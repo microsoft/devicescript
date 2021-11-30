@@ -47,10 +47,26 @@ typedef struct {
 typedef struct jdvm_function_frame jdvm_function_frame_t;
 
 typedef struct {
+    jd_device_service_t *service;
+} jdvm_role_t;
+
+#define JDVM_FIBER_FLAG_SLEEPING_ON_REG 0x0001
+#define JDVM_FIBER_FLAG_SLEEPING_ON_ROLE 0x0002
+
+typedef struct jdvm_fiber {
+    struct jdvm_fiber *next;
+    jdvm_role_t *sleeping_on;
+    jd_packet_t *arg;      // ?
+    uint16_t sleeping_reg; // 0x0000 when any packet will do
+    uint32_t wake_time;
+} jdvm_fiber_t;
+
+typedef struct {
     value_t regs[JDVM_NUM_REGS];
     value_t *globals;
 
     uint16_t error_code;
+    uint8_t num_roles;
 
     union {
         const uint32_t *img;
@@ -58,6 +74,10 @@ typedef struct {
     };
 
     jdvm_function_frame_t *curr_fn;
+    jdvm_fiber_t *curr_fiber;
+
+    jdvm_fiber_t *fibers;
+    jdvm_role_t *roles;
 
     union {
         jd_frame_t frame;
@@ -66,7 +86,7 @@ typedef struct {
 } jdvm_ctx_t;
 
 struct jdvm_function_frame {
-    jdvm_ctx_t *ctx; // ???
+    jdvm_ctx_t *ctx;
     jdvm_function_frame_t *caller;
     const jdvm_function_desc_t *func;
     uint16_t pc;
@@ -87,7 +107,8 @@ struct jdvm_function_frame {
 // $fn      - $right     points into functions section
 // $str     - $right     points into string_literals section
 // $offset  - $right
-// $fmt     - $subop:$left
+// $shift   - $left
+// $numfmt  - $subop
 
 #define JDVM_OP_INVALID 0x00
 #define JDVM_OP_BINARY 0x01  // $dst := $left $subop $right
@@ -98,16 +119,17 @@ struct jdvm_function_frame {
 #define JDVM_OP_CALL_BG 0x06 // callbg $fn (max pending?)
 #define JDVM_OP_RET 0x07     // ret
 
-#define JDVM_OP_SPRINTF 0x10 // buffer[$offset] = $fmt % r0,...
+#define JDVM_OP_SPRINTF 0x10 // buffer[$offset] = $str % r0,...
 
-#define JDVM_OP_SETUP_BUFFER 0x20 // clear buffer sz=$left
-#define JDVM_OP_SET_BUFFER 0x21   // buffer[$offset @ $fmt] := $src
-#define JDVM_OP_GET_BUFFER 0x22   // $dst := buffer[$offset @ $fmt]
+#define JDVM_OP_SETUP_BUFFER 0x20 // clear buffer sz=$offset
+#define JDVM_OP_SET_BUFFER 0x21   // buffer[$offset @ $numfmt] := $src
+#define JDVM_OP_GET_BUFFER 0x22   // $dst := buffer[$offset @ $numfmt]
 
-#define JDVM_OP_GET_REG 0x80  // buffer := $role.$code (max wait: $ms)
-#define JDVM_OP_SET_REG 0x81  // $role.$code := buffer
-#define JDVM_OP_WAIT_REG 0x82 // wait for $role.$code change, max $ms
-#define JDVM_OP_WAIT_PKT 0x83 // wait for any pkt from $role, max $ms
+#define JDVM_OP_GET_REG 0x80     // buffer := $role.$code (refresh: $ms)
+#define JDVM_OP_SET_REG 0x81     // $role.$code := buffer
+#define JDVM_OP_WAIT_REG 0x82    // wait for $role.$code change, refresh $ms
+#define JDVM_OP_WAIT_PKT 0x83    // wait for any pkt from $role
+#define JDVM_OP_SET_TIMEOUT 0x90 // set_timeout $arg16 ms
 
 #define JDVM_FMT_U8 0b0000
 #define JDVM_FMT_U16 0b0001
@@ -154,9 +176,8 @@ struct jdvm_function_frame {
 #define JDVM_ARG16_RESERVED_7 0x7
 #define JDVM_ARG16_SMALL_INT 0x8 // until 0xF
 
-#define NUM_SPECIAL_LITS 1
-
-static const value_t special_lits[NUM_SPECIAL_LITS] = {NAN};
+#define JDVM_ARG_SPECIAL_NAN 0x0
+#define JDVM_ARG_SPECIAL_SIZE 0x1
 
 static inline value_t fail(jdvm_function_frame_t *frame, int code) {
     if (!frame->ctx->error_code) {
@@ -220,9 +241,14 @@ static value_t jdvm_arg16(jdvm_function_frame_t *frame, uint16_t arg) {
             return fail(frame, 104);
         return *(int32_t *)(&ctx->img[ctx->header->int_literals.start + idx]);
     case JDVM_ARG16_SPECIAL:
-        if (idx >= NUM_SPECIAL_LITS)
-            return fail(frame, 106);
-        return special_lits[idx];
+        switch (idx) {
+        case JDVM_ARG_SPECIAL_NAN:
+            return NAN;
+        case JDVM_ARG_SPECIAL_SIZE:
+            return ctx->packet.service_size;
+        default:
+            return fail(frame, 0);
+        }
     default:
         if (arg >> 15)
             return (value_t)(arg & 0x7fff);
@@ -278,7 +304,7 @@ static value_t get_val(jdvm_function_frame_t *frame, uint8_t offset, uint8_t fmt
     jd_packet_t *pkt = &frame->ctx->packet;
 
     if (offset + sz > pkt->service_size)
-        fail(frame, 152);
+        return NAN;
 
 #define GET_VAL(SZ)                                                                                \
     case JDVM_FMT_##SZ:                                                                            \
@@ -306,6 +332,106 @@ static value_t get_val(jdvm_function_frame_t *frame, uint8_t offset, uint8_t fmt
     return q;
 }
 
+static void set_val(jdvm_function_frame_t *frame, uint8_t offset, uint8_t fmt, uint8_t shift,
+                    value_t q) {
+    uint8_t U8;
+    uint16_t U16;
+    uint32_t U32;
+    uint64_t U64;
+    int8_t I8;
+    int16_t I16;
+    int32_t I32;
+    int64_t I64;
+    float F32;
+    double F64;
+
+    unsigned sz = 1 << (fmt & 0b11);
+
+    jd_packet_t *pkt = &frame->ctx->packet;
+
+    if (offset + sz > pkt->service_size)
+        fail(frame, 152);
+
+    if (shift)
+        q *= shift_val(shift);
+
+    if (!(fmt & 0b1000))
+        q += 0.5f; // proper rounding
+
+#define SET_VAL(SZ, l, h)                                                                          \
+    case JDVM_FMT_##SZ:                                                                            \
+        SZ = q < l ? l : q > h ? h : q;                                                            \
+        memcpy(pkt->data + offset, &SZ, sizeof(SZ));                                               \
+        break
+
+#define SET_VAL_R(SZ)                                                                              \
+    case JDVM_FMT_##SZ:                                                                            \
+        SZ = q;                                                                                    \
+        memcpy(pkt->data + offset, &SZ, sizeof(SZ));                                               \
+        break
+
+    switch (fmt) {
+        SET_VAL(U8, 0, 0xff);
+        SET_VAL(U16, 0, 0xffff);
+        SET_VAL(U32, 0, 0xffffffff);
+        SET_VAL(U64, 0, 0xffffffffffffffff);
+        SET_VAL(I8, -0x80, 0x7f);
+        SET_VAL(I16, -0x8000, 0x7fff);
+        SET_VAL(I32, -0x80000000, 0x7fffffff);
+        SET_VAL(I64, -0x8000000000000000, 0x7fffffffffffffff);
+        SET_VAL_R(F32);
+        SET_VAL_R(F64);
+    default:
+        fail(frame, 153);
+        break;
+    }
+}
+
+static void setup_buffer(jdvm_function_frame_t *frame, uint8_t size) {
+    jd_packet_t *pkt = &frame->ctx->packet;
+    if (size > JD_SERIAL_PAYLOAD_SIZE)
+        fail(frame, 0);
+    memset(pkt, 0, sizeof(jd_frame_t));
+    pkt->service_size = size;
+}
+
+static jdvm_role_t *get_role(jdvm_ctx_t *ctx, uint8_t idx) {
+    if (idx >= ctx->num_roles) {
+        fail(ctx->curr_fn, 0);
+        return &ctx->roles[0];
+    }
+    return &ctx->roles[idx];
+}
+
+static void format_string(jdvm_ctx_t *ctx, uint8_t offset, uint8_t stridx) {
+    if (stridx > ctx->header->strings.length) {
+        fail(frame, 0);
+        return;
+    }
+    const jdvm_img_section_t *sect = (void *)&ctx->img[ctx->header->strings.start + stridx];
+    uint32_t ep = sect->start + sect->length;
+    if (ep > 4 * ctx->header->string_data.length) {
+        fail(frame, 0);
+        return;
+    }
+    const char *ptr = (const char *)&ctx->img[ctx->header->string_data.start];
+    const char *endp = ptr + ep;
+    ptr += sect->start;
+
+    jd_packet_t *pkt = &ctx->packet;
+    while (ptr < endp && offset < pkt->service_size) {
+        char c = *ptr++;
+        if (c != '%') {
+            pkt->data[offset++] = c;
+            continue;
+        }
+        if (ptr >= endp)
+            fail(frame, 0);
+        c = *ptr++;
+        // TODO
+    }
+}
+
 static void jdvm_step(jdvm_function_frame_t *frame) {
     jdvm_ctx_t *ctx = frame->ctx;
 
@@ -318,21 +444,25 @@ static void jdvm_step(jdvm_function_frame_t *frame) {
     int dst = (instr >> 16) & (JDVM_NUM_REGS - 1);
     int subop = (instr >> 20) & 0xf;
     uint16_t arg16 = instr & 0xffff;
-    uint8_t arg8_a = (instr >> 8) & 0xff;
-    uint8_t arg8_b = instr & 0xff;
-    uint8_t offset = arg8_b;
-    uint8_t fnidx = arg8_b;
-    uint8_t stridx = arg8_b;
+    uint8_t left = (instr >> 8) & 0xff;
+    uint8_t right = instr & 0xff;
+    uint8_t fnidx = right;
+    uint8_t stridx = right;
     uint16_t cmdcode = instr & 0x1ff;
     uint16_t roleidx = (instr >> 9) & 0x7f;
+
+    uint8_t offset = right;
+    uint8_t shift = left;
+    uint8_t numfmt = subop;
+
     int jmpoff;
 
     value_t a, b;
 
     switch (instr >> 24) {
     case JDVM_OP_BINARY:
-        a = jdvm_arg8(frame, arg8_a);
-        b = jdvm_arg8(frame, arg8_b);
+        a = jdvm_arg8(frame, left);
+        b = jdvm_arg8(frame, right);
         switch (subop) {
         case JDVM_SUBOP_BINARY_ADD:
             a = a + b;
@@ -422,6 +552,25 @@ static void jdvm_step(jdvm_function_frame_t *frame) {
         break;
     case JDVM_OP_RET:
         ctx->curr_fn = frame->caller;
+        break;
+    case JDVM_OP_SET_BUFFER:
+        set_val(frame, offset, numfmt, shift, ctx->regs[dst]);
+        break;
+    case JDVM_OP_GET_BUFFER:
+        ctx->regs[dst] = get_val(frame, offset, numfmt, shift);
+        break;
+    case JDVM_OP_SETUP_BUFFER:
+        if (subop || right)
+            fail(frame, 124);
+        setup_buffer(frame, offset);
+        break;
+    case JDVM_OP_GET_REG:
+        ctx->curr_fiber->sleeping_on = get_role(ctx, roleidx);
+        ctx->curr_fiber->sleeping_reg = cmdcode;
+        // TODO
+        break;
+    case JDVM_OP_SPRINTF:
+        format_string(ctx, offset, stridx);
         break;
     }
 }
