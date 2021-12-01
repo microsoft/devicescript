@@ -179,10 +179,18 @@ struct jdvm_function_frame {
 #define JDVM_ARG_SPECIAL_NAN 0x0
 #define JDVM_ARG_SPECIAL_SIZE 0x1
 
-static inline value_t fail(jdvm_function_frame_t *frame, int code) {
+static value_t fail(jdvm_function_frame_t *frame, int code) {
     if (!frame->ctx->error_code) {
         DMESG("error %d at %x", code, frame->pc);
         frame->ctx->error_code = code;
+    }
+    return 0;
+}
+
+static value_t fail_ctx(jdvm_ctx_t *ctx, int code) {
+    if (!ctx->error_code) {
+        DMESG("error %d at %x", code, ctx->curr_fn ? ctx->curr_fn->pc : 0);
+        ctx->error_code = code;
     }
     return 0;
 }
@@ -397,7 +405,7 @@ static void setup_buffer(jdvm_function_frame_t *frame, uint8_t size) {
 
 static jdvm_role_t *get_role(jdvm_ctx_t *ctx, uint8_t idx) {
     if (idx >= ctx->num_roles) {
-        fail(ctx->curr_fn, 0);
+        fail_ctx(ctx, 0);
         return &ctx->roles[0];
     }
     return &ctx->roles[idx];
@@ -405,13 +413,13 @@ static jdvm_role_t *get_role(jdvm_ctx_t *ctx, uint8_t idx) {
 
 static void format_string(jdvm_ctx_t *ctx, uint8_t offset, uint8_t stridx) {
     if (stridx > ctx->header->strings.length) {
-        fail(frame, 0);
+        fail_ctx(ctx, 0);
         return;
     }
     const jdvm_img_section_t *sect = (void *)&ctx->img[ctx->header->strings.start + stridx];
     uint32_t ep = sect->start + sect->length;
     if (ep > 4 * ctx->header->string_data.length) {
-        fail(frame, 0);
+        fail_ctx(ctx, 0);
         return;
     }
     const char *ptr = (const char *)&ctx->img[ctx->header->string_data.start];
@@ -426,7 +434,7 @@ static void format_string(jdvm_ctx_t *ctx, uint8_t offset, uint8_t stridx) {
             continue;
         }
         if (ptr >= endp)
-            fail(frame, 0);
+            fail_ctx(ctx, 0);
         c = *ptr++;
         // TODO
     }
