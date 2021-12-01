@@ -3,10 +3,6 @@
 #include <math.h>
 #include <assert.h>
 
-#define JDVM_NUM_REGS 16
-
-typedef float value_t;
-
 typedef struct {
     uint16_t start;  // in words
     uint16_t length; // in words
@@ -423,21 +419,11 @@ static void format_string(jdvm_ctx_t *ctx, uint8_t offset, uint8_t stridx) {
         return;
     }
     const char *ptr = (const char *)&ctx->img[ctx->header->string_data.start];
-    const char *endp = ptr + ep;
-    ptr += sect->start;
-
     jd_packet_t *pkt = &ctx->packet;
-    while (ptr < endp && offset < pkt->service_size) {
-        char c = *ptr++;
-        if (c != '%') {
-            pkt->data[offset++] = c;
-            continue;
-        }
-        if (ptr >= endp)
-            fail_ctx(ctx, 0);
-        c = *ptr++;
-        // TODO
-    }
+
+    int sz = pkt->service_size - offset;
+    if (sz > 0)
+        jdvm_strformat(ptr, sect->length, (char *)&pkt->data[offset], sz, ctx->regs, JDVM_NUM_REGS);
 }
 
 static void jdvm_step(jdvm_function_frame_t *frame) {
