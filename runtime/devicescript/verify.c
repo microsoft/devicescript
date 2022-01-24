@@ -33,6 +33,8 @@ static inline bool jacs_is_prefix_instr(uint16_t instr) {
     return (instr >> 12) <= JACS_OPTOP_SET_HIGH;
 }
 
+STATIC_ASSERT(sizeof(jacs_img_header_t) == 64 + 6 * sizeof(jacs_img_section_t));
+
 static int numSetBits(uint32_t n) {
     int r = 0;
     for (int i = 0; i < 32; ++i)
@@ -75,6 +77,7 @@ static int fail(int code, uint32_t offset) {
     MUST_CONTAIN_PTR(code, container, (sect)->start);                                              \
     MUST_CONTAIN_PTR(code, container, (sect)->start + (sect)->length)
 
+// next error 1144
 static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
     const uint8_t *imgdata = img->data;
     uint32_t offset;
@@ -161,34 +164,34 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             uint16_t tp = a;
             switch (tp) {
             case JACS_CELL_KIND_LOCAL:
-                CHECK(1100, idx < fptr->num_locals); // locals range
+                CHECK(1133, idx < fptr->num_locals); // locals range
                 break;
             case JACS_CELL_KIND_GLOBAL:
-                CHECK(1100, idx < img->header->num_globals); // globals range
+                CHECK(1134, idx < img->header->num_globals); // globals range
                 break;
             case JACS_CELL_KIND_BUFFER: { // arg=shift:numfmt, C=Offset
                 int fmt = idx & 0xf;
-                CHECK(1100, fmt <= JACS_NUMFMT_I64 || fmt == JACS_NUMFMT_F32 ||
+                CHECK(1135, fmt <= JACS_NUMFMT_I64 || fmt == JACS_NUMFMT_F32 ||
                                 fmt == JACS_NUMFMT_F64); // valid fmt
                 int sz = bitSize(idx & 0xf);
                 int shift = idx >> 4;
-                CHECK(1100, shift <= sz);       // shift < sz
-                CHECK(1100, c <= 236 - sz / 8); // offset in range
+                CHECK(1136, shift <= sz);       // shift < sz
+                CHECK(1137, c <= 236 - sz / 8); // offset in range
             } break;
             case JACS_CELL_KIND_FLOAT_CONST:
-                CHECK(1100, idx < jacs_img_num_floats(img)); // float const in range
+                CHECK(1138, idx < jacs_img_num_floats(img)); // float const in range
                 break;
             case JACS_CELL_KIND_IDENTITY:
                 break;
             case JACS_CELL_KIND_SPECIAL:
-                CHECK(1100, idx < JACS_VALUE_SPECIAL__LAST); // special in range
+                CHECK(1139, idx < JACS_VALUE_SPECIAL__LAST); // special in range
                 break;
             case JACS_CELL_KIND_ROLE_PROPERTY:
-                CHECK(1100, idx < jacs_img_num_roles(img)); // role prop R range
-                CHECK(1100, c < JACS_ROLE_PROPERTY__LAST);  // role prop C range
+                CHECK(1140, idx < jacs_img_num_roles(img)); // role prop R range
+                CHECK(1141, c < JACS_ROLE_PROPERTY__LAST);  // role prop C range
                 break;
             default:
-                CHECK(1100, false); // invalid cell kind
+                CHECK(1142, false); // invalid cell kind
             }
 
             switch (tp) {
@@ -197,7 +200,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             case JACS_CELL_KIND_BUFFER:
                 break;
             default:
-                CHECK(1100, op == JACS_OPTOP_LOAD_CELL); // cell kind not writable
+                CHECK(1143, op == JACS_OPTOP_LOAD_CELL); // cell kind not writable
                 break;
             }
         } break;
