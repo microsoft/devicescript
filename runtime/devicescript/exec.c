@@ -4,40 +4,43 @@
 #include <assert.h>
 
 typedef struct {
-    uint16_t start;  // in words
-    uint16_t length; // in words
+    uint32_t start;  // in bytes
+    uint32_t length; // in bytes
 } jdvm_img_section_t;
 
-#define JDVM_IMG_MAGIC0 0x4d564a44 // "JDVM"
+#define JDVM_IMG_MAGIC0 0x5363614a // "JacS"
 #define JDVM_IMG_MAGIC1 0x9a6a7e0a
 
 typedef struct {
     uint32_t magic0;
     uint32_t magic1;
     uint16_t num_globals;
+    uint8_t reserved[64 - 4 - 4 - 2];
+
     jdvm_img_section_t functions;      // jdvm_function_desc_t[]
-    jdvm_img_section_t functions_data; // uint32_t[]
+    jdvm_img_section_t functions_data; // uint16_t[]
     jdvm_img_section_t float_literals; // value_t[]
-    jdvm_img_section_t int_literals;   // int32_t[]
+    jdvm_img_section_t roles;          // jdvm_role_desc_t[]
     jdvm_img_section_t strings;        // jdvm_img_section_t[]
     jdvm_img_section_t string_data;    // "strings" points in here
-    jdvm_img_section_t roles;          // jdvm_role_desc_t[]
-
-    uint32_t refresh_ms_value[16];
 } jdvm_img_header_t;
+
+STATIC_ASSERT(sizeof(jdvm_img_header_t) == 64 + 6 * sizeof(jdvm_img_section_t));
 
 typedef struct {
     // position of function (must be within code section)
-    uint16_t start;  // in words, in whole image
-    uint16_t length; // in words
-    uint8_t num_locals;
-    uint8_t num_args;
-    uint16_t flags;
+    uint32_t start;  // in bytes, in whole image
+    uint32_t length; // in bytes
+    uint16_t num_locals;
+    uint8_t num_regs_and_args; //  num_regs | (num_args << 4)
+    uint8_t flags;
+    uint32_t reserved;
 } jdvm_function_desc_t;
 
 typedef struct {
     uint32_t service_class;
-    jdvm_img_section_t name; // within string_data section
+    uint16_t name_idx; // index in strings section
+    uint16_t reserved;
 } jdvm_role_desc_t;
 
 typedef struct jdvm_function_frame jdvm_function_frame_t;
@@ -89,44 +92,6 @@ struct jdvm_function_frame {
     value_t locals[0];
 };
 
-// formats:
-// $op      - 31:24      JDVM_OP_*
-// $subop   - 23:20      JDVM_SUBOP_*
-// $dst     - 19:16      destination register index
-// $src     - $dst       used when $dst is actually source
-// $left    - 15:8       left argument of binary op (arg8 enc.)
-// $right   - 7:0        right argument of binary op (arg8 enc.)
-// $arg16   - 15:0       argument of unary ops (arg16 enc.)
-// $role    - 15:9       index into roles table
-// $code    - 8:0        9 bit register or command code
-// $ms      - $subop     delay in miliseconds, refresh_ms_value[] index
-// $fn      - $right     points into functions section
-// $str     - $right     points into string_literals section
-// $offset  - $right
-// $shift   - $left
-// $numfmt  - $subop
-
-#define JDVM_OP_INVALID 0x00
-#define JDVM_OP_BINARY 0x01  // $dst := $left $subop $right
-#define JDVM_OP_UNARY 0x02   // $dst := $subop $arg16
-#define JDVM_OP_STORE 0x03   // $arg16 := $src
-#define JDVM_OP_JUMP 0x04    // jump $subop($src) $arg16 (offset)
-#define JDVM_OP_CALL 0x05    // call $fn
-#define JDVM_OP_CALL_BG 0x06 // callbg $fn (max pending?)
-#define JDVM_OP_RET 0x07     // ret
-
-#define JDVM_OP_SPRINTF 0x10 // buffer[$offset] = $str % r0,...
-
-#define JDVM_OP_SETUP_BUFFER 0x20 // clear buffer sz=$offset
-#define JDVM_OP_SET_BUFFER 0x21   // buffer[$offset @ $numfmt] := $src
-#define JDVM_OP_GET_BUFFER 0x22   // $dst := buffer[$offset @ $numfmt]
-
-#define JDVM_OP_GET_REG 0x80     // buffer := $role.$code (refresh: $ms)
-#define JDVM_OP_SET_REG 0x81     // $role.$code := buffer
-#define JDVM_OP_WAIT_REG 0x82    // wait for $role.$code change, refresh $ms
-#define JDVM_OP_WAIT_PKT 0x83    // wait for any pkt from $role
-#define JDVM_OP_SET_TIMEOUT 0x90 // set_timeout $arg16 ms
-
 #define JDVM_FMT_U8 0b0000
 #define JDVM_FMT_U16 0b0001
 #define JDVM_FMT_U32 0b0010
@@ -139,41 +104,6 @@ struct jdvm_function_frame {
 //#define JDVM_FMT_F16 0b1001
 #define JDVM_FMT_F32 0b1010
 #define JDVM_FMT_F64 0b1011
-
-#define JDVM_SUBOP_BINARY_ADD 0x1
-#define JDVM_SUBOP_BINARY_SUB 0x2
-#define JDVM_SUBOP_BINARY_DIV 0x3
-#define JDVM_SUBOP_BINARY_MUL 0x4
-#define JDVM_SUBOP_BINARY_LT 0x5
-#define JDVM_SUBOP_BINARY_LE 0x6
-#define JDVM_SUBOP_BINARY_EQ 0x7
-#define JDVM_SUBOP_BINARY_NE 0x8
-#define JDVM_SUBOP_BINARY_AND 0x9
-#define JDVM_SUBOP_BINARY_OR 0xA
-
-#define JDVM_SUBOP_UNARY_ID 0x0
-#define JDVM_SUBOP_UNARY_NEG 0x1
-#define JDVM_SUBOP_UNARY_NOT 0x2
-
-#define JDVM_SUBOP_JUMP_FORWARD 0x0
-#define JDVM_SUBOP_JUMP_BACK 0x1
-#define JDVM_SUBOP_JUMP_FORWARD_IF_ZERO 0x2
-#define JDVM_SUBOP_JUMP_BACK_IF_ZERO 0x3
-#define JDVM_SUBOP_JUMP_FORWARD_IF_NOT_ZERO 0x4
-#define JDVM_SUBOP_JUMP_BACK_IF_NOT_ZERO 0x5
-
-#define JDVM_ARG16_REG 0x0
-#define JDVM_ARG16_LOCAL 0x1
-#define JDVM_ARG16_GLOBAL 0x2
-#define JDVM_ARG16_FLOAT 0x3
-#define JDVM_ARG16_INT 0x4
-#define JDVM_ARG16_SPECIAL 0x5
-#define JDVM_ARG16_RESERVED_6 0x6
-#define JDVM_ARG16_RESERVED_7 0x7
-#define JDVM_ARG16_SMALL_INT 0x8 // until 0xF
-
-#define JDVM_ARG_SPECIAL_NAN 0x0
-#define JDVM_ARG_SPECIAL_SIZE 0x1
 
 static value_t fail(jdvm_function_frame_t *frame, int code) {
     if (!frame->ctx->error_code) {
@@ -194,7 +124,7 @@ static value_t fail_ctx(jdvm_ctx_t *ctx, int code) {
 static void jdvm_store_arg16(jdvm_function_frame_t *frame, uint16_t arg, value_t v) {
     uint32_t idx = arg & 0x0fff;
     jdvm_ctx_t *ctx = frame->ctx;
-    switch (arg >> 4) {
+    switch (arg >> 12) {
     case JDVM_ARG16_REG:
         if (idx >= JDVM_NUM_REGS)
             fail(frame, 110);
@@ -223,7 +153,7 @@ static void jdvm_store_arg16(jdvm_function_frame_t *frame, uint16_t arg, value_t
 static value_t jdvm_arg16(jdvm_function_frame_t *frame, uint16_t arg) {
     uint32_t idx = arg & 0x0fff;
     jdvm_ctx_t *ctx = frame->ctx;
-    switch (arg >> 4) {
+    switch (arg >> 12) {
     case JDVM_ARG16_REG:
         if (idx >= JDVM_NUM_REGS)
             return fail(frame, 102);
@@ -441,7 +371,7 @@ static void jdvm_step(jdvm_function_frame_t *frame) {
     uint8_t left = (instr >> 8) & 0xff;
     uint8_t right = instr & 0xff;
     uint8_t fnidx = right;
-    uint8_t stridx = right;
+    uint8_t stridx = left;
     uint16_t cmdcode = instr & 0x1ff;
     uint16_t roleidx = (instr >> 9) & 0x7f;
 
