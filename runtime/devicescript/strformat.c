@@ -118,7 +118,7 @@ static int numvalue(char c) {
     return -1;
 }
 
-size_t jdvm_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
+size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
                       size_t numargs) {
     size_t fp = 0;
     size_t dp = 0;
@@ -181,7 +181,7 @@ static void test_fmt1(const char *fmt) {
         0, 42, -108, 0.000198, 1e30, 1e-10, 2.0f / 3,
         123456789123,
     };
-    jdvm_strformat(fmt, strlen(fmt), buf, sizeof(buf) - 1, args, sizeof(args) / sizeof(args[0]));
+    jacs_strformat(fmt, strlen(fmt), buf, sizeof(buf) - 1, args, sizeof(args) / sizeof(args[0]));
     printf("'%s' -> '%s'\n", fmt, buf);
 }
 
