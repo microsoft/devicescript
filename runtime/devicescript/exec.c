@@ -1,48 +1,11 @@
-#include "jd_vm.h"
+#include "jacs_exec.h"
 
 #include <math.h>
 #include <assert.h>
 
-typedef struct {
-    uint32_t start;  // in bytes
-    uint32_t length; // in bytes
-} jacs_img_section_t;
-
-#define JACS_IMG_MAGIC0 0x5363614a // "JacS"
-#define JACS_IMG_MAGIC1 0x9a6a7e0a
-
-typedef struct {
-    uint32_t magic0;
-    uint32_t magic1;
-    uint16_t num_globals;
-    uint8_t reserved[64 - 4 - 4 - 2];
-
-    jacs_img_section_t functions;      // jacs_function_desc_t[]
-    jacs_img_section_t functions_data; // uint16_t[]
-    jacs_img_section_t float_literals; // value_t[]
-    jacs_img_section_t roles;          // jacs_role_desc_t[]
-    jacs_img_section_t strings;        // jacs_img_section_t[]
-    jacs_img_section_t string_data;    // "strings" points in here
-} jacs_img_header_t;
-
 STATIC_ASSERT(sizeof(jacs_img_header_t) == 64 + 6 * sizeof(jacs_img_section_t));
 
-typedef struct {
-    // position of function (must be within code section)
-    uint32_t start;  // in bytes, in whole image
-    uint32_t length; // in bytes
-    uint16_t num_locals;
-    uint8_t num_regs_and_args; //  num_regs | (num_args << 4)
-    uint8_t flags;
-    uint32_t reserved;
-} jacs_function_desc_t;
-
-typedef struct {
-    uint32_t service_class;
-    uint16_t name_idx; // index in strings section
-    uint16_t reserved;
-} jacs_role_desc_t;
-
+#if 0
 typedef struct jacs_function_frame jacs_function_frame_t;
 
 typedef struct {
@@ -513,3 +476,5 @@ void jacs_exec(jacs_ctx_t *ctx) {
             jacs_step(frame);
     }
 }
+
+#endif
