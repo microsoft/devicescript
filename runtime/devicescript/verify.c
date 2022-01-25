@@ -2,37 +2,6 @@
 
 #include <assert.h>
 
-typedef struct jacs_img {
-    const uint8_t *data;
-    const jacs_img_header_t *header;
-} jacs_img_t;
-
-static inline uint32_t jacs_img_num_strings(const jacs_img_t *img) {
-    return img->header->strings.length / sizeof(jacs_img_section_t);
-}
-
-static inline uint32_t jacs_img_num_roles(const jacs_img_t *img) {
-    return img->header->roles.length / sizeof(jacs_role_desc_t);
-}
-
-static inline uint32_t jacs_img_num_functions(const jacs_img_t *img) {
-    return img->header->functions.length / sizeof(jacs_function_desc_t);
-}
-
-static inline uint32_t jacs_img_num_floats(const jacs_img_t *img) {
-    return img->header->float_literals.length / sizeof(value_t);
-}
-
-static inline const jacs_function_desc_t *jacs_img_get_function(const jacs_img_t *img,
-                                                                uint32_t idx) {
-    return (const jacs_function_desc_t *)(img->data + img->header->functions.start +
-                                          idx * sizeof(jacs_function_desc_t));
-}
-
-static inline bool jacs_is_prefix_instr(uint16_t instr) {
-    return (instr >> 12) <= JACS_OPTOP_SET_HIGH;
-}
-
 STATIC_ASSERT(sizeof(jacs_img_header_t) == 64 + 6 * sizeof(jacs_img_section_t));
 
 static int numSetBits(uint32_t n) {
@@ -319,7 +288,8 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
     assert(size > sizeof(jacs_img_header_t));
     uint32_t offset = 0;
     const jacs_img_header_t *header = (const jacs_img_header_t *)imgdata;
-    jacs_img_t _img = {imgdata, header};
+    jacs_img_t _img;
+    _img.data = imgdata;
     jacs_img_t *img = &_img;
 
     CHECK(1000, header->magic0 == JACS_IMG_MAGIC0 && header->magic1 == JACS_IMG_MAGIC1);
