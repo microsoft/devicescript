@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jacs_exec.h"
+#include "jacs_regcache.h"
 #include <assert.h>
 
 typedef struct jacs_activation jacs_activation_t;

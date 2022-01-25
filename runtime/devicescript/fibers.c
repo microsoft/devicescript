@@ -133,7 +133,6 @@ void jacs_ctx_send_cmd(jacs_ctx_t *ctx, uint16_t role_idx, uint16_t code) {
 void jacs_ctx_get_jd_register(jacs_ctx_t *ctx, uint16_t role_idx, uint16_t code, uint32_t timeout,
                               uint16_t arg) {
     jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, role_idx);
-    const now = ctx->now();
 
     if (role.device) {
         const cached = ctx->regs.lookup(role, code, arg);
