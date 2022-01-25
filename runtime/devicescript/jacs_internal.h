@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jacs_exec.h"
+#include <assert.h>
 
 typedef struct jacs_activation jacs_activation_t;
 
@@ -43,6 +44,8 @@ typedef struct jacs_ctx {
 
     uint16_t error_code;
 
+    uint8_t wake_times_updated;
+
     jacs_img_t img;
 
     jacs_activation_t *curr_fn;
@@ -58,10 +61,10 @@ typedef struct jacs_ctx {
 } jacs_ctx_t;
 
 struct jacs_activation {
-    jacs_ctx_t *ctx;
     jacs_activation_t *caller;
     jacs_fiber_t *fiber;
     const jacs_function_desc_t *func;
+    uint16_t saved_regs;
     uint16_t pc;
     value_t locals[0];
 };
@@ -79,9 +82,11 @@ void jacs_ctx_yield(jacs_ctx_t *ctx);
 void jacs_ctx_send_cmd(jacs_ctx_t *ctx, uint16_t role_idx, uint16_t code);
 void jacs_ctx_get_jd_register(jacs_ctx_t *ctx, uint16_t role_idx, uint16_t code, uint32_t timeout,
                               uint16_t arg);
-void jacs_act_call_function(jacs_activation_t *act, unsigned fidx, unsigned numargs);
+void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numargs);
 void jacs_act_return_from_call(jacs_activation_t *act);
 void jacs_ctx_start_fiber(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op);
 void jacs_ctx_panic(jacs_ctx_t *ctx, unsigned code);
+void jacs_act_activate(jacs_activation_t *act);
 
-void jacs_step(jacs_activation_t *frame);
+void jacs_act_step(jacs_activation_t *frame);
+void jacs_act_restore_regs(jacs_activation_t *act);

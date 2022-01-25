@@ -1,23 +1,6 @@
 #include "jacs_internal.h"
 
 #include <math.h>
-#include <assert.h>
-
-static value_t fail(jacs_activation_t *frame, int code) {
-    if (!frame->ctx->error_code) {
-        DMESG("error %d at %x", code, frame->pc);
-        frame->ctx->error_code = code;
-    }
-    return 0;
-}
-
-static value_t fail_ctx(jacs_ctx_t *ctx, int code) {
-    if (!ctx->error_code) {
-        DMESG("error %d at %x", code, ctx->curr_fn ? ctx->curr_fn->pc : 0);
-        ctx->error_code = code;
-    }
-    return 0;
-}
 
 static value_t do_unop(int op, value_t v) {
     switch (op) {
@@ -123,7 +106,8 @@ static value_t get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, ui
 
     unsigned sz = 1 << (fmt & 0b11);
 
-    jd_packet_t *pkt = &frame->ctx->packet;
+    jacs_ctx_t *ctx = frame->fiber->ctx;
+    jd_packet_t *pkt = &ctx->packet;
 
     if (offset + sz > pkt->service_size)
         return NAN;
@@ -146,7 +130,7 @@ static value_t get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, ui
         GET_VAL(F32);
         GET_VAL(F64);
     default:
-        fail(frame, 151);
+        oops();
         return 0;
     }
     if (shift)
@@ -215,10 +199,11 @@ static void set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8
 
     unsigned sz = 1 << (fmt & 0b11);
 
-    jd_packet_t *pkt = &frame->ctx->packet;
+    jacs_ctx_t *ctx = frame->fiber->ctx;
+    jd_packet_t *pkt = &ctx->packet;
 
     if (offset + sz > pkt->service_size)
-        fail(frame, 152);
+        oops(); // ?
 
     if (shift)
         q *= shift_val(shift);
@@ -250,7 +235,7 @@ static void set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8
         SET_VAL_R(F32);
         SET_VAL_R(F64);
     default:
-        fail(frame, 153);
+        oops();
         break;
     }
 }
@@ -272,8 +257,34 @@ static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx,
     }
 }
 
-static void save_regs(jacs_activation_t *frame, uint16_t regs) {
-    // TODO
+static void save_regs(jacs_activation_t *act, unsigned regs) {
+    unsigned p = 0;
+    value_t *r = act->fiber->ctx->registers;
+    unsigned numloc = act->func->num_locals;
+    for (unsigned i = 0; i < JACS_NUM_REGS; i++) {
+        if ((1 << i) & regs) {
+            if (p >= (act->func->num_regs_and_args & 0xf))
+                oops();
+            act->locals[numloc + p] = r[i];
+            p++;
+        }
+    }
+    act->saved_regs = regs;
+}
+
+void jacs_act_restore_regs(jacs_activation_t *act) {
+    if (act->saved_regs == 0)
+        return;
+    value_t *r = act->fiber->ctx->registers;
+    unsigned numloc = act->func->num_locals;
+    unsigned p = 0;
+    for (unsigned i = 0; i < JACS_NUM_REGS; i++) {
+        if ((1 << i) & act->saved_regs) {
+            r[i] = act->locals[numloc + p];
+            p++;
+        }
+    }
+    act->saved_regs = 0;
 }
 
 static unsigned strformat(jacs_ctx_t *ctx, unsigned str_idx, unsigned numargs, uint8_t *dst,
@@ -283,8 +294,8 @@ static unsigned strformat(jacs_ctx_t *ctx, unsigned str_idx, unsigned numargs, u
                           ctx->registers, numargs);
 }
 
-void jacs_step(jacs_activation_t *frame) {
-    jacs_ctx_t *ctx = frame->ctx;
+void jacs_act_step(jacs_activation_t *frame) {
+    jacs_ctx_t *ctx = frame->fiber->ctx;
 
     assert(!ctx->error_code);
 
@@ -363,7 +374,7 @@ void jacs_step(jacs_activation_t *frame) {
         save_regs(frame, d);
         switch (arg8 >> 6) {
         case JACS_OPCALL_SYNC:
-            jacs_act_call_function(frame, b, subop);
+            jacs_fiber_call_function(frame->fiber, b, subop);
             break;
         case JACS_OPCALL_BG:
         case JACS_OPCALL_BG_MAX1:
@@ -796,33 +807,6 @@ class Activation {
         this->pc = this->info.startPC;
     }
 
-    private saveRegs(d: number) {
-        let p = 0;
-        const r = this->fiber.ctx->registers;
-        for (let i = 0; i < NUM_REGS; i++) {
-            if ((1 << i) & d) {
-                if (p >= this->info.numRegs) oops();
-                this->locals[this->info.numLocals + p] = r[i];
-                p++;
-            }
-        }
-        this->savedRegs = d;
-    }
-
-    restoreRegs() {
-        if (this->savedRegs == 0) return;
-        const r = this->fiber.ctx->registers;
-        let p = 0;
-        for (let i = 0; i < NUM_REGS; i++) {
-            if ((1 << i) & this->savedRegs) {
-                r[i] = this->locals[this->info.numLocals + p];
-                p++;
-            }
-        }
-        this->savedRegs = 0;
-    }
-
-
     logInstr() {
         const ctx = this->fiber.ctx;
         const [a, b, c, d] = ctx->params;
@@ -1097,13 +1081,13 @@ class Ctx {
     regs = new RegisterCache();
 
     constructor(public info: ImageInfo, public env: JacsEnv) {
-        this->globals = new Float64Array(this->info.numGlobals);
-        this->roles = info.roles.map(r => new Role(r));
+        ctx->globals = new Float64Array(ctx->info.numGlobals);
+        ctx->roles = info.roles.map(r => new Role(r));
 
-        this->env.onPacket = this->processPkt.bind(this);
+        ctx->env.onPacket = ctx->processPkt.bind(ctx);
 
-        this->env.roleManager.setRoles(
-            this->roles
+        ctx->env.roleManager.setRoles(
+            ctx->roles
                 .filter(r => !r.isCondition())
                 .map(r => ({
                     name: r.info.roleName,
@@ -1111,163 +1095,163 @@ class Ctx {
                 }))
         );
 
-        this->env.roleManager.onAssignmentsChanged =
-            this->syncRoleAssignments.bind(this);
+        ctx->env.roleManager.onAssignmentsChanged =
+            ctx->syncRoleAssignments.bind(ctx);
 
-        this->wakeFibers = this->wakeFibers.bind(this);
+        ctx->wakeFibers = ctx->wakeFibers.bind(ctx);
     }
 
     private syncRoleAssignments() {
         const assignedRoles: Role[] = [];
-        for (const r of this->roles) {
+        for (const r of ctx->roles) {
             if (r.isCondition()) continue;
-            const curr = this->env.roleManager.getRole(r.info.roleName);
+            const curr = ctx->env.roleManager.getRole(r.info.roleName);
             if (
                 curr.device != r.device ||
                 curr.serviceIndex != r.serviceIndex
             ) {
                 assignedRoles.push(r);
                 r.assign(curr.device, curr.serviceIndex);
-                if (!curr.device) this->regs.detachRole(r);
+                if (!curr.device) ctx->regs.detachRole(r);
             }
         }
         if (assignedRoles.length) {
             for (const r of assignedRoles) {
-                this->pkt = Packet.from(0xffff, new Uint8Array(0));
-                if (r.device) this->pkt.deviceIdentifier = r.device.deviceId;
-                this->wakeRole(r);
+                ctx->packet = Packet.from(0xffff, new Uint8Array(0));
+                if (r.device) ctx->packet.deviceIdentifier = r.device.deviceId;
+                ctx->wakeRole(r);
             }
-            this->pokeFibers();
+            ctx->pokeFibers();
         }
     }
 
     now() {
-        return this->env.now();
+        return ctx->env.now();
     }
 
     startProgram() {
-        this->startFiber(this->info.functions[0], 0, JACS_OPCALL_BG);
-        this->pokeFibers();
+        ctx->startFiber(ctx->info.functions[0], 0, JACS_OPCALL_BG);
+        ctx->pokeFibers();
     }
 
     wake_timesUpdated() {
-        this->wakeUpdated = true;
+        ctx->wakeUpdated = true;
     }
 
 
     private clearwake_timer() {
-        if (this->wake_timeout !== undefined) {
-            this->env.clearTimeout(this->wake_timeout);
-            this->wake_timeout = undefined;
+        if (ctx->wake_timeout !== undefined) {
+            ctx->env.clearTimeout(ctx->wake_timeout);
+            ctx->wake_timeout = undefined;
         }
     }
 
     private run(f: Fiber) {
-        if (this->panicCode) return;
+        if (ctx->panicCode) return;
         try {
             f.resume();
             let maxSteps = MAX_STEPS;
-            while (this->curr_fn) {
-                this->curr_fn.step();
+            while (ctx->curr_fn) {
+                ctx->curr_fn.step();
                 if (!--maxSteps) throw new Error("execution timeout");
             }
         } catch (e) {
-            if (this->panicCode) {
-                this->onPanic(this->panicCode);
+            if (ctx->panicCode) {
+                ctx->onPanic(ctx->panicCode);
             } else {
                 try {
-                    // this will set this->panicCode, so we don't run any code anymore
-                    this->panic(INTERNAL_ERROR_PANIC_CODE);
+                    // ctx will set ctx->panicCode, so we don't run any code anymore
+                    ctx->panic(INTERNAL_ERROR_PANIC_CODE);
                 } catch {}
-                this->onError(e);
+                ctx->onError(e);
             }
         }
     }
 
     private pokeFibers() {
-        if (this->wakeUpdated) this->wakeFibers();
+        if (ctx->wakeUpdated) ctx->wakeFibers();
     }
 
     private wakeFibers() {
-        if (this->panicCode) return;
+        if (ctx->panicCode) return;
 
         let minTime = 0;
 
-        this->clearwake_timer();
+        ctx->clearwake_timer();
 
-        this->pkt = Packet.onlyHeader(0xffff);
+        ctx->packet = Packet.onlyHeader(0xffff);
 
         for (;;) {
             let numRun = 0;
-            const now = this->now();
+            const now = ctx->now();
             minTime = Infinity;
-            for (const f of this->fibers) {
+            for (const f of ctx->fibers) {
                 if (!f.wake_time) continue;
                 const wake_time = f.wake_time;
                 if (now >= wake_time) {
-                    this->run(f);
-                    if (this->panicCode) return;
+                    ctx->run(f);
+                    if (ctx->panicCode) return;
                     numRun++;
                 } else {
                     minTime = Math.min(wake_time, minTime);
                 }
             }
 
-            if (numRun == 0 && minTime > this->now()) break;
+            if (numRun == 0 && minTime > ctx->now()) break;
         }
 
-        this->wakeUpdated = false;
+        ctx->wakeUpdated = false;
         if (minTime < Infinity) {
-            const delta = Math.max(0, minTime - this->now());
-            this->wake_timeout = this->env.setTimeout(this->wakeFibers, delta);
+            const delta = Math.max(0, minTime - ctx->now());
+            ctx->wake_timeout = ctx->env.setTimeout(ctx->wakeFibers, delta);
         }
     }
 
     private wakeRole(role: Role) {
-        for (const f of this->fibers)
+        for (const f of ctx->fibers)
             if (f.role_idx == role) {
                 if (false)
                     log(
                         `wake ${f.bottom_function_idx} r=${
                             role.info
-                        } pkt=${this->pkt.toString()}`
+                        } pkt=${ctx->packet.toString()}`
                     );
-                this->run(f);
+                ctx->run(f);
             }
     }
 
     private processPkt(pkt: Packet) {
-        if (this->panicCode) return;
+        if (ctx->panicCode) return;
         if (pkt.isRepeatedEvent) return;
 
-        this->pkt = pkt;
+        ctx->packet = pkt;
         if (false && pkt.serviceIndex != 0)
             console.log(new Date(), "process: " + printPacket(pkt));
-        for (let idx = 0; idx < this->roles.length; ++idx) {
-            const r = this->roles[idx];
+        for (let idx = 0; idx < ctx->roles.length; ++idx) {
+            const r = ctx->roles[idx];
             if (
                 r.device == pkt.device &&
                 (r.serviceIndex == pkt.serviceIndex ||
                     (pkt.serviceIndex == 0 && pkt.serviceCommand == 0))
             ) {
                 if (pkt.eventCode === SystemEvent.Change)
-                    this->regs.roleChanged(this->now(), r);
-                this->regs.updateWith(r, pkt, this);
-                this->wakeRole(r);
+                    ctx->regs.roleChanged(ctx->now(), r);
+                ctx->regs.updateWith(r, pkt, ctx);
+                ctx->wakeRole(r);
             }
         }
-        this->pokeFibers();
+        ctx->pokeFibers();
     }
 
     doYield() {
-        const f = this->curr_fiber;
-        this->curr_fiber = null;
-        this->curr_fn = null;
+        const f = ctx->curr_fiber;
+        ctx->curr_fiber = null;
+        ctx->curr_fn = null;
         return f;
     }
 
     private pktLabel() {
-        return fromUTF8(uint8ArrayToString(this->pkt.data));
+        return fromUTF8(uint8ArrayToString(ctx->packet.data));
     }
 }
 
