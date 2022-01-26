@@ -8,6 +8,7 @@
 
 // this can't be more than a week; unit = ms
 #define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)
+#define JACS_MAX_STEPS (128 * 1024)
 
 typedef struct jacs_activation jacs_activation_t;
 
@@ -60,6 +61,8 @@ typedef struct jacs_ctx {
     jacs_fiber_t *fibers;
     jacs_role_t *roles;
 
+    uint32_t _now;
+
     union {
         jd_frame_t frame;
         jd_packet_t packet;
@@ -84,6 +87,10 @@ static inline jd_device_service_t *jacs_ctx_role_binding(jacs_ctx_t *ctx,
 }
 
 #define oops() assert(false)
+
+static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
+    return ctx->_now;
+}
 
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time);

@@ -8,7 +8,10 @@ void jacs_regcache_free(jacs_regcache_t *cache, jacs_regcache_entry_t *q) {
 }
 
 void jacs_regcache_mark_used(jacs_regcache_t *cache, jacs_regcache_entry_t *q) {
-    unsigned idx = cache->latest_idx + 1;
+    unsigned idx = cache->latest_idx;
+    if (q == &cache->entries[idx])
+        return; // already latest
+    idx++;
     if (idx >= JACS_REGCACHE_NUM_ENTRIES)
         idx = 0;
     if (q != &cache->entries[idx]) {
@@ -45,7 +48,6 @@ jacs_regcache_entry_t *jacs_regcache_alloc(jacs_regcache_t *cache, unsigned role
     q->service_command = service_command;
     q->argument = 0;
     q->resp_size = resp_size;
-    q->last_refresh_time = jacs_now();
     if (resp_size > JACS_QUERY_MAX_INLINE)
         q->value.buffer = jd_alloc(resp_size);
 

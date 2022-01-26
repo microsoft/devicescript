@@ -19,7 +19,7 @@ typedef struct jacs_regcache {
     uint16_t latest_idx;
 } jacs_regcache_t;
 
-static inline const void *jacs_regcache_data(const jacs_regcache_entry_t *q) {
+static inline void *jacs_regcache_data(jacs_regcache_entry_t *q) {
     return q->resp_size > JACS_QUERY_MAX_INLINE ? q->value.buffer : q->value.data;
 }
 

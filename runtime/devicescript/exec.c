@@ -450,12 +450,12 @@ void jacs_act_step(jacs_activation_t *frame) {
             jacs_ctx_yield(ctx);
             break;
         case JACS_OPASYNC_SLEEP_MS: // A-timeout in ms
-            jacs_fiber_set_wake_time(frame->fiber, jacs_now() + a);
+            jacs_fiber_set_wake_time(frame->fiber, jacs_now(ctx) + a);
             jacs_ctx_yield(ctx);
             break;
         case JACS_OPASYNC_SLEEP_R0:
             jacs_fiber_set_wake_time(frame->fiber,
-                                     jacs_now() + (uint32_t)(ctx->registers[0] * 1000 + 0.5));
+                                     jacs_now(ctx) + (uint32_t)(ctx->registers[0] * 1000 + 0.5));
             jacs_ctx_yield(ctx);
             break;
         case JACS_OPASYNC_SEND_CMD: // A-role, B-code
@@ -479,274 +479,6 @@ void jacs_act_step(jacs_activation_t *frame) {
 }
 
 #if 0
-
-static void jacs_store_arg16(jacs_activation_t *frame, uint16_t arg, value_t v) {
-    uint32_t idx = arg & 0x0fff;
-    jacs_ctx_t *ctx = frame->ctx;
-    switch (arg >> 12) {
-    case JACS_ARG16_REG:
-        if (idx >= JACS_NUM_REGS)
-            fail(frame, 110);
-        else
-            ctx->regs[idx] = v;
-        break;
-    case JACS_ARG16_LOCAL:
-        if (idx >= frame->func->num_locals)
-            fail(frame, 111);
-        else
-            frame->locals[idx] = v;
-        break;
-    case JACS_ARG16_GLOBAL:
-        if (idx >= ctx->header->num_globals)
-            fail(frame, 112);
-        else
-            ctx->globals[idx] = v;
-        break;
-    default:
-        // err 113-118 available
-        fail(frame, 119);
-        break;
-    }
-}
-
-static value_t jacs_arg16(jacs_activation_t *frame, uint16_t arg) {
-    uint32_t idx = arg & 0x0fff;
-    jacs_ctx_t *ctx = frame->ctx;
-    switch (arg >> 12) {
-    case JACS_ARG16_REG:
-        if (idx >= JACS_NUM_REGS)
-            return fail(frame, 102);
-        return ctx->regs[idx];
-    case JACS_ARG16_LOCAL:
-        if (idx >= frame->func->num_locals)
-            return fail(frame, 105);
-        return frame->locals[idx];
-    case JACS_ARG16_GLOBAL:
-        if (idx >= ctx->header->num_globals)
-            return fail(frame, 101);
-        return ctx->globals[idx];
-    case JACS_ARG16_FLOAT:
-        if (idx >= ctx->header->float_literals.length)
-            return fail(frame, 103);
-        return *(value_t *)(&ctx->img[ctx->header->float_literals.start + idx]);
-    case JACS_ARG16_INT:
-        if (idx >= ctx->header->int_literals.length)
-            return fail(frame, 104);
-        return *(int32_t *)(&ctx->img[ctx->header->int_literals.start + idx]);
-    case JACS_ARG16_SPECIAL:
-        switch (idx) {
-        case JACS_ARG_SPECIAL_NAN:
-            return NAN;
-        case JACS_ARG_SPECIAL_SIZE:
-            return ctx->packet.service_size;
-        default:
-            return fail(frame, 0);
-        }
-    default:
-        if (arg >> 15)
-            return (value_t)(arg & 0x7fff);
-        // err 107-108 available
-        return fail(frame, 109);
-    }
-}
-
-static value_t jacs_arg8(jacs_activation_t *frame, uint8_t arg) {
-    if ((arg >> 4) == JACS_ARG16_REG)
-        return frame->ctx->regs[arg & 0xf]; // fast-path
-    else
-        return jacs_arg16(frame, ((arg >> 4) << 12) | (arg & 0xf));
-}
-
-static void setup_call(jacs_activation_t *caller, const jacs_function_desc_t *desc) {
-    // TODO num args?
-    size_t lsz = sizeof(value_t) * desc->num_locals;
-    jacs_activation_t *frame = jd_alloc(sizeof(jacs_activation_t *) + lsz);
-    frame->ctx = caller->ctx;
-    frame->caller = caller;
-    frame->func = desc;
-    frame->pc = desc->start;
-    memset(frame->locals, 0, lsz);
-    frame->ctx->curr_fn = frame;
-}
-
-static void setup_buffer(jacs_activation_t *frame, uint8_t size) {
-    jd_packet_t *pkt = &frame->ctx->packet;
-    if (size > JD_SERIAL_PAYLOAD_SIZE)
-        fail(frame, 0);
-    memset(pkt, 0, sizeof(jd_frame_t));
-    pkt->service_size = size;
-}
-
-static jacs_role_t *get_role(jacs_ctx_t *ctx, uint8_t idx) {
-    if (idx >= ctx->num_roles) {
-        fail_ctx(ctx, 0);
-        return &ctx->roles[0];
-    }
-    return &ctx->roles[idx];
-}
-
-static void format_string(jacs_ctx_t *ctx, uint8_t offset, uint8_t stridx) {
-    if (stridx > ctx->header->strings.length) {
-        fail_ctx(ctx, 0);
-        return;
-    }
-    const jacs_img_section_t *sect = (void *)&ctx->img[ctx->header->strings.start + stridx];
-    uint32_t ep = sect->start + sect->length;
-    if (ep > 4 * ctx->header->string_data.length) {
-        fail_ctx(ctx, 0);
-        return;
-    }
-    const char *ptr = (const char *)&ctx->img[ctx->header->string_data.start];
-    jd_packet_t *pkt = &ctx->packet;
-
-    int sz = pkt->service_size - offset;
-    if (sz > 0)
-        jacs_strformat(ptr, sect->length, (char *)&pkt->data[offset], sz, ctx->regs, JACS_NUM_REGS);
-}
-
-static void jacs_step(jacs_activation_t *frame) {
-    jacs_ctx_t *ctx = frame->ctx;
-
-    assert(!ctx->error_code);
-
-    uint32_t instr = ctx->img[frame->pc++];
-
-    // we actually expect the compiler to never emit the assignments below
-    // and instead use the bitops as needed in the implementation of opcodes
-    int dst = (instr >> 16) & (JACS_NUM_REGS - 1);
-    int subop = (instr >> 20) & 0xf;
-    uint16_t arg16 = instr & 0xffff;
-    uint8_t left = (instr >> 8) & 0xff;
-    uint8_t right = instr & 0xff;
-    uint8_t fnidx = right;
-    uint8_t stridx = left;
-    uint16_t cmdcode = instr & 0x1ff;
-    uint16_t roleidx = (instr >> 9) & 0x7f;
-
-    uint8_t offset = right;
-    uint8_t shift = left;
-    uint8_t numfmt = subop;
-
-    int jmpoff;
-
-    value_t a, b;
-
-    switch (instr >> 24) {
-    case JACS_OP_BINARY:
-        a = jacs_arg8(frame, left);
-        b = jacs_arg8(frame, right);
-        switch (subop) {
-        case JACS_SUBOP_BINARY_ADD:
-            a = a + b;
-            break;
-        case JACS_SUBOP_BINARY_SUB:
-            a = a - b;
-            break;
-        case JACS_SUBOP_BINARY_DIV:
-            a = a / b;
-            break;
-        case JACS_SUBOP_BINARY_MUL:
-            a = a * b;
-            break;
-        case JACS_SUBOP_BINARY_LT:
-            a = a < b;
-            break;
-        case JACS_SUBOP_BINARY_LE:
-            a = a <= b;
-            break;
-        case JACS_SUBOP_BINARY_EQ:
-            a = a == b;
-            break;
-        case JACS_SUBOP_BINARY_NE:
-            a = a != b;
-            break;
-        case JACS_SUBOP_BINARY_AND:
-            a = !!a && !!b;
-            break;
-        case JACS_SUBOP_BINARY_OR:
-            a = !!a || !!b;
-            break;
-        default:
-            fail(frame, 120);
-            break;
-        }
-        ctx->regs[dst] = a;
-        break;
-    case JACS_OP_UNARY:
-        a = jacs_arg16(frame, arg16);
-        switch (subop) {
-        case JACS_SUBOP_UNARY_ID:
-            break;
-        case JACS_SUBOP_UNARY_NEG:
-            a = -a;
-            break;
-        case JACS_SUBOP_UNARY_NOT:
-            a = !a;
-            break;
-        default:
-            fail(frame, 121);
-            break;
-        }
-        ctx->regs[dst] = a;
-        break;
-    case JACS_OP_STORE:
-        jacs_store_arg16(frame, arg16, ctx->regs[dst]);
-        break;
-    case JACS_OP_JUMP:
-        jmpoff = arg16;
-        switch (subop >> 1) {
-        case (JACS_SUBOP_JUMP_FORWARD >> 1):
-            break;
-        case (JACS_SUBOP_JUMP_FORWARD_IF_ZERO >> 1):
-            if (!ctx->regs[dst])
-                jmpoff = 0;
-            break;
-        case (JACS_SUBOP_JUMP_FORWARD_IF_NOT_ZERO >> 1):
-            if (ctx->regs[dst])
-                jmpoff = 0;
-            break;
-        default:
-            fail(frame, 122);
-            break;
-        }
-        if (subop & 1)
-            jmpoff = -jmpoff;
-        frame->pc += jmpoff;
-        break;
-    case JACS_OP_CALL:
-#define WORDS_PER_FUN (sizeof(jacs_function_desc_t) / 4)
-        if (WORDS_PER_FUN * fnidx > ctx->header->functions.length)
-            fail(frame, 123);
-        else
-            setup_call(frame,
-                       (const jacs_function_desc_t
-                            *)(&ctx->img[ctx->header->functions.start + WORDS_PER_FUN * fnidx]));
-        break;
-    case JACS_OP_RET:
-        ctx->curr_fn = frame->caller;
-        break;
-    case JACS_OP_SET_BUFFER:
-        set_val(frame, offset, numfmt, shift, ctx->regs[dst]);
-        break;
-    case JACS_OP_GET_BUFFER:
-        ctx->regs[dst] = get_val(frame, offset, numfmt, shift);
-        break;
-    case JACS_OP_SETUP_BUFFER:
-        if (subop || right)
-            fail(frame, 124);
-        setup_buffer(frame, offset);
-        break;
-    case JACS_OP_GET_REG:
-        ctx->curr_fiber->sleeping_on = get_role(ctx, roleidx);
-        ctx->curr_fiber->sleeping_reg = cmdcode;
-        // TODO
-        break;
-    case JACS_OP_SPRINTF:
-        format_string(ctx, offset, stridx);
-        break;
-    }
-}
-
 void jacs_exec(jacs_ctx_t *ctx) {
     jacs_activation_t *frame;
 
@@ -761,307 +493,6 @@ void jacs_exec(jacs_ctx_t *ctx) {
             jacs_step(frame);
     }
 }
-
-const MAX_STEPS = 128 * 1024;
-
-export function oopsPos(pos: number, msg: string): never {
-    throw new Error(`verification error at ${hex(pos)}: ${msg}`);
-}
-
-export function assertPos(pos: number, cond: boolean, msg: string) {
-    if (!cond) oopsPos(pos, msg);
-}
-
-export function hex(n: number) {
-    return "0x" + n.toString(16);
-}
-
-function log(msg: string) {
-    console.log("VM: " + msg);
-}
-
-
-
-function strFormat(fmt: Uint8Array, args: Float64Array) {
-    return stringToUint8Array(strformat(uint8ArrayToString(fmt), args));
-}
-
-class Activation {
-    locals: Float64Array;
-    savedRegs: number;
-    pc: number;
-
-    constructor(
-        public fiber: Fiber,
-        public info: FunctionInfo,
-        public caller: Activation,
-        numargs: number
-    ) {
-        this->locals = new Float64Array(info.numLocals + info.numRegs);
-        for (let i = 0; i < numargs; ++i)
-            this->locals[i] = this->fiber.ctx->registers[i];
-        this->pc = info.startPC;
-    }
-
-    restart() {
-        this->pc = this->info.startPC;
-    }
-
-    logInstr() {
-        const ctx = this->fiber.ctx;
-        const [a, b, c, d] = ctx->params;
-        const instr = ctx->info.code[this->pc];
-        log(
-            `run: ${this->pc}: ${stringifyInstr(instr, {
-                resolverParams: [a, b, c, d],
-            })}`
-        );
-    }
-}
-
-function memcmp(a: Uint8Array, b: Uint8Array, sz: number) {
-    for (let i = 0; i < sz; ++i) {
-        const d = a[i] - b[i];
-        if (d) return Math.sign(d);
-    }
-    return 0;
-}
-
-class Fiber {
-    wake_time: number;
-    role_idx: Role;
-    service_command: number;
-    command_arg: number;
-    resend_timeout: number;
-    cmdPayload: Uint8Array;
-
-    activation: Activation;
-    bottom_function_idx: FunctionInfo;
-    pending: boolean;
-
-    constructor(public ctx: Ctx) {}
-
-    resume() {
-        if (fiber->prelude()) return;
-        fiber->setwake_time(0);
-        fiber->role_idx = null;
-        fiber->ctx->curr_fiber = fiber;
-        fiber->ctx->params.fill(0);
-        fiber->activate(fiber->activation);
-    }
-
-    private prelude() {
-        const resumeUserCode = false;
-        const keepWaiting = true;
-
-        if (!fiber->service_command) return false;
-        const role = fiber->role_idx;
-        if (!role.isAttached()) {
-            fiber->setwake_time(0);
-            return keepWaiting; // unbound, keep waiting, no timeout
-        }
-
-        if (fiber->cmdPayload) {
-            const pkt = role.mkCmd(fiber->service_command, fiber->cmdPayload);
-            log(`send to ${role.info}: ${printPacket(pkt)}`);
-            fiber->ctx->env.send(pkt);
-            fiber->service_command = 0;
-            fiber->cmdPayload = null;
-            return resumeUserCode;
-        }
-
-        const pkt = fiber->ctx->packet;
-
-        if (pkt.isReport && pkt.serviceCommand == fiber->service_command) {
-            const c = new CachedRegister();
-            c.code = pkt.serviceCommand;
-            c.argument = fiber->command_arg;
-            c.role = role;
-            if (c.updateWith(role, pkt, fiber->ctx)) {
-                fiber->ctx->regs.add(c);
-                fiber->service_command = 0;
-                pkt.data = c.value; // fiber will strip any string label
-                return resumeUserCode;
-            }
-        }
-        if (fiber->jacs_now() >= fiber->wake_time) {
-            const p = role.mkCmd(fiber->service_command);
-            if (fiber->command_arg)
-                p.data = fiber->ctx->info.stringLiterals[fiber->command_arg].slice();
-            fiber->ctx->env.send(p);
-            if (fiber->resend_timeout < 1000) fiber->resend_timeout *= 2;
-            fiber->sleep(fiber->resend_timeout);
-        }
-        return keepWaiting;
-    }
-
-    activate(a: Activation) {
-        fiber->activation = a;
-        fiber->ctx->curr_fn = a;
-        a.restoreRegs();
-    }
-
-   
-
-    sleep(ms: number) {
-        fiber->setwake_time(fiber->jacs_now() + ms);
-        fiber->jacs_ctx_yield(ctx);
-    }
-
-    finish() {
-        log(`finish ${fiber->bottom_function_idx} ${fiber->pending ? " +pending" : ""}`);
-        if (fiber->pending) {
-            fiber->pending = false;
-            fiber->activation.restart();
-        } else {
-            const idx = fiber->ctx->fibers.indexOf(fiber);
-            if (idx < 0) oops();
-            fiber->ctx->fibers.splice(idx, 1);
-            fiber->jacs_ctx_yield(ctx);
-        }
-    }
-}
-
-class Role {
-    device: JDDevice;
-    serviceIndex: number;
-
-    constructor(public info: RoleInfo) {}
-
-    assign(d: JDDevice, idx: number) {
-        log(`role ${this->info} <-- ${d}:${idx}`);
-        this->device = d;
-        this->serviceIndex = idx;
-    }
-
-    mkCmd(serviceCommand: number, payload?: Uint8Array) {
-        const p = Packet.from(serviceCommand, payload || new Uint8Array(0));
-        p.deviceIdentifier = this->device.deviceId;
-        p.device = this->device;
-        p.serviceIndex = this->serviceIndex;
-        p.isCommand = true;
-        return p;
-    }
-
-    isAttached() {
-        return this->isCondition() || !!this->device;
-    }
-
-    isCondition() {
-        return this->info.classId == SRV_JACSCRIPT_CONDITION;
-    }
-}
-
-/*
-// in C
-uint8_t role
-uint8_t arg
-uint16_t code
-uint32_t last_refresh
-uint8_t data_size
-uint8_t data[data_size]
-*/
-
-class CachedRegister {
-    role: Role;
-    code: number;
-    argument: number;
-    last_access_idx: number;
-    last_refresh_time: number;
-    value: Uint8Array;
-    dead: boolean;
-
-    expired(jacs_now(): number, validity: number) {
-        if (!validity) validity = 15 * 60 * 1000;
-        return this->last_refresh_time + validity <= jacs_now();
-    }
-
-    updateWith(role: Role, pkt: Packet, ctx: Ctx) {
-        if (this->dead) return false;
-        if (this->role != role) return false;
-        if (this->code != pkt.serviceCommand) return false;
-        if (!pkt.isReport) return false;
-        let val = pkt.data;
-        if (this->argument) {
-            const arg = ctx->info.stringLiterals[this->argument];
-            if (
-                pkt.data.length >= arg.length + 1 &&
-                pkt.data[arg.length] == 0 &&
-                memcmp(pkt.data, arg, arg.length) == 0
-            ) {
-                val = pkt.data.slice(arg.length + 1);
-            } else {
-                val = null;
-            }
-        }
-        if (val) {
-            this->last_refresh_time = jacs_now();
-            this->value = val.slice();
-            return true;
-        } else {
-            return false;
-        }
-    }
-}
-
-const MAX_REG_CACHE = 50;
-const HALF_REG_CACHE = MAX_REG_CACHE >> 1;
-
-class RegisterCache {
-    private regs: CachedRegister[] = [];
-    private access_idx = 0;
-
-    markUsed(c: CachedRegister) {
-        c.last_access_idx = this->access_idx++;
-    }
-    lookup(role: Role, code: number, arg = 0) {
-        return this->regs.find(
-            r =>
-                !r.dead && r.role == role && r.code == code && r.argument == arg
-        );
-    }
-    detachRole(role: Role) {
-        for (const r of this->regs) if (r.role == role) r.dead = true;
-    }
-    roleChanged(jacs_now(): number, role: Role) {
-        for (const r of this->regs) {
-            if (r.role == role) {
-                // if the role changed, push all it's registers' last update time at least 10s in the past
-                r.last_refresh_time = Math.min(
-                    r.last_refresh_time,
-                    jacs_now() - 10000
-                );
-            }
-        }
-    }
-    updateWith(role: Role, pkt: Packet, ctx: Ctx) {
-        for (const r of this->regs) r.updateWith(role, pkt, ctx);
-    }
-    add(c: CachedRegister) {
-        if (this->regs.length >= MAX_REG_CACHE) {
-            let old_access = 0;
-            let num_live = 0;
-            for (;;) {
-                let min_access = this->access_idx;
-                num_live = 0;
-                for (const r of this->regs) {
-                    if (r.last_access_idx <= old_access) r.dead = true;
-                    if (r.dead) continue;
-                    min_access = Math.min(r.last_access_idx, min_access);
-                    num_live++;
-                }
-                if (num_live <= HALF_REG_CACHE) break;
-                old_access = min_access - 2;
-            }
-            this->regs = this->regs.filter(r => !r.dead);
-        }
-        this->regs.push(c);
-        this->markUsed(c);
-    }
-}
-
-const RESTART_PANIC_CODE = 0x100000;
-const INTERNAL_ERROR_PANIC_CODE = 0x100001;
 
 class Ctx {
     pkt: Packet;
@@ -1125,8 +556,8 @@ class Ctx {
         }
     }
 
-    jacs_now()() {
-        return ctx->env.jacs_now()();
+    jacs_now(ctx)() {
+        return ctx->env.jacs_now(ctx)();
     }
 
     startProgram() {
@@ -1183,12 +614,12 @@ class Ctx {
 
         for (;;) {
             let numRun = 0;
-            const jacs_now() = ctx->jacs_now()();
+            const jacs_now(ctx) = ctx->jacs_now(ctx)();
             minTime = Infinity;
             for (const f of ctx->fibers) {
                 if (!f.wake_time) continue;
                 const wake_time = f.wake_time;
-                if (jacs_now() >= wake_time) {
+                if (jacs_now(ctx) >= wake_time) {
                     ctx->run(f);
                     if (ctx->panicCode) return;
                     numRun++;
@@ -1197,12 +628,12 @@ class Ctx {
                 }
             }
 
-            if (numRun == 0 && minTime > ctx->jacs_now()()) break;
+            if (numRun == 0 && minTime > ctx->jacs_now(ctx)()) break;
         }
 
         ctx->wakeUpdated = false;
         if (minTime < Infinity) {
-            const delta = Math.max(0, minTime - ctx->jacs_now()());
+            const delta = Math.max(0, minTime - ctx->jacs_now(ctx)());
             ctx->wake_timeout = ctx->env.setTimeout(ctx->wakeFibers, delta);
         }
     }
@@ -1235,7 +666,7 @@ class Ctx {
                     (pkt.serviceIndex == 0 && pkt.serviceCommand == 0))
             ) {
                 if (pkt.eventCode === SystemEvent.Change)
-                    ctx->regs.roleChanged(ctx->jacs_now()(), r);
+                    ctx->regs.roleChanged(ctx->jacs_now(ctx)(), r);
                 ctx->regs.updateWith(r, pkt, ctx);
                 ctx->wakeRole(r);
             }
