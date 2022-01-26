@@ -33,7 +33,6 @@ void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numar
 
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time) {
     fiber->wake_time = time;
-    fiber->ctx->wake_times_updated = 1;
 }
 
 void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time) {
@@ -54,7 +53,6 @@ static void free_fiber(jacs_fiber_t *fiber) {
         f->next = fiber->next;
     }
     jd_free(fiber);
-    jacs_fiber_yield(ctx);
 }
 
 void jacs_fiber_return_from_call(jacs_activation_t *act) {
@@ -68,6 +66,7 @@ void jacs_fiber_return_from_call(jacs_activation_t *act) {
             act->pc = act->func->start >> 1;
         } else {
             DMESG("free fiber %d", fiber->bottom_function_idx);
+            jacs_fiber_yield(fiber->ctx);
             free_fiber(fiber);
         }
     }
@@ -114,6 +113,8 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
     if (ctx->error_code)
         return;
 
+    jacs_fiber_sync_now(ctx);
+
     if (!jacs_jd_should_run(fiber))
         return;
 
@@ -144,5 +145,41 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
         }
         ctx->error_code = code;
     }
-    // clear wake timer?
+    jacs_fiber_yield(ctx);
+}
+
+void jacs_fiber_sync_now(jacs_ctx_t *ctx) {
+    now = (uint32_t)tim_get_micros();
+    uint32_t new_delta = now - ctx->_prev_us;
+    // this may make sense on M0
+    if (new_delta < 2 * 1024) {
+        while (new_delta > 1000) {
+            new_delta -= 1000;
+            ctx->_now++;
+        }
+    } else {
+        ctx->_now += new_delta / 1000;
+        new_delta %= 1000;
+    }
+    ctx->_prev_us = now - new_delta;
+}
+
+static int jacs_fiber_wake_some(jacs_ctx_t *ctx) {
+    if (ctx->error_code)
+        return 0;
+    uint32_t now = jacs_now(ctx);
+    for (jacs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
+        if (fiber->wake_time && fiber->wake_time <= now) {
+            jacs_jd_reset_packet(ctx);
+            jacs_fiber_run(fiber);
+            // we can't continue - the fiber might be gone by now
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void jacs_fiber_poke(jacs_ctx_t *ctx) {
+    while (jacs_fiber_wake_some(ctx))
+        ;
 }

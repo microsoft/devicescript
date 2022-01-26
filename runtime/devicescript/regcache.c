@@ -66,3 +66,24 @@ jacs_regcache_entry_t *jacs_regcache_lookup(jacs_regcache_t *cache, unsigned rol
     }
     return NULL;
 }
+
+void jacs_regcache_age(jacs_regcache_t *cache, unsigned role_idx, uint32_t min_time) {
+    for (unsigned i = 0; i < JACS_REGCACHE_NUM_ENTRIES; ++i) {
+        jacs_regcache_entry_t *q = &cache->entries[i];
+        if (q->role_idx == role_idx && q->last_refresh_time > min_time)
+            q->last_refresh_time = min_time;
+    }
+}
+
+jacs_regcache_entry_t *jacs_regcache_next(jacs_regcache_t *cache, unsigned role_idx,
+                                          unsigned service_command, jacs_regcache_entry_t *prev) {
+    jacs_regcache_entry_t *end = &cache->entries[JACS_REGCACHE_NUM_ENTRIES];
+    if (!prev)
+        prev = &cache->entries[0];
+    while (prev < end) {
+        if (prev->service_command == service_command && prev->role_idx == role_idx)
+            return prev;
+        prev++;
+    }
+    return NULL;
+}

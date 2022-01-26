@@ -52,8 +52,6 @@ typedef struct jacs_ctx {
 
     uint16_t error_code;
 
-    uint8_t wake_times_updated;
-
     jacs_img_t img;
 
     jacs_activation_t *curr_fn;
@@ -62,6 +60,7 @@ typedef struct jacs_ctx {
     jacs_fiber_t *fibers;
     jacs_role_t *roles;
 
+    uint32_t _prev_us;
     uint32_t _now;
 
     union {
@@ -100,6 +99,8 @@ void jacs_jd_wake_role(jacs_ctx_t *ctx, unsigned role_idx);
 void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code);
 void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg);
+void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_packet_t *pkt);
+void jacs_jd_reset_packet(jacs_ctx_t *ctx);
 
 // fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
@@ -109,6 +110,8 @@ void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numar
 void jacs_fiber_return_from_call(jacs_activation_t *act);
 void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op);
 void jacs_fiber_run(jacs_fiber_t *fiber);
+void jacs_fiber_poke(jacs_ctx_t *ctx);
+void jacs_fiber_sync_now(jacs_ctx_t *ctx);
 
 // step.c
 void jacs_act_step(jacs_activation_t *frame);

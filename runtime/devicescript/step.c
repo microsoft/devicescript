@@ -556,10 +556,6 @@ class Ctx {
         }
     }
 
-    jacs_now(ctx)() {
-        return ctx->env.jacs_now(ctx)();
-    }
-
     startProgram() {
         ctx->startFiber(ctx->info.functions[0], 0, JACS_OPCALL_BG);
         ctx->pokeFibers();
@@ -574,28 +570,6 @@ class Ctx {
         if (ctx->wake_timeout !== undefined) {
             ctx->env.clearTimeout(ctx->wake_timeout);
             ctx->wake_timeout = undefined;
-        }
-    }
-
-    private run(f: Fiber) {
-        if (ctx->panicCode) return;
-        try {
-            f.resume();
-            let maxSteps = MAX_STEPS;
-            while (ctx->curr_fn) {
-                ctx->curr_fn.step();
-                if (!--maxSteps) throw new Error("execution timeout");
-            }
-        } catch (e) {
-            if (ctx->panicCode) {
-                ctx->onPanic(ctx->panicCode);
-            } else {
-                try {
-                    // ctx will set ctx->panicCode, so we don't run any code anymore
-                    ctx->panic(INTERNAL_ERROR_PANIC_CODE);
-                } catch {}
-                ctx->onError(e);
-            }
         }
     }
 
@@ -638,52 +612,8 @@ class Ctx {
         }
     }
 
-    private wakeRole(role: Role) {
-        for (const f of ctx->fibers)
-            if (f.role_idx == role) {
-                if (false)
-                    log(
-                        `wake ${f.bottom_function_idx} r=${
-                            role.info
-                        } pkt=${ctx->packet.toString()}`
-                    );
-                ctx->run(f);
-            }
-    }
 
-    private processPkt(pkt: Packet) {
-        if (ctx->panicCode) return;
-        if (pkt.isRepeatedEvent) return;
 
-        ctx->packet = pkt;
-        if (false && pkt.serviceIndex != 0)
-            console.log(new Date(), "process: " + printPacket(pkt));
-        for (let idx = 0; idx < ctx->roles.length; ++idx) {
-            const r = ctx->roles[idx];
-            if (
-                r.device == pkt.device &&
-                (r.serviceIndex == pkt.serviceIndex ||
-                    (pkt.serviceIndex == 0 && pkt.serviceCommand == 0))
-            ) {
-                if (pkt.eventCode === SystemEvent.Change)
-                    ctx->regs.roleChanged(ctx->jacs_now(ctx)(), r);
-                ctx->regs.updateWith(r, pkt, ctx);
-                ctx->wakeRole(r);
-            }
-        }
-        ctx->pokeFibers();
-    }
-
-    doYield() {
-        const f = ctx->curr_fiber;
-        ctx->curr_fiber = null;
-        ctx->curr_fn = null;
-        return f;
-    }
-
-    private pktLabel() {
-        return fromUTF8(uint8ArrayToString(ctx->packet.data));
-    }
 }
 
 export enum RunnerState {
