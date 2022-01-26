@@ -450,12 +450,12 @@ void jacs_act_step(jacs_activation_t *frame) {
             jacs_ctx_yield(ctx);
             break;
         case JACS_OPASYNC_SLEEP_MS: // A-timeout in ms
-            jacs_fiber_set_wake_time(frame->fiber, now + a);
+            jacs_fiber_set_wake_time(frame->fiber, jacs_now() + a);
             jacs_ctx_yield(ctx);
             break;
         case JACS_OPASYNC_SLEEP_R0:
             jacs_fiber_set_wake_time(frame->fiber,
-                                     now + (uint32_t)(ctx->registers[0] * 1000 + 0.5));
+                                     jacs_now() + (uint32_t)(ctx->registers[0] * 1000 + 0.5));
             jacs_ctx_yield(ctx);
             break;
         case JACS_OPASYNC_SEND_CMD: // A-role, B-code
@@ -884,7 +884,7 @@ class Fiber {
                 return resumeUserCode;
             }
         }
-        if (fiber->now >= fiber->wake_time) {
+        if (fiber->jacs_now() >= fiber->wake_time) {
             const p = role.mkCmd(fiber->service_command);
             if (fiber->command_arg)
                 p.data = fiber->ctx->info.stringLiterals[fiber->command_arg].slice();
@@ -904,7 +904,7 @@ class Fiber {
    
 
     sleep(ms: number) {
-        fiber->setwake_time(fiber->now + ms);
+        fiber->setwake_time(fiber->jacs_now() + ms);
         fiber->jacs_ctx_yield(ctx);
     }
 
@@ -971,9 +971,9 @@ class CachedRegister {
     value: Uint8Array;
     dead: boolean;
 
-    expired(now: number, validity: number) {
+    expired(jacs_now(): number, validity: number) {
         if (!validity) validity = 15 * 60 * 1000;
-        return this->last_refresh_time + validity <= now;
+        return this->last_refresh_time + validity <= jacs_now();
     }
 
     updateWith(role: Role, pkt: Packet, ctx: Ctx) {
@@ -995,7 +995,7 @@ class CachedRegister {
             }
         }
         if (val) {
-            this->last_refresh_time = now;
+            this->last_refresh_time = jacs_now();
             this->value = val.slice();
             return true;
         } else {
@@ -1023,13 +1023,13 @@ class RegisterCache {
     detachRole(role: Role) {
         for (const r of this->regs) if (r.role == role) r.dead = true;
     }
-    roleChanged(now: number, role: Role) {
+    roleChanged(jacs_now(): number, role: Role) {
         for (const r of this->regs) {
             if (r.role == role) {
                 // if the role changed, push all it's registers' last update time at least 10s in the past
                 r.last_refresh_time = Math.min(
                     r.last_refresh_time,
-                    now - 10000
+                    jacs_now() - 10000
                 );
             }
         }
@@ -1125,8 +1125,8 @@ class Ctx {
         }
     }
 
-    now() {
-        return ctx->env.now();
+    jacs_now()() {
+        return ctx->env.jacs_now()();
     }
 
     startProgram() {
@@ -1183,12 +1183,12 @@ class Ctx {
 
         for (;;) {
             let numRun = 0;
-            const now = ctx->now();
+            const jacs_now() = ctx->jacs_now()();
             minTime = Infinity;
             for (const f of ctx->fibers) {
                 if (!f.wake_time) continue;
                 const wake_time = f.wake_time;
-                if (now >= wake_time) {
+                if (jacs_now() >= wake_time) {
                     ctx->run(f);
                     if (ctx->panicCode) return;
                     numRun++;
@@ -1197,12 +1197,12 @@ class Ctx {
                 }
             }
 
-            if (numRun == 0 && minTime > ctx->now()) break;
+            if (numRun == 0 && minTime > ctx->jacs_now()()) break;
         }
 
         ctx->wakeUpdated = false;
         if (minTime < Infinity) {
-            const delta = Math.max(0, minTime - ctx->now());
+            const delta = Math.max(0, minTime - ctx->jacs_now()());
             ctx->wake_timeout = ctx->env.setTimeout(ctx->wakeFibers, delta);
         }
     }
@@ -1235,7 +1235,7 @@ class Ctx {
                     (pkt.serviceIndex == 0 && pkt.serviceCommand == 0))
             ) {
                 if (pkt.eventCode === SystemEvent.Change)
-                    ctx->regs.roleChanged(ctx->now(), r);
+                    ctx->regs.roleChanged(ctx->jacs_now()(), r);
                 ctx->regs.updateWith(r, pkt, ctx);
                 ctx->wakeRole(r);
             }

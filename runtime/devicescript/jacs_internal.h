@@ -1,8 +1,11 @@
 #pragma once
 
 #include "jacs_exec.h"
-#include "jacs_regcache.h"
 #include <assert.h>
+#include "jacdac/dist/c/jacscriptcondition.h"
+
+// this can't be more than a week; unit = ms
+#define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)
 
 typedef struct jacs_activation jacs_activation_t;
 
@@ -29,7 +32,7 @@ typedef struct jacs_fiber {
     uint16_t bottom_function_idx; // the id of function at the bottom of the stack
 
     uint32_t wake_time;
-    uint32_t resend_timeout;
+    uint16_t resend_timeout;
 
     jacs_activation_t *activation;
     struct jacs_ctx *ctx;
@@ -78,16 +81,20 @@ static inline jd_device_service_t *jacs_ctx_role_binding(jacs_ctx_t *ctx,
 
 #define oops() assert(false)
 
-void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, uint32_t time);
+void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
+void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time);
 void jacs_ctx_yield(jacs_ctx_t *ctx);
-void jacs_ctx_send_cmd(jacs_ctx_t *ctx, uint16_t role_idx, uint16_t code);
-void jacs_ctx_get_jd_register(jacs_ctx_t *ctx, uint16_t role_idx, uint16_t code, uint32_t timeout,
-                              uint16_t arg);
+void jacs_ctx_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code);
+void jacs_ctx_get_jd_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
+                              unsigned arg);
 void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numargs);
 void jacs_act_return_from_call(jacs_activation_t *act);
 void jacs_ctx_start_fiber(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op);
 void jacs_ctx_panic(jacs_ctx_t *ctx, unsigned code);
 void jacs_act_activate(jacs_activation_t *act);
+void jacs_wake_role(jacs_ctx_t *ctx, unsigned role_idx);
 
 void jacs_act_step(jacs_activation_t *frame);
 void jacs_act_restore_regs(jacs_activation_t *act);
+
+#include "jacs_regcache.h"
