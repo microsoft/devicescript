@@ -9,6 +9,7 @@
 // this can't be more than a week; unit = ms
 #define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)
 #define JACS_MAX_STEPS (128 * 1024)
+#define JACS_NO_ROLE 0xffff
 
 typedef struct jacs_activation jacs_activation_t;
 
@@ -91,19 +92,24 @@ static inline jd_device_service_t *jacs_ctx_role_binding(jacs_ctx_t *ctx,
 static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
     return ctx->_now;
 }
+void jacs_panic(jacs_ctx_t *ctx, unsigned code);
 
+// jdiface.c
+bool jacs_jd_should_run(jacs_fiber_t *fiber);
+void jacs_jd_wake_role(jacs_ctx_t *ctx, unsigned role_idx);
+void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code);
+void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
+                          unsigned arg);
+
+// fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time);
-void jacs_ctx_yield(jacs_ctx_t *ctx);
-void jacs_ctx_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code);
-void jacs_ctx_get_jd_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
-                              unsigned arg);
+void jacs_fiber_yield(jacs_ctx_t *ctx);
 void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numargs);
-void jacs_act_return_from_call(jacs_activation_t *act);
-void jacs_ctx_start_fiber(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op);
-void jacs_ctx_panic(jacs_ctx_t *ctx, unsigned code);
-void jacs_act_activate(jacs_activation_t *act);
-void jacs_wake_role(jacs_ctx_t *ctx, unsigned role_idx);
+void jacs_fiber_return_from_call(jacs_activation_t *act);
+void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op);
+void jacs_fiber_run(jacs_fiber_t *fiber);
 
+// step.c
 void jacs_act_step(jacs_activation_t *frame);
 void jacs_act_restore_regs(jacs_activation_t *act);

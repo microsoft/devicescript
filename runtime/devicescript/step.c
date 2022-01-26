@@ -379,7 +379,7 @@ void jacs_act_step(jacs_activation_t *frame) {
         case JACS_OPCALL_BG:
         case JACS_OPCALL_BG_MAX1:
         case JACS_OPCALL_BG_MAX1_PEND1:
-            jacs_ctx_start_fiber(ctx, b, subop, arg8 >> 6);
+            jacs_fiber_start(ctx, b, subop, arg8 >> 6);
             break;
         default:
             oops();
@@ -390,7 +390,7 @@ void jacs_act_step(jacs_activation_t *frame) {
         a = (a << 4) | subop;
         switch (arg8) {
         case JACS_OPSYNC_RETURN:
-            jacs_act_return_from_call(frame);
+            jacs_fiber_return_from_call(frame);
             break;
         case JACS_OPSYNC_SETUP_BUFFER: // A-size
             ctx->packet.service_size = a;
@@ -432,7 +432,7 @@ void jacs_act_step(jacs_activation_t *frame) {
             ctx->registers[0] = do_opmath2(a, ctx->registers[0], ctx->registers[1]);
             break;
         case JACS_OPSYNC_PANIC:
-            jacs_ctx_panic(ctx, a);
+            jacs_panic(ctx, a);
             break;
         default:
             oops();
@@ -447,25 +447,25 @@ void jacs_act_step(jacs_activation_t *frame) {
         case JACS_OPASYNC_WAIT_ROLE:
             frame->fiber->role_idx = a;
             jacs_fiber_set_wake_time(frame->fiber, 0);
-            jacs_ctx_yield(ctx);
+            jacs_fiber_yield(ctx);
             break;
         case JACS_OPASYNC_SLEEP_MS: // A-timeout in ms
             jacs_fiber_set_wake_time(frame->fiber, jacs_now(ctx) + a);
-            jacs_ctx_yield(ctx);
+            jacs_fiber_yield(ctx);
             break;
         case JACS_OPASYNC_SLEEP_R0:
             jacs_fiber_set_wake_time(frame->fiber,
                                      jacs_now(ctx) + (uint32_t)(ctx->registers[0] * 1000 + 0.5));
-            jacs_ctx_yield(ctx);
+            jacs_fiber_yield(ctx);
             break;
         case JACS_OPASYNC_SEND_CMD: // A-role, B-code
-            jacs_ctx_send_cmd(ctx, a, b);
+            jacs_jd_send_cmd(ctx, a, b);
             break;
         case JACS_OPASYNC_QUERY_REG: // A-role, B-code, C-timeout
-            jacs_ctx_get_jd_register(ctx, a, JD_GET(b), c, 0);
+            jacs_jd_get_register(ctx, a, JD_GET(b), c, 0);
             break;
         case JACS_OPASYNC_QUERY_IDX_REG:
-            jacs_ctx_get_jd_register(ctx, a, b & 0xff, c, b >> 8);
+            jacs_jd_get_register(ctx, a, b & 0xff, c, b >> 8);
             break;
         default:
             oops();
