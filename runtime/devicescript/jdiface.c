@@ -159,7 +159,7 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
         DMESG("send pkt");
         fiber->service_command = 0;
         jd_free(fiber->payload);
-        fiber->payload = 0;
+        fiber->payload = NULL;
         return RESUME_USER_CODE;
     }
 

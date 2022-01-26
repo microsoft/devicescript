@@ -32,3 +32,4 @@ jacs_regcache_entry_t *jacs_regcache_alloc(jacs_regcache_t *cache, unsigned role
 void jacs_regcache_age(jacs_regcache_t *cache, unsigned role_idx, uint32_t min_time);
 jacs_regcache_entry_t *jacs_regcache_next(jacs_regcache_t *cache, unsigned role_idx,
                                           unsigned service_command, jacs_regcache_entry_t *prev);
+void jacs_regcache_free_all(jacs_regcache_t *cache);

@@ -7,6 +7,12 @@ void jacs_regcache_free(jacs_regcache_t *cache, jacs_regcache_entry_t *q) {
     q->service_command = 0;
 }
 
+void jacs_regcache_free_all(jacs_regcache_t *cache) {
+    for (unsigned i = 0; i < JACS_REGCACHE_NUM_ENTRIES; ++i) {
+        jacs_regcache_free(cache, &cache->entries[i]);
+    }
+}
+
 void jacs_regcache_mark_used(jacs_regcache_t *cache, jacs_regcache_entry_t *q) {
     unsigned idx = cache->latest_idx;
     if (q == &cache->entries[idx])

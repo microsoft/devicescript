@@ -48,6 +48,8 @@ typedef struct jacs_fiber {
     struct jacs_ctx *ctx;
 } jacs_fiber_t;
 
+#define JACS_CTX_FLAG_BUSY 0x0001
+
 struct jacs_ctx {
     value_t registers[JACS_NUM_REGS];
     union {
@@ -57,6 +59,7 @@ struct jacs_ctx {
     value_t *globals;
 
     uint16_t error_code;
+    uint16_t flags;
 
     jacs_img_t img;
 
@@ -122,6 +125,7 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
 void jacs_fiber_run(jacs_fiber_t *fiber);
 void jacs_fiber_poke(jacs_ctx_t *ctx);
 void jacs_fiber_sync_now(jacs_ctx_t *ctx);
+void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 
 // step.c
 void jacs_act_step(jacs_activation_t *frame);
