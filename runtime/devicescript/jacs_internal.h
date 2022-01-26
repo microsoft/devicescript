@@ -4,6 +4,8 @@
 #include <assert.h>
 #include "jacdac/dist/c/jacscriptcondition.h"
 
+#include "jacs_regcache.h"
+
 // this can't be more than a week; unit = ms
 #define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)
 
@@ -62,6 +64,8 @@ typedef struct jacs_ctx {
         jd_frame_t frame;
         jd_packet_t packet;
     };
+
+    jacs_regcache_t regcache;
 } jacs_ctx_t;
 
 struct jacs_activation {
@@ -96,5 +100,3 @@ void jacs_wake_role(jacs_ctx_t *ctx, unsigned role_idx);
 
 void jacs_act_step(jacs_activation_t *frame);
 void jacs_act_restore_regs(jacs_activation_t *act);
-
-#include "jacs_regcache.h"

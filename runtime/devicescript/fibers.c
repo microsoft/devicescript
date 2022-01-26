@@ -113,14 +113,14 @@ void jacs_ctx_get_jd_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code,
                               unsigned arg) {
     jd_device_service_t *serv = ctx->roles[role_idx].service;
     if (serv != NULL) {
-        jacs_regcache_entry_t *cached = jacs_regcache_lookup(ctx, role_idx, code, arg);
+        jacs_regcache_entry_t *cached = jacs_regcache_lookup(&ctx->regcache, role_idx, code, arg);
         if (cached != NULL) {
             if (!timeout || timeout > JACS_MAX_REG_VALIDITY)
                 timeout = JACS_MAX_REG_VALIDITY;
             if (cached->last_refresh_time + timeout < jacs_now()) {
-                jacs_regcache_free(cached);
+                jacs_regcache_free(&ctx->regcache, cached);
             } else {
-                jacs_regcache_mark_used(cached);
+                jacs_regcache_mark_used(&ctx->regcache, cached);
                 memset(&ctx->packet, 0, sizeof(ctx->packet));
                 ctx->packet.service_command = cached->service_command;
                 ctx->packet.service_size = cached->resp_size;
@@ -144,9 +144,9 @@ void jacs_ctx_get_jd_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code,
 void jacs_ctx_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     if (JD_IS_SET(code)) {
         jacs_regcache_entry_t *cached = jacs_regcache_lookup(
-            ctx, role_idx, (code & ~JD_CMD_SET_REGISTER) | JD_CMD_GET_REGISTER, 0);
+            &ctx->regcache, role_idx, (code & ~JD_CMD_SET_REGISTER) | JD_CMD_GET_REGISTER, 0);
         if (cached != NULL)
-            jacs_regcache_free(cached);
+            jacs_regcache_free(&ctx->regcache, cached);
     }
 
     const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, role_idx);
