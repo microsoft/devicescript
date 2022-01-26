@@ -450,13 +450,10 @@ void jacs_act_step(jacs_activation_t *frame) {
             jacs_fiber_yield(ctx);
             break;
         case JACS_OPASYNC_SLEEP_MS: // A-timeout in ms
-            jacs_fiber_set_wake_time(frame->fiber, jacs_now(ctx) + a);
-            jacs_fiber_yield(ctx);
+            jacs_fiber_sleep(frame->fiber, a);
             break;
         case JACS_OPASYNC_SLEEP_R0:
-            jacs_fiber_set_wake_time(frame->fiber,
-                                     jacs_now(ctx) + (uint32_t)(ctx->registers[0] * 1000 + 0.5));
-            jacs_fiber_yield(ctx);
+            jacs_fiber_sleep(frame->fiber, (uint32_t)(ctx->registers[0] * 1000 + 0.5));
             break;
         case JACS_OPASYNC_SEND_CMD: // A-role, B-code
             jacs_jd_send_cmd(ctx, a, b);
@@ -560,59 +557,6 @@ class Ctx {
         ctx->startFiber(ctx->info.functions[0], 0, JACS_OPCALL_BG);
         ctx->pokeFibers();
     }
-
-    wake_timesUpdated() {
-        ctx->wakeUpdated = true;
-    }
-
-
-    private clearwake_timer() {
-        if (ctx->wake_timeout !== undefined) {
-            ctx->env.clearTimeout(ctx->wake_timeout);
-            ctx->wake_timeout = undefined;
-        }
-    }
-
-    private pokeFibers() {
-        if (ctx->wakeUpdated) ctx->wakeFibers();
-    }
-
-    private wakeFibers() {
-        if (ctx->panicCode) return;
-
-        let minTime = 0;
-
-        ctx->clearwake_timer();
-
-        ctx->packet = Packet.onlyHeader(0xffff);
-
-        for (;;) {
-            let numRun = 0;
-            const jacs_now(ctx) = ctx->jacs_now(ctx)();
-            minTime = Infinity;
-            for (const f of ctx->fibers) {
-                if (!f.wake_time) continue;
-                const wake_time = f.wake_time;
-                if (jacs_now(ctx) >= wake_time) {
-                    ctx->run(f);
-                    if (ctx->panicCode) return;
-                    numRun++;
-                } else {
-                    minTime = Math.min(wake_time, minTime);
-                }
-            }
-
-            if (numRun == 0 && minTime > ctx->jacs_now(ctx)()) break;
-        }
-
-        ctx->wakeUpdated = false;
-        if (minTime < Infinity) {
-            const delta = Math.max(0, minTime - ctx->jacs_now(ctx)());
-            ctx->wake_timeout = ctx->env.setTimeout(ctx->wakeFibers, delta);
-        }
-    }
-
-
 
 }
 

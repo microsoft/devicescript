@@ -1,10 +1,16 @@
 #pragma once
 
-#include "jacs_exec.h"
-#include <assert.h>
+#include "jacscript.h"
+
+#include "jd_protocol.h"
+#include "jd_client.h"
 #include "jacdac/dist/c/jacscriptcondition.h"
 
+#include "jacs_format.h"
+#include "jacs_img.h"
 #include "jacs_regcache.h"
+
+#include <assert.h>
 
 // this can't be more than a week; unit = ms
 #define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)
@@ -42,7 +48,7 @@ typedef struct jacs_fiber {
     struct jacs_ctx *ctx;
 } jacs_fiber_t;
 
-typedef struct jacs_ctx {
+struct jacs_ctx {
     value_t registers[JACS_NUM_REGS];
     union {
         uint16_t a, b, c, d;
@@ -69,7 +75,7 @@ typedef struct jacs_ctx {
     };
 
     jacs_regcache_t regcache;
-} jacs_ctx_t;
+};
 
 struct jacs_activation {
     jacs_activation_t *caller;
@@ -92,6 +98,10 @@ static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
     return ctx->_now;
 }
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
+
+// strformat.c
+size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
+                      size_t numargs);
 
 // jdiface.c
 bool jacs_jd_should_run(jacs_fiber_t *fiber);

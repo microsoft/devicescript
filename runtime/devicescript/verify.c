@@ -1,6 +1,4 @@
-#include "jacs_exec.h"
-
-#include <assert.h>
+#include "jacs_internal.h"
 
 STATIC_ASSERT(sizeof(jacs_img_header_t) == 64 + 6 * sizeof(jacs_img_section_t));
 

@@ -1,4 +1,4 @@
-#include "jacs_exec.h"
+#include "jacs_internal.h"
 
 #include <math.h>
 
