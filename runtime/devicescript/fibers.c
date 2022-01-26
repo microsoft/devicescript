@@ -29,6 +29,8 @@ void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numar
     // if fiber already activated, move the activation pointer
     if (fiber->activation)
         jacs_fiber_activate(callee);
+    else
+        fiber->activation = callee;
 }
 
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time) {
@@ -161,7 +163,7 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
         if (code == JACS_PANIC_REBOOT) {
             DMESG("RESTART requested");
         } else {
-            DMESG("PANIC %d at %x", code, ctx->curr_fn ? ctx->curr_fn->pc : 0);
+            DMESG("PANIC %d at pc=%d", code, ctx->curr_fn ? ctx->curr_fn->pc : 0);
         }
         ctx->error_code = code;
     }
@@ -192,7 +194,7 @@ static int jacs_fiber_wake_some(jacs_ctx_t *ctx) {
         if (fiber->wake_time && fiber->wake_time <= now) {
             jacs_jd_reset_packet(ctx);
             jacs_fiber_run(fiber);
-            // we can't continue - the fiber might be gone by now
+            // we can't continue with the fiber loop - the fiber might be gone by now
             return 1;
         }
     }

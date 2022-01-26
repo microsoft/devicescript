@@ -4,12 +4,12 @@
 
 #define JACS_NUM_REGS 16
 
-typedef float value_t;
+typedef double value_t;
 
 typedef struct jacs_img {
     union {
         const uint8_t *data;
-        const uint8_t *instructions;
+        const uint16_t *instructions;
         const jacs_img_header_t *header;
     };
 } jacs_img_t;
@@ -42,8 +42,10 @@ static inline const jacs_role_desc_t *jacs_img_get_role(const jacs_img_t *img, u
 }
 
 static inline value_t jacs_img_get_float(const jacs_img_t *img, uint32_t idx) {
-    return *(const value_t *)(img->data + img->header->float_literals.start +
-                              idx * sizeof(value_t));
+    double v;
+    memcpy(&v, img->data + img->header->float_literals.start + idx * sizeof(double),
+           sizeof(double));
+    return v;
 }
 
 static inline bool jacs_is_prefix_instr(uint16_t instr) {

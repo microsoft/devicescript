@@ -301,6 +301,8 @@ void jacs_act_step(jacs_activation_t *frame) {
 
     uint32_t instr = ctx->img.instructions[frame->pc++];
 
+    // DMESG("step %04x @ %d", instr, frame->pc - 1);
+
     uint32_t op = instr >> 12;
     uint32_t arg12 = instr & 0xfff;
     uint32_t arg10 = instr & 0x3ff;
@@ -469,6 +471,9 @@ void jacs_act_step(jacs_activation_t *frame) {
             break;
         }
         break;
+
+    default:
+        oops();
     }
 
     if (!jacs_is_prefix_instr(instr))

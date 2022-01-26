@@ -53,7 +53,9 @@ typedef struct jacs_fiber {
 struct jacs_ctx {
     value_t registers[JACS_NUM_REGS];
     union {
-        uint16_t a, b, c, d;
+        struct {
+            uint16_t a, b, c, d;
+        };
         uint16_t params[4];
     };
     value_t *globals;
