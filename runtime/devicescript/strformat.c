@@ -33,7 +33,7 @@ static void mycvt(NUMBER d, char *buf, int numdigits) {
     }
 
     if (isnan(d)) {
-        strcpy(buf, "NAN");
+        strcpy(buf, "NaN");
         return;
     }
 

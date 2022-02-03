@@ -8,6 +8,8 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
         if (cached != NULL) {
             if (!timeout || timeout > JACS_MAX_REG_VALIDITY)
                 timeout = JACS_MAX_REG_VALIDITY;
+            // DMESG("cached cmd=%x %d < %d", code, cached->last_refresh_time + timeout,
+            //      jacs_now(ctx));
             if (cached->last_refresh_time + timeout < jacs_now(ctx)) {
                 jacs_regcache_free(&ctx->regcache, cached);
             } else {
@@ -125,6 +127,7 @@ static jacs_regcache_entry_t *jacs_jd_update_regcache(jacs_ctx_t *ctx, unsigned 
     }
 
     memcpy(jacs_regcache_data(q), dp, resp_size);
+    q->last_refresh_time = jacs_now(ctx);
 
     return q;
 }
@@ -156,7 +159,7 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
         jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, fiber->payload,
                            fiber->payload_size);
         jd_send_pkt(&ctx->packet);
-        DMESG("send pkt");
+        DMESG("send pkt cmd=%x", fiber->service_command);
         fiber->service_command = 0;
         jd_free(fiber->payload);
         fiber->payload = NULL;
@@ -186,7 +189,7 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
 
         jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, argp, arglen);
         jd_send_pkt(&ctx->packet);
-        DMESG("(re)send pkt (%d)", fiber->resend_timeout);
+        DMESG("(re)send pkt cmd=%x", fiber->service_command);
 
         if (fiber->resend_timeout < 1000)
             fiber->resend_timeout *= 2;
