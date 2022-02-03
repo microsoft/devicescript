@@ -32,6 +32,11 @@ static void mycvt(NUMBER d, char *buf, int numdigits) {
         return;
     }
 
+    if (isnan(d)) {
+        strcpy(buf, "NAN");
+        return;
+    }
+
     if (numdigits < 4)
         numdigits = 4;
     int maxdigits = sizeof(NUMBER) == 4 ? 8 : 15;
