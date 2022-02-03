@@ -19,10 +19,6 @@
 
 typedef struct jacs_activation jacs_activation_t;
 
-typedef struct {
-    jd_device_service_t *service;
-} jacs_role_t;
-
 #define JACS_FIBER_FLAG_SLEEPING_ON_REG 0x01
 #define JACS_FIBER_FLAG_SLEEPING_ON_ROLE 0x02
 #define JACS_FIBER_FLAG_PENDING 0x04
@@ -69,7 +65,7 @@ struct jacs_ctx {
     jacs_fiber_t *curr_fiber;
 
     jacs_fiber_t *fibers;
-    jacs_role_t *roles;
+    jd_role_t **roles;
 
     uint32_t _prev_us;
     uint32_t _now;
@@ -111,7 +107,8 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
 void jacs_jd_process_pkt(jacs_ctx_t *ctx,  jd_device_service_t *serv, jd_packet_t *pkt);
 void jacs_jd_reset_packet(jacs_ctx_t *ctx);
 void jacs_jd_init_roles(jacs_ctx_t *ctx);
-void jacs_jd_device_destroyed(jacs_ctx_t *ctx, jd_device_t *dev);
+void jacs_jd_free_roles(jacs_ctx_t *ctx) ;
+void jacs_jd_role_changed(jacs_ctx_t *ctx, jd_role_t *role) ;
 
 // fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);

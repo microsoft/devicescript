@@ -1,9 +1,8 @@
 #include "jacs_internal.h"
-#include "jacdac/dist/c/rolemanager.h"
 
 void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg) {
-    jd_device_service_t *serv = ctx->roles[role_idx].service;
+    jd_device_service_t *serv = ctx->roles[role_idx]->service;
     if (serv != NULL) {
         jacs_regcache_entry_t *cached = jacs_regcache_lookup(&ctx->regcache, role_idx, code, arg);
         if (cached != NULL) {
@@ -67,10 +66,10 @@ static void jacs_jd_set_packet(jacs_ctx_t *ctx, unsigned role_idx, unsigned serv
     jd_packet_t *pkt = &ctx->packet;
     pkt->_size = (sz + 4 + 3) & ~3;
     pkt->flags = JD_FRAME_FLAG_COMMAND;
-    jd_device_t *dev = jd_service_parent(ctx->roles[role_idx].service);
+    jd_device_t *dev = jd_service_parent(ctx->roles[role_idx]->service);
     pkt->device_identifier = dev->device_identifier;
     pkt->service_size = sz;
-    pkt->service_index = ctx->roles[role_idx].service->service_index;
+    pkt->service_index = ctx->roles[role_idx]->service->service_index;
     pkt->service_command = service_command;
     if (payload)
         memcpy(pkt->data, payload, sz);
@@ -132,7 +131,7 @@ static jacs_regcache_entry_t *jacs_jd_update_regcache(jacs_ctx_t *ctx, unsigned 
 
 static bool jacs_jd_pkt_matches_role(jacs_ctx_t *ctx, unsigned role_idx) {
     jd_packet_t *pkt = &ctx->packet;
-    jd_device_service_t *serv = ctx->roles[role_idx].service;
+    jd_device_service_t *serv = ctx->roles[role_idx]->service;
     return serv &&
            ((pkt->service_index == 0 && pkt->service_command == 0) ||
             serv->service_index == pkt->service_index) &&
@@ -145,7 +144,7 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
     }
 
     jacs_ctx_t *ctx = fiber->ctx;
-    jd_device_service_t *serv = ctx->roles[fiber->role_idx].service;
+    jd_device_service_t *serv = ctx->roles[fiber->role_idx]->service;
 
     if (serv == NULL) {
         // role unbound, keep waiting, no timeout
@@ -166,7 +165,8 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
 
     jd_packet_t *pkt = &ctx->packet;
 
-    if (jd_is_report(pkt) && pkt->service_command == fiber->service_command &&
+    if (jd_is_report(pkt) && pkt->service_command &&
+        pkt->service_command == fiber->service_command &&
         jacs_jd_pkt_matches_role(ctx, fiber->role_idx)) {
         jacs_regcache_entry_t *q =
             jacs_jd_update_regcache(ctx, fiber->role_idx, fiber->command_arg);
@@ -214,34 +214,9 @@ static void jacs_jd_update_all_regcache(jacs_ctx_t *ctx, unsigned role_idx) {
     }
 }
 
-static void jacs_jd_bind_role(jacs_ctx_t *ctx, unsigned idx, jd_device_service_t *serv) {
-    if (ctx->roles[idx].service != serv) {
-        ctx->roles[idx].service = serv;
-        jacs_regcache_free_role(&ctx->regcache, idx);
-        jacs_jd_reset_packet(ctx);
-        jacs_jd_wake_role(ctx, idx);
-    }
-}
-
 static const char *jacs_jd_role_name(jacs_ctx_t *ctx, unsigned idx) {
     const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, idx);
     return jacs_img_get_string_ptr(&ctx->img, role->name_idx);
-}
-
-static void jacs_jd_rebind(jacs_ctx_t *ctx) {
-    unsigned numroles = jacs_img_num_roles(&ctx->img);
-    for (unsigned idx = 0; idx < numroles; ++idx) {
-        jd_device_service_t *serv = rolemgr_get_binding(jacs_jd_role_name(ctx, idx));
-        jacs_jd_bind_role(ctx, idx, serv);
-    }
-}
-
-void jacs_jd_init_roles(jacs_ctx_t *ctx) {
-    unsigned numroles = jacs_img_num_roles(&ctx->img);
-    for (unsigned idx = 0; idx < numroles; ++idx) {
-        const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, idx);
-        rolemgr_add_role(jacs_jd_role_name(ctx, idx), role->service_class);
-    }
 }
 
 void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t *pkt) {
@@ -250,11 +225,6 @@ void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
 
     memcpy(&ctx->packet, pkt, pkt->service_size + 16);
     pkt = &ctx->packet;
-
-    if (serv->service_class == JD_SERVICE_CLASS_ROLE_MANAGER && jd_is_event(pkt) &&
-        (pkt->service_command & JD_CMD_EVENT_CODE_MASK) == JD_ROLE_MANAGER_EV_CHANGE) {
-        jacs_jd_rebind(ctx);
-    }
 
     unsigned numroles = jacs_img_num_roles(&ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
@@ -268,12 +238,14 @@ void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     jacs_fiber_poke(ctx);
 }
 
-void jacs_jd_device_destroyed(jacs_ctx_t *ctx, jd_device_t *dev) {
+void jacs_jd_role_changed(jacs_ctx_t *ctx, jd_role_t *role) {
     unsigned numroles = jacs_img_num_roles(&ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
-        jd_device_service_t *serv = ctx->roles[idx].service;
-        if (serv && jd_service_parent(serv) == dev) {
-            jacs_jd_bind_role(ctx, idx, NULL);
+        if (ctx->roles[idx] == role) {
+            jacs_regcache_free_role(&ctx->regcache, idx);
+            jacs_jd_reset_packet(ctx);
+            jacs_jd_wake_role(ctx, idx);
+            break;
         }
     }
     jacs_fiber_poke(ctx);
@@ -281,4 +253,20 @@ void jacs_jd_device_destroyed(jacs_ctx_t *ctx, jd_device_t *dev) {
 
 void jacs_jd_reset_packet(jacs_ctx_t *ctx) {
     memset(&ctx->packet, 0xff, 32);
+}
+
+void jacs_jd_init_roles(jacs_ctx_t *ctx) {
+    unsigned numroles = jacs_img_num_roles(&ctx->img);
+    for (unsigned idx = 0; idx < numroles; ++idx) {
+        const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, idx);
+        ctx->roles[idx] = jd_role_alloc(jacs_jd_role_name(ctx, idx), role->service_class);
+    }
+}
+
+void jacs_jd_free_roles(jacs_ctx_t *ctx) {
+    unsigned numroles = jacs_img_num_roles(&ctx->img);
+    for (unsigned idx = 0; idx < numroles; ++idx) {
+        jd_role_free(ctx->roles[idx]);
+        ctx->roles[idx] = NULL;
+    }
 }

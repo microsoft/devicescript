@@ -328,7 +328,7 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
         SET_OFF(fptr);
         int top = fptr->service_class >> 28;
         CHECK(1040, top == 1 || top == 2);
-        CHECK(1041, fptr->name_idx > 0);
+        // CHECK(1041, fptr->name_idx > 0); - TODO why was this here?
         CHECK(1042, fptr->name_idx < jacs_img_num_strings(img));
     }
 

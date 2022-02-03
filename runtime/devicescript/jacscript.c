@@ -3,8 +3,8 @@
 static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     ctx->img.data = img;
 
-    ctx->globals = jd_alloc0(sizeof(value_t) * ctx->img.header->num_globals);
-    ctx->roles = jd_alloc0(sizeof(jacs_role_t) * jacs_img_num_roles(&ctx->img));
+    ctx->globals = jd_alloc(sizeof(value_t) * ctx->img.header->num_globals);
+    ctx->roles = jd_alloc(sizeof(jd_role_t *) * jacs_img_num_roles(&ctx->img));
 
     jacs_fiber_sync_now(ctx);
     jacs_jd_reset_packet(ctx);
@@ -17,7 +17,7 @@ static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
 jacs_ctx_t *jacs_create_ctx(const uint8_t *img, uint32_t size) {
     if (jacs_verify(img, size))
         return NULL;
-    jacs_ctx_t *ctx = jd_alloc0(sizeof(*ctx));
+    jacs_ctx_t *ctx = jd_alloc(sizeof(*ctx));
     setup_ctx(ctx, img);
     return ctx;
 }
@@ -40,9 +40,10 @@ void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *
     if (!ctx)
         return;
 
-    jd_device_t *dev = arg0;
+    // jd_device_t *dev = arg0;
     jd_device_service_t *serv = arg0;
     jd_packet_t *pkt = arg1;
+    jd_role_t *role = arg1;
     // jd_register_query_t *reg = arg1;
 
     jacs_enter(ctx);
@@ -50,8 +51,8 @@ void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *
     case JD_CLIENT_EV_SERVICE_PACKET:
         jacs_jd_process_pkt(ctx, serv, pkt);
         break;
-    case JD_CLIENT_EV_DEVICE_DESTROYED:
-        jacs_jd_device_destroyed(ctx, dev);
+    case JD_CLIENT_EV_ROLE_CHANGED:
+        jacs_jd_role_changed(ctx, role);
         break;
     case JD_CLIENT_EV_PROCESS:
         jacs_fiber_poke(ctx);

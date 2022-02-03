@@ -173,7 +173,7 @@ static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int id
     case JACS_CELL_KIND_ROLE_PROPERTY:
         switch (c) {
         case JACS_ROLE_PROPERTY_IS_CONNECTED:
-            return ctx->roles[idx].service != NULL;
+            return ctx->roles[idx]->service != NULL;
         default:
             oops();
             return 0;
