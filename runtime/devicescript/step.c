@@ -84,7 +84,7 @@ static value_t do_opmath2(int op, value_t a, value_t b) {
 // shift_val(0) = 1
 // shift_val(-10) = 1/1024
 // TODO change to double?
-static inline value_t shift_val(uint8_t shift) {
+static inline value_t shift_val(int shift) {
     uint32_t a = (0x7f + shift) << 23;
     float v;
     memcpy(&v, &a, sizeof(a));
@@ -135,6 +135,7 @@ static value_t get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, ui
     }
     if (shift)
         q *= shift_val(-shift);
+    // MESG("getval: %f at pc=%d", q, frame->pc);
     return q;
 }
 
@@ -244,6 +245,7 @@ static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx,
                        value_t val) {
     switch (tp) {
     case JACS_CELL_KIND_LOCAL:
+        // DMESG("loc %d := %f pc=%d", idx, val, act->pc);
         act->locals[idx] = val;
         break;
     case JACS_CELL_KIND_GLOBAL:

@@ -103,8 +103,10 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
                 if (op == JACS_OPCALL_BG_MAX1_PEND1) {
                     if (fiber->flags & JACS_FIBER_FLAG_PENDING) {
                         ctx->registers[0] = 3;
+                        // DMESG("fiber already pending %d", fidx);
                     } else {
                         fiber->flags |= JACS_FIBER_FLAG_PENDING;
+                        // DMESG("pend fiber %d", fidx);
                         ctx->registers[0] = 2;
                     }
                 } else {
