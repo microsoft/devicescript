@@ -141,6 +141,7 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
         return;
 
     fiber->role_idx = JACS_NO_ROLE;
+    fiber->service_command = 0;
     jacs_fiber_set_wake_time(fiber, 0);
 
     ctx->a = ctx->b = ctx->c = ctx->d = 0;
