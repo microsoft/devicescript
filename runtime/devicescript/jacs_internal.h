@@ -91,12 +91,6 @@ struct jacs_activation {
     value_t locals[0];
 };
 
-static inline jd_device_service_t *jacs_ctx_role_binding(jacs_ctx_t *ctx,
-                                                         const jacs_role_desc_t *role) {
-    uint32_t idx = role - jacs_img_get_role(&ctx->img, 0);
-    return ctx->roles[idx].service;
-}
-
 #define oops() assert(false)
 
 static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
@@ -114,8 +108,10 @@ void jacs_jd_wake_role(jacs_ctx_t *ctx, unsigned role_idx);
 void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code);
 void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg);
-void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_packet_t *pkt);
+void jacs_jd_process_pkt(jacs_ctx_t *ctx,  jd_device_service_t *serv, jd_packet_t *pkt);
 void jacs_jd_reset_packet(jacs_ctx_t *ctx);
+void jacs_jd_init_roles(jacs_ctx_t *ctx);
+void jacs_jd_device_destroyed(jacs_ctx_t *ctx, jd_device_t *dev);
 
 // fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);

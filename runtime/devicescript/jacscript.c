@@ -9,6 +9,8 @@ static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     jacs_fiber_sync_now(ctx);
     jacs_jd_reset_packet(ctx);
 
+    jacs_jd_init_roles(ctx);
+
     jacs_fiber_start(ctx, 0, 0, JACS_OPCALL_BG);
 }
 
@@ -34,15 +36,27 @@ unsigned jacs_error_code(jacs_ctx_t *ctx) {
     return ctx->error_code;
 }
 
-void jacs_process(jacs_ctx_t *ctx) {
-    jacs_enter(ctx);
-    jacs_fiber_poke(ctx);
-    jacs_leave(ctx);
-}
+void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *arg1) {
+    if (!ctx)
+        return;
 
-void jacs_handle_packet(jacs_ctx_t *ctx, jd_packet_t *pkt) {
+    jd_device_t *dev = arg0;
+    jd_device_service_t *serv = arg0;
+    jd_packet_t *pkt = arg1;
+    // jd_register_query_t *reg = arg1;
+
     jacs_enter(ctx);
-    jacs_jd_process_pkt(ctx, pkt);
+    switch (event_id) {
+    case JD_CLIENT_EV_SERVICE_PACKET:
+        jacs_jd_process_pkt(ctx, serv, pkt);
+        break;
+    case JD_CLIENT_EV_DEVICE_DESTROYED:
+        jacs_jd_device_destroyed(ctx, dev);
+        break;
+    case JD_CLIENT_EV_PROCESS:
+        jacs_fiber_poke(ctx);
+        break;
+    }
     jacs_leave(ctx);
 }
 

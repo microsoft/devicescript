@@ -81,6 +81,14 @@ void jacs_regcache_age(jacs_regcache_t *cache, unsigned role_idx, uint32_t min_t
     }
 }
 
+void jacs_regcache_free_role(jacs_regcache_t *cache, unsigned role_idx) {
+    for (unsigned i = 0; i < JACS_REGCACHE_NUM_ENTRIES; ++i) {
+        jacs_regcache_entry_t *q = &cache->entries[i];
+        if (q->role_idx == role_idx)
+            jacs_regcache_free(cache, q);
+    }
+}
+
 jacs_regcache_entry_t *jacs_regcache_next(jacs_regcache_t *cache, unsigned role_idx,
                                           unsigned service_command, jacs_regcache_entry_t *prev) {
     jacs_regcache_entry_t *end = &cache->entries[JACS_REGCACHE_NUM_ENTRIES];
