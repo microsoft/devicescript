@@ -18,7 +18,7 @@ void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numar
     int numregs = func->num_regs_and_args & 0xf;
 
     jacs_activation_t *callee =
-        jd_alloc0(sizeof(jacs_activation_t) + sizeof(value_t) * (numregs + func->num_locals));
+        jd_alloc(sizeof(jacs_activation_t) + sizeof(value_t) * (numregs + func->num_locals));
     memcpy(callee->locals, ctx->registers, numargs * sizeof(value_t));
     callee->pc = func->start >> 1;
     callee->caller = fiber->activation;
@@ -116,7 +116,7 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
 
     DMESG("start fiber %d", fidx);
 
-    fiber = jd_alloc0(sizeof(*fiber));
+    fiber = jd_alloc(sizeof(*fiber));
     fiber->ctx = ctx;
     fiber->bottom_function_idx = fidx;
 
