@@ -186,7 +186,7 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
 
         jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, argp, arglen);
         jd_send_pkt(&ctx->packet);
-        DMESG("re-send pkt (%d)", fiber->resend_timeout);
+        DMESG("(re)send pkt (%d)", fiber->resend_timeout);
 
         if (fiber->resend_timeout < 1000)
             fiber->resend_timeout *= 2;

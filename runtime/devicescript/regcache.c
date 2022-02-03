@@ -91,6 +91,8 @@ void jacs_regcache_free_role(jacs_regcache_t *cache, unsigned role_idx) {
 
 jacs_regcache_entry_t *jacs_regcache_next(jacs_regcache_t *cache, unsigned role_idx,
                                           unsigned service_command, jacs_regcache_entry_t *prev) {
+    if (!service_command)
+        return NULL;
     jacs_regcache_entry_t *end = &cache->entries[JACS_REGCACHE_NUM_ENTRIES];
     if (!prev)
         prev = &cache->entries[0];
