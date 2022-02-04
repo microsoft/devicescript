@@ -109,8 +109,10 @@ static value_t get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, ui
     jacs_ctx_t *ctx = frame->fiber->ctx;
     jd_packet_t *pkt = &ctx->packet;
 
-    if (offset + sz > pkt->service_size)
+    if (offset + sz > pkt->service_size) {
+        // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
         return NAN;
+    }
 
 #define GET_VAL(SZ)                                                                                \
     case JACS_NUMFMT_##SZ:                                                                         \
@@ -163,7 +165,7 @@ static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int id
             else
                 return NAN;
         case JACS_VALUE_SPECIAL_REG_GET_CODE:
-            if (jd_is_register_get(&ctx->packet))
+            if (jd_is_report(&ctx->packet) && jd_is_register_get(&ctx->packet))
                 return JD_REG_CODE(ctx->packet.service_command);
             else
                 return NAN;

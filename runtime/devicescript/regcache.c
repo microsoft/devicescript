@@ -13,10 +13,10 @@ void jacs_regcache_free_all(jacs_regcache_t *cache) {
     }
 }
 
-void jacs_regcache_mark_used(jacs_regcache_t *cache, jacs_regcache_entry_t *q) {
+jacs_regcache_entry_t *jacs_regcache_mark_used(jacs_regcache_t *cache, jacs_regcache_entry_t *q) {
     unsigned idx = cache->latest_idx;
     if (q == &cache->entries[idx])
-        return; // already latest
+        return q; // already latest
     idx++;
     if (idx >= JACS_REGCACHE_NUM_ENTRIES)
         idx = 0;
@@ -27,6 +27,7 @@ void jacs_regcache_mark_used(jacs_regcache_t *cache, jacs_regcache_entry_t *q) {
         memcpy(&cache->entries[idx], &tmp, sizeof(tmp));
     }
     cache->latest_idx = idx;
+    return &cache->entries[idx];
 }
 
 jacs_regcache_entry_t *jacs_regcache_alloc(jacs_regcache_t *cache, unsigned role_idx,
@@ -57,7 +58,7 @@ jacs_regcache_entry_t *jacs_regcache_alloc(jacs_regcache_t *cache, unsigned role
     if (resp_size > JACS_QUERY_MAX_INLINE)
         q->value.buffer = jd_alloc(resp_size);
 
-    jacs_regcache_mark_used(cache, q);
+    q = jacs_regcache_mark_used(cache, q);
 
     return q;
 }

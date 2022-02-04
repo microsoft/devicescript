@@ -13,13 +13,14 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
             if (cached->last_refresh_time + timeout < jacs_now(ctx)) {
                 jacs_regcache_free(&ctx->regcache, cached);
             } else {
-                jacs_regcache_mark_used(&ctx->regcache, cached);
+                cached = jacs_regcache_mark_used(&ctx->regcache, cached);
                 memset(&ctx->packet, 0, sizeof(ctx->packet));
                 ctx->packet.service_command = cached->service_command;
                 ctx->packet.service_size = cached->resp_size;
                 ctx->packet.service_index = serv->service_index;
                 ctx->packet.device_identifier = jd_service_parent(serv)->device_identifier;
                 memcpy(ctx->packet.data, jacs_regcache_data(cached), cached->resp_size);
+                // DMESG("cached reg %x sz=%d cmd=%d", code, cached->resp_size, cached->service_command);
                 return;
             }
         }
@@ -31,6 +32,7 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
     fib->command_arg = arg;
     fib->resend_timeout = 20;
 
+    // DMESG("wait reg %x", code);
     jacs_fiber_sleep(fib, 0);
 }
 
@@ -85,9 +87,6 @@ void jacs_jd_wake_role(jacs_ctx_t *ctx, unsigned role_idx) {
     }
 }
 
-#define RESUME_USER_CODE 1
-#define KEEP_WAITING 0
-
 static int jacs_jd_reg_arg_length(jacs_ctx_t *ctx, unsigned command_arg) {
     assert(command_arg != 0);
     jd_packet_t *pkt = &ctx->packet;
@@ -141,6 +140,9 @@ static bool jacs_jd_pkt_matches_role(jacs_ctx_t *ctx, unsigned role_idx) {
            jd_service_parent(serv)->device_identifier == pkt->device_identifier;
 }
 
+#define RESUME_USER_CODE 1
+#define KEEP_WAITING 0
+
 bool jacs_jd_should_run(jacs_fiber_t *fiber) {
     if (!fiber->service_command) {
         return RESUME_USER_CODE;
@@ -174,7 +176,7 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
         jacs_regcache_entry_t *q =
             jacs_jd_update_regcache(ctx, fiber->role_idx, fiber->command_arg);
         if (q) {
-            jacs_regcache_mark_used(&ctx->regcache, q);
+            q = jacs_regcache_mark_used(&ctx->regcache, q);
             return RESUME_USER_CODE;
         }
     }
@@ -202,6 +204,9 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
 static void jacs_jd_update_all_regcache(jacs_ctx_t *ctx, unsigned role_idx) {
     jacs_regcache_entry_t *q = NULL;
     jd_packet_t *pkt = &ctx->packet;
+
+    if (jd_is_command(pkt))
+        return;
 
     if (jd_is_event(pkt) && (pkt->service_command & JD_CMD_EVENT_CODE_MASK) == JD_EV_CHANGE) {
         jacs_regcache_age(&ctx->regcache, role_idx, jacs_now(ctx) - 10000);
@@ -232,6 +237,7 @@ void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     unsigned numroles = jacs_img_num_roles(&ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
         if (jacs_jd_pkt_matches_role(ctx, idx)) {
+            // DMESG("wake pkt %x / %d", pkt->service_command, pkt->service_size);
             jacs_fiber_sync_now(ctx);
             jacs_jd_update_all_regcache(ctx, idx);
             jacs_jd_wake_role(ctx, idx);

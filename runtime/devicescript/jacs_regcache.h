@@ -24,7 +24,7 @@ static inline void *jacs_regcache_data(jacs_regcache_entry_t *q) {
 }
 
 void jacs_regcache_free(jacs_regcache_t *cache, jacs_regcache_entry_t *q);
-void jacs_regcache_mark_used(jacs_regcache_t *cache, jacs_regcache_entry_t *q);
+jacs_regcache_entry_t *jacs_regcache_mark_used(jacs_regcache_t *cache, jacs_regcache_entry_t *q);
 jacs_regcache_entry_t *jacs_regcache_lookup(jacs_regcache_t *cache, unsigned role_idx,
                                             unsigned service_command, unsigned argument);
 jacs_regcache_entry_t *jacs_regcache_alloc(jacs_regcache_t *cache, unsigned role_idx,
