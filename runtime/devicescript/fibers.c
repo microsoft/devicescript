@@ -43,6 +43,7 @@ void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time) {
 }
 
 static void free_fiber(jacs_fiber_t *fiber) {
+    jacs_jd_clear_pkt_kind(fiber);
     jacs_ctx_t *ctx = fiber->ctx;
     if (ctx->fibers == fiber) {
         ctx->fibers = fiber->next;
@@ -54,8 +55,6 @@ static void free_fiber(jacs_fiber_t *fiber) {
             oops();
         f->next = fiber->next;
     }
-    if (fiber->payload)
-        jd_free(fiber->payload);
     jd_free(fiber);
 }
 
@@ -81,14 +80,13 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx) {
     jacs_fiber_t *f = ctx->fibers;
     while (f) {
         ctx->fibers = f->next;
+        jacs_jd_clear_pkt_kind(f);
         jacs_activation_t *act = f->activation;
         while (act) {
             jacs_activation_t *n = act->caller;
             jd_free(act);
             act = n;
         }
-        if (f->payload)
-            jd_free(f->payload);
         jd_free(f);
         f = ctx->fibers;
     }
@@ -142,8 +140,8 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
     if (!jacs_jd_should_run(fiber))
         return;
 
+    jacs_jd_clear_pkt_kind(fiber);
     fiber->role_idx = JACS_NO_ROLE;
-    fiber->service_command = 0;
     jacs_fiber_set_wake_time(fiber, 0);
 
     ctx->a = ctx->b = ctx->c = ctx->d = 0;

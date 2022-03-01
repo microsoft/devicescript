@@ -19,26 +19,35 @@
 
 typedef struct jacs_activation jacs_activation_t;
 
-#define JACS_FIBER_FLAG_SLEEPING_ON_REG 0x01
-#define JACS_FIBER_FLAG_SLEEPING_ON_ROLE 0x02
-#define JACS_FIBER_FLAG_PENDING 0x04
+#define JACS_FIBER_FLAG_PENDING 0x01
+
+#define JACS_PKT_KIND_NONE 0
+#define JACS_PKT_KIND_REG_GET 1
+#define JACS_PKT_KIND_SEND_PKT 2
 
 typedef struct jacs_fiber {
     struct jacs_fiber *next;
 
-    uint8_t *payload;
-    uint8_t payload_size;
+    union {
+        struct {
+            uint8_t *data;
+            uint8_t size;
+        } send_pkt;
+        struct {
+            uint16_t string_idx;
+            uint16_t resend_timeout;
+        } reg_get;
+    } pkt_data;
 
-    uint8_t flags;
+    uint8_t pkt_kind : 4;
+    uint8_t flags : 4;
 
     uint16_t role_idx;
     uint16_t service_command;
-    uint16_t command_arg;
 
     uint16_t bottom_function_idx; // the id of function at the bottom of the stack
 
     uint32_t wake_time;
-    uint16_t resend_timeout;
 
     jacs_activation_t *activation;
     struct jacs_ctx *ctx;
@@ -109,6 +118,7 @@ void jacs_jd_reset_packet(jacs_ctx_t *ctx);
 void jacs_jd_init_roles(jacs_ctx_t *ctx);
 void jacs_jd_free_roles(jacs_ctx_t *ctx);
 void jacs_jd_role_changed(jacs_ctx_t *ctx, jd_role_t *role);
+void jacs_jd_clear_pkt_kind(jacs_fiber_t *fib);
 
 // fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
