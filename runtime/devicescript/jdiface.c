@@ -20,7 +20,8 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
                 ctx->packet.service_index = serv->service_index;
                 ctx->packet.device_identifier = jd_service_parent(serv)->device_identifier;
                 memcpy(ctx->packet.data, jacs_regcache_data(cached), cached->resp_size);
-                // DMESG("cached reg %x sz=%d cmd=%d", code, cached->resp_size, cached->service_command);
+                // DMESG("cached reg %x sz=%d cmd=%d", code, cached->resp_size,
+                // cached->service_command);
                 return;
             }
         }
@@ -160,12 +161,17 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
     if (fiber->payload) {
         jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, fiber->payload,
                            fiber->payload_size);
-        jd_send_pkt(&ctx->packet);
-        DMESG("send pkt cmd=%x", fiber->service_command);
-        fiber->service_command = 0;
-        jd_free(fiber->payload);
-        fiber->payload = NULL;
-        return RESUME_USER_CODE;
+        if (jd_send_pkt(&ctx->packet) == 0) {
+            DMESG("send pkt cmd=%x", fiber->service_command);
+            fiber->service_command = 0;
+            jd_free(fiber->payload);
+            fiber->payload = NULL;
+            return RESUME_USER_CODE;
+        } else {
+            DMESG("send pkt FAILED cmd=%x", fiber->service_command);
+            jacs_fiber_sleep(fiber, 5); // failed, to send - try again real soon
+            return KEEP_WAITING;
+        }
     }
 
     jd_packet_t *pkt = &ctx->packet;
@@ -190,12 +196,15 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
         }
 
         jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, argp, arglen);
-        jd_send_pkt(&ctx->packet);
-        DMESG("(re)send pkt cmd=%x", fiber->service_command);
-
-        if (fiber->resend_timeout < 1000)
-            fiber->resend_timeout *= 2;
-        jacs_fiber_sleep(fiber, fiber->resend_timeout);
+        if (jd_send_pkt(&ctx->packet) != 0) {
+            DMESG("(re)send pkt FAILED cmd=%x", fiber->service_command);
+            jacs_fiber_sleep(fiber, 5); // failed, to send - try again real soon
+        } else {
+            DMESG("(re)send pkt cmd=%x", fiber->service_command);
+            if (fiber->resend_timeout < 1000)
+                fiber->resend_timeout *= 2;
+            jacs_fiber_sleep(fiber, fiber->resend_timeout);
+        }
     }
 
     return KEEP_WAITING;
