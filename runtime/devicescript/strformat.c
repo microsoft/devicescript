@@ -123,29 +123,35 @@ static int numvalue(char c) {
     return -1;
 }
 
+#define WR(c)                                                                                      \
+    do {                                                                                           \
+        char tmp = (c);                                                                            \
+        if (numskip == 0)                                                                          \
+            dst[dp++] = tmp;                                                                       \
+        else                                                                                       \
+            numskip--;                                                                             \
+    } while (0)
+
 size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
-                      size_t numargs) {
+                      size_t numargs, size_t numskip) {
     size_t fp = 0;
     size_t dp = 0;
     while (fp < fmtlen && dp < dstlen) {
         char c = fmt[fp++];
         if (c != '{' || fp >= fmtlen) {
-            dst[dp++] = c;
             // if we see "}}" we treat it as a single "}"
             if (c == '}' && fp < fmtlen && fmt[fp] == '}')
                 fp++;
-            continue;
+            goto write_c;
         }
 
         c = fmt[fp++];
-        if (c == '{') {
-            dst[dp++] = c;
-            continue;
-        }
+        if (c == '{')
+            goto write_c;
         int pos = numvalue(c);
         if (pos < 0) {
-            dst[dp++] = '!';
-            continue;
+            c = '!';
+            goto write_c;
         }
 
         size_t nextp = fp;
@@ -159,8 +165,8 @@ size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, 
         fp = nextp + 1;
 
         if (pos >= (int)numargs) {
-            dst[dp++] = '?';
-            continue;
+            c = '?';
+            goto write_c;
         }
 
         if (precision < 0)
@@ -170,11 +176,17 @@ size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, 
         mycvt(args[pos], buf, precision + 1);
         char *s = buf;
         while (*s && dp < dstlen)
-            dst[dp++] = *s++;
+            WR(*s++);
+        continue;
+
+    write_c:
+        WR(c);
     }
 
     if (dp < dstlen)
         dst[dp] = 0;
+    else
+        dst[dstlen - 1] = 0;
 
     return dp;
 }

@@ -19,6 +19,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
+// next error 1149
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -44,7 +45,6 @@ static int fail(int code, uint32_t offset) {
     MUST_CONTAIN_PTR(code, container, (sect)->start);                                              \
     MUST_CONTAIN_PTR(code, container, (sect)->start + (sect)->length)
 
-// next error 1144
 static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
     const uint8_t *imgdata = img->data;
     uint32_t offset;
@@ -213,10 +213,10 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             case JACS_OPSYNC_SETUP_BUFFER: // A-size
                 CHECK(1113, a <= 236);     // setup buffer size in range
                 break;
-            case JACS_OPSYNC_LOG_FORMAT:
             case JACS_OPSYNC_FORMAT:                        // A-string-index B-numargs
                 CHECK(1114, c <= 236);                      // offset in range
                 CHECK(1115, a < jacs_img_num_strings(img)); // str in range
+                CHECK(1147, b <= JACS_NUM_REGS);
                 break;
             case JACS_OPSYNC_STR0EQ:
                 CHECK(1116, c <= 236);                      // offset in range
@@ -264,6 +264,12 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1128, a < jacs_img_num_roles(img)); // role idx
                 CHECK(1129, b >> 8 != 0);                 // arg!=0
                 CHECK(1130, b >> 8 < jacs_img_num_strings(img)); // num str
+                break;
+            case JACS_OPASYNC_LOG_FORMAT:// A-string-index B-numargs
+                CHECK(1144, c == 0);
+                CHECK(1145, a < jacs_img_num_strings(img));
+                CHECK(1146, b < JACS_NUM_REGS);
+                CHECK(1148, (d & ((1 << b) - 1)) == ((1 << b) - 1));
                 break;
             default:
                 CHECK(1131, false); // invalid async code

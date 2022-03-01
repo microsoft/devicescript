@@ -96,7 +96,7 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code);
 
 // strformat.c
 size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
-                      size_t numargs);
+                      size_t numargs, size_t numskip);
 
 // jdiface.c
 bool jacs_jd_should_run(jacs_fiber_t *fiber);
@@ -104,11 +104,11 @@ void jacs_jd_wake_role(jacs_ctx_t *ctx, unsigned role_idx);
 void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code);
 void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg);
-void jacs_jd_process_pkt(jacs_ctx_t *ctx,  jd_device_service_t *serv, jd_packet_t *pkt);
+void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t *pkt);
 void jacs_jd_reset_packet(jacs_ctx_t *ctx);
 void jacs_jd_init_roles(jacs_ctx_t *ctx);
-void jacs_jd_free_roles(jacs_ctx_t *ctx) ;
-void jacs_jd_role_changed(jacs_ctx_t *ctx, jd_role_t *role) ;
+void jacs_jd_free_roles(jacs_ctx_t *ctx);
+void jacs_jd_role_changed(jacs_ctx_t *ctx, jd_role_t *role);
 
 // fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);

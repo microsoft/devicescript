@@ -261,16 +261,19 @@ static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx,
     }
 }
 
+static value_t *saved_regs_ptr(jacs_activation_t *act) {
+    return &act->locals[act->func->num_locals];
+}
+
 static void save_regs(jacs_activation_t *act, unsigned regs) {
-    unsigned p = 0;
     value_t *r = act->fiber->ctx->registers;
-    unsigned numloc = act->func->num_locals;
+    value_t *saved0 = saved_regs_ptr(act);
+    value_t *saved = saved0;
     for (unsigned i = 0; i < JACS_NUM_REGS; i++) {
         if ((1 << i) & regs) {
-            if (p >= (act->func->num_regs_and_args & 0xf))
+            if ((saved - saved0) >= (act->func->num_regs_and_args & 0xf))
                 oops();
-            act->locals[numloc + p] = r[i];
-            p++;
+            *saved++ = r[i];
         }
     }
     act->saved_regs = regs;
@@ -280,22 +283,20 @@ void jacs_act_restore_regs(jacs_activation_t *act) {
     if (act->saved_regs == 0)
         return;
     value_t *r = act->fiber->ctx->registers;
-    unsigned numloc = act->func->num_locals;
-    unsigned p = 0;
+    value_t *saved = saved_regs_ptr(act);
     for (unsigned i = 0; i < JACS_NUM_REGS; i++) {
         if ((1 << i) & act->saved_regs) {
-            r[i] = act->locals[numloc + p];
-            p++;
+            r[i] = *saved++;
         }
     }
     act->saved_regs = 0;
 }
 
 static unsigned strformat(jacs_ctx_t *ctx, unsigned str_idx, unsigned numargs, uint8_t *dst,
-                          unsigned dstlen) {
+                          unsigned dstlen, unsigned numskip) {
     return jacs_strformat(jacs_img_get_string_ptr(&ctx->img, str_idx),
                           jacs_img_get_string_len(&ctx->img, str_idx), (char *)dst, dstlen,
-                          ctx->registers, numargs);
+                          ctx->registers, numargs, numskip);
 }
 
 void jacs_act_step(jacs_activation_t *frame) {
@@ -404,7 +405,7 @@ void jacs_act_step(jacs_activation_t *frame) {
             break;
         case JACS_OPSYNC_FORMAT: // A-string-index B-numargs C-offset
             ctx->packet.service_size =
-                c + strformat(ctx, a, b, ctx->packet.data + c, JD_SERIAL_PAYLOAD_SIZE - c);
+                c + strformat(ctx, a, b, ctx->packet.data + c, JD_SERIAL_PAYLOAD_SIZE - c, 0);
             break;
         case JACS_OPSYNC_MEMCPY: // A-string-index C-offset
         {
@@ -425,12 +426,6 @@ void jacs_act_step(jacs_activation_t *frame) {
                 ctx->registers[0] = 0;
             break;
         }
-        case JACS_OPSYNC_LOG_FORMAT: { // A-string-index B-numargs
-            uint8_t tmp[128];          // TODO jd_alloc?
-            strformat(ctx, a, b, tmp, sizeof(tmp));
-            tmp[sizeof(tmp) - 1] = 0;
-            DMESG("JSCR: %s", tmp);
-        } break;
         case JACS_OPSYNC_MATH1:
             ctx->registers[0] = do_opmath1(a, ctx->registers[0]);
             break;
@@ -470,6 +465,12 @@ void jacs_act_step(jacs_activation_t *frame) {
         case JACS_OPASYNC_QUERY_IDX_REG:
             jacs_jd_get_register(ctx, a, b & 0xff, c, b >> 8);
             break;
+        case JACS_OPASYNC_LOG_FORMAT: { // A-string-index B-numargs
+            uint8_t tmp[128];           // TODO jd_alloc?
+            strformat(ctx, a, b, tmp, sizeof(tmp), 0);
+            tmp[sizeof(tmp) - 1] = 0;
+            DMESG("JSCR: %s", tmp);
+        } break;
         default:
             oops();
             break;

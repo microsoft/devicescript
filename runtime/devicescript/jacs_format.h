@@ -61,14 +61,15 @@ typedef struct {
 #define JACS_OPASYNC_QUERY_REG 3     // A-role, B-code, C-timeout
 #define JACS_OPASYNC_SEND_CMD 4      // A-role, B-code
 #define JACS_OPASYNC_QUERY_IDX_REG 5 // A-role, B-STRIDX:CMD[8], C-timeout
-#define JACS_OPASYNC__LAST 6
+#define JACS_OPASYNC_LOG_FORMAT 6   // A-string-index B-numargs
+#define JACS_OPASYNC__LAST 7
 
 #define JACS_OPSYNC_RETURN 0
 #define JACS_OPSYNC_SETUP_BUFFER 1 // A-size
 #define JACS_OPSYNC_FORMAT 2       // A-string-index B-numargs C-offset
 #define JACS_OPSYNC_MEMCPY 3       // A-string-index C-offset
 #define JACS_OPSYNC_STR0EQ 4       // A-string-index C-offset result in R0
-#define JACS_OPSYNC_LOG_FORMAT 5   // A-string-index B-numargs
+#define JACS_OPSYNC_UNUSED_5 5
 #define JACS_OPSYNC_MATH1 6        // A-OpMath1, R0 := op(R0)
 #define JACS_OPSYNC_MATH2 7        // A-OpMath2, R0 := op(R0, R1)
 #define JACS_OPSYNC_PANIC 8        // A-error code
