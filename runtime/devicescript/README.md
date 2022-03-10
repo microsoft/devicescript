@@ -1,31 +1,5 @@
 ## TODO
 
-* role mgr pipes
-
-```js
-lock {
-    ...
-}
-==>
-while (_locked)
-  await _cond
-_locked = 1
-...
-_locked = 0
-signal _cond
-```
-
-```js
-_log_cnt = 0
-function logmsg(id, a, b, c, d, e, f) {
-  lock {
-    fmt(id, a, b, c, d, e, f)
-    pkt[0] = _log_cnt++
-    send()
-  }
-}
-```
-
 ### General purpose?
 
 * simply `[A|B|C|D] := Rn` ?
