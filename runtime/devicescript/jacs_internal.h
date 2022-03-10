@@ -5,6 +5,7 @@
 #include "jd_protocol.h"
 #include "jd_client.h"
 #include "jacdac/dist/c/jacscriptcondition.h"
+#include "jacdac/dist/c/jacscriptmanager.h"
 
 #include "jacs_format.h"
 #include "jacs_img.h"
@@ -24,6 +25,7 @@ typedef struct jacs_activation jacs_activation_t;
 #define JACS_PKT_KIND_NONE 0
 #define JACS_PKT_KIND_REG_GET 1
 #define JACS_PKT_KIND_SEND_PKT 2
+#define JACS_PKT_KIND_LOGMSG 3
 
 typedef struct jacs_fiber {
     struct jacs_fiber *next;
@@ -37,6 +39,10 @@ typedef struct jacs_fiber {
             uint16_t string_idx;
             uint16_t resend_timeout;
         } reg_get;
+        struct {
+            uint16_t string_idx;
+            uint8_t num_args;
+        } logmsg;
     } pkt_data;
 
     uint8_t pkt_kind : 4;
@@ -78,6 +84,10 @@ struct jacs_ctx {
 
     uint32_t _prev_us;
     uint32_t _now;
+
+    uint8_t mgr_service_idx;
+    uint32_t log_counter;
+    uint32_t log_counter_to_send;
 
     union {
         jd_frame_t frame;
@@ -135,3 +145,4 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 // step.c
 void jacs_act_step(jacs_activation_t *frame);
 void jacs_act_restore_regs(jacs_activation_t *act);
+value_t *jacs_act_saved_regs_ptr(jacs_activation_t *act);

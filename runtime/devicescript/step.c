@@ -261,13 +261,13 @@ static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx,
     }
 }
 
-static value_t *saved_regs_ptr(jacs_activation_t *act) {
+value_t *jacs_act_saved_regs_ptr(jacs_activation_t *act) {
     return &act->locals[act->func->num_locals];
 }
 
 static void save_regs(jacs_activation_t *act, unsigned regs) {
     value_t *r = act->fiber->ctx->registers;
-    value_t *saved0 = saved_regs_ptr(act);
+    value_t *saved0 = jacs_act_saved_regs_ptr(act);
     value_t *saved = saved0;
     for (unsigned i = 0; i < JACS_NUM_REGS; i++) {
         if ((1 << i) & regs) {
@@ -283,7 +283,7 @@ void jacs_act_restore_regs(jacs_activation_t *act) {
     if (act->saved_regs == 0)
         return;
     value_t *r = act->fiber->ctx->registers;
-    value_t *saved = saved_regs_ptr(act);
+    value_t *saved = jacs_act_saved_regs_ptr(act);
     for (unsigned i = 0; i < JACS_NUM_REGS; i++) {
         if ((1 << i) & act->saved_regs) {
             r[i] = *saved++;
@@ -465,7 +465,10 @@ void jacs_act_step(jacs_activation_t *frame) {
         case JACS_OPASYNC_QUERY_IDX_REG:
             jacs_jd_get_register(ctx, a, b & 0xff, c, b >> 8);
             break;
-        case JACS_OPASYNC_LOG_FORMAT: { // A-string-index B-numargs
+        case JACS_OPASYNC_LOG_FORMAT: {
+            
+
+             // A-string-index B-numargs
             uint8_t tmp[128];           // TODO jd_alloc?
             strformat(ctx, a, b, tmp, sizeof(tmp), 0);
             tmp[sizeof(tmp) - 1] = 0;

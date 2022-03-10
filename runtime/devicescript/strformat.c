@@ -183,12 +183,13 @@ size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, 
         WR(c);
     }
 
-    if (dp < dstlen)
+    if (dp < dstlen) {
         dst[dp] = 0;
-    else
+        return dp;
+    } else {
         dst[dstlen - 1] = 0;
-
-    return dp;
+        return dstlen;
+    }
 }
 
 #if 0
