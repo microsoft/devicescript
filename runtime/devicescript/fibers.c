@@ -161,10 +161,11 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
     if (!code)
         code = JACS_PANIC_REBOOT;
     if (!ctx->error_code) {
+        ctx->error_pc = ctx->curr_fn ? ctx->curr_fn->pc : 0;
         if (code == JACS_PANIC_REBOOT) {
             DMESG("RESTART requested");
         } else {
-            DMESG("PANIC %d at pc=%d", code, ctx->curr_fn ? ctx->curr_fn->pc : 0);
+            DMESG("PANIC %d at pc=%d", code, ctx->error_pc);
         }
         ctx->error_code = code;
     }

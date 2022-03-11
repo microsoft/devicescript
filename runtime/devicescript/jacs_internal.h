@@ -71,8 +71,9 @@ struct jacs_ctx {
     };
     value_t *globals;
 
-    uint16_t error_code;
     uint16_t flags;
+    uint16_t error_code;
+    uint16_t error_pc;
 
     jacs_img_t img;
 
@@ -85,9 +86,10 @@ struct jacs_ctx {
     uint32_t _prev_us;
     uint32_t _now;
 
-    uint8_t mgr_service_idx;
     uint32_t log_counter;
     uint32_t log_counter_to_send;
+
+    jacs_cfg_t cfg;
 
     union {
         jd_frame_t frame;

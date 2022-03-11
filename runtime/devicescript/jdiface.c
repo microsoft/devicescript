@@ -268,7 +268,7 @@ static bool handle_logmsg(jacs_fiber_t *fiber, bool print) {
     pkt->data[JD_SERIAL_PAYLOAD_SIZE - 1] = 0; // make sure to 0-terminate
     pkt->service_size = sz + 2;
     pkt->service_command = JD_JACSCRIPT_MANAGER_CMD_LOG_MESSAGE;
-    pkt->service_index = ctx->mgr_service_idx;
+    pkt->service_index = ctx->cfg.mgr_service_idx;
     pkt->device_identifier = jd_device_id();
     pkt->_size = (pkt->service_size + 4 + 3) & ~3;
     pkt->flags = 0;
