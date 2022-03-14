@@ -8,6 +8,9 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <netdb.h>
+#include <fcntl.h>
 
 #define HOST_IP "127.0.0.1"
 
@@ -30,6 +33,19 @@ struct jd_transport_ctx {
     pthread_mutex_t talk_mutex;
 };
 typedef struct jd_transport_ctx *sock_t;
+
+int is_docker(void) {
+    static int cached;
+    if (cached == 0) {
+        int fd = open("/.dockerenv", O_RDONLY);
+        if (fd < 0)
+            cached = 1;
+        else
+            cached = 2;
+        close(fd);
+    }
+    return cached - 1;
+}
 
 static int forced_read(int fd, void *buf, size_t nbytes) {
     int numread = 0;
@@ -114,24 +130,44 @@ int sock_send_frame(sock_t ctx, jd_frame_t *frame) {
 }
 
 int sock_connect(sock_t ctx, const char *port_num) {
-    struct sockaddr_in server;
+    const char *hostname = is_docker() ? "host.docker.internal" : "localhost";
 
     CHK(ctx->sockfd == 0 && ctx->reading_thread == 0);
-    ctx->sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    CHK(ctx->sockfd != -1);
 
-    int port = atoi(port_num);
+    struct addrinfo hints = {
+        .ai_family = AF_UNSPEC,
+        .ai_socktype = SOCK_STREAM,
+    };
+    struct addrinfo *result;
 
-    server.sin_addr.s_addr = inet_addr(HOST_IP);
-    server.sin_family = AF_INET;
-    server.sin_port = htons(port);
-
-    if (connect(ctx->sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        LOG("can't connect to %s:%d: %s", HOST_IP, port, strerror(errno));
+    int s = getaddrinfo(hostname, port_num, &hints, &result);
+    if (s) {
+        LOG("getaddrinfo %s:%s: %s", hostname, port_num, gai_strerror(s));
         return -1;
     }
 
-    LOG("connected to %s:%d", HOST_IP, port);
+    for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next) {
+        int sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (sfd == -1)
+            continue;
+
+        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1) {
+            ctx->sockfd = sfd;
+            break;
+        }
+
+        if (rp->ai_next == NULL)
+            LOG("connect %s:%s: %s", hostname, port_num, strerror(errno));
+
+        close(sfd);
+    }
+
+    freeaddrinfo(result);
+
+    if (ctx->sockfd == 0)
+        return -1;
+
+    LOG("connected to %s:%s", hostname, port_num);
 
     pthread_mutex_init(&ctx->talk_mutex, NULL);
     CHK_ERR(pthread_create(&ctx->reading_thread, NULL, sock_read_loop, ctx));

@@ -49,3 +49,6 @@ $(BUILT)/%.o: %.c $(DEPS)
 
 clean:
 	rm -rf $(BUILT)
+
+gdb:
+	gdb -x gdbinit
