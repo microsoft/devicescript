@@ -107,14 +107,17 @@ int load_image(const char *name) {
     int r = jacs_verify(img, size);
     if (r) {
         fprintf(stderr, "verification error for '%s': %d\n", name, r);
+        jd_free(img);
         return r;
     }
 
     if (jacscriptmgr_deploy(img, size)) {
         fprintf(stderr, "can't deploy '%s'\n", name);
+        jd_free(img);
         return -3;
     }
 
+    jd_free(img);
     return 0;
 }
 
@@ -132,6 +135,7 @@ static void run_sample(const char *name) {
     }
 
     jacscriptmgr_deploy(NULL, 0);
+    jd_services_deinit();
 }
 
 int main(int argc, const char **argv) {

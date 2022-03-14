@@ -50,5 +50,8 @@ $(BUILT)/%.o: %.c $(DEPS)
 clean:
 	rm -rf $(BUILT)
 
-gdb:
-	gdb -x gdbinit
+gdb: all
+	gdb -x scripts/gdbinit
+
+vg: all
+	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli 8082 tmp/prog.jacs
