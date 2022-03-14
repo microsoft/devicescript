@@ -60,8 +60,8 @@ static void free_fiber(jacs_fiber_t *fiber) {
 
 void jacs_fiber_return_from_call(jacs_activation_t *act) {
     if (act->caller) {
-        jd_free(act);
         jacs_fiber_activate(act->caller);
+        jd_free(act);
     } else {
         jacs_fiber_t *fiber = act->fiber;
         if (fiber->flags & JACS_FIBER_FLAG_PENDING) {
