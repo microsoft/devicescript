@@ -130,6 +130,8 @@ static void run_sample(const char *name) {
         if (!jacscriptmgr_get_ctx())
             break;
     }
+
+    jacscriptmgr_deploy(NULL, 0);
 }
 
 int main(int argc, const char **argv) {

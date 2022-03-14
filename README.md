@@ -3,6 +3,14 @@
 This project serves as a sample how to use [jacdac-c](https://github.com/microsoft/jacdac-c)
 in non-embedded environment.
 
+## Usage
+
+* start `jacdac devtools` (the npm version) and let is running
+* open this folder in VSCode; use "Reopen in Container" if needed
+* start Terminal in VSCode
+* run `make` in terminal
+* run `./built/jdcli 8082`
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
