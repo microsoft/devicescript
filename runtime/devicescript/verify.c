@@ -173,14 +173,14 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
         } break;
 
         case JACS_OPTOP_JUMP: { // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
-            uint32_t pc2 = pc + 1;
+            int pc2 = pc + 1;
             if (arg8 & (1 << 7)) {
                 pc2 -= b;
             } else {
                 pc2 += b;
             }
             CHECK(1105, pc2 >= 0);                                            // jump before
-            CHECK(1106, pc2 < numinstr);                                      // jump after
+            CHECK(1106, pc2 < (int)numinstr);                                 // jump after
             CHECK(1107, pc2 == 0 || !jacs_is_prefix_instr(funcode[pc2 - 1])); // jump into prefix
             if (!(arg8 & (1 << 6)))
                 lastOK = true;
@@ -254,7 +254,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 break;
             case JACS_OPASYNC_SEND_CMD:                   // A-role, B-code
                 CHECK(1124, a < jacs_img_num_roles(img)); // role idx
-                CHECK(1125, b <= 0xffff);                 // cmd code
+                // CHECK(1125, b <= 0xffff);                 // cmd code
                 break;
             case JACS_OPASYNC_QUERY_REG:                  // A-role, B-code, C-timeout
                 CHECK(1126, a < jacs_img_num_roles(img)); // role idx
@@ -265,7 +265,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1129, b >> 8 != 0);                 // arg!=0
                 CHECK(1130, b >> 8 < jacs_img_num_strings(img)); // num str
                 break;
-            case JACS_OPASYNC_LOG_FORMAT:// A-string-index B-numargs
+            case JACS_OPASYNC_LOG_FORMAT: // A-string-index B-numargs
                 CHECK(1144, c == 0);
                 CHECK(1145, a < jacs_img_num_strings(img));
                 CHECK(1146, b < JACS_NUM_REGS);
