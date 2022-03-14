@@ -1,0 +1,21 @@
+#pragma once
+
+#include <string.h>
+#include <stdint.h>
+
+#include "jd_protocol.h"
+#include "jd_client.h"
+
+typedef struct jd_transport_ctx jd_transport_ctx_t;
+
+typedef struct {
+    jd_transport_ctx_t *(*alloc)(void);
+    void (*set_frame_callback)(jd_transport_ctx_t *ctx,
+                               void (*cb)(void *userdata, jd_frame_t *frame), void *userdata);
+    int (*connect)(jd_transport_ctx_t *ctx, const char *address);
+    int (*send_frame)(jd_transport_ctx_t *ctx, jd_frame_t *frame);
+    void (*free)(jd_transport_ctx_t *ctx);
+} jd_transport_t;
+
+extern const jd_transport_t hf2_transport;
+extern const jd_transport_t sock_transport;
