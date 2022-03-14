@@ -8,6 +8,8 @@ CFLAGS = $(DEFINES) $(INC) \
 	-Wno-strict-aliasing -Wno-error=unused-function -Wno-error=cpp \
 	-Wno-error=unused-variable
 
+_IGNORE1 := $(shell test -f jacdac-c/README.md || git submodule update --init --recursive 1>&2)
+
 DEPS = $(wildcard \
 	inc/*.h \
 	jacdac/dist/c/*.h \
@@ -54,4 +56,4 @@ gdb: all
 	gdb -x scripts/gdbinit
 
 vg: all
-	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli 8082 tmp/prog.jacs
+	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
