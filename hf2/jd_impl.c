@@ -16,21 +16,51 @@ uint32_t app_get_device_class(void) {
 
 uint32_t now;
 
-int gethostuuid(uuid_t id, const struct timespec *wait);
-
 void hw_panic(void) {
     abort();
 }
 
+STATIC_ASSERT(sizeof(char) == 1);
+
 static uint64_t cached_devid;
 uint64_t hw_device_id(void) {
     if (!cached_devid) {
+        char buf[100];
+        unsigned bufsz = 0;
+
+#if defined(__APPLE__)
+        extern int gethostuuid(uuid_t id, const struct timespec *wait);
         uuid_t uuid;
         struct timespec timeout = {1, 0}; // 1sec
         memset(uuid, 0, sizeof(uuid));
         gethostuuid(uuid, &timeout);
-        cached_devid = ((uint64_t)jd_hash_fnv1a(uuid, sizeof(uuid)) << 32) |
-                       ((uint64_t)jd_hash_fnv1a((uint8_t *)uuid + 4, sizeof(uuid) - 4));
+        bufsz = sizeof(uuid);
+        memcpy(buf, uuid, bufsz);
+#elif defined(__linux__)
+        FILE *f = fopen("/sys/class/dmi/id/product_uuid", "r");
+        if (f != NULL) {
+            int len = fread(buf, 1, sizeof buf, f);
+            if (len >= 10)
+                bufsz = len;
+            fclose(f);
+        }
+#endif
+
+        if (bufsz == 0) {
+            buf[0] = 0;
+            gethostname(buf, sizeof buf);
+            bufsz = strlen(buf);
+            if (bufsz > 0 && bufsz < 5) {
+                strcpy(buf + bufsz, "+padding");
+                bufsz = strlen(buf);
+            }
+        }
+
+        if (bufsz < 5)
+            jd_panic();
+
+        cached_devid = ((uint64_t)jd_hash_fnv1a(buf, bufsz) << 32) |
+                       ((uint64_t)jd_hash_fnv1a(buf + 4, bufsz - 4));
     }
 
     return cached_devid;
@@ -65,7 +95,7 @@ void target_wait_us(uint32_t us) {
         ;
 }
 
-static uint64_t getmicros() {
+static uint64_t getmicros(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return tv.tv_sec * 1000000LL + tv.tv_usec;
@@ -81,7 +111,6 @@ uint64_t tim_get_micros() {
 
 void pwr_enter_no_sleep(void) {}
 
-int target_in_irq(void)
-{
+int target_in_irq(void) {
     return 0;
 }

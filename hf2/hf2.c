@@ -243,7 +243,7 @@ int hf2_connect(hf2_t ctx, const char *address) {
 void hf2_free(hf2_t ctx) {
     if (!ctx->serialfd)
         return;
-    pthread_kill(ctx->reading_thread, 0);
+    pthread_cancel(ctx->reading_thread);
     close(ctx->serialfd);
     ctx->serialfd = 0;
 }

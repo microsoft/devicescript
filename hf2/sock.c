@@ -142,7 +142,7 @@ int sock_connect(sock_t ctx, const char *port_num) {
 void sock_free(sock_t ctx) {
     if (!ctx->sockfd)
         return;
-    pthread_kill(ctx->reading_thread, 0);
+    pthread_cancel(ctx->reading_thread);
     close(ctx->sockfd);
     ctx->sockfd = 0;
 }

@@ -40,7 +40,7 @@ all:
 
 $(BUILT)/jdcli: $(OBJ)
 	@echo LD $@
-	$(Q)$(CC) $(LDFLAGS) -o $@ $(OBJ)
+	$(Q)$(CC) $(LDFLAGS) -o $@ $(OBJ) -lm -lpthread
 
 $(BUILT)/%.o: %.c $(DEPS)
 	@echo CC $<
