@@ -465,14 +465,9 @@ void jacs_act_step(jacs_activation_t *frame) {
         case JACS_OPASYNC_QUERY_IDX_REG:
             jacs_jd_get_register(ctx, a, b & 0xff, c, b >> 8);
             break;
-        case JACS_OPASYNC_LOG_FORMAT: {
-
-            // A-string-index B-numargs
-            uint8_t tmp[128]; // TODO jd_alloc?
-            strformat(ctx, a, b, tmp, sizeof(tmp), 0);
-            tmp[sizeof(tmp) - 1] = 0;
-            DMESG("JSCR: %s", tmp);
-        } break;
+        case JACS_OPASYNC_LOG_FORMAT:
+            jacs_jd_send_logmsg(jacs_ctx_t * ctx, a, b);
+            break;
         default:
             oops();
             break;
