@@ -278,7 +278,7 @@ static bool handle_logmsg(jacs_fiber_t *fiber, bool print) {
 
     if (send_now) {
         if (jd_send_pkt(&ctx->packet) == 0) {
-            LOGV("log sent");
+            // LOGV("log sent");
             ctx->log_counter_to_send++;
             return RESUME_USER_CODE;
         } else {
