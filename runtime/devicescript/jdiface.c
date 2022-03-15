@@ -276,6 +276,9 @@ static bool handle_logmsg(jacs_fiber_t *fiber, bool print) {
     if (print)
         DMESG("JSCR: %s", pkt->data + 2);
 
+    if (!(ctx->flags & JACS_CTX_LOGGING_ENABLED))
+        return RESUME_USER_CODE;
+
     if (send_now) {
         if (jd_send_pkt(&ctx->packet) == 0) {
             // LOGV("log sent");
@@ -385,5 +388,14 @@ void jacs_jd_free_roles(jacs_ctx_t *ctx) {
     for (unsigned idx = 0; idx < numroles; ++idx) {
         jd_role_free(ctx->roles[idx]);
         ctx->roles[idx] = NULL;
+    }
+}
+
+void jacs_set_logging(jacs_ctx_t *ctx, uint8_t logging) {
+    if (logging)
+        ctx->flags |= JACS_CTX_LOGGING_ENABLED;
+    else {
+        ctx->flags &= ~JACS_CTX_LOGGING_ENABLED;
+        ctx->log_counter_to_send = ctx->log_counter;
     }
 }

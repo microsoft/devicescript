@@ -19,6 +19,7 @@ void jacs_restart(jacs_ctx_t *ctx);
 unsigned jacs_error_code(jacs_ctx_t *ctx, unsigned *pc);
 void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *arg1);
 void jacs_free_ctx(jacs_ctx_t *ctx);
+void jacs_set_logging(jacs_ctx_t *ctx, uint8_t logging);
 
 // Jacscript manager service
 typedef struct {

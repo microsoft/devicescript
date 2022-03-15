@@ -82,6 +82,8 @@ static void try_run(srv_t *state) {
             jacs_free_ctx(state->ctx);
         jacs_cfg_t cfg = {.mgr_service_idx = state->service_index};
         state->ctx = jacs_create_ctx(hd->image, hd->size, &cfg);
+        if (state->ctx)
+            jacs_set_logging(state->ctx, state->logging);
     }
     send_status(state);
 }
@@ -252,6 +254,10 @@ void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
                 state->next_restart = now; // make it more responsive
             }
             break;
+        case JD_JACSCRIPT_MANAGER_REG_LOGGING:
+            if (state->ctx)
+                jacs_set_logging(state->ctx, state->logging);
+            break;
         }
         break;
     }
@@ -320,6 +326,7 @@ void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg) {
     state->cfg = cfg;
     state->read_program_ptr = -1;
     state->autostart = 1;
+    state->logging = 1;
     state->next_restart = now;
     _state = state;
 }
