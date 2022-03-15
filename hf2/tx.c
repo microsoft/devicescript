@@ -21,7 +21,7 @@ void tx_init(const jd_transport_t *transport_, jd_transport_ctx_t *ctx) {
 
 int jd_send_frame(jd_frame_t *f) {
     if (!transport)
-        return -1;
+        return 0; // pretend we succeeded - otherwise fibers will block forever
     return transport->send_frame(transport_ctx, f);
 }
 
