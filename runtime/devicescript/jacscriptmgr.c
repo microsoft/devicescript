@@ -194,6 +194,8 @@ static void deploy_bytecode(srv_t *state, jd_packet_t *pkt) {
 
     jacscriptmgr_program_header_t hd;
 
+    DMESG("deploy %d b", sz);
+
     if (sz > state->cfg->max_program_size - sizeof(hd) || (sz & (JACSMGR_ALIGN - 1)))
         return; // just ignore it
 
@@ -307,6 +309,8 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize) {
     flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
 
     flashing_done(state);
+
+    DMESG("internal deploy done; %d bytes", imgsize);
 
     return 0;
 }

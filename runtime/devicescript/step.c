@@ -466,7 +466,7 @@ void jacs_act_step(jacs_activation_t *frame) {
             jacs_jd_get_register(ctx, a, b & 0xff, c, b >> 8);
             break;
         case JACS_OPASYNC_LOG_FORMAT:
-            jacs_jd_send_logmsg(jacs_ctx_t * ctx, a, b);
+            jacs_jd_send_logmsg(ctx, a, b);
             break;
         default:
             oops();
