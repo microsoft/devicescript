@@ -11,8 +11,6 @@
 #include "jacs_img.h"
 #include "jacs_regcache.h"
 
-#include <assert.h>
-
 // this can't be more than a week; unit = ms
 #define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)
 #define JACS_MAX_STEPS (128 * 1024)
@@ -108,7 +106,7 @@ struct jacs_activation {
     value_t locals[0];
 };
 
-#define oops() assert(false)
+#define oops() jd_panic()
 
 static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
     return ctx->_now;

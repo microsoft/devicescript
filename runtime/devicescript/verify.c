@@ -288,8 +288,8 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
 }
 
 int jacs_verify(const uint8_t *imgdata, uint32_t size) {
-    assert(((uintptr_t)imgdata & 3) == 0);
-    assert(size > sizeof(jacs_img_header_t));
+    JD_ASSERT(((uintptr_t)imgdata & 3) == 0);
+    JD_ASSERT(size > sizeof(jacs_img_header_t));
     uint32_t offset = 0;
     const jacs_img_header_t *header = (const jacs_img_header_t *)imgdata;
     jacs_img_t _img;

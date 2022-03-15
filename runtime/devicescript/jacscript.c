@@ -24,12 +24,12 @@ jacs_ctx_t *jacs_create_ctx(const uint8_t *img, uint32_t size, const jacs_cfg_t 
 }
 
 static void jacs_enter(jacs_ctx_t *ctx) {
-    assert((ctx->flags & JACS_CTX_FLAG_BUSY) == 0);
+    JD_ASSERT((ctx->flags & JACS_CTX_FLAG_BUSY) == 0);
     ctx->flags |= JACS_CTX_FLAG_BUSY;
 }
 
 static void jacs_leave(jacs_ctx_t *ctx) {
-    assert((ctx->flags & JACS_CTX_FLAG_BUSY) != 0);
+    JD_ASSERT((ctx->flags & JACS_CTX_FLAG_BUSY) != 0);
     ctx->flags &= ~JACS_CTX_FLAG_BUSY;
 }
 

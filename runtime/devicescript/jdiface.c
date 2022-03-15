@@ -124,7 +124,7 @@ void jacs_jd_wake_role(jacs_ctx_t *ctx, unsigned role_idx) {
 }
 
 static int jacs_jd_reg_arg_length(jacs_ctx_t *ctx, unsigned command_arg) {
-    assert(command_arg != 0);
+    JD_ASSERT(command_arg != 0);
     jd_packet_t *pkt = &ctx->packet;
     int slen = jacs_img_get_string_len(&ctx->img, command_arg);
     if (pkt->service_size >= slen + 1 && pkt->data[slen] == 0 &&

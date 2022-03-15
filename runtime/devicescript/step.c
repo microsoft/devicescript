@@ -302,7 +302,7 @@ static unsigned strformat(jacs_ctx_t *ctx, unsigned str_idx, unsigned numargs, u
 void jacs_act_step(jacs_activation_t *frame) {
     jacs_ctx_t *ctx = frame->fiber->ctx;
 
-    assert(!ctx->error_code);
+    JD_ASSERT(!ctx->error_code);
 
     uint32_t instr = ctx->img.instructions[frame->pc++];
 
@@ -466,10 +466,9 @@ void jacs_act_step(jacs_activation_t *frame) {
             jacs_jd_get_register(ctx, a, b & 0xff, c, b >> 8);
             break;
         case JACS_OPASYNC_LOG_FORMAT: {
-            
 
-             // A-string-index B-numargs
-            uint8_t tmp[128];           // TODO jd_alloc?
+            // A-string-index B-numargs
+            uint8_t tmp[128]; // TODO jd_alloc?
             strformat(ctx, a, b, tmp, sizeof(tmp), 0);
             tmp[sizeof(tmp) - 1] = 0;
             DMESG("JSCR: %s", tmp);

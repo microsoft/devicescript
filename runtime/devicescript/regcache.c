@@ -34,7 +34,7 @@ jacs_regcache_entry_t *jacs_regcache_alloc(jacs_regcache_t *cache, unsigned role
                                            unsigned service_command, unsigned resp_size) {
     jacs_regcache_entry_t *q = NULL;
 
-    assert(service_command > 0);
+    JD_ASSERT(service_command > 0);
 
     for (unsigned i = 0; i < JACS_REGCACHE_NUM_ENTRIES; ++i) {
         if (cache->entries[i].service_command == 0) {
