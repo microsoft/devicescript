@@ -12,6 +12,8 @@
 #define JACSMGR_PROG_MAGIC0 0x8d8abd53
 #define JACSMGR_PROG_MAGIC1 0xb27c4b2b
 
+#define LOGV JD_NOLOG
+
 typedef struct {
     uint32_t magic0;
     uint32_t size;
@@ -135,8 +137,8 @@ void jacscriptmgr_process(srv_t *state) {
         };
         jd_send_event_ext(state, JD_JACSCRIPT_MANAGER_EV_PROGRAM_PANIC, &args, sizeof(args));
         stop_program(state);
-        if (code == JACS_PANIC_REBOOT)
-            state->next_restart = now; // faster restart on reboot()
+        int delay = code == JACS_PANIC_REBOOT ? 1 : 5;
+        state->next_restart = now + delay * 1024 * 1024;
     }
 }
 
@@ -158,8 +160,12 @@ static void deploy_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
     }
 
     dst += state->write_offset;
-    if ((state->write_offset & (JD_FLASH_PAGE_SIZE - 1)) == 0)
+    if ((state->write_offset & (JD_FLASH_PAGE_SIZE - 1)) == 0) {
+        LOGV("erase %p", dst);
         flash_erase(dst);
+    }
+    
+    LOGV("wr %p sz=%d", dst, pkt->service_size);
     flash_program(dst, pkt->data, pkt->service_size);
     state->write_offset += pkt->service_size;
 }
