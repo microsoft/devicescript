@@ -18,8 +18,6 @@
 
 typedef struct jacs_activation jacs_activation_t;
 
-#define JACS_FIBER_FLAG_PENDING 0x01
-
 #define JACS_PKT_KIND_NONE 0
 #define JACS_PKT_KIND_REG_GET 1
 #define JACS_PKT_KIND_SEND_PKT 2
@@ -44,7 +42,10 @@ typedef struct jacs_fiber {
     } pkt_data;
 
     uint8_t pkt_kind : 4;
-    uint8_t flags : 4;
+
+    uint8_t pending : 1;
+    uint8_t role_wkp : 1;
+    uint8_t reserved_flag : 2;
 
     uint16_t role_idx;
     uint16_t service_command;

@@ -64,9 +64,9 @@ void jacs_fiber_return_from_call(jacs_activation_t *act) {
         jd_free(act);
     } else {
         jacs_fiber_t *fiber = act->fiber;
-        if (fiber->flags & JACS_FIBER_FLAG_PENDING) {
+        if (fiber->pending) {
             DMESG("re-run fiber %d ", fiber->bottom_function_idx);
-            fiber->flags &= ~JACS_FIBER_FLAG_PENDING;
+            fiber->pending = 0;
             act->pc = act->func->start >> 1;
         } else {
             DMESG("free fiber %d", fiber->bottom_function_idx);
@@ -99,11 +99,11 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
         for (fiber = ctx->fibers; fiber; fiber = fiber->next) {
             if (fiber->bottom_function_idx == fidx) {
                 if (op == JACS_OPCALL_BG_MAX1_PEND1) {
-                    if (fiber->flags & JACS_FIBER_FLAG_PENDING) {
+                    if (fiber->pending) {
                         ctx->registers[0] = 3;
                         // DMESG("fiber already pending %d", fidx);
                     } else {
-                        fiber->flags |= JACS_FIBER_FLAG_PENDING;
+                        fiber->pending = 1;
                         // DMESG("pend fiber %d", fidx);
                         ctx->registers[0] = 2;
                     }

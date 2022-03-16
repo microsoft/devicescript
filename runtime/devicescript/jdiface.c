@@ -118,7 +118,20 @@ static void jacs_jd_set_packet(jacs_ctx_t *ctx, unsigned role_idx, unsigned serv
 void jacs_jd_wake_role(jacs_ctx_t *ctx, unsigned role_idx) {
     for (jacs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
         if (fiber->role_idx == role_idx) {
-            jacs_fiber_run(fiber);
+            fiber->role_wkp = 1;
+        }
+    }
+
+    int runsome = 1;
+    while (runsome) {
+        runsome = 0;
+        for (jacs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
+            if (fiber->role_wkp) {
+                fiber->role_wkp = 0;
+                jacs_fiber_run(fiber);
+                runsome = 1;
+                break; // can't go to next - fiber might be gone
+            }
         }
     }
 }
