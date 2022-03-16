@@ -376,6 +376,7 @@ void jacs_jd_reset_packet(jacs_ctx_t *ctx) {
 }
 
 void jacs_jd_init_roles(jacs_ctx_t *ctx) {
+    jd_role_free_all(); // free any previous roles
     unsigned numroles = jacs_img_num_roles(&ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
         const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, idx);
