@@ -216,7 +216,7 @@ static void set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8
 
 #define SET_VAL(SZ, l, h)                                                                          \
     case JACS_NUMFMT_##SZ:                                                                         \
-        SZ = q < l ? l : q > h ? h : q;                                                            \
+        SZ = q < (value_t)l ? (value_t)l : q > (value_t)h ? (value_t)h : q;                        \
         memcpy(pkt->data + offset, &SZ, sizeof(SZ));                                               \
         break
 
