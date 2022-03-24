@@ -164,7 +164,7 @@ static void deploy_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
         LOGV("erase %p", dst);
         flash_erase(dst);
     }
-    
+
     LOGV("wr %p sz=%d", dst, pkt->service_size);
     flash_program(dst, pkt->data, pkt->service_size);
     state->write_offset += pkt->service_size;
