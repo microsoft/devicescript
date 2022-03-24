@@ -17,7 +17,7 @@ typedef struct linked_frame {
 } linked_frame_t;
 
 static pthread_mutex_t frame_mut;
-static linked_frame_t *rx_queue, *rx_to_free;
+static linked_frame_t *rx_queue;
 static void frame_cb(void *userdata, jd_frame_t *frame) {
     linked_frame_t *lnk = jd_alloc(JD_FRAME_SIZE(frame) + sizeof(void *));
     memcpy(&lnk->frame, frame, JD_FRAME_SIZE(frame));
@@ -62,18 +62,17 @@ void app_init_services() {
 
 jd_frame_t *jd_rx_get_frame(void) {
     jd_frame_t *r = NULL;
-    if (rx_to_free) {
-        free(rx_to_free);
-        rx_to_free = NULL;
-    }
     pthread_mutex_lock(&frame_mut);
     if (rx_queue) {
-        rx_to_free = rx_queue;
         r = &rx_queue->frame;
         rx_queue = rx_queue->next;
     }
     pthread_mutex_unlock(&frame_mut);
     return r;
+}
+
+void jd_rx_release_frame(jd_frame_t *frame) {
+    jd_free((uint8_t *)frame - offsetof(linked_frame_t, frame));
 }
 
 void tx_init(const jd_transport_t *transport, jd_transport_ctx_t *ctx);
