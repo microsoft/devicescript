@@ -18,6 +18,7 @@ typedef struct linked_frame {
 
 static pthread_mutex_t frame_mut;
 static linked_frame_t *rx_queue;
+static void frame_cb_post(void);
 static void frame_cb(void *userdata, jd_frame_t *frame) {
     linked_frame_t *lnk = jd_alloc(JD_FRAME_SIZE(frame) + sizeof(void *));
     memcpy(&lnk->frame, frame, JD_FRAME_SIZE(frame));
@@ -32,6 +33,7 @@ static void frame_cb(void *userdata, jd_frame_t *frame) {
         rx_queue = lnk;
     }
     pthread_mutex_unlock(&frame_mut);
+    frame_cb_post();
 }
 
 bool ends_with(const char *str, const char *suff) {
@@ -137,6 +139,29 @@ static void run_sample(const char *name) {
     jd_services_deinit();
 }
 
+static jd_transport_ctx_t *transport_ctx = NULL;
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten/eventloop.h>
+bool websock_is_connected(jd_transport_ctx_t *ctx);
+static void em_process(void *dummy) {
+    if (!websock_is_connected(transport_ctx))
+        return;
+    jd_process_everything();
+    while (rx_queue)
+        jd_process_everything();
+}
+static void frame_cb_post(void) {
+    em_process(NULL);
+}
+void run_emscripten_loop(void) {
+    emscripten_set_interval(em_process, 10, NULL);
+    emscripten_unwind_to_js_event_loop();
+}
+#else
+static void frame_cb_post(void) {}
+#endif
+
 int main(int argc, const char **argv) {
     const jd_transport_t *transport = NULL;
     const char *transport_arg = NULL;
@@ -163,7 +188,6 @@ int main(int argc, const char **argv) {
         return 1;
     }
 
-    jd_transport_ctx_t *transport_ctx = NULL;
     if (transport) {
         transport_ctx = transport->alloc();
         transport->set_frame_callback(transport_ctx, frame_cb, NULL);
@@ -182,11 +206,15 @@ int main(int argc, const char **argv) {
     if (jacs_img) {
         run_sample(jacs_img);
     } else {
+#ifdef __EMSCRIPTEN__
+        run_emscripten_loop();
+#else
         for (;;) {
             jd_process_everything();
             if (!rx_queue)
                 target_wait_us(10000);
         }
+#endif
     }
 
     return 0;

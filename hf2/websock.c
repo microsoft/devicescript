@@ -13,8 +13,8 @@
 #include <emscripten/websocket.h>
 
 #define LOG(fmt, ...) printf("WS: " fmt "\n", ##__VA_ARGS__)
-//#define LOGV(...) ((void)0)
-#define LOGV LOG
+#define LOGV(...) ((void)0)
+//#define LOGV LOG
 
 #define CHK(cond)                                                                                  \
     if (!(cond))                                                                                   \
@@ -59,11 +59,8 @@ void websock_set_frame_callback(websock_t ctx, void (*cb)(void *userdata, jd_fra
 int websock_send_frame(websock_t ctx, jd_frame_t *frame) {
     int len = JD_FRAME_SIZE(frame);
     LOGV("send %db", len);
-    uint8_t buf[257];
-    buf[0] = len;
-    memcpy(buf + 1, frame, len);
     pthread_mutex_lock(&ctx->talk_mutex);
-    int r = emscripten_websocket_send_binary(ctx->sockfd, buf, len + 1);
+    int r = emscripten_websocket_send_binary(ctx->sockfd, frame, len);
     CHK(r == 0);
     pthread_mutex_unlock(&ctx->talk_mutex);
     return 0;
@@ -130,20 +127,15 @@ int websock_connect(websock_t ctx, const char *port_num) {
     EMSCRIPTEN_WEBSOCKET_T ws = emscripten_websocket_new(&ws_attrs);
     CHK(ws > 0);
 
-    CHK_ERR(pthread_create(&ctx->reading_thread, NULL, sock_read_loop, ctx));
-
-    emscripten_websocket_set_onopen_callback_on_thread(ws, ctx, onopen, ctx->reading_thread);
-    emscripten_websocket_set_onerror_callback_on_thread(ws, ctx, onerror, ctx->reading_thread);
-    emscripten_websocket_set_onclose_callback_on_thread(ws, ctx, onclose, ctx->reading_thread);
-    emscripten_websocket_set_onmessage_callback_on_thread(ws, ctx, onmessage, ctx->reading_thread);
+    emscripten_websocket_set_onopen_callback(ws, ctx, onopen);
+    emscripten_websocket_set_onerror_callback(ws, ctx, onerror);
+    emscripten_websocket_set_onclose_callback(ws, ctx, onclose);
+    emscripten_websocket_set_onmessage_callback(ws, ctx, onmessage);
     ctx->sockfd = ws;
 
     LOG("connecting to %s", hostbuf);
 
     pthread_mutex_init(&ctx->talk_mutex, NULL);
-
-    while (!ctx->isopen)
-        sleep(1);
 
     return 0;
 }
@@ -153,9 +145,13 @@ void websock_free(websock_t ctx) {
         return;
 
     emscripten_websocket_close(ctx->sockfd, 0, "");
-    pthread_cancel(ctx->reading_thread);
     ctx->sockfd = 0;
 }
+
+bool websock_is_connected(websock_t ctx) {
+    return ctx->isopen;
+}
+
 
 const jd_transport_t sock_transport = {
     .alloc = websock_alloc,
