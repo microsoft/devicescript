@@ -57,3 +57,9 @@ gdb: all
 
 vg: all
 	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
+
+EMCC_OPTS = $(DEFINES) $(INC) \
+	-g -O0 -s WASM=1 -s EXPORTED_RUNTIME_METHODS=cwrap -s EXPORTED_FUNCTIONS=_main -pthread -s PTHREAD_POOL_SIZE=4
+
+em:
+	emcc $(EMCC_OPTS) -o $(BUILT)/jdcli.js $(SRC) -lwebsocket.js

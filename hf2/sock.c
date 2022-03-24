@@ -1,3 +1,5 @@
+#ifndef __EMSCRIPTEN__
+
 #include "jd_sdk.h"
 
 #include <stdio.h>
@@ -11,8 +13,6 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <fcntl.h>
-
-#define HOST_IP "127.0.0.1"
 
 #define LOG(fmt, ...) printf("SOCK: " fmt "\n", ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
@@ -190,3 +190,5 @@ const jd_transport_t sock_transport = {
     .send_frame = sock_send_frame,
     .free = sock_free,
 };
+
+#endif
