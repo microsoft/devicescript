@@ -11,28 +11,9 @@
 
 #define LOG(fmt, ...) printf("main: " fmt "\n", ##__VA_ARGS__)
 
-typedef struct linked_frame {
-    struct linked_frame *next;
-    jd_frame_t frame;
-} linked_frame_t;
-
-static pthread_mutex_t frame_mut;
-static linked_frame_t *rx_queue;
 static void frame_cb_post(void);
 static void frame_cb(void *userdata, jd_frame_t *frame) {
-    linked_frame_t *lnk = jd_alloc(JD_FRAME_SIZE(frame) + sizeof(void *));
-    memcpy(&lnk->frame, frame, JD_FRAME_SIZE(frame));
-    lnk->next = NULL;
-    pthread_mutex_lock(&frame_mut);
-    if (rx_queue) {
-        linked_frame_t *last = rx_queue;
-        while (last->next)
-            last = last->next;
-        last->next = lnk;
-    } else {
-        rx_queue = lnk;
-    }
-    pthread_mutex_unlock(&frame_mut);
+    jd_rx_frame_received(frame);
     frame_cb_post();
 }
 
@@ -52,29 +33,10 @@ bool starts_with(const char *str, const char *pref) {
     return memcmp(str, pref, strlen(pref)) == 0;
 }
 
-void jd_rx_init() {
-    pthread_mutex_init(&frame_mut, NULL);
-}
-
 void init_jacscript_manager(void);
 void app_init_services() {
     jd_role_manager_init();
     init_jacscript_manager();
-}
-
-jd_frame_t *jd_rx_get_frame(void) {
-    jd_frame_t *r = NULL;
-    pthread_mutex_lock(&frame_mut);
-    if (rx_queue) {
-        r = &rx_queue->frame;
-        rx_queue = rx_queue->next;
-    }
-    pthread_mutex_unlock(&frame_mut);
-    return r;
-}
-
-void jd_rx_release_frame(jd_frame_t *frame) {
-    jd_free((uint8_t *)frame - offsetof(linked_frame_t, frame));
 }
 
 void tx_init(const jd_transport_t *transport, jd_transport_ctx_t *ctx);
@@ -128,8 +90,7 @@ static void run_sample(const char *name) {
 
     for (;;) {
         jd_process_everything();
-        if (!rx_queue)
-            target_wait_us(10000);
+        target_wait_us(10000);
 
         if (!jacscriptmgr_get_ctx())
             break;
@@ -148,8 +109,6 @@ static void em_process(void *dummy) {
     if (!websock_is_connected(transport_ctx))
         return;
     jd_process_everything();
-    while (rx_queue)
-        jd_process_everything();
 }
 static void frame_cb_post(void) {
     em_process(NULL);
@@ -162,10 +121,27 @@ void run_emscripten_loop(void) {
 static void frame_cb_post(void) {}
 #endif
 
+#ifndef __EMSCRIPTEN__
+
 int main(int argc, const char **argv) {
     const jd_transport_t *transport = NULL;
     const char *transport_arg = NULL;
     const char *jacs_img = NULL;
+
+#if 0
+    uint64_t devid;
+    jd_from_hex(&devid, "1989f4ee00000000");
+    for (;;) {
+        devid += 0x71000000000;
+        char s[30];
+        jd_device_short_id(s, devid);
+        if (strcmp(s, "ZX81") == 0) {
+            jd_to_hex(s, &devid, sizeof(devid));
+            printf("%s 0x%llx\n", s, devid);
+            return 0;
+        }
+    }
+#endif
 
     for (int i = 1; i < argc; ++i) {
         const char *arg = argv[i];
@@ -196,6 +172,7 @@ int main(int argc, const char **argv) {
     }
 
     tx_init(transport, transport_ctx);
+
     jd_rx_init();
     jd_services_init();
 
@@ -211,11 +188,12 @@ int main(int argc, const char **argv) {
 #else
         for (;;) {
             jd_process_everything();
-            if (!rx_queue)
-                target_wait_us(10000);
+            target_wait_us(10000);
         }
 #endif
     }
 
     return 0;
 }
+
+#endif

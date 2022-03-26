@@ -26,7 +26,6 @@ BUILT = built
 JDS = jacdac-c/source
 SRC = $(wildcard hf2/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
-	$(wildcard jacdac-c/services/*.c) \
 	$(wildcard jacdac-c/jacscript/*.c) \
 	$(JDS)/jd_util.c \
 	$(JDS)/jd_control.c \
@@ -60,10 +59,10 @@ vg: all
 	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
 
 EMCC_OPTS = $(DEFINES) $(INC) \
-	-g -O0 -s WASM=1 -s EXPORTED_RUNTIME_METHODS=cwrap -s EXPORTED_FUNCTIONS=_main -pthread
+	-g2 -O1 -s WASM=1 -s MODULARIZE=1 --no-entry -s SINGLE_FILE=0 -s EXPORTED_FUNCTIONS=_malloc,_free --pre-js wasmpre.js
 
 em:
-	emcc $(EMCC_OPTS) -o $(BUILT)/jdcli.js $(SRC) -lwebsocket.js
+	emcc $(EMCC_OPTS) -o $(BUILT)/jdcli.js $(SRC)
 
 emr: em
-	node --experimental-wasm-threads --experimental-wasm-bulk-memory run 8081
+	node run
