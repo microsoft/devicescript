@@ -31,7 +31,7 @@ jobs:
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
     - name: make
-      run: make
+      run: make test
 
     - name: make em
       run: make em
