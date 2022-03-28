@@ -33,9 +33,6 @@ jobs:
     - name: make
       run: make test
 
-    - name: make em
-      run: make em
-
     - name: Upload jdcli.js
       uses: actions/upload-artifact@v1
       with:

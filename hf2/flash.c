@@ -12,6 +12,7 @@
 static jacscriptmgr_cfg_t cfg;
 
 void flash_program(void *dst, const void *src, uint32_t len) {
+    JD_ASSERT(cfg.program_base != NULL);
     ptrdiff_t diff = (uint8_t *)dst - (uint8_t *)cfg.program_base;
     JD_ASSERT(((uintptr_t)src & 3) == 0);
     JD_ASSERT(0 <= diff && diff + len <= cfg.max_program_size);
@@ -22,6 +23,7 @@ void flash_program(void *dst, const void *src, uint32_t len) {
 }
 
 void flash_erase(void *page_addr) {
+    JD_ASSERT(cfg.program_base != NULL);
     ptrdiff_t diff = (uint8_t *)page_addr - (uint8_t *)cfg.program_base;
     JD_ASSERT(0 <= diff && diff <= cfg.max_program_size - JD_FLASH_PAGE_SIZE);
     JD_ASSERT((diff & (JD_FLASH_PAGE_SIZE - 1)) == 0);

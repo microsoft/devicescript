@@ -10,15 +10,18 @@
 static uint64_t cached_devid = 0x1d46a30eef48919;
 
 EM_JS(void, em_send_frame, (void *frame), {
-    const sz = 12 + HEAP8[frame + 2];
-    const pkt = HEAP8.slice(frame, frame + sz);
+    const sz = 12 + (HEAP8[frame + 2] & 0xff);
+    const pkt = new Uint8Array(HEAP8.slice(frame, frame + sz).buffer);
     Module.sendPacket(pkt)
 });
 
 EM_JS(double, em_time_now, (void), { return Date.now(); });
 
+int jd_em_frame_received(jd_frame_t *frame);
+
 int jd_em_send_frame(jd_transport_ctx_t *ctx, jd_frame_t *frame) {
     em_send_frame(frame);
+    jd_em_frame_received(frame);
     return 0;
 }
 

@@ -61,13 +61,15 @@ vg: all
 	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
 
 EMCC_OPTS = $(DEFINES) $(INC) \
-	-g2 -O1 -s WASM=1 -s MODULARIZE=1 --no-entry -s SINGLE_FILE=0 -s EXPORTED_FUNCTIONS=_malloc,_free --pre-js wasmpre.js
+	-g2 -O1 -s WASM=1 -s MODULARIZE=1 --no-entry -s SINGLE_FILE=1 -s EXPORTED_FUNCTIONS=_malloc,_free --pre-js wasmpre.js
 
 em:
 	emcc $(EMCC_OPTS) -o $(BUILT)/jdcli.js $(SRC)
 
-emr: em
-	node run
-
-test: all em
+test-c: all
 	./built/jdcli samples/ex-test.jacs
+
+test-em: em
+	node run samples/ex-test.jacs
+
+test: test-c test-em
