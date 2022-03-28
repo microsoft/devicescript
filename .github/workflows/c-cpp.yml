@@ -1,0 +1,46 @@
+name: GCC and EMSDK build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    env:
+      EM_VERSION: 3.1.7
+      EM_CACHE_FOLDER: 'emsdk-cache'
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+        fetch-depth: 0
+    - uses: actions/setup-node@v2
+      with:
+          node-version: '16'
+    - name: Setup cache
+        id: cache-system-libraries
+        uses: actions/cache@v2
+        with:
+          path: ${{env.EM_CACHE_FOLDER}}
+          key: ${{env.EM_VERSION}}-${{ runner.os }}
+      - uses: mymindstorm/setup-emsdk@v11
+        with:
+          version: ${{env.EM_VERSION}}
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+
+    - name: make
+      run: make
+
+    - name: make em
+      run: make em
+
+    - name: Upload jdcli.js
+      uses: actions/upload-artifact@v1
+      with:
+        name: jdcli.js
+        path: built/jdcli.js
