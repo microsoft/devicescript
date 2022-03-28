@@ -43,3 +43,6 @@ void pwr_enter_no_sleep(void) {}
 int target_in_irq(void) {
     return 0;
 }
+
+void target_enable_irq(void) {}
+void target_disable_irq(void) {}

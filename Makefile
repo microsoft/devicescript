@@ -69,5 +69,5 @@ em:
 emr: em
 	node run
 
-test: all
-	./built/jdcli samples/ex-test.jacs; echo $$?
+test: all em
+	./built/jdcli samples/ex-test.jacs
