@@ -81,4 +81,7 @@ uint64_t tim_get_micros() {
     return getmicros() - starttime;
 }
 
+void target_enable_irq(void) {}
+void target_disable_irq(void) {}
+
 #endif

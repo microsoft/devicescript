@@ -9,8 +9,6 @@
 
 static uint64_t cached_devid = 0x1d46a30eef48919;
 
-void tx_init(const jd_transport_t *transport, jd_transport_ctx_t *ctx);
-
 EM_JS(void, em_send_frame, (void *frame), {
     const sz = 12 + HEAP8[frame + 2];
     const pkt = HEAP8.slice(frame, frame + sz);
@@ -60,6 +58,7 @@ void jd_em_init(void) {
 EMSCRIPTEN_KEEPALIVE
 void jd_em_process(void) {
     jd_process_everything();
+    tx_process();
 }
 
 EMSCRIPTEN_KEEPALIVE

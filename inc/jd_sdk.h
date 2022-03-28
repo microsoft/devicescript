@@ -19,3 +19,6 @@ typedef struct {
 
 extern const jd_transport_t hf2_transport;
 extern const jd_transport_t sock_transport;
+
+void tx_init(const jd_transport_t *transport_, jd_transport_ctx_t *ctx);
+void tx_process(void);

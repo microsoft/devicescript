@@ -33,6 +33,8 @@ SRC = $(wildcard hf2/*.c) \
 	$(JDS)/jd_send_util.c \
 	$(JDS)/jd_opipe.c \
 	$(JDS)/jd_ipipe.c \
+	$(JDS)/jd_queue.c \
+	$(JDS)/interfaces/tx_queue.c \
 	$(JDS)/interfaces/event_queue.c \
 
 OBJ = $(addprefix $(BUILT)/,$(SRC:.c=.o))
@@ -66,3 +68,6 @@ em:
 
 emr: em
 	node run
+
+test: all
+	./built/jdcli samples/ex-test.jacs; echo $$?
