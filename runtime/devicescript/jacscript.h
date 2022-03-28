@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jd_protocol.h"
+#include "jacdac/dist/c/jacscriptmanager.h"
 
 #define JACS_PANIC_REBOOT 60000
 #define JACS_PANIC_TIMEOUT 60001
