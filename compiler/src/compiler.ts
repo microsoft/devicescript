@@ -50,7 +50,6 @@ import {
     stringifyInstr,
     ValueSpecial,
 } from "./format"
-import { numSetBits, verifyBinary } from "./verify"
 
 export function oops(msg: string): never {
     throw new Error(msg)
@@ -274,6 +273,12 @@ function addUnique<T>(arr: T[], v: T) {
         arr.push(v)
     }
     return idx
+}
+
+function numSetBits(n: number) {
+    let r = 0
+    for (let i = 0; i < 32; ++i) if (n & (1 << i)) r++
+    return r
 }
 
 function specialVal(sp: ValueSpecial) {
@@ -2716,7 +2721,7 @@ class Program implements InstrArgResolver {
         }
         this.host.write("prog.jacs", b)
         this.host.write("prog-dbg.json", JSON.stringify(dbg))
-        if (this.numErrors == 0) verifyBinary(this.host, b, dbg)
+        // if (this.numErrors == 0) verifyBinary(this.host, b, dbg)
 
         return {
             success: this.numErrors == 0,
