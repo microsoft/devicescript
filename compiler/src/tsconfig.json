@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "target": "es2017",
+    "module": "es2015",
+    "lib": [
+      "es2015",
+      "es2016",
+      "es2017",
+      "dom"
+    ],
+    "strict": false,
+    "strictNullChecks": false,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "preserveConstEnums": true,
+    "noImplicitThis": true,
+    "isolatedModules": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "declarationDir": "../dist/types",
+    "resolveJsonModule": true,
+    "outDir": "../dist",
+    "pretty": true,
+    "newLine": "LF",
+    "typeRoots": [
+      "../node_modules/@types"
+    ]
+  },
+  "include": [
+    "."
+  ]
+}

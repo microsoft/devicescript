@@ -1,0 +1,27 @@
+{
+  "name": "jacscript",
+  "version": "0.0.0",
+  "description": "Jacscript VM",
+  "main": "./dist/jacscript.node.cjs",
+  "module": "./dist/jacscript.js",
+  "types": "./dist/types/jacscript.d.ts",
+  "scripts": {
+    "dist": "yarn install && rm -rf node_modules/jacdac-ts && ln -s ../.. node_modules/jacdac-ts && yarn build && yarn test",
+    "build": "node build.js",
+    "watch": "node build.js --watch",
+    "test": "node build.js --fast && node testrunner.js"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/esprima": "^4.0.3",
+    "@types/paho-mqtt": "^1.0.6",
+    "esbuild": "^0.14.11",
+    "esprima": "^4.0.1",
+    "paho-mqtt": "^1.1.0",
+    "typescript": "^4.5.4",
+    "ws": "^8.4.2"
+  },
+  "dependencies": {
+    "jacdac-ts": "^1.24.24"
+  }
+}
