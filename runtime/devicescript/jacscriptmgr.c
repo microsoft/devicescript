@@ -326,8 +326,6 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize) {
 
     flashing_done(state);
 
-    DMESG("internal deploy done; %d bytes", imgsize);
-
     const jacscriptmgr_program_header_t *hdx = jacs_header(state);
     if (!hdx || hdx->size == 0)
         return -3;
