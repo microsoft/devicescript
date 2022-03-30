@@ -73,7 +73,7 @@ async function main() {
         sourcemap: true,
         outfile,
         logLevel: "warning",
-        external: ["jacdac-ts"],
+        external: [],
         platform: cjs ? "node" : "browser",
         target: "es2019",
         format: mjs ? "esm" : cjs ? "cjs" : "iife",

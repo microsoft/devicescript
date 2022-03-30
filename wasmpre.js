@@ -1,8 +1,9 @@
 function copyToHeap(buf, fn) {
     const ptr = Module._malloc(buf.length)
     Module.HEAP8.set(buf, ptr)
-    fn(ptr)
+    const r = fn(ptr)
     Module._free(ptr)
+    return r
 }
 
 Module.handlePacket = function handlePacket(pkt) {
@@ -18,7 +19,7 @@ Module.setupNodeTcpSocketTransport = function setupNodeTcpSocketTransport(host, 
         return r
     }
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const net = require("net")
         let sock = null
 
@@ -31,15 +32,22 @@ Module.setupNodeTcpSocketTransport = function setupNodeTcpSocketTransport(host, 
         }
 
         const disconnect = () => {
+            console.log("disconnect")
             if (sock)
                 sock.end()
             sock = undefined
+            if (resolve) {
+                resolve = null
+                reject(new Error(`can't connect to ${host}:${port}`))
+            }
         }
 
         Module["sendPacket"] = send
 
         sock = net.createConnection(port, host, () => {
-            resolve(Module)
+            const f = resolve
+            resolve = null
+            f(Module)
         })
         sock.on("error", disconnect)
         sock.on("end", disconnect)
@@ -70,15 +78,26 @@ Module.setupNodeTcpSocketTransport = function setupNodeTcpSocketTransport(host, 
 }
 
 Module.jacsDeploy = function handlePacket(binary) {
-    copyToHeap(binary, ptr => Module._jd_em_jacs_deploy(ptr, binary.length))
+    return copyToHeap(binary, ptr => Module._jd_em_jacs_deploy(ptr, binary.length))
 }
 
 var jacs_interval
 
+Module.jacsInit = function jacsInit() {
+    Module._jd_em_init()
+}
+
 Module.jacsStart = function jacsStart() {
     if (jacs_interval) return
-    Module._jd_em_init()
+    Module.jacsInit()
     jacs_interval = setInterval(() => Module._jd_em_process(), 10)
+}
+
+Module.jacsStop = function jacsStop() {
+    if (jacs_interval) {
+        clearInterval(jacs_interval)
+        jacs_interval = undefined
+    }
 }
 
 Module.jacsSetDeviceId = function jacsSetDeviceId(id0, id1) {

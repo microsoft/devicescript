@@ -8,6 +8,7 @@
 #include "jacscript/jacscript.h"
 
 static uint64_t cached_devid = 0x1d46a30eef48919;
+static uint8_t inited;
 
 EM_JS(void, em_send_frame, (void *frame), {
     const sz = 12 + (HEAP8[frame + 2] & 0xff);
@@ -47,6 +48,9 @@ void jd_em_set_device_id_string(const char *str) {
 
 EMSCRIPTEN_KEEPALIVE
 void jd_em_init(void) {
+    if (inited)
+        return;
+    inited = 1;
     tx_init(&em_transport, NULL);
     jd_rx_init();
     jd_services_init();
