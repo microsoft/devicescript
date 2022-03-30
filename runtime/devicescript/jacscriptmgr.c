@@ -299,6 +299,10 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize) {
 
     uint8_t *dst = state->cfg->program_base;
     flash_erase(dst);
+
+    if (imgsize == 0)
+        return -2;
+
     flash_program(dst, &hd, 8);
 
     unsigned doff = sizeof(hd);
@@ -324,7 +328,11 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize) {
 
     DMESG("internal deploy done; %d bytes", imgsize);
 
-    return 0;
+    const jacscriptmgr_program_header_t *hdx = jacs_header(state);
+    if (!hdx || hdx->size == 0)
+        return -3;
+
+    return jacs_verify(hdx->image, hdx->size);
 }
 
 void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg) {
