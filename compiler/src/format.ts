@@ -525,6 +525,8 @@ export interface Host {
     write(filename: string, contents: Uint8Array | string): void
     log(msg: string): void
     error?(err: JacError): void
+    getSpecs(): jdspec.ServiceSpec[]
+    verifyBytecode?(buf: Uint8Array, dbgInfo?: DebugInfo): void
 }
 
 export interface JacError {

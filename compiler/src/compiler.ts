@@ -1,6 +1,17 @@
-import * as esprima from "esprima"
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="../../jacdac/spectool/jdspec.d.ts" />
 
+import * as esprima from "esprima"
 import * as estree from "estree"
+
+import {
+    SystemReg,
+    SRV_JACSCRIPT_CONDITION,
+    JacscriptCloudEvent,
+    JacscriptCloudCmd,
+    JacscriptCloudCommandStatus,
+} from "../../jacdac/dist/specconstants"
+
 import {
     range,
     read32,
@@ -9,19 +20,9 @@ import {
     toUTF8,
     write16,
     write32,
-    jdpack,
-    camelize,
-    CMD_SET_REG,
     strcmp,
-    SystemReg,
-    CMD_GET_REG,
-    SRV_JACSCRIPT_CONDITION,
-    JD_SERIAL_MAX_PAYLOAD_SIZE,
-    JacscriptCloudEvent,
-    JacscriptCloudCmd,
-    JacscriptCloudCommandStatus,
-    serviceSpecifications,
-} from "jacdac-ts"
+    encodeU32LE,
+} from "./jdutil"
 
 import {
     BinFmt,
@@ -51,6 +52,12 @@ import {
     ValueSpecial,
 } from "./format"
 
+export const JD_SERIAL_HEADER_SIZE = 16
+export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
+
+export const CMD_GET_REG = 0x1000
+export const CMD_SET_REG = 0x2000
+
 export function oops(msg: string): never {
     throw new Error(msg)
 }
@@ -75,6 +82,17 @@ function strlen(s: string | ValueDesc) {
         assert(s != null)
     }
     return toUTF8(s).length
+}
+
+export function camelize(name: string) {
+    if (!name) return name
+    return (
+        name[0].toLowerCase() +
+        name
+            .slice(1)
+            .replace(/\s+/g, "_")
+            .replace(/_([a-z0-9])/gi, (_, l) => l.toUpperCase())
+    )
 }
 
 class Cell {
@@ -356,15 +374,13 @@ class OpWriter {
     finalizeDesc(off: number) {
         assert((this.binary.length & 1) == 0)
         const flags = 0
-        this.desc.set(
-            jdpack("u32 u32 u16 u8 u8", [
-                off,
-                this.binary.length * 2,
-                this.parent.locals.list.length,
-                this.maxRegs | (this.parent.numargs << 4),
-                flags,
-            ])
-        )
+        const buf = new Uint8Array(3 * 4)
+        write32(buf, 0, off)
+        write32(buf, 4, this.binary.length * 2)
+        write16(buf, 8, this.parent.locals.list.length)
+        buf[10] = this.maxRegs | (this.parent.numargs << 4)
+        buf[11] = flags
+        this.desc.set(buf)
     }
 
     numScopes() {
@@ -957,8 +973,8 @@ class Program implements InstrArgResolver {
 
     constructor(public host: Host, public source: string) {
         this.serviceSpecs = {}
-        for (const sp of serviceSpecifications()) {
-            this.serviceSpecs[sp.camelName] = sp
+        for (const sp of host.getSpecs()) {
+            this.serviceSpecs[sp.camelName] = sp as any
         }
         this.sysSpec = this.serviceSpecs["system"]
     }
@@ -2602,7 +2618,7 @@ class Program implements InstrArgResolver {
 
         const hd = new Uint8Array(BinFmt.FixHeaderSize)
         hd.set(
-            jdpack("u32 u32 u16", [
+            encodeU32LE([
                 BinFmt.Magic0,
                 BinFmt.Magic1,
                 this.globals.list.length,
@@ -2721,7 +2737,8 @@ class Program implements InstrArgResolver {
         }
         this.host.write("prog.jacs", b)
         this.host.write("prog-dbg.json", JSON.stringify(dbg))
-        // if (this.numErrors == 0) verifyBinary(this.host, b, dbg)
+
+        if (this.numErrors == 0) this.host?.verifyBytecode(b, dbg)
 
         return {
             success: this.numErrors == 0,
@@ -2736,7 +2753,7 @@ export function compile(host: Host, code: string) {
     return p.emit()
 }
 
-export function testCompiler(code: string) {
+export function testCompiler(host: Host, code: string) {
     const lines = code.split(/\r?\n/).map(s => {
         const m = /\/\/\s*!\s*(.*)/.exec(s)
         if (m) return m[1]
@@ -2748,6 +2765,8 @@ export function testCompiler(code: string) {
         {
             write: () => {},
             log: msg => {},
+            getSpecs: host.getSpecs,
+            verifyBytecode: host.verifyBytecode,
             error: err => {
                 const exp = lines[err.line - 1]
                 if (exp && err.message.indexOf(exp) >= 0)
