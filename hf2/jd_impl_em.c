@@ -54,16 +54,19 @@ void jd_em_init(void) {
     tx_init(&em_transport, NULL);
     jd_rx_init();
     jd_services_init();
-
-    char shortbuf[5];
-    jd_device_short_id(shortbuf, jd_device_id());
-    char hexbuf[17];
-    jd_to_hex(hexbuf, &cached_devid, 8);
-    DMESG("self-device: %s/%s", hexbuf, shortbuf);
 }
 
 EMSCRIPTEN_KEEPALIVE
 void jd_em_process(void) {
+    if (inited == 1) {
+        inited = 2;
+        char shortbuf[5];
+        jd_device_short_id(shortbuf, jd_device_id());
+        char hexbuf[17];
+        jd_to_hex(hexbuf, &cached_devid, 8);
+        DMESG("self-device: %s/%s", hexbuf, shortbuf);
+    }
+
     jd_process_everything();
     tx_process();
 }

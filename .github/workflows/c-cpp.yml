@@ -19,6 +19,9 @@ jobs:
       with:
         submodules: 'recursive'
         fetch-depth: 0
+    - uses: actions/setup-node@v2
+      with:
+          node-version: '16'
     - name: Setup cache
       id: cache-system-libraries
       uses: actions/cache@v2
@@ -29,6 +32,9 @@ jobs:
       with:
           version: ${{env.EM_VERSION}}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+
+    - name: make prep-ci
+      run: make prep-ci
 
     - name: make
       run: make test

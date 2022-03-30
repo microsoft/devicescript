@@ -66,10 +66,17 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 em:
 	emcc $(EMCC_OPTS) -o $(BUILT)/jdcli.js $(SRC)
 
+comp:
+	cd compiler && node build.js --fast
+
 test-c: all
 	./built/jdcli samples/ex-test.jacs
 
-test-em: em
-	node run samples/ex-test.jacs
+test-em: em comp
+	node run test
 
 test: test-c test-em
+
+prep-ci:
+	cd compiler && yarn install
+	cd compiler && yarn build

@@ -6,10 +6,9 @@
   "module": "./dist/jacscript.js",
   "types": "./dist/types/jacscript.d.ts",
   "scripts": {
-    "dist": "yarn install && yarn build && yarn test",
+    "dist": "yarn install && yarn build",
     "build": "node build.js",
-    "watch": "node build.js --watch",
-    "test": "node build.js --fast && node testrunner.js"
+    "watch": "node build.js --watch"
   },
   "license": "MIT",
   "devDependencies": {

@@ -94,7 +94,7 @@ async function runServer(fn) {
         if (r) throw new Error("deploy error: " + r)
         console.log(`deployed ${fn}`)
     } else {
-        console.log(`waiting for external deploy ${fn}`)
+        console.log(`waiting for external deploy`)
     }
 }
 
@@ -109,6 +109,8 @@ async function main() {
         verbose = true
     }
 
+    let testMode = false
+
     try {
         if (args[0] == "test") {
             const host = await getHost()
@@ -122,6 +124,8 @@ async function main() {
                 console.log(`*** run ${fn}`)
                 await runTest(fn)
             }
+
+            testMode = true
         } else {
             await runServer(args[0])
         }
@@ -130,7 +134,8 @@ async function main() {
         process.exit(2)
     }
 
-    process.exit(0)
+    if (testMode)
+        process.exit(0)
 }
 
 main()
