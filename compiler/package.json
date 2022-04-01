@@ -1,10 +1,10 @@
 {
-  "name": "jacscript",
+  "name": "jacscript-compiler",
   "version": "0.0.0",
-  "description": "Jacscript VM",
-  "main": "./dist/jacscript.node.cjs",
-  "module": "./dist/jacscript.js",
-  "types": "./dist/types/compiler/src/jacscript.d.ts",
+  "description": "Jacscript Compiler",
+  "main": "./dist/jacscript-compiler.node.cjs",
+  "module": "./dist/jacscript-compiler.js",
+  "types": "./dist/types/compiler/src/jacscript-compiler.d.ts",
   "scripts": {
     "dist": "yarn install && yarn build",
     "build": "node build.js",

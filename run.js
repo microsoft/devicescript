@@ -1,4 +1,4 @@
-const jacsFactory = require("./built/jdcli.js")
+const jacsFactory = require("./vm")
 const fs = require("fs")
 const path = require("path")
 
@@ -86,7 +86,7 @@ async function runTest(fn) {
 
 async function runServer(fn) {
     const inst = await jacsFactory()
-    await inst.setupNodeTcpSocketTransport("localhost", 8082)
+    await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
     inst.jacsStart()
     if (fn) {
         const prog = await readCompiled(fn)

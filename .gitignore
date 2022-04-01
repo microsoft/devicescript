@@ -6,3 +6,4 @@ package-lock.json
 Makefile.user
 jacs
 compiler/dist/
+dist

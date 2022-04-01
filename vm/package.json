@@ -1,0 +1,16 @@
+{
+  "name": "jacscript-vm",
+  "version": "0.0.0",
+  "description": "Jacscript VM",
+  "main": "./dist/jacscript-vm.js",
+  "types": "./dist/wasmpre.d.ts",
+  "scripts": {
+    "dist": "yarn install && yarn build",
+    "build": "node node_modules/typescript/bin/tsc"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^4.5.4",
+    "@types/emscripten": "^1.39.6"
+  }
+}

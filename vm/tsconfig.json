@@ -21,12 +21,12 @@
     "isolatedModules": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
-    "declarationDir": "../dist/types",
+    "declarationDir": "dist",
     "resolveJsonModule": true,
-    "outDir": "../dist",
+    "outDir": "dist",
     "pretty": true,
     "newLine": "LF",
-    "types": []
+    "types": ["emscripten"]
   },
   "include": [
     "."

@@ -39,7 +39,9 @@ SRC = $(wildcard hf2/*.c) \
 
 OBJ = $(addprefix $(BUILT)/,$(SRC:.c=.o))
 
-all:
+all: native em comp
+
+native:
 	$(Q)$(MAKE) -j16 $(BUILT)/jdcli
 
 $(BUILT)/jdcli: $(OBJ)
@@ -52,21 +54,39 @@ $(BUILT)/%.o: %.c $(DEPS)
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(BUILT)
+	rm -rf $(BUILT) vm/dist compiler/dist
 
-gdb: all
+gdb: native
 	gdb -x scripts/gdbinit
 
-vg: all
+vg: native
 	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
 
 EMCC_OPTS = $(DEFINES) $(INC) \
-	-g2 -O1 -s WASM=1 -s MODULARIZE=1 --no-entry -s SINGLE_FILE=1 -s EXPORTED_FUNCTIONS=_malloc,_free --pre-js wasmpre.js
+	-g2 -O1 \
+	-s WASM=1 \
+	-s MODULARIZE=1 \
+	-s SINGLE_FILE=1 \
+	-s EXPORTED_FUNCTIONS=_malloc,_free \
+	-s ENVIRONMENT=web,webview,worker \
+	--no-entry
 
-em:
-	emcc $(EMCC_OPTS) -o $(BUILT)/jdcli.js $(SRC)
+vm/dist/wasmpre.js: vm/wasmpre.ts vm/node_modules/typescript
+	cd vm && yarn build
 
-comp:
+vm/node_modules/typescript:
+	cd vm && yarn install
+
+compiler/node_modules/typescript:
+	cd compiler && yarn install
+
+vm/dist/jacscript-vm.js: vm/dist/wasmpre.js $(SRC) $(DEPS)
+	grep -v '^export ' $< > $(BUILT)/pre.js
+	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC)
+
+em: vm/dist/jacscript-vm.js
+
+comp: compiler/node_modules/typescript
 	cd compiler && node build.js --fast
 
 test-c: all
@@ -76,7 +96,3 @@ test-em: em comp
 	node run test
 
 test: test-c test-em
-
-prep-ci:
-	cd compiler && yarn install
-	cd compiler && yarn build

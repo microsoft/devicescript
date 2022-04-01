@@ -57,8 +57,8 @@ function runTSC(args) {
 }
 
 const files = {
-  "dist/jacscript.bundle.js": "src/jacscript.ts",
-  "dist/jacscript.node.cjs": "src/jacscript.ts",
+  "dist/jacscript-compiler.bundle.js": "src/jacscript.ts",
+  "dist/jacscript-compiler.node.cjs": "src/jacscript.ts",
 }
 
 async function main() {
