@@ -33,14 +33,14 @@ jobs:
           version: ${{env.EM_VERSION}}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
-    - name: make prep-ci
-      run: make prep-ci
-
     - name: make
+      run: make
+
+    - name: make test
       run: make test
 
-    - name: Upload jdcli.js
+    - name: Upload jacscript-vm.js
       uses: actions/upload-artifact@v1
       with:
-        name: jdcli.js
-        path: built/jdcli.js
+        name: jacscript-vm.js
+        path: vm/dist/jacscript-vm.js
