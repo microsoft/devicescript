@@ -1,6 +1,3 @@
 [submodule "jacdac-c"]
 	path = jacdac-c
 	url = https://github.com/microsoft/jacdac-c
-[submodule "jacdac"]
-	path = jacdac
-	url = https://github.com/microsoft/jacdac

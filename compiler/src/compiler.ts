@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../jacdac/spectool/jdspec.d.ts" />
+/// <reference path="../../jacdac-c/jacdac/spectool/jdspec.d.ts" />
 
 import * as esprima from "esprima"
 import * as estree from "estree"
@@ -10,7 +10,7 @@ import {
     JacscriptCloudEvent,
     JacscriptCloudCmd,
     JacscriptCloudCommandStatus,
-} from "../../jacdac/dist/specconstants"
+} from "../../jacdac-c/jacdac/dist/specconstants"
 
 import {
     range,

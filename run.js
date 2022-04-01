@@ -13,7 +13,7 @@ async function getHost() {
     if (jacsHost) return jacsHost
     const inst = await jacsFactory()
     inst.jacsInit()
-    const specs = JSON.parse(fs.readFileSync("jacdac/dist/services.json", "utf8"))
+    const specs = JSON.parse(fs.readFileSync("jacdac-c/jacdac/dist/services.json", "utf8"))
     jacsHost = {
         write: (fn, cont) =>
             fs.writeFileSync(path.join(distPath, fn), cont),
