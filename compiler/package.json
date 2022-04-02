@@ -4,7 +4,7 @@
   "description": "Jacscript Compiler",
   "main": "./dist/jacscript-compiler.node.cjs",
   "module": "./dist/jacscript-compiler.js",
-  "types": "./dist/types/compiler/src/jacscript-compiler.d.ts",
+  "types": "./dist/types/compiler/src/jacscript.d.ts",
   "scripts": {
     "dist": "yarn install && yarn build",
     "build": "node build.js",

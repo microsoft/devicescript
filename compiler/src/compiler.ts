@@ -2738,7 +2738,13 @@ class Program implements InstrArgResolver {
         this.host.write("prog.jacs", b)
         this.host.write("prog-dbg.json", JSON.stringify(dbg))
 
-        if (this.numErrors == 0) this.host?.verifyBytecode(b, dbg)
+        if (this.numErrors == 0) {
+            try {
+                this.host?.verifyBytecode(b, dbg)
+            } catch (e) {
+                this.reportError([0, this.source.length], e.message)
+            }
+        }
 
         return {
             success: this.numErrors == 0,

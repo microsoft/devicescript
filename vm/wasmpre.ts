@@ -10,10 +10,9 @@ export type JacsModule = EmscriptenModule &
         _jd_em_frame_received(frame: ptr): int32
         _jd_em_jacs_deploy(img: ptr, size: int32): int32
         sendPacket(pkt: Uint8Array): void
-        ready(): Promise<JacsModule>
     }
 
-export declare var Module: JacsModule
+declare var Module: JacsModule
 
 var jacs_interval: number
 
@@ -38,7 +37,11 @@ module Exts {
         Module._jd_em_process()
     }
 
-    export function setupNodeTcpSocketTransport(require: any, host: string, port: number) {
+    export function setupNodeTcpSocketTransport(
+        require: any,
+        host: string,
+        port: number
+    ) {
         return new Promise<void>((resolve, reject) => {
             const net = require("net")
             let sock: any = null
@@ -134,3 +137,9 @@ module Exts {
 for (const kn of Object.keys(Exts)) {
     ;(Module as any)[kn] = (Exts as any)[kn]
 }
+
+function factory(): Promise<JacsModule> {
+    return null
+}
+
+export default factory
