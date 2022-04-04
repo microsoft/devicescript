@@ -1,12 +1,14 @@
 const jacsFactory = require("./vm")
 const fs = require("fs")
 const path = require("path")
+const child_process = require("child_process")
 
 const ctest = "compiler/compiler-tests"
-const samples = "compiler/samples"
+const samples = "samples"
 const rtest = "compiler/run-tests"
 const distPath = "built"
 let verbose = false
+let useC = false
 
 let jacsHost
 async function getHost() {
@@ -31,6 +33,8 @@ async function getHost() {
 async function compile(buf) {
     const jacscript = require("./compiler")
     const res = jacscript.compile(await getHost(), buf.toString("utf8"))
+    if (!res.success)
+        throw new Error("compilation failed")
     return res.binary
 }
 
@@ -85,6 +89,15 @@ async function runTest(fn) {
 }
 
 async function runServer(fn) {
+    if (useC) {
+        const prog = await readCompiled(fn)
+        const compfn = distPath + "/compiled.jacs"
+        fs.writeFileSync(compfn, prog)
+        child_process.spawn(distPath + "/jdcli", ["8082", compfn], {
+            stdio: "inherit"
+        })
+        return
+    }
     const inst = await jacsFactory()
     await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
     inst.jacsStart()
@@ -104,9 +117,19 @@ function readdir(folder) {
 
 async function main() {
     const args = process.argv.slice(2)
-    if (args[0] == "-v") {
-        args.shift()
-        verbose = true
+
+    while (true) {
+        if (args[0] == "-v") {
+            args.shift()
+            verbose = true
+            continue
+        }
+        if (args[0] == "-c") {
+            args.shift()
+            useC = true
+            continue
+        }
+        break
     }
 
     let testMode = false

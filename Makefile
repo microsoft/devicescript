@@ -90,7 +90,7 @@ comp: compiler/node_modules/typescript
 	cd compiler && node build.js --fast
 
 test-c: all
-	./built/jdcli samples/ex-test.jacs
+	node run -c compiler/run-tests/basic.js
 
 test-em: em comp
 	node run test
