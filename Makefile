@@ -54,7 +54,7 @@ $(BUILT)/%.o: %.c $(DEPS)
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(BUILT) vm/dist compiler/dist
+	rm -rf $(BUILT) vm/built compiler/built
 
 gdb: native
 	gdb -x scripts/gdbinit
@@ -63,7 +63,7 @@ vg: native
 	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
 
 EMCC_OPTS = $(DEFINES) $(INC) \
-	-g2 -O1 \
+	-g2 -O2 \
 	-s WASM=1 \
 	-s MODULARIZE=1 \
 	-s SINGLE_FILE=1 \
@@ -71,7 +71,7 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 	-s ENVIRONMENT=web,webview,worker \
 	--no-entry
 
-vm/dist/wasmpre.js: vm/wasmpre.ts vm/node_modules/typescript
+vm/built/wasmpre.js: vm/wasmpre.ts vm/node_modules/typescript
 	cd vm && yarn build
 
 vm/node_modules/typescript:
@@ -80,14 +80,15 @@ vm/node_modules/typescript:
 compiler/node_modules/typescript:
 	cd compiler && yarn install
 
-vm/dist/jacscript-vm.js: vm/dist/wasmpre.js $(SRC) $(DEPS)
+vm/dist/jacscript-vm.js: vm/built/wasmpre.js $(SRC) $(DEPS)
+	@mkdir -p vm/dist
 	grep -v '^export ' $< > $(BUILT)/pre.js
 	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC)
 
 em: vm/dist/jacscript-vm.js
 
 comp: compiler/node_modules/typescript
-	cd compiler && node build.js --fast
+	cd compiler && node build.js
 
 test-c: all
 	node run -c compiler/run-tests/basic.js

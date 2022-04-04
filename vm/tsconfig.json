@@ -23,7 +23,7 @@
     "esModuleInterop": true,
     "declarationDir": "dist",
     "resolveJsonModule": true,
-    "outDir": "dist",
+    "outDir": "built",
     "pretty": true,
     "newLine": "LF",
     "types": ["emscripten"]

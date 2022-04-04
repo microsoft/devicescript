@@ -5,5 +5,4 @@ tmp
 package-lock.json
 Makefile.user
 jacs
-compiler/dist/
-dist
+vm/dist/wasmpre.d.ts.map

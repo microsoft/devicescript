@@ -21,9 +21,9 @@
     "isolatedModules": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
-    "declarationDir": "../dist/types",
+    "declarationDir": "../built/types",
     "resolveJsonModule": true,
-    "outDir": "../dist",
+    "outDir": "../built",
     "pretty": true,
     "newLine": "LF",
     "types": []
