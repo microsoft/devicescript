@@ -88,7 +88,7 @@ void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
 void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args) {
     jacs_fiber_t *fib = ctx->curr_fiber;
 
-    fib->role_idx = 0;
+    fib->role_idx = JACS_NO_ROLE;
 
     fib->pkt_kind = JACS_PKT_KIND_LOGMSG;
     fib->service_command = ctx->log_counter & 0xffff;
