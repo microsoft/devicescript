@@ -33,14 +33,6 @@ jobs:
           version: ${{env.EM_VERSION}}
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
-    - name: make
-      run: make
-
-    - name: make test
-      run: make test
-
-    - name: Upload jacscript-vm.js
-      uses: actions/upload-artifact@v1
-      with:
-        name: jacscript-vm.js
-        path: vm/dist/jacscript-vm.js
+    - run: make
+    - run: make test
+    - run: make update-dist

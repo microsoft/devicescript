@@ -80,12 +80,14 @@ vm/node_modules/typescript:
 compiler/node_modules/typescript:
 	cd compiler && yarn install
 
-vm/dist/jacscript-vm.js: vm/built/wasmpre.js $(SRC) $(DEPS)
+VM_FILE = vm/dist/jacscript-vm.js
+
+$(VM_FILE): vm/built/wasmpre.js $(SRC) $(DEPS)
 	@mkdir -p vm/dist
 	grep -v '^export ' $< > $(BUILT)/pre.js
 	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC)
 
-em: vm/dist/jacscript-vm.js
+em: $(VM_FILE)
 
 comp: compiler/node_modules/typescript
 	cd compiler && node build.js
@@ -97,3 +99,8 @@ test-em: em comp
 	node run test
 
 test: test-c test-em
+
+update-dist: $(VM_FILE)
+	git add $(VM_FILE) vm/dist/wasmpre.d.ts
+	if [ "X$$GITHUB_WORKFLOW" != "X" ] ; then git config user.email "<>" && git config user.name "GitHub Bot" ; fi
+	if git commit -m "[skip ci] rebuild $(VM_FILE)" ; then git push ; fi

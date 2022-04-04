@@ -11,8 +11,8 @@ static uint64_t cached_devid = 0x1d46a30eef48919;
 static uint8_t inited;
 
 EM_JS(void, em_send_frame, (void *frame), {
-    const sz = 12 + (HEAP8[frame + 2] & 0xff);
-    const pkt = new Uint8Array(HEAP8.slice(frame, frame + sz).buffer);
+    const sz = 12 + HEAPU8[frame + 2];
+    const pkt = HEAPU8.slice(frame, frame + sz);
     Module.sendPacket(pkt)
 });
 
