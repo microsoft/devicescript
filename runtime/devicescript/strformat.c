@@ -1,20 +1,8 @@
 #include "jacs_internal.h"
 
-#ifdef STM32X
-#include "lib.h"
-#define itoa itoa10
-#endif
-
 #include <math.h>
 
 #define NUMBER value_t
-
-#ifndef STM32X
-static inline void itoa(int v, char *dst) {
-    // TODO reimplement
-    snprintf(dst, 30, "%d", v);
-}
-#endif
 
 #define p10(v) __builtin_powi(10, v)
 
@@ -115,7 +103,7 @@ static void mycvt(NUMBER d, char *buf, int numdigits) {
         *buf++ = 'e';
         if (e > 0)
             *buf++ = '+';
-        itoa(e, buf);
+        jd_itoa(e, buf);
     } else {
         *buf = 0;
     }
