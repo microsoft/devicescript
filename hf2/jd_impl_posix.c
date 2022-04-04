@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <time.h>
 #include <sys/time.h>
 
@@ -81,4 +82,13 @@ uint64_t tim_get_micros() {
     return getmicros() - starttime;
 }
 
+void dmesg(const char *format, ...)
+{
+    char tmp[200];
+    va_list arg;
+    va_start(arg, format);
+    jd_vsprintf(tmp, sizeof(tmp) - 1, format, arg);
+    printf("    %s\n", tmp);
+    va_end(arg);
+}
 #endif

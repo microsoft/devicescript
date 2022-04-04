@@ -18,7 +18,7 @@ var jacs_interval: number
 
 function copyToHeap<T>(buf: Uint8Array, fn: (p: ptr) => T): T {
     const ptr = Module._malloc(buf.length)
-    Module.HEAP8.set(buf, ptr)
+    Module.HEAPU8.set(buf, ptr)
     const r = fn(ptr)
     Module._free(ptr)
     return r

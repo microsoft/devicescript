@@ -5,7 +5,11 @@
 
 #include <stdio.h>
 
-#define DMESG(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
+#define DMESG_PRINTF_ATTR __attribute__ ((format (printf, 1, 2)))
+
+void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
+
+#define DMESG(fmt, ...) dmesg(fmt, ##__VA_ARGS__)
 
 #define JD_LOG DMESG
 

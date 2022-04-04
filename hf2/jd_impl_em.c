@@ -123,4 +123,17 @@ void target_wait_us(uint32_t us) {
     }
 }
 
+EM_JS(void, em_console_debug, (const char *ptr), {
+    console.debug(UTF8ToString(ptr, 1024));
+});
+
+void dmesg(const char *format, ...)
+{
+    char tmp[200];
+    va_list arg;
+    va_start(arg, format);
+    jd_vsprintf(tmp, sizeof(tmp) - 1, format, arg);
+    em_console_debug(tmp);
+    va_end(arg);
+}
 #endif
