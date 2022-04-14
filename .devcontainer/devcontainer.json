@@ -1,11 +1,10 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.195.0/containers/cpp
 {
-	"name": "C++",
+	"name": "Node.js + C++",
 	"build": {
 		"dockerfile": "Dockerfile",
-		// Update 'VARIANT' to pick an Debian / Ubuntu OS version: debian-11, debian-10, debian-9, ubuntu-21.04, ubuntu-20.04, ubuntu-18.04
-		// Use Debian 11, Debian 9, Ubuntu 18.04 or Ubuntu 21.04 on local arm64/Apple Silicon
-		"args": { "VARIANT": "debian-11" }
+		// Node v14
+		"args": { "VARIANT": "14" }
 	},
 	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
 
@@ -14,6 +13,7 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
+		"esbenp.prettier-vscode",
 		"ms-vscode.cpptools"
 	],
 
@@ -24,6 +24,6 @@
 	// "postCreateCommand": "gcc -v",
 
 	// Comment out this line to run as root instead.
-	"remoteUser": "vscode"
+	"remoteUser": "node"
 
 }

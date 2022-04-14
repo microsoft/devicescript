@@ -56,6 +56,9 @@ $(BUILT)/%.o: %.c $(DEPS)
 clean:
 	rm -rf $(BUILT) vm/built compiler/built
 
+full-clean: clean
+	rm -rf vm/node_modules compiler/node_modules
+
 gdb: native
 	gdb -x scripts/gdbinit
 

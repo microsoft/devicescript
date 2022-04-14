@@ -4,7 +4,7 @@ Jacscript is a programming language for scripting [Jacdac](https://aka.ms/jacdac
 
 It has JavaScript-like syntax and is compiled to a custom VM bytecode, which can run in very constrained
 environments (VM itself compiles to 10kB of code, with the floating point library and Jacdac SDK adding further 30kB).
-The langauge is typically [edited graphically](https://microsoft.github.io/jacdac-docs/editors/jacscript/).
+The langauge is typically edited using [Block-based drag-and-drop interface](https://microsoft.github.io/jacdac-docs/editors/jacscript/).
 
 This repository contains:
 * [jacdac-c submodule](https://github.com/microsoft/jacdac-c), including sources for Jacdac client libraries and Jacscript VM
@@ -13,8 +13,12 @@ This repository contains:
 * `samples/` - sample Jacscript programs
 * `posix/` - implementation of Jacdac SDK HAL for grown-up POSIX-like operating systems (as opposed to embedded platforms)
 
-
 ## Usage
+
+You can just use the devcontainer to build.
+
+If you want to build locally, you need to [install emscripten](https://emscripten.org/docs/getting_started/downloads.html),
+as well node.js, GNU Make and C compiler.
 
 * start `jacdac devtools` (the npm version) and let is running
 * open this folder in VSCode; use "Reopen in Container" if needed

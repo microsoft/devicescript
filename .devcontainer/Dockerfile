@@ -1,6 +1,14 @@
-# see https://github.com/microsoft/vscode-dev-containers/tree/v0.195.0/containers/cpp/.devcontainer/base.Dockerfile
-ARG VARIANT=debian-11
-FROM mcr.microsoft.com/vscode/devcontainers/cpp:0-${VARIANT}
+# see https://github.com/microsoft/vscode-dev-containers/tree/main/containers
+ARG VARIANT="14"
+FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 
-# RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-#     && apt-get -y install --no-install-recommends <your-package-list-here>
+ENV PATH="/opt/emsdk/upstream/emscripten:${PATH}"
+
+USER root
+RUN cd /opt && \
+    sudo git clone https://github.com/emscripten-core/emsdk.git && \
+    cd /opt/emsdk && \
+    sudo ./emsdk install latest && \
+    sudo ./emsdk activate latest
+
+# RUN sudo -u node npm install -g 
