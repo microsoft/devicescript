@@ -89,7 +89,9 @@ $(VM_FILE): vm/built/wasmpre.js $(SRC) $(DEPS)
 
 em: $(VM_FILE)
 
-comp: compiler/node_modules/typescript
+comp: compiler/node_modules/typescript compiler/built/compiler/src/jacscript.js
+
+compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts)
 	cd compiler && node build.js
 
 test-c: all
