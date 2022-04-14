@@ -24,7 +24,7 @@ LDFLAGS = -flto -g3
 
 BUILT = built
 JDS = jacdac-c/source
-SRC = $(wildcard hf2/*.c) \
+SRC = $(wildcard posix/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
 	$(wildcard jacdac-c/jacscript/*.c) \
 	$(JDS)/jd_util.c \
