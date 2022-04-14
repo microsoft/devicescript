@@ -1,4 +1,3 @@
-
 export function throwError(msg: string, cancel?: boolean) {
     const e = new Error(msg)
     if (cancel)
@@ -399,8 +398,8 @@ export function assert(
 ) {
     if (!cond) {
         if (debugData) console.debug(`assertion filed ${msg}`, debugData)
-            // eslint-disable-next-line no-debugger
-            debugger
+        // eslint-disable-next-line no-debugger
+        debugger
         throw new Error(msg)
     }
 }
@@ -701,18 +700,16 @@ export function range(end: number): number[] {
 }
 
 export function toggleBit(data: Uint8Array, bitindex: number) {
-    // find bit to flip
-    let byte = data[bitindex >> 3]
-    const bit = bitindex % 8
-    const on = 1 === ((byte >> bit) & 1)
-    // flip bit
-    if (on) {
-        byte &= ~(1 << bit)
-    } else {
-        byte |= 1 << bit
-    }
-    // save
-    data[bitindex >> 3] = byte
+    data[bitindex >> 3] ^= 1 << (bitindex & 7)
+}
+
+export function getBit(data: Uint8Array, bitindex: number) {
+    return !!(data[bitindex >> 3] & (1 << (bitindex & 7)))
+}
+
+export function setBit(data: Uint8Array, bitindex: number, on: boolean) {
+    if (on) data[bitindex >> 3] |= 1 << (bitindex & 7)
+    else data[bitindex >> 3] &= ~(1 << (bitindex & 7))
 }
 
 export function parseIdentifier(value: number | string) {
