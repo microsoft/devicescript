@@ -42,7 +42,7 @@ export enum OpAsync {
     SEND_CMD = 4, // A-role, B-code
     QUERY_IDX_REG = 5, // A-role, B-STRIDX:CMD[8], C-timeout
     LOG_FORMAT = 6, // A-string-index B-numargs
-    _LAST = 7,
+    _LAST = 6,
 }
 
 export enum OpSync {
@@ -55,7 +55,7 @@ export enum OpSync {
     MATH1 = 6, // A-OpMath1, R0 := op(R0)
     MATH2 = 7, // A-OpMath2, R0 := op(R0, R1)
     PANIC = 8, // A-error code
-    _LAST = 9,
+    _LAST = 8,
 }
 
 export enum OpMath1 {
@@ -65,14 +65,14 @@ export enum OpMath1 {
     LOG_E = 3,
     RANDOM = 4, // value between 0 and R0
     RANDOM_INT = 5, // int32 between 0 and (int32)R0 inclusive
-    _LAST = 6,
+    _LAST = 5,
 }
 
 export enum OpMath2 {
     MIN = 0,
     MAX = 1,
     POW = 2,
-    _LAST = 3,
+    _LAST = 2,
 }
 
 export enum OpCall {
@@ -93,7 +93,7 @@ export enum CellKind {
     SPECIAL = 5, // A=nan, regcode, role, ..., D=buffer_id (sometimes)
     ROLE_PROPERTY = 6, // A=OpRoleProperty, B=roleidx
 
-    _HW_LAST = 7,
+    _HW_LAST = 6,
 
     // these cannot be emitted directly
     JD_EVENT = 0x100,
@@ -113,7 +113,7 @@ export enum CellKind {
 
 export enum OpRoleProperty {
     IS_CONNECTED = 0,
-    _LAST = 1,
+    _LAST = 0,
 }
 
 export enum ValueSpecial {
@@ -122,7 +122,7 @@ export enum ValueSpecial {
     SIZE = 0x1,
     EV_CODE = 0x2, // or nan
     REG_GET_CODE = 0x3, // or nan
-    _LAST = 0x4,
+    _LAST = 0x3,
 }
 
 export enum OpBinary {
@@ -137,7 +137,7 @@ export enum OpBinary {
     BIT_AND = 0x9,
     BIT_OR = 0xa,
     BIT_XOR = 0xb,
-    _LAST = 0xc,
+    _LAST = 0xb,
 }
 
 export enum OpUnary {
@@ -148,7 +148,7 @@ export enum OpUnary {
     IS_NAN = 0x4, // isNaN(x)
     BIT_NOT = 0x5, // ~x
     TO_BOOL = 0x6, // !!x
-    _LAST = 0x7,
+    _LAST = 0x6,
 }
 
 // Size in bits is: 8 << (fmt & 0b11)

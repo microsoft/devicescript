@@ -647,7 +647,7 @@ class OpWriter {
         argD: number = 0
     ) {
         assert(this.isReg(dst))
-        assertRange(0, celltype, CellKind._HW_LAST - 1)
+        assertRange(0, celltype, CellKind._HW_LAST)
         // DST[4] CELL_KIND[4] A:OFF[4]
         this.emitPrefix(idx >> 4, argB, argC, argD)
         this.emitRaw(op, (dst.index << 8) | (celltype << 4) | (idx & 0xf))
@@ -2101,7 +2101,7 @@ class Program implements InstrArgResolver {
             "Math.exp": { m2: OpMath2.POW, firstArg: Math.E },
             "Math.log10": { m1: OpMath1.LOG_E, div: Math.log(10) },
             "Math.log2": { m1: OpMath1.LOG_E, div: Math.log(2) },
-            "Math.abs": { m1: OpMath1._LAST },
+            "Math.abs": { m1: OpMath1._LAST + 1 },
         }
 
         const wr = this.writer
