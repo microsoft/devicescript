@@ -2414,6 +2414,15 @@ class Program implements InstrArgResolver {
         return r
     }
 
+    private emitValueInto(trg: ValueDesc, expr: Expr) {
+        assert(this.writer.isReg(trg))
+        this.writer.push()
+        const val = this.emitExpr(expr)
+        this.requireRuntimeValue(expr, val)
+        this.writer.assign(trg, val)
+        this.writer.pop()
+    }
+
     private requireRuntimeValue(node: estree.BaseNode, v: ValueDesc) {
         switch (v.kind) {
             case CellKind.X_FP_REG:
@@ -2479,8 +2488,6 @@ class Program implements InstrArgResolver {
             "===": OpBinary.EQ,
             "!=": OpBinary.NE,
             "!==": OpBinary.NE,
-           // "&&": OpBinary.AND,
-           // "||": OpBinary.OR,
         }
 
         let op = expr.operator
@@ -2507,10 +2514,25 @@ class Program implements InstrArgResolver {
             swap = true
         }
 
+        const wr = this.writer
+
+        if (op == "&&" || op == "||") {
+            wr.push()
+            const a = this.emitSimpleValue(expr.left)
+            wr.push()
+            const tst = wr.allocReg()
+            wr.emitUnary(op == "&&" ? OpUnary.TO_BOOL : OpUnary.NOT, tst, a)
+            const skipB = wr.mkLabel("lazyB")
+            wr.pop()
+            wr.emitJump(skipB, tst.index)
+            this.emitValueInto(a, expr.right)
+            wr.emitLabel(skipB)
+            wr.popExcept(a)
+            return a
+        }
+
         const op2 = simpleOps[op]
         if (op2 === undefined) this.throwError(expr, "unhandled operator")
-
-        const wr = this.writer
 
         wr.push()
         let a = this.emitSimpleValue(expr.left)
