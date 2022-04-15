@@ -62,7 +62,7 @@ typedef struct {
 #define JACS_OPASYNC_SEND_CMD 4      // A-role, B-code
 #define JACS_OPASYNC_QUERY_IDX_REG 5 // A-role, B-STRIDX:CMD[8], C-timeout
 #define JACS_OPASYNC_LOG_FORMAT 6    // A-string-index B-numargs
-#define JACS_OPASYNC__LAST 7
+#define JACS_OPASYNC__LAST 6
 
 #define JACS_OPSYNC_RETURN 0
 #define JACS_OPSYNC_SETUP_BUFFER 1 // A-size
@@ -73,7 +73,7 @@ typedef struct {
 #define JACS_OPSYNC_MATH1 6 // A-OpMath1, R0 := op(R0)
 #define JACS_OPSYNC_MATH2 7 // A-OpMath2, R0 := op(R0, R1)
 #define JACS_OPSYNC_PANIC 8 // A-error code
-#define JACS_OPSYNC__LAST 9
+#define JACS_OPSYNC__LAST 8
 
 #define JACS_OPMATH1_FLOOR 0
 #define JACS_OPMATH1_ROUND 1
@@ -81,12 +81,12 @@ typedef struct {
 #define JACS_OPMATH1_LOG_E 3
 #define JACS_OPMATH1_RANDOM 4     // value between 0 and R0
 #define JACS_OPMATH1_RANDOM_INT 5 // int between 0 and R0 inclusive
-#define JACS_OPMATH1__LAST 6
+#define JACS_OPMATH1__LAST 5
 
 #define JACS_OPMATH2_MIN 0
 #define JACS_OPMATH2_MAX 1
 #define JACS_OPMATH2_POW 2
-#define JACS_OPMATH2__LAST 3
+#define JACS_OPMATH2__LAST 2
 
 #define JACS_OPCALL_SYNC 0          // regular call
 #define JACS_OPCALL_BG 1            // start new fiber
@@ -102,14 +102,14 @@ typedef struct {
 #define JACS_CELL_KIND_ROLE_PROPERTY 6 // A=OpRoleProperty, B=roleidx
 
 #define JACS_ROLE_PROPERTY_IS_CONNECTED 0
-#define JACS_ROLE_PROPERTY__LAST 1
+#define JACS_ROLE_PROPERTY__LAST 0
 
 #define JACS_VALUE_SPECIAL_NAN 0x0
 // jd_packet accessors:
 #define JACS_VALUE_SPECIAL_SIZE 0x1
 #define JACS_VALUE_SPECIAL_EV_CODE 0x2      // or nan
 #define JACS_VALUE_SPECIAL_REG_GET_CODE 0x3 // or nan
-#define JACS_VALUE_SPECIAL__LAST 0x4
+#define JACS_VALUE_SPECIAL__LAST 0x3
 
 #define JACS_OPBIN_ADD 0x1
 #define JACS_OPBIN_SUB 0x2
@@ -122,7 +122,7 @@ typedef struct {
 #define JACS_OPBIN_BIT_AND 0x9
 #define JACS_OPBIN_BIT_OR 0xa
 #define JACS_OPBIN_BIT_XOR 0xb
-#define JACS_OPBIN__LAST 0xc
+#define JACS_OPBIN__LAST 0xb
 
 #define JACS_OPUN_ID 0x0      // x
 #define JACS_OPUN_NEG 0x1     // -x
@@ -131,7 +131,7 @@ typedef struct {
 #define JACS_OPUN_IS_NAN 0x4  // isNaN(x)
 #define JACS_OPUN_BIT_NOT 0x5 // ~x
 #define JACS_OPUN_TO_BOOL 0x6 // !!x
-#define JACS_OPUN__LAST 0x7
+#define JACS_OPUN__LAST 0x6
 
 // Size in bits is: 8 << (fmt & 0b11)
 // Format is ["u", "i", "f", "reserved"](fmt >> 2)

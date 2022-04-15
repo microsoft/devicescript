@@ -111,12 +111,12 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             break;
 
         case JACS_OPTOP_UNARY:                    // OP[4] DST[4] SRC[4]
-            CHECK(1102, subop < JACS_OPUN__LAST); // valid uncode
+            CHECK(1102, subop <= JACS_OPUN__LAST); // valid uncode
             break;
 
         case JACS_OPTOP_BINARY:                    // OP[4] DST[4] SRC[4]
             CHECK(1103, subop != 0);               // valid bincode
-            CHECK(1104, subop < JACS_OPBIN__LAST); // valid bincode
+            CHECK(1104, subop <= JACS_OPBIN__LAST); // valid bincode
             break;
 
         case JACS_OPTOP_LOAD_CELL:  // DST[4] A:OP[2] B:OFF[6]
@@ -146,11 +146,11 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             case JACS_CELL_KIND_IDENTITY:
                 break;
             case JACS_CELL_KIND_SPECIAL:
-                CHECK(1139, idx < JACS_VALUE_SPECIAL__LAST); // special in range
+                CHECK(1139, idx <= JACS_VALUE_SPECIAL__LAST); // special in range
                 break;
             case JACS_CELL_KIND_ROLE_PROPERTY:
                 CHECK(1140, b < jacs_img_num_roles(img));    // role prop R range
-                CHECK(1141, idx < JACS_ROLE_PROPERTY__LAST); // role prop C range
+                CHECK(1141, idx <= JACS_ROLE_PROPERTY__LAST); // role prop C range
                 break;
             default:
                 CHECK(1142, false); // invalid cell kind
@@ -221,10 +221,10 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1119, a < jacs_img_num_strings(img)); // str in range
                 break;
             case JACS_OPSYNC_MATH1:
-                CHECK(1120, a < JACS_OPMATH1__LAST); // math1 in range
+                CHECK(1120, a <= JACS_OPMATH1__LAST); // math1 in range
                 break;
             case JACS_OPSYNC_MATH2:
-                CHECK(1121, a < JACS_OPMATH2__LAST); // math2 in range
+                CHECK(1121, a <= JACS_OPMATH2__LAST); // math2 in range
                 break;
             case JACS_OPSYNC_PANIC:
                 lastOK = true;
