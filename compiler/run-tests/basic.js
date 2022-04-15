@@ -12,6 +12,14 @@ function isClose(x, y) {
     panic(108)
 }
 
+function isEq(x, y) {
+    // console.log("{0} == {1}?", x, y)
+    if (x != y) {
+        console.log("fail: {0} != {1}", x, y)
+        panic(109)
+    }
+}
+
 var x = 0
 
 function testFlow() {
@@ -54,12 +62,12 @@ function testFlow() {
 }
 
 function testMath() {
-    isClose(2 + 2, 4)
-    isClose(2 - 1, 1)
+    isEq(2 + 2, 4)
+    isEq(2 - 1, 1)
     isClose(3 * 4 + 3, 15.00001)
-    isClose(Math.abs(10), 10)
-    isClose(Math.abs(-10), 10)
-    isClose(Math.abs(0), 0)
+    isEq(Math.abs(10), 10)
+    isEq(Math.abs(-10), 10)
+    isEq(Math.abs(0), 0)
     isClose(Math.log(Math.E), 1)
     isClose(Math.log(1.23456), 0.21071463)
     isClose(Math.log(-1), NaN)
@@ -72,21 +80,67 @@ function testMath() {
     isClose(Math.cbrt(27), 3)
     isClose(Math.exp(1), Math.E)
     isClose(Math.exp(10), 22026.46579480)
-    isClose(Math.ceil(0.1), 1)
-    isClose(Math.ceil(0.9), 1)
-    isClose(Math.floor(1.1), 1)
-    isClose(Math.floor(1.9), 1)
-    isClose(Math.round(1.9), 2)
-    isClose(Math.round(1.3), 1)
-    isClose(Math.min(1, 7.1), 1)
-    isClose(Math.min(1.2, 1.2), 1.2)
-    isClose(Math.min(-1, -7), -7)
-    isClose(Math.max(1, 7), 7)
-    isClose(Math.max(1, 1), 1)
-    isClose(Math.max(-1, -7), -1)
+    isEq(Math.ceil(0.1), 1)
+    isEq(Math.ceil(0.9), 1)
+    isEq(Math.floor(1.1), 1)
+    isEq(Math.floor(1.9), 1)
+    isEq(Math.round(1.9), 2)
+    isEq(Math.round(1.3), 1)
+    isEq(Math.min(1, 7.1), 1)
+    isEq(Math.min(1.2, 1.2), 1.2)
+    isEq(Math.min(-1, -7), -7)
+    isEq(Math.max(1, 7), 7)
+    isEq(Math.max(1, 1), 1)
+    isEq(Math.max(-1, -7), -1)
 
-    isClose(fib(8), 21)
-    isClose(fibx(8), 21)
+    isEq(fib(8), 21)
+    isEq(fibx(8), 21)
+
+    isEq(1 & 3, 1)
+    isEq(1 & 0, 0)
+    isEq(1 & 2, 0)
+    isEq(1 | 3, 3)
+    isEq(1 | 0, 1)
+    isEq(1 | 2, 3)
+    isEq(1 ^ 3, 2)
+    isEq(1 ^ 0, 1)
+    isEq(1 ^ 2, 3)
+    isEq(~(-3), 2)
+    isEq(~100, -101)
+}
+
+function lazyX(v) {
+    x = x + 1 + v
+    return v
+}
+
+function checkX(v) {
+    if (x != v) {
+        console.log("{0} != {1} !!", x, v)
+        panic(11)
+    }
+    x = 0
+}
+
+function testLazy() {
+    x = 0
+    if (lazyX(0) || lazyX(1)) {
+        checkX(3)
+    } else {
+        panic(10)
+    }
+
+    if (lazyX(0) && lazyX(1)) {
+        panic(10)
+    } else {
+        checkX(1)
+    }
+
+    if (lazyX(NaN) && lazyX(1)) {
+        panic(101)
+    } else {
+        if (!isNaN(x)) panic(12)
+    }
 }
 
 function fib(k) {
@@ -103,5 +157,6 @@ function fibx(k) {
 testFlow()
 if (x != 42) panic(10)
 testMath()
+testLazy()
 console.log("all OK")
 reboot()

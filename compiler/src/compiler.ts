@@ -2441,6 +2441,8 @@ class Program implements InstrArgResolver {
     private emitAssignmentExpression(
         expr: estree.AssignmentExpression
     ): ValueDesc {
+        if (expr.operator != "=")
+            this.throwError(expr, "only simple assignment supported")
         const src = this.emitExpr(expr.right)
         const wr = this.writer
         let left = expr.left
@@ -2483,6 +2485,9 @@ class Program implements InstrArgResolver {
             "/": OpBinary.DIV,
             "*": OpBinary.MUL,
             "<": OpBinary.LT,
+            "|": OpBinary.BIT_OR,
+            "&": OpBinary.BIT_AND,
+            "^": OpBinary.BIT_XOR,
             "<=": OpBinary.LE,
             "==": OpBinary.EQ,
             "===": OpBinary.EQ,
@@ -2548,16 +2553,28 @@ class Program implements InstrArgResolver {
         const simpleOps: SMap<OpUnary> = {
             "!": OpUnary.NOT,
             "-": OpUnary.NEG,
+            "~": OpUnary.BIT_NOT,
             "+": OpUnary.ID,
         }
 
-        const op = simpleOps[expr.operator]
+        let op = simpleOps[expr.operator]
         if (op === undefined) this.throwError(expr, "unhandled operator")
+
+        let arg = expr.argument
+
+        if (
+            expr.operator == "!" &&
+            arg.type == "UnaryExpression" &&
+            arg.operator == "!"
+        ) {
+            op = OpUnary.TO_BOOL
+            arg = arg.argument
+        }
 
         const wr = this.writer
 
         wr.push()
-        const a = this.emitSimpleValue(expr.argument)
+        const a = this.emitSimpleValue(arg)
         wr.emitUnary(op, a, a)
         wr.popExcept(a)
 
@@ -2582,7 +2599,7 @@ class Program implements InstrArgResolver {
             case "UnaryExpression":
                 return this.emitUnaryExpression(expr)
             default:
-                console.log(expr)
+                // console.log(expr)
                 return this.throwError(expr, "unhandled expr: " + expr.type)
         }
     }
