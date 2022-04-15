@@ -50,15 +50,16 @@ async function runTest(fn) {
     const prog = await readCompiled(fn)
     const inst = await jacsFactory()
 
+    const devid = "12abdd2289421234"
+
     return new Promise((resolve, reject) => {
         // both handlePacket and sendPacket take UInt8Array of the frame
         // addEventListener("message", ev => inst.handlePacket(ev.data))
         // inst.sendPacket = pkt => console.log("send", pkt)
         inst.sendPacket = pkt => {
             // only react to packets from our device
-            for (let i = 0; i < 8; ++i)
-                if (pkt[4 + i] != (i + 1) * 0x11)
-                    return
+            if (!Buffer.from(devid, "hex").equals(pkt.slice(4, 4 + 8)))
+                return
 
             const idx = pkt[13]
             const cmd = pkt[14] | (pkt[15] << 8)
@@ -77,7 +78,7 @@ async function runTest(fn) {
                 }
             }
         }
-        inst.jacsSetDeviceId("1122334455667788") // use 8-byte hex-encoded ID (used directly), or any string (hashed)
+        inst.jacsSetDeviceId(devid) // use 8-byte hex-encoded ID (used directly), or any string (hashed)
         inst.jacsStart()
         inst.jacsDeploy(prog)
         setTimeout(() => {
