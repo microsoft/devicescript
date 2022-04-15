@@ -243,10 +243,10 @@ Arithmetic operators are supported: `+`, `-`, `*`, `/`, `**`, as well as unary `
 
 Comparison operators `<`, `<=`, `>`, `>=`, `==`, `===`, `!=`, `!==` are supported (and return doubles).
 
-The operators `&&` and `||` are supported, but are **currently not lazy**.
+The operators `&&` and `||` are supported, and are properly lazy.
 The boolean negation `!` is supported (returning `0` or `1`).
 
-The bitwise operators are not supported.
+The bitwise operators are now supported: `|`, `&`, `^`, `~`, `<<`, `>>`, `>>>`.
 
 The following math functions and constants are supported:
 * `Math.floor`
@@ -272,6 +272,8 @@ The following math functions and constants are supported:
 * `Math.SQRT2`
 * `isNaN`
 * `NaN`
+
+All of the above should have the same semantics as JavaScript.
 
 ### Misc functions
 

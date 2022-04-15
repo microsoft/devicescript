@@ -137,7 +137,10 @@ export enum OpBinary {
     BIT_AND = 0x9,
     BIT_OR = 0xa,
     BIT_XOR = 0xb,
-    _LAST = 0xb,
+    SHIFT_LEFT = 0xc,
+    SHIFT_RIGHT = 0xd,
+    SHIFT_RIGHT_UNSIGNED = 0xe,
+    _LAST = 0xe,
 }
 
 export enum OpUnary {
@@ -384,6 +387,12 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
                 return "|"
             case OpBinary.BIT_XOR:
                 return "^"
+            case OpBinary.SHIFT_LEFT:
+                return "<<"
+            case OpBinary.SHIFT_RIGHT:
+                return ">>"
+            case OpBinary.SHIFT_RIGHT_UNSIGNED:
+                return ">>>"
             default:
                 return "bin-" + subop
         }
