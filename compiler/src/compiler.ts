@@ -521,9 +521,9 @@ class OpWriter {
         c: number = 0,
         d: number = 0
     ) {
-        this.emitPrefix(a >> 4, b, c, d)
+        this.emitPrefix(a, b, c, d)
         assertRange(0, op, OpSync._LAST)
-        this.emitRaw(OpTop.SYNC, ((a & 0xf) << 8) | op)
+        this.emitRaw(OpTop.SYNC, op)
     }
 
     private saveRegs() {
@@ -581,7 +581,7 @@ class OpWriter {
         }
     }
 
-    emitLoadCell(dst: ValueDesc, celltype: CellKind, idx: number, c = 0) {
+    emitLoadCell(dst: ValueDesc, celltype: CellKind, idx: number, argB = 0) {
         assert(this.isReg(dst))
         switch (celltype) {
             case CellKind.LOCAL:
@@ -591,7 +591,13 @@ class OpWriter {
             case CellKind.BUFFER:
             case CellKind.SPECIAL:
             case CellKind.ROLE_PROPERTY:
-                this.emitLoadStoreCell(OpTop.LOAD_CELL, dst, celltype, idx, c)
+                this.emitLoadStoreCell(
+                    OpTop.LOAD_CELL,
+                    dst,
+                    celltype,
+                    idx,
+                    argB
+                )
                 break
             case CellKind.X_FP_REG:
                 this.emitMov(dst.index, idx)
@@ -636,16 +642,15 @@ class OpWriter {
         dst: ValueDesc,
         celltype: CellKind,
         idx: number,
-        argC: number
+        argB: number = 0,
+        argC: number = 0,
+        argD: number = 0
     ) {
         assert(this.isReg(dst))
-        const [a, b] = [celltype, idx]
-        this.emitPrefix(a >> 2, b >> 6, argC || 0)
-        // DST[4] A:OP[2] B:OFF[6]
-        this.emitRaw(
-            op,
-            (dst.index << 8) | ((celltype & 0x3) << 6) | (idx & 0x3f)
-        )
+        assertRange(0, celltype, CellKind._HW_LAST - 1)
+        // DST[4] CELL_KIND[4] A:OFF[4]
+        this.emitPrefix(idx >> 4, argB, argC, argD)
+        this.emitRaw(op, (dst.index << 8) | (celltype << 4) | (idx & 0xf))
     }
 
     emitStoreByte(src: ValueDesc, off = 0) {
@@ -655,6 +660,7 @@ class OpWriter {
             OpTop.STORE_CELL,
             src,
             CellKind.BUFFER,
+            0,
             OpFmt.U8,
             off
         )
@@ -662,20 +668,35 @@ class OpWriter {
 
     emitBufLoad(dst: ValueDesc, fmt: OpFmt, off: number) {
         assertRange(0, off, 0xff)
-        this.emitLoadStoreCell(OpTop.LOAD_CELL, dst, CellKind.BUFFER, fmt, off)
+        this.emitLoadStoreCell(
+            OpTop.LOAD_CELL,
+            dst,
+            CellKind.BUFFER,
+            0,
+            fmt,
+            off
+        )
     }
 
     emitBufStore(src: ValueDesc, fmt: OpFmt, off: number) {
         assertRange(0, off, 0xff)
         assert(this.bufferAllocated(), "buffer allocated in store")
-        this.emitLoadStoreCell(OpTop.STORE_CELL, src, CellKind.BUFFER, fmt, off)
+        this.emitLoadStoreCell(
+            OpTop.STORE_CELL,
+            src,
+            CellKind.BUFFER,
+            0,
+            fmt,
+            off
+        )
     }
 
     emitBufOp(
         op: OpTop,
         dst: ValueDesc,
         off: number,
-        mem: jdspec.PacketMember
+        mem: jdspec.PacketMember,
+        bufferId = 0
     ) {
         assert(this.isReg(dst))
         let fmt = OpFmt.U8
@@ -708,12 +729,15 @@ class OpWriter {
         if (op == OpTop.STORE_CELL)
             assert(this.bufferAllocated(), "buffer allocated in store")
 
+        // B=shift:numfmt, C=Offset, D=buffer_id; A-unused ???
         this.emitLoadStoreCell(
             op,
             dst,
             CellKind.BUFFER,
+            0,
             fmt | (shift << 4),
-            off
+            off,
+            bufferId
         )
     }
 
@@ -1665,8 +1689,8 @@ class Program implements InstrArgResolver {
         wr.emitLoadCell(
             r,
             CellKind.ROLE_PROPERTY,
-            role.index,
-            OpRoleProperty.IS_CONNECTED
+            OpRoleProperty.IS_CONNECTED,
+            role.index
         )
         return r
     }
@@ -2068,6 +2092,7 @@ class Program implements InstrArgResolver {
             "Math.ceil": { m1: OpMath1.CEIL },
             "Math.log": { m1: OpMath1.LOG_E },
             "Math.random": { m1: OpMath1.RANDOM, lastArg: 1.0 },
+            "Math.randomInt": { m1: OpMath1.RANDOM_INT },
             "Math.max": { m2: OpMath2.MAX },
             "Math.min": { m2: OpMath2.MIN },
             "Math.pow": { m2: OpMath2.POW },
@@ -2454,8 +2479,8 @@ class Program implements InstrArgResolver {
             "===": OpBinary.EQ,
             "!=": OpBinary.NE,
             "!==": OpBinary.NE,
-            "&&": OpBinary.AND,
-            "||": OpBinary.OR,
+           // "&&": OpBinary.AND,
+           // "||": OpBinary.OR,
         }
 
         let op = expr.operator

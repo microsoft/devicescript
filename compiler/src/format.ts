@@ -24,13 +24,13 @@ export enum OpTop {
     UNARY = 5, // OP[4] DST[4] SRC[4]
     BINARY = 6, // OP[4] DST[4] SRC[4]
 
-    LOAD_CELL = 7, // DST[4] A:OP[2] B:OFF[6]
-    STORE_CELL = 8, // SRC[4] A:OP[2] B:OFF[6]
+    LOAD_CELL = 7, // DST[4] CELL_KIND[4] A:OFF[4]
+    STORE_CELL = 8, // SRC[4] CELL_KIND[4] A:OFF[4]
 
     JUMP = 9, // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
     CALL = 10, // NUMREGS[4] OPCALL[2] B:OFF[6] (D - saved regs)
 
-    SYNC = 11, // A:ARG[4] OP[8]
+    SYNC = 11, // UNUSED[4] OP[8]
     ASYNC = 12, // D:SAVE_REGS[4] OP[8]
 }
 
@@ -64,7 +64,8 @@ export enum OpMath1 {
     CEIL = 2,
     LOG_E = 3,
     RANDOM = 4, // value between 0 and R0
-    _LAST = 5,
+    RANDOM_INT = 5, // int32 between 0 and (int32)R0 inclusive
+    _LAST = 6,
 }
 
 export enum OpMath2 {
@@ -82,14 +83,17 @@ export enum OpCall {
 }
 
 export enum CellKind {
+    // A=idx
     LOCAL = 0,
     GLOBAL = 1,
     FLOAT_CONST = 2,
     IDENTITY = 3,
 
-    BUFFER = 4, // arg=shift:numfmt, C=Offset
-    SPECIAL = 5, // arg=nan, regcode, role, ...
-    ROLE_PROPERTY = 6, // arg=roleidx, C=OpRoleProperty
+    BUFFER = 4, // A=0, B=shift:numfmt, C=Offset, D=buffer_id
+    SPECIAL = 5, // A=nan, regcode, role, ..., D=buffer_id (sometimes)
+    ROLE_PROPERTY = 6, // A=OpRoleProperty, B=roleidx
+
+    _HW_LAST = 7,
 
     // these cannot be emitted directly
     JD_EVENT = 0x100,
@@ -130,18 +134,21 @@ export enum OpBinary {
     LE = 0x6,
     EQ = 0x7,
     NE = 0x8,
-    AND = 0x9,
-    OR = 0xa,
-    _LAST = 0xb,
+    BIT_AND = 0x9,
+    BIT_OR = 0xa,
+    BIT_XOR = 0xb,
+    _LAST = 0xc,
 }
 
 export enum OpUnary {
-    ID = 0x0,
-    NEG = 0x1,
-    NOT = 0x2,
-    ABS = 0x3,
-    IS_NAN = 0x4,
-    _LAST = 0x5,
+    ID = 0x0, // x
+    NEG = 0x1, // -x
+    NOT = 0x2, // !x
+    ABS = 0x3, // Math.abs(x)
+    IS_NAN = 0x4, // isNaN(x)
+    BIT_NOT = 0x5, // ~x
+    TO_BOOL = 0x6, // !!x
+    _LAST = 0x7,
 }
 
 // Size in bits is: 8 << (fmt & 0b11)
@@ -269,10 +276,9 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
             case OpTop.BINARY: // OP[4] DST[4] SRC[4]
                 return `${reg1} := ${reg1} ${bincode()} ${reg2}`
 
-            case OpTop.LOAD_CELL: // DST[4] A:OP[2] B:OFF[6]
-            case OpTop.STORE_CELL: // SRC[4] A:OP[2] B:OFF[6]
-                a = (a << 2) | (arg8 >> 6)
-                b = (b << 6) | arg6
+            case OpTop.LOAD_CELL:
+            case OpTop.STORE_CELL:
+                a = (a << 4) | (arg8 & 0xf)
                 return op == OpTop.LOAD_CELL
                     ? `${reg0} := ${celldesc()}`
                     : `${celldesc()} := ${reg0}`
@@ -296,7 +302,6 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
                 }_F${b} #${subop} save=${d.toString(2)}`
 
             case OpTop.SYNC: // A:ARG[4] OP[8]
-                a = (a << 4) | subop
                 return `sync ${syncOp()}`
 
             case OpTop.ASYNC: // D:SAVE_REGS[4] OP[8]
@@ -343,6 +348,10 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
                 return "-"
             case OpUnary.NOT:
                 return "!"
+            case OpUnary.BIT_NOT:
+                return "~"
+            case OpUnary.TO_BOOL:
+                return "!!"
             case OpUnary.ABS:
                 return "abs "
             case OpUnary.IS_NAN:
@@ -369,10 +378,12 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
                 return "=="
             case OpBinary.NE:
                 return "!="
-            case OpBinary.AND:
-                return "&&"
-            case OpBinary.OR:
-                return "||"
+            case OpBinary.BIT_AND:
+                return "&"
+            case OpBinary.BIT_OR:
+                return "|"
+            case OpBinary.BIT_XOR:
+                return "^"
             default:
                 return "bin-" + subop
         }
@@ -389,6 +400,8 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
                 return "log_e"
             case OpMath1.RANDOM:
                 return "random"
+            case OpMath1.RANDOM_INT:
+                return "randomInt"
             default:
                 return "m1-" + subop
         }
@@ -406,9 +419,10 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
         }
     }
     function celldesc() {
-        const idx = b
-        const r = resolver?.describeCell?.(a, b) || ""
-        switch (a) {
+        const cellkind = (arg8 >> 4) as CellKind
+        const idx = a
+        const r = resolver?.describeCell?.(cellkind, a) || ""
+        switch (cellkind) {
             case CellKind.LOCAL:
                 return `${r}_L${idx}`
             case CellKind.GLOBAL:
@@ -418,7 +432,7 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
             case CellKind.IDENTITY:
                 return `${idx}`
             case CellKind.BUFFER:
-                return `buf[${c} @ ${numfmt(idx)}]`
+                return `buf${d == 0 ? "" : d}[${c} @ ${numfmt(b)}]`
             case CellKind.SPECIAL:
                 switch (idx) {
                     case ValueSpecial.NAN:
@@ -433,15 +447,15 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
                         return `${r}_SPEC[${idx}]`
                 }
             case CellKind.ROLE_PROPERTY:
-                const rr = role(idx)
-                switch (c) {
+                const rr = role(b)
+                switch (idx) {
                     case OpRoleProperty.IS_CONNECTED:
                         return `${rr}.isConnected`
                     default:
-                        return `${rr}.prop${c}`
+                        return `${rr}.prop${a}`
                 }
             default:
-                return `C${a}[${idx}]` // ??
+                return `C${cellkind}[${idx}]` // ??
         }
     }
 
