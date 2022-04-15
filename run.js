@@ -9,6 +9,7 @@ const rtest = "compiler/run-tests"
 const distPath = "built"
 let verbose = false
 let useC = false
+let testMode = false
 
 let jacsHost
 async function getHost() {
@@ -93,13 +94,20 @@ async function runServer(fn) {
         const prog = await readCompiled(fn)
         const compfn = distPath + "/compiled.jacs"
         fs.writeFileSync(compfn, prog)
-        child_process.spawn(distPath + "/jdcli", ["8082", compfn], {
+        const args = [compfn]
+        if (!testMode) args.unshift("8082")
+        const child = child_process.spawn(distPath + "/jdcli", args, {
             stdio: "inherit"
         })
+        child.on('exit', (code) => {
+            process.exit(code)
+        });
+        testMode = false
         return
     }
     const inst = await jacsFactory()
-    await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
+    if (!testMode)
+        await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
     inst.jacsStart()
     if (fn) {
         const prog = await readCompiled(fn)
@@ -129,13 +137,19 @@ async function main() {
             useC = true
             continue
         }
+
+        if (args[0] == "-t") {
+            args.shift()
+            testMode = true
+            continue
+        }
         break
     }
 
-    let testMode = false
-
     try {
         if (args[0] == "test") {
+            testMode = true
+
             const host = await getHost()
             const jacscript = require("./compiler")
             for (const fn of readdir(ctest).concat(readdir(samples))) {
@@ -147,8 +161,6 @@ async function main() {
                 console.log(`*** run ${fn}`)
                 await runTest(fn)
             }
-
-            testMode = true
         } else {
             await runServer(args[0])
         }

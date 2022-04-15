@@ -98,7 +98,7 @@ compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts)
 	cd compiler && node build.js
 
 test-c: all
-	node run -c compiler/run-tests/basic.js
+	node run -c -t compiler/run-tests/basic.js
 
 test-em: em comp
 	node run test
