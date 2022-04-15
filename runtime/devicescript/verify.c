@@ -70,16 +70,11 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
         switch (op) {
         case JACS_OPTOP_LOAD_CELL:
         case JACS_OPTOP_STORE_CELL:
+            a = (a << 4) | (arg8 & 0xf);
+            break;
         case JACS_OPTOP_JUMP:
         case JACS_OPTOP_CALL:
             b = (b << 6) | arg6;
-            break;
-        }
-
-        switch (op) {
-        case JACS_OPTOP_LOAD_CELL:
-        case JACS_OPTOP_STORE_CELL:
-            a = (a << 2) | (arg8 >> 6);
             break;
         }
 
@@ -127,8 +122,8 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
         case JACS_OPTOP_LOAD_CELL:  // DST[4] A:OP[2] B:OFF[6]
         case JACS_OPTOP_STORE_CELL: // SRC[4] A:OP[2] B:OFF[6]
         {
-            uint16_t idx = b;
-            uint16_t tp = a;
+            uint16_t idx = a;
+            uint16_t tp = arg8 >> 4;
             switch (tp) {
             case JACS_CELL_KIND_LOCAL:
                 CHECK(1133, idx < fptr->num_locals); // locals range
@@ -137,11 +132,11 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1134, idx < img->header->num_globals); // globals range
                 break;
             case JACS_CELL_KIND_BUFFER: { // arg=shift:numfmt, C=Offset
-                int fmt = idx & 0xf;
+                int fmt = b & 0xf;
                 CHECK(1135, fmt <= JACS_NUMFMT_I64 || fmt == JACS_NUMFMT_F32 ||
                                 fmt == JACS_NUMFMT_F64); // valid fmt
-                int sz = bitSize(idx & 0xf);
-                int shift = idx >> 4;
+                int sz = bitSize(fmt);
+                int shift = b >> 4;
                 CHECK(1136, shift <= sz);       // shift < sz
                 CHECK(1137, c <= 236 - sz / 8); // offset in range
             } break;
@@ -154,8 +149,8 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1139, idx < JACS_VALUE_SPECIAL__LAST); // special in range
                 break;
             case JACS_CELL_KIND_ROLE_PROPERTY:
-                CHECK(1140, idx < jacs_img_num_roles(img)); // role prop R range
-                CHECK(1141, c < JACS_ROLE_PROPERTY__LAST);  // role prop C range
+                CHECK(1140, b < jacs_img_num_roles(img));    // role prop R range
+                CHECK(1141, idx < JACS_ROLE_PROPERTY__LAST); // role prop C range
                 break;
             default:
                 CHECK(1142, false); // invalid cell kind
@@ -204,8 +199,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                             subop); // correct num of args
             break;
 
-        case JACS_OPTOP_SYNC: // A:ARG[4] OP[8]
-            a = (a << 4) | subop;
+        case JACS_OPTOP_SYNC:
             switch (arg8) {
             case JACS_OPSYNC_RETURN:
                 lastOK = true;

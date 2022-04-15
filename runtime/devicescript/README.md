@@ -4,12 +4,24 @@
 
 * simply `[A|B|C|D] := Rn` ?
   -> verify is tricky - make sure assumptions all right?
+  -> some opcode have some bits inlined
 
-* extensibility? in C (possibly via services) or in compiler?
+* extensibility via services and compiler
+* implement NaN-boxing for fast integer operations
+* allow allocating buffers (global indexed namespace?); extend set/getnum opcode to write to these buffers; allow copying between buffers
+* add bitwise operations
 
-* add integer registers
-* integer arithmetic
-* integer variables?
+What needs to be passed as arguments?
+* global address
+* function
+* role
+* register/command code
 
-* what about analysis?
-* integer vs float regs; good idea? maybe only one set of regs - operations decide how to interpret
+Use cases:
+* LED display client with double-buffering
+* display number (two digits) on dot matrix screen
+* scroll text on dot matrix screen (compile-in font?)
+* compute median of measurements
+
+* parametrize number of roles?
+

@@ -48,11 +48,11 @@ typedef struct {
 #define JACS_OPTOP_SET_HIGH 4   // A/B/C/D[2] ARG[10]
 #define JACS_OPTOP_UNARY 5      // OP[4] DST[4] SRC[4]
 #define JACS_OPTOP_BINARY 6     // OP[4] DST[4] SRC[4]
-#define JACS_OPTOP_LOAD_CELL 7  // DST[4] A:OP[2] B:OFF[6]
-#define JACS_OPTOP_STORE_CELL 8 // SRC[4] A:OP[2] B:OFF[6]
+#define JACS_OPTOP_LOAD_CELL 7  // DST[4] CELL_KIND[4] A:OFF[4]
+#define JACS_OPTOP_STORE_CELL 8 // SRC[4] CELL_KIND[4] A:OFF[4]
 #define JACS_OPTOP_JUMP 9       // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
 #define JACS_OPTOP_CALL 10      // NUMREGS[4] OPCALL[2] B:OFF[6] (D - saved regs)
-#define JACS_OPTOP_SYNC 11      // A:ARG[4] OP[8]
+#define JACS_OPTOP_SYNC 11      // UNUSED[4] OP[8]
 #define JACS_OPTOP_ASYNC 12     // D:SAVE_REGS[4] OP[8]
 
 #define JACS_OPASYNC_WAIT_ROLE 0     // A-role
@@ -79,8 +79,9 @@ typedef struct {
 #define JACS_OPMATH1_ROUND 1
 #define JACS_OPMATH1_CEIL 2
 #define JACS_OPMATH1_LOG_E 3
-#define JACS_OPMATH1_RANDOM 4 // value between 0 and R0
-#define JACS_OPMATH1__LAST 5
+#define JACS_OPMATH1_RANDOM 4     // value between 0 and R0
+#define JACS_OPMATH1_RANDOM_INT 5 // int between 0 and R0 inclusive
+#define JACS_OPMATH1__LAST 6
 
 #define JACS_OPMATH2_MIN 0
 #define JACS_OPMATH2_MAX 1
@@ -96,9 +97,9 @@ typedef struct {
 #define JACS_CELL_KIND_GLOBAL 1
 #define JACS_CELL_KIND_FLOAT_CONST 2
 #define JACS_CELL_KIND_IDENTITY 3
-#define JACS_CELL_KIND_BUFFER 4        // arg=shift:numfmt, C=Offset
-#define JACS_CELL_KIND_SPECIAL 5       // arg=nan, regcode, role, ...
-#define JACS_CELL_KIND_ROLE_PROPERTY 6 // arg=roleidx, C=OpRoleProperty
+#define JACS_CELL_KIND_BUFFER 4        // A=0, B=shift:numfmt, C=Offset, D=buffer_id
+#define JACS_CELL_KIND_SPECIAL 5       // A=nan, regcode, role, ..., D=buffer_id (sometimes)
+#define JACS_CELL_KIND_ROLE_PROPERTY 6 // A=OpRoleProperty, B=roleidx
 
 #define JACS_ROLE_PROPERTY_IS_CONNECTED 0
 #define JACS_ROLE_PROPERTY__LAST 1
@@ -118,16 +119,19 @@ typedef struct {
 #define JACS_OPBIN_LE 0x6
 #define JACS_OPBIN_EQ 0x7
 #define JACS_OPBIN_NE 0x8
-#define JACS_OPBIN_AND 0x9
-#define JACS_OPBIN_OR 0xa
-#define JACS_OPBIN__LAST 0xb
+#define JACS_OPBIN_BIT_AND 0x9
+#define JACS_OPBIN_BIT_OR 0xa
+#define JACS_OPBIN_BIT_XOR 0xb
+#define JACS_OPBIN__LAST 0xc
 
-#define JACS_OPUN_ID 0x0
-#define JACS_OPUN_NEG 0x1
-#define JACS_OPUN_NOT 0x2
-#define JACS_OPUN_ABS 0x3
-#define JACS_OPUN_IS_NAN 0x4
-#define JACS_OPUN__LAST 0x5
+#define JACS_OPUN_ID 0x0      // x
+#define JACS_OPUN_NEG 0x1     // -x
+#define JACS_OPUN_NOT 0x2     // !x
+#define JACS_OPUN_ABS 0x3     // Math.abs(x)
+#define JACS_OPUN_IS_NAN 0x4  // isNaN(x)
+#define JACS_OPUN_BIT_NOT 0x5 // ~x
+#define JACS_OPUN_TO_BOOL 0x6 // !!x
+#define JACS_OPUN__LAST 0x7
 
 // Size in bits is: 8 << (fmt & 0b11)
 // Format is ["u", "i", "f", "reserved"](fmt >> 2)

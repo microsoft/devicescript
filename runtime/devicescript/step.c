@@ -2,6 +2,17 @@
 
 #include <math.h>
 
+static int32_t as_int(value_t v) {
+    // TODO check semantics
+    return (int32_t)v;
+}
+
+static int as_bool(value_t v) {
+    if (isnan(v))
+        return 0;
+    return v ? 1 : 0;
+}
+
 static value_t do_unop(int op, value_t v) {
     switch (op) {
     case JACS_OPUN_ID:
@@ -9,11 +20,15 @@ static value_t do_unop(int op, value_t v) {
     case JACS_OPUN_NEG:
         return -v;
     case JACS_OPUN_NOT:
-        return v ? 0 : 1;
+        return !as_bool(v);
     case JACS_OPUN_ABS:
         return v < 0 ? -v : v;
     case JACS_OPUN_IS_NAN:
         return isnan(v) ? 1 : 0;
+    case JACS_OPUN_BIT_NOT:
+        return ~as_int(v);
+    case JACS_OPUN_TO_BOOL:
+        return as_bool(v);
     default:
         oops();
         return 0;
@@ -38,13 +53,26 @@ static value_t do_binop(int op, value_t a, value_t b) {
         return a == b ? 1 : 0;
     case JACS_OPBIN_NE:
         return a != b ? 1 : 0;
-    case JACS_OPBIN_AND:
-        return a ? b : a;
-    case JACS_OPBIN_OR:
-        return a ? a : b;
+    case JACS_OPBIN_BIT_AND:
+        return as_int(a) & as_int(b);
+    case JACS_OPBIN_BIT_OR:
+        return as_int(a) | as_int(b);
+    case JACS_OPBIN_BIT_XOR:
+        return as_int(a) ^ as_int(b);
     default:
         oops();
         return 0;
+    }
+}
+
+static uint32_t random_max(uint32_t mx) {
+    uint32_t mask = 1;
+    while (mask < mx)
+        mask = (mask << 1) | 1;
+    for (;;) {
+        uint32_t r = jd_random() & mask;
+        if (r <= mx)
+            return r;
     }
 }
 
@@ -60,6 +88,8 @@ static value_t do_opmath1(int op, value_t a) {
         return log(a);
     case JACS_OPMATH1_RANDOM:
         return jd_random() * a / (value_t)0x100000000;
+    case JACS_OPMATH1_RANDOM_INT:
+        return random_max(as_int(a));
     default:
         oops();
         return 0;
@@ -141,14 +171,15 @@ static value_t get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, ui
     return q;
 }
 
-static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx, int c) {
+static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx, int b, int c,
+                         int d) {
     switch (tp) {
     case JACS_CELL_KIND_LOCAL:
         return act->locals[idx];
     case JACS_CELL_KIND_GLOBAL:
         return ctx->globals[idx];
     case JACS_CELL_KIND_BUFFER: // arg=shift:numfmt, C=Offset
-        return get_val(act, c, idx & 0xf, idx >> 4);
+        return get_val(act, c, b & 0xf, b >> 4);
     case JACS_CELL_KIND_FLOAT_CONST:
         return jacs_img_get_float(&ctx->img, idx);
     case JACS_CELL_KIND_IDENTITY:
@@ -174,9 +205,9 @@ static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int id
             return 0;
         }
     case JACS_CELL_KIND_ROLE_PROPERTY:
-        switch (c) {
+        switch (idx) {
         case JACS_ROLE_PROPERTY_IS_CONNECTED:
-            return ctx->roles[idx]->service != NULL;
+            return ctx->roles[b]->service != NULL;
         default:
             oops();
             return 0;
@@ -243,8 +274,8 @@ static void set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8
     }
 }
 
-static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx, int c,
-                       value_t val) {
+static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx, int b, int c,
+                       int d, value_t val) {
     switch (tp) {
     case JACS_CELL_KIND_LOCAL:
         // DMESG("loc %d := %f pc=%d", idx, val, act->pc);
@@ -254,7 +285,7 @@ static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx,
         ctx->globals[idx] = val;
         break;
     case JACS_CELL_KIND_BUFFER: // arg=shift:numfmt, C=Offset
-        set_val(act, c, idx & 0xf, idx >> 4, val);
+        set_val(act, c, b & 0xf, b >> 4, val);
         break;
     default:
         oops();
@@ -318,6 +349,7 @@ void jacs_act_step(jacs_activation_t *frame) {
     uint32_t reg0 = subop;
     uint32_t reg1 = arg8 >> 4;
     uint32_t reg2 = arg4;
+    uint32_t celltp = arg8 >> 4;
     uint16_t a = ctx->a;
     uint16_t b = ctx->b;
     uint16_t c = ctx->c;
@@ -326,16 +358,11 @@ void jacs_act_step(jacs_activation_t *frame) {
     switch (op) {
     case JACS_OPTOP_LOAD_CELL:
     case JACS_OPTOP_STORE_CELL:
+        a = (a << 4) | arg4;
+        break;
     case JACS_OPTOP_JUMP:
     case JACS_OPTOP_CALL:
         b = (b << 6) | arg6;
-        break;
-    }
-
-    switch (op) {
-    case JACS_OPTOP_LOAD_CELL:
-    case JACS_OPTOP_STORE_CELL:
-        a = (a << 2) | (arg8 >> 6);
         break;
     }
 
@@ -360,15 +387,15 @@ void jacs_act_step(jacs_activation_t *frame) {
         break;
 
     case JACS_OPTOP_LOAD_CELL: // DST[4] A:OP[2] B:OFF[6]
-        ctx->registers[reg0] = load_cell(ctx, frame, a, b, c);
+        ctx->registers[reg0] = load_cell(ctx, frame, celltp, a, b, c, d);
         break;
 
     case JACS_OPTOP_STORE_CELL: // SRC[4] A:OP[2] B:OFF[6]
-        store_cell(ctx, frame, a, b, c, ctx->registers[reg0]);
+        store_cell(ctx, frame, celltp, a, b, c, d, ctx->registers[reg0]);
         break;
 
     case JACS_OPTOP_JUMP: // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
-        if (arg8 & (1 << 6) && ctx->registers[reg0])
+        if (arg8 & (1 << 6) && as_bool(ctx->registers[reg0]))
             break;
         if (arg8 & (1 << 7)) {
             frame->pc -= b;
@@ -393,8 +420,7 @@ void jacs_act_step(jacs_activation_t *frame) {
         }
         break;
 
-    case JACS_OPTOP_SYNC: // A:ARG[4] OP[8]
-        a = (a << 4) | subop;
+    case JACS_OPTOP_SYNC:
         switch (arg8) {
         case JACS_OPSYNC_RETURN:
             jacs_fiber_return_from_call(frame);
