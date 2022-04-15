@@ -59,6 +59,12 @@ static value_t do_binop(int op, value_t a, value_t b) {
         return as_int(a) | as_int(b);
     case JACS_OPBIN_BIT_XOR:
         return as_int(a) ^ as_int(b);
+    case JACS_OPBIN_SHIFT_LEFT:
+        return as_int(a) << (as_int(b) & 31);
+    case JACS_OPBIN_SHIFT_RIGHT:
+        return as_int(a) >> (as_int(b) & 31);
+    case JACS_OPBIN_SHIFT_RIGHT_UNSIGNED:
+        return (uint32_t)as_int(a) >> (as_int(b) & 31);
     default:
         oops();
         return 0;

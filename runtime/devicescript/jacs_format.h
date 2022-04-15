@@ -122,7 +122,10 @@ typedef struct {
 #define JACS_OPBIN_BIT_AND 0x9
 #define JACS_OPBIN_BIT_OR 0xa
 #define JACS_OPBIN_BIT_XOR 0xb
-#define JACS_OPBIN__LAST 0xb
+#define JACS_OPBIN_SHIFT_LEFT 0xc
+#define JACS_OPBIN_SHIFT_RIGHT 0xd
+#define JACS_OPBIN_SHIFT_RIGHT_UNSIGNED 0xe
+#define JACS_OPBIN__LAST 0xe
 
 #define JACS_OPUN_ID 0x0      // x
 #define JACS_OPUN_NEG 0x1     // -x
