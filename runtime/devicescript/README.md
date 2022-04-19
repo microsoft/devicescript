@@ -7,9 +7,7 @@
   -> some opcode have some bits inlined
 
 * extensibility via services and compiler
-* implement NaN-boxing for fast integer operations
 * allow allocating buffers (global indexed namespace?); extend set/getnum opcode to write to these buffers; allow copying between buffers
-* add bitwise operations
 
 What needs to be passed as arguments?
 * global address

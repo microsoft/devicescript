@@ -4,6 +4,7 @@
 
 typedef union {
     double f;
+    uint64_t u64;
     struct {
         uint32_t mantisa32;
         uint32_t mantisa20 : 20;

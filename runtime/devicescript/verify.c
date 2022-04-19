@@ -1,4 +1,5 @@
 #include "jacs_internal.h"
+#include <math.h>
 
 STATIC_ASSERT(sizeof(jacs_img_header_t) == 64 + 6 * sizeof(jacs_img_section_t));
 
@@ -19,7 +20,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1149
+// next error 1149 / 1045
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -110,12 +111,12 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             }
             break;
 
-        case JACS_OPTOP_UNARY:                    // OP[4] DST[4] SRC[4]
+        case JACS_OPTOP_UNARY:                     // OP[4] DST[4] SRC[4]
             CHECK(1102, subop <= JACS_OPUN__LAST); // valid uncode
             break;
 
-        case JACS_OPTOP_BINARY:                    // OP[4] DST[4] SRC[4]
-            CHECK(1103, subop != 0);               // valid bincode
+        case JACS_OPTOP_BINARY:                     // OP[4] DST[4] SRC[4]
+            CHECK(1103, subop != 0);                // valid bincode
             CHECK(1104, subop <= JACS_OPBIN__LAST); // valid bincode
             break;
 
@@ -149,7 +150,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1139, idx <= JACS_VALUE_SPECIAL__LAST); // special in range
                 break;
             case JACS_CELL_KIND_ROLE_PROPERTY:
-                CHECK(1140, b < jacs_img_num_roles(img));    // role prop R range
+                CHECK(1140, b < jacs_img_num_roles(img));     // role prop R range
                 CHECK(1141, idx <= JACS_ROLE_PROPERTY__LAST); // role prop C range
                 break;
             default:
@@ -302,6 +303,16 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
 
     SET_OFF(&header->float_literals);
     CHECK(1011, (header->float_literals.length & 7) == 0);
+
+    for (const value_t *fptr = FIRST_DESC(float_literals); //
+         (void *)fptr < LAST_DESC(float_literals);         //
+         fptr++) {
+        value_t tmp = *fptr;
+        if (jacs_is_tagged_int(tmp))
+            continue;
+        CHECK(1043, !isnan(tmp.f));
+        CHECK(1044, jacs_value_from_double(tmp.f).u64 == tmp.u64);
+    }
 
     uint32_t prevProc = header->functions_data.start;
     for (const jacs_function_desc_t *fptr = FIRST_DESC(functions); //
