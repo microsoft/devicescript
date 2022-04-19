@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-#define NUMBER value_t
+#define NUMBER double
 
 #define p10(v) __builtin_powi(10, v)
 
@@ -168,7 +168,7 @@ size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, 
             precision = 6;
 
         char buf[64];
-        mycvt(args[pos], buf, precision + 1);
+        mycvt(jacs_value_to_double(args[pos]), buf, precision + 1);
         char *s = buf;
         while (*s && dp < dstlen)
             WR(*s++);

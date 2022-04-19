@@ -1,10 +1,9 @@
 #pragma once
 #include "jacs_format.h"
+#include "jacs_value.h"
 #include <stdbool.h>
 
 #define JACS_NUM_REGS 16
-
-typedef double value_t;
 
 typedef struct jacs_img {
     union {
@@ -42,9 +41,9 @@ static inline const jacs_role_desc_t *jacs_img_get_role(const jacs_img_t *img, u
 }
 
 static inline value_t jacs_img_get_float(const jacs_img_t *img, uint32_t idx) {
-    double v;
-    memcpy(&v, img->data + img->header->float_literals.start + idx * sizeof(double),
-           sizeof(double));
+    value_t v;
+    memcpy(&v, img->data + img->header->float_literals.start + idx * sizeof(value_t),
+           sizeof(value_t));
     return v;
 }
 

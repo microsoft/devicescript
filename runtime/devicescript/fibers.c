@@ -100,15 +100,15 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
             if (fiber->bottom_function_idx == fidx) {
                 if (op == JACS_OPCALL_BG_MAX1_PEND1) {
                     if (fiber->pending) {
-                        ctx->registers[0] = 3;
+                        ctx->registers[0] = jacs_value_from_int(3);
                         // DMESG("fiber already pending %d", fidx);
                     } else {
                         fiber->pending = 1;
                         // DMESG("pend fiber %d", fidx);
-                        ctx->registers[0] = 2;
+                        ctx->registers[0] = jacs_value_from_int(2);
                     }
                 } else {
-                    ctx->registers[0] = 0;
+                    ctx->registers[0] = jacs_zero;
                 }
                 return;
             }
@@ -127,7 +127,7 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
 
     jacs_fiber_set_wake_time(fiber, jacs_now(ctx));
 
-    ctx->registers[0] = 1;
+    ctx->registers[0] = jacs_one;
 }
 
 void jacs_fiber_run(jacs_fiber_t *fiber) {
