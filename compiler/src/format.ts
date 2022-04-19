@@ -72,7 +72,9 @@ export enum OpMath2 {
     MIN = 0,
     MAX = 1,
     POW = 2,
-    _LAST = 2,
+    IDIV = 3,
+    IMUL = 4,
+    _LAST = 4,
 }
 
 export enum OpCall {

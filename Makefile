@@ -97,7 +97,7 @@ comp: compiler/node_modules/typescript compiler/built/compiler/src/jacscript.js
 compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts)
 	cd compiler && node build.js
 
-test-c: all
+test-c: native
 	node run -c -t compiler/run-tests/basic.js
 
 test-em: em comp

@@ -6,9 +6,9 @@ declare class Role {
     onDisconnected(handler: () => void): void
 }
 
-declare class JDPacketInfo {}
+declare class JDPacketInfo { }
 
-declare class JDRegister extends JDPacketInfo {}
+declare class JDRegister extends JDPacketInfo { }
 
 declare class JDRegisterNum extends JDRegister {
     read(): number
@@ -64,3 +64,10 @@ declare function every(seconds: number, callback: () => void): void
 declare function panic(code: number): never
 declare function reboot(): never
 declare function onStart(handler: () => void): void
+
+interface Math {
+    /**
+    * Returns the result of signed 32-bit integer division of two numbers.
+    */
+    idiv(x: number, y: number): number;
+}

@@ -3,12 +3,12 @@
  * @param {number} y
  */
 function isClose(x, y) {
-    // console.log("{0} == {1}?", x, y)
     if (isNaN(x) && isNaN(y))
         return
     var d = Math.abs(x - y)
     if (d < 0.00000001 || d / Math.abs(x + y) < 0.00001)
         return
+    console.log("{0} != {1} !", x, y)
     panic(108)
 }
 
@@ -126,6 +126,19 @@ function testMath() {
     isEq(10 << 33, 20)
     isEq(10 << 34, 40)
     isEq(1 << -1, -2147483648)
+
+    isEq(Math.imul(10, 30), 300)
+    isEq(Math.imul(0xffff, 0xffff), -131071)
+    isEq(Math.imul(0xffff, 0xffff1), -2031601)
+    isEq(Math.imul(0xffff, 0xffff11), -32440081)
+    isEq(Math.imul(0xffff, 0xffff111), -518975761)
+    isEq(Math.imul(0xffff, 0x7fff1111), -1861095697)
+    isEq(Math.imul(0x7ffff, 0x7fff1111), 143191791)
+    isEq(Math.idiv(100, 10), 10)
+    isEq(Math.idiv(102, 10), 10)
+    isEq(Math.idiv(-102, 10), -10)
+    isEq(Math.idiv(102, 7), 14)
+    isEq(Math.idiv(-102, 7), -14)
 }
 
 function lazyX(v) {

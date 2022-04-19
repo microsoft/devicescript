@@ -909,7 +909,7 @@ class Procedure {
         this.locals = new VariableScope(this.parent.globals)
     }
     toString() {
-        return `proc ${this.name}:\n${this.writer.getAssembly()}`
+        return `proc ${this.name}: (fun${this.index})\n${this.writer.getAssembly()}`
     }
     finalize() {
         this.writer.patchLabels()
@@ -2096,6 +2096,8 @@ class Program implements InstrArgResolver {
             "Math.max": { m2: OpMath2.MAX },
             "Math.min": { m2: OpMath2.MIN },
             "Math.pow": { m2: OpMath2.POW },
+            "Math.idiv": { m2: OpMath2.IDIV },
+            "Math.imul": { m2: OpMath2.IMUL },
             "Math.sqrt": { m2: OpMath2.POW, lastArg: 1 / 2 },
             "Math.cbrt": { m2: OpMath2.POW, lastArg: 1 / 3 },
             "Math.exp": { m2: OpMath2.POW, firstArg: Math.E },
