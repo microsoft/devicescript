@@ -909,7 +909,9 @@ class Procedure {
         this.locals = new VariableScope(this.parent.globals)
     }
     toString() {
-        return `proc ${this.name}: (fun${this.index})\n${this.writer.getAssembly()}`
+        return `proc ${this.name}: (fun${
+            this.index
+        })\n${this.writer.getAssembly()}`
     }
     finalize() {
         this.writer.patchLabels()
@@ -978,7 +980,6 @@ class Program implements InstrArgResolver {
     tree: estree.Program
     procs: Procedure[] = []
     floatLiterals: number[] = []
-    intLiterals: number[] = []
     stringLiterals: string[] = []
     writer: OpWriter
     proc: Procedure
@@ -2722,9 +2723,16 @@ class Program implements InstrArgResolver {
             funData.append(proc.writer.serialize())
         }
 
-        floatData.append(
-            new Uint8Array(new Float64Array(this.floatLiterals).buffer)
-        )
+        const floatBuf = new Float64Array(this.floatLiterals).buffer
+        const nanboxedU32 = new Uint32Array(floatBuf)
+        for (let i = 0; i < this.floatLiterals.length; ++i) {
+            const f = this.floatLiterals[i]
+            if ((f | 0) == f) {
+                nanboxedU32[i * 2] = f
+                nanboxedU32[i * 2 + 1] = -1
+            }
+        }
+        floatData.append(new Uint8Array(floatBuf))
 
         for (const r of this.roles.list) {
             roleData.append((r as Role).serialize())
