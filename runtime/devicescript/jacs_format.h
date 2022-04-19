@@ -86,7 +86,9 @@ typedef struct {
 #define JACS_OPMATH2_MIN 0
 #define JACS_OPMATH2_MAX 1
 #define JACS_OPMATH2_POW 2
-#define JACS_OPMATH2__LAST 2
+#define JACS_OPMATH2_IDIV 3
+#define JACS_OPMATH2_IMUL 4
+#define JACS_OPMATH2__LAST 4
 
 #define JACS_OPCALL_SYNC 0          // regular call
 #define JACS_OPCALL_BG 1            // start new fiber

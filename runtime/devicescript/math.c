@@ -89,7 +89,7 @@ value_t jacs_step_binop(int op, value_t a, value_t b) {
             return jacs_value_from_int(r);
 
         case JACS_OPBIN_DIV:
-            // not sure this is worth it on M0+
+            // not sure this is worth it on M0+; it definitely is on M4
             if (bb == 0 || (bb == -1 && aa == INT_MIN) || ((r = aa / bb)) * bb != aa)
                 break;
             return jacs_value_from_int(r);
@@ -181,14 +181,23 @@ value_t jacs_step_opmath1(int op, value_t a) {
 }
 
 value_t jacs_step_opmath2(int op, value_t a, value_t b) {
-    if (jacs_is_tagged_int(a) && jacs_is_tagged_int(b)) {
-        int aa = a.val_int32;
-        int bb = b.val_int32;
+    if (op == JACS_OPMATH2_IDIV || op == JACS_OPMATH2_IMUL ||
+        (jacs_is_tagged_int(a) && jacs_is_tagged_int(b))) {
+        int aa = jacs_value_to_int(a);
+        int bb = jacs_value_to_int(b);
         switch (op) {
         case JACS_OPMATH2_MIN:
             return aa < bb ? a : b;
         case JACS_OPMATH2_MAX:
             return aa > bb ? a : b;
+        case JACS_OPMATH2_IDIV:
+            if (bb == 0)
+                return jacs_zero;
+            return jacs_value_from_int(aa / bb);
+        case JACS_OPMATH2_IMUL:
+            // avoid signed overflow, which is undefined
+            // note that signed and unsigned multiplication result in the same bit patterns
+            return jacs_value_from_int((uint32_t)aa * (uint32_t)bb);
         }
     }
 
@@ -344,7 +353,7 @@ void jacs_step_set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, ui
 
 #define SET_VAL_U(SZ, l, h)                                                                        \
     case JACS_NUMFMT_##SZ:                                                                         \
-        if (jacs_is_tagged_int(q) && q.val_int32 > 0)                                         \
+        if (jacs_is_tagged_int(q) && q.val_int32 > 0)                                              \
             SZ = q.val_int32;                                                                      \
         else                                                                                       \
             SZ = clamp_double(q, l, h);                                                            \
