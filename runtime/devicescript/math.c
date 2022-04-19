@@ -90,7 +90,7 @@ value_t jacs_step_binop(int op, value_t a, value_t b) {
 
         case JACS_OPBIN_DIV:
             // not sure this is worth it on M0+
-            if ((bb == -1 && aa == INT_MIN) || ((r = aa / bb)) * bb != aa)
+            if (bb == 0 || (bb == -1 && aa == INT_MIN) || ((r = aa / bb)) * bb != aa)
                 break;
             return jacs_value_from_int(r);
 
