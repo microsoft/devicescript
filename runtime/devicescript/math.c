@@ -16,7 +16,7 @@ value_t jacs_step_unop(int op, value_t v) {
     }
 
     if (jacs_is_tagged_int(v)) {
-        int q = v.mantisa32;
+        int q = v.val_int32;
         switch (op) {
         case JACS_OPUN_NEG:
             if (q == INT_MIN)
@@ -73,8 +73,8 @@ value_t jacs_step_binop(int op, value_t a, value_t b) {
     }
 
     if (jacs_is_tagged_int(a) && jacs_is_tagged_int(b)) {
-        int aa = a.mantisa32;
-        int bb = b.mantisa32;
+        int aa = a.val_int32;
+        int bb = b.val_int32;
         int r;
 
         switch (op) {
@@ -182,8 +182,8 @@ value_t jacs_step_opmath1(int op, value_t a) {
 
 value_t jacs_step_opmath2(int op, value_t a, value_t b) {
     if (jacs_is_tagged_int(a) && jacs_is_tagged_int(b)) {
-        int aa = a.mantisa32;
-        int bb = b.mantisa32;
+        int aa = a.val_int32;
+        int bb = b.val_int32;
         switch (op) {
         case JACS_OPMATH2_MIN:
             return aa < bb ? a : b;
@@ -344,8 +344,8 @@ void jacs_step_set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, ui
 
 #define SET_VAL_U(SZ, l, h)                                                                        \
     case JACS_NUMFMT_##SZ:                                                                         \
-        if (jacs_is_tagged_int(q) && (int)q.mantisa32 > 0)                                         \
-            SZ = q.mantisa32;                                                                      \
+        if (jacs_is_tagged_int(q) && q.val_int32 > 0)                                         \
+            SZ = q.val_int32;                                                                      \
         else                                                                                       \
             SZ = clamp_double(q, l, h);                                                            \
         memcpy(pkt->data + offset, &SZ, sizeof(SZ));                                               \

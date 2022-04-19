@@ -11,7 +11,7 @@ typedef union {
         uint32_t sign : 1;
     };
     struct {
-        uint32_t mantisa32_;
+        int32_t val_int32;
         uint32_t exp_sign;
     };
 } value_t;
