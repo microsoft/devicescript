@@ -149,3 +149,12 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 void jacs_act_step(jacs_activation_t *frame);
 void jacs_act_restore_regs(jacs_activation_t *act);
 value_t *jacs_act_saved_regs_ptr(jacs_activation_t *act);
+
+// math.c
+value_t jacs_step_unop(int op, value_t v);
+value_t jacs_step_binop(int op, value_t a, value_t b);
+value_t jacs_step_opmath1(int op, value_t a);
+value_t jacs_step_opmath2(int op, value_t a, value_t b);
+value_t jacs_step_get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8_t shift);
+void jacs_step_set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8_t shift,
+                       value_t q);
