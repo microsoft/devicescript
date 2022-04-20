@@ -46,11 +46,14 @@ static int fail(int code, uint32_t offset) {
     MUST_CONTAIN_PTR(code, container, (sect)->start);                                              \
     MUST_CONTAIN_PTR(code, container, (sect)->start + (sect)->length)
 
+#define IS_DYNAMIC(x) ((x) + 1 == 0)
+#define DYN_MARKER (0U - 1U)
+
 static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
     const uint8_t *imgdata = img->data;
     uint32_t offset;
     const uint16_t *funcode = (const uint16_t *)(imgdata + fptr->start);
-    uint16_t a, b, c, d;
+    uint32_t a, b, c, d;
     uint16_t num_regs = fptr->num_regs_and_args & 0xf;
     uint32_t numinstr = fptr->length >> 1;
 
@@ -94,20 +97,37 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             break;
 
         case JACS_OPTOP_SET_HIGH:
-            CHECK(1101, arg10 >> 4 == 0); // "set_high only supported for 16 bit"
-            switch (arg12 >> 10) {
-            case 0:
-                a |= arg10 << 12;
-                break;
-            case 1:
-                b |= arg10 << 12;
-                break;
-            case 2:
-                c |= arg10 << 12;
-                break;
-            case 3:
-                d |= arg10 << 12;
-                break;
+            if (arg10 >> 4 == 0x20) {
+                switch (arg12 >> 10) {
+                case 0:
+                    a = DYN_MARKER;
+                    break;
+                case 1:
+                    b = DYN_MARKER;
+                    break;
+                case 2:
+                    c = DYN_MARKER;
+                    break;
+                case 3:
+                    d = DYN_MARKER;
+                    break;
+                }
+            } else {
+                CHECK(1101, (arg10 >> 4) == 0);
+                switch (arg12 >> 10) {
+                case 0:
+                    a |= arg10 << 12;
+                    break;
+                case 1:
+                    b |= arg10 << 12;
+                    break;
+                case 2:
+                    c |= arg10 << 12;
+                    break;
+                case 3:
+                    d |= arg10 << 12;
+                    break;
+                }
             }
             break;
 
@@ -123,23 +143,27 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
         case JACS_OPTOP_LOAD_CELL:  // DST[4] A:OP[2] B:OFF[6]
         case JACS_OPTOP_STORE_CELL: // SRC[4] A:OP[2] B:OFF[6]
         {
-            uint16_t idx = a;
+            uint32_t idx = a;
             uint16_t tp = arg8 >> 4;
             switch (tp) {
             case JACS_CELL_KIND_LOCAL:
                 CHECK(1133, idx < fptr->num_locals); // locals range
                 break;
             case JACS_CELL_KIND_GLOBAL:
-                CHECK(1134, idx < img->header->num_globals); // globals range
+                CHECK(1134, IS_DYNAMIC(idx) || idx < img->header->num_globals); // globals range
                 break;
             case JACS_CELL_KIND_BUFFER: { // arg=shift:numfmt, C=Offset
-                int fmt = b & 0xf;
-                CHECK(1135, fmt <= JACS_NUMFMT_I64 || fmt == JACS_NUMFMT_F32 ||
-                                fmt == JACS_NUMFMT_F64); // valid fmt
-                int sz = bitSize(fmt);
-                int shift = b >> 4;
-                CHECK(1136, shift <= sz);       // shift < sz
-                CHECK(1137, c <= 236 - sz / 8); // offset in range
+                if (!IS_DYNAMIC(b)) {
+                    int fmt = b & 0xf;
+                    CHECK(1135, fmt <= JACS_NUMFMT_I64 || fmt == JACS_NUMFMT_F32 ||
+                                    fmt == JACS_NUMFMT_F64); // valid fmt
+                    int sz = bitSize(fmt);
+                    int shift = b >> 4;
+                    CHECK(1136, shift <= sz);                         // shift < sz
+                    CHECK(1137, IS_DYNAMIC(c) || c <= 236U - sz / 8); // offset in range
+                } else {
+                    CHECK(1137, IS_DYNAMIC(c) || c <= 236U - 1); // offset in range
+                }
             } break;
             case JACS_CELL_KIND_FLOAT_CONST:
                 CHECK(1138, idx < jacs_img_num_floats(img)); // float const in range
@@ -150,8 +174,8 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1139, idx <= JACS_VALUE_SPECIAL__LAST); // special in range
                 break;
             case JACS_CELL_KIND_ROLE_PROPERTY:
-                CHECK(1140, b < jacs_img_num_roles(img));     // role prop R range
-                CHECK(1141, idx <= JACS_ROLE_PROPERTY__LAST); // role prop C range
+                CHECK(1140, IS_DYNAMIC(b) || b < jacs_img_num_roles(img)); // role prop R range
+                CHECK(1141, idx <= JACS_ROLE_PROPERTY__LAST);              // role prop C range
                 break;
             default:
                 CHECK(1142, false); // invalid cell kind
@@ -205,8 +229,8 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             case JACS_OPSYNC_RETURN:
                 lastOK = true;
                 break;
-            case JACS_OPSYNC_SETUP_BUFFER: // A-size
-                CHECK(1113, a <= 236);     // setup buffer size in range
+            case JACS_OPSYNC_SETUP_BUFFER:              // A-size
+                CHECK(1113, IS_DYNAMIC(a) || a <= 236); // setup buffer size in range
                 break;
             case JACS_OPSYNC_FORMAT:                        // A-string-index B-numargs
                 CHECK(1114, c <= 236);                      // offset in range
@@ -245,20 +269,20 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             case JACS_OPASYNC_SLEEP_R0:
                 break;
             case JACS_OPASYNC_WAIT_ROLE:
-                CHECK(1123, a < jacs_img_num_roles(img)); // role in range
+                CHECK(1123, IS_DYNAMIC(a) || a < jacs_img_num_roles(img)); // role in range
                 break;
-            case JACS_OPASYNC_SEND_CMD:                   // A-role, B-code
-                CHECK(1124, a < jacs_img_num_roles(img)); // role idx
+            case JACS_OPASYNC_SEND_CMD:                                    // A-role, B-code
+                CHECK(1124, IS_DYNAMIC(a) || a < jacs_img_num_roles(img)); // role idx
                 // CHECK(1125, b <= 0xffff);                 // cmd code
                 break;
-            case JACS_OPASYNC_QUERY_REG:                  // A-role, B-code, C-timeout
-                CHECK(1126, a < jacs_img_num_roles(img)); // role idx
-                CHECK(1127, b <= 0x1ff);                  // reg code
+            case JACS_OPASYNC_QUERY_REG: // A-role, B-code, C-timeout
+                CHECK(1126, IS_DYNAMIC(a) || a < jacs_img_num_roles(img)); // role idx
+                CHECK(1127, IS_DYNAMIC(b) || b <= 0x1ff);                                   // reg code
                 break;
-            case JACS_OPASYNC_QUERY_IDX_REG:              // A-role, B-STRIDX:CMD[8], C-timeout
-                CHECK(1128, a < jacs_img_num_roles(img)); // role idx
-                CHECK(1129, b >> 8 != 0);                 // arg!=0
-                CHECK(1130, b >> 8 < jacs_img_num_strings(img)); // num str
+            case JACS_OPASYNC_QUERY_IDX_REG: // A-role, B-STRIDX:CMD[8], C-timeout
+                CHECK(1128, IS_DYNAMIC(a) || a < jacs_img_num_roles(img)); // role idx
+                CHECK(1129, b >> 8 != 0);                                  // arg!=0
+                CHECK(1130, b >> 8 < jacs_img_num_strings(img));           // num str
                 break;
             case JACS_OPASYNC_LOG_FORMAT: // A-string-index B-numargs
                 CHECK(1144, c == 0);

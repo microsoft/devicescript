@@ -114,6 +114,7 @@ static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
     return ctx->_now;
 }
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
+value_t jacs_runtime_failure(jacs_ctx_t *ctx);
 
 // strformat.c
 size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
@@ -155,6 +156,5 @@ value_t jacs_step_unop(int op, value_t v);
 value_t jacs_step_binop(int op, value_t a, value_t b);
 value_t jacs_step_opmath1(int op, value_t a);
 value_t jacs_step_opmath2(int op, value_t a, value_t b);
-value_t jacs_step_get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8_t shift);
-void jacs_step_set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8_t shift,
-                       value_t q);
+value_t jacs_step_get_val(jacs_activation_t *frame, uint16_t offset, uint8_t fmt0, uint16_t buffer);
+void jacs_step_set_val(jacs_activation_t *frame, uint16_t offset, uint16_t fmt0, uint16_t buffer, value_t q);

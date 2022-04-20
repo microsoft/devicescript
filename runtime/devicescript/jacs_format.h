@@ -45,7 +45,7 @@ typedef struct {
 #define JACS_OPTOP_SET_B 1      // ARG[12]
 #define JACS_OPTOP_SET_C 2      // ARG[12]
 #define JACS_OPTOP_SET_D 3      // ARG[12]
-#define JACS_OPTOP_SET_HIGH 4   // A/B/C/D[2] ARG[10]
+#define JACS_OPTOP_SET_HIGH 4   // A/B/C/D[2] IS_DYN[1] UNUSED[5] ARG_OR_REG[4]
 #define JACS_OPTOP_UNARY 5      // OP[4] DST[4] SRC[4]
 #define JACS_OPTOP_BINARY 6     // OP[4] DST[4] SRC[4]
 #define JACS_OPTOP_LOAD_CELL 7  // DST[4] CELL_KIND[4] A:OFF[4]

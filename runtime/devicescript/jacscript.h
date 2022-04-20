@@ -6,6 +6,7 @@
 #define JACS_PANIC_REBOOT 60000
 #define JACS_PANIC_TIMEOUT 60001
 #define JACS_PANIC_INTERNAL_ERROR 60002
+#define JACS_PANIC_RUNTIME_FAILURE 60003
 
 typedef struct jacs_ctx jacs_ctx_t;
 

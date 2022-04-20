@@ -6,9 +6,11 @@ static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int id
     case JACS_CELL_KIND_LOCAL:
         return act->locals[idx];
     case JACS_CELL_KIND_GLOBAL:
+        if (idx >= ctx->img.header->num_globals)
+            return jacs_runtime_failure(ctx);
         return ctx->globals[idx];
-    case JACS_CELL_KIND_BUFFER: // arg=shift:numfmt, C=Offset
-        return jacs_step_get_val(act, c, b & 0xf, b >> 4);
+    case JACS_CELL_KIND_BUFFER:
+        return jacs_step_get_val(act, c, b, d);
     case JACS_CELL_KIND_FLOAT_CONST:
         return jacs_img_get_float(&ctx->img, idx);
     case JACS_CELL_KIND_IDENTITY:
@@ -52,10 +54,13 @@ static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx,
         act->locals[idx] = val;
         break;
     case JACS_CELL_KIND_GLOBAL:
-        ctx->globals[idx] = val;
+        if (idx >= ctx->img.header->num_globals)
+            jacs_runtime_failure(ctx);
+        else
+            ctx->globals[idx] = val;
         break;
-    case JACS_CELL_KIND_BUFFER: // arg=shift:numfmt, C=Offset
-        jacs_step_set_val(act, c, b & 0xf, b >> 4, val);
+    case JACS_CELL_KIND_BUFFER:
+        jacs_step_set_val(act, c, b, d, val);
         break;
     default:
         oops();
@@ -145,7 +150,10 @@ void jacs_act_step(jacs_activation_t *frame) {
         break;
 
     case JACS_OPTOP_SET_HIGH:
-        ctx->params[arg12 >> 10] |= arg10 << 12;
+        if (instr & (1 << 9))
+            ctx->params[arg12 >> 10] = jacs_value_to_int(ctx->registers[reg2]);
+        else
+            ctx->params[arg12 >> 10] |= arg10 << 12;
         break;
 
     case JACS_OPTOP_UNARY: // OP[4] DST[4] SRC[4]

@@ -225,7 +225,10 @@ static inline double shift_val(int shift) {
     return t.f;
 }
 
-value_t jacs_step_get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8_t shift) {
+#define BAD_FMT() ((fmt == 0b1000 || fmt == 0b1001) || shift > sz * 8)
+
+value_t jacs_step_buffer_op(jacs_activation_t *frame, uint16_t offset, uint16_t fmt0,
+                          uint16_t buffer) {
     int is_float = 0;
     uint8_t U8;
     uint16_t U16;
@@ -238,10 +241,15 @@ value_t jacs_step_get_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt,
     float F32;
     double F64;
 
+    unsigned fmt = fmt0 & 0xf;
+    unsigned shift = fmt0 >> 4;
     unsigned sz = 1 << (fmt & 0b11);
 
     jacs_ctx_t *ctx = frame->fiber->ctx;
     jd_packet_t *pkt = &ctx->packet;
+
+    if (BAD_FMT())
+        jacs_runtime_failure(ctx);
 
     if (offset + sz > pkt->service_size) {
         // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
@@ -317,7 +325,7 @@ static double clamp_double(value_t v, double l, double h) {
     return vv;
 }
 
-void jacs_step_set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, uint8_t shift,
+void jacs_step_set_val(jacs_activation_t *frame, uint16_t offset, uint16_t fmt0, uint16_t buffer,
                        value_t q) {
     uint8_t U8;
     uint16_t U16;
@@ -330,13 +338,22 @@ void jacs_step_set_val(jacs_activation_t *frame, uint8_t offset, uint8_t fmt, ui
     float F32;
     double F64;
 
+    unsigned fmt = fmt0 & 0xf;
+    unsigned shift = fmt0 >> 4;
     unsigned sz = 1 << (fmt & 0b11);
 
     jacs_ctx_t *ctx = frame->fiber->ctx;
     jd_packet_t *pkt = &ctx->packet;
 
-    if (offset + sz > pkt->service_size)
-        oops(); // ?
+    if (BAD_FMT())
+        jacs_runtime_failure(ctx);
+
+select right buffer and check offset
+
+    if (offset + sz > pkt->service_size) {
+        jacs_runtime_failure(ctx);
+        return;
+    }
 
     if (shift || !jacs_is_tagged_int(q)) {
         double qq = jacs_value_to_double(q) * shift_val(shift);

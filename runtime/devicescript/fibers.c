@@ -178,6 +178,11 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
     jacs_fiber_yield(ctx);
 }
 
+value_t jacs_runtime_failure(jacs_ctx_t *ctx) {
+    jacs_panic(ctx, JACS_PANIC_RUNTIME_FAILURE);
+    return jacs_nan;
+}
+
 void jacs_fiber_sync_now(jacs_ctx_t *ctx) {
     now = (uint32_t)tim_get_micros();
     uint32_t new_delta = now - ctx->_prev_us;
