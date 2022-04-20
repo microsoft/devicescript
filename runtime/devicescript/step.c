@@ -10,7 +10,7 @@ static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int id
             return jacs_runtime_failure(ctx);
         return ctx->globals[idx];
     case JACS_CELL_KIND_BUFFER:
-        return jacs_step_get_val(act, c, b, d);
+        return jacs_buffer_op(act, b, c, d, NULL);
     case JACS_CELL_KIND_FLOAT_CONST:
         return jacs_img_get_float(&ctx->img, idx);
     case JACS_CELL_KIND_IDENTITY:
@@ -60,7 +60,7 @@ static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx,
             ctx->globals[idx] = val;
         break;
     case JACS_CELL_KIND_BUFFER:
-        jacs_step_set_val(act, c, b, d, val);
+        jacs_buffer_op(act, b, c, d, &val);
         break;
     default:
         oops();

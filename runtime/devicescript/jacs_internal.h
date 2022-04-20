@@ -156,5 +156,5 @@ value_t jacs_step_unop(int op, value_t v);
 value_t jacs_step_binop(int op, value_t a, value_t b);
 value_t jacs_step_opmath1(int op, value_t a);
 value_t jacs_step_opmath2(int op, value_t a, value_t b);
-value_t jacs_step_get_val(jacs_activation_t *frame, uint16_t offset, uint8_t fmt0, uint16_t buffer);
-void jacs_step_set_val(jacs_activation_t *frame, uint16_t offset, uint16_t fmt0, uint16_t buffer, value_t q);
+
+value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer, value_t *setv);
