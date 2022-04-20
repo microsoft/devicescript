@@ -2,5 +2,5 @@
     "compilerOptions": {
         "checkJs": true
     },
-    "exclude": ["node_modules", "**/node_modules/*", "src"]
+    "exclude": ["**/node_modules/*", "compiler/src"]
 }
