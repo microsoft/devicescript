@@ -6,13 +6,16 @@ typedef struct {
     uint32_t length; // in bytes
 } jacs_img_section_t;
 
-#define JACS_NUM_IMG_SECTIONS 6
+#define JACS_NUM_IMG_SECTIONS 7
+
+#define JACS_IMG_VERSION 0x00010001
 
 typedef struct {
     uint32_t magic0;
     uint32_t magic1;
+    uint32_t version;
     uint16_t num_globals;
-    uint8_t reserved[64 - 4 - 4 - 2];
+    uint8_t reserved[64 - 4 - 4 - 4 - 2];
 
     jacs_img_section_t functions;      // jacs_function_desc_t[]
     jacs_img_section_t functions_data; // uint16_t[]
@@ -20,6 +23,7 @@ typedef struct {
     jacs_img_section_t roles;          // jacs_role_desc_t[]
     jacs_img_section_t strings;        // jacs_img_section_t[]
     jacs_img_section_t string_data;    // "strings" points in here
+    jacs_img_section_t buffers;        // jacs_buffer_desc_t[]
 } jacs_img_header_t;
 
 typedef struct {
@@ -37,6 +41,12 @@ typedef struct {
     uint16_t name_idx; // index in strings section
     uint16_t reserved;
 } jacs_role_desc_t;
+
+typedef struct {
+    uint32_t type; // currently always 0
+    uint16_t size;
+    uint16_t reserved;
+} jacs_buffer_desc_t;
 
 #define JACS_IMG_MAGIC0 0x5363614a // "JacS"
 #define JACS_IMG_MAGIC1 0x9a6a7e0a

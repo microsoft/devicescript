@@ -6,6 +6,21 @@ static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     ctx->globals = jd_alloc(sizeof(value_t) * ctx->img.header->num_globals);
     ctx->roles = jd_alloc(sizeof(jd_role_t *) * jacs_img_num_roles(&ctx->img));
 
+    uint32_t num_buffers = jacs_img_num_buffers(&ctx->img);
+    if (num_buffers > 1) {
+        uint32_t buffer_words = num_buffers - 1;
+        for (unsigned i = 1; i < num_buffers; ++i) {
+            buffer_words += (jacs_img_get_buffer(&ctx->img, i)->size + 3) >> 2;
+        }
+        ctx->buffers = jd_alloc(sizeof(uint32_t) * buffer_words);
+        buffer_words = num_buffers - 1;
+        uint32_t *bufptr = ctx->buffers;
+        for (unsigned i = 1; i < num_buffers; ++i) {
+            *bufptr++ = buffer_words;
+            buffer_words += (jacs_img_get_buffer(&ctx->img, i)->size + 3) >> 2;
+        }
+    }
+
     jacs_fiber_sync_now(ctx);
     jacs_jd_reset_packet(ctx);
 
@@ -71,6 +86,7 @@ static void clear_ctx(jacs_ctx_t *ctx) {
     jacs_fiber_free_all_fibers(ctx);
     jd_free(ctx->globals);
     jd_free(ctx->roles);
+    jd_free(ctx->buffers);
     memset(ctx, 0, sizeof(*ctx));
 }
 

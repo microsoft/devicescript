@@ -1,7 +1,7 @@
 #include "jacs_internal.h"
 #include <math.h>
 
-STATIC_ASSERT(sizeof(jacs_img_header_t) == 64 + 6 * sizeof(jacs_img_section_t));
+STATIC_ASSERT(sizeof(jacs_img_header_t) == 64 + JACS_NUM_IMG_SECTIONS * sizeof(jacs_img_section_t));
 
 static int numSetBits(uint32_t n) {
     int r = 0;
@@ -20,7 +20,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1149 / 1045
+// next error 1149 / 1051
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -164,6 +164,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 } else {
                     CHECK(1137, IS_DYNAMIC(c) || c <= 236U - 1); // offset in range
                 }
+                CHECK(1149, IS_DYNAMIC(d) || d <= jacs_img_num_buffers(img));
             } break;
             case JACS_CELL_KIND_FLOAT_CONST:
                 CHECK(1138, idx < jacs_img_num_floats(img)); // float const in range
@@ -277,7 +278,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 break;
             case JACS_OPASYNC_QUERY_REG: // A-role, B-code, C-timeout
                 CHECK(1126, IS_DYNAMIC(a) || a < jacs_img_num_roles(img)); // role idx
-                CHECK(1127, IS_DYNAMIC(b) || b <= 0x1ff);                                   // reg code
+                CHECK(1127, IS_DYNAMIC(b) || b <= 0x1ff);                  // reg code
                 break;
             case JACS_OPASYNC_QUERY_IDX_REG: // A-role, B-STRIDX:CMD[8], C-timeout
                 CHECK(1128, IS_DYNAMIC(a) || a < jacs_img_num_roles(img)); // role idx
@@ -316,6 +317,7 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
     jacs_img_t *img = &_img;
 
     CHECK(1000, header->magic0 == JACS_IMG_MAGIC0 && header->magic1 == JACS_IMG_MAGIC1);
+    CHECK(1050, header->version == JACS_IMG_VERSION);
 
     const jacs_img_section_t *sptr = &header->functions;
 
@@ -365,6 +367,20 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
         CHECK(1040, top == 1 || top == 2);
         // CHECK(1041, fptr->name_idx > 0); - TODO why was this here?
         CHECK(1042, fptr->name_idx < jacs_img_num_strings(img));
+    }
+
+    for (const jacs_buffer_desc_t *fptr = FIRST_DESC(buffers); //
+         (void *)fptr < LAST_DESC(buffers);                    //
+         fptr++) {
+        SET_OFF(fptr);
+        CHECK(1045, fptr->type == 0);
+        CHECK(1046, fptr->reserved == 0);
+        if (fptr == FIRST_DESC(buffers)) {
+            CHECK(1049, fptr->size == JD_SERIAL_PAYLOAD_SIZE); // buffer #0 is current packet
+        } else {
+            CHECK(1047, fptr->size > 0);
+            CHECK(1048, fptr->size <= 1024);
+        }
     }
 
     return 0;

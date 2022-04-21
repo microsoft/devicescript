@@ -29,6 +29,10 @@ static inline uint32_t jacs_img_num_floats(const jacs_img_t *img) {
     return img->header->float_literals.length / sizeof(value_t);
 }
 
+static inline uint32_t jacs_img_num_buffers(const jacs_img_t *img) {
+    return img->header->buffers.length / sizeof(jacs_buffer_desc_t);
+}
+
 static inline const jacs_function_desc_t *jacs_img_get_function(const jacs_img_t *img,
                                                                 uint32_t idx) {
     return (const jacs_function_desc_t *)(img->data + img->header->functions.start +
@@ -45,6 +49,11 @@ static inline value_t jacs_img_get_float(const jacs_img_t *img, uint32_t idx) {
     memcpy(&v, img->data + img->header->float_literals.start + idx * sizeof(value_t),
            sizeof(value_t));
     return v;
+}
+
+static inline const jacs_buffer_desc_t *jacs_img_get_buffer(const jacs_img_t *img, uint32_t idx) {
+    return (const jacs_buffer_desc_t *)(img->data + img->header->buffers.start +
+                                        idx * sizeof(jacs_buffer_desc_t));
 }
 
 static inline bool jacs_is_prefix_instr(uint16_t instr) {

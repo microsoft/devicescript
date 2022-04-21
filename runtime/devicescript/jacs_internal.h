@@ -83,6 +83,8 @@ struct jacs_ctx {
     jacs_fiber_t *fibers;
     jd_role_t **roles;
 
+    uint32_t *buffers;
+
     uint32_t _prev_us;
     uint32_t _now;
 
@@ -157,4 +159,6 @@ value_t jacs_step_binop(int op, value_t a, value_t b);
 value_t jacs_step_opmath1(int op, value_t a);
 value_t jacs_step_opmath2(int op, value_t a, value_t b);
 
-value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer, value_t *setv);
+value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer,
+                       value_t *setv);
+void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx);

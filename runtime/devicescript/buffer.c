@@ -1,6 +1,12 @@
 #include "jacs_internal.h"
 #include <limits.h>
 
+void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx) {
+    if (idx == 0)
+        return ctx->packet.data;
+    return ctx->buffers + ctx->buffers[idx - 1];
+}
+
 // shift_val(10) = 1024
 // shift_val(0) = 1
 // shift_val(-10) = 1/1024
@@ -31,7 +37,7 @@ static double clamp_double(value_t v, double l, double h) {
 #define SET_VAL(SZ, l, h)                                                                          \
     case JACS_NUMFMT_##SZ:                                                                         \
         SZ = clamp_int(q, l, h);                                                                   \
-        memcpy(pkt->data + offset, &SZ, sizeof(SZ));                                               \
+        memcpy(data, &SZ, sizeof(SZ));                                                             \
         break
 
 #define SET_VAL_U(SZ, l, h)                                                                        \
@@ -40,24 +46,24 @@ static double clamp_double(value_t v, double l, double h) {
             SZ = q.val_int32;                                                                      \
         else                                                                                       \
             SZ = clamp_double(q, l, h);                                                            \
-        memcpy(pkt->data + offset, &SZ, sizeof(SZ));                                               \
+        memcpy(data, &SZ, sizeof(SZ));                                                             \
         break
 
 #define SET_VAL_R(SZ)                                                                              \
     case JACS_NUMFMT_##SZ:                                                                         \
         SZ = jacs_value_to_double(q);                                                              \
-        memcpy(pkt->data + offset, &SZ, sizeof(SZ));                                               \
+        memcpy(data, &SZ, sizeof(SZ));                                                             \
         break
 
 #define GET_VAL_INT(SZ)                                                                            \
     case JACS_NUMFMT_##SZ:                                                                         \
-        memcpy(&SZ, pkt->data + offset, sizeof(SZ));                                               \
+        memcpy(&SZ, data, sizeof(SZ));                                                             \
         I32 = SZ;                                                                                  \
         break;
 
 #define GET_VAL_UINT(SZ)                                                                           \
     case JACS_NUMFMT_##SZ:                                                                         \
-        memcpy(&SZ, pkt->data + offset, sizeof(SZ));                                               \
+        memcpy(&SZ, data, sizeof(SZ));                                                             \
         if (SZ <= INT_MAX)                                                                         \
             I32 = SZ;                                                                              \
         else {                                                                                     \
@@ -68,12 +74,12 @@ static double clamp_double(value_t v, double l, double h) {
 
 #define GET_VAL_DBL(SZ)                                                                            \
     case JACS_NUMFMT_##SZ:                                                                         \
-        memcpy(&SZ, pkt->data + offset, sizeof(SZ));                                               \
+        memcpy(&SZ, data, sizeof(SZ));                                                             \
         is_float = 1;                                                                              \
         F64 = SZ;                                                                                  \
         break;
 
-value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t offset, uint16_t fmt0, uint16_t buffer,
+value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer,
                        value_t *setv) {
     int is_float = 0;
 
@@ -92,19 +98,27 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t offset, uint16_t fmt0,
     unsigned shift = fmt0 >> 4;
     unsigned sz = 1 << (fmt & 0b11);
 
+    //if (!setv)
+    //    DMESG("GET @%d fmt=%x buf=%d", offset, fmt0, buffer);
+
     jacs_ctx_t *ctx = frame->fiber->ctx;
     jd_packet_t *pkt = &ctx->packet;
 
-    if ((fmt == 0b1000 || fmt == 0b1001) || shift > sz * 8)
-        jacs_runtime_failure(ctx);
+    if ((fmt == 0b1000 || fmt == 0b1001) || shift > sz * 8 ||
+        buffer >= jacs_img_num_buffers(&ctx->img))
+        return jacs_runtime_failure(ctx);
 
-    if (offset + sz > pkt->service_size) {
+    unsigned bufsz = buffer == 0 ? pkt->service_size : jacs_img_get_buffer(&ctx->img, buffer)->size;
+
+    if (offset + sz > bufsz) {
         // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
         if (setv)
             return jacs_runtime_failure(ctx);
         else
             return jacs_nan;
     }
+
+    uint8_t *data = jacs_buffer_ptr(ctx, buffer) + offset;
 
     if (setv) {
         value_t q = *setv;

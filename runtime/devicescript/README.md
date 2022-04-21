@@ -7,7 +7,7 @@
   -> some opcode have some bits inlined
 
 * extensibility via services and compiler
-* allow allocating buffers (global indexed namespace?); extend set/getnum opcode to write to these buffers; allow copying between buffers
+* allow copying between buffers
 
 What needs to be passed as arguments?
 * global address
