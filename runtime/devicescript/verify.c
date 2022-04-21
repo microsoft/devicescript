@@ -289,7 +289,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 CHECK(1144, c == 0);
                 CHECK(1145, a < jacs_img_num_strings(img));
                 CHECK(1146, b < JACS_NUM_REGS);
-                CHECK(1148, (d & ((1 << b) - 1)) == ((1 << b) - 1));
+                CHECK(1148, (d & ((1 << b) - 1)) == (uint32_t)((1 << b) - 1));
                 break;
             default:
                 CHECK(1131, false); // invalid async code
