@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Jacscript VM",
   "main": "./dist/jacscript-vm.js",
-  "types": "./dist/wasmpre.d.ts",
+  "types": "./dist/types.d.ts",
   "scripts": {
     "dist": "yarn install && yarn build",
     "build": "node node_modules/typescript/bin/tsc"

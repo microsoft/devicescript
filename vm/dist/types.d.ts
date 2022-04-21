@@ -105,5 +105,5 @@ declare module Exts {
     }
 }
 declare function factory(): Promise<JacsModule>;
-export default factory;
+export = factory;
 //# sourceMappingURL=wasmpre.d.ts.map

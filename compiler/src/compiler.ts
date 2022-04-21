@@ -1485,7 +1485,7 @@ class Program implements InstrArgResolver {
     }
 
     private emitProgram(prog: estree.Program) {
-        this.packetBuffer = new Buffer(null, this.buffers, 236, "packet")
+        this.packetBuffer = new Buffer(null, this.buffers, JD_SERIAL_MAX_PAYLOAD_SIZE, "packet")
         assert(this.packetBuffer.index == 0) // current packet is buffer #0
 
         this.main = new Procedure(this, "main")

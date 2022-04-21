@@ -21,7 +21,7 @@
     "isolatedModules": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
-    "declarationDir": "dist",
+    "declarationDir": "built",
     "resolveJsonModule": true,
     "outDir": "built",
     "pretty": true,
@@ -29,6 +29,6 @@
     "types": ["emscripten"]
   },
   "include": [
-    "."
+    "*.ts"
   ]
 }

@@ -76,6 +76,7 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 
 vm/built/wasmpre.js: vm/wasmpre.ts vm/node_modules/typescript
 	cd vm && yarn build
+	sed -e 's/export default factory/export = factory/' vm/built/wasmpre.d.ts > vm/dist/types.d.ts
 
 vm/node_modules/typescript:
 	cd vm && yarn install
