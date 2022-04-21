@@ -186,9 +186,24 @@ function fibx(k) {
     return fibx(k - 1) + fibx(k - 2)
 }
 
+
+var buf = buffer(20)
+function testBuffer() {
+    buf.setAt(2, "u32", 0xf00d)
+    isEq(buf.getAt(2, "u32"), 0xf00d)
+    isEq(buf.getAt(2, "u16"), 0xf00d)
+    isEq(buf.getAt(2, "u8"), 0x0d)
+    isEq(buf.getAt(3, "u8"), 0xf0)
+    
+    buf.setAt(8, "u22.10", 123.8274)
+    isClose(buf.getAt(8, "u22.10"), 123.8274)
+    isEq(buf.getAt(8, "u32"), 126799)
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
 testLazy()
+testBuffer()
 console.log("all OK")
 reboot()

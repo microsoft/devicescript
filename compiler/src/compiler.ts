@@ -237,6 +237,29 @@ class Variable extends Cell {
     }
 }
 
+class Buffer extends Cell {
+    constructor(
+        definition: estree.VariableDeclarator | estree.Identifier,
+        scope: VariableScope,
+        public length: number,
+        _name?: string
+    ) {
+        super(definition, scope)
+        if (_name) this._name = _name
+    }
+    value(): ValueDesc {
+        return mkValue(CellKind.X_BUFFER, this.index, this)
+    }
+    toString() {
+        return `buffer ${this.getName()}`
+    }
+    serialize() {
+        const r = new Uint8Array(BinFmt.BufferHeaderSize)
+        write16(r, 4, this.length)
+        return r
+    }
+}
+
 class FunctionDecl extends Cell {
     proc: Procedure
     constructor(
@@ -333,6 +356,13 @@ class Label {
 }
 
 const BUFFER_REG = NUM_REGS + 1
+
+enum PrefixReg {
+    A = 0,
+    B = 1,
+    C = 2,
+    D = 3,
+}
 
 class OpWriter {
     private allocatedRegs: ValueDesc[] = []
@@ -498,6 +528,18 @@ class OpWriter {
         assert(arg >> 12 == 0)
         assertRange(0, op, 0xf)
         this.emitInstr((op << 12) | arg)
+    }
+
+    setPrefixReg(reg: PrefixReg, v: ValueDesc) {
+        if (this.isReg(v)) {
+            this.emitRaw(OpTop.SET_HIGH, (1 << 9) | v.index)
+        } else {
+            assert(v.kind == CellKind.X_FLOAT)
+            const q = v.index & 0xffff
+            const arr: [number, number, number, number] = [0, 0, 0, 0]
+            arr[reg] = q
+            this.emitPrefix(...arr)
+        }
     }
 
     emitPrefix(a: number, b: number = 0, c: number = 0, d: number = 0) {
@@ -666,28 +708,33 @@ class OpWriter {
         )
     }
 
-    emitBufLoad(dst: ValueDesc, fmt: OpFmt, off: number) {
-        assertRange(0, off, 0xff)
+    emitBufLoad(dst: ValueDesc, fmt: OpFmt, off: number, bufidx = 0) {
+        if (bufidx == 0) assertRange(0, off, 0xff)
         this.emitLoadStoreCell(
             OpTop.LOAD_CELL,
             dst,
             CellKind.BUFFER,
             0,
             fmt,
-            off
+            off,
+            bufidx
         )
     }
 
-    emitBufStore(src: ValueDesc, fmt: OpFmt, off: number) {
+    emitBufStore(src: ValueDesc, fmt: OpFmt, off: number, bufidx = 0) {
         assertRange(0, off, 0xff)
-        assert(this.bufferAllocated(), "buffer allocated in store")
+        assert(
+            bufidx != 0 || this.bufferAllocated(),
+            "buffer allocated in store"
+        )
         this.emitLoadStoreCell(
             OpTop.STORE_CELL,
             src,
             CellKind.BUFFER,
             0,
             fmt,
-            off
+            off,
+            bufidx
         )
     }
 
@@ -974,7 +1021,8 @@ const mathConst: SMap<number> = {
 }
 
 class Program implements InstrArgResolver {
-    roles = new VariableScope(null)
+    buffers = new VariableScope(null)
+    roles = new VariableScope(this.buffers)
     functions = new VariableScope(null)
     globals = new VariableScope(this.roles)
     tree: estree.Program
@@ -995,6 +1043,7 @@ class Program implements InstrArgResolver {
     cloudMethodDispatcher: DelayedCodeSection
     startDispatchers: DelayedCodeSection
     onStart: DelayedCodeSection
+    packetBuffer: Buffer
 
     constructor(public host: Host, public source: string) {
         this.serviceSpecs = {}
@@ -1241,17 +1290,27 @@ class Program implements InstrArgResolver {
         return (pat as estree.Identifier).name
     }
 
-    private parseRole(decl: estree.VariableDeclarator) {
+    private parseRole(decl: estree.VariableDeclarator): Cell {
         const expr = decl.init
         if (expr?.type != "CallExpression") return null
-        if (idName(expr.callee) == "condition") {
-            this.requireArgs(expr, 0)
-            return new Role(
-                this,
-                decl,
-                this.roles,
-                this.serviceSpecs["jacscriptCondition"]
-            )
+        switch (idName(expr.callee)) {
+            case "condition":
+                this.requireArgs(expr, 0)
+                return new Role(
+                    this,
+                    decl,
+                    this.roles,
+                    this.serviceSpecs["jacscriptCondition"]
+                )
+            case "buffer":
+                this.requireArgs(expr, 1)
+                const sz = this.forceNumberLiteral(expr.arguments[0])
+                if ((sz | 0) != sz || sz <= 0 || sz > 1024)
+                    this.throwError(
+                        expr.arguments[0],
+                        "buffer() length must be a positive integer (under 1k)"
+                    )
+                return new Buffer(decl, this.buffers, sz)
         }
         if (expr.callee.type != "MemberExpression") return null
         if (idName(expr.callee.object) != "roles") return null
@@ -1287,6 +1346,7 @@ class Program implements InstrArgResolver {
             if (this.isTopLevel(decl)) {
                 const tmp = this.globals.lookup(this.forceName(decl.id))
                 if (tmp instanceof Role) continue
+                if (tmp instanceof Buffer) continue
                 if (tmp instanceof Variable) g = tmp
                 else {
                     if (this.numErrors == 0) oops("invalid var: " + tmp)
@@ -1425,6 +1485,9 @@ class Program implements InstrArgResolver {
     }
 
     private emitProgram(prog: estree.Program) {
+        this.packetBuffer = new Buffer(null, this.buffers, 236, "packet")
+        assert(this.packetBuffer.index == 0) // current packet is buffer #0
+
         this.main = new Procedure(this, "main")
 
         this.startDispatchers = new DelayedCodeSection(
@@ -1754,6 +1817,101 @@ class Program implements InstrArgResolver {
         }
     }
 
+    private parseFormat(expr: Expr): OpFmt {
+        const str = this.stringLiteral(expr) || ""
+        const m = /^([uif])(\d+)(\.\d+)?$/.exec(str.trim())
+        if (!m)
+            this.throwError(
+                expr,
+                `format descriptor ("u32", "i22.10", etc) expected`
+            )
+        let sz = parseInt(m[2])
+        let shift = 0
+        if (m[3]) {
+            shift = parseInt(m[3].slice(1))
+            sz += shift
+        }
+
+        let r: OpFmt
+
+        switch (sz) {
+            case 8:
+                r = OpFmt.U8
+                break
+            case 16:
+                r = OpFmt.U16
+                break
+            case 32:
+                r = OpFmt.U32
+                break
+            case 64:
+                r = OpFmt.U64
+                break
+            default:
+                this.throwError(
+                    expr,
+                    `total format size is not one of 8, 16, 32, 64 bits`
+                )
+        }
+
+        switch (m[1]) {
+            case "u":
+                break
+            case "i":
+                r += OpFmt.I8
+                break
+            case "f":
+                if (shift)
+                    this.throwError(expr, `shifts not supported for floats`)
+                r += OpFmt.F8
+                break
+            default:
+                assert(false)
+        }
+
+        if (r == OpFmt.F8 || r == OpFmt.F16)
+            this.throwError(expr, `f8 and f16 are not supported`)
+
+        return r | (shift << 4)
+    }
+
+    private emitBufferCall(
+        expr: estree.CallExpression,
+        obj: ValueDesc,
+        prop: string
+    ): ValueDesc {
+        const wr = this.writer
+        if (expr.callee.type != "MemberExpression") oops("")
+        switch (prop) {
+            case "getAt": {
+                this.requireArgs(expr, 2)
+                const fmt = this.parseFormat(expr.arguments[1])
+                wr.push()
+                const off = this.emitSimpleValue(expr.arguments[0], true)
+                wr.setPrefixReg(PrefixReg.C, off)
+                wr.pop()
+                const reg = wr.allocReg()
+                wr.emitBufLoad(reg, fmt, 0, obj.cell.index)
+                return reg
+            }
+
+            case "setAt": {
+                this.requireArgs(expr, 3)
+                const fmt = this.parseFormat(expr.arguments[1])
+                wr.push()
+                const off = this.emitSimpleValue(expr.arguments[0], true)
+                const val = this.emitSimpleValue(expr.arguments[2])
+                wr.setPrefixReg(PrefixReg.C, off)
+                wr.emitBufStore(val, fmt, 0, obj.cell.index)
+                wr.pop()
+                return values.zero
+            }
+
+            default:
+                this.throwError(expr, `can't find ${prop} on buffer`)
+        }
+    }
+
     private stringLiteral(expr: Expr) {
         if (expr?.type == "Literal" && typeof expr.value == "string") {
             return expr.value
@@ -1856,7 +2014,7 @@ class Program implements InstrArgResolver {
                 this.requireTopLevel(expr)
                 if (obj.spec.fields.length != 1)
                     this.throwError(expr, "wrong register type")
-                const threshold = this.litValue(expr.arguments[0])
+                const threshold = this.forceNumberLiteral(expr.arguments[0])
                 const name = role.getName() + "_chg_" + obj.spec.name
                 const handler = this.emitHandler(name, expr.arguments[1])
                 if (role.autoRefreshRegs.indexOf(obj.spec) < 0)
@@ -1939,7 +2097,7 @@ class Program implements InstrArgResolver {
         return regs
     }
 
-    private litValue(expr: Expr) {
+    private forceNumberLiteral(expr: Expr) {
         const tmp = this.emitExpr(expr)
         if (tmp.kind != CellKind.X_FLOAT)
             this.throwError(expr, "number literal expected")
@@ -2149,7 +2307,6 @@ class Program implements InstrArgResolver {
 
     private emitCallExpression(expr: estree.CallExpression): ValueDesc {
         const wr = this.writer
-        const numargs = expr.arguments.length
         if (expr.callee.type == "MemberExpression") {
             const prop = idName(expr.callee.property)
             const objName = idName(expr.callee.object)
@@ -2168,10 +2325,15 @@ class Program implements InstrArgResolver {
                     return this.emitRegisterCall(expr, obj, prop)
                 case CellKind.JD_ROLE:
                     return this.emitRoleCall(expr, obj, prop)
+                case CellKind.X_BUFFER:
+                    return this.emitBufferCall(expr, obj, prop)
             }
         }
 
         const funName = idName(expr.callee)
+
+        if (!funName) this.throwError(expr, `unsupported call`)
+
         if (!reservedFunctions[funName]) {
             const d = this.functions.lookup(funName) as FunctionDecl
             if (d) {
@@ -2219,7 +2381,7 @@ class Program implements InstrArgResolver {
             }
             case "panic": {
                 this.requireArgs(expr, 1)
-                const code = this.litValue(expr.arguments[0])
+                const code = this.forceNumberLiteral(expr.arguments[0])
                 if ((code | 0) != code || code <= 0 || code > 9999)
                     this.throwError(
                         expr,
@@ -2231,7 +2393,9 @@ class Program implements InstrArgResolver {
             case "every": {
                 this.requireTopLevel(expr)
                 this.requireArgs(expr, 2)
-                const time = Math.round(this.litValue(expr.arguments[0]) * 1000)
+                const time = Math.round(
+                    this.forceNumberLiteral(expr.arguments[0]) * 1000
+                )
                 if (time < 20)
                     this.throwError(
                         expr,
@@ -2408,10 +2572,14 @@ class Program implements InstrArgResolver {
         return r
     }
 
-    private emitSimpleValue(expr: Expr) {
+    private emitSimpleValue(expr: Expr, allowLit = false) {
         this.writer.push()
         const val = this.emitExpr(expr)
         this.requireRuntimeValue(expr, val)
+        if (allowLit && val.kind == CellKind.X_FLOAT) {
+            this.writer.pop()
+            return val
+        }
         const r = this.writer.forceReg(val)
         this.writer.popExcept(r)
         return r
@@ -2691,6 +2859,7 @@ class Program implements InstrArgResolver {
             encodeU32LE([
                 BinFmt.Magic0,
                 BinFmt.Magic1,
+                BinFmt.ImgVersion,
                 this.globals.list.length,
             ])
         )
@@ -2702,6 +2871,7 @@ class Program implements InstrArgResolver {
         const roleData = new SectionWriter()
         const strDesc = new SectionWriter()
         const strData = new SectionWriter()
+        const bufferDesc = new SectionWriter()
 
         for (const s of [
             funDesc,
@@ -2710,6 +2880,7 @@ class Program implements InstrArgResolver {
             roleData,
             strDesc,
             strData,
+            bufferDesc,
         ]) {
             sectDescs.append(s.desc)
             sections.push(s)
@@ -2736,6 +2907,10 @@ class Program implements InstrArgResolver {
 
         for (const r of this.roles.list) {
             roleData.append((r as Role).serialize())
+        }
+
+        for (const b of this.buffers.list) {
+            bufferDesc.append((b as Buffer).serialize())
         }
 
         const descs = this.stringLiterals.map(str => {

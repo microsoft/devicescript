@@ -1,10 +1,12 @@
 export enum BinFmt {
     Magic0 = 0x5363614a,
     Magic1 = 0x9a6a7e0a,
+    ImgVersion = 0x00010001,
     FixHeaderSize = 64,
     SectionHeaderSize = 8,
     FunctionHeaderSize = 16,
     RoleHeaderSize = 8,
+    BufferHeaderSize = 8,
     BinarySizeAlign = 32,
 }
 
@@ -19,7 +21,7 @@ export enum OpTop {
     SET_B = 1, // ARG[12]
     SET_C = 2, // ARG[12]
     SET_D = 3, // ARG[12]
-    SET_HIGH = 4, // A/B/C/D[2] ARG[10]
+    SET_HIGH = 4, // A/B/C/D[2] IS_DYN[1] UNUSED[5] ARG_OR_REG[4]
 
     UNARY = 5, // OP[4] DST[4] SRC[4]
     BINARY = 6, // OP[4] DST[4] SRC[4]
@@ -109,6 +111,7 @@ export enum CellKind {
     X_FP_REG = 0x121,
     X_FLOAT = 0x122,
     X_FUNCTION = 0x123,
+    X_BUFFER = 0x124,
 
     ERROR = 0x200,
 }
@@ -167,6 +170,8 @@ export enum OpFmt {
     I16 = 0b0101,
     I32 = 0b0110,
     I64 = 0b0111,
+    F8 = 0b1000, // not supported
+    F16 = 0b1001, // not supported
     F32 = 0b1010,
     F64 = 0b1011,
 }
@@ -272,8 +277,15 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
                 return `[${abcd[op]} 0x${arg12.toString(16)}] `
 
             case OpTop.SET_HIGH: // A/B/C/D[2] ARG[10]
-                params[arg12 >> 10] |= arg10 << 12
-                return `[upper ${abcd[arg12 >> 10]} 0x${arg10.toString(16)}] `
+                if (instr & (1 << 9)) {
+                    params[arg12 >> 10] = 0xffff
+                    return `${abcd[arg12 >> 10]} := ${reg2} `
+                } else {
+                    params[arg12 >> 10] |= arg10 << 12
+                    return `[upper ${abcd[arg12 >> 10]} 0x${arg10.toString(
+                        16
+                    )}] `
+                }
 
             case OpTop.UNARY: // OP[4] DST[4] SRC[4]
                 return `${reg1} := ${uncode()} ${reg2}`

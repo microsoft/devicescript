@@ -65,6 +65,13 @@ declare function panic(code: number): never
 declare function reboot(): never
 declare function onStart(handler: () => void): void
 
+declare function buffer(size: number): JDBuffer
+declare class JDBuffer {
+    length: number
+    getAt(offset: number, format: string): number
+    setAt(offset: number, format: string, value: number): void
+}
+
 interface Math {
     /**
     * Returns the result of signed 32-bit integer division of two numbers.
