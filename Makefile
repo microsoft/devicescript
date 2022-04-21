@@ -107,6 +107,6 @@ test-em: em comp
 test: test-c test-em
 
 update-dist: $(VM_FILE)
-	git add $(VM_FILE) vm/dist/wasmpre.d.ts
+	git add $(VM_FILE) vm/dist/types.d.ts
 	if [ "X$$GITHUB_WORKFLOW" != "X" ] ; then git config user.email "<>" && git config user.name "GitHub Bot" ; fi
 	if git commit -m "[skip ci] rebuild $(VM_FILE)" ; then git push ; fi
