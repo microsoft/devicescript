@@ -11,12 +11,8 @@ static int numSetBits(uint32_t n) {
     return r;
 }
 
-static int bitSize(int fmt) {
-    return 8 << (fmt & 0b11);
-}
-
 static int fail(int code, uint32_t offset) {
-    DMESG("verification failure: %d at %d", code, offset);
+    DMESG("verification failure: %d at %x", code, offset);
     return -code;
 }
 
@@ -152,20 +148,9 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
             case JACS_CELL_KIND_GLOBAL:
                 CHECK(1134, IS_DYNAMIC(idx) || idx < img->header->num_globals); // globals range
                 break;
-            case JACS_CELL_KIND_BUFFER: { // arg=shift:numfmt, C=Offset
-                if (!IS_DYNAMIC(b)) {
-                    int fmt = b & 0xf;
-                    CHECK(1135, fmt <= JACS_NUMFMT_I64 || fmt == JACS_NUMFMT_F32 ||
-                                    fmt == JACS_NUMFMT_F64); // valid fmt
-                    int sz = bitSize(fmt);
-                    int shift = b >> 4;
-                    CHECK(1136, shift <= sz);                         // shift < sz
-                    CHECK(1137, IS_DYNAMIC(c) || c <= 236U - sz / 8); // offset in range
-                } else {
-                    CHECK(1137, IS_DYNAMIC(c) || c <= 236U - 1); // offset in range
-                }
-                CHECK(1149, IS_DYNAMIC(d) || d <= jacs_img_num_buffers(img));
-            } break;
+            case JACS_CELL_KIND_BUFFER:
+                // all checks at runtime
+                break;
             case JACS_CELL_KIND_FLOAT_CONST:
                 CHECK(1138, idx < jacs_img_num_floats(img)); // float const in range
                 break;
@@ -231,19 +216,19 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 lastOK = true;
                 break;
             case JACS_OPSYNC_SETUP_BUFFER:              // A-size
-                CHECK(1113, IS_DYNAMIC(a) || a <= 236); // setup buffer size in range
+                CHECK(1113, IS_DYNAMIC(a) || a <= JD_SERIAL_PAYLOAD_SIZE); // setup buffer size in range
                 break;
             case JACS_OPSYNC_FORMAT:                        // A-string-index B-numargs
-                CHECK(1114, c <= 236);                      // offset in range
+                CHECK(1114, c <= JD_SERIAL_PAYLOAD_SIZE);                      // offset in range
                 CHECK(1115, a < jacs_img_num_strings(img)); // str in range
                 CHECK(1147, b <= JACS_NUM_REGS);
                 break;
             case JACS_OPSYNC_STR0EQ:
-                CHECK(1116, c <= 236);                      // offset in range
+                CHECK(1116, c <= JD_SERIAL_PAYLOAD_SIZE);                      // offset in range
                 CHECK(1117, a < jacs_img_num_strings(img)); // str in range
                 break;
             case JACS_OPSYNC_MEMCPY:
-                CHECK(1118, c <= 236);                      // offset in range
+                CHECK(1118, c <= JD_SERIAL_PAYLOAD_SIZE);                      // offset in range
                 CHECK(1119, a < jacs_img_num_strings(img)); // str in range
                 break;
             case JACS_OPSYNC_MATH1:

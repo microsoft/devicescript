@@ -1,5 +1,12 @@
 #include "jacs_internal.h"
 
+static bool role_ok(jacs_ctx_t *ctx, uint16_t a) {
+    if (a < jacs_img_num_roles(&ctx->img))
+        return true;
+    jacs_runtime_failure(ctx);
+    return false;
+}
+
 static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx, int b, int c,
                          int d) {
     switch (tp) {
@@ -37,7 +44,10 @@ static value_t load_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int id
     case JACS_CELL_KIND_ROLE_PROPERTY:
         switch (idx) {
         case JACS_ROLE_PROPERTY_IS_CONNECTED:
-            return jacs_value_from_bool(ctx->roles[b]->service != NULL);
+            if (role_ok(ctx, b))
+                return jacs_value_from_bool(ctx->roles[b]->service != NULL);
+            else
+                return jacs_nan;
         default:
             oops();
         }
@@ -204,8 +214,12 @@ void jacs_act_step(jacs_activation_t *frame) {
             jacs_fiber_return_from_call(frame);
             break;
         case JACS_OPSYNC_SETUP_BUFFER: // A-size
-            ctx->packet.service_size = a;
-            memset(ctx->packet.data, 0, a);
+            if (a > JD_SERIAL_PAYLOAD_SIZE) {
+                jacs_runtime_failure(ctx);
+            } else {
+                ctx->packet.service_size = a;
+                memset(ctx->packet.data, 0, a);
+            }
             break;
         case JACS_OPSYNC_FORMAT: // A-string-index B-numargs C-offset
             ctx->packet.service_size =
@@ -250,9 +264,11 @@ void jacs_act_step(jacs_activation_t *frame) {
         save_regs(frame, d);
         switch (arg8) {
         case JACS_OPASYNC_WAIT_ROLE:
-            frame->fiber->role_idx = a;
-            jacs_fiber_set_wake_time(frame->fiber, 0);
-            jacs_fiber_yield(ctx);
+            if (role_ok(ctx, a)) {
+                frame->fiber->role_idx = a;
+                jacs_fiber_set_wake_time(frame->fiber, 0);
+                jacs_fiber_yield(ctx);
+            }
             break;
         case JACS_OPASYNC_SLEEP_MS: // A-timeout in ms
             jacs_fiber_sleep(frame->fiber, a);
@@ -262,13 +278,16 @@ void jacs_act_step(jacs_activation_t *frame) {
                              (uint32_t)(jacs_value_to_double(ctx->registers[0]) * 1000 + 0.5));
             break;
         case JACS_OPASYNC_SEND_CMD: // A-role, B-code
-            jacs_jd_send_cmd(ctx, a, b);
+            if (role_ok(ctx, a))
+                jacs_jd_send_cmd(ctx, a, b);
             break;
         case JACS_OPASYNC_QUERY_REG: // A-role, B-code, C-timeout
-            jacs_jd_get_register(ctx, a, JD_GET(b), c, 0);
+            if (role_ok(ctx, a))
+                jacs_jd_get_register(ctx, a, JD_GET(b), c, 0);
             break;
         case JACS_OPASYNC_QUERY_IDX_REG:
-            jacs_jd_get_register(ctx, a, b & 0xff, c, b >> 8);
+            if (role_ok(ctx, a))
+                jacs_jd_get_register(ctx, a, b & 0xff, c, b >> 8);
             break;
         case JACS_OPASYNC_LOG_FORMAT:
             jacs_jd_send_logmsg(ctx, a, b);
