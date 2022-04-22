@@ -152,8 +152,8 @@ static void deploy_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
     uint32_t endp =
         ((jacscriptmgr_program_header_t *)dst)->size + sizeof(jacscriptmgr_program_header_t);
     if (pkt->service_size & (JACSMGR_ALIGN - 1) || state->write_offset + pkt->service_size > endp) {
-        DMESG("invalid pkt size: %d (off=%d endp=%d)", pkt->service_size, state->write_offset,
-              endp);
+        DMESG("invalid pkt size: %d (off=%d endp=%d)", pkt->service_size, (int)state->write_offset,
+              (int)endp);
         state->write_offset = 0;
         jd_ipipe_close(istr);
         return;
@@ -188,7 +188,7 @@ static void deploy_meta_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
         };
         unsigned endp = hdf->size + sizeof(hd);
         if (state->write_offset != endp) {
-            DMESG("missing %d bytes (of %d)", endp - state->write_offset, endp);
+            DMESG("missing %d bytes (of %d)", (int)(endp - state->write_offset), endp);
         } else {
             flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             DMESG("program written");
@@ -202,7 +202,7 @@ static void deploy_bytecode(srv_t *state, jd_packet_t *pkt) {
 
     jacscriptmgr_program_header_t hd;
 
-    DMESG("deploy %d b", sz);
+    DMESG("deploy %d b", (int)sz);
 
     if (sz > state->cfg->max_program_size - sizeof(hd) || (sz & (JACSMGR_ALIGN - 1)))
         return; // just ignore it

@@ -12,7 +12,7 @@ static int numSetBits(uint32_t n) {
 }
 
 static int fail(int code, uint32_t offset) {
-    DMESG("verification failure: %d at %x", code, offset);
+    DMESG("verification failure: %d at %x", code, (unsigned)offset);
     return -code;
 }
 

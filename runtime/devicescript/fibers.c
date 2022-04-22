@@ -172,7 +172,7 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
         if (code != JACS_PANIC_REBOOT)
             for (jacs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
                 int idx = fn->func - jacs_img_get_function(&ctx->img, 0);
-                DMESG("  pc=%d @ fun%d", fn->pc - (fn->func->start >> 1), idx);
+                DMESG("  pc=%d @ fun%d", (int)(fn->pc - (fn->func->start >> 1)), idx);
             }
     }
     jacs_fiber_yield(ctx);
