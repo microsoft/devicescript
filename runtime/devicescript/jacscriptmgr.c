@@ -229,7 +229,7 @@ void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     case JD_JACSCRIPT_MANAGER_CMD_READ_BYTECODE:
-        if (jd_opipe_open(&state->read_program_pipe, pkt) == 0)
+        if (jd_opipe_open_cmd(&state->read_program_pipe, pkt) == 0)
             state->read_program_ptr = 0;
         break;
 
