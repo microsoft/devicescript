@@ -41,8 +41,43 @@ void app_init_services() {
     init_jacscript_manager();
 }
 
+struct {
+    const void *img;
+    uint32_t size;
+    uint32_t offset;
+    uint8_t isopen;
+    jd_device_service_t *serv;
+    jd_opipe_desc_t pipe;
+} deploy;
+
+int jacs_client_deploy(const void *img, unsigned imgsize) {
+    deploy.img = img;
+    deploy.size = imgsize;
+    return 0;
+}
+
+static void process_deploy(void) {
+    if (!deploy.isopen)
+        return;
+
+    int to_write = deploy.size - deploy.offset;
+    if (to_write > 224)
+        to_write = 224;
+    int r = to_write == 0
+                ? jd_opipe_close(&deploy.pipe)
+                : jd_opipe_write(&deploy.pipe, (uint8_t *)deploy.img + deploy.offset, to_write);
+    if (r == 0) {
+        deploy.offset += to_write;
+        if (to_write == 0) {
+            DMESG("closed deploy pipe");
+            deploy.isopen = false;
+            exit(0); // TODO?
+        }
+    }
+}
+
 void app_client_event_handler(int event_id, void *arg0, void *arg1) {
-    // jd_device_t *dev = arg0;
+    jd_device_t *dev = arg0;
     // jd_register_query_t *reg = arg1;
     // jd_role_t *role = arg1;
     // jd_register_query_t *reg = arg1;
@@ -53,6 +88,10 @@ void app_client_event_handler(int event_id, void *arg0, void *arg1) {
     jacs_client_event_handler(jacs_ctx, event_id, arg0, arg1);
 
     switch (event_id) {
+    case JD_CLIENT_EV_PROCESS:
+        process_deploy();
+        break;
+
     case JD_CLIENT_EV_SERVICE_PACKET:
         if (test_mode && serv->service_class == JD_SERVICE_CLASS_JACSCRIPT_MANAGER &&
             jd_event_code(pkt) == JD_JACSCRIPT_MANAGER_EV_PROGRAM_PANIC) {
@@ -60,6 +99,36 @@ void app_client_event_handler(int event_id, void *arg0, void *arg1) {
             if (ev->panic_code) {
                 fprintf(stderr, "test failed\n");
                 exit(10);
+            }
+        }
+        if (deploy.img && serv && deploy.serv == serv) {
+            if (jd_is_report(pkt) && pkt->service_command == JD_JACSCRIPT_MANAGER_CMD_DEPLOY_BYTECODE) {
+                DMESG("opening deploy pipe");
+                if (jd_opipe_open_report(&deploy.pipe, pkt) == 0)
+                    deploy.isopen = true;
+            }
+            // we process deploy on every incoming packet - this include ACKs, so should be as fast
+            // as possible
+            process_deploy();
+        }
+        break;
+
+    case JD_CLIENT_EV_DEVICE_DESTROYED:
+        if (deploy.serv && jd_service_parent(deploy.serv) == dev) {
+            fprintf(stderr, "deploy device lost\n");
+            deploy.serv = NULL;
+        }
+        break;
+
+    case JD_CLIENT_EV_DEVICE_CREATED:
+        if (deploy.img && !deploy.serv && dev->device_identifier != jd_device_id()) {
+            deploy.serv = jd_device_lookup_service(dev, JD_SERVICE_CLASS_JACSCRIPT_MANAGER);
+            if (deploy.serv) {
+                char id[5];
+                jd_device_short_id(id, dev->device_identifier);
+                DMESG("asking for deploy: %s", id);
+                jd_service_send_cmd(deploy.serv, JD_JACSCRIPT_MANAGER_CMD_DEPLOY_BYTECODE,
+                                    &deploy.size, 4);
             }
         }
         break;

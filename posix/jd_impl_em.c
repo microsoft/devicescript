@@ -85,6 +85,11 @@ int jd_em_jacs_deploy(const void *img, unsigned imgsize) {
     return jacscriptmgr_deploy(img, imgsize);
 }
 
+EMSCRIPTEN_KEEPALIVE
+int jd_em_jacs_client_deploy(const void *img, unsigned imgsize) {
+    return jacs_client_deploy(img, imgsize);
+}
+
 #if 0
 void run_emscripten_loop(void) {
     emscripten_set_interval(em_process, 10, NULL);

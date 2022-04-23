@@ -9,6 +9,7 @@ export type JacsModule = EmscriptenModule &
         _jd_em_process(): void
         _jd_em_frame_received(frame: ptr): int32
         _jd_em_jacs_deploy(img: ptr, size: int32): int32
+        _jd_em_jacs_client_deploy(img: ptr, size: int32): int32
         sendPacket(pkt: Uint8Array): void
     }
 
@@ -102,6 +103,13 @@ module Exts {
         return copyToHeap(binary, ptr =>
             Module._jd_em_jacs_deploy(ptr, binary.length)
         )
+    }
+
+    export function jacsClientDeploy(binary: Uint8Array) {
+        // this will call exit(0) when done
+        const ptr = Module._malloc(binary.length)
+        Module.HEAPU8.set(binary, ptr)
+        return Module._jd_em_jacs_client_deploy(ptr, binary.length)
     }
 
     export function jacsInit() {

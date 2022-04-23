@@ -10,6 +10,7 @@ const distPath = "built"
 let verbose = false
 let useC = false
 let testMode = false
+let doDeploy = false
 
 let jacsHost
 async function getHost() {
@@ -113,7 +114,7 @@ async function runServer(fn) {
     inst.jacsStart()
     if (fn) {
         const prog = await readCompiled(fn)
-        const r = inst.jacsDeploy(prog)
+        const r = doDeploy ? inst.jacsClientDeploy(prog) : inst.jacsDeploy(prog)
         if (r) throw new Error("deploy error: " + r)
         console.log(`deployed ${fn}`)
     } else {
@@ -139,10 +140,14 @@ async function main() {
             useC = true
             continue
         }
-
         if (args[0] == "-t") {
             args.shift()
             testMode = true
+            continue
+        }
+        if (args[0] == "-d") {
+            args.shift()
+            doDeploy = true
             continue
         }
         break
