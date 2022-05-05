@@ -1,5 +1,5 @@
 var pot = roles.potentiometer()
-var ledD = roles.ledDisplay()
+var ledD = roles.led()
 var p
 
 pot.position.onChange(0.01, () => {

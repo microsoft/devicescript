@@ -28,6 +28,10 @@ int jd_rx_frame_received(jd_frame_t *frame) {
     return 1;
 }
 
+int jd_rx_frame_received_loopback(jd_frame_t *frame) {
+    return jd_rx_frame_received(frame);
+}
+
 void jd_rx_init() {
     pthread_mutex_init(&frame_mut, NULL);
 }

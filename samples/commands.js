@@ -1,4 +1,4 @@
-var anled = roles.led()
+var anled = roles.ledSingle()
 var btnA = roles.button()
 
 btnA.down.subscribe(() => {
