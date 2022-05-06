@@ -98,6 +98,9 @@ comp: compiler/node_modules/typescript compiler/built/compiler/src/jacscript.js
 compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts)
 	cd compiler && node build.js
 
+comp-fast:
+	cd compiler && node build.js --fast
+
 test-c: native comp
 	node run -c -t compiler/run-tests/basic.js
 

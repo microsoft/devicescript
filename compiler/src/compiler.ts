@@ -96,7 +96,7 @@ export function camelize(name: string) {
 }
 
 class Cell {
-    index: number
+    _index: number
     _name: string
 
     constructor(
@@ -110,6 +110,9 @@ class Cell {
     }
     value(): ValueDesc {
         oops("on value() on generic Cell")
+    }
+    encode() {
+        return this._index
     }
     getName() {
         if (!this._name) {
@@ -131,7 +134,7 @@ class DelayedCodeSection {
     returnLabel: Label
     body: ((wr: OpWriter) => void)[] = []
 
-    constructor(public name: string, public parent: Procedure) {}
+    constructor(public name: string, public parent: Procedure) { }
 
     empty() {
         return this.body.length == 0
@@ -180,10 +183,11 @@ class Role extends Cell {
     autoRefreshRegs: jdspec.PacketInfo[] = []
     stringIndex: number
     used = false
+    isLocal = false // set when this is a local parameter role
 
     constructor(
         prog: Program,
-        definition: estree.VariableDeclarator,
+        definition: estree.VariableDeclarator | estree.Identifier,
         scope: VariableScope,
         public spec: jdspec.ServiceSpec,
         _name?: string
@@ -194,11 +198,11 @@ class Role extends Cell {
         this.stringIndex = prog.addString(this.getName())
     }
     value(): ValueDesc {
-        return mkValue(CellKind.JD_ROLE, this.encode(), this)
+        return { kind: CellKind.JD_ROLE, index: null, role: this }
     }
     encode() {
         this.used = true
-        return this.index
+        return this._index
     }
     serialize() {
         const r = new Uint8Array(BinFmt.RoleHeaderSize)
@@ -230,7 +234,7 @@ class Variable extends Cell {
     }
     value(): ValueDesc {
         const kind = this.isLocal ? CellKind.LOCAL : CellKind.GLOBAL
-        return mkValue(kind, this.index, this)
+        return { kind, index: this.encode(), variable: this }
     }
     toString() {
         return `var ${this.getName()}`
@@ -248,7 +252,7 @@ class Buffer extends Cell {
         if (_name) this._name = _name
     }
     value(): ValueDesc {
-        return mkValue(CellKind.X_BUFFER, this.index, this)
+        return { kind: CellKind.X_BUFFER, index: null, buffer: this }
     }
     toString() {
         return `buffer ${this.getName()}`
@@ -272,7 +276,7 @@ class FunctionDecl extends Cell {
         this.proc.numargs = definition.params.length
     }
     value(): ValueDesc {
-        return mkValue(CellKind.X_FUNCTION, this.index, this)
+        return { kind: CellKind.X_FUNCTION, index: null, fun: this }
     }
     toString() {
         return `function ${this.getName()}`
@@ -282,17 +286,23 @@ class FunctionDecl extends Cell {
 interface ValueDesc {
     kind: CellKind
     index: number
-    cell?: Cell
+    role?: Role
+    variable?: Variable
+    buffer?: Buffer
+    fun?: FunctionDecl
     spec?: jdspec.PacketInfo
     litValue?: number
     strValue?: string
 }
 
-function mkValue(kind: CellKind, index: number, cell?: Cell): ValueDesc {
+function checkIndex(idx: number) {
+    assert((idx | 0) === idx)
+}
+
+function mkValue(kind: CellKind, index: number): ValueDesc {
     return {
         kind,
         index,
-        cell,
     }
 }
 
@@ -352,7 +362,7 @@ const values = {
 class Label {
     uses: number[] = []
     offset = -1
-    constructor(public name: string) {}
+    constructor(public name: string) { }
 }
 
 const BUFFER_REG = NUM_REGS + 1
@@ -441,8 +451,7 @@ class OpWriter {
     stmtEnd() {
         if (false)
             this.emitDbg(
-                `reg=${this.allocatedRegsMask.toString(16)} ${
-                    this.scopes.length
+                `reg=${this.allocatedRegsMask.toString(16)} ${this.scopes.length
                 } ${this.scopes.map(s => s.length).join(",")}`
             )
     }
@@ -503,6 +512,7 @@ class OpWriter {
     }
 
     freeReg(v: ValueDesc) {
+        checkIndex(v.index)
         const idx = this.allocatedRegs.indexOf(v)
         assert(idx >= 0)
         this.allocatedRegs.splice(idx, 1)
@@ -517,6 +527,7 @@ class OpWriter {
 
     isReg(v: ValueDesc) {
         if (v.kind == CellKind.X_FP_REG) {
+            checkIndex(v.index)
             assert((this.allocatedRegsMask & (1 << v.index)) != 0)
             return true
         } else {
@@ -531,6 +542,7 @@ class OpWriter {
     }
 
     setPrefixReg(reg: PrefixReg, v: ValueDesc) {
+        checkIndex(v.index)
         if (this.isReg(v)) {
             this.emitRaw(OpTop.SET_HIGH, (1 << 9) | v.index)
         } else {
@@ -546,6 +558,7 @@ class OpWriter {
         const vals = [a, b, c, d]
         for (let i = 0; i < 4; ++i) {
             const v = vals[i]
+            checkIndex(v)
             if (!v) continue
             const high = v >> 12
             this.emitRaw(OpTop.SET_A + i, v & 0xfff)
@@ -584,6 +597,8 @@ class OpWriter {
     }
 
     emitMov(dst: number, src: number) {
+        checkIndex(dst)
+        checkIndex(src)
         this.emitRaw(OpTop.UNARY, (OpUnary.ID << 8) | (dst << 4) | src)
     }
 
@@ -688,6 +703,7 @@ class OpWriter {
         argC: number = 0,
         argD: number = 0
     ) {
+        checkIndex(idx)
         assert(this.isReg(dst))
         assertRange(0, celltype, CellKind._HW_LAST)
         // DST[4] CELL_KIND[4] A:OFF[4]
@@ -856,6 +872,7 @@ class OpWriter {
 
     emitJump(label: Label, cond: number = -1) {
         // JMP = 9, // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
+        checkIndex(cond)
         this.emitComment("jump " + label.name)
         label.uses.push(this.binary.length)
         this.emitRaw(OpTop.SET_B, 0)
@@ -920,7 +937,7 @@ class SectionWriter {
     data: Uint8Array[] = []
     desc = new Uint8Array(BinFmt.SectionHeaderSize)
 
-    constructor(public size = -1) {}
+    constructor(public size = -1) { }
 
     finalize(off: number) {
         assert(this.offset == -1 || this.offset == off)
@@ -956,9 +973,8 @@ class Procedure {
         this.locals = new VariableScope(this.parent.globals)
     }
     toString() {
-        return `proc ${this.name}: (fun${
-            this.index
-        })\n${this.writer.getAssembly()}`
+        return `proc ${this.name}: (fun${this.index
+            })\n${this.writer.getAssembly()}`
     }
     finalize() {
         this.writer.patchLabels()
@@ -974,7 +990,7 @@ class Procedure {
 class VariableScope {
     map: SMap<Cell> = {}
     list: Cell[] = []
-    constructor(public parent: VariableScope) {}
+    constructor(public parent: VariableScope) { }
 
     lookup(name: string): Cell {
         if (this.map.hasOwnProperty(name)) return this.map[name]
@@ -983,7 +999,7 @@ class VariableScope {
     }
 
     add(cell: Cell) {
-        cell.index = this.list.length
+        cell._index = this.list.length
         this.list.push(cell)
         if (cell.definition) this.map[cell.getName()] = cell
     }
@@ -996,7 +1012,7 @@ class VariableScope {
 
     sort() {
         this.list.sort((a, b) => strcmp(a.getName(), b.getName()))
-        for (let i = 0; i < this.list.length; ++i) this.list[i].index = i
+        for (let i = 0; i < this.list.length; ++i) this.list[i]._index = i
     }
 }
 
@@ -1071,7 +1087,7 @@ class Program implements InstrArgResolver {
 
     throwError(expr: estree.BaseNode, msg: string): never {
         const err = new Error(msg)
-        ;(err as any).sourceNode = expr
+            ; (err as any).sourceNode = expr
         throw err
     }
 
@@ -1082,7 +1098,7 @@ class Program implements InstrArgResolver {
             message: msg,
             codeFragment: this.sourceFrag(range),
         }
-        ;(this.host.error || printJacError)(err)
+            ; (this.host.error || printJacError)(err)
         return values.error
     }
 
@@ -1290,6 +1306,14 @@ class Program implements InstrArgResolver {
         return (pat as estree.Identifier).name
     }
 
+    private lookupRoleSpec(expr: Expr, serv: string) {
+        const r = this.serviceSpecs.hasOwnProperty(serv)
+            ? this.serviceSpecs[serv]
+            : undefined
+        if (!r) this.throwError(expr, "no such service: " + serv)
+        return r
+    }
+
     private parseRole(decl: estree.VariableDeclarator): Cell {
         const expr = decl.init
         if (expr?.type != "CallExpression") return null
@@ -1314,12 +1338,8 @@ class Program implements InstrArgResolver {
         }
         if (expr.callee.type != "MemberExpression") return null
         if (idName(expr.callee.object) != "roles") return null
-        const serv = this.forceName(expr.callee.property)
+        const spec = this.lookupRoleSpec(expr.callee, this.forceName(expr.callee.property))
         this.requireArgs(expr, 0)
-        const spec = this.serviceSpecs.hasOwnProperty(serv)
-            ? this.serviceSpecs[serv]
-            : undefined
-        if (!spec) this.throwError(expr.callee, "no such service: " + serv)
         return new Role(this, decl, this.roles, spec)
     }
 
@@ -1456,10 +1476,13 @@ class Program implements InstrArgResolver {
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
+
             const v = new Variable(paramdef, proc.locals)
             v.isLocal = true
-            if (v.index >= 8) this.throwError(paramdef, "too many arguments")
         }
+
+        if (proc.locals.list.length >= 8)
+            this.throwError(stmt.params[7], "too many arguments")
     }
 
     private emitFunctionDeclaration(stmt: estree.FunctionDeclaration) {
@@ -1485,8 +1508,13 @@ class Program implements InstrArgResolver {
     }
 
     private emitProgram(prog: estree.Program) {
-        this.packetBuffer = new Buffer(null, this.buffers, JD_SERIAL_MAX_PAYLOAD_SIZE, "packet")
-        assert(this.packetBuffer.index == 0) // current packet is buffer #0
+        this.packetBuffer = new Buffer(
+            null,
+            this.buffers,
+            JD_SERIAL_MAX_PAYLOAD_SIZE,
+            "packet"
+        )
+        assert(this.packetBuffer._index == 0) // current packet is buffer #0
 
         this.main = new Procedure(this, "main")
 
@@ -1550,7 +1578,7 @@ class Program implements InstrArgResolver {
         }
 
         function markTopLevel(node: estree.Node) {
-            ;(node as any)._jacsIsTopLevel = true
+            ; (node as any)._jacsIsTopLevel = true
             switch (node.type) {
                 case "ExpressionStatement":
                     markTopLevel(node.expression)
@@ -1562,7 +1590,7 @@ class Program implements InstrArgResolver {
         }
     }
 
-    private ignore(val: ValueDesc) {}
+    private ignore(val: ValueDesc) { }
 
     private emitExpressionStatement(stmt: estree.ExpressionStatement) {
         this.ignore(this.emitExpr(stmt.expression))
@@ -1674,7 +1702,7 @@ class Program implements InstrArgResolver {
         obj: ValueDesc,
         prop: string
     ): ValueDesc {
-        const role = obj.cell as Role
+        const role = obj.role
         switch (prop) {
             case "subscribe":
                 this.requireTopLevel(expr)
@@ -1730,7 +1758,7 @@ class Program implements InstrArgResolver {
                 obj.spec.kind == "const" ? RefreshMS.Never : RefreshMS.Normal
         if (!field && obj.spec.fields.length == 1) field = obj.spec.fields[0]
 
-        const role = obj.cell as Role
+        const role = obj.role
         const wr = this.writer
         wr.emitAsync(
             OpAsync.QUERY_REG,
@@ -1741,30 +1769,33 @@ class Program implements InstrArgResolver {
         if (field) {
             return this.extractRegField(obj, field)
         } else {
-            const r = mkValue(CellKind.JD_VALUE_SEQ, 0, role)
-            r.spec = obj.spec
+            const r: ValueDesc = {
+                kind: CellKind.JD_VALUE_SEQ,
+                index: null,
+                role,
+                spec: obj.spec,
+            }
             return r
         }
     }
 
     private emitIsRoleConnected(role: Role) {
         const wr = this.writer
-        const r = wr.allocReg()
+        const reg = wr.allocReg()
         wr.emitLoadCell(
-            r,
+            reg,
             CellKind.ROLE_PROPERTY,
             OpRoleProperty.IS_CONNECTED,
-            role.index
+            role.encode()
         )
-        return r
+        return reg
     }
 
     private emitRoleCall(
         expr: estree.CallExpression,
-        obj: ValueDesc,
+        role: Role,
         prop: string
     ): ValueDesc {
-        const role = obj.cell as Role
         const wr = this.writer
         if (expr.callee.type != "MemberExpression") oops("")
         switch (prop) {
@@ -1799,7 +1830,7 @@ class Program implements InstrArgResolver {
                 wr.emitAsync(OpAsync.WAIT_ROLE, role.encode())
                 return values.zero
             default:
-                const v = this.emitRoleMember(expr.callee, obj)
+                const v = this.emitRoleMember(expr.callee, role)
                 if (v.kind == CellKind.JD_COMMAND) {
                     this.emitPackArgs(expr, v.spec)
                     this.writer.emitAsync(
@@ -1877,7 +1908,7 @@ class Program implements InstrArgResolver {
 
     private emitBufferCall(
         expr: estree.CallExpression,
-        obj: ValueDesc,
+        buf: Buffer,
         prop: string
     ): ValueDesc {
         const wr = this.writer
@@ -1891,7 +1922,7 @@ class Program implements InstrArgResolver {
                 wr.setPrefixReg(PrefixReg.C, off)
                 wr.pop()
                 const reg = wr.allocReg()
-                wr.emitBufLoad(reg, fmt, 0, obj.cell.index)
+                wr.emitBufLoad(reg, fmt, 0, buf.encode())
                 return reg
             }
 
@@ -1902,7 +1933,7 @@ class Program implements InstrArgResolver {
                 const off = this.emitSimpleValue(expr.arguments[0], true)
                 const val = this.emitSimpleValue(expr.arguments[2])
                 wr.setPrefixReg(PrefixReg.C, off)
-                wr.emitBufStore(val, fmt, 0, obj.cell.index)
+                wr.emitBufStore(val, fmt, 0, buf.encode())
                 wr.pop()
                 return values.zero
             }
@@ -1993,7 +2024,7 @@ class Program implements InstrArgResolver {
         obj: ValueDesc,
         prop: string
     ): ValueDesc {
-        const role = obj.cell as Role
+        const role = obj.role
         assertRange(0, obj.spec.identifier, 0x1ff)
 
         const wr = this.writer
@@ -2324,9 +2355,9 @@ class Program implements InstrArgResolver {
                 case CellKind.JD_REG:
                     return this.emitRegisterCall(expr, obj, prop)
                 case CellKind.JD_ROLE:
-                    return this.emitRoleCall(expr, obj, prop)
+                    return this.emitRoleCall(expr, obj.role, prop)
                 case CellKind.X_BUFFER:
-                    return this.emitBufferCall(expr, obj, prop)
+                    return this.emitBufferCall(expr, obj.buffer, prop)
             }
         }
 
@@ -2446,9 +2477,7 @@ class Program implements InstrArgResolver {
         return matchesName(pi.name, id)
     }
 
-    private emitRoleMember(expr: estree.MemberExpression, obj: ValueDesc) {
-        assert(obj.cell instanceof Role)
-        const role = obj.cell as Role
+    private emitRoleMember(expr: estree.MemberExpression, role: Role) {
         const propName = this.forceName(expr.property)
         let r: ValueDesc
 
@@ -2462,20 +2491,23 @@ class Program implements InstrArgResolver {
                 this.matchesSpecName(p, propName) ||
                 (generic?.identifier == p.identifier && generic?.kind == p.kind)
             ) {
-                if (isRegister(p)) {
+                const setKind = (id: CellKind) => {
                     assert(!r)
-                    r = mkValue(CellKind.JD_REG, p.identifier, role)
-                    r.spec = p
+                    r = {
+                        kind: id,
+                        index: p.identifier,
+                        role,
+                        spec: p
+                    }
+                }
+                if (isRegister(p)) {
+                    setKind(CellKind.JD_REG)
                 }
                 if (isEvent(p)) {
-                    assert(!r)
-                    r = mkValue(CellKind.JD_EVENT, p.identifier, role)
-                    r.spec = p
+                    setKind(CellKind.JD_EVENT)
                 }
                 if (isCommand(p)) {
-                    assert(!r)
-                    r = mkValue(CellKind.JD_COMMAND, p.identifier, role)
-                    r.spec = p
+                    setKind(CellKind.JD_COMMAND)
                 }
             }
         }
@@ -2507,7 +2539,7 @@ class Program implements InstrArgResolver {
         }
         const obj = this.emitExpr(expr.object)
         if (obj.kind == CellKind.JD_ROLE) {
-            return this.emitRoleMember(expr, obj)
+            return this.emitRoleMember(expr, obj.role)
         } else if (obj.kind == CellKind.JD_REG) {
             const propName = this.forceName(expr.property)
             if (obj.spec.fields.length > 1) {
@@ -3021,8 +3053,8 @@ export function testCompiler(host: Host, code: string) {
     let numExtra = 0
     const p = new Program(
         {
-            write: () => {},
-            log: msg => {},
+            write: () => { },
+            log: msg => { },
             getSpecs: host.getSpecs,
             verifyBytecode: host.verifyBytecode,
             error: err => {
