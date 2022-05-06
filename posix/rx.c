@@ -25,7 +25,7 @@ int jd_rx_frame_received(jd_frame_t *frame) {
         rx_queue = lnk;
     }
     pthread_mutex_unlock(&frame_mut);
-    return 1;
+    return 0;
 }
 
 int jd_rx_frame_received_loopback(jd_frame_t *frame) {
