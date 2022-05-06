@@ -111,9 +111,6 @@ class Cell {
     value(): ValueDesc {
         oops("on value() on generic Cell")
     }
-    encode() {
-        return this._index
-    }
     getName() {
         if (!this._name) {
             if (this.definition.type == "Identifier")
@@ -200,8 +197,27 @@ class Role extends Cell {
     value(): ValueDesc {
         return { kind: CellKind.JD_ROLE, index: null, role: this }
     }
+    rawValue(): ValueDesc {
+        if (this.isLocal)
+            return mkValue(CellKind.LOCAL, this._index)
+        else
+            return mkValue(CellKind.X_FLOAT, this._index)
+    }
+    extEncode(wr: OpWriter, reg = PrefixReg.A) {
+        this.used = true
+        if (this.isLocal) {
+            wr.push()
+            wr.setPrefixReg(reg, wr.forceReg(this.rawValue()))
+            wr.pop()
+            return 0
+        } else {
+            return this._index
+        }
+    }
     encode() {
         this.used = true
+        if (this.isLocal)
+            throwError(null, "only static roles supported here")
         return this._index
     }
     serialize() {
@@ -236,6 +252,9 @@ class Variable extends Cell {
         const kind = this.isLocal ? CellKind.LOCAL : CellKind.GLOBAL
         return { kind, index: this.encode(), variable: this }
     }
+    encode() {
+        return this._index
+    }
     toString() {
         return `var ${this.getName()}`
     }
@@ -253,6 +272,9 @@ class Buffer extends Cell {
     }
     value(): ValueDesc {
         return { kind: CellKind.X_BUFFER, index: null, buffer: this }
+    }
+    encode() {
+        return this._index
     }
     toString() {
         return `buffer ${this.getName()}`
@@ -586,6 +608,10 @@ class OpWriter {
         const regs = numSetBits(d)
         if (regs > this.maxRegs) this.maxRegs = regs
         return d
+    }
+
+    emitAsyncWithRole(op: OpAsync, role: Role, b: number = 0, c: number = 0) {
+        this.emitAsync(op, role.extEncode(this), b, c)
     }
 
     emitAsync(op: OpAsync, a: number = 0, b: number = 0, c: number = 0) {
@@ -979,6 +1005,9 @@ class Procedure {
     finalize() {
         this.writer.patchLabels()
     }
+    args() {
+        return this.locals.list.slice(0, this.numargs)
+    }
     mkTempLocal(name: string) {
         const l = new Variable(null, this.locals)
         l._name = name
@@ -1036,6 +1065,12 @@ const mathConst: SMap<number> = {
     SQRT2: Math.SQRT2,
 }
 
+function throwError(expr: estree.BaseNode, msg: string): never {
+    const err = new Error(msg)
+        ; (err as any).sourceNode = expr
+    throw err
+}
+
 class Program implements InstrArgResolver {
     buffers = new VariableScope(null)
     roles = new VariableScope(this.buffers)
@@ -1086,9 +1121,7 @@ class Program implements InstrArgResolver {
     }
 
     throwError(expr: estree.BaseNode, msg: string): never {
-        const err = new Error(msg)
-            ; (err as any).sourceNode = expr
-        throw err
+        throwError(expr, msg)
     }
 
     reportError(range: number[], msg: string): ValueDesc {
@@ -1126,6 +1159,8 @@ class Program implements InstrArgResolver {
 
     private roleDispatcher(role: Role) {
         if (!role.dispatcher) {
+            if (role.isLocal)
+                throwError(null, "local roles are not supported here")
             const proc = new Procedure(this, role.getName() + "_disp")
             role.dispatcher = {
                 proc,
@@ -1477,6 +1512,30 @@ class Program implements InstrArgResolver {
                     "only simple identifiers supported as parameters"
                 )
 
+            let tp = ""
+
+            const idx = paramdef.range?.[0]
+            if (idx) {
+                const pref = this.source.slice(0, idx).replace(/.*\n/, "")
+                const m = /\/\*\*\s*@type\s+(.*?)\s*\*\/\s*$/.exec(pref)
+                if (m) tp = m[1]
+            }
+
+            if (tp) {
+                if (tp.endsWith("Role") && tp[0].toUpperCase() == tp[0]) {
+                    let r = tp.slice(0, -4)
+                    r = r[0].toLowerCase() + r.slice(1)
+                    const spec = this.lookupRoleSpec(paramdef, r)
+                    const v = new Role(this, paramdef, proc.locals, spec)
+                    v.isLocal = true
+                    continue
+                } else if (tp == "number") {
+                    // OK!
+                } else {
+                    this.throwError(paramdef, "invalid type: " + tp)
+                }
+            }
+
             const v = new Variable(paramdef, proc.locals)
             v.isLocal = true
         }
@@ -1719,7 +1778,7 @@ class Program implements InstrArgResolver {
                 const wr = this.writer
                 const lbl = wr.mkLabel("wait")
                 wr.emitLabel(lbl)
-                wr.emitAsync(OpAsync.WAIT_ROLE, role.encode())
+                wr.emitAsyncWithRole(OpAsync.WAIT_ROLE, role)
                 wr.push()
                 const cond = this.inlineBin(
                     OpBinary.EQ,
@@ -1760,9 +1819,9 @@ class Program implements InstrArgResolver {
 
         const role = obj.role
         const wr = this.writer
-        wr.emitAsync(
+        wr.emitAsyncWithRole(
             OpAsync.QUERY_REG,
-            role.encode(),
+            role,
             obj.spec.identifier,
             refresh
         )
@@ -1786,7 +1845,7 @@ class Program implements InstrArgResolver {
             reg,
             CellKind.ROLE_PROPERTY,
             OpRoleProperty.IS_CONNECTED,
-            role.encode()
+            role.extEncode(wr, PrefixReg.B)
         )
         return reg
     }
@@ -1827,15 +1886,15 @@ class Program implements InstrArgResolver {
                 if (!role.isCondition())
                     this.throwError(expr, "only condition()s have wait()")
                 this.requireArgs(expr, 0)
-                wr.emitAsync(OpAsync.WAIT_ROLE, role.encode())
+                wr.emitAsyncWithRole(OpAsync.WAIT_ROLE, role)
                 return values.zero
             default:
                 const v = this.emitRoleMember(expr.callee, role)
                 if (v.kind == CellKind.JD_COMMAND) {
                     this.emitPackArgs(expr, v.spec)
-                    this.writer.emitAsync(
+                    this.writer.emitAsyncWithRole(
                         OpAsync.SEND_CMD,
-                        role.encode(),
+                        role,
                         v.spec.identifier
                     )
                 } else if (v.kind != CellKind.ERROR) {
@@ -1918,7 +1977,7 @@ class Program implements InstrArgResolver {
                 this.requireArgs(expr, 2)
                 const fmt = this.parseFormat(expr.arguments[1])
                 wr.push()
-                const off = this.emitSimpleValue(expr.arguments[0], true)
+                const off = this.emitSimpleValue(expr.arguments[0], CellKind.X_FLOAT)
                 wr.setPrefixReg(PrefixReg.C, off)
                 wr.pop()
                 const reg = wr.allocReg()
@@ -1930,7 +1989,7 @@ class Program implements InstrArgResolver {
                 this.requireArgs(expr, 3)
                 const fmt = this.parseFormat(expr.arguments[1])
                 wr.push()
-                const off = this.emitSimpleValue(expr.arguments[0], true)
+                const off = this.emitSimpleValue(expr.arguments[0], CellKind.X_FLOAT)
                 const val = this.emitSimpleValue(expr.arguments[2])
                 wr.setPrefixReg(PrefixReg.C, off)
                 wr.emitBufStore(val, fmt, 0, buf.encode())
@@ -2034,9 +2093,9 @@ class Program implements InstrArgResolver {
                 return this.emitRegGet(obj)
             case "write":
                 this.emitPackArgs(expr, obj.spec)
-                wr.emitAsync(
+                wr.emitAsyncWithRole(
                     OpAsync.SEND_CMD,
-                    role.encode(),
+                    role,
                     obj.spec.identifier | CMD_SET_REG
                 )
                 return values.zero
@@ -2104,13 +2163,19 @@ class Program implements InstrArgResolver {
         return v
     }
 
-    private emitArgs(args: Expr[]) {
+    private emitArgs(args: Expr[], formals?: Cell[]) {
         const wr = this.writer
         const tmpargs: number[] = []
         wr.push()
         for (let i = 0; i < args.length; i++) {
             wr.push()
-            const r = this.emitSimpleValue(args[i])
+            const f = formals?.[i]
+            let r: ValueDesc
+            if (f instanceof Role) {
+                r = this.emitRoleRef(args[i])
+            } else {
+                r = this.emitSimpleValue(args[i])
+            }
             wr.popExcept(r)
             tmpargs.push(r.index)
         }
@@ -2370,7 +2435,7 @@ class Program implements InstrArgResolver {
             if (d) {
                 this.requireArgs(expr, d.proc.numargs)
                 wr.push()
-                this.emitArgs(expr.arguments)
+                this.emitArgs(expr.arguments, d.proc.args())
                 wr.pop()
                 wr.emitCall(d.proc)
                 const r = wr.allocReg()
@@ -2604,15 +2669,25 @@ class Program implements InstrArgResolver {
         return r
     }
 
-    private emitSimpleValue(expr: Expr, allowLit = false) {
+    private emitSimpleValue(expr: Expr, except?: CellKind) {
         this.writer.push()
         const val = this.emitExpr(expr)
-        this.requireRuntimeValue(expr, val)
-        if (allowLit && val.kind == CellKind.X_FLOAT) {
+        if (except != undefined && val.kind === except) {
             this.writer.pop()
             return val
         }
+        this.requireRuntimeValue(expr, val)
         const r = this.writer.forceReg(val)
+        this.writer.popExcept(r)
+        return r
+    }
+
+    private emitRoleRef(expr: Expr) {
+        this.writer.push()
+        const val = this.emitExpr(expr)
+        if (val.kind != CellKind.JD_ROLE)
+            throwError(expr, "role expected here")
+        const r = this.writer.forceReg(val.role.rawValue())
         this.writer.popExcept(r)
         return r
     }
