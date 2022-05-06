@@ -507,7 +507,7 @@ class OpWriter {
     private doAlloc(regno: number, kind = CellKind.X_FP_REG) {
         assert(regno != -1)
         if (this.allocatedRegsMask & (1 << regno))
-            this.parent.parent.throwError(
+            throwError(
                 null,
                 `expression too complex (R${regno} allocated)`
             )
@@ -1120,10 +1120,6 @@ class Program implements InstrArgResolver {
         return { line, column }
     }
 
-    throwError(expr: estree.BaseNode, msg: string): never {
-        throwError(expr, msg)
-    }
-
     reportError(range: number[], msg: string): ValueDesc {
         this.numErrors++
         const err: JacError = {
@@ -1337,7 +1333,7 @@ class Program implements InstrArgResolver {
         pat: estree.Expression | estree.Pattern | estree.PrivateIdentifier
     ) {
         const r = idName(pat)
-        if (!r) this.throwError(pat, "only simple identifiers supported")
+        if (!r) throwError(pat, "only simple identifiers supported")
         return (pat as estree.Identifier).name
     }
 
@@ -1345,7 +1341,7 @@ class Program implements InstrArgResolver {
         const r = this.serviceSpecs.hasOwnProperty(serv)
             ? this.serviceSpecs[serv]
             : undefined
-        if (!r) this.throwError(expr, "no such service: " + serv)
+        if (!r) throwError(expr, "no such service: " + serv)
         return r
     }
 
@@ -1365,7 +1361,7 @@ class Program implements InstrArgResolver {
                 this.requireArgs(expr, 1)
                 const sz = this.forceNumberLiteral(expr.arguments[0])
                 if ((sz | 0) != sz || sz <= 0 || sz > 1024)
-                    this.throwError(
+                    throwError(
                         expr.arguments[0],
                         "buffer() length must be a positive integer (under 1k)"
                     )
@@ -1391,11 +1387,11 @@ class Program implements InstrArgResolver {
             (this.proc?.locals || this.globals).lookup(id) ||
             this.functions.lookup(id)
         )
-            this.throwError(decl, `name '${id}' already defined`)
+            throwError(decl, `name '${id}' already defined`)
     }
 
     private emitVariableDeclaration(decls: estree.VariableDeclaration) {
-        if (decls.kind != "var") this.throwError(decls, "only 'var' supported")
+        if (decls.kind != "var") throwError(decls, "only 'var' supported")
         for (const decl of decls.declarations) {
             let g: Variable
             if (this.isTopLevel(decl)) {
@@ -1507,7 +1503,7 @@ class Program implements InstrArgResolver {
     ) {
         for (const paramdef of stmt.params) {
             if (paramdef.type != "Identifier")
-                this.throwError(
+                throwError(
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
@@ -1532,7 +1528,7 @@ class Program implements InstrArgResolver {
                 } else if (tp == "number") {
                     // OK!
                 } else {
-                    this.throwError(paramdef, "invalid type: " + tp)
+                    throwError(paramdef, "invalid type: " + tp)
                 }
             }
 
@@ -1541,7 +1537,7 @@ class Program implements InstrArgResolver {
         }
 
         if (proc.locals.list.length >= 8)
-            this.throwError(stmt.params[7], "too many arguments")
+            throwError(stmt.params[7], "too many arguments")
     }
 
     private emitFunctionDeclaration(stmt: estree.FunctionDeclaration) {
@@ -1549,9 +1545,9 @@ class Program implements InstrArgResolver {
             f => f.definition === stmt
         ) as FunctionDecl
         if (!this.isTopLevel(stmt))
-            this.throwError(stmt, "only top-level functions are supported")
+            throwError(stmt, "only top-level functions are supported")
         if (stmt.generator || stmt.async)
-            this.throwError(stmt, "async not supported")
+            throwError(stmt, "async not supported")
         if (!fundecl && this.numErrors) return
 
         this.withProcedure(fundecl.proc, wr => {
@@ -1591,7 +1587,7 @@ class Program implements InstrArgResolver {
                         this.newDef(s)
                         const n = this.forceName(s.id)
                         if (reservedFunctions[n] == 1)
-                            this.throwError(
+                            throwError(
                                 s,
                                 `function name '${n}' is reserved`
                             )
@@ -1664,10 +1660,10 @@ class Program implements InstrArgResolver {
         } = {}
     ): Procedure {
         if (func.type != "ArrowFunctionExpression")
-            this.throwError(func, "arrow function expected here")
+            throwError(func, "arrow function expected here")
         const proc = new Procedure(this, name)
         if (func.params.length && !options.methodHandler)
-            this.throwError(func, "parameters not supported here")
+            throwError(func, "parameters not supported here")
         this.withProcedure(proc, wr => {
             if (options.methodHandler)
                 proc.methodSeqNo = proc.mkTempLocal("methSeqNo")
@@ -1709,7 +1705,7 @@ class Program implements InstrArgResolver {
 
     private requireArgs(expr: estree.CallExpression, num: number) {
         if (expr.arguments.length != num)
-            this.throwError(
+            throwError(
                 expr,
                 `${num} arguments required; got ${expr.arguments.length}`
             )
@@ -1730,7 +1726,7 @@ class Program implements InstrArgResolver {
 
     private requireTopLevel(expr: estree.CallExpression) {
         if (!this.isTopLevel(expr))
-            this.throwError(
+            throwError(
                 expr,
                 "this can only be done at the top-level of the program"
             )
@@ -1789,7 +1785,7 @@ class Program implements InstrArgResolver {
                 wr.emitJump(lbl, cond.index)
                 return values.zero
         }
-        this.throwError(expr, `events don't have property ${prop}`)
+        throwError(expr, `events don't have property ${prop}`)
     }
 
     private extractRegField(obj: ValueDesc, field: jdspec.PacketMember) {
@@ -1884,7 +1880,7 @@ class Program implements InstrArgResolver {
                 return values.zero
             case "wait":
                 if (!role.isCondition())
-                    this.throwError(expr, "only condition()s have wait()")
+                    throwError(expr, "only condition()s have wait()")
                 this.requireArgs(expr, 0)
                 wr.emitAsyncWithRole(OpAsync.WAIT_ROLE, role)
                 return values.zero
@@ -1898,7 +1894,7 @@ class Program implements InstrArgResolver {
                         v.spec.identifier
                     )
                 } else if (v.kind != CellKind.ERROR) {
-                    this.throwError(
+                    throwError(
                         expr,
                         `${stringifyCellKind(v.kind)} can't be called`
                     )
@@ -1911,7 +1907,7 @@ class Program implements InstrArgResolver {
         const str = this.stringLiteral(expr) || ""
         const m = /^([uif])(\d+)(\.\d+)?$/.exec(str.trim())
         if (!m)
-            this.throwError(
+            throwError(
                 expr,
                 `format descriptor ("u32", "i22.10", etc) expected`
             )
@@ -1938,7 +1934,7 @@ class Program implements InstrArgResolver {
                 r = OpFmt.U64
                 break
             default:
-                this.throwError(
+                throwError(
                     expr,
                     `total format size is not one of 8, 16, 32, 64 bits`
                 )
@@ -1952,7 +1948,7 @@ class Program implements InstrArgResolver {
                 break
             case "f":
                 if (shift)
-                    this.throwError(expr, `shifts not supported for floats`)
+                    throwError(expr, `shifts not supported for floats`)
                 r += OpFmt.F8
                 break
             default:
@@ -1960,7 +1956,7 @@ class Program implements InstrArgResolver {
         }
 
         if (r == OpFmt.F8 || r == OpFmt.F16)
-            this.throwError(expr, `f8 and f16 are not supported`)
+            throwError(expr, `f8 and f16 are not supported`)
 
         return r | (shift << 4)
     }
@@ -1998,7 +1994,7 @@ class Program implements InstrArgResolver {
             }
 
             default:
-                this.throwError(expr, `can't find ${prop} on buffer`)
+                throwError(expr, `can't find ${prop} on buffer`)
         }
     }
 
@@ -2011,7 +2007,7 @@ class Program implements InstrArgResolver {
 
     private forceStringLiteral(expr: Expr) {
         const v = this.stringLiteral(expr)
-        if (v === undefined) this.throwError(expr, "string literal expected")
+        if (v === undefined) throwError(expr, "string literal expected")
         return this.writer.emitString(v)
     }
 
@@ -2027,7 +2023,7 @@ class Program implements InstrArgResolver {
         const args = expr.arguments.map(arg => {
             if (specIdx >= fields.length) {
                 if (repeatsStart != -1) specIdx = repeatsStart
-                else this.throwError(arg, `too many arguments`)
+                else throwError(arg, `too many arguments`)
             }
             const spec = pspec.fields[specIdx++]
             if (spec.startRepeats) repeatsStart = specIdx - 1
@@ -2036,7 +2032,7 @@ class Program implements InstrArgResolver {
             if (size == 0) {
                 stringLiteral = this.stringLiteral(arg)
                 if (stringLiteral == undefined)
-                    this.throwError(arg, "expecting a string literal here")
+                    throwError(arg, "expecting a string literal here")
                 size = strlen(stringLiteral)
                 if (spec.type == "string0") size += 1
             }
@@ -2055,10 +2051,10 @@ class Program implements InstrArgResolver {
 
         // this could be skipped - they will just be zero
         if (specIdx < fields.length)
-            this.throwError(expr, "not enough arguments")
+            throwError(expr, "not enough arguments")
 
         if (offset > JD_SERIAL_MAX_PAYLOAD_SIZE)
-            this.throwError(expr, "arguments do not fit in a packet")
+            throwError(expr, "arguments do not fit in a packet")
 
         const wr = this.writer
 
@@ -2103,7 +2099,7 @@ class Program implements InstrArgResolver {
                 this.requireArgs(expr, 2)
                 this.requireTopLevel(expr)
                 if (obj.spec.fields.length != 1)
-                    this.throwError(expr, "wrong register type")
+                    throwError(expr, "wrong register type")
                 const threshold = this.forceNumberLiteral(expr.arguments[0])
                 const name = role.getName() + "_chg_" + obj.spec.name
                 const handler = this.emitHandler(name, expr.arguments[1])
@@ -2154,7 +2150,7 @@ class Program implements InstrArgResolver {
                 })
                 return values.zero
         }
-        this.throwError(expr, `events don't have property ${prop}`)
+        throwError(expr, `events don't have property ${prop}`)
     }
 
     private multExpr(v: ValueDesc, scale: number) {
@@ -2182,7 +2178,7 @@ class Program implements InstrArgResolver {
         wr.pop()
 
         if (tmpargs.some(idx => idx < args.length))
-            this.throwError(args[0], "args register clash")
+            throwError(args[0], "args register clash")
 
         const regs = wr.allocArgs(args.length)
         for (let i = 0; i < regs.length; ++i) {
@@ -2196,7 +2192,7 @@ class Program implements InstrArgResolver {
     private forceNumberLiteral(expr: Expr) {
         const tmp = this.emitExpr(expr)
         if (tmp.kind != CellKind.X_FLOAT)
-            this.throwError(expr, "number literal expected")
+            throwError(expr, "number literal expected")
         return tmp.index
     }
 
@@ -2428,7 +2424,7 @@ class Program implements InstrArgResolver {
 
         const funName = idName(expr.callee)
 
-        if (!funName) this.throwError(expr, `unsupported call`)
+        if (!funName) throwError(expr, `unsupported call`)
 
         if (!reservedFunctions[funName]) {
             const d = this.functions.lookup(funName) as FunctionDecl
@@ -2442,7 +2438,7 @@ class Program implements InstrArgResolver {
                 wr.emitMov(r.index, 0)
                 return r
             } else {
-                this.throwError(expr, `can't find function '${funName}'`)
+                throwError(expr, `can't find function '${funName}'`)
             }
         }
 
@@ -2479,7 +2475,7 @@ class Program implements InstrArgResolver {
                 this.requireArgs(expr, 1)
                 const code = this.forceNumberLiteral(expr.arguments[0])
                 if ((code | 0) != code || code <= 0 || code > 9999)
-                    this.throwError(
+                    throwError(
                         expr,
                         "panic() code must be integer between 1 and 9999"
                     )
@@ -2493,7 +2489,7 @@ class Program implements InstrArgResolver {
                     this.forceNumberLiteral(expr.arguments[0]) * 1000
                 )
                 if (time < 20)
-                    this.throwError(
+                    throwError(
                         expr,
                         "minimum every() period is 0.02s (20ms)"
                     )
@@ -2521,7 +2517,7 @@ class Program implements InstrArgResolver {
                 wr.popExcept(r)
                 return r
         }
-        this.throwError(expr, "unhandled call")
+        throwError(expr, "unhandled call")
     }
 
     private emitFmtArgs(expr: estree.CallExpression) {
@@ -2534,7 +2530,7 @@ class Program implements InstrArgResolver {
         const id = this.forceName(expr)
         if (id == "NaN") return values.nan
         const cell = this.proc.locals.lookup(id)
-        if (!cell) this.throwError(expr, "unknown name: " + id)
+        if (!cell) throwError(expr, "unknown name: " + id)
         return cell.value()
     }
 
@@ -2578,7 +2574,7 @@ class Program implements InstrArgResolver {
         }
 
         if (!r)
-            this.throwError(
+            throwError(
                 expr,
                 `role ${role.getName()} has no member ${propName}`
             )
@@ -2612,20 +2608,20 @@ class Program implements InstrArgResolver {
                     matchesName(f.name, propName)
                 )
                 if (!fld)
-                    this.throwError(
+                    throwError(
                         expr,
                         `no field ${propName} in ${obj.spec.name}`
                     )
                 return this.emitRegGet(obj, undefined, fld)
             } else {
-                this.throwError(
+                throwError(
                     expr,
                     `unhandled member ${propName}; use .read()`
                 )
             }
         }
 
-        this.throwError(expr, `unhandled member ${idName(expr.property)}`)
+        throwError(expr, `unhandled member ${idName(expr.property)}`)
     }
 
     private mkLiteral(v: number): estree.Literal {
@@ -2652,20 +2648,20 @@ class Program implements InstrArgResolver {
         }
 
         if (typeof v == "number") return floatVal(v)
-        this.throwError(expr, "unhandled literal: " + v)
+        throwError(expr, "unhandled literal: " + v)
     }
 
     private lookupCell(expr: estree.Expression | estree.Pattern) {
         const name = this.forceName(expr)
         const r = this.proc.locals.lookup(name)
-        if (!r) this.throwError(expr, `can't find '${name}'`)
+        if (!r) throwError(expr, `can't find '${name}'`)
         return r
     }
 
     private lookupVar(expr: estree.Expression | estree.Pattern) {
         const r = this.lookupCell(expr)
         if (!(r instanceof Variable))
-            this.throwError(expr, "expecting variable")
+            throwError(expr, "expecting variable")
         return r
     }
 
@@ -2712,7 +2708,7 @@ class Program implements InstrArgResolver {
             case CellKind.SPECIAL:
                 break
             default:
-                this.throwError(node, "a number required here")
+                throwError(node, "a number required here")
         }
     }
 
@@ -2720,7 +2716,7 @@ class Program implements InstrArgResolver {
         expr: estree.AssignmentExpression
     ): ValueDesc {
         if (expr.operator != "=")
-            this.throwError(expr, "only simple assignment supported")
+            throwError(expr, "only simple assignment supported")
         const src = this.emitExpr(expr.right)
         const wr = this.writer
         let left = expr.left
@@ -2733,7 +2729,7 @@ class Program implements InstrArgResolver {
                     const pat = left.elements[i]
                     const f = src.spec.fields[i]
                     if (!f)
-                        this.throwError(
+                        throwError(
                             pat,
                             `not enough fields in ${src.spec.name}`
                         )
@@ -2743,7 +2739,7 @@ class Program implements InstrArgResolver {
                 }
                 wr.pop()
             } else {
-                this.throwError(expr, "expecting a multi-field register read")
+                throwError(expr, "expecting a multi-field register read")
             }
             return src
         } else if (left.type == "Identifier") {
@@ -2751,7 +2747,7 @@ class Program implements InstrArgResolver {
             this.emitStore(this.lookupVar(left), src)
             return src
         }
-        this.throwError(expr, "unhandled assignment")
+        throwError(expr, "unhandled assignment")
     }
 
     private emitBinaryExpression(
@@ -2818,7 +2814,7 @@ class Program implements InstrArgResolver {
         }
 
         const op2 = simpleOps[op]
-        if (op2 === undefined) this.throwError(expr, "unhandled operator")
+        if (op2 === undefined) throwError(expr, "unhandled operator")
 
         wr.push()
         let a = this.emitSimpleValue(expr.left)
@@ -2839,7 +2835,7 @@ class Program implements InstrArgResolver {
         }
 
         let op = simpleOps[expr.operator]
-        if (op === undefined) this.throwError(expr, "unhandled operator")
+        if (op === undefined) throwError(expr, "unhandled operator")
 
         let arg = expr.argument
 
@@ -2881,7 +2877,7 @@ class Program implements InstrArgResolver {
                 return this.emitUnaryExpression(expr)
             default:
                 // console.log(expr)
-                return this.throwError(expr, "unhandled expr: " + expr.type)
+                return throwError(expr, "unhandled expr: " + expr.type)
         }
     }
 
@@ -2933,7 +2929,7 @@ class Program implements InstrArgResolver {
                     return this.emitFunctionDeclaration(stmt)
                 default:
                     console.log(stmt)
-                    this.throwError(stmt, `unhandled type: ${stmt.type}`)
+                    throwError(stmt, `unhandled type: ${stmt.type}`)
             }
         } catch (e) {
             this.handleException(stmt, e)
@@ -2942,7 +2938,7 @@ class Program implements InstrArgResolver {
             wr.stmtEnd()
             if (wr.numScopes() != scopes) {
                 if (!this.numErrors)
-                    this.throwError(stmt, "push/pop mismatch; " + stmt.type)
+                    throwError(stmt, "push/pop mismatch; " + stmt.type)
                 while (wr.numScopes() > scopes) wr.pop()
             }
         }
