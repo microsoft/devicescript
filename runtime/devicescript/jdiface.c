@@ -254,7 +254,8 @@ static bool handle_send_pkt(jacs_fiber_t *fiber) {
     jacs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, fiber->pkt_data.send_pkt.data,
                        fiber->pkt_data.send_pkt.size);
     if (jd_send_pkt(&ctx->packet) == 0) {
-        LOGV("send pkt cmd=%x", fiber->service_command);
+        LOGV("send pkt cmd=%x sz=%d", fiber->service_command, ctx->packet.service_size);
+        // jd_log_packet(&ctx->packet);
         return RESUME_USER_CODE;
     } else {
         LOGV("send pkt FAILED cmd=%x", fiber->service_command);
