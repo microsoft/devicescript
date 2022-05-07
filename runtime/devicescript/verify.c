@@ -16,7 +16,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1149 / 1051
+// next error 1150 / 1051
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -217,6 +217,7 @@ static int verify_function(jacs_img_t *img, const jacs_function_desc_t *fptr) {
                 break;
             case JACS_OPSYNC_SETUP_BUFFER:              // A-size
                 CHECK(1113, IS_DYNAMIC(a) || a <= JD_SERIAL_PAYLOAD_SIZE); // setup buffer size in range
+                CHECK(1149, d == 0);
                 break;
             case JACS_OPSYNC_FORMAT:                        // A-string-index B-numargs
                 CHECK(1114, c <= JD_SERIAL_PAYLOAD_SIZE);                      // offset in range
