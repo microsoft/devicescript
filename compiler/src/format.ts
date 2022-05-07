@@ -49,7 +49,7 @@ export enum OpAsync {
 
 export enum OpSync {
     RETURN = 0,
-    SETUP_BUFFER = 1, // A-size
+    SETUP_BUFFER = 1, // A-size D-buffer (only D==0 supported right now)
     FORMAT = 2, // A-string-index B-numargs C-offset
     MEMCPY = 3, // A-string-index C-offset
     STR0EQ = 4, // A-string-index C-offset result in R0
@@ -487,7 +487,7 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
             case OpSync.RETURN:
                 return `return`
             case OpSync.SETUP_BUFFER: // A-size
-                return `setup_buffer(size=${a})`
+                return `setup_buffer(size=${a} buf=${d})`
             case OpSync.FORMAT: // A-string-index B-numargs
                 return `format(str=${a} #${b}) @${c}`
             case OpSync.MEMCPY: // A-string-index

@@ -12,7 +12,7 @@ declare class JDRegister extends JDPacketInfo { }
 
 declare class JDRegisterNum extends JDRegister {
     read(): number
-    write(v: number | boolean): void
+    write(v: number | boolean | JDBuffer): void
     onChange(threshold: number, handler: (curr: number) => void): void
 }
 
@@ -68,9 +68,12 @@ declare function onStart(handler: () => void): void
 declare function buffer(size: number): JDBuffer
 declare class JDBuffer {
     length: number
+    setLength(len: number): void
     getAt(offset: number, format: string): number
     setAt(offset: number, format: string, value: number): void
 }
+
+declare var packet: JDBuffer
 
 interface Math {
     /**

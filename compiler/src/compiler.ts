@@ -268,7 +268,10 @@ class Buffer extends Cell {
         _name?: string
     ) {
         super(definition, scope)
-        if (_name) this._name = _name
+        if (_name) {
+            this._name = _name
+            scope._addToMap(this)
+        }
     }
     value(): ValueDesc {
         return { kind: CellKind.X_BUFFER, index: null, buffer: this }
@@ -566,7 +569,7 @@ class OpWriter {
     setPrefixReg(reg: PrefixReg, v: ValueDesc) {
         checkIndex(v.index)
         if (this.isReg(v)) {
-            this.emitRaw(OpTop.SET_HIGH, (1 << 9) | v.index)
+            this.emitRaw(OpTop.SET_HIGH, (reg << 10) | (1 << 9) | v.index)
         } else {
             assert(v.kind == CellKind.X_FLOAT)
             const q = v.index & 0xffff
@@ -765,10 +768,10 @@ class OpWriter {
 
     emitBufStore(src: ValueDesc, fmt: OpFmt, off: number, bufidx = 0) {
         assertRange(0, off, 0xff)
-        assert(
-            bufidx != 0 || this.bufferAllocated(),
-            "buffer allocated in store"
-        )
+        //assert(
+        //    bufidx != 0 || this.bufferAllocated(),
+        //    "buffer allocated in store"
+        //)
         this.emitLoadStoreCell(
             OpTop.STORE_CELL,
             src,
@@ -1027,10 +1030,14 @@ class VariableScope {
         return undefined
     }
 
+    _addToMap(cell: Cell) {
+        this.map[cell.getName()] = cell
+    }
+
     add(cell: Cell) {
         cell._index = this.list.length
         this.list.push(cell)
-        if (cell.definition) this.map[cell.getName()] = cell
+        if (cell.definition) this._addToMap(cell)
     }
 
     describeIndex(idx: number) {
@@ -1071,6 +1078,11 @@ function throwError(expr: estree.BaseNode, msg: string): never {
     throw err
 }
 
+interface LoopLabels {
+    continueLbl: Label
+    breakLbl: Label
+}
+
 class Program implements InstrArgResolver {
     buffers = new VariableScope(null)
     roles = new VariableScope(this.buffers)
@@ -1095,6 +1107,7 @@ class Program implements InstrArgResolver {
     startDispatchers: DelayedCodeSection
     onStart: DelayedCodeSection
     packetBuffer: Buffer
+    loopStack: LoopLabels[] = []
 
     constructor(public host: Host, public source: string) {
         this.serviceSpecs = {}
@@ -1437,6 +1450,32 @@ class Program implements InstrArgResolver {
                 stmt.alternate ? () => this.emitStmt(stmt.alternate) : null
             )
         }
+    }
+
+    private emitWhileStatement(stmt: estree.WhileStatement) {
+        const wr = this.writer
+
+        const continueLbl = wr.mkLabel("whileCont")
+        const breakLbl = wr.mkLabel("whileBrk")
+
+        wr.emitLabel(continueLbl)
+
+        wr.push()
+        let cond = this.emitExpr(stmt.test)
+        this.requireRuntimeValue(stmt.test, cond)
+        cond = wr.forceReg(cond)
+        wr.emitJump(breakLbl, cond.index)
+        wr.pop()
+
+        try {
+            this.loopStack.push({ continueLbl, breakLbl })
+            this.emitStmt(stmt.body)
+        } finally {
+            this.loopStack.pop()
+        }
+
+        wr.emitJump(continueLbl)
+        wr.emitLabel(breakLbl)
     }
 
     private emitAckCloud(
@@ -1993,6 +2032,16 @@ class Program implements InstrArgResolver {
                 return values.zero
             }
 
+            case "setLength": {
+                this.requireArgs(expr, 1)
+                wr.push()
+                const len = this.emitSimpleValue(expr.arguments[0], CellKind.X_FLOAT)
+                wr.setPrefixReg(PrefixReg.A, len)
+                wr.pop()
+                wr.emitSync(OpSync.SETUP_BUFFER, 0, 0, 0, buf.encode())
+                return values.zero
+            }
+
             default:
                 throwError(expr, `can't find ${prop} on buffer`)
         }
@@ -2019,6 +2068,9 @@ class Program implements InstrArgResolver {
         let repeatsStart = -1
         let specIdx = 0
         const fields = pspec.fields
+
+        if (expr.arguments.length == 1 && idName(expr.arguments[0]) == "packet")
+            return
 
         const args = expr.arguments.map(arg => {
             if (specIdx >= fields.length) {
@@ -2920,6 +2972,8 @@ class Program implements InstrArgResolver {
                     return this.emitVariableDeclaration(stmt)
                 case "IfStatement":
                     return this.emitIfStatement(stmt)
+                case "WhileStatement":
+                    return this.emitWhileStatement(stmt)
                 case "BlockStatement":
                     stmt.body.forEach(s => this.emitStmt(s))
                     return
