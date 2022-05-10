@@ -56,7 +56,8 @@ if (x < 0.3) {
 
 Some builtin functions only take literal arguments (especially strings, and time values).
 
-The only jump statement supported is currently `return`. There are no loops.
+The only jump statement supported is currently `return`.
+Only `while` loop is supported.
 
 ## Logging and format strings
 
@@ -181,6 +182,68 @@ pot.position.onChange(0.02, () => {
 })
 ```
 
+## Buffers
+
+Buffers can be statically allocated, read and written.
+This can be used to conserve memory (regular variables always take 8 bytes)
+and create arrays (with fixed upper limit).
+
+```js
+var mybuf = buffer(12) // 12 byte buffer
+mybuf.setAt(10, "u16", 123)
+mybuf.setAt(3, "u22.10", 173.282)
+var z = mybuf.getAt(3, "u22.10")
+```
+
+There is a special buffer called `packet` which represents a buffer to be passed to next
+command or register write.
+It supports `packets.setLength()` function (unlike regular buffers),
+and can be passed to any command or register write.
+For example `lamp.brightness.write(0.7)` is equivalent to:
+
+```js
+packet.setLength(2)
+packet.setAt(0, "u0.16", 0.7)
+lamp.brightness.write(packet)
+```
+
+## User-defined functions
+
+User-defined functions are allowed at the top-level, using `function foo(x, y) { ... }` syntax.
+They are also allowed as event handlers using arrow syntax (see above).
+Nested functions and real first-class functions are not supported.
+
+Functions can return values.
+A plain `return` is equivalent to `return NaN`.
+
+Unused function are not compiled (and not checked for errors).
+
+Function parameters are numbers by default.
+A role can be also passed using syntax:
+
+```js
+function beep(/** @type BuzzerRole */ bz, len) {
+    bz.playNote(440, 0.7, len)
+}
+
+var b = roles.buzzer()
+beep(b, 10)
+```
+
+### Implementations of client commands
+
+Commands can be marked as `client` in the spec.
+These need to be implemented by assigning to properties of the `prototype` of the role.
+For example:
+
+```js
+BuzzerRole.prototype.playNote = function (frequency, volume, duration) {
+    var p = 1000000 / frequency
+    volume = clamp(0, volume, 1)
+    this.playTone(p, p * volume * 0.5, duration)
+}
+```
+
 ## Cloud
 
 Send a label + 0 or more numeric values.
@@ -262,6 +325,8 @@ The following math functions and constants are supported:
 * `Math.exp`
 * `Math.log10`
 * `Math.log2`
+* `Math.idiv` (integer division)
+* `Math.imul` (integer multiplication)
 * `Math.E`
 * `Math.PI`
 * `Math.LN10`
@@ -283,29 +348,6 @@ The `panic()` function takes a numeric error code and terminates or restarts the
 ```js
 panic(348)
 reboot()
-```
-
-### User-defined functions
-
-User-defined functions are allowed at the top-level, using `function foo(x, y) { ... }` syntax.
-They are also allowed as event handlers using arrow syntax (see above).
-Nested functions and real first-class functions are not supported.
-
-Functions can return values.
-A plain `return` is equivalent to `return NaN`.
-
-### Implementations of client commands
-
-Commands can be marked as `client` in the spec.
-These need to be implemented by assigning to properties of the `prototype` of the role.
-For example:
-
-```js
-BuzzerRole.prototype.playNote = function (frequency, volume, duration) {
-    var p = 1000000 / frequency
-    volume = clamp(0, volume, 1)
-    this.playTone(p, p * volume * 0.5, duration)
-}
 ```
 
 ## Random notes
