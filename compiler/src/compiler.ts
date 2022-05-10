@@ -3365,10 +3365,33 @@ class Program implements InstrArgResolver {
             }
         }
 
+        const clientSpecs: jdspec.ServiceSpec[] = []
+        for (const kn of Object.keys(this.clientCommands)) {
+            const lst = this.clientCommands[kn].filter(c => c.isFresh).map(c => c.pktSpec)
+            if (lst.length > 0) {
+                const s = this.clientCommands[kn][0].serviceSpec
+                clientSpecs.push({
+                    name: s.name,
+                    camelName: s.camelName,
+                    shortId: s.shortId,
+                    shortName: s.shortName,
+                    classIdentifier: s.classIdentifier,
+                    status: undefined,
+                    extends: undefined,
+                    notes: undefined,
+                    enums: undefined,
+                    tags: undefined,
+                    constants: undefined,
+                    packets: lst
+                })
+            }
+        }
+
         return {
             success: this.numErrors == 0,
             binary: b,
             dbg: dbg,
+            clientSpecs
         }
     }
 }
