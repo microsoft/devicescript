@@ -21,3 +21,5 @@ function test1() {
     if (false)
         a[b] = btn.pressure.read() // OK - if false
 }
+
+test1()

@@ -106,6 +106,7 @@ export enum CellKind {
     JD_VALUE_SEQ = 0x103,
     JD_CURR_BUFFER = 0x104,
     JD_COMMAND = 0x105,
+    JD_CLIENT_COMMAND = 0x106,
 
     X_STRING = 0x120,
     X_FP_REG = 0x121,

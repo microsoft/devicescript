@@ -294,6 +294,20 @@ Nested functions and real first-class functions are not supported.
 Functions can return values.
 A plain `return` is equivalent to `return NaN`.
 
+### Implementations of client commands
+
+Commands can be marked as `client` in the spec.
+These need to be implemented by assigning to properties of the `prototype` of the role.
+For example:
+
+```js
+BuzzerRole.prototype.playNote = function (frequency, volume, duration) {
+    var p = 1000000 / frequency
+    volume = clamp(0, volume, 1)
+    this.playTone(p, p * volume * 0.5, duration)
+}
+```
+
 ## Random notes
 
 ### Memory usage analysis

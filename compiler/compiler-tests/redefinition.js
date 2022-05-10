@@ -17,3 +17,4 @@ function qq() { } //! already defined
 function baz() { }
 function baz() { } //! already defined
 
+foo()

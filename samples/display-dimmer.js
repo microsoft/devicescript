@@ -9,8 +9,8 @@ pot.position.onChange(0.01, () => {
     ledD.brightness.write(p * 0.3)
 })
 
-function Led_setAll(/** @type LedRole */ ld, r, g, b) {
-    var buflen = ledD.numPixels.read() * 3
+LedRole.prototype.setAll = function (r, g, b) {
+    var buflen = this.numPixels.read() * 3
     var idx = 0
     packet.setLength(buflen)
     while (idx < buflen) {
@@ -19,17 +19,21 @@ function Led_setAll(/** @type LedRole */ ld, r, g, b) {
         packet.setAt(idx + 2, "u0.8", b)
         idx = idx + 3
     }
-    ld.pixels.write(packet)
+    this.pixels.write(packet)
+}
+
+LedRole.prototype.setAllColors = function (r, g, b) {
+    this.setAll(r, g, b)
 }
 
 ledD.onConnected(() => {
-    Led_setAll(ledD, 0.9, 1, 0)
+    ledD.setAllColors(0.9, 1, 0)
 })
 
 btn.down.subscribe(() => {
-    Led_setAll(ledD, 1, 0, 1)
+    ledD.setAll(1, 0, 1)
 })
 
 btn.up.subscribe(() => {
-    Led_setAll(ledD, 0, 0, 1)
+    ledD.setAll(0, 0, 1)
 })

@@ -7,13 +7,12 @@ function clamp(low, v, hi) {
     return v
 }
 
-
-function Buzzer_playNote(/** @type BuzzerRole */ bz, frequency, volume, duration) {
+BuzzerRole.prototype.playNote = function (frequency, volume, duration) {
     var p = 1000000 / frequency
     volume = clamp(0, volume, 1)
-    bz.playTone(p, p * volume * 0.5, duration)
+    this.playTone(p, p * volume * 0.5, duration)
 }
 
 btn.down.subscribe(() => {
-    Buzzer_playNote(buzzer, 440, 0.1, 200)
+    buzzer.playNote(440, 0.1, 200)
 })

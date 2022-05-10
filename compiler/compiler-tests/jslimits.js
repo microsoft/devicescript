@@ -13,3 +13,5 @@ function foo() {
 
 async function bar() { } //! async not supported
 function* baz() { } //! async not supported
+
+foo()

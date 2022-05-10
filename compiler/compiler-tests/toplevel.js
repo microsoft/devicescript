@@ -23,3 +23,5 @@ function baz() {
     q = 1 //! can't find
 }
 
+foo()
+baz()

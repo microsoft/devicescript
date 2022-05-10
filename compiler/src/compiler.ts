@@ -84,6 +84,58 @@ function strlen(s: string | ValueDesc) {
     return toUTF8(s).length
 }
 
+// inverse of camelize()
+// setAll -> set_all
+export function snakify(s: string) {
+    const up = s.toUpperCase()
+    const lo = s.toLowerCase()
+
+    // if the name is all lowercase or all upper case don't do anything
+    if (s == up || s == lo)
+        return s
+
+    // if the name already has underscores (not as first character), leave it alone
+    if (s.lastIndexOf("_") > 0)
+        return s
+
+    const isUpper = (i: number) => s[i] != lo[i]
+    const isLower = (i: number) => s[i] != up[i]
+    //const isDigit = (i: number) => /\d/.test(s[i])
+
+    let r = ""
+    let i = 0
+    while (i < s.length) {
+        let upperMode = isUpper(i)
+        let j = i
+        while (j < s.length) {
+            if (upperMode && isLower(j)) {
+                // ABCd -> AB_Cd
+                if (j - i > 2) {
+                    j--
+                    break
+                } else {
+                    // ABdefQ -> ABdef_Q
+                    upperMode = false
+                }
+            }
+            // abcdE -> abcd_E
+            if (!upperMode && isUpper(j)) {
+                break
+            }
+            j++
+        }
+        if (r) r += "_"
+        r += s.slice(i, j)
+        i = j
+    }
+
+    // If the name is is all caps (like a constant), preserve it
+    if (r.toUpperCase() === r) {
+        return r;
+    }
+    return r.toLowerCase();
+}
+
 export function camelize(name: string) {
     if (!name) return name
     return (
@@ -190,7 +242,10 @@ class Role extends Cell {
         _name?: string
     ) {
         super(definition, scope)
-        if (_name) this._name = _name
+        if (_name) {
+            this._name = _name
+            scope._addToMap(this)
+        }
         assert(!!spec)
         this.stringIndex = prog.addString(this.getName())
     }
@@ -292,13 +347,10 @@ class Buffer extends Cell {
 class FunctionDecl extends Cell {
     proc: Procedure
     constructor(
-        parent: Program,
         definition: estree.FunctionDeclaration,
         scope: VariableScope
     ) {
         super(definition, scope)
-        this.proc = new Procedure(parent, this.getName())
-        this.proc.numargs = definition.params.length
     }
     value(): ValueDesc {
         return { kind: CellKind.X_FUNCTION, index: null, fun: this }
@@ -314,6 +366,7 @@ interface ValueDesc {
     role?: Role
     variable?: Variable
     buffer?: Buffer
+    clientCommand?: ClientCommand
     fun?: FunctionDecl
     spec?: jdspec.PacketInfo
     litValue?: number
@@ -1060,6 +1113,7 @@ enum RefreshMS {
 
 type Expr = estree.Expression | estree.Super | estree.SpreadElement
 type Stmt = estree.Statement | estree.Directive | estree.ModuleDeclaration
+type FunctionLike = estree.FunctionDeclaration | estree.ArrowFunctionExpression | estree.FunctionExpression
 
 const mathConst: SMap<number> = {
     E: Math.E,
@@ -1083,6 +1137,15 @@ interface LoopLabels {
     breakLbl: Label
 }
 
+class ClientCommand {
+    defintion: estree.FunctionExpression
+    jsName: string
+    pktSpec: jdspec.PacketInfo
+    isFresh: boolean
+    proc: Procedure
+    constructor(public serviceSpec: jdspec.ServiceSpec) { }
+}
+
 class Program implements InstrArgResolver {
     buffers = new VariableScope(null)
     roles = new VariableScope(this.buffers)
@@ -1096,6 +1159,7 @@ class Program implements InstrArgResolver {
     proc: Procedure
     sysSpec: jdspec.ServiceSpec
     serviceSpecs: Record<string, jdspec.ServiceSpec>
+    clientCommands: Record<string, ClientCommand[]> = {}
     refreshMS: number[] = [0, 500]
     resolverParams: number[]
     resolverPC: number
@@ -1108,6 +1172,7 @@ class Program implements InstrArgResolver {
     onStart: DelayedCodeSection
     packetBuffer: Buffer
     loopStack: LoopLabels[] = []
+    compileAll = false
 
     constructor(public host: Host, public source: string) {
         this.serviceSpecs = {}
@@ -1343,7 +1408,7 @@ class Program implements InstrArgResolver {
     }
 
     private forceName(
-        pat: estree.Expression | estree.Pattern | estree.PrivateIdentifier
+        pat: estree.Expression | estree.Pattern | estree.PrivateIdentifier | estree.Super
     ) {
         const r = idName(pat)
         if (!r) throwError(pat, "only simple identifiers supported")
@@ -1536,10 +1601,27 @@ class Program implements InstrArgResolver {
         this.writer.emitJump(this.writer.ret)
     }
 
-    private emitParameters(
-        stmt: estree.FunctionDeclaration | estree.ArrowFunctionExpression,
+    private specFromTypeName(expr: Expr, tp: string) {
+        if (tp.endsWith("Role") && tp[0].toUpperCase() == tp[0]) {
+            let r = tp.slice(0, -4)
+            r = r[0].toLowerCase() + r.slice(1)
+            return this.lookupRoleSpec(expr, r)
+        } else {
+            throwError(expr, "type name not understood: " + tp)
+        }
+    }
+
+    private emitFunctionBody(
+        stmt: estree.FunctionDeclaration | estree.FunctionExpression,
         proc: Procedure
     ) {
+        const wr = this.writer
+        this.emitStmt(stmt.body)
+        wr.emitLabel(wr.ret)
+        wr.emitSync(OpSync.RETURN)
+    }
+
+    private emitParameters(stmt: FunctionLike, proc: Procedure) {
         for (const paramdef of stmt.params) {
             if (paramdef.type != "Identifier")
                 throwError(
@@ -1557,17 +1639,13 @@ class Program implements InstrArgResolver {
             }
 
             if (tp) {
-                if (tp.endsWith("Role") && tp[0].toUpperCase() == tp[0]) {
-                    let r = tp.slice(0, -4)
-                    r = r[0].toLowerCase() + r.slice(1)
-                    const spec = this.lookupRoleSpec(paramdef, r)
+                if (tp == "number") {
+                    // OK!
+                } else {
+                    const spec = this.specFromTypeName(paramdef, tp)
                     const v = new Role(this, paramdef, proc.locals, spec)
                     v.isLocal = true
                     continue
-                } else if (tp == "number") {
-                    // OK!
-                } else {
-                    throwError(paramdef, "invalid type: " + tp)
                 }
             }
 
@@ -1579,6 +1657,38 @@ class Program implements InstrArgResolver {
             throwError(stmt.params[7], "too many arguments")
     }
 
+    private getClientCommandProc(cc: ClientCommand) {
+        if (cc.proc) return cc.proc
+
+        const stmt = cc.defintion
+        cc.proc = new Procedure(this, cc.serviceSpec.camelName + "." + cc.jsName)
+        cc.proc.numargs = 1 + stmt.params.length
+
+        this.withProcedure(cc.proc, wr => {
+            const v = new Role(this, null, cc.proc.locals, cc.serviceSpec, "this")
+            v.isLocal = true
+            this.emitParameters(stmt, cc.proc)
+            this.emitFunctionBody(stmt, cc.proc)
+        })
+
+        return cc.proc
+    }
+
+    private getFunctionProc(fundecl: FunctionDecl) {
+        if (fundecl.proc) return fundecl.proc
+        const stmt = fundecl.definition as estree.FunctionDeclaration
+
+        fundecl.proc = new Procedure(this, fundecl.getName())
+        fundecl.proc.numargs = stmt.params.length
+
+        this.withProcedure(fundecl.proc, wr => {
+            this.emitParameters(stmt, fundecl.proc)
+            this.emitFunctionBody(stmt, fundecl.proc)
+        })
+
+        return fundecl.proc
+    }
+
     private emitFunctionDeclaration(stmt: estree.FunctionDeclaration) {
         const fundecl = this.functions.list.find(
             f => f.definition === stmt
@@ -1587,14 +1697,9 @@ class Program implements InstrArgResolver {
             throwError(stmt, "only top-level functions are supported")
         if (stmt.generator || stmt.async)
             throwError(stmt, "async not supported")
-        if (!fundecl && this.numErrors) return
-
-        this.withProcedure(fundecl.proc, wr => {
-            this.emitParameters(stmt, fundecl.proc)
-            this.emitStmt(stmt.body)
-            wr.emitLabel(wr.ret)
-            wr.emitSync(OpSync.RETURN)
-        })
+        assert(!!fundecl || !!this.numErrors)
+        if (this.compileAll && fundecl)
+            this.getFunctionProc(fundecl)
     }
 
     private isTopLevel(node: estree.Node) {
@@ -1630,7 +1735,7 @@ class Program implements InstrArgResolver {
                                 s,
                                 `function name '${n}' is reserved`
                             )
-                        new FunctionDecl(this, s, this.functions)
+                        new FunctionDecl(s, this.functions)
                         break
                     case "VariableDeclaration":
                         for (const decl of s.declarations) {
@@ -1925,7 +2030,9 @@ class Program implements InstrArgResolver {
                 return values.zero
             default:
                 const v = this.emitRoleMember(expr.callee, role)
-                if (v.kind == CellKind.JD_COMMAND) {
+                if (v.kind == CellKind.JD_CLIENT_COMMAND) {
+                    return this.emitProcCall(expr, this.getClientCommandProc(v.clientCommand), true)
+                } else if (v.kind == CellKind.JD_COMMAND) {
                     this.emitPackArgs(expr, v.spec)
                     this.writer.emitAsyncWithRole(
                         OpAsync.SEND_CMD,
@@ -2449,6 +2556,27 @@ class Program implements InstrArgResolver {
         return res
     }
 
+    private emitProcCall(expr: estree.CallExpression, proc: Procedure, isMember = false) {
+        const wr = this.writer
+        const args = expr.arguments.slice()
+        if (isMember) {
+            this.requireArgs(expr, proc.numargs - 1)
+            if (expr.callee.type == "MemberExpression")
+                args.unshift(expr.callee.object as estree.Expression)
+            else
+                assert(false)
+        } else {
+            this.requireArgs(expr, proc.numargs)
+        }
+        wr.push()
+        this.emitArgs(args, proc.args())
+        wr.pop()
+        wr.emitCall(proc)
+        const r = wr.allocReg()
+        wr.emitMov(r.index, 0)
+        return r
+    }
+
     private emitCallExpression(expr: estree.CallExpression): ValueDesc {
         const wr = this.writer
         if (expr.callee.type == "MemberExpression") {
@@ -2481,14 +2609,7 @@ class Program implements InstrArgResolver {
         if (!reservedFunctions[funName]) {
             const d = this.functions.lookup(funName) as FunctionDecl
             if (d) {
-                this.requireArgs(expr, d.proc.numargs)
-                wr.push()
-                this.emitArgs(expr.arguments, d.proc.args())
-                wr.pop()
-                wr.emitCall(d.proc)
-                const r = wr.allocReg()
-                wr.emitMov(r.index, 0)
-                return r
+                return this.emitProcCall(expr, this.getFunctionProc(d))
             } else {
                 throwError(expr, `can't find function '${funName}'`)
             }
@@ -2586,6 +2707,12 @@ class Program implements InstrArgResolver {
         return cell.value()
     }
 
+    private emitThisExpression(expr: estree.ThisExpression): ValueDesc {
+        const cell = this.proc.locals.lookup("this")
+        if (!cell) throwError(expr, "'this' cannot be used here")
+        return cell.value()
+    }
+
     private matchesSpecName(pi: jdspec.PacketInfo, id: string) {
         return matchesName(pi.name, id)
     }
@@ -2593,6 +2720,24 @@ class Program implements InstrArgResolver {
     private emitRoleMember(expr: estree.MemberExpression, role: Role) {
         const propName = this.forceName(expr.property)
         let r: ValueDesc
+
+        const setKind = (p: jdspec.PacketInfo, id: CellKind) => {
+            assert(!r)
+            r = {
+                kind: id,
+                index: p.identifier,
+                role,
+                spec: p
+            }
+        }
+
+        for (const cmd of this.clientCommands[role.spec.camelName] ?? []) {
+            if (this.matchesSpecName(cmd.pktSpec, propName)) {
+                setKind(cmd.pktSpec, CellKind.JD_CLIENT_COMMAND)
+                r.clientCommand = cmd
+                return r
+            }
+        }
 
         let generic: jdspec.PacketInfo
         for (const p of this.sysSpec.packets) {
@@ -2604,26 +2749,20 @@ class Program implements InstrArgResolver {
                 this.matchesSpecName(p, propName) ||
                 (generic?.identifier == p.identifier && generic?.kind == p.kind)
             ) {
-                const setKind = (id: CellKind) => {
-                    assert(!r)
-                    r = {
-                        kind: id,
-                        index: p.identifier,
-                        role,
-                        spec: p
-                    }
-                }
                 if (isRegister(p)) {
-                    setKind(CellKind.JD_REG)
+                    setKind(p, CellKind.JD_REG)
                 }
                 if (isEvent(p)) {
-                    setKind(CellKind.JD_EVENT)
+                    setKind(p, CellKind.JD_EVENT)
                 }
                 if (isCommand(p)) {
-                    setKind(CellKind.JD_COMMAND)
+                    setKind(p, CellKind.JD_COMMAND)
                 }
             }
         }
+
+        if (r?.spec?.client)
+            throwError(expr, `client packet '${r.spec.name}' not implemented on ${role.spec.camelName}`)
 
         if (!r)
             throwError(
@@ -2764,11 +2903,80 @@ class Program implements InstrArgResolver {
         }
     }
 
+    private emitPrototypeUpdate(
+        expr: estree.AssignmentExpression
+    ): ValueDesc {
+        if (expr.left.type != "MemberExpression" ||
+            expr.left.object.type != "MemberExpression" ||
+            idName(expr.left.object.property) != "prototype")
+            return null
+
+        const clName = this.forceName(expr.left.object.object)
+        const spec = this.specFromTypeName(expr.left.object.object, clName)
+        const fnName = this.forceName(expr.left.property)
+        if (expr.right.type != "FunctionExpression")
+            throwError(expr.right, "expecting 'function (...) { }' here")
+
+        const cmd = new ClientCommand(spec)
+        cmd.defintion = expr.right
+        cmd.jsName = fnName
+
+        const fn = expr.right
+        cmd.pktSpec = spec.packets.filter(p => p.kind == "command" && matchesName(p.name, fnName))[0]
+        const paramNames = fn.params.map(p => this.forceName(p))
+        if (cmd.pktSpec) {
+            if (!cmd.pktSpec.client)
+                throwError(expr.left, "only 'client' commands can be implemented")
+            const flds = cmd.pktSpec.fields
+            if (paramNames.length != flds.length)
+                throwError(fn, `expecting ${flds.length} parameter(s); got ${paramNames.length}`)
+            for (let i = 0; i < flds.length; ++i) {
+                const f = flds[i]
+                if (f.storage == 0)
+                    throwError(fn, `client command has non-numeric parameter ${f.name}`)
+                if (paramNames.findIndex(p => p == f.name || matchesName(f.name, p)) != i)
+                    throwError(fn, `parameter ${f.name} found at wrong index`)
+            }
+        } else {
+            cmd.pktSpec = {
+                kind: "command",
+                description: '',
+                client: true,
+                identifier: 0x10000 + Object.keys(this.clientCommands).length,
+                name: snakify(fnName),
+                fields: fn.params.map(p => ({
+                    name: this.forceName(p),
+                    type: "f64",
+                    storage: 8,
+                }))
+            }
+            cmd.isFresh = true
+            if (spec.packets.some(p => p.name == cmd.pktSpec.name))
+                throwError(expr.left, `'${cmd.pktSpec.name}' already exists on ${spec.camelName}`)
+        }
+
+        let lst = this.clientCommands[spec.camelName]
+        if (!lst)
+            lst = this.clientCommands[spec.camelName] = []
+        if (lst.some(e => e.pktSpec.name == cmd.pktSpec.name))
+            throwError(expr.left, `${cmd.pktSpec.name} already implemented on ${spec.camelName}`)
+        lst.push(cmd)
+
+        if (this.compileAll)
+            this.getClientCommandProc(cmd)
+
+        return values.zero
+    }
+
     private emitAssignmentExpression(
         expr: estree.AssignmentExpression
     ): ValueDesc {
         if (expr.operator != "=")
             throwError(expr, "only simple assignment supported")
+
+        const res = this.emitPrototypeUpdate(expr)
+        if (res) return res
+
         const src = this.emitExpr(expr.right)
         const wr = this.writer
         let left = expr.left
@@ -2916,6 +3124,8 @@ class Program implements InstrArgResolver {
                 return this.emitCallExpression(expr)
             case "Identifier":
                 return this.emitIdentifier(expr)
+            case "ThisExpression":
+                return this.emitThisExpression(expr)
             case "MemberExpression":
                 return this.emitMemberExpression(expr)
             case "Literal":
