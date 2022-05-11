@@ -65,6 +65,7 @@ import {
     SectionWriter,
     TopOpWriter,
 } from "./opwriter"
+import { prelude } from "./prelude"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -403,6 +404,11 @@ class ClientCommand {
     constructor(public serviceSpec: jdspec.ServiceSpec) {}
 }
 
+interface Position {
+    range?: [number, number]
+    rangeFile?: string
+}
+
 class Program implements TopOpWriter {
     buffers = new VariableScope(null)
     roles = new VariableScope(this.buffers)
@@ -431,12 +437,17 @@ class Program implements TopOpWriter {
     loopStack: LoopLabels[] = []
     compileAll = false
 
-    constructor(public host: Host, public source: string) {
+    constructor(public host: Host, public _source: string) {
         this.serviceSpecs = {}
         for (const sp of host.getSpecs()) {
             this.serviceSpecs[sp.camelName] = sp as any
         }
         this.sysSpec = this.serviceSpecs["system"]
+    }
+
+    getSource(fn: string) {
+        if (!fn || fn == this.host.mainFileName?.()) return this._source
+        return prelude[fn] || ""
     }
 
     addString(str: string) {
@@ -447,24 +458,26 @@ class Program implements TopOpWriter {
         return addUnique(this.floatLiterals, f)
     }
 
-    indexToLine(idx: number) {
-        const s = this.source.slice(0, idx)
+    indexToLine(pos: Position) {
+        // TODO
+        const s = this.getSource(pos.rangeFile).slice(0, pos.range[0])
         return s.replace(/[^\n]/g, "").length + 1
     }
 
-    indexToPos(idx: number) {
-        const s = this.source.slice(0, idx)
+    indexToPos(pos: Position) {
+        const s = this.getSource(pos.rangeFile).slice(0, pos.range[0])
         const line = s.replace(/[^\n]/g, "").length + 1
-        const column = s.replace(/.*\n/, "").length + 1
+        const column = s.replace(/[^]*\n/, "").length + 1
         return { line, column }
     }
 
-    reportError(range: number[], msg: string): ValueDesc {
+    reportError(pos: Position, msg: string): ValueDesc {
         this.numErrors++
         const err: JacError = {
-            ...this.indexToPos(range[0]),
+            ...this.indexToPos(pos),
+            filename: pos.rangeFile || "",
             message: msg,
-            codeFragment: this.sourceFrag(range),
+            codeFragment: this.sourceFrag(pos),
         }
         ;(this.host.error || printJacError)(err)
         return values.error
@@ -501,9 +514,15 @@ class Program implements TopOpWriter {
                 proc,
                 top: proc.writer.mkLabel("disp_top"),
                 init: new DelayedCodeSection("init", proc.writer),
-                disconnected: new DelayedCodeSection("disconnected", proc.writer),
+                disconnected: new DelayedCodeSection(
+                    "disconnected",
+                    proc.writer
+                ),
                 connected: new DelayedCodeSection("connected", proc.writer),
-                checkConnected: new DelayedCodeSection("checkConnected", proc.writer),
+                checkConnected: new DelayedCodeSection(
+                    "checkConnected",
+                    proc.writer
+                ),
                 wasConnected: proc.mkTempLocal("connected_" + role.getName()),
             }
             this.withProcedure(proc, wr => {
@@ -901,7 +920,9 @@ class Program implements TopOpWriter {
 
             const idx = paramdef.range?.[0]
             if (idx) {
-                const pref = this.source.slice(0, idx).replace(/.*\n/, "")
+                const pref = this.getSource((paramdef as Position).rangeFile)
+                    .slice(Math.max(0, idx - 40), idx)
+                    .replace(/.*\n/, "")
                 const m = /\/\*\*\s*@type\s+(.*?)\s*\*\/\s*$/.exec(pref)
                 if (m) tp = m[1]
             }
@@ -1117,7 +1138,9 @@ class Program implements TopOpWriter {
         let [a, b] = node.range || []
         if (!b) return ""
         if (b - a > 30) b = a + 30
-        return this.source.slice(a, b).replace(/[^a-zA-Z0-9_]+/g, "_")
+        return this.getSource((node as Position).rangeFile)
+            .slice(a, b)
+            .replace(/[^a-zA-Z0-9_]+/g, "_")
     }
 
     private requireArgs(expr: estree.CallExpression, num: number) {
@@ -2435,12 +2458,14 @@ class Program implements TopOpWriter {
         }
     }
 
-    private sourceFrag(range: number[]) {
-        if (range) {
-            let [startp, endp] = range
+    private sourceFrag(pos: Position) {
+        if (pos?.range) {
+            let [startp, endp] = pos.range
             if (endp === undefined) endp = startp + 60
             endp = Math.min(endp, startp + 60)
-            return this.source.slice(startp, endp).replace(/\n[^]*/, "...")
+            return this.getSource(pos.rangeFile)
+                .slice(startp, endp)
+                .replace(/\n[^]*/, "...")
         }
 
         return null
@@ -2449,20 +2474,20 @@ class Program implements TopOpWriter {
     private handleException(stmt: estree.BaseNode, e: any) {
         if (e.sourceNode !== undefined) {
             const node = e.sourceNode || stmt
-            this.reportError(node.range, e.message)
+            this.reportError(node, e.message)
             // console.log(e.stack)
         } else {
-            this.reportError(stmt.range, "Internal error: " + e.message)
+            this.reportError(stmt, "Internal error: " + e.message)
             console.log(e.stack)
         }
     }
 
     private emitStmt(stmt: Stmt) {
-        const src = this.sourceFrag(stmt.range)
+        const src = this.sourceFrag(stmt)
         const wr = this.writer
         if (src) wr.emitComment(src)
 
-        wr.stmtStart(this.indexToLine(stmt.range[0]))
+        wr.stmtStart(this.indexToLine(stmt))
 
         const scopes = wr.numScopes()
         wr.push()
@@ -2620,16 +2645,39 @@ class Program implements TopOpWriter {
     }
 
     emit() {
-        try {
-            this.tree = esprima.parseScript(this.source, {
-                // tolerant: true,
-                range: true,
-            })
-        } catch (e) {
-            if (e.description) this.reportError([e.index], e.description)
-            else throw e
-            return
-        }
+        const files = Object.keys(prelude)
+        files.push(this.host.mainFileName?.() || "")
+
+        assert(!this.tree)
+
+        const trees = files.map(fn => {
+            try {
+                const tree = esprima.parseScript(
+                    this.getSource(fn),
+                    {
+                        // tolerant: true,
+                        range: true,
+                        comment: true,
+                    },
+                    (node, meta) => {
+                        ;(node as Position).rangeFile = fn
+                    }
+                )
+                if (this.tree == null) this.tree = tree
+                else {
+                    this.tree.body.push(...tree.body)
+                    this.tree.comments.push(...tree.comments)
+                }
+            } catch (e) {
+                if (e.description)
+                    this.reportError(
+                        { rangeFile: fn, range: [e.index, e.index + 1] },
+                        e.description
+                    )
+                else throw e
+                return null
+            }
+        })
 
         this.emitProgram(this.tree)
 
@@ -2648,7 +2696,7 @@ class Program implements TopOpWriter {
             roles: this.roles.list.map(r => r.debugInfo()),
             functions: this.procs.map(p => p.debugInfo()),
             globals: this.globals.list.map(r => r.debugInfo()),
-            source: this.source,
+            source: this._source,
         }
         this.host.write("prog.jacs", b)
         this.host.write("prog-dbg.json", JSON.stringify(dbg))
@@ -2657,7 +2705,7 @@ class Program implements TopOpWriter {
             try {
                 this.host?.verifyBytecode(b, dbg)
             } catch (e) {
-                this.reportError([0, this.source.length], e.message)
+                this.reportError({ rangeFile: "", range: [0, 1] }, e.message)
             }
         }
 
@@ -2713,6 +2761,7 @@ export function testCompiler(host: Host, code: string) {
             log: msg => {},
             getSpecs: host.getSpecs,
             verifyBytecode: host.verifyBytecode,
+            mainFileName: host.mainFileName,
             error: err => {
                 const exp = lines[err.line - 1]
                 if (exp && err.message.indexOf(exp) >= 0)
@@ -2730,6 +2779,7 @@ export function testCompiler(host: Host, code: string) {
     for (let i = 0; i < lines.length; ++i) {
         if (lines[i]) {
             printJacError({
+                filename: host.mainFileName?.() || "",
                 line: i + 1,
                 column: 1,
                 message: "missing error: " + lines[i],

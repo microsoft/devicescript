@@ -562,12 +562,14 @@ export function emptyDebugInfo(): DebugInfo {
 export interface Host {
     write(filename: string, contents: Uint8Array | string): void
     log(msg: string): void
+    mainFileName?(): string
     error?(err: JacError): void
     getSpecs(): jdspec.ServiceSpec[]
     verifyBytecode?(buf: Uint8Array, dbgInfo?: DebugInfo): void
 }
 
 export interface JacError {
+    filename: string
     line: number
     column: number
     message: string
@@ -575,7 +577,7 @@ export interface JacError {
 }
 
 export function printJacError(err: JacError) {
-    let msg = `(${err.line},${err.column}): ${err.message}`
+    let msg = `${err.filename || ""}(${err.line},${err.column}): ${err.message}`
     if (err.codeFragment) msg += ` (${err.codeFragment})`
     console.error(msg)
 }

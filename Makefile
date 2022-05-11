@@ -95,7 +95,7 @@ em: $(VM_FILE)
 
 comp: compiler/node_modules/typescript compiler/built/compiler/src/jacscript.js
 
-compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts)
+compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.js)
 	cd compiler && node build.js
 
 comp-fast:

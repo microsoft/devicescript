@@ -11,6 +11,7 @@ let verbose = false
 let useC = false
 let testMode = false
 let doDeploy = false
+let jacsFile = ""
 
 let jacsHost
 async function getHost() {
@@ -22,6 +23,7 @@ async function getHost() {
         write: (fn, cont) =>
             fs.writeFileSync(path.join(distPath, fn), cont),
         log: msg => { if (verbose) console.log(msg) },
+        mainFileName: () => jacsFile,
         getSpecs: () => specs,
         verifyBytecode: buf => {
             if (useC) return
@@ -45,6 +47,7 @@ async function readCompiled(fn) {
     const buf = fs.readFileSync(fn)
     if (buf.slice(0, 8).toString("hex") == "4a6163530a7e6a9a")
         return buf
+    jacsFile = fn
     return await compile(buf)
 }
 
@@ -161,6 +164,7 @@ async function main() {
             const jacscript = require("./compiler")
             for (const fn of readdir(ctest).concat(readdir(samples))) {
                 console.log(`*** test ${fn}`)
+                jacsFile = fn
                 jacscript.testCompiler(host, fs.readFileSync(fn, "utf8"))
             }
 

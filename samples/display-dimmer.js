@@ -9,18 +9,6 @@ pot.position.onChange(0.01, () => {
     ledD.brightness.write(p * 0.3)
 })
 
-LedRole.prototype.setAll = function (r, g, b) {
-    var buflen = this.numPixels.read() * 3
-    var idx = 0
-    packet.setLength(buflen)
-    while (idx < buflen) {
-        packet.setAt(idx, "u0.8", r)
-        packet.setAt(idx + 1, "u0.8", g)
-        packet.setAt(idx + 2, "u0.8", b)
-        idx = idx + 3
-    }
-    this.pixels.write(packet)
-}
 
 LedRole.prototype.setAllColors = function (r, g, b) {
     this.setAll(r, g, b)

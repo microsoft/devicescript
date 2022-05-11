@@ -61,8 +61,31 @@ const files = {
   "built/jacscript-compiler.node.cjs": "src/jacscript.ts",
 }
 
+function buildPrelude(folder, outp) {
+  const files = fs.readdirSync(folder)
+  files.sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
+  let r = 'export const prelude: Record<string, string> = {\n'
+  for (const fn of files) {
+    r += `    "${fn}":\n\``
+    const lines = fs.readFileSync(folder + "/" + fn, "utf-8").split(/\r?\n/)
+    while (lines[lines.length - 1] == "")
+      lines.pop()
+    for (const ln of lines) {
+      r += ln.replace(/[$`\\]/g, x => "\\" + x) + "\n"
+    }
+    r += "`,\n"
+  }
+  r += "}\n"
+  const curr = fs.readFileSync(outp, "utf-8")
+  if (curr != r) {
+    console.log("updating " + outp)
+    fs.writeFileSync(outp, r)
+  }
+}
+
 async function main() {
   try {
+    buildPrelude("lib", "src/prelude.ts")
     for (const outfile of Object.keys(files)) {
       const src = files[outfile]
       const cjs = outfile.endsWith(".cjs")
