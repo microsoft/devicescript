@@ -61,24 +61,26 @@ Only `while` loop is supported.
 
 ## Logging and format strings
 
-The `console.log()` function takes a literal string, and optionally format arguments.
+The `console.log()` takes zero or more arguments, each of which is a string or a number.
+Compiler internally constructs a format string (see below).
 
 ```js
 console.log("Hello world")
-console.log("X is {0} and Y is {1}", x, y)
+console.log("X is", x, "and Y is", y)
+console.log("X=", x, "Y=", y)
 ```
 
+The compiler is smart about adding spaces (the second and third examples will print `X is 7 and Y is 12`
+and `X=7 Y=12`).
+
+You can also use the `format()` function directly, either with `console.log()` or
+when setting string registers.
 Arguments are `{0}`, `{1}`, ..., `{9}`, `{A}`, `{B}`, ..., `{F}`.
 A second digit can be supplied to specify precision (though this doesn't work so well yet):
 
 ```js
-console.log("X = {04}", x)
-```
-
-Some functions that take string literals also accept `format()` function, using the same formatting strings as `console.log()`,
-for example:
-
-```js
+console.log(format("X is {0} and Y is {1}", x, y))
+console.log(format("X = {04}", x))
 charDisplay.message.write(format("X is {0}", x))
 ```
 
@@ -364,8 +366,6 @@ Main dynamic memory usage - function activation records (and fibers).
 
 * `role.control` -> control service of device that has this role ?
 * role for control service of the brain (to set status light, reset, etc)
-* `console.log("foo", 1, 2)`; `console.log(format("foo {0} {1}", 1, 2))`
-* use `{comments: true}` in esprima?
 
 * disallow top-level code?
 * add opcode to cache current packet (in onChanged())

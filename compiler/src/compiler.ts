@@ -459,7 +459,6 @@ class Program implements TopOpWriter {
     }
 
     indexToLine(pos: Position) {
-        // TODO
         const s = this.getSource(pos.rangeFile).slice(0, pos.range[0])
         return s.replace(/[^\n]/g, "").length + 1
     }
@@ -1751,6 +1750,7 @@ class Program implements TopOpWriter {
     }
 
     private emitCloud(expr: estree.CallExpression, fnName: string): ValueDesc {
+        const arg0 = expr.arguments[0]
         switch (fnName) {
             case "cloud.upload":
                 const spec = this.cloudRole.spec.packets.find(
@@ -1782,11 +1782,37 @@ class Program implements TopOpWriter {
                 return values.zero
             case "console.log":
                 this.writer.push()
-                this.writer.emitAsync(
-                    OpAsync.LOG_FORMAT,
-                    this.emitFmtArgs(expr),
-                    expr.arguments.length - 1
-                )
+                if (
+                    expr.arguments.length == 1 &&
+                    arg0.type == "CallExpression" &&
+                    idName(arg0.callee) == "format"
+                ) {
+                    this.writer.emitAsync(
+                        OpAsync.LOG_FORMAT,
+                        this.emitFmtArgs(arg0),
+                        arg0.arguments.length - 1
+                    )
+                } else {
+                    let fmt = ""
+                    const fmtargs = []
+                    for (const arg of expr.arguments) {
+                        if (fmt && !/[=:]$/.test(fmt)) fmt += " "
+                        const str = this.stringLiteral(arg)
+                        if (str) {
+                            fmt += str
+                        } else {
+                            fmt += `{${fmtargs.length}}`
+                            fmtargs.push(arg)
+                        }
+                    }
+                    const v = this.writer.emitString(fmt)
+                    this.emitArgs(fmtargs)
+                    this.writer.emitAsync(
+                        OpAsync.LOG_FORMAT,
+                        v.index,
+                        fmtargs.length
+                    )
+                }
                 this.writer.pop()
                 return values.zero
             default:

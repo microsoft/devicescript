@@ -5,7 +5,7 @@ var p
 
 pot.position.onChange(0.02, () => {
     p = pot.position.read()
-    console.log("tick {0}", p)
+    console.log("tick", p)
     led.brightness.write(p)
 })
 
@@ -14,5 +14,5 @@ led.brightness.onChange(0.1, () => {
 })
 
 every(0.2, () => {
-    console.log("lb {0}", led.brightness.read())
+    console.log("lb", led.brightness.read())
 })

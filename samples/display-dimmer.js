@@ -5,7 +5,7 @@ var p
 
 pot.position.onChange(0.01, () => {
     p = pot.position.read()
-    console.log("tick {0}", p)
+    console.log("tick", p)
     ledD.brightness.write(p * 0.3)
 })
 

@@ -8,14 +8,14 @@ function isClose(x, y) {
     var d = Math.abs(x - y)
     if (d < 0.00000001 || d / Math.abs(x + y) < 0.00001)
         return
-    console.log("{0} != {1} !", x, y)
+    console.log(x, " != ", y, "!")
     panic(108)
 }
 
 function isEq(x, y) {
-    // console.log("{0} == {1}?", x, y)
+    // console.log(x, " == ", y, "?")
     if (x != y) {
-        console.log("fail: {0} != {1}", x, y)
+        console.log(format("fail: {0} != {1}", x, y))
         panic(109)
     }
 }
@@ -58,7 +58,7 @@ function testFlow() {
     if (x < 0 || x > 1 || isNaN(x))
         panic(5)
     x = 42
-    console.log("rand={0}", Math.random())
+    console.log("rand=", Math.random())
 }
 
 function testMath() {
@@ -148,7 +148,7 @@ function lazyX(v) {
 
 function checkX(v) {
     if (x != v) {
-        console.log("{0} != {1} !!", x, v)
+        console.log(format("{0} != {1} !!", x, v))
         panic(11)
     }
     x = 0
