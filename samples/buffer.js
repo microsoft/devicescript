@@ -1,7 +1,9 @@
 var b = buffer(20)
 
+// comment
 function testBuffer() {
-    b.setAt(8, "u22.10", 173.282)
+    // test cmt
+    b.setAt(8, /* cmt */ "u22.10", 173.282)
     var z = b.getAt(4, "u32")
 }
 

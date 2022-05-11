@@ -362,7 +362,6 @@ Main dynamic memory usage - function activation records (and fibers).
 
 ## TODO
 
-* add prelude file(s) (with client commands and other utils)
 * `role.control` -> control service of device that has this role ?
 * role for control service of the brain (to set status light, reset, etc)
 * `console.log("foo", 1, 2)`; `console.log(format("foo {0} {1}", 1, 2))`

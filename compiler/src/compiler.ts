@@ -2650,7 +2650,7 @@ class Program implements TopOpWriter {
 
         assert(!this.tree)
 
-        const trees = files.map(fn => {
+        for (const fn of files) {
             try {
                 const tree = esprima.parseScript(
                     this.getSource(fn),
@@ -2675,9 +2675,8 @@ class Program implements TopOpWriter {
                         e.description
                     )
                 else throw e
-                return null
             }
-        })
+        }
 
         this.emitProgram(this.tree)
 
