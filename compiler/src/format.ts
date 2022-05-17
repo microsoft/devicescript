@@ -543,9 +543,13 @@ export interface CellDebugInfo {
     name: string
 }
 
+export interface RoleDebugInfo extends CellDebugInfo {
+    serviceClass: number
+}
+
 export interface DebugInfo {
     functions: FunctionDebugInfo[]
-    roles: CellDebugInfo[]
+    roles: RoleDebugInfo[]
     globals: CellDebugInfo[]
     source: string
 }

@@ -42,6 +42,7 @@ import {
     OpTop,
     OpUnary,
     printJacError,
+    RoleDebugInfo,
     SMap,
     stringifyCellKind,
     ValueSpecial,
@@ -173,6 +174,12 @@ class Role extends Cell {
     }
     isCondition() {
         return this.spec.classIdentifier == SRV_JACSCRIPT_CONDITION
+    }
+    debugInfo(): RoleDebugInfo {
+        return {
+            ...super.debugInfo(),
+            serviceClass: this.spec.classIdentifier,
+        }
     }
 }
 
@@ -2718,7 +2725,7 @@ class Program implements TopOpWriter {
 
         const b = this.serialize()
         const dbg: DebugInfo = {
-            roles: this.roles.list.map(r => r.debugInfo()),
+            roles: this.roles.list.map(r => (r as Role).debugInfo()),
             functions: this.procs.map(p => p.debugInfo()),
             globals: this.globals.list.map(r => r.debugInfo()),
             source: this._source,
