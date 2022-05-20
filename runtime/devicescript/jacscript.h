@@ -33,3 +33,9 @@ void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg);
 
 jacs_ctx_t *jacscriptmgr_get_ctx(void);
 int jacscriptmgr_deploy(const void *img, unsigned imgsize);
+
+typedef struct {
+    int (*upload)(const char *label, int numvals, double *vals);
+    int (*is_connected)(void);
+} jacscloud_api_t;
+void jacscloud_init(const jacscloud_api_t *cloud_api);
