@@ -7,12 +7,6 @@ if (false)
         q = q + 1
     })
 
-cloud.onTwinChange(() => {
-    console.log("foo=", cloud.twin("foo"))
-    console.log("bar.baz=", cloud.twin("bar.baz"))
-    console.log("qux=", cloud.twin("qux"))
-})
-
 cloud.onMethod("foo", (a, b) => {
     console.log("foo a=", a, "b=", b)
     return [a + 1, b * 2]

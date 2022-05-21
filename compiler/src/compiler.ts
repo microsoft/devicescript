@@ -1694,19 +1694,6 @@ class Program implements TopOpWriter {
         })
     }
 
-    private emitGetTwin(path: ValueDesc) {
-        const wr = this.writer
-        wr.emitAsync(
-            OpAsync.QUERY_IDX_REG,
-            this.cloudRole.encode(),
-            JacscriptCloudCmd.GetTwin | (path.index << 8),
-            RefreshMS.Slow
-        )
-        const res = wr.allocReg()
-        wr.emitBufLoad(res, OpFmt.F64, 0)
-        return res
-    }
-
     private emitCloudMethod(expr: estree.CallExpression) {
         this.requireTopLevel(expr)
         this.requireArgs(expr, 2)
@@ -1768,20 +1755,6 @@ class Program implements TopOpWriter {
                     OpAsync.SEND_CMD,
                     this.cloudRole.encode(),
                     spec.identifier
-                )
-                return values.zero
-            case "cloud.twin":
-                this.requireArgs(expr, 1)
-                const path = this.forceStringLiteral(expr.arguments[0])
-                return this.emitGetTwin(path)
-            case "cloud.onTwinChange":
-                this.requireTopLevel(expr)
-                this.requireArgs(expr, 1)
-                this.emitEventHandler(
-                    "twin_changed",
-                    expr.arguments[0],
-                    this.cloudRole,
-                    JacscriptCloudEvent.TwinChange
                 )
                 return values.zero
             case "cloud.onMethod":

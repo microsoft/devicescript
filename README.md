@@ -270,22 +270,6 @@ cloud.onMethod("get_temp_hum", () => {
 })
 ```
 
-Get value of a twin field (has to be numeric):
-
-```js
-var speed = cloud.twin("speed")
-var lightA = cloud.twin("lights.a")
-```
-
-Respond to changes in twin values:
-
-```js
-cloud.onTwinChange(() => {
-    lightA.brightness.write(cloud.twin("lights.a"))
-    lightB.brightness.write(cloud.twin("lights.b"))
-})
-```
-
 ## Top-level functions
 
 ### Time
