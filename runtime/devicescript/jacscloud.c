@@ -1,4 +1,4 @@
-#include "jdesp.h"
+#include "jacs_internal.h"
 #include "jacdac/dist/c/jacscriptcloud.h"
 
 #define LOG(msg, ...) DMESG("jacscloud: " msg, ##__VA_ARGS__)
