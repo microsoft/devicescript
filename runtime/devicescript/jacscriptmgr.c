@@ -271,14 +271,6 @@ void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 SRV_DEF(jacscriptmgr, JD_SERVICE_CLASS_JACSCRIPT_MANAGER);
 
-#if 0
-void app_client_event_handler(int event_id, void *arg0, void *arg1) {
-    jacs_client_event_handler(jacscriptmgr_get_ctx(), event_id, arg0, arg1);
-
-    // ...
-}
-#endif
-
 jacs_ctx_t *jacscriptmgr_get_ctx(void) {
     return _state ? _state->ctx : NULL;
 }
@@ -333,6 +325,12 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize) {
     return jacs_verify(hdx->image, hdx->size);
 }
 
+static void jacscriptmgr_client_ev(void *_state, int event_id, void *arg0, void *arg1) {
+    srv_t *state = _state;
+    if (state->ctx)
+        jacs_client_event_handler(state->ctx, event_id, arg0, arg1);
+}
+
 void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg) {
     SRV_ALLOC(jacscriptmgr);
     state->cfg = cfg;
@@ -340,5 +338,6 @@ void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg) {
     state->autostart = 1;
     state->logging = 1;
     state->next_restart = now;
+    jd_client_subscribe(jacscriptmgr_client_ev, state);
     _state = state;
 }
