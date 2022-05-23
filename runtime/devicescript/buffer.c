@@ -1,5 +1,6 @@
 #include "jacs_internal.h"
 #include <limits.h>
+#include <math.h>
 
 void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx) {
     if (idx == 0)
@@ -98,8 +99,8 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset,
     unsigned shift = fmt0 >> 4;
     unsigned sz = 1 << (fmt & 0b11);
 
-    //if (!setv)
-    //    DMESG("GET @%d fmt=%x buf=%d", offset, fmt0, buffer);
+    // if (!setv)
+    //     DMESG("GET @%d fmt=%x buf=%d", offset, fmt0, buffer);
 
     jacs_ctx_t *ctx = frame->fiber->ctx;
     jd_packet_t *pkt = &ctx->packet;
@@ -174,4 +175,48 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset,
 
         return jacs_value_from_double(F64);
     }
+}
+
+double jacs_read_number(void *data, unsigned bufsz, uint16_t fmt0) {
+    uint8_t U8;
+    uint16_t U16;
+    uint32_t U32;
+    uint64_t U64;
+    int8_t I8;
+    int16_t I16;
+    int32_t I32;
+    int64_t I64;
+    float F32;
+    double F64;
+    int is_float = 0;
+
+    unsigned fmt = fmt0 & 0xf;
+    unsigned shift = fmt0 >> 4;
+    unsigned sz = 1 << (fmt & 0b11);
+
+    if (sz > bufsz)
+        return NAN;
+
+    switch (fmt) {
+        GET_VAL_INT(U8);
+        GET_VAL_INT(U16);
+        GET_VAL_UINT(U32);
+        GET_VAL_UINT(U64);
+        GET_VAL_INT(I8);
+        GET_VAL_INT(I16);
+        GET_VAL_INT(I32);
+        GET_VAL_DBL(I64);
+        GET_VAL_DBL(F32);
+        GET_VAL_DBL(F64);
+    default:
+        oops();
+    }
+
+    if (!is_float)
+        F64 = I32;
+
+    if (shift)
+        F64 *= shift_val(-shift);
+
+    return F64;
 }

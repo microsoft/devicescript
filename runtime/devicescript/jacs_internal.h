@@ -162,3 +162,4 @@ value_t jacs_step_opmath2(int op, value_t a, value_t b);
 value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer,
                        value_t *setv);
 void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx);
+double jacs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
