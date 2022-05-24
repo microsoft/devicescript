@@ -95,7 +95,7 @@ static void dev_created(srv_t *state, jd_device_t *dev) {
         if (!desc)
             continue;
         add_series(state, &dev->services[i], desc->mode,
-                   desc->mode == JD_TIMESERIES_AGGREGATOR_DATA_MODE_DISCRETE ? 1000 : 10000);
+                   desc->mode == JD_TIMESERIES_AGGREGATOR_DATA_MODE_DISCRETE ? 1000 : 60000);
     }
 }
 
