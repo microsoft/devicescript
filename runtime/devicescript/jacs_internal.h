@@ -10,6 +10,7 @@
 #include "jacs_format.h"
 #include "jacs_img.h"
 #include "jacs_regcache.h"
+#include "jacs_pack.h"
 
 // this can't be more than a week; unit = ms
 #define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)

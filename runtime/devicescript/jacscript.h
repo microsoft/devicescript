@@ -1,7 +1,9 @@
 #pragma once
 
 #include "jd_protocol.h"
+#include "jd_client.h"
 #include "jacdac/dist/c/jacscriptmanager.h"
+#include "jacdac/dist/c/timeseriesaggregator.h"
 
 #define JACS_PANIC_REBOOT 60000
 #define JACS_PANIC_TIMEOUT 60001
@@ -36,6 +38,10 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize);
 
 typedef struct {
     int (*upload)(const char *label, int numvals, double *vals);
+    // label != NULL || service != NULL
+    int (*agg_upload)(const char *label, jd_device_service_t *service, uint8_t mode,
+                      jd_timeseries_aggregator_stored_report_t *data);
     int (*is_connected)(void);
 } jacscloud_api_t;
 void jacscloud_init(const jacscloud_api_t *cloud_api);
+void tsagg_init(const jacscloud_api_t *cloud_api);
