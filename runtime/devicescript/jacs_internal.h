@@ -60,6 +60,7 @@ typedef struct jacs_fiber {
 
 #define JACS_CTX_FLAG_BUSY 0x0001
 #define JACS_CTX_LOGGING_ENABLED 0x0002
+#define JACS_CTX_FREEING_ROLES 0x0004
 
 struct jacs_ctx {
     value_t registers[JACS_NUM_REGS];

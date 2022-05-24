@@ -81,7 +81,7 @@ void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *
 
 static void clear_ctx(jacs_ctx_t *ctx) {
     jacs_enter(ctx);
-    jd_role_free_all();
+    jacs_jd_free_roles(ctx);
     jacs_regcache_free_all(&ctx->regcache);
     jacs_fiber_free_all_fibers(ctx);
     jd_free(ctx->globals);
