@@ -184,19 +184,8 @@ value_t jacs_runtime_failure(jacs_ctx_t *ctx) {
 }
 
 void jacs_fiber_sync_now(jacs_ctx_t *ctx) {
-    now = (uint32_t)tim_get_micros();
-    uint32_t new_delta = now - ctx->_prev_us;
-    // this may make sense on M0
-    if (new_delta < 2 * 1024) {
-        while (new_delta > 1000) {
-            new_delta -= 1000;
-            ctx->_now++;
-        }
-    } else {
-        ctx->_now += new_delta / 1000;
-        new_delta %= 1000;
-    }
-    ctx->_prev_us = now - new_delta;
+    jd_refresh_now();
+    ctx->_now = now_ms;
 }
 
 static int jacs_fiber_wake_some(jacs_ctx_t *ctx) {
