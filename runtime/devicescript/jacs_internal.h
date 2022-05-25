@@ -87,7 +87,6 @@ struct jacs_ctx {
 
     uint32_t *buffers;
 
-    uint32_t _prev_us;
     uint32_t _now;
 
     uint32_t log_counter;
@@ -165,3 +164,10 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset,
                        value_t *setv);
 void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx);
 double jacs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
+
+// aggbuffer.c
+void aggbuffer_init(const jacscloud_api_t *api);
+int aggbuffer_flush(void);
+int aggbuffer_upload(const char *label, jd_device_service_t *service, uint8_t mode,
+                     jd_timeseries_aggregator_stored_report_t *data);
+

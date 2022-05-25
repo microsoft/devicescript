@@ -38,6 +38,7 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize);
 
 typedef struct {
     int (*upload)(const char *label, int numvals, double *vals);
+    int (*bin_upload)(const void *data, unsigned datasize);
     // label != NULL || service != NULL
     int (*agg_upload)(const char *label, jd_device_service_t *service, uint8_t mode,
                       jd_timeseries_aggregator_stored_report_t *data);

@@ -8,5 +8,5 @@
     }                                                                                              \
     ;
 #define JD_SPEC_PACK_SERVICE(name, cls, fmt, shift, mode)                                          \
-    {cls, JACS_NUM_FMT(JACS_NUMFMT_##fmt, shift), JD_TIMESERIES_AGGREGATOR_DATA_MODE_##mode},
+    {name, cls, JACS_NUM_FMT(JACS_NUMFMT_##fmt, shift), JD_TIMESERIES_AGGREGATOR_DATA_MODE_##mode},
 #define JD_SPEC_PACK_NUM(n) const unsigned jacs_num_packed_service_descs = n;
