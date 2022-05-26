@@ -122,7 +122,8 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service, uint8_t mo
         if (label[0])
             upl_label = jd_sprintf_a("%-s_%s", upl_label, label);
     } else {
-        upl_label = jd_sprintf_a("0000000000000000:%s", label);
+        uint64_t self = jd_device_id();
+        upl_label = jd_sprintf_a("%-s:%s", jd_to_hex_a(&self, 8), label);
     }
 
     LOG("upl: '%s' %f", upl_label, data->avg);

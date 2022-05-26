@@ -45,4 +45,6 @@ typedef struct {
     int (*is_connected)(void);
 } jacscloud_api_t;
 void jacscloud_init(const jacscloud_api_t *cloud_api);
+
 void tsagg_init(const jacscloud_api_t *cloud_api);
+void tsagg_update(const char *name, double v);

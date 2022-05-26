@@ -125,6 +125,23 @@ static tsagg_series_t *add_series(srv_t *state, jd_device_service_t *serv, uint8
     return ts;
 }
 
+static tsagg_series_t *lookup_series(srv_t *state, const char *label) {
+    for (tsagg_series_t *ts = state->series; ts; ts = ts->next) {
+        if (ts->label && strcmp(ts->label, label) == 0)
+            return ts;
+    }
+    return NULL;
+}
+
+static tsagg_series_t *lookup_or_add_series(srv_t *state, const char *label) {
+    tsagg_series_t *ts = lookup_series(state, label);
+    if (ts)
+        return ts;
+    ts = add_series(state, NULL, JD_TIMESERIES_AGGREGATOR_DATA_MODE_CONTINUOUS);
+    ts->label = jd_strdup(label);
+    return ts;
+}
+
 static void dev_created(srv_t *state, jd_device_t *dev) {
     for (unsigned i = 1; i < dev->num_services; ++i) {
         const jacs_packed_service_desc_t *desc =
@@ -194,15 +211,24 @@ static void series_update(srv_t *state, tsagg_series_t *ts, double v) {
         ts->v_previous = v;
         series_reset(ts);
     }
-    uint32_t delta = now_ms - ts->previous_sample;
+
     ts->acc.num_samples++;
-    ts->acc.avg += ts->v_previous * delta;
+
+    if (in_past_ms(ts->acc.end_time)) {
+        uint32_t delta = ts->acc.end_time - ts->previous_sample;
+        ts->acc.avg += ts->v_previous * delta;
+        ts->previous_sample = ts->acc.end_time;
+    } else {
+        uint32_t delta = now_ms - ts->previous_sample;
+        ts->acc.avg += ts->v_previous * delta;
+        ts->previous_sample = now_ms;
+    }
+
     if (v > ts->acc.max)
         ts->acc.max = v;
     if (v < ts->acc.min)
         ts->acc.min = v;
     ts->v_previous = v;
-    ts->previous_sample = now_ms;
 }
 
 static void dev_packet(srv_t *state, jd_device_service_t *serv, jd_packet_t *pkt) {
@@ -338,12 +364,21 @@ void tsagg_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
+static srv_t *tsagg_state;
+
 SRV_DEF(tsagg, JD_SERVICE_CLASS_TIMESERIES_AGGREGATOR);
 void tsagg_init(const jacscloud_api_t *cloud_api) {
     SRV_ALLOC(tsagg);
+    tsagg_state = state;
     state->api = cloud_api;
     state->fast_start = 1;
     state->default_contiuous_window = CONT_WINDOW_FINAL;
     state->default_discrete_window = DISCRETE_WINDOW;
     jd_client_subscribe(tsagg_client_ev, state);
+}
+
+void tsagg_update(const char *name, double v) {
+    srv_t *state = tsagg_state;
+    tsagg_series_t *ts = lookup_or_add_series(state, name);
+    series_update(state, ts, v);
 }
