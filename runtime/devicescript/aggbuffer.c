@@ -97,6 +97,8 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service, uint8_t mo
         label = "";
 
     char *upl_label;
+    uint64_t devid;
+
     if (service) {
         jd_device_t *dev = jd_service_parent(service);
 
@@ -105,7 +107,8 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service, uint8_t mo
             if (dev->services[i].service_class == service->service_class)
                 idx++;
 
-        upl_label = jd_to_hex_a(&dev->device_identifier, 8);
+        devid = dev->device_identifier;
+        upl_label = jd_to_hex_a(&devid, 8);
 
         const jacs_packed_service_desc_t *desc =
             jacs_get_packed_service_desc(service->service_class);
@@ -122,11 +125,11 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service, uint8_t mo
         if (label[0])
             upl_label = jd_sprintf_a("%-s_%s", upl_label, label);
     } else {
-        uint64_t self = jd_device_id();
-        upl_label = jd_sprintf_a("%-s:%s", jd_to_hex_a(&self, 8), label);
+        devid = jd_device_id();
+        upl_label = jd_sprintf_a("%-s:%s", jd_to_hex_a(&devid, 8), label);
     }
 
-    LOG("upl: '%s' %f", upl_label, data->avg);
+    LOG("upl: '%s' %f (%-s)", upl_label, data->avg, jd_device_short_id_a(devid));
 
     data_acc_t *p;
     for (p = series; p; p = p->next) {
