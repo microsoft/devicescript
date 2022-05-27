@@ -43,6 +43,7 @@ typedef struct {
     int (*agg_upload)(const char *label, jd_device_service_t *service,
                       jd_timeseries_aggregator_stored_report_t *data);
     int (*is_connected)(void);
+    size_t max_bin_upload_size;
 } jacscloud_api_t;
 void jacscloud_init(const jacscloud_api_t *cloud_api);
 

@@ -29,6 +29,7 @@ typedef struct {
     const jacscloud_api_t *cloud_api;
     data_acc_t *series;
     uint16_t acc_size;
+    uint16_t max_message;
 } aggbuffer_ctx_t;
 
 static aggbuffer_ctx_t *aggbuffer_ctx;
@@ -37,6 +38,10 @@ void aggbuffer_init(const jacscloud_api_t *api) {
     aggbuffer_ctx = jd_alloc(sizeof(aggbuffer_ctx_t));
     aggbuffer_ctx_t *ctx = aggbuffer_ctx;
     ctx->cloud_api = api;
+    unsigned upl_thr = api->max_bin_upload_size;
+    if (upl_thr > 1024)
+        upl_thr = 1024;
+    ctx->max_message = upl_thr - sizeof(jdbr_header_t);
 }
 
 int aggbuffer_flush(void) {
@@ -145,15 +150,19 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
             break;
     }
 
-    int res = 0;
+    int header_size = strlen(upl_label) + 1 + 4;
+    int res_size = ctx->acc_size + sizeof(jdbr_data_point_t);
+    if (p)
+        res_size += header_size;
 
-    if (p && p->num_data_points >= MAX_DATA) {
-        res = aggbuffer_flush();
+    if (res_size > ctx->max_message || (p && p->num_data_points >= MAX_DATA)) {
+        int res = aggbuffer_flush();
         if (res) {
             jd_free(upl_label);
             return res; // couldn't send, and can't add this data point...
         }
         p = NULL;
+        res_size = header_size + sizeof(jdbr_data_point_t);
     }
 
     if (p) {
@@ -163,16 +172,13 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
         p->label = upl_label;
         p->next = ctx->series;
         ctx->series = p;
-        ctx->acc_size += strlen(upl_label) + 1 + 4;
     }
 
     int idx = p->num_data_points++;
     p->data[idx].timeoffset = now_ms;
     p->data[idx].value = data->avg;
-    ctx->acc_size += sizeof(jdbr_data_point_t);
 
-    if (res == 0 && ctx->acc_size > MAX_MESSAGE - sizeof(jdbr_header_t))
-        res = aggbuffer_flush();
+    ctx->acc_size = res_size;
 
-    return res;
+    return 0;
 }
