@@ -25,23 +25,30 @@ typedef struct data_acc {
     jdbr_data_point_t data[MAX_DATA];
 } data_acc_t;
 
-static const jacscloud_api_t *cloud_api;
-static data_acc_t *series;
-static uint16_t acc_size;
+typedef struct {
+    const jacscloud_api_t *cloud_api;
+    data_acc_t *series;
+    uint16_t acc_size;
+} aggbuffer_ctx_t;
+
+static aggbuffer_ctx_t *aggbuffer_ctx;
 
 void aggbuffer_init(const jacscloud_api_t *api) {
-    cloud_api = api;
+    aggbuffer_ctx = jd_alloc(sizeof(aggbuffer_ctx_t));
+    aggbuffer_ctx_t *ctx = aggbuffer_ctx;
+    ctx->cloud_api = api;
 }
 
 int aggbuffer_flush(void) {
-    if (acc_size == 0)
+    aggbuffer_ctx_t *ctx = aggbuffer_ctx;
+    if (ctx->acc_size == 0)
         return 0;
 
-    if (!cloud_api->is_connected())
+    if (!ctx->cloud_api->is_connected())
         return -1;
 
-    acc_size += sizeof(jdbr_header_t);
-    uint8_t *buf = jd_alloc(acc_size);
+    ctx->acc_size += sizeof(jdbr_header_t);
+    uint8_t *buf = jd_alloc(ctx->acc_size);
     jdbr_header_t *hd = (void *)buf;
     hd->magic = JDBR_MAGIC;
     hd->device_time = now_ms_long;
@@ -49,7 +56,7 @@ int aggbuffer_flush(void) {
     uint32_t n = (uint32_t)now_ms_long;
 
     uint8_t *dst = buf + sizeof(jdbr_header_t);
-    for (data_acc_t *p = series; p; p = p->next) {
+    for (data_acc_t *p = ctx->series; p; p = p->next) {
         int len = strlen(p->label) + 1;
         memcpy(dst, p->label, len);
         dst += len;
@@ -65,14 +72,14 @@ int aggbuffer_flush(void) {
         dst += data_bytes;
     }
 
-    JD_ASSERT(dst - buf == acc_size);
+    JD_ASSERT(dst - buf == ctx->acc_size);
 
-    int r = cloud_api->bin_upload(buf, acc_size);
+    int r = ctx->cloud_api->bin_upload(buf, ctx->acc_size);
 
     if (r == 0)
-        LOG("uploaded %d bytes", acc_size);
+        LOG("uploaded %d bytes", ctx->acc_size);
     else
-        LOG("failed to upload %d bytes", acc_size);
+        LOG("failed to upload %d bytes", ctx->acc_size);
 
     jd_free(buf);
 
@@ -80,10 +87,10 @@ int aggbuffer_flush(void) {
     if (r)
         return r;
 
-    acc_size = 0;
-    while (series) {
-        data_acc_t *p = series;
-        series = p->next;
+    ctx->acc_size = 0;
+    while (ctx->series) {
+        data_acc_t *p = ctx->series;
+        ctx->series = p->next;
         jd_free(p->label);
         jd_free(p);
     }
@@ -93,6 +100,7 @@ int aggbuffer_flush(void) {
 
 int aggbuffer_upload(const char *label, jd_device_service_t *service,
                      jd_timeseries_aggregator_stored_report_t *data) {
+    aggbuffer_ctx_t *ctx = aggbuffer_ctx;
     if (!label)
         label = "";
 
@@ -132,7 +140,7 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
     LOG("upl: '%s' %f (%-s)", upl_label, data->avg, jd_device_short_id_a(devid));
 
     data_acc_t *p;
-    for (p = series; p; p = p->next) {
+    for (p = ctx->series; p; p = p->next) {
         if (strcmp(p->label, upl_label) == 0)
             break;
     }
@@ -153,17 +161,17 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
     } else {
         p = jd_alloc(sizeof(*p));
         p->label = upl_label;
-        p->next = series;
-        series = p;
-        acc_size += strlen(upl_label) + 1 + 4;
+        p->next = ctx->series;
+        ctx->series = p;
+        ctx->acc_size += strlen(upl_label) + 1 + 4;
     }
 
     int idx = p->num_data_points++;
     p->data[idx].timeoffset = now_ms;
     p->data[idx].value = data->avg;
-    acc_size += sizeof(jdbr_data_point_t);
+    ctx->acc_size += sizeof(jdbr_data_point_t);
 
-    if (res == 0 && acc_size > MAX_MESSAGE - sizeof(jdbr_header_t))
+    if (res == 0 && ctx->acc_size > MAX_MESSAGE - sizeof(jdbr_header_t))
         res = aggbuffer_flush();
 
     return res;
