@@ -40,7 +40,7 @@ typedef struct {
     int (*upload)(const char *label, int numvals, double *vals);
     int (*bin_upload)(const void *data, unsigned datasize);
     // label != NULL || service != NULL
-    int (*agg_upload)(const char *label, jd_device_service_t *service, uint8_t mode,
+    int (*agg_upload)(const char *label, jd_device_service_t *service,
                       jd_timeseries_aggregator_stored_report_t *data);
     int (*is_connected)(void);
 } jacscloud_api_t;

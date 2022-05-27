@@ -91,7 +91,7 @@ int aggbuffer_flush(void) {
     return 0;
 }
 
-int aggbuffer_upload(const char *label, jd_device_service_t *service, uint8_t mode,
+int aggbuffer_upload(const char *label, jd_device_service_t *service,
                      jd_timeseries_aggregator_stored_report_t *data) {
     if (!label)
         label = "";

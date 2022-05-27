@@ -168,6 +168,5 @@ double jacs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
 // aggbuffer.c
 void aggbuffer_init(const jacscloud_api_t *api);
 int aggbuffer_flush(void);
-int aggbuffer_upload(const char *label, jd_device_service_t *service, uint8_t mode,
+int aggbuffer_upload(const char *label, jd_device_service_t *service,
                      jd_timeseries_aggregator_stored_report_t *data);
-
