@@ -32,6 +32,11 @@ void jacscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
         jacscloud_upload(state, pkt);
         return;
 
+    case JD_JACSCRIPT_CLOUD_CMD_UPLOAD_BIN:
+        if (state->api->bin_upload(pkt->data, pkt->service_size))
+            LOG("failed bin upload");
+        return;
+
     case JD_GET(JD_JACSCRIPT_CLOUD_REG_CONNECTED):
         jd_respond_u8(pkt, state->api->is_connected());
         return;
