@@ -381,6 +381,7 @@ void tsagg_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_TIMESERIES_AGGREGATOR_CMD_CLEAR:
         dev_destroyed(state, NULL);
+        state->current_cont_window = 0; // restart fast upload
         return;
 
     case JD_TIMESERIES_AGGREGATOR_CMD_UPDATE: {
