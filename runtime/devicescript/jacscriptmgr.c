@@ -191,6 +191,7 @@ static void deploy_meta_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
             DMESG("missing %d bytes (of %d)", (int)(endp - state->write_offset), hdf->size);
         } else {
             flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
+            flash_sync();
             DMESG("program written");
             flashing_done(state);
         }
@@ -315,7 +316,7 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize) {
 
     jacscriptmgr_program_header_t *hdf = state->cfg->program_base;
     flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
-
+    flash_sync();
     flashing_done(state);
 
     const jacscriptmgr_program_header_t *hdx = jacs_header(state);
