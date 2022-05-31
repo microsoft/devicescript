@@ -6,6 +6,10 @@
 #define MAX_DATA 8
 #define MAX_MESSAGE 512
 
+#define NOT_IRQ()                                                                                  \
+    if (target_in_irq())                                                                           \
+    jd_panic()
+
 #define JDBR_MAGIC 0x5242444a // "JDBR"
 typedef struct __attribute__((packed)) {
     uint32_t magic;
@@ -46,6 +50,9 @@ void aggbuffer_init(const jacscloud_api_t *api) {
 
 int aggbuffer_flush(void) {
     aggbuffer_ctx_t *ctx = aggbuffer_ctx;
+
+    NOT_IRQ();
+
     if (ctx->acc_size == 0)
         return 0;
 
@@ -75,6 +82,7 @@ int aggbuffer_flush(void) {
         for (int i = 0; i < p->num_data_points; ++i)
             p->data[i].timeoffset = n - p->data[i].timeoffset;
         dst += data_bytes;
+        JD_ASSERT(dst - buf <= ctx->acc_size);
     }
 
     JD_ASSERT(dst - buf == ctx->acc_size);
@@ -111,6 +119,8 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
 
     char *upl_label;
     uint64_t devid;
+
+    NOT_IRQ();
 
     if (service) {
         jd_device_t *dev = jd_service_parent(service);
@@ -152,7 +162,7 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
 
     int header_size = strlen(upl_label) + 1 + 4;
     int res_size = ctx->acc_size + sizeof(jdbr_data_point_t);
-    if (p)
+    if (p == NULL)
         res_size += header_size;
 
     if (res_size > ctx->max_message || (p && p->num_data_points >= MAX_DATA)) {

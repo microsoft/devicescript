@@ -3,6 +3,8 @@
 
 #include <math.h>
 
+// TODO: try to synchronize series to reduce number of uploads
+
 // all values in ms
 #define MAX_WINDOW (24 * 3600 * 1000)
 #define CONT_WINDOW_0 5000
@@ -429,6 +431,8 @@ void tsagg_init(const jacscloud_api_t *cloud_api) {
     state->api = cloud_api;
     state->fast_start = 1;
     state->default_window = CONT_WINDOW_FINAL;
+    state->default_upload = 1;
+    state->upload_unlabelled = 1;
     jd_client_subscribe(tsagg_client_ev, state);
 }
 
