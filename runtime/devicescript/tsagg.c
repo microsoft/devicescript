@@ -319,7 +319,7 @@ void tsagg_process(srv_t *state) {
                     break;
                 }
                 ts->streaming_samples = num;
-                log_series(ts, "set streaming samples");
+                // log_series(ts, "set streaming samples");
             }
         }
     }
