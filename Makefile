@@ -1,5 +1,5 @@
 CC = gcc
-INC = -Ijacdac-c/inc -Iinc -I. -Ijacdac-c
+INC = -Ijacdac-c/inc -Iinc -I. -Ijacdac-c -Ijacdac-c/jacscript
 Q ?= @
 
 CFLAGS = $(DEFINES) $(INC) \
@@ -12,7 +12,7 @@ _IGNORE1 := $(shell test -f jacdac-c/README.md || git submodule update --init --
 
 DEPS = $(wildcard \
 	inc/*.h \
-	jacdac/dist/c/*.h \
+	jacdac-c/jacdac/dist/c/*.h \
 	jacdac-c/inc/*.h \
 	jacdac-c/jacscript/*.h \
 	jacdac-c/inc/interfaces/*.h \
@@ -27,6 +27,7 @@ JDS = jacdac-c/source
 SRC = $(wildcard posix/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
 	$(wildcard jacdac-c/jacscript/*.c) \
+	jacdac-c/jacdac/dist/c/jd_spec_pack.c \
 	$(JDS)/jd_util.c \
 	$(JDS)/jd_control.c \
 	$(JDS)/jd_services.c \

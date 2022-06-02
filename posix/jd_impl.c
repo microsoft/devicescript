@@ -22,7 +22,10 @@ void hw_panic(void) {
 
 STATIC_ASSERT(sizeof(char) == 1);
 
-void jd_status(int status) {}
+// TODO expose these somehow?
+uint8_t jd_connected_blink = JD_BLINK_CONNECTED;
+void jd_blink(uint8_t encoded) {}
+void jd_glow(uint32_t glow) {}
 
 void jd_alloc_stack_check() {}
 

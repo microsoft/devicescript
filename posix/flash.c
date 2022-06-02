@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include "jd_sdk.h"
+#include "services/interfaces/jd_flash.h"
 #include "jacscript/jacscript.h"
 
 static jacscriptmgr_cfg_t cfg;
@@ -28,6 +29,10 @@ void flash_erase(void *page_addr) {
     JD_ASSERT(0 <= diff && diff <= cfg.max_program_size - JD_FLASH_PAGE_SIZE);
     JD_ASSERT((diff & (JD_FLASH_PAGE_SIZE - 1)) == 0);
     memset(page_addr, 0xff, JD_FLASH_PAGE_SIZE);
+}
+
+void flash_sync() {
+    // do nothing
 }
 
 void init_jacscript_manager(void) {

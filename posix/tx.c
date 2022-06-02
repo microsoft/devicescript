@@ -19,12 +19,11 @@ void jd_packet_ready(void) {
 
 void tx_process(void) {
     while (packet_ready) {
-        jd_frame_t *f = jd_tx_get_frame();
         packet_ready = 0;
+        jd_frame_t *f = jd_tx_get_frame();
         if (f) {
             if (transport)
                 transport->send_frame(transport_ctx, f);
-            jd_rx_frame_received(f); // loop-back processing
             jd_tx_frame_sent(f);
         }
     }

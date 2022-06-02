@@ -12,6 +12,7 @@
 #define LOG(fmt, ...) printf("main: " fmt "\n", ##__VA_ARGS__)
 
 static bool test_mode;
+static bool remote_deploy;
 
 static void frame_cb_post(void);
 static void frame_cb(void *userdata, jd_frame_t *frame) {
@@ -46,6 +47,7 @@ struct {
     uint32_t size;
     uint32_t offset;
     uint8_t isopen;
+    uint8_t finished;
     jd_device_service_t *serv;
     jd_opipe_desc_t pipe;
 } deploy;
@@ -71,21 +73,19 @@ static void process_deploy(void) {
         if (to_write == 0) {
             DMESG("closed deploy pipe");
             deploy.isopen = false;
+            deploy.finished = true;
             exit(0); // TODO?
         }
     }
 }
 
-void app_client_event_handler(int event_id, void *arg0, void *arg1) {
+static void client_event_handler(void *dummy, int event_id, void *arg0, void *arg1) {
     jd_device_t *dev = arg0;
     // jd_register_query_t *reg = arg1;
     // jd_role_t *role = arg1;
     // jd_register_query_t *reg = arg1;
     jd_device_service_t *serv = arg0;
     jd_packet_t *pkt = arg1;
-
-    jacs_ctx_t *jacs_ctx = jacscriptmgr_get_ctx();
-    jacs_client_event_handler(jacs_ctx, event_id, arg0, arg1);
 
     switch (event_id) {
     case JD_CLIENT_EV_PROCESS:
@@ -102,7 +102,8 @@ void app_client_event_handler(int event_id, void *arg0, void *arg1) {
             }
         }
         if (deploy.img && serv && deploy.serv == serv) {
-            if (jd_is_report(pkt) && pkt->service_command == JD_JACSCRIPT_MANAGER_CMD_DEPLOY_BYTECODE) {
+            if (jd_is_report(pkt) &&
+                pkt->service_command == JD_JACSCRIPT_MANAGER_CMD_DEPLOY_BYTECODE) {
                 DMESG("opening deploy pipe");
                 if (jd_opipe_open_report(&deploy.pipe, pkt) == 0)
                     deploy.isopen = true;
@@ -156,6 +157,12 @@ int load_image(const char *name) {
         fprintf(stderr, "verification error for '%s': %d\n", name, r);
         jd_free(img);
         return r;
+    }
+
+    if (remote_deploy) {
+        jacs_client_deploy(img, size);
+        // don't free - it is lazy
+        return 0;
     }
 
     if (jacscriptmgr_deploy(img, size)) {
@@ -249,6 +256,7 @@ int main(int argc, const char **argv) {
         if (starts_with(arg, "/dev/")) {
             transport_arg = arg;
             transport = &hf2_transport;
+            remote_deploy = 1;
         } else if (atoi(arg)) {
             transport_arg = arg;
             transport = &sock_transport;
@@ -277,9 +285,14 @@ int main(int argc, const char **argv) {
     jd_rx_init();
     jd_services_init();
 
-    char shortbuf[5];
-    jd_device_short_id(shortbuf, jd_device_id());
-    DMESG("self-device: %s", shortbuf);
+    DMESG("self-device: %-s", jd_device_short_id_a(jd_device_id()));
+
+    if (jacs_img && remote_deploy) {
+        load_image(jacs_img);
+        jacs_img = NULL;
+    }
+
+    jd_client_subscribe(client_event_handler, NULL);
 
     if (jacs_img) {
         run_sample(jacs_img);

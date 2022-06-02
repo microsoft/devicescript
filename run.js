@@ -11,6 +11,7 @@ let verbose = false
 let useC = false
 let testMode = false
 let doDeploy = false
+let serialPort = ""
 let jacsFile = ""
 
 let jacsHost
@@ -101,7 +102,9 @@ async function runServer(fn) {
         const compfn = distPath + "/compiled.jacs"
         fs.writeFileSync(compfn, prog)
         const args = [compfn]
-        if (!testMode) args.unshift("8082")
+        if (serialPort) args.unshift(serialPort)
+        else if (!testMode) args.unshift("8082")
+        console.log("run", args)
         const child = child_process.spawn(distPath + "/jdcli", args, {
             stdio: "inherit"
         })
@@ -151,6 +154,12 @@ async function main() {
         if (args[0] == "-d") {
             args.shift()
             doDeploy = true
+            continue
+        }
+        if (args[0] && args[0].startsWith("-s:")) {
+            serialPort = args[0].slice(3)
+            useC = true
+            args.shift()
             continue
         }
         break
