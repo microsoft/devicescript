@@ -171,6 +171,3 @@ int aggbuffer_flush(void);
 int aggbuffer_upload(const char *label, jd_device_service_t *service,
                      jd_timeseries_aggregator_stored_report_t *data);
 
-// extcloud.c
-extern const jacscloud_api_t extcloud;
-void extcloud_init(void);

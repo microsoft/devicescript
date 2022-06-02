@@ -49,3 +49,7 @@ void jacscloud_init(const jacscloud_api_t *cloud_api);
 
 void tsagg_init(const jacscloud_api_t *cloud_api);
 void tsagg_update(const char *name, double v);
+
+// extcloud.c
+extern const jacscloud_api_t extcloud;
+void extcloud_init(void);
