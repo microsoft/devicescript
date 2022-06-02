@@ -140,7 +140,7 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
             if (idx > 0)
                 upl_label = jd_sprintf_a("%-s%d", upl_label, idx + 1);
         } else {
-            upl_label = jd_sprintf_a("%-s:%x", upl_label, service->service_class);
+            upl_label = jd_sprintf_a("%-s:%x", upl_label, (unsigned)service->service_class);
             if (idx > 0)
                 upl_label = jd_sprintf_a("%-s_%d", upl_label, idx + 1);
         }

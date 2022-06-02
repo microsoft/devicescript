@@ -188,7 +188,7 @@ static void deploy_meta_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
         };
         unsigned endp = hdf->size + sizeof(hd);
         if (state->write_offset != endp) {
-            DMESG("missing %d bytes (of %d)", (int)(endp - state->write_offset), hdf->size);
+            DMESG("missing %d bytes (of %d)", (int)(endp - state->write_offset), (int)hdf->size);
         } else {
             flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             flash_sync();
