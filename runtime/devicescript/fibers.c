@@ -1,6 +1,11 @@
 #include "jacs_internal.h"
 
 void jacs_fiber_yield(jacs_ctx_t *ctx) {
+    if (ctx->curr_fn && jacs_trace_enabled(ctx)) {
+        jacs_trace_ev_fiber_yield_t ev = {.pc = ctx->curr_fn->pc};
+        jacs_trace(ctx, JACS_TRACE_EV_FIBER_YIELD, &ev, sizeof(ev));
+    }
+
     ctx->curr_fn = NULL;
     ctx->curr_fiber = NULL;
 }
@@ -148,6 +153,11 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
 
     ctx->curr_fiber = fiber;
     jacs_fiber_activate(fiber->activation);
+
+    if (jacs_trace_enabled(ctx)) {
+        jacs_trace_ev_fiber_run_t ev = {.pc = fiber->activation->pc};
+        jacs_trace(ctx, JACS_TRACE_EV_FIBER_RUN, &ev, sizeof(ev));
+    }
 
     unsigned maxsteps = JACS_MAX_STEPS;
     while (ctx->curr_fn && --maxsteps)

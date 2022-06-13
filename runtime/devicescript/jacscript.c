@@ -1,5 +1,7 @@
 #include "jacs_internal.h"
 
+#include "storage/jd_storage.h"
+
 static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     ctx->img.data = img;
 
@@ -34,7 +36,16 @@ jacs_ctx_t *jacs_create_ctx(const uint8_t *img, uint32_t size, const jacs_cfg_t 
         return NULL;
     jacs_ctx_t *ctx = jd_alloc(sizeof(*ctx));
     ctx->cfg = *cfg;
+
+    if (!jd_lstore_is_enabled()) {
+        ctx->flags |= JACS_CTX_TRACE_DISABLED;
+    } else {
+        jacs_trace_ev_init_t ev = {.image_hash = jd_hash_fnv1a(img, size)};
+        jacs_trace(ctx, JACS_TRACE_EV_INIT, &ev, sizeof(ev));
+    }
+
     setup_ctx(ctx, img);
+
     return ctx;
 }
 
@@ -65,9 +76,22 @@ void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *
     // jd_register_query_t *reg = arg1;
 
     jacs_enter(ctx);
+
+    // sync time so we get it in trace;
+    // jacs_fiber_poke() does this anyway, so optimize it out
+    if (event_id != JD_CLIENT_EV_PROCESS)
+        jacs_fiber_sync_now(ctx);
+
     switch (event_id) {
     case JD_CLIENT_EV_SERVICE_PACKET:
+        jacs_trace(ctx, JACS_TRACE_EV_SERVICE_PACKET, pkt, pkt->service_size + 16);
         jacs_jd_process_pkt(ctx, serv, pkt);
+        break;
+    case JD_CLIENT_EV_BROADCAST_PACKET:
+        jacs_trace(ctx, JACS_TRACE_EV_BROADCAST_PACKET, pkt, pkt->service_size + 16);
+        break;
+    case JD_CLIENT_EV_NON_SERVICE_PACKET:
+        jacs_trace(ctx, JACS_TRACE_EV_NON_SERVICE_PACKET, pkt, pkt->service_size + 16);
         break;
     case JD_CLIENT_EV_ROLE_CHANGED:
         jacs_jd_role_changed(ctx, role);
@@ -76,6 +100,7 @@ void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *
         jacs_fiber_poke(ctx);
         break;
     }
+
     jacs_leave(ctx);
 }
 
@@ -101,4 +126,16 @@ void jacs_free_ctx(jacs_ctx_t *ctx) {
         clear_ctx(ctx);
         jd_free(ctx);
     }
+}
+
+#define JACS_TRACE_LOG_IDX 0
+void jacs_trace(jacs_ctx_t *ctx, unsigned evtype, const void *data, unsigned data_size) {
+    if (!jacs_trace_enabled(ctx))
+        return;
+    if (ctx->_now != ctx->_logged_now) {
+        ctx->_logged_now = ctx->_now;
+        jd_lstore_append(JACS_TRACE_LOG_IDX, JACS_TRACE_EV_NOW, &ctx->_logged_now,
+                         sizeof(ctx->_logged_now));
+    }
+    jd_lstore_append(JACS_TRACE_LOG_IDX, evtype, data, data_size);
 }

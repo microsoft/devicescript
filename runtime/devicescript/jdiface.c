@@ -375,6 +375,13 @@ void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
 void jacs_jd_role_changed(jacs_ctx_t *ctx, jd_role_t *role) {
     if (ctx->flags & JACS_CTX_FREEING_ROLES)
         return;
+
+    if (jacs_trace_enabled(ctx)) {
+        unsigned sz = rolemgr_serialized_role_size(role);
+        void *data = rolemgr_serialize_role(role);
+        jacs_trace(ctx, JACS_TRACE_EV_ROLE_CHANGED, data, sz);
+    }
+
     unsigned numroles = jacs_img_num_roles(&ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
         if (ctx->roles[idx] == role) {

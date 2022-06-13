@@ -11,6 +11,7 @@
 #include "jacs_img.h"
 #include "jacs_regcache.h"
 #include "jacs_pack.h"
+#include "jacs_trace.h"
 
 // this can't be more than a week; unit = ms
 #define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)
@@ -62,6 +63,7 @@ typedef struct jacs_fiber {
 #define JACS_CTX_FLAG_BUSY 0x0001
 #define JACS_CTX_LOGGING_ENABLED 0x0002
 #define JACS_CTX_FREEING_ROLES 0x0004
+#define JACS_CTX_TRACE_DISABLED 0x0008
 
 struct jacs_ctx {
     value_t registers[JACS_NUM_REGS];
@@ -88,6 +90,7 @@ struct jacs_ctx {
     uint32_t *buffers;
 
     uint32_t _now;
+    uint32_t _logged_now;
 
     uint32_t log_counter;
     uint32_t log_counter_to_send;
@@ -116,6 +119,10 @@ struct jacs_activation {
 static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
     return ctx->_now;
 }
+static inline bool jacs_trace_enabled(jacs_ctx_t *ctx) {
+    return (ctx->flags & JACS_CTX_TRACE_DISABLED) == 0;
+}
+
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
 value_t jacs_runtime_failure(jacs_ctx_t *ctx);
 
@@ -170,4 +177,3 @@ void aggbuffer_init(const jacscloud_api_t *api);
 int aggbuffer_flush(void);
 int aggbuffer_upload(const char *label, jd_device_service_t *service,
                      jd_timeseries_aggregator_stored_report_t *data);
-
