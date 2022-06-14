@@ -11,6 +11,7 @@ let verbose = false
 let useC = false
 let testMode = false
 let doDeploy = false
+let logParse = false
 let serialPort = ""
 let jacsFile = ""
 
@@ -97,6 +98,18 @@ async function runTest(fn) {
 }
 
 async function runServer(fn) {
+    if (logParse) {
+        const jacscript = require("./compiler")
+        const fsp = require('node:fs/promises')
+        const h = await fsp.open(fn, "r")
+        const r = await jacscript.parseLog((off, size) => {
+            const r = Buffer.alloc(size)
+            return h.read(r, 0, r.length, off)
+                .then(() => r)
+        })
+        console.log(r)
+        return
+    }
     if (useC) {
         const prog = await readCompiled(fn)
         const compfn = distPath + "/compiled.jacs"
@@ -156,6 +169,11 @@ async function main() {
             doDeploy = true
             continue
         }
+        if (args[0] == "-p") {
+            args.shift()
+            logParse = true
+            continue
+        }
         if (args[0] && args[0].startsWith("-s:")) {
             serialPort = args[0].slice(3)
             useC = true
@@ -166,7 +184,16 @@ async function main() {
     }
 
     try {
-        if (args[0] == "test") {
+        if (args[0] == "empty") {
+            const buf = await compile(Buffer.from(""))
+            let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t jacs_empty_program[${buf.length}] = {`
+            for (let i = 0; i < buf.length; ++i) {
+                if ((i & 15) == 0) r += "\n"
+                r += "0x" + ("0" + buf[i].toString(16)).slice(-2) + ", "
+            }
+            r += "\n};"
+            console.log(r)
+        } else if (args[0] == "test") {
             testMode = true
 
             const host = await getHost()
