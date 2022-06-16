@@ -85,6 +85,9 @@ void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *
     switch (event_id) {
     case JD_CLIENT_EV_SERVICE_PACKET:
         jacs_trace(ctx, JACS_TRACE_EV_SERVICE_PACKET, pkt, pkt->service_size + 16);
+        if (serv->service_class == JD_SERVICE_CLASS_TIMESERIES_AGGREGATOR &&
+            pkt->service_command == JD_TIMESERIES_AGGREGATOR_CMD_STORED)
+            jd_lstore_append(1, JD_LSTORE_TYPE_JD_FRAME, pkt, pkt->service_size + 16);
         jacs_jd_process_pkt(ctx, serv, pkt);
         break;
     case JD_CLIENT_EV_BROADCAST_PACKET:
