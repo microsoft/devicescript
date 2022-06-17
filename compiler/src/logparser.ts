@@ -31,8 +31,6 @@ typedef struct {
     uint32_t crc32;
 } jd_lstore_block_footer_t;
 
-
-
 */
 
 function getString(buf: Uint8Array) {
@@ -49,7 +47,13 @@ typedef struct {
     uint8_t reserved[32];
 } jd_lstore_device_info_t;
 */
-function parseDevInfo(buf: Uint8Array) {
+
+export interface DeviceInfo {
+    deviceIdentifier: string
+    firmwareName: string
+    firmwareVersion: string
+}
+function parseDevInfo(buf: Uint8Array): DeviceInfo {
     return {
         deviceIdentifier: toHex(buf.slice(0, 8)),
         firmwareName: getString(buf.slice(8, 8 + 64)),
@@ -62,7 +66,7 @@ interface Block {
     timestamp: number
     data: Uint8Array
 }
-interface TraceEvent {
+export interface TraceEvent {
     generation: number
     timestamp: number
     type: number
@@ -75,6 +79,7 @@ const JD_LSTORE_TYPE_DEVINFO = 0x01
 const JD_LSTORE_TYPE_DMESG = 0x02
 const JD_LSTORE_TYPE_LOG = 0x03
 const JD_LSTORE_TYPE_JD_FRAME = 0x04
+const JD_LSTORE_TYPE_PANIC_LOG = 0x05
 const JACS_TRACE_EV_NOW = 0x40
 const JACS_TRACE_EV_INIT = 0x41
 const JACS_TRACE_EV_SERVICE_PACKET = 0x42
@@ -88,6 +93,7 @@ const typeLookup: Record<number, string> = {
     [JD_LSTORE_TYPE_DEVINFO]: "devinfo",
     [JD_LSTORE_TYPE_DMESG]: "dmesg",
     [JD_LSTORE_TYPE_LOG]: "log",
+    [JD_LSTORE_TYPE_PANIC_LOG]: "panic_log",
     [JD_LSTORE_TYPE_JD_FRAME]: "frame",
     [JACS_TRACE_EV_NOW]: "NOW",
     [JACS_TRACE_EV_INIT]: "INIT",
@@ -99,135 +105,237 @@ const typeLookup: Record<number, string> = {
     [JACS_TRACE_EV_FIBER_YIELD]: "FIBER_YIELD",
 }
 
-/*
-typedef struct {
-    uint32_t image_hash;
-} jacs_trace_ev_init_t;
-typedef struct {
-    uint16_t pc;
-} jacs_trace_ev_fiber_run_t;
-typedef struct {
-    uint16_t pc;
-} jacs_trace_ev_fiber_yield_t;
-*/
+export class GenerationInfo {
+    firstBlock: number
+    lastBlock: number
 
-export async function parseLog(
-    readfn: (off: number, size: number) => Promise<Uint8Array>
-) {
-    const hd = await readfn(0, SECTOR_SIZE)
-    const [
-        magic0,
-        magic1,
-        version,
-        sector_size,
-        sectors_per_block,
-        header_blocks,
-        num_blocks,
-        num_rewrites,
-        hd_block_magic0,
-        hd_block_magic1,
-    ] = decodeU32LE(hd)
-
-    if (magic0 != JD_LSTORE_MAGIC0 || magic1 != JD_LSTORE_MAGIC1)
-        oops("bad magic")
-    if (version != JD_LSTORE_VERSION) oops("bad version")
-    if (sector_size != SECTOR_SIZE) oops("bad sector size")
-    const block_size = sector_size * sectors_per_block
-    const file_size = num_blocks * block_size
-    if (file_size >= 4 * 1024 * 1024 * 1024) oops("file too big (over 4GB)")
-    const data_blocks = num_blocks - header_blocks
-    let block0Idx = 0
-
-    {
-        const bl0 = await readBlock(0)
-        const lastBl = await findLastBlock(b => block_le(bl0, b))
-        if (lastBl < 0) oops("empty file")
-        block0Idx = lastBl + 1
+    get numBlocks() {
+        return this.lastBlock - this.firstBlock + 1
     }
 
-    const firstGeneration = (await readBlock(0)).generation
-    const lastGeneration = (await readBlock(-1)).generation
+    constructor(public parent: LogInfo, public index: number) {}
 
-    await readGeneration(lastGeneration)
-
-    const devInfoOff = 16 * 4
-    const afterDevInfo = devInfoOff + 8 + 64 + 64
-    const logInfo = {
-        deviceInfo: parseDevInfo(hd.slice(devInfoOff, afterDevInfo)),
-        purpose: getString(hd.slice(afterDevInfo, afterDevInfo + 32)),
-        comment: getString(hd.slice(afterDevInfo + 32, afterDevInfo + 32 + 64)),
-        firstGeneration,
-        lastGeneration,
-
-        readGeneration,
+    toString() {
+        return `gen ${this.index}, ${bytes(
+            this.numBlocks * this.parent.blockSize
+        )}`
     }
 
-    return logInfo
-
-    function oops(msg: string): never {
-        throw new Error("failed to parse LSTOR log: " + msg)
-    }
-
-    async function readGeneration(gen: number, maxBlocks = 128) {
-        let startIdx = (await findLastBlock(b => b.generation < gen)) + 1
-        const endIdx = await findLastBlock(b => b.generation <= gen)
-
-        startIdx = Math.max(startIdx, endIdx - maxBlocks)
-
-        const events: TraceEvent[] = []
-        for (let i = startIdx; i <= endIdx; ++i) {
-            const bl = await readBlock(i)
-            parseBlock(bl, events)
+    async dump() {
+        return {
+            generation: this.index,
+            size: this.numBlocks * this.parent.blockSize,
         }
+    }
 
+    async blockEvents(blockIdx: number, r: TraceEvent[] = []) {
+        if (this.firstBlock <= blockIdx && blockIdx <= this.lastBlock) {
+            const bl = await this.parent._readBlock(blockIdx)
+            parseBlock(bl, r)
+        }
+        return r
+    }
+
+    async devInfo() {
+        for (const ev of await this.blockEvents(this.firstBlock)) {
+            if (ev.type == JD_LSTORE_TYPE_DEVINFO)
+                return ev.decoded as DeviceInfo
+        }
+        return undefined
+    }
+
+    async readEvents(maxBlocks: number = 0xffffffff) {
+        const startIdx = Math.max(this.firstBlock, this.lastBlock - maxBlocks)
+        const events: TraceEvent[] = []
+        for (let i = startIdx; i <= this.lastBlock; ++i) {
+            this.blockEvents(i, events)
+        }
         return events
     }
 
-    async function readBlock(off: number): Promise<Block> {
-        off += block0Idx
-        off %= data_blocks
-        if (off < 0) off += data_blocks
-
-        const buf = await readfn((header_blocks + off) * block_size, block_size)
-        const [block_magic0, _generation, timestamp_lo, timestamp_hi] =
-            decodeU32LE(buf.slice(0, 4 * 4))
-        const [block_magic1, _crc32] = decodeU32LE(buf.slice(-2 * 4))
-        let timestamp = timestamp_lo + timestamp_hi * 0x100000000
-        let generation = _generation
-        if (
-            block_magic0 != hd_block_magic0 ||
-            block_magic1 != hd_block_magic1 ||
-            crc32(buf.slice(0, -4)) != _crc32
-        ) {
-            timestamp = 0
-            generation = 0
+    async computeStats() {
+        let dataSize = 0
+        let utilizedSize = 0
+        let numEvents = 0
+        for (let i = this.firstBlock; i <= this.lastBlock; ++i) {
+            const bl = await this.parent._readBlock(i)
+            if (!bl.generation) {
+                console.log("bad block " + i)
+                continue
+            }
+            const r: TraceEvent[] = []
+            const st: BlockStats = {} as any
+            parseBlock(bl, r, st)
+            numEvents += r.length
+            dataSize += bl.data.length
+            utilizedSize += st.endptr
         }
         return {
-            generation,
-            timestamp,
-            data: buf.slice(4 * 4, -2 * 4),
+            dataSize,
+            utilizedSize,
+            numEvents,
+            avgEventSize: utilizedSize / numEvents,
+            utilization: utilizedSize / dataSize,
         }
     }
 
-    function block_le(a: Block, b: Block) {
-        return (
-            a.generation < b.generation ||
-            (a.generation == b.generation && a.timestamp <= b.timestamp)
-        )
+    async forEachEvent(cb?: (ev: TraceEvent) => Promise<void>) {
+        if (!cb)
+            cb = ev => {
+                console.log(ev.human)
+                return Promise.resolve()
+            }
+        for (let i = this.firstBlock; i <= this.lastBlock; ++i) {
+            for (const ev of await this.blockEvents(i)) {
+                await cb(ev)
+            }
+        }
+    }
+}
+
+export class LogInfo {
+    deviceInfo: DeviceInfo
+    purpose: string
+    comment: string
+    firstGeneration: number
+    lastGeneration: number
+    blockSize: number
+
+    private generations: GenerationInfo[] = []
+    private dataBlocks: number
+    private block0Idx: number
+    _readBlock: (idx: number) => Promise<Block>
+
+    async generation(gen: number) {
+        if (this.firstGeneration <= gen && gen <= this.lastGeneration) {
+            let g = this.generations[gen]
+            if (!g) {
+                this.generations[gen] = g = new GenerationInfo(this, gen)
+                g.firstBlock =
+                    (await this.findLastBlock(b => b.generation < gen)) + 1
+                g.lastBlock = await this.findLastBlock(b => b.generation <= gen)
+            }
+            return g
+        } else {
+            return undefined
+        }
     }
 
-    async function findLastBlock(cond: (b: Block) => boolean) {
-        let l = 0
-        let r = data_blocks - 1
+    async dump() {
+        const r = {
+            deviceInfo: this.deviceInfo,
+            purpuse: this.purpose,
+            comment: this.comment,
+            size: this.dataBlocks * this.blockSize,
+            generations: [] as any[],
+        }
+        for (let i = this.firstGeneration; i <= this.lastGeneration; ++i) {
+            const g = await this.generation(i)
+            r.generations.push(await g.dump())
+        }
+        return r
+    }
 
-        if (!cond(await readBlock(l))) return -1
+    constructor(
+        private readfn: (off: number, size: number) => Promise<Uint8Array>
+    ) {}
+
+    async _load() {
+        const hd = await this.readfn(0, SECTOR_SIZE)
+        const [
+            magic0,
+            magic1,
+            version,
+            sector_size,
+            sectors_per_block,
+            header_blocks,
+            num_blocks,
+            num_rewrites,
+            hd_block_magic0,
+            hd_block_magic1,
+        ] = decodeU32LE(hd)
+
+        if (magic0 != JD_LSTORE_MAGIC0 || magic1 != JD_LSTORE_MAGIC1)
+            oops("bad magic")
+        if (version != JD_LSTORE_VERSION) oops("bad version")
+        if (sector_size != SECTOR_SIZE) oops("bad sector size")
+        this.blockSize = sector_size * sectors_per_block
+        const file_size = num_blocks * this.blockSize
+        if (file_size >= 4 * 1024 * 1024 * 1024) oops("file too big (over 4GB)")
+        this.dataBlocks = num_blocks - header_blocks
+        this.block0Idx = 0
+
+        this._readBlock = async off => {
+            off += this.block0Idx
+            off %= this.dataBlocks
+            if (off < 0) off += this.dataBlocks
+
+            const buf = await this.readfn(
+                (header_blocks + off) * this.blockSize,
+                this.blockSize
+            )
+            const [block_magic0, _generation, timestamp_lo, timestamp_hi] =
+                decodeU32LE(buf.slice(0, 4 * 4))
+            const [block_magic1, _crc32] = decodeU32LE(buf.slice(-2 * 4))
+            let timestamp = timestamp_lo + timestamp_hi * 0x100000000
+            let generation = _generation
+            if (
+                block_magic0 != hd_block_magic0 ||
+                block_magic1 != hd_block_magic1 ||
+                crc32(buf.slice(0, -4)) != _crc32
+            ) {
+                timestamp = 0
+                generation = 0
+            }
+            return {
+                generation,
+                timestamp,
+                data: buf.slice(4 * 4, -2 * 4),
+            }
+        }
+
+        function block_le(a: Block, b: Block) {
+            return (
+                a.generation < b.generation ||
+                (a.generation == b.generation && a.timestamp <= b.timestamp)
+            )
+        }
+
+        const bl0 = await this._readBlock(0)
+        const lastBl = await this.findLastBlock(b => block_le(bl0, b))
+        if (lastBl < 0) oops("empty file")
+        this.block0Idx = lastBl + 1
+
+        const devInfoOff = 16 * 4
+        const afterDevInfo = devInfoOff + 8 + 64 + 64
+
+        this.deviceInfo = parseDevInfo(hd.slice(devInfoOff, afterDevInfo))
+        this.purpose = getString(hd.slice(afterDevInfo, afterDevInfo + 32))
+        this.comment = getString(
+            hd.slice(afterDevInfo + 32, afterDevInfo + 32 + 64)
+        )
+        this.firstGeneration = (await this._readBlock(0)).generation
+        // gen0 is a placeholder
+        if (this.firstGeneration == 0) this.firstGeneration = 1
+        this.lastGeneration = (await this._readBlock(-1)).generation
+
+        function oops(msg: string): never {
+            throw new Error("failed to parse LSTOR log: " + msg)
+        }
+    }
+
+    private async findLastBlock(cond: (b: Block) => boolean) {
+        let l = 0
+        let r = this.dataBlocks - 1
+
+        if (!cond(await this._readBlock(l))) return -1
 
         // inv: cond(l)
         // inv: !cond(r+1)
         while (l < r) {
             let m = ((l + r) >> 1) + 1
             // inv: l < m <= r
-            const b = await readBlock(m)
+            const b = await this._readBlock(m)
             if (cond(b)) {
                 l = m
             } else {
@@ -237,8 +345,13 @@ export async function parseLog(
 
         return l
     }
+}
 
-    /*
+interface BlockStats {
+    endptr: number
+}
+
+/*
     typedef struct {
         uint8_t type;
         uint8_t size;    // of 'data'
@@ -246,67 +359,83 @@ export async function parseLog(
         uint8_t data[0];
     } jd_lstore_entry_t;
     */
-    function parseBlock(b: Block, r: TraceEvent[] = []) {
-        let ptr = 0
-        while (ptr < b.data.length) {
-            const tp = b.data[ptr]
-            const sz = b.data[ptr + 1]
-            const tdelta = read16(b.data, ptr + 2)
-            if (tp == 0 && sz == 0) break
-            const endp = ptr + 4 + sz
-            const ev: TraceEvent = {
-                generation: b.generation,
-                timestamp: b.timestamp + tdelta,
-                type: tp,
-                payload: b.data.slice(ptr + 4, endp),
-            }
-            decodeEvent(ev)
-            r.push(ev)
-            ptr = endp
+function parseBlock(b: Block, r: TraceEvent[] = [], statsRes?: BlockStats) {
+    let ptr = 0
+    while (ptr < b.data.length - 1) {
+        const tp = b.data[ptr]
+        const sz = b.data[ptr + 1]
+        const tdelta = read16(b.data, ptr + 2)
+        if (tp == 0 && sz == 0) break
+        const endp = ptr + 4 + sz
+        const ev: TraceEvent = {
+            generation: b.generation,
+            timestamp: b.timestamp + tdelta,
+            type: tp,
+            payload: b.data.slice(ptr + 4, endp),
         }
-        return r
+        if (!statsRes) decodeEvent(ev)
+        r.push(ev)
+        ptr = endp
     }
+    if (statsRes) statsRes.endptr = ptr
+    return r
+}
 
-    function decodeEvent(ev: TraceEvent) {
-        const tp = typeLookup[ev.type] || "tp:0x" + ev.type.toString(16)
-        const ts = (ev.timestamp / 1000).toFixed(3)
-        const pref = ts + " " + tp + " "
-        switch (ev.type) {
-            case JD_LSTORE_TYPE_DEVINFO:
-                ev.decoded = parseDevInfo(ev.payload)
-                ev.human = pref + JSON.stringify(ev.decoded)
-                break
-            case JD_LSTORE_TYPE_DMESG:
-            case JD_LSTORE_TYPE_LOG:
-                ev.decoded = fromUTF8(uint8ArrayToString(ev.payload))
-                ev.human = prefix(
-                    pref,
-                    ev.decoded.replace(/\x1B\[[0-9;]+m/g, "")
-                )
-                break
-            case JACS_TRACE_EV_BROADCAST_PACKET:
-            case JACS_TRACE_EV_SERVICE_PACKET:
-            case JACS_TRACE_EV_NON_SERVICE_PACKET:
-                ev.decoded = toHex(ev.payload)
-                ev.human = ts + " " + ev.decoded
-                break
-            case JACS_TRACE_EV_NOW:
-                ev.decoded = read32(ev.payload, 0)
-                ev.human = pref + ev.decoded
-                break
-            default:
-                ev.human = pref + toHex(ev.payload)
-                break
-        }
-        console.log(ev.human)
+function decodeEvent(ev: TraceEvent) {
+    const tp = typeLookup[ev.type] || "tp:0x" + ev.type.toString(16)
+    const ts = (ev.timestamp / 1000).toFixed(3)
+    const pref = ts + " " + tp + " "
+    switch (ev.type) {
+        case JD_LSTORE_TYPE_DEVINFO:
+            ev.decoded = parseDevInfo(ev.payload)
+            ev.human = pref + JSON.stringify(ev.decoded)
+            break
+        case JD_LSTORE_TYPE_DMESG:
+        case JD_LSTORE_TYPE_LOG:
+        case JD_LSTORE_TYPE_PANIC_LOG:
+            ev.decoded = fromUTF8(uint8ArrayToString(ev.payload))
+            ev.human = prefix(pref, ev.decoded.replace(/\x1B\[[0-9;]+m/g, ""))
+            break
+        case JACS_TRACE_EV_BROADCAST_PACKET:
+        case JACS_TRACE_EV_SERVICE_PACKET:
+        case JACS_TRACE_EV_NON_SERVICE_PACKET:
+            ev.decoded = toHex(ev.payload)
+            ev.human = ts + " " + ev.decoded
+            break
+        case JACS_TRACE_EV_NOW:
+            ev.decoded = read32(ev.payload, 0)
+            ev.human = pref + ev.decoded
+            break
+        default:
+            ev.human = pref + toHex(ev.payload)
+            break
     }
+}
 
-    function prefix(pref: string, lines: string) {
-        while (lines[lines.length - 1] == "\n") lines = lines.slice(0, -1)
-        lines = pref + lines
-        if (lines.indexOf("\n") >= 0) lines = lines.replace(/\n/g, "\n" + pref)
-        return lines
-    }
+function prefix(pref: string, lines: string) {
+    while (lines[lines.length - 1] == "\n") lines = lines.slice(0, -1)
+    lines = pref + lines
+    if (lines.indexOf("\n") >= 0) lines = lines.replace(/\n/g, "\n" + pref)
+    return lines
+}
+
+function bytes(num: number) {
+    const K = 1024
+    const M = K * K
+    const G = K * K * K
+    if (num < 2 * K) return num + " B"
+    else if (num < M) return (num >>> 10) + " kB"
+    else if (num < 100 * M) return (num / M).toFixed(1) + " MB"
+    else if (num < G) return Math.round(num / M) + " MB"
+    else return (num / G).toFixed(1) + " GB"
+}
+
+export async function parseLog(
+    readfn: (off: number, size: number) => Promise<Uint8Array>
+) {
+    const logInfo = new LogInfo(readfn)
+    await logInfo._load()
+    return logInfo
 }
 
 export function parseLogFile(f: File) {

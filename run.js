@@ -97,7 +97,8 @@ async function runTest(fn) {
     })
 }
 
-async function runServer(fn) {
+async function runServer(args) {
+    const fn = args.shift()
     if (logParse) {
         const jacscript = require("./compiler")
         const fsp = require('node:fs/promises')
@@ -107,7 +108,15 @@ async function runServer(fn) {
             return h.read(r, 0, r.length, off)
                 .then(() => r)
         })
-        console.log(r)
+        console.log(await r.dump())
+        const genidx = parseInt(args[0])
+        if (genidx) {
+            const gen = await r.generation(genidx)
+            if (args[1] == "stats")
+                console.log(await gen.computeStats())
+            else
+                await gen.forEachEvent()
+        }
         return
     }
     if (useC) {
@@ -209,7 +218,7 @@ async function main() {
                 await runTest(fn)
             }
         } else {
-            await runServer(args[0])
+            await runServer(args)
         }
     } catch (e) {
         console.error(e.stack)
