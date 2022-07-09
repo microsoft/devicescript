@@ -393,7 +393,10 @@ function decodeEvent(ev: TraceEvent) {
         case JD_LSTORE_TYPE_DMESG:
         case JD_LSTORE_TYPE_LOG:
         case JD_LSTORE_TYPE_PANIC_LOG:
-            ev.decoded = fromUTF8(uint8ArrayToString(ev.payload))
+            ev.decoded = uint8ArrayToString(ev.payload)
+            try {
+                ev.decoded = fromUTF8(ev.decoded)
+            } catch {}
             ev.human = prefix(pref, ev.decoded.replace(/\x1B\[[0-9;]+m/g, ""))
             break
         case JACS_TRACE_EV_BROADCAST_PACKET:
