@@ -6,3 +6,4 @@ package-lock.json
 Makefile.user
 jacs
 vm/dist/wasmpre.d.ts.map
+*.jdl

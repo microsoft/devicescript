@@ -6,6 +6,7 @@
 #include <time.h>
 #include <emscripten/emscripten.h>
 #include "jacscript/jacscript.h"
+#include "storage/jd_storage.h"
 
 static uint64_t cached_devid = 0x1d46a30eef48919;
 static uint8_t inited;
@@ -53,6 +54,7 @@ void jd_em_init(void) {
     inited = 1;
     tx_init(&em_transport, NULL);
     jd_rx_init();
+    jd_lstore_init();
     jd_services_init();
 }
 
@@ -69,6 +71,7 @@ void jd_em_process(void) {
 
     jd_process_everything();
     tx_process();
+    jd_lstore_process();
 }
 
 EMSCRIPTEN_KEEPALIVE

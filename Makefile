@@ -37,6 +37,8 @@ SRC = $(wildcard posix/*.c) \
 	$(JDS)/jd_queue.c \
 	$(JDS)/interfaces/tx_queue.c \
 	$(JDS)/interfaces/event_queue.c \
+	jacdac-c/storage/crc32.c \
+	jacdac-c/storage/lstore.c \
 
 OBJ = $(addprefix $(BUILT)/,$(SRC:.c=.o))
 

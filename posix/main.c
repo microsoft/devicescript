@@ -8,6 +8,7 @@
 
 #include "jd_sdk.h"
 #include "jacscript/jacscript.h"
+#include "storage/jd_storage.h"
 
 #define LOG(fmt, ...) printf("main: " fmt "\n", ##__VA_ARGS__)
 
@@ -178,6 +179,7 @@ int load_image(const char *name) {
 static void client_process(void) {
     jd_process_everything();
     tx_process();
+    jd_lstore_process();
 }
 
 static void run_sample(const char *name) {
@@ -205,6 +207,7 @@ static void run_sample(const char *name) {
     }
 
     jacscriptmgr_deploy(NULL, 0);
+    jd_lstore_force_flush();
     jd_services_deinit();
 }
 
@@ -250,6 +253,7 @@ int main(int argc, const char **argv) {
         }
     }
 #endif
+    int enable_lstore = 0;
 
     for (int i = 1; i < argc; ++i) {
         const char *arg = argv[i];
@@ -262,6 +266,8 @@ int main(int argc, const char **argv) {
             transport = &sock_transport;
         } else if (ends_with(arg, ".jacs")) {
             jacs_img = arg;
+        } else if (strcmp(arg, "-l") == 0) {
+            enable_lstore = 1;
         } else {
             fprintf(stderr, "unknown arg: %s\n", arg);
             return 1;
@@ -283,6 +289,8 @@ int main(int argc, const char **argv) {
     tx_init(transport, transport_ctx);
 
     jd_rx_init();
+    if (enable_lstore)
+        jd_lstore_init();
     jd_services_init();
 
     DMESG("self-device: %-s", jd_device_short_id_a(jd_device_id()));
