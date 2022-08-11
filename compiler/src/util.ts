@@ -82,6 +82,13 @@ export function camelize(name: string) {
             .replace(/_([a-z0-9])/gi, (_, l) => l.toUpperCase())
     )
 }
+
+export function upperCamel(name: string) {
+    name = camelize(name)
+    if (!name?.length) return name
+    return name[0].toUpperCase() + name.slice(1)
+}
+
 export function addUnique<T>(arr: T[], v: T) {
     let idx = arr.indexOf(v)
     if (idx < 0) {

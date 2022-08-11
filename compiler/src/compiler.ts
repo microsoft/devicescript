@@ -55,6 +55,7 @@ import {
     oops,
     snakify,
     strlen,
+    upperCamel,
 } from "./util"
 import {
     DelayedCodeSection,
@@ -429,6 +430,7 @@ class Program implements TopOpWriter {
     proc: Procedure
     sysSpec: jdspec.ServiceSpec
     serviceSpecs: Record<string, jdspec.ServiceSpec>
+    enums: Record<string, jdspec.EnumInfo> = {}
     clientCommands: Record<string, ClientCommand[]> = {}
     refreshMS: number[] = [0, 500]
     resolverParams: number[]
@@ -447,7 +449,11 @@ class Program implements TopOpWriter {
     constructor(public host: Host, public _source: string) {
         this.serviceSpecs = {}
         for (const sp of host.getSpecs()) {
-            this.serviceSpecs[sp.camelName] = sp as any
+            this.serviceSpecs[sp.camelName] = sp
+            for (const en of Object.keys(sp.enums)) {
+                const n = upperCamel(sp.camelName) + upperCamel(en)
+                this.enums[n] = sp.enums[en]
+            }
         }
         this.sysSpec = this.serviceSpecs["system"]
     }
@@ -1603,12 +1609,12 @@ class Program implements TopOpWriter {
                         wr.emitJump(skipHandler, tmp.index)
                         // tmp := cache
                         wr.assign(tmp, cache.value())
-                        // if (Math.abs(tmp-curr) <= threshold) goto skip
+                        // if (Math.abs(tmp-curr) < threshold) goto skip
                         // note that this also calls handler() if cache was NaN
                         wr.emitBin(OpBinary.SUB, tmp, curr)
                         wr.emitUnary(OpUnary.ABS, tmp, tmp)
                         const thresholdReg = wr.forceReg(floatVal(threshold))
-                        wr.emitBin(OpBinary.LE, tmp, thresholdReg)
+                        wr.emitBin(OpBinary.LT, tmp, thresholdReg)
                         wr.emitUnary(OpUnary.NOT, tmp, tmp)
                         wr.emitJump(skipHandler, tmp.index)
                         // cache := curr
@@ -2098,9 +2104,15 @@ class Program implements TopOpWriter {
     }
 
     private emitMemberExpression(expr: estree.MemberExpression): ValueDesc {
-        if (idName(expr.object) == "Math") {
+        const nsName = idName(expr.object)
+        if (nsName == "Math") {
             const id = idName(expr.property)
             if (mathConst.hasOwnProperty(id)) return floatVal(mathConst[id])
+        } else if (this.enums.hasOwnProperty(nsName)) {
+            const e = this.enums[nsName]
+            const prop = idName(expr.property)
+            if (e.members.hasOwnProperty(prop)) return floatVal(e.members[prop])
+            else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
         const obj = this.emitExpr(expr.object)
         if (obj.kind == CellKind.JD_ROLE) {
