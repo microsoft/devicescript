@@ -24,7 +24,11 @@ as well node.js, GNU Make and C compiler.
 * open this folder in VSCode; use "Reopen in Container" if needed
 * start Terminal in VSCode
 * run `make` in terminal
-* run `./built/jdcli 8082`
+
+Now you have options:
+* run `./built/jdcli 8082` - this will run the POSIX/native Jacscript server, which can be accessed from the devtools dashboard
+* run `node run.js samples/something.js` - this will execute given Jacscript program using the WASM binary
+* run `node run.js -c samples/something.js` - this will execute given Jacscript program using the POSIX/native binary
 
 ## Design goals for Jacscript VM
 

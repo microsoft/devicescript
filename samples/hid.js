@@ -3,7 +3,9 @@ var rot = roles.rotaryEncoder()
 var kbd = roles.hidKeyboard()
 
 btn.down.subscribe(() => {
-    kbd.key(HidKeyboardSelector.UpArrow, HidKeyboardModifiers.None, HidKeyboardAction.Press)
+    // kbd.key(HidKeyboardSelector.UpArrow, HidKeyboardModifiers.None, HidKeyboardAction.Press)
+    // kbd.key(HidKeyboardSelector.VolumeUp, HidKeyboardModifiers.None, HidKeyboardAction.Press)
+    kbd.key(HidKeyboardSelector.V, HidKeyboardModifiers.LeftGUI, HidKeyboardAction.Press)
 })
 
 function press(k) {
