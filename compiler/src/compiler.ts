@@ -305,9 +305,9 @@ class Procedure {
         this.locals = new VariableScope(this.parent.globals)
     }
     toString() {
-        return `proc ${this.name}: (fun${
+        return `proc ${this.name}_F${
             this.index
-        })\n${this.writer.getAssembly()}`
+        }:\n${this.writer.getAssembly()}`
     }
     finalize() {
         this.writer.patchLabels()

@@ -352,6 +352,10 @@ Main dynamic memory usage - function activation records (and fibers).
 
 ## TODO
 
+* add `Date.now()` ?
+* hang properties off roles - `high`, `lastHigh` for bar graph eg
+* more dynamic buffers? (offline store of pixels)
+
 * `role.control` -> control service of device that has this role ?
 * role for control service of the brain (to set status light, reset, etc)
 
