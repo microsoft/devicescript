@@ -35,6 +35,9 @@ static int fail(int code, uint32_t offset) {
     MUST_CONTAIN_PTR(code, container, (sect)->start + (sect)->length)
 
 int jacs_verify(const uint8_t *imgdata, uint32_t size) {
+    jacs_vm_check_stmt();
+    jacs_vm_check_expr();
+
     JD_ASSERT(((uintptr_t)imgdata & 3) == 0);
     JD_ASSERT(size > sizeof(jacs_img_header_t));
     uint32_t offset = 0;

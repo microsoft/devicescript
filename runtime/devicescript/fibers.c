@@ -166,7 +166,7 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
 
     unsigned maxsteps = JACS_MAX_STEPS;
     while (ctx->curr_fn && --maxsteps)
-        jacs_act_step(ctx->curr_fn);
+        jacs_vm_exec_stmt(ctx->curr_fn);
 
     if (maxsteps == 0)
         jacs_panic(ctx, JACS_PANIC_TIMEOUT);

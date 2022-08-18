@@ -159,13 +159,9 @@ void jacs_fiber_sync_now(jacs_ctx_t *ctx);
 void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 
 // step.c
-void jacs_act_step(jacs_activation_t *frame);
-
-// math.c
-value_t jacs_step_unop(int op, value_t v);
-value_t jacs_step_binop(int op, value_t a, value_t b);
-value_t jacs_step_opmath1(int op, value_t a);
-value_t jacs_step_opmath2(int op, value_t a, value_t b);
+void jacs_vm_exec_stmt(jacs_activation_t *frame);
+void jacs_vm_check_stmt(void);
+void jacs_vm_check_expr(void);
 
 value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer,
                        value_t *setv);
