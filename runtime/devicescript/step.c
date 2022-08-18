@@ -78,10 +78,6 @@ static void store_cell(jacs_ctx_t *ctx, jacs_activation_t *act, int tp, int idx,
     }
 }
 
-value_t *jacs_act_saved_regs_ptr(jacs_activation_t *act) {
-    return &act->locals[act->func->num_locals];
-}
-
 static unsigned strformat(jacs_ctx_t *ctx, unsigned str_idx, unsigned numargs, uint8_t *dst,
                           unsigned dstlen, unsigned numskip) {
     return jacs_strformat(jacs_img_get_string_ptr(&ctx->img, str_idx),
@@ -283,7 +279,7 @@ void jacs_act_step(jacs_activation_t *frame) {
 #endif
 
 typedef void (*jacs_stmt_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
-typedef void (*expr_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
+typedef value_t (*jacs_expr_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
 
 static value_t exec_expr(jacs_activation_t *frame);
 
@@ -501,7 +497,7 @@ static void stmt4_store_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t offset = exec_expr_u32(frame);
     uint32_t bufferidx = exec_expr_u32(frame);
     value_t val = exec_expr(frame);
-    jacs_buffer_op(act, fmt0, offset, bufferidx, &val);
+    jacs_buffer_op(frame, fmt0, offset, bufferidx, &val);
 }
 
 static void stmt_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -549,7 +545,7 @@ static const jacs_stmt_handler_t stmt_handlers[JACS_STMT_MAX + 1] = {
     [JACS_STMT_MAX] = stmt_invalid,
 };
 
-static const expr_handler_t expr_handlers[JACS_EXPR_MAX + 1] = {
+static const jacs_expr_handler_t expr_handlers[JACS_EXPR_MAX + 1] = {
     [0] = expr_invalid,
     [JACS_EXPR2_STR0EQ] = expr2_str0eq,
     [JACS_EXPR_MAX] = expr_invalid,
@@ -574,7 +570,7 @@ static value_t exec_expr(jacs_activation_t *frame) {
     return r;
 }
 
-void jacs_exec_stmt(jacs_activation_t *frame) {
+void jacs_act_step(jacs_activation_t *frame) {
     jacs_ctx_t *ctx = frame->fiber->ctx;
 
     uint8_t op = fetch_byte(frame, ctx);

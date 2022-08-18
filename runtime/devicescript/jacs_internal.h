@@ -39,6 +39,7 @@ typedef struct jacs_fiber {
         } reg_get;
         struct {
             uint16_t string_idx;
+            uint16_t localsidx;
             uint8_t num_args;
         } logmsg;
     } pkt_data;
@@ -69,7 +70,7 @@ typedef struct jacs_fiber {
 
 struct jacs_ctx {
     value_t *globals;
-
+    uint16_t opstack;
     uint16_t flags;
     uint16_t error_code;
     uint16_t error_pc;
@@ -140,7 +141,7 @@ void jacs_jd_init_roles(jacs_ctx_t *ctx);
 void jacs_jd_free_roles(jacs_ctx_t *ctx);
 void jacs_jd_role_changed(jacs_ctx_t *ctx, jd_role_t *role);
 void jacs_jd_clear_pkt_kind(jacs_fiber_t *fib);
-void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args);
+void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned localsidx, unsigned num_args);
 
 // fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
@@ -156,7 +157,6 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 
 // step.c
 void jacs_act_step(jacs_activation_t *frame);
-value_t *jacs_act_saved_regs_ptr(jacs_activation_t *act);
 
 // math.c
 value_t jacs_step_unop(int op, value_t v);

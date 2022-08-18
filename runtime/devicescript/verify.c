@@ -16,7 +16,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1150 / 1051
+// next error 1052
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -84,6 +84,7 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
         MUST_CONTAIN_SECT(1021, header->functions_data, sptr);
         CHECK(1020, sptr->start == prevProc);
         prevProc += sptr->length;
+        CHECK(1051, prevProc < 0x10000);
     }
 
     for (sptr = FIRST_DESC(strings); (void *)sptr < LAST_DESC(strings); sptr++) {

@@ -23,8 +23,8 @@ void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *param
         jd_alloc(sizeof(jacs_activation_t) + sizeof(value_t) * func->num_locals);
     callee->params = params;
     callee->num_params = numargs;
-    callee->params_is_copy = 0;
-    callee->pc = func->start >> 1;
+    callee->pc = func->start;
+    callee->maxpc = func->start + func->length;
     callee->caller = fiber->activation;
     callee->fiber = fiber;
     callee->func = func;

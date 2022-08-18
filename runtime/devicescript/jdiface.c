@@ -85,7 +85,8 @@ void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     jacs_fiber_sleep(fib, 0);
 }
 
-void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args) {
+void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned localsidx,
+                         unsigned num_args) {
     jacs_fiber_t *fib = ctx->curr_fiber;
 
     fib->role_idx = JACS_NO_ROLE;
@@ -95,6 +96,7 @@ void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args
     ctx->log_counter++;
     fib->pkt_data.logmsg.string_idx = string_idx;
     fib->pkt_data.logmsg.num_args = num_args;
+    fib->pkt_data.logmsg.localsidx = localsidx;
 
     if (handle_logmsg(fib, true) == RESUME_USER_CODE) {
         jacs_jd_clear_pkt_kind(fib);
@@ -273,10 +275,11 @@ static bool handle_logmsg(jacs_fiber_t *fiber, bool print) {
 
     jd_packet_t *pkt = &ctx->packet;
     unsigned str_idx = fiber->pkt_data.logmsg.string_idx;
-    unsigned sz = jacs_strformat(
-        jacs_img_get_string_ptr(&ctx->img, str_idx), jacs_img_get_string_len(&ctx->img, str_idx),
-        (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
-        jacs_act_saved_regs_ptr(fiber->activation), fiber->pkt_data.logmsg.num_args, 0);
+    unsigned sz = jacs_strformat(jacs_img_get_string_ptr(&ctx->img, str_idx),
+                                 jacs_img_get_string_len(&ctx->img, str_idx), (char *)pkt->data + 2,
+                                 JD_SERIAL_PAYLOAD_SIZE - 2,
+                                 fiber->activation->locals + fiber->pkt_data.logmsg.localsidx,
+                                 fiber->pkt_data.logmsg.num_args, 0);
     pkt->data[0] = low_log_counter & 0xff;     // log-counter
     pkt->data[1] = 0;                          // flags
     pkt->data[JD_SERIAL_PAYLOAD_SIZE - 1] = 0; // make sure to 0-terminate
