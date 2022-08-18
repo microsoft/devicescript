@@ -15,7 +15,8 @@ static void jacs_fiber_activate(jacs_activation_t *act) {
     act->fiber->ctx->curr_fn = act;
 }
 
-void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params, unsigned numargs) {
+void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params,
+                              unsigned numargs) {
     jacs_ctx_t *ctx = fiber->ctx;
     const jacs_function_desc_t *func = jacs_img_get_function(&ctx->img, fidx);
 
@@ -61,19 +62,26 @@ static void free_fiber(jacs_fiber_t *fiber) {
     jd_free(fiber);
 }
 
+static void free_activation(jacs_activation_t *act) {
+    if (act->params_is_copy)
+        jd_free(act->params);
+    jd_free(act);
+}
+
 void jacs_fiber_return_from_call(jacs_activation_t *act) {
     if (act->caller) {
         jacs_fiber_activate(act->caller);
-        jd_free(act);
+        free_activation(act);
     } else {
         jacs_fiber_t *fiber = act->fiber;
         if (fiber->pending) {
             DMESG("re-run fiber %d ", fiber->bottom_function_idx);
             fiber->pending = 0;
-            act->pc = act->func->start >> 1;
+            act->pc = act->func->start;
         } else {
             DMESG("free fiber %d", fiber->bottom_function_idx);
             jacs_fiber_yield(fiber->ctx);
+            free_activation(act);
             free_fiber(fiber);
         }
     }
@@ -87,7 +95,7 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx) {
         jacs_activation_t *act = f->activation;
         while (act) {
             jacs_activation_t *n = act->caller;
-            jd_free(act);
+            free_activation(act);
             act = n;
         }
         jd_free(f);
@@ -95,7 +103,8 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx) {
     }
 }
 
-void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs, unsigned op) {
+void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
+                      unsigned op) {
     jacs_fiber_t *fiber;
 
     if (op != JACS_OPCALL_BG)
@@ -178,7 +187,7 @@ void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
         if (code != JACS_PANIC_REBOOT)
             for (jacs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
                 int idx = fn->func - jacs_img_get_function(&ctx->img, 0);
-                DMESG("  pc=%d @ fun%d", (int)(fn->pc - (fn->func->start >> 1)), idx);
+                DMESG("  pc=%d @ fun%d", (int)(fn->pc - fn->func->start), idx);
             }
     }
     jacs_fiber_yield(ctx);

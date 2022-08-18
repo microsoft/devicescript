@@ -6,7 +6,6 @@
 typedef struct jacs_img {
     union {
         const uint8_t *data;
-        const uint16_t *instructions;
         const jacs_img_header_t *header;
     };
 } jacs_img_t;

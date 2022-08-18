@@ -3,14 +3,6 @@
 
 STATIC_ASSERT(sizeof(jacs_img_header_t) == 64 + JACS_NUM_IMG_SECTIONS * sizeof(jacs_img_section_t));
 
-static int numSetBits(uint32_t n) {
-    int r = 0;
-    for (int i = 0; i < 32; ++i)
-        if (n & (1 << i))
-            r++;
-    return r;
-}
-
 static int fail(int code, uint32_t offset) {
     DMESG("verification failure: %d at %x", code, (unsigned)offset);
     return -code;
