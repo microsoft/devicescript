@@ -75,6 +75,9 @@ struct jacs_ctx {
     uint16_t error_code;
     uint16_t error_pc;
 
+    value_t binop[2];
+    double binop_f[2];
+
     jacs_img_t img;
 
     jacs_activation_t *curr_fn;

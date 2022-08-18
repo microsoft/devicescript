@@ -1,5 +1,8 @@
 #include "jacs_internal.h"
 
+#include <math.h>
+#include <limits.h>
+
 typedef void (*jacs_stmt_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
 typedef value_t (*jacs_expr_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
 
@@ -47,6 +50,11 @@ static int32_t decode_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static uint32_t exec_expr_u32(jacs_activation_t *frame) {
     // TODO int vs uint?
+    // TODO specialize?
+    return jacs_value_to_int(exec_expr(frame));
+}
+
+static uint32_t exec_expr_i32(jacs_activation_t *frame) {
     // TODO specialize?
     return jacs_value_to_int(exec_expr(frame));
 }
@@ -244,6 +252,21 @@ static void stmt_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_runtime_failure(ctx);
 }
 
+//
+// Expressions
+//
+
+static uint32_t random_max(uint32_t mx) {
+    uint32_t mask = 1;
+    while (mask < mx)
+        mask = (mask << 1) | 1;
+    for (;;) {
+        uint32_t r = jd_random() & mask;
+        if (r <= mx)
+            return r;
+    }
+}
+
 static value_t expr_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_runtime_failure(ctx);
     return jacs_nan;
@@ -332,101 +355,257 @@ static value_t expr0_nan(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t expr1_abs(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
+    value_t v = exec_expr(frame);
+    if (!jacs_is_tagged_int(v))
+        return v.f < 0 ? jacs_value_from_double(-v.f) : v;
+    int q = v.val_int32;
+    if (q < 0) {
+        if (q == INT_MIN)
+            return jacs_max_int_1;
+        else
+            return jacs_value_from_int(-q);
+    } else
+        return v;
 }
 
 static value_t expr1_bit_not(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
+    return jacs_value_from_int(~exec_expr_i32(frame));
 }
+
 static value_t expr1_ceil(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
+    value_t v = exec_expr(frame);
+    if (jacs_is_tagged_int(v))
+        return v;
+    return jacs_value_from_double(ceil(v.f));
 }
+
 static value_t expr1_floor(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
+    value_t v = exec_expr(frame);
+    if (jacs_is_tagged_int(v))
+        return v;
+    return jacs_value_from_double(floor(v.f));
 }
-static value_t expr1_id(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr1_is_nan(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr1_log_e(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr1_neg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr1_not(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr1_random(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr1_random_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
+
 static value_t expr1_round(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
+    value_t v = exec_expr(frame);
+    if (jacs_is_tagged_int(v))
+        return v;
+    return jacs_value_from_double(round(v.f));
 }
+
+static value_t expr1_id(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return exec_expr(frame);
+}
+
+static value_t expr1_is_nan(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    value_t v = exec_expr(frame);
+    if (jacs_is_tagged_int(v))
+        return jacs_zero;
+    return jacs_value_from_bool(isnan(v.f));
+}
+
+static value_t expr1_log_e(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_value_from_double(log(exec_expr_f64(frame)));
+}
+
+static value_t expr1_neg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    value_t v = exec_expr(frame);
+    if (!jacs_is_tagged_int(v))
+        return jacs_value_from_double(-v.f);
+    if (v.val_int32 == INT_MIN)
+        return jacs_max_int_1;
+    else
+        return jacs_value_from_int(-v.val_int32);
+}
+
+static value_t expr1_not(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    value_t v = exec_expr(frame);
+    return jacs_value_from_int(!jacs_value_to_bool(v));
+}
+
+static value_t expr1_random(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_value_from_double(jd_random() * exec_expr_f64(frame) / (double)0x100000000);
+}
+
+static value_t expr1_random_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_value_from_int(random_max(exec_expr_i32(frame)));
+}
+
 static value_t expr1_to_bool(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
+    value_t v = exec_expr(frame);
+    return jacs_value_from_int(jacs_value_to_bool(v));
 }
+
+static int exec2_and_check_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    ctx->binop[0] = exec_expr(frame);
+    ctx->binop[1] = exec_expr(frame);
+    return jacs_is_tagged_int(ctx->binop[0]) && jacs_is_tagged_int(ctx->binop[1]);
+}
+
+#define aa ctx->binop[0].val_int32
+#define bb ctx->binop[1].val_int32
+
+#define af ctx->binop_f[0]
+#define bf ctx->binop_f[1]
+
+static void force_double(jacs_ctx_t *ctx) {
+    af = jacs_value_to_double(ctx->binop[0]);
+    bf = jacs_value_to_double(ctx->binop[1]);
+}
+
+static void exec2_and_force_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    aa = exec_expr_i32(frame);
+    bb = exec_expr_i32(frame);
+}
+
+static int exec2_and_check_int_or_force_double(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (exec2_and_check_int(frame, ctx))
+        return 1;
+    force_double(ctx);
+    return 0;
+}
+
 static value_t expr2_add(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
+    if (exec2_and_check_int(frame, ctx)) {
+        int r;
+        if (!__builtin_sadd_overflow(aa, bb, &r))
+            return jacs_value_from_int(r);
+    }
+    force_double(ctx);
+    return jacs_value_from_double(af + bf);
 }
-static value_t expr2_bit_and(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_bit_or(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_bit_xor(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_div(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_eq(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_idiv(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_imul(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_le(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_lt(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_max(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_min(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_mul(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_ne(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_pow(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_shift_left(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_shift_right(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
-static value_t expr2_shift_right_unsigned(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
-}
+
 static value_t expr2_sub(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_nan;
+    if (exec2_and_check_int(frame, ctx)) {
+        int r;
+        if (!__builtin_ssub_overflow(aa, bb, &r))
+            return jacs_value_from_int(r);
+    }
+    force_double(ctx);
+    return jacs_value_from_double(af - bf);
+}
+
+static value_t expr2_mul(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (exec2_and_check_int(frame, ctx)) {
+        int r;
+        if (!__builtin_smul_overflow(aa, bb, &r))
+            return jacs_value_from_int(r);
+    }
+    force_double(ctx);
+    return jacs_value_from_double(af * bf);
+}
+
+static value_t expr2_div(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (exec2_and_check_int(frame, ctx)) {
+        int r;
+        // not sure this is worth it on M0+; it definitely is on M4
+        if (bb != 0 && (bb != -1 || aa != INT_MIN) && ((r = aa / bb)) * bb == aa)
+            return jacs_value_from_int(r);
+    }
+    force_double(ctx);
+    return jacs_value_from_double(af / bf);
+}
+
+static value_t expr2_pow(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_check_int(frame, ctx);
+    force_double(ctx);
+    return jacs_value_from_double(pow(af, bf));
+}
+
+static value_t expr2_bit_and(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    return jacs_value_from_int(aa & bb);
+}
+
+static value_t expr2_bit_or(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    return jacs_value_from_int(aa | bb);
+}
+
+static value_t expr2_bit_xor(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    return jacs_value_from_int(aa ^ bb);
+}
+
+static value_t expr2_shift_left(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    return jacs_value_from_int(aa << (31 & bb));
+}
+
+static value_t expr2_shift_right(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    return jacs_value_from_int(aa >> (31 & bb));
+}
+
+static value_t expr2_shift_right_unsigned(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    uint32_t tmp = (uint32_t)aa >> (31 & bb);
+    if (tmp >> 31)
+        return jacs_value_from_double(tmp);
+    else
+        return jacs_value_from_int(tmp);
+}
+
+static value_t expr2_idiv(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    if (bb == 0)
+        return jacs_zero;
+    return jacs_value_from_int(aa / bb);
+}
+
+static value_t expr2_imul(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    // avoid signed overflow, which is undefined
+    // note that signed and unsigned multiplication result in the same bit patterns
+    return jacs_value_from_int((uint32_t)aa * (uint32_t)bb);
+}
+
+static value_t expr2_eq(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (exec2_and_check_int_or_force_double(frame, ctx))
+        return jacs_value_from_bool(aa == bb);
+    return jacs_value_from_bool(af == bf);
+}
+
+static value_t expr2_le(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (exec2_and_check_int_or_force_double(frame, ctx))
+        return jacs_value_from_bool(aa <= bb);
+    return jacs_value_from_bool(af <= bf);
+}
+
+static value_t expr2_lt(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (exec2_and_check_int_or_force_double(frame, ctx))
+        return jacs_value_from_bool(aa < bb);
+    return jacs_value_from_bool(af < bf);
+}
+
+static value_t expr2_ne(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (exec2_and_check_int_or_force_double(frame, ctx))
+        return jacs_value_from_bool(aa != bb);
+    return jacs_value_from_bool(af != bf);
+}
+
+static value_t expr2_max(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    int lt;
+    if (exec2_and_check_int_or_force_double(frame, ctx))
+        lt = aa < bb;
+    else if (isnan(af) || isnan(bf))
+        return jacs_nan;
+    else
+        lt = af < bf;
+
+    return lt ? ctx->binop[1] : ctx->binop[0];
+}
+
+static value_t expr2_min(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    int lt;
+    if (exec2_and_check_int_or_force_double(frame, ctx))
+        lt = aa < bb;
+    else if (isnan(af) || isnan(bf))
+        return jacs_nan;
+    else
+        lt = af < bf;
+
+    return lt ? ctx->binop[0] : ctx->binop[1];
 }
 
 static const jacs_stmt_handler_t stmt_handlers[JACS_STMT_MAX + 1] = {
