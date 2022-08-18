@@ -3,8 +3,6 @@
 #include "jacs_value.h"
 #include <stdbool.h>
 
-#define JACS_NUM_REGS 16
-
 typedef struct jacs_img {
     union {
         const uint8_t *data;
@@ -54,10 +52,6 @@ static inline value_t jacs_img_get_float(const jacs_img_t *img, uint32_t idx) {
 static inline const jacs_buffer_desc_t *jacs_img_get_buffer(const jacs_img_t *img, uint32_t idx) {
     return (const jacs_buffer_desc_t *)(img->data + img->header->buffers.start +
                                         idx * sizeof(jacs_buffer_desc_t));
-}
-
-static inline bool jacs_is_prefix_instr(uint16_t instr) {
-    return (instr >> 12) <= JACS_OPTOP_SET_HIGH;
 }
 
 static inline const jacs_img_section_t *jacs_img_get_string(const jacs_img_t *img, uint32_t idx) {

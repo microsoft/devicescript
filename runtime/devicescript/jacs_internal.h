@@ -56,6 +56,8 @@ typedef struct jacs_fiber {
 
     uint32_t wake_time;
 
+    value_t ret_val;
+
     jacs_activation_t *activation;
     struct jacs_ctx *ctx;
 } jacs_fiber_t;
@@ -66,13 +68,6 @@ typedef struct jacs_fiber {
 #define JACS_CTX_TRACE_DISABLED 0x0008
 
 struct jacs_ctx {
-    value_t registers[JACS_NUM_REGS];
-    union {
-        struct {
-            uint16_t a, b, c, d;
-        };
-        uint16_t params[4];
-    };
     value_t *globals;
 
     uint16_t flags;
@@ -106,11 +101,14 @@ struct jacs_ctx {
 };
 
 struct jacs_activation {
+    uint16_t pc;
+    uint16_t maxpc;
     jacs_activation_t *caller;
     jacs_fiber_t *fiber;
     const jacs_function_desc_t *func;
-    uint16_t saved_regs;
-    uint16_t pc;
+    value_t *params;
+    uint8_t num_params;
+    uint8_t params_is_copy : 1;
     value_t locals[0];
 };
 
@@ -148,9 +146,9 @@ void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned num_args
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_yield(jacs_ctx_t *ctx);
-void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numargs);
+void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params, unsigned numargs);
 void jacs_fiber_return_from_call(jacs_activation_t *act);
-void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op);
+void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs, unsigned op);
 void jacs_fiber_run(jacs_fiber_t *fiber);
 void jacs_fiber_poke(jacs_ctx_t *ctx);
 void jacs_fiber_sync_now(jacs_ctx_t *ctx);
@@ -158,7 +156,6 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 
 // step.c
 void jacs_act_step(jacs_activation_t *frame);
-void jacs_act_restore_regs(jacs_activation_t *act);
 value_t *jacs_act_saved_regs_ptr(jacs_activation_t *act);
 
 // math.c

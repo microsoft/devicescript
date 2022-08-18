@@ -13,23 +13,21 @@ void jacs_fiber_yield(jacs_ctx_t *ctx) {
 static void jacs_fiber_activate(jacs_activation_t *act) {
     act->fiber->activation = act;
     act->fiber->ctx->curr_fn = act;
-    jacs_act_restore_regs(act);
 }
 
-void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, unsigned numargs) {
+void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params, unsigned numargs) {
     jacs_ctx_t *ctx = fiber->ctx;
     const jacs_function_desc_t *func = jacs_img_get_function(&ctx->img, fidx);
 
-    int numregs = func->num_regs_and_args & 0xf;
-
     jacs_activation_t *callee =
-        jd_alloc(sizeof(jacs_activation_t) + sizeof(value_t) * (numregs + func->num_locals));
-    memcpy(callee->locals, ctx->registers, numargs * sizeof(value_t));
+        jd_alloc(sizeof(jacs_activation_t) + sizeof(value_t) * func->num_locals);
+    callee->params = params;
+    callee->num_params = numargs;
+    callee->params_is_copy = 0;
     callee->pc = func->start >> 1;
     callee->caller = fiber->activation;
     callee->fiber = fiber;
     callee->func = func;
-    callee->saved_regs = 0;
 
     // if fiber already activated, move the activation pointer
     if (fiber->activation)
@@ -97,7 +95,7 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx) {
     }
 }
 
-void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned op) {
+void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs, unsigned op) {
     jacs_fiber_t *fiber;
 
     if (op != JACS_OPCALL_BG)
@@ -105,15 +103,15 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
             if (fiber->bottom_function_idx == fidx) {
                 if (op == JACS_OPCALL_BG_MAX1_PEND1) {
                     if (fiber->pending) {
-                        ctx->registers[0] = jacs_value_from_int(3);
+                        fiber->ret_val = jacs_value_from_int(3);
                         // DMESG("fiber already pending %d", fidx);
                     } else {
                         fiber->pending = 1;
                         // DMESG("pend fiber %d", fidx);
-                        ctx->registers[0] = jacs_value_from_int(2);
+                        fiber->ret_val = jacs_value_from_int(2);
                     }
                 } else {
-                    ctx->registers[0] = jacs_zero;
+                    fiber->ret_val = jacs_zero;
                 }
                 return;
             }
@@ -125,14 +123,14 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, unsigned numargs, unsigned
     fiber->ctx = ctx;
     fiber->bottom_function_idx = fidx;
 
-    jacs_fiber_call_function(fiber, fidx, numargs);
+    jacs_fiber_call_function(fiber, fidx, params, numargs);
 
     fiber->next = ctx->fibers;
     ctx->fibers = fiber;
 
     jacs_fiber_set_wake_time(fiber, jacs_now(ctx));
 
-    ctx->registers[0] = jacs_one;
+    fiber->ret_val = jacs_one;
 }
 
 void jacs_fiber_run(jacs_fiber_t *fiber) {
@@ -148,8 +146,6 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
     jacs_jd_clear_pkt_kind(fiber);
     fiber->role_idx = JACS_NO_ROLE;
     jacs_fiber_set_wake_time(fiber, 0);
-
-    ctx->a = ctx->b = ctx->c = ctx->d = 0;
 
     ctx->curr_fiber = fiber;
     jacs_fiber_activate(fiber->activation);

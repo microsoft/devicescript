@@ -31,7 +31,7 @@ typedef struct {
     uint32_t start;  // in bytes, in whole image
     uint32_t length; // in bytes
     uint16_t num_locals;
-    uint8_t num_regs_and_args; //  num_regs | (num_args << 4)
+    uint8_t num_args;
     uint8_t flags;
     uint32_t reserved;
 } jacs_function_desc_t;
@@ -51,102 +51,88 @@ typedef struct {
 #define JACS_IMG_MAGIC0 0x5363614a // "JacS"
 #define JACS_IMG_MAGIC1 0x9a6a7e0a
 
-#define JACS_OPTOP_SET_A 0      // ARG[12]
-#define JACS_OPTOP_SET_B 1      // ARG[12]
-#define JACS_OPTOP_SET_C 2      // ARG[12]
-#define JACS_OPTOP_SET_D 3      // ARG[12]
-#define JACS_OPTOP_SET_HIGH 4   // A/B/C/D[2] IS_DYN[1] UNUSED[5] ARG_OR_REG[4]
-#define JACS_OPTOP_UNARY 5      // OP[4] DST[4] SRC[4]
-#define JACS_OPTOP_BINARY 6     // OP[4] DST[4] SRC[4]
-#define JACS_OPTOP_LOAD_CELL 7  // DST[4] CELL_KIND[4] A:OFF[4]
-#define JACS_OPTOP_STORE_CELL 8 // SRC[4] CELL_KIND[4] A:OFF[4]
-#define JACS_OPTOP_JUMP 9       // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
-#define JACS_OPTOP_CALL 10      // NUMREGS[4] OPCALL[2] B:OFF[6] (D - saved regs)
-#define JACS_OPTOP_SYNC 11      // UNUSED[4] OP[8]
-#define JACS_OPTOP_ASYNC 12     // D:SAVE_REGS[4] OP[8]
+#define JACS_STMT1_WAIT_ROLE 1      // role
+#define JACS_STMT1_SLEEP_S 2        // time in seconds
+#define JACS_STMT1_SLEEP_MS 3       // time in ms
+#define JACS_STMT3_QUERY_REG 4      // role, code, timeout
+#define JACS_STMT2_SEND_CMD 5       // role, code
+#define JACS_STMT4_QUERY_IDX_REG 6  // role, code, string-idx, timeout
+#define JACS_STMT3_LOG_FORMAT 7     // string-idx, localidx, numargs
+#define JACS_STMT4_FORMAT 8         // string-idx, localidx, numargs, offset
+#define JACS_STMT1_SETUP_BUFFER 9   // size
+#define JACS_STMT2_MEMCPY 10        // string-idx, offset
+#define JACS_STMT3_CALL 11          // fun-idx, localidx, numargs
+#define JACS_STMT4_CALL_BG 12       // fun-idx, localidx, numargs
+#define JACS_STMT1_RETURN 13        // ret-val
+#define JACS_STMTx_JMP 14           // offset
+#define JACS_STMTx1_JMP_Z 15        // offset, condition
+#define JACS_STMT1_PANIC 16         // error-code
+#define JACS_STMTx1_STORE_LOCAL 17  // idx, value
+#define JACS_STMTx1_STORE_GLOBAL 18 // idx, value
+#define JACS_STMT4_STORE_BUFFER 19  // shift:numfmt, offset, buffer_id, value
+#define JACS_STMTx1_STORE_PARAM 20  // idx, value
 
-#define JACS_OPASYNC_WAIT_ROLE 0     // A-role
-#define JACS_OPASYNC_SLEEP_R0 1      // R0 - wait time in seconds
-#define JACS_OPASYNC_SLEEP_MS 2      // A - time in ms
-#define JACS_OPASYNC_QUERY_REG 3     // A-role, B-code, C-timeout
-#define JACS_OPASYNC_SEND_CMD 4      // A-role, B-code
-#define JACS_OPASYNC_QUERY_IDX_REG 5 // A-role, B-STRIDX:CMD[8], C-timeout
-#define JACS_OPASYNC_LOG_FORMAT 6    // A-string-index B-numargs
-#define JACS_OPASYNC__LAST 6
+#define JACS_STMT_MAX 21
 
-#define JACS_OPSYNC_RETURN 0
-#define JACS_OPSYNC_SETUP_BUFFER 1 // A-size
-#define JACS_OPSYNC_FORMAT 2       // A-string-index B-numargs C-offset
-#define JACS_OPSYNC_MEMCPY 3       // A-string-index C-offset
-#define JACS_OPSYNC_STR0EQ 4       // A-string-index C-offset result in R0
-#define JACS_OPSYNC_UNUSED_5 5
-#define JACS_OPSYNC_MATH1 6 // A-OpMath1, R0 := op(R0)
-#define JACS_OPSYNC_MATH2 7 // A-OpMath2, R0 := op(R0, R1)
-#define JACS_OPSYNC_PANIC 8 // A-error code
-#define JACS_OPSYNC__LAST 8
+// expressions
+#define JACS_EXPRx_LOAD_LOCAL 1
+#define JACS_EXPRx_LOAD_GLOBAL 2
+#define JACS_EXPR3_LOAD_BUFFER 3
+#define JACS_EXPRx_LOAD_PARAM 45
 
-#define JACS_OPMATH1_FLOOR 0
-#define JACS_OPMATH1_ROUND 1
-#define JACS_OPMATH1_CEIL 2
-#define JACS_OPMATH1_LOG_E 3
-#define JACS_OPMATH1_RANDOM 4     // value between 0 and R0
-#define JACS_OPMATH1_RANDOM_INT 5 // int between 0 and R0 inclusive
-#define JACS_OPMATH1__LAST 5
+#define JACS_EXPRx_LITERAL 4
+#define JACS_EXPRx_LITERAL_F64 5
 
-#define JACS_OPMATH2_MIN 0
-#define JACS_OPMATH2_MAX 1
-#define JACS_OPMATH2_POW 2
-#define JACS_OPMATH2_IDIV 3
-#define JACS_OPMATH2_IMUL 4
-#define JACS_OPMATH2__LAST 4
+#define JACS_EXPR0_RET_VAL 6 // return value of query register, call, etc
+#define JACS_EXPR2_STR0EQ 7  // A-string-index C-offset
+
+#define JACS_EXPR1_ROLE_IS_CONNECTED 8
+#define JACS_EXPR0_PKT_SIZE 9
+#define JACS_EXPR0_PKT_EV_CODE 10      // or nan
+#define JACS_EXPR0_PKT_REG_GET_CODE 11 // or nan
+
+// math
+#define JACS_EXPR0_NAN 12        // NaN value
+#define JACS_EXPR1_ABS 13        // Math.abs(x)
+#define JACS_EXPR1_BIT_NOT 14    // ~x
+#define JACS_EXPR1_CEIL 15       // Math.ceil(x)
+#define JACS_EXPR1_FLOOR 16      // Math.floor(x)
+#define JACS_EXPR1_ID 17         // x - TODO needed?
+#define JACS_EXPR1_IS_NAN 18     // isNaN(x)
+#define JACS_EXPR1_LOG_E 19      // log_e(x)
+#define JACS_EXPR1_NEG 20        // -x
+#define JACS_EXPR1_NOT 21        // !x
+#define JACS_EXPR1_RANDOM 22     // value between 0 and arg
+#define JACS_EXPR1_RANDOM_INT 23 // int between 0 and arg inclusive
+#define JACS_EXPR1_ROUND 24      // Math.round(x)
+#define JACS_EXPR1_TO_BOOL 25    // !!x
+#define JACS_EXPR2_ADD 26
+#define JACS_EXPR2_BIT_AND 27
+#define JACS_EXPR2_BIT_OR 28
+#define JACS_EXPR2_BIT_XOR 29
+#define JACS_EXPR2_DIV 30
+#define JACS_EXPR2_EQ 31
+#define JACS_EXPR2_IDIV 32
+#define JACS_EXPR2_IMUL 33
+#define JACS_EXPR2_LE 34
+#define JACS_EXPR2_LT 35
+#define JACS_EXPR2_MAX 36
+#define JACS_EXPR2_MIN 37
+#define JACS_EXPR2_MUL 38
+#define JACS_EXPR2_NE 39
+#define JACS_EXPR2_POW 40
+#define JACS_EXPR2_SHIFT_LEFT 41
+#define JACS_EXPR2_SHIFT_RIGHT 42
+#define JACS_EXPR2_SHIFT_RIGHT_UNSIGNED 43
+#define JACS_EXPR2_SUB 44
+
+#define JACS_EXPR_MAX 46
 
 #define JACS_OPCALL_SYNC 0          // regular call
 #define JACS_OPCALL_BG 1            // start new fiber
 #define JACS_OPCALL_BG_MAX1 2       // ditto, unless one is already running
 #define JACS_OPCALL_BG_MAX1_PEND1 3 // ditto, but if fiber already running, re-run it later
 
-#define JACS_CELL_KIND_LOCAL 0
-#define JACS_CELL_KIND_GLOBAL 1
-#define JACS_CELL_KIND_FLOAT_CONST 2
-#define JACS_CELL_KIND_IDENTITY 3
-#define JACS_CELL_KIND_BUFFER 4        // A=0, B=shift:numfmt, C=Offset, D=buffer_id
-#define JACS_CELL_KIND_SPECIAL 5       // A=nan, regcode, role, ..., D=buffer_id (sometimes)
-#define JACS_CELL_KIND_ROLE_PROPERTY 6 // A=OpRoleProperty, B=roleidx
-
-#define JACS_ROLE_PROPERTY_IS_CONNECTED 0
-#define JACS_ROLE_PROPERTY__LAST 0
-
-#define JACS_VALUE_SPECIAL_NAN 0x0
-// jd_packet accessors:
-#define JACS_VALUE_SPECIAL_SIZE 0x1
-#define JACS_VALUE_SPECIAL_EV_CODE 0x2      // or nan
-#define JACS_VALUE_SPECIAL_REG_GET_CODE 0x3 // or nan
-#define JACS_VALUE_SPECIAL__LAST 0x3
-
-#define JACS_OPBIN_ADD 0x1
-#define JACS_OPBIN_SUB 0x2
-#define JACS_OPBIN_DIV 0x3
-#define JACS_OPBIN_MUL 0x4
-#define JACS_OPBIN_LT 0x5
-#define JACS_OPBIN_LE 0x6
-#define JACS_OPBIN_EQ 0x7
-#define JACS_OPBIN_NE 0x8
-#define JACS_OPBIN_BIT_AND 0x9
-#define JACS_OPBIN_BIT_OR 0xa
-#define JACS_OPBIN_BIT_XOR 0xb
-#define JACS_OPBIN_SHIFT_LEFT 0xc
-#define JACS_OPBIN_SHIFT_RIGHT 0xd
-#define JACS_OPBIN_SHIFT_RIGHT_UNSIGNED 0xe
-#define JACS_OPBIN__LAST 0xe
-
-#define JACS_OPUN_ID 0x0      // x
-#define JACS_OPUN_NEG 0x1     // -x
-#define JACS_OPUN_NOT 0x2     // !x
-#define JACS_OPUN_ABS 0x3     // Math.abs(x)
-#define JACS_OPUN_IS_NAN 0x4  // isNaN(x)
-#define JACS_OPUN_BIT_NOT 0x5 // ~x
-#define JACS_OPUN_TO_BOOL 0x6 // !!x
-#define JACS_OPUN__LAST 0x6
 
 // Size in bits is: 8 << (fmt & 0b11)
 // Format is ["u", "i", "f", "reserved"](fmt >> 2)

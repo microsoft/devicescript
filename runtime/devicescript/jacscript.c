@@ -28,7 +28,7 @@ static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
 
     jacs_jd_init_roles(ctx);
 
-    jacs_fiber_start(ctx, 0, 0, JACS_OPCALL_BG);
+    jacs_fiber_start(ctx, 0, NULL, 0, JACS_OPCALL_BG);
 }
 
 jacs_ctx_t *jacs_create_ctx(const uint8_t *img, uint32_t size, const jacs_cfg_t *cfg) {

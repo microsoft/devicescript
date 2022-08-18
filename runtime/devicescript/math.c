@@ -3,6 +3,7 @@
 #include <math.h>
 #include <limits.h>
 
+#if 0
 value_t jacs_step_unop(int op, value_t v) {
     switch (op) {
     case JACS_OPUN_ID:
@@ -215,3 +216,5 @@ value_t jacs_step_opmath2(int op, value_t a, value_t b) {
         oops();
     }
 }
+
+#endif
