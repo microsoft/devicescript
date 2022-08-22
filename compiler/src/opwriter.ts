@@ -2,17 +2,16 @@ import {
     BinFmt,
     bitSize,
     CellKind,
+    exprIsStateful,
+    exprTakesNumber,
     InstrArgResolver,
-    NUM_REGS,
-    OpAsync,
-    OpBinary,
+    JACS_MAX_EXPR_DEPTH,
     OpCall,
+    OpExpr,
     OpFmt,
-    OpSync,
-    OpTop,
-    OpUnary,
+    OpStmt,
+    stmtTakesNumber,
     stringifyInstr,
-    ValueSpecial,
 } from "./format"
 import { assert, write32, write16, range } from "./jdutil"
 import { addUnique, assertRange, numSetBits, oops } from "./util"
@@ -29,7 +28,39 @@ export class Label {
     constructor(public name: string) {}
 }
 
-const BUFFER_REG = NUM_REGS + 1
+const VF_DEPTH_MASK = 0xff
+const VF_DEPTH_SHIFT = 8
+const VF_OP_MASK = 0xff
+const VF_USES_STATE = 0x10000
+const VF_HAS_PARENT = 0x20000
+const VF_IS_LITERAL = 0x40000
+const VF_IS_MEMREF = 0x80000
+
+export class Value {
+    flags: number
+    args: Value[]
+    numValue: number
+
+    constructor() {}
+    get depth() {
+        return (this.flags >> VF_DEPTH_SHIFT) & VF_DEPTH_MASK
+    }
+    get op() {
+        return this.flags & VF_OP_MASK
+    }
+    get usesState() {
+        return !!(this.flags & VF_USES_STATE)
+    }
+    get hasParent() {
+        return !!(this.flags & VF_HAS_PARENT)
+    }
+    get isLiteral() {
+        return !!(this.flags & VF_IS_LITERAL)
+    }
+    get isMemRef() {
+        return !!(this.flags & VF_IS_MEMREF)
+    }
+}
 
 interface ValueDesc {
     kind: CellKind
@@ -50,16 +81,10 @@ export function mkValue(kind: CellKind, index: number): ValueDesc {
 }
 
 export function floatVal(v: number) {
-    const r = mkValue(CellKind.X_FLOAT, v)
-    r.litValue = v
+    const r = new Value()
+    r.numValue = v
+    r.flags = OpExpr.EXPRx_LITERAL | VF_IS_LITERAL
     return r
-}
-
-export enum PrefixReg {
-    A = 0,
-    B = 1,
-    C = 2,
-    D = 3,
 }
 
 export class OpWriter {
@@ -611,6 +636,124 @@ export class OpWriter {
         assert(this.isReg(right))
         assertRange(0, op, 0xf)
         this.emitRaw(OpTop.BINARY, (op << 8) | (left.index << 4) | right.index)
+    }
+
+    pendingStatefulValues: Value[] = []
+
+    private spillValue(v: Value) {
+        //update depth
+    }
+
+    private spillAllStateful() {
+        for (const e of this.pendingStatefulValues) {
+            if (e.usesState && !e.hasParent) this.spillValue(e)
+        }
+        this.pendingStatefulValues = []
+    }
+
+    emitMemRef(op: OpExpr, idx: number) {
+        const r = new Value()
+        r.numValue = idx
+        r.flags = op | VF_IS_MEMREF | VF_USES_STATE
+        this.pendingStatefulValues.push(r)
+        return r
+    }
+
+    emitExpr(op: OpExpr, ...args: Value[]) {
+        let maxdepth = -1
+        let usesState = exprIsStateful(op)
+        // TODO constant folding
+        for (const a of args) {
+            if (a.depth >= JACS_MAX_EXPR_DEPTH - 1) this.spillValue(a)
+            maxdepth = Math.max(a.depth, maxdepth)
+            if (a.usesState) usesState = true
+            assert(!(a.flags & VF_HAS_PARENT))
+            a.flags |= VF_HAS_PARENT
+        }
+        const r = new Value()
+        r.args = args
+        r.flags = op | ((maxdepth + 1) << VF_DEPTH_SHIFT)
+        if (usesState) {
+            r.flags |= VF_USES_STATE
+            this.pendingStatefulValues.push(r)
+        }
+        return r
+    }
+
+    private writeByte(v: number) {
+        assert(0 <= v && v <= 0xff && (v | 0) == v)
+        // TODO
+    }
+
+    private writeInt(v: number) {
+        assert((v | 0) == v)
+        if (0 <= v && v <= 0xf8) this.writeByte(v)
+        else {
+            let b = 0xf8
+            if (v < 0) {
+                b |= 4
+                v = -v
+            }
+            let hddone = false
+            for (let shift = 3; shift >= 0; shift--) {
+                const q = (v >> (8 * shift)) & 0xff
+                if (q && !hddone) {
+                    this.writeByte(b | shift)
+                    hddone = true
+                }
+                if (hddone) this.writeByte(q)
+            }
+        }
+    }
+
+    private writeArgs(firstInt: boolean, args: Value[]) {
+        let i = 0
+        if (firstInt) {
+            assert(args[0].isLiteral)
+            this.writeInt(args[0].numValue)
+            i = 1
+        }
+        while (i < args.length) {
+            this.writeValue(args[i])
+            i++
+        }
+    }
+
+    private writeValue(v: Value) {
+        if (v.isLiteral) {
+            const q = v.numValue
+            if ((q | 0) == q) {
+                const qq = q + 16 + 0x80
+                if (0x80 <= qq && qq <= 0xff) this.writeByte(qq)
+                else {
+                    this.writeByte(OpExpr.EXPRx_LITERAL)
+                    this.writeInt(q)
+                }
+            } else if (isNaN(q)) {
+                this.writeByte(OpExpr.EXPR0_NAN)
+            } else {
+                const idx = this.prog.addFloat(q)
+                this.writeByte(OpExpr.EXPRx_LITERAL_F64)
+                this.writeInt(idx)
+            }
+        } else if (v.isMemRef) {
+            assert(exprTakesNumber(v.op))
+            this.writeByte(v.op)
+            this.writeInt(v.numValue)
+        } else {
+            this.writeByte(v.op)
+            this.writeArgs(exprTakesNumber(v.op), v.args)
+        }
+    }
+
+    emitStmt(op: OpStmt, ...args: Value[]) {
+        for (const a of args) {
+            assert(!(a.flags & VF_HAS_PARENT))
+            a.flags |= VF_HAS_PARENT
+        }
+        this.spillAllStateful()
+        this.writeByte(op)
+        this.writeArgs(stmtTakesNumber(op), args)
     }
 }
 

@@ -1,7 +1,7 @@
 export enum BinFmt {
     Magic0 = 0x5363614a,
     Magic1 = 0x9a6a7e0a,
-    ImgVersion = 0x00010001,
+    ImgVersion = 0x00020001,
     FixHeaderSize = 64,
     SectionHeaderSize = 8,
     FunctionHeaderSize = 16,
@@ -14,82 +14,137 @@ export interface SMap<T> {
     [k: string]: T
 }
 
-export const NUM_REGS = 16
+export const JACS_MAX_EXPR_DEPTH = 10
 
-export enum OpTop {
-    SET_A = 0, // ARG[12]
-    SET_B = 1, // ARG[12]
-    SET_C = 2, // ARG[12]
-    SET_D = 3, // ARG[12]
-    SET_HIGH = 4, // A/B/C/D[2] IS_DYN[1] UNUSED[5] ARG_OR_REG[4]
-
-    UNARY = 5, // OP[4] DST[4] SRC[4]
-    BINARY = 6, // OP[4] DST[4] SRC[4]
-
-    LOAD_CELL = 7, // DST[4] CELL_KIND[4] A:OFF[4]
-    STORE_CELL = 8, // SRC[4] CELL_KIND[4] A:OFF[4]
-
-    JUMP = 9, // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
-    CALL = 10, // NUMREGS[4] OPCALL[2] B:OFF[6] (D - saved regs)
-
-    SYNC = 11, // UNUSED[4] OP[8]
-    ASYNC = 12, // D:SAVE_REGS[4] OP[8]
+export enum OpStmt {
+    STMT1_WAIT_ROLE = 1, // role
+    STMT1_SLEEP_S = 2, // time in seconds
+    STMT1_SLEEP_MS = 3, // time in ms
+    STMT3_QUERY_REG = 4, // role, code, timeout
+    STMT2_SEND_CMD = 5, // role, code
+    STMT4_QUERY_IDX_REG = 6, // role, code, string-idx, timeout
+    STMT3_LOG_FORMAT = 7, // string-idx, localidx, numargs
+    STMT4_FORMAT = 8, // string-idx, localidx, numargs, offset
+    STMT1_SETUP_BUFFER = 9, // size
+    STMT2_MEMCPY = 10, // string-idx, offset
+    STMT3_CALL = 11, // fun-idx, localidx, numargs
+    STMT4_CALL_BG = 12, // fun-idx, localidx, numargs, bg
+    STMT1_RETURN = 13, // ret-val
+    STMTx_JMP = 14, // offset
+    STMTx1_JMP_Z = 15, // offset, condition
+    STMT1_PANIC = 16, // error-code
+    STMTx1_STORE_LOCAL = 17, // idx, value
+    STMTx1_STORE_GLOBAL = 18, // idx, value
+    STMT4_STORE_BUFFER = 19, // shift:numfmt, offset, buffer_id, value
+    STMTx1_STORE_PARAM = 20, // idx, value
 }
 
-export enum OpAsync {
-    WAIT_ROLE = 0, // A-role
-    SLEEP_R0 = 1, // R0 - wait time in seconds
-    SLEEP_MS = 2, // A - time in ms
-    QUERY_REG = 3, // A-role, B-code, C-timeout
-    SEND_CMD = 4, // A-role, B-code
-    QUERY_IDX_REG = 5, // A-role, B-STRIDX:CMD[8], C-timeout
-    LOG_FORMAT = 6, // A-string-index B-numargs
-    _LAST = 6,
+export function stmtTakesNumber(op: OpStmt) {
+    switch (op) {
+        case OpStmt.STMTx_JMP:
+        case OpStmt.STMTx1_JMP_Z:
+        case OpStmt.STMTx1_STORE_LOCAL:
+        case OpStmt.STMTx1_STORE_GLOBAL:
+        case OpStmt.STMTx1_STORE_PARAM:
+            return true
+        default:
+            return false
+    }
 }
 
-export enum OpSync {
-    RETURN = 0,
-    SETUP_BUFFER = 1, // A-size D-buffer (only D==0 supported right now)
-    FORMAT = 2, // A-string-index B-numargs C-offset
-    MEMCPY = 3, // A-string-index C-offset
-    STR0EQ = 4, // A-string-index C-offset result in R0
-    _UNUSED_5 = 5,
-    MATH1 = 6, // A-OpMath1, R0 := op(R0)
-    MATH2 = 7, // A-OpMath2, R0 := op(R0, R1)
-    PANIC = 8, // A-error code
-    _LAST = 8,
+export enum OpExpr {
+    EXPRx_LOAD_LOCAL = 1,
+    EXPRx_LOAD_GLOBAL = 2,
+    EXPR3_LOAD_BUFFER = 3,
+    EXPRx_LOAD_PARAM = 45,
+    EXPRx_LITERAL = 4,
+    EXPRx_LITERAL_F64 = 5,
+    EXPR0_RET_VAL = 6, // return value of query register, call, etc
+    EXPR2_STR0EQ = 7, // A-string-index C-offset
+    EXPR1_ROLE_IS_CONNECTED = 8,
+    EXPR0_PKT_SIZE = 9,
+    EXPR0_PKT_EV_CODE = 10, // or nan
+    EXPR0_PKT_REG_GET_CODE = 11, // or nan
+
+    // stateless math stuff below
+    EXPR0_NAN = 12, // NaN value
+    EXPR1_ABS = 13, // Math.abs(x)
+    EXPR1_BIT_NOT = 14, // ~x
+    EXPR1_CEIL = 15, // Math.ceil(x)
+    EXPR1_FLOOR = 16, // Math.floor(x)
+    EXPR1_ID = 17, // x - TODO needed?
+    EXPR1_IS_NAN = 18, // isNaN(x)
+    EXPR1_LOG_E = 19, // log_e(x)
+    EXPR1_NEG = 20, // -x
+    EXPR1_NOT = 21, // !x
+    EXPR1_RANDOM = 22, // value between 0 and arg
+    EXPR1_RANDOM_INT = 23, // int between 0 and arg inclusive
+    EXPR1_ROUND = 24, // Math.round(x)
+    EXPR1_TO_BOOL = 25, // !!x
+    EXPR2_ADD = 26,
+    EXPR2_BIT_AND = 27,
+    EXPR2_BIT_OR = 28,
+    EXPR2_BIT_XOR = 29,
+    EXPR2_DIV = 30,
+    EXPR2_EQ = 31,
+    EXPR2_IDIV = 32,
+    EXPR2_IMUL = 33,
+    EXPR2_LE = 34,
+    EXPR2_LT = 35,
+    EXPR2_MAX = 36,
+    EXPR2_MIN = 37,
+    EXPR2_MUL = 38,
+    EXPR2_NE = 39,
+    EXPR2_POW = 40,
+    EXPR2_SHIFT_LEFT = 41,
+    EXPR2_SHIFT_RIGHT = 42,
+    EXPR2_SHIFT_RIGHT_UNSIGNED = 43,
+    EXPR2_SUB = 44,
 }
 
-export enum OpMath1 {
-    FLOOR = 0,
-    ROUND = 1,
-    CEIL = 2,
-    LOG_E = 3,
-    RANDOM = 4, // value between 0 and R0
-    RANDOM_INT = 5, // int32 between 0 and (int32)R0 inclusive
-    _LAST = 5,
+export function exprIsStateful(op: OpExpr) {
+    switch (op) {
+        case OpExpr.EXPRx_LOAD_LOCAL:
+        case OpExpr.EXPRx_LOAD_GLOBAL:
+        case OpExpr.EXPR3_LOAD_BUFFER:
+        case OpExpr.EXPRx_LOAD_PARAM:
+        case OpExpr.EXPR0_RET_VAL:
+        case OpExpr.EXPR2_STR0EQ:
+        case OpExpr.EXPR0_PKT_SIZE:
+        case OpExpr.EXPR0_PKT_EV_CODE:
+        case OpExpr.EXPR0_PKT_REG_GET_CODE:
+            return true
+        default:
+            return false
+    }
 }
 
-export enum OpMath2 {
-    MIN = 0,
-    MAX = 1,
-    POW = 2,
-    IDIV = 3,
-    IMUL = 4,
-    _LAST = 4,
+export function exprTakesNumber(op: OpExpr) {
+    switch (op) {
+        case OpExpr.EXPRx_LOAD_LOCAL:
+        case OpExpr.EXPRx_LOAD_GLOBAL:
+        case OpExpr.EXPRx_LOAD_PARAM:
+        case OpExpr.EXPRx_LITERAL:
+        case OpExpr.EXPRx_LITERAL_F64:
+            return true
+        default:
+            return false
+    }
 }
 
 export enum OpCall {
     SYNC = 0, // regular call
     BG = 1, // start new fiber
     BG_MAX1 = 2, // ditto, unless one is already running
-    BG_MAX1_PEND1 = 3, // ditto, but if fiber already running, set flag for it to be re-run when it finishes
+    BG_MAX1_PEND1 = 3, // ditto, but if fiber already running, re-run it later
 }
 
 export enum CellKind {
     // A=idx
     LOCAL = 0,
     GLOBAL = 1,
+    PARAM = 7,
+
     FLOAT_CONST = 2,
     IDENTITY = 3,
 
@@ -115,49 +170,6 @@ export enum CellKind {
     X_BUFFER = 0x124,
 
     ERROR = 0x200,
-}
-
-export enum OpRoleProperty {
-    IS_CONNECTED = 0,
-    _LAST = 0,
-}
-
-export enum ValueSpecial {
-    NAN = 0x0,
-    // jd_packet accessors:
-    SIZE = 0x1,
-    EV_CODE = 0x2, // or nan
-    REG_GET_CODE = 0x3, // or nan
-    _LAST = 0x3,
-}
-
-export enum OpBinary {
-    ADD = 0x1,
-    SUB = 0x2,
-    DIV = 0x3,
-    MUL = 0x4,
-    LT = 0x5,
-    LE = 0x6,
-    EQ = 0x7,
-    NE = 0x8,
-    BIT_AND = 0x9,
-    BIT_OR = 0xa,
-    BIT_XOR = 0xb,
-    SHIFT_LEFT = 0xc,
-    SHIFT_RIGHT = 0xd,
-    SHIFT_RIGHT_UNSIGNED = 0xe,
-    _LAST = 0xe,
-}
-
-export enum OpUnary {
-    ID = 0x0, // x
-    NEG = 0x1, // -x
-    NOT = 0x2, // !x
-    ABS = 0x3, // Math.abs(x)
-    IS_NAN = 0x4, // isNaN(x)
-    BIT_NOT = 0x5, // ~x
-    TO_BOOL = 0x6, // !!x
-    _LAST = 0x6,
 }
 
 // Size in bits is: 8 << (fmt & 0b11)
@@ -223,44 +235,17 @@ export interface InstrArgResolver {
     funName?(idx: number): string
     roleName?(idx: number): string
     resolverPC?: number
-    resolverParams: number[]
 }
 
 export function bitSize(fmt: OpFmt) {
     return 8 << (fmt & 0b11)
 }
 
-export function isPrefixInstr(instr: number) {
-    const op = instr >>> 12
-    return op <= OpTop.SET_HIGH
-}
-
-export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
-    const op = instr >>> 12
-    const arg12 = instr & 0xfff
-    const arg10 = instr & 0x3ff
-    const arg8 = instr & 0xff
-    const arg6 = instr & 0x3f
-    const arg4 = instr & 0xf
-    const subop = arg12 >> 8
-
-    const reg0 = `R${subop}`
-    const reg1 = `R${arg8 >> 4}`
-    const reg2 = `R${arg4}`
-
-    const abcd = ["A", "B", "C", "D"]
-
-    let params: number[] = resolver?.resolverParams || [0, 0, 0, 0]
-
-    let [a, b, c, d] = params
-
+export function stringifyInstr(
+    getbyte: () => number,
+    resolver?: InstrArgResolver
+) {
     let res = "    " + doOp()
-
-    if (!isPrefixInstr(instr)) {
-        res = "    " + res
-        params = [0, 0, 0, 0]
-    }
-    if (resolver) resolver.resolverParams = params
 
     const pc = resolver?.resolverPC
     if (pc !== undefined)
@@ -269,74 +254,91 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
     return res
 
     function doOp() {
+        const op = getbyte()
+        const expr = stringifyExpr
         switch (op) {
-            case OpTop.SET_A: // ARG[12]
-            case OpTop.SET_B: // ARG[12]
-            case OpTop.SET_C: // ARG[12]
-            case OpTop.SET_D: // ARG[12]
-                params[op] = arg12
-                return `[${abcd[op]} 0x${arg12.toString(16)}] `
-
-            case OpTop.SET_HIGH: // A/B/C/D[2] ARG[10]
-                if (instr & (1 << 9)) {
-                    params[arg12 >> 10] = 0xffff
-                    return `${abcd[arg12 >> 10]} := ${reg2} `
-                } else {
-                    params[arg12 >> 10] |= arg10 << 12
-                    return `[upper ${abcd[arg12 >> 10]} 0x${arg10.toString(
-                        16
-                    )}] `
-                }
-
-            case OpTop.UNARY: // OP[4] DST[4] SRC[4]
-                return `${reg1} := ${uncode()} ${reg2}`
-
-            case OpTop.BINARY: // OP[4] DST[4] SRC[4]
-                return `${reg1} := ${reg1} ${bincode()} ${reg2}`
-
-            case OpTop.LOAD_CELL:
-            case OpTop.STORE_CELL:
-                a = (a << 4) | (arg8 & 0xf)
-                return op == OpTop.LOAD_CELL
-                    ? `${reg0} := ${celldesc()}`
-                    : `${celldesc()} := ${reg0}`
-
-            case OpTop.JUMP: // REG[4] BACK[1] IF_ZERO[1] B:OFF[6]
-                b = (b << 6) | arg6
-                const off = arg8 & (1 << 7) ? -b : b
-                const offs = (off >= 0 ? "+" : "") + off
-                const dst =
-                    resolver?.resolverPC === undefined
-                        ? offs
-                        : resolver?.resolverPC + 1 + off + (" (" + offs + ")")
-                return (
-                    `jump ${dst}` + (arg8 & (1 << 6) ? ` if ${reg0} == 0` : ``)
-                )
-
-            case OpTop.CALL: // NUMREGS[4] OPCALL[2] B:OFF[6] (D - saved regs)
-                b = (b << 6) | arg6
-                return `call${callop()} ${
-                    resolver?.funName?.(b) || ""
-                }_F${b} #${subop} save=${d.toString(2)}`
-
-            case OpTop.SYNC: // A:ARG[4] OP[8]
-                return `sync ${syncOp()}`
-
-            case OpTop.ASYNC: // D:SAVE_REGS[4] OP[8]
-                d = (d << 4) | subop
-                return `async ${asyncOp()} save=${d.toString(2)}`
+            case OpStmt.STMT1_WAIT_ROLE: // role
+                return `wait_role ${role()}`
+            case OpStmt.STMT1_SLEEP_S: // time in seconds
+                return `sleep_s ${expr()}`
+            case OpStmt.STMT1_SLEEP_MS: // time in ms
+                return `sleep_ms ${expr()}`
+            case OpStmt.STMT3_QUERY_REG: // role, code, timeout
+                return `RET_VAL := ${role()}.reg[${expr()}; timeout=${expr()}]`
+            case OpStmt.STMT2_SEND_CMD: // role, code
+                return `${role()}.cmd[${expr()}]`
+            case OpStmt.STMT4_QUERY_IDX_REG: // role, code, string-idx, timeout
+                return `RET_VAL := ${role()}.reg[${expr()}; str=${expr()}; timeout=${expr()}]`
+            case OpStmt.STMT3_LOG_FORMAT: // string-idx, localidx, numargs
+                return `log str=${expr()} args=${expr()}+${expr()}`
+            case OpStmt.STMT4_FORMAT: // string-idx, localidx, numargs, offset
+                return `format str=${expr()} args=${expr()}+${expr()} offset=${expr()}`
+            case OpStmt.STMT1_SETUP_BUFFER: // size
+                return `setup_buffer size=${expr()}`
+            case OpStmt.STMT2_MEMCPY: // string-idx, offset
+                return `memcpy str=${expr()} offset=${expr()}`
+            case OpStmt.STMT3_CALL: // fun-idx, localidx, numargs
+                return calldesc()
+            case OpStmt.STMT4_CALL_BG: // fun-idx, localidx, numargs, bg
+                return calldesc() + callop()
+            case OpStmt.STMT1_RETURN: // ret-val
+                return `return ${expr()}`
+            case OpStmt.STMTx_JMP: // offset
+                return `jmp ${jmpOffset}`
+            case OpStmt.STMTx1_JMP_Z: // offset, condition
+                return `jmp ${jmpOffset} if not ${expr()}`
+            case OpStmt.STMT1_PANIC: // error-code
+                return `panic ${expr()}`
+            case OpStmt.STMTx1_STORE_LOCAL: // idx, value
+                return `${celldesc(CellKind.LOCAL)} := ${expr()}`
+            case OpStmt.STMTx1_STORE_GLOBAL: // idx, value
+                return `${celldesc(CellKind.GLOBAL)} := ${expr()}`
+            case OpStmt.STMT4_STORE_BUFFER: // shift:numfmt, offset, buffer_id, value
+                return `${bufferdesc()} := ${expr()}`
+            case OpStmt.STMTx1_STORE_PARAM: // idx, value
+                return `${celldesc(CellKind.PARAM)} := ${expr()}`
         }
     }
 
-    function jdreg(v = b) {
-        return `${role()}.reg_0x${v.toString(16)}`
+    function funname() {
+        const fn = stringifyExpr()
+        if (isNumber(fn)) {
+            const b = +fn
+            return (resolver?.funName?.(b) || "") + "_F" + b
+        } else {
+            return `_F[${fn}]`
+        }
     }
 
-    function role(idx = a) {
-        return (resolver?.roleName?.(idx) || "") + "_r" + idx
+    function calldesc() {
+        return `${funname()} args=${stringifyExpr()}+${stringifyExpr()}`
     }
 
-    function numfmt(v: number) {
+    function jmpOffset() {
+        const off = decodeInt()
+        const offs = (off >= 0 ? "+" : "") + off
+        return resolver?.resolverPC === undefined
+            ? offs
+            : resolver?.resolverPC + 1 + off + (" (" + offs + ")")
+    }
+
+    function role() {
+        const roleIdx = stringifyExpr()
+        if (isNumber(roleIdx)) {
+            const idx = +roleIdx
+            return (resolver?.roleName?.(idx) || "") + "_r" + idx
+        } else {
+            return `role(${roleIdx})`
+        }
+    }
+
+    function isNumber(s: string) {
+        return /^\d+$/.test(s)
+    }
+
+    function numfmt(vv: string) {
+        if (!isNumber(vv)) return vv
+        const v = +vv
         const fmt = v & 0xf
         const bitsz = bitSize(fmt)
         const letter = ["u", "i", "f", "x"][fmt >> 2]
@@ -346,186 +348,164 @@ export function stringifyInstr(instr: number, resolver?: InstrArgResolver) {
     }
 
     function callop() {
-        switch (arg8 >> 6) {
-            case OpCall.SYNC:
-                return ""
-            case OpCall.BG:
-                return " bg"
-            case OpCall.BG_MAX1:
-                return " bg (max1)"
-            case OpCall.BG_MAX1_PEND1:
-                return " bg (max1 pend1)"
-        }
+        const op = stringifyExpr()
+        if (isNumber(op))
+            switch (+op) {
+                case OpCall.SYNC:
+                    return ""
+                case OpCall.BG:
+                    return " bg"
+                case OpCall.BG_MAX1:
+                    return " bg (max1)"
+                case OpCall.BG_MAX1_PEND1:
+                    return " bg (max1 pend1)"
+            }
+        else return ` callop=${op}`
     }
 
-    function uncode() {
-        switch (subop) {
-            case OpUnary.ID:
-                return ""
-            case OpUnary.NEG:
-                return "-"
-            case OpUnary.NOT:
-                return "!"
-            case OpUnary.BIT_NOT:
-                return "~"
-            case OpUnary.TO_BOOL:
-                return "!!"
-            case OpUnary.ABS:
-                return "abs "
-            case OpUnary.IS_NAN:
-                return "isNaN "
-            default:
-                return "un-" + subop
+    function decodeInt() {
+        const v = getbyte()
+        if (v <= 0xf8) return v
+
+        let r = 0
+        const n = !!(v & 4)
+        const len = (v & 3) + 1
+
+        for (let i = 0; i < len; ++i) {
+            const v = getbyte()
+            r = r << 8
+            r |= v
         }
+
+        return n ? -r : r
     }
-    function bincode() {
-        switch (subop) {
-            case OpBinary.ADD:
-                return "+"
-            case OpBinary.SUB:
-                return "-"
-            case OpBinary.DIV:
-                return "/"
-            case OpBinary.MUL:
-                return "*"
-            case OpBinary.LT:
-                return "<"
-            case OpBinary.LE:
-                return "<="
-            case OpBinary.EQ:
-                return "=="
-            case OpBinary.NE:
-                return "!="
-            case OpBinary.BIT_AND:
-                return "&"
-            case OpBinary.BIT_OR:
-                return "|"
-            case OpBinary.BIT_XOR:
-                return "^"
-            case OpBinary.SHIFT_LEFT:
-                return "<<"
-            case OpBinary.SHIFT_RIGHT:
-                return ">>"
-            case OpBinary.SHIFT_RIGHT_UNSIGNED:
-                return ">>>"
-            default:
-                return "bin-" + subop
-        }
-    }
-    function math1code() {
-        switch (a) {
-            case OpMath1.FLOOR:
-                return "floor"
-            case OpMath1.ROUND:
-                return "round"
-            case OpMath1.CEIL:
-                return "ceil"
-            case OpMath1.LOG_E:
-                return "log_e"
-            case OpMath1.RANDOM:
-                return "random"
-            case OpMath1.RANDOM_INT:
-                return "randomInt"
-            default:
-                return "m1-" + subop
-        }
-    }
-    function math2code() {
-        switch (a) {
-            case OpMath2.MIN:
-                return "min"
-            case OpMath2.MAX:
-                return "max"
-            case OpMath2.POW:
-                return "pow"
-            default:
-                return "m1-" + subop
-        }
-    }
-    function celldesc() {
-        const cellkind = (arg8 >> 4) as CellKind
-        const idx = a
-        const r = resolver?.describeCell?.(cellkind, a) || ""
+
+    function celldesc(cellkind: CellKind) {
+        const idx = decodeInt()
+        const r = resolver?.describeCell?.(cellkind, idx) || ""
         switch (cellkind) {
             case CellKind.LOCAL:
                 return `${r}_L${idx}`
             case CellKind.GLOBAL:
                 return `${r}_G${idx}`
+            case CellKind.PARAM:
+                return `${r}_P${idx}`
             case CellKind.FLOAT_CONST:
                 return `${r}_F${idx}`
             case CellKind.IDENTITY:
                 return `${idx}`
-            case CellKind.BUFFER:
-                return `buf${d == 0 ? "" : d}[${c} @ ${numfmt(b)}]`
-            case CellKind.SPECIAL:
-                switch (idx) {
-                    case ValueSpecial.NAN:
-                        return "NAN"
-                    case ValueSpecial.SIZE:
-                        return "SIZE"
-                    case ValueSpecial.EV_CODE:
-                        return "EV_CODE"
-                    case ValueSpecial.REG_GET_CODE:
-                        return "REG_CODE"
-                    default:
-                        return `${r}_SPEC[${idx}]`
-                }
-            case CellKind.ROLE_PROPERTY:
-                const rr = role(b)
-                switch (idx) {
-                    case OpRoleProperty.IS_CONNECTED:
-                        return `${rr}.isConnected`
-                    default:
-                        return `${rr}.prop${a}`
-                }
             default:
                 return `C${cellkind}[${idx}]` // ??
         }
     }
 
-    function syncOp() {
-        switch (arg8) {
-            case OpSync.RETURN:
-                return `return`
-            case OpSync.SETUP_BUFFER: // A-size
-                return `setup_buffer(size=${a} buf=${d})`
-            case OpSync.FORMAT: // A-string-index B-numargs
-                return `format(str=${a} #${b}) @${c}`
-            case OpSync.MEMCPY: // A-string-index
-                return `memcpy(str=${a}) @${c}`
-            case OpSync.STR0EQ: // A-string-index
-                return `r0 := str0eq(str=${a}) @${c}`
-            case OpSync.MATH1:
-                return `r0 := ${math1code()}(r0)`
-            case OpSync.MATH2:
-                return `r0 := ${math2code()}(r0, r1)`
-            case OpSync.PANIC:
-                return `panic(${a})`
-            default:
-                return `Sync_0x${arg8.toString(16)}`
-        }
+    function bufferdesc(): string {
+        const fmt = stringifyExpr()
+        const offset = stringifyExpr()
+        const bufferidx = stringifyExpr()
+        return `buf${bufferidx}[${offset} @ ${numfmt(fmt)}]`
     }
 
-    function asyncOp() {
-        switch (arg8) {
-            case OpAsync.WAIT_ROLE:
-                return `wait_role(${role()})`
-            case OpAsync.SLEEP_MS:
-                return `sleep(${a}ms)`
-            case OpAsync.SLEEP_R0:
-                return `sleep(R0 s)`
-            case OpAsync.QUERY_REG: // A-role, B-code, C-timeout
-                return `query(${jdreg()} timeout=${c}ms)`
-            case OpAsync.QUERY_IDX_REG:
-                return `queryIdx(${jdreg(b & 0xff)} str=${
-                    b >> 8
-                } timeout=${c}ms)`
-            case OpAsync.SEND_CMD: // A-role, B-code
-                return `send(${jdreg()})`
-            case OpAsync.LOG_FORMAT: // A-string-index B-numargs
-                return `log(str=${a} #${b})`
+    function stringifyExpr(): string {
+        const op = getbyte()
+
+        if (op >= 0x80) return "" + (op - 0x80 - 16)
+
+        const expr = stringifyExpr
+
+        switch (op) {
+            case OpExpr.EXPRx_LOAD_LOCAL:
+                return celldesc(CellKind.LOCAL)
+            case OpExpr.EXPRx_LOAD_GLOBAL:
+                return celldesc(CellKind.GLOBAL)
+            case OpExpr.EXPRx_LOAD_PARAM:
+                return celldesc(CellKind.PARAM)
+            case OpExpr.EXPR3_LOAD_BUFFER:
+                return bufferdesc()
+            case OpExpr.EXPRx_LITERAL:
+                return "" + decodeInt()
+            case OpExpr.EXPRx_LITERAL_F64:
+                return celldesc(CellKind.FLOAT_CONST)
+            case OpExpr.EXPR0_RET_VAL: // return value of query register, call, etc
+                return "RET_VAL"
+            case OpExpr.EXPR2_STR0EQ: // A-string-index C-offset
+                return `str0eq(str=${expr}, off=${expr})`
+            case OpExpr.EXPR1_ROLE_IS_CONNECTED:
+                return `is_connected(${role()})`
+            case OpExpr.EXPR0_PKT_SIZE:
+                return "PKT_SIZE"
+            case OpExpr.EXPR0_PKT_EV_CODE:
+                return "PKT_EV_CODE"
+            case OpExpr.EXPR0_PKT_REG_GET_CODE:
+                return "PKT_REG_GET_CODE"
+            case OpExpr.EXPR0_NAN:
+                return "NaN"
+            case OpExpr.EXPR1_ABS:
+                return `abs(${expr()})`
+            case OpExpr.EXPR1_BIT_NOT:
+                return `~(${expr()})`
+            case OpExpr.EXPR1_CEIL:
+                return `ceil(${expr()})`
+            case OpExpr.EXPR1_FLOOR:
+                return `floor(${expr()})`
+            case OpExpr.EXPR1_ID:
+                return `id(${expr()})`
+            case OpExpr.EXPR1_IS_NAN:
+                return `isNaN(${expr()})`
+            case OpExpr.EXPR1_LOG_E:
+                return `log_E(${expr()})`
+            case OpExpr.EXPR1_NEG:
+                return `-(${expr()})`
+            case OpExpr.EXPR1_NOT:
+                return `!(${expr()})`
+            case OpExpr.EXPR1_RANDOM: // value between 0 and arg
+                return `random(${expr()})`
+            case OpExpr.EXPR1_RANDOM_INT: // int between 0 and arg inclusive
+                return `random_int(${expr()})`
+            case OpExpr.EXPR1_ROUND:
+                return `round(${expr()})`
+            case OpExpr.EXPR1_TO_BOOL:
+                return `!!(${expr()})`
+            case OpExpr.EXPR2_ADD:
+                return `(${expr()}) + (${expr()})`
+            case OpExpr.EXPR2_BIT_AND:
+                return `(${expr()}) & (${expr()})`
+            case OpExpr.EXPR2_BIT_OR:
+                return `(${expr()}) | (${expr()})`
+            case OpExpr.EXPR2_BIT_XOR:
+                return `(${expr()}) ^ (${expr()})`
+            case OpExpr.EXPR2_DIV:
+                return `(${expr()}) / (${expr()})`
+            case OpExpr.EXPR2_EQ:
+                return `(${expr()}) == (${expr()})`
+            case OpExpr.EXPR2_IDIV:
+                return `idiv(${expr()}, ${expr()})`
+            case OpExpr.EXPR2_IMUL:
+                return `imul(${expr()}, ${expr()})`
+            case OpExpr.EXPR2_LE:
+                return `(${expr()}) <= (${expr()})`
+            case OpExpr.EXPR2_LT:
+                return `(${expr()}) < (${expr()})`
+            case OpExpr.EXPR2_MAX:
+                return `max(${expr()}, ${expr()})`
+            case OpExpr.EXPR2_MIN:
+                return `min(${expr()}, ${expr()})`
+            case OpExpr.EXPR2_MUL:
+                return `(${expr()}) * (${expr()})`
+            case OpExpr.EXPR2_NE:
+                return `(${expr()}) != (${expr()})`
+            case OpExpr.EXPR2_POW:
+                return `pow(${expr()}, ${expr()})`
+            case OpExpr.EXPR2_SHIFT_LEFT:
+                return `(${expr()}) << (${expr()})`
+            case OpExpr.EXPR2_SHIFT_RIGHT:
+                return `(${expr()}) >> (${expr()})`
+            case OpExpr.EXPR2_SHIFT_RIGHT_UNSIGNED:
+                return `(${expr()}) >>> (${expr()})`
+            case OpExpr.EXPR2_SUB:
+                return `(${expr()}) - (${expr()})`
             default:
-                return `Async_0x${arg8.toString(16)}`
+                return `? 0x${op.toString(16)} ?`
         }
     }
 }
