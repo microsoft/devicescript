@@ -51,6 +51,8 @@ typedef struct {
 #define JACS_IMG_MAGIC0 0x5363614a // "JacS"
 #define JACS_IMG_MAGIC1 0x9a6a7e0a
 
+#define JACS_MAX_EXPR_DEPTH 10
+
 #define JACS_STMT1_WAIT_ROLE 1      // role
 #define JACS_STMT1_SLEEP_S 2        // time in seconds
 #define JACS_STMT1_SLEEP_MS 3       // time in ms

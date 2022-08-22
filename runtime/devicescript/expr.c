@@ -438,7 +438,7 @@ value_t jacs_vm_exec_expr(jacs_activation_t *frame) {
         return jacs_value_from_int(op - 0x80 - 16);
     }
 
-    if (ctx->opstack++ > 10 || op >= JACS_EXPR_MAX) {
+    if (ctx->opstack++ > JACS_MAX_EXPR_DEPTH || op >= JACS_EXPR_MAX) {
         jacs_runtime_failure(ctx);
         return jacs_nan;
     }
