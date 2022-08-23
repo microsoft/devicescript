@@ -90,7 +90,7 @@ export class CachedValue {
     }
     store(v: Value) {
         assert(this.numrefs > 0)
-        this.parent.emitStmt(OpStmt.STMTx1_STORE_LOCAL, floatVal(this.index), v)
+        this.parent.emitStmt(OpStmt.STMTx1_STORE_LOCAL, literal(this.index), v)
     }
     _decr() {
         assert(this.numrefs > 0)
@@ -105,7 +105,7 @@ export class CachedValue {
     }
 }
 
-export function floatVal(v: number) {
+export function literal(v: number) {
     const r = new Value()
     r.numValue = v
     r.op = OpExpr.EXPRx_LITERAL
@@ -237,15 +237,15 @@ export class OpWriter {
     }
 
     emitString(s: string) {
-        const v = floatVal(this.prog.addString(s))
+        const v = literal(this.prog.addString(s))
         v.flags |= VF_IS_STRING
         return v
     }
 
     _emitCall(procIdx: number, args: CachedValue[], op = OpCall.SYNC) {
-        const proc = floatVal(procIdx)
-        const localidx = floatVal(args[0] ? args[0].index : 0)
-        const numargs = floatVal(args.length)
+        const proc = literal(procIdx)
+        const localidx = literal(args[0] ? args[0].index : 0)
+        const numargs = literal(args.length)
 
         if (op == OpCall.SYNC)
             this.emitStmt(OpStmt.STMT3_CALL, proc, localidx, numargs)
@@ -255,7 +255,7 @@ export class OpWriter {
                 proc,
                 localidx,
                 numargs,
-                floatVal(op)
+                literal(op)
             )
     }
 
@@ -263,9 +263,9 @@ export class OpWriter {
         assertRange(0, off, 0xff)
         this.emitStmt(
             OpStmt.STMT4_STORE_BUFFER,
-            floatVal(OpFmt.U8),
-            floatVal(off),
-            floatVal(0),
+            literal(OpFmt.U8),
+            literal(off),
+            literal(0),
             src
         )
     }
@@ -274,18 +274,18 @@ export class OpWriter {
         if (bufidx == 0) assertRange(0, off, 0xff)
         return this.emitExpr(
             OpExpr.EXPR3_LOAD_BUFFER,
-            floatVal(fmt),
-            floatVal(off),
-            floatVal(bufidx)
+            literal(fmt),
+            literal(off),
+            literal(bufidx)
         )
     }
 
     emitBufStore(src: Value, fmt: OpFmt, off: number, bufidx = 0) {
         this.emitStmt(
             OpStmt.STMT4_STORE_BUFFER,
-            floatVal(fmt),
-            floatVal(off),
-            floatVal(bufidx),
+            literal(fmt),
+            literal(off),
+            literal(bufidx),
             src
         )
     }
