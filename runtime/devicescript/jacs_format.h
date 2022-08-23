@@ -61,7 +61,7 @@ typedef struct {
 #define JACS_STMT4_QUERY_IDX_REG 6  // role, code, string-idx, timeout
 #define JACS_STMT3_LOG_FORMAT 7     // string-idx, localidx, numargs
 #define JACS_STMT4_FORMAT 8         // string-idx, localidx, numargs, offset
-#define JACS_STMT1_SETUP_BUFFER 9   // size
+#define JACS_STMT2_SETUP_BUFFER 9   // size, buffer_id
 #define JACS_STMT2_MEMCPY 10        // string-idx, offset
 #define JACS_STMT3_CALL 11          // fun-idx, localidx, numargs
 #define JACS_STMT4_CALL_BG 12       // fun-idx, localidx, numargs

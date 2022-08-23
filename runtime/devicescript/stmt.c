@@ -21,7 +21,7 @@ bool jacs_vm_args_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numar
 
 int32_t jacs_vm_fetch_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint8_t v = jacs_vm_fetch_byte(frame, ctx);
-    if (v <= 0xF8)
+    if (v < 0xF8)
         return v;
 
     int32_t r = 0;
@@ -108,9 +108,11 @@ static void stmt1_return(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_fiber_return_from_call(frame);
 }
 
-static void stmt1_setup_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+static void stmt2_setup_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t a = jacs_vm_exec_expr_u32(frame);
-    if (a > JD_SERIAL_PAYLOAD_SIZE) {
+    uint32_t bufid = jacs_vm_exec_expr_u32(frame);
+    if (bufid != 0 || a > JD_SERIAL_PAYLOAD_SIZE) {
+        // bufid != 0 not supported yet
         jacs_runtime_failure(ctx);
     } else {
         ctx->packet.service_size = a;
@@ -235,7 +237,7 @@ static const jacs_vm_stmt_handler_t jacs_vm_stmt_handlers[JACS_STMT_MAX + 1] = {
     [JACS_STMT4_QUERY_IDX_REG] = stmt4_query_idx_reg,
     [JACS_STMT3_LOG_FORMAT] = stmt3_log_format,
     [JACS_STMT4_FORMAT] = stmt4_format,
-    [JACS_STMT1_SETUP_BUFFER] = stmt1_setup_buffer,
+    [JACS_STMT2_SETUP_BUFFER] = stmt2_setup_buffer,
     [JACS_STMT2_MEMCPY] = stmt2_memcpy,
     [JACS_STMT3_CALL] = stmt3_call,
     [JACS_STMT4_CALL_BG] = stmt4_call_bg,
