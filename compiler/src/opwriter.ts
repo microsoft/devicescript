@@ -33,6 +33,8 @@ const VF_USES_STATE = 0x100
 const VF_HAS_PARENT = 0x200
 const VF_IS_LITERAL = 0x400
 const VF_IS_MEMREF = 0x800
+const VF_IS_STRING = 0x1000
+const VF_IS_WRITTEN = 0x2000
 
 export class Value {
     op: number
@@ -40,6 +42,7 @@ export class Value {
     args: Value[]
     numValue: number
     _userdata: {}
+    _cachedValue: CachedValue
 
     constructor() {}
     get depth() {
@@ -61,37 +64,44 @@ export class Value {
         assert(!(this.flags & VF_HAS_PARENT))
         this.flags |= VF_HAS_PARENT
     }
+
+    _set(src: Value) {
+        if (!this._userdata) this._userdata = src._userdata
+        this.op = src.op
+        this.flags = src.flags
+        this.args = src.args
+        this.numValue = src.numValue
+        this._cachedValue = src._cachedValue
+    }
 }
 
 export class CachedValue {
+    numrefs = 1
     constructor(public parent: OpWriter, public index: number) {}
     emit() {
-        assert(this.index != null)
+        assert(this.numrefs > 0)
         const r = new Value()
         r.numValue = this.index
         r.op = OpExpr.EXPRx_LOAD_LOCAL
         r.flags = VF_IS_MEMREF // not "using state" - it's temporary
+        r._cachedValue = this
+        this.numrefs++
         return r
     }
     store(v: Value) {
-        assert(this.index != null)
+        assert(this.numrefs > 0)
         this.parent.emitStmt(OpStmt.STMTx1_STORE_LOCAL, floatVal(this.index), v)
     }
-    free() {
-        assert(this.parent.cachedValues[this.index] == this)
-        this.parent.cachedValues[this.index] = null
-        this.index = null
+    _decr() {
+        assert(this.numrefs > 0)
+        if (--this.numrefs == 0) {
+            assert(this.parent.cachedValues[this.index] == this)
+            this.parent.cachedValues[this.index] = null
+            this.index = null
+        }
     }
-}
-
-function checkIndex(idx: number) {
-    assert((idx | 0) === idx)
-}
-
-export function mkValue(kind: CellKind, index: number): Value {
-    return {
-        kind,
-        index,
+    free() {
+        this._decr()
     }
 }
 
@@ -121,6 +131,7 @@ export class OpWriter {
     private binPtr: number
     private labels: Label[] = []
     private comments: Comment[] = []
+    private bufferAllocated = false
     pendingStatefulValues: Value[] = []
     localOffsets: number[] = []
     cachedValues: CachedValue[] = []
@@ -214,40 +225,21 @@ export class OpWriter {
 
     stmtEnd() {}
 
-    pop() {}
-    push() {}
-    popExcept(save?: Value) {}
-
     allocBuf(): Value {
-        assert(!this.bufferAllocated(), "allocBuf() not free")
-        return this.doAlloc(BUFFER_REG, CellKind.JD_CURR_BUFFER)
+        assert(!this.bufferAllocated, "allocBuf() not free")
+        this.bufferAllocated = true
+        return nonEmittable(CellKind.JD_CURR_BUFFER)
     }
 
-    private doAlloc(regno: number, kind = CellKind.X_FP_REG) {
-        assert(regno != -1)
-        if (this.allocatedRegsMask & (1 << regno))
-            throw new Error(`expression too complex (R${regno} allocated)`)
-        this.allocatedRegsMask |= 1 << regno
-        const r = mkValue(kind, regno)
-        this.allocatedRegs.push(r)
-        this.scopes[this.scopes.length - 1].push(r)
-        return r
-    }
-
-    allocArgs(num: number): Value[] {
-        return range(num).map(x => this.doAlloc(x))
+    freeBuf(): void {
+        assert(this.bufferAllocated, "freeBuf() already free")
+        this.bufferAllocated = false
     }
 
     emitString(s: string) {
-        const v = mkValue(CellKind.X_STRING, this.prog.addString(s))
-        v.strValue = s
+        const v = floatVal(this.prog.addString(s))
+        v.flags |= VF_IS_STRING
         return v
-    }
-
-    emitRaw(op: OpTop, arg: number) {
-        assert(arg >> 12 == 0)
-        assertRange(0, op, 0xf)
-        this.emitInstr((op << 12) | arg)
     }
 
     _emitCall(procIdx: number, args: CachedValue[], op = OpCall.SYNC) {
@@ -265,10 +257,6 @@ export class OpWriter {
                 numargs,
                 floatVal(op)
             )
-    }
-
-    private bufferAllocated() {
-        return !!(this.allocatedRegsMask & (1 << BUFFER_REG))
     }
 
     emitStoreByte(src: Value, off = 0) {
@@ -299,56 +287,6 @@ export class OpWriter {
             floatVal(off),
             floatVal(bufidx),
             src
-        )
-    }
-
-    emitBufOp(
-        op: OpTop,
-        dst: Value,
-        off: number,
-        mem: jdspec.PacketMember,
-        bufferId = 0
-    ) {
-        assert(this.isReg(dst))
-        let fmt = OpFmt.U8
-        let sz = mem.storage
-        if (sz < 0) {
-            fmt = OpFmt.I8
-            sz = -sz
-        } else if (mem.isFloat) {
-            fmt = 0b1000
-        }
-        switch (sz) {
-            case 1:
-                break
-            case 2:
-                fmt |= OpFmt.U16
-                break
-            case 4:
-                fmt |= OpFmt.U32
-                break
-            case 8:
-                fmt |= OpFmt.U64
-                break
-            default:
-                oops("unhandled format: " + mem.storage + " for " + mem.name)
-        }
-
-        const shift = mem.shift || 0
-        assertRange(0, shift, bitSize(fmt))
-        assertRange(0, off, 0xff)
-        if (op == OpTop.STORE_CELL)
-            assert(this.bufferAllocated(), "buffer allocated in store")
-
-        // B=shift:numfmt, C=Offset, D=buffer_id; A-unused ???
-        this.emitLoadStoreCell(
-            op,
-            dst,
-            CellKind.BUFFER,
-            0,
-            fmt | (shift << 4),
-            off,
-            bufferId
         )
     }
 
@@ -403,7 +341,6 @@ export class OpWriter {
     }
 
     emitIfAndPop(reg: Value, thenBody: () => void, elseBody?: () => void) {
-        this.pop()
         if (elseBody) {
             const endIf = this.mkLabel("endif")
             const elseIf = this.mkLabel("elseif")
@@ -460,7 +397,10 @@ export class OpWriter {
     }
 
     private spillValue(v: Value) {
-        //update depth
+        const l = this.allocTmpLocal()
+        l.store(v)
+        v._set(l.emit())
+        l.free()
     }
 
     private spillAllStateful() {
@@ -550,6 +490,8 @@ export class OpWriter {
     }
 
     private writeValue(v: Value) {
+        assert(!(v.flags & VF_IS_WRITTEN))
+        v.flags |= VF_IS_WRITTEN
         if (v.isLiteral) {
             const q = v.numValue
             if ((q | 0) == q) {
@@ -572,6 +514,7 @@ export class OpWriter {
             if (v.op == OpExpr.EXPRx_LOAD_LOCAL && v.numValue >= LOCAL_OFFSET)
                 this.localOffsets.push(this.location())
             this.writeInt(v.numValue)
+            if (v._cachedValue) v._cachedValue._decr()
         } else if (v.op >= 0x100) {
             oops("this value can't be emitted")
         } else {

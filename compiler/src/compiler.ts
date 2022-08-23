@@ -57,7 +57,6 @@ import {
     floatVal,
     Label,
     LOCAL_OFFSET,
-    mkValue,
     nonEmittable,
     OpWriter,
     SectionWriter,
@@ -264,7 +263,6 @@ class ValueAdd {
     fun?: FunctionDecl
     spec?: jdspec.PacketInfo
     litValue?: number
-    strValue?: string
 }
 
 function va(v: Value) {
@@ -297,7 +295,7 @@ const values = {
     zero: floatVal(0),
     one: floatVal(1),
     nan: floatVal(NaN),
-    error: mkValue(CellKind.ERROR, 0),
+    error: nonEmittable(CellKind.ERROR),
 }
 
 class Procedure {
@@ -678,10 +676,8 @@ class Program implements TopOpWriter {
         try {
             this.proc = proc
             this.writer = proc.writer
-            proc.writer.push()
             return f(proc.writer)
         } finally {
-            proc.writer.pop()
             this.proc = prevProc
             if (prevProc) this.writer = prevProc.writer
         }
@@ -775,9 +771,7 @@ class Program implements TopOpWriter {
             }
 
             if (decl.init) {
-                this.writer.push()
                 this.emitStore(g, this.emitSimpleValue(decl.init))
-                this.writer.pop()
             }
         }
     }
@@ -846,6 +840,7 @@ class Program implements TopOpWriter {
             wr.emitBufStore(v, OpFmt.F64, off)
             off += 8
         }
+        wr.freeBuf()
         wr.emitStmt(
             OpStmt.STMT2_SEND_CMD,
             this.cloudRole.emit(wr),
@@ -1483,6 +1478,7 @@ class Program implements TopOpWriter {
                 wr.emitBufStore(desc.val, bufferFmt(desc.spec), desc.offset)
             }
         }
+        wr.freeBuf()
     }
 
     private emitRegisterCall(
@@ -1672,7 +1668,6 @@ class Program implements TopOpWriter {
                 this.emitCloudMethod(expr)
                 return values.zero
             case "console.log":
-                wr.push()
                 if (
                     expr.arguments.length == 1 &&
                     arg0.type == "CallExpression" &&
@@ -1701,7 +1696,6 @@ class Program implements TopOpWriter {
                         ...this.fmtArgs(fmtargs)
                     )
                 }
-                wr.pop()
                 return values.zero
             default:
                 return null
@@ -1880,6 +1874,7 @@ class Program implements TopOpWriter {
                     ...this.emitFmtArgs(expr),
                     floatVal(0)
                 )
+                wr.freeBuf()
                 return r
         }
         throwError(expr, "unhandled call")
@@ -2036,6 +2031,7 @@ class Program implements TopOpWriter {
             const vd = wr.emitString(v)
             wr.emitStmt(OpStmt.STMT2_SETUP_BUFFER, floatVal(strlen(v)))
             wr.emitStmt(OpStmt.STMT2_MEMCPY, vd, floatVal(0))
+            wr.freeBuf()
             return r
         }
 
@@ -2253,17 +2249,18 @@ class Program implements TopOpWriter {
 
         if (op == "&&" || op == "||") {
             const a = this.emitSimpleValue(expr.left)
+            const tmp = wr.cacheValue(a)
             const tst = wr.emitExpr(
                 op == "&&" ? OpExpr.EXPR1_TO_BOOL : OpExpr.EXPR1_NOT,
-                a
+                tmp.emit()
             )
             const skipB = wr.mkLabel("lazyB")
-            
             wr.emitJump(skipB, tst)
-            this.emitValueInto(a, expr.right)
+            tmp.store(this.emitSimpleValue(expr.right))
             wr.emitLabel(skipB)
-            wr.popExcept(a)
-            return a
+            const res = tmp.emit()
+            tmp.free()
+            return res
         }
 
         const op2 = simpleOps[op]
