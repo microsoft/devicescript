@@ -301,14 +301,18 @@ const values = {
 class Procedure {
     writer: OpWriter
     index: number
-    numargs = 0
+    params: VariableScope
     locals: VariableScope
     methodSeqNo: Variable
     constructor(public parent: Program, public name: string) {
         this.writer = new OpWriter(parent)
         this.index = this.parent.procs.length
         this.parent.procs.push(this)
-        this.locals = new VariableScope(this.parent.globals)
+        this.params = new VariableScope(this.parent.globals)
+        this.locals = new VariableScope(this.params)
+    }
+    get numargs() {
+        return this.params.list.length
     }
     toString() {
         return `proc ${this.name}_F${this.index}:\n${this.writer.getAssembly()}`
@@ -317,7 +321,7 @@ class Procedure {
         this.writer.patchLabels()
     }
     args() {
-        return this.locals.list.slice(0, this.numargs)
+        return this.params.list.slice()
     }
     mkTempLocal(name: string) {
         const l = new Variable(null, this.locals)
@@ -330,7 +334,9 @@ class Procedure {
         return {
             name: this.name,
             srcmap: this.writer.srcmap,
-            locals: this.locals.list.map(v => v.debugInfo()),
+            locals: this.params.list
+                .concat(this.locals.list)
+                .map(v => v.debugInfo()),
         }
     }
 
@@ -911,18 +917,15 @@ class Program implements TopOpWriter {
                     // OK!
                 } else {
                     const spec = this.specFromTypeName(paramdef, tp)
-                    const v = new Role(this, paramdef, proc.locals, spec)
+                    const v = new Role(this, paramdef, proc.params, spec)
                     v.isLocal = true
                     continue
                 }
             }
 
-            const v = new Variable(paramdef, proc.locals)
+            const v = new Variable(paramdef, proc.params)
             v.isLocal = true
         }
-
-        if (proc.locals.list.length >= 8)
-            throwError(stmt.params[7], "too many arguments")
     }
 
     private getClientCommandProc(cc: ClientCommand) {
@@ -933,13 +936,12 @@ class Program implements TopOpWriter {
             this,
             cc.serviceSpec.camelName + "." + cc.jsName
         )
-        cc.proc.numargs = 1 + stmt.params.length
 
         this.withProcedure(cc.proc, wr => {
             const v = new Role(
                 this,
                 null,
-                cc.proc.locals,
+                cc.proc.params,
                 cc.serviceSpec,
                 "this"
             )
@@ -956,7 +958,6 @@ class Program implements TopOpWriter {
         const stmt = fundecl.definition as estree.FunctionDeclaration
 
         fundecl.proc = new Procedure(this, fundecl.getName())
-        fundecl.proc.numargs = stmt.params.length
 
         this.withProcedure(fundecl.proc, wr => {
             this.emitParameters(stmt, fundecl.proc)
@@ -1086,7 +1087,6 @@ class Program implements TopOpWriter {
             if (options.methodHandler)
                 proc.methodSeqNo = proc.mkTempLocal("methSeqNo")
             this.emitParameters(func, proc)
-            proc.numargs = proc.locals.list.length
             if (options.every) {
                 wr.emitStmt(OpStmt.STMT1_SLEEP_MS, floatVal(options.every))
             }
@@ -1369,7 +1369,7 @@ class Program implements TopOpWriter {
                 return wr.emitExpr(
                     OpExpr.EXPR3_LOAD_BUFFER,
                     floatVal(fmt),
-                    this.emitSimpleValue(expr.arguments[0], CellKind.X_FLOAT),
+                    this.emitSimpleValue(expr.arguments[0]),
                     buf.emit(wr)
                 )
             }
@@ -1377,10 +1377,7 @@ class Program implements TopOpWriter {
             case "setAt": {
                 this.requireArgs(expr, 3)
                 const fmt = this.parseFormat(expr.arguments[1])
-                const off = this.emitSimpleValue(
-                    expr.arguments[0],
-                    CellKind.X_FLOAT
-                )
+                const off = this.emitSimpleValue(expr.arguments[0])
                 const val = this.emitSimpleValue(expr.arguments[2])
                 wr.emitStmt(
                     OpStmt.STMT4_STORE_BUFFER,
@@ -1394,10 +1391,7 @@ class Program implements TopOpWriter {
 
             case "setLength": {
                 this.requireArgs(expr, 1)
-                const len = this.emitSimpleValue(
-                    expr.arguments[0],
-                    CellKind.X_FLOAT
-                )
+                const len = this.emitSimpleValue(expr.arguments[0])
                 wr.emitStmt(OpStmt.STMT2_SETUP_BUFFER, len, buf.emit(wr))
                 return values.zero
             }
@@ -1901,7 +1895,7 @@ class Program implements TopOpWriter {
     }
 
     private emitThisExpression(expr: estree.ThisExpression): Value {
-        const cell = this.proc.locals.lookup("this")
+        const cell = this.proc.params.lookup("this")
         if (!cell) throwError(expr, "'this' cannot be used here")
         return cell.emit(this.writer)
     }
@@ -2052,9 +2046,8 @@ class Program implements TopOpWriter {
         return r
     }
 
-    private emitSimpleValue(expr: Expr, except?: CellKind): Value {
+    private emitSimpleValue(expr: Expr): Value {
         const val = this.emitExpr(expr)
-        if (except != undefined && val.op === except) return val
         this.requireRuntimeValue(expr, val)
         return val
     }
@@ -2066,19 +2059,7 @@ class Program implements TopOpWriter {
     }
 
     private requireRuntimeValue(node: estree.BaseNode, v: Value) {
-        // TODO?
-        switch (v.op) {
-            case CellKind.X_FP_REG:
-            case CellKind.LOCAL:
-            case CellKind.GLOBAL:
-            case CellKind.FLOAT_CONST:
-            case CellKind.IDENTITY:
-            case CellKind.X_FLOAT:
-            case CellKind.SPECIAL:
-                break
-            default:
-                throwError(node, "a number required here")
-        }
+        if (v.op >= 0x100) throwError(node, "a number required here")
     }
 
     private emitPrototypeUpdate(expr: estree.AssignmentExpression): Value {

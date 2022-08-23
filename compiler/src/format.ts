@@ -140,19 +140,10 @@ export enum OpCall {
 }
 
 export enum CellKind {
-    // A=idx
-    LOCAL = 0,
-    GLOBAL = 1,
-    PARAM = 7,
-
-    FLOAT_CONST = 2,
-    IDENTITY = 3,
-
-    BUFFER = 4, // A=0, B=shift:numfmt, C=Offset, D=buffer_id
-    SPECIAL = 5, // A=nan, regcode, role, ..., D=buffer_id (sometimes)
-    ROLE_PROPERTY = 6, // A=OpRoleProperty, B=roleidx
-
-    _HW_LAST = 6,
+    LOCAL = OpExpr.EXPRx_LOAD_LOCAL,
+    GLOBAL = OpExpr.EXPRx_LOAD_GLOBAL,
+    PARAM = OpExpr.EXPRx_LOAD_PARAM,
+    FLOAT_CONST = OpExpr.EXPRx_LITERAL_F64,
 
     // these cannot be emitted directly
     JD_EVENT = 0x100,
@@ -162,11 +153,6 @@ export enum CellKind {
     JD_CURR_BUFFER = 0x104,
     JD_COMMAND = 0x105,
     JD_CLIENT_COMMAND = 0x106,
-
-    X_STRING = 0x120,
-    X_FP_REG = 0x121,
-    X_FLOAT = 0x122,
-    X_FUNCTION = 0x123,
     X_BUFFER = 0x124,
 
     ERROR = 0x200,
@@ -191,30 +177,16 @@ export enum OpFmt {
 
 export function stringifyCellKind(vk: CellKind) {
     switch (vk) {
-        case CellKind.X_FP_REG:
-            return "(reg)"
         case CellKind.LOCAL:
             return "local variable"
         case CellKind.GLOBAL:
             return "global variable"
         case CellKind.FLOAT_CONST:
             return "float literal"
-        case CellKind.IDENTITY:
-            return "small int literal"
-        case CellKind.SPECIAL:
-            return "special value"
-        case CellKind.BUFFER:
-            return "buffer access"
-        case CellKind.ROLE_PROPERTY:
-            return "role property"
         case CellKind.JD_VALUE_SEQ:
             return "multi-field buffer"
         case CellKind.JD_CURR_BUFFER:
             return "current buffer"
-        case CellKind.X_STRING:
-            return "string literal"
-        case CellKind.X_FLOAT:
-            return "float literal (generic)"
         case CellKind.JD_EVENT:
             return "Jacdac event"
         case CellKind.JD_COMMAND:
@@ -392,8 +364,6 @@ export function stringifyInstr(
                 return `${r}_P${idx}`
             case CellKind.FLOAT_CONST:
                 return `${r}_F${idx}`
-            case CellKind.IDENTITY:
-                return `${idx}`
             default:
                 return `C${cellkind}[${idx}]` // ??
         }
@@ -415,17 +385,14 @@ export function stringifyInstr(
 
         switch (op) {
             case OpExpr.EXPRx_LOAD_LOCAL:
-                return celldesc(CellKind.LOCAL)
             case OpExpr.EXPRx_LOAD_GLOBAL:
-                return celldesc(CellKind.GLOBAL)
             case OpExpr.EXPRx_LOAD_PARAM:
-                return celldesc(CellKind.PARAM)
+            case OpExpr.EXPRx_LITERAL_F64:
+                return celldesc(op as any)
             case OpExpr.EXPR3_LOAD_BUFFER:
                 return bufferdesc()
             case OpExpr.EXPRx_LITERAL:
                 return "" + decodeInt()
-            case OpExpr.EXPRx_LITERAL_F64:
-                return celldesc(CellKind.FLOAT_CONST)
             case OpExpr.EXPR0_RET_VAL: // return value of query register, call, etc
                 return "RET_VAL"
             case OpExpr.EXPR2_STR0EQ: // A-string-index C-offset
