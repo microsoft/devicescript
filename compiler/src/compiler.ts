@@ -291,13 +291,6 @@ const reservedFunctions: SMap<number> = {
     onStart: 1,
 }
 
-const values = {
-    zero: floatVal(0),
-    one: floatVal(1),
-    nan: floatVal(NaN),
-    error: nonEmittable(CellKind.ERROR),
-}
-
 class Procedure {
     writer: OpWriter
     index: number
@@ -502,7 +495,7 @@ class Program implements TopOpWriter {
             codeFragment: this.sourceFrag(pos),
         }
         ;(this.host.error || printJacError)(err)
-        return values.error
+        return nonEmittable(CellKind.ERROR)
     }
 
     describeCell(t: CellKind, idx: number): string {
@@ -872,7 +865,7 @@ class Program implements TopOpWriter {
             )
         } else {
             if (wr.ret) this.writer.emitJump(this.writer.ret)
-            else wr.emitStmt(OpStmt.STMT1_RETURN, values.nan)
+            else wr.emitStmt(OpStmt.STMT1_RETURN, floatVal(NaN))
         }
     }
 
@@ -1040,7 +1033,7 @@ class Program implements TopOpWriter {
             this.startDispatchers.callHere()
             for (const s of prog.body) this.emitStmt(s)
             this.onStart.finalizeRaw()
-            this.writer.emitStmt(OpStmt.STMT1_RETURN, values.zero)
+            this.writer.emitStmt(OpStmt.STMT1_RETURN, floatVal(0))
             this.finalizeAutoRefresh()
             this.startDispatchers.finalize()
         })
@@ -1100,7 +1093,7 @@ class Program implements TopOpWriter {
             else {
                 if (options.methodHandler)
                     this.emitAckCloud(JacscriptCloudCommandStatus.OK, false, [])
-                wr.emitStmt(OpStmt.STMT1_RETURN, values.nan)
+                wr.emitStmt(OpStmt.STMT1_RETURN, floatVal(NaN))
             }
         })
         return proc
@@ -1171,7 +1164,7 @@ class Program implements TopOpWriter {
                     role,
                     va(obj).spec.identifier
                 )
-                return values.zero
+                return floatVal(0)
             case "wait":
                 this.requireArgs(expr, 0)
                 const wr = this.writer
@@ -1184,7 +1177,7 @@ class Program implements TopOpWriter {
                     floatVal(va(obj).spec.identifier)
                 )
                 wr.emitJump(lbl, cond)
-                return values.zero
+                return floatVal(0)
         }
         throwError(expr, `events don't have property ${prop}`)
     }
@@ -1266,13 +1259,13 @@ class Program implements TopOpWriter {
                             handler.callMe(wr, [], OpCall.BG_MAX1)
                         })
                     })
-                return values.zero
+                return floatVal(0)
             case "wait":
                 if (!role.isCondition())
                     throwError(expr, "only condition()s have wait()")
                 this.requireArgs(expr, 0)
                 wr.emitStmt(OpStmt.STMT1_WAIT_ROLE, role.emit(wr))
-                return values.zero
+                return floatVal(0)
             default:
                 const v = this.emitRoleMember(expr.callee, role)
                 if (v.op == CellKind.JD_CLIENT_COMMAND) {
@@ -1294,7 +1287,7 @@ class Program implements TopOpWriter {
                         `${stringifyCellKind(v.op)} can't be called`
                     )
                 }
-                return values.zero
+                return floatVal(0)
         }
     }
 
@@ -1386,14 +1379,14 @@ class Program implements TopOpWriter {
                     buf.emit(wr),
                     val
                 )
-                return values.zero
+                return floatVal(0)
             }
 
             case "setLength": {
                 this.requireArgs(expr, 1)
                 const len = this.emitSimpleValue(expr.arguments[0])
                 wr.emitStmt(OpStmt.STMT2_SETUP_BUFFER, len, buf.emit(wr))
-                return values.zero
+                return floatVal(0)
             }
 
             default:
@@ -1495,7 +1488,7 @@ class Program implements TopOpWriter {
                     role.emit(wr),
                     floatVal(va(obj).spec.identifier | CMD_SET_REG)
                 )
-                return values.zero
+                return floatVal(0)
             case "onChange":
                 this.requireArgs(expr, 2)
                 this.requireTopLevel(expr)
@@ -1509,7 +1502,7 @@ class Program implements TopOpWriter {
                 this.emitInRoleDispatcher(role, wr => {
                     const cache = this.proc.mkTempLocal(name)
                     role.dispatcher.init.emit(wr => {
-                        this.emitStore(cache, values.nan)
+                        this.emitStore(cache, floatVal(NaN))
                     })
                     const cond = wr.emitExpr(
                         OpExpr.EXPR2_EQ,
@@ -1554,7 +1547,7 @@ class Program implements TopOpWriter {
                         wr.emitLabel(skipHandler)
                     })
                 })
-                return values.zero
+                return floatVal(0)
         }
         throwError(expr, `events don't have property ${prop}`)
     }
@@ -1657,10 +1650,10 @@ class Program implements TopOpWriter {
                     this.cloudRole.emit(wr),
                     floatVal(spec.identifier)
                 )
-                return values.zero
+                return floatVal(0)
             case "cloud.onMethod":
                 this.emitCloudMethod(expr)
-                return values.zero
+                return floatVal(0)
             case "console.log":
                 if (
                     expr.arguments.length == 1 &&
@@ -1690,7 +1683,7 @@ class Program implements TopOpWriter {
                         ...this.fmtArgs(fmtargs)
                     )
                 }
-                return values.zero
+                return floatVal(0)
             default:
                 return null
         }
@@ -1815,7 +1808,7 @@ class Program implements TopOpWriter {
                     OpStmt.STMT1_SLEEP_S,
                     this.emitExpr(expr.arguments[0])
                 )
-                return values.zero
+                return floatVal(0)
             }
             case "isNaN": {
                 this.requireArgs(expr, 1)
@@ -1827,7 +1820,7 @@ class Program implements TopOpWriter {
             case "reboot": {
                 this.requireArgs(expr, 0)
                 wr.emitStmt(OpStmt.STMT1_PANIC, floatVal(0))
-                return values.zero
+                return floatVal(0)
             }
             case "panic": {
                 this.requireArgs(expr, 1)
@@ -1838,7 +1831,7 @@ class Program implements TopOpWriter {
                         "panic() code must be integer between 1 and 9999"
                     )
                 wr.emitStmt(OpStmt.STMT1_PANIC, floatVal(code))
-                return values.zero
+                return floatVal(0)
             }
             case "every": {
                 this.requireTopLevel(expr)
@@ -1852,14 +1845,14 @@ class Program implements TopOpWriter {
                     every: time,
                 })
                 proc.callMe(wr, [], OpCall.BG)
-                return values.zero
+                return floatVal(0)
             }
             case "onStart": {
                 this.requireTopLevel(expr)
                 this.requireArgs(expr, 1)
                 const proc = this.emitHandler("onStart", expr.arguments[0])
                 this.onStart.emit(wr => proc.callMe(wr, []))
-                return values.zero
+                return floatVal(0)
             }
             case "format":
                 const r = wr.allocBuf()
@@ -1888,7 +1881,7 @@ class Program implements TopOpWriter {
 
     private emitIdentifier(expr: estree.Identifier): Value {
         const id = this.forceName(expr)
-        if (id == "NaN") return values.nan
+        if (id == "NaN") return floatVal(NaN)
         const cell = this.proc.locals.lookup(id)
         if (!cell) throwError(expr, "unknown name: " + id)
         return cell.emit(this.writer)
@@ -2143,7 +2136,7 @@ class Program implements TopOpWriter {
 
         if (this.compileAll) this.getClientCommandProc(cmd)
 
-        return values.zero
+        return floatVal(0)
     }
 
     private emitAssignmentExpression(expr: estree.AssignmentExpression): Value {
