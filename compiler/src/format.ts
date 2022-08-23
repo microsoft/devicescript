@@ -25,7 +25,7 @@ export enum OpStmt {
     STMT4_QUERY_IDX_REG = 6, // role, code, string-idx, timeout
     STMT3_LOG_FORMAT = 7, // string-idx, localidx, numargs
     STMT4_FORMAT = 8, // string-idx, localidx, numargs, offset
-    STMT1_SETUP_BUFFER = 9, // size
+    STMT2_SETUP_BUFFER = 9, // size, buffer_id
     STMT2_MEMCPY = 10, // string-idx, offset
     STMT3_CALL = 11, // fun-idx, localidx, numargs
     STMT4_CALL_BG = 12, // fun-idx, localidx, numargs, bg
@@ -273,8 +273,8 @@ export function stringifyInstr(
                 return `log str=${expr()} args=${expr()}+${expr()}`
             case OpStmt.STMT4_FORMAT: // string-idx, localidx, numargs, offset
                 return `format str=${expr()} args=${expr()}+${expr()} offset=${expr()}`
-            case OpStmt.STMT1_SETUP_BUFFER: // size
-                return `setup_buffer size=${expr()}`
+            case OpStmt.STMT2_SETUP_BUFFER: // size, bufid
+                return `setup_buffer size=${expr()} buf${expr()}`
             case OpStmt.STMT2_MEMCPY: // string-idx, offset
                 return `memcpy str=${expr()} offset=${expr()}`
             case OpStmt.STMT3_CALL: // fun-idx, localidx, numargs
@@ -365,7 +365,7 @@ export function stringifyInstr(
 
     function decodeInt() {
         const v = getbyte()
-        if (v <= 0xf8) return v
+        if (v < 0xf8) return v
 
         let r = 0
         const n = !!(v & 4)
