@@ -128,7 +128,7 @@ export const LOCAL_OFFSET = 0x80
 
 export class OpWriter {
     private binary: Uint8Array
-    private binPtr: number
+    private binPtr: number = 0
     private labels: Label[] = []
     private comments: Comment[] = []
     private bufferAllocated = false
@@ -159,7 +159,6 @@ export class OpWriter {
     }
 
     finalizeDesc(off: number, numlocals: number, numargs: number) {
-        assert((this.location() & 1) == 0)
         const flags = 0
         const buf = new Uint8Array(3 * 4)
         write32(buf, 0, off)
@@ -223,7 +222,9 @@ export class OpWriter {
         return t
     }
 
-    stmtEnd() {}
+    stmtEnd() {
+        this.assertNoTemps()
+    }
 
     allocBuf(): Value {
         assert(!this.bufferAllocated, "allocBuf() not free")
@@ -257,6 +258,7 @@ export class OpWriter {
                 numargs,
                 literal(op)
             )
+        for (const c of args) c.free()
     }
 
     emitStoreByte(src: Value, off = 0) {
@@ -306,7 +308,7 @@ export class OpWriter {
                 commentPtr++
                 res += "; " + c.comment.replace(/\n/g, "\n; ") + "\n"
             }
-            res += stringifyInstr(getbyte, this.prog)
+            res += stringifyInstr(getbyte, this.prog) + "\n"
         }
 
         if (ptr > this.binPtr) res += "!!! binary mis-alignment\n"
@@ -382,12 +384,23 @@ export class OpWriter {
         if (cond) this.writeValue(cond)
     }
 
+    assertNoTemps() {
+        for (const c of this.cachedValues) {
+            if (c !== null) {
+                oops(`local ${c.index} still has ${c.numrefs} refs`)
+            }
+        }
+    }
+
     patchLabels() {
         // we now patch at emit
-        for (const l of this.labels) assert(!l.uses)
+        for (const l of this.labels) {
+            if (l.uses) oops(`label ${l.name} not resolved`)
+        }
+
+        this.assertNoTemps()
 
         // patch local indices
-        for (const c of this.cachedValues) assert(c === null)
         for (const off of this.localOffsets) {
             assert(LOCAL_OFFSET <= this.binary[off] && this.binary[off] < 0xf8)
             this.binary[off] =

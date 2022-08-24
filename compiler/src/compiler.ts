@@ -54,7 +54,7 @@ import {
     bufferFmt,
     CachedValue,
     DelayedCodeSection,
-     literal,
+    literal,
     Label,
     LOCAL_OFFSET,
     nonEmittable,
@@ -268,6 +268,10 @@ class ValueAdd {
 function va(v: Value) {
     if (!v._userdata) v._userdata = new ValueAdd()
     return v._userdata as ValueAdd
+}
+
+function cellKind(v: Value): CellKind {
+    return va(v).kind || v.op
 }
 
 function idName(pat: estree.BaseExpression) {
@@ -1056,7 +1060,9 @@ class Program implements TopOpWriter {
         }
     }
 
-    private ignore(val: Value) {}
+    private ignore(val: Value) {
+        val.adopt()
+    }
 
     private emitExpressionStatement(stmt: estree.ExpressionStatement) {
         this.ignore(this.emitExpr(stmt.expression))
@@ -1268,24 +1274,22 @@ class Program implements TopOpWriter {
                 return literal(0)
             default:
                 const v = this.emitRoleMember(expr.callee, role)
-                if (v.op == CellKind.JD_CLIENT_COMMAND) {
+                const k = cellKind(v)
+                if (k == CellKind.JD_CLIENT_COMMAND) {
                     return this.emitProcCall(
                         expr,
                         this.getClientCommandProc(va(v).clientCommand),
                         true
                     )
-                } else if (v.op == CellKind.JD_COMMAND) {
+                } else if (k == CellKind.JD_COMMAND) {
                     this.emitPackArgs(expr, va(v).spec)
                     wr.emitStmt(
                         OpStmt.STMT2_SEND_CMD,
                         role.emit(wr),
                         literal(va(v).spec.identifier)
                     )
-                } else if (v.op != CellKind.ERROR) {
-                    throwError(
-                        expr,
-                        `${stringifyCellKind(v.op)} can't be called`
-                    )
+                } else if (k != CellKind.ERROR) {
+                    throwError(expr, `${stringifyCellKind(k)} can't be called`)
                 }
                 return literal(0)
         }
@@ -1620,10 +1624,7 @@ class Program implements TopOpWriter {
 
         this.cloudMethodDispatcher.emit(wr => {
             const skip = wr.mkLabel("skipMethod")
-            wr.emitJump(
-                skip,
-                wr.emitExpr(OpExpr.EXPR2_STR0EQ, str, literal(4))
-            )
+            wr.emitJump(skip, wr.emitExpr(OpExpr.EXPR2_STR0EQ, str, literal(4)))
             const args = wr.allocTmpLocals(handler.numargs)
             args[0].store(wr.emitBufLoad(OpFmt.U32, 0))
             const pref = 4 + strlen(this.stringLiteral(expr.arguments[0])) + 1
@@ -1660,10 +1661,9 @@ class Program implements TopOpWriter {
                     arg0.type == "CallExpression" &&
                     idName(arg0.callee) == "format"
                 ) {
-                    wr.emitStmt(
-                        OpStmt.STMT3_LOG_FORMAT,
-                        ...this.emitFmtArgs(arg0)
-                    )
+                    const r = this.emitFmtArgs(arg0)
+                    wr.emitStmt(OpStmt.STMT3_LOG_FORMAT, ...r.fmt)
+                    r.free()
                 } else {
                     let fmt = ""
                     const fmtargs = []
@@ -1677,11 +1677,13 @@ class Program implements TopOpWriter {
                             fmtargs.push(arg)
                         }
                     }
+                    const r = this.fmtArgs(fmtargs)
                     wr.emitStmt(
                         OpStmt.STMT3_LOG_FORMAT,
                         wr.emitString(fmt),
-                        ...this.fmtArgs(fmtargs)
+                        ...r.fmt
                     )
+                    r.free()
                 }
                 return literal(0)
             default:
@@ -1776,15 +1778,17 @@ class Program implements TopOpWriter {
                 if (r) return r
             }
             const obj = this.emitExpr(expr.callee.object)
-            switch (obj.op) {
+            const vobj = va(obj)
+            switch (cellKind(obj)) {
                 case CellKind.JD_EVENT:
                     return this.emitEventCall(expr, obj, prop)
                 case CellKind.JD_REG:
                     return this.emitRegisterCall(expr, obj, prop)
-                case CellKind.JD_ROLE:
-                    return this.emitRoleCall(expr, va(obj).role, prop)
-                case CellKind.X_BUFFER:
-                    return this.emitBufferCall(expr, va(obj).buffer, prop)
+                default:
+                    if (vobj.buffer)
+                        return this.emitBufferCall(expr, vobj.buffer, prop)
+                    else if (vobj.role)
+                        return this.emitRoleCall(expr, va(obj).role, prop)
             }
         }
 
@@ -1856,11 +1860,9 @@ class Program implements TopOpWriter {
             }
             case "format":
                 const r = wr.allocBuf()
-                wr.emitStmt(
-                    OpStmt.STMT4_FORMAT,
-                    ...this.emitFmtArgs(expr),
-                    literal(0)
-                )
+                const t = this.emitFmtArgs(expr)
+                wr.emitStmt(OpStmt.STMT4_FORMAT, ...t.fmt, literal(0))
+                t.free()
                 wr.freeBuf()
                 return r
         }
@@ -1869,14 +1871,18 @@ class Program implements TopOpWriter {
 
     private fmtArgs(exprs: Expr[]) {
         const args = this.emitArgs(exprs)
-        return [literal(args[0] ? args[0].index : 0), literal(args.length)]
+        const free = () => {
+            for (const a of args) a.free()
+        }
+        const fmt = [literal(args[0] ? args[0].index : 0), literal(args.length)]
+        return { fmt, free }
     }
 
     private emitFmtArgs(expr: estree.CallExpression) {
         const fmtString = this.forceStringLiteral(expr.arguments[0])
-        const r = this.fmtArgs(expr.arguments.slice(1))
-        r.unshift(fmtString)
-        return r
+        const { fmt, free } = this.fmtArgs(expr.arguments.slice(1))
+        fmt.unshift(fmtString)
+        return { fmt, free }
     }
 
     private emitIdentifier(expr: estree.Identifier): Value {
@@ -1976,9 +1982,10 @@ class Program implements TopOpWriter {
             else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
         const obj = this.emitExpr(expr.object)
-        if (obj.op == CellKind.JD_ROLE) {
+        const k = cellKind(obj)
+        if (k == CellKind.JD_ROLE) {
             return this.emitRoleMember(expr, va(obj).role)
-        } else if (obj.op == CellKind.JD_REG) {
+        } else if (k == CellKind.JD_REG) {
             const propName = this.forceName(expr.property)
             if (va(obj).spec.fields.length > 1) {
                 const fld = va(obj).spec.fields.find(f =>
@@ -2047,12 +2054,13 @@ class Program implements TopOpWriter {
 
     private emitRoleRef(expr: Expr) {
         const val = this.emitExpr(expr)
-        if (val.op != CellKind.JD_ROLE) throwError(expr, "role expected here")
+        if (cellKind(val) != CellKind.JD_ROLE)
+            throwError(expr, "role expected here")
         return va(val).role.emit(this.writer)
     }
 
     private requireRuntimeValue(node: estree.BaseNode, v: Value) {
-        if (v.op >= 0x100) throwError(node, "a number required here")
+        if (cellKind(v) >= 0x100) throwError(node, "a number required here")
     }
 
     private emitPrototypeUpdate(expr: estree.AssignmentExpression): Value {
@@ -2150,7 +2158,7 @@ class Program implements TopOpWriter {
         const wr = this.writer
         let left = expr.left
         if (left.type == "ArrayPattern") {
-            if (src.op == CellKind.JD_VALUE_SEQ) {
+            if (cellKind(src) == CellKind.JD_VALUE_SEQ) {
                 let off = 0
                 const spec = va(src).spec
                 for (let i = 0; i < left.elements.length; ++i) {
@@ -2164,11 +2172,11 @@ class Program implements TopOpWriter {
             } else {
                 throwError(expr, "expecting a multi-field register read")
             }
-            return src
+            return nonEmittable(CellKind.ERROR)
         } else if (left.type == "Identifier") {
             this.requireRuntimeValue(expr.right, src)
             this.emitStore(this.lookupVar(left), src)
-            return src
+            return nonEmittable(CellKind.ERROR)
         }
         throwError(expr, "unhandled assignment")
     }

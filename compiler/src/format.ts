@@ -256,9 +256,9 @@ export function stringifyInstr(
             case OpStmt.STMT1_RETURN: // ret-val
                 return `return ${expr()}`
             case OpStmt.STMTx_JMP: // offset
-                return `jmp ${jmpOffset}`
+                return `jmp ${jmpOffset()}`
             case OpStmt.STMTx1_JMP_Z: // offset, condition
-                return `jmp ${jmpOffset} if not ${expr()}`
+                return `jmp ${jmpOffset()} if not ${expr()}`
             case OpStmt.STMT1_PANIC: // error-code
                 return `panic ${expr()}`
             case OpStmt.STMTx1_STORE_LOCAL: // idx, value
