@@ -291,7 +291,7 @@ export function stringifyInstr(
         const offs = (off >= 0 ? "+" : "") + off
         return resolver?.resolverPC === undefined
             ? offs
-            : resolver?.resolverPC + 1 + off + (" (" + offs + ")")
+            : resolver?.resolverPC + off + (" (" + offs + ")")
     }
 
     function role() {

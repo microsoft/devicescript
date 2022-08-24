@@ -155,6 +155,7 @@ export class OpWriter {
     }
 
     serialize() {
+        while (this.location() & 3) this.writeByte(0)
         return this.binary.slice(0, this.binPtr)
     }
 
@@ -162,8 +163,8 @@ export class OpWriter {
         const flags = 0
         const buf = new Uint8Array(3 * 4)
         write32(buf, 0, off)
-        write32(buf, 4, this.location() * 2)
-        write16(buf, 8, numlocals)
+        write32(buf, 4, this.location())
+        write16(buf, 8, numlocals + this.cachedValues.length)
         buf[10] = this.maxRegs | (numargs << 4)
         buf[11] = flags
         this.desc.set(buf)
@@ -304,10 +305,11 @@ export class OpWriter {
         while (ptr < this.binPtr) {
             while (commentPtr < this.comments.length) {
                 const c = this.comments[commentPtr]
-                if (c.offset >= ptr) break
+                if (c.offset > ptr) break
                 commentPtr++
                 res += "; " + c.comment.replace(/\n/g, "\n; ") + "\n"
             }
+            this.prog.resolverPC = ptr
             res += stringifyInstr(getbyte, this.prog) + "\n"
         }
 

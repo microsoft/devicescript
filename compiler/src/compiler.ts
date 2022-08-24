@@ -121,7 +121,7 @@ class Role extends Cell {
     autoRefreshRegs: jdspec.PacketInfo[] = []
     stringIndex: number
     used = false
-    isLocal = false // set when this is a local parameter role
+    isParameter = false // set when this is a local parameter role
 
     constructor(
         prog: Program,
@@ -139,17 +139,17 @@ class Role extends Cell {
         this.stringIndex = prog.addString(this.getName())
     }
     emit(wr: OpWriter): Value {
-        const r = this.isLocal
+        const r = this.isParameter
             ? wr.emitMemRef(OpExpr.EXPRx_LOAD_LOCAL, this._index)
             : literal(this._index)
         va(r).role = this
         return r
     }
     canStore() {
-        return this.isLocal
+        return this.isParameter
     }
     store(wr: OpWriter, src: Value) {
-        if (!this.isLocal) oops("can't store")
+        if (!this.isParameter) oops("can't store")
         wr.emitStmt(OpStmt.STMTx1_STORE_LOCAL, literal(this._index), src)
     }
     serialize() {
@@ -179,6 +179,7 @@ class Role extends Cell {
 
 class Variable extends Cell {
     isLocal = false
+    isParameter = false
 
     constructor(
         definition: estree.VariableDeclarator | estree.Identifier,
@@ -187,7 +188,9 @@ class Variable extends Cell {
         super(definition, scope)
     }
     emit(wr: OpWriter): Value {
-        const r = this.isLocal
+        const r = this.isParameter
+            ? wr.emitMemRef(OpExpr.EXPRx_LOAD_PARAM, this._index)
+            : this.isLocal
             ? wr.emitMemRef(OpExpr.EXPRx_LOAD_LOCAL, this._index + LOCAL_OFFSET)
             : wr.emitMemRef(OpExpr.EXPRx_LOAD_GLOBAL, this._index)
         va(r).variable = this
@@ -197,7 +200,9 @@ class Variable extends Cell {
         return true
     }
     store(wr: OpWriter, src: Value) {
-        if (this.isLocal)
+        if (this.isParameter)
+            wr.emitStmt(OpStmt.STMTx1_STORE_PARAM, literal(this._index), src)
+        else if (this.isLocal)
             wr.emitStmt(
                 OpStmt.STMTx1_STORE_LOCAL,
                 literal(this._index + LOCAL_OFFSET),
@@ -526,7 +531,7 @@ class Program implements TopOpWriter {
 
     private roleDispatcher(role: Role) {
         if (!role.dispatcher) {
-            if (role.isLocal)
+            if (role.isParameter)
                 throwError(null, "local roles are not supported here")
             const proc = new Procedure(this, role.getName() + "_disp")
             role.dispatcher = {
@@ -888,6 +893,7 @@ class Program implements TopOpWriter {
         proc: Procedure
     ) {
         this.emitStmt(stmt.body)
+        this.writer.emitStmt(OpStmt.STMT1_RETURN, literal(NaN))
     }
 
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
@@ -915,13 +921,14 @@ class Program implements TopOpWriter {
                 } else {
                     const spec = this.specFromTypeName(paramdef, tp)
                     const v = new Role(this, paramdef, proc.params, spec)
-                    v.isLocal = true
+                    v.isParameter = true
                     continue
                 }
             }
 
             const v = new Variable(paramdef, proc.params)
             v.isLocal = true
+            v.isParameter = true
         }
     }
 
@@ -942,7 +949,7 @@ class Program implements TopOpWriter {
                 cc.serviceSpec,
                 "this"
             )
-            v.isLocal = true
+            v.isParameter = true
             this.emitParameters(stmt, cc.proc)
             this.emitFunctionBody(stmt, cc.proc)
         })
