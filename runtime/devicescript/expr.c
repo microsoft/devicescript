@@ -194,8 +194,9 @@ static value_t expr1_to_bool(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static int exec2_and_check_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    ctx->binop[0] = jacs_vm_exec_expr(frame);
+    value_t tmp = jacs_vm_exec_expr(frame);
     ctx->binop[1] = jacs_vm_exec_expr(frame);
+    ctx->binop[0] = tmp;
     return jacs_is_tagged_int(ctx->binop[0]) && jacs_is_tagged_int(ctx->binop[1]);
 }
 

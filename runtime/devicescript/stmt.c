@@ -158,8 +158,9 @@ static void stmt4_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    int pc0 = frame->pc - 1;
     int32_t off = jacs_vm_fetch_int(frame, ctx);
-    int pc = frame->pc + off;
+    int pc = pc0 + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
         frame->pc = pc;
     } else {
@@ -168,9 +169,10 @@ static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_jmp_z(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    int pc0 = frame->pc - 1;
     int32_t off = jacs_vm_fetch_int(frame, ctx);
     int cond = jacs_value_to_bool(jacs_vm_exec_expr(frame));
-    int pc = frame->pc + off;
+    int pc = pc0 + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
         if (!cond)
             frame->pc = pc;
