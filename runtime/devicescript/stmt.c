@@ -3,8 +3,15 @@
 
 typedef void (*jacs_vm_stmt_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
 
-bool jacs_vm_role_ok(jacs_ctx_t *ctx, uint16_t a) {
+bool jacs_vm_role_ok(jacs_ctx_t *ctx, uint32_t a) {
     if (a < jacs_img_num_roles(&ctx->img))
+        return true;
+    jacs_runtime_failure(ctx);
+    return false;
+}
+
+bool jacs_vm_str_ok(jacs_ctx_t *ctx, uint32_t a) {
+    if (a < jacs_img_num_strings(&ctx->img))
         return true;
     jacs_runtime_failure(ctx);
     return false;
@@ -55,11 +62,11 @@ static void stmt1_wait_role(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmt1_sleep_s(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    jacs_fiber_sleep(frame->fiber, jacs_vm_exec_expr_u32(frame));
+    jacs_fiber_sleep(frame->fiber, (uint32_t)(jacs_vm_exec_expr_f64(frame) * 1000.0 + 0.5));
 }
 
 static void stmt1_sleep_ms(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    jacs_fiber_sleep(frame->fiber, (uint32_t)(jacs_vm_exec_expr_f64(frame) * 1000 + 0.5));
+    jacs_fiber_sleep(frame->fiber, jacs_vm_exec_expr_u32(frame));
 }
 
 static void stmt2_send_cmd(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -82,7 +89,7 @@ static void stmt4_query_idx_reg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t b = jacs_vm_exec_expr_u32(frame);
     uint32_t timeout = jacs_vm_exec_expr_u32(frame);
     uint32_t stridx = jacs_vm_exec_expr_u32(frame);
-    if (jacs_vm_role_ok(ctx, a))
+    if (jacs_vm_role_ok(ctx, a) && jacs_vm_str_ok(ctx, stridx))
         jacs_jd_get_register(ctx, a, b, timeout, stridx);
 }
 
@@ -90,7 +97,7 @@ static void stmt3_log_format(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t stridx = jacs_vm_exec_expr_u32(frame);
     uint32_t localidx = jacs_vm_exec_expr_u32(frame);
     uint32_t numargs = jacs_vm_exec_expr_u32(frame);
-    if (jacs_vm_args_ok(frame, localidx, numargs))
+    if (jacs_vm_args_ok(frame, localidx, numargs) && jacs_vm_str_ok(ctx, stridx))
         jacs_jd_send_logmsg(ctx, stridx, localidx, numargs);
 }
 
@@ -103,7 +110,7 @@ static void stmt4_format(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     if (offset > JD_SERIAL_PAYLOAD_SIZE)
         return;
 
-    if (jacs_vm_args_ok(frame, localidx, numargs))
+    if (jacs_vm_args_ok(frame, localidx, numargs) && jacs_vm_str_ok(ctx, stridx))
         ctx->packet.service_size =
             offset + jacs_strformat(jacs_img_get_string_ptr(&ctx->img, stridx),
                                     jacs_img_get_string_len(&ctx->img, stridx),
@@ -133,12 +140,14 @@ static void stmt2_memcpy(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t stridx = jacs_vm_exec_expr_u32(frame);
     uint32_t offset = jacs_vm_exec_expr_u32(frame);
 
-    int len = ctx->packet.service_size - offset;
-    if (len > 0) {
-        int l2 = jacs_img_get_string_len(&ctx->img, stridx);
-        if (l2 < len)
-            len = l2;
-        memcpy(ctx->packet.data + offset, jacs_img_get_string_ptr(&ctx->img, stridx), len);
+    if (jacs_vm_str_ok(ctx, stridx)) {
+        int len = ctx->packet.service_size - offset;
+        if (len > 0) {
+            int l2 = jacs_img_get_string_len(&ctx->img, stridx);
+            if (l2 < len)
+                len = l2;
+            memcpy(ctx->packet.data + offset, jacs_img_get_string_ptr(&ctx->img, stridx), len);
+        }
     }
 }
 

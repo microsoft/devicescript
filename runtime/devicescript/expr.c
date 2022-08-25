@@ -23,12 +23,15 @@ static value_t expr_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t expr2_str0eq(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t a = jacs_vm_exec_expr_u32(frame);
-    uint32_t c = jacs_vm_exec_expr_u32(frame);
+    uint32_t stridx = jacs_vm_exec_expr_u32(frame);
+    uint32_t offset = jacs_vm_exec_expr_u32(frame);
 
-    int len = jacs_img_get_string_len(&ctx->img, a);
-    if (ctx->packet.service_size >= c + len + 1 && ctx->packet.data[c + len] == 0 &&
-        memcmp(ctx->packet.data + c, jacs_img_get_string_ptr(&ctx->img, a), len) == 0)
+    if (!jacs_vm_str_ok(ctx, stridx))
+        return jacs_nan;
+
+    int len = jacs_img_get_string_len(&ctx->img, stridx);
+    if (ctx->packet.service_size >= offset + len + 1 && ctx->packet.data[offset + len] == 0 &&
+        memcmp(ctx->packet.data + offset, jacs_img_get_string_ptr(&ctx->img, stridx), len) == 0)
         return jacs_one;
     else
         return jacs_zero;

@@ -163,7 +163,7 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame);
 void jacs_vm_check_stmt(void);
 void jacs_vm_check_expr(void);
 
-value_t jacs_buffer_op(jacs_activation_t *frame, uint16_t fmt0, uint16_t offset, uint16_t buffer,
+value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, uint32_t buffer,
                        value_t *setv);
 void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx);
 double jacs_read_number(void *data, unsigned bufsz, uint16_t fmt0);

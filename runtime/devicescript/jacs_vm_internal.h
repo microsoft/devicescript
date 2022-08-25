@@ -1,6 +1,7 @@
 #pragma once
 
-bool jacs_vm_role_ok(jacs_ctx_t *ctx, uint16_t a);
+bool jacs_vm_role_ok(jacs_ctx_t *ctx, uint32_t a);
+bool jacs_vm_str_ok(jacs_ctx_t *ctx, uint32_t a);
 bool jacs_vm_args_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numargs);
 int32_t jacs_vm_fetch_int(jacs_activation_t *frame, jacs_ctx_t *ctx);
 static inline uint8_t jacs_vm_fetch_byte(jacs_activation_t *frame, jacs_ctx_t *ctx) {
