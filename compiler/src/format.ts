@@ -396,7 +396,7 @@ export function stringifyInstr(
             case OpExpr.EXPR0_RET_VAL: // return value of query register, call, etc
                 return "RET_VAL"
             case OpExpr.EXPR2_STR0EQ: // A-string-index C-offset
-                return `str0eq(str=${expr}, off=${expr})`
+                return `str0eq(str=${expr()}, off=${expr()})`
             case OpExpr.EXPR1_ROLE_IS_CONNECTED:
                 return `is_connected(${role()})`
             case OpExpr.EXPR0_PKT_SIZE:

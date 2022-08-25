@@ -329,10 +329,8 @@ export class OpWriter {
         return l
     }
 
-    emitLabel(l: Label) {
-        assert(l.offset == -1)
-        this.emitComment("lbl " + l.name)
-        l.offset = this.location()
+    _setLabelOffset(l: Label, off: number) {
+        l.offset = off
         if (l.uses) {
             for (const u of l.uses) {
                 const v = l.offset - u
@@ -343,6 +341,12 @@ export class OpWriter {
             }
             l.uses = undefined
         }
+    }
+
+    emitLabel(l: Label) {
+        assert(l.offset == -1)
+        this.emitComment("lbl " + l.name)
+        this._setLabelOffset(l, this.location())
     }
 
     emitIfAndPop(reg: Value, thenBody: () => void, elseBody?: () => void) {
@@ -387,14 +391,18 @@ export class OpWriter {
         if (cond) this.writeValue(cond)
     }
 
+    private oops(msg: string) {
+        try {
+            console.log(this.getAssembly())
+        } catch {}
+        oops(msg)
+    }
+
     assertNoTemps() {
         if (this.prog.hasErrors) return
         for (const c of this.cachedValues) {
             if (c !== null) {
-                try {
-                    console.log(this.getAssembly())
-                } catch {}
-                oops(`local ${c.index} still has ${c.numrefs} refs`)
+                this.oops(`local ${c.index} still has ${c.numrefs} refs`)
             }
         }
     }
@@ -402,7 +410,7 @@ export class OpWriter {
     patchLabels() {
         // we now patch at emit
         for (const l of this.labels) {
-            if (l.uses) oops(`label ${l.name} not resolved`)
+            if (l.uses) this.oops(`label ${l.name} not resolved`)
         }
 
         this.assertNoTemps()
@@ -614,7 +622,10 @@ export class DelayedCodeSection {
 
     finalize() {
         if (this.empty()) {
-            this.startLabel.offset = this.returnLabel.offset
+            this.parent._setLabelOffset(
+                this.startLabel,
+                this.returnLabel.offset
+            )
             return
         }
         const wr = this.parent

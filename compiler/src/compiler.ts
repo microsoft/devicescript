@@ -1790,10 +1790,8 @@ class Program implements TopOpWriter {
                     this.emitCloud(expr, fullName)
                 if (r) return r
             }
-            const obj = this.emitExpr(expr.callee.object)
-            const vobj = va(obj)
-            this.ignore(obj)
-            switch (cellKind(obj)) {
+            const vobj = this.emitRoleLike(expr.callee.object)
+            switch (vobj.kind) {
                 case CellKind.JD_EVENT:
                     return this.emitEventCall(expr, vobj, prop)
                 case CellKind.JD_REG:
@@ -1802,7 +1800,7 @@ class Program implements TopOpWriter {
                     if (vobj.buffer)
                         return this.emitBufferCall(expr, vobj.buffer, prop)
                     else if (vobj.role)
-                        return this.emitRoleCall(expr, va(obj).role, prop)
+                        return this.emitRoleCall(expr, vobj.role, prop)
             }
         }
 
@@ -1984,6 +1982,14 @@ class Program implements TopOpWriter {
         }
     }
 
+    private emitRoleLike(expr: Expr) {
+        const obj = this.emitExpr(expr)
+        this.ignore(obj)
+        const r = va(obj)
+        if (!r.kind) r.kind = obj.op
+        return r
+    }
+
     private emitMemberExpression(expr: estree.MemberExpression): Value {
         const nsName = idName(expr.object)
         if (nsName == "Math") {
@@ -1995,22 +2001,20 @@ class Program implements TopOpWriter {
             if (e.members.hasOwnProperty(prop)) return literal(e.members[prop])
             else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
-        const obj = this.emitExpr(expr.object)
-        const vobj = va(obj)
-        this.ignore(obj)
-        const k = cellKind(obj)
+        const vobj = this.emitRoleLike(expr.object)
+        const k = vobj.kind
         if (k == CellKind.JD_ROLE) {
             return this.emitRoleMember(expr, vobj.role)
         } else if (k == CellKind.JD_REG) {
             const propName = this.forceName(expr.property)
             if (vobj.spec.fields.length > 1) {
-                const fld = va(obj).spec.fields.find(f =>
+                const fld = vobj.spec.fields.find(f =>
                     matchesName(f.name, propName)
                 )
                 if (!fld)
                     throwError(
                         expr,
-                        `no field ${propName} in ${va(obj).spec.name}`
+                        `no field ${propName} in ${vobj.spec.name}`
                     )
                 return this.emitRegGet(vobj, undefined, fld)
             } else {
@@ -2072,8 +2076,7 @@ class Program implements TopOpWriter {
         const val = this.emitExpr(expr)
         if (cellKind(val) != CellKind.JD_ROLE)
             throwError(expr, "role expected here")
-        this.ignore(val)
-        return va(val).role.emit(this.writer)
+        return val
     }
 
     private requireRuntimeValue(node: estree.BaseNode, v: Value) {
