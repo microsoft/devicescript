@@ -405,6 +405,11 @@ export class OpWriter {
                 this.oops(`local ${c.index} still has ${c.numrefs} refs`)
             }
         }
+
+        for (const e of this.pendingStatefulValues) {
+            if (e.usesState && !e.hasParent)
+                this.oops("pending stateful values")
+        }
     }
 
     patchLabels() {
