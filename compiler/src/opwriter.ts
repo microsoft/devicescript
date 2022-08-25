@@ -144,11 +144,13 @@ export class OpWriter {
     offsetInFuncs = -1
     private maxRegs = 0
     srcmap: number[] = []
+    private nameIdx: number
 
     constructor(private prog: TopOpWriter, public name: string) {
         this.top = this.mkLabel("top")
         this.emitLabel(this.top)
         this.binary = new Uint8Array(128)
+        this.nameIdx = this.prog.addString(this.name.replace(/_F\d+$/, ""))
     }
 
     assertCurrent() {
@@ -162,12 +164,13 @@ export class OpWriter {
 
     finalizeDesc(off: number, numlocals: number, numargs: number) {
         const flags = 0
-        const buf = new Uint8Array(3 * 4)
+        const buf = new Uint8Array(4 * 4)
         write32(buf, 0, off)
         write32(buf, 4, this.location())
         write16(buf, 8, numlocals + this.cachedValues.length)
         buf[10] = this.maxRegs | (numargs << 4)
         buf[11] = flags
+        write16(buf, 12, this.nameIdx)
         this.desc.set(buf)
     }
 
