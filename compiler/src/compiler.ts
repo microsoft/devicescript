@@ -144,6 +144,7 @@ class Role extends Cell {
             : literal(this._index)
         va(r).role = this
         va(r).kind = CellKind.JD_ROLE
+        this.used = true
         return r
     }
     canStore() {
