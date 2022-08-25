@@ -308,8 +308,8 @@ class Procedure {
     locals: VariableScope
     methodSeqNo: Variable
     constructor(public parent: Program, public name: string) {
-        this.writer = new OpWriter(parent)
         this.index = this.parent.procs.length
+        this.writer = new OpWriter(parent, `${this.name}_F${this.index}`)
         this.parent.procs.push(this)
         this.params = new VariableScope(this.parent.globals)
         this.locals = new VariableScope(this.params)
@@ -318,7 +318,7 @@ class Procedure {
         return this.params.list.length
     }
     toString() {
-        return `proc ${this.name}_F${this.index}:\n${this.writer.getAssembly()}`
+        return this.writer.getAssembly()
     }
     finalize() {
         this.writer.patchLabels()

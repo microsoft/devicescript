@@ -145,7 +145,7 @@ export class OpWriter {
     private maxRegs = 0
     srcmap: number[] = []
 
-    constructor(private prog: TopOpWriter) {
+    constructor(private prog: TopOpWriter, public name: string) {
         this.top = this.mkLabel("top")
         this.emitLabel(this.top)
         this.binary = new Uint8Array(128)
@@ -295,7 +295,7 @@ export class OpWriter {
     }
 
     getAssembly() {
-        let res = ""
+        let res = `proc ${this.name}:\n`
         let ptr = 0
         let commentPtr = 0
         const getbyte = () => {
