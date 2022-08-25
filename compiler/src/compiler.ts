@@ -140,9 +140,10 @@ class Role extends Cell {
     }
     emit(wr: OpWriter): Value {
         const r = this.isParameter
-            ? wr.emitMemRef(OpExpr.EXPRx_LOAD_LOCAL, this._index)
+            ? wr.emitMemRef(OpExpr.EXPRx_LOAD_PARAM, this._index)
             : literal(this._index)
         va(r).role = this
+        va(r).kind = CellKind.JD_ROLE
         return r
     }
     canStore() {
@@ -468,6 +469,10 @@ class Program implements TopOpWriter {
             }
         }
         this.sysSpec = this.serviceSpecs["system"]
+    }
+
+    get hasErrors() {
+        return this.numErrors > 0
     }
 
     getSource(fn: string) {
@@ -1073,6 +1078,7 @@ class Program implements TopOpWriter {
 
     private emitExpressionStatement(stmt: estree.ExpressionStatement) {
         this.ignore(this.emitExpr(stmt.expression))
+        this.writer.assertNoTemps()
     }
 
     private emitHandler(
@@ -1163,10 +1169,10 @@ class Program implements TopOpWriter {
 
     private emitEventCall(
         expr: estree.CallExpression,
-        obj: Value,
+        vobj: ValueAdd,
         prop: string
     ): Value {
-        const role = va(obj).role
+        const role = vobj.role
         switch (prop) {
             case "subscribe":
                 this.requireTopLevel(expr)
@@ -1175,7 +1181,7 @@ class Program implements TopOpWriter {
                     this.codeName(expr.callee),
                     expr.arguments[0],
                     role,
-                    va(obj).spec.identifier
+                    vobj.spec.identifier
                 )
                 return literal(0)
             case "wait":
@@ -1187,7 +1193,7 @@ class Program implements TopOpWriter {
                 const cond = wr.emitExpr(
                     OpExpr.EXPR2_EQ,
                     wr.emitExpr(OpExpr.EXPR0_PKT_EV_CODE),
-                    literal(va(obj).spec.identifier)
+                    literal(vobj.spec.identifier)
                 )
                 wr.emitJump(lbl, cond)
                 return literal(0)
@@ -1195,10 +1201,10 @@ class Program implements TopOpWriter {
         throwError(expr, `events don't have property ${prop}`)
     }
 
-    private extractRegField(obj: Value, field: jdspec.PacketMember) {
+    private extractRegField(vobj: ValueAdd, field: jdspec.PacketMember) {
         const wr = this.writer
         let off = 0
-        for (const f of va(obj).spec.fields) {
+        for (const f of vobj.spec.fields) {
             if (f == field) {
                 return wr.emitBufLoad(bufferFmt(field), off)
             } else {
@@ -1209,16 +1215,16 @@ class Program implements TopOpWriter {
     }
 
     private emitRegGet(
-        obj: Value,
+        vobj: ValueAdd,
         refresh?: RefreshMS,
         field?: jdspec.PacketMember
     ) {
-        const spec = va(obj).spec
+        const spec = vobj.spec
         if (refresh === undefined)
             refresh = spec.kind == "const" ? RefreshMS.Never : RefreshMS.Normal
         if (!field && spec.fields.length == 1) field = spec.fields[0]
 
-        const role = va(obj).role
+        const role = vobj.role
         const wr = this.writer
         wr.emitStmt(
             OpStmt.STMT3_QUERY_REG,
@@ -1227,7 +1233,7 @@ class Program implements TopOpWriter {
             literal(refresh)
         )
         if (field) {
-            return this.extractRegField(obj, field)
+            return this.extractRegField(vobj, field)
         } else {
             const r = nonEmittable(CellKind.JD_VALUE_SEQ)
             va(r).spec = spec
@@ -1481,35 +1487,35 @@ class Program implements TopOpWriter {
 
     private emitRegisterCall(
         expr: estree.CallExpression,
-        obj: Value,
+        vobj: ValueAdd,
         prop: string
     ): Value {
-        const role = va(obj).role
-        assertRange(0, va(obj).spec.identifier, 0x1ff)
+        const role = vobj.role
+        assertRange(0, vobj.spec.identifier, 0x1ff)
 
         const wr = this.writer
         switch (prop) {
             case "read":
                 this.requireArgs(expr, 0)
-                return this.emitRegGet(obj)
+                return this.emitRegGet(vobj)
             case "write":
-                this.emitPackArgs(expr, va(obj).spec)
+                this.emitPackArgs(expr, vobj.spec)
                 wr.emitStmt(
                     OpStmt.STMT2_SEND_CMD,
                     role.emit(wr),
-                    literal(va(obj).spec.identifier | CMD_SET_REG)
+                    literal(vobj.spec.identifier | CMD_SET_REG)
                 )
                 return literal(0)
             case "onChange":
                 this.requireArgs(expr, 2)
                 this.requireTopLevel(expr)
-                if (va(obj).spec.fields.length != 1)
+                if (vobj.spec.fields.length != 1)
                     throwError(expr, "wrong register type")
                 const threshold = this.forceNumberLiteral(expr.arguments[0])
-                const name = role.getName() + "_chg_" + va(obj).spec.name
+                const name = role.getName() + "_chg_" + vobj.spec.name
                 const handler = this.emitHandler(name, expr.arguments[1])
-                if (role.autoRefreshRegs.indexOf(va(obj).spec) < 0)
-                    role.autoRefreshRegs.push(va(obj).spec)
+                if (role.autoRefreshRegs.indexOf(vobj.spec) < 0)
+                    role.autoRefreshRegs.push(vobj.spec)
                 this.emitInRoleDispatcher(role, wr => {
                     const cache = this.proc.mkTempLocal(name)
                     role.dispatcher.init.emit(wr => {
@@ -1518,12 +1524,12 @@ class Program implements TopOpWriter {
                     const cond = wr.emitExpr(
                         OpExpr.EXPR2_EQ,
                         wr.emitExpr(OpExpr.EXPR0_PKT_EV_CODE),
-                        literal(va(obj).spec.identifier)
+                        literal(vobj.spec.identifier)
                     )
                     wr.emitIfAndPop(cond, () => {
                         // get the reg value from current packet
                         const curr = wr.cacheValue(
-                            this.extractRegField(obj, va(obj).spec.fields[0])
+                            this.extractRegField(vobj, vobj.spec.fields[0])
                         )
                         const skipHandler = wr.mkLabel("skipHandler")
                         // if (isNaN(curr)) goto skip (shouldn't really happen unless service is misbehaving)
@@ -1786,11 +1792,12 @@ class Program implements TopOpWriter {
             }
             const obj = this.emitExpr(expr.callee.object)
             const vobj = va(obj)
+            this.ignore(obj)
             switch (cellKind(obj)) {
                 case CellKind.JD_EVENT:
-                    return this.emitEventCall(expr, obj, prop)
+                    return this.emitEventCall(expr, vobj, prop)
                 case CellKind.JD_REG:
-                    return this.emitRegisterCall(expr, obj, prop)
+                    return this.emitRegisterCall(expr, vobj, prop)
                 default:
                     if (vobj.buffer)
                         return this.emitBufferCall(expr, vobj.buffer, prop)
@@ -1989,12 +1996,14 @@ class Program implements TopOpWriter {
             else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
         const obj = this.emitExpr(expr.object)
+        const vobj = va(obj)
+        this.ignore(obj)
         const k = cellKind(obj)
         if (k == CellKind.JD_ROLE) {
-            return this.emitRoleMember(expr, va(obj).role)
+            return this.emitRoleMember(expr, vobj.role)
         } else if (k == CellKind.JD_REG) {
             const propName = this.forceName(expr.property)
-            if (va(obj).spec.fields.length > 1) {
+            if (vobj.spec.fields.length > 1) {
                 const fld = va(obj).spec.fields.find(f =>
                     matchesName(f.name, propName)
                 )
@@ -2003,7 +2012,7 @@ class Program implements TopOpWriter {
                         expr,
                         `no field ${propName} in ${va(obj).spec.name}`
                     )
-                return this.emitRegGet(obj, undefined, fld)
+                return this.emitRegGet(vobj, undefined, fld)
             } else {
                 throwError(expr, `unhandled member ${propName}; use .read()`)
             }
@@ -2063,6 +2072,7 @@ class Program implements TopOpWriter {
         const val = this.emitExpr(expr)
         if (cellKind(val) != CellKind.JD_ROLE)
             throwError(expr, "role expected here")
+        this.ignore(val)
         return va(val).role.emit(this.writer)
     }
 
@@ -2151,7 +2161,7 @@ class Program implements TopOpWriter {
 
         if (this.compileAll) this.getClientCommandProc(cmd)
 
-        return literal(0)
+        return nonEmittable(CellKind.ERROR)
     }
 
     private emitAssignmentExpression(expr: estree.AssignmentExpression): Value {

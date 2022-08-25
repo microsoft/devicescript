@@ -20,6 +20,7 @@ export interface TopOpWriter extends InstrArgResolver {
     addString(s: string): number
     addFloat(f: number): number
     writer: OpWriter
+    hasErrors: boolean
 }
 
 export class Label {
@@ -124,7 +125,7 @@ class Comment {
     constructor(public offset: number, public comment: string) {}
 }
 
-export const LOCAL_OFFSET = 0x80
+export const LOCAL_OFFSET = 100
 
 export class OpWriter {
     private binary: Uint8Array
@@ -387,8 +388,12 @@ export class OpWriter {
     }
 
     assertNoTemps() {
+        if (this.prog.hasErrors) return
         for (const c of this.cachedValues) {
             if (c !== null) {
+                try {
+                    console.log(this.getAssembly())
+                } catch {}
                 oops(`local ${c.index} still has ${c.numrefs} refs`)
             }
         }
