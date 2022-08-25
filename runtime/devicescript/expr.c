@@ -18,7 +18,7 @@ static uint32_t random_max(uint32_t mx) {
 }
 
 static value_t expr_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    jacs_runtime_failure(ctx);
+    jacs_runtime_failure(ctx, 60104);
     return jacs_nan;
 }
 
@@ -41,7 +41,7 @@ static value_t exprx_load_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     if (off < frame->func->num_locals)
         return frame->locals[off];
-    jacs_runtime_failure(ctx);
+    jacs_runtime_failure(ctx, 60105);
     return jacs_nan;
 }
 
@@ -56,7 +56,7 @@ static value_t exprx_load_global(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     if (off < ctx->img.header->num_globals)
         return ctx->globals[off];
-    jacs_runtime_failure(ctx);
+    jacs_runtime_failure(ctx, 60106);
     return jacs_nan;
 }
 
@@ -76,7 +76,7 @@ static value_t exprx_literal_f64(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     if (off < jacs_img_num_floats(&ctx->img))
         return jacs_img_get_float(&ctx->img, off);
-    jacs_runtime_failure(ctx);
+    jacs_runtime_failure(ctx, 60107);
     return jacs_nan;
 }
 
@@ -442,10 +442,11 @@ value_t jacs_vm_exec_expr(jacs_activation_t *frame) {
         return jacs_value_from_int(op - 0x80 - 16);
     }
 
-    if (ctx->opstack++ > JACS_MAX_EXPR_DEPTH || op >= JACS_EXPR_MAX) {
-        jacs_runtime_failure(ctx);
-        return jacs_nan;
-    }
+    if (ctx->opstack++ > JACS_MAX_EXPR_DEPTH)
+        return jacs_runtime_failure(ctx, 60108);
+
+    if (op >= JACS_EXPR_MAX)
+        return jacs_runtime_failure(ctx, 60109);
 
     value_t r = jacs_vm_expr_handlers[op](frame, ctx);
     ctx->opstack--;

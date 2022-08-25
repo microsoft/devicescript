@@ -6,21 +6,21 @@ typedef void (*jacs_vm_stmt_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx
 bool jacs_vm_role_ok(jacs_ctx_t *ctx, uint32_t a) {
     if (a < jacs_img_num_roles(&ctx->img))
         return true;
-    jacs_runtime_failure(ctx);
+    jacs_runtime_failure(ctx, 60111);
     return false;
 }
 
 bool jacs_vm_str_ok(jacs_ctx_t *ctx, uint32_t a) {
     if (a < jacs_img_num_strings(&ctx->img))
         return true;
-    jacs_runtime_failure(ctx);
+    jacs_runtime_failure(ctx, 60112);
     return false;
 }
 
 bool jacs_vm_args_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numargs) {
     if (numargs > 16 || localidx > frame->func->num_locals ||
         localidx + numargs > frame->func->num_locals) {
-        jacs_runtime_failure(frame->fiber->ctx);
+        jacs_runtime_failure(frame->fiber->ctx, 60113);
         return false;
     }
     return true;
@@ -29,7 +29,7 @@ bool jacs_vm_args_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numar
 static bool jacs_vm_args_and_fun_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numargs,
                                     uint32_t fidx) {
     if (fidx >= jacs_img_num_functions(&frame->fiber->ctx->img)) {
-        jacs_runtime_failure(frame->fiber->ctx);
+        jacs_runtime_failure(frame->fiber->ctx, 60114);
         return false;
     }
     return jacs_vm_args_ok(frame, localidx, numargs);
@@ -129,7 +129,7 @@ static void stmt2_setup_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t bufid = jacs_vm_exec_expr_u32(frame);
     if (bufid != 0 || a > JD_SERIAL_PAYLOAD_SIZE) {
         // bufid != 0 not supported yet
-        jacs_runtime_failure(ctx);
+        jacs_runtime_failure(ctx, 60115);
     } else {
         ctx->packet.service_size = a;
         memset(ctx->packet.data, 0, a);
@@ -182,7 +182,7 @@ static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
         frame->pc = pc;
     } else {
-        jacs_runtime_failure(ctx);
+        jacs_runtime_failure(ctx, 60116);
     }
 }
 
@@ -195,7 +195,7 @@ static void stmtx1_jmp_z(jacs_activation_t *frame, jacs_ctx_t *ctx) {
         if (!cond)
             frame->pc = pc;
     } else {
-        jacs_runtime_failure(ctx);
+        jacs_runtime_failure(ctx, 60117);
     }
 }
 
@@ -203,7 +203,7 @@ static void stmtx1_store_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     value_t v = jacs_vm_exec_expr(frame);
     if (off >= frame->func->num_locals)
-        jacs_runtime_failure(ctx);
+        jacs_runtime_failure(ctx, 60118);
     else
         frame->locals[off] = v;
 }
@@ -212,7 +212,7 @@ static void stmtx1_store_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     value_t v = jacs_vm_exec_expr(frame);
     if (off >= frame->func->num_args)
-        jacs_runtime_failure(ctx);
+        jacs_runtime_failure(ctx, 60119);
     else {
         if (off >= frame->num_params) {
             JD_ASSERT(!frame->params_is_copy);
@@ -230,7 +230,7 @@ static void stmtx1_store_global(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     value_t v = jacs_vm_exec_expr(frame);
     if (off >= ctx->img.header->num_globals)
-        jacs_runtime_failure(ctx);
+        jacs_runtime_failure(ctx, 60120);
     else
         ctx->globals[off] = v;
 }
@@ -244,7 +244,7 @@ static void stmt4_store_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmt_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    jacs_runtime_failure(ctx);
+    jacs_runtime_failure(ctx, 60121);
 }
 
 static const jacs_vm_stmt_handler_t jacs_vm_stmt_handlers[JACS_STMT_MAX + 1] = {
@@ -287,7 +287,7 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
     uint8_t op = jacs_vm_fetch_byte(frame, ctx);
 
     if (op >= JACS_STMT_MAX) {
-        jacs_runtime_failure(ctx);
+        jacs_runtime_failure(ctx, 60122);
     } else {
         jacs_vm_stmt_handlers[op](frame, ctx);
     }
