@@ -19,6 +19,15 @@ bool jacs_vm_args_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numar
     return true;
 }
 
+static bool jacs_vm_args_and_fun_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numargs,
+                                    uint32_t fidx) {
+    if (fidx >= jacs_img_num_functions(&frame->fiber->ctx->img)) {
+        jacs_runtime_failure(frame->fiber->ctx);
+        return false;
+    }
+    return jacs_vm_args_ok(frame, localidx, numargs);
+}
+
 int32_t jacs_vm_fetch_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint8_t v = jacs_vm_fetch_byte(frame, ctx);
     if (v < 0xF8)
@@ -143,7 +152,7 @@ static void stmt3_call(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t localidx = jacs_vm_exec_expr_u32(frame);
     uint32_t numargs = jacs_vm_exec_expr_u32(frame);
 
-    if (jacs_vm_args_ok(frame, localidx, numargs))
+    if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx))
         jacs_fiber_call_function(frame->fiber, fidx, frame->locals + localidx, numargs);
 }
 
@@ -153,7 +162,7 @@ static void stmt4_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t numargs = jacs_vm_exec_expr_u32(frame);
     uint32_t flag = jacs_vm_exec_expr_u32(frame);
 
-    if (jacs_vm_args_ok(frame, localidx, numargs))
+    if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx))
         jacs_fiber_start(ctx, fidx, frame->locals + localidx, numargs, flag);
 }
 
