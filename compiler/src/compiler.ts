@@ -1524,7 +1524,7 @@ class Program implements TopOpWriter {
                     })
                     const cond = wr.emitExpr(
                         OpExpr.EXPR2_EQ,
-                        wr.emitExpr(OpExpr.EXPR0_PKT_EV_CODE),
+                        wr.emitExpr(OpExpr.EXPR0_PKT_REG_GET_CODE),
                         literal(vobj.spec.identifier)
                     )
                     wr.emitIfAndPop(cond, () => {
