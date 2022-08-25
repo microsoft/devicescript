@@ -65,3 +65,5 @@ static inline const char *jacs_img_get_string_ptr(const jacs_img_t *img, uint32_
 static inline unsigned jacs_img_get_string_len(const jacs_img_t *img, uint32_t idx) {
     return jacs_img_get_string(img, idx)->length;
 }
+
+const char *jacs_img_fun_name(const jacs_img_t *img, unsigned fidx);

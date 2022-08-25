@@ -80,6 +80,7 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
         CHECK(1020, sptr->start == prevProc);
         prevProc += sptr->length;
         CHECK(1051, prevProc < 0x10000);
+        CHECK(1052, fptr->name_idx < jacs_img_num_strings(img));
     }
 
     for (sptr = FIRST_DESC(strings); (void *)sptr < LAST_DESC(strings); sptr++) {

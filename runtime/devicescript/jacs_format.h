@@ -33,7 +33,8 @@ typedef struct {
     uint16_t num_locals;
     uint8_t num_args;
     uint8_t flags;
-    uint32_t reserved;
+    uint16_t name_idx;
+    uint16_t reserved;
 } jacs_function_desc_t;
 
 typedef struct {

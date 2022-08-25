@@ -363,9 +363,16 @@ void jacs_jd_process_pkt(jacs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     pkt = &ctx->packet;
 
     unsigned numroles = jacs_img_num_roles(&ctx->img);
+
+    // DMESG("pkt %d %x / %d", pkt->service_index, pkt->service_command, pkt->service_size);
+    // jd_log_packet(&ctx->packet);
+
     for (unsigned idx = 0; idx < numroles; ++idx) {
         if (jacs_jd_pkt_matches_role(ctx, idx)) {
-            // DMESG("wake pkt %x / %d", pkt->service_command, pkt->service_size);
+#if 0
+            DMESG("wake pkt s=%d %x / %d r=%s", pkt->service_index, pkt->service_command,
+                  pkt->service_size, ctx->roles[idx]->name);
+#endif
             jacs_fiber_sync_now(ctx);
             jacs_jd_update_all_regcache(ctx, idx);
             jacs_jd_wake_role(ctx, idx);
