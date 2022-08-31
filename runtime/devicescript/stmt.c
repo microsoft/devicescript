@@ -297,6 +297,8 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
 
 nan-box pointers - should allow for GC of locals/globals
 
+nan vs undefined?
+
 object types:
   - buffer
   - key-value map (u16 -> f64)
@@ -304,5 +306,20 @@ object types:
   - string
 
 what about function values?
+
+role -> right now index
+
+attach kv map to role?
+
+EXPR1_ROLE_USER_DATA: role -> kvmap
+EXPR2_KV_LOOKUP: kvmap, key -> value (or nan)
+STMT3_KV_STORE: kvmap, key, value
+
+manufactured pointers
+
+---
+
+light client:
+buffer attached to role
 
 */
