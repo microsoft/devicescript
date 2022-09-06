@@ -53,12 +53,6 @@ struct {
     jd_opipe_desc_t pipe;
 } deploy;
 
-int jacs_client_deploy(const void *img, unsigned imgsize) {
-    deploy.img = img;
-    deploy.size = imgsize;
-    return 0;
-}
-
 static void process_deploy(void) {
     if (!deploy.isopen)
         return;
@@ -135,6 +129,15 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
         }
         break;
     }
+}
+
+int jacs_client_deploy(const void *img, unsigned imgsize) {
+    deploy.img = img;
+    deploy.size = imgsize;
+#ifdef __EMSCRIPTEN__
+    jd_client_subscribe(client_event_handler, NULL);
+#endif
+    return 0;
 }
 
 int load_image(const char *name) {
