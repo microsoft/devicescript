@@ -413,7 +413,8 @@ void jacs_jd_init_roles(jacs_ctx_t *ctx) {
     unsigned numroles = jacs_img_num_roles(&ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
         const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, idx);
-        ctx->roles[idx] = jd_role_alloc(jacs_jd_role_name(ctx, idx), role->service_class);
+        if (role->service_class != JD_SERVICE_CLASS_JACSCRIPT_CONDITION)
+            ctx->roles[idx] = jd_role_alloc(jacs_jd_role_name(ctx, idx), role->service_class);
     }
 }
 
