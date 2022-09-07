@@ -369,6 +369,10 @@ static value_t expr2_min(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     return lt ? ctx->binop[0] : ctx->binop[1];
 }
 
+static value_t expr0_now_ms(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_value_from_double((double)ctx->_now_long);
+}
+
 static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_MAX + 1] = {
     [0] = expr_invalid,
     [JACS_EXPRx_LOAD_LOCAL] = exprx_load_local,
@@ -421,6 +425,7 @@ static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_MAX + 1] = {
     [JACS_EXPR2_SHIFT_RIGHT] = expr2_shift_right,
     [JACS_EXPR2_SHIFT_RIGHT_UNSIGNED] = expr2_shift_right_unsigned,
     [JACS_EXPR2_SUB] = expr2_sub,
+    [JACS_EXPR0_NOW_MS] = expr0_now_ms,
 
     [JACS_EXPR_MAX] = expr_invalid,
 };

@@ -135,8 +135,9 @@ void jacs_free_ctx(jacs_ctx_t *ctx) {
 void jacs_trace(jacs_ctx_t *ctx, unsigned evtype, const void *data, unsigned data_size) {
     if (!jacs_trace_enabled(ctx))
         return;
-    if (ctx->_now != ctx->_logged_now) {
-        ctx->_logged_now = ctx->_now;
+    uint32_t n = jacs_now(ctx);
+    if (n != ctx->_logged_now) {
+        ctx->_logged_now = n;
         jd_lstore_append(JACS_TRACE_LOG_IDX, JACS_TRACE_EV_NOW, &ctx->_logged_now,
                          sizeof(ctx->_logged_now));
     }

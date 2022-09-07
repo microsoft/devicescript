@@ -218,7 +218,7 @@ value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
 
 void jacs_fiber_sync_now(jacs_ctx_t *ctx) {
     jd_refresh_now();
-    ctx->_now = now_ms;
+    ctx->_now_long = now_ms_long;
 }
 
 static int jacs_fiber_wake_some(jacs_ctx_t *ctx) {

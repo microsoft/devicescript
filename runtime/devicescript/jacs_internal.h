@@ -88,7 +88,7 @@ struct jacs_ctx {
 
     uint32_t *buffers;
 
-    uint32_t _now;
+    uint64_t _now_long;
     uint32_t _logged_now;
 
     uint32_t log_counter;
@@ -119,7 +119,7 @@ struct jacs_activation {
 #define oops() jd_panic()
 
 static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
-    return ctx->_now;
+    return (uint32_t)ctx->_now_long;
 }
 static inline bool jacs_trace_enabled(jacs_ctx_t *ctx) {
     return (ctx->flags & JACS_CTX_TRACE_DISABLED) == 0;
