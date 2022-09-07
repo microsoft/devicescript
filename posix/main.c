@@ -153,9 +153,11 @@ int load_image(const char *name) {
         return -2;
     }
     fseek(f, 0, SEEK_SET);
-    uint8_t *img = jd_alloc(size);
+    uint8_t *img = jd_alloc(size + 1);
     fread(img, size, 1, f);
     fclose(f);
+    if (memcmp("4a6163530a", img, 10) == 0)
+        size = jd_from_hex(img, (const char *)img);
     int r = jacs_verify(img, size);
     if (r) {
         fprintf(stderr, "verification error for '%s': %d\n", name, r);
