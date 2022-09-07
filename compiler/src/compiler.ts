@@ -1700,6 +1700,8 @@ class Program implements TopOpWriter {
                     r.free()
                 }
                 return literal(0)
+            case "Date.now":
+                return wr.emitExpr(OpExpr.EXPR0_NOW_MS)
             default:
                 return null
         }

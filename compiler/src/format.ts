@@ -100,6 +100,7 @@ export enum OpExpr {
     EXPR2_SHIFT_RIGHT = 42,
     EXPR2_SHIFT_RIGHT_UNSIGNED = 43,
     EXPR2_SUB = 44,
+    EXPR0_NOW_MS = 46,
 }
 
 export function exprIsStateful(op: OpExpr) {
@@ -113,6 +114,7 @@ export function exprIsStateful(op: OpExpr) {
         case OpExpr.EXPR0_PKT_SIZE:
         case OpExpr.EXPR0_PKT_EV_CODE:
         case OpExpr.EXPR0_PKT_REG_GET_CODE:
+        case OpExpr.EXPR0_NOW_MS:
             return true
         default:
             return false

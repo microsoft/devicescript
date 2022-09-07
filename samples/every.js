@@ -9,5 +9,5 @@ button1.up.subscribe(() => {
     lightBulb1.brightness.write(0)
 })
 every(5, () => {
-    console.log("5 second")
+    console.log("5 second", Date.now())
 })
