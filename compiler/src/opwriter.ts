@@ -13,8 +13,8 @@ import {
     stmtTakesNumber,
     stringifyInstr,
 } from "./format"
-import { assert, write32, write16, range } from "./jdutil"
-import { addUnique, assertRange, numSetBits, oops } from "./util"
+import { assert, write32, write16 } from "./jdutil"
+import { assertRange, oops } from "./util"
 
 export interface TopOpWriter extends InstrArgResolver {
     addString(s: string): number

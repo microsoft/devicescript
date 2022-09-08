@@ -11,6 +11,7 @@ let verbose = false
 let useC = false
 let testMode = false
 let doDeploy = false
+let disassemble = false
 let logParse = false
 let serialPort = ""
 let jacsFile = ""
@@ -49,6 +50,8 @@ async function readCompiled(fn) {
     const buf = fs.readFileSync(fn)
     if (buf.slice(0, 8).toString("hex") == "4a6163530a7e6a9a")
         return buf
+    if (buf.slice(0, 16).toString("binary") == "4a6163530a7e6a9a")
+        return Buffer.from(buf.toString("binary").replace(/\s*/g, ""), "hex")
     jacsFile = fn
     return await compile(buf)
 }
@@ -136,6 +139,11 @@ async function runServer(args) {
         testMode = false
         return
     }
+    if (disassemble) {
+        const prog = await readCompiled(fn)
+        console.log(require("./compiler").disassemble(prog))
+        return
+    }
     const inst = await jacsFactory()
     if (!testMode)
         await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
@@ -176,6 +184,11 @@ async function main() {
         if (args[0] == "-d") {
             args.shift()
             doDeploy = true
+            continue
+        }
+        if (args[0] == "-D") {
+            args.shift()
+            disassemble = true
             continue
         }
         if (args[0] == "-p") {
