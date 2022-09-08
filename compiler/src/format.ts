@@ -37,6 +37,7 @@ export enum OpStmt {
     STMTx1_STORE_GLOBAL = 18, // idx, value
     STMT4_STORE_BUFFER = 19, // shift:numfmt, offset, buffer_id, value
     STMTx1_STORE_PARAM = 20, // idx, value
+    STMT1_TERMINATE_FIBER = 21, // fiber-handle
 }
 
 export function stmtTakesNumber(op: OpStmt) {
@@ -101,6 +102,7 @@ export enum OpExpr {
     EXPR2_SHIFT_RIGHT_UNSIGNED = 43,
     EXPR2_SUB = 44,
     EXPR0_NOW_MS = 46,
+    EXPR1_GET_FIBER_HANDLE = 47,
 }
 
 export function exprIsStateful(op: OpExpr) {
@@ -115,6 +117,7 @@ export function exprIsStateful(op: OpExpr) {
         case OpExpr.EXPR0_PKT_EV_CODE:
         case OpExpr.EXPR0_PKT_REG_GET_CODE:
         case OpExpr.EXPR0_NOW_MS:
+        case OpExpr.EXPR1_GET_FIBER_HANDLE:
             return true
         default:
             return false
@@ -271,6 +274,12 @@ export function stringifyInstr(
                 return `${bufferdesc()} := ${expr()}`
             case OpStmt.STMTx1_STORE_PARAM: // idx, value
                 return `${celldesc(CellKind.PARAM)} := ${expr()}`
+            case OpStmt.STMT1_TERMINATE_FIBER:
+                return `terminate(${expr()})`
+            case 0:
+                return `0x00`
+            default:
+                return `? stmt ${op} ?`
         }
     }
 
@@ -473,6 +482,10 @@ export function stringifyInstr(
                 return `(${expr()}) >>> (${expr()})`
             case OpExpr.EXPR2_SUB:
                 return `(${expr()}) - (${expr()})`
+            case OpExpr.EXPR0_NOW_MS:
+                return `now_ms()`
+            case OpExpr.EXPR1_GET_FIBER_HANDLE:
+                return `fiber(_F${expr()})`
             default:
                 return `? 0x${op.toString(16)} ?`
         }
