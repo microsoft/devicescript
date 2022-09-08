@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma GCC diagnostic ignored "-Wzero-length-bounds"
+
 #include "jacscript.h"
 
 #include "jd_protocol.h"
