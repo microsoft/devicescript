@@ -385,7 +385,7 @@ static value_t expr1_get_fiber_handle(jacs_activation_t *frame, jacs_ctx_t *ctx)
             return jacs_nan;
     }
 
-    return jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, frame->fiber->handle_tag);
+    return jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fiber->handle_tag);
 }
 
 static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_MAX + 1] = {

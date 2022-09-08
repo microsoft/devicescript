@@ -168,6 +168,7 @@ jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, 
 }
 
 void jacs_fiber_termiante(jacs_fiber_t *f) {
+    log_fiber_op(f, "terminate");
     jacs_activation_t *act = f->activation;
     while (act) {
         jacs_activation_t *n = act->caller;
