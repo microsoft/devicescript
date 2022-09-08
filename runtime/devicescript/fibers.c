@@ -117,32 +117,43 @@ const char *jacs_img_fun_name(const jacs_img_t *img, unsigned fidx) {
     return jacs_img_get_string_ptr(img, func->name_idx);
 }
 
-void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
-                      unsigned op) {
+jacs_fiber_t *jacs_fiber_by_fidx(jacs_ctx_t *ctx, unsigned fidx) {
+    for (jacs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next)
+        if (fiber->bottom_function_idx == fidx)
+            return fiber;
+    return NULL;
+}
+
+jacs_fiber_t *jacs_fiber_by_tag(jacs_ctx_t *ctx, unsigned tag) {
+    for (jacs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next)
+        if (fiber->handle_tag == tag)
+            return fiber;
+    return NULL;
+}
+
+jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
+                               unsigned op) {
     jacs_fiber_t *fiber;
 
-    if (op != JACS_OPCALL_BG)
-        for (fiber = ctx->fibers; fiber; fiber = fiber->next) {
-            if (fiber->bottom_function_idx == fidx) {
-                if (op == JACS_OPCALL_BG_MAX1_PEND1) {
-                    if (fiber->pending) {
-                        fiber->ret_val = jacs_value_from_int(3);
-                        // LOG("fiber already pending %d", fidx);
-                    } else {
-                        fiber->pending = 1;
-                        // LOG("pend fiber %d", fidx);
-                        fiber->ret_val = jacs_value_from_int(2);
-                    }
+    if (op != JACS_OPCALL_BG) {
+        fiber = jacs_fiber_by_fidx(ctx, fidx);
+        if (fiber) {
+            if (op == JACS_OPCALL_BG_MAX1_PEND1) {
+                if (fiber->pending) {
+                    // LOG("fiber already pending %d", fidx);
                 } else {
-                    fiber->ret_val = jacs_zero;
+                    fiber->pending = 1;
+                    // LOG("pend fiber %d", fidx);
                 }
-                return;
             }
+            return fiber;
         }
+    }
 
     fiber = jd_alloc(sizeof(*fiber));
     fiber->ctx = ctx;
     fiber->bottom_function_idx = fidx;
+    fiber->handle_tag = ++ctx->fiber_handle_tag;
 
     log_fiber_op(fiber, "start");
 
@@ -153,7 +164,17 @@ void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned 
 
     jacs_fiber_set_wake_time(fiber, jacs_now(ctx));
 
-    fiber->ret_val = jacs_one;
+    return fiber;
+}
+
+void jacs_fiber_termiante(jacs_fiber_t *f) {
+    jacs_activation_t *act = f->activation;
+    while (act) {
+        jacs_activation_t *n = act->caller;
+        free_activation(act);
+        act = n;
+    }
+    free_fiber(f);
 }
 
 void jacs_fiber_run(jacs_fiber_t *fiber) {

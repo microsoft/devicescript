@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 typedef union {
-    double f;
+    double _f;
     uint64_t u64;
     struct {
         uint32_t mantisa32;
@@ -19,10 +19,36 @@ typedef union {
 
 #define JACS_INT_TAG (0U - 1U)
 #define JACS_NAN_TAG 0x7ff80000
+#define JACS_HANDLE_TAG 0x7ff00000
 
 static inline bool jacs_is_tagged_int(value_t t) {
     return (t.exp_sign + 1) == 0;
 }
+
+static inline bool jacs_is_nan(value_t t) {
+    return t.exp_sign == JACS_NAN_TAG;
+}
+
+static inline bool jacs_is_handle(value_t t) {
+    return (t.exp_sign >> (20 - 1)) == (0x7ff << 1);
+}
+
+static inline int jacs_handle_type(value_t t) {
+    return jacs_is_handle(t) ? (t.exp_sign << 12) >> 12 : 0;
+}
+
+static inline uint32_t jacs_handle_value(value_t t) {
+    return t.mantisa32;
+}
+
+static inline value_t jacs_value_from_handle(int type, uint32_t value) {
+    value_t r;
+    r.exp_sign = JACS_HANDLE_TAG + type;
+    r.mantisa32 = value;
+    return r;
+}
+
+#define JACS_HANDLE_TYPE_FIBER 1
 
 value_t jacs_value_from_double(double v);
 value_t jacs_value_from_int(int v);

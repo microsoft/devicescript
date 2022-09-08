@@ -66,8 +66,8 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
         value_t tmp = *fptr;
         if (jacs_is_tagged_int(tmp))
             continue;
-        CHECK(1043, !isnan(tmp.f));
-        CHECK(1044, jacs_value_from_double(tmp.f).u64 == tmp.u64);
+        CHECK(1043, !isnan(tmp._f));
+        CHECK(1044, jacs_value_from_double(tmp._f).u64 == tmp.u64);
     }
 
     uint32_t prevProc = header->functions_data.start;

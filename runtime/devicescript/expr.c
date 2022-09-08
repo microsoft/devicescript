@@ -116,8 +116,10 @@ static value_t expr0_nan(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static value_t expr1_abs(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_exec_expr(frame);
-    if (!jacs_is_tagged_int(v))
-        return v.f < 0 ? jacs_value_from_double(-v.f) : v;
+    if (!jacs_is_tagged_int(v)) {
+        double f = jacs_value_to_double(v);
+        return f < 0 ? jacs_value_from_double(-f) : v;
+    }
     int q = v.val_int32;
     if (q < 0) {
         if (q == INT_MIN)
@@ -136,21 +138,21 @@ static value_t expr1_ceil(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_exec_expr(frame);
     if (jacs_is_tagged_int(v))
         return v;
-    return jacs_value_from_double(ceil(v.f));
+    return jacs_value_from_double(ceil(jacs_value_to_double(v)));
 }
 
 static value_t expr1_floor(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_exec_expr(frame);
     if (jacs_is_tagged_int(v))
         return v;
-    return jacs_value_from_double(floor(v.f));
+    return jacs_value_from_double(floor(jacs_value_to_double(v)));
 }
 
 static value_t expr1_round(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_exec_expr(frame);
     if (jacs_is_tagged_int(v))
         return v;
-    return jacs_value_from_double(round(v.f));
+    return jacs_value_from_double(round(jacs_value_to_double(v)));
 }
 
 static value_t expr1_id(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -159,9 +161,7 @@ static value_t expr1_id(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static value_t expr1_is_nan(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_exec_expr(frame);
-    if (jacs_is_tagged_int(v))
-        return jacs_zero;
-    return jacs_value_from_bool(isnan(v.f));
+    return jacs_value_from_bool(v.exp_sign == JACS_NAN_TAG);
 }
 
 static value_t expr1_log_e(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -171,7 +171,7 @@ static value_t expr1_log_e(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 static value_t expr1_neg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_exec_expr(frame);
     if (!jacs_is_tagged_int(v))
-        return jacs_value_from_double(-v.f);
+        return jacs_value_from_double(-jacs_value_to_double(v));
     if (v.val_int32 == INT_MIN)
         return jacs_max_int_1;
     else
@@ -373,6 +373,21 @@ static value_t expr0_now_ms(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     return jacs_value_from_double((double)ctx->_now_long);
 }
 
+static value_t expr1_get_fiber_handle(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    int idx = jacs_vm_exec_expr_i32(frame);
+    jacs_fiber_t *fiber;
+
+    if (idx < 0)
+        fiber = frame->fiber;
+    else {
+        fiber = jacs_fiber_by_fidx(ctx, idx);
+        if (fiber == NULL)
+            return jacs_nan;
+    }
+
+    return jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, frame->fiber->handle_tag);
+}
+
 static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_MAX + 1] = {
     [0] = expr_invalid,
     [JACS_EXPRx_LOAD_LOCAL] = exprx_load_local,
@@ -426,6 +441,7 @@ static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_MAX + 1] = {
     [JACS_EXPR2_SHIFT_RIGHT_UNSIGNED] = expr2_shift_right_unsigned,
     [JACS_EXPR2_SUB] = expr2_sub,
     [JACS_EXPR0_NOW_MS] = expr0_now_ms,
+    [JACS_EXPR1_GET_FIBER_HANDLE] = expr1_get_fiber_handle,
 
     [JACS_EXPR_MAX] = expr_invalid,
 };

@@ -62,11 +62,15 @@ static void stmt1_wait_role(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmt1_sleep_s(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    jacs_fiber_sleep(frame->fiber, (uint32_t)(jacs_vm_exec_expr_f64(frame) * 1000.0 + 0.5));
+    int time = (int)(jacs_vm_exec_expr_f64(frame) * 1000.0 + 0.5);
+    if (time >= 0)
+        jacs_fiber_sleep(frame->fiber, time);
 }
 
 static void stmt1_sleep_ms(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    jacs_fiber_sleep(frame->fiber, jacs_vm_exec_expr_u32(frame));
+    int time = jacs_vm_exec_expr_i32(frame);
+    if (time >= 0)
+        jacs_fiber_sleep(frame->fiber, time);
 }
 
 static void stmt2_send_cmd(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -171,8 +175,10 @@ static void stmt4_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t numargs = jacs_vm_exec_expr_u32(frame);
     uint32_t flag = jacs_vm_exec_expr_u32(frame);
 
-    if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx))
-        jacs_fiber_start(ctx, fidx, frame->locals + localidx, numargs, flag);
+    if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx)) {
+        jacs_fiber_t *fib = jacs_fiber_start(ctx, fidx, frame->locals + localidx, numargs, flag);
+        frame->fiber->ret_val = jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fib->handle_tag);
+    }
 }
 
 static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -243,6 +249,25 @@ static void stmt4_store_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_buffer_op(frame, fmt0, offset, bufferidx, &val);
 }
 
+static void stmt1_terminate_fiber(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    value_t h = jacs_vm_exec_expr(frame);
+    frame->fiber->ret_val = jacs_nan;
+    if (jacs_is_nan(h))
+        return;
+    if (jacs_handle_type(h) != JACS_HANDLE_TYPE_FIBER)
+        jacs_runtime_failure(ctx, 60123);
+    else {
+        jacs_fiber_t *fib = jacs_fiber_by_tag(ctx, jacs_handle_value(h));
+        if (fib == NULL)
+            return;
+        if (fib == frame->fiber)
+            jacs_fiber_yield(ctx);
+        else
+            frame->fiber->ret_val = jacs_zero;
+        jacs_fiber_termiante(fib);
+    }
+}
+
 static void stmt_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_runtime_failure(ctx, 60121);
 }
@@ -269,6 +294,7 @@ static const jacs_vm_stmt_handler_t jacs_vm_stmt_handlers[JACS_STMT_MAX + 1] = {
     [JACS_STMTx1_STORE_GLOBAL] = stmtx1_store_global,
     [JACS_STMT4_STORE_BUFFER] = stmt4_store_buffer,
     [JACS_STMTx1_STORE_PARAM] = stmtx1_store_param,
+    [JACS_STMT1_TERMINATE_FIBER] = stmt1_terminate_fiber,
     [JACS_STMT_MAX] = stmt_invalid,
 };
 

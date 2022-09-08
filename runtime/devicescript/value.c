@@ -7,12 +7,12 @@ const value_t jacs_zero = {.exp_sign = JACS_INT_TAG, .val_int32 = 0};
 const value_t jacs_one = {.exp_sign = JACS_INT_TAG, .val_int32 = 1};
 const value_t jacs_nan = {.exp_sign = JACS_NAN_TAG, .val_int32 = 0};
 const value_t jacs_int_min = {.exp_sign = JACS_INT_TAG, .val_int32 = INT_MIN};
-const value_t jacs_max_int_1 = {.f = 0x80000000U};
+const value_t jacs_max_int_1 = {._f = 0x80000000U};
 
 value_t jacs_value_from_double(double v) {
     value_t t;
     value_t r;
-    t.f = v;
+    t._f = v;
     int m32z = t.mantisa32 == 0;
 
     if (isnan(v)) {
@@ -71,20 +71,24 @@ value_t jacs_value_from_bool(int v) {
 int32_t jacs_value_to_int(value_t v) {
     if (jacs_is_tagged_int(v))
         return v.val_int32;
+    if (jacs_is_handle(v))
+        return 0;
     // TODO check semantics
-    return (int32_t)v.f;
+    return (int32_t)v._f;
 }
 
 double jacs_value_to_double(value_t v) {
     if (jacs_is_tagged_int(v))
         return (double)v.val_int32;
-    return v.f;
+    if (jacs_is_handle(v))
+        return NAN;
+    return v._f;
 }
 
 int jacs_value_to_bool(value_t v) {
     if (jacs_is_tagged_int(v))
         return !!v.val_int32;
-    if (isnan(v.f))
+    if (jacs_is_nan(v) || jacs_is_handle(v))
         return 0;
-    return v.f ? 1 : 0;
+    return v._f ? 1 : 0;
 }

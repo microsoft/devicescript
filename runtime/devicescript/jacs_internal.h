@@ -57,6 +57,8 @@ typedef struct jacs_fiber {
 
     uint32_t wake_time;
 
+    uint32_t handle_tag;
+
     value_t ret_val;
 
     jacs_activation_t *activation;
@@ -94,6 +96,8 @@ struct jacs_ctx {
     uint32_t log_counter;
     uint32_t log_counter_to_send;
 
+    uint32_t fiber_handle_tag;
+
     jacs_cfg_t cfg;
 
     union {
@@ -127,6 +131,7 @@ static inline bool jacs_trace_enabled(jacs_ctx_t *ctx) {
 
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
 value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code);
+// next error 60124
 static inline value_t jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
     return _jacs_runtime_failure(ctx, code - 60000);
 }
@@ -153,12 +158,15 @@ void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned localsid
 // fibers.c
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time);
+void jacs_fiber_termiante(jacs_fiber_t *fiber);
 void jacs_fiber_yield(jacs_ctx_t *ctx);
 void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params,
                               unsigned numargs);
 void jacs_fiber_return_from_call(jacs_activation_t *act);
-void jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
-                      unsigned op);
+jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
+                               unsigned op);
+jacs_fiber_t *jacs_fiber_by_tag(jacs_ctx_t *ctx, unsigned tag);
+jacs_fiber_t *jacs_fiber_by_fidx(jacs_ctx_t *ctx, unsigned fidx);
 void jacs_fiber_run(jacs_fiber_t *fiber);
 void jacs_fiber_poke(jacs_ctx_t *ctx);
 void jacs_fiber_sync_now(jacs_ctx_t *ctx);

@@ -14,7 +14,7 @@ void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx) {
 static inline double shift_val(int shift) {
     value_t t = {0};
     t.exponent = 0x3ff + shift;
-    return t.f;
+    return t._f;
 }
 
 static int clamp_int(value_t v, int l, int h) {

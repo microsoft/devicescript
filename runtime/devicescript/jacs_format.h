@@ -65,7 +65,7 @@ typedef struct {
 #define JACS_STMT2_SETUP_BUFFER 9   // size, buffer_id
 #define JACS_STMT2_MEMCPY 10        // string-idx, offset
 #define JACS_STMT3_CALL 11          // fun-idx, localidx, numargs
-#define JACS_STMT4_CALL_BG 12       // fun-idx, localidx, numargs
+#define JACS_STMT4_CALL_BG 12       // fun-idx, localidx, numargs; returns fiber handle (existing or new)
 #define JACS_STMT1_RETURN 13        // ret-val
 #define JACS_STMTx_JMP 14           // offset
 #define JACS_STMTx1_JMP_Z 15        // offset, condition
@@ -74,8 +74,9 @@ typedef struct {
 #define JACS_STMTx1_STORE_GLOBAL 18 // idx, value
 #define JACS_STMT4_STORE_BUFFER 19  // shift:numfmt, offset, buffer_id, value
 #define JACS_STMTx1_STORE_PARAM 20  // idx, value
+#define JACS_STMT1_TERMINATE_FIBER 21 // fiber-handle; returns nan (fiber doesn't exists) or 0 (terminated)
 
-#define JACS_STMT_MAX 21
+#define JACS_STMT_MAX 22
 
 // expressions
 #define JACS_EXPRx_LOAD_LOCAL 1
@@ -130,8 +131,9 @@ typedef struct {
 #define JACS_EXPR2_SUB 44
 
 #define JACS_EXPR0_NOW_MS 46 // time since device restart in ms; time only advances when sleeping
+#define JACS_EXPR1_GET_FIBER_HANDLE 47 // if fidx<0 return self-handle; otherwise returns handle or nan if not running
 
-#define JACS_EXPR_MAX 47
+#define JACS_EXPR_MAX 48
 
 #define JACS_OPCALL_SYNC 0          // regular call
 #define JACS_OPCALL_BG 1            // start new fiber
