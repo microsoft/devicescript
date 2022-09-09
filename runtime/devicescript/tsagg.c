@@ -244,7 +244,7 @@ static void series_update(srv_t *state, tsagg_series_t *ts, double v) {
 }
 
 static void dev_packet(srv_t *state, jd_device_service_t *serv, jd_packet_t *pkt) {
-    if (pkt->service_command != JD_GET(JD_REG_READING))
+    if (pkt->service_command != JD_GET(JD_REG_READING) && !jd_is_report(pkt))
         return;
 
     const jacs_packed_service_desc_t *desc = jacs_get_packed_service_desc(serv->service_class);
