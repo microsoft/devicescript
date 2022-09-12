@@ -1,6 +1,8 @@
 #pragma once
 
+#if defined(__GNUC__) && __GNUC__ >= 10
 #pragma GCC diagnostic ignored "-Wzero-length-bounds"
+#endif
 
 #include "jacscript.h"
 
