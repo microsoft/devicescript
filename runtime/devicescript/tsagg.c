@@ -438,6 +438,8 @@ void tsagg_init(const jacscloud_api_t *cloud_api) {
 
 void tsagg_update(const char *name, double v) {
     srv_t *state = tsagg_state;
-    tsagg_series_t *ts = lookup_or_add_series(state, name, strlen(name));
-    series_update(state, ts, v);
+    if (state) {
+        tsagg_series_t *ts = lookup_or_add_series(state, name, strlen(name));
+        series_update(state, ts, v);
+    }
 }
