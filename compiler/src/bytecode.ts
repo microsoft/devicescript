@@ -2,8 +2,8 @@
 
 export enum OpStmt {
     STMT1_WAIT_ROLE = 1, // role
-    STMT1_SLEEP_S = 2, // time_in_s
-    STMT1_SLEEP_MS = 3, // time_in_ms
+    STMT1_SLEEP_S = 2,
+    STMT1_SLEEP_MS = 3,
     STMT3_QUERY_REG = 4, // role, code, timeout
     STMT2_SEND_CMD = 5, // role, code
     STMT4_QUERY_IDX_REG = 6, // role, code, string_idx, timeout
@@ -14,13 +14,13 @@ export enum OpStmt {
     STMT3_CALL = 11, // func_idx, local_idx, numargs
     STMT4_CALL_BG = 12, // func_idx, local_idx, numargs, opcall
     STMT1_RETURN = 13, // value
-    STMTx_JMP = 14, // *offset
-    STMTx1_JMP_Z = 15, // *offset, condition
+    STMTx_JMP = 14, // JMP jmpoffset
+    STMTx1_JMP_Z = 15, // JMP jmpoffset IF NOT x
     STMT1_PANIC = 16, // error_code
-    STMTx1_STORE_LOCAL = 17, // *local_idx, value
-    STMTx1_STORE_GLOBAL = 18, // *global_idx, value
+    STMTx1_STORE_LOCAL = 17, // local_idx := value
+    STMTx1_STORE_GLOBAL = 18, // global_idx := value
     STMT4_STORE_BUFFER = 19, // numfmt, offset, buffer_idx, value
-    STMTx1_STORE_PARAM = 20, // *param_idx, value
+    STMTx1_STORE_PARAM = 20, // param_idx := value
     STMT1_TERMINATE_FIBER = 21, // fiber_handle
     STMT_PAST_LAST = 22,
 }
@@ -123,3 +123,78 @@ export enum NumFmt {
     F32 = 0b1010,
     F64 = 0b1011,
 }
+
+export const EXPR_PRINT_FMTS = [
+    null,
+    "%L",
+    "%G",
+    "load_buffer(%n, offset=%e, buffer_idx=%e)",
+    "%e",
+    "%D",
+    "ret_val()",
+    "str0eq(%S, offset=%e)",
+    "role_is_connected(%R)",
+    "pkt_size()",
+    "pkt_ev_code()",
+    "pkt_reg_get_code()",
+    "nan()",
+    "abs(%e)",
+    "~%e",
+    "ceil(%e)",
+    "floor(%e)",
+    "id(%e)",
+    "is_nan(%e)",
+    "log_e(%e)",
+    "-%e",
+    "!%e",
+    "random(%e)",
+    "random_int(%e)",
+    "round(%e)",
+    "!!%e",
+    "(%e + %e)",
+    "(%e & %e)",
+    "(%e | %e)",
+    "(%e ^ %e)",
+    "(%e / %e)",
+    "(%e == %e)",
+    "idiv(%e, %e)",
+    "imul(%e, %e)",
+    "(%e <= %e)",
+    "(%e < %e)",
+    "max(%e, %e)",
+    "min(%e, %e)",
+    "(%e * %e)",
+    "(%e != %e)",
+    "pow(%e, %e)",
+    "(%e << %e)",
+    "(%e >> %e)",
+    "(%e >>> %e)",
+    "(%e - %e)",
+    "%P",
+    "now_ms()",
+    "get_fiber_handle(%F)",
+]
+export const STMT_PRINT_FMTS = [
+    null,
+    "WAIT_ROLE %R",
+    "SLEEP_S %e",
+    "SLEEP_MS %e",
+    "QUERY_REG %R code=%e timeout=%e",
+    "SEND_CMD %R code=%e",
+    "QUERY_IDX_REG %R code=%e %S timeout=%e",
+    "LOG_FORMAT %S %L numargs=%e",
+    "FORMAT %S %L numargs=%e offset=%e",
+    "SETUP_BUFFER size=%e buffer_idx=%e",
+    "MEMCPY %S offset=%e",
+    "CALL %F %L numargs=%e",
+    "CALL_BG %F %L numargs=%e %o",
+    "RETURN %e",
+    "JMP %j",
+    "JMP %j IF NOT %e",
+    "PANIC error_code=%e",
+    "%L := %e",
+    "%G := %e",
+    "STORE_BUFFER %n offset=%e buffer_idx=%e %e",
+    "%P := %e",
+    "TERMINATE_FIBER fiber_handle=%e",
+]

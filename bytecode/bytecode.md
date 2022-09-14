@@ -6,11 +6,11 @@
 
 Wait until any packet arrives from specified role.
 
-    sleep_s(time_in_s) = 2
+    sleep_s(x) = 2
 
 Wait given number of seconds.
 
-    sleep_ms(time_in_ms) = 3
+    sleep_ms(x) = 3
 
 Wait given number of milliseconds.
 
@@ -40,21 +40,21 @@ Starts new fiber (depending on `call_type`). Returns fiber handle (existing or n
 
     return(value) = 13
 
-    jmp(*offset) = 14
+    jmp(*jmpoffset) = 14               // JMP jmpoffset
 
-    jmp_z(*offset, condition) = 15
+    jmp_z(*jmpoffset, x) = 15          // JMP jmpoffset IF NOT x
 
 Jump if condition is false.
 
     panic(error_code) = 16
 
-    store_local(*local_idx, value) = 17
+    store_local(*local_idx, value) = 17      // local_idx := value
 
-    store_global(*global_idx, value) = 18
+    store_global(*global_idx, value) = 18    // global_idx := value
 
     store_buffer(numfmt, offset, buffer_idx, value) = 19
 
-    store_param(*param_idx, value) = 20
+    store_param(*param_idx, value) = 20      // param_idx := value
 
     terminate_fiber(fiber_handle) = 21
 

@@ -56,32 +56,64 @@ export function disassemble(img: Uint8Array): string {
         strData,
         bufferDesc,
     ] = range(7).map(i =>
-        decodeSection(img, BinFmt.FIX_HEADER_SIZE + i * BinFmt.SECTION_HEADER_SIZE)
+        decodeSection(
+            img,
+            BinFmt.FIX_HEADER_SIZE + i * BinFmt.SECTION_HEADER_SIZE
+        )
     )
+
+    function funName(idx: number) {
+        return getString(
+            read16(funDesc, idx * BinFmt.FUNCTION_HEADER_SIZE + 12)
+        )
+    }
+
+    function roleName(idx: number) {
+        return getString(read16(roleData, idx * BinFmt.ROLE_HEADER_SIZE + 4))
+    }
+
+    function describeString(idx: number) {
+        const buf = getStringBuf(idx)
+        let isstr = true
+        for (let i = 0; i < buf.length; ++i)
+            if (buf[i] < 32 || buf[i] > 0x80) isstr = false
+        if (isstr) return JSON.stringify(getString(idx))
+        else return toHex(buf)
+    }
 
     const resolver: InstrArgResolver = {
         resolverPC: 0,
-        funName: idx =>
-            getString(read16(funDesc, idx * BinFmt.FUNCTION_HEADER_SIZE + 12)),
-        roleName: idx =>
-            getString(read16(roleData, idx * BinFmt.ROLE_HEADER_SIZE + 4)),
-        getString: idx => {
-            const buf = getStringBuf(idx)
-            let isstr = true
-            for (let i = 0; i < buf.length; ++i)
-                if (buf[i] < 32 || buf[i] > 0x80) isstr = false
-            if (isstr) return JSON.stringify(getString(idx))
-            else return toHex(buf)
+        describeCell: (ff, idx) => {
+            switch (ff) {
+                case "R":
+                    return roleName(idx)
+                case "S":
+                    return describeString(idx)
+                case "F":
+                    return funName(idx)
+                case "P":
+                    return "" // param
+                case "L":
+                    return "" // local
+                case "G":
+                    return "" // global
+                case "D":
+                    return "" // TODO float
+            }
         },
     }
 
     let fnid = 0
-    for (let off = 0; off < funDesc.length; off += BinFmt.FUNCTION_HEADER_SIZE) {
+    for (
+        let off = 0;
+        off < funDesc.length;
+        off += BinFmt.FUNCTION_HEADER_SIZE
+    ) {
         const body = decodeSection(funDesc, off, img)
         const numlocals = read16(funDesc, off + 8)
         const numargs = funDesc[off + 10]
         const flags = funDesc[off + 11]
-        const fnname = resolver.funName(fnid)
+        const fnname = funName(fnid)
         r += `\n${fnname}_F${fnid}(${range(numargs).map(i => "P" + i)}):\n`
         if (numlocals) r += `  locals: ${range(numlocals).map(i => "L" + i)}\n`
 

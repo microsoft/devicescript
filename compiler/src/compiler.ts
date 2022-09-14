@@ -513,26 +513,23 @@ class Program implements TopOpWriter {
         return nonEmittable(CellKind.ERROR)
     }
 
-    describeCell(t: CellKind, idx: number): string {
-        switch (t) {
-            //case CellKind.LOCAL:
-            //    return this.proc.locals.describeIndex(idx)
-            case CellKind.GLOBAL:
+    describeCell(ff: string, idx: number): string {
+        switch (ff) {
+            case "R":
+                return this.roles.describeIndex(idx)
+            case "S":
+                return JSON.stringify(this.stringLiterals[idx])
+            case "P":
+                return "" // param
+            case "L":
+                return "" // local
+            case "G":
                 return this.globals.describeIndex(idx)
-            case CellKind.FLOAT_CONST:
+            case "D":
                 return this.floatLiterals[idx] + ""
-            default:
-                return undefined
+            case "F":
+                return this.procs[idx]?.name
         }
-    }
-
-    funName(idx: number): string {
-        const p = this.procs[idx]
-        if (p) return p.name
-    }
-
-    roleName(idx: number): string {
-        return this.roles.describeIndex(idx)
     }
 
     private roleDispatcher(role: Role) {
