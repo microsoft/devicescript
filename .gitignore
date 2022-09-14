@@ -1,4 +1,5 @@
 built/
+build/
 .vscode/
 node_modules/
 tmp

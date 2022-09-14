@@ -155,7 +155,7 @@ class Role extends Cell {
         wr.emitStmt(OpStmt.STMTx1_STORE_LOCAL, literal(this._index), src)
     }
     serialize() {
-        const r = new Uint8Array(BinFmt.RoleHeaderSize)
+        const r = new Uint8Array(BinFmt.ROLE_HEADER_SIZE)
         write32(r, 0, this.spec.classIdentifier)
         write16(r, 4, this.stringIndex)
         return r
@@ -239,7 +239,7 @@ class Buffer extends Cell {
         return `buffer ${this.getName()}`
     }
     serialize() {
-        const r = new Uint8Array(BinFmt.BufferHeaderSize)
+        const r = new Uint8Array(BinFmt.BUFFER_HEADER_SIZE)
         write16(r, 4, this.length)
         return r
     }
@@ -2396,16 +2396,16 @@ class Program implements TopOpWriter {
         // serialization only works on little endian machines
         this.assertLittleEndian()
 
-        const fixHeader = new SectionWriter(BinFmt.FixHeaderSize)
+        const fixHeader = new SectionWriter(BinFmt.FIX_HEADER_SIZE)
         const sectDescs = new SectionWriter()
         const sections: SectionWriter[] = [fixHeader, sectDescs]
 
-        const hd = new Uint8Array(BinFmt.FixHeaderSize)
+        const hd = new Uint8Array(BinFmt.FIX_HEADER_SIZE)
         hd.set(
             encodeU32LE([
-                BinFmt.Magic0,
-                BinFmt.Magic1,
-                BinFmt.ImgVersion,
+                BinFmt.MAGIC0,
+                BinFmt.MAGIC1,
+                BinFmt.IMG_VERSION,
                 this.globals.list.length,
             ])
         )
@@ -2432,7 +2432,7 @@ class Program implements TopOpWriter {
             sections.push(s)
         }
 
-        funDesc.size = BinFmt.FunctionHeaderSize * this.procs.length
+        funDesc.size = BinFmt.FUNCTION_HEADER_SIZE * this.procs.length
 
         for (const proc of this.procs) {
             funDesc.append(proc.writer.desc)
@@ -2475,7 +2475,7 @@ class Program implements TopOpWriter {
             s.finalize(off)
             off += s.size
         }
-        const mask = BinFmt.BinarySizeAlign - 1
+        const mask = BinFmt.BINARY_SIZE_ALIGN - 1
         off = (off + mask) & ~mask
         const outp = new Uint8Array(off)
 
@@ -2501,7 +2501,7 @@ class Program implements TopOpWriter {
         }
 
         const left = outp.length - off
-        assert(0 <= left && left < BinFmt.BinarySizeAlign)
+        assert(0 <= left && left < BinFmt.BINARY_SIZE_ALIGN)
 
         return outp
     }

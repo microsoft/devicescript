@@ -140,7 +140,7 @@ export class OpWriter {
     ret: Label
     private lineNo = -1
     private lineNoStart = -1
-    desc = new Uint8Array(BinFmt.FunctionHeaderSize)
+    desc = new Uint8Array(BinFmt.FUNCTION_HEADER_SIZE)
     offsetInFuncs = -1
     private maxRegs = 0
     srcmap: number[] = []
@@ -573,7 +573,7 @@ export class SectionWriter {
     offset = -1
     currSize = 0
     data: Uint8Array[] = []
-    desc = new Uint8Array(BinFmt.SectionHeaderSize)
+    desc = new Uint8Array(BinFmt.SECTION_HEADER_SIZE)
 
     constructor(public size = -1) {}
 

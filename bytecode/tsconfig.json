@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es5", /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "module": "commonjs", /* Specify what module code is generated. */
+    "outDir": "build",
+    "noImplicitAny": true, /* Enable error reporting for expressions and declarations with an implied `any` type.. */
+    "strictNullChecks": false, /* When type checking, take into account `null` and `undefined`. */
+    "noImplicitThis": true, /* Enable error reporting when `this` is given the type `any`. */
+    "alwaysStrict": true, /* Ensure 'use strict' is always emitted. */
+    "noImplicitReturns": true, /* Enable error reporting for codepaths that do not explicitly return in a function. */
+    "noFallthroughCasesInSwitch": true, /* Enable error reporting for fallthrough cases in switch statements. */
+    "noUncheckedIndexedAccess": true, /* Include 'undefined' in index signature results */
+    "skipLibCheck": true /* Skip type checking all .d.ts files. */
+  }
+}

@@ -13,7 +13,7 @@ function error(msg: string) {
 }
 
 function decodeSection(buf: Uint8Array, off: number, img?: Uint8Array) {
-    if (off < 0 || off + BinFmt.SectionHeaderSize > buf.length) {
+    if (off < 0 || off + BinFmt.SECTION_HEADER_SIZE > buf.length) {
         error(`section header out of range ${off}`)
         return new Uint8Array(0)
     }
@@ -36,12 +36,12 @@ export function disassemble(img: Uint8Array): string {
         error(`img too small`)
         return ""
     }
-    if (read32(img, 0) != BinFmt.Magic0 || read32(img, 4) != BinFmt.Magic1) {
+    if (read32(img, 0) != BinFmt.MAGIC0 || read32(img, 4) != BinFmt.MAGIC1) {
         error(`invalid magic`)
         return ""
     }
-    if (read32(img, 8) != BinFmt.ImgVersion) {
-        error(`invalid version ${read32(img, 8)} (exp: ${BinFmt.ImgVersion})`)
+    if (read32(img, 8) != BinFmt.IMG_VERSION) {
+        error(`invalid version ${read32(img, 8)} (exp: ${BinFmt.IMG_VERSION})`)
         return ""
     }
     const numGlobals = read16(img, 12)
@@ -56,15 +56,15 @@ export function disassemble(img: Uint8Array): string {
         strData,
         bufferDesc,
     ] = range(7).map(i =>
-        decodeSection(img, BinFmt.FixHeaderSize + i * BinFmt.SectionHeaderSize)
+        decodeSection(img, BinFmt.FIX_HEADER_SIZE + i * BinFmt.SECTION_HEADER_SIZE)
     )
 
     const resolver: InstrArgResolver = {
         resolverPC: 0,
         funName: idx =>
-            getString(read16(funDesc, idx * BinFmt.FunctionHeaderSize + 12)),
+            getString(read16(funDesc, idx * BinFmt.FUNCTION_HEADER_SIZE + 12)),
         roleName: idx =>
-            getString(read16(roleData, idx * BinFmt.RoleHeaderSize + 4)),
+            getString(read16(roleData, idx * BinFmt.ROLE_HEADER_SIZE + 4)),
         getString: idx => {
             const buf = getStringBuf(idx)
             let isstr = true
@@ -76,7 +76,7 @@ export function disassemble(img: Uint8Array): string {
     }
 
     let fnid = 0
-    for (let off = 0; off < funDesc.length; off += BinFmt.FunctionHeaderSize) {
+    for (let off = 0; off < funDesc.length; off += BinFmt.FUNCTION_HEADER_SIZE) {
         const body = decodeSection(funDesc, off, img)
         const numlocals = read16(funDesc, off + 8)
         const numargs = funDesc[off + 10]
@@ -106,6 +106,6 @@ export function disassemble(img: Uint8Array): string {
     }
 
     function getStringBuf(idx: number) {
-        return decodeSection(strDesc, idx * BinFmt.SectionHeaderSize, img)
+        return decodeSection(strDesc, idx * BinFmt.SECTION_HEADER_SIZE, img)
     }
 }
