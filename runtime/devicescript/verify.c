@@ -46,7 +46,7 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
     _img.data = imgdata;
     jacs_img_t *img = &_img;
 
-    CHECK(1000, header->magic0 == JACS_IMG_MAGIC0 && header->magic1 == JACS_IMG_MAGIC1);
+    CHECK(1000, header->magic0 == JACS_MAGIC0 && header->magic1 == JACS_MAGIC1);
     CHECK(1050, header->version == JACS_IMG_VERSION);
 
     const jacs_img_section_t *sptr = &header->functions;

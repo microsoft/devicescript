@@ -272,7 +272,7 @@ static void stmt_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_runtime_failure(ctx, 60121);
 }
 
-static const jacs_vm_stmt_handler_t jacs_vm_stmt_handlers[JACS_STMT_MAX + 1] = {
+static const jacs_vm_stmt_handler_t jacs_vm_stmt_handlers[JACS_STMT_PAST_LAST + 1] = {
     [0] = stmt_invalid,
     [JACS_STMT1_WAIT_ROLE] = stmt1_wait_role,
     [JACS_STMT1_SLEEP_S] = stmt1_sleep_s,
@@ -295,11 +295,11 @@ static const jacs_vm_stmt_handler_t jacs_vm_stmt_handlers[JACS_STMT_MAX + 1] = {
     [JACS_STMT4_STORE_BUFFER] = stmt4_store_buffer,
     [JACS_STMTx1_STORE_PARAM] = stmtx1_store_param,
     [JACS_STMT1_TERMINATE_FIBER] = stmt1_terminate_fiber,
-    [JACS_STMT_MAX] = stmt_invalid,
+    [JACS_STMT_PAST_LAST] = stmt_invalid,
 };
 
 void jacs_vm_check_stmt() {
-    for (unsigned i = 0; i <= JACS_STMT_MAX; i++) {
+    for (unsigned i = 0; i <= JACS_STMT_PAST_LAST; i++) {
         if (jacs_vm_stmt_handlers[i] == NULL) {
             DMESG("missing stmt %d", i);
             jd_panic();
@@ -312,7 +312,7 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
 
     uint8_t op = jacs_vm_fetch_byte(frame, ctx);
 
-    if (op >= JACS_STMT_MAX) {
+    if (op >= JACS_STMT_PAST_LAST) {
         jacs_runtime_failure(ctx, 60122);
     } else {
         jacs_vm_stmt_handlers[op](frame, ctx);

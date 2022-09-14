@@ -2,6 +2,12 @@
 
 #include "storage/jd_storage.h"
 
+STATIC_ASSERT(sizeof(jacs_img_section_t) == JACS_SECTION_HEADER_SIZE);
+STATIC_ASSERT(sizeof(jacs_img_header_t) == JACS_FIX_HEADER_SIZE + JACS_SECTION_HEADER_SIZE * JACS_NUM_IMG_SECTIONS);
+STATIC_ASSERT(sizeof(jacs_function_desc_t) == JACS_FUNCTION_HEADER_SIZE);
+STATIC_ASSERT(sizeof(jacs_role_desc_t) == JACS_ROLE_HEADER_SIZE);
+STATIC_ASSERT(sizeof(jacs_buffer_desc_t) == JACS_BUFFER_HEADER_SIZE);
+
 static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     ctx->img.data = img;
 

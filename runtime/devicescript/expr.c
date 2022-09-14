@@ -388,7 +388,7 @@ static value_t expr1_get_fiber_handle(jacs_activation_t *frame, jacs_ctx_t *ctx)
     return jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fiber->handle_tag);
 }
 
-static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_MAX + 1] = {
+static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_PAST_LAST + 1] = {
     [0] = expr_invalid,
     [JACS_EXPRx_LOAD_LOCAL] = exprx_load_local,
     [JACS_EXPRx_LOAD_GLOBAL] = exprx_load_global,
@@ -443,11 +443,11 @@ static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_MAX + 1] = {
     [JACS_EXPR0_NOW_MS] = expr0_now_ms,
     [JACS_EXPR1_GET_FIBER_HANDLE] = expr1_get_fiber_handle,
 
-    [JACS_EXPR_MAX] = expr_invalid,
+    [JACS_EXPR_PAST_LAST] = expr_invalid,
 };
 
 void jacs_vm_check_expr() {
-    for (unsigned i = 0; i <= JACS_EXPR_MAX; ++i) {
+    for (unsigned i = 0; i <= JACS_EXPR_PAST_LAST; ++i) {
         if (jacs_vm_expr_handlers[i] == NULL) {
             DMESG("missing expr %d", i);
             jd_panic();
@@ -466,7 +466,7 @@ value_t jacs_vm_exec_expr(jacs_activation_t *frame) {
     if (ctx->opstack++ > JACS_MAX_EXPR_DEPTH)
         return jacs_runtime_failure(ctx, 60108);
 
-    if (op >= JACS_EXPR_MAX)
+    if (op >= JACS_EXPR_PAST_LAST)
         return jacs_runtime_failure(ctx, 60109);
 
     value_t r = jacs_vm_expr_handlers[op](frame, ctx);
