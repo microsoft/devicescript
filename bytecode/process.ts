@@ -29,6 +29,7 @@ _spec.exprProps = serializeProps(_spec.expr, opcodeProps)
 writeFile("bytecode.json", JSON.stringify(_spec, null, 4))
 writeFile("jacs_bytecode.h", genCode(_spec, false))
 writeFile("bytecode.ts", genCode(_spec, true))
+writeFile("jacs_bytecode.ts", genCode(_spec, true, true))
 
 function processSpec(filecontent: string): Spec {
     const argCodes: SMap<string> = {
@@ -101,7 +102,8 @@ function processSpec(filecontent: string): Spec {
             obj.printFmt =
                 obj.name + "(" + obj.args.map(argCode).join(", ") + ")"
         } else {
-            obj.printFmt = obj.name.toUpperCase() + " " + obj.args.map(argCode).join(" ")
+            obj.printFmt =
+                obj.name.toUpperCase() + " " + obj.args.map(argCode).join(" ")
         }
 
         function argCode(a: string) {
@@ -255,9 +257,10 @@ function serializeProps(lst: OpCode[], fn: (o: OpCode) => number) {
     )
 }
 
-function genCode(spec: Spec, isTS = false) {
+function genCode(spec: Spec, isTS = false, isSTS = false) {
     let r = "// Auto-generated from bytecode.md; do not edit.\n"
-    if (isTS) r += "\n"
+    if (isSTS) r += "\nnamespace jacs {\n"
+    else if (isTS) r += "\n"
     else r += "#pragma once\n\n"
 
     startEnum("OpStmt")
@@ -296,6 +299,8 @@ function genCode(spec: Spec, isTS = false) {
 
     emitFmts("expr", spec.expr)
     emitFmts("stmt", spec.stmt)
+
+    if (isSTS) r += "} // jacs\n"
 
     return r
 
