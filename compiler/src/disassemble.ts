@@ -1,5 +1,12 @@
 import { BinFmt, InstrArgResolver, stringifyInstr } from "./format"
-import { range, read32, read16, fromUTF8, uint8ArrayToString } from "./jdutil"
+import {
+    range,
+    read32,
+    read16,
+    fromUTF8,
+    uint8ArrayToString,
+    toHex,
+} from "./jdutil"
 
 function error(msg: string) {
     console.error("JacS disasm error: " + msg)
@@ -58,6 +65,14 @@ export function disassemble(img: Uint8Array): string {
             getString(read16(funDesc, idx * BinFmt.FunctionHeaderSize + 12)),
         roleName: idx =>
             getString(read16(roleData, idx * BinFmt.RoleHeaderSize + 4)),
+        getString: idx => {
+            const buf = getStringBuf(idx)
+            let isstr = true
+            for (let i = 0; i < buf.length; ++i)
+                if (buf[i] < 32 || buf[i] > 0x80) isstr = false
+            if (isstr) return JSON.stringify(getString(idx))
+            else return toHex(buf)
+        },
     }
 
     let fnid = 0

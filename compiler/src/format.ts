@@ -211,6 +211,7 @@ export interface InstrArgResolver {
     describeCell?(t: CellKind, idx: number): string
     funName?(idx: number): string
     roleName?(idx: number): string
+    getString?(idx: number): string
     resolverPC?: number
 }
 
@@ -245,15 +246,15 @@ export function stringifyInstr(
             case OpStmt.STMT2_SEND_CMD: // role, code
                 return `${role()}.cmd[${expr()}]`
             case OpStmt.STMT4_QUERY_IDX_REG: // role, code, string-idx, timeout
-                return `RET_VAL := ${role()}.reg[${expr()}; str=${expr()}; timeout=${expr()}]`
+                return `RET_VAL := ${role()}.reg[${expr()}; ${stridx()}; timeout=${expr()}]`
             case OpStmt.STMT3_LOG_FORMAT: // string-idx, localidx, numargs
-                return `log str=${expr()} args=${expr()}+${expr()}`
+                return `log ${stridx()} args=${expr()}+${expr()}`
             case OpStmt.STMT4_FORMAT: // string-idx, localidx, numargs, offset
-                return `format str=${expr()} args=${expr()}+${expr()} offset=${expr()}`
+                return `format ${stridx()} args=${expr()}+${expr()} offset=${expr()}`
             case OpStmt.STMT2_SETUP_BUFFER: // size, bufid
                 return `setup_buffer size=${expr()} buf${expr()}`
             case OpStmt.STMT2_MEMCPY: // string-idx, offset
-                return `memcpy str=${expr()} offset=${expr()}`
+                return `memcpy ${stridx()} offset=${expr()}`
             case OpStmt.STMT3_CALL: // fun-idx, localidx, numargs
                 return calldesc()
             case OpStmt.STMT4_CALL_BG: // fun-idx, localidx, numargs, bg
@@ -280,6 +281,18 @@ export function stringifyInstr(
                 return `0x00`
             default:
                 return `? stmt ${op} ?`
+        }
+    }
+
+    function stridx() {
+        const strIdx = stringifyExpr()
+        if (isNumber(strIdx)) {
+            const idx = +strIdx
+            const str = resolver?.getString?.(idx)
+            if (str != null) return `${str} (str=${idx})`
+            else return `str=${idx}`
+        } else {
+            return `str=${strIdx}`
         }
     }
 
@@ -407,7 +420,7 @@ export function stringifyInstr(
             case OpExpr.EXPR0_RET_VAL: // return value of query register, call, etc
                 return "RET_VAL"
             case OpExpr.EXPR2_STR0EQ: // A-string-index C-offset
-                return `str0eq(str=${expr()}, off=${expr()})`
+                return `str0eq(${stridx()}, off=${expr()})`
             case OpExpr.EXPR1_ROLE_IS_CONNECTED:
                 return `is_connected(${role()})`
             case OpExpr.EXPR0_PKT_SIZE:
