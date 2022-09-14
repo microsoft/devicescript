@@ -1,4 +1,11 @@
-import { OpStmt, OpExpr, OpCall } from "./bytecode"
+import {
+    OpStmt,
+    OpExpr,
+    OpCall,
+    STMT_PROPS,
+    BytecodeFlag,
+    EXPR_PROPS,
+} from "./bytecode"
 
 export * from "./bytecode"
 
@@ -6,51 +13,16 @@ export interface SMap<T> {
     [k: string]: T
 }
 
-export const JACS_MAX_EXPR_DEPTH = 10
-
 export function stmtTakesNumber(op: OpStmt) {
-    switch (op) {
-        case OpStmt.STMTx_JMP:
-        case OpStmt.STMTx1_JMP_Z:
-        case OpStmt.STMTx1_STORE_LOCAL:
-        case OpStmt.STMTx1_STORE_GLOBAL:
-        case OpStmt.STMTx1_STORE_PARAM:
-            return true
-        default:
-            return false
-    }
+    return !!(STMT_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
 }
 
 export function exprIsStateful(op: OpExpr) {
-    switch (op) {
-        case OpExpr.EXPRx_LOAD_LOCAL:
-        case OpExpr.EXPRx_LOAD_GLOBAL:
-        case OpExpr.EXPR3_LOAD_BUFFER:
-        case OpExpr.EXPRx_LOAD_PARAM:
-        case OpExpr.EXPR0_RET_VAL:
-        case OpExpr.EXPR2_STR0EQ:
-        case OpExpr.EXPR0_PKT_SIZE:
-        case OpExpr.EXPR0_PKT_EV_CODE:
-        case OpExpr.EXPR0_PKT_REG_GET_CODE:
-        case OpExpr.EXPR0_NOW_MS:
-        case OpExpr.EXPR1_GET_FIBER_HANDLE:
-            return true
-        default:
-            return false
-    }
+    return !(EXPR_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
 }
 
 export function exprTakesNumber(op: OpExpr) {
-    switch (op) {
-        case OpExpr.EXPRx_LOAD_LOCAL:
-        case OpExpr.EXPRx_LOAD_GLOBAL:
-        case OpExpr.EXPRx_LOAD_PARAM:
-        case OpExpr.EXPRx_LITERAL:
-        case OpExpr.EXPRx_LITERAL_F64:
-            return true
-        default:
-            return false
-    }
+    return !!(EXPR_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
 }
 
 export enum CellKind {

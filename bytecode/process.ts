@@ -127,7 +127,7 @@ function processSpec(filecontent: string): Spec {
                 lineTr = lineTr.slice(4).trim()
             }
             let m =
-                /^(\w+)(\s*\((.*)\))?\s*=\s*(\d+|0[Xx][a-fA-F0-9]+)\s*(\/\/\s*(.*))?$/.exec(
+                /^(\w+)(\s*\((.*)\))?\s*=\s*(\d+|0[bB][01]+|0[Xx][a-fA-F0-9]+)\s*(\/\/\s*(.*))?$/.exec(
                     lineTr
                 )
             if (!m) {

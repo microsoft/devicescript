@@ -93,6 +93,7 @@ export enum BinFmt {
     ROLE_HEADER_SIZE = 8,
     BUFFER_HEADER_SIZE = 8,
     BINARY_SIZE_ALIGN = 32,
+    MAX_EXPR_DEPTH = 10,
 }
 
 export enum OpCall {
@@ -106,4 +107,19 @@ export enum BytecodeFlag {
     NUM_ARGS_MASK = 0xf,
     TAKES_NUMBER = 0x20,
     IS_STATELESS = 0x40, // fun modifier
+}
+
+export enum NumFmt {
+    U8 = 0b0000,
+    U16 = 0b0001,
+    U32 = 0b0010,
+    U64 = 0b0011,
+    I8 = 0b0100,
+    I16 = 0b0101,
+    I32 = 0b0110,
+    I64 = 0b0111,
+    F8 = 0b1000, // not supported
+    F16 = 0b1001, // not supported
+    F32 = 0b1010,
+    F64 = 0b1011,
 }

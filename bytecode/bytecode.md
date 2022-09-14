@@ -179,6 +179,7 @@ Returns an int between 0 and `x` inclusive.
     role_header_size = 8
     buffer_header_size = 8
     binary_size_align = 32
+    max_expr_depth = 10
 
 ## Enum: OpCall
 
@@ -204,3 +205,21 @@ Otherwise, start new fiber.
     num_args_mask = 0xf
     takes_number = 0x20
     is_stateless = 0x40 // fun modifier
+
+## Enum: NumFmt
+
+Size in bits is: `8 << (fmt & 0b11)`.
+Format is `["u", "i", "f", "reserved"](fmt >> 2)`
+
+    U8 = 0b0000
+    U16 = 0b0001
+    U32 = 0b0010
+    U64 = 0b0011
+    I8 = 0b0100
+    I16 = 0b0101
+    I32 = 0b0110
+    I64 = 0b0111
+    F8 = 0b1000 // not supported
+    F16 = 0b1001 // not supported
+    F32 = 0b1010
+    F64 = 0b1011
