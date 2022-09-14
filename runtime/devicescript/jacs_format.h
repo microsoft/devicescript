@@ -46,19 +46,3 @@ typedef struct {
     uint16_t reserved;
 } jacs_buffer_desc_t;
 
-#define JACS_MAX_EXPR_DEPTH 10
-
-// Size in bits is: 8 << (fmt & 0b11)
-// Format is ["u", "i", "f", "reserved"](fmt >> 2)
-#define JACS_NUMFMT_U8 0b0000
-#define JACS_NUMFMT_U16 0b0001
-#define JACS_NUMFMT_U32 0b0010
-#define JACS_NUMFMT_U64 0b0011
-#define JACS_NUMFMT_I8 0b0100
-#define JACS_NUMFMT_I16 0b0101
-#define JACS_NUMFMT_I32 0b0110
-#define JACS_NUMFMT_I64 0b0111
-//#define JACS_NUMFMT_F8 0b1000
-//#define JACS_NUMFMT_F16 0b1001
-#define JACS_NUMFMT_F32 0b1010
-#define JACS_NUMFMT_F64 0b1011
