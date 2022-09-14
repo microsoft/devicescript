@@ -8,7 +8,7 @@ import {
     JACS_MAX_EXPR_DEPTH,
     OpCall,
     OpExpr,
-    OpFmt,
+    NumFmt,
     OpStmt,
     stmtTakesNumber,
     stringifyInstr,
@@ -270,14 +270,14 @@ export class OpWriter {
         assertRange(0, off, 0xff)
         this.emitStmt(
             OpStmt.STMT4_STORE_BUFFER,
-            literal(OpFmt.U8),
+            literal(NumFmt.U8),
             literal(off),
             literal(0),
             src
         )
     }
 
-    emitBufLoad(fmt: OpFmt, off: number, bufidx = 0) {
+    emitBufLoad(fmt: NumFmt, off: number, bufidx = 0) {
         if (bufidx == 0) assertRange(0, off, 0xff)
         return this.emitExpr(
             OpExpr.EXPR3_LOAD_BUFFER,
@@ -287,7 +287,7 @@ export class OpWriter {
         )
     }
 
-    emitBufStore(src: Value, fmt: OpFmt, off: number, bufidx = 0) {
+    emitBufStore(src: Value, fmt: NumFmt, off: number, bufidx = 0) {
         this.emitStmt(
             OpStmt.STMT4_STORE_BUFFER,
             literal(fmt),
@@ -644,10 +644,10 @@ export class DelayedCodeSection {
 }
 
 export function bufferFmt(mem: jdspec.PacketMember) {
-    let fmt = OpFmt.U8
+    let fmt = NumFmt.U8
     let sz = mem.storage
     if (sz < 0) {
-        fmt = OpFmt.I8
+        fmt = NumFmt.I8
         sz = -sz
     } else if (mem.isFloat) {
         fmt = 0b1000
@@ -656,13 +656,13 @@ export function bufferFmt(mem: jdspec.PacketMember) {
         case 1:
             break
         case 2:
-            fmt |= OpFmt.U16
+            fmt |= NumFmt.U16
             break
         case 4:
-            fmt |= OpFmt.U32
+            fmt |= NumFmt.U32
             break
         case 8:
-            fmt |= OpFmt.U64
+            fmt |= NumFmt.U64
             break
         default:
             oops("unhandled format: " + mem.storage + " for " + mem.name)

@@ -2,9 +2,11 @@ import {
     OpStmt,
     OpExpr,
     OpCall,
+    NumFmt,
     STMT_PROPS,
     BytecodeFlag,
     EXPR_PROPS,
+    BinFmt,
 } from "./bytecode"
 
 export * from "./bytecode"
@@ -25,6 +27,8 @@ export function exprTakesNumber(op: OpExpr) {
     return !!(EXPR_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
 }
 
+export const JACS_MAX_EXPR_DEPTH = BinFmt.MAX_EXPR_DEPTH
+
 export enum CellKind {
     LOCAL = OpExpr.EXPRx_LOAD_LOCAL,
     GLOBAL = OpExpr.EXPRx_LOAD_GLOBAL,
@@ -42,23 +46,6 @@ export enum CellKind {
     X_BUFFER = 0x124,
 
     ERROR = 0x200,
-}
-
-// Size in bits is: 8 << (fmt & 0b11)
-// Format is ["u", "i", "f", "reserved"](fmt >> 2)
-export enum OpFmt {
-    U8 = 0b0000,
-    U16 = 0b0001,
-    U32 = 0b0010,
-    U64 = 0b0011,
-    I8 = 0b0100,
-    I16 = 0b0101,
-    I32 = 0b0110,
-    I64 = 0b0111,
-    F8 = 0b1000, // not supported
-    F16 = 0b1001, // not supported
-    F32 = 0b1010,
-    F64 = 0b1011,
 }
 
 export function stringifyCellKind(vk: CellKind) {
@@ -96,7 +83,7 @@ export interface InstrArgResolver {
     resolverPC?: number
 }
 
-export function bitSize(fmt: OpFmt) {
+export function bitSize(fmt: NumFmt) {
     return 8 << (fmt & 0b11)
 }
 

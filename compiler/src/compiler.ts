@@ -33,7 +33,7 @@ import {
     JacError,
     OpCall,
     OpExpr,
-    OpFmt,
+    NumFmt,
     OpStmt,
     printJacError,
     RoleDebugInfo,
@@ -838,20 +838,20 @@ class Program implements TopOpWriter {
         wr.allocBuf()
         {
             const tmp = isOuter
-                ? wr.emitBufLoad(OpFmt.U32, 0)
+                ? wr.emitBufLoad(NumFmt.U32, 0)
                 : wr.emitMemRef(OpExpr.EXPRx_LOAD_PARAM, 0)
             wr.emitStmt(
                 OpStmt.STMT2_SETUP_BUFFER,
                 literal(8 + args.length * 8),
                 literal(0)
             )
-            wr.emitBufStore(tmp, OpFmt.U32, 0)
-            wr.emitBufStore(literal(code), OpFmt.U32, 4)
+            wr.emitBufStore(tmp, NumFmt.U32, 0)
+            wr.emitBufStore(literal(code), NumFmt.U32, 4)
         }
         let off = 8
         for (const arg of args) {
             const v = this.emitSimpleValue(arg)
-            wr.emitBufStore(v, OpFmt.F64, off)
+            wr.emitBufStore(v, NumFmt.F64, off)
             off += 8
         }
         wr.freeBuf()
@@ -1309,7 +1309,7 @@ class Program implements TopOpWriter {
         }
     }
 
-    private parseFormat(expr: Expr): OpFmt {
+    private parseFormat(expr: Expr): NumFmt {
         const str = this.stringLiteral(expr) || ""
         const m = /^([uif])(\d+)(\.\d+)?$/.exec(str.trim())
         if (!m)
@@ -1324,20 +1324,20 @@ class Program implements TopOpWriter {
             sz += shift
         }
 
-        let r: OpFmt
+        let r: NumFmt
 
         switch (sz) {
             case 8:
-                r = OpFmt.U8
+                r = NumFmt.U8
                 break
             case 16:
-                r = OpFmt.U16
+                r = NumFmt.U16
                 break
             case 32:
-                r = OpFmt.U32
+                r = NumFmt.U32
                 break
             case 64:
-                r = OpFmt.U64
+                r = NumFmt.U64
                 break
             default:
                 throwError(
@@ -1350,17 +1350,17 @@ class Program implements TopOpWriter {
             case "u":
                 break
             case "i":
-                r += OpFmt.I8
+                r += NumFmt.I8
                 break
             case "f":
                 if (shift) throwError(expr, `shifts not supported for floats`)
-                r += OpFmt.F8
+                r += NumFmt.F8
                 break
             default:
                 assert(false)
         }
 
-        if (r == OpFmt.F8 || r == OpFmt.F16)
+        if (r == NumFmt.F8 || r == NumFmt.F16)
             throwError(expr, `f8 and f16 are not supported`)
 
         return r | (shift << 4)
@@ -1640,10 +1640,10 @@ class Program implements TopOpWriter {
             const skip = wr.mkLabel("skipMethod")
             wr.emitJump(skip, wr.emitExpr(OpExpr.EXPR2_STR0EQ, str, literal(4)))
             const args = wr.allocTmpLocals(handler.numargs)
-            args[0].store(wr.emitBufLoad(OpFmt.U32, 0))
+            args[0].store(wr.emitBufLoad(NumFmt.U32, 0))
             const pref = 4 + strlen(this.stringLiteral(expr.arguments[0])) + 1
             for (let i = 1; i < handler.numargs; ++i)
-                args[i].store(wr.emitBufLoad(OpFmt.F64, pref + (i - 1) * 8))
+                args[i].store(wr.emitBufLoad(NumFmt.F64, pref + (i - 1) * 8))
             handler.callMe(wr, args, OpCall.BG_MAX1)
             wr.emitJump(this.cloudMethod429, wr.emitExpr(OpExpr.EXPR0_RET_VAL))
             wr.emitJump(this.cloudRole.dispatcher.top)
