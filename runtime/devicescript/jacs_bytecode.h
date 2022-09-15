@@ -1,9 +1,9 @@
 // Auto-generated from bytecode.md; do not edit.
 #pragma once
 
-#define JACS_STMT1_WAIT_ROLE 1        // role
-#define JACS_STMT1_SLEEP_S 2          // time_in_s
-#define JACS_STMT1_SLEEP_MS 3         // time_in_ms
+#define JACS_STMT1_WAIT_ROLE 1 // role
+#define JACS_STMT1_SLEEP_S 2
+#define JACS_STMT1_SLEEP_MS 3
 #define JACS_STMT3_QUERY_REG 4        // role, code, timeout
 #define JACS_STMT2_SEND_CMD 5         // role, code
 #define JACS_STMT4_QUERY_IDX_REG 6    // role, code, string_idx, timeout
@@ -14,13 +14,13 @@
 #define JACS_STMT3_CALL 11            // func_idx, local_idx, numargs
 #define JACS_STMT4_CALL_BG 12         // func_idx, local_idx, numargs, opcall
 #define JACS_STMT1_RETURN 13          // value
-#define JACS_STMTx_JMP 14             // *offset
-#define JACS_STMTx1_JMP_Z 15          // *offset, condition
+#define JACS_STMTx_JMP 14             // JMP jmpoffset
+#define JACS_STMTx1_JMP_Z 15          // JMP jmpoffset IF NOT x
 #define JACS_STMT1_PANIC 16           // error_code
-#define JACS_STMTx1_STORE_LOCAL 17    // *local_idx, value
-#define JACS_STMTx1_STORE_GLOBAL 18   // *global_idx, value
+#define JACS_STMTx1_STORE_LOCAL 17    // local_idx := value
+#define JACS_STMTx1_STORE_GLOBAL 18   // global_idx := value
 #define JACS_STMT4_STORE_BUFFER 19    // numfmt, offset, buffer_idx, value
-#define JACS_STMTx1_STORE_PARAM 20    // *param_idx, value
+#define JACS_STMTx1_STORE_PARAM 20    // param_idx := value
 #define JACS_STMT1_TERMINATE_FIBER 21 // fiber_handle
 #define JACS_STMT_PAST_LAST 22
 
