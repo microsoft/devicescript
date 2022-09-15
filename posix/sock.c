@@ -124,7 +124,7 @@ int sock_send_frame(sock_t ctx, jd_frame_t *frame) {
     if (!jd_frame_crc_ok(frame)) {
         LOG("bad send CRC");
     }
-        DMESG("S %x %x", frame->crc, frame->flags);
+    // DMESG("S %x %x", frame->crc, frame->flags);
     memcpy(buf + 1, frame, len);
     pthread_mutex_lock(&ctx->talk_mutex);
     int r = forced_write(ctx->sockfd, buf, len + 1);
