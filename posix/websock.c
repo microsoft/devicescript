@@ -92,7 +92,7 @@ static int onmessage(int ev_type, const EmscriptenWebSocketMessageEvent *ev, voi
         jd_frame_t *frame = (jd_frame_t *)ev->data;
         if (JD_FRAME_SIZE(frame) > ev->numBytes || JD_FRAME_SIZE(frame) + 3 < ev->numBytes)
             LOG("frame size mismatch exp: %d got: %d", JD_FRAME_SIZE(frame), ev->numBytes);
-        if (jd_crc16((uint8_t *)frame + 2, JD_FRAME_SIZE(frame) - 2) != frame->crc)
+        if (!jd_frame_crc_ok(frame))
             LOG("invalid CRC");
         LOGV("JDPKT %d", frame->size);
         if (ctx->frame_cb)

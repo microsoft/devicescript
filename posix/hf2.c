@@ -101,7 +101,7 @@ static void *hf2_read_loop(void *ctx_) {
             int pktlen = ctx->response.data8[2] + 12;
             if (4 + pktlen <= frameptr) {
                 jd_frame_t *frame = (jd_frame_t *)ctx->response.data8;
-                if (jd_crc16((uint8_t *)frame + 2, JD_FRAME_SIZE(frame) - 2) != frame->crc)
+                if (!jd_frame_crc_ok(frame))
                     LOG("invalid CRC");
                 LOGV("JDPKT %d", frame->size);
                 if (ctx->frame_cb)

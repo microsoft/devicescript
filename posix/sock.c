@@ -92,7 +92,7 @@ static void *sock_read_loop(void *ctx_) {
         int pktlen = buf[2] + 12;
         if (pktlen <= len) {
             jd_frame_t *frame = (jd_frame_t *)buf;
-            if (jd_crc16((uint8_t *)frame + 2, JD_FRAME_SIZE(frame) - 2) != frame->crc)
+            if (!jd_frame_crc_ok(frame))
                 LOG("invalid CRC");
             LOGV("JDPKT %d", frame->size);
             if (ctx->frame_cb)
@@ -121,6 +121,10 @@ int sock_send_frame(sock_t ctx, jd_frame_t *frame) {
     LOGV("send %db", len);
     uint8_t buf[257];
     buf[0] = len;
+    if (!jd_frame_crc_ok(frame)) {
+        LOG("bad send CRC");
+    }
+        DMESG("S %x %x", frame->crc, frame->flags);
     memcpy(buf + 1, frame, len);
     pthread_mutex_lock(&ctx->talk_mutex);
     int r = forced_write(ctx->sockfd, buf, len + 1);
