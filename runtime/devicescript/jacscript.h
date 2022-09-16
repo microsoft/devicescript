@@ -44,7 +44,9 @@ typedef struct {
                       jd_timeseries_aggregator_stored_report_t *data);
     int (*is_connected)(void);
     size_t max_bin_upload_size;
+    int (*respond_method)(uint32_t method_id, uint32_t status, int numvals, double *vals);
 } jacscloud_api_t;
+void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, const double *vals);
 void jacscloud_init(const jacscloud_api_t *cloud_api);
 
 void tsagg_init(const jacscloud_api_t *cloud_api);

@@ -8,6 +8,8 @@ struct srv_state {
     const jacscloud_api_t *api;
 };
 
+static srv_t *_jacscloud_state;
+
 void jacscloud_process(srv_t *state) {}
 
 static void jacscloud_upload(srv_t *state, jd_packet_t *pkt) {
@@ -37,6 +39,14 @@ void jacscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
             LOG("failed bin upload");
         return;
 
+    case JD_JACSCRIPT_CLOUD_CMD_ACK_CLOUD_COMMAND: {
+        jd_jacscript_cloud_ack_cloud_command_t *arg = (void *)pkt->data;
+        int numvals = (pkt->service_size >> 3) - 1;
+        if (numvals >= 0)
+            state->api->respond_method(arg->seq_no, arg->status, numvals, arg->result);
+        break;
+    }
+
     case JD_GET(JD_JACSCRIPT_CLOUD_REG_CONNECTED):
         jd_respond_u8(pkt, state->api->is_connected());
         return;
@@ -47,8 +57,20 @@ void jacscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
+void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, const double *vals) {
+    srv_t *state = _jacscloud_state;
+    int lblsize = strlen(label) + 1;
+    int sz = 4 + lblsize + 8 * numvals;
+    uint8_t *data = jd_alloc(sz);
+    memcpy(data, &method_id, 4);
+    memcpy(data + 4, label, lblsize);
+    memcpy(data + 4 + lblsize, vals, 8 * numvals);
+    jd_send_event_ext(state, JD_JACSCRIPT_CLOUD_EV_CLOUD_COMMAND, data, sz);
+}
+
 SRV_DEF(jacscloud, JD_SERVICE_CLASS_JACSCRIPT_CLOUD);
 void jacscloud_init(const jacscloud_api_t *cloud_api) {
     SRV_ALLOC(jacscloud);
     state->api = cloud_api;
+    _jacscloud_state = state;
 }
