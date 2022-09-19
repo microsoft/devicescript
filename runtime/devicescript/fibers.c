@@ -246,9 +246,9 @@ void jacs_fiber_sync_now(jacs_ctx_t *ctx) {
 static int jacs_fiber_wake_some(jacs_ctx_t *ctx) {
     if (ctx->error_code)
         return 0;
-    uint32_t now = jacs_now(ctx);
+    uint32_t now_ = jacs_now(ctx);
     for (jacs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
-        if (fiber->wake_time && fiber->wake_time <= now) {
+        if (fiber->wake_time && fiber->wake_time <= now_) {
             jacs_jd_reset_packet(ctx);
             jacs_fiber_run(fiber);
             // we can't continue with the fiber loop - the fiber might be gone by now

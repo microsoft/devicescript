@@ -351,8 +351,8 @@ int jacscriptmgr_deploy(const void *img, unsigned imgsize) {
     return jacs_verify(hdx->image, hdx->size);
 }
 
-static void jacscriptmgr_client_ev(void *_state, int event_id, void *arg0, void *arg1) {
-    srv_t *state = _state;
+static void jacscriptmgr_client_ev(void *state0, int event_id, void *arg0, void *arg1) {
+    srv_t *state = state0;
     if (state->ctx)
         jacs_client_event_handler(state->ctx, event_id, arg0, arg1);
 }

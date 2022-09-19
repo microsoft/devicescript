@@ -44,9 +44,9 @@ int32_t jacs_vm_fetch_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     bool n = !!(v & 4);
     int len = (v & 3) + 1;
     for (int i = 0; i < len; ++i) {
-        uint8_t v = jacs_vm_fetch_byte(frame, ctx);
+        uint8_t b = jacs_vm_fetch_byte(frame, ctx);
         r <<= 8;
-        r |= v;
+        r |= b;
     }
 
     return n ? -r : r;
