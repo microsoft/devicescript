@@ -110,6 +110,20 @@ static value_t expr0_pkt_reg_get_code(jacs_activation_t *frame, jacs_ctx_t *ctx)
         return jacs_nan;
 }
 
+static value_t expr0_pkt_command_code(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (jd_is_command(&ctx->packet))
+        return jacs_value_from_int(ctx->packet.service_command);
+    else
+        return jacs_nan;
+}
+
+static value_t expr0_pkt_report_code(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    if (jd_is_report(&ctx->packet))
+        return jacs_value_from_int(ctx->packet.service_command);
+    else
+        return jacs_nan;
+}
+
 static value_t expr0_nan(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     return jacs_nan;
 }
@@ -404,6 +418,8 @@ static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_PAST_LAST + 
     [JACS_EXPR0_PKT_SIZE] = expr0_pkt_size,
     [JACS_EXPR0_PKT_EV_CODE] = expr0_pkt_ev_code,
     [JACS_EXPR0_PKT_REG_GET_CODE] = expr0_pkt_reg_get_code,
+    [JACS_EXPR0_PKT_COMMAND_CODE] = expr0_pkt_command_code,
+    [JACS_EXPR0_PKT_REPORT_CODE] = expr0_pkt_report_code,
     [JACS_EXPR2_STR0EQ] = expr2_str0eq,
 
     // math

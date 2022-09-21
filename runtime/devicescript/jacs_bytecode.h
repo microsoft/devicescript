@@ -40,6 +40,8 @@
 #define JACS_EXPR0_PKT_SIZE 9
 #define JACS_EXPR0_PKT_EV_CODE 10
 #define JACS_EXPR0_PKT_REG_GET_CODE 11
+#define JACS_EXPR0_PKT_REPORT_CODE 48
+#define JACS_EXPR0_PKT_COMMAND_CODE 49
 #define JACS_EXPR0_NAN 12
 #define JACS_EXPR0_NOW_MS 46
 #define JACS_EXPR1_ABS 13
@@ -74,12 +76,12 @@
 #define JACS_EXPR2_SHIFT_RIGHT 42          // x >> y
 #define JACS_EXPR2_SHIFT_RIGHT_UNSIGNED 43 // x >>> y
 #define JACS_EXPR2_SUB 44                  // x - y
-#define JACS_EXPR_PAST_LAST 48
+#define JACS_EXPR_PAST_LAST 50
 
 #define JACS_EXPR_PROPS                                                                            \
     "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01" \
     "\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21" \
-    "\x00\x01"
+    "\x00\x01\x00\x00"
 
 #define JACS_IMG_VERSION 0x00020001
 #define JACS_MAGIC0 0x5363614a // "JacS"
