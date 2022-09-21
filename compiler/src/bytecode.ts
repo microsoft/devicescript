@@ -42,6 +42,8 @@ export enum OpExpr {
     EXPR0_PKT_SIZE = 9,
     EXPR0_PKT_EV_CODE = 10,
     EXPR0_PKT_REG_GET_CODE = 11,
+    EXPR0_PKT_REPORT_CODE = 48,
+    EXPR0_PKT_COMMAND_CODE = 49,
     EXPR0_NAN = 12,
     EXPR0_NOW_MS = 46,
     EXPR1_ABS = 13,
@@ -76,11 +78,11 @@ export enum OpExpr {
     EXPR2_SHIFT_RIGHT = 42, // x >> y
     EXPR2_SHIFT_RIGHT_UNSIGNED = 43, // x >>> y
     EXPR2_SUB = 44, // x - y
-    EXPR_PAST_LAST = 48,
+    EXPR_PAST_LAST = 50,
 }
 
 export const EXPR_PROPS =
-    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21\x00\x01"
+    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21\x00\x01\x00\x00"
 
 export enum BinFmt {
     IMG_VERSION = 0x00020001,
@@ -173,6 +175,8 @@ export const EXPR_PRINT_FMTS = [
     "%P",
     "now_ms()",
     "get_fiber_handle(%F)",
+    "pkt_report_code()",
+    "pkt_command_code()",
 ]
 export const STMT_PRINT_FMTS = [
     null,

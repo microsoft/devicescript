@@ -93,6 +93,10 @@ Return value of query register, call, etc.
 
     pkt_reg_get_code = 11
 
+    pkt_report_code = 48
+
+    pkt_command_code = 49
+
     fun nan = 12
 
     now_ms = 46
