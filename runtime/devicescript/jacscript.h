@@ -46,6 +46,7 @@ typedef struct {
     size_t max_bin_upload_size;
     int (*respond_method)(uint32_t method_id, uint32_t status, int numvals, double *vals);
 } jacscloud_api_t;
+extern const jacscloud_api_t noop_cloud;
 void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, const double *vals);
 void jacscloud_init(const jacscloud_api_t *cloud_api);
 

@@ -74,3 +74,27 @@ void jacscloud_init(const jacscloud_api_t *cloud_api) {
     state->api = cloud_api;
     _jacscloud_state = state;
 }
+
+static int upload(const char *label, int numvals, double *vals) {
+    return 0;
+}
+
+static int bin_upload(const void *data, unsigned datasize) {
+    return 0;
+}
+static int agg_upload(const char *label, jd_device_service_t *service,
+                      jd_timeseries_aggregator_stored_report_t *data) {
+    return 0;
+}
+static int is_connected(void) {
+    return 1;
+}
+size_t max_bin_upload_size;
+
+const jacscloud_api_t noop_cloud = {
+    .upload = upload,
+    .bin_upload = bin_upload,
+    .agg_upload = agg_upload,
+    .is_connected = is_connected,
+    .max_bin_upload_size = 1024,
+};
