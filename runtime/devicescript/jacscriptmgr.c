@@ -14,6 +14,8 @@
 
 #define LOGV JD_NOLOG
 
+#define SECONDS(n) (uint32_t)((n) * 1024 * 1024)
+
 typedef struct {
     uint32_t magic0;
     uint32_t size;
@@ -144,7 +146,7 @@ void jacscriptmgr_process(srv_t *state) {
         }
     }
 
-    if (jd_should_sample(&state->next_restart, 8 * 1024 * 1024)) {
+    if (jd_should_sample(&state->next_restart, SECONDS(8))) {
         if (state->autostart && !state->ctx) {
             try_run(state);
         }
@@ -162,8 +164,7 @@ void jacscriptmgr_process(srv_t *state) {
         };
         jd_send_event_ext(state, JD_JACSCRIPT_MANAGER_EV_PROGRAM_PANIC, &args, sizeof(args));
         stop_program(state);
-        int delay = code == JACS_PANIC_REBOOT ? 1 : 5;
-        state->next_restart = now + delay * 1024 * 1024;
+        state->next_restart = now + SECONDS(code == JACS_PANIC_REBOOT ? 1 : 5);
     }
 }
 
@@ -363,7 +364,8 @@ void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg) {
     state->read_program_ptr = -1;
     state->autostart = 1;
     state->logging = 1;
-    state->next_restart = now;
+    // first start 1.5s after brain boot up - allow devices to enumerate
+    state->next_restart = now + SECONDS(1.5);
 
     JD_ASSERT(jacs_verify(jacs_empty_program, sizeof(jacs_empty_program)) == 0);
 
