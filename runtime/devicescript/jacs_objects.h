@@ -29,16 +29,22 @@ typedef struct {
     value_t *data;
 } jacs_array_t;
 
+void jacs_map_set(jacs_ctx_t *ctx, jacs_map_t *map, jacs_key_id_t key, value_t v);
+value_t jacs_map_get(jacs_ctx_t *ctx, jacs_map_t *map, jacs_key_id_t key);
+void jacs_map_clear(jacs_ctx_t *ctx, jacs_map_t *map);
+
+// GC
+
 typedef struct _jacs_gc_t jacs_gc_t;
+
+jacs_map_t *jacs_map_try_alloc(jacs_gc_t *gc);
+jacs_map_t *jacs_array_try_alloc(jacs_gc_t *gc);
 
 jacs_gc_t *jacs_gc_create(void);
 void jacs_gc_destroy(jacs_gc_t *gc);
 
 void *jd_gc_try_alloc(jacs_gc_t *gc, uint32_t size);
 void jd_gc_free(jacs_gc_t *gc, void *ptr);
-jacs_map_t *jacs_map_try_alloc(jacs_gc_t *gc);
-jacs_map_t *jacs_array_try_alloc(jacs_gc_t *gc);
-
 #if JD_64
 void *jacs_gc_base_addr(jacs_gc_t *gc);
 #else
