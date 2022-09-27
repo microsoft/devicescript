@@ -194,3 +194,6 @@ void aggbuffer_init(const jacscloud_api_t *api);
 int aggbuffer_flush(void);
 int aggbuffer_upload(const char *label, jd_device_service_t *service,
                      jd_timeseries_aggregator_stored_report_t *data);
+
+void *jacs_try_alloc(jacs_ctx_t *ctx, uint32_t size);
+void jacs_free(jacs_ctx_t *ctx, void *ptr);

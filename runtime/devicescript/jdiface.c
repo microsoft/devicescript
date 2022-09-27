@@ -48,7 +48,7 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
 void jacs_jd_clear_pkt_kind(jacs_fiber_t *fib) {
     switch (fib->pkt_kind) {
     case JACS_PKT_KIND_SEND_PKT:
-        jd_free(fib->pkt_data.send_pkt.data);
+        jacs_free(fib->ctx, fib->pkt_data.send_pkt.data);
         break;
     default:
         break;
@@ -79,9 +79,11 @@ void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
 
     unsigned sz = ctx->packet.service_size;
     fib->pkt_kind = JACS_PKT_KIND_SEND_PKT;
-    fib->pkt_data.send_pkt.data = jd_alloc(sz);
-    fib->pkt_data.send_pkt.size = sz;
-    memcpy(fib->pkt_data.send_pkt.data, ctx->packet.data, sz);
+    fib->pkt_data.send_pkt.data = jacs_try_alloc(ctx, sz);
+    if (fib->pkt_data.send_pkt.data != NULL) {
+        fib->pkt_data.send_pkt.size = sz;
+        memcpy(fib->pkt_data.send_pkt.data, ctx->packet.data, sz);
+    }
     jacs_fiber_sleep(fib, 0);
 }
 

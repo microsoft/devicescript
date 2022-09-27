@@ -23,7 +23,9 @@ void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *param
     const jacs_function_desc_t *func = jacs_img_get_function(&ctx->img, fidx);
 
     jacs_activation_t *callee =
-        jd_alloc(sizeof(jacs_activation_t) + sizeof(value_t) * func->num_locals);
+        jacs_try_alloc(ctx, sizeof(jacs_activation_t) + sizeof(value_t) * func->num_locals);
+    if (callee == NULL)
+        return;
     callee->params = params;
     callee->num_params = numargs;
     callee->pc = func->start;
@@ -61,13 +63,14 @@ static void free_fiber(jacs_fiber_t *fiber) {
             oops();
         f->next = fiber->next;
     }
-    jd_free(fiber);
+    jacs_free(ctx, fiber);
 }
 
 static void free_activation(jacs_activation_t *act) {
+    jacs_ctx_t *ctx = act->fiber->ctx;
     if (act->params_is_copy)
-        jd_free(act->params);
-    jd_free(act);
+        jacs_free(ctx, act->params);
+    jacs_free(ctx, act);
 }
 
 static void log_fiber_op(jacs_fiber_t *fiber, const char *op) {
@@ -105,7 +108,7 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx) {
             free_activation(act);
             act = n;
         }
-        jd_free(f);
+        jacs_free(ctx, f);
         f = ctx->fibers;
     }
 }
@@ -133,6 +136,9 @@ jacs_fiber_t *jacs_fiber_by_tag(jacs_ctx_t *ctx, unsigned tag) {
 
 jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
                                unsigned op) {
+    if (ctx->error_code)
+        return NULL;
+
     jacs_fiber_t *fiber;
 
     if (op != JACS_OPCALL_BG) {
@@ -150,7 +156,9 @@ jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, 
         }
     }
 
-    fiber = jd_alloc(sizeof(*fiber));
+    fiber = jacs_try_alloc(ctx, sizeof(*fiber));
+    if (fiber == NULL)
+        return NULL;
     fiber->ctx = ctx;
     fiber->bottom_function_idx = fidx;
     fiber->handle_tag = ++ctx->fiber_handle_tag;
