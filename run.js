@@ -133,7 +133,8 @@ async function runServer(args) {
         const child = child_process.spawn(distPath + "/jdcli", args, {
             stdio: "inherit"
         })
-        child.on('exit', (code) => {
+        child.on('exit', (code, err) => {
+            if (!code && err) code = 2
             process.exit(code)
         });
         testMode = false
