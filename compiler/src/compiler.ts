@@ -21,6 +21,8 @@ import {
     write32,
     strcmp,
     encodeU32LE,
+    fromHex,
+    bufferEq,
 } from "./jdutil"
 
 import {
@@ -408,6 +410,7 @@ const mathConst: SMap<number> = {
 
 function throwError(expr: estree.BaseNode, msg: string): never {
     const err = new Error(msg)
+    // console.log(err.stack)
     ;(err as any).sourceNode = expr
     throw err
 }
@@ -439,7 +442,7 @@ class Program implements TopOpWriter {
     tree: estree.Program
     procs: Procedure[] = []
     floatLiterals: number[] = []
-    stringLiterals: string[] = []
+    stringLiterals: (string | Uint8Array)[] = []
     writer: OpWriter
     proc: Procedure
     sysSpec: jdspec.ServiceSpec
@@ -481,8 +484,16 @@ class Program implements TopOpWriter {
         return prelude[fn] || ""
     }
 
-    addString(str: string) {
-        return addUnique(this.stringLiterals, str)
+    addString(str: string | Uint8Array) {
+        if (typeof str == "string") return addUnique(this.stringLiterals, str)
+        else {
+            for (let i = 0; i < this.stringLiterals.length; ++i) {
+                const ss = this.stringLiterals[i]
+                if (typeof ss != "string" && bufferEq(str, ss)) return i
+            }
+            this.stringLiterals.push(str)
+            return this.stringLiterals.length - 1
+        }
     }
 
     addFloat(f: number): number {
@@ -1416,6 +1427,29 @@ class Program implements TopOpWriter {
         return undefined
     }
 
+    private bufferLiteral(expr: Expr): Uint8Array {
+        if (
+            expr?.type == "TaggedTemplateExpression" &&
+            idName(expr.tag) == "hex"
+        ) {
+            if (expr.quasi.expressions.length)
+                throwError(
+                    expr,
+                    "${}-expressions not supported in hex literals"
+                )
+            const hexbuf = expr.quasi.quasis
+                .map(q => q.value.raw)
+                .join("")
+                .replace(/\s+/g, "")
+                .toLowerCase()
+            if (hexbuf.length & 1) throwError(expr, "non-even hex length")
+            if (!/^[0-9a-f]*$/.test(hexbuf))
+                throwError(expr, "invalid characters in hex")
+            return fromHex(hexbuf)
+        }
+        return undefined
+    }
+
     private forceStringLiteral(expr: Expr) {
         const v = this.stringLiteral(expr)
         if (v === undefined) throwError(expr, "string literal expected")
@@ -1434,6 +1468,7 @@ class Program implements TopOpWriter {
         if (expr.arguments.length == 1 && idName(expr.arguments[0]) == "packet")
             return
 
+        const wr = this.writer
         const args = expr.arguments.map(arg => {
             if (specIdx >= fields.length) {
                 if (repeatsStart != -1) specIdx = repeatsStart
@@ -1442,18 +1477,26 @@ class Program implements TopOpWriter {
             const spec = pspec.fields[specIdx++]
             if (spec.startRepeats) repeatsStart = specIdx - 1
             let size = Math.abs(spec.storage)
-            let stringLiteral: string = undefined
+            let stringLiteralVal: Value = undefined
             if (size == 0) {
-                stringLiteral = this.stringLiteral(arg)
-                if (stringLiteral == undefined)
-                    throwError(arg, "expecting a string literal here")
-                size = strlen(stringLiteral)
+                const stringLiteral = this.stringLiteral(arg)
+                if (stringLiteral != undefined) {
+                    size = strlen(stringLiteral)
+                    stringLiteralVal = wr.emitString(stringLiteral)
+                } else {
+                    const buf = this.bufferLiteral(arg)
+                    if (buf) {
+                        size = buf.length
+                        stringLiteralVal = wr.emitString(buf)
+                    } else {
+                        throwError(arg, "expecting a string literal here")
+                    }
+                }
                 if (spec.type == "string0") size += 1
             }
-            const val =
-                stringLiteral === undefined ? this.emitSimpleValue(arg) : null
+            const val = stringLiteralVal ? null : this.emitSimpleValue(arg)
             const r = {
-                stringLiteral,
+                stringLiteralVal,
                 size,
                 offset,
                 spec,
@@ -1469,12 +1512,11 @@ class Program implements TopOpWriter {
         if (offset > JD_SERIAL_MAX_PAYLOAD_SIZE)
             throwError(expr, "arguments do not fit in a packet")
 
-        const wr = this.writer
         wr.allocBuf()
         wr.emitStmt(OpStmt.STMT2_SETUP_BUFFER, literal(offset), literal(0))
         for (const desc of args) {
-            if (desc.stringLiteral !== undefined) {
-                const vd = wr.emitString(desc.stringLiteral)
+            if (desc.stringLiteralVal !== undefined) {
+                const vd = desc.stringLiteralVal
                 wr.emitStmt(OpStmt.STMT2_MEMCPY, vd, literal(desc.offset))
             } else {
                 wr.emitBufStore(desc.val, bufferFmt(desc.spec), desc.offset)
@@ -2457,10 +2499,17 @@ class Program implements TopOpWriter {
         }
 
         const descs = this.stringLiterals.map(str => {
-            const buf = stringToUint8Array(toUTF8(str) + "\u0000")
+            const buf: Uint8Array =
+                typeof str == "string"
+                    ? stringToUint8Array(toUTF8(str) + "\u0000")
+                    : str
             const desc = new Uint8Array(8)
             write32(desc, 0, strData.currSize) // initially use offsets in strData section
-            write32(desc, 4, buf.length - 1)
+            write32(
+                desc,
+                4,
+                typeof str == "string" ? buf.length - 1 : buf.length
+            )
             strData.append(buf)
             strDesc.append(desc)
             return desc

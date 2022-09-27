@@ -8,3 +8,6 @@ function testBuffer() {
 }
 
 testBuffer()
+
+var dotmatrix = roles.dotMatrix()
+dotmatrix.dots.write(hex`00 ab 12 2f 00`)

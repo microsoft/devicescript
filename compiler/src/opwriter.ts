@@ -17,7 +17,7 @@ import { assert, write32, write16 } from "./jdutil"
 import { assertRange, oops } from "./util"
 
 export interface TopOpWriter extends InstrArgResolver {
-    addString(s: string): number
+    addString(s: string | Uint8Array): number
     addFloat(f: number): number
     writer: OpWriter
     hasErrors: boolean
@@ -242,7 +242,7 @@ export class OpWriter {
         this.bufferAllocated = false
     }
 
-    emitString(s: string) {
+    emitString(s: string | Uint8Array) {
         const v = literal(this.prog.addString(s))
         v.flags |= VF_IS_STRING
         return v

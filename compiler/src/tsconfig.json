@@ -11,6 +11,7 @@
     ],
     "strict": false,
     "strictNullChecks": false,
+    "strictFunctionTypes": true,
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
