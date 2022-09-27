@@ -24,7 +24,7 @@ extern jacs_ctx_t *_jacs_ctx;
 #define TAG_BUFFER 0x2
 #define TAG_ARRAY 0x3
 #define TAG_MAP 0x4
-#define TAG_FINAL 0xf
+#define TAG_FINAL (0xf | TAG_MASK_PINNED)
 
 #define GET_TAG(p) ((p) >> TAG_POS)
 #define BASIC_TAG(p) (GET_TAG(p) & TAG_MASK)
@@ -67,12 +67,17 @@ static void mark_block(block_t *block, uint8_t tag, unsigned size) {
     block->header = size | ((uintptr_t)tag << TAG_POS);
 }
 
+static inline uintptr_t *block_ptr(block_t *block) {
+    return (uintptr_t *)block;
+}
+
 void jacs_gc_add_chunk(jacs_gc_t *gc, void *start, unsigned size) {
     JD_ASSERT(size > sizeof(chunk_t) + 128);
     chunk_t *ch = start;
     ch->end =
         (block_t *)((uintptr_t)((uint8_t *)start + size) & ~(JD_PTRSIZE - 1) - sizeof(uintptr_t));
     mark_block(ch->end, TAG_FINAL, 1);
+    mark_block(ch->start, TAG_FREE, block_ptr(ch->end) - block_ptr(ch->start));
     ch->next = gc->first_chunk;
     gc->first_chunk = ch;
 }
@@ -137,12 +142,10 @@ static void mark_roots(jacs_gc_t *gc) {
     }
 }
 
-static inline uintptr_t *block_ptr(block_t *block) {
-    return (uintptr_t *)block;
-}
-
 static inline unsigned block_size(block_t *b) {
-    return BLOCK_SIZE(b->header);
+    unsigned sz = BLOCK_SIZE(b->header);
+    JD_ASSERT(sz > 0);
+    return sz;
 }
 
 static inline block_t *next_block(block_t *block) {
@@ -176,7 +179,8 @@ static void sweep(jacs_gc_t *gc) {
                     while (can_free(p->header))
                         p = next_block(p);
                     if (p != block) {
-                        mark_block(block, TAG_FREE, block_ptr(p) - block_ptr(block));
+                        unsigned new_size = block_ptr(p) - block_ptr(block);
+                        mark_block(block, TAG_FREE, new_size);
                         memset(block->data, 0x37, (block_size(block) - 1) * sizeof(uintptr_t));
                         if (prev == NULL) {
                             gc->first_free = block;
