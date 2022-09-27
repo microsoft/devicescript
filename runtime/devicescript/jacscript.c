@@ -11,8 +11,10 @@ STATIC_ASSERT(sizeof(jacs_buffer_desc_t) == JACS_BUFFER_HEADER_SIZE);
 static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     ctx->img.data = img;
 
-    ctx->globals = jd_alloc(sizeof(value_t) * ctx->img.header->num_globals);
-    ctx->roles = jd_alloc(sizeof(jd_role_t *) * jacs_img_num_roles(&ctx->img));
+    ctx->gc = jacs_gc_create();
+
+    ctx->globals = jd_gc_try_alloc(ctx->gc, sizeof(value_t) * ctx->img.header->num_globals);
+    ctx->roles = jd_gc_try_alloc(ctx->gc, sizeof(jd_role_t *) * jacs_img_num_roles(&ctx->img));
 
     uint32_t num_buffers = jacs_img_num_buffers(&ctx->img);
     if (num_buffers > 1) {
@@ -20,7 +22,7 @@ static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
         for (unsigned i = 1; i < num_buffers; ++i) {
             buffer_words += (jacs_img_get_buffer(&ctx->img, i)->size + 3) >> 2;
         }
-        ctx->buffers = jd_alloc(sizeof(uint32_t) * buffer_words);
+        ctx->buffers = jd_gc_try_alloc(ctx->gc, sizeof(uint32_t) * buffer_words);
         buffer_words = num_buffers - 1;
         uint32_t *bufptr = ctx->buffers;
         for (unsigned i = 1; i < num_buffers; ++i) {
@@ -118,9 +120,7 @@ static void clear_ctx(jacs_ctx_t *ctx) {
     jacs_enter(ctx);
     jacs_regcache_free_all(&ctx->regcache);
     jacs_fiber_free_all_fibers(ctx);
-    jd_free(ctx->globals);
-    jd_free(ctx->roles);
-    jd_free(ctx->buffers);
+    jacs_gc_destroy(ctx->gc);
     memset(ctx, 0, sizeof(*ctx));
 }
 

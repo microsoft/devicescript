@@ -42,14 +42,13 @@ static inline uint32_t jacs_handle_value(value_t t) {
     return t.mantisa32;
 }
 
-static inline void *jacs_handle_ptr_value(value_t t) {
 #if JD_64
-    extern uintptr_t jacs_base_handle_ptr;
-    return (void *)(jacs_base_handle_ptr + t.mantisa32);
+void *jacs_handle_ptr_value(jacs_ctx_t *ctx, value_t t);
 #else
+static inline void *jacs_handle_ptr_value(jacs_ctx_t *ctx, value_t t) {
     return (void *)t.mantisa32;
-#endif
 }
+#endif
 
 static inline value_t jacs_value_from_handle(int type, uint32_t value) {
     value_t r;
@@ -57,7 +56,6 @@ static inline value_t jacs_value_from_handle(int type, uint32_t value) {
     r.mantisa32 = value;
     return r;
 }
-
 
 #define JACS_HANDLE_IS_GC_POINTER_MASK 0x80
 #define JACS_HANDLE_IS_HEAP_POINTER_MASK 0x40
@@ -68,7 +66,7 @@ static inline value_t jacs_value_from_handle(int type, uint32_t value) {
 value_t jacs_value_from_double(double v);
 value_t jacs_value_from_int(int v);
 value_t jacs_value_from_bool(int v);
-value_t jacs_value_from_pointer(int type, void *ptr);
+value_t jacs_value_from_pointer(jacs_ctx_t *ctx, int type, void *ptr);
 
 int32_t jacs_value_to_int(value_t v);
 double jacs_value_to_double(value_t v);

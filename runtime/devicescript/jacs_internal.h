@@ -103,6 +103,8 @@ struct jacs_ctx {
 
     uint32_t fiber_handle_tag;
 
+    jacs_gc_t *gc;
+
     jacs_cfg_t cfg;
 
     union {
