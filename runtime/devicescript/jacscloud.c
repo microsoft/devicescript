@@ -66,6 +66,7 @@ void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, con
     memcpy(data + 4, label, lblsize);
     memcpy(data + 4 + lblsize, vals, 8 * numvals);
     jd_send_event_ext(state, JD_JACSCRIPT_CLOUD_EV_CLOUD_COMMAND, data, sz);
+    jd_free(data);
 }
 
 SRV_DEF(jacscloud, JD_SERVICE_CLASS_JACSCRIPT_CLOUD);
