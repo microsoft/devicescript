@@ -68,6 +68,25 @@ value_t jacs_value_from_bool(int v) {
     return r;
 }
 
+value_t jacs_value_from_pointer(int type, void *ptr) {
+    uint32_t v;
+
+    JD_ASSERT(type & (JACS_HANDLE_IS_GC_POINTER_MASK | JACS_HANDLE_IS_HEAP_POINTER_MASK));
+
+#if JD_64
+    extern uintptr_t jacs_base_handle_ptr;
+    if (ptr)
+        v = (uintptr_t)ptr - jacs_base_handle_ptr;
+    else
+        v = 0;
+    JD_ASSERT((v >> 24) == 0);
+#else
+    v = (uintptr_t)ptr;
+#endif
+
+    return jacs_value_from_handle(type, v);
+}
+
 int32_t jacs_value_to_int(value_t v) {
     if (jacs_is_tagged_int(v))
         return v.val_int32;

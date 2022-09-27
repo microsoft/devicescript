@@ -16,6 +16,7 @@
 #include "jacs_regcache.h"
 #include "jacs_pack.h"
 #include "jacs_trace.h"
+#include "jacs_objects.h"
 
 // this can't be more than a week; unit = ms
 #define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)

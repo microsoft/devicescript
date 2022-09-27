@@ -33,12 +33,22 @@ static inline bool jacs_is_handle(value_t t) {
     return (t.exp_sign >> (20 - 1)) == (0x7ff << 1);
 }
 
+// handle type is 20 bit
 static inline int jacs_handle_type(value_t t) {
     return jacs_is_handle(t) ? (t.exp_sign << 12) >> 12 : 0;
 }
 
 static inline uint32_t jacs_handle_value(value_t t) {
     return t.mantisa32;
+}
+
+static inline void *jacs_handle_ptr_value(value_t t) {
+#if JD_64
+    extern uintptr_t jacs_base_handle_ptr;
+    return (void *)(jacs_base_handle_ptr + t.mantisa32);
+#else
+    return (void *)t.mantisa32;
+#endif
 }
 
 static inline value_t jacs_value_from_handle(int type, uint32_t value) {
@@ -48,11 +58,17 @@ static inline value_t jacs_value_from_handle(int type, uint32_t value) {
     return r;
 }
 
-#define JACS_HANDLE_TYPE_FIBER 1
+
+#define JACS_HANDLE_IS_GC_POINTER_MASK 0x80
+#define JACS_HANDLE_IS_HEAP_POINTER_MASK 0x40
+
+#define JACS_HANDLE_TYPE_FIBER 0x01
+#define JACS_HANDLE_TYPE_OBJECT 0x81
 
 value_t jacs_value_from_double(double v);
 value_t jacs_value_from_int(int v);
 value_t jacs_value_from_bool(int v);
+value_t jacs_value_from_pointer(int type, void *ptr);
 
 int32_t jacs_value_to_int(value_t v);
 double jacs_value_to_double(value_t v);
