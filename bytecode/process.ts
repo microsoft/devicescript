@@ -257,6 +257,22 @@ function serializeProps(lst: OpCode[], fn: (o: OpCode) => number) {
     )
 }
 
+function genJmpTables(spec: Spec) {
+    let r = "\n#define JACS_EXPR_HANDLERS expr_invalid, \\\n"
+    for (const obj of sortByCode(spec.expr)) {
+        r += `expr${sig(obj)}_${obj.name}, \\\n`
+    }
+    r += "expr_invalid\n\n"
+
+    r += "#define JACS_STMT_HANDLERS stmt_invalid, \\\n"
+    for (const obj of sortByCode(spec.stmt)) {
+        r += `stmt${sig(obj)}_${obj.name}, \\\n`
+    }
+    r += "stmt_invalid\n\n"
+
+    return r
+}
+
 function genCode(spec: Spec, isTS = false, isSTS = false) {
     let r = "// Auto-generated from bytecode.md; do not edit.\n"
     if (isSTS) r += "\nnamespace jacs {\n"
@@ -301,6 +317,8 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
     emitFmts("stmt", spec.stmt)
 
     if (isSTS) r += "} // jacs\n"
+
+    if (!isTS) r += genJmpTables(spec)
 
     return r
 

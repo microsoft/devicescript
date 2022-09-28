@@ -30,6 +30,10 @@ Wait given number of milliseconds.
 
 Copy given string to packet buffer at given `offset`.
 
+    blit(buffer_idx, dst_offset, string_idx, src_offset, length) = 22
+
+Copy bytes `string_idx[src_offset .. src_offset + length]` to `buffer_idx[dst_offset .. ]`
+
     call(func_idx, local_idx, numargs) = 11
 
 Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`

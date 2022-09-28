@@ -11,6 +11,7 @@ export enum OpStmt {
     STMT4_FORMAT = 8, // string_idx, local_idx, numargs, offset
     STMT2_SETUP_BUFFER = 9, // size, buffer_idx
     STMT2_MEMCPY = 10, // string_idx, offset
+    STMT5_BLIT = 22, // buffer_idx, dst_offset, string_idx, src_offset, length
     STMT3_CALL = 11, // func_idx, local_idx, numargs
     STMT4_CALL_BG = 12, // func_idx, local_idx, numargs, opcall
     STMT1_RETURN = 13, // value
@@ -22,11 +23,11 @@ export enum OpStmt {
     STMT4_STORE_BUFFER = 19, // numfmt, offset, buffer_idx, value
     STMTx1_STORE_PARAM = 20, // param_idx := value
     STMT1_TERMINATE_FIBER = 21, // fiber_handle
-    STMT_PAST_LAST = 22,
+    STMT_PAST_LAST = 23,
 }
 
 export const STMT_PROPS =
-    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x02\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01"
+    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x02\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01\x05"
 
 export enum OpExpr {
     EXPRx_LOAD_LOCAL = 1, // *local_idx
@@ -201,4 +202,5 @@ export const STMT_PRINT_FMTS = [
     "STORE_BUFFER %n offset=%e buffer_idx=%e %e",
     "%P := %e",
     "TERMINATE_FIBER fiber_handle=%e",
+    "BLIT buffer_idx=%e dst_offset=%e %S src_offset=%e length=%e",
 ]
