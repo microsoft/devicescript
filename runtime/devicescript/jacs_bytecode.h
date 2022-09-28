@@ -11,6 +11,7 @@
 #define JACS_STMT4_FORMAT 8           // string_idx, local_idx, numargs, offset
 #define JACS_STMT2_SETUP_BUFFER 9     // size, buffer_idx
 #define JACS_STMT2_MEMCPY 10          // string_idx, offset
+#define JACS_STMT5_BLIT 22            // buffer_idx, dst_offset, string_idx, src_offset, length
 #define JACS_STMT3_CALL 11            // func_idx, local_idx, numargs
 #define JACS_STMT4_CALL_BG 12         // func_idx, local_idx, numargs, opcall
 #define JACS_STMT1_RETURN 13          // value
@@ -22,10 +23,10 @@
 #define JACS_STMT4_STORE_BUFFER 19    // numfmt, offset, buffer_idx, value
 #define JACS_STMTx1_STORE_PARAM 20    // param_idx := value
 #define JACS_STMT1_TERMINATE_FIBER 21 // fiber_handle
-#define JACS_STMT_PAST_LAST 22
+#define JACS_STMT_PAST_LAST 23
 
 #define JACS_STMT_PROPS                                                                            \
-    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x02\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01"
+    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x02\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01\x05"
 
 #define JACS_EXPRx_LOAD_LOCAL 1        // *local_idx
 #define JACS_EXPRx_LOAD_GLOBAL 2       // *global_idx
@@ -116,3 +117,21 @@
 #define JACS_NUMFMT_F16 0b1001 // not supported
 #define JACS_NUMFMT_F32 0b1010
 #define JACS_NUMFMT_F64 0b1011
+
+#define JACS_EXPR_HANDLERS                                                                         \
+    expr_invalid, exprx_load_local, exprx_load_global, expr3_load_buffer, exprx_literal,           \
+        exprx_literal_f64, expr0_ret_val, expr2_str0eq, expr1_role_is_connected, expr0_pkt_size,   \
+        expr0_pkt_ev_code, expr0_pkt_reg_get_code, expr0_nan, expr1_abs, expr1_bit_not,            \
+        expr1_ceil, expr1_floor, expr1_id, expr1_is_nan, expr1_log_e, expr1_neg, expr1_not,        \
+        expr1_random, expr1_random_int, expr1_round, expr1_to_bool, expr2_add, expr2_bit_and,      \
+        expr2_bit_or, expr2_bit_xor, expr2_div, expr2_eq, expr2_idiv, expr2_imul, expr2_le,        \
+        expr2_lt, expr2_max, expr2_min, expr2_mul, expr2_ne, expr2_pow, expr2_shift_left,          \
+        expr2_shift_right, expr2_shift_right_unsigned, expr2_sub, exprx_load_param, expr0_now_ms,  \
+        expr1_get_fiber_handle, expr0_pkt_report_code, expr0_pkt_command_code, expr_invalid
+
+#define JACS_STMT_HANDLERS                                                                         \
+    stmt_invalid, stmt1_wait_role, stmt1_sleep_s, stmt1_sleep_ms, stmt3_query_reg, stmt2_send_cmd, \
+        stmt4_query_idx_reg, stmt3_log_format, stmt4_format, stmt2_setup_buffer, stmt2_memcpy,     \
+        stmt3_call, stmt4_call_bg, stmt1_return, stmtx_jmp, stmtx1_jmp_z, stmt1_panic,             \
+        stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer, stmtx1_store_param,           \
+        stmt1_terminate_fiber, stmt5_blit, stmt_invalid

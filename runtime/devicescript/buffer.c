@@ -8,6 +8,12 @@ void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx) {
     return ctx->buffers + ctx->buffers[idx - 1];
 }
 
+unsigned jacs_buffer_size(jacs_ctx_t *ctx, unsigned idx) {
+    if (idx == 0)
+        return ctx->packet.service_size;
+    return jacs_img_get_buffer(&ctx->img, idx)->size;
+}
+
 // shift_val(10) = 1024
 // shift_val(0) = 1
 // shift_val(-10) = 1/1024
@@ -103,7 +109,6 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset,
     //     DMESG("GET @%d fmt=%x buf=%d", offset, fmt0, buffer);
 
     jacs_ctx_t *ctx = frame->fiber->ctx;
-    jd_packet_t *pkt = &ctx->packet;
 
     if (fmt == 0b1000 || fmt == 0b1001)
         return jacs_runtime_failure(ctx, 60100);
@@ -114,7 +119,7 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset,
     if (buffer >= jacs_img_num_buffers(&ctx->img))
         return jacs_runtime_failure(ctx, 60102);
 
-    unsigned bufsz = buffer == 0 ? pkt->service_size : jacs_img_get_buffer(&ctx->img, buffer)->size;
+    unsigned bufsz = jacs_buffer_size(ctx, buffer);
 
     if (offset + sz > bufsz) {
         // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
