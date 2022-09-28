@@ -247,6 +247,22 @@ class Buffer extends Cell {
     }
 }
 
+class BufferLit extends Cell {
+    constructor(
+        definition: estree.VariableDeclarator,
+        scope: VariableScope,
+        public litValue: Uint8Array
+    ) {
+        super(definition, scope)
+    }
+    emit(wr: OpWriter): Value {
+        return wr.emitString(this.litValue)
+    }
+    toString() {
+        return `bufferLit ${this.getName()}`
+    }
+}
+
 class FunctionDecl extends Cell {
     proc: Procedure
     constructor(definition: estree.FunctionDeclaration, scope: VariableScope) {
@@ -284,7 +300,7 @@ function cellKind(v: Value): CellKind {
 }
 
 function idName(pat: estree.BaseExpression) {
-    if (pat.type != "Identifier") return null
+    if (pat?.type != "Identifier") return null
     return (pat as estree.Identifier).name
 }
 
@@ -357,6 +373,7 @@ class VariableScope {
     constructor(public parent: VariableScope) {}
 
     lookup(name: string): Cell {
+        if (name == null) return undefined
         if (this.map.hasOwnProperty(name)) return this.map[name]
         if (this.parent) return this.parent.lookup(name)
         return undefined
@@ -435,7 +452,8 @@ interface Position {
 }
 
 class Program implements TopOpWriter {
-    buffers = new VariableScope(null)
+    bufferLits = new VariableScope(null)
+    buffers = new VariableScope(this.bufferLits)
     roles = new VariableScope(this.buffers)
     functions = new VariableScope(null)
     globals = new VariableScope(this.roles)
@@ -529,7 +547,9 @@ class Program implements TopOpWriter {
             case "R":
                 return this.roles.describeIndex(idx)
             case "S":
-                return JSON.stringify(this.stringLiterals[idx])
+                const l = this.stringLiterals[idx]
+                if (typeof l == "string") return JSON.stringify(l)
+                else return toHex(l)
             case "P":
                 return "" // param
             case "L":
@@ -727,6 +747,10 @@ class Program implements TopOpWriter {
 
     private parseRole(decl: estree.VariableDeclarator): Cell {
         const expr = decl.init
+
+        const buflit = this.bufferLiteral(expr)
+        if (buflit) return new BufferLit(decl, this.bufferLits, buflit)
+
         if (expr?.type != "CallExpression") return null
         switch (idName(expr.callee)) {
             case "condition":
@@ -781,6 +805,7 @@ class Program implements TopOpWriter {
                 const tmp = this.globals.lookup(this.forceName(decl.id))
                 if (tmp instanceof Role) continue
                 if (tmp instanceof Buffer) continue
+                if (tmp instanceof BufferLit) continue
                 if (tmp instanceof Variable) g = tmp
                 else {
                     if (this.numErrors == 0) oops("invalid var: " + tmp)
@@ -1415,6 +1440,29 @@ class Program implements TopOpWriter {
                 return literal(0)
             }
 
+            case "blitAt": {
+                this.requireArgs(expr, 4)
+                const dstOffset = this.emitSimpleValue(expr.arguments[0])
+                const srcbuf = this.bufferLiteral(expr.arguments[1])
+                if (!srcbuf)
+                    throwError(
+                        expr.arguments[1],
+                        `buffer literal required here`
+                    )
+                const srcref = wr.emitString(srcbuf)
+                const srcOffset = this.emitSimpleValue(expr.arguments[2])
+                const len = this.emitSimpleValue(expr.arguments[3])
+                wr.emitStmt(
+                    OpStmt.STMT5_BLIT,
+                    buf.emit(wr),
+                    dstOffset,
+                    srcref,
+                    srcOffset,
+                    len
+                )
+                return literal(0)
+            }
+
             default:
                 throwError(expr, `can't find ${prop} on buffer`)
         }
@@ -1447,6 +1495,10 @@ class Program implements TopOpWriter {
                 throwError(expr, "invalid characters in hex")
             return fromHex(hexbuf)
         }
+
+        const b = this.bufferLits.lookup(idName(expr)) as BufferLit
+        if (b) return b.litValue
+
         return undefined
     }
 
