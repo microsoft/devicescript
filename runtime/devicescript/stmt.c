@@ -155,6 +155,39 @@ static void stmt2_memcpy(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     }
 }
 
+static void stmt5_blit(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    uint32_t buffer = jacs_vm_exec_expr_u32(frame);
+    uint32_t dst_offset = jacs_vm_exec_expr_u32(frame);
+    uint32_t stridx = jacs_vm_exec_expr_u32(frame);
+    uint32_t src_offset = jacs_vm_exec_expr_u32(frame);
+    uint32_t len = jacs_vm_exec_expr_u32(frame);
+
+    if (!jacs_vm_str_ok(ctx, stridx))
+        return;
+
+    if (buffer >= jacs_img_num_buffers(&ctx->img)) {
+        jacs_runtime_failure(ctx, 60124);
+        return;
+    }
+
+    unsigned l2 = jacs_img_get_string_len(&ctx->img, stridx);
+    if (src_offset >= l2)
+        return;
+    l2 -= src_offset;
+    if (l2 < len)
+        len = l2;
+
+    unsigned bufsz = jacs_buffer_size(ctx, buffer);
+    if (dst_offset >= bufsz)
+        return;
+    l2 = bufsz - dst_offset;
+    if (l2 < len)
+        len = l2;
+
+    uint8_t *data = jacs_buffer_ptr(ctx, buffer) + dst_offset;
+    memcpy(data, jacs_img_get_string_ptr(&ctx->img, stridx) + src_offset, len);
+}
+
 static void stmt1_panic(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t code = jacs_vm_exec_expr_u32(frame);
     jacs_panic(ctx, code);
@@ -273,30 +306,7 @@ static void stmt_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static const jacs_vm_stmt_handler_t jacs_vm_stmt_handlers[JACS_STMT_PAST_LAST + 1] = {
-    [0] = stmt_invalid,
-    [JACS_STMT1_WAIT_ROLE] = stmt1_wait_role,
-    [JACS_STMT1_SLEEP_S] = stmt1_sleep_s,
-    [JACS_STMT1_SLEEP_MS] = stmt1_sleep_ms,
-    [JACS_STMT3_QUERY_REG] = stmt3_query_reg,
-    [JACS_STMT2_SEND_CMD] = stmt2_send_cmd,
-    [JACS_STMT4_QUERY_IDX_REG] = stmt4_query_idx_reg,
-    [JACS_STMT3_LOG_FORMAT] = stmt3_log_format,
-    [JACS_STMT4_FORMAT] = stmt4_format,
-    [JACS_STMT2_SETUP_BUFFER] = stmt2_setup_buffer,
-    [JACS_STMT2_MEMCPY] = stmt2_memcpy,
-    [JACS_STMT3_CALL] = stmt3_call,
-    [JACS_STMT4_CALL_BG] = stmt4_call_bg,
-    [JACS_STMT1_RETURN] = stmt1_return,
-    [JACS_STMTx_JMP] = stmtx_jmp,
-    [JACS_STMTx1_JMP_Z] = stmtx1_jmp_z,
-    [JACS_STMT1_PANIC] = stmt1_panic,
-    [JACS_STMTx1_STORE_LOCAL] = stmtx1_store_local,
-    [JACS_STMTx1_STORE_GLOBAL] = stmtx1_store_global,
-    [JACS_STMT4_STORE_BUFFER] = stmt4_store_buffer,
-    [JACS_STMTx1_STORE_PARAM] = stmtx1_store_param,
-    [JACS_STMT1_TERMINATE_FIBER] = stmt1_terminate_fiber,
-    [JACS_STMT_PAST_LAST] = stmt_invalid,
-};
+    JACS_STMT_HANDLERS};
 
 void jacs_vm_check_stmt() {
     for (unsigned i = 0; i <= JACS_STMT_PAST_LAST; i++) {

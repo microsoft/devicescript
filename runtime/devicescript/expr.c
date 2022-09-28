@@ -403,64 +403,7 @@ static value_t expr1_get_fiber_handle(jacs_activation_t *frame, jacs_ctx_t *ctx)
 }
 
 static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_PAST_LAST + 1] = {
-    [0] = expr_invalid,
-    [JACS_EXPRx_LOAD_LOCAL] = exprx_load_local,
-    [JACS_EXPRx_LOAD_GLOBAL] = exprx_load_global,
-    [JACS_EXPR3_LOAD_BUFFER] = expr3_load_buffer,
-    [JACS_EXPRx_LOAD_PARAM] = exprx_load_param,
-
-    [JACS_EXPRx_LITERAL] = exprx_literal,
-    [JACS_EXPRx_LITERAL_F64] = exprx_literal_f64,
-
-    [JACS_EXPR0_RET_VAL] = expr0_ret_val,
-
-    [JACS_EXPR1_ROLE_IS_CONNECTED] = expr1_role_is_connected,
-    [JACS_EXPR0_PKT_SIZE] = expr0_pkt_size,
-    [JACS_EXPR0_PKT_EV_CODE] = expr0_pkt_ev_code,
-    [JACS_EXPR0_PKT_REG_GET_CODE] = expr0_pkt_reg_get_code,
-    [JACS_EXPR0_PKT_COMMAND_CODE] = expr0_pkt_command_code,
-    [JACS_EXPR0_PKT_REPORT_CODE] = expr0_pkt_report_code,
-    [JACS_EXPR2_STR0EQ] = expr2_str0eq,
-
-    // math
-    [JACS_EXPR0_NAN] = expr0_nan,
-    [JACS_EXPR1_ABS] = expr1_abs,
-    [JACS_EXPR1_BIT_NOT] = expr1_bit_not,
-    [JACS_EXPR1_CEIL] = expr1_ceil,
-    [JACS_EXPR1_FLOOR] = expr1_floor,
-    [JACS_EXPR1_ID] = expr1_id,
-    [JACS_EXPR1_IS_NAN] = expr1_is_nan,
-    [JACS_EXPR1_LOG_E] = expr1_log_e,
-    [JACS_EXPR1_NEG] = expr1_neg,
-    [JACS_EXPR1_NOT] = expr1_not,
-    [JACS_EXPR1_RANDOM] = expr1_random,
-    [JACS_EXPR1_RANDOM_INT] = expr1_random_int,
-    [JACS_EXPR1_ROUND] = expr1_round,
-    [JACS_EXPR1_TO_BOOL] = expr1_to_bool,
-    [JACS_EXPR2_ADD] = expr2_add,
-    [JACS_EXPR2_BIT_AND] = expr2_bit_and,
-    [JACS_EXPR2_BIT_OR] = expr2_bit_or,
-    [JACS_EXPR2_BIT_XOR] = expr2_bit_xor,
-    [JACS_EXPR2_DIV] = expr2_div,
-    [JACS_EXPR2_EQ] = expr2_eq,
-    [JACS_EXPR2_IDIV] = expr2_idiv,
-    [JACS_EXPR2_IMUL] = expr2_imul,
-    [JACS_EXPR2_LE] = expr2_le,
-    [JACS_EXPR2_LT] = expr2_lt,
-    [JACS_EXPR2_MAX] = expr2_max,
-    [JACS_EXPR2_MIN] = expr2_min,
-    [JACS_EXPR2_MUL] = expr2_mul,
-    [JACS_EXPR2_NE] = expr2_ne,
-    [JACS_EXPR2_POW] = expr2_pow,
-    [JACS_EXPR2_SHIFT_LEFT] = expr2_shift_left,
-    [JACS_EXPR2_SHIFT_RIGHT] = expr2_shift_right,
-    [JACS_EXPR2_SHIFT_RIGHT_UNSIGNED] = expr2_shift_right_unsigned,
-    [JACS_EXPR2_SUB] = expr2_sub,
-    [JACS_EXPR0_NOW_MS] = expr0_now_ms,
-    [JACS_EXPR1_GET_FIBER_HANDLE] = expr1_get_fiber_handle,
-
-    [JACS_EXPR_PAST_LAST] = expr_invalid,
-};
+    JACS_EXPR_HANDLERS};
 
 void jacs_vm_check_expr() {
     for (unsigned i = 0; i <= JACS_EXPR_PAST_LAST; ++i) {
