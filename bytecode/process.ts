@@ -276,13 +276,16 @@ function genJmpTables(spec: Spec) {
     for (const obj of sortByCode(spec.expr)) {
         r += `expr${sig(obj)}_${obj.name}, \\\n`
     }
-    r += "expr_invalid\n\n"
+    r += "expr_invalid\n"
+    r += "#define JACS_EXPR_PROPS " + spec.exprProps + "\n\n"
 
     r += "#define JACS_STMT_HANDLERS stmt_invalid, \\\n"
     for (const obj of sortByCode(spec.stmt)) {
         r += `stmt${sig(obj)}_${obj.name}, \\\n`
     }
-    r += "stmt_invalid\n\n"
+    r += "stmt_invalid\n"
+    r += "#define JACS_STMT_PROPS " + spec.stmtProps + "\n\n"
+
 
     return r
 }
