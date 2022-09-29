@@ -6,12 +6,12 @@ export enum OpStmt {
     STMT1_SLEEP_MS = 3,
     STMT3_QUERY_REG = 4, // role, code, timeout
     STMT2_SEND_CMD = 5, // role, code
-    STMT4_QUERY_IDX_REG = 6, // role, code, string_idx, timeout
-    STMT3_LOG_FORMAT = 7, // string_idx, local_idx, numargs
-    STMT4_FORMAT = 8, // string_idx, local_idx, numargs, offset
-    STMT2_SETUP_BUFFER = 9, // size, buffer_idx
-    STMT2_MEMCPY = 10, // string_idx, offset
-    STMT5_BLIT = 22, // buffer_idx, dst_offset, string_idx, src_offset, length
+    STMT4_QUERY_IDX_REG = 6, // role, code, string, timeout
+    STMT3_LOG_FORMAT = 7, // string, local_idx, numargs
+    STMT4_FORMAT = 8, // string, local_idx, numargs, offset
+    STMT1_SETUP_PKT_BUFFER = 9, // size
+    STMT2_SET_PKT = 10, // buffer, offset
+    STMT5_BLIT = 22, // dst, dst_offset, src, src_offset, length
     STMT3_CALL = 11, // func_idx, local_idx, numargs
     STMT4_CALL_BG = 12, // func_idx, local_idx, numargs, opcall
     STMT1_RETURN = 13, // value
@@ -20,33 +20,52 @@ export enum OpStmt {
     STMT1_PANIC = 16, // error_code
     STMTx1_STORE_LOCAL = 17, // local_idx := value
     STMTx1_STORE_GLOBAL = 18, // global_idx := value
-    STMT4_STORE_BUFFER = 19, // numfmt, offset, buffer_idx, value
+    STMT4_STORE_BUFFER = 19, // buffer, numfmt, offset, value
     STMTx1_STORE_PARAM = 20, // param_idx := value
     STMT1_TERMINATE_FIBER = 21, // fiber_handle
-    STMT_PAST_LAST = 23,
+    STMT0_ALLOC_MAP = 23,
+    STMT1_ALLOC_ARRAY = 24, // initial_size
+    STMT1_ALLOC_BUFFER = 25, // size
+    STMTx2_SET_FIELD = 26, // object.field_idx := value
+    STMT3_ARRAY_SET = 27, // array[index] := value
+    STMT3_ARRAY_INSERT = 28, // array, index, count
+    STMT_PAST_LAST = 29,
 }
 
 export const STMT_PROPS =
-    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x02\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01\x05"
+    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x01\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01\x05\x00\x01\x01\x23\x03\x03"
 
 export enum OpExpr {
     EXPRx_LOAD_LOCAL = 1, // *local_idx
     EXPRx_LOAD_GLOBAL = 2, // *global_idx
     EXPRx_LOAD_PARAM = 45, // *param_idx
+    EXPRx_STATIC_ROLE = 50, // *role_idx
+    EXPRx_STATIC_BUFFER = 51, // *string_idx
     EXPRx_LITERAL = 4, // *value
     EXPRx_LITERAL_F64 = 5, // *f64_idx
-    EXPR3_LOAD_BUFFER = 3, // numfmt, offset, buffer_idx
-    EXPR2_STR0EQ = 7, // string_idx, offset
+    EXPR3_LOAD_BUFFER = 3, // buffer, numfmt, offset
+    EXPR2_STR0EQ = 7, // buffer, offset
     EXPR1_ROLE_IS_CONNECTED = 8, // role
     EXPR1_GET_FIBER_HANDLE = 47, // func_idx
     EXPR0_RET_VAL = 6,
+    EXPR0_NOW_MS = 46,
+    EXPRx1_GET_FIELD = 52, // object.field_idx
+    EXPR2_INDEX = 53, // object[idx]
+    EXPR1_OBJECT_LENGTH = 54, // object
+    EXPR1_KEYS_LENGTH = 55, // object
+    EXPR1_TYPEOF = 56, // object
+    EXPR0_NULL = 57,
+    EXPR1_IS_NULL = 58,
     EXPR0_PKT_SIZE = 9,
     EXPR0_PKT_EV_CODE = 10,
     EXPR0_PKT_REG_GET_CODE = 11,
     EXPR0_PKT_REPORT_CODE = 48,
     EXPR0_PKT_COMMAND_CODE = 49,
+    EXPR0_PKT_BUFFER = 59,
+    EXPR0_TRUE = 60,
+    EXPR0_FALSE = 61,
+    EXPR1_TO_BOOL = 25, // !!x
     EXPR0_NAN = 12,
-    EXPR0_NOW_MS = 46,
     EXPR1_ABS = 13,
     EXPR1_BIT_NOT = 14, // ~x
     EXPR1_CEIL = 15,
@@ -59,7 +78,6 @@ export enum OpExpr {
     EXPR1_RANDOM = 22,
     EXPR1_RANDOM_INT = 23,
     EXPR1_ROUND = 24,
-    EXPR1_TO_BOOL = 25, // !!x
     EXPR2_ADD = 26, // x + y
     EXPR2_BIT_AND = 27, // x & y
     EXPR2_BIT_OR = 28, // x | y
@@ -79,22 +97,21 @@ export enum OpExpr {
     EXPR2_SHIFT_RIGHT = 42, // x >> y
     EXPR2_SHIFT_RIGHT_UNSIGNED = 43, // x >>> y
     EXPR2_SUB = 44, // x - y
-    EXPR_PAST_LAST = 50,
+    EXPR_PAST_LAST = 62,
 }
 
 export const EXPR_PROPS =
-    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21\x00\x01\x00\x00"
+    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40"
 
 export enum BinFmt {
-    IMG_VERSION = 0x00020001,
+    IMG_VERSION = 0x00030001,
     MAGIC0 = 0x5363614a, // "JacS"
     MAGIC1 = 0x9a6a7e0a,
-    NUM_IMG_SECTIONS = 7,
+    NUM_IMG_SECTIONS = 6,
     FIX_HEADER_SIZE = 64,
     SECTION_HEADER_SIZE = 8,
     FUNCTION_HEADER_SIZE = 16,
     ROLE_HEADER_SIZE = 8,
-    BUFFER_HEADER_SIZE = 8,
     BINARY_SIZE_ALIGN = 32,
     MAX_EXPR_DEPTH = 10,
 }
@@ -127,16 +144,27 @@ export enum NumFmt {
     F64 = 0b1011,
 }
 
+export enum ObjectType {
+    NULL = 0,
+    NUMBER = 1,
+    MAP = 2,
+    ARRAY = 3,
+    BUFFER = 4,
+    ROLE = 5,
+    BOOLEAN = 6,
+    FIBER = 7,
+}
+
 export const EXPR_PRINT_FMTS = [
     null,
     "%L",
     "%G",
-    "load_buffer(%n, offset=%e, buffer_idx=%e)",
+    "load_buffer(%e, %n, offset=%e)",
     "%e",
     "%D",
     "ret_val()",
-    "str0eq(%S, offset=%e)",
-    "role_is_connected(%R)",
+    "str0eq(%e, offset=%e)",
+    "role_is_connected(%e)",
     "pkt_size()",
     "pkt_ev_code()",
     "pkt_reg_get_code()",
@@ -178,19 +206,31 @@ export const EXPR_PRINT_FMTS = [
     "get_fiber_handle(%F)",
     "pkt_report_code()",
     "pkt_command_code()",
+    "%R",
+    "%S",
+    "%e.%e",
+    "%e[%e]",
+    "object_length(%e)",
+    "keys_length(%e)",
+    "typeof(%e)",
+    "null()",
+    "is_null(%e)",
+    "pkt_buffer()",
+    "true()",
+    "false()",
 ]
 export const STMT_PRINT_FMTS = [
     null,
-    "WAIT_ROLE %R",
+    "WAIT_ROLE %e",
     "SLEEP_S %e",
     "SLEEP_MS %e",
-    "QUERY_REG %R code=%e timeout=%e",
-    "SEND_CMD %R code=%e",
-    "QUERY_IDX_REG %R code=%e %S timeout=%e",
-    "LOG_FORMAT %S %L numargs=%e",
-    "FORMAT %S %L numargs=%e offset=%e",
-    "SETUP_BUFFER size=%e buffer_idx=%e",
-    "MEMCPY %S offset=%e",
+    "QUERY_REG %e code=%e timeout=%e",
+    "SEND_CMD %e code=%e",
+    "QUERY_IDX_REG %e code=%e string=%e timeout=%e",
+    "LOG_FORMAT string=%e %L numargs=%e",
+    "FORMAT string=%e %L numargs=%e offset=%e",
+    "SETUP_PKT_BUFFER size=%e",
+    "SET_PKT %e offset=%e",
     "CALL %F %L numargs=%e",
     "CALL_BG %F %L numargs=%e %o",
     "RETURN %e",
@@ -199,8 +239,14 @@ export const STMT_PRINT_FMTS = [
     "PANIC error_code=%e",
     "%L := %e",
     "%G := %e",
-    "STORE_BUFFER %n offset=%e buffer_idx=%e %e",
+    "STORE_BUFFER %e %n offset=%e %e",
     "%P := %e",
     "TERMINATE_FIBER fiber_handle=%e",
-    "BLIT buffer_idx=%e dst_offset=%e %S src_offset=%e length=%e",
+    "BLIT dst=%e dst_offset=%e src=%e src_offset=%e length=%e",
+    "ALLOC_MAP ",
+    "ALLOC_ARRAY initial_size=%e",
+    "ALLOC_BUFFER size=%e",
+    "%e.%e := %e",
+    "%e[%e] := %e",
+    "ARRAY_INSERT array=%e index=%e count=%e",
 ]

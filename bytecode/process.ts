@@ -36,12 +36,15 @@ function processSpec(filecontent: string): Spec {
         x: "e",
         y: "e",
         value: "e",
+        object: "e",
+        buffer: "e",
+        role: "e",
 
         numfmt: "n",
         opcall: "o",
         jmpoffset: "j",
 
-        role: "R",
+        role_idx: "R",
         string_idx: "S",
         local_idx: "L",
         func_idx: "F",
@@ -88,7 +91,7 @@ function processSpec(filecontent: string): Spec {
                 const idx = args.indexOf(f)
                 if (idx >= 0) {
                     args[idx] = null
-                    return argCode(f)
+                    return bareArgCode(f)
                 }
                 return f
             })
@@ -104,6 +107,11 @@ function processSpec(filecontent: string): Spec {
         } else {
             obj.printFmt =
                 obj.name.toUpperCase() + " " + obj.args.map(argCode).join(" ")
+        }
+
+        function bareArgCode(a: string) {
+            if (argCodes[a]) return "%" + argCodes[a]
+            return `%e`
         }
 
         function argCode(a: string) {
@@ -153,6 +161,8 @@ function processSpec(filecontent: string): Spec {
                 finish()
                 currObj = null
                 const [, hd, cont] = m
+                if (hd.length >= 3) // sub-headers
+                    return
                 switch (cont) {
                     case "Statements":
                         currColl = res.stmt
@@ -166,7 +176,11 @@ function processSpec(filecontent: string): Spec {
                     default:
                         m = /Enum: (\w+)/.exec(cont)
                         if (m) currColl = res.enums[m[1]] = []
-                        else error("bad header")
+                        else {
+                            if (currColl == null)
+                                return // initial sections
+                            error("bad header")
+                        }
                 }
             }
 
@@ -347,7 +361,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
 
     function startEnum(name: string) {
         r += "\n"
-        if (isTS) r += `export enum ${name} {\n`
+        if (isTS) r += `export enum ${name.replace(/_/g, "")} {\n`
     }
     function endEnum() {
         if (isTS) r += `}\n`

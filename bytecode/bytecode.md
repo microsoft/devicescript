@@ -1,5 +1,11 @@
 # JacScript bytecode spec
 
+## TODO
+
+* strings vs buffers
+* null vs undefined
+* slices vs dest offsets
+
 ## Statements
 
     wait_role(role) = 1
@@ -18,21 +24,23 @@ Wait given number of milliseconds.
 
     send_cmd(role, code) = 5
 
-    query_idx_reg(role, code, string_idx, timeout) = 6
+    query_idx_reg(role, code, string, timeout) = 6
 
-    log_format(string_idx, local_idx, numargs) = 7
+    log_format(string, local_idx, numargs) = 7
 
-    format(string_idx, local_idx, numargs, offset) = 8
+    format(string, local_idx, numargs, offset) = 8
 
-    setup_buffer(size, buffer_idx) = 9
+    setup_pkt_buffer(size) = 9
 
-    memcpy(string_idx, offset) = 10
+    set_pkt(buffer, offset) = 10
 
 Copy given string to packet buffer at given `offset`.
+Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
 
-    blit(buffer_idx, dst_offset, string_idx, src_offset, length) = 22
+    blit(dst, dst_offset, src, src_offset, length) = 22
 
-Copy bytes `string_idx[src_offset .. src_offset + length]` to `buffer_idx[dst_offset .. ]`
+Copy bytes `src[src_offset .. src_offset + length]` to `dst[dst_offset .. ]`.
+Both `src` and `dst` are buffers.
 
     call(func_idx, local_idx, numargs) = 11
 
@@ -56,13 +64,29 @@ Jump if condition is false.
 
     store_global(*global_idx, value) = 18    // global_idx := value
 
-    store_buffer(numfmt, offset, buffer_idx, value) = 19
+    store_buffer(buffer, numfmt, offset, value) = 19
 
     store_param(*param_idx, value) = 20      // param_idx := value
 
     terminate_fiber(fiber_handle) = 21
 
 Returns nan (fiber doesn't exists) or 0 (terminated).
+
+### Object handling
+
+    alloc_map() = 23
+
+    alloc_array(initial_size) = 24
+
+    alloc_buffer(size) = 25
+
+    set_field(*field_idx, object, value) = 26   // object.field_idx := value
+
+    array_set(array, index, value) = 27         // array[index] := value
+
+    array_insert(array, index, count) = 28
+
+Inserts `count` values (`undefined`) at `index`. If `count` is negative, removes values.
 
 ## Expressions
 
@@ -72,13 +96,17 @@ Returns nan (fiber doesn't exists) or 0 (terminated).
 
     load_param(*param_idx) = 45
 
+    fun static_role(*role_idx) = 50
+
+    fun static_buffer(*string_idx) = 51
+
     fun literal(*value) = 4
 
     fun literal_f64(*f64_idx) = 5
 
-    load_buffer(numfmt, offset, buffer_idx) = 3
+    load_buffer(buffer, numfmt, offset) = 3
 
-    str0eq(string_idx, offset) = 7
+    str0eq(buffer, offset) = 7
 
     role_is_connected(role) = 8
 
@@ -91,6 +119,40 @@ Otherwise, returns a handle or `nan` if fiber with given function at the bottom 
 
 Return value of query register, call, etc.
 
+    now_ms = 46
+
+Time since device restart in ms; time only advances when sleeping.
+
+### Object handling
+
+    get_field(*field_idx, object) = 52   // object.field_idx
+
+    index(object, idx) = 53              // object[idx]
+
+Works on arrays and buffers.
+
+    object_length(object) = 54
+
+Number of entries array or buffer, that can be accessed with `index()`; `0` otherwise.
+
+    keys_length(object) = 55
+
+Number of keys (properties) attached to an object (directly in map or hanging off array/buffer/...).
+
+    fun typeof(object) = 56
+
+Returns `Object_Type` enum.
+
+    fun null() = 57
+
+Returns `null` value.
+
+    fun is_null(x) = 58
+
+Check if object is exactly `null`.
+
+### Current packet accessors
+
     pkt_size = 9
 
     pkt_ev_code = 10
@@ -101,11 +163,21 @@ Return value of query register, call, etc.
 
     pkt_command_code = 49
 
+    fun pkt_buffer() = 59
+
+Return reference to "buffer" with the packet data.
+
+### Booleans
+
+    fun true() = 60
+
+    fun false() = 61
+
+    fun to_bool(x) = 25   // !!x
+
+### Math operations
+
     fun nan = 12
-
-    now_ms = 46
-
-Time since device restart in ms; time only advances when sleeping.
 
     fun abs(x) = 13
 
@@ -134,8 +206,6 @@ Returns value between 0 and `x`.
 Returns an int between 0 and `x` inclusive.
 
     fun round(x) = 24
-
-    fun to_bool(x) = 25   // !!x
 
     fun add(x, y) = 26     // x + y
 
@@ -177,15 +247,14 @@ Returns an int between 0 and `x` inclusive.
 
 ## Format Constants
 
-    img_version = 0x00020001
+    img_version = 0x00030001
     magic0 = 0x5363614a // "JacS"
     magic1 = 0x9a6a7e0a
-    num_img_sections = 7
+    num_img_sections = 6
     fix_header_size = 64
     section_header_size = 8
     function_header_size = 16
     role_header_size = 8
-    buffer_header_size = 8
     binary_size_align = 32
     max_expr_depth = 10
 
@@ -231,3 +300,27 @@ Format is `["u", "i", "f", "reserved"](fmt >> 2)`
     F16 = 0b1001 // not supported
     F32 = 0b1010
     F64 = 0b1011
+
+## Enum: Object_Type
+
+    null = 0
+
+Only the `null` value.
+
+    number = 1
+
+Integers, doubles, infinity, nan.
+
+    map = 2
+
+    array = 3
+
+    buffer = 4
+
+    role = 5
+
+    boolean = 6
+
+    fiber = 7
+
+Only `true` and `false` values.
