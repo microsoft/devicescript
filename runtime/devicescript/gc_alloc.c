@@ -3,10 +3,6 @@
 
 #include "jacs_internal.h"
 
-STATIC_ASSERT(sizeof(jacs_array_t) == sizeof(jacs_map_t));
-
-extern jacs_ctx_t *_jacs_ctx;
-
 #define ROOT_SCAN_DEPTH 10
 
 #define GET_TAG(p) ((p) >> JACS_GC_TAG_POS)
@@ -30,6 +26,7 @@ typedef struct _jacs_gc_block_t {
         free_jacs_gc_block_t free;
         jacs_gc_object_t gc;
         jacs_array_t array;
+        jacs_buffer_t buffer;
         jacs_map_t map;
     };
 } block_t;
@@ -82,6 +79,12 @@ static void scan_array(jacs_ctx_t *ctx, value_t *vals, unsigned length, int dept
     }
 }
 
+static void scan_map(jacs_ctx_t *ctx, jacs_map_t *map, int depth) {
+    if (!map)
+        return;
+    scan_array(ctx, map->data, map->length, depth - 1);
+}
+
 static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
     uintptr_t header = block->header;
 
@@ -100,9 +103,13 @@ static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
 
     switch (BASIC_TAG(header)) {
     case JACS_GC_TAG_BUFFER:
+        scan_map(ctx, block->buffer.attached, depth);
+        break;
+    case JACS_GC_TAG_MAP:
+        scan_map(ctx, &block->map, depth);
         break;
     case JACS_GC_TAG_ARRAY:
-    case JACS_GC_TAG_MAP:
+        scan_map(ctx, block->array.attached, depth);
         scan_array(ctx, block->array.data, block->array.length, depth);
         break;
     default:

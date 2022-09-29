@@ -10,7 +10,6 @@ typedef struct {
 } jacs_gc_object_t;
 
 typedef struct {
-    // same layout as jacs_array_t
     jacs_gc_object_t gc;
     jacs_small_size_t length;
     jacs_small_size_t capacity;
@@ -20,7 +19,8 @@ typedef struct {
 typedef struct {
     jacs_gc_object_t gc;
     jacs_small_size_t length;
-    uint8_t *data;
+    jacs_map_t *attached; // make sure data[] is aligned - put pointer last
+    uint8_t data[0];
 } jacs_buffer_t;
 
 static inline jacs_key_id_t *jacs_map_keys(jacs_map_t *m) {
@@ -28,8 +28,8 @@ static inline jacs_key_id_t *jacs_map_keys(jacs_map_t *m) {
 }
 
 typedef struct {
-    // same layout as jacs_map_t
     jacs_gc_object_t gc;
+    jacs_map_t *attached;
     jacs_small_size_t length;
     jacs_small_size_t capacity;
     value_t *data;
