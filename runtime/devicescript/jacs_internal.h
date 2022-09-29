@@ -197,3 +197,5 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
 void *jacs_try_alloc(jacs_ctx_t *ctx, uint32_t size);
 void jacs_free(jacs_ctx_t *ctx, void *ptr);
 void jacs_oom(jacs_ctx_t *ctx, unsigned size);
+
+#define TODO() JD_ASSERT(0)

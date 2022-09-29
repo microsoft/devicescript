@@ -158,6 +158,10 @@
         exprx_static_buffer, exprx1_get_field, expr2_index, expr1_object_length,                   \
         expr1_keys_length, expr1_typeof, expr0_null, expr1_is_null, expr0_pkt_buffer, expr0_true,  \
         expr0_false, expr_invalid
+#define JACS_EXPR_PROPS                                                                            \
+    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01" \
+    "\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21" \
+    "\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40"
 
 #define JACS_STMT_HANDLERS                                                                         \
     stmt_invalid, stmt1_wait_role, stmt1_sleep_s, stmt1_sleep_ms, stmt3_query_reg, stmt2_send_cmd, \
@@ -166,3 +170,6 @@
         stmt1_panic, stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer,                  \
         stmtx1_store_param, stmt1_terminate_fiber, stmt5_blit, stmt0_alloc_map, stmt1_alloc_array, \
         stmt1_alloc_buffer, stmtx2_set_field, stmt3_array_set, stmt3_array_insert, stmt_invalid
+#define JACS_STMT_PROPS                                                                            \
+    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x01\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01\x05" \
+    "\x00\x01\x01\x23\x03\x03"

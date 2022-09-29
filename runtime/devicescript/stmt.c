@@ -1,8 +1,6 @@
 #include "jacs_internal.h"
 #include "jacs_vm_internal.h"
 
-#define TODO() JD_ASSERT(0)
-
 typedef void (*jacs_vm_stmt_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
 
 bool jacs_vm_args_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numargs) {

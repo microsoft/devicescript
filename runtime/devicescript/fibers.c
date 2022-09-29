@@ -165,6 +165,7 @@ jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, 
 
     log_fiber_op(fiber, "start");
 
+    TODO(); // need to copy params before passing
     jacs_fiber_call_function(fiber, fidx, params, numargs);
 
     fiber->next = ctx->fibers;
