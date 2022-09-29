@@ -7,7 +7,6 @@ STATIC_ASSERT(sizeof(jacs_img_header_t) ==
               JACS_FIX_HEADER_SIZE + JACS_SECTION_HEADER_SIZE * JACS_NUM_IMG_SECTIONS);
 STATIC_ASSERT(sizeof(jacs_function_desc_t) == JACS_FUNCTION_HEADER_SIZE);
 STATIC_ASSERT(sizeof(jacs_role_desc_t) == JACS_ROLE_HEADER_SIZE);
-STATIC_ASSERT(sizeof(jacs_buffer_desc_t) == JACS_BUFFER_HEADER_SIZE);
 
 static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     ctx->img.data = img;
@@ -16,23 +15,6 @@ static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
 
     ctx->globals = jacs_try_alloc(ctx, sizeof(value_t) * ctx->img.header->num_globals);
     ctx->roles = jacs_try_alloc(ctx, sizeof(jd_role_t *) * jacs_img_num_roles(&ctx->img));
-
-    uint32_t num_buffers = jacs_img_num_buffers(&ctx->img);
-    if (num_buffers > 1) {
-        uint32_t buffer_words = num_buffers - 1;
-        for (unsigned i = 1; i < num_buffers; ++i) {
-            buffer_words += (jacs_img_get_buffer(&ctx->img, i)->size + 3) >> 2;
-        }
-        ctx->buffers = jacs_try_alloc(ctx, sizeof(uint32_t) * buffer_words);
-        if (!ctx->buffers)
-            return;
-        buffer_words = num_buffers - 1;
-        uint32_t *bufptr = ctx->buffers;
-        for (unsigned i = 1; i < num_buffers; ++i) {
-            *bufptr++ = buffer_words;
-            buffer_words += (jacs_img_get_buffer(&ctx->img, i)->size + 3) >> 2;
-        }
-    }
 
     if (ctx->error_code)
         return;
@@ -131,7 +113,6 @@ static void clear_ctx(jacs_ctx_t *ctx) {
     jacs_fiber_free_all_fibers(ctx);
     jacs_free(ctx, ctx->globals);
     jacs_free(ctx, ctx->roles);
-    jacs_free(ctx, ctx->buffers);
     jacs_gc_destroy(ctx->gc);
     memset(ctx, 0, sizeof(*ctx));
 }

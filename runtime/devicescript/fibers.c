@@ -243,7 +243,7 @@ value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
     if (code < 100)
         code = 100;
     jacs_panic(ctx, 60000 + code);
-    return jacs_nan;
+    return jacs_undefined;
 }
 
 void jacs_fiber_sync_now(jacs_ctx_t *ctx) {

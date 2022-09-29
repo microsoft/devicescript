@@ -50,6 +50,6 @@ void jacs_map_set(jacs_ctx_t *ctx, jacs_map_t *map, jacs_key_id_t key, value_t v
 value_t jacs_map_get(jacs_ctx_t *ctx, jacs_map_t *map, jacs_key_id_t key) {
     value_t *tmp = lookup(map, key);
     if (tmp == NULL)
-        return jacs_nan;
+        return jacs_undefined;
     return *tmp;
 }

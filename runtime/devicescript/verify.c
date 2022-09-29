@@ -98,19 +98,5 @@ int jacs_verify(const uint8_t *imgdata, uint32_t size) {
         CHECK(1042, fptr->name_idx < jacs_img_num_strings(img));
     }
 
-    for (const jacs_buffer_desc_t *fptr = FIRST_DESC(buffers); //
-         (void *)fptr < LAST_DESC(buffers);                    //
-         fptr++) {
-        SET_OFF(fptr);
-        CHECK(1045, fptr->type == 0);
-        CHECK(1046, fptr->reserved == 0);
-        if (fptr == FIRST_DESC(buffers)) {
-            CHECK(1049, fptr->size == JD_SERIAL_PAYLOAD_SIZE); // buffer #0 is current packet
-        } else {
-            CHECK(1047, fptr->size > 0);
-            CHECK(1048, fptr->size <= 1024);
-        }
-    }
-
     return 0;
 }

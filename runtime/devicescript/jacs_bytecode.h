@@ -6,12 +6,12 @@
 #define JACS_STMT1_SLEEP_MS 3
 #define JACS_STMT3_QUERY_REG 4        // role, code, timeout
 #define JACS_STMT2_SEND_CMD 5         // role, code
-#define JACS_STMT4_QUERY_IDX_REG 6    // role, code, string_idx, timeout
-#define JACS_STMT3_LOG_FORMAT 7       // string_idx, local_idx, numargs
-#define JACS_STMT4_FORMAT 8           // string_idx, local_idx, numargs, offset
-#define JACS_STMT2_SETUP_BUFFER 9     // size, buffer_idx
-#define JACS_STMT2_MEMCPY 10          // string_idx, offset
-#define JACS_STMT5_BLIT 22            // buffer_idx, dst_offset, string_idx, src_offset, length
+#define JACS_STMT4_QUERY_IDX_REG 6    // role, code, string, timeout
+#define JACS_STMT3_LOG_FORMAT 7       // string, local_idx, numargs
+#define JACS_STMT4_FORMAT 8           // string, local_idx, numargs, offset
+#define JACS_STMT1_SETUP_PKT_BUFFER 9 // size
+#define JACS_STMT2_SET_PKT 10         // buffer, offset
+#define JACS_STMT5_BLIT 22            // dst, dst_offset, src, src_offset, length
 #define JACS_STMT3_CALL 11            // func_idx, local_idx, numargs
 #define JACS_STMT4_CALL_BG 12         // func_idx, local_idx, numargs, opcall
 #define JACS_STMT1_RETURN 13          // value
@@ -20,31 +20,51 @@
 #define JACS_STMT1_PANIC 16           // error_code
 #define JACS_STMTx1_STORE_LOCAL 17    // local_idx := value
 #define JACS_STMTx1_STORE_GLOBAL 18   // global_idx := value
-#define JACS_STMT4_STORE_BUFFER 19    // numfmt, offset, buffer_idx, value
+#define JACS_STMT4_STORE_BUFFER 19    // buffer, numfmt, offset, value
 #define JACS_STMTx1_STORE_PARAM 20    // param_idx := value
 #define JACS_STMT1_TERMINATE_FIBER 21 // fiber_handle
-#define JACS_STMT_PAST_LAST 23
+#define JACS_STMT0_ALLOC_MAP 23
+#define JACS_STMT1_ALLOC_ARRAY 24  // initial_size
+#define JACS_STMT1_ALLOC_BUFFER 25 // size
+#define JACS_STMTx2_SET_FIELD 26   // object.field_idx := value
+#define JACS_STMT3_ARRAY_SET 27    // array[index] := value
+#define JACS_STMT3_ARRAY_INSERT 28 // array, index, count
+#define JACS_STMT_PAST_LAST 29
 
 #define JACS_STMT_PROPS                                                                            \
-    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x02\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01\x05"
+    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x01\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01\x05" \
+    "\x00\x01\x01\x23\x03\x03"
 
 #define JACS_EXPRx_LOAD_LOCAL 1        // *local_idx
 #define JACS_EXPRx_LOAD_GLOBAL 2       // *global_idx
 #define JACS_EXPRx_LOAD_PARAM 45       // *param_idx
+#define JACS_EXPRx_STATIC_ROLE 50      // *role_idx
+#define JACS_EXPRx_STATIC_BUFFER 51    // *string_idx
 #define JACS_EXPRx_LITERAL 4           // *value
 #define JACS_EXPRx_LITERAL_F64 5       // *f64_idx
-#define JACS_EXPR3_LOAD_BUFFER 3       // numfmt, offset, buffer_idx
-#define JACS_EXPR2_STR0EQ 7            // string_idx, offset
+#define JACS_EXPR3_LOAD_BUFFER 3       // buffer, numfmt, offset
+#define JACS_EXPR2_STR0EQ 7            // buffer, offset
 #define JACS_EXPR1_ROLE_IS_CONNECTED 8 // role
 #define JACS_EXPR1_GET_FIBER_HANDLE 47 // func_idx
 #define JACS_EXPR0_RET_VAL 6
+#define JACS_EXPR0_NOW_MS 46
+#define JACS_EXPRx1_GET_FIELD 52    // object.field_idx
+#define JACS_EXPR2_INDEX 53         // object[idx]
+#define JACS_EXPR1_OBJECT_LENGTH 54 // object
+#define JACS_EXPR1_KEYS_LENGTH 55   // object
+#define JACS_EXPR1_TYPEOF 56        // object
+#define JACS_EXPR0_NULL 57
+#define JACS_EXPR1_IS_NULL 58
 #define JACS_EXPR0_PKT_SIZE 9
 #define JACS_EXPR0_PKT_EV_CODE 10
 #define JACS_EXPR0_PKT_REG_GET_CODE 11
 #define JACS_EXPR0_PKT_REPORT_CODE 48
 #define JACS_EXPR0_PKT_COMMAND_CODE 49
+#define JACS_EXPR0_PKT_BUFFER 59
+#define JACS_EXPR0_TRUE 60
+#define JACS_EXPR0_FALSE 61
+#define JACS_EXPR1_TO_BOOL 25 // !!x
 #define JACS_EXPR0_NAN 12
-#define JACS_EXPR0_NOW_MS 46
 #define JACS_EXPR1_ABS 13
 #define JACS_EXPR1_BIT_NOT 14 // ~x
 #define JACS_EXPR1_CEIL 15
@@ -57,7 +77,6 @@
 #define JACS_EXPR1_RANDOM 22
 #define JACS_EXPR1_RANDOM_INT 23
 #define JACS_EXPR1_ROUND 24
-#define JACS_EXPR1_TO_BOOL 25 // !!x
 #define JACS_EXPR2_ADD 26     // x + y
 #define JACS_EXPR2_BIT_AND 27 // x & y
 #define JACS_EXPR2_BIT_OR 28  // x | y
@@ -77,22 +96,21 @@
 #define JACS_EXPR2_SHIFT_RIGHT 42          // x >> y
 #define JACS_EXPR2_SHIFT_RIGHT_UNSIGNED 43 // x >>> y
 #define JACS_EXPR2_SUB 44                  // x - y
-#define JACS_EXPR_PAST_LAST 50
+#define JACS_EXPR_PAST_LAST 62
 
 #define JACS_EXPR_PROPS                                                                            \
     "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01" \
     "\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21" \
-    "\x00\x01\x00\x00"
+    "\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40"
 
-#define JACS_IMG_VERSION 0x00020001
+#define JACS_IMG_VERSION 0x00030001
 #define JACS_MAGIC0 0x5363614a // "JacS"
 #define JACS_MAGIC1 0x9a6a7e0a
-#define JACS_NUM_IMG_SECTIONS 7
+#define JACS_NUM_IMG_SECTIONS 6
 #define JACS_FIX_HEADER_SIZE 64
 #define JACS_SECTION_HEADER_SIZE 8
 #define JACS_FUNCTION_HEADER_SIZE 16
 #define JACS_ROLE_HEADER_SIZE 8
-#define JACS_BUFFER_HEADER_SIZE 8
 #define JACS_BINARY_SIZE_ALIGN 32
 #define JACS_MAX_EXPR_DEPTH 10
 
@@ -118,6 +136,15 @@
 #define JACS_NUMFMT_F32 0b1010
 #define JACS_NUMFMT_F64 0b1011
 
+#define JACS_OBJECT_TYPE_NULL 0
+#define JACS_OBJECT_TYPE_NUMBER 1
+#define JACS_OBJECT_TYPE_MAP 2
+#define JACS_OBJECT_TYPE_ARRAY 3
+#define JACS_OBJECT_TYPE_BUFFER 4
+#define JACS_OBJECT_TYPE_ROLE 5
+#define JACS_OBJECT_TYPE_BOOLEAN 6
+#define JACS_OBJECT_TYPE_FIBER 7
+
 #define JACS_EXPR_HANDLERS                                                                         \
     expr_invalid, exprx_load_local, exprx_load_global, expr3_load_buffer, exprx_literal,           \
         exprx_literal_f64, expr0_ret_val, expr2_str0eq, expr1_role_is_connected, expr0_pkt_size,   \
@@ -127,11 +154,15 @@
         expr2_bit_or, expr2_bit_xor, expr2_div, expr2_eq, expr2_idiv, expr2_imul, expr2_le,        \
         expr2_lt, expr2_max, expr2_min, expr2_mul, expr2_ne, expr2_pow, expr2_shift_left,          \
         expr2_shift_right, expr2_shift_right_unsigned, expr2_sub, exprx_load_param, expr0_now_ms,  \
-        expr1_get_fiber_handle, expr0_pkt_report_code, expr0_pkt_command_code, expr_invalid
+        expr1_get_fiber_handle, expr0_pkt_report_code, expr0_pkt_command_code, exprx_static_role,  \
+        exprx_static_buffer, exprx1_get_field, expr2_index, expr1_object_length,                   \
+        expr1_keys_length, expr1_typeof, expr0_null, expr1_is_null, expr0_pkt_buffer, expr0_true,  \
+        expr0_false, expr_invalid
 
 #define JACS_STMT_HANDLERS                                                                         \
     stmt_invalid, stmt1_wait_role, stmt1_sleep_s, stmt1_sleep_ms, stmt3_query_reg, stmt2_send_cmd, \
-        stmt4_query_idx_reg, stmt3_log_format, stmt4_format, stmt2_setup_buffer, stmt2_memcpy,     \
-        stmt3_call, stmt4_call_bg, stmt1_return, stmtx_jmp, stmtx1_jmp_z, stmt1_panic,             \
-        stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer, stmtx1_store_param,           \
-        stmt1_terminate_fiber, stmt5_blit, stmt_invalid
+        stmt4_query_idx_reg, stmt3_log_format, stmt4_format, stmt1_setup_pkt_buffer,               \
+        stmt2_set_pkt, stmt3_call, stmt4_call_bg, stmt1_return, stmtx_jmp, stmtx1_jmp_z,           \
+        stmt1_panic, stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer,                  \
+        stmtx1_store_param, stmt1_terminate_fiber, stmt5_blit, stmt0_alloc_map, stmt1_alloc_array, \
+        stmt1_alloc_buffer, stmtx2_set_field, stmt3_array_set, stmt3_array_insert, stmt_invalid

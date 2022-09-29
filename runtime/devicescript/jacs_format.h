@@ -20,7 +20,6 @@ typedef struct {
     jacs_img_section_t roles;          // jacs_role_desc_t[]
     jacs_img_section_t strings;        // jacs_img_section_t[]
     jacs_img_section_t string_data;    // "strings" points in here
-    jacs_img_section_t buffers;        // jacs_buffer_desc_t[]
 } jacs_img_header_t;
 
 typedef struct {
@@ -39,10 +38,3 @@ typedef struct {
     uint16_t name_idx; // index in strings section
     uint16_t reserved;
 } jacs_role_desc_t;
-
-typedef struct {
-    uint32_t type; // currently always 0
-    uint16_t size;
-    uint16_t reserved;
-} jacs_buffer_desc_t;
-

@@ -138,7 +138,7 @@ static inline bool jacs_trace_enabled(jacs_ctx_t *ctx) {
 
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
 value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code);
-// next error 60125
+// next error 60132
 static inline value_t jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
     return _jacs_runtime_failure(ctx, code - 60000);
 }
@@ -184,10 +184,8 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame);
 void jacs_vm_check_stmt(void);
 void jacs_vm_check_expr(void);
 
-value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, uint32_t buffer,
+value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, value_t buffer,
                        value_t *setv);
-void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx);
-unsigned jacs_buffer_size(jacs_ctx_t *ctx, unsigned idx);
 double jacs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
 
 // aggbuffer.c

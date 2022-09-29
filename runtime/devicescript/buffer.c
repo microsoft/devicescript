@@ -2,18 +2,6 @@
 #include <limits.h>
 #include <math.h>
 
-void *jacs_buffer_ptr(jacs_ctx_t *ctx, unsigned idx) {
-    if (idx == 0)
-        return ctx->packet.data;
-    return ctx->buffers + ctx->buffers[idx - 1];
-}
-
-unsigned jacs_buffer_size(jacs_ctx_t *ctx, unsigned idx) {
-    if (idx == 0)
-        return ctx->packet.service_size;
-    return jacs_img_get_buffer(&ctx->img, idx)->size;
-}
-
 // shift_val(10) = 1024
 // shift_val(0) = 1
 // shift_val(-10) = 1/1024
@@ -86,7 +74,7 @@ static double clamp_double(value_t v, double l, double h) {
         F64 = SZ;                                                                                  \
         break;
 
-value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, uint32_t buffer,
+value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, value_t buffer,
                        value_t *setv) {
     int is_float = 0;
 
@@ -116,20 +104,18 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset,
     if (shift > sz * 8)
         return jacs_runtime_failure(ctx, 60101);
 
-    if (buffer >= jacs_img_num_buffers(&ctx->img))
-        return jacs_runtime_failure(ctx, 60102);
-
-    unsigned bufsz = jacs_buffer_size(ctx, buffer);
+    unsigned bufsz;
+    uint8_t *data = jacs_buffer_data(ctx, buffer, &bufsz);
 
     if (offset + sz > bufsz) {
         // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
         if (setv)
             return jacs_runtime_failure(ctx, 60103);
         else
-            return jacs_nan;
+            return jacs_undefined;
     }
 
-    uint8_t *data = jacs_buffer_ptr(ctx, buffer) + offset;
+    data += offset;
 
     if (setv) {
         value_t q = *setv;
@@ -156,7 +142,7 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset,
             break;
         }
 
-        return jacs_nan;
+        return jacs_void;
 
     } else {
         switch (fmt) {

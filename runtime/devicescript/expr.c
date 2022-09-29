@@ -4,6 +4,8 @@
 #include <math.h>
 #include <limits.h>
 
+#define TODO() JD_ASSERT(0)
+
 typedef value_t (*jacs_vm_expr_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
 
 static uint32_t random_max(uint32_t mx) {
@@ -18,53 +20,46 @@ static uint32_t random_max(uint32_t mx) {
 }
 
 static value_t expr_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    jacs_runtime_failure(ctx, 60104);
-    return jacs_nan;
+    return jacs_runtime_failure(ctx, 60104);
 }
 
 static value_t expr2_str0eq(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t stridx = jacs_vm_exec_expr_u32(frame);
+    unsigned len;
+    uint8_t *data = jacs_vm_exec_expr_buffer_data(frame, &len);
     uint32_t offset = jacs_vm_exec_expr_u32(frame);
 
-    if (!jacs_vm_str_ok(ctx, stridx))
-        return jacs_nan;
-
-    int len = jacs_img_get_string_len(&ctx->img, stridx);
-    if (ctx->packet.service_size >= offset + len + 1 && ctx->packet.data[offset + len] == 0 &&
-        memcmp(ctx->packet.data + offset, jacs_img_get_string_ptr(&ctx->img, stridx), len) == 0)
-        return jacs_one;
-    else
-        return jacs_zero;
+    return jacs_value_from_bool(ctx->packet.service_size >= offset + len + 1 &&
+                                ctx->packet.data[offset + len] == 0 &&
+                                memcmp(ctx->packet.data + offset, data, len) == 0);
 }
 
 static value_t exprx_load_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     if (off < frame->func->num_locals)
         return frame->locals[off];
-    jacs_runtime_failure(ctx, 60105);
-    return jacs_nan;
+    return jacs_runtime_failure(ctx, 60105);
 }
 
 static value_t exprx_load_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     if (off < frame->num_params)
         return frame->params[off];
-    return jacs_nan;
+    // no failure here - allow for var-args in future?
+    return jacs_undefined;
 }
 
 static value_t exprx_load_global(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     if (off < ctx->img.header->num_globals)
         return ctx->globals[off];
-    jacs_runtime_failure(ctx, 60106);
-    return jacs_nan;
+    return jacs_runtime_failure(ctx, 60106);
 }
 
 static value_t expr3_load_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    value_t buf = jacs_vm_exec_expr_buffer(frame);
     uint32_t fmt0 = jacs_vm_exec_expr_u32(frame);
     uint32_t offset = jacs_vm_exec_expr_u32(frame);
-    uint32_t bufferidx = jacs_vm_exec_expr_u32(frame);
-    return jacs_buffer_op(frame, fmt0, offset, bufferidx, NULL);
+    return jacs_buffer_op(frame, fmt0, offset, buf, NULL);
 }
 
 static value_t exprx_literal(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -76,8 +71,7 @@ static value_t exprx_literal_f64(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned off = jacs_vm_fetch_int(frame, ctx);
     if (off < jacs_img_num_floats(&ctx->img))
         return jacs_img_get_float(&ctx->img, off);
-    jacs_runtime_failure(ctx, 60107);
-    return jacs_nan;
+    return jacs_runtime_failure(ctx, 60107);
 }
 
 static value_t expr0_ret_val(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -85,11 +79,8 @@ static value_t expr0_ret_val(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t expr1_role_is_connected(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t b = jacs_vm_exec_expr_u32(frame);
-    if (jacs_vm_role_ok(ctx, b))
-        return jacs_value_from_bool(ctx->roles[b]->service != NULL);
-    else
-        return jacs_nan;
+    uint32_t b = jacs_vm_exec_expr_role(frame);
+    return jacs_value_from_bool(ctx->roles[b]->service != NULL);
 }
 
 static value_t expr0_pkt_size(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -100,30 +91,147 @@ static value_t expr0_pkt_ev_code(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     if (jd_is_event(&ctx->packet))
         return jacs_value_from_int(ctx->packet.service_command & JD_CMD_EVENT_CODE_MASK);
     else
-        return jacs_nan;
+        return jacs_undefined;
 }
 
 static value_t expr0_pkt_reg_get_code(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     if (jd_is_report(&ctx->packet) && jd_is_register_get(&ctx->packet))
         return jacs_value_from_int(JD_REG_CODE(ctx->packet.service_command));
     else
-        return jacs_nan;
+        return jacs_undefined;
 }
 
 static value_t expr0_pkt_command_code(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     if (jd_is_command(&ctx->packet))
         return jacs_value_from_int(ctx->packet.service_command);
     else
-        return jacs_nan;
+        return jacs_undefined;
 }
 
 static value_t expr0_pkt_report_code(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     if (jd_is_report(&ctx->packet))
         return jacs_value_from_int(ctx->packet.service_command);
     else
-        return jacs_nan;
+        return jacs_undefined;
 }
 
+static value_t expr0_now_ms(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_value_from_double((double)ctx->_now_long);
+}
+
+static value_t expr1_get_fiber_handle(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    int idx = jacs_vm_exec_expr_i32(frame);
+    jacs_fiber_t *fiber;
+
+    if (idx < 0)
+        fiber = frame->fiber;
+    else {
+        fiber = jacs_fiber_by_fidx(ctx, idx);
+        if (fiber == NULL)
+            return jacs_undefined;
+    }
+
+    return jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fiber->handle_tag);
+}
+
+static bool jacs_vm_role_ok(jacs_ctx_t *ctx, uint32_t a) {
+    if (a < jacs_img_num_roles(&ctx->img))
+        return true;
+    jacs_runtime_failure(ctx, 60111);
+    return false;
+}
+
+static bool jacs_vm_str_ok(jacs_ctx_t *ctx, uint32_t a) {
+    if (a < jacs_img_num_strings(&ctx->img))
+        return true;
+    jacs_runtime_failure(ctx, 60112);
+    return false;
+}
+
+static value_t exprx_static_role(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    unsigned idx = jacs_vm_fetch_int(frame, ctx);
+    if (!jacs_vm_role_ok(ctx, idx))
+        return jacs_undefined;
+    return jacs_value_from_handle(JACS_HANDLE_TYPE_ROLE, idx);
+}
+
+static value_t exprx_static_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    unsigned idx = jacs_vm_fetch_int(frame, ctx);
+    if (!jacs_vm_str_ok(ctx, idx))
+        return jacs_undefined;
+    return jacs_value_from_handle(JACS_HANDLE_TYPE_IMG_BUFFER, idx);
+}
+
+static value_t exprx1_get_field(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    unsigned idx = jacs_vm_fetch_int(frame, ctx);
+    jacs_map_t *map = jacs_vm_exec_expr_map(frame, false);
+    if (map == NULL)
+        return jacs_undefined;
+    return jacs_map_get(ctx, map, idx);
+}
+
+static value_t expr2_index(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    // value_t arr = jacs_vm_exec_expr(frame);
+    // uint32_t idx = jacs_vm_exec_expr_u32(frame);
+    TODO();
+    return jacs_undefined;
+}
+
+static value_t expr1_object_length(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    value_t arr = jacs_vm_exec_expr(frame);
+    unsigned len;
+    if (jacs_is_buffer(ctx, arr)) {
+        jacs_buffer_data(ctx, arr, &len);
+    } else {
+        jacs_gc_object_t *obj = jacs_value_to_gc_obj(ctx, arr);
+        if (jacs_gc_tag(obj) == JACS_GC_TAG_ARRAY)
+            len = ((jacs_array_t *)obj)->length;
+        else
+            return jacs_zero;
+    }
+    return jacs_value_from_int(len);
+}
+
+static value_t expr1_keys_length(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    jacs_map_t *map = jacs_vm_exec_expr_map(frame, false);
+    if (map == NULL)
+        return jacs_zero;
+    return jacs_value_from_int(map->length);
+}
+
+static value_t expr1_typeof(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    value_t obj = jacs_vm_exec_expr(frame);
+    return jacs_value_from_int(jacs_value_typeof(ctx, obj));
+}
+
+static value_t expr0_null(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_null;
+}
+
+static value_t expr0_pkt_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_pkt_buffer;
+}
+
+static value_t expr1_is_null(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    value_t obj = jacs_vm_exec_expr(frame);
+    if (jacs_is_special(obj) && jacs_handle_value(obj) == JACS_SPECIAL_NULL)
+        return jacs_true;
+    else
+        return jacs_false;
+}
+
+static value_t expr0_true(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_true;
+}
+
+static value_t expr0_false(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_false;
+}
+
+//
+// Math stuff
+//
+#if 1
 static value_t expr0_nan(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     return jacs_nan;
 }
@@ -207,7 +315,7 @@ static value_t expr1_random_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static value_t expr1_to_bool(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_exec_expr(frame);
-    return jacs_value_from_int(jacs_value_to_bool(v));
+    return jacs_value_from_bool(jacs_value_to_bool(v));
 }
 
 static int exec2_and_check_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -382,25 +490,7 @@ static value_t expr2_min(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
     return lt ? ctx->binop[0] : ctx->binop[1];
 }
-
-static value_t expr0_now_ms(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    return jacs_value_from_double((double)ctx->_now_long);
-}
-
-static value_t expr1_get_fiber_handle(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    int idx = jacs_vm_exec_expr_i32(frame);
-    jacs_fiber_t *fiber;
-
-    if (idx < 0)
-        fiber = frame->fiber;
-    else {
-        fiber = jacs_fiber_by_fidx(ctx, idx);
-        if (fiber == NULL)
-            return jacs_nan;
-    }
-
-    return jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fiber->handle_tag);
-}
+#endif
 
 static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_PAST_LAST + 1] = {
     JACS_EXPR_HANDLERS};
@@ -447,4 +537,52 @@ uint32_t jacs_vm_exec_expr_i32(jacs_activation_t *frame) {
 
 double jacs_vm_exec_expr_f64(jacs_activation_t *frame) {
     return jacs_value_to_double(jacs_vm_exec_expr(frame));
+}
+
+value_t jacs_vm_exec_expr_buffer(jacs_activation_t *frame) {
+    value_t tmp = jacs_vm_exec_expr(frame);
+    jacs_ctx_t *ctx = frame->fiber->ctx;
+    if (!jacs_is_buffer(ctx, tmp)) {
+        jacs_runtime_failure(ctx, 60125);
+        return jacs_pkt_buffer;
+    }
+    return tmp;
+}
+
+void *jacs_vm_exec_expr_buffer_data(jacs_activation_t *frame, unsigned *sz) {
+    value_t tmp = jacs_vm_exec_expr_buffer(frame);
+    return jacs_buffer_data(frame->fiber->ctx, tmp, sz);
+}
+
+unsigned jacs_vm_exec_expr_stridx(jacs_activation_t *frame) {
+    value_t tmp = jacs_vm_exec_expr(frame);
+    jacs_ctx_t *ctx = frame->fiber->ctx;
+    if (jacs_handle_type(tmp) != JACS_HANDLE_TYPE_IMG_BUFFER) {
+        jacs_runtime_failure(ctx, 60127);
+        return 0;
+    }
+    return jacs_handle_value(tmp);
+}
+
+unsigned jacs_vm_exec_expr_role(jacs_activation_t *frame) {
+    value_t tmp = jacs_vm_exec_expr(frame);
+    jacs_ctx_t *ctx = frame->fiber->ctx;
+    if (jacs_handle_type(tmp) != JACS_HANDLE_TYPE_ROLE) {
+        jacs_runtime_failure(ctx, 60126);
+        return 0;
+    }
+    return jacs_handle_value(tmp);
+}
+
+jacs_map_t *jacs_vm_exec_expr_map(jacs_activation_t *frame, bool create) {
+    value_t tmp = jacs_vm_exec_expr(frame);
+    jacs_ctx_t *ctx = frame->fiber->ctx;
+    if (jacs_handle_type(tmp) != JACS_HANDLE_TYPE_GC_OBJECT) {
+        jacs_runtime_failure(ctx, 60128);
+        return NULL;
+    }
+
+    TODO();
+
+    return NULL;
 }
