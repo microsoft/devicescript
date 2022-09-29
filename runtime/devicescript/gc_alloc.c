@@ -56,7 +56,7 @@ void jacs_gc_add_chunk(jacs_gc_t *gc, void *start, unsigned size) {
     JD_ASSERT(size > sizeof(chunk_t) + 128);
     chunk_t *ch = start;
     ch->end =
-        (block_t *)((uintptr_t)((uint8_t *)start + size) & ~(JD_PTRSIZE - 1) - sizeof(uintptr_t));
+        (block_t *)(((uintptr_t)((uint8_t *)start + size) & ~(JD_PTRSIZE - 1)) - sizeof(uintptr_t));
     mark_block(ch->end, JACS_GC_TAG_FINAL, 1);
     mark_block(ch->start, JACS_GC_TAG_FREE, block_ptr(ch->end) - block_ptr(ch->start));
     ch->next = gc->first_chunk;
