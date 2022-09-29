@@ -1,5 +1,5 @@
 #include "jacs_internal.h"
-#include "jacdac/dist/c/jacscriptcloud.h"
+#include "jacdac/dist/c/cloudadapter.h"
 
 typedef struct {
     jd_device_service_t *cloud_serv;
@@ -10,7 +10,7 @@ typedef struct {
 static extcloud_ctx_t *extcloud_ctx;
 
 static void ask_connected(extcloud_ctx_t *ctx) {
-    jd_service_send_cmd(ctx->cloud_serv, JD_GET(JD_JACSCRIPT_CLOUD_REG_CONNECTED), NULL, 0);
+    jd_service_send_cmd(ctx->cloud_serv, JD_GET(JD_CLOUD_ADAPTER_REG_CONNECTED), NULL, 0);
 }
 
 static void dev_created(extcloud_ctx_t *ctx, jd_device_t *dev) {
@@ -18,7 +18,7 @@ static void dev_created(extcloud_ctx_t *ctx, jd_device_t *dev) {
         return;
 
     for (unsigned i = 1; i < dev->num_services; ++i) {
-        if (dev->services[i].service_class == JD_SERVICE_CLASS_JACSCRIPT_CLOUD) {
+        if (dev->services[i].service_class == JD_SERVICE_CLASS_CLOUD_ADAPTER) {
             ctx->cloud_serv = &dev->services[i];
             ctx->is_connected = 0; // we don't know yet
             ask_connected(ctx);
@@ -44,10 +44,10 @@ static void dev_packet(extcloud_ctx_t *ctx, jd_device_service_t *serv, jd_packet
     if (!jd_is_report(pkt))
         return;
 
-    if (jd_event_code(pkt) == JD_JACSCRIPT_CLOUD_EV_CHANGE) {
+    if (jd_event_code(pkt) == JD_CLOUD_ADAPTER_EV_CHANGE) {
         ctx->is_connected = !ctx->is_connected; // this is what likely happened
         ask_connected(ctx);                     // but we ask anyways
-    } else if (pkt->service_command == JD_GET(JD_JACSCRIPT_CLOUD_REG_CONNECTED)) {
+    } else if (pkt->service_command == JD_GET(JD_CLOUD_ADAPTER_REG_CONNECTED)) {
         ctx->is_connected = !!pkt->data[0];
     }
 }
@@ -91,7 +91,7 @@ int extcloud_publish_values(const char *label, int numvals, double *vals) {
     char *data = jd_alloc(sz);
     memcpy(data, label, len);
     memcpy(data + len, vals, sz - len);
-    int r = jd_service_send_cmd(ctx->cloud_serv, JD_JACSCRIPT_CLOUD_CMD_UPLOAD, data, sz);
+    int r = jd_service_send_cmd(ctx->cloud_serv, JD_CLOUD_ADAPTER_CMD_UPLOAD, data, sz);
     jd_free(data);
 
     return r;
@@ -101,7 +101,7 @@ int extcloud_publish_bin(const void *data, unsigned datasize) {
     extcloud_ctx_t *ctx = extcloud_ctx;
     if (!ctx->cloud_serv)
         return -10;
-    return jd_service_send_cmd(ctx->cloud_serv, JD_JACSCRIPT_CLOUD_CMD_UPLOAD_BIN, data, datasize);
+    return jd_service_send_cmd(ctx->cloud_serv, JD_CLOUD_ADAPTER_CMD_UPLOAD_BIN, data, datasize);
 }
 
 int extcloud_is_connected(void) {
