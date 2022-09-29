@@ -110,37 +110,42 @@ static void stmt1_return(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_fiber_return_from_call(frame);
 }
 
-static void set_alloc(jacs_activation_t *frame, jacs_ctx_t *ctx, void *p) {
+static void set_alloc(jacs_activation_t *frame, jacs_ctx_t *ctx, void *p, unsigned sz) {
     if (p == NULL)
-        jacs_runtime_failure(ctx, 60130);
+        jacs_oom(ctx, sz);
     frame->fiber->ret_val = jacs_value_from_gc_obj(ctx, p);
 }
 
 static void stmt0_alloc_map(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    set_alloc(frame, ctx, jacs_map_try_alloc(ctx->gc));
+    set_alloc(frame, ctx, jacs_map_try_alloc(ctx->gc), sizeof(jacs_map_t));
 }
 
 static void stmt1_alloc_array(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    // uint32_t sz = jacs_vm_exec_expr_u32(frame);
-    TODO();
+    uint32_t sz = jacs_vm_exec_expr_u32(frame);
+    set_alloc(frame, ctx, jacs_array_try_alloc(ctx->gc, sz),
+              sizeof(jacs_array_t) + sz * sizeof(value_t));
 }
 
 static void stmt1_alloc_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    // uint32_t sz = jacs_vm_exec_expr_u32(frame);
-    TODO();
+    uint32_t sz = jacs_vm_exec_expr_u32(frame);
+    set_alloc(frame, ctx, jacs_buffer_try_alloc(ctx->gc, sz), sizeof(jacs_buffer_t) + sz);
 }
 
 static void stmtx2_set_field(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned idx = jacs_vm_fetch_int(frame, ctx);
     jacs_map_t *map = jacs_vm_exec_expr_map(frame, true);
     value_t v = jacs_vm_exec_expr(frame);
-    if (map == NULL)
-        jacs_runtime_failure(ctx, 60131);
-    jacs_map_set(ctx, map, idx, v);
+    if (map != NULL)
+        jacs_map_set(ctx, map, idx, v);
 }
 
 static void stmt3_array_set(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    TODO();
+    value_t arr = jacs_vm_exec_expr(frame);
+    uint32_t idx = jacs_vm_exec_expr_u32(frame);
+    value_t v = jacs_vm_exec_expr(frame);
+
+    if (jacs_index_set(ctx, arr, idx, v))
+        jacs_runtime_failure(ctx, 60133);
 }
 
 static void stmt3_array_insert(jacs_activation_t *frame, jacs_ctx_t *ctx) {

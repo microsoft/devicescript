@@ -138,7 +138,7 @@ static inline bool jacs_trace_enabled(jacs_ctx_t *ctx) {
 
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
 value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code);
-// next error 60132
+// next error 60134
 static inline value_t jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
     return _jacs_runtime_failure(ctx, code - 60000);
 }
@@ -196,3 +196,4 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
 
 void *jacs_try_alloc(jacs_ctx_t *ctx, uint32_t size);
 void jacs_free(jacs_ctx_t *ctx, void *ptr);
+void jacs_oom(jacs_ctx_t *ctx, unsigned size);

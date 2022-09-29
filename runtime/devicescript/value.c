@@ -194,10 +194,14 @@ void *jacs_buffer_data(jacs_ctx_t *ctx, value_t v, unsigned *sz) {
     }
 }
 
-jacs_gc_object_t *jacs_value_to_gc_obj(jacs_ctx_t *ctx, value_t v) {
+void *jacs_value_to_gc_obj(jacs_ctx_t *ctx, value_t v) {
     if (jacs_handle_type(v) == JACS_HANDLE_TYPE_GC_OBJECT)
         return jacs_handle_ptr_value(ctx, v);
     return NULL;
+}
+
+bool jacs_is_array(jacs_ctx_t *ctx, value_t v) {
+    return jacs_gc_tag(jacs_value_to_gc_obj(ctx,v)) == JACS_GC_TAG_ARRAY;
 }
 
 unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
@@ -223,6 +227,17 @@ unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
     case JACS_HANDLE_TYPE_FIBER:
         return JACS_OBJECT_TYPE_FIBER;
     case JACS_HANDLE_TYPE_GC_OBJECT:
+        switch (jacs_gc_tag(jacs_handle_ptr_value(ctx, v))) {
+        case JACS_GC_TAG_ARRAY:
+            return JACS_OBJECT_TYPE_ARRAY;
+        case JACS_GC_TAG_BUFFER:
+            return JACS_OBJECT_TYPE_BUFFER;
+        case JACS_GC_TAG_MAP:
+            return JACS_OBJECT_TYPE_MAP;
+        default:
+            JD_ASSERT(0);
+            return 0;
+        }
     case JACS_HANDLE_TYPE_IMG_BUFFER:
         return JACS_OBJECT_TYPE_BUFFER;
     case JACS_HANDLE_TYPE_ROLE:

@@ -112,6 +112,8 @@ static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
         scan_map(ctx, block->array.attached, depth);
         scan_array(ctx, block->array.data, block->array.length, depth);
         break;
+    case JACS_GC_TAG_BYTES:
+        break;
     default:
         oops();
         break;
@@ -250,6 +252,8 @@ static block_t *alloc_block(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
 }
 
 static void *try_alloc(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
+    if (size > JACS_MAX_ALLOC)
+        return NULL;
     block_t *b = alloc_block(gc, tag, size);
     if (!b)
         return NULL;
@@ -258,7 +262,7 @@ static void *try_alloc(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
 }
 
 void *jd_gc_try_alloc(jacs_gc_t *gc, uint32_t size) {
-    return try_alloc(gc, JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BUFFER, size);
+    return try_alloc(gc, JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES, size);
 }
 
 void jd_gc_free(jacs_gc_t *gc, void *ptr) {
@@ -266,7 +270,7 @@ void jd_gc_free(jacs_gc_t *gc, void *ptr) {
         return;
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
-    JD_ASSERT(GET_TAG(b->header) == (JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BUFFER));
+    JD_ASSERT(GET_TAG(b->header) == (JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES));
     mark_block(b, JACS_GC_TAG_FREE, block_size(b));
     memset(b->data, 0x47, (block_size(b) - 1) * sizeof(uintptr_t));
 }
@@ -275,8 +279,27 @@ jacs_map_t *jacs_map_try_alloc(jacs_gc_t *gc) {
     return try_alloc(gc, JACS_GC_TAG_MAP, sizeof(jacs_map_t));
 }
 
-jacs_map_t *jacs_array_try_alloc(jacs_gc_t *gc) {
-    return try_alloc(gc, JACS_GC_TAG_ARRAY, sizeof(jacs_array_t));
+jacs_array_t *jacs_array_try_alloc(jacs_gc_t *gc, unsigned size) {
+    size *= sizeof(value_t);
+    if (size > JACS_MAX_ALLOC)
+        return NULL;
+    jacs_array_t *arr = try_alloc(gc, JACS_GC_TAG_ARRAY, sizeof(jacs_array_t));
+    if (arr != NULL && size > 0) {
+        arr->data = jd_gc_try_alloc(gc, size);
+        if (arr->data == NULL)
+            return NULL;
+        arr->length = arr->capacity = size;
+    }
+    return arr;
+}
+
+jacs_buffer_t *jacs_buffer_try_alloc(jacs_gc_t *gc, unsigned size) {
+    if (size > JACS_MAX_ALLOC)
+        return NULL;
+    jacs_buffer_t *buf = try_alloc(gc, JACS_GC_TAG_BUFFER, sizeof(jacs_buffer_t) + size);
+    if (buf)
+        buf->length = size;
+    return buf;
 }
 
 #if JD_GC_ALLOC

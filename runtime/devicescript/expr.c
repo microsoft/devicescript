@@ -4,8 +4,6 @@
 #include <math.h>
 #include <limits.h>
 
-#define TODO() JD_ASSERT(0)
-
 typedef value_t (*jacs_vm_expr_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
 
 static uint32_t random_max(uint32_t mx) {
@@ -171,10 +169,9 @@ static value_t exprx1_get_field(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t expr2_index(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    // value_t arr = jacs_vm_exec_expr(frame);
-    // uint32_t idx = jacs_vm_exec_expr_u32(frame);
-    TODO();
-    return jacs_undefined;
+    value_t arr = jacs_vm_exec_expr(frame);
+    uint32_t idx = jacs_vm_exec_expr_u32(frame);
+    return jacs_index(ctx, arr, idx);
 }
 
 static value_t expr1_object_length(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -582,7 +579,30 @@ jacs_map_t *jacs_vm_exec_expr_map(jacs_activation_t *frame, bool create) {
         return NULL;
     }
 
-    TODO();
+    void *obj = jacs_handle_ptr_value(ctx, tmp);
+    jacs_map_t **attached;
 
-    return NULL;
+    switch (jacs_gc_tag(obj)) {
+    case JACS_GC_TAG_BUFFER:
+        attached = &((jacs_buffer_t *)obj)->attached;
+        break;
+    case JACS_GC_TAG_ARRAY:
+        attached = &((jacs_array_t *)obj)->attached;
+        break;
+    case JACS_GC_TAG_MAP:
+        return obj;
+    default:
+        JD_ASSERT(0);
+        break;
+    }
+
+    obj = *attached;
+
+    if (!obj && create) {
+        obj = *attached = jacs_map_try_alloc(ctx->gc);
+        if (obj == NULL)
+            jacs_runtime_failure(ctx, 60131);
+    }
+
+    return obj;
 }

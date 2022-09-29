@@ -146,11 +146,15 @@ void jacs_trace(jacs_ctx_t *ctx, unsigned evtype, const void *data, unsigned dat
 void *jacs_try_alloc(jacs_ctx_t *ctx, uint32_t size) {
     void *r = jd_gc_try_alloc(ctx->gc, size);
     if (r == NULL) {
-        JD_LOG("jacs: OOM (%u bytes)", (unsigned)size);
         // note that this will return after setting panic flags
-        jacs_panic(ctx, JACS_PANIC_OOM);
+        jacs_oom(ctx, size);
     }
     return r;
+}
+
+void jacs_oom(jacs_ctx_t *ctx, unsigned size) {
+    JD_LOG("jacs: OOM (%u bytes)", (unsigned)size);
+    jacs_panic(ctx, JACS_PANIC_OOM);
 }
 
 void jacs_free(jacs_ctx_t *ctx, void *ptr) {

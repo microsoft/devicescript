@@ -107,3 +107,5 @@ extern const value_t jacs_pkt_buffer;
 bool jacs_is_buffer(jacs_ctx_t *ctx, value_t v);
 bool jacs_buffer_is_writable(jacs_ctx_t *ctx, value_t v);
 void *jacs_buffer_data(jacs_ctx_t *ctx, value_t v, unsigned *sz);
+
+bool jacs_is_array(jacs_ctx_t *ctx, value_t v);
