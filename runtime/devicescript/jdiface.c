@@ -419,6 +419,7 @@ void jacs_jd_init_roles(jacs_ctx_t *ctx) {
         if (role->service_class == JD_SERVICE_CLASS_JACSCRIPT_CONDITION)
             ctx->roles[idx]->hidden = 1;
     }
+    jd_role_force_autobind();
 }
 
 void jacs_jd_free_roles(jacs_ctx_t *ctx) {

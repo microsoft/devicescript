@@ -1,5 +1,5 @@
 #include "jacs_internal.h"
-#include "jacdac/dist/c/jacscriptcloud.h"
+#include "jacdac/dist/c/cloudadapter.h"
 
 #define LOG(msg, ...) DMESG("jacscloud: " msg, ##__VA_ARGS__)
 
@@ -30,24 +30,24 @@ static void jacscloud_upload(srv_t *state, jd_packet_t *pkt) {
 
 void jacscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
-    case JD_JACSCRIPT_CLOUD_CMD_UPLOAD:
+    case JD_CLOUD_ADAPTER_CMD_UPLOAD:
         jacscloud_upload(state, pkt);
         return;
 
-    case JD_JACSCRIPT_CLOUD_CMD_UPLOAD_BIN:
+    case JD_CLOUD_ADAPTER_CMD_UPLOAD_BIN:
         if (state->api->bin_upload(pkt->data, pkt->service_size))
             LOG("failed bin upload");
         return;
 
-    case JD_JACSCRIPT_CLOUD_CMD_ACK_CLOUD_COMMAND: {
-        jd_jacscript_cloud_ack_cloud_command_t *arg = (void *)pkt->data;
+    case JD_CLOUD_ADAPTER_CMD_ACK_CLOUD_COMMAND: {
+        jd_cloud_adapter_ack_cloud_command_t *arg = (void *)pkt->data;
         int numvals = (pkt->service_size >> 3) - 1;
         if (numvals >= 0)
             state->api->respond_method(arg->seq_no, arg->status, numvals, arg->result);
         break;
     }
 
-    case JD_GET(JD_JACSCRIPT_CLOUD_REG_CONNECTED):
+    case JD_GET(JD_CLOUD_ADAPTER_REG_CONNECTED):
         jd_respond_u8(pkt, state->api->is_connected());
         return;
 
@@ -65,11 +65,11 @@ void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, con
     memcpy(data, &method_id, 4);
     memcpy(data + 4, label, lblsize);
     memcpy(data + 4 + lblsize, vals, 8 * numvals);
-    jd_send_event_ext(state, JD_JACSCRIPT_CLOUD_EV_CLOUD_COMMAND, data, sz);
+    jd_send_event_ext(state, JD_CLOUD_ADAPTER_EV_CLOUD_COMMAND, data, sz);
     jd_free(data);
 }
 
-SRV_DEF(jacscloud, JD_SERVICE_CLASS_JACSCRIPT_CLOUD);
+SRV_DEF(jacscloud, JD_SERVICE_CLASS_CLOUD_ADAPTER);
 void jacscloud_init(const jacscloud_api_t *cloud_api) {
     SRV_ALLOC(jacscloud);
     state->api = cloud_api;
