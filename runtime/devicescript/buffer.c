@@ -116,7 +116,7 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset,
     if (shift > sz * 8)
         return jacs_runtime_failure(ctx, 60101);
 
-    if (buffer >= jacs_img_num_buffers(&ctx->img))
+    if (buffer > jacs_img_num_buffers(&ctx->img))
         return jacs_runtime_failure(ctx, 60102);
 
     unsigned bufsz = jacs_buffer_size(ctx, buffer);
