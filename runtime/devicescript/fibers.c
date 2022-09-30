@@ -17,6 +17,15 @@ static void jacs_fiber_activate(jacs_activation_t *act) {
     act->fiber->ctx->curr_fn = act;
 }
 
+void jacs_fiber_copy_params(jacs_activation_t *frame) {
+    JD_ASSERT(!frame->params_is_copy);
+    value_t *tmp = jacs_try_alloc(frame->fiber->ctx, sizeof(value_t) * frame->func->num_args);
+    memcpy(tmp, frame->params, sizeof(value_t) * frame->num_params);
+    frame->num_params = frame->func->num_args;
+    frame->params = tmp;
+    frame->params_is_copy = 1;
+}
+
 void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params,
                               unsigned numargs) {
     jacs_ctx_t *ctx = fiber->ctx;
@@ -35,10 +44,15 @@ void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *param
     callee->func = func;
 
     // if fiber already activated, move the activation pointer
-    if (fiber->activation)
+    if (fiber->activation) {
         jacs_fiber_activate(callee);
-    else
+    } else {
+        // otherwise, it's a fresh fiber, we need to copy arguments if any, as the caller will go
+        // away
+        if (numargs)
+            jacs_fiber_copy_params(callee);
         fiber->activation = callee;
+    }
 }
 
 void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time) {
@@ -165,7 +179,6 @@ jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, 
 
     log_fiber_op(fiber, "start");
 
-    TODO(); // need to copy params before passing
     jacs_fiber_call_function(fiber, fidx, params, numargs);
 
     fiber->next = ctx->fibers;

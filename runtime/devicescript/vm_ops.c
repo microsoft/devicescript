@@ -246,14 +246,8 @@ static void stmtx1_store_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     if (off >= frame->func->num_args)
         jacs_runtime_failure(ctx, 60119);
     else {
-        if (off >= frame->num_params) {
-            JD_ASSERT(!frame->params_is_copy);
-            value_t *tmp = jacs_try_alloc(ctx, sizeof(value_t) * frame->func->num_args);
-            memcpy(tmp, frame->params, sizeof(value_t) * frame->num_params);
-            frame->num_params = frame->func->num_args;
-            frame->params = tmp;
-            frame->params_is_copy = 1;
-        }
+        if (off >= frame->num_params)
+            jacs_fiber_copy_params(frame);
         frame->params[off] = v;
     }
 }

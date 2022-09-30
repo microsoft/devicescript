@@ -172,6 +172,7 @@ void jacs_fiber_set_wake_time(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_sleep(jacs_fiber_t *fiber, unsigned time);
 void jacs_fiber_termiante(jacs_fiber_t *fiber);
 void jacs_fiber_yield(jacs_ctx_t *ctx);
+void jacs_fiber_copy_params(jacs_activation_t *frame);
 void jacs_fiber_call_function(jacs_fiber_t *fiber, unsigned fidx, value_t *params,
                               unsigned numargs);
 void jacs_fiber_return_from_call(jacs_activation_t *act);
