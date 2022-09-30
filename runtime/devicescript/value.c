@@ -215,7 +215,7 @@ unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
         switch (jacs_handle_value(v)) {
         case JACS_SPECIAL_FALSE:
         case JACS_SPECIAL_TRUE:
-            return JACS_OBJECT_TYPE_BOOLEAN;
+            return JACS_OBJECT_TYPE_BOOL;
         case JACS_SPECIAL_NULL:
             return JACS_OBJECT_TYPE_NULL;
         case JACS_SPECIAL_PKT_BUFFER:

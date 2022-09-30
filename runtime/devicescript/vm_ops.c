@@ -587,7 +587,7 @@ static value_t expr1_neg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static value_t expr1_not(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_pop_arg(ctx);
-    return jacs_value_from_int(!jacs_value_to_bool(v));
+    return jacs_value_from_bool(!jacs_value_to_bool(v));
 }
 
 static value_t expr1_random(jacs_activation_t *frame, jacs_ctx_t *ctx) {
