@@ -843,7 +843,7 @@ class Program implements TopOpWriter {
             wr.emitStmt(Op.STMT1_RETURN, this.emitSimpleValue(stmt.argument))
         } else {
             if (wr.ret) this.writer.emitJump(this.writer.ret)
-            else wr.emitStmt(Op.STMT1_RETURN, literal(NaN))
+            else wr.emitStmt(Op.STMT1_RETURN, literal(null))
         }
     }
 
@@ -1070,7 +1070,7 @@ class Program implements TopOpWriter {
             else {
                 if (options.methodHandler)
                     this.emitAckCloud(CloudAdapterCommandStatus.OK, false, [])
-                wr.emitStmt(Op.STMT1_RETURN, literal(NaN))
+                wr.emitStmt(Op.STMT1_RETURN, literal(null))
             }
         })
         return proc
@@ -1539,10 +1539,10 @@ class Program implements TopOpWriter {
                             this.extractRegField(vobj, vobj.spec.fields[0])
                         )
                         const skipHandler = wr.mkLabel("skipHandler")
-                        // if (isNaN(curr)) goto skip (shouldn't really happen unless service is misbehaving)
+                        // if (curr == undefined) goto skip (shouldn't really happen unless service is misbehaving)
                         wr.emitJumpIfTrue(
                             skipHandler,
-                            wr.emitExpr(Op.EXPR1_IS_NAN, curr.emit())
+                            wr.emitExpr(Op.EXPR1_IS_NULL, curr.emit())
                         )
                         // if (Math.abs(tmp-curr) < threshold) goto skip
                         // note that this also calls handler() if cache was NaN
@@ -1910,6 +1910,7 @@ class Program implements TopOpWriter {
     private emitIdentifier(expr: estree.Identifier): Value {
         const id = this.forceName(expr)
         if (id == "NaN") return literal(NaN)
+        if (id == "null") return literal(null)
         const cell = this.proc.locals.lookup(id)
         if (!cell) throwError(expr, "unknown name: " + id)
         return cell.emit(this.writer)

@@ -520,16 +520,20 @@ export class OpWriter {
         }
     }
 
-    private writeArgs(firstInt: boolean, args: Value[]) {
+    private writeArgs(op: Op, args: Value[]) {
         let i = 0
-        if (firstInt) {
-            assert(args[0].isLiteral)
-            this.writeInt(args[0].numValue)
-            i = 1
-        }
+        if (opTakesNumber(op)) i = 1
         while (i < args.length) {
             this.writeValue(args[i])
             i++
+        }
+        this.writeByte(op)
+        if (opTakesNumber(op)) {
+            assert(args[0].isLiteral)
+            const nval = args[0].numValue
+            if (op == Op.STMTx1_STORE_LOCAL && nval >= LOCAL_OFFSET)
+                this.localOffsets.push(this.location())
+            this.writeInt(nval)
         }
     }
 
@@ -564,8 +568,7 @@ export class OpWriter {
         } else if (v.op >= 0x100) {
             oops("this value can't be emitted")
         } else {
-            this.writeByte(v.op)
-            this.writeArgs(opTakesNumber(v.op), v.args)
+            this.writeArgs(v.op, v.args)
         }
     }
 
@@ -580,10 +583,7 @@ export class OpWriter {
         assert(opIsStmt(op))
         for (const a of args) a.adopt()
         this.spillAllStateful()
-        this.writeByte(op)
-        if (op == Op.STMTx1_STORE_LOCAL && args[0].numValue >= LOCAL_OFFSET)
-            this.localOffsets.push(this.location())
-        this.writeArgs(opTakesNumber(op), args)
+        this.writeArgs(op, args)
     }
 }
 
