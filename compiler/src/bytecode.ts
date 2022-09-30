@@ -7,13 +7,13 @@ export enum Op {
     STMT3_QUERY_REG = 65, // role, code, timeout
     STMT2_SEND_CMD = 66, // role, code
     STMT4_QUERY_IDX_REG = 67, // role, code, string, timeout
-    STMT3_LOG_FORMAT = 68, // string, local_idx, numargs
-    STMT4_FORMAT = 69, // string, local_idx, numargs, offset
+    STMTx2_LOG_FORMAT = 68, // *local_idx, numargs, string
+    STMTx3_FORMAT = 69, // *local_idx, numargs, string, offset
     STMT1_SETUP_PKT_BUFFER = 70, // size
     STMT2_SET_PKT = 71, // buffer, offset
     STMT5_BLIT = 72, // dst, dst_offset, src, src_offset, length
-    STMT3_CALL = 73, // func_idx, local_idx, numargs
-    STMT4_CALL_BG = 74, // func_idx, local_idx, numargs, opcall
+    STMTx2_CALL = 73, // *local_idx, numargs, func_idx
+    STMTx3_CALL_BG = 74, // *local_idx, numargs, func_idx, opcall
     STMT1_RETURN = 75, // value
     STMTx_JMP = 76, // JMP jmpoffset
     STMTx1_JMP_Z = 77, // JMP jmpoffset IF NOT x
@@ -94,7 +94,7 @@ export enum Op {
 }
 
 export const OP_PROPS =
-    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x13\x14\x11\x12\x15\x13\x14\x11\x31\x32\x11\x32\x32\x14\x32\x11\x10\x11\x11\x33\x13\x13"
+    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x33\x34\x11\x12\x15\x33\x34\x11\x31\x32\x11\x32\x32\x14\x32\x11\x10\x11\x11\x33\x13\x13"
 
 export enum BinFmt {
     IMG_VERSION = 0x00030001,
@@ -220,13 +220,13 @@ export const OP_PRINT_FMTS = [
     "QUERY_REG %e code=%e timeout=%e",
     "SEND_CMD %e code=%e",
     "QUERY_IDX_REG %e code=%e string=%e timeout=%e",
-    "LOG_FORMAT string=%e %L numargs=%e",
-    "FORMAT string=%e %L numargs=%e offset=%e",
+    "LOG_FORMAT %L numargs=%e string=%e",
+    "FORMAT %L numargs=%e string=%e offset=%e",
     "SETUP_PKT_BUFFER size=%e",
     "SET_PKT %e offset=%e",
     "BLIT dst=%e dst_offset=%e src=%e src_offset=%e length=%e",
-    "CALL %F %L numargs=%e",
-    "CALL_BG %F %L numargs=%e %o",
+    "CALL %L numargs=%e %F",
+    "CALL_BG %L numargs=%e %F %o",
     "RETURN %e",
     "JMP %j",
     "JMP %j IF NOT %e",

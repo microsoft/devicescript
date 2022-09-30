@@ -26,9 +26,9 @@ Wait given number of milliseconds.
 
     query_idx_reg(role, code, string, timeout) = 67
 
-    log_format(string, local_idx, numargs) = 68
+    log_format(*local_idx, numargs, string) = 68
 
-    format(string, local_idx, numargs, offset) = 69
+    format(*local_idx, numargs, string, offset) = 69
 
     setup_pkt_buffer(size) = 70
 
@@ -42,11 +42,11 @@ Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
 Copy bytes `src[src_offset .. src_offset + length]` to `dst[dst_offset .. ]`.
 Both `src` and `dst` are buffers.
 
-    call(func_idx, local_idx, numargs) = 73
+    call(*local_idx, numargs, func_idx) = 73
 
 Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`
 
-    call_bg(func_idx, local_idx, numargs, opcall) = 74
+    call_bg(*local_idx, numargs, func_idx, opcall) = 74
 
 Starts new fiber (depending on `call_type`). Returns fiber handle (existing or new).
 
