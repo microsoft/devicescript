@@ -125,6 +125,7 @@ static void mark_roots(jacs_gc_t *gc) {
         return;
     jacs_ctx_t *ctx = gc->ctx;
     scan_array(ctx, ctx->globals, ctx->img.header->num_globals, ROOT_SCAN_DEPTH);
+    scan_array(ctx, ctx->the_stack, ctx->stack_top, ROOT_SCAN_DEPTH);
     for (jacs_fiber_t *fib = ctx->fibers; fib; fib = fib->next) {
         scan_value(ctx, fib->ret_val, ROOT_SCAN_DEPTH);
         for (jacs_activation_t *act = fib->activation; act; act = act->caller) {

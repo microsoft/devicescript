@@ -1,7 +1,11 @@
 #include "jacs_internal.h"
 #include "jacs_vm_internal.h"
 
+#include <limits.h>
+#include <math.h>
+
 typedef void (*jacs_vm_stmt_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
+typedef value_t (*jacs_vm_expr_handler_t)(jacs_activation_t *frame, jacs_ctx_t *ctx);
 
 static void stmt1_wait_role(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t a = jacs_vm_exec_expr_role(frame);
@@ -95,7 +99,7 @@ static void stmt1_alloc_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx2_set_field(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned idx = jacs_vm_fetch_int(frame, ctx);
+    unsigned idx = ctx->literal_int;
     jacs_map_t *map = jacs_vm_exec_expr_map(frame, true);
     value_t v = jacs_vm_exec_expr(frame);
     if (map != NULL)
@@ -190,7 +194,7 @@ static void stmt4_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     int pc0 = frame->pc - 1;
-    int32_t off = jacs_vm_fetch_int(frame, ctx);
+    int32_t off = ctx->literal_int;
     int pc = pc0 + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
         frame->pc = pc;
@@ -201,7 +205,7 @@ static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static void stmtx1_jmp_z(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     int pc0 = frame->pc - 1;
-    int32_t off = jacs_vm_fetch_int(frame, ctx);
+    int32_t off = ctx->literal_int;
     int cond = jacs_value_to_bool(jacs_vm_exec_expr(frame));
     int pc = pc0 + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
@@ -213,7 +217,7 @@ static void stmtx1_jmp_z(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_store_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = jacs_vm_fetch_int(frame, ctx);
+    unsigned off = ctx->literal_int;
     value_t v = jacs_vm_exec_expr(frame);
     if (off >= frame->func->num_locals)
         jacs_runtime_failure(ctx, 60118);
@@ -222,7 +226,7 @@ static void stmtx1_store_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_store_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = jacs_vm_fetch_int(frame, ctx);
+    unsigned off = ctx->literal_int;
     value_t v = jacs_vm_exec_expr(frame);
     if (off >= frame->func->num_args)
         jacs_runtime_failure(ctx, 60119);
@@ -240,7 +244,7 @@ static void stmtx1_store_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_store_global(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = jacs_vm_fetch_int(frame, ctx);
+    unsigned off = ctx->literal_int;
     value_t v = jacs_vm_exec_expr(frame);
     if (off >= ctx->img.header->num_globals)
         jacs_runtime_failure(ctx, 60120);
@@ -275,7 +279,6 @@ static void stmt1_terminate_fiber(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     }
 }
 
-
 static uint32_t random_max(uint32_t mx) {
     uint32_t mask = 1;
     while (mask < mx)
@@ -302,14 +305,14 @@ static value_t expr2_str0eq(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t exprx_load_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = jacs_vm_fetch_int(frame, ctx);
+    unsigned off = ctx->literal_int;
     if (off < frame->func->num_locals)
         return frame->locals[off];
     return jacs_runtime_failure(ctx, 60105);
 }
 
 static value_t exprx_load_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = jacs_vm_fetch_int(frame, ctx);
+    unsigned off = ctx->literal_int;
     if (off < frame->num_params)
         return frame->params[off];
     // no failure here - allow for var-args in future?
@@ -317,7 +320,7 @@ static value_t exprx_load_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t exprx_load_global(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = jacs_vm_fetch_int(frame, ctx);
+    unsigned off = ctx->literal_int;
     if (off < ctx->img.header->num_globals)
         return ctx->globals[off];
     return jacs_runtime_failure(ctx, 60106);
@@ -331,12 +334,12 @@ static value_t expr3_load_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t exprx_literal(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    int32_t v = jacs_vm_fetch_int(frame, ctx);
+    int32_t v = ctx->literal_int;
     return jacs_value_from_int(v);
 }
 
 static value_t exprx_literal_f64(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = jacs_vm_fetch_int(frame, ctx);
+    unsigned off = ctx->literal_int;
     if (off < jacs_img_num_floats(&ctx->img))
         return jacs_img_get_float(&ctx->img, off);
     return jacs_runtime_failure(ctx, 60107);
@@ -417,21 +420,21 @@ static bool jacs_vm_str_ok(jacs_ctx_t *ctx, uint32_t a) {
 }
 
 static value_t exprx_static_role(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned idx = jacs_vm_fetch_int(frame, ctx);
+    unsigned idx = ctx->literal_int;
     if (!jacs_vm_role_ok(ctx, idx))
         return jacs_undefined;
     return jacs_value_from_handle(JACS_HANDLE_TYPE_ROLE, idx);
 }
 
 static value_t exprx_static_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned idx = jacs_vm_fetch_int(frame, ctx);
+    unsigned idx = ctx->literal_int;
     if (!jacs_vm_str_ok(ctx, idx))
         return jacs_undefined;
     return jacs_value_from_handle(JACS_HANDLE_TYPE_IMG_BUFFER, idx);
 }
 
 static value_t exprx1_get_field(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned idx = jacs_vm_fetch_int(frame, ctx);
+    unsigned idx = ctx->literal_int;
     jacs_map_t *map = jacs_vm_exec_expr_map(frame, false);
     if (map == NULL)
         return jacs_undefined;
@@ -759,48 +762,22 @@ static value_t expr2_min(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 #endif
 
-static const jacs_vm_expr_handler_t jacs_vm_expr_handlers[JACS_EXPR_PAST_LAST + 1] = {
-    JACS_EXPR_HANDLERS};
+static const void *jacs_op_handlers[JACS_OP_PAST_LAST + 1] = {JACS_OP_HANDLERS};
 
-void jacs_vm_check_expr() {
-    for (unsigned i = 0; i <= JACS_EXPR_PAST_LAST; ++i) {
-        if (jacs_vm_expr_handlers[i] == NULL) {
-            DMESG("missing expr %d", i);
-            jd_panic();
-        }
-    }
+static inline void jacs_vm_push(jacs_ctx_t *ctx, value_t v) {
+    if (ctx->stack_top >= JACS_MAX_STACK_DEPTH)
+        jacs_runtime_failure(ctx, 60109);
+    else
+        ctx->the_stack[ctx->stack_top++] = v;
 }
 
 value_t jacs_vm_exec_expr(jacs_activation_t *frame) {
     jacs_ctx_t *ctx = frame->fiber->ctx;
 
-    uint8_t op = jacs_vm_fetch_byte(frame, ctx);
-    if (op >= 0x80) {
-        return jacs_value_from_int(op - 0x80 - 16);
-    }
-
-    if (ctx->opstack++ > JACS_MAX_EXPR_DEPTH)
+    if (ctx->arg_stack_bottom >= ctx->stack_top)
         return jacs_runtime_failure(ctx, 60108);
 
-    if (op >= JACS_EXPR_PAST_LAST)
-        return jacs_runtime_failure(ctx, 60109);
-
-    value_t r = jacs_vm_expr_handlers[op](frame, ctx);
-    ctx->opstack--;
-
-    return r;
-}
-
-static const jacs_vm_stmt_handler_t jacs_vm_stmt_handlers[JACS_STMT_PAST_LAST + 1] = {
-    JACS_STMT_HANDLERS};
-
-void jacs_vm_check_stmt() {
-    for (unsigned i = 0; i <= JACS_STMT_PAST_LAST; i++) {
-        if (jacs_vm_stmt_handlers[i] == NULL) {
-            DMESG("missing stmt %d", i);
-            jd_panic();
-        }
-    }
+    return ctx->the_stack[ctx->arg_stack_bottom++];
 }
 
 void jacs_vm_exec_stmt(jacs_activation_t *frame) {
@@ -808,9 +785,39 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
 
     uint8_t op = jacs_vm_fetch_byte(frame, ctx);
 
-    if (op >= JACS_STMT_PAST_LAST) {
+    if (op >= JACS_DIRECT_CONST_OP) {
+        jacs_vm_push(ctx,
+                     jacs_value_from_int(op - JACS_DIRECT_CONST_OP - JACS_DIRECT_CONST_OFFSET));
+        return;
+    }
+
+    if (op >= JACS_OP_PAST_LAST) {
         jacs_runtime_failure(ctx, 60122);
     } else {
-        jacs_vm_stmt_handlers[op](frame, ctx);
+        uint8_t flags = JACS_OP_PROPS[op];
+
+        if (flags & JACS_BYTECODEFLAG_TAKES_NUMBER) {
+            ctx->literal_int = jacs_vm_fetch_int(frame, ctx);
+        }
+
+        uint8_t numargs = flags & JACS_BYTECODEFLAG_NUM_ARGS_MASK;
+
+        if (numargs) {
+            int bot = ctx->stack_top - numargs;
+            if (bot < 0)
+                jacs_runtime_failure(ctx, 60134);
+            ctx->arg_stack_bottom = bot;
+        }
+
+        if (flags & JACS_BYTECODEFLAG_IS_STMT) {
+            ((jacs_vm_stmt_handler_t)jacs_op_handlers[op])(frame, ctx);
+            ctx->stack_top -= numargs;
+            if (ctx->stack_top)
+                jacs_runtime_failure(ctx, 60135);
+        } else {
+            value_t v = ((jacs_vm_expr_handler_t)jacs_op_handlers[op])(frame, ctx);
+            ctx->stack_top -= numargs;
+            jacs_vm_push(ctx, v);
+        }
     }
 }

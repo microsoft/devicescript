@@ -85,6 +85,11 @@ struct jacs_ctx {
     value_t binop[2];
     double binop_f[2];
 
+    uint8_t stack_top;
+    uint8_t arg_stack_bottom;
+    uint32_t literal_int;
+    value_t the_stack[JACS_MAX_STACK_DEPTH];
+
     jacs_img_t img;
 
     jacs_activation_t *curr_fn;
@@ -138,7 +143,7 @@ static inline bool jacs_trace_enabled(jacs_ctx_t *ctx) {
 
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
 value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code);
-// next error 60134
+// next error 60136
 static inline value_t jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
     return _jacs_runtime_failure(ctx, code - 60000);
 }
@@ -181,8 +186,6 @@ void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 
 // step.c
 void jacs_vm_exec_stmt(jacs_activation_t *frame);
-void jacs_vm_check_stmt(void);
-void jacs_vm_check_expr(void);
 
 value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, value_t buffer,
                        value_t *setv);
