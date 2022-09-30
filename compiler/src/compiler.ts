@@ -135,7 +135,7 @@ class Role extends Cell {
             this._name = _name
             scope._addToMap(this)
         }
-        assert(!!spec)
+        assert(!!spec, "no spec " + _name)
         this.stringIndex = prog.addString(this.getName())
     }
     emit(wr: OpWriter): Value {
@@ -201,6 +201,7 @@ class Variable extends Cell {
         return true
     }
     store(wr: OpWriter, src: Value) {
+        if (this.valueType == ValueType.ANY) this.valueType = src.valueType
         if (this.isParameter)
             wr.emitStmt(Op.STMTx1_STORE_PARAM, literal(this._index), src)
         else if (this.isLocal)
@@ -754,12 +755,12 @@ class Program implements TopOpWriter {
                 }
             } else {
                 this.newDef(decl)
-                g = new Variable(decl, this.proc.locals, ValueType.NUMBER)
+                g = new Variable(decl, this.proc.locals, ValueType.ANY)
                 g.isLocal = true
             }
 
             if (decl.init) {
-                const v = this.emitSimpleValue(decl.init)
+                const v = this.emitSimpleValue(decl.init, ValueType.ANY)
                 g.valueType = v.valueType
                 this.emitStore(g, v)
             }
@@ -767,7 +768,7 @@ class Program implements TopOpWriter {
     }
 
     private emitIfStatement(stmt: estree.IfStatement) {
-        const cond = this.emitSimpleValue(stmt.test)
+        const cond = this.emitSimpleValue(stmt.test, ValueType.BOOL)
         if (cond.isLiteral) {
             if (cond.numValue) this.emitStmt(stmt.consequent)
             else {
@@ -789,7 +790,7 @@ class Program implements TopOpWriter {
         const breakLbl = wr.mkLabel("whileBrk")
 
         wr.emitLabel(continueLbl)
-        const cond = this.emitSimpleValue(stmt.test)
+        const cond = this.emitSimpleValue(stmt.test, ValueType.BOOL)
         wr.emitJump(breakLbl, cond)
 
         try {
@@ -975,11 +976,7 @@ class Program implements TopOpWriter {
                         for (const decl of s.declarations) {
                             this.newDef(decl)
                             if (!this.parseRole(decl)) {
-                                new Variable(
-                                    decl,
-                                    this.globals,
-                                    ValueType.NUMBER
-                                )
+                                new Variable(decl, this.globals, ValueType.ANY)
                             }
                         }
                         break
@@ -996,7 +993,7 @@ class Program implements TopOpWriter {
             this,
             null,
             this.roles,
-            this.serviceSpecs["jacscriptCloud"],
+            this.serviceSpecs["cloudAdapter"],
             "cloud"
         )
 
@@ -1791,12 +1788,14 @@ class Program implements TopOpWriter {
                     this.emitCloud(expr, fullName)
                 if (r) return r
             }
-            const val = this.emitRoleLike(expr.callee.object)
+            const val = this.emitExpr(expr.callee.object)
             const vobj = va(val)
             switch (val.valueType) {
                 case ValueType.JD_EVENT:
+                    this.ignore(val)
                     return this.emitEventCall(expr, vobj, prop)
                 case ValueType.JD_REG:
+                    this.ignore(val)
                     return this.emitRegisterCall(expr, vobj, prop)
                 case ValueType.BUFFER:
                     return this.emitBufferCall(expr, val, prop)
@@ -2085,20 +2084,35 @@ class Program implements TopOpWriter {
             case ValueType.NUMBER:
             case ValueType.NULL:
             case ValueType.BOOL:
+            case ValueType.BUFFER:
+            case ValueType.MAP:
+            case ValueType.ARRAY:
+            case ValueType.FIBER:
+            case ValueType.ROLE:
                 return true
             default:
                 return false
         }
     }
 
-    private requireValueType(node: estree.BaseNode, v: Value, tp: ValueType) {
-        if (tp == ValueType.BOOL && this.isBoolLike(v.valueType)) return
-        if (v.valueType != tp)
+    private isSimpleValue(tp: ValueType) {
+        return this.isBoolLike(tp)
+    }
+
+    private requireValueType(
+        node: estree.BaseNode,
+        v: Value,
+        reqTp: ValueType
+    ) {
+        if (reqTp == ValueType.BOOL && this.isBoolLike(v.valueType)) return
+        if (reqTp == ValueType.ANY && this.isSimpleValue(v.valueType)) return
+        if (v.valueType == ValueType.ANY) return
+        if (v.valueType != reqTp)
             throwError(
                 node,
                 `can't convert ${valueTypeToString(
                     v.valueType
-                )} to ${valueTypeToString(tp)}`
+                )} to ${valueTypeToString(reqTp)}`
             )
     }
 
@@ -2270,7 +2284,7 @@ class Program implements TopOpWriter {
         const wr = this.writer
 
         if (op == "&&" || op == "||") {
-            const a = this.emitSimpleValue(expr.left)
+            const a = this.emitSimpleValue(expr.left, ValueType.BOOL)
             const tmp = wr.cacheValue(a)
             const tst = wr.emitExpr(
                 op == "&&" ? Op.EXPR1_TO_BOOL : Op.EXPR1_NOT,
@@ -2278,7 +2292,7 @@ class Program implements TopOpWriter {
             )
             const skipB = wr.mkLabel("lazyB")
             wr.emitJump(skipB, tst)
-            tmp.store(this.emitSimpleValue(expr.right))
+            tmp.store(this.emitSimpleValue(expr.right, ValueType.BOOL))
             wr.emitLabel(skipB)
             const res = tmp.emit()
             tmp.free()
@@ -2316,7 +2330,7 @@ class Program implements TopOpWriter {
         }
 
         const wr = this.writer
-        const a = this.emitSimpleValue(arg)
+        const a = this.emitSimpleValue(arg, op == Op.EXPR1_NOT ? ValueType.BOOL : ValueType.NUMBER)
         return wr.emitExpr(op, a)
     }
 

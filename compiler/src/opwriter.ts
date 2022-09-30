@@ -114,6 +114,7 @@ export function literal(v: number) {
     if (v == null) {
         const r = new Value(ValueType.NULL)
         r.op = Op.EXPR0_NULL
+        r.args = []
         return r
     } else {
         const r = new Value(ValueType.NUMBER)
