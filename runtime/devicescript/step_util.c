@@ -37,23 +37,22 @@ int32_t jacs_vm_fetch_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 
-uint32_t jacs_vm_pop_arg_u32(jacs_activation_t *frame) {
+uint32_t jacs_vm_pop_arg_u32(jacs_ctx_t *ctx) {
     // TODO int vs uint?
-    return jacs_value_to_int(jacs_vm_pop_arg(frame));
+    return jacs_value_to_int(jacs_vm_pop_arg(ctx));
 }
 
-uint32_t jacs_vm_pop_arg_i32(jacs_activation_t *frame) {
+uint32_t jacs_vm_pop_arg_i32(jacs_ctx_t *ctx) {
     // TODO specialize?
-    return jacs_value_to_int(jacs_vm_pop_arg(frame));
+    return jacs_value_to_int(jacs_vm_pop_arg(ctx));
 }
 
-double jacs_vm_pop_arg_f64(jacs_activation_t *frame) {
-    return jacs_value_to_double(jacs_vm_pop_arg(frame));
+double jacs_vm_pop_arg_f64(jacs_ctx_t *ctx) {
+    return jacs_value_to_double(jacs_vm_pop_arg(ctx));
 }
 
-value_t jacs_vm_pop_arg_buffer(jacs_activation_t *frame) {
-    value_t tmp = jacs_vm_pop_arg(frame);
-    jacs_ctx_t *ctx = frame->fiber->ctx;
+value_t jacs_vm_pop_arg_buffer(jacs_ctx_t *ctx) {
+    value_t tmp = jacs_vm_pop_arg(ctx);
     if (!jacs_is_buffer(ctx, tmp)) {
         jacs_runtime_failure(ctx, 60125);
         return jacs_pkt_buffer;
@@ -61,14 +60,13 @@ value_t jacs_vm_pop_arg_buffer(jacs_activation_t *frame) {
     return tmp;
 }
 
-void *jacs_vm_pop_arg_buffer_data(jacs_activation_t *frame, unsigned *sz) {
-    value_t tmp = jacs_vm_pop_arg_buffer(frame);
-    return jacs_buffer_data(frame->fiber->ctx, tmp, sz);
+void *jacs_vm_pop_arg_buffer_data(jacs_ctx_t *ctx, unsigned *sz) {
+    value_t tmp = jacs_vm_pop_arg_buffer(ctx);
+    return jacs_buffer_data(ctx, tmp, sz);
 }
 
-unsigned jacs_vm_pop_arg_stridx(jacs_activation_t *frame) {
-    value_t tmp = jacs_vm_pop_arg(frame);
-    jacs_ctx_t *ctx = frame->fiber->ctx;
+unsigned jacs_vm_pop_arg_stridx(jacs_ctx_t *ctx) {
+    value_t tmp = jacs_vm_pop_arg(ctx);
     if (jacs_handle_type(tmp) != JACS_HANDLE_TYPE_IMG_BUFFER) {
         jacs_runtime_failure(ctx, 60127);
         return 0;
@@ -76,9 +74,8 @@ unsigned jacs_vm_pop_arg_stridx(jacs_activation_t *frame) {
     return jacs_handle_value(tmp);
 }
 
-unsigned jacs_vm_pop_arg_role(jacs_activation_t *frame) {
-    value_t tmp = jacs_vm_pop_arg(frame);
-    jacs_ctx_t *ctx = frame->fiber->ctx;
+unsigned jacs_vm_pop_arg_role(jacs_ctx_t *ctx) {
+    value_t tmp = jacs_vm_pop_arg(ctx);
     if (jacs_handle_type(tmp) != JACS_HANDLE_TYPE_ROLE) {
         jacs_runtime_failure(ctx, 60126);
         return 0;
@@ -86,9 +83,8 @@ unsigned jacs_vm_pop_arg_role(jacs_activation_t *frame) {
     return jacs_handle_value(tmp);
 }
 
-jacs_map_t *jacs_vm_pop_arg_map(jacs_activation_t *frame, bool create) {
-    value_t tmp = jacs_vm_pop_arg(frame);
-    jacs_ctx_t *ctx = frame->fiber->ctx;
+jacs_map_t *jacs_vm_pop_arg_map(jacs_ctx_t *ctx, bool create) {
+    value_t tmp = jacs_vm_pop_arg(ctx);
     if (jacs_handle_type(tmp) != JACS_HANDLE_TYPE_GC_OBJECT) {
         jacs_runtime_failure(ctx, 60128);
         return NULL;
