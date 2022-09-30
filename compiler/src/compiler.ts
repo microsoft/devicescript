@@ -7,9 +7,9 @@ import * as estree from "estree"
 import {
     SystemReg,
     SRV_JACSCRIPT_CONDITION,
-    JacscriptCloudEvent,
-    JacscriptCloudCmd,
-    JacscriptCloudCommandStatus,
+    CloudAdapterEvent,
+    CloudAdapterCmd,
+    CloudAdapterCommandStatus,
 } from "../../jacdac-c/jacdac/dist/specconstants"
 
 import {
@@ -28,15 +28,14 @@ import {
 import {
     BinFmt,
     CellDebugInfo,
-    CellKind,
+    ValueType,
     DebugInfo,
     FunctionDebugInfo,
     Host,
     JacError,
     OpCall,
-    OpExpr,
     NumFmt,
-    OpStmt,
+    Op,
     printJacError,
     RoleDebugInfo,
     SMap,
@@ -142,10 +141,10 @@ class Role extends Cell {
     }
     emit(wr: OpWriter): Value {
         const r = this.isParameter
-            ? wr.emitMemRef(OpExpr.EXPRx_LOAD_PARAM, this._index)
-            : literal(this._index)
+            ? wr.emitMemRef(Op.EXPRx_LOAD_PARAM, this._index)
+            : wr.emitExpr(Op.EXPRx_STATIC_ROLE, literal(this._index))
         va(r).role = this
-        va(r).kind = CellKind.JD_ROLE
+        va(r).kind = ValueType.JD_ROLE
         this.used = true
         return r
     }
@@ -154,7 +153,7 @@ class Role extends Cell {
     }
     store(wr: OpWriter, src: Value) {
         if (!this.isParameter) oops("can't store")
-        wr.emitStmt(OpStmt.STMTx1_STORE_LOCAL, literal(this._index), src)
+        wr.emitStmt(Op.STMTx1_STORE_LOCAL, literal(this._index), src)
     }
     serialize() {
         const r = new Uint8Array(BinFmt.ROLE_HEADER_SIZE)
@@ -193,10 +192,10 @@ class Variable extends Cell {
     }
     emit(wr: OpWriter): Value {
         const r = this.isParameter
-            ? wr.emitMemRef(OpExpr.EXPRx_LOAD_PARAM, this._index)
+            ? wr.emitMemRef(Op.EXPRx_LOAD_PARAM, this._index)
             : this.isLocal
-            ? wr.emitMemRef(OpExpr.EXPRx_LOAD_LOCAL, this._index + LOCAL_OFFSET)
-            : wr.emitMemRef(OpExpr.EXPRx_LOAD_GLOBAL, this._index)
+            ? wr.emitMemRef(Op.EXPRx_LOAD_LOCAL, this._index + LOCAL_OFFSET)
+            : wr.emitMemRef(Op.EXPRx_LOAD_GLOBAL, this._index)
         va(r).variable = this
         return r
     }
@@ -205,14 +204,14 @@ class Variable extends Cell {
     }
     store(wr: OpWriter, src: Value) {
         if (this.isParameter)
-            wr.emitStmt(OpStmt.STMTx1_STORE_PARAM, literal(this._index), src)
+            wr.emitStmt(Op.STMTx1_STORE_PARAM, literal(this._index), src)
         else if (this.isLocal)
             wr.emitStmt(
-                OpStmt.STMTx1_STORE_LOCAL,
+                Op.STMTx1_STORE_LOCAL,
                 literal(this._index + LOCAL_OFFSET),
                 src
             )
-        else wr.emitStmt(OpStmt.STMTx1_STORE_GLOBAL, literal(this._index), src)
+        else wr.emitStmt(Op.STMTx1_STORE_GLOBAL, literal(this._index), src)
     }
     toString() {
         return `var ${this.getName()}`
@@ -279,7 +278,7 @@ class FunctionDecl extends Cell {
 }
 
 class ValueAdd {
-    kind: CellKind
+    kind: ValueType
     index: number
     role?: Role
     variable?: Variable
@@ -295,7 +294,7 @@ function va(v: Value) {
     return v._userdata as ValueAdd
 }
 
-function cellKind(v: Value): CellKind {
+function cellKind(v: Value): ValueType {
     return va(v).kind || v.op
 }
 
@@ -539,7 +538,7 @@ class Program implements TopOpWriter {
             codeFragment: this.sourceFrag(pos),
         }
         ;(this.host.error || printJacError)(err)
-        return nonEmittable(CellKind.ERROR)
+        return nonEmittable(ValueType.ERROR)
     }
 
     describeCell(ff: string, idx: number): string {
@@ -590,7 +589,7 @@ class Program implements TopOpWriter {
                 )
                 role.dispatcher.init.callHere()
                 wr.emitLabel(role.dispatcher.top)
-                wr.emitStmt(OpStmt.STMT1_WAIT_ROLE, role.emit(wr))
+                wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
                 role.dispatcher.checkConnected.callHere()
             })
 
@@ -628,7 +627,7 @@ class Program implements TopOpWriter {
                                     wr.emitJump(
                                         disp.checkConnected.returnLabel,
                                         wr.emitExpr(
-                                            OpExpr.EXPR1_NOT,
+                                            Op.EXPR1_NOT,
                                             disp.wasConnected.emit(wr)
                                         )
                                     )
@@ -678,13 +677,13 @@ class Program implements TopOpWriter {
                             role.isSensor()
                         ) {
                             wr.emitStmt(
-                                OpStmt.STMT2_SETUP_BUFFER,
+                                Op.STMT2_SETUP_BUFFER,
                                 literal(1),
                                 literal(0)
                             )
                             wr.emitStoreByte(literal(199), 0)
                             wr.emitStmt(
-                                OpStmt.STMT2_SEND_CMD,
+                                Op.STMT2_SEND_CMD,
                                 role.emit(wr),
                                 literal(
                                     SystemReg.StreamingSamples | CMD_SET_REG
@@ -692,12 +691,11 @@ class Program implements TopOpWriter {
                             )
                         } else {
                             wr.emitStmt(
-                                OpStmt.STMT2_SETUP_BUFFER,
-                                literal(0),
+                                Op.STMT1_SETUP_PKT_BUFFER,
                                 literal(0)
                             )
                             wr.emitStmt(
-                                OpStmt.STMT2_SEND_CMD,
+                                Op.STMT2_SEND_CMD,
                                 role.emit(wr),
                                 literal(reg.identifier | CMD_GET_REG)
                             )
@@ -705,7 +703,7 @@ class Program implements TopOpWriter {
                     }
                 })
             }
-            wr.emitStmt(OpStmt.STMT1_SLEEP_MS, literal(period))
+            wr.emitStmt(Op.STMT1_SLEEP_MS, literal(period))
             wr.emitJump(wr.top)
         })
 
@@ -863,7 +861,7 @@ class Program implements TopOpWriter {
     }
 
     private emitAckCloud(
-        code: JacscriptCloudCommandStatus,
+        code: CloudAdapterCommandStatus,
         isOuter: boolean,
         args: Expr[] = []
     ) {
@@ -872,9 +870,9 @@ class Program implements TopOpWriter {
         {
             const tmp = isOuter
                 ? wr.emitBufLoad(NumFmt.U32, 0)
-                : wr.emitMemRef(OpExpr.EXPRx_LOAD_PARAM, 0)
+                : wr.emitMemRef(Op.EXPRx_LOAD_PARAM, 0)
             wr.emitStmt(
-                OpStmt.STMT2_SETUP_BUFFER,
+                Op.STMT2_SETUP_BUFFER,
                 literal(8 + args.length * 8),
                 literal(0)
             )
@@ -889,9 +887,9 @@ class Program implements TopOpWriter {
         }
         wr.freeBuf()
         wr.emitStmt(
-            OpStmt.STMT2_SEND_CMD,
+            Op.STMT2_SEND_CMD,
             this.cloudRole.emit(wr),
-            literal(JacscriptCloudCmd.AckCloudCommand)
+            literal(CloudAdapterCmd.AckCloudCommand)
         )
     }
 
@@ -904,16 +902,16 @@ class Program implements TopOpWriter {
             } else if (stmt.argument) {
                 args = [stmt.argument]
             }
-            this.emitAckCloud(JacscriptCloudCommandStatus.OK, false, args)
+            this.emitAckCloud(CloudAdapterCommandStatus.OK, false, args)
         } else if (stmt.argument) {
             if (wr.ret) oops("return with value not supported here")
             wr.emitStmt(
-                OpStmt.STMT1_RETURN,
+                Op.STMT1_RETURN,
                 this.emitSimpleValue(stmt.argument)
             )
         } else {
             if (wr.ret) this.writer.emitJump(this.writer.ret)
-            else wr.emitStmt(OpStmt.STMT1_RETURN, literal(NaN))
+            else wr.emitStmt(Op.STMT1_RETURN, literal(NaN))
         }
     }
 
@@ -932,7 +930,7 @@ class Program implements TopOpWriter {
         proc: Procedure
     ) {
         this.emitStmt(stmt.body)
-        this.writer.emitStmt(OpStmt.STMT1_RETURN, literal(NaN))
+        this.writer.emitStmt(Op.STMT1_RETURN, literal(NaN))
     }
 
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
@@ -1083,7 +1081,7 @@ class Program implements TopOpWriter {
             this.startDispatchers.callHere()
             for (const s of prog.body) this.emitStmt(s)
             this.onStart.finalizeRaw()
-            this.writer.emitStmt(OpStmt.STMT1_RETURN, literal(0))
+            this.writer.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeAutoRefresh()
             this.startDispatchers.finalize()
         })
@@ -1134,7 +1132,7 @@ class Program implements TopOpWriter {
                 proc.methodSeqNo = proc.mkTempLocal("methSeqNo")
             this.emitParameters(func, proc)
             if (options.every) {
-                wr.emitStmt(OpStmt.STMT1_SLEEP_MS, literal(options.every))
+                wr.emitStmt(Op.STMT1_SLEEP_MS, literal(options.every))
             }
             if (func.body.type == "BlockStatement") {
                 for (const stmt of func.body.body) this.emitStmt(stmt)
@@ -1145,8 +1143,8 @@ class Program implements TopOpWriter {
             if (options.every) wr.emitJump(wr.top)
             else {
                 if (options.methodHandler)
-                    this.emitAckCloud(JacscriptCloudCommandStatus.OK, false, [])
-                wr.emitStmt(OpStmt.STMT1_RETURN, literal(NaN))
+                    this.emitAckCloud(CloudAdapterCommandStatus.OK, false, [])
+                wr.emitStmt(Op.STMT1_RETURN, literal(NaN))
             }
         })
         return proc
@@ -1191,8 +1189,8 @@ class Program implements TopOpWriter {
         const handler = this.emitHandler(name, handlerExpr)
         this.emitInRoleDispatcher(role, wr => {
             const cond = wr.emitExpr(
-                OpExpr.EXPR2_EQ,
-                wr.emitExpr(OpExpr.EXPR0_PKT_EV_CODE),
+                Op.EXPR2_EQ,
+                wr.emitExpr(Op.EXPR0_PKT_EV_CODE),
                 literal(code)
             )
             wr.emitIfAndPop(cond, () =>
@@ -1223,10 +1221,10 @@ class Program implements TopOpWriter {
                 const wr = this.writer
                 const lbl = wr.mkLabel("wait")
                 wr.emitLabel(lbl)
-                wr.emitStmt(OpStmt.STMT1_WAIT_ROLE, role.emit(wr))
+                wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
                 const cond = wr.emitExpr(
-                    OpExpr.EXPR2_EQ,
-                    wr.emitExpr(OpExpr.EXPR0_PKT_EV_CODE),
+                    Op.EXPR2_EQ,
+                    wr.emitExpr(Op.EXPR0_PKT_EV_CODE),
                     literal(vobj.spec.identifier)
                 )
                 wr.emitJump(lbl, cond)
@@ -1261,7 +1259,7 @@ class Program implements TopOpWriter {
         const role = vobj.role
         const wr = this.writer
         wr.emitStmt(
-            OpStmt.STMT3_QUERY_REG,
+            Op.STMT3_QUERY_REG,
             role.emit(wr),
             literal(spec.identifier),
             literal(refresh)
@@ -1269,7 +1267,7 @@ class Program implements TopOpWriter {
         if (field) {
             return this.extractRegField(vobj, field)
         } else {
-            const r = nonEmittable(CellKind.JD_VALUE_SEQ)
+            const r = nonEmittable(ValueType.JD_VALUE_SEQ)
             va(r).spec = spec
             va(r).role = role
             return r
@@ -1278,7 +1276,7 @@ class Program implements TopOpWriter {
 
     private emitIsRoleConnected(role: Role) {
         return this.writer.emitExpr(
-            OpExpr.EXPR1_ROLE_IS_CONNECTED,
+            Op.EXPR1_ROLE_IS_CONNECTED,
             role.emit(this.writer)
         )
     }
@@ -1317,25 +1315,25 @@ class Program implements TopOpWriter {
                 if (!role.isCondition())
                     throwError(expr, "only condition()s have wait()")
                 this.requireArgs(expr, 0)
-                wr.emitStmt(OpStmt.STMT1_WAIT_ROLE, role.emit(wr))
+                wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
                 return literal(0)
             default:
                 const v = this.emitRoleMember(expr.callee, role)
                 const k = cellKind(v)
-                if (k == CellKind.JD_CLIENT_COMMAND) {
+                if (k == ValueType.JD_CLIENT_COMMAND) {
                     return this.emitProcCall(
                         expr,
                         this.getClientCommandProc(va(v).clientCommand),
                         true
                     )
-                } else if (k == CellKind.JD_COMMAND) {
+                } else if (k == ValueType.JD_COMMAND) {
                     this.emitPackArgs(expr, va(v).spec)
                     wr.emitStmt(
-                        OpStmt.STMT2_SEND_CMD,
+                        Op.STMT2_SEND_CMD,
                         role.emit(wr),
                         literal(va(v).spec.identifier)
                     )
-                } else if (k != CellKind.ERROR) {
+                } else if (k != ValueType.ERROR) {
                     throwError(expr, `${stringifyCellKind(k)} can't be called`)
                 }
                 return literal(0)
@@ -1411,7 +1409,7 @@ class Program implements TopOpWriter {
                 this.requireArgs(expr, 2)
                 const fmt = this.parseFormat(expr.arguments[1])
                 return wr.emitExpr(
-                    OpExpr.EXPR3_LOAD_BUFFER,
+                    Op.EXPR3_LOAD_BUFFER,
                     literal(fmt),
                     this.emitSimpleValue(expr.arguments[0]),
                     buf.emit(wr)
@@ -1424,7 +1422,7 @@ class Program implements TopOpWriter {
                 const off = this.emitSimpleValue(expr.arguments[0])
                 const val = this.emitSimpleValue(expr.arguments[2])
                 wr.emitStmt(
-                    OpStmt.STMT4_STORE_BUFFER,
+                    Op.STMT4_STORE_BUFFER,
                     literal(fmt),
                     off,
                     buf.emit(wr),
@@ -1436,7 +1434,7 @@ class Program implements TopOpWriter {
             case "setLength": {
                 this.requireArgs(expr, 1)
                 const len = this.emitSimpleValue(expr.arguments[0])
-                wr.emitStmt(OpStmt.STMT2_SETUP_BUFFER, len, buf.emit(wr))
+                wr.emitStmt(Op.STMT2_SETUP_BUFFER, len, buf.emit(wr))
                 return literal(0)
             }
 
@@ -1453,7 +1451,7 @@ class Program implements TopOpWriter {
                 const srcOffset = this.emitSimpleValue(expr.arguments[2])
                 const len = this.emitSimpleValue(expr.arguments[3])
                 wr.emitStmt(
-                    OpStmt.STMT5_BLIT,
+                    Op.STMT5_BLIT,
                     buf.emit(wr),
                     dstOffset,
                     srcref,
@@ -1565,11 +1563,11 @@ class Program implements TopOpWriter {
             throwError(expr, "arguments do not fit in a packet")
 
         wr.allocBuf()
-        wr.emitStmt(OpStmt.STMT2_SETUP_BUFFER, literal(offset), literal(0))
+        wr.emitStmt(Op.STMT2_SETUP_BUFFER, literal(offset), literal(0))
         for (const desc of args) {
             if (desc.stringLiteralVal !== undefined) {
                 const vd = desc.stringLiteralVal
-                wr.emitStmt(OpStmt.STMT2_MEMCPY, vd, literal(desc.offset))
+                wr.emitStmt(Op.STMT2_MEMCPY, vd, literal(desc.offset))
             } else {
                 wr.emitBufStore(desc.val, bufferFmt(desc.spec), desc.offset)
             }
@@ -1593,7 +1591,7 @@ class Program implements TopOpWriter {
             case "write":
                 this.emitPackArgs(expr, vobj.spec)
                 wr.emitStmt(
-                    OpStmt.STMT2_SEND_CMD,
+                    Op.STMT2_SEND_CMD,
                     role.emit(wr),
                     literal(vobj.spec.identifier | CMD_SET_REG)
                 )
@@ -1614,8 +1612,8 @@ class Program implements TopOpWriter {
                         this.emitStore(cache, literal(NaN))
                     })
                     const cond = wr.emitExpr(
-                        OpExpr.EXPR2_EQ,
-                        wr.emitExpr(OpExpr.EXPR0_PKT_REG_GET_CODE),
+                        Op.EXPR2_EQ,
+                        wr.emitExpr(Op.EXPR0_PKT_REG_GET_CODE),
                         literal(vobj.spec.identifier)
                     )
                     wr.emitIfAndPop(cond, () => {
@@ -1627,14 +1625,14 @@ class Program implements TopOpWriter {
                         // if (isNaN(curr)) goto skip (shouldn't really happen unless service is misbehaving)
                         wr.emitJumpIfTrue(
                             skipHandler,
-                            wr.emitExpr(OpExpr.EXPR1_IS_NAN, curr.emit())
+                            wr.emitExpr(Op.EXPR1_IS_NAN, curr.emit())
                         )
                         // if (Math.abs(tmp-curr) < threshold) goto skip
                         // note that this also calls handler() if cache was NaN
                         const absval = wr.emitExpr(
-                            OpExpr.EXPR1_ABS,
+                            Op.EXPR1_ABS,
                             wr.emitExpr(
-                                OpExpr.EXPR2_SUB,
+                                Op.EXPR2_SUB,
                                 cache.emit(wr),
                                 curr.emit()
                             )
@@ -1642,7 +1640,7 @@ class Program implements TopOpWriter {
                         wr.emitJumpIfTrue(
                             skipHandler,
                             wr.emitExpr(
-                                OpExpr.EXPR2_LT,
+                                Op.EXPR2_LT,
                                 absval,
                                 literal(threshold)
                             )
@@ -1690,18 +1688,18 @@ class Program implements TopOpWriter {
         this.emitInRoleDispatcher(this.cloudRole, wr => {
             const skipMethods = wr.mkLabel("skipMethods")
             const cond = wr.emitExpr(
-                OpExpr.EXPR2_EQ,
-                wr.emitExpr(OpExpr.EXPR0_PKT_EV_CODE),
-                literal(JacscriptCloudEvent.CloudCommand)
+                Op.EXPR2_EQ,
+                wr.emitExpr(Op.EXPR0_PKT_EV_CODE),
+                literal(CloudAdapterEvent.CloudCommand)
             )
             wr.emitJump(skipMethods, cond)
 
             this.cloudMethodDispatcher.finalizeRaw()
-            this.emitAckCloud(JacscriptCloudCommandStatus.NotFound, true)
+            this.emitAckCloud(CloudAdapterCommandStatus.NotFound, true)
             wr.emitJump(this.cloudRole.dispatcher.top)
 
             wr.emitLabel(this.cloudMethod429)
-            this.emitAckCloud(JacscriptCloudCommandStatus.Busy, true)
+            this.emitAckCloud(CloudAdapterCommandStatus.Busy, true)
             wr.emitJump(this.cloudRole.dispatcher.top)
 
             wr.emitLabel(skipMethods)
@@ -1729,14 +1727,14 @@ class Program implements TopOpWriter {
 
         this.cloudMethodDispatcher.emit(wr => {
             const skip = wr.mkLabel("skipMethod")
-            wr.emitJump(skip, wr.emitExpr(OpExpr.EXPR2_STR0EQ, str, literal(4)))
+            wr.emitJump(skip, wr.emitExpr(Op.EXPR2_STR0EQ, str, literal(4)))
             const args = wr.allocTmpLocals(handler.numargs)
             args[0].store(wr.emitBufLoad(NumFmt.U32, 0))
             const pref = 4 + strlen(this.stringLiteral(expr.arguments[0])) + 1
             for (let i = 1; i < handler.numargs; ++i)
                 args[i].store(wr.emitBufLoad(NumFmt.F64, pref + (i - 1) * 8))
             handler.callMe(wr, args, OpCall.BG_MAX1)
-            wr.emitJump(this.cloudMethod429, wr.emitExpr(OpExpr.EXPR0_RET_VAL))
+            wr.emitJump(this.cloudMethod429, wr.emitExpr(Op.EXPR0_RET_VAL))
             wr.emitJump(this.cloudRole.dispatcher.top)
             wr.emitLabel(skip)
         })
@@ -1752,7 +1750,7 @@ class Program implements TopOpWriter {
                 )
                 this.emitPackArgs(expr, spec)
                 wr.emitStmt(
-                    OpStmt.STMT2_SEND_CMD,
+                    Op.STMT2_SEND_CMD,
                     this.cloudRole.emit(wr),
                     literal(spec.identifier)
                 )
@@ -1767,7 +1765,7 @@ class Program implements TopOpWriter {
                     idName(arg0.callee) == "format"
                 ) {
                     const r = this.emitFmtArgs(arg0)
-                    wr.emitStmt(OpStmt.STMT3_LOG_FORMAT, ...r.fmt)
+                    wr.emitStmt(Op.STMT3_LOG_FORMAT, ...r.fmt)
                     r.free()
                 } else {
                     let fmt = ""
@@ -1784,7 +1782,7 @@ class Program implements TopOpWriter {
                     }
                     const r = this.fmtArgs(fmtargs)
                     wr.emitStmt(
-                        OpStmt.STMT3_LOG_FORMAT,
+                        Op.STMT3_LOG_FORMAT,
                         wr.emitString(fmt),
                         ...r.fmt
                     )
@@ -1792,7 +1790,7 @@ class Program implements TopOpWriter {
                 }
                 return literal(0)
             case "Date.now":
-                return wr.emitExpr(OpExpr.EXPR0_NOW_MS)
+                return wr.emitExpr(Op.EXPR0_NOW_MS)
             default:
                 return null
         }
@@ -1800,31 +1798,31 @@ class Program implements TopOpWriter {
 
     private emitMath(expr: estree.CallExpression, fnName: string): Value {
         interface Desc {
-            m1?: OpExpr
-            m2?: OpExpr
+            m1?: Op
+            m2?: Op
             lastArg?: number
             firstArg?: number
             div?: number
         }
 
         const funs: SMap<Desc> = {
-            "Math.floor": { m1: OpExpr.EXPR1_FLOOR },
-            "Math.round": { m1: OpExpr.EXPR1_ROUND },
-            "Math.ceil": { m1: OpExpr.EXPR1_CEIL },
-            "Math.log": { m1: OpExpr.EXPR1_LOG_E },
-            "Math.random": { m1: OpExpr.EXPR1_RANDOM, lastArg: 1.0 },
-            "Math.randomInt": { m1: OpExpr.EXPR1_RANDOM_INT },
-            "Math.max": { m2: OpExpr.EXPR2_MAX },
-            "Math.min": { m2: OpExpr.EXPR2_MIN },
-            "Math.pow": { m2: OpExpr.EXPR2_POW },
-            "Math.idiv": { m2: OpExpr.EXPR2_IDIV },
-            "Math.imul": { m2: OpExpr.EXPR2_IMUL },
-            "Math.sqrt": { m2: OpExpr.EXPR2_POW, lastArg: 1 / 2 },
-            "Math.cbrt": { m2: OpExpr.EXPR2_POW, lastArg: 1 / 3 },
-            "Math.exp": { m2: OpExpr.EXPR2_POW, firstArg: Math.E },
-            "Math.log10": { m1: OpExpr.EXPR1_LOG_E, div: Math.log(10) },
-            "Math.log2": { m1: OpExpr.EXPR1_LOG_E, div: Math.log(2) },
-            "Math.abs": { m1: OpExpr.EXPR1_ABS },
+            "Math.floor": { m1: Op.EXPR1_FLOOR },
+            "Math.round": { m1: Op.EXPR1_ROUND },
+            "Math.ceil": { m1: Op.EXPR1_CEIL },
+            "Math.log": { m1: Op.EXPR1_LOG_E },
+            "Math.random": { m1: Op.EXPR1_RANDOM, lastArg: 1.0 },
+            "Math.randomInt": { m1: Op.EXPR1_RANDOM_INT },
+            "Math.max": { m2: Op.EXPR2_MAX },
+            "Math.min": { m2: Op.EXPR2_MIN },
+            "Math.pow": { m2: Op.EXPR2_POW },
+            "Math.idiv": { m2: Op.EXPR2_IDIV },
+            "Math.imul": { m2: Op.EXPR2_IMUL },
+            "Math.sqrt": { m2: Op.EXPR2_POW, lastArg: 1 / 2 },
+            "Math.cbrt": { m2: Op.EXPR2_POW, lastArg: 1 / 3 },
+            "Math.exp": { m2: Op.EXPR2_POW, firstArg: Math.E },
+            "Math.log10": { m1: Op.EXPR1_LOG_E, div: Math.log(10) },
+            "Math.log2": { m1: Op.EXPR1_LOG_E, div: Math.log(2) },
+            "Math.abs": { m1: Op.EXPR1_ABS },
         }
 
         const wr = this.writer
@@ -1847,7 +1845,7 @@ class Program implements TopOpWriter {
         let res = wr.emitExpr(f.m1 || f.m2, ...allArgs)
 
         if (f.div !== undefined)
-            res = wr.emitExpr(OpExpr.EXPR2_MUL, res, literal(1 / f.div))
+            res = wr.emitExpr(Op.EXPR2_MUL, res, literal(1 / f.div))
 
         return res
     }
@@ -1869,7 +1867,7 @@ class Program implements TopOpWriter {
         }
         const cargs = this.emitArgs(args, proc.args())
         proc.callMe(wr, cargs)
-        return wr.emitExpr(OpExpr.EXPR0_RET_VAL)
+        return wr.emitExpr(Op.EXPR0_RET_VAL)
     }
 
     private emitCallExpression(expr: estree.CallExpression): Value {
@@ -1886,9 +1884,9 @@ class Program implements TopOpWriter {
             }
             const vobj = this.emitRoleLike(expr.callee.object)
             switch (vobj.kind) {
-                case CellKind.JD_EVENT:
+                case ValueType.JD_EVENT:
                     return this.emitEventCall(expr, vobj, prop)
-                case CellKind.JD_REG:
+                case ValueType.JD_REG:
                     return this.emitRegisterCall(expr, vobj, prop)
                 default:
                     if (vobj.buffer)
@@ -1915,7 +1913,7 @@ class Program implements TopOpWriter {
             case "wait": {
                 this.requireArgs(expr, 1)
                 wr.emitStmt(
-                    OpStmt.STMT1_SLEEP_S,
+                    Op.STMT1_SLEEP_S,
                     this.emitExpr(expr.arguments[0])
                 )
                 return literal(0)
@@ -1923,13 +1921,13 @@ class Program implements TopOpWriter {
             case "isNaN": {
                 this.requireArgs(expr, 1)
                 return wr.emitExpr(
-                    OpExpr.EXPR1_IS_NAN,
+                    Op.EXPR1_IS_NAN,
                     this.emitSimpleValue(expr.arguments[0])
                 )
             }
             case "reboot": {
                 this.requireArgs(expr, 0)
-                wr.emitStmt(OpStmt.STMT1_PANIC, literal(0))
+                wr.emitStmt(Op.STMT1_PANIC, literal(0))
                 return literal(0)
             }
             case "panic": {
@@ -1940,7 +1938,7 @@ class Program implements TopOpWriter {
                         expr,
                         "panic() code must be integer between 1 and 9999"
                     )
-                wr.emitStmt(OpStmt.STMT1_PANIC, literal(code))
+                wr.emitStmt(Op.STMT1_PANIC, literal(code))
                 return literal(0)
             }
             case "every": {
@@ -1967,7 +1965,7 @@ class Program implements TopOpWriter {
             case "format":
                 const r = wr.allocBuf()
                 const t = this.emitFmtArgs(expr)
-                wr.emitStmt(OpStmt.STMT4_FORMAT, ...t.fmt, literal(0))
+                wr.emitStmt(Op.STMT4_FORMAT, ...t.fmt, literal(0))
                 t.free()
                 wr.freeBuf()
                 return r
@@ -2014,7 +2012,7 @@ class Program implements TopOpWriter {
         let r: Value
         let v: ValueAdd
 
-        const setKind = (p: jdspec.PacketInfo, id: CellKind) => {
+        const setKind = (p: jdspec.PacketInfo, id: ValueType) => {
             assert(!r)
             r = nonEmittable(id)
             v = va(r)
@@ -2025,7 +2023,7 @@ class Program implements TopOpWriter {
 
         for (const cmd of this.clientCommands[role.spec.camelName] ?? []) {
             if (this.matchesSpecName(cmd.pktSpec, propName)) {
-                setKind(cmd.pktSpec, CellKind.JD_CLIENT_COMMAND)
+                setKind(cmd.pktSpec, ValueType.JD_CLIENT_COMMAND)
                 v.clientCommand = cmd
                 return r
             }
@@ -2042,13 +2040,13 @@ class Program implements TopOpWriter {
                 (generic?.identifier == p.identifier && generic?.kind == p.kind)
             ) {
                 if (isRegister(p)) {
-                    setKind(p, CellKind.JD_REG)
+                    setKind(p, ValueType.JD_REG)
                 }
                 if (isEvent(p)) {
-                    setKind(p, CellKind.JD_EVENT)
+                    setKind(p, ValueType.JD_EVENT)
                 }
                 if (isCommand(p)) {
-                    setKind(p, CellKind.JD_COMMAND)
+                    setKind(p, ValueType.JD_COMMAND)
                 }
             }
         }
@@ -2097,9 +2095,9 @@ class Program implements TopOpWriter {
         }
         const vobj = this.emitRoleLike(expr.object)
         const k = vobj.kind
-        if (k == CellKind.JD_ROLE) {
+        if (k == ValueType.JD_ROLE) {
             return this.emitRoleMember(expr, vobj.role)
-        } else if (k == CellKind.JD_REG) {
+        } else if (k == ValueType.JD_REG) {
             const propName = this.forceName(expr.property)
             if (vobj.spec.fields.length > 1) {
                 const fld = vobj.spec.fields.find(f =>
@@ -2137,8 +2135,8 @@ class Program implements TopOpWriter {
         if (typeof v == "string") {
             const r = wr.allocBuf()
             const vd = wr.emitString(v)
-            wr.emitStmt(OpStmt.STMT2_SETUP_BUFFER, literal(strlen(v)))
-            wr.emitStmt(OpStmt.STMT2_MEMCPY, vd, literal(0))
+            wr.emitStmt(Op.STMT2_SETUP_BUFFER, literal(strlen(v)))
+            wr.emitStmt(Op.STMT2_MEMCPY, vd, literal(0))
             wr.freeBuf()
             return r
         }
@@ -2168,7 +2166,7 @@ class Program implements TopOpWriter {
 
     private emitRoleRef(expr: Expr) {
         const val = this.emitExpr(expr)
-        if (cellKind(val) != CellKind.JD_ROLE)
+        if (cellKind(val) != ValueType.JD_ROLE)
             throwError(expr, "role expected here")
         return val
     }
@@ -2258,7 +2256,7 @@ class Program implements TopOpWriter {
 
         if (this.compileAll) this.getClientCommandProc(cmd)
 
-        return nonEmittable(CellKind.ERROR)
+        return nonEmittable(ValueType.ERROR)
     }
 
     private emitAssignmentExpression(expr: estree.AssignmentExpression): Value {
@@ -2272,7 +2270,7 @@ class Program implements TopOpWriter {
         const wr = this.writer
         let left = expr.left
         if (left.type == "ArrayPattern") {
-            if (cellKind(src) == CellKind.JD_VALUE_SEQ) {
+            if (cellKind(src) == ValueType.JD_VALUE_SEQ) {
                 let off = 0
                 const spec = va(src).spec
                 for (let i = 0; i < left.elements.length; ++i) {
@@ -2286,11 +2284,11 @@ class Program implements TopOpWriter {
             } else {
                 throwError(expr, "expecting a multi-field register read")
             }
-            return nonEmittable(CellKind.ERROR)
+            return nonEmittable(ValueType.ERROR)
         } else if (left.type == "Identifier") {
             this.requireRuntimeValue(expr.right, src)
             this.emitStore(this.lookupVar(left), src)
-            return nonEmittable(CellKind.ERROR)
+            return nonEmittable(ValueType.ERROR)
         }
         throwError(expr, "unhandled assignment")
     }
@@ -2298,23 +2296,23 @@ class Program implements TopOpWriter {
     private emitBinaryExpression(
         expr: estree.BinaryExpression | estree.LogicalExpression
     ): Value {
-        const simpleOps: SMap<OpExpr> = {
-            "+": OpExpr.EXPR2_ADD,
-            "-": OpExpr.EXPR2_SUB,
-            "/": OpExpr.EXPR2_DIV,
-            "*": OpExpr.EXPR2_MUL,
-            "<": OpExpr.EXPR2_LT,
-            "|": OpExpr.EXPR2_BIT_OR,
-            "&": OpExpr.EXPR2_BIT_AND,
-            "^": OpExpr.EXPR2_BIT_XOR,
-            "<<": OpExpr.EXPR2_SHIFT_LEFT,
-            ">>": OpExpr.EXPR2_SHIFT_RIGHT,
-            ">>>": OpExpr.EXPR2_SHIFT_RIGHT_UNSIGNED,
-            "<=": OpExpr.EXPR2_LE,
-            "==": OpExpr.EXPR2_EQ,
-            "===": OpExpr.EXPR2_EQ,
-            "!=": OpExpr.EXPR2_NE,
-            "!==": OpExpr.EXPR2_NE,
+        const simpleOps: SMap<Op> = {
+            "+": Op.EXPR2_ADD,
+            "-": Op.EXPR2_SUB,
+            "/": Op.EXPR2_DIV,
+            "*": Op.EXPR2_MUL,
+            "<": Op.EXPR2_LT,
+            "|": Op.EXPR2_BIT_OR,
+            "&": Op.EXPR2_BIT_AND,
+            "^": Op.EXPR2_BIT_XOR,
+            "<<": Op.EXPR2_SHIFT_LEFT,
+            ">>": Op.EXPR2_SHIFT_RIGHT,
+            ">>>": Op.EXPR2_SHIFT_RIGHT_UNSIGNED,
+            "<=": Op.EXPR2_LE,
+            "==": Op.EXPR2_EQ,
+            "===": Op.EXPR2_EQ,
+            "!=": Op.EXPR2_NE,
+            "!==": Op.EXPR2_NE,
         }
 
         let op = expr.operator
@@ -2347,7 +2345,7 @@ class Program implements TopOpWriter {
             const a = this.emitSimpleValue(expr.left)
             const tmp = wr.cacheValue(a)
             const tst = wr.emitExpr(
-                op == "&&" ? OpExpr.EXPR1_TO_BOOL : OpExpr.EXPR1_NOT,
+                op == "&&" ? Op.EXPR1_TO_BOOL : Op.EXPR1_NOT,
                 tmp.emit()
             )
             const skipB = wr.mkLabel("lazyB")
@@ -2368,11 +2366,11 @@ class Program implements TopOpWriter {
     }
 
     private emitUnaryExpression(expr: estree.UnaryExpression): Value {
-        const simpleOps: SMap<OpExpr> = {
-            "!": OpExpr.EXPR1_NOT,
-            "-": OpExpr.EXPR1_NEG,
-            "~": OpExpr.EXPR1_BIT_NOT,
-            "+": OpExpr.EXPR1_ID,
+        const simpleOps: SMap<Op> = {
+            "!": Op.EXPR1_NOT,
+            "-": Op.EXPR1_NEG,
+            "~": Op.EXPR1_BIT_NOT,
+            "+": Op.EXPR1_ID,
         }
 
         let op = simpleOps[expr.operator]
@@ -2385,7 +2383,7 @@ class Program implements TopOpWriter {
             arg.type == "UnaryExpression" &&
             arg.operator == "!"
         ) {
-            op = OpExpr.EXPR1_TO_BOOL
+            op = Op.EXPR1_TO_BOOL
             arg = arg.argument
         }
 

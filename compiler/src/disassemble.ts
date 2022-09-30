@@ -54,8 +54,7 @@ export function disassemble(img: Uint8Array): string {
         roleData,
         strDesc,
         strData,
-        bufferDesc,
-    ] = range(7).map(i =>
+    ] = range(BinFmt.NUM_IMG_SECTIONS).map(i =>
         decodeSection(
             img,
             BinFmt.FIX_HEADER_SIZE + i * BinFmt.SECTION_HEADER_SIZE

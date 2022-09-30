@@ -4,6 +4,7 @@ interface OpCode {
     name: string
     args: string[]
     code: string
+    rettype: string
     printFmt?: string
     description?: string
     comment?: string
@@ -18,11 +19,13 @@ interface SMap<T> {
 interface Spec {
     ops: OpCode[]
     opProps?: string
+    opTypes?: string
     enums: SMap<OpCode[]>
 }
 
 const _spec = processSpec(fs.readFileSync(process.argv[2], "utf-8"))
 _spec.opProps = serializeProps(_spec.ops, opcodeProps)
+_spec.opTypes = serializeProps(_spec.ops, opcodeType)
 writeFile("bytecode.json", JSON.stringify(_spec, null, 4))
 writeFile("jacs_bytecode.h", genCode(_spec, false))
 writeFile("bytecode.ts", genCode(_spec, true))
@@ -198,7 +201,7 @@ function processSpec(filecontent: string): Spec {
                 lineTr = lineTr.slice(4).trim()
             }
             let m =
-                /^(\w+)(\s*\((.*)\))?\s*=\s*(\d+|0[bB][01]+|0[Xx][a-fA-F0-9]+)\s*(\/\/\s*(.*))?$/.exec(
+                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*(\d+|0[bB][01]+|0[Xx][a-fA-F0-9]+)\s*(\/\/\s*(.*))?$/.exec(
                     lineTr
                 )
             if (!m) {
@@ -209,7 +212,17 @@ function processSpec(filecontent: string): Spec {
                 error("no container")
                 return
             }
-            const [_line, name, _paren, args_str, code, _cmt, comment] = m
+            const [
+                _line,
+                name,
+                _paren,
+                args_str,
+                _rettype,
+                rettype,
+                code,
+                _cmt,
+                comment,
+            ] = m
             let args: string[] = []
             if (args_str) args = args_str.split(/,\s*/).filter(s => !!s.trim())
             finish()
@@ -218,6 +231,7 @@ function processSpec(filecontent: string): Spec {
                 args,
                 code,
                 comment,
+                rettype: rettype || "void",
                 isFun,
             }
             if (args[0] && args[0][0] == "*") {
@@ -231,7 +245,10 @@ function processSpec(filecontent: string): Spec {
                     currObj.comment2 = c
                 }
             }
-            if (isExpr) currObj.isExpr = true
+            if (isExpr) {
+                currObj.isExpr = true
+                if (!rettype) error("return type not specified")
+            }
             currColl.push(currObj)
         }
     }
@@ -297,10 +314,12 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
     emitDefine(`OP_`, {
         name: "past_last",
         code: spec.ops.length + 1 + "",
+        rettype: "number",
         args: [],
     })
     endEnum()
     emitConst("op_props", spec.opProps)
+    emitConst("op_types", spec.opTypes)
 
     for (const enName of Object.keys(spec.enums)) {
         const pref =
@@ -362,7 +381,9 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
 }
 
 function lookupEnum(en: string, fld: string) {
-    return +_spec.enums[en].find(o => o.name == fld).code
+    const ent = _spec.enums[en].find(o => o.name == fld)
+    if (!ent) return undefined
+    return +ent.code
 }
 
 function opcodeProps(obj: OpCode) {
@@ -370,5 +391,12 @@ function opcodeProps(obj: OpCode) {
     if (obj.takesNumber) r |= lookupEnum("BytecodeFlag", "takes_number")
     if (obj.isFun) r |= lookupEnum("BytecodeFlag", "is_stateless")
     if (!obj.isExpr) r |= lookupEnum("BytecodeFlag", "is_stmt")
+    if (r == undefined) throw new Error()
     return r
+}
+
+function opcodeType(obj: OpCode) {
+    const tp = lookupEnum("Object_Type", obj.rettype)
+    if (tp == undefined) throw new Error("invalid type: " + obj.rettype)
+    return tp
 }

@@ -1,14 +1,11 @@
 import {
-    OpStmt,
-    OpExpr,
+    Op,
     OpCall,
     NumFmt,
-    STMT_PROPS,
     BytecodeFlag,
-    EXPR_PROPS,
     BinFmt,
-    EXPR_PRINT_FMTS,
-    STMT_PRINT_FMTS,
+    OP_PROPS,
+    OP_PRINT_FMTS,
 } from "./bytecode"
 
 export * from "./bytecode"
@@ -17,64 +14,52 @@ export interface SMap<T> {
     [k: string]: T
 }
 
-export function stmtTakesNumber(op: OpStmt) {
-    return !!(STMT_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
+export function opTakesNumber(op: Op) {
+    return !!(OP_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
 }
 
-export function exprIsStateful(op: OpExpr) {
-    return !(EXPR_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
+export function opIsStmt(op: Op) {
+    return !!(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STMT)
 }
 
-export function exprTakesNumber(op: OpExpr) {
-    return !!(EXPR_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
+export function exprIsStateful(op: Op) {
+    return !(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
 }
 
-export const JACS_MAX_EXPR_DEPTH = BinFmt.MAX_EXPR_DEPTH
+export const JACS_MAX_EXPR_DEPTH = BinFmt.MAX_STACK_DEPTH // TODO
 
-export enum CellKind {
-    LOCAL = OpExpr.EXPRx_LOAD_LOCAL,
-    GLOBAL = OpExpr.EXPRx_LOAD_GLOBAL,
-    PARAM = OpExpr.EXPRx_LOAD_PARAM,
-    FLOAT_CONST = OpExpr.EXPRx_LITERAL_F64,
-
-    // these cannot be emitted directly
-    JD_EVENT = 0x100,
-    JD_REG = 0x101,
-    JD_ROLE = 0x102,
-    JD_VALUE_SEQ = 0x103,
-    JD_CURR_BUFFER = 0x104,
-    JD_COMMAND = 0x105,
-    JD_CLIENT_COMMAND = 0x106,
-    X_BUFFER = 0x124,
-
-    ERROR = 0x200,
+export enum ValueType {
+    ERROR = 0x100,
+    ANY,
+    NUMBER,
+    BUFFER,
+    MAP,
+    ARRAY,
+    JD_EVENT,
+    JD_REG,
+    JD_ROLE,
+    JD_VALUE_SEQ,
+    JD_COMMAND,
+    JD_CLIENT_COMMAND,
 }
 
-export function stringifyCellKind(vk: CellKind) {
-    switch (vk) {
-        case CellKind.LOCAL:
-            return "local variable"
-        case CellKind.GLOBAL:
-            return "global variable"
-        case CellKind.FLOAT_CONST:
-            return "float literal"
-        case CellKind.JD_VALUE_SEQ:
-            return "multi-field buffer"
-        case CellKind.JD_CURR_BUFFER:
-            return "current buffer"
-        case CellKind.JD_EVENT:
-            return "Jacdac event"
-        case CellKind.JD_COMMAND:
-            return "Jacdac command"
-        case CellKind.JD_REG:
-            return "Jacdac register"
-        case CellKind.JD_ROLE:
-            return "Jacdac role"
-        case CellKind.ERROR:
-            return "(error node)"
-        default:
-            return "ValueKind: 0x" + (vk as number).toString(16)
-    }
+export const valueTypes = [
+    "(error node)",
+    "(any)",
+    "number",
+    "buffer",
+    "map",
+    "array",
+    "Jacdac event",
+    "Jacdac register",
+    "Jacdac role",
+    "multi-field value",
+    "Jacdac command",
+    "Jacdac client, command",
+]
+
+export function stringifyCellKind(vk: ValueType) {
+    return valueTypes[vk - 0x100] || "ValueType " + vk
 }
 
 export interface InstrArgResolver {
@@ -90,7 +75,23 @@ export function stringifyInstr(
     getbyte: () => number,
     resolver?: InstrArgResolver
 ) {
-    let res = "    " + doOp()
+    const ops: number[] = []
+    const opargs: number[] = []
+
+    for (;;) {
+        const op = getbyte()
+        ops.push(op)
+
+        if (opTakesNumber(op)) {
+            opargs.push(decodeInt())
+        } else {
+            opargs.push(null)
+        }
+
+        if (opIsStmt(op)) break
+    }
+
+    let res = "    " + stringifyExpr()
 
     const pc = resolver?.resolverPC
     if (pc !== undefined)
@@ -98,7 +99,7 @@ export function stringifyInstr(
 
     return res
 
-    function expandFmt(takesNumber: boolean, fmt: string) {
+    function expandFmt(fmt: string, intarg: number) {
         let ptr = 0
         let beg = 0
         let r = ""
@@ -114,10 +115,11 @@ export function stringifyInstr(
 
             let e: string
             let eNum: number = null
-            if (takesNumber) {
-                takesNumber = false
-                eNum = decodeInt()
+
+            if (intarg != null) {
+                eNum = intarg
                 e = eNum + ""
+                intarg = null
             } else {
                 e = stringifyExpr()
                 if (isNumber(e)) eNum = +e
@@ -154,13 +156,6 @@ export function stringifyInstr(
         }
         r += fmt.slice(beg)
         return r
-    }
-
-    function doOp() {
-        const op = getbyte()
-        const fmt = STMT_PRINT_FMTS[op]
-        if (!fmt) return `?stmt${op}?`
-        return expandFmt(stmtTakesNumber(op), fmt)
     }
 
     function jmpOffset(off: number) {
@@ -218,13 +213,17 @@ export function stringifyInstr(
     }
 
     function stringifyExpr(): string {
-        const op = getbyte()
+        const op = ops.pop()
+        const intarg = opargs.pop()
 
-        if (op >= 0x80) return "" + (op - 0x80 - 16)
+        if (op >= BinFmt.DIRECT_CONST_OP)
+            return (
+                "" + (op - BinFmt.DIRECT_CONST_OP - BinFmt.DIRECT_CONST_OFFSET)
+            )
 
-        const fmt = EXPR_PRINT_FMTS[op]
-        if (!fmt) return `?expr${op}?`
-        return expandFmt(exprTakesNumber(op), fmt)
+        const fmt = OP_PRINT_FMTS[op]
+        if (!fmt) return `?op${op}?`
+        return expandFmt(fmt, intarg)
     }
 }
 
