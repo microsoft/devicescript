@@ -8,83 +8,83 @@
 
 ## Statements
 
-    wait_role(role) = 1
+    wait_role(role) = 62
 
 Wait until any packet arrives from specified role.
 
-    sleep_s(x) = 2
+    sleep_s(x) = 63
 
 Wait given number of seconds.
 
-    sleep_ms(x) = 3
+    sleep_ms(x) = 64
 
 Wait given number of milliseconds.
 
-    query_reg(role, code, timeout) = 4
+    query_reg(role, code, timeout) = 65
 
-    send_cmd(role, code) = 5
+    send_cmd(role, code) = 66
 
-    query_idx_reg(role, code, string, timeout) = 6
+    query_idx_reg(role, code, string, timeout) = 67
 
-    log_format(string, local_idx, numargs) = 7
+    log_format(string, local_idx, numargs) = 68
 
-    format(string, local_idx, numargs, offset) = 8
+    format(string, local_idx, numargs, offset) = 69
 
-    setup_pkt_buffer(size) = 9
+    setup_pkt_buffer(size) = 70
 
-    set_pkt(buffer, offset) = 10
+    set_pkt(buffer, offset) = 71
 
 Copy given string to packet buffer at given `offset`.
 Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
 
-    blit(dst, dst_offset, src, src_offset, length) = 22
+    blit(dst, dst_offset, src, src_offset, length) = 72
 
 Copy bytes `src[src_offset .. src_offset + length]` to `dst[dst_offset .. ]`.
 Both `src` and `dst` are buffers.
 
-    call(func_idx, local_idx, numargs) = 11
+    call(func_idx, local_idx, numargs) = 73
 
 Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`
 
-    call_bg(func_idx, local_idx, numargs, opcall) = 12
+    call_bg(func_idx, local_idx, numargs, opcall) = 74
 
 Starts new fiber (depending on `call_type`). Returns fiber handle (existing or new).
 
-    return(value) = 13
+    return(value) = 75
 
-    jmp(*jmpoffset) = 14               // JMP jmpoffset
+    jmp(*jmpoffset) = 76               // JMP jmpoffset
 
-    jmp_z(*jmpoffset, x) = 15          // JMP jmpoffset IF NOT x
+    jmp_z(*jmpoffset, x) = 77          // JMP jmpoffset IF NOT x
 
 Jump if condition is false.
 
-    panic(error_code) = 16
+    panic(error_code) = 78
 
-    store_local(*local_idx, value) = 17      // local_idx := value
+    store_local(*local_idx, value) = 79      // local_idx := value
 
-    store_global(*global_idx, value) = 18    // global_idx := value
+    store_global(*global_idx, value) = 80    // global_idx := value
 
-    store_buffer(buffer, numfmt, offset, value) = 19
+    store_buffer(buffer, numfmt, offset, value) = 81
 
-    store_param(*param_idx, value) = 20      // param_idx := value
+    store_param(*param_idx, value) = 82      // param_idx := value
 
-    terminate_fiber(fiber_handle) = 21
+    terminate_fiber(fiber_handle) = 83
 
 Returns nan (fiber doesn't exists) or 0 (terminated).
 
 ### Object handling
 
-    alloc_map() = 23
+    alloc_map() = 84
 
-    alloc_array(initial_size) = 24
+    alloc_array(initial_size) = 85
 
-    alloc_buffer(size) = 25
+    alloc_buffer(size) = 86
 
-    set_field(*field_idx, object, value) = 26   // object.field_idx := value
+    set_field(*field_idx, object, value) = 87   // object.field_idx := value
 
-    array_set(array, index, value) = 27         // array[index] := value
+    array_set(array, index, value) = 88         // array[index] := value
 
-    array_insert(array, index, count) = 28
+    array_insert(array, index, count) = 89
 
 Inserts `count` values (`undefined`) at `index`. If `count` is negative, removes values.
 
@@ -256,7 +256,9 @@ Returns an int between 0 and `x` inclusive.
     function_header_size = 16
     role_header_size = 8
     binary_size_align = 32
-    max_expr_depth = 10
+    max_stack_depth = 10
+    direct_const_op = 0x80
+    direct_const_offset = 16
 
 ## Enum: OpCall
 
@@ -280,6 +282,7 @@ Otherwise, start new fiber.
 ## Enum: BytecodeFlag
 
     num_args_mask = 0xf
+    is_stmt = 0x10
     takes_number = 0x20
     is_stateless = 0x40 // fun modifier
 

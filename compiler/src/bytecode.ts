@@ -1,41 +1,34 @@
 // Auto-generated from bytecode.md; do not edit.
 
-export enum OpStmt {
-    STMT1_WAIT_ROLE = 1, // role
-    STMT1_SLEEP_S = 2,
-    STMT1_SLEEP_MS = 3,
-    STMT3_QUERY_REG = 4, // role, code, timeout
-    STMT2_SEND_CMD = 5, // role, code
-    STMT4_QUERY_IDX_REG = 6, // role, code, string, timeout
-    STMT3_LOG_FORMAT = 7, // string, local_idx, numargs
-    STMT4_FORMAT = 8, // string, local_idx, numargs, offset
-    STMT1_SETUP_PKT_BUFFER = 9, // size
-    STMT2_SET_PKT = 10, // buffer, offset
-    STMT5_BLIT = 22, // dst, dst_offset, src, src_offset, length
-    STMT3_CALL = 11, // func_idx, local_idx, numargs
-    STMT4_CALL_BG = 12, // func_idx, local_idx, numargs, opcall
-    STMT1_RETURN = 13, // value
-    STMTx_JMP = 14, // JMP jmpoffset
-    STMTx1_JMP_Z = 15, // JMP jmpoffset IF NOT x
-    STMT1_PANIC = 16, // error_code
-    STMTx1_STORE_LOCAL = 17, // local_idx := value
-    STMTx1_STORE_GLOBAL = 18, // global_idx := value
-    STMT4_STORE_BUFFER = 19, // buffer, numfmt, offset, value
-    STMTx1_STORE_PARAM = 20, // param_idx := value
-    STMT1_TERMINATE_FIBER = 21, // fiber_handle
-    STMT0_ALLOC_MAP = 23,
-    STMT1_ALLOC_ARRAY = 24, // initial_size
-    STMT1_ALLOC_BUFFER = 25, // size
-    STMTx2_SET_FIELD = 26, // object.field_idx := value
-    STMT3_ARRAY_SET = 27, // array[index] := value
-    STMT3_ARRAY_INSERT = 28, // array, index, count
-    STMT_PAST_LAST = 29,
-}
-
-export const STMT_PROPS =
-    "\x7f\x01\x01\x01\x03\x02\x04\x03\x04\x01\x02\x03\x04\x01\x21\x22\x01\x22\x22\x04\x22\x01\x05\x00\x01\x01\x23\x03\x03"
-
-export enum OpExpr {
+export enum Op {
+    STMT1_WAIT_ROLE = 62, // role
+    STMT1_SLEEP_S = 63,
+    STMT1_SLEEP_MS = 64,
+    STMT3_QUERY_REG = 65, // role, code, timeout
+    STMT2_SEND_CMD = 66, // role, code
+    STMT4_QUERY_IDX_REG = 67, // role, code, string, timeout
+    STMT3_LOG_FORMAT = 68, // string, local_idx, numargs
+    STMT4_FORMAT = 69, // string, local_idx, numargs, offset
+    STMT1_SETUP_PKT_BUFFER = 70, // size
+    STMT2_SET_PKT = 71, // buffer, offset
+    STMT5_BLIT = 72, // dst, dst_offset, src, src_offset, length
+    STMT3_CALL = 73, // func_idx, local_idx, numargs
+    STMT4_CALL_BG = 74, // func_idx, local_idx, numargs, opcall
+    STMT1_RETURN = 75, // value
+    STMTx_JMP = 76, // JMP jmpoffset
+    STMTx1_JMP_Z = 77, // JMP jmpoffset IF NOT x
+    STMT1_PANIC = 78, // error_code
+    STMTx1_STORE_LOCAL = 79, // local_idx := value
+    STMTx1_STORE_GLOBAL = 80, // global_idx := value
+    STMT4_STORE_BUFFER = 81, // buffer, numfmt, offset, value
+    STMTx1_STORE_PARAM = 82, // param_idx := value
+    STMT1_TERMINATE_FIBER = 83, // fiber_handle
+    STMT0_ALLOC_MAP = 84,
+    STMT1_ALLOC_ARRAY = 85, // initial_size
+    STMT1_ALLOC_BUFFER = 86, // size
+    STMTx2_SET_FIELD = 87, // object.field_idx := value
+    STMT3_ARRAY_SET = 88, // array[index] := value
+    STMT3_ARRAY_INSERT = 89, // array, index, count
     EXPRx_LOAD_LOCAL = 1, // *local_idx
     EXPRx_LOAD_GLOBAL = 2, // *global_idx
     EXPRx_LOAD_PARAM = 45, // *param_idx
@@ -97,11 +90,11 @@ export enum OpExpr {
     EXPR2_SHIFT_RIGHT = 42, // x >> y
     EXPR2_SHIFT_RIGHT_UNSIGNED = 43, // x >>> y
     EXPR2_SUB = 44, // x - y
-    EXPR_PAST_LAST = 62,
+    OP_PAST_LAST = 90,
 }
 
-export const EXPR_PROPS =
-    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40"
+export const OP_PROPS =
+    "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x13\x14\x11\x12\x15\x13\x14\x11\x31\x32\x11\x32\x32\x14\x32\x11\x10\x11\x11\x33\x13\x13"
 
 export enum BinFmt {
     IMG_VERSION = 0x00030001,
@@ -113,7 +106,9 @@ export enum BinFmt {
     FUNCTION_HEADER_SIZE = 16,
     ROLE_HEADER_SIZE = 8,
     BINARY_SIZE_ALIGN = 32,
-    MAX_EXPR_DEPTH = 10,
+    MAX_STACK_DEPTH = 10,
+    DIRECT_CONST_OP = 0x80,
+    DIRECT_CONST_OFFSET = 16,
 }
 
 export enum OpCall {
@@ -125,6 +120,7 @@ export enum OpCall {
 
 export enum BytecodeFlag {
     NUM_ARGS_MASK = 0xf,
+    IS_STMT = 0x10,
     TAKES_NUMBER = 0x20,
     IS_STATELESS = 0x40, // fun modifier
 }
@@ -155,7 +151,7 @@ export enum ObjectType {
     FIBER = 7,
 }
 
-export const EXPR_PRINT_FMTS = [
+export const OP_PRINT_FMTS = [
     null,
     "%L",
     "%G",
@@ -218,9 +214,6 @@ export const EXPR_PRINT_FMTS = [
     "pkt_buffer()",
     "true()",
     "false()",
-]
-export const STMT_PRINT_FMTS = [
-    null,
     "WAIT_ROLE %e",
     "SLEEP_S %e",
     "SLEEP_MS %e",
@@ -231,6 +224,7 @@ export const STMT_PRINT_FMTS = [
     "FORMAT string=%e %L numargs=%e offset=%e",
     "SETUP_PKT_BUFFER size=%e",
     "SET_PKT %e offset=%e",
+    "BLIT dst=%e dst_offset=%e src=%e src_offset=%e length=%e",
     "CALL %F %L numargs=%e",
     "CALL_BG %F %L numargs=%e %o",
     "RETURN %e",
@@ -242,7 +236,6 @@ export const STMT_PRINT_FMTS = [
     "STORE_BUFFER %e %n offset=%e %e",
     "%P := %e",
     "TERMINATE_FIBER fiber_handle=%e",
-    "BLIT dst=%e dst_offset=%e src=%e src_offset=%e length=%e",
     "ALLOC_MAP ",
     "ALLOC_ARRAY initial_size=%e",
     "ALLOC_BUFFER size=%e",

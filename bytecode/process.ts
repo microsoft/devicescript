@@ -16,16 +16,13 @@ interface SMap<T> {
     [name: string]: T
 }
 interface Spec {
-    stmt: OpCode[]
-    stmtProps?: string
-    expr: OpCode[]
-    exprProps?: string
+    ops: OpCode[]
+    opProps?: string
     enums: SMap<OpCode[]>
 }
 
 const _spec = processSpec(fs.readFileSync(process.argv[2], "utf-8"))
-_spec.stmtProps = serializeProps(_spec.stmt, opcodeProps)
-_spec.exprProps = serializeProps(_spec.expr, opcodeProps)
+_spec.opProps = serializeProps(_spec.ops, opcodeProps)
 writeFile("bytecode.json", JSON.stringify(_spec, null, 4))
 writeFile("jacs_bytecode.h", genCode(_spec, false))
 writeFile("bytecode.ts", genCode(_spec, true))
@@ -58,9 +55,9 @@ function processSpec(filecontent: string): Spec {
     let currColl: OpCode[] = null
     let currObj: OpCode = null
     let hasErrors = false
+    let isExpr = false
     const res: Spec = {
-        stmt: [],
-        expr: [],
+        ops: [],
         enums: {
             BinFmt: [],
         },
@@ -77,8 +74,7 @@ function processSpec(filecontent: string): Spec {
 
     finish()
 
-    checkCont(res.stmt)
-    checkCont(res.expr)
+    checkCont(res.ops)
 
     if (hasErrors) throw new Error()
 
@@ -161,24 +157,28 @@ function processSpec(filecontent: string): Spec {
                 finish()
                 currObj = null
                 const [, hd, cont] = m
-                if (hd.length >= 3) // sub-headers
+                if (hd.length >= 3)
+                    // sub-headers
                     return
                 switch (cont) {
                     case "Statements":
-                        currColl = res.stmt
+                        currColl = res.ops
+                        isExpr = false
                         break
                     case "Expressions":
-                        currColl = res.expr
+                        currColl = res.ops
+                        isExpr = true
                         break
                     case "Format Constants":
+                        isExpr = false
                         currColl = res.enums.BinFmt
                         break
                     default:
+                        isExpr = false
                         m = /Enum: (\w+)/.exec(cont)
                         if (m) currColl = res.enums[m[1]] = []
                         else {
-                            if (currColl == null)
-                                return // initial sections
+                            if (currColl == null) return // initial sections
                             error("bad header")
                         }
                 }
@@ -231,7 +231,7 @@ function processSpec(filecontent: string): Spec {
                     currObj.comment2 = c
                 }
             }
-            if (currColl == res.expr) currObj.isExpr = true
+            if (isExpr) currObj.isExpr = true
             currColl.push(currObj)
         }
     }
@@ -250,9 +250,12 @@ function writeFile(name: string, cont: string) {
 
 function sig(obj: OpCode) {
     const numargs = obj.args.length
-    return obj.takesNumber
-        ? "x" + (numargs - 1 ? numargs - 1 : "")
-        : "" + numargs
+    return (
+        (obj.isExpr ? "EXPR" : "STMT") +
+        (obj.takesNumber
+            ? "x" + (numargs - 1 ? numargs - 1 : "")
+            : "" + numargs)
+    )
 }
 
 function sortByCode(lst: OpCode[]) {
@@ -272,20 +275,11 @@ function serializeProps(lst: OpCode[], fn: (o: OpCode) => number) {
 }
 
 function genJmpTables(spec: Spec) {
-    let r = "\n#define JACS_EXPR_HANDLERS expr_invalid, \\\n"
-    for (const obj of sortByCode(spec.expr)) {
-        r += `expr${sig(obj)}_${obj.name}, \\\n`
+    let r = "\n#define JACS_OP_HANDLERS expr_invalid, \\\n"
+    for (const obj of sortByCode(spec.ops)) {
+        r += `${sig(obj).toLowerCase()}_${obj.name}, \\\n`
     }
-    r += "expr_invalid\n"
-    r += "#define JACS_EXPR_PROPS " + spec.exprProps + "\n\n"
-
-    r += "#define JACS_STMT_HANDLERS stmt_invalid, \\\n"
-    for (const obj of sortByCode(spec.stmt)) {
-        r += `stmt${sig(obj)}_${obj.name}, \\\n`
-    }
-    r += "stmt_invalid\n"
-    r += "#define JACS_STMT_PROPS " + spec.stmtProps + "\n\n"
-
+    r += "expr_invalid\n\n"
 
     return r
 }
@@ -296,29 +290,17 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
     else if (isTS) r += "\n"
     else r += "#pragma once\n\n"
 
-    startEnum("OpStmt")
-    for (const obj of spec.stmt) {
-        emitDefine(`STMT${sig(obj)}_`, obj)
+    startEnum("Op")
+    for (const obj of spec.ops) {
+        emitDefine(`${sig(obj)}_`, obj)
     }
-    emitDefine(`STMT_`, {
+    emitDefine(`OP_`, {
         name: "past_last",
-        code: spec.stmt.length + 1 + "",
+        code: spec.ops.length + 1 + "",
         args: [],
     })
     endEnum()
-    emitConst("stmt_props", spec.stmtProps)
-
-    startEnum("OpExpr")
-    for (const obj of spec.expr) {
-        emitDefine(`EXPR${sig(obj)}_`, obj)
-    }
-    emitDefine(`EXPR_`, {
-        name: "past_last",
-        code: spec.expr.length + 1 + "",
-        args: [],
-    })
-    endEnum()
-    emitConst("expr_props", spec.exprProps)
+    emitConst("op_props", spec.opProps)
 
     for (const enName of Object.keys(spec.enums)) {
         const pref =
@@ -330,8 +312,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
         endEnum()
     }
 
-    emitFmts("expr", spec.expr)
-    emitFmts("stmt", spec.stmt)
+    emitFmts("op", spec.ops)
 
     if (isSTS) r += "} // jacs\n"
 
@@ -388,5 +369,6 @@ function opcodeProps(obj: OpCode) {
     let r = obj.args.length
     if (obj.takesNumber) r |= lookupEnum("BytecodeFlag", "takes_number")
     if (obj.isFun) r |= lookupEnum("BytecodeFlag", "is_stateless")
+    if (!obj.isExpr) r |= lookupEnum("BytecodeFlag", "is_stmt")
     return r
 }
