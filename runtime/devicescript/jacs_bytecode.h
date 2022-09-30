@@ -7,13 +7,13 @@
 #define JACS_STMT3_QUERY_REG 65        // role, code, timeout
 #define JACS_STMT2_SEND_CMD 66         // role, code
 #define JACS_STMT4_QUERY_IDX_REG 67    // role, code, string, timeout
-#define JACS_STMT3_LOG_FORMAT 68       // string, local_idx, numargs
-#define JACS_STMT4_FORMAT 69           // string, local_idx, numargs, offset
+#define JACS_STMTx2_LOG_FORMAT 68      // *local_idx, numargs, string
+#define JACS_STMTx3_FORMAT 69          // *local_idx, numargs, string, offset
 #define JACS_STMT1_SETUP_PKT_BUFFER 70 // size
 #define JACS_STMT2_SET_PKT 71          // buffer, offset
 #define JACS_STMT5_BLIT 72             // dst, dst_offset, src, src_offset, length
-#define JACS_STMT3_CALL 73             // func_idx, local_idx, numargs
-#define JACS_STMT4_CALL_BG 74          // func_idx, local_idx, numargs, opcall
+#define JACS_STMTx2_CALL 73            // *local_idx, numargs, func_idx
+#define JACS_STMTx3_CALL_BG 74         // *local_idx, numargs, func_idx, opcall
 #define JACS_STMT1_RETURN 75           // value
 #define JACS_STMTx_JMP 76              // JMP jmpoffset
 #define JACS_STMTx1_JMP_Z 77           // JMP jmpoffset IF NOT x
@@ -95,8 +95,8 @@
 #define JACS_OP_PROPS                                                                              \
     "\x7f\x21\x21\x03\x61\x61\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01" \
     "\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x21" \
-    "\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x13" \
-    "\x14\x11\x12\x15\x13\x14\x11\x31\x32\x11\x32\x32\x14\x32\x11\x10\x11\x11\x33\x13\x13"
+    "\x00\x01\x00\x00\x61\x61\x22\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x33" \
+    "\x34\x11\x12\x15\x33\x34\x11\x31\x32\x11\x32\x32\x14\x32\x11\x10\x11\x11\x33\x13\x13"
 
 #define JACS_IMG_VERSION 0x00030001
 #define JACS_MAGIC0 0x5363614a // "JacS"
@@ -156,8 +156,8 @@
         exprx_static_buffer, exprx1_get_field, expr2_index, expr1_object_length,                   \
         expr1_keys_length, expr1_typeof, expr0_null, expr1_is_null, expr0_pkt_buffer, expr0_true,  \
         expr0_false, stmt1_wait_role, stmt1_sleep_s, stmt1_sleep_ms, stmt3_query_reg,              \
-        stmt2_send_cmd, stmt4_query_idx_reg, stmt3_log_format, stmt4_format,                       \
-        stmt1_setup_pkt_buffer, stmt2_set_pkt, stmt5_blit, stmt3_call, stmt4_call_bg,              \
+        stmt2_send_cmd, stmt4_query_idx_reg, stmtx2_log_format, stmtx3_format,                     \
+        stmt1_setup_pkt_buffer, stmt2_set_pkt, stmt5_blit, stmtx2_call, stmtx3_call_bg,            \
         stmt1_return, stmtx_jmp, stmtx1_jmp_z, stmt1_panic, stmtx1_store_local,                    \
         stmtx1_store_global, stmt4_store_buffer, stmtx1_store_param, stmt1_terminate_fiber,        \
         stmt0_alloc_map, stmt1_alloc_array, stmt1_alloc_buffer, stmtx2_set_field, stmt3_array_set, \

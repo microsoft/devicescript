@@ -62,19 +62,19 @@ static void stmt4_query_idx_reg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_jd_get_register(ctx, a, b, timeout, stridx);
 }
 
-static void stmt3_log_format(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t stridx = jacs_vm_pop_arg_stridx(ctx);
-    uint32_t localidx = jacs_vm_pop_arg_u32(ctx);
+static void stmtx2_log_format(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    uint32_t localidx = ctx->literal_int;
     uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
+    uint32_t stridx = jacs_vm_pop_arg_stridx(ctx);
     if (jacs_vm_args_ok(frame, localidx, numargs))
         jacs_jd_send_logmsg(ctx, stridx, localidx, numargs);
 }
 
-static void stmt4_format(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+static void stmtx3_format(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    uint32_t localidx = ctx->literal_int;
+    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
     unsigned len;
     char *fmt = jacs_vm_pop_arg_buffer_data(ctx, &len);
-    uint32_t localidx = jacs_vm_pop_arg_u32(ctx);
-    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
     uint32_t offset = jacs_vm_pop_arg_u32(ctx);
 
     if (offset > JD_SERIAL_PAYLOAD_SIZE)
@@ -186,19 +186,19 @@ static void stmt1_panic(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     jacs_panic(ctx, code);
 }
 
-static void stmt3_call(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
-    uint32_t localidx = jacs_vm_pop_arg_u32(ctx);
+static void stmtx2_call(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    uint32_t localidx = ctx->literal_int;
     uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
+    uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
 
     if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx))
         jacs_fiber_call_function(frame->fiber, fidx, frame->locals + localidx, numargs);
 }
 
-static void stmt4_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
-    uint32_t localidx = jacs_vm_pop_arg_u32(ctx);
+static void stmtx3_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    uint32_t localidx = ctx->literal_int;
     uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
+    uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
     uint32_t flag = jacs_vm_pop_arg_u32(ctx);
 
     if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx)) {
