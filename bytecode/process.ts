@@ -333,6 +333,13 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
 
     emitFmts("op", spec.ops)
 
+    if (isTS)
+        for (const en of ["Object_Type"])
+            emitConst(
+                en,
+                JSON.stringify(enumNames(spec.enums[en]))
+            )
+
     if (isSTS) r += "} // jacs\n"
 
     if (!isTS) r += genJmpTables(spec)
@@ -399,4 +406,12 @@ function opcodeType(obj: OpCode) {
     const tp = lookupEnum("Object_Type", obj.rettype)
     if (tp == undefined) throw new Error("invalid type: " + obj.rettype)
     return tp
+}
+
+function enumNames(lst: OpCode[]) {
+    const names: string[] = []
+    for (const obj of sortByCode(lst)) {
+        names[+obj.code] = obj.name
+    }
+    return names
 }

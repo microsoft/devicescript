@@ -6,6 +6,9 @@ import {
     BinFmt,
     OP_PROPS,
     OP_PRINT_FMTS,
+    ObjectType,
+    OP_TYPES,
+    OBJECT_TYPE,
 } from "./bytecode"
 
 export * from "./bytecode"
@@ -16,6 +19,14 @@ export interface SMap<T> {
 
 export function opTakesNumber(op: Op) {
     return !!(OP_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
+}
+
+export function opNumArgs(op: Op) {
+    return OP_PROPS.charCodeAt(op) & BytecodeFlag.NUM_ARGS_MASK
+}
+
+export function opType(op: Op): ObjectType {
+    return OP_TYPES.charCodeAt(op)
 }
 
 export function opIsStmt(op: Op) {
@@ -29,15 +40,20 @@ export function exprIsStateful(op: Op) {
 export const JACS_MAX_EXPR_DEPTH = BinFmt.MAX_STACK_DEPTH // TODO
 
 export enum ValueType {
+    ANY = ObjectType.ANY,
+    NUMBER = ObjectType.NUMBER,
+    BUFFER = ObjectType.BUFFER,
+    MAP = ObjectType.MAP,
+    ARRAY = ObjectType.ARRAY,
+    NULL = ObjectType.NULL,
+    FIBER = ObjectType.FIBER,
+    BOOL = ObjectType.BOOL,
+    ROLE = ObjectType.ROLE,
+    VOID = ObjectType.VOID,
+
     ERROR = 0x100,
-    ANY,
-    NUMBER,
-    BUFFER,
-    MAP,
-    ARRAY,
     JD_EVENT,
     JD_REG,
-    JD_ROLE,
     JD_VALUE_SEQ,
     JD_COMMAND,
     JD_CLIENT_COMMAND,
@@ -45,21 +61,15 @@ export enum ValueType {
 
 export const valueTypes = [
     "(error node)",
-    "(any)",
-    "number",
-    "buffer",
-    "map",
-    "array",
     "Jacdac event",
     "Jacdac register",
-    "Jacdac role",
     "multi-field value",
     "Jacdac command",
-    "Jacdac client, command",
+    "Jacdac client command",
 ]
 
-export function stringifyCellKind(vk: ValueType) {
-    return valueTypes[vk - 0x100] || "ValueType " + vk
+export function valueTypeToString(vk: ValueType) {
+    return OBJECT_TYPE[vk] || valueTypes[vk - 0x100] || "ValueType " + vk
 }
 
 export interface InstrArgResolver {

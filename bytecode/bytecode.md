@@ -330,7 +330,7 @@ Only `true` and `false` values.
 
 ### Object_Types only used in static type info
 
-    any = 100
+    any = 10
 
-    void = 101
+    void = 11
 

@@ -10,6 +10,9 @@ import {
     Op,
     opTakesNumber,
     stringifyInstr,
+    opNumArgs,
+    opIsStmt,
+    opType,
 } from "./format"
 import { assert, write32, write16 } from "./jdutil"
 import { assertRange, oops } from "./util"
@@ -108,17 +111,24 @@ export class CachedValue {
 }
 
 export function literal(v: number) {
-    const r = new Value(ValueType.NUMBER)
-    r.numValue = v
-    r.op = Op.EXPRx_LITERAL
-    r.flags = VF_IS_LITERAL
-    return r
+    if (v == null) {
+        const r = new Value(ValueType.NULL)
+        r.op = Op.EXPR0_NULL
+        return r
+    } else {
+        const r = new Value(ValueType.NUMBER)
+        r.numValue = v
+        r.op = Op.EXPRx_LITERAL
+        r.flags = VF_IS_LITERAL
+        return r
+    }
 }
 
-export function nonEmittable(k: number) {
-    assert(k >= 0x100)
+export function nonEmittable(k: ValueType) {
+    assert(k == ValueType.VOID || k >= 0x100)
     const r = new Value(k)
     r.op = k
+    r.valueType = k
     return r
 }
 
@@ -236,7 +246,6 @@ export class OpWriter {
         assert(!this.bufferAllocated, "allocBuf() not free")
         this.bufferAllocated = true
         return this.emitExpr(Op.EXPR0_PKT_BUFFER)
-        return nonEmittable(ValueType.JD_CURR_BUFFER)
     }
 
     freeBuf(): void {
@@ -245,7 +254,9 @@ export class OpWriter {
     }
 
     emitString(s: string | Uint8Array) {
-        const v = literal(this.prog.addString(s))
+        const v = new Value(ValueType.BUFFER)
+        v.op = Op.EXPRx_STATIC_BUFFER
+        v.args = [literal(this.prog.addString(s))]
         v.flags |= VF_IS_STRING
         return v
     }
@@ -266,17 +277,6 @@ export class OpWriter {
                 literal(op)
             )
         for (const c of args) c.free()
-    }
-
-    emitStoreByte(src: Value, off = 0) {
-        assertRange(0, off, 0xff)
-        this.emitStmt(
-            Op.STMT4_STORE_BUFFER,
-            literal(NumFmt.U8),
-            literal(off),
-            literal(0),
-            src
-        )
     }
 
     emitBufLoad(fmt: NumFmt, off: number, bufref?: Value) {
@@ -462,6 +462,8 @@ export class OpWriter {
     }
 
     emitExpr(op: Op, ...args: Value[]) {
+        assert(opNumArgs(op) == args.length)
+        assert(!opIsStmt(op))
         let maxdepth = -1
         let usesState = exprIsStateful(op)
         // TODO constant folding
@@ -472,7 +474,7 @@ export class OpWriter {
             assert(!(a.flags & VF_HAS_PARENT))
             a.flags |= VF_HAS_PARENT
         }
-        const r = new Value(ValueType.ANY)
+        const r = new Value(opType(op) as any)
         r.args = args
         r.op = op
         r.flags = maxdepth + 1
@@ -567,7 +569,15 @@ export class OpWriter {
         }
     }
 
+    emitSetBuffer(buf: Uint8Array) {
+        this.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(buf.length))
+        if (buf.length > 0)
+            this.emitStmt(Op.STMT2_SET_PKT, this.emitString(buf), literal(0))
+    }
+
     emitStmt(op: Op, ...args: Value[]) {
+        assert(opNumArgs(op) == args.length)
+        assert(opIsStmt(op))
         for (const a of args) a.adopt()
         this.spillAllStateful()
         this.writeByte(op)

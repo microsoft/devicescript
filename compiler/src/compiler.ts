@@ -39,7 +39,7 @@ import {
     printJacError,
     RoleDebugInfo,
     SMap,
-    stringifyCellKind,
+    valueTypeToString,
 } from "./format"
 import {
     addUnique,
@@ -122,7 +122,6 @@ class Role extends Cell {
     autoRefreshRegs: jdspec.PacketInfo[] = []
     stringIndex: number
     used = false
-    isParameter = false // set when this is a local parameter role
 
     constructor(
         prog: Program,
@@ -140,20 +139,13 @@ class Role extends Cell {
         this.stringIndex = prog.addString(this.getName())
     }
     emit(wr: OpWriter): Value {
-        const r = this.isParameter
-            ? wr.emitMemRef(Op.EXPRx_LOAD_PARAM, this._index)
-            : wr.emitExpr(Op.EXPRx_STATIC_ROLE, literal(this._index))
+        const r = wr.emitExpr(Op.EXPRx_STATIC_ROLE, literal(this._index))
         va(r).role = this
-        va(r).kind = ValueType.JD_ROLE
         this.used = true
         return r
     }
-    canStore() {
-        return this.isParameter
-    }
-    store(wr: OpWriter, src: Value) {
-        if (!this.isParameter) oops("can't store")
-        wr.emitStmt(Op.STMTx1_STORE_LOCAL, literal(this._index), src)
+    sendCommand(wr: OpWriter, cmd: number) {
+        wr.emitStmt(Op.STMT2_SEND_CMD, this.emit(wr), literal(cmd))
     }
     serialize() {
         const r = new Uint8Array(BinFmt.ROLE_HEADER_SIZE)
@@ -183,19 +175,25 @@ class Role extends Cell {
 class Variable extends Cell {
     isLocal = false
     isParameter = false
+    spec: jdspec.ServiceSpec
 
     constructor(
         definition: estree.VariableDeclarator | estree.Identifier,
-        scope: VariableScope
+        scope: VariableScope,
+        public valueType: ValueType
     ) {
         super(definition, scope)
     }
     emit(wr: OpWriter): Value {
         const r = this.isParameter
-            ? wr.emitMemRef(Op.EXPRx_LOAD_PARAM, this._index)
+            ? wr.emitMemRef(Op.EXPRx_LOAD_PARAM, this._index, this.valueType)
             : this.isLocal
-            ? wr.emitMemRef(Op.EXPRx_LOAD_LOCAL, this._index + LOCAL_OFFSET)
-            : wr.emitMemRef(Op.EXPRx_LOAD_GLOBAL, this._index)
+            ? wr.emitMemRef(
+                  Op.EXPRx_LOAD_LOCAL,
+                  this._index + LOCAL_OFFSET,
+                  this.valueType
+              )
+            : wr.emitMemRef(Op.EXPRx_LOAD_GLOBAL, this._index, this.valueType)
         va(r).variable = this
         return r
     }
@@ -215,34 +213,6 @@ class Variable extends Cell {
     }
     toString() {
         return `var ${this.getName()}`
-    }
-}
-
-class Buffer extends Cell {
-    constructor(
-        definition: estree.VariableDeclarator | estree.Identifier,
-        scope: VariableScope,
-        public length: number,
-        _name?: string
-    ) {
-        super(definition, scope)
-        if (_name) {
-            this._name = _name
-            scope._addToMap(this)
-        }
-    }
-    emit(wr: OpWriter): Value {
-        const r = literal(this._index)
-        va(r).buffer = this
-        return r
-    }
-    toString() {
-        return `buffer ${this.getName()}`
-    }
-    serialize() {
-        const r = new Uint8Array(BinFmt.BUFFER_HEADER_SIZE)
-        write16(r, 4, this.length)
-        return r
     }
 }
 
@@ -278,11 +248,9 @@ class FunctionDecl extends Cell {
 }
 
 class ValueAdd {
-    kind: ValueType
     index: number
     role?: Role
     variable?: Variable
-    buffer?: Buffer
     clientCommand?: ClientCommand
     fun?: FunctionDecl
     spec?: jdspec.PacketInfo
@@ -295,7 +263,7 @@ function va(v: Value) {
 }
 
 function cellKind(v: Value): ValueType {
-    return va(v).kind || v.op
+    return v.valueType
 }
 
 function idName(pat: estree.BaseExpression) {
@@ -317,6 +285,7 @@ const reservedFunctions: SMap<number> = {
     reboot: 1,
     isNaN: 1,
     onStart: 1,
+    buffer: 1,
 }
 
 class Procedure {
@@ -344,8 +313,8 @@ class Procedure {
     args() {
         return this.params.list.slice()
     }
-    mkTempLocal(name: string) {
-        const l = new Variable(null, this.locals)
+    mkTempLocal(name: string, tp: ValueType) {
+        const l = new Variable(null, this.locals, tp)
         l._name = name
         l.isLocal = true
         return l
@@ -452,8 +421,7 @@ interface Position {
 
 class Program implements TopOpWriter {
     bufferLits = new VariableScope(null)
-    buffers = new VariableScope(this.bufferLits)
-    roles = new VariableScope(this.buffers)
+    roles = new VariableScope(this.bufferLits)
     functions = new VariableScope(null)
     globals = new VariableScope(this.roles)
     tree: estree.Program
@@ -476,7 +444,6 @@ class Program implements TopOpWriter {
     cloudMethodDispatcher: DelayedCodeSection
     startDispatchers: DelayedCodeSection
     onStart: DelayedCodeSection
-    packetBuffer: Buffer
     loopStack: LoopLabels[] = []
     compileAll = false
 
@@ -564,8 +531,6 @@ class Program implements TopOpWriter {
 
     private roleDispatcher(role: Role) {
         if (!role.dispatcher) {
-            if (role.isParameter)
-                throwError(null, "local roles are not supported here")
             const proc = new Procedure(this, role.getName() + "_disp")
             role.dispatcher = {
                 proc,
@@ -580,7 +545,10 @@ class Program implements TopOpWriter {
                     "checkConnected",
                     proc.writer
                 ),
-                wasConnected: proc.mkTempLocal("connected_" + role.getName()),
+                wasConnected: proc.mkTempLocal(
+                    "connected_" + role.getName(),
+                    ValueType.BOOL
+                ),
             }
             this.withProcedure(proc, wr => {
                 this.emitStore(
@@ -676,29 +644,14 @@ class Program implements TopOpWriter {
                             reg.identifier == SystemReg.Reading &&
                             role.isSensor()
                         ) {
-                            wr.emitStmt(
-                                Op.STMT2_SETUP_BUFFER,
-                                literal(1),
-                                literal(0)
-                            )
-                            wr.emitStoreByte(literal(199), 0)
-                            wr.emitStmt(
-                                Op.STMT2_SEND_CMD,
-                                role.emit(wr),
-                                literal(
-                                    SystemReg.StreamingSamples | CMD_SET_REG
-                                )
+                            wr.emitSetBuffer(new Uint8Array([199]))
+                            role.sendCommand(
+                                wr,
+                                SystemReg.StreamingSamples | CMD_SET_REG
                             )
                         } else {
-                            wr.emitStmt(
-                                Op.STMT1_SETUP_PKT_BUFFER,
-                                literal(0)
-                            )
-                            wr.emitStmt(
-                                Op.STMT2_SEND_CMD,
-                                role.emit(wr),
-                                literal(reg.identifier | CMD_GET_REG)
-                            )
+                            wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(0))
+                            role.sendCommand(wr, reg.identifier | CMD_GET_REG)
                         }
                     }
                 })
@@ -759,15 +712,6 @@ class Program implements TopOpWriter {
                     this.roles,
                     this.serviceSpecs["jacscriptCondition"]
                 )
-            case "buffer":
-                this.requireArgs(expr, 1)
-                const sz = this.forceNumberLiteral(expr.arguments[0])
-                if ((sz | 0) != sz || sz <= 0 || sz > 1024)
-                    throwError(
-                        expr.arguments[0],
-                        "buffer() length must be a positive integer (under 1k)"
-                    )
-                return new Buffer(decl, this.buffers, sz)
         }
         if (expr.callee.type != "MemberExpression") return null
         if (idName(expr.callee.object) != "roles") return null
@@ -802,7 +746,6 @@ class Program implements TopOpWriter {
             if (this.isTopLevel(decl)) {
                 const tmp = this.globals.lookup(this.forceName(decl.id))
                 if (tmp instanceof Role) continue
-                if (tmp instanceof Buffer) continue
                 if (tmp instanceof BufferLit) continue
                 if (tmp instanceof Variable) g = tmp
                 else {
@@ -811,19 +754,20 @@ class Program implements TopOpWriter {
                 }
             } else {
                 this.newDef(decl)
-                g = new Variable(decl, this.proc.locals)
+                g = new Variable(decl, this.proc.locals, ValueType.NUMBER)
                 g.isLocal = true
             }
 
             if (decl.init) {
-                this.emitStore(g, this.emitSimpleValue(decl.init))
+                const v = this.emitSimpleValue(decl.init)
+                g.valueType = v.valueType
+                this.emitStore(g, v)
             }
         }
     }
 
     private emitIfStatement(stmt: estree.IfStatement) {
-        const cond = this.emitExpr(stmt.test)
-        this.requireRuntimeValue(stmt.test, cond)
+        const cond = this.emitSimpleValue(stmt.test)
         if (cond.isLiteral) {
             if (cond.numValue) this.emitStmt(stmt.consequent)
             else {
@@ -845,8 +789,7 @@ class Program implements TopOpWriter {
         const breakLbl = wr.mkLabel("whileBrk")
 
         wr.emitLabel(continueLbl)
-        const cond = this.emitExpr(stmt.test)
-        this.requireRuntimeValue(stmt.test, cond)
+        const cond = this.emitSimpleValue(stmt.test)
         wr.emitJump(breakLbl, cond)
 
         try {
@@ -870,12 +813,8 @@ class Program implements TopOpWriter {
         {
             const tmp = isOuter
                 ? wr.emitBufLoad(NumFmt.U32, 0)
-                : wr.emitMemRef(Op.EXPRx_LOAD_PARAM, 0)
-            wr.emitStmt(
-                Op.STMT2_SETUP_BUFFER,
-                literal(8 + args.length * 8),
-                literal(0)
-            )
+                : wr.emitMemRef(Op.EXPRx_LOAD_PARAM, 0, ValueType.NUMBER)
+            wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(8 + args.length * 8))
             wr.emitBufStore(tmp, NumFmt.U32, 0)
             wr.emitBufStore(literal(code), NumFmt.U32, 4)
         }
@@ -886,11 +825,7 @@ class Program implements TopOpWriter {
             off += 8
         }
         wr.freeBuf()
-        wr.emitStmt(
-            Op.STMT2_SEND_CMD,
-            this.cloudRole.emit(wr),
-            literal(CloudAdapterCmd.AckCloudCommand)
-        )
+        this.cloudRole.sendCommand(wr, CloudAdapterCmd.AckCloudCommand)
     }
 
     private emitReturnStatement(stmt: estree.ReturnStatement) {
@@ -905,10 +840,7 @@ class Program implements TopOpWriter {
             this.emitAckCloud(CloudAdapterCommandStatus.OK, false, args)
         } else if (stmt.argument) {
             if (wr.ret) oops("return with value not supported here")
-            wr.emitStmt(
-                Op.STMT1_RETURN,
-                this.emitSimpleValue(stmt.argument)
-            )
+            wr.emitStmt(Op.STMT1_RETURN, this.emitSimpleValue(stmt.argument))
         } else {
             if (wr.ret) this.writer.emitJump(this.writer.ret)
             else wr.emitStmt(Op.STMT1_RETURN, literal(NaN))
@@ -930,7 +862,7 @@ class Program implements TopOpWriter {
         proc: Procedure
     ) {
         this.emitStmt(stmt.body)
-        this.writer.emitStmt(Op.STMT1_RETURN, literal(NaN))
+        this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
     }
 
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
@@ -952,20 +884,18 @@ class Program implements TopOpWriter {
                 if (m) tp = m[1]
             }
 
-            if (tp) {
-                if (tp == "number") {
-                    // OK!
-                } else {
-                    const spec = this.specFromTypeName(paramdef, tp)
-                    const v = new Role(this, paramdef, proc.params, spec)
-                    v.isParameter = true
-                    continue
-                }
-            }
-
-            const v = new Variable(paramdef, proc.params)
+            const v = new Variable(paramdef, proc.params, ValueType.NUMBER)
             v.isLocal = true
             v.isParameter = true
+
+            if (tp == "" || tp == "number") {
+                // OK!
+            } else if (tp == "boolean") {
+                v.valueType = ValueType.BOOL
+            } else {
+                v.valueType = ValueType.ROLE
+                v.spec = this.specFromTypeName(paramdef, tp)
+            }
         }
     }
 
@@ -979,13 +909,10 @@ class Program implements TopOpWriter {
         )
 
         this.withProcedure(cc.proc, wr => {
-            const v = new Role(
-                this,
-                null,
-                cc.proc.params,
-                cc.serviceSpec,
-                "this"
-            )
+            const v = new Variable(null, cc.proc.params, ValueType.ROLE)
+            v._name = "this"
+            v.spec = cc.serviceSpec
+            v.isLocal = true
             v.isParameter = true
             this.emitParameters(stmt, cc.proc)
             this.emitFunctionBody(stmt, cc.proc)
@@ -1025,14 +952,6 @@ class Program implements TopOpWriter {
     }
 
     private emitProgram(prog: estree.Program) {
-        this.packetBuffer = new Buffer(
-            null,
-            this.buffers,
-            JD_SERIAL_MAX_PAYLOAD_SIZE,
-            "packet"
-        )
-        assert(this.packetBuffer._index == 0) // current packet is buffer #0
-
         this.main = new Procedure(this, "main")
 
         this.startDispatchers = new DelayedCodeSection(
@@ -1056,7 +975,11 @@ class Program implements TopOpWriter {
                         for (const decl of s.declarations) {
                             this.newDef(decl)
                             if (!this.parseRole(decl)) {
-                                new Variable(decl, this.globals)
+                                new Variable(
+                                    decl,
+                                    this.globals,
+                                    ValueType.NUMBER
+                                )
                             }
                         }
                         break
@@ -1129,7 +1052,10 @@ class Program implements TopOpWriter {
             throwError(func, "parameters not supported here")
         this.withProcedure(proc, wr => {
             if (options.methodHandler)
-                proc.methodSeqNo = proc.mkTempLocal("methSeqNo")
+                proc.methodSeqNo = proc.mkTempLocal(
+                    "methSeqNo",
+                    ValueType.NUMBER
+                )
             this.emitParameters(func, proc)
             if (options.every) {
                 wr.emitStmt(Op.STMT1_SLEEP_MS, literal(options.every))
@@ -1328,13 +1254,9 @@ class Program implements TopOpWriter {
                     )
                 } else if (k == ValueType.JD_COMMAND) {
                     this.emitPackArgs(expr, va(v).spec)
-                    wr.emitStmt(
-                        Op.STMT2_SEND_CMD,
-                        role.emit(wr),
-                        literal(va(v).spec.identifier)
-                    )
+                    role.sendCommand(wr, va(v).spec.identifier)
                 } else if (k != ValueType.ERROR) {
-                    throwError(expr, `${stringifyCellKind(k)} can't be called`)
+                    throwError(expr, `${valueTypeToString(k)} can't be called`)
                 }
                 return literal(0)
         }
@@ -1399,7 +1321,7 @@ class Program implements TopOpWriter {
 
     private emitBufferCall(
         expr: estree.CallExpression,
-        buf: Buffer,
+        buf: Value,
         prop: string
     ): Value {
         const wr = this.writer
@@ -1410,9 +1332,9 @@ class Program implements TopOpWriter {
                 const fmt = this.parseFormat(expr.arguments[1])
                 return wr.emitExpr(
                     Op.EXPR3_LOAD_BUFFER,
+                    buf,
                     literal(fmt),
-                    this.emitSimpleValue(expr.arguments[0]),
-                    buf.emit(wr)
+                    this.emitSimpleValue(expr.arguments[0])
                 )
             }
 
@@ -1421,20 +1343,19 @@ class Program implements TopOpWriter {
                 const fmt = this.parseFormat(expr.arguments[1])
                 const off = this.emitSimpleValue(expr.arguments[0])
                 const val = this.emitSimpleValue(expr.arguments[2])
-                wr.emitStmt(
-                    Op.STMT4_STORE_BUFFER,
-                    literal(fmt),
-                    off,
-                    buf.emit(wr),
-                    val
-                )
+                wr.emitStmt(Op.STMT4_STORE_BUFFER, buf, literal(fmt), off, val)
                 return literal(0)
             }
 
             case "setLength": {
+                if (buf.op != Op.EXPR0_PKT_BUFFER)
+                    throwError(
+                        expr,
+                        ".setLength() only supported on 'packet' buffer"
+                    )
                 this.requireArgs(expr, 1)
                 const len = this.emitSimpleValue(expr.arguments[0])
-                wr.emitStmt(Op.STMT2_SETUP_BUFFER, len, buf.emit(wr))
+                wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, len)
                 return literal(0)
             }
 
@@ -1452,7 +1373,7 @@ class Program implements TopOpWriter {
                 const len = this.emitSimpleValue(expr.arguments[3])
                 wr.emitStmt(
                     Op.STMT5_BLIT,
-                    buf.emit(wr),
+                    buf,
                     dstOffset,
                     srcref,
                     srcOffset,
@@ -1563,11 +1484,11 @@ class Program implements TopOpWriter {
             throwError(expr, "arguments do not fit in a packet")
 
         wr.allocBuf()
-        wr.emitStmt(Op.STMT2_SETUP_BUFFER, literal(offset), literal(0))
+        wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(offset))
         for (const desc of args) {
             if (desc.stringLiteralVal !== undefined) {
                 const vd = desc.stringLiteralVal
-                wr.emitStmt(Op.STMT2_MEMCPY, vd, literal(desc.offset))
+                wr.emitStmt(Op.STMT2_SET_PKT, vd, literal(desc.offset))
             } else {
                 wr.emitBufStore(desc.val, bufferFmt(desc.spec), desc.offset)
             }
@@ -1590,11 +1511,7 @@ class Program implements TopOpWriter {
                 return this.emitRegGet(vobj)
             case "write":
                 this.emitPackArgs(expr, vobj.spec)
-                wr.emitStmt(
-                    Op.STMT2_SEND_CMD,
-                    role.emit(wr),
-                    literal(vobj.spec.identifier | CMD_SET_REG)
-                )
+                role.sendCommand(wr, vobj.spec.identifier | CMD_SET_REG)
                 return literal(0)
             case "onChange":
                 this.requireArgs(expr, 2)
@@ -1607,7 +1524,7 @@ class Program implements TopOpWriter {
                 if (role.autoRefreshRegs.indexOf(vobj.spec) < 0)
                     role.autoRefreshRegs.push(vobj.spec)
                 this.emitInRoleDispatcher(role, wr => {
-                    const cache = this.proc.mkTempLocal(name)
+                    const cache = this.proc.mkTempLocal(name, ValueType.NUMBER)
                     role.dispatcher.init.emit(wr => {
                         this.emitStore(cache, literal(NaN))
                     })
@@ -1639,11 +1556,7 @@ class Program implements TopOpWriter {
                         )
                         wr.emitJumpIfTrue(
                             skipHandler,
-                            wr.emitExpr(
-                                Op.EXPR2_LT,
-                                absval,
-                                literal(threshold)
-                            )
+                            wr.emitExpr(Op.EXPR2_LT, absval, literal(threshold))
                         )
                         // cache := curr
                         this.emitStore(cache, curr.emit())
@@ -1749,11 +1662,7 @@ class Program implements TopOpWriter {
                     p => p.name == "upload"
                 )
                 this.emitPackArgs(expr, spec)
-                wr.emitStmt(
-                    Op.STMT2_SEND_CMD,
-                    this.cloudRole.emit(wr),
-                    literal(spec.identifier)
-                )
+                this.cloudRole.sendCommand(wr, spec.identifier)
                 return literal(0)
             case "cloud.onMethod":
                 this.emitCloudMethod(expr)
@@ -1765,7 +1674,7 @@ class Program implements TopOpWriter {
                     idName(arg0.callee) == "format"
                 ) {
                     const r = this.emitFmtArgs(arg0)
-                    wr.emitStmt(Op.STMT3_LOG_FORMAT, ...r.fmt)
+                    wr.emitStmt(Op.STMTx2_LOG_FORMAT, ...r.fmt)
                     r.free()
                 } else {
                     let fmt = ""
@@ -1782,9 +1691,9 @@ class Program implements TopOpWriter {
                     }
                     const r = this.fmtArgs(fmtargs)
                     wr.emitStmt(
-                        Op.STMT3_LOG_FORMAT,
-                        wr.emitString(fmt),
-                        ...r.fmt
+                        Op.STMTx2_LOG_FORMAT,
+                        ...r.fmt,
+                        wr.emitString(fmt)
                     )
                     r.free()
                 }
@@ -1882,17 +1791,19 @@ class Program implements TopOpWriter {
                     this.emitCloud(expr, fullName)
                 if (r) return r
             }
-            const vobj = this.emitRoleLike(expr.callee.object)
-            switch (vobj.kind) {
+            const val = this.emitRoleLike(expr.callee.object)
+            const vobj = va(val)
+            switch (val.valueType) {
                 case ValueType.JD_EVENT:
                     return this.emitEventCall(expr, vobj, prop)
                 case ValueType.JD_REG:
                     return this.emitRegisterCall(expr, vobj, prop)
+                case ValueType.BUFFER:
+                    return this.emitBufferCall(expr, val, prop)
+                case ValueType.ROLE:
+                    return this.emitRoleCall(expr, vobj.role, prop)
                 default:
-                    if (vobj.buffer)
-                        return this.emitBufferCall(expr, vobj.buffer, prop)
-                    else if (vobj.role)
-                        return this.emitRoleCall(expr, vobj.role, prop)
+                    throwError(expr, `unsupported call`)
             }
         }
 
@@ -1910,12 +1821,19 @@ class Program implements TopOpWriter {
         }
 
         switch (funName) {
-            case "wait": {
+            case "buffer": {
                 this.requireArgs(expr, 1)
                 wr.emitStmt(
-                    Op.STMT1_SLEEP_S,
+                    Op.STMT1_ALLOC_BUFFER,
                     this.emitExpr(expr.arguments[0])
                 )
+                const r = wr.emitExpr(Op.EXPR0_RET_VAL)
+                r.valueType = ValueType.BUFFER
+                return r
+            }
+            case "wait": {
+                this.requireArgs(expr, 1)
+                wr.emitStmt(Op.STMT1_SLEEP_S, this.emitExpr(expr.arguments[0]))
                 return literal(0)
             }
             case "isNaN": {
@@ -1965,7 +1883,7 @@ class Program implements TopOpWriter {
             case "format":
                 const r = wr.allocBuf()
                 const t = this.emitFmtArgs(expr)
-                wr.emitStmt(Op.STMT4_FORMAT, ...t.fmt, literal(0))
+                wr.emitStmt(Op.STMTx3_FORMAT, ...t.fmt, literal(0))
                 t.free()
                 wr.freeBuf()
                 return r
@@ -1985,7 +1903,7 @@ class Program implements TopOpWriter {
     private emitFmtArgs(expr: estree.CallExpression) {
         const fmtString = this.forceStringLiteral(expr.arguments[0])
         const { fmt, free } = this.fmtArgs(expr.arguments.slice(1))
-        fmt.unshift(fmtString)
+        fmt.push(fmtString)
         return { fmt, free }
     }
 
@@ -2077,9 +1995,7 @@ class Program implements TopOpWriter {
     private emitRoleLike(expr: Expr) {
         const obj = this.emitExpr(expr)
         this.ignore(obj)
-        const r = va(obj)
-        if (!r.kind) r.kind = obj.op
-        return r
+        return obj
     }
 
     private emitMemberExpression(expr: estree.MemberExpression): Value {
@@ -2093,22 +2009,17 @@ class Program implements TopOpWriter {
             if (e.members.hasOwnProperty(prop)) return literal(e.members[prop])
             else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
-        const vobj = this.emitRoleLike(expr.object)
-        const k = vobj.kind
-        if (k == ValueType.JD_ROLE) {
-            return this.emitRoleMember(expr, vobj.role)
-        } else if (k == ValueType.JD_REG) {
+        const val = this.emitRoleLike(expr.object)
+        const spec = va(val).spec
+        if (val.valueType == ValueType.ROLE) {
+            return this.emitRoleMember(expr, va(val).role)
+        } else if (val.valueType == ValueType.JD_REG) {
             const propName = this.forceName(expr.property)
-            if (vobj.spec.fields.length > 1) {
-                const fld = vobj.spec.fields.find(f =>
-                    matchesName(f.name, propName)
-                )
+            if (spec.fields.length > 1) {
+                const fld = spec.fields.find(f => matchesName(f.name, propName))
                 if (!fld)
-                    throwError(
-                        expr,
-                        `no field ${propName} in ${vobj.spec.name}`
-                    )
-                return this.emitRegGet(vobj, undefined, fld)
+                    throwError(expr, `no field ${propName} in ${spec.name}`)
+                return this.emitRegGet(va(val), undefined, fld)
             } else {
                 throwError(expr, `unhandled member ${propName}; use .read()`)
             }
@@ -2133,12 +2044,8 @@ class Program implements TopOpWriter {
         const wr = this.writer
 
         if (typeof v == "string") {
-            const r = wr.allocBuf()
             const vd = wr.emitString(v)
-            wr.emitStmt(Op.STMT2_SETUP_BUFFER, literal(strlen(v)))
-            wr.emitStmt(Op.STMT2_MEMCPY, vd, literal(0))
-            wr.freeBuf()
-            return r
+            return vd
         }
 
         if (typeof v == "number") return literal(v)
@@ -2158,21 +2065,40 @@ class Program implements TopOpWriter {
         return r
     }
 
-    private emitSimpleValue(expr: Expr): Value {
+    private emitSimpleValue(expr: Expr, tp = ValueType.NUMBER): Value {
         const val = this.emitExpr(expr)
-        this.requireRuntimeValue(expr, val)
+        this.requireValueType(expr, val, tp)
         return val
     }
 
     private emitRoleRef(expr: Expr) {
         const val = this.emitExpr(expr)
-        if (cellKind(val) != ValueType.JD_ROLE)
+        if (cellKind(val) != ValueType.ROLE)
             throwError(expr, "role expected here")
         return val
     }
 
-    private requireRuntimeValue(node: estree.BaseNode, v: Value) {
-        if (cellKind(v) >= 0x100) throwError(node, "a number required here")
+    private isBoolLike(tp: ValueType) {
+        switch (tp) {
+            case ValueType.ANY:
+            case ValueType.NUMBER:
+            case ValueType.NULL:
+            case ValueType.BOOL:
+                return true
+            default:
+                return false
+        }
+    }
+
+    private requireValueType(node: estree.BaseNode, v: Value, tp: ValueType) {
+        if (tp == ValueType.BOOL && this.isBoolLike(v.valueType)) return
+        if (v.valueType != tp)
+            throwError(
+                node,
+                `can't convert ${valueTypeToString(
+                    v.valueType
+                )} to ${valueTypeToString(tp)}`
+            )
     }
 
     private emitPrototypeUpdate(expr: estree.AssignmentExpression): Value {
@@ -2256,7 +2182,7 @@ class Program implements TopOpWriter {
 
         if (this.compileAll) this.getClientCommandProc(cmd)
 
-        return nonEmittable(ValueType.ERROR)
+        return nonEmittable(ValueType.VOID)
     }
 
     private emitAssignmentExpression(expr: estree.AssignmentExpression): Value {
@@ -2284,11 +2210,12 @@ class Program implements TopOpWriter {
             } else {
                 throwError(expr, "expecting a multi-field register read")
             }
-            return nonEmittable(ValueType.ERROR)
+            return nonEmittable(ValueType.VOID)
         } else if (left.type == "Identifier") {
-            this.requireRuntimeValue(expr.right, src)
-            this.emitStore(this.lookupVar(left), src)
-            return nonEmittable(ValueType.ERROR)
+            const v = this.lookupVar(left)
+            this.requireValueType(expr.right, src, v.valueType)
+            this.emitStore(v, src)
+            return nonEmittable(ValueType.VOID)
         }
         throwError(expr, "unhandled assignment")
     }
@@ -2506,17 +2433,19 @@ class Program implements TopOpWriter {
         const roleData = new SectionWriter()
         const strDesc = new SectionWriter()
         const strData = new SectionWriter()
-        const bufferDesc = new SectionWriter()
 
-        for (const s of [
+        const writers = [
             funDesc,
             funData,
             floatData,
             roleData,
             strDesc,
             strData,
-            bufferDesc,
-        ]) {
+        ]
+
+        assert(BinFmt.NUM_IMG_SECTIONS == writers.length)
+
+        for (const s of writers) {
             sectDescs.append(s.desc)
             sections.push(s)
         }
@@ -2542,10 +2471,6 @@ class Program implements TopOpWriter {
 
         for (const r of this.roles.list) {
             roleData.append((r as Role).serialize())
-        }
-
-        for (const b of this.buffers.list) {
-            bufferDesc.append((b as Buffer).serialize())
         }
 
         const descs = this.stringLiterals.map(str => {
