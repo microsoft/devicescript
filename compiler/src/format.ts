@@ -10,6 +10,7 @@ import {
     OP_TYPES,
     OBJECT_TYPE,
 } from "./bytecode"
+import { toHex } from "./jdutil"
 
 export * from "./bytecode"
 
@@ -21,8 +22,14 @@ export function opTakesNumber(op: Op) {
     return !!(OP_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
 }
 
-export function opNumArgs(op: Op) {
+export function opNumRealArgs(op: Op) {
     return OP_PROPS.charCodeAt(op) & BytecodeFlag.NUM_ARGS_MASK
+}
+
+export function opNumArgs(op: Op) {
+    let n = opNumRealArgs(op)
+    if (opTakesNumber(op)) n++
+    return n
 }
 
 export function opType(op: Op): ObjectType {
@@ -81,27 +88,47 @@ export function bitSize(fmt: NumFmt) {
     return 8 << (fmt & 0b11)
 }
 
+class OpTree {
+    args: OpTree[]
+    arg: number
+    constructor(public opcode: number) {}
+}
+
 export function stringifyInstr(
-    getbyte: () => number,
+    getbyte0: () => number,
     resolver?: InstrArgResolver
 ) {
-    const ops: number[] = []
-    const opargs: number[] = []
+    const bytebuf: number[] = []
+    const getbyte = () => {
+        const v = getbyte0()
+        bytebuf.push(v)
+        return v
+    }
+
+    const stack: OpTree[] = []
+    let jmpoff = NaN
 
     for (;;) {
         const op = getbyte()
-        ops.push(op)
-
+        const e = new OpTree(op)
         if (opTakesNumber(op)) {
-            opargs.push(decodeInt())
-        } else {
-            opargs.push(null)
+            jmpoff = resolver?.resolverPC + bytebuf.length - 1
+            e.arg = decodeInt()
         }
-
+        let n = opNumRealArgs(op)
+        if (n) {
+            if (stack.length < n)
+                return "??? stack underflow; " + toHex(bytebuf)
+            e.args = stack.slice(stack.length - n)
+            while (n--) stack.pop()
+        }
+        stack.push(e)
         if (opIsStmt(op)) break
     }
+    if (stack.length != 1)
+        return "??? bad stack: " + stack.length + "; " + toHex(bytebuf)
 
-    let res = "    " + stringifyExpr()
+    let res = "    " + stringifyExpr(stack[0]) + " // " + toHex(bytebuf)
 
     const pc = resolver?.resolverPC
     if (pc !== undefined)
@@ -109,7 +136,7 @@ export function stringifyInstr(
 
     return res
 
-    function expandFmt(fmt: string, intarg: number) {
+    function expandFmt(fmt: string, t: OpTree) {
         let ptr = 0
         let beg = 0
         let r = ""
@@ -126,12 +153,13 @@ export function stringifyInstr(
             let e: string
             let eNum: number = null
 
-            if (intarg != null) {
-                eNum = intarg
+            if (t.arg != undefined) {
+                eNum = t.arg
                 e = eNum + ""
-                intarg = null
+                t.arg = undefined
             } else {
-                e = stringifyExpr()
+                if (!t.args || !t.args.length) e = "???"
+                else e = stringifyExpr(t.args.shift())
                 if (isNumber(e)) eNum = +e
             }
 
@@ -170,9 +198,7 @@ export function stringifyInstr(
 
     function jmpOffset(off: number) {
         const offs = (off >= 0 ? "+" : "") + off
-        return resolver?.resolverPC === undefined
-            ? offs
-            : resolver?.resolverPC + off + (" (" + offs + ")")
+        return isNaN(jmpoff) ? offs : jmpoff + off + (" (" + offs + ")")
     }
 
     function isNumber(s: string) {
@@ -222,9 +248,8 @@ export function stringifyInstr(
         return n ? -r : r
     }
 
-    function stringifyExpr(): string {
-        const op = ops.pop()
-        const intarg = opargs.pop()
+    function stringifyExpr(t: OpTree): string {
+        const op = t.opcode
 
         if (op >= BinFmt.DIRECT_CONST_OP)
             return (
@@ -233,7 +258,7 @@ export function stringifyInstr(
 
         const fmt = OP_PRINT_FMTS[op]
         if (!fmt) return `?op${op}?`
-        return expandFmt(fmt, intarg)
+        return expandFmt(fmt, t)
     }
 }
 

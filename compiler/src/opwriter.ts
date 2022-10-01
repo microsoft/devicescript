@@ -387,6 +387,8 @@ export class OpWriter {
         cond?.adopt()
         this.spillAllStateful()
 
+        if (cond) this.writeValue(cond)
+
         const off0 = this.location()
         this.writeByte(cond ? Op.STMTx1_JMP_Z : Op.STMTx_JMP)
 
@@ -397,8 +399,6 @@ export class OpWriter {
             label.uses.push(off0)
             this.writeInt(0x1000)
         }
-
-        if (cond) this.writeValue(cond)
     }
 
     private oops(msg: string) {

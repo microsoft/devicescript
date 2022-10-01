@@ -395,7 +395,10 @@ function lookupEnum(en: string, fld: string) {
 
 function opcodeProps(obj: OpCode) {
     let r = obj.args.length
-    if (obj.takesNumber) r |= lookupEnum("BytecodeFlag", "takes_number")
+    if (obj.takesNumber) {
+        r -= 1
+        r |= lookupEnum("BytecodeFlag", "takes_number")
+    }
     if (obj.isFun) r |= lookupEnum("BytecodeFlag", "is_stateless")
     if (!obj.isExpr) r |= lookupEnum("BytecodeFlag", "is_stmt")
     if (r == undefined) throw new Error()
