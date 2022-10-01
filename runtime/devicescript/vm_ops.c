@@ -110,7 +110,9 @@ static void stmt1_alloc_array(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static void stmt1_alloc_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t sz = jacs_vm_pop_arg_u32(ctx);
-    set_alloc(frame, ctx, jacs_buffer_try_alloc(ctx->gc, sz), sizeof(jacs_buffer_t) + sz);
+    jacs_buffer_t *obj = jacs_buffer_try_alloc(ctx->gc, sz);
+    // DMESG("buf=%p %p", obj, (void*)obj->gc.header);
+    set_alloc(frame, ctx, obj, sizeof(jacs_buffer_t) + sz);
 }
 
 static void stmtx2_set_field(jacs_activation_t *frame, jacs_ctx_t *ctx) {
@@ -208,9 +210,8 @@ static void stmtx3_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    int pc0 = frame->pc - 1;
     int32_t off = ctx->literal_int;
-    int pc = pc0 + off;
+    int pc = ctx->jmp_pc + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
         frame->pc = pc;
     } else {
@@ -219,10 +220,9 @@ static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_jmp_z(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    int pc0 = frame->pc - 1;
     int32_t off = ctx->literal_int;
     int cond = jacs_value_to_bool(jacs_vm_pop_arg(ctx));
-    int pc = pc0 + off;
+    int pc = ctx->jmp_pc + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
         if (!cond)
             frame->pc = pc;

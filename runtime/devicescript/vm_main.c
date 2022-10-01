@@ -38,8 +38,8 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
     uint8_t op = jacs_vm_fetch_byte(frame, ctx);
 
     if (op >= JACS_DIRECT_CONST_OP) {
-        jacs_vm_push(ctx,
-                     jacs_value_from_int(op - JACS_DIRECT_CONST_OP - JACS_DIRECT_CONST_OFFSET));
+        int v = op - JACS_DIRECT_CONST_OP - JACS_DIRECT_CONST_OFFSET;
+        jacs_vm_push(ctx, jacs_value_from_int(v));
         return;
     }
 
@@ -49,10 +49,13 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
         uint8_t flags = JACS_OP_PROPS[op];
 
         if (flags & JACS_BYTECODEFLAG_TAKES_NUMBER) {
+            ctx->jmp_pc = frame->pc - 1;
             ctx->literal_int = jacs_vm_fetch_int(frame, ctx);
         }
 
         uint8_t numargs = flags & JACS_BYTECODEFLAG_NUM_ARGS_MASK;
+
+        // DMESG("op=%d na=%d top=%d", op, numargs, ctx->stack_top);
 
         if (numargs) {
             int bot = ctx->stack_top - numargs;
@@ -73,4 +76,3 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
         }
     }
 }
-

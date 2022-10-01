@@ -249,6 +249,8 @@ static block_t *alloc_block(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
         b = find_free_block(gc, tag, words);
     }
 
+    // DMESG("b=%p %p",b,(void*)b->header);
+
     return b;
 }
 
@@ -259,11 +261,11 @@ static void *try_alloc(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
     if (!b)
         return NULL;
     memset(b->data, 0x00, size);
-    return b->data;
+    return b;
 }
 
 void *jd_gc_try_alloc(jacs_gc_t *gc, uint32_t size) {
-    return try_alloc(gc, JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES, size);
+    return (uintptr_t *)try_alloc(gc, JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES, size) + 1;
 }
 
 void jd_gc_free(jacs_gc_t *gc, void *ptr) {

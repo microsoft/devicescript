@@ -85,6 +85,8 @@ struct jacs_ctx {
     value_t binop[2];
     double binop_f[2];
 
+    uint16_t jmp_pc;
+
     uint8_t stack_top;
     uint8_t arg_stack_bottom;
     uint32_t literal_int;
