@@ -53,25 +53,12 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
             ctx->literal_int = jacs_vm_fetch_int(frame, ctx);
         }
 
-        uint8_t numargs = flags & JACS_BYTECODEFLAG_NUM_ARGS_MASK;
-
-        // DMESG("op=%d na=%d top=%d", op, numargs, ctx->stack_top);
-
-        if (numargs) {
-            int bot = ctx->stack_top - numargs;
-            if (bot < 0)
-                jacs_runtime_failure(ctx, 60134);
-            ctx->arg_stack_bottom = bot;
-        }
-
         if (flags & JACS_BYTECODEFLAG_IS_STMT) {
             ((jacs_vm_stmt_handler_t)jacs_vm_op_handlers[op])(frame, ctx);
-            ctx->stack_top -= numargs;
             if (ctx->stack_top)
                 jacs_runtime_failure(ctx, 60135);
         } else {
             value_t v = ((jacs_vm_expr_handler_t)jacs_vm_op_handlers[op])(frame, ctx);
-            ctx->stack_top -= numargs;
             jacs_vm_push(ctx, v);
         }
     }

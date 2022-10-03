@@ -42,40 +42,40 @@ static void stmt1_sleep_ms(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmt2_send_cmd(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t a = jacs_vm_pop_arg_role(ctx);
     uint32_t b = jacs_vm_pop_arg_u32(ctx);
+    uint32_t a = jacs_vm_pop_arg_role(ctx);
     jacs_jd_send_cmd(ctx, a, b);
 }
 
 static void stmt3_query_reg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t a = jacs_vm_pop_arg_role(ctx);
-    uint32_t b = jacs_vm_pop_arg_u32(ctx);
     uint32_t timeout = jacs_vm_pop_arg_u32(ctx);
+    uint32_t b = jacs_vm_pop_arg_u32(ctx);
+    uint32_t a = jacs_vm_pop_arg_role(ctx);
     jacs_jd_get_register(ctx, a, JD_GET(b), timeout, 0);
 }
 
 static void stmt4_query_idx_reg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t a = jacs_vm_pop_arg_role(ctx);
-    uint32_t b = jacs_vm_pop_arg_u32(ctx);
-    uint32_t timeout = jacs_vm_pop_arg_u32(ctx);
     unsigned stridx = jacs_vm_pop_arg_stridx(ctx);
+    uint32_t timeout = jacs_vm_pop_arg_u32(ctx);
+    uint32_t b = jacs_vm_pop_arg_u32(ctx);
+    uint32_t a = jacs_vm_pop_arg_role(ctx);
     jacs_jd_get_register(ctx, a, b, timeout, stridx);
 }
 
 static void stmtx2_log_format(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t localidx = ctx->literal_int;
-    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
     uint32_t stridx = jacs_vm_pop_arg_stridx(ctx);
+    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
+    uint32_t localidx = ctx->literal_int;
     if (jacs_vm_args_ok(frame, localidx, numargs))
         jacs_jd_send_logmsg(ctx, stridx, localidx, numargs);
 }
 
 static void stmtx3_format(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t localidx = ctx->literal_int;
-    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
     unsigned len;
-    char *fmt = jacs_vm_pop_arg_buffer_data(ctx, &len);
     uint32_t offset = jacs_vm_pop_arg_u32(ctx);
+    char *fmt = jacs_vm_pop_arg_buffer_data(ctx, &len);
+    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
+    uint32_t localidx = ctx->literal_int;
 
     if (offset > JD_SERIAL_PAYLOAD_SIZE)
         return;
@@ -116,17 +116,17 @@ static void stmt1_alloc_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx2_set_field(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned idx = ctx->literal_int;
-    jacs_map_t *map = jacs_vm_pop_arg_map(ctx, true);
     value_t v = jacs_vm_pop_arg(ctx);
+    jacs_map_t *map = jacs_vm_pop_arg_map(ctx, true);
+    unsigned idx = ctx->literal_int;
     if (map != NULL)
         jacs_map_set(ctx, map, idx, v);
 }
 
 static void stmt3_array_set(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    value_t arr = jacs_vm_pop_arg(ctx);
-    uint32_t idx = jacs_vm_pop_arg_u32(ctx);
     value_t v = jacs_vm_pop_arg(ctx);
+    uint32_t idx = jacs_vm_pop_arg_u32(ctx);
+    value_t arr = jacs_vm_pop_arg(ctx);
 
     if (jacs_index_set(ctx, arr, idx, v))
         jacs_runtime_failure(ctx, 60133);
@@ -148,8 +148,8 @@ static void stmt1_setup_pkt_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static void stmt2_set_pkt(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned slen;
-    void *src = jacs_vm_pop_arg_buffer_data(ctx, &slen);
     uint32_t offset = jacs_vm_pop_arg_u32(ctx);
+    void *src = jacs_vm_pop_arg_buffer_data(ctx, &slen);
 
     int len = ctx->packet.service_size - offset;
     if (len > 0) {
@@ -160,13 +160,13 @@ static void stmt2_set_pkt(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmt5_blit(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned dlen;
-    uint8_t *dst = jacs_vm_pop_arg_buffer_data(ctx, &dlen);
-    uint32_t dst_offset = jacs_vm_pop_arg_u32(ctx);
-    unsigned slen;
-    uint8_t *src = jacs_vm_pop_arg_buffer_data(ctx, &slen);
-    uint32_t src_offset = jacs_vm_pop_arg_u32(ctx);
+    unsigned slen, dlen;
+
     uint32_t len = jacs_vm_pop_arg_u32(ctx);
+    uint32_t src_offset = jacs_vm_pop_arg_u32(ctx);
+    uint8_t *src = jacs_vm_pop_arg_buffer_data(ctx, &slen);
+    uint32_t dst_offset = jacs_vm_pop_arg_u32(ctx);
+    uint8_t *dst = jacs_vm_pop_arg_buffer_data(ctx, &dlen);
 
     if (src_offset >= slen)
         return;
@@ -189,19 +189,19 @@ static void stmt1_panic(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx2_call(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t localidx = ctx->literal_int;
-    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
     uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
+    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
+    uint32_t localidx = ctx->literal_int;
 
     if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx))
         jacs_fiber_call_function(frame->fiber, fidx, frame->locals + localidx, numargs);
 }
 
 static void stmtx3_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t localidx = ctx->literal_int;
-    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
-    uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
     uint32_t flag = jacs_vm_pop_arg_u32(ctx);
+    uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
+    uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
+    uint32_t localidx = ctx->literal_int;
 
     if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx)) {
         jacs_fiber_t *fib = jacs_fiber_start(ctx, fidx, frame->locals + localidx, numargs, flag);
@@ -220,8 +220,8 @@ static void stmtx_jmp(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_jmp_z(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    int32_t off = ctx->literal_int;
     int cond = jacs_value_to_bool(jacs_vm_pop_arg(ctx));
+    int32_t off = ctx->literal_int;
     int pc = ctx->jmp_pc + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
         if (!cond)
@@ -232,8 +232,8 @@ static void stmtx1_jmp_z(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_store_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = ctx->literal_int;
     value_t v = jacs_vm_pop_arg(ctx);
+    unsigned off = ctx->literal_int;
     if (off >= frame->func->num_locals)
         jacs_runtime_failure(ctx, 60118);
     else
@@ -241,8 +241,8 @@ static void stmtx1_store_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_store_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = ctx->literal_int;
     value_t v = jacs_vm_pop_arg(ctx);
+    unsigned off = ctx->literal_int;
     if (off >= frame->func->num_args)
         jacs_runtime_failure(ctx, 60119);
     else {
@@ -253,8 +253,8 @@ static void stmtx1_store_param(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx1_store_global(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    unsigned off = ctx->literal_int;
     value_t v = jacs_vm_pop_arg(ctx);
+    unsigned off = ctx->literal_int;
     if (off >= ctx->img.header->num_globals)
         jacs_runtime_failure(ctx, 60120);
     else
@@ -262,10 +262,10 @@ static void stmtx1_store_global(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmt4_store_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    value_t buffer = jacs_vm_pop_arg_buffer(ctx);
-    uint32_t fmt0 = jacs_vm_pop_arg_u32(ctx);
-    uint32_t offset = jacs_vm_pop_arg_u32(ctx);
     value_t val = jacs_vm_pop_arg(ctx);
+    uint32_t offset = jacs_vm_pop_arg_u32(ctx);
+    uint32_t fmt0 = jacs_vm_pop_arg_u32(ctx);
+    value_t buffer = jacs_vm_pop_arg_buffer(ctx);
     jacs_buffer_op(frame, fmt0, offset, buffer, &val);
 }
 
@@ -305,8 +305,8 @@ static value_t expr_invalid(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 
 static value_t expr2_str0eq(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     unsigned len;
-    uint8_t *data = jacs_vm_pop_arg_buffer_data(ctx, &len);
     uint32_t offset = jacs_vm_pop_arg_u32(ctx);
+    uint8_t *data = jacs_vm_pop_arg_buffer_data(ctx, &len);
 
     return jacs_value_from_bool(ctx->packet.service_size >= offset + len + 1 &&
                                 ctx->packet.data[offset + len] == 0 &&
@@ -336,9 +336,9 @@ static value_t exprx_load_global(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t expr3_load_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    value_t buf = jacs_vm_pop_arg_buffer(ctx);
-    uint32_t fmt0 = jacs_vm_pop_arg_u32(ctx);
     uint32_t offset = jacs_vm_pop_arg_u32(ctx);
+    uint32_t fmt0 = jacs_vm_pop_arg_u32(ctx);
+    value_t buf = jacs_vm_pop_arg_buffer(ctx);
     return jacs_buffer_op(frame, fmt0, offset, buf, NULL);
 }
 
@@ -451,8 +451,8 @@ static value_t exprx1_get_field(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t expr2_index(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    value_t arr = jacs_vm_pop_arg(ctx);
     uint32_t idx = jacs_vm_pop_arg_u32(ctx);
+    value_t arr = jacs_vm_pop_arg(ctx);
     return jacs_index(ctx, arr, idx);
 }
 
@@ -598,9 +598,8 @@ static value_t expr1_to_bool(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static int exec2_and_check_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    value_t tmp = jacs_vm_pop_arg(ctx);
     ctx->binop[1] = jacs_vm_pop_arg(ctx);
-    ctx->binop[0] = tmp;
+    ctx->binop[0] = jacs_vm_pop_arg(ctx);
     return jacs_is_tagged_int(ctx->binop[0]) && jacs_is_tagged_int(ctx->binop[1]);
 }
 
@@ -616,8 +615,8 @@ static void force_double(jacs_ctx_t *ctx) {
 }
 
 static void exec2_and_force_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    aa = jacs_vm_pop_arg_i32(ctx);
     bb = jacs_vm_pop_arg_i32(ctx);
+    aa = jacs_vm_pop_arg_i32(ctx);
 }
 
 static int exec2_and_check_int_or_force_double(jacs_activation_t *frame, jacs_ctx_t *ctx) {
