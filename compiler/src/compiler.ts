@@ -1146,7 +1146,7 @@ class Program implements TopOpWriter {
                 this.requireArgs(expr, 0)
                 const lbl = wr.mkLabel("wait")
                 wr.emitLabel(lbl)
-                wr.emitStmt(Op.STMT1_WAIT_ROLE, val)
+                wr.emitStmt(Op.STMT1_WAIT_ROLE, this.roleExprOf(expr, val))
                 const cond = wr.emitExpr(
                     Op.EXPR2_EQ,
                     wr.emitExpr(Op.EXPR0_PKT_EV_CODE),
@@ -1212,9 +1212,16 @@ class Program implements TopOpWriter {
         return this.writer.emitExpr(Op.EXPR1_ROLE_IS_CONNECTED, val)
     }
 
+    private roleExprOf(expr: Expr, val: Value) {
+        const vobj = va(val)
+        if (vobj.roleExpr) val = vobj.roleExpr
+        if (!val.valueType.isRole)
+            throwError(expr, `a role expression is required here`)
+        return val
+    }
+
     private roleOf(expr: Expr, val: Value) {
-        let vobj = va(val)
-        if (vobj.roleExpr) vobj = va(vobj.roleExpr)
+        let vobj = va(this.roleExprOf(expr, val))
         if (!vobj.role) throwError(expr, `a static role is required here`)
         return vobj.role
     }
@@ -1253,7 +1260,7 @@ class Program implements TopOpWriter {
             }
             case "wait": {
                 const role = this.roleOf(expr, val)
-                if (role.isCondition())
+                if (!role.isCondition())
                     throwError(expr, "only condition()s have wait()")
                 this.requireArgs(expr, 0)
                 wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
@@ -1263,6 +1270,7 @@ class Program implements TopOpWriter {
                 const v = this.emitRoleMember(expr.callee, val)
                 const k = v.valueType.kind
                 if (k == ValueKind.JD_CLIENT_COMMAND) {
+                    this.ignore(val)
                     return this.emitProcCall(
                         expr,
                         this.getClientCommandProc(va(v).clientCommand),
@@ -1444,6 +1452,19 @@ class Program implements TopOpWriter {
         return this.writer.emitString(v)
     }
 
+    private fieldTypeToValueType(mem: jdspec.PacketMember) {
+        switch (mem.type) {
+            case "bytes":
+            case "string":
+            case "string0":
+                return ValueType.BUFFER
+            case "bool":
+                return ValueType.BOOL
+            default:
+                return ValueType.NUMBER
+        }
+    }
+
     private emitPackArgs(
         expr: estree.CallExpression,
         pspec: jdspec.PacketInfo
@@ -1482,7 +1503,9 @@ class Program implements TopOpWriter {
                 }
                 if (spec.type == "string0") size += 1
             }
-            const val = stringLiteralVal ? null : this.emitSimpleValue(arg)
+            const val = stringLiteralVal
+                ? null
+                : this.emitSimpleValue(arg, this.fieldTypeToValueType(spec))
             const r = {
                 stringLiteralVal,
                 size,
