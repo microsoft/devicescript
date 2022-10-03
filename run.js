@@ -1,4 +1,4 @@
-const jacsFactory = require("./vm")
+const jacsFactory = require("./vm-dev")
 const fs = require("fs")
 const path = require("path")
 const child_process = require("child_process")
