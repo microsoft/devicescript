@@ -4,7 +4,6 @@ import {
     ValueType,
     exprIsStateful,
     InstrArgResolver,
-    JACS_MAX_EXPR_DEPTH,
     OpCall,
     NumFmt,
     Op,
@@ -30,7 +29,7 @@ export class Label {
     constructor(public name: string) {}
 }
 
-const VF_DEPTH_MASK = 0xff
+const VF_MAX_STACK_MASK = 0xff
 const VF_USES_STATE = 0x100
 const VF_HAS_PARENT = 0x200
 const VF_IS_LITERAL = 0x400
@@ -48,8 +47,8 @@ export class Value {
 
     constructor(public valueType: ValueType) {}
 
-    get depth() {
-        return this.flags & VF_DEPTH_MASK
+    get maxstack() {
+        return (this.flags & VF_MAX_STACK_MASK) + 1
     }
     get usesState() {
         return !!(this.flags & VF_USES_STATE)
@@ -115,6 +114,7 @@ export function literal(v: number) {
         const r = new Value(ValueType.NULL)
         r.op = Op.EXPR0_NULL
         r.args = []
+        r.flags = 0
         return r
     } else {
         const r = new Value(ValueType.NUMBER)
@@ -130,6 +130,7 @@ export function nonEmittable(k: ValueType) {
     const r = new Value(k)
     r.op = k
     r.valueType = k
+    r.flags = 0
     return r
 }
 
@@ -258,7 +259,7 @@ export class OpWriter {
         const v = new Value(ValueType.BUFFER)
         v.op = Op.EXPRx_STATIC_BUFFER
         v.args = [literal(this.prog.addString(s))]
-        v.flags |= VF_IS_STRING
+        v.flags = VF_IS_STRING
         return v
     }
 
@@ -465,12 +466,14 @@ export class OpWriter {
     emitExpr(op: Op, ...args: Value[]) {
         assert(opNumArgs(op) == args.length)
         assert(!opIsStmt(op))
-        let maxdepth = -1
+        let stack = 0
+        let maxstack = 1
         let usesState = exprIsStateful(op)
         // TODO constant folding
         for (const a of args) {
-            if (a.depth >= JACS_MAX_EXPR_DEPTH - 1) this.spillValue(a)
-            maxdepth = Math.max(a.depth, maxdepth)
+            if (stack + a.maxstack >= BinFmt.MAX_STACK_DEPTH) this.spillValue(a)
+            maxstack = Math.max(maxstack, stack + a.maxstack)
+            stack++
             if (a.usesState) usesState = true
             assert(!(a.flags & VF_HAS_PARENT))
             a.flags |= VF_HAS_PARENT
@@ -478,7 +481,7 @@ export class OpWriter {
         const r = new Value(opType(op) as any)
         r.args = args
         r.op = op
-        r.flags = maxdepth + 1
+        r.flags = maxstack - 1 // so that r.maxstack == maxstack
         if (usesState) {
             r.flags |= VF_USES_STATE
             this.pendingStatefulValues.push(r)
@@ -583,7 +586,7 @@ export class OpWriter {
         assert(opNumArgs(op) == args.length)
         assert(opIsStmt(op))
         for (const a of args) a.adopt()
-        this.spillAllStateful()
+        this.spillAllStateful() // this doesn't spill adopt()'ed Value's (our arguments)
         this.writeArgs(op, args)
     }
 }

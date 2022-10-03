@@ -44,8 +44,6 @@ export function exprIsStateful(op: Op) {
     return !(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
 }
 
-export const JACS_MAX_EXPR_DEPTH = BinFmt.MAX_STACK_DEPTH // TODO
-
 export enum ValueType {
     ANY = ObjectType.ANY,
     NUMBER = ObjectType.NUMBER,
