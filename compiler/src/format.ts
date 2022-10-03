@@ -232,8 +232,8 @@ export function stringifyInstr(
 export interface FunctionDebugInfo {
     name: string
     // format is (line-number, start, len)
-    // start is offset in halfwords from the start of the function
-    // len is in halfwords
+    // start is offset in bytes from the start of the function
+    // len is in bytes
     srcmap: number[]
     locals: CellDebugInfo[]
 }
