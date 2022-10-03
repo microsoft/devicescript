@@ -13,6 +13,7 @@ import {
 import { toHex } from "./jdutil"
 
 export * from "./bytecode"
+export * from "./type"
 
 export interface SMap<T> {
     [k: string]: T
@@ -42,39 +43,6 @@ export function opIsStmt(op: Op) {
 
 export function exprIsStateful(op: Op) {
     return !(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
-}
-
-export enum ValueType {
-    ANY = ObjectType.ANY,
-    NUMBER = ObjectType.NUMBER,
-    BUFFER = ObjectType.BUFFER,
-    MAP = ObjectType.MAP,
-    ARRAY = ObjectType.ARRAY,
-    NULL = ObjectType.NULL,
-    FIBER = ObjectType.FIBER,
-    BOOL = ObjectType.BOOL,
-    ROLE = ObjectType.ROLE,
-    VOID = ObjectType.VOID,
-
-    ERROR = 0x100,
-    JD_EVENT,
-    JD_REG,
-    JD_VALUE_SEQ,
-    JD_COMMAND,
-    JD_CLIENT_COMMAND,
-}
-
-export const valueTypes = [
-    "(error node)",
-    "Jacdac event",
-    "Jacdac register",
-    "multi-field value",
-    "Jacdac command",
-    "Jacdac client command",
-]
-
-export function valueTypeToString(vk: ValueType) {
-    return OBJECT_TYPE[vk] || valueTypes[vk - 0x100] || "ValueType " + vk
 }
 
 export interface InstrArgResolver {

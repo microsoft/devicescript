@@ -126,9 +126,9 @@ export function literal(v: number) {
 }
 
 export function nonEmittable(k: ValueType) {
-    assert(k == ValueType.VOID || k >= 0x100)
+    assert(k == ValueType.VOID || k.kind >= 0x100)
     const r = new Value(k)
-    r.op = k
+    r.op = k.kind
     r.valueType = k
     r.flags = 0
     return r
@@ -478,7 +478,7 @@ export class OpWriter {
             assert(!(a.flags & VF_HAS_PARENT))
             a.flags |= VF_HAS_PARENT
         }
-        const r = new Value(opType(op) as any)
+        const r = new Value(ValueType.infer(op))
         r.args = args
         r.op = op
         r.flags = maxstack - 1 // so that r.maxstack == maxstack
@@ -570,7 +570,7 @@ export class OpWriter {
             this.writeInt(v.numValue)
             if (v._cachedValue) v._cachedValue._decr()
         } else if (v.op >= 0x100) {
-            oops("this value can't be emitted")
+            oops("this value cannot be emitted: 0x" + v.op.toString(16))
         } else {
             this.writeArgs(v.op, v.args)
         }

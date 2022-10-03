@@ -39,7 +39,7 @@ import {
     printJacError,
     RoleDebugInfo,
     SMap,
-    valueTypeToString,
+    ValueKind,
 } from "./format"
 import {
     addUnique,
@@ -74,14 +74,14 @@ export const CMD_SET_REG = 0x2000
 
 class Cell {
     _index: number
-    _name: string
 
     constructor(
         public definition:
             | estree.VariableDeclarator
             | estree.FunctionDeclaration
             | estree.Identifier,
-        public scope: VariableScope
+        public scope: VariableScope,
+        public _name?: string
     ) {
         scope.add(this)
     }
@@ -130,22 +130,16 @@ class Role extends Cell {
         public spec: jdspec.ServiceSpec,
         _name?: string
     ) {
-        super(definition, scope)
-        if (_name) {
-            this._name = _name
-            scope._addToMap(this)
-        }
-        assert(!!spec, "no spec " + _name)
+        super(definition, scope, _name)
+        assert(!!spec, "no spec " + this._name)
         this.stringIndex = prog.addString(this.getName())
     }
     emit(wr: OpWriter): Value {
         const r = wr.emitExpr(Op.EXPRx_STATIC_ROLE, literal(this._index))
+        r.valueType = ValueType.ROLE(this.spec)
         va(r).role = this
         this.used = true
         return r
-    }
-    sendCommand(wr: OpWriter, cmd: number) {
-        wr.emitStmt(Op.STMT2_SEND_CMD, this.emit(wr), literal(cmd))
     }
     serialize() {
         const r = new Uint8Array(BinFmt.ROLE_HEADER_SIZE)
@@ -175,14 +169,14 @@ class Role extends Cell {
 class Variable extends Cell {
     isLocal = false
     isParameter = false
-    spec: jdspec.ServiceSpec
 
     constructor(
         definition: estree.VariableDeclarator | estree.Identifier,
         scope: VariableScope,
-        public valueType: ValueType
+        public valueType: ValueType,
+        name?: string
     ) {
-        super(definition, scope)
+        super(definition, scope, name)
     }
     emit(wr: OpWriter): Value {
         const r = this.isParameter
@@ -250,11 +244,11 @@ class FunctionDecl extends Cell {
 
 class ValueAdd {
     index: number
+    roleExpr?: Value
     role?: Role
     variable?: Variable
     clientCommand?: ClientCommand
     fun?: FunctionDecl
-    spec?: jdspec.PacketInfo
     litValue?: number
 }
 
@@ -355,7 +349,7 @@ class VariableScope {
     add(cell: Cell) {
         cell._index = this.list.length
         this.list.push(cell)
-        if (cell.definition) this._addToMap(cell)
+        if (cell.definition || cell._name) this._addToMap(cell)
     }
 
     describeIndex(idx: number) {
@@ -646,13 +640,16 @@ class Program implements TopOpWriter {
                             role.isSensor()
                         ) {
                             wr.emitSetBuffer(new Uint8Array([199]))
-                            role.sendCommand(
-                                wr,
+                            this.emitSendCommand(
+                                role,
                                 SystemReg.StreamingSamples | CMD_SET_REG
                             )
                         } else {
                             wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(0))
-                            role.sendCommand(wr, reg.identifier | CMD_GET_REG)
+                            this.emitSendCommand(
+                                role,
+                                reg.identifier | CMD_GET_REG
+                            )
                         }
                     }
                 })
@@ -826,7 +823,7 @@ class Program implements TopOpWriter {
             off += 8
         }
         wr.freeBuf()
-        this.cloudRole.sendCommand(wr, CloudAdapterCmd.AckCloudCommand)
+        this.emitSendCommand(this.cloudRole, CloudAdapterCmd.AckCloudCommand)
     }
 
     private emitReturnStatement(stmt: estree.ReturnStatement) {
@@ -894,8 +891,9 @@ class Program implements TopOpWriter {
             } else if (tp == "boolean") {
                 v.valueType = ValueType.BOOL
             } else {
-                v.valueType = ValueType.ROLE
-                v.spec = this.specFromTypeName(paramdef, tp)
+                v.valueType = ValueType.ROLE(
+                    this.specFromTypeName(paramdef, tp)
+                )
             }
         }
     }
@@ -910,9 +908,12 @@ class Program implements TopOpWriter {
         )
 
         this.withProcedure(cc.proc, wr => {
-            const v = new Variable(null, cc.proc.params, ValueType.ROLE)
-            v._name = "this"
-            v.spec = cc.serviceSpec
+            const v = new Variable(
+                null,
+                cc.proc.params,
+                ValueType.ROLE(cc.serviceSpec),
+                "this"
+            )
             v.isLocal = true
             v.isParameter = true
             this.emitParameters(stmt, cc.proc)
@@ -1124,31 +1125,32 @@ class Program implements TopOpWriter {
 
     private emitEventCall(
         expr: estree.CallExpression,
-        vobj: ValueAdd,
+        val: Value,
         prop: string
     ): Value {
-        const role = vobj.role
+        assert(val.valueType.kind == ValueKind.JD_EVENT)
+        const wr = this.writer
         switch (prop) {
             case "subscribe":
                 this.requireTopLevel(expr)
                 this.requireArgs(expr, 1)
+                this.ignore(val)
                 this.emitEventHandler(
                     this.codeName(expr.callee),
                     expr.arguments[0],
-                    role,
-                    vobj.spec.identifier
+                    this.roleOf(expr.callee, val),
+                    val.valueType.packetSpec.identifier
                 )
                 return literal(0)
             case "wait":
                 this.requireArgs(expr, 0)
-                const wr = this.writer
                 const lbl = wr.mkLabel("wait")
                 wr.emitLabel(lbl)
-                wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
+                wr.emitStmt(Op.STMT1_WAIT_ROLE, val)
                 const cond = wr.emitExpr(
                     Op.EXPR2_EQ,
                     wr.emitExpr(Op.EXPR0_PKT_EV_CODE),
-                    literal(vobj.spec.identifier)
+                    literal(val.valueType.packetSpec.identifier)
                 )
                 wr.emitJump(lbl, cond)
                 return literal(0)
@@ -1156,10 +1158,13 @@ class Program implements TopOpWriter {
         throwError(expr, `events don't have property ${prop}`)
     }
 
-    private extractRegField(vobj: ValueAdd, field: jdspec.PacketMember) {
+    private extractRegField(
+        spec: jdspec.PacketInfo,
+        field: jdspec.PacketMember
+    ) {
         const wr = this.writer
         let off = 0
-        for (const f of vobj.spec.fields) {
+        for (const f of spec.fields) {
             if (f == field) {
                 return wr.emitBufLoad(bufferFmt(field), off)
             } else {
@@ -1170,43 +1175,53 @@ class Program implements TopOpWriter {
     }
 
     private emitRegGet(
-        vobj: ValueAdd,
+        val: Value,
         refresh?: RefreshMS,
         field?: jdspec.PacketMember
     ) {
-        const spec = vobj.spec
+        assert(val.valueType.kind == ValueKind.JD_REG)
+        const spec = val.valueType.packetSpec
         if (refresh === undefined)
             refresh = spec.kind == "const" ? RefreshMS.Never : RefreshMS.Normal
         if (!field && spec.fields.length == 1) field = spec.fields[0]
 
-        const role = vobj.role
         const wr = this.writer
         wr.emitStmt(
             Op.STMT3_QUERY_REG,
-            role.emit(wr),
+            va(val).roleExpr,
             literal(spec.identifier),
             literal(refresh)
         )
         if (field) {
-            return this.extractRegField(vobj, field)
+            return this.extractRegField(spec, field)
         } else {
-            const r = nonEmittable(ValueType.JD_VALUE_SEQ)
-            va(r).spec = spec
-            va(r).role = role
+            const r = nonEmittable(
+                new ValueType(
+                    ValueKind.JD_VALUE_SEQ,
+                    val.valueType.roleSpec,
+                    spec
+                )
+            )
+            va(r).role = va(val).role
             return r
         }
     }
 
-    private emitIsRoleConnected(role: Role) {
-        return this.writer.emitExpr(
-            Op.EXPR1_ROLE_IS_CONNECTED,
-            role.emit(this.writer)
-        )
+    private emitIsRoleConnected(val: Value | Role) {
+        if (val instanceof Role) val = val.emit(this.writer)
+        return this.writer.emitExpr(Op.EXPR1_ROLE_IS_CONNECTED, val)
+    }
+
+    private roleOf(expr: Expr, val: Value) {
+        let vobj = va(val)
+        if (vobj.roleExpr) vobj = va(vobj.roleExpr)
+        if (!vobj.role) throwError(expr, `a static role is required here`)
+        return vobj.role
     }
 
     private emitRoleCall(
         expr: estree.CallExpression,
-        role: Role,
+        val: Value,
         prop: string
     ): Value {
         const wr = this.writer
@@ -1214,11 +1229,12 @@ class Program implements TopOpWriter {
         switch (prop) {
             case "isConnected":
                 this.requireArgs(expr, 0)
-                return this.emitIsRoleConnected(role)
+                return this.emitIsRoleConnected(val)
             case "onConnected":
-            case "onDisconnected":
+            case "onDisconnected": {
                 this.requireTopLevel(expr)
                 this.requireArgs(expr, 1)
+                const role = this.roleOf(expr, val)
                 const name = role.getName() + "_" + prop
                 const handler = this.emitHandler(name, expr.arguments[0])
                 const disp = this.roleDispatcher(role)
@@ -1234,26 +1250,30 @@ class Program implements TopOpWriter {
                         })
                     })
                 return literal(0)
-            case "wait":
-                if (!role.isCondition())
+            }
+            case "wait": {
+                const role = this.roleOf(expr, val)
+                if (role.isCondition())
                     throwError(expr, "only condition()s have wait()")
                 this.requireArgs(expr, 0)
                 wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
                 return literal(0)
+            }
             default:
-                const v = this.emitRoleMember(expr.callee, role)
-                const k = cellKind(v)
-                if (k == ValueType.JD_CLIENT_COMMAND) {
+                const v = this.emitRoleMember(expr.callee, val)
+                const k = v.valueType.kind
+                if (k == ValueKind.JD_CLIENT_COMMAND) {
                     return this.emitProcCall(
                         expr,
                         this.getClientCommandProc(va(v).clientCommand),
                         true
                     )
-                } else if (k == ValueType.JD_COMMAND) {
-                    this.emitPackArgs(expr, va(v).spec)
-                    role.sendCommand(wr, va(v).spec.identifier)
-                } else if (k != ValueType.ERROR) {
-                    throwError(expr, `${valueTypeToString(k)} can't be called`)
+                } else if (k == ValueKind.JD_COMMAND) {
+                    const spec = v.valueType.packetSpec
+                    this.emitPackArgs(expr, spec)
+                    this.emitSendCommand(val, spec.identifier)
+                } else if (k != ValueKind.ERROR) {
+                    throwError(expr, `${v.valueType} cannot be called`)
                 }
                 return literal(0)
         }
@@ -1380,7 +1400,7 @@ class Program implements TopOpWriter {
             }
 
             default:
-                throwError(expr, `can't find ${prop} on buffer`)
+                throwError(expr, `cannot find ${prop} on buffer`)
         }
     }
 
@@ -1495,31 +1515,36 @@ class Program implements TopOpWriter {
 
     private emitRegisterCall(
         expr: estree.CallExpression,
-        vobj: ValueAdd,
+        val: Value,
         prop: string
     ): Value {
-        const role = vobj.role
-        assertRange(0, vobj.spec.identifier, 0x1ff)
+        assert(val.valueType.kind == ValueKind.JD_REG)
+        const spec = val.valueType.packetSpec
+        const vobj = va(val)
+        assertRange(0, spec.identifier, 0x1ff)
 
-        const wr = this.writer
         switch (prop) {
             case "read":
                 this.requireArgs(expr, 0)
-                return this.emitRegGet(vobj)
+                return this.emitRegGet(val)
             case "write":
-                this.emitPackArgs(expr, vobj.spec)
-                role.sendCommand(wr, vobj.spec.identifier | CMD_SET_REG)
-                return literal(0)
-            case "onChange":
+                this.emitPackArgs(expr, spec)
+                this.emitSendCommand(
+                    vobj.roleExpr,
+                    spec.identifier | CMD_SET_REG
+                )
+                return literal(null)
+            case "onChange": {
+                const role = this.roleOf(expr.callee, val)
                 this.requireArgs(expr, 2)
                 this.requireTopLevel(expr)
-                if (vobj.spec.fields.length != 1)
+                if (spec.fields.length != 1)
                     throwError(expr, "wrong register type")
                 const threshold = this.forceNumberLiteral(expr.arguments[0])
-                const name = role.getName() + "_chg_" + vobj.spec.name
+                const name = role + "_chg_" + spec.name
                 const handler = this.emitHandler(name, expr.arguments[1])
-                if (role.autoRefreshRegs.indexOf(vobj.spec) < 0)
-                    role.autoRefreshRegs.push(vobj.spec)
+                if (role.autoRefreshRegs.indexOf(spec) < 0)
+                    role.autoRefreshRegs.push(spec)
                 this.emitInRoleDispatcher(role, wr => {
                     const cache = this.proc.mkTempLocal(name, ValueType.NUMBER)
                     role.dispatcher.init.emit(wr => {
@@ -1528,12 +1553,12 @@ class Program implements TopOpWriter {
                     const cond = wr.emitExpr(
                         Op.EXPR2_EQ,
                         wr.emitExpr(Op.EXPR0_PKT_REG_GET_CODE),
-                        literal(vobj.spec.identifier)
+                        literal(spec.identifier)
                     )
                     wr.emitIfAndPop(cond, () => {
                         // get the reg value from current packet
                         const curr = wr.cacheValue(
-                            this.extractRegField(vobj, vobj.spec.fields[0])
+                            this.extractRegField(spec, spec.fields[0])
                         )
                         const skipHandler = wr.mkLabel("skipHandler")
                         // if (curr == undefined) goto skip (shouldn't really happen unless service is misbehaving)
@@ -1565,8 +1590,9 @@ class Program implements TopOpWriter {
                     })
                 })
                 return literal(0)
+            }
         }
-        throwError(expr, `events don't have property ${prop}`)
+        throwError(expr, `registers don't have property ${prop}`)
     }
 
     private emitArgs(args: Expr[], formals?: Cell[]) {
@@ -1574,14 +1600,7 @@ class Program implements TopOpWriter {
         const arglist = wr.allocTmpLocals(args.length)
 
         for (let i = 0; i < args.length; i++) {
-            const f = formals?.[i]
-            let r: Value
-            if (f instanceof Role) {
-                r = this.emitRoleRef(args[i])
-            } else {
-                r = this.emitSimpleValue(args[i])
-            }
-            arglist[i].store(r)
+            arglist[i].store(this.emitSimpleValue(args[i]))
         }
 
         return arglist
@@ -1650,6 +1669,11 @@ class Program implements TopOpWriter {
         })
     }
 
+    private emitSendCommand(role: Value | Role, cmd: number) {
+        if (role instanceof Role) role = role.emit(this.writer)
+        this.writer.emitStmt(Op.STMT2_SEND_CMD, role, literal(cmd))
+    }
+
     private emitCloud(expr: estree.CallExpression, fnName: string): Value {
         const arg0 = expr.arguments[0]
         const wr = this.writer
@@ -1659,7 +1683,7 @@ class Program implements TopOpWriter {
                     p => p.name == "upload"
                 )
                 this.emitPackArgs(expr, spec)
-                this.cloudRole.sendCommand(wr, spec.identifier)
+                this.emitSendCommand(this.cloudRole, spec.identifier)
                 return literal(0)
             case "cloud.onMethod":
                 this.emitCloudMethod(expr)
@@ -1789,18 +1813,15 @@ class Program implements TopOpWriter {
                 if (r) return r
             }
             const val = this.emitExpr(expr.callee.object)
-            const vobj = va(val)
-            switch (val.valueType) {
-                case ValueType.JD_EVENT:
-                    this.ignore(val)
-                    return this.emitEventCall(expr, vobj, prop)
-                case ValueType.JD_REG:
-                    this.ignore(val)
-                    return this.emitRegisterCall(expr, vobj, prop)
-                case ValueType.BUFFER:
+            switch (val.valueType.kind) {
+                case ValueKind.JD_EVENT:
+                    return this.emitEventCall(expr, val, prop)
+                case ValueKind.JD_REG:
+                    return this.emitRegisterCall(expr, val, prop)
+                case ValueKind.BUFFER:
                     return this.emitBufferCall(expr, val, prop)
-                case ValueType.ROLE:
-                    return this.emitRoleCall(expr, vobj.role, prop)
+                case ValueKind.ROLE:
+                    return this.emitRoleCall(expr, val, prop)
                 default:
                     throwError(expr, `unsupported call`)
             }
@@ -1815,7 +1836,7 @@ class Program implements TopOpWriter {
             if (d) {
                 return this.emitProcCall(expr, this.getFunctionProc(d))
             } else {
-                throwError(expr, `can't find function '${funName}'`)
+                throwError(expr, `cannot find function '${funName}'`)
             }
         }
 
@@ -1917,7 +1938,8 @@ class Program implements TopOpWriter {
 
     private emitThisExpression(expr: estree.ThisExpression): Value {
         const cell = this.proc.params.lookup("this")
-        if (!cell) throwError(expr, "'this' cannot be used here")
+        if (!cell)
+            throwError(expr, "'this' cannot be used here: " + this.proc.name)
         return cell.emit(this.writer)
     }
 
@@ -1925,23 +1947,26 @@ class Program implements TopOpWriter {
         return matchesName(pi.name, id)
     }
 
-    private emitRoleMember(expr: estree.MemberExpression, role: Role) {
+    private emitRoleMember(expr: estree.MemberExpression, roleObj: Value) {
         const propName = this.forceName(expr.property)
         let r: Value
         let v: ValueAdd
 
-        const setKind = (p: jdspec.PacketInfo, id: ValueType) => {
+        assert(roleObj.valueType.isRole)
+
+        const roleSpec = roleObj.valueType.roleSpec
+
+        const setKind = (p: jdspec.PacketInfo, kind: ValueKind) => {
             assert(!r)
-            r = nonEmittable(id)
+            r = nonEmittable(new ValueType(kind, roleSpec, p))
             v = va(r)
             v.index = p.identifier
-            v.role = role
-            v.spec = p
+            v.roleExpr = roleObj
         }
 
-        for (const cmd of this.clientCommands[role.spec.camelName] ?? []) {
+        for (const cmd of this.clientCommands[roleSpec.camelName] ?? []) {
             if (this.matchesSpecName(cmd.pktSpec, propName)) {
-                setKind(cmd.pktSpec, ValueType.JD_CLIENT_COMMAND)
+                setKind(cmd.pktSpec, ValueKind.JD_CLIENT_COMMAND)
                 v.clientCommand = cmd
                 return r
             }
@@ -1952,31 +1977,36 @@ class Program implements TopOpWriter {
             if (this.matchesSpecName(p, propName)) generic = p
         }
 
-        for (const p of role.spec.packets) {
+        for (const p of roleSpec.packets) {
             if (
                 this.matchesSpecName(p, propName) ||
                 (generic?.identifier == p.identifier && generic?.kind == p.kind)
             ) {
                 if (isRegister(p)) {
-                    setKind(p, ValueType.JD_REG)
+                    setKind(p, ValueKind.JD_REG)
                 }
                 if (isEvent(p)) {
-                    setKind(p, ValueType.JD_EVENT)
+                    setKind(p, ValueKind.JD_EVENT)
                 }
                 if (isCommand(p)) {
-                    setKind(p, ValueType.JD_COMMAND)
+                    setKind(p, ValueKind.JD_COMMAND)
                 }
             }
         }
 
-        if (v?.spec?.client)
+        const packetSpec = r?.valueType?.packetSpec
+
+        if (packetSpec?.client)
             throwError(
                 expr,
-                `client packet '${v.spec.name}' not implemented on ${role.spec.camelName}`
+                `client packet '${packetSpec.name}' not implemented on ${roleSpec.camelName}`
             )
 
         if (!r)
-            throwError(expr, `role ${role.getName()} has no member ${propName}`)
+            throwError(
+                expr,
+                `service| ${roleSpec.camelName} has no member ${propName}`
+            )
         return r
 
         function isRegister(pi: jdspec.PacketInfo) {
@@ -2009,17 +2039,17 @@ class Program implements TopOpWriter {
             if (e.members.hasOwnProperty(prop)) return literal(e.members[prop])
             else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
-        const val = this.emitRoleLike(expr.object)
-        const spec = va(val).spec
-        if (val.valueType == ValueType.ROLE) {
-            return this.emitRoleMember(expr, va(val).role)
-        } else if (val.valueType == ValueType.JD_REG) {
+        const val = this.emitExpr(expr.object)
+        if (val.valueType.isRole) {
+            return this.emitRoleMember(expr, val)
+        } else if (val.valueType.kind == ValueKind.JD_REG) {
+            const spec = val.valueType.packetSpec
             const propName = this.forceName(expr.property)
             if (spec.fields.length > 1) {
                 const fld = spec.fields.find(f => matchesName(f.name, propName))
                 if (!fld)
                     throwError(expr, `no field ${propName} in ${spec.name}`)
-                return this.emitRegGet(va(val), undefined, fld)
+                return this.emitRegGet(val, undefined, fld)
             } else {
                 throwError(expr, `unhandled member ${propName}; use .read()`)
             }
@@ -2055,7 +2085,7 @@ class Program implements TopOpWriter {
     private lookupCell(expr: estree.Expression | estree.Pattern) {
         const name = this.forceName(expr)
         const r = this.proc.locals.lookup(name)
-        if (!r) throwError(expr, `can't find '${name}'`)
+        if (!r) throwError(expr, `cannot find '${name}'`)
         return r
     }
 
@@ -2071,24 +2101,17 @@ class Program implements TopOpWriter {
         return val
     }
 
-    private emitRoleRef(expr: Expr) {
-        const val = this.emitExpr(expr)
-        if (cellKind(val) != ValueType.ROLE)
-            throwError(expr, "role expected here")
-        return val
-    }
-
     private isBoolLike(tp: ValueType) {
-        switch (tp) {
-            case ValueType.ANY:
-            case ValueType.NUMBER:
-            case ValueType.NULL:
-            case ValueType.BOOL:
-            case ValueType.BUFFER:
-            case ValueType.MAP:
-            case ValueType.ARRAY:
-            case ValueType.FIBER:
-            case ValueType.ROLE:
+        switch (tp.kind) {
+            case ValueKind.ANY:
+            case ValueKind.NUMBER:
+            case ValueKind.NULL:
+            case ValueKind.BOOL:
+            case ValueKind.BUFFER:
+            case ValueKind.MAP:
+            case ValueKind.ARRAY:
+            case ValueKind.FIBER:
+            case ValueKind.ROLE:
                 return true
             default:
                 return false
@@ -2107,13 +2130,8 @@ class Program implements TopOpWriter {
         if (reqTp == ValueType.BOOL && this.isBoolLike(v.valueType)) return
         if (reqTp == ValueType.ANY && this.isSimpleValue(v.valueType)) return
         if (v.valueType == ValueType.ANY) return
-        if (v.valueType != reqTp)
-            throwError(
-                node,
-                `can't convert ${valueTypeToString(
-                    v.valueType
-                )} to ${valueTypeToString(reqTp)}`
-            )
+        if (!v.valueType.equals(reqTp))
+            throwError(node, `cannot convert ${v.valueType} to ${reqTp}`)
     }
 
     private emitPrototypeUpdate(expr: estree.AssignmentExpression): Value {
@@ -2211,9 +2229,9 @@ class Program implements TopOpWriter {
         const wr = this.writer
         let left = expr.left
         if (left.type == "ArrayPattern") {
-            if (cellKind(src) == ValueType.JD_VALUE_SEQ) {
+            if (src.valueType.kind == ValueKind.JD_VALUE_SEQ) {
                 let off = 0
-                const spec = va(src).spec
+                const spec = src.valueType.packetSpec
                 for (let i = 0; i < left.elements.length; ++i) {
                     const pat = left.elements[i]
                     const f = spec.fields[i]
@@ -2330,7 +2348,10 @@ class Program implements TopOpWriter {
         }
 
         const wr = this.writer
-        const a = this.emitSimpleValue(arg, op == Op.EXPR1_NOT ? ValueType.BOOL : ValueType.NUMBER)
+        const a = this.emitSimpleValue(
+            arg,
+            op == Op.EXPR1_NOT ? ValueType.BOOL : ValueType.NUMBER
+        )
         return wr.emitExpr(op, a)
     }
 
