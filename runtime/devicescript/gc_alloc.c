@@ -44,7 +44,7 @@ struct _jacs_gc_t {
     jacs_ctx_t *ctx;
 };
 
-static void mark_block(block_t *block, uint8_t tag, unsigned size) {
+static inline void mark_block(block_t *block, uint8_t tag, unsigned size) {
     block->header = size | ((uintptr_t)tag << JACS_GC_TAG_POS);
 }
 
@@ -79,10 +79,23 @@ static void scan_array(jacs_ctx_t *ctx, value_t *vals, unsigned length, int dept
     }
 }
 
+static void mark_ptr(jacs_ctx_t *ctx, void *ptr) {
+    JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
+    block_t *b = (block_t *)((uintptr_t *)ptr - 1);
+    JD_ASSERT((GET_TAG(b->header) & JACS_GC_TAG_MASK_SCANNED) == 0);
+    JD_ASSERT(BASIC_TAG(b->header) == JACS_GC_TAG_BYTES);
+    b->header |= (uintptr_t)JACS_GC_TAG_MASK_SCANNED << JACS_GC_TAG_POS;
+}
+
+static void scan_array_and_mark(jacs_ctx_t *ctx, value_t *vals, unsigned length, int depth) {
+    mark_ptr(ctx, vals);
+    scan_array(ctx, vals, length, depth);
+}
+
 static void scan_map(jacs_ctx_t *ctx, jacs_map_t *map, int depth) {
     if (!map)
         return;
-    scan_array(ctx, map->data, map->length, depth - 1);
+    scan_array_and_mark(ctx, map->data, map->length, depth - 1);
 }
 
 static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
@@ -110,7 +123,7 @@ static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
         break;
     case JACS_GC_TAG_ARRAY:
         scan_map(ctx, block->array.attached, depth);
-        scan_array(ctx, block->array.data, block->array.length, depth);
+        scan_array_and_mark(ctx, block->array.data, block->array.length, depth);
         break;
     case JACS_GC_TAG_BYTES:
         break;
@@ -268,13 +281,24 @@ void *jd_gc_try_alloc(jacs_gc_t *gc, uint32_t size) {
     return (uintptr_t *)try_alloc(gc, JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES, size) + 1;
 }
 
-void jd_gc_free(jacs_gc_t *gc, void *ptr) {
-    if (ptr == NULL)
-        return;
+static block_t *unpin(jacs_gc_t *gc, void *ptr, uint8_t tag) {
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
     JD_ASSERT(GET_TAG(b->header) == (JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES));
-    mark_block(b, JACS_GC_TAG_FREE, block_size(b));
+    mark_block(b, tag, block_size(b));
+    return b;
+}
+
+void jd_gc_unpin(jacs_gc_t *gc, void *ptr) {
+    if (ptr == NULL)
+        return;
+    unpin(gc, ptr, JACS_GC_TAG_BYTES);
+}
+
+void jd_gc_free(jacs_gc_t *gc, void *ptr) {
+    if (ptr == NULL)
+        return;
+    block_t *b = unpin(gc, ptr, JACS_GC_TAG_FREE);
     memset(b->data, 0x47, (block_size(b) - 1) * sizeof(uintptr_t));
 }
 

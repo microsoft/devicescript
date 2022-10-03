@@ -43,9 +43,9 @@ void jacs_map_set(jacs_ctx_t *ctx, jacs_map_t *map, jacs_key_id_t key, value_t v
         if (map->length) {
             memcpy(tmp, map->data, map->length * sizeof(value_t));
             memcpy(tmp + newlen, jacs_map_keys(map), map->length * sizeof(jacs_key_id_t));
-            jacs_free(ctx, map->data);
         }
         map->data = tmp;
+        jd_gc_unpin(ctx->gc, tmp);
     }
     map->data[map->length] = v;
     jacs_map_keys(map)[map->length] = key;
@@ -86,11 +86,10 @@ int jacs_array_set(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, value_t v) 
         value_t *newarr = jacs_try_alloc(ctx, newlen);
         if (newarr == NULL)
             return -5;
-        if (arr->data) {
+        if (arr->data)
             memcpy(newarr, arr->data, sizeof(value_t) * arr->length);
-            jacs_free(ctx, arr->data);
-        }
         arr->data = newarr;
+        jd_gc_unpin(ctx->gc, newarr);
     }
 
     arr->data[idx] = v;

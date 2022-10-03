@@ -80,6 +80,7 @@ static inline uint8_t jacs_gc_tag(void *ptr) {
 }
 
 void *jd_gc_try_alloc(jacs_gc_t *gc, uint32_t size);
+void jd_gc_unpin(jacs_gc_t *gc, void *ptr);
 void jd_gc_free(jacs_gc_t *gc, void *ptr);
 #if JD_64
 void *jacs_gc_base_addr(jacs_gc_t *gc);
