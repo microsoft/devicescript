@@ -8,7 +8,6 @@ import {
     OP_PRINT_FMTS,
     ObjectType,
     OP_TYPES,
-    OBJECT_TYPE,
 } from "./bytecode"
 import { toHex } from "./jdutil"
 
@@ -76,6 +75,8 @@ export function stringifyInstr(
 
     for (;;) {
         const op = getbyte()
+        if (op == 0 && bytebuf.length == 1)
+            return "          .fill 0x00"
         const e = new OpTree(op)
         if (opTakesNumber(op)) {
             jmpoff = resolver?.resolverPC + bytebuf.length - 1
@@ -84,7 +85,7 @@ export function stringifyInstr(
         let n = opNumRealArgs(op)
         if (n) {
             if (stack.length < n)
-                return "??? stack underflow; " + toHex(bytebuf)
+                return "???oops stack underflow; " + toHex(bytebuf)
             e.args = stack.slice(stack.length - n)
             while (n--) stack.pop()
         }
@@ -92,7 +93,7 @@ export function stringifyInstr(
         if (opIsStmt(op)) break
     }
     if (stack.length != 1)
-        return "??? bad stack: " + stack.length + "; " + toHex(bytebuf)
+        return "???oops bad stack: " + stack.length + "; " + toHex(bytebuf)
 
     let res = "    " + stringifyExpr(stack[0]) + " // " + toHex(bytebuf)
 
@@ -124,7 +125,7 @@ export function stringifyInstr(
                 e = eNum + ""
                 t.arg = undefined
             } else {
-                if (!t.args || !t.args.length) e = "???"
+                if (!t.args || !t.args.length) e = "???oops"
                 else e = stringifyExpr(t.args.shift())
                 if (isNumber(e)) eNum = +e
             }
@@ -223,7 +224,7 @@ export function stringifyInstr(
             )
 
         const fmt = OP_PRINT_FMTS[op]
-        if (!fmt) return `?op${op}?`
+        if (!fmt) return `???oops op${op}`
         return expandFmt(fmt, t)
     }
 }

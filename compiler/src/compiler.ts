@@ -2597,6 +2597,10 @@ class Program implements TopOpWriter {
         return outp
     }
 
+    getAssembly() {
+        return this.procs.map(p => p.toString()).join("\n")
+    }
+
     emit() {
         const files = Object.keys(prelude)
         files.push(this.host.mainFileName?.() || "")
@@ -2637,11 +2641,9 @@ class Program implements TopOpWriter {
         this.finalizeDispatchers()
         for (const p of this.procs) p.finalize()
 
+        // early assembly dump, in case serialization fails
         if (this.numErrors == 0)
-            this.host.write(
-                "prog.jasm",
-                this.procs.map(p => p.toString()).join("\n")
-            )
+            this.host.write("prog.jasm", this.getAssembly())
 
         const b = this.serialize()
         const dbg: DebugInfo = {
@@ -2652,6 +2654,10 @@ class Program implements TopOpWriter {
         }
         this.host.write("prog.jacs", b)
         this.host.write("prog-dbg.json", JSON.stringify(dbg))
+
+        // write assembly again
+        if (this.numErrors == 0)
+            this.host.write("prog.jasm", this.getAssembly())
 
         if (this.numErrors == 0) {
             try {
@@ -2743,4 +2749,12 @@ export function testCompiler(host: Host, code: string) {
     if (missingErrs) throw new Error("some errors were not reported")
     if (numExtra) throw new Error("extra errors reported")
     if (numerr && r.success) throw new Error("unexpected success")
+
+    if (r.success) {
+        const cont = p.getAssembly()
+        if (cont.indexOf("???oops") >= 0) {
+            console.log(cont)
+            throw new Error("bad disassembly")
+        }
+    }
 }
