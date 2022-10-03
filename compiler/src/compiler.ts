@@ -207,7 +207,7 @@ class Variable extends Cell {
         else wr.emitStmt(Op.STMTx1_STORE_GLOBAL, literal(this._index), src)
     }
     toString() {
-        return `var ${this.getName()}`
+        return `var ${this.getName()} : ${this.valueType}`
     }
 }
 
@@ -306,7 +306,7 @@ class Procedure {
         this.writer.patchLabels()
     }
     args() {
-        return this.params.list.slice()
+        return this.params.list.slice() as Variable[]
     }
     mkTempLocal(name: string, tp: ValueType) {
         const l = new Variable(null, this.locals, tp)
@@ -1595,12 +1595,16 @@ class Program implements TopOpWriter {
         throwError(expr, `registers don't have property ${prop}`)
     }
 
-    private emitArgs(args: Expr[], formals?: Cell[]) {
+    private emitArgs(args: Expr[], formals?: Variable[]) {
         const wr = this.writer
         const arglist = wr.allocTmpLocals(args.length)
 
         for (let i = 0; i < args.length; i++) {
-            arglist[i].store(this.emitSimpleValue(args[i]))
+            let tp = ValueType.NUMBER
+            const f = formals?.[i]
+            if (f) tp = f.valueType
+            arglist[i].valueType = tp
+            arglist[i].store(this.emitSimpleValue(args[i], tp))
         }
 
         return arglist
@@ -1929,11 +1933,18 @@ class Program implements TopOpWriter {
 
     private emitIdentifier(expr: estree.Identifier): Value {
         const id = this.forceName(expr)
-        if (id == "NaN") return literal(NaN)
-        if (id == "null") return literal(null)
-        const cell = this.proc.locals.lookup(id)
-        if (!cell) throwError(expr, "unknown name: " + id)
-        return cell.emit(this.writer)
+        switch (id) {
+            case "NaN":
+                return literal(NaN)
+            case "null":
+                return literal(null)
+            case "packet":
+                return this.writer.emitExpr(Op.EXPR0_PKT_BUFFER)
+            default:
+                const cell = this.proc.locals.lookup(id)
+                if (!cell) throwError(expr, "unknown name: " + id)
+                return cell.emit(this.writer)
+        }
     }
 
     private emitThisExpression(expr: estree.ThisExpression): Value {
