@@ -3,5 +3,8 @@ var led = roles.lightBulb()
 
 every(0.1, () => {
     btnA.down.wait()
-    led.brightness.write(!led.brightness.read())
+    if (led.brightness.read() > 0)
+        led.brightness.write(0)
+    else
+        led.brightness.write(1)
 })

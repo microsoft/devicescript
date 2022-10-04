@@ -1,17 +1,17 @@
 import {
     BinFmt,
     bitSize,
-    CellKind,
+    ValueType,
     exprIsStateful,
-    exprTakesNumber,
     InstrArgResolver,
-    JACS_MAX_EXPR_DEPTH,
     OpCall,
-    OpExpr,
     NumFmt,
-    OpStmt,
-    stmtTakesNumber,
+    Op,
+    opTakesNumber,
     stringifyInstr,
+    opNumArgs,
+    opIsStmt,
+    opType,
 } from "./format"
 import { assert, write32, write16 } from "./jdutil"
 import { assertRange, oops } from "./util"
@@ -29,7 +29,7 @@ export class Label {
     constructor(public name: string) {}
 }
 
-const VF_DEPTH_MASK = 0xff
+const VF_MAX_STACK_MASK = 0xff
 const VF_USES_STATE = 0x100
 const VF_HAS_PARENT = 0x200
 const VF_IS_LITERAL = 0x400
@@ -45,9 +45,10 @@ export class Value {
     _userdata: {}
     _cachedValue: CachedValue
 
-    constructor() {}
-    get depth() {
-        return this.flags & VF_DEPTH_MASK
+    constructor(public valueType: ValueType) {}
+
+    get maxstack() {
+        return (this.flags & VF_MAX_STACK_MASK) + 1
     }
     get usesState() {
         return !!(this.flags & VF_USES_STATE)
@@ -78,12 +79,13 @@ export class Value {
 
 export class CachedValue {
     numrefs = 1
+    valueType: ValueType
     constructor(public parent: OpWriter, public index: number) {}
     emit() {
         assert(this.numrefs > 0)
-        const r = new Value()
+        const r = new Value(this.valueType)
         r.numValue = this.index
-        r.op = OpExpr.EXPRx_LOAD_LOCAL
+        r.op = Op.EXPRx_LOAD_LOCAL
         r.flags = VF_IS_MEMREF // not "using state" - it's temporary
         r._cachedValue = this
         this.numrefs++
@@ -91,7 +93,8 @@ export class CachedValue {
     }
     store(v: Value) {
         assert(this.numrefs > 0)
-        this.parent.emitStmt(OpStmt.STMTx1_STORE_LOCAL, literal(this.index), v)
+        this.valueType = v.valueType
+        this.parent.emitStmt(Op.STMTx1_STORE_LOCAL, literal(this.index), v)
     }
     _decr() {
         assert(this.numrefs > 0)
@@ -107,17 +110,27 @@ export class CachedValue {
 }
 
 export function literal(v: number) {
-    const r = new Value()
-    r.numValue = v
-    r.op = OpExpr.EXPRx_LITERAL
-    r.flags = VF_IS_LITERAL
-    return r
+    if (v == null) {
+        const r = new Value(ValueType.NULL)
+        r.op = Op.EXPR0_NULL
+        r.args = []
+        r.flags = 0
+        return r
+    } else {
+        const r = new Value(ValueType.NUMBER)
+        r.numValue = v
+        r.op = Op.EXPRx_LITERAL
+        r.flags = VF_IS_LITERAL
+        return r
+    }
 }
 
-export function nonEmittable(k: number) {
-    const r = new Value()
-    assert(k >= 0x100)
-    r.op = k
+export function nonEmittable(k: ValueType) {
+    assert(k == ValueType.VOID || k.kind >= 0x100)
+    const r = new Value(k)
+    r.op = k.kind
+    r.valueType = k
+    r.flags = 0
     return r
 }
 
@@ -234,7 +247,7 @@ export class OpWriter {
     allocBuf(): Value {
         assert(!this.bufferAllocated, "allocBuf() not free")
         this.bufferAllocated = true
-        return nonEmittable(CellKind.JD_CURR_BUFFER)
+        return this.emitExpr(Op.EXPR0_PKT_BUFFER)
     }
 
     freeBuf(): void {
@@ -243,8 +256,10 @@ export class OpWriter {
     }
 
     emitString(s: string | Uint8Array) {
-        const v = literal(this.prog.addString(s))
-        v.flags |= VF_IS_STRING
+        const v = new Value(ValueType.BUFFER)
+        v.op = Op.EXPRx_STATIC_BUFFER
+        v.args = [literal(this.prog.addString(s))]
+        v.flags = VF_IS_STRING
         return v
     }
 
@@ -254,45 +269,41 @@ export class OpWriter {
         const numargs = literal(args.length)
 
         if (op == OpCall.SYNC)
-            this.emitStmt(OpStmt.STMT3_CALL, proc, localidx, numargs)
+            this.emitStmt(Op.STMTx2_CALL, localidx, numargs, proc)
         else
             this.emitStmt(
-                OpStmt.STMT4_CALL_BG,
-                proc,
+                Op.STMTx3_CALL_BG,
                 localidx,
                 numargs,
+                proc,
                 literal(op)
             )
         for (const c of args) c.free()
     }
 
-    emitStoreByte(src: Value, off = 0) {
-        assertRange(0, off, 0xff)
-        this.emitStmt(
-            OpStmt.STMT4_STORE_BUFFER,
-            literal(NumFmt.U8),
-            literal(off),
-            literal(0),
-            src
-        )
-    }
-
-    emitBufLoad(fmt: NumFmt, off: number, bufidx = 0) {
-        if (bufidx == 0) assertRange(0, off, 0xff)
+    emitBufLoad(fmt: NumFmt, off: number, bufref?: Value) {
+        if (!bufref) {
+            assertRange(0, off, 0xff)
+            bufref = this.emitExpr(Op.EXPR0_PKT_BUFFER)
+        }
         return this.emitExpr(
-            OpExpr.EXPR3_LOAD_BUFFER,
+            Op.EXPR3_LOAD_BUFFER,
+            bufref,
             literal(fmt),
-            literal(off),
-            literal(bufidx)
+            literal(off)
         )
     }
 
-    emitBufStore(src: Value, fmt: NumFmt, off: number, bufidx = 0) {
+    emitBufStore(src: Value, fmt: NumFmt, off: number, bufref?: Value) {
+        if (!bufref) {
+            assertRange(0, off, 0xff)
+            bufref = this.emitExpr(Op.EXPR0_PKT_BUFFER)
+        }
         this.emitStmt(
-            OpStmt.STMT4_STORE_BUFFER,
+            Op.STMT4_STORE_BUFFER,
+            bufref,
             literal(fmt),
             literal(off),
-            literal(bufidx),
             src
         )
     }
@@ -348,7 +359,6 @@ export class OpWriter {
 
     emitLabel(l: Label) {
         assert(l.offset == -1)
-        this.emitComment("lbl " + l.name)
         this._setLabelOffset(l, this.location())
     }
 
@@ -371,17 +381,17 @@ export class OpWriter {
     }
 
     emitJumpIfTrue(label: Label, cond: Value) {
-        return this.emitJump(label, this.emitExpr(OpExpr.EXPR1_NOT, cond))
+        return this.emitJump(label, this.emitExpr(Op.EXPR1_NOT, cond))
     }
 
     emitJump(label: Label, cond?: Value) {
         cond?.adopt()
         this.spillAllStateful()
 
-        this.emitComment("jump " + label.name)
+        if (cond) this.writeValue(cond)
 
         const off0 = this.location()
-        this.writeByte(cond ? OpStmt.STMTx1_JMP_Z : OpStmt.STMTx_JMP)
+        this.writeByte(cond ? Op.STMTx1_JMP_Z : Op.STMTx_JMP)
 
         if (label.offset != -1) {
             this.writeInt(label.offset - off0)
@@ -390,8 +400,6 @@ export class OpWriter {
             label.uses.push(off0)
             this.writeInt(0x1000)
         }
-
-        if (cond) this.writeValue(cond)
     }
 
     private oops(msg: string) {
@@ -446,8 +454,8 @@ export class OpWriter {
         this.pendingStatefulValues = []
     }
 
-    emitMemRef(op: OpExpr, idx: number) {
-        const r = new Value()
+    emitMemRef(op: Op, idx: number, tp: ValueType) {
+        const r = new Value(tp)
         r.numValue = idx
         r.op = op
         r.flags = VF_IS_MEMREF | VF_USES_STATE
@@ -455,21 +463,25 @@ export class OpWriter {
         return r
     }
 
-    emitExpr(op: OpExpr, ...args: Value[]) {
-        let maxdepth = -1
+    emitExpr(op: Op, ...args: Value[]) {
+        assert(opNumArgs(op) == args.length)
+        assert(!opIsStmt(op))
+        let stack = 0
+        let maxstack = 1
         let usesState = exprIsStateful(op)
         // TODO constant folding
         for (const a of args) {
-            if (a.depth >= JACS_MAX_EXPR_DEPTH - 1) this.spillValue(a)
-            maxdepth = Math.max(a.depth, maxdepth)
+            if (stack + a.maxstack >= BinFmt.MAX_STACK_DEPTH) this.spillValue(a)
+            maxstack = Math.max(maxstack, stack + a.maxstack)
+            stack++
             if (a.usesState) usesState = true
             assert(!(a.flags & VF_HAS_PARENT))
             a.flags |= VF_HAS_PARENT
         }
-        const r = new Value()
+        const r = new Value(ValueType.infer(op))
         r.args = args
         r.op = op
-        r.flags = maxdepth + 1
+        r.flags = maxstack - 1 // so that r.maxstack == maxstack
         if (usesState) {
             r.flags |= VF_USES_STATE
             this.pendingStatefulValues.push(r)
@@ -512,16 +524,20 @@ export class OpWriter {
         }
     }
 
-    private writeArgs(firstInt: boolean, args: Value[]) {
+    private writeArgs(op: Op, args: Value[]) {
         let i = 0
-        if (firstInt) {
-            assert(args[0].isLiteral)
-            this.writeInt(args[0].numValue)
-            i = 1
-        }
+        if (opTakesNumber(op)) i = 1
         while (i < args.length) {
             this.writeValue(args[i])
             i++
+        }
+        this.writeByte(op)
+        if (opTakesNumber(op)) {
+            assert(args[0].isLiteral)
+            const nval = args[0].numValue
+            if (op == Op.STMTx1_STORE_LOCAL && nval >= LOCAL_OFFSET)
+                this.localOffsets.push(this.location())
+            this.writeInt(nval)
         }
     }
 
@@ -531,41 +547,47 @@ export class OpWriter {
         if (v.isLiteral) {
             const q = v.numValue
             if ((q | 0) == q) {
-                const qq = q + 16 + 0x80
-                if (0x80 <= qq && qq <= 0xff) this.writeByte(qq)
+                const qq =
+                    q + BinFmt.DIRECT_CONST_OFFSET + BinFmt.DIRECT_CONST_OP
+                if (BinFmt.DIRECT_CONST_OFFSET <= qq && qq <= 0xff)
+                    this.writeByte(qq)
                 else {
-                    this.writeByte(OpExpr.EXPRx_LITERAL)
+                    this.writeByte(Op.EXPRx_LITERAL)
                     this.writeInt(q)
                 }
             } else if (isNaN(q)) {
-                this.writeByte(OpExpr.EXPR0_NAN)
+                this.writeByte(Op.EXPR0_NAN)
             } else {
                 const idx = this.prog.addFloat(q)
-                this.writeByte(OpExpr.EXPRx_LITERAL_F64)
+                this.writeByte(Op.EXPRx_LITERAL_F64)
                 this.writeInt(idx)
             }
         } else if (v.isMemRef) {
-            assert(exprTakesNumber(v.op))
+            assert(opTakesNumber(v.op))
             this.writeByte(v.op)
-            if (v.op == OpExpr.EXPRx_LOAD_LOCAL && v.numValue >= LOCAL_OFFSET)
+            if (v.op == Op.EXPRx_LOAD_LOCAL && v.numValue >= LOCAL_OFFSET)
                 this.localOffsets.push(this.location())
             this.writeInt(v.numValue)
             if (v._cachedValue) v._cachedValue._decr()
         } else if (v.op >= 0x100) {
-            oops("this value can't be emitted")
+            oops("this value cannot be emitted: 0x" + v.op.toString(16))
         } else {
-            this.writeByte(v.op)
-            this.writeArgs(exprTakesNumber(v.op), v.args)
+            this.writeArgs(v.op, v.args)
         }
     }
 
-    emitStmt(op: OpStmt, ...args: Value[]) {
+    emitSetBuffer(buf: Uint8Array) {
+        this.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(buf.length))
+        if (buf.length > 0)
+            this.emitStmt(Op.STMT2_SET_PKT, this.emitString(buf), literal(0))
+    }
+
+    emitStmt(op: Op, ...args: Value[]) {
+        assert(opNumArgs(op) == args.length)
+        assert(opIsStmt(op))
         for (const a of args) a.adopt()
-        this.spillAllStateful()
-        this.writeByte(op)
-        if (op == OpStmt.STMTx1_STORE_LOCAL && args[0].numValue >= LOCAL_OFFSET)
-            this.localOffsets.push(this.location())
-        this.writeArgs(stmtTakesNumber(op), args)
+        this.spillAllStateful() // this doesn't spill adopt()'ed Value's (our arguments)
+        this.writeArgs(op, args)
     }
 }
 

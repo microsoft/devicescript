@@ -20,7 +20,7 @@ if (g > 0) {
 }
 
 function baz() {
-    q = 1 //! can't find
+    q = 1 //! cannot find
 }
 
 foo()

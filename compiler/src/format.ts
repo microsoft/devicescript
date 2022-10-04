@@ -1,80 +1,47 @@
 import {
-    OpStmt,
-    OpExpr,
+    Op,
     OpCall,
     NumFmt,
-    STMT_PROPS,
     BytecodeFlag,
-    EXPR_PROPS,
     BinFmt,
-    EXPR_PRINT_FMTS,
-    STMT_PRINT_FMTS,
+    OP_PROPS,
+    OP_PRINT_FMTS,
+    ObjectType,
+    OP_TYPES,
 } from "./bytecode"
+import { toHex } from "./jdutil"
 
 export * from "./bytecode"
+export * from "./type"
 
 export interface SMap<T> {
     [k: string]: T
 }
 
-export function stmtTakesNumber(op: OpStmt) {
-    return !!(STMT_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
+export function opTakesNumber(op: Op) {
+    return !!(OP_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
 }
 
-export function exprIsStateful(op: OpExpr) {
-    return !(EXPR_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
+export function opNumRealArgs(op: Op) {
+    return OP_PROPS.charCodeAt(op) & BytecodeFlag.NUM_ARGS_MASK
 }
 
-export function exprTakesNumber(op: OpExpr) {
-    return !!(EXPR_PROPS.charCodeAt(op) & BytecodeFlag.TAKES_NUMBER)
+export function opNumArgs(op: Op) {
+    let n = opNumRealArgs(op)
+    if (opTakesNumber(op)) n++
+    return n
 }
 
-export const JACS_MAX_EXPR_DEPTH = BinFmt.MAX_EXPR_DEPTH
-
-export enum CellKind {
-    LOCAL = OpExpr.EXPRx_LOAD_LOCAL,
-    GLOBAL = OpExpr.EXPRx_LOAD_GLOBAL,
-    PARAM = OpExpr.EXPRx_LOAD_PARAM,
-    FLOAT_CONST = OpExpr.EXPRx_LITERAL_F64,
-
-    // these cannot be emitted directly
-    JD_EVENT = 0x100,
-    JD_REG = 0x101,
-    JD_ROLE = 0x102,
-    JD_VALUE_SEQ = 0x103,
-    JD_CURR_BUFFER = 0x104,
-    JD_COMMAND = 0x105,
-    JD_CLIENT_COMMAND = 0x106,
-    X_BUFFER = 0x124,
-
-    ERROR = 0x200,
+export function opType(op: Op): ObjectType {
+    return OP_TYPES.charCodeAt(op)
 }
 
-export function stringifyCellKind(vk: CellKind) {
-    switch (vk) {
-        case CellKind.LOCAL:
-            return "local variable"
-        case CellKind.GLOBAL:
-            return "global variable"
-        case CellKind.FLOAT_CONST:
-            return "float literal"
-        case CellKind.JD_VALUE_SEQ:
-            return "multi-field buffer"
-        case CellKind.JD_CURR_BUFFER:
-            return "current buffer"
-        case CellKind.JD_EVENT:
-            return "Jacdac event"
-        case CellKind.JD_COMMAND:
-            return "Jacdac command"
-        case CellKind.JD_REG:
-            return "Jacdac register"
-        case CellKind.JD_ROLE:
-            return "Jacdac role"
-        case CellKind.ERROR:
-            return "(error node)"
-        default:
-            return "ValueKind: 0x" + (vk as number).toString(16)
-    }
+export function opIsStmt(op: Op) {
+    return !!(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STMT)
+}
+
+export function exprIsStateful(op: Op) {
+    return !(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
 }
 
 export interface InstrArgResolver {
@@ -86,11 +53,49 @@ export function bitSize(fmt: NumFmt) {
     return 8 << (fmt & 0b11)
 }
 
+class OpTree {
+    args: OpTree[]
+    arg: number
+    constructor(public opcode: number) {}
+}
+
 export function stringifyInstr(
-    getbyte: () => number,
+    getbyte0: () => number,
     resolver?: InstrArgResolver
 ) {
-    let res = "    " + doOp()
+    const bytebuf: number[] = []
+    const getbyte = () => {
+        const v = getbyte0()
+        bytebuf.push(v)
+        return v
+    }
+
+    const stack: OpTree[] = []
+    let jmpoff = NaN
+
+    for (;;) {
+        const op = getbyte()
+        if (op == 0 && bytebuf.length == 1)
+            return "          .fill 0x00"
+        const e = new OpTree(op)
+        if (opTakesNumber(op)) {
+            jmpoff = resolver?.resolverPC + bytebuf.length - 1
+            e.arg = decodeInt()
+        }
+        let n = opNumRealArgs(op)
+        if (n) {
+            if (stack.length < n)
+                return "???oops stack underflow; " + toHex(bytebuf)
+            e.args = stack.slice(stack.length - n)
+            while (n--) stack.pop()
+        }
+        stack.push(e)
+        if (opIsStmt(op)) break
+    }
+    if (stack.length != 1)
+        return "???oops bad stack: " + stack.length + "; " + toHex(bytebuf)
+
+    let res = "    " + stringifyExpr(stack[0]) + " // " + toHex(bytebuf)
 
     const pc = resolver?.resolverPC
     if (pc !== undefined)
@@ -98,7 +103,7 @@ export function stringifyInstr(
 
     return res
 
-    function expandFmt(takesNumber: boolean, fmt: string) {
+    function expandFmt(fmt: string, t: OpTree) {
         let ptr = 0
         let beg = 0
         let r = ""
@@ -114,12 +119,14 @@ export function stringifyInstr(
 
             let e: string
             let eNum: number = null
-            if (takesNumber) {
-                takesNumber = false
-                eNum = decodeInt()
+
+            if (t.arg != undefined) {
+                eNum = t.arg
                 e = eNum + ""
+                t.arg = undefined
             } else {
-                e = stringifyExpr()
+                if (!t.args || !t.args.length) e = "???oops"
+                else e = stringifyExpr(t.args.shift())
                 if (isNumber(e)) eNum = +e
             }
 
@@ -156,18 +163,9 @@ export function stringifyInstr(
         return r
     }
 
-    function doOp() {
-        const op = getbyte()
-        const fmt = STMT_PRINT_FMTS[op]
-        if (!fmt) return `?stmt${op}?`
-        return expandFmt(stmtTakesNumber(op), fmt)
-    }
-
     function jmpOffset(off: number) {
         const offs = (off >= 0 ? "+" : "") + off
-        return resolver?.resolverPC === undefined
-            ? offs
-            : resolver?.resolverPC + off + (" (" + offs + ")")
+        return isNaN(jmpoff) ? offs : jmpoff + off + (" (" + offs + ")")
     }
 
     function isNumber(s: string) {
@@ -217,22 +215,25 @@ export function stringifyInstr(
         return n ? -r : r
     }
 
-    function stringifyExpr(): string {
-        const op = getbyte()
+    function stringifyExpr(t: OpTree): string {
+        const op = t.opcode
 
-        if (op >= 0x80) return "" + (op - 0x80 - 16)
+        if (op >= BinFmt.DIRECT_CONST_OP)
+            return (
+                "" + (op - BinFmt.DIRECT_CONST_OP - BinFmt.DIRECT_CONST_OFFSET)
+            )
 
-        const fmt = EXPR_PRINT_FMTS[op]
-        if (!fmt) return `?expr${op}?`
-        return expandFmt(exprTakesNumber(op), fmt)
+        const fmt = OP_PRINT_FMTS[op]
+        if (!fmt) return `???oops op${op}`
+        return expandFmt(fmt, t)
     }
 }
 
 export interface FunctionDebugInfo {
     name: string
     // format is (line-number, start, len)
-    // start is offset in halfwords from the start of the function
-    // len is in halfwords
+    // start is offset in bytes from the start of the function
+    // len is in bytes
     srcmap: number[]
     locals: CellDebugInfo[]
 }

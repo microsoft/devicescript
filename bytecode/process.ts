@@ -4,6 +4,7 @@ interface OpCode {
     name: string
     args: string[]
     code: string
+    rettype: string
     printFmt?: string
     description?: string
     comment?: string
@@ -16,16 +17,15 @@ interface SMap<T> {
     [name: string]: T
 }
 interface Spec {
-    stmt: OpCode[]
-    stmtProps?: string
-    expr: OpCode[]
-    exprProps?: string
+    ops: OpCode[]
+    opProps?: string
+    opTypes?: string
     enums: SMap<OpCode[]>
 }
 
 const _spec = processSpec(fs.readFileSync(process.argv[2], "utf-8"))
-_spec.stmtProps = serializeProps(_spec.stmt, opcodeProps)
-_spec.exprProps = serializeProps(_spec.expr, opcodeProps)
+_spec.opProps = serializeProps(_spec.ops, opcodeProps)
+_spec.opTypes = serializeProps(_spec.ops, opcodeType)
 writeFile("bytecode.json", JSON.stringify(_spec, null, 4))
 writeFile("jacs_bytecode.h", genCode(_spec, false))
 writeFile("bytecode.ts", genCode(_spec, true))
@@ -36,12 +36,15 @@ function processSpec(filecontent: string): Spec {
         x: "e",
         y: "e",
         value: "e",
+        object: "e",
+        buffer: "e",
+        role: "e",
 
         numfmt: "n",
         opcall: "o",
         jmpoffset: "j",
 
-        role: "R",
+        role_idx: "R",
         string_idx: "S",
         local_idx: "L",
         func_idx: "F",
@@ -55,9 +58,9 @@ function processSpec(filecontent: string): Spec {
     let currColl: OpCode[] = null
     let currObj: OpCode = null
     let hasErrors = false
+    let isExpr = false
     const res: Spec = {
-        stmt: [],
-        expr: [],
+        ops: [],
         enums: {
             BinFmt: [],
         },
@@ -74,8 +77,7 @@ function processSpec(filecontent: string): Spec {
 
     finish()
 
-    checkCont(res.stmt)
-    checkCont(res.expr)
+    checkCont(res.ops)
 
     if (hasErrors) throw new Error()
 
@@ -88,7 +90,7 @@ function processSpec(filecontent: string): Spec {
                 const idx = args.indexOf(f)
                 if (idx >= 0) {
                     args[idx] = null
-                    return argCode(f)
+                    return bareArgCode(f)
                 }
                 return f
             })
@@ -104,6 +106,11 @@ function processSpec(filecontent: string): Spec {
         } else {
             obj.printFmt =
                 obj.name.toUpperCase() + " " + obj.args.map(argCode).join(" ")
+        }
+
+        function bareArgCode(a: string) {
+            if (argCodes[a]) return "%" + argCodes[a]
+            return `%e`
         }
 
         function argCode(a: string) {
@@ -153,20 +160,30 @@ function processSpec(filecontent: string): Spec {
                 finish()
                 currObj = null
                 const [, hd, cont] = m
+                if (hd.length >= 3)
+                    // sub-headers
+                    return
                 switch (cont) {
                     case "Statements":
-                        currColl = res.stmt
+                        currColl = res.ops
+                        isExpr = false
                         break
                     case "Expressions":
-                        currColl = res.expr
+                        currColl = res.ops
+                        isExpr = true
                         break
                     case "Format Constants":
+                        isExpr = false
                         currColl = res.enums.BinFmt
                         break
                     default:
+                        isExpr = false
                         m = /Enum: (\w+)/.exec(cont)
                         if (m) currColl = res.enums[m[1]] = []
-                        else error("bad header")
+                        else {
+                            if (currColl == null) return // initial sections
+                            error("bad header")
+                        }
                 }
             }
 
@@ -184,7 +201,7 @@ function processSpec(filecontent: string): Spec {
                 lineTr = lineTr.slice(4).trim()
             }
             let m =
-                /^(\w+)(\s*\((.*)\))?\s*=\s*(\d+|0[bB][01]+|0[Xx][a-fA-F0-9]+)\s*(\/\/\s*(.*))?$/.exec(
+                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*(\d+|0[bB][01]+|0[Xx][a-fA-F0-9]+)\s*(\/\/\s*(.*))?$/.exec(
                     lineTr
                 )
             if (!m) {
@@ -195,7 +212,17 @@ function processSpec(filecontent: string): Spec {
                 error("no container")
                 return
             }
-            const [_line, name, _paren, args_str, code, _cmt, comment] = m
+            const [
+                _line,
+                name,
+                _paren,
+                args_str,
+                _rettype,
+                rettype,
+                code,
+                _cmt,
+                comment,
+            ] = m
             let args: string[] = []
             if (args_str) args = args_str.split(/,\s*/).filter(s => !!s.trim())
             finish()
@@ -204,6 +231,7 @@ function processSpec(filecontent: string): Spec {
                 args,
                 code,
                 comment,
+                rettype: rettype || "void",
                 isFun,
             }
             if (args[0] && args[0][0] == "*") {
@@ -217,7 +245,10 @@ function processSpec(filecontent: string): Spec {
                     currObj.comment2 = c
                 }
             }
-            if (currColl == res.expr) currObj.isExpr = true
+            if (isExpr) {
+                currObj.isExpr = true
+                if (!rettype) error("return type not specified")
+            }
             currColl.push(currObj)
         }
     }
@@ -236,9 +267,12 @@ function writeFile(name: string, cont: string) {
 
 function sig(obj: OpCode) {
     const numargs = obj.args.length
-    return obj.takesNumber
-        ? "x" + (numargs - 1 ? numargs - 1 : "")
-        : "" + numargs
+    return (
+        (obj.isExpr ? "EXPR" : "STMT") +
+        (obj.takesNumber
+            ? "x" + (numargs - 1 ? numargs - 1 : "")
+            : "" + numargs)
+    )
 }
 
 function sortByCode(lst: OpCode[]) {
@@ -258,17 +292,11 @@ function serializeProps(lst: OpCode[], fn: (o: OpCode) => number) {
 }
 
 function genJmpTables(spec: Spec) {
-    let r = "\n#define JACS_EXPR_HANDLERS expr_invalid, \\\n"
-    for (const obj of sortByCode(spec.expr)) {
-        r += `expr${sig(obj)}_${obj.name}, \\\n`
+    let r = "\n#define JACS_OP_HANDLERS expr_invalid, \\\n"
+    for (const obj of sortByCode(spec.ops)) {
+        r += `${sig(obj).toLowerCase()}_${obj.name}, \\\n`
     }
     r += "expr_invalid\n\n"
-
-    r += "#define JACS_STMT_HANDLERS stmt_invalid, \\\n"
-    for (const obj of sortByCode(spec.stmt)) {
-        r += `stmt${sig(obj)}_${obj.name}, \\\n`
-    }
-    r += "stmt_invalid\n\n"
 
     return r
 }
@@ -279,29 +307,19 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
     else if (isTS) r += "\n"
     else r += "#pragma once\n\n"
 
-    startEnum("OpStmt")
-    for (const obj of spec.stmt) {
-        emitDefine(`STMT${sig(obj)}_`, obj)
+    startEnum("Op")
+    for (const obj of spec.ops) {
+        emitDefine(`${sig(obj)}_`, obj)
     }
-    emitDefine(`STMT_`, {
+    emitDefine(`OP_`, {
         name: "past_last",
-        code: spec.stmt.length + 1 + "",
+        code: spec.ops.length + 1 + "",
+        rettype: "number",
         args: [],
     })
     endEnum()
-    emitConst("stmt_props", spec.stmtProps)
-
-    startEnum("OpExpr")
-    for (const obj of spec.expr) {
-        emitDefine(`EXPR${sig(obj)}_`, obj)
-    }
-    emitDefine(`EXPR_`, {
-        name: "past_last",
-        code: spec.expr.length + 1 + "",
-        args: [],
-    })
-    endEnum()
-    emitConst("expr_props", spec.exprProps)
+    emitConst("op_props", spec.opProps)
+    emitConst("op_types", spec.opTypes)
 
     for (const enName of Object.keys(spec.enums)) {
         const pref =
@@ -313,8 +331,14 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
         endEnum()
     }
 
-    emitFmts("expr", spec.expr)
-    emitFmts("stmt", spec.stmt)
+    emitFmts("op", spec.ops)
+
+    if (isTS)
+        for (const en of ["Object_Type"])
+            emitConst(
+                en,
+                JSON.stringify(enumNames(spec.enums[en]))
+            )
 
     if (isSTS) r += "} // jacs\n"
 
@@ -347,7 +371,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
 
     function startEnum(name: string) {
         r += "\n"
-        if (isTS) r += `export enum ${name} {\n`
+        if (isTS) r += `export enum ${name.replace(/_/g, "")} {\n`
     }
     function endEnum() {
         if (isTS) r += `}\n`
@@ -364,12 +388,33 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
 }
 
 function lookupEnum(en: string, fld: string) {
-    return +_spec.enums[en].find(o => o.name == fld).code
+    const ent = _spec.enums[en].find(o => o.name == fld)
+    if (!ent) return undefined
+    return +ent.code
 }
 
 function opcodeProps(obj: OpCode) {
     let r = obj.args.length
-    if (obj.takesNumber) r |= lookupEnum("BytecodeFlag", "takes_number")
+    if (obj.takesNumber) {
+        r -= 1
+        r |= lookupEnum("BytecodeFlag", "takes_number")
+    }
     if (obj.isFun) r |= lookupEnum("BytecodeFlag", "is_stateless")
+    if (!obj.isExpr) r |= lookupEnum("BytecodeFlag", "is_stmt")
+    if (r == undefined) throw new Error()
     return r
+}
+
+function opcodeType(obj: OpCode) {
+    const tp = lookupEnum("Object_Type", obj.rettype)
+    if (tp == undefined) throw new Error("invalid type: " + obj.rettype)
+    return tp
+}
+
+function enumNames(lst: OpCode[]) {
+    const names: string[] = []
+    for (const obj of sortByCode(lst)) {
+        names[+obj.code] = obj.name
+    }
+    return names
 }

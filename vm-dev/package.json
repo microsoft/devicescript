@@ -1,0 +1,5 @@
+{
+  "name": "jacscript-vm-dev",
+  "main": "../vm/built/jacscript-vm.js",
+  "types": "../vm/dist/types.d.ts"
+}

@@ -87,14 +87,19 @@ vm/node_modules/typescript:
 compiler/node_modules/typescript:
 	cd compiler && yarn install
 
+VM_TMP_FILE = vm/built/jacscript-vm.js
 VM_FILE = vm/dist/jacscript-vm.js
 
-$(VM_FILE): vm/built/wasmpre.js $(SRC) $(DEPS)
+$(VM_TMP_FILE): vm/built/wasmpre.js $(SRC) $(DEPS)
 	@mkdir -p vm/dist
 	grep -v '^export ' $< > $(BUILT)/pre.js
 	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC)
 
-em: $(VM_FILE)
+$(VM_FILE): $(VM_TMP_FILE)
+	@mkdir -p vm/dist
+	cp $(VM_TMP_FILE) $(VM_FILE)
+
+em: $(VM_TMP_FILE)
 
 comp: compiler/node_modules/typescript compiler/built/compiler/src/jacscript.js
 

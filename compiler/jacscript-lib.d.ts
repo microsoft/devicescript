@@ -37,7 +37,7 @@ declare class Condition {
 }
 declare function condition(): Condition
 
-declare class JacscriptCloud {
+declare class CloudAdapter {
     upload(label: string, ...value: number[]): void
     onMethod(
         name: string,
@@ -55,7 +55,7 @@ declare class JacscriptCloud {
     twin(path: string): number
     onTwinChange(handler: () => void): void
 }
-declare var cloud: JacscriptCloud
+declare var cloud: CloudAdapter
 
 declare function print(fmt: string, ...args: number[]): void
 declare function format(fmt: string, ...args: number[]): string

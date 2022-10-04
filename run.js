@@ -1,4 +1,4 @@
-const jacsFactory = require("./vm")
+const jacsFactory = require("./vm-dev")
 const fs = require("fs")
 const path = require("path")
 const child_process = require("child_process")
@@ -23,8 +23,11 @@ async function getHost() {
     inst.jacsInit()
     const specs = JSON.parse(fs.readFileSync("jacdac-c/jacdac/dist/services.json", "utf8"))
     jacsHost = {
-        write: (fn, cont) =>
-            fs.writeFileSync(path.join(distPath, fn), cont),
+        write: (fn, cont) => {
+            fs.writeFileSync(path.join(distPath, fn), cont)
+            if (fn.endsWith(".jasm") && cont.indexOf("???oops") >= 0)
+                throw new Error("bad disassembly")
+        },
         log: msg => { if (verbose) console.log(msg) },
         mainFileName: () => jacsFile,
         getSpecs: () => specs,
