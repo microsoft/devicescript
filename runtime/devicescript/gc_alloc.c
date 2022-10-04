@@ -363,7 +363,7 @@ void jacs_gc_destroy(jacs_gc_t *gc) {
 #else
 
 jacs_gc_t *jacs_gc_create(void) {
-    unsigned size = 64 * 1024;
+    unsigned size = JD_GC_KB * 1024;
     jacs_gc_t *gc = jd_alloc(sizeof(jacs_gc_t) + size);
     jacs_gc_add_chunk(gc, gc + 1, size);
     return gc;
