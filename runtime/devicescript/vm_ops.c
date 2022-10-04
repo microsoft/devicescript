@@ -16,15 +16,6 @@ static bool jacs_vm_args_ok(jacs_activation_t *frame, uint32_t localidx, uint32_
     return true;
 }
 
-static bool jacs_vm_args_and_fun_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numargs,
-                                    uint32_t fidx) {
-    if (fidx >= jacs_img_num_functions(&frame->fiber->ctx->img)) {
-        jacs_runtime_failure(frame->fiber->ctx, 60114);
-        return false;
-    }
-    return jacs_vm_args_ok(frame, localidx, numargs);
-}
-
 static void stmt1_wait_role(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t a = jacs_vm_pop_arg_role(ctx);
     frame->fiber->role_idx = a;
@@ -192,21 +183,21 @@ static void stmt1_panic(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmtx2_call(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
+    uint32_t fidx = jacs_vm_pop_arg_func(ctx);
     uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
     uint32_t localidx = ctx->literal_int;
 
-    if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx))
+    if (jacs_vm_args_ok(frame, localidx, numargs))
         jacs_fiber_call_function(frame->fiber, fidx, frame->locals + localidx, numargs);
 }
 
 static void stmtx3_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t flag = jacs_vm_pop_arg_u32(ctx);
-    uint32_t fidx = jacs_vm_pop_arg_u32(ctx);
+    uint32_t fidx = jacs_vm_pop_arg_func(ctx);
     uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
     uint32_t localidx = ctx->literal_int;
 
-    if (jacs_vm_args_and_fun_ok(frame, localidx, numargs, fidx)) {
+    if (jacs_vm_args_ok(frame, localidx, numargs)) {
         jacs_fiber_t *fib = jacs_fiber_start(ctx, fidx, frame->locals + localidx, numargs, flag);
         frame->fiber->ret_val = jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fib->handle_tag);
     }
@@ -403,18 +394,28 @@ static value_t expr0_now_ms(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static value_t expr1_get_fiber_handle(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    int idx = jacs_vm_pop_arg_i32(ctx);
-    jacs_fiber_t *fiber;
+    value_t func = jacs_vm_pop_arg(ctx);
+    jacs_fiber_t *fiber = NULL;
 
-    if (idx < 0)
+    if (jacs_is_nullish(func))
         fiber = frame->fiber;
-    else {
-        fiber = jacs_fiber_by_fidx(ctx, idx);
-        if (fiber == NULL)
-            return jacs_undefined;
-    }
+    else if (jacs_handle_type(func) == JACS_HANDLE_TYPE_FUNCTION)
+        fiber = jacs_fiber_by_fidx(ctx, jacs_handle_value(func));
 
+    if (fiber == NULL)
+        return jacs_undefined;
     return jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fiber->handle_tag);
+}
+
+static value_t exprx_static_function(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    unsigned fidx = ctx->literal_int;
+
+    if (fidx >= jacs_img_num_functions(&ctx->img)) {
+        jacs_runtime_failure(ctx, 60114);
+        return jacs_undefined;
+    } else {
+        return jacs_value_from_handle(JACS_HANDLE_TYPE_FUNCTION, fidx);
+    }
 }
 
 static bool jacs_vm_role_ok(jacs_ctx_t *ctx, uint32_t a) {

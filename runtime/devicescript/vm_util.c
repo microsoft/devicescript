@@ -25,6 +25,14 @@ uint32_t jacs_vm_pop_arg_i32(jacs_ctx_t *ctx) {
     return jacs_value_to_int(pop_arg(ctx));
 }
 
+uint32_t jacs_vm_pop_arg_func(jacs_ctx_t *ctx) {
+    value_t tmp = pop_arg(ctx);
+    if (jacs_handle_type(tmp) == JACS_HANDLE_TYPE_FUNCTION)
+        return jacs_handle_value(tmp);
+    jacs_runtime_failure(ctx, 60136);
+    return 0;
+}
+
 double jacs_vm_pop_arg_f64(jacs_ctx_t *ctx) {
     return jacs_value_to_double(pop_arg(ctx));
 }
@@ -95,4 +103,3 @@ jacs_map_t *jacs_vm_pop_arg_map(jacs_ctx_t *ctx, bool create) {
 
     return obj;
 }
-

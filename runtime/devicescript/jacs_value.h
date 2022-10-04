@@ -66,6 +66,7 @@ static inline value_t jacs_value_from_handle(int type, uint32_t value) {
 #define JACS_HANDLE_TYPE_GC_OBJECT (JACS_HANDLE_GC_MASK | 0x03)
 #define JACS_HANDLE_TYPE_IMG_BUFFER 0x04
 #define JACS_HANDLE_TYPE_ROLE 0x05
+#define JACS_HANDLE_TYPE_FUNCTION 0x06
 
 #define JACS_SPECIAL_NULL 0
 #define JACS_SPECIAL_FALSE 1

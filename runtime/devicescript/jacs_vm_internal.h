@@ -3,6 +3,7 @@
 value_t jacs_vm_pop_arg(jacs_ctx_t *ctx);
 uint32_t jacs_vm_pop_arg_u32(jacs_ctx_t *ctx);
 uint32_t jacs_vm_pop_arg_i32(jacs_ctx_t *ctx);
+uint32_t jacs_vm_pop_arg_func(jacs_ctx_t *ctx);
 double jacs_vm_pop_arg_f64(jacs_ctx_t *ctx);
 value_t jacs_vm_pop_arg_buffer(jacs_ctx_t *ctx);
 void *jacs_vm_pop_arg_buffer_data(jacs_ctx_t *ctx, unsigned *sz);

@@ -226,6 +226,8 @@ unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
         }
     case JACS_HANDLE_TYPE_FIBER:
         return JACS_OBJECT_TYPE_FIBER;
+    case JACS_HANDLE_TYPE_FUNCTION:
+        return JACS_OBJECT_TYPE_FUNCTION;
     case JACS_HANDLE_TYPE_GC_OBJECT:
         switch (jacs_gc_tag(jacs_handle_ptr_value(ctx, v))) {
         case JACS_GC_TAG_ARRAY:
