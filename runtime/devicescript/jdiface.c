@@ -9,6 +9,8 @@ static bool handle_logmsg(jacs_fiber_t *fiber, bool print);
 
 void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg) {
+    if (ctx->error_code)
+        return;
     jd_device_service_t *serv = ctx->roles[role_idx]->service;
     if (serv != NULL) {
         jacs_regcache_entry_t *cached = jacs_regcache_lookup(&ctx->regcache, role_idx, code, arg);
@@ -35,6 +37,7 @@ void jacs_jd_get_register(jacs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
     }
 
     jacs_fiber_t *fib = ctx->curr_fiber;
+    JD_ASSERT(fib != NULL);
     fib->role_idx = role_idx;
     fib->service_command = code;
     fib->pkt_kind = JACS_PKT_KIND_REG_GET;
@@ -57,6 +60,8 @@ void jacs_jd_clear_pkt_kind(jacs_fiber_t *fib) {
 }
 
 void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
+    if (ctx->error_code)
+        return;
     if (JD_IS_SET(code)) {
         jacs_regcache_entry_t *cached = jacs_regcache_lookup(
             &ctx->regcache, role_idx, (code & ~JD_CMD_SET_REGISTER) | JD_CMD_GET_REGISTER, 0);
@@ -66,6 +71,7 @@ void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
 
     const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, role_idx);
     jacs_fiber_t *fib = ctx->curr_fiber;
+    JD_ASSERT(fib != NULL);
 
     if (role->service_class == JD_SERVICE_CLASS_JACSCRIPT_CONDITION) {
         jacs_fiber_sleep(fib, 0);
@@ -89,7 +95,11 @@ void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
 
 void jacs_jd_send_logmsg(jacs_ctx_t *ctx, unsigned string_idx, unsigned localsidx,
                          unsigned num_args) {
+    if (ctx->error_code)
+        return;
+
     jacs_fiber_t *fib = ctx->curr_fiber;
+    JD_ASSERT(fib != NULL);
 
     fib->role_idx = JACS_NO_ROLE;
 

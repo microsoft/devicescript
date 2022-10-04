@@ -13,8 +13,10 @@ void jacs_fiber_yield(jacs_ctx_t *ctx) {
 }
 
 static void jacs_fiber_activate(jacs_activation_t *act) {
+    jacs_ctx_t *ctx = act->fiber->ctx;
     act->fiber->activation = act;
-    act->fiber->ctx->curr_fn = act;
+    if (ctx->error_code == 0)
+        ctx->curr_fn = act;
 }
 
 void jacs_fiber_copy_params(jacs_activation_t *frame) {

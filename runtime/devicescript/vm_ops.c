@@ -5,6 +5,9 @@
 #include <math.h>
 
 static bool jacs_vm_args_ok(jacs_activation_t *frame, uint32_t localidx, uint32_t numargs) {
+    if (frame->fiber->ctx->error_code)
+        return false;
+
     if (numargs > 16 || localidx > frame->func->num_locals ||
         localidx + numargs > frame->func->num_locals) {
         jacs_runtime_failure(frame->fiber->ctx, 60113);
@@ -128,7 +131,7 @@ static void stmt3_array_set(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t idx = jacs_vm_pop_arg_u32(ctx);
     value_t arr = jacs_vm_pop_arg(ctx);
 
-    if (jacs_index_set(ctx, arr, idx, v))
+    if (jacs_index_set(ctx, arr, idx, v) != 0)
         jacs_runtime_failure(ctx, 60133);
 }
 
