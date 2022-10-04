@@ -15,6 +15,7 @@ let disassemble = false
 let logParse = false
 let serialPort = ""
 let jacsFile = ""
+let isLibrary = false
 
 let jacsHost
 async function getHost() {
@@ -43,7 +44,7 @@ async function getHost() {
 
 async function compile(buf) {
     const jacscript = require("./compiler")
-    const res = jacscript.compile(await getHost(), buf.toString("utf8"))
+    const res = jacscript.compile(await getHost(), buf.toString("utf8"), { isLibrary })
     if (!res.success)
         throw new Error("compilation failed")
     return res.binary
@@ -148,6 +149,10 @@ async function runServer(args) {
         console.log(require("./compiler").disassemble(prog))
         return
     }
+    if (isLibrary) {
+        const prog = await readCompiled(fn)
+        return
+    }
     const inst = await jacsFactory()
     if (!testMode)
         await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
@@ -198,6 +203,11 @@ async function main() {
         if (args[0] == "-p") {
             args.shift()
             logParse = true
+            continue
+        }
+        if (args[0] == "-L") {
+            args.shift()
+            isLibrary = true
             continue
         }
         if (args[0] && args[0].startsWith("-s:")) {

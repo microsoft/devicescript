@@ -326,7 +326,11 @@ class Procedure {
     }
 
     callMe(wr: OpWriter, args: CachedValue[], op = OpCall.SYNC) {
-        wr._emitCall(wr.emitExpr(Op.EXPRx_STATIC_FUNCTION, literal(this.index)), args, op)
+        wr._emitCall(
+            wr.emitExpr(Op.EXPRx_STATIC_FUNCTION, literal(this.index)),
+            args,
+            op
+        )
     }
 }
 
@@ -440,6 +444,7 @@ class Program implements TopOpWriter {
     startDispatchers: DelayedCodeSection
     onStart: DelayedCodeSection
     loopStack: LoopLabels[] = []
+    isLibrary = false
     compileAll = false
 
     constructor(public host: Host, public _source: string) {
@@ -946,7 +951,11 @@ class Program implements TopOpWriter {
         if (stmt.generator || stmt.async)
             throwError(stmt, "async not supported")
         assert(!!fundecl || !!this.numErrors)
-        if (this.compileAll && fundecl) this.getFunctionProc(fundecl)
+
+        if (fundecl) {
+            if (this.compileAll || (this.isLibrary && this.inMainFile(stmt)))
+                this.getFunctionProc(fundecl)
+        }
     }
 
     private isTopLevel(node: estree.Node) {
@@ -2247,7 +2256,8 @@ class Program implements TopOpWriter {
             )
         lst.push(cmd)
 
-        if (this.compileAll) this.getClientCommandProc(cmd)
+        if (this.compileAll || (this.isLibrary && this.inMainFile(expr)))
+            this.getClientCommandProc(cmd)
 
         return nonEmittable(ValueType.VOID)
     }
@@ -2601,6 +2611,29 @@ class Program implements TopOpWriter {
         return this.procs.map(p => p.toString()).join("\n")
     }
 
+    inMainFile(p: Position) {
+        return p.rangeFile == this.host.mainFileName?.() || p.rangeFile == ""
+    }
+
+    private emitLibrary() {
+        if (!this.isLibrary) return
+
+        const q = (b: string | Uint8Array) => {
+            if (typeof b == "string") return "s:" + b
+            else return "h:" + toHex(b)
+        }
+        const lib = {
+            procs: this.procs.map(p => ({
+                name: p.name,
+                desc: q(p.writer.desc),
+                body: q(p.writer.serialize()),
+            })),
+            strings: this.stringLiterals.map(q),
+            floats: this.floatLiterals.slice(),
+        }
+        this.host.write("prog-lib.json", JSON.stringify(lib, null, 1))
+    }
+
     emit() {
         const files = Object.keys(prelude)
         files.push(this.host.mainFileName?.() || "")
@@ -2667,6 +2700,8 @@ class Program implements TopOpWriter {
             }
         }
 
+        if (this.numErrors == 0) this.emitLibrary()
+
         const clientSpecs: jdspec.ServiceSpec[] = []
         for (const kn of Object.keys(this.clientCommands)) {
             const lst = this.clientCommands[kn]
@@ -2700,8 +2735,13 @@ class Program implements TopOpWriter {
     }
 }
 
-export function compile(host: Host, code: string) {
+export function compile(
+    host: Host,
+    code: string,
+    opts: { isLibrary?: boolean } = {}
+) {
     const p = new Program(host, code)
+    if (opts.isLibrary) p.isLibrary = true
     return p.emit()
 }
 

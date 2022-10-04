@@ -21,6 +21,7 @@ export interface TopOpWriter extends InstrArgResolver {
     addFloat(f: number): number
     writer: OpWriter
     hasErrors: boolean
+    isLibrary: boolean
 }
 
 export class Label {
