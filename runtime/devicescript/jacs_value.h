@@ -76,6 +76,8 @@ static inline bool jacs_is_special(value_t t) {
     return (t.exp_sign == JACS_HANDLE_TAG + JACS_HANDLE_TYPE_SPECIAL);
 }
 
+bool jacs_is_nullish(value_t t);
+
 value_t jacs_value_from_double(double v);
 value_t jacs_value_from_int(int v);
 value_t jacs_value_from_bool(int v);

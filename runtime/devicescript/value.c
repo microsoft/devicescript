@@ -201,7 +201,7 @@ void *jacs_value_to_gc_obj(jacs_ctx_t *ctx, value_t v) {
 }
 
 bool jacs_is_array(jacs_ctx_t *ctx, value_t v) {
-    return jacs_gc_tag(jacs_value_to_gc_obj(ctx,v)) == JACS_GC_TAG_ARRAY;
+    return jacs_gc_tag(jacs_value_to_gc_obj(ctx, v)) == JACS_GC_TAG_ARRAY;
 }
 
 unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
@@ -246,4 +246,18 @@ unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
         JD_ASSERT(0);
         return 0;
     }
+}
+
+bool jacs_is_nullish(value_t t) {
+    if (jacs_is_special(t)) {
+        switch (jacs_handle_value(t)) {
+        case JACS_SPECIAL_FALSE:
+        case JACS_SPECIAL_NULL:
+            return true;
+        }
+    } else if (jacs_is_nan(t)) {
+        return true;
+    }
+
+    return false;
 }

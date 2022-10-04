@@ -275,7 +275,7 @@ static void stmt4_store_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 static void stmt1_terminate_fiber(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t h = jacs_vm_pop_arg(ctx);
     frame->fiber->ret_val = jacs_undefined;
-    if (jacs_is_nan(h))
+    if (jacs_is_nullish(h))
         return;
     if (jacs_handle_type(h) != JACS_HANDLE_TYPE_FIBER)
         jacs_runtime_failure(ctx, 60123);
