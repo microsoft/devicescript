@@ -263,8 +263,7 @@ export class OpWriter {
         return v
     }
 
-    _emitCall(procIdx: number, args: CachedValue[], op = OpCall.SYNC) {
-        const proc = literal(procIdx)
+    _emitCall(proc: Value, args: CachedValue[], op = OpCall.SYNC) {
         const localidx = literal(args[0] ? args[0].index : 0)
         const numargs = literal(args.length)
 

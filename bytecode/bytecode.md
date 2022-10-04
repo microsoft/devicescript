@@ -42,11 +42,11 @@ Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
 Copy bytes `src[src_offset .. src_offset + length]` to `dst[dst_offset .. ]`.
 Both `src` and `dst` are buffers.
 
-    call(*local_idx, numargs, func_idx) = 73
+    call(*local_idx, numargs, func) = 73
 
 Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`
 
-    call_bg(*local_idx, numargs, func_idx, opcall) = 74
+    call_bg(*local_idx, numargs, func, opcall) = 74
 
 Starts new fiber (depending on `call_type`). Returns fiber handle (existing or new).
 
@@ -100,6 +100,8 @@ Inserts `count` values (`undefined`) at `index`. If `count` is negative, removes
 
     fun static_buffer(*string_idx): buffer = 51
 
+    fun static_function(*func_idx): function = 90
+
     fun literal(*value): number = 4
 
     fun literal_f64(*f64_idx): number = 5
@@ -110,10 +112,10 @@ Inserts `count` values (`undefined`) at `index`. If `count` is negative, removes
 
     role_is_connected(role): bool = 8
 
-    get_fiber_handle(func_idx): fiber = 47
+    get_fiber_handle(func): fiber = 47
 
-If `func_idx < 0` returns self-handle.
-Otherwise, returns a handle or `nan` if fiber with given function at the bottom is not currently running.
+If `func == null` returns self-handle.
+Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
 
     ret_val: any = 6
 
@@ -247,7 +249,7 @@ Returns an int between 0 and `x` inclusive.
 
 ## Format Constants
 
-    img_version = 0x00030001
+    img_version = 0x00030002
     magic0 = 0x5363614a // "JacS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 6
@@ -324,9 +326,12 @@ Integers, doubles, infinity, nan.
 
     bool = 6
 
+Only `true` and `false` values.
+
     fiber = 7
 
-Only `true` and `false` values.
+    function = 8
+
 
 ### Object_Types only used in static type info
 

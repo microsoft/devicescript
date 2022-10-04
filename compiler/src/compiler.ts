@@ -326,7 +326,7 @@ class Procedure {
     }
 
     callMe(wr: OpWriter, args: CachedValue[], op = OpCall.SYNC) {
-        wr._emitCall(this.index, args, op)
+        wr._emitCall(wr.emitExpr(Op.EXPRx_STATIC_FUNCTION, literal(this.index)), args, op)
     }
 }
 

@@ -12,8 +12,8 @@ export enum Op {
     STMT1_SETUP_PKT_BUFFER = 70, // size
     STMT2_SET_PKT = 71, // buffer, offset
     STMT5_BLIT = 72, // dst, dst_offset, src, src_offset, length
-    STMTx2_CALL = 73, // *local_idx, numargs, func_idx
-    STMTx3_CALL_BG = 74, // *local_idx, numargs, func_idx, opcall
+    STMTx2_CALL = 73, // *local_idx, numargs, func
+    STMTx3_CALL_BG = 74, // *local_idx, numargs, func, opcall
     STMT1_RETURN = 75, // value
     STMTx_JMP = 76, // JMP jmpoffset
     STMTx1_JMP_Z = 77, // JMP jmpoffset IF NOT x
@@ -34,12 +34,13 @@ export enum Op {
     EXPRx_LOAD_PARAM = 45, // *param_idx
     EXPRx_STATIC_ROLE = 50, // *role_idx
     EXPRx_STATIC_BUFFER = 51, // *string_idx
+    EXPRx_STATIC_FUNCTION = 90, // *func_idx
     EXPRx_LITERAL = 4, // *value
     EXPRx_LITERAL_F64 = 5, // *f64_idx
     EXPR3_LOAD_BUFFER = 3, // buffer, numfmt, offset
     EXPR2_STR0EQ = 7, // buffer, offset
     EXPR1_ROLE_IS_CONNECTED = 8, // role
-    EXPR1_GET_FIBER_HANDLE = 47, // func_idx
+    EXPR1_GET_FIBER_HANDLE = 47, // func
     EXPR0_RET_VAL = 6,
     EXPR0_NOW_MS = 46,
     EXPRx1_GET_FIELD = 52, // object.field_idx
@@ -90,16 +91,16 @@ export enum Op {
     EXPR2_SHIFT_RIGHT = 42, // x >> y
     EXPR2_SHIFT_RIGHT_UNSIGNED = 43, // x >>> y
     EXPR2_SUB = 44, // x - y
-    OP_PAST_LAST = 90,
+    OP_PAST_LAST = 91,
 }
 
 export const OP_PROPS =
-    "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20\x00\x01\x00\x00\x60\x60\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13"
+    "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20\x00\x01\x00\x00\x60\x60\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60"
 export const OP_TYPES =
-    "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a\x01\x07\x01\x01\x05\x04\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b"
+    "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a\x01\x07\x01\x01\x05\x04\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08"
 
 export enum BinFmt {
-    IMG_VERSION = 0x00030001,
+    IMG_VERSION = 0x00030002,
     MAGIC0 = 0x5363614a, // "JacS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 6,
@@ -151,6 +152,7 @@ export enum ObjectType {
     ROLE = 5,
     BOOL = 6,
     FIBER = 7,
+    FUNCTION = 8,
     ANY = 10,
     VOID = 11,
 }
@@ -203,7 +205,7 @@ export const OP_PRINT_FMTS = [
     "(%e - %e)",
     "%P",
     "now_ms()",
-    "get_fiber_handle(%F)",
+    "get_fiber_handle(func=%e)",
     "pkt_report_code()",
     "pkt_command_code()",
     "%R",
@@ -229,8 +231,8 @@ export const OP_PRINT_FMTS = [
     "SETUP_PKT_BUFFER size=%e",
     "SET_PKT %e offset=%e",
     "BLIT dst=%e dst_offset=%e src=%e src_offset=%e length=%e",
-    "CALL %L numargs=%e %F",
-    "CALL_BG %L numargs=%e %F %o",
+    "CALL %L numargs=%e func=%e",
+    "CALL_BG %L numargs=%e func=%e %o",
     "RETURN %e",
     "JMP %j",
     "JMP %j IF NOT %e",
@@ -246,6 +248,7 @@ export const OP_PRINT_FMTS = [
     "%e.%e := %e",
     "%e[%e] := %e",
     "ARRAY_INSERT array=%e index=%e count=%e",
+    "%F",
 ]
 export const OBJECT_TYPE = [
     "null",
@@ -256,7 +259,7 @@ export const OBJECT_TYPE = [
     "role",
     "bool",
     "fiber",
-    null,
+    "function",
     null,
     "any",
     "void",
