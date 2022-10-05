@@ -1,8 +1,5 @@
 var btnA = roles.button()
 function foo() {
-    let y = 2 //! only 'var' supported
-    const z = 3 //! only 'var' supported
-
     var qq = 1
     qq += 2 //! only simple assignment supported
     qq-- //! unhandled

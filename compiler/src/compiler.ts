@@ -743,7 +743,7 @@ class Program implements TopOpWriter {
     }
 
     private emitVariableDeclaration(decls: estree.VariableDeclaration) {
-        if (decls.kind != "var") throwError(decls, "only 'var' supported")
+        // if (decls.kind != "var") throwError(decls, "only 'var' supported")
         for (const decl of decls.declarations) {
             let g: Variable
             if (this.isTopLevel(decl)) {
