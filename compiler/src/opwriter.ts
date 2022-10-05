@@ -181,7 +181,7 @@ export class OpWriter {
         write32(buf, 0, off)
         write32(buf, 4, this.location())
         write16(buf, 8, numlocals + this.cachedValues.length)
-        buf[10] = numargs << 4
+        buf[10] = numargs
         buf[11] = flags
         write16(buf, 12, this.nameIdx)
         this.desc.set(buf)
