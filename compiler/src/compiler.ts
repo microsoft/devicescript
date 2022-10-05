@@ -895,6 +895,8 @@ class Program implements TopOpWriter {
                 // OK!
             } else if (tp == "boolean") {
                 v.valueType = ValueType.BOOL
+            } else if (tp == "JDBuffer") {
+                v.valueType = ValueType.BUFFER
             } else {
                 v.valueType = ValueType.ROLE(
                     this.specFromTypeName(paramdef, tp)
@@ -1396,13 +1398,10 @@ class Program implements TopOpWriter {
             case "blitAt": {
                 this.requireArgs(expr, 4)
                 const dstOffset = this.emitSimpleValue(expr.arguments[0])
-                const srcbuf = this.bufferLiteral(expr.arguments[1])
-                if (!srcbuf)
-                    throwError(
-                        expr.arguments[1],
-                        `buffer literal required here`
-                    )
-                const srcref = wr.emitString(srcbuf)
+                const srcref = this.emitSimpleValue(
+                    expr.arguments[1],
+                    ValueType.BUFFER
+                )
                 const srcOffset = this.emitSimpleValue(expr.arguments[2])
                 const len = this.emitSimpleValue(expr.arguments[3])
                 wr.emitStmt(
@@ -2085,6 +2084,10 @@ class Program implements TopOpWriter {
         const val = this.emitExpr(expr.object)
         if (val.valueType.isRole) {
             return this.emitRoleMember(expr, val)
+        } else if (val.valueType.kind == ValueKind.BUFFER) {
+            const propName = this.forceName(expr.property)
+            if (propName == "length")
+                return this.writer.emitExpr(Op.EXPR1_OBJECT_LENGTH, val)
         } else if (val.valueType.kind == ValueKind.JD_REG) {
             const spec = val.valueType.packetSpec
             const propName = this.forceName(expr.property)
