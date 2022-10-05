@@ -68,13 +68,17 @@ static inline value_t jacs_value_from_handle(int type, uint32_t value) {
 #define JACS_HANDLE_TYPE_ROLE 0x05
 #define JACS_HANDLE_TYPE_FUNCTION 0x06
 
-#define JACS_SPECIAL_NULL 0
+#define JACS_SPECIAL_NULL 0 // has to be zero! NULL is represented as all zero
 #define JACS_SPECIAL_FALSE 1
 #define JACS_SPECIAL_TRUE 0x40
 #define JACS_SPECIAL_PKT_BUFFER 0x41
 
+static inline bool jacs_is_null(value_t t) {
+    return t.u64 == 0;
+}
+
 static inline bool jacs_is_special(value_t t) {
-    return (t.exp_sign == JACS_HANDLE_TAG + JACS_HANDLE_TYPE_SPECIAL);
+    return jacs_is_null(t) || (t.exp_sign == JACS_HANDLE_TAG + JACS_HANDLE_TYPE_SPECIAL);
 }
 
 bool jacs_is_nullish(value_t t);

@@ -12,7 +12,7 @@ const value_t jacs_max_int_1 = {._f = 0x80000000U};
 #define SPECIAL(n)                                                                                 \
     { .exp_sign = JACS_HANDLE_TAG + JACS_HANDLE_TYPE_SPECIAL, .val_int32 = n }
 
-const value_t jacs_null = SPECIAL(JACS_SPECIAL_NULL);
+const value_t jacs_null = {.u64 = 0};
 const value_t jacs_true = SPECIAL(JACS_SPECIAL_TRUE);
 const value_t jacs_false = SPECIAL(JACS_SPECIAL_FALSE);
 const value_t jacs_pkt_buffer = SPECIAL(JACS_SPECIAL_PKT_BUFFER);
