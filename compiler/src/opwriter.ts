@@ -156,7 +156,6 @@ export class OpWriter {
     private lineNoStart = -1
     desc = new Uint8Array(BinFmt.FUNCTION_HEADER_SIZE)
     offsetInFuncs = -1
-    private maxRegs = 0
     srcmap: number[] = []
     private nameIdx: number
 
@@ -182,7 +181,7 @@ export class OpWriter {
         write32(buf, 0, off)
         write32(buf, 4, this.location())
         write16(buf, 8, numlocals + this.cachedValues.length)
-        buf[10] = this.maxRegs | (numargs << 4)
+        buf[10] = numargs << 4
         buf[11] = flags
         write16(buf, 12, this.nameIdx)
         this.desc.set(buf)

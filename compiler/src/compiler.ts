@@ -2622,10 +2622,16 @@ class Program implements TopOpWriter {
             if (typeof b == "string") return "s:" + b
             else return "h:" + toHex(b)
         }
+        const cleanDesc = (desc: Uint8Array) => {
+            // clear offset since it's meaningless in library
+            desc = new Uint8Array(desc)
+            write32(desc, 0, 0)
+            return desc
+        }
         const lib = {
             procs: this.procs.map(p => ({
                 name: p.name,
-                desc: q(p.writer.desc),
+                desc: q(cleanDesc(p.writer.desc)),
                 body: q(p.writer.serialize()),
             })),
             strings: this.stringLiterals.map(q),
