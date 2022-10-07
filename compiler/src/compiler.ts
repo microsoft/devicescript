@@ -270,6 +270,10 @@ function matchesName(specName: string, jsName: string) {
     return camelize(specName) == jsName
 }
 
+function unit() {
+    return literal(null)
+}
+
 const reservedFunctions: SMap<number> = {
     wait: 1,
     every: 1,
@@ -1415,6 +1419,15 @@ class Program implements TopOpWriter {
                 return literal(0)
             }
 
+            case "fillAt": {
+                this.requireArgs(expr, 3)
+                const offset = this.emitSimpleValue(expr.arguments[0])
+                const len = this.emitSimpleValue(expr.arguments[1])
+                const val = this.emitSimpleValue(expr.arguments[2])
+                wr.emitStmt(Op.STMT4_MEMSET, buf, offset, len, val)
+                return literal(0)
+            }
+
             default:
                 throwError(expr, `cannot find ${prop} on buffer`)
         }
@@ -1564,7 +1577,7 @@ class Program implements TopOpWriter {
                     vobj.roleExpr,
                     spec.identifier | CMD_SET_REG
                 )
-                return literal(null)
+                return literal(0)
             case "onChange": {
                 const role = this.roleOf(expr.callee, val)
                 this.requireArgs(expr, 2)
@@ -2308,6 +2321,7 @@ class Program implements TopOpWriter {
             "-": Op.EXPR2_SUB,
             "/": Op.EXPR2_DIV,
             "*": Op.EXPR2_MUL,
+            "%": Op.EXPR2_IMOD,
             "<": Op.EXPR2_LT,
             "|": Op.EXPR2_BIT_OR,
             "&": Op.EXPR2_BIT_AND,
