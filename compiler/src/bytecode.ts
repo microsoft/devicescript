@@ -115,6 +115,8 @@ export enum BinFmt {
     MAX_STACK_DEPTH = 10,
     DIRECT_CONST_OP = 0x80,
     DIRECT_CONST_OFFSET = 16,
+    FIRST_MULTIBYTE_INT = 0xf8,
+    FIRST_NON_OPCODE = 0x10000,
 }
 
 export enum OpCall {

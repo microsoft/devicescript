@@ -276,6 +276,8 @@ Returns an int between 0 and `x` inclusive.
     max_stack_depth = 10
     direct_const_op = 0x80
     direct_const_offset = 16
+    first_multibyte_int = 0xf8
+    first_non_opcode = 0x10000
 
 ## Enum: OpCall
 

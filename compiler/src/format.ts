@@ -200,7 +200,7 @@ export function stringifyInstr(
 
     function decodeInt() {
         const v = getbyte()
-        if (v < 0xf8) return v
+        if (v < BinFmt.FIRST_MULTIBYTE_INT) return v
 
         let r = 0
         const n = !!(v & 4)

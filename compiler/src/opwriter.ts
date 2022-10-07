@@ -11,7 +11,6 @@ import {
     stringifyInstr,
     opNumArgs,
     opIsStmt,
-    opType,
 } from "./format"
 import { assert, write32, write16 } from "./jdutil"
 import { assertRange, oops } from "./util"
@@ -127,9 +126,15 @@ export function literal(v: number) {
 }
 
 export function nonEmittable(k: ValueType) {
-    assert(k == ValueType.VOID || k.kind >= 0x100)
+    assert(
+        k == ValueType.VOID || k.kind >= BinFmt.FIRST_NON_OPCODE,
+        "k = " + k
+    )
     const r = new Value(k)
-    r.op = k.kind
+    r.op =
+        k.kind > BinFmt.FIRST_NON_OPCODE
+            ? k.kind
+            : BinFmt.FIRST_NON_OPCODE + 0x100
     r.valueType = k
     r.flags = 0
     return r
@@ -432,7 +437,10 @@ export class OpWriter {
 
         // patch local indices
         for (const off of this.localOffsets) {
-            assert(LOCAL_OFFSET <= this.binary[off] && this.binary[off] < 0xf8)
+            assert(
+                LOCAL_OFFSET <= this.binary[off] &&
+                    this.binary[off] < BinFmt.FIRST_MULTIBYTE_INT
+            )
             this.binary[off] =
                 this.binary[off] - LOCAL_OFFSET + this.cachedValues.length
         }
@@ -504,9 +512,9 @@ export class OpWriter {
 
     private writeInt(v: number) {
         assert((v | 0) == v)
-        if (0 <= v && v < 0xf8) this.writeByte(v)
+        if (0 <= v && v < BinFmt.FIRST_MULTIBYTE_INT) this.writeByte(v)
         else {
-            let b = 0xf8
+            let b = BinFmt.FIRST_MULTIBYTE_INT
             if (v < 0) {
                 b |= 4
                 v = -v

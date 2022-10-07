@@ -271,7 +271,7 @@ function matchesName(specName: string, jsName: string) {
 }
 
 function unit() {
-    return literal(null)
+    return nonEmittable(ValueType.VOID)
 }
 
 const reservedFunctions: SMap<number> = {
@@ -2275,7 +2275,7 @@ class Program implements TopOpWriter {
         if (this.compileAll || (this.isLibrary && this.inMainFile(expr)))
             this.getClientCommandProc(cmd)
 
-        return nonEmittable(ValueType.VOID)
+        return unit()
     }
 
     private emitAssignmentExpression(expr: estree.AssignmentExpression): Value {
@@ -2303,12 +2303,12 @@ class Program implements TopOpWriter {
             } else {
                 throwError(expr, "expecting a multi-field register read")
             }
-            return nonEmittable(ValueType.VOID)
+            return unit()
         } else if (left.type == "Identifier") {
             const v = this.lookupVar(left)
             this.requireValueType(expr.right, src, v.valueType)
             this.emitStore(v, src)
-            return nonEmittable(ValueType.VOID)
+            return unit()
         }
         throwError(expr, "unhandled assignment")
     }

@@ -1,5 +1,6 @@
-import { ObjectType, OBJECT_TYPE, Op } from "./bytecode"
+import { BinFmt, ObjectType, OBJECT_TYPE, Op } from "./bytecode"
 import { opType } from "./format"
+import { assert } from "./jdutil"
 
 export enum ValueKind {
     ANY = ObjectType.ANY,
@@ -13,7 +14,7 @@ export enum ValueKind {
     ROLE = ObjectType.ROLE,
     VOID = ObjectType.VOID,
 
-    ERROR = 0x100,
+    ERROR = 0x10000, // BinFmt.FIRST_NON_OPCODE - esbuild fails with subsequent values when enum not a constant is used here
     JD_EVENT,
     JD_REG,
     JD_VALUE_SEQ,
@@ -26,7 +27,9 @@ export class ValueType {
         public kind: ValueKind,
         public roleSpec?: jdspec.ServiceSpec,
         public packetSpec?: jdspec.PacketInfo
-    ) {}
+    ) {
+        assert(this.kind != null)
+    }
 
     get isRole() {
         return this.kind == ValueKind.ROLE
@@ -95,5 +98,9 @@ export const valueTypes = [
 ]
 
 export function valueKindToString(vk: ValueKind) {
-    return OBJECT_TYPE[vk] || valueTypes[vk - 0x100] || "ValueType " + vk
+    return (
+        OBJECT_TYPE[vk] ||
+        valueTypes[vk - BinFmt.FIRST_NON_OPCODE] ||
+        "ValueType " + vk
+    )
 }
