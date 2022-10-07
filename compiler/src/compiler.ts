@@ -1156,7 +1156,7 @@ class Program implements TopOpWriter {
                     this.roleOf(expr.callee, val),
                     val.valueType.packetSpec.identifier
                 )
-                return literal(0)
+                return unit()
             case "wait":
                 this.requireArgs(expr, 0)
                 const lbl = wr.mkLabel("wait")
@@ -1168,7 +1168,7 @@ class Program implements TopOpWriter {
                     literal(val.valueType.packetSpec.identifier)
                 )
                 wr.emitJump(lbl, cond)
-                return literal(0)
+                return unit()
         }
         throwError(expr, `events don't have property ${prop}`)
     }
@@ -1271,7 +1271,7 @@ class Program implements TopOpWriter {
                             handler.callMe(wr, [], OpCall.BG_MAX1)
                         })
                     })
-                return literal(0)
+                return unit()
             }
             case "wait": {
                 const role = this.roleOf(expr, val)
@@ -1279,7 +1279,7 @@ class Program implements TopOpWriter {
                     throwError(expr, "only condition()s have wait()")
                 this.requireArgs(expr, 0)
                 wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
-                return literal(0)
+                return unit()
             }
             default:
                 const v = this.emitRoleMember(expr.callee, val)
@@ -1298,7 +1298,7 @@ class Program implements TopOpWriter {
                 } else if (k != ValueKind.ERROR) {
                     throwError(expr, `${v.valueType} cannot be called`)
                 }
-                return literal(0)
+                return unit()
         }
     }
 
@@ -1384,7 +1384,7 @@ class Program implements TopOpWriter {
                 const off = this.emitSimpleValue(expr.arguments[0])
                 const val = this.emitSimpleValue(expr.arguments[2])
                 wr.emitStmt(Op.STMT4_STORE_BUFFER, buf, literal(fmt), off, val)
-                return literal(0)
+                return unit()
             }
 
             case "setLength": {
@@ -1396,7 +1396,7 @@ class Program implements TopOpWriter {
                 this.requireArgs(expr, 1)
                 const len = this.emitSimpleValue(expr.arguments[0])
                 wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, len)
-                return literal(0)
+                return unit()
             }
 
             case "blitAt": {
@@ -1416,7 +1416,7 @@ class Program implements TopOpWriter {
                     srcOffset,
                     len
                 )
-                return literal(0)
+                return unit()
             }
 
             case "fillAt": {
@@ -1425,7 +1425,7 @@ class Program implements TopOpWriter {
                 const len = this.emitSimpleValue(expr.arguments[1])
                 const val = this.emitSimpleValue(expr.arguments[2])
                 wr.emitStmt(Op.STMT4_MEMSET, buf, offset, len, val)
-                return literal(0)
+                return unit()
             }
 
             default:
@@ -1577,7 +1577,7 @@ class Program implements TopOpWriter {
                     vobj.roleExpr,
                     spec.identifier | CMD_SET_REG
                 )
-                return literal(0)
+                return unit()
             case "onChange": {
                 const role = this.roleOf(expr.callee, val)
                 this.requireArgs(expr, 2)
@@ -1633,7 +1633,7 @@ class Program implements TopOpWriter {
                         wr.emitLabel(skipHandler)
                     })
                 })
-                return literal(0)
+                return unit()
             }
         }
         throwError(expr, `registers don't have property ${prop}`)
@@ -1732,10 +1732,10 @@ class Program implements TopOpWriter {
                 )
                 this.emitPackArgs(expr, spec)
                 this.emitSendCommand(this.cloudRole, spec.identifier)
-                return literal(0)
+                return unit()
             case "cloud.onMethod":
                 this.emitCloudMethod(expr)
-                return literal(0)
+                return unit()
             case "console.log":
                 if (
                     expr.arguments.length == 1 &&
@@ -1766,7 +1766,7 @@ class Program implements TopOpWriter {
                     )
                     r.free()
                 }
-                return literal(0)
+                return unit()
             case "Date.now":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)
             default:
@@ -1902,7 +1902,7 @@ class Program implements TopOpWriter {
             case "wait": {
                 this.requireArgs(expr, 1)
                 wr.emitStmt(Op.STMT1_SLEEP_S, this.emitExpr(expr.arguments[0]))
-                return literal(0)
+                return unit()
             }
             case "isNaN": {
                 this.requireArgs(expr, 1)
@@ -1914,7 +1914,7 @@ class Program implements TopOpWriter {
             case "reboot": {
                 this.requireArgs(expr, 0)
                 wr.emitStmt(Op.STMT1_PANIC, literal(0))
-                return literal(0)
+                return unit()
             }
             case "panic": {
                 this.requireArgs(expr, 1)
@@ -1925,7 +1925,7 @@ class Program implements TopOpWriter {
                         "panic() code must be integer between 1 and 9999"
                     )
                 wr.emitStmt(Op.STMT1_PANIC, literal(code))
-                return literal(0)
+                return unit()
             }
             case "every": {
                 this.requireTopLevel(expr)
@@ -1939,14 +1939,14 @@ class Program implements TopOpWriter {
                     every: time,
                 })
                 proc.callMe(wr, [], OpCall.BG)
-                return literal(0)
+                return unit()
             }
             case "onStart": {
                 this.requireTopLevel(expr)
                 this.requireArgs(expr, 1)
                 const proc = this.emitHandler("onStart", expr.arguments[0])
                 this.onStart.emit(wr => proc.callMe(wr, []))
-                return literal(0)
+                return unit()
             }
             case "format":
                 const r = wr.allocBuf()
