@@ -77,20 +77,26 @@ value_t jacs_index(jacs_ctx_t *ctx, value_t seq, unsigned idx) {
     return jacs_undefined;
 }
 
-int jacs_array_set(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, value_t v) {
-    if (idx > JACS_MAX_ALLOC / sizeof(value_t))
-        return -4;
-
-    if (arr->capacity <= idx) {
-        int newlen = grow_len(idx);
+static int array_ensure_len(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned newlen) {
+    if (arr->capacity < newlen) {
+        newlen = grow_len(newlen);
         value_t *newarr = jacs_try_alloc(ctx, newlen);
         if (newarr == NULL)
-            return -5;
+            return -1;
         if (arr->data)
             memcpy(newarr, arr->data, sizeof(value_t) * arr->length);
         arr->data = newarr;
         jd_gc_unpin(ctx->gc, newarr);
     }
+    return 0;
+}
+
+int jacs_array_set(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, value_t v) {
+    if (idx > JACS_MAX_ALLOC / sizeof(value_t))
+        return -4;
+
+    if (array_ensure_len(ctx, arr, idx + 1))
+        return -5;
 
     arr->data[idx] = v;
     if (idx >= arr->length)
@@ -118,4 +124,40 @@ int jacs_index_set(jacs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
             return -2;
         }
     }
+}
+
+int jacs_array_insert(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, int count) {
+    if (count > (int)(JACS_MAX_ALLOC / sizeof(value_t)))
+        return -4;
+
+    int newlen = arr->length + count;
+    if (newlen < 0) {
+        count = -arr->length;
+        newlen = 0;
+    }
+
+    if (count == 0)
+        return 0;
+
+    if (newlen > (int)(JACS_MAX_ALLOC / sizeof(value_t)))
+        return -6;
+
+    if (idx > arr->length)
+        idx = arr->length;
+
+    if (array_ensure_len(ctx, arr, newlen))
+        return -5;
+
+    unsigned trailing = arr->length - idx;
+
+    if (count < 0) {
+        count = -count;
+        memmove(arr->data + idx, arr->data + idx + count, trailing - count);
+    } else {
+        memmove(arr->data + idx + count, arr->data + idx, trailing);
+        memset(arr->data + idx, 0, count * sizeof(value_t));
+    }
+    arr->length = newlen;
+
+    return 0;
 }

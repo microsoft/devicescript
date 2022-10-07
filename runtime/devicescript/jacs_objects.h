@@ -44,6 +44,7 @@ void jacs_map_clear(jacs_ctx_t *ctx, jacs_map_t *map);
 value_t jacs_index(jacs_ctx_t *ctx, value_t seq, unsigned idx);
 int jacs_array_set(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, value_t v);
 int jacs_index_set(jacs_ctx_t *ctx, value_t seq, unsigned idx, value_t v);
+int jacs_array_insert(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, int count);
 
 // GC
 

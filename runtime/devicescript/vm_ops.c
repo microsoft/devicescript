@@ -127,7 +127,17 @@ static void stmt3_array_set(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 }
 
 static void stmt3_array_insert(jacs_activation_t *frame, jacs_ctx_t *ctx) {
-    TODO();
+    int32_t count = jacs_vm_pop_arg_i32(ctx);
+    uint32_t idx = jacs_vm_pop_arg_u32(ctx);
+    value_t seq = jacs_vm_pop_arg(ctx);
+
+    jacs_array_t *arr = jacs_value_to_gc_obj(ctx, seq);
+    if (jacs_gc_tag(arr) == JACS_GC_TAG_ARRAY) {
+        if (jacs_array_insert(ctx, arr, idx, count))
+            jacs_runtime_failure(ctx, 60138);
+    } else {
+        jacs_runtime_failure(ctx, 60139);
+    }
 }
 
 static void stmt1_setup_pkt_buffer(jacs_activation_t *frame, jacs_ctx_t *ctx) {
