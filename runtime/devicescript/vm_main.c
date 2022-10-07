@@ -10,7 +10,7 @@ static inline uint8_t jacs_vm_fetch_byte(jacs_activation_t *frame, jacs_ctx_t *c
 
 static inline int32_t jacs_vm_fetch_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint8_t v = jacs_vm_fetch_byte(frame, ctx);
-    if (v < 0xF8)
+    if (v < JACS_FIRST_MULTIBYTE_INT)
         return v;
 
     int32_t r = 0;
