@@ -12,6 +12,7 @@
 #define JACS_STMT1_SETUP_PKT_BUFFER 70 // size
 #define JACS_STMT2_SET_PKT 71          // buffer, offset
 #define JACS_STMT5_BLIT 72             // dst, dst_offset, src, src_offset, length
+#define JACS_STMT4_MEMSET 93           // dst, offset, length, value
 #define JACS_STMTx2_CALL 73            // *local_idx, numargs, func
 #define JACS_STMTx3_CALL_BG 74         // *local_idx, numargs, func, opcall
 #define JACS_STMT1_RETURN 75           // value
@@ -62,6 +63,7 @@
 #define JACS_EXPR0_NAN 12
 #define JACS_EXPR1_ABS 13
 #define JACS_EXPR1_BIT_NOT 14 // ~x
+#define JACS_EXPR1_ROUND 24
 #define JACS_EXPR1_CEIL 15
 #define JACS_EXPR1_FLOOR 16
 #define JACS_EXPR1_ID 17
@@ -69,40 +71,43 @@
 #define JACS_EXPR1_LOG_E 19
 #define JACS_EXPR1_NEG 20 // -x
 #define JACS_EXPR1_NOT 21 // !x
+#define JACS_EXPR1_TO_INT 92
 #define JACS_EXPR1_RANDOM 22
 #define JACS_EXPR1_RANDOM_INT 23
-#define JACS_EXPR1_ROUND 24
-#define JACS_EXPR2_ADD 26     // x + y
-#define JACS_EXPR2_BIT_AND 27 // x & y
-#define JACS_EXPR2_BIT_OR 28  // x | y
-#define JACS_EXPR2_BIT_XOR 29 // x ^ y
-#define JACS_EXPR2_DIV 30     // x / y
-#define JACS_EXPR2_EQ 31      // x == y
+#define JACS_EXPR2_ADD 26 // x + y
+#define JACS_EXPR2_SUB 44 // x - y
+#define JACS_EXPR2_MUL 38 // x * y
+#define JACS_EXPR2_DIV 30 // x / y
+#define JACS_EXPR2_POW 40
 #define JACS_EXPR2_IDIV 32
 #define JACS_EXPR2_IMUL 33
-#define JACS_EXPR2_LE 34 // x <= y
-#define JACS_EXPR2_LT 35 // x < y
-#define JACS_EXPR2_MAX 36
-#define JACS_EXPR2_MIN 37
-#define JACS_EXPR2_MUL 38 // x * y
-#define JACS_EXPR2_NE 39  // x != y
-#define JACS_EXPR2_POW 40
+#define JACS_EXPR2_IMOD 91
+#define JACS_EXPR2_BIT_AND 27              // x & y
+#define JACS_EXPR2_BIT_OR 28               // x | y
+#define JACS_EXPR2_BIT_XOR 29              // x ^ y
 #define JACS_EXPR2_SHIFT_LEFT 41           // x << y
 #define JACS_EXPR2_SHIFT_RIGHT 42          // x >> y
 #define JACS_EXPR2_SHIFT_RIGHT_UNSIGNED 43 // x >>> y
-#define JACS_EXPR2_SUB 44                  // x - y
-#define JACS_OP_PAST_LAST 91
+#define JACS_EXPR2_EQ 31                   // x == y
+#define JACS_EXPR2_LE 34                   // x <= y
+#define JACS_EXPR2_LT 35                   // x < y
+#define JACS_EXPR2_NE 39                   // x != y
+#define JACS_EXPR2_MAX 36
+#define JACS_EXPR2_MIN 37
+#define JACS_OP_PAST_LAST 94
 
 #define JACS_OP_PROPS                                                                              \
     "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01" \
     "\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20" \
     "\x00\x01\x00\x00\x60\x60\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32" \
-    "\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60"
+    "\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60\x42" \
+    "\x41\x14"
 #define JACS_OP_TYPES                                                                              \
     "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01" \
     "\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a" \
     "\x01\x07\x01\x01\x05\x04\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b" \
-    "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08"
+    "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08\x01" \
+    "\x01\x0b"
 
 #define JACS_IMG_VERSION 0x00030002
 #define JACS_MAGIC0 0x5363614a // "JacS"
@@ -121,6 +126,7 @@
 #define JACS_OPCALL_BG 1
 #define JACS_OPCALL_BG_MAX1 2
 #define JACS_OPCALL_BG_MAX1_PEND1 3
+#define JACS_OPCALL_BG_MAX1_REPLACE 4
 
 #define JACS_BYTECODEFLAG_NUM_ARGS_MASK 0xf
 #define JACS_BYTECODEFLAG_IS_STMT 0x10
@@ -170,4 +176,5 @@
         stmt1_return, stmtx_jmp, stmtx1_jmp_z, stmt1_panic, stmtx1_store_local,                    \
         stmtx1_store_global, stmt4_store_buffer, stmtx1_store_param, stmt1_terminate_fiber,        \
         stmt0_alloc_map, stmt1_alloc_array, stmt1_alloc_buffer, stmtx2_set_field, stmt3_array_set, \
-        stmt3_array_insert, exprx_static_function, expr_invalid
+        stmt3_array_insert, exprx_static_function, expr2_imod, expr1_to_int, stmt4_memset,         \
+        expr_invalid

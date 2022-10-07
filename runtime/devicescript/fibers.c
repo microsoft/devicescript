@@ -160,15 +160,16 @@ jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, 
     if (op != JACS_OPCALL_BG) {
         fiber = jacs_fiber_by_fidx(ctx, fidx);
         if (fiber) {
-            if (op == JACS_OPCALL_BG_MAX1_PEND1) {
-                if (fiber->pending) {
-                    // LOG("fiber already pending %d", fidx);
-                } else {
-                    fiber->pending = 1;
-                    // LOG("pend fiber %d", fidx);
-                }
+            if (op == JACS_OPCALL_BG_MAX1_REPLACE) {
+                jacs_fiber_termiante(fiber);
+            } else if (op == JACS_OPCALL_BG_MAX1_PEND1) {
+                fiber->pending = 1;
+                return fiber;
+            } else if (op == JACS_OPCALL_BG_MAX1) {
+                return fiber;
+            } else {
+                jd_panic();
             }
-            return fiber;
         }
     }
 
@@ -193,6 +194,8 @@ jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, 
 
 void jacs_fiber_termiante(jacs_fiber_t *f) {
     log_fiber_op(f, "terminate");
+    if (f->ctx->curr_fiber == f)
+        jacs_fiber_yield(f->ctx);
     jacs_activation_t *act = f->activation;
     while (act) {
         jacs_activation_t *n = act->caller;

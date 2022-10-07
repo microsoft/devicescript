@@ -177,6 +177,22 @@ static void stmt5_blit(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     memcpy(dst + dst_offset, src + src_offset, len);
 }
 
+static void stmt4_memset(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    unsigned dlen;
+    uint32_t val = jacs_vm_pop_arg_u32(ctx);
+    uint32_t len = jacs_vm_pop_arg_u32(ctx);
+    uint32_t dst_offset = jacs_vm_pop_arg_u32(ctx);
+    uint8_t *dst = jacs_vm_pop_arg_buffer_data(ctx, &dlen);
+
+    if (dst_offset >= dlen)
+        return;
+    dlen -= dst_offset;
+    if (dlen < len)
+        len = dlen;
+
+    memset(dst + dst_offset, val, len);
+}
+
 static void stmt1_panic(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t code = jacs_vm_pop_arg_u32(ctx);
     jacs_panic(ctx, code);
@@ -197,7 +213,9 @@ static void stmtx3_call_bg(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     uint32_t numargs = jacs_vm_pop_arg_u32(ctx);
     uint32_t localidx = ctx->literal_int;
 
-    if (jacs_vm_args_ok(frame, localidx, numargs)) {
+    if (flag == 0 || flag > JACS_OPCALL_BG_MAX1_REPLACE)
+        jacs_runtime_failure(ctx, 60137);
+    else if (jacs_vm_args_ok(frame, localidx, numargs)) {
         jacs_fiber_t *fib = jacs_fiber_start(ctx, fidx, frame->locals + localidx, numargs, flag);
         frame->fiber->ret_val = jacs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fib->handle_tag);
     }
@@ -228,6 +246,7 @@ static void stmtx1_jmp_z(jacs_activation_t *frame, jacs_ctx_t *ctx) {
 static void stmtx1_store_local(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_pop_arg(ctx);
     unsigned off = ctx->literal_int;
+    // DMESG("store L%d := %d st=%d", off, jacs_value_to_int(v), frame->func->start);
     if (off >= frame->func->num_locals)
         jacs_runtime_failure(ctx, 60118);
     else
@@ -274,10 +293,7 @@ static void stmt1_terminate_fiber(jacs_activation_t *frame, jacs_ctx_t *ctx) {
         jacs_fiber_t *fib = jacs_fiber_by_tag(ctx, jacs_handle_value(h));
         if (fib == NULL)
             return;
-        if (fib == frame->fiber)
-            jacs_fiber_yield(ctx);
-        else
-            frame->fiber->ret_val = jacs_zero;
+        frame->fiber->ret_val = jacs_zero;
         jacs_fiber_termiante(fib);
     }
 }
@@ -539,6 +555,10 @@ static value_t expr1_bit_not(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     return jacs_value_from_int(~jacs_vm_pop_arg_i32(ctx));
 }
 
+static value_t expr1_to_int(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    return jacs_value_from_int(jacs_vm_pop_arg_i32(ctx));
+}
+
 static value_t expr1_ceil(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     value_t v = jacs_vm_pop_arg(ctx);
     if (jacs_is_tagged_int(v))
@@ -716,6 +736,13 @@ static value_t expr2_idiv(jacs_activation_t *frame, jacs_ctx_t *ctx) {
     if (bb == 0)
         return jacs_zero;
     return jacs_value_from_int(aa / bb);
+}
+
+static value_t expr2_imod(jacs_activation_t *frame, jacs_ctx_t *ctx) {
+    exec2_and_force_int(frame, ctx);
+    if (bb == 0)
+        return jacs_zero;
+    return jacs_value_from_int(aa % bb);
 }
 
 static value_t expr2_imul(jacs_activation_t *frame, jacs_ctx_t *ctx) {

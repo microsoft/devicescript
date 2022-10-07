@@ -144,7 +144,7 @@ static inline bool jacs_trace_enabled(jacs_ctx_t *ctx) {
 
 void jacs_panic(jacs_ctx_t *ctx, unsigned code);
 value_t _jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code);
-// next error 60137
+// next error 60138
 static inline value_t jacs_runtime_failure(jacs_ctx_t *ctx, unsigned code) {
     return _jacs_runtime_failure(ctx, code - 60000);
 }
