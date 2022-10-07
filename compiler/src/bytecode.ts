@@ -12,6 +12,7 @@ export enum Op {
     STMT1_SETUP_PKT_BUFFER = 70, // size
     STMT2_SET_PKT = 71, // buffer, offset
     STMT5_BLIT = 72, // dst, dst_offset, src, src_offset, length
+    STMT4_MEMSET = 93, // dst, offset, length, value
     STMTx2_CALL = 73, // *local_idx, numargs, func
     STMTx3_CALL_BG = 74, // *local_idx, numargs, func, opcall
     STMT1_RETURN = 75, // value
@@ -62,6 +63,7 @@ export enum Op {
     EXPR0_NAN = 12,
     EXPR1_ABS = 13,
     EXPR1_BIT_NOT = 14, // ~x
+    EXPR1_ROUND = 24,
     EXPR1_CEIL = 15,
     EXPR1_FLOOR = 16,
     EXPR1_ID = 17,
@@ -69,35 +71,36 @@ export enum Op {
     EXPR1_LOG_E = 19,
     EXPR1_NEG = 20, // -x
     EXPR1_NOT = 21, // !x
+    EXPR1_TO_INT = 92,
     EXPR1_RANDOM = 22,
     EXPR1_RANDOM_INT = 23,
-    EXPR1_ROUND = 24,
     EXPR2_ADD = 26, // x + y
+    EXPR2_SUB = 44, // x - y
+    EXPR2_MUL = 38, // x * y
+    EXPR2_DIV = 30, // x / y
+    EXPR2_POW = 40,
+    EXPR2_IDIV = 32,
+    EXPR2_IMUL = 33,
+    EXPR2_IMOD = 91,
     EXPR2_BIT_AND = 27, // x & y
     EXPR2_BIT_OR = 28, // x | y
     EXPR2_BIT_XOR = 29, // x ^ y
-    EXPR2_DIV = 30, // x / y
-    EXPR2_EQ = 31, // x == y
-    EXPR2_IDIV = 32,
-    EXPR2_IMUL = 33,
-    EXPR2_LE = 34, // x <= y
-    EXPR2_LT = 35, // x < y
-    EXPR2_MAX = 36,
-    EXPR2_MIN = 37,
-    EXPR2_MUL = 38, // x * y
-    EXPR2_NE = 39, // x != y
-    EXPR2_POW = 40,
     EXPR2_SHIFT_LEFT = 41, // x << y
     EXPR2_SHIFT_RIGHT = 42, // x >> y
     EXPR2_SHIFT_RIGHT_UNSIGNED = 43, // x >>> y
-    EXPR2_SUB = 44, // x - y
-    OP_PAST_LAST = 91,
+    EXPR2_EQ = 31, // x == y
+    EXPR2_LE = 34, // x <= y
+    EXPR2_LT = 35, // x < y
+    EXPR2_NE = 39, // x != y
+    EXPR2_MAX = 36,
+    EXPR2_MIN = 37,
+    OP_PAST_LAST = 94,
 }
 
 export const OP_PROPS =
-    "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20\x00\x01\x00\x00\x60\x60\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60"
+    "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20\x00\x01\x00\x00\x60\x60\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60\x42\x41\x14"
 export const OP_TYPES =
-    "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a\x01\x07\x01\x01\x05\x04\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08"
+    "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a\x01\x07\x01\x01\x05\x04\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08\x01\x01\x0b"
 
 export enum BinFmt {
     IMG_VERSION = 0x00030002,
@@ -119,6 +122,7 @@ export enum OpCall {
     BG = 1,
     BG_MAX1 = 2,
     BG_MAX1_PEND1 = 3,
+    BG_MAX1_REPLACE = 4,
 }
 
 export enum BytecodeFlag {
@@ -249,6 +253,9 @@ export const OP_PRINT_FMTS = [
     "%e[%e] := %e",
     "ARRAY_INSERT array=%e index=%e count=%e",
     "%F",
+    "imod(%e, %e)",
+    "to_int(%e)",
+    "MEMSET dst=%e offset=%e length=%e %e",
 ]
 export const OBJECT_TYPE = [
     "null",

@@ -42,6 +42,10 @@ Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
 Copy bytes `src[src_offset .. src_offset + length]` to `dst[dst_offset .. ]`.
 Both `src` and `dst` are buffers.
 
+    memset(dst, offset, length, value) = 93
+
+Set bytes `dst[offset .. offset + length]` to `value`.
+
     call(*local_idx, numargs, func) = 73
 
 Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`
@@ -185,6 +189,8 @@ Return reference to "buffer" with the packet data.
 
     fun bit_not(x): number = 14   // ~x
 
+    fun round(x): number = 24
+
     fun ceil(x): number = 15
 
     fun floor(x): number = 16
@@ -199,6 +205,10 @@ Return reference to "buffer" with the packet data.
 
     fun not(x): bool = 21   // !x
 
+    fun to_int(x): number = 92
+
+Same as `x | 0`.
+
     random(x): number = 22
 
 Returns value between 0 and `x`.
@@ -207,9 +217,23 @@ Returns value between 0 and `x`.
 
 Returns an int between 0 and `x` inclusive.
 
-    fun round(x): number = 24
-
     fun add(x, y): number = 26     // x + y
+
+    fun sub(x, y): number = 44     // x - y
+  
+    fun mul(x, y): number = 38     // x * y
+
+    fun div(x, y): number = 30     // x / y
+  
+    fun pow(x, y): number = 40
+
+
+    fun idiv(x, y): number = 32
+
+    fun imul(x, y): number = 33
+
+    fun imod(x, y): number = 91
+
 
     fun bit_and(x, y): number = 27 // x & y
 
@@ -217,35 +241,26 @@ Returns an int between 0 and `x` inclusive.
 
     fun bit_xor(x, y): number = 29 // x ^ y
 
-    fun div(x, y): number = 30     // x / y
-
-    fun eq(x, y): bool = 31      // x == y
-
-    fun idiv(x, y): number = 32
-
-    fun imul(x, y): number = 33
-
-    fun le(x, y): bool = 34      // x <= y
-
-    fun lt(x, y): bool = 35      // x < y
-
-    fun max(x, y): number = 36
-
-    fun min(x, y): number = 37
-
-    fun mul(x, y): number = 38     // x * y
-
-    fun ne(x, y): bool = 39      // x != y
-
-    fun pow(x, y): number = 40
-
     fun shift_left(x, y): number = 41      // x << y
 
     fun shift_right(x, y): number = 42      // x >> y
 
     fun shift_right_unsigned(x, y): number = 43      // x >>> y
 
-    fun sub(x, y): number = 44     // x - y
+
+    fun eq(x, y): bool = 31      // x == y
+
+    fun le(x, y): bool = 34      // x <= y
+
+    fun lt(x, y): bool = 35      // x < y
+
+    fun ne(x, y): bool = 39      // x != y
+
+    fun max(x, y): number = 36
+
+    fun min(x, y): number = 37
+
+
 
 ## Format Constants
 
@@ -280,6 +295,10 @@ Start new fiber unless one is already running.
 
 If fiber is already running, set a flag for it to be restarted when it finishes.
 Otherwise, start new fiber.
+
+    bg_max1_replace = 4
+
+Start new fiber. If it's already running, replace it.
 
 ## Enum: BytecodeFlag
 
