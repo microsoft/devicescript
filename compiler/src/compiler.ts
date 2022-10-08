@@ -2094,7 +2094,18 @@ class Program implements TopOpWriter {
             if (e.members.hasOwnProperty(prop)) return literal(e.members[prop])
             else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
+
         const val = this.emitExpr(expr.object)
+
+        if (expr.computed) {
+            if (val.valueType.canIndex) {
+                const idx = this.emitSimpleValue(expr.property as Expr)
+                return this.writer.emitExpr(Op.EXPR2_INDEX, val, idx)
+            } else {
+                throwError(expr, `unhandled indexing on ${val.valueType}`)
+            }
+        }
+
         if (val.valueType.isRole) {
             return this.emitRoleMember(expr, val)
         } else if (val.valueType.kind == ValueKind.BUFFER) {
@@ -2285,9 +2296,22 @@ class Program implements TopOpWriter {
         const res = this.emitPrototypeUpdate(expr)
         if (res) return res
 
-        const src = this.emitExpr(expr.right)
         const wr = this.writer
         let left = expr.left
+
+        if (left.type == "MemberExpression" && left.computed) {
+            const arr = this.emitExpr(left.object)
+            if (arr.valueType.canIndex) {
+                const idx = this.emitSimpleValue(left.property as Expr)
+                const src = this.emitExpr(expr.right) // compute src after left.property
+                wr.emitStmt(Op.STMT3_ARRAY_SET, arr, idx, src)
+                return unit()
+            } else {
+                throwError(expr, `unhandled indexing on ${arr.valueType}`)
+            }
+        }
+
+        const src = this.emitExpr(expr.right)
         if (left.type == "ArrayPattern") {
             if (src.valueType.kind == ValueKind.JD_VALUE_SEQ) {
                 let off = 0
@@ -2310,6 +2334,7 @@ class Program implements TopOpWriter {
             this.emitStore(v, src)
             return unit()
         }
+
         throwError(expr, "unhandled assignment")
     }
 

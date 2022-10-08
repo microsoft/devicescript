@@ -16,7 +16,7 @@ function test1() {
 
     a = clr.color.read() //! cannot convert multi-field value color.color to number
 
-    a[b] = btn.pressure.read() //! unhandled assignment
+    a[b] = btn.pressure.read() //! unhandled indexing
 
     if (false)
         a[b] = btn.pressure.read() // OK - if false

@@ -73,6 +73,7 @@ declare class JDBuffer {
     setAt(offset: number, format: string, value: number): void
     blitAt(offset: number, src: JDBuffer, srcOffset: number, len: number)
     fillAt(offset: number, length: number, value: number): void
+    [idx: number]: number
 }
 
 declare var packet: JDBuffer

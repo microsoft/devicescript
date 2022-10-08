@@ -35,6 +35,10 @@ export class ValueType {
         return this.kind == ValueKind.ROLE
     }
 
+    get canIndex() {
+        return this.kind == ValueKind.ARRAY || this.kind == ValueKind.BUFFER
+    }
+
     equals(other: ValueType) {
         if (!other) return false
         return (
