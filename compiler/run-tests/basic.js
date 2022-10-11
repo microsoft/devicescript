@@ -202,6 +202,35 @@ function testBuffer() {
 
     buf[2] = 7
     isEq(buf[2], 7)
+    
+    buf[4] = 0x13
+    var b2 = hex`72 33 23 12`
+    buf.blitAt(0, b2, 0, 10)
+    isEq(buf[0], 0x72)
+    isEq(buf[3], 0x12)
+    isEq(buf[4], 0x13)
+    buf.blitAt(2, b2, 1, 1)
+    isEq(buf[0], 0x72)
+    isEq(buf[1], 0x33)
+    isEq(buf[2], 0x33)
+    isEq(buf[3], 0x12)
+    isEq(buf[4], 0x13)
+}
+
+function testArray() {
+    let arr = []
+    isEq(arr.length, 0)
+    arr = [1, 2, 3]
+    isEq(arr.length, 3)
+    isEq(arr[0], 1)
+    isEq(arr[1], 2)
+    isEq(arr[2], 3)
+    isEq(arr[3], undefined)
+    isEq(arr[-1], undefined)
+    arr[4] = 12
+    isEq(arr.length, 5)
+    isEq(arr[3], undefined)
+    isEq(arr[4], 12)
 }
 
 testFlow()
@@ -209,5 +238,6 @@ if (x != 42) panic(10)
 testMath()
 testLazy()
 testBuffer()
+testArray()
 console.log("all OK")
 reboot()

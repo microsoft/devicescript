@@ -1486,6 +1486,33 @@ class Program implements TopOpWriter {
         }
     }
 
+    private bufferSize(v: Value) {
+        if (v.op == Op.EXPRx_STATIC_BUFFER) {
+            const idx = v.args[0]?.numValue
+            if (idx != null) {
+                const lit = this.stringLiterals[idx]
+                if (typeof lit == "string") return strlen(lit)
+                else return lit.length
+            }
+        }
+        return undefined
+    }
+
+    private emitStringOrBuffer(expr: Expr) {
+        const stringLiteral = this.stringLiteral(expr)
+        const wr = this.writer
+        if (stringLiteral != undefined) {
+            return wr.emitString(stringLiteral)
+        } else {
+            const buf = this.bufferLiteral(expr)
+            if (buf) {
+                return wr.emitString(buf)
+            } else {
+                throwError(expr, "expecting a string literal here")
+            }
+        }
+    }
+
     private emitPackArgs(
         expr: estree.CallExpression,
         pspec: jdspec.PacketInfo
@@ -1509,19 +1536,8 @@ class Program implements TopOpWriter {
             let size = Math.abs(spec.storage)
             let stringLiteralVal: Value = undefined
             if (size == 0) {
-                const stringLiteral = this.stringLiteral(arg)
-                if (stringLiteral != undefined) {
-                    size = strlen(stringLiteral)
-                    stringLiteralVal = wr.emitString(stringLiteral)
-                } else {
-                    const buf = this.bufferLiteral(arg)
-                    if (buf) {
-                        size = buf.length
-                        stringLiteralVal = wr.emitString(buf)
-                    } else {
-                        throwError(arg, "expecting a string literal here")
-                    }
-                }
+                stringLiteralVal = this.emitStringOrBuffer(arg)
+                size = this.bufferSize(stringLiteralVal)
                 if (spec.type == "string0") size += 1
             }
             const val = stringLiteralVal
@@ -1980,6 +1996,7 @@ class Program implements TopOpWriter {
         switch (id) {
             case "NaN":
                 return literal(NaN)
+            case "undefined":
             case "null":
                 return literal(null)
             case "packet":
@@ -2108,7 +2125,7 @@ class Program implements TopOpWriter {
 
         if (val.valueType.isRole) {
             return this.emitRoleMember(expr, val)
-        } else if (val.valueType.kind == ValueKind.BUFFER) {
+        } else if (val.valueType.canIndex) {
             const propName = this.forceName(expr.property)
             if (propName == "length")
                 return this.writer.emitExpr(Op.EXPR1_OBJECT_LENGTH, val)
@@ -2199,7 +2216,7 @@ class Program implements TopOpWriter {
     ) {
         if (reqTp == ValueType.BOOL && this.isBoolLike(v.valueType)) return
         if (reqTp == ValueType.ANY && this.isSimpleValue(v.valueType)) return
-        if (v.valueType == ValueType.ANY) return
+        if (v.valueType == ValueType.ANY || v.valueType == ValueType.NULL) return
         if (!v.valueType.equals(reqTp))
             throwError(node, `cannot convert ${v.valueType} to ${reqTp}`)
     }
@@ -2441,6 +2458,27 @@ class Program implements TopOpWriter {
         return wr.emitExpr(op, a)
     }
 
+    private emitArrayExpression(expr: estree.ArrayExpression): Value {
+        const wr = this.writer
+        const sz = expr.elements.length
+        wr.emitStmt(Op.STMT1_ALLOC_ARRAY, literal(sz))
+        const arr = wr.emitExpr(Op.EXPR0_RET_VAL)
+        if (sz == 0) {
+            arr.valueType = ValueType.ARRAY
+            return arr
+        }
+        const ref = wr.cacheValue(arr)
+        for (let i = 0; i < sz; ++i) {
+            wr.emitStmt(
+                Op.STMT3_ARRAY_SET,
+                ref.emit(),
+                literal(i),
+                this.emitSimpleValue(expr.elements[i], ValueType.ANY)
+            )
+        }
+        return ref.finalEmit(ValueType.ARRAY)
+    }
+
     private emitExpr(expr: Expr): Value {
         switch (expr.type) {
             case "CallExpression":
@@ -2460,6 +2498,10 @@ class Program implements TopOpWriter {
                 return this.emitBinaryExpression(expr)
             case "UnaryExpression":
                 return this.emitUnaryExpression(expr)
+            case "TaggedTemplateExpression":
+                return this.emitStringOrBuffer(expr)
+            case "ArrayExpression":
+                return this.emitArrayExpression(expr)
             default:
                 // console.log(expr)
                 return throwError(expr, "unhandled expr: " + expr.type)

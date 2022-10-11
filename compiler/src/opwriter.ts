@@ -96,6 +96,12 @@ export class CachedValue {
         this.valueType = v.valueType
         this.parent.emitStmt(Op.STMTx1_STORE_LOCAL, literal(this.index), v)
     }
+    finalEmit(tp?: ValueType) {
+        const r = this.emit()
+        this.free()
+        if (tp) r.valueType = tp
+        return r
+    }
     _decr() {
         assert(this.numrefs > 0)
         if (--this.numrefs == 0) {
@@ -126,10 +132,7 @@ export function literal(v: number) {
 }
 
 export function nonEmittable(k: ValueType) {
-    assert(
-        k == ValueType.VOID || k.kind >= BinFmt.FIRST_NON_OPCODE,
-        "k = " + k
-    )
+    assert(k == ValueType.VOID || k.kind >= BinFmt.FIRST_NON_OPCODE, "k = " + k)
     const r = new Value(k)
     r.op =
         k.kind > BinFmt.FIRST_NON_OPCODE
@@ -471,8 +474,8 @@ export class OpWriter {
     }
 
     emitExpr(op: Op, ...args: Value[]) {
-        assert(opNumArgs(op) == args.length)
-        assert(!opIsStmt(op))
+        assert(opNumArgs(op) == args.length, `op ${op} exp ${opNumArgs(op)} got ${args.length}`)
+        assert(!opIsStmt(op), `op ${op} is stmt not expr`)
         let stack = 0
         let maxstack = 1
         let usesState = exprIsStateful(op)
