@@ -53,6 +53,8 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
             ctx->literal_int = jacs_vm_fetch_int(frame, ctx);
         }
 
+        ctx->stack_top_for_gc = ctx->stack_top;
+
         if (flags & JACS_BYTECODEFLAG_IS_STMT) {
             ((jacs_vm_stmt_handler_t)jacs_vm_op_handlers[op])(frame, ctx);
             if (ctx->stack_top)

@@ -88,6 +88,7 @@ struct jacs_ctx {
     uint16_t jmp_pc;
 
     uint8_t stack_top;
+    uint8_t stack_top_for_gc;
     uint32_t literal_int;
     value_t the_stack[JACS_MAX_STACK_DEPTH];
 
