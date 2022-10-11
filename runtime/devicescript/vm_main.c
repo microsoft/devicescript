@@ -32,9 +32,7 @@ static inline void jacs_vm_push(jacs_ctx_t *ctx, value_t v) {
         ctx->the_stack[ctx->stack_top++] = v;
 }
 
-void jacs_vm_exec_stmt(jacs_activation_t *frame) {
-    jacs_ctx_t *ctx = frame->fiber->ctx;
-
+static void jacs_vm_exec_opcode(jacs_ctx_t *ctx, jacs_activation_t *frame) {
     uint8_t op = jacs_vm_fetch_byte(frame, ctx);
 
     if (op >= JACS_DIRECT_CONST_OP) {
@@ -64,4 +62,14 @@ void jacs_vm_exec_stmt(jacs_activation_t *frame) {
             jacs_vm_push(ctx, v);
         }
     }
+}
+
+void jacs_vm_exec_opcodes(jacs_ctx_t *ctx) {
+    unsigned maxsteps = JACS_MAX_STEPS;
+
+    while (ctx->curr_fn && --maxsteps)
+        jacs_vm_exec_opcode(ctx, ctx->curr_fn);
+
+    if (maxsteps == 0)
+        jacs_panic(ctx, JACS_PANIC_TIMEOUT);
 }

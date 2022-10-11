@@ -187,8 +187,8 @@ void jacs_fiber_poke(jacs_ctx_t *ctx);
 void jacs_fiber_sync_now(jacs_ctx_t *ctx);
 void jacs_fiber_free_all_fibers(jacs_ctx_t *ctx);
 
-// step.c
-void jacs_vm_exec_stmt(jacs_activation_t *frame);
+// vm_main.c
+void jacs_vm_exec_opcodes(jacs_ctx_t *ctx);
 
 value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset, value_t buffer,
                        value_t *setv);

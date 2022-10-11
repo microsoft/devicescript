@@ -227,12 +227,7 @@ void jacs_fiber_run(jacs_fiber_t *fiber) {
         jacs_trace(ctx, JACS_TRACE_EV_FIBER_RUN, &ev, sizeof(ev));
     }
 
-    unsigned maxsteps = JACS_MAX_STEPS;
-    while (ctx->curr_fn && --maxsteps)
-        jacs_vm_exec_stmt(ctx->curr_fn);
-
-    if (maxsteps == 0)
-        jacs_panic(ctx, JACS_PANIC_TIMEOUT);
+    jacs_vm_exec_opcodes(ctx);
 }
 
 void jacs_panic(jacs_ctx_t *ctx, unsigned code) {
