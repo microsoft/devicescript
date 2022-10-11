@@ -307,12 +307,12 @@ jacs_map_t *jacs_map_try_alloc(jacs_gc_t *gc) {
 }
 
 jacs_array_t *jacs_array_try_alloc(jacs_gc_t *gc, unsigned size) {
-    size *= sizeof(value_t);
-    if (size > JACS_MAX_ALLOC)
+    unsigned bytesize = size * sizeof(value_t);
+    if (bytesize > JACS_MAX_ALLOC)
         return NULL;
     jacs_array_t *arr = try_alloc(gc, JACS_GC_TAG_ARRAY, sizeof(jacs_array_t));
     if (arr != NULL && size > 0) {
-        arr->data = jd_gc_try_alloc(gc, size);
+        arr->data = jd_gc_try_alloc(gc, bytesize);
         if (arr->data == NULL)
             return NULL;
         arr->length = arr->capacity = size;
