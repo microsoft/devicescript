@@ -27,6 +27,8 @@ static void setup_ctx(jacs_ctx_t *ctx, const uint8_t *img) {
     if (ctx->error_code)
         return;
 
+    jacs_gc_set_ctx(ctx->gc, ctx);
+
     jacs_fiber_start(ctx, 0, NULL, 0, JACS_OPCALL_BG);
 }
 

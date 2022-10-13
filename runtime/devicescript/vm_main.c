@@ -32,6 +32,12 @@ static inline void jacs_vm_push(jacs_ctx_t *ctx, value_t v) {
         ctx->the_stack[ctx->stack_top++] = v;
 }
 
+void jacs_dump_stackframe(jacs_ctx_t *ctx, jacs_activation_t *fn) {
+    int idx = fn->func - jacs_img_get_function(&ctx->img, 0);
+    DMESG("pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start), jacs_img_fun_name(&ctx->img, idx),
+          idx);
+}
+
 static void jacs_vm_exec_opcode(jacs_ctx_t *ctx, jacs_activation_t *frame) {
     uint8_t op = jacs_vm_fetch_byte(frame, ctx);
 
@@ -52,6 +58,8 @@ static void jacs_vm_exec_opcode(jacs_ctx_t *ctx, jacs_activation_t *frame) {
         }
 
         ctx->stack_top_for_gc = ctx->stack_top;
+
+        // jacs_dump_stackframe(ctx, frame);
 
         if (flags & JACS_BYTECODEFLAG_IS_STMT) {
             ((jacs_vm_stmt_handler_t)jacs_vm_op_handlers[op])(frame, ctx);

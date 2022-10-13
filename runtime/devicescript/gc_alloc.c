@@ -3,6 +3,11 @@
 
 #include "jacs_internal.h"
 
+#define GC_STRESS 0
+
+// #define LOG JD_LOG
+#define LOG JD_NOLOG
+
 #define ROOT_SCAN_DEPTH 10
 
 #define GET_TAG(p) ((p) >> JACS_GC_TAG_POS)
@@ -88,8 +93,10 @@ static void mark_ptr(jacs_ctx_t *ctx, void *ptr) {
 }
 
 static void scan_array_and_mark(jacs_ctx_t *ctx, value_t *vals, unsigned length, int depth) {
-    mark_ptr(ctx, vals);
-    scan_array(ctx, vals, length, depth);
+    if (vals) {
+        mark_ptr(ctx, vals);
+        scan_array(ctx, vals, length, depth);
+    }
 }
 
 static void scan_map(jacs_ctx_t *ctx, jacs_map_t *map, int depth) {
@@ -105,6 +112,7 @@ static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
         return;
 
     if (depth <= 0) {
+        LOG("mark pending");
         block->header |= (uintptr_t)JACS_GC_TAG_MASK_PENDING << JACS_GC_TAG_POS;
         return;
     }
@@ -178,14 +186,23 @@ static void sweep(jacs_gc_t *gc) {
                 if (GET_TAG(header) == JACS_GC_TAG_FINAL)
                     break;
                 JD_ASSERT(block < chunk->end);
+
+                if (!sweep)
+                    LOG("p=%x tag=%x", jacs_show_addr(gc, block), (unsigned)GET_TAG(header));
+
                 if (GET_TAG(header) & JACS_GC_TAG_MASK_PENDING) {
                     JD_ASSERT(!sweep);
+                    if (!had_pending)
+                        LOG("set pending");
                     had_pending = 1;
                     scan(gc->ctx, block, ROOT_SCAN_DEPTH);
                 } else if (sweep) {
                     block_t *p = block;
-                    while (can_free(p->header))
+                    while (can_free(p->header)) {
+                        if (GET_TAG(p->header) != JACS_GC_TAG_FREE)
+                            LOG("free: %x", jacs_show_addr(gc, p));
                         p = next_block(p);
+                    }
                     if (p != block) {
                         unsigned new_size = block_ptr(p) - block_ptr(block);
                         mark_block(block, JACS_GC_TAG_FREE, new_size);
@@ -212,6 +229,7 @@ static void sweep(jacs_gc_t *gc) {
 }
 
 static void jacs_gc(jacs_gc_t *gc) {
+    LOG("*** GC");
     mark_roots(gc);
     sweep(gc);
 }
@@ -256,6 +274,10 @@ static block_t *alloc_block(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
     if (gc->num_alloc < 32 || (gc->num_alloc & 31) == 0)
         jd_alloc_stack_check();
 
+#if GC_STRESS
+    jacs_gc(gc);
+#endif
+
     block_t *b = find_free_block(gc, tag, words);
     if (!b) {
         jacs_gc(gc);
@@ -274,6 +296,7 @@ static void *try_alloc(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
     if (!b)
         return NULL;
     memset(b->data, 0x00, size);
+    LOG("alloc: tag=%s sz=%d -> %x", jacs_gc_tag_name(tag), size, jacs_show_addr(gc, b));
     return b;
 }
 
@@ -310,13 +333,19 @@ jacs_array_t *jacs_array_try_alloc(jacs_gc_t *gc, unsigned size) {
     unsigned bytesize = size * sizeof(value_t);
     if (bytesize > JACS_MAX_ALLOC)
         return NULL;
-    jacs_array_t *arr = try_alloc(gc, JACS_GC_TAG_ARRAY, sizeof(jacs_array_t));
-    if (arr != NULL && size > 0) {
+    jacs_array_t *arr =
+        try_alloc(gc, JACS_GC_TAG_ARRAY | JACS_GC_TAG_MASK_PINNED, sizeof(jacs_array_t));
+    if (arr == NULL)
+        return NULL;
+    if (size > 0) {
         arr->data = jd_gc_try_alloc(gc, bytesize);
-        if (arr->data == NULL)
+        if (arr->data == NULL) {
+            arr->gc.header ^= (uintptr_t)JACS_GC_TAG_MASK_PINNED << JACS_GC_TAG_POS;
             return NULL;
+        }
         arr->length = arr->capacity = size;
     }
+    arr->gc.header ^= (uintptr_t)JACS_GC_TAG_MASK_PINNED << JACS_GC_TAG_POS;
     return arr;
 }
 
@@ -327,6 +356,19 @@ jacs_buffer_t *jacs_buffer_try_alloc(jacs_gc_t *gc, unsigned size) {
     if (buf)
         buf->length = size;
     return buf;
+}
+
+void jacs_gc_set_ctx(jacs_gc_t *gc, jacs_ctx_t *ctx) {
+    gc->ctx = ctx;
+}
+
+static const char *tags[] = {"free", "bytes", "array", "map", "buffer"};
+const char *jacs_gc_tag_name(unsigned tag) {
+    tag &= JACS_GC_TAG_MASK;
+    tag--;
+    if (tag < sizeof(tags) / sizeof(tags[0]))
+        return tags[tag];
+    return "?tag";
 }
 
 #if JD_GC_ALLOC
@@ -380,5 +422,12 @@ void jacs_gc_destroy(jacs_gc_t *gc) {
 void *jacs_gc_base_addr(jacs_gc_t *gc) {
     JD_ASSERT(gc && gc->first_chunk);
     return gc->first_chunk;
+}
+
+unsigned jacs_show_addr(jacs_gc_t *gc, void *ptr) {
+    if (ptr == NULL)
+        return 0;
+    JD_ASSERT(gc && gc->first_chunk);
+    return (uintptr_t)ptr - (uintptr_t)gc->first_chunk;
 }
 #endif

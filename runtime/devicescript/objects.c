@@ -80,12 +80,13 @@ value_t jacs_index(jacs_ctx_t *ctx, value_t seq, unsigned idx) {
 static int array_ensure_len(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned newlen) {
     if (arr->capacity < newlen) {
         newlen = grow_len(newlen);
-        value_t *newarr = jacs_try_alloc(ctx, newlen);
+        value_t *newarr = jacs_try_alloc(ctx, newlen * sizeof(value_t));
         if (newarr == NULL)
             return -1;
         if (arr->data)
             memcpy(newarr, arr->data, sizeof(value_t) * arr->length);
         arr->data = newarr;
+        arr->capacity = newlen;
         jd_gc_unpin(ctx->gc, newarr);
     }
     return 0;
@@ -105,6 +106,7 @@ int jacs_array_set(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, value_t v) 
 }
 
 int jacs_index_set(jacs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
+    // DMESG("set arr=%s idx=%u", jacs_show_value(ctx, seq), idx);
     if (idx > JACS_MAX_ALLOC)
         return -1;
     if (jacs_is_buffer(ctx, seq)) {

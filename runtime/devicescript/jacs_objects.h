@@ -55,6 +55,7 @@ jacs_array_t *jacs_array_try_alloc(jacs_gc_t *gc, unsigned size);
 jacs_buffer_t *jacs_buffer_try_alloc(jacs_gc_t *gc, unsigned size);
 
 jacs_gc_t *jacs_gc_create(void);
+void jacs_gc_set_ctx(jacs_gc_t *gc, jacs_ctx_t *ctx);
 void jacs_gc_destroy(jacs_gc_t *gc);
 
 #if JD_64
@@ -68,6 +69,7 @@ void jacs_gc_destroy(jacs_gc_t *gc);
 #define JACS_GC_TAG_MASK_PINNED 0x40
 #define JACS_GC_TAG_MASK 0xf
 
+// update jacs_gc_tag_name() when adding/reordering
 #define JACS_GC_TAG_FREE 0x1
 #define JACS_GC_TAG_BYTES 0x2
 #define JACS_GC_TAG_ARRAY 0x3
@@ -75,20 +77,29 @@ void jacs_gc_destroy(jacs_gc_t *gc);
 #define JACS_GC_TAG_BUFFER 0x5
 #define JACS_GC_TAG_FINAL (0xf | JACS_GC_TAG_MASK_PINNED)
 
-static inline uint8_t jacs_gc_tag(void *ptr) {
+static inline int jacs_gc_tag(void *ptr) {
     return ptr == NULL ? 0
                        : (((jacs_gc_object_t *)ptr)->header >> JACS_GC_TAG_POS) & JACS_GC_TAG_MASK;
 }
+
+const char *jacs_gc_tag_name(unsigned tag);
 
 void *jd_gc_try_alloc(jacs_gc_t *gc, uint32_t size);
 void jd_gc_unpin(jacs_gc_t *gc, void *ptr);
 void jd_gc_free(jacs_gc_t *gc, void *ptr);
 #if JD_64
 void *jacs_gc_base_addr(jacs_gc_t *gc);
+unsigned jacs_show_addr(jacs_gc_t *gc, void *ptr);
 #else
 static inline void *jacs_gc_base_addr(jacs_gc_t *gc) {
     return NULL;
 }
+static inline unsigned jacs_show_addr(jacs_gc_t *gc, void *ptr) {
+    return (unsigned)ptr;
+}
 #endif
 
 void *jacs_value_to_gc_obj(jacs_ctx_t *ctx, value_t v);
+
+// returns pointer to a static buffer!
+const char *jacs_show_value(jacs_ctx_t *ctx, value_t v);

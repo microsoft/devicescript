@@ -263,3 +263,78 @@ bool jacs_is_nullish(value_t t) {
 
     return false;
 }
+
+const char *jacs_show_value(jacs_ctx_t *ctx, value_t v) {
+    static char buf[64];
+
+    if (jacs_is_tagged_int(v)) {
+        jd_sprintf(buf, sizeof(buf), "%d", v.val_int32);
+        return buf;
+    }
+
+    const char *fmt = NULL;
+
+    switch (jacs_handle_type(v)) {
+    case JACS_HANDLE_TYPE_FLOAT64:
+        jd_sprintf(buf, sizeof(buf), "%f", jacs_value_to_double(v));
+        return buf;
+
+    case JACS_HANDLE_TYPE_SPECIAL:
+        switch (jacs_handle_value(v)) {
+        case JACS_SPECIAL_FALSE:
+            return "false";
+        case JACS_SPECIAL_TRUE:
+            return "true";
+        case JACS_SPECIAL_NULL:
+            return "null";
+        case JACS_SPECIAL_PKT_BUFFER:
+            return "packet";
+        default:
+            return "?special";
+        }
+
+    case JACS_HANDLE_TYPE_FIBER:
+        fmt = "fib";
+        break;
+    case JACS_HANDLE_TYPE_FUNCTION:
+        fmt = "fun";
+        break;
+    case JACS_HANDLE_TYPE_IMG_BUFFER:
+        fmt = "buf";
+        break;
+    case JACS_HANDLE_TYPE_ROLE:
+        fmt = "role";
+        break;
+
+    case JACS_HANDLE_TYPE_GC_OBJECT:
+        switch (jacs_gc_tag(jacs_handle_ptr_value(ctx, v))) {
+        case JACS_GC_TAG_ARRAY:
+            fmt = "array";
+            break;
+        case JACS_GC_TAG_BUFFER:
+            fmt = "buffer";
+            break;
+        case JACS_GC_TAG_MAP:
+            fmt = "map";
+            break;
+        case JACS_GC_TAG_FREE:
+            fmt = "?free";
+            break;
+        case JACS_GC_TAG_BYTES:
+            fmt = "bytes";
+            break;
+        default:
+            fmt = "???";
+            break;
+        }
+        jd_sprintf(buf, sizeof(buf), "%s:%x", fmt, jacs_handle_value(v));
+        return buf;
+    }
+
+    if (fmt)
+        jd_sprintf(buf, sizeof(buf), "%s:%u", fmt, jacs_handle_value(v));
+    else
+        return "?value";
+
+    return buf;
+}
