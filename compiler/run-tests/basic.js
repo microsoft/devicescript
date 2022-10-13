@@ -233,11 +233,22 @@ function testArray() {
     isEq(arr[4], 12)
 }
 
+function testObj() {
+    /*
+    let obj = {}
+    obj["foo"] = 1
+    obj["bar"] = 2
+    isEq(obj["foo"], 1)
+    isEq(obj["bar"], 2)
+    */
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
 testLazy()
 testBuffer()
 testArray()
+testObj()
 console.log("all OK")
 reboot()

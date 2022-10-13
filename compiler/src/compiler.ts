@@ -2216,7 +2216,8 @@ class Program implements TopOpWriter {
     ) {
         if (reqTp == ValueType.BOOL && this.isBoolLike(v.valueType)) return
         if (reqTp == ValueType.ANY && this.isSimpleValue(v.valueType)) return
-        if (v.valueType == ValueType.ANY || v.valueType == ValueType.NULL) return
+        if (v.valueType == ValueType.ANY || v.valueType == ValueType.NULL)
+            return
         if (!v.valueType.equals(reqTp))
             throwError(node, `cannot convert ${v.valueType} to ${reqTp}`)
     }
@@ -2479,6 +2480,16 @@ class Program implements TopOpWriter {
         return ref.finalEmit(ValueType.ARRAY)
     }
 
+    private emitObjectExpression(expr: estree.ObjectExpression): Value {
+        const wr = this.writer
+        wr.emitStmt(Op.STMT0_ALLOC_MAP)
+        if (expr.properties.length)
+            throwError(expr, "object initializers not supported yet")
+        const arr = wr.emitExpr(Op.EXPR0_RET_VAL)
+        arr.valueType = ValueType.MAP
+        return arr
+    }
+
     private emitExpr(expr: Expr): Value {
         switch (expr.type) {
             case "CallExpression":
@@ -2502,6 +2513,8 @@ class Program implements TopOpWriter {
                 return this.emitStringOrBuffer(expr)
             case "ArrayExpression":
                 return this.emitArrayExpression(expr)
+            case "ObjectExpression":
+                return this.emitObjectExpression(expr)
             default:
                 // console.log(expr)
                 return throwError(expr, "unhandled expr: " + expr.type)
