@@ -26,6 +26,12 @@ void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *
 void jacs_free_ctx(jacs_ctx_t *ctx);
 void jacs_set_logging(jacs_ctx_t *ctx, uint8_t logging);
 
+#define JACS_FLAG_GC_STRESS (1U << 0)
+
+void jacs_set_global_flags(uint32_t global_flags);
+void jacs_reset_global_flags(uint32_t global_flags);
+uint32_t jacs_get_global_flags(void);
+
 // Jacscript manager service
 typedef struct {
     void *program_base;

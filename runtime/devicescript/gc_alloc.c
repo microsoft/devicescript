@@ -3,8 +3,6 @@
 
 #include "jacs_internal.h"
 
-#define GC_STRESS 0
-
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
 
@@ -274,9 +272,8 @@ static block_t *alloc_block(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
     if (gc->num_alloc < 32 || (gc->num_alloc & 31) == 0)
         jd_alloc_stack_check();
 
-#if GC_STRESS
-    jacs_gc(gc);
-#endif
+    if (jacs_get_global_flags() & JACS_FLAG_GC_STRESS)
+        jacs_gc(gc);
 
     block_t *b = find_free_block(gc, tag, words);
     if (!b) {

@@ -447,3 +447,14 @@ void jacs_set_logging(jacs_ctx_t *ctx, uint8_t logging) {
         ctx->log_counter_to_send = ctx->log_counter;
     }
 }
+
+uint32_t jacs_global_flags;
+void jacs_set_global_flags(uint32_t global_flags) {
+    jacs_global_flags |= global_flags;
+}
+void jacs_reset_global_flags(uint32_t global_flags) {
+    jacs_global_flags &= ~global_flags;
+}
+uint32_t jacs_get_global_flags(void) {
+    return jacs_global_flags;
+}
