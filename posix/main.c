@@ -273,6 +273,8 @@ int main(int argc, const char **argv) {
             jacs_img = arg;
         } else if (strcmp(arg, "-l") == 0) {
             enable_lstore = 1;
+        } else if (strcmp(arg, "-X") == 0) {
+            jacs_set_global_flags(JACS_FLAG_GC_STRESS);
         } else {
             fprintf(stderr, "unknown arg: %s\n", arg);
             return 1;

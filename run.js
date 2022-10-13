@@ -131,6 +131,7 @@ async function runServer(args) {
         const compfn = distPath + "/compiled.jacs"
         fs.writeFileSync(compfn, prog)
         const args = [compfn]
+        if (testMode) args.unshift("-X")
         if (serialPort) args.unshift(serialPort)
         else if (!testMode) args.unshift("8082")
         console.log("run", args)
