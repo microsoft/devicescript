@@ -28,4 +28,7 @@ void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
 #define JD_LSTORE_FILE_SIZE (4 * 1024 * 1024)
 #endif
 
+// disable reset_in packets - not too useful on servers
+#define JD_CONFIG_WATCHDOG 0
+
 #endif
