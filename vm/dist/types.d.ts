@@ -88,7 +88,15 @@ declare module Exts {
         if (jacs_interval)
             return;
         Module.jacsInit();
-        jacs_interval = setInterval(() => Module._jd_em_process(), 10);
+        jacs_interval = setInterval(() => {
+            try {
+                Module._jd_em_process();
+            }
+            catch (e) {
+                console.error(e);
+                jacsStop();
+            }
+        }, 10);
     }
     function jacsStop() {
         if (jacs_interval) {
