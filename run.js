@@ -1,4 +1,3 @@
-const jacsFactory = require("./vm-dev")
 const fs = require("fs")
 const path = require("path")
 const child_process = require("child_process")
@@ -16,6 +15,17 @@ let logParse = false
 let serialPort = ""
 let jacsFile = ""
 let isLibrary = false
+
+function jacsFactory() {
+    let d
+    try {
+        d = require("./vm-dev")
+    } catch {
+        console.log("using shipped VM!")
+        d = require("./vm")
+    }
+    return d()
+}
 
 let jacsHost
 async function getHost() {

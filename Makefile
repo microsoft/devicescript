@@ -107,6 +107,7 @@ compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts) $(wildca
 	cd compiler && node build.js
 
 comp-fast:
+	@mkdir -p built
 	cd compiler && node build.js --fast
 
 test-c: native comp
