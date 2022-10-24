@@ -38,7 +38,7 @@ static void ctr_xcrypt(const uint8_t *nonce, uint8_t *msg, unsigned size) {
     for (unsigned ptr = 0; ptr < size; ptr += BLOCK_BYTES) {
         setup_nonce(nonce, ctr);
         jd_aes_encrypt(aes_buf);
-        xor_buf(msg, aes_buf, size - ptr);
+        xor_buf(msg + ptr, aes_buf, size - ptr);
         ctr++;
     }
 }
@@ -91,8 +91,12 @@ void jd_aes_ccm_test(void) {
 
     jd_from_hex(key, "c0c1c2c3c4c5c6c7c8c9cacbcccdcecfc0c1c2c3c4c5c6c7c8c9cacbcccdcecf");
     jd_from_hex(nonce, "00000003020100a0a1a2a3a4a5");
-    size = jd_from_hex(plain, "616c61206d61206b6f7461");
+    size = jd_from_hex(plain, "616c61206d61206b6f74612c206b6f74206d6120616c652c20616e642065766572796f6e65206973206861707079");
 
     jd_aes_ccm_encrypt(key, nonce, tag, plain, size);
     DMESG("res: %s %s", jd_to_hex_a(plain, size), jd_to_hex_a(tag, JD_AES_CCM_TAG_BYTES));
+
+    int r = jd_aes_ccm_decrypt(key, nonce, tag, plain, size);
+    DMESG("dec: %s %d", jd_to_hex_a(plain, size), r);
+
 }
