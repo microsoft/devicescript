@@ -33,13 +33,13 @@ typedef struct {
 } jd_websock_t;
 static jd_websock_t _websock;
 
-int jd_conn_new(const char *hostname) {
+int jd_conn_new(const char *hostname, int port) {
     jd_websock_t *ws = &_websock;
     ws->msgptr = 0;
     ws->framestart = 0;
     jd_free(ws->hostname);
     ws->hostname = jd_strdup(hostname);
-    return jd_sock_new(hostname);
+    return jd_sock_new(hostname, port);
 }
 
 static int send_message(jd_websock_t *ws, const void *data, unsigned size, int tp) {
@@ -110,7 +110,7 @@ static void start_conn(jd_websock_t *ws) {
     jd_crypto_get_random(nonce, NONCE_SIZE);
     char *nonce_key = jd_to_hex_a(nonce, NONCE_SIZE);
 
-    char *msg = jd_sprintf_a(websock_start, ws->hostname, ws->hostname, websock_key, nonce,
+    char *msg = jd_sprintf_a(websock_start, ws->hostname, ws->hostname, websock_key, nonce_key,
                              app_get_fw_version());
     jd_free(websock_key);
     jd_free(nonce_key);
@@ -128,7 +128,7 @@ static void shift_msg(jd_websock_t *ws, unsigned n) {
     memmove(ws->msg, ws->msg + n, ws->msgptr);
 }
 
-static void on_data(jd_websock_t *ws, uint8_t *data, unsigned size) {
+static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
     for (;;) {
         if (ws->state == ST_ERROR)
             return;
@@ -277,7 +277,7 @@ static void on_data(jd_websock_t *ws, uint8_t *data, unsigned size) {
     }
 }
 
-void jd_sock_on_event(unsigned event, void *data, unsigned size) {
+void jd_sock_on_event(unsigned event, const void *data, unsigned size) {
     jd_websock_t *ws = &_websock;
     switch (event) {
     case JD_CONN_EV_OPEN:

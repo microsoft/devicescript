@@ -26,13 +26,13 @@ int jd_aes_ccm_decrypt(const uint8_t key[JD_AES_KEY_BYTES],
 #define JD_CONN_EV_MESSAGE 0x04
 
 // this on the socket level - messages are not encrypted and can be fragmented
-int jd_sock_new(const char *hostname);
-void jd_sock_on_event(unsigned event, void *data, unsigned size);
+int jd_sock_new(const char *hostname, int port);
+void jd_sock_on_event(unsigned event, const void *data, unsigned size);
 int jd_sock_write(const void *buf, unsigned size);
 
 // This is on the connection level - messages are decrypted and whole
 // Implemented in conn.c
-int jd_conn_new(const char *hostname);
+int jd_conn_new(const char *hostname, int port);
 void jd_conn_on_event(unsigned event, const void *data, unsigned size);
 int jd_conn_send_message(const void *data, unsigned size);
 
