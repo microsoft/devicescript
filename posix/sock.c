@@ -208,11 +208,15 @@ const jd_transport_t sock_transport = {
 //
 
 static int sock_fd;
-int jd_sock_new(const char *hostname, int port) {
+void jd_sock_close(void) {
     if (sock_fd) {
         close(sock_fd);
         sock_fd = 0;
     }
+}
+
+int jd_sock_new(const char *hostname, int port) {
+    jd_sock_close();
     char *port_num = jd_sprintf_a("%d", port);
     int r = sock_create_and_connect(hostname, port_num);
     jd_free(port_num);
@@ -242,7 +246,7 @@ static void raise_error(const char *msg) {
 }
 
 void jd_sock_process(void) {
-    static uint8_t sockbuf[256];
+    static uint8_t sockbuf[128];
 
     if (!sock_fd)
         return;
