@@ -29,6 +29,7 @@ int jd_aes_ccm_decrypt(const uint8_t key[JD_AES_KEY_BYTES],
 int jd_sock_new(const char *hostname, int port);
 void jd_sock_on_event(unsigned event, const void *data, unsigned size);
 int jd_sock_write(const void *buf, unsigned size);
+void jd_sock_close(void);
 
 // This is on the connection level - messages are decrypted and whole
 // Implemented in conn.c

@@ -1,5 +1,9 @@
 #include "jd_network.h"
 
+#define LOG(fmt, ...) printf("WS: " fmt "\n", ##__VA_ARGS__)
+#define LOGV(...) ((void)0)
+//#define LOGV LOG
+
 #define ST_OPENING 0x00
 #define ST_REQ_SENT 0x01
 #define ST_GOT_101 0x02
@@ -20,6 +24,9 @@
 #define FRAME_CTRL_CLOSE 0x8
 #define FRAME_CTRL_PING 0x9
 #define FRAME_CTRL_PONG 0xA
+
+#define FRAME_FIN 0x80
+#define LEN_MASK 0x80
 
 STATIC_ASSERT(NONCE_SIZE <= JD_AES_KEY_BYTES);
 
@@ -48,7 +55,7 @@ static int send_message(jd_websock_t *ws, const void *data, unsigned size, int t
     if (size > MAX_SHORT_SIZE)
         hdsize += 2;
     uint8_t *d = jd_alloc(hdsize + size);
-    d[0] = (tp << 4) | 1;
+    d[0] = tp | FRAME_FIN;
     uint8_t *mp = d + 2;
     if (size > MAX_SHORT_SIZE) {
         d[1] = MAX_SHORT_SIZE + 1;
@@ -58,7 +65,7 @@ static int send_message(jd_websock_t *ws, const void *data, unsigned size, int t
     } else {
         d[1] = size;
     }
-    d[1] = (d[1] << 1) | 1; // masking ON
+    d[1] |= LEN_MASK;
     uint32_t rnd = jd_random();
     memcpy(mp, &rnd, sizeof(rnd));
     uint8_t *dp = mp + 4;
@@ -78,13 +85,15 @@ int jd_conn_send_message(const void *data, unsigned size) {
 static void raise_error(jd_websock_t *ws, const char *msg) {
     if (ws->state == ST_ERROR)
         return; // double error?
+    LOG("error: %s", msg);
     ws->state = ST_ERROR;
     memset(ws->keybuf, 0xff, sizeof(ws->keybuf));
     jd_conn_on_event(JD_CONN_EV_ERROR, msg, strlen(msg));
+    jd_sock_close();
 }
 
 static const char *websock_start =             //
-    "GET /jacdac-ws0 HTTP/1.1\r\n"             //
+    "GET /jacdac-ws0/%s HTTP/1.1\r\n"          // deviceid
     "Host: %s\r\n"                             // host
     "Origin: http://%s\r\n"                    // host
     "Sec-WebSocket-Key: %s==\r\n"              // key 22 chars
@@ -110,8 +119,11 @@ static void start_conn(jd_websock_t *ws) {
     jd_crypto_get_random(nonce, NONCE_SIZE);
     char *nonce_key = jd_to_hex_a(nonce, NONCE_SIZE);
 
-    char *msg = jd_sprintf_a(websock_start, ws->hostname, ws->hostname, websock_key, nonce_key,
-                             app_get_fw_version());
+    uint64_t dd = jd_device_id();
+    char *devid = jd_to_hex_a(&dd, sizeof(dd));
+
+    char *msg = jd_sprintf_a(websock_start, devid, ws->hostname, ws->hostname, websock_key,
+                             nonce_key, app_get_fw_version());
     jd_free(websock_key);
     jd_free(nonce_key);
 
@@ -157,6 +169,7 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
         if (ws->msgptr >= 12) {
             if (memcmp(ws->msg, "HTTP/1.1 101", 12) == 0) {
                 ws->state = ST_GOT_101;
+                LOG("got 101");
             } else {
                 DMESG("bad resp: %s", ws->msg);
                 raise_error(ws, "websock response");
@@ -171,11 +184,11 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
                 lastLF = i;
                 // note that ws->msg[] is '\0'-terminated, so no chance of overflow
                 if (ws->msg[i + 1] == '\n') {
-                    shift_msg(ws, i + 1);
+                    shift_msg(ws, i + 2);
                     ws->state = ST_HEADERS_DONE;
                     break;
                 } else if (ws->msg[i + 1] == '\r' && ws->msg[i + 2] == '\n') {
-                    shift_msg(ws, i + 2);
+                    shift_msg(ws, i + 3);
                     ws->state = ST_HEADERS_DONE;
                     break;
                 }
@@ -186,6 +199,9 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
                 ws->msgptr = 0; // just drop the whole thing
             else
                 shift_msg(ws, lastLF);
+        } else if (ws->state == ST_HEADERS_DONE) {
+            LOG("headers done; %d", ws->msgptr);
+            jd_conn_on_event(JD_CONN_EV_OPEN, NULL, 0);
         }
     }
 
@@ -197,9 +213,10 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
         uint8_t *frame = ws->msg + ws->framestart;
         int frametype = frame[0];
         int framelen = frame[1];
-        if (framelen & 1)
+        if (framelen & LEN_MASK) {
             raise_error(ws, "masked server pkt");
-        framelen >>= 1;
+            return;
+        }
         int datastart = ws->framestart + 2;
         if (framelen == 127) {
             raise_error(ws, "packet 64k+");
@@ -221,8 +238,8 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
         if (ws->msgptr < endptr)
             return;
 
-        int isfin = frametype & 1;
-        frametype >>= 4;
+        int isfin = (frametype & FRAME_FIN) != 0;
+        frametype &= 0x7f;
 
         if (frametype >= FRAME_CTRL_CLOSE) {
             if (!isfin) {
@@ -235,6 +252,7 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
             }
             if (frametype == FRAME_CTRL_CLOSE) {
                 ws->state = ST_CLOSED;
+                LOG("close frame");
                 jd_conn_on_event(JD_CONN_EV_CLOSE, ws->msg + datastart, framelen);
             } else if (frametype == FRAME_CTRL_PING) {
                 int r = send_message(ws, frame, framelen, FRAME_CTRL_PONG);
@@ -284,6 +302,7 @@ void jd_sock_on_event(unsigned event, const void *data, unsigned size) {
         start_conn(ws);
         break;
     case JD_CONN_EV_MESSAGE:
+        // DMESG("msg '%-s'", jd_json_escape(data, size));
         on_data(ws, data, size);
         break;
     case JD_CONN_EV_CLOSE:
@@ -311,6 +330,9 @@ __attribute__((weak)) void jd_conn_on_event(unsigned event, const void *data, un
         arg = jd_alloc(size + 1);
         memcpy(arg, data, size);
     }
-    DMESG("CONN %s '%s'", jd_conn_event_name(event), arg ? arg : "");
+    DMESG("CONN: ev %s '%s'", jd_conn_event_name(event), arg ? arg : "");
     jd_free(arg);
+
+    if (event == JD_CONN_EV_OPEN)
+        jd_conn_send_message("lalala", 6);
 }
