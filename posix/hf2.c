@@ -10,7 +10,7 @@
 
 #include "uf2hid.h"
 
-#define LOG(fmt, ...) printf("HF2: " fmt "\n", ##__VA_ARGS__)
+#define LOG(fmt, ...) DMESG("HF2: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
 
 #define CHK(cond)                                                                                  \

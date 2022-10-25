@@ -14,7 +14,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#define LOG(fmt, ...) printf("SOCK: " fmt "\n", ##__VA_ARGS__)
+#define LOG(fmt, ...) DMESG("SOCK: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
 //#define LOGV LOG
 

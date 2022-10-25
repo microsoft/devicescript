@@ -10,7 +10,7 @@
 #include "jacscript/jacscript.h"
 #include "storage/jd_storage.h"
 
-#define LOG(fmt, ...) printf("main: " fmt "\n", ##__VA_ARGS__)
+#define LOG(fmt, ...) DMESG("main: " fmt, ##__VA_ARGS__)
 
 static bool test_mode;
 static bool remote_deploy;

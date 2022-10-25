@@ -12,7 +12,7 @@
 #include <emscripten/emscripten.h>
 #include <emscripten/websocket.h>
 
-#define LOG(fmt, ...) printf("WS: " fmt "\n", ##__VA_ARGS__)
+#define LOG(fmt, ...) DMESG("WS: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
 //#define LOGV LOG
 
