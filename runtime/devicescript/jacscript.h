@@ -2,6 +2,7 @@
 
 #include "jd_protocol.h"
 #include "jd_client.h"
+#include "network/jd_network.h"
 #include "jacdac/dist/c/jacscriptmanager.h"
 #include "jacdac/dist/c/timeseriesaggregator.h"
 
