@@ -27,6 +27,7 @@ JDS = jacdac-c/source
 SRC = $(wildcard posix/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
 	$(wildcard jacdac-c/jacscript/*.c) \
+	$(wildcard jacdac-c/network/*.c) \
 	jacdac-c/jacdac/dist/c/jd_spec_pack.c \
 	$(JDS)/jd_util.c \
 	$(JDS)/jd_control.c \

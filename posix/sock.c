@@ -60,10 +60,10 @@ static int forced_read(int fd, void *buf, size_t nbytes) {
     return numread;
 }
 
-static int forced_write(int fd, void *buf, size_t nbytes) {
+static int forced_write(int fd, const void *buf, size_t nbytes) {
     int numread = 0;
     while ((int)nbytes > numread) {
-        int r = write(fd, (uint8_t *)buf + numread, nbytes - numread);
+        int r = write(fd, (const uint8_t *)buf + numread, nbytes - numread);
         if (r <= 0)
             return r;
         numread += r;
@@ -133,10 +133,9 @@ int sock_send_frame(sock_t ctx, jd_frame_t *frame) {
     return 0;
 }
 
-int sock_connect(sock_t ctx, const char *port_num) {
-    const char *hostname = is_docker() ? "host.docker.internal" : "localhost";
-
-    CHK(ctx->sockfd == 0 && ctx->reading_thread == 0);
+static int sock_create_and_connect(const char *hostname, const char *port_num) {
+    if (strcmp(hostname, "localhost") == 0 && is_docker())
+        hostname = "host.docker.internal";
 
     struct addrinfo hints = {
         .ai_family = AF_UNSPEC,
@@ -150,13 +149,15 @@ int sock_connect(sock_t ctx, const char *port_num) {
         return -1;
     }
 
+    int sockfd = -1;
+
     for (struct addrinfo *rp = result; rp != NULL; rp = rp->ai_next) {
         int sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
         if (sfd == -1)
             continue;
 
         if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1) {
-            ctx->sockfd = sfd;
+            sockfd = sfd;
             break;
         }
 
@@ -168,14 +169,21 @@ int sock_connect(sock_t ctx, const char *port_num) {
 
     freeaddrinfo(result);
 
-    if (ctx->sockfd == 0)
-        return -1;
+    if (sockfd < 0)
+        return sockfd;
 
     LOG("connected to %s:%s", hostname, port_num);
+    return sockfd;
+}
 
+int sock_connect(sock_t ctx, const char *port_num) {
+    CHK(ctx->sockfd == 0 && ctx->reading_thread == 0);
+    int s = sock_create_and_connect("localhost", port_num);
+    if (s < 0)
+        return s;
+    ctx->sockfd = s;
     pthread_mutex_init(&ctx->talk_mutex, NULL);
     CHK_ERR(pthread_create(&ctx->reading_thread, NULL, sock_read_loop, ctx));
-
     return 0;
 }
 
@@ -194,5 +202,85 @@ const jd_transport_t sock_transport = {
     .send_frame = sock_send_frame,
     .free = sock_free,
 };
+
+//
+// for websockets
+//
+
+static int sock_fd;
+int jd_sock_new(const char *hostname, int port) {
+    if (sock_fd) {
+        close(sock_fd);
+        sock_fd = 0;
+    }
+    char *port_num = jd_sprintf_a("%d", port);
+    int r = sock_create_and_connect(hostname, port_num);
+    jd_free(port_num);
+    if (r > 0) {
+        sock_fd = r;
+        jd_sock_on_event(JD_CONN_EV_OPEN, NULL, 0);
+        return 0;
+    }
+    return -1;
+}
+
+int jd_sock_write(const void *buf, unsigned size) {
+    if (!sock_fd)
+        return -10;
+    // DMESG("wr %s", (const char*)buf);
+    if (forced_write(sock_fd, buf, size) == (int)size)
+        return 0;
+    return -1;
+}
+
+static void raise_error(const char *msg) {
+    close(sock_fd);
+    sock_fd = 0;
+    if (msg)
+        jd_sock_on_event(JD_CONN_EV_ERROR, msg, strlen(msg));
+    jd_sock_on_event(JD_CONN_EV_CLOSE, NULL, 0);
+}
+
+void jd_sock_process(void) {
+    static uint8_t sockbuf[256];
+
+    if (!sock_fd)
+        return;
+
+    for (;;) {
+        int r = recv(sock_fd, sockbuf, sizeof(sockbuf), MSG_DONTWAIT);
+        if (r == 0) {
+            raise_error(NULL);
+            return;
+        }
+        if (r > 0) {
+            jd_sock_on_event(JD_CONN_EV_MESSAGE, sockbuf, r);
+        } else {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break;
+            else {
+                raise_error("recv error");
+                return;
+            }
+        }
+    }
+}
+
+static int random_fd;
+void jd_crypto_get_random(uint8_t *buf, unsigned size) {
+    if (!random_fd) {
+        const char *path = "/dev/urandom";
+        int fd = open(path, O_RDONLY);
+        if (fd < 0) {
+            DMESG("can't open %s", path);
+            jd_panic();
+        }
+        random_fd = fd;
+    }
+    if (forced_read(random_fd, buf, size) != (int)size) {
+        DMESG("can't read random");
+        jd_panic();
+    }
+}
 
 #endif

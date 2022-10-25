@@ -181,10 +181,13 @@ int load_image(const char *name) {
     return 0;
 }
 
+void jd_sock_process(void);
+
 static void client_process(void) {
     jd_process_everything();
     tx_process();
     jd_lstore_process();
+    jd_sock_process();
 }
 
 static void run_sample(const char *name) {
@@ -259,6 +262,7 @@ int main(int argc, const char **argv) {
     }
 #endif
     int enable_lstore = 0;
+    int websock = 0;
 
     for (int i = 1; i < argc; ++i) {
         const char *arg = argv[i];
@@ -275,13 +279,15 @@ int main(int argc, const char **argv) {
             enable_lstore = 1;
         } else if (strcmp(arg, "-X") == 0) {
             jacs_set_global_flags(JACS_FLAG_GC_STRESS);
+        } else if (strcmp(arg, "-w") == 0) {
+            websock = 1;
         } else {
             fprintf(stderr, "unknown arg: %s\n", arg);
             return 1;
         }
     }
 
-    if (!transport && !jacs_img) {
+    if (!transport && !jacs_img && !websock) {
         fprintf(stderr, "need transport and/or image\n");
         return 1;
     }
@@ -308,6 +314,9 @@ int main(int argc, const char **argv) {
     }
 
     jd_client_subscribe(client_event_handler, NULL);
+
+    if (websock)
+        jd_conn_new("localhost", 7071);
 
     if (jacs_img) {
         run_sample(jacs_img);
