@@ -33,8 +33,10 @@ int jd_sock_write(const void *buf, unsigned size);
 // This is on the connection level - messages are decrypted and whole
 // Implemented in conn.c
 int jd_conn_new(const char *hostname);
-void jd_conn_on_event(unsigned event, void *data, unsigned size);
+void jd_conn_on_event(unsigned event, const void *data, unsigned size);
 int jd_conn_send_message(const void *data, unsigned size);
 
 // to implement:
 void jd_crypto_get_random(uint8_t *buf, unsigned size);
+
+const char *jd_conn_event_name(unsigned event);
