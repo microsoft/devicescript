@@ -1,6 +1,6 @@
 #include "jd_network.h"
 
-#define LOG(fmt, ...) printf("WS: " fmt "\n", ##__VA_ARGS__)
+#define LOG(fmt, ...) DMESG("WS: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
 //#define LOGV LOG
 
@@ -14,8 +14,6 @@
 
 #define ST_ERROR 0xff
 
-#define NONCE_SIZE (3 * 8)
-
 #define MAX_MESSAGE 270
 
 #define FRAME_CONT 0x0
@@ -28,25 +26,31 @@
 #define FRAME_FIN 0x80
 #define LEN_MASK 0x80
 
-STATIC_ASSERT(NONCE_SIZE <= JD_AES_KEY_BYTES);
-
 typedef struct {
-    char *hostname;
     uint8_t state;
     uint16_t msgptr;
     uint16_t framestart;
-    uint8_t keybuf[JD_AES_KEY_BYTES];
     uint8_t msg[MAX_MESSAGE + 1];
 } jd_websock_t;
 static jd_websock_t _websock;
 
-int jd_conn_new(const char *hostname, int port) {
+int jd_websock_new(const char *hostname, int port, const char *protokey) {
     jd_websock_t *ws = &_websock;
     ws->msgptr = 0;
     ws->framestart = 0;
-    jd_free(ws->hostname);
-    ws->hostname = jd_strdup(hostname);
-    return jd_sock_new(hostname, port);
+
+    // save hostname and proto for later
+    // we use msg[] buffer, since it won't be used until the socket is open
+    unsigned hn_sz = strlen(hostname);
+    unsigned pr_sz = strlen(protokey);
+    if (hn_sz + pr_sz + 5 > MAX_MESSAGE)
+        jd_panic();
+    memcpy(ws->msg, hostname, hn_sz);
+    ws->msg[hn_sz] = 0;
+    memcpy(ws->msg + hn_sz + 1, protokey, pr_sz);
+    ws->msg[hn_sz + 1 + pr_sz] = 0;
+
+    return jd_tcpsock_new(hostname, port);
 }
 
 static int send_message(jd_websock_t *ws, const void *data, unsigned size, int tp) {
@@ -66,18 +70,18 @@ static int send_message(jd_websock_t *ws, const void *data, unsigned size, int t
         d[1] = size;
     }
     d[1] |= LEN_MASK;
-    uint32_t rnd = jd_random();
+    uint32_t rnd = jd_random(); // see comment on WebSocket-Key
     memcpy(mp, &rnd, sizeof(rnd));
     uint8_t *dp = mp + 4;
     for (unsigned i = 0; i < size; ++i) {
         dp[i] = ((const uint8_t *)data)[i] ^ mp[i & 3];
     }
-    int r = jd_sock_write(d, hdsize + size);
+    int r = jd_tcpsock_write(d, hdsize + size);
     jd_free(d);
     return r;
 }
 
-int jd_conn_send_message(const void *data, unsigned size) {
+int jd_websock_send_message(const void *data, unsigned size) {
     jd_websock_t *ws = &_websock;
     return send_message(ws, data, size, FRAME_BIN);
 }
@@ -87,18 +91,17 @@ static void raise_error(jd_websock_t *ws, const char *msg) {
         return; // double error?
     LOG("error: %s", msg);
     ws->state = ST_ERROR;
-    memset(ws->keybuf, 0xff, sizeof(ws->keybuf));
-    jd_conn_on_event(JD_CONN_EV_ERROR, msg, strlen(msg));
-    jd_sock_close();
+    jd_websock_on_event(JD_CONN_EV_ERROR, msg, strlen(msg));
+    jd_tcpsock_close();
 }
 
-static const char *websock_start =             //
-    "GET /jacdac-ws0/%s HTTP/1.1\r\n"          // deviceid
-    "Host: %s\r\n"                             // host
-    "Origin: http://%s\r\n"                    // host
-    "Sec-WebSocket-Key: %s==\r\n"              // key 22 chars
-    "Sec-WebSocket-Protocol: jacdac-ws-%s\r\n" // nonce
-    "User-Agent: jacdac-c/%s"                  // version
+static const char *websock_start =              //
+    "GET /jacdac-ws0/%s HTTP/1.1\r\n"           // deviceid
+    "Host: %s\r\n"                              // host
+    "Origin: http://%s\r\n"                     // host
+    "Sec-WebSocket-Key: %s==\r\n"               // key 22 chars
+    "Sec-WebSocket-Protocol: jacdac-key-%s\r\n" // nonce
+    "User-Agent: jacdac-c/%s"                   // version
     "Pragma: no-cache\r\n"
     "Cache-Control: no-cache\r\n"
     "Upgrade: websocket\r\n"
@@ -111,23 +114,27 @@ static void start_conn(jd_websock_t *ws) {
         return; // ???
 
     ws->state = ST_REQ_SENT;
-    uint8_t *nonce = ws->keybuf;
 
-    jd_crypto_get_random(nonce, 11);
-    char *websock_key = jd_to_hex_a(nonce, 11);
-
-    jd_crypto_get_random(nonce, NONCE_SIZE);
-    char *nonce_key = jd_to_hex_a(nonce, NONCE_SIZE);
+    // We don't really care about this one.
+    // By RFC6455 it should be base64 encoded and we should check
+    // Sec-WebSocket-Accept but it only really matters for web browsers
+    // trying to protect against untrusted websites.
+    // Same for masking key in send_message().
+    uint8_t wskey[11];
+    jd_crypto_get_random(wskey, sizeof(wskey));
+    char *websock_key = jd_to_hex_a(wskey, sizeof(wskey));
 
     uint64_t dd = jd_device_id();
     char *devid = jd_to_hex_a(&dd, sizeof(dd));
 
-    char *msg = jd_sprintf_a(websock_start, devid, ws->hostname, ws->hostname, websock_key,
-                             nonce_key, app_get_fw_version());
-    jd_free(websock_key);
-    jd_free(nonce_key);
+    const char *host = (char *)ws->msg;
+    const char *proto = host + strlen(host) + 1;
 
-    if (jd_sock_write(msg, strlen(msg)) < 0) {
+    char *msg =
+        jd_sprintf_a(websock_start, devid, host, host, websock_key, proto, app_get_fw_version());
+    jd_free(websock_key);
+
+    if (jd_tcpsock_write(msg, strlen(msg)) < 0) {
         raise_error(ws, "sock write error");
     }
 }
@@ -201,7 +208,7 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
                 shift_msg(ws, lastLF);
         } else if (ws->state == ST_HEADERS_DONE) {
             LOG("headers done; %d", ws->msgptr);
-            jd_conn_on_event(JD_CONN_EV_OPEN, NULL, 0);
+            jd_websock_on_event(JD_CONN_EV_OPEN, NULL, 0);
         }
     }
 
@@ -253,7 +260,7 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
             if (frametype == FRAME_CTRL_CLOSE) {
                 ws->state = ST_CLOSED;
                 LOG("close frame");
-                jd_conn_on_event(JD_CONN_EV_CLOSE, ws->msg + datastart, framelen);
+                jd_websock_on_event(JD_CONN_EV_CLOSE, ws->msg + datastart, framelen);
             } else if (frametype == FRAME_CTRL_PING) {
                 int r = send_message(ws, frame, framelen, FRAME_CTRL_PONG);
                 if (r) {
@@ -287,7 +294,7 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
 
             if (isfin) {
                 unsigned full_len = ws->framestart;
-                jd_conn_on_event(JD_CONN_EV_MESSAGE, ws->msg, full_len);
+                jd_websock_on_event(JD_CONN_EV_MESSAGE, ws->msg, full_len);
                 shift_msg(ws, full_len);
                 ws->framestart = 0;
             }
@@ -295,7 +302,7 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
     }
 }
 
-void jd_sock_on_event(unsigned event, const void *data, unsigned size) {
+void jd_tcpsock_on_event(unsigned event, const void *data, unsigned size) {
     jd_websock_t *ws = &_websock;
     switch (event) {
     case JD_CONN_EV_OPEN:
@@ -306,9 +313,22 @@ void jd_sock_on_event(unsigned event, const void *data, unsigned size) {
         on_data(ws, data, size);
         break;
     case JD_CONN_EV_CLOSE:
-    case JD_CONN_EV_ERROR:
-        jd_conn_on_event(event, data, size);
+        jd_websock_on_event(event, data, size);
         break;
+    case JD_CONN_EV_ERROR:
+        ws->state = ST_ERROR;
+        jd_tcpsock_close();
+        jd_websock_on_event(event, data, size);
+        break;
+    }
+}
+
+void jd_websock_close(void) {
+    jd_websock_t *ws = &_websock;
+    if (ws->state != ST_ERROR && ws->state != ST_CLOSED) {
+        ws->state = ST_CLOSED;
+        jd_tcpsock_close();
+        jd_websock_on_event(JD_CONN_EV_CLOSE, NULL, 0);
     }
 }
 
@@ -318,21 +338,8 @@ static const char *event_names[] = {
     [JD_CONN_EV_ERROR] = "error",
     [JD_CONN_EV_MESSAGE] = "message",
 };
-const char *jd_conn_event_name(unsigned event) {
+const char *jd_websock_event_name(unsigned event) {
     if (event < sizeof(event_names) / sizeof(event_names[0]))
         return event_names[event];
     return "???";
-}
-
-__attribute__((weak)) void jd_conn_on_event(unsigned event, const void *data, unsigned size) {
-    char *arg = NULL;
-    if (data) {
-        arg = jd_alloc(size + 1);
-        memcpy(arg, data, size);
-    }
-    DMESG("CONN: ev %s '%s'", jd_conn_event_name(event), arg ? arg : "");
-    jd_free(arg);
-
-    if (event == JD_CONN_EV_OPEN)
-        jd_conn_send_message("lalala", 6);
 }

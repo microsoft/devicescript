@@ -58,6 +58,8 @@ void jd_aes_ccm_encrypt(const uint8_t key[JD_AES_KEY_BYTES],
     xor_buf(tag, aes_buf, JD_AES_CCM_TAG_BYTES);
 
     ctr_xcrypt(nonce, plain, size);
+
+    jd_aes_clear_key();
 }
 
 int jd_aes_ccm_decrypt(const uint8_t key[JD_AES_KEY_BYTES],
@@ -75,6 +77,8 @@ int jd_aes_ccm_decrypt(const uint8_t key[JD_AES_KEY_BYTES],
     setup_nonce(nonce, 0);
     jd_aes_encrypt(aes_buf);
     xor_buf(tag, aes_buf, JD_AES_CCM_TAG_BYTES);
+
+    jd_aes_clear_key();
 
     int sum = 0;
     for (unsigned i = 0; i < JD_AES_CCM_TAG_BYTES; ++i)

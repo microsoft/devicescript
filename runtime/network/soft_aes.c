@@ -18,4 +18,9 @@ void jd_aes_setup_key(const uint8_t key[JD_AES_KEY_BYTES]) {
 void jd_aes_encrypt(uint8_t block[JD_AES_BLOCK_BYTES]) {
     AES_ECB_encrypt(&aes_ctx, block);
 }
+
+void jd_aes_clear_key(void) {
+    memset(&aes_ctx, 0, sizeof(aes_ctx));
+}
+
 #endif
