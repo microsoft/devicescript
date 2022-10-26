@@ -412,7 +412,7 @@ int encws_respond_method(uint32_t method_id, uint32_t status, int numvals, doubl
     if (state->conn_status != JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED)
         return -1;
 
-    unsigned payload_size = 4 + sizeof(double) * numvals;
+    unsigned payload_size = 8 + sizeof(double) * numvals;
     uint8_t *msg = prep_msg(JD_CLOUD_ADAPTER_CMD_ACK_CLOUD_COMMAND, payload_size);
     jd_cloud_adapter_ack_cloud_command_t *resp = (void *)(msg + CHD_SIZE);
     resp->seq_no = method_id;
