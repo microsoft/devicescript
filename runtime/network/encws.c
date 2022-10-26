@@ -162,7 +162,7 @@ static void encws_reconnect(srv_t *state) {
         return;
     }
 
-    LOG("connecting to ws://%s%s", state->hub_name, state->device_id);
+    LOG("connecting to ws://%s:%d%s", state->hub_name, state->portnum, state->device_id);
 
     int r = jd_encsock_new(state->hub_name, state->portnum, state->device_id, state->master_key);
     if (r)
@@ -234,8 +234,6 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
     state->device_id = path;
     state->portnum = portnum;
     memcpy(state->master_key, master_key, JD_AES_KEY_BYTES);
-
-    LOG("conn string: ws://%s:%d%s", host, portnum, path);
 
     if (save) {
         memcpy(conn, conn_str, conn_sz); // restore
