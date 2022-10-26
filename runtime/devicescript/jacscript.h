@@ -55,6 +55,7 @@ typedef struct {
     int (*respond_method)(uint32_t method_id, uint32_t status, int numvals, double *vals);
 } jacscloud_api_t;
 extern const jacscloud_api_t noop_cloud;
+extern const jacscloud_api_t encws_cloud;
 void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, const double *vals);
 void jacscloud_init(const jacscloud_api_t *cloud_api);
 
@@ -64,3 +65,9 @@ void tsagg_update(const char *name, double v);
 // extcloud.c
 extern const jacscloud_api_t extcloud;
 void extcloud_init(void);
+
+// aggbuffer.c
+void aggbuffer_init(const jacscloud_api_t *api);
+int aggbuffer_flush(void);
+int aggbuffer_upload(const char *label, jd_device_service_t *service,
+                     jd_timeseries_aggregator_stored_report_t *data);

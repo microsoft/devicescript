@@ -194,12 +194,6 @@ value_t jacs_buffer_op(jacs_activation_t *frame, uint32_t fmt0, uint32_t offset,
                        value_t *setv);
 double jacs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
 
-// aggbuffer.c
-void aggbuffer_init(const jacscloud_api_t *api);
-int aggbuffer_flush(void);
-int aggbuffer_upload(const char *label, jd_device_service_t *service,
-                     jd_timeseries_aggregator_stored_report_t *data);
-
 void *jacs_try_alloc(jacs_ctx_t *ctx, uint32_t size);
 void jacs_free(jacs_ctx_t *ctx, void *ptr);
 void jacs_oom(jacs_ctx_t *ctx, unsigned size);
