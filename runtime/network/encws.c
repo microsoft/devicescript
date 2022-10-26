@@ -3,6 +3,8 @@
 #include "jacdac/dist/c/cloudadapter.h"
 #include "jacscript.h"
 
+#include "interfaces/jd_usb.h" // jd_net_disable_fwd() proto
+
 #define SETTINGS_KEY "encws_connstr"
 
 #define LOG(fmt, ...) DMESG("ENCWS: " fmt, ##__VA_ARGS__)
@@ -19,6 +21,7 @@ struct srv_state {
 
     // non-regs
     bool waiting_for_net;
+    bool fwd_en;
     uint32_t reconnect_timer;
     uint32_t flush_timer;
     uint32_t watchdog_timer_ms;
@@ -106,6 +109,8 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
             memcpy(vals, dblptr, numdbl * sizeof(double));
             jacscloud_on_method((char *)label, ridval, numdbl, vals);
             jd_free(vals);
+        } else if (cmd == 0x90) {
+            state->fwd_en = payload[0];
         } else {
             LOG("unknown cmd %x", cmd);
         }
@@ -139,6 +144,7 @@ void jd_encsock_on_event(unsigned event, const void *data, unsigned size) {
         on_msg(state, (void *)data, size);
         break;
     case JD_CONN_EV_CLOSE:
+        state->fwd_en = 0;
         set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED);
         break;
     case JD_CONN_EV_ERROR:
@@ -419,6 +425,21 @@ int encws_respond_method(uint32_t method_id, uint32_t status, int numvals, doubl
     resp->status = status;
     memcpy(resp->result, vals, numvals * sizeof(double));
     return publish_and_free(msg, payload_size);
+}
+
+void jd_net_disable_fwd() {
+    srv_t *state = _encws_state;
+    state->fwd_en = 0;
+}
+
+int jd_net_send_frame(void *frame) {
+    srv_t *state = _encws_state;
+    if (!state->fwd_en)
+        return 0;
+    jd_frame_t *f = frame;
+    if (f->size == 0)
+        return -1;
+    return encws_publish(f, JD_FRAME_SIZE(f));
 }
 
 const jacscloud_api_t encws_cloud = {
