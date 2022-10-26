@@ -34,18 +34,22 @@ void jd_tcpsock_close(void);
 
 // This is on WebSocket level - messages are whole
 // Implemented in websock_conn.c
-int jd_websock_new(const char *hostname, int port, const char *protokey);
+int jd_websock_new(const char *hostname, int port, const char *path, const char *protokey);
 void jd_websock_on_event(unsigned event, const void *data, unsigned size);
 int jd_websock_send_message(const void *data, unsigned size);
 void jd_websock_close(void);
 
 // This is on encrypted packet transport level - messages are whole
 // and this will try to re-connect.
-int jd_encsock_new(const char *hostname, int port, const uint8_t master_key[JD_AES_KEY_BYTES]);
+int jd_encsock_new(const char *hostname, int port, const char *path, const uint8_t master_key[JD_AES_KEY_BYTES]);
 void jd_encsock_on_event(unsigned event, const void *data, unsigned size);
 int jd_encsock_send_message(const void *data, unsigned size);
+void jd_encsock_close(void);
+
+const char *jd_websock_event_name(unsigned event);
 
 // to implement:
 void jd_crypto_get_random(uint8_t *buf, unsigned size);
 
-const char *jd_websock_event_name(unsigned event);
+char *jd_settings_get(const char *key);
+int jd_settings_set(const char *key, const char *val);

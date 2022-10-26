@@ -33,7 +33,8 @@ static jd_encsock_t _encsock;
 STATIC_ASSERT(JD_AES_CCM_NONCE_BYTES <= JD_AES_BLOCK_BYTES);
 STATIC_ASSERT(JD_AES_KEY_BYTES / 2 <= JD_AES_BLOCK_BYTES);
 
-int jd_encsock_new(const char *hostname, int port, const uint8_t master_key[JD_AES_KEY_BYTES]) {
+int jd_encsock_new(const char *hostname, int port, const char *path,
+                   const uint8_t master_key[JD_AES_KEY_BYTES]) {
     jd_encsock_t *es = &_encsock;
 
     int sum = 0;
@@ -46,7 +47,8 @@ int jd_encsock_new(const char *hostname, int port, const uint8_t master_key[JD_A
     es->state = ST_NEW;
     jd_crypto_get_random(es->client_nonce, JD_AES_KEY_BYTES / 2);
     char *key = jd_to_hex_a(es->client_nonce, JD_AES_KEY_BYTES / 2);
-    int r = jd_websock_new(hostname, port, key);
+    key = jd_sprintf_a("jacdac-key-%-s", key);
+    int r = jd_websock_new(hostname, port, path, key);
     jd_free(key);
     return r;
 }
@@ -208,6 +210,12 @@ void jd_websock_on_event(unsigned event, const void *data, unsigned size) {
         jd_encsock_on_event(event, data, size);
         break;
     }
+}
+
+void jd_encsock_close(void) {
+    jd_encsock_t *es = &_encsock;
+    if (es->state != ST_CLOSED && es->state != ST_ERROR)
+        jd_websock_close();
 }
 
 __attribute__((weak)) void jd_encsock_on_event(unsigned event, const void *data, unsigned size) {

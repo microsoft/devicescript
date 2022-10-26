@@ -30,11 +30,11 @@ typedef struct {
     uint8_t state;
     uint16_t msgptr;
     uint16_t framestart;
-    uint8_t msg[MAX_MESSAGE + 1];
+    __attribute__((aligned(sizeof(void *)))) uint8_t msg[MAX_MESSAGE + 1];
 } jd_websock_t;
 static jd_websock_t _websock;
 
-int jd_websock_new(const char *hostname, int port, const char *protokey) {
+int jd_websock_new(const char *hostname, int port, const char *path, const char *proto) {
     jd_websock_t *ws = &_websock;
     ws->msgptr = 0;
     ws->framestart = 0;
@@ -42,13 +42,17 @@ int jd_websock_new(const char *hostname, int port, const char *protokey) {
     // save hostname and proto for later
     // we use msg[] buffer, since it won't be used until the socket is open
     unsigned hn_sz = strlen(hostname);
-    unsigned pr_sz = strlen(protokey);
-    if (hn_sz + pr_sz + 5 > MAX_MESSAGE)
+    unsigned pr_sz = strlen(proto);
+    unsigned pt_sz = strlen(path);
+    if (hn_sz + pr_sz + pt_sz + 5 > MAX_MESSAGE)
         jd_panic();
+
     memcpy(ws->msg, hostname, hn_sz);
     ws->msg[hn_sz] = 0;
-    memcpy(ws->msg + hn_sz + 1, protokey, pr_sz);
+    memcpy(ws->msg + hn_sz + 1, proto, pr_sz);
     ws->msg[hn_sz + 1 + pr_sz] = 0;
+    memcpy(ws->msg + hn_sz + 1 + pr_sz + 1, path, pt_sz);
+    ws->msg[hn_sz + 1 + pr_sz + 1 + pt_sz] = 0;
 
     return jd_tcpsock_new(hostname, port);
 }
@@ -95,13 +99,13 @@ static void raise_error(jd_websock_t *ws, const char *msg) {
     jd_tcpsock_close();
 }
 
-static const char *websock_start =              //
-    "GET /jacdac-ws0/%s HTTP/1.1\r\n"           // deviceid
-    "Host: %s\r\n"                              // host
-    "Origin: http://%s\r\n"                     // host
-    "Sec-WebSocket-Key: %s==\r\n"               // key 22 chars
-    "Sec-WebSocket-Protocol: jacdac-key-%s\r\n" // nonce
-    "User-Agent: jacdac-c/%s"                   // version
+static const char *websock_start =   //
+    "GET %s HTTP/1.1\r\n"            // path
+    "Host: %s\r\n"                   // host
+    "Origin: http://%s\r\n"          // host
+    "Sec-WebSocket-Key: %s==\r\n"    // key 22 chars
+    "Sec-WebSocket-Protocol: %s\r\n" // proto
+    "User-Agent: jacdac-c/%s"        // version
     "Pragma: no-cache\r\n"
     "Cache-Control: no-cache\r\n"
     "Upgrade: websocket\r\n"
@@ -124,14 +128,12 @@ static void start_conn(jd_websock_t *ws) {
     jd_crypto_get_random(wskey, sizeof(wskey));
     char *websock_key = jd_to_hex_a(wskey, sizeof(wskey));
 
-    uint64_t dd = jd_device_id();
-    char *devid = jd_to_hex_a(&dd, sizeof(dd));
-
     const char *host = (char *)ws->msg;
     const char *proto = host + strlen(host) + 1;
+    const char *path = proto + strlen(proto) + 1;
 
     char *msg =
-        jd_sprintf_a(websock_start, devid, host, host, websock_key, proto, app_get_fw_version());
+        jd_sprintf_a(websock_start, path, host, host, websock_key, proto, app_get_fw_version());
     jd_free(websock_key);
 
     if (jd_tcpsock_write(msg, strlen(msg)) < 0) {
