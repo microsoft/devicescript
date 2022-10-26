@@ -29,15 +29,8 @@ SRC = $(wildcard posix/*.c) \
 	$(wildcard jacdac-c/jacscript/*.c) \
 	$(wildcard jacdac-c/network/*.c) \
 	jacdac-c/jacdac/dist/c/jd_spec_pack.c \
-	$(JDS)/jd_util.c \
-	$(JDS)/jd_control.c \
-	$(JDS)/jd_services.c \
-	$(JDS)/jd_send_util.c \
-	$(JDS)/jd_opipe.c \
-	$(JDS)/jd_ipipe.c \
-	$(JDS)/jd_queue.c \
-	$(JDS)/interfaces/tx_queue.c \
-	$(JDS)/interfaces/event_queue.c \
+	$(wildcard $(JDS)/*.c) \
+	$(wildcard $(JDS)/interfaces/*.c) \
 	jacdac-c/storage/crc32.c \
 	jacdac-c/storage/lstore.c \
 

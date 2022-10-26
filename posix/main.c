@@ -41,6 +41,10 @@ void init_jacscript_manager(void);
 void app_init_services() {
     jd_role_manager_init();
     init_jacscript_manager();
+
+    encws_init();
+    jacscloud_init(&encws_cloud);
+    tsagg_init(&encws_cloud);
 }
 
 struct {
@@ -181,13 +185,13 @@ int load_image(const char *name) {
     return 0;
 }
 
-void jd_sock_process(void);
+void jd_tcpsock_process(void);
 
 static void client_process(void) {
     jd_process_everything();
     tx_process();
     jd_lstore_process();
-    jd_sock_process();
+    jd_tcpsock_process();
 }
 
 static void run_sample(const char *name) {
@@ -314,9 +318,6 @@ int main(int argc, const char **argv) {
     }
 
     jd_client_subscribe(client_event_handler, NULL);
-
-    if (websock)
-        jd_conn_new("localhost", 7071);
 
     if (jacs_img) {
         run_sample(jacs_img);
