@@ -208,44 +208,46 @@ const jd_transport_t sock_transport = {
 //
 
 static int sock_fd;
-void jd_sock_close(void) {
+static void raise_error(const char *msg) {
+    if (sock_fd) {
+        jd_tcpsock_close();
+        if (msg)
+            jd_tcpsock_on_event(JD_CONN_EV_ERROR, msg, strlen(msg));
+        jd_tcpsock_on_event(JD_CONN_EV_CLOSE, NULL, 0);
+    }
+}
+
+int jd_tcpsock_new(const char *hostname, int port) {
+    jd_tcpsock_close();
+    char *port_num = jd_sprintf_a("%d", port);
+    int r = sock_create_and_connect(hostname, port_num);
+    jd_free(port_num);
+    if (r > 0) {
+        sock_fd = r;
+        jd_tcpsock_on_event(JD_CONN_EV_OPEN, NULL, 0);
+        return 0;
+    }
+    return -1;
+}
+
+void jd_tcpsock_close(void) {
     if (sock_fd) {
         close(sock_fd);
         sock_fd = 0;
     }
 }
 
-int jd_sock_new(const char *hostname, int port) {
-    jd_sock_close();
-    char *port_num = jd_sprintf_a("%d", port);
-    int r = sock_create_and_connect(hostname, port_num);
-    jd_free(port_num);
-    if (r > 0) {
-        sock_fd = r;
-        jd_sock_on_event(JD_CONN_EV_OPEN, NULL, 0);
-        return 0;
-    }
-    return -1;
-}
-
-int jd_sock_write(const void *buf, unsigned size) {
+int jd_tcpsock_write(const void *buf, unsigned size) {
     if (!sock_fd)
         return -10;
     // DMESG("wr %s", (const char*)buf);
     if (forced_write(sock_fd, buf, size) == (int)size)
         return 0;
+    raise_error("write error");
     return -1;
 }
 
-static void raise_error(const char *msg) {
-    close(sock_fd);
-    sock_fd = 0;
-    if (msg)
-        jd_sock_on_event(JD_CONN_EV_ERROR, msg, strlen(msg));
-    jd_sock_on_event(JD_CONN_EV_CLOSE, NULL, 0);
-}
-
-void jd_sock_process(void) {
+void jd_tcpsock_process(void) {
     static uint8_t sockbuf[128];
 
     if (!sock_fd)
@@ -258,7 +260,7 @@ void jd_sock_process(void) {
             return;
         }
         if (r > 0) {
-            jd_sock_on_event(JD_CONN_EV_MESSAGE, sockbuf, r);
+            jd_tcpsock_on_event(JD_CONN_EV_MESSAGE, sockbuf, r);
         } else {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
                 break;
