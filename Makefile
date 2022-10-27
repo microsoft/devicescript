@@ -63,7 +63,7 @@ vg: native
 	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
 
 EMCC_OPTS = $(DEFINES) $(INC) \
-	-g2 -O2 \
+	-g2 -O1 \
 	-s WASM=1 \
 	-s MODULARIZE=1 \
 	-s SINGLE_FILE=1 \

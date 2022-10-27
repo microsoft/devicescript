@@ -258,7 +258,7 @@ int main(int argc, const char **argv) {
         devid += 0x71000000000;
         char s[30];
         jd_device_short_id(s, devid);
-        if (strcmp(s, "ZX81") == 0) {
+        if (strcmp(s, "WS42") == 0) {
             jd_to_hex(s, &devid, sizeof(devid));
             printf("%s 0x%llx\n", s, devid);
             return 0;

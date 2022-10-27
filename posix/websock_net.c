@@ -12,15 +12,20 @@
 #include <emscripten/websocket.h>
 
 #define LOG(fmt, ...) DMESG("WS: " fmt, ##__VA_ARGS__)
-#define LOGV(...) ((void)0)
-//#define LOGV LOG
+// #define LOGV(...) ((void)0)
+#define LOGV LOG
 
 #define CHK(cond)                                                                                  \
-    if (!(cond))                                                                                   \
-    abort()
+    if (!(cond)) {                                                                                 \
+        DMESG("fail: %s", #cond);                                                                  \
+        abort();                                                                                   \
+    }
+
 #define CHK_ERR(call)                                                                              \
-    if (0 != (call))                                                                               \
-    abort()
+    if (0 != (call)) {                                                                             \
+        DMESG("call failed: %s", #call);                                                           \
+        abort();                                                                                   \
+    }
 
 struct jd_transport_ctx {
     int sockfd;
@@ -28,15 +33,22 @@ struct jd_transport_ctx {
 };
 typedef struct jd_transport_ctx *websock_t;
 
-static struct jd_transport_ctx ws_ctx;
+static websock_t ws_ctx;
 
 int jd_websock_send_message(const void *data, unsigned size) {
-    LOGV("send %db", len);
-    websock_t ctx = &ws_ctx;
+    LOGV("send %u b", size);
+    websock_t ctx = ws_ctx;
+    if (!ctx)
+        return -1;
     return emscripten_websocket_send_binary(ctx->sockfd, (void *)data, size);
 }
 
+#define CHECK_CURRENT()                                                                            \
+    if (userdata != ws_ctx)                                                                        \
+    return EM_TRUE
+
 static int onopen(int ev_type, const EmscriptenWebSocketOpenEvent *ev, void *userdata) {
+    CHECK_CURRENT();
     LOG("connected");
     websock_t ctx = userdata;
     ctx->isopen = true;
@@ -44,11 +56,13 @@ static int onopen(int ev_type, const EmscriptenWebSocketOpenEvent *ev, void *use
     return EM_TRUE;
 }
 static int onerror(int ev_type, const EmscriptenWebSocketErrorEvent *ev, void *userdata) {
+    CHECK_CURRENT();
     LOG("error!");
     jd_websock_on_event(JD_CONN_EV_ERROR, NULL, 0);
     return EM_TRUE;
 }
 static int onclose(int ev_type, const EmscriptenWebSocketCloseEvent *ev, void *userdata) {
+    CHECK_CURRENT();
     LOG("close");
     websock_t ctx = userdata;
     ctx->isopen = false;
@@ -56,6 +70,7 @@ static int onclose(int ev_type, const EmscriptenWebSocketCloseEvent *ev, void *u
     return EM_TRUE;
 }
 static int onmessage(int ev_type, const EmscriptenWebSocketMessageEvent *ev, void *userdata) {
+    CHECK_CURRENT();
     websock_t ctx = userdata;
     if (ev->isText) {
         LOG("text message?! '%s'", ev->data);
@@ -71,7 +86,10 @@ int jd_websock_new(const char *hostname, int port, const char *path, const char 
         return -1;
     }
 
-    websock_t ctx = &ws_ctx;
+    jd_websock_close();
+
+    websock_t ctx = jd_alloc(sizeof(*ctx));
+    ws_ctx = ctx;
 
     CHK(ctx->sockfd == 0);
 
@@ -101,14 +119,18 @@ int jd_websock_new(const char *hostname, int port, const char *path, const char 
 }
 
 void jd_websock_close(void) {
-    websock_t ctx = &ws_ctx;
+    websock_t ctx = ws_ctx;
 
-    if (!ctx->sockfd)
+    if (!ctx || !ctx->sockfd)
         return;
 
-    emscripten_websocket_close(ctx->sockfd, 0, "");
+    emscripten_websocket_close(ctx->sockfd, 1000, "");
+    // emscripten_websocket_delete(ctx->sockfd); - memleak
     ctx->sockfd = 0;
     ctx->isopen = false;
+    // jd_free(ctx); - memleak...
+
+    ws_ctx = NULL;
 }
 
 #endif

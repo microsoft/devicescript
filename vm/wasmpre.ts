@@ -32,7 +32,7 @@ function bufferConcat(a: Uint8Array, b: Uint8Array) {
     return r
 }
 
-module Exts {
+export module Exts {
     export function handlePacket(pkt: Uint8Array) {
         copyToHeap(pkt, Module._jd_em_frame_received)
         Module._jd_em_process()
@@ -97,6 +97,59 @@ module Exts {
                 }
             })
         })
+    }
+
+    export function setupWebsocketTransport(url: string, proto?: string) {
+        return new Promise<void>((resolve, reject) => {
+            let sock: WebSocket = new WebSocket(url, proto)
+
+            sock.binaryType = "arraybuffer"
+
+            const send = (data: Uint8Array) => {
+                if (sock && sock.readyState == WebSocket.OPEN) {
+                    sock.send(data)
+                    return 0
+                } else {
+                    return -1
+                }
+            }
+
+            const disconnect = () => {
+                console.log("disconnect")
+                if (sock)
+                    try {
+                        sock.close()
+                    } catch {}
+                sock = undefined
+                if (resolve) {
+                    resolve = null
+                    reject(new Error(`can't connect to ${url}`))
+                }
+            }
+
+            Module["sendPacket"] = send
+
+            sock.onopen = () => resolve()
+            sock.onerror = disconnect
+            sock.onclose = disconnect
+            sock.onmessage = ev => {
+                const data = ev.data
+                if (typeof data == "string") {
+                    console.error("got string msg")
+                    return
+                } else {
+                    const pkt = new Uint8Array(ev.data)
+                    Module.handlePacket(pkt)
+                }
+            }
+        })
+    }
+
+    export function b64ToBin(s: string) {
+        s = atob(s)
+        const r = new Uint8Array(s.length)
+        for (let i = 0; i < s.length; ++i) r[i] = s.charCodeAt(i)
+        return r
     }
 
     export function jacsDeploy(binary: Uint8Array) {
