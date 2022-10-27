@@ -5,7 +5,7 @@
 
 #include "interfaces/jd_usb.h" // jd_net_disable_fwd() proto
 
-#define SETTINGS_KEY "encws_connstr"
+#define SETTINGS_KEY "wssk_connstr"
 
 #define LOG(fmt, ...) DMESG("ENCWS: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
@@ -37,10 +37,10 @@ struct srv_state {
 STATIC_ASSERT(sizeof(char) == 1);
 STATIC_ASSERT(sizeof(uint8_t) == 1);
 
-static srv_t *_encws_state;
+static srv_t *_wssk_state;
 
 REG_DEFINITION(                                                //
-    encws_regs,                                                //
+    wssk_regs,                                                //
     REG_SRV_COMMON,                                            //
     REG_U16(JD_AZURE_IOT_HUB_HEALTH_REG_CONNECTION_STATUS),    //
     REG_U32(JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_PERIOD),          //
@@ -139,7 +139,7 @@ too_short:
 }
 
 void jd_encsock_on_event(unsigned event, const void *data, unsigned size) {
-    srv_t *state = _encws_state;
+    srv_t *state = _wssk_state;
 
     LOGV("%s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
 
@@ -161,7 +161,7 @@ void jd_encsock_on_event(unsigned event, const void *data, unsigned size) {
     }
 }
 
-static void encws_disconnect(srv_t *state) {
+static void wssk_disconnect(srv_t *state) {
     if (state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED)
         return;
 
@@ -169,9 +169,9 @@ static void encws_disconnect(srv_t *state) {
     jd_encsock_close();
 }
 
-static void encws_reconnect(srv_t *state) {
+static void wssk_reconnect(srv_t *state) {
     if (!state->hub_name || !wifi_is_connected()) {
-        encws_disconnect(state);
+        wssk_disconnect(state);
         return;
     }
 
@@ -190,7 +190,7 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
         clear_conn_string(state);
         if (save)
             jd_settings_set(SETTINGS_KEY, NULL);
-        encws_reconnect(state);
+        wssk_reconnect(state);
         return 0;
     }
 
@@ -253,7 +253,7 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
         jd_settings_set(SETTINGS_KEY, conn);
     }
 
-    encws_reconnect(state);
+    wssk_reconnect(state);
 
     jd_free(conn);
 
@@ -277,7 +277,7 @@ static const uint32_t glows[] = {
 };
 #endif
 
-void encws_process(srv_t *state) {
+void wssk_process(srv_t *state) {
     if (state->push_watchdog_period_ms && in_past_ms(state->watchdog_timer_ms)) {
         DMESG("cloud watchdog reset");
         target_reset();
@@ -300,7 +300,7 @@ void encws_process(srv_t *state) {
             state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED &&
             state->hub_name && state->waiting_for_net) {
             state->waiting_for_net = false;
-            encws_reconnect(state);
+            wssk_reconnect(state);
         }
     }
 
@@ -309,18 +309,18 @@ void encws_process(srv_t *state) {
     }
 }
 
-void encws_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void wssk_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_AZURE_IOT_HUB_HEALTH_CMD_SET_CONNECTION_STRING:
         set_conn_string(state, (char *)pkt->data, pkt->service_size, 1);
         return;
 
     case JD_AZURE_IOT_HUB_HEALTH_CMD_CONNECT:
-        encws_reconnect(state);
+        wssk_reconnect(state);
         return;
 
     case JD_AZURE_IOT_HUB_HEALTH_CMD_DISCONNECT:
-        encws_disconnect(state);
+        wssk_disconnect(state);
         return;
 
     case JD_GET(JD_AZURE_IOT_HUB_HEALTH_REG_HUB_NAME):
@@ -329,14 +329,14 @@ void encws_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_GET(JD_AZURE_IOT_HUB_HEALTH_REG_HUB_DEVICE_ID): {
         const char *id = state->device_id;
-        if (id && memcmp(id, "/encws/", 7) == 0)
+        if (id && memcmp(id, "/wssk/", 7) == 0)
             id += 7;
         jd_respond_string(pkt, id);
         return;
     }
     }
 
-    switch (service_handle_register_final(state, pkt, encws_regs)) {
+    switch (service_handle_register_final(state, pkt, wssk_regs)) {
     case JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_PERIOD:
     case JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_WATCHDOG_PERIOD:
         if (state->push_period_ms < 1000)
@@ -353,11 +353,11 @@ void encws_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(encws, JD_SERVICE_CLASS_AZURE_IOT_HUB_HEALTH);
-void encws_init(void) {
-    SRV_ALLOC(encws);
+SRV_DEF(wssk, JD_SERVICE_CLASS_AZURE_IOT_HUB_HEALTH);
+void wssk_init(void) {
+    SRV_ALLOC(wssk);
 
-    aggbuffer_init(&encws_cloud);
+    aggbuffer_init(&wssk_cloud);
 
     state->conn_status = JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED;
     state->waiting_for_net = true;
@@ -369,7 +369,7 @@ void encws_init(void) {
         jd_free(conn);
     }
 
-    _encws_state = state;
+    _wssk_state = state;
 }
 
 static uint8_t *prep_msg(uint16_t cmd, unsigned payload_size) {
@@ -379,8 +379,8 @@ static uint8_t *prep_msg(uint16_t cmd, unsigned payload_size) {
     return r;
 }
 
-int encws_publish(const void *msg, unsigned len) {
-    srv_t *state = _encws_state;
+int wssk_publish(const void *msg, unsigned len) {
+    srv_t *state = _wssk_state;
     if (state->conn_status != JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED)
         return -1;
 
@@ -402,12 +402,12 @@ int encws_publish(const void *msg, unsigned len) {
 }
 
 static int publish_and_free(void *msg, unsigned payload_size) {
-    int r = encws_publish(msg, CHD_SIZE + payload_size);
+    int r = wssk_publish(msg, CHD_SIZE + payload_size);
     jd_free(msg);
     return r;
 }
 
-int encws_publish_values(const char *label, int numvals, double *vals) {
+int wssk_publish_values(const char *label, int numvals, double *vals) {
     unsigned llen = strlen(label);
     unsigned payload_size = llen + 1 + sizeof(double) * numvals;
 
@@ -418,19 +418,19 @@ int encws_publish_values(const char *label, int numvals, double *vals) {
     return publish_and_free(msg, payload_size);
 }
 
-int encws_publish_bin(const void *data, unsigned datasize) {
+int wssk_publish_bin(const void *data, unsigned datasize) {
     uint8_t *msg = prep_msg(JD_CLOUD_ADAPTER_CMD_UPLOAD_BIN, datasize);
     memcpy(msg + CHD_SIZE, data, datasize);
     return publish_and_free(msg, datasize);
 }
 
-int encws_is_connected(void) {
-    srv_t *state = _encws_state;
+int wssk_is_connected(void) {
+    srv_t *state = _wssk_state;
     return state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED;
 }
 
-int encws_respond_method(uint32_t method_id, uint32_t status, int numvals, double *vals) {
-    srv_t *state = _encws_state;
+int wssk_respond_method(uint32_t method_id, uint32_t status, int numvals, double *vals) {
+    srv_t *state = _wssk_state;
     if (state->conn_status != JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED)
         return -1;
 
@@ -449,25 +449,25 @@ static int send_pong(void) {
 }
 
 void jd_net_disable_fwd() {
-    srv_t *state = _encws_state;
+    srv_t *state = _wssk_state;
     state->fwd_en = 0;
 }
 
 int jd_net_send_frame(void *frame) {
-    srv_t *state = _encws_state;
+    srv_t *state = _wssk_state;
     if (!state->fwd_en)
         return 0;
     jd_frame_t *f = frame;
     if (f->size == 0)
         return -1;
-    return encws_publish(f, JD_FRAME_SIZE(f));
+    return wssk_publish(f, JD_FRAME_SIZE(f));
 }
 
-const jacscloud_api_t encws_cloud = {
-    .upload = encws_publish_values,
+const jacscloud_api_t wssk_cloud = {
+    .upload = wssk_publish_values,
     .agg_upload = aggbuffer_upload,
-    .bin_upload = encws_publish_bin,
-    .is_connected = encws_is_connected,
+    .bin_upload = wssk_publish_bin,
+    .is_connected = wssk_is_connected,
     .max_bin_upload_size = 1024, // just a guess
-    .respond_method = encws_respond_method,
+    .respond_method = wssk_respond_method,
 };
