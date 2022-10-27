@@ -5,12 +5,12 @@ typedef struct {
     uint32_t version;
     uint8_t seed0[JD_AES_KEY_BYTES / 4];
     uint8_t seed1[JD_AES_KEY_BYTES / 4];
-} jd_encsock_hello_msg_t;
+} jd_wssk_hello_msg_t;
 
-#define JD_ENCSOCK_MAGIC 0xcee428ca
-#define JD_ENCSOCK_VERSION 1
+#define JD_WSSK_MAGIC 0xcee428ca
+#define JD_WSSK_VERSION 1
 
-#define JD_ENCSOCK_AUTH_SIZE JD_AES_KEY_BYTES
+#define JD_WSSK_AUTH_SIZE JD_AES_KEY_BYTES
 
 #define LOG(fmt, ...) DMESG("ENC: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
@@ -27,15 +27,15 @@ typedef struct {
     uint8_t client_nonce[JD_AES_BLOCK_BYTES];
     uint8_t server_nonce[JD_AES_BLOCK_BYTES];
     uint8_t state;
-} jd_encsock_t;
-static jd_encsock_t _encsock;
+} jd_wssk_t;
+static jd_wssk_t _encsock;
 
 STATIC_ASSERT(JD_AES_CCM_NONCE_BYTES <= JD_AES_BLOCK_BYTES);
 STATIC_ASSERT(JD_AES_KEY_BYTES / 2 <= JD_AES_BLOCK_BYTES);
 
-int jd_encsock_new(const char *hostname, int port, const char *path,
+int jd_wssk_new(const char *hostname, int port, const char *path,
                    const uint8_t master_key[JD_AES_KEY_BYTES]) {
-    jd_encsock_t *es = &_encsock;
+    jd_wssk_t *es = &_encsock;
 
     int sum = 0;
     for (int i = 0; i < JD_AES_KEY_BYTES; ++i)
@@ -55,28 +55,28 @@ int jd_encsock_new(const char *hostname, int port, const char *path,
     return r;
 }
 
-static void raise_error(jd_encsock_t *es, const char *msg) {
+static void raise_error(jd_wssk_t *es, const char *msg) {
     LOG("error: %s", msg);
     if (es->state == ST_ERROR)
         return; // double error?
     es->state = ST_ERROR;
-    jd_encsock_on_event(JD_CONN_EV_ERROR, msg, strlen(msg));
+    jd_wssk_on_event(JD_CONN_EV_ERROR, msg, strlen(msg));
     jd_websock_close();
 }
 
-static void on_hello(jd_encsock_t *es, const uint8_t *msg, unsigned size) {
+static void on_hello(jd_wssk_t *es, const uint8_t *msg, unsigned size) {
     LOG("process hello (%d bytes)", size);
-    if (size < sizeof(jd_encsock_hello_msg_t)) {
+    if (size < sizeof(jd_wssk_hello_msg_t)) {
         raise_error(es, "small hello");
         return;
     }
-    jd_encsock_hello_msg_t hello;
+    jd_wssk_hello_msg_t hello;
     memcpy(&hello, msg, sizeof(hello));
-    if (hello.magic != JD_ENCSOCK_MAGIC) {
+    if (hello.magic != JD_WSSK_MAGIC) {
         raise_error(es, "bad magic");
         return;
     }
-    if (hello.version != JD_ENCSOCK_VERSION) {
+    if (hello.version != JD_WSSK_VERSION) {
         raise_error(es, "bad version");
         return;
     }
@@ -105,7 +105,7 @@ static void on_hello(jd_encsock_t *es, const uint8_t *msg, unsigned size) {
 
     es->state = ST_GOT_KEY;
 
-    if (jd_encsock_send_message(NULL, JD_ENCSOCK_AUTH_SIZE) != 0) {
+    if (jd_wssk_send_message(NULL, JD_WSSK_AUTH_SIZE) != 0) {
         raise_error(es, "can't send auth");
         return;
     }
@@ -125,7 +125,7 @@ static void inc_nonce(uint8_t nonce[JD_AES_CCM_NONCE_BYTES]) {
     }
 }
 
-static int decrypt(jd_encsock_t *es, uint8_t *msg, unsigned size) {
+static int decrypt(jd_wssk_t *es, uint8_t *msg, unsigned size) {
     if (size < JD_AES_CCM_TAG_BYTES + 4) {
         raise_error(es, "small msg");
         return -1;
@@ -142,37 +142,37 @@ static int decrypt(jd_encsock_t *es, uint8_t *msg, unsigned size) {
     return 0;
 }
 
-static void on_message(jd_encsock_t *es, const uint8_t *msg, unsigned size) {
+static void on_message(jd_wssk_t *es, const uint8_t *msg, unsigned size) {
     switch (es->state) {
     case ST_NEW:
         on_hello(es, msg, size);
         break;
     case ST_GOT_KEY:
         LOG("process auth (%d bytes)", size);
-        if (size < JD_ENCSOCK_AUTH_SIZE + JD_AES_CCM_TAG_BYTES) {
+        if (size < JD_WSSK_AUTH_SIZE + JD_AES_CCM_TAG_BYTES) {
             raise_error(es, "auth too short");
             return;
         }
         if (decrypt(es, (uint8_t *)msg, size) == 0) {
-            for (int i = 0; i < JD_ENCSOCK_AUTH_SIZE; ++i)
+            for (int i = 0; i < JD_WSSK_AUTH_SIZE; ++i)
                 if (msg[i] != 0) {
                     raise_error(es, "auth non-0");
                     return;
                 }
             es->state = ST_GOT_AUTH;
-            jd_encsock_on_event(JD_CONN_EV_OPEN, NULL, 0);
+            jd_wssk_on_event(JD_CONN_EV_OPEN, NULL, 0);
         }
         break;
     case ST_GOT_AUTH:
         if (decrypt(es, (uint8_t *)msg, size) == 0) {
-            jd_encsock_on_event(JD_CONN_EV_MESSAGE, msg, size - JD_AES_CCM_TAG_BYTES);
+            jd_wssk_on_event(JD_CONN_EV_MESSAGE, msg, size - JD_AES_CCM_TAG_BYTES);
         }
         break;
     }
 }
 
-int jd_encsock_send_message(const void *data, unsigned size) {
-    jd_encsock_t *es = &_encsock;
+int jd_wssk_send_message(const void *data, unsigned size) {
+    jd_wssk_t *es = &_encsock;
 
     if (!((es->state == ST_GOT_KEY && data == NULL) || (es->state == ST_GOT_AUTH && data != NULL)))
         return -1;
@@ -193,7 +193,7 @@ int jd_encsock_send_message(const void *data, unsigned size) {
 void jd_websock_on_event(unsigned event, const void *data, unsigned size) {
     LOGV("%s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
 
-    jd_encsock_t *es = &_encsock;
+    jd_wssk_t *es = &_encsock;
     switch (event) {
     case JD_CONN_EV_OPEN:
         break;
@@ -204,25 +204,25 @@ void jd_websock_on_event(unsigned event, const void *data, unsigned size) {
     case JD_CONN_EV_CLOSE:
         if (es->state != ST_ERROR)
             es->state = ST_CLOSED;
-        jd_encsock_on_event(event, data, size);
+        jd_wssk_on_event(event, data, size);
         break;
     case JD_CONN_EV_ERROR:
         es->state = ST_ERROR;
         jd_websock_close();
-        jd_encsock_on_event(event, data, size);
+        jd_wssk_on_event(event, data, size);
         break;
     }
 }
 
-void jd_encsock_close(void) {
-    jd_encsock_t *es = &_encsock;
+void jd_wssk_close(void) {
+    jd_wssk_t *es = &_encsock;
     if (es->state != ST_CLOSED && es->state != ST_ERROR)
         jd_websock_close();
 }
 
-__attribute__((weak)) void jd_encsock_on_event(unsigned event, const void *data, unsigned size) {
+__attribute__((weak)) void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
     DMESG("CONN: %s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
 
     if (event == JD_CONN_EV_OPEN)
-        jd_encsock_send_message("lalala", 6);
+        jd_wssk_send_message("lalala", 6);
 }

@@ -138,7 +138,7 @@ too_short:
     return;
 }
 
-void jd_encsock_on_event(unsigned event, const void *data, unsigned size) {
+void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
     srv_t *state = _wssk_state;
 
     LOGV("%s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
@@ -166,7 +166,7 @@ static void wssk_disconnect(srv_t *state) {
         return;
 
     set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTING);
-    jd_encsock_close();
+    jd_wssk_close();
 }
 
 static void wssk_reconnect(srv_t *state) {
@@ -177,7 +177,7 @@ static void wssk_reconnect(srv_t *state) {
 
     LOG("connecting to ws://%s:%d%s", state->hub_name, state->portnum, state->device_id);
 
-    int r = jd_encsock_new(state->hub_name, state->portnum, state->device_id, state->master_key);
+    int r = jd_wssk_new(state->hub_name, state->portnum, state->device_id, state->master_key);
     if (r)
         return;
 
@@ -391,7 +391,7 @@ int wssk_publish(const void *msg, unsigned len) {
     if (state->conn_status != JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED)
         return -1;
 
-    if (jd_encsock_send_message(msg, len) != 0)
+    if (jd_wssk_send_message(msg, len) != 0)
         return -2;
 
     feed_watchdog(state);

@@ -45,10 +45,10 @@ void jd_websock_close(void);
 
 // This is on encrypted packet transport level - messages are whole
 // and this will try to re-connect.
-int jd_encsock_new(const char *hostname, int port, const char *path, const uint8_t master_key[JD_AES_KEY_BYTES]);
-void jd_encsock_on_event(unsigned event, const void *data, unsigned size);
-int jd_encsock_send_message(const void *data, unsigned size);
-void jd_encsock_close(void);
+int jd_wssk_new(const char *hostname, int port, const char *path, const uint8_t master_key[JD_AES_KEY_BYTES]);
+void jd_wssk_on_event(unsigned event, const void *data, unsigned size);
+int jd_wssk_send_message(const void *data, unsigned size);
+void jd_wssk_close(void);
 
 const char *jd_websock_event_name(unsigned event);
 
