@@ -42,9 +42,9 @@ void app_init_services() {
     jd_role_manager_init();
     init_jacscript_manager();
 
-    encws_init();
-    jacscloud_init(&encws_cloud);
-    tsagg_init(&encws_cloud);
+    wssk_init();
+    jacscloud_init(&wssk_cloud);
+    tsagg_init(&wssk_cloud);
 }
 
 struct {
