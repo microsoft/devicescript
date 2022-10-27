@@ -87,7 +87,7 @@ VM_FILE = vm/dist/jacscript-vm.js
 $(VM_TMP_FILE): vm/built/wasmpre.js $(SRC) $(DEPS)
 	@mkdir -p vm/dist
 	grep -v '^export ' $< > $(BUILT)/pre.js
-	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC)
+	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC) -lwebsocket.js
 
 $(VM_FILE): $(VM_TMP_FILE)
 	@mkdir -p vm/dist

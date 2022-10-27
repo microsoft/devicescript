@@ -24,6 +24,7 @@ void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
 #ifdef __EMSCRIPTEN__
 #define JD_LSTORE 0
 #define JD_NET_BRIDGE 0
+#define JD_WEBSOCK_IMPL 0
 #else
 #define JD_LSTORE 1
 #define JD_LSTORE_FF 0
