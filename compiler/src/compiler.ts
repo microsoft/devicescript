@@ -329,12 +329,12 @@ class Procedure {
         }
     }
 
+    reference(wr: OpWriter) {
+        return wr.emitExpr(Op.EXPRx_STATIC_FUNCTION, literal(this.index))
+    }
+
     callMe(wr: OpWriter, args: CachedValue[], op = OpCall.SYNC) {
-        wr._emitCall(
-            wr.emitExpr(Op.EXPRx_STATIC_FUNCTION, literal(this.index)),
-            args,
-            op
-        )
+        wr._emitCall(this.reference(wr), args, op)
     }
 }
 
@@ -845,6 +845,7 @@ class Program implements TopOpWriter {
                 args = [stmt.argument]
             }
             this.emitAckCloud(CloudAdapterCommandStatus.OK, false, args)
+            wr.emitStmt(Op.STMT1_RETURN, literal(null))
         } else if (stmt.argument) {
             if (wr.ret) oops("return with value not supported here")
             wr.emitStmt(Op.STMT1_RETURN, this.emitSimpleValue(stmt.argument))
@@ -872,6 +873,18 @@ class Program implements TopOpWriter {
         this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
     }
 
+    private addParameter(proc: Procedure, id: estree.Identifier | string) {
+        const v = new Variable(
+            typeof id == "string" ? null : id,
+            proc.params,
+            ValueType.NUMBER
+        )
+        if (typeof id == "string") v._name = id
+        v.isLocal = true
+        v.isParameter = true
+        return v
+    }
+
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
         for (const paramdef of stmt.params) {
             if (paramdef.type != "Identifier")
@@ -891,9 +904,7 @@ class Program implements TopOpWriter {
                 if (m) tp = m[1]
             }
 
-            const v = new Variable(paramdef, proc.params, ValueType.NUMBER)
-            v.isLocal = true
-            v.isParameter = true
+            const v = this.addParameter(proc, paramdef)
 
             if (tp == "" || tp == "number") {
                 // OK!
@@ -1065,10 +1076,7 @@ class Program implements TopOpWriter {
             throwError(func, "parameters not supported here")
         this.withProcedure(proc, wr => {
             if (options.methodHandler)
-                proc.methodSeqNo = proc.mkTempLocal(
-                    "methSeqNo",
-                    ValueType.NUMBER
-                )
+                proc.methodSeqNo = this.addParameter(proc, "methSeqNo")
             this.emitParameters(func, proc)
             if (options.every) {
                 wr.emitStmt(Op.STMT1_SLEEP_MS, literal(options.every))
@@ -1721,13 +1729,16 @@ class Program implements TopOpWriter {
         this.cloudMethodDispatcher.emit(wr => {
             const skip = wr.mkLabel("skipMethod")
             wr.emitJump(skip, wr.emitExpr(Op.EXPR2_STR0EQ, str, literal(4)))
+            wr.emitJumpIfTrue(
+                this.cloudMethod429,
+                wr.emitExpr(Op.EXPR1_GET_FIBER_HANDLE, handler.reference(wr))
+            )
             const args = wr.allocTmpLocals(handler.numargs)
             args[0].store(wr.emitBufLoad(NumFmt.U32, 0))
             const pref = 4 + strlen(this.stringLiteral(expr.arguments[0])) + 1
             for (let i = 1; i < handler.numargs; ++i)
                 args[i].store(wr.emitBufLoad(NumFmt.F64, pref + (i - 1) * 8))
             handler.callMe(wr, args, OpCall.BG_MAX1)
-            wr.emitJump(this.cloudMethod429, wr.emitExpr(Op.EXPR0_RET_VAL))
             wr.emitJump(this.cloudRole.dispatcher.top)
             wr.emitLabel(skip)
         })
