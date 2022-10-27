@@ -1,5 +1,7 @@
 #include "jd_network.h"
 
+#if JD_WEBSOCK_IMPL
+
 #define LOG(fmt, ...) DMESG("WS: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
 //#define LOGV LOG
@@ -345,3 +347,5 @@ const char *jd_websock_event_name(unsigned event) {
         return event_names[event];
     return "???";
 }
+
+#endif

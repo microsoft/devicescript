@@ -2,6 +2,10 @@
 
 #include "jd_protocol.h"
 
+#ifndef JD_WEBSOCK_IMPL
+#define JD_WEBSOCK_IMPL 1
+#endif
+
 #define JD_AES_KEY_BYTES 32
 #define JD_AES_BLOCK_BYTES 16
 
