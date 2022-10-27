@@ -33,7 +33,6 @@ int jd_em_frame_received(jd_frame_t *frame);
 
 int jd_em_send_frame(jd_transport_ctx_t *ctx, jd_frame_t *frame) {
     em_send_frame(frame);
-    jd_em_frame_received(frame);
     return 0;
 }
 
