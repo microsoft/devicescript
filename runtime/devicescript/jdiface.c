@@ -1,7 +1,7 @@
 #include "jacs_internal.h"
 
-// #define LOGV DMESG
 #define LOGV JD_NOLOG
+// #define LOGV(msg, ...) DMESG("JDI: " msg, ##__VA_ARGS__)
 
 #define RESUME_USER_CODE 1
 #define KEEP_WAITING 0
