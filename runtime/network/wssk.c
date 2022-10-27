@@ -40,7 +40,7 @@ STATIC_ASSERT(sizeof(uint8_t) == 1);
 static srv_t *_wssk_state;
 
 REG_DEFINITION(                                                //
-    wssk_regs,                                                //
+    wssk_regs,                                                 //
     REG_SRV_COMMON,                                            //
     REG_U16(JD_AZURE_IOT_HUB_HEALTH_REG_CONNECTION_STATUS),    //
     REG_U32(JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_PERIOD),          //
@@ -202,7 +202,7 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
     uint8_t master_key[JD_AES_KEY_BYTES];
     int portnum = 80;
 
-    // ws://df1...64@foobar.example.com:7011/jacdac-ws0/f70e6b97713cdaee
+    // ws://wssk:df1...64@foobar.example.com:7011/jacdac-ws0/f70e6b97713cdaee
     if (strlen(conn) < JD_AES_KEY_BYTES * 2 + 6)
         goto fail_parse;
 
@@ -211,15 +211,22 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
 
     char *keybeg = conn + 5;
     char *at_pos = strchr(keybeg, '@');
-    char *colon_pos = strchr(keybeg, ':');
-    char *slash_pos = strchr(keybeg, '/');
+    char *user_colon_pos = strchr(keybeg, ':');
+    if (user_colon_pos > at_pos)
+        user_colon_pos = NULL;
+    char *colon_pos = strchr(at_pos, ':');
+    char *slash_pos = strchr(at_pos, '/');
 
     if (!at_pos || !slash_pos)
         goto fail_parse;
-    if (!(at_pos < slash_pos))
-        goto fail_parse;
     if (colon_pos && !(at_pos < colon_pos && colon_pos < slash_pos))
         goto fail_parse;
+
+    if (user_colon_pos) {
+        if (memcmp(keybeg, "wssk:", 5) != 0)
+            goto fail_parse;
+        keybeg = user_colon_pos + 1;
+    }
 
     if (at_pos - keybeg != JD_AES_KEY_BYTES * 2)
         goto fail_parse;
