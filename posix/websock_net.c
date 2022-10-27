@@ -12,8 +12,8 @@
 #include <emscripten/websocket.h>
 
 #define LOG(fmt, ...) DMESG("WS: " fmt, ##__VA_ARGS__)
-// #define LOGV(...) ((void)0)
-#define LOGV LOG
+#define LOGV(...) ((void)0)
+// #define LOGV LOG
 
 #define CHK(cond)                                                                                  \
     if (!(cond)) {                                                                                 \
