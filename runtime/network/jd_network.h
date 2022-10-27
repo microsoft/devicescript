@@ -52,7 +52,7 @@ void jd_wssk_close(void);
 
 const char *jd_websock_event_name(unsigned event);
 
-void wssk_init(void);
+void wsskhealth_init(void);
 
 // to implement:
 void jd_crypto_get_random(uint8_t *buf, unsigned size);

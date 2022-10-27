@@ -37,10 +37,10 @@ struct srv_state {
 STATIC_ASSERT(sizeof(char) == 1);
 STATIC_ASSERT(sizeof(uint8_t) == 1);
 
-static srv_t *_wssk_state;
+static srv_t *_wsskhealth_state;
 
 REG_DEFINITION(                                                //
-    wssk_regs,                                                 //
+    wsskhealth_regs,                                                 //
     REG_SRV_COMMON,                                            //
     REG_U16(JD_AZURE_IOT_HUB_HEALTH_REG_CONNECTION_STATUS),    //
     REG_U32(JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_PERIOD),          //
@@ -139,7 +139,7 @@ too_short:
 }
 
 void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
-    srv_t *state = _wssk_state;
+    srv_t *state = _wsskhealth_state;
 
     LOGV("%s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
 
@@ -161,7 +161,7 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
     }
 }
 
-static void wssk_disconnect(srv_t *state) {
+static void wsskhealth_disconnect(srv_t *state) {
     if (state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED)
         return;
 
@@ -169,9 +169,9 @@ static void wssk_disconnect(srv_t *state) {
     jd_wssk_close();
 }
 
-static void wssk_reconnect(srv_t *state) {
+static void wsskhealth_reconnect(srv_t *state) {
     if (!state->hub_name || !wifi_is_connected()) {
-        wssk_disconnect(state);
+        wsskhealth_disconnect(state);
         return;
     }
 
@@ -190,7 +190,7 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
         clear_conn_string(state);
         if (save)
             jd_settings_set(SETTINGS_KEY, NULL);
-        wssk_reconnect(state);
+        wsskhealth_reconnect(state);
         return 0;
     }
 
@@ -260,7 +260,7 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
         jd_settings_set(SETTINGS_KEY, conn);
     }
 
-    wssk_reconnect(state);
+    wsskhealth_reconnect(state);
 
     jd_free(conn);
 
@@ -284,7 +284,7 @@ static const uint32_t glows[] = {
 };
 #endif
 
-void wssk_process(srv_t *state) {
+void wsskhealth_process(srv_t *state) {
     if (state->push_watchdog_period_ms && in_past_ms(state->watchdog_timer_ms)) {
         DMESG("cloud watchdog reset");
         target_reset();
@@ -307,7 +307,7 @@ void wssk_process(srv_t *state) {
             state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED &&
             state->hub_name && state->waiting_for_net) {
             state->waiting_for_net = false;
-            wssk_reconnect(state);
+            wsskhealth_reconnect(state);
         }
     }
 
@@ -316,18 +316,18 @@ void wssk_process(srv_t *state) {
     }
 }
 
-void wssk_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void wsskhealth_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_AZURE_IOT_HUB_HEALTH_CMD_SET_CONNECTION_STRING:
         set_conn_string(state, (char *)pkt->data, pkt->service_size, 1);
         return;
 
     case JD_AZURE_IOT_HUB_HEALTH_CMD_CONNECT:
-        wssk_reconnect(state);
+        wsskhealth_reconnect(state);
         return;
 
     case JD_AZURE_IOT_HUB_HEALTH_CMD_DISCONNECT:
-        wssk_disconnect(state);
+        wsskhealth_disconnect(state);
         return;
 
     case JD_GET(JD_AZURE_IOT_HUB_HEALTH_REG_HUB_NAME):
@@ -343,7 +343,7 @@ void wssk_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
     }
 
-    switch (service_handle_register_final(state, pkt, wssk_regs)) {
+    switch (service_handle_register_final(state, pkt, wsskhealth_regs)) {
     case JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_PERIOD:
     case JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_WATCHDOG_PERIOD:
         if (state->push_period_ms < 1000)
@@ -360,9 +360,9 @@ void wssk_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(wssk, JD_SERVICE_CLASS_AZURE_IOT_HUB_HEALTH);
-void wssk_init(void) {
-    SRV_ALLOC(wssk);
+SRV_DEF(wsskhealth, JD_SERVICE_CLASS_AZURE_IOT_HUB_HEALTH);
+void wsskhealth_init(void) {
+    SRV_ALLOC(wsskhealth);
 
     aggbuffer_init(&wssk_cloud);
 
@@ -376,7 +376,7 @@ void wssk_init(void) {
         jd_free(conn);
     }
 
-    _wssk_state = state;
+    _wsskhealth_state = state;
 }
 
 static uint8_t *prep_msg(uint16_t cmd, unsigned payload_size) {
@@ -387,7 +387,7 @@ static uint8_t *prep_msg(uint16_t cmd, unsigned payload_size) {
 }
 
 int wssk_publish(const void *msg, unsigned len) {
-    srv_t *state = _wssk_state;
+    srv_t *state = _wsskhealth_state;
     if (state->conn_status != JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED)
         return -1;
 
@@ -432,12 +432,12 @@ int wssk_publish_bin(const void *data, unsigned datasize) {
 }
 
 int wssk_is_connected(void) {
-    srv_t *state = _wssk_state;
+    srv_t *state = _wsskhealth_state;
     return state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED;
 }
 
 int wssk_respond_method(uint32_t method_id, uint32_t status, int numvals, double *vals) {
-    srv_t *state = _wssk_state;
+    srv_t *state = _wsskhealth_state;
     if (state->conn_status != JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED)
         return -1;
 
@@ -456,12 +456,12 @@ static int send_pong(void) {
 }
 
 void jd_net_disable_fwd() {
-    srv_t *state = _wssk_state;
+    srv_t *state = _wsskhealth_state;
     state->fwd_en = 0;
 }
 
 int jd_net_send_frame(void *frame) {
-    srv_t *state = _wssk_state;
+    srv_t *state = _wsskhealth_state;
     if (!state->fwd_en)
         return 0;
     jd_frame_t *f = frame;

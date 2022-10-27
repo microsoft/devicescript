@@ -114,7 +114,7 @@ static void on_hello(jd_wssk_t *es, const uint8_t *msg, unsigned size) {
 }
 
 static void inc_nonce(uint8_t nonce[JD_AES_CCM_NONCE_BYTES]) {
-    for (unsigned i = JD_AES_CCM_NONCE_BYTES - 1; i >= 0; i--) {
+    for (int i = JD_AES_CCM_NONCE_BYTES - 1; i >= 0; i--) {
         if (nonce[i] < 0xff) {
             nonce[i]++;
             break;
