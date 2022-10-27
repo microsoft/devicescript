@@ -40,8 +40,10 @@ int jd_encsock_new(const char *hostname, int port, const char *path,
     int sum = 0;
     for (int i = 0; i < JD_AES_KEY_BYTES; ++i)
         sum += master_key[i];
-    if (sum == 0)
-        jd_panic(); // avoid zero key
+    if (sum == 0) {
+        DMESG("zero key!");
+        jd_panic();
+    }
 
     memcpy(es->key, master_key, JD_AES_KEY_BYTES);
     es->state = ST_NEW;
