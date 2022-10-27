@@ -20,6 +20,13 @@ function jacsFactory() {
     let d
     try {
         d = require("./vm-dev")
+        try {
+            require("websocket-polyfill")
+            // @ts-ignore
+            global.Blob = require("buffer").Blob
+        } catch {
+            console.log("can't load websocket-polyfill")
+        }
     } catch {
         console.log("using shipped VM!")
         d = require("./vm")
