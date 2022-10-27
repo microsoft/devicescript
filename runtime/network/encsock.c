@@ -124,7 +124,7 @@ static void inc_nonce(uint8_t nonce[JD_AES_CCM_NONCE_BYTES]) {
 }
 
 static int decrypt(jd_encsock_t *es, uint8_t *msg, unsigned size) {
-    if (size < JD_AES_CCM_TAG_BYTES + 8) {
+    if (size < JD_AES_CCM_TAG_BYTES + 4) {
         raise_error(es, "small msg");
         return -1;
     }

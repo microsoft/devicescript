@@ -22,6 +22,8 @@ struct srv_state {
     // non-regs
     bool waiting_for_net;
     bool fwd_en;
+    uint32_t fwd_timer;
+
     uint32_t reconnect_timer;
     uint32_t flush_timer;
     uint32_t watchdog_timer_ms;
@@ -47,6 +49,7 @@ REG_DEFINITION(                                                //
 
 #define CHD_SIZE 4
 
+static int send_pong(void);
 static bool wifi_is_connected(void) {
     return 1;
 }
@@ -111,6 +114,9 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
             jd_free(vals);
         } else if (cmd == 0x90) {
             state->fwd_en = payload[0];
+            state->fwd_timer = (16 << 20) + now;
+        } else if (cmd == 0x91) {
+            send_pong();
         } else {
             LOG("unknown cmd %x", cmd);
         }
@@ -125,6 +131,7 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
         jd_rx_frame_received_loopback(frame);
         jd_free(frame);
     }
+    return;
 
 too_short:
     LOG("too short frame: %d", size);
@@ -276,6 +283,11 @@ void encws_process(srv_t *state) {
         target_reset();
     }
 
+    if (jd_should_sample(&state->fwd_timer, 16 << 20)) {
+        // fwd_en expires after around 16s
+        state->fwd_en = 0;
+    }
+
     if (jd_should_sample(&state->reconnect_timer, 500000)) {
 #if 1
         if (!wifi_is_connected())
@@ -315,9 +327,13 @@ void encws_handle_packet(srv_t *state, jd_packet_t *pkt) {
         jd_respond_string(pkt, state->hub_name);
         return;
 
-    case JD_GET(JD_AZURE_IOT_HUB_HEALTH_REG_HUB_DEVICE_ID):
-        jd_respond_string(pkt, state->device_id);
+    case JD_GET(JD_AZURE_IOT_HUB_HEALTH_REG_HUB_DEVICE_ID): {
+        const char *id = state->device_id;
+        if (id && memcmp(id, "/encws/", 7) == 0)
+            id += 7;
+        jd_respond_string(pkt, id);
         return;
+    }
     }
 
     switch (service_handle_register_final(state, pkt, encws_regs)) {
@@ -425,6 +441,11 @@ int encws_respond_method(uint32_t method_id, uint32_t status, int numvals, doubl
     resp->status = status;
     memcpy(resp->result, vals, numvals * sizeof(double));
     return publish_and_free(msg, payload_size);
+}
+
+static int send_pong(void) {
+    uint8_t *msg = prep_msg(0x91, 0);
+    return publish_and_free(msg, 0);
 }
 
 void jd_net_disable_fwd() {
