@@ -67,8 +67,9 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 	-s WASM=1 \
 	-s MODULARIZE=1 \
 	-s SINGLE_FILE=1 \
+	-s ASSERTIONS=1 \
 	-s EXPORTED_FUNCTIONS=_malloc,_free \
-	-s ENVIRONMENT=web,webview,worker \
+	-s ENVIRONMENT=web,webview,worker,node \
 	--no-entry
 
 vm/built/wasmpre.js: vm/wasmpre.ts vm/node_modules/typescript
