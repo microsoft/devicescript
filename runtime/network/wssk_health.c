@@ -7,6 +7,8 @@
 
 #define SETTINGS_KEY "wssk_connstr"
 
+#define WATCHDOG_SECONDS 32
+
 #define LOG(fmt, ...) DMESG("ENCWS: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
 //#define LOGV LOG
@@ -20,13 +22,14 @@ struct srv_state {
     uint32_t push_watchdog_period_ms;
 
     // non-regs
-    bool waiting_for_net;
     bool fwd_en;
     uint32_t fwd_timer;
 
+    uint32_t glow_timer;
     uint32_t reconnect_timer;
     uint32_t flush_timer;
     uint32_t watchdog_timer_ms;
+    uint32_t ping_timer;
 
     char *hub_name;
     char *device_id;
@@ -50,6 +53,7 @@ REG_DEFINITION(                                                //
 #define CHD_SIZE 4
 
 static int send_pong(void);
+static int send_ping(void);
 
 static const char *status_name(int st) {
     switch (st) {
@@ -64,6 +68,11 @@ static const char *status_name(int st) {
     default:
         return "???";
     }
+}
+
+static void feed_reconnect_watchdog(srv_t *state) {
+    state->reconnect_timer = now + (WATCHDOG_SECONDS << 20);
+    state->ping_timer = now + ((WATCHDOG_SECONDS / 2) << 20);
 }
 
 static void feed_watchdog(srv_t *state) {
@@ -114,6 +123,10 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
             state->fwd_timer = (16 << 20) + now;
         } else if (cmd == 0x91) {
             send_pong();
+        } else if (cmd == 0x92) {
+            // the only effect of PONG we need is feeding the reconnect watchdog which was already
+            // done
+            LOGV("pong");
         } else {
             LOG("unknown cmd %x", cmd);
         }
@@ -142,9 +155,11 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
 
     switch (event) {
     case JD_CONN_EV_OPEN:
+        feed_reconnect_watchdog(state);
         set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED);
         break;
     case JD_CONN_EV_MESSAGE:
+        feed_reconnect_watchdog(state);
         on_msg(state, (void *)data, size);
         break;
     case JD_CONN_EV_CLOSE:
@@ -167,10 +182,10 @@ static void wsskhealth_disconnect(srv_t *state) {
 }
 
 static void wsskhealth_reconnect(srv_t *state) {
-    if (!state->hub_name || !jd_tcpsock_is_available()) {
-        wsskhealth_disconnect(state);
+    wsskhealth_disconnect(state);
+
+    if (!state->hub_name || !jd_tcpsock_is_available())
         return;
-    }
 
     LOG("connecting to ws://%s:%d%s", state->hub_name, state->portnum, state->device_id);
 
@@ -179,6 +194,7 @@ static void wsskhealth_reconnect(srv_t *state) {
         return;
 
     set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTING);
+    feed_reconnect_watchdog(state);
 }
 
 static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz, int save) {
@@ -292,21 +308,20 @@ void wsskhealth_process(srv_t *state) {
         state->fwd_en = 0;
     }
 
-    if (jd_should_sample(&state->reconnect_timer, 500000)) {
-#if 1
+    if (jd_should_sample(&state->ping_timer, 4 << 20)) {
+        send_ping();
+    }
+
+    if (jd_should_sample(&state->glow_timer, 512 << 10)) {
         if (!jd_tcpsock_is_available())
             jd_glow(JD_GLOW_CLOUD_CONNECTING_TO_NETWORK);
         else
             jd_glow(glows[state->conn_status]);
-#endif
+    }
 
-        if (jd_tcpsock_is_available() &&
-            state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED &&
-            state->hub_name && state->waiting_for_net) {
-            state->reconnect_timer = now + (5 << 20); // 5s before next re-connect
-            // state->waiting_for_net = false;
-            wsskhealth_reconnect(state);
-        }
+    // the ~512ms period is only used when we're waiting for network or there is no hub
+    if (jd_should_sample(&state->reconnect_timer, 512 << 10)) {
+        wsskhealth_reconnect(state);
     }
 
     if (jd_should_sample_ms(&state->flush_timer, state->push_period_ms)) {
@@ -365,7 +380,6 @@ void wsskhealth_init(void) {
     aggbuffer_init(&wssk_cloud);
 
     state->conn_status = JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED;
-    state->waiting_for_net = true;
     state->push_period_ms = 5000;
 
     char *conn = jd_settings_get(SETTINGS_KEY);
@@ -450,6 +464,11 @@ int wssk_respond_method(uint32_t method_id, uint32_t status, int numvals, double
 
 static int send_pong(void) {
     uint8_t *msg = prep_msg(0x91, 0);
+    return publish_and_free(msg, 0);
+}
+
+static int send_ping(void) {
+    uint8_t *msg = prep_msg(0x92, 0);
     return publish_and_free(msg, 0);
 }
 
