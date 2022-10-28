@@ -40,7 +40,7 @@ STATIC_ASSERT(sizeof(uint8_t) == 1);
 static srv_t *_wsskhealth_state;
 
 REG_DEFINITION(                                                //
-    wsskhealth_regs,                                                 //
+    wsskhealth_regs,                                           //
     REG_SRV_COMMON,                                            //
     REG_U16(JD_AZURE_IOT_HUB_HEALTH_REG_CONNECTION_STATUS),    //
     REG_U32(JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_PERIOD),          //
@@ -50,9 +50,6 @@ REG_DEFINITION(                                                //
 #define CHD_SIZE 4
 
 static int send_pong(void);
-static bool wifi_is_connected(void) {
-    return 1;
-}
 
 static const char *status_name(int st) {
     switch (st) {
@@ -170,7 +167,7 @@ static void wsskhealth_disconnect(srv_t *state) {
 }
 
 static void wsskhealth_reconnect(srv_t *state) {
-    if (!state->hub_name || !wifi_is_connected()) {
+    if (!state->hub_name || !jd_tcpsock_is_available()) {
         wsskhealth_disconnect(state);
         return;
     }
@@ -297,16 +294,17 @@ void wsskhealth_process(srv_t *state) {
 
     if (jd_should_sample(&state->reconnect_timer, 500000)) {
 #if 1
-        if (!wifi_is_connected())
+        if (!jd_tcpsock_is_available())
             jd_glow(JD_GLOW_CLOUD_CONNECTING_TO_NETWORK);
         else
             jd_glow(glows[state->conn_status]);
 #endif
 
-        if (wifi_is_connected() &&
+        if (jd_tcpsock_is_available() &&
             state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED &&
             state->hub_name && state->waiting_for_net) {
-            state->waiting_for_net = false;
+            state->reconnect_timer = now + (5 << 20); // 5s before next re-connect
+            // state->waiting_for_net = false;
             wsskhealth_reconnect(state);
         }
     }
@@ -478,3 +476,7 @@ const jacscloud_api_t wssk_cloud = {
     .max_bin_upload_size = 1024, // just a guess
     .respond_method = wssk_respond_method,
 };
+
+__attribute__((weak)) bool jd_tcpsock_is_available(void) {
+    return 1;
+}

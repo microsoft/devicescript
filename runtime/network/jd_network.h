@@ -35,6 +35,7 @@ int jd_tcpsock_new(const char *hostname, int port);
 void jd_tcpsock_on_event(unsigned event, const void *data, unsigned size);
 int jd_tcpsock_write(const void *buf, unsigned size);
 void jd_tcpsock_close(void);
+bool jd_tcpsock_is_available(void);
 
 // This is on WebSocket level - messages are whole
 // Implemented in websock_conn.c
