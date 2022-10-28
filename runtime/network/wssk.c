@@ -12,7 +12,7 @@ typedef struct {
 
 #define JD_WSSK_AUTH_SIZE JD_AES_KEY_BYTES
 
-#define LOG(fmt, ...) DMESG("ENC: " fmt, ##__VA_ARGS__)
+#define LOG(fmt, ...) DMESG("WSSK: " fmt, ##__VA_ARGS__)
 #if 1
 #define LOGV(...) ((void)0)
 #else

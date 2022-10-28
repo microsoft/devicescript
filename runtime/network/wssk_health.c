@@ -9,9 +9,12 @@
 
 #define WATCHDOG_SECONDS 32
 
-#define LOG(fmt, ...) DMESG("ENCWS: " fmt, ##__VA_ARGS__)
+#define LOG(fmt, ...) DMESG("WSSK-H: " fmt, ##__VA_ARGS__)
+#if 0
 #define LOGV(...) ((void)0)
-//#define LOGV LOG
+#else
+#define LOGV LOG
+#endif
 
 struct srv_state {
     SRV_COMMON;
