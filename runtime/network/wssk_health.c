@@ -349,8 +349,8 @@ void wsskhealth_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_GET(JD_AZURE_IOT_HUB_HEALTH_REG_HUB_DEVICE_ID): {
         const char *id = state->device_id;
-        if (id && memcmp(id, "/wssk/", 7) == 0)
-            id += 7;
+        if (id && memcmp(id, "/wssk/", 6) == 0)
+            id += 6;
         jd_respond_string(pkt, id);
         return;
     }

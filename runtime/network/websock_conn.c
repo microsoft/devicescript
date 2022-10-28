@@ -116,9 +116,6 @@ static const char *websock_start =   //
     "\r\n";
 
 static void start_conn(jd_websock_t *ws) {
-    if (ws->state != ST_OPENING)
-        return; // ???
-
     ws->state = ST_REQ_SENT;
 
     // We don't really care about this one.
