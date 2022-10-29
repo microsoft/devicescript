@@ -333,6 +333,8 @@ void jd_websock_close(void) {
     }
 }
 
+#endif
+
 static const char *event_names[] = {
     [JD_CONN_EV_OPEN] = "open",
     [JD_CONN_EV_CLOSE] = "close",
@@ -344,5 +346,3 @@ const char *jd_websock_event_name(unsigned event) {
         return event_names[event];
     return "???";
 }
-
-#endif
