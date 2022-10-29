@@ -185,6 +185,7 @@ int jd_wssk_send_message(const void *data, unsigned size) {
         memcpy(sendbuf, data, size);
     jd_aes_ccm_encrypt(es->key, es->client_nonce, sendbuf + size, sendbuf, size);
     int r = jd_websock_send_message(sendbuf, size + JD_AES_CCM_TAG_BYTES);
+    jd_free(sendbuf);
     if (r != 0) {
         raise_error(es, "write err");
         return r;
