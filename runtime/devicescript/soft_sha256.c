@@ -51,7 +51,7 @@ void jd_sha256_hmac_setup(const void *key, unsigned keysize) {
 }
 
 void jd_sha256_hmac_update(const void *buf, unsigned size) {
-    jd_sha256_hmac_update(buf, size);
+    jd_sha256_update(buf, size);
 }
 
 void jd_sha256_hmac_finish(uint8_t hash[JD_SHA256_HASH_BYTES]) {
