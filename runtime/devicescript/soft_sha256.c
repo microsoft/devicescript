@@ -19,7 +19,8 @@ void jd_sha256_setup() {
 }
 
 void jd_sha256_update(const void *buf, unsigned size) {
-    sha_256_write(&_sha_ctx, buf, size);
+    if (size)
+        sha_256_write(&_sha_ctx, buf, size);
 }
 
 void jd_sha256_finish(uint8_t hash[JD_SHA256_HASH_BYTES]) {
@@ -90,6 +91,23 @@ static void jd_sha256_test_one(const char *key, const char *msg, const char *exp
     jd_free(buf);
 }
 
+void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsigned key_size,
+                    const void *info, unsigned info_size, const void *info2, unsigned info_size2,
+                    uint8_t outkey[JD_SHA256_HASH_BYTES]) {
+    uint8_t hash[JD_SHA256_HASH_BYTES];
+
+    jd_sha256_hmac_setup(salt, salt_size);
+
+    jd_sha256_hmac_update(key, key_size);
+    jd_sha256_hmac_finish(hash);
+
+    jd_sha256_hmac_setup(hash, JD_SHA256_HASH_BYTES);
+    jd_sha256_hmac_update(info, info_size);
+    jd_sha256_hmac_update(info2, info_size2);
+    jd_sha256_hmac_update("\x01", 1);
+    jd_sha256_hmac_finish(outkey);
+}
+
 void jd_sha256_hmac_test(void) {
     jd_sha256_test_one("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b", "4869205468657265",
                        "b0344c61d8db38535ca8afceaf0bf12b 881dc200c9833da726e9376c2e32cff7");
@@ -114,4 +132,17 @@ void jd_sha256_hmac_test(void) {
                        "204669727374",
                        "60e431591ee0b67f0d8a26aacbf5b77f "
                        "8e0bc6213728c5140546040f0ee37f54 ");
+
+    unsigned sz;
+    void *key = jd_from_hex_a("60e431591ee0b67f0d8a26aacbf5b77f "
+                              "8e0bc6213728c5140546040f0ee37f54 ",
+                              &sz);
+    uint8_t outkey[JD_SHA256_HASH_BYTES];
+    jd_sha256_hkdf(NULL, 0, key, sz, "Hello", 5, NULL, 0, outkey);
+    DMESG("%-s Hello -> %-s", jd_to_hex_a(key, sz), jd_to_hex_a(outkey, JD_SHA256_HASH_BYTES));
+    jd_free(key);
+    void *exp =
+        jd_from_hex_a("765c02ce44dc89b569157316c33e8a296117c6c17efeec2e976e480825cfdcde", &sz);
+    if (memcmp(exp, outkey, JD_SHA256_HASH_BYTES) != 0)
+        jd_panic();
 }
