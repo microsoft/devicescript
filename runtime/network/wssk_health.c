@@ -10,7 +10,7 @@
 #define WATCHDOG_SECONDS 32
 
 #define LOG(fmt, ...) DMESG("WSSK-H: " fmt, ##__VA_ARGS__)
-#if 0
+#if 1
 #define LOGV(...) ((void)0)
 #else
 #define LOGV LOG
@@ -38,6 +38,8 @@ struct srv_state {
     char *device_id;
     uint8_t master_key[JD_AES_KEY_BYTES];
     uint16_t portnum;
+
+    jd_queue_t fwdqueue;
 };
 
 STATIC_ASSERT(sizeof(char) == 1);
@@ -57,6 +59,7 @@ REG_DEFINITION(                                                //
 
 static int send_pong(void);
 static int send_ping(void);
+int wssk_publish(const void *msg, unsigned len);
 
 static const char *status_name(int st) {
     switch (st) {
@@ -122,6 +125,9 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
             jacscloud_on_method((char *)label, ridval, numdbl, vals);
             jd_free(vals);
         } else if (cmd == 0x90) {
+            if (payload[0] && !state->fwdqueue) {
+                state->fwdqueue = jd_queue_alloc(JD_USB_QUEUE_SIZE);
+            }
             state->fwd_en = payload[0];
             state->fwd_timer = (16 << 20) + now;
         } else if (cmd == 0x91) {
@@ -141,7 +147,8 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
             goto too_short;
         frame = jd_alloc(fsz);
         memcpy(frame, data, fsz);
-        jd_rx_frame_received_loopback(frame);
+        jd_send_frame_raw(frame);
+        // jd_rx_frame_received_loopback(frame);
         jd_free(frame);
     }
     return;
@@ -309,6 +316,19 @@ void wsskhealth_process(srv_t *state) {
     if (jd_should_sample(&state->fwd_timer, 16 << 20)) {
         // fwd_en expires after around 16s
         state->fwd_en = 0;
+    }
+
+    if (state->fwdqueue) {
+        for (;;) {
+            jd_frame_t *f = jd_queue_front(state->fwdqueue);
+            if (!f)
+                break;
+            if (state->fwd_en) {
+                if (wssk_publish(f, JD_FRAME_SIZE(f)) != 0)
+                    break; // wait for next round
+            }
+            jd_queue_shift(state->fwdqueue);
+        }
     }
 
     if (jd_should_sample(&state->ping_timer, 4 << 20)) {
@@ -482,12 +502,12 @@ void jd_net_disable_fwd() {
 
 int jd_net_send_frame(void *frame) {
     srv_t *state = _wsskhealth_state;
-    if (!state->fwd_en)
+    if (!state || !state->fwd_en)
         return 0;
     jd_frame_t *f = frame;
     if (f->size == 0)
         return -1;
-    return wssk_publish(f, JD_FRAME_SIZE(f));
+    return jd_queue_push(state->fwdqueue, f);
 }
 
 const jacscloud_api_t wssk_cloud = {

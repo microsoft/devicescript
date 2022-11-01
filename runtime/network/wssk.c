@@ -177,6 +177,9 @@ static void on_message(jd_wssk_t *es, const uint8_t *msg, unsigned size) {
 int jd_wssk_send_message(const void *data, unsigned size) {
     jd_wssk_t *es = &_encsock;
 
+    if (target_in_irq())
+        jd_panic();
+
     if (!((es->state == ST_GOT_KEY && data == NULL) || (es->state == ST_GOT_AUTH && data != NULL)))
         return -1;
 
@@ -195,6 +198,8 @@ int jd_wssk_send_message(const void *data, unsigned size) {
 }
 
 void jd_websock_on_event(unsigned event, const void *data, unsigned size) {
+    if (target_in_irq())
+        jd_panic();
     LOGV("%s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
 
     jd_wssk_t *es = &_encsock;
@@ -219,6 +224,8 @@ void jd_websock_on_event(unsigned event, const void *data, unsigned size) {
 }
 
 void jd_wssk_close(void) {
+    if (target_in_irq())
+        jd_panic();
     jd_wssk_t *es = &_encsock;
     if (es->state != ST_CLOSED && es->state != ST_ERROR)
         jd_websock_close();
