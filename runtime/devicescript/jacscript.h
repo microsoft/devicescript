@@ -44,6 +44,14 @@ void jd_sha256_setup(void);
 void jd_sha256_update(const void *buf, unsigned size);
 void jd_sha256_finish(uint8_t hash[JD_SHA256_HASH_BYTES]);
 
+// these are implemented based on the jd_sha256_* above
+void jd_sha256_hmac_setup(const void *key, unsigned keysize);
+void jd_sha256_hmac_update(const void *buf, unsigned size);
+void jd_sha256_hmac_finish(uint8_t hash[JD_SHA256_HASH_BYTES]);
+void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsigned key_size,
+                    const void *info, unsigned info_size, const void *info2, unsigned info_size2,
+                    uint8_t outkey[JD_SHA256_HASH_BYTES]);
+
 // Jacscript manager service
 typedef struct {
     void *program_base;
