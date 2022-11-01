@@ -166,44 +166,41 @@ void jacscriptmgr_process(srv_t *state) {
     }
 }
 
-static void deploy_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
-    srv_t *state = (srv_t *)((uint8_t *)istr - offsetof(srv_t, write_program_pipe));
-    JD_ASSERT(state == _state);
+int jacscriptmgr_deploy_start(uint32_t sz) {
+    srv_t *state = _state;
+
+    jacscriptmgr_program_header_t hd;
+
+    DMESG("deploy %d b", (int)sz);
+
+    if (sz >= state->cfg->max_program_size - sizeof(hd) || (sz & (JACSMGR_ALIGN - 1)))
+        return -1;
+
+    stop_program(state);
+
+    flash_erase(state->cfg->program_base);
+
+    if (sz == 0)
+        return 0;
+
+    hd.magic0 = JACSMGR_PROG_MAGIC0;
+    hd.size = sz;
+    flash_program(state->cfg->program_base, &hd, 8);
+
+    state->write_offset = sizeof(hd);
+
+    send_status(state); // this will send JD_STATUS_CODES_WAITING_FOR_INPUT
+
+    return 0;
+}
+
+int jacscriptmgr_deploy_write(const void *buf, unsigned size) {
+    srv_t *state = _state;
+
     if (state->write_offset == 0)
-        return; // shouldn't happen
+        return -1;
 
-    uint8_t *dst = state->cfg->program_base;
-    uint32_t endp =
-        ((jacscriptmgr_program_header_t *)dst)->size + sizeof(jacscriptmgr_program_header_t);
-    if (pkt->service_size & (JACSMGR_ALIGN - 1) || state->write_offset + pkt->service_size > endp) {
-        DMESG("invalid pkt size: %d (off=%d endp=%d)", pkt->service_size, (int)state->write_offset,
-              (int)endp);
-        state->write_offset = 0;
-        jd_ipipe_close(istr);
-        return;
-    }
-
-    dst += state->write_offset;
-    if ((state->write_offset & (JD_FLASH_PAGE_SIZE - 1)) == 0) {
-        LOGV("erase %p", dst);
-        flash_erase(dst);
-    }
-
-    LOGV("wr %p sz=%d", dst, pkt->service_size);
-    flash_program(dst, pkt->data, pkt->service_size);
-    state->write_offset += pkt->service_size;
-}
-
-static void flashing_done(srv_t *state) {
-    send_status(state);
-    jd_send_event(state, JD_EV_CHANGE);
-    state->next_restart = now; // make it more responsive
-}
-
-static void deploy_meta_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
-    srv_t *state = (srv_t *)((uint8_t *)istr - offsetof(srv_t, write_program_pipe));
-    JD_ASSERT(state == _state);
-    if (pkt == NULL) {
+    if (buf == NULL) {
         // pipe closed
         jacscriptmgr_program_header_t *hdf = state->cfg->program_base;
         jacscriptmgr_program_header_t hd = {
@@ -213,38 +210,69 @@ static void deploy_meta_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
         unsigned endp = hdf->size + sizeof(hd);
         if (state->write_offset != endp) {
             DMESG("missing %d bytes (of %d)", (int)(endp - state->write_offset), (int)hdf->size);
+            return -1;
         } else {
             flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             flash_sync();
             DMESG("program written");
-            flashing_done(state);
+            send_status(state);
+            jd_send_event(state, JD_EV_CHANGE);
+            state->next_restart = now; // make it more responsive
+            return 0;
         }
+    }
+
+    uint8_t *dst = state->cfg->program_base;
+    uint32_t endp =
+        ((jacscriptmgr_program_header_t *)dst)->size + sizeof(jacscriptmgr_program_header_t);
+    if (size & (JACSMGR_ALIGN - 1) || state->write_offset + size > endp ||
+        size >= JD_FLASH_PAGE_SIZE) {
+        DMESG("invalid pkt size: %d (off=%d endp=%d)", size, (int)state->write_offset, (int)endp);
+        state->write_offset = 0;
+        return -1;
+    }
+
+    if (state->write_offset / JD_FLASH_PAGE_SIZE !=
+        (state->write_offset + size) / JD_FLASH_PAGE_SIZE) {
+        unsigned page_off = (state->write_offset + size) & (JD_FLASH_PAGE_SIZE - 1);
+        LOGV("erase %p", dst + page_off);
+        flash_erase(dst + page_off);
+    }
+
+    dst += state->write_offset;
+
+    LOGV("wr %p sz=%d", dst, size);
+    flash_program(dst, buf, size);
+    state->write_offset += size;
+
+    return 0;
+}
+
+static void deploy_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
+    srv_t *state = (srv_t *)((uint8_t *)istr - offsetof(srv_t, write_program_pipe));
+    JD_ASSERT(state == _state);
+    if (jacscriptmgr_deploy_write(pkt->data, pkt->service_size)) {
+        jd_ipipe_close(istr);
+    }
+}
+
+static void deploy_meta_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
+    srv_t *state = (srv_t *)((uint8_t *)istr - offsetof(srv_t, write_program_pipe));
+    JD_ASSERT(state == _state);
+    if (pkt == NULL) {
+        // pipe closed
+        jacscriptmgr_deploy_write(NULL, 0);
     }
 }
 
 static void deploy_bytecode(srv_t *state, jd_packet_t *pkt) {
     uint32_t sz = *(uint32_t *)pkt->data;
 
-    jacscriptmgr_program_header_t hd;
-
-    DMESG("deploy %d b", (int)sz);
-
-    if (sz > state->cfg->max_program_size - sizeof(hd) || (sz & (JACSMGR_ALIGN - 1)))
+    if (jacscriptmgr_deploy_start(sz))
         return; // just ignore it
 
-    stop_program(state);
-
-    flash_erase(state->cfg->program_base);
-
-    hd.magic0 = JACSMGR_PROG_MAGIC0;
-    hd.size = sz;
-    flash_program(state->cfg->program_base, &hd, 8);
-
-    state->write_offset = sizeof(hd);
     int port = jd_ipipe_open(&state->write_program_pipe, deploy_handler, deploy_meta_handler);
     jd_respond_u16(pkt, port);
-
-    send_status(state); // this will send JD_STATUS_CODES_WAITING_FOR_INPUT
 }
 
 int jacscriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]) {
@@ -326,51 +354,27 @@ jacs_ctx_t *jacscriptmgr_get_ctx(void) {
 
 int jacscriptmgr_deploy(const void *img, unsigned imgsize) {
     srv_t *state = _state;
-    jacscriptmgr_program_header_t hd = {
-        .magic0 = JACSMGR_PROG_MAGIC0,
-        .size = imgsize,
-        .magic1 = JACSMGR_PROG_MAGIC1,
-        .hash = jd_hash_fnv1a(img, imgsize),
-    };
 
-    if (imgsize > state->cfg->max_program_size - sizeof(hd) || (imgsize & (JACSMGR_ALIGN - 1)))
+    if (jacscriptmgr_deploy_start(imgsize))
         return -1;
-
-    stop_program(state);
-
-    uint8_t *dst = state->cfg->program_base;
-    flash_erase(dst);
 
     if (imgsize == 0)
         return -2;
 
-    flash_program(dst, &hd, 8);
-
-    unsigned doff = sizeof(hd);
-    unsigned soff = 0;
-
-    while (soff < imgsize) {
-        unsigned sz = imgsize - soff;
-        unsigned pageoff = doff & (JD_FLASH_PAGE_SIZE - 1);
-        unsigned maxsz = JD_FLASH_PAGE_SIZE - pageoff;
-        if (sz > maxsz)
-            sz = maxsz;
-        if (pageoff == 0)
-            flash_erase(dst + doff);
-        flash_program(dst + doff, (const uint8_t *)img + soff, sz);
-        doff += sz;
-        soff += sz;
+    for (unsigned sz, soff = 0; soff < imgsize; soff += sz) {
+        sz = imgsize - soff;
+        if (sz > 128)
+            sz = 128;
+        if (jacscriptmgr_deploy_write((const uint8_t *)img + soff, sz))
+            return -3;
     }
 
-    jacscriptmgr_program_header_t *hdf = state->cfg->program_base;
-    flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
-    flash_sync();
-    flashing_done(state);
+    if (jacscriptmgr_deploy_write(NULL, 0))
+        return -4;
 
     const jacscriptmgr_program_header_t *hdx = jacs_header(state);
-    if (!hdx || hdx->size == 0)
-        return -3;
-
+    if (hdx == NULL)
+        return -5; // ???
     return jacs_verify(hdx->image, hdx->size);
 }
 

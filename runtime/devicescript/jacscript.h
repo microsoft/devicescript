@@ -55,6 +55,8 @@ void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg);
 jacs_ctx_t *jacscriptmgr_get_ctx(void);
 int jacscriptmgr_deploy(const void *img, unsigned imgsize);
 int jacscriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]);
+int jacscriptmgr_deploy_start(uint32_t sz);
+int jacscriptmgr_deploy_write(const void *buf, unsigned size);
 
 typedef struct {
     int (*upload)(const char *label, int numvals, double *vals);
