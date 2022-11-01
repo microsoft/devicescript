@@ -247,6 +247,26 @@ static void deploy_bytecode(srv_t *state, jd_packet_t *pkt) {
     send_status(state); // this will send JD_STATUS_CODES_WAITING_FOR_INPUT
 }
 
+int jacscriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]) {
+    srv_t *state = _state;
+    const jacscriptmgr_program_header_t *hd = jacs_header(state);
+    if (hd) {
+        jd_sha256_setup();
+        jd_sha256_update(hd->image, hd->size);
+        jd_sha256_finish(hash);
+        return 0;
+    } else {
+        memset(hash, 0, JD_SHA256_HASH_BYTES);
+        return -1;
+    }
+}
+
+static void hash_program(srv_t *state, jd_packet_t *pkt) {
+    uint8_t hash[JD_SHA256_HASH_BYTES];
+    jacscriptmgr_get_hash(hash);
+    jd_send(pkt->service_index, pkt->service_command, hash, JD_SHA256_HASH_BYTES);
+}
+
 void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_JACSCRIPT_MANAGER_CMD_DEPLOY_BYTECODE:
@@ -264,6 +284,10 @@ void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_GET(JD_JACSCRIPT_MANAGER_REG_PROGRAM_HASH):
         jd_respond_u32(pkt, jacs_header(state) ? jacs_header(state)->hash : 0);
+        break;
+
+    case JD_GET(0x182): // TODO update spec
+        hash_program(state, pkt);
         break;
 
     case JD_GET(JD_REG_STATUS_CODE):

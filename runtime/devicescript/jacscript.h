@@ -33,6 +33,17 @@ void jacs_set_global_flags(uint32_t global_flags);
 void jacs_reset_global_flags(uint32_t global_flags);
 uint32_t jacs_get_global_flags(void);
 
+// this is used by Jacscript Manager and implemented by default in software
+#define JD_SHA256_HASH_BYTES 32
+
+#ifndef JD_SHA256_SOFT
+#define JD_SHA256_SOFT 1
+#endif
+
+void jd_sha256_setup(void);
+void jd_sha256_update(const void *buf, unsigned size);
+void jd_sha256_finish(uint8_t hash[JD_SHA256_HASH_BYTES]);
+
 // Jacscript manager service
 typedef struct {
     void *program_base;
@@ -43,6 +54,7 @@ void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg);
 
 jacs_ctx_t *jacscriptmgr_get_ctx(void);
 int jacscriptmgr_deploy(const void *img, unsigned imgsize);
+int jacscriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]);
 
 typedef struct {
     int (*upload)(const char *label, int numvals, double *vals);
