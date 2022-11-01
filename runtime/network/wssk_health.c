@@ -57,7 +57,6 @@ REG_DEFINITION(                                                //
 
 #define CHD_SIZE 4
 
-static int send_pong(void);
 static int send_ping(void);
 int wssk_publish(const void *msg, unsigned len);
 
@@ -104,41 +103,13 @@ static void clear_conn_string(srv_t *state) {
     state->device_id = NULL;
 }
 
+static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size);
 static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
     if (size < CHD_SIZE)
         goto too_short;
 
     if (data[2] == 0) {
-        // compressed packet
-        uint16_t cmd = data[0] | (data[1] << 8);
-        uint8_t *payload = data + CHD_SIZE;
-        data[size] = 0; // force NUL-terminate
-        if (cmd == JD_CLOUD_ADAPTER_CMD_ACK_CLOUD_COMMAND) {
-            uint32_t ridval;
-            memcpy(&ridval, payload, sizeof(ridval));
-            uint8_t *label = payload + 4;
-            uint8_t *dblptr = label + strlen((char *)label) + 1;
-            unsigned numdbl = (size - (dblptr - data)) / sizeof(double);
-            LOG("method: '%s' rid=%u numvals=%u", label, ridval, numdbl);
-            double *vals = jd_alloc(numdbl * sizeof(double) + 1);
-            memcpy(vals, dblptr, numdbl * sizeof(double));
-            jacscloud_on_method((char *)label, ridval, numdbl, vals);
-            jd_free(vals);
-        } else if (cmd == 0x90) {
-            if (payload[0] && !state->fwdqueue) {
-                state->fwdqueue = jd_queue_alloc(JD_USB_QUEUE_SIZE);
-            }
-            state->fwd_en = payload[0];
-            state->fwd_timer = (16 << 20) + now;
-        } else if (cmd == 0x91) {
-            send_pong();
-        } else if (cmd == 0x92) {
-            // the only effect of PONG we need is feeding the reconnect watchdog which was already
-            // done
-            LOGV("pong");
-        } else {
-            LOG("unknown cmd %x", cmd);
-        }
+        on_cmd_msg(state, data, size);
     } else {
         // forwarded frame
         jd_frame_t *frame = (void *)data;
@@ -485,14 +456,66 @@ int wssk_respond_method(uint32_t method_id, uint32_t status, int numvals, double
     return publish_and_free(msg, payload_size);
 }
 
-static int send_pong(void) {
-    uint8_t *msg = prep_msg(0x91, 0);
+static int send_empty(uint16_t cmd) {
+    uint8_t *msg = prep_msg(cmd, 0);
     return publish_and_free(msg, 0);
 }
 
 static int send_ping(void) {
-    uint8_t *msg = prep_msg(0x92, 0);
-    return publish_and_free(msg, 0);
+    return send_empty(0x92);
+}
+
+static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
+    // compressed packet
+    uint16_t cmd = data[0] | (data[1] << 8);
+    uint8_t *payload = data + CHD_SIZE;
+    data[size] = 0; // force NUL-terminate
+    unsigned payload_size = size - CHD_SIZE;
+    if (cmd == JD_CLOUD_ADAPTER_CMD_ACK_CLOUD_COMMAND) {
+        uint32_t ridval;
+        memcpy(&ridval, payload, sizeof(ridval));
+        uint8_t *label = payload + 4;
+        uint8_t *dblptr = label + strlen((char *)label) + 1;
+        unsigned numdbl = (size - (dblptr - data)) / sizeof(double);
+        LOG("method: '%s' rid=%u numvals=%u", label, ridval, numdbl);
+        double *vals = jd_alloc(numdbl * sizeof(double) + 1);
+        memcpy(vals, dblptr, numdbl * sizeof(double));
+        jacscloud_on_method((char *)label, ridval, numdbl, vals);
+        jd_free(vals);
+    } else if (cmd == 0x90) {
+        if (payload[0] && !state->fwdqueue) {
+            state->fwdqueue = jd_queue_alloc(JD_USB_QUEUE_SIZE);
+        }
+        state->fwd_en = payload[0];
+        state->fwd_timer = (16 << 20) + now;
+    } else if (cmd == 0x91) {
+        send_empty(0x91);
+    } else if (cmd == 0x92) {
+        // the only effect of PONG we need is feeding the reconnect watchdog which was already
+        // done
+        LOGV("pong");
+    } else if (cmd == 0x93) {
+        uint8_t *msg = prep_msg(0x93, JD_SHA256_HASH_BYTES);
+        jacscriptmgr_get_hash(msg + CHD_SIZE);
+        publish_and_free(msg, JD_SHA256_HASH_BYTES);
+    } else if (cmd == 0x94) {
+        if (jacscriptmgr_deploy_start(*(uint32_t *)payload) == 0)
+            send_empty(0x94);
+        else
+            send_empty(0xff);
+    } else if (cmd == 0x95) {
+        if (jacscriptmgr_deploy_write(payload, payload_size) == 0)
+            send_empty(0x95);
+        else
+            send_empty(0xff);
+    } else if (cmd == 0x96) {
+        if (jacscriptmgr_deploy_write(NULL, 0) == 0)
+            send_empty(0x96);
+        else
+            send_empty(0xff);
+    } else {
+        LOG("unknown cmd %x", cmd);
+    }
 }
 
 void jd_net_disable_fwd() {
