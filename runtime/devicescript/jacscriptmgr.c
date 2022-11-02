@@ -234,14 +234,14 @@ int jacscriptmgr_deploy_write(const void *buf, unsigned size) {
 
     if (state->write_offset / JD_FLASH_PAGE_SIZE !=
         (state->write_offset + size) / JD_FLASH_PAGE_SIZE) {
-        unsigned page_off = (state->write_offset + size) & (JD_FLASH_PAGE_SIZE - 1);
-        LOGV("erase %p", dst + page_off);
+        unsigned page_off = (state->write_offset + size) & ~(JD_FLASH_PAGE_SIZE - 1);
+        LOGV("erase %p %u", dst + page_off, page_off);
         flash_erase(dst + page_off);
     }
 
     dst += state->write_offset;
 
-    LOGV("wr %p sz=%d", dst, size);
+    LOGV("wr %p (%u) sz=%d", dst, (unsigned)state->write_offset, size);
     flash_program(dst, buf, size);
     state->write_offset += size;
 
