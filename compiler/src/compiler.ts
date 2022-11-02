@@ -2750,7 +2750,8 @@ class Program implements TopOpWriter {
 
     emit() {
         const files = Object.keys(prelude)
-        files.push(this.host.mainFileName?.() || "")
+        const mainFn = this.host.mainFileName?.() || ""
+        files.push(mainFn)
 
         assert(!this.tree)
 
@@ -2800,6 +2801,12 @@ class Program implements TopOpWriter {
             source: this._source,
         }
         this.host.write("prog.jacs", b)
+        const progJson = {
+            text: this._source,
+            blocks: "",
+            compiled: toHex(b),
+        }
+        this.host.write("prog-body.json", JSON.stringify(progJson, null, 4))
         this.host.write("prog-dbg.json", JSON.stringify(dbg))
 
         // write assembly again
