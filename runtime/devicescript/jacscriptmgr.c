@@ -215,7 +215,7 @@ int jacscriptmgr_deploy_write(const void *buf, unsigned size) {
             flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             flash_sync();
             DMESG("program written");
-            send_status(state);
+            stop_program(state);
             jd_send_event(state, JD_EV_CHANGE);
             state->next_restart = now; // make it more responsive
             return 0;
