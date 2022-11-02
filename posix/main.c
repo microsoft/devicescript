@@ -42,7 +42,7 @@ void app_init_services() {
     jd_role_manager_init();
     init_jacscript_manager();
 
-    wssk_init();
+    wsskhealth_init();
     jacscloud_init(&wssk_cloud);
     tsagg_init(&wssk_cloud);
 }
@@ -194,7 +194,7 @@ static void client_process(void) {
     jd_tcpsock_process();
 }
 
-static void run_sample(const char *name) {
+static void run_sample(const char *name, int keepgoing) {
     test_mode = true;
 
     jd_packet_t ask_ann;
@@ -212,7 +212,7 @@ static void run_sample(const char *name) {
         client_process();
         target_wait_us(10000);
 
-        if (iter > 15 && !jacscriptmgr_get_ctx() && the_end == 0x1000000000) {
+        if (!keepgoing && iter > 15 && !jacscriptmgr_get_ctx() && the_end == 0x1000000000) {
             // if the script ended, we shall exit soon, but not exactly now
             the_end = iter + 15;
         }
@@ -310,7 +310,12 @@ int main(int argc, const char **argv) {
         jd_lstore_init();
     jd_services_init();
 
-    DMESG("self-device: %-s", jd_device_short_id_a(jd_device_id()));
+    {
+        uint64_t devid = jd_device_id();
+        char hexbuf[17];
+        jd_to_hex(hexbuf, &devid, 8);
+        DMESG("self-device: %-s %s", jd_device_short_id_a(jd_device_id()), hexbuf);
+    }
 
     if (jacs_img && remote_deploy) {
         load_image(jacs_img);
@@ -320,7 +325,7 @@ int main(int argc, const char **argv) {
     jd_client_subscribe(client_event_handler, NULL);
 
     if (jacs_img) {
-        run_sample(jacs_img);
+        run_sample(jacs_img, websock);
     } else {
 #ifdef __EMSCRIPTEN__
         run_emscripten_loop();

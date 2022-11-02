@@ -9,6 +9,7 @@ CFLAGS = $(DEFINES) $(INC) \
 	-Wno-error=unused-variable
 
 _IGNORE1 := $(shell test -f jacdac-c/README.md || git submodule update --init --recursive 1>&2)
+_IGNORE2 := $(shell test -f jacdac-c/jacscript/sha-2/README.md || (cd jacdac-c && git submodule update --init --recursive 1>&2))
 
 DEPS = $(wildcard \
 	inc/*.h \
