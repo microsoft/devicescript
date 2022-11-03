@@ -172,7 +172,9 @@ async function runServer(args) {
         return
     }
     const inst = await jacsFactory()
-    if (!testMode)
+    if (testMode)
+        inst.sendPacket = () => { }
+    else
         await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
     inst.jacsStart()
     if (fn) {
