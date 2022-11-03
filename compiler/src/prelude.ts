@@ -1,5 +1,5 @@
 export const prelude: Record<string, string> = {
-    "clientcmds.js":
+    "clientcmds.ts":
 `BuzzerRole.prototype.playNote = function (frequency, volume, duration) {
     var p = 1000000 / frequency
     volume = clamp(0, volume, 1)
@@ -19,7 +19,7 @@ LedRole.prototype.setAll = function (r, g, b) {
     this.pixels.write(packet)
 }
 `,
-    "utils.js":
+    "utils.ts":
 `function clamp(low, v, hi) {
     if (v < low) return low
     if (v > hi) return hi
