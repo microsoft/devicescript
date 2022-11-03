@@ -29,9 +29,7 @@ declare function isNaN(number: number): boolean
 interface Object {}
 
 interface Function {}
-
 interface CallableFunction extends Function {}
-
 interface NewableFunction extends Function {}
 
 interface IArguments {
@@ -41,12 +39,17 @@ interface IArguments {
 }
 
 interface String {}
-
 interface Boolean {}
-
 interface Number {}
 
 interface RegExp {}
+interface IterableIterator<T> {}
+
+
+interface SymbolConstructor {
+    readonly iterator: unique symbol;
+}
+declare var Symbol: SymbolConstructor;
 
 interface Array<T> {
     /**
@@ -54,6 +57,7 @@ interface Array<T> {
      */
     length: number
     [n: number]: T
+    [Symbol.iterator](): IterableIterator<T>;
 }
 
 declare namespace console {

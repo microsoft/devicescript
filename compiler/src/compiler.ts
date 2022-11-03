@@ -964,7 +964,8 @@ class Program implements TopOpWriter {
         ) as FunctionDecl
         if (!this.isTopLevel(stmt))
             throwError(stmt, "only top-level functions are supported")
-        if (stmt.modifiers?.length) throwError(stmt, "async not supported")
+        if (stmt.modifiers?.length || stmt.asteriskToken)
+            throwError(stmt, "async not supported")
         assert(!!fundecl || !!this.numErrors)
 
         if (fundecl) {
@@ -2165,7 +2166,8 @@ class Program implements TopOpWriter {
     private emitLiteral(v: any, node?: ts.Node) {
         if (v === true) v = 1
         else if (v === false) v = 0
-        else if (v === null || v === undefined) v = 0
+
+        if (v === null || v === undefined) return literal(v)
 
         if (typeof v == "string") return this.writer.emitString(v)
 
@@ -2497,6 +2499,14 @@ class Program implements TopOpWriter {
         switch (expr.kind) {
             case SK.CallExpression:
                 return this.emitCallExpression(expr as ts.CallExpression)
+            case SK.FalseKeyword:
+                return this.emitLiteral(false)
+            case SK.TrueKeyword:
+                return this.emitLiteral(true)
+            case SK.NullKeyword:
+                return this.emitLiteral(null)
+            case SK.UndefinedKeyword:
+                return this.emitLiteral(undefined)
             case SK.Identifier:
                 return this.emitIdentifier(expr as ts.Identifier)
             case SK.ThisKeyword:
@@ -2773,8 +2783,6 @@ class Program implements TopOpWriter {
 
         this.emitProgram(this.tree)
 
-        if (this.numErrors > 0) return
-
         this.finalizeCloudMethods()
         this.finalizeDispatchers()
         for (const p of this.procs) p.finalize()
@@ -2872,17 +2880,24 @@ export function testCompiler(host: Host, code: string) {
             verifyBytecode: host.verifyBytecode,
             mainFileName: host.mainFileName,
             error: err => {
-                const { line } = ts.getLineAndCharacterOfPosition(
-                    err.file,
-                    err.start
-                )
-                const exp = lines[line]
-                const text = ts.flattenDiagnosticMessageText(
-                    err.messageText,
-                    "\n"
-                )
-                if (exp && text.indexOf(exp) >= 0) lines[line] = null
-                else {
+                let isOK = false
+                if (err.file) {
+                    const { line } = ts.getLineAndCharacterOfPosition(
+                        err.file,
+                        err.start
+                    )
+                    const exp = lines[line]
+                    const text = ts.flattenDiagnosticMessageText(
+                        err.messageText,
+                        "\n"
+                    )
+                    if (exp != null && text.indexOf(exp) >= 0) {
+                        lines[line] = "" // allow more errors on the same line
+                        isOK = true
+                    }
+                }
+
+                if (!isOK) {
                     numExtra++
                     console.error(formatDiagnostics([err]))
                 }

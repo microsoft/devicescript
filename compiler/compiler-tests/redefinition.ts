@@ -1,8 +1,8 @@
 var rx = roles.button()
-var rx = roles.lightBulb() //! already defined
+var rx = roles.button() //! already defined
 
 var btnA = roles.button()
-var btnA = 1 //! already defined
+var btnA = roles.button() //! already defined
 
 var z = 1
 
@@ -11,10 +11,12 @@ function foo() {
     var z = 1 //! already defined
 }
 
-var qq = 1
-function qq() { } //! already defined
+var qq = 1 //! Duplicate identifier
+function qq() { } //! Duplicate identifier
 
-function baz() { }
-function baz() { } //! already defined
+function baz() { } //! Duplicate function implementation
+function baz() { } //! Duplicate function implementation
 
 foo()
+
+export {}

@@ -13,7 +13,7 @@ function foo() {
 
 if (g > 0) {
     var q = 0
-    function baz() { } //! only top-level functions are supported
+    function bazz() { } //! only top-level functions are supported
 
     r.down.subscribe(() => { //! top-level
     })
@@ -25,3 +25,5 @@ function baz() {
 
 foo()
 baz()
+
+export {}
