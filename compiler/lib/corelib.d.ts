@@ -38,3 +38,11 @@ interface Array<T> {
     length: number
     [n: number]: T
 }
+
+declare namespace console {
+    function log(...args: any[]): void
+}
+
+declare namespace Date {
+    function now(): number
+}

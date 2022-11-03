@@ -64,10 +64,19 @@ const files = {
 function buildPrelude(folder, outp) {
   const files = fs.readdirSync(folder)
   files.sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
-  let r = 'export const prelude: Record<string, string> = {\n'
+
+  const filecont = {}
   for (const fn of files) {
+    filecont[fn] = fs.readFileSync(folder + "/" + fn, "utf-8")
+  }
+
+  const specs = "../jacdac-c/jacdac/dist/jacscript-spec.d.ts"
+  filecont["../" + specs] = fs.readFileSync(specs, "utf-8")
+
+  let r = 'export const prelude: Record<string, string> = {\n'
+  for (const fn of Object.keys(filecont)) {
     r += `    "${fn}":\n\``
-    const lines = fs.readFileSync(folder + "/" + fn, "utf-8").split(/\r?\n/)
+    const lines = filecont[fn].split(/\r?\n/)
     while (lines[lines.length - 1] == "")
       lines.pop()
     for (const ln of lines) {

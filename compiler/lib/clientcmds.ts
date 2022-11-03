@@ -4,6 +4,9 @@ BuzzerRole.prototype.playNote = function (frequency, volume, duration) {
     this.playTone(p, p * volume * 0.5, duration)
 }
 
+interface LedRole {
+    setAll(r: number, g: number, b: number): void
+}
 LedRole.prototype.setAll = function (r, g, b) {
     var buflen = this.numPixels.read() * 3
     var idx = 0
