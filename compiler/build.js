@@ -85,7 +85,10 @@ function buildPrelude(folder, outp) {
     r += "`,\n"
   }
   r += "}\n"
-  const curr = fs.readFileSync(outp, "utf-8")
+  let curr = ""
+  try {
+    curr = fs.readFileSync(outp, "utf-8")
+  } catch { }
   if (curr != r) {
     console.log("updating " + outp)
     fs.writeFileSync(outp, r)
