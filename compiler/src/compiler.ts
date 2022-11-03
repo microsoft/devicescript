@@ -1445,6 +1445,8 @@ class Program implements TopOpWriter {
     }
 
     private bufferLiteral(expr: Expr): Uint8Array {
+        if (!expr) return undefined
+
         if (ts.isTaggedTemplateExpression(expr) && idName(expr.tag) == "hex") {
             if (!ts.isNoSubstitutionTemplateLiteral(expr.template))
                 throwError(
@@ -2546,6 +2548,10 @@ class Program implements TopOpWriter {
             case SK.ObjectLiteralExpression:
                 return this.emitObjectExpression(
                     expr as ts.ObjectLiteralExpression
+                )
+            case SK.ParenthesizedExpression:
+                return this.emitExpr(
+                    (expr as ts.ParenthesizedExpression).expression
                 )
             default:
                 // console.log(expr)

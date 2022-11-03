@@ -122,7 +122,7 @@ export function buildAST(host: Host, source: string) {
         // types?: string[];
     }
     const program = ts.createProgram({
-        rootNames: [mainFn].concat(Object.keys(prelude)),
+        rootNames: Object.keys(prelude).concat([mainFn]),
         options: tsOptions,
         host: tsHost,
     })

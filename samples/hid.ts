@@ -5,10 +5,14 @@ var kbd = roles.hidKeyboard()
 btn.down.subscribe(() => {
     // kbd.key(HidKeyboardSelector.UpArrow, HidKeyboardModifiers.None, HidKeyboardAction.Press)
     // kbd.key(HidKeyboardSelector.VolumeUp, HidKeyboardModifiers.None, HidKeyboardAction.Press)
-    kbd.key(HidKeyboardSelector.V, HidKeyboardModifiers.LeftGUI, HidKeyboardAction.Press)
+    kbd.key(
+        HidKeyboardSelector.V,
+        HidKeyboardModifiers.LeftGUI,
+        HidKeyboardAction.Press
+    )
 })
 
-function press(k) {
+function press(k: number) {
     kbd.key(k, HidKeyboardModifiers.None, HidKeyboardAction.Down)
     wait(0.02)
     kbd.key(k, HidKeyboardModifiers.None, HidKeyboardAction.Up)
@@ -27,3 +31,5 @@ rot.position.onChange(1, () => {
         press(HidKeyboardSelector.LeftArrow)
     }
 })
+
+export {}
