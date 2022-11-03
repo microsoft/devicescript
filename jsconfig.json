@@ -1,6 +1,0 @@
-{
-    "compilerOptions": {
-        "checkJs": true
-    },
-    "exclude": ["**/node_modules/*", "compiler/src"]
-}

@@ -1,18 +1,12 @@
-/**
- * @param {number} x
- * @param {number} y
- */
-function isClose(x, y) {
-    if (isNaN(x) && isNaN(y))
-        return
+function isClose(x: number, y: number): void {
+    if (isNaN(x) && isNaN(y)) return
     var d = Math.abs(x - y)
-    if (d < 0.00000001 || d / Math.abs(x + y) < 0.00001)
-        return
+    if (d < 0.00000001 || d / Math.abs(x + y) < 0.00001) return
     console.log(x, " != ", y, "!")
     panic(108)
 }
 
-function isEq(x, y) {
+function isEq(x: number, y: number): void {
     // console.log(x, " == ", y, "?")
     if (x != y) {
         console.log(format("fail: {0} != {1}", x, y))
@@ -24,39 +18,32 @@ var x = 0
 
 function testFlow() {
     x = 1
-    if (x != 1)
-        panic(1)
-    if (x !== 1)
-        panic(1)
+    if (x != 1) panic(1)
+    if (x !== 1) panic(1)
     if (x == 1) {
         x = 2
-        if (x != 2)
-            panic(3)
+        if (x != 2) panic(3)
     } else {
         panic(2)
     }
     x = 1
-    if (x < 1)
-        panic(1)
-    if (x > 1)
-        panic(1)
-    if (x >= 1) { }
-    else panic(1)
-    if (x <= 1) { }
-    else panic(1)
+    if (x < 1) panic(1)
+    if (x > 1) panic(1)
+    if (x >= 1) {
+    } else panic(1)
+    if (x <= 1) {
+    } else panic(1)
     if (x < 0.5) panic(1)
     if (x > 1.5) panic(1)
-    if (0 <= x && x <= 2) { }
-    else panic(1)
-    if (0 <= x || x < 1) { }
-    else panic(1)
+    if (0 <= x && x <= 2) {
+    } else panic(1)
+    if (0 <= x || x < 1) {
+    } else panic(1)
     if (x < 0 || x > 10) panic(1)
     x = -1
-    if (Math.abs(x) != 1)
-        panic(4)
+    if (Math.abs(x) != 1) panic(4)
     x = Math.random()
-    if (x < 0 || x > 1 || isNaN(x))
-        panic(5)
+    if (x < 0 || x > 1 || isNaN(x)) panic(5)
     x = 42
     console.log("rand=", Math.random())
 }
@@ -79,7 +66,7 @@ function testMath() {
     isClose(Math.sqrt(1 / 2), Math.SQRT1_2)
     isClose(Math.cbrt(27), 3)
     isClose(Math.exp(1), Math.E)
-    isClose(Math.exp(10), 22026.46579480)
+    isClose(Math.exp(10), 22026.4657948)
     isEq(Math.ceil(0.1), 1)
     isEq(Math.ceil(0.9), 1)
     isEq(Math.floor(1.1), 1)
@@ -105,7 +92,7 @@ function testMath() {
     isEq(1 ^ 3, 2)
     isEq(1 ^ 0, 1)
     isEq(1 ^ 2, 3)
-    isEq(~(-3), 2)
+    isEq(~-3, 2)
     isEq(~100, -101)
 
     isEq(1 << 2, 4)
@@ -141,12 +128,12 @@ function testMath() {
     isEq(Math.idiv(-102, 7), -14)
 }
 
-function lazyX(v) {
+function lazyX(v: number) {
     x = x + 1 + v
     return v
 }
 
-function checkX(v) {
+function checkX(v: number) {
     if (x != v) {
         console.log(format("{0} != {1} !!", x, v))
         panic(11)
@@ -175,17 +162,16 @@ function testLazy() {
     }
 }
 
-function fib(k) {
+function fib(k: number): number {
     if (k < 2) return k
     var r = fib(k - 1) + fib(k - 2)
     return r
 }
 
-function fibx(k) {
+function fibx(k: number): number {
     if (k < 2) return k
     return fibx(k - 1) + fibx(k - 2)
 }
-
 
 function testBuffer() {
     var buf = buffer(20)
@@ -202,7 +188,7 @@ function testBuffer() {
 
     buf[2] = 7
     isEq(buf[2], 7)
-    
+
     buf[4] = 0x13
     var b2 = hex`72 33 23 12`
     buf.blitAt(0, b2, 0, 10)
@@ -252,3 +238,5 @@ testArray()
 testObj()
 console.log("all OK")
 reboot()
+
+export {}

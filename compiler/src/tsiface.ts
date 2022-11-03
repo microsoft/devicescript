@@ -113,7 +113,7 @@ export function buildAST(host: Host, source: string) {
         strict: true,
         // strictFunctionTypes: false,
         // strictBindCallApply: false,
-        // strictNullChecks: false,
+        strictNullChecks: false,
         // strictPropertyInitialization: false,
         // suppressExcessPropertyErrors: true,
         // suppressImplicitAnyIndexErrors: true,

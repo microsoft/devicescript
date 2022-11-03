@@ -2591,6 +2591,7 @@ class Program implements TopOpWriter {
                     return this.emitFunctionDeclaration(
                         stmt as ts.FunctionDeclaration
                     )
+                case SK.ExportDeclaration:
                 case SK.InterfaceDeclaration:
                     return // ignore
                 default:

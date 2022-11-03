@@ -99,7 +99,7 @@ em: $(VM_TMP_FILE)
 
 comp: compiler/node_modules/typescript compiler/built/compiler/src/jacscript.js
 
-compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.js)
+compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.ts)
 	cd compiler && node build.js
 
 comp-fast:
@@ -107,7 +107,7 @@ comp-fast:
 	cd compiler && node build.js --fast
 
 test-c: native comp
-	node run -c -t compiler/run-tests/basic.js
+	node run -c -t compiler/run-tests/basic.ts
 
 test-em: em comp
 	node run test
