@@ -118,7 +118,9 @@ async function main() {
     console.log("bundle done")
     if (!fast)
       await runTSC(["-b", "src"])
-  } catch { }
+  } catch (e) {
+    console.error(e)
+   }
 }
 
 main()
