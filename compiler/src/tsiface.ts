@@ -33,7 +33,7 @@ class MyHost implements ts.CompilerHost {
     writeFile: ts.WriteFileCallback
 
     getDefaultLibFileName(options: ts.CompilerOptions): string {
-        return "no-default-lib.d.ts"
+        return "corelib.d.ts"
     }
     getDefaultLibLocation?(): string {
         return "."
@@ -105,7 +105,7 @@ export function buildAST(host: Host, source: string) {
         noImplicitThis: true,
         // noStrictGenericChecks: true,
         noPropertyAccessFromIndexSignature: true,
-        noLib: true,
+        // noLib: true,
         noImplicitOverride: true,
         // skipLibCheck: true,
         // skipDefaultLibCheck: true,

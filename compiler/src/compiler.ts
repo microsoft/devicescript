@@ -2070,7 +2070,7 @@ class Program implements TopOpWriter {
         if (!r)
             throwError(
                 expr,
-                `service| ${roleSpec.camelName} has no member ${propName}`
+                `service ${roleSpec.camelName} has no member ${propName}`
             )
         return r
 
@@ -2590,7 +2590,7 @@ class Program implements TopOpWriter {
                         stmt as ts.FunctionDeclaration
                     )
                 default:
-                    console.log(stmt)
+                    // console.log(stmt)
                     throwError(stmt, `unhandled stmt type: ${SK[stmt.kind]}`)
             }
         } catch (e) {
