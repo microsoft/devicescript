@@ -2560,10 +2560,8 @@ class Program implements TopOpWriter {
     }
 
     private sourceFrag(node: ts.Node) {
-        return node
-            .getFullText()
-            .slice(0, 60)
-            .replace(/\n[^]*/, "...")
+        const text = node.getFullText().trim()
+        return text.slice(0, 60).replace(/\n[^]*/, "...")
     }
 
     private handleException(stmt: ts.Node, e: any) {
