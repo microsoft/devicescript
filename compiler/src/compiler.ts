@@ -987,7 +987,9 @@ class Program implements TopOpWriter {
         this.onStart = new DelayedCodeSection("onStart", this.main.writer)
 
         const stmts = ([] as ts.Statement[]).concat(
-            ...prog.getSourceFiles().map(file => file.statements)
+            ...prog
+                .getSourceFiles()
+                .map(file => (file.isDeclarationFile ? [] : file.statements))
         )
 
         stmts.forEach(markTopLevel)
@@ -2013,7 +2015,7 @@ class Program implements TopOpWriter {
     }
 
     private emitRoleMember(expr: ts.PropertyAccessExpression, roleObj: Value) {
-        const propName = this.forceName(expr.expression)
+        const propName = this.forceName(expr.name)
         let r: Value
         let v: ValueAdd
 
@@ -2589,6 +2591,8 @@ class Program implements TopOpWriter {
                     return this.emitFunctionDeclaration(
                         stmt as ts.FunctionDeclaration
                     )
+                case SK.InterfaceDeclaration:
+                    return // ignore
                 default:
                     // console.log(stmt)
                     throwError(stmt, `unhandled stmt type: ${SK[stmt.kind]}`)

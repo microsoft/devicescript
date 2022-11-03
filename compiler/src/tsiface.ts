@@ -138,5 +138,5 @@ const diagHost: ts.FormatDiagnosticsHost = {
 export function formatDiagnostics(
     diagnostics: readonly ts.Diagnostic[]
 ): string {
-    return ts.formatDiagnostics(diagnostics, diagHost)
+    return ts.formatDiagnostics(diagnostics, diagHost).trim()
 }
