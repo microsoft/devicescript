@@ -8,6 +8,7 @@
 
 #include "jd_sdk.h"
 #include "jacscript/jacscript.h"
+#include <applibs/storage.h>
 #include "storage/jd_storage.h"
 
 #define LOG(fmt, ...) printf("main: " fmt "\n", ##__VA_ARGS__)
@@ -141,21 +142,21 @@ int jacs_client_deploy(const void *img, unsigned imgsize) {
 }
 
 int load_image(const char *name) {
-    FILE *f = name ? fopen(name, "rb") : NULL;
-    if (!f) {
+    int f = name ? Storage_OpenFileInImagePackage(name) : NULL;
+    if (f == -1) {
         fprintf(stderr, "can't open image '%s'\n", name);
         return -1;
     }
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
+
+    long size = lseek(f, 0, SEEK_END);
     if (size <= 0) {
         fprintf(stderr, "can't determine file size for` '%s'\n", name);
         return -2;
     }
-    fseek(f, 0, SEEK_SET);
+    lseek(f, 0, SEEK_SET);
     uint8_t *img = jd_alloc(size + 1);
-    fread(img, size, 1, f);
-    fclose(f);
+    read(f, img, size);
+    close(f);
     if (memcmp("4a6163530a", img, 10) == 0)
         size = jd_from_hex(img, (const char *)img);
     int r = jacs_verify(img, size);

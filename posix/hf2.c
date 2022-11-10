@@ -48,78 +48,78 @@ typedef struct jd_transport_ctx *hf2_t;
 
 static int forced_read(int fd, void *buf, size_t nbytes) {
     int numread = 0;
-    while ((int)nbytes > numread) {
-        int r = read(fd, (uint8_t *)buf + numread, nbytes - numread);
-        if (r <= 0)
-            return r;
-        numread += r;
-        if ((int)nbytes > numread)
-            LOGV("short read: %d", r);
-    }
+    // while ((int)nbytes > numread) {
+    //     int r = read(fd, (uint8_t *)buf + numread, nbytes - numread);
+    //     if (r <= 0)
+    //         return r;
+    //     numread += r;
+    //     if ((int)nbytes > numread)
+    //         LOGV("short read: %d", r);
+    // }
     return numread;
 }
 
 static void *hf2_read_loop(void *ctx_) {
-    hf2_t ctx = ctx_;
-    uint8_t buf[HF2_FRAGMENT_SIZE + 1];
-    int frameptr = 0;
-    for (;;) {
-        int r = forced_read(ctx->serialfd, buf, HF2_FRAGMENT_SIZE);
-        if (r <= 0) {
-            LOG("read loop stopped");
-            break;
-        }
-        if (r != HF2_FRAGMENT_SIZE) {
-            LOG("read sz: %d", r);
-            abort();
-        }
-        int tp = buf[0] & HF2_FLAG_MASK;
-        int len = buf[0] & HF2_SIZE_MASK;
-        if (tp & HF2_FLAG_SERIAL_OUT) {
-            // TODO probably want to concat stuff
-            buf[len + 1] = 0; // NUL-terminate
-            LOG("serial-%s: %s", tp == HF2_FLAG_SERIAL_ERR ? "err" : "out", buf + 1);
-            continue;
-        }
-        if (frameptr >= 0) {
-            if (frameptr + len <= HF2_MAX_PKT) {
-                memcpy(ctx->frame + frameptr, buf + 1, len);
-                frameptr += len;
-            } else {
-                LOG("pkt overflow");
-                frameptr = -1;
-            }
-        }
-        if (tp == HF2_FLAG_CMDPKT_BODY)
-            continue;
-        assert(tp == HF2_FLAG_CMDPKT_LAST);
-        if (frameptr < 4) {
-            frameptr = 0;
-            continue;
-        }
-        if (ctx->response.eventId == HF2_EV_JDS_PACKET) {
-            int pktlen = ctx->response.data8[2] + 12;
-            if (4 + pktlen <= frameptr) {
-                jd_frame_t *frame = (jd_frame_t *)ctx->response.data8;
-                if (!jd_frame_crc_ok(frame))
-                    LOG("invalid CRC");
-                LOGV("JDPKT %d", frame->size);
-                if (ctx->frame_cb)
-                    ctx->frame_cb(ctx->frame_cb_data, frame);
-            } else {
-                LOG("too short JDPKT");
-            }
-        } else if (ctx->response.status & HF2_STATUS_EVENT) {
-            LOG("unhandled event 0x%x", ctx->response.eventId);
-        } else {
-            pthread_mutex_lock(&ctx->talk_mutex);
-            ctx->num_resp++;
-            memcpy(ctx->talk_frame, ctx->frame, frameptr);
-            pthread_cond_signal(&ctx->talk_awaiter);
-            pthread_mutex_unlock(&ctx->talk_mutex);
-        }
-        frameptr = 0;
-    }
+    // hf2_t ctx = ctx_;
+    // uint8_t buf[HF2_FRAGMENT_SIZE + 1];
+    // int frameptr = 0;
+    // for (;;) {
+    //     int r = forced_read(ctx->serialfd, buf, HF2_FRAGMENT_SIZE);
+    //     if (r <= 0) {
+    //         LOG("read loop stopped");
+    //         break;
+    //     }
+    //     if (r != HF2_FRAGMENT_SIZE) {
+    //         LOG("read sz: %d", r);
+    //         abort();
+    //     }
+    //     int tp = buf[0] & HF2_FLAG_MASK;
+    //     int len = buf[0] & HF2_SIZE_MASK;
+    //     if (tp & HF2_FLAG_SERIAL_OUT) {
+    //         // TODO probably want to concat stuff
+    //         buf[len + 1] = 0; // NUL-terminate
+    //         LOG("serial-%s: %s", tp == HF2_FLAG_SERIAL_ERR ? "err" : "out", buf + 1);
+    //         continue;
+    //     }
+    //     if (frameptr >= 0) {
+    //         if (frameptr + len <= HF2_MAX_PKT) {
+    //             memcpy(ctx->frame + frameptr, buf + 1, len);
+    //             frameptr += len;
+    //         } else {
+    //             LOG("pkt overflow");
+    //             frameptr = -1;
+    //         }
+    //     }
+    //     if (tp == HF2_FLAG_CMDPKT_BODY)
+    //         continue;
+    //     assert(tp == HF2_FLAG_CMDPKT_LAST);
+    //     if (frameptr < 4) {
+    //         frameptr = 0;
+    //         continue;
+    //     }
+    //     if (ctx->response.eventId == HF2_EV_JDS_PACKET) {
+    //         int pktlen = ctx->response.data8[2] + 12;
+    //         if (4 + pktlen <= frameptr) {
+    //             jd_frame_t *frame = (jd_frame_t *)ctx->response.data8;
+    //             if (!jd_frame_crc_ok(frame))
+    //                 LOG("invalid CRC");
+    //             LOGV("JDPKT %d", frame->size);
+    //             if (ctx->frame_cb)
+    //                 ctx->frame_cb(ctx->frame_cb_data, frame);
+    //         } else {
+    //             LOG("too short JDPKT");
+    //         }
+    //     } else if (ctx->response.status & HF2_STATUS_EVENT) {
+    //         LOG("unhandled event 0x%x", ctx->response.eventId);
+    //     } else {
+    //         pthread_mutex_lock(&ctx->talk_mutex);
+    //         ctx->num_resp++;
+    //         memcpy(ctx->talk_frame, ctx->frame, frameptr);
+    //         pthread_cond_signal(&ctx->talk_awaiter);
+    //         pthread_mutex_unlock(&ctx->talk_mutex);
+    //     }
+    //     frameptr = 0;
+    // }
     return NULL;
 }
 
@@ -134,28 +134,28 @@ void hf2_set_frame_callback(hf2_t ctx, void (*cb)(void *userdata, jd_frame_t *fr
 }
 
 static void hf2_send(hf2_t ctx, const void *data, size_t size) {
-    uint8_t buf[HF2_FRAGMENT_SIZE] = {0};
-    const uint8_t *ptr = data;
-    for (;;) {
-        int s;
-        if (size <= HF2_FRAGMENT_SIZE - 1) {
-            s = size;
-            buf[0] = HF2_FLAG_CMDPKT_LAST | size;
-        } else {
-            s = HF2_FRAGMENT_SIZE - 1;
-            buf[0] = HF2_FLAG_CMDPKT_BODY | (HF2_FRAGMENT_SIZE - 1);
-        }
-        memcpy(buf + 1, ptr, s);
-        int sz = write(ctx->serialfd, buf, HF2_FRAGMENT_SIZE);
-        if (sz != HF2_FRAGMENT_SIZE) {
-            LOG("write error");
-            abort();
-        }
-        ptr += s;
-        size -= s;
-        if (!size)
-            break;
-    }
+//     uint8_t buf[HF2_FRAGMENT_SIZE] = {0};
+//     const uint8_t *ptr = data;
+//     for (;;) {
+//         int s;
+//         if (size <= HF2_FRAGMENT_SIZE - 1) {
+//             s = size;
+//             buf[0] = HF2_FLAG_CMDPKT_LAST | size;
+//         } else {
+//             s = HF2_FRAGMENT_SIZE - 1;
+//             buf[0] = HF2_FLAG_CMDPKT_BODY | (HF2_FRAGMENT_SIZE - 1);
+//         }
+//         memcpy(buf + 1, ptr, s);
+//         int sz = write(ctx->serialfd, buf, HF2_FRAGMENT_SIZE);
+//         if (sz != HF2_FRAGMENT_SIZE) {
+//             LOG("write error");
+//             abort();
+//         }
+//         ptr += s;
+//         size -= s;
+//         if (!size)
+//             break;
+//     }
 }
 
 static int hf2_talk(hf2_t ctx, uint32_t cmd, const void *data, size_t datalen) {
@@ -163,49 +163,49 @@ static int hf2_talk(hf2_t ctx, uint32_t cmd, const void *data, size_t datalen) {
     size_t sz = 8 + datalen;
     int ret;
 
-    HF2_Command *req = alloca(sz);
-    req->command_id = cmd;
-    req->tag = ++ctx->cmd_seq;
-    req->reserved0 = 0;
-    req->reserved1 = 0;
-    if (datalen)
-        memcpy(req->data8, data, datalen);
-    ctx->talk_response.tag = ~req->tag;
-    hf2_send(ctx, req, sz);
+    // HF2_Command *req = alloca(sz);
+    // req->command_id = cmd;
+    // req->tag = ++ctx->cmd_seq;
+    // req->reserved0 = 0;
+    // req->reserved1 = 0;
+    // if (datalen)
+    //     memcpy(req->data8, data, datalen);
+    // ctx->talk_response.tag = ~req->tag;
+    // hf2_send(ctx, req, sz);
 
-    pthread_mutex_lock(&ctx->talk_mutex);
-    if (ctx->talk_response.tag != req->tag) {
-        uint32_t limit = ctx->num_resp + 3;
-        while (ctx->num_resp < limit) {
-            struct timespec t;
-            clock_gettime(CLOCK_REALTIME, &t);
-            t.tv_sec += 1;
-            int r = pthread_cond_timedwait(&ctx->talk_awaiter, &ctx->talk_mutex, &t);
-            if (r != 0) {
-                LOG("timeout, %s", strerror(r));
-                break;
-            }
-            if (ctx->talk_response.tag == req->tag)
-                break;
-            LOG("message out of sync; %d - %d", ctx->talk_response.tag, req->tag);
-        }
-    }
-    if (ctx->talk_response.tag == req->tag) {
-        switch (ctx->talk_response.status) {
-        case HF2_STATUS_OK:
-            ret = 0;
-            break;
-        default:
-            LOG("HF2 status: %d (%d) for %x", ctx->talk_response.status,
-                ctx->talk_response.status_info, cmd);
-            ret = -ctx->talk_response.status;
-            break;
-        }
-    } else {
-        ret = -100;
-        LOG("no response for %x", cmd);
-    }
-    pthread_mutex_unlock(&ctx->talk_mutex);
+    // pthread_mutex_lock(&ctx->talk_mutex);
+    // if (ctx->talk_response.tag != req->tag) {
+    //     uint32_t limit = ctx->num_resp + 3;
+    //     while (ctx->num_resp < limit) {
+    //         struct timespec t;
+    //         clock_gettime(CLOCK_REALTIME, &t);
+    //         t.tv_sec += 1;
+    //         int r = pthread_cond_timedwait(&ctx->talk_awaiter, &ctx->talk_mutex, &t);
+    //         if (r != 0) {
+    //             LOG("timeout, %s", strerror(r));
+    //             break;
+    //         }
+    //         if (ctx->talk_response.tag == req->tag)
+    //             break;
+    //         LOG("message out of sync; %d - %d", ctx->talk_response.tag, req->tag);
+    //     }
+    // }
+    // if (ctx->talk_response.tag == req->tag) {
+    //     switch (ctx->talk_response.status) {
+    //     case HF2_STATUS_OK:
+    //         ret = 0;
+    //         break;
+    //     default:
+    //         LOG("HF2 status: %d (%d) for %x", ctx->talk_response.status,
+    //             ctx->talk_response.status_info, cmd);
+    //         ret = -ctx->talk_response.status;
+    //         break;
+    //     }
+    // } else {
+    //     ret = -100;
+    //     LOG("no response for %x", cmd);
+    // }
+    // pthread_mutex_unlock(&ctx->talk_mutex);
     pthread_mutex_unlock(&ctx->talk_outer_mutex);
 
     return ret;
