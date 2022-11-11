@@ -186,12 +186,13 @@ int load_image(const char *name) {
 }
 
 void jd_tcpsock_process(void);
+void app_process(void) {
+    tx_process();
+    jd_tcpsock_process();
+}
 
 static void client_process(void) {
     jd_process_everything();
-    tx_process();
-    jd_lstore_process();
-    jd_tcpsock_process();
 }
 
 static void run_sample(const char *name, int keepgoing) {

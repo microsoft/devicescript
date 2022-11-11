@@ -153,4 +153,7 @@ void dmesg(const char *format, ...)
     em_console_debug(tmp);
     va_end(arg);
 }
+
+void jd_tcpsock_process(void) {}
+
 #endif

@@ -35,5 +35,6 @@ void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
 // disable reset_in packets - not too useful on servers
 #define JD_CONFIG_WATCHDOG 0
 
+// #define JD_THR_PTHREAD 1
 
 #endif
