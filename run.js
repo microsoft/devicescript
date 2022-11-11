@@ -20,6 +20,13 @@ function jacsFactory() {
     let d
     try {
         d = require("./vm-dev")
+        try {
+            require("websocket-polyfill")
+            // @ts-ignore
+            global.Blob = require("buffer").Blob
+        } catch {
+            console.log("can't load websocket-polyfill")
+        }
     } catch {
         console.log("using shipped VM!")
         d = require("./vm")
@@ -165,7 +172,9 @@ async function runServer(args) {
         return
     }
     const inst = await jacsFactory()
-    if (!testMode)
+    if (testMode)
+        inst.sendPacket = () => { }
+    else
         await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
     inst.jacsStart()
     if (fn) {

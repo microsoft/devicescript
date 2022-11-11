@@ -10,7 +10,7 @@
 #include "jacscript/jacscript.h"
 #include "storage/jd_storage.h"
 
-#define LOG(fmt, ...) printf("main: " fmt "\n", ##__VA_ARGS__)
+#define LOG(fmt, ...) DMESG("main: " fmt, ##__VA_ARGS__)
 
 static bool test_mode;
 static bool remote_deploy;
@@ -41,6 +41,10 @@ void init_jacscript_manager(void);
 void app_init_services() {
     jd_role_manager_init();
     init_jacscript_manager();
+
+    wsskhealth_init();
+    jacscloud_init(&wssk_cloud);
+    tsagg_init(&wssk_cloud);
 }
 
 struct {
@@ -181,13 +185,17 @@ int load_image(const char *name) {
     return 0;
 }
 
-static void client_process(void) {
-    jd_process_everything();
+void jd_tcpsock_process(void);
+void app_process(void) {
     tx_process();
-    jd_lstore_process();
+    jd_tcpsock_process();
 }
 
-static void run_sample(const char *name) {
+static void client_process(void) {
+    jd_process_everything();
+}
+
+static void run_sample(const char *name, int keepgoing) {
     test_mode = true;
 
     jd_packet_t ask_ann;
@@ -205,7 +213,7 @@ static void run_sample(const char *name) {
         client_process();
         target_wait_us(10000);
 
-        if (iter > 15 && !jacscriptmgr_get_ctx() && the_end == 0x1000000000) {
+        if (!keepgoing && iter > 15 && !jacscriptmgr_get_ctx() && the_end == 0x1000000000) {
             // if the script ended, we shall exit soon, but not exactly now
             the_end = iter + 15;
         }
@@ -251,7 +259,7 @@ int main(int argc, const char **argv) {
         devid += 0x71000000000;
         char s[30];
         jd_device_short_id(s, devid);
-        if (strcmp(s, "ZX81") == 0) {
+        if (strcmp(s, "WS42") == 0) {
             jd_to_hex(s, &devid, sizeof(devid));
             printf("%s 0x%llx\n", s, devid);
             return 0;
@@ -259,6 +267,7 @@ int main(int argc, const char **argv) {
     }
 #endif
     int enable_lstore = 0;
+    int websock = 0;
 
     for (int i = 1; i < argc; ++i) {
         const char *arg = argv[i];
@@ -275,13 +284,15 @@ int main(int argc, const char **argv) {
             enable_lstore = 1;
         } else if (strcmp(arg, "-X") == 0) {
             jacs_set_global_flags(JACS_FLAG_GC_STRESS);
+        } else if (strcmp(arg, "-w") == 0) {
+            websock = 1;
         } else {
             fprintf(stderr, "unknown arg: %s\n", arg);
             return 1;
         }
     }
 
-    if (!transport && !jacs_img) {
+    if (!transport && !jacs_img && !websock) {
         fprintf(stderr, "need transport and/or image\n");
         return 1;
     }
@@ -300,7 +311,12 @@ int main(int argc, const char **argv) {
         jd_lstore_init();
     jd_services_init();
 
-    DMESG("self-device: %-s", jd_device_short_id_a(jd_device_id()));
+    {
+        uint64_t devid = jd_device_id();
+        char hexbuf[17];
+        jd_to_hex(hexbuf, &devid, 8);
+        DMESG("self-device: %-s %s", jd_device_short_id_a(jd_device_id()), hexbuf);
+    }
 
     if (jacs_img && remote_deploy) {
         load_image(jacs_img);
@@ -310,7 +326,7 @@ int main(int argc, const char **argv) {
     jd_client_subscribe(client_event_handler, NULL);
 
     if (jacs_img) {
-        run_sample(jacs_img);
+        run_sample(jacs_img, websock);
     } else {
 #ifdef __EMSCRIPTEN__
         run_emscripten_loop();

@@ -9,6 +9,7 @@ CFLAGS = $(DEFINES) $(INC) \
 	-Wno-error=unused-variable
 
 _IGNORE1 := $(shell test -f jacdac-c/README.md || git submodule update --init --recursive 1>&2)
+_IGNORE2 := $(shell test -f jacdac-c/jacscript/sha-2/README.md || (cd jacdac-c && git submodule update --init --recursive 1>&2))
 
 DEPS = $(wildcard \
 	inc/*.h \
@@ -27,16 +28,10 @@ JDS = jacdac-c/source
 SRC = $(wildcard posix/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
 	$(wildcard jacdac-c/jacscript/*.c) \
+	$(wildcard jacdac-c/network/*.c) \
 	jacdac-c/jacdac/dist/c/jd_spec_pack.c \
-	$(JDS)/jd_util.c \
-	$(JDS)/jd_control.c \
-	$(JDS)/jd_services.c \
-	$(JDS)/jd_send_util.c \
-	$(JDS)/jd_opipe.c \
-	$(JDS)/jd_ipipe.c \
-	$(JDS)/jd_queue.c \
-	$(JDS)/interfaces/tx_queue.c \
-	$(JDS)/interfaces/event_queue.c \
+	$(wildcard $(JDS)/*.c) \
+	$(wildcard $(JDS)/interfaces/*.c) \
 	jacdac-c/storage/crc32.c \
 	jacdac-c/storage/lstore.c \
 
@@ -69,12 +64,13 @@ vg: native
 	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
 
 EMCC_OPTS = $(DEFINES) $(INC) \
-	-g2 -O2 \
+	-g2 -O1 \
 	-s WASM=1 \
 	-s MODULARIZE=1 \
 	-s SINGLE_FILE=1 \
+	-s ASSERTIONS=1 \
 	-s EXPORTED_FUNCTIONS=_malloc,_free \
-	-s ENVIRONMENT=web,webview,worker \
+	-s ENVIRONMENT=web,webview,worker,node \
 	--no-entry
 
 vm/built/wasmpre.js: vm/wasmpre.ts vm/node_modules/typescript
@@ -92,8 +88,8 @@ VM_FILE = vm/dist/jacscript-vm.js
 
 $(VM_TMP_FILE): vm/built/wasmpre.js $(SRC) $(DEPS)
 	@mkdir -p vm/dist
-	grep -v '^export ' $< > $(BUILT)/pre.js
-	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC)
+	sed -e 's/^export var/var/' $< | grep -v '^export ' > $(BUILT)/pre.js
+	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC) -lwebsocket.js
 
 $(VM_FILE): $(VM_TMP_FILE)
 	@mkdir -p vm/dist
@@ -103,7 +99,7 @@ em: $(VM_TMP_FILE)
 
 comp: compiler/node_modules/typescript compiler/built/compiler/src/jacscript.js
 
-compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.js)
+compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.ts)
 	cd compiler && node build.js
 
 comp-fast:
@@ -111,7 +107,7 @@ comp-fast:
 	cd compiler && node build.js --fast
 
 test-c: native comp
-	node run -c -t compiler/run-tests/basic.js
+	node run -c -t compiler/run-tests/basic.ts
 
 test-em: em comp
 	node run test

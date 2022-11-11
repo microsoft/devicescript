@@ -14,6 +14,8 @@ import { toHex } from "./jdutil"
 export * from "./bytecode"
 export * from "./type"
 
+import type ts from "typescript"
+
 export interface SMap<T> {
     [k: string]: T
 }
@@ -262,25 +264,13 @@ export function emptyDebugInfo(): DebugInfo {
     }
 }
 
+export type JacsDiagnostic = ts.Diagnostic
+
 export interface Host {
     write(filename: string, contents: Uint8Array | string): void
     log(msg: string): void
     mainFileName?(): string
-    error?(err: JacError): void
+    error?(err: JacsDiagnostic): void
     getSpecs(): jdspec.ServiceSpec[]
     verifyBytecode?(buf: Uint8Array, dbgInfo?: DebugInfo): void
-}
-
-export interface JacError {
-    filename: string
-    line: number
-    column: number
-    message: string
-    codeFragment: string
-}
-
-export function printJacError(err: JacError) {
-    let msg = `${err.filename || ""}(${err.line},${err.column}): ${err.message}`
-    if (err.codeFragment) msg += ` (${err.codeFragment})`
-    console.error(msg)
 }

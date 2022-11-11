@@ -5,6 +5,7 @@
 
 #include "jd_protocol.h"
 #include "jd_client.h"
+#include "network/jd_network.h"
 
 typedef struct jd_transport_ctx jd_transport_ctx_t;
 

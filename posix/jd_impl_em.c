@@ -19,11 +19,20 @@ EM_JS(void, em_send_frame, (void *frame), {
 
 EM_JS(double, em_time_now, (void), { return Date.now(); });
 
+EM_JS(void, jd_crypto_get_random, (uint8_t *trg, unsigned size), {
+    let buf = new Uint8Array(size);
+    if (typeof window == "object" && window.crypto && window.crypto.getRandomValues)
+        window.crypto.getRandomValues(buf);
+    else {
+        buf = require("crypto").randomBytes(size);
+    }
+    HEAPU8.set(buf, trg);
+});
+
 int jd_em_frame_received(jd_frame_t *frame);
 
 int jd_em_send_frame(jd_transport_ctx_t *ctx, jd_frame_t *frame) {
     em_send_frame(frame);
-    jd_em_frame_received(frame);
     return 0;
 }
 
@@ -144,4 +153,7 @@ void dmesg(const char *format, ...)
     em_console_debug(tmp);
     va_end(arg);
 }
+
+void jd_tcpsock_process(void) {}
+
 #endif

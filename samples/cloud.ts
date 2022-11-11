@@ -1,7 +1,7 @@
 var q = 0
-
-if (false)
-    every(10, () => {
+        
+// if (false)
+    every(5, () => {
         console.log("upl", q)
         cloud.upload("hello", q, 2 * q, q + 10000)
         q = q + 1

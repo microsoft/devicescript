@@ -9,7 +9,9 @@ pot.position.onChange(0.01, () => {
     ledD.brightness.write(p * 0.3)
 })
 
-
+declare interface LedRole {
+    setAllColors(r: number, g: number, b: number): void
+}
 LedRole.prototype.setAllColors = function (r, g, b) {
     this.setAll(r, g, b)
 }

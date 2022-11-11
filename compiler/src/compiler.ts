@@ -1,8 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../../jacdac-c/jacdac/spectool/jdspec.d.ts" />
 
-import * as esprima from "esprima"
-import * as estree from "estree"
+import * as ts from "typescript"
+import { SyntaxKind as SK } from "typescript"
 
 import {
     SystemReg,
@@ -32,14 +32,13 @@ import {
     DebugInfo,
     FunctionDebugInfo,
     Host,
-    JacError,
     OpCall,
     NumFmt,
     Op,
-    printJacError,
     RoleDebugInfo,
     SMap,
     ValueKind,
+    JacsDiagnostic,
 } from "./format"
 import {
     addUnique,
@@ -65,6 +64,7 @@ import {
     Value,
 } from "./opwriter"
 import { prelude } from "./prelude"
+import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -77,9 +77,10 @@ class Cell {
 
     constructor(
         public definition:
-            | estree.VariableDeclarator
-            | estree.FunctionDeclaration
-            | estree.Identifier,
+            | ts.VariableDeclaration
+            | ts.FunctionDeclaration
+            | ts.ParameterDeclaration
+            | ts.Identifier,
         public scope: VariableScope,
         public _name?: string
     ) {
@@ -96,9 +97,9 @@ class Cell {
     }
     getName() {
         if (!this._name) {
-            if (this.definition.type == "Identifier")
+            if (ts.isIdentifier(this.definition))
                 this._name = idName(this.definition)
-            else this._name = idName(this.definition.id)
+            else this._name = idName(this.definition.name)
         }
         return this._name
     }
@@ -125,7 +126,7 @@ class Role extends Cell {
 
     constructor(
         prog: Program,
-        definition: estree.VariableDeclarator | estree.Identifier,
+        definition: ts.VariableDeclaration | ts.Identifier,
         scope: VariableScope,
         public spec: jdspec.ServiceSpec,
         _name?: string
@@ -171,7 +172,7 @@ class Variable extends Cell {
     isParameter = false
 
     constructor(
-        definition: estree.VariableDeclarator | estree.Identifier,
+        definition: ts.VariableDeclaration | ts.ParameterDeclaration,
         scope: VariableScope,
         public valueType: ValueType,
         name?: string
@@ -213,7 +214,7 @@ class Variable extends Cell {
 
 class BufferLit extends Cell {
     constructor(
-        definition: estree.VariableDeclarator,
+        definition: ts.VariableDeclaration,
         scope: VariableScope,
         public litValue: Uint8Array
     ) {
@@ -229,7 +230,7 @@ class BufferLit extends Cell {
 
 class FunctionDecl extends Cell {
     proc: Procedure
-    constructor(definition: estree.FunctionDeclaration, scope: VariableScope) {
+    constructor(definition: ts.FunctionDeclaration, scope: VariableScope) {
         super(definition, scope)
     }
     emit(wr: OpWriter): Value {
@@ -261,9 +262,9 @@ function cellKind(v: Value): ValueType {
     return v.valueType
 }
 
-function idName(pat: estree.BaseExpression) {
-    if (pat?.type != "Identifier") return null
-    return (pat as estree.Identifier).name
+function idName(pat: ts.Expression | ts.DeclarationName) {
+    if (ts.isIdentifier(pat)) return pat.text
+    else return null
 }
 
 function matchesName(specName: string, jsName: string) {
@@ -329,12 +330,12 @@ class Procedure {
         }
     }
 
+    reference(wr: OpWriter) {
+        return wr.emitExpr(Op.EXPRx_STATIC_FUNCTION, literal(this.index))
+    }
+
     callMe(wr: OpWriter, args: CachedValue[], op = OpCall.SYNC) {
-        wr._emitCall(
-            wr.emitExpr(Op.EXPRx_STATIC_FUNCTION, literal(this.index)),
-            args,
-            op
-        )
+        wr._emitCall(this.reference(wr), args, op)
     }
 }
 
@@ -378,12 +379,12 @@ enum RefreshMS {
     Slow = 5000,
 }
 
-type Expr = estree.Expression | estree.Super | estree.SpreadElement
-type Stmt = estree.Statement | estree.Directive | estree.ModuleDeclaration
+type Expr = ts.Expression
+type Stmt = ts.Statement
 type FunctionLike =
-    | estree.FunctionDeclaration
-    | estree.ArrowFunctionExpression
-    | estree.FunctionExpression
+    | ts.FunctionDeclaration
+    | ts.ArrowFunction
+    | ts.FunctionExpression
 
 const mathConst: SMap<number> = {
     E: Math.E,
@@ -396,7 +397,7 @@ const mathConst: SMap<number> = {
     SQRT2: Math.SQRT2,
 }
 
-function throwError(expr: estree.BaseNode, msg: string): never {
+function throwError(expr: ts.Node, msg: string): never {
     const err = new Error(msg)
     // console.log(err.stack)
     ;(err as any).sourceNode = expr
@@ -409,7 +410,7 @@ interface LoopLabels {
 }
 
 class ClientCommand {
-    defintion: estree.FunctionExpression
+    defintion: ts.FunctionExpression
     jsName: string
     pktSpec: jdspec.PacketInfo
     isFresh: boolean
@@ -427,7 +428,8 @@ class Program implements TopOpWriter {
     roles = new VariableScope(this.bufferLits)
     functions = new VariableScope(null)
     globals = new VariableScope(this.roles)
-    tree: estree.Program
+    tree: ts.Program
+    mainFile: ts.SourceFile
     procs: Procedure[] = []
     floatLiterals: number[] = []
     stringLiterals: (string | Uint8Array)[] = []
@@ -488,27 +490,31 @@ class Program implements TopOpWriter {
         return addUnique(this.floatLiterals, f)
     }
 
-    indexToLine(pos: Position) {
-        const s = this.getSource(pos.rangeFile).slice(0, pos.range[0])
-        return s.replace(/[^\n]/g, "").length + 1
+    indexToLine(node: ts.Node) {
+        const { line } = ts.getLineAndCharacterOfPosition(
+            node.getSourceFile(),
+            node.getStart()
+        )
+        return line + 1
     }
 
-    indexToPos(pos: Position) {
-        const s = this.getSource(pos.rangeFile).slice(0, pos.range[0])
-        const line = s.replace(/[^\n]/g, "").length + 1
-        const column = s.replace(/[^]*\n/, "").length + 1
-        return { line, column }
+    printDiag(diag: ts.Diagnostic) {
+        if (diag.category == ts.DiagnosticCategory.Error) this.numErrors++
+        if (this.host.error) this.host.error(diag)
+        else console.error(formatDiagnostics([diag]))
     }
 
-    reportError(pos: Position, msg: string): Value {
-        this.numErrors++
-        const err: JacError = {
-            ...this.indexToPos(pos),
-            filename: pos.rangeFile || "",
-            message: msg,
-            codeFragment: this.sourceFrag(pos),
+    reportError(node: ts.Node, msg: string): Value {
+        ts.createSemanticDiagnosticsBuilderProgram
+        const diag: ts.Diagnostic = {
+            category: ts.DiagnosticCategory.Error,
+            messageText: msg,
+            code: 9999,
+            file: node.getSourceFile(),
+            start: node.getStart(),
+            length: node.getWidth(),
         }
-        ;(this.host.error || printJacError)(err)
+        this.printDiag(diag)
         return nonEmittable(ValueType.ERROR)
     }
 
@@ -683,19 +689,13 @@ class Program implements TopOpWriter {
         }
     }
 
-    private forceName(
-        pat:
-            | estree.Expression
-            | estree.Pattern
-            | estree.PrivateIdentifier
-            | estree.Super
-    ) {
+    private forceName(pat: ts.Expression | ts.DeclarationName) {
         const r = idName(pat)
         if (!r) throwError(pat, "only simple identifiers supported")
-        return (pat as estree.Identifier).name
+        return r
     }
 
-    private lookupRoleSpec(expr: Expr, serv: string) {
+    private lookupRoleSpec(expr: ts.Node, serv: string) {
         const r = this.serviceSpecs.hasOwnProperty(serv)
             ? this.serviceSpecs[serv]
             : undefined
@@ -703,14 +703,15 @@ class Program implements TopOpWriter {
         return r
     }
 
-    private parseRole(decl: estree.VariableDeclarator): Cell {
-        const expr = decl.init
+    private parseRole(decl: ts.VariableDeclaration): Cell {
+        const expr = decl.initializer
 
         const buflit = this.bufferLiteral(expr)
         if (buflit) return new BufferLit(decl, this.bufferLits, buflit)
 
-        if (expr?.type != "CallExpression") return null
-        switch (idName(expr.callee)) {
+        if (!expr || !ts.isCallExpression(expr)) return null
+
+        switch (idName(expr.expression)) {
             case "condition":
                 this.requireArgs(expr, 0)
                 return new Role(
@@ -720,11 +721,11 @@ class Program implements TopOpWriter {
                     this.serviceSpecs["jacscriptCondition"]
                 )
         }
-        if (expr.callee.type != "MemberExpression") return null
-        if (idName(expr.callee.object) != "roles") return null
+        if (!ts.isPropertyAccessExpression(expr.expression)) return null
+        if (idName(expr.expression.expression) != "roles") return null
         const spec = this.lookupRoleSpec(
-            expr.callee,
-            this.forceName(expr.callee.property)
+            expr.expression,
+            this.forceName(expr.expression.name)
         )
         this.requireArgs(expr, 0)
         return new Role(this, decl, this.roles, spec)
@@ -734,10 +735,8 @@ class Program implements TopOpWriter {
         trg.store(this.writer, src)
     }
 
-    private newDef(
-        decl: { id: estree.Identifier | estree.Pattern } & estree.BaseNode
-    ) {
-        const id = this.forceName(decl.id)
+    private newDef(decl: ts.NamedDeclaration) {
+        const id = this.forceName(decl.name)
         if (
             this.roles.lookup(id) ||
             (this.proc?.locals || this.globals).lookup(id) ||
@@ -746,12 +745,12 @@ class Program implements TopOpWriter {
             throwError(decl, `name '${id}' already defined`)
     }
 
-    private emitVariableDeclaration(decls: estree.VariableDeclaration) {
+    private emitVariableDeclaration(decls: ts.VariableStatement) {
         // if (decls.kind != "var") throwError(decls, "only 'var' supported")
-        for (const decl of decls.declarations) {
+        for (const decl of decls.declarationList.declarations) {
             let g: Variable
             if (this.isTopLevel(decl)) {
-                const tmp = this.globals.lookup(this.forceName(decl.id))
+                const tmp = this.globals.lookup(this.forceName(decl.name))
                 if (tmp instanceof Role) continue
                 if (tmp instanceof BufferLit) continue
                 if (tmp instanceof Variable) g = tmp
@@ -765,43 +764,45 @@ class Program implements TopOpWriter {
                 g.isLocal = true
             }
 
-            if (decl.init) {
-                const v = this.emitSimpleValue(decl.init, ValueType.ANY)
+            if (decl.initializer) {
+                const v = this.emitSimpleValue(decl.initializer, ValueType.ANY)
                 g.valueType = v.valueType
                 this.emitStore(g, v)
             }
         }
     }
 
-    private emitIfStatement(stmt: estree.IfStatement) {
-        const cond = this.emitSimpleValue(stmt.test, ValueType.BOOL)
+    private emitIfStatement(stmt: ts.IfStatement) {
+        const cond = this.emitSimpleValue(stmt.expression, ValueType.BOOL)
         if (cond.isLiteral) {
-            if (cond.numValue) this.emitStmt(stmt.consequent)
+            if (cond.numValue) this.emitStmt(stmt.thenStatement)
             else {
-                if (stmt.alternate) this.emitStmt(stmt.alternate)
+                if (stmt.elseStatement) this.emitStmt(stmt.elseStatement)
             }
         } else {
             this.writer.emitIfAndPop(
                 cond,
-                () => this.emitStmt(stmt.consequent),
-                stmt.alternate ? () => this.emitStmt(stmt.alternate) : null
+                () => this.emitStmt(stmt.thenStatement),
+                stmt.elseStatement
+                    ? () => this.emitStmt(stmt.elseStatement)
+                    : null
             )
         }
     }
 
-    private emitWhileStatement(stmt: estree.WhileStatement) {
+    private emitWhileStatement(stmt: ts.WhileStatement) {
         const wr = this.writer
 
         const continueLbl = wr.mkLabel("whileCont")
         const breakLbl = wr.mkLabel("whileBrk")
 
         wr.emitLabel(continueLbl)
-        const cond = this.emitSimpleValue(stmt.test, ValueType.BOOL)
+        const cond = this.emitSimpleValue(stmt.expression, ValueType.BOOL)
         wr.emitJump(breakLbl, cond)
 
         try {
             this.loopStack.push({ continueLbl, breakLbl })
-            this.emitStmt(stmt.body)
+            this.emitStmt(stmt.statement)
         } finally {
             this.loopStack.pop()
         }
@@ -835,26 +836,30 @@ class Program implements TopOpWriter {
         this.emitSendCommand(this.cloudRole, CloudAdapterCmd.AckCloudCommand)
     }
 
-    private emitReturnStatement(stmt: estree.ReturnStatement) {
+    private emitReturnStatement(stmt: ts.ReturnStatement) {
         const wr = this.writer
         if (this.proc.methodSeqNo) {
             let args: Expr[] = []
-            if (stmt.argument?.type == "ArrayExpression") {
-                args = stmt.argument.elements.slice()
-            } else if (stmt.argument) {
-                args = [stmt.argument]
+            if (
+                stmt.expression &&
+                ts.isArrayLiteralExpression(stmt.expression)
+            ) {
+                args = stmt.expression.elements.slice()
+            } else if (stmt.expression) {
+                args = [stmt.expression]
             }
             this.emitAckCloud(CloudAdapterCommandStatus.OK, false, args)
-        } else if (stmt.argument) {
+            wr.emitStmt(Op.STMT1_RETURN, literal(null))
+        } else if (stmt.expression) {
             if (wr.ret) oops("return with value not supported here")
-            wr.emitStmt(Op.STMT1_RETURN, this.emitSimpleValue(stmt.argument))
+            wr.emitStmt(Op.STMT1_RETURN, this.emitSimpleValue(stmt.expression))
         } else {
             if (wr.ret) this.writer.emitJump(this.writer.ret)
             else wr.emitStmt(Op.STMT1_RETURN, literal(null))
         }
     }
 
-    private specFromTypeName(expr: Expr, tp: string) {
+    private specFromTypeName(expr: ts.Node, tp: string) {
         if (tp.endsWith("Role") && tp[0].toUpperCase() == tp[0]) {
             let r = tp.slice(0, -4)
             r = r[0].toLowerCase() + r.slice(1)
@@ -865,35 +870,40 @@ class Program implements TopOpWriter {
     }
 
     private emitFunctionBody(
-        stmt: estree.FunctionDeclaration | estree.FunctionExpression,
+        stmt: ts.FunctionDeclaration | ts.FunctionExpression,
         proc: Procedure
     ) {
         this.emitStmt(stmt.body)
         this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
     }
 
+    private addParameter(
+        proc: Procedure,
+        id: ts.ParameterDeclaration | string
+    ) {
+        const v = new Variable(
+            typeof id == "string" ? null : id,
+            proc.params,
+            ValueType.NUMBER
+        )
+        if (typeof id == "string") v._name = id
+        v.isLocal = true
+        v.isParameter = true
+        return v
+    }
+
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
-        for (const paramdef of stmt.params) {
-            if (paramdef.type != "Identifier")
+        for (const paramdef of stmt.parameters) {
+            if (!idName(paramdef.name))
                 throwError(
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
 
+            const v = this.addParameter(proc, paramdef)
+
             let tp = ""
-
-            const idx = paramdef.range?.[0]
-            if (idx) {
-                const pref = this.getSource((paramdef as Position).rangeFile)
-                    .slice(Math.max(0, idx - 40), idx)
-                    .replace(/.*\n/, "")
-                const m = /\/\*\*\s*@type\s+(.*?)\s*\*\/\s*$/.exec(pref)
-                if (m) tp = m[1]
-            }
-
-            const v = new Variable(paramdef, proc.params, ValueType.NUMBER)
-            v.isLocal = true
-            v.isParameter = true
+            if (paramdef.type) tp = paramdef.type.getText()
 
             if (tp == "" || tp == "number") {
                 // OK!
@@ -936,7 +946,7 @@ class Program implements TopOpWriter {
 
     private getFunctionProc(fundecl: FunctionDecl) {
         if (fundecl.proc) return fundecl.proc
-        const stmt = fundecl.definition as estree.FunctionDeclaration
+        const stmt = fundecl.definition as ts.FunctionDeclaration
 
         fundecl.proc = new Procedure(this, fundecl.getName())
 
@@ -948,13 +958,13 @@ class Program implements TopOpWriter {
         return fundecl.proc
     }
 
-    private emitFunctionDeclaration(stmt: estree.FunctionDeclaration) {
+    private emitFunctionDeclaration(stmt: ts.FunctionDeclaration) {
         const fundecl = this.functions.list.find(
             f => f.definition === stmt
         ) as FunctionDecl
         if (!this.isTopLevel(stmt))
             throwError(stmt, "only top-level functions are supported")
-        if (stmt.generator || stmt.async)
+        if (stmt.modifiers?.length || stmt.asteriskToken)
             throwError(stmt, "async not supported")
         assert(!!fundecl || !!this.numErrors)
 
@@ -964,11 +974,11 @@ class Program implements TopOpWriter {
         }
     }
 
-    private isTopLevel(node: estree.Node) {
+    private isTopLevel(node: ts.Node) {
         return !!(node as any)._jacsIsTopLevel
     }
 
-    private emitProgram(prog: estree.Program) {
+    private emitProgram(prog: ts.Program) {
         this.main = new Procedure(this, "main")
 
         this.startDispatchers = new DelayedCodeSection(
@@ -976,26 +986,31 @@ class Program implements TopOpWriter {
             this.main.writer
         )
         this.onStart = new DelayedCodeSection("onStart", this.main.writer)
-        prog.body.forEach(markTopLevel)
+
+        const stmts = ([] as ts.Statement[]).concat(
+            ...prog
+                .getSourceFiles()
+                .map(file => (file.isDeclarationFile ? [] : file.statements))
+        )
+
+        stmts.forEach(markTopLevel)
+
         // pre-declare all functions and globals
-        for (const s of prog.body) {
+        for (const s of stmts) {
             try {
-                switch (s.type) {
-                    case "FunctionDeclaration":
-                        this.newDef(s)
-                        const n = this.forceName(s.id)
-                        if (reservedFunctions[n] == 1)
-                            throwError(s, `function name '${n}' is reserved`)
-                        new FunctionDecl(s, this.functions)
-                        break
-                    case "VariableDeclaration":
-                        for (const decl of s.declarations) {
-                            this.newDef(decl)
-                            if (!this.parseRole(decl)) {
-                                new Variable(decl, this.globals, ValueType.ANY)
-                            }
+                if (ts.isFunctionDeclaration(s)) {
+                    this.newDef(s)
+                    const n = this.forceName(s.name)
+                    if (reservedFunctions[n] == 1)
+                        throwError(s, `function name '${n}' is reserved`)
+                    new FunctionDecl(s, this.functions)
+                } else if (ts.isVariableStatement(s)) {
+                    for (const decl of s.declarationList.declarations) {
+                        this.newDef(decl)
+                        if (!this.parseRole(decl)) {
+                            new Variable(decl, this.globals, ValueType.ANY)
                         }
-                        break
+                    }
                 }
             } catch (e) {
                 this.handleException(s, e)
@@ -1015,7 +1030,7 @@ class Program implements TopOpWriter {
 
         this.withProcedure(this.main, () => {
             this.startDispatchers.callHere()
-            for (const s of prog.body) this.emitStmt(s)
+            for (const s of stmts) this.emitStmt(s)
             this.onStart.finalizeRaw()
             this.writer.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeAutoRefresh()
@@ -1027,16 +1042,11 @@ class Program implements TopOpWriter {
             assert(cl == this.cloudRole)
         }
 
-        function markTopLevel(node: estree.Node) {
+        function markTopLevel(node: ts.Node) {
             ;(node as any)._jacsIsTopLevel = true
-            switch (node.type) {
-                case "ExpressionStatement":
-                    markTopLevel(node.expression)
-                    break
-                case "VariableDeclaration":
-                    node.declarations.forEach(markTopLevel)
-                    break
-            }
+            if (ts.isExpressionStatement(node)) markTopLevel(node.expression)
+            else if (ts.isVariableStatement(node))
+                node.declarationList.declarations.forEach(markTopLevel)
         }
     }
 
@@ -1044,7 +1054,7 @@ class Program implements TopOpWriter {
         val.adopt()
     }
 
-    private emitExpressionStatement(stmt: estree.ExpressionStatement) {
+    private emitExpressionStatement(stmt: ts.ExpressionStatement) {
         this.ignore(this.emitExpr(stmt.expression))
         this.writer.assertNoTemps()
     }
@@ -1057,24 +1067,21 @@ class Program implements TopOpWriter {
             methodHandler?: boolean
         } = {}
     ): Procedure {
-        if (func.type != "ArrowFunctionExpression")
+        if (!ts.isArrowFunction(func))
             throwError(func, "arrow function expected here")
         const proc = new Procedure(this, name)
         proc.writer.ret = proc.writer.mkLabel("ret")
-        if (func.params.length && !options.methodHandler)
+        if (func.parameters.length && !options.methodHandler)
             throwError(func, "parameters not supported here")
         this.withProcedure(proc, wr => {
             if (options.methodHandler)
-                proc.methodSeqNo = proc.mkTempLocal(
-                    "methSeqNo",
-                    ValueType.NUMBER
-                )
+                proc.methodSeqNo = this.addParameter(proc, "methSeqNo")
             this.emitParameters(func, proc)
             if (options.every) {
                 wr.emitStmt(Op.STMT1_SLEEP_MS, literal(options.every))
             }
-            if (func.body.type == "BlockStatement") {
-                for (const stmt of func.body.body) this.emitStmt(stmt)
+            if (ts.isBlock(func.body)) {
+                this.emitStmt(func.body)
             } else {
                 this.ignore(this.emitExpr(func.body))
             }
@@ -1089,21 +1096,20 @@ class Program implements TopOpWriter {
         return proc
     }
 
-    private codeName(node: estree.BaseNode) {
-        let [a, b] = node.range || []
-        if (!b) return ""
-        if (b - a > 30) b = a + 30
-        return this.getSource((node as Position).rangeFile)
-            .slice(a, b)
+    private codeName(node: ts.Node) {
+        return node
+            .getText()
+            .slice(0, 30)
             .replace(/[^a-zA-Z0-9_]+/g, "_")
     }
 
-    private requireArgs(expr: estree.CallExpression, num: number) {
-        if (expr.arguments.length != num)
-            throwError(
-                expr,
-                `${num} arguments required; got ${expr.arguments.length}`
-            )
+    private requireArgsExt(node: ts.Node, args: Expr[], num: number) {
+        if (args.length != num)
+            throwError(node, `${num} arguments required; got ${args.length}`)
+    }
+
+    private requireArgs(expr: ts.CallExpression, num: number) {
+        this.requireArgsExt(expr, expr.arguments.slice(), num)
     }
 
     private emitInRoleDispatcher(role: Role, f: (wr: OpWriter) => void) {
@@ -1111,7 +1117,7 @@ class Program implements TopOpWriter {
         this.withProcedure(disp.proc, f)
     }
 
-    private requireTopLevel(expr: estree.CallExpression) {
+    private requireTopLevel(expr: ts.CallExpression) {
         if (!this.isTopLevel(expr))
             throwError(
                 expr,
@@ -1139,7 +1145,7 @@ class Program implements TopOpWriter {
     }
 
     private emitEventCall(
-        expr: estree.CallExpression,
+        expr: ts.CallExpression,
         val: Value,
         prop: string
     ): Value {
@@ -1151,9 +1157,9 @@ class Program implements TopOpWriter {
                 this.requireArgs(expr, 1)
                 this.ignore(val)
                 this.emitEventHandler(
-                    this.codeName(expr.callee),
+                    this.codeName(expr.expression),
                     expr.arguments[0],
-                    this.roleOf(expr.callee, val),
+                    this.roleOf(expr.expression, val),
                     val.valueType.packetSpec.identifier
                 )
                 return unit()
@@ -1242,12 +1248,12 @@ class Program implements TopOpWriter {
     }
 
     private emitRoleCall(
-        expr: estree.CallExpression,
+        expr: ts.CallExpression,
         val: Value,
         prop: string
     ): Value {
         const wr = this.writer
-        if (expr.callee.type != "MemberExpression") oops("")
+        if (!ts.isPropertyAccessExpression(expr.expression)) oops("")
         switch (prop) {
             case "isConnected":
                 this.requireArgs(expr, 0)
@@ -1282,7 +1288,7 @@ class Program implements TopOpWriter {
                 return unit()
             }
             default:
-                const v = this.emitRoleMember(expr.callee, val)
+                const v = this.emitRoleMember(expr.expression, val)
                 const k = v.valueType.kind
                 if (k == ValueKind.JD_CLIENT_COMMAND) {
                     this.ignore(val)
@@ -1360,12 +1366,12 @@ class Program implements TopOpWriter {
     }
 
     private emitBufferCall(
-        expr: estree.CallExpression,
+        expr: ts.CallExpression,
         buf: Value,
         prop: string
     ): Value {
         const wr = this.writer
-        if (expr.callee.type != "MemberExpression") oops("")
+        if (!ts.isPropertyAccessExpression(expr.expression)) oops("")
         switch (prop) {
             case "getAt": {
                 this.requireArgs(expr, 2)
@@ -1434,27 +1440,20 @@ class Program implements TopOpWriter {
     }
 
     private stringLiteral(expr: Expr) {
-        if (expr?.type == "Literal" && typeof expr.value == "string") {
-            return expr.value
-        }
+        if (this.isStringLiteral(expr)) return expr.text
         return undefined
     }
 
     private bufferLiteral(expr: Expr): Uint8Array {
-        if (
-            expr?.type == "TaggedTemplateExpression" &&
-            idName(expr.tag) == "hex"
-        ) {
-            if (expr.quasi.expressions.length)
+        if (!expr) return undefined
+
+        if (ts.isTaggedTemplateExpression(expr) && idName(expr.tag) == "hex") {
+            if (!ts.isNoSubstitutionTemplateLiteral(expr.template))
                 throwError(
                     expr,
                     "${}-expressions not supported in hex literals"
                 )
-            const hexbuf = expr.quasi.quasis
-                .map(q => q.value.raw)
-                .join("")
-                .replace(/\s+/g, "")
-                .toLowerCase()
+            const hexbuf = expr.template.text.replace(/\s+/g, "").toLowerCase()
             if (hexbuf.length & 1) throwError(expr, "non-even hex length")
             if (!/^[0-9a-f]*$/.test(hexbuf))
                 throwError(expr, "invalid characters in hex")
@@ -1513,10 +1512,7 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitPackArgs(
-        expr: estree.CallExpression,
-        pspec: jdspec.PacketInfo
-    ) {
+    private emitPackArgs(expr: ts.CallExpression, pspec: jdspec.PacketInfo) {
         let offset = 0
         let repeatsStart = -1
         let specIdx = 0
@@ -1574,7 +1570,7 @@ class Program implements TopOpWriter {
     }
 
     private emitRegisterCall(
-        expr: estree.CallExpression,
+        expr: ts.CallExpression,
         val: Value,
         prop: string
     ): Value {
@@ -1595,7 +1591,7 @@ class Program implements TopOpWriter {
                 )
                 return unit()
             case "onChange": {
-                const role = this.roleOf(expr.callee, val)
+                const role = this.roleOf(expr.expression, val)
                 this.requireArgs(expr, 2)
                 this.requireTopLevel(expr)
                 if (spec.fields.length != 1)
@@ -1699,12 +1695,12 @@ class Program implements TopOpWriter {
         })
     }
 
-    private emitCloudMethod(expr: estree.CallExpression) {
+    private emitCloudMethod(expr: ts.CallExpression) {
         this.requireTopLevel(expr)
         this.requireArgs(expr, 2)
         const str = this.forceStringLiteral(expr.arguments[0])
         const handler = this.emitHandler(
-            this.codeName(expr.callee),
+            this.codeName(expr.expression),
             expr.arguments[1],
             { methodHandler: true }
         )
@@ -1721,13 +1717,16 @@ class Program implements TopOpWriter {
         this.cloudMethodDispatcher.emit(wr => {
             const skip = wr.mkLabel("skipMethod")
             wr.emitJump(skip, wr.emitExpr(Op.EXPR2_STR0EQ, str, literal(4)))
+            wr.emitJumpIfTrue(
+                this.cloudMethod429,
+                wr.emitExpr(Op.EXPR1_GET_FIBER_HANDLE, handler.reference(wr))
+            )
             const args = wr.allocTmpLocals(handler.numargs)
             args[0].store(wr.emitBufLoad(NumFmt.U32, 0))
             const pref = 4 + strlen(this.stringLiteral(expr.arguments[0])) + 1
             for (let i = 1; i < handler.numargs; ++i)
                 args[i].store(wr.emitBufLoad(NumFmt.F64, pref + (i - 1) * 8))
             handler.callMe(wr, args, OpCall.BG_MAX1)
-            wr.emitJump(this.cloudMethod429, wr.emitExpr(Op.EXPR0_RET_VAL))
             wr.emitJump(this.cloudRole.dispatcher.top)
             wr.emitLabel(skip)
         })
@@ -1738,7 +1737,7 @@ class Program implements TopOpWriter {
         this.writer.emitStmt(Op.STMT2_SEND_CMD, role, literal(cmd))
     }
 
-    private emitCloud(expr: estree.CallExpression, fnName: string): Value {
+    private emitCloud(expr: ts.CallExpression, fnName: string): Value {
         const arg0 = expr.arguments[0]
         const wr = this.writer
         switch (fnName) {
@@ -1755,8 +1754,8 @@ class Program implements TopOpWriter {
             case "console.log":
                 if (
                     expr.arguments.length == 1 &&
-                    arg0.type == "CallExpression" &&
-                    idName(arg0.callee) == "format"
+                    ts.isCallExpression(arg0) &&
+                    idName(arg0.expression) == "format"
                 ) {
                     const r = this.emitFmtArgs(arg0)
                     wr.emitStmt(Op.STMTx2_LOG_FORMAT, ...r.fmt)
@@ -1790,7 +1789,7 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitMath(expr: estree.CallExpression, fnName: string): Value {
+    private emitMath(node: ts.Node, args: Expr[], fnName: string): Value {
         interface Desc {
             m1?: Op
             m2?: Op
@@ -1828,9 +1827,8 @@ class Program implements TopOpWriter {
         if (f.firstArg !== undefined) numArgs--
         if (f.lastArg !== undefined) numArgs--
         assert(!isNaN(numArgs))
-        this.requireArgs(expr, numArgs)
+        this.requireArgsExt(node, args, numArgs)
 
-        const args = expr.arguments.slice()
         if (f.firstArg !== undefined) args.unshift(this.mkLiteral(f.firstArg))
         if (f.lastArg !== undefined) args.push(this.mkLiteral(f.lastArg))
         assert(args.length == origArgs)
@@ -1845,7 +1843,7 @@ class Program implements TopOpWriter {
     }
 
     private emitProcCall(
-        expr: estree.CallExpression,
+        expr: ts.CallExpression,
         proc: Procedure,
         isMember = false
     ) {
@@ -1853,8 +1851,8 @@ class Program implements TopOpWriter {
         const args = expr.arguments.slice()
         if (isMember) {
             this.requireArgs(expr, proc.numargs - 1)
-            if (expr.callee.type == "MemberExpression")
-                args.unshift(expr.callee.object as estree.Expression)
+            if (ts.isPropertyAccessExpression(expr.expression))
+                args.unshift(expr.expression.expression)
             else assert(false)
         } else {
             this.requireArgs(expr, proc.numargs)
@@ -1864,19 +1862,19 @@ class Program implements TopOpWriter {
         return wr.emitExpr(Op.EXPR0_RET_VAL)
     }
 
-    private emitCallExpression(expr: estree.CallExpression): Value {
+    private emitCallExpression(expr: ts.CallExpression): Value {
         const wr = this.writer
-        if (expr.callee.type == "MemberExpression") {
-            const prop = idName(expr.callee.property)
-            const objName = idName(expr.callee.object)
+        if (ts.isPropertyAccessExpression(expr.expression)) {
+            const prop = idName(expr.expression.name)
+            const objName = idName(expr.expression.expression)
             if (objName) {
                 const fullName = objName + "." + prop
                 const r =
-                    this.emitMath(expr, fullName) ||
+                    this.emitMath(expr, expr.arguments.slice(), fullName) ||
                     this.emitCloud(expr, fullName)
                 if (r) return r
             }
-            const val = this.emitExpr(expr.callee.object)
+            const val = this.emitExpr(expr.expression.expression)
             switch (val.valueType.kind) {
                 case ValueKind.JD_EVENT:
                     return this.emitEventCall(expr, val, prop)
@@ -1891,7 +1889,7 @@ class Program implements TopOpWriter {
             }
         }
 
-        const funName = idName(expr.callee)
+        const funName = idName(expr.expression)
 
         if (!funName) throwError(expr, `unsupported call`)
 
@@ -1984,14 +1982,14 @@ class Program implements TopOpWriter {
         return { fmt, free }
     }
 
-    private emitFmtArgs(expr: estree.CallExpression) {
+    private emitFmtArgs(expr: ts.CallExpression) {
         const fmtString = this.forceStringLiteral(expr.arguments[0])
         const { fmt, free } = this.fmtArgs(expr.arguments.slice(1))
         fmt.push(fmtString)
         return { fmt, free }
     }
 
-    private emitIdentifier(expr: estree.Identifier): Value {
+    private emitIdentifier(expr: ts.Identifier): Value {
         const id = this.forceName(expr)
         switch (id) {
             case "NaN":
@@ -2008,7 +2006,7 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitThisExpression(expr: estree.ThisExpression): Value {
+    private emitThisExpression(expr: ts.ThisExpression): Value {
         const cell = this.proc.params.lookup("this")
         if (!cell)
             throwError(expr, "'this' cannot be used here: " + this.proc.name)
@@ -2019,8 +2017,8 @@ class Program implements TopOpWriter {
         return matchesName(pi.name, id)
     }
 
-    private emitRoleMember(expr: estree.MemberExpression, roleObj: Value) {
-        const propName = this.forceName(expr.property)
+    private emitRoleMember(expr: ts.PropertyAccessExpression, roleObj: Value) {
+        const propName = this.forceName(expr.name)
         let r: Value
         let v: ValueAdd
 
@@ -2077,7 +2075,7 @@ class Program implements TopOpWriter {
         if (!r)
             throwError(
                 expr,
-                `service| ${roleSpec.camelName} has no member ${propName}`
+                `service ${roleSpec.camelName} has no member ${propName}`
             )
         return r
 
@@ -2100,38 +2098,43 @@ class Program implements TopOpWriter {
         return obj
     }
 
-    private emitMemberExpression(expr: estree.MemberExpression): Value {
-        const nsName = idName(expr.object)
+    private emitElementAccessExpression(
+        expr: ts.ElementAccessExpression
+    ): Value {
+        const val = this.emitExpr(expr.expression)
+        if (val.valueType.canIndex) {
+            const idx = this.emitSimpleValue(expr.argumentExpression)
+            return this.writer.emitExpr(Op.EXPR2_INDEX, val, idx)
+        } else {
+            throwError(expr, `unhandled indexing on ${val.valueType}`)
+        }
+    }
+
+    private emitPropertyAccessExpression(
+        expr: ts.PropertyAccessExpression
+    ): Value {
+        const nsName = idName(expr.expression)
         if (nsName == "Math") {
-            const id = idName(expr.property)
+            const id = idName(expr.name)
             if (mathConst.hasOwnProperty(id)) return literal(mathConst[id])
         } else if (this.enums.hasOwnProperty(nsName)) {
             const e = this.enums[nsName]
-            const prop = idName(expr.property)
+            const prop = idName(expr.name)
             if (e.members.hasOwnProperty(prop)) return literal(e.members[prop])
             else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
 
-        const val = this.emitExpr(expr.object)
-
-        if (expr.computed) {
-            if (val.valueType.canIndex) {
-                const idx = this.emitSimpleValue(expr.property as Expr)
-                return this.writer.emitExpr(Op.EXPR2_INDEX, val, idx)
-            } else {
-                throwError(expr, `unhandled indexing on ${val.valueType}`)
-            }
-        }
+        const val = this.emitExpr(expr.expression)
 
         if (val.valueType.isRole) {
             return this.emitRoleMember(expr, val)
         } else if (val.valueType.canIndex) {
-            const propName = this.forceName(expr.property)
+            const propName = this.forceName(expr.name)
             if (propName == "length")
                 return this.writer.emitExpr(Op.EXPR1_OBJECT_LENGTH, val)
         } else if (val.valueType.kind == ValueKind.JD_REG) {
             const spec = val.valueType.packetSpec
-            const propName = this.forceName(expr.property)
+            const propName = this.forceName(expr.name)
             if (spec.fields.length > 1) {
                 const fld = spec.fields.find(f => matchesName(f.name, propName))
                 if (!fld)
@@ -2142,41 +2145,60 @@ class Program implements TopOpWriter {
             }
         }
 
-        throwError(expr, `unhandled member ${idName(expr.property)}`)
+        throwError(expr, `unhandled member ${idName(expr.name)}`)
     }
 
-    private mkLiteral(v: number): estree.Literal {
-        return {
-            type: "Literal",
-            value: v,
+    private mkLiteral(v: number): ts.NumericLiteral {
+        return ts.factory.createNumericLiteral(v)
+    }
+
+    private isStringLiteral(node: ts.Node): node is ts.LiteralExpression {
+        switch (node.kind) {
+            case SK.TemplateHead:
+            case SK.TemplateMiddle:
+            case SK.TemplateTail:
+            case SK.StringLiteral:
+            case SK.NoSubstitutionTemplateLiteral:
+                return true
+            default:
+                return false
         }
     }
 
-    private emitLiteral(expr: estree.Literal): Value {
-        let v = expr.value
+    private emitLiteral(v: any, node?: ts.Node) {
         if (v === true) v = 1
         else if (v === false) v = 0
-        else if (v === null || v === undefined) v = 0
 
-        const wr = this.writer
+        if (v === null || v === undefined) return literal(v)
 
-        if (typeof v == "string") {
-            const vd = wr.emitString(v)
-            return vd
-        }
+        if (typeof v == "string") return this.writer.emitString(v)
 
         if (typeof v == "number") return literal(v)
-        throwError(expr, "unhandled literal: " + v)
+
+        throwError(node, "unhandled literal: " + v)
     }
 
-    private lookupCell(expr: estree.Expression | estree.Pattern) {
+    private emitLiteralExpression(node: ts.LiteralExpression): Value {
+        const wr = this.writer
+
+        if (node.kind == SK.NumericLiteral) {
+            const parsed = parseFloat(node.text)
+            return this.emitLiteral(parsed)
+        } else if (this.isStringLiteral(node)) {
+            return wr.emitString(node.text)
+        } else {
+            throwError(node, "whoops")
+        }
+    }
+
+    private lookupCell(expr: ts.Expression) {
         const name = this.forceName(expr)
         const r = this.proc.locals.lookup(name)
         if (!r) throwError(expr, `cannot find '${name}'`)
         return r
     }
 
-    private lookupVar(expr: estree.Expression | estree.Pattern) {
+    private lookupVar(expr: ts.Expression) {
         const r = this.lookupCell(expr)
         if (!(r instanceof Variable)) throwError(expr, "expecting variable")
         return r
@@ -2209,11 +2231,7 @@ class Program implements TopOpWriter {
         return this.isBoolLike(tp)
     }
 
-    private requireValueType(
-        node: estree.BaseNode,
-        v: Value,
-        reqTp: ValueType
-    ) {
+    private requireValueType(node: ts.Node, v: Value, reqTp: ValueType) {
         if (reqTp == ValueType.BOOL && this.isBoolLike(v.valueType)) return
         if (reqTp == ValueType.ANY && this.isSimpleValue(v.valueType)) return
         if (v.valueType == ValueType.ANY || v.valueType == ValueType.NULL)
@@ -2222,18 +2240,19 @@ class Program implements TopOpWriter {
             throwError(node, `cannot convert ${v.valueType} to ${reqTp}`)
     }
 
-    private emitPrototypeUpdate(expr: estree.AssignmentExpression): Value {
+    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
+        const left = expr.left
         if (
-            expr.left.type != "MemberExpression" ||
-            expr.left.object.type != "MemberExpression" ||
-            idName(expr.left.object.property) != "prototype"
+            !ts.isPropertyAccessExpression(left) ||
+            !ts.isPropertyAccessExpression(left.expression) ||
+            idName(left.expression.name) != "prototype"
         )
             return null
 
-        const clName = this.forceName(expr.left.object.object)
-        const spec = this.specFromTypeName(expr.left.object.object, clName)
-        const fnName = this.forceName(expr.left.property)
-        if (expr.right.type != "FunctionExpression")
+        const clName = this.forceName(left.expression.expression)
+        const spec = this.specFromTypeName(left.expression.expression, clName)
+        const fnName = this.forceName(left.name)
+        if (!ts.isFunctionExpression(expr.right))
             throwError(expr.right, "expecting 'function (...) { }' here")
 
         const cmd = new ClientCommand(spec)
@@ -2244,13 +2263,10 @@ class Program implements TopOpWriter {
         cmd.pktSpec = spec.packets.filter(
             p => p.kind == "command" && matchesName(p.name, fnName)
         )[0]
-        const paramNames = fn.params.map(p => this.forceName(p))
+        const paramNames = fn.parameters.map(p => this.forceName(p.name))
         if (cmd.pktSpec) {
             if (!cmd.pktSpec.client)
-                throwError(
-                    expr.left,
-                    "only 'client' commands can be implemented"
-                )
+                throwError(left, "only 'client' commands can be implemented")
             const flds = cmd.pktSpec.fields
             if (paramNames.length != flds.length)
                 throwError(
@@ -2278,8 +2294,8 @@ class Program implements TopOpWriter {
                 client: true,
                 identifier: 0x10000 + Object.keys(this.clientCommands).length,
                 name: snakify(fnName),
-                fields: fn.params.map(p => ({
-                    name: this.forceName(p),
+                fields: fn.parameters.map(p => ({
+                    name: this.forceName(p.name),
                     type: "f64",
                     storage: 8,
                 })),
@@ -2307,20 +2323,17 @@ class Program implements TopOpWriter {
         return unit()
     }
 
-    private emitAssignmentExpression(expr: estree.AssignmentExpression): Value {
-        if (expr.operator != "=")
-            throwError(expr, "only simple assignment supported")
-
+    private emitAssignmentExpression(expr: ts.BinaryExpression): Value {
         const res = this.emitPrototypeUpdate(expr)
         if (res) return res
 
         const wr = this.writer
         let left = expr.left
 
-        if (left.type == "MemberExpression" && left.computed) {
-            const arr = this.emitExpr(left.object)
+        if (ts.isElementAccessExpression(left)) {
+            const arr = this.emitExpr(left.expression)
             if (arr.valueType.canIndex) {
-                const idx = this.emitSimpleValue(left.property as Expr)
+                const idx = this.emitSimpleValue(left.argumentExpression)
                 const src = this.emitExpr(expr.right) // compute src after left.property
                 wr.emitStmt(Op.STMT3_ARRAY_SET, arr, idx, src)
                 return unit()
@@ -2330,7 +2343,7 @@ class Program implements TopOpWriter {
         }
 
         const src = this.emitExpr(expr.right)
-        if (left.type == "ArrayPattern") {
+        if (ts.isArrayLiteralExpression(left)) {
             if (src.valueType.kind == ValueKind.JD_VALUE_SEQ) {
                 let off = 0
                 const spec = src.valueType.packetSpec
@@ -2346,7 +2359,7 @@ class Program implements TopOpWriter {
                 throwError(expr, "expecting a multi-field register read")
             }
             return unit()
-        } else if (left.type == "Identifier") {
+        } else if (ts.isIdentifier(left)) {
             const v = this.lookupVar(left)
             this.requireValueType(expr.right, src, v.valueType)
             this.emitStore(v, src)
@@ -2356,60 +2369,54 @@ class Program implements TopOpWriter {
         throwError(expr, "unhandled assignment")
     }
 
-    private emitBinaryExpression(
-        expr: estree.BinaryExpression | estree.LogicalExpression
-    ): Value {
+    private emitBinaryExpression(expr: ts.BinaryExpression): Value {
         const simpleOps: SMap<Op> = {
-            "+": Op.EXPR2_ADD,
-            "-": Op.EXPR2_SUB,
-            "/": Op.EXPR2_DIV,
-            "*": Op.EXPR2_MUL,
-            "%": Op.EXPR2_IMOD,
-            "<": Op.EXPR2_LT,
-            "|": Op.EXPR2_BIT_OR,
-            "&": Op.EXPR2_BIT_AND,
-            "^": Op.EXPR2_BIT_XOR,
-            "<<": Op.EXPR2_SHIFT_LEFT,
-            ">>": Op.EXPR2_SHIFT_RIGHT,
-            ">>>": Op.EXPR2_SHIFT_RIGHT_UNSIGNED,
-            "<=": Op.EXPR2_LE,
-            "==": Op.EXPR2_EQ,
-            "===": Op.EXPR2_EQ,
-            "!=": Op.EXPR2_NE,
-            "!==": Op.EXPR2_NE,
+            [SK.PlusToken]: Op.EXPR2_ADD,
+            [SK.MinusToken]: Op.EXPR2_SUB,
+            [SK.SlashToken]: Op.EXPR2_DIV,
+            [SK.AsteriskToken]: Op.EXPR2_MUL,
+            [SK.PercentToken]: Op.EXPR2_IMOD,
+            [SK.LessThanToken]: Op.EXPR2_LT,
+            [SK.BarToken]: Op.EXPR2_BIT_OR,
+            [SK.AmpersandToken]: Op.EXPR2_BIT_AND,
+            [SK.CaretToken]: Op.EXPR2_BIT_XOR,
+            [SK.LessThanLessThanToken]: Op.EXPR2_SHIFT_LEFT,
+            [SK.GreaterThanGreaterThanToken]: Op.EXPR2_SHIFT_RIGHT,
+            [SK.GreaterThanGreaterThanGreaterThanToken]:
+                Op.EXPR2_SHIFT_RIGHT_UNSIGNED,
+            [SK.LessThanEqualsToken]: Op.EXPR2_LE,
+            [SK.EqualsEqualsToken]: Op.EXPR2_EQ,
+            [SK.EqualsEqualsEqualsToken]: Op.EXPR2_EQ,
+            [SK.ExclamationEqualsToken]: Op.EXPR2_NE,
+            [SK.ExclamationEqualsEqualsToken]: Op.EXPR2_NE,
         }
 
-        let op = expr.operator
+        let op = expr.operatorToken.kind
 
-        if (op == "**")
-            return this.emitMath(
-                {
-                    type: "CallExpression",
-                    range: expr.range,
-                    callee: null,
-                    optional: false,
-                    arguments: [expr.left, expr.right],
-                },
-                "Math.pow"
-            )
+        if (op == SK.EqualsToken) return this.emitAssignmentExpression(expr)
+
+        if (op == SK.AsteriskAsteriskToken)
+            return this.emitMath(expr, [expr.left, expr.right], "Math.pow")
 
         let swap = false
-        if (op == ">") {
-            op = "<"
+        if (op == SK.GreaterThanToken) {
+            op = SK.LessThanToken
             swap = true
         }
-        if (op == ">=") {
-            op = "<="
+        if (op == SK.GreaterThanEqualsToken) {
+            op = SK.LessThanEqualsToken
             swap = true
         }
 
         const wr = this.writer
 
-        if (op == "&&" || op == "||") {
+        if (op == SK.AmpersandAmpersandToken || op == SK.BarBarToken) {
             const a = this.emitSimpleValue(expr.left, ValueType.BOOL)
             const tmp = wr.cacheValue(a)
             const tst = wr.emitExpr(
-                op == "&&" ? Op.EXPR1_TO_BOOL : Op.EXPR1_NOT,
+                op == SK.AmpersandAmpersandToken
+                    ? Op.EXPR1_TO_BOOL
+                    : Op.EXPR1_NOT,
                 tmp.emit()
             )
             const skipB = wr.mkLabel("lazyB")
@@ -2429,26 +2436,26 @@ class Program implements TopOpWriter {
         return wr.emitExpr(op2, a, b)
     }
 
-    private emitUnaryExpression(expr: estree.UnaryExpression): Value {
+    private emitUnaryExpression(expr: ts.PrefixUnaryExpression): Value {
         const simpleOps: SMap<Op> = {
-            "!": Op.EXPR1_NOT,
-            "-": Op.EXPR1_NEG,
-            "~": Op.EXPR1_BIT_NOT,
-            "+": Op.EXPR1_ID,
+            [SK.ExclamationToken]: Op.EXPR1_NOT,
+            [SK.MinusToken]: Op.EXPR1_NEG,
+            [SK.TildeToken]: Op.EXPR1_BIT_NOT,
+            [SK.PlusToken]: Op.EXPR1_ID,
         }
 
         let op = simpleOps[expr.operator]
         if (op === undefined) throwError(expr, "unhandled operator")
 
-        let arg = expr.argument
+        let arg = expr.operand
 
         if (
-            expr.operator == "!" &&
-            arg.type == "UnaryExpression" &&
-            arg.operator == "!"
+            expr.operator == SK.ExclamationToken &&
+            ts.isPrefixUnaryExpression(arg) &&
+            arg.operator == SK.ExclamationToken
         ) {
             op = Op.EXPR1_TO_BOOL
-            arg = arg.argument
+            arg = arg.operand
         }
 
         const wr = this.writer
@@ -2459,7 +2466,7 @@ class Program implements TopOpWriter {
         return wr.emitExpr(op, a)
     }
 
-    private emitArrayExpression(expr: estree.ArrayExpression): Value {
+    private emitArrayExpression(expr: ts.ArrayLiteralExpression): Value {
         const wr = this.writer
         const sz = expr.elements.length
         wr.emitStmt(Op.STMT1_ALLOC_ARRAY, literal(sz))
@@ -2480,7 +2487,7 @@ class Program implements TopOpWriter {
         return ref.finalEmit(ValueType.ARRAY)
     }
 
-    private emitObjectExpression(expr: estree.ObjectExpression): Value {
+    private emitObjectExpression(expr: ts.ObjectLiteralExpression): Value {
         const wr = this.writer
         wr.emitStmt(Op.STMT0_ALLOC_MAP)
         if (expr.properties.length)
@@ -2491,50 +2498,73 @@ class Program implements TopOpWriter {
     }
 
     private emitExpr(expr: Expr): Value {
-        switch (expr.type) {
-            case "CallExpression":
-                return this.emitCallExpression(expr)
-            case "Identifier":
-                return this.emitIdentifier(expr)
-            case "ThisExpression":
-                return this.emitThisExpression(expr)
-            case "MemberExpression":
-                return this.emitMemberExpression(expr)
-            case "Literal":
-                return this.emitLiteral(expr)
-            case "AssignmentExpression":
-                return this.emitAssignmentExpression(expr)
-            case "LogicalExpression":
-            case "BinaryExpression":
-                return this.emitBinaryExpression(expr)
-            case "UnaryExpression":
-                return this.emitUnaryExpression(expr)
-            case "TaggedTemplateExpression":
-                return this.emitStringOrBuffer(expr)
-            case "ArrayExpression":
-                return this.emitArrayExpression(expr)
-            case "ObjectExpression":
-                return this.emitObjectExpression(expr)
+        switch (expr.kind) {
+            case SK.CallExpression:
+                return this.emitCallExpression(expr as ts.CallExpression)
+            case SK.FalseKeyword:
+                return this.emitLiteral(false)
+            case SK.TrueKeyword:
+                return this.emitLiteral(true)
+            case SK.NullKeyword:
+                return this.emitLiteral(null)
+            case SK.UndefinedKeyword:
+                return this.emitLiteral(undefined)
+            case SK.Identifier:
+                return this.emitIdentifier(expr as ts.Identifier)
+            case SK.ThisKeyword:
+                return this.emitThisExpression(expr as ts.ThisExpression)
+            case SK.ElementAccessExpression:
+                return this.emitElementAccessExpression(
+                    expr as ts.ElementAccessExpression
+                )
+            case SK.PropertyAccessExpression:
+                return this.emitPropertyAccessExpression(
+                    expr as ts.PropertyAccessExpression
+                )
+
+            case SK.TemplateHead:
+            case SK.TemplateMiddle:
+            case SK.TemplateTail:
+            case SK.NumericLiteral:
+            case SK.StringLiteral:
+            case SK.NoSubstitutionTemplateLiteral:
+                //case SyntaxKind.RegularExpressionLiteral:
+                return this.emitLiteralExpression(expr as ts.LiteralExpression)
+
+            case SK.BinaryExpression:
+                return this.emitBinaryExpression(expr as ts.BinaryExpression)
+            case SK.PrefixUnaryExpression:
+                return this.emitUnaryExpression(
+                    expr as ts.PrefixUnaryExpression
+                )
+            case SK.TaggedTemplateExpression:
+                return this.emitStringOrBuffer(
+                    expr as ts.TaggedTemplateExpression
+                )
+            case SK.ArrayLiteralExpression:
+                return this.emitArrayExpression(
+                    expr as ts.ArrayLiteralExpression
+                )
+            case SK.ObjectLiteralExpression:
+                return this.emitObjectExpression(
+                    expr as ts.ObjectLiteralExpression
+                )
+            case SK.ParenthesizedExpression:
+                return this.emitExpr(
+                    (expr as ts.ParenthesizedExpression).expression
+                )
             default:
                 // console.log(expr)
-                return throwError(expr, "unhandled expr: " + expr.type)
+                return throwError(expr, "unhandled expr: " + SK[expr.kind])
         }
     }
 
-    private sourceFrag(pos: Position) {
-        if (pos?.range) {
-            let [startp, endp] = pos.range
-            if (endp === undefined) endp = startp + 60
-            endp = Math.min(endp, startp + 60)
-            return this.getSource(pos.rangeFile)
-                .slice(startp, endp)
-                .replace(/\n[^]*/, "...")
-        }
-
-        return null
+    private sourceFrag(node: ts.Node) {
+        const text = node.getFullText().trim()
+        return text.slice(0, 60).replace(/\n[^]*/, "...")
     }
 
-    private handleException(stmt: estree.BaseNode, e: any) {
+    private handleException(stmt: ts.Node, e: any) {
         if (e.sourceNode !== undefined) {
             const node = e.sourceNode || stmt
             this.reportError(node, e.message)
@@ -2545,7 +2575,7 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitStmt(stmt: Stmt) {
+    private emitStmt(stmt: ts.Statement) {
         const src = this.sourceFrag(stmt)
         const wr = this.writer
         if (src) wr.emitComment(src)
@@ -2553,25 +2583,34 @@ class Program implements TopOpWriter {
         wr.stmtStart(this.indexToLine(stmt))
 
         try {
-            switch (stmt.type) {
-                case "ExpressionStatement":
-                    return this.emitExpressionStatement(stmt)
-                case "VariableDeclaration":
-                    return this.emitVariableDeclaration(stmt)
-                case "IfStatement":
-                    return this.emitIfStatement(stmt)
-                case "WhileStatement":
-                    return this.emitWhileStatement(stmt)
-                case "BlockStatement":
-                    stmt.body.forEach(s => this.emitStmt(s))
+            switch (stmt.kind) {
+                case SK.ExpressionStatement:
+                    return this.emitExpressionStatement(
+                        stmt as ts.ExpressionStatement
+                    )
+                case SK.VariableStatement:
+                    return this.emitVariableDeclaration(
+                        stmt as ts.VariableStatement
+                    )
+                case SK.IfStatement:
+                    return this.emitIfStatement(stmt as ts.IfStatement)
+                case SK.WhileStatement:
+                    return this.emitWhileStatement(stmt as ts.WhileStatement)
+                case SK.Block:
+                    stmt.forEachChild(s => this.emitStmt(s as ts.Statement))
                     return
-                case "ReturnStatement":
-                    return this.emitReturnStatement(stmt)
-                case "FunctionDeclaration":
-                    return this.emitFunctionDeclaration(stmt)
+                case SK.ReturnStatement:
+                    return this.emitReturnStatement(stmt as ts.ReturnStatement)
+                case SK.FunctionDeclaration:
+                    return this.emitFunctionDeclaration(
+                        stmt as ts.FunctionDeclaration
+                    )
+                case SK.ExportDeclaration:
+                case SK.InterfaceDeclaration:
+                    return // ignore
                 default:
-                    console.log(stmt)
-                    throwError(stmt, `unhandled type: ${stmt.type}`)
+                    // console.log(stmt)
+                    throwError(stmt, `unhandled stmt type: ${SK[stmt.kind]}`)
             }
         } catch (e) {
             this.handleException(stmt, e)
@@ -2708,8 +2747,8 @@ class Program implements TopOpWriter {
         return this.procs.map(p => p.toString()).join("\n")
     }
 
-    inMainFile(p: Position) {
-        return p.rangeFile == this.host.mainFileName?.() || p.rangeFile == ""
+    inMainFile(node: ts.Node) {
+        return node.getSourceFile() == this.mainFile
     }
 
     private emitLibrary() {
@@ -2738,38 +2777,13 @@ class Program implements TopOpWriter {
     }
 
     emit() {
-        const files = Object.keys(prelude)
-        files.push(this.host.mainFileName?.() || "")
-
         assert(!this.tree)
 
-        for (const fn of files) {
-            try {
-                const tree = esprima.parseScript(
-                    this.getSource(fn),
-                    {
-                        // tolerant: true,
-                        range: true,
-                        comment: true,
-                    },
-                    (node, meta) => {
-                        ;(node as Position).rangeFile = fn
-                    }
-                )
-                if (this.tree == null) this.tree = tree
-                else {
-                    this.tree.body.push(...tree.body)
-                    this.tree.comments.push(...tree.comments)
-                }
-            } catch (e) {
-                if (e.description)
-                    this.reportError(
-                        { rangeFile: fn, range: [e.index, e.index + 1] },
-                        e.description
-                    )
-                else throw e
-            }
-        }
+        this.tree = buildAST(this.host, this._source)
+        getProgramDiagnostics(this.tree).forEach(d => this.printDiag(d))
+
+        const files = this.tree.getSourceFiles()
+        this.mainFile = files[files.length - 1]
 
         this.emitProgram(this.tree)
 
@@ -2789,6 +2803,12 @@ class Program implements TopOpWriter {
             source: this._source,
         }
         this.host.write("prog.jacs", b)
+        const progJson = {
+            text: this._source,
+            blocks: "",
+            compiled: toHex(b),
+        }
+        this.host.write("prog-body.json", JSON.stringify(progJson, null, 4))
         this.host.write("prog-dbg.json", JSON.stringify(dbg))
 
         // write assembly again
@@ -2799,7 +2819,7 @@ class Program implements TopOpWriter {
             try {
                 this.host?.verifyBytecode(b, dbg)
             } catch (e) {
-                this.reportError({ rangeFile: "", range: [0, 1] }, e.message)
+                this.reportError(this.mainFile, e.message)
             }
         }
 
@@ -2864,12 +2884,26 @@ export function testCompiler(host: Host, code: string) {
             verifyBytecode: host.verifyBytecode,
             mainFileName: host.mainFileName,
             error: err => {
-                const exp = lines[err.line - 1]
-                if (exp && err.message.indexOf(exp) >= 0)
-                    lines[err.line - 1] = null
-                else {
+                let isOK = false
+                if (err.file) {
+                    const { line } = ts.getLineAndCharacterOfPosition(
+                        err.file,
+                        err.start
+                    )
+                    const exp = lines[line]
+                    const text = ts.flattenDiagnosticMessageText(
+                        err.messageText,
+                        "\n"
+                    )
+                    if (exp != null && text.indexOf(exp) >= 0) {
+                        lines[line] = "" // allow more errors on the same line
+                        isOK = true
+                    }
+                }
+
+                if (!isOK) {
                     numExtra++
-                    printJacError(err)
+                    console.error(formatDiagnostics([err]))
                 }
             },
         },
@@ -2879,13 +2913,9 @@ export function testCompiler(host: Host, code: string) {
     let missingErrs = 0
     for (let i = 0; i < lines.length; ++i) {
         if (lines[i]) {
-            printJacError({
-                filename: host.mainFileName?.() || "",
-                line: i + 1,
-                column: 1,
-                message: "missing error: " + lines[i],
-                codeFragment: "",
-            })
+            const msg = "missing error: " + lines[i]
+            const fn = host.mainFileName?.() || ""
+            console.error(`${fn}(${i + 1},${1}): ${msg}`)
             missingErrs++
         }
     }

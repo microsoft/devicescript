@@ -1,4 +1,4 @@
-var x
+var x: number
 var servo1 = roles.servo()
 var button1 = roles.button()
 var airPressure1 = roles.airPressure()
@@ -16,3 +16,5 @@ airPressure1.pressure.onChange(1, () => {
 button1.up.subscribe(() => {
     servo1.angle.write(0)
 })
+
+export {}

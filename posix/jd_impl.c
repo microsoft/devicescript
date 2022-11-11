@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/time.h>
+#include <pthread.h>
 
 #include "interfaces/jd_hw.h"
 
@@ -43,9 +44,53 @@ void jd_free(void *p) {
 
 void pwr_enter_no_sleep(void) {}
 
+static pthread_mutex_t irq_mut = PTHREAD_MUTEX_INITIALIZER;
+
 int target_in_irq(void) {
     return 0;
 }
 
-void target_enable_irq(void) {}
-void target_disable_irq(void) {}
+void target_disable_irq(void) {
+    pthread_mutex_lock(&irq_mut);
+}
+
+void target_enable_irq(void) {
+    pthread_mutex_unlock(&irq_mut);
+}
+
+typedef struct setting {
+    struct setting *next;
+    char *key;
+    char *value;
+} setting_t;
+static setting_t *settings;
+
+static setting_t *find_entry(const char *key, int create) {
+    setting_t *p;
+    for (p = settings; p; p = p->next) {
+        if (strcmp(p->key, key) == 0)
+            return p;
+    }
+    if (!create)
+        return NULL;
+    p = jd_alloc(sizeof(setting_t));
+    p->next = settings;
+    p->key = jd_strdup(key);
+    settings = p;
+    return p;
+}
+
+char *jd_settings_get(const char *key) {
+    setting_t *s = find_entry(key, 0);
+    return s ? s->value : NULL;
+}
+
+int jd_settings_set(const char *key, const char *val) {
+    setting_t *s = find_entry(key, 1);
+    jd_free(s->value);
+    if (val == NULL)
+        s->value = NULL;
+    else
+        s->value = jd_strdup(val);
+    return 0;
+}
