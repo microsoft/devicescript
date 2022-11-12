@@ -268,7 +268,7 @@ const char *jacs_show_value(jacs_ctx_t *ctx, value_t v) {
     static char buf[64];
 
     if (jacs_is_tagged_int(v)) {
-        jd_sprintf(buf, sizeof(buf), "%d", v.val_int32);
+        jd_sprintf(buf, sizeof(buf), "%d", (int)v.val_int32);
         return buf;
     }
 
@@ -327,12 +327,12 @@ const char *jacs_show_value(jacs_ctx_t *ctx, value_t v) {
             fmt = "???";
             break;
         }
-        jd_sprintf(buf, sizeof(buf), "%s:%x", fmt, jacs_handle_value(v));
+        jd_sprintf(buf, sizeof(buf), "%s:%x", fmt, (unsigned)jacs_handle_value(v));
         return buf;
     }
 
     if (fmt)
-        jd_sprintf(buf, sizeof(buf), "%s:%u", fmt, jacs_handle_value(v));
+        jd_sprintf(buf, sizeof(buf), "%s:%u", fmt, (unsigned)jacs_handle_value(v));
     else
         return "?value";
 
