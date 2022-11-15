@@ -9,7 +9,7 @@ const config = {
     title: "Jacscript",
     tagline: "Portable, small footprint virtual machine",
     url: "https://microsoft.github.io/",
-    baseUrl: "/",
+    baseUrl: "/jacscript/",
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "throw",
     favicon: "img/favicon.ico",
