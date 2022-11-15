@@ -23,7 +23,15 @@ jobs:
                   fetch-depth: 0
             - uses: actions/setup-node@v3
               with:
-                  node-version: "18"
+                  node-version: 18
+                  cache: yarn
                   cache-dependency-path: website/yarn.lock
-            - run: yarn build
-              working_directory: website
+            - name: Install dependencies
+                run: yarn install --frozen-lockfile
+            - name: Build website
+                run: yarn build
+            - name: Deploy to GitHub Pages
+                uses: peaceiris/actions-gh-pages@v3
+                with:
+                github_token: ${{ secrets.GITHUB_TOKEN }}
+                publish_dir: ./build
