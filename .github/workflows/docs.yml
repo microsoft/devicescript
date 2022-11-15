@@ -1,0 +1,29 @@
+name: Documentation build
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "website/**"
+    pull_request:
+        branches: [main]
+        paths:
+            - "website/**"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        defaults:
+          run:
+            working-directory: website        
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: "recursive"
+                  fetch-depth: 0
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: "18"
+                  cache-dependency-path: website/yarn.lock
+            - run: yarn build
+              working_directory: website
