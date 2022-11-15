@@ -14,7 +14,7 @@ nvm use 18
 -   install packages
 
 ```
-$ yarn --frozen-lockfile
+$ yarn install --frozen-lockfile
 ```
 
 To refresh packages, run `yarn install` and commit `yarn.lock`.
