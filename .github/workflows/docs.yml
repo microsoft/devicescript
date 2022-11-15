@@ -14,8 +14,8 @@ jobs:
     build:
         runs-on: ubuntu-latest
         defaults:
-          run:
-            working-directory: website        
+            run:
+                working-directory: website
         steps:
             - uses: actions/checkout@v3
               with:
@@ -27,11 +27,11 @@ jobs:
                   cache: yarn
                   cache-dependency-path: website/yarn.lock
             - name: Install dependencies
-                run: yarn install --frozen-lockfile
+              run: yarn install --frozen-lockfile
             - name: Build website
-                run: yarn build
+              run: yarn build
             - name: Deploy to GitHub Pages
-                uses: peaceiris/actions-gh-pages@v3
-                with:
-                github_token: ${{ secrets.GITHUB_TOKEN }}
-                publish_dir: ./build
+              uses: peaceiris/actions-gh-pages@v3
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./build
