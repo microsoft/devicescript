@@ -1,0 +1,39 @@
+name: Documentation build
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - "website/**"
+    pull_request:
+        branches: [main]
+        paths:
+            - "website/**"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: website
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: "recursive"
+                  fetch-depth: 0
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 18
+                  cache: yarn
+                  cache-dependency-path: website/yarn.lock
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
+            - name: Build website
+              run: yarn build
+            - name: Deploy to GitHub Pages
+              uses: peaceiris/actions-gh-pages@v3
+              if: ${{ github.ref == 'refs/heads/main' }}
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./build
+                  force_orphan: true

@@ -1,38 +1,42 @@
 name: GCC and EMSDK build
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    push:
+        branches: [main]
+        paths-ignore:
+            - "website/**"
+    pull_request:
+        branches: [main]
+        paths-ignore:
+            - "website/**"
 
 jobs:
-  build:
-    env:
-      EM_VERSION: 3.1.7
-      EM_CACHE_FOLDER: 'emsdk-cache'
+    build:
+        env:
+            EM_VERSION: 3.1.7
+            EM_CACHE_FOLDER: "emsdk-cache"
 
-    runs-on: ubuntu-latest
+        runs-on: ubuntu-latest
 
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
-        fetch-depth: 0
-    - uses: actions/setup-node@v2
-      with:
-          node-version: '16'
-    - name: Setup cache
-      id: cache-system-libraries
-      uses: actions/cache@v2
-      with:
-          path: ${{env.EM_CACHE_FOLDER}}
-          key: ${{env.EM_VERSION}}-${{ runner.os }}
-    - uses: mymindstorm/setup-emsdk@v11
-      with:
-          version: ${{env.EM_VERSION}}
-          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: "recursive"
+                  fetch-depth: 0
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: "18"
+            - name: Setup cache
+              id: cache-system-libraries
+              uses: actions/cache@v3
+              with:
+                  path: ${{env.EM_CACHE_FOLDER}}
+                  key: ${{env.EM_VERSION}}-${{ runner.os }}
+            - uses: mymindstorm/setup-emsdk@v11
+              with:
+                  version: ${{env.EM_VERSION}}
+                  actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
 
-    - run: make
-    - run: make test
-    - run: make update-dist
+            - run: make
+            - run: make test
+            - run: make update-dist

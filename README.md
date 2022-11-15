@@ -4,7 +4,7 @@ Jacscript is a programming language for scripting [Jacdac](https://aka.ms/jacdac
 
 It has JavaScript-like syntax and is compiled to a custom VM bytecode, which can run in very constrained
 environments (VM itself compiles to 10kB of code, with the floating point library and Jacdac SDK adding further 30kB).
-The langauge is typically edited using [Block-based drag-and-drop interface](https://microsoft.github.io/jacdac-docs/editors/jacscript/).
+The language is typically edited using [Block-based drag-and-drop interface](https://microsoft.github.io/jacdac-docs/editors/jacscript/).
 
 This repository contains:
 * [jacdac-c submodule](https://github.com/microsoft/jacdac-c), including sources for Jacdac client libraries and Jacscript VM
