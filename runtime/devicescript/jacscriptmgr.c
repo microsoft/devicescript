@@ -314,7 +314,7 @@ void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         jd_respond_u32(pkt, jacs_header(state) ? jacs_header(state)->hash : 0);
         break;
 
-    case JD_GET(0x182): // TODO update spec
+    case JD_GET(JD_JACSCRIPT_MANAGER_REG_PROGRAM_SHA256):
         hash_program(state, pkt);
         break;
 
