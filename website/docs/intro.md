@@ -16,11 +16,3 @@ environments (VM itself compiles to 10kB of code, with the floating point librar
 * small memory (RAM) footprint
 * small code (flash) footprint
 * leave space for extensions in future
-
-```mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
-```
