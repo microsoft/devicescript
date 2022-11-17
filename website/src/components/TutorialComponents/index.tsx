@@ -8,6 +8,7 @@ import { CodeEditor as MonacoEditor } from "./CodeEditor"
 import codeBlockContainerStyles from "@docusaurus/theme-classic/src/theme/CodeBlock/Container/styles.module.css"
 import codeBlockContentStyles from "@docusaurus/theme-classic/src/theme/CodeBlock/Content/styles.module.css"
 import styles from "./styles.module.css"
+import Prism from "prism-react-renderer/prism"
 
 import runJacscript from "./runJacscript"
 const clientConfig = {
@@ -46,10 +47,9 @@ function OutputToggle(props: {
 function RunButton(props: {
     onClick: () => Promise<void>
     runFinished: boolean
-    isZ3Duo: boolean
 }) {
-    const { onClick, runFinished, isZ3Duo } = props
-    const text = isZ3Duo ? "Check" : "Run"
+    const { onClick, runFinished } = props
+    const text = "Run"
     return (
         <button
             className="button button--primary"
@@ -242,7 +242,6 @@ function CustomCodeEditor(props: {
                     onChange={onChange}
                     language={language}
                     prism={Prism}
-                    githubRepo={githubRepo}
                     readonly={readonly}
                     showLineNumbers={showLineNumbers}
                 />
@@ -266,19 +265,11 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
         showLineNumbers,
         readonly,
     } = input
-
-    const isZ3Duo = lang === "z3-duo"
-
     const [currCode, setCurrCode] = useState(code)
-
     const [outputRendered, setOutputRendered] = useState(false)
-
     const [runFinished, setRunFinished] = useState(true)
-
     const [output, setOutput] = useState(result)
-
     const [lastSnippet, setLastSnippet] = useState(code)
-
     const codeChanged = lastSnippet !== currCode
 
     const onDidClickOutputToggle = () => {
@@ -294,9 +285,7 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
         const runProcess = clientConfig[lang]
 
         let input = currCode
-        let process = isZ3Duo
-            ? runProcess(input, result.output)
-            : runProcess(input)
+        let process = runProcess(input)
 
         // `z3.interrupt` -- set the cancel status of an ongoing execution, potentially with a timeout (soft? hard? we should use hard)
         try {
@@ -356,13 +345,11 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
             />
             <>
                 <div className={styles.buttons}>
-                    {!isZ3Duo && !readonly && !editable && !outputRendered && (
+                    {!readonly && !editable && !outputRendered && (
                         <OutputToggle onClick={onDidClickOutputToggle} />
                     )}
-                    {(isZ3Duo ||
-                        (!readonly && (editable || outputRendered))) && (
+                    {!readonly && (editable || outputRendered) && (
                         <RunButton
-                            isZ3Duo={isZ3Duo}
                             onClick={onDidClickRun}
                             runFinished={runFinished}
                         />
