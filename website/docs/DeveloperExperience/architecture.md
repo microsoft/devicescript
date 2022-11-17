@@ -10,7 +10,7 @@ sidebar_position: 1
 * W, web developer
 * F, firmware developer
 
-# Flow to Device
+## Flow to Device
 
 ```mermaid
 sequenceDiagram
@@ -25,4 +25,18 @@ sequenceDiagram
     D->>DV: Hey, the temperature is above 80, ping the cloud...
     DV->>CD: Ding dong, it's too hot down there. <br/>Let me post to that hook!
     Note left of CD: Power Automate Flow is triggered!
+```
+
+## VS Code extension
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    code: VS Code
+    ext: Jacscript Extension worker
+    dev: Device
+    code --> ext
+    ext --> code
+    ext --> dev: serial, usb
+    dev --> ext
 ```
