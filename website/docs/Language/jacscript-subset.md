@@ -12,7 +12,7 @@ Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` ret
 `0.0` and `NaN` are considered falsy.
 TODO should compare with NaN return NaN?
 
-```js
+```ts
 var x, y
 x = pot.reading.read()
 if (x < 0.3) {
