@@ -17,10 +17,10 @@ async function createConfig() {
                     timeout: 2000, // timeout for execution of each code snippet in milliseconds during build
                     processToExecute: "./src/remark/compile.js",
                     statusCodes: {
-                        success: "z3-ran",
-                        timeout: "z3-timed-out",
-                        runError: "z3-failed",
-                        runtimeError: "z3-runtime-error",
+                        success: "success",
+                        timeout: "timeout",
+                        runError: "error",
+                        runtimeError: "runtimeerror",
                     },
                 },
                 githubRepo: "microsoft/jacscript",

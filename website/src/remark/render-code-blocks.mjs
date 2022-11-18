@@ -128,7 +128,7 @@ async function getOutput(config, input, lang, skipErr) {
         )
     }
 
-    console.log(`${lang} finished: ${hash}, ${status}, ${output}, ${error}`)
+    console.debug(`${lang}: ${hash}, ${status}, ${error}`)
 
     const errorToReport = checkRuntimeError(
         langVersion,
@@ -175,7 +175,9 @@ export default function plugin() {
 
         visit(ast, "code", (node, index, parent) => {
             const { value, lang, meta } = node
-            const langConfig = languageConfig.languages.find(l => l.label === lang)
+            const langConfig = languageConfig.languages.find(
+                l => l.label === lang
+            )
             if (!langConfig) return
 
             const skipRegex = /(no-build)|(ignore-errors)/
@@ -184,70 +186,70 @@ export default function plugin() {
             const alwaysEditable = editableRegex.test(meta)
             const lineNumRegex = /(show-line-numbers)/i
 
-                const label = langConfig.label
-                const highlight = langConfig.highlight
+            const label = langConfig.label
+            const highlight = langConfig.highlight
 
-                // line numbers can be shown for all blocks through `language.config.js`,
-                // or for a specific block through `show-line-numbers`
-                // e.g. ```z3 show-line-numbers
-                const showLineNumbers =
-                    langConfig.showLineNumbers || lineNumRegex.test(meta)
-                if (!langConfig.buildConfig) {
-                    // there is no runtime configured,
-                    // so just add the syntax highlighting and github discussion button (if configured)
+            // line numbers can be shown for all blocks through `language.config.js`,
+            // or for a specific block through `show-line-numbers`
+            // e.g. ```z3 show-line-numbers
+            const showLineNumbers =
+                langConfig.showLineNumbers || lineNumRegex.test(meta)
+            if (!langConfig.buildConfig) {
+                // there is no runtime configured,
+                // so just add the syntax highlighting and github discussion button (if configured)
 
-                    let code = value
-                    let result = {}
+                let code = value
+                let result = {}
 
-                    const val = JSON.stringify({
-                        lang: lang,
-                        highlight: highlight,
-                        statusCodes: langConfig.statusCodes ?? {},
-                        code,
-                        result: result,
-                        editable: true,
-                        readonly: langConfig.readonly ?? true,
-                        showLineNumbers: showLineNumbers,
-                    })
-                    parent.children.splice(index, 1, {
-                        type: "jsx",
-                        value: `<CustomCodeBlock input={${val}} />`,
-                    })
-                    return
-                }
-
-                promises.push(async () => {
-                    // console.log(`num promises: ${promises.length}; `);
-                    const buildConfig = langConfig.buildConfig
-                    const result = await getOutput(
-                        buildConfig,
-                        value,
-                        lang,
-                        skipErr
-                    )
-
-                    // console.log({ node, index, parent });
-
-                    const val = JSON.stringify({
-                        lang: lang,
-                        highlight: highlight,
-                        statusCodes: buildConfig.statusCodes,
-                        code: value,
-                        result: result,
-                        editable: alwaysEditable,
-                        readonly: false,
-                        showLineNumbers: showLineNumbers,
-                        langVersion: buildConfig.langVersion,
-                        tool: buildConfig.npmPackage,
-                    })
-                    parent.children.splice(index, 1, {
-                        type: "jsx",
-                        // TODO: encode the source into jsx tree to avoid XSS?
-                        // TODO: create a generic <CodeBlock and pass lang={lang} />
-                        // TODO: pass syntax highlighting to CodeBlock
-                        value: `<CustomCodeBlock input={${val}} />`,
-                    })
+                const val = JSON.stringify({
+                    lang: lang,
+                    highlight: highlight,
+                    statusCodes: langConfig.statusCodes ?? {},
+                    code,
+                    result: result,
+                    editable: true,
+                    readonly: langConfig.readonly ?? true,
+                    showLineNumbers: showLineNumbers,
                 })
+                parent.children.splice(index, 1, {
+                    type: "jsx",
+                    value: `<CustomCodeBlock input={${val}} />`,
+                })
+                return
+            }
+
+            promises.push(async () => {
+                // console.log(`num promises: ${promises.length}; `);
+                const buildConfig = langConfig.buildConfig
+                const result = await getOutput(
+                    buildConfig,
+                    value,
+                    lang,
+                    skipErr
+                )
+
+                // console.log({ node, index, parent });
+
+                const val = JSON.stringify({
+                    lang: lang,
+                    highlight: highlight,
+                    statusCodes: buildConfig.statusCodes,
+                    code: value,
+                    result: result,
+                    editable: alwaysEditable,
+                    readonly: false,
+                    showLineNumbers: showLineNumbers,
+                    langVersion: buildConfig.langVersion,
+                    tool: buildConfig.npmPackage,
+                })
+                parent.children.splice(index, 1, {
+                    type: "jsx",
+                    // TODO: encode the source into jsx tree to avoid XSS?
+                    // TODO: create a generic <CodeBlock and pass lang={lang} />
+                    // TODO: pass syntax highlighting to CodeBlock
+                    value: `<CustomCodeBlock input={${val}} />`,
+                })
+            })
         })
 
         for (const p of promises) {
