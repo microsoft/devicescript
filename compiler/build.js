@@ -97,7 +97,7 @@ function buildPrelude(folder, outp) {
 
 async function main() {
   try {
-    buildPrelude("lib", "src/prelude.ts")
+    buildPrelude("jacs/lib", "src/prelude.ts")
     for (const outfile of Object.keys(files)) {
       const src = files[outfile]
       const cjs = outfile.endsWith(".cjs")

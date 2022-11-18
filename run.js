@@ -2,9 +2,9 @@ const fs = require("fs")
 const path = require("path")
 const child_process = require("child_process")
 
-const ctest = "compiler/compiler-tests"
-const samples = "samples"
-const rtest = "compiler/run-tests"
+const ctest = "compiler/jacs/compiler-tests"
+const samples = "compiler/jacs/samples"
+const rtest = "compiler/jacs/run-tests"
 const distPath = "built"
 let verbose = false
 let useC = false

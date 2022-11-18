@@ -12,7 +12,7 @@ native em update-dist:
 
 test-c: native comp
 	@mkdir -p built
-	node run -c -t compiler/run-tests/basic.ts
+	node run -c -t compiler/jacs/run-tests/basic.ts
 
 test-em: em comp
 	node run test
