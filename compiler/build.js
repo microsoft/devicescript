@@ -16,7 +16,7 @@ function getMTime(path) {
 }
 
 function copyVM() {
-  const dist = "../website/static/vm/jacscript-vm.js"
+  const dist = "../website/static/js/jacscript-vm.js"
   const builtDir = "../runtime/jacscript-vm/built"
   const built = builtDir + "/jacscript-vm.js"
   const builtT = getMTime(built)
@@ -82,7 +82,7 @@ function runTSC(args) {
 }
 
 const files = {
-  "built/jacscript-compiler.bundle.js": "src/jacscript.ts",
+  "built/jacscript-compiler.js": "src/jacscript.ts",
   "built/jacscript-compiler.node.cjs": "src/jacscript.ts",
 }
 

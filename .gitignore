@@ -9,3 +9,4 @@ runtime/jacscript-vm/dist/wasmpre.d.ts.map
 *.jdl
 compiler/src/prelude.ts
 website/solutions
+website/static/js/jacscript-compiler.js

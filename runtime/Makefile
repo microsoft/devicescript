@@ -75,7 +75,7 @@ jacscript-vm/built/wasmpre.js: jacscript-vm/wasmpre.ts
 	sed -e 's/export default factory/export = factory/' jacscript-vm/built/wasmpre.d.ts > jacscript-vm/dist/types.d.ts
 
 VM_TMP_FILE = jacscript-vm/built/jacscript-vm.js
-VM_FILE = ../website/static/vm/jacscript-vm.js
+VM_FILE = ../website/static/js/jacscript-vm.js
 
 $(VM_TMP_FILE): jacscript-vm/built/wasmpre.js $(SRC) $(DEPS)
 	@mkdir -p $(BUILT)
