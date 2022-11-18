@@ -9,3 +9,4 @@ jacs
 vm/dist/wasmpre.d.ts.map
 *.jdl
 compiler/src/prelude.ts
+website/solutions

@@ -7,7 +7,7 @@ Buffers can be statically allocated, read and written.
 This can be used to conserve memory (regular variables always take 8 bytes)
 and create arrays (with fixed upper limit).
 
-```ts
+```js
 var mybuf = buffer(12) // 12 byte buffer
 mybuf.setAt(10, "u16", 123)
 mybuf.setAt(3, "u22.10", 173.282)

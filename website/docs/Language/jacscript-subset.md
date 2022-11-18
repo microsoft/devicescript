@@ -4,6 +4,15 @@ sidebar_position: 1
 
 # JavaScript subset
 
+```ts
+let x = 0, y = 0
+if (x < 0.3) {
+    y = x * 3
+} else {
+    y = -x / 7
+}
+```
+
 Global and local variables are supported (only `var`, no `const` or `let`).
 
 All variables are numbers (64-bit IEEE floating point).
@@ -12,7 +21,7 @@ Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` ret
 `0.0` and `NaN` are considered falsy.
 TODO should compare with NaN return NaN?
 
-```ts
+```js
 var x, y
 x = pot.reading.read()
 if (x < 0.3) {

@@ -10,7 +10,7 @@ const { readJsonSync, writeJsonSync, ensureDirSync } = fs_extra_pkg
 import { createHash } from "crypto"
 
 // site version
-import sitePkg from "../../package.json" assert { type: "json" }
+import sitePkg from "../../../package.json" assert { type: "json" }
 // for version `x.y.z`, only recompute hashes if `x` changes
 // to avoid recomputation over minor changes on the website
 // (so we only recompute for every major release)
@@ -175,6 +175,8 @@ export default function plugin() {
 
         visit(ast, "code", (node, index, parent) => {
             const { value, lang, meta } = node
+            const langConfig = languageConfig.languages.find(l => l.label === lang)
+            if (!langConfig) return
 
             const skipRegex = /(no-build)|(ignore-errors)/
             const skipErr = skipRegex.test(meta)
@@ -182,7 +184,6 @@ export default function plugin() {
             const alwaysEditable = editableRegex.test(meta)
             const lineNumRegex = /(show-line-numbers)/i
 
-            for (const langConfig of languageConfig.languages) {
                 const label = langConfig.label
                 const highlight = langConfig.highlight
 
@@ -191,11 +192,6 @@ export default function plugin() {
                 // e.g. ```z3 show-line-numbers
                 const showLineNumbers =
                     langConfig.showLineNumbers || lineNumRegex.test(meta)
-
-                if (lang !== label) {
-                    continue // onto the next lang config available until we are out
-                }
-
                 if (!langConfig.buildConfig) {
                     // there is no runtime configured,
                     // so just add the syntax highlighting and github discussion button (if configured)
@@ -217,7 +213,7 @@ export default function plugin() {
                         type: "jsx",
                         value: `<CustomCodeBlock input={${val}} />`,
                     })
-                    continue
+                    return
                 }
 
                 promises.push(async () => {
@@ -252,7 +248,6 @@ export default function plugin() {
                         value: `<CustomCodeBlock input={${val}} />`,
                     })
                 })
-            }
         })
 
         for (const p of promises) {
