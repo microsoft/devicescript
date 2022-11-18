@@ -29,7 +29,7 @@ function jacsFactory() {
             // @ts-ignore
             global.Blob = require("buffer").Blob
         } catch {
-            console.log("can't load websocket-polyfill")
+            //console.log("can't load websocket-polyfill")
         }
     } catch {
         d = require("../../../vm")
