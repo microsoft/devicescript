@@ -2,9 +2,9 @@ const fs = require("fs")
 const path = require("path")
 const child_process = require("child_process")
 
-const ctest = "compiler/compiler-tests"
-const samples = "samples"
-const rtest = "compiler/run-tests"
+const ctest = "jacs/compiler-tests"
+const samples = "jacs/samples"
+const rtest = "jacs/run-tests"
 const distPath = "built"
 let verbose = false
 let useC = false
@@ -17,19 +17,13 @@ let jacsFile = ""
 let isLibrary = false
 
 function jacsFactory() {
-    let d
+    d = require("jacscript-vm")
     try {
-        d = require("./vm-dev")
-        try {
-            require("websocket-polyfill")
-            // @ts-ignore
-            global.Blob = require("buffer").Blob
-        } catch {
-            console.log("can't load websocket-polyfill")
-        }
+        require("websocket-polyfill")
+        // @ts-ignore
+        global.Blob = require("buffer").Blob
     } catch {
-        console.log("using shipped VM!")
-        d = require("./vm")
+        console.log("can't load websocket-polyfill")
     }
     return d()
 }
@@ -39,7 +33,7 @@ async function getHost() {
     if (jacsHost) return jacsHost
     const inst = await jacsFactory()
     inst.jacsInit()
-    const specs = JSON.parse(fs.readFileSync("jacdac-c/jacdac/dist/services.json", "utf8"))
+    const specs = JSON.parse(fs.readFileSync("runtime/jacdac-c/jacdac/dist/services.json", "utf8"))
     jacsHost = {
         write: (fn, cont) => {
             fs.writeFileSync(path.join(distPath, fn), cont)
@@ -152,7 +146,7 @@ async function runServer(args) {
         if (serialPort) args.unshift(serialPort)
         else if (!testMode) args.unshift("8082")
         console.log("run", args)
-        const child = child_process.spawn(distPath + "/jdcli", args, {
+        const child = child_process.spawn("runtime/built/jdcli", args, {
             stdio: "inherit"
         })
         child.on('exit', (code, err) => {
@@ -175,7 +169,7 @@ async function runServer(args) {
     if (testMode)
         inst.sendPacket = () => { }
     else
-        await inst.setupNodeTcpSocketTransport(require, "localhost", 8082)
+        await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
     inst.jacsStart()
     if (fn) {
         const prog = await readCompiled(fn)
@@ -193,6 +187,10 @@ function readdir(folder) {
 
 async function main() {
     const args = process.argv.slice(2)
+
+    try {
+        fs.mkdirSync(distPath)
+    } catch { }
 
     while (true) {
         if (args[0] == "-v") {

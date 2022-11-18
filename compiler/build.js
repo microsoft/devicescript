@@ -6,6 +6,31 @@ const childProcess = require("child_process")
 let watch = false
 let fast = false
 
+function getMTime(path) {
+  try {
+    const st = fs.statSync(path)
+    return st.mtimeMs
+  } catch {
+    return undefined
+  }
+}
+
+function copyVM() {
+  const dist = "../website/static/vm/jacscript-vm.js"
+  const builtDir = "../runtime/jacscript-vm/built"
+  const built = builtDir + "/jacscript-vm.js"
+  const builtT = getMTime(built)
+  const distT = getMTime(dist)
+  if (builtT === undefined || distT > builtT + 1) {
+    console.log(`cp ${dist} ${built}`)
+    try {
+      fs.mkdirSync(builtDir)
+    } catch { }
+    fs.copyFileSync(dist, built)
+    fs.utimesSync(built, new Date(), new Date(distT))
+  }
+}
+
 const args = process.argv.slice(2)
 if (args[0] == "--watch" || args[0] == "-watch" || args[0] == "-w") {
   args.shift()
@@ -70,7 +95,7 @@ function buildPrelude(folder, outp) {
     filecont[fn] = fs.readFileSync(folder + "/" + fn, "utf-8")
   }
 
-  const specs = "../jacdac-c/jacdac/dist/jacscript-spec.d.ts"
+  const specs = "../runtime/jacdac-c/jacdac/dist/jacscript-spec.d.ts"
   filecont["../" + specs] = fs.readFileSync(specs, "utf-8")
 
   let r = 'export const prelude: Record<string, string> = {\n'
@@ -97,7 +122,8 @@ function buildPrelude(folder, outp) {
 
 async function main() {
   try {
-    buildPrelude("lib", "src/prelude.ts")
+    copyVM()
+    buildPrelude("../jacs/lib", "src/prelude.ts")
     for (const outfile of Object.keys(files)) {
       const src = files[outfile]
       const cjs = outfile.endsWith(".cjs")
@@ -120,7 +146,7 @@ async function main() {
       await runTSC(["-b", "src"])
   } catch (e) {
     console.error(e)
-   }
+  }
 }
 
 main()

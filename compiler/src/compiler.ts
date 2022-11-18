@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../jacdac-c/jacdac/spectool/jdspec.d.ts" />
+/// <reference path="../../runtime/jacdac-c/jacdac/spectool/jdspec.d.ts" />
 
 import * as ts from "typescript"
 import { SyntaxKind as SK } from "typescript"
@@ -10,7 +10,7 @@ import {
     CloudAdapterEvent,
     CloudAdapterCmd,
     CloudAdapterCommandStatus,
-} from "../../jacdac-c/jacdac/dist/specconstants"
+} from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 
 import {
     read32,

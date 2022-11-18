@@ -1,7 +1,7 @@
-type ptr = number
-type int32 = number
+declare type ptr = number
+declare type int32 = number
 
-export type JacsModule = EmscriptenModule &
+export declare type JacsModule = EmscriptenModule &
     typeof Exts & {
         _jd_em_set_device_id_2x_i32(id0: int32, id1: int32): void
         _jd_em_set_device_id_string(str: ptr): void
@@ -54,8 +54,8 @@ export module Exts {
                 if (sock) sock.write(buf)
             }
 
-            const disconnect = () => {
-                console.log("disconnect")
+            const disconnect = (err: any) => {
+                console.log("disconnect", err.message)
                 if (sock) sock.end()
                 sock = undefined
                 if (resolve) {
@@ -119,7 +119,7 @@ export module Exts {
                 if (sock)
                     try {
                         sock.close()
-                    } catch {}
+                    } catch { }
                 sock = undefined
                 if (resolve) {
                     resolve = null
@@ -203,7 +203,7 @@ export module Exts {
 }
 
 for (const kn of Object.keys(Exts)) {
-    ;(Module as any)[kn] = (Exts as any)[kn]
+    ; (Module as any)[kn] = (Exts as any)[kn]
 }
 
 function factory(): Promise<JacsModule> {
