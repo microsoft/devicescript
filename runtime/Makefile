@@ -37,7 +37,7 @@ SRC = $(wildcard posix/*.c) \
 
 OBJ = $(addprefix $(BUILT)/,$(SRC:.c=.o))
 
-all: native em comp
+all: native em
 
 native:
 	$(Q)$(MAKE) -j16 $(BUILT)/jdcli
@@ -52,10 +52,7 @@ $(BUILT)/%.o: %.c $(DEPS)
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(BUILT) vm/built compiler/built
-
-full-clean: clean
-	rm -rf vm/node_modules compiler/node_modules
+	rm -rf $(BUILT) jacscript-vm/built
 
 gdb: native
 	gdb -x scripts/gdbinit
@@ -73,48 +70,27 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 	-s ENVIRONMENT=web,webview,worker,node \
 	--no-entry
 
-vm/built/wasmpre.js: vm/wasmpre.ts vm/node_modules/typescript
+jacscript-vm/built/wasmpre.js: jacscript-vm/wasmpre.ts
 	cd vm && yarn build
-	sed -e 's/export default factory/export = factory/' vm/built/wasmpre.d.ts > vm/dist/types.d.ts
+	sed -e 's/export default factory/export = factory/' jacscript-vm/built/wasmpre.d.ts > jacscript-vm/dist/types.d.ts
 
-vm/node_modules/typescript:
-	cd vm && yarn install
+VM_TMP_FILE = jacscript-vm/built/jacscript-vm.js
+VM_FILE = jacscript-vm/dist/jacscript-vm.js
 
-compiler/node_modules/typescript:
-	cd compiler && yarn install
-
-VM_TMP_FILE = vm/built/jacscript-vm.js
-VM_FILE = vm/dist/jacscript-vm.js
-
-$(VM_TMP_FILE): vm/built/wasmpre.js $(SRC) $(DEPS)
-	@mkdir -p vm/dist
+$(VM_TMP_FILE): jacscript-vm/built/wasmpre.js $(SRC) $(DEPS)
 	sed -e 's/^export var/var/' $< | grep -v '^export ' > $(BUILT)/pre.js
 	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC) -lwebsocket.js
 
 $(VM_FILE): $(VM_TMP_FILE)
-	@mkdir -p vm/dist
+	@mkdir -p jacscript-vm/dist
 	cp $(VM_TMP_FILE) $(VM_FILE)
 
 em: $(VM_TMP_FILE)
 
-comp: compiler/node_modules/typescript compiler/built/compiler/src/jacscript.js
-
-compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.ts)
-	cd compiler && node build.js
-
-comp-fast:
-	@mkdir -p built
-	cd compiler && node build.js --fast
-
-test-c: native comp
-	node run -c -t compiler/run-tests/basic.ts
-
-test-em: em comp
-	node run test
-
-test: test-c test-em
-
 update-dist: $(VM_FILE)
-	git add $(VM_FILE) vm/dist/types.d.ts
+	git add $(VM_FILE) jacscript-vm/dist/types.d.ts
 	if [ "X$$GITHUB_WORKFLOW" != "X" ] ; then git config user.email "<>" && git config user.name "GitHub Bot" ; fi
 	if git commit -m "[skip ci] rebuild $(VM_FILE)" ; then git push ; fi
+
+test test-c test-em:
+	$(MAKE) -C .. $@

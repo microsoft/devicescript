@@ -9,7 +9,7 @@ function mymain(m) {
                         r.arrayBuffer()
                             .then(v => m.jacsDeploy(new Uint8Array(v)))
                     else
-                        console.log("you can copy or symlink built/prog.jacs to vm/built/prog.jacs to pre-load it here")
+                        console.log("you can copy or symlink built/prog.jacs to jacscript-vm/built/prog.jacs to pre-load it here")
                 })
         }, err => {
             console.log("failed to connect to devtools; please run 'jacdac devtools' in console")

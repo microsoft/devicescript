@@ -3,7 +3,7 @@
     "private": true,
     "workspaces": [
         "compiler",
-        "runtime/vm",
-        "runtime/vm-dev"
+        "runtime/jacscript-vm",
+        "runtime/jacscript-vm-dev"
     ]
 }

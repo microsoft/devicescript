@@ -1,7 +1,7 @@
-type ptr = number
-type int32 = number
+declare type ptr = number
+declare type int32 = number
 
-export type JacsModule = EmscriptenModule &
+export declare type JacsModule = EmscriptenModule &
     typeof Exts & {
         _jd_em_set_device_id_2x_i32(id0: int32, id1: int32): void
         _jd_em_set_device_id_string(str: ptr): void

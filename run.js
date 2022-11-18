@@ -19,7 +19,7 @@ let isLibrary = false
 function jacsFactory() {
     let d
     try {
-        d = require("./vm-dev")
+        d = require("jacscript-vm-dev")
         try {
             require("websocket-polyfill")
             // @ts-ignore
@@ -27,9 +27,9 @@ function jacsFactory() {
         } catch {
             console.log("can't load websocket-polyfill")
         }
-    } catch {
-        console.log("using shipped VM!")
-        d = require("./vm")
+    } catch (e) {
+        console.log("using shipped VM!", e)
+        d = require("jacscript-vm")
     }
     return d()
 }
@@ -39,7 +39,7 @@ async function getHost() {
     if (jacsHost) return jacsHost
     const inst = await jacsFactory()
     inst.jacsInit()
-    const specs = JSON.parse(fs.readFileSync("jacdac-c/jacdac/dist/services.json", "utf8"))
+    const specs = JSON.parse(fs.readFileSync("runtime/jacdac-c/jacdac/dist/services.json", "utf8"))
     jacsHost = {
         write: (fn, cont) => {
             fs.writeFileSync(path.join(distPath, fn), cont)
@@ -152,7 +152,7 @@ async function runServer(args) {
         if (serialPort) args.unshift(serialPort)
         else if (!testMode) args.unshift("8082")
         console.log("run", args)
-        const child = child_process.spawn(distPath + "/jdcli", args, {
+        const child = child_process.spawn("runtime/built/jdcli", args, {
             stdio: "inherit"
         })
         child.on('exit', (code, err) => {

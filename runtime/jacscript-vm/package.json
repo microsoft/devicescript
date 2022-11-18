@@ -7,7 +7,7 @@
   "scripts": {
     "dist": "yarn install && yarn build",
     "serve": "http-server -c-1 -p 7070 .",
-    "build": "node node_modules/typescript/bin/tsc"
+    "build": "tsc"
   },
   "license": "MIT",
   "devDependencies": {
