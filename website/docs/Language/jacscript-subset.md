@@ -4,16 +4,8 @@ sidebar_position: 1
 
 # JavaScript subset
 
-```ts
-let x = 0, y = 0
-if (x < 0.3) {
-    y = x * 3
-} else {
-    y = -x / 7
-}
-```
 
-Global and local variables are supported (only `var`, no `const` or `let`).
+Global and local variables are supported (only `const` or `let`, no `var`).
 
 All variables are numbers (64-bit IEEE floating point).
 Numeric binary and unary expressions are supported.
@@ -21,8 +13,8 @@ Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` ret
 `0.0` and `NaN` are considered falsy.
 TODO should compare with NaN return NaN?
 
-```js
-var x, y
+```ts
+let x, y
 x = pot.reading.read()
 if (x < 0.3) {
     y = x * 3
@@ -42,7 +34,7 @@ Only `while` loop is supported.
 The `console.log()` takes zero or more arguments, each of which is a string or a number.
 Compiler internally constructs a format string (see below).
 
-```js
+```ts
 console.log("Hello world")
 console.log("X is", x, "and Y is", y)
 console.log("X=", x, "Y=", y)
@@ -56,7 +48,7 @@ when setting string registers.
 Arguments are `{0}`, `{1}`, ..., `{9}`, `{A}`, `{B}`, ..., `{F}`.
 A second digit can be supplied to specify precision (though this doesn't work so well yet):
 
-```js
+```ts
 console.log(format("X is {0} and Y is {1}", x, y))
 console.log(format("X = {04}", x))
 charDisplay.message.write(format("X is {0}", x))

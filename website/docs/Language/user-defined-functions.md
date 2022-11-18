@@ -16,12 +16,12 @@ Unused function are not compiled (and not checked for errors).
 Function parameters are numbers by default.
 A role can be also passed using syntax:
 
-```js
-function beep(/** @type BuzzerRole */ bz, len) {
+```ts
+function beep(bz: BuzzerRole, len:  number) {
     bz.playNote(440, 0.7, len)
 }
 
-var b = roles.buzzer()
+const b = roles.buzzer()
 beep(b, 10)
 ```
 
@@ -31,9 +31,9 @@ Commands can be marked as `client` in the spec.
 These need to be implemented by assigning to properties of the `prototype` of the role.
 For example:
 
-```js
-BuzzerRole.prototype.playNote = function (frequency, volume, duration) {
-    var p = 1000000 / frequency
+```ts
+BuzzerRole.prototype.playNote = function (frequency: number, volume: number, duration:  number) {
+    const p = 1000000 / frequency
     volume = clamp(0, volume, 1)
     this.playTone(p, p * volume * 0.5, duration)
 }

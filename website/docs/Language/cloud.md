@@ -6,7 +6,7 @@ sidebar_position: 8
 
 Send a label + 0 or more numeric values.
 
-```js
+```ts
 cloud.upload("potval", pot.reading.read())
 cloud.upload("color", r * 256, g * 256, b * 256)
 ```
@@ -16,7 +16,7 @@ Normally, status code 200 is returned to the cloud once the handler finishes.
 If the method is not found, 404 is returned.
 If the method is already running 429 is returned.
 
-```js
+```ts
 cloud.onMethod("set_lights", (a, b) => {
     lightA.brightness.write(a)
     lightB.brightness.write(a)
