@@ -54,8 +54,8 @@ export module Exts {
                 if (sock) sock.write(buf)
             }
 
-            const disconnect = () => {
-                console.log("disconnect")
+            const disconnect = (err: any) => {
+                console.log("disconnect", err.message)
                 if (sock) sock.end()
                 sock = undefined
                 if (resolve) {
@@ -119,7 +119,7 @@ export module Exts {
                 if (sock)
                     try {
                         sock.close()
-                    } catch {}
+                    } catch { }
                 sock = undefined
                 if (resolve) {
                     resolve = null
@@ -203,7 +203,7 @@ export module Exts {
 }
 
 for (const kn of Object.keys(Exts)) {
-    ;(Module as any)[kn] = (Exts as any)[kn]
+    ; (Module as any)[kn] = (Exts as any)[kn]
 }
 
 function factory(): Promise<JacsModule> {
