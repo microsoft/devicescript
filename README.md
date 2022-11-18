@@ -20,6 +20,12 @@ You can just use the devcontainer to build.
 If you want to build locally, you need to [install emscripten](https://emscripten.org/docs/getting_started/downloads.html),
 as well node.js, GNU Make and C compiler.
 
+* fetch submodules
+
+```bash
+git submodule update --init --recursive
+```
+
 * start `jacdac devtools` (the npm version) and let is running
 * open this folder in VSCode; use "Reopen in Container" if needed
 * start Terminal in VSCode

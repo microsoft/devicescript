@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # JavaScript subset
 
-Global and local variables are supported (only `var`, no `const` or `let`).
+Global and local variables are supported (only `const` or `let`, no `var`).
 
 All variables are numbers (64-bit IEEE floating point).
 Numeric binary and unary expressions are supported.
@@ -13,15 +13,15 @@ Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` ret
 TODO should compare with NaN return NaN?
 
 ```js
-var x, y
-x = pot.reading.read()
+const pot = roles.potentiometer()
+let x, y
+x = pot.position.read()
 if (x < 0.3) {
     y = x * 3
 } else {
     y = -x / 7
 }
 ```
-
 
 Some builtin functions only take literal arguments (especially strings, and time values).
 
@@ -33,7 +33,9 @@ Only `while` loop is supported.
 The `console.log()` takes zero or more arguments, each of which is a string or a number.
 Compiler internally constructs a format string (see below).
 
-```js
+```ts
+let x = 0
+let y = 4
 console.log("Hello world")
 console.log("X is", x, "and Y is", y)
 console.log("X=", x, "Y=", y)

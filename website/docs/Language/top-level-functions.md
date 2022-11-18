@@ -7,14 +7,14 @@ sidebar_position: 9
 ## Time
 
 Run a function periodically (`0.3s` in the example below; `20ms` minimum):
-```js
+```ts
 every(0.3, () => {
     // ...
 })
 ```
 
 Wait given number of seconds:
-```js
+```ts
 wait(0.3)
 ```
 
@@ -63,7 +63,7 @@ All of the above should have the same semantics as JavaScript.
 The `panic()` function takes a numeric error code and terminates or restarts the program.
 `reboot()` is similar, but doesn't print error message.
 
-```js
+```ts
 panic(348)
 reboot()
 ```

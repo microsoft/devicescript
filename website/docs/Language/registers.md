@@ -12,16 +12,16 @@ Registers have following methods - `.onChange()`, `.read()` and `.write()`.
 If register contains multiple fields, a tuple (array) is returned.
 
 ```js
-var x
-x = pot.position.read()
-x = pot.reading.read() // equivalent
+const pot = roles.potentiometer()
+const lamp = roles.led()
+const colorSensor = roles.color()
+let x = pot.position.read()
 
 lamp.brightness.write(0.7)
 
-var r, g, b
-[r, g, b] = colorSensor.color.read()
+const [r, g, b] = colorSensor.color.read()
 
-myLed.color.write(0.3, 1, 0.7)
+// myLed.color.write(0.3, 1, 0.7)
 ```
 
 The `.onChange()` handler can be registered to execute whenever the value of the register changes
@@ -30,6 +30,7 @@ It is executed once when the value is first determined, and then whenever the cu
 is different by at least the specified value from the value at previous handler execution.
 
 ```js
+const pot = roles.potentiometer()
 pot.position.onChange(0.02, () => {
     lamp.brightness.write(pot.position.read())
 })
