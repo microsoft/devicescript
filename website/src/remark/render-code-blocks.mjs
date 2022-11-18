@@ -57,8 +57,17 @@ ${hash}
     return ""
 }
 
+const memoryCache = {}
+
 async function getOutput(config, input, lang, skipErr) {
-    const { timeout, langVersion, processToExecute, statusCodes } = config
+    const {
+        timeout,
+        langVersion,
+        processToExecute,
+        moduleToExecute,
+        statusCodes,
+        cache,
+    } = config
     const hashObj = createHash("sha1")
 
     // TODO: add rise4fun engine version to the hash
@@ -78,8 +87,10 @@ async function getOutput(config, input, lang, skipErr) {
 
     // TODO: error handling for z3-js etc?
     const errRegex = /(\(error)|(unsupported)|([eE]rror:)/
-    const data = readJsonSync(pathOut, { throws: false }) // don't throw an error if file not exist
-    if (data !== null) {
+    const data =
+        memoryCache[pathOut] ||
+        (cache && readJsonSync(pathOut, { throws: false })) // don't throw an error if file not exist
+    if (data) {
         console.log(`cache hit ${hash}`)
         const errorToReport = checkRuntimeError(
             lang,
@@ -94,7 +105,8 @@ async function getOutput(config, input, lang, skipErr) {
             // we had erroneous code with ignore-error / no-build meta
             data.error = errorToReport
             data.status = statusCodes.runtimeError
-            writeJsonSync(pathOut, data) // update old cache
+            memoryCache[pathOut] = data
+            if (cache) writeJsonSync(pathOut, data) // update old cache
         }
         return data
     }
@@ -107,18 +119,22 @@ async function getOutput(config, input, lang, skipErr) {
     writeJsonSync(pathIn, inputObj)
 
     try {
-        let result = spawnSync("node", [processToExecute, pathIn], {
-            timeout: timeout,
-        })
-        output = result.stdout.length > 0 ? result.stdout.toString() : ""
-        // when running lang does fail
-        error = result.stderr.length > 0 ? result.stderr.toString() : ""
-
+        if (processToExecute) {
+            const result = spawnSync("node", [processToExecute, pathIn], {
+                timeout: timeout,
+            })
+            output = result.stdout.length > 0 ? result.stdout.toString() : ""
+            error = result.stderr.length > 0 ? result.stderr.toString() : ""
+        } else if (moduleToExecute) {
+            const run = require(moduleToExecute)
+            const result = await run({ input, config })
+            error = result.error
+            output = result.output
+        }
         status = error === "" ? statusCodes.success : statusCodes.runError
     } catch (e) {
         error = `${lang} timed out after ${timeout}ms.`
         output = ""
-
         status = statusCodes.timeout
     }
 
@@ -153,7 +169,8 @@ async function getOutput(config, input, lang, skipErr) {
     }
 
     // write to file
-    writeJsonSync(pathOut, result)
+    memoryCache[pathOut] = result
+    if (cache) writeJsonSync(pathOut, result)
 
     return result
 }
