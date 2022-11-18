@@ -27,8 +27,8 @@ function jacsFactory() {
         } catch {
             console.log("can't load websocket-polyfill")
         }
-    } catch (e) {
-        console.log("using shipped VM!", e)
+    } catch {
+        console.log("using shipped VM!")
         d = require("jacscript-vm")
     }
     return d()

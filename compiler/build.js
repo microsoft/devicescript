@@ -70,7 +70,7 @@ function buildPrelude(folder, outp) {
     filecont[fn] = fs.readFileSync(folder + "/" + fn, "utf-8")
   }
 
-  const specs = "../jacdac-c/jacdac/dist/jacscript-spec.d.ts"
+  const specs = "../runtime/jacdac-c/jacdac/dist/jacscript-spec.d.ts"
   filecont["../" + specs] = fs.readFileSync(specs, "utf-8")
 
   let r = 'export const prelude: Record<string, string> = {\n'

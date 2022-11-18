@@ -71,7 +71,7 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 	--no-entry
 
 jacscript-vm/built/wasmpre.js: jacscript-vm/wasmpre.ts
-	cd vm && yarn build
+	cd jacscript-vm && yarn build
 	sed -e 's/export default factory/export = factory/' jacscript-vm/built/wasmpre.d.ts > jacscript-vm/dist/types.d.ts
 
 VM_TMP_FILE = jacscript-vm/built/jacscript-vm.js

@@ -18,3 +18,10 @@ test-em: em comp
 	node run test
 
 test: test-c test-em
+
+clean:
+	rm -rf built compiler/built
+	$(MAKE) -C runtime $@
+
+full-clean: clean
+	rm -rf node_modules compiler/node_modules runtime/*/node_modules
