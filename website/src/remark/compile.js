@@ -3,6 +3,22 @@ const { stdout, stderr } = require("node:process")
 const { readJsonSync } = require("fs-extra")
 const fs = require("fs")
 const path = require("path")
+const specs = JSON.parse(
+    fs.readFileSync(
+        path.resolve("../jacdac-c/jacdac/dist/services.json"),
+        "utf8"
+    )
+)
+const compiler = require("../../../compiler")
+
+function toHex(bytes) {
+    if (!bytes) return undefined
+    let r = ""
+    for (let i = 0; i < bytes.length; ++i) {
+        r += ("0" + bytes[i].toString(16)).slice(-2)
+    }
+    return r
+}
 
 function jacsFactory() {
     let d
@@ -16,29 +32,21 @@ function jacsFactory() {
             console.log("can't load websocket-polyfill")
         }
     } catch {
-        console.log("using shipped VM!")
         d = require("../../../vm")
     }
     return d()
 }
 
-let jacsHost
 async function getHost() {
-    if (jacsHost) return jacsHost
     const inst = await jacsFactory()
     inst.jacsInit()
-    const specs = JSON.parse(
-        fs.readFileSync(
-            path.resolve("../jacdac-c/jacdac/dist/services.json"),
-            "utf8"
-        )
-    )
-    jacsHost = {
+    const files = {}
+    const jacsHost = {
         write: (fn, cont) => {
-            console.log(`${fn}->${cont}`)
+            files[fn] = cont
         },
         log: msg => {
-            if (verbose) console.log(msg)
+            console.log(msg)
         },
         mainFileName: () => "main.ts",
         getSpecs: () => specs,
@@ -47,18 +55,29 @@ async function getHost() {
             if (res != 0) throw new Error("verification error: " + res)
         },
     }
+    jacsHost.files = files
     return jacsHost
 }
 
 async function run(inputFile) {
     const input = readJsonSync(inputFile).input
+    let error = undefined
+    let files
+    let result
     try {
         const host = await getHost()
-        const jacscript = require("../../../compiler")
-        const result = jacscript.compile(host, input)
-        stdout.write(JSON.stringify(result))
+        result = compiler.compile(host, input)
+        files = host.files
     } catch (e) {
+        error = e
         stderr.write(String(e))
+    }
+    return {
+        files,
+        success: result.success,
+        binary: toHex(result.binary),
+        dbg: result.dbg,
+        error,
     }
 }
 

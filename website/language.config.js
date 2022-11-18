@@ -30,22 +30,6 @@ async function createConfig() {
         solutionsDir: "./solutions",
     }
 
-    for (const langConfig of config.languages) {
-        if (!langConfig.buildConfig) {
-            // console.log(`no config for ${langConfig.label}`);
-            continue
-        }
-        const npmPackage = langConfig.buildConfig.npmPackage
-        if (npmPackage) {
-            const pkgJson = `${npmPackage}/package.json`
-            // @ts-ignore
-            const langVersion = (
-                await import(pkgJson, { assert: { type: "json" } })
-            ).default.version
-            langConfig.buildConfig.langVersion = langVersion
-        }
-    }
-
     return config
 }
 
