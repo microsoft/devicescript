@@ -15,6 +15,9 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
+        env:
+            EM_VERSION: 3.1.7
+            EM_CACHE_FOLDER: "emsdk-cache"
         defaults:
             run:
                 working-directory: website
