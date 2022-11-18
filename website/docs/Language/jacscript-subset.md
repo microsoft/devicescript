@@ -14,6 +14,7 @@ Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` ret
 TODO should compare with NaN return NaN?
 
 ```ts
+const pot = roles.potentiometer()
 let x, y
 x = pot.reading.read()
 if (x < 0.3) {
