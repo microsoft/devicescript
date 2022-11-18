@@ -31,7 +31,7 @@ Commands can be marked as `client` in the spec.
 These need to be implemented by assigning to properties of the `prototype` of the role.
 For example:
 
-```ts
+```js
 BuzzerRole.prototype.playNote = function (frequency: number, volume: number, duration:  number) {
     const p = 1000000 / frequency
     volume = clamp(0, volume, 1)

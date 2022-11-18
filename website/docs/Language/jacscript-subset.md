@@ -4,7 +4,6 @@ sidebar_position: 1
 
 # JavaScript subset
 
-
 Global and local variables are supported (only `const` or `let`, no `var`).
 
 All variables are numbers (64-bit IEEE floating point).
@@ -13,17 +12,16 @@ Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` ret
 `0.0` and `NaN` are considered falsy.
 TODO should compare with NaN return NaN?
 
-```ts
+```js
 const pot = roles.potentiometer()
 let x, y
-x = pot.reading.read()
+x = pot.position.read()
 if (x < 0.3) {
     y = x * 3
 } else {
     y = -x / 7
 }
 ```
-
 
 Some builtin functions only take literal arguments (especially strings, and time values).
 
@@ -36,6 +34,8 @@ The `console.log()` takes zero or more arguments, each of which is a string or a
 Compiler internally constructs a format string (see below).
 
 ```ts
+let x = 0
+let y = 4
 console.log("Hello world")
 console.log("X is", x, "and Y is", y)
 console.log("X=", x, "Y=", y)
@@ -49,7 +49,7 @@ when setting string registers.
 Arguments are `{0}`, `{1}`, ..., `{9}`, `{A}`, `{B}`, ..., `{F}`.
 A second digit can be supplied to specify precision (though this doesn't work so well yet):
 
-```ts
+```js
 console.log(format("X is {0} and Y is {1}", x, y))
 console.log(format("X = {04}", x))
 charDisplay.message.write(format("X is {0}", x))
