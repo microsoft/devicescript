@@ -1,4 +1,4 @@
-/// <reference path="../../../runtime/jacdac-c/jacdac/dist/jacscript-spec.d.ts" />
+/// <reference path="../../runtime/jacdac-c/jacdac/dist/jacscript-spec.d.ts" />
 
 declare class Role {
     isConnected(): number

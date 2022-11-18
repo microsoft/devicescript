@@ -12,7 +12,7 @@ native em update-dist:
 
 test-c: native comp
 	@mkdir -p built
-	node run -c -t compiler/jacs/run-tests/basic.ts
+	node run -c -t jacs/run-tests/basic.ts
 
 test-em: em comp
 	node run test
@@ -20,7 +20,7 @@ test-em: em comp
 test: test-c test-em
 
 clean:
-	rm -rf built compiler/built
+	rm -rf built compiler/built compiler/src/prelude.ts
 	$(MAKE) -C runtime $@
 
 full-clean: clean
