@@ -21,6 +21,7 @@ and can be passed to any command or register write.
 For example `lamp.brightness.write(0.7)` is equivalent to:
 
 ```ts
+const lamp = roles.led()
 packet.setLength(2)
 packet.setAt(0, "u0.16", 0.7)
 lamp.brightness.write(packet)
