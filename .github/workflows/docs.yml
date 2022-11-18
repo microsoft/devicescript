@@ -18,9 +18,6 @@ jobs:
         env:
             EM_VERSION: 3.1.7
             EM_CACHE_FOLDER: "emsdk-cache"
-        defaults:
-            run:
-                working-directory: website
         steps:
             - uses: actions/checkout@v3
               with:
@@ -43,8 +40,10 @@ jobs:
                   actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
             - run: make        
             - name: Install dependencies
+              working-directory: website
               run: yarn install --frozen-lockfile
             - name: Build website
+              working-directory: website
               run: yarn build
             - name: Deploy to GitHub Pages
               uses: peaceiris/actions-gh-pages@v3
