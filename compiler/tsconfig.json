@@ -15,15 +15,5 @@
         "isolatedModules": true,
         "noImplicitAny": true,
         "types": []
-    },
-    "exclude": [
-        "**/node_modules/*",
-        "compiler/src"
-    ],
-    "include": [
-        "samples",
-        "compiler/lib",
-        "compiler/run-tests",
-        "compiler/compiler-tests"
-    ]
+    }
 }

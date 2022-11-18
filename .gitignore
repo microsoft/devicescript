@@ -5,7 +5,6 @@ node_modules/
 tmp
 package-lock.json
 Makefile.user
-jacs
 runtime/jacscript-vm/dist/wasmpre.d.ts.map
 *.jdl
 compiler/src/prelude.ts
