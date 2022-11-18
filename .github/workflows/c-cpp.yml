@@ -36,6 +36,7 @@ jobs:
               with:
                   version: ${{env.EM_VERSION}}
                   actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+            - run: yarn
             - run: make
             - run: make test
             - run: make update-dist
