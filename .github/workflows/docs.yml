@@ -15,25 +15,13 @@ on:
 jobs:
     build:
         runs-on: ubuntu-latest
-        env:
-            EM_VERSION: 3.1.7
-            EM_CACHE_FOLDER: "emsdk-cache"
         steps:
             - uses: actions/checkout@v3
               with:
                   submodules: "recursive"
                   fetch-depth: 0
-            - name: Setup cache
-              id: cache-system-libraries
-              uses: actions/cache@v3
-              with:
-                  path: ${{env.EM_CACHE_FOLDER}}
-                  key: ${{env.EM_VERSION}}-${{ runner.os }}
-            - uses: mymindstorm/setup-emsdk@v11
-              with:
-                  version: ${{env.EM_VERSION}}
-                  actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-            - run: make
+            - run: yarn install
+            - run: yarn build
             - uses: actions/setup-node@v3
               with:
                   node-version: 18
