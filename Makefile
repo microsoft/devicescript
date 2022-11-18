@@ -115,6 +115,7 @@ test-em: em comp
 test: test-c test-em
 
 update-dist: $(VM_FILE)
-	git add $(VM_FILE) vm/dist/types.d.ts
+	cp $(VM_FILE) website/static/vm/jacscript-vm.js
+	git add $(VM_FILE) vm/dist/types.d.ts website/static/vm/jacscript-vm.js
 	if [ "X$$GITHUB_WORKFLOW" != "X" ] ; then git config user.email "<>" && git config user.name "GitHub Bot" ; fi
 	if git commit -m "[skip ci] rebuild $(VM_FILE)" ; then git push ; fi
