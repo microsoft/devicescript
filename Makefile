@@ -7,7 +7,7 @@ comp-fast:
 	@mkdir -p built
 	cd compiler && node build.js --fast
 
-native em:
+native em update-dist:
 	$(MAKE) -C runtime $@
 
 test-c: native comp
