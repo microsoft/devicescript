@@ -39,6 +39,9 @@ jobs:
                   version: ${{env.EM_VERSION}}
                   actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
             - run: make        
+            - name: use node 18
+              working-directory: website
+              run: nvm use 18
             - name: Install dependencies
               working-directory: website
               run: yarn install --frozen-lockfile
