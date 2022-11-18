@@ -75,15 +75,15 @@ jacscript-vm/built/wasmpre.js: jacscript-vm/wasmpre.ts
 	sed -e 's/export default factory/export = factory/' jacscript-vm/built/wasmpre.d.ts > jacscript-vm/dist/types.d.ts
 
 VM_TMP_FILE = jacscript-vm/built/jacscript-vm.js
-VM_FILE = jacscript-vm/dist/jacscript-vm.js
+VM_FILE = ../website/static/vm/jacscript-vm.js
 
 $(VM_TMP_FILE): jacscript-vm/built/wasmpre.js $(SRC) $(DEPS)
+	@mkdir -p $(BUILT)
 	sed -e 's/^export var/var/' $< | grep -v '^export ' > $(BUILT)/pre.js
 	emcc $(EMCC_OPTS) -o $@ --pre-js $(BUILT)/pre.js $(SRC) -lwebsocket.js
 
 $(VM_FILE): $(VM_TMP_FILE)
-	@mkdir -p jacscript-vm/dist
-	cp $(VM_TMP_FILE) $(VM_FILE)
+	cp -a $(VM_TMP_FILE) $(VM_FILE)
 
 em: $(VM_TMP_FILE)
 

@@ -1,6 +1,0 @@
-{
-  "name": "jacscript-vm-dev",
-  "version": "0.0.0",
-  "main": "../jacscript-vm/built/jacscript-vm.js",
-  "types": "../jacscript-vm/dist/types.d.ts"
-}

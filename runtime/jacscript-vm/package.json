@@ -2,7 +2,7 @@
   "name": "jacscript-vm",
   "version": "0.0.0",
   "description": "Jacscript VM",
-  "main": "./dist/jacscript-vm.js",
+  "main": "./built/jacscript-vm.js",
   "types": "./dist/types.d.ts",
   "scripts": {
     "dist": "yarn install && yarn build",

@@ -1,9 +1,13 @@
 {
     "version": "0.0.0",
     "private": true,
+    "scripts": {
+        "build": "cd compiler && yarn build",
+        "build-fast": "cd compiler && yarn build-fast",
+        "test": "node run -t jacs/run-tests/basic.ts && node run test"
+    },
     "workspaces": [
         "compiler",
-        "runtime/jacscript-vm",
-        "runtime/jacscript-vm-dev"
+        "runtime/jacscript-vm"
     ]
 }

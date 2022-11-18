@@ -17,19 +17,13 @@ let jacsFile = ""
 let isLibrary = false
 
 function jacsFactory() {
-    let d
+    d = require("jacscript-vm")
     try {
-        d = require("jacscript-vm-dev")
-        try {
-            require("websocket-polyfill")
-            // @ts-ignore
-            global.Blob = require("buffer").Blob
-        } catch {
-            console.log("can't load websocket-polyfill")
-        }
+        require("websocket-polyfill")
+        // @ts-ignore
+        global.Blob = require("buffer").Blob
     } catch {
-        console.log("using shipped VM!")
-        d = require("jacscript-vm")
+        console.log("can't load websocket-polyfill")
     }
     return d()
 }
@@ -193,6 +187,10 @@ function readdir(folder) {
 
 async function main() {
     const args = process.argv.slice(2)
+
+    try {
+        fs.mkdirSync(distPath)
+    } catch { }
 
     while (true) {
         if (args[0] == "-v") {

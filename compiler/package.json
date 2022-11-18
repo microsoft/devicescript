@@ -8,6 +8,7 @@
   "scripts": {
     "dist": "yarn install && yarn build",
     "build": "node build.js",
+    "build-fast": "node build.js --fast",
     "watch": "node build.js --watch"
   },
   "license": "MIT",
