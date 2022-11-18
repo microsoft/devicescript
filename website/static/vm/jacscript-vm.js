@@ -132,8 +132,8 @@ var Exts;
                 if (sock)
                     sock.write(buf);
             };
-            const disconnect = () => {
-                console.log("disconnect");
+            const disconnect = (err) => {
+                console.log("disconnect", err.message);
                 if (sock)
                     sock.end();
                 sock = undefined;
