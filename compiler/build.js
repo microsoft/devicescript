@@ -82,8 +82,9 @@ function runTSC(args) {
 }
 
 const files = {
-  "built/jacscript-compiler.bundle.js": "src/jacscript.ts",
+  "built/jacscript-compiler.js": "src/jacscript.ts",
   "built/jacscript-compiler.node.cjs": "src/jacscript.ts",
+  "../cli/built/jacscript-cli.cjs": "../cli/src/cli.ts",
 }
 
 function buildPrelude(folder, outp) {
@@ -128,18 +129,23 @@ async function main() {
       const src = files[outfile]
       const cjs = outfile.endsWith(".cjs")
       const mjs = outfile.endsWith(".mjs")
+      const t0 = Date.now()
       await esbuild.build({
         entryPoints: [src],
         bundle: true,
         sourcemap: true,
         outfile,
         logLevel: "warning",
-        external: [],
+        external: [
+          "websocket-polyfill",
+          "jacscript-compiler"
+        ],
         platform: cjs ? "node" : "browser",
         target: "es2019",
         format: mjs ? "esm" : cjs ? "cjs" : "iife",
         watch
       })
+      console.log(`build ${outfile}: ${Date.now() - t0}ms`)
     }
     console.log("bundle done")
     if (!fast)

@@ -1,0 +1,17 @@
+{
+  "name": "jacscript-cli",
+  "version": "0.0.0",
+  "description": "Jacscript CLI",
+  "bin": "./built/jacscript-cli.cjs",
+  "files": [
+    "./built/jacscript-cli.cjs",
+    "buffer",
+    "README.md"
+  ],
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "commander": "^9.4.1",
+    "jacscript-compiler": "0.0.0"
+  }
+}
