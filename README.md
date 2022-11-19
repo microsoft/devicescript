@@ -17,12 +17,10 @@ This repository contains:
 
 You can just use the devcontainer to build.
 
-If you want to build locally you need to install node.js.
-
-* fetch submodules
+If you want to build locally you need to install node.js. After cloning, the repo run
 
 ```bash
-git submodule update --init --recursive
+yarn setup
 ```
 
 * start `jacdac devtools` (the npm version) and let is running
