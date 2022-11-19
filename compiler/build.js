@@ -16,7 +16,7 @@ function getMTime(path) {
 }
 
 function copyVM() {
-  const dist = "../website/static/vm/jacscript-vm.js"
+  const dist = "../website/static/dist/jacscript-vm.js"
   const builtDir = "../runtime/jacscript-vm/built"
   const built = builtDir + "/jacscript-vm.js"
   const builtT = getMTime(built)
