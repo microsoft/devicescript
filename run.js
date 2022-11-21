@@ -33,38 +33,40 @@ async function getHost() {
     if (jacsHost) return jacsHost
     const inst = await jacsFactory()
     inst.jacsInit()
-    const specs = JSON.parse(fs.readFileSync("runtime/jacdac-c/jacdac/dist/services.json", "utf8"))
+    const specs = JSON.parse(
+        fs.readFileSync("runtime/jacdac-c/jacdac/dist/services.json", "utf8")
+    )
     jacsHost = {
         write: (fn, cont) => {
             fs.writeFileSync(path.join(distPath, fn), cont)
             if (fn.endsWith(".jasm") && cont.indexOf("???oops") >= 0)
                 throw new Error("bad disassembly")
         },
-        log: msg => { if (verbose) console.log(msg) },
+        log: msg => {
+            if (verbose) console.log(msg)
+        },
         mainFileName: () => jacsFile,
         getSpecs: () => specs,
         verifyBytecode: buf => {
             if (useC) return
             const res = inst.jacsDeploy(buf)
-            if (res != 0)
-                throw new Error("verification error: " + res)
-        }
+            if (res != 0) throw new Error("verification error: " + res)
+        },
     }
     return jacsHost
 }
 
 async function compile(buf) {
     const jacscript = require("./compiler")
-    const res = jacscript.compile(await getHost(), buf.toString("utf8"), { isLibrary })
-    if (!res.success)
-        throw new Error("compilation failed")
+    const host = await getHost()
+    const res = jacscript.compile(buf.toString("utf8"), { host, isLibrary })
+    if (!res.success) throw new Error("compilation failed")
     return res.binary
 }
 
 async function readCompiled(fn) {
     const buf = fs.readFileSync(fn)
-    if (buf.slice(0, 8).toString("hex") == "4a6163530a7e6a9a")
-        return buf
+    if (buf.slice(0, 8).toString("hex") == "4a6163530a7e6a9a") return buf
     if (buf.slice(0, 16).toString("binary") == "4a6163530a7e6a9a")
         return Buffer.from(buf.toString("binary").replace(/\s*/g, ""), "hex")
     jacsFile = fn
@@ -83,13 +85,12 @@ async function runTest(fn) {
         // inst.sendPacket = pkt => console.log("send", pkt)
         inst.sendPacket = pkt => {
             // only react to packets from our device
-            if (!Buffer.from(devid, "hex").equals(pkt.slice(4, 4 + 8)))
-                return
+            if (!Buffer.from(devid, "hex").equals(pkt.slice(4, 4 + 8))) return
 
             const idx = pkt[13]
             const cmd = pkt[14] | (pkt[15] << 8)
             // see if it's "panic event"
-            if (idx == 2 && (cmd & 0x8000) && (cmd & 0xff) == 0x80) {
+            if (idx == 2 && cmd & 0x8000 && (cmd & 0xff) == 0x80) {
                 const panic_code = pkt[16] | (pkt[16] << 8)
                 if (panic_code) {
                     console.log("test failed")
@@ -119,21 +120,18 @@ async function runServer(args) {
     const fn = args.shift()
     if (logParse) {
         const jacscript = require("./compiler")
-        const fsp = require('node:fs/promises')
+        const fsp = require("node:fs/promises")
         const h = await fsp.open(fn, "r")
         const r = await jacscript.parseLog((off, size) => {
             const r = Buffer.alloc(size)
-            return h.read(r, 0, r.length, off)
-                .then(() => r)
+            return h.read(r, 0, r.length, off).then(() => r)
         })
         console.log(await r.dump())
         const genidx = parseInt(args[0])
         if (genidx) {
             const gen = await r.generation(genidx)
-            if (args[1] == "stats")
-                console.log(await gen.computeStats())
-            else
-                await gen.forEachEvent()
+            if (args[1] == "stats") console.log(await gen.computeStats())
+            else await gen.forEachEvent()
         }
         return
     }
@@ -147,12 +145,12 @@ async function runServer(args) {
         else if (!testMode) args.unshift("8082")
         console.log("run", args)
         const child = child_process.spawn("runtime/built/jdcli", args, {
-            stdio: "inherit"
+            stdio: "inherit",
         })
-        child.on('exit', (code, err) => {
+        child.on("exit", (code, err) => {
             if (!code && err) code = 2
             process.exit(code)
-        });
+        })
         testMode = false
         return
     }
@@ -166,10 +164,8 @@ async function runServer(args) {
         return
     }
     const inst = await jacsFactory()
-    if (testMode)
-        inst.sendPacket = () => { }
-    else
-        await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
+    if (testMode) inst.sendPacket = () => {}
+    else await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
     inst.jacsStart()
     if (fn) {
         const prog = await readCompiled(fn)
@@ -190,7 +186,7 @@ async function main() {
 
     try {
         fs.mkdirSync(distPath)
-    } catch { }
+    } catch {}
 
     while (true) {
         if (args[0] == "-v") {
@@ -270,8 +266,7 @@ async function main() {
         process.exit(2)
     }
 
-    if (testMode)
-        process.exit(0)
+    if (testMode) process.exit(0)
 }
 
 main()

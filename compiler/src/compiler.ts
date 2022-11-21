@@ -2858,11 +2858,48 @@ class Program implements TopOpWriter {
     }
 }
 
+import jacdacDefaultSpecificationsData from "../../runtime/jacdac-c/jacdac/dist/services.json"
+// import * as specs from "../../runtime/jacdac-c/jacdac/dist/services.json" - slows down intellisense?
+
+export const jacdacDefaultSpecifications =
+    jacdacDefaultSpecificationsData as jdspec.ServiceSpec[]
+
+/**
+ * Coimpiles the jacscript program.
+ * @param code
+ * @param opts
+ * @returns
+ */
 export function compile(
-    host: Host,
     code: string,
-    opts: { isLibrary?: boolean } = {}
+    opts: {
+        host?: Host
+        mainFileName?: string
+        log?: (msg: string) => void
+        files?: Record<string, string | Uint8Array>
+        specs?: jdspec.ServiceSpec[]
+        verifyBytecode?: (buf: Uint8Array) => void
+        isLibrary?: boolean
+    } = {}
 ) {
+    const {
+        files = {},
+        mainFileName = "",
+        specs = jacdacDefaultSpecifications,
+        log = (msg: string) => console.debug(msg),
+        verifyBytecode = buf => {},
+    } = opts
+    const {
+        host = <Host>{
+            mainFileName: () => mainFileName,
+            write: (filename: string, contents: string | Uint8Array) => {
+                files[filename] = contents
+            },
+            log,
+            getSpecs: () => specs,
+            verifyBytecode,
+        },
+    } = opts
     const p = new Program(host, code)
     if (opts.isLibrary) p.isLibrary = true
     return p.emit()

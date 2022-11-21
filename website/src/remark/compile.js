@@ -1,15 +1,9 @@
 "use strict"
 const { stdout, stderr } = require("node:process")
 const { readJsonSync } = require("fs-extra")
-const fs = require("fs")
-const path = require("path")
-const specs = JSON.parse(
-    fs.readFileSync(
-        path.resolve("../runtime/jacdac-c/jacdac/dist/services.json"),
-        "utf8"
-    )
-)
-const compiler = require("../../../compiler")
+require("../../../compiler")
+
+const { compile } = globalThis.jacscript
 
 function toHex(bytes) {
     if (!bytes) return undefined
@@ -20,32 +14,14 @@ function toHex(bytes) {
     return r
 }
 
-async function getHost() {
-    const files = {}
-    const jacsHost = {
-        write: (fn, cont) => {
-            files[fn] = cont
-        },
-        log: msg => {
-            console.log(msg)
-        },
-        mainFileName: () => "main.ts",
-        getSpecs: () => specs,
-        verifyBytecode: buf => { },
-    }
-    jacsHost.files = files
-    return jacsHost
-}
-
 async function run(inputFile) {
     const input = readJsonSync(inputFile).input
+    const files = {}
+    const log = msg => stdout.write(msg)
     let error = undefined
-    let files
     let result
     try {
-        const host = await getHost()
-        result = compiler.compile(host, input)
-        files = host.files
+        result = compile(input, { log, files })
     } catch (e) {
         error = e
         stderr.write(String(e))
