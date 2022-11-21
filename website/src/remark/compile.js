@@ -3,7 +3,7 @@ const { stdout, stderr } = require("node:process")
 const { readJsonSync } = require("fs-extra")
 require("../../../compiler")
 
-const compile = globalThis.jacscriptCompile
+const { compile } = globalThis.jacscript
 
 function toHex(bytes) {
     if (!bytes) return undefined
