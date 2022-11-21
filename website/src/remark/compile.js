@@ -5,7 +5,7 @@ const fs = require("fs")
 const path = require("path")
 const specs = JSON.parse(
     fs.readFileSync(
-        path.resolve("../jacdac-c/jacdac/dist/services.json"),
+        path.resolve("../runtime/jacdac-c/jacdac/dist/services.json"),
         "utf8"
     )
 )
