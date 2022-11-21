@@ -3,7 +3,7 @@ const { stdout, stderr } = require("node:process")
 const { readJsonSync } = require("fs-extra")
 require("../../../compiler")
 
-const compiler = globalThis.jacscriptCompile
+const compile = globalThis.jacscriptCompile
 
 function toHex(bytes) {
     if (!bytes) return undefined
@@ -21,9 +21,7 @@ async function run(inputFile) {
     let error = undefined
     let result
     try {
-        const host = await getHost()
-        result = compiler.compile(input, { host, log, files })
-        files = host.files
+        result = compile(input, { log, files })
     } catch (e) {
         error = e
         stderr.write(String(e))
