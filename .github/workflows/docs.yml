@@ -3,14 +3,8 @@ name: Documentation build
 on:
     push:
         branches: [main]
-        paths:
-            - ".github/**"
-            - "website/**"
     pull_request:
         branches: [main]
-        paths:
-            - ".github/**"
-            - "website/**"
 
 jobs:
     build:
