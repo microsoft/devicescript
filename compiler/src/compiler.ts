@@ -2858,8 +2858,10 @@ class Program implements TopOpWriter {
     }
 }
 
-import jacdacDefaultSpecifications from "../../runtime/jacdac-c/jacdac/dist/services.json"
+import jacdacDefaultSpecificationsData from "../../runtime/jacdac-c/jacdac/dist/services.json"
 // import * as specs from "../../runtime/jacdac-c/jacdac/dist/services.json" - slows down intellisense?
+
+export const jacdacDefaultSpecifications = jacdacDefaultSpecificationsData as jdspec.ServiceSpec[]
 
 /**
  * Coimpiles the jacscript program.
