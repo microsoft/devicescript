@@ -31,7 +31,7 @@ async function getHost() {
         },
         mainFileName: () => "main.ts",
         getSpecs: () => specs,
-        verifyBytecode: buf => { },
+        verifyBytecode: buf => {},
     }
     jacsHost.files = files
     return jacsHost
@@ -44,7 +44,7 @@ async function run(inputFile) {
     let result
     try {
         const host = await getHost()
-        result = compiler.compile(host, input)
+        result = compiler.compile(input, { host })
         files = host.files
     } catch (e) {
         error = e

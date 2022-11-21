@@ -40,26 +40,34 @@ async function getHost() {
             const p = join(distPath, fn)
             console.log(`write ${p}`)
             writeFileSync(p, cont)
-            if (fn.endsWith(".jasm") && typeof cont == "string" && cont.indexOf("???oops") >= 0)
+            if (
+                fn.endsWith(".jasm") &&
+                typeof cont == "string" &&
+                cont.indexOf("???oops") >= 0
+            )
                 throw new Error("bad disassembly")
         },
-        log: msg => { if (options.verbose) console.log(msg) },
+        log: msg => {
+            if (options.verbose) console.log(msg)
+        },
         mainFileName: () => options._file || "",
         getSpecs: () => specs,
         verifyBytecode: buf => {
             if (options.noVerify) return
             const res = inst.jacsDeploy(buf)
-            if (res != 0)
-                throw new Error("verification error: " + res)
-        }
+            if (res != 0) throw new Error("verification error: " + res)
+        },
     }
     return jacsHost
 }
 
 async function compileBuf(buf: Buffer) {
-    const res = compile(await getHost(), buf.toString("utf8"), { isLibrary: options.library })
-    if (!res.success)
-        throw new Error("compilation failed")
+    const host = await getHost()
+    const res = compile(buf.toString("utf8"), {
+        host,
+        isLibrary: options.library,
+    })
+    if (!res.success) throw new Error("compilation failed")
     return res.binary
 }
 
