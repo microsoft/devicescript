@@ -1,10 +1,9 @@
 
-import { Command } from "commander"
+const program = require("commander")
 import { build } from "./build"
+import pkg from "../package.json"
 
 export async function mainCli() {
-    const pkg = require("../package.json")
-    const program = new Command()
     program
         .name("jacscript")
         .description("build and run Jacscript program https://aka.ms/jacscript")
