@@ -1,97 +1,26 @@
-import { join } from "node:path"
-import { readFileSync, writeFileSync } from "node:fs"
 
-import { program as commander } from "commander"
-import { compile, Host, jacdacDefaultSpecifications } from "jacscript-compiler"
-
-interface CmdOptions {
-    verbose?: boolean
-    noVerify?: boolean
-    library?: boolean
-    _file?: string
-}
-
-let options: CmdOptions
-
-const distPath = "built"
-
-function jacsFactory() {
-    let d = require("jacscript-vm")
-    try {
-        require("websocket-polyfill")
-        // @ts-ignore
-        global.Blob = require("buffer").Blob
-    } catch {
-        console.log("can't load websocket-polyfill")
-    }
-    return d()
-}
-
-let jacsHost: Host
-async function getHost() {
-    if (jacsHost) return jacsHost
-    const inst = await jacsFactory()
-    inst.jacsInit()
-    jacsHost = {
-        write: (fn, cont) => {
-            const p = join(distPath, fn)
-            console.log(`write ${p}`)
-            writeFileSync(p, cont)
-            if (
-                fn.endsWith(".jasm") &&
-                typeof cont == "string" &&
-                cont.indexOf("???oops") >= 0
-            )
-                throw new Error("bad disassembly")
-        },
-        log: msg => {
-            if (options.verbose) console.log(msg)
-        },
-        mainFileName: () => options._file || "",
-        getSpecs: () => jacdacDefaultSpecifications,
-        verifyBytecode: buf => {
-            if (options.noVerify) return
-            const res = inst.jacsDeploy(buf)
-            if (res != 0) throw new Error("verification error: " + res)
-        },
-    }
-    return jacsHost
-}
-
-async function compileBuf(buf: Buffer) {
-    const host = await getHost()
-    const res = compile(buf.toString("utf8"), {
-        host,
-        isLibrary: options.library,
-    })
-    if (!res.success) throw new Error("compilation failed")
-    return res.binary
-}
+import { Command } from "commander"
+import { build } from "./build"
 
 export async function mainCli() {
     const pkg = require("../package.json")
-    commander
+    const program = new Command()
+    program
+        .name("jacscript")
+        .description("build and run Jacscript program https://aka.ms/jacscript")
         .version(pkg.version)
         .option("-v, --verbose", "more logging")
+
+    program
+        .command("build", { isDefault: true })
+        .description("build a jacscript file")
         .option("-l, --library", "build library")
         .option("--no-verify", "don't verify resulting bytecode")
+        .option("-o", "--out-dir", "output directory, default is 'built'")
         .arguments("<file.ts>")
-        .parse(process.argv)
+        .action(build)
 
-    options = commander as CmdOptions
-
-    if (commander.args.length != 1) {
-        console.error("exactly one argument expected")
-        process.exit(1)
-    }
-
-    options._file = commander.args[0]
-
-    try {
-        await compileBuf(readFileSync(options._file))
-    } catch (e) {
-        console.error(e.stack)
-    }
+    program.parse(process.argv)
 }
 
 if (require.main === module) mainCli()
