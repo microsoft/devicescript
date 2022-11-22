@@ -1,7 +1,11 @@
 import { join } from "node:path"
-import { readFileSync, writeFileSync } from "node:fs"
+import { readFileSync, writeFileSync, ensureDirSync } from "fs-extra"
 
-import { compile, jacdacDefaultSpecifications, JacsDiagnostic } from "jacscript-compiler"
+import {
+    compile,
+    jacdacDefaultSpecifications,
+    JacsDiagnostic,
+} from "jacscript-compiler"
 import { CmdOptions } from "./command"
 
 function jacsFactory() {
@@ -20,9 +24,12 @@ async function getHost(options: BuildOptions) {
     const inst = options.noVerify ? undefined : await jacsFactory()
     inst?.jacsInit()
 
+    const outdir = options.outDir || "./built"
+    ensureDirSync(outdir)
+
     const jacsHost = {
         write: (fn: string, cont: string) => {
-            const p = join(options.outDir || "built", fn)
+            const p = join(outdir, fn)
             if (options.verbose) console.debug(`write ${p}`)
             writeFileSync(p, cont)
             if (
