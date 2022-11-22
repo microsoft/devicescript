@@ -58,5 +58,3 @@ void wsskhealth_init(void);
 // to implement:
 void jd_crypto_get_random(uint8_t *buf, unsigned size);
 
-char *jd_settings_get(const char *key);
-int jd_settings_set(const char *key, const char *val);

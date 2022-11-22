@@ -4,6 +4,7 @@
 #include "jacscript.h"
 
 #include "interfaces/jd_usb.h" // jd_net_disable_fwd() proto
+#include "services/interfaces/jd_flash.h" // jd_settings*
 
 #define SETTINGS_KEY "wssk_connstr"
 
