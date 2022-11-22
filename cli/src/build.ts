@@ -1,7 +1,7 @@
 import { join } from "node:path"
 import { readFileSync, writeFileSync } from "node:fs"
 
-import { compile, jacdacDefaultSpecifications } from "jacscript-compiler"
+import { compile, jacdacDefaultSpecifications, JacsDiagnostic } from "jacscript-compiler"
 import { CmdOptions } from "./command"
 
 function jacsFactory() {
@@ -21,7 +21,7 @@ async function getHost(options: BuildOptions) {
     inst?.jacsInit()
 
     const jacsHost = {
-        write: (fn, cont) => {
+        write: (fn: string, cont: string) => {
             const p = join(options.outDir || "built", fn)
             if (options.verbose) console.debug(`write ${p}`)
             writeFileSync(p, cont)
@@ -32,15 +32,15 @@ async function getHost(options: BuildOptions) {
             )
                 throw new Error("bad disassembly")
         },
-        log: msg => {
+        log: (msg: string) => {
             if (options.verbose) console.log(msg)
         },
-        error: err => {
+        error: (err: JacsDiagnostic) => {
             console.error(err)
         },
         mainFileName: () => options.mainFileName || "",
         getSpecs: () => jacdacDefaultSpecifications,
-        verifyBytecode: buf => {
+        verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
             const res = inst.jacsDeploy(buf)
             if (res != 0) throw new Error("verification error: " + res)

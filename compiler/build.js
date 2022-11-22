@@ -154,7 +154,10 @@ async function main() {
         }
         console.log("bundle done")
         copyCompiler()
-        if (!fast) await runTSC(["-b", "src"])
+        if (!fast) {
+            await runTSC(["-b", "src"])
+            await runTSC(["-b", "../cli/src"])
+        }
     } catch (e) {
         console.error(e)
     }
