@@ -2877,6 +2877,7 @@ export function compile(
         mainFileName?: string
         log?: (msg: string) => void
         files?: Record<string, string | Uint8Array>
+        errors?: JacsDiagnostic[]
         specs?: jdspec.ServiceSpec[]
         verifyBytecode?: (buf: Uint8Array) => void
         isLibrary?: boolean
@@ -2888,6 +2889,7 @@ export function compile(
         specs = jacdacDefaultSpecifications,
         log = (msg: string) => console.debug(msg),
         verifyBytecode = buf => {},
+        errors = [],
     } = opts
     const {
         host = <Host>{
@@ -2896,6 +2898,7 @@ export function compile(
                 files[filename] = contents
             },
             log,
+            error: err => errors.push(err),
             getSpecs: () => specs,
             verifyBytecode,
         },
