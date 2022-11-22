@@ -478,7 +478,7 @@ static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
         uint8_t *label = payload + 4;
         uint8_t *dblptr = label + strlen((char *)label) + 1;
         unsigned numdbl = (size - (dblptr - data)) / sizeof(double);
-        LOG("method: '%s' rid=%u numvals=%u", label, ridval, numdbl);
+        LOG("method: '%s' rid=%u numvals=%u", label, (unsigned)ridval, numdbl);
         double *vals = jd_alloc(numdbl * sizeof(double) + 1);
         memcpy(vals, dblptr, numdbl * sizeof(double));
         jacscloud_on_method((char *)label, ridval, numdbl, vals);
