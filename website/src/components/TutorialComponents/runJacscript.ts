@@ -6,6 +6,7 @@ export default async function runJacscript(input: string): Promise<string> {
         channel: "jacscript",
         type: "source",
         source: input,
+        force: true,
     }
     console.log({ msg })
     iframe.contentWindow.postMessage(
