@@ -59,6 +59,7 @@ async function createConfig() {
                 docs: {
                     sidebar: {
                         hideable: true,
+                        autoCollapseCategories: true,
                     },
                 },
                 navbar: {
