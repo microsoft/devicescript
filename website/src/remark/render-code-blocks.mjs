@@ -10,7 +10,7 @@ const { readJsonSync, writeJsonSync, ensureDirSync } = fs_extra_pkg
 import { createHash } from "crypto"
 
 // site version
-import sitePkg from "../../../package.json" assert { type: "json" }
+const sitePkg = readJsonSync("../package.json")
 // for version `x.y.z`, only recompute hashes if `x` changes
 // to avoid recomputation over minor changes on the website
 // (so we only recompute for every major release)
