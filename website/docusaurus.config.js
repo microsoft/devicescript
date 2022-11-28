@@ -56,6 +56,11 @@ async function createConfig() {
         themeConfig:
             /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
             ({
+                docs: {
+                    sidebar: {
+                        hideable: true,
+                    },
+                },
                 navbar: {
                     title: "Jacscript",
                     logo: {
