@@ -67,6 +67,8 @@
 }
 
 .pane {
+  position: absolute;
+  overflow-y: auto;
   border: 0;
   width: calc(100% - 17px);
   left: 11px;
