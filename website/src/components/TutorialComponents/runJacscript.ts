@@ -7,8 +7,7 @@ export default async function runJacscript(input: string): Promise<string> {
         type: "source",
         source: input,
     }
-    console.log({ msg, iframe })
-    debugger
+    console.log({ msg })
     iframe.contentWindow.postMessage(
         JSON.stringify(msg),
         "https://microsoft.github.io/jacdac-docs/"
