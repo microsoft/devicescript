@@ -1,8 +1,9 @@
 {
-  "label": "Language",
-  "position": 2,
-  "link": {
-    "type": "generated-index",
-    "description": "Jacscript Language and Runtime reference."
-  }
+    "label": "Language",
+    "position": 2,
+    "collapsible": true,
+    "link": {
+        "type": "generated-index",
+        "description": "Jacscript Language and Runtime reference."
+    }
 }

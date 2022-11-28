@@ -71,71 +71,7 @@ function Output(props: {
     const timeout = result.status === statusCodes.timeout
     const emptyOutput = result.output === ""
 
-    let z3DuoOutput
-
-    try {
-        z3DuoOutput = JSON.parse(result.output as string)
-    } catch (e) {
-        // result.output is indeed a string, not a stringified obj
-        z3DuoOutput = undefined
-    }
-
-    const icon = (b: boolean) => {
-        return b ? "✅" : "❌"
-    }
-
-    const buildOutput = (
-        model1: string,
-        res1: { [key: string]: boolean },
-        model2?: string,
-        res2?: { [key: string]: boolean }
-    ) => {
-        const secondRow =
-            model2 && res2 ? (
-                <tr>
-                    <td>
-                        <pre>{model2}</pre>
-                    </td>
-                    <td className={styles.TableCellIcon}>{icon(res2.user)}</td>
-                    <td className={styles.TableCellIcon}>
-                        {icon(res2.secret)}
-                    </td>
-                </tr>
-            ) : (
-                <></>
-            )
-
-        return (
-            <table>
-                <tr>
-                    <th className={styles.FirstCol}>Model</th>
-                    <th>Satisfies your formula?</th>
-                    <th>Satisfies the secret formula?</th>
-                </tr>
-                <tr>
-                    <td>
-                        <pre>{model1}</pre>
-                    </td>
-                    <td className={styles.TableCellIcon}>{icon(res1.user)}</td>
-                    <td className={styles.TableCellIcon}>
-                        {icon(res1.secret)}
-                    </td>
-                </tr>
-                {secondRow}
-            </table>
-        )
-    }
-
-    const z3DuoTable = z3DuoOutput ? (
-        buildOutput(
-            z3DuoOutput.model1,
-            z3DuoOutput.res1,
-            z3DuoOutput.model2,
-            z3DuoOutput.res2
-        )
-    ) : (
-        <></>
-    )
+    if (emptyOutput) return null
 
     const regularOutput = (
         <pre className={codeChanged ? styles.outdated : ""}>
@@ -151,37 +87,15 @@ function Output(props: {
                     <br />
                 </span>
             )}
-            {success
-                ? emptyOutput
-                    ? "--Output is empty--"
-                    : result.output
-                : !timeout && result.error}
+            {success ? result.output : !timeout && result.error}
         </pre>
-    )
-
-    const z3DuoOutputEl = (
-        <div className={codeChanged ? styles.outdated : ""}>
-            {success ? (
-                ""
-            ) : (
-                <span style={{ color: "red" }}>
-                    <b>Script contains one or more errors: </b>
-                    <br />
-                </span>
-            )}
-            {success
-                ? emptyOutput
-                    ? "--Output is empty--"
-                    : z3DuoTable
-                : result.error}
-        </div>
     )
 
     return (
         <div>
             <b>Output{codeChanged ? " (outdated)" : ""}:</b>
             <br />
-            {z3DuoOutput ? z3DuoOutputEl : regularOutput}
+            {regularOutput}
         </div>
     )
 }
@@ -345,10 +259,7 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
             />
             <>
                 <div className={styles.buttons}>
-                    {!readonly && !editable && !outputRendered && (
-                        <OutputToggle onClick={onDidClickOutputToggle} />
-                    )}
-                    {!readonly && (editable || outputRendered) && (
+                    {!readonly && (
                         <RunButton
                             onClick={onDidClickRun}
                             runFinished={runFinished}

@@ -1,14 +1,15 @@
 ---
 sidebar_position: 1
+hide_table_of_contents: true
 ---
 
 # Architecture
 
 ## Personas
 
-* C, citizen developer
-* W, web developer
-* F, firmware developer
+-   C, citizen developer
+-   W, web developer
+-   F, firmware developer
 
 ## Flow to Device
 
