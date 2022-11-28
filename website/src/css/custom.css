@@ -70,8 +70,13 @@
   position: absolute;
   overflow-y: auto;
   border: 0;
-  width: calc(100% - 17px);
-  left: 11px;
+  width: 100%;
   top: 0;
   height: 100%;
+}
+.pane.left {
+  left: 0px;
+}
+.pane.right {
+  right: 0px;
 }

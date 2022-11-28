@@ -14,12 +14,12 @@ export default function Root({ children }) {
             onDragStarted={handleDragStart}
             onDragFinished={handleDragEnd}
         >
-            <div className="pane">{children}</div>
+            <div className="pane left">{children}</div>
             <div>
                 {!dragging && (
                     <iframe
                         id="jacdac-dashboard"
-                        className="pane"
+                        className="pane right"
                         alt="jacdac dashboard and simulators"
                         allow="usb;serial;bluetooth"
                         src={`https://microsoft.github.io/jacdac-docs/dashboard?jacscriptvm=1&embed=1&light=1`}
