@@ -22,7 +22,7 @@ export default function Root({ children }) {
                         className="pane right"
                         alt="jacdac dashboard and simulators"
                         allow="usb;serial;bluetooth"
-                        src={`https://microsoft.github.io/jacdac-docs/dashboard?jacscriptvm=1&embed=1&light=1`}
+                        src={`https://microsoft.github.io/jacdac-docs/editors/jacscript-text?jacscriptvm=1&embed=1&light=1`}
                         frameBorder="0"
                     />
                 )}
