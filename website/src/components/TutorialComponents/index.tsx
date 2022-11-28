@@ -71,6 +71,7 @@ function Output(props: {
     const timeout = result.status === statusCodes.timeout
     const emptyOutput = result.output === ""
 
+    if (emptyOutput) return null
 
     const regularOutput = (
         <pre className={codeChanged ? styles.outdated : ""}>
@@ -86,11 +87,7 @@ function Output(props: {
                     <br />
                 </span>
             )}
-            {success
-                ? emptyOutput
-                    ? "--Output is empty--"
-                    : result.output
-                : !timeout && result.error}
+            {success ? result.output : !timeout && result.error}
         </pre>
     )
 
@@ -262,10 +259,7 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
             />
             <>
                 <div className={styles.buttons}>
-                    {!readonly && !editable && !outputRendered && (
-                        <OutputToggle onClick={onDidClickOutputToggle} />
-                    )}
-                    {!readonly && (editable || outputRendered) && (
+                    {!readonly && (
                         <RunButton
                             onClick={onDidClickRun}
                             runFinished={runFinished}
