@@ -71,15 +71,6 @@ function Output(props: {
     const timeout = result.status === statusCodes.timeout
     const emptyOutput = result.output === ""
 
-    let z3DuoOutput
-
-    try {
-        z3DuoOutput = JSON.parse(result.output as string)
-    } catch (e) {
-        // result.output is indeed a string, not a stringified obj
-        z3DuoOutput = undefined
-    }
-
     const icon = (b: boolean) => {
         return b ? "✅" : "❌"
     }
@@ -126,17 +117,6 @@ function Output(props: {
         )
     }
 
-    const z3DuoTable = z3DuoOutput ? (
-        buildOutput(
-            z3DuoOutput.model1,
-            z3DuoOutput.res1,
-            z3DuoOutput.model2,
-            z3DuoOutput.res2
-        )
-    ) : (
-        <></>
-    )
-
     const regularOutput = (
         <pre className={codeChanged ? styles.outdated : ""}>
             {success ? (
@@ -159,29 +139,11 @@ function Output(props: {
         </pre>
     )
 
-    const z3DuoOutputEl = (
-        <div className={codeChanged ? styles.outdated : ""}>
-            {success ? (
-                ""
-            ) : (
-                <span style={{ color: "red" }}>
-                    <b>Script contains one or more errors: </b>
-                    <br />
-                </span>
-            )}
-            {success
-                ? emptyOutput
-                    ? "--Output is empty--"
-                    : z3DuoTable
-                : result.error}
-        </div>
-    )
-
     return (
         <div>
             <b>Output{codeChanged ? " (outdated)" : ""}:</b>
             <br />
-            {z3DuoOutput ? z3DuoOutputEl : regularOutput}
+            {regularOutput}
         </div>
     )
 }
