@@ -1,6 +1,6 @@
 function isClose(x: number, y: number): void {
     if (isNaN(x) && isNaN(y)) return
-    var d = Math.abs(x - y)
+    const d = Math.abs(x - y)
     if (d < 0.00000001 || d / Math.abs(x + y) < 0.00001) return
     console.log(x, " != ", y, "!")
     panic(108)
@@ -14,7 +14,7 @@ function isEq(x: number, y: number): void {
     }
 }
 
-var x = 0
+let x = 0
 
 function testFlow() {
     x = 1
@@ -174,7 +174,7 @@ function fibx(k: number): number {
 }
 
 function testBuffer() {
-    var buf = buffer(20)
+    const buf = buffer(20)
     buf.setAt(2, "u32", 0xf00d)
     isEq(buf.getAt(2, "u32"), 0xf00d)
     isEq(buf.getAt(2, "u16"), 0xf00d)

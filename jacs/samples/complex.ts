@@ -1,8 +1,8 @@
-var btnA = roles.button()
-var color = roles.color()
-var led = roles.lightBulb()
-var display = roles.characterScreen()
-var r, g, b, tint
+const btnA = roles.button()
+const color = roles.color()
+const led = roles.lightBulb()
+const display = roles.characterScreen()
+let r, g, b, tint
 
 btnA.down.subscribe(() => {
   led.brightness.write(1)

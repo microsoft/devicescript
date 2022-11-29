@@ -13,7 +13,7 @@ Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` ret
 `0.0` and `NaN` are considered falsy.
 TODO should compare with NaN return NaN?
 
-```js
+```ts
 const pot = roles.potentiometer()
 let x, y
 x = pot.position.read()
@@ -50,7 +50,9 @@ when setting string registers.
 Arguments are `{0}`, `{1}`, ..., `{9}`, `{A}`, `{B}`, ..., `{F}`.
 A second digit can be supplied to specify precision (though this doesn't work so well yet):
 
-```js
+```ts
+let x = 7, y = 12
+
 console.log(format("X is {0} and Y is {1}", x, y))
 console.log(format("X = {04}", x))
 charDisplay.message.write(format("X is {0}", x))

@@ -1,5 +1,5 @@
-var anled = roles.ledSingle()
-var btnA = roles.button()
+const anled = roles.ledSingle()
+const btnA = roles.button()
 
 btnA.down.subscribe(() => {
     anled.animate(255, 0, 255, 50)

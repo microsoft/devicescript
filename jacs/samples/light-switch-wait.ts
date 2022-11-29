@@ -1,5 +1,5 @@
-var btnA = roles.button()
-var led = roles.lightBulb()
+const btnA = roles.button()
+const led = roles.lightBulb()
 
 every(0.1, () => {
     btnA.down.wait()

@@ -1,6 +1,6 @@
-var btn = roles.button()
-var rot = roles.rotaryEncoder()
-var kbd = roles.hidKeyboard()
+const btn = roles.button()
+const rot = roles.rotaryEncoder()
+const kbd = roles.hidKeyboard()
 
 btn.down.subscribe(() => {
     // kbd.key(HidKeyboardSelector.UpArrow, HidKeyboardModifiers.None, HidKeyboardAction.Press)
@@ -19,9 +19,9 @@ function press(k: number) {
     wait(0.02)
 }
 
-var prevV = rot.position.read()
+let prevV = rot.position.read()
 rot.position.onChange(1, () => {
-    var v = rot.position.read()
+    const v = rot.position.read()
     while (prevV < v) {
         prevV = prevV + 1
         press(HidKeyboardSelector.RightArrow)

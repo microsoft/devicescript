@@ -1,6 +1,6 @@
-var condA = condition()
-var condB = condition()
-var btnA = roles.button()
+const condA = condition()
+const condB = condition()
+const btnA = roles.button()
 
 every(0.05, () => {
     console.log("X2")
