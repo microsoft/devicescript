@@ -1,4 +1,4 @@
-var q = 0
+let q = 0
         
 // if (false)
     every(5, () => {

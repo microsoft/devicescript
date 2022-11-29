@@ -1,7 +1,7 @@
-var x: number
-var servo1 = roles.servo()
-var button1 = roles.button()
-var airPressure1 = roles.airPressure()
+let x: number
+const servo1 = roles.servo()
+const button1 = roles.button()
+const airPressure1 = roles.airPressure()
 servo1.onConnected(() => {
     servo1.enabled.write(true)
 })

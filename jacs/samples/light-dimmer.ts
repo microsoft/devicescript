@@ -1,7 +1,7 @@
-var pot = roles.potentiometer()
-var led = roles.lightBulb()
-var relay = roles.relay()
-var p
+const pot = roles.potentiometer()
+const led = roles.lightBulb()
+const relay = roles.relay()
+let p
 
 pot.position.onChange(0.02, () => {
     p = pot.position.read()

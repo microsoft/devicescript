@@ -1,5 +1,5 @@
-var lightBulb1 = roles.lightBulb()
-var button1 = roles.button()
+const lightBulb1 = roles.lightBulb()
+const button1 = roles.button()
 button1.down.subscribe(() => {
     console.log("down")
     lightBulb1.brightness.write(1)

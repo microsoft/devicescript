@@ -1,5 +1,5 @@
-var btnA = roles.button()
-var led = roles.lightBulb()
+const btnA = roles.button()
+const led = roles.lightBulb()
 
 btnA.down.subscribe(() => {
     console.log('down')

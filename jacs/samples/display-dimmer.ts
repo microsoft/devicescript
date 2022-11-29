@@ -1,7 +1,7 @@
-var pot = roles.potentiometer()
-var ledD = roles.led()
-var btn = roles.button()
-var p
+const pot = roles.potentiometer()
+const ledD = roles.led()
+const btn = roles.button()
+let p
 
 pot.position.onChange(0.01, () => {
     p = pot.position.read()

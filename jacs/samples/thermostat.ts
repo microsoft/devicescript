@@ -1,6 +1,5 @@
-var thermometer = roles.temperature()
-var heater = roles.relay()
-var t
+const thermometer = roles.temperature()
+const heater = roles.relay()
 
 heater.onConnected(() => {
     console.log("heater detected")
@@ -11,7 +10,7 @@ heater.onDisconnected(() => {
 })
 
 thermometer.temperature.onChange(5, () => {
-    t = thermometer.temperature.read()
+    const t = thermometer.temperature.read()
     if (t < 21) {
         heater.active.write(1)
     } else {
