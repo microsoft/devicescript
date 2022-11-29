@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useMemo, useState } from "react"
 import SplitPane from "react-split-pane"
 
 // Default implementation, that you can customize
@@ -9,7 +9,7 @@ export default function Root({ children }) {
     return (
         <SplitPane
             split="vertical"
-            defaultSize={800}
+            defaultSize={"min(75%, 65rem)"}
             minSize={400}
             onDragStarted={handleDragStart}
             onDragFinished={handleDragEnd}
