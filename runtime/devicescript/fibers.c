@@ -75,8 +75,7 @@ static void free_fiber(jacs_fiber_t *fiber) {
         jacs_fiber_t *f = ctx->fibers;
         while (f && f->next != fiber)
             f = f->next;
-        if (!f)
-            oops();
+        JD_ASSERT(f != NULL);
         f->next = fiber->next;
     }
     jacs_free(ctx, fiber);

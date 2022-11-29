@@ -134,7 +134,7 @@ static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
     case JACS_GC_TAG_BYTES:
         break;
     default:
-        oops();
+        JD_PANIC();
         break;
     }
 }
