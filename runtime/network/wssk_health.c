@@ -3,7 +3,7 @@
 #include "jacdac/dist/c/cloudadapter.h"
 #include "jacscript.h"
 
-#include "interfaces/jd_usb.h" // jd_net_disable_fwd() proto
+#include "interfaces/jd_usb.h"            // jd_net_disable_fwd() proto
 #include "services/interfaces/jd_flash.h" // jd_settings*
 
 #define SETTINGS_KEY "wssk_connstr"
@@ -521,7 +521,8 @@ static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
 
 void jd_net_disable_fwd() {
     srv_t *state = _wsskhealth_state;
-    state->fwd_en = 0;
+    if (state)
+        state->fwd_en = 0;
 }
 
 int jd_net_send_frame(void *frame) {
