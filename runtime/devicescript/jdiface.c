@@ -338,7 +338,7 @@ bool jacs_jd_should_run(jacs_fiber_t *fiber) {
         return handle_logmsg(fiber, false);
 
     default:
-        jd_panic();
+        JD_PANIC();
     }
 }
 

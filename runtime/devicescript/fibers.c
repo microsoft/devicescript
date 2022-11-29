@@ -168,7 +168,7 @@ jacs_fiber_t *jacs_fiber_start(jacs_ctx_t *ctx, unsigned fidx, value_t *params, 
             } else if (op == JACS_OPCALL_BG_MAX1) {
                 return fiber;
             } else {
-                jd_panic();
+                JD_PANIC();
             }
         }
     }

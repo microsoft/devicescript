@@ -8,7 +8,7 @@
 
 #define NOT_IRQ()                                                                                  \
     if (target_in_irq())                                                                           \
-    jd_panic()
+    JD_PANIC()
 
 #define JDBR_MAGIC 0x5242444a // "JDBR"
 typedef struct __attribute__((packed)) {

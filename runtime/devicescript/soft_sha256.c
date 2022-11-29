@@ -11,7 +11,7 @@ static uint8_t _sha_locked;
 void jd_sha256_setup() {
     target_disable_irq();
     if (_sha_locked)
-        jd_panic();
+        JD_PANIC();
     _sha_locked = 1;
     target_enable_irq();
 
@@ -144,5 +144,5 @@ void jd_sha256_hmac_test(void) {
     void *exp =
         jd_from_hex_a("765c02ce44dc89b569157316c33e8a296117c6c17efeec2e976e480825cfdcde", &sz);
     if (memcmp(exp, outkey, JD_SHA256_HASH_BYTES) != 0)
-        jd_panic();
+        JD_PANIC();
 }

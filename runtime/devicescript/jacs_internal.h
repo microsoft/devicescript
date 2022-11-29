@@ -134,8 +134,6 @@ struct jacs_activation {
     value_t locals[0];
 };
 
-#define oops() jd_panic()
-
 static inline uint32_t jacs_now(jacs_ctx_t *ctx) {
     return (uint32_t)ctx->_now_long;
 }

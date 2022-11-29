@@ -383,7 +383,7 @@ void jd_alloc_add_chunk(void *start, unsigned size) {
 void *jd_alloc(uint32_t size) {
     void *r = jd_gc_try_alloc(&_static_gc, size);
     if (!r)
-        jd_panic();
+        JD_PANIC();
     return r;
 }
 
