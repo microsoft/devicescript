@@ -47,7 +47,7 @@ void jd_aes_ccm_encrypt(const uint8_t key[JD_AES_KEY_BYTES],
                         const uint8_t nonce[JD_AES_CCM_NONCE_BYTES],
                         uint8_t tag[JD_AES_CCM_TAG_BYTES], uint8_t *plain, unsigned size) {
     if (size >= (1 << (JD_AES_CCM_LENGTH_BYTES * 8)) - 10)
-        jd_panic();
+        JD_PANIC();
 
     jd_aes_setup_key(key);
 

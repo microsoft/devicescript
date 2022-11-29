@@ -45,7 +45,7 @@ int jd_wssk_new(const char *hostname, int port, const char *path,
         sum += master_key[i];
     if (sum == 0) {
         DMESG("zero key!");
-        jd_panic();
+        JD_PANIC();
     }
 
     memcpy(es->key, master_key, JD_AES_KEY_BYTES);
@@ -178,7 +178,7 @@ int jd_wssk_send_message(const void *data, unsigned size) {
     jd_wssk_t *es = &_encsock;
 
     if (target_in_irq())
-        jd_panic();
+        JD_PANIC();
 
     if (!((es->state == ST_GOT_KEY && data == NULL) || (es->state == ST_GOT_AUTH && data != NULL)))
         return -1;
@@ -199,7 +199,7 @@ int jd_wssk_send_message(const void *data, unsigned size) {
 
 void jd_websock_on_event(unsigned event, const void *data, unsigned size) {
     if (target_in_irq())
-        jd_panic();
+        JD_PANIC();
     LOGV("%s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
 
     jd_wssk_t *es = &_encsock;
@@ -225,7 +225,7 @@ void jd_websock_on_event(unsigned event, const void *data, unsigned size) {
 
 void jd_wssk_close(void) {
     if (target_in_irq())
-        jd_panic();
+        JD_PANIC();
     jd_wssk_t *es = &_encsock;
     if (es->state != ST_CLOSED && es->state != ST_ERROR)
         jd_websock_close();

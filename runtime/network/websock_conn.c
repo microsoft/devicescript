@@ -47,7 +47,7 @@ int jd_websock_new(const char *hostname, int port, const char *path, const char 
     unsigned pr_sz = strlen(proto);
     unsigned pt_sz = strlen(path);
     if (hn_sz + pr_sz + pt_sz + 5 > MAX_MESSAGE)
-        jd_panic();
+        JD_PANIC();
 
     memcpy(ws->msg, hostname, hn_sz);
     ws->msg[hn_sz] = 0;
