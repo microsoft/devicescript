@@ -12,7 +12,7 @@ TODO should we drop this, and only leave `pot.position` ?
 Registers have following methods - `.onChange()`, `.read()` and `.write()`.
 If register contains multiple fields, a tuple (array) is returned.
 
-```js
+```ts
 const pot = roles.potentiometer()
 const lamp = roles.led()
 const colorSensor = roles.color()
@@ -30,7 +30,7 @@ by at least the specified value.
 It is executed once when the value is first determined, and then whenever the current value
 is different by at least the specified value from the value at previous handler execution.
 
-```js
+```ts
 const pot = roles.potentiometer()
 pot.position.onChange(0.02, () => {
     lamp.brightness.write(pot.position.read())

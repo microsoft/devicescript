@@ -18,7 +18,7 @@ Function parameters are numbers by default.
 A role can be also passed using syntax:
 
 ```ts
-function beep(bz: BuzzerRole, len:  number) {
+function beep(bz: BuzzerRole, len: number) {
     bz.playNote(440, 0.7, len)
 }
 
@@ -33,7 +33,11 @@ These need to be implemented by assigning to properties of the `prototype` of th
 For example:
 
 ```js
-BuzzerRole.prototype.playNote = function (frequency: number, volume: number, duration:  number) {
+BuzzerRole.prototype.playNote = function (
+    frequency: number,
+    volume: number,
+    duration: number
+) {
     const p = 1000000 / frequency
     volume = clamp(0, volume, 1)
     this.playTone(p, p * volume * 0.5, duration)
