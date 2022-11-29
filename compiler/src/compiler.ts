@@ -505,7 +505,6 @@ class Program implements TopOpWriter {
     }
 
     reportError(node: ts.Node, msg: string): Value {
-        ts.createSemanticDiagnosticsBuilderProgram
         const diag: ts.Diagnostic = {
             category: ts.DiagnosticCategory.Error,
             messageText: msg,
