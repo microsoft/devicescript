@@ -1,4 +1,4 @@
-export default async function runJacscript(input: string): Promise<string> {
+export default async function runDeviceScript(input: string): Promise<string> {
     const iframe = document.getElementById(
         "jacdac-dashboard"
     ) as HTMLIFrameElement

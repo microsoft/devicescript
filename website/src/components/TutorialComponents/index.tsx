@@ -9,9 +9,9 @@ import codeBlockContentStyles from "@docusaurus/theme-classic/src/theme/CodeBloc
 import styles from "./styles.module.css"
 import Prism from "prism-react-renderer/prism"
 
-import runJacscript from "./runJacscript"
+import runDeviceScript from "./runDeviceScript"
 const clientConfig = {
-    ts: runJacscript,
+    ts: runDeviceScript,
 }
 
 interface CodeBlockProps {
