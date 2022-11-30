@@ -1,7 +1,7 @@
 #include "jd_network.h"
 #include "jacdac/dist/c/azureiothubhealth.h"
 #include "jacdac/dist/c/cloudadapter.h"
-#include "jacscript.h"
+#include "devicescript.h"
 
 #include "interfaces/jd_usb.h"            // jd_net_disable_fwd() proto
 #include "services/interfaces/jd_flash.h" // jd_settings*
@@ -497,20 +497,20 @@ static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
         LOGV("pong");
     } else if (cmd == 0x93) {
         uint8_t *msg = prep_msg(0x93, JD_SHA256_HASH_BYTES);
-        jacscriptmgr_get_hash(msg + CHD_SIZE);
+        devicescriptmgr_get_hash(msg + CHD_SIZE);
         publish_and_free(msg, JD_SHA256_HASH_BYTES);
     } else if (cmd == 0x94) {
-        if (jacscriptmgr_deploy_start(*(uint32_t *)payload) == 0)
+        if (devicescriptmgr_deploy_start(*(uint32_t *)payload) == 0)
             send_empty(0x94);
         else
             send_empty(0xff);
     } else if (cmd == 0x95) {
-        if (jacscriptmgr_deploy_write(payload, payload_size) == 0)
+        if (devicescriptmgr_deploy_write(payload, payload_size) == 0)
             send_empty(0x95);
         else
             send_empty(0xff);
     } else if (cmd == 0x96) {
-        if (jacscriptmgr_deploy_write(NULL, 0) == 0)
+        if (devicescriptmgr_deploy_write(NULL, 0) == 0)
             send_empty(0x96);
         else
             send_empty(0xff);
