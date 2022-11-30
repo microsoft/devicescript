@@ -17,7 +17,7 @@ async function createConfig() {
         title: "DeviceScript",
         tagline: "Portable, small footprint virtual machine for embedded devices.",
         url: "https://microsoft.github.io/",
-        baseUrl: "/jacscript/",
+        baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
         onBrokenMarkdownLinks: "throw",
         favicon: "img/favicon.ico",
@@ -26,7 +26,7 @@ async function createConfig() {
         // GitHub pages deployment config.
         // If you aren't using GitHub pages, you don't need these.
         organizationName: "microsoft", // Usually your GitHub org/user name.
-        projectName: "jacscript", // Usually your repo name.
+        projectName: "devicescript", // Usually your repo name.
         deploymentBranch: "gh-pages",
 
         // Even if you don't use internalization, you can use this field to set useful
@@ -76,7 +76,7 @@ async function createConfig() {
                             label: "Reference",
                         },
                         {
-                            href: "https://github.com/microsoft/jacscript",
+                            href: "https://github.com/microsoft/devicescript/",
                             label: "GitHub",
                             position: "right",
                         },
@@ -99,7 +99,7 @@ async function createConfig() {
                             items: [
                                 {
                                     label: "Discussions",
-                                    href: "https://github.com/microsoft/jacscript/discussions",
+                                    href: "https://github.com/microsoft/devicescript/discussions",
                                 },
                             ],
                         },
