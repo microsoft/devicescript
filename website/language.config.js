@@ -23,7 +23,7 @@ async function createConfig() {
                         runtimeError: "runtimeerror",
                     },
                 },
-                githubRepo: "microsoft/jacscript",
+                githubRepo: "microsoft/devicescript",
                 githubDiscussion: false,
             },
         ],
