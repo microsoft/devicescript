@@ -6,4 +6,4 @@ export * from "./disassemble"
 import { compile } from "./compiler"
 
 if (typeof globalThis !== "undefined")
-    (globalThis as any).jacscript = { compile }
+    (globalThis as any).deviceScript = { compile }

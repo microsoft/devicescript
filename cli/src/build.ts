@@ -5,7 +5,7 @@ import {
     compile,
     jacdacDefaultSpecifications,
     JacsDiagnostic,
-} from "jacscript-compiler"
+} from "devicescript-compiler"
 import { CmdOptions } from "./command"
 
 function jacsFactory() {

@@ -17,8 +17,8 @@ function getMTime(path) {
 }
 
 function copyCompiler() {
-    const to = "../website/static/dist/jacscript-compiler.js"
-    const from = "built/jacscript-compiler.js"
+    const to = "../website/static/dist/devicescript-compiler.js"
+    const from = "built/devicescript-compiler.js"
     distCopy(from, to)
 }
 
@@ -91,9 +91,9 @@ function runTSC(args) {
 }
 
 const files = {
-    "built/jacscript-compiler.js": "src/jacscript.ts",
-    "built/jacscript-compiler.node.cjs": "src/jacscript.ts",
-    "../cli/built/jacscript-cli.cjs": "../cli/src/cli.ts",
+    "built/devicescript-compiler.js": "src/devicescript.ts",
+    "built/devicescript-compiler.node.cjs": "src/devicescript.ts",
+    "../cli/built/devicescript-cli.cjs": "../cli/src/cli.ts",
 }
 
 function buildPrelude(folder, outp) {
@@ -105,7 +105,7 @@ function buildPrelude(folder, outp) {
         filecont[fn] = fs.readFileSync(folder + "/" + fn, "utf-8")
     }
 
-    const specs = "../runtime/jacdac-c/jacdac/dist/jacscript-spec.d.ts"
+    const specs = "../runtime/jacdac-c/jacdac/dist/devicescript-spec.d.ts"
     filecont["../" + specs] = fs.readFileSync(specs, "utf-8")
 
     let r = "export const prelude: Record<string, string> = {\n"
@@ -144,7 +144,7 @@ async function main() {
                 sourcemap: true,
                 outfile,
                 logLevel: "warning",
-                external: ["websocket-polyfill", "jacscript-compiler"],
+                external: ["websocket-polyfill", "devicescript-compiler"],
                 platform: cjs ? "node" : "browser",
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",

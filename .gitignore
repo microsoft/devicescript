@@ -10,4 +10,4 @@ runtime/jacscript-vm/dist/wasmpre.d.ts.map
 compiler/src/prelude.ts
 website/solutions
 website/static/dist/jacscript-compiler.js
-
+website/static/dist/devicescript-compiler.js

@@ -1,10 +1,10 @@
 {
-  "name": "jacscript-compiler",
+  "name": "devicescript-compiler",
   "version": "0.0.0",
-  "description": "Jacscript Compiler",
-  "main": "./built/jacscript-compiler.node.cjs",
-  "module": "./built/jacscript-compiler.js",
-  "types": "./built/types/compiler/src/jacscript.d.ts",
+  "description": "DeviceScript Compiler",
+  "main": "./built/devicescript-compiler.node.cjs",
+  "module": "./built/devicescript-compiler.js",
+  "types": "./built/types/compiler/src/devicescript.d.ts",
   "scripts": {
     "dist": "yarn install && yarn build",
     "build": "node build.js",

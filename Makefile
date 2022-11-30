@@ -1,6 +1,6 @@
-comp: compiler/built/compiler/src/jacscript.js
+comp: compiler/built/compiler/src/devicescript.js
 
-compiler/built/compiler/src/jacscript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.ts)
+compiler/built/compiler/src/devicescript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.ts)
 	yarn build
 
 comp-fast:

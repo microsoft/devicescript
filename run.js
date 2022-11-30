@@ -57,9 +57,9 @@ async function getHost() {
 }
 
 async function compile(buf) {
-    const jacscript = require("./compiler")
+    const compiler = require("./compiler/built/types/compiler/src/devicescript")
     const host = await getHost()
-    const res = jacscript.compile(buf.toString("utf8"), { host, isLibrary })
+    const res = compiler.compile(buf.toString("utf8"), { host, isLibrary })
     if (!res.success) throw new Error("compilation failed")
     return res.binary
 }
@@ -119,10 +119,10 @@ async function runTest(fn) {
 async function runServer(args) {
     const fn = args.shift()
     if (logParse) {
-        const jacscript = require("./compiler")
+        const compiler = require("./compiler/built/types/compiler/src/devicescript")
         const fsp = require("node:fs/promises")
         const h = await fsp.open(fn, "r")
-        const r = await jacscript.parseLog((off, size) => {
+        const r = await compiler.parseLog((off, size) => {
             const r = Buffer.alloc(size)
             return h.read(r, 0, r.length, off).then(() => r)
         })
@@ -156,7 +156,7 @@ async function runServer(args) {
     }
     if (disassemble) {
         const prog = await readCompiled(fn)
-        console.log(require("./compiler").disassemble(prog))
+        console.log(require("./compiler/built/types/compiler/src/devicescript").disassemble(prog))
         return
     }
     if (isLibrary) {
@@ -247,11 +247,11 @@ async function main() {
             testMode = true
 
             const host = await getHost()
-            const jacscript = require("./compiler")
+            const compiler = require("./compiler/built/types/compiler/src/devicescript")
             for (const fn of readdir(ctest).concat(readdir(samples))) {
                 console.log(`*** test ${fn}`)
                 jacsFile = fn
-                jacscript.testCompiler(host, fs.readFileSync(fn, "utf8"))
+                compiler.testCompiler(host, fs.readFileSync(fn, "utf8"))
             }
 
             for (const fn of readdir(rtest)) {

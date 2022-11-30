@@ -39,7 +39,7 @@ Once you have it all:
 * run `./runtime/built/jdcli 8082` - this will run the POSIX/native DeviceScript server, which can be accessed from the devtools dashboard
 * run `make em` to compile using emscripten
 
-## Design goals for Jacscript VM
+## Design goals for DeviceScript VM
 
 * secure - can predictably execute untrusted code (random bytes)
 * easy to analyze - should be possible to statically determine the set of APIs used
@@ -76,7 +76,7 @@ Main dynamic memory usage - function activation records (and fibers).
 * do fiber round-robin for yields?
 * some testing framework? (depends on services?)
 
-### Implementing services in jacscript
+### Implementing services in DeviceScript
 
 * this generally doesn't work with handler-pending model
 * opcode to send current packet
