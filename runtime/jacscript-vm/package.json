@@ -1,8 +1,8 @@
 {
-  "name": "jacscript-vm",
+  "name": "devicescript-vm",
   "version": "0.0.0",
-  "description": "Jacscript VM",
-  "main": "./built/jacscript-vm.js",
+  "description": "DeviceScript VM",
+  "main": "./built/devicescript-vm.js",
   "types": "./dist/types.d.ts",
   "scripts": {
     "dist": "yarn install && yarn build",

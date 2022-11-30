@@ -74,8 +74,8 @@ jacscript-vm/built/wasmpre.js: jacscript-vm/wasmpre.ts
 	cd jacscript-vm && yarn build
 	sed -e 's/export default factory/export = factory/' jacscript-vm/built/wasmpre.d.ts > jacscript-vm/dist/types.d.ts
 
-VM_TMP_FILE = jacscript-vm/built/jacscript-vm.js
-VM_FILE = ../website/static/dist/jacscript-vm.js
+VM_TMP_FILE = jacscript-vm/built/devicescript-vm.js
+VM_FILE = ../website/static/dist/devicescript-vm.js
 
 $(VM_TMP_FILE): jacscript-vm/built/wasmpre.js $(SRC) $(DEPS)
 	@mkdir -p $(BUILT)
