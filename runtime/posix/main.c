@@ -7,7 +7,7 @@
 #include <assert.h>
 
 #include "jd_sdk.h"
-#include "jacscript/jacscript.h"
+#include "devicescript/devicescript.h"
 #include "storage/jd_storage.h"
 
 #define LOG(fmt, ...) DMESG("main: " fmt, ##__VA_ARGS__)
@@ -37,10 +37,10 @@ bool starts_with(const char *str, const char *pref) {
     return memcmp(str, pref, strlen(pref)) == 0;
 }
 
-void init_jacscript_manager(void);
+void init_devicescript_manager(void);
 void app_init_services() {
     jd_role_manager_init();
-    init_jacscript_manager();
+    init_devicescript_manager();
 
     wsskhealth_init();
     jacscloud_init(&wssk_cloud);
@@ -94,7 +94,7 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
     case JD_CLIENT_EV_SERVICE_PACKET:
         if (test_mode && serv->service_class == JD_SERVICE_CLASS_JACSCRIPT_MANAGER &&
             jd_event_code(pkt) == JD_JACSCRIPT_MANAGER_EV_PROGRAM_PANIC) {
-            jd_jacscript_manager_program_panic_t *ev = (void *)pkt->data;
+            jd_devicescript_manager_program_panic_t *ev = (void *)pkt->data;
             if (ev->panic_code) {
                 fprintf(stderr, "test failed\n");
                 exit(10);
@@ -175,7 +175,7 @@ int load_image(const char *name) {
         return 0;
     }
 
-    if (jacscriptmgr_deploy(img, size)) {
+    if (devicescriptmgr_deploy(img, size)) {
         fprintf(stderr, "can't deploy '%s'\n", name);
         jd_free(img);
         return -3;
@@ -213,13 +213,13 @@ static void run_sample(const char *name, int keepgoing) {
         client_process();
         target_wait_us(10000);
 
-        if (!keepgoing && iter > 15 && !jacscriptmgr_get_ctx() && the_end == 0x1000000000) {
+        if (!keepgoing && iter > 15 && !devicescriptmgr_get_ctx() && the_end == 0x1000000000) {
             // if the script ended, we shall exit soon, but not exactly now
             the_end = iter + 15;
         }
     }
 
-    jacscriptmgr_deploy(NULL, 0);
+    devicescriptmgr_deploy(NULL, 0);
     jd_lstore_force_flush();
     jd_services_deinit();
 }

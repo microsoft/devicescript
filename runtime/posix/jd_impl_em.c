@@ -5,7 +5,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <emscripten/emscripten.h>
-#include "jacscript/jacscript.h"
+#include "devicescript/devicescript.h"
 #include "storage/jd_storage.h"
 
 static uint64_t cached_devid = 0x1d46a30eef48919;
@@ -94,7 +94,7 @@ int jd_em_frame_received(jd_frame_t *frame) {
 
 EMSCRIPTEN_KEEPALIVE
 int jd_em_jacs_deploy(const void *img, unsigned imgsize) {
-    return jacscriptmgr_deploy(img, imgsize);
+    return devicescriptmgr_deploy(img, imgsize);
 }
 
 EMSCRIPTEN_KEEPALIVE

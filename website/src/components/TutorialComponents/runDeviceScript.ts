@@ -3,7 +3,7 @@ export default async function runDeviceScript(input: string): Promise<string> {
         "jacdac-dashboard"
     ) as HTMLIFrameElement
     const msg = {
-        channel: "jacscript",
+        channel: "devicescript",
         type: "source",
         source: input,
         force: true,

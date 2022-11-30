@@ -5,9 +5,8 @@ node_modules/
 tmp
 package-lock.json
 Makefile.user
-runtime/jacscript-vm/dist/wasmpre.d.ts.map
+runtime/devicescript-vm/dist/wasmpre.d.ts.map
 *.jdl
 compiler/src/prelude.ts
 website/solutions
-website/static/dist/jacscript-compiler.js
 website/static/dist/devicescript-compiler.js

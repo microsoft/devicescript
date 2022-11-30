@@ -24,7 +24,7 @@ function copyCompiler() {
 
 function copyVM() {
     const dist = "../website/static/dist/devicescript-vm.js"
-    const builtDir = "../runtime/jacscript-vm/built"
+    const builtDir = "../runtime/devicescript-vm/built"
     const built = builtDir + "/devicescript-vm.js"
     distCopy(dist, built)
 }

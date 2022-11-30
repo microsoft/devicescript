@@ -55,7 +55,7 @@
    match-leak-kinds: reachable
    fun:malloc
    fun:jd_alloc
-   fun:init_jacscript_manager
+   fun:init_devicescript_manager
    fun:app_init_services
    fun:jd_services_init
    fun:main

@@ -17,7 +17,7 @@ let jacsFile = ""
 let isLibrary = false
 
 function jacsFactory() {
-    d = require("jacscript-vm")
+    d = require("devicescript-vm")
     try {
         require("websocket-polyfill")
         // @ts-ignore

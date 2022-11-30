@@ -717,7 +717,7 @@ class Program implements TopOpWriter {
                     this,
                     decl,
                     this.roles,
-                    this.serviceSpecs["jacscriptCondition"]
+                    this.serviceSpecs["deviceScriptCondition"]
                 )
         }
         if (!ts.isPropertyAccessExpression(expr.expression)) return null
@@ -2864,7 +2864,7 @@ export const jacdacDefaultSpecifications =
     jacdacDefaultSpecificationsData as jdspec.ServiceSpec[]
 
 /**
- * Coimpiles the jacscript program.
+ * Compiles the DeviceScript program.
  * @param code
  * @param opts
  * @returns

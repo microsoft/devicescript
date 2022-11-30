@@ -10,6 +10,6 @@
     "workspaces": [
         "compiler",
         "cli",
-        "runtime/jacscript-vm"
+        "runtime/devicescript-vm"
     ]
 }
