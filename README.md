@@ -1,14 +1,14 @@
-# Jacscript
+# DeviceScript
 
-Jacscript is a programming language for scripting [Jacdac](https://aka.ms/jacdac) services.
+DeviceScript is a programming language for scripting [Jacdac](https://aka.ms/jacdac) services.
 
 It has JavaScript-like syntax and is compiled to a custom VM bytecode, which can run in very constrained
 environments (VM itself compiles to 10kB of code, with the floating point library and Jacdac SDK adding further 30kB).
 
 This repository contains:
-* [jacdac-c submodule](https://github.com/microsoft/jacdac-c), including sources for Jacdac client libraries and Jacscript VM
-* `compiler/` - sources for Jacscript compiler
-* `runtime/jacscript-vm/` - glue files to build Jacscript VM as WASM module using [emscripten](https://emscripten.org/); `vm/dist/` contain pre-built files
+* [jacdac-c submodule](https://github.com/microsoft/jacdac-c), including sources for Jacdac client libraries and DeviceScript VM
+* `compiler/` - sources for DeviceScript compiler
+* `runtime/jacscript-vm/` - glue files to build DeviceScript VM as WASM module using [emscripten](https://emscripten.org/); `vm/dist/` contain pre-built files
 * `jacs/samples/` - sample Jacscript programs
 * `runtime/posix/` - implementation of Jacdac SDK HAL for grown-up POSIX-like operating systems (as opposed to embedded platforms)
 
@@ -28,15 +28,15 @@ yarn setup
 * start Terminal in VSCode
 * run `yarn install`
 * run `yarn build`
-* run `node run.js jacs/samples/something.ts` - this will execute given Jacscript program using the WASM binary
+* run `node run.js jacs/samples/something.ts` - this will execute given DeviceScript program using the WASM binary
 
 If you want to develop the runtime (as opposed to compiler or website), you will also need
 GNU Make, C compiler, and [emscripten](https://emscripten.org/docs/getting_started/downloads.html).
 Once you have it all:
 
 * run `make native` to compile using native C compiler
-* run `node run.js -c jacs/samples/something.ts` - this will execute given Jacscript program using the POSIX/native binary
-* run `./runtime/built/jdcli 8082` - this will run the POSIX/native Jacscript server, which can be accessed from the devtools dashboard
+* run `node run.js -c jacs/samples/something.ts` - this will execute given DeviceScript program using the POSIX/native binary
+* run `./runtime/built/jdcli 8082` - this will run the POSIX/native DeviceScript server, which can be accessed from the devtools dashboard
 * run `make em` to compile using emscripten
 
 ## Design goals for Jacscript VM

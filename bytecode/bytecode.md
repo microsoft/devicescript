@@ -1,4 +1,4 @@
-# JacScript bytecode spec
+# DeviceScript bytecode spec
 
 ## TODO
 

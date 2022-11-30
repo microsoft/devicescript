@@ -1,3 +1,3 @@
-# Jacscript CLI
+# DeviceScript CLI
 
 ...

@@ -1,7 +1,7 @@
 {
-  "name": "jacscript-cli",
+  "name": "devicescript-cli",
   "version": "0.0.0",
-  "description": "Jacscript CLI",
+  "description": "DeviceScript command line tool",
   "bin": "./built/jacscript-cli.cjs",
   "files": [
     "./built/jacscript-cli.cjs",

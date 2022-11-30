@@ -14,8 +14,8 @@ async function createConfig() {
 
     /** @type {import('@docusaurus/types').Config} */
     const config = {
-        title: "Jacscript",
-        tagline: "Portable, small footprint virtual machine",
+        title: "DeviceScript",
+        tagline: "Portable, small footprint virtual machine for embedded devices.",
         url: "https://microsoft.github.io/",
         baseUrl: "/jacscript/",
         onBrokenLinks: "throw",
@@ -63,9 +63,9 @@ async function createConfig() {
                     },
                 },
                 navbar: {
-                    title: "Jacscript",
+                    title: "DeviceScript",
                     logo: {
-                        alt: "Jacscript language",
+                        alt: "DeviceScript language",
                         src: "img/logo.svg",
                     },
                     items: [
