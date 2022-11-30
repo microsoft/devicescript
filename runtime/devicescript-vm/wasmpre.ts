@@ -8,14 +8,14 @@ export declare type JacsModule = EmscriptenModule &
         _jd_em_init(): void
         _jd_em_process(): void
         _jd_em_frame_received(frame: ptr): int32
-        _jd_em_jacs_deploy(img: ptr, size: int32): int32
-        _jd_em_jacs_client_deploy(img: ptr, size: int32): int32
+        _jd_em_devs_deploy(img: ptr, size: int32): int32
+        _jd_em_devs_client_deploy(img: ptr, size: int32): int32
         sendPacket(pkt: Uint8Array): void
     }
 
 declare var Module: JacsModule
 
-var jacs_interval: number
+var devs_interval: number
 
 function copyToHeap<T>(buf: Uint8Array, fn: (p: ptr) => T): T {
     const ptr = Module._malloc(buf.length)
@@ -154,7 +154,7 @@ export module Exts {
 
     export function jacsDeploy(binary: Uint8Array) {
         return copyToHeap(binary, ptr =>
-            Module._jd_em_jacs_deploy(ptr, binary.length)
+            Module._jd_em_devs_deploy(ptr, binary.length)
         )
     }
 
@@ -162,7 +162,7 @@ export module Exts {
         // this will call exit(0) when done
         const ptr = Module._malloc(binary.length)
         Module.HEAPU8.set(binary, ptr)
-        return Module._jd_em_jacs_client_deploy(ptr, binary.length)
+        return Module._jd_em_devs_client_deploy(ptr, binary.length)
     }
 
     export function jacsInit() {
@@ -170,9 +170,9 @@ export module Exts {
     }
 
     export function jacsStart() {
-        if (jacs_interval) return
+        if (devs_interval) return
         Module.jacsInit()
-        jacs_interval = setInterval(() => {
+        devs_interval = setInterval(() => {
             try {
                 Module._jd_em_process()
             } catch (e) {
@@ -183,9 +183,9 @@ export module Exts {
     }
 
     export function jacsStop() {
-        if (jacs_interval) {
-            clearInterval(jacs_interval)
-            jacs_interval = undefined
+        if (devs_interval) {
+            clearInterval(devs_interval)
+            devs_interval = undefined
         }
     }
 

@@ -43,7 +43,7 @@ void app_init_services() {
     init_devicescript_manager();
 
     wsskhealth_init();
-    jacscloud_init(&wssk_cloud);
+    devscloud_init(&wssk_cloud);
     tsagg_init(&wssk_cloud);
 }
 
@@ -92,9 +92,9 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
         break;
 
     case JD_CLIENT_EV_SERVICE_PACKET:
-        if (test_mode && serv->service_class == JD_SERVICE_CLASS_JACSCRIPT_MANAGER &&
-            jd_event_code(pkt) == JD_JACSCRIPT_MANAGER_EV_PROGRAM_PANIC) {
-            jd_devicescript_manager_program_panic_t *ev = (void *)pkt->data;
+        if (test_mode && serv->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_MANAGER &&
+            jd_event_code(pkt) == JD_DEVICE_SCRIPT_MANAGER_EV_PROGRAM_PANIC) {
+            jd_device_script_manager_program_panic_t *ev = (void *)pkt->data;
             if (ev->panic_code) {
                 fprintf(stderr, "test failed\n");
                 exit(10);
@@ -102,7 +102,7 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
         }
         if (deploy.img && serv && deploy.serv == serv) {
             if (jd_is_report(pkt) &&
-                pkt->service_command == JD_JACSCRIPT_MANAGER_CMD_DEPLOY_BYTECODE) {
+                pkt->service_command == JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE) {
                 DMESG("opening deploy pipe");
                 if (jd_opipe_open_report(&deploy.pipe, pkt) == 0)
                     deploy.isopen = true;
@@ -122,12 +122,12 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
 
     case JD_CLIENT_EV_DEVICE_CREATED:
         if (deploy.img && !deploy.serv && dev->device_identifier != jd_device_id()) {
-            deploy.serv = jd_device_lookup_service(dev, JD_SERVICE_CLASS_JACSCRIPT_MANAGER);
+            deploy.serv = jd_device_lookup_service(dev, JD_SERVICE_CLASS_DEVICE_SCRIPT_MANAGER);
             if (deploy.serv) {
                 char id[5];
                 jd_device_short_id(id, dev->device_identifier);
                 DMESG("asking for deploy: %s", id);
-                jd_service_send_cmd(deploy.serv, JD_JACSCRIPT_MANAGER_CMD_DEPLOY_BYTECODE,
+                jd_service_send_cmd(deploy.serv, JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE,
                                     &deploy.size, 4);
             }
         }
@@ -135,7 +135,7 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
     }
 }
 
-int jacs_client_deploy(const void *img, unsigned imgsize) {
+int devs_client_deploy(const void *img, unsigned imgsize) {
     deploy.img = img;
     deploy.size = imgsize;
 #ifdef __EMSCRIPTEN__
@@ -162,7 +162,7 @@ int load_image(const char *name) {
     fclose(f);
     if (memcmp("4a6163530a", img, 10) == 0)
         size = jd_from_hex(img, (const char *)img);
-    int r = jacs_verify(img, size);
+    int r = devs_verify(img, size);
     if (r) {
         fprintf(stderr, "verification error for '%s': %d\n", name, r);
         jd_free(img);
@@ -170,7 +170,7 @@ int load_image(const char *name) {
     }
 
     if (remote_deploy) {
-        jacs_client_deploy(img, size);
+        devs_client_deploy(img, size);
         // don't free - it is lazy
         return 0;
     }
@@ -250,7 +250,7 @@ static void frame_cb_post(void) {}
 int main(int argc, const char **argv) {
     const jd_transport_t *transport = NULL;
     const char *transport_arg = NULL;
-    const char *jacs_img = NULL;
+    const char *devs_img = NULL;
 
 #if 0
     uint64_t devid;
@@ -279,11 +279,11 @@ int main(int argc, const char **argv) {
             transport_arg = arg;
             transport = &sock_transport;
         } else if (ends_with(arg, ".jacs")) {
-            jacs_img = arg;
+            devs_img = arg;
         } else if (strcmp(arg, "-l") == 0) {
             enable_lstore = 1;
         } else if (strcmp(arg, "-X") == 0) {
-            jacs_set_global_flags(JACS_FLAG_GC_STRESS);
+            devs_set_global_flags(JACS_FLAG_GC_STRESS);
         } else if (strcmp(arg, "-w") == 0) {
             websock = 1;
         } else {
@@ -292,7 +292,7 @@ int main(int argc, const char **argv) {
         }
     }
 
-    if (!transport && !jacs_img && !websock) {
+    if (!transport && !devs_img && !websock) {
         fprintf(stderr, "need transport and/or image\n");
         return 1;
     }
@@ -318,15 +318,15 @@ int main(int argc, const char **argv) {
         DMESG("self-device: %-s %s", jd_device_short_id_a(jd_device_id()), hexbuf);
     }
 
-    if (jacs_img && remote_deploy) {
-        load_image(jacs_img);
-        jacs_img = NULL;
+    if (devs_img && remote_deploy) {
+        load_image(devs_img);
+        devs_img = NULL;
     }
 
     jd_client_subscribe(client_event_handler, NULL);
 
-    if (jacs_img) {
-        run_sample(jacs_img, websock);
+    if (devs_img) {
+        run_sample(devs_img, websock);
     } else {
 #ifdef __EMSCRIPTEN__
         run_emscripten_loop();

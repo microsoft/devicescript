@@ -27,9 +27,9 @@ const _spec = processSpec(fs.readFileSync(process.argv[2], "utf-8"))
 _spec.opProps = serializeProps(_spec.ops, opcodeProps)
 _spec.opTypes = serializeProps(_spec.ops, opcodeType)
 writeFile("bytecode.json", JSON.stringify(_spec, null, 4))
-writeFile("jacs_bytecode.h", genCode(_spec, false))
+writeFile("devs_bytecode.h", genCode(_spec, false))
 writeFile("bytecode.ts", genCode(_spec, true))
-writeFile("jacs_bytecode.ts", genCode(_spec, true, true))
+writeFile("devs_bytecode.ts", genCode(_spec, true, true))
 
 function processSpec(filecontent: string): Spec {
     const argCodes: SMap<string> = {

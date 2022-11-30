@@ -93,13 +93,13 @@ int jd_em_frame_received(jd_frame_t *frame) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-int jd_em_jacs_deploy(const void *img, unsigned imgsize) {
+int jd_em_devs_deploy(const void *img, unsigned imgsize) {
     return devicescriptmgr_deploy(img, imgsize);
 }
 
 EMSCRIPTEN_KEEPALIVE
-int jd_em_jacs_client_deploy(const void *img, unsigned imgsize) {
-    return jacs_client_deploy(img, imgsize);
+int jd_em_devs_client_deploy(const void *img, unsigned imgsize) {
+    return devs_client_deploy(img, imgsize);
 }
 
 #if 0

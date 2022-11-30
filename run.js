@@ -236,7 +236,7 @@ async function main() {
     try {
         if (args[0] == "empty") {
             const buf = await compile(Buffer.from(""))
-            let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t jacs_empty_program[${buf.length}] = {`
+            let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[${buf.length}] = {`
             for (let i = 0; i < buf.length; ++i) {
                 if ((i & 15) == 0) r += "\n"
                 r += "0x" + ("0" + buf[i].toString(16)).slice(-2) + ", "
