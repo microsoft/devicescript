@@ -117,8 +117,7 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
         unsigned fsz = JD_FRAME_SIZE(frame);
         if (fsz > size)
             goto too_short;
-        frame = jd_alloc(fsz);
-        memcpy(frame, data, fsz);
+        frame = jd_memdup(data, fsz); // why do we copy here?
         jd_send_frame_raw(frame);
         // jd_rx_frame_received_loopback(frame);
         jd_free(frame);
@@ -479,8 +478,7 @@ static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
         uint8_t *dblptr = label + strlen((char *)label) + 1;
         unsigned numdbl = (size - (dblptr - data)) / sizeof(double);
         LOG("method: '%s' rid=%u numvals=%u", label, (unsigned)ridval, numdbl);
-        double *vals = jd_alloc(numdbl * sizeof(double) + 1);
-        memcpy(vals, dblptr, numdbl * sizeof(double));
+        double *vals = jd_memdup(dblptr, numdbl * sizeof(double));
         devscloud_on_method((char *)label, ridval, numdbl, vals);
         jd_free(vals);
     } else if (cmd == 0x90) {
