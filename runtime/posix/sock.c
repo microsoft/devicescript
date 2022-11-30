@@ -279,13 +279,13 @@ void jd_crypto_get_random(uint8_t *buf, unsigned size) {
         int fd = open(path, O_RDONLY);
         if (fd < 0) {
             DMESG("can't open %s", path);
-            jd_panic();
+            JD_PANIC();
         }
         random_fd = fd;
     }
     if (forced_read(random_fd, buf, size) != (int)size) {
         DMESG("can't read random");
-        jd_panic();
+        JD_PANIC();
     }
 }
 

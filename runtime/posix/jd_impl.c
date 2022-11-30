@@ -61,7 +61,8 @@ void target_enable_irq(void) {
 typedef struct setting {
     struct setting *next;
     char *key;
-    char *value;
+    uint8_t *valptr;
+    unsigned valsize;
 } setting_t;
 static setting_t *settings;
 
@@ -80,17 +81,27 @@ static setting_t *find_entry(const char *key, int create) {
     return p;
 }
 
-char *jd_settings_get(const char *key) {
+int jd_settings_get_bin(const char *key, void *dst, unsigned space) {
     setting_t *s = find_entry(key, 0);
-    return s ? s->value : NULL;
+    if (!s || !s->valptr)
+        return -1;
+    unsigned sz = s->valsize;
+    if (space < sz)
+        sz = space;
+    if (sz)
+        memcpy(dst, s->valptr, sz);
+    return s->valsize;
 }
 
-int jd_settings_set(const char *key, const char *val) {
+int jd_settings_set_bin(const char *key, const void *val, unsigned size) {
     setting_t *s = find_entry(key, 1);
-    jd_free(s->value);
-    if (val == NULL)
-        s->value = NULL;
-    else
-        s->value = jd_strdup(val);
+    jd_free(s->valptr);
+    if (val == NULL) {
+        s->valptr = NULL;
+        s->valsize = 0;
+    } else {
+        s->valptr = jd_memdup(val, size);
+        s->valsize = size;
+    }
     return 0;
 }

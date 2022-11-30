@@ -48,7 +48,7 @@ uint64_t hw_device_id(void) {
         }
 
         if (bufsz < 5)
-            jd_panic();
+            JD_PANIC();
 
         cached_devid = ((uint64_t)jd_hash_fnv1a(buf, bufsz) << 32) |
                        ((uint64_t)jd_hash_fnv1a(buf + 4, bufsz - 4));
