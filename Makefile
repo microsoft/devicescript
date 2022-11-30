@@ -18,7 +18,7 @@ test-em: em comp
 test: test-c test-em
 
 clean:
-	rm -rf built compiler/built compiler/src/prelude.ts
+	rm -rf built compiler/built compiler/src/prelude.ts cli/built
 	$(MAKE) -C runtime clean
 
 full-clean: clean
