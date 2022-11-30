@@ -481,7 +481,7 @@ static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
         LOG("method: '%s' rid=%u numvals=%u", label, (unsigned)ridval, numdbl);
         double *vals = jd_alloc(numdbl * sizeof(double) + 1);
         memcpy(vals, dblptr, numdbl * sizeof(double));
-        jacscloud_on_method((char *)label, ridval, numdbl, vals);
+        devscloud_on_method((char *)label, ridval, numdbl, vals);
         jd_free(vals);
     } else if (cmd == 0x90) {
         if (payload[0] && !state->fwdqueue) {
@@ -535,7 +535,7 @@ int jd_net_send_frame(void *frame) {
     return jd_queue_push(state->fwdqueue, f);
 }
 
-const jacscloud_api_t wssk_cloud = {
+const devscloud_api_t wssk_cloud = {
     .upload = wssk_publish_values,
     .agg_upload = aggbuffer_upload,
     .bin_upload = wssk_publish_bin,
