@@ -39,7 +39,7 @@ struct srv_state {
     uint32_t next_restart;
 
     const devicescriptmgr_cfg_t *cfg;
-    jacs_ctx_t *ctx;
+    devs_ctx_t *ctx;
 
     uint32_t write_offset;
     jd_ipipe_desc_t write_program_pipe;
@@ -57,7 +57,7 @@ REG_DEFINITION(                                 //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING),   //
 )
 
-__attribute__((aligned(sizeof(void *)))) static const uint8_t jacs_empty_program[224] = {
+__attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[224] = {
     0x4a, 0x61, 0x63, 0x53, 0x0a, 0x7e, 0x6a, 0x9a, 0x02, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -74,7 +74,7 @@ __attribute__((aligned(sizeof(void *)))) static const uint8_t jacs_empty_program
     0x52, 0x65, 0x66, 0x72, 0x65, 0x73, 0x68, 0x5f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
 
-static const devicescriptmgr_program_header_t *jacs_header(srv_t *state) {
+static const devicescriptmgr_program_header_t *devs_header(srv_t *state) {
     const devicescriptmgr_program_header_t *hd = state->cfg->program_base;
     if (hd->magic0 == JACSMGR_PROG_MAGIC0 && hd->magic1 == JACSMGR_PROG_MAGIC1)
         return hd;
@@ -84,7 +84,7 @@ static const devicescriptmgr_program_header_t *jacs_header(srv_t *state) {
 static uint32_t current_status(srv_t *state) {
     if (state->ctx)
         return JD_STATUS_CODES_READY;
-    const devicescriptmgr_program_header_t *hd = jacs_header(state);
+    const devicescriptmgr_program_header_t *hd = devs_header(state);
     if (hd && hd->size != 0)
         return JD_STATUS_CODES_SLEEPING;
     return JD_STATUS_CODES_WAITING_FOR_INPUT;
@@ -98,32 +98,32 @@ static void send_status(srv_t *state) {
 
 static void run_img(srv_t *state, const void *img, unsigned size) {
     if (state->ctx)
-        jacs_free_ctx(state->ctx);
-    jacs_cfg_t cfg = {.mgr_service_idx = state->service_index};
-    state->ctx = jacs_create_ctx(img, size, &cfg);
+        devs_free_ctx(state->ctx);
+    devs_cfg_t cfg = {.mgr_service_idx = state->service_index};
+    state->ctx = devs_create_ctx(img, size, &cfg);
     if (state->ctx)
-        jacs_set_logging(state->ctx, state->logging);
+        devs_set_logging(state->ctx, state->logging);
 }
 
 static void try_run(srv_t *state) {
-    const devicescriptmgr_program_header_t *hd = jacs_header(state);
-    if (hd && hd->size != 0 && jacs_verify(hd->image, hd->size) == 0) {
+    const devicescriptmgr_program_header_t *hd = devs_header(state);
+    if (hd && hd->size != 0 && devs_verify(hd->image, hd->size) == 0) {
         run_img(state, hd->image, hd->size);
     } else {
-        run_img(state, jacs_empty_program, sizeof(jacs_empty_program));
+        run_img(state, devs_empty_program, sizeof(devs_empty_program));
     }
     send_status(state);
 }
 
 static void stop_program(srv_t *state) {
-    jacs_free_ctx(state->ctx);
+    devs_free_ctx(state->ctx);
     state->ctx = NULL;
     send_status(state);
 }
 
 void devicescriptmgr_process(srv_t *state) {
     if (state->read_program_ptr >= 0) {
-        const devicescriptmgr_program_header_t *hd = jacs_header(state);
+        const devicescriptmgr_program_header_t *hd = devs_header(state);
         int sz = hd ? hd->size : 0;
         if (state->read_program_ptr >= sz) {
             jd_opipe_close(&state->read_program_pipe);
@@ -154,7 +154,7 @@ void devicescriptmgr_process(srv_t *state) {
         return;
 
     unsigned pc;
-    unsigned code = jacs_error_code(state->ctx, &pc);
+    unsigned code = devs_error_code(state->ctx, &pc);
     if (code) {
         jd_device_script_manager_program_panic_t args = {
             .panic_code = code == JACS_PANIC_REBOOT ? 0 : code,
@@ -277,7 +277,7 @@ static void deploy_bytecode(srv_t *state, jd_packet_t *pkt) {
 
 int devicescriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]) {
     srv_t *state = _state;
-    const devicescriptmgr_program_header_t *hd = jacs_header(state);
+    const devicescriptmgr_program_header_t *hd = devs_header(state);
     if (hd) {
         jd_sha256_setup();
         jd_sha256_update(hd->image, hd->size);
@@ -307,11 +307,11 @@ void devicescriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     case JD_GET(JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_SIZE):
-        jd_respond_u32(pkt, jacs_header(state) ? jacs_header(state)->size : 0);
+        jd_respond_u32(pkt, devs_header(state) ? devs_header(state)->size : 0);
         break;
 
     case JD_GET(JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_HASH):
-        jd_respond_u32(pkt, jacs_header(state) ? jacs_header(state)->hash : 0);
+        jd_respond_u32(pkt, devs_header(state) ? devs_header(state)->hash : 0);
         break;
 
     case JD_GET(JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_SHA256):
@@ -339,7 +339,7 @@ void devicescriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
             break;
         case JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING:
             if (state->ctx)
-                jacs_set_logging(state->ctx, state->logging);
+                devs_set_logging(state->ctx, state->logging);
             break;
         }
         break;
@@ -348,7 +348,7 @@ void devicescriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 SRV_DEF(devicescriptmgr, JD_SERVICE_CLASS_DEVICE_SCRIPT_MANAGER);
 
-jacs_ctx_t *devicescriptmgr_get_ctx(void) {
+devs_ctx_t *devicescriptmgr_get_ctx(void) {
     return _state ? _state->ctx : NULL;
 }
 
@@ -372,16 +372,16 @@ int devicescriptmgr_deploy(const void *img, unsigned imgsize) {
     if (devicescriptmgr_deploy_write(NULL, 0))
         return -4;
 
-    const devicescriptmgr_program_header_t *hdx = jacs_header(state);
+    const devicescriptmgr_program_header_t *hdx = devs_header(state);
     if (hdx == NULL)
         return -5; // ???
-    return jacs_verify(hdx->image, hdx->size);
+    return devs_verify(hdx->image, hdx->size);
 }
 
 static void devicescriptmgr_client_ev(void *state0, int event_id, void *arg0, void *arg1) {
     srv_t *state = state0;
     if (state->ctx)
-        jacs_client_event_handler(state->ctx, event_id, arg0, arg1);
+        devs_client_event_handler(state->ctx, event_id, arg0, arg1);
 }
 
 void devicescriptmgr_init(const devicescriptmgr_cfg_t *cfg) {
@@ -393,7 +393,7 @@ void devicescriptmgr_init(const devicescriptmgr_cfg_t *cfg) {
     // first start 1.5s after brain boot up - allow devices to enumerate
     state->next_restart = now + SECONDS(1.5);
 
-    JD_ASSERT(jacs_verify(jacs_empty_program, sizeof(jacs_empty_program)) == 0);
+    JD_ASSERT(devs_verify(devs_empty_program, sizeof(devs_empty_program)) == 0);
 
     jd_client_subscribe(devicescriptmgr_client_ev, state);
     _state = state;

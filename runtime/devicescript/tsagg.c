@@ -1,4 +1,4 @@
-#include "jacs_internal.h"
+#include "devs_internal.h"
 #include "jacdac/dist/c/timeseriesaggregator.h"
 
 #include <math.h>
@@ -48,7 +48,7 @@ struct srv_state {
     uint32_t next_global_streaming_samples;
     uint32_t watchdog_timer_ms;
 
-    const jacscloud_api_t *api;
+    const devscloud_api_t *api;
     tsagg_series_t *series;
 
     uint32_t current_cont_window;
@@ -64,17 +64,17 @@ REG_DEFINITION(                                                   //
     REG_U8(JD_TIMESERIES_AGGREGATOR_REG_FAST_START),              //
 )
 
-const jacs_packed_service_desc_t *jacs_get_packed_service_desc(uint32_t service_class) {
+const devs_packed_service_desc_t *devs_get_packed_service_desc(uint32_t service_class) {
     int l = 0;
-    int r = jacs_num_packed_service_descs - 1;
+    int r = devs_num_packed_service_descs - 1;
     while (l <= r) {
         int m = (l + r) / 2;
-        if (jacs_packed_service_descs[m].service_class < service_class)
+        if (devs_packed_service_descs[m].service_class < service_class)
             l = m + 1;
-        else if (jacs_packed_service_descs[m].service_class > service_class)
+        else if (devs_packed_service_descs[m].service_class > service_class)
             r = m - 1;
         else
-            return &jacs_packed_service_descs[m];
+            return &devs_packed_service_descs[m];
     }
     return NULL;
 }
@@ -156,8 +156,8 @@ static tsagg_series_t *lookup_or_add_series(srv_t *state, const char *label, int
 
 static void dev_created(srv_t *state, jd_device_t *dev) {
     for (unsigned i = 1; i < dev->num_services; ++i) {
-        const jacs_packed_service_desc_t *desc =
-            jacs_get_packed_service_desc(dev->services[i].service_class);
+        const devs_packed_service_desc_t *desc =
+            devs_get_packed_service_desc(dev->services[i].service_class);
         if (!desc)
             continue;
         add_series(state, &dev->services[i]);
@@ -247,7 +247,7 @@ static void dev_packet(srv_t *state, jd_device_service_t *serv, jd_packet_t *pkt
     if (pkt->service_command != JD_GET(JD_REG_READING) && !jd_is_report(pkt))
         return;
 
-    const jacs_packed_service_desc_t *desc = jacs_get_packed_service_desc(serv->service_class);
+    const devs_packed_service_desc_t *desc = devs_get_packed_service_desc(serv->service_class);
     if (desc == NULL)
         return;
 
@@ -255,7 +255,7 @@ static void dev_packet(srv_t *state, jd_device_service_t *serv, jd_packet_t *pkt
         if (ts->service == serv) {
             if (ts->streaming_samples)
                 ts->streaming_samples--;
-            double v = jacs_read_number(pkt->data, pkt->service_size, desc->numfmt);
+            double v = devs_read_number(pkt->data, pkt->service_size, desc->numfmt);
             series_update(state, ts, v);
             feed_watchdog(state);
         }
@@ -425,7 +425,7 @@ void tsagg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 static srv_t *tsagg_state;
 
 SRV_DEF(tsagg, JD_SERVICE_CLASS_TIMESERIES_AGGREGATOR);
-void tsagg_init(const jacscloud_api_t *cloud_api) {
+void tsagg_init(const devscloud_api_t *cloud_api) {
     SRV_ALLOC(tsagg);
     tsagg_state = state;
     state->api = cloud_api;

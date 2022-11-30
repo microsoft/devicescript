@@ -13,7 +13,7 @@ static devicescriptmgr_cfg_t cfg;
 static bool is_erased;
 static uint8_t *max_write;
 
-#define KEY "jacs_prog"
+#define KEY "devs_prog"
 
 void flash_program(void *dst, const void *src, uint32_t len) {
     JD_ASSERT(cfg.program_base != NULL);

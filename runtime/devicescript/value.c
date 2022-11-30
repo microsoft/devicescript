@@ -1,23 +1,23 @@
-#include "jacs_internal.h"
+#include "devs_internal.h"
 
 #include <math.h>
 #include <limits.h>
 
-const value_t jacs_zero = {.exp_sign = JACS_INT_TAG, .val_int32 = 0};
-const value_t jacs_one = {.exp_sign = JACS_INT_TAG, .val_int32 = 1};
-const value_t jacs_nan = {.exp_sign = JACS_NAN_TAG, .val_int32 = 0};
-const value_t jacs_int_min = {.exp_sign = JACS_INT_TAG, .val_int32 = INT_MIN};
-const value_t jacs_max_int_1 = {._f = 0x80000000U};
+const value_t devs_zero = {.exp_sign = JACS_INT_TAG, .val_int32 = 0};
+const value_t devs_one = {.exp_sign = JACS_INT_TAG, .val_int32 = 1};
+const value_t devs_nan = {.exp_sign = JACS_NAN_TAG, .val_int32 = 0};
+const value_t devs_int_min = {.exp_sign = JACS_INT_TAG, .val_int32 = INT_MIN};
+const value_t devs_max_int_1 = {._f = 0x80000000U};
 
 #define SPECIAL(n)                                                                                 \
     { .exp_sign = JACS_HANDLE_TAG + JACS_HANDLE_TYPE_SPECIAL, .val_int32 = n }
 
-const value_t jacs_null = {.u64 = 0};
-const value_t jacs_true = SPECIAL(JACS_SPECIAL_TRUE);
-const value_t jacs_false = SPECIAL(JACS_SPECIAL_FALSE);
-const value_t jacs_pkt_buffer = SPECIAL(JACS_SPECIAL_PKT_BUFFER);
+const value_t devs_null = {.u64 = 0};
+const value_t devs_true = SPECIAL(JACS_SPECIAL_TRUE);
+const value_t devs_false = SPECIAL(JACS_SPECIAL_FALSE);
+const value_t devs_pkt_buffer = SPECIAL(JACS_SPECIAL_PKT_BUFFER);
 
-value_t jacs_value_from_double(double v) {
+value_t devs_value_from_double(double v) {
     value_t t;
     value_t r;
     t._f = v;
@@ -25,13 +25,13 @@ value_t jacs_value_from_double(double v) {
 
     if (isnan(v)) {
         // normalize NaNs -- they are very likely all already normalized
-        return jacs_nan;
+        return devs_nan;
     }
 
     r.exp_sign = JACS_INT_TAG;
 
     if (m32z && t.exp_sign == 0)
-        return jacs_zero;
+        return devs_zero;
 
     int e = t.exponent - 0x3ff;
     if (e >= 0) {
@@ -43,7 +43,7 @@ value_t jacs_value_from_double(double v) {
         } else {
             if (e > 30) {
                 if (m32z && t.exp_sign == 0xc1e00000)
-                    return jacs_int_min;
+                    return devs_int_min;
             } else {
                 if ((t.mantisa32 << (e - 20)) == 0) {
                     r.val_int32 =
@@ -62,22 +62,22 @@ int_sign:
     return r;
 }
 
-value_t jacs_value_from_int(int v) {
+value_t devs_value_from_int(int v) {
     value_t r;
     r.exp_sign = JACS_INT_TAG;
     r.val_int32 = v;
     return r;
 }
 
-value_t jacs_value_from_bool(int v) {
-    return v ? jacs_true : jacs_false;
+value_t devs_value_from_bool(int v) {
+    return v ? devs_true : devs_false;
 }
 
-value_t jacs_value_from_pointer(jacs_ctx_t *ctx, int type, void *ptr) {
+value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr) {
     uint32_t v;
 
     if (ptr == NULL)
-        return jacs_null;
+        return devs_null;
 
     JD_ASSERT(type & (JACS_HANDLE_GC_MASK | JACS_HANDLE_IMG_MASK));
 
@@ -85,21 +85,21 @@ value_t jacs_value_from_pointer(jacs_ctx_t *ctx, int type, void *ptr) {
     if (type & JACS_HANDLE_IMG_MASK)
         v = (uintptr_t)ptr - (uintptr_t)ctx->img.data;
     else
-        v = (uintptr_t)ptr - (uintptr_t)jacs_gc_base_addr(ctx->gc);
+        v = (uintptr_t)ptr - (uintptr_t)devs_gc_base_addr(ctx->gc);
     JD_ASSERT((v >> 24) == 0);
 #else
     v = (uintptr_t)ptr;
 #endif
 
-    return jacs_value_from_handle(type, v);
+    return devs_value_from_handle(type, v);
 }
 
 #if JD_64
-void *jacs_handle_ptr_value(jacs_ctx_t *ctx, value_t t) {
-    int tp = jacs_handle_type(t);
+void *devs_handle_ptr_value(devs_ctx_t *ctx, value_t t) {
+    int tp = devs_handle_type(t);
 
     if (tp & JACS_HANDLE_GC_MASK)
-        return (void *)((uintptr_t)jacs_gc_base_addr(ctx->gc) + t.mantisa32);
+        return (void *)((uintptr_t)devs_gc_base_addr(ctx->gc) + t.mantisa32);
 
     if (tp & JACS_HANDLE_IMG_MASK)
         return (void *)((uintptr_t)ctx->img.data + t.mantisa32);
@@ -109,11 +109,11 @@ void *jacs_handle_ptr_value(jacs_ctx_t *ctx, value_t t) {
 }
 #endif
 
-int32_t jacs_value_to_int(value_t v) {
-    if (jacs_is_tagged_int(v))
+int32_t devs_value_to_int(value_t v) {
+    if (devs_is_tagged_int(v))
         return v.val_int32;
-    if (jacs_is_handle(v)) {
-        if (jacs_is_special(v) && jacs_handle_value(v) >= JACS_SPECIAL_TRUE)
+    if (devs_is_handle(v)) {
+        if (devs_is_special(v) && devs_handle_value(v) >= JACS_SPECIAL_TRUE)
             return 1;
         else
             return 0;
@@ -122,13 +122,13 @@ int32_t jacs_value_to_int(value_t v) {
     return (int32_t)v._f;
 }
 
-double jacs_value_to_double(value_t v) {
-    if (jacs_is_tagged_int(v))
+double devs_value_to_double(value_t v) {
+    if (devs_is_tagged_int(v))
         return (double)v.val_int32;
 
-    if (jacs_is_handle(v)) {
-        if (jacs_is_special(v))
-            switch (jacs_handle_value(v)) {
+    if (devs_is_handle(v)) {
+        if (devs_is_special(v))
+            switch (devs_handle_value(v)) {
             case JACS_SPECIAL_FALSE:
                 return 0;
             case JACS_SPECIAL_TRUE:
@@ -140,22 +140,22 @@ double jacs_value_to_double(value_t v) {
     return v._f;
 }
 
-bool jacs_value_to_bool(value_t v) {
-    if (jacs_is_tagged_int(v))
+bool devs_value_to_bool(value_t v) {
+    if (devs_is_tagged_int(v))
         return !!v.val_int32;
-    if (jacs_is_special(v))
-        return jacs_handle_value(v) >= JACS_SPECIAL_TRUE;
-    if (jacs_is_handle(v))
+    if (devs_is_special(v))
+        return devs_handle_value(v) >= JACS_SPECIAL_TRUE;
+    if (devs_is_handle(v))
         return 0;
     return v._f == 0.0 ? 1 : 0;
 }
 
-bool jacs_is_buffer(jacs_ctx_t *ctx, value_t v) {
-    switch (jacs_handle_type(v)) {
+bool devs_is_buffer(devs_ctx_t *ctx, value_t v) {
+    switch (devs_handle_type(v)) {
     case JACS_HANDLE_TYPE_SPECIAL:
-        return jacs_handle_value(v) == JACS_SPECIAL_PKT_BUFFER;
+        return devs_handle_value(v) == JACS_SPECIAL_PKT_BUFFER;
     case JACS_HANDLE_TYPE_GC_OBJECT:
-        return jacs_gc_tag(jacs_handle_ptr_value(ctx, v)) == JACS_GC_TAG_BUFFER;
+        return devs_gc_tag(devs_handle_ptr_value(ctx, v)) == JACS_GC_TAG_BUFFER;
     case JACS_HANDLE_TYPE_IMG_BUFFER:
         return true;
     default:
@@ -163,30 +163,30 @@ bool jacs_is_buffer(jacs_ctx_t *ctx, value_t v) {
     }
 }
 
-bool jacs_buffer_is_writable(jacs_ctx_t *ctx, value_t v) {
-    return jacs_is_buffer(ctx, v) && jacs_handle_type(v) != JACS_HANDLE_TYPE_IMG_BUFFER;
+bool devs_buffer_is_writable(devs_ctx_t *ctx, value_t v) {
+    return devs_is_buffer(ctx, v) && devs_handle_type(v) != JACS_HANDLE_TYPE_IMG_BUFFER;
 }
 
-void *jacs_buffer_data(jacs_ctx_t *ctx, value_t v, unsigned *sz) {
-    JD_ASSERT(jacs_is_buffer(ctx, v));
-    switch (jacs_handle_type(v)) {
+void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
+    JD_ASSERT(devs_is_buffer(ctx, v));
+    switch (devs_handle_type(v)) {
     case JACS_HANDLE_TYPE_SPECIAL: {
         if (sz)
             *sz = ctx->packet.service_size;
         return ctx->packet.data;
     }
     case JACS_HANDLE_TYPE_GC_OBJECT: {
-        jacs_buffer_t *buf = jacs_handle_ptr_value(ctx, v);
+        devs_buffer_t *buf = devs_handle_ptr_value(ctx, v);
         if (sz)
             *sz = buf->length;
         return buf->data;
     }
     case JACS_HANDLE_TYPE_IMG_BUFFER: {
-        unsigned idx = jacs_handle_value(v);
-        JD_ASSERT(idx < jacs_img_num_strings(&ctx->img));
+        unsigned idx = devs_handle_value(v);
+        JD_ASSERT(idx < devs_img_num_strings(&ctx->img));
         if (sz)
-            *sz = jacs_img_get_string_len(&ctx->img, idx);
-        return (void *)jacs_img_get_string_ptr(&ctx->img, idx);
+            *sz = devs_img_get_string_len(&ctx->img, idx);
+        return (void *)devs_img_get_string_ptr(&ctx->img, idx);
     }
     default:
         JD_ASSERT(0);
@@ -194,25 +194,25 @@ void *jacs_buffer_data(jacs_ctx_t *ctx, value_t v, unsigned *sz) {
     }
 }
 
-void *jacs_value_to_gc_obj(jacs_ctx_t *ctx, value_t v) {
-    if (jacs_handle_type(v) == JACS_HANDLE_TYPE_GC_OBJECT)
-        return jacs_handle_ptr_value(ctx, v);
+void *devs_value_to_gc_obj(devs_ctx_t *ctx, value_t v) {
+    if (devs_handle_type(v) == JACS_HANDLE_TYPE_GC_OBJECT)
+        return devs_handle_ptr_value(ctx, v);
     return NULL;
 }
 
-bool jacs_is_array(jacs_ctx_t *ctx, value_t v) {
-    return jacs_gc_tag(jacs_value_to_gc_obj(ctx, v)) == JACS_GC_TAG_ARRAY;
+bool devs_is_array(devs_ctx_t *ctx, value_t v) {
+    return devs_gc_tag(devs_value_to_gc_obj(ctx, v)) == JACS_GC_TAG_ARRAY;
 }
 
-unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
-    if (jacs_is_tagged_int(v))
+unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
+    if (devs_is_tagged_int(v))
         return JACS_OBJECT_TYPE_NUMBER;
 
-    switch (jacs_handle_type(v)) {
+    switch (devs_handle_type(v)) {
     case JACS_HANDLE_TYPE_FLOAT64:
         return JACS_OBJECT_TYPE_NUMBER;
     case JACS_HANDLE_TYPE_SPECIAL:
-        switch (jacs_handle_value(v)) {
+        switch (devs_handle_value(v)) {
         case JACS_SPECIAL_FALSE:
         case JACS_SPECIAL_TRUE:
             return JACS_OBJECT_TYPE_BOOL;
@@ -229,7 +229,7 @@ unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
     case JACS_HANDLE_TYPE_FUNCTION:
         return JACS_OBJECT_TYPE_FUNCTION;
     case JACS_HANDLE_TYPE_GC_OBJECT:
-        switch (jacs_gc_tag(jacs_handle_ptr_value(ctx, v))) {
+        switch (devs_gc_tag(devs_handle_ptr_value(ctx, v))) {
         case JACS_GC_TAG_ARRAY:
             return JACS_OBJECT_TYPE_ARRAY;
         case JACS_GC_TAG_BUFFER:
@@ -250,37 +250,37 @@ unsigned jacs_value_typeof(jacs_ctx_t *ctx, value_t v) {
     }
 }
 
-bool jacs_is_nullish(value_t t) {
-    if (jacs_is_special(t)) {
-        switch (jacs_handle_value(t)) {
+bool devs_is_nullish(value_t t) {
+    if (devs_is_special(t)) {
+        switch (devs_handle_value(t)) {
         case JACS_SPECIAL_FALSE:
         case JACS_SPECIAL_NULL:
             return true;
         }
-    } else if (jacs_is_nan(t)) {
+    } else if (devs_is_nan(t)) {
         return true;
     }
 
     return false;
 }
 
-const char *jacs_show_value(jacs_ctx_t *ctx, value_t v) {
+const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     static char buf[64];
 
-    if (jacs_is_tagged_int(v)) {
+    if (devs_is_tagged_int(v)) {
         jd_sprintf(buf, sizeof(buf), "%d", (int)v.val_int32);
         return buf;
     }
 
     const char *fmt = NULL;
 
-    switch (jacs_handle_type(v)) {
+    switch (devs_handle_type(v)) {
     case JACS_HANDLE_TYPE_FLOAT64:
-        jd_sprintf(buf, sizeof(buf), "%f", jacs_value_to_double(v));
+        jd_sprintf(buf, sizeof(buf), "%f", devs_value_to_double(v));
         return buf;
 
     case JACS_HANDLE_TYPE_SPECIAL:
-        switch (jacs_handle_value(v)) {
+        switch (devs_handle_value(v)) {
         case JACS_SPECIAL_FALSE:
             return "false";
         case JACS_SPECIAL_TRUE:
@@ -307,7 +307,7 @@ const char *jacs_show_value(jacs_ctx_t *ctx, value_t v) {
         break;
 
     case JACS_HANDLE_TYPE_GC_OBJECT:
-        switch (jacs_gc_tag(jacs_handle_ptr_value(ctx, v))) {
+        switch (devs_gc_tag(devs_handle_ptr_value(ctx, v))) {
         case JACS_GC_TAG_ARRAY:
             fmt = "array";
             break;
@@ -327,12 +327,12 @@ const char *jacs_show_value(jacs_ctx_t *ctx, value_t v) {
             fmt = "???";
             break;
         }
-        jd_sprintf(buf, sizeof(buf), "%s:%x", fmt, (unsigned)jacs_handle_value(v));
+        jd_sprintf(buf, sizeof(buf), "%s:%x", fmt, (unsigned)devs_handle_value(v));
         return buf;
     }
 
     if (fmt)
-        jd_sprintf(buf, sizeof(buf), "%s:%u", fmt, (unsigned)jacs_handle_value(v));
+        jd_sprintf(buf, sizeof(buf), "%s:%u", fmt, (unsigned)devs_handle_value(v));
     else
         return "?value";
 

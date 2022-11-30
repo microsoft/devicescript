@@ -1,16 +1,16 @@
-#include "jacs_internal.h"
+#include "devs_internal.h"
 
-void jacs_map_clear(jacs_ctx_t *ctx, jacs_map_t *map) {
+void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map) {
     if (map->data) {
-        jacs_free(ctx, map->data);
+        devs_free(ctx, map->data);
         map->data = NULL;
         map->capacity = 0;
         map->length = 0;
     }
 }
 
-static value_t *lookup(jacs_map_t *map, jacs_key_id_t key) {
-    jacs_key_id_t *keys = jacs_map_keys(map);
+static value_t *lookup(devs_map_t *map, devs_key_id_t key) {
+    devs_key_id_t *keys = devs_map_keys(map);
     for (unsigned i = 0; i < map->length; ++i) {
         if (keys[i] == key)
             return &map->data[i];
@@ -25,7 +25,7 @@ static int grow_len(int capacity) {
     return newlen;
 }
 
-void jacs_map_set(jacs_ctx_t *ctx, jacs_map_t *map, jacs_key_id_t key, value_t v) {
+void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, devs_key_id_t key, value_t v) {
     value_t *tmp = lookup(map, key);
     if (tmp != NULL) {
         *tmp = v;
@@ -37,50 +37,50 @@ void jacs_map_set(jacs_ctx_t *ctx, jacs_map_t *map, jacs_key_id_t key, value_t v
     if (map->capacity == map->length) {
         int newlen = grow_len(map->capacity);
         map->capacity = newlen;
-        tmp = jacs_try_alloc(ctx, newlen * (sizeof(value_t) + sizeof(jacs_key_id_t)));
+        tmp = devs_try_alloc(ctx, newlen * (sizeof(value_t) + sizeof(devs_key_id_t)));
         if (!tmp)
             return;
         if (map->length) {
             memcpy(tmp, map->data, map->length * sizeof(value_t));
-            memcpy(tmp + newlen, jacs_map_keys(map), map->length * sizeof(jacs_key_id_t));
+            memcpy(tmp + newlen, devs_map_keys(map), map->length * sizeof(devs_key_id_t));
         }
         map->data = tmp;
         jd_gc_unpin(ctx->gc, tmp);
     }
     map->data[map->length] = v;
-    jacs_map_keys(map)[map->length] = key;
+    devs_map_keys(map)[map->length] = key;
     map->length++;
 }
 
-value_t jacs_map_get(jacs_ctx_t *ctx, jacs_map_t *map, jacs_key_id_t key) {
+value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, devs_key_id_t key) {
     value_t *tmp = lookup(map, key);
     if (tmp == NULL)
-        return jacs_undefined;
+        return devs_undefined;
     return *tmp;
 }
 
-value_t jacs_index(jacs_ctx_t *ctx, value_t seq, unsigned idx) {
+value_t devs_index(devs_ctx_t *ctx, value_t seq, unsigned idx) {
     if (idx > JACS_MAX_ALLOC)
-        return jacs_undefined;
-    if (jacs_is_buffer(ctx, seq)) {
+        return devs_undefined;
+    if (devs_is_buffer(ctx, seq)) {
         unsigned len;
-        uint8_t *p = jacs_buffer_data(ctx, seq, &len);
+        uint8_t *p = devs_buffer_data(ctx, seq, &len);
         if (idx < len)
-            return jacs_value_from_int(p[idx]);
+            return devs_value_from_int(p[idx]);
     } else {
-        jacs_array_t *arr = jacs_value_to_gc_obj(ctx, seq);
-        if (jacs_gc_tag(arr) == JACS_GC_TAG_ARRAY) {
+        devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
+        if (devs_gc_tag(arr) == JACS_GC_TAG_ARRAY) {
             if (idx < arr->length)
                 return arr->data[idx];
         }
     }
-    return jacs_undefined;
+    return devs_undefined;
 }
 
-static int array_ensure_len(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned newlen) {
+static int array_ensure_len(devs_ctx_t *ctx, devs_array_t *arr, unsigned newlen) {
     if (arr->capacity < newlen) {
         newlen = grow_len(newlen);
-        value_t *newarr = jacs_try_alloc(ctx, newlen * sizeof(value_t));
+        value_t *newarr = devs_try_alloc(ctx, newlen * sizeof(value_t));
         if (newarr == NULL)
             return -1;
         if (arr->data)
@@ -92,7 +92,7 @@ static int array_ensure_len(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned newlen)
     return 0;
 }
 
-int jacs_array_set(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, value_t v) {
+int devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v) {
     if (idx > JACS_MAX_ALLOC / sizeof(value_t))
         return -4;
 
@@ -105,30 +105,30 @@ int jacs_array_set(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, value_t v) 
     return 0;
 }
 
-int jacs_index_set(jacs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
-    // DMESG("set arr=%s idx=%u", jacs_show_value(ctx, seq), idx);
+int devs_index_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
+    // DMESG("set arr=%s idx=%u", devs_show_value(ctx, seq), idx);
     if (idx > JACS_MAX_ALLOC)
         return -1;
-    if (jacs_is_buffer(ctx, seq)) {
+    if (devs_is_buffer(ctx, seq)) {
         unsigned len;
-        uint8_t *p = jacs_buffer_data(ctx, seq, &len);
+        uint8_t *p = devs_buffer_data(ctx, seq, &len);
         if (idx < len) {
-            p[idx] = jacs_value_to_int(v) & 0xff;
+            p[idx] = devs_value_to_int(v) & 0xff;
             return 0;
         } else {
             return -3;
         }
     } else {
-        jacs_array_t *arr = jacs_value_to_gc_obj(ctx, seq);
-        if (jacs_gc_tag(arr) == JACS_GC_TAG_ARRAY) {
-            return jacs_array_set(ctx, arr, idx, v);
+        devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
+        if (devs_gc_tag(arr) == JACS_GC_TAG_ARRAY) {
+            return devs_array_set(ctx, arr, idx, v);
         } else {
             return -2;
         }
     }
 }
 
-int jacs_array_insert(jacs_ctx_t *ctx, jacs_array_t *arr, unsigned idx, int count) {
+int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int count) {
     if (count > (int)(JACS_MAX_ALLOC / sizeof(value_t)))
         return -4;
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-#include "jacs_internal.h"
+#include "devs_internal.h"
 
 // #define LOG JD_LOG
 #define LOG JD_NOLOG
@@ -15,36 +15,36 @@
 
 #define BLOCK_SIZE(p) ((p)&0xffffff)
 
-typedef struct _free_jacs_gc_block_t {
-    jacs_gc_object_t gc;
-    struct _jacs_gc_block_t *next;
-} free_jacs_gc_block_t;
+typedef struct _free_devs_gc_block_t {
+    devs_gc_object_t gc;
+    struct _devs_gc_block_t *next;
+} free_devs_gc_block_t;
 
-typedef struct _jacs_gc_block_t {
+typedef struct _devs_gc_block_t {
     union {
         struct {
             uintptr_t header;
             uint8_t data[0];
         };
-        free_jacs_gc_block_t free;
-        jacs_gc_object_t gc;
-        jacs_array_t array;
-        jacs_buffer_t buffer;
-        jacs_map_t map;
+        free_devs_gc_block_t free;
+        devs_gc_object_t gc;
+        devs_array_t array;
+        devs_buffer_t buffer;
+        devs_map_t map;
     };
 } block_t;
 
-typedef struct _jacs_gc_chunk_t {
-    struct _jacs_gc_chunk_t *next;
+typedef struct _devs_gc_chunk_t {
+    struct _devs_gc_chunk_t *next;
     block_t *end; // GET_TAG(end) == JACS_GC_TAG_FINAL
     block_t start[0];
 } chunk_t;
 
-struct _jacs_gc_t {
+struct _devs_gc_t {
     block_t *first_free;
     chunk_t *first_chunk;
     uint32_t num_alloc;
-    jacs_ctx_t *ctx;
+    devs_ctx_t *ctx;
 };
 
 static inline void mark_block(block_t *block, uint8_t tag, unsigned size) {
@@ -55,7 +55,7 @@ static inline uintptr_t *block_ptr(block_t *block) {
     return (uintptr_t *)block;
 }
 
-void jacs_gc_add_chunk(jacs_gc_t *gc, void *start, unsigned size) {
+void devs_gc_add_chunk(devs_gc_t *gc, void *start, unsigned size) {
     JD_ASSERT(size > sizeof(chunk_t) + 128);
     chunk_t *ch = start;
     ch->end =
@@ -66,23 +66,23 @@ void jacs_gc_add_chunk(jacs_gc_t *gc, void *start, unsigned size) {
     gc->first_chunk = ch;
 }
 
-static void scan(jacs_ctx_t *ctx, block_t *block, int depth);
+static void scan(devs_ctx_t *ctx, block_t *block, int depth);
 
-static void scan_value(jacs_ctx_t *ctx, value_t v, int depth) {
-    if (jacs_handle_type(v) & JACS_HANDLE_GC_MASK) {
-        block_t *b = jacs_handle_ptr_value(ctx, v);
+static void scan_value(devs_ctx_t *ctx, value_t v, int depth) {
+    if (devs_handle_type(v) & JACS_HANDLE_GC_MASK) {
+        block_t *b = devs_handle_ptr_value(ctx, v);
         if (b)
             scan(ctx, b, depth);
     }
 }
 
-static void scan_array(jacs_ctx_t *ctx, value_t *vals, unsigned length, int depth) {
+static void scan_array(devs_ctx_t *ctx, value_t *vals, unsigned length, int depth) {
     for (unsigned i = 0; i < length; ++i) {
         scan_value(ctx, vals[i], depth);
     }
 }
 
-static void mark_ptr(jacs_ctx_t *ctx, void *ptr) {
+static void mark_ptr(devs_ctx_t *ctx, void *ptr) {
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
     JD_ASSERT((GET_TAG(b->header) & JACS_GC_TAG_MASK_SCANNED) == 0);
@@ -90,20 +90,20 @@ static void mark_ptr(jacs_ctx_t *ctx, void *ptr) {
     b->header |= (uintptr_t)JACS_GC_TAG_MASK_SCANNED << JACS_GC_TAG_POS;
 }
 
-static void scan_array_and_mark(jacs_ctx_t *ctx, value_t *vals, unsigned length, int depth) {
+static void scan_array_and_mark(devs_ctx_t *ctx, value_t *vals, unsigned length, int depth) {
     if (vals) {
         mark_ptr(ctx, vals);
         scan_array(ctx, vals, length, depth);
     }
 }
 
-static void scan_map(jacs_ctx_t *ctx, jacs_map_t *map, int depth) {
+static void scan_map(devs_ctx_t *ctx, devs_map_t *map, int depth) {
     if (!map)
         return;
     scan_array_and_mark(ctx, map->data, map->length, depth - 1);
 }
 
-static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
+static void scan(devs_ctx_t *ctx, block_t *block, int depth) {
     uintptr_t header = block->header;
 
     if (IS_FREE(header) || GET_TAG(header) & JACS_GC_TAG_MASK_SCANNED)
@@ -139,15 +139,15 @@ static void scan(jacs_ctx_t *ctx, block_t *block, int depth) {
     }
 }
 
-static void mark_roots(jacs_gc_t *gc) {
+static void mark_roots(devs_gc_t *gc) {
     if (gc->ctx == NULL)
         return;
-    jacs_ctx_t *ctx = gc->ctx;
+    devs_ctx_t *ctx = gc->ctx;
     scan_array(ctx, ctx->globals, ctx->img.header->num_globals, ROOT_SCAN_DEPTH);
     scan_array(ctx, ctx->the_stack, ctx->stack_top_for_gc, ROOT_SCAN_DEPTH);
-    for (jacs_fiber_t *fib = ctx->fibers; fib; fib = fib->next) {
+    for (devs_fiber_t *fib = ctx->fibers; fib; fib = fib->next) {
         scan_value(ctx, fib->ret_val, ROOT_SCAN_DEPTH);
-        for (jacs_activation_t *act = fib->activation; act; act = act->caller) {
+        for (devs_activation_t *act = fib->activation; act; act = act->caller) {
             if (act->params_is_copy)
                 scan_array(ctx, act->params, act->num_params, ROOT_SCAN_DEPTH);
             scan_array(ctx, act->locals, act->func->num_locals, ROOT_SCAN_DEPTH);
@@ -171,7 +171,7 @@ static inline bool can_free(uintptr_t header) {
            (tag & (JACS_GC_TAG_MASK_SCANNED | JACS_GC_TAG_MASK_PINNED)) == 0;
 }
 
-static void sweep(jacs_gc_t *gc) {
+static void sweep(devs_gc_t *gc) {
     int sweep = 0;
     block_t *prev = NULL;
     gc->first_free = NULL;
@@ -186,7 +186,7 @@ static void sweep(jacs_gc_t *gc) {
                 JD_ASSERT(block < chunk->end);
 
                 if (!sweep)
-                    LOG("p=%x tag=%x", jacs_show_addr(gc, block), (unsigned)GET_TAG(header));
+                    LOG("p=%x tag=%x", devs_show_addr(gc, block), (unsigned)GET_TAG(header));
 
                 if (GET_TAG(header) & JACS_GC_TAG_MASK_PENDING) {
                     JD_ASSERT(!sweep);
@@ -198,7 +198,7 @@ static void sweep(jacs_gc_t *gc) {
                     block_t *p = block;
                     while (can_free(p->header)) {
                         if (GET_TAG(p->header) != JACS_GC_TAG_FREE)
-                            LOG("free: %x", jacs_show_addr(gc, p));
+                            LOG("free: %x", devs_show_addr(gc, p));
                         p = next_block(p);
                     }
                     if (p != block) {
@@ -226,13 +226,13 @@ static void sweep(jacs_gc_t *gc) {
     }
 }
 
-static void jacs_gc(jacs_gc_t *gc) {
+static void devs_gc(devs_gc_t *gc) {
     LOG("*** GC");
     mark_roots(gc);
     sweep(gc);
 }
 
-static block_t *find_free_block(jacs_gc_t *gc, uint8_t tag, uint32_t words) {
+static block_t *find_free_block(devs_gc_t *gc, uint8_t tag, uint32_t words) {
     block_t *prev = NULL;
     for (block_t *b = gc->first_free; b; prev = b, b = b->free.next) {
         unsigned bsz = block_size(b);
@@ -264,7 +264,7 @@ static block_t *find_free_block(jacs_gc_t *gc, uint8_t tag, uint32_t words) {
     return NULL;
 }
 
-static block_t *alloc_block(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
+static block_t *alloc_block(devs_gc_t *gc, uint8_t tag, uint32_t size) {
     unsigned words = (size + JD_PTRSIZE - 1) / JD_PTRSIZE;
 
     // if jd_free() is supported we check stack often at the beginning and less often later
@@ -272,12 +272,12 @@ static block_t *alloc_block(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
     if (gc->num_alloc < 32 || (gc->num_alloc & 31) == 0)
         jd_alloc_stack_check();
 
-    if (jacs_get_global_flags() & JACS_FLAG_GC_STRESS)
-        jacs_gc(gc);
+    if (devs_get_global_flags() & JACS_FLAG_GC_STRESS)
+        devs_gc(gc);
 
     block_t *b = find_free_block(gc, tag, words);
     if (!b) {
-        jacs_gc(gc);
+        devs_gc(gc);
         b = find_free_block(gc, tag, words);
     }
 
@@ -286,22 +286,22 @@ static block_t *alloc_block(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
     return b;
 }
 
-static void *try_alloc(jacs_gc_t *gc, uint8_t tag, uint32_t size) {
+static void *try_alloc(devs_gc_t *gc, uint8_t tag, uint32_t size) {
     if (size > JACS_MAX_ALLOC)
         return NULL;
     block_t *b = alloc_block(gc, tag, size);
     if (!b)
         return NULL;
     memset(b->data, 0x00, size);
-    LOG("alloc: tag=%s sz=%d -> %x", jacs_gc_tag_name(tag), size, jacs_show_addr(gc, b));
+    LOG("alloc: tag=%s sz=%d -> %x", devs_gc_tag_name(tag), size, devs_show_addr(gc, b));
     return b;
 }
 
-void *jd_gc_try_alloc(jacs_gc_t *gc, uint32_t size) {
+void *jd_gc_try_alloc(devs_gc_t *gc, uint32_t size) {
     return (uintptr_t *)try_alloc(gc, JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES, size) + 1;
 }
 
-static block_t *unpin(jacs_gc_t *gc, void *ptr, uint8_t tag) {
+static block_t *unpin(devs_gc_t *gc, void *ptr, uint8_t tag) {
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
     JD_ASSERT(GET_TAG(b->header) == (JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES));
@@ -309,29 +309,29 @@ static block_t *unpin(jacs_gc_t *gc, void *ptr, uint8_t tag) {
     return b;
 }
 
-void jd_gc_unpin(jacs_gc_t *gc, void *ptr) {
+void jd_gc_unpin(devs_gc_t *gc, void *ptr) {
     if (ptr == NULL)
         return;
     unpin(gc, ptr, JACS_GC_TAG_BYTES);
 }
 
-void jd_gc_free(jacs_gc_t *gc, void *ptr) {
+void jd_gc_free(devs_gc_t *gc, void *ptr) {
     if (ptr == NULL)
         return;
     block_t *b = unpin(gc, ptr, JACS_GC_TAG_FREE);
     memset(b->data, 0x47, (block_size(b) - 1) * sizeof(uintptr_t));
 }
 
-jacs_map_t *jacs_map_try_alloc(jacs_gc_t *gc) {
-    return try_alloc(gc, JACS_GC_TAG_MAP, sizeof(jacs_map_t));
+devs_map_t *devs_map_try_alloc(devs_gc_t *gc) {
+    return try_alloc(gc, JACS_GC_TAG_MAP, sizeof(devs_map_t));
 }
 
-jacs_array_t *jacs_array_try_alloc(jacs_gc_t *gc, unsigned size) {
+devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size) {
     unsigned bytesize = size * sizeof(value_t);
     if (bytesize > JACS_MAX_ALLOC)
         return NULL;
-    jacs_array_t *arr =
-        try_alloc(gc, JACS_GC_TAG_ARRAY | JACS_GC_TAG_MASK_PINNED, sizeof(jacs_array_t));
+    devs_array_t *arr =
+        try_alloc(gc, JACS_GC_TAG_ARRAY | JACS_GC_TAG_MASK_PINNED, sizeof(devs_array_t));
     if (arr == NULL)
         return NULL;
     if (size > 0) {
@@ -346,21 +346,21 @@ jacs_array_t *jacs_array_try_alloc(jacs_gc_t *gc, unsigned size) {
     return arr;
 }
 
-jacs_buffer_t *jacs_buffer_try_alloc(jacs_gc_t *gc, unsigned size) {
+devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size) {
     if (size > JACS_MAX_ALLOC)
         return NULL;
-    jacs_buffer_t *buf = try_alloc(gc, JACS_GC_TAG_BUFFER, sizeof(jacs_buffer_t) + size);
+    devs_buffer_t *buf = try_alloc(gc, JACS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
     if (buf)
         buf->length = size;
     return buf;
 }
 
-void jacs_gc_set_ctx(jacs_gc_t *gc, jacs_ctx_t *ctx) {
+void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
     gc->ctx = ctx;
 }
 
 static const char *tags[] = {"free", "bytes", "array", "map", "buffer"};
-const char *jacs_gc_tag_name(unsigned tag) {
+const char *devs_gc_tag_name(unsigned tag) {
     tag &= JACS_GC_TAG_MASK;
     tag--;
     if (tag < sizeof(tags) / sizeof(tags[0]))
@@ -370,12 +370,12 @@ const char *jacs_gc_tag_name(unsigned tag) {
 
 #if JD_GC_ALLOC
 
-static jacs_gc_t _static_gc;
+static devs_gc_t _static_gc;
 
 #if JD_HW_ALLOC
 
 void jd_alloc_add_chunk(void *start, unsigned size) {
-    jacs_gc_add_chunk(&_static_gc, start, size);
+    devs_gc_add_chunk(&_static_gc, start, size);
 }
 
 #endif
@@ -391,24 +391,24 @@ void jd_free(void *ptr) {
     jd_gc_free(&_static_gc, ptr);
 }
 
-jacs_gc_t *jacs_gc_create(void) {
+devs_gc_t *devs_gc_create(void) {
     return &_static_gc;
 }
 
-void jacs_gc_destroy(jacs_gc_t *gc) {
+void devs_gc_destroy(devs_gc_t *gc) {
     // no op
 }
 
 #else
 
-jacs_gc_t *jacs_gc_create(void) {
+devs_gc_t *devs_gc_create(void) {
     unsigned size = JD_GC_KB * 1024;
-    jacs_gc_t *gc = jd_alloc(sizeof(jacs_gc_t) + size);
-    jacs_gc_add_chunk(gc, gc + 1, size);
+    devs_gc_t *gc = jd_alloc(sizeof(devs_gc_t) + size);
+    devs_gc_add_chunk(gc, gc + 1, size);
     return gc;
 }
 
-void jacs_gc_destroy(jacs_gc_t *gc) {
+void devs_gc_destroy(devs_gc_t *gc) {
     gc->first_chunk = NULL;
     jd_free(gc);
 }
@@ -416,12 +416,12 @@ void jacs_gc_destroy(jacs_gc_t *gc) {
 #endif
 
 #if JD_64
-void *jacs_gc_base_addr(jacs_gc_t *gc) {
+void *devs_gc_base_addr(devs_gc_t *gc) {
     JD_ASSERT(gc && gc->first_chunk);
     return gc->first_chunk;
 }
 
-unsigned jacs_show_addr(jacs_gc_t *gc, void *ptr) {
+unsigned devs_show_addr(devs_gc_t *gc, void *ptr) {
     if (ptr == NULL)
         return 0;
     JD_ASSERT(gc && gc->first_chunk);

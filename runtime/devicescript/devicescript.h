@@ -12,26 +12,26 @@
 #define JACS_PANIC_RUNTIME_FAILURE 60003
 #define JACS_PANIC_OOM 60004
 
-typedef struct jacs_ctx jacs_ctx_t;
+typedef struct devs_ctx devs_ctx_t;
 
 typedef struct {
     uint8_t mgr_service_idx;
-} jacs_cfg_t;
+} devs_cfg_t;
 
-int jacs_verify(const uint8_t *img, uint32_t size);
+int devs_verify(const uint8_t *img, uint32_t size);
 
-jacs_ctx_t *jacs_create_ctx(const uint8_t *img, uint32_t size, const jacs_cfg_t *cfg);
-void jacs_restart(jacs_ctx_t *ctx);
-unsigned jacs_error_code(jacs_ctx_t *ctx, unsigned *pc);
-void jacs_client_event_handler(jacs_ctx_t *ctx, int event_id, void *arg0, void *arg1);
-void jacs_free_ctx(jacs_ctx_t *ctx);
-void jacs_set_logging(jacs_ctx_t *ctx, uint8_t logging);
+devs_ctx_t *devs_create_ctx(const uint8_t *img, uint32_t size, const devs_cfg_t *cfg);
+void devs_restart(devs_ctx_t *ctx);
+unsigned devs_error_code(devs_ctx_t *ctx, unsigned *pc);
+void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *arg1);
+void devs_free_ctx(devs_ctx_t *ctx);
+void devs_set_logging(devs_ctx_t *ctx, uint8_t logging);
 
 #define JACS_FLAG_GC_STRESS (1U << 0)
 
-void jacs_set_global_flags(uint32_t global_flags);
-void jacs_reset_global_flags(uint32_t global_flags);
-uint32_t jacs_get_global_flags(void);
+void devs_set_global_flags(uint32_t global_flags);
+void devs_reset_global_flags(uint32_t global_flags);
+uint32_t devs_get_global_flags(void);
 
 // this is used by Jacscript Manager and implemented by default in software
 #define JD_SHA256_HASH_BYTES 32
@@ -60,7 +60,7 @@ typedef struct {
 
 void devicescriptmgr_init(const devicescriptmgr_cfg_t *cfg);
 
-jacs_ctx_t *devicescriptmgr_get_ctx(void);
+devs_ctx_t *devicescriptmgr_get_ctx(void);
 int devicescriptmgr_deploy(const void *img, unsigned imgsize);
 int devicescriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]);
 int devicescriptmgr_deploy_start(uint32_t sz);
@@ -75,21 +75,21 @@ typedef struct {
     int (*is_connected)(void);
     size_t max_bin_upload_size;
     int (*respond_method)(uint32_t method_id, uint32_t status, int numvals, double *vals);
-} jacscloud_api_t;
-extern const jacscloud_api_t noop_cloud;
-extern const jacscloud_api_t wssk_cloud;
-void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, const double *vals);
-void jacscloud_init(const jacscloud_api_t *cloud_api);
+} devscloud_api_t;
+extern const devscloud_api_t noop_cloud;
+extern const devscloud_api_t wssk_cloud;
+void devscloud_on_method(const char *label, uint32_t method_id, int numvals, const double *vals);
+void devscloud_init(const devscloud_api_t *cloud_api);
 
-void tsagg_init(const jacscloud_api_t *cloud_api);
+void tsagg_init(const devscloud_api_t *cloud_api);
 void tsagg_update(const char *name, double v);
 
 // extcloud.c
-extern const jacscloud_api_t extcloud;
+extern const devscloud_api_t extcloud;
 void extcloud_init(void);
 
 // aggbuffer.c
-void aggbuffer_init(const jacscloud_api_t *api);
+void aggbuffer_init(const devscloud_api_t *api);
 int aggbuffer_flush(void);
 int aggbuffer_upload(const char *label, jd_device_service_t *service,
                      jd_timeseries_aggregator_stored_report_t *data);

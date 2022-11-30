@@ -1,4 +1,4 @@
-#include "jacs_internal.h"
+#include "devs_internal.h"
 #include "jacdac/dist/c/timeseriesaggregator.h"
 
 #define LOG(msg, ...) DMESG("aggbuf: " msg, ##__VA_ARGS__)
@@ -30,7 +30,7 @@ typedef struct data_acc {
 } data_acc_t;
 
 typedef struct {
-    const jacscloud_api_t *cloud_api;
+    const devscloud_api_t *cloud_api;
     data_acc_t *series;
     uint16_t acc_size;
     uint16_t max_message;
@@ -38,7 +38,7 @@ typedef struct {
 
 static aggbuffer_ctx_t *aggbuffer_ctx;
 
-void aggbuffer_init(const jacscloud_api_t *api) {
+void aggbuffer_init(const devscloud_api_t *api) {
     aggbuffer_ctx = jd_alloc(sizeof(aggbuffer_ctx_t));
     aggbuffer_ctx_t *ctx = aggbuffer_ctx;
     ctx->cloud_api = api;
@@ -133,8 +133,8 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
         devid = dev->device_identifier;
         upl_label = jd_to_hex_a(&devid, 8);
 
-        const jacs_packed_service_desc_t *desc =
-            jacs_get_packed_service_desc(service->service_class);
+        const devs_packed_service_desc_t *desc =
+            devs_get_packed_service_desc(service->service_class);
         if (desc) {
             upl_label = jd_sprintf_a("%-s:%s", upl_label, desc->name);
             if (idx > 0)

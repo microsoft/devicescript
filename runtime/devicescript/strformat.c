@@ -1,4 +1,4 @@
-#include "jacs_internal.h"
+#include "devs_internal.h"
 
 static int numvalue(char c) {
     if ('0' <= c && c <= '9')
@@ -18,7 +18,7 @@ static int numvalue(char c) {
             numskip--;                                                                             \
     } while (0)
 
-size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
+size_t devs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
                       size_t numargs, size_t numskip) {
     size_t fp = 0;
     size_t dp = 0;
@@ -59,7 +59,7 @@ size_t jacs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, 
             precision = 6;
 
         char buf[64];
-        jd_print_double(buf, jacs_value_to_double(args[pos]), precision + 1);
+        jd_print_double(buf, devs_value_to_double(args[pos]), precision + 1);
 
         char *s = buf;
         while (*s && dp < dstlen)
@@ -86,7 +86,7 @@ static void test_fmt1(const char *fmt) {
         0, 42, -108, 0.000198, 1e30, 1e-10, 2.0f / 3,
         123456789123,
     };
-    jacs_strformat(fmt, strlen(fmt), buf, sizeof(buf) - 1, args, sizeof(args) / sizeof(args[0]));
+    devs_strformat(fmt, strlen(fmt), buf, sizeof(buf) - 1, args, sizeof(args) / sizeof(args[0]));
     printf("'%s' -> '%s'\n", fmt, buf);
 }
 

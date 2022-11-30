@@ -1,4 +1,4 @@
-#include "jacs_internal.h"
+#include "devs_internal.h"
 
 #if JD_SHA256_SOFT
 

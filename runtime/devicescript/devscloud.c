@@ -1,18 +1,18 @@
-#include "jacs_internal.h"
+#include "devs_internal.h"
 #include "jacdac/dist/c/cloudadapter.h"
 
-#define LOG(msg, ...) DMESG("jacscloud: " msg, ##__VA_ARGS__)
+#define LOG(msg, ...) DMESG("devscloud: " msg, ##__VA_ARGS__)
 
 struct srv_state {
     SRV_COMMON;
-    const jacscloud_api_t *api;
+    const devscloud_api_t *api;
 };
 
-static srv_t *_jacscloud_state;
+static srv_t *_devscloud_state;
 
-void jacscloud_process(srv_t *state) {}
+void devscloud_process(srv_t *state) {}
 
-static void jacscloud_upload(srv_t *state, jd_packet_t *pkt) {
+static void devscloud_upload(srv_t *state, jd_packet_t *pkt) {
     int ptr = 0;
     while (ptr < pkt->service_size && pkt->data[ptr])
         ptr++;
@@ -28,10 +28,10 @@ static void jacscloud_upload(srv_t *state, jd_packet_t *pkt) {
         LOG("failed upload");
 }
 
-void jacscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void devscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_CLOUD_ADAPTER_CMD_UPLOAD:
-        jacscloud_upload(state, pkt);
+        devscloud_upload(state, pkt);
         return;
 
     case JD_CLOUD_ADAPTER_CMD_UPLOAD_BIN:
@@ -57,8 +57,8 @@ void jacscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, const double *vals) {
-    srv_t *state = _jacscloud_state;
+void devscloud_on_method(const char *label, uint32_t method_id, int numvals, const double *vals) {
+    srv_t *state = _devscloud_state;
     int lblsize = strlen(label) + 1;
     int sz = 4 + lblsize + 8 * numvals;
     uint8_t *data = jd_alloc(sz);
@@ -69,11 +69,11 @@ void jacscloud_on_method(const char *label, uint32_t method_id, int numvals, con
     jd_free(data);
 }
 
-SRV_DEF(jacscloud, JD_SERVICE_CLASS_CLOUD_ADAPTER);
-void jacscloud_init(const jacscloud_api_t *cloud_api) {
-    SRV_ALLOC(jacscloud);
+SRV_DEF(devscloud, JD_SERVICE_CLASS_CLOUD_ADAPTER);
+void devscloud_init(const devscloud_api_t *cloud_api) {
+    SRV_ALLOC(devscloud);
     state->api = cloud_api;
-    _jacscloud_state = state;
+    _devscloud_state = state;
 }
 
 static int upload(const char *label, int numvals, double *vals) {
@@ -92,7 +92,7 @@ static int is_connected(void) {
 }
 size_t max_bin_upload_size;
 
-const jacscloud_api_t noop_cloud = {
+const devscloud_api_t noop_cloud = {
     .upload = upload,
     .bin_upload = bin_upload,
     .agg_upload = agg_upload,

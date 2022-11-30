@@ -1,4 +1,4 @@
-#include "jacs_internal.h"
+#include "devs_internal.h"
 #include "jacdac/dist/c/cloudadapter.h"
 
 typedef struct {
@@ -109,7 +109,7 @@ int extcloud_is_connected(void) {
     return ctx->cloud_serv != NULL && ctx->is_connected;
 }
 
-const jacscloud_api_t extcloud = {
+const devscloud_api_t extcloud = {
     .upload = extcloud_publish_values,
     .agg_upload = aggbuffer_upload,
     .bin_upload = extcloud_publish_bin,
