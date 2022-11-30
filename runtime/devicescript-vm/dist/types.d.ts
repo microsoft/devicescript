@@ -7,8 +7,8 @@ export declare type JacsModule = EmscriptenModule & typeof Exts & {
     _jd_em_init(): void;
     _jd_em_process(): void;
     _jd_em_frame_received(frame: ptr): int32;
-    _jd_em_jacs_deploy(img: ptr, size: int32): int32;
-    _jd_em_jacs_client_deploy(img: ptr, size: int32): int32;
+    _jd_em_devs_deploy(img: ptr, size: int32): int32;
+    _jd_em_devs_client_deploy(img: ptr, size: int32): int32;
     sendPacket(pkt: Uint8Array): void;
 };
 export declare module Exts {

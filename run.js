@@ -57,7 +57,7 @@ async function getHost() {
 }
 
 async function compile(buf) {
-    const compiler = require("./compiler/built/types/compiler/src/devicescript")
+    const compiler = require("./compiler/built/devicescript-compiler.node.cjs")
     const host = await getHost()
     const res = compiler.compile(buf.toString("utf8"), { host, isLibrary })
     if (!res.success) throw new Error("compilation failed")
@@ -119,7 +119,7 @@ async function runTest(fn) {
 async function runServer(args) {
     const fn = args.shift()
     if (logParse) {
-        const compiler = require("./compiler/built/types/compiler/src/devicescript")
+        const compiler = require("./compiler/built/devicescript-compiler.node.cjs")
         const fsp = require("node:fs/promises")
         const h = await fsp.open(fn, "r")
         const r = await compiler.parseLog((off, size) => {
@@ -156,7 +156,7 @@ async function runServer(args) {
     }
     if (disassemble) {
         const prog = await readCompiled(fn)
-        console.log(require("./compiler/built/types/compiler/src/devicescript").disassemble(prog))
+        console.log(require("./compiler/built/devicescript-compiler.node.cjs").disassemble(prog))
         return
     }
     if (isLibrary) {
@@ -247,7 +247,7 @@ async function main() {
             testMode = true
 
             const host = await getHost()
-            const compiler = require("./compiler/built/types/compiler/src/devicescript")
+            const compiler = require("./compiler/built/devicescript-compiler.node.cjs")
             for (const fn of readdir(ctest).concat(readdir(samples))) {
                 console.log(`*** test ${fn}`)
                 jacsFile = fn
