@@ -9,7 +9,7 @@ import {
 import { CmdOptions } from "./command"
 
 function jacsFactory() {
-    let d = require("jacscript-vm")
+    let d = require("devicescript-vm")
     try {
         require("websocket-polyfill")
         // @ts-ignore
