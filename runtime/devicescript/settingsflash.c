@@ -67,7 +67,7 @@ __attribute__((weak)) char *jd_settings_get(const char *key) {
     if (size < 0)
         return NULL;
     char *r = jd_alloc(size + 1);
-    if (size <= sizeof(tmp)) {
+    if (size <= (int)sizeof(tmp)) {
         memcpy(r, tmp, size);
     } else {
         jd_settings_get_bin(key, r, size);

@@ -8,8 +8,8 @@
 
 #include "jd_protocol.h"
 #include "jd_client.h"
-#include "jacdac/dist/c/jacscriptcondition.h"
-#include "jacdac/dist/c/jacscriptmanager.h"
+#include "jacdac/dist/c/devicescriptcondition.h"
+#include "jacdac/dist/c/devicescriptmanager.h"
 
 #include "jacs_format.h"
 #include "jacs_img.h"

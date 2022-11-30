@@ -4,7 +4,7 @@
 #include "services/jd_services.h"
 #include "services/interfaces/jd_flash.h"
 #include "jd_client.h"
-#include "jacdac/dist/c/jacscriptmanager.h"
+#include "jacdac/dist/c/devicescriptmanager.h"
 #include "jacscript/jacscript.h"
 
 #define JACSMGR_ALIGN 32
@@ -52,9 +52,9 @@ static srv_t *_state;
 REG_DEFINITION(                                 //
     jacscriptmgr_regs,                          //
     REG_SRV_COMMON,                             //
-    REG_U8(JD_JACSCRIPT_MANAGER_REG_RUNNING),   //
-    REG_U8(JD_JACSCRIPT_MANAGER_REG_AUTOSTART), //
-    REG_U8(JD_JACSCRIPT_MANAGER_REG_LOGGING),   //
+    REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING),   //
+    REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART), //
+    REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING),   //
 )
 
 __attribute__((aligned(sizeof(void *)))) static const uint8_t jacs_empty_program[224] = {
@@ -156,11 +156,11 @@ void jacscriptmgr_process(srv_t *state) {
     unsigned pc;
     unsigned code = jacs_error_code(state->ctx, &pc);
     if (code) {
-        jd_jacscript_manager_program_panic_t args = {
+        jd_device_script_manager_program_panic_t args = {
             .panic_code = code == JACS_PANIC_REBOOT ? 0 : code,
             .program_counter = pc,
         };
-        jd_send_event_ext(state, JD_JACSCRIPT_MANAGER_EV_PROGRAM_PANIC, &args, sizeof(args));
+        jd_send_event_ext(state, JD_DEVICE_SCRIPT_MANAGER_EV_PROGRAM_PANIC, &args, sizeof(args));
         stop_program(state);
         state->next_restart = now + SECONDS(code == JACS_PANIC_REBOOT ? 1 : 5);
     }
@@ -297,24 +297,24 @@ static void hash_program(srv_t *state, jd_packet_t *pkt) {
 
 void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
-    case JD_JACSCRIPT_MANAGER_CMD_DEPLOY_BYTECODE:
+    case JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE:
         deploy_bytecode(state, pkt);
         break;
 
-    case JD_JACSCRIPT_MANAGER_CMD_READ_BYTECODE:
+    case JD_DEVICE_SCRIPT_MANAGER_CMD_READ_BYTECODE:
         if (jd_opipe_open_cmd(&state->read_program_pipe, pkt) == 0)
             state->read_program_ptr = 0;
         break;
 
-    case JD_GET(JD_JACSCRIPT_MANAGER_REG_PROGRAM_SIZE):
+    case JD_GET(JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_SIZE):
         jd_respond_u32(pkt, jacs_header(state) ? jacs_header(state)->size : 0);
         break;
 
-    case JD_GET(JD_JACSCRIPT_MANAGER_REG_PROGRAM_HASH):
+    case JD_GET(JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_HASH):
         jd_respond_u32(pkt, jacs_header(state) ? jacs_header(state)->hash : 0);
         break;
 
-    case JD_GET(JD_JACSCRIPT_MANAGER_REG_PROGRAM_SHA256):
+    case JD_GET(JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_SHA256):
         hash_program(state, pkt);
         break;
 
@@ -324,7 +324,7 @@ void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     default:
         switch (service_handle_register_final(state, pkt, jacscriptmgr_regs)) {
-        case JD_JACSCRIPT_MANAGER_REG_RUNNING:
+        case JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING:
             if (state->running && !state->ctx) {
                 state->running = 0; // not running yet
                 try_run(state);
@@ -332,12 +332,12 @@ void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
                 stop_program(state);
             }
             break;
-        case JD_JACSCRIPT_MANAGER_REG_AUTOSTART:
+        case JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART:
             if (state->autostart) {
                 state->next_restart = now; // make it more responsive
             }
             break;
-        case JD_JACSCRIPT_MANAGER_REG_LOGGING:
+        case JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING:
             if (state->ctx)
                 jacs_set_logging(state->ctx, state->logging);
             break;
@@ -346,7 +346,7 @@ void jacscriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(jacscriptmgr, JD_SERVICE_CLASS_JACSCRIPT_MANAGER);
+SRV_DEF(jacscriptmgr, JD_SERVICE_CLASS_DEVICE_SCRIPT_MANAGER);
 
 jacs_ctx_t *jacscriptmgr_get_ctx(void) {
     return _state ? _state->ctx : NULL;

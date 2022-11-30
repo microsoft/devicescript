@@ -74,7 +74,7 @@ void jacs_jd_send_cmd(jacs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     jacs_fiber_t *fib = ctx->curr_fiber;
     JD_ASSERT(fib != NULL);
 
-    if (role->service_class == JD_SERVICE_CLASS_JACSCRIPT_CONDITION) {
+    if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION) {
         jacs_fiber_sleep(fib, 0);
         LOGV("wake condition");
         jacs_jd_wake_role(ctx, role_idx);
@@ -297,7 +297,7 @@ static bool handle_logmsg(jacs_fiber_t *fiber, bool print) {
     pkt->data[1] = 0;                          // flags
     pkt->data[JD_SERIAL_PAYLOAD_SIZE - 1] = 0; // make sure to 0-terminate
     pkt->service_size = sz + 2;
-    pkt->service_command = JD_JACSCRIPT_MANAGER_CMD_LOG_MESSAGE;
+    pkt->service_command = JD_DEVICE_SCRIPT_MANAGER_CMD_LOG_MESSAGE;
     pkt->service_index = ctx->cfg.mgr_service_idx;
     pkt->device_identifier = jd_device_id();
     pkt->_size = (pkt->service_size + 4 + 3) & ~3;
@@ -427,7 +427,7 @@ void jacs_jd_init_roles(jacs_ctx_t *ctx) {
     for (unsigned idx = 0; idx < numroles; ++idx) {
         const jacs_role_desc_t *role = jacs_img_get_role(&ctx->img, idx);
         ctx->roles[idx] = jd_role_alloc(jacs_jd_role_name(ctx, idx), role->service_class);
-        if (role->service_class == JD_SERVICE_CLASS_JACSCRIPT_CONDITION)
+        if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION)
             ctx->roles[idx]->hidden = 1;
     }
     jd_role_force_autobind();
