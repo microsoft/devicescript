@@ -1,7 +1,7 @@
 #include "services/jd_services.h"
 #include "services/interfaces/jd_flash.h"
 #include "jd_client.h"
-#include "jacscript/jacscript.h"
+#include "devicescript/devicescript.h"
 
 #ifndef JD_FLASH_IN_SETTINGS
 #define JD_FLASH_IN_SETTINGS 0
@@ -9,7 +9,7 @@
 
 #if JD_FLASH_IN_SETTINGS
 
-static jacscriptmgr_cfg_t cfg;
+static devicescriptmgr_cfg_t cfg;
 static bool is_erased;
 static uint8_t *max_write;
 
@@ -45,10 +45,10 @@ void flash_erase(void *page_addr) {
     }
 }
 
-void jacscriptmgr_init_mem(unsigned size) {
+void devicescriptmgr_init_mem(unsigned size) {
     cfg.max_program_size = size;
     cfg.program_base = jd_alloc(cfg.max_program_size);
-    jacscriptmgr_init(&cfg);
+    devicescriptmgr_init(&cfg);
     jd_settings_get_bin(KEY, cfg.program_base, cfg.max_program_size);
 }
 

@@ -56,15 +56,15 @@ void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsig
 typedef struct {
     void *program_base;
     uint32_t max_program_size;
-} jacscriptmgr_cfg_t;
+} devicescriptmgr_cfg_t;
 
-void jacscriptmgr_init(const jacscriptmgr_cfg_t *cfg);
+void devicescriptmgr_init(const devicescriptmgr_cfg_t *cfg);
 
-jacs_ctx_t *jacscriptmgr_get_ctx(void);
-int jacscriptmgr_deploy(const void *img, unsigned imgsize);
-int jacscriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]);
-int jacscriptmgr_deploy_start(uint32_t sz);
-int jacscriptmgr_deploy_write(const void *buf, unsigned size);
+jacs_ctx_t *devicescriptmgr_get_ctx(void);
+int devicescriptmgr_deploy(const void *img, unsigned imgsize);
+int devicescriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]);
+int devicescriptmgr_deploy_start(uint32_t sz);
+int devicescriptmgr_deploy_write(const void *buf, unsigned size);
 
 typedef struct {
     int (*upload)(const char *label, int numvals, double *vals);

@@ -4,7 +4,7 @@
 #pragma GCC diagnostic ignored "-Wzero-length-bounds"
 #endif
 
-#include "jacscript.h"
+#include "devicescript.h"
 
 #include "jd_protocol.h"
 #include "jd_client.h"
