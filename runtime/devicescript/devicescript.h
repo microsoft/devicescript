@@ -33,7 +33,7 @@ void devs_set_global_flags(uint32_t global_flags);
 void devs_reset_global_flags(uint32_t global_flags);
 uint32_t devs_get_global_flags(void);
 
-// this is used by Jacscript Manager and implemented by default in software
+// this is used by DeviceScript Manager and implemented by default in software
 #define JD_SHA256_HASH_BYTES 32
 
 #ifndef JD_SHA256_SOFT
@@ -52,7 +52,7 @@ void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsig
                     const void *info, unsigned info_size, const void *info2, unsigned info_size2,
                     uint8_t outkey[JD_SHA256_HASH_BYTES]);
 
-// Jacscript manager service
+// DeviceScript manager service
 typedef struct {
     void *program_base;
     uint32_t max_program_size;
