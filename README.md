@@ -8,8 +8,8 @@ environments (VM itself compiles to 10kB of code, with the floating point librar
 This repository contains:
 * [jacdac-c submodule](https://github.com/microsoft/jacdac-c), including sources for Jacdac client libraries and DeviceScript VM
 * `compiler/` - sources for DeviceScript compiler
-* `runtime/jacscript-vm/` - glue files to build DeviceScript VM as WASM module using [emscripten](https://emscripten.org/); `vm/dist/` contain pre-built files
-* `jacs/samples/` - sample Jacscript programs
+* `runtime/devicescript-vm/` - glue files to build DeviceScript VM as WASM module using [emscripten](https://emscripten.org/); `vm/dist/` contain pre-built files
+* `jacs/samples/` - sample DeviceScript programs
 * `runtime/posix/` - implementation of Jacdac SDK HAL for grown-up POSIX-like operating systems (as opposed to embedded platforms)
 
 
