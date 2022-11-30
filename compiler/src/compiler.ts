@@ -6,7 +6,7 @@ import { SyntaxKind as SK } from "typescript"
 
 import {
     SystemReg,
-    SRV_JACSCRIPT_CONDITION,
+    SRV_DEVICE_SCRIPT_CONDITION,
     CloudAdapterEvent,
     CloudAdapterCmd,
     CloudAdapterCommandStatus,
@@ -157,7 +157,7 @@ class Role extends Cell {
         )
     }
     isCondition() {
-        return this.spec.classIdentifier == SRV_JACSCRIPT_CONDITION
+        return this.spec.classIdentifier == SRV_DEVICE_SCRIPT_CONDITION
     }
     debugInfo(): RoleDebugInfo {
         return {
