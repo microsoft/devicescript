@@ -1,6 +1,6 @@
 import { join } from "node:path"
+import { watch } from "node:fs"
 import { readFileSync, writeFileSync, ensureDirSync } from "fs-extra"
-import { watch } from "chokidar"
 const debounce = require("debounce-promise")
 import {
     compile,
@@ -92,7 +92,7 @@ async function buildWatch(file: string, options: BuildOptions) {
         500,
         { leading: true }
     )
-    watch(file).on("all", (event: string, path: string) => work())
+    watch(file, work)
 }
 
 async function buildOnce(file: string, options: BuildOptions) {
