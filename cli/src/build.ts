@@ -78,8 +78,8 @@ export interface BuildOptions extends CmdOptions {
 }
 
 export async function build(file: string, options: BuildOptions) {
-    if (!options?.watch) await buildOnce(file, options)
-    else await buildWatch(file, options)
+    await buildOnce(file, options)
+    if (options.watch) await buildWatch(file, options)
 }
 
 async function buildWatch(file: string, options: BuildOptions) {
