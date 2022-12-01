@@ -49,7 +49,11 @@
         [
             "@semantic-release/git",
             {
-                "assets": ["**/package.json"]
+                "assets": [
+                    "compiler/package.json",
+                    "cli/package.json",
+                    "runtime/devicescript-vm/package.json"
+                ]
             }
         ]
     ]
