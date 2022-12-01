@@ -1,6 +1,7 @@
 import { join } from "node:path"
 import { readFileSync, writeFileSync, ensureDirSync } from "fs-extra"
-
+import { watch } from "chokidar"
+const debounce = require("debounce-promise")
 import {
     compile,
     jacdacDefaultSpecifications,
@@ -70,15 +71,36 @@ export interface BuildOptions extends CmdOptions {
     noVerify?: boolean
     library?: boolean
     outDir?: string
+    watch?: boolean
 
+    // internal option
     mainFileName?: string
 }
 
 export async function build(file: string, options: BuildOptions) {
+    if (!options?.watch) await buildOnce(file, options)
+    else await buildWatch(file, options)
+}
+
+async function buildWatch(file: string, options: BuildOptions) {
+    console.log(`watching ${file}...`)
+    const work = debounce(
+        async () => {
+            console.debug(`change detected...`)
+            await buildOnce(file, options)
+        },
+        500,
+        { leading: true }
+    )
+    watch(file).on("all", (event: string, path: string) => work())
+}
+
+async function buildOnce(file: string, options: BuildOptions) {
     try {
         const buf = readFileSync(file)
         await compileBuf(buf, { ...options, mainFileName: file })
     } catch (e) {
         console.error(e.stack)
+        throw e
     }
 }

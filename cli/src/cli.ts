@@ -13,6 +13,7 @@ export async function mainCli() {
     program
         .command("build", { isDefault: true })
         .description("build a DeviceScript file")
+        .option("-w, --watch", "watch file changes and rebuild automatically")
         .option("-l, --library", "build library")
         .option("--no-verify", "don't verify resulting bytecode")
         .option("-o", "--out-dir", "output directory, default is 'built'")
