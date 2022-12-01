@@ -66,6 +66,8 @@ int devicescriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]);
 int devicescriptmgr_deploy_start(uint32_t sz);
 int devicescriptmgr_deploy_write(const void *buf, unsigned size);
 
+void devicescriptmgr_init_mem(unsigned size);
+
 typedef struct {
     int (*upload)(const char *label, int numvals, double *vals);
     int (*bin_upload)(const void *data, unsigned datasize);
