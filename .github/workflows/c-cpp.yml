@@ -43,7 +43,7 @@ jobs:
               run: make update-dist
               if: github.ref == 'refs/heads/main'
             - name: semantic release prep
-              run: yarn workspaces add -D -W semantic-release semantic-release-monorepo @semantic-release/git
+              run: yarn add -D -W semantic-release semantic-release-monorepo @semantic-release/git
               if: github.ref == 'refs/heads/main'
             - name: semantic release
               run: yarn workspaces run semantic-release -e semantic-release-monorepo 
