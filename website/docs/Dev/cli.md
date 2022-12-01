@@ -29,3 +29,12 @@ This is the default command, so you can omit build.
 ```bash
 devsc
 ```
+
+### watch
+
+To automatically rebuild your program based on file changes,
+add `--watch`.
+
+```bash
+devsc build --watch
+```

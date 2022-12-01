@@ -1,7 +1,7 @@
 
-const program = require("commander")
 import { build } from "./build"
 import pkg from "../package.json"
+import { program } from "commander"
 
 export async function mainCli() {
     program
@@ -17,7 +17,7 @@ export async function mainCli() {
         .option("-l, --library", "build library")
         .option("--no-verify", "don't verify resulting bytecode")
         .option("-o", "--out-dir", "output directory, default is 'built'")
-        .arguments("<file.ts>")
+        .arguments("[file.ts]")
         .action(build)
 
     program.parse(process.argv)

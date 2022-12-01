@@ -1,6 +1,11 @@
 import { join } from "node:path"
 import { watch } from "node:fs"
-import { readFileSync, writeFileSync, ensureDirSync } from "fs-extra"
+import {
+    readFileSync,
+    writeFileSync,
+    ensureDirSync,
+    pathExistsSync,
+} from "fs-extra"
 const debounce = require("debounce-promise")
 import {
     compile,
@@ -78,6 +83,7 @@ export interface BuildOptions extends CmdOptions {
 }
 
 export async function build(file: string, options: BuildOptions) {
+    file = file || "main.ts"
     await buildOnce(file, options)
     if (options.watch) await buildWatch(file, options)
 }
@@ -97,10 +103,15 @@ async function buildWatch(file: string, options: BuildOptions) {
 
 async function buildOnce(file: string, options: BuildOptions) {
     try {
+        if (!pathExistsSync(file))
+            throw new Error(`source file ${file} not found`)
         const buf = readFileSync(file)
         await compileBuf(buf, { ...options, mainFileName: file })
     } catch (e) {
-        console.error(e.stack)
+        if (options.verbose) {
+            console.debug(e.message)
+            console.debug(e.stack)
+        }
         throw e
     }
 }
