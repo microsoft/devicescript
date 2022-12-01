@@ -1,8 +1,13 @@
 {
   "name": "devicescript-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DeviceScript command line tool",
-  "keywords": ["devicescript", "jacdac", "iot", "embedded"],
+  "keywords": [
+    "devicescript",
+    "jacdac",
+    "iot",
+    "embedded"
+  ],
   "author": "Microsoft",
   "bin": "./built/devicescript-cli.cjs",
   "files": [
