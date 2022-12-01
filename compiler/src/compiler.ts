@@ -72,6 +72,8 @@ export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
 export const CMD_GET_REG = 0x1000
 export const CMD_SET_REG = 0x2000
 
+export const DEVS_ASSEMBLY_FILE = "prog.jasm"
+
 class Cell {
     _index: number
 
@@ -2792,7 +2794,7 @@ class Program implements TopOpWriter {
 
         // early assembly dump, in case serialization fails
         if (this.numErrors == 0)
-            this.host.write("prog.jasm", this.getAssembly())
+            this.host.write(DEVS_ASSEMBLY_FILE, this.getAssembly())
 
         const b = this.serialize()
         const dbg: DebugInfo = {
@@ -2812,7 +2814,7 @@ class Program implements TopOpWriter {
 
         // write assembly again
         if (this.numErrors == 0)
-            this.host.write("prog.jasm", this.getAssembly())
+            this.host.write(DEVS_ASSEMBLY_FILE, this.getAssembly())
 
         if (this.numErrors == 0) {
             try {
