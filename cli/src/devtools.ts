@@ -28,12 +28,12 @@ function fetchProxy(localhost: boolean): Promise<string> {
                 let body = ""
                 res.on("data", data => (body += data))
                 res.on("end", () => {
-                    if (localhost) {
-                        body = body.replace(
-                            /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
-                            "http://localhost:8000/dashboard"
-                        )
-                    }
+                    body = body.replace(
+                        /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
+                        localhost
+                            ? "http://localhost:8000/devicescript/"
+                            : "https://microsoft.github.io/jacdac-docs/editors/devicescript/"
+                    )
                     resolve(body)
                 })
                 res.on("error", reject)
