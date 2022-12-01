@@ -26,6 +26,7 @@
     "commander": "^9.4.1",
     "debounce-promise": "^3.1.2",
     "devicescript-compiler": "*",
+    "faye-websocket": "^0.11.4",
     "fs-extra": "^10.1.0"
   }
 }
