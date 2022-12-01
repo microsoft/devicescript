@@ -1,6 +1,12 @@
 import { join } from "node:path"
-import { readFileSync, writeFileSync, ensureDirSync } from "fs-extra"
-
+import { watch } from "node:fs"
+import {
+    readFileSync,
+    writeFileSync,
+    ensureDirSync,
+    pathExistsSync,
+} from "fs-extra"
+const debounce = require("debounce-promise")
 import {
     compile,
     jacdacDefaultSpecifications,
@@ -70,15 +76,42 @@ export interface BuildOptions extends CmdOptions {
     noVerify?: boolean
     library?: boolean
     outDir?: string
+    watch?: boolean
 
+    // internal option
     mainFileName?: string
 }
 
 export async function build(file: string, options: BuildOptions) {
+    file = file || "main.ts"
+    await buildOnce(file, options)
+    if (options.watch) await buildWatch(file, options)
+}
+
+async function buildWatch(file: string, options: BuildOptions) {
+    console.log(`watching ${file}...`)
+    const work = debounce(
+        async () => {
+            console.debug(`change detected...`)
+            await buildOnce(file, options)
+        },
+        500,
+        { leading: true }
+    )
+    watch(file, work)
+}
+
+async function buildOnce(file: string, options: BuildOptions) {
     try {
+        if (!pathExistsSync(file))
+            throw new Error(`source file ${file} not found`)
         const buf = readFileSync(file)
         await compileBuf(buf, { ...options, mainFileName: file })
     } catch (e) {
-        console.error(e.stack)
+        if (options.verbose) {
+            console.debug(e.message)
+            console.debug(e.stack)
+        }
+        throw e
     }
 }

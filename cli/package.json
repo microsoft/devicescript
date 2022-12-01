@@ -17,12 +17,15 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@types/commander": "^2.12.2",
+    "@types/debounce-promise": "^3.1.5",
     "@types/fs-extra": "^9.0.13",
     "@types/node": "^18.11.9"
   },
   "dependencies": {
     "commander": "^9.4.1",
-    "fs-extra": "^10.1.0",
-    "devicescript-compiler": "*"
+    "debounce-promise": "^3.1.2",
+    "devicescript-compiler": "*",
+    "fs-extra": "^10.1.0"
   }
 }
