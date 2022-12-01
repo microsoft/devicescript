@@ -16,7 +16,7 @@ function fetchProxy(localhost: boolean): Promise<string> {
     const url = localhost
         ? "http://localhost:8000/devtools/proxy.html"
         : "https://microsoft.github.io/jacdac-docs/devtools/proxy"
-    debug(`fetch jacdac devtools proxy at ${url}`)
+    //debug(`fetch jacdac devtools proxy at ${url}`)
     return new Promise<string>((resolve, reject) => {
         protocol
             .get(url, res => {
@@ -66,18 +66,16 @@ export async function startDevTools(
     const clients: WebSocket[] = []
 
     // upload DeviceScript file is needed
-    const sendDeviceScript = bytecodeFile
-        ? () => {
-              const bytecode = fs.readFileSync(bytecodeFile)
-              console.debug(`refresh bytecode...`)
-              const msg = JSON.stringify({
-                  type: "source",
-                  channel: "devicescript",
-                  bytecode: bytecode.toString("hex"),
-              })
-              clients.forEach(c => c.send(msg))
-          }
-        : undefined
+    const sendDeviceScript = () => {
+        const bytecode = fs.readFileSync(bytecodeFile)
+        debug(`refresh bytecode...`)
+        const msg = JSON.stringify({
+            type: "source",
+            channel: "devicescript",
+            bytecode: bytecode.toString("hex"),
+        })
+        clients.forEach(c => c.send(msg))
+    }
 
     const server = http.createServer(function (req, res) {
         const parsedUrl = url.parse(req.url)
@@ -104,7 +102,7 @@ export async function startDevTools(
             // store sender id to deduped packet
             client[SENDER_FIELD] = sender
             clients.push(client)
-            log(`client: connected (${sender}, ${clients.length} clients)`)
+            log(`webclient: connected (${sender}, ${clients.length} clients)`)
             client.on("message", (event: any) => {
                 const { data } = event
                 if (!firstDeviceScript && sendDeviceScript) {
@@ -134,7 +132,7 @@ export async function startDevTools(
             }
         }
         clients.push(client)
-        log(`client: connected (${sender} ${clients.length} clients)`)
+        log(`tcpclient: connected (${sender} ${clients.length} clients)`)
         client.on("end", () => removeClient(client))
         client.on("error", (ev: Error) => error(ev))
     })
