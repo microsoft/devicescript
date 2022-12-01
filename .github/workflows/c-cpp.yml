@@ -42,3 +42,12 @@ jobs:
             - name: update pre-compiled WASM
               run: make update-dist
               if: github.ref == 'refs/heads/main'
+            - name: semantic release prep
+              run: yarn workspaces add -D -W semantic-release semantic-release-monorepo @semantic-release/git
+              if: github.ref == 'refs/heads/main'
+            - name: semantic release
+              run: yarn workspaces run semantic-release -e semantic-release-monorepo 
+              if: github.ref == 'refs/heads/main'
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
