@@ -11,8 +11,10 @@ import {
     compile,
     jacdacDefaultSpecifications,
     JacsDiagnostic,
+    DEVS_ASSEMBLY_FILE,
 } from "devicescript-compiler"
 import { CmdOptions } from "./command"
+import { startDevTools } from "./devtools"
 
 function jacsFactory() {
     let d = require("devicescript-vm")
@@ -30,7 +32,7 @@ async function getHost(options: BuildOptions) {
     const inst = options.noVerify ? undefined : await jacsFactory()
     inst?.jacsInit()
 
-    const outdir = options.outDir || "./built"
+    const outdir = options.outDir     
     ensureDirSync(outdir)
 
     const jacsHost = {
@@ -84,11 +86,18 @@ export interface BuildOptions extends CmdOptions {
 
 export async function build(file: string, options: BuildOptions) {
     file = file || "main.ts"
+    options = options || {}
+    options.outDir = options.outDir || "./built"
+    options.mainFileName = file
+    
     await buildOnce(file, options)
     if (options.watch) await buildWatch(file, options)
 }
 
 async function buildWatch(file: string, options: BuildOptions) {
+    const bytecodeFile = join(options.outDir, DEVS_ASSEMBLY_FILE)
+
+    // start watch source file
     console.log(`watching ${file}...`)
     const work = debounce(
         async () => {
@@ -99,6 +108,9 @@ async function buildWatch(file: string, options: BuildOptions) {
         { leading: true }
     )
     watch(file, work)
+
+    // start watching bytecode file
+    await startDevTools(bytecodeFile)
 }
 
 async function buildOnce(file: string, options: BuildOptions) {
