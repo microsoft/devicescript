@@ -18,16 +18,10 @@ The command tool is named `devicescript` or `devsc` for short.
 
 ## Build
 
-The `build` command compiles the DeviceScript files in the current folder, using the resolution rules in `tsconfig.json`.
+The `build` command compiles a DeviceScript file (default is `main.ts`), using the resolution rules in `tsconfig.json`. It is the default command.
 
 ```bash
-devsc build
-```
-
-This is the default command, so you can omit build.
-
-```bash
-devsc
+devsc build main.ts
 ```
 
 ### watch
@@ -37,4 +31,16 @@ add `--watch`.
 
 ```bash
 devsc build --watch
+```
+
+When the build is run in watch mode, it also opens a developer tool web server that allows
+to execute the compiled program in a virtual device or physical devices. Follow the console
+application instructions to open the web page.
+
+#### --internet
+
+To access the developer tools outside localhost, add `--internet`
+
+```bash
+devsc build --watch --internet
 ```
