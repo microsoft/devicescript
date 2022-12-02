@@ -35,6 +35,7 @@ const tsConfig: any = {
 
 export interface InitOptions {
     force?: boolean
+    spaces?: number
 }
 
 const GENDIR = ".devicescript"
@@ -44,12 +45,12 @@ const GITIGNORE = ".gitignore"
 const PKG = "package.json"
 
 export default function init(options: InitOptions & CmdOptions) {
-    const { force } = options
+    const { force, spaces = 4 } = options
     log(`Initializing files for DeviceScript project`)
     // tsconfig.json
     if (!pathExistsSync(TSCONFIG) || force) {
         debug(`write ${TSCONFIG}`)
-        writeJSONSync(TSCONFIG, tsConfig, { spaces: 4 })
+        writeJSONSync(TSCONFIG, tsConfig, { spaces })
     } else {
         debug(`skip ${TSCONFIG}, already exists`)
     }
@@ -109,7 +110,7 @@ export default function init(options: InitOptions & CmdOptions) {
     }
     if (pkgChanged) {
         debug(`write ${PKG}`)
-        writeJSONSync(PKG, pkg, { spaces: 4 })
+        writeJSONSync(PKG, pkg, { spaces })
     }
 
     // help message
