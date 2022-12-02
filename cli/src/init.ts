@@ -45,11 +45,11 @@ const PKG = "package.json"
 
 export default function init(options: InitOptions & CmdOptions) {
     const { force } = options
-    log(`init files for DeviceScript`)
+    log(`Initializing files for DeviceScript project`)
     // tsconfig.json
     if (!pathExistsSync(TSCONFIG) || force) {
         debug(`write ${TSCONFIG}`)
-        writeJSONSync(TSCONFIG, tsConfig)
+        writeJSONSync(TSCONFIG, tsConfig, { spaces: 4 })
     } else {
         debug(`skip ${TSCONFIG}, already exists`)
     }
@@ -78,7 +78,9 @@ export default function init(options: InitOptions & CmdOptions) {
         debug(`write ${MAIN}`)
         writeFileSync(
             MAIN,
-            `
+            `// keep this line to force module mode
+            export {}
+
 `,
             { encoding: "utf8" }
         )
@@ -107,7 +109,7 @@ export default function init(options: InitOptions & CmdOptions) {
     }
     if (pkgChanged) {
         debug(`write ${PKG}`)
-        writeJSONSync(PKG, pkg)
+        writeJSONSync(PKG, pkg, { spaces: 4 })
     }
 
     // help message
