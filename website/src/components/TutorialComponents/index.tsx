@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useContext, useState } from "react"
 import clsx from "clsx"
 import { ThemeClassNames, usePrismTheme } from "@docusaurus/theme-common"
 import useIsBrowser from "@docusaurus/useIsBrowser"
@@ -9,10 +9,7 @@ import codeBlockContentStyles from "@docusaurus/theme-classic/src/theme/CodeBloc
 import styles from "./styles.module.css"
 import Prism from "prism-react-renderer/prism"
 
-import runDeviceScript from "./runDeviceScript"
-const clientConfig = {
-    ts: runDeviceScript,
-}
+import DevToolsContext from "@site/src/contexts/DevToolsContext"
 
 interface CodeBlockProps {
     lang: string
@@ -50,10 +47,7 @@ function RunButton(props: {
     const { onClick, runFinished } = props
     const text = "Run"
     return (
-        <button
-            className="button button--primary"
-            onClick={async () => await onClick()}
-        >
+        <button className="button button--primary" onClick={onClick}>
             {runFinished ? text : "Running..."}
         </button>
     )
@@ -172,9 +166,12 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
     const [output, setOutput] = useState(result)
     const [lastSnippet, setLastSnippet] = useState(code)
     const codeChanged = lastSnippet !== currCode
-
-    const onDidClickOutputToggle = () => {
-        setOutputRendered(!outputRendered)
+    const { setSource } = useContext(DevToolsContext)
+    const clientConfig = {
+        ts: input => {
+            setSource(input)
+            return JSON.stringify({ output: "", error: "" })
+        },
     }
 
     // bypassing server-side rendering
@@ -185,8 +182,8 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
 
         const runProcess = clientConfig[lang]
 
-        let input = currCode
-        let process = runProcess(input)
+        const input = currCode
+        let process = runProcess(input, setSource)
 
         // `z3.interrupt` -- set the cancel status of an ongoing execution, potentially with a timeout (soft? hard? we should use hard)
         try {
