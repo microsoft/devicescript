@@ -10,6 +10,7 @@ import fs from "fs"
 const log = console.log
 const debug = console.debug
 const error = console.error
+const dasboardPath = "editors/devicescript"
 
 function fetchProxy(localhost: boolean): Promise<string> {
     const protocol = localhost ? http : https
@@ -31,8 +32,8 @@ function fetchProxy(localhost: boolean): Promise<string> {
                     body = body.replace(
                         /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
                         localhost
-                            ? "http://localhost:8000/devicescript/"
-                            : "https://microsoft.github.io/jacdac-docs/editors/devicescript/"
+                            ? `http://localhost:8000/${dasboardPath}/`
+                            : `https://microsoft.github.io/jacdac-docs/${dasboardPath}/`
                     )
                     resolve(body)
                 })
@@ -54,8 +55,7 @@ export async function startDevTools(
     const tcpPort = 8082
     const listenHost = internet ? undefined : "127.0.0.1"
 
-    log(`start dev tools for ${bytecodeFile}`)
-    log(`   dashboard: http://localhost:${port}`)
+    log(`starting dev tools at http://localhost:${port}`)
     log(`   websocket: ws://localhost:${port}`)
     log(`   tcpsocket: tcp://localhost:${tcpPort}`)
 

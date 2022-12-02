@@ -73,6 +73,7 @@ export const CMD_GET_REG = 0x1000
 export const CMD_SET_REG = 0x2000
 
 export const DEVS_ASSEMBLY_FILE = "prog.jasm"
+export const DEVS_BYTECODE_FILE = "prog.jacs"
 
 class Cell {
     _index: number
@@ -2803,7 +2804,7 @@ class Program implements TopOpWriter {
             globals: this.globals.list.map(r => r.debugInfo()),
             source: this._source,
         }
-        this.host.write("prog.jacs", b)
+        this.host.write(DEVS_BYTECODE_FILE, b)
         const progJson = {
             text: this._source,
             blocks: "",

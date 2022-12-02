@@ -11,7 +11,7 @@ import {
     compile,
     jacdacDefaultSpecifications,
     JacsDiagnostic,
-    DEVS_ASSEMBLY_FILE,
+    DEVS_BYTECODE_FILE,
 } from "devicescript-compiler"
 import { CmdOptions } from "./command"
 import { startDevTools } from "./devtools"
@@ -95,7 +95,7 @@ export async function build(file: string, options: BuildOptions) {
 }
 
 async function buildWatch(file: string, options: BuildOptions) {
-    const bytecodeFile = join(options.outDir, DEVS_ASSEMBLY_FILE)
+    const bytecodeFile = join(options.outDir, DEVS_BYTECODE_FILE)
 
     // start watch source file
     console.log(`watching ${file}...`)
