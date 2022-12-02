@@ -26,7 +26,7 @@ export default function SplitDevTools(props) {
     return (
         <SplitPane
             split="vertical"
-            defaultSize={"min(75%, 65rem)"}
+            defaultSize={"min(60%, 55rem)"}
             minSize={400}
             onDragStarted={handleDragStart}
             onDragFinished={handleDragEnd}
