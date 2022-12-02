@@ -4,7 +4,6 @@ import {
     pathExistsSync,
     writeFileSync,
     writeJSONSync,
-    mkdirSync,
     readJSONSync,
     ensureDirSync,
     readFileSync,
@@ -12,7 +11,6 @@ import {
 
 const log = console.log
 const debug = console.debug
-const error = console.error
 
 const tsConfig: any = {
     compilerOptions: {
@@ -58,7 +56,6 @@ export default function init(options: InitOptions & CmdOptions) {
     ensureDirSync(GENDIR)
 
     // todo: copy prelude, ...
-
     // make sure it' in
     const gid = `${GENDIR}/\n`
     if (!pathExistsSync(GITIGNORE)) {
