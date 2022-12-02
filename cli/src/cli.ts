@@ -1,6 +1,7 @@
-import { build } from "./build"
-import pkg from "../package.json"
 import { program } from "commander"
+import pkg from "../package.json"
+import { build } from "./build"
+import { devtools } from "./devtools"
 
 export async function mainCli() {
     program
@@ -25,6 +26,16 @@ export async function mainCli() {
         )
         .arguments("[file.ts]")
         .action(build)
+
+    program
+        .command("devtools")
+        .description("launches a local deveplopement tools server")
+        .option("--internet", "allow connections from non-localhost")
+        .option(
+            "--localhost",
+            "use localhost:8000 instead of the internet dashboard"
+        )
+        .action(devtools)
 
     program.parse(process.argv)
 }

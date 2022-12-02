@@ -14,7 +14,7 @@ import {
     DEVS_BYTECODE_FILE,
 } from "devicescript-compiler"
 import { CmdOptions } from "./command"
-import { startDevTools } from "./devtools"
+import { devtools } from "./devtools"
 
 function jacsFactory() {
     let d = require("devicescript-vm")
@@ -28,11 +28,11 @@ function jacsFactory() {
     return d()
 }
 
-async function getHost(options: BuildOptions) {
+async function getHost(options: BuildOptions & CmdOptions) {
     const inst = options.noVerify ? undefined : await jacsFactory()
     inst?.jacsInit()
 
-    const outdir = options.outDir     
+    const outdir = options.outDir
     ensureDirSync(outdir)
 
     const jacsHost = {
@@ -74,7 +74,7 @@ async function compileBuf(buf: Buffer, options: BuildOptions) {
     return res.binary
 }
 
-export interface BuildOptions extends CmdOptions {
+export interface BuildOptions {
     noVerify?: boolean
     library?: boolean
     outDir?: string
@@ -84,12 +84,12 @@ export interface BuildOptions extends CmdOptions {
     mainFileName?: string
 }
 
-export async function build(file: string, options: BuildOptions) {
+export async function build(file: string, options: BuildOptions & CmdOptions) {
     file = file || "main.ts"
     options = options || {}
     options.outDir = options.outDir || "./built"
     options.mainFileName = file
-    
+
     await buildOnce(file, options)
     if (options.watch) await buildWatch(file, options)
 }
@@ -110,10 +110,10 @@ async function buildWatch(file: string, options: BuildOptions) {
     watch(file, work)
 
     // start watching bytecode file
-    await startDevTools(bytecodeFile)
+    await devtools({ ...options, bytecodeFile })
 }
 
-async function buildOnce(file: string, options: BuildOptions) {
+async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
     try {
         if (!pathExistsSync(file))
             throw new Error(`source file ${file} not found`)

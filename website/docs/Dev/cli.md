@@ -2,8 +2,8 @@
 
 ## Setup
 
-* install [Node.js](https://nodejs.org/en/download/)
-* install the CLI using npm or yarn
+-   install [Node.js](https://nodejs.org/en/download/)
+-   install the CLI using npm or yarn
 
 ```bash
 npm install -g devicescript
@@ -16,7 +16,7 @@ yarn add devicescript
 
 The command tool is named `devicescript` or `devsc` for short.
 
-## Build
+## build
 
 The `build` command compiles a DeviceScript file (default is `main.ts`), using the resolution rules in `tsconfig.json`. It is the default command.
 
@@ -24,7 +24,7 @@ The `build` command compiles a DeviceScript file (default is `main.ts`), using t
 devsc build main.ts
 ```
 
-### watch
+### --watch
 
 To automatically rebuild your program based on file changes,
 add `--watch`.
@@ -43,4 +43,20 @@ To access the developer tools outside localhost, add `--internet`
 
 ```bash
 devsc build --watch --internet
+```
+
+## devtools
+
+The `devtools` command launches the developer tool server, without trying to build a project.
+
+```bash
+devsc devtools
+```
+
+#### --internet
+
+To access the developer tools outside localhost, add `--internet`
+
+```bash
+devsc devtools --internet
 ```

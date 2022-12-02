@@ -6,6 +6,7 @@ import https from "https"
 import url from "url"
 import net from "net"
 import fs from "fs"
+import { CmdOptions } from "./command"
 
 const log = console.log
 const debug = console.debug
@@ -43,14 +44,15 @@ function fetchProxy(localhost: boolean): Promise<string> {
     })
 }
 
-export async function startDevTools(
-    bytecodeFile: string,
-    options?: {
-        internet?: boolean
-        localhost?: boolean
-    }
-) {
-    const { internet, localhost } = options || {}
+export interface DevToolsOptions {
+    internet?: boolean
+    localhost?: boolean
+
+    bytecodeFile?: string
+}
+
+export async function devtools(options: DevToolsOptions & CmdOptions) {
+    const { internet, localhost, bytecodeFile } = options
     const port = 8081
     const tcpPort = 8082
     const listenHost = internet ? undefined : "127.0.0.1"
@@ -66,16 +68,18 @@ export async function startDevTools(
     const clients: WebSocket[] = []
 
     // upload DeviceScript file is needed
-    const sendDeviceScript = () => {
-        const bytecode = fs.readFileSync(bytecodeFile)
-        debug(`refresh bytecode...`)
-        const msg = JSON.stringify({
-            type: "bytecode",
-            channel: "devicescript",
-            bytecode: bytecode.toString("hex"),
-        })
-        clients.forEach(c => c.send(msg))
-    }
+    const sendDeviceScript = bytecodeFile
+        ? () => {
+              const bytecode = fs.readFileSync(bytecodeFile)
+              debug(`refresh bytecode...`)
+              const msg = JSON.stringify({
+                  type: "bytecode",
+                  channel: "devicescript",
+                  bytecode: bytecode.toString("hex"),
+              })
+              clients.forEach(c => c.send(msg))
+          }
+        : undefined
 
     const server = http.createServer(function (req, res) {
         const parsedUrl = url.parse(req.url)
@@ -140,6 +144,8 @@ export async function startDevTools(
     server.listen(port, listenHost)
     tcpServer.listen(tcpPort, listenHost)
 
-    debug(`watch ${bytecodeFile}`)
-    fs.watch(bytecodeFile, sendDeviceScript)
+    if (bytecodeFile) {
+        debug(`watch ${bytecodeFile}`)
+        fs.watch(bytecodeFile, sendDeviceScript)
+    }
 }
