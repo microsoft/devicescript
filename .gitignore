@@ -10,3 +10,4 @@ runtime/devicescript-vm/dist/wasmpre.d.ts.map
 compiler/src/prelude.ts
 website/solutions
 website/static/dist/devicescript-compiler.js
+temp/

@@ -80,7 +80,7 @@ export default function init(options: InitOptions & CmdOptions) {
         writeFileSync(
             MAIN,
             `// keep this line to force module mode
-            export {}
+export {}
 
 `,
             { encoding: "utf8" }

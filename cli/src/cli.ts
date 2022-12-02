@@ -32,11 +32,7 @@ export async function mainCli() {
         .command("init")
         .description("configures the current directory for devicescript")
         .option("-f, --force", "force overwrite existing files")
-        .option(
-            "--spaces <number>",
-            "number of spaces when generating JSON",
-            "4"
-        )
+        .option("--spaces <number>", "number of spaces when generating JSON")
         .action(init)
 
     program
