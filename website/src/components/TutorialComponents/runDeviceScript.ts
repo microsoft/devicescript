@@ -10,7 +10,7 @@ export default async function runDeviceScript(input: string): Promise<string> {
     }
     console.log({ msg })
     iframe.contentWindow.postMessage(
-        JSON.stringify(msg),
+        msg,
         "https://microsoft.github.io/jacdac-docs/"
     )
     return JSON.stringify({ output: "", error: "" })
