@@ -70,7 +70,7 @@ export async function startDevTools(
         const bytecode = fs.readFileSync(bytecodeFile)
         debug(`refresh bytecode...`)
         const msg = JSON.stringify({
-            type: "source",
+            type: "bytecode",
             channel: "devicescript",
             bytecode: bytecode.toString("hex"),
         })
