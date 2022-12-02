@@ -4,7 +4,10 @@ import {
     pathExistsSync,
     writeFileSync,
     writeJSONSync,
+    mkdirSync,
     readJSONSync,
+    ensureDirSync,
+    readFileSync,
 } from "fs-extra"
 
 const log = console.log
@@ -35,8 +38,10 @@ export interface InitOptions {
     force?: boolean
 }
 
+const GENDIR = ".devicescript"
 const TSCONFIG = "tsconfig.json"
 const MAIN = "main.ts"
+const GITIGNORE = ".gitignore"
 
 export default function init(options: InitOptions & CmdOptions) {
     const { force } = options
@@ -50,6 +55,22 @@ export default function init(options: InitOptions & CmdOptions) {
     }
 
     // typescript definitions
+    ensureDirSync(GENDIR)
+
+    // make sure it' in
+    const gid = `${GENDIR}/\n`
+    if (!pathExistsSync(GITIGNORE)) {
+        debug(`write ${GITIGNORE}`)
+        writeFileSync(GITIGNORE, gid, { encoding: "utf8" })
+    } else {
+        const gitignore = readFileSync(GITIGNORE, { encoding: "utf8" })
+        if (gitignore.indexOf(gid) < 0) {
+            debug(`update ${GITIGNORE}`)
+            writeFileSync(GITIGNORE, `${gitignore}\n${gid}`, {
+                encoding: "utf8",
+            })
+        }
+    }
 
     // main.ts
     if (!pathExistsSync(MAIN)) {
