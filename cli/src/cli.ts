@@ -2,6 +2,7 @@ import { program } from "commander"
 import pkg from "../package.json"
 import { build } from "./build"
 import { devtools } from "./devtools"
+import init from "./init"
 
 export async function mainCli() {
     program
@@ -26,6 +27,12 @@ export async function mainCli() {
         )
         .arguments("[file.ts]")
         .action(build)
+
+    program
+        .command("init")
+        .description("configures the current directory for devicescript")
+        .option("-f, --force", "force overwrite existing files")
+        .action(init)
 
     program
         .command("devtools")

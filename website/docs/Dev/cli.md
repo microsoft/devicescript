@@ -60,3 +60,12 @@ To access the developer tools outside localhost, add `--internet`
 ```bash
 devsc devtools --internet
 ```
+
+## init
+
+The `init` commands creates or updates the necessary files to get syntax completion
+and checking in DeviceScript project (typically from Visual Studio Code). The command expects to be in the project folder.
+
+```bash
+devsc init
+```
