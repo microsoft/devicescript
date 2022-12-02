@@ -36,6 +36,7 @@ export interface InitOptions {
 }
 
 const TSCONFIG = "tsconfig.json"
+const MAIN = "main.ts"
 
 export default function init(options: InitOptions & CmdOptions) {
     const { force } = options
@@ -49,4 +50,15 @@ export default function init(options: InitOptions & CmdOptions) {
     }
 
     // typescript definitions
+
+    // main.ts
+    if (!pathExistsSync(MAIN)) {
+        debug(`write ${MAIN}`)
+        writeFileSync(
+            MAIN,
+            `
+`,
+            { encoding: "utf8" }
+        )
+    }
 }
