@@ -15,6 +15,7 @@ yarn add devicescript
 ```
 
 The command tool is named `devicescript` or `devsc` for short.
+The full list of options for each command is available through the CLI by running `devsc help <command>`.
 
 ## build
 
