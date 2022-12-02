@@ -189,6 +189,10 @@ void jd_tcpsock_process(void);
 void app_process(void) {
     tx_process();
     jd_tcpsock_process();
+
+    static uint32_t uptime_cnt;
+    if (jd_should_sample_ms(&uptime_cnt, 5000))
+        tsagg_update("uptime", (double)now_ms_long / 1000);
 }
 
 static void client_process(void) {

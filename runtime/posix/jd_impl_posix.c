@@ -85,10 +85,12 @@ uint64_t tim_get_micros() {
 }
 
 void dmesg(const char *format, ...) {
-    char tmp[200];
+    char tmp[500];
     va_list arg;
     va_start(arg, format);
     jd_vsprintf(tmp, sizeof(tmp) - 1, format, arg);
+    memcpy(tmp + sizeof(tmp) - 4, "...", 4); // this typically does nothing (there is an earlier
+                                             // '\0'), except when there's an overflow
     printf("    %s\n", tmp);
     va_end(arg);
 }
