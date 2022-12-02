@@ -94,14 +94,12 @@ static void jd_sha256_test_one(const char *key, const char *msg, const char *exp
 void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsigned key_size,
                     const void *info, unsigned info_size, const void *info2, unsigned info_size2,
                     uint8_t outkey[JD_SHA256_HASH_BYTES]) {
-    uint8_t hash[JD_SHA256_HASH_BYTES];
-
     jd_sha256_hmac_setup(salt, salt_size);
 
     jd_sha256_hmac_update(key, key_size);
-    jd_sha256_hmac_finish(hash);
+    jd_sha256_hmac_finish(outkey);
 
-    jd_sha256_hmac_setup(hash, JD_SHA256_HASH_BYTES);
+    jd_sha256_hmac_setup(outkey, JD_SHA256_HASH_BYTES);
     jd_sha256_hmac_update(info, info_size);
     jd_sha256_hmac_update(info2, info_size2);
     jd_sha256_hmac_update("\x01", 1);

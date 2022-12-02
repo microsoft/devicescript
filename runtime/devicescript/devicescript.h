@@ -33,25 +33,6 @@ void devs_set_global_flags(uint32_t global_flags);
 void devs_reset_global_flags(uint32_t global_flags);
 uint32_t devs_get_global_flags(void);
 
-// this is used by DeviceScript Manager and implemented by default in software
-#define JD_SHA256_HASH_BYTES 32
-
-#ifndef JD_SHA256_SOFT
-#define JD_SHA256_SOFT 1
-#endif
-
-void jd_sha256_setup(void);
-void jd_sha256_update(const void *buf, unsigned size);
-void jd_sha256_finish(uint8_t hash[JD_SHA256_HASH_BYTES]);
-
-// these are implemented based on the jd_sha256_* above
-void jd_sha256_hmac_setup(const void *key, unsigned keysize);
-void jd_sha256_hmac_update(const void *buf, unsigned size);
-void jd_sha256_hmac_finish(uint8_t hash[JD_SHA256_HASH_BYTES]);
-void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsigned key_size,
-                    const void *info, unsigned info_size, const void *info2, unsigned info_size2,
-                    uint8_t outkey[JD_SHA256_HASH_BYTES]);
-
 // DeviceScript manager service
 typedef struct {
     void *program_base;
