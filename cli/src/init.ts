@@ -57,6 +57,8 @@ export default function init(options: InitOptions & CmdOptions) {
     // typescript definitions
     ensureDirSync(GENDIR)
 
+    // todo: copy prelude, ...
+
     // make sure it' in
     const gid = `${GENDIR}/\n`
     if (!pathExistsSync(GITIGNORE)) {
