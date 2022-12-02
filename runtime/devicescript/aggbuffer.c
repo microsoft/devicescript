@@ -1,6 +1,13 @@
 #include "devs_internal.h"
 #include "jacdac/dist/c/timeseriesaggregator.h"
 
+#ifndef TSAGG_USE_MINMAX
+#define TSAGG_USE_MINMAX 1
+#endif
+#ifndef TSAGG_USE_NSAMPL
+#define TSAGG_USE_NSAMPL 1
+#endif
+
 #define LOG(msg, ...) DMESG("aggbuf: " msg, ##__VA_ARGS__)
 
 #define MAX_DATA 8
@@ -17,9 +24,31 @@ typedef struct __attribute__((packed)) {
     uint8_t reserved[28];
 } jdbr_header_t;
 
+/*
+const masks: Record<string, number> = {
+    timedelta: 0x100,
+    avg: 0x00,
+    min: 0x01,
+    max: 0x02,
+    numsamples: 0x104,
+    duration: 0x108,
+}
+*/
+
+#define TSAGG_USE_MINMAX 1
+#define TSAGG_USE_NSAMPL 1
+
 typedef struct {
     uint32_t timeoffset;
-    float value;
+    float avg;
+#if TSAGG_USE_MINMAX
+    float min;
+    float max;
+#endif
+#if TSAGG_USE_NSAMPL
+    uint32_t nsampl;
+    uint32_t dur;
+#endif
 } jdbr_data_point_t;
 
 typedef struct data_acc {
@@ -73,7 +102,16 @@ int aggbuffer_flush(void) {
         memcpy(dst, p->label, len);
         dst += len;
         uint32_t data_bytes = p->num_data_points * sizeof(jdbr_data_point_t);
-        memcpy(dst, &data_bytes, 4);
+
+        uint32_t masked_data_bytes = data_bytes;
+#if TSAGG_USE_MINMAX
+        masked_data_bytes |= (0x01 | 0x02) << 24;
+#endif
+#if TSAGG_USE_NSAMPL
+        masked_data_bytes |= (0x04 | 0x08) << 24;
+#endif
+
+        memcpy(dst, &masked_data_bytes, 4);
         dst += 4;
         for (int i = 0; i < p->num_data_points; ++i)
             p->data[i].timeoffset = n - p->data[i].timeoffset;
@@ -89,10 +127,12 @@ int aggbuffer_flush(void) {
 
     int r = ctx->cloud_api->bin_upload(buf, ctx->acc_size);
 
-    if (r == 0)
+    if (r == 0) {
         LOG("uploaded %d bytes", ctx->acc_size);
-    else
+        // LOG("msg: %-s", jd_to_hex_a(buf, ctx->acc_size));
+    } else {
         LOG("failed to upload %d bytes", ctx->acc_size);
+    }
 
     jd_free(buf);
 
@@ -185,8 +225,17 @@ int aggbuffer_upload(const char *label, jd_device_service_t *service,
     }
 
     int idx = p->num_data_points++;
-    p->data[idx].timeoffset = now_ms;
-    p->data[idx].value = data->avg;
+    p->data[idx].timeoffset = data->end_time;
+    p->data[idx].avg = data->avg;
+
+#if TSAGG_USE_MINMAX
+    p->data[idx].min = data->min;
+    p->data[idx].max = data->max;
+#endif
+#if TSAGG_USE_NSAMPL
+    p->data[idx].nsampl = data->num_samples;
+    p->data[idx].dur = data->end_time - data->start_time;
+#endif
 
     ctx->acc_size = res_size;
 
