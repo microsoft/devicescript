@@ -39,6 +39,7 @@ export default function SplitDevTools(props) {
                         id="jacdac-dashboard"
                         className="pane right"
                         allow="usb;serial;bluetooth"
+                        sandbox="allow-scripts allow-downloads allow-same-origin"
                         src={`https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0`}
                         frameBorder="0"
                     />
