@@ -1,5 +1,6 @@
 import { CmdOptions } from "./command"
-import { join } from "node:path"
+import { basename } from "node:path"
+import { cwd } from "node:process"
 import {
     pathExistsSync,
     writeFileSync,
@@ -40,6 +41,7 @@ const GENDIR = ".devicescript"
 const TSCONFIG = "tsconfig.json"
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"
+const PKG = "package.json"
 
 export default function init(options: InitOptions & CmdOptions) {
     const { force } = options
@@ -81,4 +83,35 @@ export default function init(options: InitOptions & CmdOptions) {
             { encoding: "utf8" }
         )
     }
+
+    // package.json
+    let pkgChanged = false
+    const pkg = pathExistsSync(PKG)
+        ? readJSONSync(PKG)
+        : {
+              name: basename(cwd()),
+          }
+    if (!pkg.devicescript) {
+        pkgChanged = true
+        pkg.devicescript = {}
+    }
+    if (!pkg.scripts?.["build"]) {
+        pkgChanged = true
+        pkg.scripts = pkg.scripts || {}
+        pkg.scripts["build"] = `devsc build`
+    }
+    if (!pkg.scripts?.["start"]) {
+        pkgChanged = true
+        pkg.scripts = pkg.scripts || {}
+        pkg.scripts["start"] = `devsc build --watch`
+    }
+    if (pkgChanged) {
+        debug(`write ${PKG}`)
+        writeJSONSync(PKG, pkg)
+    }
+
+    // help message
+    log(`your DeviceScript project is ready`)
+    log(`to start the local development, run "yarn start"`)
+    log(`to build binaries, run "yarn build"`)
 }
