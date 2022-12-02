@@ -25,6 +25,26 @@ int jd_aes_ccm_decrypt(const uint8_t key[JD_AES_KEY_BYTES],
                        const uint8_t nonce[JD_AES_CCM_NONCE_BYTES],
                        uint8_t tag[JD_AES_CCM_TAG_BYTES], uint8_t *msg, unsigned size);
 
+
+// this is used by DeviceScript Manager and implemented by default in software
+#define JD_SHA256_HASH_BYTES 32
+
+#ifndef JD_SHA256_SOFT
+#define JD_SHA256_SOFT 1
+#endif
+
+void jd_sha256_setup(void);
+void jd_sha256_update(const void *buf, unsigned size);
+void jd_sha256_finish(uint8_t hash[JD_SHA256_HASH_BYTES]);
+
+// these are implemented based on the jd_sha256_* above
+void jd_sha256_hmac_setup(const void *key, unsigned keysize);
+void jd_sha256_hmac_update(const void *buf, unsigned size);
+void jd_sha256_hmac_finish(uint8_t hash[JD_SHA256_HASH_BYTES]);
+void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsigned key_size,
+                    const void *info, unsigned info_size, const void *info2, unsigned info_size2,
+                    uint8_t outkey[JD_SHA256_HASH_BYTES]);
+
 #define JD_CONN_EV_OPEN 0x01
 #define JD_CONN_EV_CLOSE 0x02
 #define JD_CONN_EV_ERROR 0x03

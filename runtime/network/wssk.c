@@ -3,12 +3,11 @@
 typedef struct {
     uint32_t magic;
     uint32_t version;
-    uint8_t seed0[JD_AES_KEY_BYTES / 4];
-    uint8_t seed1[JD_AES_KEY_BYTES / 4];
+    uint8_t seed[JD_AES_KEY_BYTES / 2];
 } jd_wssk_hello_msg_t;
 
 #define JD_WSSK_MAGIC 0xcee428ca
-#define JD_WSSK_VERSION 1
+#define JD_WSSK_VERSION 2
 
 #define JD_WSSK_AUTH_SIZE JD_AES_KEY_BYTES
 
@@ -37,7 +36,7 @@ STATIC_ASSERT(JD_AES_CCM_NONCE_BYTES <= JD_AES_BLOCK_BYTES);
 STATIC_ASSERT(JD_AES_KEY_BYTES / 2 <= JD_AES_BLOCK_BYTES);
 
 int jd_wssk_new(const char *hostname, int port, const char *path,
-                   const uint8_t master_key[JD_AES_KEY_BYTES]) {
+                const uint8_t master_key[JD_AES_KEY_BYTES]) {
     jd_wssk_t *es = &_encsock;
 
     int sum = 0;
@@ -52,7 +51,7 @@ int jd_wssk_new(const char *hostname, int port, const char *path,
     es->state = ST_NEW;
     jd_crypto_get_random(es->client_nonce, JD_AES_KEY_BYTES / 2);
     char *key = jd_to_hex_a(es->client_nonce, JD_AES_KEY_BYTES / 2);
-    key = jd_sprintf_a("jacdac-key-%-s", key);
+    key = jd_sprintf_a("devs-key-%-s", key);
     int r = jd_websock_new(hostname, port, path, key);
     jd_free(key);
     return r;
@@ -84,22 +83,8 @@ static void on_hello(jd_wssk_t *es, const uint8_t *msg, unsigned size) {
         return;
     }
 
-    uint8_t *buf = es->server_nonce;
-    unsigned chunk = JD_AES_KEY_BYTES / 4;
-
-    jd_aes_setup_key(es->key);
-
-    memcpy(buf, es->client_nonce, chunk);
-    memcpy(buf + chunk, hello.seed0, chunk);
-    jd_aes_encrypt(buf);
-    memcpy(es->key, buf, chunk * 2);
-
-    memcpy(buf, es->client_nonce + chunk, chunk);
-    memcpy(buf + chunk, hello.seed1, chunk);
-    jd_aes_encrypt(buf);
-    memcpy(es->key + chunk * 2, buf, chunk * 2);
-
-    jd_aes_clear_key();
+    jd_sha256_hkdf(NULL, 0, es->key, JD_AES_KEY_BYTES, es->client_nonce, JD_AES_KEY_BYTES / 2,
+                   hello.seed, JD_AES_KEY_BYTES / 2, es->key);
 
     memset(es->client_nonce, 0, sizeof(es->client_nonce));
     es->client_nonce[0] = 1;
