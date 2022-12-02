@@ -12,6 +12,7 @@
 #define CONT_WINDOW_STEP 2000 // every 5000ms
 
 #define LOG(msg, ...) DMESG("tsagg: " msg, ##__VA_ARGS__)
+#define LOGV(...) ((void)0)
 #define MS(n) ((n) << 10)
 
 typedef struct tsagg_series {
@@ -240,11 +241,12 @@ static void series_update(srv_t *state, tsagg_series_t *ts, double v) {
         ts->acc.max = v;
     if (v < ts->acc.min)
         ts->acc.min = v;
+    LOGV("add %s %f [%f %f]", ts->label, v, ts->acc.min, ts->acc.max);
     ts->v_previous = v;
 }
 
 static void dev_packet(srv_t *state, jd_device_service_t *serv, jd_packet_t *pkt) {
-    if (pkt->service_command != JD_GET(JD_REG_READING) && !jd_is_report(pkt))
+    if (pkt->service_command != JD_GET(JD_REG_READING) || !jd_is_report(pkt))
         return;
 
     const devs_packed_service_desc_t *desc = devs_get_packed_service_desc(serv->service_class);
@@ -256,6 +258,7 @@ static void dev_packet(srv_t *state, jd_device_service_t *serv, jd_packet_t *pkt
             if (ts->streaming_samples)
                 ts->streaming_samples--;
             double v = devs_read_number(pkt->data, pkt->service_size, desc->numfmt);
+            LOGV("n: %s %d %f", desc->name, pkt->service_size, v);
             series_update(state, ts, v);
             feed_watchdog(state);
         }
