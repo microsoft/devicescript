@@ -12,6 +12,7 @@ import {
     jacdacDefaultSpecifications,
     JacsDiagnostic,
     DEVS_BYTECODE_FILE,
+    formatDiagnostics,
 } from "devicescript-compiler"
 import { CmdOptions } from "./command"
 import { devtools } from "./devtools"
@@ -51,7 +52,7 @@ async function getHost(options: BuildOptions & CmdOptions) {
             if (options.verbose) console.log(msg)
         },
         error: (err: JacsDiagnostic) => {
-            console.error(err)
+            console.error(formatDiagnostics([err]))
         },
         mainFileName: () => options.mainFileName || "",
         getSpecs: () => jacdacDefaultSpecifications,

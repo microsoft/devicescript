@@ -4,6 +4,7 @@ export * from "./logparser"
 export * from "./disassemble"
 export * from "./specgen"
 export * from "./embedspecs"
+export * from "./tsiface"
 
 import { compile } from "./compiler"
 

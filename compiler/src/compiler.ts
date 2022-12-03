@@ -2780,7 +2780,7 @@ class Program implements TopOpWriter {
     emit() {
         assert(!this.tree)
 
-        this.tree = buildAST(this.host, this._source)
+        this.tree = buildAST(this.host, this._source, this.prelude)
         getProgramDiagnostics(this.tree).forEach(d => this.printDiag(d))
 
         const files = this.tree.getSourceFiles()
