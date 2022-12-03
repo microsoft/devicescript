@@ -1,12 +1,12 @@
 import { CmdOptions } from "./command"
-import { basename } from "node:path"
+import { basename, join } from "node:path"
 import { cwd } from "node:process"
 import {
     pathExistsSync,
     writeFileSync,
     writeJSONSync,
     readJSONSync,
-    ensureDirSync,
+    emptyDirSync,
     readFileSync,
 } from "fs-extra"
 import { preludeFiles } from "devicescript-compiler"
@@ -58,12 +58,11 @@ export default function init(options: InitOptions & CmdOptions) {
     }
 
     // typescript definitions
-    ensureDirSync(GENDIR)
-
+    emptyDirSync(GENDIR)
     debug(`write ${GENDIR}/*`)
     const prelude = preludeFiles()
     for (const fn of Object.keys(prelude)) {
-        writeFileSync(GENDIR + "/" + fn, prelude[fn])
+        writeFileSync(join(GENDIR, fn), prelude[fn])
     }
 
     // todo: copy prelude, ...
@@ -105,6 +104,11 @@ export {}
     if (!pkg.devicescript) {
         pkgChanged = true
         pkg.devicescript = {}
+    }
+    if (!pkg.scripts?.["init"]) {
+        pkgChanged = true
+        pkg.scripts = pkg.scripts || {}
+        pkg.scripts["init"] = `devsc init`
     }
     if (!pkg.scripts?.["build"]) {
         pkgChanged = true
