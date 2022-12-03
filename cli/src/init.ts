@@ -9,6 +9,7 @@ import {
     ensureDirSync,
     readFileSync,
 } from "fs-extra"
+import { preludeFiles } from "devicescript-compiler"
 
 const log = console.log
 const debug = console.debug
@@ -31,6 +32,7 @@ const tsConfig: any = {
         noImplicitAny: true,
         types: [],
     },
+    include: ["*.ts", ".devicescript/*.ts"],
 }
 
 export interface InitOptions {
@@ -57,6 +59,12 @@ export default function init(options: InitOptions & CmdOptions) {
 
     // typescript definitions
     ensureDirSync(GENDIR)
+
+    debug(`write ${GENDIR}/*`)
+    const prelude = preludeFiles()
+    for (const fn of Object.keys(prelude)) {
+        writeFileSync(GENDIR + "/" + fn, prelude[fn])
+    }
 
     // todo: copy prelude, ...
     // make sure it' in

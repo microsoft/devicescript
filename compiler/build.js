@@ -36,7 +36,7 @@ function distCopy(from, to) {
         console.debug(`cp ${from} ${to}`)
         try {
             fs.mkdirSync(path.dirname(to))
-        } catch {}
+        } catch { }
         fs.copyFileSync(from, to)
         fs.utimesSync(to, new Date(), new Date(fromT))
     }
@@ -96,17 +96,16 @@ const files = {
     "../cli/built/devicescript-cli.cjs": "../cli/src/cli.ts",
 }
 
+const specname = "devicescript-spec.d.ts"
 function buildPrelude(folder, outp) {
     const files = fs.readdirSync(folder)
     files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 
     const filecont = {}
     for (const fn of files) {
+        if (fn == specname) continue
         filecont[fn] = fs.readFileSync(folder + "/" + fn, "utf-8")
     }
-
-    const specs = "../runtime/jacdac-c/jacdac/dist/devicescript-spec.d.ts"
-    filecont["../" + specs] = fs.readFileSync(specs, "utf-8")
 
     let r = "export const prelude: Record<string, string> = {\n"
     for (const fn of Object.keys(filecont)) {
@@ -122,7 +121,7 @@ function buildPrelude(folder, outp) {
     let curr = ""
     try {
         curr = fs.readFileSync(outp, "utf-8")
-    } catch {}
+    } catch { }
     if (curr != r) {
         console.log("updating " + outp)
         fs.writeFileSync(outp, r)
@@ -158,6 +157,8 @@ async function main() {
             await runTSC(["-b", "src"])
             await runTSC(["-b", "../cli/src"])
         }
+        const ds = require("./built/devicescript-compiler.node.cjs")
+        fs.writeFileSync("../jacs/lib/" + specname, ds.preludeFiles()[specname])
     } catch (e) {
         console.error(e)
     }

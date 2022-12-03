@@ -63,8 +63,9 @@ import {
     TopOpWriter,
     Value,
 } from "./opwriter"
-import { prelude } from "./prelude"
 import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
+import { preludeFiles } from "./specgen"
+import { jacdacDefaultSpecifications } from "./embedspecs"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -421,11 +422,6 @@ class ClientCommand {
     constructor(public serviceSpec: jdspec.ServiceSpec) {}
 }
 
-interface Position {
-    range?: [number, number]
-    rangeFile?: string
-}
-
 class Program implements TopOpWriter {
     bufferLits = new VariableScope(null)
     roles = new VariableScope(this.bufferLits)
@@ -445,6 +441,7 @@ class Program implements TopOpWriter {
     refreshMS: number[] = [0, 500]
     resolverParams: number[]
     resolverPC: number
+    prelude: Record<string, string>
     numErrors = 0
     main: Procedure
     cloudRole: Role
@@ -458,7 +455,8 @@ class Program implements TopOpWriter {
 
     constructor(public host: Host, public _source: string) {
         this.serviceSpecs = {}
-        for (const sp of host.getSpecs()) {
+        const specs = host.getSpecs()
+        for (const sp of specs) {
             this.serviceSpecs[sp.camelName] = sp
             for (const en of Object.keys(sp.enums)) {
                 const n = upperCamel(sp.camelName) + upperCamel(en)
@@ -466,6 +464,7 @@ class Program implements TopOpWriter {
             }
         }
         this.sysSpec = this.serviceSpecs["system"]
+        this.prelude = preludeFiles(specs)
     }
 
     get hasErrors() {
@@ -474,7 +473,7 @@ class Program implements TopOpWriter {
 
     getSource(fn: string) {
         if (!fn || fn == this.host.mainFileName?.()) return this._source
-        return prelude[fn] || ""
+        return this.prelude[fn] || ""
     }
 
     addString(str: string | Uint8Array) {
@@ -2859,12 +2858,6 @@ class Program implements TopOpWriter {
         }
     }
 }
-
-import jacdacDefaultSpecificationsData from "../../runtime/jacdac-c/jacdac/dist/services.json"
-// import * as specs from "../../runtime/jacdac-c/jacdac/dist/services.json" - slows down intellisense?
-
-export const jacdacDefaultSpecifications =
-    jacdacDefaultSpecificationsData as jdspec.ServiceSpec[]
 
 /**
  * Compiles the DeviceScript program.

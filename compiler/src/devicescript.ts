@@ -2,6 +2,8 @@ export * from "./format"
 export * from "./compiler"
 export * from "./logparser"
 export * from "./disassemble"
+export * from "./specgen"
+export * from "./embedspecs"
 
 import { compile } from "./compiler"
 
