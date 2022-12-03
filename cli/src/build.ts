@@ -1,5 +1,5 @@
 import { join } from "node:path"
-import { watch } from "node:fs"
+import { existsSync, watch } from "node:fs"
 import {
     readFileSync,
     writeFileSync,
@@ -89,6 +89,12 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
     options = options || {}
     options.outDir = options.outDir || "./built"
     options.mainFileName = file
+
+    if (!existsSync(file)) {
+        // otherwise we throw
+        console.error(`${file} does not exist`)
+        return
+    }
 
     await buildOnce(file, options)
     if (options.watch) await buildWatch(file, options)
