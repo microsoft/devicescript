@@ -6,11 +6,8 @@ import https from "https"
 import url from "url"
 import net from "net"
 import fs from "fs"
-import { CmdOptions } from "./command"
+import { CmdOptions, debug, error, log } from "./command"
 
-const log = console.log
-const debug = console.debug
-const error = console.error
 const dasboardPath = "editors/devicescript"
 
 function fetchProxy(localhost: boolean): Promise<string> {

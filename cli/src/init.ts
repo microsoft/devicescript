@@ -1,4 +1,4 @@
-import { CmdOptions } from "./command"
+import { CmdOptions, debug, GENDIR, LIBDIR, log } from "./command"
 import { basename, join } from "node:path"
 import { cwd } from "node:process"
 import {
@@ -11,11 +11,6 @@ import {
 } from "fs-extra"
 import { preludeFiles } from "devicescript-compiler"
 
-const log = console.log
-const debug = console.debug
-
-const GENDIR = ".devicescript"
-const LIBDIR = `${GENDIR}/lib`
 const TSCONFIG = "tsconfig.json"
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"

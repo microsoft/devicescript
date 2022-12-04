@@ -14,7 +14,7 @@ import {
     DEVS_BYTECODE_FILE,
     formatDiagnostics,
 } from "devicescript-compiler"
-import { CmdOptions } from "./command"
+import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
 
 function jacsFactory() {
@@ -24,7 +24,7 @@ function jacsFactory() {
         // @ts-ignore
         global.Blob = require("buffer").Blob
     } catch {
-        console.log("can't load websocket-polyfill")
+        log("can't load websocket-polyfill")
     }
     return d()
 }
@@ -39,7 +39,7 @@ async function getHost(options: BuildOptions & CmdOptions) {
     const jacsHost = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
-            if (options.verbose) console.debug(`write ${p}`)
+            if (options.verbose) debug(`write ${p}`)
             writeFileSync(p, cont)
             if (
                 fn.endsWith(".jasm") &&
@@ -49,10 +49,10 @@ async function getHost(options: BuildOptions & CmdOptions) {
                 throw new Error("bad disassembly")
         },
         log: (msg: string) => {
-            if (options.verbose) console.log(msg)
+            if (options.verbose) log(msg)
         },
         error: (err: JacsDiagnostic) => {
-            console.error(formatDiagnostics([err]))
+            error(formatDiagnostics([err]))
         },
         mainFileName: () => options.mainFileName || "",
         getSpecs: () => jacdacDefaultSpecifications,
@@ -88,15 +88,16 @@ export interface BuildOptions {
 export async function build(file: string, options: BuildOptions & CmdOptions) {
     file = file || "main.ts"
     options = options || {}
-    options.outDir = options.outDir || "./built"
+    options.outDir = options.outDir || BINDIR
     options.mainFileName = file
 
     if (!existsSync(file)) {
         // otherwise we throw
-        console.error(`${file} does not exist`)
+        error(`${file} does not exist`)
         return
     }
 
+    ensureDirSync(options.outDir)
     await buildOnce(file, options)
     if (options.watch) await buildWatch(file, options)
 }
@@ -105,10 +106,10 @@ async function buildWatch(file: string, options: BuildOptions) {
     const bytecodeFile = join(options.outDir, DEVS_BYTECODE_FILE)
 
     // start watch source file
-    console.log(`watching ${file}...`)
+    log(`watching ${file}...`)
     const work = debounce(
         async () => {
-            console.debug(`change detected...`)
+            debug(`change detected...`)
             await buildOnce(file, options)
         },
         500,
@@ -128,8 +129,8 @@ async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
         await compileBuf(buf, { ...options, mainFileName: file })
     } catch (e) {
         if (options.verbose) {
-            console.debug(e.message)
-            console.debug(e.stack)
+            debug(e.message)
+            debug(e.stack)
         }
         throw e
     }
