@@ -6,12 +6,19 @@
 -   install the CLI using npm or yarn
 
 ```bash
-npm install -g devicescript
+# yarn
+corepack enable
+yarn add -D devicescript
 ```
 
 ```bash
-corepack enable
-yarn add devicescript
+#npm developer dependency
+npm install devicescript --save-dev
+```
+
+```bash
+#npm globally
+npm install -g -u devicescript
 ```
 
 The command tool is named `devicescript` or `devsc` for short.
