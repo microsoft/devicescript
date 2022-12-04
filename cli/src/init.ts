@@ -39,7 +39,7 @@ const tsConfig: any = {
         noImplicitAny: true,
         types: [],
     },
-    include: ["*.ts", `${LIBDIR}/*.ts`ƒ],
+    include: ["*.ts", `${LIBDIR}/*.ts`],
 }
 
 export interface InitOptions {
