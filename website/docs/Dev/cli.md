@@ -44,6 +44,10 @@ tsconfig.json : configure the TypeScript compiler to compile DeviceScript syntax
 By default, `init` will not override existing `tsconfig.json`. Using this flag, you can override this setting
 and force refreshing that file.
 
+```bash
+devsc init --force
+```
+
 ## build
 
 The `build` command compiles a DeviceScript file (default is `main.ts`), using the resolution rules in `tsconfig.json`. It is the default command.
