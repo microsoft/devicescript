@@ -30,13 +30,13 @@ devsc init
 A device script project will look as follows:
 
 ```
-.devicescript : reserved folder for devicescript generated
-    /lib : supporting runtime types and libraries
-    /bin : compilation file output
-.gitignore : if you are using git, make sure to ignore .devicescript
-main.ts : usual name for your entry point application
-package.json : additional dependencies and also has the `devicescript` field entry
-tsconfig.json : configure the TypeScript compiler to compile DeviceScript syntax
+.devicescript     reserved folder for devicescript generated
+    /lib          supporting runtime types and libraries
+    /bin          compilation file output
+.gitignore        if you are using git, make sure to ignore .devicescript
+main.ts           usual name for your entry point application
+package.json      additional dependencies and also has the `devicescript` field entry
+tsconfig.json     configure the TypeScript compiler to compile DeviceScript syntax
 ```
 
 ### --force
