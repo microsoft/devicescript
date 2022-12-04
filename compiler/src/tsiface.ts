@@ -1,6 +1,5 @@
 import * as ts from "typescript"
 import { Host } from "./format"
-import { prelude } from "./prelude"
 
 class MyHost implements ts.CompilerHost {
     constructor(public fileText: Record<string, string>) {}
@@ -76,7 +75,11 @@ export function getProgramDiagnostics(program: ts.Program): ts.Diagnostic[] {
     }
 }
 
-export function buildAST(host: Host, source: string) {
+export function buildAST(
+    host: Host,
+    source: string,
+    prelude: Record<string, string>
+) {
     const mainFn = host?.mainFileName() || "main.ts"
     const tsHost = new MyHost({
         [mainFn]: source,
