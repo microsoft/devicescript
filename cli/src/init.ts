@@ -14,6 +14,13 @@ import { preludeFiles } from "devicescript-compiler"
 const log = console.log
 const debug = console.debug
 
+const GENDIR = ".devicescript"
+const LIBDIR = `${GENDIR}/lib`
+const TSCONFIG = "tsconfig.json"
+const MAIN = "main.ts"
+const GITIGNORE = ".gitignore"
+const PKG = "package.json"
+
 const tsConfig: any = {
     compilerOptions: {
         moduleResolution: "node",
@@ -32,19 +39,13 @@ const tsConfig: any = {
         noImplicitAny: true,
         types: [],
     },
-    include: ["*.ts", ".devicescript/*.ts"],
+    include: ["*.ts", `${LIBDIR}/*.ts`ƒ],
 }
 
 export interface InitOptions {
     force?: boolean
     spaces?: number
 }
-
-const GENDIR = ".devicescript"
-const TSCONFIG = "tsconfig.json"
-const MAIN = "main.ts"
-const GITIGNORE = ".gitignore"
-const PKG = "package.json"
 
 export default function init(options: InitOptions & CmdOptions) {
     const { force, spaces = 4 } = options
@@ -58,15 +59,14 @@ export default function init(options: InitOptions & CmdOptions) {
     }
 
     // typescript definitions
-    emptyDirSync(GENDIR)
-    debug(`write ${GENDIR}/*`)
+    emptyDirSync(LIBDIR)
+    debug(`write ${LIBDIR}/*`)
     const prelude = preludeFiles()
     for (const fn of Object.keys(prelude)) {
-        writeFileSync(join(GENDIR, fn), prelude[fn])
+        writeFileSync(join(LIBDIR, fn), prelude[fn])
     }
 
-    // todo: copy prelude, ...
-    // make sure it' in
+    // .gitignore
     const gid = `${GENDIR}/\n`
     if (!pathExistsSync(GITIGNORE)) {
         debug(`write ${GITIGNORE}`)
