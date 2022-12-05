@@ -139,7 +139,11 @@ const diagHost: ts.FormatDiagnosticsHost = {
 }
 
 export function formatDiagnostics(
-    diagnostics: readonly ts.Diagnostic[]
+    diagnostics: readonly ts.Diagnostic[],
+    basic = false
 ): string {
-    return ts.formatDiagnostics(diagnostics, diagHost).trim()
+    const diag = basic
+        ? ts.formatDiagnostics(diagnostics, diagHost)
+        : ts.formatDiagnosticsWithColorAndContext(diagnostics, diagHost)
+    return diag.trim()
 }
