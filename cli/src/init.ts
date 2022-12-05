@@ -91,7 +91,7 @@ export {}
 
 
     // help message
-    log(`Your DeviceScript project is ready`)
+    log(`Your DeviceScript project is ready.`)
     log(`to start the local development, run "yarn start"`)
     log(`to build binaries, run "yarn build"`)
 }
