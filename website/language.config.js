@@ -24,7 +24,35 @@ async function createConfig() {
                     },
                 },
                 githubRepo: "microsoft/devicescript",
-                githubDiscussion: false,
+                sandbox: {
+                    files: {
+                        "package.json": {
+                            content: {
+                                dependencies: {},
+                                devDependencies: {
+                                    "devicescript-cli": "*",
+                                },
+                                descriptscript: {},
+                                scripts: {
+                                    build: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build",
+                                    setup: "node node_modules/devicescript-cli/built/devicescript-cli.cjs init",
+                                    watch: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build --watch",
+                                    start: "yarn setup",
+                                },
+                            },
+                        },
+                        "sandbox.config.json": {
+                            content: {
+                                template: "node",
+                                view: "terminal",
+                                container: {
+                                    node: "16",
+                                },
+                            },
+                        },
+                    },
+                    main: "main.ts",
+                },
             },
         ],
         solutionsDir: "./solutions",

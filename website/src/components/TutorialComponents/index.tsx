@@ -10,11 +10,12 @@ import styles from "./styles.module.css"
 import Prism from "prism-react-renderer/prism"
 
 import DevToolsContext from "@site/src/contexts/DevToolsContext"
+import CodeSandboxButton from "./CodeSandboxButton"
 
 interface CodeBlockProps {
     lang: string
     highlight: string
-    statusCodes: { [key: string]: string }
+    statusCodes: Record<string, string>
     code: string
     result: { [key: string]: string }
     githubRepo: string | undefined
@@ -23,21 +24,10 @@ interface CodeBlockProps {
     readonly: boolean
     langVersion?: string
     tool?: string
-}
-
-function OutputToggle(props: {
-    onClick: () => void
-    disabled?: boolean
-    version?: string
-    tool?: string
-}) {
-    const { onClick } = props
-
-    return (
-        <button className="button button--primary" onClick={onClick}>
-            Run
-        </button>
-    )
+    sandbox?: {
+        files: Record<string, { content: string }>
+        main?: string
+    }
 }
 
 function RunButton(props: {
@@ -102,6 +92,10 @@ function CustomCodeEditor(props: {
     onChange?: (code: string) => void
     githubRepo: string | undefined
     readonly: boolean
+    sandbox?: {
+        files: Record<string, { content: string }>
+        main?: string
+    }
 }) {
     const {
         input,
@@ -111,8 +105,8 @@ function CustomCodeEditor(props: {
         githubRepo,
         onChange,
         readonly,
+        sandbox,
     } = props
-
     const prismTheme = usePrismTheme()
     // console.log(prismTheme);
     // the line above shows that we are still using `plain` for syntax highlighting
@@ -140,6 +134,7 @@ function CustomCodeEditor(props: {
                 prism={Prism}
                 readonly={readonly}
                 showLineNumbers={showLineNumbers}
+                sandbox={sandbox}
             />
         </Container>
     )
@@ -159,6 +154,7 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
         editable,
         showLineNumbers,
         readonly,
+        sandbox,
     } = input
     const [currCode, setCurrCode] = useState(code)
     const [outputRendered, setOutputRendered] = useState(false)
@@ -240,15 +236,14 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
                 language={highlight}
                 githubRepo={githubRepo}
                 readonly={readonly}
+                sandbox={sandbox}
             />
             <>
                 <div className={styles.buttons}>
-                    {!readonly && (
-                        <RunButton
-                            onClick={onDidClickRun}
-                            runFinished={runFinished}
-                        />
-                    )}
+                    <RunButton
+                        onClick={onDidClickRun}
+                        runFinished={runFinished}
+                    />
                 </div>
                 {outputRendered ? (
                     <Output

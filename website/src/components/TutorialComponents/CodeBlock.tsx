@@ -10,6 +10,7 @@ import codeBlockContentStyles from "@docusaurus/theme-classic/src/theme/CodeBloc
 import CopyButton from "@theme/CodeBlock/CopyButton"
 import Highlight, { Prism, Language, PrismTheme } from "prism-react-renderer"
 import styles from "./styles.module.css"
+import CodeSandboxButton from "./CodeSandboxButton"
 
 // source code of LiveEditor that allows for code editing
 // a good starting point for customizing our own code editor
@@ -25,14 +26,16 @@ function CodeEditor(props: {
     theme: PrismTheme
     showLineNumbers: boolean
     readonly: boolean
+    sandbox?: {
+        files: Record<string, { content: string }>
+        main?: string
+    }
 }) {
-    const { code } = props
+    const { code, language, sandbox } = props
     // const [disabled, setDisabled] = useState(props.disabled);
     const [allowUndo, setAllowUndo] = useState(false)
     const [tmpCode, setTmpCode] = useState("")
     const [hasFocus, setHasFocus] = useState(false)
-
-    const disabled = props.disabled || !hasFocus
 
     useEffect(() => {
         if (props.onChange) {
@@ -55,6 +58,7 @@ function CodeEditor(props: {
     const handleBlur = () => {
         setHasFocus(false)
     }
+
     return (
         <div className={props.className} style={props.style}>
             <Highlight
@@ -146,6 +150,16 @@ function CodeEditor(props: {
                     className={codeBlockContentStyles.codeButton}
                     code={code}
                 />
+                {sandbox && (
+                    <CodeSandboxButton
+                        className={codeBlockContentStyles.codeButton}
+                        files={{
+                            ...sandbox.files,
+                            [sandbox.main]: { content: code },
+                        }}
+                        startFile={sandbox.main}
+                    />
+                )}
             </div>
         </div>
     )

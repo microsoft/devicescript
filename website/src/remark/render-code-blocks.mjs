@@ -227,6 +227,7 @@ export default function plugin() {
                     editable: true,
                     readonly: langConfig.readonly ?? true,
                     showLineNumbers: showLineNumbers,
+                    sandbox: langConfig.sandbox,
                 })
                 parent.children.splice(index, 1, {
                     type: "jsx",
@@ -258,6 +259,7 @@ export default function plugin() {
                     showLineNumbers: showLineNumbers,
                     langVersion: buildConfig.langVersion,
                     tool: buildConfig.npmPackage,
+                    sandbox: langConfig.sandbox,
                 })
                 parent.children.splice(index, 1, {
                     type: "jsx",
