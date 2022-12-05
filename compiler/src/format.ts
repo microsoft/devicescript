@@ -264,7 +264,11 @@ export function emptyDebugInfo(): DebugInfo {
     }
 }
 
-export type JacsDiagnostic = ts.Diagnostic
+export interface JacsDiagnostic extends ts.Diagnostic {
+    filename: string
+    line: number
+    column: number
+}
 
 export interface Host {
     write(filename: string, contents: Uint8Array | string): void

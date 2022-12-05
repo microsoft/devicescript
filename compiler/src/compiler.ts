@@ -507,7 +507,24 @@ class Program implements TopOpWriter {
 
     printDiag(diag: ts.Diagnostic) {
         if (diag.category == ts.DiagnosticCategory.Error) this.numErrors++
-        if (this.host.error) this.host.error(diag)
+
+        const jdiag: JacsDiagnostic = {
+            ...diag,
+            filename: this.host?.mainFileName() || "main.ts",
+            line: 1,
+            column: 1,
+        }
+
+        if (diag.file) {
+            const { character, line } = diag.file.getLineAndCharacterOfPosition(
+                diag.start
+            )
+            jdiag.line = line + 1
+            jdiag.column = character + 1
+            jdiag.filename = diag.file.fileName
+        }
+
+        if (this.host.error) this.host.error(jdiag)
         else console.error(formatDiagnostics([diag]))
     }
 
@@ -2815,7 +2832,7 @@ class Program implements TopOpWriter {
             compiled: toHex(b),
         }
         this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
-        this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg,null, 4))
+        this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg, null, 4))
 
         // write assembly again
         if (this.numErrors == 0)
