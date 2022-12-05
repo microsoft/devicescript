@@ -89,37 +89,6 @@ export {}
         )
     }
 
-    // package.json
-    let pkgChanged = false
-    const pkg = pathExistsSync(PKG)
-        ? readJSONSync(PKG)
-        : {
-              name: basename(cwd()),
-              private: true,
-          }
-    if (!pkg.devicescript) {
-        pkgChanged = true
-        pkg.devicescript = {}
-    }
-    if (!pkg.scripts?.["init"]) {
-        pkgChanged = true
-        pkg.scripts = pkg.scripts || {}
-        pkg.scripts["init"] = `devsc init`
-    }
-    if (!pkg.scripts?.["build"]) {
-        pkgChanged = true
-        pkg.scripts = pkg.scripts || {}
-        pkg.scripts["build"] = `devsc build`
-    }
-    if (!pkg.scripts?.["start"]) {
-        pkgChanged = true
-        pkg.scripts = pkg.scripts || {}
-        pkg.scripts["start"] = `devsc build --watch`
-    }
-    if (pkgChanged) {
-        debug(`write ${PKG}`)
-        writeJSONSync(PKG, pkg, { spaces })
-    }
 
     // help message
     log(`Your DeviceScript project is ready`)
