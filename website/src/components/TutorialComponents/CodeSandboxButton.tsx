@@ -19,7 +19,6 @@ export default function CodeSandboxButton(props: {
         })
         try {
             setImporting(true)
-            console.log({ body })
             const x = await fetch(
                 "https://codesandbox.io/api/v1/sandboxes/define?json=1",
                 {
@@ -74,8 +73,8 @@ export default function CodeSandboxButton(props: {
                     fill="none"
                     stroke="#000"
                     strokeLinecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="12"
+                    strokeLinejoin="round"
+                    strokeWidth="12"
                 />
                 <line
                     x1="128.9"
@@ -93,24 +92,24 @@ export default function CodeSandboxButton(props: {
                     fill="none"
                     stroke="#000"
                     strokeLinecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="12"
+                    strokeLinejoin="round"
+                    strokeWidth="12"
                 />
                 <polyline
                     points="176 209 176 153.9 224 126.9"
                     fill="none"
                     stroke="#000"
                     strokeLinecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="12"
+                    strokeLinejoin="round"
+                    strokeWidth="12"
                 />
                 <polyline
                     points="80 209 80 153.9 32 126.9"
                     fill="none"
                     stroke="#000"
                     strokeLinecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="12"
+                    strokeLinejoin="round"
+                    strokeWidth="12"
                 />
             </svg>
         </button>

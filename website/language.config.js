@@ -34,10 +34,10 @@ async function createConfig() {
                                 },
                                 descriptscript: {},
                                 scripts: {
-                                    build: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build",
                                     setup: "node node_modules/devicescript-cli/built/devicescript-cli.cjs init",
+                                    build: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build",
                                     watch: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build --watch",
-                                    start: "yarn setup",
+                                    start: "yarn setup && yarn watch",
                                 },
                             },
                         },
