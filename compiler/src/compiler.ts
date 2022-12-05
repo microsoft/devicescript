@@ -73,8 +73,13 @@ export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
 export const CMD_GET_REG = 0x1000
 export const CMD_SET_REG = 0x2000
 
-export const DEVS_ASSEMBLY_FILE = "bytecode.dasm"
-export const DEVS_BYTECODE_FILE = "bytecode.devs"
+export const DEVS_FILE_PREFIX = "bytecode"
+export const DEVS_ASSEMBLY_FILE = `${DEVS_FILE_PREFIX}.dasm`
+export const DEVS_BYTECODE_FILE = `${DEVS_FILE_PREFIX}.devs`
+
+export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
+export const DEVS_BODY_FILE = `${DEVS_FILE_PREFIX}-body.json`
+export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
 
 class Cell {
     _index: number
@@ -2774,7 +2779,7 @@ class Program implements TopOpWriter {
             strings: this.stringLiterals.map(q),
             floats: this.floatLiterals.slice(),
         }
-        this.host.write("prog-lib.json", JSON.stringify(lib, null, 1))
+        this.host.write(DEVS_LIB_FILE, JSON.stringify(lib, null, 1))
     }
 
     emit() {
@@ -2809,8 +2814,8 @@ class Program implements TopOpWriter {
             blocks: "",
             compiled: toHex(b),
         }
-        this.host.write("prog-body.json", JSON.stringify(progJson, null, 4))
-        this.host.write("prog-dbg.json", JSON.stringify(dbg))
+        this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
+        this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg,null, 4))
 
         // write assembly again
         if (this.numErrors == 0)
