@@ -65,7 +65,7 @@ export default function CodeSandboxButton(props: {
                     d="M224,177.3V78.7a8.1,8.1,0,0,0-4.1-7l-88-49.5a7.8,7.8,0,0,0-7.8,0l-88,49.5a8.1,8.1,0,0,0-4.1,7v98.6a8.1,8.1,0,0,0,4.1,7l88,49.5a7.8,7.8,0,0,0,7.8,0l88-49.5A8.1,8.1,0,0,0,224,177.3Z"
                     fill="none"
                     stroke="#000"
-                    stroke-linecap="round"
+                    strokeLinecap="round"
                     stroke-linejoin="round"
                     stroke-width="12"
                 />
@@ -73,7 +73,7 @@ export default function CodeSandboxButton(props: {
                     points="222.9 74.6 128.9 128 33.1 74.6"
                     fill="none"
                     stroke="#000"
-                    stroke-linecap="round"
+                    strokeLinecap="round"
                     stroke-linejoin="round"
                     stroke-width="12"
                 />
@@ -84,7 +84,7 @@ export default function CodeSandboxButton(props: {
                     y2="234.8"
                     fill="none"
                     stroke="#000"
-                    stroke-linecap="round"
+                    strokeLinecap="round"
                     stroke-linejoin="round"
                     stroke-width="12"
                 />
@@ -92,7 +92,7 @@ export default function CodeSandboxButton(props: {
                     points="177 47.5 128 75.1 79 47.5"
                     fill="none"
                     stroke="#000"
-                    stroke-linecap="round"
+                    strokeLinecap="round"
                     stroke-linejoin="round"
                     stroke-width="12"
                 />
@@ -100,7 +100,7 @@ export default function CodeSandboxButton(props: {
                     points="176 209 176 153.9 224 126.9"
                     fill="none"
                     stroke="#000"
-                    stroke-linecap="round"
+                    strokeLinecap="round"
                     stroke-linejoin="round"
                     stroke-width="12"
                 />
@@ -108,7 +108,7 @@ export default function CodeSandboxButton(props: {
                     points="80 209 80 153.9 32 126.9"
                     fill="none"
                     stroke="#000"
-                    stroke-linecap="round"
+                    strokeLinecap="round"
                     stroke-linejoin="round"
                     stroke-width="12"
                 />
