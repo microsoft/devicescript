@@ -18,6 +18,9 @@
     "build-fast": "node build.js --fast",
     "watch": "node build.js --watch"
   },
+  "files": [
+    "./built/**"
+  ],
   "license": "MIT",
   "devDependencies": {
     "esbuild": "^0.14.11",
