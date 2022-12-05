@@ -65,13 +65,20 @@ async function getHost(options: BuildOptions & CmdOptions) {
     return jacsHost
 }
 
+export class CompilationError extends Error {
+    constructor(message: string) {
+        super(message)
+        this.name = "CompilationError"
+    }
+}
+
 async function compileBuf(buf: Buffer, options: BuildOptions) {
     const host = await getHost(options)
     const res = compile(buf.toString("utf8"), {
         host,
         isLibrary: options.library,
     })
-    if (!res.success) throw new Error("compilation failed")
+    if (!res.success) throw new CompilationError("compilation failed")
     return res.binary
 }
 
@@ -122,6 +129,7 @@ async function buildWatch(file: string, options: BuildOptions) {
 }
 
 async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
+    const { watch } = options
     try {
         if (!pathExistsSync(file))
             throw new Error(`source file ${file} not found`)
@@ -132,6 +140,7 @@ async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
             debug(e.message)
             debug(e.stack)
         }
+        if (e instanceof CompilationError && watch) return
         throw e
     }
 }
