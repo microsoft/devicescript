@@ -95,6 +95,7 @@ export {}
         ? readJSONSync(PKG)
         : {
               name: basename(cwd()),
+              private: true,
           }
     if (!pkg.devicescript) {
         pkgChanged = true
