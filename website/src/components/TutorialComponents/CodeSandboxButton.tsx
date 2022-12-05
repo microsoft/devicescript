@@ -3,22 +3,23 @@ import clsx from "clsx"
 import codeBlockContentStyles from "@docusaurus/theme-classic/src/theme/CodeBlock/Content/styles.module.css"
 
 export default function CodeSandboxButton(props: {
+    className?: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    files: () => Record<string, any>
-    startFile?: string
+    files: Record<string, any>
+    startFile: string
 }) {
-    const { files, startFile = "main.ts" } = props
+    const { className, files, startFile } = props
     const [error, setError] = useState<any>(undefined)
     const [importing, setImporting] = useState(false)
 
     const handleClick = async () => {
-        const f = files()
-        const file =
-            startFile ||
-            Object.keys(f).filter(fn => /\.js$/.test(fn))[0] ||
-            "index.js"
+        const f = files
+        const body = JSON.stringify({
+            files: f,
+        })
         try {
             setImporting(true)
+            console.log({ body })
             const x = await fetch(
                 "https://codesandbox.io/api/v1/sandboxes/define?json=1",
                 {
@@ -27,15 +28,17 @@ export default function CodeSandboxButton(props: {
                         "Content-Type": "application/json",
                         Accept: "application/json",
                     },
-                    body: JSON.stringify({
-                        files: f,
-                    }),
+                    body,
                 }
             )
             const data = await x.json()
-            const url = `https://codesandbox.io/s/${data.sandbox_id}?file=/${file}`
+            const { sandbox_id } = data
+            if (sandbox_id === undefined)
+                throw new Error("failed to create new sandbox")
+            const url = `https://codesandbox.io/s/${data.sandbox_id}?file=/${startFile}`
             window.open(url, "_blank", "noreferrer")
         } catch (error) {
+            console.error(error)
             setError(error)
         } finally {
             setImporting(false)
@@ -47,11 +50,16 @@ export default function CodeSandboxButton(props: {
             type="button"
             aria-label="Open code in CodeSandbox"
             title="Open in CodeSandbox"
-            className={clsx("clean-btn", codeBlockContentStyles.codeButton)}
-            style={{ borderColor: "var(--custom-editor-reset-color)" }}
+            className={clsx("clean-btn", className)}
             onClick={handleClick}
+            disabled={importing}
         >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 256 256"
+            >
                 <rect width="256" height="256" fill="none" />
                 <path
                     d="M224,177.3V78.7a8.1,8.1,0,0,0-4.1-7l-88-49.5a7.8,7.8,0,0,0-7.8,0l-88,49.5a8.1,8.1,0,0,0-4.1,7v98.6a8.1,8.1,0,0,0,4.1,7l88,49.5a7.8,7.8,0,0,0,7.8,0l88-49.5A8.1,8.1,0,0,0,224,177.3Z"

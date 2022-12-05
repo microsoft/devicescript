@@ -24,7 +24,10 @@ interface CodeBlockProps {
     readonly: boolean
     langVersion?: string
     tool?: string
-    sandbox?: Record<string, any>
+    sandbox?: {
+        files: Record<string, { content: string }>
+        main?: string
+    }
 }
 
 function RunButton(props: {
@@ -89,7 +92,10 @@ function CustomCodeEditor(props: {
     onChange?: (code: string) => void
     githubRepo: string | undefined
     readonly: boolean
-    sandbox?: Record<string, any>
+    sandbox?: {
+        files: Record<string, { content: string }>
+        main?: string
+    }
 }) {
     const {
         input,
@@ -99,8 +105,8 @@ function CustomCodeEditor(props: {
         githubRepo,
         onChange,
         readonly,
+        sandbox,
     } = props
-
     const prismTheme = usePrismTheme()
     // console.log(prismTheme);
     // the line above shows that we are still using `plain` for syntax highlighting
@@ -128,6 +134,7 @@ function CustomCodeEditor(props: {
                 prism={Prism}
                 readonly={readonly}
                 showLineNumbers={showLineNumbers}
+                sandbox={sandbox}
             />
         </Container>
     )
@@ -217,10 +224,6 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
     const onDidChangeCode = (code: string) => {
         setCurrCode(code)
     }
-    const codeSandboxFiles: () => Record<string, any> = () => ({
-        ...(sandbox || {}),
-        [`main.${lang}`]: currCode,
-    })
 
     return (
         <div>
@@ -241,7 +244,6 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
                         onClick={onDidClickRun}
                         runFinished={runFinished}
                     />
-                    <CodeSandboxButton files={codeSandboxFiles} />
                 </div>
                 {outputRendered ? (
                     <Output
