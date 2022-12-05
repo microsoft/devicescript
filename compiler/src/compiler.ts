@@ -74,7 +74,7 @@ export const CMD_GET_REG = 0x1000
 export const CMD_SET_REG = 0x2000
 
 export const DEVS_ASSEMBLY_FILE = "bytecode.dasm"
-export const DEVS_BYTECODE_FILE = "bytecode.dacs"
+export const DEVS_BYTECODE_FILE = "bytecode.devs"
 
 class Cell {
     _index: number
