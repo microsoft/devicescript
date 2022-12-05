@@ -1,5 +1,8 @@
 # Command Line Interface
 
+The DeviceScript command line allows to compile and debug programs from your favorite IDE.
+The CLI also also usable within containers (Docker, GitHub Codespaces, CodeSandbox, ...).
+
 ## Setup
 
 -   install [Node.js](https://nodejs.org/en/download/)
