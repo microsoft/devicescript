@@ -8,17 +8,17 @@
 ```bash
 # yarn
 corepack enable
-yarn add -D devicescript
+yarn add -D devicescript-cli
 ```
 
 ```bash
 #npm developer dependency
-npm install devicescript --save-dev
+npm install devicescript-cli --save-dev
 ```
 
 ```bash
 #npm globally
-npm install -g -u devicescript
+npm install -g -u devicescript-cli
 ```
 
 The command tool is named `devicescript` or `devsc` for short.
