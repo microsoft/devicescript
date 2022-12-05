@@ -8,7 +8,7 @@ import net from "net"
 import fs from "fs"
 import { CmdOptions, debug, error, log } from "./command"
 
-const dasboardPath = "editors/devicescript"
+const dasboardPath = "tools/devicescript-devtools"
 
 function fetchProxy(localhost: boolean): Promise<string> {
     const protocol = localhost ? http : https
