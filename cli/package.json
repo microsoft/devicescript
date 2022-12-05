@@ -15,7 +15,6 @@
     "devsc": "./devicescript"
   },  
   "files": [
-    "./devsc",
     "./devicescript",
     "./built/devicescript-cli.cjs",
     "buffer",
