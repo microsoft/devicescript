@@ -10,11 +10,12 @@ import styles from "./styles.module.css"
 import Prism from "prism-react-renderer/prism"
 
 import DevToolsContext from "@site/src/contexts/DevToolsContext"
+import CodeSandboxButton from "./CodeSandboxButton"
 
 interface CodeBlockProps {
     lang: string
     highlight: string
-    statusCodes: { [key: string]: string }
+    statusCodes: Record<string, string>
     code: string
     result: { [key: string]: string }
     githubRepo: string | undefined
@@ -23,21 +24,7 @@ interface CodeBlockProps {
     readonly: boolean
     langVersion?: string
     tool?: string
-}
-
-function OutputToggle(props: {
-    onClick: () => void
-    disabled?: boolean
-    version?: string
-    tool?: string
-}) {
-    const { onClick } = props
-
-    return (
-        <button className="button button--primary" onClick={onClick}>
-            Run
-        </button>
-    )
+    sandbox?: Record<string, any>
 }
 
 function RunButton(props: {
@@ -102,6 +89,7 @@ function CustomCodeEditor(props: {
     onChange?: (code: string) => void
     githubRepo: string | undefined
     readonly: boolean
+    sandbox?: Record<string, any>
 }) {
     const {
         input,
@@ -159,6 +147,7 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
         editable,
         showLineNumbers,
         readonly,
+        sandbox,
     } = input
     const [currCode, setCurrCode] = useState(code)
     const [outputRendered, setOutputRendered] = useState(false)
@@ -228,6 +217,10 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
     const onDidChangeCode = (code: string) => {
         setCurrCode(code)
     }
+    const codeSandboxFiles: () => Record<string, any> = () => ({
+        ...(sandbox || {}),
+        [`main.${lang}`]: currCode,
+    })
 
     return (
         <div>
@@ -240,15 +233,15 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
                 language={highlight}
                 githubRepo={githubRepo}
                 readonly={readonly}
+                sandbox={sandbox}
             />
             <>
                 <div className={styles.buttons}>
-                    {!readonly && (
-                        <RunButton
-                            onClick={onDidClickRun}
-                            runFinished={runFinished}
-                        />
-                    )}
+                    <RunButton
+                        onClick={onDidClickRun}
+                        runFinished={runFinished}
+                    />
+                    <CodeSandboxButton files={codeSandboxFiles} />
                 </div>
                 {outputRendered ? (
                     <Output

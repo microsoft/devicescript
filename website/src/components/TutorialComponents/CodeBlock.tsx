@@ -25,6 +25,7 @@ function CodeEditor(props: {
     theme: PrismTheme
     showLineNumbers: boolean
     readonly: boolean
+    sandbox?: Record<string, any>
 }) {
     const { code } = props
     // const [disabled, setDisabled] = useState(props.disabled);

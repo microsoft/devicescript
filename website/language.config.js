@@ -24,7 +24,13 @@ async function createConfig() {
                     },
                 },
                 githubRepo: "microsoft/devicescript",
-                githubDiscussion: false,
+                sandbox: {
+                    "package.json": {
+                        devDependencies: {
+                            "devicescript-cli": "*"
+                        }
+                    }
+                }
             },
         ],
         solutionsDir: "./solutions",
