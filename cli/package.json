@@ -9,7 +9,11 @@
     "embedded"
   ],
   "author": "Microsoft",
-  "bin": "./built/devicescript-cli.cjs",
+  "bin": {
+    "devicescript": "./devicescript",
+    "devicescript-cli": "./devicescript",
+    "devsc": "./devicescript"
+  },  
   "files": [
     "./devsc",
     "./devicescript",
