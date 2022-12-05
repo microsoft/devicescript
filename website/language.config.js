@@ -32,20 +32,21 @@ async function createConfig() {
                                 devDependencies: {
                                     "devicescript-cli": "*",
                                 },
+                                descriptscript: {},
                                 scripts: {
-                                    build: "./node_modules/bin/devicescript build",
-                                    watch: "./node_modules/bin/devicescript build --watch",
-                                    init: "./node_modules/bin/devicescript init",
-                                    postinstall: "yarn init & yarn watch",
+                                    build: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build",
+                                    setup: "node node_modules/devicescript-cli/built/devicescript-cli.cjs init",
+                                    watch: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build --watch",
+                                    start: "yarn setup",
                                 },
                             },
                         },
                         "sandbox.config.json": {
                             content: {
                                 template: "node",
+                                view: "terminal",
                                 container: {
                                     node: "16",
-                                    port: 8000,
                                 },
                             },
                         },
