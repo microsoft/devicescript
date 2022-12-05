@@ -11,6 +11,8 @@
   "author": "Microsoft",
   "bin": "./built/devicescript-cli.cjs",
   "files": [
+    "./devsc",
+    "./devicescript",
     "./built/devicescript-cli.cjs",
     "buffer",
     "README.md"
