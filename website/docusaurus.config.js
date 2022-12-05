@@ -20,7 +20,7 @@ async function createConfig() {
         baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
         onBrokenMarkdownLinks: "throw",
-        favicon: "img/favicon.ico",
+        favicon: "img/favicon.svg",
         trailingSlash: false,
 
         // GitHub pages deployment config.

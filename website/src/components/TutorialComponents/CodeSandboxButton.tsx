@@ -65,8 +65,8 @@ export default function CodeSandboxButton(props: {
                     fill="none"
                     stroke="#000"
                     strokeLinecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="12"
+                    strokeLinejoin="round"
+                    strokeWidth="12"
                 />
                 <polyline
                     points="222.9 74.6 128.9 128 33.1 74.6"
@@ -84,8 +84,8 @@ export default function CodeSandboxButton(props: {
                     fill="none"
                     stroke="#000"
                     strokeLinecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="12"
+                    strokeLinejoin="round"
+                    strokeWidth="12"
                 />
                 <polyline
                     points="177 47.5 128 75.1 79 47.5"
