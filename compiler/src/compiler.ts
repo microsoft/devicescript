@@ -73,8 +73,8 @@ export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
 export const CMD_GET_REG = 0x1000
 export const CMD_SET_REG = 0x2000
 
-export const DEVS_ASSEMBLY_FILE = "prog.jasm"
-export const DEVS_BYTECODE_FILE = "prog.jacs"
+export const DEVS_ASSEMBLY_FILE = "bytecode.dasm"
+export const DEVS_BYTECODE_FILE = "bytecode.dacs"
 
 class Cell {
     _index: number
