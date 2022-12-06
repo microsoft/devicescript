@@ -25,5 +25,3 @@ function baz() {
 
 foo()
 baz()
-
-export {}

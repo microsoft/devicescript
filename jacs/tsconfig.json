@@ -14,6 +14,7 @@
         "noImplicitThis": true,
         "isolatedModules": true,
         "noImplicitAny": true,
+        "moduleDetection": "force",
         "types": []
     }
 }

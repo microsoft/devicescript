@@ -14,5 +14,3 @@ btnA.down.subscribe(() => {
   // display.message.write(format("t={0} {1}", tint, r))
   led.brightness.write(0)
 })
-
-export {}

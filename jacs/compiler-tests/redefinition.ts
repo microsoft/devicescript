@@ -18,5 +18,3 @@ function baz() { } //! Duplicate function implementation
 function baz() { } //! Duplicate function implementation
 
 foo()
-
-export {}

@@ -238,5 +238,3 @@ testArray()
 testObj()
 console.log("all OK")
 reboot()
-
-export {}

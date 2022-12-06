@@ -31,5 +31,3 @@ rot.position.onChange(1, () => {
         press(HidKeyboardSelector.LeftArrow)
     }
 })
-
-export {}
