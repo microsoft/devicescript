@@ -42,6 +42,7 @@ async function createConfig() {
                 /** @type {import('@docusaurus/preset-classic').Options} */
                 ({
                     docs: {
+                        routeBasePath: '/',
                         sidebarPath: require.resolve("./sidebars.js"),
                         remarkPlugins: [],
                     },
@@ -73,7 +74,7 @@ async function createConfig() {
                             type: "doc",
                             docId: "intro",
                             position: "left",
-                            label: "Reference",
+                            label: "Docs",
                         },
                         {
                             href: "https://github.com/microsoft/devicescript/",

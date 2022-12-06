@@ -17,3 +17,14 @@ environments (VM itself compiles to 10kB of code, with the floating point librar
 * small memory (RAM) footprint
 * small code (flash) footprint
 * leave space for extensions in future
+
+## Live documentation
+
+Most code examples can be loaded in the side-editor by clicking the `Run` button; or in other cloud-based virtual machine by hovering on the source and clicking on the apprioriate button.
+
+```ts
+console.log(`click run to load this program in a DeviceScript simulator`)
+every(1, () => {
+    console.log(`hello`)
+})
+```

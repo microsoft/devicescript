@@ -1,8 +1,4 @@
 {
-  "label": "Developer Experience",
-  "position": 3,
-  "link": {
-    "type": "generated-index",
-    "description": "How the editors work."
-  }
+    "label": "Developer",
+    "position": 3
 }
