@@ -68,7 +68,11 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
     const sendDeviceScript = bytecodeFile
         ? () => {
               const bytecode = fs.readFileSync(bytecodeFile)
-              debug(`refresh bytecode...`)
+              debug(
+                  `refresh bytecode ${Math.round(
+                      (bytecode.length || 0) / 1000
+                  )}kb...`
+              )
               const msg = JSON.stringify({
                   type: "bytecode",
                   channel: "devicescript",
