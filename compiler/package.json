@@ -29,5 +29,8 @@
     "@types/fs-extra": "^9.0.13",
     "@types/node": "^18.11.9"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "publishConfig": {
+      "access": "public"
+  }
 }
