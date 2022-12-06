@@ -66,6 +66,21 @@ The `build` command compiles a DeviceScript file (default is `main.ts`), using t
 devsc build main.ts
 ```
 
+or, for short,
+
+```bash
+devsc build
+```
+
+### --stats
+
+The ``--stats`` flag enables printing additional debugging information about code size,
+and other useful metrics.
+
+```bash
+devsc build --stats
+```
+
 ### --watch
 
 To automatically rebuild your program based on file changes,

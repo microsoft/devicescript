@@ -13,6 +13,7 @@ import {
     JacsDiagnostic,
     DEVS_BYTECODE_FILE,
     formatDiagnostics,
+    LogInfo,
 } from "devicescript-compiler"
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
@@ -78,8 +79,7 @@ async function compileBuf(buf: Buffer, options: BuildOptions) {
         host,
         isLibrary: options.library,
     })
-    if (!res.success) throw new CompilationError("compilation failed")
-    return res.binary
+    return res
 }
 
 export interface BuildOptions {
@@ -87,6 +87,7 @@ export interface BuildOptions {
     library?: boolean
     outDir?: string
     watch?: boolean
+    stats?: boolean
 
     // internal option
     mainFileName?: string
@@ -104,6 +105,7 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
         return
     }
 
+    log(`building ${file}`)
     ensureDirSync(options.outDir)
     await buildOnce(file, options)
     if (options.watch) await buildWatch(file, options)
@@ -128,19 +130,61 @@ async function buildWatch(file: string, options: BuildOptions) {
     await devtools({ ...options, bytecodeFile })
 }
 
+function roundWithPrecision(
+    x: number,
+    digits: number,
+    round = Math.round
+): number {
+    digits = digits | 0
+    // invalid digits input
+    if (digits <= 0) return round(x)
+    if (x == 0) return 0
+    let r = 0
+    while (r == 0 && digits < 21) {
+        const d = Math.pow(10, digits++)
+        r = round(x * d + Number.EPSILON) / d
+    }
+    return r
+}
+function prettySize(b: number) {
+    b = b | 0
+    if (b === 0) return "0kb"
+    else if (b < 100) return b + "b"
+    else if (b < 1000) return roundWithPrecision(b / 1e3, 2) + "kb"
+    else if (b < 1000000) return roundWithPrecision(b / 1e3, 1) + "kb"
+    else return roundWithPrecision(b / 1e6, 1) + "mb"
+}
+
 async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
-    const { watch } = options
-    try {
-        if (!pathExistsSync(file))
-            throw new Error(`source file ${file} not found`)
-        const buf = readFileSync(file)
-        await compileBuf(buf, { ...options, mainFileName: file })
-    } catch (e) {
-        if (options.verbose) {
-            debug(e.message)
-            debug(e.stack)
-        }
-        if (e instanceof CompilationError && watch) return
-        throw e
+    const { watch, stats } = options
+    if (!pathExistsSync(file)) throw new Error(`source file ${file} not found`)
+    const buf = readFileSync(file)
+    const { success, binary, dbg, clientSpecs } = await compileBuf(buf, {
+        ...options,
+        mainFileName: file,
+    })
+    if (!success) {
+        if (watch) return
+        throw new CompilationError("compilation failed")
+    }
+
+    log(`binary: ${prettySize(binary.length)}`)
+    if (stats) {
+        const { sizes, functions } = dbg
+        log(
+            "  " +
+                Object.keys(sizes)
+                    .map(name => `${name}: ${prettySize(sizes[name])}`)
+                    .join(", ")
+        )
+        log(`  functions:`)
+        functions
+            .sort((l, r) => l.size - r.size)
+            .forEach(fn => {
+                log(`  ${fn.name} (${prettySize(fn.size)})`)
+                fn.users.forEach(user =>
+                    debug(`    <-- ${user.file}: ${user.line}, ${user.col}`)
+                )
+            })
     }
 }
