@@ -30,13 +30,13 @@ async function createConfig() {
                             content: {
                                 dependencies: {},
                                 devDependencies: {
-                                    "devicescript-cli": "*",
+                                    "@devicescript/cli": "*",
                                 },
                                 descriptscript: {},
                                 scripts: {
-                                    setup: "node node_modules/devicescript-cli/built/devicescript-cli.cjs init",
-                                    build: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build",
-                                    watch: "node node_modules/devicescript-cli/built/devicescript-cli.cjs build --watch",
+                                    setup: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs init",
+                                    build: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build",
+                                    watch: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build --watch",
                                     start: "yarn setup && yarn watch",
                                 },
                             },

@@ -10,18 +10,17 @@ The CLI also also usable within containers (Docker, GitHub Codespaces, CodeSandb
 
 ```bash
 # yarn
-corepack enable
-yarn add -D devicescript-cli
+yarn add -D @devicescript/cli
 ```
 
 ```bash
 #npm developer dependency
-npm install devicescript-cli --save-dev
+npm install @devicescript/cli --save-dev
 ```
 
 ```bash
 #npm globally
-npm install -g -u devicescript-cli
+npm install -g -u @devicescript/cli
 ```
 
 The command tool is named `devicescript` or `devsc` for short.

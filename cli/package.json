@@ -1,5 +1,5 @@
 {
-    "name": "devicescript-cli",
+    "name": "@devicescript/cli",
     "version": "1.0.1",
     "description": "DeviceScript command line tool",
     "keywords": [
@@ -28,8 +28,8 @@
         "@types/node": "^18.11.9"
     },
     "dependencies": {
-        "devicescript-compiler": "*",
-        "devicescript-vm": "*",
+        "@devicescript/compiler": "*",
+        "@devicescript/vm": "*",
         "commander": "^9.4.1",
         "debounce-promise": "^3.1.2",
         "faye-websocket": "^0.11.4",

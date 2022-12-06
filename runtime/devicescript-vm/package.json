@@ -1,5 +1,5 @@
 {
-    "name": "devicescript-vm",
+    "name": "@devicescript/vm",
     "version": "1.0.0",
     "description": "DeviceScript Virtual Machine",
     "keywords": [
