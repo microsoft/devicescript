@@ -16,12 +16,12 @@ import {
     LogInfo,
     DEVS_DBG_FILE,
     prettySize,
-} from "devicescript-compiler"
+} from "@devicescript/compiler"
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
 
 function jacsFactory() {
-    let d = require("devicescript-vm")
+    let d = require("@devicescript/vm")
     try {
         require("websocket-polyfill")
         // @ts-ignore

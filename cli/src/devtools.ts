@@ -7,7 +7,7 @@ import url from "url"
 import net from "net"
 import { CmdOptions, debug, error, log } from "./command"
 import { readFileSync, readJSONSync, watch } from "fs-extra"
-import { prettySize } from "devicescript-compiler"
+import { prettySize } from "@devicescript/compiler"
 
 const dasboardPath = "tools/devicescript-devtools"
 

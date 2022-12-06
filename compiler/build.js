@@ -143,7 +143,7 @@ async function main() {
                 sourcemap: true,
                 outfile,
                 logLevel: "warning",
-                external: ["websocket-polyfill", "devicescript-compiler"],
+                external: ["websocket-polyfill", "@devicescript/compiler"],
                 platform: cjs ? "node" : "browser",
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",
