@@ -9,7 +9,7 @@ import {
     emptyDirSync,
     readFileSync,
 } from "fs-extra"
-import { preludeFiles } from "devicescript-compiler"
+import { preludeFiles } from "@devicescript/compiler"
 
 const TSCONFIG = "tsconfig.json"
 const MAIN = "main.ts"

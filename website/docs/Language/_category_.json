@@ -1,9 +1,5 @@
 {
     "label": "Language",
     "position": 2,
-    "collapsible": true,
-    "link": {
-        "type": "generated-index",
-        "description": "DeviceScript Language and Runtime reference."
-    }
+    "collapsible": true
 }
