@@ -5,6 +5,7 @@ export * from "./disassemble"
 export * from "./specgen"
 export * from "./embedspecs"
 export * from "./tsiface"
+export * from "./info"
 
 import { compile } from "./compiler"
 

@@ -27,15 +27,11 @@ import {
 
 import {
     BinFmt,
-    CellDebugInfo,
     ValueType,
-    DebugInfo,
-    FunctionDebugInfo,
     Host,
     OpCall,
     NumFmt,
     Op,
-    RoleDebugInfo,
     SMap,
     ValueKind,
     JacsDiagnostic,
@@ -66,6 +62,13 @@ import {
 import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
 import { preludeFiles } from "./specgen"
 import { jacdacDefaultSpecifications } from "./embedspecs"
+import {
+    CellDebugInfo,
+    RoleDebugInfo,
+    FunctionDebugInfo,
+    DebugInfo,
+    SrcLocation,
+} from "./info"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -80,6 +83,7 @@ export const DEVS_BYTECODE_FILE = `${DEVS_FILE_PREFIX}.devs`
 export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
 export const DEVS_BODY_FILE = `${DEVS_FILE_PREFIX}-body.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
+export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.txts`
 
 class Cell {
     _index: number
@@ -271,6 +275,18 @@ function cellKind(v: Value): ValueType {
     return v.valueType
 }
 
+function toSrcLocation(n: ts.Node): SrcLocation {
+    const f = n.getSourceFile()
+    const pp = f.getLineAndCharacterOfPosition(n.pos)
+    return {
+        file: f.fileName,
+        line: pp.line + 1,
+        col: pp.character + 1,
+        len: n.end - n.pos,
+        pos: n.pos,
+    }
+}
+
 function idName(pat: ts.Expression | ts.DeclarationName) {
     if (ts.isIdentifier(pat)) return pat.text
     else return null
@@ -303,6 +319,8 @@ class Procedure {
     params: VariableScope
     locals: VariableScope
     methodSeqNo: Variable
+    users: ts.Node[] = []
+    skipAccounting = false
     constructor(public parent: Program, public name: string) {
         this.index = this.parent.procs.length
         this.writer = new OpWriter(parent, `${this.name}_F${this.index}`)
@@ -322,6 +340,10 @@ class Procedure {
     args() {
         return this.params.list.slice() as Variable[]
     }
+    useFrom(node: ts.Node) {
+        if (this.users.indexOf(node) >= 0) return
+        this.users.push(node)
+    }
     mkTempLocal(name: string, tp: ValueType) {
         const l = new Variable(null, this.locals, tp)
         l._name = name
@@ -333,6 +355,8 @@ class Procedure {
         return {
             name: this.name,
             srcmap: this.writer.srcmap,
+            size: this.writer.size,
+            users: this.users.map(toSrcLocation),
             locals: this.params.list
                 .concat(this.locals.list)
                 .map(v => v.debugInfo()),
@@ -439,6 +463,7 @@ class Program implements TopOpWriter {
     stringLiterals: (string | Uint8Array)[] = []
     writer: OpWriter
     proc: Procedure
+    accountingProc: Procedure
     sysSpec: jdspec.ServiceSpec
     serviceSpecs: Record<string, jdspec.ServiceSpec>
     enums: Record<string, jdspec.EnumInfo> = {}
@@ -565,6 +590,7 @@ class Program implements TopOpWriter {
     private roleDispatcher(role: Role) {
         if (!role.dispatcher) {
             const proc = new Procedure(this, role.getName() + "_disp")
+            proc.skipAccounting = true
             role.dispatcher = {
                 proc,
                 top: proc.writer.mkLabel("disp_top"),
@@ -702,13 +728,16 @@ class Program implements TopOpWriter {
     private withProcedure<T>(proc: Procedure, f: (wr: OpWriter) => T) {
         assert(!!proc)
         const prevProc = this.proc
+        const prevAcc = this.accountingProc
         try {
             this.proc = proc
+            if (!proc.skipAccounting) this.accountingProc = proc
             this.writer = proc.writer
             return f(proc.writer)
         } finally {
             this.proc = prevProc
             if (prevProc) this.writer = prevProc.writer
+            this.accountingProc = prevAcc
         }
     }
 
@@ -1082,6 +1111,12 @@ class Program implements TopOpWriter {
         this.writer.assertNoTemps()
     }
 
+    private uniqueProcName(base: string) {
+        let suff = 0
+        while (this.procs.some(p => p.name == base + "_" + suff)) suff++
+        return base + "_" + suff
+    }
+
     private emitHandler(
         name: string,
         func: Expr,
@@ -1092,7 +1127,8 @@ class Program implements TopOpWriter {
     ): Procedure {
         if (!ts.isArrowFunction(func))
             throwError(func, "arrow function expected here")
-        const proc = new Procedure(this, name)
+        const proc = new Procedure(this, this.uniqueProcName(name))
+        proc.useFrom(func)
         proc.writer.ret = proc.writer.mkLabel("ret")
         if (func.parameters.length && !options.methodHandler)
             throwError(func, "parameters not supported here")
@@ -1872,6 +1908,7 @@ class Program implements TopOpWriter {
     ) {
         const wr = this.writer
         const args = expr.arguments.slice()
+        proc.useFrom(expr)
         if (isMember) {
             this.requireArgs(expr, proc.numargs - 1)
             if (ts.isPropertyAccessExpression(expr.expression))
@@ -2833,6 +2870,7 @@ class Program implements TopOpWriter {
         }
         this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
         this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg, null, 4))
+        this.host.write(DEVS_SIZES_FILE, computeSizes(dbg))
 
         // write assembly again
         if (this.numErrors == 0)
@@ -2986,5 +3024,25 @@ export function testCompiler(host: Host, code: string) {
             console.log(cont)
             throw new Error("bad disassembly")
         }
+    }
+}
+
+export function computeSizes(dbg: DebugInfo) {
+    const funs = dbg.functions.slice()
+    funs.sort((a, b) => a.size - b.size || strcmp(a.name, b.name))
+    return (
+        "\n## Functions\n" +
+        funs.map(f => `${f.size}\t${f.name}\t${locs2str(f.users)}\n`).join("")
+    )
+
+    function loc2str(l: SrcLocation) {
+        return `${l.file}(${l.line},${l.col})`
+    }
+
+    function locs2str(ls: SrcLocation[]) {
+        const maxlen = 10
+        let r = ls.slice(0, maxlen).map(loc2str).join(", ")
+        if (ls.length > maxlen) r += "..."
+        return r
     }
 }

@@ -10,6 +10,7 @@ import {
     OP_TYPES,
 } from "./bytecode"
 import { toHex } from "./jdutil"
+import { DebugInfo } from "./info"
 
 export * from "./bytecode"
 export * from "./type"
@@ -231,38 +232,6 @@ export function stringifyInstr(
     }
 }
 
-export interface FunctionDebugInfo {
-    name: string
-    // format is (line-number, start, len)
-    // start is offset in bytes from the start of the function
-    // len is in bytes
-    srcmap: number[]
-    locals: CellDebugInfo[]
-}
-
-export interface CellDebugInfo {
-    name: string
-}
-
-export interface RoleDebugInfo extends CellDebugInfo {
-    serviceClass: number
-}
-
-export interface DebugInfo {
-    functions: FunctionDebugInfo[]
-    roles: RoleDebugInfo[]
-    globals: CellDebugInfo[]
-    source: string
-}
-
-export function emptyDebugInfo(): DebugInfo {
-    return {
-        functions: [],
-        globals: [],
-        roles: [],
-        source: "",
-    }
-}
 
 export interface JacsDiagnostic extends ts.Diagnostic {
     filename: string

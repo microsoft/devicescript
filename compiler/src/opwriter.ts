@@ -183,6 +183,10 @@ export class OpWriter {
         return this.binary.slice(0, this.binPtr)
     }
 
+    get size() {
+        return this.binPtr
+    }
+
     finalizeDesc(off: number, numlocals: number, numargs: number) {
         const flags = 0
         const buf = new Uint8Array(4 * 4)
