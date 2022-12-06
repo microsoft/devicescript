@@ -184,7 +184,7 @@ export class OpWriter {
     }
 
     get size() {
-        return this.binPtr
+        return this.binPtr + this.desc.length
     }
 
     finalizeDesc(off: number, numlocals: number, numargs: number) {

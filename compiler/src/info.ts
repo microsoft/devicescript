@@ -26,6 +26,13 @@ export interface RoleDebugInfo extends CellDebugInfo {
 }
 
 export interface DebugInfo {
+    sizes: Record<string, number> & {
+        header: number
+        floats: number
+        strings: number
+        roles: number
+        align: number
+    }
     functions: FunctionDebugInfo[]
     roles: RoleDebugInfo[]
     globals: CellDebugInfo[]
@@ -34,6 +41,13 @@ export interface DebugInfo {
 
 export function emptyDebugInfo(): DebugInfo {
     return {
+        sizes: {
+            header: 0,
+            floats: 0,
+            strings: 0,
+            roles: 0,
+            align: 0,
+        },
         functions: [],
         globals: [],
         roles: [],

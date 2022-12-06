@@ -2772,6 +2772,7 @@ class Program implements TopOpWriter {
             s.finalize(off)
             off += s.size
         }
+
         const mask = BinFmt.BINARY_SIZE_ALIGN - 1
         off = (off + mask) & ~mask
         const outp = new Uint8Array(off)
@@ -2800,7 +2801,21 @@ class Program implements TopOpWriter {
         const left = outp.length - off
         assert(0 <= left && left < BinFmt.BINARY_SIZE_ALIGN)
 
-        return outp
+        const dbg: DebugInfo = {
+            sizes: {
+                header: fixHeader.size + sectDescs.size,
+                floats: floatData.size,
+                strings: strData.size + strDesc.size,
+                roles: roleData.size,
+                align: left,
+            },
+            roles: this.roles.list.map(r => (r as Role).debugInfo()),
+            functions: this.procs.map(p => p.debugInfo()),
+            globals: this.globals.list.map(r => r.debugInfo()),
+            source: this._source,
+        }
+
+        return { binary: outp, dbg }
     }
 
     getAssembly() {
@@ -2855,18 +2870,12 @@ class Program implements TopOpWriter {
         if (this.numErrors == 0)
             this.host.write(DEVS_ASSEMBLY_FILE, this.getAssembly())
 
-        const b = this.serialize()
-        const dbg: DebugInfo = {
-            roles: this.roles.list.map(r => (r as Role).debugInfo()),
-            functions: this.procs.map(p => p.debugInfo()),
-            globals: this.globals.list.map(r => r.debugInfo()),
-            source: this._source,
-        }
-        this.host.write(DEVS_BYTECODE_FILE, b)
+        const { binary, dbg } = this.serialize()
+        this.host.write(DEVS_BYTECODE_FILE, binary)
         const progJson = {
             text: this._source,
             blocks: "",
-            compiled: toHex(b),
+            compiled: toHex(binary),
         }
         this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
         this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg, null, 4))
@@ -2878,7 +2887,7 @@ class Program implements TopOpWriter {
 
         if (this.numErrors == 0) {
             try {
-                this.host?.verifyBytecode(b, dbg)
+                this.host?.verifyBytecode(binary, dbg)
             } catch (e) {
                 this.reportError(this.mainFile, e.message)
             }
@@ -2912,7 +2921,7 @@ class Program implements TopOpWriter {
 
         return {
             success: this.numErrors == 0,
-            binary: b,
+            binary: binary,
             dbg: dbg,
             clientSpecs,
         }
@@ -3030,9 +3039,22 @@ export function testCompiler(host: Host, code: string) {
 export function computeSizes(dbg: DebugInfo) {
     const funs = dbg.functions.slice()
     funs.sort((a, b) => a.size - b.size || strcmp(a.name, b.name))
+    let ftotal = 0
+    for (const f of funs) {
+        ftotal += f.size
+    }
+    let dtotal = 0
+    for (const v of Object.values(dbg.sizes)) dtotal += v
     return (
+        "## Data\n" +
+        Object.keys(dbg.sizes)
+            .map(k => `${dbg.sizes[k]}\t${k}\n`)
+            .join("") +
+        `${dtotal}\tData TOTAL\n` +
         "\n## Functions\n" +
-        funs.map(f => `${f.size}\t${f.name}\t${locs2str(f.users)}\n`).join("")
+        funs.map(f => `${f.size}\t${f.name}\t${locs2str(f.users)}\n`).join("") +
+        `${ftotal}\tFunction TOTAL\n\n` +
+        `${dtotal + ftotal}\tTOTAL\n`
     )
 
     function loc2str(l: SrcLocation) {
