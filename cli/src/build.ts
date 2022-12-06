@@ -14,6 +14,8 @@ import {
     DEVS_BYTECODE_FILE,
     formatDiagnostics,
     LogInfo,
+    DEVS_DBG_FILE,
+    prettySize,
 } from "devicescript-compiler"
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
@@ -113,6 +115,7 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
 
 async function buildWatch(file: string, options: BuildOptions) {
     const bytecodeFile = join(options.outDir, DEVS_BYTECODE_FILE)
+    const debugFile = join(options.outDir, DEVS_DBG_FILE)
 
     // start watch source file
     log(`watching ${file}...`)
@@ -127,32 +130,7 @@ async function buildWatch(file: string, options: BuildOptions) {
     watch(file, work)
 
     // start watching bytecode file
-    await devtools({ ...options, bytecodeFile })
-}
-
-function roundWithPrecision(
-    x: number,
-    digits: number,
-    round = Math.round
-): number {
-    digits = digits | 0
-    // invalid digits input
-    if (digits <= 0) return round(x)
-    if (x == 0) return 0
-    let r = 0
-    while (r == 0 && digits < 21) {
-        const d = Math.pow(10, digits++)
-        r = round(x * d + Number.EPSILON) / d
-    }
-    return r
-}
-function prettySize(b: number) {
-    b = b | 0
-    if (b === 0) return "0kb"
-    else if (b < 100) return b + "b"
-    else if (b < 1000) return roundWithPrecision(b / 1e3, 2) + "kb"
-    else if (b < 1000000) return roundWithPrecision(b / 1e3, 1) + "kb"
-    else return roundWithPrecision(b / 1e6, 1) + "mb"
+    await devtools({ ...options, bytecodeFile, debugFile })
 }
 
 async function buildOnce(file: string, options: BuildOptions & CmdOptions) {

@@ -5,8 +5,9 @@ import http from "http"
 import https from "https"
 import url from "url"
 import net from "net"
-import fs from "fs"
 import { CmdOptions, debug, error, log } from "./command"
+import { readFileSync, readJSONSync, watch } from "fs-extra"
+import { prettySize } from "devicescript-compiler"
 
 const dasboardPath = "tools/devicescript-devtools"
 
@@ -46,10 +47,11 @@ export interface DevToolsOptions {
     localhost?: boolean
 
     bytecodeFile?: string
+    debugFile?: string
 }
 
 export async function devtools(options: DevToolsOptions & CmdOptions) {
-    const { internet, localhost, bytecodeFile } = options
+    const { internet, localhost, bytecodeFile, debugFile } = options
     const port = 8081
     const tcpPort = 8082
     const listenHost = internet ? undefined : "127.0.0.1"
@@ -67,16 +69,16 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
     // upload DeviceScript file is needed
     const sendDeviceScript = bytecodeFile
         ? () => {
-              const bytecode = fs.readFileSync(bytecodeFile)
+              const bytecode = readFileSync(bytecodeFile)
+              const dbg = debugFile ? readJSONSync(debugFile) : undefined
               debug(
-                  `refresh bytecode ${Math.round(
-                      (bytecode.length || 0) / 1000
-                  )}kb...`
+                  `refresh bytecode ${prettySize(bytecode.length)}...`
               )
               const msg = JSON.stringify({
                   type: "bytecode",
                   channel: "devicescript",
                   bytecode: bytecode.toString("hex"),
+                  dbg,
               })
               clients.forEach(c => c.send(msg))
           }
@@ -146,7 +148,7 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
     tcpServer.listen(tcpPort, listenHost)
 
     if (bytecodeFile) {
-        debug(`watch ${bytecodeFile}`)
-        fs.watch(bytecodeFile, sendDeviceScript)
+        debug(`watching ${bytecodeFile}...`)
+        watch(bytecodeFile, sendDeviceScript)
     }
 }

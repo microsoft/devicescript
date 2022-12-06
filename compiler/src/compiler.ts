@@ -2871,7 +2871,6 @@ class Program implements TopOpWriter {
             this.host.write(DEVS_ASSEMBLY_FILE, this.getAssembly())
 
         const { binary, dbg } = this.serialize()
-        this.host.write(DEVS_BYTECODE_FILE, binary)
         const progJson = {
             text: this._source,
             blocks: "",
@@ -2880,10 +2879,10 @@ class Program implements TopOpWriter {
         this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
         this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg, null, 4))
         this.host.write(DEVS_SIZES_FILE, computeSizes(dbg))
-
-        // write assembly again
         if (this.numErrors == 0)
             this.host.write(DEVS_ASSEMBLY_FILE, this.getAssembly())
+        // this file is tracked by --watch and should be written last
+        this.host.write(DEVS_BYTECODE_FILE, binary)
 
         if (this.numErrors == 0) {
             try {
