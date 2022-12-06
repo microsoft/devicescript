@@ -83,7 +83,7 @@ export const DEVS_BYTECODE_FILE = `${DEVS_FILE_PREFIX}.devs`
 export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
 export const DEVS_BODY_FILE = `${DEVS_FILE_PREFIX}-body.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
-export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.txts`
+export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
 class Cell {
     _index: number
@@ -321,7 +321,11 @@ class Procedure {
     methodSeqNo: Variable
     users: ts.Node[] = []
     skipAccounting = false
-    constructor(public parent: Program, public name: string) {
+    constructor(
+        public parent: Program,
+        public name: string,
+        public sourceNode?: ts.Node
+    ) {
         this.index = this.parent.procs.length
         this.writer = new OpWriter(parent, `${this.name}_F${this.index}`)
         this.parent.procs.push(this)
@@ -355,6 +359,9 @@ class Procedure {
         return {
             name: this.name,
             srcmap: this.writer.srcmap,
+            location: this.sourceNode
+                ? toSrcLocation(this.sourceNode)
+                : undefined,
             size: this.writer.size,
             users: this.users.map(toSrcLocation),
             locals: this.params.list
@@ -977,7 +984,8 @@ class Program implements TopOpWriter {
         const stmt = cc.defintion
         cc.proc = new Procedure(
             this,
-            cc.serviceSpec.camelName + "." + cc.jsName
+            cc.serviceSpec.camelName + "." + cc.jsName,
+            stmt
         )
 
         this.withProcedure(cc.proc, wr => {
@@ -1000,7 +1008,7 @@ class Program implements TopOpWriter {
         if (fundecl.proc) return fundecl.proc
         const stmt = fundecl.definition as ts.FunctionDeclaration
 
-        fundecl.proc = new Procedure(this, fundecl.getName())
+        fundecl.proc = new Procedure(this, fundecl.getName(), stmt)
 
         this.withProcedure(fundecl.proc, wr => {
             this.emitParameters(stmt, fundecl.proc)
@@ -1127,7 +1135,7 @@ class Program implements TopOpWriter {
     ): Procedure {
         if (!ts.isArrowFunction(func))
             throwError(func, "arrow function expected here")
-        const proc = new Procedure(this, this.uniqueProcName(name))
+        const proc = new Procedure(this, this.uniqueProcName(name), func)
         proc.useFrom(func)
         proc.writer.ret = proc.writer.mkLabel("ret")
         if (func.parameters.length && !options.methodHandler)
@@ -3035,6 +3043,55 @@ export function testCompiler(host: Host, code: string) {
     }
 }
 
+export function toTable(header: string[], rows: (string | number)[][]) {
+    rows = rows.slice()
+    rows.unshift(header)
+    const maxlen: number[] = []
+    const isnum: boolean[] = []
+    for (const row of rows) {
+        for (let i = 0; i < row.length; ++i) {
+            maxlen[i] = Math.min(
+                Math.max(maxlen[i] ?? 2, toStr(row[i]).length),
+                30
+            )
+            isnum[i] ||= typeof row[i] == "number"
+        }
+    }
+    let hd = true
+    let res = ""
+    for (const row of rows) {
+        for (let i = 0; i < maxlen.length; ++i) {
+            let w = toStr(row[i])
+            const missing = maxlen[i] - w.length
+            if (missing > 0) {
+                const pref = " ".repeat(missing)
+                if (isnum[i]) w = pref + w
+                else w = w + pref
+            }
+            res += w
+            if (i != maxlen.length - 1) res += " | "
+        }
+        res += "\n"
+        if (hd) {
+            hd = false
+            for (let i = 0; i < maxlen.length; ++i) {
+                let w = isnum[i]
+                    ? "-".repeat(maxlen[i] - 1) + ":"
+                    : "-".repeat(maxlen[i])
+                res += w
+                if (i != maxlen.length - 1) res += " | "
+            }
+            res += "\n"
+        }
+    }
+
+    return res.replace(/\s+\n/mg, "\n")
+
+    function toStr(n: string | number | null) {
+        return (n ?? "") + ""
+    }
+}
+
 export function computeSizes(dbg: DebugInfo) {
     const funs = dbg.functions.slice()
     funs.sort((a, b) => a.size - b.size || strcmp(a.name, b.name))
@@ -3045,15 +3102,23 @@ export function computeSizes(dbg: DebugInfo) {
     let dtotal = 0
     for (const v of Object.values(dbg.sizes)) dtotal += v
     return (
-        "## Data\n" +
-        Object.keys(dbg.sizes)
-            .map(k => `${dbg.sizes[k]}\t${k}\n`)
-            .join("") +
-        `${dtotal}\tData TOTAL\n` +
-        "\n## Functions\n" +
-        funs.map(f => `${f.size}\t${f.name}\t${locs2str(f.users)}\n`).join("") +
-        `${ftotal}\tFunction TOTAL\n\n` +
-        `${dtotal + ftotal}\tTOTAL\n`
+        "## Data\n\n" +
+        toTable(
+            ["Size", "Name"],
+            Object.keys(dbg.sizes)
+                .map(k => [dbg.sizes[k], k])
+                .concat([[dtotal, "Data TOTAL"]])
+        ) +
+        "\n## Functions\n\n" +
+        toTable(
+            ["Size", "Name", "Users"],
+            funs
+                .map(f => [f.size, "`" + f.name + "`", locs2str(f.users)])
+                .concat([
+                    [ftotal, "Function TOTAL"],
+                    [dtotal + ftotal, "TOTAL"],
+                ])
+        )
     )
 
     function loc2str(l: SrcLocation) {

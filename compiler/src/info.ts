@@ -9,6 +9,9 @@ export interface SrcLocation {
 export interface FunctionDebugInfo {
     name: string
     size: number
+    // where the function is defined; some functions are synthetic and miss location
+    location?: SrcLocation
+    // where the function is called from; may include `location` eg. for inline handlers
     users: SrcLocation[]
     // format is (line-number, start, len)
     // start is offset in bytes from the start of the function
