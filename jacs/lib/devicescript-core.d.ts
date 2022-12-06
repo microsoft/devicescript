@@ -37,7 +37,7 @@ declare module "@devicescript/core" {
         wait(): void
     }
 
-    class CloudAdapter {
+    class CloudConnector {
         upload(label: string, ...value: number[]): void
         onMethod(
             name: string,
@@ -55,7 +55,7 @@ declare module "@devicescript/core" {
         twin(path: string): number
         onTwinChange(handler: () => void): void
     }
-    const cloud: CloudAdapter
+    const cloud: CloudConnector
 
     function print(fmt: string, ...args: number[]): void
     function format(fmt: string, ...args: number[]): string
@@ -65,8 +65,11 @@ declare module "@devicescript/core" {
     function reboot(): never
     function onStart(handler: () => void): void
 
-    function buffer(size: number): Buffer
     class Buffer {
+        private constructor()
+
+        static alloc(size: number): Buffer
+
         length: number
         setLength(len: number): void
         getAt(offset: number, format: string): number
@@ -82,4 +85,8 @@ declare module "@devicescript/core" {
     }
 
     const packet: Buffer
+
+    global {
+        function hex(lits: any, ...args: any[]): Buffer
+    }
 }

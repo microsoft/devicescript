@@ -1,3 +1,6 @@
+import * as ds from "@devicescript/core"
+import { panic } from "@devicescript/core"
+
 function isClose(x: number, y: number): void {
     if (isNaN(x) && isNaN(y)) return
     const d = Math.abs(x - y)
@@ -9,7 +12,7 @@ function isClose(x: number, y: number): void {
 function isEq(x: number, y: number): void {
     // console.log(x, " == ", y, "?")
     if (x != y) {
-        console.log(format("fail: {0} != {1}", x, y))
+        console.log(ds.format("fail: {0} != {1}", x, y))
         panic(109)
     }
 }
@@ -135,7 +138,7 @@ function lazyX(v: number) {
 
 function checkX(v: number) {
     if (x != v) {
-        console.log(format("{0} != {1} !!", x, v))
+        console.log(ds.format("{0} != {1} !!", x, v))
         panic(11)
     }
     x = 0
@@ -174,7 +177,7 @@ function fibx(k: number): number {
 }
 
 function testBuffer() {
-    const buf = buffer(20)
+    const buf = ds.Buffer.alloc(20)
     buf.setAt(2, "u32", 0xf00d)
     isEq(buf.getAt(2, "u32"), 0xf00d)
     isEq(buf.getAt(2, "u16"), 0xf00d)
@@ -237,4 +240,4 @@ testBuffer()
 testArray()
 testObj()
 console.log("all OK")
-reboot()
+ds.reboot()

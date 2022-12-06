@@ -15,17 +15,17 @@ export function specToDeviceScript(info: jdspec.ServiceSpec) {
 
     for (const en of Object.values(info.enums)) {
         const enPref = enumName(en.name)
-        r += `declare enum ${enPref} { // ${cStorage(en.storage)}\n`
+        r += `enum ${enPref} { // ${cStorage(en.storage)}\n`
         for (const k of Object.keys(en.members)) {
             r += "    " + k + " = " + toHex(en.members[k]) + ",\n"
         }
         r += "}\n\n"
     }
 
-    const clname = upperCamel(info.camelName) + "Role"
+    const clname = upperCamel(info.camelName)
     const baseclass =
-        info.extends.indexOf("_sensor") >= 0 ? "SensorRole" : "Role"
-    r += `declare class ${clname} extends ${baseclass} {\n`
+        info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
+    r += `class ${clname} extends ${baseclass} {\n`
 
     for (const pkt of info.packets) {
         if (pkt.derived) continue // ???
@@ -54,15 +54,15 @@ export function specToDeviceScript(info: jdspec.ServiceSpec) {
 
         if (isRegister(pkt.kind)) {
             if (cmt.needsStruct) {
-                tp = `JDRegisterArray`
+                tp = `RegisterArray`
                 if (pkt.fields.length > 1) tp += ` & { ${fields} }`
             } else {
                 if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
-                    tp = "JDRegisterString"
-                else tp = "JDRegisterNum"
+                    tp = "RegisterString"
+                else tp = "RegisterNum"
             }
         } else if (pkt.kind == "event") {
-            tp = "JDEvent"
+            tp = "Event"
         } else if (pkt.kind == "command") {
             r += wrapComment("devs", cmt.comment)
             r += `    ${camelize(pkt.name)}(${fields}): void\n`
@@ -76,17 +76,6 @@ export function specToDeviceScript(info: jdspec.ServiceSpec) {
 
     r += "}\n"
 
-    if (info.shortId[0] != "_") {
-        r += `declare namespace roles {
-    /**
-     * Declares a new ${info.name} service role.
-    **/
-    function ${jsQuote(info.camelName)}(): ${clname}
-}\n\n`
-    } else {
-        r += "\n"
-    }
-
     return r.replace(/ *$/gm, "")
 
     function enumName(n: string) {
@@ -97,6 +86,8 @@ export function specToDeviceScript(info: jdspec.ServiceSpec) {
 export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
     if (!specs) specs = jacdacDefaultSpecifications
     const r = { ...prelude }
-    r["devicescript-spec.d.ts"] = specs.map(specToDeviceScript).join("\n")
+    const thespecs = specs.map(specToDeviceScript).join("\n")
+    const withmodule = `declare module "@devicescript/core" {\n${thespecs}\n}\n`
+    r["devicescript-spec.d.ts"] = withmodule
     return r
 }
