@@ -4,11 +4,13 @@
 
 // TODO: factor into an independent plugin
 import visit from "unist-util-visit"
-import logger from "@docusaurus/logger"
 import fs_extra_pkg from "fs-extra"
 import { spawnSync } from "child_process"
 const { readJsonSync, writeJsonSync, ensureDirSync } = fs_extra_pkg
 import { createHash } from "crypto"
+
+const info = console.debug
+const debug = console.debug 
 
 // site version
 const sitePkg = readJsonSync("../compiler/package.json")
@@ -17,7 +19,7 @@ const sitePkg = readJsonSync("../compiler/package.json")
 // (so we only recompute for every major release)
 const VERSION = sitePkg.version.replace(/(\..)*$/g, "")
 
-logger.info(`rendering snippets ${VERSION}`)
+info(`rendering snippets ${VERSION}`)
 // language configs
 import getLangConfig from "../../language.config.js"
 const languageConfig = await getLangConfig()
@@ -144,7 +146,7 @@ async function getOutput(config, input, lang, skipErr) {
         )
     }
 
-    logger.debug`${lang}: ${hash}, ${status}, ${error}`
+    debug(`${lang}: ${hash}, ${status}, ${error}`)
 
     const errorToReport = checkRuntimeError(
         langVersion,

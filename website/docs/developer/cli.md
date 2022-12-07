@@ -51,6 +51,7 @@ A device script project will look as follows:
 main.ts           usual name for your entry point application
 package.json      additional dependencies and also has the `devicescript` field entry
 tsconfig.json     configure the TypeScript compiler to compile DeviceScript syntax
+...               A few additional files supporting the coding experience in VS Code
 ```
 
 ### --force

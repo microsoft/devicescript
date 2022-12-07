@@ -1,5 +1,4 @@
 ---
-sidebar_position: 2
 hide_table_of_contents: true
 ---
 
@@ -176,3 +175,8 @@ in the developer tools window.
 
 Click on the chip to start flasing the DeviceScript bytecode
 to your Raspberry Pico. It will automatically reflash when it detects changes.
+
+## Part 3: Using the command line
+
+That's it for this guide. In the next getting started, we'll show how to build
+this example using the command line tool in VS Code.
