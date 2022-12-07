@@ -148,8 +148,8 @@ Once the UF2 is copied and the Pico restarted,
 
 -   open the DeviceScript developer tools (click `Run`)
 -   click `Connect`
--   click `Serial`
--   select `Raspberry Pico`
+-   click `Connect USB`
+-   select `Raspberry Pico` in the system menu listing devices
 
 After connecting, you should see a new chip under the `DeviceScript` section with the image of the Raspberry Pico.
 
