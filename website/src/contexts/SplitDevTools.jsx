@@ -57,8 +57,8 @@ export default function SplitDevTools(props) {
                         ref={iframeRef}
                         id="jacdac-dashboard"
                         className="pane right"
-                        allow="usb;serial;bluetooth"
-                        sandbox="allow-scripts allow-downloads allow-same-origin"
+                        allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking; serial; bluetooth"
+                        sandbox="allow-forms allow-scripts allow-downloads allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
                         src={url}
                         frameBorder="0"
                     />

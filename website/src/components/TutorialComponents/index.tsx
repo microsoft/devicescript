@@ -10,7 +10,6 @@ import styles from "./styles.module.css"
 import Prism from "prism-react-renderer/prism"
 
 import DevToolsContext from "@site/src/contexts/DevToolsContext"
-import CodeSandboxButton from "./CodeSandboxButton"
 
 interface CodeBlockProps {
     lang: string
