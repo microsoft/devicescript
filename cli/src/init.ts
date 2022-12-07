@@ -40,7 +40,7 @@ const optionalFiles: Record<string, any> = {
         tabWidth: 4,
     },
     ".vscode/extensions.json": {
-        recommendations: ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"],
+        recommendations: ["esbenp.prettier-vscode"],
     },
 }
 export interface InitOptions {
