@@ -22,7 +22,7 @@ You can also click on `Fork` and open the sample in CodeSandbox.
 
 ## Try DeviceScript locally (or remotely)
 
-Install the [DeviceScript command line](/dev/cli) and use your favorite TypeScript IDE to write your scripts.
+Install the [DeviceScript command line](/developer/cli) and use your favorite TypeScript IDE to write your scripts.
 
 Getting started with a fresh project can be done with 3 commands.
 
