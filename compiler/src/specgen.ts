@@ -1,14 +1,22 @@
 import {
     cStorage,
-    toHex,
     addComment,
-    isRegister,
     wrapComment,
     jsQuote,
 } from "../../runtime/jacdac-c/jacdac/spectool/jdspec"
 import { jacdacDefaultSpecifications } from "./embedspecs"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
+
+function isRegister(k: jdspec.PacketKind) {
+    return k == "ro" || k == "rw" || k == "const"
+}
+
+function toHex(n: number): string {
+    if (n === undefined) return ""
+    if (n < 0) return "-" + toHex(n)
+    return "0x" + n.toString(16)
+}
 
 export function specToDeviceScript(info: jdspec.ServiceSpec) {
     let r = `// Service: ${info.name}\n`

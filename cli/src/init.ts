@@ -1,43 +1,49 @@
 import { CmdOptions, debug, GENDIR, LIBDIR, log } from "./command"
-import { basename, join } from "node:path"
-import { cwd } from "node:process"
+import { dirname, join } from "node:path"
 import {
     pathExistsSync,
     writeFileSync,
     writeJSONSync,
-    readJSONSync,
     emptyDirSync,
     readFileSync,
+    ensureDirSync,
 } from "fs-extra"
 import { preludeFiles } from "@devicescript/compiler"
 
-const TSCONFIG = "tsconfig.json"
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"
-const PKG = "package.json"
 
-const tsConfig: any = {
-    compilerOptions: {
-        moduleResolution: "node",
-        target: "es2022",
-        module: "es2015",
-        lib: [],
-        strict: true,
-        strictNullChecks: false,
-        strictFunctionTypes: true,
-        sourceMap: false,
-        declaration: false,
-        experimentalDecorators: true,
-        preserveConstEnums: true,
-        noImplicitThis: true,
-        isolatedModules: true,
-        moduleDetection: "force",
-        noImplicitAny: true,
-        types: [],
+const optionalFiles: Record<string, any> = {
+    "tsconfig.json": {
+        compilerOptions: {
+            moduleResolution: "node",
+            target: "es2022",
+            module: "es2015",
+            lib: [],
+            strict: true,
+            strictNullChecks: false,
+            strictFunctionTypes: true,
+            sourceMap: false,
+            declaration: false,
+            experimentalDecorators: true,
+            preserveConstEnums: true,
+            noImplicitThis: true,
+            isolatedModules: true,
+            noImplicitAny: true,
+            moduleDetection: "force",
+            types: [],
+        },
+        include: ["*.ts", `${LIBDIR}/*.ts`],
     },
-    include: ["*.ts", `${LIBDIR}/*.ts`],
+    ".prettierrc": {
+        arrowParens: "avoid",
+        semi: false,
+        tabWidth: 4,
+    },
+    ".vscode/extensions.json": {
+        recommendations: ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"],
+    },
 }
-
 export interface InitOptions {
     force?: boolean
     spaces?: number
@@ -46,13 +52,18 @@ export interface InitOptions {
 export default function init(options: InitOptions & CmdOptions) {
     const { force, spaces = 4 } = options
     log(`Initializing files for DeviceScript project`)
-    // tsconfig.json
-    if (!pathExistsSync(TSCONFIG) || force) {
-        debug(`write ${TSCONFIG}`)
-        writeJSONSync(TSCONFIG, tsConfig, { spaces })
-    } else {
-        debug(`skip ${TSCONFIG}, already exists`)
-    }
+    Object.keys(optionalFiles).forEach(fn => {
+        // tsconfig.json
+        if (!pathExistsSync(fn) || force) {
+            const data = optionalFiles[fn]
+            debug(`write ${fn}`)
+            const dn = dirname(fn)
+            if (dn) ensureDirSync(dn)
+            writeJSONSync(fn, data, { spaces })
+        } else {
+            debug(`skip ${fn}, already exists`)
+        }
+    })
 
     // typescript definitions
     emptyDirSync(LIBDIR)

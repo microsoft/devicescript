@@ -6,6 +6,8 @@
         "build": "cd compiler && yarn build",
         "build-fast": "cd compiler && yarn build-fast",
         "watch": "cd compiler && yarn watch",
+        "docs": "cd website && yarn start",
+        "dev": "yarn watch & yarn docs",
         "test": "node run -t jacs/run-tests/basic.ts && node run test"
     },
     "workspaces": [

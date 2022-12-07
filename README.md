@@ -23,6 +23,12 @@ If you want to build locally you need to install node.js. After cloning, the rep
 yarn setup
 ```
 
+To run a watch build and the docs, run
+
+```
+yarn dev
+```
+
 * start `jacdac devtools` (the npm version) and let is running
 * open this folder in VSCode; use "Reopen in Container" if needed
 * start Terminal in VSCode

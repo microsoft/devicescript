@@ -1,3 +1,8 @@
+---
+sidebar_position: 200
+hide_table_of_contents: true
+---
+
 # Command Line Interface
 
 The DeviceScript command line allows to compile and debug programs from your favorite IDE.

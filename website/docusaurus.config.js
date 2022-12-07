@@ -91,7 +91,7 @@ async function createConfig() {
                             items: [
                                 {
                                     label: "Language Reference",
-                                    to: "/docs/intro",
+                                    to: "/intro",
                                 },
                             ],
                         },

@@ -10,7 +10,7 @@ import styles from './index.module.css';
 /**
 <Link
 className="button button--secondary button--lg"
-to="/docs/intro">
+to="/intro">
 Docusaurus Tutorial - 5min ⏱️
 </Link>
 */
