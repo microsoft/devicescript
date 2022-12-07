@@ -45,20 +45,19 @@ function fetchProxy(localhost: boolean): Promise<string> {
 export interface DevToolsOptions {
     internet?: boolean
     localhost?: boolean
+    tcp?: boolean
 
     bytecodeFile?: string
     debugFile?: string
 }
 
 export async function devtools(options: DevToolsOptions & CmdOptions) {
-    const { internet, localhost, bytecodeFile, debugFile } = options
+    const { internet, localhost, bytecodeFile, debugFile, tcp } = options
     const port = 8081
     const tcpPort = 8082
     const listenHost = internet ? undefined : "127.0.0.1"
 
     log(`starting dev tools at http://localhost:${port}`)
-    log(`   websocket: ws://localhost:${port}`)
-    log(`   tcpsocket: tcp://localhost:${tcpPort}`)
 
     // download proxy sources
     const proxyHtml = await fetchProxy(localhost)
@@ -71,9 +70,7 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
         ? () => {
               const bytecode = readFileSync(bytecodeFile)
               const dbg = debugFile ? readJSONSync(debugFile) : undefined
-              debug(
-                  `refresh bytecode ${prettySize(bytecode.length)}...`
-              )
+              debug(`refresh bytecode ${prettySize(bytecode.length)}...`)
               const msg = JSON.stringify({
                   type: "bytecode",
                   channel: "devicescript",
@@ -84,6 +81,7 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
           }
         : undefined
 
+    log(`   websocket: ws://localhost:${port}`)
     const server = http.createServer(function (req, res) {
         const parsedUrl = url.parse(req.url)
         const pathname = parsedUrl.pathname
@@ -121,31 +119,33 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
             client.on("error", (ev: Error) => error(ev))
         }
     })
-
-    const tcpServer = net.createServer((client: any) => {
-        const sender = "tcp" + Math.random()
-        client[SENDER_FIELD] = sender
-        client.send = (pkt0: Buffer) => {
-            const pkt = new Uint8Array(pkt0)
-            const b = new Uint8Array(1 + pkt.length)
-            b[0] = pkt.length
-            b.set(pkt, 1)
-            try {
-                client.write(b)
-            } catch {
-                try {
-                    client.end()
-                } catch {} // eslint-disable-line no-empty
-            }
-        }
-        clients.push(client)
-        log(`tcpclient: connected (${sender} ${clients.length} clients)`)
-        client.on("end", () => removeClient(client))
-        client.on("error", (ev: Error) => error(ev))
-    })
-
     server.listen(port, listenHost)
-    tcpServer.listen(tcpPort, listenHost)
+
+    if (tcp) {
+        log(`   tcpsocket: tcp://localhost:${tcpPort}`)
+        const tcpServer = net.createServer((client: any) => {
+            const sender = "tcp" + Math.random()
+            client[SENDER_FIELD] = sender
+            client.send = (pkt0: Buffer) => {
+                const pkt = new Uint8Array(pkt0)
+                const b = new Uint8Array(1 + pkt.length)
+                b[0] = pkt.length
+                b.set(pkt, 1)
+                try {
+                    client.write(b)
+                } catch {
+                    try {
+                        client.end()
+                    } catch {} // eslint-disable-line no-empty
+                }
+            }
+            clients.push(client)
+            log(`tcpclient: connected (${sender} ${clients.length} clients)`)
+            client.on("end", () => removeClient(client))
+            client.on("error", (ev: Error) => error(ev))
+        })
+        tcpServer.listen(tcpPort, listenHost)
+    }
 
     if (bytecodeFile) {
         debug(`watching ${bytecodeFile}...`)
