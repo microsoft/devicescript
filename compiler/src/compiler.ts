@@ -944,14 +944,9 @@ class Program implements TopOpWriter {
         expr: ts.Node,
         optional = false
     ): jdspec.ServiceSpec {
-        const tp = this.checker.getTypeAtLocation(expr)
-        const cls = tp.getSymbol()?.valueDeclaration
-        if (
-            cls &&
-            ts.isClassDeclaration(cls) &&
-            this.inCoreModule(tp.getSymbol())
-        ) {
-            let r = this.forceName(cls.name)
+        const nm = this.nodeName(expr)
+        if (nm && nm[0] == "#") {
+            let r = nm.slice(1)
             r = r[0].toLowerCase() + r.slice(1)
             return this.lookupRoleSpec(expr, r)
         } else {
@@ -996,11 +991,11 @@ class Program implements TopOpWriter {
             let tp = ""
             if (paramdef.type) tp = this.nodeName(paramdef.type)
 
-            if (tp == "" || tp == "number") {
+            if (tp == "" || tp == "#number") {
                 // OK!
-            } else if (tp == "boolean") {
+            } else if (tp == "#boolean") {
                 v.valueType = ValueType.BOOL
-            } else if (tp == "JDBuffer") {
+            } else if (tp == "#Buffer") {
                 v.valueType = ValueType.BUFFER
             } else {
                 v.valueType = ValueType.ROLE(
@@ -1978,9 +1973,15 @@ class Program implements TopOpWriter {
     }
 
     private nodeName(node: ts.Node) {
-        if (node.kind == SK.NumberKeyword) return "#number"
-        const r = this.symName(this.checker.getSymbolAtLocation(node))
-        console.log(node.kind, r)
+        switch (node.kind) {
+            case SK.NumberKeyword:
+                return "#number"
+            case SK.BooleanKeyword:
+                return "#boolean"
+        }
+        const sym = this.checker.getSymbolAtLocation(node)
+        const r = this.symName(sym)
+        // if (!r) console.log(node.kind, r)
         return r
     }
 
@@ -2076,9 +2077,9 @@ class Program implements TopOpWriter {
         const wr = this.writer
 
         const callName = this.nodeName(expr.expression)
+        const builtInName = callName.startsWith("#") ? callName[1] : null
 
-        if (callName.startsWith("#")) {
-            const builtInName = callName.slice(1)
+        if (builtInName) {
             const r =
                 this.emitMath(expr, expr.arguments.slice(), builtInName) ||
                 this.emitCloud(expr, builtInName)
@@ -2086,8 +2087,6 @@ class Program implements TopOpWriter {
 
             const d = this.monkeyPatch[callName]
             if (d) return this.emitProcCall(expr, this.getMonkeyPatchProc(d))
-
-            return this.emitBuiltInCall(expr, builtInName)
         }
 
         if (ts.isPropertyAccessExpression(expr.expression)) {
@@ -2103,6 +2102,8 @@ class Program implements TopOpWriter {
                 case ValueKind.ROLE:
                     return this.emitRoleCall(expr, val, prop)
                 default:
+                    if (builtInName)
+                        return this.emitBuiltInCall(expr, builtInName)
                     throwError(expr, `unsupported call`)
             }
         }
