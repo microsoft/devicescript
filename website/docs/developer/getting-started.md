@@ -5,17 +5,15 @@ hide_table_of_contents: true
 
 # Getting Started
 
-In this guide, you'll use a Raspberry Pi Pico and a pressure sensor to create a mouse button actionable with the mouse.
+In this guide, you'll use a Raspberry Pi Pico and a pressure sensor to create a mouth-blowing activated mouse button.
 
 ## Part 1: Creating the firmware
 
 At a high level, we want the script to generate a mouse click whenever we detect a peak in air pressure.
-
-You can tag along in this documentation page and use the interactive code snippets; or you can use the [command line interface](/dev/cli) to get a local development setup within minutes.
+Tag along this part of the guide even if you do not have hardware available, DeviceScript provides web-based simulators and editors.
 
 :::tip
-Tag along this part of the guide even if you do not have hardware
-available, DeviceScript provides web-based simulators and editors.
+You can tag along in this documentation page and use the interactive code snippets; or you can use the [command line interface](/dev/cli) to get a local development setup within minutes.
 :::
 
 ### Console output
@@ -33,9 +31,13 @@ developer tools.
 By default, the snippet will run in a virtual DeviceScript virtual machine (running in the browser), we'll see later how to run on hardware.
 :::
 
+:::tip
+Collapse the table of contents to reclaim screen space!
+:::
+
 ### Defining Roles
 
-In DeviceScript, all access to sensors, actuators or other hardware components is abstracted through [Jacdac](https://aka.ms/jacdac) services.
+In DeviceScript, all access to sensors, actuators or other hardware components are abstracted through [Jacdac](https://aka.ms/jacdac) services. Sensors act as **servers** and your scripts connects **clients** to interact with them.
 To interact with Jacdac services, you define **roles** for each service you need.
 
 In this scenario, we will need to measure air pressure and send HID mouse commands. Therefore, we declare a `airPressure` role and a `hidMouse` role.
@@ -54,7 +56,12 @@ and HID mouse service.
 
 ### Tracking pressure changes
 
-To track pressure changes, we register a callback
+The `sensor` client exposes `pressure` register object.
+We can read the register value to retreive the air pressure
+sensor last reading. As mentionned in the Jacdac docs,
+the reading is in `hPa` and should be around 1000.
+
+To track pressure changes, we register a callback that triggers when the pressure reading changes by `10` hPa.
 
 ```ts
 console.log("starting...")
@@ -74,13 +81,8 @@ in the console output.
 
 ### Reading the pressure
 
-The `sensor` client exposes `pressure` register object.
-We can read the register value to retreive the air pressure
-sensor last reading. As mentionned in the Jacdac docs,
-the reading is in `hPa` and should be around 1000.
-
-We can modify the snippet to print the `pressure` reading
-to the console.
+We can modify the snippet by `reading` the `pressure` reading
+and logging it to the console.
 
 ```ts
 console.log("starting...")
@@ -88,6 +90,7 @@ const sensor = roles.airPressure()
 const mouse = roles.hidMouse()
 // listen for pressure changes
 sensor.pressure.onChange(10, () => {
+    // read sensor reading
     const pressure = sensor.pressure.read()
     console.log(pressure)
 })
@@ -97,22 +100,26 @@ sensor.pressure.onChange(10, () => {
 
 Let's assume that `1400` hPa is a thresold high enough
 to detect a user blowing on the sensor; then we
-can add code in the `onChange` handler to generate a mouse click.
+can add code to generate a mouse click.
 
+:::note
 `1400` is rater arbitrary and this is the kind of constants
 that you will want to tune using the actual hardware sensors,
 not just a simulator.
+:::
 
 ```ts
 const sensor = roles.airPressure()
 const mouse = roles.hidMouse()
 // listen for pressure changes
 sensor.pressure.onChange(10, () => {
+    // read sensor reading
     const pressure = sensor.pressure.read()
     console.log(pressure)
     // user blows in straw
     if (pressure > 1400) {
         // click!
+        console.log(`click!`)
         mouse.setButton(HidMouseButton.Left, HidMouseButtonEvent.Click)
         // debouncing
         wait(0.05)
