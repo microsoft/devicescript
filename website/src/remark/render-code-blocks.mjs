@@ -4,19 +4,20 @@
 
 // TODO: factor into an independent plugin
 import visit from "unist-util-visit"
+import logger from "@docusaurus/logger"
 import fs_extra_pkg from "fs-extra"
 import { spawnSync } from "child_process"
 const { readJsonSync, writeJsonSync, ensureDirSync } = fs_extra_pkg
 import { createHash } from "crypto"
 
 // site version
-const sitePkg = readJsonSync("../package.json")
+const sitePkg = readJsonSync("../compiler/package.json")
 // for version `x.y.z`, only recompute hashes if `x` changes
 // to avoid recomputation over minor changes on the website
 // (so we only recompute for every major release)
 const VERSION = sitePkg.version.replace(/(\..)*$/g, "")
 
-console.log(`rendering snippets ${VERSION}`)
+logger.info(`rendering snippets ${VERSION}`)
 // language configs
 import getLangConfig from "../../language.config.js"
 const languageConfig = await getLangConfig()
@@ -91,7 +92,6 @@ async function getOutput(config, input, lang, skipErr) {
         memoryCache[pathOut] ||
         (cache && readJsonSync(pathOut, { throws: false })) // don't throw an error if file not exist
     if (data) {
-        console.log(`cache hit ${hash}`)
         const errorToReport = checkRuntimeError(
             lang,
             langVersion,
@@ -144,7 +144,7 @@ async function getOutput(config, input, lang, skipErr) {
         )
     }
 
-    console.debug(`${lang}: ${hash}, ${status}, ${error}`)
+    logger.debug`${lang}: ${hash}, ${status}, ${error}`
 
     const errorToReport = checkRuntimeError(
         langVersion,
