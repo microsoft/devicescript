@@ -85,6 +85,8 @@ export const DEVS_BODY_FILE = `${DEVS_FILE_PREFIX}-body.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
 export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
+const coreModule = "@devicescript/core"
+
 class Cell {
     _index: number
 
@@ -458,12 +460,18 @@ class ClientCommand {
     constructor(public serviceSpec: jdspec.ServiceSpec) {}
 }
 
+class MonkeyPatch {
+    proc: Procedure
+    constructor(public defintion: ts.FunctionExpression, public name: string) {}
+}
+
 class Program implements TopOpWriter {
     bufferLits = new VariableScope(null)
     roles = new VariableScope(this.bufferLits)
     functions = new VariableScope(null)
     globals = new VariableScope(this.roles)
     tree: ts.Program
+    checker: ts.TypeChecker
     mainFile: ts.SourceFile
     procs: Procedure[] = []
     floatLiterals: number[] = []
@@ -475,6 +483,7 @@ class Program implements TopOpWriter {
     serviceSpecs: Record<string, jdspec.ServiceSpec>
     enums: Record<string, jdspec.EnumInfo> = {}
     clientCommands: Record<string, ClientCommand[]> = {}
+    monkeyPatch: Record<string, MonkeyPatch> = {}
     refreshMS: number[] = [0, 500]
     resolverParams: number[]
     resolverPC: number
@@ -918,13 +927,36 @@ class Program implements TopOpWriter {
         }
     }
 
-    private specFromTypeName(expr: ts.Node, tp: string) {
-        if (tp.endsWith("Role") && tp[0].toUpperCase() == tp[0]) {
-            let r = tp.slice(0, -4)
+    private moduleOf(sym: ts.Symbol) {
+        let n = sym?.valueDeclaration?.parent
+        if (n?.kind == SK.ModuleBlock) n = n.parent
+        if (n && ts.isModuleDeclaration(n)) {
+            if (ts.isStringLiteral(n.name)) return n.name.text
+        }
+        return null
+    }
+
+    private inCoreModule(sym: ts.Symbol) {
+        return this.moduleOf(sym) == coreModule
+    }
+
+    private specFromTypeName(
+        expr: ts.Node,
+        optional = false
+    ): jdspec.ServiceSpec {
+        const tp = this.checker.getTypeAtLocation(expr)
+        const cls = tp.getSymbol()?.valueDeclaration
+        if (
+            cls &&
+            ts.isClassDeclaration(cls) &&
+            this.inCoreModule(tp.getSymbol())
+        ) {
+            let r = this.forceName(cls.name)
             r = r[0].toLowerCase() + r.slice(1)
             return this.lookupRoleSpec(expr, r)
         } else {
-            throwError(expr, "type name not understood: " + tp)
+            if (optional) return null
+            throwError(expr, `type name not understood: ${SK[expr.kind]}`)
         }
     }
 
@@ -962,7 +994,7 @@ class Program implements TopOpWriter {
             const v = this.addParameter(proc, paramdef)
 
             let tp = ""
-            if (paramdef.type) tp = paramdef.type.getText()
+            if (paramdef.type) tp = this.nodeName(paramdef.type)
 
             if (tp == "" || tp == "number") {
                 // OK!
@@ -972,7 +1004,7 @@ class Program implements TopOpWriter {
                 v.valueType = ValueType.BUFFER
             } else {
                 v.valueType = ValueType.ROLE(
-                    this.specFromTypeName(paramdef, tp)
+                    this.specFromTypeName(paramdef.type)
                 )
             }
         }
@@ -1822,7 +1854,7 @@ class Program implements TopOpWriter {
                 if (
                     expr.arguments.length == 1 &&
                     ts.isCallExpression(arg0) &&
-                    idName(arg0.expression) == "format"
+                    this.nodeName(arg0.expression) == "#format"
                 ) {
                     const r = this.emitFmtArgs(arg0)
                     wr.emitStmt(Op.STMTx2_LOG_FORMAT, ...r.fmt)
@@ -1930,47 +1962,33 @@ class Program implements TopOpWriter {
         return wr.emitExpr(Op.EXPR0_RET_VAL)
     }
 
-    private emitCallExpression(expr: ts.CallExpression): Value {
+    private symName(sym: ts.Symbol) {
+        if (!sym) return null
+        if (sym.flags & ts.SymbolFlags.Alias)
+            sym = this.checker.getAliasedSymbol(sym)
+        const r = this.checker.getFullyQualifiedName(sym)
+        if (r && r.startsWith(`"${coreModule}"`))
+            return "#" + r.slice(coreModule.length + 3)
+        else {
+            const d = sym.getDeclarations()?.[0]
+            if (d && this.prelude.hasOwnProperty(d.getSourceFile().fileName))
+                return "#" + r
+        }
+        return r
+    }
+
+    private nodeName(node: ts.Node) {
+        if (node.kind == SK.NumberKeyword) return "#number"
+        const r = this.symName(this.checker.getSymbolAtLocation(node))
+        console.log(node.kind, r)
+        return r
+    }
+
+    private emitBuiltInCall(expr: ts.CallExpression, funName: string): Value {
         const wr = this.writer
-        if (ts.isPropertyAccessExpression(expr.expression)) {
-            const prop = idName(expr.expression.name)
-            const objName = idName(expr.expression.expression)
-            if (objName) {
-                const fullName = objName + "." + prop
-                const r =
-                    this.emitMath(expr, expr.arguments.slice(), fullName) ||
-                    this.emitCloud(expr, fullName)
-                if (r) return r
-            }
-            const val = this.emitExpr(expr.expression.expression)
-            switch (val.valueType.kind) {
-                case ValueKind.JD_EVENT:
-                    return this.emitEventCall(expr, val, prop)
-                case ValueKind.JD_REG:
-                    return this.emitRegisterCall(expr, val, prop)
-                case ValueKind.BUFFER:
-                    return this.emitBufferCall(expr, val, prop)
-                case ValueKind.ROLE:
-                    return this.emitRoleCall(expr, val, prop)
-                default:
-                    throwError(expr, `unsupported call`)
-            }
-        }
-
-        const funName = idName(expr.expression)
-
-        if (!funName) throwError(expr, `unsupported call`)
-
-        if (!reservedFunctions[funName]) {
-            const d = this.functions.lookup(funName) as FunctionDecl
-            if (d) {
-                return this.emitProcCall(expr, this.getFunctionProc(d))
-            } else {
-                throwError(expr, `cannot find function '${funName}'`)
-            }
-        }
 
         switch (funName) {
+            case "Buffer.alloc":
             case "buffer": {
                 this.requireArgs(expr, 1)
                 wr.emitStmt(
@@ -2039,6 +2057,68 @@ class Program implements TopOpWriter {
                 return r
         }
         throwError(expr, "unhandled call")
+    }
+
+    private getMonkeyPatchProc(mp: MonkeyPatch) {
+        if (mp.proc) return mp.proc
+
+        const stmt = mp.defintion
+        mp.proc = new Procedure(this, mp.name, stmt)
+        this.withProcedure(mp.proc, wr => {
+            this.emitParameters(stmt, mp.proc)
+            this.emitFunctionBody(stmt, mp.proc)
+        })
+
+        return mp.proc
+    }
+
+    private emitCallExpression(expr: ts.CallExpression): Value {
+        const wr = this.writer
+
+        const callName = this.nodeName(expr.expression)
+
+        if (callName.startsWith("#")) {
+            const builtInName = callName.slice(1)
+            const r =
+                this.emitMath(expr, expr.arguments.slice(), builtInName) ||
+                this.emitCloud(expr, builtInName)
+            if (r) return r
+
+            const d = this.monkeyPatch[callName]
+            if (d) return this.emitProcCall(expr, this.getMonkeyPatchProc(d))
+
+            return this.emitBuiltInCall(expr, builtInName)
+        }
+
+        if (ts.isPropertyAccessExpression(expr.expression)) {
+            const prop = idName(expr.expression.name)
+            const val = this.emitExpr(expr.expression.expression)
+            switch (val.valueType.kind) {
+                case ValueKind.JD_EVENT:
+                    return this.emitEventCall(expr, val, prop)
+                case ValueKind.JD_REG:
+                    return this.emitRegisterCall(expr, val, prop)
+                case ValueKind.BUFFER:
+                    return this.emitBufferCall(expr, val, prop)
+                case ValueKind.ROLE:
+                    return this.emitRoleCall(expr, val, prop)
+                default:
+                    throwError(expr, `unsupported call`)
+            }
+        }
+
+        const funName = idName(expr.expression)
+
+        if (!funName) throwError(expr, `unsupported call`)
+
+        if (!reservedFunctions[funName]) {
+            const d = this.functions.lookup(funName) as FunctionDecl
+            if (d) {
+                return this.emitProcCall(expr, this.getFunctionProc(d))
+            } else {
+                throwError(expr, `cannot find function '${funName}'`)
+            }
+        }
     }
 
     private fmtArgs(exprs: Expr[]) {
@@ -2310,18 +2390,38 @@ class Program implements TopOpWriter {
 
     private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
         const left = expr.left
-        if (
-            !ts.isPropertyAccessExpression(left) ||
-            !ts.isPropertyAccessExpression(left.expression) ||
-            idName(left.expression.name) != "prototype"
-        )
-            return null
 
-        const clName = this.forceName(left.expression.expression)
-        const spec = this.specFromTypeName(left.expression.expression, clName)
+        if (!ts.isPropertyAccessExpression(left)) return null
+
+        let classExpr = left.expression
+        if (
+            ts.isPropertyAccessExpression(classExpr) &&
+            idName(classExpr.name) == "prototype"
+        )
+            classExpr = classExpr.expression
+
+        const className = this.nodeName(classExpr)
+
+        // allow more stuff in future
+        const isMonkeyPatch = className == "#Math"
+        const spec = isMonkeyPatch
+            ? null
+            : this.specFromTypeName(classExpr, true)
+
+        if (!isMonkeyPatch && !spec) return
+
         const fnName = this.forceName(left.name)
         if (!ts.isFunctionExpression(expr.right))
             throwError(expr.right, "expecting 'function (...) { }' here")
+
+        if (isMonkeyPatch) {
+            const id = className + "." + fnName
+            const mp = new MonkeyPatch(expr.right, id.slice(1))
+            this.monkeyPatch[id] = mp
+            if (this.compileAll || (this.isLibrary && this.inMainFile(expr)))
+                this.getMonkeyPatchProc(mp)
+            return unit()
+        }
 
         const cmd = new ClientCommand(spec)
         cmd.defintion = expr.right
@@ -2675,6 +2775,9 @@ class Program implements TopOpWriter {
                     )
                 case SK.ExportDeclaration:
                 case SK.InterfaceDeclaration:
+                case SK.ModuleDeclaration:
+                    return // ignore
+                case SK.ImportDeclaration:
                     return // ignore
                 default:
                     // console.log(stmt)
@@ -2863,6 +2966,8 @@ class Program implements TopOpWriter {
         assert(!this.tree)
 
         this.tree = buildAST(this.host, this._source, this.prelude)
+        this.checker = this.tree.getTypeChecker()
+
         getProgramDiagnostics(this.tree).forEach(d => this.printDiag(d))
 
         const files = this.tree.getSourceFiles()
@@ -3085,7 +3190,7 @@ export function toTable(header: string[], rows: (string | number)[][]) {
         }
     }
 
-    return res.replace(/\s+\n/mg, "\n")
+    return res.replace(/\s+\n/gm, "\n")
 
     function toStr(n: string | number | null) {
         return (n ?? "") + ""
