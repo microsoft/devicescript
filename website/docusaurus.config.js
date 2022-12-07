@@ -15,7 +15,7 @@ async function createConfig() {
     /** @type {import('@docusaurus/types').Config} */
     const config = {
         title: "DeviceScript",
-        tagline: "Portable, small footprint virtual machine for embedded devices.",
+        tagline: "Portable, small footprint virtual machine for embedded devices with a flair of TypeScript.",
         url: "https://microsoft.github.io/",
         baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
