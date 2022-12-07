@@ -1,5 +1,5 @@
 #include "jd_network.h"
-#include "jacdac/dist/c/azureiothubhealth.h"
+#include "jacdac/dist/c/cloudconfiguration.h"
 #include "jacdac/dist/c/cloudadapter.h"
 #include "devicescript.h"
 
@@ -51,9 +51,9 @@ static srv_t *_wsskhealth_state;
 REG_DEFINITION(                                                //
     wsskhealth_regs,                                           //
     REG_SRV_COMMON,                                            //
-    REG_U16(JD_AZURE_IOT_HUB_HEALTH_REG_CONNECTION_STATUS),    //
-    REG_U32(JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_PERIOD),          //
-    REG_U32(JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_WATCHDOG_PERIOD), //
+    REG_U16(JD_CLOUD_CONFIGURATION_REG_CONNECTION_STATUS),    //
+    REG_U32(JD_CLOUD_CONFIGURATION_REG_PUSH_PERIOD),          //
+    REG_U32(JD_CLOUD_CONFIGURATION_REG_PUSH_WATCHDOG_PERIOD), //
 )
 
 #define CHD_SIZE 4
@@ -63,13 +63,13 @@ int wssk_publish(const void *msg, unsigned len);
 
 static const char *status_name(int st) {
     switch (st) {
-    case JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED:
+    case JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED:
         return "CONNECTED";
-    case JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED:
+    case JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED:
         return "DISCONNECTED";
-    case JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTING:
+    case JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTING:
         return "CONNECTING";
-    case JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTING:
+    case JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTING:
         return "DISCONNECTING";
     default:
         return "???";
@@ -91,7 +91,7 @@ static void set_status(srv_t *state, uint16_t status) {
         return;
     LOG("status %d (%s)", status, status_name(status));
     state->conn_status = status;
-    jd_send_event_ext(state, JD_AZURE_IOT_HUB_HEALTH_EV_CONNECTION_STATUS_CHANGE,
+    jd_send_event_ext(state, JD_CLOUD_CONFIGURATION_EV_CONNECTION_STATUS_CHANGE,
                       &state->conn_status, sizeof(state->conn_status));
 }
 
@@ -137,7 +137,7 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
     switch (event) {
     case JD_CONN_EV_OPEN:
         feed_reconnect_watchdog(state);
-        set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED);
+        set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED);
         break;
     case JD_CONN_EV_MESSAGE:
         feed_reconnect_watchdog(state);
@@ -145,20 +145,20 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
         break;
     case JD_CONN_EV_CLOSE:
         state->fwd_en = 0;
-        set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED);
+        set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED);
         break;
     case JD_CONN_EV_ERROR:
         LOG("encsock error: %-s", jd_json_escape(data, size));
-        set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED);
+        set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED);
         break;
     }
 }
 
 static void wsskhealth_disconnect(srv_t *state) {
-    if (state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED)
+    if (state->conn_status == JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED)
         return;
 
-    set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTING);
+    set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTING);
     jd_wssk_close();
 }
 
@@ -174,7 +174,7 @@ static void wsskhealth_reconnect(srv_t *state) {
     if (r)
         return;
 
-    set_status(state, JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTING);
+    set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTING);
     feed_reconnect_watchdog(state);
 }
 
@@ -270,10 +270,10 @@ fail_parse:
 
 #if 1
 static const uint32_t glows[] = {
-    [JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED] = JD_GLOW_CLOUD_CONNECTED_TO_CLOUD,
-    [JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED] = JD_GLOW_CLOUD_NOT_CONNECTED_TO_CLOUD,
-    [JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTING] = JD_GLOW_CLOUD_CONNECTING_TO_CLOUD,
-    [JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTING] =
+    [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED] = JD_GLOW_CLOUD_CONNECTED_TO_CLOUD,
+    [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED] = JD_GLOW_CLOUD_NOT_CONNECTED_TO_CLOUD,
+    [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTING] = JD_GLOW_CLOUD_CONNECTING_TO_CLOUD,
+    [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTING] =
         JD_GLOW_CLOUD_NOT_CONNECTED_TO_CLOUD,
 };
 #endif
@@ -325,23 +325,23 @@ void wsskhealth_process(srv_t *state) {
 
 void wsskhealth_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
-    case JD_AZURE_IOT_HUB_HEALTH_CMD_SET_CONNECTION_STRING:
+    case JD_CLOUD_CONFIGURATION_CMD_SET_CONNECTION_STRING:
         set_conn_string(state, (char *)pkt->data, pkt->service_size, 1);
         return;
 
-    case JD_AZURE_IOT_HUB_HEALTH_CMD_CONNECT:
+    case JD_CLOUD_CONFIGURATION_CMD_CONNECT:
         wsskhealth_reconnect(state);
         return;
 
-    case JD_AZURE_IOT_HUB_HEALTH_CMD_DISCONNECT:
+    case JD_CLOUD_CONFIGURATION_CMD_DISCONNECT:
         wsskhealth_disconnect(state);
         return;
 
-    case JD_GET(JD_AZURE_IOT_HUB_HEALTH_REG_HUB_NAME):
+    case JD_GET(JD_CLOUD_CONFIGURATION_REG_SERVER_NAME):
         jd_respond_string(pkt, state->hub_name);
         return;
 
-    case JD_GET(JD_AZURE_IOT_HUB_HEALTH_REG_HUB_DEVICE_ID): {
+    case JD_GET(JD_CLOUD_CONFIGURATION_REG_CLOUD_DEVICE_ID): {
         const char *id = state->device_id;
         if (id && memcmp(id, "/wssk/", 6) == 0)
             id += 6;
@@ -351,8 +351,8 @@ void wsskhealth_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 
     switch (service_handle_register_final(state, pkt, wsskhealth_regs)) {
-    case JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_PERIOD:
-    case JD_AZURE_IOT_HUB_HEALTH_REG_PUSH_WATCHDOG_PERIOD:
+    case JD_CLOUD_CONFIGURATION_REG_PUSH_PERIOD:
+    case JD_CLOUD_CONFIGURATION_REG_PUSH_WATCHDOG_PERIOD:
         if (state->push_period_ms < 1000)
             state->push_period_ms = 1000;
         if (state->push_period_ms > 24 * 3600 * 1000)
@@ -367,13 +367,13 @@ void wsskhealth_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(wsskhealth, JD_SERVICE_CLASS_AZURE_IOT_HUB_HEALTH);
+SRV_DEF(wsskhealth, JD_SERVICE_CLASS_CLOUD_CONFIGURATION);
 void wsskhealth_init(void) {
     SRV_ALLOC(wsskhealth);
 
     aggbuffer_init(&wssk_cloud);
 
-    state->conn_status = JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_DISCONNECTED;
+    state->conn_status = JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED;
     state->push_period_ms = 5000;
 
     char *conn = jd_settings_get(SETTINGS_KEY);
@@ -394,7 +394,7 @@ static uint8_t *prep_msg(uint16_t cmd, unsigned payload_size) {
 
 int wssk_publish(const void *msg, unsigned len) {
     srv_t *state = _wsskhealth_state;
-    if (state->conn_status != JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED)
+    if (state->conn_status != JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED)
         return -1;
 
     if (jd_wssk_send_message(msg, len) != 0)
@@ -439,12 +439,12 @@ int wssk_publish_bin(const void *data, unsigned datasize) {
 
 int wssk_is_connected(void) {
     srv_t *state = _wsskhealth_state;
-    return state->conn_status == JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED;
+    return state->conn_status == JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED;
 }
 
 int wssk_respond_method(uint32_t method_id, uint32_t status, int numvals, double *vals) {
     srv_t *state = _wsskhealth_state;
-    if (state->conn_status != JD_AZURE_IOT_HUB_HEALTH_CONNECTION_STATUS_CONNECTED)
+    if (state->conn_status != JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED)
         return -1;
 
     unsigned payload_size = 8 + sizeof(double) * numvals;
