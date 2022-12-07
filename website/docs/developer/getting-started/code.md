@@ -53,7 +53,8 @@ devsc build --watch
 The command line task will also start a local web server that will send the compiled bytecode
 to a developer tools page similar to the one hosted in the docs.
 
--   open the developer tools page (see cli output)
+-   open the developer tools page, typically http://localhost:8081/ (see cli output)
+-   use te developer tools page similarly to the embedded docs page
 
 ## Edit, deploy, debug loop
 
