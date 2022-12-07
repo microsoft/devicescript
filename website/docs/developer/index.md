@@ -26,6 +26,8 @@ Native communication connection typically do not work when working from a contai
 
 On the other hand, modern browsers have been supporting communication with hardware devices, with WebSerial, WebUSB and WebBluetooth. Therefore, this is the preferred solution used by DeviceScript to communicate with hardware.
 
+### Deployment
+
 When developing a DeviceScript program, the command line will start a web server that acts as a bridge between
 a developer tools web page and the compilation results.
 
@@ -36,11 +38,36 @@ stateDiagram-v2
     cli: DeviceScript compiler/server
     browser: DeviceScript DevTools (browser)
     device: Hardware device
+    simulator: Virtual device (browser)
     code --> cli
     cli --> browser
-    browser --> device: Jacdac over serial, usb
-    device --> browser
+    browser --> simulator: DeviceScript bytecode
+    browser --> device: DeviceScript bytecode over serial, usb
 ```
+
+### Simulation
+
+The DeviceScript developer tool page also acts as a bridge routing the Jacdac packets to all players. This means 
+that you can test and debug your scripts in a virtual or hardware device, using virtual or hardware sensors.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    browser: DeviceScript DevTools (browser)
+    device: Hardware device
+    simulator: Virtual device
+    hwsensor: Hardware sensor
+    vsensor: Virtual sensor
+    browser --> simulator
+    simulator --> browser
+    browser --> device: serial, USB, web sockets
+    device --> browser
+    device --> hwsensor: I2C, SPI, GPIO, Jacdac, ...
+    hwsensor --> device
+    browser --> vsensor
+    vsensor --> browser
+```
+
 
 :::tip
 If you are developing the C++ firmware for DeviceScript,
