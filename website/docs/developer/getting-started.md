@@ -7,7 +7,7 @@ hide_table_of_contents: true
 
 In this guide, you'll use a Raspberry Pi Pico and a pressure sensor to create a mouth-blowing activated mouse button.
 
-## Part 1: Creating the firmware
+## Part 1: Coding the script
 
 At a high level, we want the script to generate a mouse click whenever we detect a peak in air pressure.
 Tag along this part of the guide even if you do not have hardware available, DeviceScript provides web-based simulators and editors.
