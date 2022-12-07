@@ -2,9 +2,15 @@
 
 In this guide, you'll use a Raspberry Pi Pico and a pressure sensor to create a mouse button actionable with the mouse.
 
-:::tip
-Don't worry about the necessary hardware yet, you can use DeviceScript simulator get started without it.
-:::
+## Try DeviceScript
+
+You do not need hardware or install any tools to try out DeviceScript. Try editing this sandbox and press `Run`!
+
+```ts
+every(1, () => {
+    console.log(`hello`)
+})
+```
 
 ## Roles
 
