@@ -44,8 +44,8 @@ In this scenario, we will need to measure air pressure and send HID mouse comman
 
 ```ts
 console.log(`starting...`)
-const sensor = roles.airPressure()
-const mouse = roles.hidMouse()
+const sensor = new ds.AirPressure()
+const mouse = new ds.HidMouse()
 ```
 
 :::note
@@ -65,8 +65,8 @@ To track pressure changes, we register a callback that triggers when the pressur
 
 ```ts
 console.log("starting...")
-const sensor = roles.airPressure()
-const mouse = roles.hidMouse()
+const sensor = new ds.AirPressure()
+const mouse = new ds.HidMouse()
 // listen for pressure changes
 sensor.pressure.onChange(10, () => {
     console.log("pressure changed")
@@ -86,8 +86,8 @@ and logging it to the console.
 
 ```ts
 console.log("starting...")
-const sensor = roles.airPressure()
-const mouse = roles.hidMouse()
+const sensor = new ds.AirPressure()
+const mouse = new ds.HidMouse()
 // listen for pressure changes
 sensor.pressure.onChange(10, () => {
     // read sensor reading
@@ -109,8 +109,8 @@ not just a simulator.
 :::
 
 ```ts
-const sensor = roles.airPressure()
-const mouse = roles.hidMouse()
+const sensor = new ds.AirPressure()
+const mouse = new ds.HidMouse()
 // listen for pressure changes
 sensor.pressure.onChange(10, () => {
     // read sensor reading

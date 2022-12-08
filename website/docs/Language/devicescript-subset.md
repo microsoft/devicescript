@@ -14,7 +14,7 @@ Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` ret
 TODO should compare with NaN return NaN?
 
 ```ts
-const pot = roles.potentiometer()
+const pot = new ds.Potentiometer()
 let x, y
 x = pot.position.read()
 if (x < 0.3) {
@@ -45,7 +45,7 @@ console.log("X=", x, "Y=", y)
 The compiler is smart about adding spaces (the second and third examples will print `X is 7 and Y is 12`
 and `X=7 Y=12`).
 
-You can also use the `format()` function directly, either with `console.log()` or
+You can also use the `ds.format()` function directly, either with `console.log()` or
 when setting string registers.
 Arguments are `{0}`, `{1}`, ..., `{9}`, `{A}`, `{B}`, ..., `{F}`.
 A second digit can be supplied to specify precision (though this doesn't work so well yet):
@@ -53,7 +53,7 @@ A second digit can be supplied to specify precision (though this doesn't work so
 ```ts
 let x = 7, y = 12
 
-console.log(format("X is {0} and Y is {1}", x, y))
-console.log(format("X = {04}", x))
-charDisplay.message.write(format("X is {0}", x))
+console.log(ds.format("X is {0} and Y is {1}", x, y))
+console.log(ds.format("X = {04}", x))
+charDisplay.message.write(ds.format("X is {0}", x))
 ```

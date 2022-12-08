@@ -18,11 +18,11 @@ Function parameters are numbers by default.
 A role can be also passed using syntax:
 
 ```ts
-function beep(bz: BuzzerRole, len: number) {
+function beep(bz: ds.Buzzer, len: number) {
     bz.playNote(440, 0.7, len)
 }
 
-const b = roles.buzzer()
+const b = new ds.Buzzer()
 beep(b, 10)
 ```
 
@@ -33,7 +33,7 @@ These need to be implemented by assigning to properties of the `prototype` of th
 For example:
 
 ```js
-BuzzerRole.prototype.playNote = function (
+ds.Buzzer.prototype.playNote = function (
     frequency: number,
     volume: number,
     duration: number
