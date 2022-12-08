@@ -15,7 +15,8 @@ async function createConfig() {
     /** @type {import('@docusaurus/types').Config} */
     const config = {
         title: "DeviceScript",
-        tagline: "Portable, small footprint virtual machine for embedded devices with a flair of TypeScript.",
+        tagline:
+            "Portable, small footprint virtual machine for embedded devices with a flair of TypeScript.",
         url: "https://microsoft.github.io/",
         baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
@@ -42,7 +43,7 @@ async function createConfig() {
                 /** @type {import('@docusaurus/preset-classic').Options} */
                 ({
                     docs: {
-                        routeBasePath: '/',
+                        routeBasePath: "/",
                         sidebarPath: require.resolve("./sidebars.js"),
                         remarkPlugins: [],
                     },
@@ -57,6 +58,9 @@ async function createConfig() {
         themeConfig:
             /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
             ({
+                colorMode: {
+                    disableSwitch: false,
+                },
                 docs: {
                     sidebar: {
                         hideable: true,
@@ -65,9 +69,11 @@ async function createConfig() {
                 },
                 navbar: {
                     title: "DeviceScript",
+                    hideOnScroll: true,
                     logo: {
                         alt: "DeviceScript language",
                         src: "img/logo.svg",
+                        srcDark: "img/logo_dark.svg",
                     },
                     items: [
                         {
