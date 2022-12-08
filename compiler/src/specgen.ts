@@ -19,7 +19,7 @@ function toHex(n: number): string {
 }
 
 export function specToDeviceScript(info: jdspec.ServiceSpec) {
-    let r = `// Service: ${info.name}\n`
+    let r = ""
 
     for (const en of Object.values(info.enums)) {
         const enPref = enumName(en.name)
@@ -31,10 +31,19 @@ export function specToDeviceScript(info: jdspec.ServiceSpec) {
     }
 
     const clname = upperCamel(info.camelName)
-    const baseclass =
-        info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
-    if (info.status === "deprecated")
-        r += "// @deprecated\n"
+    const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
+
+    // emit stats as attributes
+    {
+        let cmt = `${info.name}\n`
+        const descr = info.notes["long"] || info.notes["short"]
+        if (descr) cmt += `${descr}\n\n`
+        if (info.status === "deprecated") cmt += "@deprecated\n"
+        else if (!info.status || info.status === "experimental")
+            cmt += "@experimental\n"
+        r += wrapComment("devs", cmt)
+    }
+    // emit class
     r += `class ${clname} extends ${baseclass} {\n`
 
     for (const pkt of info.packets) {
