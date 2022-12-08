@@ -121,6 +121,7 @@ async function createConfig() {
             mermaid: true,
         },
         themes: ["@docusaurus/theme-mermaid"],
+        /*
         plugins: [
             [
                 "docusaurus-plugin-typedoc",
@@ -136,6 +137,7 @@ async function createConfig() {
                 },
             ],
         ],
+        */
     }
 
     const renderCodeBlocks = (
