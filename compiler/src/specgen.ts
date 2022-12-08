@@ -33,6 +33,8 @@ export function specToDeviceScript(info: jdspec.ServiceSpec) {
     const clname = upperCamel(info.camelName)
     const baseclass =
         info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
+    if (info.status === "deprecated")
+        r += "// @deprecated\n"
     r += `class ${clname} extends ${baseclass} {\n`
 
     for (const pkt of info.packets) {
