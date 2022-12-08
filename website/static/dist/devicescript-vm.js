@@ -192,7 +192,7 @@ var Exts;
                     return -1;
                 }
             };
-            const disconnect = () => {
+            const disconnect = (err) => {
                 console.log("disconnect");
                 if (sock)
                     try {
@@ -202,7 +202,7 @@ var Exts;
                 sock = undefined;
                 if (resolve) {
                     resolve = null;
-                    reject(new Error(`can't connect to ${url}`));
+                    reject(new Error(`can't connect to ${url}; ${err === null || err === void 0 ? void 0 : err.message}`));
                 }
             };
             Module["sendPacket"] = send;
