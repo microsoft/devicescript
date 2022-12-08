@@ -27,6 +27,9 @@ void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *
 void devs_free_ctx(devs_ctx_t *ctx);
 void devs_set_logging(devs_ctx_t *ctx, uint8_t logging);
 
+void devs_panic_handler(int exitcode);
+void devs_deploy_handler(int exitcode);
+
 #define JACS_FLAG_GC_STRESS (1U << 0)
 
 void devs_set_global_flags(uint32_t global_flags);

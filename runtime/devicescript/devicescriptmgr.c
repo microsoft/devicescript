@@ -49,9 +49,9 @@ struct srv_state {
 };
 static srv_t *_state;
 
-REG_DEFINITION(                                 //
-    devicescriptmgr_regs,                          //
-    REG_SRV_COMMON,                             //
+REG_DEFINITION(                                     //
+    devicescriptmgr_regs,                           //
+    REG_SRV_COMMON,                                 //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING),   //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART), //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING),   //
@@ -120,6 +120,8 @@ static void stop_program(srv_t *state) {
     state->ctx = NULL;
     send_status(state);
 }
+
+__attribute__((weak)) void devs_panic_handler(int exitcode) {}
 
 void devicescriptmgr_process(srv_t *state) {
     if (state->read_program_ptr >= 0) {
