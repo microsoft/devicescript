@@ -41,6 +41,28 @@ tsconfig.json     configure the TypeScript compiler to compile DeviceScript synt
 ...               A few additional files supporting the coding experience in VS Code
 ```
 
+-   open `main.ts` and copy the following code
+
+```ts
+console.log("starting...")
+const sensor = roles.airPressure()
+const mouse = roles.hidMouse()
+// listen for pressure changes
+sensor.pressure.onChange(10, () => {
+    // read sensor reading
+    const pressure = sensor.pressure.read()
+    console.log(pressure)
+    // user blows in straw
+    if (pressure > 1400) {
+        // click!
+        console.log(`click!`)
+        mouse.setButton(HidMouseButton.Left, HidMouseButtonEvent.Click)
+        // debouncing
+        wait(0.05)
+    }
+})
+```
+
 ## Launch the build watch
 
 Assuming `main.ts` is the root file of your application,

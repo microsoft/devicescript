@@ -108,6 +108,7 @@ not just a simulator.
 :::
 
 ```ts
+console.log("starting...")
 const sensor = roles.airPressure()
 const mouse = roles.hidMouse()
 // listen for pressure changes
