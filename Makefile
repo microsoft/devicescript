@@ -1,16 +1,18 @@
+CLI = ./cli/devicescript
+
 comp: compiler/built/compiler/src/devicescript.js
 
 compiler/built/compiler/src/devicescript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.ts)
 	yarn build
 
 comp-fast:
-	yarn build-fast
+	cd compiler && node build.js --fast
 
 native em update-dist:
 	$(MAKE) -C runtime $@
 
 test-c: native comp
-	node run -c -t jacs/run-tests/basic.ts
+	$(CLI) crun -t jacs/run-tests/basic.ts
 
 test-em: em comp
 	yarn test

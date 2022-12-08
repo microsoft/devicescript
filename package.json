@@ -8,7 +8,7 @@
         "watch": "cd compiler && yarn watch",
         "docs": "cd website && yarn start",
         "dev": "yarn watch & yarn docs",
-        "test": "node run -t jacs/run-tests/basic.ts && node run test"
+        "test": "node ./cli/devicescript ctool --test"
     },
     "workspaces": [
         "compiler",

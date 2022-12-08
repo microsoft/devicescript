@@ -1,6 +1,7 @@
 import { program } from "commander"
 import pkg from "../package.json"
 import { build } from "./build"
+import { crunScript } from "./crun"
 import { ctool } from "./ctool"
 import { devtools } from "./devtools"
 import init from "./init"
@@ -84,6 +85,17 @@ export async function mainCli() {
         .option("-w, --wait", "wait for external deploy")
         .arguments("[file.ts|file.devs]")
         .action(runScript)
+
+    program
+        .command("crun", { hidden: true })
+        .description("run a script using native runner")
+        .option("-t, --test", "run in test mode (no sockets, no restarts)")
+        .option(
+            "-s, --serial <serial-port>",
+            "connect to serial port, not 127.0.0.1:8082"
+        )
+        .arguments("<file.ts|file.devs>")
+        .action(crunScript)
 
     program.parse(process.argv)
 }

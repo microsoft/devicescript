@@ -229,6 +229,7 @@ static void run_sample(const char *name, int keepgoing) {
 }
 
 static jd_transport_ctx_t *transport_ctx = NULL;
+extern int settings_in_files;
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/eventloop.h>
@@ -290,6 +291,8 @@ int main(int argc, const char **argv) {
             devs_set_global_flags(JACS_FLAG_GC_STRESS);
         } else if (strcmp(arg, "-w") == 0) {
             websock = 1;
+        } else if (strcmp(arg, "-n") == 0) {
+            settings_in_files = 0;
         } else {
             fprintf(stderr, "unknown arg: %s\n", arg);
             return 1;
