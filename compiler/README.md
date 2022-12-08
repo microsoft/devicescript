@@ -1,4 +1,4 @@
-# DeviceScript Command Line Tool
+# DeviceScript Compiler
 
 DeviceScript is a programming language for scripting [Jacdac](https://aka.ms/jacdac) services.
 
