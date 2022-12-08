@@ -493,7 +493,7 @@ class Program implements TopOpWriter {
             this.serviceSpecs[sp.camelName] = sp
             for (const en of Object.keys(sp.enums)) {
                 const n = upperCamel(sp.camelName) + upperCamel(en)
-                this.enums[n] = sp.enums[en]
+                this.enums["#" + n] = sp.enums[en]
             }
         }
         this.sysSpec = this.serviceSpecs["system"]
@@ -766,24 +766,15 @@ class Program implements TopOpWriter {
 
         if (!expr) return null
 
-        let spec: jdspec.ServiceSpec
-
-        if (ts.isCallExpression(expr)) {
-            const nm = this.nodeName(expr.expression)
-            if (nm == "#condition") {
+        if (ts.isNewExpression(expr)) {
+            const spec = this.specFromTypeName(expr.expression, true)
+            if (spec) {
                 this.requireArgs(expr, 0)
-                spec = this.serviceSpecs["deviceScriptCondition"]
+                return new Role(this, decl, this.roles, spec)
             }
-            this.requireArgs(expr, 0)
-        } else if (ts.isNewExpression(expr)) {
-            spec = this.specFromTypeName(expr.expression, true)
-            this.requireArgs(expr, 0)
         }
 
-        if (spec)
-            return new Role(this, decl, this.roles, spec)
-        else
-            return null
+        return null
     }
 
     private emitStore(trg: Variable, src: Value) {
@@ -935,6 +926,7 @@ class Program implements TopOpWriter {
         if (nm && nm[0] == "#") {
             let r = nm.slice(1)
             r = r[0].toLowerCase() + r.slice(1)
+            if (r == "condition") r = "deviceScriptCondition"
             return this.lookupRoleSpec(expr, r)
         } else {
             if (optional) return null
@@ -1600,7 +1592,10 @@ class Program implements TopOpWriter {
         let specIdx = 0
         const fields = pspec.fields
 
-        if (expr.arguments.length == 1 && idName(expr.arguments[0]) == "packet")
+        if (
+            expr.arguments.length == 1 &&
+            this.nodeName(expr.arguments[0]) == "#packet"
+        )
             return
 
         const wr = this.writer
@@ -1823,14 +1818,14 @@ class Program implements TopOpWriter {
         const arg0 = expr.arguments[0]
         const wr = this.writer
         switch (fnName) {
-            case "cloud.upload":
+            case "CloudConnector.upload":
                 const spec = this.cloudRole.spec.packets.find(
                     p => p.name == "upload"
                 )
                 this.emitPackArgs(expr, spec)
                 this.emitSendCommand(this.cloudRole, spec.identifier)
                 return unit()
-            case "cloud.onMethod":
+            case "CloudConnector.onMethod":
                 this.emitCloudMethod(expr)
                 return unit()
             case "console.log":
@@ -1949,13 +1944,15 @@ class Program implements TopOpWriter {
         if (!sym) return null
         if (sym.flags & ts.SymbolFlags.Alias)
             sym = this.checker.getAliasedSymbol(sym)
-        const r = this.checker.getFullyQualifiedName(sym)
+        let r = this.checker.getFullyQualifiedName(sym)
         if (r && r.startsWith(`"${coreModule}"`))
             return "#" + r.slice(coreModule.length + 3)
         else {
             const d = sym.getDeclarations()?.[0]
-            if (d && this.prelude.hasOwnProperty(d.getSourceFile().fileName))
+            if (d && this.prelude.hasOwnProperty(d.getSourceFile().fileName)) {
+                r = r.replace(/^global\./, "")
                 return "#" + r
+            }
         }
         return r
     }
@@ -2065,7 +2062,8 @@ class Program implements TopOpWriter {
         const wr = this.writer
 
         const callName = this.nodeName(expr.expression)
-        const builtInName = callName.startsWith("#") ? callName.slice(1) : null
+        const builtInName =
+            callName && callName.startsWith("#") ? callName.slice(1) : null
 
         if (builtInName) {
             const r =
@@ -2126,20 +2124,13 @@ class Program implements TopOpWriter {
     }
 
     private emitIdentifier(expr: ts.Identifier): Value {
+        const r = this.emitBuiltInConst(expr)
+        if (r) return r
+
         const id = this.forceName(expr)
-        switch (id) {
-            case "NaN":
-                return literal(NaN)
-            case "undefined":
-            case "null":
-                return literal(null)
-            case "packet":
-                return this.writer.emitExpr(Op.EXPR0_PKT_BUFFER)
-            default:
-                const cell = this.proc.locals.lookup(id)
-                if (!cell) throwError(expr, "unknown name: " + id)
-                return cell.emit(this.writer)
-        }
+        const cell = this.proc.locals.lookup(id)
+        if (!cell) throwError(expr, "unknown name: " + id)
+        return cell.emit(this.writer)
     }
 
     private emitThisExpression(expr: ts.ThisExpression): Value {
@@ -2246,11 +2237,28 @@ class Program implements TopOpWriter {
         }
     }
 
+    private emitBuiltInConst(expr: ts.Expression, nodeName?: string) {
+        if (!nodeName) nodeName = this.nodeName(expr)
+        switch (nodeName) {
+            case "#packet":
+                return this.writer.emitExpr(Op.EXPR0_PKT_BUFFER)
+            case "#NaN":
+                return this.emitLiteral(NaN)
+            case "undefined":
+                return this.emitLiteral(undefined)
+            default:
+                return null
+        }
+    }
+
     private emitPropertyAccessExpression(
         expr: ts.PropertyAccessExpression
     ): Value {
-        const nsName = idName(expr.expression)
-        if (nsName == "Math") {
+        const r = this.emitBuiltInConst(expr)
+        if (r) return r
+
+        const nsName = this.nodeName(expr.expression)
+        if (nsName == "#Math") {
             const id = idName(expr.name)
             if (mathConst.hasOwnProperty(id)) return literal(mathConst[id])
         } else if (this.enums.hasOwnProperty(nsName)) {
@@ -2726,6 +2734,7 @@ class Program implements TopOpWriter {
             this.reportError(node, e.message)
             // console.log(e.stack)
         } else {
+            debugger
             this.reportError(stmt, "Internal error: " + e.message)
             console.log(e.stack)
         }
