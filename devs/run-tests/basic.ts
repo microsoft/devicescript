@@ -232,6 +232,16 @@ function testObj() {
     */
 }
 
+function testConsole() {
+    // note that we don't really test the output ... 
+    const n = 8
+    const q = 12
+    console.log("text" + n)
+    console.log("text" + n + q)
+    console.log("text" + n + "blah" + q)
+    console.log("text" + (n + q))
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
@@ -239,5 +249,6 @@ testLazy()
 testBuffer()
 testArray()
 testObj()
+testConsole()
 console.log("all OK")
 ds.reboot()

@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from "node:fs"
-import { compileBuf, compileFile, getHost, devsFactory } from "./build"
+import { compileBuf, getHost } from "./build"
 import { CmdOptions } from "./command"
 import * as path from "node:path"
 import { testCompiler } from "@devicescript/compiler"

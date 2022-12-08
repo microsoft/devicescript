@@ -1814,6 +1814,27 @@ class Program implements TopOpWriter {
         this.writer.emitStmt(Op.STMT2_SEND_CMD, role, literal(cmd))
     }
 
+    private isStringLike(expr: ts.Expression) {
+        return !!(
+            this.checker.getTypeAtLocation(expr).getFlags() &
+            ts.TypeFlags.StringLike
+        )
+    }
+
+    private flattenPlus(arg: ts.Expression): ts.Expression[] {
+        if (
+            this.isStringLike(arg) &&
+            ts.isBinaryExpression(arg) &&
+            arg.operatorToken.kind == SK.PlusToken
+        ) {
+            return this.flattenPlus(arg.left).concat(
+                this.flattenPlus(arg.right)
+            )
+        } else {
+            return [arg]
+        }
+    }
+
     private emitCloud(expr: ts.CallExpression, fnName: string): Value {
         const arg0 = expr.arguments[0]
         const wr = this.writer
@@ -1839,15 +1860,24 @@ class Program implements TopOpWriter {
                     r.free()
                 } else {
                     let fmt = ""
-                    const fmtargs = []
-                    for (const arg of expr.arguments) {
-                        if (fmt && !/[=:]$/.test(fmt)) fmt += " "
+                    const fmtargs: ts.Expression[] = []
+                    const pushArg = (arg: ts.Expression) => {
                         const str = this.stringLiteral(arg)
                         if (str) {
                             fmt += str
                         } else {
                             fmt += `{${fmtargs.length}}`
                             fmtargs.push(arg)
+                        }
+                    }
+
+                    for (const arg of expr.arguments) {
+                        if (fmt && !/[=:]$/.test(fmt)) fmt += " "
+                        const flat = this.flattenPlus(arg)
+                        if (flat.some(f => this.stringLiteral(f) != null)) {
+                            flat.forEach(pushArg)
+                        } else {
+                            pushArg(arg)
                         }
                     }
                     const r = this.fmtArgs(fmtargs)
