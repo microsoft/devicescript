@@ -26,7 +26,7 @@ export function DevToolsProvider(props: { children: ReactNode }) {
 
     return (
         <DevToolsContext.Provider value={{ setSource, setDarkMode }}>
-            {source ? (
+            {source !== undefined ? (
                 <SplitDevTools
                     {...props}
                     source={source}
