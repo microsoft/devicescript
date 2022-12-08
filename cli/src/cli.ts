@@ -88,8 +88,10 @@ export async function mainCli() {
         .arguments("[file.ts|file.devs]")
         .action(runScript)
 
+    // this talks direct jacdac packets, it doesn't work with current devtools (since they do not forward jacdac packets)
+    // hide it until we have a better story
     program
-        .command("deploy")
+        .command("deploy", { hidden: true })
         .description("deploy a script over jacdac proxy")
         .option(
             "--tcp",
@@ -111,7 +113,7 @@ export async function mainCli() {
 
     program
         .command("disasm")
-        .description("disassembly .jacs binary")
+        .description("disassemble .jacs binary")
         .arguments("<file.ts|file.devs>")
         .action(disasm)
 
