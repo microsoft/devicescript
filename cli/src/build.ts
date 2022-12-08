@@ -67,7 +67,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         getSpecs: () => jacdacDefaultSpecifications,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
-            const res = inst.jacsDeploy(buf)
+            const res = inst.jacsVerify(buf)
             if (res != 0) throw new Error("verification error: " + res)
         },
     }

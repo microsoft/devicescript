@@ -49,7 +49,7 @@ async function getHost() {
         getSpecs: () => specs,
         verifyBytecode: buf => {
             if (useC) return
-            const res = inst.jacsDeploy(buf)
+            const res = inst.jacsVerify(buf)
             if (res != 0) throw new Error("verification error: " + res)
         },
     }

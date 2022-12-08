@@ -98,6 +98,11 @@ int jd_em_devs_deploy(const void *img, unsigned imgsize) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+int jd_em_devs_verify(const void *img, unsigned imgsize) {
+    return devs_verify(img, imgsize);
+}
+
+EMSCRIPTEN_KEEPALIVE
 int jd_em_devs_client_deploy(const void *img, unsigned imgsize) {
     return devs_client_deploy(img, imgsize);
 }

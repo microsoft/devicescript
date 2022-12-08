@@ -90,7 +90,7 @@ export async function runScript(fn: string, options: RunOptions & CmdOptions) {
         const prog = await readCompiled(fn)
         const r = inst.jacsDeploy(prog)
         if (r) throw new Error("deploy error: " + r)
-        console.log(`deployed ${fn}`)
+        console.log(`self-deployed ${fn}`)
     }
 
     if (options.wait) console.log(`waiting for external deploy`)

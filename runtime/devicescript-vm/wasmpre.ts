@@ -9,6 +9,7 @@ export declare type JacsModule = EmscriptenModule &
         _jd_em_process(): void
         _jd_em_frame_received(frame: ptr): int32
         _jd_em_devs_deploy(img: ptr, size: int32): int32
+        _jd_em_devs_verify(img: ptr, size: int32): int32
         _jd_em_devs_client_deploy(img: ptr, size: int32): int32
         sendPacket(pkt: Uint8Array): void
     }
@@ -67,6 +68,7 @@ export module Exts {
             Module["sendPacket"] = send
 
             sock = net.createConnection(port, host, () => {
+                console.log(`connected to ${port}:${host}`)
                 const f = resolve
                 resolve = null
                 f()
@@ -114,22 +116,27 @@ export module Exts {
                 }
             }
 
-            const disconnect = (err:any) => {
+            const disconnect = (err: any) => {
                 console.log("disconnect")
                 if (sock)
                     try {
                         sock.close()
-                    } catch { }
+                    } catch {}
                 sock = undefined
                 if (resolve) {
                     resolve = null
-                    reject(new Error(`can't connect to ${url}; ${err?.message}`))
+                    reject(
+                        new Error(`can't connect to ${url}; ${err?.message}`)
+                    )
                 }
             }
 
             Module["sendPacket"] = send
 
-            sock.onopen = () => resolve()
+            sock.onopen = () => {
+                console.log(`connected to ${url}`)
+                resolve()
+            }
             sock.onerror = disconnect
             sock.onclose = disconnect
             sock.onmessage = ev => {
@@ -155,6 +162,12 @@ export module Exts {
     export function jacsDeploy(binary: Uint8Array) {
         return copyToHeap(binary, ptr =>
             Module._jd_em_devs_deploy(ptr, binary.length)
+        )
+    }
+
+    export function jacsVerify(binary: Uint8Array) {
+        return copyToHeap(binary, ptr =>
+            Module._jd_em_devs_verify(ptr, binary.length)
         )
     }
 
@@ -203,7 +216,7 @@ export module Exts {
 }
 
 for (const kn of Object.keys(Exts)) {
-    ; (Module as any)[kn] = (Exts as any)[kn]
+    ;(Module as any)[kn] = (Exts as any)[kn]
 }
 
 function factory(): Promise<JacsModule> {

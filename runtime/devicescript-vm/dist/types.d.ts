@@ -8,6 +8,7 @@ export declare type JacsModule = EmscriptenModule & typeof Exts & {
     _jd_em_process(): void;
     _jd_em_frame_received(frame: ptr): int32;
     _jd_em_devs_deploy(img: ptr, size: int32): int32;
+    _jd_em_devs_verify(img: ptr, size: int32): int32;
     _jd_em_devs_client_deploy(img: ptr, size: int32): int32;
     sendPacket(pkt: Uint8Array): void;
 };
@@ -17,6 +18,7 @@ export declare module Exts {
     function setupWebsocketTransport(url: string, proto?: string): Promise<void>;
     function b64ToBin(s: string): Uint8Array;
     function jacsDeploy(binary: Uint8Array): number;
+    function jacsVerify(binary: Uint8Array): number;
     function jacsClientDeploy(binary: Uint8Array): number;
     function jacsInit(): void;
     function jacsStart(): void;
