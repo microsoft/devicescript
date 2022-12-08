@@ -41,6 +41,8 @@ export function specToDeviceScript(info: jdspec.ServiceSpec) {
         if (info.status === "deprecated") cmt += "@deprecated\n"
         else if (!info.status || info.status === "experimental")
             cmt += "@experimental\n"
+        if (info.group) cmt += `@group ${info.group}\n`
+        if (info.tags?.length) cmt += `@category ${info.tags[0]}\n`
         r += wrapComment("devs", cmt)
     }
     // emit class
