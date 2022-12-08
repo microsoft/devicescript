@@ -17,7 +17,7 @@ test-c: native comp
 test-em: em comp
 	yarn test
 
-test: test-c test-em
+test: em test-c test-em
 
 clean:
 	rm -rf built compiler/built compiler/src/prelude.ts cli/built
