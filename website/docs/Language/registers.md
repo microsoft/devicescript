@@ -13,9 +13,9 @@ Registers have following methods - `.onChange()`, `.read()` and `.write()`.
 If register contains multiple fields, a tuple (array) is returned.
 
 ```ts
-const pot = roles.potentiometer()
-const lamp = roles.led()
-const colorSensor = roles.color()
+const pot = new ds.Potentiometer()
+const lamp = new ds.Led()
+const colorSensor = new ds.Color()
 let x = pot.position.read()
 
 lamp.brightness.write(0.7)
@@ -31,7 +31,7 @@ It is executed once when the value is first determined, and then whenever the cu
 is different by at least the specified value from the value at previous handler execution.
 
 ```ts
-const pot = roles.potentiometer()
+const pot = new ds.Potentiometer()
 pot.position.onChange(0.02, () => {
     lamp.brightness.write(pot.position.read())
 })

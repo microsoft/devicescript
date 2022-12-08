@@ -1,22 +1,24 @@
-const btn = roles.button()
-const rot = roles.rotaryEncoder()
-const kbd = roles.hidKeyboard()
+import * as ds from "@devicescript/core"
+
+const btn = new ds.Button()
+const rot = new ds.RotaryEncoder()
+const kbd = new ds.HidKeyboard()
 
 btn.down.subscribe(() => {
     // kbd.key(HidKeyboardSelector.UpArrow, HidKeyboardModifiers.None, HidKeyboardAction.Press)
     // kbd.key(HidKeyboardSelector.VolumeUp, HidKeyboardModifiers.None, HidKeyboardAction.Press)
     kbd.key(
-        HidKeyboardSelector.V,
-        HidKeyboardModifiers.LeftGUI,
-        HidKeyboardAction.Press
+        ds.HidKeyboardSelector.V,
+        ds.HidKeyboardModifiers.LeftGUI,
+        ds.HidKeyboardAction.Press
     )
 })
 
 function press(k: number) {
-    kbd.key(k, HidKeyboardModifiers.None, HidKeyboardAction.Down)
-    wait(0.02)
-    kbd.key(k, HidKeyboardModifiers.None, HidKeyboardAction.Up)
-    wait(0.02)
+    kbd.key(k, ds.HidKeyboardModifiers.None, ds.HidKeyboardAction.Down)
+    ds.wait(0.02)
+    kbd.key(k, ds.HidKeyboardModifiers.None, ds.HidKeyboardAction.Up)
+    ds.wait(0.02)
 }
 
 let prevV = rot.position.read()
@@ -24,12 +26,10 @@ rot.position.onChange(1, () => {
     const v = rot.position.read()
     while (prevV < v) {
         prevV = prevV + 1
-        press(HidKeyboardSelector.RightArrow)
+        press(ds.HidKeyboardSelector.RightArrow)
     }
     while (prevV > v) {
         prevV = prevV - 1
-        press(HidKeyboardSelector.LeftArrow)
+        press(ds.HidKeyboardSelector.LeftArrow)
     }
 })
-
-export {}

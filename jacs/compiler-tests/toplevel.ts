@@ -1,5 +1,7 @@
-var g = 0
-var r = roles.button()
+import * as ds from "@devicescript/core"
+
+const g = 0
+const r = new ds.Button()
 
 function foo() {
     function bar() { } //! only top-level functions are supported
@@ -12,7 +14,7 @@ function foo() {
 }
 
 if (g > 0) {
-    var q = 0
+    const q = 0
     function bazz() { } //! only top-level functions are supported
 
     r.down.subscribe(() => { //! top-level
@@ -20,10 +22,8 @@ if (g > 0) {
 }
 
 function baz() {
-    q = 1 //! cannot find
+    q = 1 //! Cannot find
 }
 
 foo()
 baz()
-
-export {}

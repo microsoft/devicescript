@@ -1,5 +1,7 @@
-const btnA = roles.button()
-const led = roles.lightBulb()
+import * as ds from "@devicescript/core"
+
+const btnA = new ds.Button()
+const led = new ds.LightBulb()
 
 console.log("program start")
 btnA.down.subscribe(() => {

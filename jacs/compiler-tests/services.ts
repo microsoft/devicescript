@@ -1,12 +1,14 @@
-var r1 = roles.noSuchService() //! does not exist on type
-var r2 = roles.button(1) //! Expected 0 arguments
-var r3 = roles.lightbulb() //! does not exist on type
-var r4 = roles.lightBulb() // OK
+import * as ds from "@devicescript/core"
 
-var btn = roles.button()
-var clr = roles.color()
+const r1 = new ds.NoSuchService() //! does not exist on type
+const r2 = new ds.Button(1) //! Expected 0 arguments
+const r3 = new ds.Lightbulb() //! does not exist on type
+const r4 = new ds.LightBulb() // OK
+
+const btn = new ds.Button()
+const clr = new ds.Color()
 function test1() {
-    var a, b, c, d
+    let a, b, c, d
 
     [a, b] = btn.pressure.read(); //! method that returns an iterator
     [a] = btn.pressure.read(); //! method that returns an iterator

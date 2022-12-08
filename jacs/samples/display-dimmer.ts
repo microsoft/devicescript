@@ -1,6 +1,8 @@
-const pot = roles.potentiometer()
-const ledD = roles.led()
-const btn = roles.button()
+import * as ds from "@devicescript/core"
+
+const pot = new ds.Potentiometer()
+const ledD = new ds.Led()
+const btn = new ds.Button()
 let p
 
 pot.position.onChange(0.01, () => {
@@ -9,10 +11,13 @@ pot.position.onChange(0.01, () => {
     ledD.brightness.write(p * 0.3)
 })
 
-declare interface LedRole {
-    setAllColors(r: number, g: number, b: number): void
+declare module "@devicescript/core" {
+    interface Led {
+        setAllColors(r: number, g: number, b: number): void
+    }
 }
-LedRole.prototype.setAllColors = function (r, g, b) {
+
+ds.Led.prototype.setAllColors = function (r, g, b) {
     this.setAll(r, g, b)
 }
 

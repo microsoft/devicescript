@@ -9,16 +9,16 @@ The same role can be referenced multiple times, and runtime makes sure not to as
 multiple roles to the same service instance.
 
 ```ts
-const btnA = roles.button()
-const btnB = roles.button()
-const pot = roles.potentiometer()
-const lamp = roles.lightBulb()
+const btnA = new ds.Button()
+const btnB = new ds.Button()
+const pot = new ds.Potentiometer()
+const lamp = new ds.LightBulb()
 ```
 
 You can check if role is currently assigned, and react to it being assigned or unassigned:
 
 ```ts
-const heater = roles.relay()
+const heater = new ds.Relay()
 if (heater.isConnected())
     heater.active.write(1)
 heater.onConnected(() => {
@@ -34,7 +34,7 @@ heater.onDisconnected(() => {
 Events are referenced as `myRole.eventName`. They currently have two member functions, `.wait()` and `.subscribe()`.
 
 ```ts
-const btnA = roles.button()
+const btnA = new ds.Button()
 btnA.down.subscribe(() => {
     console.log("button down!")
 })

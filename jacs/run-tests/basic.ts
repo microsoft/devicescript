@@ -1,3 +1,6 @@
+import * as ds from "@devicescript/core"
+import { panic } from "@devicescript/core"
+
 function isClose(x: number, y: number): void {
     if (isNaN(x) && isNaN(y)) return
     const d = Math.abs(x - y)
@@ -9,7 +12,7 @@ function isClose(x: number, y: number): void {
 function isEq(x: number, y: number): void {
     // console.log(x, " == ", y, "?")
     if (x != y) {
-        console.log(format("fail: {0} != {1}", x, y))
+        console.log(ds.format("fail: {0} != {1}", x, y))
         panic(109)
     }
 }
@@ -135,7 +138,7 @@ function lazyX(v: number) {
 
 function checkX(v: number) {
     if (x != v) {
-        console.log(format("{0} != {1} !!", x, v))
+        console.log(ds.format("{0} != {1} !!", x, v))
         panic(11)
     }
     x = 0
@@ -164,7 +167,7 @@ function testLazy() {
 
 function fib(k: number): number {
     if (k < 2) return k
-    var r = fib(k - 1) + fib(k - 2)
+    const r = fib(k - 1) + fib(k - 2)
     return r
 }
 
@@ -174,7 +177,7 @@ function fibx(k: number): number {
 }
 
 function testBuffer() {
-    const buf = buffer(20)
+    const buf = Buffer.alloc(20)
     buf.setAt(2, "u32", 0xf00d)
     isEq(buf.getAt(2, "u32"), 0xf00d)
     isEq(buf.getAt(2, "u16"), 0xf00d)
@@ -190,7 +193,7 @@ function testBuffer() {
     isEq(buf[2], 7)
 
     buf[4] = 0x13
-    var b2 = hex`72 33 23 12`
+    const b2 = hex`72 33 23 12`
     buf.blitAt(0, b2, 0, 10)
     isEq(buf[0], 0x72)
     isEq(buf[3], 0x12)
@@ -237,6 +240,4 @@ testBuffer()
 testArray()
 testObj()
 console.log("all OK")
-reboot()
-
-export {}
+ds.reboot()

@@ -30,6 +30,7 @@ const optionalFiles: Record<string, any> = {
             noImplicitThis: true,
             isolatedModules: true,
             noImplicitAny: true,
+            moduleDetection: "force",
             types: [],
         },
         include: ["*.ts", `${LIBDIR}/*.ts`],
@@ -90,14 +91,7 @@ export default function init(options: InitOptions & CmdOptions) {
     // main.ts
     if (!pathExistsSync(MAIN)) {
         debug(`write ${MAIN}`)
-        writeFileSync(
-            MAIN,
-            `// keep this line to force module mode
-export {}
-
-`,
-            { encoding: "utf8" }
-        )
+        writeFileSync(MAIN, `// put your code here!\n`, { encoding: "utf8" })
     }
 
     // help message

@@ -1,4 +1,6 @@
-const b = buffer(20)
+import * as ds from "@devicescript/core"
+
+const b = Buffer.alloc(20)
 
 const bufa = hex`00 01 02 03 04`
 
@@ -16,6 +18,5 @@ function testBuffer() {
 
 testBuffer()
 
-const dotmatrix = roles.dotMatrix()
+const dotmatrix = new ds.DotMatrix()
 dotmatrix.dots.write(hex`00 ab 12 2f 00`)
-

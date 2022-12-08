@@ -1,6 +1,8 @@
-const btn = roles.button()
-const rot = roles.rotaryEncoder()
-const mouse = roles.hidMouse()
+import * as ds from "@devicescript/core"
+
+const btn = new ds.Button()
+const rot = new ds.RotaryEncoder()
+const mouse = new ds.HidMouse()
 
 const scale = 5
 
@@ -13,5 +15,5 @@ rot.position.onChange(1, () => {
     const v = rot.position.read()
     mouse.move(scale * (v - prevV), 0, 100)
     prevV = v
-    wait(0.1)
+    ds.wait(0.1)
 })

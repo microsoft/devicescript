@@ -12,7 +12,7 @@ Every handler runs in its own fiber (lightweight thread).
 The scheduler is non-preemptive, meaning
 a fiber executes without interruption until it returns or hits an asynchronous operation,
 upon which point it's suspended.
-Example async operations are `wait()` and register read.
+Example async operations are `ds.wait()` and a register read.
 Only one fiber executes at a time, while the other fibers are suspended.
 This is similar to modern JavaScript, but there's no `await` keyword.
 

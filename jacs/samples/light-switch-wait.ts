@@ -1,7 +1,9 @@
-const btnA = roles.button()
-const led = roles.lightBulb()
+import * as ds from "@devicescript/core"
 
-every(0.1, () => {
+const btnA = new ds.Button()
+const led = new ds.LightBulb()
+
+ds.every(0.1, () => {
     btnA.down.wait()
     if (led.brightness.read() > 0)
         led.brightness.write(0)
