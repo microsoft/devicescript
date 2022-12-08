@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { compileFile, jacsFactory } from "./build"
+import { compileFile, devsFactory } from "./build"
 import { CmdOptions, error } from "./command"
 
 export interface RunOptions {
@@ -19,7 +19,7 @@ export async function readCompiled(fn: string) {
 
 export async function runTest(fn: string, options: RunOptions = {}) {
     const prog = await readCompiled(fn)
-    const inst = await jacsFactory()
+    const inst = await devsFactory()
 
     const devid = "12abdd2289421234"
 
@@ -37,9 +37,9 @@ export async function runTest(fn: string, options: RunOptions = {}) {
                 if (f) f()
             }
         }
-        inst.jacsSetDeviceId(devid)
-        inst.jacsStart()
-        inst.jacsDeploy(prog)
+        inst.devsSetDeviceId(devid)
+        inst.devsStart()
+        inst.devsDeploy(prog)
         setTimeout(() => {
             if (resolve) {
                 console.log("timeout")
@@ -68,16 +68,16 @@ export async function runScript(fn: string, options: RunOptions & CmdOptions) {
             }
         )
 
-    const inst = await jacsFactory()
+    const inst = await devsFactory()
     if (options.test) inst.sendPacket = () => {}
     else if (options.tcp)
         await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
     else await inst.setupWebsocketTransport("ws://127.0.0.1:8081")
-    inst.jacsStart()
+    inst.devsStart()
 
     if (fn) {
         const prog = await readCompiled(fn)
-        const r = inst.jacsDeploy(prog)
+        const r = inst.devsDeploy(prog)
         if (r) throw new Error("deploy error: " + r)
         console.log(`self-deployed ${fn}`)
     }

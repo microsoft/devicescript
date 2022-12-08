@@ -1,7 +1,7 @@
 /// <reference types="emscripten" />
 declare type ptr = number;
 declare type int32 = number;
-export declare type JacsModule = EmscriptenModule & typeof Exts & {
+export declare type DevsModule = EmscriptenModule & typeof Exts & {
     _jd_em_set_device_id_2x_i32(id0: int32, id1: int32): void;
     _jd_em_set_device_id_string(str: ptr): void;
     _jd_em_init(): void;
@@ -19,14 +19,14 @@ export declare module Exts {
     function setupNodeTcpSocketTransport(require: any, host: string, port: number): Promise<void>;
     function setupWebsocketTransport(url: string, proto?: string): Promise<void>;
     function b64ToBin(s: string): Uint8Array;
-    function jacsDeploy(binary: Uint8Array): number;
-    function jacsVerify(binary: Uint8Array): number;
-    function jacsClientDeploy(binary: Uint8Array): number;
-    function jacsInit(): void;
-    function jacsStart(): void;
-    function jacsStop(): void;
-    function jacsSetDeviceId(id0: string | number, id1?: number): void;
+    function devsDeploy(binary: Uint8Array): number;
+    function devsVerify(binary: Uint8Array): number;
+    function devsClientDeploy(binary: Uint8Array): number;
+    function devsInit(): void;
+    function devsStart(): void;
+    function devsStop(): void;
+    function devsSetDeviceId(id0: string | number, id1?: number): void;
 }
-declare function factory(): Promise<JacsModule>;
+declare function factory(): Promise<DevsModule>;
 export default factory;
 //# sourceMappingURL=wasmpre.d.ts.map

@@ -34,7 +34,7 @@ import {
     Op,
     SMap,
     ValueKind,
-    JacsDiagnostic,
+    DevsDiagnostic,
 } from "./format"
 import {
     addUnique,
@@ -536,7 +536,7 @@ class Program implements TopOpWriter {
     printDiag(diag: ts.Diagnostic) {
         if (diag.category == ts.DiagnosticCategory.Error) this.numErrors++
 
-        const jdiag: JacsDiagnostic = {
+        const jdiag: DevsDiagnostic = {
             ...diag,
             filename: this.host?.mainFileName() || "main.ts",
             line: 1,
@@ -1041,7 +1041,7 @@ class Program implements TopOpWriter {
     }
 
     private isTopLevel(node: ts.Node) {
-        return !!(node as any)._jacsIsTopLevel
+        return !!(node as any)._devsIsTopLevel
     }
 
     private emitProgram(prog: ts.Program) {
@@ -1107,7 +1107,7 @@ class Program implements TopOpWriter {
         }
 
         function markTopLevel(node: ts.Node) {
-            ;(node as any)._jacsIsTopLevel = true
+            ;(node as any)._devsIsTopLevel = true
             if (ts.isExpressionStatement(node)) markTopLevel(node.expression)
             else if (ts.isVariableStatement(node))
                 node.declarationList.declarations.forEach(markTopLevel)
@@ -3050,7 +3050,7 @@ export function compile(
         mainFileName?: string
         log?: (msg: string) => void
         files?: Record<string, string | Uint8Array>
-        errors?: JacsDiagnostic[]
+        errors?: DevsDiagnostic[]
         specs?: jdspec.ServiceSpec[]
         verifyBytecode?: (buf: Uint8Array) => void
         isLibrary?: boolean

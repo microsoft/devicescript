@@ -290,7 +290,7 @@ int main(int argc, const char **argv) {
         } else if (atoi(arg)) {
             transport_arg = arg;
             transport = &sock_transport;
-        } else if (ends_with(arg, ".jacs")) {
+        } else if (ends_with(arg, ".devs")) {
             devs_img = arg;
         } else if (strcmp(arg, "-l") == 0) {
             enable_lstore = 1;

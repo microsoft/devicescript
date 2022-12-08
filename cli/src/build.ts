@@ -10,7 +10,7 @@ const debounce = require("debounce-promise")
 import {
     compile,
     jacdacDefaultSpecifications,
-    JacsDiagnostic,
+    DevsDiagnostic,
     DEVS_BYTECODE_FILE,
     formatDiagnostics,
     DEVS_DBG_FILE,
@@ -19,12 +19,12 @@ import {
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
 
-import type { JacsModule } from "@devicescript/vm"
+import type { DevsModule } from "@devicescript/vm"
 
-let jacsInst: JacsModule
-export function jacsFactory() {
+let devsInst: DevsModule
+export function devsFactory() {
     // emscripten doesn't like multiple instances
-    if (jacsInst) return Promise.resolve(jacsInst)
+    if (devsInst) return Promise.resolve(devsInst)
     const d = require("@devicescript/vm")
     try {
         require("websocket-polyfill")
@@ -33,19 +33,19 @@ export function jacsFactory() {
     } catch {
         log("can't load websocket-polyfill")
     }
-    return (d() as Promise<JacsModule>).then(m => {
-        jacsInst = m
-        m.jacsInit()
+    return (d() as Promise<DevsModule>).then(m => {
+        devsInst = m
+        m.devsInit()
         return m
     })
 }
 
 export async function getHost(options: BuildOptions & CmdOptions) {
-    const inst = options.noVerify ? undefined : await jacsFactory()
+    const inst = options.noVerify ? undefined : await devsFactory()
     const outdir = options.outDir || BINDIR
     ensureDirSync(outdir)
 
-    const jacsHost = {
+    const devsHost = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
             if (options.verbose) debug(`write ${p}`)
@@ -60,18 +60,18 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         log: (msg: string) => {
             if (options.verbose) log(msg)
         },
-        error: (err: JacsDiagnostic) => {
+        error: (err: DevsDiagnostic) => {
             error(formatDiagnostics([err]))
         },
         mainFileName: () => options.mainFileName || "main.ts",
         getSpecs: () => jacdacDefaultSpecifications,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
-            const res = inst.jacsVerify(buf)
+            const res = inst.devsVerify(buf)
             if (res != 0) throw new Error("verification error: " + res)
         },
     }
-    return jacsHost
+    return devsHost
 }
 
 export class CompilationError extends Error {

@@ -303,7 +303,7 @@ function genJmpTables(spec: Spec) {
 
 function genCode(spec: Spec, isTS = false, isSTS = false) {
     let r = "// Auto-generated from bytecode.md; do not edit.\n"
-    if (isSTS) r += "\nnamespace jacs {\n"
+    if (isSTS) r += "\nnamespace devs {\n"
     else if (isTS) r += "\n"
     else r += "#pragma once\n\n"
 
@@ -340,7 +340,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
                 JSON.stringify(enumNames(spec.enums[en]))
             )
 
-    if (isSTS) r += "} // jacs\n"
+    if (isSTS) r += "} // devs\n"
 
     if (!isTS) r += genJmpTables(spec)
 

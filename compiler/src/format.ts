@@ -233,7 +233,7 @@ export function stringifyInstr(
 }
 
 
-export interface JacsDiagnostic extends ts.Diagnostic {
+export interface DevsDiagnostic extends ts.Diagnostic {
     filename: string
     line: number
     column: number
@@ -243,7 +243,7 @@ export interface Host {
     write(filename: string, contents: Uint8Array | string): void
     log(msg: string): void
     mainFileName?(): string
-    error?(err: JacsDiagnostic): void
+    error?(err: DevsDiagnostic): void
     getSpecs(): jdspec.ServiceSpec[]
     verifyBytecode?(buf: Uint8Array, dbgInfo?: DebugInfo): void
 }

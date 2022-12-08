@@ -14,7 +14,7 @@ export async function crunScript(
     options: CRunOptions & CmdOptions
 ) {
     const prog = await readCompiled(fn)
-    const compfn = BINDIR + "/compiled.jacs"
+    const compfn = BINDIR + "/compiled.devs"
     await ensureDir(BINDIR)
     writeFileSync(compfn, prog)
 

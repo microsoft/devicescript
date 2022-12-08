@@ -58,7 +58,7 @@ gdb: native
 	gdb -x scripts/gdbinit
 
 vg: native
-	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.jacs
+	valgrind --suppressions=scripts/valgrind.supp --show-reachable=yes  --leak-check=full --gen-suppressions=all ./built/jdcli samples/ex-test.devs
 
 EMCC_OPTS = $(DEFINES) $(INC) \
 	-g2 -O1 \

@@ -1,7 +1,7 @@
 declare type ptr = number
 declare type int32 = number
 
-export declare type JacsModule = EmscriptenModule &
+export declare type DevsModule = EmscriptenModule &
     typeof Exts & {
         _jd_em_set_device_id_2x_i32(id0: int32, id1: int32): void
         _jd_em_set_device_id_string(str: ptr): void
@@ -16,7 +16,7 @@ export declare type JacsModule = EmscriptenModule &
         panicHandler(code: int32): void
     }
 
-declare var Module: JacsModule
+declare var Module: DevsModule
 
 var devs_interval: number
 
@@ -161,50 +161,50 @@ export module Exts {
         return r
     }
 
-    export function jacsDeploy(binary: Uint8Array) {
+    export function devsDeploy(binary: Uint8Array) {
         return copyToHeap(binary, ptr =>
             Module._jd_em_devs_deploy(ptr, binary.length)
         )
     }
 
-    export function jacsVerify(binary: Uint8Array) {
+    export function devsVerify(binary: Uint8Array) {
         return copyToHeap(binary, ptr =>
             Module._jd_em_devs_verify(ptr, binary.length)
         )
     }
 
-    export function jacsClientDeploy(binary: Uint8Array) {
+    export function devsClientDeploy(binary: Uint8Array) {
         // this will call exit(0) when done
         const ptr = Module._malloc(binary.length)
         Module.HEAPU8.set(binary, ptr)
         return Module._jd_em_devs_client_deploy(ptr, binary.length)
     }
 
-    export function jacsInit() {
+    export function devsInit() {
         Module._jd_em_init()
     }
 
-    export function jacsStart() {
+    export function devsStart() {
         if (devs_interval) return
-        Module.jacsInit()
+        Module.devsInit()
         devs_interval = setInterval(() => {
             try {
                 Module._jd_em_process()
             } catch (e) {
                 console.error(e)
-                jacsStop()
+                devsStop()
             }
         }, 10)
     }
 
-    export function jacsStop() {
+    export function devsStop() {
         if (devs_interval) {
             clearInterval(devs_interval)
             devs_interval = undefined
         }
     }
 
-    export function jacsSetDeviceId(id0: string | number, id1?: number) {
+    export function devsSetDeviceId(id0: string | number, id1?: number) {
         if (typeof id0 == "string") {
             const s = allocateUTF8(id0)
             Module._jd_em_set_device_id_string(s)
@@ -221,7 +221,7 @@ for (const kn of Object.keys(Exts)) {
     ;(Module as any)[kn] = (Exts as any)[kn]
 }
 
-function factory(): Promise<JacsModule> {
+function factory(): Promise<DevsModule> {
     return null
 }
 

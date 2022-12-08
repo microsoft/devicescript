@@ -9,5 +9,5 @@ end
 set startup-with-shell off
 
 file built/jdcli
-set args samples/ex-test.jacs
+set args samples/ex-test.devs
 set args 8082
