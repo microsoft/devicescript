@@ -13,15 +13,19 @@ import {
     JacsDiagnostic,
     DEVS_BYTECODE_FILE,
     formatDiagnostics,
-    LogInfo,
     DEVS_DBG_FILE,
     prettySize,
 } from "@devicescript/compiler"
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
 
-function jacsFactory() {
-    let d = require("@devicescript/vm")
+import type { JacsModule } from "@devicescript/vm"
+
+let jacsInst: JacsModule
+export function jacsFactory() {
+    // emscripten doesn't like multiple instances
+    if (jacsInst) return Promise.resolve(jacsInst)
+    const d = require("@devicescript/vm")
     try {
         require("websocket-polyfill")
         // @ts-ignore
@@ -29,14 +33,16 @@ function jacsFactory() {
     } catch {
         log("can't load websocket-polyfill")
     }
-    return d()
+    return (d() as Promise<JacsModule>).then(m => {
+        jacsInst = m
+        m.jacsInit()
+        return m
+    })
 }
 
-async function getHost(options: BuildOptions & CmdOptions) {
+export async function getHost(options: BuildOptions & CmdOptions) {
     const inst = options.noVerify ? undefined : await jacsFactory()
-    inst?.jacsInit()
-
-    const outdir = options.outDir
+    const outdir = options.outDir || BINDIR
     ensureDirSync(outdir)
 
     const jacsHost = {
@@ -57,7 +63,7 @@ async function getHost(options: BuildOptions & CmdOptions) {
         error: (err: JacsDiagnostic) => {
             error(formatDiagnostics([err]))
         },
-        mainFileName: () => options.mainFileName || "",
+        mainFileName: () => options.mainFileName || "main.ts",
         getSpecs: () => jacdacDefaultSpecifications,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
@@ -75,7 +81,12 @@ export class CompilationError extends Error {
     }
 }
 
-async function compileBuf(buf: Buffer, options: BuildOptions) {
+export async function compileFile(fn: string, options: BuildOptions = {}) {
+    if (!pathExistsSync(fn)) throw new Error(`source file ${fn} not found`)
+    return compileBuf(readFileSync(fn), { ...options, mainFileName: fn })
+}
+
+export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
     const host = await getHost(options)
     const res = compile(buf.toString("utf8"), {
         host,
@@ -135,12 +146,7 @@ async function buildWatch(file: string, options: BuildOptions) {
 
 async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
     const { watch, stats } = options
-    if (!pathExistsSync(file)) throw new Error(`source file ${file} not found`)
-    const buf = readFileSync(file)
-    const { success, binary, dbg, clientSpecs } = await compileBuf(buf, {
-        ...options,
-        mainFileName: file,
-    })
+    const { success, binary, dbg } = await compileFile(file, options)
     if (!success) {
         if (watch) return
         throw new CompilationError("compilation failed")

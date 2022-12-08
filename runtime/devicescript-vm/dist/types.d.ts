@@ -24,5 +24,5 @@ export declare module Exts {
     function jacsSetDeviceId(id0: string | number, id1?: number): void;
 }
 declare function factory(): Promise<JacsModule>;
-export = factory;
+export default factory;
 //# sourceMappingURL=wasmpre.d.ts.map

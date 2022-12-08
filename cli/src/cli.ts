@@ -1,8 +1,11 @@
 import { program } from "commander"
 import pkg from "../package.json"
 import { build } from "./build"
+import { ctool } from "./ctool"
 import { devtools } from "./devtools"
 import init from "./init"
+import { logParse } from "./logparse"
+import { runScript } from "./run"
 
 export async function mainCli() {
     program
@@ -47,6 +50,40 @@ export async function mainCli() {
         )
         .option("-t, --tcp", "open native TCP socket at 8082")
         .action(devtools)
+
+    program
+        .command("ctool", { hidden: true })
+        .description("access to internal compilation tools")
+        .option("--empty", "generate empty program embed")
+        .option("-t, --test", "run compiler tests")
+        .action(ctool)
+
+    program
+        .command("logparse", { hidden: true })
+        .description("parse binary log file from SD card")
+        .option(
+            "-g, --generation <number>",
+            "give details for a specific generation; otherwise generations are just listed"
+        )
+        .option("-s, --stats", "only print stats, not content")
+        .arguments("<log_xxx.jdl>")
+        .action(logParse)
+
+    program
+        .command("run")
+        .description("run a script")
+        .option(
+            "--tcp",
+            "use tcp jacdac proxy on 127.0.0.1:8082 (otherwise ws://127.0.0.1:8081)"
+        )
+        .option("-t, --test", "run in test mode (no sockets, no restarts)")
+        .option(
+            "-T, --test-timeout <milliseconds>",
+            "set timeout for --test mode (default: 2000ms)"
+        )
+        .option("-w, --wait", "wait for external deploy")
+        .arguments("[file.ts|file.devs]")
+        .action(runScript)
 
     program.parse(process.argv)
 }

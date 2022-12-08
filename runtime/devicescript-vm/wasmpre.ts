@@ -114,7 +114,7 @@ export module Exts {
                 }
             }
 
-            const disconnect = () => {
+            const disconnect = (err:any) => {
                 console.log("disconnect")
                 if (sock)
                     try {
@@ -123,7 +123,7 @@ export module Exts {
                 sock = undefined
                 if (resolve) {
                     resolve = null
-                    reject(new Error(`can't connect to ${url}`))
+                    reject(new Error(`can't connect to ${url}; ${err?.message}`))
                 }
             }
 

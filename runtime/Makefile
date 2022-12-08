@@ -70,9 +70,9 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 	-s ENVIRONMENT=web,webview,worker,node \
 	--no-entry
 
-devicescript-vm/built/wasmpre.js: devicescript-vm/wasmpre.ts
+devicescript-vm/built/wasmpre.js: devicescript-vm/wasmpre.ts Makefile
 	cd devicescript-vm && yarn build
-	sed -e 's/export default factory/export = factory/' devicescript-vm/built/wasmpre.d.ts > devicescript-vm/dist/types.d.ts
+	cat devicescript-vm/built/wasmpre.d.ts > devicescript-vm/dist/types.d.ts
 
 VM_TMP_FILE = devicescript-vm/built/devicescript-vm.js
 VM_FILE = ../website/static/dist/devicescript-vm.js
