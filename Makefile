@@ -1,5 +1,7 @@
 CLI = ./cli/devicescript
 
+all: em comp
+
 comp: compiler/built/compiler/src/devicescript.js
 
 compiler/built/compiler/src/devicescript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.ts)
@@ -17,7 +19,7 @@ test-c: native comp
 test-em: em comp
 	yarn test
 
-test: em test-c test-em
+test: test-c test-em
 
 clean:
 	rm -rf built compiler/built compiler/src/prelude.ts cli/built
