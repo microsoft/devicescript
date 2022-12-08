@@ -14,9 +14,9 @@ function readdir(folder: string) {
     return readdirSync(folder).map(bn => path.join(folder, bn))
 }
 
-const ctest = "jacs/compiler-tests"
-const samples = "jacs/samples"
-const rtest = "jacs/run-tests"
+const ctest = "devs/compiler-tests"
+const samples = "devs/samples"
+const rtest = "devs/run-tests"
 
 
 export async function ctool(options: CToolOptions & CmdOptions) {

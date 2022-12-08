@@ -14,7 +14,7 @@ native em update-dist:
 	$(MAKE) -C runtime $@
 
 test-c: native comp
-	$(CLI) crun -t jacs/run-tests/basic.ts
+	$(CLI) crun -t devs/run-tests/basic.ts
 
 test-em: em comp
 	yarn test

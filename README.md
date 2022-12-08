@@ -9,7 +9,7 @@ This repository contains:
 * [jacdac-c submodule](https://github.com/microsoft/jacdac-c), including sources for Jacdac client libraries and DeviceScript VM
 * `compiler/` - sources for DeviceScript compiler
 * `runtime/devicescript-vm/` - glue files to build DeviceScript VM as WASM module using [emscripten](https://emscripten.org/); `vm/dist/` contain pre-built files
-* `jacs/samples/` - sample DeviceScript programs
+* `devs/samples/` - sample DeviceScript programs
 * `runtime/posix/` - implementation of Jacdac SDK HAL for grown-up POSIX-like operating systems (as opposed to embedded platforms)
 
 
@@ -34,14 +34,14 @@ yarn dev
 * start Terminal in VSCode
 * run `yarn install`
 * run `yarn build`
-* run `devs run jacs/samples/something.ts` - this will execute given DeviceScript program using the WASM binary
+* run `devs run devs/samples/something.ts` - this will execute given DeviceScript program using the WASM binary
 
 If you want to develop the runtime (as opposed to compiler or website), you will also need
 GNU Make, C compiler, and [emscripten](https://emscripten.org/docs/getting_started/downloads.html).
 Once you have it all:
 
 * run `make native` to compile using native C compiler
-* run `devs crun jacs/samples/something.ts` - this will execute given DeviceScript program using the POSIX/native binary
+* run `devs crun devs/samples/something.ts` - this will execute given DeviceScript program using the POSIX/native binary
 * run `./runtime/built/jdcli 8082` - this will run the POSIX/native DeviceScript server, which can be accessed from the devtools dashboard
 * run `make em` to compile using emscripten
 

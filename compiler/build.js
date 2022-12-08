@@ -131,7 +131,7 @@ function buildPrelude(folder, outp) {
 async function main() {
     try {
         copyVM()
-        buildPrelude("../jacs/lib", "src/prelude.ts")
+        buildPrelude("../devs/lib", "src/prelude.ts")
         for (const outfile of Object.keys(files)) {
             const src = files[outfile]
             const cjs = outfile.endsWith(".cjs")
@@ -158,7 +158,7 @@ async function main() {
             await runTSC(["-b", "../cli/src"])
         }
         const ds = require("./built/devicescript-compiler.node.cjs")
-        fs.writeFileSync("../jacs/lib/" + specname, ds.preludeFiles()[specname])
+        fs.writeFileSync("../devs/lib/" + specname, ds.preludeFiles()[specname])
     } catch (e) {
         console.error(e)
     }
