@@ -289,7 +289,7 @@ function toSrcLocation(n: ts.Node): SrcLocation {
     }
 }
 
-function idName(pat: ts.Expression | ts.DeclarationName) {
+function idName(pat: Expr | ts.DeclarationName) {
     if (ts.isIdentifier(pat)) return pat.text
     else return null
 }
@@ -408,7 +408,7 @@ enum RefreshMS {
     Slow = 5000,
 }
 
-type Expr = ts.Expression
+type Expr = ts.Expression | ts.TemplateLiteralLikeNode
 type Stmt = ts.Statement
 type FunctionLike =
     | ts.FunctionDeclaration
@@ -1821,15 +1821,24 @@ class Program implements TopOpWriter {
         )
     }
 
-    private flattenPlus(arg: ts.Expression): ts.Expression[] {
+    private flattenPlus(arg: ts.Expression): Expr[] {
+        if (!this.isStringLike(arg)) return [arg]
+
         if (
-            this.isStringLike(arg) &&
             ts.isBinaryExpression(arg) &&
             arg.operatorToken.kind == SK.PlusToken
         ) {
             return this.flattenPlus(arg.left).concat(
                 this.flattenPlus(arg.right)
             )
+        } else if (ts.isTemplateExpression(arg)) {
+            const r: Expr[] = []
+            if (arg.head.text) r.push(arg.head)
+            for (const span of arg.templateSpans) {
+                r.push(span.expression)
+                if (span.literal.text) r.push(span.literal)
+            }
+            return r
         } else {
             return [arg]
         }
@@ -1860,8 +1869,8 @@ class Program implements TopOpWriter {
                     r.free()
                 } else {
                     let fmt = ""
-                    const fmtargs: ts.Expression[] = []
-                    const pushArg = (arg: ts.Expression) => {
+                    const fmtargs: Expr[] = []
+                    const pushArg = (arg: Expr) => {
                         const str = this.stringLiteral(arg)
                         if (str) {
                             fmt += str

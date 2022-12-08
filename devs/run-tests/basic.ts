@@ -233,13 +233,16 @@ function testObj() {
 }
 
 function testConsole() {
-    // note that we don't really test the output ... 
+    // note that we don't really test the output ...
     const n = 8
     const q = 12
     console.log("text" + n)
     console.log("text" + n + q)
     console.log("text" + n + "blah" + q)
     console.log("text" + (n + q))
+    console.log(`text ${n + q}`)
+    console.log(`text ${n} x ${q}`)
+    console.log(`text ${n} + ${q} is`, n + q)
 }
 
 testFlow()
