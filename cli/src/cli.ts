@@ -3,7 +3,9 @@ import pkg from "../package.json"
 import { build } from "./build"
 import { crunScript } from "./crun"
 import { ctool } from "./ctool"
+import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
+import { disasm } from "./disasm"
 import init from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
@@ -87,6 +89,16 @@ export async function mainCli() {
         .action(runScript)
 
     program
+        .command("deploy")
+        .description("deploy a script over jacdac proxy")
+        .option(
+            "--tcp",
+            "use tcp jacdac proxy on 127.0.0.1:8082 (otherwise ws://127.0.0.1:8081)"
+        )
+        .arguments("<file.ts|file.devs>")
+        .action(deployScript)
+
+    program
         .command("crun", { hidden: true })
         .description("run a script using native runner")
         .option("-t, --test", "run in test mode (no sockets, no restarts)")
@@ -96,6 +108,12 @@ export async function mainCli() {
         )
         .arguments("<file.ts|file.devs>")
         .action(crunScript)
+
+    program
+        .command("disasm")
+        .description("disassembly .jacs binary")
+        .arguments("<file.ts|file.devs>")
+        .action(disasm)
 
     program.parse(process.argv)
 }

@@ -12,6 +12,8 @@ export declare type JacsModule = EmscriptenModule &
         _jd_em_devs_verify(img: ptr, size: int32): int32
         _jd_em_devs_client_deploy(img: ptr, size: int32): int32
         sendPacket(pkt: Uint8Array): void
+        deployHandler(code: int32): void
+        panicHandler(code: int32): void
     }
 
 declare var Module: JacsModule

@@ -24,31 +24,20 @@ export async function runTest(fn: string, options: RunOptions = {}) {
     const devid = "12abdd2289421234"
 
     return new Promise<void>((resolve, reject) => {
-        // both handlePacket and sendPacket take UInt8Array of the frame
-        // addEventListener("message", ev => inst.handlePacket(ev.data))
-        // inst.sendPacket = pkt => console.log("send", pkt)
-        inst.sendPacket = pkt => {
-            // only react to packets from our device
-            if (!Buffer.from(devid, "hex").equals(pkt.slice(4, 4 + 8))) return
-
-            const idx = pkt[13]
-            const cmd = pkt[14] | (pkt[15] << 8)
-            // see if it's "panic event"
-            if (idx == 2 && cmd & 0x8000 && (cmd & 0xff) == 0x80) {
-                const panic_code = pkt[16] | (pkt[16] << 8)
-                if (panic_code) {
-                    console.log("test failed")
-                    resolve = null
-                    reject(new Error("test failed"))
-                } else {
-                    console.log("test OK")
-                    const f = resolve
-                    resolve = null
-                    if (f) f()
-                }
+        inst.sendPacket = () => {}
+        inst.panicHandler = panic_code => {
+            if (panic_code) {
+                console.log("test failed")
+                resolve = null
+                reject(new Error("test failed"))
+            } else {
+                console.log("test OK")
+                const f = resolve
+                resolve = null
+                if (f) f()
             }
         }
-        inst.jacsSetDeviceId(devid) // use 8-byte hex-encoded ID (used directly), or any string (hashed)
+        inst.jacsSetDeviceId(devid)
         inst.jacsStart()
         inst.jacsDeploy(prog)
         setTimeout(() => {

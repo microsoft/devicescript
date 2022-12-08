@@ -57,6 +57,12 @@ struct {
     jd_opipe_desc_t pipe;
 } deploy;
 
+#ifndef __EMSCRIPTEN__
+void devs_deploy_handler(int exitcode) {
+    exit(0);
+}
+#endif
+
 static void process_deploy(void) {
     if (!deploy.isopen)
         return;
@@ -73,10 +79,19 @@ static void process_deploy(void) {
             DMESG("closed deploy pipe");
             deploy.isopen = false;
             deploy.finished = true;
-            exit(0); // TODO?
+            devs_deploy_handler(0);
         }
     }
 }
+
+#ifndef __EMSCRIPTEN__
+void devs_panic_handler(int exitcode) {
+    if (test_mode && exitcode) {
+        fprintf(stderr, "test failed\n");
+        exit(10);
+    }
+}
+#endif
 
 static void client_event_handler(void *dummy, int event_id, void *arg0, void *arg1) {
     jd_device_t *dev = arg0;
@@ -92,14 +107,6 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
         break;
 
     case JD_CLIENT_EV_SERVICE_PACKET:
-        if (test_mode && serv->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_MANAGER &&
-            jd_event_code(pkt) == JD_DEVICE_SCRIPT_MANAGER_EV_PROGRAM_PANIC) {
-            jd_device_script_manager_program_panic_t *ev = (void *)pkt->data;
-            if (ev->panic_code) {
-                fprintf(stderr, "test failed\n");
-                exit(10);
-            }
-        }
         if (deploy.img && serv && deploy.serv == serv) {
             if (jd_is_report(pkt) &&
                 pkt->service_command == JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE) {

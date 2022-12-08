@@ -17,9 +17,25 @@ EM_JS(void, em_send_frame, (void *frame), {
     Module.sendPacket(pkt)
 });
 
+EM_JS(void, _devs_panic_handler, (int exitcode), {
+    console.log("PANIC", exitcode);
+    if (Module.panicHandler)
+        Module.panicHandler(exitcode);
+});
+
+// the syntax above doesn't work with weak symbols
+void devs_panic_handler(int exitcode) {
+    _devs_panic_handler(exitcode);
+}
+
+EM_JS(void, devs_deploy_handler, (int exitcode), {
+    if (Module.deployHandler)
+        Module.deployHandler(exitcode);
+});
+
 EM_JS(double, em_time_now, (void), { return Date.now(); });
 
-EM_JS(void, jd_crypto_get_random, (uint8_t *trg, unsigned size), {
+EM_JS(void, jd_crypto_get_random, (uint8_t * trg, unsigned size), {
     let buf = new Uint8Array(size);
     if (typeof window == "object" && window.crypto && window.crypto.getRandomValues)
         window.crypto.getRandomValues(buf);
@@ -145,12 +161,9 @@ void target_wait_us(uint32_t us) {
     }
 }
 
-EM_JS(void, em_console_debug, (const char *ptr), {
-    console.debug(UTF8ToString(ptr, 1024));
-});
+EM_JS(void, em_console_debug, (const char *ptr), { console.debug(UTF8ToString(ptr, 1024)); });
 
-void dmesg(const char *format, ...)
-{
+void dmesg(const char *format, ...) {
     char tmp[200];
     va_list arg;
     va_start(arg, format);
