@@ -230,6 +230,7 @@ void devs_fiber_run(devs_fiber_t *fiber) {
 }
 
 void devs_panic(devs_ctx_t *ctx, unsigned code) {
+    unsigned orig_code = code;
     if (!code)
         code = JACS_PANIC_REBOOT;
     if (!ctx->error_code) {
@@ -248,6 +249,8 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
                 DMESG("  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),
                       devs_img_fun_name(&ctx->img, idx), idx);
             }
+
+        devs_panic_handler(orig_code);
     }
     devs_fiber_yield(ctx);
 }
