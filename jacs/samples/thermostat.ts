@@ -1,5 +1,7 @@
-const thermometer = roles.temperature()
-const heater = roles.relay()
+import * as ds from "@devicescript/core"
+
+const thermometer = new ds.Temperature()
+const heater = new ds.Relay()
 
 heater.onConnected(() => {
     console.log("heater detected")

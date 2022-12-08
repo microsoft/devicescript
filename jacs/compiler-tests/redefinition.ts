@@ -1,17 +1,19 @@
-var rx = roles.button()
-var rx = roles.button() //! already defined
+import * as ds from "@devicescript/core"
 
-var btnA = roles.button()
-var btnA = roles.button() //! already defined
+var rx = new ds.Button()
+var rx = new ds.Button() //! already defined
 
-var z = 1
+var btnA = new ds.Button()
+var btnA = new ds.Button() //! already defined
+
+const z = 1
 
 function foo() {
     // no shadowing allowed
-    var z = 1 //! already defined
+    const z = 1 //! already defined
 }
 
-var qq = 1 //! Duplicate identifier
+const qq = 1 //! Duplicate identifier
 function qq() { } //! Duplicate identifier
 
 function baz() { } //! Duplicate function implementation

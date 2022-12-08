@@ -1,7 +1,9 @@
+import * as ds from "@devicescript/core"
+
 let x: number
-const servo1 = roles.servo()
-const button1 = roles.button()
-const airPressure1 = roles.airPressure()
+const servo1 = new ds.Servo()
+const button1 = new ds.Button()
+const airPressure1 = new ds.AirPressure()
 servo1.onConnected(() => {
     servo1.enabled.write(true)
 })

@@ -1,3 +1,6 @@
+import * as ds from "@devicescript/core"
+import { onStart, wait } from "@devicescript/core"
+
 onStart(() => {
     console.log("3")
     wait(0.5)

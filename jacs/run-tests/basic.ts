@@ -167,7 +167,7 @@ function testLazy() {
 
 function fib(k: number): number {
     if (k < 2) return k
-    var r = fib(k - 1) + fib(k - 2)
+    const r = fib(k - 1) + fib(k - 2)
     return r
 }
 
@@ -177,7 +177,7 @@ function fibx(k: number): number {
 }
 
 function testBuffer() {
-    const buf = ds.Buffer.alloc(20)
+    const buf = Buffer.alloc(20)
     buf.setAt(2, "u32", 0xf00d)
     isEq(buf.getAt(2, "u32"), 0xf00d)
     isEq(buf.getAt(2, "u16"), 0xf00d)
@@ -193,7 +193,7 @@ function testBuffer() {
     isEq(buf[2], 7)
 
     buf[4] = 0x13
-    var b2 = hex`72 33 23 12`
+    const b2 = hex`72 33 23 12`
     buf.blitAt(0, b2, 0, 10)
     isEq(buf[0], 0x72)
     isEq(buf[3], 0x12)

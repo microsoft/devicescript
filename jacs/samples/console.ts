@@ -1,3 +1,5 @@
+import * as ds from "@devicescript/core"
+
 function testIt() {
     const x = 7, y = 12
     console.log("Hello world")

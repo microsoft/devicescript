@@ -1,6 +1,8 @@
-var btnA = roles.button()
+import * as ds from "@devicescript/core"
+
+const btnA = new ds.Button()
 function foo() {
-    var qq = 1
+    let qq = 1
     qq += 2 //! unhandled operator
     qq-- //! unhandled
 }

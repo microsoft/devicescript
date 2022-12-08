@@ -1,20 +1,22 @@
-const condA = condition()
-const condB = condition()
-const btnA = roles.button()
+import * as ds from "@devicescript/core"
 
-every(0.05, () => {
+const condA = new ds.Condition()
+const condB = new ds.Condition()
+const btnA = new ds.Button()
+
+ds.every(0.05, () => {
     console.log("X2")
     condB.wait()
     console.log("sig 2")
 })
 
-every(0.05, () => {
+ds.every(0.05, () => {
     console.log("X1")
     condA.wait()
     console.log("sig 1")
-    wait(1)
+    ds.wait(1)
     condB.signal()
-    wait(1)
+    ds.wait(1)
 })
 
 btnA.down.subscribe(() => {

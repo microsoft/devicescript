@@ -1,5 +1,7 @@
-const btn = roles.button()
-const buzzer = roles.buzzer()
+import * as ds from "@devicescript/core"
+
+const btn = new ds.Button()
+const buzzer = new ds.Buzzer()
 
 
 btn.down.subscribe(() => {
