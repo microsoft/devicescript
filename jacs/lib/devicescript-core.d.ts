@@ -1,43 +1,43 @@
 /// <reference path="devicescript-spec.d.ts" />
 
 declare module "@devicescript/core" {
-    class Role {
+    export class Role {
         isConnected(): number
         onConnected(handler: () => void): void
         onDisconnected(handler: () => void): void
     }
 
-    class PacketInfo {}
+    export class PacketInfo {}
 
-    class Register extends PacketInfo {}
+    export class Register extends PacketInfo {}
 
-    class RegisterNum extends Register {
+    export class RegisterNum extends Register {
         read(): number
         write(v: number | boolean | Buffer): void
         onChange(threshold: number, handler: (curr: number) => void): void
     }
 
-    class RegisterString extends Register {
+    export class RegisterString extends Register {
         read(): string
         write(v: string): void
     }
 
-    class RegisterArray extends Register {
+    export class RegisterArray extends Register {
         read(): number[]
         write(v: number[]): void
     }
 
-    class Event extends PacketInfo {
+    export class Event extends PacketInfo {
         wait(): void
         subscribe(handler: () => void): void
     }
 
-    class Condition {
+    export class Condition {
         signal(): void
         wait(): void
     }
 
-    class CloudConnector {
+    export class CloudConnector {
         upload(label: string, ...value: number[]): void
         onMethod(
             name: string,
@@ -55,38 +55,40 @@ declare module "@devicescript/core" {
         twin(path: string): number
         onTwinChange(handler: () => void): void
     }
-    const cloud: CloudConnector
+    export const cloud: CloudConnector
 
-    function print(fmt: string, ...args: number[]): void
-    function format(fmt: string, ...args: number[]): string
-    function wait(seconds: number): void
-    function every(seconds: number, callback: () => void): void
-    function panic(code: number): never
-    function reboot(): never
-    function onStart(handler: () => void): void
+    export function print(fmt: string, ...args: number[]): void
+    export function format(fmt: string, ...args: number[]): string
+    export function wait(seconds: number): void
+    export function every(seconds: number, callback: () => void): void
+    export function panic(code: number): never
+    export function reboot(): never
+    export function onStart(handler: () => void): void
 
-    class Buffer {
-        private constructor()
+    export const packet: Buffer
 
-        static alloc(size: number): Buffer
-
-        length: number
-        setLength(len: number): void
-        getAt(offset: number, format: string): number
-        setAt(offset: number, format: string, value: number): void
-        blitAt(
-            offset: number,
-            src: Buffer,
-            srcOffset: number,
-            len: number
-        ): void
-        fillAt(offset: number, length: number, value: number): void
-        [idx: number]: number
-    }
-
-    const packet: Buffer
+    export { Buffer }
 
     global {
         function hex(lits: any, ...args: any[]): Buffer
+
+        class Buffer {
+            private constructor()
+
+            static alloc(size: number): Buffer
+
+            length: number
+            setLength(len: number): void
+            getAt(offset: number, format: string): number
+            setAt(offset: number, format: string, value: number): void
+            blitAt(
+                offset: number,
+                src: Buffer,
+                srcOffset: number,
+                len: number
+            ): void
+            fillAt(offset: number, length: number, value: number): void
+            [idx: number]: number
+        }
     }
 }
