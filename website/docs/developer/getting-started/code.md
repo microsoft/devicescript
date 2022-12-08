@@ -44,6 +44,8 @@ tsconfig.json     configure the TypeScript compiler to compile DeviceScript synt
 -   open `main.ts` and copy the following code
 
 ```ts
+import * as ds from "@devicescript/core"
+
 console.log("starting...")
 const sensor = roles.airPressure()
 const mouse = roles.hidMouse()

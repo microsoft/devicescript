@@ -37,11 +37,14 @@ Collapse the table of contents to reclaim screen space!
 ### Defining Roles
 
 In DeviceScript, all access to sensors, actuators or other hardware components are abstracted through [Jacdac](https://aka.ms/jacdac) services. Sensors act as **servers** and your scripts connects **clients** to interact with them.
+
 To interact with Jacdac services, you define **roles** for each service you need.
 
 In this scenario, we will need to measure air pressure and send HID mouse commands. Therefore, we declare a `airPressure` role and a `hidMouse` role.
 
 ```ts
+import * as ds from "@devicescript/core"
+
 console.log(`starting...`)
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
@@ -51,6 +54,17 @@ const mouse = new ds.HidMouse()
 After click the `Run` button, click on the
 `Start simulators` icon to create a virtual air pressure
 and HID mouse service.
+:::
+
+:::tip
+For consistency and breivity accross all the documentions, the '@devicescript/core' module
+is implicitely imported as
+
+```ts
+import * as ds from "@devicescript/core"
+```
+
+Make sure to add it back if you copy snippets around!
 :::
 
 ### Tracking pressure changes
@@ -108,6 +122,8 @@ not just a simulator.
 :::
 
 ```ts
+import * as ds from "@devicescript/core"
+
 console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
