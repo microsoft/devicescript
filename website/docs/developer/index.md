@@ -13,7 +13,7 @@ DeviceScript uses the TypeScript syntax and the developer tooling does not requi
 Most code examples can be loaded in the side-editor by clicking the `Run` button; or in other cloud-based virtual machine by hovering on the source and clicking on the apprioriate button.
 
 ```ts
-every(1, () => {
+ds.every(1, () => {
     console.log(`hello`)
 })
 ```

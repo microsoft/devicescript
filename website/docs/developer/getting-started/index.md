@@ -136,9 +136,9 @@ sensor.pressure.onChange(10, () => {
     if (pressure > 1400) {
         // click!
         console.log(`click!`)
-        mouse.setButton(HidMouseButton.Left, HidMouseButtonEvent.Click)
+        mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
         // debouncing
-        wait(0.05)
+        ds.wait(0.05)
     }
 })
 ```

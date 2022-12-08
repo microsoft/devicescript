@@ -9,14 +9,14 @@ hide_table_of_contents: true
 
 Run a function periodically (`0.3s` in the example below; `20ms` minimum):
 ```ts
-every(0.3, () => {
+ds.every(0.3, () => {
     // ...
 })
 ```
 
 Wait given number of seconds:
 ```ts
-wait(0.3)
+ds.wait(0.3)
 ```
 
 ## Math
@@ -65,6 +65,6 @@ The `panic()` function takes a numeric error code and terminates or restarts the
 `reboot()` is similar, but doesn't print error message.
 
 ```ts
-panic(348)
-reboot()
+ds.panic(348)
+ds.reboot()
 ```
