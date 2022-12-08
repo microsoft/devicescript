@@ -764,26 +764,26 @@ class Program implements TopOpWriter {
         const buflit = this.bufferLiteral(expr)
         if (buflit) return new BufferLit(decl, this.bufferLits, buflit)
 
-        if (!expr || !ts.isCallExpression(expr)) return null
+        if (!expr) return null
 
-        switch (idName(expr.expression)) {
-            case "condition":
+        let spec: jdspec.ServiceSpec
+
+        if (ts.isCallExpression(expr)) {
+            const nm = this.nodeName(expr.expression)
+            if (nm == "#condition") {
                 this.requireArgs(expr, 0)
-                return new Role(
-                    this,
-                    decl,
-                    this.roles,
-                    this.serviceSpecs["deviceScriptCondition"]
-                )
+                spec = this.serviceSpecs["deviceScriptCondition"]
+            }
+            this.requireArgs(expr, 0)
+        } else if (ts.isNewExpression(expr)) {
+            spec = this.specFromTypeName(expr.expression, true)
+            this.requireArgs(expr, 0)
         }
-        if (!ts.isPropertyAccessExpression(expr.expression)) return null
-        if (idName(expr.expression.expression) != "roles") return null
-        const spec = this.lookupRoleSpec(
-            expr.expression,
-            this.forceName(expr.expression.name)
-        )
-        this.requireArgs(expr, 0)
-        return new Role(this, decl, this.roles, spec)
+
+        if (spec)
+            return new Role(this, decl, this.roles, spec)
+        else
+            return null
     }
 
     private emitStore(trg: Variable, src: Value) {
@@ -1187,7 +1187,10 @@ class Program implements TopOpWriter {
             throwError(node, `${num} arguments required; got ${args.length}`)
     }
 
-    private requireArgs(expr: ts.CallExpression, num: number) {
+    private requireArgs(
+        expr: ts.CallExpression | ts.NewExpression,
+        num: number
+    ) {
         this.requireArgsExt(expr, expr.arguments.slice(), num)
     }
 
