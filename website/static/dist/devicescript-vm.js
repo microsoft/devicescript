@@ -241,48 +241,48 @@ var Exts;
         return r;
     }
     Exts.b64ToBin = b64ToBin;
-    function jacsDeploy(binary) {
+    function devsDeploy(binary) {
         return copyToHeap(binary, ptr => Module._jd_em_devs_deploy(ptr, binary.length));
     }
-    Exts.jacsDeploy = jacsDeploy;
-    function jacsVerify(binary) {
+    Exts.devsDeploy = devsDeploy;
+    function devsVerify(binary) {
         return copyToHeap(binary, ptr => Module._jd_em_devs_verify(ptr, binary.length));
     }
-    Exts.jacsVerify = jacsVerify;
-    function jacsClientDeploy(binary) {
+    Exts.devsVerify = devsVerify;
+    function devsClientDeploy(binary) {
         // this will call exit(0) when done
         const ptr = Module._malloc(binary.length);
         Module.HEAPU8.set(binary, ptr);
         return Module._jd_em_devs_client_deploy(ptr, binary.length);
     }
-    Exts.jacsClientDeploy = jacsClientDeploy;
-    function jacsInit() {
+    Exts.devsClientDeploy = devsClientDeploy;
+    function devsInit() {
         Module._jd_em_init();
     }
-    Exts.jacsInit = jacsInit;
-    function jacsStart() {
+    Exts.devsInit = devsInit;
+    function devsStart() {
         if (devs_interval)
             return;
-        Module.jacsInit();
+        Module.devsInit();
         devs_interval = setInterval(() => {
             try {
                 Module._jd_em_process();
             }
             catch (e) {
                 console.error(e);
-                jacsStop();
+                devsStop();
             }
         }, 10);
     }
-    Exts.jacsStart = jacsStart;
-    function jacsStop() {
+    Exts.devsStart = devsStart;
+    function devsStop() {
         if (devs_interval) {
             clearInterval(devs_interval);
             devs_interval = undefined;
         }
     }
-    Exts.jacsStop = jacsStop;
-    function jacsSetDeviceId(id0, id1) {
+    Exts.devsStop = devsStop;
+    function devsSetDeviceId(id0, id1) {
         if (typeof id0 == "string") {
             const s = allocateUTF8(id0);
             Module._jd_em_set_device_id_string(s);
@@ -295,7 +295,7 @@ var Exts;
             throw new Error("invalid args");
         }
     }
-    Exts.jacsSetDeviceId = jacsSetDeviceId;
+    Exts.devsSetDeviceId = devsSetDeviceId;
 })(Exts || (Exts = {}));
 for (const kn of Object.keys(Exts)) {
     ;
