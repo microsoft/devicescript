@@ -302,19 +302,6 @@ function unit() {
     return nonEmittable(ValueType.VOID)
 }
 
-const reservedFunctions: SMap<number> = {
-    wait: 1,
-    every: 1,
-    upload: 1,
-    print: 1,
-    format: 1,
-    panic: 1,
-    reboot: 1,
-    isNaN: 1,
-    onStart: 1,
-    buffer: 1,
-}
-
 class Procedure {
     writer: OpWriter
     index: number
@@ -1087,9 +1074,7 @@ class Program implements TopOpWriter {
             try {
                 if (ts.isFunctionDeclaration(s)) {
                     this.newDef(s)
-                    const n = this.forceName(s.name)
-                    if (reservedFunctions[n] == 1)
-                        throwError(s, `function name '${n}' is reserved`)
+                    this.forceName(s.name)
                     new FunctionDecl(s, this.functions)
                 } else if (ts.isVariableStatement(s)) {
                     for (const decl of s.declarationList.declarations) {
@@ -1987,7 +1972,6 @@ class Program implements TopOpWriter {
 
     private emitBuiltInCall(expr: ts.CallExpression, funName: string): Value {
         const wr = this.writer
-
         switch (funName) {
             case "Buffer.alloc":
             case "buffer": {
@@ -2056,8 +2040,9 @@ class Program implements TopOpWriter {
                 t.free()
                 wr.freeBuf()
                 return r
+            default:
+                return null
         }
-        throwError(expr, "unhandled call")
     }
 
     private getMonkeyPatchProc(mp: MonkeyPatch) {
@@ -2077,7 +2062,7 @@ class Program implements TopOpWriter {
         const wr = this.writer
 
         const callName = this.nodeName(expr.expression)
-        const builtInName = callName.startsWith("#") ? callName[1] : null
+        const builtInName = callName.startsWith("#") ? callName.slice(1) : null
 
         if (builtInName) {
             const r =
@@ -2087,6 +2072,9 @@ class Program implements TopOpWriter {
 
             const d = this.monkeyPatch[callName]
             if (d) return this.emitProcCall(expr, this.getMonkeyPatchProc(d))
+
+            const builtIn = this.emitBuiltInCall(expr, builtInName)
+            if (builtIn) return builtIn
         }
 
         if (ts.isPropertyAccessExpression(expr.expression)) {
@@ -2102,8 +2090,6 @@ class Program implements TopOpWriter {
                 case ValueKind.ROLE:
                     return this.emitRoleCall(expr, val, prop)
                 default:
-                    if (builtInName)
-                        return this.emitBuiltInCall(expr, builtInName)
                     throwError(expr, `unsupported call`)
             }
         }
@@ -2112,13 +2098,11 @@ class Program implements TopOpWriter {
 
         if (!funName) throwError(expr, `unsupported call`)
 
-        if (!reservedFunctions[funName]) {
-            const d = this.functions.lookup(funName) as FunctionDecl
-            if (d) {
-                return this.emitProcCall(expr, this.getFunctionProc(d))
-            } else {
-                throwError(expr, `cannot find function '${funName}'`)
-            }
+        const d = this.functions.lookup(funName) as FunctionDecl
+        if (d) {
+            return this.emitProcCall(expr, this.getFunctionProc(d))
+        } else {
+            throwError(expr, `cannot find function '${funName}'`)
         }
     }
 
