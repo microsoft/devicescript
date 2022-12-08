@@ -18,7 +18,6 @@ const ctest = "devs/compiler-tests"
 const samples = "devs/samples"
 const rtest = "devs/run-tests"
 
-
 export async function ctool(options: CToolOptions & CmdOptions) {
     if (options.empty) {
         const res = await compileBuf(Buffer.from(""))
@@ -33,11 +32,14 @@ export async function ctool(options: CToolOptions & CmdOptions) {
     }
 
     if (options.test) {
-        for (const fn of readdir(ctest).concat(readdir(samples))) {
+        const files = readdir(ctest)
+            .concat(readdir(samples))
+            .filter(f => /\.ts$/.test(f))
+        for (const fn of files) {
+            console.log(`*** test ${fn}`)
             const host = await getHost({
                 mainFileName: fn,
             })
-            console.log(`*** test ${fn}`)
             testCompiler(host, readFileSync(fn, "utf8"))
         }
 
