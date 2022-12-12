@@ -5,10 +5,10 @@ import {
     wrapComment,
     jsQuote,
 } from "../../runtime/jacdac-c/jacdac/spectool/jdspec"
+import { SRV_BOOTLOADER, SRV_BRIDGE, SRV_CONTROL, SRV_DASHBOARD, SRV_DEVICE_SCRIPT_CONDITION, SRV_DEVICE_SCRIPT_MANAGER, SRV_INFRASTRUCTURE, SRV_LOGGER, SRV_PROTO_TEST, SRV_PROXY, SRV_ROLE_MANAGER, SRV_SETTINGS, SRV_UNIQUE_BRAIN } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 import { jacdacDefaultSpecifications } from "./embedspecs"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
-const PREFIX = `import * as ds from "@devicescript/core"`
 
 function isRegister(k: jdspec.PacketKind) {
     return k == "ro" || k == "rw" || k == "const"
@@ -20,8 +20,29 @@ function toHex(n: number): string {
     return "0x" + n.toString(16)
 }
 
+function ignoreSpec(info: jdspec.ServiceSpec) {
+    return (
+        info.status === "deprecated" ||
+        [
+            SRV_CONTROL,
+            SRV_ROLE_MANAGER,
+            SRV_LOGGER,
+            SRV_SETTINGS,
+            SRV_BOOTLOADER,
+            SRV_PROTO_TEST,
+            SRV_INFRASTRUCTURE,
+            SRV_PROXY,
+            SRV_UNIQUE_BRAIN,
+            SRV_DASHBOARD,
+            SRV_BRIDGE,
+            SRV_DEVICE_SCRIPT_CONDITION,
+            SRV_DEVICE_SCRIPT_MANAGER,
+        ].indexOf(info.classIdentifier) > -1
+    )
+}
+
 function specToDeviceScript(info: jdspec.ServiceSpec): string {
-    if (info.status === "deprecated") return undefined
+    if (ignoreSpec(info)) return undefined
 
     let r = ""
 
@@ -120,7 +141,7 @@ export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
 }
 
 function specToMarkdown(info: jdspec.ServiceSpec): string {
-    if (info.status === "deprecated") return undefined
+    if (ignoreSpec(info)) return undefined
 
     const reserved: Record<string, string> = { switch: "sw" }
 
