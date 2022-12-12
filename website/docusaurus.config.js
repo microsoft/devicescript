@@ -5,13 +5,6 @@ const lightCodeTheme = require("prism-react-renderer/themes/github")
 const darkCodeTheme = require("prism-react-renderer/themes/dracula")
 
 async function createConfig() {
-    const repo = process.env.GITHUB_REPOSITORY
-    const sha = process.env.GITHUB_SHA
-    const releaseTag = process.env.RELEASE_VERSION
-    const languageConfig = await (
-        await import("./language.config.js")
-    ).default()
-
     /** @type {import('@docusaurus/types').Config} */
     const config = {
         title: "DeviceScript",
@@ -106,6 +99,19 @@ async function createConfig() {
                                 {
                                     label: "Discussions",
                                     href: "https://github.com/microsoft/devicescript/discussions",
+                                },
+                            ],
+                        },
+                        {
+                            title: "Legal",
+                            items: [
+                                {
+                                    label: "Privacy & Cookies",
+                                    href: "https://privacy.microsoft.com/en-us/privacystatement",
+                                },
+                                {
+                                    label: "Terms Of Use",
+                                    href: "https://www.microsoft.com/en-us/legal/terms-of-use",
                                 },
                             ],
                         },
