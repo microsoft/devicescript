@@ -10,7 +10,7 @@ const { readJsonSync, writeJsonSync, ensureDirSync } = fs_extra_pkg
 import { createHash } from "crypto"
 
 const info = console.debug
-const debug = console.debug 
+const debug = console.debug
 
 // site version
 const sitePkg = readJsonSync("../compiler/package.json")
@@ -262,6 +262,7 @@ export default function plugin() {
                     langVersion: buildConfig.langVersion,
                     tool: buildConfig.npmPackage,
                     sandbox: langConfig.sandbox,
+                    label,
                 })
                 parent.children.splice(index, 1, {
                     type: "jsx",
