@@ -12,7 +12,7 @@ At a high level, we want the script to generate a mouse click whenever we detect
 Tag along this part of the guide even if you do not have hardware available, DeviceScript provides web-based simulators and editors.
 
 :::tip
-You can tag along in this documentation page and use the interactive code snippets; or you can use the [command line interface](/developer/cli) to get a local development setup within minutes.
+You can tag along in this documentation page and use the interactive code snippets; or you can use the [command line interface](/api/cli) to get a local development setup within minutes.
 :::
 
 ### Console output

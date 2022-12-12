@@ -131,23 +131,6 @@ async function createConfig() {
             mermaid: true,
         },
         themes: ["@docusaurus/theme-mermaid"],
-        /*
-        plugins: [
-            [
-                "docusaurus-plugin-typedoc",
-
-                // Plugin / TypeDoc options
-                {
-                    entryPoints: ["../devs/lib/devicescript-core.d.ts"],
-                    tsconfig: "../devs/lib/tsconfig.json",
-                    sidebar: {
-                        categoryLabel: 'API',
-                        position: 100,
-                    }
-                },
-            ],
-        ],
-        */
     }
 
     const renderCodeBlocks = (

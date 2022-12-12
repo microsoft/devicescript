@@ -12,7 +12,7 @@ in Docker, GitHub Codespaces, ...
 
 ## Setting up the project
 
-Let's get started by installing the [DeviceScript command line](/developer/cli) and create an empty project
+Let's get started by installing the [DeviceScript command line](/api/cli) and create an empty project
 
 -   Open `code` in a new empty folder
 -   Open a terminal (`` Ctrl + ` ``)
