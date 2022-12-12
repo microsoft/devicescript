@@ -14,10 +14,10 @@ function toHex(bytes) {
     return r
 }
 
-const PREFIX = `import * as ds from "@devicescript/core"\n`
+const PREFIX = `import * as ds from "@devicescript/core"`
 async function run(inputFile) {
     let input = readJsonSync(inputFile).input
-    if (input.indexOf(PREFIX) < 0) input = PREFIX + input
+    if (input.indexOf(PREFIX) < 0) input = PREFIX + "\n" + input
     const files = {}
     const log = msg => stdout.write(msg)
     const errors = []
