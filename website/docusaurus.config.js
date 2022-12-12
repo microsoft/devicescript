@@ -107,7 +107,7 @@ async function createConfig() {
                             items: [
                                 {
                                     label: "Privacy & Cookies",
-                                    href: "https://privacy.microsoft.com/en-us/privacystatement",
+                                    href: "https://go.microsoft.com/fwlink/?LinkId=521839",
                                 },
                                 {
                                     label: "Terms Of Use",
