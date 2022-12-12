@@ -18,16 +18,17 @@ async function run(inputFile) {
     const input = readJsonSync(inputFile).input
     const files = {}
     const log = msg => stdout.write(msg)
+    const errors = []
     let error = undefined
     let result
     try {
-        result = compile(input, { log, files })
-        if (!result.success)
-            stderr.write("compilation failed")
+        result = compile(input, { log, errors, files })
+        if (!result.success) stderr.write("compilation failed\n")
     } catch (e) {
         error = e
         stderr.write(String(e))
     }
+    errors.forEach(error => stderr.write(error.formatted + "\n"))
     return {
         files,
         success: result.success,

@@ -541,6 +541,7 @@ class Program implements TopOpWriter {
             filename: this.host?.mainFileName() || "main.ts",
             line: 1,
             column: 1,
+            formatted: formatDiagnostics([diag])
         }
 
         if (diag.file) {
@@ -551,9 +552,8 @@ class Program implements TopOpWriter {
             jdiag.column = character + 1
             jdiag.filename = diag.file.fileName
         }
-
         if (this.host.error) this.host.error(jdiag)
-        else console.error(formatDiagnostics([diag]))
+        else console.error(jdiag.formatted)
     }
 
     reportError(node: ts.Node, msg: string): Value {
@@ -3076,6 +3076,13 @@ class Program implements TopOpWriter {
     }
 }
 
+export interface CompilationResult {
+    success: boolean,
+    binary: Uint8Array,
+    dbg: DebugInfo
+    clientSpecs: jdspec.ServiceSpec[]
+}
+
 /**
  * Compiles the DeviceScript program.
  * @param code
@@ -3094,7 +3101,7 @@ export function compile(
         verifyBytecode?: (buf: Uint8Array) => void
         isLibrary?: boolean
     } = {}
-) {
+): CompilationResult {
     const {
         files = {},
         mainFileName = "",
