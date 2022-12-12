@@ -113,6 +113,10 @@ async function createConfig() {
                                     label: "Terms Of Use",
                                     href: "https://www.microsoft.com/en-us/legal/terms-of-use",
                                 },
+                                {
+                                    label: "Trademarks",
+                                    href: "https://www.microsoft.com/trademarks",
+                                },
                             ],
                         },
                     ],
