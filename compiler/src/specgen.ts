@@ -1,3 +1,4 @@
+import ts from "typescript"
 import {
     cStorage,
     addComment,
@@ -7,6 +8,7 @@ import {
 import { jacdacDefaultSpecifications } from "./embedspecs"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
+const PREFIX = `import * as ds from "@devicescript/core"`
 
 function isRegister(k: jdspec.PacketKind) {
     return k == "ro" || k == "rw" || k == "const"
@@ -120,25 +122,37 @@ export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
 function specToMarkdown(info: jdspec.ServiceSpec): string {
     if (info.status === "deprecated") return undefined
 
+    const reserved: Record<string, string> = { switch: "sw" }
+
     const clname = upperCamel(info.camelName)
+    const varname = reserved[info.camelName] || info.camelName
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
 
     let r: string[] = [
-
         `---
 hide_table_of_contents: true
 pagination_prev: null
 pagination_next: null
 ---        
 # ${clname}
-
-A client for the ${info.name} service.
-
-${info.notes["long"] || info.notes["short"]}
 `,
+        info.notes["short"],
+        `-  client for [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/)`,
+        baseclass ? `-  inherits ${baseclass}` : undefined,
+        info.notes["long"]
+            ? `## About
+
+${info.notes["long"]}
+`
+            : undefined,
+        `
+\`\`\`ts
+const ${varname} = new ds.${clname}()
+\`\`\`
+            `,
     ]
 
-    return r.join("\n")
+    return r.filter(s => s !== undefined).join("\n")
 }
 
 export function markdownFiles(specs?: jdspec.ServiceSpec[]) {
@@ -146,7 +160,7 @@ export function markdownFiles(specs?: jdspec.ServiceSpec[]) {
     const r: Record<string, string> = {}
     specs.forEach(spec => {
         const md = specToMarkdown(spec)
-        if (md) r[spec.camelName.toLocaleLowerCase()] = md
+        if (md) r[spec.shortId] = md
     })
     return r
 }
