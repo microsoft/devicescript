@@ -17,7 +17,7 @@ Unused function are not compiled (and not checked for errors).
 Function parameters are numbers by default.
 A role can be also passed using syntax:
 
-```ts
+```ts ignore-errors
 function beep(bz: ds.Buzzer, len: number) {
     bz.playNote(440, 0.7, len)
 }
