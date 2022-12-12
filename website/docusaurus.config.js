@@ -16,7 +16,7 @@ async function createConfig() {
     const config = {
         title: "DeviceScript",
         tagline:
-            "Portable, small footprint virtual machine for embedded devices with a flair of TypeScript.",
+            "Portable, small footprint virtual machine for embedded devices with a hint of TypeScript.",
         url: "https://microsoft.github.io/",
         baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
