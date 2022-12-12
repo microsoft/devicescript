@@ -22,6 +22,8 @@ async function run(inputFile) {
     let result
     try {
         result = compile(input, { log, files })
+        if (!result.success)
+            stderr.write("compilation failed")
     } catch (e) {
         error = e
         stderr.write(String(e))

@@ -19,5 +19,11 @@ environments (VM itself compiles to 10kB of code, with the floating point librar
 * leave space for extensions in future
 
 ```ts
-this is a broken sample
+this is a broken sampless
+sdss
+dfsd
+fsdf
+sdf
+sdf
+
 ```
