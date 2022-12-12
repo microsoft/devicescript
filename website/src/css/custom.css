@@ -86,3 +86,7 @@
 .pane.right {
   right: 0px;
 }
+
+div.navbar__logo {
+  margin-right: 1.5rem;
+}
