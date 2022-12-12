@@ -18,8 +18,8 @@ function toHex(n: number): string {
     return "0x" + n.toString(16)
 }
 
-export function specToDeviceScript(info: jdspec.ServiceSpec): string {
-    if (info.status === "deprecated") return ""
+function specToDeviceScript(info: jdspec.ServiceSpec): string {
+    if (info.status === "deprecated") return undefined
 
     let r = ""
 
@@ -108,8 +108,45 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
 export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
     if (!specs) specs = jacdacDefaultSpecifications
     const r = { ...prelude }
-    const thespecs = specs.map(specToDeviceScript).join("\n")
+    const thespecs = specs
+        .map(specToDeviceScript)
+        .filter(n => !!n)
+        .join("\n")
     const withmodule = `declare module "@devicescript/core" {\n${thespecs}\n}\n`
     r["devicescript-spec.d.ts"] = withmodule
+    return r
+}
+
+function specToMarkdown(info: jdspec.ServiceSpec): string {
+    if (info.status === "deprecated") return undefined
+
+    const clname = upperCamel(info.camelName)
+    const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
+
+    let r: string[] = [
+
+        `---
+hide_table_of_contents: true
+pagination_prev: null
+pagination_next: null
+---        
+# ${clname}
+
+A client for the ${info.name} service.
+
+${info.notes["long"] || info.notes["short"]}
+`,
+    ]
+
+    return r.join("\n")
+}
+
+export function markdownFiles(specs?: jdspec.ServiceSpec[]) {
+    if (!specs) specs = jacdacDefaultSpecifications
+    const r: Record<string, string> = {}
+    specs.forEach(spec => {
+        const md = specToMarkdown(spec)
+        if (md) r[spec.camelName.toLocaleLowerCase()] = md
+    })
     return r
 }
