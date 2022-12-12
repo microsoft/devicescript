@@ -237,6 +237,7 @@ export interface DevsDiagnostic extends ts.Diagnostic {
     filename: string
     line: number
     column: number
+    formatted: string
 }
 
 export interface Host {

@@ -21,8 +21,9 @@ It supports `ds.packet.setLength()` function (unlike regular buffers),
 and can be passed to any command or register write.
 For example `lamp.brightness.write(0.7)` is equivalent to:
 
-```ts
+```ts ignore-errors
 const lamp = new ds.Led()
+const packet = new Buffer()
 packet.setLength(2)
 packet.setAt(0, "u0.16", 0.7)
 lamp.brightness.write(packet)

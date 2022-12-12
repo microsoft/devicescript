@@ -50,10 +50,11 @@ when setting string registers.
 Arguments are `{0}`, `{1}`, ..., `{9}`, `{A}`, `{B}`, ..., `{F}`.
 A second digit can be supplied to specify precision (though this doesn't work so well yet):
 
-```ts
+```ts ignore-errors
+const screen = new ds.CharacterScreen()
 let x = 7, y = 12
 
-console.log(ds.format("X is {0} and Y is {1}", x, y))
-console.log(ds.format("X = {04}", x))
-charDisplay.message.write(ds.format("X is {0}", x))
+console.log("X is {0} and Y is {1}", x, y)
+console.log("X = {04}", x)
+screen.message.write(`X is ${x}`)
 ```
