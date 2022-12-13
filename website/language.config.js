@@ -11,6 +11,7 @@ async function createConfig() {
                 label: "ts", // label for the language in markdown code blocks
                 highlight: "typescript", // syntax highlighting provided by prism for the language
                 showLineNumbers: false, // whether to show line numbers in all code block of this language
+                prefix: 'import * as ds from "@devicescript/core"',
                 buildConfig: {
                     version: "1",
                     langVersion,

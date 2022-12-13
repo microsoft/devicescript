@@ -26,17 +26,15 @@ function CodeEditor(props: {
     theme: PrismTheme
     showLineNumbers: boolean
     readonly: boolean
+    prefix?: string
     sandbox?: {
         files: Record<string, { content: string }>
         main?: string
     }
 }) {
-    const { code, language, sandbox } = props
-    // const [disabled, setDisabled] = useState(props.disabled);
-    const [allowUndo, setAllowUndo] = useState(false)
-    const [tmpCode, setTmpCode] = useState("")
-    const [hasFocus, setHasFocus] = useState(false)
-
+    const { code, sandbox, prefix } = props
+    const prefixedCode =
+        !prefix || code.indexOf(prefix) > -1 ? code : prefix + "\n\n" + code
     useEffect(() => {
         if (props.onChange) {
             props.onChange(code)
@@ -52,11 +50,6 @@ function CodeEditor(props: {
             range.collapse(true)
             selectObj.addRange(range)
         }
-        setHasFocus(true)
-    }
-
-    const handleBlur = () => {
-        setHasFocus(false)
     }
 
     return (
@@ -111,7 +104,6 @@ function CodeEditor(props: {
                             }}
                             spellCheck="false"
                             onFocus={handleFocus}
-                            onBlur={handleBlur}
                         >
                             <code
                                 className={clsx(
@@ -148,14 +140,14 @@ function CodeEditor(props: {
             <div className={codeBlockContentStyles.buttonGroup}>
                 <CopyButton
                     className={codeBlockContentStyles.codeButton}
-                    code={code}
+                    code={prefixedCode}
                 />
                 {sandbox && (
                     <CodeSandboxButton
                         className={codeBlockContentStyles.codeButton}
                         files={{
                             ...sandbox.files,
-                            [sandbox.main]: { content: code },
+                            [sandbox.main]: { content: prefixedCode },
                         }}
                         startFile={sandbox.main}
                     />

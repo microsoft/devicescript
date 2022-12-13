@@ -23,6 +23,7 @@ interface CodeBlockProps {
     readonly: boolean
     langVersion?: string
     tool?: string
+    prefix?: string
     sandbox?: {
         files: Record<string, { content: string }>
         main?: string
@@ -91,6 +92,7 @@ function CustomCodeEditor(props: {
     onChange?: (code: string) => void
     githubRepo: string | undefined
     readonly: boolean
+    prefix?: string
     sandbox?: {
         files: Record<string, { content: string }>
         main?: string
@@ -105,6 +107,7 @@ function CustomCodeEditor(props: {
         onChange,
         readonly,
         sandbox,
+        prefix,
     } = props
     const prismTheme = usePrismTheme()
     // console.log(prismTheme);
@@ -134,6 +137,7 @@ function CustomCodeEditor(props: {
                 readonly={readonly}
                 showLineNumbers={showLineNumbers}
                 sandbox={sandbox}
+                prefix={prefix}
             />
         </Container>
     )
@@ -154,6 +158,7 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
         showLineNumbers,
         readonly,
         sandbox,
+        prefix,
     } = input
     const [currCode, setCurrCode] = useState(code)
     const [outputRendered, setOutputRendered] = useState(false)
@@ -236,6 +241,7 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
                 githubRepo={githubRepo}
                 readonly={readonly}
                 sandbox={sandbox}
+                prefix={prefix}
             />
             <>
                 <div className={styles.buttons}>

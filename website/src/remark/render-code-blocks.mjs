@@ -226,6 +226,8 @@ export default function plugin() {
                     readonly: langConfig.readonly ?? true,
                     showLineNumbers: showLineNumbers,
                     sandbox: langConfig.sandbox,
+                    prefix: langConfig.prefix,
+                    label,
                 })
                 parent.children.splice(index, 1, {
                     type: "jsx",
@@ -258,6 +260,7 @@ export default function plugin() {
                         tool: buildConfig.npmPackage,
                         sandbox: langConfig.sandbox,
                         label,
+                        prefix: langConfig.prefix,
                     })
                     parent.children.splice(index, 1, {
                         type: "jsx",

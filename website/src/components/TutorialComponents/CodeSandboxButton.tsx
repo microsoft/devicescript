@@ -1,6 +1,5 @@
 import React, { useState } from "react"
 import clsx from "clsx"
-import codeBlockContentStyles from "@docusaurus/theme-classic/src/theme/CodeBlock/Content/styles.module.css"
 
 export default function CodeSandboxButton(props: {
     className?: string

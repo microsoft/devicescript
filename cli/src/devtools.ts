@@ -70,7 +70,7 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
         ? () => {
               const bytecode = readFileSync(bytecodeFile)
               const dbg = debugFile ? readJSONSync(debugFile) : undefined
-              debug(`refresh bytecode ${prettySize(bytecode.length)}...`)
+              debug(`refresh bytecode (${prettySize(bytecode.length)}) with ${clients.length} clients...`)
               const msg = JSON.stringify({
                   type: "bytecode",
                   channel: "devicescript",

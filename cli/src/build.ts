@@ -152,7 +152,7 @@ async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
         throw new CompilationError("compilation failed")
     }
 
-    log(`binary: ${prettySize(binary.length)}`)
+    log(`bytecode: ${prettySize(binary.length)}`)
     if (stats) {
         const { sizes, functions } = dbg
         log(
