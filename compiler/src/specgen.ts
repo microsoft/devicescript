@@ -189,7 +189,7 @@ ${info.notes["long"]}
 `
             : undefined,
         `
-\`\`\`ts no-build
+\`\`\`ts
 const ${varname} = new ds.${clname}()
 \`\`\`
             `,
@@ -238,7 +238,7 @@ const ${varname} = new ds.${clname}()
                     ? undefined
                     : pkt.kind === "rw"
                     ? `-  read and write value
-\`\`\`ts no-build
+\`\`\`ts
 const ${varname} = new ds.${clname}()
 // ...
 const value = ${varname}.${pname}.read()
@@ -246,7 +246,7 @@ ${varname}.${pname}.write(value)
 \`\`\`
 `
                     : `-  read value
-\`\`\`ts no-build
+\`\`\`ts
 const ${varname} = new ds.${clname}()
 // ...
 const value = ${varname}.${pname}.read()
@@ -254,7 +254,7 @@ const value = ${varname}.${pname}.read()
 `,
                 isNumber
                     ? `-  track value changes
-\`\`\`ts no-build
+\`\`\`ts
 const ${varname} = new ds.${clname}()
 // ...
 ${varname}.${pname}.onChange(0, () => {
