@@ -185,7 +185,6 @@ function specToMarkdown(info: jdspec.ServiceSpec): string {
 
     let r: string[] = [
         `---
-hide_table_of_contents: true
 pagination_prev: null
 pagination_next: null
 ---        
@@ -214,8 +213,11 @@ const ${varname} = new ds.${clname}()
             `,
     ]
 
-    info.packets.forEach(pkt => {
-        if (pkt.derived || pkt.internal) return // ???
+    const regs = info.packets
+        .filter(pkt => isRegister(pkt.kind))
+        .filter(pkt => !pkt.derived && !pkt.internal)
+    if (regs?.length) r.push("## Registers", "")
+    regs.forEach(pkt => {
         const cmt = addComment(pkt)
         // if there's a startRepeats before last field, we don't put ... before it
         const earlyRepeats = pkt.fields
@@ -236,31 +238,39 @@ const ${varname} = new ds.${clname}()
             })
             .join(", ")
         const pname = camelize(pkt.name)
-        if (isRegister(pkt.kind)) {
-            let tp: string = undefined
-            if (cmt.needsStruct) {
-                tp = `RegisterArray`
-                if (pkt.fields.length > 1) tp += ` & { ${fields} }`
-            } else {
-                if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
-                    tp = "RegisterString"
-                else tp = "RegisterNum"
-            }
-            const isNumber = tp === "RegisterNum"
-            r.push(
-                `## ${pname}
+        const isConst = pkt.kind === "const"
+        let tp: string = undefined
+        if (cmt.needsStruct) {
+            tp = `RegisterArray`
+            if (pkt.fields.length > 1) tp += ` & { ${fields} }`
+        } else {
+            if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
+                tp = "RegisterString"
+            else if (pkt.fields.length == 1 && pkt.fields[0].type == "bytes")
+                tp = "RegisterBuffer"
+            else if (pkt.fields[0].type == "bool") tp = "RegisterBool"
+            else tp = "RegisterNum"
+        }
+        const isNumber = tp === "RegisterNum"
+        const isBoolean = tp === "RegisterBool"
+        const isString = tp === "RegisterString"
+        r.push(
+            `### ${pname}
 `,
-                pkt.description,
-                "",
-                `-  register of type: \`${tp}\` (protocol \`${pkt.packFormat}\`)`,
-                pkt.optional
-                    ? `-  optional: this register may not be implemented`
-                    : undefined,
-                "",
-                !isNumber
-                    ? undefined
-                    : pkt.kind === "rw"
-                    ? `-  read and write value
+            pkt.description,
+            "",
+            `-  type: \`${tp}\` (protocol \`${pkt.packFormat}\`)`,
+            pkt.optional
+                ? `-  optional: this register may not be implemented`
+                : undefined,
+            isConst
+                ? `-  constant: the register value will not change (until the next reset)`
+                : undefined,
+            "",
+            !isNumber && !isBoolean && !isString
+                ? undefined
+                : pkt.kind === "rw"
+                ? `-  read and write
 \`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
@@ -268,15 +278,17 @@ const value = ${varname}.${pname}.read()
 ${varname}.${pname}.write(value)
 \`\`\`
 `
-                    : `-  read value
+                : `-  read only
 \`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
 const value = ${varname}.${pname}.read()
 \`\`\`
 `,
-                isNumber
-                    ? `-  track value changes
+            isConst
+                ? undefined
+                : isNumber
+                ? `-  track value changes
 \`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
@@ -285,9 +297,18 @@ ${varname}.${pname}.onChange(0, () => {
 })
 \`\`\`
 `
-                    : undefined
-            )
-        }
+                : isBoolean || isString
+                ? `-  track value changes
+                    \`\`\`ts ${nobuild}
+                    const ${varname} = new ds.${clname}()
+                    // ...
+                    ${varname}.${pname}.onChange(() => {
+                        const value = ${varname}.${pname}.read()
+                    })
+                    \`\`\`
+                    `
+                : undefined
+        )
     })
 
     return r.filter(s => s !== undefined).join("\n")
