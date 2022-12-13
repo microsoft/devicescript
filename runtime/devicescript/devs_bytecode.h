@@ -112,7 +112,7 @@
     "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08\x01" \
     "\x01\x04\x04\x04\x04"
 
-#define DEVS_IMG_VERSION 0x00040000
+#define DEVS_IMG_VERSION 0x00010000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 8
