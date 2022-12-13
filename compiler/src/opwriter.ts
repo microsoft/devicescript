@@ -77,6 +77,11 @@ export class Value {
         this.numValue = src.numValue
         this._cachedValue = src._cachedValue
     }
+
+    withType(tp: ValueType) {
+        this.valueType = tp
+        return this
+    }
 }
 
 export class CachedValue {

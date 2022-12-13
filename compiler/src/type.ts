@@ -6,6 +6,7 @@ export enum ValueKind {
     ANY = ObjectType.ANY,
     NUMBER = ObjectType.NUMBER,
     BUFFER = ObjectType.BUFFER,
+    STRING = ObjectType.STRING,
     MAP = ObjectType.MAP,
     ARRAY = ObjectType.ARRAY,
     NULL = ObjectType.NULL,
@@ -71,6 +72,7 @@ export class ValueType {
     static ANY = new ValueType(ValueKind.ANY)
     static NUMBER = new ValueType(ValueKind.NUMBER)
     static BUFFER = new ValueType(ValueKind.BUFFER)
+    static STRING = new ValueType(ValueKind.STRING)
     static MAP = new ValueType(ValueKind.MAP)
     static ARRAY = new ValueType(ValueKind.ARRAY)
     static NULL = new ValueType(ValueKind.NULL)

@@ -312,6 +312,7 @@ class Procedure {
     methodSeqNo: Variable
     users: ts.Node[] = []
     skipAccounting = false
+    retType = ValueType.VOID
     constructor(
         public parent: Program,
         public name: string,
@@ -563,7 +564,7 @@ class Program implements TopOpWriter {
             filename: this.host?.mainFileName() || "main.ts",
             line: 1,
             column: 1,
-            formatted: formatDiagnostics([diag])
+            formatted: formatDiagnostics([diag]),
         }
 
         if (diag.file) {
@@ -793,7 +794,11 @@ class Program implements TopOpWriter {
         if (!expr) return null
 
         if (ts.isNewExpression(expr)) {
-            const spec = this.specFromTypeName(expr.expression, true)
+            const spec = this.specFromTypeName(
+                expr.expression,
+                this.nodeName(expr.expression),
+                true
+            )
             if (spec) {
                 this.requireArgs(expr, 0)
                 return new Role(this, decl, this.roles, spec)
@@ -815,6 +820,19 @@ class Program implements TopOpWriter {
             this.functions.lookup(id)
         )
             throwError(decl, `name '${id}' already defined`)
+    }
+
+    private lookupBuiltinFunc(name: string) {
+        const d = this.functions.lookup(name)
+        if (d && d.definition) {
+            if (
+                this.prelude.hasOwnProperty(
+                    d.definition.getSourceFile().fileName
+                )
+            )
+                return d as FunctionDecl
+        }
+        return undefined
     }
 
     private emitVariableDeclaration(decls: ts.VariableStatement) {
@@ -924,7 +942,10 @@ class Program implements TopOpWriter {
             wr.emitStmt(Op.STMT1_RETURN, literal(null))
         } else if (stmt.expression) {
             if (wr.ret) oops("return with value not supported here")
-            wr.emitStmt(Op.STMT1_RETURN, this.emitSimpleValue(stmt.expression))
+            wr.emitStmt(
+                Op.STMT1_RETURN,
+                this.emitSimpleValue(stmt.expression, ValueType.ANY)
+            )
         } else {
             if (wr.ret) this.writer.emitJump(this.writer.ret)
             else wr.emitStmt(Op.STMT1_RETURN, literal(null))
@@ -946,9 +967,10 @@ class Program implements TopOpWriter {
 
     private specFromTypeName(
         expr: ts.Node,
+        nm?: string,
         optional = false
     ): jdspec.ServiceSpec {
-        const nm = this.nodeName(expr)
+        if (!nm) nm = this.nodeName(expr)
         if (nm && nm[0] == "#") {
             let r = nm.slice(1)
             r = r[0].toLowerCase() + r.slice(1)
@@ -956,7 +978,7 @@ class Program implements TopOpWriter {
             return this.lookupRoleSpec(expr, r)
         } else {
             if (optional) return null
-            throwError(expr, `type name not understood: ${SK[expr.kind]}`)
+            throwError(expr, `type name not understood: ${nm}`)
         }
     }
 
@@ -983,31 +1005,48 @@ class Program implements TopOpWriter {
         return v
     }
 
+    private mapType(node: ts.Node, tp: ts.Type) {
+        if (tp.getFlags() & ts.TypeFlags.BooleanLike) return ValueType.BOOL
+        if (tp.getFlags() & ts.TypeFlags.NumberLike) return ValueType.NUMBER
+        if (tp.getFlags() & ts.TypeFlags.StringLike) return ValueType.STRING
+        if (tp.getFlags() & ts.TypeFlags.VoidLike) return ValueType.VOID
+        if (tp.getFlags() & (ts.TypeFlags.Any | ts.TypeFlags.Unknown))
+            return ValueType.ANY
+
+        const n = this.symName(tp.getSymbol())
+        if (n && n[0] == "#") {
+            if (n == "#Buffer") return ValueType.BUFFER
+            if (n == "#Array") return ValueType.ARRAY
+            if (
+                tp
+                    .getBaseTypes()
+                    ?.some(b => this.symName(b.getSymbol()) == "#Role")
+            )
+                return ValueType.ROLE(this.specFromTypeName(node, n))
+        }
+
+        throwError(
+            node,
+            `type not understood: ${this.checker.typeToString(tp)} (${n})`
+        )
+    }
+
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
-        for (const paramdef of stmt.parameters) {
-            if (!idName(paramdef.name))
+        const sig = this.checker.getSignatureFromDeclaration(stmt)
+        for (const pp of sig.parameters) {
+            const paramdef = pp.declarations?.[0] as ts.ParameterDeclaration
+            if (paramdef?.kind != SK.Parameter)
                 throwError(
-                    paramdef,
+                    paramdef ?? stmt,
                     "only simple identifiers supported as parameters"
                 )
-
             const v = this.addParameter(proc, paramdef)
-
-            let tp = ""
-            if (paramdef.type) tp = this.nodeName(paramdef.type)
-
-            if (tp == "" || tp == "#number") {
-                // OK!
-            } else if (tp == "#boolean") {
-                v.valueType = ValueType.BOOL
-            } else if (tp == "#Buffer") {
-                v.valueType = ValueType.BUFFER
-            } else {
-                v.valueType = ValueType.ROLE(
-                    this.specFromTypeName(paramdef.type)
-                )
-            }
+            v.valueType = this.mapType(
+                paramdef,
+                this.checker.getTypeOfSymbolAtLocation(pp, paramdef)
+            )
         }
+        proc.retType = this.mapType(stmt, sig.getReturnType())
     }
 
     private getClientCommandProc(cc: ClientCommand) {
@@ -1056,13 +1095,25 @@ class Program implements TopOpWriter {
         ) as FunctionDecl
         if (!this.isTopLevel(stmt))
             throwError(stmt, "only top-level functions are supported")
-        if (stmt.modifiers?.length || stmt.asteriskToken)
-            throwError(stmt, "async not supported")
+        if (
+            stmt.asteriskToken ||
+            (stmt.modifiers && !stmt.modifiers.every(modifierOK))
+        )
+            throwError(stmt, "modifier not supported")
         assert(!!fundecl || !!this.numErrors)
 
         if (fundecl) {
             if (this.compileAll || (this.isLibrary && this.inMainFile(stmt)))
                 this.getFunctionProc(fundecl)
+        }
+
+        function modifierOK(mod: ts.Modifier) {
+            switch (mod.kind) {
+                case SK.ExportKeyword:
+                    return true
+                default:
+                    return false
+            }
         }
     }
 
@@ -1279,15 +1330,44 @@ class Program implements TopOpWriter {
         throwError(expr, `events don't have property ${prop}`)
     }
 
+    private directCallFun(expr: ts.Node, fn: FunctionDecl, args: Value[]) {
+        const wr = this.writer
+        const proc = this.getFunctionProc(fn)
+        proc.useFrom(expr)
+        const arglist = wr.allocTmpLocals(args.length)
+        const formals = proc.args()
+        for (let i = 0; i < args.length; i++) {
+            const v = args[i]
+            this.requireValueType(expr, v, formals[i].valueType)
+            arglist[i].store(v)
+        }
+        proc.callMe(wr, arglist)
+        return this.retVal(proc.retType)
+    }
+
+    private loadFieldAt(
+        expr: ts.Node,
+        field: jdspec.PacketMember,
+        off: number
+    ) {
+        const wr = this.writer
+        if (field.storage == 0) {
+            const fn = this.lookupBuiltinFunc("decode_" + field.type)
+            if (!fn) throwError(null, `${field.type} format not supported yet`)
+            return this.directCallFun(expr, fn, [literal(off)])
+        }
+        return wr.emitBufLoad(bufferFmt(field), off)
+    }
+
     private extractRegField(
+        node: ts.Node,
         spec: jdspec.PacketInfo,
         field: jdspec.PacketMember
     ) {
-        const wr = this.writer
         let off = 0
         for (const f of spec.fields) {
             if (f == field) {
-                return wr.emitBufLoad(bufferFmt(field), off)
+                return this.loadFieldAt(node, field, off)
             } else {
                 off += Math.abs(f.storage)
             }
@@ -1296,6 +1376,7 @@ class Program implements TopOpWriter {
     }
 
     private emitRegGet(
+        node: ts.Node,
         val: Value,
         refresh?: RefreshMS,
         field?: jdspec.PacketMember
@@ -1314,7 +1395,7 @@ class Program implements TopOpWriter {
             literal(refresh)
         )
         if (field) {
-            return this.extractRegField(spec, field)
+            return this.extractRegField(node, spec, field)
         } else {
             const r = nonEmittable(
                 new ValueType(
@@ -1525,6 +1606,11 @@ class Program implements TopOpWriter {
                 return unit()
             }
 
+            case "toString":
+                this.requireArgs(expr, 0)
+                wr.emitStmt(Op.STMT1_DECODE_UTF8, buf)
+                return this.retVal(ValueType.STRING)
+
             case "fillAt": {
                 this.requireArgs(expr, 3)
                 const offset = this.emitSimpleValue(expr.arguments[0])
@@ -1689,7 +1775,7 @@ class Program implements TopOpWriter {
         switch (prop) {
             case "read":
                 this.requireArgs(expr, 0)
-                return this.emitRegGet(val)
+                return this.emitRegGet(expr, val)
             case "write":
                 this.emitPackArgs(expr, spec)
                 this.emitSendCommand(
@@ -1721,7 +1807,7 @@ class Program implements TopOpWriter {
                     wr.emitIfAndPop(cond, () => {
                         // get the reg value from current packet
                         const curr = wr.cacheValue(
-                            this.extractRegField(spec, spec.fields[0])
+                            this.extractRegField(expr, spec, spec.fields[0])
                         )
                         const skipHandler = wr.mkLabel("skipHandler")
                         // if (curr == undefined) goto skip (shouldn't really happen unless service is misbehaving)
@@ -1766,7 +1852,6 @@ class Program implements TopOpWriter {
             let tp = ValueType.NUMBER
             const f = formals?.[i]
             if (f) tp = f.valueType
-            arglist[i].valueType = tp
             arglist[i].store(this.emitSimpleValue(args[i], tp))
         }
 
@@ -1988,6 +2073,11 @@ class Program implements TopOpWriter {
         return res
     }
 
+    private retVal(tp: ValueType) {
+        if (tp.kind == ValueKind.VOID) return unit()
+        return this.writer.emitExpr(Op.EXPR0_RET_VAL).withType(tp)
+    }
+
     private emitProcCall(
         expr: ts.CallExpression,
         proc: Procedure,
@@ -2006,7 +2096,8 @@ class Program implements TopOpWriter {
         }
         const cargs = this.emitArgs(args, proc.args())
         proc.callMe(wr, cargs)
-        return wr.emitExpr(Op.EXPR0_RET_VAL)
+        if (proc.retType.kind == ValueKind.VOID) return unit()
+        return this.retVal(proc.retType)
     }
 
     private symName(sym: ts.Symbol) {
@@ -2049,9 +2140,7 @@ class Program implements TopOpWriter {
                     Op.STMT1_ALLOC_BUFFER,
                     this.emitExpr(expr.arguments[0])
                 )
-                const r = wr.emitExpr(Op.EXPR0_RET_VAL)
-                r.valueType = ValueType.BUFFER
-                return r
+                return this.retVal(ValueType.BUFFER)
             }
             case "wait": {
                 this.requireArgs(expr, 1)
@@ -2128,8 +2217,6 @@ class Program implements TopOpWriter {
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
-        const wr = this.writer
-
         const callName = this.nodeName(expr.expression)
         const builtInName =
             callName && callName.startsWith("#") ? callName.slice(1) : null
@@ -2352,7 +2439,7 @@ class Program implements TopOpWriter {
                 const fld = spec.fields.find(f => matchesName(f.name, propName))
                 if (!fld)
                     throwError(expr, `no field ${propName} in ${spec.name}`)
-                return this.emitRegGet(val, undefined, fld)
+                return this.emitRegGet(expr, val, undefined, fld)
             } else {
                 throwError(expr, `unhandled member ${propName}; use .read()`)
             }
@@ -2430,6 +2517,7 @@ class Program implements TopOpWriter {
             case ValueKind.NULL:
             case ValueKind.BOOL:
             case ValueKind.BUFFER:
+            case ValueKind.STRING:
             case ValueKind.MAP:
             case ValueKind.ARRAY:
             case ValueKind.FIBER:
@@ -2471,7 +2559,7 @@ class Program implements TopOpWriter {
         const isMonkeyPatch = className == "#Math"
         const spec = isMonkeyPatch
             ? null
-            : this.specFromTypeName(classExpr, true)
+            : this.specFromTypeName(classExpr, this.nodeName(classExpr), true)
 
         if (!isMonkeyPatch && !spec) return
 
@@ -2584,7 +2672,7 @@ class Program implements TopOpWriter {
                     const pat = left.elements[i]
                     const f = spec.fields[i]
                     if (!f) throwError(pat, `not enough fields in ${spec.name}`)
-                    const e = wr.emitBufLoad(bufferFmt(f), off)
+                    const e = this.loadFieldAt(expr.right, f, off)
                     off += Math.abs(f.storage)
                     this.emitStore(this.lookupVar(pat), e)
                 }
@@ -2725,9 +2813,7 @@ class Program implements TopOpWriter {
         wr.emitStmt(Op.STMT0_ALLOC_MAP)
         if (expr.properties.length)
             throwError(expr, "object initializers not supported yet")
-        const arr = wr.emitExpr(Op.EXPR0_RET_VAL)
-        arr.valueType = ValueType.MAP
-        return arr
+        return this.retVal(ValueType.MAP)
     }
 
     private emitExpr(expr: Expr): Value {
@@ -3128,8 +3214,8 @@ class Program implements TopOpWriter {
 }
 
 export interface CompilationResult {
-    success: boolean,
-    binary: Uint8Array,
+    success: boolean
+    binary: Uint8Array
     dbg: DebugInfo
     clientSpecs: jdspec.ServiceSpec[]
 }

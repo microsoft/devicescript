@@ -80,6 +80,8 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             } else {
                 if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
                     tp = "RegisterString"
+                else if (pkt.fields.length == 1 && pkt.fields[0].type == "bytes")
+                    tp = "RegisterBuffer"
                 else tp = "RegisterNum"
             }
         } else if (pkt.kind == "event") {

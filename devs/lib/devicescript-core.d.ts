@@ -13,7 +13,13 @@ declare module "@devicescript/core" {
 
     export class RegisterNum extends Register {
         read(): number
-        write(v: number | boolean | Buffer): void
+        write(v: number | boolean): void
+        onChange(threshold: number, handler: (curr: number) => void): void
+    }
+
+    export class RegisterBuffer extends Register {
+        read(): Buffer
+        write(v: Buffer): void
         onChange(threshold: number, handler: (curr: number) => void): void
     }
 
@@ -89,6 +95,8 @@ declare module "@devicescript/core" {
             ): void
             fillAt(offset: number, length: number, value: number): void
             [idx: number]: number
+
+            toString(): string
         }
     }
 }
