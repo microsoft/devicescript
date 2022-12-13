@@ -45,7 +45,12 @@ function processSpec(filecontent: string): Spec {
         jmpoffset: "j",
 
         role_idx: "R",
-        string_idx: "S",
+
+        ascii_idx: "A",
+        utf8_idx: "U",
+        buffer_idx: "B",
+        builtin_idx: "I",
+
         local_idx: "L",
         func_idx: "F",
         global_idx: "G",
@@ -292,7 +297,7 @@ function serializeProps(lst: OpCode[], fn: (o: OpCode) => number) {
 }
 
 function genJmpTables(spec: Spec) {
-    let r = "\n#define JACS_OP_HANDLERS expr_invalid, \\\n"
+    let r = "\n#define DEVS_OP_HANDLERS expr_invalid, \\\n"
     for (const obj of sortByCode(spec.ops)) {
         r += `${sig(obj).toLowerCase()}_${obj.name}, \\\n`
     }
@@ -335,16 +340,27 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
 
     if (isTS)
         for (const en of ["Object_Type"])
-            emitConst(
-                en,
-                JSON.stringify(enumNames(spec.enums[en]))
-            )
+            emitConst(en, JSON.stringify(enumNames(spec.enums[en])))
 
     if (isSTS) r += "} // devs\n"
 
     if (!isTS) r += genJmpTables(spec)
 
+    emitStrings("BuiltIn_String")
+
     return r
+
+    function listLiteral(lst: string[]) {
+        const inner = lst
+            .map(o => (o == "_empty" ? '""' : JSON.stringify(o)))
+            .join(", ")
+        return isTS ? `[${inner}]` : inner
+    }
+
+    function emitStrings(id: string) {
+        emitConst(id + "__val", listLiteral(contEnumNames(spec.enums[id])))
+        emitConst(id + "__size", contEnumNames(spec.enums[id]).length + "")
+    }
 
     function emitFmts(id: string, lst: OpCode[]) {
         if (!isTS) return
@@ -366,7 +382,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
         comment = addCmt(comment)
         if (isTS)
             r += `export const ${name.toUpperCase()} = ${val} ${comment}\n`
-        else r += `#define JACS_${name.toUpperCase()} ${val} ${comment}\n`
+        else r += `#define DEVS_${name.toUpperCase()} ${val} ${comment}\n`
     }
 
     function startEnum(name: string) {
@@ -383,7 +399,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
         const val = obj.code
         const name = pref + obj.name.toUpperCase()
         if (isTS) r += `    ${name} = ${val}, ${cmt}\n`
-        else r += `#define JACS_${name} ${val} ${cmt}\n`
+        else r += `#define DEVS_${name} ${val} ${cmt}\n`
     }
 }
 
@@ -417,4 +433,10 @@ function enumNames(lst: OpCode[]) {
         names[+obj.code] = obj.name
     }
     return names
+}
+
+function contEnumNames(lst: OpCode[]) {
+    const tmp = enumNames(lst)
+    if (tmp.some(n => !n)) throw new Error("bad enum")
+    return tmp
 }

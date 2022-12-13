@@ -1,4 +1,10 @@
-import { BinFmt, InstrArgResolver, stringifyInstr } from "./format"
+import {
+    BinFmt,
+    BUILTIN_STRING__VAL,
+    InstrArgResolver,
+    StrIdx,
+    stringifyInstr,
+} from "./format"
 import {
     range,
     read32,
@@ -6,6 +12,8 @@ import {
     fromUTF8,
     uint8ArrayToString,
     toHex,
+    stringToUint8Array,
+    assert,
 } from "./jdutil"
 
 function error(msg: string) {
@@ -52,7 +60,9 @@ export function disassemble(img: Uint8Array): string {
         funData,
         floatData,
         roleData,
-        strDesc,
+        asciiDesc,
+        utf8Desc,
+        bufferDesc,
         strData,
     ] = range(BinFmt.NUM_IMG_SECTIONS).map(i =>
         decodeSection(
@@ -62,22 +72,18 @@ export function disassemble(img: Uint8Array): string {
     )
 
     function funName(idx: number) {
-        return getString(
+        return getString1(
             read16(funDesc, idx * BinFmt.FUNCTION_HEADER_SIZE + 12)
         )
     }
 
     function roleName(idx: number) {
-        return getString(read16(roleData, idx * BinFmt.ROLE_HEADER_SIZE + 4))
+        return getString1(read16(roleData, idx * BinFmt.ROLE_HEADER_SIZE + 4))
     }
 
-    function describeString(idx: number) {
-        const buf = getStringBuf(idx)
-        let isstr = true
-        for (let i = 0; i < buf.length; ++i)
-            if (buf[i] < 32 || buf[i] > 0x80) isstr = false
-        if (isstr) return JSON.stringify(getString(idx))
-        else return toHex(buf)
+    function describeString(tp: StrIdx, idx: number) {
+        if (tp == StrIdx.BUFFER) return getString(tp, idx)
+        else return JSON.stringify(getString(tp, idx))
     }
 
     const resolver: InstrArgResolver = {
@@ -86,8 +92,14 @@ export function disassemble(img: Uint8Array): string {
             switch (ff) {
                 case "R":
                     return roleName(idx)
-                case "S":
-                    return describeString(idx)
+                case "B":
+                    return describeString(StrIdx.BUFFER, idx)
+                case "U":
+                    return describeString(StrIdx.UTF8, idx)
+                case "A":
+                    return describeString(StrIdx.ASCII, idx)
+                case "I":
+                    return describeString(StrIdx.BUILTIN, idx)
                 case "F":
                     return funName(idx)
                 case "P":
@@ -128,15 +140,51 @@ export function disassemble(img: Uint8Array): string {
 
     return r
 
-    function getString(idx: number) {
-        let r = uint8ArrayToString(getStringBuf(idx))
-        try {
-            r = fromUTF8(r)
-        } catch {}
-        return r
+    function getString1(idx: number) {
+        const tp = idx >> StrIdx._SHIFT
+        idx &= (1 << StrIdx._SHIFT) - 1
+        return getString(tp, idx)
     }
 
-    function getStringBuf(idx: number) {
-        return decodeSection(strDesc, idx * BinFmt.SECTION_HEADER_SIZE, img)
+    function getString(tp: StrIdx, idx: number) {
+        const buf = getStringBuf(tp, idx)
+        if (tp == StrIdx.BUFFER) return toHex(buf)
+        else return fromUTF8(uint8ArrayToString(buf))
+    }
+
+    function getStringBuf(tp: StrIdx, idx: number) {
+        if (tp == StrIdx.BUILTIN) {
+            return stringToUint8Array(BUILTIN_STRING__VAL[idx])
+        } else if (tp == StrIdx.ASCII) {
+            idx *= BinFmt.ASCII_HEADER_SIZE
+            if (idx + 2 > asciiDesc.length) {
+                error("ascii index out of range")
+                return new Uint8Array(0)
+            }
+            const start = read16(asciiDesc, idx)
+            if (start >= strData.length) {
+                error("ascii start out of range")
+                return new Uint8Array(0)
+            }
+            for (let i = start; i < strData.length; ++i) {
+                if (strData[i] === 0) return strData.slice(start, i)
+            }
+            error("missing NUL")
+            return new Uint8Array(0)
+        } else if (tp == StrIdx.UTF8) {
+            return decodeSection(
+                utf8Desc,
+                idx * BinFmt.SECTION_HEADER_SIZE,
+                strData
+            )
+        } else if (tp == StrIdx.BUFFER) {
+            return decodeSection(
+                bufferDesc,
+                idx * BinFmt.SECTION_HEADER_SIZE,
+                strData
+            )
+        } else {
+            assert(false)
+        }
     }
 }

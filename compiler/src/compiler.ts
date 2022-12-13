@@ -35,6 +35,8 @@ import {
     SMap,
     ValueKind,
     DevsDiagnostic,
+    BUILTIN_STRING__VAL,
+    StrIdx,
 } from "./format"
 import {
     addUnique,
@@ -462,7 +464,9 @@ class Program implements TopOpWriter {
     mainFile: ts.SourceFile
     procs: Procedure[] = []
     floatLiterals: number[] = []
-    stringLiterals: (string | Uint8Array)[] = []
+    asciiLiterals: string[] = []
+    utf8Literals: string[] = []
+    bufferLiterals: Uint8Array[] = []
     writer: OpWriter
     proc: Procedure
     accountingProc: Procedure
@@ -509,16 +513,34 @@ class Program implements TopOpWriter {
         return this.prelude[fn] || ""
     }
 
-    addString(str: string | Uint8Array) {
-        if (typeof str == "string") return addUnique(this.stringLiterals, str)
-        else {
-            for (let i = 0; i < this.stringLiterals.length; ++i) {
-                const ss = this.stringLiterals[i]
-                if (typeof ss != "string" && bufferEq(str, ss)) return i
+    addString(str: string) {
+        let isAscii = true
+        for (let i = 0; i < str.length; ++i)
+            if (str.charCodeAt(i) > 127 || str.charCodeAt(i) == 0) {
+                isAscii = false
+                break
             }
-            this.stringLiterals.push(str)
-            return this.stringLiterals.length - 1
+        let idx = BUILTIN_STRING__VAL.indexOf(str)
+        if (idx >= 0) return idx | (StrIdx.BUILTIN << StrIdx._SHIFT)
+        if (isAscii && str.length < 50)
+            return (
+                addUnique(this.asciiLiterals, str) |
+                (StrIdx.ASCII << StrIdx._SHIFT)
+            )
+        else
+            return (
+                addUnique(this.utf8Literals, str) |
+                (StrIdx.UTF8 << StrIdx._SHIFT)
+            )
+    }
+
+    addBuffer(buf: Uint8Array) {
+        for (let i = 0; i < this.bufferLiterals.length; ++i) {
+            const ss = this.bufferLiterals[i]
+            if (bufferEq(buf, ss)) return i
         }
+        this.bufferLiterals.push(buf)
+        return this.bufferLiterals.length - 1
     }
 
     addFloat(f: number): number {
@@ -573,10 +595,14 @@ class Program implements TopOpWriter {
         switch (ff) {
             case "R":
                 return this.roles.describeIndex(idx)
-            case "S":
-                const l = this.stringLiterals[idx]
-                if (typeof l == "string") return JSON.stringify(l)
-                else return toHex(l)
+            case "B":
+                return toHex(this.bufferLiterals[idx])
+            case "U":
+                return JSON.stringify(this.utf8Literals[idx])
+            case "A":
+                return JSON.stringify(this.asciiLiterals[idx])
+            case "I":
+                return JSON.stringify(BUILTIN_STRING__VAL[idx])
             case "P":
                 return "" // param
             case "L":
@@ -1560,14 +1586,18 @@ class Program implements TopOpWriter {
     }
 
     private bufferSize(v: Value) {
-        if (v.op == Op.EXPRx_STATIC_BUFFER) {
-            const idx = v.args[0]?.numValue
-            if (idx != null) {
-                const lit = this.stringLiterals[idx]
-                if (typeof lit == "string") return strlen(lit)
-                else return lit.length
+        const idx = v.args?.[0]?.numValue
+        if (idx !== undefined)
+            switch (v.op) {
+                case Op.EXPRx_STATIC_BUFFER:
+                    return this.bufferLiterals[idx].length
+                case Op.EXPRx_STATIC_ASCII_STRING:
+                    return this.asciiLiterals[idx].length
+                case Op.EXPRx_STATIC_UTF8_STRING:
+                    return strlen(this.utf8Literals[idx])
+                case Op.EXPRx_STATIC_BUILTIN_STRING:
+                    return BUILTIN_STRING__VAL[idx].length
             }
-        }
         return undefined
     }
 
@@ -2854,7 +2884,9 @@ class Program implements TopOpWriter {
         const funData = new SectionWriter()
         const floatData = new SectionWriter()
         const roleData = new SectionWriter()
-        const strDesc = new SectionWriter()
+        const asciiDesc = new SectionWriter()
+        const utf8Desc = new SectionWriter()
+        const bufferDesc = new SectionWriter()
         const strData = new SectionWriter()
 
         const writers = [
@@ -2862,7 +2894,9 @@ class Program implements TopOpWriter {
             funData,
             floatData,
             roleData,
-            strDesc,
+            asciiDesc,
+            utf8Desc,
+            bufferDesc,
             strData,
         ]
 
@@ -2896,22 +2930,38 @@ class Program implements TopOpWriter {
             roleData.append((r as Role).serialize())
         }
 
-        const descs = this.stringLiterals.map(str => {
-            const buf: Uint8Array =
-                typeof str == "string"
-                    ? stringToUint8Array(toUTF8(str) + "\u0000")
-                    : str
-            const desc = new Uint8Array(8)
-            write32(desc, 0, strData.currSize) // initially use offsets in strData section
-            write32(
-                desc,
-                4,
-                typeof str == "string" ? buf.length - 1 : buf.length
-            )
-            strData.append(buf)
-            strDesc.append(desc)
-            return desc
-        })
+        function addLits(lst: (Uint8Array | string)[], dst: SectionWriter) {
+            lst.forEach(str => {
+                const buf: Uint8Array =
+                    typeof str == "string"
+                        ? stringToUint8Array(toUTF8(str) + "\u0000")
+                        : str
+
+                let desc = new Uint8Array(BinFmt.SECTION_HEADER_SIZE)
+                write32(desc, 0, strData.currSize)
+                write32(
+                    desc,
+                    4,
+                    typeof str == "string" ? buf.length - 1 : buf.length
+                )
+                strData.append(buf)
+                if (dst == asciiDesc) {
+                    assert(desc[2] == 0)
+                    assert(desc[3] == 0)
+                    desc = desc.slice(0, BinFmt.ASCII_HEADER_SIZE)
+                }
+                dst.append(desc)
+                return desc
+            })
+        }
+
+        addLits(this.asciiLiterals, asciiDesc)
+        addLits(this.utf8Literals, utf8Desc)
+        addLits(this.bufferLiterals, bufferDesc)
+
+        asciiDesc.align()
+
+        strData.append(new Uint8Array(1)) // final NUL-terminator
         strData.align()
 
         let off = 0
@@ -2923,11 +2973,6 @@ class Program implements TopOpWriter {
         const mask = BinFmt.BINARY_SIZE_ALIGN - 1
         off = (off + mask) & ~mask
         const outp = new Uint8Array(off)
-
-        // shift offsets from strData-local to global
-        for (const d of descs) {
-            write32(d, 0, read32(d, 0) + strData.offset)
-        }
 
         for (const proc of this.procs) {
             proc.writer.finalizeDesc(
@@ -2952,7 +2997,11 @@ class Program implements TopOpWriter {
             sizes: {
                 header: fixHeader.size + sectDescs.size,
                 floats: floatData.size,
-                strings: strData.size + strDesc.size,
+                strings:
+                    strData.size +
+                    asciiDesc.size +
+                    utf8Desc.size +
+                    bufferDesc.size,
                 roles: roleData.size,
                 align: left,
             },
@@ -2992,7 +3041,9 @@ class Program implements TopOpWriter {
                 desc: q(cleanDesc(p.writer.desc)),
                 body: q(p.writer.serialize()),
             })),
-            strings: this.stringLiterals.map(q),
+            buffer: this.bufferLiterals.map(q),
+            ascii: this.asciiLiterals.map(q),
+            utf8: this.utf8Literals.map(q),
             floats: this.floatLiterals.slice(),
         }
         this.host.write(DEVS_LIB_FILE, JSON.stringify(lib, null, 1))

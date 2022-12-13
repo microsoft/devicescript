@@ -11,12 +11,14 @@ import {
     stringifyInstr,
     opNumArgs,
     opIsStmt,
+    StrIdx,
 } from "./format"
 import { assert, write32, write16 } from "./jdutil"
 import { assertRange, oops } from "./util"
 
 export interface TopOpWriter extends InstrArgResolver {
-    addString(s: string | Uint8Array): number
+    addString(s: string): number
+    addBuffer(s: Uint8Array): number
     addFloat(f: number): number
     writer: OpWriter
     hasErrors: boolean
@@ -269,8 +271,20 @@ export class OpWriter {
 
     emitString(s: string | Uint8Array) {
         const v = new Value(ValueType.BUFFER)
-        v.op = Op.EXPRx_STATIC_BUFFER
-        v.args = [literal(this.prog.addString(s))]
+        let idx = 0
+        if (typeof s == "string") {
+            idx = this.prog.addString(s)
+            const tp = idx >> StrIdx._SHIFT
+            idx &= (1 << StrIdx._SHIFT) - 1
+            if (tp == StrIdx.UTF8) v.op = Op.EXPRx_STATIC_UTF8_STRING
+            else if (tp == StrIdx.BUILTIN) v.op = Op.EXPRx_STATIC_BUILTIN_STRING
+            else if (tp == StrIdx.ASCII) v.op = Op.EXPRx_STATIC_ASCII_STRING
+            else assert(false)
+        } else {
+            idx = this.prog.addBuffer(s)
+            v.op = Op.EXPRx_STATIC_BUFFER
+        }
+        v.args = [literal(idx)]
         v.flags = VF_IS_STRING
         return v
     }
@@ -478,7 +492,10 @@ export class OpWriter {
     }
 
     emitExpr(op: Op, ...args: Value[]) {
-        assert(opNumArgs(op) == args.length, `op ${op} exp ${opNumArgs(op)} got ${args.length}`)
+        assert(
+            opNumArgs(op) == args.length,
+            `op ${op} exp ${opNumArgs(op)} got ${args.length}`
+        )
         assert(!opIsStmt(op), `op ${op} is stmt not expr`)
         let stack = 0
         let maxstack = 1
