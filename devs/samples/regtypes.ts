@@ -15,3 +15,7 @@ const wifi = new ds.Wifi()
 const theip = wifi.ipAddress.read()
 const themac = wifi.eui48.read()
 wifi.eui48.onChange(() => {})
+
+const dig = new ds.SevenSegmentDisplay()
+dig.digits.write(hex`00 11`)
+const d = dig.digits.read()
