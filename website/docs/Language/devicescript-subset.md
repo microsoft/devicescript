@@ -50,7 +50,7 @@ when setting string registers.
 Arguments are `{0}`, `{1}`, ..., `{9}`, `{A}`, `{B}`, ..., `{F}`.
 A second digit can be supplied to specify precision (though this doesn't work so well yet):
 
-```ts ignore-errors
+```ts no-build
 const screen = new ds.CharacterScreen()
 let x = 7, y = 12
 

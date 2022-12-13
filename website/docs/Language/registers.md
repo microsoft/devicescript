@@ -10,7 +10,7 @@ Registers are referenced as `myRole.regName`.
 Registers have following methods - `.onChange()`, `.read()` and `.write()`.
 If register contains multiple fields, a tuple (array) is returned.
 
-```ts ignore-errors
+```ts no-build
 const pot = new ds.Potentiometer()
 const lamp = new ds.Led()
 const colorSensor = new ds.Color()
