@@ -8,6 +8,9 @@ import fs_extra_pkg from "fs-extra"
 import { spawnSync } from "child_process"
 const { readJsonSync, writeJsonSync, ensureDirSync } = fs_extra_pkg
 import { createHash } from "crypto"
+import pLimit from "p-limit"
+
+const limit = pLimit(8)
 
 const info = console.debug
 const debug = console.debug
@@ -19,7 +22,6 @@ const sitePkg = readJsonSync("../compiler/package.json")
 // (so we only recompute for every major release)
 const VERSION = sitePkg.version.replace(/(\..)*$/g, "")
 
-info(`rendering snippets ${VERSION}`)
 // language configs
 import getLangConfig from "../../language.config.js"
 const languageConfig = await getLangConfig()
@@ -146,8 +148,7 @@ async function getOutput(config, input, lang, skipErr) {
         )
     }
 
-    if (status !== "success")
-        debug(`${lang}: ${hash}, ${status}, ${error}`)
+    if (status !== "success") debug(`${lang}: ${hash}, ${status}, ${error}`)
 
     const errorToReport = checkRuntimeError(
         langVersion,
@@ -200,12 +201,8 @@ export default function plugin() {
             )
             if (!langConfig) return
 
-            const skipRegex = /(no-build)|(ignore-errors)/
-            const skipErr = skipRegex.test(meta)
-            const editableRegex = /(always-editable)/
-            const alwaysEditable = editableRegex.test(meta)
-            const lineNumRegex = /(show-line-numbers)/i
-
+            const noBuild = /no-build/i.test(meta)
+            const skipErr = /(no-build)|(ignore-errors)/i.test(meta)
             const label = langConfig.label
             const highlight = langConfig.highlight
 
@@ -213,11 +210,9 @@ export default function plugin() {
             // or for a specific block through `show-line-numbers`
             // e.g. ```z3 show-line-numbers
             const showLineNumbers =
-                langConfig.showLineNumbers || lineNumRegex.test(meta)
-            if (!langConfig.buildConfig) {
-                // there is no runtime configured,
-                // so just add the syntax highlighting and github discussion button (if configured)
-
+                langConfig.showLineNumbers ||
+                /(show-)?(line-numbers)/i.test(meta)
+            if (!langConfig.buildConfig || noBuild) {
                 let code = value
                 let result = {}
 
@@ -239,46 +234,43 @@ export default function plugin() {
                 return
             }
 
-            promises.push(async () => {
-                // console.log(`num promises: ${promises.length}; `);
-                const buildConfig = langConfig.buildConfig
-                const result = await getOutput(
-                    buildConfig,
-                    value,
-                    lang,
-                    skipErr
-                )
+            promises.push(
+                limit(async () => {
+                    const buildConfig = langConfig.buildConfig
+                    const result = await getOutput(
+                        buildConfig,
+                        value,
+                        lang,
+                        skipErr
+                    )
 
-                // console.log({ node, index, parent });
+                    // console.log({ node, index, parent });
 
-                const val = JSON.stringify({
-                    lang: lang,
-                    highlight: highlight,
-                    statusCodes: buildConfig.statusCodes,
-                    code: value,
-                    result: result,
-                    editable: alwaysEditable,
-                    readonly: false,
-                    showLineNumbers: showLineNumbers,
-                    langVersion: buildConfig.langVersion,
-                    tool: buildConfig.npmPackage,
-                    sandbox: langConfig.sandbox,
-                    label,
+                    const val = JSON.stringify({
+                        lang: lang,
+                        highlight: highlight,
+                        statusCodes: buildConfig.statusCodes,
+                        code: value,
+                        result: result,
+                        readonly: false,
+                        showLineNumbers: showLineNumbers,
+                        langVersion: buildConfig.langVersion,
+                        tool: buildConfig.npmPackage,
+                        sandbox: langConfig.sandbox,
+                        label,
+                    })
+                    parent.children.splice(index, 1, {
+                        type: "jsx",
+                        value: `<CustomCodeBlock input={${val}} />`,
+                    })
                 })
-                parent.children.splice(index, 1, {
-                    type: "jsx",
-                    // TODO: encode the source into jsx tree to avoid XSS?
-                    // TODO: create a generic <CodeBlock and pass lang={lang} />
-                    // TODO: pass syntax highlighting to CodeBlock
-                    value: `<CustomCodeBlock input={${val}} />`,
-                })
-            })
+            )
         })
 
-        for (const p of promises) {
-            // need to run sync according to Kevin
-            await p()
-            // console.log(`num promises: ${promises.length}`);
+        if (promises.length) {
+            info(`rendering ${promises.length} snippets`)
+            await Promise.all(promises)
+            //info(`renderered ${promises.length} snippets`)
         }
     }
     return transformer

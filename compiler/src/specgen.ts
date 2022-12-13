@@ -181,6 +181,7 @@ function specToMarkdown(info: jdspec.ServiceSpec): string {
     const clname = upperCamel(camelName)
     const varname = reserved[camelName] || camelName
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
+    const nobuild = status === "stable" || status === "rc" ? "" : "no-build"
 
     let r: string[] = [
         `---
@@ -207,7 +208,7 @@ ${patchLinks(info.notes["long"])}
 `
             : undefined,
         `
-\`\`\`ts no-build
+\`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 \`\`\`
             `,
@@ -256,7 +257,7 @@ const ${varname} = new ds.${clname}()
                     ? undefined
                     : pkt.kind === "rw"
                     ? `-  read and write value
-\`\`\`ts no-build
+\`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
 const value = ${varname}.${pname}.read()
@@ -264,7 +265,7 @@ ${varname}.${pname}.write(value)
 \`\`\`
 `
                     : `-  read value
-\`\`\`ts no-build
+\`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
 const value = ${varname}.${pname}.read()
@@ -272,7 +273,7 @@ const value = ${varname}.${pname}.read()
 `,
                 isNumber
                     ? `-  track value changes
-\`\`\`ts no-build
+\`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
 ${varname}.${pname}.onChange(0, () => {
