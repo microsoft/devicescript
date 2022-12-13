@@ -22,6 +22,7 @@ import {
 import { jacdacDefaultSpecifications } from "./embedspecs"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
+import { packetsToRegisters } from "../../runtime/jacdac-c/jacdac/spectool/jdutils"
 
 function isRegister(k: jdspec.PacketKind) {
     return k == "ro" || k == "rw" || k == "const"
@@ -180,7 +181,6 @@ function specToMarkdown(info: jdspec.ServiceSpec): string {
     const clname = upperCamel(camelName)
     const varname = reserved[camelName] || camelName
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
-    const nobuild = status === "stable" ? "" : "no-build"
 
     let r: string[] = [
         `---
@@ -206,7 +206,7 @@ ${patchLinks(info.notes["long"])}
 `
             : undefined,
         `
-\`\`\`ts ${nobuild}
+\`\`\`ts
 const ${varname} = new ds.${clname}()
 \`\`\`
             `,
@@ -254,6 +254,7 @@ ${varname}.${camelize(pkt.name)}(${fields}): void
     if (regs?.length) r.push("## Registers", "")
     regs.forEach(pkt => {
         const cmt = addComment(pkt)
+        const nobuild = status === "stable" && !pkt.client ? "" : "no-build"
         // if there's a startRepeats before last field, we don't put ... before it
         const earlyRepeats = pkt.fields
             .slice(0, pkt.fields.length - 1)
