@@ -465,11 +465,29 @@ static value_t exprx_static_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_handle(JACS_HANDLE_TYPE_ROLE, idx);
 }
 
-static value_t exprx_static_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned idx = ctx->literal_int;
-    if (!devs_vm_str_ok(ctx, idx))
+static value_t static_something(devs_ctx_t *ctx, unsigned tp) {
+    uint32_t v = (tp << JACS_STRIDX__SHIFT) | ctx->literal_int;
+    if (!devs_img_stridx_ok(ctx->img, v)) {
+        devs_runtime_failure(ctx, 60112);
         return devs_undefined;
-    return devs_value_from_handle(JACS_HANDLE_TYPE_IMG_BUFFER, idx);
+    }
+    return devs_value_from_handle(JACS_HANDLE_TYPE_IMG_BUFFERISH, v);
+}
+
+static value_t exprx_static_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return static_something(ctx, JACS_STRIDX_BUFFER);
+}
+
+static value_t exprx_static_ascii_string(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return static_something(ctx, JACS_STRIDX_ASCII);
+}
+
+static value_t exprx_static_utf8_string(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return static_something(ctx, JACS_STRIDX_UTF8);
+}
+
+static value_t exprx_static_builtin_string(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return static_something(ctx, JACS_STRIDX_BUILTIN);
 }
 
 static value_t exprx1_get_field(devs_activation_t *frame, devs_ctx_t *ctx) {

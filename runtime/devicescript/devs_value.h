@@ -64,7 +64,7 @@ static inline value_t devs_value_from_handle(int type, uint32_t value) {
 #define JACS_HANDLE_TYPE_SPECIAL 0x01
 #define JACS_HANDLE_TYPE_FIBER 0x02
 #define JACS_HANDLE_TYPE_GC_OBJECT (JACS_HANDLE_GC_MASK | 0x03)
-#define JACS_HANDLE_TYPE_IMG_BUFFER 0x04
+#define JACS_HANDLE_TYPE_IMG_BUFFERISH 0x04
 #define JACS_HANDLE_TYPE_ROLE 0x05
 #define JACS_HANDLE_TYPE_FUNCTION 0x06
 
@@ -75,6 +75,10 @@ static inline value_t devs_value_from_handle(int type, uint32_t value) {
 
 static inline bool devs_is_null(value_t t) {
     return t.u64 == 0;
+}
+
+static inline bool devs_bufferish_is_buffer(value_t v) {
+    return (devs_handle_value(v) >> JACS_STRIDX__SHIFT) == JACS_STRIDX_BUFFER;
 }
 
 static inline bool devs_is_special(value_t t) {

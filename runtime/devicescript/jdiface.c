@@ -154,9 +154,10 @@ void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
 static int devs_jd_reg_arg_length(devs_ctx_t *ctx, unsigned command_arg) {
     JD_ASSERT(command_arg != 0);
     jd_packet_t *pkt = &ctx->packet;
-    int slen = devs_img_get_string_len(&ctx->img, command_arg);
-    if (pkt->service_size >= slen + 1 && pkt->data[slen] == 0 &&
-        memcmp(devs_img_get_string_ptr(&ctx->img, command_arg), pkt->data, slen) == 0) {
+    unsigned slen;
+    const char *ptr = devs_img_get_utf8(&ctx->img, command_arg);
+    if (pkt->service_size >= (int)slen + 1 && pkt->data[slen] == 0 &&
+        memcmp(ptr, pkt->data, slen) == 0) {
         return slen + 1;
     } else {
         return 0;
@@ -240,11 +241,10 @@ static bool handle_reg_get(devs_fiber_t *fiber) {
     }
 
     if (devs_now(ctx) >= fiber->wake_time) {
-        int arglen = 0;
+        unsigned arglen = 0;
         const void *argp = NULL;
         if (fiber->pkt_data.reg_get.string_idx) {
-            arglen = devs_img_get_string_len(&ctx->img, fiber->pkt_data.reg_get.string_idx);
-            argp = devs_img_get_string_ptr(&ctx->img, fiber->pkt_data.reg_get.string_idx);
+            argp = devs_img_get_utf8(&ctx->img, fiber->pkt_data.reg_get.string_idx, &arglen)
         }
 
         devs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, argp, arglen);
@@ -287,10 +287,9 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
         return retry_soon(fiber);
 
     jd_packet_t *pkt = &ctx->packet;
-    unsigned str_idx = fiber->pkt_data.logmsg.string_idx;
-    unsigned sz = devs_strformat(devs_img_get_string_ptr(&ctx->img, str_idx),
-                                 devs_img_get_string_len(&ctx->img, str_idx), (char *)pkt->data + 2,
-                                 JD_SERIAL_PAYLOAD_SIZE - 2,
+    unsigned fmtsize;
+    const char *fmt = devs_img_get_utf8(&ctx->img, fiber->pkt_data.logmsg.string_idx, &fmtsize);
+    unsigned sz = devs_strformat(fmt, fmtsize, (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
                                  fiber->activation->locals + fiber->pkt_data.logmsg.localsidx,
                                  fiber->pkt_data.logmsg.num_args, 0);
     pkt->data[0] = low_log_counter & 0xff;     // log-counter
@@ -365,7 +364,7 @@ static void devs_jd_update_all_regcache(devs_ctx_t *ctx, unsigned role_idx) {
 
 static const char *devs_jd_role_name(devs_ctx_t *ctx, unsigned idx) {
     const devs_role_desc_t *role = devs_img_get_role(&ctx->img, idx);
-    return devs_img_get_string_ptr(&ctx->img, role->name_idx);
+    return devs_img_get_utf8(&ctx->img, role->name_idx, NULL);
 }
 
 void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t *pkt) {

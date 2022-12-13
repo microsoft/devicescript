@@ -53,7 +53,7 @@ void *devs_vm_pop_arg_buffer_data(devs_ctx_t *ctx, unsigned *sz) {
 
 unsigned devs_vm_pop_arg_stridx(devs_ctx_t *ctx) {
     value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) != JACS_HANDLE_TYPE_IMG_BUFFER) {
+    if (devs_handle_type(tmp) != JACS_HANDLE_TYPE_IMG_BUFFERISH) {
         devs_runtime_failure(ctx, 60127);
         return 0;
     }

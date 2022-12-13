@@ -10,10 +10,6 @@ typedef struct devs_img {
     };
 } devs_img_t;
 
-static inline uint32_t devs_img_num_strings(const devs_img_t *img) {
-    return img->header->strings.length / sizeof(devs_img_section_t);
-}
-
 static inline uint32_t devs_img_num_roles(const devs_img_t *img) {
     return img->header->roles.length / sizeof(devs_role_desc_t);
 }
@@ -44,17 +40,6 @@ static inline value_t devs_img_get_float(const devs_img_t *img, uint32_t idx) {
     return v;
 }
 
-static inline const devs_img_section_t *devs_img_get_string(const devs_img_t *img, uint32_t idx) {
-    return (const devs_img_section_t *)(img->data + img->header->strings.start +
-                                        idx * sizeof(devs_img_section_t));
-}
-
-static inline const char *devs_img_get_string_ptr(const devs_img_t *img, uint32_t idx) {
-    return (const char *)(img->data + devs_img_get_string(img, idx)->start);
-}
-
-static inline unsigned devs_img_get_string_len(const devs_img_t *img, uint32_t idx) {
-    return devs_img_get_string(img, idx)->length;
-}
-
+const char *devs_img_get_utf8(const devs_img_t *img, uint32_t idx, unsigned *size);
 const char *devs_img_fun_name(const devs_img_t *img, unsigned fidx);
+bool devs_img_stridx_ok(devs_img_t img, uint32_t stridx);

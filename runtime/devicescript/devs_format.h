@@ -18,7 +18,9 @@ typedef struct {
     devs_img_section_t functions_data; // uint16_t[]
     devs_img_section_t float_literals; // value_t[]
     devs_img_section_t roles;          // devs_role_desc_t[]
-    devs_img_section_t strings;        // devs_img_section_t[]
+    devs_img_section_t ascii_strings;  // uint16_t[]
+    devs_img_section_t utf8_strings;   // devs_img_section_t[]
+    devs_img_section_t buffers;        // devs_img_section_t[]
     devs_img_section_t string_data;    // "strings" points in here
 } devs_img_header_t;
 

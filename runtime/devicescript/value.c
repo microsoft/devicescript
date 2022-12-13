@@ -156,15 +156,15 @@ bool devs_is_buffer(devs_ctx_t *ctx, value_t v) {
         return devs_handle_value(v) == JACS_SPECIAL_PKT_BUFFER;
     case JACS_HANDLE_TYPE_GC_OBJECT:
         return devs_gc_tag(devs_handle_ptr_value(ctx, v)) == JACS_GC_TAG_BUFFER;
-    case JACS_HANDLE_TYPE_IMG_BUFFER:
-        return true;
+    case JACS_HANDLE_TYPE_IMG_BUFFERISH:
+        return devs_bufferish_is_buffer(v);
     default:
         return false;
     }
 }
 
 bool devs_buffer_is_writable(devs_ctx_t *ctx, value_t v) {
-    return devs_is_buffer(ctx, v) && devs_handle_type(v) != JACS_HANDLE_TYPE_IMG_BUFFER;
+    return devs_is_buffer(ctx, v) && devs_handle_type(v) != JACS_HANDLE_TYPE_IMG_BUFFERISH;
 }
 
 void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
@@ -181,12 +181,10 @@ void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
             *sz = buf->length;
         return buf->data;
     }
-    case JACS_HANDLE_TYPE_IMG_BUFFER: {
+    case JACS_HANDLE_TYPE_IMG_BUFFERISH: {
+        // TODO optimize - we know it's a buffer in range
         unsigned idx = devs_handle_value(v);
-        JD_ASSERT(idx < devs_img_num_strings(&ctx->img));
-        if (sz)
-            *sz = devs_img_get_string_len(&ctx->img, idx);
-        return (void *)devs_img_get_string_ptr(&ctx->img, idx);
+        return (void *)devs_img_get_utf8(&ctx->img, idx, sz);
     }
     default:
         JD_ASSERT(0);
@@ -240,8 +238,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
             JD_ASSERT(0);
             return 0;
         }
-    case JACS_HANDLE_TYPE_IMG_BUFFER:
-        return JACS_OBJECT_TYPE_BUFFER;
+    case JACS_HANDLE_TYPE_IMG_BUFFERISH:
+        return devs_bufferish_is_buffer(v) ? JACS_OBJECT_TYPE_BUFFER : JACS_OBJECT_TYPE_STRING;
     case JACS_HANDLE_TYPE_ROLE:
         return JACS_OBJECT_TYPE_ROLE;
     default:
@@ -299,8 +297,8 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     case JACS_HANDLE_TYPE_FUNCTION:
         fmt = "fun";
         break;
-    case JACS_HANDLE_TYPE_IMG_BUFFER:
-        fmt = "buf";
+    case JACS_HANDLE_TYPE_IMG_BUFFERISH:
+        fmt = devs_bufferish_is_buffer(v) ? "buf" : "str";
         break;
     case JACS_HANDLE_TYPE_ROLE:
         fmt = "role";
