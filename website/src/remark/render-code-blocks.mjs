@@ -146,7 +146,7 @@ async function getOutput(config, input, lang, skipErr) {
         )
     }
 
-    debug(`${lang}: ${hash}, ${status}, ${error}`)
+    //debug(`${lang}: ${hash}, ${status}, ${error}`)
 
     const errorToReport = checkRuntimeError(
         langVersion,
