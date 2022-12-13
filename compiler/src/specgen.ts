@@ -74,9 +74,9 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
 
     // emit stats as attributes
     {
-        let cmt = `${info.name}\n`
-        const descr = info.notes["long"] || info.notes["short"]
-        if (descr) cmt += `${descr}\n\n`
+        let cmt = (info.notes["short"] || info.name) + "\n\n"
+        if (info.notes["long"])
+            cmt += "@remarks\n\n" + info.notes["long"] + "\n\n"
         if (!info.status || info.status === "experimental")
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
