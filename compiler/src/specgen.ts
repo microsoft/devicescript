@@ -90,6 +90,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
         if (pkt.derived || pkt.internal) continue // ???
         const cmt = addComment(pkt)
 
+        let kw = ""
         let tp = ""
 
         // if there's a startRepeats before last field, we don't put ... before it
@@ -112,6 +113,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
             .join(", ")
 
         if (isRegister(pkt.kind)) {
+            kw = "readonly "
             if (cmt.needsStruct) {
                 tp = `RegisterArray`
                 if (pkt.fields.length > 1) tp += ` & { ${fields} }`
@@ -121,15 +123,23 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
                 else tp = "RegisterNum"
             }
         } else if (pkt.kind == "event") {
+            kw = "readonly "
             tp = "Event"
         } else if (pkt.kind == "command") {
-            r += wrapComment("devs", cmt.comment)
+            r += wrapComment(
+                "devs",
+                cmt.comment +
+                    pkt.fields
+                        .filter(f => !!f)
+                        .map(f => `@param ${f.name} - ${f.unit}`)
+                        .join("\n")
+            )
             r += `    ${camelize(pkt.name)}(${fields}): void\n`
         }
 
         if (tp) {
             r += wrapComment("devs", cmt.comment)
-            r += `    ${camelize(pkt.name)}: ${tp}\n`
+            r += `    ${kw}${camelize(pkt.name)}: ${tp}\n`
         }
     }
 
