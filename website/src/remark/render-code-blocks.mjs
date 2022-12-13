@@ -146,7 +146,7 @@ async function getOutput(config, input, lang, skipErr) {
         )
     }
 
-    if (!status !== "success")
+    if (status !== "success")
         debug(`${lang}: ${hash}, ${status}, ${error}`)
 
     const errorToReport = checkRuntimeError(
