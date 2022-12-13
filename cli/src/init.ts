@@ -13,7 +13,7 @@ import { preludeFiles } from "@devicescript/compiler"
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"
 
-const optionalFiles: Record<string, any> = {
+const optionalFiles: Record<string, Object | string> = {
     "tsconfig.json": {
         compilerOptions: {
             moduleResolution: "node",
@@ -43,6 +43,36 @@ const optionalFiles: Record<string, any> = {
     ".vscode/extensions.json": {
         recommendations: ["esbenp.prettier-vscode"],
     },
+    "README.md": `# - project name -
+
+This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
+
+## Local/container development
+
+-  install node.js and dependencies
+
+\`\`\`bash
+yarn install
+\`\`\`
+
+-  prepare TypeScript support files
+
+\`\`\`bash
+yarn setup
+\`\`\`
+
+- launch developer server
+
+\`\`\`bash
+yarn watch
+\`\`\`
+
+-  navigate to devtools page (see terminal output) 
+to use the simulators or deploy to hardware.
+
+-  open \`main.ts\` in your favorite TypeScript IDE and start editing.
+
+`,
 }
 export interface InitOptions {
     force?: boolean
@@ -59,7 +89,9 @@ export default function init(options: InitOptions & CmdOptions) {
             debug(`write ${fn}`)
             const dn = dirname(fn)
             if (dn) ensureDirSync(dn)
-            writeJSONSync(fn, data, { spaces })
+            if (typeof data === "string")
+                writeFileSync(fn, data, { encoding: "utf8" })
+            else writeJSONSync(fn, data, { spaces })
         } else {
             debug(`skip ${fn}, already exists`)
         }
