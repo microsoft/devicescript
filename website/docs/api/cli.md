@@ -1,6 +1,5 @@
 ---
 sidebar_position: 200
-hide_table_of_contents: true
 ---
 
 # Command Line Interface
