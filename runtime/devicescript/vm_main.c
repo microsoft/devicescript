@@ -10,7 +10,7 @@ static inline uint8_t devs_vm_fetch_byte(devs_activation_t *frame, devs_ctx_t *c
 
 static inline int32_t devs_vm_fetch_int(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint8_t v = devs_vm_fetch_byte(frame, ctx);
-    if (v < JACS_FIRST_MULTIBYTE_INT)
+    if (v < DEVS_FIRST_MULTIBYTE_INT)
         return v;
 
     int32_t r = 0;
@@ -26,7 +26,7 @@ static inline int32_t devs_vm_fetch_int(devs_activation_t *frame, devs_ctx_t *ct
 }
 
 static inline void devs_vm_push(devs_ctx_t *ctx, value_t v) {
-    if (ctx->stack_top >= JACS_MAX_STACK_DEPTH)
+    if (ctx->stack_top >= DEVS_MAX_STACK_DEPTH)
         devs_runtime_failure(ctx, 60109);
     else
         ctx->the_stack[ctx->stack_top++] = v;
@@ -41,18 +41,18 @@ void devs_dump_stackframe(devs_ctx_t *ctx, devs_activation_t *fn) {
 static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
     uint8_t op = devs_vm_fetch_byte(frame, ctx);
 
-    if (op >= JACS_DIRECT_CONST_OP) {
-        int v = op - JACS_DIRECT_CONST_OP - JACS_DIRECT_CONST_OFFSET;
+    if (op >= DEVS_DIRECT_CONST_OP) {
+        int v = op - DEVS_DIRECT_CONST_OP - DEVS_DIRECT_CONST_OFFSET;
         devs_vm_push(ctx, devs_value_from_int(v));
         return;
     }
 
-    if (op >= JACS_OP_PAST_LAST) {
+    if (op >= DEVS_OP_PAST_LAST) {
         devs_runtime_failure(ctx, 60122);
     } else {
-        uint8_t flags = JACS_OP_PROPS[op];
+        uint8_t flags = DEVS_OP_PROPS[op];
 
-        if (flags & JACS_BYTECODEFLAG_TAKES_NUMBER) {
+        if (flags & DEVS_BYTECODEFLAG_TAKES_NUMBER) {
             ctx->jmp_pc = frame->pc - 1;
             ctx->literal_int = devs_vm_fetch_int(frame, ctx);
         }
@@ -61,7 +61,7 @@ static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
 
         // devs_dump_stackframe(ctx, frame);
 
-        if (flags & JACS_BYTECODEFLAG_IS_STMT) {
+        if (flags & DEVS_BYTECODEFLAG_IS_STMT) {
             ((devs_vm_stmt_handler_t)devs_vm_op_handlers[op])(frame, ctx);
             if (ctx->stack_top)
                 devs_runtime_failure(ctx, 60135);
@@ -73,16 +73,16 @@ static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
 }
 
 void devs_vm_exec_opcodes(devs_ctx_t *ctx) {
-    unsigned maxsteps = JACS_MAX_STEPS;
+    unsigned maxsteps = DEVS_MAX_STEPS;
 
     while (ctx->curr_fn && --maxsteps)
         devs_vm_exec_opcode(ctx, ctx->curr_fn);
 
     if (maxsteps == 0)
-        devs_panic(ctx, JACS_PANIC_TIMEOUT);
+        devs_panic(ctx, DEVS_PANIC_TIMEOUT);
 }
 
-static const char *builtin_strings[JACS_BUILTIN_STRING__SIZE] = {JACS_BUILTIN_STRING__VAL};
+static const char *builtin_strings[DEVS_BUILTIN_STRING__SIZE] = {DEVS_BUILTIN_STRING__VAL};
 const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
     if (!devs_img_stridx_ok(img, idx)) {
         if (size)
@@ -90,28 +90,28 @@ const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
         return NULL;
     }
 
-    unsigned tp = (uint16_t)idx >> JACS_STRIDX__SHIFT;
-    idx &= (1 << JACS_STRIDX__SHIFT) - 1;
+    unsigned tp = (uint16_t)idx >> DEVS_STRIDX__SHIFT;
+    idx &= (1 << DEVS_STRIDX__SHIFT) - 1;
 
     const char *r = NULL;
     const devs_img_section_t *sect = NULL;
 
     switch (tp) {
-    case JACS_STRIDX_UTF8:
+    case DEVS_STRIDX_UTF8:
         sect = (const devs_img_section_t *)(img.data + img.header->utf8_strings.start +
                                             idx * sizeof(devs_img_section_t));
         break;
-    case JACS_STRIDX_BUFFER:
+    case DEVS_STRIDX_BUFFER:
         sect = (const devs_img_section_t *)(img.data + img.header->buffers.start +
                                             idx * sizeof(devs_img_section_t));
         break;
-    case JACS_STRIDX_BUILTIN:
+    case DEVS_STRIDX_BUILTIN:
         r = builtin_strings[idx];
         break;
-    case JACS_STRIDX_ASCII: {
-        JD_ASSERT(JACS_ASCII_HEADER_SIZE == sizeof(uint16_t));
+    case DEVS_STRIDX_ASCII: {
+        JD_ASSERT(DEVS_ASCII_HEADER_SIZE == sizeof(uint16_t));
         uint16_t off = *(uint16_t *)(img.data + img.header->ascii_strings.start +
-                                     idx * JACS_ASCII_HEADER_SIZE);
+                                     idx * DEVS_ASCII_HEADER_SIZE);
         r = (const char *)(img.data + img.header->string_data.start + off);
     } break;
     default:

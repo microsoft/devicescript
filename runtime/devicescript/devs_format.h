@@ -12,7 +12,7 @@ typedef struct {
     uint32_t magic1;
     uint32_t version;
     uint16_t num_globals;
-    uint8_t reserved[JACS_FIX_HEADER_SIZE - 4 - 4 - 4 - 2];
+    uint8_t reserved[DEVS_FIX_HEADER_SIZE - 4 - 4 - 4 - 2];
 
     devs_img_section_t functions;      // devs_function_desc_t[]
     devs_img_section_t functions_data; // uint16_t[]

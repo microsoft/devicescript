@@ -27,7 +27,7 @@ uint32_t devs_vm_pop_arg_i32(devs_ctx_t *ctx) {
 
 uint32_t devs_vm_pop_arg_func(devs_ctx_t *ctx) {
     value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) == JACS_HANDLE_TYPE_FUNCTION)
+    if (devs_handle_type(tmp) == DEVS_HANDLE_TYPE_FUNCTION)
         return devs_handle_value(tmp);
     devs_runtime_failure(ctx, 60136);
     return 0;
@@ -53,7 +53,7 @@ void *devs_vm_pop_arg_buffer_data(devs_ctx_t *ctx, unsigned *sz) {
 
 unsigned devs_vm_pop_arg_stridx(devs_ctx_t *ctx) {
     value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) != JACS_HANDLE_TYPE_IMG_BUFFERISH) {
+    if (devs_handle_type(tmp) != DEVS_HANDLE_TYPE_IMG_BUFFERISH) {
         devs_runtime_failure(ctx, 60127);
         return 0;
     }
@@ -62,7 +62,7 @@ unsigned devs_vm_pop_arg_stridx(devs_ctx_t *ctx) {
 
 unsigned devs_vm_pop_arg_role(devs_ctx_t *ctx) {
     value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) != JACS_HANDLE_TYPE_ROLE) {
+    if (devs_handle_type(tmp) != DEVS_HANDLE_TYPE_ROLE) {
         devs_runtime_failure(ctx, 60126);
         return 0;
     }
@@ -71,7 +71,7 @@ unsigned devs_vm_pop_arg_role(devs_ctx_t *ctx) {
 
 devs_map_t *devs_vm_pop_arg_map(devs_ctx_t *ctx, bool create) {
     value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) != JACS_HANDLE_TYPE_GC_OBJECT) {
+    if (devs_handle_type(tmp) != DEVS_HANDLE_TYPE_GC_OBJECT) {
         devs_runtime_failure(ctx, 60128);
         return NULL;
     }
@@ -80,13 +80,13 @@ devs_map_t *devs_vm_pop_arg_map(devs_ctx_t *ctx, bool create) {
     devs_map_t **attached;
 
     switch (devs_gc_tag(obj)) {
-    case JACS_GC_TAG_BUFFER:
+    case DEVS_GC_TAG_BUFFER:
         attached = &((devs_buffer_t *)obj)->attached;
         break;
-    case JACS_GC_TAG_ARRAY:
+    case DEVS_GC_TAG_ARRAY:
         attached = &((devs_array_t *)obj)->attached;
         break;
-    case JACS_GC_TAG_MAP:
+    case DEVS_GC_TAG_MAP:
         return obj;
     default:
         JD_ASSERT(0);

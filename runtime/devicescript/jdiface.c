@@ -16,8 +16,8 @@ void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
     if (serv != NULL) {
         devs_regcache_entry_t *cached = devs_regcache_lookup(&ctx->regcache, role_idx, code, arg);
         if (cached != NULL) {
-            if (!timeout || timeout > JACS_MAX_REG_VALIDITY)
-                timeout = JACS_MAX_REG_VALIDITY;
+            if (!timeout || timeout > DEVS_MAX_REG_VALIDITY)
+                timeout = DEVS_MAX_REG_VALIDITY;
             // DMESG("cached cmd=%x %d < %d", code, cached->last_refresh_time + timeout,
             //      devs_now(ctx));
             if (cached->last_refresh_time + timeout < devs_now(ctx)) {
@@ -41,7 +41,7 @@ void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
     JD_ASSERT(fib != NULL);
     fib->role_idx = role_idx;
     fib->service_command = code;
-    fib->pkt_kind = JACS_PKT_KIND_REG_GET;
+    fib->pkt_kind = DEVS_PKT_KIND_REG_GET;
     fib->pkt_data.reg_get.string_idx = arg;
     fib->pkt_data.reg_get.resend_timeout = 20;
 
@@ -51,13 +51,13 @@ void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
 
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib) {
     switch (fib->pkt_kind) {
-    case JACS_PKT_KIND_SEND_PKT:
+    case DEVS_PKT_KIND_SEND_PKT:
         devs_free(fib->ctx, fib->pkt_data.send_pkt.data);
         break;
     default:
         break;
     }
-    fib->pkt_kind = JACS_PKT_KIND_NONE;
+    fib->pkt_kind = DEVS_PKT_KIND_NONE;
 }
 
 void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
@@ -85,7 +85,7 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     fib->service_command = code;
 
     unsigned sz = ctx->packet.service_size;
-    fib->pkt_kind = JACS_PKT_KIND_SEND_PKT;
+    fib->pkt_kind = DEVS_PKT_KIND_SEND_PKT;
     fib->pkt_data.send_pkt.data = devs_try_alloc(ctx, sz);
     if (fib->pkt_data.send_pkt.data != NULL) {
         fib->pkt_data.send_pkt.size = sz;
@@ -102,9 +102,9 @@ void devs_jd_send_logmsg(devs_ctx_t *ctx, unsigned string_idx, unsigned localsid
     devs_fiber_t *fib = ctx->curr_fiber;
     JD_ASSERT(fib != NULL);
 
-    fib->role_idx = JACS_NO_ROLE;
+    fib->role_idx = DEVS_NO_ROLE;
 
-    fib->pkt_kind = JACS_PKT_KIND_LOGMSG;
+    fib->pkt_kind = DEVS_PKT_KIND_LOGMSG;
     fib->service_command = ctx->log_counter & 0xffff;
     ctx->log_counter++;
     fib->pkt_data.logmsg.string_idx = string_idx;
@@ -305,7 +305,7 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
     if (print)
         DMESG("JSCR: %s", pkt->data + 2);
 
-    if (!(ctx->flags & JACS_CTX_LOGGING_ENABLED))
+    if (!(ctx->flags & DEVS_CTX_LOGGING_ENABLED))
         return RESUME_USER_CODE;
 
     if (send_now) {
@@ -323,17 +323,17 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
 }
 
 bool devs_jd_should_run(devs_fiber_t *fiber) {
-    if (fiber->pkt_kind == JACS_PKT_KIND_NONE)
+    if (fiber->pkt_kind == DEVS_PKT_KIND_NONE)
         return RESUME_USER_CODE;
 
     switch (fiber->pkt_kind) {
-    case JACS_PKT_KIND_REG_GET:
+    case DEVS_PKT_KIND_REG_GET:
         return handle_reg_get(fiber);
 
-    case JACS_PKT_KIND_SEND_PKT:
+    case DEVS_PKT_KIND_SEND_PKT:
         return handle_send_pkt(fiber);
 
-    case JACS_PKT_KIND_LOGMSG:
+    case DEVS_PKT_KIND_LOGMSG:
         return handle_logmsg(fiber, false);
 
     default:
@@ -395,13 +395,13 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
 }
 
 void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role) {
-    if (ctx->flags & JACS_CTX_FREEING_ROLES)
+    if (ctx->flags & DEVS_CTX_FREEING_ROLES)
         return;
 
     if (devs_trace_enabled(ctx)) {
         unsigned sz = rolemgr_serialized_role_size(role);
         void *data = rolemgr_serialize_role(role);
-        devs_trace(ctx, JACS_TRACE_EV_ROLE_CHANGED, data, sz);
+        devs_trace(ctx, DEVS_TRACE_EV_ROLE_CHANGED, data, sz);
     }
 
     unsigned numroles = devs_img_num_roles(ctx->img);
@@ -433,16 +433,16 @@ void devs_jd_init_roles(devs_ctx_t *ctx) {
 }
 
 void devs_jd_free_roles(devs_ctx_t *ctx) {
-    ctx->flags |= JACS_CTX_FREEING_ROLES;
+    ctx->flags |= DEVS_CTX_FREEING_ROLES;
     jd_role_free_all();
-    ctx->flags &= ~JACS_CTX_FREEING_ROLES;
+    ctx->flags &= ~DEVS_CTX_FREEING_ROLES;
 }
 
 void devs_set_logging(devs_ctx_t *ctx, uint8_t logging) {
     if (logging)
-        ctx->flags |= JACS_CTX_LOGGING_ENABLED;
+        ctx->flags |= DEVS_CTX_LOGGING_ENABLED;
     else {
-        ctx->flags &= ~JACS_CTX_LOGGING_ENABLED;
+        ctx->flags &= ~DEVS_CTX_LOGGING_ENABLED;
         ctx->log_counter_to_send = ctx->log_counter;
     }
 }

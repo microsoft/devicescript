@@ -19,16 +19,16 @@
 #include "devs_objects.h"
 
 // this can't be more than a week; unit = ms
-#define JACS_MAX_REG_VALIDITY (15 * 60 * 1000)
-#define JACS_MAX_STEPS (128 * 1024)
-#define JACS_NO_ROLE 0xffff
+#define DEVS_MAX_REG_VALIDITY (15 * 60 * 1000)
+#define DEVS_MAX_STEPS (128 * 1024)
+#define DEVS_NO_ROLE 0xffff
 
 typedef struct devs_activation devs_activation_t;
 
-#define JACS_PKT_KIND_NONE 0
-#define JACS_PKT_KIND_REG_GET 1
-#define JACS_PKT_KIND_SEND_PKT 2
-#define JACS_PKT_KIND_LOGMSG 3
+#define DEVS_PKT_KIND_NONE 0
+#define DEVS_PKT_KIND_REG_GET 1
+#define DEVS_PKT_KIND_SEND_PKT 2
+#define DEVS_PKT_KIND_LOGMSG 3
 
 typedef struct devs_fiber {
     struct devs_fiber *next;
@@ -70,10 +70,10 @@ typedef struct devs_fiber {
     struct devs_ctx *ctx;
 } devs_fiber_t;
 
-#define JACS_CTX_FLAG_BUSY 0x0001
-#define JACS_CTX_LOGGING_ENABLED 0x0002
-#define JACS_CTX_FREEING_ROLES 0x0004
-#define JACS_CTX_TRACE_DISABLED 0x0008
+#define DEVS_CTX_FLAG_BUSY 0x0001
+#define DEVS_CTX_LOGGING_ENABLED 0x0002
+#define DEVS_CTX_FREEING_ROLES 0x0004
+#define DEVS_CTX_TRACE_DISABLED 0x0008
 
 struct devs_ctx {
     value_t *globals;
@@ -90,7 +90,7 @@ struct devs_ctx {
     uint8_t stack_top;
     uint8_t stack_top_for_gc;
     uint32_t literal_int;
-    value_t the_stack[JACS_MAX_STACK_DEPTH];
+    value_t the_stack[DEVS_MAX_STACK_DEPTH];
 
     devs_img_t img;
 
@@ -138,7 +138,7 @@ static inline uint32_t devs_now(devs_ctx_t *ctx) {
     return (uint32_t)ctx->_now_long;
 }
 static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
-    return (ctx->flags & JACS_CTX_TRACE_DISABLED) == 0;
+    return (ctx->flags & DEVS_CTX_TRACE_DISABLED) == 0;
 }
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);

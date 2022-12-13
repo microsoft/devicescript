@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#define JACS_NUM_FMT(fmt, shift) ((fmt) | ((shift) << 4))
+#define DEVS_NUM_FMT(fmt, shift) ((fmt) | ((shift) << 4))
 typedef struct {
     const char *name;
     uint32_t service_class;

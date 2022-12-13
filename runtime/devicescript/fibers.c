@@ -5,7 +5,7 @@
 void devs_fiber_yield(devs_ctx_t *ctx) {
     if (ctx->curr_fn && devs_trace_enabled(ctx)) {
         devs_trace_ev_fiber_yield_t ev = {.pc = ctx->curr_fn->pc};
-        devs_trace(ctx, JACS_TRACE_EV_FIBER_YIELD, &ev, sizeof(ev));
+        devs_trace(ctx, DEVS_TRACE_EV_FIBER_YIELD, &ev, sizeof(ev));
     }
 
     ctx->curr_fn = NULL;
@@ -157,15 +157,15 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned fidx, value_t *params, 
 
     devs_fiber_t *fiber;
 
-    if (op != JACS_OPCALL_BG) {
+    if (op != DEVS_OPCALL_BG) {
         fiber = devs_fiber_by_fidx(ctx, fidx);
         if (fiber) {
-            if (op == JACS_OPCALL_BG_MAX1_REPLACE) {
+            if (op == DEVS_OPCALL_BG_MAX1_REPLACE) {
                 devs_fiber_termiante(fiber);
-            } else if (op == JACS_OPCALL_BG_MAX1_PEND1) {
+            } else if (op == DEVS_OPCALL_BG_MAX1_PEND1) {
                 fiber->pending = 1;
                 return fiber;
-            } else if (op == JACS_OPCALL_BG_MAX1) {
+            } else if (op == DEVS_OPCALL_BG_MAX1) {
                 return fiber;
             } else {
                 JD_PANIC();
@@ -216,7 +216,7 @@ void devs_fiber_run(devs_fiber_t *fiber) {
         return;
 
     devs_jd_clear_pkt_kind(fiber);
-    fiber->role_idx = JACS_NO_ROLE;
+    fiber->role_idx = DEVS_NO_ROLE;
     devs_fiber_set_wake_time(fiber, 0);
 
     ctx->curr_fiber = fiber;
@@ -224,7 +224,7 @@ void devs_fiber_run(devs_fiber_t *fiber) {
 
     if (devs_trace_enabled(ctx)) {
         devs_trace_ev_fiber_run_t ev = {.pc = fiber->activation->pc};
-        devs_trace(ctx, JACS_TRACE_EV_FIBER_RUN, &ev, sizeof(ev));
+        devs_trace(ctx, DEVS_TRACE_EV_FIBER_RUN, &ev, sizeof(ev));
     }
 
     devs_vm_exec_opcodes(ctx);
@@ -233,18 +233,18 @@ void devs_fiber_run(devs_fiber_t *fiber) {
 void devs_panic(devs_ctx_t *ctx, unsigned code) {
     unsigned orig_code = code;
     if (!code)
-        code = JACS_PANIC_REBOOT;
+        code = DEVS_PANIC_REBOOT;
     if (!ctx->error_code) {
         ctx->error_pc = ctx->curr_fn ? ctx->curr_fn->pc : 0;
         // using DMESG here since this logging should never be disabled
-        if (code == JACS_PANIC_REBOOT) {
+        if (code == DEVS_PANIC_REBOOT) {
             DMESG("RESTART requested");
         } else {
             DMESG("PANIC %d at pc=%d", code, ctx->error_pc);
         }
         ctx->error_code = code;
 
-        if (code != JACS_PANIC_REBOOT)
+        if (code != DEVS_PANIC_REBOOT)
             for (devs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
                 int idx = fn->func - devs_img_get_function(ctx->img, 0);
                 DMESG("  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),

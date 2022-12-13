@@ -6,11 +6,11 @@
 #include "jacdac/dist/c/devicescriptmanager.h"
 #include "jacdac/dist/c/timeseriesaggregator.h"
 
-#define JACS_PANIC_REBOOT 60000
-#define JACS_PANIC_TIMEOUT 60001
-#define JACS_PANIC_INTERNAL_ERROR 60002
-#define JACS_PANIC_RUNTIME_FAILURE 60003
-#define JACS_PANIC_OOM 60004
+#define DEVS_PANIC_REBOOT 60000
+#define DEVS_PANIC_TIMEOUT 60001
+#define DEVS_PANIC_INTERNAL_ERROR 60002
+#define DEVS_PANIC_RUNTIME_FAILURE 60003
+#define DEVS_PANIC_OOM 60004
 
 typedef struct devs_ctx devs_ctx_t;
 
@@ -30,7 +30,7 @@ void devs_set_logging(devs_ctx_t *ctx, uint8_t logging);
 void devs_panic_handler(int exitcode);
 void devs_deploy_handler(int exitcode);
 
-#define JACS_FLAG_GC_STRESS (1U << 0)
+#define DEVS_FLAG_GC_STRESS (1U << 0)
 
 void devs_set_global_flags(uint32_t global_flags);
 void devs_reset_global_flags(uint32_t global_flags);

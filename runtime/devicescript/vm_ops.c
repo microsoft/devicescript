@@ -132,7 +132,7 @@ static void stmt3_array_insert(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t seq = devs_vm_pop_arg(ctx);
 
     devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
-    if (devs_gc_tag(arr) == JACS_GC_TAG_ARRAY) {
+    if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {
         if (devs_array_insert(ctx, arr, idx, count))
             devs_runtime_failure(ctx, 60138);
     } else {
@@ -223,11 +223,11 @@ static void stmtx3_call_bg(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t numargs = devs_vm_pop_arg_u32(ctx);
     uint32_t localidx = ctx->literal_int;
 
-    if (flag == 0 || flag > JACS_OPCALL_BG_MAX1_REPLACE)
+    if (flag == 0 || flag > DEVS_OPCALL_BG_MAX1_REPLACE)
         devs_runtime_failure(ctx, 60137);
     else if (devs_vm_args_ok(frame, localidx, numargs)) {
         devs_fiber_t *fib = devs_fiber_start(ctx, fidx, frame->locals + localidx, numargs, flag);
-        frame->fiber->ret_val = devs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fib->handle_tag);
+        frame->fiber->ret_val = devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, fib->handle_tag);
     }
 }
 
@@ -297,7 +297,7 @@ static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
     frame->fiber->ret_val = devs_undefined;
     if (devs_is_nullish(h))
         return;
-    if (devs_handle_type(h) != JACS_HANDLE_TYPE_FIBER)
+    if (devs_handle_type(h) != DEVS_HANDLE_TYPE_FIBER)
         devs_runtime_failure(ctx, 60123);
     else {
         devs_fiber_t *fib = devs_fiber_by_tag(ctx, devs_handle_value(h));
@@ -425,12 +425,12 @@ static value_t expr1_get_fiber_handle(devs_activation_t *frame, devs_ctx_t *ctx)
 
     if (devs_is_nullish(func))
         fiber = frame->fiber;
-    else if (devs_handle_type(func) == JACS_HANDLE_TYPE_FUNCTION)
+    else if (devs_handle_type(func) == DEVS_HANDLE_TYPE_FUNCTION)
         fiber = devs_fiber_by_fidx(ctx, devs_handle_value(func));
 
     if (fiber == NULL)
         return devs_undefined;
-    return devs_value_from_handle(JACS_HANDLE_TYPE_FIBER, fiber->handle_tag);
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, fiber->handle_tag);
 }
 
 static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -440,7 +440,7 @@ static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) 
         devs_runtime_failure(ctx, 60114);
         return devs_undefined;
     } else {
-        return devs_value_from_handle(JACS_HANDLE_TYPE_FUNCTION, fidx);
+        return devs_value_from_handle(DEVS_HANDLE_TYPE_FUNCTION, fidx);
     }
 }
 
@@ -455,32 +455,32 @@ static value_t exprx_static_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned idx = ctx->literal_int;
     if (!devs_vm_role_ok(ctx, idx))
         return devs_undefined;
-    return devs_value_from_handle(JACS_HANDLE_TYPE_ROLE, idx);
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, idx);
 }
 
 static value_t static_something(devs_ctx_t *ctx, unsigned tp) {
-    uint32_t v = (tp << JACS_STRIDX__SHIFT) | ctx->literal_int;
+    uint32_t v = (tp << DEVS_STRIDX__SHIFT) | ctx->literal_int;
     if (!devs_img_stridx_ok(ctx->img, v)) {
         devs_runtime_failure(ctx, 60112);
         return devs_undefined;
     }
-    return devs_value_from_handle(JACS_HANDLE_TYPE_IMG_BUFFERISH, v);
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_IMG_BUFFERISH, v);
 }
 
 static value_t exprx_static_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return static_something(ctx, JACS_STRIDX_BUFFER);
+    return static_something(ctx, DEVS_STRIDX_BUFFER);
 }
 
 static value_t exprx_static_ascii_string(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return static_something(ctx, JACS_STRIDX_ASCII);
+    return static_something(ctx, DEVS_STRIDX_ASCII);
 }
 
 static value_t exprx_static_utf8_string(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return static_something(ctx, JACS_STRIDX_UTF8);
+    return static_something(ctx, DEVS_STRIDX_UTF8);
 }
 
 static value_t exprx_static_builtin_string(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return static_something(ctx, JACS_STRIDX_BUILTIN);
+    return static_something(ctx, DEVS_STRIDX_BUILTIN);
 }
 
 static value_t exprx1_get_field(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -504,7 +504,7 @@ static value_t expr1_object_length(devs_activation_t *frame, devs_ctx_t *ctx) {
         devs_buffer_data(ctx, arr, &len);
     } else {
         devs_gc_object_t *obj = devs_value_to_gc_obj(ctx, arr);
-        if (devs_gc_tag(obj) == JACS_GC_TAG_ARRAY)
+        if (devs_gc_tag(obj) == DEVS_GC_TAG_ARRAY)
             len = ((devs_array_t *)obj)->length;
         else
             return devs_zero;
@@ -534,7 +534,7 @@ static value_t expr0_pkt_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t expr1_is_null(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t obj = devs_vm_pop_arg(ctx);
-    if (devs_is_special(obj) && devs_handle_value(obj) == JACS_SPECIAL_NULL)
+    if (devs_is_special(obj) && devs_handle_value(obj) == DEVS_SPECIAL_NULL)
         return devs_true;
     else
         return devs_false;
@@ -607,7 +607,7 @@ static value_t expr1_id(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t expr1_is_nan(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
-    return devs_value_from_bool(v.exp_sign == JACS_NAN_TAG);
+    return devs_value_from_bool(v.exp_sign == DEVS_NAN_TAG);
 }
 
 static value_t expr1_log_e(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -822,4 +822,4 @@ static value_t expr2_min(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 #endif
 
-const void *devs_vm_op_handlers[JACS_OP_PAST_LAST + 1] = {JACS_OP_HANDLERS};
+const void *devs_vm_op_handlers[DEVS_OP_PAST_LAST + 1] = {DEVS_OP_HANDLERS};

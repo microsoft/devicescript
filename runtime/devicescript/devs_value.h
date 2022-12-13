@@ -17,16 +17,16 @@ typedef union {
     };
 } value_t;
 
-#define JACS_INT_TAG (0U - 1U)
-#define JACS_NAN_TAG 0x7ff80000
-#define JACS_HANDLE_TAG 0x7ff00000
+#define DEVS_INT_TAG (0U - 1U)
+#define DEVS_NAN_TAG 0x7ff80000
+#define DEVS_HANDLE_TAG 0x7ff00000
 
 static inline bool devs_is_tagged_int(value_t t) {
     return (t.exp_sign + 1) == 0;
 }
 
 static inline bool devs_is_nan(value_t t) {
-    return t.exp_sign == JACS_NAN_TAG;
+    return t.exp_sign == DEVS_NAN_TAG;
 }
 
 static inline bool devs_is_handle(value_t t) {
@@ -52,37 +52,37 @@ static inline void *devs_handle_ptr_value(devs_ctx_t *ctx, value_t t) {
 
 static inline value_t devs_value_from_handle(int type, uint32_t value) {
     value_t r;
-    r.exp_sign = JACS_HANDLE_TAG + type;
+    r.exp_sign = DEVS_HANDLE_TAG + type;
     r.mantisa32 = value;
     return r;
 }
 
-#define JACS_HANDLE_GC_MASK 0x80
-#define JACS_HANDLE_IMG_MASK 0x40 // TODO remove this?
+#define DEVS_HANDLE_GC_MASK 0x80
+#define DEVS_HANDLE_IMG_MASK 0x40 // TODO remove this?
 
-#define JACS_HANDLE_TYPE_FLOAT64 0x00
-#define JACS_HANDLE_TYPE_SPECIAL 0x01
-#define JACS_HANDLE_TYPE_FIBER 0x02
-#define JACS_HANDLE_TYPE_GC_OBJECT (JACS_HANDLE_GC_MASK | 0x03)
-#define JACS_HANDLE_TYPE_IMG_BUFFERISH 0x04
-#define JACS_HANDLE_TYPE_ROLE 0x05
-#define JACS_HANDLE_TYPE_FUNCTION 0x06
+#define DEVS_HANDLE_TYPE_FLOAT64 0x00
+#define DEVS_HANDLE_TYPE_SPECIAL 0x01
+#define DEVS_HANDLE_TYPE_FIBER 0x02
+#define DEVS_HANDLE_TYPE_GC_OBJECT (DEVS_HANDLE_GC_MASK | 0x03)
+#define DEVS_HANDLE_TYPE_IMG_BUFFERISH 0x04
+#define DEVS_HANDLE_TYPE_ROLE 0x05
+#define DEVS_HANDLE_TYPE_FUNCTION 0x06
 
-#define JACS_SPECIAL_NULL 0 // has to be zero! NULL is represented as all zero
-#define JACS_SPECIAL_FALSE 1
-#define JACS_SPECIAL_TRUE 0x40
-#define JACS_SPECIAL_PKT_BUFFER 0x41
+#define DEVS_SPECIAL_NULL 0 // has to be zero! NULL is represented as all zero
+#define DEVS_SPECIAL_FALSE 1
+#define DEVS_SPECIAL_TRUE 0x40
+#define DEVS_SPECIAL_PKT_BUFFER 0x41
 
 static inline bool devs_is_null(value_t t) {
     return t.u64 == 0;
 }
 
 static inline bool devs_bufferish_is_buffer(value_t v) {
-    return (devs_handle_value(v) >> JACS_STRIDX__SHIFT) == JACS_STRIDX_BUFFER;
+    return (devs_handle_value(v) >> DEVS_STRIDX__SHIFT) == DEVS_STRIDX_BUFFER;
 }
 
 static inline bool devs_is_special(value_t t) {
-    return devs_is_null(t) || (t.exp_sign == JACS_HANDLE_TAG + JACS_HANDLE_TYPE_SPECIAL);
+    return devs_is_null(t) || (t.exp_sign == DEVS_HANDLE_TAG + DEVS_HANDLE_TYPE_SPECIAL);
 }
 
 bool devs_is_nullish(value_t t);
@@ -92,14 +92,14 @@ value_t devs_value_from_int(int v);
 value_t devs_value_from_bool(int v);
 value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr);
 static inline value_t devs_value_from_gc_obj(devs_ctx_t *ctx, void *ptr) {
-    return devs_value_from_pointer(ctx, JACS_HANDLE_TYPE_GC_OBJECT, ptr);
+    return devs_value_from_pointer(ctx, DEVS_HANDLE_TYPE_GC_OBJECT, ptr);
 }
 
 int32_t devs_value_to_int(value_t v);
 double devs_value_to_double(value_t v);
 bool devs_value_to_bool(value_t v);
 
-// returns one of JACS_OBJECT_TYPE_*
+// returns one of DEVS_OBJECT_TYPE_*
 unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v);
 
 extern const value_t devs_zero;

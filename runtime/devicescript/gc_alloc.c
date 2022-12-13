@@ -8,10 +8,10 @@
 
 #define ROOT_SCAN_DEPTH 10
 
-#define GET_TAG(p) ((p) >> JACS_GC_TAG_POS)
-#define BASIC_TAG(p) (GET_TAG(p) & JACS_GC_TAG_MASK)
+#define GET_TAG(p) ((p) >> DEVS_GC_TAG_POS)
+#define BASIC_TAG(p) (GET_TAG(p) & DEVS_GC_TAG_MASK)
 
-#define IS_FREE(header) (BASIC_TAG(header) == JACS_GC_TAG_FREE)
+#define IS_FREE(header) (BASIC_TAG(header) == DEVS_GC_TAG_FREE)
 
 #define BLOCK_SIZE(p) ((p)&0xffffff)
 
@@ -36,7 +36,7 @@ typedef struct _devs_gc_block_t {
 
 typedef struct _devs_gc_chunk_t {
     struct _devs_gc_chunk_t *next;
-    block_t *end; // GET_TAG(end) == JACS_GC_TAG_FINAL
+    block_t *end; // GET_TAG(end) == DEVS_GC_TAG_FINAL
     block_t start[0];
 } chunk_t;
 
@@ -48,7 +48,7 @@ struct _devs_gc_t {
 };
 
 static inline void mark_block(block_t *block, uint8_t tag, unsigned size) {
-    block->header = size | ((uintptr_t)tag << JACS_GC_TAG_POS);
+    block->header = size | ((uintptr_t)tag << DEVS_GC_TAG_POS);
 }
 
 static inline uintptr_t *block_ptr(block_t *block) {
@@ -60,8 +60,8 @@ void devs_gc_add_chunk(devs_gc_t *gc, void *start, unsigned size) {
     chunk_t *ch = start;
     ch->end =
         (block_t *)(((uintptr_t)((uint8_t *)start + size) & ~(JD_PTRSIZE - 1)) - sizeof(uintptr_t));
-    mark_block(ch->end, JACS_GC_TAG_FINAL, 1);
-    mark_block(ch->start, JACS_GC_TAG_FREE, block_ptr(ch->end) - block_ptr(ch->start));
+    mark_block(ch->end, DEVS_GC_TAG_FINAL, 1);
+    mark_block(ch->start, DEVS_GC_TAG_FREE, block_ptr(ch->end) - block_ptr(ch->start));
     ch->next = gc->first_chunk;
     gc->first_chunk = ch;
 }
@@ -69,7 +69,7 @@ void devs_gc_add_chunk(devs_gc_t *gc, void *start, unsigned size) {
 static void scan(devs_ctx_t *ctx, block_t *block, int depth);
 
 static void scan_value(devs_ctx_t *ctx, value_t v, int depth) {
-    if (devs_handle_type(v) & JACS_HANDLE_GC_MASK) {
+    if (devs_handle_type(v) & DEVS_HANDLE_GC_MASK) {
         block_t *b = devs_handle_ptr_value(ctx, v);
         if (b)
             scan(ctx, b, depth);
@@ -85,9 +85,9 @@ static void scan_array(devs_ctx_t *ctx, value_t *vals, unsigned length, int dept
 static void mark_ptr(devs_ctx_t *ctx, void *ptr) {
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
-    JD_ASSERT((GET_TAG(b->header) & JACS_GC_TAG_MASK_SCANNED) == 0);
-    JD_ASSERT(BASIC_TAG(b->header) == JACS_GC_TAG_BYTES);
-    b->header |= (uintptr_t)JACS_GC_TAG_MASK_SCANNED << JACS_GC_TAG_POS;
+    JD_ASSERT((GET_TAG(b->header) & DEVS_GC_TAG_MASK_SCANNED) == 0);
+    JD_ASSERT(BASIC_TAG(b->header) == DEVS_GC_TAG_BYTES);
+    b->header |= (uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS;
 }
 
 static void scan_array_and_mark(devs_ctx_t *ctx, value_t *vals, unsigned length, int depth) {
@@ -106,32 +106,32 @@ static void scan_map(devs_ctx_t *ctx, devs_map_t *map, int depth) {
 static void scan(devs_ctx_t *ctx, block_t *block, int depth) {
     uintptr_t header = block->header;
 
-    if (IS_FREE(header) || GET_TAG(header) & JACS_GC_TAG_MASK_SCANNED)
+    if (IS_FREE(header) || GET_TAG(header) & DEVS_GC_TAG_MASK_SCANNED)
         return;
 
     if (depth <= 0) {
         LOG("mark pending");
-        block->header |= (uintptr_t)JACS_GC_TAG_MASK_PENDING << JACS_GC_TAG_POS;
+        block->header |= (uintptr_t)DEVS_GC_TAG_MASK_PENDING << DEVS_GC_TAG_POS;
         return;
     }
 
-    block->header |= (uintptr_t)JACS_GC_TAG_MASK_SCANNED << JACS_GC_TAG_POS;
-    block->header &= ~((uintptr_t)JACS_GC_TAG_MASK_PENDING << JACS_GC_TAG_POS);
+    block->header |= (uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS;
+    block->header &= ~((uintptr_t)DEVS_GC_TAG_MASK_PENDING << DEVS_GC_TAG_POS);
 
     depth--;
 
     switch (BASIC_TAG(header)) {
-    case JACS_GC_TAG_BUFFER:
+    case DEVS_GC_TAG_BUFFER:
         scan_map(ctx, block->buffer.attached, depth);
         break;
-    case JACS_GC_TAG_MAP:
+    case DEVS_GC_TAG_MAP:
         scan_map(ctx, &block->map, depth);
         break;
-    case JACS_GC_TAG_ARRAY:
+    case DEVS_GC_TAG_ARRAY:
         scan_map(ctx, block->array.attached, depth);
         scan_array_and_mark(ctx, block->array.data, block->array.length, depth);
         break;
-    case JACS_GC_TAG_BYTES:
+    case DEVS_GC_TAG_BYTES:
         break;
     default:
         JD_PANIC();
@@ -167,8 +167,8 @@ static inline block_t *next_block(block_t *block) {
 
 static inline bool can_free(uintptr_t header) {
     uint8_t tag = GET_TAG(header);
-    return tag == JACS_GC_TAG_FREE ||
-           (tag & (JACS_GC_TAG_MASK_SCANNED | JACS_GC_TAG_MASK_PINNED)) == 0;
+    return tag == DEVS_GC_TAG_FREE ||
+           (tag & (DEVS_GC_TAG_MASK_SCANNED | DEVS_GC_TAG_MASK_PINNED)) == 0;
 }
 
 static void sweep(devs_gc_t *gc) {
@@ -181,14 +181,14 @@ static void sweep(devs_gc_t *gc) {
         for (chunk_t *chunk = gc->first_chunk; chunk; chunk = chunk->next) {
             for (block_t *block = chunk->start;; block = next_block(block)) {
                 uintptr_t header = block->header;
-                if (GET_TAG(header) == JACS_GC_TAG_FINAL)
+                if (GET_TAG(header) == DEVS_GC_TAG_FINAL)
                     break;
                 JD_ASSERT(block < chunk->end);
 
                 if (!sweep)
                     LOG("p=%x tag=%x", devs_show_addr(gc, block), (unsigned)GET_TAG(header));
 
-                if (GET_TAG(header) & JACS_GC_TAG_MASK_PENDING) {
+                if (GET_TAG(header) & DEVS_GC_TAG_MASK_PENDING) {
                     JD_ASSERT(!sweep);
                     if (!had_pending)
                         LOG("set pending");
@@ -197,13 +197,13 @@ static void sweep(devs_gc_t *gc) {
                 } else if (sweep) {
                     block_t *p = block;
                     while (can_free(p->header)) {
-                        if (GET_TAG(p->header) != JACS_GC_TAG_FREE)
+                        if (GET_TAG(p->header) != DEVS_GC_TAG_FREE)
                             LOG("free: %x", devs_show_addr(gc, p));
                         p = next_block(p);
                     }
                     if (p != block) {
                         unsigned new_size = block_ptr(p) - block_ptr(block);
-                        mark_block(block, JACS_GC_TAG_FREE, new_size);
+                        mark_block(block, DEVS_GC_TAG_FREE, new_size);
                         memset(block->data, 0x37, (block_size(block) - 1) * sizeof(uintptr_t));
                         if (prev == NULL) {
                             gc->first_free = block;
@@ -214,7 +214,7 @@ static void sweep(devs_gc_t *gc) {
                         prev = block;
                     } else {
                         block->header = block->header &
-                                        ~((uintptr_t)JACS_GC_TAG_MASK_SCANNED << JACS_GC_TAG_POS);
+                                        ~((uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS);
                     }
                 }
             }
@@ -245,7 +245,7 @@ static block_t *find_free_block(devs_gc_t *gc, uint8_t tag, uint32_t words) {
             // split block
             mark_block(b, tag, words + 1);
             next = next_block(b);
-            mark_block(next, JACS_GC_TAG_FREE, left - 1);
+            mark_block(next, DEVS_GC_TAG_FREE, left - 1);
             next->free.next = b->free.next;
         } else {
             mark_block(b, tag, block_size(b));
@@ -272,7 +272,7 @@ static block_t *alloc_block(devs_gc_t *gc, uint8_t tag, uint32_t size) {
     if (gc->num_alloc < 32 || (gc->num_alloc & 31) == 0)
         jd_alloc_stack_check();
 
-    if (devs_get_global_flags() & JACS_FLAG_GC_STRESS)
+    if (devs_get_global_flags() & DEVS_FLAG_GC_STRESS)
         devs_gc(gc);
 
     block_t *b = find_free_block(gc, tag, words);
@@ -287,7 +287,7 @@ static block_t *alloc_block(devs_gc_t *gc, uint8_t tag, uint32_t size) {
 }
 
 static void *try_alloc(devs_gc_t *gc, uint8_t tag, uint32_t size) {
-    if (size > JACS_MAX_ALLOC)
+    if (size > DEVS_MAX_ALLOC)
         return NULL;
     block_t *b = alloc_block(gc, tag, size);
     if (!b)
@@ -298,13 +298,13 @@ static void *try_alloc(devs_gc_t *gc, uint8_t tag, uint32_t size) {
 }
 
 void *jd_gc_try_alloc(devs_gc_t *gc, uint32_t size) {
-    return (uintptr_t *)try_alloc(gc, JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES, size) + 1;
+    return (uintptr_t *)try_alloc(gc, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size) + 1;
 }
 
 static block_t *unpin(devs_gc_t *gc, void *ptr, uint8_t tag) {
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
-    JD_ASSERT(GET_TAG(b->header) == (JACS_GC_TAG_MASK_PINNED | JACS_GC_TAG_BYTES));
+    JD_ASSERT(GET_TAG(b->header) == (DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES));
     mark_block(b, tag, block_size(b));
     return b;
 }
@@ -312,44 +312,44 @@ static block_t *unpin(devs_gc_t *gc, void *ptr, uint8_t tag) {
 void jd_gc_unpin(devs_gc_t *gc, void *ptr) {
     if (ptr == NULL)
         return;
-    unpin(gc, ptr, JACS_GC_TAG_BYTES);
+    unpin(gc, ptr, DEVS_GC_TAG_BYTES);
 }
 
 void jd_gc_free(devs_gc_t *gc, void *ptr) {
     if (ptr == NULL)
         return;
-    block_t *b = unpin(gc, ptr, JACS_GC_TAG_FREE);
+    block_t *b = unpin(gc, ptr, DEVS_GC_TAG_FREE);
     memset(b->data, 0x47, (block_size(b) - 1) * sizeof(uintptr_t));
 }
 
 devs_map_t *devs_map_try_alloc(devs_gc_t *gc) {
-    return try_alloc(gc, JACS_GC_TAG_MAP, sizeof(devs_map_t));
+    return try_alloc(gc, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
 }
 
 devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size) {
     unsigned bytesize = size * sizeof(value_t);
-    if (bytesize > JACS_MAX_ALLOC)
+    if (bytesize > DEVS_MAX_ALLOC)
         return NULL;
     devs_array_t *arr =
-        try_alloc(gc, JACS_GC_TAG_ARRAY | JACS_GC_TAG_MASK_PINNED, sizeof(devs_array_t));
+        try_alloc(gc, DEVS_GC_TAG_ARRAY | DEVS_GC_TAG_MASK_PINNED, sizeof(devs_array_t));
     if (arr == NULL)
         return NULL;
     if (size > 0) {
         arr->data = jd_gc_try_alloc(gc, bytesize);
         if (arr->data == NULL) {
-            arr->gc.header ^= (uintptr_t)JACS_GC_TAG_MASK_PINNED << JACS_GC_TAG_POS;
+            arr->gc.header ^= (uintptr_t)DEVS_GC_TAG_MASK_PINNED << DEVS_GC_TAG_POS;
             return NULL;
         }
         arr->length = arr->capacity = size;
     }
-    arr->gc.header ^= (uintptr_t)JACS_GC_TAG_MASK_PINNED << JACS_GC_TAG_POS;
+    arr->gc.header ^= (uintptr_t)DEVS_GC_TAG_MASK_PINNED << DEVS_GC_TAG_POS;
     return arr;
 }
 
 devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size) {
-    if (size > JACS_MAX_ALLOC)
+    if (size > DEVS_MAX_ALLOC)
         return NULL;
-    devs_buffer_t *buf = try_alloc(gc, JACS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
+    devs_buffer_t *buf = try_alloc(gc, DEVS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
     if (buf)
         buf->length = size;
     return buf;
@@ -361,7 +361,7 @@ void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
 
 static const char *tags[] = {"free", "bytes", "array", "map", "buffer"};
 const char *devs_gc_tag_name(unsigned tag) {
-    tag &= JACS_GC_TAG_MASK;
+    tag &= DEVS_GC_TAG_MASK;
     tag--;
     if (tag < sizeof(tags) / sizeof(tags[0]))
         return tags[tag];

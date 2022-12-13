@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#define JACS_MAX_ALLOC 0xf000
+#define DEVS_MAX_ALLOC 0xf000
 
 typedef uint16_t devs_small_size_t;
 typedef uint16_t devs_key_id_t;
@@ -59,27 +59,27 @@ void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx);
 void devs_gc_destroy(devs_gc_t *gc);
 
 #if JD_64
-#define JACS_GC_TAG_POS (24 + 32)
+#define DEVS_GC_TAG_POS (24 + 32)
 #else
-#define JACS_GC_TAG_POS 24
+#define DEVS_GC_TAG_POS 24
 #endif
 
-#define JACS_GC_TAG_MASK_PENDING 0x80
-#define JACS_GC_TAG_MASK_SCANNED 0x20
-#define JACS_GC_TAG_MASK_PINNED 0x40
-#define JACS_GC_TAG_MASK 0xf
+#define DEVS_GC_TAG_MASK_PENDING 0x80
+#define DEVS_GC_TAG_MASK_SCANNED 0x20
+#define DEVS_GC_TAG_MASK_PINNED 0x40
+#define DEVS_GC_TAG_MASK 0xf
 
 // update devs_gc_tag_name() when adding/reordering
-#define JACS_GC_TAG_FREE 0x1
-#define JACS_GC_TAG_BYTES 0x2
-#define JACS_GC_TAG_ARRAY 0x3
-#define JACS_GC_TAG_MAP 0x4
-#define JACS_GC_TAG_BUFFER 0x5
-#define JACS_GC_TAG_FINAL (0xf | JACS_GC_TAG_MASK_PINNED)
+#define DEVS_GC_TAG_FREE 0x1
+#define DEVS_GC_TAG_BYTES 0x2
+#define DEVS_GC_TAG_ARRAY 0x3
+#define DEVS_GC_TAG_MAP 0x4
+#define DEVS_GC_TAG_BUFFER 0x5
+#define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 
 static inline int devs_gc_tag(void *ptr) {
     return ptr == NULL ? 0
-                       : (((devs_gc_object_t *)ptr)->header >> JACS_GC_TAG_POS) & JACS_GC_TAG_MASK;
+                       : (((devs_gc_object_t *)ptr)->header >> DEVS_GC_TAG_POS) & DEVS_GC_TAG_MASK;
 }
 
 const char *devs_gc_tag_name(unsigned tag);

@@ -60,7 +60,7 @@ value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, devs_key_id_t key) {
 }
 
 value_t devs_index(devs_ctx_t *ctx, value_t seq, unsigned idx) {
-    if (idx > JACS_MAX_ALLOC)
+    if (idx > DEVS_MAX_ALLOC)
         return devs_undefined;
     if (devs_is_buffer(ctx, seq)) {
         unsigned len;
@@ -69,7 +69,7 @@ value_t devs_index(devs_ctx_t *ctx, value_t seq, unsigned idx) {
             return devs_value_from_int(p[idx]);
     } else {
         devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
-        if (devs_gc_tag(arr) == JACS_GC_TAG_ARRAY) {
+        if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {
             if (idx < arr->length)
                 return arr->data[idx];
         }
@@ -93,7 +93,7 @@ static int array_ensure_len(devs_ctx_t *ctx, devs_array_t *arr, unsigned newlen)
 }
 
 int devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v) {
-    if (idx > JACS_MAX_ALLOC / sizeof(value_t))
+    if (idx > DEVS_MAX_ALLOC / sizeof(value_t))
         return -4;
 
     if (array_ensure_len(ctx, arr, idx + 1))
@@ -107,7 +107,7 @@ int devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v) 
 
 int devs_index_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
     // DMESG("set arr=%s idx=%u", devs_show_value(ctx, seq), idx);
-    if (idx > JACS_MAX_ALLOC)
+    if (idx > DEVS_MAX_ALLOC)
         return -1;
     if (devs_is_buffer(ctx, seq)) {
         unsigned len;
@@ -120,7 +120,7 @@ int devs_index_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
         }
     } else {
         devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
-        if (devs_gc_tag(arr) == JACS_GC_TAG_ARRAY) {
+        if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {
             return devs_array_set(ctx, arr, idx, v);
         } else {
             return -2;
@@ -129,7 +129,7 @@ int devs_index_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
 }
 
 int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int count) {
-    if (count > (int)(JACS_MAX_ALLOC / sizeof(value_t)))
+    if (count > (int)(DEVS_MAX_ALLOC / sizeof(value_t)))
         return -4;
 
     int newlen = arr->length + count;
@@ -141,7 +141,7 @@ int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int coun
     if (count == 0)
         return 0;
 
-    if (newlen > (int)(JACS_MAX_ALLOC / sizeof(value_t)))
+    if (newlen > (int)(DEVS_MAX_ALLOC / sizeof(value_t)))
         return -6;
 
     if (idx > arr->length)
