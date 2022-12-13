@@ -259,7 +259,7 @@ const ${varname} = new ds.${clname}()
 `,
             pkt.description,
             "",
-            `-  type: \`${tp}\` (protocol \`${pkt.packFormat}\`)`,
+            `-  type: \`${tp}\` (packing format \`${pkt.packFormat}\`)`,
             pkt.optional
                 ? `-  optional: this register may not be implemented`
                 : undefined,
