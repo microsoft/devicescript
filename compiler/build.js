@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 const esbuild = require("esbuild")
-const fs = require("fs")
 const childProcess = require("child_process")
 const path = require("path")
+const fs = require("fs-extra")
 
 let watch = false
 let fast = false
@@ -36,7 +36,7 @@ function distCopy(from, to) {
         console.debug(`cp ${from} ${to}`)
         try {
             fs.mkdirSync(path.dirname(to))
-        } catch { }
+        } catch {}
         fs.copyFileSync(from, to)
         fs.utimesSync(to, new Date(), new Date(fromT))
     }
@@ -121,7 +121,7 @@ function buildPrelude(folder, outp) {
     let curr = ""
     try {
         curr = fs.readFileSync(outp, "utf-8")
-    } catch { }
+    } catch {}
     if (curr != r) {
         console.log("updating " + outp)
         fs.writeFileSync(outp, r)
@@ -159,6 +159,17 @@ async function main() {
         }
         const ds = require("./built/devicescript-compiler.node.cjs")
         fs.writeFileSync("../devs/lib/" + specname, ds.preludeFiles()[specname])
+        const mds = ds.markdownFiles()
+        const mdo = "../website/docs/api/clients"
+        fs.emptyDirSync(mdo)
+        fs.writeJSONSync(path.join(mdo, "_category_.json"), {
+            label: "Clients",
+            position: 1,
+            collapsible: true,
+        })
+        Object.keys(mds).forEach(fn =>
+            fs.writeFileSync(path.join(mdo, `${fn}.md`), mds[fn])
+        )
     } catch (e) {
         console.error(e)
     }

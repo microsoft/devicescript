@@ -5,15 +5,6 @@ require("../../../compiler")
 
 const { compile } = globalThis.deviceScript
 
-function toHex(bytes) {
-    if (!bytes) return undefined
-    let r = ""
-    for (let i = 0; i < bytes.length; ++i) {
-        r += ("0" + bytes[i].toString(16)).slice(-2)
-    }
-    return r
-}
-
 const PREFIX = `import * as ds from "@devicescript/core"`
 async function run(inputFile) {
     let input = readJsonSync(inputFile).input
@@ -21,23 +12,13 @@ async function run(inputFile) {
     const files = {}
     const log = msg => stdout.write(msg)
     const errors = []
-    let error = undefined
-    let result
     try {
-        result = compile(input, { log, errors, files })
+        const result = compile(input, { log, errors, files })
         if (!result.success) stderr.write("compilation failed\n")
     } catch (e) {
-        error = e
         stderr.write(String(e))
     }
     errors.forEach(error => stderr.write(error.formatted + "\n"))
-    return {
-        files,
-        success: result.success,
-        binary: toHex(result.binary),
-        dbg: result.dbg,
-        error,
-    }
 }
 
 const inputFile = process.argv[2]
