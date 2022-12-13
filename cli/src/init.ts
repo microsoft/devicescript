@@ -12,6 +12,7 @@ import { preludeFiles } from "@devicescript/compiler"
 
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"
+const IMPORT_PREFIX = `import * as ds from "@devicescript/core"`
 
 const optionalFiles: Record<string, Object | string> = {
     "tsconfig.json": {
@@ -42,6 +43,21 @@ const optionalFiles: Record<string, Object | string> = {
     },
     ".vscode/extensions.json": {
         recommendations: ["esbenp.prettier-vscode"],
+    },
+    "package.json": {
+        content: {
+            dependencies: {},
+            devDependencies: {
+                "@devicescript/cli": "*",
+            },
+            descriptscript: {},
+            scripts: {
+                setup: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs init",
+                build: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build",
+                watch: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build --watch",
+                start: "yarn setup && yarn watch",
+            },
+        },
     },
     "README.md": `# - project name -
 
@@ -117,7 +133,7 @@ export default function init(options: InitOptions & CmdOptions) {
     // main.ts
     if (!pathExistsSync(MAIN)) {
         debug(`write ${MAIN}`)
-        writeFileSync(MAIN, `// put your code here!\n`, { encoding: "utf8" })
+        writeFileSync(MAIN, `${IMPORT_PREFIX}\n\n`, { encoding: "utf8" })
     }
 
     // help message
