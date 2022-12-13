@@ -191,16 +191,16 @@ pagination_next: null
 ---        
 # ${clname}
 `,
-        patchLinks(info.notes["short"]),
-        `-  client for [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/)`,
-        baseclass ? `-  inherits ${baseclass}` : undefined,
         status !== "stable" && info.shortId[0] !== "_"
             ? `
-:::warning
+:::caution
 This service is ${status} and may change in the future.
 :::
 `
             : undefined,
+        patchLinks(info.notes["short"]),
+        `-  client for [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/)`,
+        baseclass ? `-  inherits ${baseclass}` : undefined,
         info.notes["long"]
             ? `## About
 
