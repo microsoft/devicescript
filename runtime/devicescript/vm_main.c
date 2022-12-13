@@ -87,8 +87,7 @@ const char *devs_img_get_utf8(const devs_img_t *img, uint32_t idx, unsigned *siz
     if (!devs_img_stridx_ok(*img, idx)) {
         if (*size)
             *size = 0;
-        devs_runtime_failure(ctx, 60140);
-        return "";
+        return NULL;
     }
 
     unsigned tp = (uint16_t)idx >> JACS_STRIDX__SHIFT;
@@ -130,4 +129,13 @@ const char *devs_img_get_utf8(const devs_img_t *img, uint32_t idx, unsigned *siz
     } else {
         JD_ASSERT(0);
     }
+}
+
+const char *devs_get_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size) {
+    const char *r = devs_img_get_utf8(&ctx->img, idx, size);
+    if (r == NULL) {
+        devs_runtime_failure(ctx, 60140);
+        return "";
+    }
+    return r;
 }

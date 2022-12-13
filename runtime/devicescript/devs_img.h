@@ -43,3 +43,4 @@ static inline value_t devs_img_get_float(const devs_img_t *img, uint32_t idx) {
 const char *devs_img_get_utf8(const devs_img_t *img, uint32_t idx, unsigned *size);
 const char *devs_img_fun_name(const devs_img_t *img, unsigned fidx);
 bool devs_img_stridx_ok(devs_img_t img, uint32_t stridx);
+const char *devs_get_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size);

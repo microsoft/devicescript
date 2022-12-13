@@ -184,7 +184,7 @@ void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
     case JACS_HANDLE_TYPE_IMG_BUFFERISH: {
         // TODO optimize - we know it's a buffer in range
         unsigned idx = devs_handle_value(v);
-        return (void *)devs_img_get_utf8(&ctx->img, idx, sz);
+        return (void *)devs_get_utf8(ctx, idx, sz);
     }
     default:
         JD_ASSERT(0);

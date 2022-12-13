@@ -132,7 +132,8 @@ const char *devs_img_fun_name(const devs_img_t *img, unsigned fidx) {
     if (fidx >= devs_img_num_functions(img))
         return "???";
     const devs_function_desc_t *func = devs_img_get_function(img, fidx);
-    return devs_img_get_utf8(img, func->name_idx, NULL);
+    const char *name = devs_img_get_utf8(img, func->name_idx, NULL);
+    return name ? name : "???";
 }
 
 devs_fiber_t *devs_fiber_by_fidx(devs_ctx_t *ctx, unsigned fidx) {

@@ -40,14 +40,14 @@ bool devs_img_stridx_ok(devs_img_t img, uint32_t nameidx) {
     unsigned idx = nameidx & ((1 << JACS_STRIDX__SHIFT) - 1);
     switch (nameidx >> JACS_STRIDX__SHIFT) {
     case JACS_STRIDX_BUFFER:
-        return (idx < img->header->buffers.length / sizeof(devs_img_section_t));
+        return (idx < img.header->buffers.length / sizeof(devs_img_section_t));
     case JACS_STRIDX_BUILTIN:
         return (idx < JACS_BUILTIN_STRING__SIZE);
     case JACS_STRIDX_ASCII:
         JD_ASSERT(JACS_ASCII_HEADER_SIZE == sizeof(uint16_t));
-        return (idx < img->header->ascii_strings.length / JACS_ASCII_HEADER_SIZE);
+        return (idx < img.header->ascii_strings.length / JACS_ASCII_HEADER_SIZE);
     case JACS_STRIDX_UTF8:
-        return (idx < img->header->utf8_strings.length / sizeof(devs_img_section_t));
+        return (idx < img.header->utf8_strings.length / sizeof(devs_img_section_t));
     default:
         JD_ASSERT(0);
     }
@@ -60,7 +60,6 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     const devs_img_header_t *header = (const devs_img_header_t *)imgdata;
     devs_img_t _img;
     _img.data = imgdata;
-    devs_img_t *img = &_img;
 
     CHECK(1000, header->magic0 == JACS_MAGIC0 && header->magic1 == JACS_MAGIC1);
     CHECK(1050, header->version == JACS_IMG_VERSION);

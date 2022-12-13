@@ -451,13 +451,6 @@ static bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a) {
     return false;
 }
 
-static bool devs_vm_str_ok(devs_ctx_t *ctx, uint32_t a) {
-    if (a < devs_img_num_strings(&ctx->img))
-        return true;
-    devs_runtime_failure(ctx, 60112);
-    return false;
-}
-
 static value_t exprx_static_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned idx = ctx->literal_int;
     if (!devs_vm_role_ok(ctx, idx))

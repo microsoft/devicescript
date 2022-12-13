@@ -155,7 +155,7 @@ static int devs_jd_reg_arg_length(devs_ctx_t *ctx, unsigned command_arg) {
     JD_ASSERT(command_arg != 0);
     jd_packet_t *pkt = &ctx->packet;
     unsigned slen;
-    const char *ptr = devs_img_get_utf8(&ctx->img, command_arg);
+    const char *ptr = devs_get_utf8(ctx, command_arg, &slen);
     if (pkt->service_size >= (int)slen + 1 && pkt->data[slen] == 0 &&
         memcmp(ptr, pkt->data, slen) == 0) {
         return slen + 1;
@@ -244,7 +244,7 @@ static bool handle_reg_get(devs_fiber_t *fiber) {
         unsigned arglen = 0;
         const void *argp = NULL;
         if (fiber->pkt_data.reg_get.string_idx) {
-            argp = devs_img_get_utf8(&ctx->img, fiber->pkt_data.reg_get.string_idx, &arglen)
+            argp = devs_get_utf8(ctx, fiber->pkt_data.reg_get.string_idx, &arglen);
         }
 
         devs_jd_set_packet(ctx, fiber->role_idx, fiber->service_command, argp, arglen);
@@ -288,7 +288,7 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
 
     jd_packet_t *pkt = &ctx->packet;
     unsigned fmtsize;
-    const char *fmt = devs_img_get_utf8(&ctx->img, fiber->pkt_data.logmsg.string_idx, &fmtsize);
+    const char *fmt = devs_get_utf8(ctx, fiber->pkt_data.logmsg.string_idx, &fmtsize);
     unsigned sz = devs_strformat(fmt, fmtsize, (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
                                  fiber->activation->locals + fiber->pkt_data.logmsg.localsidx,
                                  fiber->pkt_data.logmsg.num_args, 0);
