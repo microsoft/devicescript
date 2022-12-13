@@ -1351,7 +1351,7 @@ class Program implements TopOpWriter {
         off: number
     ) {
         const wr = this.writer
-        if (field.storage == 0) {
+        if (this.isBufferField(field)) {
             const fn = this.lookupBuiltinFunc("decode_" + field.type)
             if (!fn) throwError(null, `${field.type} format not supported yet`)
             return this.directCallFun(expr, fn, [literal(off)])
@@ -1762,6 +1762,15 @@ class Program implements TopOpWriter {
         wr.freeBuf()
     }
 
+    private isBufferField(field: jdspec.PacketMember) {
+        return (
+            field.type == "bytes" ||
+            field.type == "string" ||
+            field.type == "string0" ||
+            field.storage == 0
+        )
+    }
+
     private emitRegisterCall(
         expr: ts.CallExpression,
         val: Value,
@@ -1784,14 +1793,25 @@ class Program implements TopOpWriter {
                 )
                 return unit()
             case "onChange": {
-                const role = this.roleOf(expr.expression, val)
-                this.requireArgs(expr, 2)
-                this.requireTopLevel(expr)
                 if (spec.fields.length != 1)
-                    throwError(expr, "wrong register type")
-                const threshold = this.forceNumberLiteral(expr.arguments[0])
+                    throwError(
+                        expr,
+                        "structured registers not supported in onChange()"
+                    )
+                const fld = spec.fields[0]
+                const noThreshold =
+                    this.isBufferField(fld) || fld.type == "bool"
+                const role = this.roleOf(expr.expression, val)
+                this.requireArgs(expr, noThreshold ? 1 : 2)
+                this.requireTopLevel(expr)
+                const threshold = noThreshold
+                    ? null
+                    : this.forceNumberLiteral(expr.arguments[0])
                 const name = role + "_chg_" + spec.name
-                const handler = this.emitHandler(name, expr.arguments[1])
+                const handler = this.emitHandler(
+                    name,
+                    expr.arguments[noThreshold ? 0 : 1]
+                )
                 if (role.autoRefreshRegs.indexOf(spec) < 0)
                     role.autoRefreshRegs.push(spec)
                 this.emitInRoleDispatcher(role, wr => {
@@ -1807,7 +1827,7 @@ class Program implements TopOpWriter {
                     wr.emitIfAndPop(cond, () => {
                         // get the reg value from current packet
                         const curr = wr.cacheValue(
-                            this.extractRegField(expr, spec, spec.fields[0])
+                            this.extractRegField(expr, spec, fld)
                         )
                         const skipHandler = wr.mkLabel("skipHandler")
                         // if (curr == undefined) goto skip (shouldn't really happen unless service is misbehaving)
@@ -1817,18 +1837,33 @@ class Program implements TopOpWriter {
                         )
                         // if (Math.abs(tmp-curr) < threshold) goto skip
                         // note that this also calls handler() if cache was NaN
-                        const absval = wr.emitExpr(
-                            Op.EXPR1_ABS,
-                            wr.emitExpr(
-                                Op.EXPR2_SUB,
-                                cache.emit(wr),
-                                curr.emit()
+                        if (threshold) {
+                            const absval = wr.emitExpr(
+                                Op.EXPR1_ABS,
+                                wr.emitExpr(
+                                    Op.EXPR2_SUB,
+                                    cache.emit(wr),
+                                    curr.emit()
+                                )
                             )
-                        )
-                        wr.emitJumpIfTrue(
-                            skipHandler,
-                            wr.emitExpr(Op.EXPR2_LT, absval, literal(threshold))
-                        )
+                            wr.emitJumpIfTrue(
+                                skipHandler,
+                                wr.emitExpr(
+                                    Op.EXPR2_LT,
+                                    absval,
+                                    literal(threshold)
+                                )
+                            )
+                        } else {
+                            wr.emitJumpIfTrue(
+                                skipHandler,
+                                wr.emitExpr(
+                                    Op.EXPR2_EQ,
+                                    cache.emit(wr),
+                                    curr.emit()
+                                )
+                            )
+                        }
                         // cache := curr
                         this.emitStore(cache, curr.emit())
                         curr.free()

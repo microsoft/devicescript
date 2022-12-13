@@ -13,14 +13,20 @@ declare module "@devicescript/core" {
 
     export class RegisterNum extends Register {
         read(): number
-        write(v: number | boolean): void
+        write(v: number): void
         onChange(threshold: number, handler: (curr: number) => void): void
     }
 
     export class RegisterBuffer extends Register {
         read(): Buffer
         write(v: Buffer): void
-        onChange(threshold: number, handler: (curr: number) => void): void
+        onChange(handler: (curr: number) => void): void
+    }
+
+    export class RegisterBool extends Register {
+        read(): boolean
+        write(v: boolean): void
+        onChange(handler: (curr: number) => void): void
     }
 
     export class RegisterString extends Register {

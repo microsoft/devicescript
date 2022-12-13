@@ -14,8 +14,8 @@ heater.onDisconnected(() => {
 thermometer.temperature.onChange(5, () => {
     const t = thermometer.temperature.read()
     if (t < 21) {
-        heater.active.write(1)
+        heater.active.write(true)
     } else {
-        heater.active.write(0)
+        heater.active.write(false)
     }
 })
