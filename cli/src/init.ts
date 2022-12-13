@@ -49,22 +49,16 @@ This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
 
 ## Local/container development
 
--  install node.js and dependencies
+-  install node.js 16+ and dependencies
 
 \`\`\`bash
 yarn install
 \`\`\`
 
--  prepare TypeScript support files
-
-\`\`\`bash
-yarn setup
-\`\`\`
-
 - launch developer server
 
 \`\`\`bash
-yarn watch
+yarn start
 \`\`\`
 
 -  navigate to devtools page (see terminal output) 
@@ -128,6 +122,5 @@ export default function init(options: InitOptions & CmdOptions) {
 
     // help message
     log(`Your DeviceScript project is ready.`)
-    log(`to start the local development, run "yarn start"`)
-    log(`to build binaries, run "yarn build"`)
+    log(`- to start the local development, run "yarn start"`)
 }
