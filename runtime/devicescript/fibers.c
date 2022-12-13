@@ -31,7 +31,7 @@ void devs_fiber_copy_params(devs_activation_t *frame) {
 void devs_fiber_call_function(devs_fiber_t *fiber, unsigned fidx, value_t *params,
                               unsigned numargs) {
     devs_ctx_t *ctx = fiber->ctx;
-    const devs_function_desc_t *func = devs_img_get_function(&ctx->img, fidx);
+    const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
 
     devs_activation_t *callee =
         devs_try_alloc(ctx, sizeof(devs_activation_t) + sizeof(value_t) * func->num_locals);
@@ -89,7 +89,7 @@ static void free_activation(devs_activation_t *act) {
 }
 
 static void log_fiber_op(devs_fiber_t *fiber, const char *op) {
-    LOG("%s fiber %s_F%d", op, devs_img_fun_name(&fiber->ctx->img, fiber->bottom_function_idx),
+    LOG("%s fiber %s_F%d", op, devs_img_fun_name(fiber->ctx->img, fiber->bottom_function_idx),
         fiber->bottom_function_idx);
 }
 
@@ -128,7 +128,7 @@ void devs_fiber_free_all_fibers(devs_ctx_t *ctx) {
     }
 }
 
-const char *devs_img_fun_name(const devs_img_t *img, unsigned fidx) {
+const char *devs_img_fun_name(devs_img_t img, unsigned fidx) {
     if (fidx >= devs_img_num_functions(img))
         return "???";
     const devs_function_desc_t *func = devs_img_get_function(img, fidx);
@@ -246,9 +246,9 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
 
         if (code != JACS_PANIC_REBOOT)
             for (devs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
-                int idx = fn->func - devs_img_get_function(&ctx->img, 0);
+                int idx = fn->func - devs_img_get_function(ctx->img, 0);
                 DMESG("  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),
-                      devs_img_fun_name(&ctx->img, idx), idx);
+                      devs_img_fun_name(ctx->img, idx), idx);
             }
 
         devs_panic_handler(orig_code);

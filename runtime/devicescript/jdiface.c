@@ -70,7 +70,7 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
             devs_regcache_free(&ctx->regcache, cached);
     }
 
-    const devs_role_desc_t *role = devs_img_get_role(&ctx->img, role_idx);
+    const devs_role_desc_t *role = devs_img_get_role(ctx->img, role_idx);
     devs_fiber_t *fib = ctx->curr_fiber;
     JD_ASSERT(fib != NULL);
 
@@ -363,8 +363,8 @@ static void devs_jd_update_all_regcache(devs_ctx_t *ctx, unsigned role_idx) {
 }
 
 static const char *devs_jd_role_name(devs_ctx_t *ctx, unsigned idx) {
-    const devs_role_desc_t *role = devs_img_get_role(&ctx->img, idx);
-    return devs_img_get_utf8(&ctx->img, role->name_idx, NULL);
+    const devs_role_desc_t *role = devs_img_get_role(ctx->img, idx);
+    return devs_img_get_utf8(ctx->img, role->name_idx, NULL);
 }
 
 void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t *pkt) {
@@ -374,7 +374,7 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     memcpy(&ctx->packet, pkt, pkt->service_size + 16);
     pkt = &ctx->packet;
 
-    unsigned numroles = devs_img_num_roles(&ctx->img);
+    unsigned numroles = devs_img_num_roles(ctx->img);
 
     // DMESG("pkt %d %x / %d", pkt->service_index, pkt->service_command, pkt->service_size);
     // jd_log_packet(&ctx->packet);
@@ -404,7 +404,7 @@ void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role) {
         devs_trace(ctx, JACS_TRACE_EV_ROLE_CHANGED, data, sz);
     }
 
-    unsigned numroles = devs_img_num_roles(&ctx->img);
+    unsigned numroles = devs_img_num_roles(ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
         if (ctx->roles[idx] == role) {
             devs_regcache_free_role(&ctx->regcache, idx);
@@ -422,9 +422,9 @@ void devs_jd_reset_packet(devs_ctx_t *ctx) {
 
 void devs_jd_init_roles(devs_ctx_t *ctx) {
     devs_jd_free_roles(ctx); // free any previous roles
-    unsigned numroles = devs_img_num_roles(&ctx->img);
+    unsigned numroles = devs_img_num_roles(ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
-        const devs_role_desc_t *role = devs_img_get_role(&ctx->img, idx);
+        const devs_role_desc_t *role = devs_img_get_role(ctx->img, idx);
         ctx->roles[idx] = jd_role_alloc(devs_jd_role_name(ctx, idx), role->service_class);
         if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION)
             ctx->roles[idx]->hidden = 1;

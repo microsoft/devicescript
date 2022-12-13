@@ -369,8 +369,8 @@ static value_t exprx_literal(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t exprx_literal_f64(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
-    if (off < devs_img_num_floats(&ctx->img))
-        return devs_img_get_float(&ctx->img, off);
+    if (off < devs_img_num_floats(ctx->img))
+        return devs_img_get_float(ctx->img, off);
     return devs_runtime_failure(ctx, 60107);
 }
 
@@ -436,7 +436,7 @@ static value_t expr1_get_fiber_handle(devs_activation_t *frame, devs_ctx_t *ctx)
 static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned fidx = ctx->literal_int;
 
-    if (fidx >= devs_img_num_functions(&ctx->img)) {
+    if (fidx >= devs_img_num_functions(ctx->img)) {
         devs_runtime_failure(ctx, 60114);
         return devs_undefined;
     } else {
@@ -445,7 +445,7 @@ static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) 
 }
 
 static bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a) {
-    if (a < devs_img_num_roles(&ctx->img))
+    if (a < devs_img_num_roles(ctx->img))
         return true;
     devs_runtime_failure(ctx, 60111);
     return false;
