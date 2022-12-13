@@ -88,7 +88,6 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     info.packets.forEach(pkt => {
         if (pkt.derived || pkt.internal) return // ???
         const cmt = addComment(pkt)
-
         let kw = ""
         let tp = ""
 
@@ -212,6 +211,42 @@ const ${varname} = new ds.${clname}()
 \`\`\`
             `,
     ]
+
+    const cmds = info.packets.filter(
+        pkt => pkt.kind === "command" && !pkt.internal && !pkt.derived
+    )
+    if (cmds.length) r.push("## Commands", "")
+    cmds.forEach(pkt => {
+        // if there's a startRepeats before last field, we don't put ... before it
+        const earlyRepeats = pkt.fields
+            .slice(0, pkt.fields.length - 1)
+            .some(f => f.startRepeats)
+        const fields = pkt.fields
+            .map(f => {
+                const tp =
+                    f.type == "string" || f.type == "string0"
+                        ? "string"
+                        : info.enums[f.type]
+                        ? enumName(f.type)
+                        : "number"
+                if (f.startRepeats && !earlyRepeats)
+                    return `...${f.name}: ${tp}[]`
+                else return `${f.name}: ${tp}`
+            })
+            .join(", ")
+        const pname = camelize(pkt.name)
+
+        r.push(
+            `### ${pname}`,
+            "",
+            pkt.description,
+            `
+\`\`\`ts no-build
+${varname}.${camelize(pkt.name)}(${fields}): void
+\`\`\`            
+`
+        )
+    })
 
     const regs = info.packets
         .filter(pkt => isRegister(pkt.kind))
