@@ -18,9 +18,7 @@ interface CodeBlockProps {
     code: string
     result: { [key: string]: string }
     githubRepo: string | undefined
-    editable: boolean
     showLineNumbers: boolean
-    readonly: boolean
     langVersion?: string
     tool?: string
     prefix?: string
@@ -32,54 +30,12 @@ interface CodeBlockProps {
 
 function RunButton(props: {
     onClick: () => Promise<void>
-    runFinished: boolean
 }) {
-    const { onClick, runFinished } = props
-    const text = "Run"
+    const { onClick } = props
     return (
         <button className="button button--primary" onClick={onClick}>
-            {runFinished ? text : "Running..."}
+            Run
         </button>
-    )
-}
-
-function Output(props: {
-    language: string
-    result: { [key: string]: string | Array<string> }
-    codeChanged: boolean
-    statusCodes: { [key: string]: string }
-}) {
-    const { language, result, codeChanged, statusCodes } = props
-    const success = result.status === statusCodes.success
-    const timeout = result.status === statusCodes.timeout
-    const emptyOutput = result.output === ""
-
-    if (emptyOutput) return null
-
-    const regularOutput = (
-        <pre className={codeChanged ? styles.outdated : ""}>
-            {success ? (
-                ""
-            ) : timeout ? (
-                <span style={{ color: "red" }}>
-                    {`--${language} timeout--`}
-                </span>
-            ) : (
-                <span style={{ color: "red" }}>
-                    <b>Script contains one or more errors: </b>
-                    <br />
-                </span>
-            )}
-            {success ? result.output : !timeout && result.error}
-        </pre>
-    )
-
-    return (
-        <div>
-            <b>Output{codeChanged ? " (outdated)" : ""}:</b>
-            <br />
-            {regularOutput}
-        </div>
     )
 }
 
@@ -88,10 +44,8 @@ function CustomCodeEditor(props: {
     input: string
     showLineNumbers?: boolean
     language?: string
-    editable?: boolean
     onChange?: (code: string) => void
     githubRepo: string | undefined
-    readonly: boolean
     prefix?: string
     sandbox?: {
         files: Record<string, { content: string }>
@@ -102,10 +56,8 @@ function CustomCodeEditor(props: {
         input,
         language,
         showLineNumbers,
-        editable,
         githubRepo,
         onChange,
-        readonly,
         sandbox,
         prefix,
     } = props
@@ -119,7 +71,6 @@ function CustomCodeEditor(props: {
         <Container
             as="div"
             className={clsx(
-                editable ? styles.editable : "",
                 codeBlockContainerStyles.codeBlockContainer,
                 ThemeClassNames.common.codeBlock,
                 language && `language-${language}`
@@ -128,13 +79,13 @@ function CustomCodeEditor(props: {
             <CodeEditor
                 code={input}
                 theme={prismTheme}
-                disabled={!editable}
+                disabled={false}
                 key={String(isBrowser)}
                 className={codeBlockContentStyles.codeBlockContent}
                 onChange={onChange}
                 language={language}
                 prism={Prism}
-                readonly={readonly}
+                readonly={true}
                 showLineNumbers={showLineNumbers}
                 sandbox={sandbox}
                 prefix={prefix}
@@ -154,18 +105,12 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
         code,
         result,
         githubRepo,
-        editable,
         showLineNumbers,
-        readonly,
         sandbox,
         prefix,
     } = input
-    const [currCode, setCurrCode] = useState(code)
+    const currCode = code
     const [outputRendered, setOutputRendered] = useState(false)
-    const [runFinished, setRunFinished] = useState(true)
-    const [output, setOutput] = useState(result)
-    const [lastSnippet, setLastSnippet] = useState(code)
-    const codeChanged = lastSnippet !== currCode
     const { setSource } = useContext(DevToolsContext)
     const clientConfig = {
         ts: input => {
@@ -176,7 +121,6 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
 
     // bypassing server-side rendering
     const onDidClickRun = async () => {
-        setRunFinished(false)
         const newResult = { ...result }
         let errorMsg: string
 
@@ -216,17 +160,10 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
             newResult.status = `${lang}-web-failed`
             throw new Error(errorMsg)
         } finally {
-            setLastSnippet(input)
-            setOutput(newResult)
-            setRunFinished(true)
             if (!outputRendered) {
                 setOutputRendered(true) // hack for the playground editor
             }
         }
-    }
-
-    const onDidChangeCode = (code: string) => {
-        setCurrCode(code)
     }
 
     return (
@@ -235,11 +172,8 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
                 input={code}
                 id={result.hash}
                 showLineNumbers={showLineNumbers}
-                onChange={onDidChangeCode}
-                editable={editable || outputRendered}
                 language={highlight}
                 githubRepo={githubRepo}
-                readonly={readonly}
                 sandbox={sandbox}
                 prefix={prefix}
             />
@@ -247,19 +181,8 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
                 <div className={styles.buttons}>
                     <RunButton
                         onClick={onDidClickRun}
-                        runFinished={runFinished}
                     />
                 </div>
-                {outputRendered ? (
-                    <Output
-                        language={lang}
-                        codeChanged={codeChanged}
-                        result={output}
-                        statusCodes={statusCodes}
-                    />
-                ) : (
-                    <div />
-                )}
             </>
         </div>
     )
