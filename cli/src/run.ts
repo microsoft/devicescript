@@ -11,8 +11,8 @@ export interface RunOptions {
 
 export async function readCompiled(fn: string) {
     const buf = readFileSync(fn)
-    if (buf.subarray(0, 8).toString("hex") == "4a6163530a7e6a9a") return buf
-    if (buf.subarray(0, 16).toString("binary") == "4a6163530a7e6a9a")
+    if (buf.subarray(0, 8).toString("hex") == "446576530a7e6a9a") return buf
+    if (buf.subarray(0, 16).toString("binary") == "446576530a7e6a9a")
         return Buffer.from(buf.toString("binary").replace(/\s*/g, ""), "hex")
     return (await compileFile(fn)).binary
 }

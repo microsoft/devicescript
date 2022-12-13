@@ -23,8 +23,7 @@ For example `lamp.brightness.write(0.7)` is equivalent to:
 
 ```ts ignore-errors
 const lamp = new ds.Led()
-const packet = new Buffer()
-packet.setLength(2)
-packet.setAt(0, "u0.16", 0.7)
-lamp.brightness.write(packet)
+ds.packet.setLength(2)
+ds.packet.setAt(0, "u0.16", 0.7)
+lamp.brightness.write(ds.packet)
 ```

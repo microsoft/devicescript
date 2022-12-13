@@ -42,6 +42,9 @@ all: native em
 native:
 	$(Q)$(MAKE) -j16 $(BUILT)/jdcli
 
+native1:
+	$(Q)$(MAKE) -j1 $(BUILT)/jdcli
+
 $(BUILT)/jdcli: $(OBJ)
 	@echo LD $@
 	$(Q)$(CC) $(LDFLAGS) -o $@ $(OBJ) -lm -lpthread

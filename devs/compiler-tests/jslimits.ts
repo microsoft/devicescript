@@ -7,7 +7,7 @@ function foo() {
     qq-- //! unhandled
 }
 
-async function bar() { } //! async not supported
-function* baz() { } //! async not supported
+async function bar() { } //! modifier not supported
+function* baz() { } //! modifier not supported
 
 foo()

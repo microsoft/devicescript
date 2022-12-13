@@ -81,6 +81,10 @@ Both `src` and `dst` are buffers.
 
 Set bytes `dst[offset .. offset + length]` to `value`.
 
+    decode_utf8(buffer) = 97
+
+Convert buffer to string using UTF-8 encoding.
+
     call(*local_idx, numargs, func) = 73
 
 Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`
@@ -433,3 +437,10 @@ Only `true` and `false` values.
     splice = 15
     slice = 16
     join = 17
+    true = 19
+    false = 20
+    packet = 21
+    NaN = 22
+    array = 23
+    buffer = 24
+    map = 25

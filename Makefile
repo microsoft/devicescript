@@ -10,7 +10,7 @@ compiler/built/compiler/src/devicescript.js: $(wildcard compiler/src/*.ts) $(wil
 comp-fast:
 	cd compiler && node build.js --fast
 
-native em update-dist:
+native native1 em update-dist:
 	$(MAKE) -C runtime $@
 
 test-c: native comp
