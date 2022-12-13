@@ -32,7 +32,7 @@ The command tool is named `devicescript` or `devsc` for short.
 The full list of options for each command is available through the CLI by running `devsc help <command>`.
 
 
-## init
+## devsc init
 
 The `init` commands creates or updates the necessary files to get syntax completion
 and checking in DeviceScript project (typically from Visual Studio Code). The command expects to be in the project folder.
@@ -63,7 +63,7 @@ and force refreshing that file.
 devsc init --force
 ```
 
-## build
+## devsc build
 
 The `build` command compiles a DeviceScript file (default is `main.ts`), using the resolution rules in `tsconfig.json`. It is the default command.
 
@@ -107,7 +107,7 @@ To access the developer tools outside localhost, add `--internet`
 devsc build --watch --internet
 ```
 
-## devtools
+## devsc devtools
 
 The `devtools` command launches the developer tool server, without trying to build a project.
 

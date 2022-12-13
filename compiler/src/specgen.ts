@@ -17,7 +17,9 @@ function toHex(n: number): string {
     return "0x" + n.toString(16)
 }
 
-export function specToDeviceScript(info: jdspec.ServiceSpec) {
+export function specToDeviceScript(info: jdspec.ServiceSpec): string {
+    if (info.status === "deprecated") return ""
+
     let r = ""
 
     for (const en of Object.values(info.enums)) {
@@ -37,8 +39,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec) {
         let cmt = `${info.name}\n`
         const descr = info.notes["long"] || info.notes["short"]
         if (descr) cmt += `${descr}\n\n`
-        if (info.status === "deprecated") cmt += "@deprecated\n"
-        else if (!info.status || info.status === "experimental")
+        if (!info.status || info.status === "experimental")
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
         if (info.tags?.length) cmt += `@category ${info.tags[0]}\n`

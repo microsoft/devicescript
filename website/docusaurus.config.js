@@ -5,18 +5,11 @@ const lightCodeTheme = require("prism-react-renderer/themes/github")
 const darkCodeTheme = require("prism-react-renderer/themes/dracula")
 
 async function createConfig() {
-    const repo = process.env.GITHUB_REPOSITORY
-    const sha = process.env.GITHUB_SHA
-    const releaseTag = process.env.RELEASE_VERSION
-    const languageConfig = await (
-        await import("./language.config.js")
-    ).default()
-
     /** @type {import('@docusaurus/types').Config} */
     const config = {
         title: "DeviceScript",
         tagline:
-            "Portable, small footprint virtual machine for embedded devices with a flair of TypeScript.",
+            "Portable, small footprint virtual machine for embedded devices with a hint of TypeScript.",
         url: "https://microsoft.github.io/",
         baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
@@ -109,6 +102,23 @@ async function createConfig() {
                                 },
                             ],
                         },
+                        {
+                            title: "Legal",
+                            items: [
+                                {
+                                    label: "Privacy & Cookies",
+                                    href: "https://go.microsoft.com/fwlink/?LinkId=521839",
+                                },
+                                {
+                                    label: "Terms Of Use",
+                                    href: "https://www.microsoft.com/en-us/legal/terms-of-use",
+                                },
+                                {
+                                    label: "Trademarks",
+                                    href: "https://www.microsoft.com/trademarks",
+                                },
+                            ],
+                        },
                     ],
                     copyright: `Copyright © ${new Date().getFullYear()} Microsoft.`,
                 },
@@ -121,23 +131,6 @@ async function createConfig() {
             mermaid: true,
         },
         themes: ["@docusaurus/theme-mermaid"],
-        /*
-        plugins: [
-            [
-                "docusaurus-plugin-typedoc",
-
-                // Plugin / TypeDoc options
-                {
-                    entryPoints: ["../devs/lib/devicescript-core.d.ts"],
-                    tsconfig: "../devs/lib/tsconfig.json",
-                    sidebar: {
-                        categoryLabel: 'API',
-                        position: 100,
-                    }
-                },
-            ],
-        ],
-        */
     }
 
     const renderCodeBlocks = (

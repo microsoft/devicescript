@@ -14,18 +14,23 @@ function toHex(bytes) {
     return r
 }
 
+const PREFIX = `import * as ds from "@devicescript/core"`
 async function run(inputFile) {
-    const input = readJsonSync(inputFile).input
+    let input = readJsonSync(inputFile).input
+    if (input.indexOf(PREFIX) < 0) input = PREFIX + "\n" + input
     const files = {}
     const log = msg => stdout.write(msg)
+    const errors = []
     let error = undefined
     let result
     try {
-        result = compile(input, { log, files })
+        result = compile(input, { log, errors, files })
+        if (!result.success) stderr.write("compilation failed\n")
     } catch (e) {
         error = e
         stderr.write(String(e))
     }
+    errors.forEach(error => stderr.write(error.formatted + "\n"))
     return {
         files,
         success: result.success,

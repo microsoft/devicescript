@@ -12,7 +12,7 @@ in Docker, GitHub Codespaces, ...
 
 ## Setting up the project
 
-Let's get started by installing the [DeviceScript command line](/developer/cli) and create an empty project
+Let's get started by installing the [DeviceScript command line](/api/cli) and create an empty project
 
 -   Open `code` in a new empty folder
 -   Open a terminal (`` Ctrl + ` ``)
@@ -47,8 +47,8 @@ tsconfig.json     configure the TypeScript compiler to compile DeviceScript synt
 import * as ds from "@devicescript/core"
 
 console.log("starting...")
-const sensor = roles.airPressure()
-const mouse = roles.hidMouse()
+const sensor = new ds.AirPressure()
+const mouse = new ds.HidMouse()
 // listen for pressure changes
 sensor.pressure.onChange(10, () => {
     // read sensor reading
