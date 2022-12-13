@@ -28,13 +28,16 @@ async function run(inputFile) {
         if (!result.success) stderr.write("compilation failed\n")
     } catch (e) {
         error = e
+        result = {
+            success: false,
+        }
         stderr.write(String(e))
     }
     errors.forEach(error => stderr.write(error.formatted + "\n"))
     return {
         files,
         success: result.success,
-        binary: toHex(result.binary),
+        binary: result.binary ? toHex(result.binary) : result.binary,
         dbg: result.dbg,
         error,
     }

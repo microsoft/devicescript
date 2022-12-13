@@ -5,7 +5,21 @@ import {
     wrapComment,
     jsQuote,
 } from "../../runtime/jacdac-c/jacdac/spectool/jdspec"
-import { SRV_BOOTLOADER, SRV_BRIDGE, SRV_CONTROL, SRV_DASHBOARD, SRV_DEVICE_SCRIPT_CONDITION, SRV_DEVICE_SCRIPT_MANAGER, SRV_INFRASTRUCTURE, SRV_LOGGER, SRV_PROTO_TEST, SRV_PROXY, SRV_ROLE_MANAGER, SRV_SETTINGS, SRV_UNIQUE_BRAIN } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
+import {
+    SRV_BOOTLOADER,
+    SRV_BRIDGE,
+    SRV_CONTROL,
+    SRV_DASHBOARD,
+    SRV_DEVICE_SCRIPT_CONDITION,
+    SRV_DEVICE_SCRIPT_MANAGER,
+    SRV_INFRASTRUCTURE,
+    SRV_LOGGER,
+    SRV_PROTO_TEST,
+    SRV_PROXY,
+    SRV_ROLE_MANAGER,
+    SRV_SETTINGS,
+    SRV_UNIQUE_BRAIN,
+} from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 import { jacdacDefaultSpecifications } from "./embedspecs"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
@@ -73,7 +87,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     r += `class ${clname} extends ${baseclass} {\n`
 
     for (const pkt of info.packets) {
-        if (pkt.derived) continue // ???
+        if (pkt.derived || pkt.internal) continue // ???
         const cmt = addComment(pkt)
 
         let tp = ""
@@ -143,10 +157,11 @@ export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
 function specToMarkdown(info: jdspec.ServiceSpec): string {
     if (ignoreSpec(info)) return undefined
 
+    const { status, camelName } = info
     const reserved: Record<string, string> = { switch: "sw" }
 
-    const clname = upperCamel(info.camelName)
-    const varname = reserved[info.camelName] || info.camelName
+    const clname = upperCamel(camelName)
+    const varname = reserved[camelName] || camelName
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
 
     let r: string[] = [
@@ -160,6 +175,13 @@ pagination_next: null
         info.notes["short"],
         `-  client for [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/)`,
         baseclass ? `-  inherits ${baseclass}` : undefined,
+        status !== "stable" && info.shortId[0] !== "_"
+            ? `
+:::warning
+This service is ${status} and may change in the future.
+:::
+`
+            : undefined,
         info.notes["long"]
             ? `## About
 
@@ -167,13 +189,88 @@ ${info.notes["long"]}
 `
             : undefined,
         `
-\`\`\`ts
+\`\`\`ts no-build
 const ${varname} = new ds.${clname}()
 \`\`\`
             `,
     ]
 
+    for (const pkt of info.packets) {
+        if (pkt.derived || pkt.internal) continue // ???
+        const cmt = addComment(pkt)
+        // if there's a startRepeats before last field, we don't put ... before it
+        const earlyRepeats = pkt.fields
+            .slice(0, pkt.fields.length - 1)
+            .some(f => f.startRepeats)
+
+        const fields = pkt.fields
+            .map(f => {
+                const tp =
+                    f.type == "string" || f.type == "string0"
+                        ? "string"
+                        : info.enums[f.type]
+                        ? enumName(f.type)
+                        : "number"
+                if (f.startRepeats && !earlyRepeats)
+                    return `...${f.name}: ${tp}[]`
+                else return `${f.name}: ${tp}`
+            })
+            .join(", ")
+        const pname = camelize(pkt.name)
+        if (isRegister(pkt.kind)) {
+            let tp: string = undefined
+            if (cmt.needsStruct) {
+                tp = `RegisterArray`
+                if (pkt.fields.length > 1) tp += ` & { ${fields} }`
+            } else {
+                if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
+                    tp = "RegisterString"
+                else tp = "RegisterNum"
+            }
+            const isNumber = tp === "RegisterNum"
+            r.push(
+                `## ${pname}
+`,
+                pkt.description,
+                "",
+                `-  register of type: \`number\` (protocol ${pkt.packFormat})`,
+                !isNumber
+                    ? undefined
+                    : pkt.kind === "rw"
+                    ? `-  read and write value
+\`\`\`ts no-build
+const ${varname} = new ds.${clname}()
+// ...
+const value = ${varname}.${pname}.read()
+${varname}.${pname}.write(value)
+\`\`\`
+`
+                    : `-  read value
+\`\`\`ts no-build
+const ${varname} = new ds.${clname}()
+// ...
+const value = ${varname}.${pname}.read()
+\`\`\`
+`,
+                isNumber
+                    ? `-  track value changes
+\`\`\`ts no-build
+const ${varname} = new ds.${clname}()
+// ...
+${varname}.${pname}.onChange(0, () => {
+    const value = ${varname}.${pname}.read()
+})
+\`\`\`
+`
+                    : undefined
+            )
+        }
+    }
+
     return r.filter(s => s !== undefined).join("\n")
+    function enumName(n: string) {
+        return upperCamel(info.camelName) + upperCamel(n)
+    }
 }
 
 export function markdownFiles(specs?: jdspec.ServiceSpec[]) {
