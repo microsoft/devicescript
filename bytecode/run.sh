@@ -2,11 +2,11 @@
 
 set -x
 set -e
-node ../compiler/node_modules/typescript/bin/tsc
+node ../node_modules/typescript/bin/tsc
 node build/process.js bytecode.md
 cp build/bytecode.ts ../compiler/src/
-cp build/devs_bytecode.h ../jacdac-c/devicescript/
-clang-format -i ../jacdac-c/devicescript/devs_bytecode.h
+cp build/devs_bytecode.h ../runtime/jacdac-c/devicescript/devs_bytecode.h
+clang-format -i ../runtime/jacdac-c/devicescript/devs_bytecode.h
 prettier -w ../compiler/src/bytecode.ts
 MC=../../../microcode
 if test -d $MC ; then

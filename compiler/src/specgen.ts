@@ -2,7 +2,6 @@ import {
     cStorage,
     addComment,
     wrapComment,
-    jsQuote,
 } from "../../runtime/jacdac-c/jacdac/spectool/jdspec"
 import { jacdacDefaultSpecifications } from "./embedspecs"
 import { prelude } from "./prelude"

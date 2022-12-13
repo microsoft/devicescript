@@ -2,9 +2,44 @@
 
 ## TODO
 
-* strings vs buffers
+* split strings and buffers in bytecode
+* built-in strings
+* object prototypes
+* object property lookup by string, not index
+* closures - just keep pointer to parent stack frame - in parent clear pointer variables on last use or exit
+* try/catch
+* some more compact binary string repr? LATER
+* drop seconds, use milliseconds everywhere
+* multi-program LATER
+
+### Tree-shaking
+* in ES tree shaking typically only applies to functions, not class/object methods
+* should people even use classes?
+
+
+### Decisions
+* utf16 vs utf8 strings
 * null vs undefined
-* slices vs dest offsets
+* hash-consing of strings? LATER
+* call method identified by string -> eg. charCodeAt YES
+* prototype property access via string lookup?
+
+### Buffer-ish
+* built in strings
+* static ASCII strings
+* static Unicode strings
+* dynamic ASCII strings
+* dynamic Unicode strings
+* dynamic tree strings
+* static buffers
+* dynamic buffers
+
+
+Strings layout:
+* 2 byte offset into NUL-terminated string in string data section; ASCII-only, length up to ~50 bytes, no inner NUL
+* 4 byte offset + 3 byte length + 1 byte flags (ASCII-only, has skip-list) - both buffer and string, but in separate tables
+
+
 
 ## Statements
 
@@ -42,7 +77,7 @@ Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
 Copy bytes `src[src_offset .. src_offset + length]` to `dst[dst_offset .. ]`.
 Both `src` and `dst` are buffers.
 
-    memset(dst, offset, length, value) = 93
+    memset(dst, offset, length, value) = 51
 
 Set bytes `dst[offset .. offset + length]` to `value`.
 
@@ -102,7 +137,13 @@ Inserts `count` values (`undefined`) at `index`. If `count` is negative, removes
 
     fun static_role(*role_idx): role = 50
 
-    fun static_buffer(*string_idx): buffer = 51
+    fun static_buffer(*buffer_idx): buffer = 93
+
+    fun static_builtin_string(*builtin_idx): buffer = 94
+
+    fun static_ascii_string(*ascii_idx): buffer = 95
+
+    fun static_utf8_string(*utf8_idx): buffer = 96
 
     fun static_function(*func_idx): function = 90
 
@@ -264,20 +305,29 @@ Returns an int between 0 and `x` inclusive.
 
 ## Format Constants
 
-    img_version = 0x00030002
+    img_version = 0x00040000
     magic0 = 0x5363614a // "JacS"
     magic1 = 0x9a6a7e0a
-    num_img_sections = 6
+    num_img_sections = 8
     fix_header_size = 64
     section_header_size = 8
     function_header_size = 16
     role_header_size = 8
+    ascii_header_size = 2
     binary_size_align = 32
     max_stack_depth = 10
     direct_const_op = 0x80
     direct_const_offset = 16
     first_multibyte_int = 0xf8
     first_non_opcode = 0x10000
+
+## Enum: StrIdx
+
+    buffer = 0
+    builtin = 1
+    ascii = 2
+    utf8 = 3
+    _shift = 14
 
 ## Enum: OpCall
 
@@ -353,6 +403,8 @@ Only `true` and `false` values.
 
     function = 8
 
+    string = 9
+
 
 ### Object_Types only used in static type info
 
@@ -360,3 +412,24 @@ Only `true` and `false` values.
 
     void = 11
 
+## Enum: BuiltIn_String
+
+    _empty = 0
+    null = 18
+    undefined = 1
+    string = 2
+    number = 3
+    boolean = 4
+    function = 5
+    toString = 6
+    charCodeAt = 7
+    next = 8
+    prev = 9
+    length = 10
+    pop = 11
+    push = 12
+    shift = 13
+    unshift = 14
+    splice = 15
+    slice = 16
+    join = 17

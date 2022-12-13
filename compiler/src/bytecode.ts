@@ -12,7 +12,7 @@ export enum Op {
     STMT1_SETUP_PKT_BUFFER = 70, // size
     STMT2_SET_PKT = 71, // buffer, offset
     STMT5_BLIT = 72, // dst, dst_offset, src, src_offset, length
-    STMT4_MEMSET = 93, // dst, offset, length, value
+    STMT4_MEMSET = 51, // dst, offset, length, value
     STMTx2_CALL = 73, // *local_idx, numargs, func
     STMTx3_CALL_BG = 74, // *local_idx, numargs, func, opcall
     STMT1_RETURN = 75, // value
@@ -34,7 +34,10 @@ export enum Op {
     EXPRx_LOAD_GLOBAL = 2, // *global_idx
     EXPRx_LOAD_PARAM = 45, // *param_idx
     EXPRx_STATIC_ROLE = 50, // *role_idx
-    EXPRx_STATIC_BUFFER = 51, // *string_idx
+    EXPRx_STATIC_BUFFER = 93, // *buffer_idx
+    EXPRx_STATIC_BUILTIN_STRING = 94, // *builtin_idx
+    EXPRx_STATIC_ASCII_STRING = 95, // *ascii_idx
+    EXPRx_STATIC_UTF8_STRING = 96, // *utf8_idx
     EXPRx_STATIC_FUNCTION = 90, // *func_idx
     EXPRx_LITERAL = 4, // *value
     EXPRx_LITERAL_F64 = 5, // *f64_idx
@@ -94,29 +97,38 @@ export enum Op {
     EXPR2_NE = 39, // x != y
     EXPR2_MAX = 36,
     EXPR2_MIN = 37,
-    OP_PAST_LAST = 94,
+    OP_PAST_LAST = 97,
 }
 
 export const OP_PROPS =
-    "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20\x00\x01\x00\x00\x60\x60\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60\x42\x41\x14"
+    "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20\x00\x01\x00\x00\x60\x14\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60\x42\x41\x60\x60\x60\x60"
 export const OP_TYPES =
-    "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a\x01\x07\x01\x01\x05\x04\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08\x01\x01\x0b"
+    "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a\x01\x07\x01\x01\x05\x0b\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08\x01\x01\x04\x04\x04\x04"
 
 export enum BinFmt {
-    IMG_VERSION = 0x00030002,
+    IMG_VERSION = 0x00040000,
     MAGIC0 = 0x5363614a, // "JacS"
     MAGIC1 = 0x9a6a7e0a,
-    NUM_IMG_SECTIONS = 6,
+    NUM_IMG_SECTIONS = 8,
     FIX_HEADER_SIZE = 64,
     SECTION_HEADER_SIZE = 8,
     FUNCTION_HEADER_SIZE = 16,
     ROLE_HEADER_SIZE = 8,
+    ASCII_HEADER_SIZE = 2,
     BINARY_SIZE_ALIGN = 32,
     MAX_STACK_DEPTH = 10,
     DIRECT_CONST_OP = 0x80,
     DIRECT_CONST_OFFSET = 16,
     FIRST_MULTIBYTE_INT = 0xf8,
     FIRST_NON_OPCODE = 0x10000,
+}
+
+export enum StrIdx {
+    BUFFER = 0,
+    BUILTIN = 1,
+    ASCII = 2,
+    UTF8 = 3,
+    _SHIFT = 14,
 }
 
 export enum OpCall {
@@ -159,8 +171,31 @@ export enum ObjectType {
     BOOL = 6,
     FIBER = 7,
     FUNCTION = 8,
+    STRING = 9,
     ANY = 10,
     VOID = 11,
+}
+
+export enum BuiltInString {
+    _EMPTY = 0,
+    NULL = 18,
+    UNDEFINED = 1,
+    STRING = 2,
+    NUMBER = 3,
+    BOOLEAN = 4,
+    FUNCTION = 5,
+    TOSTRING = 6,
+    CHARCODEAT = 7,
+    NEXT = 8,
+    PREV = 9,
+    LENGTH = 10,
+    POP = 11,
+    PUSH = 12,
+    SHIFT = 13,
+    UNSHIFT = 14,
+    SPLICE = 15,
+    SLICE = 16,
+    JOIN = 17,
 }
 
 export const OP_PRINT_FMTS = [
@@ -215,7 +250,7 @@ export const OP_PRINT_FMTS = [
     "pkt_report_code()",
     "pkt_command_code()",
     "%R",
-    "%S",
+    "MEMSET dst=%e offset=%e length=%e %e",
     "%e.%e",
     "%e[%e]",
     "object_length(%e)",
@@ -257,7 +292,10 @@ export const OP_PRINT_FMTS = [
     "%F",
     "imod(%e, %e)",
     "to_int(%e)",
-    "MEMSET dst=%e offset=%e length=%e %e",
+    "%B",
+    "%I",
+    "%A",
+    "%U",
 ]
 export const OBJECT_TYPE = [
     "null",
@@ -269,7 +307,29 @@ export const OBJECT_TYPE = [
     "bool",
     "fiber",
     "function",
-    null,
+    "string",
     "any",
     "void",
 ]
+export const BUILTIN_STRING__VAL = [
+    "",
+    "undefined",
+    "string",
+    "number",
+    "boolean",
+    "function",
+    "toString",
+    "charCodeAt",
+    "next",
+    "prev",
+    "length",
+    "pop",
+    "push",
+    "shift",
+    "unshift",
+    "splice",
+    "slice",
+    "join",
+    "null",
+]
+export const BUILTIN_STRING__SIZE = 19

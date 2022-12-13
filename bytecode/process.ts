@@ -45,7 +45,12 @@ function processSpec(filecontent: string): Spec {
         jmpoffset: "j",
 
         role_idx: "R",
-        string_idx: "S",
+
+        ascii_idx: "A",
+        utf8_idx: "U",
+        buffer_idx: "B",
+        builtin_idx: "I",
+
         local_idx: "L",
         func_idx: "F",
         global_idx: "G",
@@ -335,16 +340,27 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
 
     if (isTS)
         for (const en of ["Object_Type"])
-            emitConst(
-                en,
-                JSON.stringify(enumNames(spec.enums[en]))
-            )
+            emitConst(en, JSON.stringify(enumNames(spec.enums[en])))
 
     if (isSTS) r += "} // devs\n"
 
     if (!isTS) r += genJmpTables(spec)
 
+    emitStrings("BuiltIn_String")
+
     return r
+
+    function listLiteral(lst: string[]) {
+        const inner = lst
+            .map(o => (o == "_empty" ? '""' : JSON.stringify(o)))
+            .join(", ")
+        return isTS ? `[${inner}]` : inner
+    }
+
+    function emitStrings(id: string) {
+        emitConst(id + "__val", listLiteral(contEnumNames(spec.enums[id])))
+        emitConst(id + "__size", contEnumNames(spec.enums[id]).length + "")
+    }
 
     function emitFmts(id: string, lst: OpCode[]) {
         if (!isTS) return
@@ -417,4 +433,10 @@ function enumNames(lst: OpCode[]) {
         names[+obj.code] = obj.name
     }
     return names
+}
+
+function contEnumNames(lst: OpCode[]) {
+    const tmp = enumNames(lst)
+    if (tmp.some(n => !n)) throw new Error("bad enum")
+    return tmp
 }
