@@ -17,7 +17,7 @@ import {
 } from "./jdutil"
 
 function error(msg: string) {
-    console.error("JacS disasm error: " + msg)
+    console.error("DevS disasm error: " + msg)
 }
 
 function decodeSection(buf: Uint8Array, off: number, img?: Uint8Array) {
@@ -138,6 +138,23 @@ export function disassemble(img: Uint8Array): string {
         fnid++
     }
 
+    // printStrings("builtin", StrIdx.BUILTIN, BUILTIN_STRING__SIZE)
+    printStrings(
+        "ASCII",
+        StrIdx.ASCII,
+        asciiDesc.length / BinFmt.ASCII_HEADER_SIZE
+    )
+    printStrings(
+        "UTF8",
+        StrIdx.UTF8,
+        utf8Desc.length / BinFmt.SECTION_HEADER_SIZE
+    )
+    printStrings(
+        "buffer",
+        StrIdx.BUFFER,
+        bufferDesc.length / BinFmt.SECTION_HEADER_SIZE
+    )
+
     return r
 
     function getString1(idx: number) {
@@ -150,6 +167,13 @@ export function disassemble(img: Uint8Array): string {
         const buf = getStringBuf(tp, idx)
         if (tp == StrIdx.BUFFER) return toHex(buf)
         else return fromUTF8(uint8ArrayToString(buf))
+    }
+
+    function printStrings(lbl: string, tp: StrIdx, num: number) {
+        r += `\nStrings ${lbl}:\n`
+        for (let i = 0; i < num; ++i) {
+            r += ("     " + i).slice(-4) + ": " + describeString(tp, i) + "\n"
+        }
     }
 
     function getStringBuf(tp: StrIdx, idx: number) {
