@@ -5,9 +5,7 @@ hide_table_of_contents: true
 
 # Registers
 
-Registers are referenced as `myRole.regName`, where `regName` can also be the system-wide name,
-so both `pot.position` and `pot.reading` will work.
-TODO should we drop this, and only leave `pot.position` ?
+Registers are referenced as `myRole.regName`.
 
 Registers have following methods - `.onChange()`, `.read()` and `.write()`.
 If register contains multiple fields, a tuple (array) is returned.

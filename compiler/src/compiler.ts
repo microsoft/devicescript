@@ -2325,16 +2325,8 @@ class Program implements TopOpWriter {
             }
         }
 
-        let generic: jdspec.PacketInfo
-        for (const p of this.sysSpec.packets) {
-            if (this.matchesSpecName(p, propName)) generic = p
-        }
-
         for (const p of roleSpec.packets) {
-            if (
-                this.matchesSpecName(p, propName) ||
-                (generic?.identifier == p.identifier && generic?.kind == p.kind)
-            ) {
+            if (this.matchesSpecName(p, propName)) {
                 if (isRegister(p)) {
                     setKind(p, ValueKind.JD_REG)
                 }

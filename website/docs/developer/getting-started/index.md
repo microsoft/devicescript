@@ -94,7 +94,7 @@ in the console output.
 
 ### Reading the pressure
 
-We can modify the snippet by `reading` the `pressure` reading
+We can modify the snippet by `read()ing` the `pressure` reading
 and logging it to the console.
 
 ```ts
@@ -111,7 +111,7 @@ sensor.pressure.onChange(10, () => {
 
 ### Testing for high pressure
 
-Let's assume that `1400` hPa is a thresold high enough
+Let's assume that `1400` hPa is a threshold high enough
 to detect a user blowing on the sensor; then we
 can add code to generate a mouse click.
 
