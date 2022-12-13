@@ -28,12 +28,18 @@ function fetchProxy(localhost: boolean): Promise<string> {
                 let body = ""
                 res.on("data", data => (body += data))
                 res.on("end", () => {
-                    body = body.replace(
-                        /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
-                        localhost
-                            ? `http://localhost:8000/${dasboardPath}/`
-                            : `https://microsoft.github.io/jacdac-docs/${dasboardPath}/`
-                    )
+                    body = body
+                        .replace(
+                            /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
+                            localhost
+                                ? `http://localhost:8000/${dasboardPath}/`
+                                : `https://microsoft.github.io/jacdac-docs/${dasboardPath}/`
+                        )
+                        .replace("Jacdac DevTools", "DeviceScript DevTools")
+                        .replace(
+                            "https://microsoft.github.io/jacdac-docs/favicon.svg",
+                            "https://microsoft.github.io/devicescript/img/favicon.svg"
+                        )
                     resolve(body)
                 })
                 res.on("error", reject)
@@ -70,7 +76,11 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
         ? () => {
               const bytecode = readFileSync(bytecodeFile)
               const dbg = debugFile ? readJSONSync(debugFile) : undefined
-              debug(`refresh bytecode (${prettySize(bytecode.length)}) with ${clients.length} clients...`)
+              debug(
+                  `refresh bytecode (${prettySize(bytecode.length)}) with ${
+                      clients.length
+                  } clients...`
+              )
               const msg = JSON.stringify({
                   type: "bytecode",
                   channel: "devicescript",
