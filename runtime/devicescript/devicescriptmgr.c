@@ -7,10 +7,10 @@
 #include "jacdac/dist/c/devicescriptmanager.h"
 #include "devicescript/devicescript.h"
 
-#define JACSMGR_ALIGN 32
+#define DEVSMGR_ALIGN 32
 
-#define JACSMGR_PROG_MAGIC0 0x8d8abd53
-#define JACSMGR_PROG_MAGIC1 0xb27c4b2b
+#define DEVSMGR_PROG_MAGIC0 0x8d8abd53
+#define DEVSMGR_PROG_MAGIC1 0xb27c4b2b
 
 #define LOGV JD_NOLOG
 
@@ -74,7 +74,7 @@ __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program
 
 static const devicescriptmgr_program_header_t *devs_header(srv_t *state) {
     const devicescriptmgr_program_header_t *hd = state->cfg->program_base;
-    if (hd->magic0 == JACSMGR_PROG_MAGIC0 && hd->magic1 == JACSMGR_PROG_MAGIC1)
+    if (hd->magic0 == DEVSMGR_PROG_MAGIC0 && hd->magic1 == DEVSMGR_PROG_MAGIC1)
         return hd;
     return NULL;
 }
@@ -173,7 +173,7 @@ int devicescriptmgr_deploy_start(uint32_t sz) {
 
     DMESG("deploy %d b", (int)sz);
 
-    if (sz >= state->cfg->max_program_size - sizeof(hd) || (sz & (JACSMGR_ALIGN - 1)))
+    if (sz >= state->cfg->max_program_size - sizeof(hd) || (sz & (DEVSMGR_ALIGN - 1)))
         return -1;
 
     stop_program(state);
@@ -183,7 +183,7 @@ int devicescriptmgr_deploy_start(uint32_t sz) {
     if (sz == 0)
         return 0;
 
-    hd.magic0 = JACSMGR_PROG_MAGIC0;
+    hd.magic0 = DEVSMGR_PROG_MAGIC0;
     hd.size = sz;
     flash_program(state->cfg->program_base, &hd, 8);
 
@@ -204,7 +204,7 @@ int devicescriptmgr_deploy_write(const void *buf, unsigned size) {
         // pipe closed
         devicescriptmgr_program_header_t *hdf = state->cfg->program_base;
         devicescriptmgr_program_header_t hd = {
-            .magic1 = JACSMGR_PROG_MAGIC1,
+            .magic1 = DEVSMGR_PROG_MAGIC1,
             .hash = jd_hash_fnv1a(hdf->image, hdf->size),
         };
         unsigned endp = hdf->size + sizeof(hd);
@@ -225,7 +225,7 @@ int devicescriptmgr_deploy_write(const void *buf, unsigned size) {
     uint8_t *dst = state->cfg->program_base;
     uint32_t endp =
         ((devicescriptmgr_program_header_t *)dst)->size + sizeof(devicescriptmgr_program_header_t);
-    if (size & (JACSMGR_ALIGN - 1) || state->write_offset + size > endp ||
+    if (size & (DEVSMGR_ALIGN - 1) || state->write_offset + size > endp ||
         size >= JD_FLASH_PAGE_SIZE) {
         DMESG("invalid pkt size: %d (off=%d endp=%d)", size, (int)state->write_offset, (int)endp);
         state->write_offset = 0;
