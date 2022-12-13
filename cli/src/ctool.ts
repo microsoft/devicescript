@@ -20,7 +20,7 @@ const rtest = "devs/run-tests"
 
 export async function ctool(options: CToolOptions & CmdOptions) {
     if (options.empty) {
-        const res = await compileBuf(Buffer.from(""))
+        const res = await compileBuf(Buffer.from(""), { noVerify: true })
         const buf = res.binary
         let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[${buf.length}] = {`
         for (let i = 0; i < buf.length; ++i) {

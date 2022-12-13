@@ -2960,6 +2960,8 @@ class Program implements TopOpWriter {
         addLits(this.bufferLiterals, bufferDesc)
 
         asciiDesc.align()
+
+        strData.append(new Uint8Array(1)) // final NUL-terminator
         strData.align()
 
         let off = 0

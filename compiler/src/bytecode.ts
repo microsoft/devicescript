@@ -110,7 +110,7 @@ export enum BinFmt {
     MAGIC0 = 0x5363614a, // "JacS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 8,
-    FIX_HEADER_SIZE = 64,
+    FIX_HEADER_SIZE = 32,
     SECTION_HEADER_SIZE = 8,
     FUNCTION_HEADER_SIZE = 16,
     ROLE_HEADER_SIZE = 8,

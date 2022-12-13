@@ -309,7 +309,7 @@ Returns an int between 0 and `x` inclusive.
     magic0 = 0x5363614a // "JacS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 8
-    fix_header_size = 64
+    fix_header_size = 32
     section_header_size = 8
     function_header_size = 16
     role_header_size = 8
