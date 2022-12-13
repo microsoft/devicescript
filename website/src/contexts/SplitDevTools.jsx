@@ -19,6 +19,7 @@ export default function SplitDevTools(props) {
             type: "source",
             source,
             force,
+            startMissingSimulators: true,
         }
         parent.postMessage(msg, "https://microsoft.github.io/jacdac-docs/")
     }
