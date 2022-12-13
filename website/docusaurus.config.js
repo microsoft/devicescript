@@ -75,6 +75,12 @@ async function createConfig() {
                             label: "Docs",
                         },
                         {
+                            type: "doc",
+                            docId: "api/cli",
+                            position: "left",
+                            label: "API",
+                        },
+                        {
                             href: "https://github.com/microsoft/devicescript/",
                             label: "GitHub",
                             position: "right",
@@ -88,8 +94,16 @@ async function createConfig() {
                             title: "Docs",
                             items: [
                                 {
+                                    label: "Developer",
+                                    to: "/developer",
+                                },
+                                {
                                     label: "Language Reference",
-                                    to: "/intro",
+                                    to: "/language",
+                                },
+                                {
+                                    label: "API",
+                                    to: "/api/cli",
                                 },
                             ],
                         },

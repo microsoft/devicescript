@@ -1,16 +1,16 @@
 ---
-sidebar_position: 200
+sidebar_position: 1
 ---
 
 # Command Line Interface
 
-The DeviceScript command line allows to compile and debug programs from your favorite IDE.
+The DeviceScript command line (CLI) allows to compile and debug programs from your favorite IDE.
 The CLI also also usable within containers (Docker, GitHub Codespaces, CodeSandbox, ...).
 
 ## Setup
 
 -   install [Node.js](https://nodejs.org/en/download/)
--   install the CLI using npm or yarn
+-   install the CLI using `npm` or `yarn`
 
 ```bash
 # yarn
