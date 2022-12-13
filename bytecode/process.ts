@@ -297,7 +297,7 @@ function serializeProps(lst: OpCode[], fn: (o: OpCode) => number) {
 }
 
 function genJmpTables(spec: Spec) {
-    let r = "\n#define JACS_OP_HANDLERS expr_invalid, \\\n"
+    let r = "\n#define DEVS_OP_HANDLERS expr_invalid, \\\n"
     for (const obj of sortByCode(spec.ops)) {
         r += `${sig(obj).toLowerCase()}_${obj.name}, \\\n`
     }
@@ -382,7 +382,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
         comment = addCmt(comment)
         if (isTS)
             r += `export const ${name.toUpperCase()} = ${val} ${comment}\n`
-        else r += `#define JACS_${name.toUpperCase()} ${val} ${comment}\n`
+        else r += `#define DEVS_${name.toUpperCase()} ${val} ${comment}\n`
     }
 
     function startEnum(name: string) {
@@ -399,7 +399,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
         const val = obj.code
         const name = pref + obj.name.toUpperCase()
         if (isTS) r += `    ${name} = ${val}, ${cmt}\n`
-        else r += `#define JACS_${name} ${val} ${cmt}\n`
+        else r += `#define DEVS_${name} ${val} ${cmt}\n`
     }
 }
 

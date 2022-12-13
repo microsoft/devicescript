@@ -80,14 +80,14 @@ const JD_LSTORE_TYPE_DMESG = 0x02
 const JD_LSTORE_TYPE_LOG = 0x03
 const JD_LSTORE_TYPE_JD_FRAME = 0x04
 const JD_LSTORE_TYPE_PANIC_LOG = 0x05
-const JACS_TRACE_EV_NOW = 0x40
-const JACS_TRACE_EV_INIT = 0x41
-const JACS_TRACE_EV_SERVICE_PACKET = 0x42
-const JACS_TRACE_EV_NON_SERVICE_PACKET = 0x43
-const JACS_TRACE_EV_BROADCAST_PACKET = 0x44
-const JACS_TRACE_EV_ROLE_CHANGED = 0x45
-const JACS_TRACE_EV_FIBER_RUN = 0x46
-const JACS_TRACE_EV_FIBER_YIELD = 0x47
+const DEVS_TRACE_EV_NOW = 0x40
+const DEVS_TRACE_EV_INIT = 0x41
+const DEVS_TRACE_EV_SERVICE_PACKET = 0x42
+const DEVS_TRACE_EV_NON_SERVICE_PACKET = 0x43
+const DEVS_TRACE_EV_BROADCAST_PACKET = 0x44
+const DEVS_TRACE_EV_ROLE_CHANGED = 0x45
+const DEVS_TRACE_EV_FIBER_RUN = 0x46
+const DEVS_TRACE_EV_FIBER_YIELD = 0x47
 
 const typeLookup: Record<number, string> = {
     [JD_LSTORE_TYPE_DEVINFO]: "devinfo",
@@ -95,14 +95,14 @@ const typeLookup: Record<number, string> = {
     [JD_LSTORE_TYPE_LOG]: "log",
     [JD_LSTORE_TYPE_PANIC_LOG]: "panic_log",
     [JD_LSTORE_TYPE_JD_FRAME]: "frame",
-    [JACS_TRACE_EV_NOW]: "NOW",
-    [JACS_TRACE_EV_INIT]: "INIT",
-    [JACS_TRACE_EV_SERVICE_PACKET]: "PKT",
-    [JACS_TRACE_EV_NON_SERVICE_PACKET]: "PKT[?]",
-    [JACS_TRACE_EV_BROADCAST_PACKET]: "PKT[*]",
-    [JACS_TRACE_EV_ROLE_CHANGED]: "ROLE",
-    [JACS_TRACE_EV_FIBER_RUN]: "FIBER_RUN",
-    [JACS_TRACE_EV_FIBER_YIELD]: "FIBER_YIELD",
+    [DEVS_TRACE_EV_NOW]: "NOW",
+    [DEVS_TRACE_EV_INIT]: "INIT",
+    [DEVS_TRACE_EV_SERVICE_PACKET]: "PKT",
+    [DEVS_TRACE_EV_NON_SERVICE_PACKET]: "PKT[?]",
+    [DEVS_TRACE_EV_BROADCAST_PACKET]: "PKT[*]",
+    [DEVS_TRACE_EV_ROLE_CHANGED]: "ROLE",
+    [DEVS_TRACE_EV_FIBER_RUN]: "FIBER_RUN",
+    [DEVS_TRACE_EV_FIBER_YIELD]: "FIBER_YIELD",
 }
 
 export class GenerationInfo {
@@ -399,13 +399,13 @@ function decodeEvent(ev: TraceEvent) {
             } catch {}
             ev.human = prefix(pref, ev.decoded.replace(/\x1B\[[0-9;]+m/g, ""))
             break
-        case JACS_TRACE_EV_BROADCAST_PACKET:
-        case JACS_TRACE_EV_SERVICE_PACKET:
-        case JACS_TRACE_EV_NON_SERVICE_PACKET:
+        case DEVS_TRACE_EV_BROADCAST_PACKET:
+        case DEVS_TRACE_EV_SERVICE_PACKET:
+        case DEVS_TRACE_EV_NON_SERVICE_PACKET:
             ev.decoded = toHex(ev.payload)
             ev.human = ts + " " + ev.decoded
             break
-        case JACS_TRACE_EV_NOW:
+        case DEVS_TRACE_EV_NOW:
             ev.decoded = read32(ev.payload, 0)
             ev.human = pref + ev.decoded
             break

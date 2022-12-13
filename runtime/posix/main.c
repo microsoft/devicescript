@@ -295,7 +295,7 @@ int main(int argc, const char **argv) {
         } else if (strcmp(arg, "-l") == 0) {
             enable_lstore = 1;
         } else if (strcmp(arg, "-X") == 0) {
-            devs_set_global_flags(JACS_FLAG_GC_STRESS);
+            devs_set_global_flags(DEVS_FLAG_GC_STRESS);
         } else if (strcmp(arg, "-w") == 0) {
             websock = 1;
         } else if (strcmp(arg, "-n") == 0) {

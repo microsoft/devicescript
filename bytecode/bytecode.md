@@ -305,8 +305,8 @@ Returns an int between 0 and `x` inclusive.
 
 ## Format Constants
 
-    img_version = 0x00040000
-    magic0 = 0x5363614a // "JacS"
+    img_version = 0x00010000
+    magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 8
     fix_header_size = 32

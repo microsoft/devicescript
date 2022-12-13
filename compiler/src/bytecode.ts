@@ -107,7 +107,7 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION = 0x00040000,
-    MAGIC0 = 0x5363614a, // "JacS"
+    MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 8,
     FIX_HEADER_SIZE = 32,
