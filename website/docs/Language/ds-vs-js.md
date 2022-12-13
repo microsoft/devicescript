@@ -2,7 +2,7 @@
 sidebar_position: 100
 ---
 
-# Differences between DeviceScript and JavaScript
+# Differences with JavaScript
 
 This document lists differences in semantics between DeviceScript and JavaScript/TypeScript.
 
