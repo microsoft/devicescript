@@ -180,7 +180,7 @@ function specToMarkdown(info: jdspec.ServiceSpec): string {
     const clname = upperCamel(camelName)
     const varname = reserved[camelName] || camelName
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
-    const nobuild = status === "stable" || status === "rc" ? "" : "no-build"
+    const nobuild = status === "stable" ? "" : "no-build"
 
     let r: string[] = [
         `---
