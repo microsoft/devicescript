@@ -80,7 +80,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
         if (info.tags?.length) cmt += `@category ${info.tags[0]}\n`
-        r += wrapComment("devs", cmt)
+        r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class
     r += `class ${clname} extends ${baseclass} {\n`
@@ -149,6 +149,9 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     function enumName(n: string) {
         return upperCamel(info.camelName) + upperCamel(n)
     }
+    function patchLinks(n: string) {
+        return n?.replace(/\]\(\/services\//g, "](/api/clients/")
+    }
 }
 
 export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
@@ -181,7 +184,7 @@ pagination_next: null
 ---        
 # ${clname}
 `,
-        info.notes["short"],
+        patchLinks(info.notes["short"]),
         `-  client for [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/)`,
         baseclass ? `-  inherits ${baseclass}` : undefined,
         status !== "stable" && info.shortId[0] !== "_"
@@ -194,7 +197,7 @@ This service is ${status} and may change in the future.
         info.notes["long"]
             ? `## About
 
-${info.notes["long"]}
+${patchLinks(info.notes["long"])}
 `
             : undefined,
         `
@@ -279,6 +282,9 @@ ${varname}.${pname}.onChange(0, () => {
     return r.filter(s => s !== undefined).join("\n")
     function enumName(n: string) {
         return upperCamel(info.camelName) + upperCamel(n)
+    }
+    function patchLinks(n: string) {
+        return n?.replace(/\]\(\/services\//g, "](/api/clients/")
     }
 }
 
