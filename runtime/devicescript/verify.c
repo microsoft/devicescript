@@ -1,7 +1,8 @@
 #include "devs_internal.h"
 #include <math.h>
 
-STATIC_ASSERT(sizeof(devs_img_header_t) == 64 + JACS_NUM_IMG_SECTIONS * sizeof(devs_img_section_t));
+STATIC_ASSERT(sizeof(devs_img_header_t) ==
+              JACS_FIX_HEADER_SIZE + JACS_NUM_IMG_SECTIONS * sizeof(devs_img_section_t));
 
 static int fail(int code, uint32_t offset) {
     DMESG("verification failure: %d at %x", code, (unsigned)offset);

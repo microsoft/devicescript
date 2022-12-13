@@ -85,7 +85,7 @@ void devs_vm_exec_opcodes(devs_ctx_t *ctx) {
 static const char *builtin_strings[JACS_BUILTIN_STRING__SIZE] = {JACS_BUILTIN_STRING__VAL};
 const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
     if (!devs_img_stridx_ok(img, idx)) {
-        if (*size)
+        if (size)
             *size = 0;
         return NULL;
     }
@@ -119,11 +119,11 @@ const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
     }
 
     if (sect) {
-        if (*size)
+        if (size)
             *size = sect->length;
         return (const char *)(img.data + img.header->string_data.start + sect->start);
     } else if (r) {
-        if (*size)
+        if (size)
             *size = strlen(r);
         return r;
     } else {
