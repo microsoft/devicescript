@@ -85,8 +85,8 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     // emit class
     r += `class ${clname} extends ${baseclass} {\n`
 
-    for (const pkt of info.packets) {
-        if (pkt.derived || pkt.internal) continue // ???
+    info.packets.forEach(pkt => {
+        if (pkt.derived || pkt.internal) return // ???
         const cmt = addComment(pkt)
 
         let kw = ""
@@ -146,7 +146,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
             r += wrapComment("devs", cmt.comment)
             r += `    ${kw}${camelize(pkt.name)}: ${tp}\n`
         }
-    }
+    })
 
     r += "}\n"
 
@@ -214,8 +214,8 @@ const ${varname} = new ds.${clname}()
             `,
     ]
 
-    for (const pkt of info.packets) {
-        if (pkt.derived || pkt.internal) continue // ???
+    info.packets.forEach(pkt => {
+        if (pkt.derived || pkt.internal) return // ???
         const cmt = addComment(pkt)
         // if there's a startRepeats before last field, we don't put ... before it
         const earlyRepeats = pkt.fields
@@ -252,7 +252,11 @@ const ${varname} = new ds.${clname}()
 `,
                 pkt.description,
                 "",
-                `-  register of type: \`number\` (protocol ${pkt.packFormat})`,
+                `-  register of type: \`${tp}\` (protocol \`${pkt.packFormat}\`)`,
+                pkt.optional
+                    ? `-  optional: this register may not be implemented`
+                    : undefined,
+                "",
                 !isNumber
                     ? undefined
                     : pkt.kind === "rw"
@@ -284,7 +288,7 @@ ${varname}.${pname}.onChange(0, () => {
                     : undefined
             )
         }
-    }
+    })
 
     return r.filter(s => s !== undefined).join("\n")
     function enumName(n: string) {
