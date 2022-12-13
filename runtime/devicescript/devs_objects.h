@@ -25,6 +25,12 @@ typedef struct {
     uint8_t data[0];
 } devs_buffer_t;
 
+typedef struct {
+    devs_gc_object_t gc;
+    devs_small_size_t length;
+    char data[0];
+} devs_string_t;
+
 static inline devs_key_id_t *devs_map_keys(devs_map_t *m) {
     return (devs_key_id_t *)(void *)(m->data + m->length);
 }
@@ -53,6 +59,7 @@ typedef struct _devs_gc_t devs_gc_t;
 devs_map_t *devs_map_try_alloc(devs_gc_t *gc);
 devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size);
 devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size);
+devs_string_t *devs_string_try_alloc(devs_gc_t *gc, unsigned size);
 
 devs_gc_t *devs_gc_create(void);
 void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx);
@@ -75,6 +82,7 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_ARRAY 0x3
 #define DEVS_GC_TAG_MAP 0x4
 #define DEVS_GC_TAG_BUFFER 0x5
+#define DEVS_GC_TAG_STRING 0x6
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 
 static inline int devs_gc_tag(void *ptr) {

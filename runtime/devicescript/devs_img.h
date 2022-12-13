@@ -42,5 +42,6 @@ static inline value_t devs_img_get_float(devs_img_t img, uint32_t idx) {
 
 const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size);
 const char *devs_img_fun_name(devs_img_t img, unsigned fidx);
+const char *devs_img_role_name(devs_img_t img, unsigned idx);
 bool devs_img_stridx_ok(devs_img_t img, uint32_t stridx);
-const char *devs_get_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size);
+const char *devs_get_static_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size);

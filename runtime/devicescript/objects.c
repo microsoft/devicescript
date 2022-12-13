@@ -1,4 +1,5 @@
 #include "devs_internal.h"
+#include "devs_objects.h"
 
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map) {
     if (map->data) {

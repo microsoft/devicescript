@@ -131,6 +131,7 @@ static void scan(devs_ctx_t *ctx, block_t *block, int depth) {
         scan_map(ctx, block->array.attached, depth);
         scan_array_and_mark(ctx, block->array.data, block->array.length, depth);
         break;
+    case DEVS_GC_TAG_STRING:
     case DEVS_GC_TAG_BYTES:
         break;
     default:
@@ -322,6 +323,26 @@ void jd_gc_free(devs_gc_t *gc, void *ptr) {
     memset(b->data, 0x47, (block_size(b) - 1) * sizeof(uintptr_t));
 }
 
+void devs_value_pin(devs_ctx_t *ctx, value_t v) {
+    if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT)
+        return;
+    block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v) - 1);
+    unsigned tag = GET_TAG(b->header);
+    JD_ASSERT((tag & DEVS_GC_TAG_MASK_PINNED) == 0);
+    JD_ASSERT((tag & DEVS_GC_TAG_MASK) >= DEVS_GC_TAG_BYTES);
+    b->header |= ((uintptr_t)DEVS_GC_TAG_MASK_PINNED << DEVS_GC_TAG_POS);
+}
+
+void devs_value_unpin(devs_ctx_t *ctx, value_t v) {
+    if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT)
+        return;
+    block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v) - 1);
+    unsigned tag = GET_TAG(b->header);
+    JD_ASSERT((tag & DEVS_GC_TAG_MASK_PINNED) != 0);
+    JD_ASSERT((tag & DEVS_GC_TAG_MASK) >= DEVS_GC_TAG_BYTES);
+    b->header &= ~((uintptr_t)DEVS_GC_TAG_MASK_PINNED << DEVS_GC_TAG_POS);
+}
+
 devs_map_t *devs_map_try_alloc(devs_gc_t *gc) {
     return try_alloc(gc, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
 }
@@ -355,11 +376,20 @@ devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size) {
     return buf;
 }
 
+devs_string_t *devs_string_try_alloc(devs_gc_t *gc, unsigned size) {
+    if (size > DEVS_MAX_ALLOC)
+        return NULL;
+    devs_string_t *buf = try_alloc(gc, DEVS_GC_TAG_STRING, sizeof(devs_string_t) + size + 1);
+    if (buf)
+        buf->length = size;
+    return buf;
+}
+
 void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
     gc->ctx = ctx;
 }
 
-static const char *tags[] = {"free", "bytes", "array", "map", "buffer"};
+static const char *tags[] = {"free", "bytes", "array", "map", "buffer", "string"};
 const char *devs_gc_tag_name(unsigned tag) {
     tag &= DEVS_GC_TAG_MASK;
     tag--;

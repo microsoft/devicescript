@@ -88,8 +88,16 @@ devs_map_t *devs_vm_pop_arg_map(devs_ctx_t *ctx, bool create) {
         break;
     case DEVS_GC_TAG_MAP:
         return obj;
+    case DEVS_GC_TAG_STRING:
+        // strings are immutable, can't attach properties
+        if (create) {
+            // note that in ES writing to string properties is no-op
+            // we make it an error
+            devs_runtime_failure(ctx, 60128);
+        }
+        return NULL;
     default:
-        JD_ASSERT(0);
+        JD_PANIC();
         break;
     }
 

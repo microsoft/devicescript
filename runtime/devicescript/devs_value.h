@@ -90,7 +90,7 @@ bool devs_is_nullish(value_t t);
 value_t devs_value_from_double(double v);
 value_t devs_value_from_int(int v);
 value_t devs_value_from_bool(int v);
-value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr);
+value_t devs_value_from_pointer(devs_ctx_t *ctx, int gc_tag, void *ptr);
 static inline value_t devs_value_from_gc_obj(devs_ctx_t *ctx, void *ptr) {
     return devs_value_from_pointer(ctx, DEVS_HANDLE_TYPE_GC_OBJECT, ptr);
 }
@@ -120,3 +120,15 @@ bool devs_buffer_is_writable(devs_ctx_t *ctx, value_t v);
 void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz);
 
 bool devs_is_array(devs_ctx_t *ctx, value_t v);
+
+bool devs_is_string(devs_ctx_t *ctx, value_t v);
+value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b);
+const char *devs_string_get_utf8(devs_ctx_t *ctx, value_t s, unsigned *size);
+value_t devs_value_to_string(devs_ctx_t *ctx, value_t v);
+value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap);
+__attribute__((format(printf, 2, 3))) value_t devs_string_sprintf(devs_ctx_t *ctx,
+                                                                  const char *format, ...);
+value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len);
+
+void devs_value_pin(devs_ctx_t *ctx, value_t v);
+void devs_value_unpin(devs_ctx_t *ctx, value_t v);

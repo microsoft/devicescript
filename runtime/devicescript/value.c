@@ -104,7 +104,7 @@ void *devs_handle_ptr_value(devs_ctx_t *ctx, value_t t) {
     if (tp & DEVS_HANDLE_IMG_MASK)
         return (void *)((uintptr_t)ctx->img.data + t.mantisa32);
 
-    JD_ASSERT(0);
+    JD_PANIC();
     return NULL;
 }
 #endif
@@ -184,10 +184,10 @@ void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
     case DEVS_HANDLE_TYPE_IMG_BUFFERISH: {
         // TODO optimize - we know it's a buffer in range
         unsigned idx = devs_handle_value(v);
-        return (void *)devs_get_utf8(ctx, idx, sz);
+        return (void *)devs_get_static_utf8(ctx, idx, sz);
     }
     default:
-        JD_ASSERT(0);
+        JD_PANIC();
         return NULL;
     }
 }
@@ -219,7 +219,7 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         case DEVS_SPECIAL_PKT_BUFFER:
             return DEVS_OBJECT_TYPE_BUFFER;
         default:
-            JD_ASSERT(0);
+            JD_PANIC();
             return 0;
         }
     case DEVS_HANDLE_TYPE_FIBER:
@@ -232,10 +232,12 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
             return DEVS_OBJECT_TYPE_ARRAY;
         case DEVS_GC_TAG_BUFFER:
             return DEVS_OBJECT_TYPE_BUFFER;
+        case DEVS_GC_TAG_STRING:
+            return DEVS_OBJECT_TYPE_STRING;
         case DEVS_GC_TAG_MAP:
             return DEVS_OBJECT_TYPE_MAP;
         default:
-            JD_ASSERT(0);
+            JD_PANIC();
             return 0;
         }
     case DEVS_HANDLE_TYPE_IMG_BUFFERISH:
@@ -243,7 +245,7 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_ROLE:
         return DEVS_OBJECT_TYPE_ROLE;
     default:
-        JD_ASSERT(0);
+        JD_PANIC();
         return 0;
     }
 }
@@ -311,6 +313,9 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
             break;
         case DEVS_GC_TAG_BUFFER:
             fmt = "buffer";
+            break;
+        case DEVS_GC_TAG_STRING:
+            fmt = "string";
             break;
         case DEVS_GC_TAG_MAP:
             fmt = "map";

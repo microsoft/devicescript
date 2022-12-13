@@ -109,6 +109,14 @@ static void stmt1_alloc_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     set_alloc(frame, ctx, obj, sizeof(devs_buffer_t) + sz);
 }
 
+static void stmt1_decode_utf8(devs_activation_t *frame, devs_ctx_t *ctx) {
+    unsigned slen;
+    uint8_t *src = devs_vm_pop_arg_buffer_data(ctx, &slen);
+    if (!ctx->error_code) {
+        frame->fiber->ret_val = devs_string_from_utf8(ctx, src, slen);
+    }
+}
+
 static void stmtx2_set_field(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     devs_map_t *map = devs_vm_pop_arg_map(ctx, true);
@@ -654,6 +662,10 @@ static int exec2_and_check_int(devs_activation_t *frame, devs_ctx_t *ctx) {
 #define af ctx->binop_f[0]
 #define bf ctx->binop_f[1]
 
+static bool either_is_string(devs_ctx_t *ctx) {
+    return devs_is_string(ctx, ctx->binop[0]) || devs_is_string(ctx, ctx->binop[1]);
+}
+
 static void force_double(devs_ctx_t *ctx) {
     af = devs_value_to_double(ctx->binop[0]);
     bf = devs_value_to_double(ctx->binop[1]);
@@ -677,6 +689,8 @@ static value_t expr2_add(devs_activation_t *frame, devs_ctx_t *ctx) {
         if (!__builtin_sadd_overflow(aa, bb, &r))
             return devs_value_from_int(r);
     }
+    if (either_is_string(ctx))
+        return devs_string_concat(ctx, ctx->binop[0], ctx->binop[1]);
     force_double(ctx);
     return devs_value_from_double(af + bf);
 }

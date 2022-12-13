@@ -13,6 +13,7 @@
 #define DEVS_STMT2_SET_PKT 71          // buffer, offset
 #define DEVS_STMT5_BLIT 72             // dst, dst_offset, src, src_offset, length
 #define DEVS_STMT4_MEMSET 51           // dst, offset, length, value
+#define DEVS_STMT1_DECODE_UTF8 97      // buffer
 #define DEVS_STMTx2_CALL 73            // *local_idx, numargs, func
 #define DEVS_STMTx3_CALL_BG 74         // *local_idx, numargs, func, opcall
 #define DEVS_STMT1_RETURN 75           // value
@@ -97,20 +98,20 @@
 #define DEVS_EXPR2_NE 39                   // x != y
 #define DEVS_EXPR2_MAX 36
 #define DEVS_EXPR2_MIN 37
-#define DEVS_OP_PAST_LAST 97
+#define DEVS_OP_PAST_LAST 98
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01" \
     "\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20" \
     "\x00\x01\x00\x00\x60\x14\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32" \
     "\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60\x42" \
-    "\x41\x60\x60\x60\x60"
+    "\x41\x60\x60\x60\x60\x11"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01" \
     "\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a" \
     "\x01\x07\x01\x01\x05\x0b\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b" \
     "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08\x01" \
-    "\x01\x04\x04\x04\x04"
+    "\x01\x04\x04\x04\x04\x0b"
 
 #define DEVS_IMG_VERSION 0x00010000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
@@ -190,6 +191,13 @@
 #define DEVS_BUILTIN_STRING_SPLICE 15
 #define DEVS_BUILTIN_STRING_SLICE 16
 #define DEVS_BUILTIN_STRING_JOIN 17
+#define DEVS_BUILTIN_STRING_TRUE 19
+#define DEVS_BUILTIN_STRING_FALSE 20
+#define DEVS_BUILTIN_STRING_PACKET 21
+#define DEVS_BUILTIN_STRING_NAN 22
+#define DEVS_BUILTIN_STRING_ARRAY 23
+#define DEVS_BUILTIN_STRING_BUFFER 24
+#define DEVS_BUILTIN_STRING_MAP 25
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_load_local, exprx_load_global, expr3_load_buffer, exprx_literal,           \
@@ -211,9 +219,10 @@
         stmt1_alloc_buffer, stmtx2_set_field, stmt3_array_set, stmt3_array_insert,                 \
         exprx_static_function, expr2_imod, expr1_to_int, exprx_static_buffer,                      \
         exprx_static_builtin_string, exprx_static_ascii_string, exprx_static_utf8_string,          \
-        expr_invalid
+        stmt1_decode_utf8, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "undefined", "string", "number", "boolean", "function", "toString", "charCodeAt", "next",  \
-        "prev", "length", "pop", "push", "shift", "unshift", "splice", "slice", "join", "null"
-#define DEVS_BUILTIN_STRING__SIZE 19
+        "prev", "length", "pop", "push", "shift", "unshift", "splice", "slice", "join", "null",    \
+        "true", "false", "packet", "NaN", "array", "buffer", "map"
+#define DEVS_BUILTIN_STRING__SIZE 26

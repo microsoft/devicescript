@@ -136,6 +136,11 @@ const char *devs_img_fun_name(devs_img_t img, unsigned fidx) {
     return name ? name : "???";
 }
 
+const char *devs_img_role_name(devs_img_t img, unsigned idx) {
+    const devs_role_desc_t *role = devs_img_get_role(img, idx);
+    return devs_img_get_utf8(img, role->name_idx, NULL);
+}
+
 devs_fiber_t *devs_fiber_by_fidx(devs_ctx_t *ctx, unsigned fidx) {
     for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next)
         if (fiber->bottom_function_idx == fidx)

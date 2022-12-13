@@ -115,7 +115,7 @@ const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
         r = (const char *)(img.data + img.header->string_data.start + off);
     } break;
     default:
-        JD_ASSERT(0);
+        JD_PANIC();
     }
 
     if (sect) {
@@ -127,11 +127,11 @@ const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
             *size = strlen(r);
         return r;
     } else {
-        JD_ASSERT(0);
+        JD_PANIC();
     }
 }
 
-const char *devs_get_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size) {
+const char *devs_get_static_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size) {
     const char *r = devs_img_get_utf8(ctx->img, idx, size);
     if (r == NULL) {
         devs_runtime_failure(ctx, 60140);

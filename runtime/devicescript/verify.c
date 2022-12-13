@@ -50,7 +50,7 @@ bool devs_img_stridx_ok(devs_img_t img, uint32_t nameidx) {
     case DEVS_STRIDX_UTF8:
         return (idx < img.header->utf8_strings.length / sizeof(devs_img_section_t));
     default:
-        JD_ASSERT(0);
+        JD_PANIC();
     }
 }
 
