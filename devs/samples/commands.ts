@@ -1,12 +1,12 @@
 import * as ds from "@devicescript/core"
 
-const anled = new ds.LedSingle()
+const buzzer = new ds.Buzzer()
 const btnA = new ds.Button()
 
 btnA.down.subscribe(() => {
-    anled.animate(255, 0, 255, 50)
+    buzzer.playNote(440, 0.5, 50)
     ds.wait(1)
-    anled.animate(255, 255, 0, 50)
+    buzzer.playNote(800, 1, 50)
     ds.wait(1)
-    anled.animate(0, 0, 0, 50)
+    buzzer.playNote(600, 0.5, 50)
 })
