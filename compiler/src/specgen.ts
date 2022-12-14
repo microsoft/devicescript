@@ -22,7 +22,9 @@ import {
 import { jacdacDefaultSpecifications } from "./embedspecs"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
-import { packetsToRegisters } from "../../runtime/jacdac-c/jacdac/spectool/jdutils"
+
+const REGISTER_NUMBER = "RegisterNumber"
+const REGISTER_BOOL = "RegisterBool"
 
 function isRegister(k: jdspec.PacketKind) {
     return k == "ro" || k == "rw" || k == "const"
@@ -124,8 +126,8 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
                     pkt.fields[0].type == "bytes"
                 )
                     tp = "RegisterBuffer"
-                else if (pkt.fields[0].type == "bool") tp = "RegisterBool"
-                else tp = "RegisterNum"
+                else if (pkt.fields[0].type == "bool") tp = REGISTER_BOOL
+                else tp = REGISTER_NUMBER
             }
         } else if (pkt.kind == "event") {
             kw = "readonly "
@@ -284,11 +286,11 @@ ${varname}.${camelize(pkt.name)}(${fields}): void
                 tp = "RegisterString"
             else if (pkt.fields.length == 1 && pkt.fields[0].type == "bytes")
                 tp = "RegisterBuffer"
-            else if (pkt.fields[0].type == "bool") tp = "RegisterBool"
-            else tp = "RegisterNum"
+            else if (pkt.fields[0].type == "bool") tp = REGISTER_BOOL
+            else tp = REGISTER_NUMBER
         }
-        const isNumber = tp === "RegisterNum"
-        const isBoolean = tp === "RegisterBool"
+        const isNumber = tp === REGISTER_NUMBER
+        const isBoolean = tp === REGISTER_BOOL
         const isString = tp === "RegisterString"
         r.push(
             `### ${pname}

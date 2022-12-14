@@ -11,7 +11,7 @@ declare module "@devicescript/core" {
 
     export class Register extends PacketInfo {}
 
-    export class RegisterNum extends Register {
+    export class RegisterNumber extends Register {
         read(): number
         write(v: number): void
         onChange(threshold: number, handler: (curr: number) => void): void
