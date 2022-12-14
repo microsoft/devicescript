@@ -25,5 +25,9 @@
     },
     "publishConfig": {
         "access": "public"
-    }
+    },
+    "files": [
+        "./built",
+        "./dist"
+    ]
 }
