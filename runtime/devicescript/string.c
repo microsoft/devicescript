@@ -42,7 +42,9 @@ value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap) {
     va_list ap2;
     va_copy(ap2, ap);
     int len = jd_vsprintf(NULL, 0, format, ap);
-    devs_string_t *s = devs_string_try_alloc(ctx->gc, len);
+    // len includes final NUL; devs_string_try_alloc() allocates the final NUL, but doesn't count it
+    // in its len
+    devs_string_t *s = devs_string_try_alloc(ctx->gc, len - 1);
     if (s == NULL) {
         devs_runtime_failure(ctx, 60144);
         // re-run vsprintf with non-NULL dst so it executes %-s (free)
@@ -51,7 +53,7 @@ value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap) {
         return devs_undefined;
     } else {
         jd_vsprintf(s->data, len, format, ap2);
-        return devs_value_from_pointer(ctx, DEVS_GC_TAG_STRING, s);
+        return devs_value_from_gc_obj(ctx, s);
     }
 }
 
@@ -70,7 +72,7 @@ value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len
         return devs_undefined;
     } else {
         memcpy(s->data, utf8, len); // TODO validate utf8
-        return devs_value_from_pointer(ctx, DEVS_GC_TAG_STRING, s);
+        return devs_value_from_gc_obj(ctx, s);
     }
 }
 
@@ -180,7 +182,7 @@ value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
         } else {
             memcpy(s->data, ap, alen);
             memcpy(s->data + alen, bp, blen);
-            r = devs_value_from_pointer(ctx, DEVS_GC_TAG_STRING, s);
+            r = devs_value_from_gc_obj(ctx, s);
         }
     }
 

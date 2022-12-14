@@ -326,7 +326,7 @@ void jd_gc_free(devs_gc_t *gc, void *ptr) {
 void devs_value_pin(devs_ctx_t *ctx, value_t v) {
     if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT)
         return;
-    block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v) - 1);
+    block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v));
     unsigned tag = GET_TAG(b->header);
     JD_ASSERT((tag & DEVS_GC_TAG_MASK_PINNED) == 0);
     JD_ASSERT((tag & DEVS_GC_TAG_MASK) >= DEVS_GC_TAG_BYTES);
@@ -336,7 +336,7 @@ void devs_value_pin(devs_ctx_t *ctx, value_t v) {
 void devs_value_unpin(devs_ctx_t *ctx, value_t v) {
     if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT)
         return;
-    block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v) - 1);
+    block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v));
     unsigned tag = GET_TAG(b->header);
     JD_ASSERT((tag & DEVS_GC_TAG_MASK_PINNED) != 0);
     JD_ASSERT((tag & DEVS_GC_TAG_MASK) >= DEVS_GC_TAG_BYTES);
