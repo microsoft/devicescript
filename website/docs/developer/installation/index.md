@@ -9,7 +9,7 @@ This section will get you started at the level of the stack you're looking for.
 
 ## Try DeviceScript
 
-You do not need hardware or install any tools to try out DeviceScript. Try editing this sandbox!
+You do not need hardware or install any tools to try out DeviceScript. Try running this snippet!
 
 ```ts
 ds.every(1, () => {

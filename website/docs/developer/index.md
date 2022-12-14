@@ -8,15 +8,18 @@ hide_table_of_contents: true
 The DeviceScript developer experience is designed to be friendly with developers familiar with TypeScript projects.
 DeviceScript uses the TypeScript syntax and the developer tooling does not require any special hardware
 
-## Live documentation
+## Try DeviceScript
 
-Most code examples can be loaded in the side-editor by clicking the `Run` button; or in other cloud-based virtual machine by hovering on the source and clicking on the apprioriate button.
+You do not need hardware or install any tools to try out DeviceScript. Try running this snippet!
 
 ```ts
 ds.every(1, () => {
     console.log(`hello`)
 })
 ```
+
+You can edit it directly and press `Run` to load it in the DeviceScript simulator in the documentation.
+You can also click on `Fork` and open the sample in CodeSandbox.
 
 ## How tools work
 

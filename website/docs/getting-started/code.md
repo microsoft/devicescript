@@ -1,5 +1,6 @@
 ---
-sidebar_position: 1
+sidebar_position: 20
+hide_table_of_contents: true
 ---
 
 # Visual Studio Code
