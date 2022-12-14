@@ -98,6 +98,18 @@ When the build is run in watch mode, it also opens a developer tool web server t
 to execute the compiled program in a virtual device or physical devices. Follow the console
 application instructions to open the web page.
 
+```mermaid
+stateDiagram-v2
+    direction LR
+    browser: Dev Tools
+    vdev: Virtual Device
+    dev: Hardware Device
+    bytecode --> browser
+    browser --> vdev
+    browser --> dev: serial, usb
+```
+
+
 #### --internet
 
 To access the developer tools outside localhost, add `--internet`
