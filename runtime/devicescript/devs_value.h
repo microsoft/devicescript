@@ -60,7 +60,7 @@ static inline value_t devs_value_from_handle(int type, uint32_t value) {
 #define DEVS_HANDLE_GC_MASK 0x80
 #define DEVS_HANDLE_IMG_MASK 0x40 // TODO remove this?
 
-#define DEVS_HANDLE_TYPE_FLOAT64 0x00
+#define DEVS_HANDLE_TYPE_FLOAT64_OR_NULL 0x00
 #define DEVS_HANDLE_TYPE_SPECIAL 0x01
 #define DEVS_HANDLE_TYPE_FIBER 0x02
 #define DEVS_HANDLE_TYPE_GC_OBJECT (DEVS_HANDLE_GC_MASK | 0x03)
@@ -68,7 +68,7 @@ static inline value_t devs_value_from_handle(int type, uint32_t value) {
 #define DEVS_HANDLE_TYPE_ROLE 0x05
 #define DEVS_HANDLE_TYPE_FUNCTION 0x06
 
-#define DEVS_SPECIAL_NULL 0 // has to be zero! NULL is represented as all zero
+#define DEVS_SPECIAL_F64_NULL 0 // has to be zero! NULL is represented as all zero
 #define DEVS_SPECIAL_FALSE 1
 #define DEVS_SPECIAL_TRUE 0x40
 #define DEVS_SPECIAL_PKT_BUFFER 0x41
@@ -98,6 +98,9 @@ static inline value_t devs_value_from_gc_obj(devs_ctx_t *ctx, void *ptr) {
 int32_t devs_value_to_int(value_t v);
 double devs_value_to_double(value_t v);
 bool devs_value_to_bool(value_t v);
+
+bool devs_value_ieee_eq(devs_ctx_t *ctx, value_t a, value_t b);
+bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b);
 
 // returns one of DEVS_OBJECT_TYPE_*
 unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v);

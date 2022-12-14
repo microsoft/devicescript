@@ -207,15 +207,13 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         return DEVS_OBJECT_TYPE_NUMBER;
 
     switch (devs_handle_type(v)) {
-    case DEVS_HANDLE_TYPE_FLOAT64:
-        return DEVS_OBJECT_TYPE_NUMBER;
+    case DEVS_HANDLE_TYPE_FLOAT64_OR_NULL:
+        return devs_is_null(v) ? DEVS_OBJECT_TYPE_NULL : DEVS_OBJECT_TYPE_NUMBER;
     case DEVS_HANDLE_TYPE_SPECIAL:
         switch (devs_handle_value(v)) {
         case DEVS_SPECIAL_FALSE:
         case DEVS_SPECIAL_TRUE:
             return DEVS_OBJECT_TYPE_BOOL;
-        case DEVS_SPECIAL_NULL:
-            return DEVS_OBJECT_TYPE_NULL;
         case DEVS_SPECIAL_PKT_BUFFER:
             return DEVS_OBJECT_TYPE_BUFFER;
         default:
@@ -254,7 +252,7 @@ bool devs_is_nullish(value_t t) {
     if (devs_is_special(t)) {
         switch (devs_handle_value(t)) {
         case DEVS_SPECIAL_FALSE:
-        case DEVS_SPECIAL_NULL:
+        case DEVS_SPECIAL_F64_NULL:
             return true;
         }
     } else if (devs_is_nan(t)) {
@@ -275,7 +273,9 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     const char *fmt = NULL;
 
     switch (devs_handle_type(v)) {
-    case DEVS_HANDLE_TYPE_FLOAT64:
+    case DEVS_HANDLE_TYPE_FLOAT64_OR_NULL:
+        if (devs_is_null(v))
+            return "null";
         jd_sprintf(buf, sizeof(buf), "%f", devs_value_to_double(v));
         return buf;
 
@@ -285,8 +285,6 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
             return "false";
         case DEVS_SPECIAL_TRUE:
             return "true";
-        case DEVS_SPECIAL_NULL:
-            return "null";
         case DEVS_SPECIAL_PKT_BUFFER:
             return "packet";
         default:
@@ -340,4 +338,45 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
         return "?value";
 
     return buf;
+}
+
+bool devs_value_ieee_eq(devs_ctx_t *ctx, value_t a, value_t b) {
+    if (devs_is_nan(a) && devs_is_nan(b))
+        return false;
+    return devs_value_eq(ctx, a, b);
+}
+
+// Values are equal if they share the exact same representation,
+// or if they are both strings and have the same contents.
+// NaN is handled in devs_value_ieee_eq().
+bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b) {
+    if (a.u64 == b.u64)
+        return true;
+#if 0
+    if (devs_is_tagged_int(a) || devs_is_tagged_int(b))
+        return false;
+
+    if (devs_is_null(a) || devs_is_null(b))
+        return false;
+#endif
+
+    if (devs_is_string(ctx, a)) {
+        if (!devs_is_string(ctx, b))
+            return false;
+        unsigned alen, blen;
+        const char *aptr = devs_string_get_utf8(ctx, a, &alen);
+        const char *bptr = devs_string_get_utf8(ctx, b, &blen);
+        return alen == blen && memcmp(aptr, bptr, alen) == 0;
+    }
+
+    // by this the values are only equal
+    return false;
+
+#if 0
+    int ta = devs_handle_type(a);
+    int tb = devs_handle_type(b);
+
+    if (ta != tb)
+        return false;
+#endif
 }

@@ -90,7 +90,9 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
         return v;
 
     switch (devs_handle_type(v)) {
-    case DEVS_HANDLE_TYPE_FLOAT64: {
+    case DEVS_HANDLE_TYPE_FLOAT64_OR_NULL: {
+        if (devs_is_null(v))
+            return builtin_string(DEVS_BUILTIN_STRING_NULL);
         char buf[64];
         double vv = devs_value_to_double(v);
         if (isnan(vv))
@@ -104,8 +106,6 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
             return builtin_string(DEVS_BUILTIN_STRING_FALSE);
         case DEVS_SPECIAL_TRUE:
             return builtin_string(DEVS_BUILTIN_STRING_TRUE);
-        case DEVS_SPECIAL_NULL:
-            return builtin_string(DEVS_BUILTIN_STRING_NULL);
         case DEVS_SPECIAL_PKT_BUFFER:
             return builtin_string(DEVS_BUILTIN_STRING_PACKET);
         default:

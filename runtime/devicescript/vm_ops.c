@@ -542,7 +542,7 @@ static value_t expr0_pkt_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t expr1_is_null(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t obj = devs_vm_pop_arg(ctx);
-    if (devs_is_special(obj) && devs_handle_value(obj) == DEVS_SPECIAL_NULL)
+    if (devs_is_null(obj))
         return devs_true;
     else
         return devs_false;
@@ -788,9 +788,15 @@ static value_t expr2_imul(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static value_t expr2_eq(devs_activation_t *frame, devs_ctx_t *ctx) {
-    if (exec2_and_check_int_or_force_double(frame, ctx))
+    if (exec2_and_check_int(frame, ctx))
         return devs_value_from_bool(aa == bb);
-    return devs_value_from_bool(af == bf);
+    return devs_value_from_bool(devs_value_ieee_eq(ctx, ctx->binop[0], ctx->binop[1]));
+}
+
+static value_t expr2_ne(devs_activation_t *frame, devs_ctx_t *ctx) {
+    if (exec2_and_check_int(frame, ctx))
+        return devs_value_from_bool(aa != bb);
+    return devs_value_from_bool(!devs_value_ieee_eq(ctx, ctx->binop[0], ctx->binop[1]));
 }
 
 static value_t expr2_le(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -803,12 +809,6 @@ static value_t expr2_lt(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (exec2_and_check_int_or_force_double(frame, ctx))
         return devs_value_from_bool(aa < bb);
     return devs_value_from_bool(af < bf);
-}
-
-static value_t expr2_ne(devs_activation_t *frame, devs_ctx_t *ctx) {
-    if (exec2_and_check_int_or_force_double(frame, ctx))
-        return devs_value_from_bool(aa != bb);
-    return devs_value_from_bool(af != bf);
 }
 
 static value_t expr2_max(devs_activation_t *frame, devs_ctx_t *ctx) {
