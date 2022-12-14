@@ -63,18 +63,18 @@ value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, devs_key_id_t key) {
 value_t devs_index(devs_ctx_t *ctx, value_t seq, unsigned idx) {
     if (idx > DEVS_MAX_ALLOC)
         return devs_undefined;
-    if (devs_is_buffer(ctx, seq)) {
-        unsigned len;
-        uint8_t *p = devs_buffer_data(ctx, seq, &len);
-        if (idx < len)
-            return devs_value_from_int(p[idx]);
-    } else {
-        devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
-        if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {
-            if (idx < arr->length)
-                return arr->data[idx];
-        }
+
+    unsigned len;
+    const uint8_t *p = devs_bufferish_data(ctx, seq, &len);
+    if (p && idx < len)
+        return devs_value_from_int(p[idx]);
+
+    devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
+    if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {
+        if (idx < arr->length)
+            return arr->data[idx];
     }
+
     return devs_undefined;
 }
 
@@ -110,7 +110,7 @@ int devs_index_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
     // DMESG("set arr=%s idx=%u", devs_show_value(ctx, seq), idx);
     if (idx > DEVS_MAX_ALLOC)
         return -1;
-    if (devs_is_buffer(ctx, seq)) {
+    if (devs_buffer_is_writable(ctx, seq)) {
         unsigned len;
         uint8_t *p = devs_buffer_data(ctx, seq, &len);
         if (idx < len) {

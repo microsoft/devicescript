@@ -14,7 +14,9 @@ value_t devs_buffer_op(devs_activation_t *frame, uint32_t fmt0, uint32_t offset,
         return devs_runtime_failure(ctx, 60100);
 
     unsigned bufsz;
-    uint8_t *data = devs_buffer_data(ctx, buffer, &bufsz);
+    uint8_t *data = (void *)devs_bufferish_data(ctx, buffer, &bufsz);
+
+    JD_ASSERT(data != NULL);
 
     if (offset + sz > bufsz) {
         // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
@@ -27,6 +29,7 @@ value_t devs_buffer_op(devs_activation_t *frame, uint32_t fmt0, uint32_t offset,
     data += offset;
 
     if (setv) {
+        JD_ASSERT(devs_buffer_is_writable(ctx, buffer));
         value_t q = *setv;
         if (devs_is_tagged_int(q)) {
             jd_numfmt_write_i32(data, fmt0, q.val_int32);

@@ -78,7 +78,8 @@ value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len
 
 static value_t buffer_to_string(devs_ctx_t *ctx, value_t v) {
     unsigned sz;
-    void *data = devs_buffer_data(ctx, v, &sz);
+    const void *data = devs_bufferish_data(ctx, v, &sz);
+    JD_ASSERT(data != NULL);
     unsigned maxbuf = 32;
     if (sz > maxbuf) {
         return devs_string_sprintf(ctx, "[Buffer[%u] %-s...]", sz, jd_to_hex_a(data, maxbuf));

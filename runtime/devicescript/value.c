@@ -192,6 +192,18 @@ void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
     }
 }
 
+const void *devs_bufferish_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
+    if (devs_is_buffer(ctx, v))
+        return devs_buffer_data(ctx, v, sz);
+    else if (devs_is_string(ctx, v))
+        return devs_string_get_utf8(ctx, v, sz);
+    else {
+        if (sz)
+            *sz = 0;
+        return NULL;
+    }
+}
+
 void *devs_value_to_gc_obj(devs_ctx_t *ctx, value_t v) {
     if (devs_handle_type(v) == DEVS_HANDLE_TYPE_GC_OBJECT)
         return devs_handle_ptr_value(ctx, v);

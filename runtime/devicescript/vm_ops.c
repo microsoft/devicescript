@@ -515,8 +515,8 @@ static value_t expr2_index(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr1_object_length(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t arr = devs_vm_pop_arg(ctx);
     unsigned len;
-    if (devs_is_buffer(ctx, arr)) {
-        devs_buffer_data(ctx, arr, &len);
+    if (devs_bufferish_data(ctx, arr, &len)) {
+        // OK
     } else {
         devs_gc_object_t *obj = devs_value_to_gc_obj(ctx, arr);
         if (devs_gc_tag(obj) == DEVS_GC_TAG_ARRAY)

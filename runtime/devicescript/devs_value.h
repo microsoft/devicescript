@@ -124,6 +124,9 @@ bool devs_is_buffer(devs_ctx_t *ctx, value_t v);
 bool devs_buffer_is_writable(devs_ctx_t *ctx, value_t v);
 void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz);
 
+// this returns NULL if v is neither buffer not string
+const void *devs_bufferish_data(devs_ctx_t *ctx, value_t v, unsigned *sz);
+
 bool devs_is_array(devs_ctx_t *ctx, value_t v);
 
 bool devs_is_string(devs_ctx_t *ctx, value_t v);
