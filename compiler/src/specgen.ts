@@ -25,6 +25,9 @@ import { camelize, upperCamel } from "./util"
 
 const REGISTER_NUMBER = "RegisterNumber"
 const REGISTER_BOOL = "RegisterBool"
+const REGISTER_STRING = "RegisterString"
+const REGISTER_BUFFER = "RegisterBuffer"
+const REGISTER_ARRAY = "RegisterArray"
 
 function isRegister(k: jdspec.PacketKind) {
     return k == "ro" || k == "rw" || k == "const"
@@ -116,16 +119,16 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
         if (isRegister(pkt.kind)) {
             kw = "readonly "
             if (cmt.needsStruct) {
-                tp = `RegisterArray`
+                tp = REGISTER_ARRAY
                 if (pkt.fields.length > 1) tp += ` & { ${fields} }`
             } else {
                 if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
-                    tp = "RegisterString"
+                    tp = REGISTER_STRING
                 else if (
                     pkt.fields.length == 1 &&
                     pkt.fields[0].type == "bytes"
                 )
-                    tp = "RegisterBuffer"
+                    tp = REGISTER_BUFFER
                 else if (pkt.fields[0].type == "bool") tp = REGISTER_BOOL
                 else tp = REGISTER_NUMBER
             }
@@ -279,19 +282,19 @@ ${varname}.${camelize(pkt.name)}(${fields}): void
         const isConst = pkt.kind === "const"
         let tp: string = undefined
         if (cmt.needsStruct) {
-            tp = `RegisterArray`
+            tp = REGISTER_ARRAY
             if (pkt.fields.length > 1) tp += ` & { ${fields} }`
         } else {
             if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
-                tp = "RegisterString"
+                tp = REGISTER_STRING
             else if (pkt.fields.length == 1 && pkt.fields[0].type == "bytes")
-                tp = "RegisterBuffer"
+                tp = REGISTER_BUFFER
             else if (pkt.fields[0].type == "bool") tp = REGISTER_BOOL
             else tp = REGISTER_NUMBER
         }
         const isNumber = tp === REGISTER_NUMBER
         const isBoolean = tp === REGISTER_BOOL
-        const isString = tp === "RegisterString"
+        const isString = tp === REGISTER_STRING
         r.push(
             `### ${pname}
 `,
