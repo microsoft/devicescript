@@ -122,10 +122,16 @@ export class CachedValue {
     }
 }
 
-export function literal(v: number) {
+export function literal(v: number | boolean) {
     if (v == null) {
         const r = new Value(ValueType.NULL)
         r.op = Op.EXPR0_NULL
+        r.args = []
+        r.flags = 0
+        return r
+    } else if (typeof v == "boolean") {
+        const r = new Value(ValueType.BOOL)
+        r.op = v ? Op.EXPR0_TRUE : Op.EXPR0_FALSE
         r.args = []
         r.flags = 0
         return r
@@ -275,7 +281,9 @@ export class OpWriter {
     }
 
     emitString(s: string | Uint8Array) {
-        const v = new Value(ValueType.BUFFER)
+        const v = new Value(
+            typeof s == "string" ? ValueType.STRING : ValueType.BUFFER
+        )
         let idx = 0
         if (typeof s == "string") {
             idx = this.prog.addString(s)

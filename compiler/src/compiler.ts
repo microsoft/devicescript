@@ -862,13 +862,22 @@ class Program implements TopOpWriter {
         }
     }
 
+    private valueIsAlwaysFalse(v: Value) {
+        if (v.isLiteral) return v.numValue == 0
+        return v.op == Op.EXPR0_FALSE || v.op == Op.EXPR0_NULL
+    }
+
+    private valueIsAlwaysTrue(v: Value) {
+        if (v.isLiteral) return v.numValue != 0 && !isNaN(v.numValue)
+        return v.op == Op.EXPR0_TRUE
+    }
+
     private emitIfStatement(stmt: ts.IfStatement) {
         const cond = this.emitSimpleValue(stmt.expression, ValueType.BOOL)
-        if (cond.isLiteral) {
-            if (cond.numValue) this.emitStmt(stmt.thenStatement)
-            else {
-                if (stmt.elseStatement) this.emitStmt(stmt.elseStatement)
-            }
+        if (this.valueIsAlwaysFalse(cond)) {
+            if (stmt.elseStatement) this.emitStmt(stmt.elseStatement)
+        } else if (this.valueIsAlwaysTrue(cond)) {
+            this.emitStmt(stmt.thenStatement)
         } else {
             this.writer.emitIfAndPop(
                 cond,
@@ -2489,14 +2498,15 @@ class Program implements TopOpWriter {
     }
 
     private emitLiteral(v: any, node?: ts.Node) {
-        if (v === true) v = 1
-        else if (v === false) v = 0
-
-        if (v === null || v === undefined) return literal(v)
+        if (
+            v === null ||
+            v === undefined ||
+            typeof v == "number" ||
+            typeof v == "boolean"
+        )
+            return literal(v)
 
         if (typeof v == "string") return this.writer.emitString(v)
-
-        if (typeof v == "number") return literal(v)
 
         throwError(node, "unhandled literal: " + v)
     }
@@ -2792,7 +2802,11 @@ class Program implements TopOpWriter {
         let a = this.emitSimpleValue(expr.left, dstTp)
         let b = this.emitSimpleValue(expr.right, dstTp)
         if (swap) [a, b] = [b, a]
-        return wr.emitExpr(op2, a, b)
+
+        const res = wr.emitExpr(op2, a, b)
+        if (op2 == Op.EXPR2_ADD && this.isStringLike(expr))
+            res.valueType = ValueType.STRING
+        return res
     }
 
     private emitUnaryExpression(expr: ts.PrefixUnaryExpression): Value {

@@ -17,6 +17,13 @@ function isEq(x: number, y: number): void {
     }
 }
 
+function strEq(a: string, b: string) {
+    if (a != b) {
+        console.log(`fail: '${a}' != '${b}'`)
+        panic(110)
+    }
+}
+
 let x = 0
 
 function testFlow() {
@@ -245,6 +252,26 @@ function testConsole() {
     console.log(`text ${n} + ${q} is`, n + q)
 }
 
+function testString() {
+    strEq("a" + "b", "ab")
+    strEq("a" + 1, "a1")
+    strEq(1 + "a", "1a")
+    strEq(":" + true, ":true")
+    strEq(":" + false, ":false")
+    strEq(":" + null, ":null")
+    strEq(":" + 1.4, ":1.4")
+    strEq(":" + NaN, ":NaN")
+
+    const b = Buffer.alloc(3)
+    b[0] = 0x42
+    b[1] = 0x6c
+    strEq(":" + b, ":[Buffer[3] 426c00]")
+
+    strEq(`x${1}`, "x1")
+    strEq(`x${true}x`, "xtruex")
+    strEq(`x ${null} x`, "x null x")
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
@@ -253,5 +280,6 @@ testBuffer()
 testArray()
 testObj()
 testConsole()
+testString()
 console.log("all OK")
 ds.reboot()
