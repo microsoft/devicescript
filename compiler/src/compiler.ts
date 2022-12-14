@@ -1884,7 +1884,7 @@ class Program implements TopOpWriter {
         const arglist = wr.allocTmpLocals(args.length)
 
         for (let i = 0; i < args.length; i++) {
-            let tp = ValueType.NUMBER
+            let tp = ValueType.ANY
             const f = formals?.[i]
             if (f) tp = f.valueType
             arglist[i].store(this.emitSimpleValue(args[i], tp))
@@ -2008,51 +2008,51 @@ class Program implements TopOpWriter {
             case "CloudConnector.onMethod":
                 this.emitCloudMethod(expr)
                 return unit()
-            case "console.log":
-                if (
-                    expr.arguments.length == 1 &&
-                    ts.isCallExpression(arg0) &&
-                    this.nodeName(arg0.expression) == "#format"
-                ) {
-                    const r = this.emitFmtArgs(arg0)
-                    wr.emitStmt(Op.STMTx2_LOG_FORMAT, ...r.fmt)
-                    r.free()
-                } else {
-                    let fmt = ""
-                    const fmtargs: Expr[] = []
-                    const pushArg = (arg: Expr) => {
-                        const str = this.stringLiteral(arg)
-                        if (str) {
-                            fmt += str
-                        } else {
-                            fmt += `{${fmtargs.length}}`
-                            fmtargs.push(arg)
-                        }
-                    }
-
-                    for (const arg of expr.arguments) {
-                        if (fmt && !/[=:]$/.test(fmt)) fmt += " "
-                        const flat = this.flattenPlus(arg)
-                        if (flat.some(f => this.stringLiteral(f) != null)) {
-                            flat.forEach(pushArg)
-                        } else {
-                            pushArg(arg)
-                        }
-                    }
-                    const r = this.fmtArgs(fmtargs)
-                    wr.emitStmt(
-                        Op.STMTx2_LOG_FORMAT,
-                        ...r.fmt,
-                        wr.emitString(fmt)
-                    )
-                    r.free()
-                }
+            case "console.log": {
+                const r = this.compileFormat(expr.arguments.slice())
+                wr.emitStmt(
+                    Op.STMTx2_LOG_FORMAT,
+                    ...r.fmtargs,
+                    wr.emitString(r.fmtstr)
+                )
+                r.free()
                 return unit()
+            }
             case "Date.now":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)
             default:
                 return null
         }
+    }
+
+    private compileFormat(args: ts.Expression[]) {
+        let fmt = ""
+        const fmtargs: Expr[] = []
+        const strval = (n: number) => {
+            if (n <= 9) return "" + n
+            return String.fromCharCode(0x61 + n - 9)
+        }
+        const pushArg = (arg: Expr) => {
+            const str = this.stringLiteral(arg)
+            if (str) {
+                fmt += str.replace(/\{/g, "{{")
+            } else {
+                fmt += `{${strval(fmtargs.length)}}`
+                fmtargs.push(arg)
+            }
+        }
+
+        for (const arg of args) {
+            if (fmt && !/[=:]$/.test(fmt)) fmt += " "
+            const flat = this.flattenPlus(arg)
+            if (flat.some(f => this.stringLiteral(f) != null)) {
+                flat.forEach(pushArg)
+            } else {
+                pushArg(arg)
+            }
+        }
+        const r = this.fmtArgs(fmtargs)
+        return { ...r, fmtstr: fmt }
     }
 
     private emitMath(node: ts.Node, args: Expr[], fnName: string): Value {
@@ -2226,13 +2226,13 @@ class Program implements TopOpWriter {
                 this.onStart.emit(wr => proc.callMe(wr, []))
                 return unit()
             }
-            case "format":
-                const r = wr.allocBuf()
-                const t = this.emitFmtArgs(expr)
-                wr.emitStmt(Op.STMTx3_FORMAT, ...t.fmt, literal(0))
+            case "format": {
+                const fmtString = this.forceStringLiteral(expr.arguments[0])
+                const t = this.fmtArgs(expr.arguments.slice(1))
+                const r = wr.emitExpr(Op.EXPRx2_FORMAT, ...t.fmtargs, fmtString)
                 t.free()
-                wr.freeBuf()
                 return r
+            }
             default:
                 return null
         }
@@ -2303,15 +2303,11 @@ class Program implements TopOpWriter {
         const free = () => {
             for (const a of args) a.free()
         }
-        const fmt = [literal(args[0] ? args[0].index : 0), literal(args.length)]
-        return { fmt, free }
-    }
-
-    private emitFmtArgs(expr: ts.CallExpression) {
-        const fmtString = this.forceStringLiteral(expr.arguments[0])
-        const { fmt, free } = this.fmtArgs(expr.arguments.slice(1))
-        fmt.push(fmtString)
-        return { fmt, free }
+        const fmtargs = [
+            literal(args[0] ? args[0].index : 0),
+            literal(args.length),
+        ]
+        return { fmtargs, free }
     }
 
     private emitIdentifier(expr: ts.Identifier): Value {
@@ -2516,6 +2512,17 @@ class Program implements TopOpWriter {
         } else {
             throwError(node, "whoops")
         }
+    }
+
+    private emitTemplateExpression(node: ts.TemplateExpression): Value {
+        const r = this.compileFormat([node])
+        const e = this.writer.emitExpr(
+            Op.EXPRx2_FORMAT,
+            ...r.fmtargs,
+            this.writer.emitString(r.fmtstr)
+        )
+        r.free()
+        return e
     }
 
     private lookupCell(expr: ts.Expression) {
@@ -2778,8 +2785,12 @@ class Program implements TopOpWriter {
 
         const op2 = simpleOps[op]
         if (op2 === undefined) throwError(expr, "unhandled operator")
-        let a = this.emitSimpleValue(expr.left)
-        let b = this.emitSimpleValue(expr.right)
+
+        let dstTp = ValueType.NUMBER
+        if (op2 == Op.EXPR2_EQ || op2 == Op.EXPR2_NE || op2 == Op.EXPR2_ADD)
+            dstTp = ValueType.ANY
+        let a = this.emitSimpleValue(expr.left, dstTp)
+        let b = this.emitSimpleValue(expr.right, dstTp)
         if (swap) [a, b] = [b, a]
         return wr.emitExpr(op2, a, b)
     }
@@ -2876,6 +2887,11 @@ class Program implements TopOpWriter {
             case SK.NoSubstitutionTemplateLiteral:
                 //case SyntaxKind.RegularExpressionLiteral:
                 return this.emitLiteralExpression(expr as ts.LiteralExpression)
+
+            case SK.TemplateExpression:
+                return this.emitTemplateExpression(
+                    expr as ts.TemplateExpression
+                )
 
             case SK.BinaryExpression:
                 return this.emitBinaryExpression(expr as ts.BinaryExpression)

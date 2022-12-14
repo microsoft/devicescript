@@ -63,8 +63,6 @@ Wait given number of milliseconds.
 
     log_format(*local_idx, numargs, string) = 68
 
-    format(*local_idx, numargs, string, offset) = 69
-
     setup_pkt_buffer(size) = 70
 
     set_pkt(buffer, offset) = 71
@@ -143,13 +141,15 @@ Inserts `count` values (`undefined`) at `index`. If `count` is negative, removes
 
     fun static_buffer(*buffer_idx): buffer = 93
 
-    fun static_builtin_string(*builtin_idx): buffer = 94
+    fun static_builtin_string(*builtin_idx): string = 94
 
-    fun static_ascii_string(*ascii_idx): buffer = 95
+    fun static_ascii_string(*ascii_idx): string = 95
 
-    fun static_utf8_string(*utf8_idx): buffer = 96
+    fun static_utf8_string(*utf8_idx): string = 96
 
     fun static_function(*func_idx): function = 90
+
+    fun format(*local_idx, numargs, string): string = 69
 
     fun literal(*value): number = 4
 

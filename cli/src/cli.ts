@@ -103,7 +103,7 @@ export async function mainCli() {
     program
         .command("crun", { hidden: true })
         .description("run a script using native runner")
-        .option("-t, --test", "run in test mode (no sockets, no restarts)")
+        .option("-n, --net", "connect to 127.0.0.1:8082 for Jacdac proxy")
         .option(
             "-s, --serial <serial-port>",
             "connect to serial port, not 127.0.0.1:8082"

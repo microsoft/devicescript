@@ -14,7 +14,7 @@ native native1 em update-dist:
 	$(MAKE) -C runtime $@
 
 test-c: native comp
-	$(CLI) crun -t devs/run-tests/basic.ts
+	$(CLI) crun devs/run-tests/basic.ts
 
 test-em: em comp
 	yarn test
@@ -27,3 +27,8 @@ clean:
 
 full-clean: clean
 	rm -rf node_modules compiler/node_modules runtime/*/node_modules
+
+check:
+	$(MAKE) clean
+	$(MAKE) all
+	$(MAKE) test

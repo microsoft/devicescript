@@ -95,7 +95,7 @@ declare module "@devicescript/core" {
             setAt(offset: number, format: string, value: number): void
             blitAt(
                 offset: number,
-                src: Buffer,
+                src: Buffer | string,
                 srcOffset: number,
                 len: number
             ): void

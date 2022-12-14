@@ -5,7 +5,7 @@ import { BINDIR, CmdOptions, log } from "./command"
 import { readCompiled } from "./run"
 
 export interface CRunOptions {
-    test?: boolean
+    net?: boolean
     serial?: string
 }
 
@@ -20,13 +20,14 @@ export async function crunScript(
 
     const args = [compfn]
 
-    if (options.test) args.unshift("-X", "-n")
+    if (!options.net) args.unshift("-X", "-n")
 
     if (options.serial) args.unshift(options.serial)
-    else if (!options.test) args.unshift("8082")
+    else if (options.net) args.unshift("8082")
 
-    log("run", args)
-    const child = spawn("./runtime/built/jdcli", args, {
+    const executable = "./runtime/built/jdcli"
+    log(`run: ${executable} ${args.join(" ")}`)
+    const child = spawn(executable, args, {
         stdio: "inherit",
     })
     child.on("exit", (code, err) => {
