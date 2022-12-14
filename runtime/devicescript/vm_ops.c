@@ -64,23 +64,6 @@ static void stmtx2_log_format(devs_activation_t *frame, devs_ctx_t *ctx) {
         devs_jd_send_logmsg(ctx, stridx, localidx, numargs);
 }
 
-static void stmtx3_format(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned len;
-    uint32_t offset = devs_vm_pop_arg_u32(ctx);
-    char *fmt = devs_vm_pop_arg_buffer_data(ctx, &len);
-    uint32_t numargs = devs_vm_pop_arg_u32(ctx);
-    uint32_t localidx = ctx->literal_int;
-
-    if (offset > JD_SERIAL_PAYLOAD_SIZE)
-        return;
-
-    if (devs_vm_args_ok(frame, localidx, numargs))
-        ctx->packet.service_size =
-            offset + devs_strformat(ctx, fmt, len, (char *)ctx->packet.data + offset,
-                                    JD_SERIAL_PAYLOAD_SIZE - offset, frame->locals + localidx,
-                                    numargs, 0);
-}
-
 static void stmt1_return(devs_activation_t *frame, devs_ctx_t *ctx) {
     frame->fiber->ret_val = devs_vm_pop_arg(ctx);
     devs_fiber_return_from_call(frame);
@@ -111,7 +94,7 @@ static void stmt1_alloc_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static void stmt1_decode_utf8(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned slen;
-    uint8_t *src = devs_vm_pop_arg_buffer_data(ctx, &slen);
+    uint8_t *src = devs_vm_pop_arg_buffer_data(ctx, &slen, 0);
     if (!ctx->error_code) {
         frame->fiber->ret_val = devs_string_from_utf8(ctx, src, slen);
     }
@@ -161,7 +144,7 @@ static void stmt1_setup_pkt_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
 static void stmt2_set_pkt(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned slen;
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
-    void *src = devs_vm_pop_arg_buffer_data(ctx, &slen);
+    void *src = devs_vm_pop_arg_buffer_data(ctx, &slen, DEVS_BUFFER_STRING_OK);
 
     int len = ctx->packet.service_size - offset;
     if (len > 0) {
@@ -176,9 +159,9 @@ static void stmt5_blit(devs_activation_t *frame, devs_ctx_t *ctx) {
 
     uint32_t len = devs_vm_pop_arg_u32(ctx);
     uint32_t src_offset = devs_vm_pop_arg_u32(ctx);
-    uint8_t *src = devs_vm_pop_arg_buffer_data(ctx, &slen);
+    uint8_t *src = devs_vm_pop_arg_buffer_data(ctx, &slen, DEVS_BUFFER_STRING_OK);
     uint32_t dst_offset = devs_vm_pop_arg_u32(ctx);
-    uint8_t *dst = devs_vm_pop_arg_buffer_data(ctx, &dlen);
+    uint8_t *dst = devs_vm_pop_arg_buffer_data(ctx, &dlen, DEVS_BUFFER_RW);
 
     if (src_offset >= slen)
         return;
@@ -200,7 +183,7 @@ static void stmt4_memset(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t val = devs_vm_pop_arg_u32(ctx);
     uint32_t len = devs_vm_pop_arg_u32(ctx);
     uint32_t dst_offset = devs_vm_pop_arg_u32(ctx);
-    uint8_t *dst = devs_vm_pop_arg_buffer_data(ctx, &dlen);
+    uint8_t *dst = devs_vm_pop_arg_buffer_data(ctx, &dlen, DEVS_BUFFER_RW);
 
     if (dst_offset >= dlen)
         return;
@@ -296,7 +279,7 @@ static void stmt4_store_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t val = devs_vm_pop_arg(ctx);
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
-    value_t buffer = devs_vm_pop_arg_buffer(ctx);
+    value_t buffer = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_RW);
     devs_buffer_op(frame, fmt0, offset, buffer, &val);
 }
 
@@ -334,7 +317,7 @@ static value_t expr_invalid(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr2_str0eq(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned len;
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
-    uint8_t *data = devs_vm_pop_arg_buffer_data(ctx, &len);
+    uint8_t *data = devs_vm_pop_arg_buffer_data(ctx, &len, DEVS_BUFFER_STRING_OK);
 
     return devs_value_from_bool(ctx->packet.service_size >= offset + len + 1 &&
                                 ctx->packet.data[offset + len] == 0 &&
@@ -366,7 +349,7 @@ static value_t exprx_load_global(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr3_load_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
-    value_t buf = devs_vm_pop_arg_buffer(ctx);
+    value_t buf = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_STRING_OK);
     return devs_buffer_op(frame, fmt0, offset, buf, NULL);
 }
 
@@ -380,6 +363,30 @@ static value_t exprx_literal_f64(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (off < devs_img_num_floats(ctx->img))
         return devs_img_get_float(ctx->img, off);
     return devs_runtime_failure(ctx, 60107);
+}
+
+static value_t exprx2_format(devs_activation_t *frame, devs_ctx_t *ctx) {
+    unsigned len;
+    const char *fmt = devs_vm_pop_arg_string_data(ctx, &len);
+    uint32_t numargs = devs_vm_pop_arg_u32(ctx);
+    uint32_t localidx = ctx->literal_int;
+
+    if (!devs_vm_args_ok(frame, localidx, numargs))
+        return devs_undefined;
+
+    char tmp[64];
+    unsigned sz =
+        devs_strformat(ctx, fmt, len, tmp, sizeof(tmp), frame->locals + localidx, numargs, 0);
+    devs_string_t *str = devs_string_try_alloc(ctx->gc, sz - 1);
+    if (str == NULL) {
+        devs_runtime_failure(ctx, 60146);
+        return devs_undefined;
+    }
+    if (sz > sizeof(tmp))
+        devs_strformat(ctx, fmt, len, str->data, sz, frame->locals + localidx, numargs, 0);
+    else
+        memcpy(str->data, tmp, sz - 1);
+    return devs_value_from_gc_obj(ctx, str);
 }
 
 static value_t expr0_ret_val(devs_activation_t *frame, devs_ctx_t *ctx) {

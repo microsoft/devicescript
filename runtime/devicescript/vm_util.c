@@ -37,18 +37,38 @@ double devs_vm_pop_arg_f64(devs_ctx_t *ctx) {
     return devs_value_to_double(pop_arg(ctx));
 }
 
-value_t devs_vm_pop_arg_buffer(devs_ctx_t *ctx) {
+value_t devs_vm_pop_arg_buffer(devs_ctx_t *ctx, int flags) {
     value_t tmp = pop_arg(ctx);
     if (!devs_is_buffer(ctx, tmp)) {
-        devs_runtime_failure(ctx, 60125);
+        if ((flags & DEVS_BUFFER_STRING_OK) && devs_is_string(ctx, tmp)) {
+            // OK
+        } else {
+            devs_runtime_failure(ctx, 60125);
+            return devs_pkt_buffer;
+        }
+    }
+    if ((flags & DEVS_BUFFER_RW) && !devs_buffer_is_writable(ctx, tmp)) {
+        devs_runtime_failure(ctx, 60148);
         return devs_pkt_buffer;
     }
     return tmp;
 }
 
-void *devs_vm_pop_arg_buffer_data(devs_ctx_t *ctx, unsigned *sz) {
-    value_t tmp = devs_vm_pop_arg_buffer(ctx);
+void *devs_vm_pop_arg_buffer_data(devs_ctx_t *ctx, unsigned *sz, int flags) {
+    value_t tmp = devs_vm_pop_arg_buffer(ctx, flags);
+    if ((flags & DEVS_BUFFER_STRING_OK) && devs_is_string(ctx, tmp))
+        return (void *)devs_string_get_utf8(ctx, tmp, sz);
     return devs_buffer_data(ctx, tmp, sz);
+}
+
+const char *devs_vm_pop_arg_string_data(devs_ctx_t *ctx, unsigned *sz) {
+    value_t tmp = pop_arg(ctx);
+    if (!devs_is_string(ctx, tmp)) {
+        devs_runtime_failure(ctx, 60147);
+        *sz = 0;
+        return "";
+    }
+    return devs_string_get_utf8(ctx, tmp, sz);
 }
 
 unsigned devs_vm_pop_arg_stridx(devs_ctx_t *ctx) {

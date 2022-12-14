@@ -8,7 +8,6 @@
 #define DEVS_STMT2_SEND_CMD 66         // role, code
 #define DEVS_STMT4_QUERY_IDX_REG 67    // role, code, string, timeout
 #define DEVS_STMTx2_LOG_FORMAT 68      // *local_idx, numargs, string
-#define DEVS_STMTx3_FORMAT 69          // *local_idx, numargs, string, offset
 #define DEVS_STMT1_SETUP_PKT_BUFFER 70 // size
 #define DEVS_STMT2_SET_PKT 71          // buffer, offset
 #define DEVS_STMT5_BLIT 72             // dst, dst_offset, src, src_offset, length
@@ -40,6 +39,7 @@
 #define DEVS_EXPRx_STATIC_ASCII_STRING 95   // *ascii_idx
 #define DEVS_EXPRx_STATIC_UTF8_STRING 96    // *utf8_idx
 #define DEVS_EXPRx_STATIC_FUNCTION 90       // *func_idx
+#define DEVS_EXPRx2_FORMAT 69               // *local_idx, numargs, string
 #define DEVS_EXPRx_LITERAL 4                // *value
 #define DEVS_EXPRx_LITERAL_F64 5            // *f64_idx
 #define DEVS_EXPR3_LOAD_BUFFER 3            // buffer, numfmt, offset
@@ -104,14 +104,14 @@
     "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01" \
     "\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20" \
     "\x00\x01\x00\x00\x60\x14\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32" \
-    "\x33\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60\x42" \
+    "\x62\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60\x42" \
     "\x41\x60\x60\x60\x60\x11"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01" \
     "\x01\x01\x06\x01\x01\x01\x01\x01\x06\x01\x01\x06\x06\x01\x01\x01\x06\x01\x01\x01\x01\x01\x0a" \
     "\x01\x07\x01\x01\x05\x0b\x0a\x0a\x01\x01\x01\x00\x06\x04\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b" \
-    "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08\x01" \
-    "\x01\x04\x04\x04\x04\x0b"
+    "\x09\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x08\x01" \
+    "\x01\x04\x09\x09\x09\x0b"
 
 #define DEVS_IMG_VERSION 0x00010000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
@@ -212,7 +212,7 @@
         stmt4_memset, exprx1_get_field, expr2_index, expr1_object_length, expr1_keys_length,       \
         expr1_typeof, expr0_null, expr1_is_null, expr0_pkt_buffer, expr0_true, expr0_false,        \
         stmt1_wait_role, stmt1_sleep_s, stmt1_sleep_ms, stmt3_query_reg, stmt2_send_cmd,           \
-        stmt4_query_idx_reg, stmtx2_log_format, stmtx3_format, stmt1_setup_pkt_buffer,             \
+        stmt4_query_idx_reg, stmtx2_log_format, exprx2_format, stmt1_setup_pkt_buffer,             \
         stmt2_set_pkt, stmt5_blit, stmtx2_call, stmtx3_call_bg, stmt1_return, stmtx_jmp,           \
         stmtx1_jmp_z, stmt1_panic, stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer,    \
         stmtx1_store_param, stmt1_terminate_fiber, stmt0_alloc_map, stmt1_alloc_array,             \

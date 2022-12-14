@@ -293,9 +293,10 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
         devs_strformat(ctx, fmt, fmtsize, (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
                        fiber->activation->locals + fiber->pkt_data.logmsg.localsidx,
                        fiber->pkt_data.logmsg.num_args, 0);
-    pkt->data[0] = low_log_counter & 0xff;     // log-counter
-    pkt->data[1] = 0;                          // flags
-    pkt->data[JD_SERIAL_PAYLOAD_SIZE - 1] = 0; // make sure to 0-terminate
+    pkt->data[0] = low_log_counter & 0xff; // log-counter
+    pkt->data[1] = 0;                      // flags
+    if (sz > JD_SERIAL_PAYLOAD_SIZE - 2)
+        sz = JD_SERIAL_PAYLOAD_SIZE - 2;
     pkt->service_size = sz + 2;
     pkt->service_command = JD_DEVICE_SCRIPT_MANAGER_CMD_LOG_MESSAGE;
     pkt->service_index = ctx->cfg.mgr_service_idx;

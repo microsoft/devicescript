@@ -12,9 +12,11 @@ static int numvalue(char c) {
 #define WR(c)                                                                                      \
     do {                                                                                           \
         char tmp = (c);                                                                            \
-        if (numskip == 0)                                                                          \
-            dst[dp++] = tmp;                                                                       \
-        else                                                                                       \
+        if (numskip == 0) {                                                                        \
+            if (dp < dstlen)                                                                       \
+                dst[dp] = tmp;                                                                     \
+            dp++;                                                                                  \
+        } else                                                                                     \
             numskip--;                                                                             \
     } while (0)
 
@@ -22,8 +24,12 @@ size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst
                       value_t *args, size_t numargs, size_t numskip) {
     size_t fp = 0;
     size_t dp = 0;
-    while (fp < fmtlen && dp < dstlen) {
-        char c = fmt[fp++];
+
+    if (dstlen)
+        dst[0] = 0; // in case numskip prevents us from writing anything
+
+    while (fp <= fmtlen) {
+        char c = fp == fmtlen ? (fp++, 0) : fmt[fp++];
         if (c != '{' || fp >= fmtlen) {
             // if we see "}}" we treat it as a single "}"
             if (c == '}' && fp < fmtlen && fmt[fp] == '}')
@@ -73,7 +79,7 @@ size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst
             s = devs_string_get_utf8(ctx, tmp, &sz);
         }
 
-        while (sz-- && dp < dstlen)
+        while (sz--)
             WR(*s++);
         continue;
 
@@ -81,11 +87,8 @@ size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst
         WR(c);
     }
 
-    if (dp < dstlen) {
-        dst[dp] = 0;
-        return dp;
-    } else {
-        dst[dstlen - 1] = 0;
-        return dstlen;
-    }
+    if (dstlen)
+        dst[dstlen - 1] = 0; // in case we overflow
+
+    return dp;
 }
