@@ -289,9 +289,10 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
     jd_packet_t *pkt = &ctx->packet;
     unsigned fmtsize;
     const char *fmt = devs_get_static_utf8(ctx, fiber->pkt_data.logmsg.string_idx, &fmtsize);
-    unsigned sz = devs_strformat(fmt, fmtsize, (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
-                                 fiber->activation->locals + fiber->pkt_data.logmsg.localsidx,
-                                 fiber->pkt_data.logmsg.num_args, 0);
+    unsigned sz =
+        devs_strformat(ctx, fmt, fmtsize, (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
+                       fiber->activation->locals + fiber->pkt_data.logmsg.localsidx,
+                       fiber->pkt_data.logmsg.num_args, 0);
     pkt->data[0] = low_log_counter & 0xff;     // log-counter
     pkt->data[1] = 0;                          // flags
     pkt->data[JD_SERIAL_PAYLOAD_SIZE - 1] = 0; // make sure to 0-terminate

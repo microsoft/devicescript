@@ -149,8 +149,8 @@ static inline value_t devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
 }
 
 // strformat.c
-size_t devs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
-                      size_t numargs, size_t numskip);
+size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst, size_t dstlen,
+                      value_t *args, size_t numargs, size_t numskip);
 
 // jdiface.c
 bool devs_jd_should_run(devs_fiber_t *fiber);

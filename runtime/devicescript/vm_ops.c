@@ -76,7 +76,7 @@ static void stmtx3_format(devs_activation_t *frame, devs_ctx_t *ctx) {
 
     if (devs_vm_args_ok(frame, localidx, numargs))
         ctx->packet.service_size =
-            offset + devs_strformat(fmt, len, (char *)ctx->packet.data + offset,
+            offset + devs_strformat(ctx, fmt, len, (char *)ctx->packet.data + offset,
                                     JD_SERIAL_PAYLOAD_SIZE - offset, frame->locals + localidx,
                                     numargs, 0);
 }

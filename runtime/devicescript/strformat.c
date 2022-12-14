@@ -18,8 +18,8 @@ static int numvalue(char c) {
             numskip--;                                                                             \
     } while (0)
 
-size_t devs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, value_t *args,
-                      size_t numargs, size_t numskip) {
+size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst, size_t dstlen,
+                      value_t *args, size_t numargs, size_t numskip) {
     size_t fp = 0;
     size_t dp = 0;
     while (fp < fmtlen && dp < dstlen) {
@@ -58,11 +58,22 @@ size_t devs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, 
         if (precision < 0)
             precision = 6;
 
-        char buf[64];
-        jd_print_double(buf, devs_value_to_double(args[pos]), precision + 1);
+        unsigned sz;
+        const char *s;
+        value_t v = args[pos];
+        if (devs_is_number(v)) {
+            char buf[64];
+            jd_print_double(buf, devs_value_to_double(args[pos]), precision + 1);
+            s = buf;
+            sz = strlen(buf);
+        } else {
+            value_t tmp = devs_value_to_string(ctx, v);
+            // note that tmp is not pinned, it may go away at next allocation, but we only use it
+            // down below
+            s = devs_string_get_utf8(ctx, tmp, &sz);
+        }
 
-        char *s = buf;
-        while (*s && dp < dstlen)
+        while (sz-- && dp < dstlen)
             WR(*s++);
         continue;
 
@@ -78,26 +89,3 @@ size_t devs_strformat(const char *fmt, size_t fmtlen, char *dst, size_t dstlen, 
         return dstlen;
     }
 }
-
-#if 0
-static void test_fmt1(const char *fmt) {
-    char buf[256];
-    value_t args[] = {
-        0, 42, -108, 0.000198, 1e30, 1e-10, 2.0f / 3,
-        123456789123,
-    };
-    devs_strformat(fmt, strlen(fmt), buf, sizeof(buf) - 1, args, sizeof(args) / sizeof(args[0]));
-    printf("'%s' -> '%s'\n", fmt, buf);
-}
-
-void test_fmt(void) {
-    test_fmt1("hello world");
-    test_fmt1("hello{0}world");
-    test_fmt1("{0} {1} {2} {3} {4} {5}");
-    test_fmt1("{6} {7} {79} {74}");
-    test_fmt1("{Q} {Z} {!}");
-    test_fmt1("{{{5}}}");
-    test_fmt1("q}x");
-    test_fmt1("q}}x");
-}
-#endif

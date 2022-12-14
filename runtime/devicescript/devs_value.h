@@ -86,6 +86,8 @@ static inline bool devs_is_special(value_t t) {
 }
 
 bool devs_is_nullish(value_t t);
+bool devs_is_number(value_t t);
+
 
 value_t devs_value_from_double(double v);
 value_t devs_value_from_int(int v);

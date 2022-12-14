@@ -81,9 +81,9 @@ static value_t buffer_to_string(devs_ctx_t *ctx, value_t v) {
     void *data = devs_buffer_data(ctx, v, &sz);
     unsigned maxbuf = 32;
     if (sz > maxbuf) {
-        return devs_string_sprintf(ctx, "[Buffer %ub: %-s...]", sz, jd_to_hex_a(data, maxbuf));
+        return devs_string_sprintf(ctx, "[Buffer[%u] %-s...]", sz, jd_to_hex_a(data, maxbuf));
     } else {
-        return devs_string_sprintf(ctx, "[Buffer %ub: %-s]", sz, jd_to_hex_a(data, sz));
+        return devs_string_sprintf(ctx, "[Buffer[%u] %-s]", sz, jd_to_hex_a(data, sz));
     }
 }
 
