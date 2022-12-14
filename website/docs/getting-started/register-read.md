@@ -5,7 +5,14 @@ hide_table_of_contents: true
 
 # Register read
 
-We can modify the snippet by `read()ing` the `pressure` reading
+You can retreive the current value of a register by calling `read`. 
+Internally, the client will handle all the necessary syncronization and communication with the sensor.
+
+```ts no-build
+    const pressure = sensor.pressure.read()
+```
+
+Let's modify the snippet by `read()ing` the `pressure` reading
 and logging it to the console.
 
 ```ts
