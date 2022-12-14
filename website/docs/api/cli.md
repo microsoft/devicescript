@@ -101,12 +101,15 @@ application instructions to open the web page.
 ```mermaid
 stateDiagram-v2
     direction LR
-    browser: Dev Tools
+    sources
+    cli: CLI\n(compiler + web server)
+    browser: Dev Tools\n(browser)
     vdev: Virtual Device
     dev: Hardware Device
-    bytecode --> browser
+    cli --> sources: watch files
+    cli --> browser: bytecode
     browser --> vdev
-    browser --> dev: serial, usb
+    browser --> dev: WebSerial, WebUsb, ...
 ```
 
 
