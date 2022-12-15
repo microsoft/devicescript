@@ -1,14 +1,10 @@
 # DeviceScript bytecode spec
 
 ## TODO
-
-* split strings and buffers in bytecode
-* built-in strings
 * object prototypes
 * object property lookup by string, not index
 * closures - just keep pointer to parent stack frame - in parent clear pointer variables on last use or exit
 * try/catch
-* some more compact binary string repr? LATER
 * drop seconds, use milliseconds everywhere
 * multi-program LATER
 
@@ -18,28 +14,16 @@
 
 
 ### Decisions
-* utf16 vs utf8 strings
+* utf16 vs utf8 strings - UTF8
 * null vs undefined
-* hash-consing of strings? LATER
+* hash-consing of strings? (esp. for JSON parsing) LATER
 * call method identified by string -> eg. charCodeAt YES
 * prototype property access via string lookup?
 
-### Buffer-ish
-* built in strings
-* static ASCII strings
-* static Unicode strings
-* dynamic ASCII strings
-* dynamic Unicode strings
-* dynamic tree strings
-* static buffers
-* dynamic buffers
-
-
-Strings layout:
-* 2 byte offset into NUL-terminated string in string data section; ASCII-only, length up to ~50 bytes, no inner NUL
-* 4 byte offset + 3 byte length + 1 byte flags (ASCII-only, has skip-list) - both buffer and string, but in separate tables
-
-
+### Philosophy
+* static vs dynamic
+* use types in compilation?
+* built-in methods vs opcodes
 
 ## Statements
 
