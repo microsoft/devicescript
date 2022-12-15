@@ -1,0 +1,28 @@
+# Raspberry Pi Pico W
+
+![Adafruit board from the top](board.png)
+
+-  [Product page](https://www.raspberrypi.com/products/raspberry-pi-pico/)
+
+## Firmware update
+
+To install the DeviceScript runtime on the board, follow these instructions:
+
+-  download the latest `devicescript-pico-w.uf2` file from [jacdac-pico releases](https://github.com/microsoft/jacdac-pico/releases)
+-  put the pico in bootloader mode by pressing `RESET`, `BOOT`
+-  download the `.uf2` file into the `PICO` drive
+
+## Connecting
+
+Once the UF2 is copied and the board restarted,
+
+-   open the DeviceScript developer tools (click `Run`)
+-   click `Connect`
+-   click `Connect USB`
+-   select `Raspberry Pico` in the system menu listing devices
+
+After connecting, you should see a new chip under the `DeviceScript` section with the image of the board.
+
+## Accessories
+
+The [Adafruit PiCowbell Proto for Pico](https://www.adafruit.com/product/5200) makes it easy to connect Qwiic/STEMMA QT sensors.

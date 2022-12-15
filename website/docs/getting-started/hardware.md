@@ -5,28 +5,20 @@ hide_table_of_contents: true
 
 # Hardware
 
-For this part of the guide, we will be using the _real_ hardware components:
+For this part of the guide, we will be using the _real_ hardware components.
 
--   a [Raspberry Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/) board,
--   a [Adafruit PiCowbell Proto for Pico](https://www.adafruit.com/product/5200)
+
+For the DeviceScript runtime,
+
+-   a [Raspberry Pi Pico W](/devices/raspberry-pi-pico-w/) board
+
+or
+
+-   a [Adafruit QtPy ESP32 C3](/devices/adafruit-qt-py-esp32-c3-wifi-dev-board/) board
+
+and for sensors,
+
 -   a [Adafruit LPS25 Pressure Sensor](https://www.adafruit.com/product/4530)
-
-## Updating the Pico
-
-The first step is to upload the DeviceScript Virtual Macine
-firmware on the Raspberry Pi Pico.
-Navigate to https://github.com/microsoft/jacdac-pico/releases and drop the `.uf2` on your Pico bootloader drive.
-
-## Connecting the Pico
-
-Once the UF2 is copied and the Pico restarted,
-
--   open the DeviceScript developer tools (click `Run`)
--   click `Connect`
--   click `Connect USB`
--   select `Raspberry Pico` in the system menu listing devices
-
-After connecting, you should see a new chip under the `DeviceScript` section with the image of the Raspberry Pico.
 
 ## Connecting the pressure sensor
 
