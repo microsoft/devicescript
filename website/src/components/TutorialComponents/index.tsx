@@ -22,15 +22,14 @@ interface CodeBlockProps {
     langVersion?: string
     tool?: string
     prefix?: string
+    noRun?: boolean
     sandbox?: {
         files: Record<string, { content: string }>
         main?: string
     }
 }
 
-function RunButton(props: {
-    onClick: () => Promise<void>
-}) {
+function RunButton(props: { onClick: () => Promise<void> }) {
     const { onClick } = props
     return (
         <button className="button button--primary" onClick={onClick}>
@@ -108,6 +107,7 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
         showLineNumbers,
         sandbox,
         prefix,
+        noRun,
     } = input
     const currCode = code
     const [outputRendered, setOutputRendered] = useState(false)
@@ -177,13 +177,11 @@ export default function CustomCodeBlock(props: { input: CodeBlockProps }) {
                 sandbox={sandbox}
                 prefix={prefix}
             />
-            <>
+            {!noRun && (
                 <div className={styles.buttons}>
-                    <RunButton
-                        onClick={onDidClickRun}
-                    />
+                    <RunButton onClick={onDidClickRun} />
                 </div>
-            </>
+            )}
         </div>
     )
 }

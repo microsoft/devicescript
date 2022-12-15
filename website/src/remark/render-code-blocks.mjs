@@ -202,6 +202,7 @@ export default function plugin() {
             if (!langConfig) return
 
             const noBuild = /no-build/i.test(meta)
+            const noRun = /no-run/i.test(meta)
             const skipErr = /(no-build)|(ignore-errors)/i.test(meta)
             const label = langConfig.label
             const highlight = langConfig.highlight
@@ -226,6 +227,7 @@ export default function plugin() {
                     sandbox: langConfig.sandbox,
                     prefix: langConfig.prefix,
                     label,
+                    noRun,
                 })
                 parent.children.splice(index, 1, {
                     type: "jsx",
@@ -258,6 +260,7 @@ export default function plugin() {
                         sandbox: langConfig.sandbox,
                         label,
                         prefix: langConfig.prefix,
+                        noRun,
                     })
                     parent.children.splice(index, 1, {
                         type: "jsx",

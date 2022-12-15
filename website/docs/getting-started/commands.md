@@ -13,10 +13,15 @@ can add code to generate a mouse click.
 that you will want to tune using the actual hardware sensors,
 not just a simulator.
 
+```ts no-build no-run
+if (pressure > 1400) {
+    mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
+}
+```
+
+The full sample looks like this.
 
 ```ts
-import * as ds from "@devicescript/core"
-
 console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
