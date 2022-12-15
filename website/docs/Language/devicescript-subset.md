@@ -31,7 +31,8 @@ Only `while` loop is supported.
 
 ## Logging and format strings
 
-The `console.log()` takes zero or more arguments, each of which is a string or a number.
+The `console.log()` takes zero or more arguments of any type.
+Template literals and string concatenation are also supported.
 Compiler internally constructs a format string (see below).
 
 ```ts
@@ -40,10 +41,21 @@ let y = 4
 console.log("Hello world")
 console.log("X is", x, "and Y is", y)
 console.log("X=", x, "Y=", y)
+console.log(`X=${x} Y=${y}`)
+console.log("X=" + x + " Y=" + y)
 ```
 
 The compiler is smart about adding spaces (the second and third examples will print `X is 7 and Y is 12`
-and `X=7 Y=12`).
+and `X=7 Y=12` respectively).
+
+Concatenation and template literals can be also used to write registers.
+
+```ts no-build
+const screen = new ds.CharacterScreen()
+let x = 7
+screen.message.write("X = " + x)
+screen.message.write(`X is ${x}`)
+```
 
 You can also use the `ds.format()` function directly, either with `console.log()` or
 when setting string registers.
@@ -54,7 +66,7 @@ A second digit can be supplied to specify precision (though this doesn't work so
 const screen = new ds.CharacterScreen()
 let x = 7, y = 12
 
-console.log("X is {0} and Y is {1}", x, y)
-console.log("X = {04}", x)
-screen.message.write(`X is ${x}`)
+console.log(ds.format("X is {0} and Y is {1}", x, y))
+console.log(ds.format("X = {04}", x))
+screen.message.write(ds.format("X is {0}", x))
 ```
