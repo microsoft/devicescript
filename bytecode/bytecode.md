@@ -25,6 +25,14 @@
 * use types in compilation?
 * built-in methods vs opcodes
 
+### Dynamic methods
+* obj.prop -> (objptr, intr-method-index/function-index)
+* role.packet -> (roleidx, spec-offset)
+* builtin_field(*idx, obj)
+* ascii_field(*idx, obj)
+* gen_field(field, obj)
+* call0(fn), call1(fn,arg0), call2(fn,arg0,arg1), ..., call4(...)
+
 ## Statements
 
     wait_role(role) = 62
@@ -105,7 +113,7 @@ Returns nan (fiber doesn't exists) or 0 (terminated).
 
     alloc_buffer(size) = 86
 
-    set_field(*field_idx, object, value) = 87   // object.field_idx := value
+    set_field(object, field, value) = 87        // object.field := value
 
     array_set(array, index, value) = 88         // array[index] := value
 
@@ -160,7 +168,7 @@ Time since device restart in ms; time only advances when sleeping.
 
 ### Object handling
 
-    get_field(*field_idx, object): any = 52   // object.field_idx
+    get_field(object, field): any = 52        // object.field
 
     index(object, idx): any = 53              // object[idx]
 
