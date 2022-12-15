@@ -100,7 +100,7 @@ static void scan_array_and_mark(devs_ctx_t *ctx, value_t *vals, unsigned length,
 static void scan_map(devs_ctx_t *ctx, devs_map_t *map, int depth) {
     if (!map)
         return;
-    scan_array_and_mark(ctx, map->data, map->length, depth - 1);
+    scan_array_and_mark(ctx, map->data, map->length * 2, depth - 1);
 }
 
 static void scan(devs_ctx_t *ctx, block_t *block, int depth) {

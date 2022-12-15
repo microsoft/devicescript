@@ -100,12 +100,12 @@ static void stmt1_decode_utf8(devs_activation_t *frame, devs_ctx_t *ctx) {
     }
 }
 
-static void stmtx2_set_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+static void stmt3_set_field(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
+    value_t key = devs_vm_pop_arg(ctx);
     devs_map_t *map = devs_vm_pop_arg_map(ctx, true);
-    unsigned idx = ctx->literal_int;
     if (map != NULL)
-        devs_map_set(ctx, map, idx, v);
+        devs_map_set(ctx, map, key, v);
 }
 
 static void stmt3_array_set(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -498,8 +498,8 @@ static value_t exprx_static_builtin_string(devs_activation_t *frame, devs_ctx_t 
     return static_something(ctx, DEVS_STRIDX_BUILTIN);
 }
 
-static value_t exprx1_get_field(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned idx = ctx->literal_int;
+static value_t expr2_get_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t idx = devs_vm_pop_arg(ctx);
     devs_map_t *map = devs_vm_pop_arg_map(ctx, false);
     if (map == NULL)
         return devs_undefined;

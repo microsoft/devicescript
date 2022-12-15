@@ -27,7 +27,7 @@
 #define DEVS_STMT0_ALLOC_MAP 84
 #define DEVS_STMT1_ALLOC_ARRAY 85           // initial_size
 #define DEVS_STMT1_ALLOC_BUFFER 86          // size
-#define DEVS_STMTx2_SET_FIELD 87            // object.field_idx := value
+#define DEVS_STMT3_SET_FIELD 87             // object.field := value
 #define DEVS_STMT3_ARRAY_SET 88             // array[index] := value
 #define DEVS_STMT3_ARRAY_INSERT 89          // array, index, count
 #define DEVS_EXPRx_LOAD_LOCAL 1             // *local_idx
@@ -48,7 +48,7 @@
 #define DEVS_EXPR1_GET_FIBER_HANDLE 47      // func
 #define DEVS_EXPR0_RET_VAL 6
 #define DEVS_EXPR0_NOW_MS 46
-#define DEVS_EXPRx1_GET_FIELD 52    // object.field_idx
+#define DEVS_EXPR2_GET_FIELD 52     // object.field
 #define DEVS_EXPR2_INDEX 53         // object[idx]
 #define DEVS_EXPR1_OBJECT_LENGTH 54 // object
 #define DEVS_EXPR1_KEYS_LENGTH 55   // object
@@ -103,8 +103,8 @@
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x20\x20\x03\x60\x60\x00\x02\x01\x00\x00\x00\x40\x41\x41\x41\x41\x41\x41\x41\x41\x41\x01" \
     "\x01\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x20" \
-    "\x00\x01\x00\x00\x60\x14\x21\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32" \
-    "\x62\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x32\x13\x13\x60\x42" \
+    "\x00\x01\x00\x00\x60\x14\x02\x02\x01\x01\x41\x40\x41\x40\x40\x40\x11\x11\x11\x13\x12\x14\x32" \
+    "\x62\x11\x12\x15\x32\x33\x11\x30\x31\x11\x31\x31\x14\x31\x11\x10\x11\x11\x13\x13\x13\x60\x42" \
     "\x41\x60\x60\x60\x60\x11"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x0a\x0a\x01\x01\x01\x0a\x06\x06\x01\x01\x01\x01\x01\x01\x01\x01\x0a\x06\x01\x01\x06\x01" \
@@ -209,14 +209,14 @@
         expr2_lt, expr2_max, expr2_min, expr2_mul, expr2_ne, expr2_pow, expr2_shift_left,          \
         expr2_shift_right, expr2_shift_right_unsigned, expr2_sub, exprx_load_param, expr0_now_ms,  \
         expr1_get_fiber_handle, expr0_pkt_report_code, expr0_pkt_command_code, exprx_static_role,  \
-        stmt4_memset, exprx1_get_field, expr2_index, expr1_object_length, expr1_keys_length,       \
+        stmt4_memset, expr2_get_field, expr2_index, expr1_object_length, expr1_keys_length,        \
         expr1_typeof, expr0_null, expr1_is_null, expr0_pkt_buffer, expr0_true, expr0_false,        \
         stmt1_wait_role, stmt1_sleep_s, stmt1_sleep_ms, stmt3_query_reg, stmt2_send_cmd,           \
         stmt4_query_idx_reg, stmtx2_log_format, exprx2_format, stmt1_setup_pkt_buffer,             \
         stmt2_set_pkt, stmt5_blit, stmtx2_call, stmtx3_call_bg, stmt1_return, stmtx_jmp,           \
         stmtx1_jmp_z, stmt1_panic, stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer,    \
         stmtx1_store_param, stmt1_terminate_fiber, stmt0_alloc_map, stmt1_alloc_array,             \
-        stmt1_alloc_buffer, stmtx2_set_field, stmt3_array_set, stmt3_array_insert,                 \
+        stmt1_alloc_buffer, stmt3_set_field, stmt3_array_set, stmt3_array_insert,                  \
         exprx_static_function, expr2_imod, expr1_to_int, exprx_static_buffer,                      \
         exprx_static_builtin_string, exprx_static_ascii_string, exprx_static_utf8_string,          \
         stmt1_decode_utf8, expr_invalid

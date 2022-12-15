@@ -10,12 +10,32 @@ void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map) {
     }
 }
 
-static value_t *lookup(devs_map_t *map, devs_key_id_t key) {
-    devs_key_id_t *keys = devs_map_keys(map);
-    for (unsigned i = 0; i < map->length; ++i) {
-        if (keys[i] == key)
-            return &map->data[i];
+static value_t *lookup(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
+    if (!devs_is_string(ctx, key))
+        return NULL;
+
+    value_t *data = map->data;
+    uint32_t kh = devs_handle_value(key);
+    unsigned len2 = map->length * 2;
+
+    // do a quick reference-only check
+    for (unsigned i = 0; i < len2; i += 2) {
+        // check the low bits first, since they are more likely to be different
+        if (devs_handle_value(data[i]) == kh && data[i].u64 == key.u64) {
+            return &data[i + 1];
+        }
     }
+
+    // slow path - compare strings
+    unsigned ksz, csz;
+    const char *cp, *kp = devs_string_get_utf8(ctx, key, &ksz);
+    for (unsigned i = 0; i < len2; i += 2) {
+        cp = devs_string_get_utf8(ctx, data[i], &csz);
+        if (csz == ksz && memcmp(kp, cp, ksz) == 0)
+            return &data[i + 1];
+    }
+
+    // nothing found...
     return NULL;
 }
 
@@ -26,35 +46,38 @@ static int grow_len(int capacity) {
     return newlen;
 }
 
-void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, devs_key_id_t key, value_t v) {
-    value_t *tmp = lookup(map, key);
+void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v) {
+    value_t *tmp = lookup(ctx, map, key);
     if (tmp != NULL) {
         *tmp = v;
         return;
     }
+
+    if (!devs_is_string(ctx, key))
+        devs_runtime_failure(ctx, 60149);
 
     JD_ASSERT(map->capacity <= map->length);
 
     if (map->capacity == map->length) {
         int newlen = grow_len(map->capacity);
         map->capacity = newlen;
-        tmp = devs_try_alloc(ctx, newlen * (sizeof(value_t) + sizeof(devs_key_id_t)));
+        tmp = devs_try_alloc(ctx, newlen * (2 * sizeof(value_t)));
         if (!tmp)
             return;
         if (map->length) {
-            memcpy(tmp, map->data, map->length * sizeof(value_t));
-            memcpy(tmp + newlen, devs_map_keys(map), map->length * sizeof(devs_key_id_t));
+            memcpy(tmp, map->data, map->length * sizeof(value_t) * 2);
         }
         map->data = tmp;
         jd_gc_unpin(ctx->gc, tmp);
     }
-    map->data[map->length] = v;
-    devs_map_keys(map)[map->length] = key;
+
+    map->data[map->length * 2] = key;
+    map->data[map->length * 2 + 1] = v;
     map->length++;
 }
 
-value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, devs_key_id_t key) {
-    value_t *tmp = lookup(map, key);
+value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
+    value_t *tmp = lookup(ctx, map, key);
     if (tmp == NULL)
         return devs_undefined;
     return *tmp;

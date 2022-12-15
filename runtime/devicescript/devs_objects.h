@@ -4,7 +4,6 @@
 #define DEVS_MAX_ALLOC 0xf000
 
 typedef uint16_t devs_small_size_t;
-typedef uint16_t devs_key_id_t;
 
 typedef struct {
     uintptr_t header;
@@ -31,10 +30,6 @@ typedef struct {
     char data[0];
 } devs_string_t;
 
-static inline devs_key_id_t *devs_map_keys(devs_map_t *m) {
-    return (devs_key_id_t *)(void *)(m->data + m->length);
-}
-
 typedef struct {
     devs_gc_object_t gc;
     devs_map_t *attached;
@@ -43,8 +38,8 @@ typedef struct {
     value_t *data;
 } devs_array_t;
 
-void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, devs_key_id_t key, value_t v);
-value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, devs_key_id_t key);
+void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v);
+value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map);
 
 value_t devs_index(devs_ctx_t *ctx, value_t seq, unsigned idx);
