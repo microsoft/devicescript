@@ -1,8 +1,15 @@
 /// <reference path="devicescript-spec.d.ts" />
 
 declare module "@devicescript/core" {
+
+    /**
+     * A base class for service clients
+     */
+    // TODO: rename to serviceclient?
     export class Role {
+        // TODO: convert to `get connected() { ... }`
         isConnected(): number
+        // TODO: is there a way to unregister an event?
         onConnected(handler: () => void): void
         onDisconnected(handler: () => void): void
     }
@@ -23,12 +30,14 @@ declare module "@devicescript/core" {
     export class RegisterNumber extends Register {
         /**
          * Gets the current value of the register as a number.
+         * TODO: missing value behavior (optional regs)
          */
         read(): number
 
         /**
          * Sets the current value of the register.
          * @param value value to assign to the register
+         * TODO: is it guaranteed, does it throw when it fails?
          */
         write(value: number): void
 
@@ -36,6 +45,7 @@ declare module "@devicescript/core" {
          * Registers a callback to execute when the register value changes by the given threshold
          * @param threshold minimum value change required to trigger the handler
          * @param handler callback to execute
+         * TODO: can we unregister?
          */
         onChange(threshold: number, handler: (curr: number) => void): void
     }
@@ -52,6 +62,8 @@ declare module "@devicescript/core" {
         /**
          * Sets the current value of the register.
          * @param value value to assign to the register
+         * TODO: is the buffer copied or owned?
+         * TODO: is Buffer = null same as buffer[0]
          */
         write(value: Buffer): void
 
@@ -73,12 +85,12 @@ declare module "@devicescript/core" {
      */
     export class RegisterString extends Register {
         read(): string
-        write(v: string): void
+        write(value: string): void
     }
 
     export class RegisterArray extends Register {
         read(): number[]
-        write(v: number[]): void
+        write(value: number[]): void
     }
 
     export class Event extends PacketInfo {
@@ -88,6 +100,7 @@ declare module "@devicescript/core" {
         wait(): void
         /**
          * Register a callback that will be raised when the event is raised.
+         * @handler callback to execute
          */
         subscribe(handler: () => void): void
     }
@@ -112,7 +125,9 @@ declare module "@devicescript/core" {
                 v7: number
             ) => void
         ): void
+        // TODO: delete?
         twin(path: string): number
+        // TODO: delete?
         onTwinChange(handler: () => void): void
     }
     export const cloud: CloudConnector
