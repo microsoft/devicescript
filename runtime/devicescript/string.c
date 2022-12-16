@@ -13,6 +13,11 @@ bool devs_is_string(devs_ctx_t *ctx, value_t v) {
     }
 }
 
+bool devs_is_number(value_t v) {
+    return devs_is_tagged_int(v) ||
+           (devs_handle_type(v) == DEVS_HANDLE_TYPE_FLOAT64_OR_NULL && !devs_is_null(v));
+}
+
 const char *devs_string_get_utf8(devs_ctx_t *ctx, value_t v, unsigned *size) {
     switch (devs_handle_type(v)) {
     case DEVS_HANDLE_TYPE_GC_OBJECT: {
@@ -127,7 +132,8 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
             return buffer_to_string(ctx, v);
         case DEVS_GC_TAG_MAP:
             return builtin_string(DEVS_BUILTIN_STRING_MAP);
-        case DEVS_GC_TAG_STRING:
+        case DEVS_GC_TAG_BUILTIN_PROTO: // can't happen
+        case DEVS_GC_TAG_STRING:        // handled on top
         default:
             JD_PANIC();
         }

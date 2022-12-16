@@ -133,6 +133,7 @@ static void scan(devs_ctx_t *ctx, block_t *block, int depth) {
         break;
     case DEVS_GC_TAG_STRING:
     case DEVS_GC_TAG_BYTES:
+    case DEVS_GC_TAG_BUILTIN_PROTO:
         break;
     default:
         JD_PANIC();

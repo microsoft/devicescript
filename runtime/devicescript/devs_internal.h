@@ -143,7 +143,7 @@ static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);
 value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code);
-// next error 60150
+// next error 60157
 static inline value_t devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
     return _devs_runtime_failure(ctx, code - 60000);
 }
@@ -196,4 +196,4 @@ void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size);
 void devs_free(devs_ctx_t *ctx, void *ptr);
 void devs_oom(devs_ctx_t *ctx, unsigned size);
 
-#define TODO() JD_ASSERT(0)
+#define TODO JD_PANIC

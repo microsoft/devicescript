@@ -91,43 +91,6 @@ unsigned devs_vm_pop_arg_role(devs_ctx_t *ctx) {
 
 devs_map_t *devs_vm_pop_arg_map(devs_ctx_t *ctx, bool create) {
     value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) != DEVS_HANDLE_TYPE_GC_OBJECT) {
-        devs_runtime_failure(ctx, 60128);
-        return NULL;
-    }
-
-    void *obj = devs_handle_ptr_value(ctx, tmp);
-    devs_map_t **attached;
-
-    switch (devs_gc_tag(obj)) {
-    case DEVS_GC_TAG_BUFFER:
-        attached = &((devs_buffer_t *)obj)->attached;
-        break;
-    case DEVS_GC_TAG_ARRAY:
-        attached = &((devs_array_t *)obj)->attached;
-        break;
-    case DEVS_GC_TAG_MAP:
-        return obj;
-    case DEVS_GC_TAG_STRING:
-        // strings are immutable, can't attach properties
-        if (create) {
-            // note that in ES writing to string properties is no-op
-            // we make it an error
-            devs_runtime_failure(ctx, 60128);
-        }
-        return NULL;
-    default:
-        JD_PANIC();
-        break;
-    }
-
-    obj = *attached;
-
-    if (!obj && create) {
-        obj = *attached = devs_map_try_alloc(ctx->gc);
-        if (obj == NULL)
-            devs_runtime_failure(ctx, 60131);
-    }
-
-    return obj;
+    void *m = devs_object_get_attached(ctx, tmp, create);
+    return devs_is_map(m) ? m : NULL;
 }

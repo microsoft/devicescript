@@ -113,8 +113,7 @@ static void stmt3_array_set(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t idx = devs_vm_pop_arg_u32(ctx);
     value_t arr = devs_vm_pop_arg(ctx);
 
-    if (devs_index_set(ctx, arr, idx, v) != 0)
-        devs_runtime_failure(ctx, 60133);
+    devs_seq_set(ctx, arr, idx, v);
 }
 
 static void stmt3_array_insert(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -509,7 +508,7 @@ static value_t expr2_get_field(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr2_index(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t idx = devs_vm_pop_arg_u32(ctx);
     value_t arr = devs_vm_pop_arg(ctx);
-    return devs_index(ctx, arr, idx);
+    return devs_seq_get(ctx, arr, idx);
 }
 
 static value_t expr1_object_length(devs_activation_t *frame, devs_ctx_t *ctx) {

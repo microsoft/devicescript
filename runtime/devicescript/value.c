@@ -246,6 +246,7 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
             return DEVS_OBJECT_TYPE_STRING;
         case DEVS_GC_TAG_MAP:
             return DEVS_OBJECT_TYPE_MAP;
+        case DEVS_GC_TAG_BUILTIN_PROTO:
         default:
             JD_PANIC();
             return 0;
@@ -272,11 +273,6 @@ bool devs_is_nullish(value_t t) {
     }
 
     return false;
-}
-
-bool devs_is_number(value_t t) {
-    return devs_is_tagged_int(t) ||
-           (!devs_is_null(t) && devs_handle_type(t) == DEVS_HANDLE_TYPE_FLOAT64_OR_NULL);
 }
 
 const char *devs_show_value(devs_ctx_t *ctx, value_t v) {

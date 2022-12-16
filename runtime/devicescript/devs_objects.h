@@ -12,10 +12,20 @@ typedef struct {
 
 typedef struct {
     devs_gc_object_t gc;
+} devs_map_or_proto_t;
+
+typedef struct {
+    devs_gc_object_t gc;
+    devs_map_or_proto_t *proto;
     devs_small_size_t length;
     devs_small_size_t capacity;
     value_t *data;
 } devs_map_t;
+
+typedef struct {
+    devs_gc_object_t gc;
+    // ...
+} devs_builtin_proto_t;
 
 typedef struct {
     devs_gc_object_t gc;
@@ -42,10 +52,21 @@ void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v);
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map);
 
-value_t devs_index(devs_ctx_t *ctx, value_t seq, unsigned idx);
-int devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v);
-int devs_index_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v);
+value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx);
+void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v);
+void devs_seq_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v);
 int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int count);
+
+value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key);
+
+// works on objects (including going up the proto chain), arrays, buffers, ...
+value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key);
+void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v);
+
+devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create);
+devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx);
+value_t devs_proto_lookup(devs_ctx_t *ctx, devs_builtin_proto_t *proto, value_t key);
+value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v);
 
 // GC
 
@@ -78,11 +99,20 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_MAP 0x4
 #define DEVS_GC_TAG_BUFFER 0x5
 #define DEVS_GC_TAG_STRING 0x6
+#define DEVS_GC_TAG_BUILTIN_PROTO 0x7 // these are not in GC heap!
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 
 static inline int devs_gc_tag(void *ptr) {
     return ptr == NULL ? 0
                        : (((devs_gc_object_t *)ptr)->header >> DEVS_GC_TAG_POS) & DEVS_GC_TAG_MASK;
+}
+
+static inline bool devs_is_map(void *ptr) {
+    return devs_gc_tag(ptr) == DEVS_GC_TAG_MAP;
+}
+
+static inline bool devs_is_proto(void *ptr) {
+    return devs_gc_tag(ptr) == DEVS_GC_TAG_BUILTIN_PROTO;
 }
 
 const char *devs_gc_tag_name(unsigned tag);
