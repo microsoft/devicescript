@@ -31,6 +31,7 @@ typedef struct _devs_gc_block_t {
         devs_array_t array;
         devs_buffer_t buffer;
         devs_map_t map;
+        devs_bound_function_t bound_function;
     };
 } block_t;
 
@@ -69,7 +70,7 @@ void devs_gc_add_chunk(devs_gc_t *gc, void *start, unsigned size) {
 static void scan(devs_ctx_t *ctx, block_t *block, int depth);
 
 static void scan_value(devs_ctx_t *ctx, value_t v, int depth) {
-    if (devs_handle_type(v) & DEVS_HANDLE_GC_MASK) {
+    if (devs_handle_is_ptr(v)) {
         block_t *b = devs_handle_ptr_value(ctx, v);
         if (b)
             scan(ctx, b, depth);
@@ -130,6 +131,10 @@ static void scan(devs_ctx_t *ctx, block_t *block, int depth) {
     case DEVS_GC_TAG_ARRAY:
         scan_map(ctx, block->array.attached, depth);
         scan_array_and_mark(ctx, block->array.data, block->array.length, depth);
+        break;
+    case DEVS_GC_TAG_BOUND_FUNCTION:
+        scan_value(ctx, block->bound_function.this_val, depth - 1);
+        scan_value(ctx, block->bound_function.func, depth - 1);
         break;
     case DEVS_GC_TAG_STRING:
     case DEVS_GC_TAG_BYTES:
@@ -288,7 +293,7 @@ static block_t *alloc_block(devs_gc_t *gc, uint8_t tag, uint32_t size) {
     return b;
 }
 
-static void *try_alloc(devs_gc_t *gc, uint8_t tag, uint32_t size) {
+void *devs_any_try_alloc(devs_gc_t *gc, unsigned tag, uint32_t size) {
     if (size > DEVS_MAX_ALLOC)
         return NULL;
     block_t *b = alloc_block(gc, tag, size);
@@ -300,7 +305,8 @@ static void *try_alloc(devs_gc_t *gc, uint8_t tag, uint32_t size) {
 }
 
 void *jd_gc_try_alloc(devs_gc_t *gc, uint32_t size) {
-    return (uintptr_t *)try_alloc(gc, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size) + 1;
+    return (uintptr_t *)devs_any_try_alloc(gc, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size) +
+           1;
 }
 
 static block_t *unpin(devs_gc_t *gc, void *ptr, uint8_t tag) {
@@ -325,7 +331,7 @@ void jd_gc_free(devs_gc_t *gc, void *ptr) {
 }
 
 void devs_value_pin(devs_ctx_t *ctx, value_t v) {
-    if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT)
+    if (!devs_handle_is_ptr(v))
         return;
     block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v));
     unsigned tag = GET_TAG(b->header);
@@ -335,7 +341,7 @@ void devs_value_pin(devs_ctx_t *ctx, value_t v) {
 }
 
 void devs_value_unpin(devs_ctx_t *ctx, value_t v) {
-    if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT)
+    if (!devs_handle_is_ptr(v))
         return;
     block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v));
     unsigned tag = GET_TAG(b->header);
@@ -345,7 +351,7 @@ void devs_value_unpin(devs_ctx_t *ctx, value_t v) {
 }
 
 devs_map_t *devs_map_try_alloc(devs_gc_t *gc) {
-    return try_alloc(gc, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
+    return devs_any_try_alloc(gc, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
 }
 
 devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size) {
@@ -353,7 +359,7 @@ devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size) {
     if (bytesize > DEVS_MAX_ALLOC)
         return NULL;
     devs_array_t *arr =
-        try_alloc(gc, DEVS_GC_TAG_ARRAY | DEVS_GC_TAG_MASK_PINNED, sizeof(devs_array_t));
+        devs_any_try_alloc(gc, DEVS_GC_TAG_ARRAY | DEVS_GC_TAG_MASK_PINNED, sizeof(devs_array_t));
     if (arr == NULL)
         return NULL;
     if (size > 0) {
@@ -371,7 +377,7 @@ devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size) {
 devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size) {
     if (size > DEVS_MAX_ALLOC)
         return NULL;
-    devs_buffer_t *buf = try_alloc(gc, DEVS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
+    devs_buffer_t *buf = devs_any_try_alloc(gc, DEVS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
     if (buf)
         buf->length = size;
     return buf;
@@ -380,7 +386,8 @@ devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size) {
 devs_string_t *devs_string_try_alloc(devs_gc_t *gc, unsigned size) {
     if (size > DEVS_MAX_ALLOC)
         return NULL;
-    devs_string_t *buf = try_alloc(gc, DEVS_GC_TAG_STRING, sizeof(devs_string_t) + size + 1);
+    devs_string_t *buf =
+        devs_any_try_alloc(gc, DEVS_GC_TAG_STRING, sizeof(devs_string_t) + size + 1);
     if (buf)
         buf->length = size;
     return buf;

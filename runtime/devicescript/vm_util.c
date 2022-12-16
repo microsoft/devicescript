@@ -27,7 +27,7 @@ uint32_t devs_vm_pop_arg_i32(devs_ctx_t *ctx) {
 
 uint32_t devs_vm_pop_arg_func(devs_ctx_t *ctx) {
     value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) == DEVS_HANDLE_TYPE_FUNCTION)
+    if (devs_handle_type(tmp) == DEVS_HANDLE_TYPE_STATIC_FUNCTION)
         return devs_handle_value(tmp);
     devs_runtime_failure(ctx, 60136);
     return 0;

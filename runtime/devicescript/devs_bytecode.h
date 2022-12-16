@@ -218,6 +218,8 @@
 #define DEVS_BUILTIN_STRING_ARRAY 23
 #define DEVS_BUILTIN_STRING_BUFFER 24
 #define DEVS_BUILTIN_STRING_MAP 25
+#define DEVS_BUILTIN_STRING_INFINITY 26
+#define DEVS_BUILTIN_STRING_MINFINITY 27 // -Infinity
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_load_local, exprx_load_global, expr3_load_buffer, exprx_literal,           \
@@ -244,5 +246,5 @@
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "undefined", "string", "number", "boolean", "function", "toString", "charCodeAt", "next",  \
         "prev", "length", "pop", "push", "shift", "unshift", "splice", "slice", "join", "null",    \
-        "true", "false", "packet", "NaN", "array", "buffer", "map"
-#define DEVS_BUILTIN_STRING__SIZE 26
+        "true", "false", "packet", "NaN", "array", "buffer", "map", "Infinity", "-Infinity"
+#define DEVS_BUILTIN_STRING__SIZE 28

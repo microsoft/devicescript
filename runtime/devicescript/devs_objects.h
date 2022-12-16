@@ -48,6 +48,12 @@ typedef struct {
     value_t *data;
 } devs_array_t;
 
+typedef struct {
+    devs_gc_object_t gc;
+    value_t this_val;
+    value_t func;
+} devs_bound_function_t;
+
 void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v);
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map);
@@ -77,6 +83,9 @@ devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size);
 devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size);
 devs_string_t *devs_string_try_alloc(devs_gc_t *gc, unsigned size);
 
+// result has to be casted to one of devs_gc_object_t objects
+void *devs_any_try_alloc(devs_gc_t *gc, unsigned tag, unsigned size);
+
 devs_gc_t *devs_gc_create(void);
 void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx);
 void devs_gc_destroy(devs_gc_t *gc);
@@ -99,7 +108,8 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_MAP 0x4
 #define DEVS_GC_TAG_BUFFER 0x5
 #define DEVS_GC_TAG_STRING 0x6
-#define DEVS_GC_TAG_BUILTIN_PROTO 0x7 // these are not in GC heap!
+#define DEVS_GC_TAG_BOUND_FUNCTION 0x7
+#define DEVS_GC_TAG_BUILTIN_PROTO 0xf // these are not in GC heap!
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 
 static inline int devs_gc_tag(void *ptr) {

@@ -91,9 +91,18 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, devs_builtin_proto_t *proto, value_t 
     TODO();
 }
 
-// turn (function) into (obj, function)
-value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v) {
+// if `fn` is a static function, return `(obj, fn)` tuple
+// otherwise return `obj`
+// it may allocate an object for the tuple, but typically it doesn't
+value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
+    if (devs_handle_type(fn) != DEVS_HANDLE_TYPE_STATIC_FUNCTION)
+        return obj;
+
     TODO();
+#if 0
+    devs_bound_function_t *res =
+        devs_any_try_alloc(ctx->gc, DEVS_GC_TAG_BOUND_FUNCTION, sizeof(devs_bound_function_t));
+#endif
 }
 
 static devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, bool create) {
@@ -108,15 +117,14 @@ static devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, bool 
 }
 
 devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create) {
-    static const uint8_t proto_by_handle_type[] = {
-        [DEVS_HANDLE_TYPE_FLOAT64_OR_NULL] = DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE,
-        [DEVS_HANDLE_TYPE_FIBER] = DEVS_BUILTIN_OBJECT_FIBER_PROTOTYPE,
-        [DEVS_HANDLE_TYPE_ROLE] = DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE,
-        [DEVS_HANDLE_TYPE_FUNCTION] = DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE,
-        // we check for buffer beforehand
-        [DEVS_HANDLE_TYPE_IMG_BUFFERISH] = DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE,
-        // already checked for NULL and 'packet'; only bools left
-        [DEVS_HANDLE_TYPE_SPECIAL] = DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE,
+    static const uint8_t proto_by_object_type[] = {
+        [DEVS_OBJECT_TYPE_NUMBER] = DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE,
+        [DEVS_OBJECT_TYPE_FIBER] = DEVS_BUILTIN_OBJECT_FIBER_PROTOTYPE,
+        [DEVS_OBJECT_TYPE_ROLE] = DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE,
+        [DEVS_OBJECT_TYPE_FUNCTION] = DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE,
+        [DEVS_OBJECT_TYPE_STRING] = DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE,
+        [DEVS_OBJECT_TYPE_BUFFER] = DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE,
+        [DEVS_OBJECT_TYPE_BOOL] = DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE,
     };
 
     if (devs_is_null(v)) {
@@ -124,14 +132,11 @@ devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool c
         return NULL;
     }
 
-    int tp = devs_is_tagged_int(v) ? DEVS_HANDLE_TYPE_FLOAT64_OR_NULL : devs_handle_type(v);
-
-    if (tp != DEVS_HANDLE_TYPE_GC_OBJECT) {
+    if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT) {
+        int tp = devs_value_typeof(ctx, v);
         int pt = 0;
-        if (devs_is_buffer(ctx, v))
-            pt = DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE;
-        else if (tp < (int)sizeof(proto_by_handle_type)) {
-            pt = proto_by_handle_type[tp];
+        if (tp < (int)sizeof(proto_by_object_type)) {
+            pt = proto_by_object_type[tp];
         }
         JD_ASSERT(pt != 0);
         return devs_get_static_proto(ctx, pt, create);
@@ -155,6 +160,8 @@ devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool c
         return (devs_map_or_proto_t *)obj;
     case DEVS_GC_TAG_STRING:
         return devs_get_static_proto(ctx, DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE, create);
+    case DEVS_GC_TAG_BOUND_FUNCTION:
+        return devs_get_static_proto(ctx, DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE, create);
     case DEVS_GC_TAG_BUILTIN_PROTO:
     default:
         JD_PANIC();

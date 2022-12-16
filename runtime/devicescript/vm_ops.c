@@ -439,7 +439,7 @@ static value_t expr1_get_fiber_handle(devs_activation_t *frame, devs_ctx_t *ctx)
 
     if (devs_is_nullish(func))
         fiber = frame->fiber;
-    else if (devs_handle_type(func) == DEVS_HANDLE_TYPE_FUNCTION)
+    else if (devs_handle_type(func) == DEVS_HANDLE_TYPE_STATIC_FUNCTION)
         fiber = devs_fiber_by_fidx(ctx, devs_handle_value(func));
 
     if (fiber == NULL)
@@ -454,7 +454,7 @@ static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) 
         devs_runtime_failure(ctx, 60114);
         return devs_undefined;
     } else {
-        return devs_value_from_handle(DEVS_HANDLE_TYPE_FUNCTION, fidx);
+        return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, fidx);
     }
 }
 
@@ -621,7 +621,7 @@ static value_t expr1_id(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t expr1_is_nan(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
-    return devs_value_from_bool(v.exp_sign == DEVS_NAN_TAG);
+    return devs_value_from_bool(devs_is_nan(v));
 }
 
 static value_t expr1_log_e(devs_activation_t *frame, devs_ctx_t *ctx) {

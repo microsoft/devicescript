@@ -18,28 +18,59 @@ typedef union {
 } value_t;
 
 #define DEVS_INT_TAG (0U - 1U)
-#define DEVS_NAN_TAG 0x7ff80000
-#define DEVS_HANDLE_TAG 0x7ff00000
+#define DEVS_HANDLE_TAG 0x00000000
+
+// closure: ptr to env + static fn
+// bound fn: ptr to gc_obj + static fn
+
+#define DEVS_HANDLE_TYPE_MASK 0xf
+
+#define DEVS_HANDLE_TYPE_FLOAT64 0x10
+
+#define DEVS_HANDLE_TYPE_SPECIAL 0x0
+#define DEVS_HANDLE_TYPE_FIBER 0x1
+#define DEVS_HANDLE_TYPE_ROLE 0x2
+#define DEVS_HANDLE_TYPE_STATIC_FUNCTION 0x3
+#define DEVS_HANDLE_TYPE_IMG_BUFFERISH 0x4
+
+#define DEVS_HANDLE_TYPE_GC_OBJECT 0x8
+#define DEVS_HANDLE_TYPE_CLOSURE 0x9
+#define DEVS_HANDLE_TYPE_BOUND_FUNCTION 0xA
+
+#define DEVS_SPECIAL_NULL 0 // has to be zero! NULL is represented as all zero
+#define DEVS_SPECIAL_FALSE 1
+#define DEVS_SPECIAL_NAN 2
+#define DEVS_SPECIAL_TRUE 0x40
+#define DEVS_SPECIAL_PKT_BUFFER 0x41
+#define DEVS_SPECIAL_INF 0x42
+#define DEVS_SPECIAL_MINF 0x43
 
 static inline bool devs_is_tagged_int(value_t t) {
     return (t.exp_sign + 1) == 0;
 }
 
-static inline bool devs_is_nan(value_t t) {
-    return t.exp_sign == DEVS_NAN_TAG;
+static inline bool devs_handle_type_is_ptr(int tp) {
+    return (tp & 0x8) != 0;
 }
 
 static inline bool devs_is_handle(value_t t) {
-    return (t.exp_sign >> (20 - 1)) == (0x7ff << 1);
+    return t.exponent == 0;
 }
 
-// handle type is 20 bit
 static inline int devs_handle_type(value_t t) {
-    return devs_is_handle(t) ? (t.exp_sign << 12) >> 12 : 0;
+    return devs_is_handle(t) ? (t.exp_sign & DEVS_HANDLE_TYPE_MASK) : DEVS_HANDLE_TYPE_FLOAT64;
 }
 
 static inline uint32_t devs_handle_value(value_t t) {
     return t.mantisa32;
+}
+
+static inline uint16_t devs_handle_high_value(value_t t) {
+    return (t.exp_sign << 12) >> 4;
+}
+
+static inline bool devs_handle_is_ptr(value_t t) {
+    return devs_handle_type_is_ptr(devs_handle_type(t));
 }
 
 #if JD_64
@@ -57,22 +88,6 @@ static inline value_t devs_value_from_handle(int type, uint32_t value) {
     return r;
 }
 
-#define DEVS_HANDLE_GC_MASK 0x80
-#define DEVS_HANDLE_IMG_MASK 0x40 // TODO remove this?
-
-#define DEVS_HANDLE_TYPE_FLOAT64_OR_NULL 0x00
-#define DEVS_HANDLE_TYPE_SPECIAL 0x01
-#define DEVS_HANDLE_TYPE_FIBER 0x02
-#define DEVS_HANDLE_TYPE_GC_OBJECT (DEVS_HANDLE_GC_MASK | 0x03)
-#define DEVS_HANDLE_TYPE_IMG_BUFFERISH 0x04
-#define DEVS_HANDLE_TYPE_ROLE 0x05
-#define DEVS_HANDLE_TYPE_FUNCTION 0x06
-
-#define DEVS_SPECIAL_F64_NULL 0 // has to be zero! NULL is represented as all zero
-#define DEVS_SPECIAL_FALSE 1
-#define DEVS_SPECIAL_TRUE 0x40
-#define DEVS_SPECIAL_PKT_BUFFER 0x41
-
 static inline bool devs_is_null(value_t t) {
     return t.u64 == 0;
 }
@@ -82,12 +97,16 @@ static inline bool devs_bufferish_is_buffer(value_t v) {
 }
 
 static inline bool devs_is_special(value_t t) {
-    return devs_is_null(t) || (t.exp_sign == DEVS_HANDLE_TAG + DEVS_HANDLE_TYPE_SPECIAL);
+    return t.exp_sign == DEVS_HANDLE_TAG + DEVS_HANDLE_TYPE_SPECIAL;
+}
+
+static inline bool devs_is_nan(value_t t) {
+    return devs_is_special(t) && devs_handle_value(t) == DEVS_SPECIAL_NAN;
 }
 
 bool devs_is_nullish(value_t t);
+// this excludes NaN and Inf
 bool devs_is_number(value_t t);
-
 
 value_t devs_value_from_double(double v);
 value_t devs_value_from_int(int v);
@@ -110,6 +129,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v);
 extern const value_t devs_zero;
 extern const value_t devs_one;
 extern const value_t devs_nan;
+extern const value_t devs_inf;
+extern const value_t devs_minf;
 extern const value_t devs_int_min;
 extern const value_t devs_max_int_1;
 extern const value_t devs_null;

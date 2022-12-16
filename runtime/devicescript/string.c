@@ -14,8 +14,7 @@ bool devs_is_string(devs_ctx_t *ctx, value_t v) {
 }
 
 bool devs_is_number(value_t v) {
-    return devs_is_tagged_int(v) ||
-           (devs_handle_type(v) == DEVS_HANDLE_TYPE_FLOAT64_OR_NULL && !devs_is_null(v));
+    return devs_is_tagged_int(v) || devs_handle_type(v) == DEVS_HANDLE_TYPE_FLOAT64;
 }
 
 const char *devs_string_get_utf8(devs_ctx_t *ctx, value_t v, unsigned *size) {
@@ -98,36 +97,47 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
         return v;
 
     switch (devs_handle_type(v)) {
-    case DEVS_HANDLE_TYPE_FLOAT64_OR_NULL: {
-        if (devs_is_null(v))
-            return builtin_string(DEVS_BUILTIN_STRING_NULL);
+    case DEVS_HANDLE_TYPE_FLOAT64: {
         char buf[64];
-        double vv = devs_value_to_double(v);
-        if (isnan(vv))
-            return builtin_string(DEVS_BUILTIN_STRING_NAN);
-        jd_print_double(buf, vv, 7);
+        jd_print_double(buf, devs_value_to_double(v), 7);
         return devs_string_sprintf(ctx, "%s", buf);
     }
     case DEVS_HANDLE_TYPE_SPECIAL:
         switch (devs_handle_value(v)) {
+        case DEVS_SPECIAL_NULL:
+            return builtin_string(DEVS_BUILTIN_STRING_NULL);
         case DEVS_SPECIAL_FALSE:
             return builtin_string(DEVS_BUILTIN_STRING_FALSE);
         case DEVS_SPECIAL_TRUE:
             return builtin_string(DEVS_BUILTIN_STRING_TRUE);
         case DEVS_SPECIAL_PKT_BUFFER:
             return builtin_string(DEVS_BUILTIN_STRING_PACKET);
+        case DEVS_SPECIAL_NAN:
+            return builtin_string(DEVS_BUILTIN_STRING_NAN);
+        case DEVS_SPECIAL_INF:
+            return builtin_string(DEVS_BUILTIN_STRING_INFINITY);
+        case DEVS_SPECIAL_MINF:
+            return builtin_string(DEVS_BUILTIN_STRING_MINFINITY);
         default:
             JD_PANIC();
         }
     case DEVS_HANDLE_TYPE_FIBER:
         return devs_string_sprintf(ctx, "[Fiber: %x]", devs_handle_value(v));
-    case DEVS_HANDLE_TYPE_FUNCTION:
+    case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
         return devs_string_sprintf(ctx, "[Function: %s]",
                                    devs_img_fun_name(ctx->img, devs_handle_value(v)));
+    case DEVS_HANDLE_TYPE_CLOSURE:
+        return devs_string_sprintf(ctx, "[Closure: %s]",
+                                   devs_img_fun_name(ctx->img, devs_handle_high_value(v)));
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
+        return devs_string_sprintf(ctx, "[Method: %s]",
+                                   devs_img_fun_name(ctx->img, devs_handle_high_value(v)));
     case DEVS_HANDLE_TYPE_GC_OBJECT:
         switch (devs_gc_tag(devs_handle_ptr_value(ctx, v))) {
         case DEVS_GC_TAG_ARRAY:
             return builtin_string(DEVS_BUILTIN_STRING_ARRAY); // TODO stringify array?
+        case DEVS_GC_TAG_BOUND_FUNCTION:
+            return builtin_string(DEVS_BUILTIN_STRING_FUNCTION); // TODO?
         case DEVS_GC_TAG_BUFFER:
             return buffer_to_string(ctx, v);
         case DEVS_GC_TAG_MAP:

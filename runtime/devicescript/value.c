@@ -5,7 +5,6 @@
 
 const value_t devs_zero = {.exp_sign = DEVS_INT_TAG, .val_int32 = 0};
 const value_t devs_one = {.exp_sign = DEVS_INT_TAG, .val_int32 = 1};
-const value_t devs_nan = {.exp_sign = DEVS_NAN_TAG, .val_int32 = 0};
 const value_t devs_int_min = {.exp_sign = DEVS_INT_TAG, .val_int32 = INT_MIN};
 const value_t devs_max_int_1 = {._f = 0x80000000U};
 
@@ -16,17 +15,27 @@ const value_t devs_null = {.u64 = 0};
 const value_t devs_true = SPECIAL(DEVS_SPECIAL_TRUE);
 const value_t devs_false = SPECIAL(DEVS_SPECIAL_FALSE);
 const value_t devs_pkt_buffer = SPECIAL(DEVS_SPECIAL_PKT_BUFFER);
+const value_t devs_nan = SPECIAL(DEVS_SPECIAL_NAN);
+const value_t devs_inf = SPECIAL(DEVS_SPECIAL_INF);
+const value_t devs_minf = SPECIAL(DEVS_SPECIAL_MINF);
 
 value_t devs_value_from_double(double v) {
+    switch (fpclassify(v)) {
+    case FP_NAN:
+        return devs_nan;
+    case FP_INFINITE:
+        return v > 0 ? devs_inf : devs_minf;
+    case FP_SUBNORMAL:
+    case FP_ZERO: // this is both 0.0 and -0.0
+        return devs_zero;
+    default:
+        break;
+    }
+
     value_t t;
     value_t r;
     t._f = v;
     int m32z = t.mantisa32 == 0;
-
-    if (isnan(v)) {
-        // normalize NaNs -- they are very likely all already normalized
-        return devs_nan;
-    }
 
     r.exp_sign = DEVS_INT_TAG;
 
@@ -79,13 +88,10 @@ value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr) {
     if (ptr == NULL)
         return devs_null;
 
-    JD_ASSERT(type & (DEVS_HANDLE_GC_MASK | DEVS_HANDLE_IMG_MASK));
+    JD_ASSERT(devs_handle_type_is_ptr(type));
 
 #if JD_64
-    if (type & DEVS_HANDLE_IMG_MASK)
-        v = (uintptr_t)ptr - (uintptr_t)ctx->img.data;
-    else
-        v = (uintptr_t)ptr - (uintptr_t)devs_gc_base_addr(ctx->gc);
+    v = (uintptr_t)ptr - (uintptr_t)devs_gc_base_addr(ctx->gc);
     JD_ASSERT((v >> 24) == 0);
 #else
     v = (uintptr_t)ptr;
@@ -96,13 +102,8 @@ value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr) {
 
 #if JD_64
 void *devs_handle_ptr_value(devs_ctx_t *ctx, value_t t) {
-    int tp = devs_handle_type(t);
-
-    if (tp & DEVS_HANDLE_GC_MASK)
+    if (devs_handle_is_ptr(t))
         return (void *)((uintptr_t)devs_gc_base_addr(ctx->gc) + t.mantisa32);
-
-    if (tp & DEVS_HANDLE_IMG_MASK)
-        return (void *)((uintptr_t)ctx->img.data + t.mantisa32);
 
     JD_PANIC();
     return NULL;
@@ -219,33 +220,43 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         return DEVS_OBJECT_TYPE_NUMBER;
 
     switch (devs_handle_type(v)) {
-    case DEVS_HANDLE_TYPE_FLOAT64_OR_NULL:
-        return devs_is_null(v) ? DEVS_OBJECT_TYPE_NULL : DEVS_OBJECT_TYPE_NUMBER;
+    case DEVS_HANDLE_TYPE_FLOAT64:
+        return DEVS_OBJECT_TYPE_NUMBER;
     case DEVS_HANDLE_TYPE_SPECIAL:
         switch (devs_handle_value(v)) {
+        case DEVS_SPECIAL_NULL:
+            return DEVS_OBJECT_TYPE_NULL;
         case DEVS_SPECIAL_FALSE:
         case DEVS_SPECIAL_TRUE:
             return DEVS_OBJECT_TYPE_BOOL;
         case DEVS_SPECIAL_PKT_BUFFER:
             return DEVS_OBJECT_TYPE_BUFFER;
+        case DEVS_SPECIAL_INF:
+        case DEVS_SPECIAL_MINF:
+        case DEVS_SPECIAL_NAN:
+            return DEVS_OBJECT_TYPE_NUMBER;
         default:
             JD_PANIC();
             return 0;
         }
     case DEVS_HANDLE_TYPE_FIBER:
         return DEVS_OBJECT_TYPE_FIBER;
-    case DEVS_HANDLE_TYPE_FUNCTION:
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
+    case DEVS_HANDLE_TYPE_CLOSURE:
+    case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
         return DEVS_OBJECT_TYPE_FUNCTION;
     case DEVS_HANDLE_TYPE_GC_OBJECT:
         switch (devs_gc_tag(devs_handle_ptr_value(ctx, v))) {
-        case DEVS_GC_TAG_ARRAY:
-            return DEVS_OBJECT_TYPE_ARRAY;
-        case DEVS_GC_TAG_BUFFER:
-            return DEVS_OBJECT_TYPE_BUFFER;
         case DEVS_GC_TAG_STRING:
             return DEVS_OBJECT_TYPE_STRING;
         case DEVS_GC_TAG_MAP:
             return DEVS_OBJECT_TYPE_MAP;
+        case DEVS_GC_TAG_ARRAY:
+            return DEVS_OBJECT_TYPE_ARRAY;
+        case DEVS_GC_TAG_BUFFER:
+            return DEVS_OBJECT_TYPE_BUFFER;
+        case DEVS_GC_TAG_BOUND_FUNCTION:
+            return DEVS_OBJECT_TYPE_FUNCTION;
         case DEVS_GC_TAG_BUILTIN_PROTO:
         default:
             JD_PANIC();
@@ -262,15 +273,13 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
 }
 
 bool devs_is_nullish(value_t t) {
-    if (devs_is_special(t)) {
+    if (devs_is_special(t))
         switch (devs_handle_value(t)) {
         case DEVS_SPECIAL_FALSE:
-        case DEVS_SPECIAL_F64_NULL:
+        case DEVS_SPECIAL_NULL:
+        case DEVS_SPECIAL_NAN:
             return true;
         }
-    } else if (devs_is_nan(t)) {
-        return true;
-    }
 
     return false;
 }
@@ -286,20 +295,26 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     const char *fmt = NULL;
 
     switch (devs_handle_type(v)) {
-    case DEVS_HANDLE_TYPE_FLOAT64_OR_NULL:
-        if (devs_is_null(v))
-            return "null";
+    case DEVS_HANDLE_TYPE_FLOAT64:
         jd_sprintf(buf, sizeof(buf), "%f", devs_value_to_double(v));
         return buf;
 
     case DEVS_HANDLE_TYPE_SPECIAL:
         switch (devs_handle_value(v)) {
+        case DEVS_SPECIAL_NULL:
+            return "null";
         case DEVS_SPECIAL_FALSE:
             return "false";
         case DEVS_SPECIAL_TRUE:
             return "true";
         case DEVS_SPECIAL_PKT_BUFFER:
             return "packet";
+        case DEVS_SPECIAL_INF:
+            return "Infinity";
+        case DEVS_SPECIAL_MINF:
+            return "-Infinity";
+        case DEVS_SPECIAL_NAN:
+            return "NaN";
         default:
             return "?special";
         }
@@ -307,7 +322,7 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_FIBER:
         fmt = "fib";
         break;
-    case DEVS_HANDLE_TYPE_FUNCTION:
+    case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
         fmt = "fun";
         break;
     case DEVS_HANDLE_TYPE_IMG_BUFFERISH:
@@ -316,7 +331,14 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_ROLE:
         fmt = "role";
         break;
-
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
+        jd_sprintf(buf, sizeof(buf), "method:%d:%x", (int)devs_handle_high_value(v),
+                   (unsigned)devs_handle_value(v));
+        return buf;
+    case DEVS_HANDLE_TYPE_CLOSURE:
+        jd_sprintf(buf, sizeof(buf), "closure:%d:%x", (int)devs_handle_high_value(v),
+                   (unsigned)devs_handle_value(v));
+        return buf;
     case DEVS_HANDLE_TYPE_GC_OBJECT:
         switch (devs_gc_tag(devs_handle_ptr_value(ctx, v))) {
         case DEVS_GC_TAG_ARRAY:
@@ -336,6 +358,9 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
             break;
         case DEVS_GC_TAG_BYTES:
             fmt = "bytes";
+            break;
+        case DEVS_GC_TAG_BOUND_FUNCTION:
+            fmt = "bound";
             break;
         default:
             fmt = "???";
@@ -365,24 +390,14 @@ bool devs_value_ieee_eq(devs_ctx_t *ctx, value_t a, value_t b) {
 bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b) {
     if (a.u64 == b.u64)
         return true;
-#if 0
-    if (devs_is_tagged_int(a) || devs_is_tagged_int(b))
-        return false;
 
-    if (devs_is_null(a) || devs_is_null(b))
-        return false;
-#endif
-
-    if (devs_is_string(ctx, a)) {
-        if (!devs_is_string(ctx, b))
-            return false;
+    if (devs_is_string(ctx, a) && devs_is_string(ctx, b)) {
         unsigned alen, blen;
         const char *aptr = devs_string_get_utf8(ctx, a, &alen);
         const char *bptr = devs_string_get_utf8(ctx, b, &blen);
         return alen == blen && memcmp(aptr, bptr, alen) == 0;
     }
 
-    // by this the values are only equal
     return false;
 
 #if 0
