@@ -246,7 +246,7 @@ const ${varname} = new ds.${clname}()
             "",
             pkt.description,
             `
-\`\`\`ts no-build
+\`\`\`ts no-build no-run
 ${varname}.${camelize(pkt.name)}(${fields}): void
 \`\`\`            
 `
