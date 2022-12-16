@@ -140,11 +140,20 @@ declare module "@devicescript/core" {
     export function reboot(): never
     export function onStart(handler: () => void): void
 
+    /**
+     * @internal
+     * TODO: move to submodule?
+     */
     export const packet: Buffer
 
     export { Buffer }
 
     global {
+        /**
+         * Compiles hex-encoded data as a buffer in flash
+         * @param lits hex-encoded string literal
+         * @param args 
+         */
         function hex(lits: any, ...args: any[]): Buffer
 
         class Buffer {
@@ -152,6 +161,9 @@ declare module "@devicescript/core" {
 
             static alloc(size: number): Buffer
 
+            /**
+             * Gets the length in bytes of the buffer
+             */
             length: number
             setLength(len: number): void
             getAt(offset: number, format: string): number
