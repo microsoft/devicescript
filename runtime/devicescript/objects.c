@@ -107,6 +107,7 @@ const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned id
             midx--;
             if (ctx->_builtin_protos == NULL) {
                 ctx->_builtin_protos = devs_try_alloc(ctx, sizeof(void *) * MAX_PROTO);
+                ctx->_num_builtin_protos = MAX_PROTO;
                 if (ctx->_builtin_protos == NULL)
                     return NULL; // whoops
             }
@@ -127,7 +128,30 @@ const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned id
     return (const devs_map_or_proto_t *)devs_object_get_static_built_in(ctx, idx);
 }
 
-value_t devs_proto_lookup(devs_ctx_t *ctx, devs_builtin_proto_t *proto, value_t key) {
+value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key) {
+    const devs_builtin_proto_entry_t *p = proto->entries;
+
+    if (devs_handle_type(key) == DEVS_HANDLE_TYPE_IMG_BUFFERISH &&
+        (devs_handle_value(key) >> DEVS_STRIDX__SHIFT) == DEVS_STRIDX_BUILTIN) {
+        unsigned kidx = devs_handle_value(key) & ((1 << DEVS_STRIDX__SHIFT) - 1);
+        while (p->builtin_string_id) {
+            if (p->builtin_string_id == kidx)
+                break;
+        }
+    } else {
+        unsigned ksz;
+        const char *kptr = devs_string_get_utf8(ctx, key, &ksz);
+        if (ksz != strlen(kptr))
+            return devs_undefined;
+        while (p->builtin_string_id) {
+            if (strcmp(devs_builtin_string_by_idx(p->builtin_string_id), kptr) == 0)
+                break;
+        }
+    }
+
+    if (!p->builtin_string_id)
+        return devs_undefined;
+
     TODO();
 }
 
@@ -294,7 +318,7 @@ value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
                 break;
         } else {
             JD_ASSERT(devs_is_proto(proto));
-            ptmp = devs_proto_lookup(ctx, (devs_builtin_proto_t *)proto, key);
+            ptmp = devs_proto_lookup(ctx, (const devs_builtin_proto_t *)proto, key);
             tmp = &ptmp;
             break;
         }

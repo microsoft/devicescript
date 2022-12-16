@@ -40,6 +40,7 @@ static inline value_t devs_img_get_float(devs_img_t img, uint32_t idx) {
     return v;
 }
 
+const char *devs_builtin_string_by_idx(unsigned idx);
 const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size);
 const char *devs_img_fun_name(devs_img_t img, unsigned fidx);
 const char *devs_img_role_name(devs_img_t img, unsigned idx);

@@ -89,6 +89,8 @@ struct devs_ctx {
 
     uint8_t stack_top;
     uint8_t stack_top_for_gc;
+    uint8_t _num_builtin_protos;
+
     uint32_t literal_int;
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
 

@@ -150,8 +150,16 @@ static void mark_roots(devs_gc_t *gc) {
     if (gc->ctx == NULL)
         return;
     devs_ctx_t *ctx = gc->ctx;
+
     scan_array(ctx, ctx->globals, ctx->img.header->num_globals, ROOT_SCAN_DEPTH);
     scan_array(ctx, ctx->the_stack, ctx->stack_top_for_gc, ROOT_SCAN_DEPTH);
+
+    for (unsigned i = 0; i < ctx->_num_builtin_protos; ++i) {
+        void *p = ctx->_builtin_protos[i];
+        if (p)
+            scan(ctx, p, ROOT_SCAN_DEPTH);
+    }
+
     for (devs_fiber_t *fib = ctx->fibers; fib; fib = fib->next) {
         scan_value(ctx, fib->ret_val, ROOT_SCAN_DEPTH);
         for (devs_activation_t *act = fib->activation; act; act = act->caller) {

@@ -74,7 +74,7 @@ void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v);
 const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create);
 const devs_builtin_proto_t *devs_object_get_static_built_in(devs_ctx_t *ctx, unsigned idx);
 const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx);
-value_t devs_proto_lookup(devs_ctx_t *ctx, devs_builtin_proto_t *proto, value_t key);
+value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key);
 value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v);
 
 // GC

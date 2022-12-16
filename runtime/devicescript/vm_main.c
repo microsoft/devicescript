@@ -34,8 +34,7 @@ static inline void devs_vm_push(devs_ctx_t *ctx, value_t v) {
 
 void devs_dump_stackframe(devs_ctx_t *ctx, devs_activation_t *fn) {
     int idx = fn->func - devs_img_get_function(ctx->img, 0);
-    DMESG("pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start), devs_img_fun_name(ctx->img, idx),
-          idx);
+    DMESG("pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start), devs_img_fun_name(ctx->img, idx), idx);
 }
 
 static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
@@ -83,6 +82,13 @@ void devs_vm_exec_opcodes(devs_ctx_t *ctx) {
 }
 
 static const char *builtin_strings[DEVS_BUILTIN_STRING___MAX + 1] = {DEVS_BUILTIN_STRING__VAL};
+
+const char *devs_builtin_string_by_idx(unsigned idx) {
+    if (idx > DEVS_BUILTIN_STRING___MAX)
+        return NULL;
+    return builtin_strings[idx];
+}
+
 const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
     if (!devs_img_stridx_ok(img, idx)) {
         if (size)
