@@ -28,6 +28,7 @@ typedef struct {
     devs_gc_object_t gc;
     const devs_builtin_proto_entry_t *entries;
 } devs_builtin_proto_t;
+extern const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1];
 
 typedef struct {
     devs_gc_object_t gc;

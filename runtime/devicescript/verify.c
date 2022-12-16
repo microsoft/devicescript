@@ -9,7 +9,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1059
+// next error 1060
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -85,6 +85,9 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
         CHECK(1043, !isnan(tmp._f));
         CHECK(1044, devs_value_from_double(tmp._f).u64 == tmp.u64);
     }
+
+    CHECK(1059,
+          header->functions.length / sizeof(devs_function_desc_t) < DEVS_FIRST_BUILTIN_FUNCTION);
 
     uint32_t prevProc = header->functions_data.start;
     for (const devs_function_desc_t *fptr = FIRST_DESC(functions); //

@@ -83,8 +83,6 @@ value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
     return *tmp;
 }
 
-extern const devs_builtin_proto_t devs_builtin_protos[];
-
 const devs_builtin_proto_t *devs_object_get_static_built_in(devs_ctx_t *ctx, unsigned idx) {
     JD_ASSERT(idx <= DEVS_BUILTIN_OBJECT___MAX);
     if (devs_builtin_protos[idx].entries == NULL)
@@ -136,7 +134,8 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
         unsigned kidx = devs_handle_value(key) & ((1 << DEVS_STRIDX__SHIFT) - 1);
         while (p->builtin_string_id) {
             if (p->builtin_string_id == kidx)
-                break;
+                return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION,
+                                              p->builtin_function_idx);
         }
     } else {
         unsigned ksz;
@@ -145,14 +144,12 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
             return devs_undefined;
         while (p->builtin_string_id) {
             if (strcmp(devs_builtin_string_by_idx(p->builtin_string_id), kptr) == 0)
-                break;
+                return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION,
+                                              p->builtin_function_idx);
         }
     }
 
-    if (!p->builtin_string_id)
-        return devs_undefined;
-
-    TODO();
+    return devs_undefined;
 }
 
 #define PACK_SHIFT 24

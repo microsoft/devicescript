@@ -129,6 +129,12 @@ void devs_fiber_free_all_fibers(devs_ctx_t *ctx) {
 }
 
 const char *devs_img_fun_name(devs_img_t img, unsigned fidx) {
+    if (fidx >= DEVS_FIRST_BUILTIN_FUNCTION) {
+        fidx -= DEVS_FIRST_BUILTIN_FUNCTION;
+        if (fidx >= devs_num_builtin_functions)
+            return "???b";
+        return devs_builtin_string_by_idx(devs_builtin_functions[fidx].builtin_string_id);
+    }
     if (fidx >= devs_img_num_functions(img))
         return "???";
     const devs_function_desc_t *func = devs_img_get_function(img, fidx);
