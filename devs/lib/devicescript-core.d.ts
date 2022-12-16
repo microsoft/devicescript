@@ -7,28 +7,70 @@ declare module "@devicescript/core" {
         onDisconnected(handler: () => void): void
     }
 
+    /**
+     * A base class for registers, events.
+     */
     export class PacketInfo {}
 
+    /**
+     * A base class for register clients.
+     */
     export class Register extends PacketInfo {}
 
+    /**
+     * A client for a register that holds a numerical value.
+     */
     export class RegisterNumber extends Register {
+        /**
+         * Gets the current value of the register as a number.
+         */
         read(): number
-        write(v: number): void
+
+        /**
+         * Sets the current value of the register.
+         * @param value value to assign to the register
+         */
+        write(value: number): void
+
+        /**
+         * Registers a callback to execute when the register value changes by the given threshold
+         * @param threshold minimum value change required to trigger the handler
+         * @param handler callback to execute
+         */
         onChange(threshold: number, handler: (curr: number) => void): void
     }
 
+    /**
+     * A client for a register that holds a Buffer (byte[]).
+     */
     export class RegisterBuffer extends Register {
+        /**
+         * Gets the current value of the register.
+         */
         read(): Buffer
-        write(v: Buffer): void
+
+        /**
+         * Sets the current value of the register.
+         * @param value value to assign to the register
+         */
+        write(value: Buffer): void
+
+        /**
+         * Registers a callback to execute when the register value changes
+         * @param handler callback to execute
+         */
         onChange(handler: (curr: number) => void): void
     }
 
     export class RegisterBool extends Register {
         read(): boolean
-        write(v: boolean): void
+        write(value: boolean): void
         onChange(handler: (curr: number) => void): void
     }
 
+    /**
+     * A client for a register that holds a string value.
+     */
     export class RegisterString extends Register {
         read(): string
         write(v: string): void
@@ -40,7 +82,13 @@ declare module "@devicescript/core" {
     }
 
     export class Event extends PacketInfo {
+        /**
+         * Blocks the current thread under the event is received.
+         */
         wait(): void
+        /**
+         * Register a callback that will be raised when the event is raised.
+         */
         subscribe(handler: () => void): void
     }
 
