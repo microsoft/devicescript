@@ -16,5 +16,6 @@
         "noImplicitAny": true,
         "moduleDetection": "force",
         "types": []
-    }
+    },
+    "include": ["devs/lib/*.ts"]
 }
