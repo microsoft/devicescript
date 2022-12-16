@@ -83,8 +83,48 @@ value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
     return *tmp;
 }
 
-devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
-    TODO();
+extern const devs_builtin_proto_t devs_builtin_protos[];
+
+const devs_builtin_proto_t *devs_object_get_static_built_in(devs_ctx_t *ctx, unsigned idx) {
+    JD_ASSERT(idx <= DEVS_BUILTIN_OBJECT___MAX);
+    if (devs_builtin_protos[idx].entries == NULL)
+        return NULL; // not there?
+    return &devs_builtin_protos[idx];
+}
+
+static const uint8_t builtin_proto_idx[] = {
+    [DEVS_BUILTIN_OBJECT_MATH] = 1,
+    [DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE] = 2,
+    [DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE] = 3,
+    [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = 4,
+};
+#define MAX_PROTO 4
+
+const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
+    if (idx < sizeof(builtin_proto_idx)) {
+        unsigned midx = builtin_proto_idx[idx];
+        if (midx > 0) {
+            midx--;
+            if (ctx->_builtin_protos == NULL) {
+                ctx->_builtin_protos = devs_try_alloc(ctx, sizeof(void *) * MAX_PROTO);
+                if (ctx->_builtin_protos == NULL)
+                    return NULL; // whoops
+            }
+            JD_ASSERT(midx < MAX_PROTO);
+            devs_map_t *m = ctx->_builtin_protos[midx];
+            if (m == NULL) {
+                m = devs_map_try_alloc(ctx);
+                if (m != NULL) {
+                    ctx->_builtin_protos[midx] = m;
+                    m->proto =
+                        (const devs_map_or_proto_t *)devs_object_get_static_built_in(ctx, idx);
+                }
+            }
+            return (const devs_map_or_proto_t *)m;
+        }
+    }
+
+    return (const devs_map_or_proto_t *)devs_object_get_static_built_in(ctx, idx);
 }
 
 value_t devs_proto_lookup(devs_ctx_t *ctx, devs_builtin_proto_t *proto, value_t key) {
@@ -124,7 +164,7 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
         }
 
     devs_bound_function_t *res =
-        devs_any_try_alloc(ctx->gc, DEVS_GC_TAG_BOUND_FUNCTION, sizeof(devs_bound_function_t));
+        devs_any_try_alloc(ctx, DEVS_GC_TAG_BOUND_FUNCTION, sizeof(devs_bound_function_t));
     if (res == NULL)
         return devs_undefined;
 
@@ -161,7 +201,7 @@ int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activat
     }
 }
 
-static devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, bool create) {
+static const devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, bool create) {
     // accessing prototype on static object - can't attach properties
     if (create) {
         // note that in ES writing to string/... properties is no-op
@@ -172,7 +212,7 @@ static devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, bool 
     return devs_object_get_built_in(ctx, tp);
 }
 
-devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create) {
+const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create) {
     static const uint8_t proto_by_object_type[] = {
         [DEVS_OBJECT_TYPE_NUMBER] = DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE,
         [DEVS_OBJECT_TYPE_FIBER] = DEVS_BUILTIN_OBJECT_FIBER_PROTOTYPE,
@@ -227,7 +267,7 @@ devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool c
     devs_map_t *map = *attached;
 
     if (!map && create) {
-        map = *attached = devs_map_try_alloc(ctx->gc);
+        map = *attached = devs_map_try_alloc(ctx);
         if (map == NULL) {
             devs_runtime_failure(ctx, 60131);
             return NULL;
@@ -241,7 +281,7 @@ devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool c
 }
 
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
-    devs_map_or_proto_t *proto = devs_object_get_attached(ctx, obj, 0);
+    const devs_map_or_proto_t *proto = devs_object_get_attached(ctx, obj, 0);
 
     value_t ptmp, *tmp = NULL;
 

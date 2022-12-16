@@ -20,7 +20,7 @@ static const devs_builtin_proto_entry_t String_prototype_entries[] = {
 static const devs_builtin_proto_entry_t Buffer_prototype_entries[] = {
     {N(LENGTH), 0, PROP, (void *)prop_Buffer_length}, {0, 0, 0, 0}};
 
-const devs_builtin_proto_t devs_builtin_protos[] = {
+const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
     [DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Buffer_prototype_entries},
 };

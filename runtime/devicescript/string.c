@@ -47,7 +47,7 @@ value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap) {
     int len = jd_vsprintf(NULL, 0, format, ap);
     // len includes final NUL; devs_string_try_alloc() allocates the final NUL, but doesn't count it
     // in its len
-    devs_string_t *s = devs_string_try_alloc(ctx->gc, len - 1);
+    devs_string_t *s = devs_string_try_alloc(ctx, len - 1);
     if (s == NULL) {
         devs_runtime_failure(ctx, 60144);
         // re-run vsprintf with non-NULL dst so it executes %-s (free)
@@ -69,7 +69,7 @@ value_t devs_string_sprintf(devs_ctx_t *ctx, const char *format, ...) {
 }
 
 value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len) {
-    devs_string_t *s = devs_string_try_alloc(ctx->gc, len);
+    devs_string_t *s = devs_string_try_alloc(ctx, len);
     if (s == NULL) {
         devs_runtime_failure(ctx, 60145);
         return devs_undefined;
@@ -192,7 +192,7 @@ value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
     } else if (blen == 0) {
         r = a;
     } else {
-        devs_string_t *s = devs_string_try_alloc(ctx->gc, alen + blen);
+        devs_string_t *s = devs_string_try_alloc(ctx, alen + blen);
         if (s == NULL) {
             devs_runtime_failure(ctx, 60142);
             r = devs_undefined;

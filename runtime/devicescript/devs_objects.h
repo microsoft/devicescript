@@ -18,7 +18,7 @@ typedef struct {
 
 typedef struct {
     devs_gc_object_t gc;
-    devs_map_or_proto_t *proto;
+    const devs_map_or_proto_t *proto;
     devs_small_size_t length;
     devs_small_size_t capacity;
     value_t *data;
@@ -71,8 +71,9 @@ value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key);
 value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key);
 void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v);
 
-devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create);
-devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx);
+const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create);
+const devs_builtin_proto_t *devs_object_get_static_built_in(devs_ctx_t *ctx, unsigned idx);
+const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx);
 value_t devs_proto_lookup(devs_ctx_t *ctx, devs_builtin_proto_t *proto, value_t key);
 value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v);
 
@@ -80,13 +81,13 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v);
 
 typedef struct _devs_gc_t devs_gc_t;
 
-devs_map_t *devs_map_try_alloc(devs_gc_t *gc);
-devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size);
-devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size);
-devs_string_t *devs_string_try_alloc(devs_gc_t *gc, unsigned size);
+devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx);
+devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size);
+devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size);
+devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size);
 
 // result has to be casted to one of devs_gc_object_t objects
-void *devs_any_try_alloc(devs_gc_t *gc, unsigned tag, unsigned size);
+void *devs_any_try_alloc(devs_ctx_t *ctx, unsigned tag, unsigned size);
 
 devs_gc_t *devs_gc_create(void);
 void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx);
@@ -121,22 +122,21 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_BUILTIN_PROTO 0xf // these are not in GC heap!
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 
-static inline int devs_gc_tag(void *ptr) {
+static inline int devs_gc_tag(const void *ptr) {
     return ptr == NULL ? 0
                        : (((devs_gc_object_t *)ptr)->header >> DEVS_GC_TAG_POS) & DEVS_GC_TAG_MASK;
 }
 
-static inline bool devs_is_map(void *ptr) {
+static inline bool devs_is_map(const void *ptr) {
     return devs_gc_tag(ptr) == DEVS_GC_TAG_MAP;
 }
 
-static inline bool devs_is_proto(void *ptr) {
+static inline bool devs_is_proto(const void *ptr) {
     return devs_gc_tag(ptr) == DEVS_GC_TAG_BUILTIN_PROTO;
 }
 
 const char *devs_gc_tag_name(unsigned tag);
 
-void *jd_gc_try_alloc(devs_gc_t *gc, uint32_t size);
 void jd_gc_unpin(devs_gc_t *gc, void *ptr);
 void jd_gc_free(devs_gc_t *gc, void *ptr);
 #if JD_64

@@ -76,18 +76,18 @@ static void set_alloc(devs_activation_t *frame, devs_ctx_t *ctx, void *p, unsign
 }
 
 static void stmt0_alloc_map(devs_activation_t *frame, devs_ctx_t *ctx) {
-    set_alloc(frame, ctx, devs_map_try_alloc(ctx->gc), sizeof(devs_map_t));
+    set_alloc(frame, ctx, devs_map_try_alloc(ctx), sizeof(devs_map_t));
 }
 
 static void stmt1_alloc_array(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t sz = devs_vm_pop_arg_u32(ctx);
-    set_alloc(frame, ctx, devs_array_try_alloc(ctx->gc, sz),
+    set_alloc(frame, ctx, devs_array_try_alloc(ctx, sz),
               sizeof(devs_array_t) + sz * sizeof(value_t));
 }
 
 static void stmt1_alloc_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t sz = devs_vm_pop_arg_u32(ctx);
-    devs_buffer_t *obj = devs_buffer_try_alloc(ctx->gc, sz);
+    devs_buffer_t *obj = devs_buffer_try_alloc(ctx, sz);
     // DMESG("buf=%p %p", obj, (void*)obj->gc.header);
     set_alloc(frame, ctx, obj, sizeof(devs_buffer_t) + sz);
 }
@@ -376,7 +376,7 @@ static value_t exprx2_format(devs_activation_t *frame, devs_ctx_t *ctx) {
     char tmp[64];
     unsigned sz =
         devs_strformat(ctx, fmt, len, tmp, sizeof(tmp), frame->locals + localidx, numargs, 0);
-    devs_string_t *str = devs_string_try_alloc(ctx->gc, sz - 1);
+    devs_string_t *str = devs_string_try_alloc(ctx, sz - 1);
     if (str == NULL) {
         devs_runtime_failure(ctx, 60146);
         return devs_undefined;

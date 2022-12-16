@@ -100,6 +100,9 @@ struct devs_ctx {
     devs_fiber_t *fibers;
     jd_role_t **roles;
 
+    // use devs_object_get_built_in()
+    devs_map_t **_builtin_protos;
+
     uint32_t *buffers;
 
     uint64_t _now_long;

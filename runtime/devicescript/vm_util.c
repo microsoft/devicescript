@@ -91,6 +91,6 @@ unsigned devs_vm_pop_arg_role(devs_ctx_t *ctx) {
 
 devs_map_t *devs_vm_pop_arg_map(devs_ctx_t *ctx, bool create) {
     value_t tmp = pop_arg(ctx);
-    void *m = devs_object_get_attached(ctx, tmp, create);
-    return devs_is_map(m) ? m : NULL;
+    const void *m = devs_object_get_attached(ctx, tmp, create);
+    return devs_is_map(m) ? (void *)m : NULL;
 }

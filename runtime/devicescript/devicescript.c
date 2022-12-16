@@ -145,15 +145,6 @@ void devs_trace(devs_ctx_t *ctx, unsigned evtype, const void *data, unsigned dat
     jd_lstore_append(DEVS_TRACE_LOG_IDX, evtype, data, data_size);
 }
 
-void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size) {
-    void *r = jd_gc_try_alloc(ctx->gc, size);
-    if (r == NULL) {
-        // note that this will return after setting panic flags
-        devs_oom(ctx, size);
-    }
-    return r;
-}
-
 void devs_oom(devs_ctx_t *ctx, unsigned size) {
     JD_LOG("devs: OOM (%u bytes)", (unsigned)size);
     devs_panic(ctx, DEVS_PANIC_OOM);

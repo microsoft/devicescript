@@ -293,7 +293,7 @@ static block_t *alloc_block(devs_gc_t *gc, uint8_t tag, uint32_t size) {
     return b;
 }
 
-void *devs_any_try_alloc(devs_gc_t *gc, unsigned tag, uint32_t size) {
+void *jd_gc_any_try_alloc(devs_gc_t *gc, unsigned tag, uint32_t size) {
     if (size > DEVS_MAX_ALLOC)
         return NULL;
     block_t *b = alloc_block(gc, tag, size);
@@ -304,9 +304,18 @@ void *devs_any_try_alloc(devs_gc_t *gc, unsigned tag, uint32_t size) {
     return b;
 }
 
-void *jd_gc_try_alloc(devs_gc_t *gc, uint32_t size) {
-    return (uintptr_t *)devs_any_try_alloc(gc, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size) +
-           1;
+void *devs_any_try_alloc(devs_ctx_t *ctx, unsigned tag, uint32_t size) {
+    void *r = jd_gc_any_try_alloc(ctx->gc, tag, size);
+    if (r == NULL)
+        devs_oom(ctx, size);
+    return r;
+}
+
+void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size) {
+    uintptr_t *r = devs_any_try_alloc(ctx, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size);
+    if (r)
+        return r + 1;
+    return NULL;
 }
 
 static block_t *unpin(devs_gc_t *gc, void *ptr, uint8_t tag) {
@@ -350,20 +359,20 @@ void devs_value_unpin(devs_ctx_t *ctx, value_t v) {
     b->header &= ~((uintptr_t)DEVS_GC_TAG_MASK_PINNED << DEVS_GC_TAG_POS);
 }
 
-devs_map_t *devs_map_try_alloc(devs_gc_t *gc) {
-    return devs_any_try_alloc(gc, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
+devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx) {
+    return devs_any_try_alloc(ctx, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
 }
 
-devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size) {
+devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size) {
     unsigned bytesize = size * sizeof(value_t);
     if (bytesize > DEVS_MAX_ALLOC)
         return NULL;
     devs_array_t *arr =
-        devs_any_try_alloc(gc, DEVS_GC_TAG_ARRAY | DEVS_GC_TAG_MASK_PINNED, sizeof(devs_array_t));
+        devs_any_try_alloc(ctx, DEVS_GC_TAG_ARRAY | DEVS_GC_TAG_MASK_PINNED, sizeof(devs_array_t));
     if (arr == NULL)
         return NULL;
     if (size > 0) {
-        arr->data = jd_gc_try_alloc(gc, bytesize);
+        arr->data = devs_try_alloc(ctx, bytesize);
         if (arr->data == NULL) {
             arr->gc.header ^= (uintptr_t)DEVS_GC_TAG_MASK_PINNED << DEVS_GC_TAG_POS;
             return NULL;
@@ -374,20 +383,20 @@ devs_array_t *devs_array_try_alloc(devs_gc_t *gc, unsigned size) {
     return arr;
 }
 
-devs_buffer_t *devs_buffer_try_alloc(devs_gc_t *gc, unsigned size) {
+devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size) {
     if (size > DEVS_MAX_ALLOC)
         return NULL;
-    devs_buffer_t *buf = devs_any_try_alloc(gc, DEVS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
+    devs_buffer_t *buf = devs_any_try_alloc(ctx, DEVS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
     if (buf)
         buf->length = size;
     return buf;
 }
 
-devs_string_t *devs_string_try_alloc(devs_gc_t *gc, unsigned size) {
+devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size) {
     if (size > DEVS_MAX_ALLOC)
         return NULL;
     devs_string_t *buf =
-        devs_any_try_alloc(gc, DEVS_GC_TAG_STRING, sizeof(devs_string_t) + size + 1);
+        devs_any_try_alloc(ctx, DEVS_GC_TAG_STRING, sizeof(devs_string_t) + size + 1);
     if (buf)
         buf->length = size;
     return buf;
@@ -419,7 +428,7 @@ void jd_alloc_add_chunk(void *start, unsigned size) {
 #endif
 
 void *jd_alloc(uint32_t size) {
-    void *r = jd_gc_try_alloc(&_static_gc, size);
+    void *r = jd_gc_any_try_alloc(&_static_gc, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size);
     if (!r)
         JD_PANIC();
     return r;
