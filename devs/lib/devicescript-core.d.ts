@@ -1,7 +1,6 @@
 /// <reference path="devicescript-spec.d.ts" />
 
 declare module "@devicescript/core" {
-
     /**
      * A base class for service clients
      */
@@ -22,6 +21,7 @@ declare module "@devicescript/core" {
     /**
      * A base class for register clients.
      */
+    // TODO: support for "isImplemented?"
     export class Register extends PacketInfo {}
 
     /**
@@ -74,8 +74,19 @@ declare module "@devicescript/core" {
         onChange(handler: (curr: number) => void): void
     }
 
+    /**
+     * A client for a register that holds a numerical value.
+     */
     export class RegisterBool extends Register {
+        /**
+         * Gets the current value of the register as a number.
+         * TODO: missing value behavior (optional regs)
+         */
         read(): boolean
+        /**
+         * Sets the current value of the register as a number.
+         * TODO: missing value behavior (optional regs)
+         */
         write(value: boolean): void
         onChange(handler: (curr: number) => void): void
     }
@@ -102,15 +113,18 @@ declare module "@devicescript/core" {
          * Register a callback that will be raised when the event is raised.
          * @handler callback to execute
          */
+        // TODO: consider something like "onReceived" to match other events
         subscribe(handler: () => void): void
     }
 
+    // TODO: maybe a better name, is this some kind of internal data structure?
     export class Condition {
         signal(): void
         wait(): void
     }
 
     export class CloudConnector {
+        // TODO: support uploading objects
         upload(label: string, ...value: number[]): void
         onMethod(
             name: string,
@@ -152,7 +166,7 @@ declare module "@devicescript/core" {
         /**
          * Compiles hex-encoded data as a buffer in flash
          * @param lits hex-encoded string literal
-         * @param args 
+         * @param args
          */
         function hex(lits: any, ...args: any[]): Buffer
 
