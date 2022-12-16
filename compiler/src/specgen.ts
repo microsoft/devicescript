@@ -344,14 +344,14 @@ ${varname}.${pname}.onChange(0, () => {
 `
                 : isBoolean || isString
                 ? `-  track value changes
-                    \`\`\`ts ${nobuild}
-                    const ${varname} = new ds.${clname}()
-                    // ...
-                    ${varname}.${pname}.onChange(() => {
-                        const value = ${varname}.${pname}.read()
-                    })
-                    \`\`\`
-                    `
+\`\`\`ts ${nobuild}
+const ${varname} = new ds.${clname}()
+// ...
+${varname}.${pname}.onChange(() => {
+    const value = ${varname}.${pname}.read()
+})
+\`\`\`
+`
                 : undefined
         )
     })
