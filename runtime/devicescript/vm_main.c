@@ -82,7 +82,7 @@ void devs_vm_exec_opcodes(devs_ctx_t *ctx) {
         devs_panic(ctx, DEVS_PANIC_TIMEOUT);
 }
 
-static const char *builtin_strings[DEVS_BUILTIN_STRING__SIZE] = {DEVS_BUILTIN_STRING__VAL};
+static const char *builtin_strings[DEVS_BUILTIN_STRING___MAX + 1] = {DEVS_BUILTIN_STRING__VAL};
 const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
     if (!devs_img_stridx_ok(img, idx)) {
         if (size)

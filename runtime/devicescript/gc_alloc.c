@@ -49,7 +49,7 @@ struct _devs_gc_t {
 };
 
 static inline void mark_block(block_t *block, uint8_t tag, unsigned size) {
-    block->header = size | ((uintptr_t)tag << DEVS_GC_TAG_POS);
+    block->header = DEVS_GC_MK_TAG_WORDS(tag, size);
 }
 
 static inline uintptr_t *block_ptr(block_t *block) {

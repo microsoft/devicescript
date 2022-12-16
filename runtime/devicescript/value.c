@@ -242,6 +242,7 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_FIBER:
         return DEVS_OBJECT_TYPE_FIBER;
     case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC:
     case DEVS_HANDLE_TYPE_CLOSURE:
     case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
         return DEVS_OBJECT_TYPE_FUNCTION;
@@ -332,6 +333,7 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
         fmt = "role";
         break;
     case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC:
         jd_sprintf(buf, sizeof(buf), "method:%d:%x", (int)devs_handle_high_value(v),
                    (unsigned)devs_handle_value(v));
         return buf;

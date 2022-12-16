@@ -1,6 +1,8 @@
 #pragma once
 #include <stdint.h>
 
+#include "devs_proto.h"
+
 #define DEVS_MAX_ALLOC 0xf000
 
 typedef uint16_t devs_small_size_t;
@@ -24,7 +26,7 @@ typedef struct {
 
 typedef struct {
     devs_gc_object_t gc;
-    // ...
+    const devs_builtin_proto_entry_t *entries;
 } devs_builtin_proto_t;
 
 typedef struct {
@@ -95,6 +97,13 @@ void devs_gc_destroy(devs_gc_t *gc);
 #else
 #define DEVS_GC_TAG_POS 24
 #endif
+
+#define DEVS_GC_MK_TAG_WORDS(tag, size) ((size) | ((uintptr_t)(tag) << DEVS_GC_TAG_POS))
+#define DEVS_GC_MK_TAG_BYTES(tag, size)                                                            \
+    DEVS_GC_MK_TAG_WORDS(tag, (size + JD_PTRSIZE - 1) / JD_PTRSIZE)
+
+#define DEVS_BUILTIN_PROTO_INIT                                                                    \
+    { DEVS_GC_MK_TAG_BYTES(DEVS_GC_TAG_BUILTIN_PROTO, sizeof(devs_builtin_proto_t)) }
 
 #define DEVS_GC_TAG_MASK_PENDING 0x80
 #define DEVS_GC_TAG_MASK_SCANNED 0x20

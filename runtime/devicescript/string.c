@@ -1,5 +1,4 @@
 #include "devs_internal.h"
-#include "devs_value.h"
 #include <math.h>
 
 bool devs_is_string(devs_ctx_t *ctx, value_t v) {
@@ -130,6 +129,7 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
         return devs_string_sprintf(ctx, "[Closure: %s]",
                                    devs_img_fun_name(ctx->img, devs_handle_high_value(v)));
     case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC:
         return devs_string_sprintf(ctx, "[Method: %s]",
                                    devs_img_fun_name(ctx->img, devs_handle_high_value(v)));
     case DEVS_HANDLE_TYPE_GC_OBJECT:

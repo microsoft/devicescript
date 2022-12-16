@@ -140,6 +140,7 @@
 #define DEVS_OPCALL_BG_MAX1 2
 #define DEVS_OPCALL_BG_MAX1_PEND1 3
 #define DEVS_OPCALL_BG_MAX1_REPLACE 4
+#define DEVS_OPCALL___MAX 4
 
 #define DEVS_BYTECODEFLAG_NUM_ARGS_MASK 0xf
 #define DEVS_BYTECODEFLAG_IS_STMT 0x10
@@ -158,6 +159,7 @@
 #define DEVS_NUMFMT_F16 0b1001 // not supported
 #define DEVS_NUMFMT_F32 0b1010
 #define DEVS_NUMFMT_F64 0b1011
+#define DEVS_NUMFMT___MAX 11
 
 #define DEVS_OBJECT_TYPE_NULL 0
 #define DEVS_OBJECT_TYPE_NUMBER 1
@@ -171,6 +173,7 @@
 #define DEVS_OBJECT_TYPE_STRING 9
 #define DEVS_OBJECT_TYPE_ANY 10
 #define DEVS_OBJECT_TYPE_VOID 11
+#define DEVS_OBJECT_TYPE___MAX 11
 
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
@@ -191,6 +194,7 @@
 #define DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE 15
 #define DEVS_BUILTIN_OBJECT_BOOLEAN 16
 #define DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE 17
+#define DEVS_BUILTIN_OBJECT___MAX 17
 
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_NULL 18
@@ -220,6 +224,7 @@
 #define DEVS_BUILTIN_STRING_MAP 25
 #define DEVS_BUILTIN_STRING_INFINITY 26
 #define DEVS_BUILTIN_STRING_MINFINITY 27 // -Infinity
+#define DEVS_BUILTIN_STRING___MAX 27
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_load_local, exprx_load_global, expr3_load_buffer, exprx_literal,           \
@@ -247,4 +252,3 @@
     "", "undefined", "string", "number", "boolean", "function", "toString", "charCodeAt", "next",  \
         "prev", "length", "pop", "push", "shift", "unshift", "splice", "slice", "join", "null",    \
         "true", "false", "packet", "NaN", "array", "buffer", "map", "Infinity", "-Infinity"
-#define DEVS_BUILTIN_STRING__SIZE 28

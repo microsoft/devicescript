@@ -43,7 +43,7 @@ bool devs_img_stridx_ok(devs_img_t img, uint32_t nameidx) {
     case DEVS_STRIDX_BUFFER:
         return (idx < img.header->buffers.length / sizeof(devs_img_section_t));
     case DEVS_STRIDX_BUILTIN:
-        return (idx < DEVS_BUILTIN_STRING__SIZE);
+        return (idx <= DEVS_BUILTIN_STRING___MAX);
     case DEVS_STRIDX_ASCII:
         JD_ASSERT(DEVS_ASCII_HEADER_SIZE == sizeof(uint16_t));
         return (idx < img.header->ascii_strings.length / DEVS_ASCII_HEADER_SIZE);

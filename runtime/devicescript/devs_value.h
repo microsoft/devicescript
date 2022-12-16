@@ -32,6 +32,7 @@ typedef union {
 #define DEVS_HANDLE_TYPE_ROLE 0x2
 #define DEVS_HANDLE_TYPE_STATIC_FUNCTION 0x3
 #define DEVS_HANDLE_TYPE_IMG_BUFFERISH 0x4
+#define DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC 0x5
 
 #define DEVS_HANDLE_TYPE_GC_OBJECT 0x8
 #define DEVS_HANDLE_TYPE_CLOSURE 0x9
@@ -111,7 +112,7 @@ bool devs_is_number(value_t t);
 value_t devs_value_from_double(double v);
 value_t devs_value_from_int(int v);
 value_t devs_value_from_bool(int v);
-value_t devs_value_from_pointer(devs_ctx_t *ctx, int gc_tag, void *ptr);
+value_t devs_value_from_pointer(devs_ctx_t *ctx, int handle_type, void *ptr);
 static inline value_t devs_value_from_gc_obj(devs_ctx_t *ctx, void *ptr) {
     return devs_value_from_pointer(ctx, DEVS_HANDLE_TYPE_GC_OBJECT, ptr);
 }
@@ -140,6 +141,7 @@ extern const value_t devs_pkt_buffer;
 
 #define devs_void devs_null
 #define devs_undefined devs_null
+#define devs_error devs_null
 
 bool devs_is_buffer(devs_ctx_t *ctx, value_t v);
 bool devs_buffer_is_writable(devs_ctx_t *ctx, value_t v);

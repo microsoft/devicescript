@@ -196,4 +196,7 @@ void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size);
 void devs_free(devs_ctx_t *ctx, void *ptr);
 void devs_oom(devs_ctx_t *ctx, unsigned size);
 
+value_t devs_make_closure(devs_ctx_t *ctx, devs_activation_t *closure, unsigned fnidx);
+int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activation_t **closure);
+
 #define TODO JD_PANIC

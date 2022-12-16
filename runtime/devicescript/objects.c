@@ -91,6 +91,8 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, devs_builtin_proto_t *proto, value_t 
     TODO();
 }
 
+#define PACK_SHIFT 24
+
 // if `fn` is a static function, return `(obj, fn)` tuple
 // otherwise return `obj`
 // it may allocate an object for the tuple, but typically it doesn't
@@ -98,11 +100,65 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
     if (devs_handle_type(fn) != DEVS_HANDLE_TYPE_STATIC_FUNCTION)
         return obj;
 
-    TODO();
-#if 0
+    unsigned fidx = devs_handle_value(fn);
+    int otp = devs_handle_type(obj);
+
+    if (fidx <= 0xffff)
+        switch (otp) {
+        case DEVS_HANDLE_TYPE_SPECIAL:
+        case DEVS_HANDLE_TYPE_FIBER:
+        case DEVS_HANDLE_TYPE_ROLE:
+        case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
+        case DEVS_HANDLE_TYPE_IMG_BUFFERISH: {
+            uint32_t hv = devs_handle_value(obj);
+            JD_ASSERT((hv >> PACK_SHIFT) == 0);
+            JD_ASSERT(devs_handle_high_value(obj) == 0);
+            return devs_value_from_handle(DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC | (fidx << 4),
+                                          (otp << PACK_SHIFT) | hv);
+        }
+
+        case DEVS_HANDLE_TYPE_GC_OBJECT:
+            JD_ASSERT(devs_handle_high_value(obj) == 0);
+            return devs_value_from_handle(DEVS_HANDLE_TYPE_BOUND_FUNCTION | (fidx << 4),
+                                          devs_handle_value(obj));
+        }
+
     devs_bound_function_t *res =
         devs_any_try_alloc(ctx->gc, DEVS_GC_TAG_BOUND_FUNCTION, sizeof(devs_bound_function_t));
-#endif
+    if (res == NULL)
+        return devs_undefined;
+
+    res->this_val = obj;
+    res->func = fn;
+    return devs_value_from_gc_obj(ctx, res);
+}
+
+value_t devs_make_closure(devs_ctx_t *ctx, devs_activation_t *closure, unsigned fnidx) {
+    JD_ASSERT(fnidx <= 0xffff);
+    return devs_value_from_pointer(ctx, DEVS_HANDLE_TYPE_CLOSURE | (fnidx << 4), closure);
+}
+
+int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activation_t **closure) {
+    *closure = NULL;
+    *this_val = devs_undefined;
+
+    uint32_t hv = devs_handle_value(src);
+    switch (devs_handle_type(src)) {
+    case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
+        *this_val = devs_undefined;
+        return hv;
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC:
+        *this_val = devs_value_from_handle(hv >> PACK_SHIFT, hv & ((1 << PACK_SHIFT) - 1));
+        return devs_handle_high_value(src);
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
+        *this_val = devs_value_from_handle(DEVS_HANDLE_TYPE_GC_OBJECT, hv);
+        return devs_handle_high_value(src);
+    case DEVS_HANDLE_TYPE_CLOSURE:
+        *closure = devs_handle_ptr_value(ctx, src);
+        return devs_handle_high_value(src);
+    default:
+        return -1;
+    }
 }
 
 static devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, bool create) {
