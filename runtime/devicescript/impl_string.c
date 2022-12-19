@@ -2,10 +2,12 @@
 
 // ignore UTF8 decoding for now
 
-void prop_String_length(devs_ctx_t *ctx) {
+value_t prop_String_length(devs_ctx_t *ctx, value_t self) {
     unsigned sz;
-    if (devs_string_get_utf8(ctx, devs_arg_self(ctx), &sz))
-        devs_ret_int(ctx, sz);
+    if (devs_string_get_utf8(ctx, self, &sz))
+        return devs_value_from_int(sz);
+    else
+        return devs_undefined;
 }
 
 void meth1_String_charCodeAt(devs_ctx_t *ctx) {

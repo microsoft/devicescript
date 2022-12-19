@@ -162,6 +162,17 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
         return obj;
 
     unsigned fidx = devs_handle_value(fn);
+
+    int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
+    if (bltin >= 0) {
+        JD_ASSERT(bltin < devs_num_builtin_functions);
+        const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
+        if (h->flags & DEVS_BUILTIN_FLAG_IS_PROPERTY) {
+            JD_ASSERT(h->num_args == 0);
+            return h->handler.prop(ctx, obj);
+        }
+    }
+
     int otp = devs_handle_type(obj);
 
     if (fidx <= 0xffff)

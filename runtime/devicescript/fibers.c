@@ -22,8 +22,6 @@ static void devs_fiber_activate(devs_activation_t *act) {
 int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     devs_ctx_t *ctx = fiber->ctx;
 
-    TODO(); // deal with property calls
-
     value_t *argp = ctx->the_stack;
 
     value_t fn = *argp;
@@ -42,8 +40,9 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
             unsigned num = h->num_args - numparams + 1;
             memset(argp + numparams, 0, num * sizeof(value_t));
         }
+        JD_ASSERT(!(h->flags & DEVS_BUILTIN_FLAG_IS_PROPERTY));
         fiber->ret_val = devs_undefined;
-        h->handler(ctx);
+        h->handler.meth(ctx);
         return 0;
     }
 

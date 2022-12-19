@@ -9,7 +9,7 @@
 
 // impl_buffer.c
 void fun1_Buffer_alloc(devs_ctx_t *ctx);
-void prop_Buffer_length(devs_ctx_t *ctx);
+value_t prop_Buffer_length(devs_ctx_t *ctx, value_t self);
 void meth0_Buffer_toString(devs_ctx_t *ctx);
 void meth3_Buffer_fillAt(devs_ctx_t *ctx);
 void meth4_Buffer_blitAt(devs_ctx_t *ctx);
@@ -31,7 +31,7 @@ void fun2_Math_imul(devs_ctx_t *ctx);
 void fun2_Math_min(devs_ctx_t *ctx);
 void fun2_Math_max(devs_ctx_t *ctx);
 // impl_string.c
-void prop_String_length(devs_ctx_t *ctx);
+value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
 
 static const devs_builtin_proto_entry_t Buffer_entries[] = { //
@@ -81,28 +81,28 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
 
 uint16_t devs_num_builtin_functions = 22;
 const devs_builtin_function_t devs_builtin_functions[22] = {
-    {N(ALLOC), 1, NO_SELF, fun1_Buffer_alloc},
-    {N(LENGTH), 0, PROP, prop_Buffer_length},
-    {N(TOSTRING), 0, 0, meth0_Buffer_toString},
-    {N(FILLAT), 3, 0, meth3_Buffer_fillAt},
-    {N(BLITAT), 4, 0, meth4_Buffer_blitAt},
-    {N(SLEEPMS), 1, NO_SELF, fun1_DeviceScript_sleepMs},
-    {N(PANIC), 1, NO_SELF, fun1_DeviceScript_panic},
-    {N(REBOOT), 0, NO_SELF, fun0_DeviceScript_reboot},
-    {N(CEIL), 1, NO_SELF, fun1_Math_ceil},
-    {N(FLOOR), 1, NO_SELF, fun1_Math_floor},
-    {N(ROUND), 1, NO_SELF, fun1_Math_round},
-    {N(RANDOM), 0, NO_SELF, fun0_Math_random},
-    {N(RANDOMINT), 1, NO_SELF, fun1_Math_randomInt},
-    {N(LOG), 1, NO_SELF, fun1_Math_log},
-    {N(POW), 2, NO_SELF, fun2_Math_pow},
-    {N(IDIV), 2, NO_SELF, fun2_Math_idiv},
-    {N(IMOD), 2, NO_SELF, fun2_Math_imod},
-    {N(IMUL), 2, NO_SELF, fun2_Math_imul},
-    {N(MIN), 2, NO_SELF, fun2_Math_min},
-    {N(MAX), 2, NO_SELF, fun2_Math_max},
-    {N(LENGTH), 0, PROP, prop_String_length},
-    {N(CHARCODEAT), 1, 0, meth1_String_charCodeAt}};
+    {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
+    {N(LENGTH), 0, PROP, {.prop = prop_Buffer_length}},
+    {N(TOSTRING), 0, 0, {.meth = meth0_Buffer_toString}},
+    {N(FILLAT), 3, 0, {.meth = meth3_Buffer_fillAt}},
+    {N(BLITAT), 4, 0, {.meth = meth4_Buffer_blitAt}},
+    {N(SLEEPMS), 1, NO_SELF, {.meth = fun1_DeviceScript_sleepMs}},
+    {N(PANIC), 1, NO_SELF, {.meth = fun1_DeviceScript_panic}},
+    {N(REBOOT), 0, NO_SELF, {.meth = fun0_DeviceScript_reboot}},
+    {N(CEIL), 1, NO_SELF, {.meth = fun1_Math_ceil}},
+    {N(FLOOR), 1, NO_SELF, {.meth = fun1_Math_floor}},
+    {N(ROUND), 1, NO_SELF, {.meth = fun1_Math_round}},
+    {N(RANDOM), 0, NO_SELF, {.meth = fun0_Math_random}},
+    {N(RANDOMINT), 1, NO_SELF, {.meth = fun1_Math_randomInt}},
+    {N(LOG), 1, NO_SELF, {.meth = fun1_Math_log}},
+    {N(POW), 2, NO_SELF, {.meth = fun2_Math_pow}},
+    {N(IDIV), 2, NO_SELF, {.meth = fun2_Math_idiv}},
+    {N(IMOD), 2, NO_SELF, {.meth = fun2_Math_imod}},
+    {N(IMUL), 2, NO_SELF, {.meth = fun2_Math_imul}},
+    {N(MIN), 2, NO_SELF, {.meth = fun2_Math_min}},
+    {N(MAX), 2, NO_SELF, {.meth = fun2_Math_max}},
+    {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
+    {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}}};
 
 STATIC_ASSERT(4 <= DEVS_BUILTIN_MAX_ARGS);
 STATIC_ASSERT(61440 == DEVS_FIRST_BUILTIN_FUNCTION);

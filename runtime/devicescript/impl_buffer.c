@@ -21,10 +21,12 @@ void fun1_Buffer_alloc(devs_ctx_t *ctx) {
     devs_ret_gc_ptr(ctx, devs_buffer_try_alloc(ctx, sz));
 }
 
-void prop_Buffer_length(devs_ctx_t *ctx) {
+value_t prop_Buffer_length(devs_ctx_t *ctx, value_t self) {
     unsigned sz;
-    if (buffer_data(ctx, devs_arg_self(ctx), &sz))
-        devs_ret_int(ctx, sz);
+    if (buffer_data(ctx, self, &sz))
+        return devs_value_from_int(sz);
+    else
+        return devs_undefined;
 }
 
 void meth0_Buffer_toString(devs_ctx_t *ctx) {
