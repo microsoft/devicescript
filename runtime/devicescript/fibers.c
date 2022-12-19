@@ -19,18 +19,32 @@ static void devs_fiber_activate(devs_activation_t *act) {
         ctx->curr_fn = act;
 }
 
-int devs_fiber_call_function(devs_fiber_t *fiber, value_t fn, value_t *params, unsigned numparams) {
+int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     devs_ctx_t *ctx = fiber->ctx;
 
     TODO(); // deal with property calls
-    TODO(); // deal with builtin calls
 
-    value_t this_val;
+    value_t *argp = ctx->the_stack;
+
+    value_t fn = *argp;
     devs_activation_t *closure;
-    int fidx = devs_get_fnidx(ctx, fn, &this_val, &closure);
+    int fidx = devs_get_fnidx(ctx, fn, argp, &closure);
     if (fidx < 0) {
         devs_runtime_failure(ctx, 60157);
         return -1;
+    }
+
+    int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
+    if (bltin >= 0) {
+        JD_ASSERT(bltin < devs_num_builtin_functions);
+        const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
+        if (numparams <= h->num_args) {
+            unsigned num = h->num_args - numparams + 1;
+            memset(argp + numparams, 0, num * sizeof(value_t));
+        }
+        fiber->ret_val = devs_undefined;
+        h->handler(ctx);
+        return 0;
     }
 
     const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
@@ -41,15 +55,15 @@ int devs_fiber_call_function(devs_fiber_t *fiber, value_t fn, value_t *params, u
         return -2;
 
     unsigned num_formals = func->num_args;
-    value_t *ap = devs_frame_params(callee);
+    value_t *params;
     if (func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS) {
-        *ap++ = this_val;
-        num_formals--;
-    }
-
+        params = argp;
+        numparams++; // count the this/fn parameter
+    } else
+        params = argp + 1;
     if (num_formals > numparams)
         num_formals = numparams;
-    memcpy(ap, params, num_formals * sizeof(value_t));
+    memcpy(devs_frame_params(callee), params, num_formals * sizeof(value_t));
 
     callee->pc = func->start;
     callee->closure = closure;
@@ -170,12 +184,23 @@ devs_fiber_t *devs_fiber_by_tag(devs_ctx_t *ctx, unsigned tag) {
     return NULL;
 }
 
-devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
-                               unsigned op) {
+devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op) {
     if (ctx->error_code)
         return NULL;
 
     devs_fiber_t *fiber;
+
+    devs_activation_t *closure;
+    value_t this_val;
+    int fidx = devs_get_fnidx(ctx, devs_arg_self(ctx), &this_val, &closure);
+    if (fidx < 0) {
+        devs_runtime_failure(ctx, 60160);
+        return NULL;
+    }
+    if (fidx >= DEVS_FIRST_BUILTIN_FUNCTION) {
+        devs_runtime_failure(ctx, 60161);
+        return NULL;
+    }
 
     if (op != DEVS_OPCALL_BG) {
         fiber = devs_fiber_by_fidx(ctx, fidx);
@@ -202,8 +227,7 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned fidx, value_t *params, 
 
     log_fiber_op(fiber, "start");
 
-    devs_fiber_call_function(fiber, devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, fidx),
-                             params, numargs);
+    devs_fiber_call_function(fiber, numargs);
 
     fiber->next = ctx->fibers;
     ctx->fibers = fiber;

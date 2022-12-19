@@ -29,7 +29,10 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
 
     devs_gc_set_ctx(ctx->gc, ctx);
 
-    devs_fiber_start(ctx, 0, NULL, 0, DEVS_OPCALL_BG);
+    // reference the "main" function (first function)
+    ctx->the_stack[0] = devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, 0);
+    // run it in bg
+    devs_fiber_start(ctx, 0, DEVS_OPCALL_BG);
 }
 
 devs_ctx_t *devs_create_ctx(const uint8_t *img, uint32_t size, const devs_cfg_t *cfg) {

@@ -10,7 +10,7 @@ typedef struct {
     uint16_t builtin_string_id; // DEVS_BUILTIN_STRING_xxx
     uint8_t num_args;
     uint8_t flags; // DEVS_BUILTIN_FLAG_
-    void *handler;
+    void (*handler)(devs_ctx_t *ctx);
 } devs_builtin_function_t;
 
 #define DEVS_BUILTIN_MAX_ARGS 4

@@ -154,7 +154,7 @@ static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);
 value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code);
-// next error 60160
+// next error 60163
 static inline value_t devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
     return _devs_runtime_failure(ctx, code - 60000);
 }
@@ -183,10 +183,9 @@ void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_termiante(devs_fiber_t *fiber);
 void devs_fiber_yield(devs_ctx_t *ctx);
-int devs_fiber_call_function(devs_fiber_t *fiber, value_t fn, value_t *params, unsigned numparams);
+int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams);
 void devs_fiber_return_from_call(devs_activation_t *act);
-devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
-                               unsigned op);
+devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op);
 devs_fiber_t *devs_fiber_by_tag(devs_ctx_t *ctx, unsigned tag);
 devs_fiber_t *devs_fiber_by_fidx(devs_ctx_t *ctx, unsigned fidx);
 void devs_fiber_run(devs_fiber_t *fiber);
