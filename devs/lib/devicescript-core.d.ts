@@ -73,6 +73,7 @@ declare module "@devicescript/core" {
     export function format(fmt: string, ...args: number[]): string
     export function wait(seconds: number): void
     export function every(seconds: number, callback: () => void): void
+    export function sleepMs(milliseconds: number): void
     export function panic(code: number): never
     export function reboot(): never
     export function onStart(handler: () => void): void

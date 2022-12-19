@@ -32,3 +32,7 @@ check:
 	$(MAKE) clean
 	$(MAKE) all
 	$(MAKE) test
+
+regen:
+	node runtime/jacdac-c/scripts/ds-builtin-proto.js runtime/jacdac-c/devicescript/impl_*.c
+	clang-format -i runtime/jacdac-c/devicescript/protogen.c

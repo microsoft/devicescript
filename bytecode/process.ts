@@ -4,6 +4,7 @@ interface OpCode {
     name: string
     args: string[]
     code: string
+    lineNo?: number
     rettype: string
     printFmt?: string
     description?: string
@@ -21,9 +22,15 @@ interface Spec {
     opProps?: string
     opTypes?: string
     enums: SMap<OpCode[]>
+    _repl?: string
 }
 
 const _spec = processSpec(fs.readFileSync(process.argv[2], "utf-8"))
+if (_spec._repl) {
+    fs.writeFileSync(process.argv[2] + ".new", _spec._repl, "utf-8")
+    console.log("wrote new file")
+    process.exit(10)
+}
 _spec.opProps = serializeProps(_spec.ops, opcodeProps)
 _spec.opTypes = serializeProps(_spec.ops, opcodeType)
 writeFile("bytecode.json", JSON.stringify(_spec, null, 4))
@@ -63,7 +70,6 @@ function processSpec(filecontent: string): Spec {
     let currColl: OpCode[] = null
     let currObj: OpCode = null
     let hasErrors = false
-    let isExpr = false
     const res: Spec = {
         ops: [],
         enums: {
@@ -80,6 +86,18 @@ function processSpec(filecontent: string): Spec {
         error("exception: " + e.message)
     }
 
+    const lines = filecontent.split(/\n/)
+    let filled = false
+    fillCodes(res.ops)
+    for (const en of Object.values(res.enums)) {
+        fillCodes(en)
+    }
+    if (filled) {
+        while (!lines[lines.length - 1]) lines.pop()
+        res._repl = lines.join("\n")
+        return res
+    }
+
     finish()
 
     checkCont(res.ops)
@@ -87,6 +105,32 @@ function processSpec(filecontent: string): Spec {
     if (hasErrors) throw new Error()
 
     return res
+
+    function fillCodes(ops: OpCode[]) {
+        const used: boolean[] = []
+        for (const op of ops) {
+            if (op.code != "?") {
+                used[+op.code] = true
+            }
+        }
+
+        for (const op of ops) {
+            if (op.code == "?") {
+                for (let i = 1; i < used.length + 2; ++i) {
+                    if (!used[i]) {
+                        used[i] = true
+                        const idx = op.lineNo - 1
+                        let ln = lines[idx]
+                        ln = ln.replace(/ = \?/, " = " + i)
+                        if (ln == lines[idx]) error("missing '= ?'", op.lineNo)
+                        lines[idx] = ln
+                        break
+                    }
+                }
+                filled = true
+            }
+        }
+    }
 
     function computePrintFmt(obj: OpCode) {
         if (obj.comment) {
@@ -134,8 +178,8 @@ function processSpec(filecontent: string): Spec {
         if (nums.length != lst.length + 1) error("non-cont")
     }
 
-    function error(msg = "syntax error") {
-        console.log(`error at ${lineNo}: ${msg}`)
+    function error(msg = "syntax error", ln = lineNo) {
+        console.log(`error at ${ln}: ${msg}`)
         hasErrors = true
     }
 
@@ -169,20 +213,13 @@ function processSpec(filecontent: string): Spec {
                     // sub-headers
                     return
                 switch (cont) {
-                    case "Statements":
+                    case "Ops":
                         currColl = res.ops
-                        isExpr = false
-                        break
-                    case "Expressions":
-                        currColl = res.ops
-                        isExpr = true
                         break
                     case "Format Constants":
-                        isExpr = false
                         currColl = res.enums.BinFmt
                         break
                     default:
-                        isExpr = false
                         m = /Enum: (\w+)/.exec(cont)
                         if (m) currColl = res.enums[m[1]] = []
                         else {
@@ -206,7 +243,7 @@ function processSpec(filecontent: string): Spec {
                 lineTr = lineTr.slice(4).trim()
             }
             let m =
-                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*(\d+|0[bB][01]+|0[Xx][a-fA-F0-9]+)\s*(\/\/\s*(.*))?$/.exec(
+                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*(\d+|0[bB][01]+|0[Xx][a-fA-F0-9]+|\?)\s*(\/\/\s*(.*))?$/.exec(
                     lineTr
                 )
             if (!m) {
@@ -238,6 +275,7 @@ function processSpec(filecontent: string): Spec {
                 comment,
                 rettype: rettype || "void",
                 isFun,
+                lineNo,
             }
             if (args[0] && args[0][0] == "*") {
                 currObj.takesNumber = true
@@ -250,10 +288,7 @@ function processSpec(filecontent: string): Spec {
                     currObj.comment2 = c
                 }
             }
-            if (isExpr) {
-                currObj.isExpr = true
-                if (!rettype) error("return type not specified")
-            }
+            if (rettype) currObj.isExpr = true
             currColl.push(currObj)
         }
     }
@@ -330,9 +365,18 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
         const pref =
             isTS || enName == "BinFmt" ? "" : enName.toUpperCase() + "_"
         startEnum(enName)
+        let max = 0
         for (const obj of spec.enums[enName]) {
             emitDefine(pref, obj)
+            max = Math.max(+obj.code, max)
         }
+        if (max <= spec.enums[enName].length)
+            emitDefine(pref, {
+                name: "__max",
+                code: max + "",
+                args: [],
+                rettype: null,
+            })
         endEnum()
     }
 
@@ -359,7 +403,6 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
 
     function emitStrings(id: string) {
         emitConst(id + "__val", listLiteral(contEnumNames(spec.enums[id])))
-        emitConst(id + "__size", contEnumNames(spec.enums[id]).length + "")
     }
 
     function emitFmts(id: string, lst: OpCode[]) {
@@ -430,7 +473,7 @@ function opcodeType(obj: OpCode) {
 function enumNames(lst: OpCode[]) {
     const names: string[] = []
     for (const obj of sortByCode(lst)) {
-        names[+obj.code] = obj.name
+        names[+obj.code] = obj.comment ?? obj.name
     }
     return names
 }

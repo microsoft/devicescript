@@ -122,6 +122,7 @@ export enum BinFmt {
     DIRECT_CONST_OFFSET = 16,
     FIRST_MULTIBYTE_INT = 0xf8,
     FIRST_NON_OPCODE = 0x10000,
+    FIRST_BUILTIN_FUNCTION = 0xf000,
 }
 
 export enum StrIdx {
@@ -138,6 +139,7 @@ export enum OpCall {
     BG_MAX1 = 2,
     BG_MAX1_PEND1 = 3,
     BG_MAX1_REPLACE = 4,
+    __MAX = 4,
 }
 
 export enum BytecodeFlag {
@@ -160,6 +162,7 @@ export enum NumFmt {
     F16 = 0b1001, // not supported
     F32 = 0b1010,
     F64 = 0b1011,
+    __MAX = 11,
 }
 
 export enum ObjectType {
@@ -175,6 +178,30 @@ export enum ObjectType {
     STRING = 9,
     ANY = 10,
     VOID = 11,
+    __MAX = 11,
+}
+
+export enum BuiltInObject {
+    MATH = 0,
+    OBJECT = 1,
+    OBJECT_PROTOTYPE = 2,
+    ARRAY = 3,
+    ARRAY_PROTOTYPE = 3,
+    BUFFER = 4,
+    BUFFER_PROTOTYPE = 5,
+    STRING = 6,
+    STRING_PROTOTYPE = 7,
+    NUMBER = 8,
+    NUMBER_PROTOTYPE = 9,
+    FIBER = 10,
+    FIBER_PROTOTYPE = 11,
+    ROLE = 12,
+    ROLE_PROTOTYPE = 13,
+    FUNCTION = 14,
+    FUNCTION_PROTOTYPE = 15,
+    BOOLEAN = 16,
+    BOOLEAN_PROTOTYPE = 17,
+    __MAX = 17,
 }
 
 export enum BuiltInString {
@@ -204,6 +231,9 @@ export enum BuiltInString {
     ARRAY = 23,
     BUFFER = 24,
     MAP = 25,
+    INFINITY = 26,
+    MINFINITY = 27, // -Infinity
+    __MAX = 27,
 }
 
 export const OP_PRINT_FMTS = [
@@ -347,5 +377,6 @@ export const BUILTIN_STRING__VAL = [
     "array",
     "buffer",
     "map",
+    "Infinity",
+    "-Infinity",
 ]
-export const BUILTIN_STRING__SIZE = 26

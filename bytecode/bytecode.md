@@ -33,270 +33,246 @@
 * gen_field(field, obj)
 * call0(fn), call1(fn,arg0), call2(fn,arg0,arg1), ..., call4(...)
 
-## Statements
+* Math.max = ...; Math.clamp = ...
+* Array.prototype.subarray = ...
 
-    wait_role(role) = 62
+* led.active.__proto__.foo = ... ? nope. frozen.
+
+```ts
+function foo() {
+    const x = ...
+    Bar.prototype.baz = function () { return this.q + x } - disallow
+}
+// bar.baz -> ???
+```
+
+## Ops
+
+### Control flow
+
+    call(*local_idx, numargs, func) = 1
+
+Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`
+
+    call0(func) = 2
+    call1(func, value0) = 3
+    call2(func, value0, value1) = 4
+    call3(func, value0, value1, value2) = 5
+    call4(func, value0, value1, value2, value3) = 6
+    call5(func, value0, value1, value2, value3, value4) = 7
+    call6(func, value0, value1, value2, value3, value4, value5) = 8
+    call7(func, value0, value1, value2, value3, value4, value5, value6) = 9
+    call8(func, value0, value1, value2, value3, value4, value5, value6, value7) = 10
+
+Short-hand version of regular `call` opcode.
+
+    call_bg(*local_idx, numargs, func, opcall) = 11
+
+Starts new fiber (depending on `call_type`). Returns fiber handle (existing or new).
+
+    return(value) = 12
+
+    jmp(*jmpoffset) = 13               // JMP jmpoffset
+
+    jmp_z(*jmpoffset, x) = 14          // JMP jmpoffset IF NOT x
+
+Jump if condition is false.
+
+    panic(error_code) = 15
+
+    log_format(*local_idx, numargs, string) = 16
+
+### Variables
+
+    store_local(*local_idx, value) = 17      // local_idx := value
+
+    store_global(*global_idx, value) = 18    // global_idx := value
+
+    store_buffer(buffer, numfmt, offset, value) = 19
+
+    store_param(*param_idx, value) = 20      // param_idx := value
+
+    load_local(*local_idx): any = 21
+
+    load_global(*global_idx): any = 22
+
+    load_param(*param_idx): any = 23
+
+### Field access
+
+    fun index(object, idx): any = 24              // object[idx]
+
+Read named field or sequence member (depending on type of idx).
+
+    index_set(object, index, value) = 25         // object[index] := value
+
+Write named field or sequence member (depending on type of idx).
+
+    builtin_field(*builtin_idx, obj): any = 26  // obj.builtin_idx
+
+Shorthand to `index(obj, static_builtin_string(builtin_idx))`
+ 
+    ascii_field(*ascii_idx, obj): any = 27      // obj.ascii_idx
+
+Shorthand to `index(obj, static_ascii_string(ascii_idx))`
+
+    utf8_field(*utf8_idx, obj): any = 28        // obj.utf8_idx
+
+Shorthand to `index(obj, static_utf8_string(utf8_idx))`
+
+    fun math_field(*builtin_idx): any = 29      // Math.builtin_idx
+
+    fun ds_field(*builtin_idx): any = 30        // ds.builtin_idx
+
+### Objects
+
+    alloc_map() = 31
+
+    alloc_array(initial_size) = 32
+
+    alloc_buffer(size) = 33
+
+### Statics
+
+    fun static_role(*role_idx): role = 34
+
+    fun static_buffer(*buffer_idx): buffer = 35
+
+    fun static_builtin_string(*builtin_idx): string = 36
+
+    fun static_ascii_string(*ascii_idx): string = 37
+
+    fun static_utf8_string(*utf8_idx): string = 38
+
+    fun static_function(*func_idx): function = 39
+
+    fun literal(*value): number = 40
+
+    fun literal_f64(*f64_idx): number = 41
+
+### Misc
+
+    fun format(*local_idx, numargs, string): string = 42
+
+    load_buffer(buffer, numfmt, offset): number = 43
+
+    ret_val: any = 44
+
+Return value of query register, call, etc.
+
+    fun typeof(object): number = 45
+
+Returns `Object_Type` enum.
+
+    fun null(): null = 46
+
+Returns `null` value.
+
+    fun is_null(x): bool = 47
+
+Check if object is exactly `null`.
+
+### Booleans
+
+    fun true(): bool = 48
+
+    fun false(): bool = 49
+
+    fun to_bool(x): bool = 50   // !!x
+
+### Math operations
+
+    fun nan(): number = 51
+
+    fun abs(x): number = 52
+
+    fun bit_not(x): number = 53   // ~x
+
+    fun is_nan(x): bool = 54
+
+    fun neg(x): number = 55   // -x
+
+    fun not(x): bool = 56   // !x
+
+    fun to_int(x): number = 57
+
+Same as `x | 0`.
+
+    fun add(x, y): number = 58     // x + y
+
+    fun sub(x, y): number = 59     // x - y
+  
+    fun mul(x, y): number = 60     // x * y
+
+    fun div(x, y): number = 61     // x / y
+
+    fun bit_and(x, y): number = 62 // x & y
+
+    fun bit_or(x, y): number = 63  // x | y
+
+    fun bit_xor(x, y): number = 64 // x ^ y
+
+    fun shift_left(x, y): number = 65      // x << y
+
+    fun shift_right(x, y): number = 66      // x >> y
+
+    fun shift_right_unsigned(x, y): number = 67      // x >>> y
+
+    fun eq(x, y): bool = 68      // x == y
+
+    fun le(x, y): bool = 69      // x <= y
+
+    fun lt(x, y): bool = 70      // x < y
+
+    fun ne(x, y): bool = 71      // x != y
+
+### To be removed (mostly)
+
+    terminate_fiber(fiber_handle) = 72
+
+Returns nan (fiber doesn't exists) or 0 (terminated).
+
+    wait_role(role) = 73
 
 Wait until any packet arrives from specified role.
 
-    sleep_s(x) = 63
+    query_reg(role, code, timeout) = 74
 
-Wait given number of seconds.
+    send_cmd(role, code) = 75
 
-    sleep_ms(x) = 64
+    query_idx_reg(role, code, string, timeout) = 76
 
-Wait given number of milliseconds.
+    setup_pkt_buffer(size) = 77
 
-    query_reg(role, code, timeout) = 65
-
-    send_cmd(role, code) = 66
-
-    query_idx_reg(role, code, string, timeout) = 67
-
-    log_format(*local_idx, numargs, string) = 68
-
-    setup_pkt_buffer(size) = 70
-
-    set_pkt(buffer, offset) = 71
+    set_pkt(buffer, offset) = 78
 
 Copy given string to packet buffer at given `offset`.
 Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
 
-    blit(dst, dst_offset, src, src_offset, length) = 72
+    now_ms: number = 79
 
-Copy bytes `src[src_offset .. src_offset + length]` to `dst[dst_offset .. ]`.
-Both `src` and `dst` are buffers.
+Time since device restart in ms; time only advances when sleeping.
 
-    memset(dst, offset, length, value) = 51
+    str0eq(buffer, offset): bool = 80
 
-Set bytes `dst[offset .. offset + length]` to `value`.
-
-    decode_utf8(buffer) = 97
-
-Convert buffer to string using UTF-8 encoding.
-
-    call(*local_idx, numargs, func) = 73
-
-Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`
-
-    call_bg(*local_idx, numargs, func, opcall) = 74
-
-Starts new fiber (depending on `call_type`). Returns fiber handle (existing or new).
-
-    return(value) = 75
-
-    jmp(*jmpoffset) = 76               // JMP jmpoffset
-
-    jmp_z(*jmpoffset, x) = 77          // JMP jmpoffset IF NOT x
-
-Jump if condition is false.
-
-    panic(error_code) = 78
-
-    store_local(*local_idx, value) = 79      // local_idx := value
-
-    store_global(*global_idx, value) = 80    // global_idx := value
-
-    store_buffer(buffer, numfmt, offset, value) = 81
-
-    store_param(*param_idx, value) = 82      // param_idx := value
-
-    terminate_fiber(fiber_handle) = 83
-
-Returns nan (fiber doesn't exists) or 0 (terminated).
-
-### Object handling
-
-    alloc_map() = 84
-
-    alloc_array(initial_size) = 85
-
-    alloc_buffer(size) = 86
-
-    set_field(object, field, value) = 87        // object.field := value
-
-    array_set(array, index, value) = 88         // array[index] := value
-
-    array_insert(array, index, count) = 89
-
-Inserts `count` values (`undefined`) at `index`. If `count` is negative, removes values.
-
-## Expressions
-
-    load_local(*local_idx): any = 1
-
-    load_global(*global_idx): any = 2
-
-    load_param(*param_idx): any = 45
-
-    fun static_role(*role_idx): role = 50
-
-    fun static_buffer(*buffer_idx): buffer = 93
-
-    fun static_builtin_string(*builtin_idx): string = 94
-
-    fun static_ascii_string(*ascii_idx): string = 95
-
-    fun static_utf8_string(*utf8_idx): string = 96
-
-    fun static_function(*func_idx): function = 90
-
-    fun format(*local_idx, numargs, string): string = 69
-
-    fun literal(*value): number = 4
-
-    fun literal_f64(*f64_idx): number = 5
-
-    load_buffer(buffer, numfmt, offset): number = 3
-
-    str0eq(buffer, offset): bool = 7
-
-    role_is_connected(role): bool = 8
-
-    get_fiber_handle(func): fiber = 47
+    get_fiber_handle(func): fiber = 81
 
 If `func == null` returns self-handle.
 Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
 
-    ret_val: any = 6
+    pkt_size(): number = 82
 
-Return value of query register, call, etc.
+    pkt_ev_code(): number = 83
 
-    now_ms: number = 46
+    pkt_reg_get_code(): number = 84
 
-Time since device restart in ms; time only advances when sleeping.
+    pkt_report_code(): number = 85
 
-### Object handling
+    pkt_command_code(): number = 86
 
-    get_field(object, field): any = 52        // object.field
-
-    index(object, idx): any = 53              // object[idx]
-
-Works on arrays and buffers.
-
-    object_length(object): number = 54
-
-Number of entries array or buffer, that can be accessed with `index()`; `0` otherwise.
-
-    keys_length(object): number = 55
-
-Number of keys (properties) attached to an object (directly in map or hanging off array/buffer/...).
-
-    fun typeof(object): number = 56
-
-Returns `Object_Type` enum.
-
-    fun null(): null = 57
-
-Returns `null` value.
-
-    fun is_null(x): bool = 58
-
-Check if object is exactly `null`.
-
-### Current packet accessors
-
-    pkt_size(): number = 9
-
-    pkt_ev_code(): number = 10
-
-    pkt_reg_get_code(): number = 11
-
-    pkt_report_code(): number = 48
-
-    pkt_command_code(): number = 49
-
-    fun pkt_buffer(): buffer = 59
+    fun pkt_buffer(): buffer = 87
 
 Return reference to "buffer" with the packet data.
-
-### Booleans
-
-    fun true(): bool = 60
-
-    fun false(): bool = 61
-
-    fun to_bool(x): bool = 25   // !!x
-
-### Math operations
-
-    fun nan(): number = 12
-
-    fun abs(x): number = 13
-
-    fun bit_not(x): number = 14   // ~x
-
-    fun round(x): number = 24
-
-    fun ceil(x): number = 15
-
-    fun floor(x): number = 16
-
-    fun id(x): any = 17
-
-    fun is_nan(x): bool = 18
-
-    fun log_e(x): number = 19
-
-    fun neg(x): number = 20   // -x
-
-    fun not(x): bool = 21   // !x
-
-    fun to_int(x): number = 92
-
-Same as `x | 0`.
-
-    random(x): number = 22
-
-Returns value between 0 and `x`.
-
-    random_int(x): number = 23
-
-Returns an int between 0 and `x` inclusive.
-
-    fun add(x, y): number = 26     // x + y
-
-    fun sub(x, y): number = 44     // x - y
-  
-    fun mul(x, y): number = 38     // x * y
-
-    fun div(x, y): number = 30     // x / y
-  
-    fun pow(x, y): number = 40
-
-
-    fun idiv(x, y): number = 32
-
-    fun imul(x, y): number = 33
-
-    fun imod(x, y): number = 91
-
-
-    fun bit_and(x, y): number = 27 // x & y
-
-    fun bit_or(x, y): number = 28  // x | y
-
-    fun bit_xor(x, y): number = 29 // x ^ y
-
-    fun shift_left(x, y): number = 41      // x << y
-
-    fun shift_right(x, y): number = 42      // x >> y
-
-    fun shift_right_unsigned(x, y): number = 43      // x >>> y
-
-
-    fun eq(x, y): bool = 31      // x == y
-
-    fun le(x, y): bool = 34      // x <= y
-
-    fun lt(x, y): bool = 35      // x < y
-
-    fun ne(x, y): bool = 39      // x != y
-
-    fun max(x, y): number = 36
-
-    fun min(x, y): number = 37
-
 
 
 ## Format Constants
@@ -316,6 +292,7 @@ Returns an int between 0 and `x` inclusive.
     direct_const_offset = 16
     first_multibyte_int = 0xf8
     first_non_opcode = 0x10000
+    first_builtin_function = 0xf000
 
 ## Enum: StrIdx
 
@@ -401,38 +378,110 @@ Only `true` and `false` values.
 
     string = 9
 
-
 ### Object_Types only used in static type info
 
     any = 10
 
     void = 11
 
+## Enum: BuiltIn_Object
+
+    math = 0
+    object = 1
+    object_prototype = 2
+    array = 3
+    array_prototype = 3
+    buffer = 4
+    buffer_prototype = 5
+    string = 6
+    string_prototype = 7
+    number = 8
+    number_prototype = 9
+    fiber = 10
+    fiber_prototype = 11
+    role = 12
+    role_prototype = 13
+    function = 14
+    function_prototype = 15
+    boolean = 16
+    boolean_prototype = 17
+    devicescript = 18
+
 ## Enum: BuiltIn_String
 
     _empty = 0
-    null = 18
-    undefined = 1
-    string = 2
-    number = 3
-    boolean = 4
-    function = 5
-    toString = 6
-    charCodeAt = 7
-    next = 8
-    prev = 9
-    length = 10
-    pop = 11
-    push = 12
-    shift = 13
-    unshift = 14
-    splice = 15
-    slice = 16
-    join = 17
-    true = 19
-    false = 20
-    packet = 21
-    NaN = 22
-    array = 23
-    buffer = 24
-    map = 25
+    MInfinity = 1 // -Infinity
+    DeviceScript = 2
+    E = 3
+    Infinity = 4
+    LN10 = 5
+    LN2 = 6
+    LOG10E = 7
+    LOG2E = 8
+    NaN = 9
+    PI = 10
+    SQRT1_2 = 11
+    SQRT2 = 12
+    abs = 13
+    alloc = 14
+    array = 15
+    blitAt = 16
+    boolean = 17
+    buffer = 18
+    cbrt = 19
+    ceil = 20
+    charCodeAt = 21
+    clamp = 22
+    exp = 23
+    false = 24
+    fillAt = 25
+    floor = 26
+    forEach = 27
+    function = 28
+    getAt = 29
+    idiv = 30
+    imul = 31
+    isConnected = 32
+    join = 33
+    length = 34
+    log = 35
+    log10 = 36
+    log2 = 37
+    map = 38
+    max = 39
+    min = 40
+    next = 41
+    null = 42
+    number = 43
+    onChange = 44
+    onConnected = 45
+    onDisconnected = 46
+    packet = 47
+    panic = 48
+    pop = 49
+    pow = 50
+    prev = 51
+    prototype = 52
+    push = 53
+    random = 54
+    randomInt = 55
+    read = 56
+    reboot = 57
+    round = 58
+    setAt = 59
+    setLength = 60
+    shift = 61
+    signal = 62
+    slice = 63
+    splice = 64
+    sqrt = 65
+    string = 66
+    subscribe = 67
+    toString = 68
+    true = 69
+    undefined = 70
+    unshift = 71
+    wait = 72
+    write = 73
+
+    waitMs = 74
