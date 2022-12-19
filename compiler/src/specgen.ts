@@ -218,7 +218,11 @@ const ${varname} = new ds.${clname}()
     ]
 
     const cmds = info.packets.filter(
-        pkt => pkt.kind === "command" && !pkt.internal && !pkt.derived
+        pkt =>
+            pkt.kind === "command" &&
+            !pkt.internal &&
+            !pkt.derived &&
+            !pkt.lowLevel
     )
     if (cmds.length) r.push("## Commands", "")
     cmds.forEach(pkt => {
@@ -246,8 +250,8 @@ const ${varname} = new ds.${clname}()
             "",
             pkt.description,
             `
-\`\`\`ts no-build
-${varname}.${camelize(pkt.name)}(${fields}): void
+\`\`\`ts no-build no-run
+${varname}.${pname}(${fields}): void
 \`\`\`            
 `
         )
@@ -255,7 +259,7 @@ ${varname}.${camelize(pkt.name)}(${fields}): void
 
     const regs = info.packets
         .filter(pkt => isRegister(pkt.kind))
-        .filter(pkt => !pkt.derived && !pkt.internal)
+        .filter(pkt => !pkt.derived && !pkt.internal && !pkt.lowLevel)
     if (regs?.length) r.push("## Registers", "")
     regs.forEach(pkt => {
         const cmt = addComment(pkt)
@@ -340,15 +344,39 @@ ${varname}.${pname}.onChange(0, () => {
 `
                 : isBoolean || isString
                 ? `-  track value changes
-                    \`\`\`ts ${nobuild}
-                    const ${varname} = new ds.${clname}()
-                    // ...
-                    ${varname}.${pname}.onChange(() => {
-                        const value = ${varname}.${pname}.read()
-                    })
-                    \`\`\`
-                    `
+\`\`\`ts ${nobuild}
+const ${varname} = new ds.${clname}()
+// ...
+${varname}.${pname}.onChange(() => {
+    const value = ${varname}.${pname}.read()
+})
+\`\`\`
+`
                 : undefined
+        )
+    })
+
+    const evts = info.packets.filter(
+        pkt =>
+            pkt.kind === "event" &&
+            !pkt.internal &&
+            !pkt.derived &&
+            !pkt.lowLevel
+    )
+    if (evts.length) r.push("## Events", "")
+    evts.forEach(pkt => {
+        const pname = camelize(pkt.name)
+        r.push(
+            `### ${pname}`,
+            "",
+            pkt.description,
+            `
+\`\`\`ts no-build no-run
+${varname}.${pname}.subscribe(() => {
+
+})
+\`\`\`            
+`
         )
     })
 

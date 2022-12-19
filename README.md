@@ -26,6 +26,7 @@ yarn setup
 To run a watch build and the docs, run
 
 ```
+nvm use 18
 yarn dev
 ```
 

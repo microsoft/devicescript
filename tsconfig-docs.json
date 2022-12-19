@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "target": "es2022",
+        "module": "es2015",
+        "lib": [],
+        "strict": true,
+        "strictNullChecks": false,
+        "strictFunctionTypes": true,
+        "sourceMap": false,
+        "declaration": false,
+        "experimentalDecorators": true,
+        "preserveConstEnums": true,
+        "noImplicitThis": true,
+        "isolatedModules": true,
+        "noImplicitAny": true,
+        "moduleDetection": "force",
+        "types": []
+    },
+    "include": ["devs/lib/*.ts"]
+}
