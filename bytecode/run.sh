@@ -4,7 +4,8 @@ echo "compile..."
 node ../node_modules/typescript/bin/tsc || exit 1
 echo "process..."
 node build/process.js bytecode.md
-if [ $? = 10 ] ; then
+R=$?
+if [ $R = 10 ] ; then
   diff -u bytecode.md bytecode.md.new
   read -p "apply changes [y/n]? " -n 1 -r
   echo
@@ -13,8 +14,9 @@ if [ $? = 10 ] ; then
     exit 1
   fi
   mv bytecode.md.new bytecode.md
-elif [ $? != 0 ] ; then
-  exit 1
+elif [ $R != 0 ] ; then
+  echo "exit $R"
+  exit $R
 fi
 set -x
 set -e

@@ -64,7 +64,7 @@ Regular, sync call. Passes `numargs` arguments, starting from local variable num
     call7(func, value0, value1, value2, value3, value4, value5, value6) = 9
     call8(func, value0, value1, value2, value3, value4, value5, value6, value7) = 10
 
-Short-hand version of regular `call` opcode.
+Short-hand versions of regular `call` opcode.
 
     call_bg(*local_idx, numargs, func, opcall) = 11
 
@@ -293,6 +293,7 @@ Return reference to "buffer" with the packet data.
     first_multibyte_int = 0xf8
     first_non_opcode = 0x10000
     first_builtin_function = 0xf000
+    max_args_short_call = 8
 
 ## Enum: StrIdx
 
@@ -331,6 +332,10 @@ Start new fiber. If it's already running, replace it.
     is_stmt = 0x10
     takes_number = 0x20
     is_stateless = 0x40 // fun modifier
+
+## Enum: FunctionFlag
+
+    needs_this = 0x01
 
 ## Enum: NumFmt
 
