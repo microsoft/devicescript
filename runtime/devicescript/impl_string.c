@@ -19,13 +19,3 @@ value_t fun_String_charCodeAt(devs_ctx_t *ctx, value_t self, value_t idxv) {
         return devs_nan;
     return devs_value_from_int((uint8_t)data[idx]);
 }
-
-value_t prop_Buffer_length(devs_ctx_t *ctx, value_t self) {
-    unsigned sz;
-    if (!devs_is_buffer(ctx, self))
-        return devs_undefined;
-    if (!devs_buffer_data(ctx, self, &sz))
-        return devs_undefined;
-    return devs_value_from_int(sz);
-}
-

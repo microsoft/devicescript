@@ -117,6 +117,7 @@
 #define DEVS_FIRST_MULTIBYTE_INT 0xf8
 #define DEVS_FIRST_NON_OPCODE 0x10000
 #define DEVS_FIRST_BUILTIN_FUNCTION 0xf000
+#define DEVS_MAX_ARGS_SHORT_CALL 8
 
 #define DEVS_STRIDX_BUFFER 0
 #define DEVS_STRIDX_BUILTIN 1
@@ -263,8 +264,9 @@
 #define DEVS_BUILTIN_STRING_UNSHIFT 71
 #define DEVS_BUILTIN_STRING_WAIT 72
 #define DEVS_BUILTIN_STRING_WRITE 73
-#define DEVS_BUILTIN_STRING_WAITMS 74
-#define DEVS_BUILTIN_STRING___MAX 74
+#define DEVS_BUILTIN_STRING_SLEEPMS 74
+#define DEVS_BUILTIN_STRING_IMOD 75
+#define DEVS_BUILTIN_STRING___MAX 75
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, stmtx2_call, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3, stmt5_call4,    \
@@ -295,4 +297,4 @@
         "packet", "panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",       \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
-        "write", "waitMs"
+        "write", "sleepMs", "imod"

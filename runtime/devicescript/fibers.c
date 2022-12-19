@@ -23,6 +23,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, value_t fn, value_t *params, u
     devs_ctx_t *ctx = fiber->ctx;
 
     TODO(); // deal with property calls
+    TODO(); // deal with builtin calls
 
     value_t this_val;
     devs_activation_t *closure;

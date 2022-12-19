@@ -23,17 +23,6 @@ static void stmt1_wait_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_fiber_yield(ctx);
 }
 
-static void stmt1_sleep_s(devs_activation_t *frame, devs_ctx_t *ctx) {
-    int time = (int)(devs_vm_pop_arg_f64(ctx) * 1000.0 + 0.5);
-    if (time >= 0)
-        devs_fiber_sleep(frame->fiber, time);
-}
-
-static void stmt1_sleep_ms(devs_activation_t *frame, devs_ctx_t *ctx) {
-    int time = devs_vm_pop_arg_i32(ctx);
-    if (time >= 0)
-        devs_fiber_sleep(frame->fiber, time);
-}
 
 static void stmt2_send_cmd(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t b = devs_vm_pop_arg_u32(ctx);
@@ -92,14 +81,6 @@ static void stmt1_alloc_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     set_alloc(frame, ctx, obj, sizeof(devs_buffer_t) + sz);
 }
 
-static void stmt1_decode_utf8(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned slen;
-    uint8_t *src = devs_vm_pop_arg_buffer_data(ctx, &slen, 0);
-    if (!ctx->error_code) {
-        frame->fiber->ret_val = devs_string_from_utf8(ctx, src, slen);
-    }
-}
-
 static void stmt3_index_set(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     value_t idx = devs_vm_pop_arg(ctx);
@@ -142,46 +123,6 @@ static void stmt2_set_pkt(devs_activation_t *frame, devs_ctx_t *ctx) {
             len = slen;
         memcpy(ctx->packet.data + offset, src, len);
     }
-}
-
-static void stmt5_blit(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned slen, dlen;
-
-    uint32_t len = devs_vm_pop_arg_u32(ctx);
-    uint32_t src_offset = devs_vm_pop_arg_u32(ctx);
-    uint8_t *src = devs_vm_pop_arg_buffer_data(ctx, &slen, DEVS_BUFFER_STRING_OK);
-    uint32_t dst_offset = devs_vm_pop_arg_u32(ctx);
-    uint8_t *dst = devs_vm_pop_arg_buffer_data(ctx, &dlen, DEVS_BUFFER_RW);
-
-    if (src_offset >= slen)
-        return;
-    slen -= src_offset;
-    if (slen < len)
-        len = slen;
-
-    if (dst_offset >= dlen)
-        return;
-    dlen -= dst_offset;
-    if (dlen < len)
-        len = dlen;
-
-    memcpy(dst + dst_offset, src + src_offset, len);
-}
-
-static void stmt4_memset(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned dlen;
-    uint32_t val = devs_vm_pop_arg_u32(ctx);
-    uint32_t len = devs_vm_pop_arg_u32(ctx);
-    uint32_t dst_offset = devs_vm_pop_arg_u32(ctx);
-    uint8_t *dst = devs_vm_pop_arg_buffer_data(ctx, &dlen, DEVS_BUFFER_RW);
-
-    if (dst_offset >= dlen)
-        return;
-    dlen -= dst_offset;
-    if (dlen < len)
-        len = dlen;
-
-    memset(dst + dst_offset, val, len);
 }
 
 static void stmt1_panic(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -303,17 +244,6 @@ static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
             return;
         frame->fiber->ret_val = devs_zero;
         devs_fiber_termiante(fib);
-    }
-}
-
-static uint32_t random_max(uint32_t mx) {
-    uint32_t mask = 1;
-    while (mask < mx)
-        mask = (mask << 1) | 1;
-    for (;;) {
-        uint32_t r = jd_random() & mask;
-        if (r <= mx)
-            return r;
     }
 }
 
@@ -610,7 +540,6 @@ static value_t expr0_false(devs_activation_t *frame, devs_ctx_t *ctx) {
 //
 // Math stuff
 //
-#if 1
 static value_t expr0_nan(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_nan;
 }
@@ -639,38 +568,9 @@ static value_t expr1_to_int(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_int(devs_vm_pop_arg_i32(ctx));
 }
 
-static value_t expr1_ceil(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t v = devs_vm_pop_arg(ctx);
-    if (devs_is_tagged_int(v))
-        return v;
-    return devs_value_from_double(ceil(devs_value_to_double(v)));
-}
-
-static value_t expr1_floor(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t v = devs_vm_pop_arg(ctx);
-    if (devs_is_tagged_int(v))
-        return v;
-    return devs_value_from_double(floor(devs_value_to_double(v)));
-}
-
-static value_t expr1_round(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t v = devs_vm_pop_arg(ctx);
-    if (devs_is_tagged_int(v))
-        return v;
-    return devs_value_from_double(round(devs_value_to_double(v)));
-}
-
-static value_t expr1_id(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return devs_vm_pop_arg(ctx);
-}
-
 static value_t expr1_is_nan(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     return devs_value_from_bool(devs_is_nan(v));
-}
-
-static value_t expr1_log_e(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return devs_value_from_double(log(devs_vm_pop_arg_f64(ctx)));
 }
 
 static value_t expr1_neg(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -686,14 +586,6 @@ static value_t expr1_neg(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr1_not(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     return devs_value_from_bool(!devs_value_to_bool(v));
-}
-
-static value_t expr1_random(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return devs_value_from_double(jd_random() * devs_vm_pop_arg_f64(ctx) / (double)0x100000000);
-}
-
-static value_t expr1_random_int(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return devs_value_from_int(random_max(devs_vm_pop_arg_i32(ctx)));
 }
 
 static value_t expr1_to_bool(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -777,12 +669,6 @@ static value_t expr2_div(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_double(af / bf);
 }
 
-static value_t expr2_pow(devs_activation_t *frame, devs_ctx_t *ctx) {
-    exec2_and_check_int(frame, ctx);
-    force_double(ctx);
-    return devs_value_from_double(pow(af, bf));
-}
-
 static value_t expr2_bit_and(devs_activation_t *frame, devs_ctx_t *ctx) {
     exec2_and_force_int(frame, ctx);
     return devs_value_from_int(aa & bb);
@@ -817,27 +703,6 @@ static value_t expr2_shift_right_unsigned(devs_activation_t *frame, devs_ctx_t *
         return devs_value_from_int(tmp);
 }
 
-static value_t expr2_idiv(devs_activation_t *frame, devs_ctx_t *ctx) {
-    exec2_and_force_int(frame, ctx);
-    if (bb == 0)
-        return devs_zero;
-    return devs_value_from_int(aa / bb);
-}
-
-static value_t expr2_imod(devs_activation_t *frame, devs_ctx_t *ctx) {
-    exec2_and_force_int(frame, ctx);
-    if (bb == 0)
-        return devs_zero;
-    return devs_value_from_int(aa % bb);
-}
-
-static value_t expr2_imul(devs_activation_t *frame, devs_ctx_t *ctx) {
-    exec2_and_force_int(frame, ctx);
-    // avoid signed overflow, which is undefined
-    // note that signed and unsigned multiplication result in the same bit patterns
-    return devs_value_from_int((uint32_t)aa * (uint32_t)bb);
-}
-
 static value_t expr2_eq(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (exec2_and_check_int(frame, ctx))
         return devs_value_from_bool(aa == bb);
@@ -861,30 +726,5 @@ static value_t expr2_lt(devs_activation_t *frame, devs_ctx_t *ctx) {
         return devs_value_from_bool(aa < bb);
     return devs_value_from_bool(af < bf);
 }
-
-static value_t expr2_max(devs_activation_t *frame, devs_ctx_t *ctx) {
-    int lt;
-    if (exec2_and_check_int_or_force_double(frame, ctx))
-        lt = aa < bb;
-    else if (isnan(af) || isnan(bf))
-        return devs_nan;
-    else
-        lt = af < bf;
-
-    return lt ? ctx->binop[1] : ctx->binop[0];
-}
-
-static value_t expr2_min(devs_activation_t *frame, devs_ctx_t *ctx) {
-    int lt;
-    if (exec2_and_check_int_or_force_double(frame, ctx))
-        lt = aa < bb;
-    else if (isnan(af) || isnan(bf))
-        return devs_nan;
-    else
-        lt = af < bf;
-
-    return lt ? ctx->binop[0] : ctx->binop[1];
-}
-#endif
 
 const void *devs_vm_op_handlers[DEVS_OP_PAST_LAST + 1] = {DEVS_OP_HANDLERS};

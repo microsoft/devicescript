@@ -459,3 +459,24 @@ int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int coun
 
     return 0;
 }
+
+
+int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx) {
+    return devs_value_to_int(ctx->the_stack[idx]);
+}
+
+double devs_arg_double(devs_ctx_t *ctx, unsigned idx) {
+    return devs_value_to_double(ctx->the_stack[idx]);
+}
+
+void devs_ret_double(devs_ctx_t *ctx, double v) {
+    ctx->curr_fiber->ret_val = devs_value_from_double(v);
+}
+
+void devs_ret_int(devs_ctx_t *ctx, int v) {
+    ctx->curr_fiber->ret_val = devs_value_from_int(v);
+}
+
+void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v) {
+    ctx->curr_fiber->ret_val = devs_value_from_gc_obj(ctx, v);
+}
