@@ -100,20 +100,11 @@ static void stmt1_decode_utf8(devs_activation_t *frame, devs_ctx_t *ctx) {
     }
 }
 
-static void stmt3_set_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+static void stmt3_index_set(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
-    value_t key = devs_vm_pop_arg(ctx);
-    devs_map_t *map = devs_vm_pop_arg_map(ctx, true);
-    if (map != NULL)
-        devs_map_set(ctx, map, key, v);
-}
-
-static void stmt3_array_set(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t v = devs_vm_pop_arg(ctx);
-    uint32_t idx = devs_vm_pop_arg_u32(ctx);
-    value_t arr = devs_vm_pop_arg(ctx);
-
-    devs_seq_set(ctx, arr, idx, v);
+    value_t idx = devs_vm_pop_arg(ctx);
+    value_t obj = devs_vm_pop_arg(ctx);
+    devs_any_set(ctx, obj, idx, v);
 }
 
 static void stmt3_array_insert(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -199,13 +190,32 @@ static void stmt1_panic(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static void stmtx2_call(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t fidx = devs_vm_pop_arg_func(ctx);
+    value_t fn = devs_vm_pop_arg(ctx);
     uint32_t numargs = devs_vm_pop_arg_u32(ctx);
     uint32_t localidx = ctx->literal_int;
 
     if (devs_vm_args_ok(frame, localidx, numargs))
-        devs_fiber_call_function(frame->fiber, fidx, frame->locals + localidx, numargs);
+        devs_fiber_call_function(frame->fiber, fn, devs_frame_locals(frame) + localidx, numargs);
 }
+
+static void stmt_callN(devs_activation_t *frame, devs_ctx_t *ctx, unsigned N) {
+    JD_ASSERT(ctx->stack_top == N + 1);
+    ctx->stack_top = 0;
+    devs_fiber_call_function(frame->fiber, ctx->the_stack[0], ctx->the_stack + 1, N);
+}
+
+#define STMT_CALL(n, k)                                                                            \
+    static void n(devs_activation_t *frame, devs_ctx_t *ctx) { stmt_callN(frame, ctx, k); }
+
+STMT_CALL(stmt1_call0, 0)
+STMT_CALL(stmt2_call1, 1)
+STMT_CALL(stmt3_call2, 2)
+STMT_CALL(stmt4_call3, 3)
+STMT_CALL(stmt5_call4, 4)
+STMT_CALL(stmt6_call5, 5)
+STMT_CALL(stmt7_call6, 6)
+STMT_CALL(stmt8_call7, 7)
+STMT_CALL(stmt9_call8, 8)
 
 static void stmtx3_call_bg(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t flag = devs_vm_pop_arg_u32(ctx);
@@ -216,7 +226,8 @@ static void stmtx3_call_bg(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (flag == 0 || flag > DEVS_OPCALL_BG_MAX1_REPLACE)
         devs_runtime_failure(ctx, 60137);
     else if (devs_vm_args_ok(frame, localidx, numargs)) {
-        devs_fiber_t *fib = devs_fiber_start(ctx, fidx, frame->locals + localidx, numargs, flag);
+        devs_fiber_t *fib =
+            devs_fiber_start(ctx, fidx, devs_frame_locals(frame) + localidx, numargs, flag);
         frame->fiber->ret_val = devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, fib->handle_tag);
     }
 }
@@ -250,7 +261,7 @@ static void stmtx1_store_local(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (off >= frame->func->num_locals)
         devs_runtime_failure(ctx, 60118);
     else
-        frame->locals[off] = v;
+        devs_frame_locals(frame)[off] = v;
 }
 
 static void stmtx1_store_param(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -258,11 +269,8 @@ static void stmtx1_store_param(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
     if (off >= frame->func->num_args)
         devs_runtime_failure(ctx, 60119);
-    else {
-        if (off >= frame->num_params)
-            devs_fiber_copy_params(frame);
-        frame->params[off] = v;
-    }
+    else
+        devs_frame_params(frame)[off] = v;
 }
 
 static void stmtx1_store_global(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -326,14 +334,14 @@ static value_t expr2_str0eq(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t exprx_load_local(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
     if (off < frame->func->num_locals)
-        return frame->locals[off];
+        return devs_frame_locals(frame)[off];
     return devs_runtime_failure(ctx, 60105);
 }
 
 static value_t exprx_load_param(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
-    if (off < frame->num_params)
-        return frame->params[off];
+    if (off < frame->func->num_args)
+        return devs_frame_params(frame)[off];
     // no failure here - allow for var-args in future?
     return devs_undefined;
 }
@@ -374,15 +382,16 @@ static value_t exprx2_format(devs_activation_t *frame, devs_ctx_t *ctx) {
         return devs_undefined;
 
     char tmp[64];
-    unsigned sz =
-        devs_strformat(ctx, fmt, len, tmp, sizeof(tmp), frame->locals + localidx, numargs, 0);
+    unsigned sz = devs_strformat(ctx, fmt, len, tmp, sizeof(tmp),
+                                 devs_frame_locals(frame) + localidx, numargs, 0);
     devs_string_t *str = devs_string_try_alloc(ctx, sz - 1);
     if (str == NULL) {
         devs_runtime_failure(ctx, 60146);
         return devs_undefined;
     }
     if (sz > sizeof(tmp))
-        devs_strformat(ctx, fmt, len, str->data, sz, frame->locals + localidx, numargs, 0);
+        devs_strformat(ctx, fmt, len, str->data, sz, devs_frame_locals(frame) + localidx, numargs,
+                       0);
     else
         memcpy(str->data, tmp, sz - 1);
     return devs_value_from_gc_obj(ctx, str);
@@ -472,13 +481,32 @@ static value_t exprx_static_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, idx);
 }
 
-static value_t static_something(devs_ctx_t *ctx, unsigned tp) {
+static inline int string_index(devs_ctx_t *ctx, unsigned tp) {
     uint32_t v = (tp << DEVS_STRIDX__SHIFT) | ctx->literal_int;
-    if (!devs_img_stridx_ok(ctx->img, v)) {
+    if (!devs_img_stridx_ok(ctx->img, v))
+        return -1;
+    return v;
+}
+
+static value_t static_something(devs_ctx_t *ctx, unsigned tp) {
+    int v = string_index(ctx, tp);
+    if (v < 0) {
         devs_runtime_failure(ctx, 60112);
         return devs_undefined;
     }
     return devs_value_from_handle(DEVS_HANDLE_TYPE_IMG_BUFFERISH, v);
+}
+
+static inline value_t get_field_ex(devs_ctx_t *ctx, unsigned tp, value_t obj) {
+    value_t fld = static_something(ctx, tp);
+    if (devs_is_null(fld))
+        return devs_undefined;
+    else
+        return devs_object_get(ctx, obj, fld);
+}
+
+static inline value_t get_field(devs_ctx_t *ctx, unsigned tp) {
+    return get_field_ex(ctx, tp, devs_vm_pop_arg(ctx));
 }
 
 static value_t exprx_static_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -497,18 +525,35 @@ static value_t exprx_static_builtin_string(devs_activation_t *frame, devs_ctx_t 
     return static_something(ctx, DEVS_STRIDX_BUILTIN);
 }
 
-static value_t expr2_get_field(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t idx = devs_vm_pop_arg(ctx);
-    devs_map_t *map = devs_vm_pop_arg_map(ctx, false);
-    if (map == NULL)
-        return devs_undefined;
-    return devs_map_get(ctx, map, idx);
+static value_t exprx1_builtin_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return get_field(ctx, DEVS_STRIDX_BUILTIN);
+}
+
+static value_t exprx1_ascii_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return get_field(ctx, DEVS_STRIDX_ASCII);
+}
+
+static value_t exprx1_utf8_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return get_field(ctx, DEVS_STRIDX_UTF8);
+}
+
+static value_t get_builtin_field(devs_ctx_t *ctx, unsigned obj) {
+    value_t fld = static_something(ctx, DEVS_STRIDX_BUILTIN);
+    return devs_object_get_no_bind(ctx, devs_object_get_built_in(ctx, obj), fld);
+}
+
+static value_t exprx_math_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return get_builtin_field(ctx, DEVS_BUILTIN_OBJECT_MATH);
+}
+
+static value_t exprx_ds_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return get_builtin_field(ctx, DEVS_BUILTIN_OBJECT_DEVICESCRIPT);
 }
 
 static value_t expr2_index(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t idx = devs_vm_pop_arg_u32(ctx);
+    value_t idx = devs_vm_pop_arg(ctx);
     value_t arr = devs_vm_pop_arg(ctx);
-    return devs_seq_get(ctx, arr, idx);
+    return devs_any_get(ctx, arr, idx);
 }
 
 static value_t expr1_object_length(devs_activation_t *frame, devs_ctx_t *ctx) {

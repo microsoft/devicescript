@@ -19,27 +19,39 @@ static void devs_fiber_activate(devs_activation_t *act) {
         ctx->curr_fn = act;
 }
 
-void devs_fiber_copy_params(devs_activation_t *frame) {
-    JD_ASSERT(!frame->params_is_copy);
-    value_t *tmp = devs_try_alloc(frame->fiber->ctx, sizeof(value_t) * frame->func->num_args);
-    memcpy(tmp, frame->params, sizeof(value_t) * frame->num_params);
-    frame->num_params = frame->func->num_args;
-    frame->params = tmp;
-    frame->params_is_copy = 1;
-}
-
-void devs_fiber_call_function(devs_fiber_t *fiber, unsigned fidx, value_t *params,
-                              unsigned numargs) {
+int devs_fiber_call_function(devs_fiber_t *fiber, value_t fn, value_t *params, unsigned numparams) {
     devs_ctx_t *ctx = fiber->ctx;
-    const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
 
+    TODO(); // deal with property calls
+
+    value_t this_val;
+    devs_activation_t *closure;
+    int fidx = devs_get_fnidx(ctx, fn, &this_val, &closure);
+    if (fidx < 0) {
+        devs_runtime_failure(ctx, 60157);
+        return -1;
+    }
+
+    const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
+    unsigned num_slots = func->num_locals + func->num_args;
     devs_activation_t *callee =
-        devs_try_alloc(ctx, sizeof(devs_activation_t) + sizeof(value_t) * func->num_locals);
+        devs_try_alloc(ctx, sizeof(devs_activation_t) + sizeof(value_t) * num_slots);
     if (callee == NULL)
-        return;
-    callee->params = params;
-    callee->num_params = numargs;
+        return -2;
+
+    unsigned num_formals = func->num_args;
+    value_t *ap = devs_frame_params(callee);
+    if (func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS) {
+        *ap++ = this_val;
+        num_formals--;
+    }
+
+    if (num_formals > numparams)
+        num_formals = numparams;
+    memcpy(ap, params, num_formals * sizeof(value_t));
+
     callee->pc = func->start;
+    callee->closure = closure;
     callee->maxpc = func->start + func->length;
     callee->caller = fiber->activation;
     callee->fiber = fiber;
@@ -49,12 +61,10 @@ void devs_fiber_call_function(devs_fiber_t *fiber, unsigned fidx, value_t *param
     if (fiber->activation) {
         devs_fiber_activate(callee);
     } else {
-        // otherwise, it's a fresh fiber, we need to copy arguments if any, as the caller will go
-        // away
-        if (numargs)
-            devs_fiber_copy_params(callee);
         fiber->activation = callee;
     }
+
+    return 0;
 }
 
 void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time) {
@@ -83,8 +93,6 @@ static void free_fiber(devs_fiber_t *fiber) {
 
 static void free_activation(devs_activation_t *act) {
     devs_ctx_t *ctx = act->fiber->ctx;
-    if (act->params_is_copy)
-        devs_free(ctx, act->params);
     devs_free(ctx, act);
 }
 
@@ -193,7 +201,8 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned fidx, value_t *params, 
 
     log_fiber_op(fiber, "start");
 
-    devs_fiber_call_function(fiber, fidx, params, numargs);
+    devs_fiber_call_function(fiber, devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, fidx),
+                             params, numargs);
 
     fiber->next = ctx->fibers;
     ctx->fibers = fiber;

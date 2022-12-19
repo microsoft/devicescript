@@ -130,14 +130,20 @@ struct devs_ctx {
 struct devs_activation {
     uint16_t pc;
     uint16_t maxpc;
+    devs_activation_t *closure;
     devs_activation_t *caller;
     devs_fiber_t *fiber;
     const devs_function_desc_t *func;
-    value_t *params;
-    uint8_t num_params;
-    uint8_t params_is_copy : 1;
-    value_t locals[0];
+    value_t slots[0];
 };
+
+static inline value_t *devs_frame_locals(devs_activation_t *frame) {
+    return frame->slots + frame->func->num_args;
+}
+
+static inline value_t *devs_frame_params(devs_activation_t *frame) {
+    return frame->slots;
+}
 
 static inline uint32_t devs_now(devs_ctx_t *ctx) {
     return (uint32_t)ctx->_now_long;
@@ -148,7 +154,7 @@ static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);
 value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code);
-// next error 60157
+// next error 60158
 static inline value_t devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
     return _devs_runtime_failure(ctx, code - 60000);
 }
@@ -177,9 +183,7 @@ void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_termiante(devs_fiber_t *fiber);
 void devs_fiber_yield(devs_ctx_t *ctx);
-void devs_fiber_copy_params(devs_activation_t *frame);
-void devs_fiber_call_function(devs_fiber_t *fiber, unsigned fidx, value_t *params,
-                              unsigned numargs);
+int devs_fiber_call_function(devs_fiber_t *fiber, value_t fn, value_t *params, unsigned numparams);
 void devs_fiber_return_from_call(devs_activation_t *act);
 devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned fidx, value_t *params, unsigned numargs,
                                unsigned op);

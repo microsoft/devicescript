@@ -66,6 +66,7 @@ void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v)
 void devs_seq_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v);
 int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int count);
 
+value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *proto, value_t key);
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key);
 
 // works on objects (including going up the proto chain), arrays, buffers, ...

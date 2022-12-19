@@ -301,9 +301,7 @@ const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, 
         return devs_object_get_built_in(ctx, builtin);
 }
 
-value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
-    const devs_map_or_proto_t *proto = devs_object_get_attached(ctx, obj, 0);
-
+value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *proto, value_t key) {
     value_t ptmp, *tmp = NULL;
 
     while (proto) {
@@ -325,8 +323,12 @@ value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
 
     if (tmp == NULL)
         return devs_undefined;
+    return *tmp;
+}
 
-    return devs_function_bind(ctx, obj, *tmp);
+value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
+    value_t tmp = devs_object_get_no_bind(ctx, devs_object_get_attached(ctx, obj, 0), key);
+    return devs_function_bind(ctx, obj, tmp);
 }
 
 value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx) {

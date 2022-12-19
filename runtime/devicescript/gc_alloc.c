@@ -163,9 +163,8 @@ static void mark_roots(devs_gc_t *gc) {
     for (devs_fiber_t *fib = ctx->fibers; fib; fib = fib->next) {
         scan_value(ctx, fib->ret_val, ROOT_SCAN_DEPTH);
         for (devs_activation_t *act = fib->activation; act; act = act->caller) {
-            if (act->params_is_copy)
-                scan_array(ctx, act->params, act->num_params, ROOT_SCAN_DEPTH);
-            scan_array(ctx, act->locals, act->func->num_locals, ROOT_SCAN_DEPTH);
+            scan_array(ctx, act->slots, act->func->num_args + act->func->num_locals,
+                       ROOT_SCAN_DEPTH);
         }
     }
 }
