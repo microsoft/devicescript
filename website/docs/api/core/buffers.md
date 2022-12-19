@@ -1,7 +1,8 @@
 ---
-sidebar_position: 6
+sidebar_position: 9
 hide_table_of_contents: true
 ---
+
 # Buffers
 
 Buffers can be dynamically allocated, read and written.
@@ -14,6 +15,18 @@ mybuf.setAt(10, "u16", 123)
 mybuf.setAt(3, "u22.10", 173.282)
 const z = mybuf.getAt(3, "u22.10")
 ```
+
+## hex
+
+`hex` is a string literal template that converts data in hexadecimal form into a readonly `Buffer` in flash.
+
+```ts
+// Buffer in flash!
+const data = hex`010203040506070809`
+console.log(data)
+```
+
+## packet
 
 There is a special buffer called `ds.packet` which represents a buffer to be passed to next
 command or register write.
