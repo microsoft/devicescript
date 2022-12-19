@@ -53,13 +53,13 @@ void fun2_Math_pow(devs_ctx_t *ctx) {
 void fun2_Math_idiv(devs_ctx_t *ctx) {
     int32_t aa = devs_arg_int(ctx, 0);
     int32_t bb = devs_arg_int(ctx, 1);
-    devs_ret_int(ctx, bb == 0 ? 0 : aa / bb)
+    devs_ret_int(ctx, bb == 0 ? 0 : aa / bb);
 }
 
 void fun2_Math_imod(devs_ctx_t *ctx) {
     int32_t aa = devs_arg_int(ctx, 0);
     int32_t bb = devs_arg_int(ctx, 1);
-    devs_ret_int(ctx, bb == 0 ? 0 : aa % bb)
+    devs_ret_int(ctx, bb == 0 ? 0 : aa % bb);
 }
 
 void fun2_Math_imul(devs_ctx_t *ctx) {

@@ -209,3 +209,20 @@ value_t devs_make_closure(devs_ctx_t *ctx, devs_activation_t *closure, unsigned 
 int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activation_t **closure);
 
 #define TODO JD_PANIC
+
+// for impl_*.c
+int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx);
+double devs_arg_double(devs_ctx_t *ctx, unsigned idx);
+static inline value_t devs_arg(devs_ctx_t *ctx, unsigned idx) {
+    return ctx->the_stack[idx + 1];
+}
+static inline value_t devs_arg_self(devs_ctx_t *ctx) {
+    return devs_arg(ctx, 0);
+}
+
+void devs_ret_double(devs_ctx_t *ctx, double v);
+void devs_ret_int(devs_ctx_t *ctx, int v);
+void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v);
+static inline void devs_ret(devs_ctx_t *ctx, value_t v) {
+    ctx->curr_fiber->ret_val = v;
+}

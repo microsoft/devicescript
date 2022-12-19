@@ -23,17 +23,15 @@ void fun1_Buffer_alloc(devs_ctx_t *ctx) {
 
 void prop_Buffer_length(devs_ctx_t *ctx) {
     unsigned sz;
-    if (!buffer_data(ctx, devs_arg_self(ctx), &sz))
-        return devs_undefined;
-    devs_ret_int(ctx, sz);
+    if (buffer_data(ctx, devs_arg_self(ctx), &sz))
+        devs_ret_int(ctx, sz);
 }
 
 void meth0_Buffer_toString(devs_ctx_t *ctx) {
     unsigned sz;
     const uint8_t *data = buffer_data(ctx, devs_arg_self(ctx), &sz);
-    if (data == NULL)
-        return devs_undefined;
-    devs_ret(ctx, devs_string_from_utf8(ctx, data, sz));
+    if (data)
+        devs_ret(ctx, devs_string_from_utf8(ctx, data, sz));
 }
 
 void meth3_Buffer_fillAt(devs_ctx_t *ctx) {
