@@ -134,10 +134,15 @@ extern const value_t devs_inf;
 extern const value_t devs_minf;
 extern const value_t devs_int_min;
 extern const value_t devs_max_int_1;
-extern const value_t devs_null;
 extern const value_t devs_true;
 extern const value_t devs_false;
 extern const value_t devs_pkt_buffer;
+
+static inline value_t devs_null_() {
+    value_t v = {.u64 = 0};
+    return v;
+}
+#define devs_null (devs_null_())
 
 #define devs_void devs_null
 #define devs_undefined devs_null

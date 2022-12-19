@@ -11,7 +11,6 @@ const value_t devs_max_int_1 = {._f = 0x80000000U};
 #define SPECIAL(n)                                                                                 \
     { .exp_sign = DEVS_HANDLE_TAG + DEVS_HANDLE_TYPE_SPECIAL, .val_int32 = n }
 
-const value_t devs_null = {.u64 = 0};
 const value_t devs_true = SPECIAL(DEVS_SPECIAL_TRUE);
 const value_t devs_false = SPECIAL(DEVS_SPECIAL_FALSE);
 const value_t devs_pkt_buffer = SPECIAL(DEVS_SPECIAL_PKT_BUFFER);
