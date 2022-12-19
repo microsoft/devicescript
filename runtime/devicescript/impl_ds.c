@@ -1,19 +1,19 @@
 #include "devs_internal.h"
 
-void fun_DeviceScript_sleepMs(devs_ctx_t *ctx, value_t ms) {
-    int time = devs_value_to_int(ms);
+void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx) {
+    int time = devs_arg_int(ctx, 0);
     if (time >= 0)
         devs_fiber_sleep(ctx->curr_fiber, time);
 }
 
-void fun_DeviceScript_panic(devs_ctx_t *ctx, value_t v) {
-    unsigned code = devs_value_to_int(v);
+void fun1_DeviceScript_panic(devs_ctx_t *ctx) {
+    unsigned code = devs_arg_int(ctx, 0);
     if (code == 0 || code > 0xffff)
         code = 127;
     devs_panic(ctx, code);
 }
 
-void fun_DeviceScript_reboot(devs_ctx_t *ctx) {
+void fun0_DeviceScript_reboot(devs_ctx_t *ctx) {
     devs_panic(ctx, 0);
 }
 

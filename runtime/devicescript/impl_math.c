@@ -1,26 +1,28 @@
 #include "devs_internal.h"
 #include <math.h>
 
-value_t fun_Math_ceil(devs_ctx_t *ctx, value_t v) {
+static void fun1_to_int(devs_ctx_t *ctx, double (*fn)(double)) {
+    value_t v = devs_arg(ctx, 0);
     if (devs_is_tagged_int(v))
-        return v;
-    return devs_value_from_double(ceil(devs_value_to_double(v)));
+        devs_ret(ctx, v);
+    else
+        devs_ret_double(ctx, ceil(devs_value_to_double(v)));
 }
 
-value_t fun_Math_floor(devs_ctx_t *ctx, value_t v) {
-    if (devs_is_tagged_int(v))
-        return v;
-    return devs_value_from_double(floor(devs_value_to_double(v)));
+void fun1_Math_ceil(devs_ctx_t *ctx) {
+    fun1_to_int(ctx, ceil);
 }
 
-value_t fun_Math_round(devs_ctx_t *ctx, value_t v) {
-    if (devs_is_tagged_int(v))
-        return v;
-    return devs_value_from_double(round(devs_value_to_double(v)));
+void fun1_Math_floor(devs_ctx_t *ctx) {
+    fun1_to_int(ctx, floor);
 }
 
-value_t fun_Math_random(devs_ctx_t *ctx) {
-    return devs_value_from_double(jd_random() * (double)0x100000000);
+void fun1_Math_round(devs_ctx_t *ctx) {
+    fun1_to_int(ctx, round);
+}
+
+void fun0_Math_random(devs_ctx_t *ctx) {
+    devs_ret_double(ctx, jd_random() * (double)0x100000000);
 }
 
 static uint32_t random_max(uint32_t mx) {
@@ -34,59 +36,59 @@ static uint32_t random_max(uint32_t mx) {
     }
 }
 
-value_t fun_Math_randomInt(devs_ctx_t *ctx, value_t lim) {
-    return devs_value_from_int(random_max(devs_value_to_int(lim)));
+void fun1_Math_randomInt(devs_ctx_t *ctx) {
+    devs_ret_int(ctx, random_max(devs_arg_int(ctx, 0)));
 }
 
-value_t fun_Math_log(devs_ctx_t *ctx, value_t v) {
-    return devs_value_from_double(log(devs_value_to_double(v)));
+void fun1_Math_log(devs_ctx_t *ctx) {
+    devs_ret_double(ctx, log(devs_arg_double(ctx, 0)));
 }
 
-value_t fun_Math_pow(devs_ctx_t *ctx, value_t a, value_t b) {
-    return devs_value_from_double(pow(devs_value_to_double(a), devs_value_to_double(b)));
+void fun2_Math_pow(devs_ctx_t *ctx) {
+    double x = devs_arg_double(ctx, 0);
+    double y = devs_arg_double(ctx, 1);
+    devs_ret_double(ctx, pow(x, y));
 }
 
-value_t fun_Math_idiv(devs_ctx_t *ctx, value_t a, value_t b) {
-    int32_t aa = devs_value_to_int(a);
-    int32_t bb = devs_value_to_int(b);
-    if (bb == 0)
-        return devs_zero;
-    return devs_value_from_int(aa / bb);
+void fun2_Math_idiv(devs_ctx_t *ctx) {
+    int32_t aa = devs_arg_int(ctx, 0);
+    int32_t bb = devs_arg_int(ctx, 1);
+    devs_ret_int(ctx, bb == 0 ? 0 : aa / bb)
 }
 
-value_t fun_Math_imod(devs_ctx_t *ctx, value_t a, value_t b) {
-    int32_t aa = devs_value_to_int(a);
-    int32_t bb = devs_value_to_int(b);
-    if (bb == 0)
-        return devs_zero;
-    return devs_value_from_int(aa % bb);
+void fun2_Math_imod(devs_ctx_t *ctx) {
+    int32_t aa = devs_arg_int(ctx, 0);
+    int32_t bb = devs_arg_int(ctx, 1);
+    devs_ret_int(ctx, bb == 0 ? 0 : aa % bb)
 }
 
-value_t fun_Math_imul(devs_ctx_t *ctx, value_t a, value_t b) {
-    int32_t aa = devs_value_to_int(a);
-    int32_t bb = devs_value_to_int(b);
+void fun2_Math_imul(devs_ctx_t *ctx) {
+    int32_t aa = devs_arg_int(ctx, 0);
+    int32_t bb = devs_arg_int(ctx, 1);
     // avoid signed overflow, which is undefined
     // note that signed and unsigned multiplication result in the same bit patterns
-    return devs_value_from_int((uint32_t)aa * (uint32_t)bb);
+    devs_ret_int(ctx, (uint32_t)aa * (uint32_t)bb);
 }
 
-static value_t fun_minmax(devs_ctx_t *ctx, value_t a, value_t b, bool ismin) {
+static void fun2_minmax(devs_ctx_t *ctx, bool ismin) {
+    value_t a = devs_arg(ctx, 0);
+    value_t b = devs_arg(ctx, 1);
     if (devs_is_tagged_int(a) && devs_is_tagged_int(b)) {
         int32_t aa = devs_value_to_int(a);
         int32_t bb = devs_value_to_int(b);
-        return (ismin ? aa < bb : aa > bb) ? a : b;
+        devs_ret(ctx, (ismin ? aa < bb : aa > bb) ? a : b);
     }
     double af = devs_value_to_double(a);
     double bf = devs_value_to_double(b);
     if (isnan(af) || isnan(bf))
-        return devs_nan;
-    return (ismin ? af < bf : af > bf) ? a : b;
+        devs_ret(ctx, devs_nan);
+    devs_ret(ctx, (ismin ? af < bf : af > bf) ? a : b);
 }
 
-value_t fun_Math_min(devs_ctx_t *ctx, value_t a, value_t b) {
-    return fun_minmax(ctx, a, b, true);
+void fun2_Math_min(devs_ctx_t *ctx) {
+    return fun2_minmax(ctx, true);
 }
 
-value_t fun_Math_max(devs_ctx_t *ctx, value_t a, value_t b) {
-    return fun_minmax(ctx, a, b, false);
+void fun2_Math_max(devs_ctx_t *ctx) {
+    return fun2_minmax(ctx, false);
 }

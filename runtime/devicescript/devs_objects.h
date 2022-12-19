@@ -162,7 +162,10 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v);
 int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx);
 double devs_arg_double(devs_ctx_t *ctx, unsigned idx);
 static inline value_t devs_arg(devs_ctx_t *ctx, unsigned idx) {
-    return ctx->the_stack[idx];
+    return ctx->the_stack[idx + 1];
+}
+static inline value_t devs_arg_self(devs_ctx_t *ctx) {
+    return devs_arg(ctx, 0);
 }
 
 void devs_ret_double(devs_ctx_t *ctx, double v);

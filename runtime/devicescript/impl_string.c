@@ -2,20 +2,20 @@
 
 // ignore UTF8 decoding for now
 
-value_t prop_String_length(devs_ctx_t *ctx, value_t self) {
+void prop_String_length(devs_ctx_t *ctx) {
     unsigned sz;
-    if (!devs_string_get_utf8(ctx, self, &sz))
-        return devs_error;
-    return devs_value_from_int(sz);
+    if (devs_string_get_utf8(ctx, devs_arg_self(ctx), &sz))
+        devs_ret_int(ctx, sz);
 }
 
-value_t fun_String_charCodeAt(devs_ctx_t *ctx, value_t self, value_t idxv) {
+void meth1_String_charCodeAt(devs_ctx_t *ctx) {
     unsigned sz;
-    const char *data = devs_string_get_utf8(ctx, self, &sz);
-    if (!data)
-        return devs_error;
-    unsigned idx = devs_value_to_int(idxv);
-    if (idx >= sz)
-        return devs_nan;
-    return devs_value_from_int((uint8_t)data[idx]);
+    const char *data = devs_string_get_utf8(ctx, devs_arg_self(ctx), &sz);
+    if (data) {
+        unsigned idx = devs_arg_int(ctx, 0);
+        if (idx >= sz)
+            devs_ret(ctx, devs_nan);
+        else
+            devs_ret_int(ctx, (uint8_t)data[idx]);
+    }
 }

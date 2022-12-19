@@ -16,34 +16,34 @@ static void *wr_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
     return devs_buffer_data(ctx, v, sz);
 }
 
-value_t fun_Buffer_alloc(devs_ctx_t *ctx, value_t sz) {
-    return devs_value_from_gc_obj(ctx, devs_buffer_try_alloc(ctx, devs_value_to_int(sz)));
+void fun1_Buffer_alloc(devs_ctx_t *ctx) {
+    unsigned sz = devs_arg_int(ctx, 0);
+    devs_ret_gc_ptr(ctx, devs_buffer_try_alloc(ctx, sz));
 }
 
-value_t prop_Buffer_length(devs_ctx_t *ctx, value_t self) {
+void prop_Buffer_length(devs_ctx_t *ctx) {
     unsigned sz;
-    if (!buffer_data(ctx, self, &sz))
+    if (!buffer_data(ctx, devs_arg_self(ctx), &sz))
         return devs_undefined;
-    return devs_value_from_int(sz);
+    devs_ret_int(ctx, sz);
 }
 
-value_t fun_Buffer_toString(devs_ctx_t *ctx, value_t self) {
+void meth0_Buffer_toString(devs_ctx_t *ctx) {
     unsigned sz;
-    const uint8_t *data = buffer_data(ctx, self, &sz);
+    const uint8_t *data = buffer_data(ctx, devs_arg_self(ctx), &sz);
     if (data == NULL)
         return devs_undefined;
-    return devs_string_from_utf8(ctx, data, sz);
+    devs_ret(ctx, devs_string_from_utf8(ctx, data, sz));
 }
 
-void fun_Buffer_fillAt(devs_ctx_t *ctx, value_t self, value_t offset, value_t length,
-                       value_t pattern) {
+void meth3_Buffer_fillAt(devs_ctx_t *ctx) {
     unsigned dlen;
-    uint8_t *dst = wr_buffer_data(ctx, self, &dlen);
+    uint8_t *dst = wr_buffer_data(ctx, devs_arg_self(ctx), &dlen);
     if (dst == NULL)
         return;
-    unsigned dst_offset = devs_value_to_int(offset);
-    unsigned len = devs_value_to_int(length);
-    unsigned val = devs_value_to_int(pattern);
+    unsigned dst_offset = devs_arg_int(ctx, 0);
+    unsigned len = devs_arg_int(ctx, 1);
+    unsigned val = devs_arg_int(ctx, 2);
 
     if (dst_offset >= dlen)
         return;
@@ -54,16 +54,17 @@ void fun_Buffer_fillAt(devs_ctx_t *ctx, value_t self, value_t offset, value_t le
     memset(dst + dst_offset, val, len);
 }
 
-void fun_Buffer_blitAt(devs_ctx_t *ctx, value_t self, value_t offset, value_t src_,
-                       value_t src_offset_, value_t length) {
+void meth4_Buffer_blitAt(devs_ctx_t *ctx) {
     unsigned slen, dlen;
 
-    uint32_t len = devs_value_to_int(length);
-    uint32_t src_offset = devs_value_to_int(src_offset_);
+    uint8_t *dst = wr_buffer_data(ctx, devs_arg_self(ctx), &dlen);
+    uint32_t dst_offset = devs_arg_int(ctx, 0);
+
+    value_t src_ = devs_arg(ctx, 1);
     const uint8_t *src = devs_is_string(ctx, src_) ? devs_string_get_utf8(ctx, src_, &slen)
                                                    : buffer_data(ctx, src_, &slen);
-    uint32_t dst_offset = devs_value_to_int(offset);
-    uint8_t *dst = wr_buffer_data(ctx, self, &dlen);
+    uint32_t src_offset = devs_arg_int(ctx, 2);
+    uint32_t len = devs_arg_int(ctx, 3);
 
     if (src_offset >= slen)
         return;
