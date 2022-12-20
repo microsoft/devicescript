@@ -261,8 +261,13 @@ const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, 
     }
 
     if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT) {
-        int tp = devs_value_typeof(ctx, v);
         int pt = 0;
+        int tp = devs_value_typeof(ctx, v);
+        if (tp == DEVS_OBJECT_TYPE_MAP && devs_is_special(v)) {
+            uint32_t hv = devs_handle_value(v);
+            if (devs_handle_is_builtin(hv))
+                return devs_get_static_proto(ctx, hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST, create);
+        }
         if (tp < (int)sizeof(proto_by_object_type)) {
             pt = proto_by_object_type[tp];
         }

@@ -215,6 +215,8 @@ bool devs_is_array(devs_ctx_t *ctx, value_t v) {
 }
 
 unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
+    uint32_t hv;
+
     if (devs_is_tagged_int(v))
         return DEVS_OBJECT_TYPE_NUMBER;
 
@@ -222,7 +224,7 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_FLOAT64:
         return DEVS_OBJECT_TYPE_NUMBER;
     case DEVS_HANDLE_TYPE_SPECIAL:
-        switch (devs_handle_value(v)) {
+        switch ((hv = devs_handle_value(v))) {
         case DEVS_SPECIAL_NULL:
             return DEVS_OBJECT_TYPE_NULL;
         case DEVS_SPECIAL_FALSE:
@@ -235,8 +237,10 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         case DEVS_SPECIAL_NAN:
             return DEVS_OBJECT_TYPE_NUMBER;
         default:
-            JD_PANIC();
-            return 0;
+            if (devs_handle_is_builtin(hv))
+                return DEVS_OBJECT_TYPE_MAP;
+            else
+                JD_PANIC();
         }
     case DEVS_HANDLE_TYPE_FIBER:
         return DEVS_OBJECT_TYPE_FIBER;
@@ -293,6 +297,7 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     }
 
     const char *fmt = NULL;
+    uint32_t hv;
 
     switch (devs_handle_type(v)) {
     case DEVS_HANDLE_TYPE_FLOAT64:
@@ -300,7 +305,7 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
         return buf;
 
     case DEVS_HANDLE_TYPE_SPECIAL:
-        switch (devs_handle_value(v)) {
+        switch ((hv = devs_handle_value(v))) {
         case DEVS_SPECIAL_NULL:
             return "null";
         case DEVS_SPECIAL_FALSE:
@@ -316,6 +321,11 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
         case DEVS_SPECIAL_NAN:
             return "NaN";
         default:
+            if (devs_handle_is_builtin(hv)) {
+                jd_sprintf(buf, sizeof(buf), "builtin:%d",
+                           (int)hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST);
+                return buf;
+            }
             return "?special";
         }
 

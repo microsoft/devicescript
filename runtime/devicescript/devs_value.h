@@ -46,6 +46,13 @@ typedef union {
 #define DEVS_SPECIAL_INF 0x42
 #define DEVS_SPECIAL_MINF 0x43
 
+#define DEVS_SPECIAL_BUILTIN_OBJ_FIRST 0x60
+#define DEVS_SPECIAL_BUILTIN_OBJ_LAST (DEVS_SPECIAL_BUILTIN_OBJ_FIRST + DEVS_BUILTIN_OBJECT___MAX)
+
+static inline bool devs_handle_is_builtin(uint32_t hv) {
+    return DEVS_SPECIAL_BUILTIN_OBJ_FIRST <= hv && hv <= DEVS_SPECIAL_BUILTIN_OBJ_LAST;
+}
+
 static inline bool devs_is_tagged_int(value_t t) {
     return (t.exp_sign + 1) == 0;
 }

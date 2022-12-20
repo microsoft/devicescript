@@ -42,6 +42,7 @@
 #define DEVS_EXPRx_STATIC_FUNCTION 39       // *func_idx
 #define DEVS_EXPRx_LITERAL 40               // *value
 #define DEVS_EXPRx_LITERAL_F64 41           // *f64_idx
+#define DEVS_EXPRx_BUILTIN_OBJECT 88        // *bltn_idx
 #define DEVS_EXPRx2_FORMAT 42               // *local_idx, numargs, string
 #define DEVS_EXPR3_LOAD_BUFFER 43           // buffer, numfmt, offset
 #define DEVS_EXPR0_RET_VAL 44
@@ -88,20 +89,20 @@
 #define DEVS_EXPR0_PKT_REPORT_CODE 85
 #define DEVS_EXPR0_PKT_COMMAND_CODE 86
 #define DEVS_EXPR0_PKT_BUFFER 87
-#define DEVS_OP_PAST_LAST 88
+#define DEVS_OP_PAST_LAST 89
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x32\x11\x12\x13\x14\x15\x16\x17\x18\x19\x33\x11\x30\x31\x11\x32\x31\x31\x14\x31\x20\x20" \
     "\x20\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x62\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x02\x01\x00\x00\x00\x00\x00\x40"
+    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x02\x01\x00\x00\x00\x00\x00\x40\x60"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0a\x0a" \
     "\x0a\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x09\x01\x0a\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x06\x07\x01\x01\x01\x01\x01\x04"
+    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x06\x07\x01\x01\x01\x01\x01\x04\x01"
 
-#define DEVS_IMG_VERSION 0x00010000
+#define DEVS_IMG_VERSION 0x01000000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 8
@@ -286,7 +287,7 @@
         stmt2_send_cmd, stmt4_query_idx_reg, stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms,  \
         expr2_str0eq, expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code,                   \
         expr0_pkt_reg_get_code, expr0_pkt_report_code, expr0_pkt_command_code, expr0_pkt_buffer,   \
-        expr_invalid
+        exprx_builtin_object, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \
@@ -298,3 +299,8 @@
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
         "write", "sleepMs", "imod"
+#define DEVS_BUILTIN_OBJECT__VAL                                                                   \
+    "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
+        "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \
+        "Role", "Role_prototype", "Function", "Function_prototype", "Boolean",                     \
+        "Boolean_prototype", "Devicescript"

@@ -95,6 +95,7 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
     if (devs_is_string(ctx, v))
         return v;
 
+    uint32_t hv;
     switch (devs_handle_type(v)) {
     case DEVS_HANDLE_TYPE_FLOAT64: {
         char buf[64];
@@ -102,7 +103,7 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
         return devs_string_sprintf(ctx, "%s", buf);
     }
     case DEVS_HANDLE_TYPE_SPECIAL:
-        switch (devs_handle_value(v)) {
+        switch ((hv = devs_handle_value(v))) {
         case DEVS_SPECIAL_NULL:
             return builtin_string(DEVS_BUILTIN_STRING_NULL);
         case DEVS_SPECIAL_FALSE:
@@ -117,8 +118,13 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
             return builtin_string(DEVS_BUILTIN_STRING_INFINITY);
         case DEVS_SPECIAL_MINF:
             return builtin_string(DEVS_BUILTIN_STRING_MINFINITY);
-        default:
-            JD_PANIC();
+        default: {
+            if (devs_handle_is_builtin(hv))
+                return devs_string_sprintf(ctx, "[Static Obj: %d]",
+                                           (int)hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST);
+            else
+                JD_PANIC();
+        }
         }
     case DEVS_HANDLE_TYPE_FIBER:
         return devs_string_sprintf(ctx, "[Fiber: %x]", devs_handle_value(v));
