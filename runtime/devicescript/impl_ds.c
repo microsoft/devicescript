@@ -41,3 +41,9 @@ void funX_DeviceScript_format(devs_ctx_t *ctx) {
         memcpy(str->data, tmp, sz - 1);
     devs_ret_gc_ptr(ctx, str);
 }
+
+void fun1_DeviceScript_log(devs_ctx_t *ctx) {
+    value_t s = devs_arg(ctx, 0);
+    s = devs_value_to_string(ctx, s);
+    devs_jd_send_logmsg(ctx, s);
+}

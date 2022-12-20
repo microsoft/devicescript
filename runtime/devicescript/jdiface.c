@@ -57,6 +57,7 @@ void devs_jd_clear_pkt_kind(devs_fiber_t *fib) {
     default:
         break;
     }
+    fib->pkt_data.v = devs_null;
     fib->pkt_kind = DEVS_PKT_KIND_NONE;
 }
 
@@ -94,8 +95,7 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     devs_fiber_sleep(fib, 0);
 }
 
-void devs_jd_send_logmsg(devs_ctx_t *ctx, unsigned string_idx, unsigned localsidx,
-                         unsigned num_args) {
+void devs_jd_send_logmsg(devs_ctx_t *ctx, value_t str) {
     if (ctx->error_code)
         return;
 
@@ -107,13 +107,10 @@ void devs_jd_send_logmsg(devs_ctx_t *ctx, unsigned string_idx, unsigned localsid
     fib->pkt_kind = DEVS_PKT_KIND_LOGMSG;
     fib->service_command = ctx->log_counter & 0xffff;
     ctx->log_counter++;
-    fib->pkt_data.logmsg.string_idx = string_idx;
-    fib->pkt_data.logmsg.num_args = num_args;
-    fib->pkt_data.logmsg.localsidx = localsidx;
+    fib->pkt_data.v = str;
 
-    if (handle_logmsg(fib, true) == RESUME_USER_CODE) {
+    if (handle_logmsg(fib, true) == RESUME_USER_CODE)
         devs_jd_clear_pkt_kind(fib);
-    }
 }
 
 static void devs_jd_set_packet(devs_ctx_t *ctx, unsigned role_idx, unsigned service_command,
@@ -287,16 +284,13 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
         return retry_soon(fiber);
 
     jd_packet_t *pkt = &ctx->packet;
-    unsigned fmtsize;
-    const char *fmt = devs_get_static_utf8(ctx, fiber->pkt_data.logmsg.string_idx, &fmtsize);
-    unsigned sz =
-        devs_strformat(ctx, fmt, fmtsize, (char *)pkt->data + 2, JD_SERIAL_PAYLOAD_SIZE - 2,
-                       devs_frame_locals(fiber->activation) + fiber->pkt_data.logmsg.localsidx,
-                       fiber->pkt_data.logmsg.num_args, 0);
+    unsigned sz;
+    const char *str = devs_string_get_utf8(ctx, fiber->pkt_data.v, &sz);
     pkt->data[0] = low_log_counter & 0xff; // log-counter
     pkt->data[1] = 0;                      // flags
     if (sz > JD_SERIAL_PAYLOAD_SIZE - 2)
         sz = JD_SERIAL_PAYLOAD_SIZE - 2;
+    memcpy(pkt->data, str, sz);
     pkt->service_size = sz + 2;
     pkt->service_command = JD_DEVICE_SCRIPT_MANAGER_CMD_LOG_MESSAGE;
     pkt->service_index = ctx->cfg.mgr_service_idx;
@@ -305,7 +299,7 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
     pkt->flags = 0;
 
     if (print)
-        DMESG("JSCR: %s", pkt->data + 2);
+        DMESG("JSCR: %s", str);
 
     if (!(ctx->flags & DEVS_CTX_LOGGING_ENABLED))
         return RESUME_USER_CODE;

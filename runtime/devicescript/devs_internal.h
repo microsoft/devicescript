@@ -42,11 +42,7 @@ typedef struct devs_fiber {
             uint16_t string_idx;
             uint16_t resend_timeout;
         } reg_get;
-        struct {
-            uint16_t string_idx;
-            uint16_t localsidx;
-            uint8_t num_args;
-        } logmsg;
+        value_t v;
     } pkt_data;
 
     uint8_t pkt_kind : 4;
@@ -69,6 +65,11 @@ typedef struct devs_fiber {
     devs_activation_t *activation;
     struct devs_ctx *ctx;
 } devs_fiber_t;
+
+static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
+    // TODO use 'ret_val' instead?
+    return fib->pkt_kind == DEVS_PKT_KIND_LOGMSG;
+}
 
 #define DEVS_CTX_FLAG_BUSY 0x0001
 #define DEVS_CTX_LOGGING_ENABLED 0x0002
@@ -154,7 +155,7 @@ static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);
 value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code);
-// next error 60164
+// next error 60165
 static inline value_t devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
     return _devs_runtime_failure(ctx, code - 60000);
 }
@@ -175,8 +176,7 @@ void devs_jd_init_roles(devs_ctx_t *ctx);
 void devs_jd_free_roles(devs_ctx_t *ctx);
 void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role);
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib);
-void devs_jd_send_logmsg(devs_ctx_t *ctx, unsigned string_idx, unsigned localsidx,
-                         unsigned num_args);
+void devs_jd_send_logmsg(devs_ctx_t *ctx, value_t str);
 
 // fibers.c
 void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);

@@ -7,6 +7,9 @@
 
 #define N(n) (DEVS_BUILTIN_STRING_##n)
 
+// impl_array.c
+value_t prop_Array_length(devs_ctx_t *ctx, value_t self);
+void meth2_Array_insert(devs_ctx_t *ctx);
 // impl_buffer.c
 void fun1_Buffer_alloc(devs_ctx_t *ctx);
 value_t prop_Buffer_length(devs_ctx_t *ctx, value_t self);
@@ -18,6 +21,7 @@ void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx);
 void fun1_DeviceScript_panic(devs_ctx_t *ctx);
 void fun0_DeviceScript_reboot(devs_ctx_t *ctx);
 void funX_DeviceScript_format(devs_ctx_t *ctx);
+void fun1_DeviceScript_log(devs_ctx_t *ctx);
 // impl_math.c
 void fun1_Math_ceil(devs_ctx_t *ctx);
 void fun1_Math_floor(devs_ctx_t *ctx);
@@ -38,49 +42,52 @@ value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self);
 value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
 
+static const devs_builtin_proto_entry_t Array_prototype_entries[] = { //
+    {N(LENGTH), 0xf000},
+    {N(INSERT), 0xf001},
+    {0, 0}};
+
 static const devs_builtin_proto_entry_t Buffer_entries[] = { //
-    {N(ALLOC), 0xf000},
+    {N(ALLOC), 0xf002},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Buffer_prototype_entries[] = { //
-    {N(LENGTH), 0xf001},
-    {N(TOSTRING), 0xf002},
-    {N(FILLAT), 0xf003},
-    {N(BLITAT), 0xf004},
+    {N(LENGTH), 0xf003},
+    {N(TOSTRING), 0xf004},
+    {N(FILLAT), 0xf005},
+    {N(BLITAT), 0xf006},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
-    {N(SLEEPMS), 0xf005},
-    {N(PANIC), 0xf006},
-    {N(REBOOT), 0xf007},
-    {N(FORMAT), 0xf008},
-    {0, 0}};
+    {N(SLEEPMS), 0xf007}, {N(PANIC), 0xf008}, {N(REBOOT), 0xf009},
+    {N(FORMAT), 0xf00a},  {N(LOG), 0xf00b},   {0, 0}};
 
 static const devs_builtin_proto_entry_t Math_entries[] = { //
-    {N(CEIL), 0xf009},
-    {N(FLOOR), 0xf00a},
-    {N(ROUND), 0xf00b},
-    {N(RANDOM), 0xf00c},
-    {N(RANDOMINT), 0xf00d},
-    {N(LOG), 0xf00e},
-    {N(POW), 0xf00f},
-    {N(IDIV), 0xf010},
-    {N(IMOD), 0xf011},
-    {N(IMUL), 0xf012},
-    {N(MIN), 0xf013},
-    {N(MAX), 0xf014},
+    {N(CEIL), 0xf00c},
+    {N(FLOOR), 0xf00d},
+    {N(ROUND), 0xf00e},
+    {N(RANDOM), 0xf00f},
+    {N(RANDOMINT), 0xf010},
+    {N(LOG), 0xf011},
+    {N(POW), 0xf012},
+    {N(IDIV), 0xf013},
+    {N(IMOD), 0xf014},
+    {N(IMUL), 0xf015},
+    {N(MIN), 0xf016},
+    {N(MAX), 0xf017},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 0xf015},
+    {N(ISCONNECTED), 0xf018},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 0xf016},
-    {N(CHARCODEAT), 0xf017},
+    {N(LENGTH), 0xf019},
+    {N(CHARCODEAT), 0xf01a},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
+    [DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Array_prototype_entries},
     [DEVS_BUILTIN_OBJECT_BUFFER] = {DEVS_BUILTIN_PROTO_INIT, Buffer_entries},
     [DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Buffer_prototype_entries},
     [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = {DEVS_BUILTIN_PROTO_INIT, DeviceScript_entries},
@@ -89,8 +96,10 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 24;
-const devs_builtin_function_t devs_builtin_functions[24] = {
+uint16_t devs_num_builtin_functions = 27;
+const devs_builtin_function_t devs_builtin_functions[27] = {
+    {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
+    {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
     {N(LENGTH), 0, PROP, {.prop = prop_Buffer_length}},
     {N(TOSTRING), 0, 0, {.meth = meth0_Buffer_toString}},
@@ -100,6 +109,7 @@ const devs_builtin_function_t devs_builtin_functions[24] = {
     {N(PANIC), 1, NO_SELF, {.meth = fun1_DeviceScript_panic}},
     {N(REBOOT), 0, NO_SELF, {.meth = fun0_DeviceScript_reboot}},
     {N(FORMAT), 0, NO_SELF, {.meth = funX_DeviceScript_format}},
+    {N(LOG), 1, NO_SELF, {.meth = fun1_DeviceScript_log}},
     {N(CEIL), 1, NO_SELF, {.meth = fun1_Math_ceil}},
     {N(FLOOR), 1, NO_SELF, {.meth = fun1_Math_floor}},
     {N(ROUND), 1, NO_SELF, {.meth = fun1_Math_round}},

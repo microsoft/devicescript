@@ -16,7 +16,6 @@
 #define DEVS_STMTx_JMP 13            // JMP jmpoffset
 #define DEVS_STMTx1_JMP_Z 14         // JMP jmpoffset IF NOT x
 #define DEVS_STMT1_PANIC 15          // error_code
-#define DEVS_STMTx2_LOG_FORMAT 16    // *local_idx, numargs, string
 #define DEVS_STMTx1_STORE_LOCAL 17   // local_idx := value
 #define DEVS_STMTx1_STORE_GLOBAL 18  // global_idx := value
 #define DEVS_STMT4_STORE_BUFFER 19   // buffer, numfmt, offset, value
@@ -42,8 +41,7 @@
 #define DEVS_EXPRx_STATIC_FUNCTION 39       // *func_idx
 #define DEVS_EXPRx_LITERAL 40               // *value
 #define DEVS_EXPRx_LITERAL_F64 41           // *f64_idx
-#define DEVS_EXPRx_BUILTIN_OBJECT 88        // *builtin_object
-#define DEVS_EXPRx2_FORMAT 42               // *local_idx, numargs, string
+#define DEVS_EXPRx_BUILTIN_OBJECT 86        // *builtin_object
 #define DEVS_EXPR3_LOAD_BUFFER 43           // buffer, numfmt, offset
 #define DEVS_EXPR0_RET_VAL 44
 #define DEVS_EXPR1_TYPEOF 45 // object
@@ -87,20 +85,20 @@
 #define DEVS_EXPR0_PKT_EV_CODE 83
 #define DEVS_EXPR0_PKT_REG_GET_CODE 84
 #define DEVS_EXPR0_PKT_REPORT_CODE 85
-#define DEVS_EXPR0_PKT_COMMAND_CODE 86
-#define DEVS_EXPR0_PKT_BUFFER 87
-#define DEVS_OP_PAST_LAST 89
+#define DEVS_EXPR0_PKT_COMMAND_CODE 16
+#define DEVS_EXPR0_PKT_BUFFER 42
+#define DEVS_OP_PAST_LAST 87
 
 #define DEVS_OP_PROPS                                                                              \
-    "\x7f\x32\x11\x12\x13\x14\x15\x16\x17\x18\x19\x33\x11\x30\x31\x11\x32\x31\x31\x14\x31\x20\x20" \
-    "\x20\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x62\x03\x00\x41" \
+    "\x7f\x32\x11\x12\x13\x14\x15\x16\x17\x18\x19\x33\x11\x30\x31\x11\x00\x31\x31\x14\x31\x20\x20" \
+    "\x20\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x02\x01\x00\x00\x00\x00\x00\x40\x60"
+    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x02\x01\x00\x00\x00\x00\x60"
 #define DEVS_OP_TYPES                                                                              \
-    "\x7f\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0a\x0a" \
-    "\x0a\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x09\x01\x0a\x01" \
+    "\x7f\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x0b\x0a\x0a" \
+    "\x0a\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x06\x07\x01\x01\x01\x01\x01\x04\x01"
+    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x06\x07\x01\x01\x01\x01\x01"
 
 #define DEVS_IMG_VERSION 0x01000000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
@@ -268,26 +266,27 @@
 #define DEVS_BUILTIN_STRING_SLEEPMS 74
 #define DEVS_BUILTIN_STRING_IMOD 75
 #define DEVS_BUILTIN_STRING_FORMAT 76
-#define DEVS_BUILTIN_STRING___MAX 76
+#define DEVS_BUILTIN_STRING_INSERT 77
+#define DEVS_BUILTIN_STRING___MAX 77
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, stmtx2_call, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3, stmt5_call4,    \
         stmt6_call5, stmt7_call6, stmt8_call7, stmt9_call8, stmtx3_call_bg, stmt1_return,          \
-        stmtx_jmp, stmtx1_jmp_z, stmt1_panic, stmtx2_log_format, stmtx1_store_local,               \
+        stmtx_jmp, stmtx1_jmp_z, stmt1_panic, expr0_pkt_command_code, stmtx1_store_local,          \
         stmtx1_store_global, stmt4_store_buffer, stmtx1_store_param, exprx_load_local,             \
         exprx_load_global, exprx_load_param, expr2_index, stmt3_index_set, exprx1_builtin_field,   \
         exprx1_ascii_field, exprx1_utf8_field, exprx_math_field, exprx_ds_field, stmt0_alloc_map,  \
         stmt1_alloc_array, stmt1_alloc_buffer, exprx_static_role, exprx_static_buffer,             \
         exprx_static_builtin_string, exprx_static_ascii_string, exprx_static_utf8_string,          \
-        exprx_static_function, exprx_literal, exprx_literal_f64, exprx2_format, expr3_load_buffer, \
-        expr0_ret_val, expr1_typeof, expr0_null, expr1_is_null, expr0_true, expr0_false,           \
-        expr1_to_bool, expr0_nan, expr1_abs, expr1_bit_not, expr1_is_nan, expr1_neg, expr1_not,    \
-        expr1_to_int, expr2_add, expr2_sub, expr2_mul, expr2_div, expr2_bit_and, expr2_bit_or,     \
-        expr2_bit_xor, expr2_shift_left, expr2_shift_right, expr2_shift_right_unsigned, expr2_eq,  \
-        expr2_le, expr2_lt, expr2_ne, stmt1_terminate_fiber, stmt1_wait_role, stmt3_query_reg,     \
-        stmt2_send_cmd, stmt4_query_idx_reg, stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms,  \
-        expr2_str0eq, expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code,                   \
-        expr0_pkt_reg_get_code, expr0_pkt_report_code, expr0_pkt_command_code, expr0_pkt_buffer,   \
+        exprx_static_function, exprx_literal, exprx_literal_f64, expr0_pkt_buffer,                 \
+        expr3_load_buffer, expr0_ret_val, expr1_typeof, expr0_null, expr1_is_null, expr0_true,     \
+        expr0_false, expr1_to_bool, expr0_nan, expr1_abs, expr1_bit_not, expr1_is_nan, expr1_neg,  \
+        expr1_not, expr1_to_int, expr2_add, expr2_sub, expr2_mul, expr2_div, expr2_bit_and,        \
+        expr2_bit_or, expr2_bit_xor, expr2_shift_left, expr2_shift_right,                          \
+        expr2_shift_right_unsigned, expr2_eq, expr2_le, expr2_lt, expr2_ne, stmt1_terminate_fiber, \
+        stmt1_wait_role, stmt3_query_reg, stmt2_send_cmd, stmt4_query_idx_reg,                     \
+        stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms, expr2_str0eq, expr1_get_fiber_handle, \
+        expr0_pkt_size, expr0_pkt_ev_code, expr0_pkt_reg_get_code, expr0_pkt_report_code,          \
         exprx_builtin_object, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
@@ -299,7 +298,7 @@
         "packet", "panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",       \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
-        "write", "sleepMs", "imod", "format"
+        "write", "sleepMs", "imod", "format", "insert"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \

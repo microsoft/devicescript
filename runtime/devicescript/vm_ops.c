@@ -44,14 +44,6 @@ static void stmt4_query_idx_reg(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_jd_get_register(ctx, a, b, timeout, stridx);
 }
 
-static void stmtx2_log_format(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t stridx = devs_vm_pop_arg_stridx(ctx);
-    uint32_t numargs = devs_vm_pop_arg_u32(ctx);
-    uint32_t localidx = ctx->literal_int;
-    if (devs_vm_args_ok(frame, localidx, numargs))
-        devs_jd_send_logmsg(ctx, stridx, localidx, numargs);
-}
-
 static void stmt1_return(devs_activation_t *frame, devs_ctx_t *ctx) {
     frame->fiber->ret_val = devs_vm_pop_arg(ctx);
     devs_fiber_return_from_call(frame);
@@ -87,19 +79,6 @@ static void stmt3_index_set(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_any_set(ctx, obj, idx, v);
 }
 
-static void stmt3_array_insert(devs_activation_t *frame, devs_ctx_t *ctx) {
-    int32_t count = devs_vm_pop_arg_i32(ctx);
-    uint32_t idx = devs_vm_pop_arg_u32(ctx);
-    value_t seq = devs_vm_pop_arg(ctx);
-
-    devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
-    if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {
-        if (devs_array_insert(ctx, arr, idx, count))
-            devs_runtime_failure(ctx, 60138);
-    } else {
-        devs_runtime_failure(ctx, 60139);
-    }
-}
 
 static void stmt1_setup_pkt_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t a = devs_vm_pop_arg_u32(ctx);
@@ -311,31 +290,6 @@ static value_t exprx_literal_f64(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (off < devs_img_num_floats(ctx->img))
         return devs_img_get_float(ctx->img, off);
     return devs_runtime_failure(ctx, 60107);
-}
-
-static value_t exprx2_format(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned len;
-    const char *fmt = devs_vm_pop_arg_string_data(ctx, &len);
-    uint32_t numargs = devs_vm_pop_arg_u32(ctx);
-    uint32_t localidx = ctx->literal_int;
-
-    if (!devs_vm_args_ok(frame, localidx, numargs))
-        return devs_undefined;
-
-    char tmp[64];
-    unsigned sz = devs_strformat(ctx, fmt, len, tmp, sizeof(tmp),
-                                 devs_frame_locals(frame) + localidx, numargs, 0);
-    devs_string_t *str = devs_string_try_alloc(ctx, sz - 1);
-    if (str == NULL) {
-        devs_runtime_failure(ctx, 60146);
-        return devs_undefined;
-    }
-    if (sz > sizeof(tmp))
-        devs_strformat(ctx, fmt, len, str->data, sz, devs_frame_locals(frame) + localidx, numargs,
-                       0);
-    else
-        memcpy(str->data, tmp, sz - 1);
-    return devs_value_from_gc_obj(ctx, str);
 }
 
 static value_t expr0_ret_val(devs_activation_t *frame, devs_ctx_t *ctx) {
