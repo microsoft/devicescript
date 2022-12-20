@@ -4,17 +4,6 @@
 #include <limits.h>
 #include <math.h>
 
-static bool devs_vm_args_ok(devs_activation_t *frame, uint32_t localidx, uint32_t numargs) {
-    if (frame->fiber->ctx->error_code)
-        return false;
-
-    if (numargs > 16 || localidx > frame->func->num_locals ||
-        localidx + numargs > frame->func->num_locals) {
-        devs_runtime_failure(frame->fiber->ctx, 60113);
-        return false;
-    }
-    return true;
-}
 
 static void stmt1_wait_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t a = devs_vm_pop_arg_role(ctx);
@@ -108,30 +97,6 @@ static void stmt1_panic(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_panic(ctx, code);
 }
 
-static int args_to_stack(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t fn = devs_vm_pop_arg(ctx);
-    uint32_t numargs = devs_vm_pop_arg_u32(ctx);
-    uint32_t localidx = ctx->literal_int;
-
-    if (devs_vm_args_ok(frame, localidx, numargs)) {
-        JD_ASSERT(ctx->stack_top == 0);
-        if (numargs + 2 >= DEVS_MAX_STACK_DEPTH)
-            devs_runtime_failure(ctx, 60162);
-        ctx->stack_top_for_gc = numargs + 1;
-        ctx->the_stack[0] = fn;
-        memcpy(ctx->the_stack + 1, devs_frame_locals(frame) + localidx, numargs * sizeof(value_t));
-        return numargs;
-    }
-
-    return -1;
-}
-
-static void stmtx2_call(devs_activation_t *frame, devs_ctx_t *ctx) {
-    int numargs = args_to_stack(frame, ctx);
-    if (numargs >= 0)
-        devs_fiber_call_function(frame->fiber, numargs);
-}
-
 static void stmt_callN(devs_activation_t *frame, devs_ctx_t *ctx, unsigned N) {
     JD_ASSERT(ctx->stack_top == N + 1);
     ctx->stack_top = 0;
@@ -150,18 +115,6 @@ STMT_CALL(stmt6_call5, 5)
 STMT_CALL(stmt7_call6, 6)
 STMT_CALL(stmt8_call7, 7)
 STMT_CALL(stmt9_call8, 8)
-
-static void stmtx3_call_bg(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t flag = devs_vm_pop_arg_u32(ctx);
-    int numargs = args_to_stack(frame, ctx);
-    if (flag == 0 || flag > DEVS_OPCALL_BG_MAX1_REPLACE)
-        devs_runtime_failure(ctx, 60137);
-    else if (numargs >= 0) {
-        devs_fiber_t *fib = devs_fiber_start(ctx, numargs, flag);
-        if (fib)
-            frame->fiber->ret_val = devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, fib->handle_tag);
-    }
-}
 
 static void stmtx_jmp(devs_activation_t *frame, devs_ctx_t *ctx) {
     int32_t off = ctx->literal_int;
