@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { compileFile, devsFactory } from "./build"
+import { BuildOptions, compileFile, devsFactory } from "./build"
 import { CmdOptions, error } from "./command"
 
 export interface RunOptions {
@@ -9,12 +9,12 @@ export interface RunOptions {
     testTimeout?: string
 }
 
-export async function readCompiled(fn: string) {
+export async function readCompiled(fn: string, options: BuildOptions = {}) {
     const buf = readFileSync(fn)
     if (buf.subarray(0, 8).toString("hex") == "446576530a7e6a9a") return buf
     if (buf.subarray(0, 16).toString("binary") == "446576530a7e6a9a")
         return Buffer.from(buf.toString("binary").replace(/\s*/g, ""), "hex")
-    const res = await compileFile(fn)
+    const res = await compileFile(fn, options)
     if (!res.success) process.exit(1)
     return res.binary
 }
