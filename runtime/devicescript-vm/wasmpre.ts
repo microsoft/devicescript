@@ -12,8 +12,18 @@ export declare type DevsModule = EmscriptenModule &
         _jd_em_devs_verify(img: ptr, size: int32): int32
         _jd_em_devs_client_deploy(img: ptr, size: int32): int32
         sendPacket(pkt: Uint8Array): void
+
+        /**
+         * Overrideable metod called when deployment is done.
+         * @param code error code, 0 is success.
+         */
         deployHandler(code: int32): void
-        panicHandler(code: int32): void
+
+        /**
+         * Overrideable method called when a panic code is raiserd.
+         * @param exitCode the panic code
+         */
+        panicHandler(exitCode: int32): void
     }
 
 declare var Module: DevsModule
@@ -299,11 +309,11 @@ export module Exts {
     }
 
     /**
-     * Specifices the virtual macine device id. 
+     * Specifices the virtual macine device id.
      * @remarks
-     * 
+     *
      * Must be called before `devsStart`.
-     * 
+     *
      * @param id0 a hex-encoded device id string or the first 32bit of the device id
      * @param id1 the second 32 bits of the device id, undefined if id0 is a string
      */
