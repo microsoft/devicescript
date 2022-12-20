@@ -5,7 +5,9 @@ sidebar_position: 100
 
 # Web Assembly Virtual Machine
 
-The `@devicescript/vm` package contains DeviceScript C virtual machine compiled to Web Assembly. It allows you to run bytecode in node.js and browsers (this package is used in the [CLI](/api/cli/))
+The `@devicescript/vm` package contains DeviceScript C virtual machine compiled to Web Assembly. It allows you to run bytecode in node.js and browsers
+
+This package is used in the [CLI](/api/cli/) and in developer tools web page.
 
 To add to your project, you can use
 
