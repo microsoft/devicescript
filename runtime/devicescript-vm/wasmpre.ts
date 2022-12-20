@@ -167,6 +167,11 @@ export module Exts {
         )
     }
 
+    /**
+     * Verifies the format and version of the bytecode
+     * @param binary DeviceScript bytecode
+     * @returns error code, 0 if verificatino is successful
+     */
     export function devsVerify(binary: Uint8Array) {
         return copyToHeap(binary, ptr =>
             Module._jd_em_devs_verify(ptr, binary.length)
