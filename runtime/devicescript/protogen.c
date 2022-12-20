@@ -30,6 +30,9 @@ void fun2_Math_imod(devs_ctx_t *ctx);
 void fun2_Math_imul(devs_ctx_t *ctx);
 void fun2_Math_min(devs_ctx_t *ctx);
 void fun2_Math_max(devs_ctx_t *ctx);
+// impl_object.c
+// impl_role.c
+value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self);
 // impl_string.c
 value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
@@ -66,9 +69,13 @@ static const devs_builtin_proto_entry_t Math_entries[] = { //
     {N(MAX), 0xf013},
     {0, 0}};
 
+static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
+    {N(ISCONNECTED), 0xf014},
+    {0, 0}};
+
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 0xf014},
-    {N(CHARCODEAT), 0xf015},
+    {N(LENGTH), 0xf015},
+    {N(CHARCODEAT), 0xf016},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -76,11 +83,12 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Buffer_prototype_entries},
     [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = {DEVS_BUILTIN_PROTO_INIT, DeviceScript_entries},
     [DEVS_BUILTIN_OBJECT_MATH] = {DEVS_BUILTIN_PROTO_INIT, Math_entries},
+    [DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Role_prototype_entries},
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 22;
-const devs_builtin_function_t devs_builtin_functions[22] = {
+uint16_t devs_num_builtin_functions = 23;
+const devs_builtin_function_t devs_builtin_functions[23] = {
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
     {N(LENGTH), 0, PROP, {.prop = prop_Buffer_length}},
     {N(TOSTRING), 0, 0, {.meth = meth0_Buffer_toString}},
@@ -101,6 +109,7 @@ const devs_builtin_function_t devs_builtin_functions[22] = {
     {N(IMUL), 2, NO_SELF, {.meth = fun2_Math_imul}},
     {N(MIN), 2, NO_SELF, {.meth = fun2_Math_min}},
     {N(MAX), 2, NO_SELF, {.meth = fun2_Math_max}},
+    {N(ISCONNECTED), 0, PROP, {.prop = prop_Role_isConnected}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}}};
 

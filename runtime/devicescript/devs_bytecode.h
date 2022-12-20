@@ -303,4 +303,4 @@
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \
         "Role", "Role_prototype", "Function", "Function_prototype", "Boolean",                     \
-        "Boolean_prototype", "Devicescript"
+        "Boolean_prototype", "DeviceScript"
