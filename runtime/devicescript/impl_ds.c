@@ -17,3 +17,27 @@ void fun0_DeviceScript_reboot(devs_ctx_t *ctx) {
     devs_panic(ctx, 0);
 }
 
+void funX_DeviceScript_format(devs_ctx_t *ctx) {
+    if (ctx->stack_top_for_gc < 2)
+        return;
+
+    value_t fmtv = devs_arg(ctx, 0);
+    unsigned len;
+    const char *fmt = devs_string_get_utf8(ctx, fmtv, &len);
+    if (fmt == NULL)
+        return;
+
+    unsigned numargs = ctx->stack_top_for_gc - 1;
+    value_t *argp = ctx->the_stack + 1;
+
+    char tmp[64];
+    unsigned sz = devs_strformat(ctx, fmt, len, tmp, sizeof(tmp), argp, numargs, 0);
+    devs_string_t *str = devs_string_try_alloc(ctx, sz - 1);
+    if (str == NULL)
+        return;
+    if (sz > sizeof(tmp))
+        devs_strformat(ctx, fmt, len, str->data, sz, argp, numargs, 0);
+    else
+        memcpy(str->data, tmp, sz - 1);
+    devs_ret_gc_ptr(ctx, str);
+}

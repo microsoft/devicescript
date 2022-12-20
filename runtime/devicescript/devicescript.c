@@ -31,6 +31,7 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
 
     // reference the "main" function (first function)
     ctx->the_stack[0] = devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, 0);
+    ctx->stack_top_for_gc = 1;
     // run it in bg
     devs_fiber_start(ctx, 0, DEVS_OPCALL_BG);
 }

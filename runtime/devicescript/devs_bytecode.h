@@ -1,16 +1,16 @@
 // Auto-generated from bytecode.md; do not edit.
 #pragma once
 
-#define DEVS_STMTx2_CALL 1  // *local_idx, numargs, func
-#define DEVS_STMT1_CALL0 2  // func
-#define DEVS_STMT2_CALL1 3  // func, value0
-#define DEVS_STMT3_CALL2 4  // func, value0, value1
-#define DEVS_STMT4_CALL3 5  // func, value0, value1, value2
-#define DEVS_STMT5_CALL4 6  // func, value0, value1, value2, value3
-#define DEVS_STMT6_CALL5 7  // func, value0, value1, value2, value3, value4
-#define DEVS_STMT7_CALL6 8  // func, value0, value1, value2, value3, value4, value5
-#define DEVS_STMT8_CALL7 9  // func, value0, value1, value2, value3, value4, value5, value6
-#define DEVS_STMT9_CALL8 10 // func, value0, value1, value2, value3, value4, value5, value6, value7
+#define DEVS_STMTx2_CALL 1           // *local_idx, numargs, func
+#define DEVS_STMT1_CALL0 2           // CALL func()
+#define DEVS_STMT2_CALL1 3           // CALL func(v0)
+#define DEVS_STMT3_CALL2 4           // CALL func(v0, v1)
+#define DEVS_STMT4_CALL3 5           // CALL func(v0, v1, v2)
+#define DEVS_STMT5_CALL4 6           // CALL func(v0, v1, v2, v3)
+#define DEVS_STMT6_CALL5 7           // CALL func(v0, v1, v2, v3, v4)
+#define DEVS_STMT7_CALL6 8           // CALL func(v0, v1, v2, v3, v4, v5)
+#define DEVS_STMT8_CALL7 9           // CALL func(v0, v1, v2, v3, v4, v5, v6)
+#define DEVS_STMT9_CALL8 10          // CALL func(v0, v1, v2, v3, v4, v5, v6, v7)
 #define DEVS_STMTx3_CALL_BG 11       // *local_idx, numargs, func, opcall
 #define DEVS_STMT1_RETURN 12         // value
 #define DEVS_STMTx_JMP 13            // JMP jmpoffset
@@ -42,7 +42,7 @@
 #define DEVS_EXPRx_STATIC_FUNCTION 39       // *func_idx
 #define DEVS_EXPRx_LITERAL 40               // *value
 #define DEVS_EXPRx_LITERAL_F64 41           // *f64_idx
-#define DEVS_EXPRx_BUILTIN_OBJECT 88        // *bltn_idx
+#define DEVS_EXPRx_BUILTIN_OBJECT 88        // *builtin_object
 #define DEVS_EXPRx2_FORMAT 42               // *local_idx, numargs, string
 #define DEVS_EXPR3_LOAD_BUFFER 43           // buffer, numfmt, offset
 #define DEVS_EXPR0_RET_VAL 44
@@ -267,7 +267,8 @@
 #define DEVS_BUILTIN_STRING_WRITE 73
 #define DEVS_BUILTIN_STRING_SLEEPMS 74
 #define DEVS_BUILTIN_STRING_IMOD 75
-#define DEVS_BUILTIN_STRING___MAX 75
+#define DEVS_BUILTIN_STRING_FORMAT 76
+#define DEVS_BUILTIN_STRING___MAX 76
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, stmtx2_call, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3, stmt5_call4,    \
@@ -298,7 +299,7 @@
         "packet", "panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",       \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
-        "write", "sleepMs", "imod"
+        "write", "sleepMs", "imod", "format"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \

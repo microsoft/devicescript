@@ -23,6 +23,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     devs_ctx_t *ctx = fiber->ctx;
 
     value_t *argp = ctx->the_stack;
+    JD_ASSERT(numparams + 1 == ctx->stack_top_for_gc);
 
     value_t fn = *argp;
     devs_activation_t *closure;

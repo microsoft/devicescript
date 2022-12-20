@@ -17,6 +17,7 @@ void meth4_Buffer_blitAt(devs_ctx_t *ctx);
 void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx);
 void fun1_DeviceScript_panic(devs_ctx_t *ctx);
 void fun0_DeviceScript_reboot(devs_ctx_t *ctx);
+void funX_DeviceScript_format(devs_ctx_t *ctx);
 // impl_math.c
 void fun1_Math_ceil(devs_ctx_t *ctx);
 void fun1_Math_floor(devs_ctx_t *ctx);
@@ -52,30 +53,31 @@ static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
     {N(SLEEPMS), 0xf005},
     {N(PANIC), 0xf006},
     {N(REBOOT), 0xf007},
+    {N(FORMAT), 0xf008},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Math_entries[] = { //
-    {N(CEIL), 0xf008},
-    {N(FLOOR), 0xf009},
-    {N(ROUND), 0xf00a},
-    {N(RANDOM), 0xf00b},
-    {N(RANDOMINT), 0xf00c},
-    {N(LOG), 0xf00d},
-    {N(POW), 0xf00e},
-    {N(IDIV), 0xf00f},
-    {N(IMOD), 0xf010},
-    {N(IMUL), 0xf011},
-    {N(MIN), 0xf012},
-    {N(MAX), 0xf013},
+    {N(CEIL), 0xf009},
+    {N(FLOOR), 0xf00a},
+    {N(ROUND), 0xf00b},
+    {N(RANDOM), 0xf00c},
+    {N(RANDOMINT), 0xf00d},
+    {N(LOG), 0xf00e},
+    {N(POW), 0xf00f},
+    {N(IDIV), 0xf010},
+    {N(IMOD), 0xf011},
+    {N(IMUL), 0xf012},
+    {N(MIN), 0xf013},
+    {N(MAX), 0xf014},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 0xf014},
+    {N(ISCONNECTED), 0xf015},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 0xf015},
-    {N(CHARCODEAT), 0xf016},
+    {N(LENGTH), 0xf016},
+    {N(CHARCODEAT), 0xf017},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -87,8 +89,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 23;
-const devs_builtin_function_t devs_builtin_functions[23] = {
+uint16_t devs_num_builtin_functions = 24;
+const devs_builtin_function_t devs_builtin_functions[24] = {
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
     {N(LENGTH), 0, PROP, {.prop = prop_Buffer_length}},
     {N(TOSTRING), 0, 0, {.meth = meth0_Buffer_toString}},
@@ -97,6 +99,7 @@ const devs_builtin_function_t devs_builtin_functions[23] = {
     {N(SLEEPMS), 1, NO_SELF, {.meth = fun1_DeviceScript_sleepMs}},
     {N(PANIC), 1, NO_SELF, {.meth = fun1_DeviceScript_panic}},
     {N(REBOOT), 0, NO_SELF, {.meth = fun0_DeviceScript_reboot}},
+    {N(FORMAT), 0, NO_SELF, {.meth = funX_DeviceScript_format}},
     {N(CEIL), 1, NO_SELF, {.meth = fun1_Math_ceil}},
     {N(FLOOR), 1, NO_SELF, {.meth = fun1_Math_floor}},
     {N(ROUND), 1, NO_SELF, {.meth = fun1_Math_round}},
