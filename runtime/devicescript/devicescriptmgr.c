@@ -56,7 +56,6 @@ REG_DEFINITION(                                     //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING),   //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART), //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING),   //
-    REG_U32(JD_DEVICE_SCRIPT_MANAGER_REG_RUNTIME_VERSION), //
 )
 
 __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[192] = {
