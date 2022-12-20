@@ -1,0 +1,102 @@
+---
+title: WebASM VM
+sidebar_position: 100
+---
+
+# Web Assembly Virtual Machine
+
+The `@devicescript/vm` package contains DeviceScript C virtual machine compiled to Web Assembly. It allows you to run bytecode in node.js and browsers
+
+This package is used in the [CLI](/api/cli/) and in developer tools web page.
+
+To add to your project, you can use
+
+-   npm
+
+```bash
+npm install --save @devicescript/vm
+```
+
+-   yarn
+
+```bash
+yarn add @devicescript/vm
+```
+
+## import
+
+Loading the virtual machine is async and should typically be cached in a global variable.
+
+### Node.js
+
+```js
+import type { DevsModule } from "@devicescript/vm"
+
+const vmLoader = require("@devicescript/vm")
+const vm: DevsModule = await vmLoader()
+vm.devsInit()
+```
+
+### Browser
+
+```js
+import type { DevsModule } from "@devicescript/vm"
+import vmLoader from "@devicescript/vm"
+
+const vm: DevsModule = await vmLoader()
+vm.devsInit()
+```
+
+or import https://microsoft.github.io/devicescript/dist/devicescript-vm.js for the latest build.
+
+## devsSetDeviceId
+
+Specifies the device id of the virtual machine device. This method should be called before starting the virtual machine.
+
+```js
+vm.devsSetDeviceId("1989f4eee0ebe206")
+```
+
+## devsStart
+
+Starts the virtual machine. Does nothing if already running.
+
+```js
+const code = vm.devsStart()
+if (code) console.error("failed to start", code)
+```
+
+## devsStop
+
+Stops the virtual machine. Does nothing if already stopped.
+
+```js
+vm.devsStop()
+```
+
+## devsIsRunning
+
+Indicates if the virtual machine is started.
+
+```js
+vm.devsIsRunning()
+```
+
+## devsInit
+
+This method allocates data structures necessary for running the virtual machine.
+It is automatically called by other metods.
+
+```js
+vm.devsInit()
+```
+
+## devsVerify
+
+Verifies that a buffer of bytecode is well formed. Returns non-zero error codes when failing.
+
+```js
+vm.devsVerify()
+```
+
+TODO devsDeploy
