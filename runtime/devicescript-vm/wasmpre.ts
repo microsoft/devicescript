@@ -65,7 +65,7 @@ export module Exts {
 
     /**
      * Starts a packet transport over a TCP socket in a node.js application
-     * @param require module resultion function
+     * @param require module resolution function, requires "net" package
      * @param host socket url host
      * @param port socket port
      */
@@ -143,7 +143,6 @@ export module Exts {
 
     /**
      * Starts a packet transport over a WebSocket using arraybuffer binary type.
-     * @param require module resultion function
      * @param url socket url
      * @param port socket port
      */
