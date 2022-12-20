@@ -1,22 +1,19 @@
 // Auto-generated from bytecode.md; do not edit.
 
 export enum Op {
-    STMTx2_CALL = 1, // *local_idx, numargs, func
-    STMT1_CALL0 = 2, // func
-    STMT2_CALL1 = 3, // func, value0
-    STMT3_CALL2 = 4, // func, value0, value1
-    STMT4_CALL3 = 5, // func, value0, value1, value2
-    STMT5_CALL4 = 6, // func, value0, value1, value2, value3
-    STMT6_CALL5 = 7, // func, value0, value1, value2, value3, value4
-    STMT7_CALL6 = 8, // func, value0, value1, value2, value3, value4, value5
-    STMT8_CALL7 = 9, // func, value0, value1, value2, value3, value4, value5, value6
-    STMT9_CALL8 = 10, // func, value0, value1, value2, value3, value4, value5, value6, value7
-    STMTx3_CALL_BG = 11, // *local_idx, numargs, func, opcall
+    STMT1_CALL0 = 2, // CALL func()
+    STMT2_CALL1 = 3, // CALL func(v0)
+    STMT3_CALL2 = 4, // CALL func(v0, v1)
+    STMT4_CALL3 = 5, // CALL func(v0, v1, v2)
+    STMT5_CALL4 = 6, // CALL func(v0, v1, v2, v3)
+    STMT6_CALL5 = 7, // CALL func(v0, v1, v2, v3, v4)
+    STMT7_CALL6 = 8, // CALL func(v0, v1, v2, v3, v4, v5)
+    STMT8_CALL7 = 9, // CALL func(v0, v1, v2, v3, v4, v5, v6)
+    STMT9_CALL8 = 10, // CALL func(v0, v1, v2, v3, v4, v5, v6, v7)
     STMT1_RETURN = 12, // value
     STMTx_JMP = 13, // JMP jmpoffset
     STMTx1_JMP_Z = 14, // JMP jmpoffset IF NOT x
     STMT1_PANIC = 15, // error_code
-    STMTx2_LOG_FORMAT = 16, // *local_idx, numargs, string
     STMTx1_STORE_LOCAL = 17, // local_idx := value
     STMTx1_STORE_GLOBAL = 18, // global_idx := value
     STMT4_STORE_BUFFER = 19, // buffer, numfmt, offset, value
@@ -42,7 +39,7 @@ export enum Op {
     EXPRx_STATIC_FUNCTION = 39, // *func_idx
     EXPRx_LITERAL = 40, // *value
     EXPRx_LITERAL_F64 = 41, // *f64_idx
-    EXPRx2_FORMAT = 42, // *local_idx, numargs, string
+    EXPRx_BUILTIN_OBJECT = 1, // *builtin_object
     EXPR3_LOAD_BUFFER = 43, // buffer, numfmt, offset
     EXPR0_RET_VAL = 44,
     EXPR1_TYPEOF = 45, // object
@@ -80,24 +77,24 @@ export enum Op {
     STMT1_SETUP_PKT_BUFFER = 77, // size
     STMT2_SET_PKT = 78, // buffer, offset
     EXPR0_NOW_MS = 79,
-    EXPR2_STR0EQ = 80, // buffer, offset
-    EXPR1_GET_FIBER_HANDLE = 81, // func
-    EXPR0_PKT_SIZE = 82,
-    EXPR0_PKT_EV_CODE = 83,
-    EXPR0_PKT_REG_GET_CODE = 84,
-    EXPR0_PKT_REPORT_CODE = 85,
-    EXPR0_PKT_COMMAND_CODE = 86,
-    EXPR0_PKT_BUFFER = 87,
-    OP_PAST_LAST = 88,
+    EXPR2_STR0EQ = 11, // buffer, offset
+    EXPR1_GET_FIBER_HANDLE = 80, // func
+    EXPR0_PKT_SIZE = 81,
+    EXPR0_PKT_EV_CODE = 82,
+    EXPR0_PKT_REG_GET_CODE = 83,
+    EXPR0_PKT_REPORT_CODE = 84,
+    EXPR0_PKT_COMMAND_CODE = 16,
+    EXPR0_PKT_BUFFER = 42,
+    OP_PAST_LAST = 85,
 }
 
 export const OP_PROPS =
-    "\x7f\x32\x11\x12\x13\x14\x15\x16\x17\x18\x19\x33\x11\x30\x31\x11\x32\x31\x31\x14\x31\x20\x20\x20\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x62\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x02\x01\x00\x00\x00\x00\x00\x40"
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x31\x20\x20\x20\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x00\x00"
 export const OP_TYPES =
-    "\x7f\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0a\x0a\x0a\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x09\x01\x0a\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x06\x07\x01\x01\x01\x01\x01\x04"
+    "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x0b\x0a\x0a\x0a\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x01\x01"
 
 export enum BinFmt {
-    IMG_VERSION = 0x00010000,
+    IMG_VERSION = 0x01000000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 8,
@@ -113,6 +110,7 @@ export enum BinFmt {
     FIRST_MULTIBYTE_INT = 0xf8,
     FIRST_NON_OPCODE = 0x10000,
     FIRST_BUILTIN_FUNCTION = 0xf000,
+    MAX_ARGS_SHORT_CALL = 8,
 }
 
 export enum StrIdx {
@@ -275,28 +273,32 @@ export enum BuiltInString {
     UNSHIFT = 71,
     WAIT = 72,
     WRITE = 73,
-    WAITMS = 74,
-    __MAX = 74,
+    SLEEPMS = 74,
+    IMOD = 75,
+    FORMAT = 76,
+    INSERT = 77,
+    START = 78,
+    __MAX = 78,
 }
 
 export const OP_PRINT_FMTS = [
     null,
-    "CALL %L numargs=%e func=%e",
-    "CALL0 func=%e",
-    "CALL1 func=%e value0=%e",
-    "CALL2 func=%e value0=%e value1=%e",
-    "CALL3 func=%e value0=%e value1=%e value2=%e",
-    "CALL4 func=%e value0=%e value1=%e value2=%e value3=%e",
-    "CALL5 func=%e value0=%e value1=%e value2=%e value3=%e value4=%e",
-    "CALL6 func=%e value0=%e value1=%e value2=%e value3=%e value4=%e value5=%e",
-    "CALL7 func=%e value0=%e value1=%e value2=%e value3=%e value4=%e value5=%e value6=%e",
-    "CALL8 func=%e value0=%e value1=%e value2=%e value3=%e value4=%e value5=%e value6=%e value7=%e",
-    "CALL_BG %L numargs=%e func=%e %o",
+    "%O",
+    "CALL %e()",
+    "CALL %e(%e)",
+    "CALL %e(%e, %e)",
+    "CALL %e(%e, %e, %e)",
+    "CALL %e(%e, %e, %e, %e)",
+    "CALL %e(%e, %e, %e, %e, %e)",
+    "CALL %e(%e, %e, %e, %e, %e, %e)",
+    "CALL %e(%e, %e, %e, %e, %e, %e, %e)",
+    "CALL %e(%e, %e, %e, %e, %e, %e, %e, %e)",
+    "str0eq(%e, offset=%e)",
     "RETURN %e",
     "JMP %j",
     "JMP %j IF NOT %e",
     "PANIC error_code=%e",
-    "LOG_FORMAT %L numargs=%e string=%e",
+    "pkt_command_code()",
     "%L := %e",
     "%G := %e",
     "STORE_BUFFER %e %n offset=%e %e",
@@ -322,7 +324,7 @@ export const OP_PRINT_FMTS = [
     "%F",
     "%e",
     "%D",
-    "format(%L, numargs=%e, string=%e)",
+    "pkt_buffer()",
     "load_buffer(%e, %n, offset=%e)",
     "ret_val()",
     "typeof(%e)",
@@ -360,14 +362,11 @@ export const OP_PRINT_FMTS = [
     "SETUP_PKT_BUFFER size=%e",
     "SET_PKT %e offset=%e",
     "now_ms()",
-    "str0eq(%e, offset=%e)",
     "get_fiber_handle(func=%e)",
     "pkt_size()",
     "pkt_ev_code()",
     "pkt_reg_get_code()",
     "pkt_report_code()",
-    "pkt_command_code()",
-    "pkt_buffer()",
 ]
 export const OBJECT_TYPE = [
     "null",
@@ -458,5 +457,30 @@ export const BUILTIN_STRING__VAL = [
     "unshift",
     "wait",
     "write",
-    "waitMs",
+    "sleepMs",
+    "imod",
+    "format",
+    "insert",
+    "start",
+]
+export const BUILTIN_OBJECT__VAL = [
+    "Math",
+    "Object",
+    "Object_prototype",
+    "Array_prototype",
+    "Buffer",
+    "Buffer_prototype",
+    "String",
+    "String_prototype",
+    "Number",
+    "Number_prototype",
+    "Fiber",
+    "Fiber_prototype",
+    "Role",
+    "Role_prototype",
+    "Function",
+    "Function_prototype",
+    "Boolean",
+    "Boolean_prototype",
+    "DeviceScript",
 ]

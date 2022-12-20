@@ -19,7 +19,7 @@ You can check if role is currently assigned, and react to it being assigned or u
 
 ```ts
 const heater = new ds.Relay()
-if (heater.isConnected())
+if (heater.isConnected)
     heater.active.write(true)
 heater.onConnected(() => {
     // ...

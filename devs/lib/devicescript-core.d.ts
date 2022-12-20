@@ -2,7 +2,7 @@
 
 declare module "@devicescript/core" {
     export class Role {
-        isConnected(): number
+        isConnected: boolean
         onConnected(handler: () => void): void
         onDisconnected(handler: () => void): void
     }

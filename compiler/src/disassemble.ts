@@ -1,5 +1,6 @@
 import {
     BinFmt,
+    BUILTIN_OBJECT__VAL,
     BUILTIN_STRING__VAL,
     InstrArgResolver,
     StrIdx,
@@ -100,6 +101,8 @@ export function disassemble(img: Uint8Array): string {
                     return describeString(StrIdx.ASCII, idx)
                 case "I":
                     return describeString(StrIdx.BUILTIN, idx)
+                case "O":
+                    return BUILTIN_OBJECT__VAL[idx] || "???"
                 case "F":
                     return funName(idx)
                 case "P":

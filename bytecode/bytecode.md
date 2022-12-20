@@ -50,25 +50,17 @@ function foo() {
 
 ### Control flow
 
-    call(*local_idx, numargs, func) = 1
-
-Regular, sync call. Passes `numargs` arguments, starting from local variable number `local_idx`
-
-    call0(func) = 2
-    call1(func, value0) = 3
-    call2(func, value0, value1) = 4
-    call3(func, value0, value1, value2) = 5
-    call4(func, value0, value1, value2, value3) = 6
-    call5(func, value0, value1, value2, value3, value4) = 7
-    call6(func, value0, value1, value2, value3, value4, value5) = 8
-    call7(func, value0, value1, value2, value3, value4, value5, value6) = 9
-    call8(func, value0, value1, value2, value3, value4, value5, value6, value7) = 10
+    call0(func) = 2                                   // CALL func()
+    call1(func, v0) = 3                               // CALL func(v0)
+    call2(func, v0, v1) = 4                           // CALL func(v0, v1)
+    call3(func, v0, v1, v2) = 5                       // CALL func(v0, v1, v2)
+    call4(func, v0, v1, v2, v3) = 6                   // CALL func(v0, v1, v2, v3)
+    call5(func, v0, v1, v2, v3, v4) = 7               // CALL func(v0, v1, v2, v3, v4)
+    call6(func, v0, v1, v2, v3, v4, v5) = 8           // CALL func(v0, v1, v2, v3, v4, v5)
+    call7(func, v0, v1, v2, v3, v4, v5, v6) = 9       // CALL func(v0, v1, v2, v3, v4, v5, v6)
+    call8(func, v0, v1, v2, v3, v4, v5, v6, v7) = 10  // CALL func(v0, v1, v2, v3, v4, v5, v6, v7)
 
 Short-hand versions of regular `call` opcode.
-
-    call_bg(*local_idx, numargs, func, opcall) = 11
-
-Starts new fiber (depending on `call_type`). Returns fiber handle (existing or new).
 
     return(value) = 12
 
@@ -79,8 +71,6 @@ Starts new fiber (depending on `call_type`). Returns fiber handle (existing or n
 Jump if condition is false.
 
     panic(error_code) = 15
-
-    log_format(*local_idx, numargs, string) = 16
 
 ### Variables
 
@@ -150,9 +140,9 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun literal_f64(*f64_idx): number = 41
 
-### Misc
+    fun builtin_object(*builtin_object): number = 1
 
-    fun format(*local_idx, numargs, string): string = 42
+### Misc
 
     load_buffer(buffer, numfmt, offset): number = 43
 
@@ -253,31 +243,31 @@ Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
 
 Time since device restart in ms; time only advances when sleeping.
 
-    str0eq(buffer, offset): bool = 80
+    str0eq(buffer, offset): bool = 11
 
-    get_fiber_handle(func): fiber = 81
+    get_fiber_handle(func): fiber = 80
 
 If `func == null` returns self-handle.
 Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
 
-    pkt_size(): number = 82
+    pkt_size(): number = 81
 
-    pkt_ev_code(): number = 83
+    pkt_ev_code(): number = 82
 
-    pkt_reg_get_code(): number = 84
+    pkt_reg_get_code(): number = 83
 
-    pkt_report_code(): number = 85
+    pkt_report_code(): number = 84
 
-    pkt_command_code(): number = 86
+    pkt_command_code(): number = 16
 
-    fun pkt_buffer(): buffer = 87
+    fun pkt_buffer(): buffer = 42
 
 Return reference to "buffer" with the packet data.
 
 
 ## Format Constants
 
-    img_version = 0x00010000
+    img_version = 0x01_00_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 8
@@ -391,26 +381,26 @@ Only `true` and `false` values.
 
 ## Enum: BuiltIn_Object
 
-    math = 0
-    object = 1
-    object_prototype = 2
-    array = 3
-    array_prototype = 3
-    buffer = 4
-    buffer_prototype = 5
-    string = 6
-    string_prototype = 7
-    number = 8
-    number_prototype = 9
-    fiber = 10
-    fiber_prototype = 11
-    role = 12
-    role_prototype = 13
-    function = 14
-    function_prototype = 15
-    boolean = 16
-    boolean_prototype = 17
-    devicescript = 18
+    Math = 0
+    Object = 1
+    Object_prototype = 2
+    Array = 3
+    Array_prototype = 3
+    Buffer = 4
+    Buffer_prototype = 5
+    String = 6
+    String_prototype = 7
+    Number = 8
+    Number_prototype = 9
+    Fiber = 10
+    Fiber_prototype = 11
+    Role = 12
+    Role_prototype = 13
+    Function = 14
+    Function_prototype = 15
+    Boolean = 16
+    Boolean_prototype = 17
+    DeviceScript = 18
 
 ## Enum: BuiltIn_String
 
@@ -489,4 +479,8 @@ Only `true` and `false` values.
     wait = 72
     write = 73
 
-    waitMs = 74
+    sleepMs = 74
+    imod = 75
+    format = 76
+    insert = 77
+    start = 78

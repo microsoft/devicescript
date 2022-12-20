@@ -57,6 +57,7 @@ function processSpec(filecontent: string): Spec {
         utf8_idx: "U",
         buffer_idx: "B",
         builtin_idx: "I",
+        builtin_object: "O",
 
         local_idx: "L",
         func_idx: "F",
@@ -175,7 +176,11 @@ function processSpec(filecontent: string): Spec {
             if (nums[idx]) error(`duplicate ${obj.name} ${idx}`)
             nums[idx] = 1
         }
-        if (nums.length != lst.length + 1) error("non-cont")
+        for (let i = 0; i < nums.length; ++i) {
+            if (!nums[i])
+                console.log(`missing ${i}`)
+        }
+        if (nums.length != lst.length + 1) error(`non-cont; max=${nums.length - 1}`)
     }
 
     function error(msg = "syntax error", ln = lineNo) {
@@ -243,7 +248,7 @@ function processSpec(filecontent: string): Spec {
                 lineTr = lineTr.slice(4).trim()
             }
             let m =
-                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*(\d+|0[bB][01]+|0[Xx][a-fA-F0-9]+|\?)\s*(\/\/\s*(.*))?$/.exec(
+                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*([\d_]+|0[bB][01_]+|0[Xx][a-fA-F0-9_]+|\?)\s*(\/\/\s*(.*))?$/.exec(
                     lineTr
                 )
             if (!m) {
@@ -271,7 +276,7 @@ function processSpec(filecontent: string): Spec {
             currObj = {
                 name,
                 args,
-                code,
+                code: code.replace(/_/g, ""),
                 comment,
                 rettype: rettype || "void",
                 isFun,
@@ -391,6 +396,7 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
     if (!isTS) r += genJmpTables(spec)
 
     emitStrings("BuiltIn_String")
+    emitStrings("BuiltIn_Object")
 
     return r
 

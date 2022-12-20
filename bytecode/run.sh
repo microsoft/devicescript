@@ -14,7 +14,11 @@ if [ $R = 10 ] ; then
     exit 1
   fi
   mv bytecode.md.new bytecode.md
-elif [ $R != 0 ] ; then
+  node build/process.js bytecode.md
+  R=$?
+fi
+
+if [ $R != 0 ] ; then
   echo "exit $R"
   exit $R
 fi

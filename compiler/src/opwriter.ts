@@ -12,6 +12,8 @@ import {
     opNumArgs,
     opIsStmt,
     StrIdx,
+    BuiltInString,
+    BuiltInObject,
 } from "./format"
 import { assert, write32, write16 } from "./jdutil"
 import { assertRange, oops } from "./util"
@@ -81,6 +83,16 @@ export class Value {
     withType(tp: ValueType) {
         this.valueType = tp
         return this
+    }
+
+    get staticIdx() {
+        assert(this.args.length == 1)
+        assert(this.args[0].isLiteral)
+        return this.args[0].numValue
+    }
+
+    toString() {
+        return `[op=${Op[this.op]} a=${this.args?.length}]`
     }
 }
 
@@ -229,7 +241,7 @@ export class OpWriter {
         this.lineNoStart = this.location()
     }
 
-    allocTmpLocals(num: number) {
+    private allocTmpLocals(num: number) {
         let run = 0
         let runStart = 0
         for (let i = 0; i < this.cachedValues.length; ++i) {
@@ -300,23 +312,6 @@ export class OpWriter {
         v.args = [literal(idx)]
         v.flags = VF_IS_STRING
         return v
-    }
-
-    _emitCall(proc: Value, args: CachedValue[], op = OpCall.SYNC) {
-        const localidx = literal(args[0] ? args[0].index : 0)
-        const numargs = literal(args.length)
-
-        if (op == OpCall.SYNC)
-            this.emitStmt(Op.STMTx2_CALL, localidx, numargs, proc)
-        else
-            this.emitStmt(
-                Op.STMTx3_CALL_BG,
-                localidx,
-                numargs,
-                proc,
-                literal(op)
-            )
-        for (const c of args) c.free()
     }
 
     emitBufLoad(fmt: NumFmt, off: number, bufref?: Value) {
@@ -577,7 +572,7 @@ export class OpWriter {
         }
         this.writeByte(op)
         if (opTakesNumber(op)) {
-            assert(args[0].isLiteral)
+            assert(args[0].isLiteral, `exp literal for op=${Op[op]} ${args[0]}`)
             const nval = args[0].numValue
             if (op == Op.STMTx1_STORE_LOCAL && nval >= LOCAL_OFFSET)
                 this.localOffsets.push(this.location())
@@ -632,6 +627,62 @@ export class OpWriter {
         for (const a of args) a.adopt()
         this.spillAllStateful() // this doesn't spill adopt()'ed Value's (our arguments)
         this.writeArgs(op, args)
+    }
+
+    emitCall(fn: Value, ...args: Value[]) {
+        assert(args.length <= BinFmt.MAX_ARGS_SHORT_CALL)
+        this.emitStmt(Op.STMT1_CALL0 + args.length, fn, ...args)
+    }
+
+    emitBuiltInObject(obj: BuiltInObject) {
+        return this.emitExpr(Op.EXPRx_BUILTIN_OBJECT, literal(obj))
+    }
+
+    emitIndex(obj: Value, field: Value) {
+        if (
+            obj.op == Op.EXPRx_BUILTIN_OBJECT &&
+            field.op == Op.EXPRx_STATIC_BUILTIN_STRING
+        )
+            return this.staticBuiltIn(obj.staticIdx, field.staticIdx)
+
+        let op = Op.EXPR2_INDEX
+        switch (field.op) {
+            case Op.EXPRx_STATIC_BUILTIN_STRING:
+                op = Op.EXPRx1_BUILTIN_FIELD
+                break
+            case Op.EXPRx_STATIC_ASCII_STRING:
+                op = Op.EXPRx1_ASCII_FIELD
+                break
+            case Op.EXPRx_STATIC_UTF8_STRING:
+                op = Op.EXPRx1_UTF8_FIELD
+                break
+            default:
+                return this.emitExpr(Op.EXPR2_INDEX, obj, field)
+        }
+
+        return this.emitExpr(op, literal(field.staticIdx), obj)
+    }
+
+    builtInMember(obj: Value, name: BuiltInString) {
+        return this.emitExpr(Op.EXPRx1_BUILTIN_FIELD, literal(name), obj)
+    }
+
+    staticBuiltIn(obj: BuiltInObject, name: BuiltInString) {
+        if (obj == BuiltInObject.MATH) return this.mathMember(name)
+        else if (obj == BuiltInObject.DEVICESCRIPT) return this.dsMember(name)
+        return this.emitExpr(
+            Op.EXPRx1_BUILTIN_FIELD,
+            this.emitBuiltInObject(obj),
+            literal(name)
+        )
+    }
+
+    dsMember(name: BuiltInString) {
+        return this.emitExpr(Op.EXPRx_DS_FIELD, literal(name))
+    }
+
+    mathMember(name: BuiltInString) {
+        return this.emitExpr(Op.EXPRx_MATH_FIELD, literal(name))
     }
 }
 
