@@ -107,9 +107,11 @@ export module Exts {
             sock = net.createConnection(port, host, () => {
                 log(`connected to ${port}:${host}`)
                 const f = resolve
-                resolve = null
-                reject = null
-                f({ close })
+                if (f) {
+                    resolve = null
+                    reject = null
+                    f({ close })
+                }
             })
             sock.on("error", disconnect)
             sock.on("end", disconnect)
@@ -186,11 +188,11 @@ export module Exts {
 
             sock.onopen = () => {
                 log(`connected to ${url}`)
-                const r = resolve
-                if (r) {
+                const f = resolve
+                if (f) {
                     resolve = null
                     reject = null
-                    r({ close })
+                    f({ close })
                 }
             }
             sock.onerror = disconnect
