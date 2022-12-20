@@ -115,7 +115,7 @@
 
 #define DEVS_IMG_VERSION 0x00010000
 #define DEVS_VERSION_MAJOR(n) (((n) >> 24) & 0xff)
-#define DEVS_VERSION_MINOR(n) (((n) >> 0x16) & 0xff)
+#define DEVS_VERSION_MINOR(n) (((n) >> 16) & 0xff)
 #define DEVS_VERSION_PATCH(n) ((n) & 0xffff)
 
 #define DEVS_MAGIC0 0x53766544 // "DevS"
