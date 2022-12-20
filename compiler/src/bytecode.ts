@@ -23,9 +23,9 @@ export enum Op {
     EXPRx_LOAD_PARAM = 23, // *param_idx
     EXPR2_INDEX = 24, // object[idx]
     STMT3_INDEX_SET = 25, // object[index] := value
-    EXPRx1_BUILTIN_FIELD = 26, // obj.builtin_idx
-    EXPRx1_ASCII_FIELD = 27, // obj.ascii_idx
-    EXPRx1_UTF8_FIELD = 28, // obj.utf8_idx
+    EXPRx1_BUILTIN_FIELD = 26, // [builtin_idx]obj
+    EXPRx1_ASCII_FIELD = 27, // [ascii_idx]obj
+    EXPRx1_UTF8_FIELD = 28, // [utf8_idx]obj
     EXPRx_MATH_FIELD = 29, // Math.builtin_idx
     EXPRx_DS_FIELD = 30, // ds.builtin_idx
     STMT0_ALLOC_MAP = 31,
@@ -278,7 +278,9 @@ export enum BuiltInString {
     FORMAT = 76,
     INSERT = 77,
     START = 78,
-    __MAX = 78,
+    CLOUD = 79,
+    MAIN = 80,
+    __MAX = 80,
 }
 
 export const OP_PRINT_FMTS = [
@@ -308,9 +310,9 @@ export const OP_PRINT_FMTS = [
     "%P",
     "%e[%e]",
     "%e[%e] := %e",
-    "%e.%I",
-    "%e.%A",
-    "%e.%U",
+    "[%I]%e",
+    "[%A]%e",
+    "[%U]%e",
     "Math.%I",
     "ds.%I",
     "ALLOC_MAP ",
@@ -462,6 +464,8 @@ export const BUILTIN_STRING__VAL = [
     "format",
     "insert",
     "start",
+    "cloud",
+    "main",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

@@ -98,15 +98,15 @@ Read named field or sequence member (depending on type of idx).
 
 Write named field or sequence member (depending on type of idx).
 
-    builtin_field(*builtin_idx, obj): any = 26  // obj.builtin_idx
+    builtin_field(*builtin_idx, obj): any = 26  // [builtin_idx]obj
 
 Shorthand to `index(obj, static_builtin_string(builtin_idx))`
  
-    ascii_field(*ascii_idx, obj): any = 27      // obj.ascii_idx
+    ascii_field(*ascii_idx, obj): any = 27      // [ascii_idx]obj
 
 Shorthand to `index(obj, static_ascii_string(ascii_idx))`
 
-    utf8_field(*utf8_idx, obj): any = 28        // obj.utf8_idx
+    utf8_field(*utf8_idx, obj): any = 28        // [utf8_idx]obj
 
 Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
@@ -484,3 +484,5 @@ Only `true` and `false` values.
     format = 76
     insert = 77
     start = 78
+    cloud = 79
+    main = 80

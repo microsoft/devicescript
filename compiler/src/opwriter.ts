@@ -672,8 +672,8 @@ export class OpWriter {
         else if (obj == BuiltInObject.DEVICESCRIPT) return this.dsMember(name)
         return this.emitExpr(
             Op.EXPRx1_BUILTIN_FIELD,
-            this.emitBuiltInObject(obj),
-            literal(name)
+            literal(name),
+            this.emitBuiltInObject(obj)
         )
     }
 

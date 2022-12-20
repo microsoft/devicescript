@@ -11,4 +11,10 @@ declare interface Math {
      * @param hi upper bound
      */
     clamp(low: number, v: number, hi: number): number
+
+    /**
+     * Return an integer between 0 and `max` inclusive
+     * @param max upper bound
+     */
+    randomInt(max: number): number
 }

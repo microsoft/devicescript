@@ -93,6 +93,14 @@ export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
 const coreModule = "@devicescript/core"
 
+const builtInObjByName: Record<string, BuiltInObject> = {
+    "#ds.": BuiltInObject.DEVICESCRIPT,
+}
+BUILTIN_OBJECT__VAL.forEach((n, i) => {
+    if (n.indexOf("_") < 0 && i != BuiltInObject.DEVICESCRIPT)
+        builtInObjByName["#" + n] = i
+})
+
 class Cell {
     _index: number
 
@@ -534,12 +542,10 @@ class Program implements TopOpWriter {
             }
         let idx = BUILTIN_STRING__VAL.indexOf(str)
         if (idx >= 0) return idx | (StrIdx.BUILTIN << StrIdx._SHIFT)
-        if (isAscii && str.length < 50)
-            return (
-                addUnique(this.asciiLiterals, str) |
-                (StrIdx.ASCII << StrIdx._SHIFT)
-            )
-        else
+        if (isAscii && str.length < 50) {
+            idx = addUnique(this.asciiLiterals, str)
+            return idx | (StrIdx.ASCII << StrIdx._SHIFT)
+        } else
             return (
                 addUnique(this.utf8Literals, str) |
                 (StrIdx.UTF8 << StrIdx._SHIFT)
@@ -1000,8 +1006,8 @@ class Program implements TopOpWriter {
         optional = false
     ): jdspec.ServiceSpec {
         if (!nm) nm = this.nodeName(expr)
-        if (nm && nm[0] == "#") {
-            let r = nm.slice(1)
+        if (nm && nm.startsWith("#ds.")) {
+            let r = nm.slice(4)
             r = r[0].toLowerCase() + r.slice(1)
             if (r == "condition") r = "deviceScriptCondition"
             return this.lookupRoleSpec(expr, r)
@@ -1039,7 +1045,10 @@ class Program implements TopOpWriter {
         if (tp.getFlags() & ts.TypeFlags.NumberLike) return ValueType.NUMBER
         if (tp.getFlags() & ts.TypeFlags.StringLike) return ValueType.STRING
         if (tp.getFlags() & ts.TypeFlags.VoidLike) return ValueType.VOID
-        if (tp.getFlags() & (ts.TypeFlags.Any | ts.TypeFlags.Unknown))
+        if (
+            tp.getFlags() &
+            (ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.Never)
+        )
             return ValueType.ANY
 
         const n = this.symName(tp.getSymbol())
@@ -1132,9 +1141,10 @@ class Program implements TopOpWriter {
         assert(!!fundecl || !!this.numErrors)
 
         if (fundecl.getName().startsWith("__ds_")) {
+            // TODO rename function to strip __ds_ (smaller binary)
             // TODO compare signatures!
             const id = fundecl.getName().slice(5)
-            this.monkeyPatch["#" + id] = fundecl
+            this.monkeyPatch["#ds." + id] = fundecl
         }
 
         if (fundecl) {
@@ -2071,7 +2081,7 @@ class Program implements TopOpWriter {
         wr.emitCall(
             wr.dsMember(BuiltInString.FORMAT),
             wr.emitString(fmt),
-            ...this.emitArgs(args)
+            ...this.emitArgs(fmtargs)
         )
         return this.retVal(ValueType.STRING)
     }
@@ -2109,12 +2119,22 @@ class Program implements TopOpWriter {
             sym = this.checker.getAliasedSymbol(sym)
         let r = this.checker.getFullyQualifiedName(sym)
         if (r && r.startsWith(`"${coreModule}"`))
-            return "#" + r.slice(coreModule.length + 3)
+            return "#ds." + r.slice(coreModule.length + 3)
         else {
             const d = sym.getDeclarations()?.[0]
             if (d && this.prelude.hasOwnProperty(d.getSourceFile().fileName)) {
                 r = r.replace(/^global\./, "")
-                return "#" + r
+                if (
+                    ts.isSourceFile(d.parent) ||
+                    ts.isModuleBlock(d.parent) ||
+                    (ts.isInterfaceDeclaration(d.parent) &&
+                        ts.isSourceFile(d.parent.parent)) ||
+                    (ts.isVariableDeclarationList(d.parent) &&
+                        ts.isSourceFile(d.parent.parent.parent))
+                )
+                    return "#" + r
+                // console.log(SK[d.parent.kind], d.parent.kind, r)
+                return r
             }
         }
         return r
@@ -2346,6 +2366,15 @@ class Program implements TopOpWriter {
             case "undefined":
                 return this.emitLiteral(undefined)
             default:
+                if (builtInObjByName.hasOwnProperty(nodeName))
+                    return this.writer.emitBuiltInObject(
+                        builtInObjByName[nodeName]
+                    )
+                if (nodeName.startsWith("#ds.")) {
+                    const idx = BUILTIN_STRING__VAL.indexOf(nodeName.slice(4))
+                    if (idx >= 0) return this.writer.dsMember(idx)
+                }
+                // console.log("N", nodeName)
                 return null
         }
     }
@@ -2512,7 +2541,7 @@ class Program implements TopOpWriter {
 
         if (isMonkeyPatch) {
             const id = className + "." + fnName
-            const mp = new MonkeyPatch(expr.right, id.slice(1))
+            const mp = new MonkeyPatch(expr.right, fnName)
             this.monkeyPatch[id] = mp
             if (this.compileAll || (this.isLibrary && this.inMainFile(expr)))
                 this.getMonkeyPatchProc(mp)
