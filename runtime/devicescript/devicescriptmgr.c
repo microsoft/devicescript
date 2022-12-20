@@ -6,6 +6,7 @@
 #include "jd_client.h"
 #include "jacdac/dist/c/devicescriptmanager.h"
 #include "devicescript/devicescript.h"
+#include "devicescript/devs_bytecode.h"
 
 #define DEVSMGR_ALIGN 32
 
@@ -55,6 +56,7 @@ REG_DEFINITION(                                     //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING),   //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART), //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING),   //
+    REG_U32(JD_DEVICE_SCRIPT_MANAGER_REG_RUNTIME_VERSION), //
 )
 
 __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[192] = {
@@ -320,6 +322,9 @@ void devicescriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_GET(JD_REG_STATUS_CODE):
         jd_respond_u32(pkt, current_status(state));
+        break;
+    case JD_DEVICE_SCRIPT_MANAGER_REG_RUNTIME_VERSION:
+        jd_respond_u32(pkt, DEVS_IMG_VERSION);
         break;
 
     default:

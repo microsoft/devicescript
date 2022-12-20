@@ -63,7 +63,8 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     _img.data = imgdata;
 
     CHECK(1000, header->magic0 == DEVS_MAGIC0 && header->magic1 == DEVS_MAGIC1);
-    CHECK(1050, header->version == DEVS_IMG_VERSION);
+    CHECK(1050, VERSION_MAJOR(header->version) == VERSION_MAJOR(DEVS_IMG_VERSION));
+    // minor?
 
     const devs_img_section_t *sptr = &header->functions;
 
