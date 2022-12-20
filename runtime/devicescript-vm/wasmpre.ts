@@ -299,7 +299,11 @@ export module Exts {
     }
 
     /**
-     * Specifices the virtual macine device id.
+     * Specifices the virtual macine device id. 
+     * @remarks
+     * 
+     * Must be called before `devsStart`.
+     * 
      * @param id0 a hex-encoded device id string or the first 32bit of the device id
      * @param id1 the second 32 bits of the device id, undefined if id0 is a string
      */
