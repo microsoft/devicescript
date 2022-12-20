@@ -114,9 +114,9 @@
     "\x01\x04\x09\x09\x09\x0b"
 
 #define DEVS_IMG_VERSION 0x00010000
-#define VERSION_MAJOR(n) ((n) & 0xff000000)
-#define VERSION_MINOR(n) ((n) & 0x00ff0000)
-#define VERSION_PATCH(n) ((n) & 0x0000ffff)
+#define DEVS_VERSION_MAJOR(n) (((n) >> 24) & 0xff)
+#define DEVS_VERSION_MINOR(n) (((n) >> 0x16) & 0xff)
+#define DEVS_VERSION_PATCH(n) ((n) & 0xffff)
 
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
