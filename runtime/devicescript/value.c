@@ -288,6 +288,10 @@ bool devs_is_nullish(value_t t) {
     return false;
 }
 
+void devs_log_value(devs_ctx_t *ctx, const char *lbl, value_t v) {
+    DMESG("%s: %s", lbl, devs_show_value(ctx, v));
+}
+
 const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     static char buf[64];
 

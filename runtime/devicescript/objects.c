@@ -136,6 +136,7 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
             if (p->builtin_string_id == kidx)
                 return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION,
                                               p->builtin_function_idx);
+            p++;
         }
     } else {
         unsigned ksz;
@@ -146,6 +147,7 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
             if (strcmp(devs_builtin_string_by_idx(p->builtin_string_id), kptr) == 0)
                 return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION,
                                               p->builtin_function_idx);
+            p++;
         }
     }
 

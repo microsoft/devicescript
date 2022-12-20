@@ -4,7 +4,6 @@
 #include <limits.h>
 #include <math.h>
 
-
 static void stmt1_wait_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t a = devs_vm_pop_arg_role(ctx);
     frame->fiber->role_idx = a;
@@ -68,7 +67,6 @@ static void stmt3_index_set(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_any_set(ctx, obj, idx, v);
 }
 
-
 static void stmt1_setup_pkt_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t a = devs_vm_pop_arg_u32(ctx);
     if (a > JD_SERIAL_PAYLOAD_SIZE) {
@@ -100,6 +98,10 @@ static void stmt1_panic(devs_activation_t *frame, devs_ctx_t *ctx) {
 static void stmt_callN(devs_activation_t *frame, devs_ctx_t *ctx, unsigned N) {
     JD_ASSERT(ctx->stack_top == N + 1);
     ctx->stack_top = 0;
+#if 0
+    devs_log_value(ctx, "fn", ctx->the_stack[0]);
+    devs_log_value(ctx, "a0", ctx->the_stack[1]);
+#endif
     devs_fiber_call_function(frame->fiber, N);
 }
 

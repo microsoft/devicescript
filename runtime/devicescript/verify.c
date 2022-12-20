@@ -9,7 +9,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1060
+// next error 1061
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -105,7 +105,7 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     uint8_t *str_data = FIRST_DESC(string_data);
     CHECK(1059, str_data[header->string_data.length - 1] == 0);
     for (sptr = FIRST_DESC(utf8_strings); (void *)sptr < LAST_DESC(utf8_strings); sptr++) {
-        CHECK(1052, sptr->start < header->string_data.length);
+        CHECK(1060, sptr->start < header->string_data.length);
         CHECK(1053, sptr->start + sptr->length < header->string_data.length);
         CHECK(1054, str_data[sptr->start + sptr->length] == 0);
     }

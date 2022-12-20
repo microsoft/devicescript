@@ -266,7 +266,9 @@
 #define DEVS_BUILTIN_STRING_FORMAT 76
 #define DEVS_BUILTIN_STRING_INSERT 77
 #define DEVS_BUILTIN_STRING_START 78
-#define DEVS_BUILTIN_STRING___MAX 78
+#define DEVS_BUILTIN_STRING_CLOUD 79
+#define DEVS_BUILTIN_STRING_MAIN 80
+#define DEVS_BUILTIN_STRING___MAX 80
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -297,7 +299,7 @@
         "packet", "panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",       \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
-        "write", "sleepMs", "imod", "format", "insert", "start"
+        "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \

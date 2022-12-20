@@ -157,3 +157,4 @@ void *devs_value_to_gc_obj(devs_ctx_t *ctx, value_t v);
 
 // returns pointer to a static buffer!
 const char *devs_show_value(devs_ctx_t *ctx, value_t v);
+void devs_log_value(devs_ctx_t *ctx, const char *lbl, value_t v);

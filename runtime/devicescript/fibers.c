@@ -37,9 +37,9 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     if (bltin >= 0) {
         JD_ASSERT(bltin < devs_num_builtin_functions);
         const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
-        if (numparams <= h->num_args) {
-            unsigned num = h->num_args - numparams + 1;
-            memset(argp + numparams, 0, num * sizeof(value_t));
+        if (numparams < h->num_args) {
+            unsigned num = h->num_args - numparams;
+            memset(argp + 1 + numparams, 0, num * sizeof(value_t));
         }
         JD_ASSERT(!(h->flags & DEVS_BUILTIN_FLAG_IS_PROPERTY));
         fiber->ret_val = devs_undefined;
