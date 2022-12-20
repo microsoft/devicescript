@@ -20,6 +20,11 @@ export declare module Exts {
     function setupWebsocketTransport(url: string, proto?: string): Promise<void>;
     function b64ToBin(s: string): Uint8Array;
     function devsDeploy(binary: Uint8Array): number;
+    /**
+     * Verifies the format and version of the bytecode
+     * @param binary DeviceScript bytecode
+     * @returns error code, 0 if verificatino is successful
+     */
     function devsVerify(binary: Uint8Array): number;
     function devsClientDeploy(binary: Uint8Array): number;
     function devsInit(): void;
