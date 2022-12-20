@@ -216,7 +216,7 @@ static inline value_t devs_arg(devs_ctx_t *ctx, unsigned idx) {
     return ctx->the_stack[idx + 1];
 }
 static inline value_t devs_arg_self(devs_ctx_t *ctx) {
-    return devs_arg(ctx, 0);
+    return ctx->the_stack[0];
 }
 
 void devs_ret_double(devs_ctx_t *ctx, double v);

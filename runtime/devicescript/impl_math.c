@@ -1,5 +1,6 @@
 #include "devs_internal.h"
 #include <math.h>
+#include <limits.h>
 
 static void fun1_to_int(devs_ctx_t *ctx, double (*fn)(double)) {
     value_t v = devs_arg(ctx, 0);
@@ -19,6 +20,19 @@ void fun1_Math_floor(devs_ctx_t *ctx) {
 
 void fun1_Math_round(devs_ctx_t *ctx) {
     fun1_to_int(ctx, round);
+}
+
+void fun1_Math_abs(devs_ctx_t *ctx) {
+    value_t v = devs_arg(ctx, 0);
+    if (devs_is_tagged_int(v) && v.val_int32 != INT_MIN)
+        devs_ret(ctx, v.val_int32 >= 0 ? v : devs_value_from_int(-v.val_int32));
+    else {
+        double q = devs_value_to_double(v);
+        if (q < 0)
+            devs_ret_double(ctx, -q);
+        else
+            devs_ret(ctx, v);
+    }
 }
 
 void fun0_Math_random(devs_ctx_t *ctx) {
