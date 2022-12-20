@@ -304,7 +304,7 @@ export module Exts {
      * Indicates if the virtual machine is running
      * @returns true if the virtual machine is started.
      */
-    export function isRunning() {
+    export function devsIsRunning() {
         return !!devs_interval
     }
 
@@ -318,7 +318,7 @@ export module Exts {
      * @param id1 the second 32 bits of the device id, undefined if id0 is a string
      */
     export function devsSetDeviceId(id0: string | number, id1?: number) {
-        if (isRunning()) throw new Error("cannot change deviceid while running")
+        if (devsIsRunning()) throw new Error("cannot change deviceid while running")
         Module.devsInit()
         if (typeof id0 == "string") {
             if (id1 !== undefined) throw new Error("invalid arguments")
