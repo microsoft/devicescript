@@ -63,7 +63,11 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     _img.data = imgdata;
 
     CHECK(1000, header->magic0 == DEVS_MAGIC0 && header->magic1 == DEVS_MAGIC1);
-    CHECK(1050, header->version == DEVS_IMG_VERSION);
+    // precise match on major
+    CHECK(1050, DEVS_VERSION_MAJOR(header->version) == DEVS_VERSION_MAJOR(DEVS_IMG_VERSION));
+    // bytecode minor should only load if no older than current runtime
+    CHECK(1050, DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION));
+    // ignore patch
 
     const devs_img_section_t *sptr = &header->functions;
 
