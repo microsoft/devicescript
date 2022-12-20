@@ -36,17 +36,45 @@ function bufferConcat(a: Uint8Array, b: Uint8Array) {
 }
 
 export module Exts {
+    /**
+     * Logging function
+     */
+    export let log = console.log
+
+    /**
+     * Error logging function
+     */
+    export let error = console.error
+
+    /**
+     * Callback to invoke when a packet needs to be handled by the virtual machine
+     * TODO: frame or packet?
+     * @param pkt a Jacdac frame
+     */
     export function handlePacket(pkt: Uint8Array) {
         copyToHeap(pkt, Module._jd_em_frame_received)
         Module._jd_em_process()
     }
 
+    export interface TransportResult {
+        /**
+         * Callback to close the transport
+         */
+        close: () => void
+    }
+
+    /**
+     * Starts a packet transport over a TCP socket in a node.js application
+     * @param require module resultion function
+     * @param host socket url host
+     * @param port socket port
+     */
     export function setupNodeTcpSocketTransport(
-        require: any,
+        require: (moduleName: string) => any,
         host: string,
         port: number
-    ) {
-        return new Promise<void>((resolve, reject) => {
+    ): Promise<TransportResult> {
+        return new Promise<TransportResult>((resolve, reject) => {
             const net = require("net")
             let sock: any = null
 
@@ -58,22 +86,30 @@ export module Exts {
             }
 
             const disconnect = (err: any) => {
-                console.log("disconnect", err.message)
-                if (sock) sock.end()
-                sock = undefined
+                log("disconnect", err?.message)
+                if (sock)
+                    try {
+                        sock.end()
+                    } catch {
+                    } finally {
+                        sock = undefined
+                    }
                 if (resolve) {
                     resolve = null
                     reject(new Error(`can't connect to ${host}:${port}`))
                 }
             }
 
+            const close = () => disconnect(undefined)
+
             Module["sendPacket"] = send
 
             sock = net.createConnection(port, host, () => {
-                console.log(`connected to ${port}:${host}`)
+                log(`connected to ${port}:${host}`)
                 const f = resolve
                 resolve = null
-                f()
+                reject = null
+                f({ close })
             })
             sock.on("error", disconnect)
             sock.on("end", disconnect)
@@ -103,9 +139,18 @@ export module Exts {
         })
     }
 
-    export function setupWebsocketTransport(url: string, proto?: string) {
-        return new Promise<void>((resolve, reject) => {
-            let sock: WebSocket = new WebSocket(url, proto)
+    /**
+     * Starts a packet transport over a WebSocket using arraybuffer binary type.
+     * @param require module resultion function
+     * @param url socket url
+     * @param port socket port
+     */
+    export function setupWebsocketTransport(
+        url: string | URL,
+        protocols?: string | string[]
+    ): Promise<TransportResult> {
+        return new Promise<TransportResult>((resolve, reject) => {
+            let sock: WebSocket = new WebSocket(url, protocols)
 
             sock.binaryType = "arraybuffer"
 
@@ -119,12 +164,14 @@ export module Exts {
             }
 
             const disconnect = (err: any) => {
-                console.log("disconnect")
+                log("disconnect", err?.message)
                 if (sock)
                     try {
                         sock.close()
-                    } catch {}
-                sock = undefined
+                    } catch {
+                    } finally {
+                        sock = undefined
+                    }
                 if (resolve) {
                     resolve = null
                     reject(
@@ -133,18 +180,25 @@ export module Exts {
                 }
             }
 
+            const close = () => disconnect(undefined)
+
             Module["sendPacket"] = send
 
             sock.onopen = () => {
-                console.log(`connected to ${url}`)
-                resolve()
+                log(`connected to ${url}`)
+                const r = resolve
+                if (r) {
+                    resolve = null
+                    reject = null
+                    r({ close })
+                }
             }
             sock.onerror = disconnect
             sock.onclose = disconnect
             sock.onmessage = ev => {
                 const data = ev.data
                 if (typeof data == "string") {
-                    console.error("got string msg")
+                    error("got string msg")
                     return
                 } else {
                     const pkt = new Uint8Array(ev.data)
@@ -154,13 +208,25 @@ export module Exts {
         })
     }
 
-    export function b64ToBin(s: string) {
+    /**
+     * Utility that converts a base64-encoded buffer into a Uint8Array
+     * TODO: nobody is using this?
+     * @param s
+     * @returns
+     */
+    export function b64ToBin(s: string): Uint8Array {
         s = atob(s)
         const r = new Uint8Array(s.length)
         for (let i = 0; i < s.length; ++i) r[i] = s.charCodeAt(i)
         return r
     }
 
+    /**
+     * Deploys a DeviceScript bytecode to the virtual machine
+     * TODO: what is the difference with devsClientDeploy
+     * @param binary
+     * @returns error code, 0 if deployment is successful
+     */
     export function devsDeploy(binary: Uint8Array) {
         return copyToHeap(binary, ptr =>
             Module._jd_em_devs_deploy(ptr, binary.length)
@@ -170,7 +236,7 @@ export module Exts {
     /**
      * Verifies the format and version of the bytecode
      * @param binary DeviceScript bytecode
-     * @returns error code, 0 if verificatino is successful
+     * @returns error code, 0 if verification is successful
      */
     export function devsVerify(binary: Uint8Array) {
         return copyToHeap(binary, ptr =>
@@ -178,6 +244,11 @@ export module Exts {
         )
     }
 
+    /**
+     * Deploys a DeviceScript bytecode to the virtual machine
+     * @param binary
+     * @returns error code, 0 if deployment is successful
+     */
     export function devsClientDeploy(binary: Uint8Array) {
         // this will call exit(0) when done
         const ptr = Module._malloc(binary.length)
@@ -185,39 +256,64 @@ export module Exts {
         return Module._jd_em_devs_client_deploy(ptr, binary.length)
     }
 
+    /**
+     * Initalises the virtual machine data structure.
+     */
     export function devsInit() {
         Module._jd_em_init()
     }
 
-    export function devsStart() {
+    /**
+     * Initializes and start the virtual machine (calls init).
+     */
+    export function devsStart(): void {
         if (devs_interval) return
         Module.devsInit()
         devs_interval = setInterval(() => {
             try {
                 Module._jd_em_process()
             } catch (e) {
-                console.error(e)
+                error(e)
                 devsStop()
             }
         }, 10)
     }
 
-    export function devsStop() {
+    /**
+     * Stops the virtual machine
+     */
+    export function devsStop(): void {
         if (devs_interval) {
             clearInterval(devs_interval)
             devs_interval = undefined
         }
     }
 
+    /**
+     * Indicates if the virtual machine is running
+     * @returns true if the virtual machine is started.
+     */
+    export function isRunning() {
+        return !!devs_interval
+    }
+
+    /**
+     * Specifices the virtual macine device id.
+     * @param id0 a hex-encoded device id string or the first 32bit of the device id
+     * @param id1 the second 32 bits of the device id, undefined if id0 is a string
+     */
     export function devsSetDeviceId(id0: string | number, id1?: number) {
+        if (isRunning()) throw new Error("cannot change deviceid while running")
+        Module.devsInit()
         if (typeof id0 == "string") {
+            if (id1 !== undefined) throw new Error("invalid arguments")
             const s = allocateUTF8(id0)
             Module._jd_em_set_device_id_string(s)
             Module._free(s)
         } else if (typeof id0 == "number" && typeof id1 == "number") {
             Module._jd_em_set_device_id_2x_i32(id0, id1)
         } else {
-            throw new Error("invalid args")
+            throw new Error("invalid arguments")
         }
     }
 }
