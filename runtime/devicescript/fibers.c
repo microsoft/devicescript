@@ -29,6 +29,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     devs_activation_t *closure;
     int fidx = devs_get_fnidx(ctx, fn, argp, &closure);
     if (fidx < 0) {
+        devs_log_value(ctx, "non-fun", fn);
         devs_runtime_failure(ctx, 60157);
         return -1;
     }

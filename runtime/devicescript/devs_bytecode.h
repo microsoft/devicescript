@@ -23,9 +23,9 @@
 #define DEVS_EXPRx_LOAD_PARAM 23     // *param_idx
 #define DEVS_EXPR2_INDEX 24          // object[idx]
 #define DEVS_STMT3_INDEX_SET 25      // object[index] := value
-#define DEVS_EXPRx1_BUILTIN_FIELD 26 // obj.builtin_idx
-#define DEVS_EXPRx1_ASCII_FIELD 27   // obj.ascii_idx
-#define DEVS_EXPRx1_UTF8_FIELD 28    // obj.utf8_idx
+#define DEVS_EXPRx1_BUILTIN_FIELD 26 // [builtin_idx]obj
+#define DEVS_EXPRx1_ASCII_FIELD 27   // [ascii_idx]obj
+#define DEVS_EXPRx1_UTF8_FIELD 28    // [utf8_idx]obj
 #define DEVS_EXPRx_MATH_FIELD 29     // Math.builtin_idx
 #define DEVS_EXPRx_DS_FIELD 30       // ds.builtin_idx
 #define DEVS_STMT0_ALLOC_MAP 31

@@ -27,8 +27,8 @@ void funX_DeviceScript_format(devs_ctx_t *ctx) {
     if (fmt == NULL)
         return;
 
-    unsigned numargs = ctx->stack_top_for_gc - 1;
-    value_t *argp = ctx->the_stack + 1;
+    unsigned numargs = ctx->stack_top_for_gc - 2;
+    value_t *argp = ctx->the_stack + 2;
 
     char tmp[64];
     unsigned sz = devs_strformat(ctx, fmt, len, tmp, sizeof(tmp), argp, numargs, 0);

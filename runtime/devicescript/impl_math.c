@@ -36,7 +36,7 @@ void fun1_Math_abs(devs_ctx_t *ctx) {
 }
 
 void fun0_Math_random(devs_ctx_t *ctx) {
-    devs_ret_double(ctx, jd_random() * (double)0x100000000);
+    devs_ret_double(ctx, jd_random() * (1.0 / 0x100000000));
 }
 
 static uint32_t random_max(uint32_t mx) {

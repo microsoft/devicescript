@@ -258,7 +258,7 @@ const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, 
     };
 
     if (devs_is_null(v)) {
-        devs_runtime_failure(ctx, 60157);
+        devs_runtime_failure(ctx, 60165);
         return NULL;
     }
 
