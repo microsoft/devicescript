@@ -144,19 +144,10 @@ static void stmtx1_store_local(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     unsigned off = ctx->literal_int;
     // DMESG("store L%d := %d st=%d", off, devs_value_to_int(v), frame->func->start);
-    if (off >= frame->func->num_locals)
+    if (off >= frame->func->num_slots)
         devs_runtime_failure(ctx, 60118);
     else
-        devs_frame_locals(frame)[off] = v;
-}
-
-static void stmtx1_store_param(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t v = devs_vm_pop_arg(ctx);
-    unsigned off = ctx->literal_int;
-    if (off >= frame->func->num_args)
-        devs_runtime_failure(ctx, 60119);
-    else
-        devs_frame_params(frame)[off] = v;
+        frame->slots[off] = v;
 }
 
 static void stmtx1_store_global(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -208,17 +199,9 @@ static value_t expr2_str0eq(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t exprx_load_local(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
-    if (off < frame->func->num_locals)
-        return devs_frame_locals(frame)[off];
+    if (off < frame->func->num_slots)
+        return frame->slots[off];
     return devs_runtime_failure(ctx, 60105);
-}
-
-static value_t exprx_load_param(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned off = ctx->literal_int;
-    if (off < frame->func->num_args)
-        return devs_frame_params(frame)[off];
-    // no failure here - allow for var-args in future?
-    return devs_undefined;
 }
 
 static value_t exprx_load_global(devs_activation_t *frame, devs_ctx_t *ctx) {

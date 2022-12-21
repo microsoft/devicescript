@@ -51,9 +51,8 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     }
 
     const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
-    unsigned num_slots = func->num_locals + func->num_args;
     devs_activation_t *callee =
-        devs_try_alloc(ctx, sizeof(devs_activation_t) + sizeof(value_t) * num_slots);
+        devs_try_alloc(ctx, sizeof(devs_activation_t) + sizeof(value_t) * func->num_slots);
     if (callee == NULL)
         return -2;
 
@@ -66,7 +65,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         params = argp + 1;
     if (num_formals > numparams)
         num_formals = numparams;
-    memcpy(devs_frame_params(callee), params, num_formals * sizeof(value_t));
+    memcpy(callee->slots, params, num_formals * sizeof(value_t));
 
     callee->pc = func->start;
     callee->closure = closure;

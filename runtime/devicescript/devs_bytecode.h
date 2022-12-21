@@ -17,10 +17,8 @@
 #define DEVS_STMTx1_STORE_LOCAL 17   // local_idx := value
 #define DEVS_STMTx1_STORE_GLOBAL 18  // global_idx := value
 #define DEVS_STMT4_STORE_BUFFER 19   // buffer, numfmt, offset, value
-#define DEVS_STMTx1_STORE_PARAM 20   // param_idx := value
 #define DEVS_EXPRx_LOAD_LOCAL 21     // *local_idx
 #define DEVS_EXPRx_LOAD_GLOBAL 22    // *global_idx
-#define DEVS_EXPRx_LOAD_PARAM 23     // *param_idx
 #define DEVS_EXPR2_INDEX 24          // object[idx]
 #define DEVS_STMT3_INDEX_SET 25      // object[index] := value
 #define DEVS_EXPRx1_BUILTIN_FIELD 26 // [builtin_idx]obj
@@ -81,22 +79,22 @@
 #define DEVS_EXPR1_GET_FIBER_HANDLE 80 // func
 #define DEVS_EXPR0_PKT_SIZE 81
 #define DEVS_EXPR0_PKT_EV_CODE 82
-#define DEVS_EXPR0_PKT_REG_GET_CODE 83
-#define DEVS_EXPR0_PKT_REPORT_CODE 84
+#define DEVS_EXPR0_PKT_REG_GET_CODE 20
+#define DEVS_EXPR0_PKT_REPORT_CODE 23
 #define DEVS_EXPR0_PKT_COMMAND_CODE 16
 #define DEVS_EXPR0_PKT_BUFFER 42
-#define DEVS_OP_PAST_LAST 85
+#define DEVS_OP_PAST_LAST 83
 
 #define DEVS_OP_PROPS                                                                              \
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x31\x20\x20" \
-    "\x20\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20" \
+    "\x00\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x00\x00"
+    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00"
 #define DEVS_OP_TYPES                                                                              \
-    "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x0b\x0a\x0a" \
-    "\x0a\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01" \
+    "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x01\x0a\x0a" \
+    "\x01\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x01\x01"
+    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01"
 
 #define DEVS_IMG_VERSION 0x01000000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
@@ -274,8 +272,8 @@
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
         stmt5_call4, stmt6_call5, stmt7_call6, stmt8_call7, stmt9_call8, expr2_str0eq,             \
         stmt1_return, stmtx_jmp, stmtx1_jmp_z, stmt1_panic, expr0_pkt_command_code,                \
-        stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer, stmtx1_store_param,           \
-        exprx_load_local, exprx_load_global, exprx_load_param, expr2_index, stmt3_index_set,       \
+        stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer, expr0_pkt_reg_get_code,       \
+        exprx_load_local, exprx_load_global, expr0_pkt_report_code, expr2_index, stmt3_index_set,  \
         exprx1_builtin_field, exprx1_ascii_field, exprx1_utf8_field, exprx_math_field,             \
         exprx_ds_field, stmt0_alloc_map, stmt1_alloc_array, stmt1_alloc_buffer, exprx_static_role, \
         exprx_static_buffer, exprx_static_builtin_string, exprx_static_ascii_string,               \
@@ -287,8 +285,7 @@
         expr2_shift_right, expr2_shift_right_unsigned, expr2_eq, expr2_le, expr2_lt, expr2_ne,     \
         stmt1_terminate_fiber, stmt1_wait_role, stmt3_query_reg, stmt2_send_cmd,                   \
         stmt4_query_idx_reg, stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms,                  \
-        expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code, expr0_pkt_reg_get_code,         \
-        expr0_pkt_report_code, expr_invalid
+        expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \

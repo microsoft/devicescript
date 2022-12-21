@@ -138,14 +138,6 @@ struct devs_activation {
     value_t slots[0];
 };
 
-static inline value_t *devs_frame_locals(devs_activation_t *frame) {
-    return frame->slots + frame->func->num_args;
-}
-
-static inline value_t *devs_frame_params(devs_activation_t *frame) {
-    return frame->slots;
-}
-
 static inline uint32_t devs_now(devs_ctx_t *ctx) {
     return (uint32_t)ctx->_now_long;
 }

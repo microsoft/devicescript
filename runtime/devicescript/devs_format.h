@@ -28,7 +28,7 @@ typedef struct {
     // position of function (must be within code section)
     uint32_t start;  // in bytes, in whole image
     uint32_t length; // in bytes
-    uint16_t num_locals;
+    uint16_t num_slots;
     uint8_t num_args;
     uint8_t flags;
     uint16_t name_idx;

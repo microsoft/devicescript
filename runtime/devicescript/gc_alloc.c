@@ -165,8 +165,7 @@ static void mark_roots(devs_gc_t *gc) {
         if (devs_fiber_uses_pkt_data_v(fib))
             scan_value(ctx, fib->pkt_data.v, ROOT_SCAN_DEPTH);
         for (devs_activation_t *act = fib->activation; act; act = act->caller) {
-            scan_array(ctx, act->slots, act->func->num_args + act->func->num_locals,
-                       ROOT_SCAN_DEPTH);
+            scan_array(ctx, act->slots, act->func->num_slots, ROOT_SCAN_DEPTH);
         }
     }
 }

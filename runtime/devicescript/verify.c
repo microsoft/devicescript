@@ -9,7 +9,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1061
+// next error 1062
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -93,6 +93,10 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     for (const devs_function_desc_t *fptr = FIRST_DESC(functions); //
          (void *)fptr < LAST_DESC(functions);                      //
          fptr++) {
+        int numargs = fptr->num_args;
+        if (fptr->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS)
+            numargs++;
+        CHECK(1062, numargs <= fptr->num_slots);
         sptr = (const devs_img_section_t *)fptr;
         CHECK_SECT_ALIGNED(sptr);
         MUST_CONTAIN_SECT(1021, header->functions_data, sptr);
