@@ -399,7 +399,7 @@ value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key) {
 
 void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v) {
     if (devs_is_number(key)) {
-        unsigned idx = devs_value_to_int(v);
+        unsigned idx = devs_value_to_int(key);
         devs_seq_set(ctx, obj, idx, v);
     } else if (devs_is_string(ctx, key)) {
         devs_map_t *map = (void *)devs_object_get_attached(ctx, obj, true);
