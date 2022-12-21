@@ -80,13 +80,9 @@ Jump if condition is false.
 
     store_buffer(buffer, numfmt, offset, value) = 19
 
-    store_param(*param_idx, value) = 20      // param_idx := value
-
     load_local(*local_idx): any = 21
 
     load_global(*global_idx): any = 22
-
-    load_param(*param_idx): any = 23
 
 ### Field access
 
@@ -254,9 +250,9 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 
     pkt_ev_code(): number = 82
 
-    pkt_reg_get_code(): number = 83
+    pkt_reg_get_code(): number = 20
 
-    pkt_report_code(): number = 84
+    pkt_report_code(): number = 23
 
     pkt_command_code(): number = 16
 

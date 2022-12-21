@@ -58,12 +58,13 @@ import {
     DelayedCodeSection,
     literal,
     Label,
-    LOCAL_OFFSET,
     nonEmittable,
     OpWriter,
     SectionWriter,
     TopOpWriter,
     Value,
+    VariableKind,
+    packVarIndex,
 } from "./opwriter"
 import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
 import { preludeFiles } from "./specgen"
@@ -197,27 +198,33 @@ class Role extends Cell {
 }
 
 class Variable extends Cell {
-    isLocal = false
-    isParameter = false
-
     constructor(
         definition: ts.VariableDeclaration | ts.ParameterDeclaration,
+        public vkind: VariableKind,
         scope: VariableScope,
         public valueType: ValueType,
         name?: string
     ) {
         super(definition, scope, name)
     }
+
+    private get packedIndex() {
+        return packVarIndex(this.vkind, this._index)
+    }
     emit(wr: OpWriter): Value {
-        const r = this.isParameter
-            ? wr.emitMemRef(Op.EXPRx_LOAD_PARAM, this._index, this.valueType)
-            : this.isLocal
-            ? wr.emitMemRef(
-                  Op.EXPRx_LOAD_LOCAL,
-                  this._index + LOCAL_OFFSET,
-                  this.valueType
-              )
-            : wr.emitMemRef(Op.EXPRx_LOAD_GLOBAL, this._index, this.valueType)
+        let r: Value
+        if (this.vkind == VariableKind.Global)
+            r = wr.emitMemRef(
+                Op.EXPRx_LOAD_GLOBAL,
+                this.packedIndex,
+                this.valueType
+            )
+        else
+            r = wr.emitMemRef(
+                Op.EXPRx_LOAD_LOCAL,
+                this.packedIndex,
+                this.valueType
+            )
         va(r).variable = this
         return r
     }
@@ -226,15 +233,10 @@ class Variable extends Cell {
     }
     store(wr: OpWriter, src: Value) {
         if (this.valueType == ValueType.ANY) this.valueType = src.valueType
-        if (this.isParameter)
-            wr.emitStmt(Op.STMTx1_STORE_PARAM, literal(this._index), src)
-        else if (this.isLocal)
-            wr.emitStmt(
-                Op.STMTx1_STORE_LOCAL,
-                literal(this._index + LOCAL_OFFSET),
-                src
-            )
-        else wr.emitStmt(Op.STMTx1_STORE_GLOBAL, literal(this._index), src)
+
+        if (this.vkind == VariableKind.Global)
+            wr.emitStmt(Op.STMTx1_STORE_GLOBAL, literal(this.packedIndex), src)
+        else wr.emitStmt(Op.STMTx1_STORE_LOCAL, literal(this.packedIndex), src)
     }
     toString() {
         return `var ${this.getName()} : ${this.valueType}`
@@ -325,6 +327,7 @@ class Procedure {
     users: ts.Node[] = []
     skipAccounting = false
     retType = ValueType.VOID
+    usesThis = false
     constructor(
         public parent: Program,
         public name: string,
@@ -343,7 +346,11 @@ class Procedure {
         return this.writer.getAssembly()
     }
     finalize() {
-        this.writer.patchLabels()
+        this.writer.patchLabels(
+            this.locals.list.length,
+            this.numargs,
+            this.usesThis
+        )
     }
     args() {
         return this.params.list.slice() as Variable[]
@@ -353,9 +360,8 @@ class Procedure {
         this.users.push(node)
     }
     mkTempLocal(name: string, tp: ValueType) {
-        const l = new Variable(null, this.locals, tp)
+        const l = new Variable(null, VariableKind.Local, this.locals, tp)
         l._name = name
-        l.isLocal = true
         return l
     }
     debugInfo(): FunctionDebugInfo {
@@ -623,8 +629,6 @@ class Program implements TopOpWriter {
                 return JSON.stringify(BUILTIN_STRING__VAL[idx])
             case "O":
                 return BUILTIN_OBJECT__VAL[idx] || "???"
-            case "P":
-                return "" // param
             case "L":
                 return "" // local
             case "G":
@@ -876,8 +880,12 @@ class Program implements TopOpWriter {
                 }
             } else {
                 this.newDef(decl)
-                g = new Variable(decl, this.proc.locals, ValueType.ANY)
-                g.isLocal = true
+                g = new Variable(
+                    decl,
+                    VariableKind.Local,
+                    this.proc.locals,
+                    ValueType.ANY
+                )
             }
 
             if (decl.initializer) {
@@ -946,7 +954,7 @@ class Program implements TopOpWriter {
         {
             const tmp = isOuter
                 ? wr.emitBufLoad(NumFmt.U32, 0)
-                : wr.emitMemRef(Op.EXPRx_LOAD_PARAM, 0, ValueType.NUMBER)
+                : wr.emitMemRef(Op.EXPRx_LOAD_LOCAL, 1, ValueType.NUMBER)
             wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(8 + args.length * 8))
             wr.emitBufStore(tmp, NumFmt.U32, 0)
             wr.emitBufStore(literal(code), NumFmt.U32, 4)
@@ -1031,12 +1039,11 @@ class Program implements TopOpWriter {
     ) {
         const v = new Variable(
             typeof id == "string" ? null : id,
+            VariableKind.Parameter,
             proc.params,
             ValueType.NUMBER
         )
         if (typeof id == "string") v._name = id
-        v.isLocal = true
-        v.isParameter = true
         return v
     }
 
@@ -1100,12 +1107,11 @@ class Program implements TopOpWriter {
         this.withProcedure(cc.proc, wr => {
             const v = new Variable(
                 null,
+                VariableKind.Parameter,
                 cc.proc.params,
                 ValueType.ROLE(cc.serviceSpec),
                 "this"
             )
-            v.isLocal = true
-            v.isParameter = true
             this.emitParameters(stmt, cc.proc)
             this.emitFunctionBody(stmt, cc.proc)
         })
@@ -1194,7 +1200,12 @@ class Program implements TopOpWriter {
                     for (const decl of s.declarationList.declarations) {
                         this.newDef(decl)
                         if (!this.parseRole(decl)) {
-                            new Variable(decl, this.globals, ValueType.ANY)
+                            new Variable(
+                                decl,
+                                VariableKind.Global,
+                                this.globals,
+                                ValueType.ANY
+                            )
                         }
                     }
                 }
@@ -3048,11 +3059,7 @@ class Program implements TopOpWriter {
         const outp = new Uint8Array(off)
 
         for (const proc of this.procs) {
-            proc.writer.finalizeDesc(
-                funData.offset + proc.writer.offsetInFuncs,
-                proc.locals.list.length,
-                proc.numargs
-            )
+            proc.writer.finalizeDesc(funData.offset + proc.writer.offsetInFuncs)
         }
 
         off = 0

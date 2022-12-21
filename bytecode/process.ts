@@ -62,7 +62,6 @@ function processSpec(filecontent: string): Spec {
         local_idx: "L",
         func_idx: "F",
         global_idx: "G",
-        param_idx: "P",
         f64_idx: "D",
     }
 

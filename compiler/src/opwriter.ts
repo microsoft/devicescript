@@ -14,6 +14,7 @@ import {
     StrIdx,
     BuiltInString,
     BuiltInObject,
+    FunctionFlag,
 } from "./format"
 import { assert, write32, write16 } from "./jdutil"
 import { assertRange, oops } from "./util"
@@ -100,10 +101,13 @@ export class CachedValue {
     numrefs = 1
     valueType: ValueType
     constructor(public parent: OpWriter, public index: number) {}
+    private get packedIndex() {
+        return packVarIndex(VariableKind.Cached, this.index)
+    }
     emit() {
         assert(this.numrefs > 0)
         const r = new Value(this.valueType)
-        r.numValue = this.index
+        r.numValue = this.packedIndex
         r.op = Op.EXPRx_LOAD_LOCAL
         r.flags = VF_IS_MEMREF // not "using state" - it's temporary
         r._cachedValue = this
@@ -113,7 +117,11 @@ export class CachedValue {
     store(v: Value) {
         assert(this.numrefs > 0)
         this.valueType = v.valueType
-        this.parent.emitStmt(Op.STMTx1_STORE_LOCAL, literal(this.index), v)
+        this.parent.emitStmt(
+            Op.STMTx1_STORE_LOCAL,
+            literal(this.packedIndex),
+            v
+        )
     }
     finalEmit(tp?: ValueType) {
         const r = this.emit()
@@ -172,7 +180,40 @@ class Comment {
     constructor(public offset: number, public comment: string) {}
 }
 
-export const LOCAL_OFFSET = 100
+export enum VariableKind {
+    Global,
+    ThisParam,
+    Parameter,
+    Cached,
+    Local,
+}
+const VAR_PARAM_OFF = 1
+const VAR_CACHED_OFF = 30
+const VAR_LOCAL_OFF = 100
+
+export function packVarIndex(vk: VariableKind, idx: number) {
+    switch (vk) {
+        case VariableKind.Global:
+            return idx
+        case VariableKind.ThisParam:
+            assert(idx == 0)
+            return idx
+        case VariableKind.Parameter:
+            idx += VAR_PARAM_OFF
+            assert(idx < VAR_CACHED_OFF)
+            return idx
+        case VariableKind.Cached:
+            idx += VAR_CACHED_OFF
+            assert(idx < VAR_LOCAL_OFF)
+            return idx
+        case VariableKind.Local:
+            idx += VAR_LOCAL_OFF
+            assert(idx < BinFmt.FIRST_MULTIBYTE_INT)
+            return idx
+        default:
+            oops("bad vk")
+    }
+}
 
 export class OpWriter {
     private binary: Uint8Array
@@ -204,7 +245,6 @@ export class OpWriter {
     }
 
     serialize() {
-        while (this.location() & 3) this.writeByte(0)
         return this.binary.slice(0, this.binPtr)
     }
 
@@ -212,16 +252,8 @@ export class OpWriter {
         return this.binPtr + this.desc.length
     }
 
-    finalizeDesc(off: number, numlocals: number, numargs: number) {
-        const flags = 0
-        const buf = new Uint8Array(4 * 4)
-        write32(buf, 0, off)
-        write32(buf, 4, this.location())
-        write16(buf, 8, numlocals + this.cachedValues.length)
-        buf[10] = numargs
-        buf[11] = flags
-        write16(buf, 12, this.nameIdx)
-        this.desc.set(buf)
+    finalizeDesc(off: number) {
+        write32(this.desc, 0, off)
     }
 
     emitDbg(msg: string) {
@@ -456,7 +488,7 @@ export class OpWriter {
         }
     }
 
-    patchLabels() {
+    patchLabels(numLocals: number, numargs: number, hasThis: boolean) {
         // we now patch at emit
         for (const l of this.labels) {
             if (l.uses) this.oops(`label ${l.name} not resolved`)
@@ -464,16 +496,43 @@ export class OpWriter {
 
         this.assertNoTemps()
 
+        while (this.location() & 3) this.writeByte(0)
+
+        const numSlots = numargs + numLocals + this.cachedValues.length
+
         // patch local indices
         for (const off of this.localOffsets) {
-            assert(
-                LOCAL_OFFSET <= this.binary[off] &&
-                    this.binary[off] < BinFmt.FIRST_MULTIBYTE_INT
-            )
-            this.binary[off] =
-                this.binary[off] - LOCAL_OFFSET + this.cachedValues.length
+            let v = this.binary[off]
+            if (v == 0) {
+                // this
+                assert(hasThis && numargs > 0)
+            } else if (v < VAR_CACHED_OFF) {
+                // regular param
+                if (!hasThis) v -= VAR_PARAM_OFF
+                assert(v < numargs)
+            } else if (v < VAR_LOCAL_OFF) {
+                // cached local
+                v -= VAR_CACHED_OFF
+                assert(v < this.cachedValues.length)
+                v += numargs
+            } else {
+                v -= VAR_LOCAL_OFF
+                assert(v < numLocals)
+                v += numargs + this.cachedValues.length
+                assert(v < numSlots)
+            }
+            assert(v < BinFmt.FIRST_MULTIBYTE_INT)
+            this.binary[off] = v
         }
         this.localOffsets = []
+
+        const flags = hasThis ? FunctionFlag.NEEDS_THIS : 0
+        const buf = this.desc
+        write32(buf, 4, this.location())
+        write16(buf, 8, numSlots)
+        buf[10] = numargs
+        buf[11] = flags
+        write16(buf, 12, this.nameIdx)
     }
 
     private spillValue(v: Value) {
@@ -563,6 +622,12 @@ export class OpWriter {
         }
     }
 
+    private saveLocalIdx(nval: number) {
+        assert(nval != 0)
+        assert(nval < BinFmt.FIRST_MULTIBYTE_INT)
+        this.localOffsets.push(this.location())
+    }
+
     private writeArgs(op: Op, args: Value[]) {
         let i = 0
         if (opTakesNumber(op)) i = 1
@@ -574,8 +639,7 @@ export class OpWriter {
         if (opTakesNumber(op)) {
             assert(args[0].isLiteral, `exp literal for op=${Op[op]} ${args[0]}`)
             const nval = args[0].numValue
-            if (op == Op.STMTx1_STORE_LOCAL && nval >= LOCAL_OFFSET)
-                this.localOffsets.push(this.location())
+            if (op == Op.STMTx1_STORE_LOCAL) this.saveLocalIdx(nval)
             this.writeInt(nval)
         }
     }
@@ -604,8 +668,7 @@ export class OpWriter {
         } else if (v.isMemRef) {
             assert(opTakesNumber(v.op))
             this.writeByte(v.op)
-            if (v.op == Op.EXPRx_LOAD_LOCAL && v.numValue >= LOCAL_OFFSET)
-                this.localOffsets.push(this.location())
+            if (v.op == Op.EXPRx_LOAD_LOCAL) this.saveLocalIdx(v.numValue)
             this.writeInt(v.numValue)
             if (v._cachedValue) v._cachedValue._decr()
         } else if (v.op >= 0x100) {

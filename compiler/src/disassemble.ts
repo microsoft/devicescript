@@ -2,6 +2,7 @@ import {
     BinFmt,
     BUILTIN_OBJECT__VAL,
     BUILTIN_STRING__VAL,
+    FunctionFlag,
     InstrArgResolver,
     StrIdx,
     stringifyInstr,
@@ -37,7 +38,7 @@ function decodeSection(buf: Uint8Array, off: number, img?: Uint8Array) {
         return new Uint8Array(0)
     }
 
-    return img.slice(start, start + len)
+    return new Uint8Array(img.slice(start, start + len))
 }
 
 export function disassemble(img: Uint8Array): string {
@@ -87,6 +88,12 @@ export function disassemble(img: Uint8Array): string {
         else return JSON.stringify(getString(tp, idx))
     }
 
+    let funDescFlags = 0
+    let funDescNumArgs = 0
+
+    const floatArr = new Float64Array(floatData.buffer)
+    const intFloatArr = new Int32Array(floatData.buffer)
+
     const resolver: InstrArgResolver = {
         resolverPC: 0,
         describeCell: (ff, idx) => {
@@ -105,14 +112,20 @@ export function disassemble(img: Uint8Array): string {
                     return BUILTIN_OBJECT__VAL[idx] || "???"
                 case "F":
                     return funName(idx)
-                case "P":
-                    return "" // param
                 case "L":
-                    return "" // local
+                    if (funDescFlags & FunctionFlag.NEEDS_THIS) {
+                        if (idx == 0) return "this"
+                        idx--
+                    }
+                    if (idx < funDescNumArgs) return "par" + idx
+                    idx -= funDescNumArgs
+                    return "loc" + idx
                 case "G":
                     return "" // global
                 case "D":
-                    return "" // TODO float
+                    if (intFloatArr[idx * 2 + 1] == -1)
+                        return intFloatArr[idx * 2] + ""
+                    return floatArr[idx] + ""
             }
         },
     }
@@ -124,12 +137,16 @@ export function disassemble(img: Uint8Array): string {
         off += BinFmt.FUNCTION_HEADER_SIZE
     ) {
         const body = decodeSection(funDesc, off, img)
-        const numlocals = read16(funDesc, off + 8)
-        const numargs = funDesc[off + 10]
-        const flags = funDesc[off + 11]
+        funDescNumArgs = funDesc[off + 10]
+        funDescFlags = funDesc[off + 11]
+        const numlocals = read16(funDesc, off + 8) - funDescNumArgs
         const fnname = funName(fnid)
-        r += `\n${fnname}_F${fnid}(${range(numargs).map(i => "P" + i)}):\n`
-        if (numlocals) r += `  locals: ${range(numlocals).map(i => "L" + i)}\n`
+        const thisptr = funDescFlags & FunctionFlag.NEEDS_THIS ? "this, " : ""
+        r += `\n${fnname}_F${fnid}(${thisptr}${range(funDescNumArgs).map(
+            i => "par" + i
+        )}):\n`
+        if (numlocals)
+            r += `  locals: ${range(numlocals).map(i => "loc" + i)}\n`
 
         let ptr = 0
         const getbyte = () => body[ptr++]
