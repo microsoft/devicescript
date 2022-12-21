@@ -7,7 +7,7 @@ static void fun1_to_int(devs_ctx_t *ctx, double (*fn)(double)) {
     if (devs_is_tagged_int(v))
         devs_ret(ctx, v);
     else
-        devs_ret_double(ctx, ceil(devs_value_to_double(v)));
+        devs_ret_double(ctx, fn(devs_value_to_double(v)));
 }
 
 void fun1_Math_ceil(devs_ctx_t *ctx) {
