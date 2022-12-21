@@ -24,6 +24,10 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
 };
 export declare module Exts {
     /**
+     * Debug output and stack traces are sent here.
+     */
+    let dmesg: (s: string) => void;
+    /**
      * Logging function
      */
     let log: (...data: any[]) => void;

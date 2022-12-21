@@ -47,6 +47,11 @@ function bufferConcat(a: Uint8Array, b: Uint8Array) {
 
 export module Exts {
     /**
+     * Debug output and stack traces are sent here.
+     */
+    export let dmesg = (s: string) => console.debug(s)
+
+    /**
      * Logging function
      */
     export let log = console.log
