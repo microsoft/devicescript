@@ -318,12 +318,6 @@ function symCell(sym: ts.Symbol) {
     return (sym as DsSymbol)?.__ds_cell
 }
 
-function symSetCell(sym: ts.Symbol, cell: Cell) {
-    const s = sym as DsSymbol
-    assert(!s.__ds_cell || s.__ds_cell == cell)
-    s.__ds_cell = cell
-}
-
 class Procedure {
     writer: OpWriter
     index: number
@@ -856,13 +850,7 @@ class Program implements TopOpWriter {
     }
 
     private newDef(decl: ts.NamedDeclaration) {
-        const id = this.forceName(decl.name)
-        if (
-            this.roles.lookup(id) ||
-            (this.proc?.locals || this.globals).lookup(id) ||
-            this.functions.lookup(id)
-        )
-            throwError(decl, `name '${id}' already defined`)
+        this.forceName(decl.name)
     }
 
     private lookupBuiltinFunc(name: string) {
@@ -883,7 +871,7 @@ class Program implements TopOpWriter {
         for (const decl of decls.declarationList.declarations) {
             let g: Variable
             if (this.isTopLevel(decl)) {
-                const tmp = this.globals.lookup(this.forceName(decl.name))
+                const tmp = this.getCellAtLocation(decl)
                 if (tmp instanceof Role) continue
                 if (tmp instanceof BufferLit) continue
                 if (tmp instanceof Variable) g = tmp
@@ -1189,10 +1177,16 @@ class Program implements TopOpWriter {
         return !!(node as any)._devsIsTopLevel
     }
 
+    private symSetCell(sym: ts.Symbol, cell: Cell) {
+        const s = sym as DsSymbol
+        assert(!s.__ds_cell || s.__ds_cell == cell || this.numErrors > 0)
+        s.__ds_cell = cell
+    }
+    
     private assignCell<T extends Cell>(node: ts.NamedDeclaration, cell: T): T {
         const sym = this.checker.getSymbolAtLocation(node.name)
         assert(!!sym)
-        symSetCell(sym, cell)
+        this.symSetCell(sym, cell)
         return cell
     }
 
@@ -1717,8 +1711,8 @@ class Program implements TopOpWriter {
             return fromHex(hexbuf)
         }
 
-        const b = this.bufferLits.lookup(idName(expr)) as BufferLit
-        if (b) return b.litValue
+        const cell = this.getCellAtLocation(expr)
+        if (cell instanceof BufferLit) return cell.litValue
 
         return undefined
     }
@@ -2281,18 +2275,17 @@ class Program implements TopOpWriter {
             else return this.emitGenericMethodCall(expr, val, prop)
         }
 
-        const funName = idName(expr.expression)
-        const d = this.functions.lookup(funName) as FunctionDecl
-        if (d) {
-            return this.emitProcCall(expr, this.getFunctionProc(d))
-        } else {
-            const fn = this.emitExpr(expr.expression)
-            return this.emitGenericCall(expr, fn)
-        }
+        const fn = this.emitExpr(expr.expression)
+        return this.emitGenericCall(expr, fn)
     }
 
     private getCellAtLocation(node: ts.Node) {
-        return symCell(this.checker.getSymbolAtLocation(node))
+        let sym = this.checker.getSymbolAtLocation(node)
+        if (!sym) {
+            const decl = node as ts.NamedDeclaration
+            if (decl.name) sym = this.checker.getSymbolAtLocation(decl.name)
+        }
+        return symCell(sym)
     }
 
     private emitIdentifier(expr: ts.Identifier): Value {
@@ -2503,15 +2496,8 @@ class Program implements TopOpWriter {
         return this.compileFormat([node])
     }
 
-    private lookupCell(expr: ts.Expression) {
-        const name = this.forceName(expr)
-        const r = this.proc.locals.lookup(name)
-        if (!r) throwError(expr, `cannot find '${name}'`)
-        return r
-    }
-
     private lookupVar(expr: ts.Expression) {
-        const r = this.lookupCell(expr)
+        const r = this.getCellAtLocation(expr)
         if (!(r instanceof Variable)) throwError(expr, "expecting variable")
         return r
     }

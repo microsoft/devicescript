@@ -1,16 +1,16 @@
 import * as ds from "@devicescript/core"
 
-var rx = new ds.Button()
-var rx = new ds.Button() //! already defined
+const rx = new ds.Button() //! Cannot redeclare
+const rx = new ds.Button() //! Cannot redeclare
 
-var btnA = new ds.Button()
-var btnA = new ds.Button() //! already defined
+const btnA = new ds.Button() //! Cannot redeclare
+const btnA = new ds.Button() //! Cannot redeclare
 
 const z = 1
 
 function foo() {
-    // no shadowing allowed
-    const z = 1 //! already defined
+    // shadowing allowed
+    const z = 1
 }
 
 const qq = 1 //! Duplicate identifier
