@@ -1,10 +1,10 @@
 ---
-sidebar_position: 2
+sidebar_position: 0.5
 hide_table_of_contents: true
 ---
 # Roles
 
-Roles are defined by referencing a service name (in `roles` namespace).
+Roles are defined by instantiating a service client.
 The same role can be referenced multiple times, and runtime makes sure not to assign
 multiple roles to the same service instance.
 
@@ -27,19 +27,4 @@ heater.onConnected(() => {
 heater.onDisconnected(() => {
     // ...
 })
-```
-
-## Events
-
-Events are referenced as `myRole.eventName`. They currently have two member functions, `.wait()` and `.subscribe()`.
-
-```ts
-const btnA = new ds.Button()
-btnA.down.subscribe(() => {
-    console.log("button down!")
-})
-
-// ...
-btnA.up.wait()
-// ...
 ```
