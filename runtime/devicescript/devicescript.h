@@ -19,6 +19,7 @@ typedef struct {
 } devs_cfg_t;
 
 int devs_verify(const uint8_t *img, uint32_t size);
+void devs_dump_versions(const void *img);
 
 devs_ctx_t *devs_create_ctx(const uint8_t *img, uint32_t size, const devs_cfg_t *cfg);
 void devs_restart(devs_ctx_t *ctx);

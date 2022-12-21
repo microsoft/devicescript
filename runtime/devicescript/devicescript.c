@@ -37,8 +37,17 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
 }
 
 devs_ctx_t *devs_create_ctx(const uint8_t *img, uint32_t size, const devs_cfg_t *cfg) {
-    if (devs_verify(img, size))
+    if (size < sizeof(devs_img_header_t)) {
+        DMESG("image too small");
         return NULL;
+    }
+
+    int error = devs_verify(img, size);
+    devs_dump_versions(img);
+
+    if (error != 0)
+        return NULL;
+
     devs_ctx_t *ctx = jd_alloc(sizeof(*ctx));
     ctx->cfg = *cfg;
 

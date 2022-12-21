@@ -54,6 +54,14 @@ bool devs_img_stridx_ok(devs_img_t img, uint32_t nameidx) {
     }
 }
 
+void devs_dump_versions(const void *imgdata) {
+    uint32_t v;
+    memcpy(&v, (const uint8_t *)imgdata + 8, 4);
+    DMESG("DeviceScript runtime v%d.%d.%d; file v%d.%d.%d", DEVS_VERSION_MAJOR(DEVS_IMG_VERSION),
+          DEVS_VERSION_MINOR(DEVS_IMG_VERSION), DEVS_VERSION_PATCH(DEVS_IMG_VERSION),
+          DEVS_VERSION_MAJOR(v), DEVS_VERSION_MINOR(v), DEVS_VERSION_PATCH(v));
+}
+
 int devs_verify(const uint8_t *imgdata, uint32_t size) {
     JD_ASSERT(((uintptr_t)imgdata & 3) == 0);
     JD_ASSERT(size > sizeof(devs_img_header_t));
@@ -63,11 +71,18 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     _img.data = imgdata;
 
     CHECK(1000, header->magic0 == DEVS_MAGIC0 && header->magic1 == DEVS_MAGIC1);
-    // precise match on major
-    CHECK(1050, DEVS_VERSION_MAJOR(header->version) == DEVS_VERSION_MAJOR(DEVS_IMG_VERSION));
-    // bytecode minor should only load if no older than current runtime
-    CHECK(1050, DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION));
+
+    // precise match on major,
+    // bytecode minor should only load if no older than current runtime,
     // ignore patch
+    if (DEVS_VERSION_MAJOR(header->version) == DEVS_VERSION_MAJOR(DEVS_IMG_VERSION) &&
+        DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION)) {
+        // OK
+    } else {
+        DMESG("version mismatch");
+        devs_dump_versions(imgdata);
+        return fail(1050, offset);
+    }
 
     const devs_img_section_t *sptr = &header->functions;
 
