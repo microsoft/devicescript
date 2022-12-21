@@ -1140,14 +1140,14 @@ class Program implements TopOpWriter {
             throwError(stmt, "modifier not supported")
         assert(!!fundecl || !!this.numErrors)
 
-        if (fundecl.getName().startsWith("__ds_")) {
-            // TODO rename function to strip __ds_ (smaller binary)
-            // TODO compare signatures!
-            const id = fundecl.getName().slice(5)
-            this.monkeyPatch["#ds." + id] = fundecl
-        }
-
         if (fundecl) {
+            if (fundecl.getName().startsWith("__ds_")) {
+                // TODO rename function to strip __ds_ (smaller binary)
+                // TODO compare signatures!
+                const id = fundecl.getName().slice(5)
+                this.monkeyPatch["#ds." + id] = fundecl
+            }
+
             if (this.compileAll || (this.isLibrary && this.inMainFile(stmt)))
                 this.getFunctionProc(fundecl)
         }
@@ -1743,7 +1743,7 @@ class Program implements TopOpWriter {
 
         if (
             expr.arguments.length == 1 &&
-            this.nodeName(expr.arguments[0]) == "#packet"
+            this.nodeName(expr.arguments[0]) == "#ds.packet"
         )
             return
 
@@ -2027,14 +2027,14 @@ class Program implements TopOpWriter {
     private emitCloud(expr: ts.CallExpression, fnName: string): Value {
         const wr = this.writer
         switch (fnName) {
-            case "CloudConnector.upload":
+            case "ds.CloudConnector.upload":
                 const spec = this.cloudRole.spec.packets.find(
                     p => p.name == "upload"
                 )
                 this.emitPackArgs(expr, spec)
                 this.emitSendCommand(this.cloudRole, spec.identifier)
                 return unit()
-            case "CloudConnector.onMethod":
+            case "ds.CloudConnector.onMethod":
                 this.emitCloudMethod(expr)
                 return unit()
             case "console.log":
@@ -2163,7 +2163,7 @@ class Program implements TopOpWriter {
                     this.emitSimpleValue(expr.arguments[0])
                 )
             }
-            case "every": {
+            case "ds.every": {
                 this.requireTopLevel(expr)
                 this.requireArgs(expr, 2)
                 const time = Math.round(
@@ -2177,7 +2177,7 @@ class Program implements TopOpWriter {
                 proc.callMe(wr, [], OpCall.BG)
                 return unit()
             }
-            case "onStart": {
+            case "ds.onStart": {
                 this.requireTopLevel(expr)
                 this.requireArgs(expr, 1)
                 const proc = this.emitHandler("onStart", expr.arguments[0])
@@ -2359,7 +2359,7 @@ class Program implements TopOpWriter {
     private emitBuiltInConst(expr: ts.Expression, nodeName?: string) {
         if (!nodeName) nodeName = this.nodeName(expr)
         switch (nodeName) {
-            case "#packet":
+            case "#ds.packet":
                 return this.writer.emitExpr(Op.EXPR0_PKT_BUFFER)
             case "#NaN":
                 return this.emitLiteral(NaN)

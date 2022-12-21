@@ -92,6 +92,7 @@ void dmesg(const char *format, ...) {
     memcpy(tmp + sizeof(tmp) - 4, "...", 4); // this typically does nothing (there is an earlier
                                              // '\0'), except when there's an overflow
     printf("    %s\n", tmp);
+    fflush(stdout);
     va_end(arg);
 }
 
