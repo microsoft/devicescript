@@ -13,7 +13,6 @@ import {
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 
 import {
-    read32,
     stringToUint8Array,
     toHex,
     toUTF8,
@@ -54,7 +53,6 @@ import {
 } from "./util"
 import {
     bufferFmt,
-    CachedValue,
     DelayedCodeSection,
     literal,
     Label,
@@ -265,9 +263,8 @@ class FunctionDecl extends Cell {
         super(definition, scope)
     }
     emit(wr: OpWriter): Value {
-        const r = literal(this._index)
-        va(r).fun = this
-        return r
+        const prog = wr.prog as Program
+        return prog.getFunctionProc(this).reference(wr)
     }
     toString() {
         return `function ${this.getName()}`
@@ -280,17 +277,12 @@ class ValueAdd {
     role?: Role
     variable?: Variable
     clientCommand?: ClientCommand
-    fun?: FunctionDecl
     litValue?: number
 }
 
 function va(v: Value) {
     if (!v._userdata) v._userdata = new ValueAdd()
     return v._userdata as ValueAdd
-}
-
-function cellKind(v: Value): ValueType {
-    return v.valueType
 }
 
 function toSrcLocation(n: ts.Node): SrcLocation {
@@ -316,6 +308,20 @@ function matchesName(specName: string, jsName: string) {
 
 function unit() {
     return nonEmittable(ValueType.VOID)
+}
+
+interface DsSymbol extends ts.Symbol {
+    __ds_cell: Cell
+}
+
+function symCell(sym: ts.Symbol) {
+    return (sym as DsSymbol)?.__ds_cell
+}
+
+function symSetCell(sym: ts.Symbol, cell: Cell) {
+    const s = sym as DsSymbol
+    assert(!s.__ds_cell || s.__ds_cell == cell)
+    s.__ds_cell = cell
 }
 
 class Procedure {
@@ -819,7 +825,11 @@ class Program implements TopOpWriter {
         const expr = decl.initializer
 
         const buflit = this.bufferLiteral(expr)
-        if (buflit) return new BufferLit(decl, this.bufferLits, buflit)
+        if (buflit)
+            return this.assignCell(
+                decl,
+                new BufferLit(decl, this.bufferLits, buflit)
+            )
 
         if (!expr) return null
 
@@ -831,7 +841,10 @@ class Program implements TopOpWriter {
             )
             if (spec) {
                 this.requireArgs(expr, 0)
-                return new Role(this, decl, this.roles, spec)
+                return this.assignCell(
+                    decl,
+                    new Role(this, decl, this.roles, spec)
+                )
             }
         }
 
@@ -880,11 +893,14 @@ class Program implements TopOpWriter {
                 }
             } else {
                 this.newDef(decl)
-                g = new Variable(
+                g = this.assignCell(
                     decl,
-                    VariableKind.Local,
-                    this.proc.locals,
-                    ValueType.ANY
+                    new Variable(
+                        decl,
+                        VariableKind.Local,
+                        this.proc.locals,
+                        ValueType.ANY
+                    )
                 )
             }
 
@@ -1044,6 +1060,7 @@ class Program implements TopOpWriter {
             ValueType.NUMBER
         )
         if (typeof id == "string") v._name = id
+        else this.assignCell(id, v)
         return v
     }
 
@@ -1119,7 +1136,7 @@ class Program implements TopOpWriter {
         return cc.proc
     }
 
-    private getFunctionProc(fundecl: FunctionDecl) {
+    getFunctionProc(fundecl: FunctionDecl) {
         if (fundecl.proc) return fundecl.proc
         const stmt = fundecl.definition as ts.FunctionDeclaration
 
@@ -1172,6 +1189,13 @@ class Program implements TopOpWriter {
         return !!(node as any)._devsIsTopLevel
     }
 
+    private assignCell<T extends Cell>(node: ts.NamedDeclaration, cell: T): T {
+        const sym = this.checker.getSymbolAtLocation(node.name)
+        assert(!!sym)
+        symSetCell(sym, cell)
+        return cell
+    }
+
     private emitProgram(prog: ts.Program) {
         this.main = new Procedure(this, "main", this.mainFile)
 
@@ -1195,16 +1219,19 @@ class Program implements TopOpWriter {
                 if (ts.isFunctionDeclaration(s)) {
                     this.newDef(s)
                     this.forceName(s.name)
-                    new FunctionDecl(s, this.functions)
+                    this.assignCell(s, new FunctionDecl(s, this.functions))
                 } else if (ts.isVariableStatement(s)) {
                     for (const decl of s.declarationList.declarations) {
                         this.newDef(decl)
                         if (!this.parseRole(decl)) {
-                            new Variable(
+                            this.assignCell(
                                 decl,
-                                VariableKind.Global,
-                                this.globals,
-                                ValueType.ANY
+                                new Variable(
+                                    decl,
+                                    VariableKind.Global,
+                                    this.globals,
+                                    ValueType.ANY
+                                )
                             )
                         }
                     }
@@ -2264,13 +2291,15 @@ class Program implements TopOpWriter {
         }
     }
 
+    private getCellAtLocation(node: ts.Node) {
+        return symCell(this.checker.getSymbolAtLocation(node))
+    }
+
     private emitIdentifier(expr: ts.Identifier): Value {
         const r = this.emitBuiltInConst(expr)
         if (r) return r
-
-        const id = this.forceName(expr)
-        const cell = this.proc.locals.lookup(id)
-        if (!cell) throwError(expr, "unknown name: " + id)
+        const cell = this.getCellAtLocation(expr)
+        if (!cell) throwError(expr, "unknown name: " + idName(expr))
         return cell.emit(this.writer)
     }
 

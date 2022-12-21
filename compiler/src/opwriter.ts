@@ -233,7 +233,7 @@ export class OpWriter {
     srcmap: number[] = []
     private nameIdx: number
 
-    constructor(private prog: TopOpWriter, public name: string) {
+    constructor(public prog: TopOpWriter, public name: string) {
         this.top = this.mkLabel("top")
         this.emitLabel(this.top)
         this.binary = new Uint8Array(128)
