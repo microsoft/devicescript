@@ -1,12 +1,12 @@
-import { DebugInfo, parseStackFrame } from "@devicescript/compiler"
-import { readJSONSync } from "fs-extra"
+import { parseStackFrame } from "@devicescript/compiler"
 import { readFileSync } from "node:fs"
-import { BINDIR, CmdOptions, log } from "./command"
+import { readDebugInfo } from "./build"
+import { CmdOptions, log } from "./command"
 
 export interface AnnotateOptions {}
 
 export async function annotate(options: AnnotateOptions & CmdOptions) {
     const str = readFileSync(0, "utf-8")
-    const dbg = readJSONSync(BINDIR + "/bytecode-dbg.json") as DebugInfo
+    const dbg = readDebugInfo()
     log(parseStackFrame(dbg, str).markedLine)
 }

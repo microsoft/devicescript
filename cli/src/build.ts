@@ -24,6 +24,14 @@ import { devtools } from "./devtools"
 
 import type { DevsModule } from "@devicescript/vm"
 
+export function readDebugInfo() {
+    let dbg: DebugInfo
+    try {
+        dbg = readJSONSync(join(BINDIR, DEVS_DBG_FILE))
+    } catch {}
+    return dbg
+}
+
 let devsInst: DevsModule
 export function devsFactory() {
     // emscripten doesn't like multiple instances
@@ -37,13 +45,9 @@ export function devsFactory() {
         log("can't load websocket-polyfill")
     }
 
-    let dbg: DebugInfo
-    try {
-        dbg = readJSONSync(BINDIR + "/bytecode-dbg.json")
-    } catch {}
-
     return (d() as Promise<DevsModule>).then(m => {
         devsInst = m
+        const dbg = readDebugInfo()
         if (dbg)
             (m as any).dmesg = (s: string) => {
                 console.debug(parseStackFrame(dbg, s).markedLine)
