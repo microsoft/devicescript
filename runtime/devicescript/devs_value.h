@@ -74,7 +74,7 @@ static inline uint32_t devs_handle_value(value_t t) {
 }
 
 static inline uint16_t devs_handle_high_value(value_t t) {
-    return (t.exp_sign << 12) >> 4;
+    return (t.exp_sign << 12) >> (12 + 4);
 }
 
 static inline bool devs_handle_is_ptr(value_t t) {

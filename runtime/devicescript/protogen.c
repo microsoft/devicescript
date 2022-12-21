@@ -28,6 +28,7 @@ void methX_Function_start(devs_ctx_t *ctx);
 void fun1_Math_ceil(devs_ctx_t *ctx);
 void fun1_Math_floor(devs_ctx_t *ctx);
 void fun1_Math_round(devs_ctx_t *ctx);
+void fun1_Math_abs(devs_ctx_t *ctx);
 void fun0_Math_random(devs_ctx_t *ctx);
 void fun1_Math_randomInt(devs_ctx_t *ctx);
 void fun1_Math_log(devs_ctx_t *ctx);
@@ -45,51 +46,45 @@ value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
 
 static const devs_builtin_proto_entry_t Array_prototype_entries[] = { //
-    {N(LENGTH), 0xf000},
-    {N(INSERT), 0xf001},
+    {N(LENGTH), 50000},
+    {N(INSERT), 50001},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Buffer_entries[] = { //
-    {N(ALLOC), 0xf002},
+    {N(ALLOC), 50002},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Buffer_prototype_entries[] = { //
-    {N(LENGTH), 0xf003},
-    {N(TOSTRING), 0xf004},
-    {N(FILLAT), 0xf005},
-    {N(BLITAT), 0xf006},
+    {N(LENGTH), 50003},
+    {N(TOSTRING), 50004},
+    {N(FILLAT), 50005},
+    {N(BLITAT), 50006},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
-    {N(SLEEPMS), 0xf007}, {N(PANIC), 0xf008}, {N(REBOOT), 0xf009},
-    {N(FORMAT), 0xf00a},  {N(LOG), 0xf00b},   {0, 0}};
+    {N(SLEEPMS), 50007}, {N(PANIC), 50008}, {N(REBOOT), 50009},
+    {N(FORMAT), 50010},  {N(LOG), 50011},   {0, 0}};
 
 static const devs_builtin_proto_entry_t Function_prototype_entries[] = { //
-    {N(START), 0xf00c},
+    {N(START), 50012},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Math_entries[] = { //
-    {N(CEIL), 0xf00d},
-    {N(FLOOR), 0xf00e},
-    {N(ROUND), 0xf00f},
-    {N(RANDOM), 0xf010},
-    {N(RANDOMINT), 0xf011},
-    {N(LOG), 0xf012},
-    {N(POW), 0xf013},
-    {N(IDIV), 0xf014},
-    {N(IMOD), 0xf015},
-    {N(IMUL), 0xf016},
-    {N(MIN), 0xf017},
-    {N(MAX), 0xf018},
-    {0, 0}};
+    {N(CEIL), 50013},   {N(FLOOR), 50014},
+    {N(ROUND), 50015},  {N(ABS), 50016},
+    {N(RANDOM), 50017}, {N(RANDOMINT), 50018},
+    {N(LOG), 50019},    {N(POW), 50020},
+    {N(IDIV), 50021},   {N(IMOD), 50022},
+    {N(IMUL), 50023},   {N(MIN), 50024},
+    {N(MAX), 50025},    {0, 0}};
 
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 0xf019},
+    {N(ISCONNECTED), 50026},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 0xf01a},
-    {N(CHARCODEAT), 0xf01b},
+    {N(LENGTH), 50027},
+    {N(CHARCODEAT), 50028},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -104,8 +99,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 28;
-const devs_builtin_function_t devs_builtin_functions[28] = {
+uint16_t devs_num_builtin_functions = 29;
+const devs_builtin_function_t devs_builtin_functions[29] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
@@ -122,6 +117,7 @@ const devs_builtin_function_t devs_builtin_functions[28] = {
     {N(CEIL), 1, NO_SELF, {.meth = fun1_Math_ceil}},
     {N(FLOOR), 1, NO_SELF, {.meth = fun1_Math_floor}},
     {N(ROUND), 1, NO_SELF, {.meth = fun1_Math_round}},
+    {N(ABS), 1, NO_SELF, {.meth = fun1_Math_abs}},
     {N(RANDOM), 0, NO_SELF, {.meth = fun0_Math_random}},
     {N(RANDOMINT), 1, NO_SELF, {.meth = fun1_Math_randomInt}},
     {N(LOG), 1, NO_SELF, {.meth = fun1_Math_log}},
@@ -136,4 +132,4 @@ const devs_builtin_function_t devs_builtin_functions[28] = {
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}}};
 
 STATIC_ASSERT(4 <= DEVS_BUILTIN_MAX_ARGS);
-STATIC_ASSERT(61440 == DEVS_FIRST_BUILTIN_FUNCTION);
+STATIC_ASSERT(50000 == DEVS_FIRST_BUILTIN_FUNCTION);

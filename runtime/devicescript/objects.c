@@ -165,6 +165,7 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
 
     unsigned fidx = devs_handle_value(fn);
 
+    bool needsSelf;
     int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
     if (bltin >= 0) {
         JD_ASSERT(bltin < devs_num_builtin_functions);
@@ -172,8 +173,16 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
         if (h->flags & DEVS_BUILTIN_FLAG_IS_PROPERTY) {
             JD_ASSERT(h->num_args == 0);
             return h->handler.prop(ctx, obj);
+        } else {
+            needsSelf = !(h->flags & DEVS_BUILTIN_FLAG_NO_SELF);
         }
+    } else {
+        JD_ASSERT(fidx < devs_img_num_functions(ctx->img));
+        const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
+        needsSelf = !!(func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS);
     }
+
+    (void)needsSelf;
 
     int otp = devs_handle_type(obj);
 
@@ -230,6 +239,16 @@ int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activat
     case DEVS_HANDLE_TYPE_CLOSURE:
         *closure = devs_handle_ptr_value(ctx, src);
         return devs_handle_high_value(src);
+    case DEVS_HANDLE_TYPE_GC_OBJECT: {
+        devs_bound_function_t *bnd = devs_handle_ptr_value(ctx, src);
+        if (devs_gc_tag(bnd) == DEVS_GC_TAG_BOUND_FUNCTION) {
+            int r = devs_get_fnidx(ctx, bnd->func, this_val, closure);
+            *this_val = bnd->this_val;
+            return r;
+        } else {
+            return -1;
+        }
+    }
     default:
         return -1;
     }

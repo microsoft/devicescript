@@ -34,6 +34,8 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         return -1;
     }
 
+    // devs_log_value(ctx, "fn", fn);
+
     int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
     if (bltin >= 0) {
         JD_ASSERT(bltin < devs_num_builtin_functions);
