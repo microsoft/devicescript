@@ -5,6 +5,7 @@ import {
     writeFileSync,
     ensureDirSync,
     pathExistsSync,
+    readJSONSync,
 } from "fs-extra"
 const debounce = require("debounce-promise")
 import {
@@ -15,6 +16,8 @@ import {
     formatDiagnostics,
     DEVS_DBG_FILE,
     prettySize,
+    DebugInfo,
+    parseStackFrame,
 } from "@devicescript/compiler"
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
@@ -33,8 +36,18 @@ export function devsFactory() {
     } catch {
         log("can't load websocket-polyfill")
     }
+
+    let dbg: DebugInfo
+    try {
+        dbg = readJSONSync(BINDIR + "/bytecode-dbg.json")
+    } catch {}
+
     return (d() as Promise<DevsModule>).then(m => {
         devsInst = m
+        if (dbg)
+            (m as any).dmesg = (s: string) => {
+                console.debug(parseStackFrame(dbg, s).markedLine)
+            }
         m.devsInit()
         return m
     })

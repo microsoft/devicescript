@@ -6,6 +6,7 @@ export * from "./specgen"
 export * from "./embedspecs"
 export * from "./tsiface"
 export * from "./info"
+export { parseStackFrame } from "./debug"
 export { prettySize } from "./jdutil"
 
 import { compile } from "./compiler"

@@ -1167,7 +1167,7 @@ class Program implements TopOpWriter {
     }
 
     private emitProgram(prog: ts.Program) {
-        this.main = new Procedure(this, "main")
+        this.main = new Procedure(this, "main", this.mainFile)
 
         this.startDispatchers = new DelayedCodeSection(
             "startDispatchers",

@@ -161,7 +161,13 @@ void target_wait_us(uint32_t us) {
     }
 }
 
-EM_JS(void, em_console_debug, (const char *ptr), { console.debug(UTF8ToString(ptr, 1024)); });
+EM_JS(void, em_console_debug, (const char *ptr), {
+    const s = UTF8ToString(ptr, 1024);
+    if (Module.dmesg)
+        Module.dmesg(s);
+    else
+        console.debug(s);
+});
 
 void dmesg(const char *format, ...) {
     char tmp[200];

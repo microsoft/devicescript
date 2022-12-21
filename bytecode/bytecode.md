@@ -282,7 +282,7 @@ Return reference to "buffer" with the packet data.
     direct_const_offset = 16
     first_multibyte_int = 0xf8
     first_non_opcode = 0x10000
-    first_builtin_function = 0xf000
+    first_builtin_function = 50000
     max_args_short_call = 8
 
 ## Enum: StrIdx

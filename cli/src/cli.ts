@@ -1,5 +1,6 @@
 import { program } from "commander"
 import pkg from "../package.json"
+import { annotate } from "./annotate"
 import { build } from "./build"
 import { crunScript } from "./crun"
 import { ctool } from "./ctool"
@@ -116,6 +117,11 @@ export async function mainCli() {
         .description("disassemble .devs binary")
         .arguments("<file.ts|file.devs>")
         .action(disasm)
+
+    program
+        .command("annotate")
+        .description("annotate stack frames in stdin")
+        .action(annotate)
 
     program.parse(process.argv)
 }
