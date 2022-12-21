@@ -65,8 +65,8 @@ export async function runScript(fn: string, options: RunOptions & CmdOptions) {
     if (options.test)
         return await runTest(fn, options).then(
             () => process.exit(0),
-            err => {
-                err(err.message)
+            e => {
+                err(e?.message)
             }
         )
 
