@@ -117,9 +117,6 @@ class Cell {
     emit(wr: OpWriter): Value {
         oops("on value() on generic Cell")
     }
-    store(wr: OpWriter, src: Value) {
-        oops("on storeInto() on generic Cell")
-    }
     canStore() {
         return false
     }
@@ -196,20 +193,56 @@ class Role extends Cell {
 }
 
 class Variable extends Cell {
+    public parentProc: Procedure
+
     constructor(
         definition: ts.VariableDeclaration | ts.ParameterDeclaration,
         public vkind: VariableKind,
-        scope: VariableScope,
+        scopeOrProc: VariableScope | Procedure,
         public valueType: ValueType,
         name?: string
     ) {
-        super(definition, scope, name)
+        super(
+            definition,
+            scopeOrProc instanceof VariableScope
+                ? scopeOrProc
+                : vkind == VariableKind.Local
+                ? scopeOrProc.locals
+                : scopeOrProc.params,
+            name
+        )
+        if (scopeOrProc instanceof Procedure) this.parentProc = scopeOrProc
+    }
+
+    emitViaClosure(wr: OpWriter, lev: number) {
+        if (lev == 0) return this.emit(wr)
+        const r = wr.emitExpr(
+            Op.EXPRx1_LOAD_CLOSURE,
+            literal(this.getClosureIndex()),
+            literal(lev)
+        )
+        r.valueType = this.valueType
+        va(r).variable = this
+        return r
     }
 
     private get packedIndex() {
         return packVarIndex(this.vkind, this._index)
     }
+
+    private getClosureIndex() {
+        assert(this.vkind != VariableKind.Global)
+        return this.parentProc.mapVarOffset(this.packedIndex)
+    }
+
+    private assertDirect(wr: OpWriter) {
+        if (this.parentProc) {
+            assert((wr.prog as Program).proc == this.parentProc)
+        }
+    }
+
     emit(wr: OpWriter): Value {
+        this.assertDirect(wr)
         let r: Value
         if (this.vkind == VariableKind.Global)
             r = wr.emitMemRef(
@@ -229,12 +262,31 @@ class Variable extends Cell {
     canStore() {
         return true
     }
-    store(wr: OpWriter, src: Value) {
+    store(wr: OpWriter, src: Value, lev: number) {
         if (this.valueType == ValueType.ANY) this.valueType = src.valueType
 
-        if (this.vkind == VariableKind.Global)
-            wr.emitStmt(Op.STMTx1_STORE_GLOBAL, literal(this.packedIndex), src)
-        else wr.emitStmt(Op.STMTx1_STORE_LOCAL, literal(this.packedIndex), src)
+        if (lev == 0) {
+            this.assertDirect(wr)
+            if (this.vkind == VariableKind.Global)
+                wr.emitStmt(
+                    Op.STMTx1_STORE_GLOBAL,
+                    literal(this.packedIndex),
+                    src
+                )
+            else
+                wr.emitStmt(
+                    Op.STMTx1_STORE_LOCAL,
+                    literal(this.packedIndex),
+                    src
+                )
+        } else {
+            wr.emitStmt(
+                Op.STMTx2_STORE_CLOSURE,
+                literal(this.getClosureIndex()),
+                literal(lev),
+                src
+            )
+        }
     }
     toString() {
         return `var ${this.getName()} : ${this.valueType}`
@@ -328,6 +380,10 @@ class Procedure {
     skipAccounting = false
     retType = ValueType.VOID
     usesThis = false
+    parentProc: Procedure
+    nestedProcs: Procedure[] = []
+    mapVarOffset: (n: number) => number
+
     constructor(
         public parent: Program,
         public name: string,
@@ -346,7 +402,8 @@ class Procedure {
         return this.writer.getAssembly()
     }
     finalize() {
-        this.writer.patchLabels(
+        if (this.mapVarOffset) return
+        this.mapVarOffset = this.writer.patchLabels(
             this.locals.list.length,
             this.numargs,
             this.usesThis
@@ -360,7 +417,7 @@ class Procedure {
         this.users.push(node)
     }
     mkTempLocal(name: string, tp: ValueType) {
-        const l = new Variable(null, VariableKind.Local, this.locals, tp)
+        const l = new Variable(null, VariableKind.Local, this, tp)
         l._name = name
         return l
     }
@@ -380,8 +437,17 @@ class Procedure {
         }
     }
 
+    addNestedProc(proc: Procedure) {
+        this.nestedProcs.push(proc)
+        proc.parentProc = this
+    }
+
     reference(wr: OpWriter) {
         return wr.emitExpr(Op.EXPRx_STATIC_FUNCTION, literal(this.index))
+    }
+
+    referenceAsClosure(wr: OpWriter) {
+        return wr.emitExpr(Op.EXPRx_MAKE_CLOSURE, literal(this.index))
     }
 
     callMe(wr: OpWriter, args: Value[], op = OpCall.SYNC) {
@@ -846,7 +912,7 @@ class Program implements TopOpWriter {
     }
 
     private emitStore(trg: Variable, src: Value) {
-        trg.store(this.writer, src)
+        trg.store(this.writer, src, this.getClosureLevel(trg))
     }
 
     private newDef(decl: ts.NamedDeclaration) {
@@ -886,7 +952,7 @@ class Program implements TopOpWriter {
                     new Variable(
                         decl,
                         VariableKind.Local,
-                        this.proc.locals,
+                        this.proc,
                         ValueType.ANY
                     )
                 )
@@ -1029,12 +1095,39 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitFunctionBody(
-        stmt: ts.FunctionDeclaration | ts.FunctionExpression,
+    private emitFunction(
+        stmt: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
         proc: Procedure
     ) {
-        this.emitStmt(stmt.body)
-        this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
+        this.withProcedure(proc, wr => {
+            this.emitParameters(stmt, proc)
+            this.emitFunctionBody(stmt, proc)
+        })
+        return proc
+    }
+
+    private emitFunctionBody(
+        stmt: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
+        proc: Procedure
+    ) {
+        if (ts.isBlock(stmt.body)) {
+            this.emitStmt(stmt.body)
+            this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
+        } else {
+            this.writer.emitStmt(Op.STMT1_RETURN, this.emitExpr(stmt.body))
+        }
+
+        proc.finalize()
+        for (const p of proc.nestedProcs) {
+            if (
+                p.sourceNode &&
+                (ts.isFunctionDeclaration(p.sourceNode) ||
+                    ts.isFunctionExpression(p.sourceNode) ||
+                    ts.isArrowFunction(p.sourceNode))
+            )
+                this.emitFunction(p.sourceNode, p)
+            else oops("bad sourceNode")
+        }
     }
 
     private addParameter(
@@ -1044,7 +1137,7 @@ class Program implements TopOpWriter {
         const v = new Variable(
             typeof id == "string" ? null : id,
             VariableKind.Parameter,
-            proc.params,
+            proc,
             ValueType.NUMBER
         )
         if (typeof id == "string") v._name = id
@@ -1062,6 +1155,14 @@ class Program implements TopOpWriter {
             (ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.Never)
         )
             return ValueType.ANY
+
+        if (tp.getFlags() & ts.TypeFlags.StructuredType) {
+            const sigs = this.checker.getSignaturesOfType(
+                tp,
+                ts.SignatureKind.Call
+            )
+            if (sigs?.length > 0) return ValueType.FUNCTION
+        }
 
         const n = this.symName(tp.getSymbol())
         if (n && n[0] == "#") {
@@ -1113,7 +1214,7 @@ class Program implements TopOpWriter {
             const v = new Variable(
                 null,
                 VariableKind.Parameter,
-                cc.proc.params,
+                cc.proc,
                 ValueType.ROLE(cc.serviceSpec),
                 "this"
             )
@@ -1127,15 +1228,8 @@ class Program implements TopOpWriter {
     getFunctionProc(fundecl: FunctionDecl) {
         if (fundecl.proc) return fundecl.proc
         const stmt = fundecl.definition as ts.FunctionDeclaration
-
         fundecl.proc = new Procedure(this, fundecl.getName(), stmt)
-
-        this.withProcedure(fundecl.proc, wr => {
-            this.emitParameters(stmt, fundecl.proc)
-            this.emitFunctionBody(stmt, fundecl.proc)
-        })
-
-        return fundecl.proc
+        return this.emitFunction(stmt, fundecl.proc)
     }
 
     private emitFunctionDeclaration(stmt: ts.FunctionDeclaration) {
@@ -1182,7 +1276,7 @@ class Program implements TopOpWriter {
         assert(!s.__ds_cell || s.__ds_cell == cell || this.numErrors > 0)
         s.__ds_cell = cell
     }
-    
+
     private assignCell<T extends Cell>(node: ts.NamedDeclaration, cell: T): T {
         const sym = this.checker.getSymbolAtLocation(node.name)
         assert(!!sym)
@@ -2230,12 +2324,8 @@ class Program implements TopOpWriter {
 
         const stmt = mp.defintion
         mp.proc = new Procedure(this, mp.name, stmt)
-        this.withProcedure(mp.proc, wr => {
-            this.emitParameters(stmt, mp.proc)
-            this.emitFunctionBody(stmt, mp.proc)
-        })
 
-        return mp.proc
+        return this.emitFunction(stmt, mp.proc)
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
@@ -2288,11 +2378,26 @@ class Program implements TopOpWriter {
         return symCell(sym)
     }
 
+    private getClosureLevel(variable: Variable) {
+        if (variable.vkind == VariableKind.Global) return 0
+        assert(!!variable.parentProc)
+        let lev = 0
+        let ptr = this.proc
+        while (ptr && ptr != variable.parentProc) {
+            lev++
+            ptr = ptr.parentProc
+        }
+        assert(ptr != null)
+        return lev
+    }
+
     private emitIdentifier(expr: ts.Identifier): Value {
         const r = this.emitBuiltInConst(expr)
         if (r) return r
         const cell = this.getCellAtLocation(expr)
         if (!cell) throwError(expr, "unknown name: " + idName(expr))
+        if (cell instanceof Variable)
+            return cell.emitViaClosure(this.writer, this.getClosureLevel(cell))
         return cell.emit(this.writer)
     }
 
@@ -2520,6 +2625,7 @@ class Program implements TopOpWriter {
             case ValueKind.ARRAY:
             case ValueKind.FIBER:
             case ValueKind.ROLE:
+            case ValueKind.FUNCTION:
                 return true
             default:
                 return false
@@ -2816,6 +2922,18 @@ class Program implements TopOpWriter {
         return ref.finalEmit(ValueType.ARRAY)
     }
 
+    private emitFunctionExpr(
+        expr: ts.ArrowFunction | ts.FunctionExpression
+    ): Value {
+        const wr = this.writer
+        const n = (expr.name ? idName(expr.name) : null) || "inline"
+
+        const proc = new Procedure(this, n, expr)
+        this.proc.addNestedProc(proc)
+
+        return proc.referenceAsClosure(wr)
+    }
+
     private emitObjectExpression(expr: ts.ObjectLiteralExpression): Value {
         const wr = this.writer
         wr.emitStmt(Op.STMT0_ALLOC_MAP)
@@ -2885,6 +3003,10 @@ class Program implements TopOpWriter {
                 return this.emitExpr(
                     (expr as ts.ParenthesizedExpression).expression
                 )
+            case SK.ArrowFunction:
+                return this.emitFunctionExpr(expr as ts.ArrowFunction)
+            case SK.FunctionExpression:
+                return this.emitFunctionExpr(expr as ts.FunctionExpression)
             default:
                 // console.log(expr)
                 return throwError(expr, "unhandled expr: " + SK[expr.kind])

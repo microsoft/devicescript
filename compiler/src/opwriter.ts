@@ -498,11 +498,11 @@ export class OpWriter {
 
         while (this.location() & 3) this.writeByte(0)
 
-        const numSlots = numargs + numLocals + this.cachedValues.length
+        const cachedLen = this.cachedValues.length
+        const numSlots = numargs + numLocals + cachedLen
 
-        // patch local indices
-        for (const off of this.localOffsets) {
-            let v = this.binary[off]
+        const mapVarOffset = (v: number) => {
+            assert(this.cachedValues.length == cachedLen)
             if (v == 0) {
                 // this
                 assert(hasThis && numargs > 0)
@@ -513,16 +513,21 @@ export class OpWriter {
             } else if (v < VAR_LOCAL_OFF) {
                 // cached local
                 v -= VAR_CACHED_OFF
-                assert(v < this.cachedValues.length)
+                assert(v < cachedLen)
                 v += numargs
             } else {
                 v -= VAR_LOCAL_OFF
                 assert(v < numLocals)
-                v += numargs + this.cachedValues.length
+                v += numargs + cachedLen
                 assert(v < numSlots)
             }
             assert(v < BinFmt.FIRST_MULTIBYTE_INT)
-            this.binary[off] = v
+            return v
+        }
+
+        // patch local indices
+        for (const off of this.localOffsets) {
+            this.binary[off] = mapVarOffset(this.binary[off])
         }
         this.localOffsets = []
 
@@ -533,6 +538,8 @@ export class OpWriter {
         buf[10] = numargs
         buf[11] = flags
         write16(buf, 12, this.nameIdx)
+
+        return mapVarOffset
     }
 
     private spillValue(v: Value) {

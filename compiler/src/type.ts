@@ -8,6 +8,7 @@ export enum ValueKind {
     BUFFER = ObjectType.BUFFER,
     STRING = ObjectType.STRING,
     MAP = ObjectType.MAP,
+    FUNCTION = ObjectType.FUNCTION,
     ARRAY = ObjectType.ARRAY,
     NULL = ObjectType.NULL,
     FIBER = ObjectType.FIBER,
@@ -77,6 +78,7 @@ export class ValueType {
     static ARRAY = new ValueType(ValueKind.ARRAY)
     static NULL = new ValueType(ValueKind.NULL)
     static FIBER = new ValueType(ValueKind.FIBER)
+    static FUNCTION = new ValueType(ValueKind.FUNCTION)
     static BOOL = new ValueType(ValueKind.BOOL)
     static VOID = new ValueType(ValueKind.VOID)
     static ERROR = new ValueType(ValueKind.ERROR)
@@ -90,6 +92,7 @@ export class ValueType {
         ValueType.FIBER,
         ValueType.BOOL,
         ValueType.VOID,
+        ValueType.FUNCTION,
         ValueType.ERROR,
     ]
 }

@@ -84,6 +84,12 @@ Jump if condition is false.
 
     load_global(*global_idx): any = 22
 
+    store_closure(*local_clo_idx, levels, value) = 83
+
+    load_closure(*local_clo_idx, levels): any = 84
+
+    make_closure(*func_idx): function = 85    // CLOSURE(func_idx)
+
 ### Field access
 
     fun index(object, idx): any = 24              // object[idx]
@@ -263,7 +269,7 @@ Return reference to "buffer" with the packet data.
 
 ## Format Constants
 
-    img_version = 0x01_00_0000
+    img_version = 0x01_01_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 8

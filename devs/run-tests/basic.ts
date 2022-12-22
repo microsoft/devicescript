@@ -272,6 +272,75 @@ function testString() {
     strEq(`x ${null} x`, "x null x")
 }
 
+let gl = 0
+function testClo(b: (one?: number) => () => void) {
+    gl = 0
+    isEq(gl, 0)
+    const q = b(1)
+    isEq(gl, 4)
+    q()
+    isEq(gl, 5)
+    q()
+    isEq(gl, 6)
+}
+
+function testClosures1() {
+    const foo = function foo() {
+        let q = 1
+        const bar = () => {
+            gl = q
+            q = q + 1
+        }
+        isEq(gl, 0)
+        bar()
+        isEq(gl, 1)
+        q = q + q
+        bar()
+        isEq(gl, 4)
+        return bar
+    }
+    testClo(foo)
+}
+
+function testClosures2() {
+    const foo = function foo() {
+        let q = 1
+        const qux = () => {
+            const bar = () => {
+                gl = q
+                q = q + 1
+            }
+            return bar
+        }
+        const bar = qux()
+        isEq(gl, 0)
+        bar()
+        isEq(gl, 1)
+        q = q + q
+        bar()
+        isEq(gl, 4)
+        return bar
+    }
+    testClo(foo)
+}
+
+function testClosures3() {
+    const foo = function foo(q: number) {
+        const bar = () => {
+            gl = q
+            q = q + 1
+        }
+        isEq(gl, 0)
+        bar()
+        isEq(gl, 1)
+        q = q + q
+        bar()
+        isEq(gl, 4)
+        return bar
+    }
+    testClo(foo)
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
@@ -281,5 +350,9 @@ testArray()
 testObj()
 testConsole()
 testString()
+testClosures1()
+testClosures2()
+testClosures3()
+
 console.log("all OK")
 ds.reboot()
