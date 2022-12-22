@@ -121,6 +121,7 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_BUFFER 0x5
 #define DEVS_GC_TAG_STRING 0x6
 #define DEVS_GC_TAG_BOUND_FUNCTION 0x7
+#define DEVS_GC_TAG_ACTIVATION 0x8
 #define DEVS_GC_TAG_BUILTIN_PROTO 0xf // these are not in GC heap!
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 

@@ -129,6 +129,7 @@ struct devs_ctx {
 };
 
 struct devs_activation {
+    devs_gc_object_t gc;
     uint16_t pc;
     uint16_t maxpc;
     devs_activation_t *closure;

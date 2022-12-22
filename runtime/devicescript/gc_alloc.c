@@ -31,6 +31,7 @@ typedef struct _devs_gc_block_t {
         devs_array_t array;
         devs_buffer_t buffer;
         devs_map_t map;
+        devs_activation_t act;
         devs_bound_function_t bound_function;
     };
 } block_t;
@@ -133,8 +134,11 @@ static void scan(devs_ctx_t *ctx, block_t *block, int depth) {
         scan_array_and_mark(ctx, block->array.data, block->array.length, depth);
         break;
     case DEVS_GC_TAG_BOUND_FUNCTION:
-        scan_value(ctx, block->bound_function.this_val, depth - 1);
-        scan_value(ctx, block->bound_function.func, depth - 1);
+        scan_value(ctx, block->bound_function.this_val, depth);
+        scan_value(ctx, block->bound_function.func, depth);
+        break;
+    case DEVS_GC_TAG_ACTIVATION:
+        scan_array(ctx, block->act.slots, block->act.func->num_slots, depth);
         break;
     case DEVS_GC_TAG_STRING:
     case DEVS_GC_TAG_BYTES:
@@ -165,7 +169,7 @@ static void mark_roots(devs_gc_t *gc) {
         if (devs_fiber_uses_pkt_data_v(fib))
             scan_value(ctx, fib->pkt_data.v, ROOT_SCAN_DEPTH);
         for (devs_activation_t *act = fib->activation; act; act = act->caller) {
-            scan_array(ctx, act->slots, act->func->num_slots, ROOT_SCAN_DEPTH);
+            scan(ctx, (void *)act, ROOT_SCAN_DEPTH);
         }
     }
 }

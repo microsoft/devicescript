@@ -51,11 +51,13 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     }
 
     const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
-    devs_activation_t *callee =
-        devs_try_alloc(ctx, sizeof(devs_activation_t) + sizeof(value_t) * func->num_slots);
+    devs_activation_t *callee = devs_any_try_alloc(
+        ctx, DEVS_GC_TAG_ACTIVATION, sizeof(devs_activation_t) + sizeof(value_t) * func->num_slots);
+
     if (callee == NULL)
         return -2;
 
+    // note that callee is not pinned - do not allocate until connected to fiber
     unsigned num_formals = func->num_args;
     value_t *params;
     if (func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS) {
@@ -107,10 +109,6 @@ static void free_fiber(devs_fiber_t *fiber) {
     devs_free(ctx, fiber);
 }
 
-static void free_activation(devs_ctx_t *ctx, devs_activation_t *act) {
-    devs_free(ctx, act);
-}
-
 static void log_fiber_op(devs_fiber_t *fiber, const char *op) {
     LOG("%s fiber %s_F%d", op, devs_img_fun_name(fiber->ctx->img, fiber->bottom_function_idx),
         fiber->bottom_function_idx);
@@ -120,7 +118,6 @@ void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
     devs_ctx_t *ctx = fiber->ctx;
     if (act->caller) {
         devs_fiber_activate(fiber, act->caller);
-        free_activation(ctx, act);
     } else {
         if (fiber->pending) {
             log_fiber_op(fiber, "re-run");
@@ -128,8 +125,7 @@ void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
             act->pc = act->func->start;
         } else {
             log_fiber_op(fiber, "free");
-            devs_fiber_yield(fiber->ctx);
-            free_activation(ctx, act);
+            devs_fiber_yield(ctx);
             free_fiber(fiber);
         }
     }
@@ -140,12 +136,6 @@ void devs_fiber_free_all_fibers(devs_ctx_t *ctx) {
     while (f) {
         ctx->fibers = f->next;
         devs_jd_clear_pkt_kind(f);
-        devs_activation_t *act = f->activation;
-        while (act) {
-            devs_activation_t *n = act->caller;
-            free_activation(ctx, act);
-            act = n;
-        }
         devs_free(ctx, f);
         f = ctx->fibers;
     }
@@ -227,10 +217,11 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op) {
 
     log_fiber_op(fiber, "start");
 
-    devs_fiber_call_function(fiber, numargs);
-
+    // link fiber first, so activation linked to it are marked in GC
     fiber->next = ctx->fibers;
     ctx->fibers = fiber;
+
+    devs_fiber_call_function(fiber, numargs);
 
     devs_fiber_set_wake_time(fiber, devs_now(ctx));
 
@@ -241,12 +232,6 @@ void devs_fiber_termiante(devs_fiber_t *f) {
     log_fiber_op(f, "terminate");
     if (f->ctx->curr_fiber == f)
         devs_fiber_yield(f->ctx);
-    devs_activation_t *act = f->activation;
-    while (act) {
-        devs_activation_t *n = act->caller;
-        free_activation(f->ctx, act);
-        act = n;
-    }
     free_fiber(f);
 }
 
