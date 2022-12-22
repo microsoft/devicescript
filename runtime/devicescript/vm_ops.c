@@ -151,6 +151,32 @@ static void stmtx1_store_local(devs_activation_t *frame, devs_ctx_t *ctx) {
         frame->slots[off] = v;
 }
 
+static value_t *lookup_clo_val(devs_activation_t *frame, devs_ctx_t *ctx) {
+    int level = devs_vm_pop_arg_i32(ctx);
+    unsigned off = ctx->literal_int;
+
+    if (level <= 0)
+        return NULL;
+
+    devs_activation_t *closure = frame;
+    while (closure && level-- > 0)
+        closure = closure->closure;
+
+    if (closure && off < closure->func->num_slots)
+        return &closure->slots[off];
+
+    return NULL;
+}
+
+static void stmtx2_store_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t v = devs_vm_pop_arg(ctx);
+    value_t *dst = lookup_clo_val(frame, ctx);
+    if (dst == NULL)
+        devs_runtime_failure(ctx, 60166);
+    else
+        *dst = v;
+}
+
 static void stmtx1_store_global(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     unsigned off = ctx->literal_int;
@@ -203,6 +229,26 @@ static value_t exprx_load_local(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (off < frame->func->num_slots)
         return frame->slots[off];
     return devs_runtime_failure(ctx, 60105);
+}
+
+static value_t exprx1_load_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t *src = lookup_clo_val(frame, ctx);
+    if (src == NULL) {
+        devs_runtime_failure(ctx, 60167);
+        return devs_undefined;
+    } else {
+        return *src;
+    }
+}
+
+static value_t exprx_make_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
+    unsigned fidx = ctx->literal_int;
+    if (fidx >= devs_img_num_functions(ctx->img)) {
+        devs_runtime_failure(ctx, 60168);
+        return devs_undefined;
+    } else {
+        return devs_make_closure(ctx, frame, fidx);
+    }
 }
 
 static value_t exprx_load_global(devs_activation_t *frame, devs_ctx_t *ctx) {

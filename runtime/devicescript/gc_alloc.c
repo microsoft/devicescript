@@ -68,13 +68,12 @@ void devs_gc_add_chunk(devs_gc_t *gc, void *start, unsigned size) {
     gc->first_chunk = ch;
 }
 
-static void scan(devs_ctx_t *ctx, block_t *block, int depth);
+static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth);
 
 static void scan_value(devs_ctx_t *ctx, value_t v, int depth) {
     if (devs_handle_is_ptr(v)) {
         block_t *b = devs_handle_ptr_value(ctx, v);
-        if (b)
-            scan(ctx, b, depth);
+        scan_gc_obj(ctx, b, depth);
     }
 }
 
@@ -105,7 +104,10 @@ static void scan_map(devs_ctx_t *ctx, devs_map_t *map, int depth) {
     scan_array_and_mark(ctx, map->data, map->length * 2, depth - 1);
 }
 
-static void scan(devs_ctx_t *ctx, block_t *block, int depth) {
+static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
+    if (block == NULL)
+        return;
+
     uintptr_t header = block->header;
 
     if (IS_FREE(header) || GET_TAG(header) & DEVS_GC_TAG_MASK_SCANNED)
@@ -138,6 +140,7 @@ static void scan(devs_ctx_t *ctx, block_t *block, int depth) {
         scan_value(ctx, block->bound_function.func, depth);
         break;
     case DEVS_GC_TAG_ACTIVATION:
+        scan_gc_obj(ctx, (void *)block->act.closure, depth);
         scan_array(ctx, block->act.slots, block->act.func->num_slots, depth);
         break;
     case DEVS_GC_TAG_STRING:
@@ -160,8 +163,7 @@ static void mark_roots(devs_gc_t *gc) {
 
     for (unsigned i = 0; i < ctx->_num_builtin_protos; ++i) {
         void *p = ctx->_builtin_protos[i];
-        if (p)
-            scan(ctx, p, ROOT_SCAN_DEPTH);
+        scan_gc_obj(ctx, p, ROOT_SCAN_DEPTH);
     }
 
     for (devs_fiber_t *fib = ctx->fibers; fib; fib = fib->next) {
@@ -169,7 +171,7 @@ static void mark_roots(devs_gc_t *gc) {
         if (devs_fiber_uses_pkt_data_v(fib))
             scan_value(ctx, fib->pkt_data.v, ROOT_SCAN_DEPTH);
         for (devs_activation_t *act = fib->activation; act; act = act->caller) {
-            scan(ctx, (void *)act, ROOT_SCAN_DEPTH);
+            scan_gc_obj(ctx, (void *)act, ROOT_SCAN_DEPTH);
         }
     }
 }
@@ -212,7 +214,7 @@ static void sweep(devs_gc_t *gc) {
                     if (!had_pending)
                         LOG("set pending");
                     had_pending = 1;
-                    scan(gc->ctx, block, ROOT_SCAN_DEPTH);
+                    scan_gc_obj(gc->ctx, block, ROOT_SCAN_DEPTH);
                 } else if (sweep) {
                     block_t *p = block;
                     while (can_free(p->header)) {

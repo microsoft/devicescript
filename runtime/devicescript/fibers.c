@@ -15,8 +15,10 @@ void devs_fiber_yield(devs_ctx_t *ctx) {
 static void devs_fiber_activate(devs_fiber_t *fiber, devs_activation_t *act) {
     devs_ctx_t *ctx = fiber->ctx;
     fiber->activation = act;
-    if (ctx->error_code == 0)
+    if (ctx->error_code == 0) {
         ctx->curr_fn = act;
+        JD_ASSERT(act->maxpc > 0);
+    }
 }
 
 int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
@@ -116,6 +118,7 @@ static void log_fiber_op(devs_fiber_t *fiber, const char *op) {
 
 void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
     devs_ctx_t *ctx = fiber->ctx;
+    act->maxpc = 0; // protect against re-activation
     if (act->caller) {
         devs_fiber_activate(fiber, act->caller);
     } else {
