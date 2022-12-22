@@ -44,6 +44,7 @@ value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self);
 // impl_string.c
 value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
+void meth1_String_charAt(devs_ctx_t *ctx);
 
 static const devs_builtin_proto_entry_t Array_prototype_entries[] = { //
     {N(LENGTH), 50000},
@@ -85,6 +86,7 @@ static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
     {N(LENGTH), 50027},
     {N(CHARCODEAT), 50028},
+    {N(CHARAT), 50029},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -99,8 +101,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 29;
-const devs_builtin_function_t devs_builtin_functions[29] = {
+uint16_t devs_num_builtin_functions = 30;
+const devs_builtin_function_t devs_builtin_functions[30] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
@@ -129,7 +131,8 @@ const devs_builtin_function_t devs_builtin_functions[29] = {
     {N(MAX), 2, NO_SELF, {.meth = fun2_Math_max}},
     {N(ISCONNECTED), 0, PROP, {.prop = prop_Role_isConnected}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
-    {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}}};
+    {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},
+    {N(CHARAT), 1, 0, {.meth = meth1_String_charAt}}};
 
 STATIC_ASSERT(4 <= DEVS_BUILTIN_MAX_ARGS);
 STATIC_ASSERT(50000 == DEVS_FIRST_BUILTIN_FUNCTION);

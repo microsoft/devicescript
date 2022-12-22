@@ -21,3 +21,7 @@ void meth1_String_charCodeAt(devs_ctx_t *ctx) {
             devs_ret_int(ctx, (uint8_t)data[idx]);
     }
 }
+
+void meth1_String_charAt(devs_ctx_t *ctx) {
+    devs_ret(ctx, devs_seq_get(ctx, devs_arg_self(ctx), devs_arg_int(ctx, 0)));
+}

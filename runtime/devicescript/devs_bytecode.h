@@ -21,7 +21,7 @@
 #define DEVS_EXPRx_LOAD_GLOBAL 22    // *global_idx
 #define DEVS_STMTx2_STORE_CLOSURE 83 // *local_clo_idx, levels, value
 #define DEVS_EXPRx1_LOAD_CLOSURE 84  // *local_clo_idx, levels
-#define DEVS_EXPRx_MAKE_CLOSURE 85   // *func_idx
+#define DEVS_EXPRx_MAKE_CLOSURE 85   // CLOSURE(func_idx)
 #define DEVS_EXPR2_INDEX 24          // object[idx]
 #define DEVS_STMT3_INDEX_SET 25      // object[index] := value
 #define DEVS_EXPRx1_BUILTIN_FIELD 26 // [builtin_idx]obj
@@ -99,7 +99,7 @@
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
     "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08"
 
-#define DEVS_IMG_VERSION 0x01010000
+#define DEVS_IMG_VERSION 0x01020000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 8
@@ -269,7 +269,8 @@
 #define DEVS_BUILTIN_STRING_START 78
 #define DEVS_BUILTIN_STRING_CLOUD 79
 #define DEVS_BUILTIN_STRING_MAIN 80
-#define DEVS_BUILTIN_STRING___MAX 80
+#define DEVS_BUILTIN_STRING_CHARAT 81
+#define DEVS_BUILTIN_STRING___MAX 81
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -300,7 +301,7 @@
         "packet", "panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",       \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
-        "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main"
+        "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \

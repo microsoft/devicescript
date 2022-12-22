@@ -87,6 +87,7 @@ devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx);
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size);
+devs_string_t *devs_string_try_alloc_init(devs_ctx_t *ctx, const uint8_t *str, unsigned size);
 
 // result has to be casted to one of devs_gc_object_t objects
 void *devs_any_try_alloc(devs_ctx_t *ctx, unsigned tag, unsigned size);

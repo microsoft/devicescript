@@ -374,8 +374,11 @@ value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx) {
 
     unsigned len;
     const uint8_t *p = devs_bufferish_data(ctx, seq, &len);
-    if (p && idx < len)
+    if (p && idx < len) {
+        if (devs_is_string(ctx, seq))
+            return devs_value_from_gc_obj(ctx, devs_string_try_alloc_init(ctx, p + idx, 1));
         return devs_value_from_int(p[idx]);
+    }
 
     devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
     if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {

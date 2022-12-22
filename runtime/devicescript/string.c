@@ -69,12 +69,12 @@ value_t devs_string_sprintf(devs_ctx_t *ctx, const char *format, ...) {
 }
 
 value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len) {
-    devs_string_t *s = devs_string_try_alloc(ctx, len);
+    // TODO validate utf8??
+    devs_string_t *s = devs_string_try_alloc_init(ctx, utf8, len);
     if (s == NULL) {
         devs_runtime_failure(ctx, 60145);
         return devs_undefined;
     } else {
-        memcpy(s->data, utf8, len); // TODO validate utf8
         return devs_value_from_gc_obj(ctx, s);
     }
 }

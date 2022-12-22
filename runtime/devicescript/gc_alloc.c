@@ -416,6 +416,13 @@ devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size) {
     return buf;
 }
 
+devs_string_t *devs_string_try_alloc_init(devs_ctx_t *ctx, const uint8_t *str, unsigned size) {
+    devs_string_t *s = devs_string_try_alloc(ctx, size);
+    if (s)
+        memcpy(s->data, str, size);
+    return s;
+}
+
 void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
     gc->ctx = ctx;
 }
