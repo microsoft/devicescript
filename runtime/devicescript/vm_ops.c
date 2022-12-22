@@ -6,8 +6,8 @@
 
 static void stmt1_wait_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t a = devs_vm_pop_arg_role(ctx);
-    frame->fiber->role_idx = a;
-    devs_fiber_set_wake_time(frame->fiber, 0);
+    ctx->curr_fiber->role_idx = a;
+    devs_fiber_set_wake_time(ctx->curr_fiber, 0);
     devs_fiber_yield(ctx);
 }
 
@@ -33,14 +33,15 @@ static void stmt4_query_idx_reg(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static void stmt1_return(devs_activation_t *frame, devs_ctx_t *ctx) {
-    frame->fiber->ret_val = devs_vm_pop_arg(ctx);
-    devs_fiber_return_from_call(frame);
+    devs_fiber_t *f = ctx->curr_fiber;
+    f->ret_val = devs_vm_pop_arg(ctx);
+    devs_fiber_return_from_call(f, frame);
 }
 
 static void set_alloc(devs_activation_t *frame, devs_ctx_t *ctx, void *p, unsigned sz) {
     if (p == NULL)
         devs_oom(ctx, sz);
-    frame->fiber->ret_val = devs_value_from_gc_obj(ctx, p);
+    ctx->curr_fiber->ret_val = devs_value_from_gc_obj(ctx, p);
 }
 
 static void stmt0_alloc_map(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -102,7 +103,7 @@ static void stmt_callN(devs_activation_t *frame, devs_ctx_t *ctx, unsigned N) {
     devs_log_value(ctx, "fn", ctx->the_stack[0]);
     devs_log_value(ctx, "a0", ctx->the_stack[1]);
 #endif
-    devs_fiber_call_function(frame->fiber, N);
+    devs_fiber_call_function(ctx->curr_fiber, N);
 }
 
 #define STMT_CALL(n, k)                                                                            \
@@ -164,12 +165,12 @@ static void stmt4_store_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
     value_t buffer = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_RW);
-    devs_buffer_op(frame, fmt0, offset, buffer, &val);
+    devs_buffer_op(ctx, frame, fmt0, offset, buffer, &val);
 }
 
 static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t h = devs_vm_pop_arg(ctx);
-    frame->fiber->ret_val = devs_undefined;
+    ctx->curr_fiber->ret_val = devs_undefined;
     if (devs_is_nullish(h))
         return;
     if (devs_handle_type(h) != DEVS_HANDLE_TYPE_FIBER)
@@ -178,7 +179,7 @@ static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
         devs_fiber_t *fib = devs_fiber_by_tag(ctx, devs_handle_value(h));
         if (fib == NULL)
             return;
-        frame->fiber->ret_val = devs_zero;
+        ctx->curr_fiber->ret_val = devs_zero;
         devs_fiber_termiante(fib);
     }
 }
@@ -215,7 +216,7 @@ static value_t expr3_load_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
     value_t buf = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_STRING_OK);
-    return devs_buffer_op(frame, fmt0, offset, buf, NULL);
+    return devs_buffer_op(ctx, frame, fmt0, offset, buf, NULL);
 }
 
 static value_t exprx_literal(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -231,7 +232,7 @@ static value_t exprx_literal_f64(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static value_t expr0_ret_val(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return frame->fiber->ret_val;
+    return ctx->curr_fiber->ret_val;
 }
 
 static value_t expr0_pkt_size(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -275,7 +276,7 @@ static value_t expr1_get_fiber_handle(devs_activation_t *frame, devs_ctx_t *ctx)
     devs_fiber_t *fiber = NULL;
 
     if (devs_is_nullish(func))
-        fiber = frame->fiber;
+        fiber = ctx->curr_fiber;
     else if (devs_handle_type(func) == DEVS_HANDLE_TYPE_STATIC_FUNCTION)
         fiber = devs_fiber_by_fidx(ctx, devs_handle_value(func));
 

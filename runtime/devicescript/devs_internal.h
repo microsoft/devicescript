@@ -133,7 +133,6 @@ struct devs_activation {
     uint16_t maxpc;
     devs_activation_t *closure;
     devs_activation_t *caller;
-    devs_fiber_t *fiber;
     const devs_function_desc_t *func;
     value_t slots[0];
 };
@@ -176,7 +175,7 @@ void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_termiante(devs_fiber_t *fiber);
 void devs_fiber_yield(devs_ctx_t *ctx);
 int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams);
-void devs_fiber_return_from_call(devs_activation_t *act);
+void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act);
 devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op);
 devs_fiber_t *devs_fiber_by_tag(devs_ctx_t *ctx, unsigned tag);
 devs_fiber_t *devs_fiber_by_fidx(devs_ctx_t *ctx, unsigned fidx);
@@ -188,8 +187,8 @@ void devs_fiber_free_all_fibers(devs_ctx_t *ctx);
 // vm_main.c
 void devs_vm_exec_opcodes(devs_ctx_t *ctx);
 
-value_t devs_buffer_op(devs_activation_t *frame, uint32_t fmt0, uint32_t offset, value_t buffer,
-                       value_t *setv);
+value_t devs_buffer_op(devs_ctx_t *ctx, devs_activation_t *frame, uint32_t fmt0, uint32_t offset,
+                       value_t buffer, value_t *setv);
 double devs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
 
 void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size);

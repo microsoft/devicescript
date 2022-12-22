@@ -3,12 +3,10 @@
 #include <limits.h>
 #include <math.h>
 
-value_t devs_buffer_op(devs_activation_t *frame, uint32_t fmt0, uint32_t offset, value_t buffer,
-                       value_t *setv) {
+value_t devs_buffer_op(devs_ctx_t *ctx, devs_activation_t *frame, uint32_t fmt0, uint32_t offset,
+                       value_t buffer, value_t *setv) {
 
     unsigned sz = jd_numfmt_bytes(fmt0);
-
-    devs_ctx_t *ctx = frame->fiber->ctx;
 
     if (!jd_numfmt_is_valid(fmt0))
         return devs_runtime_failure(ctx, 60100);
