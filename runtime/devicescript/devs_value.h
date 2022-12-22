@@ -145,7 +145,7 @@ extern const value_t devs_true;
 extern const value_t devs_false;
 extern const value_t devs_pkt_buffer;
 
-static inline value_t devs_null_() {
+static inline value_t devs_null_(void) {
     value_t v = {.u64 = 0};
     return v;
 }
