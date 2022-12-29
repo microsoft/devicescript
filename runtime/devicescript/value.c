@@ -1,6 +1,7 @@
 #include "devs_internal.h"
 
 #include <math.h>
+#include <stdlib.h>
 #include <limits.h>
 
 const value_t devs_zero = {.exp_sign = DEVS_INT_TAG, .val_int32 = 0};
@@ -109,41 +110,56 @@ void *devs_handle_ptr_value(devs_ctx_t *ctx, value_t t) {
 }
 #endif
 
-int32_t devs_value_to_int(value_t v) {
+double devs_value_to_double(devs_ctx_t *ctx, value_t v) {
     if (devs_is_tagged_int(v))
-        return v.val_int32;
-    if (devs_is_handle(v)) {
-        if (devs_is_special(v) && devs_handle_value(v) >= DEVS_SPECIAL_TRUE)
-            return 1;
-        else
+        return (double)v.val_int32;
+
+    if (devs_handle_type(v) == DEVS_HANDLE_TYPE_FLOAT64)
+        return v._f;
+
+    if (devs_is_special(v))
+        switch (devs_handle_value(v)) {
+        case DEVS_SPECIAL_NULL:
+        case DEVS_SPECIAL_FALSE:
             return 0;
+        case DEVS_SPECIAL_TRUE:
+            return 1;
+        case DEVS_SPECIAL_INF:
+            return INFINITY;
+        case DEVS_SPECIAL_MINF:
+            return -INFINITY;
+        default:
+            return NAN;
+        }
+
+    if (devs_is_string(ctx, v)) {
+        unsigned sz;
+        const char *data = devs_string_get_utf8(ctx, v, &sz);
+        char *endp;
+        double d = strtod(data, &endp);
+        if (data != endp)
+            return d;
     }
 
-    double rem = fmod(trunc(v._f), 4294967296.0);
+    return NAN;
+}
+
+int32_t devs_value_to_int(devs_ctx_t *ctx, value_t v) {
+    if (devs_is_tagged_int(v))
+        return v.val_int32;
+    if (devs_is_special(v))
+        return devs_handle_value(v) >= DEVS_SPECIAL_TRUE ? 1 : 0;
+
+    double vv = devs_value_to_double(ctx, v);
+    if (isnan(vv))
+        return 0;
+    double rem = fmod(trunc(vv), 4294967296.0);
     if (rem < 0.0)
         rem += 4294967296.0;
     return (int32_t)((uint32_t)rem);
 }
 
-double devs_value_to_double(value_t v) {
-    if (devs_is_tagged_int(v))
-        return (double)v.val_int32;
-
-    if (devs_is_handle(v)) {
-        if (devs_is_special(v))
-            switch (devs_handle_value(v)) {
-            case DEVS_SPECIAL_FALSE:
-                return 0;
-            case DEVS_SPECIAL_TRUE:
-                return 1;
-            }
-        return NAN;
-    }
-
-    return v._f;
-}
-
-bool devs_value_to_bool(value_t v) {
+bool devs_value_to_bool(devs_ctx_t *ctx, value_t v) {
     if (devs_is_tagged_int(v))
         return !!v.val_int32;
     if (devs_is_special(v))

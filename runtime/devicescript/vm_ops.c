@@ -130,7 +130,7 @@ static void stmtx_jmp(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static void stmtx1_jmp_z(devs_activation_t *frame, devs_ctx_t *ctx) {
-    int cond = devs_value_to_bool(devs_vm_pop_arg(ctx));
+    int cond = devs_value_to_bool(ctx, devs_vm_pop_arg(ctx));
     int32_t off = ctx->literal_int;
     int pc = ctx->jmp_pc + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
@@ -517,7 +517,7 @@ static value_t expr0_inf(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr1_abs(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     if (!devs_is_tagged_int(v)) {
-        double f = devs_value_to_double(v);
+        double f = devs_value_to_double(ctx, v);
         return f < 0 ? devs_value_from_double(-f) : v;
     }
     int q = v.val_int32;
@@ -546,21 +546,28 @@ static value_t expr1_is_nan(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr1_neg(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     if (!devs_is_tagged_int(v))
-        return devs_value_from_double(-devs_value_to_double(v));
+        return devs_value_from_double(-devs_value_to_double(ctx, v));
     if (v.val_int32 == INT_MIN)
         return devs_max_int_1;
     else
         return devs_value_from_int(-v.val_int32);
 }
 
+static value_t expr1_uplus(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t v = devs_vm_pop_arg(ctx);
+    if (devs_is_number(v) || devs_is_nan(v))
+        return v;
+    return devs_value_from_double(devs_value_to_double(ctx, v));
+}
+
 static value_t expr1_not(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
-    return devs_value_from_bool(!devs_value_to_bool(v));
+    return devs_value_from_bool(!devs_value_to_bool(ctx, v));
 }
 
 static value_t expr1_to_bool(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
-    return devs_value_from_bool(devs_value_to_bool(v));
+    return devs_value_from_bool(devs_value_to_bool(ctx, v));
 }
 
 static int exec2_and_check_int(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -580,8 +587,8 @@ static bool either_is_string(devs_ctx_t *ctx) {
 }
 
 static void force_double(devs_ctx_t *ctx) {
-    af = devs_value_to_double(ctx->binop[0]);
-    bf = devs_value_to_double(ctx->binop[1]);
+    af = devs_value_to_double(ctx, ctx->binop[0]);
+    bf = devs_value_to_double(ctx, ctx->binop[1]);
 }
 
 static void exec2_and_force_int(devs_activation_t *frame, devs_ctx_t *ctx) {

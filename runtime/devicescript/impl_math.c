@@ -7,7 +7,7 @@ static void fun1_to_int(devs_ctx_t *ctx, double (*fn)(double)) {
     if (devs_is_tagged_int(v))
         devs_ret(ctx, v);
     else
-        devs_ret_double(ctx, fn(devs_value_to_double(v)));
+        devs_ret_double(ctx, fn(devs_value_to_double(ctx, v)));
 }
 
 void fun1_Math_ceil(devs_ctx_t *ctx) {
@@ -27,7 +27,7 @@ void fun1_Math_abs(devs_ctx_t *ctx) {
     if (devs_is_tagged_int(v) && v.val_int32 != INT_MIN)
         devs_ret(ctx, v.val_int32 >= 0 ? v : devs_value_from_int(-v.val_int32));
     else {
-        double q = devs_value_to_double(v);
+        double q = devs_value_to_double(ctx, v);
         if (q < 0)
             devs_ret_double(ctx, -q);
         else
@@ -88,12 +88,12 @@ static void fun2_minmax(devs_ctx_t *ctx, bool ismin) {
     value_t a = devs_arg(ctx, 0);
     value_t b = devs_arg(ctx, 1);
     if (devs_is_tagged_int(a) && devs_is_tagged_int(b)) {
-        int32_t aa = devs_value_to_int(a);
-        int32_t bb = devs_value_to_int(b);
+        int32_t aa = devs_value_to_int(ctx, a);
+        int32_t bb = devs_value_to_int(ctx, b);
         devs_ret(ctx, (ismin ? aa < bb : aa > bb) ? a : b);
     }
-    double af = devs_value_to_double(a);
-    double bf = devs_value_to_double(b);
+    double af = devs_value_to_double(ctx, a);
+    double bf = devs_value_to_double(ctx, b);
     if (isnan(af) || isnan(bf))
         devs_ret(ctx, devs_nan);
     devs_ret(ctx, (ismin ? af < bf : af > bf) ? a : b);

@@ -32,7 +32,7 @@ value_t devs_buffer_op(devs_ctx_t *ctx, devs_activation_t *frame, uint32_t fmt0,
         if (devs_is_tagged_int(q)) {
             jd_numfmt_write_i32(data, fmt0, q.val_int32);
         } else {
-            jd_numfmt_write_float(data, fmt0, devs_value_to_double(q));
+            jd_numfmt_write_float(data, fmt0, devs_value_to_double(ctx, q));
         }
 
         return devs_void;

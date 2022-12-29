@@ -124,9 +124,9 @@ static inline value_t devs_value_from_gc_obj(devs_ctx_t *ctx, void *ptr) {
     return devs_value_from_pointer(ctx, DEVS_HANDLE_TYPE_GC_OBJECT, ptr);
 }
 
-int32_t devs_value_to_int(value_t v);
-double devs_value_to_double(value_t v);
-bool devs_value_to_bool(value_t v);
+int32_t devs_value_to_int(devs_ctx_t *ctx, value_t v);
+double devs_value_to_double(devs_ctx_t *ctx, value_t v);
+bool devs_value_to_bool(devs_ctx_t *ctx, value_t v);
 
 bool devs_value_ieee_eq(devs_ctx_t *ctx, value_t a, value_t b);
 bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b);

@@ -18,15 +18,15 @@ value_t devs_vm_pop_arg(devs_ctx_t *ctx) {
 
 uint32_t devs_vm_pop_arg_u32(devs_ctx_t *ctx) {
     // TODO int vs uint?
-    return devs_value_to_int(pop_arg(ctx));
+    return devs_value_to_int(ctx, pop_arg(ctx));
 }
 
 int32_t devs_vm_pop_arg_i32(devs_ctx_t *ctx) {
-    return devs_value_to_int(pop_arg(ctx));
+    return devs_value_to_int(ctx, pop_arg(ctx));
 }
 
 double devs_vm_pop_arg_f64(devs_ctx_t *ctx) {
-    return devs_value_to_double(pop_arg(ctx));
+    return devs_value_to_double(ctx, pop_arg(ctx));
 }
 
 value_t devs_vm_pop_arg_buffer(devs_ctx_t *ctx, int flags) {

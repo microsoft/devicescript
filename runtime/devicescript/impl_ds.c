@@ -1,4 +1,5 @@
 #include "devs_internal.h"
+#include <math.h>
 
 void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx) {
     int time = devs_arg_int(ctx, 0);
@@ -46,4 +47,12 @@ void fun1_DeviceScript_log(devs_ctx_t *ctx) {
     value_t s = devs_arg(ctx, 0);
     s = devs_value_to_string(ctx, s);
     devs_jd_send_logmsg(ctx, s);
+}
+
+void fun1_DeviceScript_parseFloat(devs_ctx_t *ctx) {
+    devs_ret_double(ctx, devs_arg_double(ctx, 0));
+}
+
+void fun1_DeviceScript_parseInt(devs_ctx_t *ctx) {
+    devs_ret_double(ctx, trunc(devs_arg_double(ctx, 0)));
 }

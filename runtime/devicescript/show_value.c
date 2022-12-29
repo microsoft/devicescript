@@ -18,7 +18,7 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
 
     switch (devs_handle_type(v)) {
     case DEVS_HANDLE_TYPE_FLOAT64:
-        jd_sprintf(buf, sizeof(buf), "%f", devs_value_to_double(v));
+        jd_sprintf(buf, sizeof(buf), "%f", devs_value_to_double(ctx, v));
         return buf;
 
     case DEVS_HANDLE_TYPE_SPECIAL:

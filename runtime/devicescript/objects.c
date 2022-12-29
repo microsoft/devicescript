@@ -391,7 +391,7 @@ value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx) {
 
 value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key) {
     if (devs_is_number(key)) {
-        unsigned idx = devs_value_to_int(key);
+        unsigned idx = devs_value_to_int(ctx, key);
         return devs_seq_get(ctx, obj, idx);
     } else if (devs_is_string(ctx, key)) {
         return devs_object_get(ctx, obj, key);
@@ -402,7 +402,7 @@ value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key) {
 
 void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v) {
     if (devs_is_number(key)) {
-        unsigned idx = devs_value_to_int(key);
+        unsigned idx = devs_value_to_int(ctx, key);
         devs_seq_set(ctx, obj, idx, v);
     } else if (devs_is_string(ctx, key)) {
         devs_map_t *map = (void *)devs_object_get_attached(ctx, obj, true);
@@ -450,7 +450,7 @@ void devs_seq_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
         unsigned len;
         uint8_t *p = devs_buffer_data(ctx, seq, &len);
         if (idx < len) {
-            p[idx] = devs_value_to_int(v) & 0xff;
+            p[idx] = devs_value_to_int(ctx, v) & 0xff;
         } else {
             devs_runtime_failure(ctx, 60151);
         }
@@ -501,11 +501,17 @@ int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int coun
 }
 
 int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx) {
-    return devs_value_to_int(devs_arg(ctx, idx));
+    return devs_value_to_int(ctx, devs_arg(ctx, idx));
 }
 
 double devs_arg_double(devs_ctx_t *ctx, unsigned idx) {
-    return devs_value_to_double(devs_arg(ctx, idx));
+    return devs_value_to_double(ctx, devs_arg(ctx, idx));
+}
+
+const char *devs_arg_utf8_with_conv(devs_ctx_t *ctx, unsigned idx, unsigned *sz) {
+    // store it on the stack, so it doesn't get GCed
+    ctx->the_stack[idx + 1] = devs_value_to_string(ctx, devs_arg(ctx, idx));
+    return devs_string_get_utf8(ctx, devs_arg(ctx, idx), sz);
 }
 
 void devs_ret_double(devs_ctx_t *ctx, double v) {

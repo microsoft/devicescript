@@ -69,7 +69,7 @@ size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst
         value_t v = args[pos];
         if (devs_is_number(v)) {
             char buf[64];
-            jd_print_double(buf, devs_value_to_double(args[pos]), precision + 1);
+            jd_print_double(buf, devs_value_to_double(ctx, args[pos]), precision + 1);
             s = buf;
             sz = strlen(buf);
         } else {

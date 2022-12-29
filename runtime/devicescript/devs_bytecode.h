@@ -55,8 +55,9 @@
 #define DEVS_EXPR1_ABS 52
 #define DEVS_EXPR1_BIT_NOT 53 // ~x
 #define DEVS_EXPR1_IS_NAN 54
-#define DEVS_EXPR1_NEG 55 // -x
-#define DEVS_EXPR1_NOT 56 // !x
+#define DEVS_EXPR1_NEG 55   // -x
+#define DEVS_EXPR1_UPLUS 88 // +x
+#define DEVS_EXPR1_NOT 56   // !x
 #define DEVS_EXPR1_TO_INT 57
 #define DEVS_EXPR2_ADD 58                  // x + y
 #define DEVS_EXPR2_SUB 59                  // x - y
@@ -88,18 +89,18 @@
 #define DEVS_EXPR0_PKT_REPORT_CODE 23
 #define DEVS_EXPR0_PKT_COMMAND_CODE 16
 #define DEVS_EXPR0_PKT_BUFFER 42
-#define DEVS_OP_PAST_LAST 88
+#define DEVS_OP_PAST_LAST 89
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20" \
     "\x00\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40"
+    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x01\x0a\x0a" \
     "\x01\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01"
+    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01"
 
 #define DEVS_IMG_VERSION 0x01020000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
@@ -295,7 +296,8 @@
         stmt1_terminate_fiber, stmt1_wait_role, stmt3_query_reg, stmt2_send_cmd,                   \
         stmt4_query_idx_reg, stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms,                  \
         expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code, stmtx2_store_closure,           \
-        exprx1_load_closure, exprx_make_closure, expr1_typeof_str, expr0_inf, expr_invalid
+        exprx1_load_closure, exprx_make_closure, expr1_typeof_str, expr0_inf, expr1_uplus,         \
+        expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \

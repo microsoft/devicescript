@@ -22,6 +22,8 @@ void fun1_DeviceScript_panic(devs_ctx_t *ctx);
 void fun0_DeviceScript_reboot(devs_ctx_t *ctx);
 void funX_DeviceScript_format(devs_ctx_t *ctx);
 void fun1_DeviceScript_log(devs_ctx_t *ctx);
+void fun1_DeviceScript_parseFloat(devs_ctx_t *ctx);
+void fun1_DeviceScript_parseInt(devs_ctx_t *ctx);
 // impl_function.c
 void methX_Function_start(devs_ctx_t *ctx);
 // impl_math.c
@@ -63,30 +65,30 @@ static const devs_builtin_proto_entry_t Buffer_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
-    {N(SLEEPMS), 50007}, {N(PANIC), 50008}, {N(REBOOT), 50009},
-    {N(FORMAT), 50010},  {N(LOG), 50011},   {0, 0}};
+    {N(SLEEPMS), 50007}, {N(PANIC), 50008},      {N(REBOOT), 50009},   {N(FORMAT), 50010},
+    {N(LOG), 50011},     {N(PARSEFLOAT), 50012}, {N(PARSEINT), 50013}, {0, 0}};
 
 static const devs_builtin_proto_entry_t Function_prototype_entries[] = { //
-    {N(START), 50012},
+    {N(START), 50014},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Math_entries[] = { //
-    {N(CEIL), 50013},   {N(FLOOR), 50014},
-    {N(ROUND), 50015},  {N(ABS), 50016},
-    {N(RANDOM), 50017}, {N(RANDOMINT), 50018},
-    {N(LOG), 50019},    {N(POW), 50020},
-    {N(IDIV), 50021},   {N(IMOD), 50022},
-    {N(IMUL), 50023},   {N(MIN), 50024},
-    {N(MAX), 50025},    {0, 0}};
+    {N(CEIL), 50015},   {N(FLOOR), 50016},
+    {N(ROUND), 50017},  {N(ABS), 50018},
+    {N(RANDOM), 50019}, {N(RANDOMINT), 50020},
+    {N(LOG), 50021},    {N(POW), 50022},
+    {N(IDIV), 50023},   {N(IMOD), 50024},
+    {N(IMUL), 50025},   {N(MIN), 50026},
+    {N(MAX), 50027},    {0, 0}};
 
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 50026},
+    {N(ISCONNECTED), 50028},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50027},
-    {N(CHARCODEAT), 50028},
-    {N(CHARAT), 50029},
+    {N(LENGTH), 50029},
+    {N(CHARCODEAT), 50030},
+    {N(CHARAT), 50031},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -101,8 +103,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 30;
-const devs_builtin_function_t devs_builtin_functions[30] = {
+uint16_t devs_num_builtin_functions = 32;
+const devs_builtin_function_t devs_builtin_functions[32] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
@@ -115,6 +117,8 @@ const devs_builtin_function_t devs_builtin_functions[30] = {
     {N(REBOOT), 0, NO_SELF, {.meth = fun0_DeviceScript_reboot}},
     {N(FORMAT), 0, NO_SELF, {.meth = funX_DeviceScript_format}},
     {N(LOG), 1, NO_SELF, {.meth = fun1_DeviceScript_log}},
+    {N(PARSEFLOAT), 1, NO_SELF, {.meth = fun1_DeviceScript_parseFloat}},
+    {N(PARSEINT), 1, NO_SELF, {.meth = fun1_DeviceScript_parseInt}},
     {N(START), 0, 0, {.meth = methX_Function_start}},
     {N(CEIL), 1, NO_SELF, {.meth = fun1_Math_ceil}},
     {N(FLOOR), 1, NO_SELF, {.meth = fun1_Math_floor}},

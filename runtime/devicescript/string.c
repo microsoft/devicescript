@@ -99,7 +99,7 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
     switch (devs_handle_type(v)) {
     case DEVS_HANDLE_TYPE_FLOAT64: {
         char buf[64];
-        jd_print_double(buf, devs_value_to_double(v), 7);
+        jd_print_double(buf, devs_value_to_double(ctx, v), 7);
         return devs_string_sprintf(ctx, "%s", buf);
     }
     case DEVS_HANDLE_TYPE_SPECIAL:

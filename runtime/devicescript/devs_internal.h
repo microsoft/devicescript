@@ -204,6 +204,7 @@ int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activat
 // for impl_*.c
 int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx);
 double devs_arg_double(devs_ctx_t *ctx, unsigned idx);
+const char *devs_arg_utf8_with_conv(devs_ctx_t *ctx, unsigned idx, unsigned *sz);
 static inline value_t devs_arg(devs_ctx_t *ctx, unsigned idx) {
     return ctx->the_stack[idx + 1];
 }
