@@ -118,8 +118,11 @@ int32_t devs_value_to_int(value_t v) {
         else
             return 0;
     }
-    // TODO check semantics
-    return (int32_t)v._f;
+
+    double rem = fmod(trunc(v._f), 4294967296.0);
+    if (rem < 0.0)
+        rem += 4294967296.0;
+    return (int32_t)((uint32_t)rem);
 }
 
 double devs_value_to_double(value_t v) {
