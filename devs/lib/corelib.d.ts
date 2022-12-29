@@ -38,7 +38,25 @@ interface IArguments {
     callee: Function
 }
 
-interface String {}
+interface String {
+        /**
+         * Returns the character at the specified index.
+         * @param pos The zero-based index of the desired character.
+         */
+        charAt(pos: number): string;
+    
+        /**
+         * Returns the Unicode value of the character at the specified location.
+         * @param index The zero-based index of the desired character. If there is no character at the specified index, NaN is returned.
+         */
+        charCodeAt(index: number): number;
+    
+        /** Returns the length of a String object. */
+        readonly length: number;
+
+        readonly [index: number]: string;
+    
+}
 interface Boolean {}
 interface Number {}
 
