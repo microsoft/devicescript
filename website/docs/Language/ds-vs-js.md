@@ -43,3 +43,7 @@ Properties can be attached to roles, dynamic buffers, and of course regular map 
 ## Objects
 
 `typeof null == "null"` instead of `typeof null == "object"` as in JS.
+
+## Expressions
+
+Assignments do not return value (i.e., you cannot say `x = y = 1` or `if (x = foo()) { ... }`).

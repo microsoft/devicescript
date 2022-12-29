@@ -230,13 +230,15 @@ function testArray() {
 }
 
 function testObj() {
-    /*
-    let obj = {}
-    obj["foo"] = 1
-    obj["bar"] = 2
-    isEq(obj["foo"], 1)
-    isEq(obj["bar"], 2)
-    */
+  const obj: any = {
+    bar: 13
+  }
+  obj.foo = 5
+  isEq(obj.foo, 5)
+  isEq(obj.bar, 13)
+  obj.foo = 7
+  isEq(obj.foo, 7)
+  isEq(obj.bar, 13)
 }
 
 function testConsole() {

@@ -3,7 +3,6 @@
 ## TODO
 * object prototypes
 * object property lookup by string, not index
-* closures - just keep pointer to parent stack frame - in parent clear pointer variables on last use or exit
 * try/catch
 * drop seconds, use milliseconds everywhere
 * multi-program LATER
@@ -26,25 +25,8 @@
 * built-in methods vs opcodes
 
 ### Dynamic methods
-* obj.prop -> (objptr, intr-method-index/function-index)
 * role.packet -> (roleidx, spec-offset)
-* builtin_field(*idx, obj)
-* ascii_field(*idx, obj)
-* gen_field(field, obj)
-* call0(fn), call1(fn,arg0), call2(fn,arg0,arg1), ..., call4(...)
-
-* Math.max = ...; Math.clamp = ...
-* Array.prototype.subarray = ...
-
 * led.active.__proto__.foo = ... ? nope. frozen.
-
-```ts
-function foo() {
-    const x = ...
-    Bar.prototype.baz = function () { return this.q + x } - disallow
-}
-// bar.baz -> ???
-```
 
 ## Ops
 
@@ -60,7 +42,7 @@ function foo() {
     call7(func, v0, v1, v2, v3, v4, v5, v6) = 9       // CALL func(v0, v1, v2, v3, v4, v5, v6)
     call8(func, v0, v1, v2, v3, v4, v5, v6, v7) = 10  // CALL func(v0, v1, v2, v3, v4, v5, v6, v7)
 
-Short-hand versions of regular `call` opcode.
+Call a function with given number of parameters.
 
     return(value) = 12
 
@@ -277,7 +259,7 @@ Return reference to "buffer" with the packet data.
 
 ## Format Constants
 
-    img_version = 0x01_02_0000
+    img_version = 0x01_03_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 8

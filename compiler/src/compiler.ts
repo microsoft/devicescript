@@ -2776,12 +2776,14 @@ class Program implements TopOpWriter {
         const wr = this.writer
         let left = expr.left
 
-        if (ts.isElementAccessExpression(left)) {
+        if (
+            ts.isElementAccessExpression(left) ||
+            ts.isPropertyAccessExpression(left)
+        ) {
             const arr = this.emitExpr(left.expression)
-            const idx = this.emitSimpleValue(
-                left.argumentExpression,
-                ValueType.ANY
-            )
+            const idx = ts.isPropertyAccessExpression(left)
+                ? wr.emitString(this.forceName(left.name))
+                : this.emitSimpleValue(left.argumentExpression, ValueType.ANY)
             const src = this.emitExpr(expr.right) // compute src after left.property
             wr.emitStmt(Op.STMT3_INDEX_SET, arr, idx, src)
             return unit()
@@ -2961,9 +2963,28 @@ class Program implements TopOpWriter {
     private emitObjectExpression(expr: ts.ObjectLiteralExpression): Value {
         const wr = this.writer
         wr.emitStmt(Op.STMT0_ALLOC_MAP)
-        if (expr.properties.length)
-            throwError(expr, "object initializers not supported yet")
-        return this.retVal(ValueType.MAP)
+        const ret = this.retVal(ValueType.MAP)
+        if (expr.properties.length == 0) return ret
+
+        const arr = wr.cacheValue(ret)
+        for (const p of expr.properties) {
+            let expr: Expr
+            if (ts.isPropertyAssignment(p)) {
+                expr = p.initializer
+            } else if (
+                ts.isShorthandPropertyAssignment(p) &&
+                !p.objectAssignmentInitializer
+            ) {
+                expr = p.name
+            } else {
+                throwError(p, `unsupported initializer ${SK[p.kind]}`)
+            }
+            const fld = wr.emitString(this.forceName(p.name))
+            const init = this.emitExpr(expr)
+            wr.emitStmt(Op.STMT3_INDEX_SET, arr.emit(), fld, init)
+        }
+
+        return arr.finalEmit()
     }
 
     private emitExpr(expr: Expr): Value {
