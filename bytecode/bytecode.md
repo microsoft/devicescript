@@ -190,6 +190,8 @@ Check if object is exactly `null`.
 
     fun neg(x): number = 55   // -x
 
+    fun uplus(x): number = 88  // +x
+
     fun not(x): bool = 56   // !x
 
     fun to_int(x): number = 57

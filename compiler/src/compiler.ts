@@ -2899,13 +2899,11 @@ class Program implements TopOpWriter {
         const simpleOps: SMap<Op> = {
             [SK.ExclamationToken]: Op.EXPR1_NOT,
             [SK.MinusToken]: Op.EXPR1_NEG,
+            [SK.PlusToken]: Op.EXPR1_UPLUS,
             [SK.TildeToken]: Op.EXPR1_BIT_NOT,
         }
 
         let arg = expr.operand
-
-        if (expr.operator == SK.PlusToken)
-            return this.emitSimpleValue(arg, ValueType.NUMBER)
 
         let op = simpleOps[expr.operator]
         if (op === undefined) throwError(expr, "unhandled operator")
