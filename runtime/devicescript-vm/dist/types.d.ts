@@ -69,7 +69,6 @@ export declare module Exts {
     function b64ToBin(s: string): Uint8Array;
     /**
      * Deploys a DeviceScript bytecode to the virtual machine
-     * TODO: what is the difference with devsClientDeploy
      * @param binary
      * @returns error code, 0 if deployment is successful
      */
@@ -81,7 +80,9 @@ export declare module Exts {
      */
     function devsVerify(binary: Uint8Array): number;
     /**
-     * Deploys a DeviceScript bytecode to the virtual machine
+     * Deploys to the first virtual machine on Jacdac stack (experimental)
+     * @internal
+     * @alpha
      * @param binary
      * @returns error code, 0 if deployment is successful
      */

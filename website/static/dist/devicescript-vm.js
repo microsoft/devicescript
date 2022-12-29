@@ -296,7 +296,6 @@ var Exts;
     Exts.b64ToBin = b64ToBin;
     /**
      * Deploys a DeviceScript bytecode to the virtual machine
-     * TODO: what is the difference with devsClientDeploy
      * @param binary
      * @returns error code, 0 if deployment is successful
      */
@@ -314,7 +313,9 @@ var Exts;
     }
     Exts.devsVerify = devsVerify;
     /**
-     * Deploys a DeviceScript bytecode to the virtual machine
+     * Deploys to the first virtual machine on Jacdac stack (experimental)
+     * @internal
+     * @alpha
      * @param binary
      * @returns error code, 0 if deployment is successful
      */
