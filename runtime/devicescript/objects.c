@@ -56,7 +56,7 @@ void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v) {
     if (!devs_is_string(ctx, key))
         devs_runtime_failure(ctx, 60149);
 
-    JD_ASSERT(map->capacity <= map->length);
+    JD_ASSERT(map->capacity >= map->length);
 
     if (map->capacity == map->length) {
         int newlen = grow_len(map->capacity);
@@ -161,7 +161,7 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
 // it may allocate an object for the tuple, but typically it doesn't
 value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
     if (devs_handle_type(fn) != DEVS_HANDLE_TYPE_STATIC_FUNCTION)
-        return obj;
+        return fn;
 
     unsigned fidx = devs_handle_value(fn);
 
