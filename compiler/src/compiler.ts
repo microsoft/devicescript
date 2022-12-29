@@ -196,7 +196,10 @@ class Variable extends Cell {
     public parentProc: Procedure
 
     constructor(
-        definition: ts.VariableDeclaration | ts.ParameterDeclaration,
+        definition:
+            | ts.VariableDeclaration
+            | ts.ParameterDeclaration
+            | ts.FunctionDeclaration,
         public vkind: VariableKind,
         scopeOrProc: VariableScope | Procedure,
         public valueType: ValueType,
@@ -1236,8 +1239,21 @@ class Program implements TopOpWriter {
         const fundecl = this.functions.list.find(
             f => f.definition === stmt
         ) as FunctionDecl
-        if (!this.isTopLevel(stmt))
-            throwError(stmt, "only top-level functions are supported")
+
+        if (!this.isTopLevel(stmt)) {
+            const fnVar = this.assignCell(
+                stmt,
+                new Variable(
+                    stmt,
+                    VariableKind.Local,
+                    this.proc,
+                    ValueType.FUNCTION
+                )
+            )
+            this.emitStore(fnVar, this.emitFunctionExpr(stmt))
+            return
+        }
+
         if (
             stmt.asteriskToken ||
             (stmt.modifiers && !stmt.modifiers.every(modifierOK))
@@ -2226,12 +2242,12 @@ class Program implements TopOpWriter {
         const args = expr.arguments.slice()
         proc.useFrom(expr)
         if (isMember) {
-            this.requireArgs(expr, proc.numargs - 1)
+            // this.requireArgs(expr, proc.numargs - 1)
             if (ts.isPropertyAccessExpression(expr.expression))
                 args.unshift(expr.expression.expression)
             else assert(false)
         } else {
-            this.requireArgs(expr, proc.numargs)
+            // this.requireArgs(expr, proc.numargs)
         }
         const cargs = this.emitArgs(args, proc.args())
         proc.callMe(wr, cargs)
@@ -2275,6 +2291,8 @@ class Program implements TopOpWriter {
         }
         const sym = this.checker.getSymbolAtLocation(node)
         const r = this.symName(sym)
+        if (["#parseInt", "#parseFloat"].indexOf(r) >= 0)
+            return "#ds." + r.slice(1)
         // if (!r) console.log(node.kind, r)
         return r
     }
@@ -2496,11 +2514,14 @@ class Program implements TopOpWriter {
 
     private emitBuiltInConst(expr: ts.Expression, nodeName?: string) {
         if (!nodeName) nodeName = this.nodeName(expr)
+        if (!nodeName) return null
         switch (nodeName) {
             case "#ds.packet":
                 return this.writer.emitExpr(Op.EXPR0_PKT_BUFFER)
             case "#NaN":
                 return this.emitLiteral(NaN)
+            case "#Infinity":
+                return this.emitLiteral(Infinity)
             case "undefined":
                 return this.emitLiteral(undefined)
             default:
@@ -2818,6 +2839,11 @@ class Program implements TopOpWriter {
 
         if (op == SK.EqualsToken) return this.emitAssignmentExpression(expr)
 
+        if (op == SK.CommaToken) {
+            this.ignore(this.emitExpr(expr.left))
+            return this.emitSimpleValue(expr.right, ValueType.ANY)
+        }
+
         if (op == SK.AsteriskAsteriskToken)
             return this.emitMathCall(BuiltInString.POW, expr.left, expr.right)
         if (op == SK.PercentToken)
@@ -2923,7 +2949,7 @@ class Program implements TopOpWriter {
     }
 
     private emitFunctionExpr(
-        expr: ts.ArrowFunction | ts.FunctionExpression
+        expr: ts.ArrowFunction | ts.FunctionExpression | ts.FunctionDeclaration
     ): Value {
         const wr = this.writer
         const n = (expr.name ? idName(expr.name) : null) || "inline"
@@ -3007,6 +3033,11 @@ class Program implements TopOpWriter {
                 return this.emitFunctionExpr(expr as ts.ArrowFunction)
             case SK.FunctionExpression:
                 return this.emitFunctionExpr(expr as ts.FunctionExpression)
+            case SK.TypeOfExpression:
+                return this.writer.emitExpr(
+                    Op.EXPR1_TYPEOF_STR,
+                    this.emitExpr((expr as ts.TypeOfExpression).expression)
+                )
             default:
                 // console.log(expr)
                 return throwError(expr, "unhandled expr: " + SK[expr.kind])

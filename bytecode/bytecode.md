@@ -156,6 +156,10 @@ Return value of query register, call, etc.
 
 Returns `Object_Type` enum.
 
+    fun typeof_str(object): number = 86
+
+Returns JS-compatible string.
+
     fun null(): null = 46
 
 Returns `null` value.
@@ -175,6 +179,8 @@ Check if object is exactly `null`.
 ### Math operations
 
     fun nan(): number = 51
+
+    fun inf(): number = 87
 
     fun abs(x): number = 52
 
@@ -269,7 +275,7 @@ Return reference to "buffer" with the packet data.
 
 ## Format Constants
 
-    img_version = 0x01_01_0000
+    img_version = 0x01_02_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 8
@@ -488,3 +494,7 @@ Only `true` and `false` values.
     start = 78
     cloud = 79
     main = 80
+    charAt = 81
+    object = 82
+    parseInt = 83
+    parseFloat = 84

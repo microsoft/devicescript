@@ -53,3 +53,10 @@ export function decode_string0(off: number) {
 export function __ds_wait(seconds: number) {
     ds.sleepMs(seconds * 1000)
 }
+
+export function __ds_assert(cond: boolean, msg?: string) {
+    if (!cond) {
+        console.log("Assertion failed: " + msg)
+        ds.panic(108)
+    }
+}

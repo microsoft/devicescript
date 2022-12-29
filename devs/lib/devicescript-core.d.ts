@@ -153,6 +153,7 @@ declare module "@devicescript/core" {
     export function panic(code: number): never
     export function reboot(): never
     export function onStart(handler: () => void): void
+    export function assert(cond: boolean, msg?: string): void
 
     /**
      * @internal
@@ -193,5 +194,18 @@ declare module "@devicescript/core" {
 
             toString(): string
         }
+
+
+        /**
+         * Converts a string to an integer.
+         * @param string A string to convert into a number.
+         */
+        function parseInt(string: string): number
+
+        /**
+         * Converts a string to a floating-point number.
+         * @param string A string that contains a floating-point number.
+         */
+        function parseFloat(string: string): number
     }
 }

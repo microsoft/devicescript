@@ -667,6 +667,11 @@ export class OpWriter {
                 }
             } else if (isNaN(q)) {
                 this.writeByte(Op.EXPR0_NAN)
+            } else if (q == Infinity) {
+                this.writeByte(Op.EXPR0_INF)
+            } else if (q == -Infinity) {
+                this.writeByte(Op.EXPR0_INF)
+                this.writeByte(Op.EXPR1_NEG)
             } else {
                 const idx = this.prog.addFloat(q)
                 this.writeByte(Op.EXPRx_LITERAL_F64)

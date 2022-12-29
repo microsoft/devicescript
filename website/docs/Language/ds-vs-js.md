@@ -39,3 +39,7 @@ The comparisons with `NaN` behave as in JS (and IEEE standard), in particular `N
 JS lets you attach properties to arrays, buffers, functions, etc. in addition to regular map objects.
 In DeviceScript properties cannot be attached to functions and statically allocated buffers.
 Properties can be attached to roles, dynamic buffers, and of course regular map objects.
+
+## Objects
+
+`typeof null == "null"` instead of `typeof null == "object"` as in JS.
