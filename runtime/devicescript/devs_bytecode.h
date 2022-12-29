@@ -43,13 +43,15 @@
 #define DEVS_EXPRx_BUILTIN_OBJECT 1         // *builtin_object
 #define DEVS_EXPR3_LOAD_BUFFER 43           // buffer, numfmt, offset
 #define DEVS_EXPR0_RET_VAL 44
-#define DEVS_EXPR1_TYPEOF 45 // object
+#define DEVS_EXPR1_TYPEOF 45     // object
+#define DEVS_EXPR1_TYPEOF_STR 86 // object
 #define DEVS_EXPR0_NULL 46
 #define DEVS_EXPR1_IS_NULL 47
 #define DEVS_EXPR0_TRUE 48
 #define DEVS_EXPR0_FALSE 49
 #define DEVS_EXPR1_TO_BOOL 50 // !!x
 #define DEVS_EXPR0_NAN 51
+#define DEVS_EXPR0_INF 87
 #define DEVS_EXPR1_ABS 52
 #define DEVS_EXPR1_BIT_NOT 53 // ~x
 #define DEVS_EXPR1_IS_NAN 54
@@ -86,18 +88,18 @@
 #define DEVS_EXPR0_PKT_REPORT_CODE 23
 #define DEVS_EXPR0_PKT_COMMAND_CODE 16
 #define DEVS_EXPR0_PKT_BUFFER 42
-#define DEVS_OP_PAST_LAST 86
+#define DEVS_OP_PAST_LAST 88
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20" \
     "\x00\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20"
+    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x01\x0a\x0a" \
     "\x01\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08"
+    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01"
 
 #define DEVS_IMG_VERSION 0x01020000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
@@ -270,7 +272,10 @@
 #define DEVS_BUILTIN_STRING_CLOUD 79
 #define DEVS_BUILTIN_STRING_MAIN 80
 #define DEVS_BUILTIN_STRING_CHARAT 81
-#define DEVS_BUILTIN_STRING___MAX 81
+#define DEVS_BUILTIN_STRING_OBJECT 82
+#define DEVS_BUILTIN_STRING_PARSEINT 83
+#define DEVS_BUILTIN_STRING_PARSEFLOAT 84
+#define DEVS_BUILTIN_STRING___MAX 84
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -290,7 +295,7 @@
         stmt1_terminate_fiber, stmt1_wait_role, stmt3_query_reg, stmt2_send_cmd,                   \
         stmt4_query_idx_reg, stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms,                  \
         expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code, stmtx2_store_closure,           \
-        exprx1_load_closure, exprx_make_closure, expr_invalid
+        exprx1_load_closure, exprx_make_closure, expr1_typeof_str, expr0_inf, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \
@@ -301,7 +306,8 @@
         "packet", "panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",       \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
-        "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt"
+        "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
+        "object", "parseInt", "parseFloat"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \

@@ -450,6 +450,35 @@ static value_t expr1_typeof(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_int(devs_value_typeof(ctx, obj));
 }
 
+static const uint8_t typeof_map[] = {
+    // typeof null is not JS-compliant, but makes much more sense
+    [DEVS_OBJECT_TYPE_NULL] = DEVS_BUILTIN_STRING_NULL,
+    [DEVS_OBJECT_TYPE_NUMBER] = DEVS_BUILTIN_STRING_NUMBER,
+    [DEVS_OBJECT_TYPE_MAP] = DEVS_BUILTIN_STRING_OBJECT,
+    [DEVS_OBJECT_TYPE_ARRAY] = DEVS_BUILTIN_STRING_OBJECT,
+    [DEVS_OBJECT_TYPE_BUFFER] = DEVS_BUILTIN_STRING_OBJECT,
+    [DEVS_OBJECT_TYPE_ROLE] = DEVS_BUILTIN_STRING_OBJECT,
+    [DEVS_OBJECT_TYPE_BOOL] = DEVS_BUILTIN_STRING_BOOLEAN,
+    [DEVS_OBJECT_TYPE_FIBER] = DEVS_BUILTIN_STRING_OBJECT,
+    [DEVS_OBJECT_TYPE_FUNCTION] = DEVS_BUILTIN_STRING_FUNCTION,
+    [DEVS_OBJECT_TYPE_STRING] = DEVS_BUILTIN_STRING_STRING,
+};
+
+static value_t expr1_typeof_str(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t obj = devs_vm_pop_arg(ctx);
+    unsigned idx = devs_value_typeof(ctx, obj);
+    if (idx < sizeof(typeof_map))
+        idx = typeof_map[idx];
+    else
+        idx = 0;
+    if (idx == 0)
+        return devs_undefined;
+    else {
+        ctx->literal_int = idx;
+        return static_something(ctx, DEVS_STRIDX_BUILTIN);
+    }
+}
+
 static value_t expr0_null(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_null;
 }
@@ -479,6 +508,10 @@ static value_t expr0_false(devs_activation_t *frame, devs_ctx_t *ctx) {
 //
 static value_t expr0_nan(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_nan;
+}
+
+static value_t expr0_inf(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return devs_inf;
 }
 
 static value_t expr1_abs(devs_activation_t *frame, devs_ctx_t *ctx) {

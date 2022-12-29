@@ -21,7 +21,7 @@ uint32_t devs_vm_pop_arg_u32(devs_ctx_t *ctx) {
     return devs_value_to_int(pop_arg(ctx));
 }
 
-uint32_t devs_vm_pop_arg_i32(devs_ctx_t *ctx) {
+int32_t devs_vm_pop_arg_i32(devs_ctx_t *ctx) {
     return devs_value_to_int(pop_arg(ctx));
 }
 

@@ -6,7 +6,7 @@
 
 value_t devs_vm_pop_arg(devs_ctx_t *ctx);
 uint32_t devs_vm_pop_arg_u32(devs_ctx_t *ctx);
-uint32_t devs_vm_pop_arg_i32(devs_ctx_t *ctx);
+int32_t devs_vm_pop_arg_i32(devs_ctx_t *ctx);
 double devs_vm_pop_arg_f64(devs_ctx_t *ctx);
 value_t devs_vm_pop_arg_buffer(devs_ctx_t *ctx, int flags);
 void *devs_vm_pop_arg_buffer_data(devs_ctx_t *ctx, unsigned *sz, int flags);
