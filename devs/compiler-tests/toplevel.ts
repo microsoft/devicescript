@@ -4,7 +4,7 @@ const g = 0
 const r = new ds.Button()
 
 function foo() {
-    function bar() { } //! only top-level functions are supported
+    function bar() { }
 
     r.down.subscribe(() => { //! top-level
     })
@@ -15,7 +15,7 @@ function foo() {
 
 if (g > 0) {
     const q = 0
-    function bazz() { } //! only top-level functions are supported
+    function bazz() { }
 
     r.down.subscribe(() => { //! top-level
     })

@@ -14,7 +14,7 @@
     "types": "./dist/types.d.ts",
     "scripts": {
         "dist": "yarn install && yarn build",
-        "serve": "http-server -c-1 -p 7070 .",
+        "serve": "(cd built && rm -f bytecode.devs && ln -s ../../../.devicescript/bin/bytecode.devs .) && http-server -c-1 -p 7070 .",
         "build": "tsc"
     },
     "license": "MIT",

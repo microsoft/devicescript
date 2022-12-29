@@ -3,7 +3,7 @@ function mymain(m) {
         .then(() => {
             m.devsSetDeviceId("1989f4eee0ebe206")
             m.devsStart()
-            fetch("built/bytecode.dacs")
+            fetch("built/bytecode.devs")
                 .then(r => {
                     if (r.status == 200)
                         r.arrayBuffer()

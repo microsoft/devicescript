@@ -39,6 +39,7 @@ export async function runTest(fn: string, options: RunOptions = {}) {
                 if (f) f()
             }
         }
+        inst.devsStop()
         inst.devsSetDeviceId(devid)
         inst.devsStart()
         inst.devsDeploy(prog)
