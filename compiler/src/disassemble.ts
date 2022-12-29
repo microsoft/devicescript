@@ -94,6 +94,13 @@ export function disassemble(img: Uint8Array): string {
     const floatArr = new Float64Array(floatData.buffer)
     const intFloatArr = new Int32Array(floatData.buffer)
 
+    const getFlt = (idx: number) => {
+        if (intFloatArr[idx * 2 + 1] == -1) return intFloatArr[idx * 2] + ""
+        const rr = floatArr[idx] + ""
+        if (/^-?\d+$/.test(rr)) return rr + ".0"
+        return rr
+    }
+
     const resolver: InstrArgResolver = {
         resolverPC: 0,
         describeCell: (ff, idx) => {
@@ -123,9 +130,7 @@ export function disassemble(img: Uint8Array): string {
                 case "G":
                     return "" // global
                 case "D":
-                    if (intFloatArr[idx * 2 + 1] == -1)
-                        return intFloatArr[idx * 2] + ""
-                    return floatArr[idx] + ""
+                    return getFlt(idx)
             }
         },
     }
@@ -174,6 +179,11 @@ export function disassemble(img: Uint8Array): string {
         StrIdx.BUFFER,
         bufferDesc.length / BinFmt.SECTION_HEADER_SIZE
     )
+
+    r += `\nDoubles:\n`
+    for (let i = 0; i < floatArr.length; ++i) {
+        r += ("     " + i).slice(-4) + ": " + getFlt(i) + "\n"
+    }
 
     return r
 
