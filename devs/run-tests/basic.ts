@@ -229,16 +229,26 @@ function testArray() {
     isEq(arr[4], 12)
 }
 
+function testObjInner(x: any) {
+    const { foo: fo, bar } = x
+    isEq(fo, 7)
+    isEq(bar, 13)
+}
+
 function testObj() {
-  const obj: any = {
-    bar: 13
-  }
-  obj.foo = 5
-  isEq(obj.foo, 5)
-  isEq(obj.bar, 13)
-  obj.foo = 7
-  isEq(obj.foo, 7)
-  isEq(obj.bar, 13)
+    const obj: any = {
+        bar: 13,
+    }
+    obj.foo = 5
+    isEq(obj.foo, 5)
+    isEq(obj.bar, 13)
+    obj.foo = 7
+    isEq(obj.foo, 7)
+    isEq(obj.bar, 13)
+
+    testObjInner(obj)
+
+    return obj
 }
 
 function testConsole() {
@@ -349,7 +359,9 @@ testMath()
 testLazy()
 testBuffer()
 testArray()
-testObj()
+const { foo, bar } = testObj()
+isEq(foo, 7)
+isEq(bar, 13)
 testConsole()
 testString()
 testClosures1()

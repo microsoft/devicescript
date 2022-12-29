@@ -63,6 +63,7 @@ import {
     Value,
     VariableKind,
     packVarIndex,
+    CachedValue,
 } from "./opwriter"
 import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
 import { preludeFiles } from "./specgen"
@@ -108,6 +109,7 @@ class Cell {
             | ts.VariableDeclaration
             | ts.FunctionDeclaration
             | ts.ParameterDeclaration
+            | ts.BindingElement
             | ts.Identifier,
         public scope: VariableScope,
         public _name?: string
@@ -199,7 +201,8 @@ class Variable extends Cell {
         definition:
             | ts.VariableDeclaration
             | ts.ParameterDeclaration
-            | ts.FunctionDeclaration,
+            | ts.FunctionDeclaration
+            | ts.BindingElement,
         public vkind: VariableKind,
         scopeOrProc: VariableScope | Procedure,
         public valueType: ValueType,
@@ -935,36 +938,79 @@ class Program implements TopOpWriter {
         return undefined
     }
 
+    private skipInit(decl: ts.VariableDeclaration) {
+        if (this.isTopLevel(decl) && idName(decl.name)) {
+            const cell = this.getCellAtLocation(decl)
+            return !(cell instanceof Variable)
+        }
+        return false
+    }
+
+    private emitPropName(pn: ts.PropertyName | ts.BindingName) {
+        const wr = this.writer
+        if (ts.isIdentifier(pn) || ts.isStringLiteral(pn))
+            return wr.emitString(pn.text)
+        throwError(pn, "unsupported property name")
+    }
+
+    private assignToId(id: ts.Identifier, init: Value) {
+        const variable = this.getCellAtLocation(id)
+        if (!(variable instanceof Variable)) throwError(id, "invalid cell type")
+        variable.valueType = init.valueType
+        this.emitStore(variable, init)
+    }
+
+    private assignToBindingElement(
+        bindingElt: ts.BindingElement,
+        obj: CachedValue
+    ) {
+        const wr = this.writer
+        const bindingName = bindingElt.name
+        let val: Value
+        const fld = this.emitPropName(
+            bindingElt.propertyName ?? bindingElt.name
+        )
+        val = wr.emitIndex(obj.emit(), fld)
+
+        if (ts.isIdentifier(bindingName)) {
+            this.assignToId(bindingName, val)
+        } else if (ts.isObjectBindingPattern(bindingName)) {
+            const obj2 = wr.cacheValue(val)
+            for (const elt of bindingName.elements) {
+                this.assignToBindingElement(elt, obj2)
+            }
+            obj2.free()
+        } else {
+            throwError(bindingName, "invalid binding elt")
+        }
+    }
+
     private emitVariableDeclaration(decls: ts.VariableStatement) {
-        // if (decls.kind != "var") throwError(decls, "only 'var' supported")
         for (const decl of decls.declarationList.declarations) {
-            let g: Variable
+            if (this.skipInit(decl)) continue
+
             if (this.isTopLevel(decl)) {
-                const tmp = this.getCellAtLocation(decl)
-                if (tmp instanceof Role) continue
-                if (tmp instanceof BufferLit) continue
-                if (tmp instanceof Variable) g = tmp
-                else {
-                    if (this.numErrors == 0) oops("invalid var: " + tmp)
-                    else continue
-                }
+                // OK
             } else {
-                this.newDef(decl)
-                g = this.assignCell(
-                    decl,
-                    new Variable(
-                        decl,
-                        VariableKind.Local,
-                        this.proc,
-                        ValueType.ANY
-                    )
-                )
+                this.assignVariableCells(decl, this.proc)
             }
 
-            if (decl.initializer) {
-                const v = this.emitSimpleValue(decl.initializer, ValueType.ANY)
-                g.valueType = v.valueType
-                this.emitStore(g, v)
+            if (!decl.initializer) continue
+
+            const init = this.emitSimpleValue(decl.initializer, ValueType.ANY)
+
+            if (ts.isIdentifier(decl.name)) {
+                this.assignToId(decl.name, init)
+            } else {
+                const wr = this.writer
+                const obj = wr.cacheValue(init)
+                if (ts.isObjectBindingPattern(decl.name)) {
+                    for (const elt of decl.name.elements)
+                        this.assignToBindingElement(elt, obj)
+                } else {
+                    throwError(decl, "array destruct not supported")
+                }
+                obj.free()
             }
         }
     }
@@ -1326,18 +1372,7 @@ class Program implements TopOpWriter {
                     this.assignCell(s, new FunctionDecl(s, this.functions))
                 } else if (ts.isVariableStatement(s)) {
                     for (const decl of s.declarationList.declarations) {
-                        this.newDef(decl)
-                        if (!this.parseRole(decl)) {
-                            this.assignCell(
-                                decl,
-                                new Variable(
-                                    decl,
-                                    VariableKind.Global,
-                                    this.globals,
-                                    ValueType.ANY
-                                )
-                            )
-                        }
+                        this.assignVariableCells(decl, null)
                     }
                 }
             } catch (e) {
@@ -1375,7 +1410,44 @@ class Program implements TopOpWriter {
             if (ts.isExpressionStatement(node)) markTopLevel(node.expression)
             else if (ts.isVariableStatement(node))
                 node.declarationList.declarations.forEach(markTopLevel)
+            else if (
+                ts.isVariableDeclaration(node) &&
+                !ts.isIdentifier(node.name)
+            )
+                node.name.elements.forEach(markTopLevel)
         }
+    }
+
+    private assignVariableCells(decl: ts.VariableDeclaration, proc: Procedure) {
+        if (idName(decl.name) && !proc) {
+            if (this.parseRole(decl)) return
+        }
+
+        const doAssign = (decl: ts.VariableDeclaration | ts.BindingElement) => {
+            if (ts.isIdentifier(decl.name))
+                this.assignCell(
+                    decl,
+                    new Variable(
+                        decl,
+                        proc ? VariableKind.Local : VariableKind.Global,
+                        proc ? proc : this.globals,
+                        ValueType.ANY
+                    )
+                )
+            else if (ts.isObjectBindingPattern(decl.name)) {
+                for (const elt of decl.name.elements) {
+                    doAssign(elt)
+                }
+            } else if (ts.isArrayBindingPattern(decl.name)) {
+                for (const elt of decl.name.elements) {
+                    if (!ts.isOmittedExpression(elt)) doAssign(elt)
+                }
+            } else {
+                throwError(decl, "unsupported binding")
+            }
+        }
+
+        doAssign(decl)
     }
 
     private ignore(val: Value) {
@@ -2387,13 +2459,17 @@ class Program implements TopOpWriter {
         return this.emitGenericCall(expr, fn)
     }
 
-    private getCellAtLocation(node: ts.Node) {
+    private getSymAtLocation(node: ts.Node) {
         let sym = this.checker.getSymbolAtLocation(node)
         if (!sym) {
             const decl = node as ts.NamedDeclaration
             if (decl.name) sym = this.checker.getSymbolAtLocation(decl.name)
         }
-        return symCell(sym)
+        return sym
+    }
+
+    private getCellAtLocation(node: ts.Node) {
+        return symCell(this.getSymAtLocation(node))
     }
 
     private getClosureLevel(variable: Variable) {
