@@ -266,8 +266,9 @@ static block_t *find_free_block(devs_gc_t *gc, uint8_t tag, uint32_t words) {
             // split block
             mark_block(b, tag, words + 1);
             next = next_block(b);
-            mark_block(next, DEVS_GC_TAG_FREE, left - 1);
+            // mark_block() below can overwrite b->free.next when words==0, so do this first
             next->free.next = b->free.next;
+            mark_block(next, DEVS_GC_TAG_FREE, left - 1);
         } else {
             mark_block(b, tag, block_size(b));
             next = b->free.next;
@@ -427,7 +428,8 @@ void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
     gc->ctx = ctx;
 }
 
-static const char *tags[] = {"free", "bytes", "array", "map", "buffer", "string"};
+static const char *tags[] = {"free",   "bytes",  "array",    "map",
+                             "buffer", "string", "function", "activation"};
 const char *devs_gc_tag_name(unsigned tag) {
     tag &= DEVS_GC_TAG_MASK;
     tag--;
