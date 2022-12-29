@@ -239,7 +239,6 @@ export module Exts {
 
     /**
      * Deploys a DeviceScript bytecode to the virtual machine
-     * TODO: what is the difference with devsClientDeploy
      * @param binary
      * @returns error code, 0 if deployment is successful
      */
@@ -261,7 +260,9 @@ export module Exts {
     }
 
     /**
-     * Deploys a DeviceScript bytecode to the virtual machine
+     * Deploys to the first virtual machine on Jacdac stack (experimental)
+     * @internal
+     * @alpha
      * @param binary
      * @returns error code, 0 if deployment is successful
      */
