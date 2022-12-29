@@ -972,6 +972,15 @@ class Program implements TopOpWriter {
         )
         val = wr.emitIndex(obj.emit(), fld)
 
+        if (bindingElt.initializer)
+            throwError(
+                bindingElt,
+                "default values in bindings not supported yet"
+            )
+
+        if (bindingElt.dotDotDotToken)
+            throwError(bindingElt, "spread in bindings not supported yet")
+
         if (ts.isIdentifier(bindingName)) {
             this.assignToId(bindingName, val)
         } else if (ts.isObjectBindingPattern(bindingName)) {
