@@ -7,12 +7,8 @@ node build/process.js bytecode.md
 R=$?
 if [ $R = 10 ] ; then
   diff -u bytecode.md bytecode.md.new
-  read -p "apply changes [y/n]? " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]
-  then
-    exit 1
-  fi
+  printf "Apply changes? Enter - yes, Ctrl-C to stop: "
+  read LINE
   mv bytecode.md.new bytecode.md
   node build/process.js bytecode.md
   R=$?

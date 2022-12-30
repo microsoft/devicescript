@@ -2861,16 +2861,10 @@ class Program implements TopOpWriter {
         const wr = this.writer
         let left = expr.left
 
-        if (
-            ts.isElementAccessExpression(left) ||
-            ts.isPropertyAccessExpression(left)
-        ) {
-            const arr = this.emitExpr(left.expression)
-            const idx = ts.isPropertyAccessExpression(left)
-                ? wr.emitString(this.forceName(left.name))
-                : this.emitSimpleValue(left.argumentExpression, ValueType.ANY)
+        const r = this.tryEmitIndex(left)
+        if (r) {
             const src = this.emitExpr(expr.right) // compute src after left.property
-            wr.emitStmt(Op.STMT3_INDEX_SET, arr, idx, src)
+            wr.emitStmt(Op.STMT3_INDEX_SET, r.obj, r.idx, src)
             return unit()
         }
 
@@ -3033,6 +3027,29 @@ class Program implements TopOpWriter {
         return ref.finalEmit(ValueType.ARRAY)
     }
 
+    private tryEmitIndex(expr: Expr) {
+        const wr = this.writer
+        if (
+            ts.isElementAccessExpression(expr) ||
+            ts.isPropertyAccessExpression(expr)
+        ) {
+            const obj = this.emitExpr(expr.expression)
+            const idx = ts.isPropertyAccessExpression(expr)
+                ? wr.emitString(this.forceName(expr.name))
+                : this.emitSimpleValue(expr.argumentExpression, ValueType.ANY)
+            return { obj, idx }
+        }
+        return null
+    }
+
+    private emitDeleteExpression(expr: ts.DeleteExpression): Value {
+        const wr = this.writer
+        const r = this.tryEmitIndex(expr.expression)
+        if (!r) throwError(expr, "unsupported delete")
+        wr.emitStmt(Op.STMT2_INDEX_DELETE, r.obj, r.idx)
+        return this.retVal(ValueType.BOOL)
+    }
+
     private emitFunctionExpr(
         expr: ts.ArrowFunction | ts.FunctionExpression | ts.FunctionDeclaration
     ): Value {
@@ -3144,6 +3161,8 @@ class Program implements TopOpWriter {
                 return this.emitFunctionExpr(expr as ts.ArrowFunction)
             case SK.FunctionExpression:
                 return this.emitFunctionExpr(expr as ts.FunctionExpression)
+            case SK.DeleteExpression:
+                return this.emitDeleteExpression(expr as ts.DeleteExpression)
             case SK.TypeOfExpression:
                 return this.writer.emitExpr(
                     Op.EXPR1_TYPEOF_STR,

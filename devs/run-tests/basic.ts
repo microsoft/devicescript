@@ -9,7 +9,7 @@ function isClose(x: number, y: number): void {
     panic(108)
 }
 
-function isEq(x: number, y: number): void {
+function isEq(x: any, y: any): void {
     // console.log(x, " == ", y, "?")
     if (x != y) {
         console.log(ds.format("fail: {0} != {1}", x, y))
@@ -261,6 +261,13 @@ function testSpread() {
     const qq = { foo: 1, ...obj, bar: 3 }
     isEq(qq.foo, 5)
     isEq(qq.bar, 3)
+
+    isEq(delete qq.bar2, false)
+    isEq(delete qq.bar, true)
+    isEq(delete qq.bar, false)
+    isEq(Object.keys(qq).length, 1)
+    isEq(qq.foo, 5)
+    isEq(qq.bar, null)
 }
 
 function testConsole() {

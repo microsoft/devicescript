@@ -1,28 +1,14 @@
 # DeviceScript bytecode spec
 
+Expressions do not modify the state. They may throw exceptions though.
+
 ## TODO
-* object prototypes
-* object property lookup by string, not index
 * try/catch
 * drop seconds, use milliseconds everywhere
 * multi-program LATER
 
-### Tree-shaking
-* in ES tree shaking typically only applies to functions, not class/object methods
-* should people even use classes?
-
-
 ### Decisions
-* utf16 vs utf8 strings - UTF8
-* null vs undefined
 * hash-consing of strings? (esp. for JSON parsing) LATER
-* call method identified by string -> eg. charCodeAt YES
-* prototype property access via string lookup?
-
-### Philosophy
-* static vs dynamic
-* use types in compilation?
-* built-in methods vs opcodes
 
 ### Dynamic methods
 * role.packet -> (roleidx, spec-offset)
@@ -81,6 +67,10 @@ Read named field or sequence member (depending on type of idx).
     index_set(object, index, value) = 25         // object[index] := value
 
 Write named field or sequence member (depending on type of idx).
+
+    index_delete(object, index) = 90              // delete object[index]
+
+Remove a named field from an object.
 
     builtin_field(*builtin_idx, obj): any = 26  // [builtin_idx]obj
 
