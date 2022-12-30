@@ -61,6 +61,42 @@ void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_prot
     }
 }
 
+void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, devs_array_t *arr,
+                             bool keys) {
+    unsigned dp = arr->length;
+    if (devs_is_map(src)) {
+        devs_map_t *srcmap = (devs_map_t *)src;
+        unsigned len2 = srcmap->length * 2;
+        value_t *data = srcmap->data;
+        if (devs_array_insert(ctx, arr, dp, srcmap->length)) {
+            devs_runtime_failure(ctx, 60170);
+            return;
+        }
+        for (unsigned i = 0; i < len2; i += 2) {
+            arr->data[dp++] = keys ? data[i] : data[i + 1];
+        }
+    } else {
+        const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;
+        const devs_builtin_proto_entry_t *p = proto->entries;
+
+        while (p->builtin_string_id)
+            p++;
+        unsigned len = p - proto->entries;
+
+        if (devs_array_insert(ctx, arr, dp, len)) {
+            devs_runtime_failure(ctx, 60170);
+            return;
+        }
+
+        p = proto->entries;
+        while (p->builtin_string_id) {
+            arr->data[dp++] =
+                keys ? devs_builtin_string(p->builtin_string_id) : proto_value(ctx, p);
+            p++;
+        }
+    }
+}
+
 static int grow_len(int capacity) {
     int newlen = capacity * 10 / 8;
     if (newlen < 4)

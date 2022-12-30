@@ -61,6 +61,8 @@ void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v);
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map);
 void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_proto_t *src);
+void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, devs_array_t *arr,
+                             bool keys);
 
 value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx);
 void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v);
