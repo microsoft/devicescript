@@ -12,8 +12,6 @@ value_t devs_vm_pop_arg_buffer(devs_ctx_t *ctx, int flags);
 void *devs_vm_pop_arg_buffer_data(devs_ctx_t *ctx, unsigned *sz, int flags);
 unsigned devs_vm_pop_arg_stridx(devs_ctx_t *ctx);
 unsigned devs_vm_pop_arg_role(devs_ctx_t *ctx);
-devs_map_t *devs_vm_pop_arg_map(devs_ctx_t *ctx, bool create);
-const char *devs_vm_pop_arg_string_data(devs_ctx_t *ctx, unsigned *sz);
 
 extern const void *devs_vm_op_handlers[];
 

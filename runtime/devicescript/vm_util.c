@@ -53,16 +53,6 @@ void *devs_vm_pop_arg_buffer_data(devs_ctx_t *ctx, unsigned *sz, int flags) {
     return devs_buffer_data(ctx, tmp, sz);
 }
 
-const char *devs_vm_pop_arg_string_data(devs_ctx_t *ctx, unsigned *sz) {
-    value_t tmp = pop_arg(ctx);
-    if (!devs_is_string(ctx, tmp)) {
-        devs_runtime_failure(ctx, 60147);
-        *sz = 0;
-        return "";
-    }
-    return devs_string_get_utf8(ctx, tmp, sz);
-}
-
 unsigned devs_vm_pop_arg_stridx(devs_ctx_t *ctx) {
     value_t tmp = pop_arg(ctx);
     if (devs_handle_type(tmp) != DEVS_HANDLE_TYPE_IMG_BUFFERISH) {
@@ -79,10 +69,4 @@ unsigned devs_vm_pop_arg_role(devs_ctx_t *ctx) {
         return 0;
     }
     return devs_handle_value(tmp);
-}
-
-devs_map_t *devs_vm_pop_arg_map(devs_ctx_t *ctx, bool create) {
-    value_t tmp = pop_arg(ctx);
-    const void *m = devs_object_get_attached(ctx, tmp, create);
-    return devs_is_map(m) ? (void *)m : NULL;
 }
