@@ -28,6 +28,37 @@ declare function isNaN(number: number): boolean
 
 interface Object {}
 
+interface ObjectConstructor {
+    /**
+     * Copy the values of all of the enumerable own properties from one or more source objects to a
+     * target object. Returns the target object.
+     * @param target The target object to copy to.
+     * @param source The source object from which to copy properties.
+     */
+    assign<T extends {}, U>(target: T, source: U): T & U
+
+    /**
+     * Returns the names of the enumerable string properties and methods of an object.
+     * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
+     */
+    keys(o: {}): string[]
+
+    /**
+     * Returns an array of values of the enumerable properties of an object
+     * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
+     */
+    values<T>(o: { [s: string]: T } | T[]): T[]
+
+    /**
+     * Returns an array of values of the enumerable properties of an object
+     * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
+     */
+    values(o: {}): any[]
+}
+
+declare var Object: ObjectConstructor;
+
+
 interface Function {}
 interface CallableFunction extends Function {}
 interface NewableFunction extends Function {}
@@ -39,23 +70,22 @@ interface IArguments {
 }
 
 interface String {
-        /**
-         * Returns the character at the specified index.
-         * @param pos The zero-based index of the desired character.
-         */
-        charAt(pos: number): string;
-    
-        /**
-         * Returns the Unicode value of the character at the specified location.
-         * @param index The zero-based index of the desired character. If there is no character at the specified index, NaN is returned.
-         */
-        charCodeAt(index: number): number;
-    
-        /** Returns the length of a String object. */
-        readonly length: number;
+    /**
+     * Returns the character at the specified index.
+     * @param pos The zero-based index of the desired character.
+     */
+    charAt(pos: number): string
 
-        readonly [index: number]: string;
-    
+    /**
+     * Returns the Unicode value of the character at the specified location.
+     * @param index The zero-based index of the desired character. If there is no character at the specified index, NaN is returned.
+     */
+    charCodeAt(index: number): number
+
+    /** Returns the length of a String object. */
+    readonly length: number
+
+    readonly [index: number]: string
 }
 interface Boolean {}
 interface Number {}
@@ -63,11 +93,10 @@ interface Number {}
 interface RegExp {}
 interface IterableIterator<T> {}
 
-
 interface SymbolConstructor {
-    readonly iterator: unique symbol;
+    readonly iterator: unique symbol
 }
-declare var Symbol: SymbolConstructor;
+declare var Symbol: SymbolConstructor
 
 interface Array<T> {
     /**
@@ -75,7 +104,7 @@ interface Array<T> {
      */
     length: number
     [n: number]: T
-    [Symbol.iterator](): IterableIterator<T>;
+    [Symbol.iterator](): IterableIterator<T>
 }
 
 declare namespace console {

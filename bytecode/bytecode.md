@@ -98,6 +98,8 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun ds_field(*builtin_idx): any = 30        // ds.builtin_idx
 
+    fun object_field(*builtin_idx): any = 89      // Object.builtin_idx
+
 ### Objects
 
     alloc_map() = 31
@@ -259,7 +261,7 @@ Return reference to "buffer" with the packet data.
 
 ## Format Constants
 
-    img_version = 0x01_03_0000
+    img_version = 0x01_04_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 8
@@ -482,3 +484,6 @@ Only `true` and `false` values.
     object = 82
     parseInt = 83
     parseFloat = 84
+    assign = 85
+    keys = 86
+    values = 87

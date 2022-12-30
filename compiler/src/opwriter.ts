@@ -745,6 +745,7 @@ export class OpWriter {
     staticBuiltIn(obj: BuiltInObject, name: BuiltInString) {
         if (obj == BuiltInObject.MATH) return this.mathMember(name)
         else if (obj == BuiltInObject.DEVICESCRIPT) return this.dsMember(name)
+        else if (obj == BuiltInObject.OBJECT) return this.objectMember(name)
         return this.emitExpr(
             Op.EXPRx1_BUILTIN_FIELD,
             literal(name),
@@ -758,6 +759,10 @@ export class OpWriter {
 
     mathMember(name: BuiltInString) {
         return this.emitExpr(Op.EXPRx_MATH_FIELD, literal(name))
+    }
+
+    objectMember(name: BuiltInString) {
+        return this.emitExpr(Op.EXPRx_OBJECT_FIELD, literal(name))
     }
 }
 
