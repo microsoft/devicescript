@@ -251,6 +251,18 @@ function testObj() {
     return obj
 }
 
+function testSpread() {
+    const obj: any = {
+        bar: 13,
+    }
+    Object.assign(obj, { foo: 5 })
+    isEq(obj.foo, 5)
+    isEq(obj.bar, 13)
+    const qq = { foo: 1, ...obj, bar: 3 }
+    isEq(qq.foo, 5)
+    isEq(qq.bar, 3)
+}
+
 function testConsole() {
     // note that we don't really test the output ...
     const n = 8
@@ -362,6 +374,7 @@ testArray()
 const { foo, bar } = testObj()
 isEq(foo, 7)
 isEq(bar, 13)
+testSpread()
 testConsole()
 testString()
 testClosures1()

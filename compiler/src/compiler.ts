@@ -3061,6 +3061,13 @@ class Program implements TopOpWriter {
                 !p.objectAssignmentInitializer
             ) {
                 expr = p.name
+            } else if (ts.isSpreadAssignment(p) && !p.name) {
+                wr.emitCall(
+                    wr.objectMember(BuiltInString.ASSIGN),
+                    arr.emit(),
+                    this.emitExpr(p.expression)
+                )
+                continue
             } else {
                 throwError(p, `unsupported initializer ${SK[p.kind]}`)
             }
