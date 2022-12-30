@@ -95,14 +95,24 @@ export class Value {
     toString() {
         return `[op=${Op[this.op]} a=${this.args?.length}]`
     }
+
+    clone() {
+        const r = new Value(this.valueType)
+        r._set(this)
+        if (r.args) r.args = r.args.map(a => a.clone())
+        return r
+    }
 }
 
 export class CachedValue {
     numrefs = 1
     valueType: ValueType
     constructor(public parent: OpWriter, public index: number) {}
-    private get packedIndex() {
+    get packedIndex() {
         return packVarIndex(VariableKind.Cached, this.index)
+    }
+    get isCached() {
+        return true
     }
     emit() {
         assert(this.numrefs > 0)
@@ -140,6 +150,28 @@ export class CachedValue {
     free() {
         this._decr()
     }
+}
+
+class UnCachedValue extends CachedValue {
+    constructor(parent: OpWriter) {
+        super(parent, null)
+    }
+
+    theValue: Value
+    get isCached() {
+        return false
+    }
+    emit() {
+        return this.theValue.clone()
+    }
+
+    store(v: Value) {
+        assert(this.theValue === undefined)
+        this.valueType = v.valueType
+        this.theValue = v
+    }
+
+    _decr() {}
 }
 
 export function literal(v: number | boolean) {
@@ -303,8 +335,24 @@ export class OpWriter {
         return this.allocTmpLocals(1)[0]
     }
 
-    cacheValue(v: Value) {
-        const t = this.allocTmpLocal()
+    needsCache(v: Value) {
+        let maxSize = 5
+        return needsCacheRec(v)
+        function needsCacheRec(v: Value) {
+            if (v.usesState) return true
+            if (maxSize-- < 0) return true
+            return v.args && v.args.some(needsCacheRec)
+        }
+    }
+
+    cacheValue(v: Value, force = false) {
+        let t: CachedValue
+        if (this.needsCache(v) || force) {
+            t = this.allocTmpLocal()
+        } else {
+            t = new UnCachedValue(this)
+        }
+
         t.store(v)
         return t
     }
@@ -478,7 +526,7 @@ export class OpWriter {
         if (this.prog.hasErrors) return
         for (const c of this.cachedValues) {
             if (c !== null) {
-                this.oops(`local ${c.index} still has ${c.numrefs} refs`)
+                this.oops(`_L${c.packedIndex} still has ${c.numrefs} refs`)
             }
         }
 

@@ -1262,9 +1262,12 @@ class Program implements TopOpWriter {
                 return ValueType.ROLE(this.specFromTypeName(node, n))
         }
 
+        if (tp.getFlags() & ts.TypeFlags.Object) return ValueType.MAP
+
+        const tname = this.checker.typeToString(tp)
         throwError(
             node,
-            `type not understood: ${this.checker.typeToString(tp)} (${n})`
+            `type not understood: ${tname} (${n} ${tp.getFlags()})`
         )
     }
 
@@ -1489,6 +1492,10 @@ class Program implements TopOpWriter {
 
     private ignore(val: Value) {
         val.adopt()
+    }
+
+    private isIgnored(expr: Expr) {
+        return expr.parent && ts.isExpressionStatement(expr.parent)
     }
 
     private emitExpressionStatement(stmt: ts.ExpressionStatement) {
@@ -1848,9 +1855,9 @@ class Program implements TopOpWriter {
         return this.retVal(this.nodeType(expr))
     }
 
-    private emitMathCall(id: BuiltInString, ...args: Expr[]) {
+    private emitMathCall(id: BuiltInString, ...args: Value[]) {
         const wr = this.writer
-        wr.emitCall(wr.mathMember(id), ...this.emitArgs(args))
+        wr.emitCall(wr.mathMember(id), ...args)
         return this.retVal(ValueType.NUMBER)
     }
 
@@ -2878,7 +2885,44 @@ class Program implements TopOpWriter {
         return unit()
     }
 
+    private emitAssignmentTarget(trg: Expr) {
+        const wr = this.writer
+        const r = this.tryEmitIndex(trg)
+        if (r) {
+            const obj = wr.cacheValue(r.obj)
+            const idx = wr.cacheValue(r.idx)
+
+            return {
+                read: () => wr.emitIndex(obj.emit(), idx.emit()),
+                write: (src: Value) =>
+                    wr.emitStmt(
+                        Op.STMT3_INDEX_SET,
+                        obj.emit(),
+                        idx.emit(),
+                        src
+                    ),
+                free: () => {
+                    obj.free()
+                    idx.free()
+                },
+            }
+        }
+
+        if (ts.isIdentifier(trg)) {
+            const variable = this.lookupVar(trg)
+            return {
+                read: () => variable.emit(wr),
+                write: (src: Value) => this.emitStore(variable, src),
+                free: () => {},
+            }
+        }
+
+        throwError(trg, "unsupported assignment target")
+    }
+
     private emitAssignmentExpression(expr: ts.BinaryExpression): Value {
+        this.forceAssignmentIgnored(expr)
+
         const res = this.emitPrototypeUpdate(expr)
         if (res) return res
 
@@ -2919,6 +2963,14 @@ class Program implements TopOpWriter {
         throwError(expr, "unhandled assignment")
     }
 
+    private forceAssignmentIgnored(expr: Expr) {
+        if (!this.isIgnored(expr))
+            throwError(
+                expr,
+                "the value of assignment expression has to be ignored"
+            )
+    }
+
     private emitBinaryExpression(expr: ts.BinaryExpression): Value {
         const simpleOps: SMap<Op> = {
             [SK.PlusToken]: Op.EXPR2_ADD,
@@ -2940,6 +2992,37 @@ class Program implements TopOpWriter {
             [SK.ExclamationEqualsEqualsToken]: Op.EXPR2_NE,
         }
 
+        function stripEquals(k: SK) {
+            switch (k) {
+                case SK.PlusEqualsToken:
+                    return SK.PlusToken
+                case SK.MinusEqualsToken:
+                    return SK.MinusToken
+                case SK.AsteriskEqualsToken:
+                    return SK.AsteriskToken
+                case SK.AsteriskAsteriskEqualsToken:
+                    return SK.AsteriskAsteriskToken
+                case SK.SlashEqualsToken:
+                    return SK.SlashToken
+                case SK.PercentEqualsToken:
+                    return SK.PercentToken
+                case SK.LessThanLessThanEqualsToken:
+                    return SK.LessThanLessThanToken
+                case SK.GreaterThanGreaterThanEqualsToken:
+                    return SK.GreaterThanGreaterThanToken
+                case SK.GreaterThanGreaterThanGreaterThanEqualsToken:
+                    return SK.GreaterThanGreaterThanGreaterThanToken
+                case SK.AmpersandEqualsToken:
+                    return SK.AmpersandToken
+                case SK.BarEqualsToken:
+                    return SK.BarToken
+                case SK.CaretEqualsToken:
+                    return SK.CaretToken
+                default:
+                    return null
+            }
+        }
+
         let op = expr.operatorToken.kind
 
         if (op == SK.EqualsToken) return this.emitAssignmentExpression(expr)
@@ -2948,11 +3031,6 @@ class Program implements TopOpWriter {
             this.ignore(this.emitExpr(expr.left))
             return this.emitSimpleValue(expr.right, ValueType.ANY)
         }
-
-        if (op == SK.AsteriskAsteriskToken)
-            return this.emitMathCall(BuiltInString.POW, expr.left, expr.right)
-        if (op == SK.PercentToken)
-            return this.emitMathCall(BuiltInString.IMOD, expr.left, expr.right)
 
         let swap = false
         if (op == SK.GreaterThanToken) {
@@ -2968,7 +3046,7 @@ class Program implements TopOpWriter {
 
         if (op == SK.AmpersandAmpersandToken || op == SK.BarBarToken) {
             const a = this.emitSimpleValue(expr.left, ValueType.BOOL)
-            const tmp = wr.cacheValue(a)
+            const tmp = wr.cacheValue(a, true)
             const tst = wr.emitExpr(
                 op == SK.AmpersandAmpersandToken
                     ? Op.EXPR1_TO_BOOL
@@ -2979,28 +3057,57 @@ class Program implements TopOpWriter {
             wr.emitJump(skipB, tst)
             tmp.store(this.emitSimpleValue(expr.right, ValueType.BOOL))
             wr.emitLabel(skipB)
-            const res = tmp.emit()
-            tmp.free()
+
+            return tmp.finalEmit()
+        }
+
+        const emitBin = (op: SK, a: Value, b: Value) => {
+            if (op == SK.AsteriskAsteriskToken)
+                return this.emitMathCall(BuiltInString.POW, a, b)
+            if (op == SK.PercentToken)
+                return this.emitMathCall(BuiltInString.IMOD, a, b)
+
+            const op2 = simpleOps[op]
+            if (op2 === undefined) throwError(expr, "unhandled operator")
+
+            const res = wr.emitExpr(op2, a, b)
+            if (op2 == Op.EXPR2_ADD && this.isStringLike(expr))
+                res.valueType = ValueType.STRING
             return res
         }
 
+        if (stripEquals(op) != null) {
+            op = stripEquals(op)
+            const t = this.emitAssignmentTarget(expr.left)
+            const other = this.emitSimpleValue(expr.right, ValueType.ANY)
+            this.forceAssignmentIgnored(expr)
+            const r = emitBin(op, t.read(), other)
+            t.write(r)
+            t.free()
+            return unit()
+        }
+
         const op2 = simpleOps[op]
-        if (op2 === undefined) throwError(expr, "unhandled operator")
 
         let dstTp = ValueType.NUMBER
         if (op2 == Op.EXPR2_EQ || op2 == Op.EXPR2_NE || op2 == Op.EXPR2_ADD)
             dstTp = ValueType.ANY
+
         let a = this.emitSimpleValue(expr.left, dstTp)
         let b = this.emitSimpleValue(expr.right, dstTp)
         if (swap) [a, b] = [b, a]
 
-        const res = wr.emitExpr(op2, a, b)
-        if (op2 == Op.EXPR2_ADD && this.isStringLike(expr))
-            res.valueType = ValueType.STRING
-        return res
+        return emitBin(op, a, b)
+    }
+
+    private mapPostfixOp(k: SK) {
+        if (k == SK.PlusPlusToken) return Op.EXPR2_ADD
+        if (k == SK.MinusMinusToken) return Op.EXPR2_SUB
+        return null
     }
 
     private emitUnaryExpression(expr: ts.PrefixUnaryExpression): Value {
+        const wr = this.writer
         const simpleOps: SMap<Op> = {
             [SK.ExclamationToken]: Op.EXPR1_NOT,
             [SK.MinusToken]: Op.EXPR1_NEG,
@@ -3009,6 +3116,15 @@ class Program implements TopOpWriter {
         }
 
         let arg = expr.operand
+
+        const updateOp = this.mapPostfixOp(expr.operator)
+        if (updateOp) {
+            const t = this.emitAssignmentTarget(expr.operand)
+            t.write(wr.emitExpr(updateOp, t.read(), literal(1)))
+            const r = t.read()
+            t.free()
+            return r
+        }
 
         let op = simpleOps[expr.operator]
         if (op === undefined) throwError(expr, "unhandled operator")
@@ -3022,7 +3138,6 @@ class Program implements TopOpWriter {
             arg = arg.operand
         }
 
-        const wr = this.writer
         const a = this.emitSimpleValue(
             arg,
             op == Op.EXPR1_NOT ? ValueType.BOOL : ValueType.NUMBER
@@ -3072,6 +3187,24 @@ class Program implements TopOpWriter {
         if (!r) throwError(expr, "unsupported delete")
         wr.emitStmt(Op.STMT2_INDEX_DELETE, r.obj, r.idx)
         return this.retVal(ValueType.BOOL)
+    }
+
+    private emitPostfixUnaryExpression(expr: ts.PostfixUnaryExpression): Value {
+        const wr = this.writer
+        const t = this.emitAssignmentTarget(expr.operand)
+        const op = this.mapPostfixOp(expr.operator)
+        assert(op != null)
+        if (this.isIgnored(expr)) {
+            t.write(wr.emitExpr(op, t.read(), literal(1)))
+            t.free()
+            return unit()
+        } else {
+            const cached = wr.cacheValue(t.read())
+            assert(cached.isCached)
+            t.write(wr.emitExpr(op, cached.emit(), literal(1)))
+            t.free()
+            return cached.finalEmit()
+        }
     }
 
     private emitFunctionExpr(
@@ -3191,6 +3324,10 @@ class Program implements TopOpWriter {
                 return this.writer.emitExpr(
                     Op.EXPR1_TYPEOF_STR,
                     this.emitExpr((expr as ts.TypeOfExpression).expression)
+                )
+            case SK.PostfixUnaryExpression:
+                return this.emitPostfixUnaryExpression(
+                    expr as ts.PostfixUnaryExpression
                 )
             default:
                 // console.log(expr)

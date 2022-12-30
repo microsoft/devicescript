@@ -60,7 +60,7 @@ Jump if condition is false.
 
 ### Field access
 
-    fun index(object, idx): any = 24              // object[idx]
+    index(object, idx): any = 24              // object[idx]
 
 Read named field or sequence member (depending on type of idx).
 
