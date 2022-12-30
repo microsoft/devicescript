@@ -39,6 +39,28 @@ static value_t *lookup(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
     return NULL;
 }
 
+static value_t proto_value(devs_ctx_t *ctx, const devs_builtin_proto_entry_t *p) {
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, p->builtin_function_idx);
+}
+
+void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_proto_t *src) {
+    if (devs_is_map(src)) {
+        devs_map_t *srcmap = (devs_map_t *)src;
+        unsigned len2 = srcmap->length * 2;
+        value_t *data = srcmap->data;
+        for (unsigned i = 0; i < len2; i += 2) {
+            devs_map_set(ctx, dst, data[i], data[i + 1]);
+        }
+    } else {
+        const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;
+        const devs_builtin_proto_entry_t *p = proto->entries;
+        while (p->builtin_string_id) {
+            devs_map_set(ctx, dst, devs_builtin_string(p->builtin_string_id), proto_value(ctx, p));
+            p++;
+        }
+    }
+}
+
 static int grow_len(int capacity) {
     int newlen = capacity * 10 / 8;
     if (newlen < 4)
@@ -112,7 +134,7 @@ const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned id
             JD_ASSERT(midx < MAX_PROTO);
             devs_map_t *m = ctx->_builtin_protos[midx];
             if (m == NULL) {
-                m = devs_map_try_alloc(ctx);
+                m = devs_any_try_alloc(ctx, DEVS_GC_TAG_HALF_STATIC_MAP, sizeof(devs_map_t));
                 if (m != NULL) {
                     ctx->_builtin_protos[midx] = m;
                     m->proto =
@@ -134,8 +156,7 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
         unsigned kidx = devs_handle_value(key) & ((1 << DEVS_STRIDX__SHIFT) - 1);
         while (p->builtin_string_id) {
             if (p->builtin_string_id == kidx)
-                return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION,
-                                              p->builtin_function_idx);
+                return proto_value(ctx, p);
             p++;
         }
     } else {
@@ -145,8 +166,7 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
             return devs_undefined;
         while (p->builtin_string_id) {
             if (strcmp(devs_builtin_string_by_idx(p->builtin_string_id), kptr) == 0)
-                return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION,
-                                              p->builtin_function_idx);
+                return proto_value(ctx, p);
             p++;
         }
     }
@@ -254,18 +274,39 @@ int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activat
     }
 }
 
-static const devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, bool create) {
-    // accessing prototype on static object - can't attach properties
-    if (create) {
-        // note that in ES writing to string/... properties is no-op
-        // we make it an error
-        devs_runtime_failure(ctx, 60128);
+#define ATTACH_RW 0x01
+#define ATTACH_ENUM 0x02
+#define ATTACH_DIRECT 0x04
+
+static const devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp,
+                                                        unsigned attach_flags) {
+    if ((attach_flags & (ATTACH_DIRECT | ATTACH_ENUM)) == ATTACH_ENUM)
         return NULL;
+
+    const devs_map_or_proto_t *r = devs_object_get_built_in(ctx, tp);
+
+    // accessing prototype on static object - can't attach properties
+    if (attach_flags & ATTACH_RW) {
+        if (attach_flags & ATTACH_DIRECT) {
+            if (devs_is_map(r)) {
+                return r;
+            } else {
+                devs_runtime_failure(ctx, 60169);
+                return NULL;
+            }
+        } else {
+            // note that in ES writing to string/... properties is no-op
+            // we make it an error
+            devs_runtime_failure(ctx, 60128);
+            return NULL;
+        }
+    } else {
+        return r;
     }
-    return devs_object_get_built_in(ctx, tp);
 }
 
-const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create) {
+static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v,
+                                                           unsigned attach_flags) {
     static const uint8_t proto_by_object_type[] = {
         [DEVS_OBJECT_TYPE_NUMBER] = DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE,
         [DEVS_OBJECT_TYPE_FIBER] = DEVS_BUILTIN_OBJECT_FIBER_PROTOTYPE,
@@ -287,13 +328,14 @@ const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, 
         if (tp == DEVS_OBJECT_TYPE_MAP && devs_is_special(v)) {
             uint32_t hv = devs_handle_value(v);
             if (devs_handle_is_builtin(hv))
-                return devs_get_static_proto(ctx, hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST, create);
+                return devs_get_static_proto(ctx, hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST,
+                                             attach_flags | ATTACH_DIRECT);
         }
         if (tp < (int)sizeof(proto_by_object_type)) {
             pt = proto_by_object_type[tp];
         }
         JD_ASSERT(pt != 0);
-        return devs_get_static_proto(ctx, pt, create);
+        return devs_get_static_proto(ctx, pt, attach_flags);
     }
 
     devs_gc_object_t *obj = devs_handle_ptr_value(ctx, v);
@@ -310,12 +352,13 @@ const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, 
         attached = &((devs_array_t *)obj)->attached;
         builtin = DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE;
         break;
+    case DEVS_GC_TAG_HALF_STATIC_MAP:
     case DEVS_GC_TAG_MAP:
         return (devs_map_or_proto_t *)obj;
     case DEVS_GC_TAG_STRING:
-        return devs_get_static_proto(ctx, DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE, create);
+        return devs_get_static_proto(ctx, DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE, attach_flags);
     case DEVS_GC_TAG_BOUND_FUNCTION:
-        return devs_get_static_proto(ctx, DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE, create);
+        return devs_get_static_proto(ctx, DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE, attach_flags);
     case DEVS_GC_TAG_BUILTIN_PROTO:
     default:
         JD_PANIC();
@@ -324,18 +367,34 @@ const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, 
 
     devs_map_t *map = *attached;
 
-    if (!map && create) {
+    if (!map && (attach_flags & ATTACH_RW)) {
         map = *attached = devs_map_try_alloc(ctx);
         if (map == NULL) {
             devs_runtime_failure(ctx, 60131);
             return NULL;
+        } else {
+            map->proto = devs_object_get_built_in(ctx, builtin);
         }
     }
 
-    if (map)
+    if (map || (attach_flags & ATTACH_ENUM))
         return (devs_map_or_proto_t *)map;
     else
         return devs_object_get_built_in(ctx, builtin);
+}
+
+devs_map_t *devs_object_get_attached_rw(devs_ctx_t *ctx, value_t v) {
+    const void *r = devs_object_get_attached(ctx, v, ATTACH_RW);
+    JD_ASSERT(r == NULL || devs_is_map(r));
+    return (void *)r;
+}
+
+const devs_map_or_proto_t *devs_object_get_attached_ro(devs_ctx_t *ctx, value_t v) {
+    return devs_object_get_attached(ctx, v, 0);
+}
+
+const devs_map_or_proto_t *devs_object_get_attached_enum(devs_ctx_t *ctx, value_t v) {
+    return devs_object_get_attached(ctx, v, ATTACH_ENUM);
 }
 
 value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *proto, value_t key) {
@@ -364,7 +423,7 @@ value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *prot
 }
 
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
-    value_t tmp = devs_object_get_no_bind(ctx, devs_object_get_attached(ctx, obj, 0), key);
+    value_t tmp = devs_object_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
     return devs_function_bind(ctx, obj, tmp);
 }
 
@@ -405,11 +464,9 @@ void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v) {
         unsigned idx = devs_value_to_int(ctx, key);
         devs_seq_set(ctx, obj, idx, v);
     } else if (devs_is_string(ctx, key)) {
-        devs_map_t *map = (void *)devs_object_get_attached(ctx, obj, true);
-        if (devs_is_map(map))
+        devs_map_t *map = devs_object_get_attached_rw(ctx, obj);
+        if (map)
             devs_map_set(ctx, map, key, v);
-        else
-            devs_runtime_failure(ctx, 60155);
     } else {
         devs_runtime_failure(ctx, 60156);
     }

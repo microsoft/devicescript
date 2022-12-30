@@ -421,6 +421,10 @@ static value_t exprx_math_field(devs_activation_t *frame, devs_ctx_t *ctx) {
     return get_builtin_field(ctx, DEVS_BUILTIN_OBJECT_MATH);
 }
 
+static value_t exprx_object_field(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return get_builtin_field(ctx, DEVS_BUILTIN_OBJECT_OBJECT);
+}
+
 static value_t exprx_ds_field(devs_activation_t *frame, devs_ctx_t *ctx) {
     return get_builtin_field(ctx, DEVS_BUILTIN_OBJECT_DEVICESCRIPT);
 }

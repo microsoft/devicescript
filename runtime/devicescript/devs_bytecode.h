@@ -29,6 +29,7 @@
 #define DEVS_EXPRx1_UTF8_FIELD 28    // [utf8_idx]obj
 #define DEVS_EXPRx_MATH_FIELD 29     // Math.builtin_idx
 #define DEVS_EXPRx_DS_FIELD 30       // ds.builtin_idx
+#define DEVS_EXPRx_OBJECT_FIELD 89   // Object.builtin_idx
 #define DEVS_STMT0_ALLOC_MAP 31
 #define DEVS_STMT1_ALLOC_ARRAY 32           // initial_size
 #define DEVS_STMT1_ALLOC_BUFFER 33          // size
@@ -89,20 +90,20 @@
 #define DEVS_EXPR0_PKT_REPORT_CODE 23
 #define DEVS_EXPR0_PKT_COMMAND_CODE 16
 #define DEVS_EXPR0_PKT_BUFFER 42
-#define DEVS_OP_PAST_LAST 89
+#define DEVS_OP_PAST_LAST 90
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20" \
     "\x00\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41"
+    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41\x60"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x01\x0a\x0a" \
     "\x01\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01"
+    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01\x0a"
 
-#define DEVS_IMG_VERSION 0x01030000
+#define DEVS_IMG_VERSION 0x01040000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 8
@@ -276,7 +277,10 @@
 #define DEVS_BUILTIN_STRING_OBJECT 82
 #define DEVS_BUILTIN_STRING_PARSEINT 83
 #define DEVS_BUILTIN_STRING_PARSEFLOAT 84
-#define DEVS_BUILTIN_STRING___MAX 84
+#define DEVS_BUILTIN_STRING_ASSIGN 85
+#define DEVS_BUILTIN_STRING_KEYS 86
+#define DEVS_BUILTIN_STRING_VALUES 87
+#define DEVS_BUILTIN_STRING___MAX 87
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -297,7 +301,7 @@
         stmt4_query_idx_reg, stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms,                  \
         expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code, stmtx2_store_closure,           \
         exprx1_load_closure, exprx_make_closure, expr1_typeof_str, expr0_inf, expr1_uplus,         \
-        expr_invalid
+        exprx_object_field, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \
@@ -309,7 +313,7 @@
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
         "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
-        "object", "parseInt", "parseFloat"
+        "object", "parseInt", "parseFloat", "assign", "keys", "values"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \

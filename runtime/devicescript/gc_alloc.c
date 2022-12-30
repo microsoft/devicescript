@@ -128,6 +128,7 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
     case DEVS_GC_TAG_BUFFER:
         scan_map(ctx, block->buffer.attached, depth);
         break;
+    case DEVS_GC_TAG_HALF_STATIC_MAP:
     case DEVS_GC_TAG_MAP:
         scan_map(ctx, &block->map, depth);
         break;
@@ -428,8 +429,8 @@ void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
     gc->ctx = ctx;
 }
 
-static const char *tags[] = {"free",   "bytes",  "array",    "map",
-                             "buffer", "string", "function", "activation"};
+static const char *tags[] = {"free",     "bytes",      "array",          "map", "buffer", "string",
+                             "function", "activation", "half_static_map"};
 const char *devs_gc_tag_name(unsigned tag) {
     tag &= DEVS_GC_TAG_MASK;
     tag--;

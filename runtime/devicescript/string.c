@@ -36,7 +36,7 @@ const char *devs_string_get_utf8(devs_ctx_t *ctx, value_t v, unsigned *size) {
     }
 }
 
-static value_t builtin_string(unsigned idx) {
+value_t devs_builtin_string(unsigned idx) {
     return devs_value_from_handle(DEVS_HANDLE_TYPE_IMG_BUFFERISH,
                                   (DEVS_STRIDX_BUILTIN << DEVS_STRIDX__SHIFT) | idx);
 }
@@ -105,19 +105,19 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_SPECIAL:
         switch ((hv = devs_handle_value(v))) {
         case DEVS_SPECIAL_NULL:
-            return builtin_string(DEVS_BUILTIN_STRING_NULL);
+            return devs_builtin_string(DEVS_BUILTIN_STRING_NULL);
         case DEVS_SPECIAL_FALSE:
-            return builtin_string(DEVS_BUILTIN_STRING_FALSE);
+            return devs_builtin_string(DEVS_BUILTIN_STRING_FALSE);
         case DEVS_SPECIAL_TRUE:
-            return builtin_string(DEVS_BUILTIN_STRING_TRUE);
+            return devs_builtin_string(DEVS_BUILTIN_STRING_TRUE);
         case DEVS_SPECIAL_PKT_BUFFER:
-            return builtin_string(DEVS_BUILTIN_STRING_PACKET);
+            return devs_builtin_string(DEVS_BUILTIN_STRING_PACKET);
         case DEVS_SPECIAL_NAN:
-            return builtin_string(DEVS_BUILTIN_STRING_NAN);
+            return devs_builtin_string(DEVS_BUILTIN_STRING_NAN);
         case DEVS_SPECIAL_INF:
-            return builtin_string(DEVS_BUILTIN_STRING_INFINITY);
+            return devs_builtin_string(DEVS_BUILTIN_STRING_INFINITY);
         case DEVS_SPECIAL_MINF:
-            return builtin_string(DEVS_BUILTIN_STRING_MINFINITY);
+            return devs_builtin_string(DEVS_BUILTIN_STRING_MINFINITY);
         default: {
             if (devs_handle_is_builtin(hv))
                 return devs_string_sprintf(ctx, "[Static Obj: %d]",
@@ -141,13 +141,14 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_GC_OBJECT:
         switch (devs_gc_tag(devs_handle_ptr_value(ctx, v))) {
         case DEVS_GC_TAG_ARRAY:
-            return builtin_string(DEVS_BUILTIN_STRING_ARRAY); // TODO stringify array?
+            return devs_builtin_string(DEVS_BUILTIN_STRING_ARRAY); // TODO stringify array?
         case DEVS_GC_TAG_BOUND_FUNCTION:
-            return builtin_string(DEVS_BUILTIN_STRING_FUNCTION); // TODO?
+            return devs_builtin_string(DEVS_BUILTIN_STRING_FUNCTION); // TODO?
         case DEVS_GC_TAG_BUFFER:
             return buffer_to_string(ctx, v);
+        case DEVS_GC_TAG_HALF_STATIC_MAP:
         case DEVS_GC_TAG_MAP:
-            return builtin_string(DEVS_BUILTIN_STRING_MAP);
+            return devs_builtin_string(DEVS_BUILTIN_STRING_MAP);
         case DEVS_GC_TAG_BUILTIN_PROTO: // can't happen
         case DEVS_GC_TAG_STRING:        // handled on top
         default:

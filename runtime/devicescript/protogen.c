@@ -41,6 +41,7 @@ void fun2_Math_imul(devs_ctx_t *ctx);
 void fun2_Math_min(devs_ctx_t *ctx);
 void fun2_Math_max(devs_ctx_t *ctx);
 // impl_object.c
+void fun2_Object_assign(devs_ctx_t *ctx);
 // impl_role.c
 value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self);
 // impl_string.c
@@ -81,14 +82,18 @@ static const devs_builtin_proto_entry_t Math_entries[] = { //
     {N(IMUL), 50025},   {N(MIN), 50026},
     {N(MAX), 50027},    {0, 0}};
 
+static const devs_builtin_proto_entry_t Object_entries[] = { //
+    {N(ASSIGN), 50028},
+    {0, 0}};
+
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 50028},
+    {N(ISCONNECTED), 50029},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50029},
-    {N(CHARCODEAT), 50030},
-    {N(CHARAT), 50031},
+    {N(LENGTH), 50030},
+    {N(CHARCODEAT), 50031},
+    {N(CHARAT), 50032},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -99,12 +104,13 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT,
                                                 Function_prototype_entries},
     [DEVS_BUILTIN_OBJECT_MATH] = {DEVS_BUILTIN_PROTO_INIT, Math_entries},
+    [DEVS_BUILTIN_OBJECT_OBJECT] = {DEVS_BUILTIN_PROTO_INIT, Object_entries},
     [DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Role_prototype_entries},
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 32;
-const devs_builtin_function_t devs_builtin_functions[32] = {
+uint16_t devs_num_builtin_functions = 33;
+const devs_builtin_function_t devs_builtin_functions[33] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
@@ -133,6 +139,7 @@ const devs_builtin_function_t devs_builtin_functions[32] = {
     {N(IMUL), 2, NO_SELF, {.meth = fun2_Math_imul}},
     {N(MIN), 2, NO_SELF, {.meth = fun2_Math_min}},
     {N(MAX), 2, NO_SELF, {.meth = fun2_Math_max}},
+    {N(ASSIGN), 2, NO_SELF, {.meth = fun2_Object_assign}},
     {N(ISCONNECTED), 0, PROP, {.prop = prop_Role_isConnected}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},

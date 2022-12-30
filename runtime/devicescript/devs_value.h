@@ -172,6 +172,7 @@ value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap);
 __attribute__((format(printf, 2, 3))) value_t devs_string_sprintf(devs_ctx_t *ctx,
                                                                   const char *format, ...);
 value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len);
+value_t devs_builtin_string(unsigned idx);
 
 void devs_value_pin(devs_ctx_t *ctx, value_t v);
 void devs_value_unpin(devs_ctx_t *ctx, value_t v);

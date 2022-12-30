@@ -60,6 +60,7 @@ typedef struct {
 void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v);
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map);
+void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_proto_t *src);
 
 value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx);
 void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v);
@@ -73,7 +74,9 @@ value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key);
 value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key);
 void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v);
 
-const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, bool create);
+devs_map_t *devs_object_get_attached_rw(devs_ctx_t *ctx, value_t v);
+const devs_map_or_proto_t *devs_object_get_attached_ro(devs_ctx_t *ctx, value_t v);
+const devs_map_or_proto_t *devs_object_get_attached_enum(devs_ctx_t *ctx, value_t v);
 const devs_builtin_proto_t *devs_object_get_static_built_in(devs_ctx_t *ctx, unsigned idx);
 const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx);
 value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key);
@@ -123,6 +126,7 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_STRING 0x6
 #define DEVS_GC_TAG_BOUND_FUNCTION 0x7
 #define DEVS_GC_TAG_ACTIVATION 0x8
+#define DEVS_GC_TAG_HALF_STATIC_MAP 0x9
 #define DEVS_GC_TAG_BUILTIN_PROTO 0xf // these are not in GC heap!
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 
@@ -132,7 +136,8 @@ static inline int devs_gc_tag(const void *ptr) {
 }
 
 static inline bool devs_is_map(const void *ptr) {
-    return devs_gc_tag(ptr) == DEVS_GC_TAG_MAP;
+    int t = devs_gc_tag(ptr);
+    return t == DEVS_GC_TAG_MAP || t == DEVS_GC_TAG_HALF_STATIC_MAP;
 }
 
 static inline bool devs_is_proto(const void *ptr) {
