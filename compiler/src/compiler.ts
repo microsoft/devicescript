@@ -1021,8 +1021,8 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitVariableDeclaration(decls: ts.VariableStatement) {
-        for (const decl of decls.declarationList.declarations) {
+    private emitVariableDeclarationList(decls: ts.VariableDeclarationList) {
+        for (const decl of decls.declarations) {
             if (this.skipInit(decl)) continue
 
             if (this.isTopLevel(decl)) {
@@ -1052,6 +1052,10 @@ class Program implements TopOpWriter {
         }
     }
 
+    private emitVariableDeclaration(decls: ts.VariableStatement) {
+        this.emitVariableDeclarationList(decls.declarationList)
+    }
+
     private valueIsAlwaysFalse(v: Value) {
         if (v.isLiteral) return v.numValue == 0
         return v.op == Op.EXPR0_FALSE || v.op == Op.EXPR0_NULL
@@ -1077,6 +1081,39 @@ class Program implements TopOpWriter {
                     : null
             )
         }
+    }
+
+    private emitForStatement(stmt: ts.ForStatement) {
+        const wr = this.writer
+
+        const topLbl = wr.mkLabel("forTop")
+        const continueLbl = wr.mkLabel("forCont")
+        const breakLbl = wr.mkLabel("forBrk")
+
+        if (stmt.initializer) {
+            if (ts.isVariableDeclarationList(stmt.initializer))
+                this.emitVariableDeclarationList(stmt.initializer)
+            else {
+                this.emitIgnoredExpression(stmt.initializer)
+            }
+        }
+
+        wr.emitLabel(topLbl)
+
+        const cond = this.emitSimpleValue(stmt.condition, ValueType.BOOL)
+        wr.emitJump(breakLbl, cond)
+
+        try {
+            this.loopStack.push({ continueLbl, breakLbl })
+            this.emitStmt(stmt.statement)
+            wr.emitLabel(continueLbl)
+            if (stmt.incrementor) this.emitIgnoredExpression(stmt.incrementor)
+        } finally {
+            this.loopStack.pop()
+        }
+
+        wr.emitJump(topLbl)
+        wr.emitLabel(breakLbl)
     }
 
     private emitWhileStatement(stmt: ts.WhileStatement) {
@@ -1494,13 +1531,31 @@ class Program implements TopOpWriter {
         val.adopt()
     }
 
+    private isForIgnored(expr: Expr) {
+        if (expr.parent) {
+            if (ts.isForStatement(expr.parent))
+                return (
+                    expr == expr.parent.initializer ||
+                    expr == expr.parent.incrementor
+                )
+        }
+        return false
+    }
+
     private isIgnored(expr: Expr) {
-        return expr.parent && ts.isExpressionStatement(expr.parent)
+        return (
+            expr.parent &&
+            (ts.isExpressionStatement(expr.parent) || this.isForIgnored(expr))
+        )
+    }
+
+    private emitIgnoredExpression(expr: Expr) {
+        this.ignore(this.emitExpr(expr))
+        this.writer.assertNoTemps()
     }
 
     private emitExpressionStatement(stmt: ts.ExpressionStatement) {
-        this.ignore(this.emitExpr(stmt.expression))
-        this.writer.assertNoTemps()
+        this.emitIgnoredExpression(stmt.expression)
     }
 
     private uniqueProcName(base: string) {
@@ -3373,6 +3428,8 @@ class Program implements TopOpWriter {
                     return this.emitIfStatement(stmt as ts.IfStatement)
                 case SK.WhileStatement:
                     return this.emitWhileStatement(stmt as ts.WhileStatement)
+                case SK.ForStatement:
+                    return this.emitForStatement(stmt as ts.ForStatement)
                 case SK.Block:
                     stmt.forEachChild(s => this.emitStmt(s as ts.Statement))
                     return

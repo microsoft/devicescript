@@ -31,3 +31,4 @@ function postPreFix() {
 }
 
 postPreFix()
+ds.reboot()
