@@ -24,6 +24,7 @@
 #define DEVS_EXPRx_MAKE_CLOSURE 85   // CLOSURE(func_idx)
 #define DEVS_EXPR2_INDEX 24          // object[idx]
 #define DEVS_STMT3_INDEX_SET 25      // object[index] := value
+#define DEVS_STMT2_INDEX_DELETE 90   // delete object[index]
 #define DEVS_EXPRx1_BUILTIN_FIELD 26 // [builtin_idx]obj
 #define DEVS_EXPRx1_ASCII_FIELD 27   // [ascii_idx]obj
 #define DEVS_EXPRx1_UTF8_FIELD 28    // [utf8_idx]obj
@@ -90,18 +91,18 @@
 #define DEVS_EXPR0_PKT_REPORT_CODE 23
 #define DEVS_EXPR0_PKT_COMMAND_CODE 16
 #define DEVS_EXPR0_PKT_BUFFER 42
-#define DEVS_OP_PAST_LAST 90
+#define DEVS_OP_PAST_LAST 91
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20" \
     "\x00\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41\x60"
+    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41\x60\x12"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x01\x0a\x0a" \
     "\x01\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01\x0a"
+    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01\x0a\x0b"
 
 #define DEVS_IMG_VERSION 0x01040000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
@@ -301,7 +302,7 @@
         stmt4_query_idx_reg, stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms,                  \
         expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code, stmtx2_store_closure,           \
         exprx1_load_closure, exprx_make_closure, expr1_typeof_str, expr0_inf, expr1_uplus,         \
-        exprx_object_field, expr_invalid
+        exprx_object_field, stmt2_index_delete, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \

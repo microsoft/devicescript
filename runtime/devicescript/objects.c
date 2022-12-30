@@ -134,6 +134,21 @@ void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v) {
     map->length++;
 }
 
+int devs_map_delete(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
+    value_t *tmp = lookup(ctx, map, key);
+    if (tmp == NULL) {
+        return -1;
+    }
+
+    tmp--;
+    unsigned off = tmp - map->data;
+    unsigned trailing = map->length - off / 2 - 1;
+    map->length--;
+    if (trailing)
+        memmove(tmp, tmp + 2, trailing * 2 * sizeof(value_t));
+    return 0;
+}
+
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
     value_t *tmp = lookup(ctx, map, key);
     if (tmp == NULL)

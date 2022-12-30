@@ -68,6 +68,17 @@ static void stmt3_index_set(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_any_set(ctx, obj, idx, v);
 }
 
+static void stmt2_index_delete(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t idx = devs_vm_pop_arg(ctx);
+    value_t obj = devs_vm_pop_arg(ctx);
+    ctx->curr_fiber->ret_val = devs_false;
+    if (!devs_is_string(ctx, idx))
+        devs_runtime_failure(ctx, 60172);
+    devs_map_t *map = devs_object_get_attached_rw(ctx, obj);
+    if (map && devs_map_delete(ctx, map, idx) == 0)
+        ctx->curr_fiber->ret_val = devs_true;
+}
+
 static void stmt1_setup_pkt_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t a = devs_vm_pop_arg_u32(ctx);
     if (a > JD_SERIAL_PAYLOAD_SIZE) {
