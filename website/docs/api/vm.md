@@ -62,8 +62,8 @@ vm.devsSetDeviceId("1989f4eee0ebe206")
 Starts the virtual machine. Does nothing if already running.
 
 ```js
-const code = vm.devsStart()
-if (code) console.error("failed to start", code)
+const res = vm.devsStart()
+if (res) console.error("failed to start", res)
 ```
 
 ## devsStop
@@ -79,7 +79,7 @@ vm.devsStop()
 Indicates if the virtual machine is started.
 
 ```js
-vm.devsIsRunning()
+const running = vm.devsIsRunning()
 ```
 
 ## devsInit
@@ -96,7 +96,8 @@ vm.devsInit()
 Verifies that a buffer of bytecode is well formed. Returns non-zero error codes when failing.
 
 ```js
-vm.devsVerify()
+const res = vm.devsVerify()
+if (res) console.error("failed to verify", res)
 ```
 
 TODO devsDeploy
