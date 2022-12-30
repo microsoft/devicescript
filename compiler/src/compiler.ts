@@ -946,10 +946,9 @@ class Program implements TopOpWriter {
         return false
     }
 
-    private emitPropName(pn: ts.PropertyName | ts.BindingName) {
+    private getPropName(pn: ts.PropertyName | ts.BindingName) {
         const wr = this.writer
-        if (ts.isIdentifier(pn) || ts.isStringLiteral(pn))
-            return wr.emitString(pn.text)
+        if (ts.isIdentifier(pn) || ts.isStringLiteral(pn)) return pn.text
         throwError(pn, "unsupported property name")
     }
 
@@ -960,17 +959,47 @@ class Program implements TopOpWriter {
         this.emitStore(variable, init)
     }
 
+    private cloneObj(obj: Value) {
+        const wr = this.writer
+        wr.emitStmt(Op.STMT0_ALLOC_MAP)
+        wr.emitCall(
+            wr.objectMember(BuiltInString.ASSIGN),
+            this.retVal(ValueType.MAP),
+            obj
+        )
+        return this.retVal(ValueType.MAP)
+    }
+
     private assignToBindingElement(
         bindingElt: ts.BindingElement,
-        obj: CachedValue
+        obj: CachedValue,
+        usedFields: string[]
     ) {
         const wr = this.writer
         const bindingName = bindingElt.name
-        let val: Value
-        const fld = this.emitPropName(
+
+        if (bindingElt.dotDotDotToken) {
+            const spr = wr.cacheValue(this.cloneObj(obj.emit()))
+
+            for (const pn of usedFields)
+                wr.emitStmt(
+                    Op.STMT2_INDEX_DELETE,
+                    spr.emit(),
+                    wr.emitString(pn)
+                )
+
+            if (!ts.isIdentifier(bindingName))
+                throwError(bindingName, "unsupported spread")
+            this.assignToId(bindingName, spr.finalEmit())
+            return
+        }
+
+        const pname = this.getPropName(
             bindingElt.propertyName ?? bindingElt.name
         )
-        val = wr.emitIndex(obj.emit(), fld)
+        usedFields.push(pname)
+
+        let val = wr.emitIndex(obj.emit(), wr.emitString(pname))
 
         if (bindingElt.initializer)
             throwError(
@@ -978,15 +1007,13 @@ class Program implements TopOpWriter {
                 "default values in bindings not supported yet"
             )
 
-        if (bindingElt.dotDotDotToken)
-            throwError(bindingElt, "spread in bindings not supported yet")
-
         if (ts.isIdentifier(bindingName)) {
             this.assignToId(bindingName, val)
         } else if (ts.isObjectBindingPattern(bindingName)) {
             const obj2 = wr.cacheValue(val)
+            const used: string[] = []
             for (const elt of bindingName.elements) {
-                this.assignToBindingElement(elt, obj2)
+                this.assignToBindingElement(elt, obj2, used)
             }
             obj2.free()
         } else {
@@ -1014,8 +1041,9 @@ class Program implements TopOpWriter {
                 const wr = this.writer
                 const obj = wr.cacheValue(init)
                 if (ts.isObjectBindingPattern(decl.name)) {
+                    const used: string[] = []
                     for (const elt of decl.name.elements)
-                        this.assignToBindingElement(elt, obj)
+                        this.assignToBindingElement(elt, obj, used)
                 } else {
                     throwError(decl, "array destruct not supported")
                 }
@@ -2589,12 +2617,8 @@ class Program implements TopOpWriter {
         expr: ts.ElementAccessExpression
     ): Value {
         const val = this.emitExpr(expr.expression)
-        if (val.valueType.canIndex) {
-            const idx = this.emitSimpleValue(expr.argumentExpression)
-            return this.writer.emitExpr(Op.EXPR2_INDEX, val, idx)
-        } else {
-            throwError(expr, `unhandled indexing on ${val.valueType}`)
-        }
+        const idx = this.emitSimpleValue(expr.argumentExpression)
+        return this.writer.emitExpr(Op.EXPR2_INDEX, val, idx)
     }
 
     private emitBuiltInConst(expr: ts.Expression, nodeName?: string) {

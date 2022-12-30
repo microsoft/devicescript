@@ -251,6 +251,19 @@ function testObj() {
     return obj
 }
 
+function objEq(a: any, b: any) {
+    if (a == b) return
+    const ka = Object.keys(a)
+    const kb = Object.keys(b)
+    isEq(ka.length, kb.length)
+    let i = 0
+    while (i < ka.length) {
+        const k = ka[i]
+        isEq(a[k], b[k])
+        i = i + 1
+    }
+}
+
 function testSpread() {
     const obj: any = {
         bar: 13,
@@ -268,6 +281,19 @@ function testSpread() {
     isEq(Object.keys(qq).length, 1)
     isEq(qq.foo, 5)
     isEq(qq.bar, null)
+
+    const o2 = { a: 1, b: 2, c: 3 }
+    {
+        const { a, ...r0 } = o2
+        isEq(a, 1)
+        objEq(r0, { b: 2, c: 3 })
+    }
+    {
+        const { a, b, ...r0 } = o2
+        isEq(a, 1)
+        isEq(b, 2)
+        objEq(r0, { c: 3 })
+    }
 }
 
 function testConsole() {
