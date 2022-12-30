@@ -3262,6 +3262,26 @@ class Program implements TopOpWriter {
         }
     }
 
+    private emitConditionalExpression(expr: ts.ConditionalExpression): Value {
+        const wr = this.writer
+        const cond = this.emitSimpleValue(expr.condition, ValueType.BOOL)
+        if (this.valueIsAlwaysFalse(cond)) {
+            return this.emitExpr(expr.whenFalse)
+        } else if (this.valueIsAlwaysTrue(cond)) {
+            return this.emitExpr(expr.whenTrue)
+        } else {
+            const lblElse = wr.mkLabel("condElse")
+            const lblEnd = wr.mkLabel("condEnd")
+            wr.emitJump(lblElse, cond)
+            const tmp = wr.cacheValue(this.emitExpr(expr.whenTrue), true)
+            wr.emitJump(lblEnd)
+            wr.emitLabel(lblElse)
+            tmp.store(this.emitExpr(expr.whenFalse))
+            wr.emitLabel(lblEnd)
+            return tmp.finalEmit()
+        }
+    }
+
     private emitFunctionExpr(
         expr: ts.ArrowFunction | ts.FunctionExpression | ts.FunctionDeclaration
     ): Value {
@@ -3383,6 +3403,10 @@ class Program implements TopOpWriter {
             case SK.PostfixUnaryExpression:
                 return this.emitPostfixUnaryExpression(
                     expr as ts.PostfixUnaryExpression
+                )
+            case SK.ConditionalExpression:
+                return this.emitConditionalExpression(
+                    expr as ts.ConditionalExpression
                 )
             default:
                 // console.log(expr)
