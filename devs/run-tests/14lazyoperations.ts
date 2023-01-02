@@ -66,9 +66,10 @@ function testLazyOps(): void {
     }
 
     lazyAcc = 0
-    assert((true ? incrLazyNum(1, 42) : incrLazyNum(10, 36)) == 42, "?:")
+    let cond = true
+    assert((cond ? incrLazyNum(1, 42) : incrLazyNum(10, 36)) == 42, "?:")
     assert(lazyAcc == 1, "?:0")
-    assert((false ? incrLazyNum(1, 42) : incrLazyNum(10, 36)) == 36, "?:1")
+    assert((!cond ? incrLazyNum(1, 42) : incrLazyNum(10, 36)) == 36, "?:1")
     assert(lazyAcc == 11, "?:2")
     lazyAcc = 0
 
