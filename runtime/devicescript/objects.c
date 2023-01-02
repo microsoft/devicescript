@@ -459,15 +459,24 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
 
     if (htp == DEVS_HANDLE_TYPE_ROLE_MEMBER) {
         unsigned roleidx;
+        int pt;
         uint16_t code = devs_decode_role_packet(ctx, v, &roleidx)->code;
-        int pt = 0;
-        if (JD_IS_GET(code))
+        switch (code & DEVS_PACKETSPEC_CODE_MASK) {
+        case DEVS_PACKETSPEC_CODE_REGISTER:
             pt = DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE;
-        else if (code & JD_CMD_EVENT_MASK)
+            break;
+        case DEVS_PACKETSPEC_CODE_EVENT:
             pt = DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE;
-        else if ((code >> 12) == 0)
+            break;
+        case DEVS_PACKETSPEC_CODE_COMMAND:
             pt = DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE;
-        JD_ASSERT(pt != 0);
+            break;
+        case DEVS_PACKETSPEC_CODE_REPORT:
+            pt = DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE;
+            break;
+        default:
+            JD_PANIC();
+        }
         return devs_get_static_proto(ctx, pt, attach_flags);
     }
 

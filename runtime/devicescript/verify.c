@@ -4,6 +4,10 @@
 STATIC_ASSERT(sizeof(devs_img_header_t) ==
               DEVS_FIX_HEADER_SIZE + DEVS_NUM_IMG_SECTIONS * sizeof(devs_img_section_t));
 
+STATIC_ASSERT(sizeof(devs_service_spec_t) == DEVS_SERVICE_SPEC_HEADER_SIZE);
+STATIC_ASSERT(sizeof(devs_packet_spec_t) == DEVS_SERVICE_SPEC_PACKET_SIZE);
+STATIC_ASSERT(sizeof(devs_field_spec_t) == DEVS_SERVICE_SPEC_FIELD_SIZE);
+
 static int fail(int code, uint32_t offset) {
     DMESG("verification failure: %d at %x", code, (unsigned)offset);
     return -code;
