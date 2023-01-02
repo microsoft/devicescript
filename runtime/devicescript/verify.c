@@ -159,5 +159,48 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
         CHECK(1042, devs_img_stridx_ok(_img, fptr->name_idx));
     }
 
+    const devs_service_spec_t *specs = FIRST_DESC(service_specs);
+    const uint8_t *specs_base = (const uint8_t *)specs;
+    for (unsigned i = 0; i < header->num_service_specs; ++i) {
+        const devs_service_spec_t *spec = specs + i;
+        SET_OFF(spec);
+        CHECK(1062, (void *)(spec + 1) < LAST_DESC(service_specs));
+        if (i == 0)
+            CHECK(1063, spec->service_class == JD_SERVICE_CLASS_BASE);
+        if (i == 1)
+            CHECK(1064, spec->service_class == JD_SERVICE_CLASS_SENSOR);
+        unsigned off = spec->packets_offset * 4;
+        CHECK(1065, off < header->service_specs.length);
+        CHECK(1066,
+              off + sizeof(devs_packet_spec_t) * spec->num_packets <= header->service_specs.length);
+
+        CHECK(1067, devs_img_stridx_ok(_img, spec->name_idx));
+        unsigned base_class = spec->flags & DEVS_SERVICESPEC_FLAG_DERIVE_MASK;
+        CHECK(1068, base_class == DEVS_SERVICESPEC_FLAG_DERIVE_BASE ||
+                        base_class == DEVS_SERVICESPEC_FLAG_DERIVE_SENSOR);
+        const devs_packet_spec_t *pkts = (const void *)(specs_base + off);
+        for (unsigned idx = 0; idx < spec->num_packets; ++idx) {
+            const devs_packet_spec_t *pkt = pkts + idx;
+            SET_OFF(pkt);
+            CHECK(1069, devs_img_stridx_ok(_img, pkt->name_idx));
+            if (pkt->flags & DEVS_PACKETSPEC_FLAG_MULTI_FIELD) {
+                unsigned foff = pkt->numfmt_or_struct_offset * 4;
+                CHECK(1070, foff + 4 < header->service_specs.length);
+                const devs_field_spec_t *fld = (const void *)(specs_base + foff);
+                bool terminated = false;
+                while ((void *)fld < LAST_DESC(service_specs)) {
+                    if (fld->name_idx == 0) {
+                        CHECK(1071, fld->numfmt == 0 && fld->flags == 0);
+                        terminated = true;
+                        break;
+                    }
+                    CHECK(1072, devs_img_stridx_ok(_img, fld->name_idx));
+                    fld++;
+                }
+                CHECK(1073, terminated);
+            }
+        }
+    }
+
     return 0;
 }
