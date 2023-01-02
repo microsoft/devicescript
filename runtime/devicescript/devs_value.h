@@ -33,8 +33,9 @@ typedef union {
 #define DEVS_HANDLE_TYPE_STATIC_FUNCTION 0x3
 #define DEVS_HANDLE_TYPE_IMG_BUFFERISH 0x4
 #define DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC 0x5
+#define DEVS_HANDLE_TYPE_ROLE_MEMBER 0x6
 
-#define DEVS_HANDLE_TYPE_GC_OBJECT 0x8
+#define DEVS_HANDLE_TYPE_GC_OBJECT 0x8 // see devs_handle_type_is_ptr()
 #define DEVS_HANDLE_TYPE_CLOSURE 0x9
 #define DEVS_HANDLE_TYPE_BOUND_FUNCTION 0xA
 
@@ -73,6 +74,7 @@ static inline uint32_t devs_handle_value(value_t t) {
     return t.mantisa32;
 }
 
+// high_value is 16 bit
 static inline uint16_t devs_handle_high_value(value_t t) {
     return (t.exp_sign << 12) >> (12 + 4);
 }

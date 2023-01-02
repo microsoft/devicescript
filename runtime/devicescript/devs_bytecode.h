@@ -95,7 +95,7 @@
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20" \
-    "\x00\x42\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
+    "\x00\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
     "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41\x60\x12"
 #define DEVS_OP_TYPES                                                                              \
@@ -104,10 +104,10 @@
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
     "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01\x0a\x0b"
 
-#define DEVS_IMG_VERSION 0x01040000
+#define DEVS_IMG_VERSION 0x02000000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
-#define DEVS_NUM_IMG_SECTIONS 8
+#define DEVS_NUM_IMG_SECTIONS 9
 #define DEVS_FIX_HEADER_SIZE 32
 #define DEVS_SECTION_HEADER_SIZE 8
 #define DEVS_FUNCTION_HEADER_SIZE 16
@@ -191,7 +191,10 @@
 #define DEVS_BUILTIN_OBJECT_BOOLEAN 16
 #define DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE 17
 #define DEVS_BUILTIN_OBJECT_DEVICESCRIPT 18
-#define DEVS_BUILTIN_OBJECT___MAX 18
+#define DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE 19
+#define DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE 20
+#define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 21
+#define DEVS_BUILTIN_OBJECT___MAX 21
 
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
@@ -319,4 +322,5 @@
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \
         "Role", "Role_prototype", "Function", "Function_prototype", "Boolean",                     \
-        "Boolean_prototype", "DeviceScript"
+        "Boolean_prototype", "DeviceScript", "DsRegister_prototype", "DsCommand_prototype",        \
+        "DsEvent_prototype"

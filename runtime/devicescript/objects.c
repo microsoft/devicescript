@@ -1,6 +1,8 @@
 #include "devs_internal.h"
 #include "devs_objects.h"
 
+#define PACK_SHIFT 28
+
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map) {
     if (map->data) {
         devs_free(ctx, map->data);
@@ -51,13 +53,15 @@ void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_prot
         for (unsigned i = 0; i < len2; i += 2) {
             devs_map_set(ctx, dst, data[i], data[i + 1]);
         }
-    } else {
+    } else if (devs_is_builtin_proto(src)) {
         const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;
         const devs_builtin_proto_entry_t *p = proto->entries;
         while (p->builtin_string_id) {
             devs_map_set(ctx, dst, devs_builtin_string(p->builtin_string_id), proto_value(ctx, p));
             p++;
         }
+    } else {
+        TODO();
     }
 }
 
@@ -75,7 +79,7 @@ void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, de
         for (unsigned i = 0; i < len2; i += 2) {
             arr->data[dp++] = keys ? data[i] : data[i + 1];
         }
-    } else {
+    } else if (devs_is_builtin_proto(src)) {
         const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;
         const devs_builtin_proto_entry_t *p = proto->entries;
 
@@ -94,6 +98,8 @@ void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, de
                 keys ? devs_builtin_string(p->builtin_string_id) : proto_value(ctx, p);
             p++;
         }
+    } else {
+        TODO();
     }
 }
 
@@ -149,6 +155,12 @@ int devs_map_delete(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
     return 0;
 }
 
+bool devs_is_service_spec(devs_ctx_t *ctx, const void *ptr) {
+    return (uintptr_t)((const uint8_t *)ptr -
+                       (const uint8_t *)devs_img_get_service_spec(ctx->img, 0)) <
+           (sizeof(devs_service_spec_t) * ctx->img.header->num_service_specs);
+}
+
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
     value_t *tmp = lookup(ctx, map, key);
     if (tmp == NULL)
@@ -199,7 +211,77 @@ const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned id
     return (const devs_map_or_proto_t *)devs_object_get_static_built_in(ctx, idx);
 }
 
+bool devs_static_streq(devs_ctx_t *ctx, unsigned stridx, const char *other, unsigned other_len) {
+    unsigned size;
+    const char *r = devs_img_get_utf8(ctx->img, stridx, &size);
+    if (other_len != size)
+        return false;
+    return memcmp(r, other, size) == 0;
+}
+
+#define MAX_OFF_BITS (PACK_SHIFT - DEVS_ROLE_BITS)
+
+static value_t packet_spec(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
+    const uint32_t *baseoff = (const void *)devs_img_get_service_spec(ctx->img, 0);
+    uintptr_t off = (const uint32_t *)pkt - baseoff;
+    JD_ASSERT(off < (1 << MAX_OFF_BITS));
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE_MEMBER,
+                                  DEVS_ROLE_INVALID | (off << DEVS_ROLE_BITS));
+}
+
+const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx) {
+    if (roleidx)
+        *roleidx = DEVS_ROLE_INVALID;
+    if (devs_handle_type(v) != DEVS_HANDLE_TYPE_ROLE_MEMBER)
+        return NULL;
+    uint32_t h = devs_handle_value(v);
+    if (roleidx)
+        *roleidx = h & DEVS_ROLE_MASK;
+    return devs_img_get_packet_spec(ctx->img, h >> DEVS_ROLE_BITS);
+}
+
+const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx) {
+    if (roleidx >= devs_img_num_roles(ctx->img))
+        return NULL;
+    uint32_t cls = devs_img_get_role(ctx->img, roleidx)->service_class;
+    for (unsigned i = 0; i < ctx->img.header->num_service_specs; ++i) {
+        const devs_service_spec_t *spec = devs_img_get_service_spec(ctx->img, i);
+        if (spec->service_class == cls)
+            return spec;
+    }
+    return NULL;
+}
+
+value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key) {
+    JD_ASSERT(devs_is_service_spec(ctx, spec));
+    const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
+    unsigned num_packets = spec->num_packets;
+
+    if (devs_handle_type(key) == DEVS_HANDLE_TYPE_IMG_BUFFERISH) {
+        unsigned kidx = devs_handle_value(key);
+        for (unsigned i = 0; i < num_packets; ++i) {
+            if (pkts[i].name_idx == kidx)
+                return packet_spec(ctx, &pkts[i]);
+        }
+    }
+
+    unsigned ksz;
+    const char *kptr = devs_string_get_utf8(ctx, key, &ksz);
+    if (ksz == 0)
+        return devs_undefined;
+
+    for (unsigned i = 0; i < num_packets; ++i) {
+        if (devs_static_streq(ctx, pkts[i].name_idx, kptr, ksz))
+            return packet_spec(ctx, &pkts[i]);
+    }
+
+    return devs_undefined;
+}
+
 value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key) {
+    if (!devs_is_builtin_proto(proto))
+        return devs_spec_lookup(ctx, (const devs_service_spec_t *)proto, key);
+
     const devs_builtin_proto_entry_t *p = proto->entries;
 
     if (devs_handle_type(key) == DEVS_HANDLE_TYPE_IMG_BUFFERISH &&
@@ -224,8 +306,6 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
 
     return devs_undefined;
 }
-
-#define PACK_SHIFT 24
 
 // if `fn` is a static function, return `(obj, fn)` tuple
 // otherwise return `obj`
@@ -262,9 +342,11 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
         case DEVS_HANDLE_TYPE_SPECIAL:
         case DEVS_HANDLE_TYPE_FIBER:
         case DEVS_HANDLE_TYPE_ROLE:
+        case DEVS_HANDLE_TYPE_ROLE_MEMBER:
         case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
         case DEVS_HANDLE_TYPE_IMG_BUFFERISH: {
             uint32_t hv = devs_handle_value(obj);
+            JD_ASSERT((((uint32_t)otp << PACK_SHIFT) >> PACK_SHIFT) == otp);
             JD_ASSERT((hv >> PACK_SHIFT) == 0);
             JD_ASSERT(devs_handle_high_value(obj) == 0);
             return devs_value_from_handle(DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC | (fidx << 4),
@@ -373,7 +455,30 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
         return NULL;
     }
 
-    if (devs_handle_type(v) != DEVS_HANDLE_TYPE_GC_OBJECT) {
+    int htp = devs_handle_type(v);
+
+    if (htp == DEVS_HANDLE_TYPE_ROLE_MEMBER) {
+        unsigned roleidx;
+        uint16_t code = devs_decode_role_packet(ctx, v, &roleidx)->code;
+        int pt = 0;
+        if (JD_IS_GET(code))
+            pt = DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE;
+        else if (code & JD_CMD_EVENT_MASK)
+            pt = DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE;
+        else if ((code >> 12) == 0)
+            pt = DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE;
+        JD_ASSERT(pt != 0);
+        return devs_get_static_proto(ctx, pt, attach_flags);
+    }
+
+    if (htp == DEVS_HANDLE_TYPE_ROLE) {
+        const void *r = devs_role_spec(ctx, devs_handle_value(v));
+        if (r == NULL)
+            devs_runtime_failure(ctx, 60172);
+        return r;
+    }
+
+    if (htp != DEVS_HANDLE_TYPE_GC_OBJECT) {
         int pt = 0;
         int tp = devs_value_typeof(ctx, v);
         if (tp == DEVS_OBJECT_TYPE_MAP && devs_is_special(v)) {

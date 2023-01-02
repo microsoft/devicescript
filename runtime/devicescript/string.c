@@ -160,6 +160,12 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_ROLE:
         return devs_string_sprintf(ctx, "[Role: %s]",
                                    devs_img_role_name(ctx->img, devs_handle_value(v)));
+    case DEVS_HANDLE_TYPE_ROLE_MEMBER: {
+        unsigned roleidx;
+        const devs_packet_spec_t *pkt = devs_decode_role_packet(ctx, v, &roleidx);
+        return devs_string_sprintf(ctx, "[Role: %s.%s]", devs_img_role_name(ctx->img, roleidx),
+                                   devs_img_get_utf8(ctx->img, pkt->name_idx, NULL));
+    }
     default:
         JD_PANIC();
     }

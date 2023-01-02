@@ -288,6 +288,9 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         }
     case DEVS_HANDLE_TYPE_IMG_BUFFERISH:
         return devs_bufferish_is_buffer(v) ? DEVS_OBJECT_TYPE_BUFFER : DEVS_OBJECT_TYPE_STRING;
+    case DEVS_HANDLE_TYPE_ROLE_MEMBER:
+        return devs_decode_role_packet(ctx, v, NULL)->code & 0xf000 ? DEVS_OBJECT_TYPE_MAP
+                                                                    : DEVS_OBJECT_TYPE_FUNCTION;
     case DEVS_HANDLE_TYPE_ROLE:
         return DEVS_OBJECT_TYPE_ROLE;
     default:

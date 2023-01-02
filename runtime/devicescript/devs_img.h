@@ -22,8 +22,7 @@ static inline uint32_t devs_img_num_floats(devs_img_t img) {
     return img.header->float_literals.length / sizeof(value_t);
 }
 
-static inline const devs_function_desc_t *devs_img_get_function(devs_img_t img,
-                                                                uint32_t idx) {
+static inline const devs_function_desc_t *devs_img_get_function(devs_img_t img, uint32_t idx) {
     return (const devs_function_desc_t *)(img.data + img.header->functions.start +
                                           idx * sizeof(devs_function_desc_t));
 }
@@ -31,6 +30,15 @@ static inline const devs_function_desc_t *devs_img_get_function(devs_img_t img,
 static inline const devs_role_desc_t *devs_img_get_role(devs_img_t img, uint32_t idx) {
     return (const devs_role_desc_t *)(img.data + img.header->roles.start +
                                       idx * sizeof(devs_role_desc_t));
+}
+
+static inline const devs_service_spec_t *devs_img_get_service_spec(devs_img_t img, uint32_t idx) {
+    return (const devs_service_spec_t *)(img.data + img.header->service_specs.start +
+                                         idx * sizeof(devs_service_spec_t));
+}
+
+static inline const devs_packet_spec_t *devs_img_get_packet_spec(devs_img_t img, unsigned offset) {
+    return (const devs_packet_spec_t *)(img.data + img.header->service_specs.start + offset * 4);
 }
 
 static inline value_t devs_img_get_float(devs_img_t img, uint32_t idx) {

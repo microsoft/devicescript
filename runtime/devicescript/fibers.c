@@ -159,6 +159,8 @@ const char *devs_img_fun_name(devs_img_t img, unsigned fidx) {
 }
 
 const char *devs_img_role_name(devs_img_t img, unsigned idx) {
+    if (idx >= devs_img_num_roles(img))
+        return "???";
     const devs_role_desc_t *role = devs_img_get_role(img, idx);
     return devs_img_get_utf8(img, role->name_idx, NULL);
 }

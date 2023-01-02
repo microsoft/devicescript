@@ -58,6 +58,9 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_ROLE:
         fmt = "role";
         break;
+    case DEVS_HANDLE_TYPE_ROLE_MEMBER:
+        fmt = "role_member";
+        break;
     case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
     case DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC:
         jd_sprintf(buf, sizeof(buf), "method:%d:%x", (int)devs_handle_high_value(v),

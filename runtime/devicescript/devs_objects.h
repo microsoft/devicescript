@@ -30,6 +30,11 @@ typedef struct {
 } devs_builtin_proto_t;
 extern const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1];
 
+static inline bool devs_is_builtin_proto(const void *ptr) {
+    return (uintptr_t)((const devs_builtin_proto_t *)ptr - devs_builtin_protos) <
+           DEVS_BUILTIN_OBJECT___MAX + 1;
+}
+
 typedef struct {
     devs_gc_object_t gc;
     devs_small_size_t length;
@@ -84,6 +89,10 @@ const devs_builtin_proto_t *devs_object_get_static_built_in(devs_ctx_t *ctx, uns
 const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx);
 value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key);
 value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v);
+bool devs_is_service_spec(devs_ctx_t *ctx, const void *ptr);
+const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx);
+value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key);
+const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx);
 
 // GC
 
