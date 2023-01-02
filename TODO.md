@@ -5,8 +5,16 @@
 * buffer overflows when printing a lot
 * treat roles as "normal" objects
 * drop type-directed compilation
+* try/catch - devs_runtime_failure() vs devs_raise()
+
+* role.packet -> (roleidx, spec-offset)
+* led.active.__proto__.foo = ... ? nope. frozen.
 
 ## General usability
+
+* drop seconds, use milliseconds everywhere
+* multi-program LATER
+* hash-consing of strings? (esp. for JSON parsing) LATER
 
 * hang properties off roles - `high`, `lastHigh` for bar graph eg
 * `role.control` -> control service of device that has this role ?

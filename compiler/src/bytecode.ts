@@ -100,10 +100,10 @@ export const OP_TYPES =
     "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x01\x0a\x0a\x01\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01\x0a\x0b"
 
 export enum BinFmt {
-    IMG_VERSION = 0x01040000,
+    IMG_VERSION = 0x02000000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
-    NUM_IMG_SECTIONS = 8,
+    NUM_IMG_SECTIONS = 9,
     FIX_HEADER_SIZE = 32,
     SECTION_HEADER_SIZE = 8,
     FUNCTION_HEADER_SIZE = 16,
@@ -117,6 +117,9 @@ export enum BinFmt {
     FIRST_NON_OPCODE = 0x10000,
     FIRST_BUILTIN_FUNCTION = 50000,
     MAX_ARGS_SHORT_CALL = 8,
+    SERVICE_SPEC_HEADER_SIZE = 16,
+    SERVICE_SPEC_PACKET_SIZE = 8,
+    SERVICE_SPEC_FIELD_SIZE = 4,
 }
 
 export enum StrIdx {
@@ -128,12 +131,12 @@ export enum StrIdx {
 }
 
 export enum OpCall {
+    __MAX = 4,
     SYNC = 0,
     BG = 1,
     BG_MAX1 = 2,
     BG_MAX1_PEND1 = 3,
     BG_MAX1_REPLACE = 4,
-    __MAX = 4,
 }
 
 export enum BytecodeFlag {
@@ -144,11 +147,12 @@ export enum BytecodeFlag {
 }
 
 export enum FunctionFlag {
-    NEEDS_THIS = 0x01,
     __MAX = 1,
+    NEEDS_THIS = 0x01,
 }
 
 export enum NumFmt {
+    __MAX = 12,
     U8 = 0b0000,
     U16 = 0b0001,
     U32 = 0b0010,
@@ -161,10 +165,47 @@ export enum NumFmt {
     F16 = 0b1001, // not supported
     F32 = 0b1010,
     F64 = 0b1011,
-    __MAX = 11,
+    SPECIAL = 0b1100,
+}
+
+export enum NumFmtSpecial {
+    __MAX = 6,
+    EMPTY = 0,
+    BYTES = 1,
+    STRING = 2,
+    STRING0 = 3,
+    BOOL = 4,
+    PIPE = 5,
+    PIPE_PORT = 6,
+}
+
+export enum PacketSpecCode {
+    REGISTER = 0x1000,
+    EVENT = 0x8000,
+    COMMAND = 0x0000,
+    REPORT = 0x2000,
+    MASK = 0xf000,
+}
+
+export enum ServiceSpecFlag {
+    DERIVE_MASK = 0x000f,
+    DERIVE_BASE = 0x0000,
+    DERIVE_SENSOR = 0x0001,
+}
+
+export enum PacketSpecFlag {
+    __MAX = 1,
+    MULTI_FIELD = 0x01,
+}
+
+export enum FieldSpecFlag {
+    __MAX = 2,
+    IS_BYTES = 0x01,
+    STARTS_REPEATS = 0x02,
 }
 
 export enum ObjectType {
+    __MAX = 11,
     NULL = 0,
     NUMBER = 1,
     MAP = 2,
@@ -177,10 +218,10 @@ export enum ObjectType {
     STRING = 9,
     ANY = 10,
     VOID = 11,
-    __MAX = 11,
 }
 
 export enum BuiltInObject {
+    __MAX = 22,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -201,10 +242,14 @@ export enum BuiltInObject {
     BOOLEAN = 16,
     BOOLEAN_PROTOTYPE = 17,
     DEVICESCRIPT = 18,
-    __MAX = 18,
+    DSREGISTER_PROTOTYPE = 19,
+    DSCOMMAND_PROTOTYPE = 20,
+    DSEVENT_PROTOTYPE = 21,
+    DSREPORT_PROTOTYPE = 22,
 }
 
 export enum BuiltInString {
+    __MAX = 87,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -293,7 +338,6 @@ export enum BuiltInString {
     ASSIGN = 85,
     KEYS = 86,
     VALUES = 87,
-    __MAX = 87,
 }
 
 export const OP_PRINT_FMTS = [
@@ -513,4 +557,8 @@ export const BUILTIN_OBJECT__VAL = [
     "Boolean",
     "Boolean_prototype",
     "DeviceScript",
+    "DsRegister_prototype",
+    "DsCommand_prototype",
+    "DsEvent_prototype",
+    "DsReport_prototype",
 ]

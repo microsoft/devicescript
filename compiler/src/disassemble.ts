@@ -2,8 +2,12 @@ import {
     BinFmt,
     BUILTIN_OBJECT__VAL,
     BUILTIN_STRING__VAL,
+    FieldSpecFlag,
     FunctionFlag,
     InstrArgResolver,
+    numfmtToString,
+    PacketSpecCode,
+    PacketSpecFlag,
     StrIdx,
     stringifyInstr,
 } from "./format"
@@ -55,6 +59,7 @@ export function disassemble(img: Uint8Array): string {
         return ""
     }
     const numGlobals = read16(img, 12)
+    const numSpecs = read16(img, 14)
     let r = `; img size ${img.length}\n` + `; ${numGlobals} globals\n`
 
     const [
@@ -66,6 +71,7 @@ export function disassemble(img: Uint8Array): string {
         utf8Desc,
         bufferDesc,
         strData,
+        specData,
     ] = range(BinFmt.NUM_IMG_SECTIONS).map(i =>
         decodeSection(
             img,
@@ -183,6 +189,50 @@ export function disassemble(img: Uint8Array): string {
     r += `\nDoubles:\n`
     for (let i = 0; i < floatArr.length; ++i) {
         r += ("     " + i).slice(-4) + ": " + getFlt(i) + "\n"
+    }
+
+    r += `\n`
+    for (let i = 0; i < numSpecs; i++) {
+        const sz = BinFmt.SERVICE_SPEC_HEADER_SIZE
+        const servSpec = specData.slice(i * sz, i * sz + sz)
+        const flags = read16(servSpec, 2)
+        const cls = read32(servSpec, 4).toString(16)
+        const numPackets = read16(servSpec, 8)
+        const pkts_offset = read16(servSpec, 10) * 4
+        const name = getString1(read16(servSpec, 0))
+        r += `SPEC ${name} 0x${cls} (f=${flags})\n`
+        for (let j = 0; j < numPackets; ++j) {
+            const off = pkts_offset + j * BinFmt.SERVICE_SPEC_PACKET_SIZE
+            const pktSpec = specData.slice(
+                off,
+                off + BinFmt.SERVICE_SPEC_PACKET_SIZE
+            )
+            const pname = getString1(read16(pktSpec, 0))
+            const code = read16(pktSpec, 2)
+            const flags = read16(pktSpec, 4)
+            const numfmtOrOffset = read16(pktSpec, 6)
+            const isOffset = !!(flags & PacketSpecFlag.MULTI_FIELD)
+            const numfmt = isOffset ? "{...}" : numfmtToString(numfmtOrOffset)
+            const codeType = code & PacketSpecCode.MASK
+            const tpName = PacketSpecCode[codeType]
+            const shortCode = (code & ~PacketSpecCode.MASK).toString(16)
+            r += `    ${tpName} ${pname} : ${numfmt} @ 0x${shortCode} (f=${flags})\n`
+            if (isOffset) {
+                let ptr = numfmtOrOffset << 2
+                while (ptr < specData.length) {
+                    if (read32(specData, ptr) == 0) break
+                    const fname = getString1(read16(specData, ptr))
+                    const flags = specData[ptr + 3]
+                    const fmt =
+                        flags & FieldSpecFlag.IS_BYTES
+                            ? `bytes[${specData[ptr + 2]}]`
+                            : numfmtToString(specData[ptr + 2])
+                    r += `        ${fname} : ${fmt} (f=${flags})\n`
+                    ptr += BinFmt.SERVICE_SPEC_FIELD_SIZE
+                }
+            }
+        }
+        r += "\n"
     }
 
     return r

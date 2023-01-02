@@ -176,10 +176,10 @@ function processSpec(filecontent: string): Spec {
             nums[idx] = 1
         }
         for (let i = 0; i < nums.length; ++i) {
-            if (!nums[i])
-                console.log(`missing ${i}`)
+            if (!nums[i]) console.log(`missing ${i}`)
         }
-        if (nums.length != lst.length + 1) error(`non-cont; max=${nums.length - 1}`)
+        if (nums.length != lst.length + 1)
+            error(`non-cont; max=${nums.length - 1}`)
     }
 
     function error(msg = "syntax error", ln = lineNo) {
@@ -371,7 +371,6 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
         startEnum(enName)
         let max = 0
         for (const obj of spec.enums[enName]) {
-            emitDefine(pref, obj)
             max = Math.max(+obj.code, max)
         }
         if (max <= spec.enums[enName].length)
@@ -381,6 +380,9 @@ function genCode(spec: Spec, isTS = false, isSTS = false) {
                 args: [],
                 rettype: null,
             })
+        for (const obj of spec.enums[enName]) {
+            emitDefine(pref, obj)
+        }
         endEnum()
     }
 

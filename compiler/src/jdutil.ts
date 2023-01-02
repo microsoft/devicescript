@@ -324,6 +324,12 @@ export function encodeU32LE(words: number[]) {
     return r
 }
 
+export function encodeU16LE(words: number[]) {
+    const r = new Uint8Array(words.length * 2)
+    for (let i = 0; i < words.length; ++i) write16(r, i * 2, words[i])
+    return r
+}
+
 export function decodeU32LE(buf: Uint8Array) {
     const res: number[] = []
     for (let i = 0; i < buf.length; i += 4) res.push(read32(buf, i))

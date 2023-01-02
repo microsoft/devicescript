@@ -8,6 +8,7 @@ import {
     OP_PRINT_FMTS,
     ObjectType,
     OP_TYPES,
+    NumFmtSpecial,
 } from "./bytecode"
 import { toHex } from "./jdutil"
 import { DebugInfo } from "./info"
@@ -62,6 +63,19 @@ class OpTree {
     constructor(public opcode: number) {}
 }
 
+export function numfmtToString(v: number) {
+    const fmt = v & 0xf
+    const bitsz = bitSize(fmt)
+    const letter = ["u", "i", "f", "x"][fmt >> 2]
+    if (letter == "x") {
+        const idx = (v >> 4) | ((v & 3) << 4)
+        return NumFmtSpecial[idx] ?? "Spec." + idx
+    }
+    const shift = v >> 4
+    if (shift) return letter + (bitsz - shift) + "." + shift
+    else return letter + bitsz
+}
+
 export function stringifyInstr(
     getbyte0: () => number,
     resolver?: InstrArgResolver
@@ -78,8 +92,7 @@ export function stringifyInstr(
 
     for (;;) {
         const op = getbyte()
-        if (op == 0 && bytebuf.length == 1)
-            return "          .fill 0x00"
+        if (op == 0 && bytebuf.length == 1) return "          .fill 0x00"
         const e = new OpTree(op)
         if (opTakesNumber(op)) {
             jmpoff = resolver?.resolverPC + bytebuf.length - 1
@@ -177,13 +190,7 @@ export function stringifyInstr(
 
     function numfmt(vv: string) {
         if (!isNumber(vv)) return vv
-        const v = +vv
-        const fmt = v & 0xf
-        const bitsz = bitSize(fmt)
-        const letter = ["u", "i", "f", "x"][fmt >> 2]
-        const shift = v >> 4
-        if (shift) return letter + (bitsz - shift) + "." + shift
-        else return letter + bitsz
+        return numfmtToString(+vv)
     }
 
     function callop(op: string) {
@@ -231,7 +238,6 @@ export function stringifyInstr(
         return expandFmt(fmt, t)
     }
 }
-
 
 export interface DevsDiagnostic extends ts.Diagnostic {
     filename: string

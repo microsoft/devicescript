@@ -2,18 +2,6 @@
 
 Expressions do not modify the state. They may throw exceptions though.
 
-## TODO
-* try/catch
-* drop seconds, use milliseconds everywhere
-* multi-program LATER
-
-### Decisions
-* hash-consing of strings? (esp. for JSON parsing) LATER
-
-### Dynamic methods
-* role.packet -> (roleidx, spec-offset)
-* led.active.__proto__.foo = ... ? nope. frozen.
-
 ## Ops
 
 ### Control flow
@@ -251,10 +239,10 @@ Return reference to "buffer" with the packet data.
 
 ## Format Constants
 
-    img_version = 0x01_04_0000
+    img_version = 0x02_00_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
-    num_img_sections = 8
+    num_img_sections = 9
     fix_header_size = 32
     section_header_size = 8
     function_header_size = 16
@@ -268,6 +256,9 @@ Return reference to "buffer" with the packet data.
     first_non_opcode = 0x10000
     first_builtin_function = 50000
     max_args_short_call = 8
+    service_spec_header_size = 16
+    service_spec_packet_size = 8
+    service_spec_field_size = 4
 
 ## Enum: StrIdx
 
@@ -328,6 +319,40 @@ Format is `["u", "i", "f", "reserved"](fmt >> 2)`
     F16 = 0b1001 // not supported
     F32 = 0b1010
     F64 = 0b1011
+    Special = 0b1100
+
+## Enum: NumFmt_Special
+
+    empty = 0
+    bytes = 1
+    string = 2
+    string0 = 3
+    bool = 4
+    pipe = 5
+    pipe_port = 6
+
+## Enum: PacketSpec_Code
+
+    register = 0x1000
+    event = 0x8000
+    command = 0x0000
+    report = 0x2000
+    MASK = 0xf000
+
+## Enum: ServiceSpec_Flag
+
+    derive_mask = 0x000f
+    derive_base = 0x0000
+    derive_sensor = 0x0001
+
+## Enum: PacketSpec_Flag
+
+    multi_field = 0x01
+
+## Enum: FieldSpec_Flag
+
+    is_bytes = 0x01
+    starts_repeats = 0x02
 
 ## Enum: Object_Type
 
@@ -385,6 +410,10 @@ Only `true` and `false` values.
     Boolean = 16
     Boolean_prototype = 17
     DeviceScript = 18
+    DsRegister_prototype = 19
+    DsCommand_prototype = 20
+    DsEvent_prototype = 21
+    DsReport_prototype = 22
 
 ## Enum: BuiltIn_String
 

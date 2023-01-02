@@ -23,6 +23,8 @@ import {
     fromHex,
     bufferEq,
     range,
+    uniqueMap,
+    encodeU16LE,
 } from "./jdutil"
 
 import {
@@ -40,6 +42,11 @@ import {
     BUILTIN_OBJECT__VAL,
     BuiltInString,
     BuiltInObject,
+    NumFmtSpecial,
+    PacketSpecCode,
+    PacketSpecFlag,
+    FieldSpecFlag,
+    ServiceSpecFlag,
 } from "./format"
 import {
     addUnique,
@@ -3485,6 +3492,147 @@ class Program implements TopOpWriter {
         assert(toHex(new Uint8Array(test.buffer)) == "42d0")
     }
 
+    private specialFieldFmt(f: jdspec.PacketMember) {
+        switch (f.type) {
+            case "string":
+                return NumFmtSpecial.STRING
+            case "bool":
+                return NumFmtSpecial.BOOL
+            case "string0":
+                return NumFmtSpecial.STRING0
+            case "bytes":
+                return NumFmtSpecial.BYTES
+            case "pipe":
+                return NumFmtSpecial.PIPE
+            case "pipe_port":
+                return NumFmtSpecial.PIPE_PORT
+            default:
+                return undefined
+        }
+    }
+
+    private fieldFmt(f: jdspec.PacketMember) {
+        const special = f ? this.specialFieldFmt(f) : NumFmtSpecial.EMPTY
+        if (special != undefined) {
+            return (
+                NumFmt.SPECIAL | ((special & 0xf) << 4) | ((special >> 4) & 0x3)
+            )
+        } else {
+            return bufferFmt(f)
+        }
+    }
+
+    private serializeSpecs() {
+        let usedSpecs = uniqueMap(
+            this.roles.list as Role[],
+            r => r.spec.classIdentifier + "",
+            r => r.spec
+        )
+        usedSpecs.unshift(this.serviceSpecs["sensor"])
+        usedSpecs.unshift(this.serviceSpecs["base"])
+        // usedSpecs = Object.values(this.serviceSpecs)
+        const numSpecs = usedSpecs.length
+        const specWriter = new SectionWriter()
+
+        const later = usedSpecs.map(spec => {
+            const specDesc = new Uint8Array(BinFmt.SERVICE_SPEC_HEADER_SIZE)
+            specWriter.append(specDesc)
+            let flags = 0
+
+            if (spec.extends.indexOf("_sensor") >= 0)
+                flags |= ServiceSpecFlag.DERIVE_SENSOR
+
+            const name =
+                spec.camelName[0].toUpperCase() + spec.camelName.slice(1)
+            write16(specDesc, 0, this.addString(name))
+            write32(specDesc, 4, spec.classIdentifier)
+            write16(specDesc, 2, flags)
+            const pkts = spec.packets
+
+            return () => {
+                const multifields = pkts.map(pkt => {
+                    if (
+                        pkt.fields.length == 0 ||
+                        (pkt.fields.length == 1 && !pkt.fields[0].startRepeats)
+                    )
+                        return -1 // inline field
+                    else {
+                        const r = specWriter.currSize >> 2
+                        for (const f of pkt.fields) {
+                            let flags = 0x00
+                            let numfmt = 0
+                            if (f.storage && /u8\[/.test(f.type)) {
+                                flags |= FieldSpecFlag.IS_BYTES
+                                numfmt = f.storage
+                            } else {
+                                numfmt = this.fieldFmt(f)
+                            }
+                            if (f.startRepeats)
+                                flags |= FieldSpecFlag.STARTS_REPEATS
+                            specWriter.append(
+                                encodeU16LE([
+                                    this.addString(camelize(f.name)),
+                                    numfmt | (flags << 8),
+                                ])
+                            )
+                        }
+                        specWriter.append(encodeU16LE([0, 0]))
+                        assert(4 == BinFmt.SERVICE_SPEC_FIELD_SIZE)
+                        return r
+                    }
+                })
+                const startoff = specWriter.currSize
+                let idx = -1
+                for (const pkt of pkts) {
+                    idx++
+                    let code = pkt.identifier
+                    let flags = 0
+                    if (pkt.derived) continue
+                    if (isRegister(pkt)) code |= PacketSpecCode.REGISTER
+                    else if (pkt.kind == "event") code |= PacketSpecCode.EVENT
+                    else if (pkt.kind == "command")
+                        code |= PacketSpecCode.COMMAND
+                    else if (pkt.kind == "report") code |= PacketSpecCode.REPORT
+                    else if (pkt.kind.includes("pipe")) continue
+                    else oops(`unknown pkt kind ${pkt.kind}`)
+                    let numfmt = multifields[idx]
+                    if (numfmt == -1) numfmt = this.fieldFmt(pkt.fields[0])
+                    else flags |= PacketSpecFlag.MULTI_FIELD
+                    const pktDesc = encodeU16LE([
+                        this.addString(camelize(pkt.name)),
+                        code,
+                        flags,
+                        numfmt,
+                    ])
+                    assert(
+                        pktDesc.length == BinFmt.SERVICE_SPEC_PACKET_SIZE,
+                        "sz"
+                    )
+                    specWriter.append(pktDesc)
+                }
+
+                write16(specDesc, 10, startoff >> 2)
+                const nument =
+                    (specWriter.currSize - startoff) /
+                    BinFmt.SERVICE_SPEC_PACKET_SIZE
+                write16(specDesc, 8, nument)
+            }
+        })
+
+        later.forEach(f => f())
+
+        specWriter.align()
+
+        return {
+            numSpecs,
+            specWriter,
+        }
+
+        function isRegister(pi: jdspec.PacketInfo) {
+            return pi.kind == "ro" || pi.kind == "rw" || pi.kind == "const"
+        }
+    }
+
     private serialize() {
         // serialization only works on little endian machines
         this.assertLittleEndian()
@@ -3512,6 +3660,8 @@ class Program implements TopOpWriter {
         const utf8Desc = new SectionWriter()
         const bufferDesc = new SectionWriter()
         const strData = new SectionWriter()
+        const { specWriter, numSpecs } = this.serializeSpecs()
+        write16(hd, 14, numSpecs)
 
         const writers = [
             funDesc,
@@ -3522,6 +3672,7 @@ class Program implements TopOpWriter {
             utf8Desc,
             bufferDesc,
             strData,
+            specWriter,
         ]
 
         assert(BinFmt.NUM_IMG_SECTIONS == writers.length)
