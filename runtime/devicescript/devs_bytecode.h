@@ -231,7 +231,7 @@
 #define DEVS_BUILTIN_OBJECT_PACKET 23
 #define DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE 24
 
-#define DEVS_BUILTIN_STRING___MAX 96
+#define DEVS_BUILTIN_STRING___MAX 97
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -329,6 +329,7 @@
 #define DEVS_BUILTIN_STRING_PAYLOAD 94
 #define DEVS_BUILTIN_STRING_DECODE 95
 #define DEVS_BUILTIN_STRING_ENCODE 96
+#define DEVS_BUILTIN_STRING_ONPACKET 97
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -362,7 +363,8 @@
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
         "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
-        "deviceId", "shortId", "serviceIndex", "serviceCommand", "payload", "decode", "encode"
+        "deviceId", "shortId", "serviceIndex", "serviceCommand", "payload", "decode", "encode",    \
+        "onPacket"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \

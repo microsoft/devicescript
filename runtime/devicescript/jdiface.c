@@ -78,6 +78,7 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION) {
         devs_fiber_sleep(fib, 0);
         LOGV("wake condition");
+        devs_jd_reset_packet(ctx);
         devs_jd_wake_role(ctx, role_idx);
         return;
     }
@@ -127,11 +128,48 @@ static void devs_jd_set_packet(devs_ctx_t *ctx, unsigned role_idx, unsigned serv
         memcpy(pkt->data, payload, sz);
 }
 
+value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx) {
+    if (ctx->packet.service_index == 0xff)
+        return devs_undefined;
+    devs_packet_t *pkt = devs_any_try_alloc(ctx, sizeof(*pkt), DEVS_GC_TAG_PACKET);
+    if (pkt == NULL)
+        return devs_undefined;
+
+    value_t r = devs_value_from_gc_obj(ctx, pkt);
+    devs_value_pin(ctx, r);
+
+    pkt->payload = devs_buffer_try_alloc(ctx, ctx->packet.service_size);
+    if (pkt->payload == NULL) {
+        devs_value_unpin(ctx, r);
+        return devs_undefined;
+    }
+    memcpy(pkt->payload->data, ctx->packet.data, pkt->payload->length);
+    pkt->device_id = ctx->packet.device_identifier;
+    pkt->service_index = ctx->packet.service_index;
+    pkt->service_command = ctx->packet.service_command;
+    pkt->flags = ctx->packet.flags;
+    pkt->roleidx = role_idx;
+
+    devs_value_unpin(ctx, r);
+    return r;
+}
+
 void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
     for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
         if (fiber->role_idx == role_idx) {
             fiber->role_wkp = 1;
         }
+    }
+
+    value_t role = devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, role_idx);
+    value_t fn = devs_object_get(ctx, role, devs_builtin_string(DEVS_BUILTIN_STRING_ONPACKET));
+    if (!devs_is_null(fn)) {
+        ctx->stack_top_for_gc = 2;
+        ctx->the_stack[0] = fn;
+        ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role_idx);
+        devs_fiber_t *fiber = devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
+        if (fiber)
+            fiber->role_wkp = 1;
     }
 
     int runsome = 1;
