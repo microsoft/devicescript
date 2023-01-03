@@ -295,26 +295,30 @@ value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value
 value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key) {
     JD_ASSERT(devs_is_proto(proto));
 
-    const devs_builtin_proto_entry_t *p = proto->entries;
+    while (proto) {
+        const devs_builtin_proto_entry_t *p = proto->entries;
 
-    if (devs_handle_type(key) == DEVS_HANDLE_TYPE_IMG_BUFFERISH &&
-        (devs_handle_value(key) >> DEVS_STRIDX__SHIFT) == DEVS_STRIDX_BUILTIN) {
-        unsigned kidx = devs_handle_value(key) & ((1 << DEVS_STRIDX__SHIFT) - 1);
-        while (p->builtin_string_id) {
-            if (p->builtin_string_id == kidx)
-                return proto_value(ctx, p);
-            p++;
+        if (devs_handle_type(key) == DEVS_HANDLE_TYPE_IMG_BUFFERISH &&
+            (devs_handle_value(key) >> DEVS_STRIDX__SHIFT) == DEVS_STRIDX_BUILTIN) {
+            unsigned kidx = devs_handle_value(key) & ((1 << DEVS_STRIDX__SHIFT) - 1);
+            while (p->builtin_string_id) {
+                if (p->builtin_string_id == kidx)
+                    return proto_value(ctx, p);
+                p++;
+            }
+        } else {
+            unsigned ksz;
+            const char *kptr = devs_string_get_utf8(ctx, key, &ksz);
+            if (ksz != strlen(kptr))
+                return devs_undefined;
+            while (p->builtin_string_id) {
+                if (strcmp(devs_builtin_string_by_idx(p->builtin_string_id), kptr) == 0)
+                    return proto_value(ctx, p);
+                p++;
+            }
         }
-    } else {
-        unsigned ksz;
-        const char *kptr = devs_string_get_utf8(ctx, key, &ksz);
-        if (ksz != strlen(kptr))
-            return devs_undefined;
-        while (p->builtin_string_id) {
-            if (strcmp(devs_builtin_string_by_idx(p->builtin_string_id), kptr) == 0)
-                return proto_value(ctx, p);
-            p++;
-        }
+
+        proto = proto->parent;
     }
 
     return devs_undefined;

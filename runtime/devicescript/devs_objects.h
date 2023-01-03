@@ -24,8 +24,9 @@ typedef struct {
     value_t *data;
 } devs_map_t;
 
-typedef struct {
+typedef struct devs_builtin_proto {
     devs_gc_object_t gc;
+    const struct devs_builtin_proto *parent;
     const devs_builtin_proto_entry_t *entries;
 } devs_builtin_proto_t;
 extern const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1];

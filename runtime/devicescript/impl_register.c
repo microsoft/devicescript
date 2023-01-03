@@ -1,11 +1,20 @@
 #include "devs_internal.h"
 
-static const devs_packet_spec_t *devs_arg_self_reg(devs_ctx_t *ctx, unsigned *role) {
-    const devs_packet_spec_t *pkt = devs_decode_role_packet(ctx, devs_arg_self(ctx), role);
+DEVS_DERIVE(DsRegister_prototype, DsPacketInfo_prototype)
+DEVS_DERIVE(DsCommand_prototype, DsPacketInfo_prototype)
+DEVS_DERIVE(DsEvent_prototype, DsPacketInfo_prototype)
+
+static const devs_packet_spec_t *getrolepkt(devs_ctx_t *ctx, unsigned *role, value_t self) {
+    const devs_packet_spec_t *pkt = devs_decode_role_packet(ctx, self, role);
     if (pkt == NULL) {
         devs_runtime_failure(ctx, 60173);
         return NULL;
     }
+    return pkt;
+}
+
+static const devs_packet_spec_t *devs_arg_self_reg(devs_ctx_t *ctx, unsigned *role) {
+    const devs_packet_spec_t *pkt = getrolepkt(ctx, role, devs_arg_self(ctx));
     if (*role == DEVS_ROLE_INVALID) {
         devs_runtime_failure(ctx, 60174);
         return NULL;
@@ -132,4 +141,37 @@ void methX_DsRegister_write(devs_ctx_t *ctx) {
 
     devs_packet_encode(ctx, pkt);
     devs_jd_send_cmd(ctx, role, JD_SET(pkt->code & 0x0fff));
+}
+
+#define SELF()                                                                                     \
+    unsigned role;                                                                                 \
+    const devs_packet_spec_t *pkt = getrolepkt(ctx, &role, self);                                  \
+    if (pkt == NULL)                                                                               \
+    return devs_undefined
+
+value_t prop_DsPacketInfo_role(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    if (role == DEVS_ROLE_INVALID)
+        return devs_undefined;
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, role);
+}
+
+value_t prop_DsPacketInfo_name(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_IMG_BUFFERISH, pkt->name_idx);
+}
+
+value_t prop_DsPacketInfo_code(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_int(pkt->code & 0xfff);
+}
+
+void methX_DsCommand___func__(devs_ctx_t *ctx) {
+    unsigned role;
+    const devs_packet_spec_t *pkt = devs_arg_self_reg(ctx, &role);
+    if (pkt == NULL)
+        return;
+
+    devs_packet_encode(ctx, pkt);
+    devs_jd_send_cmd(ctx, role, pkt->code);
 }

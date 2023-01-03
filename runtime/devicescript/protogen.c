@@ -55,6 +55,10 @@ void meth0_Packet_decode(devs_ctx_t *ctx);
 // impl_register.c
 void meth0_DsRegister_read(devs_ctx_t *ctx);
 void methX_DsRegister_write(devs_ctx_t *ctx);
+value_t prop_DsPacketInfo_role(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacketInfo_name(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacketInfo_code(devs_ctx_t *ctx, value_t self);
+void methX_DsCommand___func__(devs_ctx_t *ctx);
 // impl_role.c
 value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self);
 // impl_string.c
@@ -63,81 +67,142 @@ void meth1_String_charCodeAt(devs_ctx_t *ctx);
 void meth1_String_charAt(devs_ctx_t *ctx);
 
 static const devs_builtin_proto_entry_t Array_prototype_entries[] = { //
-    {N(LENGTH), 50000},
-    {N(INSERT), 50001},
+    {N(LENGTH), 50000},                                               //
+    {N(INSERT), 50001},                                               //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Buffer_entries[] = { //
-    {N(ALLOC), 50002},
+    {N(ALLOC), 50002},                                       //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Buffer_prototype_entries[] = { //
-    {N(LENGTH), 50003},
-    {N(TOSTRING), 50004},
-    {N(FILLAT), 50005},
-    {N(BLITAT), 50006},
+    {N(LENGTH), 50003},                                                //
+    {N(TOSTRING), 50004},                                              //
+    {N(FILLAT), 50005},                                                //
+    {N(BLITAT), 50006},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
-    {N(SLEEPMS), 50007}, {N(PANIC), 50008},      {N(REBOOT), 50009},   {N(FORMAT), 50010},
-    {N(LOG), 50011},     {N(PARSEFLOAT), 50012}, {N(PARSEINT), 50013}, {0, 0}};
+    {N(SLEEPMS), 50007},                                           //
+    {N(PANIC), 50008},                                             //
+    {N(REBOOT), 50009},                                            //
+    {N(FORMAT), 50010},                                            //
+    {N(LOG), 50011},                                               //
+    {N(PARSEFLOAT), 50012},                                        //
+    {N(PARSEINT), 50013},                                          //
+    {0, 0}};
 
 static const devs_builtin_proto_entry_t Function_prototype_entries[] = { //
-    {N(START), 50014},
+    {N(START), 50014},                                                   //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Math_entries[] = { //
-    {N(CEIL), 50015},   {N(FLOOR), 50016},
-    {N(ROUND), 50017},  {N(ABS), 50018},
-    {N(RANDOM), 50019}, {N(RANDOMINT), 50020},
-    {N(LOG), 50021},    {N(POW), 50022},
-    {N(IDIV), 50023},   {N(IMOD), 50024},
-    {N(IMUL), 50025},   {N(MIN), 50026},
-    {N(MAX), 50027},    {0, 0}};
+    {N(CEIL), 50015},                                      //
+    {N(FLOOR), 50016},                                     //
+    {N(ROUND), 50017},                                     //
+    {N(ABS), 50018},                                       //
+    {N(RANDOM), 50019},                                    //
+    {N(RANDOMINT), 50020},                                 //
+    {N(LOG), 50021},                                       //
+    {N(POW), 50022},                                       //
+    {N(IDIV), 50023},                                      //
+    {N(IMOD), 50024},                                      //
+    {N(IMUL), 50025},                                      //
+    {N(MIN), 50026},                                       //
+    {N(MAX), 50027},                                       //
+    {0, 0}};
 
 static const devs_builtin_proto_entry_t Object_entries[] = { //
-    {N(ASSIGN), 50028},
-    {N(KEYS), 50029},
-    {N(VALUES), 50030},
+    {N(ASSIGN), 50028},                                      //
+    {N(KEYS), 50029},                                        //
+    {N(VALUES), 50030},                                      //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Packet_prototype_entries[] = { //
-    {N(ROLE), 50031},           {N(DEVICEID), 50032}, {N(SHORTID), 50033}, {N(SERVICEINDEX), 50034},
-    {N(SERVICECOMMAND), 50035}, {N(PAYLOAD), 50036},  {N(DECODE), 50037},  {0, 0}};
+    {N(ROLE), 50031},                                                  //
+    {N(DEVICEID), 50032},                                              //
+    {N(SHORTID), 50033},                                               //
+    {N(SERVICEINDEX), 50034},                                          //
+    {N(SERVICECOMMAND), 50035},                                        //
+    {N(PAYLOAD), 50036},                                               //
+    {N(DECODE), 50037},                                                //
+    {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50038},
-    {N(WRITE), 50039},
+    {N(READ), 50038},                                                      //
+    {N(WRITE), 50039},                                                     //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t DsCommand_prototype_entries[] = { //
+    {N(__FUNC__), 50043},                                                 //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t DsEvent_prototype_entries[] = { //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
+    {N(ROLE), 50040},                                                        //
+    {N(NAME), 50041},                                                        //
+    {N(CODE), 50042},                                                        //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 50040},
+    {N(ISCONNECTED), 50044},                                         //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50041},
-    {N(CHARCODEAT), 50042},
-    {N(CHARAT), 50043},
+    {N(LENGTH), 50045},                                                //
+    {N(CHARCODEAT), 50046},                                            //
+    {N(CHARAT), 50047},                                                //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t empty_entries[] = { //
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
-    [DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Array_prototype_entries},
-    [DEVS_BUILTIN_OBJECT_BUFFER] = {DEVS_BUILTIN_PROTO_INIT, Buffer_entries},
-    [DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Buffer_prototype_entries},
-    [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = {DEVS_BUILTIN_PROTO_INIT, DeviceScript_entries},
-    [DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT,
+    [DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                             Array_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_BUFFER] = {DEVS_BUILTIN_PROTO_INIT, NULL, Buffer_entries},
+    [DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                              Buffer_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = {DEVS_BUILTIN_PROTO_INIT, NULL, DeviceScript_entries},
+    [DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
                                                 Function_prototype_entries},
-    [DEVS_BUILTIN_OBJECT_MATH] = {DEVS_BUILTIN_PROTO_INIT, Math_entries},
-    [DEVS_BUILTIN_OBJECT_OBJECT] = {DEVS_BUILTIN_PROTO_INIT, Object_entries},
-    [DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Packet_prototype_entries},
-    [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT,
-                                                  DsRegister_prototype_entries},
-    [DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Role_prototype_entries},
-    [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_MATH] = {DEVS_BUILTIN_PROTO_INIT, NULL, Math_entries},
+    [DEVS_BUILTIN_OBJECT_OBJECT] = {DEVS_BUILTIN_PROTO_INIT, NULL, Object_entries},
+    [DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                              Packet_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] =
+        {DEVS_BUILTIN_PROTO_INIT, &devs_builtin_protos[DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE],
+         DsRegister_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE] =
+        {DEVS_BUILTIN_PROTO_INIT, &devs_builtin_protos[DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE],
+         DsCommand_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE] =
+        {DEVS_BUILTIN_PROTO_INIT, &devs_builtin_protos[DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE],
+         DsEvent_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                                    DsPacketInfo_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, Role_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                              String_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_ARRAY] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_STRING] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_NUMBER] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_FIBER] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_FIBER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_ROLE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_FUNCTION] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_BOOLEAN] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_PACKET] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
+    [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 44;
-const devs_builtin_function_t devs_builtin_functions[44] = {
+uint16_t devs_num_builtin_functions = 48;
+const devs_builtin_function_t devs_builtin_functions[48] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
@@ -178,6 +243,10 @@ const devs_builtin_function_t devs_builtin_functions[44] = {
     {N(DECODE), 0, 0, {.meth = meth0_Packet_decode}},
     {N(READ), 0, 0, {.meth = meth0_DsRegister_read}},
     {N(WRITE), 0, 0, {.meth = methX_DsRegister_write}},
+    {N(ROLE), 0, PROP, {.prop = prop_DsPacketInfo_role}},
+    {N(NAME), 0, PROP, {.prop = prop_DsPacketInfo_name}},
+    {N(CODE), 0, PROP, {.prop = prop_DsPacketInfo_code}},
+    {N(__FUNC__), 0, 0, {.meth = methX_DsCommand___func__}},
     {N(ISCONNECTED), 0, PROP, {.prop = prop_Role_isConnected}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},

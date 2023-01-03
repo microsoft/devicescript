@@ -243,3 +243,5 @@ static inline jd_role_t *devs_role(devs_ctx_t *ctx, unsigned roleidx) {
 }
 
 bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a);
+
+#define DEVS_DERIVE(cls, basecls) /* */

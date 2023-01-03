@@ -203,35 +203,36 @@
 #define DEVS_OBJECT_TYPE_ANY 11
 #define DEVS_OBJECT_TYPE_VOID 12
 
-#define DEVS_BUILTIN_OBJECT___MAX 24
+#define DEVS_BUILTIN_OBJECT___MAX 26
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
 #define DEVS_BUILTIN_OBJECT_ARRAY 3
-#define DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE 3
-#define DEVS_BUILTIN_OBJECT_BUFFER 4
-#define DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE 5
-#define DEVS_BUILTIN_OBJECT_STRING 6
-#define DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE 7
-#define DEVS_BUILTIN_OBJECT_NUMBER 8
-#define DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE 9
-#define DEVS_BUILTIN_OBJECT_FIBER 10
-#define DEVS_BUILTIN_OBJECT_FIBER_PROTOTYPE 11
-#define DEVS_BUILTIN_OBJECT_ROLE 12
-#define DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE 13
-#define DEVS_BUILTIN_OBJECT_FUNCTION 14
-#define DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE 15
-#define DEVS_BUILTIN_OBJECT_BOOLEAN 16
-#define DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE 17
-#define DEVS_BUILTIN_OBJECT_DEVICESCRIPT 18
-#define DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE 19
-#define DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE 20
-#define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 21
-#define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 22
-#define DEVS_BUILTIN_OBJECT_PACKET 23
-#define DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE 24
+#define DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE 4
+#define DEVS_BUILTIN_OBJECT_BUFFER 5
+#define DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE 6
+#define DEVS_BUILTIN_OBJECT_STRING 7
+#define DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE 8
+#define DEVS_BUILTIN_OBJECT_NUMBER 9
+#define DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE 10
+#define DEVS_BUILTIN_OBJECT_FIBER 11
+#define DEVS_BUILTIN_OBJECT_FIBER_PROTOTYPE 12
+#define DEVS_BUILTIN_OBJECT_ROLE 13
+#define DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE 14
+#define DEVS_BUILTIN_OBJECT_FUNCTION 15
+#define DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE 16
+#define DEVS_BUILTIN_OBJECT_BOOLEAN 17
+#define DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE 18
+#define DEVS_BUILTIN_OBJECT_PACKET 19
+#define DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE 20
+#define DEVS_BUILTIN_OBJECT_DEVICESCRIPT 21
+#define DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE 22
+#define DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE 23
+#define DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE 24
+#define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 25
+#define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 26
 
-#define DEVS_BUILTIN_STRING___MAX 97
+#define DEVS_BUILTIN_STRING___MAX 99
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -330,6 +331,8 @@
 #define DEVS_BUILTIN_STRING_DECODE 95
 #define DEVS_BUILTIN_STRING_ENCODE 96
 #define DEVS_BUILTIN_STRING_ONPACKET 97
+#define DEVS_BUILTIN_STRING_CODE 98
+#define DEVS_BUILTIN_STRING_NAME 99
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -364,10 +367,11 @@
         "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
         "deviceId", "shortId", "serviceIndex", "serviceCommand", "payload", "decode", "encode",    \
-        "onPacket"
+        "onPacket", "code", "name"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
-    "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
-        "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \
-        "Role", "Role_prototype", "Function", "Function_prototype", "Boolean",                     \
-        "Boolean_prototype", "DeviceScript", "DsRegister_prototype", "DsCommand_prototype",        \
-        "DsEvent_prototype", "DsReport_prototype", "Packet", "Packet_prototype"
+    "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
+        "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "Fiber",   \
+        "Fiber_prototype", "Role", "Role_prototype", "Function", "Function_prototype", "Boolean",  \
+        "Boolean_prototype", "Packet", "Packet_prototype", "DeviceScript",                         \
+        "DsPacketInfo_prototype", "DsRegister_prototype", "DsCommand_prototype",                   \
+        "DsEvent_prototype", "DsReport_prototype"
