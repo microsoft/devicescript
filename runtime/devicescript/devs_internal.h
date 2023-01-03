@@ -152,7 +152,7 @@ static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);
 value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code);
-// next error 60178
+// next error 60182
 static inline value_t devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
     return _devs_runtime_failure(ctx, code - 60000);
 }
@@ -197,6 +197,7 @@ value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t 
                        value_t *setv);
 double devs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
 value_t devs_buffer_decode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t **buf, unsigned len);
+unsigned devs_buffer_encode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t *data, unsigned len, value_t v);
 
 void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size);
 void devs_free(devs_ctx_t *ctx, void *ptr);

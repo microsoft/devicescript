@@ -123,3 +123,66 @@ value_t devs_buffer_decode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t **buf, unsign
         return devs_runtime_failure(ctx, 60176);
     }
 }
+
+unsigned devs_buffer_encode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t *data, unsigned len,
+                            value_t v) {
+    int sp = jd_numfmt_special_idx(fmt0);
+
+    switch (sp) {
+    case -1: {
+        if (!jd_numfmt_is_valid(fmt0)) {
+            devs_runtime_failure(ctx, 60178);
+            return 0;
+        }
+
+        unsigned sz = jd_numfmt_bytes(fmt0);
+        if (sz <= len) {
+            if (devs_is_tagged_int(v)) {
+                jd_numfmt_write_i32(data, fmt0, v.val_int32);
+            } else {
+                jd_numfmt_write_float(data, fmt0, devs_value_to_double(ctx, v));
+            }
+        }
+        return sz;
+    }
+
+    case DEVS_NUMFMT_SPECIAL_BOOL:
+        if (1 <= len)
+            *data = devs_value_to_bool(ctx, v) ? 0xff : 0;
+        return 1;
+
+    case DEVS_NUMFMT_SPECIAL_EMPTY:
+        return 0;
+
+    case DEVS_NUMFMT_SPECIAL_STRING0:
+    case DEVS_NUMFMT_SPECIAL_STRING:
+    case DEVS_NUMFMT_SPECIAL_BYTES: {
+        unsigned sz;
+        const void *d = devs_bufferish_data(ctx, v, &sz);
+        if (d == NULL) {
+            v = devs_value_to_string(ctx, v);
+            d = devs_bufferish_data(ctx, v, &sz);
+            if (d == NULL)
+                return 0; // ???
+        }
+
+        if (sz > len)
+            sz = len;
+        memcpy(data, d, sz);
+        if (sp == DEVS_NUMFMT_SPECIAL_STRING0 && sz < len) {
+            data[sz] = 0;
+            sz++;
+        }
+        return sz;
+    }
+
+    case DEVS_NUMFMT_SPECIAL_PIPE:
+    case DEVS_NUMFMT_SPECIAL_PIPE_PORT:
+        devs_runtime_failure(ctx, 60179); // TODO
+        return 0;
+
+    default:
+        devs_runtime_failure(ctx, 60180);
+        return 0;
+    }
+}

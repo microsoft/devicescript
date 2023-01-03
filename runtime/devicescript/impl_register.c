@@ -13,18 +13,16 @@ static const devs_packet_spec_t *devs_arg_self_reg(devs_ctx_t *ctx, unsigned *ro
     return pkt;
 }
 
-static void DsRegister_read_cont(devs_ctx_t *ctx, void *data) {
-    const devs_packet_spec_t *pkt = data;
+value_t devs_packet_decode(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
+    uint8_t *dp = ctx->packet.data;
+    uint8_t *ep = ctx->packet.data + ctx->packet.service_size;
 
     if (pkt->flags & DEVS_PACKETSPEC_FLAG_MULTI_FIELD) {
         devs_array_t *arr = devs_array_try_alloc(ctx, 0);
         if (!arr)
-            return;
+            return devs_undefined;
         value_t res = devs_value_from_gc_obj(ctx, arr);
         devs_value_pin(ctx, res);
-
-        uint8_t *ep = ctx->packet.data + ctx->packet.service_size;
-        uint8_t *dp = ctx->packet.data;
 
         const devs_field_spec_t *fld = devs_img_get_field_spec(ctx->img, pkt->numfmt_or_offset);
         const devs_field_spec_t *rep = NULL;
@@ -55,12 +53,14 @@ static void DsRegister_read_cont(devs_ctx_t *ctx, void *data) {
         }
 
         devs_value_unpin(ctx, res);
-        devs_ret(ctx, res);
+        return res;
     } else {
-        uint8_t *dp = ctx->packet.data;
-        value_t tmp = devs_buffer_decode(ctx, pkt->numfmt_or_offset, &dp, ctx->packet.service_size);
-        devs_ret(ctx, tmp);
+        return devs_buffer_decode(ctx, pkt->numfmt_or_offset, &dp, ep - dp);
     }
+}
+
+static void DsRegister_read_cont(devs_ctx_t *ctx, void *userdata) {
+    devs_ret(ctx, devs_packet_decode(ctx, userdata));
 }
 
 void meth0_DsRegister_read(devs_ctx_t *ctx) {
@@ -71,6 +71,65 @@ void meth0_DsRegister_read(devs_ctx_t *ctx) {
 
     devs_fiber_t *f = ctx->curr_fiber;
 
-    devs_jd_get_register(ctx, role, pkt->code, 1000, 0);
+    devs_jd_get_register(ctx, role, pkt->code, 1000, 0); // TODO delay!
     devs_setup_resume(f, DsRegister_read_cont, (void *)pkt);
+}
+
+void devs_packet_encode(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
+    unsigned argc = ctx->stack_top_for_gc - 1;
+    value_t *argv = ctx->the_stack + 1;
+    if (argc == 1 && devs_is_array(ctx, argv[0])) {
+        devs_array_t *arr = devs_value_to_gc_obj(ctx, argv[0]);
+        argv = arr->data;
+        argc = arr->length;
+    }
+
+    uint8_t *ep = ctx->packet.data + JD_SERIAL_PAYLOAD_SIZE;
+    uint8_t *dp = ctx->packet.data;
+
+    if (pkt->flags & DEVS_PACKETSPEC_FLAG_MULTI_FIELD) {
+        const devs_field_spec_t *fld = devs_img_get_field_spec(ctx->img, pkt->numfmt_or_offset);
+        const devs_field_spec_t *rep = NULL;
+
+        for (unsigned argp = 0; argp < argc; argp++) {
+            intptr_t sz = ep - dp;
+            if (sz < 0)
+                break;
+
+            int off = devs_buffer_encode(ctx, fld->numfmt, dp, ep - dp, argv[argp]);
+
+            if (off == 0)
+                break;
+            dp += off;
+
+            if (!rep && fld->flags & DEVS_FIELDSPEC_FLAG_STARTS_REPEATS)
+                rep = fld;
+            fld++;
+            if (!fld->name_idx) {
+                if (rep)
+                    fld = rep;
+                else
+                    break;
+            }
+        }
+    } else {
+        if (argc > 1)
+            devs_runtime_failure(ctx, 60181);
+        if (argc >= 1) {
+            int off = devs_buffer_encode(ctx, pkt->numfmt_or_offset, dp, ep - dp, argv[0]);
+            dp += off;
+        }
+    }
+
+    ctx->packet.service_size = dp - ctx->packet.data;
+}
+
+void methX_DsRegister_write(devs_ctx_t *ctx) {
+    unsigned role;
+    const devs_packet_spec_t *pkt = devs_arg_self_reg(ctx, &role);
+    if (pkt == NULL)
+        return;
+
+    devs_packet_encode(ctx, pkt);
+    devs_jd_send_cmd(ctx, role, JD_SET(pkt->code & 0x0fff));
 }
