@@ -12,7 +12,7 @@ void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
                           unsigned arg) {
     if (ctx->error_code)
         return;
-    jd_device_service_t *serv = ctx->roles[role_idx]->service;
+    jd_device_service_t *serv = devs_role(ctx, role_idx)->service;
     if (serv != NULL) {
         devs_regcache_entry_t *cached = devs_regcache_lookup(&ctx->regcache, role_idx, code, arg);
         if (cached != NULL) {
@@ -118,10 +118,10 @@ static void devs_jd_set_packet(devs_ctx_t *ctx, unsigned role_idx, unsigned serv
     jd_packet_t *pkt = &ctx->packet;
     pkt->_size = (sz + 4 + 3) & ~3;
     pkt->flags = JD_FRAME_FLAG_COMMAND;
-    jd_device_t *dev = jd_service_parent(ctx->roles[role_idx]->service);
+    jd_device_t *dev = jd_service_parent(devs_role(ctx, role_idx)->service);
     pkt->device_identifier = dev->device_identifier;
     pkt->service_size = sz;
-    pkt->service_index = ctx->roles[role_idx]->service->service_index;
+    pkt->service_index = devs_role(ctx, role_idx)->service->service_index;
     pkt->service_command = service_command;
     if (payload)
         memcpy(pkt->data, payload, sz);
@@ -195,7 +195,7 @@ static devs_regcache_entry_t *devs_jd_update_regcache(devs_ctx_t *ctx, unsigned 
 
 static bool devs_jd_pkt_matches_role(devs_ctx_t *ctx, unsigned role_idx) {
     jd_packet_t *pkt = &ctx->packet;
-    jd_device_service_t *serv = ctx->roles[role_idx]->service;
+    jd_device_service_t *serv = devs_role(ctx, role_idx)->service;
     return serv &&
            ((pkt->service_index == 0 && pkt->service_command == 0) ||
             serv->service_index == pkt->service_index) &&
@@ -209,7 +209,7 @@ static bool retry_soon(devs_fiber_t *fiber) {
 
 static bool role_missing(devs_fiber_t *fiber) {
     devs_ctx_t *ctx = fiber->ctx;
-    jd_device_service_t *serv = ctx->roles[fiber->role_idx]->service;
+    jd_device_service_t *serv = devs_role(ctx, fiber->role_idx)->service;
 
     if (serv == NULL) {
         // role unbound, keep waiting, no timeout
@@ -374,7 +374,7 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
         if (devs_jd_pkt_matches_role(ctx, idx)) {
 #if 0
             DMESG("wake pkt s=%d %x / %d r=%s", pkt->service_index, pkt->service_command,
-                  pkt->service_size, ctx->roles[idx]->name);
+                  pkt->service_size, devs_role(ctx, idx)->name);
 #endif
             devs_fiber_sync_now(ctx);
             devs_jd_update_all_regcache(ctx, idx);
@@ -397,7 +397,7 @@ void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role) {
 
     unsigned numroles = devs_img_num_roles(ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
-        if (ctx->roles[idx] == role) {
+        if (devs_role(ctx, idx) == role) {
             devs_regcache_free_role(&ctx->regcache, idx);
             devs_jd_reset_packet(ctx);
             devs_jd_wake_role(ctx, idx);
@@ -416,9 +416,10 @@ void devs_jd_init_roles(devs_ctx_t *ctx) {
     unsigned numroles = devs_img_num_roles(ctx->img);
     for (unsigned idx = 0; idx < numroles; ++idx) {
         const devs_role_desc_t *role = devs_img_get_role(ctx->img, idx);
-        ctx->roles[idx] = jd_role_alloc(devs_img_role_name(ctx->img, idx), role->service_class);
+        ctx->roles[idx].role =
+            jd_role_alloc(devs_img_role_name(ctx->img, idx), role->service_class);
         if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION)
-            ctx->roles[idx]->hidden = 1;
+            devs_role(ctx, idx)->hidden = 1;
     }
     jd_role_force_autobind();
 }

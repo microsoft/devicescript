@@ -81,6 +81,11 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
 #define DEVS_CTX_FREEING_ROLES 0x0004
 #define DEVS_CTX_TRACE_DISABLED 0x0008
 
+typedef struct {
+    jd_role_t *role;
+    devs_map_t *attached;
+} devs_role_t;
+
 struct devs_ctx {
     value_t *globals;
     uint16_t opstack;
@@ -106,7 +111,7 @@ struct devs_ctx {
     devs_fiber_t *curr_fiber;
 
     devs_fiber_t *fibers;
-    jd_role_t **roles;
+    devs_role_t *roles;
 
     // use devs_object_get_built_in()
     devs_map_t **_builtin_protos;
@@ -230,3 +235,7 @@ static inline bool devs_did_yield(devs_ctx_t *ctx) {
     return ctx->curr_fiber == NULL;
 }
 void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata);
+
+static inline jd_role_t *devs_role(devs_ctx_t *ctx, unsigned roleidx) {
+    return ctx->roles[roleidx].role;
+}

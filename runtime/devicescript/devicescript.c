@@ -14,7 +14,7 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
     ctx->gc = devs_gc_create();
 
     ctx->globals = devs_try_alloc(ctx, sizeof(value_t) * ctx->img.header->num_globals);
-    ctx->roles = devs_try_alloc(ctx, sizeof(jd_role_t *) * devs_img_num_roles(ctx->img));
+    ctx->roles = devs_try_alloc(ctx, sizeof(devs_role_t) * devs_img_num_roles(ctx->img));
 
     if (ctx->error_code)
         return;

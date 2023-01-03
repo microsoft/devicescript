@@ -7,5 +7,5 @@ value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self) {
     }
 
     uint32_t roleidx = devs_handle_value(self);
-    return devs_value_from_bool(ctx->roles[roleidx]->service != NULL);
+    return devs_value_from_bool(devs_role(ctx, roleidx)->service != NULL);
 }

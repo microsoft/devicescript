@@ -505,9 +505,22 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
     }
 
     if (htp == DEVS_HANDLE_TYPE_ROLE) {
-        const void *r = devs_role_spec(ctx, devs_handle_value(v));
-        if (r == NULL)
-            devs_runtime_failure(ctx, 60172);
+        unsigned roleidx = devs_handle_value(v);
+        devs_map_t *m = ctx->roles[roleidx].attached;
+        const void *r = m;
+        if (!m) {
+            r = devs_role_spec(ctx, roleidx);
+            if (r == NULL)
+                devs_runtime_failure(ctx, 60172);
+            if (attach_flags & ATTACH_RW) {
+                m = devs_map_try_alloc(ctx);
+                if (m != NULL) {
+                    ctx->roles[roleidx].attached = m;
+                    m->proto = r;
+                }
+                r = m;
+            }
+        }
         return r;
     }
 
@@ -558,12 +571,10 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
 
     if (!map && (attach_flags & ATTACH_RW)) {
         map = *attached = devs_map_try_alloc(ctx);
-        if (map == NULL) {
-            devs_runtime_failure(ctx, 60131);
+        if (map == NULL)
             return NULL;
-        } else {
+        else
             map->proto = devs_object_get_built_in(ctx, builtin);
-        }
     }
 
     if (map || (attach_flags & ATTACH_ENUM))
