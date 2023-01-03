@@ -44,6 +44,8 @@ void fun2_Math_max(devs_ctx_t *ctx);
 void fun2_Object_assign(devs_ctx_t *ctx);
 void fun1_Object_keys(devs_ctx_t *ctx);
 void fun1_Object_values(devs_ctx_t *ctx);
+// impl_register.c
+void meth0_DsRegister_read(devs_ctx_t *ctx);
 // impl_role.c
 value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self);
 // impl_string.c
@@ -90,14 +92,18 @@ static const devs_builtin_proto_entry_t Object_entries[] = { //
     {N(VALUES), 50030},
     {0, 0}};
 
+static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
+    {N(READ), 50031},
+    {0, 0}};
+
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 50031},
+    {N(ISCONNECTED), 50032},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50032},
-    {N(CHARCODEAT), 50033},
-    {N(CHARAT), 50034},
+    {N(LENGTH), 50033},
+    {N(CHARCODEAT), 50034},
+    {N(CHARAT), 50035},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -109,12 +115,14 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
                                                 Function_prototype_entries},
     [DEVS_BUILTIN_OBJECT_MATH] = {DEVS_BUILTIN_PROTO_INIT, Math_entries},
     [DEVS_BUILTIN_OBJECT_OBJECT] = {DEVS_BUILTIN_PROTO_INIT, Object_entries},
+    [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT,
+                                                  DsRegister_prototype_entries},
     [DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Role_prototype_entries},
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 35;
-const devs_builtin_function_t devs_builtin_functions[35] = {
+uint16_t devs_num_builtin_functions = 36;
+const devs_builtin_function_t devs_builtin_functions[36] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
@@ -146,6 +154,7 @@ const devs_builtin_function_t devs_builtin_functions[35] = {
     {N(ASSIGN), 2, NO_SELF, {.meth = fun2_Object_assign}},
     {N(KEYS), 1, NO_SELF, {.meth = fun1_Object_keys}},
     {N(VALUES), 1, NO_SELF, {.meth = fun1_Object_values}},
+    {N(READ), 0, 0, {.meth = meth0_DsRegister_read}},
     {N(ISCONNECTED), 0, PROP, {.prop = prop_Role_isConnected}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},
