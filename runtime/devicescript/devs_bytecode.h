@@ -179,6 +179,7 @@
 #define DEVS_SERVICESPEC_FLAG_DERIVE_MASK 0x000f
 #define DEVS_SERVICESPEC_FLAG_DERIVE_BASE 0x0000
 #define DEVS_SERVICESPEC_FLAG_DERIVE_SENSOR 0x0001
+#define DEVS_SERVICESPEC_FLAG_DERIVE_LAST 0x0001
 
 #define DEVS_PACKETSPEC_FLAG___MAX 1
 #define DEVS_PACKETSPEC_FLAG_MULTI_FIELD 0x01
@@ -227,7 +228,7 @@
 #define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 21
 #define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 22
 
-#define DEVS_BUILTIN_STRING___MAX 87
+#define DEVS_BUILTIN_STRING___MAX 88
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -316,6 +317,7 @@
 #define DEVS_BUILTIN_STRING_ASSIGN 85
 #define DEVS_BUILTIN_STRING_KEYS 86
 #define DEVS_BUILTIN_STRING_VALUES 87
+#define DEVS_BUILTIN_STRING___FUNC__ 88
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -348,7 +350,7 @@
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
         "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
-        "object", "parseInt", "parseFloat", "assign", "keys", "values"
+        "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \

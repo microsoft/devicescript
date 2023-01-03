@@ -6,13 +6,16 @@ typedef struct {
     uint16_t builtin_function_idx; // 0xfXXX
 } devs_builtin_proto_entry_t;
 
+typedef void (*devs_method_cb_t)(devs_ctx_t *ctx);
+typedef value_t (*devs_prop_cb_t)(devs_ctx_t *ctx, value_t self);
+
 typedef struct {
     uint16_t builtin_string_id; // DEVS_BUILTIN_STRING_xxx
     uint8_t num_args;
     uint8_t flags; // DEVS_BUILTIN_FLAG_
     union {
-        void (*meth)(devs_ctx_t *ctx);
-        value_t (*prop)(devs_ctx_t *ctx, value_t self);
+        devs_method_cb_t meth;
+        devs_prop_cb_t prop;
     } handler;
 } devs_builtin_function_t;
 

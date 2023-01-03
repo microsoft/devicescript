@@ -46,13 +46,8 @@ static value_t proto_value(devs_ctx_t *ctx, const devs_builtin_proto_entry_t *p)
 }
 
 void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_proto_t *src) {
-    if (devs_is_map(src)) {
-        devs_map_t *srcmap = (devs_map_t *)src;
-        unsigned len2 = srcmap->length * 2;
-        value_t *data = srcmap->data;
-        for (unsigned i = 0; i < len2; i += 2) {
-            devs_map_set(ctx, dst, data[i], data[i + 1]);
-        }
+    if (devs_is_service_spec(ctx, src)) {
+        TODO();
     } else if (devs_is_builtin_proto(src)) {
         const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;
         const devs_builtin_proto_entry_t *p = proto->entries;
@@ -61,24 +56,21 @@ void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_prot
             p++;
         }
     } else {
-        TODO();
+        JD_ASSERT(devs_is_map(src));
+        devs_map_t *srcmap = (devs_map_t *)src;
+        unsigned len2 = srcmap->length * 2;
+        value_t *data = srcmap->data;
+        for (unsigned i = 0; i < len2; i += 2) {
+            devs_map_set(ctx, dst, data[i], data[i + 1]);
+        }
     }
 }
 
 void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, devs_array_t *arr,
                              bool keys) {
     unsigned dp = arr->length;
-    if (devs_is_map(src)) {
-        devs_map_t *srcmap = (devs_map_t *)src;
-        unsigned len2 = srcmap->length * 2;
-        value_t *data = srcmap->data;
-        if (devs_array_insert(ctx, arr, dp, srcmap->length)) {
-            devs_runtime_failure(ctx, 60170);
-            return;
-        }
-        for (unsigned i = 0; i < len2; i += 2) {
-            arr->data[dp++] = keys ? data[i] : data[i + 1];
-        }
+    if (devs_is_service_spec(ctx, src)) {
+        TODO();
     } else if (devs_is_builtin_proto(src)) {
         const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;
         const devs_builtin_proto_entry_t *p = proto->entries;
@@ -99,7 +91,17 @@ void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, de
             p++;
         }
     } else {
-        TODO();
+        JD_ASSERT(devs_is_map(src));
+        devs_map_t *srcmap = (devs_map_t *)src;
+        unsigned len2 = srcmap->length * 2;
+        value_t *data = srcmap->data;
+        if (devs_array_insert(ctx, arr, dp, srcmap->length)) {
+            devs_runtime_failure(ctx, 60170);
+            return;
+        }
+        for (unsigned i = 0; i < len2; i += 2) {
+            arr->data[dp++] = keys ? data[i] : data[i + 1];
+        }
     }
 }
 
@@ -252,35 +254,46 @@ const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx) {
     return NULL;
 }
 
-value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key) {
-    JD_ASSERT(devs_is_service_spec(ctx, spec));
-    const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
-    unsigned num_packets = spec->num_packets;
+const devs_service_spec_t *devs_get_base_spec(devs_ctx_t *ctx, const devs_service_spec_t *spec) {
+    if (spec->service_class == JD_SERVICE_CLASS_BASE)
+        return NULL;
+    int idx = spec->flags & DEVS_SERVICESPEC_FLAG_DERIVE_MASK;
+    JD_ASSERT(idx <= DEVS_SERVICESPEC_FLAG_DERIVE_LAST);
+    return devs_img_get_service_spec(ctx->img, idx);
+}
 
-    if (devs_handle_type(key) == DEVS_HANDLE_TYPE_IMG_BUFFERISH) {
-        unsigned kidx = devs_handle_value(key);
+value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key) {
+    while (spec) {
+        JD_ASSERT(devs_is_service_spec(ctx, spec));
+        const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
+        unsigned num_packets = spec->num_packets;
+
+        if (devs_handle_type(key) == DEVS_HANDLE_TYPE_IMG_BUFFERISH) {
+            unsigned kidx = devs_handle_value(key);
+            for (unsigned i = 0; i < num_packets; ++i) {
+                if (pkts[i].name_idx == kidx)
+                    return packet_spec(ctx, &pkts[i]);
+            }
+        }
+
+        unsigned ksz;
+        const char *kptr = devs_string_get_utf8(ctx, key, &ksz);
+        if (ksz == 0)
+            return devs_undefined;
+
         for (unsigned i = 0; i < num_packets; ++i) {
-            if (pkts[i].name_idx == kidx)
+            if (devs_static_streq(ctx, pkts[i].name_idx, kptr, ksz))
                 return packet_spec(ctx, &pkts[i]);
         }
-    }
 
-    unsigned ksz;
-    const char *kptr = devs_string_get_utf8(ctx, key, &ksz);
-    if (ksz == 0)
-        return devs_undefined;
-
-    for (unsigned i = 0; i < num_packets; ++i) {
-        if (devs_static_streq(ctx, pkts[i].name_idx, kptr, ksz))
-            return packet_spec(ctx, &pkts[i]);
+        spec = devs_get_base_spec(ctx, spec);
     }
 
     return devs_undefined;
 }
 
 value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key) {
-    if (!devs_is_builtin_proto(proto))
-        return devs_spec_lookup(ctx, (const devs_service_spec_t *)proto, key);
+    JD_ASSERT(devs_is_proto(proto));
 
     const devs_builtin_proto_entry_t *p = proto->entries;
 
@@ -308,10 +321,20 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
 }
 
 // if `fn` is a static function, return `(obj, fn)` tuple
+// if `fn` is a role member and `obj` is role, return (a different) `(obj, fn)` tuple
 // otherwise return `obj`
 // it may allocate an object for the tuple, but typically it doesn't
 value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
-    if (devs_handle_type(fn) != DEVS_HANDLE_TYPE_STATIC_FUNCTION)
+    int htp = devs_handle_type(fn);
+
+    if (htp == DEVS_HANDLE_TYPE_ROLE_MEMBER && devs_handle_type(obj) == DEVS_HANDLE_TYPE_ROLE) {
+        uint32_t role = devs_handle_value(obj);
+        JD_ASSERT((role & DEVS_ROLE_MASK) == role);
+        role |= devs_handle_value(fn) & ~DEVS_ROLE_MASK;
+        return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE_MEMBER, role);
+    }
+
+    if (htp != DEVS_HANDLE_TYPE_STATIC_FUNCTION)
         return fn;
 
     unsigned fidx = devs_handle_value(fn);
@@ -421,11 +444,12 @@ static const devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp,
     // accessing prototype on static object - can't attach properties
     if (attach_flags & ATTACH_RW) {
         if (attach_flags & ATTACH_DIRECT) {
-            if (devs_is_map(r)) {
-                return r;
-            } else {
+            if (devs_is_builtin_proto(r)) {
                 devs_runtime_failure(ctx, 60169);
                 return NULL;
+            } else {
+                JD_ASSERT(devs_is_map(r));
+                return r;
             }
         } else {
             // note that in ES writing to string/... properties is no-op
@@ -567,16 +591,20 @@ value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *prot
 
     while (proto) {
         devs_map_t *map;
-        if (devs_is_map(proto)) {
+        if (devs_is_builtin_proto(proto)) {
+            ptmp = devs_proto_lookup(ctx, (const devs_builtin_proto_t *)proto, key);
+            tmp = &ptmp;
+            break;
+        } else if (devs_is_service_spec(ctx, proto)) {
+            ptmp = devs_spec_lookup(ctx, (const devs_service_spec_t *)proto, key);
+            tmp = &ptmp;
+            break;
+        } else {
+            JD_ASSERT(devs_is_map(proto));
             map = (devs_map_t *)proto;
             tmp = lookup(ctx, map, key);
             if (tmp)
                 break;
-        } else {
-            JD_ASSERT(devs_is_proto(proto));
-            ptmp = devs_proto_lookup(ctx, (const devs_builtin_proto_t *)proto, key);
-            tmp = &ptmp;
-            break;
         }
 
         proto = map->proto;
@@ -746,4 +774,13 @@ void devs_ret_int(devs_ctx_t *ctx, int v) {
 
 void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v) {
     devs_ret(ctx, devs_value_from_gc_obj(ctx, v));
+}
+
+void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata) {
+    if (devs_did_yield(f->ctx)) {
+        f->resume_cb = cb;
+        f->resume_data = userdata;
+    } else {
+        cb(f->ctx, userdata);
+    }
 }

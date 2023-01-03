@@ -262,6 +262,14 @@ void devs_fiber_run(devs_fiber_t *fiber) {
         devs_trace(ctx, DEVS_TRACE_EV_FIBER_RUN, &ev, sizeof(ev));
     }
 
+    devs_resume_cb_t cb = fiber->resume_cb;
+    if (cb) {
+        void *data = fiber->resume_data;
+        fiber->resume_cb = NULL;
+        fiber->resume_data = NULL;
+        cb(ctx, data);
+    }
+
     devs_vm_exec_opcodes(ctx);
 }
 

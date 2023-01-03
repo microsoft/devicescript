@@ -13,7 +13,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1062
+// next error 1074
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -165,9 +165,9 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
         const devs_service_spec_t *spec = specs + i;
         SET_OFF(spec);
         CHECK(1062, (void *)(spec + 1) < LAST_DESC(service_specs));
-        if (i == 0)
+        if (i == DEVS_SERVICESPEC_FLAG_DERIVE_BASE)
             CHECK(1063, spec->service_class == JD_SERVICE_CLASS_BASE);
-        if (i == 1)
+        if (i == DEVS_SERVICESPEC_FLAG_DERIVE_SENSOR)
             CHECK(1064, spec->service_class == JD_SERVICE_CLASS_SENSOR);
         unsigned off = spec->packets_offset * 4;
         CHECK(1065, off < header->service_specs.length);
@@ -176,15 +176,14 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
 
         CHECK(1067, devs_img_stridx_ok(_img, spec->name_idx));
         unsigned base_class = spec->flags & DEVS_SERVICESPEC_FLAG_DERIVE_MASK;
-        CHECK(1068, base_class == DEVS_SERVICESPEC_FLAG_DERIVE_BASE ||
-                        base_class == DEVS_SERVICESPEC_FLAG_DERIVE_SENSOR);
+        CHECK(1068, base_class <= DEVS_SERVICESPEC_FLAG_DERIVE_LAST);
         const devs_packet_spec_t *pkts = (const void *)(specs_base + off);
         for (unsigned idx = 0; idx < spec->num_packets; ++idx) {
             const devs_packet_spec_t *pkt = pkts + idx;
             SET_OFF(pkt);
             CHECK(1069, devs_img_stridx_ok(_img, pkt->name_idx));
             if (pkt->flags & DEVS_PACKETSPEC_FLAG_MULTI_FIELD) {
-                unsigned foff = pkt->numfmt_or_struct_offset * 4;
+                unsigned foff = pkt->numfmt_or_offset * 4;
                 CHECK(1070, foff + 4 < header->service_specs.length);
                 const devs_field_spec_t *fld = (const void *)(specs_base + foff);
                 bool terminated = false;

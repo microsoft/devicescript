@@ -202,7 +202,7 @@ static void stmt4_store_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
     value_t buffer = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_RW);
-    devs_buffer_op(ctx, frame, fmt0, offset, buffer, &val);
+    devs_buffer_op(ctx, fmt0, offset, buffer, &val);
 }
 
 static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -273,7 +273,7 @@ static value_t expr3_load_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
     value_t buf = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_STRING_OK);
-    return devs_buffer_op(ctx, frame, fmt0, offset, buf, NULL);
+    return devs_buffer_op(ctx, fmt0, offset, buf, NULL);
 }
 
 static value_t exprx_literal(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -447,11 +447,11 @@ static value_t exprx_builtin_object(devs_activation_t *frame, devs_ctx_t *ctx) {
         return devs_undefined;
 
     const devs_map_or_proto_t *p = devs_object_get_built_in(ctx, idx);
-    if (devs_is_map(p))
-        return devs_value_from_gc_obj(ctx, (void *)p);
-    else
+    if (devs_is_builtin_proto(p))
         return devs_value_from_handle(DEVS_HANDLE_TYPE_SPECIAL,
                                       DEVS_SPECIAL_BUILTIN_OBJ_FIRST + idx);
+    else
+        return devs_value_from_gc_obj(ctx, (void *)p);
 }
 
 static value_t expr2_index(devs_activation_t *frame, devs_ctx_t *ctx) {

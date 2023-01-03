@@ -31,7 +31,7 @@ typedef struct {
 } devs_img_header_t;
 
 #define DEVS_ROLE_BITS 15
-#define DEVS_ROLE_MASK ((1 << DEVS_ROLE_BITS) - 1)
+#define DEVS_ROLE_MASK ((1U << DEVS_ROLE_BITS) - 1)
 #define DEVS_ROLE_INVALID DEVS_ROLE_MASK
 
 typedef struct {
@@ -63,12 +63,12 @@ typedef struct {
 typedef struct {
     uint16_t name_idx; // "lightLevelError"
     uint16_t code;     // 0x1106 (reg-get)
-    uint16_t flags;
-    uint16_t numfmt_or_struct_offset;
+    uint16_t flags;    // DEVS_PACKETSPEC_FLAG_*
+    uint16_t numfmt_or_offset;
 } devs_packet_spec_t;
 
 typedef struct {
     uint16_t name_idx; // "x"
-    uint8_t numfmt;
+    uint8_t numfmt; // DEVS_FIELDSPEC_FLAG_*
     uint8_t flags;
 } devs_field_spec_t;

@@ -30,6 +30,8 @@ typedef struct devs_activation devs_activation_t;
 #define DEVS_PKT_KIND_SEND_PKT 2
 #define DEVS_PKT_KIND_LOGMSG 3
 
+typedef void (*devs_resume_cb_t)(devs_ctx_t *ctx, void *userdata);
+
 typedef struct devs_fiber {
     struct devs_fiber *next;
 
@@ -64,6 +66,9 @@ typedef struct devs_fiber {
 
     devs_activation_t *activation;
     struct devs_ctx *ctx;
+
+    devs_resume_cb_t resume_cb;
+    void *resume_data;
 } devs_fiber_t;
 
 static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
@@ -147,7 +152,7 @@ static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);
 value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code);
-// next error 60173
+// next error 60178
 static inline value_t devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
     return _devs_runtime_failure(ctx, code - 60000);
 }
@@ -188,9 +193,10 @@ void devs_fiber_free_all_fibers(devs_ctx_t *ctx);
 // vm_main.c
 void devs_vm_exec_opcodes(devs_ctx_t *ctx);
 
-value_t devs_buffer_op(devs_ctx_t *ctx, devs_activation_t *frame, uint32_t fmt0, uint32_t offset,
-                       value_t buffer, value_t *setv);
+value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t buffer,
+                       value_t *setv);
 double devs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
+value_t devs_buffer_decode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t **buf, unsigned len);
 
 void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size);
 void devs_free(devs_ctx_t *ctx, void *ptr);
@@ -218,3 +224,8 @@ void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v);
 static inline void devs_ret(devs_ctx_t *ctx, value_t v) {
     ctx->curr_fiber->ret_val = v;
 }
+
+static inline bool devs_did_yield(devs_ctx_t *ctx) {
+    return ctx->curr_fiber == NULL;
+}
+void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata);

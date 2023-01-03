@@ -98,59 +98,65 @@ static void scan_array_and_mark(devs_ctx_t *ctx, value_t *vals, unsigned length,
     }
 }
 
-static void scan_map(devs_ctx_t *ctx, devs_map_t *map, int depth) {
-    if (!map)
-        return;
-    scan_array_and_mark(ctx, map->data, map->length * 2, depth - 1);
-}
-
 static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
-    if (block == NULL)
-        return;
+    while (block) {
+        uintptr_t header = block->header;
 
-    uintptr_t header = block->header;
+        if (IS_FREE(header) || GET_TAG(header) & DEVS_GC_TAG_MASK_SCANNED)
+            return;
 
-    if (IS_FREE(header) || GET_TAG(header) & DEVS_GC_TAG_MASK_SCANNED)
-        return;
+        if (depth <= 0) {
+            LOG("mark pending");
+            block->header |= (uintptr_t)DEVS_GC_TAG_MASK_PENDING << DEVS_GC_TAG_POS;
+            return;
+        }
 
-    if (depth <= 0) {
-        LOG("mark pending");
-        block->header |= (uintptr_t)DEVS_GC_TAG_MASK_PENDING << DEVS_GC_TAG_POS;
-        return;
-    }
+        block->header |= (uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS;
+        block->header &= ~((uintptr_t)DEVS_GC_TAG_MASK_PENDING << DEVS_GC_TAG_POS);
 
-    block->header |= (uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS;
-    block->header &= ~((uintptr_t)DEVS_GC_TAG_MASK_PENDING << DEVS_GC_TAG_POS);
+        depth--;
 
-    depth--;
+        devs_map_t *map = NULL;
 
-    switch (BASIC_TAG(header)) {
-    case DEVS_GC_TAG_BUFFER:
-        scan_map(ctx, block->buffer.attached, depth);
-        break;
-    case DEVS_GC_TAG_HALF_STATIC_MAP:
-    case DEVS_GC_TAG_MAP:
-        scan_map(ctx, &block->map, depth);
-        break;
-    case DEVS_GC_TAG_ARRAY:
-        scan_map(ctx, block->array.attached, depth);
-        scan_array_and_mark(ctx, block->array.data, block->array.length, depth);
-        break;
-    case DEVS_GC_TAG_BOUND_FUNCTION:
-        scan_value(ctx, block->bound_function.this_val, depth);
-        scan_value(ctx, block->bound_function.func, depth);
-        break;
-    case DEVS_GC_TAG_ACTIVATION:
-        scan_gc_obj(ctx, (void *)block->act.closure, depth);
-        scan_array(ctx, block->act.slots, block->act.func->num_slots, depth);
-        break;
-    case DEVS_GC_TAG_STRING:
-    case DEVS_GC_TAG_BYTES:
-    case DEVS_GC_TAG_BUILTIN_PROTO:
-        break;
-    default:
-        JD_PANIC();
-        break;
+        switch (BASIC_TAG(header)) {
+        case DEVS_GC_TAG_BUFFER:
+            map = block->buffer.attached;
+            break;
+        case DEVS_GC_TAG_HALF_STATIC_MAP:
+        case DEVS_GC_TAG_MAP:
+            map = &block->map;
+            break;
+        case DEVS_GC_TAG_ARRAY:
+            scan_array_and_mark(ctx, block->array.data, block->array.length, depth);
+            map = block->array.attached;
+            break;
+        case DEVS_GC_TAG_BOUND_FUNCTION:
+            scan_value(ctx, block->bound_function.this_val, depth);
+            scan_value(ctx, block->bound_function.func, depth);
+            break;
+        case DEVS_GC_TAG_ACTIVATION:
+            scan_gc_obj(ctx, (void *)block->act.closure, depth);
+            scan_array(ctx, block->act.slots, block->act.func->num_slots, depth);
+            break;
+        case DEVS_GC_TAG_STRING:
+        case DEVS_GC_TAG_BYTES:
+        case DEVS_GC_TAG_BUILTIN_PROTO:
+            break;
+        default:
+            JD_PANIC();
+            break;
+        }
+
+        if (map) {
+            scan_array_and_mark(ctx, map->data, map->length * 2, depth);
+            if (map->proto && !devs_is_builtin_proto(map->proto) &&
+                !devs_is_service_spec(ctx, map->proto))
+                block = (void *)map->proto;
+            else
+                break;
+        } else {
+            break;
+        }
     }
 }
 

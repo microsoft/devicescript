@@ -41,6 +41,10 @@ static inline const devs_packet_spec_t *devs_img_get_packet_spec(devs_img_t img,
     return (const devs_packet_spec_t *)(img.data + img.header->service_specs.start + offset * 4);
 }
 
+static inline const devs_field_spec_t *devs_img_get_field_spec(devs_img_t img, unsigned offset) {
+    return (const devs_field_spec_t *)(img.data + img.header->service_specs.start + offset * 4);
+}
+
 static inline value_t devs_img_get_float(devs_img_t img, uint32_t idx) {
     value_t v;
     memcpy(&v, img.data + img.header->float_literals.start + idx * sizeof(value_t),
