@@ -44,6 +44,14 @@ void fun2_Math_max(devs_ctx_t *ctx);
 void fun2_Object_assign(devs_ctx_t *ctx);
 void fun1_Object_keys(devs_ctx_t *ctx);
 void fun1_Object_values(devs_ctx_t *ctx);
+// impl_packet.c
+value_t prop_Packet_role(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_deviceId(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_shortId(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_serviceIndex(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_serviceCommand(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_payload(devs_ctx_t *ctx, value_t self);
+void meth0_Packet_decode(devs_ctx_t *ctx);
 // impl_register.c
 void meth0_DsRegister_read(devs_ctx_t *ctx);
 void methX_DsRegister_write(devs_ctx_t *ctx);
@@ -93,19 +101,23 @@ static const devs_builtin_proto_entry_t Object_entries[] = { //
     {N(VALUES), 50030},
     {0, 0}};
 
+static const devs_builtin_proto_entry_t Packet_prototype_entries[] = { //
+    {N(ROLE), 50031},           {N(DEVICEID), 50032}, {N(SHORTID), 50033}, {N(SERVICEINDEX), 50034},
+    {N(SERVICECOMMAND), 50035}, {N(PAYLOAD), 50036},  {N(DECODE), 50037},  {0, 0}};
+
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50031},
-    {N(WRITE), 50032},
+    {N(READ), 50038},
+    {N(WRITE), 50039},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 50033},
+    {N(ISCONNECTED), 50040},
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50034},
-    {N(CHARCODEAT), 50035},
-    {N(CHARAT), 50036},
+    {N(LENGTH), 50041},
+    {N(CHARCODEAT), 50042},
+    {N(CHARAT), 50043},
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -117,14 +129,15 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
                                                 Function_prototype_entries},
     [DEVS_BUILTIN_OBJECT_MATH] = {DEVS_BUILTIN_PROTO_INIT, Math_entries},
     [DEVS_BUILTIN_OBJECT_OBJECT] = {DEVS_BUILTIN_PROTO_INIT, Object_entries},
+    [DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Packet_prototype_entries},
     [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT,
                                                   DsRegister_prototype_entries},
     [DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, Role_prototype_entries},
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, String_prototype_entries},
 };
 
-uint16_t devs_num_builtin_functions = 37;
-const devs_builtin_function_t devs_builtin_functions[37] = {
+uint16_t devs_num_builtin_functions = 44;
+const devs_builtin_function_t devs_builtin_functions[44] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
@@ -156,6 +169,13 @@ const devs_builtin_function_t devs_builtin_functions[37] = {
     {N(ASSIGN), 2, NO_SELF, {.meth = fun2_Object_assign}},
     {N(KEYS), 1, NO_SELF, {.meth = fun1_Object_keys}},
     {N(VALUES), 1, NO_SELF, {.meth = fun1_Object_values}},
+    {N(ROLE), 0, PROP, {.prop = prop_Packet_role}},
+    {N(DEVICEID), 0, PROP, {.prop = prop_Packet_deviceId}},
+    {N(SHORTID), 0, PROP, {.prop = prop_Packet_shortId}},
+    {N(SERVICEINDEX), 0, PROP, {.prop = prop_Packet_serviceIndex}},
+    {N(SERVICECOMMAND), 0, PROP, {.prop = prop_Packet_serviceCommand}},
+    {N(PAYLOAD), 0, PROP, {.prop = prop_Packet_payload}},
+    {N(DECODE), 0, 0, {.meth = meth0_Packet_decode}},
     {N(READ), 0, 0, {.meth = meth0_DsRegister_read}},
     {N(WRITE), 0, 0, {.meth = methX_DsRegister_write}},
     {N(ISCONNECTED), 0, PROP, {.prop = prop_Role_isConnected}},

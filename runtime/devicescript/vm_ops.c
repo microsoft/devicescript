@@ -353,7 +353,7 @@ static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) 
     }
 }
 
-static bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a) {
+bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a) {
     if (a < devs_img_num_roles(ctx->img))
         return true;
     devs_runtime_failure(ctx, 60111);
@@ -477,6 +477,7 @@ static const uint8_t typeof_map[] = {
     [DEVS_OBJECT_TYPE_FIBER] = DEVS_BUILTIN_STRING_OBJECT,
     [DEVS_OBJECT_TYPE_FUNCTION] = DEVS_BUILTIN_STRING_FUNCTION,
     [DEVS_OBJECT_TYPE_STRING] = DEVS_BUILTIN_STRING_STRING,
+    [DEVS_OBJECT_TYPE_PACKET] = DEVS_BUILTIN_STRING_OBJECT,
 };
 
 static value_t expr1_typeof_str(devs_activation_t *frame, devs_ctx_t *ctx) {

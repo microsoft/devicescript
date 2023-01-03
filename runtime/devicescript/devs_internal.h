@@ -203,6 +203,8 @@ value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t 
 double devs_read_number(void *data, unsigned bufsz, uint16_t fmt0);
 value_t devs_buffer_decode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t **buf, unsigned len);
 unsigned devs_buffer_encode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t *data, unsigned len, value_t v);
+value_t devs_packet_decode(devs_ctx_t *ctx, const devs_packet_spec_t *pkt, uint8_t *dp,
+                           unsigned len);
 
 void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size);
 void devs_free(devs_ctx_t *ctx, void *ptr);
@@ -239,3 +241,5 @@ void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata);
 static inline jd_role_t *devs_role(devs_ctx_t *ctx, unsigned roleidx) {
     return ctx->roles[roleidx].role;
 }
+
+bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a);

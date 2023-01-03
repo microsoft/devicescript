@@ -99,12 +99,12 @@
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
     "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41\x60\x12"
 #define DEVS_OP_TYPES                                                                              \
-    "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x01\x0a\x0a" \
-    "\x01\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01" \
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x06\x0c\x0c\x0c\x0c\x01\x0c\x0c\x0c\x01\x0b\x0b" \
+    "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0b\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01\x0a\x0b"
+    "\x06\x06\x06\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x01\x07\x01\x01\x0c\x0b\x08\x01\x01\x01\x0b\x0c"
 
-#define DEVS_IMG_VERSION 0x02000000
+#define DEVS_IMG_VERSION 0x02010000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 9
@@ -188,7 +188,7 @@
 #define DEVS_FIELDSPEC_FLAG_IS_BYTES 0x01
 #define DEVS_FIELDSPEC_FLAG_STARTS_REPEATS 0x02
 
-#define DEVS_OBJECT_TYPE___MAX 11
+#define DEVS_OBJECT_TYPE___MAX 12
 #define DEVS_OBJECT_TYPE_NULL 0
 #define DEVS_OBJECT_TYPE_NUMBER 1
 #define DEVS_OBJECT_TYPE_MAP 2
@@ -199,10 +199,11 @@
 #define DEVS_OBJECT_TYPE_FIBER 7
 #define DEVS_OBJECT_TYPE_FUNCTION 8
 #define DEVS_OBJECT_TYPE_STRING 9
-#define DEVS_OBJECT_TYPE_ANY 10
-#define DEVS_OBJECT_TYPE_VOID 11
+#define DEVS_OBJECT_TYPE_PACKET 10
+#define DEVS_OBJECT_TYPE_ANY 11
+#define DEVS_OBJECT_TYPE_VOID 12
 
-#define DEVS_BUILTIN_OBJECT___MAX 22
+#define DEVS_BUILTIN_OBJECT___MAX 24
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
@@ -227,8 +228,10 @@
 #define DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE 20
 #define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 21
 #define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 22
+#define DEVS_BUILTIN_OBJECT_PACKET 23
+#define DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE 24
 
-#define DEVS_BUILTIN_STRING___MAX 88
+#define DEVS_BUILTIN_STRING___MAX 96
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -318,6 +321,14 @@
 #define DEVS_BUILTIN_STRING_KEYS 86
 #define DEVS_BUILTIN_STRING_VALUES 87
 #define DEVS_BUILTIN_STRING___FUNC__ 88
+#define DEVS_BUILTIN_STRING_ROLE 89
+#define DEVS_BUILTIN_STRING_DEVICEID 90
+#define DEVS_BUILTIN_STRING_SHORTID 91
+#define DEVS_BUILTIN_STRING_SERVICEINDEX 92
+#define DEVS_BUILTIN_STRING_SERVICECOMMAND 93
+#define DEVS_BUILTIN_STRING_PAYLOAD 94
+#define DEVS_BUILTIN_STRING_DECODE 95
+#define DEVS_BUILTIN_STRING_ENCODE 96
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -350,10 +361,11 @@
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
         "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
-        "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__"
+        "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
+        "deviceId", "shortId", "serviceIndex", "serviceCommand", "payload", "decode", "encode"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array_prototype", "Buffer", "Buffer_prototype",         \
         "String", "String_prototype", "Number", "Number_prototype", "Fiber", "Fiber_prototype",    \
         "Role", "Role_prototype", "Function", "Function_prototype", "Boolean",                     \
         "Boolean_prototype", "DeviceScript", "DsRegister_prototype", "DsCommand_prototype",        \
-        "DsEvent_prototype", "DsReport_prototype"
+        "DsEvent_prototype", "DsReport_prototype", "Packet", "Packet_prototype"

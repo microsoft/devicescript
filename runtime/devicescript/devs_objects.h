@@ -62,6 +62,18 @@ typedef struct {
     value_t func;
 } devs_bound_function_t;
 
+typedef struct {
+    devs_gc_object_t gc;
+    uint64_t device_id;
+    uint16_t service_command;
+    uint16_t roleidx;
+    uint8_t flags;
+    uint8_t service_index;
+    devs_map_t *attached;
+    devs_buffer_t *payload;
+} devs_packet_t;
+
+
 void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v);
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 int devs_map_delete(devs_ctx_t *ctx, devs_map_t *map, value_t key);
@@ -139,6 +151,7 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_BOUND_FUNCTION 0x7
 #define DEVS_GC_TAG_ACTIVATION 0x8
 #define DEVS_GC_TAG_HALF_STATIC_MAP 0x9
+#define DEVS_GC_TAG_PACKET 0xA
 #define DEVS_GC_TAG_BUILTIN_PROTO 0xf // these are not in GC heap!
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 

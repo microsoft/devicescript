@@ -13,9 +13,9 @@ static const devs_packet_spec_t *devs_arg_self_reg(devs_ctx_t *ctx, unsigned *ro
     return pkt;
 }
 
-value_t devs_packet_decode(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
-    uint8_t *dp = ctx->packet.data;
-    uint8_t *ep = ctx->packet.data + ctx->packet.service_size;
+value_t devs_packet_decode(devs_ctx_t *ctx, const devs_packet_spec_t *pkt, uint8_t *dp,
+                           unsigned len) {
+    uint8_t *ep = dp + len;
 
     if (pkt->flags & DEVS_PACKETSPEC_FLAG_MULTI_FIELD) {
         devs_array_t *arr = devs_array_try_alloc(ctx, 0);
@@ -60,7 +60,7 @@ value_t devs_packet_decode(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
 }
 
 static void DsRegister_read_cont(devs_ctx_t *ctx, void *userdata) {
-    devs_ret(ctx, devs_packet_decode(ctx, userdata));
+    devs_ret(ctx, devs_packet_decode(ctx, userdata, ctx->packet.data, ctx->packet.service_size));
 }
 
 void meth0_DsRegister_read(devs_ctx_t *ctx) {

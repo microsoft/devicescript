@@ -146,6 +146,12 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
             return devs_builtin_string(DEVS_BUILTIN_STRING_FUNCTION); // TODO?
         case DEVS_GC_TAG_BUFFER:
             return buffer_to_string(ctx, v);
+        case DEVS_GC_TAG_PACKET: {
+            devs_packet_t *pkt = devs_handle_ptr_value(ctx, v);
+            return devs_string_sprintf(ctx, "[Packet: %s cmd=0x%x sz=%d]",
+                                       devs_img_role_name(ctx->img, pkt->roleidx),
+                                       pkt->service_command, pkt->payload->length);
+        }
         case DEVS_GC_TAG_HALF_STATIC_MAP:
         case DEVS_GC_TAG_MAP:
             return devs_builtin_string(DEVS_BUILTIN_STRING_MAP);

@@ -81,6 +81,9 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
         case DEVS_GC_TAG_STRING:
             fmt = "string";
             break;
+        case DEVS_GC_TAG_PACKET:
+            fmt = "packet";
+            break;
         case DEVS_GC_TAG_HALF_STATIC_MAP:
         case DEVS_GC_TAG_MAP:
             fmt = "map";

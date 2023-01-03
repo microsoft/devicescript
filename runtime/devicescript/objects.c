@@ -554,6 +554,10 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
         attached = &((devs_array_t *)obj)->attached;
         builtin = DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE;
         break;
+    case DEVS_GC_TAG_PACKET:
+        attached = &((devs_packet_t *)obj)->attached;
+        builtin = DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE;
+        break;
     case DEVS_GC_TAG_HALF_STATIC_MAP:
     case DEVS_GC_TAG_MAP:
         return (devs_map_or_proto_t *)obj;

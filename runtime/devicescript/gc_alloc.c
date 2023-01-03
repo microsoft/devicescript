@@ -33,6 +33,7 @@ typedef struct _devs_gc_block_t {
         devs_map_t map;
         devs_activation_t act;
         devs_bound_function_t bound_function;
+        devs_packet_t pkt;
     };
 } block_t;
 
@@ -99,6 +100,8 @@ static void scan_array_and_mark(devs_ctx_t *ctx, value_t *vals, unsigned length,
 }
 
 static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
+    depth--;
+
     while (block) {
         uintptr_t header = block->header;
 
@@ -114,8 +117,6 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
         block->header |= (uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS;
         block->header &= ~((uintptr_t)DEVS_GC_TAG_MASK_PENDING << DEVS_GC_TAG_POS);
 
-        depth--;
-
         devs_map_t *map = NULL;
 
         switch (BASIC_TAG(header)) {
@@ -129,6 +130,10 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
         case DEVS_GC_TAG_ARRAY:
             scan_array_and_mark(ctx, block->array.data, block->array.length, depth);
             map = block->array.attached;
+            break;
+        case DEVS_GC_TAG_PACKET:
+            scan_gc_obj(ctx, (block_t *)block->pkt.payload, depth);
+            map = block->pkt.attached;
             break;
         case DEVS_GC_TAG_BOUND_FUNCTION:
             scan_value(ctx, block->bound_function.this_val, depth);
