@@ -227,6 +227,14 @@ function testArray() {
     isEq(arr.length, 5)
     isEq(arr[3], undefined)
     isEq(arr[4], 12)
+
+    arr = []
+    arr.push(10)
+    isEq(arr.length, 1)
+    isEq(arr[0], 10)
+    isEq(arr[1], null)
+    isEq(arr.push(20), 2)
+    isEq(arr[1], 20)
 }
 
 function testObjInner(x: any) {

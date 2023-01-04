@@ -102,10 +102,12 @@ const coreModule = "@devicescript/core"
 
 const builtInObjByName: Record<string, BuiltInObject> = {
     "#ds.": BuiltInObject.DEVICESCRIPT,
+    "#ArrayConstructor.prototype": BuiltInObject.ARRAY_PROTOTYPE,
 }
 BUILTIN_OBJECT__VAL.forEach((n, i) => {
+    n = n.replace(/_prototype$/, ".prototype")
     if (n.indexOf("_") < 0 && i != BuiltInObject.DEVICESCRIPT)
-        builtInObjByName["#" + n] = i
+        builtInObjByName["#" + n.replace(/^Ds/, "ds.")] = i
 })
 
 class Cell {
@@ -392,7 +394,6 @@ class Procedure {
     users: ts.Node[] = []
     skipAccounting = false
     retType = ValueType.VOID
-    usesThis = false
     parentProc: Procedure
     nestedProcs: Procedure[] = []
     mapVarOffset: (n: number) => number
@@ -414,13 +415,18 @@ class Procedure {
     toString() {
         return this.writer.getAssembly()
     }
+    get usesThis() {
+        const p = this.params.list[0] as Variable
+        return p?.vkind == VariableKind.ThisParam
+    }
     finalize() {
-        if (this.mapVarOffset) return
+        if (this.mapVarOffset) return false
         this.mapVarOffset = this.writer.patchLabels(
             this.locals.list.length,
             this.numargs,
             this.usesThis
         )
+        return true
     }
     args() {
         return this.params.list.slice() as Variable[]
@@ -1236,18 +1242,8 @@ class Program implements TopOpWriter {
         return proc
     }
 
-    private emitFunctionBody(
-        stmt: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
-        proc: Procedure
-    ) {
-        if (ts.isBlock(stmt.body)) {
-            this.emitStmt(stmt.body)
-            this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
-        } else {
-            this.writer.emitStmt(Op.STMT1_RETURN, this.emitExpr(stmt.body))
-        }
-
-        proc.finalize()
+    private finalizeProc(proc: Procedure) {
+        if (!proc.finalize()) return
         for (const p of proc.nestedProcs) {
             if (
                 p.sourceNode &&
@@ -1258,6 +1254,21 @@ class Program implements TopOpWriter {
                 this.emitFunction(p.sourceNode, p)
             else oops("bad sourceNode")
         }
+    }
+
+    private emitFunctionBody(
+        stmt: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
+        proc: Procedure
+    ) {
+        if (ts.isBlock(stmt.body)) {
+            this.emitStmt(stmt.body)
+            if (!this.writer.justHadReturn())
+                this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
+        } else {
+            this.writer.emitStmt(Op.STMT1_RETURN, this.emitExpr(stmt.body))
+        }
+
+        this.finalizeProc(proc)
     }
 
     private addParameter(
@@ -1272,6 +1283,7 @@ class Program implements TopOpWriter {
         )
         if (typeof id == "string") v._name = id
         else this.assignCell(id, v)
+        if (v.getName() == "this") v.vkind = VariableKind.ThisParam
         return v
     }
 
@@ -1316,21 +1328,16 @@ class Program implements TopOpWriter {
     }
 
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
-        const sig = this.checker.getSignatureFromDeclaration(stmt)
-        for (const pp of sig.parameters) {
-            const paramdef = pp.declarations?.[0] as ts.ParameterDeclaration
-            if (paramdef?.kind != SK.Parameter)
+        for (const paramdef of stmt.parameters) {
+            if (paramdef.kind != SK.Parameter)
                 throwError(
-                    paramdef ?? stmt,
+                    paramdef,
                     "only simple identifiers supported as parameters"
                 )
             const v = this.addParameter(proc, paramdef)
-            v.valueType = this.mapType(
-                paramdef,
-                this.checker.getTypeOfSymbolAtLocation(pp, paramdef)
-            )
+            v.valueType = ValueType.ANY
         }
-        proc.retType = this.mapType(stmt, sig.getReturnType())
+        proc.retType = ValueType.ANY
     }
 
     private getClientCommandProc(cc: ClientCommand) {
@@ -2575,7 +2582,11 @@ class Program implements TopOpWriter {
     }
 
     private getCellAtLocation(node: ts.Node) {
-        return symCell(this.getSymAtLocation(node))
+        let sym: ts.Symbol
+        if (node?.parent?.kind == SK.ShorthandPropertyAssignment)
+            sym = this.checker.getShorthandAssignmentValueSymbol(node.parent)
+        else sym = this.getSymAtLocation(node)
+        return symCell(sym)
     }
 
     private getClosureLevel(variable: Variable) {
@@ -2707,11 +2718,11 @@ class Program implements TopOpWriter {
                     return this.writer.emitBuiltInObject(
                         builtInObjByName[nodeName]
                     )
+                // console.log("N", nodeName)
                 if (nodeName.startsWith("#ds.")) {
                     const idx = BUILTIN_STRING__VAL.indexOf(nodeName.slice(4))
                     if (idx >= 0) return this.writer.dsMember(idx)
                 }
-                // console.log("N", nodeName)
                 return null
         }
     }
@@ -2840,8 +2851,8 @@ class Program implements TopOpWriter {
         if (reqTp == ValueType.ANY && this.isSimpleValue(v.valueType)) return
         if (v.valueType == ValueType.ANY || v.valueType == ValueType.NULL)
             return
-        if (!v.valueType.equals(reqTp))
-            throwError(node, `cannot convert ${v.valueType} to ${reqTp}`)
+        // if (!v.valueType.equals(reqTp))
+        //    throwError(node, `cannot convert ${v.valueType} to ${reqTp}`)
     }
 
     private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
@@ -3337,6 +3348,8 @@ class Program implements TopOpWriter {
 
     private emitExpr(expr: Expr): Value {
         switch (expr.kind) {
+            case SK.AsExpression:
+                return this.emitExpr((expr as ts.AsExpression).expression)
             case SK.CallExpression:
                 return this.emitCallExpression(expr as ts.CallExpression)
             case SK.FalseKeyword:
@@ -3473,6 +3486,7 @@ class Program implements TopOpWriter {
                 case SK.ExportDeclaration:
                 case SK.InterfaceDeclaration:
                 case SK.ModuleDeclaration:
+                case SK.EmptyStatement:
                     return // ignore
                 case SK.ImportDeclaration:
                     return // ignore
@@ -3528,9 +3542,14 @@ class Program implements TopOpWriter {
             r => r.spec.classIdentifier + "",
             r => r.spec
         )
-        usedSpecs.unshift(this.serviceSpecs["sensor"])
-        usedSpecs.unshift(this.serviceSpecs["base"])
-        // usedSpecs = Object.values(this.serviceSpecs)
+        if (false)
+            usedSpecs = Object.values(this.serviceSpecs).filter(
+                s => s.shortId[0] != "_"
+            )
+        if (usedSpecs.length) {
+            usedSpecs.unshift(this.serviceSpecs["sensor"])
+            usedSpecs.unshift(this.serviceSpecs["base"])
+        }
         const numSpecs = usedSpecs.length
         const specWriter = new SectionWriter()
 
@@ -3835,7 +3854,7 @@ class Program implements TopOpWriter {
 
         this.finalizeCloudMethods()
         this.finalizeDispatchers()
-        for (const p of this.procs) p.finalize()
+        for (const p of this.procs) this.finalizeProc(p)
 
         // early assembly dump, in case serialization fails
         if (this.numErrors == 0)

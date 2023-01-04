@@ -10,6 +10,31 @@ declare module "@devicescript/core" {
         // TODO: is there a way to unregister an event?
         onConnected(handler: () => void): void
         onDisconnected(handler: () => void): void
+
+        onPacket: (pkt: Packet) => void
+
+        _changeHandlers: any
+    }
+
+    export class Packet {
+        role: Role
+        deviceIdentifier: string
+        shortId: string
+        serviceIndex: number
+        serviceCommand: number
+        payload: Buffer
+        decode(): any
+
+        flags: number
+        isReport: boolean
+        isCommand: boolean
+
+        isEvent: boolean
+        eventCode: number
+
+        isRegSet: boolean
+        isRegGet: boolean
+        regCode: number
     }
 
     /**
@@ -21,7 +46,11 @@ declare module "@devicescript/core" {
      * A base class for register clients.
      */
     // TODO: support for "isImplemented?"
-    export class Register extends PacketInfo {}
+    export class Register extends PacketInfo {
+        name: string
+        code: number
+        role: Role
+    }
 
     /**
      * A client for a register that holds a numerical value.
@@ -99,8 +128,8 @@ declare module "@devicescript/core" {
     }
 
     export class RegisterArray extends Register {
-        read(): number[]
-        write(value: number[]): void
+        read(): any[]
+        write(value: any[]): void
     }
 
     export class Event extends PacketInfo {
@@ -194,7 +223,6 @@ declare module "@devicescript/core" {
 
             toString(): string
         }
-
 
         /**
          * Converts a string to an integer.

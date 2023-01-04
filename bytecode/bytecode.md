@@ -239,7 +239,7 @@ Return reference to "buffer" with the packet data.
 
 ## Format Constants
 
-    img_version = 0x02_00_0000
+    img_version = 0x02_01_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9
@@ -344,6 +344,7 @@ Format is `["u", "i", "f", "reserved"](fmt >> 2)`
     derive_mask = 0x000f
     derive_base = 0x0000
     derive_sensor = 0x0001
+    derive_last = 0x0001
 
 ## Enum: PacketSpec_Flag
 
@@ -382,11 +383,13 @@ Only `true` and `false` values.
 
     string = 9
 
+    packet = 10
+
 ### Object_Types only used in static type info
 
-    any = 10
+    any = 11
 
-    void = 11
+    void = 12
 
 ## Enum: BuiltIn_Object
 
@@ -394,26 +397,29 @@ Only `true` and `false` values.
     Object = 1
     Object_prototype = 2
     Array = 3
-    Array_prototype = 3
-    Buffer = 4
-    Buffer_prototype = 5
-    String = 6
-    String_prototype = 7
-    Number = 8
-    Number_prototype = 9
-    Fiber = 10
-    Fiber_prototype = 11
-    Role = 12
-    Role_prototype = 13
-    Function = 14
-    Function_prototype = 15
-    Boolean = 16
-    Boolean_prototype = 17
-    DeviceScript = 18
-    DsRegister_prototype = 19
-    DsCommand_prototype = 20
-    DsEvent_prototype = 21
-    DsReport_prototype = 22
+    Array_prototype = 4
+    Buffer = 5
+    Buffer_prototype = 6
+    String = 7
+    String_prototype = 8
+    Number = 9
+    Number_prototype = 10
+    Fiber = 11
+    Fiber_prototype = 12
+    Role = 13
+    Role_prototype = 14
+    Function = 15
+    Function_prototype = 16
+    Boolean = 17
+    Boolean_prototype = 18
+    Packet = 19
+    Packet_prototype = 20
+    DeviceScript = 21
+    DsPacketInfo_prototype = 22
+    DsRegister_prototype = 23
+    DsCommand_prototype = 24
+    DsEvent_prototype = 25
+    DsReport_prototype = 26
 
 ## Enum: BuiltIn_String
 
@@ -506,3 +512,23 @@ Only `true` and `false` values.
     assign = 85
     keys = 86
     values = 87
+    __func__ = 88
+    role = 89
+    deviceIdentifier = 90
+    shortId = 91
+    serviceIndex = 92
+    serviceCommand = 93
+    payload = 94
+    decode = 95
+    encode = 96
+    onPacket = 97
+    code = 98
+    name = 99
+    isEvent = 100
+    eventCode = 101
+    isRegSet = 102
+    isRegGet = 103
+    regCode = 104
+    flags = 105
+    isReport = 106
+    isCommand = 107

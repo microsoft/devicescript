@@ -97,10 +97,10 @@ export enum Op {
 export const OP_PROPS =
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20\x00\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41\x60\x12"
 export const OP_TYPES =
-    "\x7f\x01\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x06\x0b\x0b\x0b\x0b\x01\x0b\x0b\x0b\x01\x0a\x0a\x01\x0a\x0b\x0a\x0a\x0a\x0a\x0a\x0b\x0b\x0b\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0a\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x01\x07\x01\x01\x0b\x0a\x08\x01\x01\x01\x0a\x0b"
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x06\x0c\x0c\x0c\x0c\x01\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x01\x07\x01\x01\x0c\x0b\x08\x01\x01\x01\x0b\x0c"
 
 export enum BinFmt {
-    IMG_VERSION = 0x02000000,
+    IMG_VERSION = 0x02010000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 9,
@@ -191,6 +191,7 @@ export enum ServiceSpecFlag {
     DERIVE_MASK = 0x000f,
     DERIVE_BASE = 0x0000,
     DERIVE_SENSOR = 0x0001,
+    DERIVE_LAST = 0x0001,
 }
 
 export enum PacketSpecFlag {
@@ -205,7 +206,7 @@ export enum FieldSpecFlag {
 }
 
 export enum ObjectType {
-    __MAX = 11,
+    __MAX = 12,
     NULL = 0,
     NUMBER = 1,
     MAP = 2,
@@ -216,40 +217,44 @@ export enum ObjectType {
     FIBER = 7,
     FUNCTION = 8,
     STRING = 9,
-    ANY = 10,
-    VOID = 11,
+    PACKET = 10,
+    ANY = 11,
+    VOID = 12,
 }
 
 export enum BuiltInObject {
-    __MAX = 22,
+    __MAX = 26,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
     ARRAY = 3,
-    ARRAY_PROTOTYPE = 3,
-    BUFFER = 4,
-    BUFFER_PROTOTYPE = 5,
-    STRING = 6,
-    STRING_PROTOTYPE = 7,
-    NUMBER = 8,
-    NUMBER_PROTOTYPE = 9,
-    FIBER = 10,
-    FIBER_PROTOTYPE = 11,
-    ROLE = 12,
-    ROLE_PROTOTYPE = 13,
-    FUNCTION = 14,
-    FUNCTION_PROTOTYPE = 15,
-    BOOLEAN = 16,
-    BOOLEAN_PROTOTYPE = 17,
-    DEVICESCRIPT = 18,
-    DSREGISTER_PROTOTYPE = 19,
-    DSCOMMAND_PROTOTYPE = 20,
-    DSEVENT_PROTOTYPE = 21,
-    DSREPORT_PROTOTYPE = 22,
+    ARRAY_PROTOTYPE = 4,
+    BUFFER = 5,
+    BUFFER_PROTOTYPE = 6,
+    STRING = 7,
+    STRING_PROTOTYPE = 8,
+    NUMBER = 9,
+    NUMBER_PROTOTYPE = 10,
+    FIBER = 11,
+    FIBER_PROTOTYPE = 12,
+    ROLE = 13,
+    ROLE_PROTOTYPE = 14,
+    FUNCTION = 15,
+    FUNCTION_PROTOTYPE = 16,
+    BOOLEAN = 17,
+    BOOLEAN_PROTOTYPE = 18,
+    PACKET = 19,
+    PACKET_PROTOTYPE = 20,
+    DEVICESCRIPT = 21,
+    DSPACKETINFO_PROTOTYPE = 22,
+    DSREGISTER_PROTOTYPE = 23,
+    DSCOMMAND_PROTOTYPE = 24,
+    DSEVENT_PROTOTYPE = 25,
+    DSREPORT_PROTOTYPE = 26,
 }
 
 export enum BuiltInString {
-    __MAX = 87,
+    __MAX = 107,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -338,6 +343,26 @@ export enum BuiltInString {
     ASSIGN = 85,
     KEYS = 86,
     VALUES = 87,
+    __FUNC__ = 88,
+    ROLE = 89,
+    DEVICEIDENTIFIER = 90,
+    SHORTID = 91,
+    SERVICEINDEX = 92,
+    SERVICECOMMAND = 93,
+    PAYLOAD = 94,
+    DECODE = 95,
+    ENCODE = 96,
+    ONPACKET = 97,
+    CODE = 98,
+    NAME = 99,
+    ISEVENT = 100,
+    EVENTCODE = 101,
+    ISREGSET = 102,
+    ISREGGET = 103,
+    REGCODE = 104,
+    FLAGS = 105,
+    ISREPORT = 106,
+    ISCOMMAND = 107,
 }
 
 export const OP_PRINT_FMTS = [
@@ -444,6 +469,7 @@ export const OBJECT_TYPE = [
     "fiber",
     "function",
     "string",
+    "packet",
     "any",
     "void",
 ]
@@ -536,11 +562,32 @@ export const BUILTIN_STRING__VAL = [
     "assign",
     "keys",
     "values",
+    "__func__",
+    "role",
+    "deviceIdentifier",
+    "shortId",
+    "serviceIndex",
+    "serviceCommand",
+    "payload",
+    "decode",
+    "encode",
+    "onPacket",
+    "code",
+    "name",
+    "isEvent",
+    "eventCode",
+    "isRegSet",
+    "isRegGet",
+    "regCode",
+    "flags",
+    "isReport",
+    "isCommand",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
     "Object",
     "Object_prototype",
+    "Array",
     "Array_prototype",
     "Buffer",
     "Buffer_prototype",
@@ -556,7 +603,10 @@ export const BUILTIN_OBJECT__VAL = [
     "Function_prototype",
     "Boolean",
     "Boolean_prototype",
+    "Packet",
+    "Packet_prototype",
     "DeviceScript",
+    "DsPacketInfo_prototype",
     "DsRegister_prototype",
     "DsCommand_prototype",
     "DsEvent_prototype",

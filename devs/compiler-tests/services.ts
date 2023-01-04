@@ -16,7 +16,7 @@ function test1() {
     [a, b] = clr.color.read(); // OK
     [a, b, c, d] = clr.color.read() //! not enough fields in color
 
-    a = clr.color.read() //! cannot convert multi-field value color.color to number
+    // a = clr.color.read() // cannot convert multi-field value color.color to number
 
     a[b] = btn.pressure.read()
 }

@@ -56,8 +56,7 @@ interface ObjectConstructor {
     values(o: {}): any[]
 }
 
-declare var Object: ObjectConstructor;
-
+declare var Object: ObjectConstructor
 
 interface Function {}
 interface CallableFunction extends Function {}
@@ -105,7 +104,19 @@ interface Array<T> {
     length: number
     [n: number]: T
     [Symbol.iterator](): IterableIterator<T>
+
+    /**
+     * Appends new element to the end of an array, and returns the new length of the array.
+     * @param item New element to add to the array.
+     */
+    push(item: T): number
 }
+
+interface ArrayConstructor {
+    isArray(arg: any): arg is any[]
+    readonly prototype: any[]
+}
+declare var Array: ArrayConstructor
 
 declare namespace console {
     function log(...args: any[]): void

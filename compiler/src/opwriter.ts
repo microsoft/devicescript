@@ -219,7 +219,6 @@ export enum VariableKind {
     Cached,
     Local,
 }
-const VAR_PARAM_OFF = 1
 const VAR_CACHED_OFF = 30
 const VAR_LOCAL_OFF = 100
 
@@ -231,7 +230,6 @@ export function packVarIndex(vk: VariableKind, idx: number) {
             assert(idx == 0)
             return idx
         case VariableKind.Parameter:
-            idx += VAR_PARAM_OFF
             assert(idx < VAR_CACHED_OFF)
             return idx
         case VariableKind.Cached:
@@ -264,6 +262,7 @@ export class OpWriter {
     offsetInFuncs = -1
     srcmap: number[] = []
     private nameIdx: number
+    private lastReturnLocation = -1
 
     constructor(public prog: TopOpWriter, public name: string) {
         this.top = this.mkLabel("top")
@@ -551,12 +550,8 @@ export class OpWriter {
 
         const mapVarOffset = (v: number) => {
             assert(this.cachedValues.length == cachedLen)
-            if (v == 0) {
-                // this
-                assert(hasThis && numargs > 0)
-            } else if (v < VAR_CACHED_OFF) {
+            if (v < VAR_CACHED_OFF) {
                 // regular param
-                if (!hasThis) v -= VAR_PARAM_OFF
                 assert(v < numargs)
             } else if (v < VAR_LOCAL_OFF) {
                 // cached local
@@ -678,7 +673,6 @@ export class OpWriter {
     }
 
     private saveLocalIdx(nval: number) {
-        assert(nval != 0)
         assert(nval < BinFmt.FIRST_MULTIBYTE_INT)
         this.localOffsets.push(this.location())
     }
@@ -750,6 +744,11 @@ export class OpWriter {
         for (const a of args) a.adopt()
         this.spillAllStateful() // this doesn't spill adopt()'ed Value's (our arguments)
         this.writeArgs(op, args)
+        if (op == Op.STMT1_RETURN) this.lastReturnLocation = this.location()
+    }
+
+    justHadReturn() {
+        return this.location() == this.lastReturnLocation
     }
 
     emitCall(fn: Value, ...args: Value[]) {

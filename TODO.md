@@ -1,9 +1,14 @@
 # TODO
 
-## Big ticket
+### treat roles as "normal" objects
+* `Command.__func__`
+* Role.onConnected
+* `Register.onChange` ??
+* `Event.subscribe` ??
+* `Event.wait` ??
 
+## Big ticket
 * buffer overflows when printing a lot
-* treat roles as "normal" objects
 * drop type-directed compilation
 * try/catch - devs_runtime_failure() vs devs_raise()
 

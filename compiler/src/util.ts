@@ -1,6 +1,7 @@
 import { toUTF8 } from "./jdutil"
 
 export function oops(msg: string): never {
+    debugger
     throw new Error(msg)
 }
 
