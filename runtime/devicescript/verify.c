@@ -13,7 +13,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1074
+// next error 1075
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -116,10 +116,7 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     for (const devs_function_desc_t *fptr = FIRST_DESC(functions); //
          (void *)fptr < LAST_DESC(functions);                      //
          fptr++) {
-        int numargs = fptr->num_args;
-        if (fptr->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS)
-            numargs++;
-        CHECK(1062, numargs <= fptr->num_slots);
+        CHECK(1062, fptr->num_args <= fptr->num_slots);
         sptr = (const devs_img_section_t *)fptr;
         CHECK_SECT_ALIGNED(sptr);
         MUST_CONTAIN_SECT(1021, header->functions_data, sptr);
@@ -164,7 +161,7 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     for (unsigned i = 0; i < header->num_service_specs; ++i) {
         const devs_service_spec_t *spec = specs + i;
         SET_OFF(spec);
-        CHECK(1062, (void *)(spec + 1) < LAST_DESC(service_specs));
+        CHECK(1074, (void *)(spec + 1) < LAST_DESC(service_specs));
         if (i == DEVS_SERVICESPEC_FLAG_DERIVE_BASE)
             CHECK(1063, spec->service_class == JD_SERVICE_CLASS_BASE);
         if (i == DEVS_SERVICESPEC_FLAG_DERIVE_SENSOR)
