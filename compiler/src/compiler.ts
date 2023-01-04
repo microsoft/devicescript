@@ -3323,6 +3323,9 @@ class Program implements TopOpWriter {
         const proc = new Procedure(this, n, expr)
         this.proc.addNestedProc(proc)
 
+        // this is conservative
+        if (this.proc.parentProc) this.proc.usesClosure = true
+
         return proc.referenceAsClosure(wr)
     }
 
