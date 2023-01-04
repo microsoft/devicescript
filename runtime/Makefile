@@ -9,13 +9,14 @@ CFLAGS = $(DEFINES) $(INC) \
 	-Wno-error=unused-variable
 
 _IGNORE1 := $(shell test -f jacdac-c/README.md || git submodule update --init --recursive 1>&2)
-_IGNORE2 := $(shell test -f jacdac-c/devicescript/sha-2/README.md || (cd jacdac-c && git submodule update --init --recursive 1>&2))
+_IGNORE2 := $(shell test -f devicescript/sha-2/README.md || git submodule update --init --recursive 1>&2)
+_IGNORE3 := $(shell test -f jacdac-c/network/tiny-AES-c/README.md || (cd jacdac-c && git submodule update --init --recursive 1>&2))
 
 DEPS = $(wildcard \
 	inc/*.h \
+	devicescript/*.h \
 	jacdac-c/jacdac/dist/c/*.h \
 	jacdac-c/inc/*.h \
-	jacdac-c/devicescript/*.h \
 	jacdac-c/inc/interfaces/*.h \
 	jacdac-c/services/*.h \
 	jacdac-c/services/interfaces/*.h \
@@ -26,8 +27,8 @@ LDFLAGS = -flto -g3
 BUILT = built
 JDS = jacdac-c/source
 SRC = $(wildcard posix/*.c) \
+	$(wildcard devicescript/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
-	$(wildcard jacdac-c/devicescript/*.c) \
 	$(wildcard jacdac-c/network/*.c) \
 	jacdac-c/jacdac/dist/c/jd_spec_pack.c \
 	$(wildcard $(JDS)/*.c) \
