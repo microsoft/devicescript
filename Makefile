@@ -34,7 +34,8 @@ check:
 	$(MAKE) test
 
 regen:
-	node runtime/jacdac-c/scripts/ds-builtin-proto.js \
-		runtime/jacdac-c/devicescript/devs_bytecode.h \
-		runtime/jacdac-c/devicescript/impl_*.c
-	clang-format -i runtime/jacdac-c/devicescript/protogen.c
+	cd bytecode && ./run.sh
+	node runtime/scripts/ds-builtin-proto.js \
+		runtime/devicescript/devs_bytecode.h \
+		runtime/devicescript/impl_*.c
+	clang-format -i runtime/devicescript/protogen.c
