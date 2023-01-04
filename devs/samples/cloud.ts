@@ -20,3 +20,7 @@ cloud.onMethod("bar", (a) => {
     ds.wait(5)
     return [108]
 })
+
+cloud.onMethod("bar2", () => {
+    return [108]
+})

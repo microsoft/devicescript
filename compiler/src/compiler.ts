@@ -403,6 +403,7 @@ class Procedure {
         public name: string,
         public sourceNode?: ts.Node
     ) {
+        if (!this.sourceNode) this.sourceNode = parent.lastNode
         this.index = this.parent.procs.length
         this.writer = new OpWriter(parent, `${this.name}_F${this.index}`)
         this.parent.procs.push(this)
@@ -574,6 +575,7 @@ class Program implements TopOpWriter {
     checker: ts.TypeChecker
     mainFile: ts.SourceFile
     procs: Procedure[] = []
+    lastNode: ts.Node
     floatLiterals: number[] = []
     asciiLiterals: string[] = []
     utf8Literals: string[] = []
@@ -727,7 +729,11 @@ class Program implements TopOpWriter {
 
     private roleDispatcher(role: Role) {
         if (!role.dispatcher) {
-            const proc = new Procedure(this, role.getName() + "_disp")
+            const proc = new Procedure(
+                this,
+                role.getName() + "_disp",
+                role.definition
+            )
             proc.skipAccounting = true
             role.dispatcher = {
                 proc,
@@ -1160,7 +1166,7 @@ class Program implements TopOpWriter {
         {
             const tmp = isOuter
                 ? wr.emitBufLoad(NumFmt.U32, 0)
-                : wr.emitMemRef(Op.EXPRx_LOAD_LOCAL, 1, ValueType.NUMBER)
+                : wr.emitMemRef(Op.EXPRx_LOAD_LOCAL, 0, ValueType.NUMBER)
             wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(8 + args.length * 8))
             wr.emitBufStore(tmp, NumFmt.U32, 0)
             wr.emitBufStore(literal(code), NumFmt.U32, 4)
@@ -1243,7 +1249,12 @@ class Program implements TopOpWriter {
     }
 
     private finalizeProc(proc: Procedure) {
-        if (!proc.finalize()) return
+        try {
+            if (!proc.finalize()) return
+        } catch (e) {
+            this.handleException(proc.sourceNode, e)
+            return
+        }
         for (const p of proc.nestedProcs) {
             if (
                 p.sourceNode &&
@@ -1438,6 +1449,7 @@ class Program implements TopOpWriter {
     }
 
     private emitProgram(prog: ts.Program) {
+        this.lastNode = this.mainFile
         this.main = new Procedure(this, "main", this.mainFile)
 
         this.startDispatchers = new DelayedCodeSection(
@@ -3440,6 +3452,10 @@ class Program implements TopOpWriter {
     }
 
     private handleException(stmt: ts.Node, e: any) {
+        if (e.terminateEmit) throw e
+
+        if (!stmt) stmt = this.lastNode
+
         if (e.sourceNode !== undefined) {
             const node = e.sourceNode || stmt
             this.reportError(node, e.message)
@@ -3448,6 +3464,8 @@ class Program implements TopOpWriter {
             debugger
             this.reportError(stmt, "Internal error: " + e.message)
             console.log(e.stack)
+            e.terminateEmit = true
+            throw e
         }
     }
 
@@ -3455,6 +3473,8 @@ class Program implements TopOpWriter {
         const src = this.sourceFrag(stmt)
         const wr = this.writer
         if (src) wr.emitComment(src)
+
+        this.lastNode = stmt
 
         wr.stmtStart(this.indexToLine(stmt))
 
