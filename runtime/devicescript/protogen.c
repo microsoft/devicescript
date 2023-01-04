@@ -46,11 +46,19 @@ void fun1_Object_keys(devs_ctx_t *ctx);
 void fun1_Object_values(devs_ctx_t *ctx);
 // impl_packet.c
 value_t prop_Packet_role(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_deviceId(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_deviceIdentifier(devs_ctx_t *ctx, value_t self);
 value_t prop_Packet_shortId(devs_ctx_t *ctx, value_t self);
 value_t prop_Packet_serviceIndex(devs_ctx_t *ctx, value_t self);
 value_t prop_Packet_serviceCommand(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_flags(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_isCommand(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_isReport(devs_ctx_t *ctx, value_t self);
 value_t prop_Packet_payload(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_isEvent(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_eventCode(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_isRegSet(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_isRegGet(devs_ctx_t *ctx, value_t self);
+value_t prop_Packet_regCode(devs_ctx_t *ctx, value_t self);
 void meth0_Packet_decode(devs_ctx_t *ctx);
 // impl_register.c
 void meth0_DsRegister_read(devs_ctx_t *ctx);
@@ -120,40 +128,48 @@ static const devs_builtin_proto_entry_t Object_entries[] = { //
 
 static const devs_builtin_proto_entry_t Packet_prototype_entries[] = { //
     {N(ROLE), 50031},                                                  //
-    {N(DEVICEID), 50032},                                              //
+    {N(DEVICEIDENTIFIER), 50032},                                      //
     {N(SHORTID), 50033},                                               //
     {N(SERVICEINDEX), 50034},                                          //
     {N(SERVICECOMMAND), 50035},                                        //
-    {N(PAYLOAD), 50036},                                               //
-    {N(DECODE), 50037},                                                //
+    {N(FLAGS), 50036},                                                 //
+    {N(ISCOMMAND), 50037},                                             //
+    {N(ISREPORT), 50038},                                              //
+    {N(PAYLOAD), 50039},                                               //
+    {N(ISEVENT), 50040},                                               //
+    {N(EVENTCODE), 50041},                                             //
+    {N(ISREGSET), 50042},                                              //
+    {N(ISREGGET), 50043},                                              //
+    {N(REGCODE), 50044},                                               //
+    {N(DECODE), 50045},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50038},                                                      //
-    {N(WRITE), 50039},                                                     //
+    {N(READ), 50046},                                                      //
+    {N(WRITE), 50047},                                                     //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsCommand_prototype_entries[] = { //
-    {N(__FUNC__), 50043},                                                 //
+    {N(__FUNC__), 50051},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsEvent_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
-    {N(ROLE), 50040},                                                        //
-    {N(NAME), 50041},                                                        //
-    {N(CODE), 50042},                                                        //
+    {N(ROLE), 50048},                                                        //
+    {N(NAME), 50049},                                                        //
+    {N(CODE), 50050},                                                        //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
-    {N(ISCONNECTED), 50044},                                         //
+    {N(ISCONNECTED), 50052},                                         //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50045},                                                //
-    {N(CHARCODEAT), 50046},                                            //
-    {N(CHARAT), 50047},                                                //
+    {N(LENGTH), 50053},                                                //
+    {N(CHARCODEAT), 50054},                                            //
+    {N(CHARAT), 50055},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t empty_entries[] = { //
@@ -201,8 +217,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 48;
-const devs_builtin_function_t devs_builtin_functions[48] = {
+uint16_t devs_num_builtin_functions = 56;
+const devs_builtin_function_t devs_builtin_functions[56] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
@@ -235,11 +251,19 @@ const devs_builtin_function_t devs_builtin_functions[48] = {
     {N(KEYS), 1, NO_SELF, {.meth = fun1_Object_keys}},
     {N(VALUES), 1, NO_SELF, {.meth = fun1_Object_values}},
     {N(ROLE), 0, PROP, {.prop = prop_Packet_role}},
-    {N(DEVICEID), 0, PROP, {.prop = prop_Packet_deviceId}},
+    {N(DEVICEIDENTIFIER), 0, PROP, {.prop = prop_Packet_deviceIdentifier}},
     {N(SHORTID), 0, PROP, {.prop = prop_Packet_shortId}},
     {N(SERVICEINDEX), 0, PROP, {.prop = prop_Packet_serviceIndex}},
     {N(SERVICECOMMAND), 0, PROP, {.prop = prop_Packet_serviceCommand}},
+    {N(FLAGS), 0, PROP, {.prop = prop_Packet_flags}},
+    {N(ISCOMMAND), 0, PROP, {.prop = prop_Packet_isCommand}},
+    {N(ISREPORT), 0, PROP, {.prop = prop_Packet_isReport}},
     {N(PAYLOAD), 0, PROP, {.prop = prop_Packet_payload}},
+    {N(ISEVENT), 0, PROP, {.prop = prop_Packet_isEvent}},
+    {N(EVENTCODE), 0, PROP, {.prop = prop_Packet_eventCode}},
+    {N(ISREGSET), 0, PROP, {.prop = prop_Packet_isRegSet}},
+    {N(ISREGGET), 0, PROP, {.prop = prop_Packet_isRegGet}},
+    {N(REGCODE), 0, PROP, {.prop = prop_Packet_regCode}},
     {N(DECODE), 0, 0, {.meth = meth0_Packet_decode}},
     {N(READ), 0, 0, {.meth = meth0_DsRegister_read}},
     {N(WRITE), 0, 0, {.meth = methX_DsRegister_write}},

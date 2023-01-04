@@ -182,8 +182,9 @@ static const uint8_t builtin_proto_idx[] = {
     [DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE] = 2,
     [DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE] = 3,
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = 4,
+    [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] = 5,
 };
-#define MAX_PROTO 4
+#define MAX_PROTO 5
 
 const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
     if (idx < sizeof(builtin_proto_idx)) {
@@ -680,6 +681,7 @@ void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v) {
         if (map)
             devs_map_set(ctx, map, key, v);
     } else {
+        devs_log_value(ctx, "invalid key", key);
         devs_runtime_failure(ctx, 60156);
     }
 }

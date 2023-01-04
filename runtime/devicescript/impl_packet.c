@@ -25,7 +25,7 @@ value_t prop_Packet_role(devs_ctx_t *ctx, value_t self) {
     return devs_undefined;
 }
 
-value_t prop_Packet_deviceId(devs_ctx_t *ctx, value_t self) {
+value_t prop_Packet_deviceIdentifier(devs_ctx_t *ctx, value_t self) {
     SELF();
     return devs_string_sprintf(ctx, "%-s", jd_to_hex_a(&pkt->device_id, 8));
 }
@@ -47,9 +47,58 @@ value_t prop_Packet_serviceCommand(devs_ctx_t *ctx, value_t self) {
     return devs_value_from_int(pkt->service_command);
 }
 
+value_t prop_Packet_flags(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_int(pkt->flags);
+}
+
+value_t prop_Packet_isCommand(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_bool(pkt->flags & JD_FRAME_FLAG_COMMAND);
+}
+
+value_t prop_Packet_isReport(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_bool(!(pkt->flags & JD_FRAME_FLAG_COMMAND));
+}
+
 value_t prop_Packet_payload(devs_ctx_t *ctx, value_t self) {
     SELF();
     return devs_value_from_gc_obj(ctx, pkt->payload);
+}
+
+static bool is_event(devs_packet_t *pkt) {
+    return !(pkt->flags & JD_FRAME_FLAG_COMMAND) &&
+           pkt->service_index <= JD_SERVICE_INDEX_MAX_NORMAL &&
+           (pkt->service_command & JD_CMD_EVENT_MASK) != 0;
+}
+
+value_t prop_Packet_isEvent(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_bool(is_event(pkt));
+}
+
+value_t prop_Packet_eventCode(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return is_event(pkt) ? devs_value_from_int(pkt->service_command & JD_CMD_EVENT_MASK)
+                         : devs_undefined;
+}
+
+value_t prop_Packet_isRegSet(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_bool(JD_IS_SET(pkt->service_command));
+}
+
+value_t prop_Packet_isRegGet(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_bool(JD_IS_GET(pkt->service_command));
+}
+
+value_t prop_Packet_regCode(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    if (!JD_IS_GET(pkt->service_command) && !JD_IS_SET(pkt->service_command))
+        return devs_undefined;
+    return devs_value_from_int(JD_REG_CODE(pkt->service_command));
 }
 
 static bool devs_pkt_matches_cmd(const devs_packet_spec_t *p, uint16_t service_command) {

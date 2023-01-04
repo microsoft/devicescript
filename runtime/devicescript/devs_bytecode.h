@@ -232,7 +232,7 @@
 #define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 25
 #define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 26
 
-#define DEVS_BUILTIN_STRING___MAX 99
+#define DEVS_BUILTIN_STRING___MAX 107
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -323,7 +323,7 @@
 #define DEVS_BUILTIN_STRING_VALUES 87
 #define DEVS_BUILTIN_STRING___FUNC__ 88
 #define DEVS_BUILTIN_STRING_ROLE 89
-#define DEVS_BUILTIN_STRING_DEVICEID 90
+#define DEVS_BUILTIN_STRING_DEVICEIDENTIFIER 90
 #define DEVS_BUILTIN_STRING_SHORTID 91
 #define DEVS_BUILTIN_STRING_SERVICEINDEX 92
 #define DEVS_BUILTIN_STRING_SERVICECOMMAND 93
@@ -333,6 +333,14 @@
 #define DEVS_BUILTIN_STRING_ONPACKET 97
 #define DEVS_BUILTIN_STRING_CODE 98
 #define DEVS_BUILTIN_STRING_NAME 99
+#define DEVS_BUILTIN_STRING_ISEVENT 100
+#define DEVS_BUILTIN_STRING_EVENTCODE 101
+#define DEVS_BUILTIN_STRING_ISREGSET 102
+#define DEVS_BUILTIN_STRING_ISREGGET 103
+#define DEVS_BUILTIN_STRING_REGCODE 104
+#define DEVS_BUILTIN_STRING_FLAGS 105
+#define DEVS_BUILTIN_STRING_ISREPORT 106
+#define DEVS_BUILTIN_STRING_ISCOMMAND 107
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -366,8 +374,9 @@
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
         "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
-        "deviceId", "shortId", "serviceIndex", "serviceCommand", "payload", "decode", "encode",    \
-        "onPacket", "code", "name"
+        "deviceIdentifier", "shortId", "serviceIndex", "serviceCommand", "payload", "decode",      \
+        "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
+        "regCode", "flags", "isReport", "isCommand"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "Fiber",   \
