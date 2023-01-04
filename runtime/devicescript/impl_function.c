@@ -16,5 +16,6 @@ void methX_Function_start(devs_ctx_t *ctx) {
     unsigned numargs = ctx->stack_top_for_gc - 1;
     memmove(ctx->the_stack + 1, ctx->the_stack + 2, numargs * sizeof(value_t));
     devs_fiber_t *fib = devs_fiber_start(ctx, numargs, flag);
-    devs_ret_gc_ptr(ctx, fib);
+
+    devs_ret(ctx,  devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, fib->handle_tag));
 }
