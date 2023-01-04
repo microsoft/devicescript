@@ -1,3 +1,6 @@
 [submodule "jacdac-c"]
 	path = runtime/jacdac-c
 	url = https://github.com/microsoft/jacdac-c
+[submodule "runtime/devicescript/sha-2"]
+	path = runtime/devicescript/sha-2
+	url = https://github.com/amosnier/sha-2
