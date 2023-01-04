@@ -4,3 +4,6 @@
 [submodule "runtime/devicescript/sha-2"]
 	path = runtime/devicescript/sha-2
 	url = https://github.com/amosnier/sha-2
+[submodule "runtime/network/tiny-AES-c"]
+	path = runtime/network/tiny-AES-c
+	url = https://github.com/kokke/tiny-AES-c

@@ -1,5 +1,5 @@
 CC = gcc
-INC = -Ijacdac-c/inc -Iinc -I. -Ijacdac-c -Ijacdac-c/devicescript
+INC = -Ijacdac-c/inc -Iinc -I. -Ijacdac-c -Idevicescript
 Q ?= @
 
 CFLAGS = $(DEFINES) $(INC) \
@@ -10,7 +10,7 @@ CFLAGS = $(DEFINES) $(INC) \
 
 _IGNORE1 := $(shell test -f jacdac-c/README.md || git submodule update --init --recursive 1>&2)
 _IGNORE2 := $(shell test -f devicescript/sha-2/README.md || git submodule update --init --recursive 1>&2)
-_IGNORE3 := $(shell test -f jacdac-c/network/tiny-AES-c/README.md || (cd jacdac-c && git submodule update --init --recursive 1>&2))
+_IGNORE3 := $(shell test -f jacdac-c/jacdac/README.md || (cd jacdac-c && git submodule update --init --recursive 1>&2))
 
 DEPS = $(wildcard \
 	inc/*.h \
@@ -28,8 +28,8 @@ BUILT = built
 JDS = jacdac-c/source
 SRC = $(wildcard posix/*.c) \
 	$(wildcard devicescript/*.c) \
+	$(wildcard network/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
-	$(wildcard jacdac-c/network/*.c) \
 	jacdac-c/jacdac/dist/c/jd_spec_pack.c \
 	$(wildcard $(JDS)/*.c) \
 	$(wildcard $(JDS)/interfaces/*.c) \
