@@ -374,7 +374,7 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
         case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
         case DEVS_HANDLE_TYPE_IMG_BUFFERISH: {
             uint32_t hv = devs_handle_value(obj);
-            JD_ASSERT((((uint32_t)otp << PACK_SHIFT) >> PACK_SHIFT) == otp);
+            JD_ASSERT((((uint32_t)otp << PACK_SHIFT) >> PACK_SHIFT) == (uint32_t)otp);
             JD_ASSERT((hv >> PACK_SHIFT) == 0);
             JD_ASSERT(devs_handle_high_value(obj) == 0);
             return devs_value_from_handle(DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC | (fidx << 4),
