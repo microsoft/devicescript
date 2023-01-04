@@ -325,6 +325,17 @@ value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, va
     return devs_undefined;
 }
 
+static value_t devs_function_bind_alloc(devs_ctx_t *ctx, value_t obj, value_t fn) {
+    devs_bound_function_t *res =
+        devs_any_try_alloc(ctx, DEVS_GC_TAG_BOUND_FUNCTION, sizeof(devs_bound_function_t));
+    if (res == NULL)
+        return devs_undefined;
+
+    res->this_val = obj;
+    res->func = fn;
+    return devs_value_from_gc_obj(ctx, res);
+}
+
 // if `fn` is a static function, return `(obj, fn)` tuple
 // if `fn` is a role member and `obj` is role, return (a different) `(obj, fn)` tuple
 // otherwise return `obj`
@@ -338,6 +349,9 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
         role |= devs_handle_value(fn) & ~DEVS_ROLE_MASK;
         return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE_MEMBER, role);
     }
+
+    if (htp == DEVS_HANDLE_TYPE_CLOSURE)
+        return devs_function_bind_alloc(ctx, obj, fn);
 
     if (htp != DEVS_HANDLE_TYPE_STATIC_FUNCTION)
         return fn;
@@ -387,14 +401,7 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
                                           devs_handle_value(obj));
         }
 
-    devs_bound_function_t *res =
-        devs_any_try_alloc(ctx, DEVS_GC_TAG_BOUND_FUNCTION, sizeof(devs_bound_function_t));
-    if (res == NULL)
-        return devs_undefined;
-
-    res->this_val = obj;
-    res->func = fn;
-    return devs_value_from_gc_obj(ctx, res);
+    return devs_function_bind_alloc(ctx, obj, fn);
 }
 
 value_t devs_make_closure(devs_ctx_t *ctx, devs_activation_t *closure, unsigned fnidx) {
