@@ -396,6 +396,7 @@ class Procedure {
     retType = ValueType.VOID
     parentProc: Procedure
     nestedProcs: Procedure[] = []
+    usesClosure = false
     mapVarOffset: (n: number) => number
 
     constructor(
@@ -2611,6 +2612,7 @@ class Program implements TopOpWriter {
             ptr = ptr.parentProc
         }
         assert(ptr != null)
+        if (lev > 0) this.proc.usesClosure = true
         return lev
     }
 
@@ -3875,6 +3877,15 @@ class Program implements TopOpWriter {
         this.finalizeCloudMethods()
         this.finalizeDispatchers()
         for (const p of this.procs) this.finalizeProc(p)
+
+        const staticProcs: Record<string, boolean> = {}
+        for (const p of this.procs) {
+            if (!p.usesClosure) staticProcs[p.index + ""] = true
+        }
+        const funIsStatic = (idx: number) => staticProcs[idx + ""] == true
+        for (const p of this.procs) {
+            p.writer.makeFunctionsStatic(funIsStatic)
+        }
 
         // early assembly dump, in case serialization fails
         if (this.numErrors == 0)

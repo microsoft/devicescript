@@ -263,6 +263,7 @@ export class OpWriter {
     srcmap: number[] = []
     private nameIdx: number
     private lastReturnLocation = -1
+    private closureRefs: Record<string, number[]> = {}
 
     constructor(public prog: TopOpWriter, public name: string) {
         this.top = this.mkLabel("top")
@@ -728,7 +729,23 @@ export class OpWriter {
         } else if (v.op >= 0x100) {
             oops("this value cannot be emitted: 0x" + v.op.toString(16))
         } else {
+            if (v.op == Op.EXPRx_MAKE_CLOSURE) {
+                const key = v.args[0].numValue + ""
+                let l = this.closureRefs[key]
+                if (!l) l = this.closureRefs[key] = []
+                l.push(this.binPtr)
+            }
             this.writeArgs(v.op, v.args)
+        }
+    }
+
+    makeFunctionsStatic(isStatic: (fnidx: number) => boolean) {
+        for (const key of Object.keys(this.closureRefs)) {
+            if (!isStatic(+key)) continue
+            for (const idx of this.closureRefs[key]) {
+                assert(this.binary[idx] == Op.EXPRx_MAKE_CLOSURE)
+                this.binary[idx] = Op.EXPRx_STATIC_FUNCTION
+            }
         }
     }
 

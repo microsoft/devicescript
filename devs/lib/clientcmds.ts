@@ -42,7 +42,7 @@ function roleOnPacket(this: ds.Role, pkt: ds.Packet) {
     }
 }
 
-function onChange(
+;(ds.Register.prototype as any).onChange = function onChange(
     this: ds.Register,
     threshold: number,
     handler: (v: any) => void
@@ -66,10 +66,7 @@ function onChange(
     lst[lst.length] = obj
 }
 
-;(ds.Register.prototype as any).onChange = onChange
-
-function push<T>(this: T[], item: T) {
+Array.prototype.push = function push<T>(this: T[], item: T) {
     this[this.length] = item
     return this.length
 }
-Array.prototype.push = push
