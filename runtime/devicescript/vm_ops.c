@@ -94,6 +94,25 @@ STMT_CALL(stmt7_call6, 6)
 STMT_CALL(stmt8_call7, 7)
 STMT_CALL(stmt9_call8, 8)
 
+static void stmt2_call_array(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t args = devs_vm_pop_arg(ctx);
+    value_t fn = devs_vm_pop_arg(ctx);
+    if (!devs_is_array(ctx, args))
+        devs_runtime_failure(ctx, 60186);
+    else {
+        devs_array_t *arr = devs_value_to_gc_obj(ctx, args);
+        unsigned N = arr->length;
+        if (N > DEVS_MAX_STACK_DEPTH - 1)
+            devs_runtime_failure(ctx, 60187);
+        else {
+            ctx->stack_top_for_gc = N + 1;
+            ctx->the_stack[0] = fn;
+            memcpy(ctx->the_stack + 1, arr->data, N * sizeof(value_t));
+            devs_fiber_call_function(ctx->curr_fiber, N);
+        }
+    }
+}
+
 static void stmtx_jmp(devs_activation_t *frame, devs_ctx_t *ctx) {
     int32_t off = ctx->literal_int;
     int pc = ctx->jmp_pc + off;

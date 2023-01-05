@@ -18,6 +18,10 @@ Expressions do not modify the state. They may throw exceptions though.
 
 Call a function with given number of parameters.
 
+    call_array(func, args) = 79                        // CALL func(...args)
+
+Passes arguments to a function as an array. The array can be at most `max_stack_depth - 1` elements long.
+
     return(value) = 12
 
     jmp(*jmpoffset) = 13               // JMP jmpoffset
