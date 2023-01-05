@@ -360,7 +360,6 @@ class Procedure {
     index: number
     params: VariableScope
     locals: VariableScope
-    methodSeqNo: Variable
     users: ts.Node[] = []
     skipAccounting = false
     retType = ValueType.VOID
@@ -813,7 +812,12 @@ class Program implements TopOpWriter {
         )
         usedFields.push(pname)
 
-        let val = wr.emitIndex(obj.emit(), wr.emitString(pname))
+        const val = wr.emitIndex(obj.emit(), wr.emitString(pname))
+        this.finishBindingAssignment(bindingElt, val)
+    }
+
+    private finishBindingAssignment(bindingElt: ts.BindingElement, val: Value) {
+        const bindingName = bindingElt.name
 
         if (bindingElt.initializer)
             throwError(
@@ -824,7 +828,7 @@ class Program implements TopOpWriter {
         if (ts.isIdentifier(bindingName)) {
             this.assignToId(bindingName, val)
         } else if (ts.isObjectBindingPattern(bindingName)) {
-            const obj2 = wr.cacheValue(val)
+            const obj2 = this.writer.cacheValue(val)
             const used: string[] = []
             for (const elt of bindingName.elements) {
                 this.assignToBindingElement(elt, obj2, used)
@@ -833,6 +837,29 @@ class Program implements TopOpWriter {
         } else {
             throwError(bindingName, "invalid binding elt")
         }
+    }
+
+    private assignToArrayBindingElement(
+        bindingElt: ts.ArrayBindingElement,
+        obj: CachedValue,
+        index: number
+    ) {
+        if (ts.isOmittedExpression(bindingElt)) return
+
+        const wr = this.writer
+        const bindingName = bindingElt.name
+
+        if (bindingElt.dotDotDotToken) {
+            const spl = wr.emitIndex(obj.emit(), wr.emitString("slice"))
+            wr.emitCall(spl, literal(index))
+            if (!ts.isIdentifier(bindingName))
+                throwError(bindingName, "unsupported spread")
+            this.assignToId(bindingName, this.retVal(ValueType.ARRAY))
+            return
+        }
+
+        const val = wr.emitIndex(obj.emit(), literal(index))
+        this.finishBindingAssignment(bindingElt, val)
     }
 
     private emitVariableDeclarationList(decls: ts.VariableDeclarationList) {
@@ -852,14 +879,18 @@ class Program implements TopOpWriter {
             if (ts.isIdentifier(decl.name)) {
                 this.assignToId(decl.name, init)
             } else {
-                const wr = this.writer
-                const obj = wr.cacheValue(init)
+                const obj = this.writer.cacheValue(init)
                 if (ts.isObjectBindingPattern(decl.name)) {
                     const used: string[] = []
                     for (const elt of decl.name.elements)
                         this.assignToBindingElement(elt, obj, used)
+                } else if (ts.isArrayBindingPattern(decl.name)) {
+                    let idx = 0
+                    for (const elt of decl.name.elements) {
+                        this.assignToArrayBindingElement(elt, obj, idx++)
+                    }
                 } else {
-                    throwError(decl, "array destruct not supported")
+                    throwError(decl, "unsupported destructuring")
                 }
                 obj.free()
             }
@@ -951,46 +982,9 @@ class Program implements TopOpWriter {
         wr.emitLabel(breakLbl)
     }
 
-    private emitAckCloud(
-        code: CloudAdapterCommandStatus,
-        isOuter: boolean,
-        args: Expr[] = []
-    ) {
-        const wr = this.writer
-        wr.allocBuf()
-        {
-            const tmp = isOuter
-                ? wr.emitBufLoad(NumFmt.U32, 0)
-                : wr.emitMemRef(Op.EXPRx_LOAD_LOCAL, 0, ValueType.NUMBER)
-            wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(8 + args.length * 8))
-            wr.emitBufStore(tmp, NumFmt.U32, 0)
-            wr.emitBufStore(literal(code), NumFmt.U32, 4)
-        }
-        let off = 8
-        for (const arg of args) {
-            const v = this.emitSimpleValue(arg)
-            wr.emitBufStore(v, NumFmt.F64, off)
-            off += 8
-        }
-        wr.freeBuf()
-        this.emitSendCommand(this.cloudRole, CloudAdapterCmd.AckCloudCommand)
-    }
-
     private emitReturnStatement(stmt: ts.ReturnStatement) {
         const wr = this.writer
-        if (this.proc.methodSeqNo) {
-            let args: Expr[] = []
-            if (
-                stmt.expression &&
-                ts.isArrayLiteralExpression(stmt.expression)
-            ) {
-                args = stmt.expression.elements.slice()
-            } else if (stmt.expression) {
-                args = [stmt.expression]
-            }
-            this.emitAckCloud(CloudAdapterCommandStatus.OK, false, args)
-            wr.emitStmt(Op.STMT1_RETURN, literal(null))
-        } else if (stmt.expression) {
+        if (stmt.expression) {
             if (wr.ret) oops("return with value not supported here")
             wr.emitStmt(
                 Op.STMT1_RETURN,
@@ -1373,7 +1367,6 @@ class Program implements TopOpWriter {
         func: Expr,
         options: {
             every?: number
-            methodHandler?: boolean
         } = {}
     ): Procedure {
         if (!ts.isArrowFunction(func))
@@ -1381,11 +1374,9 @@ class Program implements TopOpWriter {
         const proc = new Procedure(this, this.uniqueProcName(name), func)
         proc.useFrom(func)
         proc.writer.ret = proc.writer.mkLabel("ret")
-        if (func.parameters.length && !options.methodHandler)
+        if (func.parameters.length)
             throwError(func, "parameters not supported here")
         this.withProcedure(proc, wr => {
-            if (options.methodHandler)
-                proc.methodSeqNo = this.addParameter(proc, "methSeqNo")
             this.emitParameters(func, proc)
             if (options.every) {
                 this.emitSleep(options.every)
@@ -1398,8 +1389,6 @@ class Program implements TopOpWriter {
             wr.emitLabel(wr.ret)
             if (options.every) wr.emitJump(wr.top)
             else {
-                if (options.methodHandler)
-                    this.emitAckCloud(CloudAdapterCommandStatus.OK, false, [])
                 wr.emitStmt(Op.STMT1_RETURN, literal(null))
             }
         })
@@ -1537,18 +1526,6 @@ class Program implements TopOpWriter {
                 return unit()
             }
 
-            case "setLength": {
-                if (buf.op != Op.EXPR0_PKT_BUFFER)
-                    throwError(
-                        expr,
-                        ".setLength() only supported on 'packet' buffer"
-                    )
-                this.requireArgs(expr, 1)
-                const len = this.emitSimpleValue(expr.arguments[0])
-                wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, len)
-                return unit()
-            }
-
             default:
                 return null
         }
@@ -1625,11 +1602,6 @@ class Program implements TopOpWriter {
         const tmp = this.emitExpr(expr)
         if (!tmp.isLiteral) throwError(expr, "number literal expected")
         return tmp.numValue
-    }
-
-    private emitSendCommand(role: Value | Role, cmd: number) {
-        if (role instanceof Role) role = role.emit(this.writer)
-        this.writer.emitStmt(Op.STMT2_SEND_CMD, role, literal(cmd))
     }
 
     private isStringLike(expr: ts.Expression) {
