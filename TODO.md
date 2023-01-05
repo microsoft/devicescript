@@ -5,13 +5,10 @@
 * `Register.onChange` threshold handling
 * `Event.subscribe`
 * `Event.wait`
-* clean up the compiler
-* tree-shaking for prototypes
 * `Condition` handling
 * register delay computation
 * Role.sendCommand
 * `[a,b,c] = reg.read()`
-* `const [a,b,c] = reg.read()`
 * for-of
 
 ## Big ticket

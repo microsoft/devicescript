@@ -213,6 +213,10 @@ function testBuffer() {
     isEq(buf[4], 0x13)
 }
 
+function three(a: number, b: number, c: number) {
+    return a / b + c
+}
+
 function testArray() {
     let arr = []
     isEq(arr.length, 0)
@@ -235,6 +239,16 @@ function testArray() {
     isEq(arr[1], null)
     isEq(arr.push(20), 2)
     isEq(arr[1], 20)
+
+    const [a, b, c, ...rest] = arr
+    isEq(a, 10)
+    isEq(b, 20)
+    isEq(c, null)
+    isEq(rest.length, 0)
+    const [aa, ...bb] = arr
+    isEq(aa, 10)
+    isEq(bb.length, 1)
+    isEq(bb[0], 20)
 }
 
 function testObjInner(x: any) {
@@ -302,6 +316,15 @@ function testSpread() {
         isEq(b, 2)
         objEq(r0, { c: 3 })
     }
+
+    isEq(three(10, 2, 7), 12)
+    const arr: [number, number, number] = [10, 2, 7]
+    isEq(three(...arr), 12)
+    const arr2: [number, number] = [2, 7]
+    isEq(three(10, ...arr2), 12)
+    const tmp1 = [1, 2]
+    tmp1.pushRange(tmp1)
+    isEq(tmp1.length, 4)
 }
 
 function testConsole() {

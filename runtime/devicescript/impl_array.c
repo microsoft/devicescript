@@ -53,9 +53,11 @@ void meth1_Array_pushRange(devs_ctx_t *ctx) {
 
     devs_array_t *src = devs_value_to_gc_obj(ctx, other);
     if (src->length) {
+        // note that self and src can alias
+        unsigned len_src = src->length;
         unsigned len0 = self->length;
-        if (devs_array_insert(ctx, self, self->length, src->length) == 0) {
-            memcpy(self->data + len0, src->data, src->length * sizeof(value_t));
+        if (devs_array_insert(ctx, self, self->length, len_src) == 0) {
+            memcpy(self->data + len0, src->data, len_src * sizeof(value_t));
         }
     }
 

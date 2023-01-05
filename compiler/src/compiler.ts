@@ -1778,6 +1778,17 @@ class Program implements TopOpWriter {
             if (builtIn) return builtIn
         }
 
+        if (
+            callName == "#Array.push" &&
+            expr.arguments.some(ts.isSpreadElement)
+        ) {
+            const lim = BinFmt.MAX_STACK_DEPTH - 1
+            throwError(
+                expr,
+                `...args has a length limit of ${lim} elements; better use Array.pushRange()`
+            )
+        }
+
         if (ts.isPropertyAccessExpression(expr.expression)) {
             const prop = idName(expr.expression.name)
             const val = this.emitExpr(expr.expression.expression)
