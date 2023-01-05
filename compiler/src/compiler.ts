@@ -504,14 +504,8 @@ class VariableScope {
     }
 }
 
-enum RefreshMS {
-    Never = 0,
-    Normal = 500,
-    Slow = 5000,
-}
 
 type Expr = ts.Expression | ts.TemplateLiteralLikeNode
-type Stmt = ts.Statement
 type FunctionLike =
     | ts.FunctionDeclaration
     | ts.ArrowFunction
@@ -785,7 +779,6 @@ class Program implements TopOpWriter {
     }
 
     private getPropName(pn: ts.PropertyName | ts.BindingName) {
-        const wr = this.writer
         if (ts.isIdentifier(pn) || ts.isStringLiteral(pn)) return pn.text
         throwError(pn, "unsupported property name")
     }
@@ -1035,9 +1028,6 @@ class Program implements TopOpWriter {
         return null
     }
 
-    private inCoreModule(sym: ts.Symbol) {
-        return this.moduleOf(sym) == coreModule
-    }
 
     private specFromTypeName(
         expr: ts.Node,
@@ -1060,7 +1050,7 @@ class Program implements TopOpWriter {
         stmt: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
         proc: Procedure
     ) {
-        this.withProcedure(proc, wr => {
+        this.withProcedure(proc, () => {
             this.emitParameters(stmt, proc)
             this.emitFunctionBody(stmt, proc)
         })
@@ -1181,7 +1171,7 @@ class Program implements TopOpWriter {
         )
 
         this.withProcedure(cc.proc, wr => {
-            const v = new Variable(
+            new Variable(
                 null,
                 VariableKind.Parameter,
                 cc.proc,
@@ -1614,24 +1604,7 @@ class Program implements TopOpWriter {
         return undefined
     }
 
-    private forceStringLiteral(expr: Expr) {
-        const v = this.stringLiteral(expr)
-        if (v === undefined) throwError(expr, "string literal expected")
-        return this.writer.emitString(v)
-    }
 
-    private fieldTypeToValueType(mem: jdspec.PacketMember) {
-        switch (mem.type) {
-            case "bytes":
-            case "string":
-            case "string0":
-                return ValueType.BUFFER
-            case "bool":
-                return ValueType.BOOL
-            default:
-                return ValueType.NUMBER
-        }
-    }
 
     private bufferSize(v: Value) {
         const idx = v.args?.[0]?.numValue
@@ -1664,17 +1637,8 @@ class Program implements TopOpWriter {
         }
     }
 
-    private isBufferField(field: jdspec.PacketMember) {
-        return (
-            field.type == "bytes" ||
-            field.type == "string" ||
-            field.type == "string0" ||
-            field.storage == 0
-        )
-    }
 
     private emitArgs(args: Expr[], formals?: Variable[]) {
-        const wr = this.writer
         return args.map((arg, i) => {
             let tp = ValueType.ANY
             const f = formals?.[i]
@@ -3168,7 +3132,7 @@ export function compile(
         mainFileName = "",
         specs = jacdacDefaultSpecifications,
         log = (msg: string) => console.debug(msg),
-        verifyBytecode = buf => {},
+        verifyBytecode = () => {},
         errors = [],
     } = opts
     const {
@@ -3199,7 +3163,7 @@ export function testCompiler(host: Host, code: string) {
     const p = new Program(
         {
             write: () => {},
-            log: msg => {},
+            log: () => {},
             getSpecs: host.getSpecs,
             verifyBytecode: host.verifyBytecode,
             mainFileName: host.mainFileName,
