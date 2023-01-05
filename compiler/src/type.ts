@@ -17,11 +17,6 @@ export enum ValueKind {
     VOID = ObjectType.VOID,
 
     ERROR = 0x10000, // BinFmt.FIRST_NON_OPCODE - esbuild fails with subsequent values when enum not a constant is used here
-    JD_EVENT,
-    JD_REG,
-    JD_VALUE_SEQ,
-    JD_COMMAND,
-    JD_CLIENT_COMMAND,
 }
 
 export class ValueType {
@@ -35,10 +30,6 @@ export class ValueType {
 
     get isRole() {
         return this.kind == ValueKind.ROLE
-    }
-
-    get canIndex() {
-        return this.kind == ValueKind.ARRAY || this.kind == ValueKind.BUFFER
     }
 
     equals(other: ValueType) {

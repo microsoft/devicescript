@@ -16,6 +16,11 @@ declare module "@devicescript/core" {
         /**
          * @internal
          */
+        sendCommand(serviceCommand: number, payload?: Buffer): void
+
+        /**
+         * @internal
+         */
         onPacket: (pkt: Packet) => void
 
         _changeHandlers: any
@@ -151,7 +156,7 @@ declare module "@devicescript/core" {
          * @handler callback to execute
          */
         // TODO: consider something like "onReceived" to match other events
-        subscribe(handler: () => void): void
+        subscribe(handler: (pkt: Packet) => void): void
     }
 
     // TODO: maybe a better name, is this some kind of internal data structure?
@@ -160,9 +165,7 @@ declare module "@devicescript/core" {
         wait(): void
     }
 
-    export class CloudConnector {
-        // TODO: support uploading objects
-        upload(label: string, ...value: number[]): void
+    export interface CloudAdapter {
         onMethod(
             name: string,
             handler: (
@@ -176,12 +179,9 @@ declare module "@devicescript/core" {
                 v7: number
             ) => void
         ): void
-        // TODO: delete?
-        twin(path: string): number
-        // TODO: delete?
-        onTwinChange(handler: () => void): void
+        _cloudHandlers: any
     }
-    export const cloud: CloudConnector
+    export const cloud: CloudAdapter
 
     export function print(fmt: string, ...args: number[]): void
     export function format(fmt: string, ...args: number[]): string

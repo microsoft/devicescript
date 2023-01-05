@@ -37,12 +37,25 @@ function callHandlers(h: ds.Handler[]) {
 
 function roleOnPacket(this: ds.Role, pkt: ds.Packet) {
     if (!pkt || pkt.serviceCommand == 0) {
+        const conn = this.isConnected
         if (this._connHandlers || this._disconHandlers) {
-            const conn = this.isConnected
             if (conn != this._wasConnected) {
                 this._wasConnected = conn
                 if (conn) callHandlers(this._connHandlers)
                 else callHandlers(this._disconHandlers)
+            }
+        }
+        if (conn && this._changeHandlers) {
+            const regs = Object.keys(this._changeHandlers)
+            for (let i = 0; i < regs.length; ++i) {
+                const rg = parseInt(regs[i])
+                if (rg == 0x0101) {
+                    const b = Buffer.alloc(1)
+                    b[0] = 199
+                    this.sendCommand(0x2003, b)
+                } else {
+                    this.sendCommand(0x1000 | rg)
+                }
             }
         }
     }
@@ -105,4 +118,29 @@ function addElement<T>(arr: T[], e: T) {
 Array.prototype.push = function push<T>(this: T[], item: T) {
     this[this.length] = item
     return this.length
+}
+
+function handleCloudCommand(pkt: ds.Packet) {
+    const [seqNo, cmd, ...vals] = pkt.decode()
+    const cloud = pkt.role as ds.CloudAdapter
+    const h = cloud._cloudHandlers[cmd]
+    if (h) {
+        const r = h(...vals)
+        cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.OK, ...r)
+    } else {
+        // TODO Busy? store fiber ref and possibly kill?
+        cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.NotFound)
+    }
+}
+
+ds.CloudAdapter.prototype.onMethod = function onMethod(
+    this: ds.CloudAdapter,
+    name,
+    handler
+) {
+    if (!this._cloudHandlers) {
+        this.cloudCommand.subscribe(handleCloudCommand)
+        this._cloudHandlers = {}
+    }
+    this._cloudHandlers[name] = handler
 }

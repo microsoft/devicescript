@@ -80,7 +80,9 @@ void meth0_DsRegister_read(devs_ctx_t *ctx) {
 
     devs_fiber_t *f = ctx->curr_fiber;
 
-    devs_jd_get_register(ctx, role, pkt->code, 1000, 0); // TODO delay!
+    // TODO delay 500 for regular
+    // TODO delay 0 (none) for const
+    devs_jd_get_register(ctx, role, pkt->code, 500, 0);
     devs_setup_resume(f, DsRegister_read_cont, (void *)pkt);
 }
 

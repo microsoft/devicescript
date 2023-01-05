@@ -9,6 +9,10 @@
 * tree-shaking for prototypes
 * `Condition` handling
 * register delay computation
+* Role.sendCommand
+* `[a,b,c] = reg.read()`
+* `const [a,b,c] = reg.read()`
+* for-of
 
 ## Big ticket
 * buffer overflows when printing a lot

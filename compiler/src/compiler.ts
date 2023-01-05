@@ -7,7 +7,6 @@ import { SyntaxKind as SK } from "typescript"
 import {
     SystemReg,
     SRV_DEVICE_SCRIPT_CONDITION,
-    CloudAdapterEvent,
     CloudAdapterCmd,
     CloudAdapterCommandStatus,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
@@ -22,7 +21,6 @@ import {
     encodeU32LE,
     fromHex,
     bufferEq,
-    range,
     uniqueMap,
     encodeU16LE,
 } from "./jdutil"
@@ -51,7 +49,6 @@ import {
 import {
     addUnique,
     assert,
-    assertRange,
     camelize,
     oops,
     snakify,
@@ -147,16 +144,6 @@ class Cell {
 }
 
 class Role extends Cell {
-    dispatcher: {
-        proc: Procedure
-        top: Label
-        init: DelayedCodeSection
-        checkConnected: DelayedCodeSection
-        connected: DelayedCodeSection
-        disconnected: DelayedCodeSection
-        wasConnected: Variable
-    }
-    autoRefreshRegs: jdspec.PacketInfo[] = []
     stringIndex: number
     used = false
 
@@ -562,11 +549,6 @@ class ClientCommand {
     constructor(public serviceSpec: jdspec.ServiceSpec) {}
 }
 
-class MonkeyPatch {
-    proc: Procedure
-    constructor(public defintion: ts.FunctionExpression, public name: string) {}
-}
-
 class Program implements TopOpWriter {
     bufferLits = new VariableScope(null)
     roles = new VariableScope(this.bufferLits)
@@ -588,8 +570,7 @@ class Program implements TopOpWriter {
     serviceSpecs: Record<string, jdspec.ServiceSpec>
     enums: Record<string, jdspec.EnumInfo> = {}
     clientCommands: Record<string, ClientCommand[]> = {}
-    monkeyPatch: Record<string, MonkeyPatch | FunctionDecl> = {}
-    refreshMS: number[] = [0, 500]
+    monkeyPatch: Record<string, FunctionDecl> = {}
     resolverParams: number[]
     resolverPC: number
     prelude: Record<string, string>
@@ -597,8 +578,6 @@ class Program implements TopOpWriter {
     main: Procedure
     cloudRole: Role
     cloudMethod429: Label
-    cloudMethodDispatcher: DelayedCodeSection
-    startDispatchers: DelayedCodeSection
     onStart: DelayedCodeSection
     loopStack: LoopLabels[] = []
     isLibrary = false
@@ -728,153 +707,9 @@ class Program implements TopOpWriter {
         }
     }
 
-    private roleDispatcher(role: Role) {
-        if (!role.dispatcher) {
-            const proc = new Procedure(
-                this,
-                role.getName() + "_disp",
-                role.definition
-            )
-            proc.skipAccounting = true
-            role.dispatcher = {
-                proc,
-                top: proc.writer.mkLabel("disp_top"),
-                init: new DelayedCodeSection("init", proc.writer),
-                disconnected: new DelayedCodeSection(
-                    "disconnected",
-                    proc.writer
-                ),
-                connected: new DelayedCodeSection("connected", proc.writer),
-                checkConnected: new DelayedCodeSection(
-                    "checkConnected",
-                    proc.writer
-                ),
-                wasConnected: proc.mkTempLocal(
-                    "connected_" + role.getName(),
-                    ValueType.BOOL
-                ),
-            }
-            this.withProcedure(proc, wr => {
-                this.emitStore(
-                    role.dispatcher.wasConnected,
-                    this.emitIsRoleConnected(role)
-                )
-                role.dispatcher.init.callHere()
-                wr.emitLabel(role.dispatcher.top)
-                wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
-                role.dispatcher.checkConnected.callHere()
-            })
-
-            this.startDispatchers.emit(wr => {
-                // this is only executed once, but with BG_MAX1 is easier to naively analyze memory usage
-                proc.callMe(wr, [], OpCall.BG_MAX1)
-            })
-        }
-        return role.dispatcher
-    }
-
-    private finalizeDispatchers() {
-        for (const role of this.roles.list) {
-            const disp = (role as Role).dispatcher
-            if (disp)
-                this.withProcedure(disp.proc, wr => {
-                    // forever!
-                    wr.emitJump(disp.top)
-
-                    // run init
-                    disp.init.finalize()
-
-                    // if any dis/connect handlers, do the checking
-                    if (!disp.connected.empty() || !disp.disconnected.empty()) {
-                        disp.checkConnected.body.push(wr => {
-                            const connNow = this.emitIsRoleConnected(
-                                role as Role
-                            )
-                            const nowDis = wr.mkLabel("nowDis")
-                            wr.emitJump(nowDis, connNow)
-
-                            {
-                                // now==connected
-                                if (!disp.connected.empty()) {
-                                    wr.emitJump(
-                                        disp.checkConnected.returnLabel,
-                                        wr.emitExpr(
-                                            Op.EXPR1_NOT,
-                                            disp.wasConnected.emit(wr)
-                                        )
-                                    )
-                                    // prev==disconnected
-
-                                    disp.connected.finalizeRaw()
-                                }
-                                this.emitStore(disp.wasConnected, literal(1))
-                                wr.emitJump(disp.checkConnected.returnLabel)
-                            }
-
-                            {
-                                wr.emitLabel(nowDis)
-                                // now==disconnected
-                                if (!disp.disconnected.empty()) {
-                                    wr.emitJump(
-                                        disp.checkConnected.returnLabel,
-                                        disp.wasConnected.emit(wr)
-                                    )
-                                    // prev==connected
-                                    disp.disconnected.finalizeRaw()
-                                }
-                                this.emitStore(disp.wasConnected, literal(0))
-                                wr.emitJump(disp.checkConnected.returnLabel)
-                            }
-                        })
-                    }
-
-                    // either way, finalize checkConnected
-                    disp.checkConnected.finalize()
-                })
-        }
-    }
-
     private emitSleep(ms: number) {
         const wr = this.writer
         wr.emitCall(wr.dsMember(BuiltInString.SLEEPMS), literal(ms))
-    }
-
-    private finalizeAutoRefresh() {
-        if (this.roles.list.every(r => (r as Role).autoRefreshRegs.length == 0))
-            return
-        const proc = new Procedure(this, "_autoRefresh_")
-        const period = 521
-        this.withProcedure(proc, wr => {
-            for (const role_ of this.roles.list) {
-                const role = role_ as Role
-                if (role.autoRefreshRegs.length == 0) continue
-                const isConn = this.emitIsRoleConnected(role)
-                wr.emitIfAndPop(isConn, () => {
-                    for (const reg of role.autoRefreshRegs) {
-                        if (
-                            reg.identifier == SystemReg.Reading &&
-                            role.isSensor()
-                        ) {
-                            wr.emitSetBuffer(new Uint8Array([199]))
-                            this.emitSendCommand(
-                                role,
-                                SystemReg.StreamingSamples | CMD_SET_REG
-                            )
-                        } else {
-                            wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(0))
-                            this.emitSendCommand(
-                                role,
-                                reg.identifier | CMD_GET_REG
-                            )
-                        }
-                    }
-                })
-            }
-            this.emitSleep(period)
-            wr.emitJump(wr.top)
-        })
-
-        this.startDispatchers.emit(wr => proc.callMe(wr, [], OpCall.BG_MAX1))
     }
 
     private withProcedure<T>(proc: Procedure, f: (wr: OpWriter) => T) {
@@ -939,23 +774,6 @@ class Program implements TopOpWriter {
 
     private emitStore(trg: Variable, src: Value) {
         trg.store(this.writer, src, this.getClosureLevel(trg))
-    }
-
-    private newDef(decl: ts.NamedDeclaration) {
-        this.forceName(decl.name)
-    }
-
-    private lookupBuiltinFunc(name: string) {
-        const d = this.functions.lookup(name)
-        if (d && d.definition) {
-            if (
-                this.prelude.hasOwnProperty(
-                    d.definition.getSourceFile().fileName
-                )
-            )
-                return d as FunctionDecl
-        }
-        return undefined
     }
 
     private skipInit(decl: ts.VariableDeclaration) {
@@ -1453,10 +1271,6 @@ class Program implements TopOpWriter {
         this.lastNode = this.mainFile
         this.main = new Procedure(this, "main", this.mainFile)
 
-        this.startDispatchers = new DelayedCodeSection(
-            "startDispatchers",
-            this.main.writer
-        )
         this.onStart = new DelayedCodeSection("onStart", this.main.writer)
 
         const stmts = ([] as ts.Statement[]).concat(
@@ -1471,7 +1285,6 @@ class Program implements TopOpWriter {
         for (const s of stmts) {
             try {
                 if (ts.isFunctionDeclaration(s)) {
-                    this.newDef(s)
                     this.forceName(s.name)
                     this.assignCell(s, new FunctionDecl(s, this.functions))
                 } else if (ts.isVariableStatement(s)) {
@@ -1496,12 +1309,9 @@ class Program implements TopOpWriter {
         )
 
         this.withProcedure(this.main, () => {
-            this.startDispatchers.callHere()
             for (const s of stmts) this.emitStmt(s)
             this.onStart.finalizeRaw()
             this.writer.emitStmt(Op.STMT1_RETURN, literal(0))
-            this.finalizeAutoRefresh()
-            this.startDispatchers.finalize()
         })
 
         if (!this.cloudRole.used) {
@@ -1629,13 +1439,6 @@ class Program implements TopOpWriter {
         return proc
     }
 
-    private codeName(node: ts.Node) {
-        return node
-            .getText()
-            .slice(0, 30)
-            .replace(/[^a-zA-Z0-9_]+/g, "_")
-    }
-
     private requireArgsExt(node: ts.Node, args: Expr[], num: number) {
         if (args.length != num)
             throwError(node, `${num} arguments required; got ${args.length}`)
@@ -1648,226 +1451,12 @@ class Program implements TopOpWriter {
         this.requireArgsExt(expr, expr.arguments.slice(), num)
     }
 
-    private emitInRoleDispatcher(role: Role, f: (wr: OpWriter) => void) {
-        const disp = this.roleDispatcher(role)
-        this.withProcedure(disp.proc, f)
-    }
-
     private requireTopLevel(expr: ts.CallExpression) {
         if (!this.isTopLevel(expr))
             throwError(
                 expr,
                 "this can only be done at the top-level of the program"
             )
-    }
-
-    private emitEventHandler(
-        name: string,
-        handlerExpr: Expr,
-        role: Role,
-        code: number
-    ) {
-        const handler = this.emitHandler(name, handlerExpr)
-        this.emitInRoleDispatcher(role, wr => {
-            const cond = wr.emitExpr(
-                Op.EXPR2_EQ,
-                wr.emitExpr(Op.EXPR0_PKT_EV_CODE),
-                literal(code)
-            )
-            wr.emitIfAndPop(cond, () =>
-                handler.callMe(wr, [], OpCall.BG_MAX1_PEND1)
-            )
-        })
-    }
-
-    private emitEventCall(
-        expr: ts.CallExpression,
-        val: Value,
-        prop: string
-    ): Value {
-        assert(val.valueType.kind == ValueKind.JD_EVENT)
-        const wr = this.writer
-        switch (prop) {
-            case "subscribe":
-                this.requireTopLevel(expr)
-                this.requireArgs(expr, 1)
-                this.ignore(val)
-                this.emitEventHandler(
-                    this.codeName(expr.expression),
-                    expr.arguments[0],
-                    this.roleOf(expr.expression, val),
-                    val.valueType.packetSpec.identifier
-                )
-                return unit()
-            case "wait":
-                this.requireArgs(expr, 0)
-                const lbl = wr.mkLabel("wait")
-                wr.emitLabel(lbl)
-                wr.emitStmt(Op.STMT1_WAIT_ROLE, this.roleExprOf(expr, val))
-                const cond = wr.emitExpr(
-                    Op.EXPR2_EQ,
-                    wr.emitExpr(Op.EXPR0_PKT_EV_CODE),
-                    literal(val.valueType.packetSpec.identifier)
-                )
-                wr.emitJump(lbl, cond)
-                return unit()
-            default:
-                return null
-        }
-    }
-
-    private directCallFun(expr: ts.Node, fn: FunctionDecl, args: Value[]) {
-        const wr = this.writer
-        const proc = this.getFunctionProc(fn)
-        proc.useFrom(expr)
-        const formals = proc.args()
-        for (let i = 0; i < args.length; i++) {
-            const v = args[i]
-            this.requireValueType(expr, v, formals[i].valueType)
-        }
-        proc.callMe(wr, args)
-        return this.retVal(proc.retType)
-    }
-
-    private loadFieldAt(
-        expr: ts.Node,
-        field: jdspec.PacketMember,
-        off: number
-    ) {
-        const wr = this.writer
-        if (this.isBufferField(field)) {
-            const fn = this.lookupBuiltinFunc("decode_" + field.type)
-            if (!fn) throwError(null, `${field.type} format not supported yet`)
-            return this.directCallFun(expr, fn, [literal(off)])
-        }
-        return wr.emitBufLoad(bufferFmt(field), off)
-    }
-
-    private extractRegField(
-        node: ts.Node,
-        spec: jdspec.PacketInfo,
-        field: jdspec.PacketMember
-    ) {
-        let off = 0
-        for (const f of spec.fields) {
-            if (f == field) {
-                return this.loadFieldAt(node, field, off)
-            } else {
-                off += Math.abs(f.storage)
-            }
-        }
-        oops("field missing")
-    }
-
-    private emitRegGet(
-        node: ts.Node,
-        val: Value,
-        refresh?: RefreshMS,
-        field?: jdspec.PacketMember
-    ) {
-        assert(val.valueType.kind == ValueKind.JD_REG)
-        const spec = val.valueType.packetSpec
-        if (refresh === undefined)
-            refresh = spec.kind == "const" ? RefreshMS.Never : RefreshMS.Normal
-        if (!field && spec.fields.length == 1) field = spec.fields[0]
-
-        const wr = this.writer
-        wr.emitStmt(
-            Op.STMT3_QUERY_REG,
-            va(val).roleExpr,
-            literal(spec.identifier),
-            literal(refresh)
-        )
-        if (field) {
-            return this.extractRegField(node, spec, field)
-        } else {
-            const r = nonEmittable(
-                new ValueType(
-                    ValueKind.JD_VALUE_SEQ,
-                    val.valueType.roleSpec,
-                    spec
-                )
-            )
-            va(r).role = va(val).role
-            return r
-        }
-    }
-
-    private emitIsRoleConnected(val: Value | Role) {
-        if (val instanceof Role) val = val.emit(this.writer)
-        return this.writer.builtInMember(val, BuiltInString.ISCONNECTED)
-    }
-
-    private roleExprOf(expr: Expr, val: Value) {
-        const vobj = va(val)
-        if (vobj.roleExpr) val = vobj.roleExpr
-        if (!val.valueType.isRole)
-            throwError(expr, `a role expression is required here`)
-        return val
-    }
-
-    private roleOf(expr: Expr, val: Value) {
-        let vobj = va(this.roleExprOf(expr, val))
-        if (!vobj.role) throwError(expr, `a static role is required here`)
-        return vobj.role
-    }
-
-    private emitRoleCall(
-        expr: ts.CallExpression,
-        val: Value,
-        prop: string
-    ): Value {
-        const wr = this.writer
-        if (!ts.isPropertyAccessExpression(expr.expression)) oops("")
-        switch (prop) {
-            case "onConnected":
-            case "onDisconnected": {
-                this.requireTopLevel(expr)
-                this.requireArgs(expr, 1)
-                const role = this.roleOf(expr, val)
-                const name = role.getName() + "_" + prop
-                const handler = this.emitHandler(name, expr.arguments[0])
-                const disp = this.roleDispatcher(role)
-                const section =
-                    prop == "onConnected" ? disp.connected : disp.disconnected
-                section.emit(wr => {
-                    handler.callMe(wr, [], OpCall.BG_MAX1_PEND1)
-                })
-                if (prop == "onConnected")
-                    disp.init.emit(wr => {
-                        wr.emitIfAndPop(disp.wasConnected.emit(wr), () => {
-                            handler.callMe(wr, [], OpCall.BG_MAX1)
-                        })
-                    })
-                return unit()
-            }
-            case "wait": {
-                const role = this.roleOf(expr, val)
-                if (!role.isCondition())
-                    throwError(expr, "only condition()s have wait()")
-                this.requireArgs(expr, 0)
-                wr.emitStmt(Op.STMT1_WAIT_ROLE, role.emit(wr))
-                return unit()
-            }
-            default:
-                const v = this.emitRoleMember(expr.expression, val)
-                const k = v.valueType.kind
-                if (k == ValueKind.JD_CLIENT_COMMAND) {
-                    this.ignore(val)
-                    return this.emitProcCall(
-                        expr,
-                        this.getClientCommandProc(va(v).clientCommand),
-                        true
-                    )
-                } else if (k == ValueKind.JD_COMMAND) {
-                    const spec = v.valueType.packetSpec
-                    this.emitPackArgs(expr, spec)
-                    this.emitSendCommand(val, spec.identifier)
-                } else if (k != ValueKind.ERROR) {
-                    throwError(expr, `${v.valueType} cannot be called`)
-                }
-                return unit()
-        }
     }
 
     private parseFormat(expr: Expr): NumFmt {
@@ -2075,66 +1664,6 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitPackArgs(expr: ts.CallExpression, pspec: jdspec.PacketInfo) {
-        let offset = 0
-        let repeatsStart = -1
-        let specIdx = 0
-        const fields = pspec.fields
-
-        if (
-            expr.arguments.length == 1 &&
-            this.nodeName(expr.arguments[0]) == "#ds.packet"
-        )
-            return
-
-        const wr = this.writer
-        const args = expr.arguments.map(arg => {
-            if (specIdx >= fields.length) {
-                if (repeatsStart != -1) specIdx = repeatsStart
-                else throwError(arg, `too many arguments`)
-            }
-            const spec = pspec.fields[specIdx++]
-            if (spec.startRepeats) repeatsStart = specIdx - 1
-            let size = Math.abs(spec.storage)
-            let stringLiteralVal: Value = undefined
-            if (size == 0) {
-                stringLiteralVal = this.emitStringOrBuffer(arg)
-                size = this.bufferSize(stringLiteralVal)
-                if (spec.type == "string0") size += 1
-            }
-            const val = stringLiteralVal
-                ? null
-                : this.emitSimpleValue(arg, this.fieldTypeToValueType(spec))
-            const r = {
-                stringLiteralVal,
-                size,
-                offset,
-                spec,
-                val,
-            }
-            offset += size
-            return r
-        })
-
-        // this could be skipped - they will just be zero
-        if (specIdx < fields.length) throwError(expr, "not enough arguments")
-
-        if (offset > JD_SERIAL_MAX_PAYLOAD_SIZE)
-            throwError(expr, "arguments do not fit in a packet")
-
-        wr.allocBuf()
-        wr.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(offset))
-        for (const desc of args) {
-            if (desc.stringLiteralVal !== undefined) {
-                const vd = desc.stringLiteralVal
-                wr.emitStmt(Op.STMT2_SET_PKT, vd, literal(desc.offset))
-            } else {
-                wr.emitBufStore(desc.val, bufferFmt(desc.spec), desc.offset)
-            }
-        }
-        wr.freeBuf()
-    }
-
     private isBufferField(field: jdspec.PacketMember) {
         return (
             field.type == "bytes" ||
@@ -2142,114 +1671,6 @@ class Program implements TopOpWriter {
             field.type == "string0" ||
             field.storage == 0
         )
-    }
-
-    private emitRegisterCall(
-        expr: ts.CallExpression,
-        val: Value,
-        prop: string
-    ): Value {
-        assert(val.valueType.kind == ValueKind.JD_REG)
-        const spec = val.valueType.packetSpec
-        const vobj = va(val)
-        assertRange(0, spec.identifier, 0x1ff)
-
-        switch (prop) {
-            case "read":
-                this.requireArgs(expr, 0)
-                return this.emitRegGet(expr, val)
-            case "write":
-                this.emitPackArgs(expr, spec)
-                this.emitSendCommand(
-                    vobj.roleExpr,
-                    spec.identifier | CMD_SET_REG
-                )
-                return unit()
-            case "onChange": {
-                if (spec.fields.length != 1)
-                    throwError(
-                        expr,
-                        "structured registers not supported in onChange()"
-                    )
-                const fld = spec.fields[0]
-                const noThreshold =
-                    this.isBufferField(fld) || fld.type == "bool"
-                const role = this.roleOf(expr.expression, val)
-                this.requireArgs(expr, noThreshold ? 1 : 2)
-                this.requireTopLevel(expr)
-                const threshold = noThreshold
-                    ? null
-                    : this.forceNumberLiteral(expr.arguments[0])
-                const name = role + "_chg_" + spec.name
-                const handler = this.emitHandler(
-                    name,
-                    expr.arguments[noThreshold ? 0 : 1]
-                )
-                if (role.autoRefreshRegs.indexOf(spec) < 0)
-                    role.autoRefreshRegs.push(spec)
-                this.emitInRoleDispatcher(role, wr => {
-                    const cache = this.proc.mkTempLocal(name, ValueType.NUMBER)
-                    role.dispatcher.init.emit(wr => {
-                        this.emitStore(cache, literal(NaN))
-                    })
-                    const cond = wr.emitExpr(
-                        Op.EXPR2_EQ,
-                        wr.emitExpr(Op.EXPR0_PKT_REG_GET_CODE),
-                        literal(spec.identifier)
-                    )
-                    wr.emitIfAndPop(cond, () => {
-                        // get the reg value from current packet
-                        const curr = wr.cacheValue(
-                            this.extractRegField(expr, spec, fld)
-                        )
-                        const skipHandler = wr.mkLabel("skipHandler")
-                        // if (curr == undefined) goto skip (shouldn't really happen unless service is misbehaving)
-                        wr.emitJumpIfTrue(
-                            skipHandler,
-                            wr.emitExpr(Op.EXPR1_IS_NULL, curr.emit())
-                        )
-                        // if (Math.abs(tmp-curr) < threshold) goto skip
-                        // note that this also calls handler() if cache was NaN
-                        if (threshold) {
-                            const absval = wr.emitExpr(
-                                Op.EXPR1_ABS,
-                                wr.emitExpr(
-                                    Op.EXPR2_SUB,
-                                    cache.emit(wr),
-                                    curr.emit()
-                                )
-                            )
-                            wr.emitJumpIfTrue(
-                                skipHandler,
-                                wr.emitExpr(
-                                    Op.EXPR2_LT,
-                                    absval,
-                                    literal(threshold)
-                                )
-                            )
-                        } else {
-                            wr.emitJumpIfTrue(
-                                skipHandler,
-                                wr.emitExpr(
-                                    Op.EXPR2_EQ,
-                                    cache.emit(wr),
-                                    curr.emit()
-                                )
-                            )
-                        }
-                        // cache := curr
-                        this.emitStore(cache, curr.emit())
-                        curr.free()
-                        // handler()
-                        handler.callMe(wr, [], OpCall.BG_MAX1_PEND1)
-                        // skip:
-                        wr.emitLabel(skipHandler)
-                    })
-                })
-                return unit()
-            }
-        }
-        return null
     }
 
     private emitArgs(args: Expr[], formals?: Variable[]) {
@@ -2266,67 +1687,6 @@ class Program implements TopOpWriter {
         const tmp = this.emitExpr(expr)
         if (!tmp.isLiteral) throwError(expr, "number literal expected")
         return tmp.numValue
-    }
-
-    private finalizeCloudMethods() {
-        if (!this.cloudMethodDispatcher) return
-        this.emitInRoleDispatcher(this.cloudRole, wr => {
-            const skipMethods = wr.mkLabel("skipMethods")
-            const cond = wr.emitExpr(
-                Op.EXPR2_EQ,
-                wr.emitExpr(Op.EXPR0_PKT_EV_CODE),
-                literal(CloudAdapterEvent.CloudCommand)
-            )
-            wr.emitJump(skipMethods, cond)
-
-            this.cloudMethodDispatcher.finalizeRaw()
-            this.emitAckCloud(CloudAdapterCommandStatus.NotFound, true)
-            wr.emitJump(this.cloudRole.dispatcher.top)
-
-            wr.emitLabel(this.cloudMethod429)
-            this.emitAckCloud(CloudAdapterCommandStatus.Busy, true)
-            wr.emitJump(this.cloudRole.dispatcher.top)
-
-            wr.emitLabel(skipMethods)
-        })
-    }
-
-    private emitCloudMethod(expr: ts.CallExpression) {
-        this.requireTopLevel(expr)
-        this.requireArgs(expr, 2)
-        const str = this.forceStringLiteral(expr.arguments[0])
-        const handler = this.emitHandler(
-            this.codeName(expr.expression),
-            expr.arguments[1],
-            { methodHandler: true }
-        )
-        if (!this.cloudMethodDispatcher) {
-            this.emitInRoleDispatcher(this.cloudRole, wr => {
-                this.cloudMethod429 = wr.mkLabel("cloud429")
-            })
-            this.cloudMethodDispatcher = new DelayedCodeSection(
-                "cloud_method",
-                this.cloudRole.dispatcher.proc.writer
-            )
-        }
-
-        this.cloudMethodDispatcher.emit(wr => {
-            const skip = wr.mkLabel("skipMethod")
-            wr.emitJump(skip, wr.emitExpr(Op.EXPR2_STR0EQ, str, literal(4)))
-            wr.emitJumpIfTrue(
-                this.cloudMethod429,
-                wr.emitExpr(Op.EXPR1_GET_FIBER_HANDLE, handler.reference(wr))
-            )
-            const pref = 4 + strlen(this.stringLiteral(expr.arguments[0])) + 1
-            const args = range(handler.numargs).map(i =>
-                i == 0
-                    ? wr.emitBufLoad(NumFmt.U32, 0)
-                    : wr.emitBufLoad(NumFmt.F64, pref + (i - 1) * 8)
-            )
-            handler.callMe(wr, args, OpCall.BG_MAX1)
-            wr.emitJump(this.cloudRole.dispatcher.top)
-            wr.emitLabel(skip)
-        })
     }
 
     private emitSendCommand(role: Value | Role, cmd: number) {
@@ -2364,19 +1724,9 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitCloud(expr: ts.CallExpression, fnName: string): Value {
+    private emitVmOpBuiltin(expr: ts.CallExpression, fnName: string): Value {
         const wr = this.writer
         switch (fnName) {
-            case "ds.CloudConnector.upload":
-                const spec = this.cloudRole.spec.packets.find(
-                    p => p.name == "upload"
-                )
-                this.emitPackArgs(expr, spec)
-                this.emitSendCommand(this.cloudRole, spec.identifier)
-                return unit()
-            case "ds.CloudConnector.onMethod":
-                this.emitCloudMethod(expr)
-                return unit()
             case "console.log":
                 wr.emitCall(
                     wr.dsMember(BuiltInString.LOG),
@@ -2531,17 +1881,8 @@ class Program implements TopOpWriter {
         }
     }
 
-    private getMonkeyPatchProc(mp: MonkeyPatch | FunctionDecl) {
-        if (mp instanceof FunctionDecl) {
-            return this.getFunctionProc(mp)
-        }
-
-        if (mp.proc) return mp.proc
-
-        const stmt = mp.defintion
-        mp.proc = new Procedure(this, mp.name, stmt)
-
-        return this.emitFunction(stmt, mp.proc)
+    private getMonkeyPatchProc(mp: FunctionDecl) {
+        return this.getFunctionProc(mp)
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
@@ -2550,7 +1891,7 @@ class Program implements TopOpWriter {
             callName && callName.startsWith("#") ? callName.slice(1) : null
 
         if (builtInName) {
-            const r = this.emitCloud(expr, builtInName)
+            const r = this.emitVmOpBuiltin(expr, builtInName)
             if (r) return r
 
             const d = this.monkeyPatch[callName]
@@ -2565,14 +1906,8 @@ class Program implements TopOpWriter {
             const val = this.emitExpr(expr.expression.expression)
             const callRes = (() => {
                 switch (val.valueType.kind) {
-                    case ValueKind.JD_EVENT:
-                        return this.emitEventCall(expr, val, prop)
-                    case ValueKind.JD_REG:
-                        return this.emitRegisterCall(expr, val, prop)
                     case ValueKind.BUFFER:
                         return this.emitBufferCall(expr, val, prop)
-                    case ValueKind.ROLE:
-                        return this.emitRoleCall(expr, val, prop)
                     default:
                         return null
                 }
@@ -2633,80 +1968,6 @@ class Program implements TopOpWriter {
         return cell.emit(this.writer)
     }
 
-    private matchesSpecName(pi: jdspec.PacketInfo, id: string) {
-        return matchesName(pi.name, id)
-    }
-
-    private emitRoleMember(expr: ts.PropertyAccessExpression, roleObj: Value) {
-        const propName = this.forceName(expr.name)
-        let r: Value
-        let v: ValueAdd
-
-        assert(roleObj.valueType.isRole)
-
-        if (propName == "isConnected")
-            return this.writer.builtInMember(roleObj, BuiltInString.ISCONNECTED)
-
-        const roleSpec = roleObj.valueType.roleSpec
-
-        const setKind = (p: jdspec.PacketInfo, kind: ValueKind) => {
-            assert(!r)
-            r = nonEmittable(new ValueType(kind, roleSpec, p))
-            v = va(r)
-            v.index = p.identifier
-            v.roleExpr = roleObj
-        }
-
-        for (const cmd of this.clientCommands[roleSpec.camelName] ?? []) {
-            if (this.matchesSpecName(cmd.pktSpec, propName)) {
-                setKind(cmd.pktSpec, ValueKind.JD_CLIENT_COMMAND)
-                v.clientCommand = cmd
-                return r
-            }
-        }
-
-        for (const p of roleSpec.packets) {
-            if (this.matchesSpecName(p, propName)) {
-                if (isRegister(p)) {
-                    setKind(p, ValueKind.JD_REG)
-                }
-                if (isEvent(p)) {
-                    setKind(p, ValueKind.JD_EVENT)
-                }
-                if (isCommand(p)) {
-                    setKind(p, ValueKind.JD_COMMAND)
-                }
-            }
-        }
-
-        const packetSpec = r?.valueType?.packetSpec
-
-        if (packetSpec?.client)
-            throwError(
-                expr,
-                `client packet '${packetSpec.name}' not implemented on ${roleSpec.camelName}`
-            )
-
-        if (!r)
-            throwError(
-                expr,
-                `service ${roleSpec.camelName} has no member ${propName}`
-            )
-        return r
-
-        function isRegister(pi: jdspec.PacketInfo) {
-            return pi.kind == "ro" || pi.kind == "rw" || pi.kind == "const"
-        }
-
-        function isEvent(pi: jdspec.PacketInfo) {
-            return pi.kind == "event"
-        }
-
-        function isCommand(pi: jdspec.PacketInfo) {
-            return pi.kind == "command"
-        }
-    }
-
     private emitElementAccessExpression(
         expr: ts.ElementAccessExpression
     ): Value {
@@ -2759,26 +2020,10 @@ class Program implements TopOpWriter {
         }
 
         const val = this.emitExpr(expr.expression)
-
-        if (val.valueType.isRole) {
-            return this.emitRoleMember(expr, val)
-        } else if (val.valueType.kind == ValueKind.JD_REG) {
-            const spec = val.valueType.packetSpec
-            const propName = this.forceName(expr.name)
-            if (spec.fields.length > 1) {
-                const fld = spec.fields.find(f => matchesName(f.name, propName))
-                if (!fld)
-                    throwError(expr, `no field ${propName} in ${spec.name}`)
-                return this.emitRegGet(expr, val, undefined, fld)
-            } else {
-                throwError(expr, `unhandled member ${propName}; use .read()`)
-            }
-        } else {
-            return this.writer.emitIndex(
-                val,
-                this.writer.emitString(this.forceName(expr.name))
-            )
-        }
+        return this.writer.emitIndex(
+            val,
+            this.writer.emitString(this.forceName(expr.name))
+        )
     }
 
     private isStringLiteral(node: ts.Node): node is ts.LiteralExpression {
@@ -2832,41 +2077,7 @@ class Program implements TopOpWriter {
     }
 
     private emitSimpleValue(expr: Expr, tp = ValueType.NUMBER): Value {
-        const val = this.emitExpr(expr)
-        this.requireValueType(expr, val, tp)
-        return val
-    }
-
-    private isBoolLike(tp: ValueType) {
-        switch (tp.kind) {
-            case ValueKind.ANY:
-            case ValueKind.NUMBER:
-            case ValueKind.NULL:
-            case ValueKind.BOOL:
-            case ValueKind.BUFFER:
-            case ValueKind.STRING:
-            case ValueKind.MAP:
-            case ValueKind.ARRAY:
-            case ValueKind.FIBER:
-            case ValueKind.ROLE:
-            case ValueKind.FUNCTION:
-                return true
-            default:
-                return false
-        }
-    }
-
-    private isSimpleValue(tp: ValueType) {
-        return this.isBoolLike(tp)
-    }
-
-    private requireValueType(node: ts.Node, v: Value, reqTp: ValueType) {
-        if (reqTp == ValueType.BOOL && this.isBoolLike(v.valueType)) return
-        if (reqTp == ValueType.ANY && this.isSimpleValue(v.valueType)) return
-        if (v.valueType == ValueType.ANY || v.valueType == ValueType.NULL)
-            return
-        // if (!v.valueType.equals(reqTp))
-        //    throwError(node, `cannot convert ${v.valueType} to ${reqTp}`)
+        return this.emitExpr(expr)
     }
 
     private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
@@ -2895,14 +2106,6 @@ class Program implements TopOpWriter {
         if (!ts.isFunctionExpression(expr.right))
             throwError(expr.right, "expecting 'function (...) { }' here")
 
-        if (isMonkeyPatch) {
-            const id = className + "." + fnName
-            const mp = new MonkeyPatch(expr.right, fnName)
-            this.monkeyPatch[id] = mp
-            if (this.compileAll || (this.isLibrary && this.inMainFile(expr)))
-                this.getMonkeyPatchProc(mp)
-            return unit()
-        }
 
         const cmd = new ClientCommand(spec)
         cmd.defintion = expr.right
@@ -3025,24 +2228,9 @@ class Program implements TopOpWriter {
 
         const src = this.emitExpr(expr.right)
         if (ts.isArrayLiteralExpression(left)) {
-            if (src.valueType.kind == ValueKind.JD_VALUE_SEQ) {
-                let off = 0
-                const spec = src.valueType.packetSpec
-                for (let i = 0; i < left.elements.length; ++i) {
-                    const pat = left.elements[i]
-                    const f = spec.fields[i]
-                    if (!f) throwError(pat, `not enough fields in ${spec.name}`)
-                    const e = this.loadFieldAt(expr.right, f, off)
-                    off += Math.abs(f.storage)
-                    this.emitStore(this.lookupVar(pat), e)
-                }
-            } else {
-                throwError(expr, "expecting a multi-field register read")
-            }
-            return unit()
+            throwError(expr, "todo array assignment")
         } else if (ts.isIdentifier(left)) {
             const v = this.lookupVar(left)
-            this.requireValueType(expr.right, src, v.valueType)
             this.emitStore(v, src)
             return unit()
         }
@@ -3877,8 +3065,6 @@ class Program implements TopOpWriter {
 
         this.emitProgram(this.tree)
 
-        this.finalizeCloudMethods()
-        this.finalizeDispatchers()
         for (const p of this.procs) this.finalizeProc(p)
 
         const staticProcs: Record<string, boolean> = {}
