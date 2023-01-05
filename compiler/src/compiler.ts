@@ -339,9 +339,6 @@ function idName(pat: Expr | ts.DeclarationName) {
     else return null
 }
 
-function matchesName(specName: string, jsName: string) {
-    return camelize(specName) == jsName
-}
 
 function unit() {
     return nonEmittable(ValueType.VOID)
@@ -996,14 +993,6 @@ class Program implements TopOpWriter {
         }
     }
 
-    private moduleOf(sym: ts.Symbol) {
-        let n = sym?.valueDeclaration?.parent
-        if (n?.kind == SK.ModuleBlock) n = n.parent
-        if (n && ts.isModuleDeclaration(n)) {
-            if (ts.isStringLiteral(n.name)) return n.name.text
-        }
-        return null
-    }
 
     private specFromTypeName(
         expr: ts.Node,
@@ -1634,22 +1623,6 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitVmOpBuiltin(expr: ts.CallExpression, fnName: string): Value {
-        const wr = this.writer
-        switch (fnName) {
-            case "console.log":
-                wr.emitCall(
-                    wr.dsMember(BuiltInString.LOG),
-                    this.compileFormat(expr.arguments.slice())
-                )
-                return unit()
-            case "Date.now":
-                return wr.emitExpr(Op.EXPR0_NOW_MS)
-            default:
-                return null
-        }
-    }
-
     private compileFormat(args: ts.Expression[]) {
         let fmt = ""
         const fmtargs: Expr[] = []
@@ -1691,27 +1664,6 @@ class Program implements TopOpWriter {
         return this.writer.emitExpr(Op.EXPR0_RET_VAL).withType(tp)
     }
 
-    private emitProcCall(
-        expr: ts.CallExpression,
-        proc: Procedure,
-        isMember = false
-    ) {
-        const wr = this.writer
-        const args = expr.arguments.slice()
-        proc.useFrom(expr)
-        if (isMember) {
-            // this.requireArgs(expr, proc.numargs - 1)
-            if (ts.isPropertyAccessExpression(expr.expression))
-                args.unshift(expr.expression.expression)
-            else assert(false)
-        } else {
-            // this.requireArgs(expr, proc.numargs)
-        }
-        const cargs = this.emitArgs(args, proc.args())
-        proc.callMe(wr, cargs)
-        if (proc.retType.kind == ValueKind.VOID) return unit()
-        return this.retVal(proc.retType)
-    }
 
     private symName(sym: ts.Symbol) {
         if (!sym) return null
@@ -1786,6 +1738,14 @@ class Program implements TopOpWriter {
                 this.onStart.emit(wr => proc.callMe(wr, []))
                 return unit()
             }
+            case "console.log":
+                wr.emitCall(
+                    wr.dsMember(BuiltInString.LOG),
+                    this.compileFormat(expr.arguments.slice())
+                )
+                return unit()
+            case "Date.now":
+                return wr.emitExpr(Op.EXPR0_NOW_MS)
             default:
                 return null
         }
@@ -1799,9 +1759,6 @@ class Program implements TopOpWriter {
         if (callName) this.usedMethods[callName] = true
 
         if (builtInName) {
-            const r = this.emitVmOpBuiltin(expr, builtInName)
-            if (r) return r
-
             const builtIn = this.emitBuiltInCall(expr, builtInName)
             if (builtIn) return builtIn
         }
