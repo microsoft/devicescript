@@ -7,7 +7,6 @@ void devs_log_value(devs_ctx_t *ctx, const char *lbl, value_t v) {
 static char buf[64];
 
 const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
-
     if (devs_is_tagged_int(v)) {
         jd_sprintf(buf, sizeof(buf), "%d", (int)v.val_int32);
         return buf;
@@ -128,8 +127,12 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
         break;
     }
 
-    if (!isFun)
+    if (!isFun) {
+        const char *s = devs_string_get_utf8(ctx, v, NULL);
+        if (s)
+            return s;
         return devs_show_value0(ctx, v);
+    }
 
     value_t this_val;
     devs_activation_t *closure;
