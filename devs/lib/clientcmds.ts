@@ -30,7 +30,23 @@ interface ChangeHandler {
     threshold?: number // TODO add logic
 }
 
+function callHandlers(h: ds.Handler[]) {
+    if (!h) return
+    for (let i = 0; i < h.length; ++i) h()
+}
+
 function roleOnPacket(this: ds.Role, pkt: ds.Packet) {
+    if (!pkt || pkt.serviceCommand == 0) {
+        if (this._connHandlers || this._disconHandlers) {
+            const conn = this.isConnected
+            if (conn != this._wasConnected) {
+                this._wasConnected = conn
+                if (conn) callHandlers(this._connHandlers)
+                else callHandlers(this._disconHandlers)
+            }
+        }
+    }
+    if (!pkt) return
     if (pkt.isReport && pkt.isRegGet && this._changeHandlers) {
         const handlers: ChangeHandler[] = this._changeHandlers[pkt.regCode + ""]
         if (handlers) {
@@ -42,6 +58,26 @@ function roleOnPacket(this: ds.Role, pkt: ds.Packet) {
     }
 }
 
+function addElement<T>(arr: T[], e: T) {
+    if (!arr) return [e]
+    arr.push(e)
+    return arr
+}
+
+;(ds.Role.prototype as any).onConnected = function onConnected(
+    this: ds.Role,
+    h: ds.Handler
+) {
+    this.onPacket = roleOnPacket
+    this._connHandlers = addElement(this._connHandlers, h)
+}
+;(ds.Role.prototype as any).onDisconnected = function onConnected(
+    this: ds.Role,
+    h: ds.Handler
+) {
+    this.onPacket = roleOnPacket
+    this._disconHandlers = addElement(this._disconHandlers, h)
+}
 ;(ds.Register.prototype as any).onChange = function onChange(
     this: ds.Register,
     threshold: number,

@@ -228,6 +228,7 @@ static inline value_t devs_arg_self(devs_ctx_t *ctx) {
 
 void devs_ret_double(devs_ctx_t *ctx, double v);
 void devs_ret_int(devs_ctx_t *ctx, int v);
+void devs_ret_bool(devs_ctx_t *ctx, bool v);
 void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v);
 static inline void devs_ret(devs_ctx_t *ctx, value_t v) {
     ctx->curr_fiber->ret_val = v;

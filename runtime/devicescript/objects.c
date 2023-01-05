@@ -183,8 +183,9 @@ static const uint8_t builtin_proto_idx[] = {
     [DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE] = 3,
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = 4,
     [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] = 5,
+    [DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE] = 6,
 };
-#define MAX_PROTO 5
+#define MAX_PROTO 6
 
 const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
     if (idx < sizeof(builtin_proto_idx)) {
@@ -798,6 +799,10 @@ void devs_ret_double(devs_ctx_t *ctx, double v) {
 
 void devs_ret_int(devs_ctx_t *ctx, int v) {
     devs_ret(ctx, devs_value_from_int(v));
+}
+
+void devs_ret_bool(devs_ctx_t *ctx, bool v) {
+    devs_ret(ctx, devs_value_from_bool(v));
 }
 
 void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v) {

@@ -1,6 +1,8 @@
 /// <reference path="devicescript-spec.d.ts" />
 
 declare module "@devicescript/core" {
+    export type Handler = () => void
+
     /**
      * A base class for service clients
      */
@@ -11,9 +13,16 @@ declare module "@devicescript/core" {
         onConnected(handler: () => void): void
         onDisconnected(handler: () => void): void
 
+        /**
+         * @internal
+         */
         onPacket: (pkt: Packet) => void
 
         _changeHandlers: any
+
+        _wasConnected: boolean
+        _connHandlers: Handler[]
+        _disconHandlers: Handler[]
     }
 
     export class Packet {

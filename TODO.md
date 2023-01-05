@@ -1,11 +1,14 @@
 # TODO
 
 ### treat roles as "normal" objects
-* `Command.__func__`
-* Role.onConnected
-* `Register.onChange` ??
-* `Event.subscribe` ??
-* `Event.wait` ??
+* actually call `Command.__func__`
+* `Register.onChange` threshold handling
+* `Event.subscribe`
+* `Event.wait`
+* clean up the compiler
+* tree-shaking for prototypes
+* `Condition` handling
+* register delay computation
 
 ## Big ticket
 * buffer overflows when printing a lot

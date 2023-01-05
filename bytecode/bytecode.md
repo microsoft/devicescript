@@ -420,6 +420,7 @@ Only `true` and `false` values.
     DsCommand_prototype = 24
     DsEvent_prototype = 25
     DsReport_prototype = 26
+    DsRole_prototype = 27
 
 ## Enum: BuiltIn_String
 
@@ -532,3 +533,4 @@ Only `true` and `false` values.
     flags = 105
     isReport = 106
     isCommand = 107
+    isArray = 108

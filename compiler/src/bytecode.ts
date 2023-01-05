@@ -223,7 +223,7 @@ export enum ObjectType {
 }
 
 export enum BuiltInObject {
-    __MAX = 26,
+    __MAX = 27,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -251,10 +251,11 @@ export enum BuiltInObject {
     DSCOMMAND_PROTOTYPE = 24,
     DSEVENT_PROTOTYPE = 25,
     DSREPORT_PROTOTYPE = 26,
+    DSROLE_PROTOTYPE = 27,
 }
 
 export enum BuiltInString {
-    __MAX = 107,
+    __MAX = 108,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -363,6 +364,7 @@ export enum BuiltInString {
     FLAGS = 105,
     ISREPORT = 106,
     ISCOMMAND = 107,
+    ISARRAY = 108,
 }
 
 export const OP_PRINT_FMTS = [
@@ -582,6 +584,7 @@ export const BUILTIN_STRING__VAL = [
     "flags",
     "isReport",
     "isCommand",
+    "isArray",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
@@ -611,4 +614,5 @@ export const BUILTIN_OBJECT__VAL = [
     "DsCommand_prototype",
     "DsEvent_prototype",
     "DsReport_prototype",
+    "DsRole_prototype",
 ]

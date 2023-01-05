@@ -24,3 +24,7 @@ void meth2_Array_insert(devs_ctx_t *ctx) {
     if (devs_array_insert(ctx, self, idx, count))
         devs_runtime_failure(ctx, 60138);
 }
+
+void fun1_Array_isArray(devs_ctx_t *ctx) {
+    devs_ret_bool(ctx, devs_is_array(ctx, devs_arg(ctx, 0)));
+}

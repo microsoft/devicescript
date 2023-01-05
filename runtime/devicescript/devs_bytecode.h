@@ -203,7 +203,7 @@
 #define DEVS_OBJECT_TYPE_ANY 11
 #define DEVS_OBJECT_TYPE_VOID 12
 
-#define DEVS_BUILTIN_OBJECT___MAX 26
+#define DEVS_BUILTIN_OBJECT___MAX 27
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
@@ -231,8 +231,9 @@
 #define DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE 24
 #define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 25
 #define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 26
+#define DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE 27
 
-#define DEVS_BUILTIN_STRING___MAX 107
+#define DEVS_BUILTIN_STRING___MAX 108
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -341,6 +342,7 @@
 #define DEVS_BUILTIN_STRING_FLAGS 105
 #define DEVS_BUILTIN_STRING_ISREPORT 106
 #define DEVS_BUILTIN_STRING_ISCOMMAND 107
+#define DEVS_BUILTIN_STRING_ISARRAY 108
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -376,11 +378,11 @@
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
         "deviceIdentifier", "shortId", "serviceIndex", "serviceCommand", "payload", "decode",      \
         "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
-        "regCode", "flags", "isReport", "isCommand"
+        "regCode", "flags", "isReport", "isCommand", "isArray"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "Fiber",   \
         "Fiber_prototype", "Role", "Role_prototype", "Function", "Function_prototype", "Boolean",  \
         "Boolean_prototype", "Packet", "Packet_prototype", "DeviceScript",                         \
         "DsPacketInfo_prototype", "DsRegister_prototype", "DsCommand_prototype",                   \
-        "DsEvent_prototype", "DsReport_prototype"
+        "DsEvent_prototype", "DsReport_prototype", "DsRole_prototype"
