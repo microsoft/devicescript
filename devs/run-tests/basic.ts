@@ -429,6 +429,21 @@ function testClosures3() {
     testClo(foo)
 }
 
+function testForOf() {
+    let coll2 = [1, 2]
+    if (coll2) {
+    } else ds.panic(111)
+    let tmp = coll2
+    let sum = 0
+    for (const e of coll2) {
+        if (coll2 != null) coll2.push(17)
+        coll2 = null
+        sum += e
+    }
+    isEq(sum, 20)
+    isEq(tmp.length, 3)
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
@@ -444,6 +459,7 @@ testString()
 testClosures1()
 testClosures2()
 testClosures3()
+testForOf()
 
 console.log("all OK")
 ds.reboot()

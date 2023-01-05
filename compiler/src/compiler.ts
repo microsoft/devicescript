@@ -403,11 +403,6 @@ class Procedure {
         if (this.users.indexOf(node) >= 0) return
         this.users.push(node)
     }
-    mkTempLocal(name: string, tp: ValueType) {
-        const l = new Variable(null, VariableKind.Local, this, tp)
-        l._name = name
-        return l
-    }
     debugInfo(): FunctionDebugInfo {
         this.writer._forceFinStmt()
         return {
@@ -942,7 +937,7 @@ class Program implements TopOpWriter {
         wr.emitLabel(topLbl)
 
         const cond = this.emitSimpleValue(stmt.condition, ValueType.BOOL)
-        wr.emitJump(breakLbl, cond)
+        wr.emitJumpIfFalse(breakLbl, cond)
 
         try {
             this.loopStack.push({ continueLbl, breakLbl })
@@ -957,6 +952,56 @@ class Program implements TopOpWriter {
         wr.emitLabel(breakLbl)
     }
 
+    private emitForOfStatement(stmt: ts.ForOfStatement) {
+        const wr = this.writer
+
+        const topLbl = wr.mkLabel("forTop")
+        const continueLbl = wr.mkLabel("forCont")
+        const breakLbl = wr.mkLabel("forBrk")
+
+        if (
+            stmt.awaitModifier ||
+            !stmt.initializer ||
+            !ts.isVariableDeclarationList(stmt.initializer) ||
+            stmt.initializer.declarations.length != 1
+        )
+            throwError(stmt, "only for (let/const x of ...) supported")
+
+        const decl = stmt.initializer.declarations[0]
+      
+        const coll = wr.cacheValue(this.emitExpr(stmt.expression))
+        const idx = wr.cacheValue(literal(0), true)
+        coll.longTerm = true
+        idx.longTerm = true
+
+        this.emitVariableDeclarationList(stmt.initializer)
+        const elt = this.getCellAtLocation(decl) as Variable
+        assert(elt instanceof Variable)
+
+        wr.emitLabel(topLbl)
+
+        const cond = wr.emitExpr(
+            Op.EXPR2_LT,
+            idx.emit(),
+            wr.emitIndex(coll.emit(), wr.emitString("length"))
+        )
+        wr.emitJumpIfFalse(breakLbl, cond)
+
+        try {
+            this.loopStack.push({ continueLbl, breakLbl })
+            this.emitStore(elt, wr.emitIndex(coll.emit(), idx.emit()))
+            this.emitStmt(stmt.statement)
+            wr.emitLabel(continueLbl)
+            idx.store(wr.emitExpr(Op.EXPR2_ADD, idx.emit(), literal(1)))
+        } finally {
+            this.loopStack.pop()
+            coll.free()
+            idx.free()
+        }
+
+        wr.emitJump(topLbl)
+        wr.emitLabel(breakLbl)
+    }
     private emitWhileStatement(stmt: ts.WhileStatement) {
         const wr = this.writer
 
@@ -965,7 +1010,7 @@ class Program implements TopOpWriter {
 
         wr.emitLabel(continueLbl)
         const cond = this.emitSimpleValue(stmt.expression, ValueType.BOOL)
-        wr.emitJump(breakLbl, cond)
+        wr.emitJumpIfFalse(breakLbl, cond)
 
         try {
             this.loopStack.push({ continueLbl, breakLbl })
@@ -2194,7 +2239,7 @@ class Program implements TopOpWriter {
                 tmp.emit()
             )
             const skipB = wr.mkLabel("lazyB")
-            wr.emitJump(skipB, tst)
+            wr.emitJumpIfFalse(skipB, tst)
             tmp.store(this.emitSimpleValue(expr.right, ValueType.BOOL))
             wr.emitLabel(skipB)
 
@@ -2357,7 +2402,7 @@ class Program implements TopOpWriter {
         } else {
             const lblElse = wr.mkLabel("condElse")
             const lblEnd = wr.mkLabel("condEnd")
-            wr.emitJump(lblElse, cond)
+            wr.emitJumpIfFalse(lblElse, cond)
             const tmp = wr.cacheValue(this.emitExpr(expr.whenTrue), true)
             wr.emitJump(lblEnd)
             wr.emitLabel(lblElse)
@@ -2579,6 +2624,8 @@ class Program implements TopOpWriter {
                     return this.emitWhileStatement(stmt as ts.WhileStatement)
                 case SK.ForStatement:
                     return this.emitForStatement(stmt as ts.ForStatement)
+                case SK.ForOfStatement:
+                    return this.emitForOfStatement(stmt as ts.ForOfStatement)
                 case SK.Block:
                     stmt.forEachChild(s => this.emitStmt(s as ts.Statement))
                     return

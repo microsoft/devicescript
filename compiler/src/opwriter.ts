@@ -106,6 +106,7 @@ export class Value {
 
 export class CachedValue {
     numrefs = 1
+    longTerm = false
     valueType: ValueType
     constructor(public parent: OpWriter, public index: number) {}
     get packedIndex() {
@@ -479,7 +480,7 @@ export class OpWriter {
         if (elseBody) {
             const endIf = this.mkLabel("endif")
             const elseIf = this.mkLabel("elseif")
-            this.emitJump(elseIf, reg)
+            this.emitJumpIfFalse(elseIf, reg)
             thenBody()
             this.emitJump(endIf)
             this.emitLabel(elseIf)
@@ -487,17 +488,25 @@ export class OpWriter {
             this.emitLabel(endIf)
         } else {
             const skipIf = this.mkLabel("skipif")
-            this.emitJump(skipIf, reg)
+            this.emitJumpIfFalse(skipIf, reg)
             thenBody()
             this.emitLabel(skipIf)
         }
     }
 
     emitJumpIfTrue(label: Label, cond: Value) {
-        return this.emitJump(label, this.emitExpr(Op.EXPR1_NOT, cond))
+        return this.emitJumpIfFalse(label, this.emitExpr(Op.EXPR1_NOT, cond))
     }
 
-    emitJump(label: Label, cond?: Value) {
+    emitJumpIfFalse(label: Label, cond: Value) {
+        return this._emitJump(label, cond)
+    }
+
+    emitJump(label: Label) {
+        return this._emitJump(label)
+    }
+
+    private _emitJump(label: Label, cond?: Value) {
         cond?.adopt()
         this.spillAllStateful()
 
@@ -522,10 +531,10 @@ export class OpWriter {
         oops(msg)
     }
 
-    assertNoTemps() {
+    assertNoTemps(really = false) {
         if (this.prog.hasErrors) return
         for (const c of this.cachedValues) {
-            if (c !== null) {
+            if (c !== null && (really || !c.longTerm)) {
                 this.oops(`_L${c.packedIndex} still has ${c.numrefs} refs`)
             }
         }
@@ -542,7 +551,7 @@ export class OpWriter {
             if (l.uses) this.oops(`label ${l.name} not resolved`)
         }
 
-        this.assertNoTemps()
+        this.assertNoTemps(true)
 
         while (this.location() & 3) this.writeByte(0)
 

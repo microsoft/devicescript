@@ -165,7 +165,7 @@ bool devs_value_to_bool(devs_ctx_t *ctx, value_t v) {
     if (devs_is_special(v))
         return devs_handle_value(v) >= DEVS_SPECIAL_TRUE;
     if (devs_is_handle(v))
-        return 0;
+        return 1;
     return v._f == 0.0 ? 1 : 0;
 }
 
