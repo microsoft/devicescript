@@ -19,18 +19,18 @@
 #define DEVS_STMT4_STORE_BUFFER 19   // buffer, numfmt, offset, value
 #define DEVS_EXPRx_LOAD_LOCAL 21     // *local_idx
 #define DEVS_EXPRx_LOAD_GLOBAL 22    // *global_idx
-#define DEVS_STMTx2_STORE_CLOSURE 83 // *local_clo_idx, levels, value
-#define DEVS_EXPRx1_LOAD_CLOSURE 84  // *local_clo_idx, levels
-#define DEVS_EXPRx_MAKE_CLOSURE 85   // CLOSURE(func_idx)
+#define DEVS_STMTx2_STORE_CLOSURE 73 // *local_clo_idx, levels, value
+#define DEVS_EXPRx1_LOAD_CLOSURE 74  // *local_clo_idx, levels
+#define DEVS_EXPRx_MAKE_CLOSURE 75   // CLOSURE(func_idx)
 #define DEVS_EXPR2_INDEX 24          // object[idx]
 #define DEVS_STMT3_INDEX_SET 25      // object[index] := value
-#define DEVS_STMT2_INDEX_DELETE 90   // delete object[index]
+#define DEVS_STMT2_INDEX_DELETE 11   // delete object[index]
 #define DEVS_EXPRx1_BUILTIN_FIELD 26 // [builtin_idx]obj
 #define DEVS_EXPRx1_ASCII_FIELD 27   // [ascii_idx]obj
 #define DEVS_EXPRx1_UTF8_FIELD 28    // [utf8_idx]obj
 #define DEVS_EXPRx_MATH_FIELD 29     // Math.builtin_idx
 #define DEVS_EXPRx_DS_FIELD 30       // ds.builtin_idx
-#define DEVS_EXPRx_OBJECT_FIELD 89   // Object.builtin_idx
+#define DEVS_EXPRx_OBJECT_FIELD 16   // Object.builtin_idx
 #define DEVS_STMT0_ALLOC_MAP 31
 #define DEVS_STMT1_ALLOC_ARRAY 32           // initial_size
 #define DEVS_STMT1_ALLOC_BUFFER 33          // size
@@ -46,19 +46,19 @@
 #define DEVS_EXPR3_LOAD_BUFFER 43           // buffer, numfmt, offset
 #define DEVS_EXPR0_RET_VAL 44
 #define DEVS_EXPR1_TYPEOF 45     // object
-#define DEVS_EXPR1_TYPEOF_STR 86 // object
+#define DEVS_EXPR1_TYPEOF_STR 76 // object
 #define DEVS_EXPR0_NULL 46
 #define DEVS_EXPR1_IS_NULL 47
 #define DEVS_EXPR0_TRUE 48
 #define DEVS_EXPR0_FALSE 49
 #define DEVS_EXPR1_TO_BOOL 50 // !!x
 #define DEVS_EXPR0_NAN 51
-#define DEVS_EXPR0_INF 87
+#define DEVS_EXPR0_INF 20
 #define DEVS_EXPR1_ABS 52
 #define DEVS_EXPR1_BIT_NOT 53 // ~x
 #define DEVS_EXPR1_IS_NAN 54
 #define DEVS_EXPR1_NEG 55   // -x
-#define DEVS_EXPR1_UPLUS 88 // +x
+#define DEVS_EXPR1_UPLUS 23 // +x
 #define DEVS_EXPR1_NOT 56   // !x
 #define DEVS_EXPR1_TO_INT 57
 #define DEVS_EXPR2_ADD 58                  // x + y
@@ -76,35 +76,23 @@
 #define DEVS_EXPR2_LT 70                   // x < y
 #define DEVS_EXPR2_NE 71                   // x != y
 #define DEVS_STMT1_TERMINATE_FIBER 72      // fiber_handle
-#define DEVS_STMT1_WAIT_ROLE 73            // role
-#define DEVS_STMT3_QUERY_REG 74            // role, code, timeout
-#define DEVS_STMT2_SEND_CMD 75             // role, code
-#define DEVS_STMT4_QUERY_IDX_REG 76        // role, code, string, timeout
-#define DEVS_STMT1_SETUP_PKT_BUFFER 77     // size
-#define DEVS_STMT2_SET_PKT 78              // buffer, offset
-#define DEVS_EXPR0_NOW_MS 79
-#define DEVS_EXPR2_STR0EQ 11           // buffer, offset
-#define DEVS_EXPR1_GET_FIBER_HANDLE 80 // func
-#define DEVS_EXPR0_PKT_SIZE 81
-#define DEVS_EXPR0_PKT_EV_CODE 82
-#define DEVS_EXPR0_PKT_REG_GET_CODE 20
-#define DEVS_EXPR0_PKT_REPORT_CODE 23
-#define DEVS_EXPR0_PKT_COMMAND_CODE 16
+#define DEVS_EXPR0_NOW_MS 77
+#define DEVS_EXPR1_GET_FIBER_HANDLE 78 // func
 #define DEVS_EXPR0_PKT_BUFFER 42
-#define DEVS_OP_PAST_LAST 91
+#define DEVS_OP_PAST_LAST 79
 
 #define DEVS_OP_PROPS                                                                              \
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20" \
-    "\x00\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x11\x30\x31\x11\x60\x31\x31\x14\x40\x20\x20" \
+    "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41\x60\x12"
+    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01"
 #define DEVS_OP_TYPES                                                                              \
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x06\x0c\x0c\x0c\x0c\x01\x0c\x0c\x0c\x01\x0b\x0b" \
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b" \
     "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0b\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x01\x07\x01\x01\x0c\x0b\x08\x01\x01\x01\x0b\x0c"
+    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07"
 
-#define DEVS_IMG_VERSION 0x02010000
+#define DEVS_IMG_VERSION 0x03000000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 9
@@ -348,24 +336,21 @@
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
-        stmt5_call4, stmt6_call5, stmt7_call6, stmt8_call7, stmt9_call8, expr2_str0eq,             \
-        stmt1_return, stmtx_jmp, stmtx1_jmp_z, stmt1_panic, expr0_pkt_command_code,                \
-        stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer, expr0_pkt_reg_get_code,       \
-        exprx_load_local, exprx_load_global, expr0_pkt_report_code, expr2_index, stmt3_index_set,  \
-        exprx1_builtin_field, exprx1_ascii_field, exprx1_utf8_field, exprx_math_field,             \
-        exprx_ds_field, stmt0_alloc_map, stmt1_alloc_array, stmt1_alloc_buffer, exprx_static_role, \
-        exprx_static_buffer, exprx_static_builtin_string, exprx_static_ascii_string,               \
-        exprx_static_utf8_string, exprx_static_function, exprx_literal, exprx_literal_f64,         \
-        expr0_pkt_buffer, expr3_load_buffer, expr0_ret_val, expr1_typeof, expr0_null,              \
-        expr1_is_null, expr0_true, expr0_false, expr1_to_bool, expr0_nan, expr1_abs,               \
-        expr1_bit_not, expr1_is_nan, expr1_neg, expr1_not, expr1_to_int, expr2_add, expr2_sub,     \
-        expr2_mul, expr2_div, expr2_bit_and, expr2_bit_or, expr2_bit_xor, expr2_shift_left,        \
-        expr2_shift_right, expr2_shift_right_unsigned, expr2_eq, expr2_le, expr2_lt, expr2_ne,     \
-        stmt1_terminate_fiber, stmt1_wait_role, stmt3_query_reg, stmt2_send_cmd,                   \
-        stmt4_query_idx_reg, stmt1_setup_pkt_buffer, stmt2_set_pkt, expr0_now_ms,                  \
-        expr1_get_fiber_handle, expr0_pkt_size, expr0_pkt_ev_code, stmtx2_store_closure,           \
-        exprx1_load_closure, exprx_make_closure, expr1_typeof_str, expr0_inf, expr1_uplus,         \
-        exprx_object_field, stmt2_index_delete, expr_invalid
+        stmt5_call4, stmt6_call5, stmt7_call6, stmt8_call7, stmt9_call8, stmt2_index_delete,       \
+        stmt1_return, stmtx_jmp, stmtx1_jmp_z, stmt1_panic, exprx_object_field,                    \
+        stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer, expr0_inf, exprx_load_local,  \
+        exprx_load_global, expr1_uplus, expr2_index, stmt3_index_set, exprx1_builtin_field,        \
+        exprx1_ascii_field, exprx1_utf8_field, exprx_math_field, exprx_ds_field, stmt0_alloc_map,  \
+        stmt1_alloc_array, stmt1_alloc_buffer, exprx_static_role, exprx_static_buffer,             \
+        exprx_static_builtin_string, exprx_static_ascii_string, exprx_static_utf8_string,          \
+        exprx_static_function, exprx_literal, exprx_literal_f64, expr0_pkt_buffer,                 \
+        expr3_load_buffer, expr0_ret_val, expr1_typeof, expr0_null, expr1_is_null, expr0_true,     \
+        expr0_false, expr1_to_bool, expr0_nan, expr1_abs, expr1_bit_not, expr1_is_nan, expr1_neg,  \
+        expr1_not, expr1_to_int, expr2_add, expr2_sub, expr2_mul, expr2_div, expr2_bit_and,        \
+        expr2_bit_or, expr2_bit_xor, expr2_shift_left, expr2_shift_right,                          \
+        expr2_shift_right_unsigned, expr2_eq, expr2_le, expr2_lt, expr2_ne, stmt1_terminate_fiber, \
+        stmtx2_store_closure, exprx1_load_closure, exprx_make_closure, expr1_typeof_str,           \
+        expr0_now_ms, expr1_get_fiber_handle, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \

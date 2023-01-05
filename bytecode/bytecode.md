@@ -40,11 +40,11 @@ Jump if condition is false.
 
     load_global(*global_idx): any = 22
 
-    store_closure(*local_clo_idx, levels, value) = 83
+    store_closure(*local_clo_idx, levels, value) = 73
 
-    load_closure(*local_clo_idx, levels): any = 84
+    load_closure(*local_clo_idx, levels): any = 74
 
-    make_closure(*func_idx): function = 85    // CLOSURE(func_idx)
+    make_closure(*func_idx): function = 75    // CLOSURE(func_idx)
 
 ### Field access
 
@@ -56,7 +56,7 @@ Read named field or sequence member (depending on type of idx).
 
 Write named field or sequence member (depending on type of idx).
 
-    index_delete(object, index) = 90              // delete object[index]
+    index_delete(object, index) = 11              // delete object[index]
 
 Remove a named field from an object.
 
@@ -76,7 +76,7 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun ds_field(*builtin_idx): any = 30        // ds.builtin_idx
 
-    fun object_field(*builtin_idx): any = 89      // Object.builtin_idx
+    fun object_field(*builtin_idx): any = 16      // Object.builtin_idx
 
 ### Objects
 
@@ -118,7 +118,7 @@ Return value of query register, call, etc.
 
 Returns `Object_Type` enum.
 
-    fun typeof_str(object): number = 86
+    fun typeof_str(object): number = 76
 
 Returns JS-compatible string.
 
@@ -142,7 +142,7 @@ Check if object is exactly `null`.
 
     fun nan(): number = 51
 
-    fun inf(): number = 87
+    fun inf(): number = 20
 
     fun abs(x): number = 52
 
@@ -152,7 +152,7 @@ Check if object is exactly `null`.
 
     fun neg(x): number = 55   // -x
 
-    fun uplus(x): number = 88  // +x
+    fun uplus(x): number = 23  // +x
 
     fun not(x): bool = 56   // !x
 
@@ -194,43 +194,14 @@ Same as `x | 0`.
 
 Returns nan (fiber doesn't exists) or 0 (terminated).
 
-    wait_role(role) = 73
-
-Wait until any packet arrives from specified role.
-
-    query_reg(role, code, timeout) = 74
-
-    send_cmd(role, code) = 75
-
-    query_idx_reg(role, code, string, timeout) = 76
-
-    setup_pkt_buffer(size) = 77
-
-    set_pkt(buffer, offset) = 78
-
-Copy given string to packet buffer at given `offset`.
-Same as `blit(pkt_buffer, offset, buffer, 0, null)`.
-
-    now_ms: number = 79
+    now_ms: number = 77
 
 Time since device restart in ms; time only advances when sleeping.
 
-    str0eq(buffer, offset): bool = 11
-
-    get_fiber_handle(func): fiber = 80
+    get_fiber_handle(func): fiber = 78
 
 If `func == null` returns self-handle.
 Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
-
-    pkt_size(): number = 81
-
-    pkt_ev_code(): number = 82
-
-    pkt_reg_get_code(): number = 20
-
-    pkt_report_code(): number = 23
-
-    pkt_command_code(): number = 16
 
     fun pkt_buffer(): buffer = 42
 
@@ -239,7 +210,7 @@ Return reference to "buffer" with the packet data.
 
 ## Format Constants
 
-    img_version = 0x02_01_0000
+    img_version = 0x03_00_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9

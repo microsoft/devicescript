@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <math.h>
 
+#if 0
 static void stmt1_wait_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t a = devs_vm_pop_arg_role(ctx);
     ctx->curr_fiber->role_idx = a;
@@ -16,21 +17,7 @@ static void stmt2_send_cmd(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t a = devs_vm_pop_arg_role(ctx);
     devs_jd_send_cmd(ctx, a, b);
 }
-
-static void stmt3_query_reg(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t timeout = devs_vm_pop_arg_u32(ctx);
-    uint32_t b = devs_vm_pop_arg_u32(ctx);
-    uint32_t a = devs_vm_pop_arg_role(ctx);
-    devs_jd_get_register(ctx, a, JD_GET(b), timeout, 0);
-}
-
-static void stmt4_query_idx_reg(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned stridx = devs_vm_pop_arg_stridx(ctx);
-    uint32_t timeout = devs_vm_pop_arg_u32(ctx);
-    uint32_t b = devs_vm_pop_arg_u32(ctx);
-    uint32_t a = devs_vm_pop_arg_role(ctx);
-    devs_jd_get_register(ctx, a, b, timeout, stridx);
-}
+#endif
 
 static void stmt1_return(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_fiber_t *f = ctx->curr_fiber;
@@ -77,29 +64,6 @@ static void stmt2_index_delete(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_map_t *map = devs_object_get_attached_rw(ctx, obj);
     if (map && devs_map_delete(ctx, map, idx) == 0)
         ctx->curr_fiber->ret_val = devs_true;
-}
-
-static void stmt1_setup_pkt_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t a = devs_vm_pop_arg_u32(ctx);
-    if (a > JD_SERIAL_PAYLOAD_SIZE) {
-        devs_runtime_failure(ctx, 60115);
-    } else {
-        ctx->packet.service_size = a;
-        memset(ctx->packet.data, 0, a);
-    }
-}
-
-static void stmt2_set_pkt(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned slen;
-    uint32_t offset = devs_vm_pop_arg_u32(ctx);
-    void *src = devs_vm_pop_arg_buffer_data(ctx, &slen, DEVS_BUFFER_STRING_OK);
-
-    int len = ctx->packet.service_size - offset;
-    if (len > 0) {
-        if (slen < (unsigned)len)
-            len = slen;
-        memcpy(ctx->packet.data + offset, src, len);
-    }
 }
 
 static void stmt1_panic(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -225,16 +189,6 @@ static value_t expr_invalid(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_runtime_failure(ctx, 60104);
 }
 
-static value_t expr2_str0eq(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned len;
-    uint32_t offset = devs_vm_pop_arg_u32(ctx);
-    uint8_t *data = devs_vm_pop_arg_buffer_data(ctx, &len, DEVS_BUFFER_STRING_OK);
-
-    return devs_value_from_bool(ctx->packet.service_size >= offset + len + 1 &&
-                                ctx->packet.data[offset + len] == 0 &&
-                                memcmp(ctx->packet.data + offset, data, len) == 0);
-}
-
 static value_t exprx_load_local(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
     if (off < frame->func->num_slots)
@@ -290,38 +244,6 @@ static value_t exprx_literal_f64(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t expr0_ret_val(devs_activation_t *frame, devs_ctx_t *ctx) {
     return ctx->curr_fiber->ret_val;
-}
-
-static value_t expr0_pkt_size(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return devs_value_from_int(ctx->packet.service_size);
-}
-
-static value_t expr0_pkt_ev_code(devs_activation_t *frame, devs_ctx_t *ctx) {
-    if (jd_is_event(&ctx->packet))
-        return devs_value_from_int(ctx->packet.service_command & JD_CMD_EVENT_CODE_MASK);
-    else
-        return devs_undefined;
-}
-
-static value_t expr0_pkt_reg_get_code(devs_activation_t *frame, devs_ctx_t *ctx) {
-    if (jd_is_report(&ctx->packet) && jd_is_register_get(&ctx->packet))
-        return devs_value_from_int(JD_REG_CODE(ctx->packet.service_command));
-    else
-        return devs_undefined;
-}
-
-static value_t expr0_pkt_command_code(devs_activation_t *frame, devs_ctx_t *ctx) {
-    if (jd_is_command(&ctx->packet))
-        return devs_value_from_int(ctx->packet.service_command);
-    else
-        return devs_undefined;
-}
-
-static value_t expr0_pkt_report_code(devs_activation_t *frame, devs_ctx_t *ctx) {
-    if (jd_is_report(&ctx->packet))
-        return devs_value_from_int(ctx->packet.service_command);
-    else
-        return devs_undefined;
 }
 
 static value_t expr0_now_ms(devs_activation_t *frame, devs_ctx_t *ctx) {

@@ -19,18 +19,18 @@ export enum Op {
     STMT4_STORE_BUFFER = 19, // buffer, numfmt, offset, value
     EXPRx_LOAD_LOCAL = 21, // *local_idx
     EXPRx_LOAD_GLOBAL = 22, // *global_idx
-    STMTx2_STORE_CLOSURE = 83, // *local_clo_idx, levels, value
-    EXPRx1_LOAD_CLOSURE = 84, // *local_clo_idx, levels
-    EXPRx_MAKE_CLOSURE = 85, // CLOSURE(func_idx)
+    STMTx2_STORE_CLOSURE = 73, // *local_clo_idx, levels, value
+    EXPRx1_LOAD_CLOSURE = 74, // *local_clo_idx, levels
+    EXPRx_MAKE_CLOSURE = 75, // CLOSURE(func_idx)
     EXPR2_INDEX = 24, // object[idx]
     STMT3_INDEX_SET = 25, // object[index] := value
-    STMT2_INDEX_DELETE = 90, // delete object[index]
+    STMT2_INDEX_DELETE = 11, // delete object[index]
     EXPRx1_BUILTIN_FIELD = 26, // [builtin_idx]obj
     EXPRx1_ASCII_FIELD = 27, // [ascii_idx]obj
     EXPRx1_UTF8_FIELD = 28, // [utf8_idx]obj
     EXPRx_MATH_FIELD = 29, // Math.builtin_idx
     EXPRx_DS_FIELD = 30, // ds.builtin_idx
-    EXPRx_OBJECT_FIELD = 89, // Object.builtin_idx
+    EXPRx_OBJECT_FIELD = 16, // Object.builtin_idx
     STMT0_ALLOC_MAP = 31,
     STMT1_ALLOC_ARRAY = 32, // initial_size
     STMT1_ALLOC_BUFFER = 33, // size
@@ -46,19 +46,19 @@ export enum Op {
     EXPR3_LOAD_BUFFER = 43, // buffer, numfmt, offset
     EXPR0_RET_VAL = 44,
     EXPR1_TYPEOF = 45, // object
-    EXPR1_TYPEOF_STR = 86, // object
+    EXPR1_TYPEOF_STR = 76, // object
     EXPR0_NULL = 46,
     EXPR1_IS_NULL = 47,
     EXPR0_TRUE = 48,
     EXPR0_FALSE = 49,
     EXPR1_TO_BOOL = 50, // !!x
     EXPR0_NAN = 51,
-    EXPR0_INF = 87,
+    EXPR0_INF = 20,
     EXPR1_ABS = 52,
     EXPR1_BIT_NOT = 53, // ~x
     EXPR1_IS_NAN = 54,
     EXPR1_NEG = 55, // -x
-    EXPR1_UPLUS = 88, // +x
+    EXPR1_UPLUS = 23, // +x
     EXPR1_NOT = 56, // !x
     EXPR1_TO_INT = 57,
     EXPR2_ADD = 58, // x + y
@@ -76,31 +76,19 @@ export enum Op {
     EXPR2_LT = 70, // x < y
     EXPR2_NE = 71, // x != y
     STMT1_TERMINATE_FIBER = 72, // fiber_handle
-    STMT1_WAIT_ROLE = 73, // role
-    STMT3_QUERY_REG = 74, // role, code, timeout
-    STMT2_SEND_CMD = 75, // role, code
-    STMT4_QUERY_IDX_REG = 76, // role, code, string, timeout
-    STMT1_SETUP_PKT_BUFFER = 77, // size
-    STMT2_SET_PKT = 78, // buffer, offset
-    EXPR0_NOW_MS = 79,
-    EXPR2_STR0EQ = 11, // buffer, offset
-    EXPR1_GET_FIBER_HANDLE = 80, // func
-    EXPR0_PKT_SIZE = 81,
-    EXPR0_PKT_EV_CODE = 82,
-    EXPR0_PKT_REG_GET_CODE = 20,
-    EXPR0_PKT_REPORT_CODE = 23,
-    EXPR0_PKT_COMMAND_CODE = 16,
+    EXPR0_NOW_MS = 77,
+    EXPR1_GET_FIBER_HANDLE = 78, // func
     EXPR0_PKT_BUFFER = 42,
-    OP_PAST_LAST = 91,
+    OP_PAST_LAST = 79,
 }
 
 export const OP_PROPS =
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x02\x11\x30\x31\x11\x00\x31\x31\x14\x00\x20\x20\x00\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x11\x13\x12\x14\x11\x12\x00\x01\x00\x00\x32\x21\x20\x41\x40\x41\x60\x12"
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x11\x30\x31\x11\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01"
 export const OP_TYPES =
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x06\x0c\x0c\x0c\x0c\x01\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x01\x07\x01\x01\x0c\x0b\x08\x01\x01\x01\x0b\x0c"
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07"
 
 export enum BinFmt {
-    IMG_VERSION = 0x02010000,
+    IMG_VERSION = 0x03000000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 9,
@@ -381,19 +369,19 @@ export const OP_PRINT_FMTS = [
     "CALL %e(%e, %e, %e, %e, %e, %e)",
     "CALL %e(%e, %e, %e, %e, %e, %e, %e)",
     "CALL %e(%e, %e, %e, %e, %e, %e, %e, %e)",
-    "str0eq(%e, offset=%e)",
+    "delete %e[%e]",
     "RETURN %e",
     "JMP %j",
     "JMP %j IF NOT %e",
     "PANIC error_code=%e",
-    "pkt_command_code()",
+    "Object.%I",
     "%L := %e",
     "%G := %e",
     "STORE_BUFFER %e %n offset=%e %e",
-    "pkt_reg_get_code()",
+    "inf()",
     "%L",
     "%G",
-    "pkt_report_code()",
+    "+%e",
     "%e[%e]",
     "%e[%e] := %e",
     "[%I]%e",
@@ -443,24 +431,12 @@ export const OP_PRINT_FMTS = [
     "(%e < %e)",
     "(%e != %e)",
     "TERMINATE_FIBER fiber_handle=%e",
-    "WAIT_ROLE %e",
-    "QUERY_REG %e code=%e timeout=%e",
-    "SEND_CMD %e code=%e",
-    "QUERY_IDX_REG %e code=%e string=%e timeout=%e",
-    "SETUP_PKT_BUFFER size=%e",
-    "SET_PKT %e offset=%e",
-    "now_ms()",
-    "get_fiber_handle(func=%e)",
-    "pkt_size()",
-    "pkt_ev_code()",
     "STORE_CLOSURE local_clo_idx=%e levels=%e %e",
     "load_closure(local_clo_idx=%e, levels=%e)",
     "CLOSURE(%F)",
     "typeof_str(%e)",
-    "inf()",
-    "+%e",
-    "Object.%I",
-    "delete %e[%e]",
+    "now_ms()",
+    "get_fiber_handle(func=%e)",
 ]
 export const OBJECT_TYPE = [
     "null",
