@@ -106,10 +106,17 @@ interface Array<T> {
     [Symbol.iterator](): IterableIterator<T>
 
     /**
-     * Appends new element to the end of an array, and returns the new length of the array.
-     * @param item New element to add to the array.
+     * Appends new elements to the end of an array, and returns the new length of the array.
+     * @param items New elements to add to the array.
      */
-    push(item: T): number
+    push(...items: T[]): number
+
+
+    /**
+     * Appends new elements to the end of an array, and returns the new length of the array.
+     * @param items New elements to add to the array.
+     */
+    pushRange(items: T[]): number
 
     /**
      * Returns a copy of a section of an array.

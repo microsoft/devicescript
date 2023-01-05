@@ -8,17 +8,14 @@ const r4 = new ds.LightBulb() // OK
 const btn = new ds.Button()
 const clr = new ds.Color()
 function test1() {
-    let a, b, c, d
+    {
+        let [a, b] = btn.pressure.read() //! method that returns an iterator
+        let [aa] = btn.pressure.read() //! method that returns an iterator
+    }
 
-    [a, b] = btn.pressure.read(); //! method that returns an iterator
-    [a] = btn.pressure.read(); //! method that returns an iterator
-
-    [a, b] = clr.color.read(); // OK
-    [a, b, c, d] = clr.color.read() //! not enough fields in color
-
-    // a = clr.color.read() // cannot convert multi-field value color.color to number
-
-    a[b] = btn.pressure.read()
+    {
+        let [a, b] = clr.color.read() // OK
+    }
 }
 
 test1()

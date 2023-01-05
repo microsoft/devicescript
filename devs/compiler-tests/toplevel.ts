@@ -6,18 +6,18 @@ const r = new ds.Button()
 function foo() {
     function bar() { }
 
-    r.down.subscribe(() => { //! top-level
+    r.down.subscribe(() => {
     })
-    r.onConnected(() => { //! top-level
+    r.onConnected(() => {
     })
-    r.pressure.onChange(0.1, () => {}) //! top-level
+    r.pressure.onChange(0.1, () => {})
 }
 
 if (g > 0) {
     const q = 0
     function bazz() { }
 
-    r.down.subscribe(() => { //! top-level
+    r.down.subscribe(() => {
     })
 }
 

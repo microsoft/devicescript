@@ -222,7 +222,7 @@
 #define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 26
 #define DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE 27
 
-#define DEVS_BUILTIN_STRING___MAX 110
+#define DEVS_BUILTIN_STRING___MAX 111
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -334,6 +334,7 @@
 #define DEVS_BUILTIN_STRING_ISARRAY 108
 #define DEVS_BUILTIN_STRING_INLINE 109
 #define DEVS_BUILTIN_STRING_ASSERT 110
+#define DEVS_BUILTIN_STRING_PUSHRANGE 111
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -366,7 +367,7 @@
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
         "deviceIdentifier", "shortId", "serviceIndex", "serviceCommand", "payload", "decode",      \
         "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
-        "regCode", "flags", "isReport", "isCommand", "isArray", "inline", "assert"
+        "regCode", "flags", "isReport", "isCommand", "isArray", "inline", "assert", "pushRange"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "Fiber",   \

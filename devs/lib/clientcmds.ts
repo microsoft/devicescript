@@ -117,11 +117,6 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     lst[lst.length] = obj
 }
 
-Array.prototype.push = function push<T>(this: T[], item: T) {
-    this[this.length] = item
-    return this.length
-}
-
 function handleCloudCommand(pkt: ds.Packet) {
     const [seqNo, cmd, ...vals] = pkt.decode()
     const cloud = pkt.role as ds.CloudAdapter

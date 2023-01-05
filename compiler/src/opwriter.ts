@@ -749,12 +749,6 @@ export class OpWriter {
         }
     }
 
-    emitSetBuffer(buf: Uint8Array) {
-        this.emitStmt(Op.STMT1_SETUP_PKT_BUFFER, literal(buf.length))
-        if (buf.length > 0)
-            this.emitStmt(Op.STMT2_SET_PKT, this.emitString(buf), literal(0))
-    }
-
     emitStmt(op: Op, ...args: Value[]) {
         assert(opNumArgs(op) == args.length)
         assert(opIsStmt(op))

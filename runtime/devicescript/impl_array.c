@@ -31,6 +31,37 @@ void fun1_Array_isArray(devs_ctx_t *ctx) {
     devs_ret_bool(ctx, devs_is_array(ctx, devs_arg(ctx, 0)));
 }
 
+void methX_Array_push(devs_ctx_t *ctx) {
+    devs_array_t *self = devs_arg_self_array(ctx);
+    if (!self)
+        return;
+    for (unsigned i = 0; i < ctx->stack_top_for_gc - 1; ++i) {
+        devs_array_set(ctx, self, self->length, devs_arg(ctx, i));
+    }
+    devs_ret_int(ctx, self->length);
+}
+
+void meth1_Array_pushRange(devs_ctx_t *ctx) {
+    devs_array_t *self = devs_arg_self_array(ctx);
+    if (!self)
+        return;
+    value_t other = devs_arg(ctx, 0);
+    if (!devs_is_array(ctx, other)) {
+        devs_runtime_failure(ctx, 60188);
+        return;
+    }
+
+    devs_array_t *src = devs_value_to_gc_obj(ctx, other);
+    if (src->length) {
+        unsigned len0 = self->length;
+        if (devs_array_insert(ctx, self, self->length, src->length) == 0) {
+            memcpy(self->data + len0, src->data, src->length * sizeof(value_t));
+        }
+    }
+
+    devs_ret_int(ctx, self->length);
+}
+
 void methX_Array_slice(devs_ctx_t *ctx) {
     devs_array_t *self = devs_arg_self_array(ctx);
     unsigned numargs = ctx->stack_top_for_gc - 1;

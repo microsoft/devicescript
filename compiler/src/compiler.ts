@@ -339,7 +339,6 @@ function idName(pat: Expr | ts.DeclarationName) {
     else return null
 }
 
-
 function unit() {
     return nonEmittable(ValueType.VOID)
 }
@@ -993,7 +992,6 @@ class Program implements TopOpWriter {
         }
     }
 
-
     private specFromTypeName(
         expr: ts.Node,
         nm?: string,
@@ -1467,7 +1465,25 @@ class Program implements TopOpWriter {
 
     private emitGenericCall(expr: ts.CallExpression, fn: Value) {
         const wr = this.writer
-        wr.emitCall(fn, ...this.emitArgs(expr.arguments.slice()))
+        const args = expr.arguments.slice()
+        if (args.some(ts.isSpreadElement)) {
+            wr.emitStmt(Op.STMT1_ALLOC_ARRAY, literal(0))
+            const arr = wr.cacheValue(this.retVal())
+            for (const a of args) {
+                let expr: Value
+                let meth = "push"
+                if (ts.isSpreadElement(a)) {
+                    expr = this.emitExpr(a.expression)
+                    meth = "pushRange"
+                } else {
+                    expr = this.emitExpr(a)
+                }
+                wr.emitCall(wr.emitIndex(arr.emit(), wr.emitString(meth)), expr)
+            }
+            wr.emitStmt(Op.STMT2_CALL_ARRAY, fn, arr.finalEmit())
+        } else {
+            wr.emitCall(fn, ...this.emitArgs(expr.arguments.slice()))
+        }
         return this.retVal(this.nodeType(expr))
     }
 
@@ -1659,11 +1675,10 @@ class Program implements TopOpWriter {
         return this.retVal(ValueType.STRING)
     }
 
-    private retVal(tp: ValueType) {
+    private retVal(tp = ValueType.ANY) {
         if (tp.kind == ValueKind.VOID) return unit()
         return this.writer.emitExpr(Op.EXPR0_RET_VAL).withType(tp)
     }
-
 
     private symName(sym: ts.Symbol) {
         if (!sym) return null

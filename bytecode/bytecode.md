@@ -511,3 +511,4 @@ Only `true` and `false` values.
     isArray = 108
     inline = 109
     assert = 110
+    pushRange = 111
