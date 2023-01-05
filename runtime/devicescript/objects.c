@@ -184,8 +184,9 @@ static const uint8_t builtin_proto_idx[] = {
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = 4,
     [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] = 5,
     [DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE] = 6,
+    [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = 7,
 };
-#define MAX_PROTO 6
+#define MAX_PROTO 7
 
 const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
     if (idx < sizeof(builtin_proto_idx)) {
@@ -644,6 +645,11 @@ value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *prot
 }
 
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
+    if (devs_is_null(obj)) {
+        devs_log_value(ctx, "getting null", key);
+        devs_runtime_failure(ctx, 60185);
+    }
+
     value_t tmp = devs_object_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
     return devs_function_bind(ctx, obj, tmp);
 }
@@ -681,6 +687,11 @@ value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key) {
 }
 
 void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v) {
+    if (devs_is_null(obj)) {
+        devs_log_value(ctx, "setting null", key);
+        devs_runtime_failure(ctx, 60184);
+    }
+
     if (devs_is_number(key)) {
         unsigned idx = devs_value_to_int(ctx, key);
         devs_seq_set(ctx, obj, idx, v);
