@@ -33,28 +33,13 @@ export function pktSlice(off: number, endp: number) {
     return r
 }
 
-export function decode_bytes(off: number) {
-    return pktSlice(off, ds.packet.length)
-}
+declare var ds_impl: typeof ds
 
-export function decode_string(off: number) {
-    return decode_bytes(off).toString()
-}
-
-export function decode_string0(off: number) {
-    let endp = off
-    while (endp < ds.packet.length) {
-        if (ds.packet[endp] == 0) break
-        endp++
-    }
-    return pktSlice(off, endp).toString()
-}
-
-export function __ds_wait(seconds: number) {
+ds_impl.wait = function (seconds: number) {
     ds.sleepMs(seconds * 1000)
 }
 
-export function __ds_assert(cond: boolean, msg?: string) {
+ds_impl.assert = function (cond: boolean, msg?: string) {
     if (!cond) {
         console.log("Assertion failed: " + msg)
         ds.panic(108)

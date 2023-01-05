@@ -255,7 +255,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 108,
+    __MAX = 110,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -365,6 +365,8 @@ export enum BuiltInString {
     ISREPORT = 106,
     ISCOMMAND = 107,
     ISARRAY = 108,
+    INLINE = 109,
+    ASSERT = 110,
 }
 
 export const OP_PRINT_FMTS = [
@@ -585,6 +587,8 @@ export const BUILTIN_STRING__VAL = [
     "isReport",
     "isCommand",
     "isArray",
+    "inline",
+    "assert",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

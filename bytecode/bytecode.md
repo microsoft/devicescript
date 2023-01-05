@@ -534,3 +534,5 @@ Only `true` and `false` values.
     isReport = 106
     isCommand = 107
     isArray = 108
+    inline = 109
+    assert = 110

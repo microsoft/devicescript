@@ -161,7 +161,6 @@ class Role extends Cell {
     emit(wr: OpWriter): Value {
         const r = wr.emitExpr(Op.EXPRx_STATIC_ROLE, literal(this._index))
         r.valueType = ValueType.ROLE(this.spec)
-        va(r).role = this
         this.used = true
         return r
     }
@@ -224,7 +223,6 @@ class Variable extends Cell {
             literal(lev)
         )
         r.valueType = this.valueType
-        va(r).variable = this
         return r
     }
 
@@ -258,7 +256,6 @@ class Variable extends Cell {
                 this.packedIndex,
                 this.valueType
             )
-        va(r).variable = this
         return r
     }
     canStore() {
@@ -325,20 +322,6 @@ class FunctionDecl extends Cell {
     }
 }
 
-class ValueAdd {
-    index: number
-    roleExpr?: Value
-    role?: Role
-    variable?: Variable
-    clientCommand?: ClientCommand
-    litValue?: number
-}
-
-function va(v: Value) {
-    if (!v._userdata) v._userdata = new ValueAdd()
-    return v._userdata as ValueAdd
-}
-
 function toSrcLocation(n: ts.Node): SrcLocation {
     const f = n.getSourceFile()
     const pp = f.getLineAndCharacterOfPosition(n.pos)
@@ -352,7 +335,7 @@ function toSrcLocation(n: ts.Node): SrcLocation {
 }
 
 function idName(pat: Expr | ts.DeclarationName) {
-    if (ts.isIdentifier(pat)) return pat.text
+    if (pat && ts.isIdentifier(pat)) return pat.text
     else return null
 }
 
@@ -389,7 +372,8 @@ class Procedure {
     constructor(
         public parent: Program,
         public name: string,
-        public sourceNode?: ts.Node
+        public sourceNode?: ts.Node,
+        public isMethod?: boolean
     ) {
         if (!this.sourceNode) this.sourceNode = parent.lastNode
         this.index = this.parent.procs.length
@@ -504,7 +488,6 @@ class VariableScope {
     }
 }
 
-
 type Expr = ts.Expression | ts.TemplateLiteralLikeNode
 type FunctionLike =
     | ts.FunctionDeclaration
@@ -534,13 +517,12 @@ interface LoopLabels {
     breakLbl: Label
 }
 
-class ClientCommand {
-    defintion: ts.FunctionExpression
-    jsName: string
-    pktSpec: jdspec.PacketInfo
-    isFresh: boolean
-    proc: Procedure
-    constructor(public serviceSpec: jdspec.ServiceSpec) {}
+interface ProtoDefinition {
+    className: string
+    methodName: string
+    names: string[]
+    expr: ts.BinaryExpression
+    emitted?: boolean
 }
 
 class Program implements TopOpWriter {
@@ -563,8 +545,8 @@ class Program implements TopOpWriter {
     sysSpec: jdspec.ServiceSpec
     serviceSpecs: Record<string, jdspec.ServiceSpec>
     enums: Record<string, jdspec.EnumInfo> = {}
-    clientCommands: Record<string, ClientCommand[]> = {}
-    monkeyPatch: Record<string, FunctionDecl> = {}
+    protoDefinitions: ProtoDefinition[] = []
+    usedMethods: Record<string, boolean> = {}
     resolverParams: number[]
     resolverPC: number
     prelude: Record<string, string>
@@ -572,6 +554,7 @@ class Program implements TopOpWriter {
     main: Procedure
     cloudRole: Role
     cloudMethod429: Label
+    protoAssign: DelayedCodeSection
     onStart: DelayedCodeSection
     loopStack: LoopLabels[] = []
     isLibrary = false
@@ -1028,7 +1011,6 @@ class Program implements TopOpWriter {
         return null
     }
 
-
     private specFromTypeName(
         expr: ts.Node,
         nm?: string,
@@ -1099,7 +1081,7 @@ class Program implements TopOpWriter {
             typeof id == "string" ? null : id,
             VariableKind.Parameter,
             proc,
-            ValueType.NUMBER
+            ValueType.ANY
         )
         if (typeof id == "string") v._name = id
         else this.assignCell(id, v)
@@ -1148,41 +1130,17 @@ class Program implements TopOpWriter {
     }
 
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
+        if (proc.isMethod && idName(stmt.parameters[0]?.name) != "this")
+            this.addParameter(proc, "this")
         for (const paramdef of stmt.parameters) {
             if (paramdef.kind != SK.Parameter)
                 throwError(
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
-            const v = this.addParameter(proc, paramdef)
-            v.valueType = ValueType.ANY
+            this.addParameter(proc, paramdef)
         }
         proc.retType = ValueType.ANY
-    }
-
-    private getClientCommandProc(cc: ClientCommand) {
-        if (cc.proc) return cc.proc
-
-        const stmt = cc.defintion
-        cc.proc = new Procedure(
-            this,
-            cc.serviceSpec.camelName + "." + cc.jsName,
-            stmt
-        )
-
-        this.withProcedure(cc.proc, wr => {
-            new Variable(
-                null,
-                VariableKind.Parameter,
-                cc.proc,
-                ValueType.ROLE(cc.serviceSpec),
-                "this"
-            )
-            this.emitParameters(stmt, cc.proc)
-            this.emitFunctionBody(stmt, cc.proc)
-        })
-
-        return cc.proc
     }
 
     getFunctionProc(fundecl: FunctionDecl) {
@@ -1219,13 +1177,6 @@ class Program implements TopOpWriter {
         assert(!!fundecl || !!this.numErrors)
 
         if (fundecl) {
-            if (fundecl.getName().startsWith("__ds_")) {
-                // TODO rename function to strip __ds_ (smaller binary)
-                // TODO compare signatures!
-                const id = fundecl.getName().slice(5)
-                this.monkeyPatch["#ds." + id] = fundecl
-            }
-
             if (this.compileAll || (this.isLibrary && this.inMainFile(stmt)))
                 this.getFunctionProc(fundecl)
         }
@@ -1257,11 +1208,34 @@ class Program implements TopOpWriter {
         return cell
     }
 
+    private emitProtoAssigns() {
+        for (;;) {
+            let numemit = 0
+            for (const p of this.protoDefinitions) {
+                if (p.emitted) continue
+                if (this.compileAll || p.names.some(n => this.usedMethods[n])) {
+                    p.emitted = true
+                    numemit++
+                    // console.log("EMIT upd", p.names[0])
+                    this.protoAssign.emit(() => {
+                        this.emitAssignmentExpression(p.expr, true)
+                    })
+                }
+            }
+
+            if (numemit == 0) break
+        }
+    }
+
     private emitProgram(prog: ts.Program) {
         this.lastNode = this.mainFile
         this.main = new Procedure(this, "main", this.mainFile)
 
         this.onStart = new DelayedCodeSection("onStart", this.main.writer)
+        this.protoAssign = new DelayedCodeSection(
+            "protoAssign",
+            this.main.writer
+        )
 
         const stmts = ([] as ts.Statement[]).concat(
             ...prog
@@ -1299,8 +1273,11 @@ class Program implements TopOpWriter {
         )
 
         this.withProcedure(this.main, () => {
+            this.protoAssign.callHere()
             for (const s of stmts) this.emitStmt(s)
+            this.emitProtoAssigns()
             this.onStart.finalizeRaw()
+            this.protoAssign.finalize()
             this.writer.emitStmt(Op.STMT1_RETURN, literal(0))
         })
 
@@ -1604,8 +1581,6 @@ class Program implements TopOpWriter {
         return undefined
     }
 
-
-
     private bufferSize(v: Value) {
         const idx = v.args?.[0]?.numValue
         if (idx !== undefined)
@@ -1636,7 +1611,6 @@ class Program implements TopOpWriter {
             }
         }
     }
-
 
     private emitArgs(args: Expr[], formals?: Variable[]) {
         return args.map((arg, i) => {
@@ -1845,21 +1819,16 @@ class Program implements TopOpWriter {
         }
     }
 
-    private getMonkeyPatchProc(mp: FunctionDecl) {
-        return this.getFunctionProc(mp)
-    }
-
     private emitCallExpression(expr: ts.CallExpression): Value {
         const callName = this.nodeName(expr.expression)
         const builtInName =
             callName && callName.startsWith("#") ? callName.slice(1) : null
 
+        if (callName) this.usedMethods[callName] = true
+
         if (builtInName) {
             const r = this.emitVmOpBuiltin(expr, builtInName)
             if (r) return r
-
-            const d = this.monkeyPatch[callName]
-            if (d) return this.emitProcCall(expr, this.getMonkeyPatchProc(d))
 
             const builtIn = this.emitBuiltInCall(expr, builtInName)
             if (builtIn) return builtIn
@@ -1952,6 +1921,8 @@ class Program implements TopOpWriter {
                 return this.emitLiteral(Infinity)
             case "undefined":
                 return this.emitLiteral(undefined)
+            case "#ds_impl":
+                return this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT)
             default:
                 if (builtInObjByName.hasOwnProperty(nodeName))
                     return this.writer.emitBuiltInObject(
@@ -2044,99 +2015,71 @@ class Program implements TopOpWriter {
         return this.emitExpr(expr)
     }
 
+    private getBaseTypes(clsTp: ts.Type) {
+        if (
+            clsTp.getFlags() & ts.TypeFlags.Object &&
+            (clsTp as ts.ObjectType).objectFlags &
+                ts.ObjectFlags.ClassOrInterface
+        )
+            return this.checker.getBaseTypes(clsTp as ts.InterfaceType)
+
+        return []
+    }
+
+    private getBaseSyms(sym: ts.Symbol) {
+        const res: ts.Symbol[] = []
+        const decl = sym?.valueDeclaration
+        if (!decl) return res
+
+        const cls = this.getSymAtLocation(decl.parent)
+        if (!cls) return []
+        const clsTp = this.checker.getDeclaredTypeOfSymbol(cls)
+        for (const baseTp of this.getBaseTypes(clsTp)) {
+            const baseSym = this.checker.getPropertyOfType(
+                baseTp,
+                sym.getName()
+            )
+            if (baseSym) res.push(baseSym, ...this.getBaseSyms(baseSym))
+        }
+
+        return res
+    }
+
     private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
         const left = expr.left
 
         if (!ts.isPropertyAccessExpression(left)) return null
+        if (!ts.isFunctionExpression(expr.right)) return null
+        if (!this.isTopLevel(expr.parent)) return null
 
-        let classExpr = left.expression
-        if (
-            ts.isPropertyAccessExpression(classExpr) &&
-            idName(classExpr.name) == "prototype"
-        )
-            classExpr = classExpr.expression
+        const sym = this.getSymAtLocation(left)
+        const decl = sym?.valueDeclaration
 
-        const className = this.nodeName(classExpr)
-
-        // allow more stuff in future
-        const isMonkeyPatch = className == "#Math"
-        const spec = isMonkeyPatch
-            ? null
-            : this.specFromTypeName(classExpr, this.nodeName(classExpr), true)
-
-        if (!isMonkeyPatch && !spec) return
-
-        const fnName = this.forceName(left.name)
-        if (!ts.isFunctionExpression(expr.right))
-            throwError(expr.right, "expecting 'function (...) { }' here")
-
-
-        const cmd = new ClientCommand(spec)
-        cmd.defintion = expr.right
-        cmd.jsName = fnName
-
-        const fn = expr.right
-        cmd.pktSpec = spec.packets.filter(
-            p => p.kind == "command" && matchesName(p.name, fnName)
-        )[0]
-        const paramNames = fn.parameters.map(p => this.forceName(p.name))
-        if (cmd.pktSpec) {
-            if (!cmd.pktSpec.client)
-                throwError(left, "only 'client' commands can be implemented")
-            const flds = cmd.pktSpec.fields
-            if (paramNames.length != flds.length)
-                throwError(
-                    fn,
-                    `expecting ${flds.length} parameter(s); got ${paramNames.length}`
-                )
-            for (let i = 0; i < flds.length; ++i) {
-                const f = flds[i]
-                if (f.storage == 0)
-                    throwError(
-                        fn,
-                        `client command has non-numeric parameter ${f.name}`
-                    )
-                if (
-                    paramNames.findIndex(
-                        p => p == f.name || matchesName(f.name, p)
-                    ) != i
-                )
-                    throwError(fn, `parameter ${f.name} found at wrong index`)
+        if (decl) {
+            const name = this.symName(sym)
+            const protoUpdate: ProtoDefinition = {
+                methodName: idName(left.name),
+                className: this.nodeName(decl.parent),
+                names: [name],
+                expr,
             }
+
+            if (name == "#ds.RegisterNumber.onChange")
+                protoUpdate.names.push(
+                    "#ds.RegisterBuffer.onChange",
+                    "#ds.RegisterBool.onChange"
+                )
+
+            for (const baseSym of this.getBaseSyms(sym)) {
+                protoUpdate.names.push(this.symName(baseSym))
+            }
+
+            this.protoDefinitions.push(protoUpdate)
+
+            return unit()
         } else {
-            cmd.pktSpec = {
-                kind: "command",
-                description: "",
-                client: true,
-                identifier: 0x10000 + Object.keys(this.clientCommands).length,
-                name: snakify(fnName),
-                fields: fn.parameters.map(p => ({
-                    name: this.forceName(p.name),
-                    type: "f64",
-                    storage: 8,
-                })),
-            }
-            cmd.isFresh = true
-            if (spec.packets.some(p => p.name == cmd.pktSpec.name))
-                throwError(
-                    expr.left,
-                    `'${cmd.pktSpec.name}' already exists on ${spec.camelName}`
-                )
+            throwError(expr, "can't determine symbol of prototype update")
         }
-
-        let lst = this.clientCommands[spec.camelName]
-        if (!lst) lst = this.clientCommands[spec.camelName] = []
-        if (lst.some(e => e.pktSpec.name == cmd.pktSpec.name))
-            throwError(
-                expr.left,
-                `${cmd.pktSpec.name} already implemented on ${spec.camelName}`
-            )
-        lst.push(cmd)
-
-        if (this.compileAll || (this.isLibrary && this.inMainFile(expr)))
-            this.getClientCommandProc(cmd)
-
-        return unit()
     }
 
     private emitAssignmentTarget(trg: Expr) {
@@ -2174,10 +2117,13 @@ class Program implements TopOpWriter {
         throwError(trg, "unsupported assignment target")
     }
 
-    private emitAssignmentExpression(expr: ts.BinaryExpression): Value {
+    private emitAssignmentExpression(
+        expr: ts.BinaryExpression,
+        noProto = false
+    ): Value {
         this.forceAssignmentIgnored(expr)
 
-        const res = this.emitPrototypeUpdate(expr)
+        const res = noProto ? null : this.emitPrototypeUpdate(expr)
         if (res) return res
 
         const wr = this.writer
@@ -2466,13 +2412,40 @@ class Program implements TopOpWriter {
         }
     }
 
+    private isAssignment(expr: ts.Node): expr is ts.BinaryExpression {
+        return (
+            expr &&
+            ts.isBinaryExpression(expr) &&
+            expr.operatorToken.kind == SK.EqualsToken
+        )
+    }
+
+    private isProtoRef(expr: ts.Node) {
+        return (
+            expr &&
+            ts.isPropertyAccessExpression(expr) &&
+            idName(expr.name) == "prototype"
+        )
+    }
+
     private emitFunctionExpr(
         expr: ts.ArrowFunction | ts.FunctionExpression | ts.FunctionDeclaration
     ): Value {
         const wr = this.writer
-        const n = (expr.name ? idName(expr.name) : null) || "inline"
+        let n = expr.name ? idName(expr.name) : null
+        let isMethod = false
 
-        const proc = new Procedure(this, n, expr)
+        if (this.isAssignment(expr.parent)) {
+            if (ts.isPropertyAccessExpression(expr.parent.left)) {
+                const methName = expr.parent.left.name
+                if (this.isProtoRef(expr.parent.left.expression))
+                    isMethod = true
+                if (!n) n = idName(methName)
+            }
+        }
+        if (!n) n = "inline"
+
+        const proc = new Procedure(this, n, expr, isMethod)
         this.proc.addNestedProc(proc)
 
         // this is conservative
@@ -3068,35 +3041,10 @@ class Program implements TopOpWriter {
 
         if (this.numErrors == 0) this.emitLibrary()
 
-        const clientSpecs: jdspec.ServiceSpec[] = []
-        for (const kn of Object.keys(this.clientCommands)) {
-            const lst = this.clientCommands[kn]
-                .filter(c => c.isFresh)
-                .map(c => c.pktSpec)
-            if (lst.length > 0) {
-                const s = this.clientCommands[kn][0].serviceSpec
-                clientSpecs.push({
-                    name: s.name,
-                    camelName: s.camelName,
-                    shortId: s.shortId,
-                    shortName: s.shortName,
-                    classIdentifier: s.classIdentifier,
-                    status: undefined,
-                    extends: undefined,
-                    notes: undefined,
-                    enums: undefined,
-                    tags: undefined,
-                    constants: undefined,
-                    packets: lst,
-                })
-            }
-        }
-
         return {
             success: this.numErrors == 0,
             binary: binary,
             dbg: dbg,
-            clientSpecs,
         }
     }
 }
@@ -3105,7 +3053,6 @@ export interface CompilationResult {
     success: boolean
     binary: Uint8Array
     dbg: DebugInfo
-    clientSpecs: jdspec.ServiceSpec[]
 }
 
 /**

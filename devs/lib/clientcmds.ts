@@ -77,21 +77,23 @@ function addElement<T>(arr: T[], e: T) {
     return arr
 }
 
-;(ds.Role.prototype as any).onConnected = function onConnected(
+ds.Role.prototype.onConnected = function onConnected(
     this: ds.Role,
     h: ds.Handler
 ) {
     this.onPacket = roleOnPacket
     this._connHandlers = addElement(this._connHandlers, h)
 }
-;(ds.Role.prototype as any).onDisconnected = function onConnected(
+ds.Role.prototype.onDisconnected = function onConnected(
     this: ds.Role,
     h: ds.Handler
 ) {
     this.onPacket = roleOnPacket
     this._disconHandlers = addElement(this._disconHandlers, h)
 }
-;(ds.Register.prototype as any).onChange = function onChange(
+
+// TODO actually apply it on Register base class!
+ds.RegisterNumber.prototype.onChange = function onChange(
     this: ds.Register,
     threshold: number,
     handler: (v: any) => void
