@@ -363,6 +363,10 @@ bool devs_jd_should_run(devs_fiber_t *fiber) {
         return RESUME_USER_CODE;
 
     switch (fiber->pkt_kind) {
+    case DEVS_PKT_KIND_ROLE_WAIT:
+        fiber->ret_val = devs_jd_pkt_capture(fiber->ctx, fiber->role_idx);
+        return RESUME_USER_CODE;
+
     case DEVS_PKT_KIND_REG_GET:
         return handle_reg_get(fiber);
 

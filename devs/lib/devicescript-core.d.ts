@@ -19,6 +19,12 @@ declare module "@devicescript/core" {
         onDisconnected(handler: () => void): void
 
         /**
+         * Wait for the next packet to arrive from the device.
+         * When device has just disconnected this returns null.
+         */
+        wait(): Packet | null
+
+        /**
          * @internal
          */
         sendCommand(serviceCommand: number, payload?: Buffer): void

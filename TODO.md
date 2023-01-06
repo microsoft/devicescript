@@ -1,11 +1,11 @@
 # TODO
 
 ### treat roles as "normal" objects
-* `Register.onChange` threshold handling
 * `Event.wait`
 * `Condition` handling
 * register delay computation
 * `[a,b,c] = reg.read()`
+* run handlers in background - some sort of object to keep track if it's running?
 
 ## Random stuff
 * change `ALLOC_*` opcodes to expressions
