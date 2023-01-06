@@ -26,13 +26,6 @@ Math.log2 = function log2(x) {
 
 import * as ds from "@devicescript/core"
 
-export function pktSlice(off: number, endp: number) {
-    const len = Math.max(endp - off, 0)
-    const r = Buffer.alloc(len)
-    r.blitAt(0, ds.packet, off, len)
-    return r
-}
-
 declare var ds_impl: typeof ds
 
 ds_impl.wait = function (seconds: number) {

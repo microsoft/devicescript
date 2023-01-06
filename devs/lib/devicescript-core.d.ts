@@ -200,12 +200,6 @@ declare module "@devicescript/core" {
     export function onStart(handler: () => void): void
     export function assert(cond: boolean, msg?: string): void
 
-    /**
-     * @internal
-     * TODO: move to submodule?
-     */
-    export const packet: Buffer
-
     export { Buffer }
 
     global {

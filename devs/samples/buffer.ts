@@ -10,9 +10,10 @@ function testBuffer() {
     b.setAt(8, /* cmt */ "u22.10", 173.282)
     const z = b.getAt(4, "u32")
 
-    const idx = 0
+    let idx = 0
     while (idx < 4) {
         b.blitAt(3, bufa, idx, 2)
+        idx++
     }
 }
 

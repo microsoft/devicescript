@@ -14,15 +14,15 @@ declare module "@devicescript/core" {
 
 ds.Led.prototype.setAll = function (r, g, b) {
     const buflen = this.numPixels.read() * 3
+    const buf = Buffer.alloc(buflen)
     let idx = 0
-    ds.packet.setLength(buflen)
     while (idx < buflen) {
-        ds.packet.setAt(idx, "u0.8", r)
-        ds.packet.setAt(idx + 1, "u0.8", g)
-        ds.packet.setAt(idx + 2, "u0.8", b)
+        buf.setAt(idx, "u0.8", r)
+        buf.setAt(idx + 1, "u0.8", g)
+        buf.setAt(idx + 2, "u0.8", b)
         idx = idx + 3
     }
-    this.pixels.write(ds.packet)
+    this.pixels.write(buf)
 }
 
 interface ChangeHandler {
