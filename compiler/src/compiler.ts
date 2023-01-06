@@ -906,6 +906,15 @@ class Program implements TopOpWriter {
         wr.emitLabel(breakLbl)
     }
 
+    private emitBreakContStatement(stmt: ts.BreakOrContinueStatement) {
+        if (stmt.label)
+            throwError(stmt, "labelled break/cont not supported yet")
+        const loop = this.loopStack[this.loopStack.length - 1]
+        this.writer.emitJump(
+            stmt.kind == SK.ContinueStatement ? loop.continueLbl : loop.breakLbl
+        )
+    }
+
     private emitForOfStatement(stmt: ts.ForOfStatement) {
         const wr = this.writer
 
@@ -2525,6 +2534,11 @@ class Program implements TopOpWriter {
                     return this.emitForStatement(stmt as ts.ForStatement)
                 case SK.ForOfStatement:
                     return this.emitForOfStatement(stmt as ts.ForOfStatement)
+                case SK.ContinueStatement:
+                case SK.BreakStatement:
+                    return this.emitBreakContStatement(
+                        stmt as ts.BreakOrContinueStatement
+                    )
                 case SK.Block:
                     stmt.forEachChild(s => this.emitStmt(s as ts.Statement))
                     return

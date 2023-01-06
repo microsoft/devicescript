@@ -27,7 +27,8 @@ ds.Led.prototype.setAll = function (r, g, b) {
 
 interface ChangeHandler {
     handler: (v: any) => void
-    threshold?: number // TODO add logic
+    threshold?: number
+    prev?: any
 }
 
 function callHandlers(hh: ds.Handler[]) {
@@ -63,8 +64,17 @@ function roleOnPacket(this: ds.Role, pkt: ds.Packet) {
         const handlers: ChangeHandler[] = this._changeHandlers[pkt.regCode + ""]
         if (handlers) {
             const val = pkt.decode()
-            for (let i = 0; i < handlers.length; ++i) {
-                handlers[i].handler(val)
+            for (const h of handlers) {
+                if (typeof val == "number" && h.threshold != null) {
+                    if (h.prev != null && Math.abs(val - h.prev) < h.threshold)
+                        continue
+                    h.prev = val
+                }
+                if (typeof val == "boolean") {
+                    if (val === h.prev) continue
+                    h.prev = val
+                }
+                h.handler(val)
             }
         }
     }
@@ -95,7 +105,6 @@ ds.Role.prototype.onDisconnected = function onConnected(
     this._disconHandlers = addElement(this._disconHandlers, h)
 }
 
-// TODO actually apply it on Register base class!
 ds.RegisterNumber.prototype.onChange = function onChange(
     this: ds.Register,
     threshold: number,
