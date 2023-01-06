@@ -117,10 +117,11 @@ class Cell {
             | ts.ParameterDeclaration
             | ts.BindingElement
             | ts.Identifier,
-        public scope: VariableScope,
+        scope: Cell[],
         public _name?: string
     ) {
-        scope.add(this)
+        this._index = scope.length
+        scope.push(this)
     }
     emit(wr: OpWriter): Value {
         oops("on value() on generic Cell")
@@ -150,7 +151,7 @@ class Role extends Cell {
     constructor(
         prog: Program,
         definition: ts.VariableDeclaration | ts.Identifier,
-        scope: VariableScope,
+        scope: Role[],
         public spec: jdspec.ServiceSpec,
         _name?: string
     ) {
@@ -199,17 +200,17 @@ class Variable extends Cell {
             | ts.FunctionDeclaration
             | ts.BindingElement,
         public vkind: VariableKind,
-        scopeOrProc: VariableScope | Procedure,
+        scopeOrProc: Variable[] | Procedure,
         public valueType: ValueType,
         name?: string
     ) {
         super(
             definition,
-            scopeOrProc instanceof VariableScope
-                ? scopeOrProc
-                : vkind == VariableKind.Local
-                ? scopeOrProc.locals
-                : scopeOrProc.params,
+            scopeOrProc instanceof Procedure
+                ? vkind == VariableKind.Local
+                    ? scopeOrProc.locals
+                    : scopeOrProc.params
+                : scopeOrProc,
             name
         )
         if (scopeOrProc instanceof Procedure) this.parentProc = scopeOrProc
@@ -295,7 +296,7 @@ class Variable extends Cell {
 class BufferLit extends Cell {
     constructor(
         definition: ts.VariableDeclaration,
-        scope: VariableScope,
+        scope: Cell[],
         public litValue: Uint8Array
     ) {
         super(definition, scope)
@@ -310,7 +311,7 @@ class BufferLit extends Cell {
 
 class FunctionDecl extends Cell {
     proc: Procedure
-    constructor(definition: ts.FunctionDeclaration, scope: VariableScope) {
+    constructor(definition: ts.FunctionDeclaration, scope: FunctionDecl[]) {
         super(definition, scope)
     }
     emit(wr: OpWriter): Value {
@@ -354,8 +355,8 @@ function symCell(sym: ts.Symbol) {
 class Procedure {
     writer: OpWriter
     index: number
-    params: VariableScope
-    locals: VariableScope
+    params: Variable[] = []
+    locals: Variable[] = []
     users: ts.Node[] = []
     skipAccounting = false
     retType = ValueType.VOID
@@ -374,30 +375,28 @@ class Procedure {
         this.index = this.parent.procs.length
         this.writer = new OpWriter(parent, `${this.name}_F${this.index}`)
         this.parent.procs.push(this)
-        this.params = new VariableScope(this.parent.globals)
-        this.locals = new VariableScope(this.params)
     }
     get numargs() {
-        return this.params.list.length
+        return this.params.length
     }
     toString() {
         return this.writer.getAssembly()
     }
     get usesThis() {
-        const p = this.params.list[0] as Variable
+        const p = this.params[0] as Variable
         return p?.vkind == VariableKind.ThisParam
     }
     finalize() {
         if (this.mapVarOffset) return false
         this.mapVarOffset = this.writer.patchLabels(
-            this.locals.list.length,
+            this.locals.length,
             this.numargs,
             this.usesThis
         )
         return true
     }
     args() {
-        return this.params.list.slice() as Variable[]
+        return this.params.slice() as Variable[]
     }
     useFrom(node: ts.Node) {
         if (this.users.indexOf(node) >= 0) return
@@ -413,9 +412,7 @@ class Procedure {
                 : undefined,
             size: this.writer.size,
             users: this.users.map(toSrcLocation),
-            locals: this.params.list
-                .concat(this.locals.list)
-                .map(v => v.debugInfo()),
+            locals: this.params.concat(this.locals).map(v => v.debugInfo()),
         }
     }
 
@@ -441,33 +438,6 @@ class Procedure {
                 literal(op),
                 ...args
             )
-    }
-}
-
-class VariableScope {
-    map: SMap<Cell> = {}
-    list: Cell[] = []
-    constructor(public parent: VariableScope) {}
-
-    _addToMap(cell: Cell) {
-        this.map[cell.getName()] = cell
-    }
-
-    add(cell: Cell) {
-        cell._index = this.list.length
-        this.list.push(cell)
-        if (cell.definition || cell._name) this._addToMap(cell)
-    }
-
-    describeIndex(idx: number) {
-        const v = this.list[idx]
-        if (v) return v.getName()
-        return undefined
-    }
-
-    sort() {
-        this.list.sort((a, b) => strcmp(a.getName(), b.getName()))
-        for (let i = 0; i < this.list.length; ++i) this.list[i]._index = i
     }
 }
 
@@ -531,10 +501,10 @@ export const compileFlagHelp: Record<string, string> = {
 }
 
 class Program implements TopOpWriter {
-    bufferLits = new VariableScope(null)
-    roles = new VariableScope(this.bufferLits)
-    functions = new VariableScope(null)
-    globals = new VariableScope(this.roles)
+    bufferLits: BufferLit[] = []
+    roles: Role[] = []
+    functions: FunctionDecl[] = []
+    globals: Variable[] = []
     tree: ts.Program
     checker: ts.TypeChecker
     mainFile: ts.SourceFile
@@ -667,7 +637,7 @@ class Program implements TopOpWriter {
     describeCell(ff: string, idx: number): string {
         switch (ff) {
             case "R":
-                return this.roles.describeIndex(idx)
+                return this.roles[idx]?.getName()
             case "B":
                 return toHex(this.bufferLiterals[idx])
             case "U":
@@ -681,7 +651,7 @@ class Program implements TopOpWriter {
             case "L":
                 return "" // local
             case "G":
-                return this.globals.describeIndex(idx)
+                return this.globals[idx]?.getName()
             case "D":
                 return this.floatLiterals[idx] + ""
             case "F":
@@ -1196,7 +1166,7 @@ class Program implements TopOpWriter {
     }
 
     private emitFunctionDeclaration(stmt: ts.FunctionDeclaration) {
-        const fundecl = this.functions.list.find(
+        const fundecl = this.functions.find(
             f => f.definition === stmt
         ) as FunctionDecl
 
@@ -1319,7 +1289,10 @@ class Program implements TopOpWriter {
             }
         }
 
-        this.roles.sort()
+        this.roles.sort((a, b) => strcmp(a.getName(), b.getName()))
+        this.roles.forEach((r, i) => {
+            r._index = i
+        })
 
         // make sure the cloud role is last
         this.cloudRole = new Role(
@@ -1340,7 +1313,7 @@ class Program implements TopOpWriter {
         })
 
         if (!this.cloudRole.used) {
-            const cl = this.roles.list.pop()
+            const cl = this.roles.pop()
             assert(cl == this.cloudRole)
         }
 
@@ -1903,7 +1876,7 @@ class Program implements TopOpWriter {
     }
 
     private emitThisExpression(expr: ts.ThisExpression): Value {
-        const p0 = this.proc.params.list[0] as Variable
+        const p0 = this.proc.params[0] as Variable
         if (p0 && p0.vkind == VariableKind.ThisParam)
             return p0.emit(this.writer)
         throwError(expr, "'this' cannot be used here: " + this.proc.name)
@@ -2717,7 +2690,7 @@ class Program implements TopOpWriter {
 
     private serializeSpecs() {
         let usedSpecs = uniqueMap(
-            this.roles.list as Role[],
+            this.roles,
             r => r.spec.classIdentifier + "",
             r => r.spec
         )
@@ -2845,7 +2818,7 @@ class Program implements TopOpWriter {
                 BinFmt.MAGIC0,
                 BinFmt.MAGIC1,
                 BinFmt.IMG_VERSION,
-                this.globals.list.length,
+                this.globals.length,
             ])
         )
         fixHeader.append(hd)
@@ -2899,8 +2872,8 @@ class Program implements TopOpWriter {
         }
         floatData.append(new Uint8Array(floatBuf))
 
-        for (const r of this.roles.list) {
-            roleData.append((r as Role).serialize())
+        for (const r of this.roles) {
+            roleData.append(r.serialize())
         }
 
         function addLits(lst: (Uint8Array | string)[], dst: SectionWriter) {
@@ -2974,9 +2947,9 @@ class Program implements TopOpWriter {
                 roles: roleData.size,
                 align: left,
             },
-            roles: this.roles.list.map(r => (r as Role).debugInfo()),
+            roles: this.roles.map(r => r.debugInfo()),
             functions: this.procs.map(p => p.debugInfo()),
-            globals: this.globals.list.map(r => r.debugInfo()),
+            globals: this.globals.map(r => r.debugInfo()),
             source: this._source,
         }
 
