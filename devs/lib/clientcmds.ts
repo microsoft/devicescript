@@ -107,8 +107,10 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     }
 
     const role = this.role
-    role.onPacket = roleOnPacket
-    if (!role._changeHandlers) role._changeHandlers = {}
+    if (!role._changeHandlers) {
+        role._changeHandlers = {}
+        role.onPacket = roleOnPacket
+    }
     const key = this.code + ""
     let lst: ChangeHandler[] = role._changeHandlers[key]
     if (!lst) {
@@ -150,6 +152,7 @@ ds.Event.prototype.subscribe = function (handler) {
     if (!m) {
         m = {}
         this.role._eventHandlers = m
+        this.role.onPacket = roleOnPacket
     }
     const k = this.code + ""
     if (!m[k]) m[k] = []
