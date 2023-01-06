@@ -1917,8 +1917,20 @@ class Program implements TopOpWriter {
         return this.writer.emitExpr(Op.EXPR2_INDEX, val, idx)
     }
 
-    private emitBuiltInConst(expr: ts.Expression, nodeName?: string) {
-        if (!nodeName) nodeName = this.nodeName(expr)
+    private isRoleClass(sym: ts.Symbol) {
+        if (
+            !sym.valueDeclaration ||
+            sym.valueDeclaration.kind != SK.ClassDeclaration
+        )
+            return false
+        const tps = this.getBaseTypes(
+            this.checker.getDeclaredTypeOfSymbol(sym)
+        ).map(tp => this.symName(tp.getSymbol()))
+        return tps.includes("#ds.Sensor") || tps.includes("#ds.Role")
+    }
+
+    private emitBuiltInConst(expr: ts.Expression) {
+        const nodeName = this.nodeName(expr)
         if (!nodeName) return null
         switch (nodeName) {
             case "#ds.packet":
@@ -1960,6 +1972,13 @@ class Program implements TopOpWriter {
             const prop = idName(expr.name)
             if (e.members.hasOwnProperty(prop)) return literal(e.members[prop])
             else throwError(expr, `enum ${nsName} has no member ${prop}`)
+        }
+
+        if (idName(expr.name) == "prototype") {
+            const sym = this.checker.getSymbolAtLocation(expr.expression)
+            if (this.isRoleClass(sym)) {
+                // TODO xxx
+            }
         }
 
         const val = this.emitExpr(expr.expression)
