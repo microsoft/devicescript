@@ -35,7 +35,7 @@ void methX_Array_push(devs_ctx_t *ctx) {
     devs_array_t *self = devs_arg_self_array(ctx);
     if (!self)
         return;
-    for (unsigned i = 0; i < ctx->stack_top_for_gc - 1; ++i) {
+    for (int i = 0; i < ctx->stack_top_for_gc - 1; ++i) {
         devs_array_set(ctx, self, self->length, devs_arg(ctx, i));
     }
     devs_ret_int(ctx, self->length);
