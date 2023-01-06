@@ -1,4 +1,4 @@
-import { program } from "commander"
+import { program, CommandOptions } from "commander"
 import pkg from "../package.json"
 import { annotate } from "./annotate"
 import { build } from "./build"
@@ -10,8 +10,28 @@ import { disasm } from "./disasm"
 import init from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
+import { compileFlagHelp } from "@devicescript/compiler"
 
 export async function mainCli() {
+    function buildCommand(nameAndArgs: string, opts?: CommandOptions) {
+        return program
+            .command(nameAndArgs, opts)
+            .option("-s, --stats", "show additional size information")
+            .option("-o, --out-dir", "output directory, default is 'built'")
+            .option("--no-verify", "don't verify resulting bytecode")
+            .option(
+                "-F, --flag <compiler-flag>",
+                "set compiler flag",
+                (val, prev: Record<string, boolean>) => {
+                    if (!compileFlagHelp[val])
+                        throw new Error(`invalid compiler flag: '${val}'`)
+                    prev[val] = true
+                    return prev
+                },
+                {}
+            )
+    }
+
     program
         .name("DeviceScript")
         .description(
@@ -20,13 +40,8 @@ export async function mainCli() {
         .version(pkg.version)
         .option("-v, --verbose", "more logging")
 
-    program
-        .command("build", { isDefault: true })
+    buildCommand("build", { isDefault: true })
         .description("build a DeviceScript file")
-        .option("-s, --stats", "show additional size information")
-        .option("-l, --library", "build library")
-        .option("--no-verify", "don't verify resulting bytecode")
-        .option("-o", "--out-dir", "output directory, default is 'built'")
         .option("-w, --watch", "watch file changes and rebuild automatically")
         .option("--internet", "allow connections from non-localhost")
         .option(
@@ -36,6 +51,19 @@ export async function mainCli() {
         .option("-t, --tcp", "open native TCP socket at 8082")
         .arguments("[file.ts]")
         .action(build)
+
+    program
+        .command("flags")
+        .description("show description of compiler flags")
+        .action(() => {
+            function pad(s: string, n: number) {
+                while (s.length < n) s += " "
+                return s
+            }
+            for (const k of Object.keys(compileFlagHelp)) {
+                console.log(`    -F ${pad(k, 20)} ${compileFlagHelp[k]}`)
+            }
+        })
 
     program
         .command("init")
@@ -73,8 +101,7 @@ export async function mainCli() {
         .arguments("<log_xxx.jdl>")
         .action(logParse)
 
-    program
-        .command("run")
+    buildCommand("run")
         .description("run a script")
         .option(
             "--tcp",
@@ -101,8 +128,7 @@ export async function mainCli() {
         .arguments("<file.ts|file.devs>")
         .action(deployScript)
 
-    program
-        .command("crun", { hidden: true })
+    buildCommand("crun", { hidden: true })
         .description("run a script using native runner")
         .option("-n, --net", "connect to 127.0.0.1:8082 for Jacdac proxy")
         .option(

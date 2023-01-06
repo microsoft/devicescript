@@ -1,4 +1,4 @@
-import { devsFactory } from "./build"
+import { BuildOptions, devsFactory } from "./build"
 import { CmdOptions, error } from "./command"
 import { readCompiled } from "./run"
 
@@ -8,7 +8,7 @@ export interface RunOptions {
 
 export async function deployScript(
     fn: string,
-    options: RunOptions & CmdOptions
+    options: RunOptions & CmdOptions & BuildOptions
 ) {
     const inst = await devsFactory()
     if (options.tcp)
@@ -20,7 +20,7 @@ export async function deployScript(
         process.exit(code)
     }
 
-    const prog = await readCompiled(fn)
+    const prog = await readCompiled(fn, options)
     const r = inst.devsClientDeploy(prog)
     if (r) throw new Error("deploy error: " + r)
     console.log(`remote-deployed ${fn}`)

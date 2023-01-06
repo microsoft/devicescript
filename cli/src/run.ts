@@ -19,8 +19,11 @@ export async function readCompiled(fn: string, options: BuildOptions = {}) {
     return res.binary
 }
 
-export async function runTest(fn: string, options: RunOptions = {}) {
-    const prog = await readCompiled(fn)
+export async function runTest(
+    fn: string,
+    options: RunOptions & BuildOptions = {}
+) {
+    const prog = await readCompiled(fn, options)
     const inst = await devsFactory()
 
     const devid = "12abdd2289421234"
@@ -57,7 +60,10 @@ function err(msg: string) {
     process.exit(1)
 }
 
-export async function runScript(fn: string, options: RunOptions & CmdOptions) {
+export async function runScript(
+    fn: string,
+    options: RunOptions & BuildOptions & CmdOptions
+) {
     if (options.test && options.wait)
         err("can't use --test and --wait together")
     if (options.test && !fn) err("--test require file name")
@@ -79,7 +85,7 @@ export async function runScript(fn: string, options: RunOptions & CmdOptions) {
     inst.devsStart()
 
     if (fn) {
-        const prog = await readCompiled(fn)
+        const prog = await readCompiled(fn, options)
         const r = inst.devsDeploy(prog)
         if (r) throw new Error("deploy error: " + r)
         console.log(`self-deployed ${fn}`)

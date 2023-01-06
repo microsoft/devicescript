@@ -3,7 +3,7 @@ import { ensureDir } from "fs-extra"
 import { spawn } from "node:child_process"
 import { writeFileSync } from "node:fs"
 import { createInterface } from "node:readline"
-import { readDebugInfo } from "./build"
+import { BuildOptions, readDebugInfo } from "./build"
 import { BINDIR, CmdOptions, log } from "./command"
 import { readCompiled } from "./run"
 
@@ -14,9 +14,10 @@ export interface CRunOptions {
 
 export async function crunScript(
     fn: string,
-    options: CRunOptions & CmdOptions
+    options: CRunOptions & CmdOptions & BuildOptions
 ) {
-    const prog = await readCompiled(fn, { noVerify: true })
+    options.noVerify = true
+    const prog = await readCompiled(fn, options)
     const compfn = BINDIR + "/compiled.devs"
     await ensureDir(BINDIR)
     writeFileSync(compfn, prog)

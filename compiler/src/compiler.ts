@@ -515,6 +515,20 @@ interface ProtoDefinition {
     emitted?: boolean
 }
 
+export interface CompileFlags {
+    library?: boolean
+    allFunctions?: boolean
+    allPrototypes?: boolean
+}
+
+export const compileFlagHelp: Record<string, string> = {
+    library: "generate library (in .json format)",
+    allFunctions:
+        "compile-in all `function ...() { }` top-level declarations, used or not",
+    allPrototypes:
+        "compile-in all `object.method = function ...` assignments, used or not",
+}
+
 class Program implements TopOpWriter {
     bufferLits = new VariableScope(null)
     roles = new VariableScope(this.bufferLits)
@@ -547,8 +561,8 @@ class Program implements TopOpWriter {
     protoAssign: DelayedCodeSection
     onStart: DelayedCodeSection
     loopStack: LoopLabels[] = []
-    isLibrary = false
-    compileAll = false
+    flags: CompileFlags = {}
+    isLibrary: boolean
 
     constructor(public host: Host, public _source: string) {
         this.serviceSpecs = {}
@@ -1203,7 +1217,10 @@ class Program implements TopOpWriter {
         assert(!!fundecl || !!this.numErrors)
 
         if (fundecl) {
-            if (this.compileAll || (this.isLibrary && this.inMainFile(stmt)))
+            if (
+                this.flags.allFunctions ||
+                (this.isLibrary && this.inMainFile(stmt))
+            )
                 this.getFunctionProc(fundecl)
         }
 
@@ -1239,7 +1256,10 @@ class Program implements TopOpWriter {
             let numemit = 0
             for (const p of this.protoDefinitions) {
                 if (p.emitted) continue
-                if (this.compileAll || p.names.some(n => this.usedMethods[n])) {
+                if (
+                    this.flags.allPrototypes ||
+                    p.names.some(n => this.usedMethods[n])
+                ) {
                     p.emitted = true
                     numemit++
                     // console.log("EMIT upd", p.names[0])
@@ -3045,7 +3065,7 @@ export function compile(
         errors?: DevsDiagnostic[]
         specs?: jdspec.ServiceSpec[]
         verifyBytecode?: (buf: Uint8Array) => void
-        isLibrary?: boolean
+        flags?: CompileFlags
     } = {}
 ): CompilationResult {
     const {
@@ -3069,7 +3089,8 @@ export function compile(
         },
     } = opts
     const p = new Program(host, code)
-    if (opts.isLibrary) p.isLibrary = true
+    p.flags = opts.flags ?? {}
+    p.isLibrary = p.flags.library || false
     return p.emit()
 }
 

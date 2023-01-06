@@ -18,6 +18,7 @@ import {
     prettySize,
     DebugInfo,
     parseStackFrame,
+    CompileFlags,
 } from "@devicescript/compiler"
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
@@ -105,19 +106,20 @@ export async function compileFile(fn: string, options: BuildOptions = {}) {
 
 export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
     const host = await getHost(options)
+    const flags = (options.flag ?? {}) as CompileFlags
     const res = compile(buf.toString("utf8"), {
         host,
-        isLibrary: options.library,
+        flags,
     })
     return res
 }
 
 export interface BuildOptions {
     noVerify?: boolean
-    library?: boolean
     outDir?: string
     watch?: boolean
     stats?: boolean
+    flag?: Record<string, boolean>
 
     // internal option
     mainFileName?: string
