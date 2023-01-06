@@ -50,7 +50,8 @@ struct _devs_gc_t {
     devs_ctx_t *ctx;
 };
 
-static inline void mark_block(block_t *block, uint8_t tag, unsigned size) {
+static inline void mark_block(block_t *block, unsigned tag, unsigned size) {
+    JD_ASSERT(tag <= 0xff);
     block->header = DEVS_GC_MK_TAG_WORDS(tag, size);
 }
 
@@ -270,7 +271,7 @@ static void devs_gc(devs_gc_t *gc) {
     sweep(gc);
 }
 
-static block_t *find_free_block(devs_gc_t *gc, uint8_t tag, uint32_t words) {
+static block_t *find_free_block(devs_gc_t *gc, unsigned tag, uint32_t words) {
     block_t *prev = NULL;
     for (block_t *b = gc->first_free; b; prev = b, b = b->free.next) {
         unsigned bsz = block_size(b);
@@ -303,8 +304,10 @@ static block_t *find_free_block(devs_gc_t *gc, uint8_t tag, uint32_t words) {
     return NULL;
 }
 
-static block_t *alloc_block(devs_gc_t *gc, uint8_t tag, uint32_t size) {
+static block_t *alloc_block(devs_gc_t *gc, unsigned tag, uint32_t size) {
     unsigned words = (size + JD_PTRSIZE - 1) / JD_PTRSIZE;
+
+    JD_ASSERT(tag <= 0xff);
 
     // if jd_free() is supported we check stack often at the beginning and less often later
     gc->num_alloc++;

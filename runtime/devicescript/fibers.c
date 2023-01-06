@@ -1,6 +1,7 @@
 #include "devs_internal.h"
 
 #define LOG JD_LOG
+#define VLOG JD_NOLOG
 
 void devs_fiber_yield(devs_ctx_t *ctx) {
     if (ctx->curr_fn && devs_trace_enabled(ctx)) {
@@ -31,7 +32,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     devs_activation_t *closure;
     int fidx = devs_get_fnidx(ctx, fn, argp, &closure);
     if (fidx < 0) {
-        devs_log_value(ctx, "non-fun", fn);
+        devs_log_value(ctx, "non-function called", fn);
         devs_runtime_failure(ctx, 60157);
         return -1;
     }
@@ -112,8 +113,8 @@ static void free_fiber(devs_fiber_t *fiber) {
 }
 
 static void log_fiber_op(devs_fiber_t *fiber, const char *op) {
-    LOG("%s fiber %s_F%d", op, devs_img_fun_name(fiber->ctx->img, fiber->bottom_function_idx),
-        fiber->bottom_function_idx);
+    VLOG("%s fiber %s_F%d", op, devs_img_fun_name(fiber->ctx->img, fiber->bottom_function_idx),
+         fiber->bottom_function_idx);
 }
 
 void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {

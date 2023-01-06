@@ -131,7 +131,7 @@ static void devs_jd_set_packet(devs_ctx_t *ctx, unsigned role_idx, unsigned serv
 value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx) {
     if (ctx->packet.service_index == 0xff)
         return devs_undefined;
-    devs_packet_t *pkt = devs_any_try_alloc(ctx, sizeof(*pkt), DEVS_GC_TAG_PACKET);
+    devs_packet_t *pkt = devs_any_try_alloc(ctx, DEVS_GC_TAG_PACKET, sizeof(*pkt));
     if (pkt == NULL)
         return devs_undefined;
 
@@ -166,6 +166,8 @@ void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
     if (!devs_is_null(fn)) {
         ctx->stack_top_for_gc = 2;
         ctx->the_stack[0] = fn;
+        // null it out first, in case devs_jd_pkt_capture() triggers GC
+        ctx->the_stack[1] = devs_null;
         ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role_idx);
         devs_fiber_t *fiber = devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
         if (fiber)
