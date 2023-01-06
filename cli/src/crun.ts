@@ -10,6 +10,8 @@ import { readCompiled } from "./run"
 export interface CRunOptions {
     net?: boolean
     serial?: string
+    lazyGc?: boolean
+    settings?: boolean
 }
 
 export async function crunScript(
@@ -24,10 +26,11 @@ export async function crunScript(
 
     const args = [compfn]
 
-    if (!options.net) args.unshift("-X", "-n")
-
     if (options.serial) args.unshift(options.serial)
     else if (options.net) args.unshift("8082")
+
+    if (!options.lazyGc) args.unshift("-X")
+    if (!options.settings) args.unshift("-n")
 
     const executable = "./runtime/built/jdcli"
     log(`run: ${executable} ${args.join(" ")}`)

@@ -132,6 +132,14 @@ export async function mainCli() {
         .description("run a script using native runner")
         .option("-n, --net", "connect to 127.0.0.1:8082 for Jacdac proxy")
         .option(
+            "--lazy-gc",
+            "only run GC when full (otherwise run on every allocation for stress-test)"
+        )
+        .option(
+            "--settings",
+            "load/save settings from files (otherwise in memory only)"
+        )
+        .option(
             "-s, --serial <serial-port>",
             "connect to serial port, not 127.0.0.1:8082"
         )
