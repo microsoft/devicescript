@@ -448,6 +448,8 @@ static int devs_get_fnidx_core(devs_ctx_t *ctx, value_t src, value_t *this_val,
         }
     }
     default: {
+        if (devs_is_null(src))
+            return -1;
         value_t f = devs_object_get(ctx, src, devs_builtin_string(DEVS_BUILTIN_STRING___FUNC__));
         if (devs_is_null(f))
             return -1;
@@ -662,8 +664,13 @@ value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *prot
             break;
         } else if (devs_is_service_spec(ctx, proto)) {
             ptmp = devs_spec_lookup(ctx, (const devs_service_spec_t *)proto, key);
-            tmp = &ptmp;
-            break;
+            if (!devs_is_null(ptmp)) {
+                tmp = &ptmp;
+                break;
+            } else {
+                proto = devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE);
+                continue;
+            }
         } else {
             JD_ASSERT(devs_is_map(proto));
             map = (devs_map_t *)proto;

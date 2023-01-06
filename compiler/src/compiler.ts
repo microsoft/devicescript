@@ -88,6 +88,7 @@ const coreModule = "@devicescript/core"
 const builtInObjByName: Record<string, BuiltInObject> = {
     "#ds.": BuiltInObject.DEVICESCRIPT,
     "#ArrayConstructor.prototype": BuiltInObject.ARRAY_PROTOTYPE,
+    "#ds.RegisterNumber.prototype": BuiltInObject.DSREGISTER_PROTOTYPE,
 }
 BUILTIN_OBJECT__VAL.forEach((n, i) => {
     n = n.replace(/_prototype$/, ".prototype")
