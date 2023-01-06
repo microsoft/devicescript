@@ -9,7 +9,13 @@
 * register delay computation
 * Role.sendCommand
 * `[a,b,c] = reg.read()`
-* for-of
+
+## Random stuff
+* change `ALLOC_*` opcodes to expressions
+* `Object.keys(spec_object)` ?
+* validate UTF8 on input
+* fix charAt() etc to decode UTF8
+* add `JSON.parse/stringify()`
 
 ## Big ticket
 * buffer overflows when printing a lot
@@ -24,6 +30,7 @@
 * drop seconds, use milliseconds everywhere
 * multi-program LATER
 * hash-consing of strings? (esp. for JSON parsing) LATER
+* tree strings?
 
 * hang properties off roles - `high`, `lastHigh` for bar graph eg
 * `role.control` -> control service of device that has this role ?
