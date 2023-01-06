@@ -83,6 +83,7 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
 
 typedef struct {
     jd_role_t *role;
+    devs_map_t *dynproto;
     devs_map_t *attached;
 } devs_role_t;
 
@@ -212,6 +213,8 @@ void devs_oom(devs_ctx_t *ctx, unsigned size);
 
 value_t devs_make_closure(devs_ctx_t *ctx, devs_activation_t *closure, unsigned fnidx);
 int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activation_t **closure);
+
+devs_map_t *devs_get_role_proto(devs_ctx_t *ctx, unsigned roleidx);
 
 #define TODO JD_PANIC
 

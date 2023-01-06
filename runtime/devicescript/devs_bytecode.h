@@ -44,6 +44,7 @@
 #define DEVS_EXPRx_LITERAL 40               // *value
 #define DEVS_EXPRx_LITERAL_F64 41           // *f64_idx
 #define DEVS_EXPRx_BUILTIN_OBJECT 1         // *builtin_object
+#define DEVS_EXPRx_ROLE_PROTO 80            // role_idx.prototype
 #define DEVS_EXPR3_LOAD_BUFFER 43           // buffer, numfmt, offset
 #define DEVS_EXPR0_RET_VAL 44
 #define DEVS_EXPR1_TYPEOF 45     // object
@@ -80,20 +81,20 @@
 #define DEVS_EXPR0_NOW_MS 77
 #define DEVS_EXPR1_GET_FIBER_HANDLE 78 // func
 #define DEVS_EXPR0_PKT_BUFFER 42
-#define DEVS_OP_PAST_LAST 80
+#define DEVS_OP_PAST_LAST 81
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x11\x30\x31\x11\x60\x31\x31\x14\x40\x20\x20" \
     "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x40\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12"
+    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x20"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b" \
     "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x04\x01\x0b\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c"
+    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x05"
 
-#define DEVS_IMG_VERSION 0x03000000
+#define DEVS_IMG_VERSION 0x03010000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 9
@@ -352,7 +353,7 @@
         expr2_bit_or, expr2_bit_xor, expr2_shift_left, expr2_shift_right,                          \
         expr2_shift_right_unsigned, expr2_eq, expr2_le, expr2_lt, expr2_ne, stmt1_terminate_fiber, \
         stmtx2_store_closure, exprx1_load_closure, exprx_make_closure, expr1_typeof_str,           \
-        expr0_now_ms, expr1_get_fiber_handle, stmt2_call_array, expr_invalid
+        expr0_now_ms, expr1_get_fiber_handle, stmt2_call_array, exprx_role_proto, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \

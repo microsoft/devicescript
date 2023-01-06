@@ -105,6 +105,7 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v);
 bool devs_is_service_spec(devs_ctx_t *ctx, const void *ptr);
 const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx);
 value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key);
+const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t service_class);
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx);
 
 // GC

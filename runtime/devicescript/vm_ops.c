@@ -308,6 +308,13 @@ static value_t exprx_static_role(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, idx);
 }
 
+static value_t exprx_role_proto(devs_activation_t *frame, devs_ctx_t *ctx) {
+    unsigned idx = ctx->literal_int;
+    if (!devs_vm_role_ok(ctx, idx))
+        return devs_undefined;
+    return devs_value_from_gc_obj(ctx, devs_get_role_proto(ctx, idx));
+}
+
 static inline int string_index(devs_ctx_t *ctx, unsigned tp) {
     uint32_t v = (tp << DEVS_STRIDX__SHIFT) | ctx->literal_int;
     if (!devs_img_stridx_ok(ctx->img, v))

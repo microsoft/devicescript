@@ -112,6 +112,8 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
 ### Misc
 
+    role_proto(*role_idx): role = 80         // role_idx.prototype
+
     load_buffer(buffer, numfmt, offset): number = 43
 
     ret_val: any = 44
@@ -214,7 +216,7 @@ Return reference to "buffer" with the packet data.
 
 ## Format Constants
 
-    img_version = 0x03_00_0000
+    img_version = 0x03_01_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9
