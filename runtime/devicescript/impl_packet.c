@@ -80,7 +80,7 @@ value_t prop_Packet_isEvent(devs_ctx_t *ctx, value_t self) {
 
 value_t prop_Packet_eventCode(devs_ctx_t *ctx, value_t self) {
     SELF();
-    return is_event(pkt) ? devs_value_from_int(pkt->service_command & JD_CMD_EVENT_MASK)
+    return is_event(pkt) ? devs_value_from_int(pkt->service_command & JD_CMD_EVENT_CODE_MASK)
                          : devs_undefined;
 }
 
