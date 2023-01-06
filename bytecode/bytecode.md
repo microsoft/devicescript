@@ -514,3 +514,4 @@ Only `true` and `false` values.
     inline = 109
     assert = 110
     pushRange = 111
+    sendCommand = 112

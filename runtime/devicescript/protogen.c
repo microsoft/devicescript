@@ -73,6 +73,7 @@ value_t prop_DsPacketInfo_code(devs_ctx_t *ctx, value_t self);
 void methX_DsCommand___func__(devs_ctx_t *ctx);
 // impl_role.c
 value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self);
+void meth2_Role_sendCommand(devs_ctx_t *ctx);
 // impl_string.c
 value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
@@ -175,12 +176,13 @@ static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
 
 static const devs_builtin_proto_entry_t Role_prototype_entries[] = { //
     {N(ISCONNECTED), 50056},                                         //
+    {N(SENDCOMMAND), 50057},                                         //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50057},                                                //
-    {N(CHARCODEAT), 50058},                                            //
-    {N(CHARAT), 50059},                                                //
+    {N(LENGTH), 50058},                                                //
+    {N(CHARCODEAT), 50059},                                            //
+    {N(CHARAT), 50060},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t empty_entries[] = { //
@@ -229,8 +231,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 60;
-const devs_builtin_function_t devs_builtin_functions[60] = {
+uint16_t devs_num_builtin_functions = 61;
+const devs_builtin_function_t devs_builtin_functions[61] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -288,6 +290,7 @@ const devs_builtin_function_t devs_builtin_functions[60] = {
     {N(CODE), 0, PROP, {.prop = prop_DsPacketInfo_code}},
     {N(__FUNC__), 0, 0, {.meth = methX_DsCommand___func__}},
     {N(ISCONNECTED), 0, PROP, {.prop = prop_Role_isConnected}},
+    {N(SENDCOMMAND), 2, 0, {.meth = meth2_Role_sendCommand}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},
     {N(CHARAT), 1, 0, {.meth = meth1_String_charAt}}};

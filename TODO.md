@@ -3,11 +3,9 @@
 ### treat roles as "normal" objects
 * actually call `Command.__func__`
 * `Register.onChange` threshold handling
-* `Event.subscribe`
 * `Event.wait`
 * `Condition` handling
 * register delay computation
-* Role.sendCommand
 * `[a,b,c] = reg.read()`
 
 ## Random stuff
