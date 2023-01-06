@@ -30,9 +30,8 @@ interface ChangeHandler {
     threshold?: number // TODO add logic
 }
 
-function callHandlers(h: ds.Handler[]) {
-    if (!h) return
-    for (let i = 0; i < h.length; ++i) h()
+function callHandlers(hh: ds.Handler[]) {
+    if (hh) for (const h of hh) h()
 }
 
 function roleOnPacket(this: ds.Role, pkt: ds.Packet) {
@@ -68,6 +67,10 @@ function roleOnPacket(this: ds.Role, pkt: ds.Packet) {
                 handlers[i].handler(val)
             }
         }
+    }
+    if (pkt.isEvent && this._eventHandlers) {
+        const hh = this._eventHandlers[pkt.eventCode + ""]
+        if (hh) for (const h of hh) h(pkt)
     }
 }
 
@@ -140,4 +143,15 @@ ds.CloudAdapter.prototype.onMethod = function onMethod(
         this._cloudHandlers = {}
     }
     this._cloudHandlers[name] = handler
+}
+
+ds.Event.prototype.subscribe = function (handler) {
+    let m = this.role._eventHandlers
+    if (!m) {
+        m = {}
+        this.role._eventHandlers = m
+    }
+    const k = this.code + ""
+    if (!m[k]) m[k] = []
+    m[k].push(handler)
 }

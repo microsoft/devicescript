@@ -2,6 +2,11 @@
 
 declare module "@devicescript/core" {
     export type Handler = () => void
+    export type PktHandler = (pkt: Packet) => void
+
+    export type SMap<T> = {
+        [idx: string]: T
+    }
 
     /**
      * A base class for service clients
@@ -21,13 +26,15 @@ declare module "@devicescript/core" {
         /**
          * @internal
          */
-        onPacket: (pkt: Packet) => void
+        onPacket: PktHandler
 
         _changeHandlers: any
 
         _wasConnected: boolean
         _connHandlers: Handler[]
         _disconHandlers: Handler[]
+
+        _eventHandlers: SMap<PktHandler[]>
     }
 
     export class Packet {
@@ -54,17 +61,17 @@ declare module "@devicescript/core" {
     /**
      * A base class for registers, events.
      */
-    export class PacketInfo {}
+    export class PacketInfo {
+        name: string
+        code: number
+        role: Role
+    }
 
     /**
      * A base class for register clients.
      */
     // TODO: support for "isImplemented?"
-    export class Register extends PacketInfo {
-        name: string
-        code: number
-        role: Role
-    }
+    export class Register extends PacketInfo {}
 
     /**
      * A client for a register that holds a numerical value.

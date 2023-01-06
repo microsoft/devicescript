@@ -178,6 +178,11 @@ static void mark_roots(devs_gc_t *gc) {
         scan_gc_obj(ctx, p, ROOT_SCAN_DEPTH);
     }
 
+    for (unsigned i = 0; i < devs_img_num_roles(ctx->img); ++i) {
+        scan_gc_obj(ctx, (block_t *)ctx->roles[i].attached, ROOT_SCAN_DEPTH);
+        scan_gc_obj(ctx, (block_t *)ctx->roles[i].dynproto, ROOT_SCAN_DEPTH);
+    }
+
     for (devs_fiber_t *fib = ctx->fibers; fib; fib = fib->next) {
         scan_value(ctx, fib->ret_val, ROOT_SCAN_DEPTH);
         if (devs_fiber_uses_pkt_data_v(fib))

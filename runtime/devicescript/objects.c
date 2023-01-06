@@ -184,9 +184,10 @@ static const uint8_t builtin_proto_idx[] = {
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = 4,
     [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] = 5,
     [DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE] = 6,
-    [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = 7,
+    [DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE] = 7,
+    [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = 8,
 };
-#define MAX_PROTO 7
+#define MAX_PROTO 8
 
 const devs_map_or_proto_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
     if (idx < sizeof(builtin_proto_idx)) {

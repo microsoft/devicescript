@@ -1951,7 +1951,18 @@ class Program implements TopOpWriter {
         if (idName(expr.name) == "prototype") {
             const sym = this.checker.getSymbolAtLocation(expr.expression)
             if (this.isRoleClass(sym)) {
-                // TODO xxx
+                const spec = this.specFromTypeName(expr.expression)
+                const r = this.roles.find(r => r.spec == spec)
+                if (r) {
+                    r.used = true
+                    return this.writer.emitExpr(
+                        Op.EXPRx_ROLE_PROTO,
+                        literal(r._index)
+                    )
+                } else {
+                    if (!this.flags.allPrototypes)
+                        throwError(expr, "role not used")
+                }
             }
         }
 
