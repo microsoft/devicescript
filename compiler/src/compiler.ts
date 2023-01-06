@@ -7,8 +7,6 @@ import { SyntaxKind as SK } from "typescript"
 import {
     SystemReg,
     SRV_DEVICE_SCRIPT_CONDITION,
-    CloudAdapterCmd,
-    CloudAdapterCommandStatus,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 
 import {
@@ -27,13 +25,11 @@ import {
 
 import {
     BinFmt,
-    ValueType,
     Host,
     OpCall,
     NumFmt,
     Op,
     SMap,
-    ValueKind,
     DevsDiagnostic,
     BUILTIN_STRING__VAL,
     StrIdx,
@@ -46,15 +42,7 @@ import {
     FieldSpecFlag,
     ServiceSpecFlag,
 } from "./format"
-import {
-    addUnique,
-    assert,
-    camelize,
-    oops,
-    snakify,
-    strlen,
-    upperCamel,
-} from "./util"
+import { addUnique, assert, camelize, oops, strlen, upperCamel } from "./util"
 import {
     bufferFmt,
     DelayedCodeSection,
@@ -161,7 +149,6 @@ class Role extends Cell {
     }
     emit(wr: OpWriter): Value {
         const r = wr.emitExpr(Op.EXPRx_STATIC_ROLE, literal(this._index))
-        r.valueType = ValueType.ROLE(this.spec)
         this.used = true
         return r
     }
@@ -201,7 +188,6 @@ class Variable extends Cell {
             | ts.BindingElement,
         public vkind: VariableKind,
         scopeOrProc: Variable[] | Procedure,
-        public valueType: ValueType,
         name?: string
     ) {
         super(
@@ -223,7 +209,6 @@ class Variable extends Cell {
             literal(this.getClosureIndex()),
             literal(lev)
         )
-        r.valueType = this.valueType
         return r
     }
 
@@ -246,25 +231,14 @@ class Variable extends Cell {
         this.assertDirect(wr)
         let r: Value
         if (this.vkind == VariableKind.Global)
-            r = wr.emitMemRef(
-                Op.EXPRx_LOAD_GLOBAL,
-                this.packedIndex,
-                this.valueType
-            )
-        else
-            r = wr.emitMemRef(
-                Op.EXPRx_LOAD_LOCAL,
-                this.packedIndex,
-                this.valueType
-            )
+            r = wr.emitMemRef(Op.EXPRx_LOAD_GLOBAL, this.packedIndex)
+        else r = wr.emitMemRef(Op.EXPRx_LOAD_LOCAL, this.packedIndex)
         return r
     }
     canStore() {
         return true
     }
     store(wr: OpWriter, src: Value, lev: number) {
-        if (this.valueType == ValueType.ANY) this.valueType = src.valueType
-
         if (lev == 0) {
             this.assertDirect(wr)
             if (this.vkind == VariableKind.Global)
@@ -289,7 +263,7 @@ class Variable extends Cell {
         }
     }
     toString() {
-        return `var ${this.getName()} : ${this.valueType}`
+        return `var ${this.getName()}`
     }
 }
 
@@ -341,7 +315,7 @@ function idName(pat: Expr | ts.DeclarationName) {
 }
 
 function unit() {
-    return nonEmittable(ValueType.VOID)
+    return nonEmittable()
 }
 
 interface DsSymbol extends ts.Symbol {
@@ -359,7 +333,6 @@ class Procedure {
     locals: Variable[] = []
     users: ts.Node[] = []
     skipAccounting = false
-    retType = ValueType.VOID
     parentProc: Procedure
     nestedProcs: Procedure[] = []
     usesClosure = false
@@ -631,7 +604,7 @@ class Program implements TopOpWriter {
             length: node.getWidth(),
         }
         this.printDiag(diag)
-        return nonEmittable(ValueType.ERROR)
+        return unit()
     }
 
     describeCell(ff: string, idx: number): string {
@@ -744,19 +717,14 @@ class Program implements TopOpWriter {
     private assignToId(id: ts.Identifier, init: Value) {
         const variable = this.getCellAtLocation(id)
         if (!(variable instanceof Variable)) throwError(id, "invalid cell type")
-        variable.valueType = init.valueType
         this.emitStore(variable, init)
     }
 
     private cloneObj(obj: Value) {
         const wr = this.writer
         wr.emitStmt(Op.STMT0_ALLOC_MAP)
-        wr.emitCall(
-            wr.objectMember(BuiltInString.ASSIGN),
-            this.retVal(ValueType.MAP),
-            obj
-        )
-        return this.retVal(ValueType.MAP)
+        wr.emitCall(wr.objectMember(BuiltInString.ASSIGN), this.retVal(), obj)
+        return this.retVal()
     }
 
     private assignToBindingElement(
@@ -830,7 +798,7 @@ class Program implements TopOpWriter {
             wr.emitCall(spl, literal(index))
             if (!ts.isIdentifier(bindingName))
                 throwError(bindingName, "unsupported spread")
-            this.assignToId(bindingName, this.retVal(ValueType.ARRAY))
+            this.assignToId(bindingName, this.retVal())
             return
         }
 
@@ -850,7 +818,7 @@ class Program implements TopOpWriter {
 
             if (!decl.initializer) continue
 
-            const init = this.emitSimpleValue(decl.initializer, ValueType.ANY)
+            const init = this.emitSimpleValue(decl.initializer)
 
             if (ts.isIdentifier(decl.name)) {
                 this.assignToId(decl.name, init)
@@ -888,7 +856,7 @@ class Program implements TopOpWriter {
     }
 
     private emitIfStatement(stmt: ts.IfStatement) {
-        const cond = this.emitSimpleValue(stmt.expression, ValueType.BOOL)
+        const cond = this.emitSimpleValue(stmt.expression)
         if (this.valueIsAlwaysFalse(cond)) {
             if (stmt.elseStatement) this.emitStmt(stmt.elseStatement)
         } else if (this.valueIsAlwaysTrue(cond)) {
@@ -921,7 +889,7 @@ class Program implements TopOpWriter {
 
         wr.emitLabel(topLbl)
 
-        const cond = this.emitSimpleValue(stmt.condition, ValueType.BOOL)
+        const cond = this.emitSimpleValue(stmt.condition)
         wr.emitJumpIfFalse(breakLbl, cond)
 
         try {
@@ -994,7 +962,7 @@ class Program implements TopOpWriter {
         const breakLbl = wr.mkLabel("whileBrk")
 
         wr.emitLabel(continueLbl)
-        const cond = this.emitSimpleValue(stmt.expression, ValueType.BOOL)
+        const cond = this.emitSimpleValue(stmt.expression)
         wr.emitJumpIfFalse(breakLbl, cond)
 
         try {
@@ -1012,10 +980,7 @@ class Program implements TopOpWriter {
         const wr = this.writer
         if (stmt.expression) {
             if (wr.ret) oops("return with value not supported here")
-            wr.emitStmt(
-                Op.STMT1_RETURN,
-                this.emitSimpleValue(stmt.expression, ValueType.ANY)
-            )
+            wr.emitStmt(Op.STMT1_RETURN, this.emitSimpleValue(stmt.expression))
         } else {
             if (wr.ret) this.writer.emitJump(this.writer.ret)
             else wr.emitStmt(Op.STMT1_RETURN, literal(null))
@@ -1095,53 +1060,12 @@ class Program implements TopOpWriter {
         const v = new Variable(
             typeof id == "string" ? null : id,
             VariableKind.Parameter,
-            proc,
-            ValueType.ANY
+            proc
         )
         if (typeof id == "string") v._name = id
         else this.assignCell(id, v)
         if (v.getName() == "this") v.vkind = VariableKind.ThisParam
         return v
-    }
-
-    private mapType(node: ts.Node, tp: ts.Type) {
-        if (tp.getFlags() & ts.TypeFlags.BooleanLike) return ValueType.BOOL
-        if (tp.getFlags() & ts.TypeFlags.NumberLike) return ValueType.NUMBER
-        if (tp.getFlags() & ts.TypeFlags.StringLike) return ValueType.STRING
-        if (tp.getFlags() & ts.TypeFlags.VoidLike) return ValueType.VOID
-        if (
-            tp.getFlags() &
-            (ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.Never)
-        )
-            return ValueType.ANY
-
-        if (tp.getFlags() & ts.TypeFlags.StructuredType) {
-            const sigs = this.checker.getSignaturesOfType(
-                tp,
-                ts.SignatureKind.Call
-            )
-            if (sigs?.length > 0) return ValueType.FUNCTION
-        }
-
-        const n = this.symName(tp.getSymbol())
-        if (n && n[0] == "#") {
-            if (n == "#Buffer") return ValueType.BUFFER
-            if (n == "#Array") return ValueType.ARRAY
-            if (
-                tp
-                    .getBaseTypes()
-                    ?.some(b => this.symName(b.getSymbol()) == "#Role")
-            )
-                return ValueType.ROLE(this.specFromTypeName(node, n))
-        }
-
-        if (tp.getFlags() & ts.TypeFlags.Object) return ValueType.MAP
-
-        const tname = this.checker.typeToString(tp)
-        throwError(
-            node,
-            `type not understood: ${tname} (${n} ${tp.getFlags()})`
-        )
     }
 
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
@@ -1155,7 +1079,6 @@ class Program implements TopOpWriter {
                 )
             this.addParameter(proc, paramdef)
         }
-        proc.retType = ValueType.ANY
     }
 
     getFunctionProc(fundecl: FunctionDecl) {
@@ -1173,12 +1096,7 @@ class Program implements TopOpWriter {
         if (!this.isTopLevel(stmt)) {
             const fnVar = this.assignCell(
                 stmt,
-                new Variable(
-                    stmt,
-                    VariableKind.Local,
-                    this.proc,
-                    ValueType.FUNCTION
-                )
+                new Variable(stmt, VariableKind.Local, this.proc)
             )
             this.emitStore(fnVar, this.emitFunctionExpr(stmt))
             return
@@ -1342,8 +1260,7 @@ class Program implements TopOpWriter {
                     new Variable(
                         decl,
                         proc ? VariableKind.Local : VariableKind.Global,
-                        proc ? proc : this.globals,
-                        ValueType.ANY
+                        proc ? proc : this.globals
                     )
                 )
             else if (ts.isObjectBindingPattern(decl.name)) {
@@ -1510,10 +1427,6 @@ class Program implements TopOpWriter {
         return r | (shift << 4)
     }
 
-    private nodeType(node: ts.Node) {
-        return this.mapType(node, this.checker.getTypeAtLocation(node))
-    }
-
     private emitGenericCall(expr: ts.CallExpression, fn: Value) {
         const wr = this.writer
         const args = expr.arguments.slice()
@@ -1535,13 +1448,13 @@ class Program implements TopOpWriter {
         } else {
             wr.emitCall(fn, ...this.emitArgs(expr.arguments.slice()))
         }
-        return this.retVal(this.nodeType(expr))
+        return this.retVal()
     }
 
     private emitMathCall(id: BuiltInString, ...args: Value[]) {
         const wr = this.writer
         wr.emitCall(wr.mathMember(id), ...args)
-        return this.retVal(ValueType.NUMBER)
+        return this.retVal()
     }
 
     private stringLiteral(expr: Expr) {
@@ -1602,13 +1515,8 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitArgs(args: Expr[], formals?: Variable[]) {
-        return args.map((arg, i) => {
-            let tp = ValueType.ANY
-            const f = formals?.[i]
-            if (f) tp = f.valueType
-            return this.emitSimpleValue(arg, tp)
-        })
+    private emitArgs(args: Expr[]) {
+        return args.map(arg => this.emitSimpleValue(arg))
     }
 
     private forceNumberLiteral(expr: Expr) {
@@ -1649,7 +1557,7 @@ class Program implements TopOpWriter {
 
     private compileFormat(args: ts.Expression[]) {
         let fmt = ""
-        const fmtargs: Expr[] = []
+        const fmtArgs: Expr[] = []
         const strval = (n: number) => {
             if (n <= 9) return "" + n
             return String.fromCharCode(0x61 + n - 9)
@@ -1659,8 +1567,8 @@ class Program implements TopOpWriter {
             if (str) {
                 fmt += str.replace(/\{/g, "{{")
             } else {
-                fmt += `{${strval(fmtargs.length)}}`
-                fmtargs.push(arg)
+                fmt += `{${strval(fmtArgs.length)}}`
+                fmtArgs.push(arg)
             }
         }
 
@@ -1678,14 +1586,13 @@ class Program implements TopOpWriter {
         wr.emitCall(
             wr.dsMember(BuiltInString.FORMAT),
             wr.emitString(fmt),
-            ...this.emitArgs(fmtargs)
+            ...this.emitArgs(fmtArgs)
         )
-        return this.retVal(ValueType.STRING)
+        return this.retVal()
     }
 
-    private retVal(tp = ValueType.ANY) {
-        if (tp.kind == ValueKind.VOID) return unit()
-        return this.writer.emitExpr(Op.EXPR0_RET_VAL).withType(tp)
+    private retVal() {
+        return this.writer.emitExpr(Op.EXPR0_RET_VAL)
     }
 
     private symName(sym: ts.Symbol) {
@@ -2023,7 +1930,7 @@ class Program implements TopOpWriter {
         return r
     }
 
-    private emitSimpleValue(expr: Expr, tp = ValueType.NUMBER): Value {
+    private emitSimpleValue(expr: Expr): Value {
         return this.emitExpr(expr)
     }
 
@@ -2226,7 +2133,7 @@ class Program implements TopOpWriter {
 
         if (op == SK.CommaToken) {
             this.ignore(this.emitExpr(expr.left))
-            return this.emitSimpleValue(expr.right, ValueType.ANY)
+            return this.emitSimpleValue(expr.right)
         }
 
         let swap = false
@@ -2242,7 +2149,7 @@ class Program implements TopOpWriter {
         const wr = this.writer
 
         if (op == SK.AmpersandAmpersandToken || op == SK.BarBarToken) {
-            const a = this.emitSimpleValue(expr.left, ValueType.BOOL)
+            const a = this.emitSimpleValue(expr.left)
             const tmp = wr.cacheValue(a, true)
             const tst = wr.emitExpr(
                 op == SK.AmpersandAmpersandToken
@@ -2252,7 +2159,7 @@ class Program implements TopOpWriter {
             )
             const skipB = wr.mkLabel("lazyB")
             wr.emitJumpIfFalse(skipB, tst)
-            tmp.store(this.emitSimpleValue(expr.right, ValueType.BOOL))
+            tmp.store(this.emitSimpleValue(expr.right))
             wr.emitLabel(skipB)
 
             return tmp.finalEmit()
@@ -2268,15 +2175,13 @@ class Program implements TopOpWriter {
             if (op2 === undefined) throwError(expr, "unhandled operator")
 
             const res = wr.emitExpr(op2, a, b)
-            if (op2 == Op.EXPR2_ADD && this.isStringLike(expr))
-                res.valueType = ValueType.STRING
             return res
         }
 
         if (stripEquals(op) != null) {
             op = stripEquals(op)
             const t = this.emitAssignmentTarget(expr.left)
-            const other = this.emitSimpleValue(expr.right, ValueType.ANY)
+            const other = this.emitSimpleValue(expr.right)
             this.forceAssignmentIgnored(expr)
             const r = emitBin(op, t.read(), other)
             t.write(r)
@@ -2286,12 +2191,8 @@ class Program implements TopOpWriter {
 
         const op2 = simpleOps[op]
 
-        let dstTp = ValueType.NUMBER
-        if (op2 == Op.EXPR2_EQ || op2 == Op.EXPR2_NE || op2 == Op.EXPR2_ADD)
-            dstTp = ValueType.ANY
-
-        let a = this.emitSimpleValue(expr.left, dstTp)
-        let b = this.emitSimpleValue(expr.right, dstTp)
+        let a = this.emitSimpleValue(expr.left)
+        let b = this.emitSimpleValue(expr.right)
         if (swap) [a, b] = [b, a]
 
         return emitBin(op, a, b)
@@ -2335,11 +2236,7 @@ class Program implements TopOpWriter {
             arg = arg.operand
         }
 
-        const a = this.emitSimpleValue(
-            arg,
-            op == Op.EXPR1_NOT ? ValueType.BOOL : ValueType.NUMBER
-        )
-        return wr.emitExpr(op, a)
+        return wr.emitExpr(op, this.emitSimpleValue(arg))
     }
 
     private emitArrayExpression(expr: ts.ArrayLiteralExpression): Value {
@@ -2347,20 +2244,17 @@ class Program implements TopOpWriter {
         const sz = expr.elements.length
         wr.emitStmt(Op.STMT1_ALLOC_ARRAY, literal(sz))
         const arr = wr.emitExpr(Op.EXPR0_RET_VAL)
-        if (sz == 0) {
-            arr.valueType = ValueType.ARRAY
-            return arr
-        }
+        if (sz == 0) return arr
         const ref = wr.cacheValue(arr)
         for (let i = 0; i < sz; ++i) {
             wr.emitStmt(
                 Op.STMT3_INDEX_SET,
                 ref.emit(),
                 literal(i),
-                this.emitSimpleValue(expr.elements[i], ValueType.ANY)
+                this.emitSimpleValue(expr.elements[i])
             )
         }
-        return ref.finalEmit(ValueType.ARRAY)
+        return ref.finalEmit()
     }
 
     private tryEmitIndex(expr: Expr) {
@@ -2372,7 +2266,7 @@ class Program implements TopOpWriter {
             const obj = this.emitExpr(expr.expression)
             const idx = ts.isPropertyAccessExpression(expr)
                 ? wr.emitString(this.forceName(expr.name))
-                : this.emitSimpleValue(expr.argumentExpression, ValueType.ANY)
+                : this.emitSimpleValue(expr.argumentExpression)
             return { obj, idx }
         }
         return null
@@ -2383,7 +2277,7 @@ class Program implements TopOpWriter {
         const r = this.tryEmitIndex(expr.expression)
         if (!r) throwError(expr, "unsupported delete")
         wr.emitStmt(Op.STMT2_INDEX_DELETE, r.obj, r.idx)
-        return this.retVal(ValueType.BOOL)
+        return this.retVal()
     }
 
     private emitPostfixUnaryExpression(expr: ts.PostfixUnaryExpression): Value {
@@ -2406,7 +2300,7 @@ class Program implements TopOpWriter {
 
     private emitConditionalExpression(expr: ts.ConditionalExpression): Value {
         const wr = this.writer
-        const cond = this.emitSimpleValue(expr.condition, ValueType.BOOL)
+        const cond = this.emitSimpleValue(expr.condition)
         if (this.valueIsAlwaysFalse(cond)) {
             return this.emitExpr(expr.whenFalse)
         } else if (this.valueIsAlwaysTrue(cond)) {
@@ -2469,7 +2363,7 @@ class Program implements TopOpWriter {
     private emitObjectExpression(expr: ts.ObjectLiteralExpression): Value {
         const wr = this.writer
         wr.emitStmt(Op.STMT0_ALLOC_MAP)
-        const ret = this.retVal(ValueType.MAP)
+        const ret = this.retVal()
         if (expr.properties.length == 0) return ret
 
         const arr = wr.cacheValue(ret)

@@ -17,11 +17,7 @@
 
 ## Big ticket
 * buffer overflows when printing a lot
-* drop type-directed compilation
 * try/catch - devs_runtime_failure() vs devs_raise()
-
-* role.packet -> (roleidx, spec-offset)
-* led.active.__proto__.foo = ... ? nope. frozen.
 
 ## General usability
 

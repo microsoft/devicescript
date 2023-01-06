@@ -1,7 +1,6 @@
 import {
     BinFmt,
     bitSize,
-    ValueType,
     exprIsStateful,
     InstrArgResolver,
     NumFmt,
@@ -49,7 +48,7 @@ export class Value {
     _userdata: {}
     _cachedValue: CachedValue
 
-    constructor(public valueType: ValueType) {}
+    constructor() {}
 
     get maxstack() {
         return (this.flags & VF_MAX_STACK_MASK) + 1
@@ -80,11 +79,6 @@ export class Value {
         this._cachedValue = src._cachedValue
     }
 
-    withType(tp: ValueType) {
-        this.valueType = tp
-        return this
-    }
-
     get staticIdx() {
         assert(this.args.length == 1)
         assert(this.args[0].isLiteral)
@@ -96,7 +90,7 @@ export class Value {
     }
 
     clone() {
-        const r = new Value(this.valueType)
+        const r = new Value()
         r._set(this)
         if (r.args) r.args = r.args.map(a => a.clone())
         return r
@@ -104,9 +98,8 @@ export class Value {
 }
 
 export class CachedValue {
-    numrefs = 1
+    numRefs = 1
     longTerm = false
-    valueType: ValueType
     constructor(public parent: OpWriter, public index: number) {}
     get packedIndex() {
         return packVarIndex(VariableKind.Cached, this.index)
@@ -115,33 +108,31 @@ export class CachedValue {
         return true
     }
     emit() {
-        assert(this.numrefs > 0)
-        const r = new Value(this.valueType)
+        assert(this.numRefs > 0)
+        const r = new Value()
         r.numValue = this.packedIndex
         r.op = Op.EXPRx_LOAD_LOCAL
         r.flags = VF_IS_MEMREF // not "using state" - it's temporary
         r._cachedValue = this
-        this.numrefs++
+        this.numRefs++
         return r
     }
     store(v: Value) {
-        assert(this.numrefs > 0)
-        this.valueType = v.valueType
+        assert(this.numRefs > 0)
         this.parent.emitStmt(
             Op.STMTx1_STORE_LOCAL,
             literal(this.packedIndex),
             v
         )
     }
-    finalEmit(tp?: ValueType) {
+    finalEmit() {
         const r = this.emit()
         this.free()
-        if (tp) r.valueType = tp
         return r
     }
     _decr() {
-        assert(this.numrefs > 0)
-        if (--this.numrefs == 0) {
+        assert(this.numRefs > 0)
+        if (--this.numRefs == 0) {
             assert(this.parent.cachedValues[this.index] == this)
             this.parent.cachedValues[this.index] = null
             this.index = null
@@ -167,7 +158,6 @@ class UnCachedValue extends CachedValue {
 
     store(v: Value) {
         assert(this.theValue === undefined)
-        this.valueType = v.valueType
         this.theValue = v
     }
 
@@ -175,35 +165,26 @@ class UnCachedValue extends CachedValue {
 }
 
 export function literal(v: number | boolean) {
+    const r = new Value()
     if (v == null) {
-        const r = new Value(ValueType.NULL)
         r.op = Op.EXPR0_NULL
         r.args = []
         r.flags = 0
-        return r
     } else if (typeof v == "boolean") {
-        const r = new Value(ValueType.BOOL)
         r.op = v ? Op.EXPR0_TRUE : Op.EXPR0_FALSE
         r.args = []
         r.flags = 0
-        return r
     } else {
-        const r = new Value(ValueType.NUMBER)
         r.numValue = v
         r.op = Op.EXPRx_LITERAL
         r.flags = VF_IS_LITERAL
-        return r
     }
+    return r
 }
 
-export function nonEmittable(k: ValueType) {
-    assert(k == ValueType.VOID || k.kind >= BinFmt.FIRST_NON_OPCODE, "k = " + k)
-    const r = new Value(k)
-    r.op =
-        k.kind > BinFmt.FIRST_NON_OPCODE
-            ? k.kind
-            : BinFmt.FIRST_NON_OPCODE + 0x100
-    r.valueType = k
+export function nonEmittable() {
+    const r = new Value()
+    r.op = BinFmt.FIRST_NON_OPCODE + 0x100
     r.flags = 0
     return r
 }
@@ -373,9 +354,7 @@ export class OpWriter {
     }
 
     emitString(s: string | Uint8Array) {
-        const v = new Value(
-            typeof s == "string" ? ValueType.STRING : ValueType.BUFFER
-        )
+        const v = new Value()
         let idx = 0
         if (typeof s == "string") {
             idx = this.prog.addString(s)
@@ -477,8 +456,8 @@ export class OpWriter {
 
     emitIfAndPop(reg: Value, thenBody: () => void, elseBody?: () => void) {
         if (elseBody) {
-            const endIf = this.mkLabel("endif")
-            const elseIf = this.mkLabel("elseif")
+            const endIf = this.mkLabel("endIf")
+            const elseIf = this.mkLabel("elseIf")
             this.emitJumpIfFalse(elseIf, reg)
             thenBody()
             this.emitJump(endIf)
@@ -486,7 +465,7 @@ export class OpWriter {
             elseBody()
             this.emitLabel(endIf)
         } else {
-            const skipIf = this.mkLabel("skipif")
+            const skipIf = this.mkLabel("skipIf")
             this.emitJumpIfFalse(skipIf, reg)
             thenBody()
             this.emitLabel(skipIf)
@@ -534,7 +513,7 @@ export class OpWriter {
         if (this.prog.hasErrors) return
         for (const c of this.cachedValues) {
             if (c !== null && (really || !c.longTerm)) {
-                this.oops(`_L${c.packedIndex} still has ${c.numrefs} refs`)
+                this.oops(`_L${c.packedIndex} still has ${c.numRefs} refs`)
             }
         }
 
@@ -608,8 +587,8 @@ export class OpWriter {
         this.pendingStatefulValues = []
     }
 
-    emitMemRef(op: Op, idx: number, tp: ValueType) {
-        const r = new Value(tp)
+    emitMemRef(op: Op, idx: number) {
+        const r = new Value()
         r.numValue = idx
         r.op = op
         r.flags = VF_IS_MEMREF | VF_USES_STATE
@@ -624,21 +603,21 @@ export class OpWriter {
         )
         assert(!opIsStmt(op), `op ${op} is stmt not expr`)
         let stack = 0
-        let maxstack = 1
+        let maxStack = 1
         let usesState = exprIsStateful(op)
         // TODO constant folding
         for (const a of args) {
             if (stack + a.maxstack >= BinFmt.MAX_STACK_DEPTH) this.spillValue(a)
-            maxstack = Math.max(maxstack, stack + a.maxstack)
+            maxStack = Math.max(maxStack, stack + a.maxstack)
             stack++
             if (a.usesState) usesState = true
             assert(!(a.flags & VF_HAS_PARENT))
             a.flags |= VF_HAS_PARENT
         }
-        const r = new Value(ValueType.infer(op))
+        const r = new Value()
         r.args = args
         r.op = op
-        r.flags = maxstack - 1 // so that r.maxstack == maxstack
+        r.flags = maxStack - 1 // so that r.maxStack == maxStack
         if (usesState) {
             r.flags |= VF_USES_STATE
             this.pendingStatefulValues.push(r)

@@ -14,7 +14,6 @@ import { toHex } from "./jdutil"
 import { DebugInfo } from "./info"
 
 export * from "./bytecode"
-export * from "./type"
 
 import type ts from "typescript"
 
