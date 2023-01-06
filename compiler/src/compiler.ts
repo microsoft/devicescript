@@ -1428,6 +1428,7 @@ class Program implements TopOpWriter {
             else {
                 wr.emitStmt(Op.STMT1_RETURN, literal(null))
             }
+            this.finalizeProc(proc)
         })
         return proc
     }
@@ -3006,7 +3007,7 @@ class Program implements TopOpWriter {
 
         for (const p of this.procs) {
             // all procs should be finalized by here
-            assert(!!p.mapVarOffset)
+            if (!p.mapVarOffset) oops(`proc ${p.name} not finalized`)
         }
 
         const staticProcs: Record<string, boolean> = {}

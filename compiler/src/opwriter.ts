@@ -4,7 +4,6 @@ import {
     ValueType,
     exprIsStateful,
     InstrArgResolver,
-    OpCall,
     NumFmt,
     Op,
     opTakesNumber,
