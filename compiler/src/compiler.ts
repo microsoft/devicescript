@@ -449,13 +449,6 @@ class VariableScope {
     list: Cell[] = []
     constructor(public parent: VariableScope) {}
 
-    lookup(name: string): Cell {
-        if (name == null) return undefined
-        if (this.map.hasOwnProperty(name)) return this.map[name]
-        if (this.parent) return this.parent.lookup(name)
-        return undefined
-    }
-
     _addToMap(cell: Cell) {
         this.map[cell.getName()] = cell
     }
@@ -523,6 +516,10 @@ export interface CompileFlags {
     traceProto?: boolean
 }
 
+function trace(...args: any) {
+    console.debug("\u001b[32mTRACE:", ...args, "\u001b[0m")
+}
+
 export const compileFlagHelp: Record<string, string> = {
     library: "generate library (in .json format)",
     allFunctions:
@@ -559,10 +556,10 @@ class Program implements TopOpWriter {
     resolverPC: number
     prelude: Record<string, string>
     numErrors = 0
-    main: Procedure
+    mainProc: Procedure
+    protoProc: Procedure
     cloudRole: Role
     cloudMethod429: Label
-    protoAssign: DelayedCodeSection
     onStart: DelayedCodeSection
     loopStack: LoopLabels[] = []
     flags: CompileFlags = {}
@@ -1260,43 +1257,43 @@ class Program implements TopOpWriter {
     }
 
     private emitProtoAssigns() {
-        for (;;) {
-            let numemit = 0
-            for (const p of this.protoDefinitions) {
-                if (p.emitted) continue
-                if (
-                    this.flags.allPrototypes ||
-                    p.names.some(n => this.usedMethods[n])
-                ) {
-                    p.emitted = true
-                    numemit++
-                    if (this.flags.traceProto)
-                        console.log("EMIT upd", p.names[0])
-                    this.protoAssign.emit(() => {
-                        this.emitAssignmentExpression(p.expr, true)
-                    })
-                }
-            }
+        const needsEmit = (p: ProtoDefinition) =>
+            !p.emitted &&
+            (this.flags.allPrototypes || p.names.some(n => this.usedMethods[n]))
 
-            if (numemit == 0) break
-        }
+        this.withProcedure(this.protoProc, wr => {
+            for (;;) {
+                let numemit = 0
+                for (const p of this.protoDefinitions) {
+                    if (needsEmit(p)) {
+                        p.emitted = true
+                        numemit++
+                        if (this.flags.traceProto) trace("EMIT upd", p.names[0])
+                        this.emitAssignmentExpression(p.expr, true)
+                    }
+                }
+                this.emitNested(this.protoProc)
+                this.protoProc.nestedProcs = []
+
+                if (numemit == 0) break
+            }
+            this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
+            this.finalizeProc(this.protoProc)
+        })
 
         if (this.flags.traceProto) {
             for (const p of this.protoDefinitions) {
-                if (!p.emitted) console.log("SKIP upd", p.names[0])
+                if (!p.emitted) trace("SKIP upd", p.names[0])
             }
         }
     }
 
     private emitProgram(prog: ts.Program) {
         this.lastNode = this.mainFile
-        this.main = new Procedure(this, "main", this.mainFile)
+        this.mainProc = new Procedure(this, "main", this.mainFile)
+        this.protoProc = new Procedure(this, "prototype", this.mainFile)
 
-        this.onStart = new DelayedCodeSection("onStart", this.main.writer)
-        this.protoAssign = new DelayedCodeSection(
-            "protoAssign",
-            this.main.writer
-        )
+        this.onStart = new DelayedCodeSection("onStart", this.mainProc.writer)
 
         const stmts = ([] as ts.Statement[]).concat(
             ...prog
@@ -1333,13 +1330,13 @@ class Program implements TopOpWriter {
             "cloud"
         )
 
-        this.withProcedure(this.main, () => {
-            this.protoAssign.callHere()
+        this.withProcedure(this.mainProc, wr => {
+            this.protoProc.callMe(wr, [])
             for (const s of stmts) this.emitStmt(s)
-            this.emitProtoAssigns()
             this.onStart.finalizeRaw()
-            this.protoAssign.finalize()
             this.writer.emitStmt(Op.STMT1_RETURN, literal(0))
+            this.finalizeProc(this.mainProc)
+            this.emitProtoAssigns()
         })
 
         if (!this.cloudRole.used) {
@@ -1739,7 +1736,8 @@ class Program implements TopOpWriter {
                         ts.isSourceFile(d.parent.parent.parent))
                 )
                     return "#" + r
-                // console.log(SK[d.parent.kind], d.parent.kind, r)
+                if (this.flags.traceBuiltin)
+                    trace("not-builtin", SK[d.parent.kind], d.parent.kind, r)
                 return r
             }
         }
@@ -1839,7 +1837,7 @@ class Program implements TopOpWriter {
             callName && callName.startsWith("#") ? callName.slice(1) : null
 
         if (callName && !this.usedMethods[callName]) {
-            if (this.flags.traceProto) console.log(`use: ${callName}`)
+            if (this.flags.traceProto) trace(`use: ${callName}`)
             this.usedMethods[callName] = true
         }
 
@@ -1905,10 +1903,10 @@ class Program implements TopOpWriter {
     }
 
     private emitThisExpression(expr: ts.ThisExpression): Value {
-        const cell = this.proc.params.lookup("this")
-        if (!cell)
-            throwError(expr, "'this' cannot be used here: " + this.proc.name)
-        return cell.emit(this.writer)
+        const p0 = this.proc.params.list[0] as Variable
+        if (p0 && p0.vkind == VariableKind.ThisParam)
+            return p0.emit(this.writer)
+        throwError(expr, "'this' cannot be used here: " + this.proc.name)
     }
 
     private emitElementAccessExpression(
@@ -1938,8 +1936,7 @@ class Program implements TopOpWriter {
                     return this.writer.emitBuiltInObject(
                         builtInObjByName[nodeName]
                     )
-                if (this.flags.traceBuiltin)
-                    console.log("traceBuiltin:", nodeName)
+                if (this.flags.traceBuiltin) trace("traceBuiltin:", nodeName)
                 if (nodeName.startsWith("#ds.")) {
                     const idx = BUILTIN_STRING__VAL.indexOf(nodeName.slice(4))
                     if (idx >= 0) return this.writer.dsMember(idx)
@@ -2604,7 +2601,7 @@ class Program implements TopOpWriter {
         } else {
             debugger
             this.reportError(stmt, "Internal error: " + e.message)
-            console.log(e.stack)
+            console.error(e.stack)
             e.terminateEmit = true
             throw e
         }
@@ -3015,7 +3012,10 @@ class Program implements TopOpWriter {
 
         this.emitProgram(this.tree)
 
-        for (const p of this.procs) this.finalizeProc(p)
+        for (const p of this.procs) {
+            // all procs should be finalized by here
+            assert(!!p.mapVarOffset)
+        }
 
         const staticProcs: Record<string, boolean> = {}
         for (const p of this.procs) {
@@ -3171,7 +3171,7 @@ export function testCompiler(host: Host, code: string) {
     if (r.success) {
         const cont = p.getAssembly()
         if (cont.indexOf("???oops") >= 0) {
-            console.log(cont)
+            console.error(cont)
             throw new Error("bad disassembly")
         }
     }
