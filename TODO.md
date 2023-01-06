@@ -1,7 +1,6 @@
 # TODO
 
 ### treat roles as "normal" objects
-* actually call `Command.__func__`
 * `Register.onChange` threshold handling
 * `Event.wait`
 * `Condition` handling

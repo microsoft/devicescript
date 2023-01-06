@@ -415,9 +415,13 @@ value_t devs_make_closure(devs_ctx_t *ctx, devs_activation_t *closure, unsigned 
     return devs_value_from_pointer(ctx, DEVS_HANDLE_TYPE_CLOSURE | (fnidx << 4), closure);
 }
 
-int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activation_t **closure) {
+static int devs_get_fnidx_core(devs_ctx_t *ctx, value_t src, value_t *this_val,
+                               devs_activation_t **closure, int depth) {
     *closure = NULL;
     *this_val = devs_undefined;
+
+    if (depth > 2)
+        return -1;
 
     uint32_t hv = devs_handle_value(src);
     switch (devs_handle_type(src)) {
@@ -436,16 +440,28 @@ int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activat
     case DEVS_HANDLE_TYPE_GC_OBJECT: {
         devs_bound_function_t *bnd = devs_handle_ptr_value(ctx, src);
         if (devs_gc_tag(bnd) == DEVS_GC_TAG_BOUND_FUNCTION) {
-            int r = devs_get_fnidx(ctx, bnd->func, this_val, closure);
+            int r = devs_get_fnidx_core(ctx, bnd->func, this_val, closure, depth + 1);
             *this_val = bnd->this_val;
             return r;
         } else {
             return -1;
         }
     }
-    default:
-        return -1;
+    default: {
+        value_t f = devs_object_get(ctx, src, devs_builtin_string(DEVS_BUILTIN_STRING___FUNC__));
+        if (devs_is_null(f))
+            return -1;
+        else {
+            int r = devs_get_fnidx_core(ctx, f, this_val, closure, depth + 1);
+            *this_val = src;
+            return r;
+        }
     }
+    }
+}
+
+int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activation_t **closure) {
+    return devs_get_fnidx_core(ctx, src, this_val, closure, 0);
 }
 
 #define ATTACH_RW 0x01
