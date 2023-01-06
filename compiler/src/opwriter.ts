@@ -342,12 +342,6 @@ export class OpWriter {
         this.assertNoTemps()
     }
 
-    allocBuf(): Value {
-        assert(!this.bufferAllocated, "allocBuf() not free")
-        this.bufferAllocated = true
-        return this.emitExpr(Op.EXPR0_PKT_BUFFER)
-    }
-
     freeBuf(): void {
         assert(this.bufferAllocated, "freeBuf() already free")
         this.bufferAllocated = false
@@ -371,33 +365,6 @@ export class OpWriter {
         v.args = [literal(idx)]
         v.flags = VF_IS_STRING
         return v
-    }
-
-    emitBufLoad(fmt: NumFmt, off: number, bufref?: Value) {
-        if (!bufref) {
-            assertRange(0, off, 0xff)
-            bufref = this.emitExpr(Op.EXPR0_PKT_BUFFER)
-        }
-        return this.emitExpr(
-            Op.EXPR3_LOAD_BUFFER,
-            bufref,
-            literal(fmt),
-            literal(off)
-        )
-    }
-
-    emitBufStore(src: Value, fmt: NumFmt, off: number, bufref?: Value) {
-        if (!bufref) {
-            assertRange(0, off, 0xff)
-            bufref = this.emitExpr(Op.EXPR0_PKT_BUFFER)
-        }
-        this.emitStmt(
-            Op.STMT4_STORE_BUFFER,
-            bufref,
-            literal(fmt),
-            literal(off),
-            src
-        )
     }
 
     getAssembly() {

@@ -1815,8 +1815,6 @@ class Program implements TopOpWriter {
         const nodeName = this.nodeName(expr)
         if (!nodeName) return null
         switch (nodeName) {
-            case "#ds.packet":
-                return this.writer.emitExpr(Op.EXPR0_PKT_BUFFER)
             case "#NaN":
                 return this.emitLiteral(NaN)
             case "#Infinity":

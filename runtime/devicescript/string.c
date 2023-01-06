@@ -110,8 +110,6 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
             return devs_builtin_string(DEVS_BUILTIN_STRING_FALSE);
         case DEVS_SPECIAL_TRUE:
             return devs_builtin_string(DEVS_BUILTIN_STRING_TRUE);
-        case DEVS_SPECIAL_PKT_BUFFER:
-            return devs_builtin_string(DEVS_BUILTIN_STRING_PACKET);
         case DEVS_SPECIAL_NAN:
             return devs_builtin_string(DEVS_BUILTIN_STRING_NAN);
         case DEVS_SPECIAL_INF:

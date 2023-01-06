@@ -28,8 +28,6 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
             return "false";
         case DEVS_SPECIAL_TRUE:
             return "true";
-        case DEVS_SPECIAL_PKT_BUFFER:
-            return "packet";
         case DEVS_SPECIAL_INF:
             return "Infinity";
         case DEVS_SPECIAL_MINF:

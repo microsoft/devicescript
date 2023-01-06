@@ -14,7 +14,6 @@ const value_t devs_max_int_1 = {._f = 0x80000000U};
 
 const value_t devs_true = SPECIAL(DEVS_SPECIAL_TRUE);
 const value_t devs_false = SPECIAL(DEVS_SPECIAL_FALSE);
-const value_t devs_pkt_buffer = SPECIAL(DEVS_SPECIAL_PKT_BUFFER);
 const value_t devs_nan = SPECIAL(DEVS_SPECIAL_NAN);
 const value_t devs_inf = SPECIAL(DEVS_SPECIAL_INF);
 const value_t devs_minf = SPECIAL(DEVS_SPECIAL_MINF);
@@ -171,8 +170,6 @@ bool devs_value_to_bool(devs_ctx_t *ctx, value_t v) {
 
 bool devs_is_buffer(devs_ctx_t *ctx, value_t v) {
     switch (devs_handle_type(v)) {
-    case DEVS_HANDLE_TYPE_SPECIAL:
-        return devs_handle_value(v) == DEVS_SPECIAL_PKT_BUFFER;
     case DEVS_HANDLE_TYPE_GC_OBJECT:
         return devs_gc_tag(devs_handle_ptr_value(ctx, v)) == DEVS_GC_TAG_BUFFER;
     case DEVS_HANDLE_TYPE_IMG_BUFFERISH:
@@ -249,8 +246,6 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         case DEVS_SPECIAL_FALSE:
         case DEVS_SPECIAL_TRUE:
             return DEVS_OBJECT_TYPE_BOOL;
-        case DEVS_SPECIAL_PKT_BUFFER:
-            return DEVS_OBJECT_TYPE_BUFFER;
         case DEVS_SPECIAL_INF:
         case DEVS_SPECIAL_MINF:
         case DEVS_SPECIAL_NAN:

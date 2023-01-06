@@ -43,7 +43,6 @@ typedef union {
 #define DEVS_SPECIAL_FALSE 1
 #define DEVS_SPECIAL_NAN 2
 #define DEVS_SPECIAL_TRUE 0x40
-#define DEVS_SPECIAL_PKT_BUFFER 0x41
 #define DEVS_SPECIAL_INF 0x42
 #define DEVS_SPECIAL_MINF 0x43
 
@@ -145,7 +144,6 @@ extern const value_t devs_int_min;
 extern const value_t devs_max_int_1;
 extern const value_t devs_true;
 extern const value_t devs_false;
-extern const value_t devs_pkt_buffer;
 
 static inline value_t devs_null_(void) {
     value_t v = {.u64 = 0};

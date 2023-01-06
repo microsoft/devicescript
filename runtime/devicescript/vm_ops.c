@@ -185,7 +185,8 @@ static void stmt4_store_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
     value_t buffer = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_RW);
-    devs_buffer_op(ctx, fmt0, offset, buffer, &val);
+    if (!devs_is_null(buffer))
+        devs_buffer_op(ctx, fmt0, offset, buffer, &val);
 }
 
 static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -246,6 +247,8 @@ static value_t expr3_load_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
     value_t buf = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_STRING_OK);
+    if (devs_is_null(buf))
+        return devs_undefined;
     return devs_buffer_op(ctx, fmt0, offset, buf, NULL);
 }
 
@@ -445,10 +448,6 @@ static value_t expr1_typeof_str(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t expr0_null(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_null;
-}
-
-static value_t expr0_pkt_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return devs_pkt_buffer;
 }
 
 static value_t expr1_is_null(devs_activation_t *frame, devs_ctx_t *ctx) {

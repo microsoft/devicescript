@@ -112,7 +112,7 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
 ### Misc
 
-    role_proto(*role_idx): role = 80         // role_idx.prototype
+    role_proto(*role_idx): role = 42         // role_idx.prototype
 
     load_buffer(buffer, numfmt, offset): number = 43
 
@@ -209,14 +209,10 @@ Time since device restart in ms; time only advances when sleeping.
 If `func == null` returns self-handle.
 Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
 
-    fun pkt_buffer(): buffer = 42
-
-Return reference to "buffer" with the packet data.
-
 
 ## Format Constants
 
-    img_version = 0x03_01_0000
+    img_version = 0x04_00_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9
