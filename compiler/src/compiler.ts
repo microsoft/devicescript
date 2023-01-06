@@ -968,7 +968,7 @@ class Program implements TopOpWriter {
             throwError(stmt, "only for (let/const x of ...) supported")
 
         const decl = stmt.initializer.declarations[0]
-      
+
         const coll = wr.cacheValue(this.emitExpr(stmt.expression))
         const idx = wr.cacheValue(literal(0), true)
         coll.longTerm = true
@@ -1538,49 +1538,6 @@ class Program implements TopOpWriter {
         return this.retVal(ValueType.NUMBER)
     }
 
-    private emitGenericMethodCall(
-        expr: ts.CallExpression,
-        obj: Value,
-        prop: string
-    ) {
-        const wr = this.writer
-        const fn = wr.emitIndex(obj, wr.emitString(prop))
-        return this.emitGenericCall(expr, fn)
-    }
-
-    private emitBufferCall(
-        expr: ts.CallExpression,
-        buf: Value,
-        prop: string
-    ): Value {
-        const wr = this.writer
-        if (!ts.isPropertyAccessExpression(expr.expression)) oops("")
-        switch (prop) {
-            case "getAt": {
-                this.requireArgs(expr, 2)
-                const fmt = this.parseFormat(expr.arguments[1])
-                return wr.emitExpr(
-                    Op.EXPR3_LOAD_BUFFER,
-                    buf,
-                    literal(fmt),
-                    this.emitSimpleValue(expr.arguments[0])
-                )
-            }
-
-            case "setAt": {
-                this.requireArgs(expr, 3)
-                const fmt = this.parseFormat(expr.arguments[1])
-                const off = this.emitSimpleValue(expr.arguments[0])
-                const val = this.emitSimpleValue(expr.arguments[2])
-                wr.emitStmt(Op.STMT4_STORE_BUFFER, buf, literal(fmt), off, val)
-                return unit()
-            }
-
-            default:
-                return null
-        }
-    }
-
     private stringLiteral(expr: Expr) {
         if (this.isStringLiteral(expr)) return expr.text
         return undefined
@@ -1739,6 +1696,8 @@ class Program implements TopOpWriter {
                 if (
                     ts.isSourceFile(d.parent) ||
                     ts.isModuleBlock(d.parent) ||
+                    (ts.isClassDeclaration(d.parent) &&
+                        ts.isModuleBlock(d.parent.parent)) ||
                     (ts.isInterfaceDeclaration(d.parent) &&
                         ts.isSourceFile(d.parent.parent)) ||
                     (ts.isVariableDeclarationList(d.parent) &&
@@ -1769,6 +1728,7 @@ class Program implements TopOpWriter {
 
     private emitBuiltInCall(expr: ts.CallExpression, funName: string): Value {
         const wr = this.writer
+        const obj = (expr.expression as ts.PropertyAccessExpression).expression
         switch (funName) {
             case "isNaN": {
                 this.requireArgs(expr, 1)
@@ -1806,6 +1766,33 @@ class Program implements TopOpWriter {
                 return unit()
             case "Date.now":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)
+
+            case "Buffer.getAt": {
+                this.requireArgs(expr, 2)
+                const fmt = this.parseFormat(expr.arguments[1])
+                return wr.emitExpr(
+                    Op.EXPR3_LOAD_BUFFER,
+                    this.emitExpr(obj),
+                    literal(fmt),
+                    this.emitSimpleValue(expr.arguments[0])
+                )
+            }
+
+            case "Buffer.setAt": {
+                this.requireArgs(expr, 3)
+                const fmt = this.parseFormat(expr.arguments[1])
+                const off = this.emitSimpleValue(expr.arguments[0])
+                const val = this.emitSimpleValue(expr.arguments[2])
+                wr.emitStmt(
+                    Op.STMT4_STORE_BUFFER,
+                    this.emitExpr(obj),
+                    literal(fmt),
+                    off,
+                    val
+                )
+                return unit()
+            }
+
             default:
                 return null
         }
@@ -1832,21 +1819,6 @@ class Program implements TopOpWriter {
                 expr,
                 `...args has a length limit of ${lim} elements; better use Array.pushRange()`
             )
-        }
-
-        if (ts.isPropertyAccessExpression(expr.expression)) {
-            const prop = idName(expr.expression.name)
-            const val = this.emitExpr(expr.expression.expression)
-            const callRes = (() => {
-                switch (val.valueType.kind) {
-                    case ValueKind.BUFFER:
-                        return this.emitBufferCall(expr, val, prop)
-                    default:
-                        return null
-                }
-            })()
-            if (callRes) return callRes
-            else return this.emitGenericMethodCall(expr, val, prop)
         }
 
         const fn = this.emitExpr(expr.expression)
