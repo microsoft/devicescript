@@ -519,6 +519,8 @@ export interface CompileFlags {
     library?: boolean
     allFunctions?: boolean
     allPrototypes?: boolean
+    traceBuiltin?: boolean
+    traceProto?: boolean
 }
 
 export const compileFlagHelp: Record<string, string> = {
@@ -527,6 +529,8 @@ export const compileFlagHelp: Record<string, string> = {
         "compile-in all `function ...() { }` top-level declarations, used or not",
     allPrototypes:
         "compile-in all `object.method = function ...` assignments, used or not",
+    traceBuiltin: "trace unresolved built-in functions",
+    traceProto: "trace tree-shaking of prototypes",
 }
 
 class Program implements TopOpWriter {
@@ -1079,13 +1083,7 @@ class Program implements TopOpWriter {
         return proc
     }
 
-    private finalizeProc(proc: Procedure) {
-        try {
-            if (!proc.finalize()) return
-        } catch (e) {
-            this.handleException(proc.sourceNode, e)
-            return
-        }
+    private emitNested(proc: Procedure) {
         for (const p of proc.nestedProcs) {
             if (
                 p.sourceNode &&
@@ -1096,6 +1094,16 @@ class Program implements TopOpWriter {
                 this.emitFunction(p.sourceNode, p)
             else oops("bad sourceNode")
         }
+    }
+
+    private finalizeProc(proc: Procedure) {
+        try {
+            if (!proc.finalize()) return
+        } catch (e) {
+            this.handleException(proc.sourceNode, e)
+            return
+        }
+        this.emitNested(proc)
     }
 
     private emitFunctionBody(
@@ -1262,7 +1270,8 @@ class Program implements TopOpWriter {
                 ) {
                     p.emitted = true
                     numemit++
-                    // console.log("EMIT upd", p.names[0])
+                    if (this.flags.traceProto)
+                        console.log("EMIT upd", p.names[0])
                     this.protoAssign.emit(() => {
                         this.emitAssignmentExpression(p.expr, true)
                     })
@@ -1270,6 +1279,12 @@ class Program implements TopOpWriter {
             }
 
             if (numemit == 0) break
+        }
+
+        if (this.flags.traceProto) {
+            for (const p of this.protoDefinitions) {
+                if (!p.emitted) console.log("SKIP upd", p.names[0])
+            }
         }
     }
 
@@ -1823,7 +1838,10 @@ class Program implements TopOpWriter {
         const builtInName =
             callName && callName.startsWith("#") ? callName.slice(1) : null
 
-        if (callName) this.usedMethods[callName] = true
+        if (callName && !this.usedMethods[callName]) {
+            if (this.flags.traceProto) console.log(`use: ${callName}`)
+            this.usedMethods[callName] = true
+        }
 
         if (builtInName) {
             const builtIn = this.emitBuiltInCall(expr, builtInName)
@@ -1920,7 +1938,8 @@ class Program implements TopOpWriter {
                     return this.writer.emitBuiltInObject(
                         builtInObjByName[nodeName]
                     )
-                // console.log("N", nodeName)
+                if (this.flags.traceBuiltin)
+                    console.log("traceBuiltin:", nodeName)
                 if (nodeName.startsWith("#ds.")) {
                     const idx = BUILTIN_STRING__VAL.indexOf(nodeName.slice(4))
                     if (idx >= 0) return this.writer.dsMember(idx)
