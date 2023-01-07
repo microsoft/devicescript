@@ -377,10 +377,10 @@ Only `true` and `false` values.
     String_prototype = 8
     Number = 9
     Number_prototype = 10
-    Fiber = 11
-    Fiber_prototype = 12
-    Role = 13
-    Role_prototype = 14
+    DsFiber = 11
+    DsFiber_prototype = 12
+    DsRole = 13
+    DsRole_prototype = 14
     Function = 15
     Function_prototype = 16
     Boolean = 17
@@ -393,7 +393,6 @@ Only `true` and `false` values.
     DsCommand_prototype = 24
     DsEvent_prototype = 25
     DsReport_prototype = 26
-    DsRole_prototype = 27
 
 ## Enum: BuiltIn_String
 

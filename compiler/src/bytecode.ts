@@ -212,7 +212,7 @@ export enum ObjectType {
 }
 
 export enum BuiltInObject {
-    __MAX = 27,
+    __MAX = 26,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -224,10 +224,10 @@ export enum BuiltInObject {
     STRING_PROTOTYPE = 8,
     NUMBER = 9,
     NUMBER_PROTOTYPE = 10,
-    FIBER = 11,
-    FIBER_PROTOTYPE = 12,
-    ROLE = 13,
-    ROLE_PROTOTYPE = 14,
+    DSFIBER = 11,
+    DSFIBER_PROTOTYPE = 12,
+    DSROLE = 13,
+    DSROLE_PROTOTYPE = 14,
     FUNCTION = 15,
     FUNCTION_PROTOTYPE = 16,
     BOOLEAN = 17,
@@ -240,7 +240,6 @@ export enum BuiltInObject {
     DSCOMMAND_PROTOTYPE = 24,
     DSEVENT_PROTOTYPE = 25,
     DSREPORT_PROTOTYPE = 26,
-    DSROLE_PROTOTYPE = 27,
 }
 
 export enum BuiltInString {
@@ -584,10 +583,10 @@ export const BUILTIN_OBJECT__VAL = [
     "String_prototype",
     "Number",
     "Number_prototype",
-    "Fiber",
-    "Fiber_prototype",
-    "Role",
-    "Role_prototype",
+    "DsFiber",
+    "DsFiber_prototype",
+    "DsRole",
+    "DsRole_prototype",
     "Function",
     "Function_prototype",
     "Boolean",
@@ -600,5 +599,4 @@ export const BUILTIN_OBJECT__VAL = [
     "DsCommand_prototype",
     "DsEvent_prototype",
     "DsReport_prototype",
-    "DsRole_prototype",
 ]

@@ -1,6 +1,6 @@
 #include "devs_internal.h"
 
-value_t prop_Role_isConnected(devs_ctx_t *ctx, value_t self) {
+value_t prop_DsRole_isConnected(devs_ctx_t *ctx, value_t self) {
     if (devs_handle_type(self) != DEVS_HANDLE_TYPE_ROLE) {
         devs_runtime_failure(ctx, 60163);
         return devs_undefined;
@@ -20,7 +20,7 @@ static unsigned devs_arg_self_role(devs_ctx_t *ctx) {
     }
 }
 
-void meth2_Role_sendCommand(devs_ctx_t *ctx) {
+void meth2_DsRole_sendCommand(devs_ctx_t *ctx) {
     unsigned role = devs_arg_self_role(ctx);
     if (role == DEVS_ROLE_INVALID)
         return;
@@ -40,7 +40,7 @@ void meth2_Role_sendCommand(devs_ctx_t *ctx) {
     }
 }
 
-void meth0_Role_wait(devs_ctx_t *ctx) {
+void meth0_DsRole_wait(devs_ctx_t *ctx) {
     unsigned role = devs_arg_self_role(ctx);
     if (role == DEVS_ROLE_INVALID)
         return;

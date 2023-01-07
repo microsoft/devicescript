@@ -1,7 +1,6 @@
 # TODO
 
 ### treat roles as "normal" objects
-* `Event.wait`
 * `Condition` handling
 * register delay computation
 * `[a,b,c] = reg.read()`

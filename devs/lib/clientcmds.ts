@@ -167,3 +167,10 @@ ds.Event.prototype.subscribe = function (handler) {
     if (!m[k]) m[k] = []
     m[k].push(handler)
 }
+
+ds.Event.prototype.wait = function () {
+    while (true) {
+        const pkt = this.role.wait()
+        if (pkt && pkt.eventCode == this.code) return
+    }
+}

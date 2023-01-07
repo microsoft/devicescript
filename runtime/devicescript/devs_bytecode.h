@@ -192,7 +192,7 @@
 #define DEVS_OBJECT_TYPE_ANY 11
 #define DEVS_OBJECT_TYPE_VOID 12
 
-#define DEVS_BUILTIN_OBJECT___MAX 27
+#define DEVS_BUILTIN_OBJECT___MAX 26
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
@@ -204,10 +204,10 @@
 #define DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE 8
 #define DEVS_BUILTIN_OBJECT_NUMBER 9
 #define DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE 10
-#define DEVS_BUILTIN_OBJECT_FIBER 11
-#define DEVS_BUILTIN_OBJECT_FIBER_PROTOTYPE 12
-#define DEVS_BUILTIN_OBJECT_ROLE 13
-#define DEVS_BUILTIN_OBJECT_ROLE_PROTOTYPE 14
+#define DEVS_BUILTIN_OBJECT_DSFIBER 11
+#define DEVS_BUILTIN_OBJECT_DSFIBER_PROTOTYPE 12
+#define DEVS_BUILTIN_OBJECT_DSROLE 13
+#define DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE 14
 #define DEVS_BUILTIN_OBJECT_FUNCTION 15
 #define DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE 16
 #define DEVS_BUILTIN_OBJECT_BOOLEAN 17
@@ -220,7 +220,6 @@
 #define DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE 24
 #define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 25
 #define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 26
-#define DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE 27
 
 #define DEVS_BUILTIN_STRING___MAX 112
 #define DEVS_BUILTIN_STRING__EMPTY 0
@@ -372,8 +371,8 @@
         "sendCommand"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
-        "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "Fiber",   \
-        "Fiber_prototype", "Role", "Role_prototype", "Function", "Function_prototype", "Boolean",  \
-        "Boolean_prototype", "Packet", "Packet_prototype", "DeviceScript",                         \
+        "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \
+        "DsFiber_prototype", "DsRole", "DsRole_prototype", "Function", "Function_prototype",       \
+        "Boolean", "Boolean_prototype", "Packet", "Packet_prototype", "DeviceScript",              \
         "DsPacketInfo_prototype", "DsRegister_prototype", "DsCommand_prototype",                   \
-        "DsEvent_prototype", "DsReport_prototype", "DsRole_prototype"
+        "DsEvent_prototype", "DsReport_prototype"
