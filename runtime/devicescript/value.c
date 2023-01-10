@@ -17,6 +17,7 @@ const value_t devs_false = SPECIAL(DEVS_SPECIAL_FALSE);
 const value_t devs_nan = SPECIAL(DEVS_SPECIAL_NAN);
 const value_t devs_inf = SPECIAL(DEVS_SPECIAL_INF);
 const value_t devs_minf = SPECIAL(DEVS_SPECIAL_MINF);
+const value_t devs_new = SPECIAL(DEVS_SPECIAL_NEW_EXPR);
 
 value_t devs_value_from_double(double v) {
     switch (fpclassify(v)) {
@@ -245,6 +246,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         case DEVS_SPECIAL_MINF:
         case DEVS_SPECIAL_NAN:
             return DEVS_OBJECT_TYPE_NUMBER;
+        case DEVS_SPECIAL_NEW_EXPR:
+            return DEVS_OBJECT_TYPE_EXOTIC;
         default:
             if (devs_handle_is_builtin(hv))
                 return DEVS_OBJECT_TYPE_MAP;

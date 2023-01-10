@@ -34,6 +34,8 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
             return "-Infinity";
         case DEVS_SPECIAL_NAN:
             return "NaN";
+        case DEVS_SPECIAL_NEW_EXPR:
+            return "__new__";
         default:
             if (devs_handle_is_builtin(hv)) {
                 jd_sprintf(buf, sizeof(buf), "builtin:%d",
