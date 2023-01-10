@@ -99,6 +99,8 @@ function test4(fn: () => void) {
         return 10
     } catch {
         return 20
+    } finally {
+        glb1++
     }
 }
 
@@ -117,6 +119,29 @@ function test5() {
         }
     }
     assert(n == 2)
+}
+
+function test6() {
+    let n = 0
+    let kk = 0
+    for (let k of [0, 1, 2]) {
+        try {
+            n++
+            try {
+                if (k == 1) break
+            } catch {
+                n += 1000
+            } finally {
+                kk++
+            }
+        } catch {
+            n += 100
+        } finally {
+            kk += 100
+        }
+    }
+    assert(n == 2)
+    assert(kk == 202)
 }
 
 function run() {
@@ -146,8 +171,10 @@ function run() {
             throw "foo"
         }) == 20
     )
+    assert(glb1 == 13)
 
     test5()
+    test6()
 
     console.log("test exn done")
 }
