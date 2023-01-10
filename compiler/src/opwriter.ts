@@ -320,7 +320,7 @@ export class OpWriter {
         let maxSize = 5
         return needsCacheRec(v)
         function needsCacheRec(v: Value) {
-            if (v.usesState) return true
+            if (v.usesState || v._cachedValue) return true
             if (maxSize-- < 0) return true
             return v.args && v.args.some(needsCacheRec)
         }

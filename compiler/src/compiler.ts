@@ -1218,10 +1218,14 @@ class Program implements TopOpWriter {
         stmt: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
         proc: Procedure
     ) {
-        this.withProcedure(proc, () => {
-            this.emitParameters(stmt, proc)
-            this.emitFunctionBody(stmt, proc)
-        })
+        try {
+            this.withProcedure(proc, () => {
+                this.emitParameters(stmt, proc)
+                this.emitFunctionBody(stmt, proc)
+            })
+        } catch (e) {
+            this.handleException(stmt, e)
+        }
         return proc
     }
 
@@ -1288,6 +1292,7 @@ class Program implements TopOpWriter {
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
+            this.forceName(paramdef.name)
             this.addParameter(proc, paramdef)
         }
     }
@@ -2622,7 +2627,10 @@ class Program implements TopOpWriter {
             let fld: Value
             if (ts.isComputedPropertyName(p.name)) {
                 fld = this.emitExpr(p.name.expression)
-            } else if (ts.isNumericLiteral(p.name) || ts.isStringLiteral(p.name)) {
+            } else if (
+                ts.isNumericLiteral(p.name) ||
+                ts.isStringLiteral(p.name)
+            ) {
                 fld = this.emitExpr(p.name)
             } else {
                 fld = wr.emitString(this.forceName(p.name))
