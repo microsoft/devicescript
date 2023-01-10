@@ -280,7 +280,7 @@ function testNested() {
     for (let f of fns) f()
     assert(glb1 == 321)
     */
-   
+
     function bar(v: number) {
         assert(x == 7 && y == v)
         glb1++
@@ -290,7 +290,6 @@ function testNested() {
     }
 }
 
-
 function ignore(v: any) {}
 function incr() {
     glb1++
@@ -299,6 +298,42 @@ function runInl() {
     glb1 = 0
     ignore(incr())
     assert(glb1 == 1)
+}
+
+function bar() {
+    return "foo123"
+}
+function foo(): any {
+    let x = bar()
+    if (!x) return 12
+}
+function foo2(): any {
+    let x = bar()
+    if (x) return 12
+}
+function foo3(): any {
+    let x = bar()
+}
+function foo4(): any {
+    let x = bar()
+    return
+}
+function foo5() {
+    let x = bar()
+}
+function foo6() {
+    let x = bar()
+    return
+}
+
+function testUndef() {
+    msg("testUndef")
+    assert(foo() === undefined)
+    assert(foo2() === 12)
+    assert(foo3() === undefined)
+    assert(foo4() === undefined)
+    assert(foo5() === undefined)
+    assert(foo6() === undefined)
 }
 
 testComplexCallExpr()
@@ -317,5 +352,6 @@ testLambdaDecrCapture()
 testNested()
 runInl()
 
+testUndef()
 
 ds.reboot()

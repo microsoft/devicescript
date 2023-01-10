@@ -419,6 +419,7 @@ export class OpWriter {
 
     emitLabel(l: Label) {
         assert(l.offset == -1)
+        this.lastReturnLocation = null
         this._setLabelOffset(l, this.location())
     }
 
