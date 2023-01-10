@@ -14,9 +14,8 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-#define LOG(fmt, ...) DMESG("SOCK: " fmt, ##__VA_ARGS__)
-#define LOGV(...) ((void)0)
-//#define LOGV LOG
+#define LOG_TAG "SOCK"
+#include "devs_logging.h"
 
 #define CHK(cond)                                                                                  \
     if (!(cond))                                                                                   \

@@ -10,8 +10,8 @@
 
 #include "uf2hid.h"
 
-#define LOG(fmt, ...) DMESG("HF2: " fmt, ##__VA_ARGS__)
-#define LOGV(...) ((void)0)
+#define LOG_TAG "HF2"
+#include "devs_logging.h"
 
 #define CHK(cond)                                                                                  \
     if (!(cond))                                                                                   \

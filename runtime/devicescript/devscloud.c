@@ -1,7 +1,8 @@
 #include "devs_internal.h"
 #include "jacdac/dist/c/cloudadapter.h"
 
-#define LOG(msg, ...) DMESG("devscloud: " msg, ##__VA_ARGS__)
+#define LOG_TAG "devscloud"
+#include "devs_logging.h"
 
 struct srv_state {
     SRV_COMMON;

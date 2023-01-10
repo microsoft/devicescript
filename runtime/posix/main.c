@@ -10,7 +10,8 @@
 #include "devicescript/devicescript.h"
 #include "storage/jd_storage.h"
 
-#define LOG(fmt, ...) DMESG("main: " fmt, ##__VA_ARGS__)
+#define LOG_TAG "main"
+#include "devs_logging.h"
 
 static bool test_mode;
 static bool remote_deploy;
