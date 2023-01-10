@@ -48,11 +48,21 @@ static void stmt2_index_delete(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t idx = devs_vm_pop_arg(ctx);
     value_t obj = devs_vm_pop_arg(ctx);
     ctx->curr_fiber->ret_val = devs_false;
-    if (!devs_is_string(ctx, idx))
-        devs_runtime_failure(ctx, 60172);
     devs_map_t *map = devs_object_get_attached_rw(ctx, obj);
-    if (map && devs_map_delete(ctx, map, idx) == 0)
+    if (!map)
+        return;
+
+    bool str = devs_is_string(ctx, idx);
+    if (!str) {
+        idx = devs_value_to_string(ctx, idx);
+        devs_value_pin(ctx, idx);
+    }
+
+    if (devs_map_delete(ctx, map, idx) == 0)
         ctx->curr_fiber->ret_val = devs_true;
+
+    if (!str)
+        devs_value_unpin(ctx, idx);
 }
 
 static void stmt1_panic(devs_activation_t *frame, devs_ctx_t *ctx) {

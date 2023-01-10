@@ -2619,7 +2619,14 @@ class Program implements TopOpWriter {
             } else {
                 throwError(p, `unsupported initializer ${SK[p.kind]}`)
             }
-            const fld = wr.emitString(this.forceName(p.name))
+            let fld: Value
+            if (ts.isComputedPropertyName(p.name)) {
+                fld = this.emitExpr(p.name.expression)
+            } else if (ts.isNumericLiteral(p.name) || ts.isStringLiteral(p.name)) {
+                fld = this.emitExpr(p.name)
+            } else {
+                fld = wr.emitString(this.forceName(p.name))
+            }
             const init = this.emitExpr(expr)
             wr.emitStmt(Op.STMT3_INDEX_SET, arr.emit(), fld, init)
         }

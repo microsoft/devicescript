@@ -718,14 +718,22 @@ value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx) {
     return devs_undefined;
 }
 
+bool devs_looks_indexable(devs_ctx_t *ctx, value_t seq) {
+    return devs_is_array(ctx, seq) || devs_is_buffer(ctx, seq) || devs_is_string(ctx, seq);
+}
+
 value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key) {
-    if (devs_is_number(key)) {
+    if (devs_is_number(key) && devs_looks_indexable(ctx, obj)) {
         unsigned idx = devs_value_to_int(ctx, key);
         return devs_seq_get(ctx, obj, idx);
     } else if (devs_is_string(ctx, key)) {
         return devs_object_get(ctx, obj, key);
     } else {
-        return devs_undefined;
+        key = devs_value_to_string(ctx, key);
+        devs_value_pin(ctx, key);
+        value_t res = devs_object_get(ctx, obj, key);
+        devs_value_unpin(ctx, key);
+        return res;
     }
 }
 
@@ -735,16 +743,21 @@ void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v) {
         devs_runtime_failure(ctx, 60184);
     }
 
-    if (devs_is_number(key)) {
+    if (devs_is_number(key) && devs_looks_indexable(ctx, obj)) {
         unsigned idx = devs_value_to_int(ctx, key);
         devs_seq_set(ctx, obj, idx, v);
-    } else if (devs_is_string(ctx, key)) {
-        devs_map_t *map = devs_object_get_attached_rw(ctx, obj);
-        if (map)
-            devs_map_set(ctx, map, key, v);
     } else {
-        devs_log_value(ctx, "invalid key", key);
-        devs_runtime_failure(ctx, 60156);
+        devs_map_t *map = devs_object_get_attached_rw(ctx, obj);
+        if (!map)
+            return;
+        if (devs_is_string(ctx, key))
+            devs_map_set(ctx, map, key, v);
+        else {
+            key = devs_value_to_string(ctx, key);
+            devs_value_pin(ctx, key);
+            devs_map_set(ctx, map, key, v);
+            devs_value_unpin(ctx, key);
+        }
     }
 }
 
