@@ -23,6 +23,8 @@
 #define DEVS_MAX_STEPS (128 * 1024)
 #define DEVS_NO_ROLE 0xffff
 
+#define DEVS_MAX_STACK_TRACE_FRAMES 16
+
 typedef struct devs_activation devs_activation_t;
 
 #define DEVS_PKT_KIND_NONE 0
@@ -262,3 +264,7 @@ void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn);
 #define DEVS_THROW_INTERNAL 0x0002
 void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags);
 void devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...);
+
+const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
+void devs_dump_stack(devs_ctx_t *ctx, value_t stack);
+void devs_dump_exception(devs_ctx_t *ctx, value_t exn);

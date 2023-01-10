@@ -996,6 +996,11 @@ class Program implements TopOpWriter {
         wr.emitStmt(Op.STMT1_RE_THROW, exn.finalEmit())
     }
 
+    private emitThrowStatement(stmt: ts.ThrowStatement) {
+        const wr = this.writer
+        wr.emitStmt(Op.STMT1_THROW, this.emitExpr(stmt.expression))
+    }
+
     private emitBlock(stmt: ts.Block) {
         for (const s of stmt.statements) this.emitStmt(s)
     }
@@ -2694,6 +2699,8 @@ class Program implements TopOpWriter {
                     return this.emitBlock(stmt as ts.Block)
                 case SK.TryStatement:
                     return this.emitTryStatement(stmt as ts.TryStatement)
+                case SK.ThrowStatement:
+                    return this.emitThrowStatement(stmt as ts.ThrowStatement)
                 case SK.ReturnStatement:
                     return this.emitReturnStatement(stmt as ts.ReturnStatement)
                 case SK.FunctionDeclaration:

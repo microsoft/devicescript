@@ -34,16 +34,79 @@ int devs_pop_tryframe(devs_activation_t *frame, devs_ctx_t *ctx) {
     return 0;
 }
 
+const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc) {
+    unsigned numfn = devs_img_num_functions(ctx->img);
+
+    // TODO could try binary search on functions
+    for (unsigned fn = 0; fn < numfn; ++fn) {
+        const devs_function_desc_t *desc = devs_img_get_function(ctx->img, fn);
+        if (desc->start <= pc && pc <= desc->start + desc->length)
+            return desc;
+    }
+    return NULL;
+}
+
+void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
+    if (!devs_is_buffer(ctx, stack)) {
+        devs_log_value(ctx, "expecting stack, got", stack);
+        return;
+    }
+
+    unsigned sz;
+    devs_pc_t *data = devs_buffer_data(ctx, stack, &sz);
+    sz /= sizeof(devs_pc_t);
+
+    for (unsigned i = 0; i < sz; ++i) {
+        int pc = data[i];
+        const devs_function_desc_t *desc = devs_function_by_pc(ctx, data[i]);
+        if (desc) {
+            int fn = desc - devs_img_get_function(ctx->img, 0);
+            DMESG("  pc=%d @ %s_F%d", (int)(pc - desc->start), devs_img_fun_name(ctx->img, fn), fn);
+        } else {
+            DMESG("  pc=%d @ ???", pc);
+        }
+    }
+}
+
+void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
+    if (devs_can_attach(ctx, exn)) {
+        value_t msg = devs_any_get(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING_MESSAGE));
+        if (!devs_is_null(msg)) {
+            devs_log_value(ctx, "Exception", msg);
+            value_t stack =
+                devs_any_get(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING___STACK__));
+            if (!devs_is_null(stack))
+                devs_dump_stack(ctx, stack);
+            return;
+        }
+    }
+
+    devs_log_value(ctx, "Exception", exn);
+}
+
 value_t devs_capture_stack(devs_ctx_t *ctx) {
-    // TODO
-    return devs_null;
+    int numfr = 0;
+    for (devs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller)
+        numfr++;
+    if (numfr > DEVS_MAX_STACK_TRACE_FRAMES)
+        numfr = DEVS_MAX_STACK_TRACE_FRAMES;
+    devs_buffer_t *stackbuf = devs_buffer_try_alloc(ctx, numfr * sizeof(devs_pc_t));
+    if (!stackbuf)
+        return devs_undefined;
+
+    int idx = 0;
+    for (devs_activation_t *fn = ctx->curr_fn; fn; idx++, fn = fn->caller) {
+        if (idx >= numfr)
+            break;
+        ((devs_pc_t *)stackbuf->data)[idx] = fn->pc;
+    }
+    return devs_value_from_gc_obj(ctx, stackbuf);
 }
 
 void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn) {
-    value_t str = devs_value_to_string(ctx, exn);
-    const char *s = devs_string_get_utf8(ctx, str, NULL);
-    DMESG("unhandled exception: %s", s);
-    devs_runtime_failure(ctx, 60196); // TODO should we continue instead?
+    DMESG("Unhandled exception");
+    devs_dump_exception(ctx, exn);
+    devs_panic(ctx, DEVS_PANIC_UNHANDLED_EXCEPTION); // TODO should we continue instead?
 }
 
 void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
