@@ -106,6 +106,12 @@ interface Array<T> {
     [Symbol.iterator](): IterableIterator<T>
 
     /**
+     * Insert `count` `null` elements at `index`.
+     * If `count` is negative, remove elements.
+     */
+    insert(index: number, count: number): void
+
+    /**
      * Appends new elements to the end of an array, and returns the new length of the array.
      * @param items New elements to add to the array.
      */
@@ -116,6 +122,12 @@ interface Array<T> {
      * @param items New elements to add to the array.
      */
     pushRange(items: T[]): number
+
+    /**
+     * Removes the last element from an array and returns it.
+     * If the array is empty, undefined is returned and the array is not modified.
+     */
+    pop(): T | undefined
 
     /**
      * Returns a copy of a section of an array.

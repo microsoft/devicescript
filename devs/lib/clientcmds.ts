@@ -208,3 +208,11 @@ Array.prototype.some = function (f) {
     }
     return false
 }
+
+Array.prototype.pop = function () {
+    const length = this.length - 1
+    if (length < 0) return undefined
+    const r = this[length]
+    this.insert(length, -1)
+    return r
+}
