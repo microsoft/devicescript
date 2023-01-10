@@ -691,6 +691,8 @@ class Program implements TopOpWriter {
     }
 
     private parseRole(decl: ts.VariableDeclaration): Cell {
+        if (this.getCellAtLocation(decl)) return
+
         const expr = decl.initializer
 
         const buflit = this.bufferLiteral(expr)
@@ -739,9 +741,7 @@ class Program implements TopOpWriter {
     }
 
     private assignToId(id: ts.Identifier, init: Value) {
-        const variable = this.getCellAtLocation(id)
-        if (!(variable instanceof Variable)) throwError(id, "invalid cell type")
-        this.emitStore(variable, init)
+        this.emitStore(this.getVarAtLocation(id), init)
     }
 
     private cloneObj(obj: Value) {
@@ -865,13 +865,9 @@ class Program implements TopOpWriter {
 
     private emitVariableDeclarationList(decls: ts.VariableDeclarationList) {
         for (const decl of decls.declarations) {
-            if (this.skipInit(decl)) continue
+            this.assignVariableCells(decl) // just in case
 
-            if (this.isTopLevel(decl)) {
-                // OK
-            } else {
-                this.assignVariableCells(decl, this.proc)
-            }
+            if (this.skipInit(decl)) continue
 
             let init: Value = null
 
@@ -901,7 +897,7 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitVariableDeclaration(decls: ts.VariableStatement) {
+    private emitVariableStatement(decls: ts.VariableStatement) {
         this.emitVariableDeclarationList(decls.declarationList)
     }
 
@@ -1007,11 +1003,8 @@ class Program implements TopOpWriter {
         wr.emitStmt(Op.STMT0_CATCH)
         const decl = stmt.catchClause.variableDeclaration
         if (decl) {
-            this.assignVariableCells(decl, this.proc)
-            this.emitStore(
-                this.getCellAtLocation(decl) as Variable,
-                this.retVal()
-            )
+            this.assignVariableCells(decl)
+            this.emitStore(this.getVarAtLocation(decl), this.retVal())
         }
         this.emitBlock(stmt.catchClause.block)
 
@@ -1047,6 +1040,7 @@ class Program implements TopOpWriter {
     }
 
     private emitBlock(stmt: ts.Block) {
+        for (const s of stmt.statements) this.assignCellsToStmt(s)
         for (const s of stmt.statements) this.emitStmt(s)
     }
 
@@ -1104,8 +1098,7 @@ class Program implements TopOpWriter {
         const idx = wr.cacheValue(literal(0), true)
 
         this.emitVariableDeclarationList(stmt.initializer)
-        const elt = this.getCellAtLocation(decl) as Variable
-        assert(elt instanceof Variable)
+        const elt = this.getVarAtLocation(decl)
 
         wr.emitLabel(loop.topLbl)
 
@@ -1310,11 +1303,10 @@ class Program implements TopOpWriter {
         ) as FunctionDecl
 
         if (!this.isTopLevel(stmt)) {
-            const fnVar = this.assignCell(
-                stmt,
-                new Variable(stmt, VariableKind.Local, this.proc)
+            this.emitStore(
+                this.getVarAtLocation(stmt),
+                this.emitFunctionExpr(stmt)
             )
-            this.emitStore(fnVar, this.emitFunctionExpr(stmt))
             return
         }
 
@@ -1409,18 +1401,7 @@ class Program implements TopOpWriter {
 
         // pre-declare all functions and globals
         for (const s of stmts) {
-            try {
-                if (ts.isFunctionDeclaration(s)) {
-                    this.forceName(s.name)
-                    this.assignCell(s, new FunctionDecl(s, this.functions))
-                } else if (ts.isVariableStatement(s)) {
-                    for (const decl of s.declarationList.declarations) {
-                        this.assignVariableCells(decl, null)
-                    }
-                }
-            } catch (e) {
-                this.handleException(s, e)
-            }
+            this.assignCellsToStmt(s)
         }
 
         this.roles.sort((a, b) => strcmp(a.getName(), b.getName()))
@@ -1464,22 +1445,52 @@ class Program implements TopOpWriter {
         }
     }
 
-    private assignVariableCells(decl: ts.VariableDeclaration, proc: Procedure) {
-        if (idName(decl.name) && !proc) {
+    private assignCellsToStmt(stmt: ts.Statement) {
+        if (ts.isVariableStatement(stmt)) {
+            for (const decl of stmt.declarationList.declarations)
+                try {
+                    this.assignVariableCells(decl)
+                } catch (e) {
+                    this.handleException(decl, e)
+                }
+        } else if (ts.isFunctionDeclaration(stmt)) {
+            if (this.getCellAtLocation(stmt)) return
+            this.forceName(stmt.name)
+            try {
+                if (this.isTopLevel(stmt))
+                    this.assignCell(
+                        stmt,
+                        new FunctionDecl(stmt, this.functions)
+                    )
+                else
+                    this.assignCell(
+                        stmt,
+                        new Variable(stmt, VariableKind.Local, this.proc)
+                    )
+            } catch (e) {
+                this.handleException(stmt, e)
+            }
+        }
+    }
+
+    private assignVariableCells(decl: ts.VariableDeclaration) {
+        const topLevel = this.isTopLevel(decl)
+        if (idName(decl.name) && topLevel) {
             if (this.parseRole(decl)) return
         }
 
         const doAssign = (decl: ts.VariableDeclaration | ts.BindingElement) => {
-            if (ts.isIdentifier(decl.name))
+            if (ts.isIdentifier(decl.name)) {
+                if (this.getCellAtLocation(decl)) return
                 this.assignCell(
                     decl,
                     new Variable(
                         decl,
-                        proc ? VariableKind.Local : VariableKind.Global,
-                        proc ? proc : this.globals
+                        topLevel ? VariableKind.Global : VariableKind.Local,
+                        topLevel ? this.globals : this.proc
                     )
                 )
-            else if (ts.isObjectBindingPattern(decl.name)) {
+            } else if (ts.isObjectBindingPattern(decl.name)) {
                 for (const elt of decl.name.elements) {
                     doAssign(elt)
                 }
@@ -1984,6 +1995,13 @@ class Program implements TopOpWriter {
         return symCell(sym)
     }
 
+    private getVarAtLocation(node: ts.Node) {
+        const v = this.getCellAtLocation(node)
+        if (!v) throwError(node, "variable not assigned yet")
+        if (!(v instanceof Variable)) throwError(node, "expecting variable")
+        return v
+    }
+
     private getClosureLevel(variable: Variable) {
         if (variable.vkind == VariableKind.Global) return 0
         assert(!!variable.parentProc)
@@ -2154,12 +2172,6 @@ class Program implements TopOpWriter {
         return this.compileFormat([node])
     }
 
-    private lookupVar(expr: ts.Expression) {
-        const r = this.getCellAtLocation(expr)
-        if (!(r instanceof Variable)) throwError(expr, "expecting variable")
-        return r
-    }
-
     private getBaseTypes(clsTp: ts.Type) {
         if (
             clsTp.getFlags() & ts.TypeFlags.Object &&
@@ -2251,7 +2263,7 @@ class Program implements TopOpWriter {
         }
 
         if (ts.isIdentifier(trg)) {
-            const variable = this.lookupVar(trg)
+            const variable = this.getVarAtLocation(trg)
             return {
                 read: () => variable.emit(wr),
                 write: (src: Value) => this.emitStore(variable, src),
@@ -2285,7 +2297,7 @@ class Program implements TopOpWriter {
         if (ts.isArrayLiteralExpression(left)) {
             throwError(expr, "todo array assignment")
         } else if (ts.isIdentifier(left)) {
-            const v = this.lookupVar(left)
+            const v = this.getVarAtLocation(left)
             this.emitStore(v, src)
             return unit()
         }
@@ -2766,6 +2778,8 @@ class Program implements TopOpWriter {
 
         wr.stmtStart(this.indexToLine(stmt))
 
+        this.assignCellsToStmt(stmt)
+
         try {
             switch (stmt.kind) {
                 case SK.ExpressionStatement:
@@ -2773,7 +2787,7 @@ class Program implements TopOpWriter {
                         stmt as ts.ExpressionStatement
                     )
                 case SK.VariableStatement:
-                    return this.emitVariableDeclaration(
+                    return this.emitVariableStatement(
                         stmt as ts.VariableStatement
                     )
                 case SK.IfStatement:
