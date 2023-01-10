@@ -504,7 +504,12 @@ export class OpWriter {
         }
     }
 
-    patchLabels(numLocals: number, numargs: number, hasThis: boolean) {
+    patchLabels(
+        numLocals: number,
+        numargs: number,
+        hasThis: boolean,
+        tryDepth: number
+    ) {
         // we now patch at emit
         for (const l of this.labels) {
             if (l.uses) this.oops(`label ${l.name} not resolved`)
@@ -550,6 +555,8 @@ export class OpWriter {
         buf[10] = numargs
         buf[11] = flags
         write16(buf, 12, this.nameIdx)
+        assert(tryDepth <= 0xff)
+        buf[14] = tryDepth
 
         return mapVarOffset
     }

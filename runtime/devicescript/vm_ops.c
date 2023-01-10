@@ -101,7 +101,7 @@ static void stmt2_call_array(devs_activation_t *frame, devs_ctx_t *ctx) {
         }
     }
 }
-static bool get_pc(devs_activation_t *frame, devs_ctx_t *ctx) {
+static int get_pc(devs_activation_t *frame, devs_ctx_t *ctx) {
     int32_t off = ctx->literal_int;
     int pc = ctx->jmp_pc + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {

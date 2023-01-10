@@ -370,7 +370,8 @@ class Procedure {
         this.mapVarOffset = this.writer.patchLabels(
             this.locals.length,
             this.numargs,
-            this.usesThis
+            this.usesThis,
+            this.maxTryBlocks
         )
         return true
     }
@@ -941,7 +942,6 @@ class Program implements TopOpWriter {
             FINALLY
             re_throw tmp
     */
-
 
     private emitTryCatchStatement(stmt: ts.TryStatement) {
         if (!stmt.catchClause) return this.emitBlock(stmt.tryBlock)
