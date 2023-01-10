@@ -220,14 +220,17 @@ static void sweep(devs_gc_t *gc) {
         for (chunk_t *chunk = gc->first_chunk; chunk; chunk = chunk->next) {
             for (block_t *block = chunk->start;; block = next_block(block)) {
                 uintptr_t header = block->header;
-                if (GET_TAG(header) == DEVS_GC_TAG_FINAL)
+                unsigned tag = GET_TAG(header);
+                if (tag == DEVS_GC_TAG_FINAL)
                     break;
                 JD_ASSERT(block < chunk->end);
 
                 if (!sweep)
-                    LOG("p=%x tag=%x", devs_show_addr(gc, block), (unsigned)GET_TAG(header));
+                    LOG("p=%x tag=%x", devs_show_addr(gc, block), (unsigned)tag);
 
-                if (GET_TAG(header) & DEVS_GC_TAG_MASK_PENDING) {
+                if ((tag & DEVS_GC_TAG_MASK_PENDING) ||
+                    (tag & (DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_MASK_SCANNED)) ==
+                        DEVS_GC_TAG_MASK_PINNED) {
                     JD_ASSERT(!sweep);
                     if (!had_pending)
                         LOG("set pending");
