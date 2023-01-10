@@ -843,10 +843,22 @@ class Program implements TopOpWriter {
         }
     }
 
+    private isFundecl(node: ts.Node) {
+        switch (node.kind) {
+            case SK.FunctionDeclaration:
+            case SK.FunctionExpression:
+            case SK.ArrowFunction:
+                return true
+            default:
+                return false
+        }
+    }
+
     private isInLoop(node: ts.Node) {
         while (node) {
             if (this.isLoop(node)) return true
             node = node.parent
+            if (node && this.isFundecl(node)) return false
         }
         return false
     }
@@ -1986,8 +1998,15 @@ class Program implements TopOpWriter {
         if (r) return r
         const cell = this.getCellAtLocation(expr)
         if (!cell) throwError(expr, "unknown name: " + idName(expr))
-        if (cell instanceof Variable)
-            return cell.emitViaClosure(this.writer, this.getClosureLevel(cell))
+        if (cell instanceof Variable) {
+            const lev = this.getClosureLevel(cell)
+            if (lev && this.isInLoop(cell.definition))
+                throwError(
+                    expr,
+                    "closure references to loop variables are currently broken"
+                )
+            return cell.emitViaClosure(this.writer, lev)
+        }
         return cell.emit(this.writer)
     }
 
