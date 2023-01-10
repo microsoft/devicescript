@@ -226,6 +226,25 @@ function testUnaryPlus() {
     // assert(isNaN(+qq))
 }
 
+/* TODO (enums not supported)
+function getABoolean() {
+    return !!true
+}
+
+enum SomeEnum {
+    One = 1,
+    Two = 2,
+}
+
+function testEnumToString() {
+    let enumTest = getABoolean() ? SomeEnum.One : SomeEnum.Two
+
+    assert(`${enumTest}` === "1", "enum tostring in template")
+    assert(enumTest + "" === "1", "enum tostring in concatenation")
+}
+testEnumToString()
+*/
+
 testComma()
 testNums()
 testNaN()
