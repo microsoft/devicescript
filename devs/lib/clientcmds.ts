@@ -174,3 +174,37 @@ ds.Event.prototype.wait = function () {
         if (pkt && pkt.eventCode == this.code) return
     }
 }
+
+Array.prototype.map = function (f) {
+    const res: any[] = []
+    const length = this.length
+    for (let i = 0; i < length; ++i) {
+        res.push(f(this[i], i, this))
+    }
+    return res
+}
+
+Array.prototype.filter = function (f) {
+    const res: any[] = []
+    const length = this.length
+    for (let i = 0; i < length; ++i) {
+        if (f(this[i], i, this)) res.push(this[i])
+    }
+    return res
+}
+
+Array.prototype.every = function (f) {
+    const length = this.length
+    for (let i = 0; i < length; ++i) {
+        if (!f(this[i], i, this)) return false
+    }
+    return true
+}
+
+Array.prototype.some = function (f) {
+    const length = this.length
+    for (let i = 0; i < length; ++i) {
+        if (f(this[i], i, this)) return true
+    }
+    return false
+}

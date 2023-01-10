@@ -127,6 +127,42 @@ interface Array<T> {
      * If end is undefined, then the slice extends to the end of the array.
      */
     slice(start?: number, end?: number): T[]
+
+    /**
+     * Determines whether all the members of an array satisfy the specified test.
+     * @param predicate A function that accepts up to three arguments. The every method calls
+     * the predicate function for each element in the array until the predicate returns a value
+     * which is coercible to the Boolean value false, or until the end of the array.
+     */
+    every(predicate: (value: T, index: number, array: T[]) => unknown): boolean
+
+    /**
+     * Determines whether the specified callback function returns true for any element of an array.
+     * @param predicate A function that accepts up to three arguments. The some method calls
+     * the predicate function for each element in the array until the predicate returns a value
+     * which is coercible to the Boolean value true, or until the end of the array.
+     */
+    some(predicate: (value: T, index: number, array: T[]) => unknown): boolean
+
+    /**
+     * Performs the specified action for each element in an array.
+     * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the array.
+     */
+    forEach(callbackfn: (value: T, index: number, array: T[]) => void): void
+
+    /**
+     * Calls a defined callback function on each element of an array, and returns an array that contains the results.
+     * @param callbackfn A function that accepts up to three arguments. The map method calls the callbackfn function one time for each element in the array.
+     */
+    map<U>(callbackfn: (value: T, index: number, array: T[]) => U): U[]
+
+    /**
+     * Returns the elements of an array that meet the condition specified in a callback function.
+     * @param predicate A function that accepts up to three arguments. The filter method calls the predicate function one time for each element in the array.
+     */
+    filter<S extends T>(
+        predicate: (value: T, index: number, array: T[]) => value is S
+    ): S[]
 }
 
 interface ArrayConstructor {
