@@ -15,7 +15,11 @@ void devs_log_value(devs_ctx_t *ctx, const char *lbl, value_t v) {
     }
 }
 
+#if JD_64
+static char buf[128];
+#else
 static char buf[64];
+#endif
 
 const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
     if (devs_is_tagged_int(v)) {
@@ -74,14 +78,17 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_ROLE_MEMBER:
         fmt = "role_member";
         break;
-    case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
     case DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC:
         jd_sprintf(buf, sizeof(buf), "method:%d:%x", (int)devs_handle_high_value(v),
                    (unsigned)devs_handle_value(v));
         return buf;
+    case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
+        jd_sprintf(buf, sizeof(buf), "method:%d:%p", (int)devs_handle_high_value(v),
+                   devs_handle_ptr_value(ctx, v));
+        return buf;
     case DEVS_HANDLE_TYPE_CLOSURE:
-        jd_sprintf(buf, sizeof(buf), "closure:%d:%x", (int)devs_handle_high_value(v),
-                   (unsigned)devs_handle_value(v));
+        jd_sprintf(buf, sizeof(buf), "closure:%d:%p", (int)devs_handle_high_value(v),
+                   devs_handle_ptr_value(ctx, v));
         return buf;
     case DEVS_HANDLE_TYPE_GC_OBJECT:
         switch (devs_gc_tag(devs_handle_ptr_value(ctx, v))) {
@@ -114,7 +121,7 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
             fmt = "???";
             break;
         }
-        jd_sprintf(buf, sizeof(buf), "%s:%x", fmt, (unsigned)devs_handle_value(v));
+        jd_sprintf(buf, sizeof(buf), "%s:%p", fmt, devs_handle_ptr_value(ctx, v));
         return buf;
     }
 

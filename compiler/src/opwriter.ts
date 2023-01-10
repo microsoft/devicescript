@@ -99,7 +99,7 @@ export class Value {
 
 export class CachedValue {
     numRefs = 1
-    longTerm = false
+    _longTerm = false
     constructor(public parent: OpWriter, public index: number) {}
     get packedIndex() {
         return packVarIndex(VariableKind.Cached, this.index)
@@ -131,7 +131,7 @@ export class CachedValue {
         return r
     }
     _decr() {
-        assert(this.numRefs > 0)
+        if (this.numRefs <= 0) oops(`cached ref=0`)
         if (--this.numRefs == 0) {
             assert(this.parent.cachedValues[this.index] == this)
             this.parent.cachedValues[this.index] = null
@@ -326,10 +326,11 @@ export class OpWriter {
         }
     }
 
-    cacheValue(v: Value, force = false) {
+    cacheValue(v: Value, longTerm = false) {
         let t: CachedValue
-        if (this.needsCache(v) || force) {
+        if (this.needsCache(v) || longTerm) {
             t = this.allocTmpLocal()
+            t._longTerm = longTerm
         } else {
             t = new UnCachedValue(this)
         }
@@ -493,7 +494,7 @@ export class OpWriter {
     assertNoTemps(really = false) {
         if (this.prog.hasErrors) return
         for (const c of this.cachedValues) {
-            if (c !== null && (really || !c.longTerm)) {
+            if (c !== null && (really || !c._longTerm)) {
                 this.oops(`_L${c.packedIndex} still has ${c.numRefs} refs`)
             }
         }

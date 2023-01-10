@@ -15,6 +15,14 @@ typedef union {
         int32_t val_int32;
         uint32_t exp_sign;
     };
+    // this is for better view in the debugger
+    struct {
+        uint32_t handle_value;
+        uint32_t handle_type : 4;
+        uint32_t handle_hi_value : 16;
+        uint32_t handle_eq_0 : 11;
+        uint32_t handle_unused : 1;
+    };
 } value_t;
 
 #define DEVS_INT_TAG (0U - 1U)
@@ -70,7 +78,7 @@ static inline bool devs_handle_is_throw_jmp(uint32_t hv) {
 static inline int devs_handle_decode_throw_jmp_pc(uint32_t hv, unsigned *lev) {
     hv -= DEVS_SPECIAL_THROW_JMP_OFF;
     *lev = hv & DEVS_SPECIAL_THROW_JMP_LEVEL_MAX;
-    return hv >= DEVS_SPECIAL_THROW_JMP_OFF;
+    return hv >> DEVS_SPECIAL_THROW_JMP_LEVEL_SHIFT;
 }
 
 static inline bool devs_is_tagged_int(value_t t) {

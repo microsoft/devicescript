@@ -5,7 +5,7 @@
 
 static inline devs_pc_t *get_tryframes(devs_activation_t *frame) {
     JD_ASSERT(frame->func->num_try_frames > 0);
-    return (devs_pc_t *)frame->slots + frame->func->num_slots;
+    return (devs_pc_t *)(frame->slots + frame->func->num_slots);
 }
 
 void devs_push_tryframe(devs_activation_t *frame, devs_ctx_t *ctx, int pc) {

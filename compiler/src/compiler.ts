@@ -998,6 +998,7 @@ class Program implements TopOpWriter {
             this.proc.loopStack.pop()
         }
 
+        wr.emitLabel(finallyLbl)
         wr.emitStmt(Op.STMT0_FINALLY)
         const exn = wr.cacheValue(this.retVal(), true)
         this.emitBlock(stmt.finallyBlock)
@@ -1063,10 +1064,8 @@ class Program implements TopOpWriter {
 
         const decl = stmt.initializer.declarations[0]
 
-        const coll = wr.cacheValue(this.emitExpr(stmt.expression))
+        const coll = wr.cacheValue(this.emitExpr(stmt.expression), true)
         const idx = wr.cacheValue(literal(0), true)
-        coll.longTerm = true
-        idx.longTerm = true
 
         this.emitVariableDeclarationList(stmt.initializer)
         const elt = this.getCellAtLocation(decl) as Variable
@@ -1082,7 +1081,9 @@ class Program implements TopOpWriter {
         wr.emitJumpIfFalse(loop.breakLbl, cond)
 
         try {
-            this.emitStore(elt, wr.emitIndex(coll.emit(), idx.emit()))
+            const collVal = coll.emit()
+            const idxVal = idx.emit()
+            this.emitStore(elt, wr.emitIndex(collVal, idxVal))
             this.proc.loopStack.push(loop)
             this.emitStmt(stmt.statement)
             wr.emitLabel(loop.continueLbl)

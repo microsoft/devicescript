@@ -3,8 +3,8 @@
 
 #include "devs_internal.h"
 
-// #define LOG JD_LOG
-#define LOG JD_NOLOG
+// #define LOG_TAG "gc"
+#include "devs_logging.h"
 
 #define ROOT_SCAN_DEPTH 10
 
@@ -226,7 +226,7 @@ static void sweep(devs_gc_t *gc) {
                 JD_ASSERT(block < chunk->end);
 
                 if (!sweep)
-                    LOG("p=%x tag=%x", devs_show_addr(gc, block), (unsigned)tag);
+                    LOG("p=%p tag=%x", block, (unsigned)tag);
 
                 if ((tag & DEVS_GC_TAG_MASK_PENDING) ||
                     (tag & (DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_MASK_SCANNED)) ==
@@ -240,7 +240,7 @@ static void sweep(devs_gc_t *gc) {
                     block_t *p = block;
                     while (can_free(p->header)) {
                         if (GET_TAG(p->header) != DEVS_GC_TAG_FREE)
-                            LOG("free: %x", devs_show_addr(gc, p));
+                            LOG("free: %p", p);
                         p = next_block(p);
                     }
                     if (p != block) {
@@ -338,7 +338,7 @@ void *jd_gc_any_try_alloc(devs_gc_t *gc, unsigned tag, uint32_t size) {
     if (!b)
         return NULL;
     memset(b->data, 0x00, size);
-    LOG("alloc: tag=%s sz=%d -> %x", devs_gc_tag_name(tag), size, devs_show_addr(gc, b));
+    LOG("alloc: tag=%s sz=%d -> %p", devs_gc_tag_name(tag), size, b);
     return b;
 }
 
@@ -512,12 +512,5 @@ void devs_gc_destroy(devs_gc_t *gc) {
 void *devs_gc_base_addr(devs_gc_t *gc) {
     JD_ASSERT(gc && gc->first_chunk);
     return gc->first_chunk;
-}
-
-unsigned devs_show_addr(devs_gc_t *gc, void *ptr) {
-    if (ptr == NULL)
-        return 0;
-    JD_ASSERT(gc && gc->first_chunk);
-    return (uintptr_t)ptr - (uintptr_t)gc->first_chunk;
 }
 #endif

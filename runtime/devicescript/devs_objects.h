@@ -179,13 +179,9 @@ void jd_gc_unpin(devs_gc_t *gc, void *ptr);
 void jd_gc_free(devs_gc_t *gc, void *ptr);
 #if JD_64
 void *devs_gc_base_addr(devs_gc_t *gc);
-unsigned devs_show_addr(devs_gc_t *gc, void *ptr);
 #else
 static inline void *devs_gc_base_addr(devs_gc_t *gc) {
     return NULL;
-}
-static inline unsigned devs_show_addr(devs_gc_t *gc, void *ptr) {
-    return (unsigned)ptr;
 }
 #endif
 

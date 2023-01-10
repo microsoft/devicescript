@@ -155,7 +155,7 @@ export function disassemble(img: Uint8Array): string {
         const thisptr = funDescFlags & FunctionFlag.NEEDS_THIS ? "this, " : ""
         r += `\n${fnname}_F${fnid}(${thisptr}${range(funDescNumArgs).map(
             i => "par" + i
-        )}):\n`
+        )}): @${read32(funDesc, off)}\n`
         if (numlocals)
             r += `  locals: ${range(numlocals).map(i => "loc" + i)}\n`
 
