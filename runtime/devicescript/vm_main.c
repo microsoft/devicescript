@@ -8,6 +8,10 @@ static inline uint8_t devs_vm_fetch_byte(devs_activation_t *frame, devs_ctx_t *c
     return 0;
 }
 
+uint8_t devs_fetch_opcode(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return devs_vm_fetch_byte(frame, ctx);
+}
+
 static inline int32_t devs_vm_fetch_int(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint8_t v = devs_vm_fetch_byte(frame, ctx);
     if (v < DEVS_FIRST_MULTIBYTE_INT)

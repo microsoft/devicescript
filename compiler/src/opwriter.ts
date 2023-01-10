@@ -451,14 +451,28 @@ export class OpWriter {
         return this._emitJump(label)
     }
 
-    private _emitJump(label: Label, cond?: Value) {
+    emitTry(label: Label) {
+        return this._emitJump(label, undefined, Op.STMTx_TRY)
+    }
+
+    emitEndTry(label: Label) {
+        return this._emitJump(label, undefined, Op.STMTx_END_TRY)
+    }
+
+    emitThrowJmp(label: Label, level: number) {
+        if (level == 0) return this.emitJump(label)
+        return this._emitJump(label, literal(level), Op.STMTx1_THROW_JMP)
+    }
+
+    private _emitJump(label: Label, cond?: Value, op?: Op) {
         cond?.adopt()
         this.spillAllStateful()
 
         if (cond) this.writeValue(cond)
 
         const off0 = this.location()
-        this.writeByte(cond ? Op.STMTx1_JMP_Z : Op.STMTx_JMP)
+        if (!op) op = cond ? Op.STMTx1_JMP_Z : Op.STMTx_JMP
+        this.writeByte(op)
 
         if (label.offset != -1) {
             this.writeInt(label.offset - off0)

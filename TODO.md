@@ -6,6 +6,32 @@
 * `[a,b,c] = reg.read()`
 * run handlers in background - some sort of object to keep track if it's running?
 
+```
+try {...}catch(e) {...}...
+
+try lbl
+...
+jmp after
+lbl: catch()
+e := retval ()
+...
+after:
+...
+
+try {...break...} finally {...}...  
+
+try lbl
+...
+throw_brk brklbl
+...
+lbl: finally()
+tmp := retval()
+...
+re_throw(tmp)
+...
+brklbl:
+```
+
 ## Random stuff
 * change `ALLOC_*` opcodes to expressions
 * `Object.keys(spec_object)` ?

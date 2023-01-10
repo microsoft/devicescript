@@ -32,6 +32,43 @@ Jump if condition is false.
 
     panic(error_code) = 15
 
+    try(*jmpoffset) = 80                // TRY jmpoffset
+
+Start try-catch block - catch/finally handler is at the jmpoffset.
+
+    end_try(*jmpoffset) = 81
+
+Try block has to end with this. jmpoffset is for continuation code.
+
+    catch() = 82
+
+Has to be the first opcode in the catch handler. Causes error elsewhere.
+If value throw is JMP rethrows immediately.
+
+    finally() = 83
+
+Has to be the first opcode in the finally handler.
+Finally block should be followed by storing exception value in a local
+and finish with `re_throw` of the exception.
+`retval` set to `null` when block executed not due to an exception.
+
+    throw(value) = 84
+
+Throw an exception.
+
+    re_throw(value) = 85
+
+Throw an exception without setting the `__stack__` field.
+Does nothing if `value` is `null`.
+
+    throw_jmp(*jmpoffset, level) = 86
+
+Jump to given offset popping `level` try blocks, activating the finally blocks on the way.
+
+    debugger() = 87
+
+Trigger breakpoint when debugger connected. No-op otherwise.
+
 ### Variables
 
     store_local(*local_idx, value) = 17      // local_idx := value
@@ -358,6 +395,8 @@ Only `true` and `false` values.
 
     packet = 10
 
+    exotic = 11
+
 ### Object_Types only used in static type info
 
     any = 11
@@ -393,6 +432,13 @@ Only `true` and `false` values.
     DsCommand_prototype = 24
     DsEvent_prototype = 25
     DsReport_prototype = 26
+    Error = 27
+    Error_prototype = 28
+    TypeError = 29
+    TypeError_prototype = 30
+    RangeError = 31
+    RangeError_prototype = 32
+
 
 ## Enum: BuiltIn_String
 
@@ -510,3 +556,10 @@ Only `true` and `false` values.
     assert = 110
     pushRange = 111
     sendCommand = 112
+    __stack__ = 113
+    Error = 114
+    TypeError = 115
+    RangeError = 116
+    stack = 117
+    message = 118
+    cause = 119

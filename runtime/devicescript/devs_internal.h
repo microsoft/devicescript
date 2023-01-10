@@ -93,12 +93,12 @@ struct devs_ctx {
     uint16_t opstack;
     uint16_t flags;
     uint16_t error_code;
-    uint16_t error_pc;
+    devs_pc_t error_pc;
 
     value_t binop[2];
     double binop_f[2];
 
-    uint16_t jmp_pc;
+    devs_pc_t jmp_pc;
 
     uint8_t stack_top;
     uint8_t stack_top_for_gc;
@@ -142,8 +142,8 @@ struct devs_ctx {
 
 struct devs_activation {
     devs_gc_object_t gc;
-    uint16_t pc;
-    uint16_t maxpc;
+    devs_pc_t pc;
+    devs_pc_t maxpc;
     devs_activation_t *closure;
     devs_activation_t *caller;
     const devs_function_desc_t *func;
@@ -159,7 +159,7 @@ static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);
 value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code);
-// next error 60192
+// next error 60200
 static inline value_t devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
     return _devs_runtime_failure(ctx, code - 60000);
 }
@@ -199,6 +199,7 @@ void devs_fiber_free_all_fibers(devs_ctx_t *ctx);
 
 // vm_main.c
 void devs_vm_exec_opcodes(devs_ctx_t *ctx);
+uint8_t devs_fetch_opcode(devs_activation_t *frame, devs_ctx_t *ctx);
 
 value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t buffer,
                        value_t *setv);
@@ -250,3 +251,14 @@ static inline jd_role_t *devs_role(devs_ctx_t *ctx, unsigned roleidx) {
 bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a);
 
 #define DEVS_DERIVE(cls, basecls) /* */
+
+// try.c
+void devs_push_tryframe(devs_activation_t *frame, devs_ctx_t *ctx, int pc);
+int devs_pop_tryframe(devs_activation_t *frame, devs_ctx_t *ctx);
+value_t devs_capture_stack(devs_ctx_t *ctx);
+void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn);
+
+#define DEVS_THROW_NO_STACK 0x0001
+#define DEVS_THROW_INTERNAL 0x0002
+void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags);
+void devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...);

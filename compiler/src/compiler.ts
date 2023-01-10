@@ -337,6 +337,11 @@ class Procedure {
     parentProc: Procedure
     nestedProcs: Procedure[] = []
     usesClosure = false
+    loopStack: LoopLabels[] = []
+    returnValue: CachedValue
+    returnValueLabel: Label
+    returnNoValueLabel: Label
+    maxTryBlocks = 0
     mapVarOffset: (n: number) => number
 
     constructor(
@@ -413,6 +418,13 @@ class Procedure {
                 ...args
             )
     }
+    pushTryBlock(stmt: ts.TryStatement) {
+        this.loopStack.push({ tryBlock: stmt })
+        this.maxTryBlocks = Math.max(
+            this.maxTryBlocks,
+            this.loopStack.filter(b => !!b.tryBlock).length
+        )
+    }
 }
 
 type Expr = ts.Expression | ts.TemplateLiteralLikeNode
@@ -440,8 +452,11 @@ function throwError(expr: ts.Node, msg: string): never {
 }
 
 interface LoopLabels {
-    continueLbl: Label
-    breakLbl: Label
+    tryBlock?: ts.TryStatement
+    labelSym?: ts.Symbol
+    topLbl?: Label
+    continueLbl?: Label
+    breakLbl?: Label
 }
 
 interface ProtoDefinition {
@@ -505,7 +520,6 @@ class Program implements TopOpWriter {
     cloudRole: Role
     cloudMethod429: Label
     onStart: DelayedCodeSection
-    loopStack: LoopLabels[] = []
     flags: CompileFlags = {}
     isLibrary: boolean
 
@@ -699,6 +713,7 @@ class Program implements TopOpWriter {
     }
 
     private emitStore(trg: Variable, src: Value) {
+        assert(trg instanceof Variable)
         trg.store(this.writer, src, this.getClosureLevel(trg))
     }
 
@@ -876,9 +891,7 @@ class Program implements TopOpWriter {
     private emitForStatement(stmt: ts.ForStatement) {
         const wr = this.writer
 
-        const topLbl = wr.mkLabel("forTop")
-        const continueLbl = wr.mkLabel("forCont")
-        const breakLbl = wr.mkLabel("forBrk")
+        const loop = this.mkLoopLabels(stmt)
 
         if (stmt.initializer) {
             if (ts.isVariableDeclarationList(stmt.initializer))
@@ -888,39 +901,144 @@ class Program implements TopOpWriter {
             }
         }
 
-        wr.emitLabel(topLbl)
+        wr.emitLabel(loop.topLbl)
 
         const cond = this.emitExpr(stmt.condition)
-        wr.emitJumpIfFalse(breakLbl, cond)
+        wr.emitJumpIfFalse(loop.breakLbl, cond)
 
         try {
-            this.loopStack.push({ continueLbl, breakLbl })
+            this.proc.loopStack.push(loop)
             this.emitStmt(stmt.statement)
-            wr.emitLabel(continueLbl)
+            wr.emitLabel(loop.continueLbl)
             if (stmt.incrementor) this.emitIgnoredExpression(stmt.incrementor)
         } finally {
-            this.loopStack.pop()
+            this.proc.loopStack.pop()
         }
 
-        wr.emitJump(topLbl)
-        wr.emitLabel(breakLbl)
+        wr.emitJump(loop.topLbl)
+        wr.emitLabel(loop.breakLbl)
+    }
+
+    /*
+        try { BODY }
+        catch (e) { CATCH }
+        finally { FINALLY }
+
+        ==>
+            try l_finally
+            try l_catch
+            BODY
+            end_try l_after
+
+        l_catch:
+            catch()
+            e := retval()
+            CATCH
+        l_after: 
+        l_finally:
+            finally()
+            tmp := retval()
+            FINALLY
+            re_throw tmp
+    */
+
+
+    private emitTryCatchStatement(stmt: ts.TryStatement) {
+        if (!stmt.catchClause) return this.emitBlock(stmt.tryBlock)
+
+        const wr = this.writer
+
+        const after = wr.mkLabel("aftertry")
+        const catchLbl = wr.mkLabel("catch")
+        wr.emitTry(catchLbl)
+
+        this.proc.pushTryBlock(stmt)
+        try {
+            this.emitBlock(stmt.tryBlock)
+        } finally {
+            this.proc.loopStack.pop()
+            wr.emitEndTry(after)
+        }
+
+        wr.emitStmt(Op.STMT0_CATCH)
+        const decl = stmt.catchClause.variableDeclaration
+        if (decl) {
+            this.assignVariableCells(decl, this.proc)
+            this.emitStore(
+                this.getCellAtLocation(decl) as Variable,
+                this.retVal()
+            )
+        }
+        this.emitBlock(stmt.catchClause.block)
+
+        wr.emitLabel(after)
+    }
+
+    private emitTryStatement(stmt: ts.TryStatement) {
+        if (!stmt.finallyBlock) return this.emitTryCatchStatement(stmt)
+
+        // try ... catch ... finally ...
+        const wr = this.writer
+
+        const finallyLbl = wr.mkLabel("finally")
+        wr.emitTry(finallyLbl)
+        this.proc.pushTryBlock(stmt)
+
+        try {
+            this.emitTryCatchStatement(stmt)
+        } finally {
+            this.proc.loopStack.pop()
+        }
+
+        wr.emitStmt(Op.STMT0_FINALLY)
+        const exn = wr.cacheValue(this.retVal(), true)
+        this.emitBlock(stmt.finallyBlock)
+        wr.emitStmt(Op.STMT1_RE_THROW, exn.finalEmit())
+    }
+
+    private emitBlock(stmt: ts.Block) {
+        for (const s of stmt.statements) this.emitStmt(s)
     }
 
     private emitBreakContStatement(stmt: ts.BreakOrContinueStatement) {
-        if (stmt.label)
-            throwError(stmt, "labelled break/cont not supported yet")
-        const loop = this.loopStack[this.loopStack.length - 1]
-        this.writer.emitJump(
-            stmt.kind == SK.ContinueStatement ? loop.continueLbl : loop.breakLbl
-        )
+        const sym = stmt.label ? this.getSymAtLocation(stmt.label) : null
+        let numTry = 0
+        const wr = this.writer
+        for (let i = this.proc.loopStack.length - 1; i >= 0; i--) {
+            const loop = this.proc.loopStack[i]
+            if (loop.tryBlock) {
+                numTry++
+                continue
+            }
+            if (sym && sym != loop.labelSym) continue
+            const lbl =
+                stmt.kind == SK.ContinueStatement
+                    ? loop.continueLbl
+                    : loop.breakLbl
+            if (numTry) wr.emitThrowJmp(lbl, numTry)
+            else wr.emitJump(lbl)
+            return
+        }
+        throwError(stmt, "loop not found")
+    }
+
+    private mkLoopLabels(stmt: ts.IterationStatement) {
+        const wr = this.writer
+        const res: LoopLabels = {
+            topLbl: wr.mkLabel("top"),
+            continueLbl: wr.mkLabel("continue"),
+            breakLbl: wr.mkLabel("break"),
+        }
+        if (ts.isLabeledStatement(stmt.parent)) {
+            res.labelSym = this.getSymAtLocation(stmt.parent.label)
+        }
+        return res
     }
 
     private emitForOfStatement(stmt: ts.ForOfStatement) {
         const wr = this.writer
 
-        const topLbl = wr.mkLabel("forTop")
-        const continueLbl = wr.mkLabel("forCont")
-        const breakLbl = wr.mkLabel("forBrk")
+        const loop = this.mkLoopLabels(stmt)
 
         if (
             stmt.awaitModifier ||
@@ -941,59 +1059,91 @@ class Program implements TopOpWriter {
         const elt = this.getCellAtLocation(decl) as Variable
         assert(elt instanceof Variable)
 
-        wr.emitLabel(topLbl)
+        wr.emitLabel(loop.topLbl)
 
         const cond = wr.emitExpr(
             Op.EXPR2_LT,
             idx.emit(),
             wr.emitIndex(coll.emit(), wr.emitString("length"))
         )
-        wr.emitJumpIfFalse(breakLbl, cond)
+        wr.emitJumpIfFalse(loop.breakLbl, cond)
 
         try {
-            this.loopStack.push({ continueLbl, breakLbl })
             this.emitStore(elt, wr.emitIndex(coll.emit(), idx.emit()))
+            this.proc.loopStack.push(loop)
             this.emitStmt(stmt.statement)
-            wr.emitLabel(continueLbl)
+            wr.emitLabel(loop.continueLbl)
             idx.store(wr.emitExpr(Op.EXPR2_ADD, idx.emit(), literal(1)))
         } finally {
-            this.loopStack.pop()
+            this.proc.loopStack.pop()
             coll.free()
             idx.free()
         }
 
-        wr.emitJump(topLbl)
-        wr.emitLabel(breakLbl)
+        wr.emitJump(loop.topLbl)
+        wr.emitLabel(loop.breakLbl)
     }
+
     private emitWhileStatement(stmt: ts.WhileStatement) {
         const wr = this.writer
 
-        const continueLbl = wr.mkLabel("whileCont")
-        const breakLbl = wr.mkLabel("whileBrk")
+        const loop = this.mkLoopLabels(stmt)
 
-        wr.emitLabel(continueLbl)
+        wr.emitLabel(loop.continueLbl)
+        wr.emitLabel(loop.topLbl)
         const cond = this.emitExpr(stmt.expression)
-        wr.emitJumpIfFalse(breakLbl, cond)
+        wr.emitJumpIfFalse(loop.breakLbl, cond)
 
         try {
-            this.loopStack.push({ continueLbl, breakLbl })
+            this.proc.loopStack.push(loop)
             this.emitStmt(stmt.statement)
         } finally {
-            this.loopStack.pop()
+            this.proc.loopStack.pop()
         }
 
-        wr.emitJump(continueLbl)
-        wr.emitLabel(breakLbl)
+        wr.emitJump(loop.continueLbl)
+        wr.emitLabel(loop.breakLbl)
+    }
+
+    private finishRetVal() {
+        const wr = this.writer
+        if (this.proc.returnValueLabel) {
+            wr.emitLabel(this.proc.returnValueLabel)
+            wr.emitStmt(Op.STMT1_RETURN, this.proc.returnValue.finalEmit())
+        }
+        if (this.proc.returnNoValueLabel) {
+            wr.emitLabel(this.proc.returnNoValueLabel)
+            wr.emitStmt(Op.STMT1_RETURN, literal(null))
+        }
     }
 
     private emitReturnStatement(stmt: ts.ReturnStatement) {
         const wr = this.writer
+        const numTry = this.proc.loopStack.filter(l => !!l.tryBlock).length
         if (stmt.expression) {
             if (wr.ret) oops("return with value not supported here")
-            wr.emitStmt(Op.STMT1_RETURN, this.emitExpr(stmt.expression))
+            const expr = this.emitExpr(stmt.expression)
+            if (numTry) {
+                if (!this.proc.returnValue) {
+                    this.proc.returnValue = wr.cacheValue(expr, true)
+                    this.proc.returnValueLabel = wr.mkLabel("retVal")
+                } else this.proc.returnValue.store(expr)
+                wr.emitThrowJmp(this.proc.returnValueLabel, numTry)
+            } else {
+                wr.emitStmt(Op.STMT1_RETURN, expr)
+            }
         } else {
-            if (wr.ret) this.writer.emitJump(this.writer.ret)
-            else wr.emitStmt(Op.STMT1_RETURN, literal(null))
+            if (wr.ret) {
+                this.writer.emitThrowJmp(this.writer.ret, numTry)
+            } else {
+                if (numTry) {
+                    if (!this.proc.returnNoValueLabel)
+                        this.proc.returnNoValueLabel = wr.mkLabel("retNoVal")
+                    wr.emitThrowJmp(this.proc.returnNoValueLabel, numTry)
+                } else {
+                    wr.emitStmt(Op.STMT1_RETURN, literal(null))
+                }
+            }
         }
     }
 
@@ -1059,6 +1209,7 @@ class Program implements TopOpWriter {
         } else {
             this.writer.emitStmt(Op.STMT1_RETURN, this.emitExpr(stmt.body))
         }
+        this.finishRetVal()
 
         this.finalizeProc(proc)
     }
@@ -2540,8 +2691,9 @@ class Program implements TopOpWriter {
                         stmt as ts.BreakOrContinueStatement
                     )
                 case SK.Block:
-                    stmt.forEachChild(s => this.emitStmt(s as ts.Statement))
-                    return
+                    return this.emitBlock(stmt as ts.Block)
+                case SK.TryStatement:
+                    return this.emitTryStatement(stmt as ts.TryStatement)
                 case SK.ReturnStatement:
                     return this.emitReturnStatement(stmt as ts.ReturnStatement)
                 case SK.FunctionDeclaration:

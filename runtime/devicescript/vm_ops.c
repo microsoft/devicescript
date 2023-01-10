@@ -4,25 +4,14 @@
 #include <limits.h>
 #include <math.h>
 
-#if 0
-static void stmt1_wait_role(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t a = devs_vm_pop_arg_role(ctx);
-    ctx->curr_fiber->role_idx = a;
-    devs_fiber_set_wake_time(ctx->curr_fiber, 0);
-    devs_fiber_yield(ctx);
-}
-
-static void stmt2_send_cmd(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t b = devs_vm_pop_arg_u32(ctx);
-    uint32_t a = devs_vm_pop_arg_role(ctx);
-    devs_jd_send_cmd(ctx, a, b);
-}
-#endif
-
 static void stmt1_return(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_fiber_t *f = ctx->curr_fiber;
     f->ret_val = devs_vm_pop_arg(ctx);
     devs_fiber_return_from_call(f, frame);
+}
+
+static void stmt0_debugger(devs_activation_t *frame, devs_ctx_t *ctx) {
+    // no-op for now
 }
 
 static void set_alloc(devs_activation_t *frame, devs_ctx_t *ctx, void *p, unsigned sz) {
@@ -112,26 +101,86 @@ static void stmt2_call_array(devs_activation_t *frame, devs_ctx_t *ctx) {
         }
     }
 }
-
-static void stmtx_jmp(devs_activation_t *frame, devs_ctx_t *ctx) {
+static bool get_pc(devs_activation_t *frame, devs_ctx_t *ctx) {
     int32_t off = ctx->literal_int;
     int pc = ctx->jmp_pc + off;
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
-        frame->pc = pc;
+        return pc;
     } else {
         devs_runtime_failure(ctx, 60116);
+        return 0;
     }
+}
+
+static void stmtx_jmp(devs_activation_t *frame, devs_ctx_t *ctx) {
+    int pc = get_pc(frame, ctx);
+    if (pc)
+        frame->pc = pc;
 }
 
 static void stmtx1_jmp_z(devs_activation_t *frame, devs_ctx_t *ctx) {
     int cond = devs_value_to_bool(ctx, devs_vm_pop_arg(ctx));
-    int32_t off = ctx->literal_int;
-    int pc = ctx->jmp_pc + off;
-    if ((int)frame->func->start <= pc && pc < frame->maxpc) {
-        if (!cond)
-            frame->pc = pc;
+    int pc = get_pc(frame, ctx);
+    if (pc && !cond)
+        frame->pc = pc;
+}
+
+static void stmtx_try(devs_activation_t *frame, devs_ctx_t *ctx) {
+    int pc = get_pc(frame, ctx);
+    devs_push_tryframe(frame, ctx, pc);
+}
+
+static void stmtx_end_try(devs_activation_t *frame, devs_ctx_t *ctx) {
+    int pc = get_pc(frame, ctx);
+    if (pc)
+        frame->pc = pc;
+    if (devs_pop_tryframe(frame, ctx) == 0)
+        devs_runtime_failure(ctx, 60193);
+}
+
+static void stmt0_catch(devs_activation_t *frame, devs_ctx_t *ctx) {
+    // no regular execution of catch()
+    devs_runtime_failure(ctx, 60194);
+}
+
+static void stmt0_finally(devs_activation_t *frame, devs_ctx_t *ctx) {
+    // regular execution of finally() clears the exception value
+    // and pops the top of the try stack, that has to match the location of the finally()
+    int pc = devs_pop_tryframe(frame, ctx);
+    if (pc == frame->pc - 1)
+        ctx->curr_fiber->ret_val = devs_undefined;
+    else
+        devs_runtime_failure(ctx, 60195);
+}
+
+static void stmt1_throw(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t exn = devs_vm_pop_arg(ctx);
+    if (devs_is_null(exn)) {
+        devs_throw_type_error(ctx, "throwing null");
     } else {
-        devs_runtime_failure(ctx, 60117);
+        devs_throw(ctx, exn, 0);
+    }
+}
+
+static void stmtx1_throw_jmp(devs_activation_t *frame, devs_ctx_t *ctx) {
+    unsigned lev = devs_vm_pop_arg_i32(ctx);
+    if (lev > DEVS_SPECIAL_THROW_JMP_LEVEL_MAX) {
+        devs_runtime_failure(ctx, 60198);
+        return;
+    }
+    int pc = get_pc(frame, ctx);
+    if (pc) {
+        value_t exn = devs_value_encode_throw_jmp_pc(pc, lev);
+        devs_throw(ctx, exn, DEVS_THROW_NO_STACK);
+    }
+}
+
+static void stmt1_re_throw(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t exn = devs_vm_pop_arg(ctx);
+    if (devs_is_null(exn)) {
+        // no-op
+    } else {
+        devs_throw(ctx, exn, DEVS_THROW_NO_STACK);
     }
 }
 
@@ -429,6 +478,7 @@ static const uint8_t typeof_map[] = {
     [DEVS_OBJECT_TYPE_FUNCTION] = DEVS_BUILTIN_STRING_FUNCTION,
     [DEVS_OBJECT_TYPE_STRING] = DEVS_BUILTIN_STRING_STRING,
     [DEVS_OBJECT_TYPE_PACKET] = DEVS_BUILTIN_STRING_OBJECT,
+    [DEVS_OBJECT_TYPE_EXOTIC] = DEVS_BUILTIN_STRING_OBJECT,
 };
 
 static value_t expr1_typeof_str(devs_activation_t *frame, devs_ctx_t *ctx) {

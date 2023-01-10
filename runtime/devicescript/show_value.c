@@ -39,6 +39,11 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
                 jd_sprintf(buf, sizeof(buf), "builtin:%d",
                            (int)hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST);
                 return buf;
+            } else if (devs_handle_is_throw_jmp(hv)) {
+                unsigned lev;
+                int pc = devs_handle_decode_throw_jmp_pc(hv, &lev);
+                jd_sprintf(buf, sizeof(buf), "throw:%d@%u", pc, lev);
+                return buf;
             }
             return "?special";
         }

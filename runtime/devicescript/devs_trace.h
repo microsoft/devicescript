@@ -17,12 +17,12 @@ typedef struct {
 
 #define DEVS_TRACE_EV_FIBER_RUN 0x46
 typedef struct {
-    uint16_t pc;
+    devs_pc_t pc;
 } devs_trace_ev_fiber_run_t;
 
 #define DEVS_TRACE_EV_FIBER_YIELD 0x47
 typedef struct {
-    uint16_t pc;
+    devs_pc_t pc;
 } devs_trace_ev_fiber_yield_t;
 
 

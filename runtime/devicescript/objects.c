@@ -1,8 +1,6 @@
 #include "devs_internal.h"
 #include "devs_objects.h"
 
-#define PACK_SHIFT 28
-
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map) {
     if (map->data) {
         devs_free(ctx, map->data);
@@ -225,7 +223,7 @@ bool devs_static_streq(devs_ctx_t *ctx, unsigned stridx, const char *other, unsi
     return memcmp(r, other, size) == 0;
 }
 
-#define MAX_OFF_BITS (PACK_SHIFT - DEVS_ROLE_BITS)
+#define MAX_OFF_BITS (DEVS_PACK_SHIFT - DEVS_ROLE_BITS)
 
 static value_t packet_spec(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
     const uint32_t *baseoff = (const void *)devs_img_get_service_spec(ctx->img, 0);
@@ -394,11 +392,11 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
         case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
         case DEVS_HANDLE_TYPE_IMG_BUFFERISH: {
             uint32_t hv = devs_handle_value(obj);
-            JD_ASSERT((((uint32_t)otp << PACK_SHIFT) >> PACK_SHIFT) == (uint32_t)otp);
-            JD_ASSERT((hv >> PACK_SHIFT) == 0);
+            JD_ASSERT((((uint32_t)otp << DEVS_PACK_SHIFT) >> DEVS_PACK_SHIFT) == (uint32_t)otp);
+            JD_ASSERT((hv >> DEVS_PACK_SHIFT) == 0);
             JD_ASSERT(devs_handle_high_value(obj) == 0);
             return devs_value_from_handle(DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC | (fidx << 4),
-                                          (otp << PACK_SHIFT) | hv);
+                                          (otp << DEVS_PACK_SHIFT) | hv);
         }
 
         case DEVS_HANDLE_TYPE_GC_OBJECT:
@@ -429,7 +427,8 @@ static int devs_get_fnidx_core(devs_ctx_t *ctx, value_t src, value_t *this_val,
         *this_val = devs_undefined;
         return hv;
     case DEVS_HANDLE_TYPE_BOUND_FUNCTION_STATIC:
-        *this_val = devs_value_from_handle(hv >> PACK_SHIFT, hv & ((1 << PACK_SHIFT) - 1));
+        *this_val =
+            devs_value_from_handle(hv >> DEVS_PACK_SHIFT, hv & ((1 << DEVS_PACK_SHIFT) - 1));
         return devs_handle_high_value(src);
     case DEVS_HANDLE_TYPE_BOUND_FUNCTION:
         *this_val = devs_value_from_handle(DEVS_HANDLE_TYPE_GC_OBJECT, hv);
@@ -525,6 +524,7 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
         [DEVS_OBJECT_TYPE_STRING] = DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE,
         [DEVS_OBJECT_TYPE_BUFFER] = DEVS_BUILTIN_OBJECT_BUFFER_PROTOTYPE,
         [DEVS_OBJECT_TYPE_BOOL] = DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE,
+        [DEVS_OBJECT_TYPE_EXOTIC] = DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE,
     };
 
     if (devs_is_null(v)) {
@@ -869,5 +869,17 @@ void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata) {
         f->resume_data = userdata;
     } else {
         cb(f->ctx, userdata);
+    }
+}
+
+bool devs_can_attach(devs_ctx_t *ctx, value_t v) {
+    switch (devs_value_typeof(ctx, v)) {
+    case DEVS_OBJECT_TYPE_MAP:
+    case DEVS_OBJECT_TYPE_ROLE:
+    case DEVS_OBJECT_TYPE_ARRAY:
+    case DEVS_OBJECT_TYPE_BUFFER:
+        return true;
+    default:
+        return false;
     }
 }

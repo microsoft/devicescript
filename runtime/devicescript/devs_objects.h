@@ -95,6 +95,7 @@ value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key);
 value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key);
 void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v);
 
+bool devs_can_attach(devs_ctx_t *ctx, value_t v);
 devs_map_t *devs_object_get_attached_rw(devs_ctx_t *ctx, value_t v);
 const devs_map_or_proto_t *devs_object_get_attached_ro(devs_ctx_t *ctx, value_t v);
 const devs_map_or_proto_t *devs_object_get_attached_enum(devs_ctx_t *ctx, value_t v);

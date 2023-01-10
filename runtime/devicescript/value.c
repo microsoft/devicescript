@@ -186,11 +186,6 @@ bool devs_buffer_is_writable(devs_ctx_t *ctx, value_t v) {
 void *devs_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
     JD_ASSERT(devs_is_buffer(ctx, v));
     switch (devs_handle_type(v)) {
-    case DEVS_HANDLE_TYPE_SPECIAL: {
-        if (sz)
-            *sz = ctx->packet.service_size;
-        return ctx->packet.data;
-    }
     case DEVS_HANDLE_TYPE_GC_OBJECT: {
         devs_buffer_t *buf = devs_handle_ptr_value(ctx, v);
         if (sz)
@@ -253,6 +248,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         default:
             if (devs_handle_is_builtin(hv))
                 return DEVS_OBJECT_TYPE_MAP;
+            else if (devs_handle_is_throw_jmp(hv))
+                return DEVS_OBJECT_TYPE_EXOTIC;
             else
                 JD_PANIC();
         }
@@ -339,4 +336,11 @@ bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b) {
     if (ta != tb)
         return false;
 #endif
+}
+
+value_t devs_value_encode_throw_jmp_pc(int pc, unsigned lev) {
+    JD_ASSERT(lev <= DEVS_SPECIAL_THROW_JMP_LEVEL_MAX);
+    JD_ASSERT(pc && pc <= DEVS_SPECIAL_THROW_JMP_PC_MAX);
+    uint32_t hv = (pc << DEVS_SPECIAL_THROW_JMP_LEVEL_SHIFT) | lev;
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_SPECIAL, DEVS_SPECIAL_THROW_JMP_OFF + hv);
 }

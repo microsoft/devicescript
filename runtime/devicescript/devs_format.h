@@ -6,6 +6,8 @@
 #define DEVS_VERSION_MINOR(n) (((n) >> 16) & 0xff)
 #define DEVS_VERSION_PATCH(n) ((n)&0xffff)
 
+typedef uint16_t devs_pc_t;
+
 typedef struct {
     uint32_t start;  // in bytes
     uint32_t length; // in bytes
@@ -42,7 +44,8 @@ typedef struct {
     uint8_t num_args;
     uint8_t flags;
     uint16_t name_idx;
-    uint16_t reserved;
+    uint8_t num_try_frames;
+    uint8_t reserved;
 } devs_function_desc_t;
 
 typedef struct {
@@ -69,6 +72,6 @@ typedef struct {
 
 typedef struct {
     uint16_t name_idx; // "x"
-    uint8_t numfmt; // DEVS_FIELDSPEC_FLAG_*
+    uint8_t numfmt;    // DEVS_FIELDSPEC_FLAG_*
     uint8_t flags;
 } devs_field_spec_t;

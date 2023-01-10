@@ -15,6 +15,14 @@ export enum Op {
     STMTx_JMP = 13, // JMP jmpoffset
     STMTx1_JMP_Z = 14, // JMP jmpoffset IF NOT x
     STMT1_PANIC = 15, // error_code
+    STMTx_TRY = 80, // TRY jmpoffset
+    STMTx_END_TRY = 81, // *jmpoffset
+    STMT0_CATCH = 82,
+    STMT0_FINALLY = 83,
+    STMT1_THROW = 84, // value
+    STMT1_RE_THROW = 85, // value
+    STMTx1_THROW_JMP = 86, // *jmpoffset, level
+    STMT0_DEBUGGER = 87,
     STMTx1_STORE_LOCAL = 17, // local_idx := value
     STMTx1_STORE_GLOBAL = 18, // global_idx := value
     STMT4_STORE_BUFFER = 19, // buffer, numfmt, offset, value
@@ -80,13 +88,13 @@ export enum Op {
     STMT1_TERMINATE_FIBER = 72, // fiber_handle
     EXPR0_NOW_MS = 77,
     EXPR1_GET_FIBER_HANDLE = 78, // func
-    OP_PAST_LAST = 80,
+    OP_PAST_LAST = 88,
 }
 
 export const OP_PROPS =
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x11\x30\x31\x11\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12"
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x11\x30\x31\x11\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x30\x10\x10\x11\x11\x31\x10"
 export const OP_TYPES =
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c"
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c"
 
 export enum BinFmt {
     IMG_VERSION = 0x04000000,
@@ -207,12 +215,13 @@ export enum ObjectType {
     FUNCTION = 8,
     STRING = 9,
     PACKET = 10,
+    EXOTIC = 11,
     ANY = 11,
     VOID = 12,
 }
 
 export enum BuiltInObject {
-    __MAX = 26,
+    __MAX = 32,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -240,10 +249,16 @@ export enum BuiltInObject {
     DSCOMMAND_PROTOTYPE = 24,
     DSEVENT_PROTOTYPE = 25,
     DSREPORT_PROTOTYPE = 26,
+    ERROR = 27,
+    ERROR_PROTOTYPE = 28,
+    TYPEERROR = 29,
+    TYPEERROR_PROTOTYPE = 30,
+    RANGEERROR = 31,
+    RANGEERROR_PROTOTYPE = 32,
 }
 
 export enum BuiltInString {
-    __MAX = 112,
+    __MAX = 119,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -357,6 +372,13 @@ export enum BuiltInString {
     ASSERT = 110,
     PUSHRANGE = 111,
     SENDCOMMAND = 112,
+    __STACK__ = 113,
+    ERROR = 114,
+    TYPEERROR = 115,
+    RANGEERROR = 116,
+    STACK = 117,
+    MESSAGE = 118,
+    CAUSE = 119,
 }
 
 export const OP_PRINT_FMTS = [
@@ -440,6 +462,14 @@ export const OP_PRINT_FMTS = [
     "now_ms()",
     "get_fiber_handle(func=%e)",
     "CALL %e(...%e)",
+    "TRY %j",
+    "END_TRY %j",
+    "CATCH ",
+    "FINALLY ",
+    "THROW %e",
+    "RE_THROW %e",
+    "THROW_JMP %j level=%e",
+    "DEBUGGER ",
 ]
 export const OBJECT_TYPE = [
     "null",
@@ -570,6 +600,13 @@ export const BUILTIN_STRING__VAL = [
     "assert",
     "pushRange",
     "sendCommand",
+    "__stack__",
+    "Error",
+    "TypeError",
+    "RangeError",
+    "stack",
+    "message",
+    "cause",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
@@ -599,4 +636,10 @@ export const BUILTIN_OBJECT__VAL = [
     "DsCommand_prototype",
     "DsEvent_prototype",
     "DsReport_prototype",
+    "Error",
+    "Error_prototype",
+    "TypeError",
+    "TypeError_prototype",
+    "RangeError",
+    "RangeError_prototype",
 ]

@@ -46,11 +46,31 @@ typedef union {
 #define DEVS_SPECIAL_INF 0x42
 #define DEVS_SPECIAL_MINF 0x43
 
+#define DEVS_PACK_SHIFT 28
+
+#define DEVS_SPECIAL_THROW_JMP_OFF 0x400
+#define DEVS_SPECIAL_THROW_JMP_LEVEL_SHIFT 4
+#define DEVS_SPECIAL_THROW_JMP_LEVEL_MAX ((1 << DEVS_SPECIAL_THROW_JMP_LEVEL_SHIFT) - 1)
+#define DEVS_SPECIAL_THROW_JMP_PC_MAX                                                              \
+    ((1 << (DEVS_PACK_SHIFT - DEVS_SPECIAL_THROW_JMP_LEVEL_SHIFT)) - 1)
+
 #define DEVS_SPECIAL_BUILTIN_OBJ_FIRST 0x60
 #define DEVS_SPECIAL_BUILTIN_OBJ_LAST (DEVS_SPECIAL_BUILTIN_OBJ_FIRST + DEVS_BUILTIN_OBJECT___MAX)
 
+value_t devs_value_encode_throw_jmp_pc(int pc, unsigned lev);
+
 static inline bool devs_handle_is_builtin(uint32_t hv) {
     return DEVS_SPECIAL_BUILTIN_OBJ_FIRST <= hv && hv <= DEVS_SPECIAL_BUILTIN_OBJ_LAST;
+}
+
+static inline bool devs_handle_is_throw_jmp(uint32_t hv) {
+    return hv >= DEVS_SPECIAL_THROW_JMP_OFF;
+}
+
+static inline int devs_handle_decode_throw_jmp_pc(uint32_t hv, unsigned *lev) {
+    hv -= DEVS_SPECIAL_THROW_JMP_OFF;
+    *lev = hv & DEVS_SPECIAL_THROW_JMP_LEVEL_MAX;
+    return hv >= DEVS_SPECIAL_THROW_JMP_OFF;
 }
 
 static inline bool devs_is_tagged_int(value_t t) {

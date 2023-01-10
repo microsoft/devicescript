@@ -54,8 +54,10 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     }
 
     const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
-    devs_activation_t *callee = devs_any_try_alloc(
-        ctx, DEVS_GC_TAG_ACTIVATION, sizeof(devs_activation_t) + sizeof(value_t) * func->num_slots);
+    devs_activation_t *callee =
+        devs_any_try_alloc(ctx, DEVS_GC_TAG_ACTIVATION,
+                           sizeof(devs_activation_t) + sizeof(value_t) * func->num_slots +
+                               sizeof(devs_pc_t) * func->num_try_frames);
 
     if (callee == NULL)
         return -2;

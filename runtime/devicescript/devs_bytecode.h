@@ -1,20 +1,28 @@
 // Auto-generated from bytecode.md; do not edit.
 #pragma once
 
-#define DEVS_STMT1_CALL0 2           // CALL func()
-#define DEVS_STMT2_CALL1 3           // CALL func(v0)
-#define DEVS_STMT3_CALL2 4           // CALL func(v0, v1)
-#define DEVS_STMT4_CALL3 5           // CALL func(v0, v1, v2)
-#define DEVS_STMT5_CALL4 6           // CALL func(v0, v1, v2, v3)
-#define DEVS_STMT6_CALL5 7           // CALL func(v0, v1, v2, v3, v4)
-#define DEVS_STMT7_CALL6 8           // CALL func(v0, v1, v2, v3, v4, v5)
-#define DEVS_STMT8_CALL7 9           // CALL func(v0, v1, v2, v3, v4, v5, v6)
-#define DEVS_STMT9_CALL8 10          // CALL func(v0, v1, v2, v3, v4, v5, v6, v7)
-#define DEVS_STMT2_CALL_ARRAY 79     // CALL func(...args)
-#define DEVS_STMT1_RETURN 12         // value
-#define DEVS_STMTx_JMP 13            // JMP jmpoffset
-#define DEVS_STMTx1_JMP_Z 14         // JMP jmpoffset IF NOT x
-#define DEVS_STMT1_PANIC 15          // error_code
+#define DEVS_STMT1_CALL0 2       // CALL func()
+#define DEVS_STMT2_CALL1 3       // CALL func(v0)
+#define DEVS_STMT3_CALL2 4       // CALL func(v0, v1)
+#define DEVS_STMT4_CALL3 5       // CALL func(v0, v1, v2)
+#define DEVS_STMT5_CALL4 6       // CALL func(v0, v1, v2, v3)
+#define DEVS_STMT6_CALL5 7       // CALL func(v0, v1, v2, v3, v4)
+#define DEVS_STMT7_CALL6 8       // CALL func(v0, v1, v2, v3, v4, v5)
+#define DEVS_STMT8_CALL7 9       // CALL func(v0, v1, v2, v3, v4, v5, v6)
+#define DEVS_STMT9_CALL8 10      // CALL func(v0, v1, v2, v3, v4, v5, v6, v7)
+#define DEVS_STMT2_CALL_ARRAY 79 // CALL func(...args)
+#define DEVS_STMT1_RETURN 12     // value
+#define DEVS_STMTx_JMP 13        // JMP jmpoffset
+#define DEVS_STMTx1_JMP_Z 14     // JMP jmpoffset IF NOT x
+#define DEVS_STMT1_PANIC 15      // error_code
+#define DEVS_STMTx_TRY 80        // TRY jmpoffset
+#define DEVS_STMTx_END_TRY 81    // *jmpoffset
+#define DEVS_STMT0_CATCH 82
+#define DEVS_STMT0_FINALLY 83
+#define DEVS_STMT1_THROW 84      // value
+#define DEVS_STMT1_RE_THROW 85   // value
+#define DEVS_STMTx1_THROW_JMP 86 // *jmpoffset, level
+#define DEVS_STMT0_DEBUGGER 87
 #define DEVS_STMTx1_STORE_LOCAL 17   // local_idx := value
 #define DEVS_STMTx1_STORE_GLOBAL 18  // global_idx := value
 #define DEVS_STMT4_STORE_BUFFER 19   // buffer, numfmt, offset, value
@@ -80,18 +88,18 @@
 #define DEVS_STMT1_TERMINATE_FIBER 72      // fiber_handle
 #define DEVS_EXPR0_NOW_MS 77
 #define DEVS_EXPR1_GET_FIBER_HANDLE 78 // func
-#define DEVS_OP_PAST_LAST 80
+#define DEVS_OP_PAST_LAST 88
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x11\x30\x31\x11\x60\x31\x31\x14\x40\x20\x20" \
     "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12"
+    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x30\x10\x10\x11\x11\x31\x10"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b" \
     "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c"
+    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c"
 
 #define DEVS_IMG_VERSION 0x04000000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
@@ -189,10 +197,11 @@
 #define DEVS_OBJECT_TYPE_FUNCTION 8
 #define DEVS_OBJECT_TYPE_STRING 9
 #define DEVS_OBJECT_TYPE_PACKET 10
+#define DEVS_OBJECT_TYPE_EXOTIC 11
 #define DEVS_OBJECT_TYPE_ANY 11
 #define DEVS_OBJECT_TYPE_VOID 12
 
-#define DEVS_BUILTIN_OBJECT___MAX 26
+#define DEVS_BUILTIN_OBJECT___MAX 32
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
@@ -220,8 +229,14 @@
 #define DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE 24
 #define DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE 25
 #define DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE 26
+#define DEVS_BUILTIN_OBJECT_ERROR 27
+#define DEVS_BUILTIN_OBJECT_ERROR_PROTOTYPE 28
+#define DEVS_BUILTIN_OBJECT_TYPEERROR 29
+#define DEVS_BUILTIN_OBJECT_TYPEERROR_PROTOTYPE 30
+#define DEVS_BUILTIN_OBJECT_RANGEERROR 31
+#define DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE 32
 
-#define DEVS_BUILTIN_STRING___MAX 112
+#define DEVS_BUILTIN_STRING___MAX 119
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -335,6 +350,13 @@
 #define DEVS_BUILTIN_STRING_ASSERT 110
 #define DEVS_BUILTIN_STRING_PUSHRANGE 111
 #define DEVS_BUILTIN_STRING_SENDCOMMAND 112
+#define DEVS_BUILTIN_STRING___STACK__ 113
+#define DEVS_BUILTIN_STRING_ERROR 114
+#define DEVS_BUILTIN_STRING_TYPEERROR 115
+#define DEVS_BUILTIN_STRING_RANGEERROR 116
+#define DEVS_BUILTIN_STRING_STACK 117
+#define DEVS_BUILTIN_STRING_MESSAGE 118
+#define DEVS_BUILTIN_STRING_CAUSE 119
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -352,7 +374,9 @@
         expr2_bit_or, expr2_bit_xor, expr2_shift_left, expr2_shift_right,                          \
         expr2_shift_right_unsigned, expr2_eq, expr2_le, expr2_lt, expr2_ne, stmt1_terminate_fiber, \
         stmtx2_store_closure, exprx1_load_closure, exprx_make_closure, expr1_typeof_str,           \
-        expr0_now_ms, expr1_get_fiber_handle, stmt2_call_array, expr_invalid
+        expr0_now_ms, expr1_get_fiber_handle, stmt2_call_array, stmtx_try, stmtx_end_try,          \
+        stmt0_catch, stmt0_finally, stmt1_throw, stmt1_re_throw, stmtx1_throw_jmp, stmt0_debugger, \
+        expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \
@@ -368,11 +392,13 @@
         "deviceIdentifier", "shortId", "serviceIndex", "serviceCommand", "payload", "decode",      \
         "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
         "regCode", "flags", "isReport", "isCommand", "isArray", "inline", "assert", "pushRange",   \
-        "sendCommand"
+        "sendCommand", "__stack__", "Error", "TypeError", "RangeError", "stack", "message",        \
+        "cause"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \
         "DsFiber_prototype", "DsRole", "DsRole_prototype", "Function", "Function_prototype",       \
         "Boolean", "Boolean_prototype", "Packet", "Packet_prototype", "DeviceScript",              \
         "DsPacketInfo_prototype", "DsRegister_prototype", "DsCommand_prototype",                   \
-        "DsEvent_prototype", "DsReport_prototype"
+        "DsEvent_prototype", "DsReport_prototype", "Error", "Error_prototype", "TypeError",        \
+        "TypeError_prototype", "RangeError", "RangeError_prototype"
