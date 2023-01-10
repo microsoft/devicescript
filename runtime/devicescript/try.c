@@ -1,5 +1,8 @@
 #include "devs_internal.h"
 
+// #define LOG_TAG "exn"
+#include "devs_logging.h"
+
 static inline devs_pc_t *get_tryframes(devs_activation_t *frame) {
     JD_ASSERT(frame->func->num_try_frames > 0);
     return (devs_pc_t *)frame->slots + frame->func->num_slots;
@@ -20,11 +23,11 @@ void devs_push_tryframe(devs_activation_t *frame, devs_ctx_t *ctx, int pc) {
 }
 
 int devs_pop_tryframe(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned numtry = frame->func->num_try_frames;
+    int numtry = frame->func->num_try_frames;
     if (!numtry)
         return 0;
     devs_pc_t *tf = get_tryframes(frame);
-    for (unsigned i = numtry - 1; i > 0; --i) {
+    for (int i = numtry - 1; i >= 0; --i) {
         if (tf[i] != 0) {
             int pc = tf[i];
             tf[i] = 0;
@@ -110,6 +113,8 @@ void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn) {
 }
 
 void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
+    LOG_VAL("throw", exn);
+
     devs_value_pin(ctx, exn);
 
     if (devs_can_attach(ctx, exn) && !(flags & DEVS_THROW_NO_STACK)) {
@@ -135,12 +140,14 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
         }
 
         int pc = devs_pop_tryframe(frame, ctx);
+        LOG("pc=%d", pc);
         if (pc == 0) {
             if (jump_pc != 0) {
                 devs_runtime_failure(ctx, 60199);
                 break;
             }
             int hadcaller = frame->caller != NULL;
+            LOG("up hadcaller=%d", hadcaller);
             devs_fiber_return_from_call(ctx->curr_fiber, frame);
             if (!hadcaller) {
                 devs_unhandled_exn(ctx, exn);

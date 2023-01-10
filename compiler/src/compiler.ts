@@ -967,6 +967,7 @@ class Program implements TopOpWriter {
             wr.emitEndTry(after)
         }
 
+        wr.emitLabel(catchLbl)
         wr.emitStmt(Op.STMT0_CATCH)
         const decl = stmt.catchClause.variableDeclaration
         if (decl) {

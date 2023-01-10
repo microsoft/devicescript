@@ -8,8 +8,8 @@ static void meth1_error_ctor(devs_ctx_t *ctx, unsigned blt, unsigned str) {
         m->proto = devs_object_get_built_in(ctx, blt);
     value_t msg = devs_arg(ctx, 0);
     if (devs_is_null(msg))
-        msg = devs_builtin_string(DEVS_BUILTIN_STRING_ERROR);
-    devs_map_set_string_field(ctx, m, str, msg);
+        msg = devs_builtin_string(str);
+    devs_map_set_string_field(ctx, m, DEVS_BUILTIN_STRING_MESSAGE, msg);
     devs_ret_gc_ptr(ctx, m);
 }
 
