@@ -830,6 +830,27 @@ class Program implements TopOpWriter {
         this.finishBindingAssignment(bindingElt, val)
     }
 
+    private isLoop(node: ts.Node) {
+        switch (node.kind) {
+            case SK.WhileStatement:
+            case SK.DoStatement:
+            case SK.ForStatement:
+            case SK.ForOfStatement:
+            case SK.ForInStatement:
+                return true
+            default:
+                return false
+        }
+    }
+
+    private isInLoop(node: ts.Node) {
+        while (node) {
+            if (this.isLoop(node)) return true
+            node = node.parent
+        }
+        return false
+    }
+
     private emitVariableDeclarationList(decls: ts.VariableDeclarationList) {
         for (const decl of decls.declarations) {
             if (this.skipInit(decl)) continue
@@ -840,9 +861,12 @@ class Program implements TopOpWriter {
                 this.assignVariableCells(decl, this.proc)
             }
 
-            if (!decl.initializer) continue
+            let init: Value = null
 
-            const init = this.emitExpr(decl.initializer)
+            if (decl.initializer) init = this.emitExpr(decl.initializer)
+            else if (this.isInLoop(decl)) init = literal(null)
+
+            if (!init) continue
 
             if (ts.isIdentifier(decl.name)) {
                 this.assignToId(decl.name, init)
@@ -2588,6 +2612,8 @@ class Program implements TopOpWriter {
         switch (expr.kind) {
             case SK.AsExpression:
                 return this.emitExpr((expr as ts.AsExpression).expression)
+            case SK.TypeAssertionExpression:
+                return this.emitExpr((expr as ts.TypeAssertion).expression)
             case SK.CallExpression:
                 return this.emitCallExpression(expr as ts.CallExpression)
             case SK.FalseKeyword:
@@ -2741,6 +2767,7 @@ class Program implements TopOpWriter {
                     return this.emitFunctionDeclaration(
                         stmt as ts.FunctionDeclaration
                     )
+                case SK.TypeAliasDeclaration:
                 case SK.ExportDeclaration:
                 case SK.InterfaceDeclaration:
                 case SK.ModuleDeclaration:

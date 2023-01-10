@@ -216,3 +216,13 @@ Array.prototype.pop = function () {
     this.insert(length, -1)
     return r
 }
+
+Array.prototype.indexOf = function (elt, from) {
+    const length = this.length
+    if (from == undefined) from = 0
+    while (from < length) {
+        if (this[from] === elt) return from
+        from++
+    }
+    return -1
+}

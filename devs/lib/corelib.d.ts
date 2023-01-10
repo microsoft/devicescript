@@ -58,7 +58,12 @@ interface ObjectConstructor {
 
 declare var Object: ObjectConstructor
 
-interface Function {}
+interface Function {
+    /**
+     * Start function in background passing given arguments.
+     */
+    start(flag: number, ...args: any[]): void
+}
 interface CallableFunction extends Function {}
 interface NewableFunction extends Function {}
 
@@ -128,6 +133,13 @@ interface Array<T> {
      * If the array is empty, undefined is returned and the array is not modified.
      */
     pop(): T | undefined
+
+    /**
+     * Returns the index of the first occurrence of a value in an array, or -1 if it is not present.
+     * @param searchElement The value to locate in the array.
+     * @param fromIndex The array index at which to begin the search. If fromIndex is omitted, the search starts at index 0.
+     */
+    indexOf(searchElement: T, fromIndex?: number): number
 
     /**
      * Returns a copy of a section of an array.

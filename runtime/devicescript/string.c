@@ -196,11 +196,18 @@ void devs_map_set_string_field(devs_ctx_t *ctx, devs_map_t *m, unsigned builtin_
 }
 
 value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
+    bool dup = (a.u64 == b.u64);
+
     devs_value_pin(ctx, a);
-    devs_value_pin(ctx, b);
+    if (!dup)
+        devs_value_pin(ctx, b);
 
     a = devs_value_to_string_and_pin(ctx, a);
-    b = devs_value_to_string_and_pin(ctx, b);
+
+    if (dup)
+        b = a;
+    else
+        b = devs_value_to_string_and_pin(ctx, b);
 
     const char *ap, *bp;
     unsigned alen, blen;
@@ -230,7 +237,8 @@ value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
     }
 
     devs_value_unpin(ctx, a);
-    devs_value_unpin(ctx, b);
+    if (!dup)
+        devs_value_unpin(ctx, b);
 
     return r;
 }
