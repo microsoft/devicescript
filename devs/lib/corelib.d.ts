@@ -111,7 +111,6 @@ interface Array<T> {
      */
     push(...items: T[]): number
 
-
     /**
      * Appends new elements to the end of an array, and returns the new length of the array.
      * @param items New elements to add to the array.
@@ -248,3 +247,37 @@ interface Math {
 declare var Math: Math
 
 interface TemplateStringsArray {}
+
+interface Error {
+    name: string
+    message: string
+    stack?: string
+}
+
+interface ErrorConstructor {
+    new (message?: string): Error
+    (message?: string): Error
+    readonly prototype: Error
+}
+
+declare var Error: ErrorConstructor
+
+interface RangeError extends Error {}
+
+interface RangeErrorConstructor extends ErrorConstructor {
+    new (message?: string): RangeError
+    (message?: string): RangeError
+    readonly prototype: RangeError
+}
+
+declare var RangeError: RangeErrorConstructor
+
+interface TypeError extends Error {}
+
+interface TypeErrorConstructor extends ErrorConstructor {
+    new (message?: string): TypeError
+    (message?: string): TypeError
+    readonly prototype: TypeError
+}
+
+declare var TypeError: TypeErrorConstructor

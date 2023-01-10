@@ -13,7 +13,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1075
+// next error 1077
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -124,6 +124,10 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
         prevProc += sptr->length;
         CHECK(1051, prevProc < 0x10000);
         CHECK(1052, devs_img_stridx_ok(_img, fptr->name_idx));
+        if (fptr->flags & DEVS_FUNCTIONFLAG_IS_CTOR)
+            CHECK(1075, fptr->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS);
+        if (fptr->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS)
+            CHECK(1076, fptr->num_args >= 1);
     }
 
     uint8_t *str_data = FIRST_DESC(string_data);

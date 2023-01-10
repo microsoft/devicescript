@@ -335,6 +335,32 @@ static value_t expr1_get_fiber_handle(devs_activation_t *frame, devs_ctx_t *ctx)
     return devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, fiber->handle_tag);
 }
 
+static value_t expr1_new(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t func = devs_vm_pop_arg(ctx);
+    value_t th;
+    devs_activation_t *clo;
+
+    int fidx = devs_get_fnidx(ctx, func, &th, &clo);
+    if (fidx < 0)
+        return devs_throw_type_error(ctx, "new unsupported on this expression");
+
+    int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
+    if (bltin >= 0) {
+        JD_ASSERT(bltin < devs_num_builtin_functions);
+        const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
+        if (!(h->flags & DEVS_BUILTIN_FLAG_IS_CTOR))
+            return devs_throw_type_error(ctx, "builtin function is not a ctor");
+    } else {
+        JD_ASSERT(fidx < (int)devs_img_num_functions(ctx->img));
+        const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
+        if (!(func->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
+            return devs_throw_type_error(ctx, "function is not a ctor");
+    }
+
+    return func;
+    // return devs_function_bind(ctx, devs_new, func);
+}
+
 static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned fidx = ctx->literal_int;
 

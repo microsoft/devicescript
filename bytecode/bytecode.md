@@ -119,6 +119,8 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun object_field(*builtin_idx): any = 16      // Object.builtin_idx
 
+    fun new(func): function = 88                   // new func
+
 ### Objects
 
     alloc_map() = 31
@@ -311,6 +313,7 @@ Start new fiber. If it's already running, replace it.
 ## Enum: FunctionFlag
 
     needs_this = 0x01
+    is_ctor = 0x02
 
 ## Enum: NumFmt
 
@@ -563,3 +566,4 @@ Only `true` and `false` values.
     stack = 117
     message = 118
     cause = 119
+    __new__ = 120

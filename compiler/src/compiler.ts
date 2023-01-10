@@ -468,6 +468,13 @@ interface ProtoDefinition {
     emitted?: boolean
 }
 
+interface CallLike {
+    position: ts.Node
+    compiledCallExpr?: Value
+    callexpr: Expr
+    arguments: Expr[]
+}
+
 export interface CompileFlags {
     library?: boolean
     allFunctions?: boolean
@@ -1516,19 +1523,18 @@ class Program implements TopOpWriter {
         return proc
     }
 
-    private requireArgsExt(node: ts.Node, args: Expr[], num: number) {
-        if (args.length != num)
-            throwError(node, `${num} arguments required; got ${args.length}`)
-    }
-
     private requireArgs(
-        expr: ts.CallExpression | ts.NewExpression,
+        expr: ts.CallExpression | ts.NewExpression | CallLike,
         num: number
     ) {
-        this.requireArgsExt(expr, expr.arguments.slice(), num)
+        if (expr.arguments.length != num)
+            throwError(
+                (expr as any).position || expr,
+                `${num} arguments required; got ${expr.arguments.length}`
+            )
     }
 
-    private requireTopLevel(expr: ts.CallExpression) {
+    private requireTopLevel(expr: ts.Node) {
         if (!this.isTopLevel(expr))
             throwError(
                 expr,
@@ -1593,9 +1599,8 @@ class Program implements TopOpWriter {
         return r | (shift << 4)
     }
 
-    private emitGenericCall(expr: ts.CallExpression, fn: Value) {
+    private emitGenericCall(args: Expr[], fn: Value) {
         const wr = this.writer
-        const args = expr.arguments.slice()
         if (args.some(ts.isSpreadElement)) {
             wr.emitStmt(Op.STMT1_ALLOC_ARRAY, literal(0))
             const arr = wr.cacheValue(this.retVal())
@@ -1612,7 +1617,7 @@ class Program implements TopOpWriter {
             }
             wr.emitStmt(Op.STMT2_CALL_ARRAY, fn, arr.finalEmit())
         } else {
-            wr.emitCall(fn, ...this.emitArgs(expr.arguments.slice()))
+            wr.emitCall(fn, ...this.emitArgs(args))
         }
         return this.retVal()
     }
@@ -1691,14 +1696,14 @@ class Program implements TopOpWriter {
         return tmp.numValue
     }
 
-    private isStringLike(expr: ts.Expression) {
+    private isStringLike(expr: Expr) {
         return !!(
             this.checker.getTypeAtLocation(expr).getFlags() &
             ts.TypeFlags.StringLike
         )
     }
 
-    private flattenPlus(arg: ts.Expression): Expr[] {
+    private flattenPlus(arg: Expr): Expr[] {
         if (!this.isStringLike(arg)) return [arg]
 
         if (
@@ -1721,7 +1726,7 @@ class Program implements TopOpWriter {
         }
     }
 
-    private compileFormat(args: ts.Expression[]) {
+    private compileFormat(args: Expr[]) {
         let fmt = ""
         const fmtArgs: Expr[] = []
         const strval = (n: number) => {
@@ -1806,9 +1811,9 @@ class Program implements TopOpWriter {
         return r
     }
 
-    private emitBuiltInCall(expr: ts.CallExpression, funName: string): Value {
+    private emitBuiltInCall(expr: CallLike, funName: string): Value {
         const wr = this.writer
-        const obj = (expr.expression as ts.PropertyAccessExpression).expression
+        const obj = (expr.callexpr as ts.PropertyAccessExpression).expression
         switch (funName) {
             case "isNaN": {
                 this.requireArgs(expr, 1)
@@ -1818,13 +1823,16 @@ class Program implements TopOpWriter {
                 )
             }
             case "ds.every": {
-                this.requireTopLevel(expr)
+                this.requireTopLevel(expr.position)
                 this.requireArgs(expr, 2)
                 const time = Math.round(
                     this.forceNumberLiteral(expr.arguments[0]) * 1000
                 )
                 if (time < 20)
-                    throwError(expr, "minimum every() period is 0.02s (20ms)")
+                    throwError(
+                        expr.position,
+                        "minimum every() period is 0.02s (20ms)"
+                    )
                 const proc = this.emitHandler("every", expr.arguments[1], {
                     every: time,
                 })
@@ -1832,7 +1840,7 @@ class Program implements TopOpWriter {
                 return unit()
             }
             case "ds.onStart": {
-                this.requireTopLevel(expr)
+                this.requireTopLevel(expr.position)
                 this.requireArgs(expr, 1)
                 const proc = this.emitHandler("onStart", expr.arguments[0])
                 this.onStart.emit(wr => proc.callMe(wr, []))
@@ -1841,7 +1849,7 @@ class Program implements TopOpWriter {
             case "console.log":
                 wr.emitCall(
                     wr.dsMember(BuiltInString.LOG),
-                    this.compileFormat(expr.arguments.slice())
+                    this.compileFormat(expr.arguments)
                 )
                 return unit()
             case "Date.now":
@@ -1879,7 +1887,15 @@ class Program implements TopOpWriter {
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
-        const callName = this.nodeName(expr.expression)
+        return this.emitCallLike({
+            position: expr,
+            callexpr: expr.expression,
+            arguments: expr.arguments.slice(),
+        })
+    }
+
+    private emitCallLike(call: CallLike): Value {
+        const callName = this.nodeName(call.callexpr)
         const builtInName =
             callName && callName.startsWith("#") ? callName.slice(1) : null
 
@@ -1889,23 +1905,23 @@ class Program implements TopOpWriter {
         }
 
         if (builtInName) {
-            const builtIn = this.emitBuiltInCall(expr, builtInName)
+            const builtIn = this.emitBuiltInCall(call, builtInName)
             if (builtIn) return builtIn
         }
 
         if (
             callName == "#Array.push" &&
-            expr.arguments.some(ts.isSpreadElement)
+            call.arguments.some(ts.isSpreadElement)
         ) {
             const lim = BinFmt.MAX_STACK_DEPTH - 1
             throwError(
-                expr,
+                call.position,
                 `...args has a length limit of ${lim} elements; better use Array.pushRange()`
             )
         }
 
-        const fn = this.emitExpr(expr.expression)
-        return this.emitGenericCall(expr, fn)
+        const fn = call.compiledCallExpr ?? this.emitExpr(call.callexpr)
+        return this.emitGenericCall(call.arguments, fn)
     }
 
     private getSymAtLocation(node: ts.Node) {
@@ -2438,6 +2454,20 @@ class Program implements TopOpWriter {
         return this.retVal()
     }
 
+    private emitNewExpression(expr: ts.NewExpression): Value {
+        const wr = this.writer
+        const desc: CallLike = {
+            position: expr,
+            callexpr: expr.expression,
+            arguments: expr.arguments ? expr.arguments.slice() : [],
+        }
+        desc.compiledCallExpr = wr.emitExpr(
+            Op.EXPR1_NEW,
+            this.emitExpr(desc.callexpr)
+        )
+        return this.emitCallLike(desc)
+    }
+
     private emitPostfixUnaryExpression(expr: ts.PostfixUnaryExpression): Value {
         const wr = this.writer
         const t = this.emitAssignmentTarget(expr.operand)
@@ -2621,6 +2651,8 @@ class Program implements TopOpWriter {
                 return this.emitFunctionExpr(expr as ts.FunctionExpression)
             case SK.DeleteExpression:
                 return this.emitDeleteExpression(expr as ts.DeleteExpression)
+            case SK.NewExpression:
+                return this.emitNewExpression(expr as ts.NewExpression)
             case SK.TypeOfExpression:
                 return this.writer.emitExpr(
                     Op.EXPR1_TYPEOF_STR,

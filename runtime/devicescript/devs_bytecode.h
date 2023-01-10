@@ -40,6 +40,7 @@
 #define DEVS_EXPRx_MATH_FIELD 29     // Math.builtin_idx
 #define DEVS_EXPRx_DS_FIELD 30       // ds.builtin_idx
 #define DEVS_EXPRx_OBJECT_FIELD 16   // Object.builtin_idx
+#define DEVS_EXPR1_NEW 88            // new func
 #define DEVS_STMT0_ALLOC_MAP 31
 #define DEVS_STMT1_ALLOC_ARRAY 32           // initial_size
 #define DEVS_STMT1_ALLOC_BUFFER 33          // size
@@ -88,20 +89,20 @@
 #define DEVS_STMT1_TERMINATE_FIBER 72      // fiber_handle
 #define DEVS_EXPR0_NOW_MS 77
 #define DEVS_EXPR1_GET_FIBER_HANDLE 78 // func
-#define DEVS_OP_PAST_LAST 88
+#define DEVS_OP_PAST_LAST 89
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x11\x30\x31\x11\x60\x31\x31\x14\x40\x20\x20" \
     "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x30\x10\x10\x11\x11\x31\x10"
+    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x30\x10\x10\x11\x11\x31\x10\x41"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b" \
     "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01" \
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c"
+    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08"
 
-#define DEVS_IMG_VERSION 0x04000000
+#define DEVS_IMG_VERSION 0x04010000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 9
@@ -140,8 +141,9 @@
 #define DEVS_BYTECODEFLAG_TAKES_NUMBER 0x20
 #define DEVS_BYTECODEFLAG_IS_STATELESS 0x40 // fun modifier
 
-#define DEVS_FUNCTIONFLAG___MAX 1
+#define DEVS_FUNCTIONFLAG___MAX 2
 #define DEVS_FUNCTIONFLAG_NEEDS_THIS 0x01
+#define DEVS_FUNCTIONFLAG_IS_CTOR 0x02
 
 #define DEVS_NUMFMT___MAX 12
 #define DEVS_NUMFMT_U8 0b0000
@@ -236,7 +238,7 @@
 #define DEVS_BUILTIN_OBJECT_RANGEERROR 31
 #define DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE 32
 
-#define DEVS_BUILTIN_STRING___MAX 119
+#define DEVS_BUILTIN_STRING___MAX 120
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -357,6 +359,7 @@
 #define DEVS_BUILTIN_STRING_STACK 117
 #define DEVS_BUILTIN_STRING_MESSAGE 118
 #define DEVS_BUILTIN_STRING_CAUSE 119
+#define DEVS_BUILTIN_STRING___NEW__ 120
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -376,7 +379,7 @@
         stmtx2_store_closure, exprx1_load_closure, exprx_make_closure, expr1_typeof_str,           \
         expr0_now_ms, expr1_get_fiber_handle, stmt2_call_array, stmtx_try, stmtx_end_try,          \
         stmt0_catch, stmt0_finally, stmt1_throw, stmt1_re_throw, stmtx1_throw_jmp, stmt0_debugger, \
-        expr_invalid
+        expr1_new, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \
@@ -393,7 +396,7 @@
         "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
         "regCode", "flags", "isReport", "isCommand", "isArray", "inline", "assert", "pushRange",   \
         "sendCommand", "__stack__", "Error", "TypeError", "RangeError", "stack", "message",        \
-        "cause"
+        "cause", "__new__"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

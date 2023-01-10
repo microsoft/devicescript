@@ -15,6 +15,7 @@ let r = `// auto-generated!
 #define PROP DEVS_BUILTIN_FLAG_IS_PROPERTY
 #define ASYNC DEVS_BUILTIN_FLAG_ASYNC_CALL
 #define NO_SELF DEVS_BUILTIN_FLAG_NO_SELF
+#define CTOR DEVS_BUILTIN_FLAG_IS_CTOR
 
 #define N(n) (DEVS_BUILTIN_STRING_ ## n)
 
@@ -78,7 +79,7 @@ for (const fn of scriptArgs) {
             continue
 
         const m2 = /^([a-zA-Z0-9]+)_(\w+)$/.exec(suffName)
-        const [_x, className, methodName] = m2
+        let [_x, className, methodName] = m2
         let objId = className
 
         r += `${full};\n`
@@ -117,6 +118,9 @@ for (const fn of scriptArgs) {
         }
         if (funProp == 'fun') {
             flags.push("NO_SELF")
+        } else if (methodName == "__ctor__") {
+            methodName = "__func__"
+            flags.push("CTOR")
         } else {
             objId += "_prototype"
         }

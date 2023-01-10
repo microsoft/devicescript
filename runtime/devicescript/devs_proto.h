@@ -23,6 +23,7 @@ typedef struct {
 #define DEVS_BUILTIN_FLAG_IS_PROPERTY 0x01
 #define DEVS_BUILTIN_FLAG_ASYNC_CALL 0x02
 #define DEVS_BUILTIN_FLAG_NO_SELF 0x04
+#define DEVS_BUILTIN_FLAG_IS_CTOR 0x08
 
 extern uint16_t devs_num_builtin_functions;
 extern const devs_builtin_function_t devs_builtin_functions[];

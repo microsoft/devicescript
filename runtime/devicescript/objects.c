@@ -863,6 +863,15 @@ void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v) {
     devs_ret(ctx, devs_value_from_gc_obj(ctx, v));
 }
 
+devs_map_t *devs_arg_self_map(devs_ctx_t *ctx) {
+    value_t s = devs_arg_self(ctx);
+    void *p = devs_value_to_gc_obj(ctx, s);
+    if (devs_is_map(p))
+        return p;
+    devs_throw_type_error(ctx, "object expected");
+    return NULL;
+}
+
 void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata) {
     if (devs_did_yield(f->ctx)) {
         f->resume_cb = cb;

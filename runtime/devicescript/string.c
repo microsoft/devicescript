@@ -188,6 +188,13 @@ static value_t devs_value_to_string_and_pin(devs_ctx_t *ctx, value_t a) {
     }
 }
 
+void devs_map_set_string_field(devs_ctx_t *ctx, devs_map_t *m, unsigned builtin_str, value_t msg) {
+    devs_value_pin(ctx, msg);
+    msg = devs_value_to_string_and_pin(ctx, msg);
+    devs_map_set(ctx, m, devs_builtin_string(builtin_str), msg);
+    devs_value_unpin(ctx, msg);
+}
+
 value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
     devs_value_pin(ctx, a);
     devs_value_pin(ctx, b);

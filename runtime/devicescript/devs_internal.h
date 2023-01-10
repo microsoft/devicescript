@@ -232,6 +232,7 @@ static inline value_t devs_arg(devs_ctx_t *ctx, unsigned idx) {
 static inline value_t devs_arg_self(devs_ctx_t *ctx) {
     return ctx->the_stack[0];
 }
+devs_map_t *devs_arg_self_map(devs_ctx_t *ctx);
 
 void devs_ret_double(devs_ctx_t *ctx, double v);
 void devs_ret_int(devs_ctx_t *ctx, int v);
@@ -263,7 +264,7 @@ void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn);
 #define DEVS_THROW_NO_STACK 0x0001
 #define DEVS_THROW_INTERNAL 0x0002
 void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags);
-void devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...);
+value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...);
 
 const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack);

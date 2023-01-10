@@ -173,7 +173,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
     devs_value_unpin(ctx, exn);
 }
 
-void devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...) {
+value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...) {
     devs_map_t *exn = devs_map_try_alloc(ctx);
     if (exn) {
         value_t eval = devs_value_from_gc_obj(ctx, exn);
@@ -184,12 +184,11 @@ void devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...) {
         va_start(arg, format);
         value_t msg = devs_string_vsprintf(ctx, format, arg);
         va_end(arg);
-        devs_value_pin(ctx, msg);
 
-        devs_map_set(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING_MESSAGE), msg);
-        devs_value_unpin(ctx, msg);
+        devs_map_set_string_field(ctx, exn, DEVS_BUILTIN_STRING_MESSAGE, msg);
+
         devs_value_unpin(ctx, eval);
-
         devs_throw(ctx, eval, DEVS_THROW_INTERNAL);
     }
+    return devs_undefined;
 }

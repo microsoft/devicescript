@@ -49,6 +49,14 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         }
         JD_ASSERT(!(h->flags & DEVS_BUILTIN_FLAG_IS_PROPERTY));
         fiber->ret_val = devs_undefined;
+        if (h->flags & DEVS_BUILTIN_FLAG_IS_CTOR) {
+            if (devs_is_map(devs_value_to_gc_obj(ctx, *argp))) {
+                // devs_log_value(ctx, "no attach", *argp);
+            } else {
+                devs_map_t *m = devs_map_try_alloc(ctx);
+                *argp = devs_value_from_gc_obj(ctx, m);
+            }
+        }
         h->handler.meth(ctx);
         return 0;
     }
@@ -87,6 +95,12 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         fiber->activation = callee;
     }
 
+    if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_null(callee->slots[0])) {
+        devs_map_t *m = devs_map_try_alloc(ctx);
+        // TODO set prototype (to something)
+        callee->slots[0] = devs_value_from_gc_obj(ctx, m);
+    }
+
     return 0;
 }
 
@@ -123,6 +137,8 @@ void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
     devs_ctx_t *ctx = fiber->ctx;
     act->maxpc = 0; // protect against re-activation
     if (act->caller) {
+        if (devs_is_null(fiber->ret_val) && (act->func->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
+            fiber->ret_val = act->slots[0];
         devs_fiber_activate(fiber, act->caller);
     } else {
         if (fiber->pending) {
