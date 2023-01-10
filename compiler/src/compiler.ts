@@ -1040,8 +1040,19 @@ class Program implements TopOpWriter {
     }
 
     private emitBlock(stmt: ts.Block) {
-        for (const s of stmt.statements) this.assignCellsToStmt(s)
-        for (const s of stmt.statements) this.emitStmt(s)
+        let hadFun = false
+        let stmts = stmt.statements.slice()
+        for (const s of stmts) {
+            this.assignCellsToStmt(s)
+            if (ts.isFunctionDeclaration(s)) hadFun = true
+        }
+        if (hadFun) {
+            stmts = stmts
+                .filter<ts.Statement>(ts.isFunctionDeclaration)
+                .concat(stmts.filter(s => !ts.isFunctionDeclaration(s)))
+        }
+
+        for (const s of stmts) this.emitStmt(s)
     }
 
     private emitBreakContStatement(stmt: ts.BreakOrContinueStatement) {
