@@ -45,7 +45,6 @@ typedef union {
 #define DEVS_SPECIAL_TRUE 0x40
 #define DEVS_SPECIAL_INF 0x42
 #define DEVS_SPECIAL_MINF 0x43
-#define DEVS_SPECIAL_NEW_EXPR 0x44
 
 #define DEVS_PACK_SHIFT 28
 
@@ -159,7 +158,6 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v);
 extern const value_t devs_zero;
 extern const value_t devs_one;
 extern const value_t devs_nan;
-extern const value_t devs_new;
 extern const value_t devs_inf;
 extern const value_t devs_minf;
 extern const value_t devs_int_min;

@@ -116,8 +116,6 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
             return devs_builtin_string(DEVS_BUILTIN_STRING_INFINITY);
         case DEVS_SPECIAL_MINF:
             return devs_builtin_string(DEVS_BUILTIN_STRING_MINFINITY);
-        case DEVS_SPECIAL_NEW_EXPR:
-            return devs_builtin_string(DEVS_BUILTIN_STRING___NEW__);
         default: {
             if (devs_handle_is_builtin(hv))
                 return devs_string_sprintf(ctx, "[Static Obj: %d]",
