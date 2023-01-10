@@ -184,6 +184,13 @@ Array.prototype.map = function (f) {
     return res
 }
 
+Array.prototype.forEach = function (f) {
+    const length = this.length
+    for (let i = 0; i < length; ++i) {
+        f(this[i], i, this)
+    }
+}
+
 Array.prototype.filter = function (f) {
     const res: any[] = []
     const length = this.length
@@ -225,4 +232,12 @@ Array.prototype.indexOf = function (elt, from) {
         from++
     }
     return -1
+}
+
+Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
+    const len = this.length
+    for (let i = 0; i < len; ++i) {
+        initialValue = callbackfn(initialValue, this[i], i)
+    }
+    return initialValue
 }

@@ -24,8 +24,7 @@ function runInBackground(f: Action) {
 }
 
 function testRefLocals(): void {
-    /*
-    // We currently error on this
+    /* TODO
     msg("start test ref locals")
     let s = ""
     for (let i of [3, 2, 1]) {

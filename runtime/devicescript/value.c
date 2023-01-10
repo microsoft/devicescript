@@ -163,9 +163,14 @@ bool devs_value_to_bool(devs_ctx_t *ctx, value_t v) {
         return !!v.val_int32;
     if (devs_is_special(v))
         return devs_handle_value(v) >= DEVS_SPECIAL_TRUE;
+    if (devs_is_string(ctx, v)) {
+        unsigned sz;
+        devs_string_get_utf8(ctx, v, &sz);
+        return sz > 0;
+    }
     if (devs_is_handle(v))
         return 1;
-    return v._f == 0.0 ? 1 : 0;
+    return v._f == 0.0 ? true : false;
 }
 
 bool devs_is_buffer(devs_ctx_t *ctx, value_t v) {
