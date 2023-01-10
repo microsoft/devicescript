@@ -2,6 +2,17 @@
 
 void devs_log_value(devs_ctx_t *ctx, const char *lbl, value_t v) {
     DMESG("%s: %s", lbl, devs_show_value(ctx, v));
+    devs_map_t *map = devs_value_to_gc_obj(ctx, v);
+    if (devs_is_map(map)) {
+        for (unsigned i = 0; i < map->length; i++) {
+            if (i > 10) {
+                DMESG("  ...");
+                break;
+            }
+            DMESG("  %s =>", devs_show_value(ctx, map->data[i * 2]));
+            DMESG("    %s", devs_show_value(ctx, map->data[i * 2 + 1]));
+        }
+    }
 }
 
 static char buf[64];
