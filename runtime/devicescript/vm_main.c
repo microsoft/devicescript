@@ -44,6 +44,8 @@ void devs_dump_stackframe(devs_ctx_t *ctx, devs_activation_t *fn) {
 static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
     uint8_t op = devs_vm_fetch_byte(frame, ctx);
 
+    ctx->in_throw = 0;
+
     if (op >= DEVS_DIRECT_CONST_OP) {
         int v = op - DEVS_DIRECT_CONST_OP - DEVS_DIRECT_CONST_OFFSET;
         devs_vm_push(ctx, devs_value_from_int(v));

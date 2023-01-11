@@ -32,8 +32,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     devs_activation_t *closure;
     int fidx = devs_get_fnidx(ctx, fn, argp, &closure);
     if (fidx < 0) {
-        devs_log_value(ctx, "non-function called", fn);
-        devs_runtime_failure(ctx, 60157);
+        devs_throw_type_error(ctx, "%s called", devs_show_value(ctx, fn));
         return -1;
     }
 
@@ -207,12 +206,10 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op) {
     devs_activation_t *closure;
     value_t this_val;
     int fidx = devs_get_fnidx(ctx, devs_arg_self(ctx), &this_val, &closure);
-    if (fidx < 0) {
-        devs_runtime_failure(ctx, 60160);
+    if (fidx < 0)
         return NULL;
-    }
     if (fidx >= DEVS_FIRST_BUILTIN_FUNCTION) {
-        devs_runtime_failure(ctx, 60161);
+        devs_throw_type_error(ctx, "fiber started with a builtin function");
         return NULL;
     }
 

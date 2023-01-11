@@ -108,12 +108,25 @@ value_t devs_capture_stack(devs_ctx_t *ctx) {
 
 void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn) {
     DMESG("Unhandled exception");
+    ctx->in_throw = 0;
     devs_dump_exception(ctx, exn);
     devs_panic(ctx, DEVS_PANIC_UNHANDLED_EXCEPTION); // TODO should we continue instead?
 }
 
 void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
     LOG_VAL("throw", exn);
+
+    if (ctx->in_throw) {
+        devs_log_value(ctx, "double throw", exn);
+        return;
+    }
+
+    if (ctx->curr_fn == NULL) {
+        devs_unhandled_exn(ctx, exn);
+        return;
+    }
+
+    ctx->in_throw = 1;
 
     devs_value_pin(ctx, exn);
 
@@ -214,4 +227,20 @@ value_t devs_throw_range_error(devs_ctx_t *ctx, const char *format, ...) {
         devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE, format, arg);
     va_end(arg);
     return exn;
+}
+
+value_t devs_throw_not_supported_error(devs_ctx_t *ctx, const char *what) {
+    return devs_throw_type_error(ctx, "%s not supported (yet)", what);
+}
+
+value_t devs_throw_expecting_error(devs_ctx_t *ctx, unsigned builtinstr, value_t v) {
+    return devs_throw_expecting_error_ext(ctx, devs_builtin_string_by_idx(builtinstr), v);
+}
+
+value_t devs_throw_expecting_error_ext(devs_ctx_t *ctx, const char *what, value_t v) {
+    return devs_throw_type_error(ctx, "expecting %s; got %s", what, devs_show_value(ctx, v));
+}
+
+value_t devs_throw_too_big_error(devs_ctx_t *ctx, unsigned builtinstr) {
+    return devs_throw_range_error(ctx, "%s too big", devs_builtin_string_by_idx(builtinstr));
 }

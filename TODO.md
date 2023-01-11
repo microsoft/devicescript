@@ -16,7 +16,6 @@
 ## Big ticket
 * classes
 * buffer overflows when printing a lot
-* update devs_runtime_failure() to devs_throw*()
 
 ## General usability
 

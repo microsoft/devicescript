@@ -100,11 +100,14 @@ struct devs_ctx {
     value_t binop[2];
     double binop_f[2];
 
+    value_t diag_field;
+
     devs_pc_t jmp_pc;
 
     uint8_t stack_top;
     uint8_t stack_top_for_gc;
     uint8_t _num_builtin_protos;
+    uint8_t in_throw;
 
     uint32_t literal_int;
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
@@ -266,6 +269,10 @@ void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn);
 void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags);
 value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...);
 value_t devs_throw_range_error(devs_ctx_t *ctx, const char *format, ...);
+value_t devs_throw_not_supported_error(devs_ctx_t *ctx, const char *what);
+value_t devs_throw_expecting_error_ext(devs_ctx_t *ctx, const char *what, value_t v);
+value_t devs_throw_expecting_error(devs_ctx_t *ctx, unsigned builtinstr, value_t v);
+value_t devs_throw_too_big_error(devs_ctx_t *ctx, unsigned builtinstr);
 
 const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack);

@@ -9,8 +9,6 @@ uint32_t devs_vm_pop_arg_u32(devs_ctx_t *ctx);
 int32_t devs_vm_pop_arg_i32(devs_ctx_t *ctx);
 double devs_vm_pop_arg_f64(devs_ctx_t *ctx);
 value_t devs_vm_pop_arg_buffer(devs_ctx_t *ctx, int flags);
-unsigned devs_vm_pop_arg_stridx(devs_ctx_t *ctx);
-unsigned devs_vm_pop_arg_role(devs_ctx_t *ctx);
 
 extern const void *devs_vm_op_handlers[];
 

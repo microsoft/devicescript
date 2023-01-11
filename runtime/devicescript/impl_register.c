@@ -7,16 +7,17 @@ DEVS_DERIVE(DsEvent_prototype, DsPacketInfo_prototype)
 static const devs_packet_spec_t *getrolepkt(devs_ctx_t *ctx, unsigned *role, value_t self) {
     const devs_packet_spec_t *pkt = devs_decode_role_packet(ctx, self, role);
     if (pkt == NULL) {
-        devs_runtime_failure(ctx, 60173);
+        devs_throw_expecting_error_ext(ctx, "role member", self);
         return NULL;
     }
     return pkt;
 }
 
 static const devs_packet_spec_t *devs_arg_self_reg(devs_ctx_t *ctx, unsigned *role) {
-    const devs_packet_spec_t *pkt = getrolepkt(ctx, role, devs_arg_self(ctx));
-    if (*role == DEVS_ROLE_INVALID) {
-        devs_runtime_failure(ctx, 60174);
+    value_t self = devs_arg_self(ctx);
+    const devs_packet_spec_t *pkt = getrolepkt(ctx, role, self);
+    if (pkt && *role == DEVS_ROLE_INVALID) {
+        devs_throw_expecting_error_ext(ctx, "instantiated role member", self);
         return NULL;
     }
     return pkt;
@@ -124,11 +125,13 @@ void devs_packet_encode(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
             }
         }
     } else {
-        if (argc > 1)
-            devs_runtime_failure(ctx, 60181);
         if (argc >= 1) {
-            int off = devs_buffer_encode(ctx, pkt->numfmt_or_offset, dp, ep - dp, argv[0]);
-            dp += off;
+            if (argc > 1) {
+                devs_throw_range_error(ctx, "only one value expected; got %d", argc);
+            } else {
+                int off = devs_buffer_encode(ctx, pkt->numfmt_or_offset, dp, ep - dp, argv[0]);
+                dp += off;
+            }
         }
     }
 

@@ -2,7 +2,7 @@
 
 static const void *buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
     if (!devs_is_buffer(ctx, v)) {
-        devs_runtime_failure(ctx, 60158);
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_BUFFER, v);
         return NULL;
     }
     return devs_buffer_data(ctx, v, sz);
@@ -10,7 +10,7 @@ static const void *buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
 
 static void *wr_buffer_data(devs_ctx_t *ctx, value_t v, unsigned *sz) {
     if (!devs_buffer_is_writable(ctx, v)) {
-        devs_runtime_failure(ctx, 60159);
+        devs_throw_expecting_error_ext(ctx, "mutable Buffer", v);
         return NULL;
     }
     return devs_buffer_data(ctx, v, sz);

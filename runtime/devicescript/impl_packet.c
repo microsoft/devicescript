@@ -1,13 +1,10 @@
 #include "devs_internal.h"
 
 static devs_packet_t *getpkt(devs_ctx_t *ctx, value_t self) {
-    if (devs_handle_type(self) != DEVS_HANDLE_TYPE_GC_OBJECT) {
-        devs_runtime_failure(ctx, 60182);
-        return NULL;
-    }
-    devs_packet_t *pkt = devs_handle_ptr_value(ctx, self);
-    if (devs_gc_tag(pkt) != DEVS_GC_TAG_PACKET) {
-        devs_runtime_failure(ctx, 60183);
+    devs_packet_t *pkt;
+    if (devs_handle_type(self) != DEVS_HANDLE_TYPE_GC_OBJECT ||
+        devs_gc_tag((pkt = devs_handle_ptr_value(ctx, self))) != DEVS_GC_TAG_PACKET) {
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_PACKET, self);
         return NULL;
     }
     return pkt;

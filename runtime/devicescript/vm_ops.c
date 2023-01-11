@@ -48,6 +48,7 @@ static void stmt2_index_delete(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t idx = devs_vm_pop_arg(ctx);
     value_t obj = devs_vm_pop_arg(ctx);
     ctx->curr_fiber->ret_val = devs_false;
+    ctx->diag_field = idx;
     devs_map_t *map = devs_object_get_attached_rw(ctx, obj);
     if (!map)
         return;
@@ -97,13 +98,13 @@ static void stmt2_call_array(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t args = devs_vm_pop_arg(ctx);
     value_t fn = devs_vm_pop_arg(ctx);
     if (!devs_is_array(ctx, args))
-        devs_runtime_failure(ctx, 60186);
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_ARRAY, args);
     else {
         devs_array_t *arr = devs_value_to_gc_obj(ctx, args);
         unsigned N = arr->length;
-        if (N > DEVS_MAX_STACK_DEPTH - 1)
-            devs_runtime_failure(ctx, 60187);
-        else {
+        if (N > DEVS_MAX_STACK_DEPTH - 1) {
+            devs_throw_not_supported_error(ctx, "large parameters array");
+        } else {
             ctx->stack_top_for_gc = N + 1;
             ctx->the_stack[0] = fn;
             memcpy(ctx->the_stack + 1, arr->data, N * sizeof(value_t));
@@ -254,7 +255,7 @@ static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (devs_is_nullish(h))
         return;
     if (devs_handle_type(h) != DEVS_HANDLE_TYPE_FIBER)
-        devs_runtime_failure(ctx, 60123);
+        devs_throw_expecting_error_ext(ctx, "fiber", h);
     else {
         devs_fiber_t *fib = devs_fiber_by_tag(ctx, devs_handle_value(h));
         if (fib == NULL)

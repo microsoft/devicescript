@@ -77,10 +77,8 @@ void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, de
             p++;
         unsigned len = p - proto->entries;
 
-        if (devs_array_insert(ctx, arr, dp, len)) {
-            devs_runtime_failure(ctx, 60170);
+        if (devs_array_insert(ctx, arr, dp, len) != 0)
             return;
-        }
 
         p = proto->entries;
         while (p->builtin_string_id) {
@@ -93,10 +91,8 @@ void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, de
         devs_map_t *srcmap = (devs_map_t *)src;
         unsigned len2 = srcmap->length * 2;
         value_t *data = srcmap->data;
-        if (devs_array_insert(ctx, arr, dp, srcmap->length)) {
-            devs_runtime_failure(ctx, 60170);
+        if (devs_array_insert(ctx, arr, dp, srcmap->length) != 0)
             return;
-        }
         for (unsigned i = 0; i < len2; i += 2) {
             arr->data[dp++] = keys ? data[i] : data[i + 1];
         }
@@ -117,8 +113,10 @@ void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v) {
         return;
     }
 
-    if (!devs_is_string(ctx, key))
-        devs_runtime_failure(ctx, 60149);
+    if (!devs_is_string(ctx, key)) {
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_STRING, key);
+        return;
+    }
 
     JD_ASSERT(map->capacity >= map->length);
 
@@ -469,6 +467,23 @@ int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activat
 #define ATTACH_ENUM 0x02
 #define ATTACH_DIRECT 0x04
 
+static void throw_field_error_str(devs_ctx_t *ctx, unsigned attach_flags, const char *objdesc) {
+    const char *op = attach_flags & ATTACH_RW ? "setting" : "getting";
+    char *objd = jd_strdup(objdesc);
+
+    if (devs_is_null(ctx->diag_field))
+        devs_throw_type_error(ctx, "%s fields of %s", op, objd);
+    else
+        devs_throw_type_error(ctx, "%s field '%s' of %s", op, devs_show_value(ctx, ctx->diag_field),
+                              objd);
+
+    jd_free(objd);
+}
+
+static void throw_field_error(devs_ctx_t *ctx, unsigned attach_flags, value_t v) {
+    throw_field_error_str(ctx, attach_flags, devs_show_value(ctx, v));
+}
+
 static const devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp,
                                                         unsigned attach_flags) {
     if ((attach_flags & (ATTACH_DIRECT | ATTACH_ENUM)) == ATTACH_ENUM)
@@ -480,7 +495,7 @@ static const devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp,
     if (attach_flags & ATTACH_RW) {
         if (attach_flags & ATTACH_DIRECT) {
             if (devs_is_builtin_proto(r)) {
-                devs_runtime_failure(ctx, 60169);
+                throw_field_error_str(ctx, attach_flags, "a builtin frozen object");
                 return NULL;
             } else {
                 JD_ASSERT(devs_is_map(r));
@@ -489,7 +504,7 @@ static const devs_map_or_proto_t *devs_get_static_proto(devs_ctx_t *ctx, int tp,
         } else {
             // note that in ES writing to string/... properties is no-op
             // we make it an error
-            devs_runtime_failure(ctx, 60128);
+            throw_field_error_str(ctx, attach_flags, "a primitive");
             return NULL;
         }
     } else {
@@ -528,7 +543,7 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
     };
 
     if (devs_is_null(v)) {
-        devs_runtime_failure(ctx, 60165);
+        throw_field_error(ctx, attach_flags, v);
         return NULL;
     }
 
@@ -642,15 +657,20 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
 devs_map_t *devs_object_get_attached_rw(devs_ctx_t *ctx, value_t v) {
     const void *r = devs_object_get_attached(ctx, v, ATTACH_RW);
     JD_ASSERT(r == NULL || devs_is_map(r));
+    ctx->diag_field = devs_undefined;
     return (void *)r;
 }
 
 const devs_map_or_proto_t *devs_object_get_attached_ro(devs_ctx_t *ctx, value_t v) {
-    return devs_object_get_attached(ctx, v, 0);
+    const devs_map_or_proto_t *r = devs_object_get_attached(ctx, v, 0);
+    ctx->diag_field = devs_undefined;
+    return r;
 }
 
 const devs_map_or_proto_t *devs_object_get_attached_enum(devs_ctx_t *ctx, value_t v) {
-    return devs_object_get_attached(ctx, v, ATTACH_ENUM);
+    const devs_map_or_proto_t *r = devs_object_get_attached(ctx, v, ATTACH_ENUM);
+    ctx->diag_field = devs_undefined;
+    return r;
 }
 
 value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *proto, value_t key) {
@@ -688,11 +708,7 @@ value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *prot
 }
 
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
-    if (devs_is_null(obj)) {
-        devs_log_value(ctx, "getting null", key);
-        devs_runtime_failure(ctx, 60185);
-    }
-
+    ctx->diag_field = key;
     value_t tmp = devs_object_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
     return devs_function_bind(ctx, obj, tmp);
 }
@@ -738,15 +754,11 @@ value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key) {
 }
 
 void devs_any_set(devs_ctx_t *ctx, value_t obj, value_t key, value_t v) {
-    if (devs_is_null(obj)) {
-        devs_log_value(ctx, "setting null", key);
-        devs_runtime_failure(ctx, 60184);
-    }
-
     if (devs_is_number(key) && devs_looks_indexable(ctx, obj)) {
         unsigned idx = devs_value_to_int(ctx, key);
         devs_seq_set(ctx, obj, idx, v);
     } else {
+        ctx->diag_field = key;
         devs_map_t *map = devs_object_get_attached_rw(ctx, obj);
         if (!map)
             return;
@@ -778,10 +790,10 @@ static int array_ensure_len(devs_ctx_t *ctx, devs_array_t *arr, unsigned newlen)
 
 void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v) {
     if (idx > DEVS_MAX_ALLOC / sizeof(value_t))
-        devs_runtime_failure(ctx, 60153);
-    else if (array_ensure_len(ctx, arr, idx + 1) != 0)
-        devs_runtime_failure(ctx, 60154); // this will be hidden by previous PANIC OOM
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_ARRAY);
     else {
+        if (array_ensure_len(ctx, arr, idx + 1) != 0)
+            return;
         arr->data[idx] = v;
         if (idx >= arr->length)
             arr->length = idx + 1;
@@ -791,28 +803,30 @@ void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v)
 void devs_seq_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
     // DMESG("set arr=%s idx=%u", devs_show_value(ctx, seq), idx);
     if (idx > DEVS_MAX_ALLOC) {
-        devs_runtime_failure(ctx, 60150);
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_ARRAY);
     } else if (devs_buffer_is_writable(ctx, seq)) {
         unsigned len;
         uint8_t *p = devs_buffer_data(ctx, seq, &len);
         if (idx < len) {
             p[idx] = devs_value_to_int(ctx, v) & 0xff;
         } else {
-            devs_runtime_failure(ctx, 60151);
+            devs_throw_range_error(ctx, "buffer write at %u, len=%u", idx, len);
         }
     } else {
         devs_array_t *arr = devs_value_to_gc_obj(ctx, seq);
         if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {
             devs_array_set(ctx, arr, idx, v);
         } else {
-            devs_runtime_failure(ctx, 60152);
+            devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_ARRAY, v);
         }
     }
 }
 
 int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int count) {
-    if (count > (int)(DEVS_MAX_ALLOC / sizeof(value_t)))
+    if (count > (int)(DEVS_MAX_ALLOC / sizeof(value_t))) {
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_ARRAY);
         return -4;
+    }
 
     int newlen = arr->length + count;
     if (newlen < 0) {
@@ -823,8 +837,10 @@ int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int coun
     if (count == 0)
         return 0;
 
-    if (newlen > (int)(DEVS_MAX_ALLOC / sizeof(value_t)))
+    if (newlen > (int)(DEVS_MAX_ALLOC / sizeof(value_t))) {
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_ARRAY);
         return -6;
+    }
 
     if (idx > arr->length)
         idx = arr->length;

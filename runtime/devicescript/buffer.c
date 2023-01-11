@@ -3,13 +3,17 @@
 #include <limits.h>
 #include <math.h>
 
+static value_t invalid_numfmt(devs_ctx_t *ctx) {
+    return devs_throw_range_error(ctx, "buffer numfmt invalid");
+}
+
 value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t buffer,
                        value_t *setv) {
 
     unsigned sz = jd_numfmt_bytes(fmt0);
 
     if (!jd_numfmt_is_valid(fmt0))
-        return devs_runtime_failure(ctx, 60100);
+        return invalid_numfmt(ctx);
 
     unsigned bufsz;
     uint8_t *data = (void *)devs_bufferish_data(ctx, buffer, &bufsz);
@@ -19,7 +23,7 @@ value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t 
     if (offset + sz > bufsz) {
         // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
         if (setv)
-            return devs_runtime_failure(ctx, 60103);
+            return devs_throw_range_error(ctx, "buffer store out of range");
         else
             return devs_undefined;
     }
@@ -66,7 +70,7 @@ value_t devs_buffer_decode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t **buf, unsign
     switch (sp) {
     case -1: {
         if (!jd_numfmt_is_valid(fmt0))
-            return devs_runtime_failure(ctx, 60175);
+            return invalid_numfmt(ctx);
 
         unsigned sz = jd_numfmt_bytes(fmt0);
         if (sz > len)
@@ -117,10 +121,10 @@ value_t devs_buffer_decode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t **buf, unsign
 
     case DEVS_NUMFMT_SPECIAL_PIPE:
     case DEVS_NUMFMT_SPECIAL_PIPE_PORT:
-        return devs_runtime_failure(ctx, 60177); // TODO
+        return devs_throw_not_supported_error(ctx, "pipes in specs");
 
     default:
-        return devs_runtime_failure(ctx, 60176);
+        return devs_throw_not_supported_error(ctx, "this numfmt");
     }
 }
 
@@ -131,7 +135,7 @@ unsigned devs_buffer_encode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t *data, unsig
     switch (sp) {
     case -1: {
         if (!jd_numfmt_is_valid(fmt0)) {
-            devs_runtime_failure(ctx, 60178);
+            invalid_numfmt(ctx);
             return 0;
         }
 
@@ -178,11 +182,11 @@ unsigned devs_buffer_encode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t *data, unsig
 
     case DEVS_NUMFMT_SPECIAL_PIPE:
     case DEVS_NUMFMT_SPECIAL_PIPE_PORT:
-        devs_runtime_failure(ctx, 60179); // TODO
+        devs_throw_not_supported_error(ctx, "pipes in specs");
         return 0;
 
     default:
-        devs_runtime_failure(ctx, 60180);
+        devs_throw_not_supported_error(ctx, "this numfmt");
         return 0;
     }
 }

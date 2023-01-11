@@ -49,7 +49,6 @@ value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap) {
     // in its len
     devs_string_t *s = devs_string_try_alloc(ctx, len - 1);
     if (s == NULL) {
-        devs_runtime_failure(ctx, 60144);
         // re-run vsprintf with non-NULL dst so it executes %-s (free)
         char tmp;
         jd_vsprintf(&tmp, 1, format, ap2);
@@ -72,7 +71,6 @@ value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len
     // TODO validate utf8??
     devs_string_t *s = devs_string_try_alloc_init(ctx, utf8, len);
     if (s == NULL) {
-        devs_runtime_failure(ctx, 60145);
         return devs_undefined;
     } else {
         return devs_value_from_gc_obj(ctx, s);
@@ -227,7 +225,6 @@ value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
     } else {
         devs_string_t *s = devs_string_try_alloc(ctx, alen + blen);
         if (s == NULL) {
-            devs_runtime_failure(ctx, 60142);
             r = devs_undefined;
         } else {
             memcpy(s->data, ap, alen);

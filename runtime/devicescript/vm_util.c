@@ -35,31 +35,13 @@ value_t devs_vm_pop_arg_buffer(devs_ctx_t *ctx, int flags) {
         if ((flags & DEVS_BUFFER_STRING_OK) && devs_is_string(ctx, tmp)) {
             // OK
         } else {
-            devs_runtime_failure(ctx, 60125);
+            devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_BUFFER, tmp);
             return devs_null;
         }
     }
     if ((flags & DEVS_BUFFER_RW) && !devs_buffer_is_writable(ctx, tmp)) {
-        devs_runtime_failure(ctx, 60148);
+        devs_throw_expecting_error_ext(ctx, "mutable Buffer", tmp);
         return devs_null;
     }
     return tmp;
-}
-
-unsigned devs_vm_pop_arg_stridx(devs_ctx_t *ctx) {
-    value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) != DEVS_HANDLE_TYPE_IMG_BUFFERISH) {
-        devs_runtime_failure(ctx, 60127);
-        return 0;
-    }
-    return devs_handle_value(tmp);
-}
-
-unsigned devs_vm_pop_arg_role(devs_ctx_t *ctx) {
-    value_t tmp = pop_arg(ctx);
-    if (devs_handle_type(tmp) != DEVS_HANDLE_TYPE_ROLE) {
-        devs_runtime_failure(ctx, 60126);
-        return 0;
-    }
-    return devs_handle_value(tmp);
 }
