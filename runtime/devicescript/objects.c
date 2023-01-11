@@ -40,7 +40,11 @@ static value_t *lookup(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
 }
 
 static value_t proto_value(devs_ctx_t *ctx, const devs_builtin_proto_entry_t *p) {
-    return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, p->builtin_function_idx);
+    unsigned idx = p->builtin_idx;
+    if (idx <= DEVS_BUILTIN_OBJECT___MAX)
+        return devs_builtin_object_value(ctx, idx);
+    JD_ASSERT(idx >= DEVS_FIRST_BUILTIN_FUNCTION);
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, idx);
 }
 
 void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_proto_t *src) {
@@ -920,4 +924,16 @@ bool devs_can_attach(devs_ctx_t *ctx, value_t v) {
     default:
         return false;
     }
+}
+
+value_t devs_builtin_object_value(devs_ctx_t *ctx, unsigned idx) {
+    if (idx > DEVS_BUILTIN_OBJECT___MAX)
+        return devs_undefined;
+
+    const devs_map_or_proto_t *p = devs_object_get_built_in(ctx, idx);
+    if (devs_is_builtin_proto(p))
+        return devs_value_from_handle(DEVS_HANDLE_TYPE_SPECIAL,
+                                      DEVS_SPECIAL_BUILTIN_OBJ_FIRST + idx);
+    else
+        return devs_value_from_gc_obj(ctx, (void *)p);
 }

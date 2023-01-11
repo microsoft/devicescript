@@ -2,8 +2,8 @@
 #include <stdint.h>
 
 typedef struct {
-    uint16_t builtin_string_id;    // DEVS_BUILTIN_STRING_xxx
-    uint16_t builtin_function_idx; // 0xfXXX
+    uint16_t builtin_string_id; // DEVS_BUILTIN_STRING_xxx
+    uint16_t builtin_idx;       // 0 ... DEVS_BUILTIN_OBJECT___MAX, DEVS_FIRST_BUILTIN_FUNCTION ...
 } devs_builtin_proto_entry_t;
 
 typedef void (*devs_method_cb_t)(devs_ctx_t *ctx);

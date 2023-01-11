@@ -22,6 +22,15 @@ let r = `// auto-generated!
 `
 
 const bytecodedef = fs.readFileSync(scriptArgs.shift(), "utf-8")
+const builtinObjects = {}
+
+bytecodedef.replace(/^#define (DEVS_BUILTIN_OBJECT_\w+)/mg, (_, key) => {
+    builtinObjects[key] = true
+    return ""
+})
+delete builtinObjects["DEVS_BUILTIN_OBJECT___MAX"]
+delete builtinObjects["DEVS_BUILTIN_OBJECT__VAL"]
+
 
 const deriveMap = {}
 
@@ -170,6 +179,26 @@ if (numerr)
 
 r += "\n"
 byObj["empty"] = []
+
+function objKey(k) {
+    return `DEVS_BUILTIN_OBJECT_${k.toUpperCase()}`
+}
+
+for (const k of Object.keys(byObj)) {
+    builtinObjects[objKey(k)] = 2
+    if (builtinObjects[objKey(k) + "_PROTOTYPE"]) {
+        byObj[k].push(`{ N(PROTOTYPE), ${objKey(k)}_PROTOTYPE }`)
+    }
+}
+
+for (const key of Object.keys(builtinObjects)) {
+    if (builtinObjects[key] == 1 && builtinObjects[key + "_PROTOTYPE"]) {
+        const k = key.replace(/DEVS_BUILTIN_OBJECT_/, "").toLowerCase()
+        byObj[k] = [`{ N(PROTOTYPE), ${key}_PROTOTYPE }`]
+        builtinObjects[key] = 2
+    }
+}
+
 for (const k of Object.keys(byObj)) {
     r += `static const devs_builtin_proto_entry_t ${k}_entries[] = { //\n`
     r += byObj[k].map(s => s + ", //\n").join("")
@@ -178,24 +207,17 @@ for (const k of Object.keys(byObj)) {
 delete byObj["empty"]
 
 r += `const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {\n`
-const filledKeys = {}
 for (const k of Object.keys(byObj)) {
     const base = deriveMap[k] ? `&devs_builtin_protos[DEVS_BUILTIN_OBJECT_${deriveMap[k].toUpperCase()}]` : `NULL`
     delete deriveMap[k]
-    const key = `DEVS_BUILTIN_OBJECT_${k.toUpperCase()}`
-    filledKeys[key] = 1
-    r += `[${key}] = { DEVS_BUILTIN_PROTO_INIT, ${base}, ${k}_entries },\n`
+    r += `[${objKey(k)}] = { DEVS_BUILTIN_PROTO_INIT, ${base}, ${k}_entries },\n`
 }
 
-filledKeys["DEVS_BUILTIN_OBJECT___MAX"] = 1
-filledKeys["DEVS_BUILTIN_OBJECT__VAL"] = 1
-
-bytecodedef.replace(/^#define (DEVS_BUILTIN_OBJECT_\w+)/mg, (_, key) => {
-    if (filledKeys[key])
-        return ""
-    r += `[${key}] = { DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries },\n`
-    return ""
-})
+for (const key of Object.keys(builtinObjects)) {
+    if (builtinObjects[key] == 1) {
+        r += `[${key}] = { DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries },\n`
+    }
+}
 
 r += "};\n\n"
 

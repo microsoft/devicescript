@@ -110,6 +110,8 @@ value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value
 const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t service_class);
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx);
 
+value_t devs_builtin_object_value(devs_ctx_t *ctx, unsigned idx);
+
 // GC
 
 typedef struct _devs_gc_t devs_gc_t;

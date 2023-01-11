@@ -478,17 +478,7 @@ static value_t exprx_ds_field(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static value_t exprx_builtin_object(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t idx = ctx->literal_int;
-
-    if (idx > DEVS_BUILTIN_OBJECT___MAX)
-        return devs_undefined;
-
-    const devs_map_or_proto_t *p = devs_object_get_built_in(ctx, idx);
-    if (devs_is_builtin_proto(p))
-        return devs_value_from_handle(DEVS_HANDLE_TYPE_SPECIAL,
-                                      DEVS_SPECIAL_BUILTIN_OBJ_FIRST + idx);
-    else
-        return devs_value_from_gc_obj(ctx, (void *)p);
+    return devs_builtin_object_value(ctx, ctx->literal_int);
 }
 
 static value_t expr2_index(devs_activation_t *frame, devs_ctx_t *ctx) {
