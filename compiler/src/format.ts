@@ -50,6 +50,7 @@ export function exprIsStateful(op: Op) {
 export interface InstrArgResolver {
     describeCell?(fmt: string, idx: number): string
     resolverPC?: number
+    verboseDisasm?: boolean
 }
 
 export function bitSize(fmt: NumFmt) {
@@ -110,7 +111,9 @@ export function stringifyInstr(
     if (stack.length != 1)
         return "???oops bad stack: " + stack.length + "; " + toHex(bytebuf)
 
-    let res = "    " + stringifyExpr(stack[0]) + " // " + toHex(bytebuf)
+    let res = "    " + stringifyExpr(stack[0])
+
+    if (resolver.verboseDisasm) res += " // " + toHex(bytebuf)
 
     const pc = resolver?.resolverPC
     if (pc !== undefined)
@@ -122,6 +125,15 @@ export function stringifyInstr(
         let ptr = 0
         let beg = 0
         let r = ""
+        const args = (t.args || []).map(stringifyExpr)
+        if (t.arg != undefined) args.unshift(t.arg + "")
+        t.arg = undefined
+
+        if (fmt.startsWith("{swap}")) {
+            args.reverse()
+            fmt = fmt.slice(6)
+        }
+
         while (ptr < fmt.length) {
             if (fmt.charCodeAt(ptr) != 37) {
                 ptr++
@@ -132,18 +144,8 @@ export function stringifyInstr(
             ptr++
             beg = ptr + 1
 
-            let e: string
-            let eNum: number = null
-
-            if (t.arg != undefined) {
-                eNum = t.arg
-                e = eNum + ""
-                t.arg = undefined
-            } else {
-                if (!t.args || !t.args.length) e = "???oops"
-                else e = stringifyExpr(t.args.shift())
-                if (isNumber(e)) eNum = +e
-            }
+            let e = args.shift() ?? "???oops"
+            const eNum = isNumber(e) ? +e : null
 
             const ff = fmt[ptr]
             switch (ff) {
@@ -163,10 +165,13 @@ export function stringifyInstr(
                     break
 
                 default:
-                    e = "_" + ff + e
+                    e = "{" + ff + e + "}"
                     if (eNum != null && resolver) {
                         const pref = resolver.describeCell(ff, eNum)
-                        if (pref) e = pref + e
+                        if (pref) {
+                            if (resolver.verboseDisasm) e = pref + e
+                            else e = pref
+                        }
                     }
                     break
             }
@@ -184,7 +189,7 @@ export function stringifyInstr(
     }
 
     function isNumber(s: string) {
-        return /^\d+$/.test(s)
+        return /^-?\d+$/.test(s)
     }
 
     function numfmt(vv: string) {

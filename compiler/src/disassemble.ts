@@ -45,7 +45,7 @@ function decodeSection(buf: Uint8Array, off: number, img?: Uint8Array) {
     return new Uint8Array(img.slice(start, start + len))
 }
 
-export function disassemble(img: Uint8Array): string {
+export function disassemble(img: Uint8Array, verbose = false): string {
     if (!img || img.length < 100) {
         error(`img too small`)
         return ""
@@ -109,6 +109,7 @@ export function disassemble(img: Uint8Array): string {
 
     const resolver: InstrArgResolver = {
         resolverPC: 0,
+        verboseDisasm: verbose,
         describeCell: (ff, idx) => {
             switch (ff) {
                 case "R":
@@ -124,7 +125,7 @@ export function disassemble(img: Uint8Array): string {
                 case "O":
                     return BUILTIN_OBJECT__VAL[idx] || "???"
                 case "F":
-                    return funName(idx)
+                    return funName(idx) + "_F" + idx
                 case "L":
                     if (funDescFlags & FunctionFlag.NEEDS_THIS) {
                         if (idx == 0) return "this"

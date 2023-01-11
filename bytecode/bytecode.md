@@ -101,15 +101,15 @@ Write named field or sequence member (depending on type of idx).
 
 Remove a named field from an object.
 
-    builtin_field(*builtin_idx, obj): any = 26  // [builtin_idx]obj
+    builtin_field(*builtin_idx, obj): any = 26  // {swap}obj.builtin_idx
 
 Shorthand to `index(obj, static_builtin_string(builtin_idx))`
  
-    ascii_field(*ascii_idx, obj): any = 27      // [ascii_idx]obj
+    ascii_field(*ascii_idx, obj): any = 27      // {swap}obj.ascii_idx
 
 Shorthand to `index(obj, static_ascii_string(ascii_idx))`
 
-    utf8_field(*utf8_idx, obj): any = 28        // [utf8_idx]obj
+    utf8_field(*utf8_idx, obj): any = 28        // {swap}obj.utf8_idx
 
 Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
@@ -167,7 +167,7 @@ Returns `Object_Type` enum.
 
 Returns JS-compatible string.
 
-    fun null(): null = 46
+    fun null(): null = 46       // null
 
 Returns `null` value.
 

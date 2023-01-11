@@ -149,6 +149,7 @@ export async function mainCli() {
     program
         .command("disasm")
         .description("disassemble .devs binary")
+        .option("-d, --detailed", "include all details")
         .arguments("<file.ts|file.devs>")
         .action(disasm)
 

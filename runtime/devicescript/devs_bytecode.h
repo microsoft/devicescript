@@ -34,9 +34,9 @@
 #define DEVS_EXPR2_INDEX 24          // object[idx]
 #define DEVS_STMT3_INDEX_SET 25      // object[index] := value
 #define DEVS_STMT2_INDEX_DELETE 11   // delete object[index]
-#define DEVS_EXPRx1_BUILTIN_FIELD 26 // [builtin_idx]obj
-#define DEVS_EXPRx1_ASCII_FIELD 27   // [ascii_idx]obj
-#define DEVS_EXPRx1_UTF8_FIELD 28    // [utf8_idx]obj
+#define DEVS_EXPRx1_BUILTIN_FIELD 26 // {swap}obj.builtin_idx
+#define DEVS_EXPRx1_ASCII_FIELD 27   // {swap}obj.ascii_idx
+#define DEVS_EXPRx1_UTF8_FIELD 28    // {swap}obj.utf8_idx
 #define DEVS_EXPRx_MATH_FIELD 29     // Math.builtin_idx
 #define DEVS_EXPRx_DS_FIELD 30       // ds.builtin_idx
 #define DEVS_EXPRx_OBJECT_FIELD 16   // Object.builtin_idx
@@ -58,7 +58,7 @@
 #define DEVS_EXPR0_RET_VAL 44
 #define DEVS_EXPR1_TYPEOF 45     // object
 #define DEVS_EXPR1_TYPEOF_STR 76 // object
-#define DEVS_EXPR0_NULL 46
+#define DEVS_EXPR0_NULL 46       // null
 #define DEVS_EXPR1_IS_NULL 47
 #define DEVS_EXPR0_TRUE 48
 #define DEVS_EXPR0_FALSE 49

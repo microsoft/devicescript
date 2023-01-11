@@ -34,9 +34,9 @@ export enum Op {
     EXPR2_INDEX = 24, // object[idx]
     STMT3_INDEX_SET = 25, // object[index] := value
     STMT2_INDEX_DELETE = 11, // delete object[index]
-    EXPRx1_BUILTIN_FIELD = 26, // [builtin_idx]obj
-    EXPRx1_ASCII_FIELD = 27, // [ascii_idx]obj
-    EXPRx1_UTF8_FIELD = 28, // [utf8_idx]obj
+    EXPRx1_BUILTIN_FIELD = 26, // {swap}obj.builtin_idx
+    EXPRx1_ASCII_FIELD = 27, // {swap}obj.ascii_idx
+    EXPRx1_UTF8_FIELD = 28, // {swap}obj.utf8_idx
     EXPRx_MATH_FIELD = 29, // Math.builtin_idx
     EXPRx_DS_FIELD = 30, // ds.builtin_idx
     EXPRx_OBJECT_FIELD = 16, // Object.builtin_idx
@@ -58,7 +58,7 @@ export enum Op {
     EXPR0_RET_VAL = 44,
     EXPR1_TYPEOF = 45, // object
     EXPR1_TYPEOF_STR = 76, // object
-    EXPR0_NULL = 46,
+    EXPR0_NULL = 46, // null
     EXPR1_IS_NULL = 47,
     EXPR0_TRUE = 48,
     EXPR0_FALSE = 49,
@@ -411,9 +411,9 @@ export const OP_PRINT_FMTS = [
     "+%e",
     "%e[%e]",
     "%e[%e] := %e",
-    "[%I]%e",
-    "[%A]%e",
-    "[%U]%e",
+    "{swap}%e.%I",
+    "{swap}%e.%A",
+    "{swap}%e.%U",
     "Math.%I",
     "ds.%I",
     "ALLOC_MAP ",
@@ -431,7 +431,7 @@ export const OP_PRINT_FMTS = [
     "load_buffer(%e, %n, offset=%e)",
     "ret_val()",
     "typeof(%e)",
-    "null()",
+    "null",
     "is_null(%e)",
     "true()",
     "false()",
