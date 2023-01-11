@@ -118,7 +118,7 @@ static int get_pc(devs_activation_t *frame, devs_ctx_t *ctx) {
     if ((int)frame->func->start <= pc && pc < frame->maxpc) {
         return pc;
     } else {
-        devs_runtime_failure(ctx, 60116);
+        devs_runtime_failure(ctx, 60105);
         return 0;
     }
 }
@@ -146,12 +146,12 @@ static void stmtx_end_try(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (pc)
         frame->pc = pc;
     if (devs_pop_tryframe(frame, ctx) == 0)
-        devs_runtime_failure(ctx, 60193);
+        devs_runtime_failure(ctx, 60106);
 }
 
 static void stmt0_catch(devs_activation_t *frame, devs_ctx_t *ctx) {
     // no regular execution of catch()
-    devs_runtime_failure(ctx, 60194);
+    devs_runtime_failure(ctx, 60107);
 }
 
 static void stmt0_finally(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -161,7 +161,7 @@ static void stmt0_finally(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (pc == frame->pc - 1)
         ctx->curr_fiber->ret_val = devs_undefined;
     else
-        devs_runtime_failure(ctx, 60195);
+        devs_runtime_failure(ctx, 60109);
 }
 
 static void stmt1_throw(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -176,7 +176,7 @@ static void stmt1_throw(devs_activation_t *frame, devs_ctx_t *ctx) {
 static void stmtx1_throw_jmp(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned lev = devs_vm_pop_arg_i32(ctx);
     if (lev > DEVS_SPECIAL_THROW_JMP_LEVEL_MAX) {
-        devs_runtime_failure(ctx, 60198);
+        devs_runtime_failure(ctx, 60110);
         return;
     }
     int pc = get_pc(frame, ctx);
@@ -200,7 +200,7 @@ static void stmtx1_store_local(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
     // DMESG("store L%d := %d st=%d", off, devs_value_to_int(v), frame->func->start);
     if (off >= frame->func->num_slots)
-        devs_runtime_failure(ctx, 60118);
+        devs_runtime_failure(ctx, 60111);
     else
         frame->slots[off] = v;
 }
@@ -226,7 +226,7 @@ static void stmtx2_store_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     value_t *dst = lookup_clo_val(frame, ctx);
     if (dst == NULL)
-        devs_runtime_failure(ctx, 60166);
+        devs_runtime_failure(ctx, 60112);
     else
         *dst = v;
 }
@@ -235,7 +235,7 @@ static void stmtx1_store_global(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t v = devs_vm_pop_arg(ctx);
     unsigned off = ctx->literal_int;
     if (off >= ctx->img.header->num_globals)
-        devs_runtime_failure(ctx, 60120);
+        devs_runtime_failure(ctx, 60113);
     else
         ctx->globals[off] = v;
 }
@@ -266,20 +266,20 @@ static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static value_t expr_invalid(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return devs_runtime_failure(ctx, 60104);
+    return devs_runtime_failure(ctx, 60114);
 }
 
 static value_t exprx_load_local(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
     if (off < frame->func->num_slots)
         return frame->slots[off];
-    return devs_runtime_failure(ctx, 60105);
+    return devs_runtime_failure(ctx, 60115);
 }
 
 static value_t exprx1_load_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t *src = lookup_clo_val(frame, ctx);
     if (src == NULL) {
-        devs_runtime_failure(ctx, 60167);
+        devs_runtime_failure(ctx, 60116);
         return devs_undefined;
     } else {
         return *src;
@@ -289,7 +289,7 @@ static value_t exprx1_load_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t exprx_make_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned fidx = ctx->literal_int;
     if (fidx >= devs_img_num_functions(ctx->img)) {
-        devs_runtime_failure(ctx, 60168);
+        devs_runtime_failure(ctx, 60117);
         return devs_undefined;
     } else {
         return devs_make_closure(ctx, frame, fidx);
@@ -300,7 +300,7 @@ static value_t exprx_load_global(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
     if (off < ctx->img.header->num_globals)
         return ctx->globals[off];
-    return devs_runtime_failure(ctx, 60106);
+    return devs_runtime_failure(ctx, 60118);
 }
 
 static value_t expr3_load_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -321,7 +321,7 @@ static value_t exprx_literal_f64(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned off = ctx->literal_int;
     if (off < devs_img_num_floats(ctx->img))
         return devs_img_get_float(ctx->img, off);
-    return devs_runtime_failure(ctx, 60107);
+    return devs_runtime_failure(ctx, 60119);
 }
 
 static value_t expr0_ret_val(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -376,7 +376,7 @@ static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) 
     unsigned fidx = ctx->literal_int;
 
     if (fidx >= devs_img_num_functions(ctx->img)) {
-        devs_runtime_failure(ctx, 60114);
+        devs_runtime_failure(ctx, 60120);
         return devs_undefined;
     } else {
         return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, fidx);
@@ -386,7 +386,7 @@ static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) 
 bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a) {
     if (a < devs_img_num_roles(ctx->img))
         return true;
-    devs_runtime_failure(ctx, 60111);
+    devs_runtime_failure(ctx, 60121);
     return false;
 }
 
@@ -414,7 +414,7 @@ static inline int string_index(devs_ctx_t *ctx, unsigned tp) {
 static value_t static_something(devs_ctx_t *ctx, unsigned tp) {
     int v = string_index(ctx, tp);
     if (v < 0) {
-        devs_runtime_failure(ctx, 60112);
+        devs_runtime_failure(ctx, 60122);
         return devs_undefined;
     }
     return devs_value_from_handle(DEVS_HANDLE_TYPE_IMG_BUFFERISH, v);
