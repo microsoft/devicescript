@@ -6,32 +6,6 @@
 * `[a,b,c] = reg.read()`
 * run handlers in background - some sort of object to keep track if it's running?
 
-```
-try {...}catch(e) {...}...
-
-try lbl
-...
-jmp after
-lbl: catch()
-e := retval ()
-...
-after:
-...
-
-try {...break...} finally {...}...  
-
-try lbl
-...
-throw_brk brklbl
-...
-lbl: finally()
-tmp := retval()
-...
-re_throw(tmp)
-...
-brklbl:
-```
-
 ## Random stuff
 * change `ALLOC_*` opcodes to expressions
 * `Object.keys(spec_object)` ?
@@ -40,8 +14,9 @@ brklbl:
 * add `JSON.parse/stringify()`
 
 ## Big ticket
+* classes
 * buffer overflows when printing a lot
-* try/catch - devs_runtime_failure() vs devs_raise()
+* update devs_runtime_failure() to devs_throw*()
 
 ## General usability
 

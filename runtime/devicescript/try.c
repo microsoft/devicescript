@@ -180,17 +180,15 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
     devs_value_unpin(ctx, exn);
 }
 
-value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...) {
+static value_t devs_throw_internal_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format,
+                                         va_list arg) {
     devs_map_t *exn = devs_map_try_alloc(ctx);
     if (exn) {
         value_t eval = devs_value_from_gc_obj(ctx, exn);
         devs_value_pin(ctx, eval);
-        exn->proto = devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_TYPEERROR_PROTOTYPE);
+        exn->proto = devs_object_get_built_in(ctx, proto_idx);
 
-        va_list arg;
-        va_start(arg, format);
         value_t msg = devs_string_vsprintf(ctx, format, arg);
-        va_end(arg);
 
         devs_map_set_string_field(ctx, exn, DEVS_BUILTIN_STRING_MESSAGE, msg);
 
@@ -198,4 +196,22 @@ value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...) {
         devs_throw(ctx, eval, DEVS_THROW_INTERNAL);
     }
     return devs_undefined;
+}
+
+value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...) {
+    va_list arg;
+    va_start(arg, format);
+    value_t exn =
+        devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_TYPEERROR_PROTOTYPE, format, arg);
+    va_end(arg);
+    return exn;
+}
+
+value_t devs_throw_range_error(devs_ctx_t *ctx, const char *format, ...) {
+    va_list arg;
+    va_start(arg, format);
+    value_t exn =
+        devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE, format, arg);
+    va_end(arg);
+    return exn;
 }

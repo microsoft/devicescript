@@ -265,6 +265,7 @@ void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn);
 #define DEVS_THROW_INTERNAL 0x0002
 void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags);
 value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...);
+value_t devs_throw_range_error(devs_ctx_t *ctx, const char *format, ...);
 
 const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack);
