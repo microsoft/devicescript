@@ -15,6 +15,7 @@ native native1 em update-dist:
 
 test-c: native comp
 	set -e ; for f in devs/run-tests/*.ts ; do \
+	  echo "*** $$f" ; \
 	  $(CLI) crun $$f ; done
 
 test-em: em comp

@@ -1,5 +1,8 @@
 #include "devs_internal.h"
 
+DEVS_DERIVE(TypeError_prototype, Error_prototype)
+DEVS_DERIVE(RangeError_prototype, Error_prototype)
+
 static void meth1_error_ctor(devs_ctx_t *ctx, unsigned blt, unsigned str) {
     devs_map_t *m = devs_arg_self_map(ctx);
     if (!m)

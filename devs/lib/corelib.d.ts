@@ -29,6 +29,8 @@ declare function isNaN(number: number): boolean
 interface Object {}
 
 interface ObjectConstructor {
+    (): any;
+
     /**
      * Copy the values of all of the enumerable own properties from one or more source objects to a
      * target object. Returns the target object.

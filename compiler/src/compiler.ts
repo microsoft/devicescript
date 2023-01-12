@@ -2343,6 +2343,7 @@ class Program implements TopOpWriter {
             [SK.EqualsEqualsEqualsToken]: Op.EXPR2_EQ,
             [SK.ExclamationEqualsToken]: Op.EXPR2_NE,
             [SK.ExclamationEqualsEqualsToken]: Op.EXPR2_NE,
+            [SK.InstanceOfKeyword]: Op.EXPR2_INSTANCE_OF,
         }
 
         function stripEquals(k: SK) {

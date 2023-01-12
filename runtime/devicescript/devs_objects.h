@@ -91,6 +91,10 @@ int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int coun
 
 value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *proto, value_t key);
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key);
+value_t devs_object_get_built_in_field(devs_ctx_t *ctx, value_t obj, unsigned idx);
+const devs_map_or_proto_t *devs_object_get_proto(devs_ctx_t *ctx, const devs_map_or_proto_t *obj);
+bool devs_instance_of(devs_ctx_t *ctx, value_t obj, const devs_map_or_proto_t *cls_proto);
+const devs_map_or_proto_t *devs_get_prototype_field(devs_ctx_t *ctx, value_t cls);
 
 // works on objects (including going up the proto chain), arrays, buffers, ...
 value_t devs_any_get(devs_ctx_t *ctx, value_t obj, value_t key);
@@ -116,7 +120,7 @@ value_t devs_builtin_object_value(devs_ctx_t *ctx, unsigned idx);
 
 typedef struct _devs_gc_t devs_gc_t;
 
-devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx);
+devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, const devs_map_or_proto_t *proto);
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size);

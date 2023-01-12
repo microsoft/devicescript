@@ -162,7 +162,7 @@ void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
     }
 
     value_t role = devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, role_idx);
-    value_t fn = devs_object_get(ctx, role, devs_builtin_string(DEVS_BUILTIN_STRING_ONPACKET));
+    value_t fn = devs_object_get_built_in_field(ctx, role, DEVS_BUILTIN_STRING_ONPACKET);
     if (!devs_is_null(fn)) {
         ctx->stack_top_for_gc = 2;
         ctx->the_stack[0] = fn;

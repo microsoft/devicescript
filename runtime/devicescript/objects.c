@@ -451,7 +451,7 @@ static int devs_get_fnidx_core(devs_ctx_t *ctx, value_t src, value_t *this_val,
     default: {
         if (devs_is_null(src))
             return -1;
-        value_t f = devs_object_get(ctx, src, devs_builtin_string(DEVS_BUILTIN_STRING___FUNC__));
+        value_t f = devs_object_get_built_in_field(ctx, src, DEVS_BUILTIN_STRING___FUNC__);
         if (devs_is_null(f))
             return -1;
         else {
@@ -585,11 +585,8 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
         if (!r)
             return NULL;
         if (attach_flags & ATTACH_RW) {
-            devs_map_t *m = devs_map_try_alloc(ctx);
-            if (m != NULL) {
-                ctx->roles[roleidx].attached = m;
-                m->proto = r;
-            }
+            devs_map_t *m = devs_map_try_alloc(ctx, r);
+            ctx->roles[roleidx].attached = m;
             r = m;
         }
         return r;
@@ -645,11 +642,9 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
     devs_map_t *map = *attached;
 
     if (!map && (attach_flags & ATTACH_RW)) {
-        map = *attached = devs_map_try_alloc(ctx);
+        map = *attached = devs_map_try_alloc(ctx, devs_object_get_built_in(ctx, builtin));
         if (map == NULL)
             return NULL;
-        else
-            map->proto = devs_object_get_built_in(ctx, builtin);
     }
 
     if (map || (attach_flags & ATTACH_ENUM))
@@ -675,6 +670,59 @@ const devs_map_or_proto_t *devs_object_get_attached_enum(devs_ctx_t *ctx, value_
     const devs_map_or_proto_t *r = devs_object_get_attached(ctx, v, ATTACH_ENUM);
     ctx->diag_field = devs_undefined;
     return r;
+}
+
+const devs_map_or_proto_t *devs_object_get_proto(devs_ctx_t *ctx, const devs_map_or_proto_t *obj) {
+    const void *res;
+
+    if (devs_is_builtin_proto(obj)) {
+        res = ((const devs_builtin_proto_t *)obj)->parent;
+    } else if (devs_is_service_spec(ctx, obj)) {
+        res = devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE);
+    } else {
+        JD_ASSERT(devs_is_map(obj));
+        devs_map_t *map = (devs_map_t *)obj;
+        return map->proto;
+    }
+
+    if (res == NULL)
+        res = devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE);
+    if (obj == res) // Object.prototype.__proto__ == NULL
+        return NULL;
+    return res;
+}
+
+const devs_map_or_proto_t *devs_get_prototype_field(devs_ctx_t *ctx, value_t cls) {
+    value_t cls_proto_val = devs_object_get_built_in_field(ctx, cls, DEVS_BUILTIN_STRING_PROTOTYPE);
+    if (devs_is_null(cls_proto_val)) {
+        devs_throw_type_error(ctx, "no .prototype");
+        return NULL;
+    } else {
+        const devs_map_or_proto_t *cls_proto = devs_object_get_attached_enum(ctx, cls_proto_val);
+        if (cls_proto == NULL)
+            devs_throw_type_error(ctx, "invalid .prototype");
+        return cls_proto;
+    }
+}
+
+bool devs_instance_of(devs_ctx_t *ctx, value_t obj, const devs_map_or_proto_t *cls_proto) {
+    if (cls_proto == NULL)
+        return false;
+
+    const devs_map_or_proto_t *proto = devs_object_get_attached_ro(ctx, obj);
+    const devs_map_or_proto_t *en = devs_object_get_attached_enum(ctx, obj);
+    if (proto && proto == en)
+        proto = devs_object_get_proto(ctx, proto);
+    if (proto == NULL)
+        return false;
+
+    while (proto) {
+        if (cls_proto == proto)
+            return true;
+        proto = devs_object_get_proto(ctx, proto);
+    }
+
+    return false;
 }
 
 value_t devs_object_get_no_bind(devs_ctx_t *ctx, const devs_map_or_proto_t *proto, value_t key) {
@@ -715,6 +763,10 @@ value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
     ctx->diag_field = key;
     value_t tmp = devs_object_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
     return devs_function_bind(ctx, obj, tmp);
+}
+
+value_t devs_object_get_built_in_field(devs_ctx_t *ctx, value_t obj, unsigned idx) {
+    return devs_object_get(ctx, obj, devs_builtin_string(idx));
 }
 
 value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx) {

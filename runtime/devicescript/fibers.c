@@ -52,7 +52,8 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
             if (devs_is_map(devs_value_to_gc_obj(ctx, *argp))) {
                 // devs_log_value(ctx, "no attach", *argp);
             } else {
-                devs_map_t *m = devs_map_try_alloc(ctx);
+                // __proto__ to be set by the built-in function
+                devs_map_t *m = devs_map_try_alloc(ctx, NULL);
                 *argp = devs_value_from_gc_obj(ctx, m);
             }
         }
@@ -95,8 +96,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     }
 
     if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_null(callee->slots[0])) {
-        devs_map_t *m = devs_map_try_alloc(ctx);
-        // TODO set prototype (to something)
+        devs_map_t *m = devs_map_try_alloc(ctx, devs_get_prototype_field(ctx, fn));
         callee->slots[0] = devs_value_from_gc_obj(ctx, m);
     }
 

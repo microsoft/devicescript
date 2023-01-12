@@ -444,6 +444,25 @@ function testForOf() {
     isEq(tmp.length, 3)
 }
 
+function testInstanceOf() {
+    const err = new Error()
+    const tperr = new TypeError()
+
+    isEq(err instanceof Error, true)
+    isEq(err instanceof TypeError, false)
+    isEq(tperr instanceof TypeError, true)
+    isEq(tperr instanceof Error, true)
+    isEq(tperr instanceof RangeError, false)
+    isEq(err instanceof RangeError, false)
+
+    isEq(err instanceof Object, true)
+    isEq(tperr instanceof Object, true)
+
+    const obj = {}
+    isEq(obj instanceof Object, true)
+    isEq(obj instanceof Error, false)
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
@@ -460,6 +479,7 @@ testClosures1()
 testClosures2()
 testClosures3()
 testForOf()
+testInstanceOf()
 
 console.log("all OK")
 ds.reboot()

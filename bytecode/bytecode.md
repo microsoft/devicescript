@@ -175,6 +175,10 @@ Returns `null` value.
 
 Check if object is exactly `null`.
 
+    fun instance_of(obj, cls): bool = 89
+
+Check if `obj` has `cls.prototype` in its prototype chain.
+
 ### Booleans
 
     fun true(): bool = 48
@@ -251,7 +255,7 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 
 ## Format Constants
 
-    img_version = 0x04_01_0000
+    img_version = 0x04_02_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9
