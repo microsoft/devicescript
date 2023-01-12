@@ -695,7 +695,8 @@ const devs_map_or_proto_t *devs_object_get_proto(devs_ctx_t *ctx, const devs_map
 const devs_map_or_proto_t *devs_get_prototype_field(devs_ctx_t *ctx, value_t cls) {
     value_t cls_proto_val = devs_object_get_built_in_field(ctx, cls, DEVS_BUILTIN_STRING_PROTOTYPE);
     if (devs_is_null(cls_proto_val)) {
-        devs_throw_type_error(ctx, "no .prototype");
+        if (!ctx->in_throw)
+            devs_throw_type_error(ctx, "no .prototype");
         return NULL;
     } else {
         const devs_map_or_proto_t *cls_proto = devs_object_get_attached_enum(ctx, cls_proto_val);
@@ -706,7 +707,7 @@ const devs_map_or_proto_t *devs_get_prototype_field(devs_ctx_t *ctx, value_t cls
 }
 
 bool devs_instance_of(devs_ctx_t *ctx, value_t obj, const devs_map_or_proto_t *cls_proto) {
-    if (cls_proto == NULL)
+    if (cls_proto == NULL || devs_is_null(obj))
         return false;
 
     const devs_map_or_proto_t *proto = devs_object_get_attached_ro(ctx, obj);
@@ -873,7 +874,7 @@ void devs_seq_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
         if (devs_gc_tag(arr) == DEVS_GC_TAG_ARRAY) {
             devs_array_set(ctx, arr, idx, v);
         } else {
-            devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_ARRAY, v);
+            devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_ARRAY, seq);
         }
     }
 }

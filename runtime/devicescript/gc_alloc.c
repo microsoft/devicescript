@@ -184,6 +184,9 @@ static void mark_roots(devs_gc_t *gc) {
         scan_gc_obj(ctx, (block_t *)ctx->roles[i].dynproto, ROOT_SCAN_DEPTH);
     }
 
+    scan_value(ctx, ctx->exn_val, ROOT_SCAN_DEPTH);
+    scan_value(ctx, ctx->diag_field, ROOT_SCAN_DEPTH);
+
     for (devs_fiber_t *fib = ctx->fibers; fib; fib = fib->next) {
         scan_value(ctx, fib->ret_val, ROOT_SCAN_DEPTH);
         if (devs_fiber_uses_pkt_data_v(fib))
@@ -406,8 +409,10 @@ devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, const devs_map_or_proto_t *proto
 
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size) {
     unsigned bytesize = size * sizeof(value_t);
-    if (bytesize > DEVS_MAX_ALLOC)
+    if (size > DEVS_MAX_ALLOC || bytesize > DEVS_MAX_ALLOC) {
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_ARRAY);
         return NULL;
+    }
     devs_array_t *arr =
         devs_any_try_alloc(ctx, DEVS_GC_TAG_ARRAY | DEVS_GC_TAG_MASK_PINNED, sizeof(devs_array_t));
     if (arr == NULL)
@@ -425,8 +430,10 @@ devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size) {
 }
 
 devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size) {
-    if (size > DEVS_MAX_ALLOC)
+    if (size > DEVS_MAX_ALLOC) {
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_BUFFER);
         return NULL;
+    }
     devs_buffer_t *buf = devs_any_try_alloc(ctx, DEVS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
     if (buf)
         buf->length = size;
@@ -434,8 +441,10 @@ devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size) {
 }
 
 devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size) {
-    if (size > DEVS_MAX_ALLOC)
+    if (size > DEVS_MAX_ALLOC) {
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_STRING);
         return NULL;
+    }
     devs_string_t *buf =
         devs_any_try_alloc(ctx, DEVS_GC_TAG_STRING, sizeof(devs_string_t) + size + 1);
     if (buf)

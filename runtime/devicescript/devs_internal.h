@@ -101,6 +101,7 @@ struct devs_ctx {
     double binop_f[2];
 
     value_t diag_field;
+    value_t exn_val;
 
     devs_pc_t jmp_pc;
 

@@ -38,13 +38,12 @@ static inline void devs_vm_push(devs_ctx_t *ctx, value_t v) {
 
 void devs_dump_stackframe(devs_ctx_t *ctx, devs_activation_t *fn) {
     int idx = fn->func - devs_img_get_function(ctx->img, 0);
-    DMESG("pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start), devs_img_fun_name(ctx->img, idx), idx);
+    DMESG("pc=%d @ %s_F%d st=%d", (int)(fn->pc - fn->func->start), devs_img_fun_name(ctx->img, idx),
+          idx, ctx->stack_top);
 }
 
 static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
     uint8_t op = devs_vm_fetch_byte(frame, ctx);
-
-    ctx->in_throw = 0;
 
     if (op >= DEVS_DIRECT_CONST_OP) {
         int v = op - DEVS_DIRECT_CONST_OP - DEVS_DIRECT_CONST_OFFSET;
@@ -73,6 +72,14 @@ static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
         } else {
             value_t v = ((devs_vm_expr_handler_t)devs_vm_op_handlers[op])(frame, ctx);
             devs_vm_push(ctx, v);
+        }
+
+        if (ctx->in_throw) {
+            ctx->stack_top = 0;
+            ctx->in_throw = 0;
+            if (ctx->curr_fiber)
+                ctx->curr_fiber->ret_val = ctx->exn_val;
+            ctx->exn_val = devs_undefined;
         }
     }
 }

@@ -175,13 +175,13 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
                 if (jump_pc) {
                     jump_level--;
                 } else {
-                    ctx->curr_fiber->ret_val = exn;
+                    ctx->exn_val = exn;
                     break;
                 }
             } else if (op == DEVS_STMT0_FINALLY) {
                 if (jump_pc)
                     exn = devs_value_encode_throw_jmp_pc(jump_pc, jump_level - 1);
-                ctx->curr_fiber->ret_val = exn;
+                ctx->exn_val = exn;
                 break;
             } else {
                 devs_runtime_failure(ctx, 60125);

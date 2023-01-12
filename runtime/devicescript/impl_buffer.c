@@ -58,11 +58,15 @@ void meth4_Buffer_blitAt(devs_ctx_t *ctx) {
     unsigned slen, dlen;
 
     uint8_t *dst = wr_buffer_data(ctx, devs_arg_self(ctx), &dlen);
+    if (dst == NULL)
+        return;
     uint32_t dst_offset = devs_arg_int(ctx, 0);
 
     value_t src_ = devs_arg(ctx, 1);
     const uint8_t *src = devs_is_string(ctx, src_) ? devs_string_get_utf8(ctx, src_, &slen)
                                                    : buffer_data(ctx, src_, &slen);
+    if (src == NULL)
+        return;
     uint32_t src_offset = devs_arg_int(ctx, 2);
     uint32_t len = devs_arg_int(ctx, 3);
 
