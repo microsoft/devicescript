@@ -10,6 +10,21 @@ void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map) {
     }
 }
 
+static inline uint16_t *short_keys(devs_short_map_t *map) {
+    return (uint16_t *)(map->short_data + map->capacity);
+}
+
+static value_t *lookup_short(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key) {
+    unsigned len = map->length;
+    uint16_t *keys = short_keys(map);
+    for (unsigned i = 0; i < len; i++) {
+        if (keys[i] == key) {
+            return &map->short_data[i];
+        }
+    }
+    return NULL;
+}
+
 static value_t *lookup(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
     if (!devs_is_string(ctx, key))
         return NULL;
@@ -126,10 +141,10 @@ void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v) {
 
     if (map->capacity == map->length) {
         int newlen = grow_len(map->capacity);
-        map->capacity = newlen;
         tmp = devs_try_alloc(ctx, newlen * (2 * sizeof(value_t)));
         if (!tmp)
             return;
+        map->capacity = newlen;
         if (map->length) {
             memcpy(tmp, map->data, map->length * sizeof(value_t) * 2);
         }
@@ -139,6 +154,34 @@ void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v) {
 
     map->data[map->length * 2] = key;
     map->data[map->length * 2 + 1] = v;
+    map->length++;
+}
+
+void devs_short_map_set(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key, value_t v) {
+    value_t *tmp = lookup_short(ctx, map, key);
+    if (tmp != NULL) {
+        *tmp = v;
+        return;
+    }
+
+    JD_ASSERT(map->capacity >= map->length);
+
+    if (map->capacity == map->length) {
+        int newlen = grow_len(map->capacity);
+        tmp = devs_try_alloc(ctx, newlen * (sizeof(value_t) + sizeof(uint16_t)));
+        if (!tmp)
+            return;
+        map->capacity = newlen;
+        if (map->length) {
+            memcpy(tmp, map->short_data, map->length * sizeof(value_t));
+            memcpy(tmp + newlen, short_keys(map), map->length * sizeof(uint16_t));
+        }
+        map->short_data = tmp;
+        jd_gc_unpin(ctx->gc, tmp);
+    }
+
+    map->short_data[map->length] = v;
+    short_keys(map)[map->length] = key;
     map->length++;
 }
 
@@ -165,6 +208,13 @@ bool devs_is_service_spec(devs_ctx_t *ctx, const void *ptr) {
 
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key) {
     value_t *tmp = lookup(ctx, map, key);
+    if (tmp == NULL)
+        return devs_undefined;
+    return *tmp;
+}
+
+value_t devs_short_map_get(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key) {
+    value_t *tmp = lookup_short(ctx, map, key);
     if (tmp == NULL)
         return devs_undefined;
     return *tmp;
@@ -634,6 +684,7 @@ static const devs_map_or_proto_t *devs_object_get_attached(devs_ctx_t *ctx, valu
     case DEVS_GC_TAG_BOUND_FUNCTION:
         return devs_get_static_proto(ctx, DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE, attach_flags);
     case DEVS_GC_TAG_BUILTIN_PROTO:
+    case DEVS_GC_TAG_SHORT_MAP:
     default:
         JD_PANIC();
         break;

@@ -31,6 +31,7 @@ typedef struct _devs_gc_block_t {
         devs_array_t array;
         devs_buffer_t buffer;
         devs_map_t map;
+        devs_short_map_t short_map;
         devs_activation_t act;
         devs_bound_function_t bound_function;
         devs_packet_t pkt;
@@ -124,6 +125,7 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
         case DEVS_GC_TAG_BUFFER:
             map = block->buffer.attached;
             break;
+        case DEVS_GC_TAG_SHORT_MAP:
         case DEVS_GC_TAG_HALF_STATIC_MAP:
         case DEVS_GC_TAG_MAP:
             map = &block->map;
@@ -154,7 +156,10 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
         }
 
         if (map) {
-            scan_array_and_mark(ctx, map->data, map->length * 2, depth);
+            unsigned len = map->length;
+            if (BASIC_TAG(header) != DEVS_GC_TAG_SHORT_MAP)
+                len *= 2;
+            scan_array_and_mark(ctx, map->data, len, depth);
             if (map->proto && !devs_is_builtin_proto(map->proto) &&
                 !devs_is_service_spec(ctx, map->proto))
                 block = (void *)map->proto;
@@ -184,6 +189,7 @@ static void mark_roots(devs_gc_t *gc) {
         scan_gc_obj(ctx, (block_t *)ctx->roles[i].dynproto, ROOT_SCAN_DEPTH);
     }
 
+    scan_gc_obj(ctx, (block_t *)ctx->fn_protos, ROOT_SCAN_DEPTH);
     scan_value(ctx, ctx->exn_val, ROOT_SCAN_DEPTH);
     scan_value(ctx, ctx->diag_field, ROOT_SCAN_DEPTH);
 
@@ -405,6 +411,10 @@ devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, const devs_map_or_proto_t *proto
     if (m)
         m->proto = proto;
     return m;
+}
+
+devs_short_map_t *devs_short_map_try_alloc(devs_ctx_t *ctx) {
+    return devs_any_try_alloc(ctx, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
 }
 
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size) {

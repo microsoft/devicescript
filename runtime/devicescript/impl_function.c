@@ -20,3 +20,22 @@ void methX_Function_start(devs_ctx_t *ctx) {
     if (fib != NULL)
         devs_ret(ctx, devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, fib->handle_tag));
 }
+
+value_t prop_Function_prototype(devs_ctx_t *ctx, value_t self) {
+    value_t th;
+    devs_activation_t *clo;
+    int fn = devs_get_fnidx(ctx, self, &th, &clo);
+    if (fn < 0 || fn >= DEVS_FIRST_BUILTIN_FUNCTION ||
+        !(devs_img_get_function(ctx->img, fn)->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
+        return devs_throw_expecting_error_ext(ctx, "ctor function", self);
+    value_t r = devs_short_map_get(ctx, ctx->fn_protos, fn);
+    if (devs_is_null(r)) {
+        r = devs_value_from_gc_obj(
+            ctx, devs_map_try_alloc(
+                     ctx, devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)));
+        devs_value_pin(ctx, r);
+        devs_short_map_set(ctx, ctx->fn_protos, fn, r);
+        devs_value_unpin(ctx, r);
+    }
+    return r;
+}

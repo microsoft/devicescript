@@ -113,6 +113,8 @@ struct devs_ctx {
     uint32_t literal_int;
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
 
+    devs_short_map_t *fn_protos;
+
     devs_img_t img;
 
     devs_activation_t *curr_fn;

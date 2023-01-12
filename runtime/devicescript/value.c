@@ -271,6 +271,7 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
             return DEVS_OBJECT_TYPE_STRING;
         case DEVS_GC_TAG_PACKET:
             return DEVS_OBJECT_TYPE_PACKET;
+        case DEVS_GC_TAG_SHORT_MAP:
         case DEVS_GC_TAG_HALF_STATIC_MAP:
         case DEVS_GC_TAG_MAP:
             return DEVS_OBJECT_TYPE_MAP;

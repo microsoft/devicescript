@@ -154,12 +154,17 @@ export function disassemble(img: Uint8Array, verbose = false): string {
         const numlocals = read16(funDesc, off + 8) - funDescNumArgs
         const fnname = funName(fnid)
         const txtArgs = range(funDescNumArgs).map(i => "par" + i)
+        let pref = "proc"
         if (funDescFlags & FunctionFlag.NEEDS_THIS) {
             txtArgs.pop()
             txtArgs.unshift("this")
+            pref = "method"
         }
         const imgoff = read32(funDesc, off)
-        r += `\n${fnname}_F${fnid}(${txtArgs.join(", ")}): @${imgoff}\n`
+        if (funDescFlags & FunctionFlag.IS_CTOR) {
+            pref = "ctor"
+        }
+        r += `\n${pref} ${fnname}_F${fnid}(${txtArgs.join(", ")}): @${imgoff}\n`
         if (numlocals)
             r += `  locals: ${range(numlocals).map(i => "loc" + i)}\n`
 

@@ -24,6 +24,15 @@ typedef struct {
     value_t *data;
 } devs_map_t;
 
+// same structure as devs_map_t but data[] field is different
+typedef struct {
+    devs_gc_object_t gc;
+    const devs_map_or_proto_t *proto;
+    devs_small_size_t length;
+    devs_small_size_t capacity;
+    value_t *short_data;
+} devs_short_map_t;
+
 typedef struct devs_builtin_proto {
     devs_gc_object_t gc;
     const struct devs_builtin_proto *parent;
@@ -74,7 +83,6 @@ typedef struct {
     devs_buffer_t *payload;
 } devs_packet_t;
 
-
 void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v);
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 int devs_map_delete(devs_ctx_t *ctx, devs_map_t *map, value_t key);
@@ -83,6 +91,9 @@ void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, const devs_map_or_prot
 void devs_map_keys_or_values(devs_ctx_t *ctx, const devs_map_or_proto_t *src, devs_array_t *arr,
                              bool keys);
 void devs_map_set_string_field(devs_ctx_t *ctx, devs_map_t *m, unsigned builtin_str, value_t msg);
+
+value_t devs_short_map_get(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key);
+void devs_short_map_set(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key, value_t v);
 
 value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx);
 void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v);
@@ -121,6 +132,7 @@ value_t devs_builtin_object_value(devs_ctx_t *ctx, unsigned idx);
 typedef struct _devs_gc_t devs_gc_t;
 
 devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, const devs_map_or_proto_t *proto);
+devs_short_map_t *devs_short_map_try_alloc(devs_ctx_t *ctx);
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size);
@@ -162,6 +174,7 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_ACTIVATION 0x8
 #define DEVS_GC_TAG_HALF_STATIC_MAP 0x9
 #define DEVS_GC_TAG_PACKET 0xA
+#define DEVS_GC_TAG_SHORT_MAP 0xB
 #define DEVS_GC_TAG_BUILTIN_PROTO 0xf // these are not in GC heap!
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 

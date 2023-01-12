@@ -463,6 +463,33 @@ function testInstanceOf() {
     isEq(obj instanceof Error, false)
 }
 
+class Foo {
+    num: number
+    str: string
+
+    constructor(n: number) {
+        this.num = n
+        this.str = "blah"
+    }
+
+    stringify() {
+        return `${this.num}/${this.str}`
+    }
+
+    unused() {}
+}
+
+function callStr(q: Foo) {
+    return q.stringify()
+}
+
+function testClass() {
+    const f = new Foo(12)
+    isEq(callStr(f), "12/blah")
+    f.str = "bb"
+    isEq(callStr(f), "12/bb")
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
@@ -480,6 +507,7 @@ testClosures2()
 testClosures3()
 testForOf()
 testInstanceOf()
+testClass()
 
 console.log("all OK")
 ds.reboot()
