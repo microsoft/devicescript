@@ -15,14 +15,22 @@
 
 ## Big ticket
 * classes
-* buffer overflows when printing a lot
+* Jacdac packet queue overflow when printing a lot
 
 ## General usability
-
 * drop seconds, use milliseconds everywhere
-* multi-program LATER
-* hash-consing of strings? (esp. for JSON parsing) LATER
 * tree strings?
+* introduce Fiber class (also Fiber.suspend() and Fiber.resume())
+* drop `length` field from fun-descriptor
+* automatically add `ds.reboot()` in tests
+* make `import` for side-effects work
+
+## Later
+* multi-program
+* hash-consing of strings? (esp. for JSON parsing)
+* compacting GC
+
+## Older stuff?
 
 * hang properties off roles - `high`, `lastHigh` for bar graph eg
 * `role.control` -> control service of device that has this role ?

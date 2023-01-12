@@ -41,6 +41,7 @@ import {
     PacketSpecFlag,
     FieldSpecFlag,
     ServiceSpecFlag,
+    FunctionFlag,
 } from "./format"
 import { addUnique, assert, camelize, oops, strlen, upperCamel } from "./util"
 import {
@@ -96,13 +97,22 @@ BUILTIN_OBJECT__VAL.forEach((n, i) => {
         builtInObjByName["#" + n.replace(/^Ds/, "ds.")] = i
 })
 
+function TODO(): never {
+    throwError(null, "TODO")
+}
+
+type TsFunctionDecl =
+    | ts.FunctionDeclaration
+    | ts.MethodDeclaration
+    | ts.ClassDeclaration
+
 class Cell {
     _index: number
 
     constructor(
         public definition:
+            | TsFunctionDecl
             | ts.VariableDeclaration
-            | ts.FunctionDeclaration
             | ts.ParameterDeclaration
             | ts.BindingElement
             | ts.Identifier,
@@ -286,7 +296,7 @@ class BufferLit extends Cell {
 
 class FunctionDecl extends Cell {
     proc: Procedure
-    constructor(definition: ts.FunctionDeclaration, scope: FunctionDecl[]) {
+    constructor(definition: TsFunctionDecl, scope: FunctionDecl[]) {
         super(definition, scope)
     }
     emit(wr: OpWriter): Value {
@@ -354,6 +364,11 @@ class Procedure {
         this.index = this.parent.procs.length
         this.writer = new OpWriter(parent, `${this.name}_F${this.index}`)
         this.parent.procs.push(this)
+        if (
+            ts.isMethodDeclaration(this.sourceNode) ||
+            ts.isClassDeclaration(this.sourceNode)
+        )
+            this.isMethod = true
     }
     get numargs() {
         return this.params.length
@@ -367,10 +382,10 @@ class Procedure {
     }
     finalize() {
         if (this.mapVarOffset) return false
+        if (this.usesThis) this.writer.funFlags |= FunctionFlag.NEEDS_THIS
         this.mapVarOffset = this.writer.patchLabels(
             this.locals.length,
             this.numargs,
-            this.usesThis,
             this.maxTryBlocks
         )
         return true
@@ -433,6 +448,8 @@ type FunctionLike =
     | ts.FunctionDeclaration
     | ts.ArrowFunction
     | ts.FunctionExpression
+    | ts.MethodDeclaration
+    | ts.ConstructorDeclaration
 
 const mathConst: SMap<number> = {
     E: Math.E,
@@ -1218,13 +1235,47 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitFunction(
-        stmt: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
-        proc: Procedure
-    ) {
+    private emitCtorAssignments(cls: ts.ClassLikeDeclaration) {
+        const wr = this.writer
+        this.proc.writer.funFlags |= FunctionFlag.IS_CTOR
+        for (const mem of cls.members) {
+            if (!ts.isPropertyDeclaration(mem)) continue
+            const id = this.forceName(mem.name)
+            if (mem.initializer) {
+                wr.emitStmt(
+                    Op.STMT3_INDEX_SET,
+                    this.emitThisExpression(mem),
+                    wr.emitString(id),
+                    this.emitExpr(mem.initializer)
+                )
+            }
+        }
+    }
+
+    private emitCtor(cls: ts.ClassLikeDeclaration, proc: Procedure) {
+        const ctor = cls.members.find(ts.isConstructorDeclaration)
+        if (ctor) return this.emitFunction(ctor, proc)
+        else {
+            try {
+                this.withProcedure(proc, wr => {
+                    this.emitCtorAssignments(cls)
+                    wr.emitStmt(Op.STMT1_RETURN, literal(null))
+                    this.finishRetVal()
+                    this.finalizeProc(proc)
+                })
+            } catch (e) {
+                this.handleException(cls, e)
+            }
+            return proc
+        }
+    }
+
+    private emitFunction(stmt: FunctionLike, proc: Procedure) {
         try {
             this.withProcedure(proc, () => {
                 this.emitParameters(stmt, proc)
+                if (ts.isConstructorDeclaration(stmt))
+                    this.emitCtorAssignments(stmt.parent)
                 this.emitFunctionBody(stmt, proc)
             })
         } catch (e) {
@@ -1256,10 +1307,7 @@ class Program implements TopOpWriter {
         this.emitNested(proc)
     }
 
-    private emitFunctionBody(
-        stmt: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
-        proc: Procedure
-    ) {
+    private emitFunctionBody(stmt: FunctionLike, proc: Procedure) {
         if (ts.isBlock(stmt.body)) {
             this.emitStmt(stmt.body)
             if (!this.writer.justHadReturn())
@@ -1303,15 +1351,23 @@ class Program implements TopOpWriter {
 
     getFunctionProc(fundecl: FunctionDecl) {
         if (fundecl.proc) return fundecl.proc
-        const stmt = fundecl.definition as ts.FunctionDeclaration
+        const stmt = fundecl.definition as TsFunctionDecl
         fundecl.proc = new Procedure(this, fundecl.getName(), stmt)
-        return this.emitFunction(stmt, fundecl.proc)
+        if (ts.isClassDeclaration(stmt))
+            return this.emitCtor(stmt, fundecl.proc)
+        else return this.emitFunction(stmt, fundecl.proc)
     }
 
     private emitFunctionDeclaration(stmt: ts.FunctionDeclaration) {
         const fundecl = this.functions.find(
             f => f.definition === stmt
         ) as FunctionDecl
+
+        if (
+            stmt.asteriskToken ||
+            (stmt.modifiers && !stmt.modifiers.every(modifierOK))
+        )
+            throwError(stmt, "modifier not supported")
 
         if (!this.isTopLevel(stmt)) {
             this.emitStore(
@@ -1321,11 +1377,6 @@ class Program implements TopOpWriter {
             return
         }
 
-        if (
-            stmt.asteriskToken ||
-            (stmt.modifiers && !stmt.modifiers.every(modifierOK))
-        )
-            throwError(stmt, "modifier not supported")
         assert(!!fundecl || !!this.numErrors)
 
         if (fundecl) {
@@ -1342,6 +1393,30 @@ class Program implements TopOpWriter {
                     return true
                 default:
                     return false
+            }
+        }
+    }
+
+    private emitClassDeclaration(stmt: ts.ClassDeclaration) {
+        const fdecl = this.getCellAtLocation(stmt) as FunctionDecl
+        assert(fdecl instanceof FunctionDecl)
+        if (stmt.heritageClauses) {
+            for (const cls of stmt.heritageClauses) {
+                if (cls.token == SK.ImplementsKeyword) continue
+                if (cls.token == SK.ExtendsKeyword)
+                    throwError(cls, "extends not supported yet")
+            }
+        }
+
+        for (const mem of stmt.members) {
+            switch (mem.kind) {
+                case SK.PropertyDeclaration:
+                case SK.MethodDeclaration:
+                case SK.Constructor:
+                case SK.SemicolonClassElement:
+                    break
+                default:
+                    throwError(mem, "unsupported class member")
             }
         }
     }
@@ -1457,17 +1532,17 @@ class Program implements TopOpWriter {
     }
 
     private assignCellsToStmt(stmt: ts.Statement) {
-        if (ts.isVariableStatement(stmt)) {
-            for (const decl of stmt.declarationList.declarations)
-                try {
-                    this.assignVariableCells(decl)
-                } catch (e) {
-                    this.handleException(decl, e)
-                }
-        } else if (ts.isFunctionDeclaration(stmt)) {
-            if (this.getCellAtLocation(stmt)) return
-            this.forceName(stmt.name)
-            try {
+        try {
+            if (ts.isVariableStatement(stmt)) {
+                for (const decl of stmt.declarationList.declarations)
+                    try {
+                        this.assignVariableCells(decl)
+                    } catch (e) {
+                        this.handleException(decl, e)
+                    }
+            } else if (ts.isFunctionDeclaration(stmt)) {
+                if (this.getCellAtLocation(stmt)) return
+                this.forceName(stmt.name)
                 if (this.isTopLevel(stmt))
                     this.assignCell(
                         stmt,
@@ -1478,9 +1553,25 @@ class Program implements TopOpWriter {
                         stmt,
                         new Variable(stmt, VariableKind.Local, this.proc)
                     )
-            } catch (e) {
-                this.handleException(stmt, e)
+            } else if (ts.isClassDeclaration(stmt)) {
+                if (this.getCellAtLocation(stmt)) return
+                if (!stmt.name) throwError(stmt, "classes need names")
+                if (!this.isTopLevel(stmt))
+                    throwError(stmt, "only top-level classes supported")
+                this.forceName(stmt.name)
+                this.assignCell(stmt, new FunctionDecl(stmt, this.functions))
+                for (const mem of stmt.members) {
+                    if (ts.isMethodDeclaration(mem)) {
+                        this.forceName(mem.name)
+                        this.assignCell(
+                            mem,
+                            new FunctionDecl(stmt, this.functions)
+                        )
+                    }
+                }
             }
+        } catch (e) {
+            this.handleException(stmt, e)
         }
     }
 
@@ -2044,7 +2135,7 @@ class Program implements TopOpWriter {
         return cell.emit(this.writer)
     }
 
-    private emitThisExpression(expr: ts.ThisExpression): Value {
+    private emitThisExpression(expr: ts.Node): Value {
         const p0 = this.proc.params[0] as Variable
         if (p0 && p0.vkind == VariableKind.ThisParam)
             return p0.emit(this.writer)
@@ -2596,9 +2687,7 @@ class Program implements TopOpWriter {
         )
     }
 
-    private emitFunctionExpr(
-        expr: ts.ArrowFunction | ts.FunctionExpression | ts.FunctionDeclaration
-    ): Value {
+    private emitFunctionExpr(expr: FunctionLike): Value {
         const wr = this.writer
         let n = expr.name ? idName(expr.name) : null
         let isMethod = false
@@ -2826,6 +2915,10 @@ class Program implements TopOpWriter {
                 case SK.FunctionDeclaration:
                     return this.emitFunctionDeclaration(
                         stmt as ts.FunctionDeclaration
+                    )
+                case SK.ClassDeclaration:
+                    return this.emitClassDeclaration(
+                        stmt as ts.ClassDeclaration
                     )
                 case SK.TypeAliasDeclaration:
                 case SK.ExportDeclaration:

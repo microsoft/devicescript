@@ -235,6 +235,7 @@ export class OpWriter {
     pendingStatefulValues: Value[] = []
     localOffsets: number[] = []
     cachedValues: CachedValue[] = []
+    funFlags: FunctionFlag = 0
     top: Label
     ret: Label
     private lineNo = -1
@@ -509,7 +510,6 @@ export class OpWriter {
     patchLabels(
         numLocals: number,
         numargs: number,
-        hasThis: boolean,
         tryDepth: number
     ) {
         // we now patch at emit
@@ -550,12 +550,11 @@ export class OpWriter {
         }
         this.localOffsets = []
 
-        const flags = hasThis ? FunctionFlag.NEEDS_THIS : 0
         const buf = this.desc
         write32(buf, 4, this.location())
         write16(buf, 8, numSlots)
         buf[10] = numargs
-        buf[11] = flags
+        buf[11] = this.funFlags
         write16(buf, 12, this.nameIdx)
         assert(tryDepth <= 0xff)
         buf[14] = tryDepth
