@@ -153,10 +153,13 @@ export function disassemble(img: Uint8Array, verbose = false): string {
         funDescFlags = funDesc[off + 11]
         const numlocals = read16(funDesc, off + 8) - funDescNumArgs
         const fnname = funName(fnid)
-        const thisptr = funDescFlags & FunctionFlag.NEEDS_THIS ? "this, " : ""
-        r += `\n${fnname}_F${fnid}(${thisptr}${range(funDescNumArgs).map(
-            i => "par" + i
-        )}): @${read32(funDesc, off)}\n`
+        const txtArgs = range(funDescNumArgs).map(i => "par" + i)
+        if (funDescFlags & FunctionFlag.NEEDS_THIS) {
+            txtArgs.pop()
+            txtArgs.unshift("this")
+        }
+        const imgoff = read32(funDesc, off)
+        r += `\n${fnname}_F${fnid}(${txtArgs.join(", ")}): @${imgoff}\n`
         if (numlocals)
             r += `  locals: ${range(numlocals).map(i => "loc" + i)}\n`
 

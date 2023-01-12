@@ -481,7 +481,8 @@ interface ProtoDefinition {
     className: string
     methodName: string
     names: string[]
-    expr: ts.BinaryExpression
+    methodDecl?: ts.MethodDeclaration
+    protoUpdate?: ts.BinaryExpression
     emitted?: boolean
 }
 
@@ -1397,6 +1398,23 @@ class Program implements TopOpWriter {
         }
     }
 
+    private methodNames(sym: ts.Symbol) {
+        const name = this.symName(sym)
+        const names = [name]
+
+        if (name == "#ds.RegisterNumber.onChange")
+            names.push(
+                "#ds.RegisterBuffer.onChange",
+                "#ds.RegisterBool.onChange"
+            )
+
+        for (const baseSym of this.getBaseSyms(sym)) {
+            names.push(this.symName(baseSym))
+        }
+
+        return names
+    }
+
     private emitClassDeclaration(stmt: ts.ClassDeclaration) {
         const fdecl = this.getCellAtLocation(stmt) as FunctionDecl
         assert(fdecl instanceof FunctionDecl)
@@ -1418,6 +1436,16 @@ class Program implements TopOpWriter {
                 default:
                     throwError(mem, "unsupported class member")
             }
+
+            if (ts.isMethodDeclaration(mem)) {
+                const sym = this.getSymAtLocation(mem)
+                this.protoDefinitions.push({
+                    className: this.nodeName(stmt),
+                    methodName: this.forceName(mem.name),
+                    names: this.methodNames(sym),
+                    methodDecl: mem,
+                })
+            }
         }
     }
 
@@ -1438,10 +1466,38 @@ class Program implements TopOpWriter {
         return cell
     }
 
+    private emitMethod(meth: ts.MethodDeclaration) {
+        const wr = this.writer
+
+        const proc = new Procedure(this, this.forceName(meth.name), meth)
+        this.emitFunction(meth, proc)
+
+        const proto = wr.emitIndex(
+            this.ctorProc(meth.parent).reference(wr),
+            wr.emitString("prototype")
+        )
+        wr.emitStmt(
+            Op.STMT3_INDEX_SET,
+            proto,
+            wr.emitString(this.forceName(meth.name)),
+            proc.reference(wr)
+        )
+    }
+
+    private ctorProc(
+        cls: ts.ClassLikeDeclaration | ts.ObjectLiteralExpression
+    ) {
+        const ctordecl = this.getCellAtLocation(cls) as FunctionDecl
+        assert(ctordecl instanceof FunctionDecl)
+        return ctordecl.proc
+    }
+
     private emitProtoAssigns() {
         const needsEmit = (p: ProtoDefinition) =>
             !p.emitted &&
-            (this.flags.allPrototypes || p.names.some(n => this.usedMethods[n]))
+            (this.flags.allPrototypes ||
+                p.names.some(n => this.usedMethods[n])) &&
+            (p.protoUpdate || this.ctorProc(p.methodDecl.parent) != null)
 
         this.withProcedure(this.protoProc, wr => {
             for (;;) {
@@ -1451,7 +1507,8 @@ class Program implements TopOpWriter {
                         p.emitted = true
                         numemit++
                         if (this.flags.traceProto) trace("EMIT upd", p.names[0])
-                        this.emitAssignmentExpression(p.expr, true)
+                        if (p.methodDecl) this.emitMethod(p.methodDecl)
+                        else this.emitAssignmentExpression(p.protoUpdate, true)
                     }
                 }
                 this.emitNested(this.protoProc)
@@ -1465,7 +1522,7 @@ class Program implements TopOpWriter {
 
         if (this.flags.traceProto) {
             for (const p of this.protoDefinitions) {
-                if (!p.emitted) trace("SKIP upd", p.names[0])
+                if (!p.emitted) trace("skip upd", p.names[0])
             }
         }
     }
@@ -1560,15 +1617,6 @@ class Program implements TopOpWriter {
                     throwError(stmt, "only top-level classes supported")
                 this.forceName(stmt.name)
                 this.assignCell(stmt, new FunctionDecl(stmt, this.functions))
-                for (const mem of stmt.members) {
-                    if (ts.isMethodDeclaration(mem)) {
-                        this.forceName(mem.name)
-                        this.assignCell(
-                            mem,
-                            new FunctionDecl(stmt, this.functions)
-                        )
-                    }
-                }
             }
         } catch (e) {
             this.handleException(stmt, e)
@@ -1959,7 +2007,7 @@ class Program implements TopOpWriter {
             case SK.BooleanKeyword:
                 return "#boolean"
         }
-        const sym = this.checker.getSymbolAtLocation(node)
+        const sym = this.getSymAtLocation(node)
         const r = this.symName(sym)
         if (["#parseInt", "#parseFloat"].indexOf(r) >= 0)
             return "#ds." + r.slice(1)
@@ -2315,26 +2363,12 @@ class Program implements TopOpWriter {
         const decl = sym?.valueDeclaration
 
         if (decl) {
-            const name = this.symName(sym)
-            const protoUpdate: ProtoDefinition = {
+            this.protoDefinitions.push({
                 methodName: idName(left.name),
                 className: this.nodeName(decl.parent),
-                names: [name],
-                expr,
-            }
-
-            if (name == "#ds.RegisterNumber.onChange")
-                protoUpdate.names.push(
-                    "#ds.RegisterBuffer.onChange",
-                    "#ds.RegisterBool.onChange"
-                )
-
-            for (const baseSym of this.getBaseSyms(sym)) {
-                protoUpdate.names.push(this.symName(baseSym))
-            }
-
-            this.protoDefinitions.push(protoUpdate)
-
+                names: this.methodNames(sym),
+                protoUpdate: expr,
+            })
             return unit()
         } else {
             throwError(expr, "can't determine symbol of prototype update")
