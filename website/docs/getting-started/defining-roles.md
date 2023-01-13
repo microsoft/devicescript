@@ -27,7 +27,7 @@ const mouse = new ds.HidMouse()
 You can already interact with the simulators, but we don't have any interresting code using them yet.
 
 :::note
-For consistency and breivity, the `@devicescript/core` module
+For consistency and brevity, the `@devicescript/core` module
 is implicitely imported as follows:
 
 ```ts no-build no-run
