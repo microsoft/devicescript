@@ -4,6 +4,7 @@
 #include "devs_internal.h"
 
 // #define LOG_TAG "gc"
+// #define VLOGGING 1
 #include "devs_logging.h"
 
 #define ROOT_SCAN_DEPTH 10
@@ -15,9 +16,12 @@
 
 #define BLOCK_SIZE(p) ((p)&0xffffff)
 
+#define FREE_FILL 0x37
+
 typedef struct _free_devs_gc_block_t {
     devs_gc_object_t gc;
     struct _devs_gc_block_t *next;
+    uint8_t data[0];
 } free_devs_gc_block_t;
 
 typedef struct _devs_gc_block_t {
@@ -54,6 +58,10 @@ struct _devs_gc_t {
 static inline void mark_block(block_t *block, unsigned tag, unsigned size) {
     JD_ASSERT(tag <= 0xff);
     block->header = DEVS_GC_MK_TAG_WORDS(tag, size);
+    if (tag == DEVS_GC_TAG_FREE) {
+        JD_ASSERT(size >= 2);
+        memset(block->free.data, FREE_FILL, (size - 2) * sizeof(uintptr_t));
+    }
 }
 
 static inline uintptr_t *block_ptr(block_t *block) {
@@ -235,7 +243,7 @@ static void sweep(devs_gc_t *gc) {
                 JD_ASSERT(block < chunk->end);
 
                 if (!sweep)
-                    LOG("p=%p tag=%x", block, (unsigned)tag);
+                    LOGV("p=%p tag=%x", block, (unsigned)tag);
 
                 if ((tag & DEVS_GC_TAG_MASK_PENDING) ||
                     (tag & (DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_MASK_SCANNED)) ==
@@ -255,7 +263,6 @@ static void sweep(devs_gc_t *gc) {
                     if (p != block) {
                         unsigned new_size = block_ptr(p) - block_ptr(block);
                         mark_block(block, DEVS_GC_TAG_FREE, new_size);
-                        memset(block->data, 0x37, (block_size(block) - 1) * sizeof(uintptr_t));
                         if (prev == NULL) {
                             gc->first_free = block;
                         } else {
@@ -274,6 +281,29 @@ static void sweep(devs_gc_t *gc) {
             break;
         if (!had_pending)
             sweep = 1;
+    }
+}
+
+static void validate_heap(devs_gc_t *gc) {
+    for (chunk_t *chunk = gc->first_chunk; chunk; chunk = chunk->next) {
+        for (block_t *block = chunk->start;; block = next_block(block)) {
+            uintptr_t header = block->header;
+            unsigned tag = GET_TAG(header);
+            if (tag == DEVS_GC_TAG_FINAL)
+                break;
+            JD_ASSERT(block < chunk->end);
+
+            if (tag == DEVS_GC_TAG_FREE) {
+                unsigned size = (block_size(block) - 2) * sizeof(uintptr_t);
+                for (unsigned i = 0; i < size; ++i) {
+                    if (block->free.data[i] != FREE_FILL) {
+                        DMESG("block corruption: %p off=%u v=%x", block,
+                              (unsigned)(i + sizeof(uintptr_t)), block->free.data[i]);
+                        JD_PANIC();
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -319,6 +349,9 @@ static block_t *find_free_block(devs_gc_t *gc, unsigned tag, uint32_t words) {
 static block_t *alloc_block(devs_gc_t *gc, unsigned tag, uint32_t size) {
     unsigned words = (size + JD_PTRSIZE - 1) / JD_PTRSIZE;
 
+    if (words == 0)
+        words = 1; // min. alloc size:60
+
     JD_ASSERT(tag <= 0xff);
 
     // if jd_free() is supported we check stack often at the beginning and less often later
@@ -326,8 +359,10 @@ static block_t *alloc_block(devs_gc_t *gc, unsigned tag, uint32_t size) {
     if (gc->num_alloc < 32 || (gc->num_alloc & 31) == 0)
         jd_alloc_stack_check();
 
-    if (devs_get_global_flags() & DEVS_FLAG_GC_STRESS)
+    if (devs_get_global_flags() & DEVS_FLAG_GC_STRESS) {
+        validate_heap(gc);
         devs_gc(gc);
+    }
 
     block_t *b = find_free_block(gc, tag, words);
     if (!b) {
@@ -365,12 +400,11 @@ void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size) {
     return NULL;
 }
 
-static block_t *unpin(devs_gc_t *gc, void *ptr, uint8_t tag) {
+static void unpin(devs_gc_t *gc, void *ptr, uint8_t tag) {
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
     JD_ASSERT(GET_TAG(b->header) == (DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES));
     mark_block(b, tag, block_size(b));
-    return b;
 }
 
 void jd_gc_unpin(devs_gc_t *gc, void *ptr) {
@@ -382,8 +416,7 @@ void jd_gc_unpin(devs_gc_t *gc, void *ptr) {
 void jd_gc_free(devs_gc_t *gc, void *ptr) {
     if (ptr == NULL)
         return;
-    block_t *b = unpin(gc, ptr, DEVS_GC_TAG_FREE);
-    memset(b->data, 0x47, (block_size(b) - 1) * sizeof(uintptr_t));
+    unpin(gc, ptr, DEVS_GC_TAG_FREE);
 }
 
 void devs_value_pin(devs_ctx_t *ctx, value_t v) {
