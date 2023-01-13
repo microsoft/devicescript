@@ -12,7 +12,7 @@ interface Opts {
     height?: number
     msg?: string
 }
-/* TODO
+/* TODO accessors
 class OptImpl {
     width: number
     get height() {
@@ -116,7 +116,7 @@ function runObjLit() {
     foo(op)
     assert(glb1 == 17 + 15, "g+")
 
-    /* TODO
+    /* TODO accessors
     glb1 = 0
     let v = new OptImpl()
     v.width = 34

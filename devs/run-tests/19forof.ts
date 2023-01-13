@@ -64,7 +64,7 @@ function testForOf() {
     assert(sum == 55, "fo7")
 
 
-    /* TODO
+    /* TODO nested closures
     let f = []
     glb1 = 0
     for (const q of [1, 12]) {

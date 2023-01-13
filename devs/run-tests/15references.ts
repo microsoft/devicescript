@@ -24,7 +24,7 @@ function runInBackground(f: Action) {
 }
 
 function testRefLocals(): void {
-    /* TODO
+    /* TODO nested closures
     msg("start test ref locals")
     let s = ""
     for (let i of [3, 2, 1]) {
@@ -180,12 +180,10 @@ interface V {
     bar: string
 }
 
-/* TODO
 class Blah {
     foo: number
     bar: string
 }
-*/
 
 function check(v: V) {
     return `${v.foo + 1}/${v.bar}`
@@ -241,7 +239,6 @@ function testDynamicMaps() {
         bar: "foo",
     }
 
-    /* TODO
     let z = new Blah()
     z.foo = 12
     z.bar = "blah"
@@ -252,7 +249,6 @@ function testDynamicMaps() {
     z.bar = "foo"
     msg("dynamic class")
     allChecks(z)
-    */
 
     allChecks(v)
 }

@@ -257,7 +257,7 @@ function testNested() {
     bar2()
     assert(glb1 == 12)
 
-    /* TODO
+    /* TODO nested closures
     glb1 = 0
     const arr = [1, 20, 300]
     for (let k of arr) {

@@ -40,7 +40,7 @@ function arrayAssignment() {
     assert(c == 3, "[]")
     assert(b == "foo", "[1]")
     
-    /* TODO
+    /* TODO destructor assignments
     ;[a, c] = [c, a]
     assert(a == 3, "[2]")
     assert(c == 1, "[]")
@@ -61,11 +61,9 @@ function arrayAssignment() {
     msg("arrayAssignment done")
 }
 
-/* TODO
 class ObjF {
     constructor(public x: number, public y: string) {}
 }
-*/
 
 function objectAssignment() {
     //let {aa,bb} = {aa:10,bb:20}
@@ -79,17 +77,15 @@ function objectAssignment() {
     assert(q == 1, "{}")
     assert(r == 2, "{}")
 
-    /* TODO
     let { x, y } = new ObjF(1, "foo")
     assert(x == 1, "{}")
     assert(y == "foo", "{}")
-    */
 
     msg("objectAssignment done")
 }
 
 function runObjDestruct() {
-    /* TODO
+    /* TODO destructors in params
     glb1 = 0
 
     testFunction(({}) => {
