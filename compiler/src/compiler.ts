@@ -1569,11 +1569,15 @@ class Program implements TopOpWriter {
     }
 
     private emitProtoAssigns() {
-        const needsEmit = (p: ProtoDefinition) =>
-            !p.emitted &&
-            (this.flags.allPrototypes ||
-                p.names.some(n => this.usedMethods[n])) &&
-            (p.protoUpdate || this.ctorProc(p.methodDecl.parent) != null)
+        const needsEmit = (p: ProtoDefinition) => {
+            if (p.emitted) return false
+            if (p.methodDecl && this.ctorProc(p.methodDecl.parent) == null)
+                return false
+            if (this.flags.allPrototypes) return true
+            if (this.usedMethods["*" + p.methodName]) return true
+            if (p.names.some(n => this.usedMethods[n])) return true
+            return false
+        }
 
         this.withProcedure(this.protoProc, wr => {
             for (;;) {
@@ -2078,8 +2082,11 @@ class Program implements TopOpWriter {
                         ts.isSourceFile(d.parent.parent)) ||
                     (ts.isVariableDeclarationList(d.parent) &&
                         ts.isSourceFile(d.parent.parent.parent))
-                )
+                ) {
+                    if (["parseInt", "parseFloat"].indexOf(r) >= 0)
+                        return "#ds." + r
                     return "#" + r
+                }
                 if (this.flags.traceBuiltin)
                     trace("not-builtin", SK[d.parent.kind], d.parent.kind, r)
                 return r
@@ -2095,12 +2102,7 @@ class Program implements TopOpWriter {
             case SK.BooleanKeyword:
                 return "#boolean"
         }
-        const sym = this.getSymAtLocation(node)
-        const r = this.symName(sym)
-        if (["#parseInt", "#parseFloat"].indexOf(r) >= 0)
-            return "#ds." + r.slice(1)
-        // if (!r) console.log(node.kind, r)
-        return r
+        return this.symName(this.getSymAtLocation(node))
     }
 
     private emitBuiltInCall(expr: CallLike, funName: string): Value {
@@ -2190,11 +2192,6 @@ class Program implements TopOpWriter {
         const callName = this.nodeName(call.callexpr)
         const builtInName =
             callName && callName.startsWith("#") ? callName.slice(1) : null
-
-        if (callName && !this.usedMethods[callName]) {
-            if (this.flags.traceProto) trace(`use: ${callName}`)
-            this.usedMethods[callName] = true
-        }
 
         if (builtInName) {
             const builtIn = this.emitBuiltInCall(call, builtInName)
@@ -2338,7 +2335,10 @@ class Program implements TopOpWriter {
                 if (this.flags.traceBuiltin) trace("traceBuiltin:", nodeName)
                 if (nodeName.startsWith("#ds.")) {
                     const idx = BUILTIN_STRING__VAL.indexOf(nodeName.slice(4))
-                    if (idx >= 0) return this.writer.dsMember(idx)
+                    if (idx >= 0) {
+                        this.markMethodUsed(nodeName)
+                        return this.writer.dsMember(idx)
+                    }
                 }
                 return null
         }
@@ -2379,11 +2379,8 @@ class Program implements TopOpWriter {
             }
         }
 
-        const val = this.emitExpr(expr.expression)
-        return this.writer.emitIndex(
-            val,
-            this.writer.emitString(this.forceName(expr.name))
-        )
+        const { obj, idx } = this.tryEmitIndex(expr)
+        return this.writer.emitIndex(obj, idx)
     }
 
     private isStringLiteral(node: ts.Node): node is ts.LiteralExpression {
@@ -2739,6 +2736,14 @@ class Program implements TopOpWriter {
         return ref.finalEmit()
     }
 
+    private markMethodUsed(meth: string) {
+        assert(!!meth)
+        if (!this.usedMethods[meth]) {
+            if (this.flags.traceProto) trace(`use: ${meth}`)
+            this.usedMethods[meth] = true
+        }
+    }
+
     private tryEmitIndex(expr: Expr) {
         const wr = this.writer
         if (
@@ -2746,9 +2751,25 @@ class Program implements TopOpWriter {
             ts.isPropertyAccessExpression(expr)
         ) {
             const obj = this.emitExpr(expr.expression)
-            const idx = ts.isPropertyAccessExpression(expr)
-                ? wr.emitString(this.forceName(expr.name))
-                : this.emitExpr(expr.argumentExpression)
+            let idx: Value
+            if (ts.isPropertyAccessExpression(expr)) {
+                idx = wr.emitString(this.forceName(expr.name))
+                const sym = this.getSymAtLocation(expr)
+                const decl = sym?.valueDeclaration
+                const symName = this.symName(sym)
+                if (
+                    (symName && symName[0] == "#") ||
+                    (decl && decl.parent && ts.isClassLike(decl.parent))
+                ) {
+                    this.markMethodUsed(symName)
+                } else {
+                    this.markMethodUsed("*" + idName(expr.name))
+                }
+            } else {
+                idx = this.emitExpr(expr.argumentExpression)
+                if (idx.strValue != undefined)
+                    this.markMethodUsed("*" + idx.strValue)
+            }
             return { obj, idx }
         }
         return null

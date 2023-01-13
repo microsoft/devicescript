@@ -45,6 +45,7 @@ export class Value {
     flags: number
     args: Value[]
     numValue: number
+    strValue: string
     _userdata: {}
     _cachedValue: CachedValue
 
@@ -360,6 +361,7 @@ export class OpWriter {
             else if (tp == StrIdx.BUILTIN) v.op = Op.EXPRx_STATIC_BUILTIN_STRING
             else if (tp == StrIdx.ASCII) v.op = Op.EXPRx_STATIC_ASCII_STRING
             else assert(false)
+            v.strValue = s
         } else {
             idx = this.prog.addBuffer(s)
             v.op = Op.EXPRx_STATIC_BUFFER

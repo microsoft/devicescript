@@ -18,7 +18,7 @@ test-c: native comp
 	  echo "*** $$f" ; \
 	  $(CLI) crun $$f ; done
 
-test-em: em comp
+test-em: em comp-fast
 	yarn test
 
 test: test-c test-em

@@ -73,15 +73,14 @@ function run() {
     testACall(new A(), 1, 42)
     testACall(new B(), 2, 108)
     testACall(new C(), 3, 42)
-    // TODO super.calls 
+    // TODO super.calls
     // testACall(new D(), 3, 52)
 }
 
 class A1 {
     v: number
     s: string
-    constructor(k?: number) {
-        if (k == undefined) k = 12
+    constructor(k = 12) {
         this.v = k
     }
 }
@@ -126,8 +125,54 @@ function run2() {
     b.foo(1)
 }
 
+interface IFoo {
+    foo(): number
+    bar(x: number): string
+    twoArg(x: number, y: number): number
+    baz: string
+}
+
+class A3 {
+    constructor() {
+        this.baz = "Q" + "A"
+    }
+    foo() {
+        return 12
+    }
+    bar(v: number) {
+        return v + ""
+    }
+    twoArg(x: number) {
+        return x
+    }
+    baz: string
+}
+class B3 extends A3 {
+    override foo() {
+        return 13
+    }
+}
+
+function foo(f: IFoo) {
+    return f.foo() + f.baz + f.bar(42)
+}
+
+function run3() {
+    msg("Ifaces.run")
+    let a = new A3()
+    assert(foo(a) + "X" == "12QA42X")
+    assert((a as IFoo).twoArg(1, 2) == 1, "t")
+    a = new B3()
+    assert(foo(a) + "X" == "13QA42X", "b")
+    let q = a as IFoo
+    q.baz = "Z"
+    assert(foo(q) + "X" == "13Z42X", "x")
+    msg("Ifaces.runDONE")
+}
+
 run()
 run1()
 run2()
+run3()
 
 ds.reboot()
