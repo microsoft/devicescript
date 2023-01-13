@@ -23,16 +23,13 @@ jobs:
               with:
                   submodules: "recursive"
                   fetch-depth: 0
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: "18"
             - name: Setup cache
               id: cache-system-libraries
               uses: actions/cache@v3
               with:
                   path: ${{env.EM_CACHE_FOLDER}}
                   key: ${{env.EM_VERSION}}-${{ runner.os }}
-            - uses: mymindstorm/setup-emsdk@v11
+            - uses: mymindstorm/setup-emsdk@v12
               with:
                   version: ${{env.EM_VERSION}}
                   actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
