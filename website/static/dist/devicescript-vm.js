@@ -988,28 +988,28 @@ function ignoredModuleProp(prop) {
   }
 }
 
-function unexportedMessage(sym, isFSSybol) {
+function unexportedMessage(sym, isFSSymbol) {
   var msg = "'" + sym + "' was not exported. add it to EXPORTED_RUNTIME_METHODS (see the FAQ)";
-  if (isFSSybol) {
+  if (isFSSymbol) {
     msg += '. Alternatively, forcing filesystem support (-s FORCE_FILESYSTEM=1) can export this for you';
   }
   return msg;
 }
 
-function unexportedRuntimeSymbol(sym, isFSSybol) {
+function unexportedRuntimeSymbol(sym, isFSSymbol) {
   if (!Object.getOwnPropertyDescriptor(Module, sym)) {
     Object.defineProperty(Module, sym, {
       configurable: true,
       get: function() {
-        abort(unexportedMessage(sym, isFSSybol));
+        abort(unexportedMessage(sym, isFSSymbol));
       }
     });
   }
 }
 
-function unexportedRuntimeFunction(sym, isFSSybol) {
+function unexportedRuntimeFunction(sym, isFSSymbol) {
   if (!Object.getOwnPropertyDescriptor(Module, sym)) {
-    Module[sym] = () => abort(unexportedMessage(sym, isFSSybol));
+    Module[sym] = () => abort(unexportedMessage(sym, isFSSymbol));
   }
 }
 
