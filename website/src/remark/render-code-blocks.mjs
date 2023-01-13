@@ -273,7 +273,7 @@ export default function plugin() {
         if (promises.length) {
             info(`rendering ${promises.length} snippets`)
             await Promise.all(promises)
-            //info(`renderered ${promises.length} snippets`)
+            //info(`rendered ${promises.length} snippets`)
         }
     }
     return transformer
