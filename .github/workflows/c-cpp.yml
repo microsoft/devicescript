@@ -42,6 +42,9 @@ jobs:
             - name: update pre-compiled WASM
               run: make update-dist
               if: github.ref == 'refs/heads/main'
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: "18"
             - name: semantic release prep
               run: yarn add -D -W semantic-release semantic-release-monorepo @semantic-release/git
               if: github.ref == 'refs/heads/main'
