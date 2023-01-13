@@ -162,7 +162,9 @@ void devs_gc_destroy(devs_gc_t *gc);
     DEVS_GC_MK_TAG_WORDS(tag, (size + JD_PTRSIZE - 1) / JD_PTRSIZE)
 
 #define DEVS_BUILTIN_PROTO_INIT                                                                    \
-    { DEVS_GC_MK_TAG_BYTES(DEVS_GC_TAG_BUILTIN_PROTO, sizeof(devs_builtin_proto_t)) }
+    {                                                                                              \
+        { DEVS_GC_MK_TAG_BYTES(DEVS_GC_TAG_BUILTIN_PROTO, sizeof(devs_builtin_proto_t)) }          \
+    }
 
 #define DEVS_GC_TAG_MASK_PENDING 0x80
 #define DEVS_GC_TAG_MASK_SCANNED 0x20
