@@ -12,12 +12,12 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
     _jd_em_devs_client_deploy(img: ptr, size: int32): int32;
     sendPacket(pkt: Uint8Array): void;
     /**
-     * Overrideable method called when deployment is done.
+     * Overridable method called when deployment is done.
      * @param code error code, 0 is success.
      */
     deployHandler(code: int32): void;
     /**
-     * Overrideable method called when a panic code is raiserd.
+     * Overridable method called when a panic code is raiserd.
      * @param exitCode the panic code
      */
     panicHandler(exitCode: int32): void;
