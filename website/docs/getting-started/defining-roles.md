@@ -24,7 +24,7 @@ const mouse = new ds.HidMouse()
 - [ ]   Click `Run` to load the snippet in the developer tools
 - [ ]  Check that a air pressure and mouse simulator was started by the tools.
 
-You can already interact with the simulators, but we don't have any interresting code using them yet.
+You can already interact with the simulators, but we don't have any interesting code using them yet.
 
 :::note
 For consistency and brevity, the `@devicescript/core` module
