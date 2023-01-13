@@ -9,7 +9,7 @@ import { CmdOptions, debug, error, log } from "./command"
 import { readFileSync, readJSONSync, watch } from "fs-extra"
 import { prettySize } from "@devicescript/compiler"
 
-const dasboardPath = "tools/devicescript-devtools"
+const dashboardPath = "tools/devicescript-devtools"
 
 function fetchProxy(localhost: boolean): Promise<string> {
     const protocol = localhost ? http : https
@@ -32,8 +32,8 @@ function fetchProxy(localhost: boolean): Promise<string> {
                         .replace(
                             /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
                             localhost
-                                ? `http://localhost:8000/${dasboardPath}/`
-                                : `https://microsoft.github.io/jacdac-docs/${dasboardPath}/`
+                                ? `http://localhost:8000/${dashboardPath}/`
+                                : `https://microsoft.github.io/jacdac-docs/${dashboardPath}/`
                         )
                         .replace("Jacdac DevTools", "DeviceScript DevTools")
                         .replace(
