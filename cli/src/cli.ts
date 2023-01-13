@@ -13,6 +13,8 @@ import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
 
 export async function mainCli() {
+    Error.stackTraceLimit = 30
+
     function buildCommand(nameAndArgs: string, opts?: CommandOptions) {
         return program
             .command(nameAndArgs, opts)

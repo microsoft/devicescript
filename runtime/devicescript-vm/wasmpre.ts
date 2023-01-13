@@ -101,7 +101,7 @@ export module Exts {
             }
 
             const disconnect = (err: any) => {
-                log("disconnect", err?.message)
+                Module.log("disconnect", err?.message)
                 if (sock)
                     try {
                         sock.end()
@@ -120,7 +120,7 @@ export module Exts {
             Module["sendPacket"] = send
 
             sock = net.createConnection(port, host, () => {
-                log(`connected to ${port}:${host}`)
+                Module.log(`connected to ${port}:${host}`)
                 const f = resolve
                 if (f) {
                     resolve = null
@@ -180,7 +180,7 @@ export module Exts {
             }
 
             const disconnect = (err: any) => {
-                log("disconnect", err?.message)
+                Module.log("disconnect", err?.message)
                 if (sock)
                     try {
                         sock.close()
@@ -201,7 +201,7 @@ export module Exts {
             Module["sendPacket"] = send
 
             sock.onopen = () => {
-                log(`connected to ${url}`)
+                Module.log(`connected to ${url}`)
                 const f = resolve
                 if (f) {
                     resolve = null
@@ -214,7 +214,7 @@ export module Exts {
             sock.onmessage = ev => {
                 const data = ev.data
                 if (typeof data == "string") {
-                    error("got string msg")
+                    Module.error("got string msg")
                     return
                 } else {
                     const pkt = new Uint8Array(ev.data)
@@ -290,7 +290,7 @@ export module Exts {
             try {
                 Module._jd_em_process()
             } catch (e) {
-                error(e)
+                Module.error(e)
                 devsStop()
             }
         }, 10)

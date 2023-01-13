@@ -47,8 +47,13 @@ export async function runTest(
         inst.devsSetDeviceId(devid)
         inst.devsStart()
         inst.devsDeploy(prog)
+        inst.error = (...data) => {
+            console.error(...data)
+            process.exit(1)
+        }
         setTimeout(() => {
             if (resolve) {
+                inst.devsStop()
                 console.log("timeout")
                 reject(new Error("timeout"))
             }
