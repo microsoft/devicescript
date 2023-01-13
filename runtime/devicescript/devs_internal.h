@@ -193,7 +193,7 @@ void devs_jd_send_logmsg(devs_ctx_t *ctx, value_t str);
 // fibers.c
 void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time);
-void devs_fiber_termiante(devs_fiber_t *fiber);
+void devs_fiber_terminate(devs_fiber_t *fiber);
 void devs_fiber_yield(devs_ctx_t *ctx);
 int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams);
 void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act);

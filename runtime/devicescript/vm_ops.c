@@ -264,7 +264,7 @@ static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
         if (fib == NULL)
             return;
         ctx->curr_fiber->ret_val = devs_zero;
-        devs_fiber_termiante(fib);
+        devs_fiber_terminate(fib);
     }
 }
 

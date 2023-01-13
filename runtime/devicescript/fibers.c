@@ -217,7 +217,7 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op) {
         fiber = devs_fiber_by_fidx(ctx, fidx);
         if (fiber) {
             if (op == DEVS_OPCALL_BG_MAX1_REPLACE) {
-                devs_fiber_termiante(fiber);
+                devs_fiber_terminate(fiber);
             } else if (op == DEVS_OPCALL_BG_MAX1_PEND1) {
                 fiber->pending = 1;
                 return fiber;
@@ -249,7 +249,7 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op) {
     return fiber;
 }
 
-void devs_fiber_termiante(devs_fiber_t *f) {
+void devs_fiber_terminate(devs_fiber_t *f) {
     log_fiber_op(f, "terminate");
     if (f->ctx->curr_fiber == f)
         devs_fiber_yield(f->ctx);
