@@ -2095,7 +2095,7 @@ function createWasm() {
         typeof fetch == 'function') {
       return fetch(wasmBinaryFile, { credentials: 'same-origin' }).then(function(response) {
         // Suppress closure warning here since the upstream definition for
-        // instantiateStreaming only allows Promise<Repsponse> rather than
+        // instantiateStreaming only allows Promise<Response> rather than
         // an actual Response.
         // TODO(https://github.com/google/closure-compiler/pull/3913): Remove if/when upstream closure is fixed.
         /** @suppress {checkTypes} */
