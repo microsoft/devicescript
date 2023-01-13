@@ -85,7 +85,7 @@ const running = vm.devsIsRunning()
 ## devsInit
 
 This method allocates data structures necessary for running the virtual machine.
-It is automatically called by other metods.
+It is automatically called by other methods.
 
 ```js
 vm.devsInit()

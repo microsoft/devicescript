@@ -12,7 +12,7 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
     _jd_em_devs_client_deploy(img: ptr, size: int32): int32;
     sendPacket(pkt: Uint8Array): void;
     /**
-     * Overrideable metod called when deployment is done.
+     * Overrideable method called when deployment is done.
      * @param code error code, 0 is success.
      */
     deployHandler(code: int32): void;

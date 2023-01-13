@@ -14,7 +14,7 @@ export declare type DevsModule = EmscriptenModule &
         sendPacket(pkt: Uint8Array): void
 
         /**
-         * Overrideable metod called when deployment is done.
+         * Overrideable method called when deployment is done.
          * @param code error code, 0 is success.
          */
         deployHandler(code: int32): void
