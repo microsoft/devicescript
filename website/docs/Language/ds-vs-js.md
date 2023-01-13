@@ -13,7 +13,7 @@ The method `String.charCodeAt()` returns a Unicode code point (up to 21 bits), n
 See [discussion](https://github.com/microsoft/devicescript/discussions/34).
 
 String encoding is currently UTF-8 which make [indexing slow](https://github.com/microsoft/devicescript/issues/40),
-and [construction by concatnation quadratic](https://github.com/microsoft/devicescript/issues/39).
+and [construction by concatenation quadratic](https://github.com/microsoft/devicescript/issues/39).
 This may be fixed in future, see linked issues.
 
 ## Prototypes
