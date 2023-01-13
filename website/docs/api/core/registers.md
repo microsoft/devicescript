@@ -49,7 +49,7 @@ The `onChange` method on `RegisterNumber` registers a callback to run when the r
 
 ```ts
 const sensor = new ds.Temperature()
-sensor.temperature.onChange(2 /* deg celcius */, () => {
+sensor.temperature.onChange(2 /* deg celsius */, () => {
     const t = sensor.temperature.read()
     console.log(t)
 })
