@@ -6,8 +6,8 @@ typedef union {
     double _f;
     uint64_t u64;
     struct {
-        uint32_t mantisa32;
-        uint32_t mantisa20 : 20;
+        uint32_t mantissa32;
+        uint32_t mantissa20 : 20;
         uint32_t exponent : 11;
         uint32_t sign : 1;
     };
@@ -98,7 +98,7 @@ static inline int devs_handle_type(value_t t) {
 }
 
 static inline uint32_t devs_handle_value(value_t t) {
-    return t.mantisa32;
+    return t.mantissa32;
 }
 
 // high_value is 16 bit
@@ -114,14 +114,14 @@ static inline bool devs_handle_is_ptr(value_t t) {
 void *devs_handle_ptr_value(devs_ctx_t *ctx, value_t t);
 #else
 static inline void *devs_handle_ptr_value(devs_ctx_t *ctx, value_t t) {
-    return (void *)t.mantisa32;
+    return (void *)t.mantissa32;
 }
 #endif
 
 static inline value_t devs_value_from_handle(int type, uint32_t value) {
     value_t r;
     r.exp_sign = DEVS_HANDLE_TAG + type;
-    r.mantisa32 = value;
+    r.mantissa32 = value;
     return r;
 }
 

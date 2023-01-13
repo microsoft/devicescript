@@ -34,7 +34,7 @@ value_t devs_value_from_double(double v) {
     value_t t;
     value_t r;
     t._f = v;
-    int m32z = t.mantisa32 == 0;
+    int m32z = t.mantissa32 == 0;
 
     r.exp_sign = DEVS_INT_TAG;
 
@@ -44,8 +44,8 @@ value_t devs_value_from_double(double v) {
     int e = t.exponent - 0x3ff;
     if (e >= 0) {
         if (e <= 20) {
-            if (m32z && (e == 20 || (t.mantisa20 << (e + 12)) == 0)) {
-                r.val_int32 = (t.mantisa20 | (1 << 20)) >> (20 - e);
+            if (m32z && (e == 20 || (t.mantissa20 << (e + 12)) == 0)) {
+                r.val_int32 = (t.mantissa20 | (1 << 20)) >> (20 - e);
                 goto int_sign;
             }
         } else {
@@ -53,9 +53,9 @@ value_t devs_value_from_double(double v) {
                 if (m32z && t.exp_sign == 0xc1e00000)
                     return devs_int_min;
             } else {
-                if ((t.mantisa32 << (e - 20)) == 0) {
+                if ((t.mantissa32 << (e - 20)) == 0) {
                     r.val_int32 =
-                        ((t.mantisa20 | (1 << 20)) << (e - 20)) | (t.mantisa32 >> (32 - (e - 20)));
+                        ((t.mantissa20 | (1 << 20)) << (e - 20)) | (t.mantissa32 >> (32 - (e - 20)));
                     goto int_sign;
                 }
             }
@@ -102,7 +102,7 @@ value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr) {
 #if JD_64
 void *devs_handle_ptr_value(devs_ctx_t *ctx, value_t t) {
     if (devs_handle_is_ptr(t))
-        return (void *)((uintptr_t)devs_gc_base_addr(ctx->gc) + t.mantisa32);
+        return (void *)((uintptr_t)devs_gc_base_addr(ctx->gc) + t.mantissa32);
 
     JD_PANIC();
     return NULL;
