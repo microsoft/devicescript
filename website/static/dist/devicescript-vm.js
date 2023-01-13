@@ -1220,7 +1220,7 @@ function allocate(slab, allocator) {
 // runtime_strings.js: Strings related runtime functions that are part of both MINIMAL_RUNTIME and regular runtime.
 
 // Given a pointer 'ptr' to a null-terminated UTF8-encoded string in the given array that contains uint8 values, returns
-// a copy of that string as a Javascript String object.
+// a copy of that string as a JavaScript String object.
 
 var UTF8Decoder = typeof TextDecoder != 'undefined' ? new TextDecoder('utf8') : undefined;
 
@@ -1271,7 +1271,7 @@ function UTF8ArrayToString(heap, idx, maxBytesToRead) {
 }
 
 // Given a pointer 'ptr' to a null-terminated UTF8-encoded string in the emscripten HEAP, returns a
-// copy of that string as a Javascript String object.
+// copy of that string as a JavaScript String object.
 // maxBytesToRead: an optional length that specifies the maximum number of bytes to read. You can omit
 //                 this parameter to scan the string until the first \0 byte. If maxBytesToRead is
 //                 passed, and the string at [ptr, ptr+maxBytesToReadr[ contains a null byte in the
@@ -1290,11 +1290,11 @@ function UTF8ToString(ptr, maxBytesToRead) {
   return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead) : '';
 }
 
-// Copies the given Javascript String object 'str' to the given byte array at address 'outIdx',
+// Copies the given JavaScript String object 'str' to the given byte array at address 'outIdx',
 // encoded in UTF8 form and null-terminated. The copy will require at most str.length*4+1 bytes of space in the HEAP.
 // Use the function lengthBytesUTF8 to compute the exact number of bytes (excluding null terminator) that this function will write.
 // Parameters:
-//   str: the Javascript string to copy.
+//   str: the JavaScript string to copy.
 //   heap: the array to copy to. Each index in this array is assumed to be one 8-byte element.
 //   outIdx: The starting offset in the array to begin the copying.
 //   maxBytesToWrite: The maximum number of bytes this function can write to the array.
@@ -1344,7 +1344,7 @@ function stringToUTF8Array(str, heap, outIdx, maxBytesToWrite) {
   return outIdx - startIdx;
 }
 
-// Copies the given Javascript String object 'str' to the emscripten HEAP at address 'outPtr',
+// Copies the given JavaScript String object 'str' to the emscripten HEAP at address 'outPtr',
 // null-terminated and encoded in UTF8 form. The copy will require at most str.length*4+1 bytes of space in the HEAP.
 // Use the function lengthBytesUTF8 to compute the exact number of bytes (excluding null terminator) that this function will write.
 // Returns the number of bytes written, EXCLUDING the null terminator.
@@ -1354,7 +1354,7 @@ function stringToUTF8(str, outPtr, maxBytesToWrite) {
   return stringToUTF8Array(str, HEAPU8,outPtr, maxBytesToWrite);
 }
 
-// Returns the number of bytes the given Javascript string takes if encoded as a UTF8 byte array, EXCLUDING the null terminator byte.
+// Returns the number of bytes the given JavaScript string takes if encoded as a UTF8 byte array, EXCLUDING the null terminator byte.
 function lengthBytesUTF8(str) {
   var len = 0;
   for (var i = 0; i < str.length; ++i) {
@@ -1377,7 +1377,7 @@ function lengthBytesUTF8(str) {
 // runtime_strings_extra.js: Strings related runtime functions that are available only in regular runtime.
 
 // Given a pointer 'ptr' to a null-terminated ASCII-encoded string in the emscripten HEAP, returns
-// a copy of that string as a Javascript String object.
+// a copy of that string as a JavaScript String object.
 
 function AsciiToString(ptr) {
   var str = '';
@@ -1388,7 +1388,7 @@ function AsciiToString(ptr) {
   }
 }
 
-// Copies the given Javascript String object 'str' to the emscripten HEAP at address 'outPtr',
+// Copies the given JavaScript String object 'str' to the emscripten HEAP at address 'outPtr',
 // null-terminated and encoded in ASCII form. The copy will require at most str.length+1 bytes of space in the HEAP.
 
 function stringToAscii(str, outPtr) {
@@ -1396,7 +1396,7 @@ function stringToAscii(str, outPtr) {
 }
 
 // Given a pointer 'ptr' to a null-terminated UTF16LE-encoded string in the emscripten HEAP, returns
-// a copy of that string as a Javascript String object.
+// a copy of that string as a JavaScript String object.
 
 var UTF16Decoder = typeof TextDecoder != 'undefined' ? new TextDecoder('utf-16le') : undefined;
 
@@ -1430,11 +1430,11 @@ function UTF16ToString(ptr, maxBytesToRead) {
   }
 }
 
-// Copies the given Javascript String object 'str' to the emscripten HEAP at address 'outPtr',
+// Copies the given JavaScript String object 'str' to the emscripten HEAP at address 'outPtr',
 // null-terminated and encoded in UTF16 form. The copy will require at most str.length*4+2 bytes of space in the HEAP.
 // Use the function lengthBytesUTF16() to compute the exact number of bytes (excluding null terminator) that this function will write.
 // Parameters:
-//   str: the Javascript string to copy.
+//   str: the JavaScript string to copy.
 //   outPtr: Byte address in Emscripten HEAP where to write the string to.
 //   maxBytesToWrite: The maximum number of bytes this function can write to the array. This count should include the null
 //                    terminator, i.e. if maxBytesToWrite=2, only the null terminator will be written and nothing else.
@@ -1463,7 +1463,7 @@ function stringToUTF16(str, outPtr, maxBytesToWrite) {
   return outPtr - startPtr;
 }
 
-// Returns the number of bytes the given Javascript string takes if encoded as a UTF16 byte array, EXCLUDING the null terminator byte.
+// Returns the number of bytes the given JavaScript string takes if encoded as a UTF16 byte array, EXCLUDING the null terminator byte.
 
 function lengthBytesUTF16(str) {
   return str.length*2;
@@ -1492,11 +1492,11 @@ function UTF32ToString(ptr, maxBytesToRead) {
   return str;
 }
 
-// Copies the given Javascript String object 'str' to the emscripten HEAP at address 'outPtr',
+// Copies the given JavaScript String object 'str' to the emscripten HEAP at address 'outPtr',
 // null-terminated and encoded in UTF32 form. The copy will require at most str.length*4+4 bytes of space in the HEAP.
 // Use the function lengthBytesUTF32() to compute the exact number of bytes (excluding null terminator) that this function will write.
 // Parameters:
-//   str: the Javascript string to copy.
+//   str: the JavaScript string to copy.
 //   outPtr: Byte address in Emscripten HEAP where to write the string to.
 //   maxBytesToWrite: The maximum number of bytes this function can write to the array. This count should include the null
 //                    terminator, i.e. if maxBytesToWrite=4, only the null terminator will be written and nothing else.
@@ -1530,7 +1530,7 @@ function stringToUTF32(str, outPtr, maxBytesToWrite) {
   return outPtr - startPtr;
 }
 
-// Returns the number of bytes the given Javascript string takes if encoded as a UTF16 byte array, EXCLUDING the null terminator byte.
+// Returns the number of bytes the given JavaScript string takes if encoded as a UTF16 byte array, EXCLUDING the null terminator byte.
 
 function lengthBytesUTF32(str) {
   var len = 0;
