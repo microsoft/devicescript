@@ -74,6 +74,13 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 	-s ENVIRONMENT=web,webview,worker,node \
 	--no-entry
 
+ifneq ($(EMCC_MEM_CHECK),)
+EMCC_OPTS += \
+	-fsanitize=address \
+	-s INITIAL_MEMORY=196608000 \
+	-s STACK_OVERFLOW_CHECK=2
+endif
+
 devicescript-vm/built/wasmpre.js: devicescript-vm/wasmpre.ts Makefile
 	cd devicescript-vm && yarn build
 	cat devicescript-vm/built/wasmpre.d.ts > devicescript-vm/dist/types.d.ts
