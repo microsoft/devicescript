@@ -74,7 +74,7 @@ export async function mainCli() {
 
     program
         .command("devtools")
-        .description("launches a local deveplopement tools server")
+        .description("launches a local development tools server")
         .option("--internet", "allow connections from non-localhost")
         .option(
             "--localhost",
