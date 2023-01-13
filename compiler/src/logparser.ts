@@ -224,7 +224,7 @@ export class LogInfo {
     async dump() {
         const r = {
             deviceInfo: this.deviceInfo,
-            purpuse: this.purpose,
+            purpose: this.purpose,
             comment: this.comment,
             size: this.dataBlocks * this.blockSize,
             generations: [] as any[],
