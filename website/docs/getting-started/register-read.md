@@ -5,7 +5,7 @@ hide_table_of_contents: true
 
 # Register read
 
-You can retreive the current value of a register by calling `read`.
+You can retrieve the current value of a register by calling `read`.
 Internally, the client will handle all the necessary syncronization and communication with the sensor.
 
 ```ts no-build no-run

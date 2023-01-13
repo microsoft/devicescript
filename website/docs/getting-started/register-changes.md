@@ -6,7 +6,7 @@ hide_table_of_contents: true
 # Register changes
 
 The `sensor` client exposes `pressure` register object.
-We can read the register value to retreive the air pressure
+We can read the register value to retrieve the air pressure
 sensor last reading. As mentioned in the Jacdac docs,
 the reading is in `hPa` and should be around 1000.
 
