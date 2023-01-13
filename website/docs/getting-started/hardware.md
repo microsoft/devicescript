@@ -34,5 +34,5 @@ in the developer tools window.
 
 ## Uploading DeviceScript bytecode
 
-Click on the chip to start flasing the DeviceScript bytecode
+Click on the chip to start flashing the DeviceScript bytecode
 to your Raspberry Pico. It will automatically reflash when it detects changes.
