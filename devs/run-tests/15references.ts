@@ -63,6 +63,7 @@ function testByRefParams(): void {
     msg("testByRefParams")
     refparamWrite("a" + "b")
     refparamWrite2(newTestrec())
+    sleepMs(10)
     refparamWrite3(newTestrec())
     sum = 0
     let x = 1
@@ -97,7 +98,7 @@ function refparamWrite3(testrecX: Testrec): void {
     })
     testrecX = newTestrec()
     testrecX.str = "foo"
-    sleepMs(130)
+    sleepMs(30)
     assert(testrecX.str == "foox", "ff2")
 }
 
