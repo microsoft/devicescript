@@ -370,7 +370,7 @@ var Exts;
     }
     Exts.devsIsRunning = devsIsRunning;
     /**
-     * Specifices the virtual macine device id.
+     * Specifices the virtual machine device id.
      * @remarks
      *
      * Must be called before `devsStart`.
