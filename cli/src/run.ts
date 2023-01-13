@@ -31,6 +31,7 @@ export async function runTest(
     return new Promise<void>((resolve, reject) => {
         inst.sendPacket = () => {}
         inst.panicHandler = panic_code => {
+            inst.devsStop()
             if (panic_code) {
                 console.log("test failed")
                 resolve = null
