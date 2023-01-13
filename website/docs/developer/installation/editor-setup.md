@@ -15,4 +15,4 @@ VS Code is one of the most popular editors in use today. It has a large marketpl
 
 As part of the project initialization (`devsc init`), DeviceScript will create configuration files for linting and formatting your source code in VS Code
 
-There are many other editos, pick the one that works best for you!
+There are many other editors, pick the one that works best for you!
