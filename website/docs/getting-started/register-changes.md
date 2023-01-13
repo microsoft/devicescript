@@ -7,7 +7,7 @@ hide_table_of_contents: true
 
 The `sensor` client exposes `pressure` register object.
 We can read the register value to retreive the air pressure
-sensor last reading. As mentionned in the Jacdac docs,
+sensor last reading. As mentioned in the Jacdac docs,
 the reading is in `hPa` and should be around 1000.
 
 To track pressure changes, we register a callback that triggers when the pressure reading changes by `10` hPa.
