@@ -1398,6 +1398,18 @@ class Program implements TopOpWriter {
             this.forceName(paramdef.name)
             this.addParameter(proc, paramdef)
         }
+        for (const paramdef of stmt.parameters) {
+            if (paramdef.initializer) {
+                const wr = this.writer
+                const v = this.getVarAtLocation(paramdef)
+                wr.emitIfAndPop(
+                    wr.emitExpr(Op.EXPR1_IS_NULL, v.emit(wr)),
+                    () => {
+                        this.emitStore(v, this.emitExpr(paramdef.initializer))
+                    }
+                )
+            }
+        }
     }
 
     getFunctionProc(fundecl: FunctionDecl) {
