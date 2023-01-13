@@ -169,13 +169,21 @@ EM_JS(void, em_console_debug, (const char *ptr), {
         console.debug(s);
 });
 
-void dmesg(const char *format, ...) {
+void dmesgv(const char *format, va_list arg) {
     char tmp[200];
-    va_list arg;
-    va_start(arg, format);
     jd_vsprintf(tmp, sizeof(tmp) - 1, format, arg);
     em_console_debug(tmp);
-    va_end(arg);
+}
+
+void dmesg(const char *format, ...) {
+    if (!strchr(format, '%'))
+        em_console_debug(format);
+    else {
+        va_list arg;
+        va_start(arg, format);
+        dmesgv(format, arg);
+        va_end(arg);
+    }
 }
 
 void jd_tcpsock_process(void) {}
