@@ -1274,7 +1274,7 @@ function UTF8ArrayToString(heap, idx, maxBytesToRead) {
 // copy of that string as a JavaScript String object.
 // maxBytesToRead: an optional length that specifies the maximum number of bytes to read. You can omit
 //                 this parameter to scan the string until the first \0 byte. If maxBytesToRead is
-//                 passed, and the string at [ptr, ptr+maxBytesToReadr[ contains a null byte in the
+//                 passed, and the string at [ptr, ptr+maxBytesToRead[ contains a null byte in the
 //                 middle, then the string will cut short at that byte index (i.e. maxBytesToRead will
 //                 not produce a string of exact length [ptr, ptr+maxBytesToRead[)
 //                 N.B. mixing frequent uses of UTF8ToString() with and without maxBytesToRead may
