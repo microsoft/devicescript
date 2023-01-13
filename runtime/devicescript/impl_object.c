@@ -47,3 +47,24 @@ void fun1_Object_keys(devs_ctx_t *ctx) {
 void fun1_Object_values(devs_ctx_t *ctx) {
     fun1_keys_or_values(ctx, 0);
 }
+
+void fun2_Object_setPrototypeOf(devs_ctx_t *ctx) {
+    value_t trg = devs_arg(ctx, 0);
+    value_t src = devs_arg(ctx, 1);
+
+    devs_map_t *m = devs_value_to_gc_obj(ctx, trg);
+    if (!devs_is_map(m)) {
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_OBJECT, trg);
+        return;
+    }
+
+    const devs_map_or_proto_t *p = devs_object_get_attached_enum(ctx, src);
+    if (!p) {
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_PROTOTYPE, src);
+        return;
+    }
+
+    m->proto = p;
+
+    devs_ret(ctx, trg);
+}

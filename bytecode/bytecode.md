@@ -104,7 +104,7 @@ Remove a named field from an object.
     builtin_field(*builtin_idx, obj): any = 26  // {swap}obj.builtin_idx
 
 Shorthand to `index(obj, static_builtin_string(builtin_idx))`
- 
+
     ascii_field(*ascii_idx, obj): any = 27      // {swap}obj.ascii_idx
 
 Shorthand to `index(obj, static_ascii_string(ascii_idx))`
@@ -117,9 +117,11 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun ds_field(*builtin_idx): any = 30        // ds.builtin_idx
 
-    fun object_field(*builtin_idx): any = 16      // Object.builtin_idx
+    fun object_field(*builtin_idx): any = 16    // Object.builtin_idx
 
-    fun new(func): function = 88                   // new func
+    fun new(func): function = 88                // new func
+
+    fun bind(func, obj): function = 90          // func.bind(obj)
 
 ### Objects
 
@@ -212,7 +214,7 @@ Same as `x | 0`.
     fun add(x, y): number = 58     // x + y
 
     fun sub(x, y): number = 59     // x - y
-  
+
     fun mul(x, y): number = 60     // x * y
 
     fun div(x, y): number = 61     // x / y
@@ -252,10 +254,9 @@ Time since device restart in ms; time only advances when sleeping.
 If `func == null` returns self-handle.
 Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
 
-
 ## Format Constants
 
-    img_version = 0x04_02_0000
+    img_version = 0x04_03_0000
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9
@@ -446,7 +447,6 @@ Only `true` and `false` values.
     RangeError = 31
     RangeError_prototype = 32
 
-
 ## Enum: BuiltIn_String
 
     _empty = 0
@@ -571,3 +571,4 @@ Only `true` and `false` values.
     message = 118
     cause = 119
     __new__ = 120
+    setPrototypeOf = 121

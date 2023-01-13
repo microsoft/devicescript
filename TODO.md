@@ -12,6 +12,7 @@
 * validate UTF8 on input
 * fix charAt() etc to decode UTF8
 * add `JSON.parse/stringify()`
+* limit call stack depth
 
 ## Big ticket
 * classes

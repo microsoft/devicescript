@@ -464,11 +464,9 @@ function testInstanceOf() {
 }
 
 class Foo {
-    num: number
     str: string
 
-    constructor(n: number) {
-        this.num = n
+    constructor(public num: number) {
         this.str = "blah"
     }
 
@@ -477,6 +475,18 @@ class Foo {
     }
 
     unused() {}
+}
+
+class Bar extends Foo {
+    override stringify(): string {
+        return `hello ${this.num} ${this.str}`
+    }
+}
+
+class Baz extends Foo {
+    constructor() {
+        super(77)
+    }
 }
 
 function callStr(q: Foo) {
@@ -488,6 +498,8 @@ function testClass() {
     isEq(callStr(f), "12/blah")
     f.str = "bb"
     isEq(callStr(f), "12/bb")
+    isEq(callStr(new Bar(13)), "hello 13 blah")
+    isEq(callStr(new Baz()), "77/blah")
 }
 
 testFlow()
@@ -496,9 +508,12 @@ testMath()
 testLazy()
 testBuffer()
 testArray()
+
+// top-level const assignment
 const { foo, bar } = testObj()
 isEq(foo, 7)
 isEq(bar, 13)
+
 testSpread()
 testConsole()
 testString()

@@ -54,6 +54,7 @@ void fun2_Math_max(devs_ctx_t *ctx);
 void fun2_Object_assign(devs_ctx_t *ctx);
 void fun1_Object_keys(devs_ctx_t *ctx);
 void fun1_Object_values(devs_ctx_t *ctx);
+void fun2_Object_setPrototypeOf(devs_ctx_t *ctx);
 // impl_packet.c
 value_t prop_Packet_role(devs_ctx_t *ctx, value_t self);
 value_t prop_Packet_deviceIdentifier(devs_ctx_t *ctx, value_t self);
@@ -167,55 +168,56 @@ static const devs_builtin_proto_entry_t Object_entries[] = { //
     {N(ASSIGN), 50036},                                      //
     {N(KEYS), 50037},                                        //
     {N(VALUES), 50038},                                      //
+    {N(SETPROTOTYPEOF), 50039},                              //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Packet_prototype_entries[] = { //
-    {N(ROLE), 50039},                                                  //
-    {N(DEVICEIDENTIFIER), 50040},                                      //
-    {N(SHORTID), 50041},                                               //
-    {N(SERVICEINDEX), 50042},                                          //
-    {N(SERVICECOMMAND), 50043},                                        //
-    {N(FLAGS), 50044},                                                 //
-    {N(ISCOMMAND), 50045},                                             //
-    {N(ISREPORT), 50046},                                              //
-    {N(PAYLOAD), 50047},                                               //
-    {N(ISEVENT), 50048},                                               //
-    {N(EVENTCODE), 50049},                                             //
-    {N(ISREGSET), 50050},                                              //
-    {N(ISREGGET), 50051},                                              //
-    {N(REGCODE), 50052},                                               //
-    {N(DECODE), 50053},                                                //
+    {N(ROLE), 50040},                                                  //
+    {N(DEVICEIDENTIFIER), 50041},                                      //
+    {N(SHORTID), 50042},                                               //
+    {N(SERVICEINDEX), 50043},                                          //
+    {N(SERVICECOMMAND), 50044},                                        //
+    {N(FLAGS), 50045},                                                 //
+    {N(ISCOMMAND), 50046},                                             //
+    {N(ISREPORT), 50047},                                              //
+    {N(PAYLOAD), 50048},                                               //
+    {N(ISEVENT), 50049},                                               //
+    {N(EVENTCODE), 50050},                                             //
+    {N(ISREGSET), 50051},                                              //
+    {N(ISREGGET), 50052},                                              //
+    {N(REGCODE), 50053},                                               //
+    {N(DECODE), 50054},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50054},                                                      //
-    {N(WRITE), 50055},                                                     //
+    {N(READ), 50055},                                                      //
+    {N(WRITE), 50056},                                                     //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsCommand_prototype_entries[] = { //
-    {N(__FUNC__), 50059},                                                 //
+    {N(__FUNC__), 50060},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsEvent_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
-    {N(ROLE), 50056},                                                        //
-    {N(NAME), 50057},                                                        //
-    {N(CODE), 50058},                                                        //
+    {N(ROLE), 50057},                                                        //
+    {N(NAME), 50058},                                                        //
+    {N(CODE), 50059},                                                        //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRole_prototype_entries[] = { //
-    {N(ISCONNECTED), 50060},                                           //
-    {N(SENDCOMMAND), 50061},                                           //
-    {N(WAIT), 50062},                                                  //
+    {N(ISCONNECTED), 50061},                                           //
+    {N(SENDCOMMAND), 50062},                                           //
+    {N(WAIT), 50063},                                                  //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50063},                                                //
-    {N(CHARCODEAT), 50064},                                            //
-    {N(CHARAT), 50065},                                                //
+    {N(LENGTH), 50064},                                                //
+    {N(CHARCODEAT), 50065},                                            //
+    {N(CHARAT), 50066},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t empty_entries[] = { //
@@ -302,8 +304,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_ERROR_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 66;
-const devs_builtin_function_t devs_builtin_functions[66] = {
+uint16_t devs_num_builtin_functions = 67;
+const devs_builtin_function_t devs_builtin_functions[67] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -343,6 +345,7 @@ const devs_builtin_function_t devs_builtin_functions[66] = {
     {N(ASSIGN), 2, NO_SELF, {.meth = fun2_Object_assign}},
     {N(KEYS), 1, NO_SELF, {.meth = fun1_Object_keys}},
     {N(VALUES), 1, NO_SELF, {.meth = fun1_Object_values}},
+    {N(SETPROTOTYPEOF), 2, NO_SELF, {.meth = fun2_Object_setPrototypeOf}},
     {N(ROLE), 0, PROP, {.prop = prop_Packet_role}},
     {N(DEVICEIDENTIFIER), 0, PROP, {.prop = prop_Packet_deviceIdentifier}},
     {N(SHORTID), 0, PROP, {.prop = prop_Packet_shortId}},

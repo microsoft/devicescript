@@ -21,6 +21,7 @@ import {
     bufferEq,
     uniqueMap,
     encodeU16LE,
+    range,
 } from "./jdutil"
 
 import {
@@ -296,6 +297,10 @@ class BufferLit extends Cell {
 
 class FunctionDecl extends Cell {
     proc: Procedure
+
+    numCtorArgs: number
+    baseCtor: FunctionDecl
+
     constructor(definition: TsFunctionDecl, scope: FunctionDecl[]) {
         super(definition, scope)
     }
@@ -414,6 +419,10 @@ class Procedure {
     addNestedProc(proc: Procedure) {
         this.nestedProcs.push(proc)
         proc.parentProc = this
+    }
+
+    dotPrototype(wr: OpWriter) {
+        return wr.builtInMember(this.reference(wr), BuiltInString.PROTOTYPE)
     }
 
     reference(wr: OpWriter) {
@@ -1236,9 +1245,14 @@ class Program implements TopOpWriter {
         }
     }
 
-    private emitCtorAssignments(cls: ts.ClassLikeDeclaration) {
+    private emitCtorAssignments(
+        cls: ts.ClassLikeDeclaration,
+        ctor?: ts.ConstructorDeclaration
+    ) {
         const wr = this.writer
-        this.proc.writer.funFlags |= FunctionFlag.IS_CTOR
+        assert(this.proc.usesThis)
+        this.proc.writer.funFlags |=
+            FunctionFlag.IS_CTOR | FunctionFlag.NEEDS_THIS
         for (const mem of cls.members) {
             if (!ts.isPropertyDeclaration(mem)) continue
             const id = this.forceName(mem.name)
@@ -1251,14 +1265,43 @@ class Program implements TopOpWriter {
                 )
             }
         }
+        for (const param of ctor?.parameters ?? []) {
+            if (ts.isParameterPropertyDeclaration(param, ctor)) {
+                wr.emitStmt(
+                    Op.STMT3_INDEX_SET,
+                    this.emitThisExpression(param),
+                    wr.emitString(this.forceName(param.name)),
+                    this.getVarAtLocation(param).emit(wr)
+                )
+            }
+        }
     }
 
     private emitCtor(cls: ts.ClassLikeDeclaration, proc: Procedure) {
         const ctor = cls.members.find(ts.isConstructorDeclaration)
         if (ctor) return this.emitFunction(ctor, proc)
         else {
+            // generate implicit ctor
             try {
+                const fdecl = this.getCellAtLocation(cls) as FunctionDecl
+                assert(fdecl instanceof FunctionDecl)
                 this.withProcedure(proc, wr => {
+                    this.addParameter(proc, "this")
+                    const params = range(fdecl.numCtorArgs).map(i =>
+                        this.addParameter(proc, "a" + i)
+                    )
+                    if (fdecl.baseCtor) {
+                        wr.emitCall(
+                            wr.emitExpr(
+                                Op.EXPR2_BIND,
+                                fdecl.baseCtor.emit(wr),
+                                this.emitThisExpression(cls)
+                            ),
+                            ...params.map(p => p.emit(wr))
+                        )
+                    } else {
+                        assert(params.length == 0)
+                    }
                     this.emitCtorAssignments(cls)
                     wr.emitStmt(Op.STMT1_RETURN, literal(null))
                     this.finishRetVal()
@@ -1271,12 +1314,19 @@ class Program implements TopOpWriter {
         }
     }
 
+    private isLeafCtor(stmt: FunctionLike): stmt is ts.ConstructorDeclaration {
+        if (!ts.isConstructorDeclaration(stmt)) return false
+        const decl = this.getCellAtLocation(stmt.parent) as FunctionDecl
+        return decl.baseCtor == null
+    }
+
     private emitFunction(stmt: FunctionLike, proc: Procedure) {
         try {
             this.withProcedure(proc, () => {
                 this.emitParameters(stmt, proc)
-                if (ts.isConstructorDeclaration(stmt))
-                    this.emitCtorAssignments(stmt.parent)
+                // if there is a base class (non-leaf) then ctor assignments emitted right after super() call
+                if (this.isLeafCtor(stmt))
+                    this.emitCtorAssignments(stmt.parent, stmt)
                 this.emitFunctionBody(stmt, proc)
             })
         } catch (e) {
@@ -1418,13 +1468,8 @@ class Program implements TopOpWriter {
     private emitClassDeclaration(stmt: ts.ClassDeclaration) {
         const fdecl = this.getCellAtLocation(stmt) as FunctionDecl
         assert(fdecl instanceof FunctionDecl)
-        if (stmt.heritageClauses) {
-            for (const cls of stmt.heritageClauses) {
-                if (cls.token == SK.ImplementsKeyword) continue
-                if (cls.token == SK.ExtendsKeyword)
-                    throwError(cls, "extends not supported yet")
-            }
-        }
+
+        let numCtorArgs: number = null
 
         for (const mem of stmt.members) {
             switch (mem.kind) {
@@ -1445,8 +1490,31 @@ class Program implements TopOpWriter {
                     names: this.methodNames(sym),
                     methodDecl: mem,
                 })
+            } else if (ts.isConstructorDeclaration(mem)) {
+                numCtorArgs = mem.parameters.length
             }
         }
+
+        let baseDecl: FunctionDecl
+        if (stmt.heritageClauses) {
+            for (const cls of stmt.heritageClauses) {
+                if (cls.token == SK.ImplementsKeyword) continue
+                if (cls.token == SK.ExtendsKeyword) {
+                    const tps = cls.types
+                        .slice()
+                        .map(e => this.checker.getTypeAtLocation(e))
+                    if (tps.length != 1)
+                        throwError(cls, "only single extends supported")
+                    baseDecl = symCell(tps[0].symbol) as FunctionDecl
+                    if (!(baseDecl instanceof FunctionDecl))
+                        throwError(cls, "invalid extends")
+                }
+            }
+        }
+
+        assert(baseDecl == null || baseDecl.numCtorArgs != null)
+        fdecl.numCtorArgs = numCtorArgs ?? baseDecl?.numCtorArgs ?? 0
+        fdecl.baseCtor = baseDecl
     }
 
     private isTopLevel(node: ts.Node) {
@@ -1472,13 +1540,9 @@ class Program implements TopOpWriter {
         const proc = new Procedure(this, this.forceName(meth.name), meth)
         this.emitFunction(meth, proc)
 
-        const proto = wr.emitIndex(
-            this.ctorProc(meth.parent).reference(wr),
-            wr.emitString("prototype")
-        )
         wr.emitStmt(
             Op.STMT3_INDEX_SET,
-            proto,
+            this.ctorProc(meth.parent).dotPrototype(wr),
             wr.emitString(this.forceName(meth.name)),
             proc.reference(wr)
         )
@@ -1516,6 +1580,18 @@ class Program implements TopOpWriter {
 
                 if (numemit == 0) break
             }
+
+            for (const fdecl of this.functions) {
+                if (fdecl.baseCtor && fdecl.proc) {
+                    assert(!!fdecl.baseCtor.proc)
+                    wr.emitCall(
+                        wr.objectMember(BuiltInString.SETPROTOTYPEOF),
+                        fdecl.proc.dotPrototype(wr),
+                        fdecl.baseCtor.proc.dotPrototype(wr)
+                    )
+                }
+            }
+
             this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
             this.finalizeProc(this.protoProc)
         })
@@ -2124,6 +2200,26 @@ class Program implements TopOpWriter {
             )
         }
 
+        if (call.callexpr.kind == SK.SuperKeyword) {
+            const wr = this.writer
+            const baseCls = this.getSymAtLocation(call.callexpr)
+            const baseDecl = symCell(baseCls) as FunctionDecl
+            assert(baseDecl instanceof FunctionDecl)
+            const bound = wr.emitExpr(
+                Op.EXPR2_BIND,
+                baseDecl.emit(wr),
+                this.emitThisExpression(call.callexpr)
+            )
+            const r = this.emitGenericCall(call.arguments, bound)
+            for (let node: ts.Node = call.callexpr; node; node = node.parent) {
+                if (ts.isConstructorDeclaration(node)) {
+                    this.emitCtorAssignments(node.parent, node)
+                    return r
+                }
+            }
+            assert(false)
+        }
+
         const fn = call.compiledCallExpr ?? this.emitExpr(call.callexpr)
         return this.emitGenericCall(call.arguments, fn)
     }
@@ -2322,14 +2418,15 @@ class Program implements TopOpWriter {
         return this.compileFormat([node])
     }
 
-    private getBaseTypes(clsTp: ts.Type) {
-        if (
-            clsTp.getFlags() & ts.TypeFlags.Object &&
-            (clsTp as ts.ObjectType).objectFlags &
-                ts.ObjectFlags.ClassOrInterface
+    private isInterfaceType(tp: ts.Type): tp is ts.InterfaceType {
+        return !!(
+            tp.getFlags() & ts.TypeFlags.Object &&
+            (tp as ts.ObjectType).objectFlags & ts.ObjectFlags.ClassOrInterface
         )
-            return this.checker.getBaseTypes(clsTp as ts.InterfaceType)
+    }
 
+    private getBaseTypes(clsTp: ts.Type) {
+        if (this.isInterfaceType(clsTp)) return this.checker.getBaseTypes(clsTp)
         return []
     }
 

@@ -375,6 +375,12 @@ static value_t expr1_new(devs_activation_t *frame, devs_ctx_t *ctx) {
     // return devs_function_bind(ctx, devs_new, func);
 }
 
+static value_t expr2_bind(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t obj = devs_vm_pop_arg(ctx);
+    value_t func = devs_vm_pop_arg(ctx);
+    return devs_function_bind(ctx, obj, func);
+}
+
 static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned fidx = ctx->literal_int;
 
