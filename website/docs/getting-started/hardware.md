@@ -22,7 +22,7 @@ and for sensors,
 
 ## Connecting the pressure sensor
 
-We use a Adafruit PiCowbell for convinience to easily connect
+We use a Adafruit PiCowbell for convenience to easily connect
 STEMMA sensors. Solders headers to your Pico and mount it
 on the PiCowbell.
 
