@@ -88,7 +88,7 @@ export declare module Exts {
      */
     function devsClientDeploy(binary: Uint8Array): number;
     /**
-     * Initalises the virtual machine data structure.
+     * Initialises the virtual machine data structure.
      */
     function devsInit(): void;
     /**

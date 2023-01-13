@@ -327,7 +327,7 @@ var Exts;
     }
     Exts.devsClientDeploy = devsClientDeploy;
     /**
-     * Initalises the virtual machine data structure.
+     * Initialises the virtual machine data structure.
      */
     function devsInit() {
         Module._jd_em_init();

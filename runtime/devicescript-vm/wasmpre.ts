@@ -274,7 +274,7 @@ export module Exts {
     }
 
     /**
-     * Initalises the virtual machine data structure.
+     * Initialises the virtual machine data structure.
      */
     export function devsInit() {
         Module._jd_em_init()
