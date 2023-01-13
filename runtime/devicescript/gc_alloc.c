@@ -414,7 +414,7 @@ devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, const devs_map_or_proto_t *proto
 }
 
 devs_short_map_t *devs_short_map_try_alloc(devs_ctx_t *ctx) {
-    return devs_any_try_alloc(ctx, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
+    return devs_any_try_alloc(ctx, DEVS_GC_TAG_SHORT_MAP, sizeof(devs_map_t));
 }
 
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size) {
@@ -473,8 +473,9 @@ void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
     gc->ctx = ctx;
 }
 
-static const char *tags[] = {"free",     "bytes",      "array",          "map", "buffer", "string",
-                             "function", "activation", "half_static_map"};
+static const char *tags[] = {
+    "free",     "bytes",      "array",           "map",      "buffer", "string",
+    "function", "activation", "half_static_map", "short_map"};
 const char *devs_gc_tag_name(unsigned tag) {
     tag &= DEVS_GC_TAG_MASK;
     tag--;

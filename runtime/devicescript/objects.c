@@ -171,10 +171,11 @@ void devs_short_map_set(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key, va
         tmp = devs_try_alloc(ctx, newlen * (sizeof(value_t) + sizeof(uint16_t)));
         if (!tmp)
             return;
+        uint16_t *srckeys = short_keys(map);
         map->capacity = newlen;
         if (map->length) {
             memcpy(tmp, map->short_data, map->length * sizeof(value_t));
-            memcpy(tmp + newlen, short_keys(map), map->length * sizeof(uint16_t));
+            memcpy(tmp + newlen, srckeys, map->length * sizeof(uint16_t));
         }
         map->short_data = tmp;
         jd_gc_unpin(ctx->gc, tmp);

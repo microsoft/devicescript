@@ -5,10 +5,22 @@
 
 #define DEVS_MAX_ALLOC 0xf000
 
+#if JD_64
+#define DEVS_GC_TAG_POS (24 + 32)
+#else
+#define DEVS_GC_TAG_POS 24
+#endif
+
 typedef uint16_t devs_small_size_t;
 
 typedef struct {
-    uintptr_t header;
+    union {
+        uintptr_t header;
+        struct {
+            uintptr_t size : DEVS_GC_TAG_POS;
+            uintptr_t tag : 8;
+        };
+    };
     // ...
 } devs_gc_object_t;
 
@@ -144,12 +156,6 @@ void *devs_any_try_alloc(devs_ctx_t *ctx, unsigned tag, unsigned size);
 devs_gc_t *devs_gc_create(void);
 void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx);
 void devs_gc_destroy(devs_gc_t *gc);
-
-#if JD_64
-#define DEVS_GC_TAG_POS (24 + 32)
-#else
-#define DEVS_GC_TAG_POS 24
-#endif
 
 #define DEVS_GC_MK_TAG_WORDS(tag, size) ((size) | ((uintptr_t)(tag) << DEVS_GC_TAG_POS))
 #define DEVS_GC_MK_TAG_BYTES(tag, size)                                                            \
