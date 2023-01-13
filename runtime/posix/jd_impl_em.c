@@ -123,6 +123,14 @@ int jd_em_devs_client_deploy(const void *img, unsigned imgsize) {
     return devs_client_deploy(img, imgsize);
 }
 
+EMSCRIPTEN_KEEPALIVE
+void jd_em_devs_enable_gc_stress(int en) {
+    if (en)
+        devs_set_global_flags(DEVS_FLAG_GC_STRESS);
+    else
+        devs_reset_global_flags(DEVS_FLAG_GC_STRESS);
+}
+
 #if 0
 void run_emscripten_loop(void) {
     emscripten_set_interval(em_process, 10, NULL);

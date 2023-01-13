@@ -10,6 +10,7 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
     _jd_em_devs_deploy(img: ptr, size: int32): int32;
     _jd_em_devs_verify(img: ptr, size: int32): int32;
     _jd_em_devs_client_deploy(img: ptr, size: int32): int32;
+    _jd_em_devs_enable_gc_stress(en: int32): void;
     sendPacket(pkt: Uint8Array): void;
     /**
      * Overrideable metod called when deployment is done.
@@ -91,6 +92,10 @@ export declare module Exts {
      * Initalises the virtual machine data structure.
      */
     function devsInit(): void;
+    /**
+     * Enables/disables GC stress testing.
+     */
+    function devsGcStress(en: boolean): void;
     /**
      * Initializes and start the virtual machine (calls init).
      */

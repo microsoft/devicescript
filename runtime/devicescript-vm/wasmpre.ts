@@ -11,6 +11,7 @@ export declare type DevsModule = EmscriptenModule &
         _jd_em_devs_deploy(img: ptr, size: int32): int32
         _jd_em_devs_verify(img: ptr, size: int32): int32
         _jd_em_devs_client_deploy(img: ptr, size: int32): int32
+        _jd_em_devs_enable_gc_stress(en: int32): void
         sendPacket(pkt: Uint8Array): void
 
         /**
@@ -278,6 +279,13 @@ export module Exts {
      */
     export function devsInit() {
         Module._jd_em_init()
+    }
+
+    /**
+     * Enables/disables GC stress testing.
+     */
+    export function devsGcStress(en: boolean) {
+        Module._jd_em_devs_enable_gc_stress(en ? 1 : 0)
     }
 
     /**
