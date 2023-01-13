@@ -17,7 +17,7 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
      */
     deployHandler(code: int32): void;
     /**
-     * Overridable method called when a panic code is raiserd.
+     * Overridable method called when a panic code is raised.
      * @param exitCode the panic code
      */
     panicHandler(exitCode: int32): void;
