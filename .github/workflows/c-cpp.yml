@@ -13,7 +13,7 @@ on:
 jobs:
     build:
         env:
-            EM_VERSION: 3.1.7
+            EM_VERSION: 3.1.30
             EM_CACHE_FOLDER: "emsdk-cache"
 
         runs-on: ubuntu-latest

@@ -72,6 +72,7 @@ EMCC_OPTS = $(DEFINES) $(INC) \
 	-s ASSERTIONS=1 \
 	-s EXPORTED_FUNCTIONS=_malloc,_free \
 	-s ENVIRONMENT=web,webview,worker,node \
+	-s DEFAULT_LIBRARY_FUNCS_TO_INCLUDE='$$allocateUTF8' \
 	--no-entry
 
 ifneq ($(EMCC_MEM_CHECK),)

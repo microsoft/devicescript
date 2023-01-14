@@ -28,14 +28,18 @@ void devs_panic_handler(int exitcode) {
     _devs_panic_handler(exitcode);
 }
 
-EM_JS(void, devs_deploy_handler, (int exitcode), {
+EM_JS(void, em_deploy_handler, (int exitcode), {
     if (Module.deployHandler)
         Module.deployHandler(exitcode);
 });
 
+void devs_deploy_handler(int exitcode) {
+    em_deploy_handler(exitcode);
+}
+
 EM_JS(double, em_time_now, (void), { return Date.now(); });
 
-EM_JS(void, jd_crypto_get_random, (uint8_t * trg, unsigned size), {
+EM_JS(void, em_jd_crypto_get_random, (uint8_t * trg, unsigned size), {
     let buf = new Uint8Array(size);
     if (typeof window == "object" && window.crypto && window.crypto.getRandomValues)
         window.crypto.getRandomValues(buf);
@@ -44,6 +48,10 @@ EM_JS(void, jd_crypto_get_random, (uint8_t * trg, unsigned size), {
     }
     HEAPU8.set(buf, trg);
 });
+
+void jd_crypto_get_random(uint8_t *trg, unsigned size) {
+    em_jd_crypto_get_random(trg, size);
+}
 
 int jd_em_frame_received(jd_frame_t *frame);
 
