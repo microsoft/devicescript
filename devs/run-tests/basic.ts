@@ -502,6 +502,27 @@ function testClass() {
     isEq(callStr(new Baz()), "77/blah")
 }
 
+function testFunName() {
+    const b = new Bar(12)
+    isEq(ds.reboot.name, "reboot")
+    isEq(b.constructor.name, "Bar")
+    isEq(b.stringify.name, "stringify")
+    isEq(qq.name, "qq")
+    isEq(testFunName.name, "testFunName")
+
+    let e = new TypeError("blah")
+    // isEq(e.constructor, TypeError) TODO
+    isEq(e.constructor.name, "TypeError")
+    isEq(e.name, "TypeError")
+
+    e = new Error("blah")
+    // isEq(e.constructor, Error) TODO
+    isEq(e.constructor.name, "Error")
+    isEq(e.name, "Error")
+
+    function qq() {}
+}
+
 testFlow()
 if (x != 42) panic(10)
 testMath()
@@ -523,6 +544,7 @@ testClosures3()
 testForOf()
 testInstanceOf()
 testClass()
+testFunName()
 
 console.log("all OK")
 ds.reboot()

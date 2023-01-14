@@ -33,9 +33,11 @@ void fun1_DeviceScript_parseInt(devs_ctx_t *ctx);
 void meth1_Error___ctor__(devs_ctx_t *ctx);
 void meth1_RangeError___ctor__(devs_ctx_t *ctx);
 void meth1_TypeError___ctor__(devs_ctx_t *ctx);
+value_t prop_Error_name(devs_ctx_t *ctx, value_t self);
 // impl_function.c
 void methX_Function_start(devs_ctx_t *ctx);
 value_t prop_Function_prototype(devs_ctx_t *ctx, value_t self);
+value_t prop_Function_name(devs_ctx_t *ctx, value_t self);
 // impl_math.c
 void fun1_Math_ceil(devs_ctx_t *ctx);
 void fun1_Math_floor(devs_ctx_t *ctx);
@@ -123,14 +125,21 @@ static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t TypeError_prototype_entries[] = { //
+    {N(CONSTRUCTOR), 50020},                                              //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t RangeError_prototype_entries[] = { //
+    {N(CONSTRUCTOR), 50019},                                               //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Error_entries[] = { //
     {N(__FUNC__), 50018},                                   //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_ERROR_PROTOTYPE},    //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t Error_prototype_entries[] = { //
+    {N(CONSTRUCTOR), 50018},                                          //
+    {N(NAME), 50021},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t RangeError_entries[] = { //
@@ -144,80 +153,81 @@ static const devs_builtin_proto_entry_t TypeError_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Function_prototype_entries[] = { //
-    {N(START), 50021},                                                   //
-    {N(PROTOTYPE), 50022},                                               //
+    {N(START), 50022},                                                   //
+    {N(PROTOTYPE), 50023},                                               //
+    {N(NAME), 50024},                                                    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Math_entries[] = { //
-    {N(CEIL), 50023},                                      //
-    {N(FLOOR), 50024},                                     //
-    {N(ROUND), 50025},                                     //
-    {N(ABS), 50026},                                       //
-    {N(RANDOM), 50027},                                    //
-    {N(RANDOMINT), 50028},                                 //
-    {N(LOG), 50029},                                       //
-    {N(POW), 50030},                                       //
-    {N(IDIV), 50031},                                      //
-    {N(IMOD), 50032},                                      //
-    {N(IMUL), 50033},                                      //
-    {N(MIN), 50034},                                       //
-    {N(MAX), 50035},                                       //
+    {N(CEIL), 50025},                                      //
+    {N(FLOOR), 50026},                                     //
+    {N(ROUND), 50027},                                     //
+    {N(ABS), 50028},                                       //
+    {N(RANDOM), 50029},                                    //
+    {N(RANDOMINT), 50030},                                 //
+    {N(LOG), 50031},                                       //
+    {N(POW), 50032},                                       //
+    {N(IDIV), 50033},                                      //
+    {N(IMOD), 50034},                                      //
+    {N(IMUL), 50035},                                      //
+    {N(MIN), 50036},                                       //
+    {N(MAX), 50037},                                       //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Object_entries[] = { //
-    {N(ASSIGN), 50036},                                      //
-    {N(KEYS), 50037},                                        //
-    {N(VALUES), 50038},                                      //
-    {N(SETPROTOTYPEOF), 50039},                              //
+    {N(ASSIGN), 50038},                                      //
+    {N(KEYS), 50039},                                        //
+    {N(VALUES), 50040},                                      //
+    {N(SETPROTOTYPEOF), 50041},                              //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Packet_prototype_entries[] = { //
-    {N(ROLE), 50040},                                                  //
-    {N(DEVICEIDENTIFIER), 50041},                                      //
-    {N(SHORTID), 50042},                                               //
-    {N(SERVICEINDEX), 50043},                                          //
-    {N(SERVICECOMMAND), 50044},                                        //
-    {N(FLAGS), 50045},                                                 //
-    {N(ISCOMMAND), 50046},                                             //
-    {N(ISREPORT), 50047},                                              //
-    {N(PAYLOAD), 50048},                                               //
-    {N(ISEVENT), 50049},                                               //
-    {N(EVENTCODE), 50050},                                             //
-    {N(ISREGSET), 50051},                                              //
-    {N(ISREGGET), 50052},                                              //
-    {N(REGCODE), 50053},                                               //
-    {N(DECODE), 50054},                                                //
+    {N(ROLE), 50042},                                                  //
+    {N(DEVICEIDENTIFIER), 50043},                                      //
+    {N(SHORTID), 50044},                                               //
+    {N(SERVICEINDEX), 50045},                                          //
+    {N(SERVICECOMMAND), 50046},                                        //
+    {N(FLAGS), 50047},                                                 //
+    {N(ISCOMMAND), 50048},                                             //
+    {N(ISREPORT), 50049},                                              //
+    {N(PAYLOAD), 50050},                                               //
+    {N(ISEVENT), 50051},                                               //
+    {N(EVENTCODE), 50052},                                             //
+    {N(ISREGSET), 50053},                                              //
+    {N(ISREGGET), 50054},                                              //
+    {N(REGCODE), 50055},                                               //
+    {N(DECODE), 50056},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50055},                                                      //
-    {N(WRITE), 50056},                                                     //
+    {N(READ), 50057},                                                      //
+    {N(WRITE), 50058},                                                     //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsCommand_prototype_entries[] = { //
-    {N(__FUNC__), 50060},                                                 //
+    {N(__FUNC__), 50062},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsEvent_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
-    {N(ROLE), 50057},                                                        //
-    {N(NAME), 50058},                                                        //
-    {N(CODE), 50059},                                                        //
+    {N(ROLE), 50059},                                                        //
+    {N(NAME), 50060},                                                        //
+    {N(CODE), 50061},                                                        //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRole_prototype_entries[] = { //
-    {N(ISCONNECTED), 50061},                                           //
-    {N(SENDCOMMAND), 50062},                                           //
-    {N(WAIT), 50063},                                                  //
+    {N(ISCONNECTED), 50063},                                           //
+    {N(SENDCOMMAND), 50064},                                           //
+    {N(WAIT), 50065},                                                  //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50064},                                                //
-    {N(CHARCODEAT), 50065},                                            //
-    {N(CHARAT), 50066},                                                //
+    {N(LENGTH), 50066},                                                //
+    {N(CHARCODEAT), 50067},                                            //
+    {N(CHARAT), 50068},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t empty_entries[] = { //
@@ -266,6 +276,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
         {DEVS_BUILTIN_PROTO_INIT, &devs_builtin_protos[DEVS_BUILTIN_OBJECT_ERROR_PROTOTYPE],
          RangeError_prototype_entries},
     [DEVS_BUILTIN_OBJECT_ERROR] = {DEVS_BUILTIN_PROTO_INIT, NULL, Error_entries},
+    [DEVS_BUILTIN_OBJECT_ERROR_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                             Error_prototype_entries},
     [DEVS_BUILTIN_OBJECT_RANGEERROR] = {DEVS_BUILTIN_PROTO_INIT, NULL, RangeError_entries},
     [DEVS_BUILTIN_OBJECT_TYPEERROR] = {DEVS_BUILTIN_PROTO_INIT, NULL, TypeError_entries},
     [DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
@@ -301,11 +313,10 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSFIBER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
     [DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
-    [DEVS_BUILTIN_OBJECT_ERROR_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 67;
-const devs_builtin_function_t devs_builtin_functions[67] = {
+uint16_t devs_num_builtin_functions = 69;
+const devs_builtin_function_t devs_builtin_functions[69] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -324,11 +335,13 @@ const devs_builtin_function_t devs_builtin_functions[67] = {
     {N(LOG), 1, NO_SELF, {.meth = fun1_DeviceScript_log}},
     {N(PARSEFLOAT), 1, NO_SELF, {.meth = fun1_DeviceScript_parseFloat}},
     {N(PARSEINT), 1, NO_SELF, {.meth = fun1_DeviceScript_parseInt}},
-    {N(__FUNC__), 1, CTOR, {.meth = meth1_Error___ctor__}},
-    {N(__FUNC__), 1, CTOR, {.meth = meth1_RangeError___ctor__}},
-    {N(__FUNC__), 1, CTOR, {.meth = meth1_TypeError___ctor__}},
+    {N(ERROR), 1, CTOR, {.meth = meth1_Error___ctor__}},
+    {N(RANGEERROR), 1, CTOR, {.meth = meth1_RangeError___ctor__}},
+    {N(TYPEERROR), 1, CTOR, {.meth = meth1_TypeError___ctor__}},
+    {N(NAME), 0, PROP, {.prop = prop_Error_name}},
     {N(START), 0, 0, {.meth = methX_Function_start}},
     {N(PROTOTYPE), 0, PROP, {.prop = prop_Function_prototype}},
+    {N(NAME), 0, PROP, {.prop = prop_Function_name}},
     {N(CEIL), 1, NO_SELF, {.meth = fun1_Math_ceil}},
     {N(FLOOR), 1, NO_SELF, {.meth = fun1_Math_floor}},
     {N(ROUND), 1, NO_SELF, {.meth = fun1_Math_round}},

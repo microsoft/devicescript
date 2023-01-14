@@ -33,8 +33,5 @@ ds_impl.wait = function (seconds: number) {
 }
 
 ds_impl.assert = function (cond: boolean, msg?: string) {
-    if (!cond) {
-        console.log("Assertion failed: " + msg)
-        ds.panic(108)
-    }
+    if (!cond) throw new Error("Assertion failed: " + msg)
 }

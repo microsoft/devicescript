@@ -26,10 +26,13 @@ declare var Infinity: number
  */
 declare function isNaN(number: number): boolean
 
-interface Object {}
+interface Object {
+    /** The initial value of Object.prototype.constructor is the standard built-in Object constructor. */
+    constructor: Function
+}
 
 interface ObjectConstructor {
-    (): any;
+    (): any
 
     /**
      * Copy the values of all of the enumerable own properties from one or more source objects to a
@@ -56,6 +59,19 @@ interface ObjectConstructor {
      * @param o Object that contains the properties and methods. This can be an object that you created or an existing Document Object Model (DOM) object.
      */
     values(o: {}): any[]
+
+    /**
+     * Returns the prototype of an object.
+     * @param o The object that references the prototype.
+     */
+    // getPrototypeOf(o: any): any
+
+    /**
+     * Sets the prototype of a specified object o to object proto or null. Returns the object o.
+     * @param o The object to change its prototype.
+     * @param proto The value of the new prototype or null.
+     */
+    setPrototypeOf(o: any, proto: object | null): any
 }
 
 declare var Object: ObjectConstructor
@@ -65,6 +81,11 @@ interface Function {
      * Start function in background passing given arguments.
      */
     start(flag: number, ...args: any[]): void
+
+    /**
+     * Returns the name of the function. Function names are read-only and can not be changed.
+     */
+    readonly name: string
 }
 interface CallableFunction extends Function {}
 interface NewableFunction extends Function {}

@@ -72,19 +72,26 @@ void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
 }
 
 void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
+    int hadinfo = 0;
     if (devs_can_attach(ctx, exn)) {
-        value_t msg = devs_any_get(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING_MESSAGE));
+        value_t ctor = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_NAME);
+        if (!devs_is_null(ctor)) {
+            devs_log_value(ctx, "Exception", ctor);
+            hadinfo++;
+        }
+
+        value_t msg = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_MESSAGE);
         if (!devs_is_null(msg)) {
-            devs_log_value(ctx, "Exception", msg);
-            value_t stack =
-                devs_any_get(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING___STACK__));
+            devs_log_value(ctx, "  message", msg);
+            value_t stack = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING___STACK__);
             if (!devs_is_null(stack))
                 devs_dump_stack(ctx, stack);
-            return;
+            hadinfo++;
         }
     }
 
-    devs_log_value(ctx, "Exception", exn);
+    if (!hadinfo)
+        devs_log_value(ctx, "Exception", exn);
 }
 
 value_t devs_capture_stack(devs_ctx_t *ctx) {

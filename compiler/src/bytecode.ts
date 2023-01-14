@@ -100,7 +100,7 @@ export const OP_TYPES =
     "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x08"
 
 export enum BinFmt {
-    IMG_VERSION = 0x04030000,
+    IMG_VERSION = 0x04040000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 9,
@@ -262,7 +262,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 121,
+    __MAX = 123,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -385,6 +385,8 @@ export enum BuiltInString {
     CAUSE = 119,
     __NEW__ = 120,
     SETPROTOTYPEOF = 121,
+    GETPROTOTYPEOF = 122,
+    CONSTRUCTOR = 123,
 }
 
 export const OP_PRINT_FMTS = [
@@ -618,6 +620,8 @@ export const BUILTIN_STRING__VAL = [
     "cause",
     "__new__",
     "setPrototypeOf",
+    "getPrototypeOf",
+    "constructor",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

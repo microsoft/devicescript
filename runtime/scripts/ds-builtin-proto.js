@@ -138,11 +138,20 @@ for (const fn of scriptArgs) {
 
         const fl = flags.length == 0 ? "0" : flags.join("|")
 
-        if (!byObj[objId])
-            byObj[objId] = []
-        byObj[objId].push(`{ N(${methodName.toUpperCase()}), ${firstFun + allfuns.length} }`)
+        addByObj(objId, `{ N(${methodName.toUpperCase()}), ${firstFun + allfuns.length} }`)
 
-        allfuns.push(`{ N(${methodName.toUpperCase()}), ${numArgs}, ${fl}, { ${fld} = ${fnName} } }`)
+        let allfunName = methodName
+        if (flags.includes("CTOR")) {
+            addByObj(objId + "_prototype", `{ N(CONSTRUCTOR), ${firstFun + allfuns.length} }`)
+            allfunName = objId
+        }
+
+        allfuns.push(`{ N(${allfunName.toUpperCase()}), ${numArgs}, ${fl}, { ${fld} = ${fnName} } }`)
+    }
+
+    function addByObj(id, ent) {
+        if (!byObj[id]) byObj[id] = []
+        byObj[id].push(ent)
     }
 
     function error(msg) {

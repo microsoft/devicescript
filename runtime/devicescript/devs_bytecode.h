@@ -104,7 +104,7 @@
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
     "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x08"
 
-#define DEVS_IMG_VERSION 0x04030000
+#define DEVS_IMG_VERSION 0x04040000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 9
@@ -240,7 +240,7 @@
 #define DEVS_BUILTIN_OBJECT_RANGEERROR 31
 #define DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE 32
 
-#define DEVS_BUILTIN_STRING___MAX 121
+#define DEVS_BUILTIN_STRING___MAX 123
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -363,6 +363,8 @@
 #define DEVS_BUILTIN_STRING_CAUSE 119
 #define DEVS_BUILTIN_STRING___NEW__ 120
 #define DEVS_BUILTIN_STRING_SETPROTOTYPEOF 121
+#define DEVS_BUILTIN_STRING_GETPROTOTYPEOF 122
+#define DEVS_BUILTIN_STRING_CONSTRUCTOR 123
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -399,7 +401,7 @@
         "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
         "regCode", "flags", "isReport", "isCommand", "isArray", "inline", "assert", "pushRange",   \
         "sendCommand", "__stack__", "Error", "TypeError", "RangeError", "stack", "message",        \
-        "cause", "__new__", "setPrototypeOf"
+        "cause", "__new__", "setPrototypeOf", "getPrototypeOf", "constructor"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

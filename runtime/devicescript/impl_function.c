@@ -33,9 +33,31 @@ value_t prop_Function_prototype(devs_ctx_t *ctx, value_t self) {
         r = devs_value_from_gc_obj(
             ctx, devs_map_try_alloc(
                      ctx, devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)));
-        devs_value_pin(ctx, r);
-        devs_short_map_set(ctx, ctx->fn_protos, fn, r);
-        devs_value_unpin(ctx, r);
+        if (!devs_is_null(r)) {
+            devs_value_pin(ctx, r);
+            devs_any_set(ctx, r, devs_builtin_string(DEVS_BUILTIN_STRING_CONSTRUCTOR),
+                         devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, fn));
+            devs_short_map_set(ctx, ctx->fn_protos, fn, r);
+            devs_value_unpin(ctx, r);
+        }
     }
     return r;
+}
+
+value_t prop_Function_name(devs_ctx_t *ctx, value_t self) {
+    value_t th;
+    devs_activation_t *clo;
+    int fn = devs_get_fnidx(ctx, self, &th, &clo);
+    if (fn < 0)
+        return devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_FUNCTION, self);
+
+    int bltin = fn - DEVS_FIRST_BUILTIN_FUNCTION;
+    if (bltin >= 0) {
+        JD_ASSERT(bltin < devs_num_builtin_functions);
+        const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
+        return devs_builtin_string(h->builtin_string_id);
+    } else {
+        return devs_value_from_handle(DEVS_HANDLE_TYPE_IMG_BUFFERISH,
+                                      devs_img_get_function(ctx->img, fn)->name_idx);
+    }
 }

@@ -393,6 +393,27 @@ static value_t devs_function_bind_alloc(devs_ctx_t *ctx, value_t obj, value_t fn
     return devs_value_from_gc_obj(ctx, res);
 }
 
+static const devs_builtin_function_t *devs_get_property_desc(devs_ctx_t *ctx, value_t fn) {
+    int htp = devs_handle_type(fn);
+
+    if (htp != DEVS_HANDLE_TYPE_STATIC_FUNCTION)
+        return NULL;
+
+    unsigned fidx = devs_handle_value(fn);
+
+    int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
+    if (bltin >= 0) {
+        JD_ASSERT(bltin < devs_num_builtin_functions);
+        const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
+        if (h->flags & DEVS_BUILTIN_FLAG_IS_PROPERTY) {
+            JD_ASSERT(h->num_args == 0);
+            return h;
+        }
+    }
+
+    return NULL;
+}
+
 // if `fn` is a static function, return `(obj, fn)` tuple
 // if `fn` is a role member and `obj` is role, return (a different) `(obj, fn)` tuple
 // otherwise return `obj`
@@ -413,27 +434,11 @@ value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
     if (htp != DEVS_HANDLE_TYPE_STATIC_FUNCTION)
         return fn;
 
+    const devs_builtin_function_t *h = devs_get_property_desc(ctx, fn);
+    if (h)
+        return h->handler.prop(ctx, obj);
+
     unsigned fidx = devs_handle_value(fn);
-
-    bool needsSelf;
-    int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
-    if (bltin >= 0) {
-        JD_ASSERT(bltin < devs_num_builtin_functions);
-        const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
-        if (h->flags & DEVS_BUILTIN_FLAG_IS_PROPERTY) {
-            JD_ASSERT(h->num_args == 0);
-            return h->handler.prop(ctx, obj);
-        } else {
-            needsSelf = !(h->flags & DEVS_BUILTIN_FLAG_NO_SELF);
-        }
-    } else {
-        JD_ASSERT(fidx < devs_img_num_functions(ctx->img));
-        const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
-        needsSelf = !!(func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS);
-    }
-
-    (void)needsSelf;
-
     int otp = devs_handle_type(obj);
 
     if (fidx <= 0xffff)
@@ -819,7 +824,13 @@ value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
 }
 
 value_t devs_object_get_built_in_field(devs_ctx_t *ctx, value_t obj, unsigned idx) {
-    return devs_object_get(ctx, obj, devs_builtin_string(idx));
+    value_t key = devs_builtin_string(idx);
+    ctx->diag_field = key;
+    value_t fn = devs_object_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
+    const devs_builtin_function_t *h = devs_get_property_desc(ctx, fn);
+    if (h)
+        return h->handler.prop(ctx, obj);
+    return fn;
 }
 
 value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx) {
