@@ -336,6 +336,28 @@ function testUndef() {
     assert(foo6() === undefined)
 }
 
+class FooArc {
+    public handlerxx: () => void;
+    run() {
+        this.handlerxx()
+    }
+}
+
+function endFn(win?: boolean) {
+    assert(win === undefined, "lp1")
+}
+
+function testLambdasWithMoreParams() {
+    function a(f: (x: number, v: string, y: number) => void) {
+        f(1, "a" + "X12b", 7)
+    }
+    a(() => { })
+
+    const f = new FooArc()
+    f.handlerxx = endFn
+    f.run()
+}
+
 testComplexCallExpr()
 testInline()
 
@@ -353,5 +375,6 @@ testNested()
 runInl()
 
 testUndef()
+testLambdasWithMoreParams()
 
 ds.reboot()
