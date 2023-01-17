@@ -17,7 +17,7 @@ const lamp = new ds.LightBulb()
 
 You can check if role is currently assigned, and react to it being assigned or unassigned:
 
-```ts
+```js
 const heater = new ds.Relay()
 if (heater.isConnected)
     heater.active.write(true)
