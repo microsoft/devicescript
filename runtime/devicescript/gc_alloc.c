@@ -174,8 +174,7 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
             if (BASIC_TAG(header) != DEVS_GC_TAG_SHORT_MAP)
                 len *= 2;
             scan_array_and_mark(ctx, map->data, len, depth);
-            if (map->proto && !devs_is_builtin_proto(map->proto) &&
-                !devs_is_service_spec(ctx, map->proto))
+            if (devs_maplike_is_map(ctx, map->proto))
                 block = (void *)map->proto;
             else
                 break;

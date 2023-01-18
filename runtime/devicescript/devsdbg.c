@@ -263,6 +263,8 @@ static unsigned obj_get_props(devs_ctx_t *ctx, value_t v, jd_devs_dbg_key_value_
         return 0;
 
     devs_maplike_t *proto = devs_maplike_get_proto(ctx, obj);
+    if (proto && devs_maplike_is_map(ctx, obj) && devs_gc_tag(obj) == DEVS_GC_TAG_HALF_STATIC_MAP)
+        proto = NULL; // proto invisible
     unsigned idx = 0;
     if (proto) {
         if (trg)

@@ -107,11 +107,13 @@ typedef void (*devs_map_iter_cb_t)(devs_ctx_t *ctx, void *userdata, value_t k, v
 unsigned devs_maplike_iter(devs_ctx_t *ctx, devs_maplike_t *src, void *userdata,
                            devs_map_iter_cb_t cb);
 void devs_maplike_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys);
+bool devs_maplike_is_map(devs_ctx_t *ctx, devs_maplike_t *src);
 
 value_t devs_short_map_get(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key);
 void devs_short_map_set(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key, value_t v);
 devs_maplike_t *devs_maplike_get_proto(devs_ctx_t *ctx, devs_maplike_t *obj);
 value_t devs_maplike_get_no_bind(devs_ctx_t *ctx, devs_maplike_t *proto, value_t key);
+value_t devs_maplike_to_value(devs_ctx_t *ctx, devs_maplike_t *obj);
 
 value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx);
 void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v);

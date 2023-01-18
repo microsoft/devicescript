@@ -79,6 +79,8 @@ unsigned devs_maplike_iter(devs_ctx_t *ctx, devs_maplike_t *src, void *userdata,
     } else {
         JD_ASSERT(devs_is_map(src));
         devs_map_t *srcmap = (devs_map_t *)src;
+        unsigned len = srcmap->length;
+
         if (cb != NULL) {
             unsigned len2 = srcmap->length * 2;
             value_t *data = srcmap->data;
@@ -86,7 +88,11 @@ unsigned devs_maplike_iter(devs_ctx_t *ctx, devs_maplike_t *src, void *userdata,
                 cb(ctx, userdata, data[i], data[i + 1]);
             }
         }
-        return srcmap->length;
+
+        if (devs_gc_tag(srcmap) == DEVS_GC_TAG_HALF_STATIC_MAP)
+            len += devs_maplike_iter(ctx, srcmap->proto, userdata, cb);
+
+        return len;
     }
 }
 
@@ -105,7 +111,15 @@ static void kv_add(devs_ctx_t *ctx, void *userdata, value_t k, value_t v) {
     acc->arr->data[acc->dp++] = acc->keys ? k : v;
 }
 
-void devs_maplike_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys) {
+bool devs_maplike_is_map(devs_ctx_t *ctx, devs_maplike_t *src) {
+    if (src == NULL || devs_is_builtin_proto(src) || devs_is_service_spec(ctx, src))
+        return false;
+    JD_ASSERT(devs_is_map(src));
+    return true;
+}
+
+void devs_maplike_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr,
+                                 bool keys) {
     struct kv_ctx acc = {
         .dp = arr->length,
         .arr = arr,
@@ -1051,4 +1065,20 @@ value_t devs_builtin_object_value(devs_ctx_t *ctx, unsigned idx) {
                                       DEVS_SPECIAL_BUILTIN_OBJ_FIRST + idx);
     else
         return devs_value_from_gc_obj(ctx, (void *)p);
+}
+
+value_t devs_maplike_to_value(devs_ctx_t *ctx, devs_maplike_t *obj) {
+    if (devs_is_builtin_proto(obj)) {
+        return devs_builtin_object_value(ctx,
+                                         (const devs_builtin_proto_t *)obj - devs_builtin_protos);
+    } else if (devs_is_service_spec(ctx, obj)) {
+        // this shouldn't happen
+        return devs_null;
+    } else {
+        JD_ASSERT(devs_is_map(obj));
+        devs_map_t *map = (devs_map_t *)obj;
+        if (devs_gc_tag(map) == DEVS_GC_TAG_HALF_STATIC_MAP && devs_is_builtin_proto(map->proto))
+            return devs_maplike_to_value(ctx, map->proto);
+        return devs_value_from_gc_obj(ctx, map);
+    }
 }

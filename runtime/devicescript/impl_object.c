@@ -7,12 +7,8 @@ void fun2_Object_assign(devs_ctx_t *ctx) {
     if (!devs_is_null(src0)) {
         devs_map_t *dst = devs_object_get_attached_rw(ctx, dst0);
         devs_maplike_t *src = devs_object_get_attached_enum(ctx, src0);
-        if (src && dst) {
-            if (devs_gc_tag(src) == DEVS_GC_TAG_HALF_STATIC_MAP) {
-                devs_map_copy_into(ctx, dst, ((devs_map_t *)src)->proto);
-            }
+        if (src && dst)
             devs_map_copy_into(ctx, dst, src);
-        }
     }
 
     devs_ret(ctx, dst0);
@@ -32,8 +28,6 @@ static void fun1_keys_or_values(devs_ctx_t *ctx, bool keys) {
     value_t ret = devs_value_from_gc_obj(ctx, arr);
     devs_value_pin(ctx, ret);
 
-    if (devs_gc_tag(src) == DEVS_GC_TAG_HALF_STATIC_MAP)
-        devs_maplike_keys_or_values(ctx, ((devs_map_t *)src)->proto, arr, keys);
     devs_maplike_keys_or_values(ctx, src, arr, keys);
 
     devs_value_unpin(ctx, ret);
