@@ -27,7 +27,7 @@ typedef struct {
     uint32_t reserved2[28];
 
     uint8_t image[0];
-} devicescriptmgr_program_header_t;
+} devsmgr_program_header_t;
 
 #define LOG JD_LOG
 
@@ -39,7 +39,7 @@ struct srv_state {
 
     uint32_t next_restart;
 
-    const devicescriptmgr_cfg_t *cfg;
+    const devsmgr_cfg_t *cfg;
     devs_ctx_t *ctx;
 
     uint32_t write_offset;
@@ -51,7 +51,7 @@ struct srv_state {
 static srv_t *_state;
 
 REG_DEFINITION(                                     //
-    devicescriptmgr_regs,                           //
+    devsmgr_regs,                           //
     REG_SRV_COMMON,                                 //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING),   //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART), //
@@ -70,8 +70,8 @@ __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program
     0x00, 0x00, 0x00, 0x00, 0x34, 0x40, 0x00, 0x00, 0x27, 0x01, 0x02, 0x90, 0x0c, 0x00, 0x00, 0x00,
     0x2e, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
-static const devicescriptmgr_program_header_t *devs_header(srv_t *state) {
-    const devicescriptmgr_program_header_t *hd = state->cfg->program_base;
+static const devsmgr_program_header_t *devs_header(srv_t *state) {
+    const devsmgr_program_header_t *hd = state->cfg->program_base;
     if (hd->magic0 == DEVSMGR_PROG_MAGIC0 && hd->magic1 == DEVSMGR_PROG_MAGIC1)
         return hd;
     return NULL;
@@ -80,7 +80,7 @@ static const devicescriptmgr_program_header_t *devs_header(srv_t *state) {
 static uint32_t current_status(srv_t *state) {
     if (state->ctx)
         return JD_STATUS_CODES_READY;
-    const devicescriptmgr_program_header_t *hd = devs_header(state);
+    const devsmgr_program_header_t *hd = devs_header(state);
     if (hd && hd->size != 0)
         return JD_STATUS_CODES_SLEEPING;
     return JD_STATUS_CODES_WAITING_FOR_INPUT;
@@ -102,7 +102,7 @@ static void run_img(srv_t *state, const void *img, unsigned size) {
 }
 
 static void try_run(srv_t *state) {
-    const devicescriptmgr_program_header_t *hd = devs_header(state);
+    const devsmgr_program_header_t *hd = devs_header(state);
     if (hd && hd->size != 0 && devs_verify(hd->image, hd->size) == 0) {
         run_img(state, hd->image, hd->size);
     } else {
@@ -119,9 +119,9 @@ static void stop_program(srv_t *state) {
 
 __attribute__((weak)) void devs_panic_handler(int exitcode) {}
 
-void devicescriptmgr_process(srv_t *state) {
+void devsmgr_process(srv_t *state) {
     if (state->read_program_ptr >= 0) {
-        const devicescriptmgr_program_header_t *hd = devs_header(state);
+        const devsmgr_program_header_t *hd = devs_header(state);
         int sz = hd ? hd->size : 0;
         if (state->read_program_ptr >= sz) {
             jd_opipe_close(&state->read_program_pipe);
@@ -164,10 +164,10 @@ void devicescriptmgr_process(srv_t *state) {
     }
 }
 
-int devicescriptmgr_deploy_start(uint32_t sz) {
+int devsmgr_deploy_start(uint32_t sz) {
     srv_t *state = _state;
 
-    devicescriptmgr_program_header_t hd;
+    devsmgr_program_header_t hd;
 
     DMESG("deploy %d b", (int)sz);
 
@@ -192,7 +192,7 @@ int devicescriptmgr_deploy_start(uint32_t sz) {
     return 0;
 }
 
-int devicescriptmgr_deploy_write(const void *buf, unsigned size) {
+int devsmgr_deploy_write(const void *buf, unsigned size) {
     srv_t *state = _state;
 
     if (state->write_offset == 0)
@@ -200,8 +200,8 @@ int devicescriptmgr_deploy_write(const void *buf, unsigned size) {
 
     if (buf == NULL) {
         // pipe closed
-        devicescriptmgr_program_header_t *hdf = state->cfg->program_base;
-        devicescriptmgr_program_header_t hd = {
+        devsmgr_program_header_t *hdf = state->cfg->program_base;
+        devsmgr_program_header_t hd = {
             .magic1 = DEVSMGR_PROG_MAGIC1,
             .hash = jd_hash_fnv1a(hdf->image, hdf->size),
         };
@@ -222,7 +222,7 @@ int devicescriptmgr_deploy_write(const void *buf, unsigned size) {
 
     uint8_t *dst = state->cfg->program_base;
     uint32_t endp =
-        ((devicescriptmgr_program_header_t *)dst)->size + sizeof(devicescriptmgr_program_header_t);
+        ((devsmgr_program_header_t *)dst)->size + sizeof(devsmgr_program_header_t);
     if (size & (DEVSMGR_ALIGN - 1) || state->write_offset + size > endp ||
         size >= JD_FLASH_PAGE_SIZE) {
         DMESG("invalid pkt size: %d (off=%d endp=%d)", size, (int)state->write_offset, (int)endp);
@@ -249,7 +249,7 @@ int devicescriptmgr_deploy_write(const void *buf, unsigned size) {
 static void deploy_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
     srv_t *state = (srv_t *)((uint8_t *)istr - offsetof(srv_t, write_program_pipe));
     JD_ASSERT(state == _state);
-    if (devicescriptmgr_deploy_write(pkt->data, pkt->service_size)) {
+    if (devsmgr_deploy_write(pkt->data, pkt->service_size)) {
         jd_ipipe_close(istr);
     }
 }
@@ -259,23 +259,23 @@ static void deploy_meta_handler(jd_ipipe_desc_t *istr, jd_packet_t *pkt) {
     JD_ASSERT(state == _state);
     if (pkt == NULL) {
         // pipe closed
-        devicescriptmgr_deploy_write(NULL, 0);
+        devsmgr_deploy_write(NULL, 0);
     }
 }
 
 static void deploy_bytecode(srv_t *state, jd_packet_t *pkt) {
     uint32_t sz = *(uint32_t *)pkt->data;
 
-    if (devicescriptmgr_deploy_start(sz))
+    if (devsmgr_deploy_start(sz))
         return; // just ignore it
 
     int port = jd_ipipe_open(&state->write_program_pipe, deploy_handler, deploy_meta_handler);
     jd_respond_u16(pkt, port);
 }
 
-int devicescriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]) {
+int devsmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]) {
     srv_t *state = _state;
-    const devicescriptmgr_program_header_t *hd = devs_header(state);
+    const devsmgr_program_header_t *hd = devs_header(state);
     if (hd) {
         jd_sha256_setup();
         jd_sha256_update(hd->image, hd->size);
@@ -289,11 +289,11 @@ int devicescriptmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]) {
 
 static void hash_program(srv_t *state, jd_packet_t *pkt) {
     uint8_t hash[JD_SHA256_HASH_BYTES];
-    devicescriptmgr_get_hash(hash);
+    devsmgr_get_hash(hash);
     jd_send(pkt->service_index, pkt->service_command, hash, JD_SHA256_HASH_BYTES);
 }
 
-void devicescriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
+void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE:
         deploy_bytecode(state, pkt);
@@ -324,7 +324,7 @@ void devicescriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     default:
-        switch (service_handle_register_final(state, pkt, devicescriptmgr_regs)) {
+        switch (service_handle_register_final(state, pkt, devsmgr_regs)) {
         case JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING:
             if (state->running && !state->ctx) {
                 state->running = 0; // not running yet
@@ -347,16 +347,16 @@ void devicescriptmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 }
 
-SRV_DEF(devicescriptmgr, JD_SERVICE_CLASS_DEVICE_SCRIPT_MANAGER);
+SRV_DEF(devsmgr, JD_SERVICE_CLASS_DEVICE_SCRIPT_MANAGER);
 
-devs_ctx_t *devicescriptmgr_get_ctx(void) {
+devs_ctx_t *devsmgr_get_ctx(void) {
     return _state ? _state->ctx : NULL;
 }
 
-int devicescriptmgr_deploy(const void *img, unsigned imgsize) {
+int devsmgr_deploy(const void *img, unsigned imgsize) {
     srv_t *state = _state;
 
-    if (devicescriptmgr_deploy_start(imgsize))
+    if (devsmgr_deploy_start(imgsize))
         return -1;
 
     if (imgsize == 0)
@@ -366,27 +366,27 @@ int devicescriptmgr_deploy(const void *img, unsigned imgsize) {
         sz = imgsize - soff;
         if (sz > 128)
             sz = 128;
-        if (devicescriptmgr_deploy_write((const uint8_t *)img + soff, sz))
+        if (devsmgr_deploy_write((const uint8_t *)img + soff, sz))
             return -3;
     }
 
-    if (devicescriptmgr_deploy_write(NULL, 0))
+    if (devsmgr_deploy_write(NULL, 0))
         return -4;
 
-    const devicescriptmgr_program_header_t *hdx = devs_header(state);
+    const devsmgr_program_header_t *hdx = devs_header(state);
     if (hdx == NULL)
         return -5; // ???
     return devs_verify(hdx->image, hdx->size);
 }
 
-static void devicescriptmgr_client_ev(void *state0, int event_id, void *arg0, void *arg1) {
+static void devsmgr_client_ev(void *state0, int event_id, void *arg0, void *arg1) {
     srv_t *state = state0;
     if (state->ctx)
         devs_client_event_handler(state->ctx, event_id, arg0, arg1);
 }
 
-void devicescriptmgr_init(const devicescriptmgr_cfg_t *cfg) {
-    SRV_ALLOC(devicescriptmgr);
+void devsmgr_init(const devsmgr_cfg_t *cfg) {
+    SRV_ALLOC(devsmgr);
     state->cfg = cfg;
     state->read_program_ptr = -1;
     state->autostart = 1;
@@ -396,6 +396,6 @@ void devicescriptmgr_init(const devicescriptmgr_cfg_t *cfg) {
 
     JD_ASSERT(devs_verify(devs_empty_program, sizeof(devs_empty_program)) == 0);
 
-    jd_client_subscribe(devicescriptmgr_client_ev, state);
+    jd_client_subscribe(devsmgr_client_ev, state);
     _state = state;
 }

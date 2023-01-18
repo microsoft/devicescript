@@ -183,7 +183,7 @@ int load_image(const char *name) {
         return 0;
     }
 
-    if (devicescriptmgr_deploy(img, size)) {
+    if (devsmgr_deploy(img, size)) {
         fprintf(stderr, "can't deploy '%s'\n", name);
         jd_free(img);
         return -3;
@@ -225,13 +225,13 @@ static void run_sample(const char *name, int keepgoing) {
         client_process();
         target_wait_us(10000);
 
-        if (!keepgoing && iter > 15 && !devicescriptmgr_get_ctx() && the_end == 0x1000000000) {
+        if (!keepgoing && iter > 15 && !devsmgr_get_ctx() && the_end == 0x1000000000) {
             // if the script ended, we shall exit soon, but not exactly now
             the_end = iter + 15;
         }
     }
 
-    devicescriptmgr_deploy(NULL, 0);
+    devsmgr_deploy(NULL, 0);
     jd_lstore_force_flush();
     jd_services_deinit();
 }

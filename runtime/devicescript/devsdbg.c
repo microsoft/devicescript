@@ -437,7 +437,7 @@ static void read_named(cmd_t *cmd) {
 }
 
 void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
-    devs_ctx_t *ctx = devicescriptmgr_get_ctx();
+    devs_ctx_t *ctx = devsmgr_get_ctx();
     cmd_t _cmd = {.state = state, .pkt = pkt, .ctx = ctx};
     cmd_t *cmd = &_cmd;
 

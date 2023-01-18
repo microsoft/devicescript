@@ -9,7 +9,7 @@
 
 #if JD_FLASH_IN_SETTINGS
 
-static devicescriptmgr_cfg_t cfg;
+static devsmgr_cfg_t cfg;
 static bool is_erased;
 static uint8_t *max_write;
 
@@ -45,10 +45,10 @@ void flash_erase(void *page_addr) {
     }
 }
 
-void devicescriptmgr_init_mem(unsigned size) {
+void devsmgr_init_mem(unsigned size) {
     cfg.max_program_size = size;
     cfg.program_base = jd_alloc(cfg.max_program_size);
-    devicescriptmgr_init(&cfg);
+    devsmgr_init(&cfg);
     jd_settings_get_bin(KEY, cfg.program_base, cfg.max_program_size);
 }
 

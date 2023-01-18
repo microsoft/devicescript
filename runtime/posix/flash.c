@@ -10,7 +10,7 @@
 #include "services/interfaces/jd_flash.h"
 #include "devicescript/devicescript.h"
 
-static devicescriptmgr_cfg_t cfg;
+static devsmgr_cfg_t cfg;
 
 void flash_program(void *dst, const void *src, uint32_t len) {
     JD_ASSERT(cfg.program_base != NULL);
@@ -38,5 +38,5 @@ void flash_sync() {
 void init_devicescript_manager(void) {
     cfg.max_program_size = 32 * 1024;
     cfg.program_base = jd_alloc(cfg.max_program_size);
-    devicescriptmgr_init(&cfg);
+    devsmgr_init(&cfg);
 }
