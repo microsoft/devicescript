@@ -139,6 +139,8 @@ void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
         if (devs_is_null(fiber->ret_val) && (act->func->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
             fiber->ret_val = act->slots[0];
         devs_fiber_activate(fiber, act->caller);
+        // act may survive as a closure past the caller intended lifetime
+        act->caller = NULL;
     } else {
         if (fiber->pending) {
             log_fiber_op(fiber, "re-run");
