@@ -23,7 +23,7 @@ static void set_alloc(devs_activation_t *frame, devs_ctx_t *ctx, void *p, unsign
 static void stmt0_alloc_map(devs_activation_t *frame, devs_ctx_t *ctx) {
     set_alloc(frame, ctx,
               devs_map_try_alloc(
-                  ctx, devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)),
+                  ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)),
               sizeof(devs_map_t));
 }
 
@@ -471,7 +471,7 @@ static value_t exprx1_utf8_field(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t get_builtin_field(devs_ctx_t *ctx, unsigned obj) {
     value_t fld = static_something(ctx, DEVS_STRIDX_BUILTIN);
-    return devs_object_get_no_bind(ctx, devs_object_get_built_in(ctx, obj), fld);
+    return devs_maplike_get_no_bind(ctx, devs_get_builtin_object(ctx, obj), fld);
 }
 
 static value_t exprx_math_field(devs_activation_t *frame, devs_ctx_t *ctx) {

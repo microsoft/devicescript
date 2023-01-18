@@ -32,7 +32,7 @@ value_t prop_Function_prototype(devs_ctx_t *ctx, value_t self) {
     if (devs_is_null(r)) {
         r = devs_value_from_gc_obj(
             ctx, devs_map_try_alloc(
-                     ctx, devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)));
+                     ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)));
         if (!devs_is_null(r)) {
             devs_value_pin(ctx, r);
             devs_any_set(ctx, r, devs_builtin_string(DEVS_BUILTIN_STRING_CONSTRUCTOR),

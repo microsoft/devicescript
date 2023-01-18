@@ -202,7 +202,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
 
 static value_t devs_throw_internal_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format,
                                          va_list arg) {
-    devs_map_t *exn = devs_map_try_alloc(ctx, devs_object_get_built_in(ctx, proto_idx));
+    devs_map_t *exn = devs_map_try_alloc(ctx, devs_get_builtin_object(ctx, proto_idx));
     if (exn) {
         value_t eval = devs_value_from_gc_obj(ctx, exn);
         devs_value_pin(ctx, eval);

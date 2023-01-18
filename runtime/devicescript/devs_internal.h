@@ -123,7 +123,7 @@ struct devs_ctx {
     devs_fiber_t *fibers;
     devs_role_t *roles;
 
-    // use devs_object_get_built_in()
+    // use devs_get_builtin_object()
     devs_map_t **_builtin_protos;
 
     uint32_t *buffers;

@@ -33,8 +33,8 @@ static void fun1_keys_or_values(devs_ctx_t *ctx, bool keys) {
     devs_value_pin(ctx, ret);
 
     if (devs_gc_tag(src) == DEVS_GC_TAG_HALF_STATIC_MAP)
-        devs_map_keys_or_values(ctx, ((devs_map_t *)src)->proto, arr, keys);
-    devs_map_keys_or_values(ctx, src, arr, keys);
+        devs_maplike_keys_or_values(ctx, ((devs_map_t *)src)->proto, arr, keys);
+    devs_maplike_keys_or_values(ctx, src, arr, keys);
 
     devs_value_unpin(ctx, ret);
     devs_ret(ctx, ret);

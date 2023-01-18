@@ -101,21 +101,25 @@ value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 int devs_map_delete(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map);
 void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, devs_maplike_t *src);
-void devs_map_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys);
 void devs_map_set_string_field(devs_ctx_t *ctx, devs_map_t *m, unsigned builtin_str, value_t msg);
+
+typedef void (*devs_map_iter_cb_t)(devs_ctx_t *ctx, void *userdata, value_t k, value_t v);
+unsigned devs_maplike_iter(devs_ctx_t *ctx, devs_maplike_t *src, void *userdata,
+                           devs_map_iter_cb_t cb);
+void devs_maplike_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys);
 
 value_t devs_short_map_get(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key);
 void devs_short_map_set(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key, value_t v);
+devs_maplike_t *devs_maplike_get_proto(devs_ctx_t *ctx, devs_maplike_t *obj);
+value_t devs_maplike_get_no_bind(devs_ctx_t *ctx, devs_maplike_t *proto, value_t key);
 
 value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx);
 void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v);
 void devs_seq_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v);
 int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int count);
 
-value_t devs_object_get_no_bind(devs_ctx_t *ctx, devs_maplike_t *proto, value_t key);
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key);
 value_t devs_object_get_built_in_field(devs_ctx_t *ctx, value_t obj, unsigned idx);
-devs_maplike_t *devs_object_get_proto(devs_ctx_t *ctx, devs_maplike_t *obj);
 bool devs_instance_of(devs_ctx_t *ctx, value_t obj, devs_maplike_t *cls_proto);
 devs_maplike_t *devs_get_prototype_field(devs_ctx_t *ctx, value_t cls);
 
@@ -127,13 +131,12 @@ bool devs_can_attach(devs_ctx_t *ctx, value_t v);
 devs_map_t *devs_object_get_attached_rw(devs_ctx_t *ctx, value_t v);
 devs_maplike_t *devs_object_get_attached_ro(devs_ctx_t *ctx, value_t v);
 devs_maplike_t *devs_object_get_attached_enum(devs_ctx_t *ctx, value_t v);
-const devs_builtin_proto_t *devs_object_get_static_built_in(devs_ctx_t *ctx, unsigned idx);
-devs_maplike_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx);
-value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key);
+
+// DEVS_BUILTIN_OBJECT_*
+devs_maplike_t *devs_get_builtin_object(devs_ctx_t *ctx, unsigned idx);
 value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v);
 bool devs_is_service_spec(devs_ctx_t *ctx, const void *ptr);
 const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx);
-value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key);
 const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t service_class);
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx);
 

@@ -8,7 +8,7 @@ static void meth1_error_ctor(devs_ctx_t *ctx, unsigned blt, unsigned str) {
     if (!m)
         return;
     if (m->proto == NULL)
-        m->proto = devs_object_get_built_in(ctx, blt);
+        m->proto = devs_get_builtin_object(ctx, blt);
     value_t msg = devs_arg(ctx, 0);
     if (devs_is_null(msg))
         msg = devs_builtin_string(str);

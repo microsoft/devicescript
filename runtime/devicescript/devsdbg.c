@@ -247,8 +247,14 @@ static unsigned obj_length(void *obj) {
     }
 }
 
-static value_t value_from_objlike(devs_ctx_t *ctx, devs_maplike_t *obj) {
+static value_t value_from_maplike(devs_ctx_t *ctx, devs_maplike_t *obj) {
     TODO();
+}
+
+static void kv_add(devs_ctx_t *ctx, void *userdata, value_t k, value_t v) {
+    jd_devs_dbg_key_value_t **tp = userdata;
+    expand_key_value(ctx, *tp, k, v);
+    (*tp)++;
 }
 
 static unsigned obj_get_props(devs_ctx_t *ctx, value_t v, jd_devs_dbg_key_value_t *trg) {
@@ -256,38 +262,19 @@ static unsigned obj_get_props(devs_ctx_t *ctx, value_t v, jd_devs_dbg_key_value_
     if (obj == NULL)
         return 0;
 
-    devs_map_t *map;
-
-    devs_maplike_t *proto = devs_object_get_proto(ctx, obj);
+    devs_maplike_t *proto = devs_maplike_get_proto(ctx, obj);
     unsigned idx = 0;
     if (proto) {
         if (trg)
             expand_key_value(ctx, trg++, devs_builtin_string(DEVS_BUILTIN_STRING___PROTO__),
-                             value_from_objlike(ctx, proto));
+                             value_from_maplike(ctx, proto));
         idx++;
     }
 
-    value_t pinned = devs_null;
-
-    if (devs_is_service_spec(ctx, obj) || devs_is_builtin_proto(obj)) {
-        map = devs_map_try_alloc(ctx, NULL);
-        pinned = devs_value_from_gc_obj(ctx, map);
-        devs_value_pin(ctx, pinned);
-        devs_map_copy_into(ctx, map, obj);
-    } else {
-        JD_ASSERT(devs_is_map(obj));
-        map = (void *)obj;
-    }
-
-    idx += map->length;
-
-    if (trg) {
-        unsigned len2 = map->length * 2;
-        for (unsigned i = 0; i < len2; i += 2)
-            expand_key_value(ctx, trg++, map->data[i], map->data[i + 1]);
-    }
-
-    devs_value_unpin(ctx, pinned);
+    if (trg)
+        idx += devs_maplike_iter(ctx, obj, &trg, kv_add);
+    else
+        idx += devs_maplike_iter(ctx, obj, NULL, NULL);
 
     return idx;
 }

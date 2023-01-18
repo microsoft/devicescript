@@ -62,59 +62,62 @@ static value_t proto_value(devs_ctx_t *ctx, const devs_builtin_proto_entry_t *p)
     return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, idx);
 }
 
-void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, devs_maplike_t *src) {
+unsigned devs_maplike_iter(devs_ctx_t *ctx, devs_maplike_t *src, void *userdata,
+                           devs_map_iter_cb_t cb) {
     if (devs_is_service_spec(ctx, src)) {
         TODO();
+        return 0;
     } else if (devs_is_builtin_proto(src)) {
         const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;
         const devs_builtin_proto_entry_t *p = proto->entries;
         while (p->builtin_string_id) {
-            devs_map_set(ctx, dst, devs_builtin_string(p->builtin_string_id), proto_value(ctx, p));
+            if (cb)
+                cb(ctx, userdata, devs_builtin_string(p->builtin_string_id), proto_value(ctx, p));
             p++;
         }
+        return p - proto->entries;
     } else {
         JD_ASSERT(devs_is_map(src));
         devs_map_t *srcmap = (devs_map_t *)src;
-        unsigned len2 = srcmap->length * 2;
-        value_t *data = srcmap->data;
-        for (unsigned i = 0; i < len2; i += 2) {
-            devs_map_set(ctx, dst, data[i], data[i + 1]);
+        if (cb != NULL) {
+            unsigned len2 = srcmap->length * 2;
+            value_t *data = srcmap->data;
+            for (unsigned i = 0; i < len2; i += 2) {
+                cb(ctx, userdata, data[i], data[i + 1]);
+            }
         }
+        return srcmap->length;
     }
 }
 
-void devs_map_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys) {
-    unsigned dp = arr->length;
-    if (devs_is_service_spec(ctx, src)) {
-        TODO();
-    } else if (devs_is_builtin_proto(src)) {
-        const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;
-        const devs_builtin_proto_entry_t *p = proto->entries;
+void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, devs_maplike_t *src) {
+    devs_maplike_iter(ctx, src, dst, (devs_map_iter_cb_t)devs_map_set);
+}
 
-        while (p->builtin_string_id)
-            p++;
-        unsigned len = p - proto->entries;
+struct kv_ctx {
+    unsigned dp;
+    bool keys;
+    devs_array_t *arr;
+};
 
-        if (devs_array_insert(ctx, arr, dp, len) != 0)
-            return;
+static void kv_add(devs_ctx_t *ctx, void *userdata, value_t k, value_t v) {
+    struct kv_ctx *acc = userdata;
+    acc->arr->data[acc->dp++] = acc->keys ? k : v;
+}
 
-        p = proto->entries;
-        while (p->builtin_string_id) {
-            arr->data[dp++] =
-                keys ? devs_builtin_string(p->builtin_string_id) : proto_value(ctx, p);
-            p++;
-        }
-    } else {
-        JD_ASSERT(devs_is_map(src));
-        devs_map_t *srcmap = (devs_map_t *)src;
-        unsigned len2 = srcmap->length * 2;
-        value_t *data = srcmap->data;
-        if (devs_array_insert(ctx, arr, dp, srcmap->length) != 0)
-            return;
-        for (unsigned i = 0; i < len2; i += 2) {
-            arr->data[dp++] = keys ? data[i] : data[i + 1];
-        }
-    }
+void devs_maplike_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys) {
+    struct kv_ctx acc = {
+        .dp = arr->length,
+        .arr = arr,
+        .keys = keys,
+    };
+
+    unsigned len = devs_maplike_iter(ctx, src, NULL, NULL);
+
+    if (devs_array_insert(ctx, arr, acc.dp, len) != 0)
+        return;
+
+    devs_maplike_iter(ctx, src, &acc, kv_add);
 }
 
 static int grow_len(int capacity) {
@@ -220,7 +223,7 @@ value_t devs_short_map_get(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key)
     return *tmp;
 }
 
-const devs_builtin_proto_t *devs_object_get_static_built_in(devs_ctx_t *ctx, unsigned idx) {
+static const devs_builtin_proto_t *get_static_built_in_proto(devs_ctx_t *ctx, unsigned idx) {
     JD_ASSERT(idx <= DEVS_BUILTIN_OBJECT___MAX);
     if (devs_builtin_protos[idx].entries == NULL)
         return NULL; // not there?
@@ -239,7 +242,7 @@ static const uint8_t builtin_proto_idx[] = {
 };
 #define MAX_PROTO 8
 
-devs_maplike_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
+devs_maplike_t *devs_get_builtin_object(devs_ctx_t *ctx, unsigned idx) {
     if (idx < sizeof(builtin_proto_idx)) {
         unsigned midx = builtin_proto_idx[idx];
         if (midx > 0) {
@@ -256,14 +259,14 @@ devs_maplike_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
                 m = devs_any_try_alloc(ctx, DEVS_GC_TAG_HALF_STATIC_MAP, sizeof(devs_map_t));
                 if (m != NULL) {
                     ctx->_builtin_protos[midx] = m;
-                    m->proto = (devs_maplike_t *)devs_object_get_static_built_in(ctx, idx);
+                    m->proto = (devs_maplike_t *)get_static_built_in_proto(ctx, idx);
                 }
             }
             return (devs_maplike_t *)m;
         }
     }
 
-    return (devs_maplike_t *)devs_object_get_static_built_in(ctx, idx);
+    return (devs_maplike_t *)get_static_built_in_proto(ctx, idx);
 }
 
 bool devs_static_streq(devs_ctx_t *ctx, unsigned stridx, const char *other, unsigned other_len) {
@@ -318,7 +321,7 @@ const devs_service_spec_t *devs_get_base_spec(devs_ctx_t *ctx, const devs_servic
     return devs_img_get_service_spec(ctx->img, idx);
 }
 
-value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key) {
+static value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key) {
     while (spec) {
         JD_ASSERT(devs_is_service_spec(ctx, spec));
         const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
@@ -348,7 +351,7 @@ value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value
     return devs_undefined;
 }
 
-value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key) {
+static value_t devs_proto_lookup(devs_ctx_t *ctx, const devs_builtin_proto_t *proto, value_t key) {
     JD_ASSERT(devs_is_proto(proto));
 
     while (proto) {
@@ -546,7 +549,7 @@ static devs_maplike_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, unsigned a
     if ((attach_flags & (ATTACH_DIRECT | ATTACH_ENUM)) == ATTACH_ENUM)
         return NULL;
 
-    devs_maplike_t *r = devs_object_get_built_in(ctx, tp);
+    devs_maplike_t *r = devs_get_builtin_object(ctx, tp);
 
     // accessing prototype on static object - can't attach properties
     if (attach_flags & ATTACH_RW) {
@@ -695,7 +698,7 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
     devs_map_t *map = *attached;
 
     if (!map && (attach_flags & ATTACH_RW)) {
-        map = *attached = devs_map_try_alloc(ctx, devs_object_get_built_in(ctx, builtin));
+        map = *attached = devs_map_try_alloc(ctx, devs_get_builtin_object(ctx, builtin));
         if (map == NULL)
             return NULL;
     }
@@ -703,7 +706,7 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
     if (map || (attach_flags & ATTACH_ENUM))
         return (devs_maplike_t *)map;
     else
-        return devs_object_get_built_in(ctx, builtin);
+        return devs_get_builtin_object(ctx, builtin);
 }
 
 devs_map_t *devs_object_get_attached_rw(devs_ctx_t *ctx, value_t v) {
@@ -725,13 +728,13 @@ devs_maplike_t *devs_object_get_attached_enum(devs_ctx_t *ctx, value_t v) {
     return r;
 }
 
-devs_maplike_t *devs_object_get_proto(devs_ctx_t *ctx, devs_maplike_t *obj) {
+devs_maplike_t *devs_maplike_get_proto(devs_ctx_t *ctx, devs_maplike_t *obj) {
     const void *res;
 
     if (devs_is_builtin_proto(obj)) {
         res = ((const devs_builtin_proto_t *)obj)->parent;
     } else if (devs_is_service_spec(ctx, obj)) {
-        res = devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE);
+        res = devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE);
     } else {
         JD_ASSERT(devs_is_map(obj));
         devs_map_t *map = (devs_map_t *)obj;
@@ -739,7 +742,7 @@ devs_maplike_t *devs_object_get_proto(devs_ctx_t *ctx, devs_maplike_t *obj) {
     }
 
     if (res == NULL)
-        res = devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE);
+        res = devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE);
     if (obj == res) // Object.prototype.__proto__ == NULL
         return NULL;
     return res;
@@ -766,20 +769,20 @@ bool devs_instance_of(devs_ctx_t *ctx, value_t obj, devs_maplike_t *cls_proto) {
     devs_maplike_t *proto = devs_object_get_attached_ro(ctx, obj);
     devs_maplike_t *en = devs_object_get_attached_enum(ctx, obj);
     if (proto && proto == en)
-        proto = devs_object_get_proto(ctx, proto);
+        proto = devs_maplike_get_proto(ctx, proto);
     if (proto == NULL)
         return false;
 
     while (proto) {
         if (cls_proto == proto)
             return true;
-        proto = devs_object_get_proto(ctx, proto);
+        proto = devs_maplike_get_proto(ctx, proto);
     }
 
     return false;
 }
 
-value_t devs_object_get_no_bind(devs_ctx_t *ctx, devs_maplike_t *proto, value_t key) {
+value_t devs_maplike_get_no_bind(devs_ctx_t *ctx, devs_maplike_t *proto, value_t key) {
     value_t ptmp, *tmp = NULL;
 
     while (proto) {
@@ -794,7 +797,7 @@ value_t devs_object_get_no_bind(devs_ctx_t *ctx, devs_maplike_t *proto, value_t 
                 tmp = &ptmp;
                 break;
             } else {
-                proto = devs_object_get_built_in(ctx, DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE);
+                proto = devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE);
                 continue;
             }
         } else {
@@ -815,14 +818,14 @@ value_t devs_object_get_no_bind(devs_ctx_t *ctx, devs_maplike_t *proto, value_t 
 
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key) {
     ctx->diag_field = key;
-    value_t tmp = devs_object_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
+    value_t tmp = devs_maplike_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
     return devs_function_bind(ctx, obj, tmp);
 }
 
 value_t devs_object_get_built_in_field(devs_ctx_t *ctx, value_t obj, unsigned idx) {
     value_t key = devs_builtin_string(idx);
     ctx->diag_field = key;
-    value_t fn = devs_object_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
+    value_t fn = devs_maplike_get_no_bind(ctx, devs_object_get_attached_ro(ctx, obj), key);
     const devs_builtin_function_t *h = devs_get_property_desc(ctx, fn);
     if (h)
         return h->handler.prop(ctx, obj);
@@ -1042,7 +1045,7 @@ value_t devs_builtin_object_value(devs_ctx_t *ctx, unsigned idx) {
     if (idx > DEVS_BUILTIN_OBJECT___MAX)
         return devs_undefined;
 
-    devs_maplike_t *p = devs_object_get_built_in(ctx, idx);
+    devs_maplike_t *p = devs_get_builtin_object(ctx, idx);
     if (devs_is_builtin_proto(p))
         return devs_value_from_handle(DEVS_HANDLE_TYPE_SPECIAL,
                                       DEVS_SPECIAL_BUILTIN_OBJ_FIRST + idx);
