@@ -25,5 +25,4 @@ typedef struct {
     devs_pc_t pc;
 } devs_trace_ev_fiber_yield_t;
 
-
 void devs_trace(devs_ctx_t *ctx, unsigned trace_type, const void *data, unsigned data_size);

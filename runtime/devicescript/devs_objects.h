@@ -101,8 +101,7 @@ value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 int devs_map_delete(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map);
 void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, devs_maplike_t *src);
-void devs_map_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr,
-                             bool keys);
+void devs_map_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys);
 void devs_map_set_string_field(devs_ctx_t *ctx, devs_map_t *m, unsigned builtin_str, value_t msg);
 
 value_t devs_short_map_get(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key);

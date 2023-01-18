@@ -83,8 +83,7 @@ void devs_map_copy_into(devs_ctx_t *ctx, devs_map_t *dst, devs_maplike_t *src) {
     }
 }
 
-void devs_map_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr,
-                             bool keys) {
+void devs_map_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys) {
     unsigned dp = arr->length;
     if (devs_is_service_spec(ctx, src)) {
         TODO();
@@ -257,8 +256,7 @@ devs_maplike_t *devs_object_get_built_in(devs_ctx_t *ctx, unsigned idx) {
                 m = devs_any_try_alloc(ctx, DEVS_GC_TAG_HALF_STATIC_MAP, sizeof(devs_map_t));
                 if (m != NULL) {
                     ctx->_builtin_protos[midx] = m;
-                    m->proto =
-                        (devs_maplike_t *)devs_object_get_static_built_in(ctx, idx);
+                    m->proto = (devs_maplike_t *)devs_object_get_static_built_in(ctx, idx);
                 }
             }
             return (devs_maplike_t *)m;
@@ -544,8 +542,7 @@ static void throw_field_error(devs_ctx_t *ctx, unsigned attach_flags, value_t v)
     throw_field_error_str(ctx, attach_flags, devs_show_value(ctx, v));
 }
 
-static devs_maplike_t *devs_get_static_proto(devs_ctx_t *ctx, int tp,
-                                                        unsigned attach_flags) {
+static devs_maplike_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, unsigned attach_flags) {
     if ((attach_flags & (ATTACH_DIRECT | ATTACH_ENUM)) == ATTACH_ENUM)
         return NULL;
 
@@ -589,8 +586,7 @@ devs_map_t *devs_get_role_proto(devs_ctx_t *ctx, unsigned roleidx) {
     return m;
 }
 
-static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v,
-                                                           unsigned attach_flags) {
+static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsigned attach_flags) {
     static const uint8_t proto_by_object_type[] = {
         [DEVS_OBJECT_TYPE_NUMBER] = DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE,
         [DEVS_OBJECT_TYPE_FIBER] = DEVS_BUILTIN_OBJECT_DSFIBER_PROTOTYPE,
