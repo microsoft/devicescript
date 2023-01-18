@@ -6,7 +6,7 @@ void fun2_Object_assign(devs_ctx_t *ctx) {
 
     if (!devs_is_null(src0)) {
         devs_map_t *dst = devs_object_get_attached_rw(ctx, dst0);
-        const devs_map_or_proto_t *src = devs_object_get_attached_enum(ctx, src0);
+        devs_maplike_t *src = devs_object_get_attached_enum(ctx, src0);
         if (src && dst) {
             if (devs_gc_tag(src) == DEVS_GC_TAG_HALF_STATIC_MAP) {
                 devs_map_copy_into(ctx, dst, ((devs_map_t *)src)->proto);
@@ -21,7 +21,7 @@ void fun2_Object_assign(devs_ctx_t *ctx) {
 static void fun1_keys_or_values(devs_ctx_t *ctx, bool keys) {
     value_t src0 = devs_arg(ctx, 0);
 
-    const devs_map_or_proto_t *src = devs_object_get_attached_enum(ctx, src0);
+    devs_maplike_t *src = devs_object_get_attached_enum(ctx, src0);
     if (!src)
         return;
 
@@ -58,7 +58,7 @@ void fun2_Object_setPrototypeOf(devs_ctx_t *ctx) {
         return;
     }
 
-    const devs_map_or_proto_t *p = devs_object_get_attached_enum(ctx, src);
+    devs_maplike_t *p = devs_object_get_attached_enum(ctx, src);
     if (!p) {
         devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_PROTOTYPE, src);
         return;

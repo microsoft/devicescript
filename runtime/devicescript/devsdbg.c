@@ -247,18 +247,18 @@ static unsigned obj_length(void *obj) {
     }
 }
 
-static value_t value_from_objlike(devs_ctx_t *ctx, const devs_map_or_proto_t *obj) {
+static value_t value_from_objlike(devs_ctx_t *ctx, devs_maplike_t *obj) {
     TODO();
 }
 
 static unsigned obj_get_props(devs_ctx_t *ctx, value_t v, jd_devs_dbg_key_value_t *trg) {
-    const devs_map_or_proto_t *obj = devs_object_get_attached_enum(ctx, v);
+    devs_maplike_t *obj = devs_object_get_attached_enum(ctx, v);
     if (obj == NULL)
         return 0;
 
     devs_map_t *map;
 
-    const devs_map_or_proto_t *proto = devs_object_get_proto(ctx, obj);
+    devs_maplike_t *proto = devs_object_get_proto(ctx, obj);
     unsigned idx = 0;
     if (proto) {
         if (trg)

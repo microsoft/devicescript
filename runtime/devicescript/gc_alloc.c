@@ -445,7 +445,7 @@ void devs_value_unpin(devs_ctx_t *ctx, value_t v) {
     b->header &= ~((uintptr_t)DEVS_GC_TAG_MASK_PINNED << DEVS_GC_TAG_POS);
 }
 
-devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, const devs_map_or_proto_t *proto) {
+devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, devs_maplike_t *proto) {
     devs_map_t *m = devs_any_try_alloc(ctx, DEVS_GC_TAG_MAP, sizeof(devs_map_t));
     if (m)
         m->proto = proto;
