@@ -96,7 +96,8 @@ void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *
     // devs_fiber_poke() does this anyway, so optimize it out
     if (event_id != JD_CLIENT_EV_PROCESS)
         devs_fiber_sync_now(ctx);
-
+    
+    // all bytecode execution is called from one of these event handlers
     switch (event_id) {
     case JD_CLIENT_EV_SERVICE_PACKET:
         devs_trace(ctx, DEVS_TRACE_EV_SERVICE_PACKET, pkt, pkt->service_size + 16);
@@ -124,6 +125,7 @@ void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *
 
 static void clear_ctx(devs_ctx_t *ctx) {
     devs_jd_free_roles(ctx);
+    devs_vm_clear_breakpoints(ctx);
     devs_enter(ctx);
     devs_regcache_free_all(&ctx->regcache);
     devs_fiber_free_all_fibers(ctx);

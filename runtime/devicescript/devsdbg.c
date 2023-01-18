@@ -335,7 +335,7 @@ static void send_values(cmd_t *cmd, unsigned num, value_t *vals) {
             expand_value(cmd->ctx, r + i, vals[i]);
 }
 
-static void send_indexed(cmd_t *cmd) {
+static void read_indexed(cmd_t *cmd) {
     devs_ctx_t *ctx = cmd->ctx;
     jd_devs_dbg_read_indexed_values_t *args = (void *)cmd->pkt->data;
     switch (args->modifier) {
@@ -377,7 +377,51 @@ static void send_indexed(cmd_t *cmd) {
     }
 }
 
-static void send_named(cmd_t *cmd) {
+static void respond_value(cmd_t *cmd, value_t v) {
+    jd_devs_dbg_value_t trg;
+    expand_value(cmd->ctx, &trg, v);
+    jd_send(cmd->pkt->service_index, cmd->pkt->service_command, &trg, sizeof(trg));
+}
+
+static void respond_no_value(cmd_t *cmd) {
+    jd_devs_dbg_value_t trg = {.tag = JD_DEVS_DBG_VALUE_TAG_UNHANDLED};
+    jd_send(cmd->pkt->service_index, cmd->pkt->service_command, &trg, sizeof(trg));
+}
+
+static void read_value(cmd_t *cmd) {
+    devs_ctx_t *ctx = cmd->ctx;
+    jd_devs_dbg_read_value_t *args = (void *)cmd->pkt->data;
+    switch (args->index) {
+    case JD_DEVS_DBG_VALUE_INDEX_CURRENT_EXCEPTION:
+        if (devs_is_null(ctx->exn_val) && ctx->curr_fiber)
+            respond_value(cmd, ctx->curr_fiber->ret_val);
+        else
+            respond_value(cmd, ctx->exn_val);
+        break;
+
+    case JD_DEVS_DBG_VALUE_INDEX_RETURN_VALUE: {
+        devs_fiber_t *f = devs_fiber_by_tag(ctx, args->arg);
+        if (f)
+            respond_value(cmd, ctx->exn_val);
+        else
+            respond_no_value(cmd);
+        break;
+    }
+
+    case JD_DEVS_DBG_VALUE_INDEX_ROLE_OBJECT:
+        if (args->arg < devs_img_num_roles(ctx->img))
+            respond_value(cmd, devs_value_from_gc_obj(ctx, ctx->roles[args->arg].attached));
+        else
+            respond_no_value(cmd);
+        break;
+
+    default:
+        respond_no_value(cmd);
+        break;
+    }
+}
+
+static void read_named(cmd_t *cmd) {
     jd_devs_dbg_read_named_values_t *args = (void *)cmd->pkt->data;
     devs_ctx_t *ctx = cmd->ctx;
     void *obj = to_gc_obj(ctx, args->obj);
@@ -439,28 +483,48 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
         if (ctx == NULL)
             send_empty(cmd);
         else
-            send_indexed(cmd);
+            read_indexed(cmd);
         break;
 
     case JD_DEVS_DBG_CMD_READ_NAMED_VALUES:
         if (ctx == NULL)
             send_empty(cmd);
         else
-            send_named(cmd);
+            read_named(cmd);
         break;
 
     case JD_DEVS_DBG_CMD_READ_VALUE:
-        TODO();
+        if (ctx == NULL)
+            respond_no_value(cmd);
+        else
+            read_value(cmd);
         break;
 
     case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINT:
+        if (ctx)
+            devs_vm_clear_breakpoint(ctx, *((uint16_t *)pkt->data));
+        break;
+
     case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINTS:
+        if (ctx)
+            devs_vm_clear_breakpoints(ctx);
+        break;
+
     case JD_DEVS_DBG_CMD_SET_BREAKPOINT:
-        TODO();
+        if (ctx)
+            devs_vm_set_breakpoint(ctx, *((uint16_t *)pkt->data));
+        break;
+
+    case JD_DEVS_DBG_CMD_HALT:
+        if (ctx)
+            devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_HALT);
         break;
 
     case JD_DEVS_DBG_CMD_RESUME:
-    case JD_DEVS_DBG_CMD_HALT:
+        if (ctx)
+            devs_vm_resume(ctx);
+        break;
+
     case JD_DEVS_DBG_CMD_RESTART_AND_HALT:
         TODO();
         break;

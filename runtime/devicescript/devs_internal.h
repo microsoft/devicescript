@@ -10,6 +10,7 @@
 #include "jd_client.h"
 #include "jacdac/dist/c/devicescriptcondition.h"
 #include "jacdac/dist/c/devicescriptmanager.h"
+#include "jacdac/dist/c/devicescriptdebugger.h"
 
 #include "devs_format.h"
 #include "devs_img.h"
@@ -90,6 +91,11 @@ typedef struct {
     devs_map_t *attached;
 } devs_role_t;
 
+// has to be power of 2
+#define DEVS_BRK_HASH_SIZE 32
+// has to be under 0xff
+#define DEVS_BRK_MAX_COUNT 0xf0
+
 struct devs_ctx {
     value_t *globals;
     uint16_t opstack;
@@ -109,6 +115,7 @@ struct devs_ctx {
     uint8_t stack_top_for_gc;
     uint8_t _num_builtin_protos;
     uint8_t in_throw;
+    uint8_t suspension;
 
     uint32_t literal_int;
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
@@ -140,6 +147,10 @@ struct devs_ctx {
 
     devs_cfg_t cfg;
 
+    devs_pc_t *brk_list;
+    uint16_t brk_count;
+    uint8_t brk_jump_tbl[DEVS_BRK_HASH_SIZE];
+
     union {
         jd_frame_t frame;
         jd_packet_t packet;
@@ -163,6 +174,10 @@ static inline uint32_t devs_now(devs_ctx_t *ctx) {
 }
 static inline bool devs_trace_enabled(devs_ctx_t *ctx) {
     return (ctx->flags & DEVS_CTX_TRACE_DISABLED) == 0;
+}
+
+static inline bool devs_is_suspended(devs_ctx_t *ctx) {
+    return ctx->suspension != JD_DEVS_DBG_SUSPENSION_TYPE_NONE;
 }
 
 void devs_panic(devs_ctx_t *ctx, unsigned code);
@@ -208,6 +223,12 @@ void devs_fiber_free_all_fibers(devs_ctx_t *ctx);
 // vm_main.c
 void devs_vm_exec_opcodes(devs_ctx_t *ctx);
 uint8_t devs_fetch_opcode(devs_activation_t *frame, devs_ctx_t *ctx);
+
+int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc);
+bool devs_vm_clear_breakpoint(devs_ctx_t *ctx, unsigned pc);
+void devs_vm_clear_breakpoints(devs_ctx_t *ctx);
+void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause);
+int devs_vm_resume(devs_ctx_t *ctx);
 
 value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t buffer,
                        value_t *setv);

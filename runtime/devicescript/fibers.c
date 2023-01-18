@@ -16,7 +16,7 @@ void devs_fiber_yield(devs_ctx_t *ctx) {
 static void devs_fiber_activate(devs_fiber_t *fiber, devs_activation_t *act) {
     devs_ctx_t *ctx = fiber->ctx;
     fiber->activation = act;
-    if (ctx->error_code == 0) {
+    if (!devs_is_suspended(ctx)) {
         ctx->curr_fn = act;
         JD_ASSERT(act->maxpc > 0);
     }
@@ -260,7 +260,7 @@ void devs_fiber_termiante(devs_fiber_t *f) {
 
 void devs_fiber_run(devs_fiber_t *fiber) {
     devs_ctx_t *ctx = fiber->ctx;
-    if (ctx->error_code)
+    if (devs_is_suspended(ctx))
         return;
 
     devs_fiber_sync_now(ctx);
@@ -330,7 +330,7 @@ void devs_fiber_sync_now(devs_ctx_t *ctx) {
 }
 
 static int devs_fiber_wake_some(devs_ctx_t *ctx) {
-    if (ctx->error_code)
+    if (devs_is_suspended(ctx))
         return 0;
     uint32_t now_ = devs_now(ctx);
     for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {

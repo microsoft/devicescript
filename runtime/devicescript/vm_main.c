@@ -42,7 +42,116 @@ void devs_dump_stackframe(devs_ctx_t *ctx, devs_activation_t *fn) {
           idx, ctx->stack_top);
 }
 
+int devs_vm_resume(devs_ctx_t *ctx) {
+    if (!devs_is_suspended(ctx))
+        return -1;
+    ctx->suspension = JD_DEVS_DBG_SUSPENSION_TYPE_NONE;
+    TODO();
+}
+
+void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause) {
+    ctx->suspension = cause;
+    TODO();
+}
+
+static inline unsigned brk_hash(unsigned pc) {
+    return pc & (DEVS_BRK_HASH_SIZE - 1);
+}
+
+static void recompute_brk_jump_tbl(devs_ctx_t *ctx) {
+    memset(ctx->brk_jump_tbl, 0, DEVS_BRK_HASH_SIZE);
+    devs_pc_t *l = ctx->brk_list;
+    for (unsigned i = 0; i < ctx->brk_count; ++i) {
+        if (l[i] && !ctx->brk_jump_tbl[brk_hash(l[i])])
+            ctx->brk_jump_tbl[brk_hash(l[i])] = i;
+    }
+}
+
+void devs_vm_clear_breakpoints(devs_ctx_t *ctx) {
+    jd_free(ctx->brk_list);
+    ctx->brk_list = NULL;
+    ctx->brk_count = 0;
+    recompute_brk_jump_tbl(ctx);
+}
+
+bool devs_vm_clear_breakpoint(devs_ctx_t *ctx, unsigned pc) {
+    if (pc == 0)
+        return false;
+    JD_ASSERT(pc == (devs_pc_t)pc);
+    devs_pc_t *l = ctx->brk_list;
+    for (unsigned i = 0; i < ctx->brk_count; ++i) {
+        if (l[i] == pc) {
+            memmove(l + i, l + i + 1, (ctx->brk_count - i - 1) * sizeof(devs_pc_t));
+            ctx->brk_list[ctx->brk_count - 1] = 0;
+            recompute_brk_jump_tbl(ctx);
+            return true;
+        }
+    }
+    return false;
+}
+
+int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc) {
+    JD_ASSERT(pc == (devs_pc_t)pc);
+    if (pc == 0)
+        return -2;
+    devs_pc_t *l = ctx->brk_list;
+    unsigned cnt = ctx->brk_count;
+    if (cnt == 0 || l[cnt - 1] != 0) {
+        if (cnt >= DEVS_BRK_MAX_COUNT)
+            return -1;
+
+        cnt = cnt * 2 + 8;
+        if (cnt > DEVS_BRK_MAX_COUNT)
+            cnt = DEVS_BRK_MAX_COUNT;
+
+        l = jd_alloc(cnt * sizeof(devs_pc_t));
+        memcpy(l, ctx->brk_list, ctx->brk_count * sizeof(devs_pc_t));
+        jd_free(ctx->brk_list);
+        ctx->brk_list = l;
+        ctx->brk_count = cnt;
+    }
+
+    bool was_in_section = false;
+    for (unsigned i = 0; i < cnt; ++i) {
+        bool in_section = brk_hash(l[i]) == brk_hash(pc);
+        if (l[i] == 0) {
+            l[i] = pc;
+            break;
+        } else if ((was_in_section && !in_section) || (in_section && l[i] >= pc)) {
+            if (l[i] == pc)
+                return 0;
+            memmove(l + i + 1, l + i, (cnt - i - 1) * sizeof(devs_pc_t));
+            l[i] = pc;
+            break;
+        }
+        was_in_section = in_section;
+    }
+
+    recompute_brk_jump_tbl(ctx);
+    return 1;
+}
+
+static inline bool devs_vm_chk_brk(devs_ctx_t *ctx, devs_activation_t *frame) {
+    devs_pc_t pc = frame->pc;
+    unsigned i = ctx->brk_jump_tbl[brk_hash(pc)];
+
+    if (i) {
+        devs_pc_t *l = ctx->brk_list;
+        for (; pc >= l[i]; ++i) {
+            if (pc == l[i]) {
+                devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_BREAKPOINT);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
+    if (devs_vm_chk_brk(ctx, frame))
+        return;
+
     uint8_t op = devs_vm_fetch_byte(frame, ctx);
 
     if (op >= DEVS_DIRECT_CONST_OP) {

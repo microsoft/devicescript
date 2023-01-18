@@ -11,7 +11,7 @@ static void stmt1_return(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static void stmt0_debugger(devs_activation_t *frame, devs_ctx_t *ctx) {
-    // no-op for now
+    devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_DEBUGGER_STMT);
 }
 
 static void set_alloc(devs_activation_t *frame, devs_ctx_t *ctx, void *p, unsigned sz) {
@@ -21,10 +21,10 @@ static void set_alloc(devs_activation_t *frame, devs_ctx_t *ctx, void *p, unsign
 }
 
 static void stmt0_alloc_map(devs_activation_t *frame, devs_ctx_t *ctx) {
-    set_alloc(frame, ctx,
-              devs_map_try_alloc(
-                  ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)),
-              sizeof(devs_map_t));
+    set_alloc(
+        frame, ctx,
+        devs_map_try_alloc(ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)),
+        sizeof(devs_map_t));
 }
 
 static void stmt1_alloc_array(devs_activation_t *frame, devs_ctx_t *ctx) {

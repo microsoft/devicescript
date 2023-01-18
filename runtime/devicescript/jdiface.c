@@ -403,7 +403,7 @@ static void devs_jd_update_all_regcache(devs_ctx_t *ctx, unsigned role_idx) {
 }
 
 void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t *pkt) {
-    if (ctx->error_code)
+    if (devs_is_suspended(ctx))
         return;
 
     memcpy(&ctx->packet, pkt, pkt->service_size + 16);
