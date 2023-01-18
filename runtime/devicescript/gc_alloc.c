@@ -16,6 +16,12 @@
 
 #define BLOCK_SIZE(p) ((p)&0xffffff)
 
+#if JD_64
+#define ZERO_MASK 0x00ffffffff000000
+#else
+#define ZERO_MASK 0
+#endif
+
 #define FREE_FILL 0x37
 
 typedef struct _free_devs_gc_block_t {
@@ -570,3 +576,29 @@ void *devs_gc_base_addr(devs_gc_t *gc) {
     return gc->first_chunk;
 }
 #endif
+
+bool devs_gc_obj_valid(devs_ctx_t *ctx, const void *ptr) {
+    if (ptr == NULL || ((uintptr_t)ptr & (JD_PTRSIZE - 1)))
+        return false;
+
+    for (chunk_t *ch = ctx->gc->first_chunk; ch; ch = ch->next) {
+        if ((void *)ch->start <= ptr && ptr < (void *)ch->end) {
+            block_t *b = (void *)ptr;
+            unsigned sz = block_size(b);
+            if ((void **)b->data + sz > (void **)ch->end)
+                return false;
+            if (BASIC_TAG(b->header) == 0 || (b->header & ZERO_MASK))
+                return false;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void devs_gc_obj_check(devs_ctx_t *ctx, const void *ptr) {
+    if (!devs_gc_obj_valid(ctx, ptr)) {
+        DMESG("invalid GC obj: %p", ptr);
+        JD_PANIC();
+    }
+}
