@@ -144,13 +144,37 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
     unsigned htp = devs_handle_type(v);
     uint32_t hv = devs_handle_value(v);
 
-    if (htp == DEVS_HANDLE_TYPE_IMG_BUFFERISH) {
+    switch (htp) {
+    case DEVS_HANDLE_TYPE_IMG_BUFFERISH:
         trg->tag = JD_DEVS_DBG_VALUE_TAG_IMG_BUFFER + (hv >> DEVS_STRIDX__SHIFT);
         trg->v0 = hv & ((1 << DEVS_STRIDX__SHIFT) - 1);
         return;
+
+    case DEVS_HANDLE_TYPE_SPECIAL:
+        if (devs_handle_is_builtin(hv)) {
+            trg->tag = JD_DEVS_DBG_VALUE_TAG_BUILTIN_OBJECT;
+            trg->v0 = hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST;
+            return;
+        }
+        break;
+
+    case DEVS_HANDLE_TYPE_GC_OBJECT: {
+        devs_map_t *map = devs_handle_ptr_value(ctx, v);
+        if (devs_is_map(map)) {
+            trg->tag = JD_DEVS_DBG_VALUE_TAG_OBJ_MAP;
+            trg->v0 = hv;
+            trg->v1 = obj_get_props(ctx, v, NULL);
+            return;
+        }
+        break;
     }
 
-    TODO(); // handle all the 'map' cases
+    case DEVS_HANDLE_TYPE_ROLE_MEMBER:
+        trg->tag = JD_DEVS_DBG_VALUE_TAG_ROLE_MEMBER;
+        trg->v0 = hv & DEVS_ROLE_MASK;
+        trg->v1 = hv >> DEVS_ROLE_BITS;
+        return;
+    }
 
     switch (devs_value_typeof(ctx, v)) {
     case DEVS_OBJECT_TYPE_NULL:
@@ -233,7 +257,30 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
 
 static void expand_key_value(devs_ctx_t *ctx, jd_devs_dbg_key_value_t *trg, value_t key,
                              value_t v) {
-    TODO();
+    jd_devs_dbg_value_t tmp;
+
+    expand_value(ctx, &tmp, key);
+    switch (tmp.tag) {
+    case JD_DEVS_DBG_VALUE_TAG_IMG_STRING_BUILTIN:
+    case JD_DEVS_DBG_VALUE_TAG_IMG_STRING_ASCII:
+    case JD_DEVS_DBG_VALUE_TAG_IMG_STRING_UTF8:
+        JD_ASSERT(((tmp.tag << 24) & ~(JD_DEVS_DBG_STRING_STATIC_TAG_MASK)) == 0);
+        JD_ASSERT(((tmp.v0 << 1) & ~(JD_DEVS_DBG_STRING_STATIC_INDEX_MASK)) == 0);
+        trg->key = JD_DEVS_DBG_STRING_STATIC_INDICATOR_MASK | (tmp.tag << 24) | (tmp.v0 << 1);
+        break;
+    case JD_DEVS_DBG_VALUE_TAG_OBJ_STRING:
+        JD_ASSERT((tmp.v0 & JD_DEVS_DBG_STRING_STATIC_INDICATOR_MASK) !=
+                  JD_DEVS_DBG_STRING_STATIC_INDICATOR_MASK);
+        trg->key = tmp.v0;
+        break;
+    default:
+        trg->key = JD_DEVS_DBG_STRING_UNHANDLED;
+        break;
+    }
+
+    JD_ASSERT(sizeof(*trg) == sizeof(trg->key) + sizeof(tmp));
+    expand_value(ctx, &tmp, v);
+    memcpy((uint8_t *)trg + sizeof(trg->key), &tmp, sizeof(tmp));
 }
 
 static unsigned obj_length(void *obj) {
@@ -248,7 +295,7 @@ static unsigned obj_length(void *obj) {
 }
 
 static value_t value_from_maplike(devs_ctx_t *ctx, devs_maplike_t *obj) {
-    TODO();
+    return devs_maplike_to_value(ctx, obj);
 }
 
 static void kv_add(devs_ctx_t *ctx, void *userdata, value_t k, value_t v) {
