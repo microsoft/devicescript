@@ -240,7 +240,7 @@
 #define DEVS_BUILTIN_OBJECT_RANGEERROR 31
 #define DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE 32
 
-#define DEVS_BUILTIN_STRING___MAX 123
+#define DEVS_BUILTIN_STRING___MAX 124
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -365,6 +365,7 @@
 #define DEVS_BUILTIN_STRING_SETPROTOTYPEOF 121
 #define DEVS_BUILTIN_STRING_GETPROTOTYPEOF 122
 #define DEVS_BUILTIN_STRING_CONSTRUCTOR 123
+#define DEVS_BUILTIN_STRING___PROTO__ 124
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -401,7 +402,7 @@
         "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
         "regCode", "flags", "isReport", "isCommand", "isArray", "inline", "assert", "pushRange",   \
         "sendCommand", "__stack__", "Error", "TypeError", "RangeError", "stack", "message",        \
-        "cause", "__new__", "setPrototypeOf", "getPrototypeOf", "constructor"
+        "cause", "__new__", "setPrototypeOf", "getPrototypeOf", "constructor", "__proto__"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

@@ -15,7 +15,6 @@
 * limit call stack depth
 
 ## Big ticket
-* classes
 * Jacdac packet queue overflow when printing a lot
 
 ## General usability

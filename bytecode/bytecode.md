@@ -574,3 +574,4 @@ Only `true` and `false` values.
     setPrototypeOf = 121
     getPrototypeOf = 122
     constructor = 123
+    __proto__ = 124

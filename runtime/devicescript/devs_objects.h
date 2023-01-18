@@ -172,6 +172,7 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_MASK 0xf
 
 // update devs_gc_tag_name() when adding/reordering
+#define DEVS_GC_TAG_NULL 0x0
 #define DEVS_GC_TAG_FREE 0x1
 #define DEVS_GC_TAG_BYTES 0x2
 #define DEVS_GC_TAG_ARRAY 0x3
@@ -187,9 +188,12 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
 
 static inline int devs_gc_tag(const void *ptr) {
-    return ptr == NULL ? 0
+    return ptr == NULL ? DEVS_GC_TAG_NULL
                        : (((devs_gc_object_t *)ptr)->header >> DEVS_GC_TAG_POS) & DEVS_GC_TAG_MASK;
 }
+
+bool devs_gc_obj_valid(devs_ctx_t *ctx, const void *ptr);
+void devs_gc_obj_check(devs_ctx_t *ctx, const void *ptr);
 
 static inline bool devs_is_map(const void *ptr) {
     int t = devs_gc_tag(ptr);

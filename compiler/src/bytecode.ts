@@ -262,7 +262,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 123,
+    __MAX = 124,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -387,6 +387,7 @@ export enum BuiltInString {
     SETPROTOTYPEOF = 121,
     GETPROTOTYPEOF = 122,
     CONSTRUCTOR = 123,
+    __PROTO__ = 124,
 }
 
 export const OP_PRINT_FMTS = [
@@ -622,6 +623,7 @@ export const BUILTIN_STRING__VAL = [
     "setPrototypeOf",
     "getPrototypeOf",
     "constructor",
+    "__proto__",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
