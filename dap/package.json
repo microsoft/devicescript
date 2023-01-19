@@ -16,7 +16,8 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^18.11.9"
+    "@types/node": "^18.11.9",
+    "async-mutex": "^0.4.0"
   },
   "dependencies": {
     "@devicescript/compiler": "*",
