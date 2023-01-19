@@ -36,7 +36,7 @@ function distCopy(from, to) {
         console.debug(`cp ${from} ${to}`)
         try {
             fs.mkdirSync(path.dirname(to))
-        } catch {}
+        } catch { }
         fs.copyFileSync(from, to)
         fs.utimesSync(to, new Date(), new Date(fromT))
     }
@@ -94,6 +94,7 @@ const files = {
     "built/devicescript-compiler.js": "src/devicescript.ts",
     "built/devicescript-compiler.node.cjs": "src/devicescript.ts",
     "../cli/built/devicescript-cli.cjs": "../cli/src/cli.ts",
+    "../dap/built/devicescript-dap.cjs": "../dap/src/dsdap.ts",
 }
 
 const specname = "devicescript-spec.d.ts"
@@ -121,7 +122,7 @@ function buildPrelude(folder, outp) {
     let curr = ""
     try {
         curr = fs.readFileSync(outp, "utf-8")
-    } catch {}
+    } catch { }
     if (curr != r) {
         console.log("updating " + outp)
         fs.writeFileSync(outp, r)
@@ -154,8 +155,7 @@ async function main() {
         console.log("bundle done")
         copyCompiler()
         if (!fast) {
-            await runTSC(["-b", "src"])
-            await runTSC(["-b", "../cli/src"])
+            await runTSC(["-b", "src", "../cli/src", "../dap/src"])
         }
         const ds = require("./built/devicescript-compiler.node.cjs")
         fs.writeFileSync("../devs/lib/" + specname, ds.preludeFiles()[specname])

@@ -14,6 +14,7 @@
         "compiler",
         "cli",
         "runtime/devicescript-vm",
-        "runtime/jacdac-c/jacdac"
+        "runtime/jacdac-c/jacdac",
+        "dap"
     ]
 }
