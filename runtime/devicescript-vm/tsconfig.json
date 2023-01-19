@@ -1,32 +1,12 @@
 {
+  "extends": "../../tsconfig-base.json",
   "compilerOptions": {
-    "moduleResolution": "node",
-    "target": "es2017",
-    "module": "es2015",
-    "lib": [
-      "es2015",
-      "es2016",
-      "es2017",
-      "dom"
-    ],
-    "strict": false,
-    "strictNullChecks": false,
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "preserveConstEnums": true,
-    "noImplicitThis": true,
-    "isolatedModules": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
     "declarationDir": "built",
-    "resolveJsonModule": true,
     "outDir": "built",
-    "pretty": true,
-    "newLine": "LF",
-    "types": ["emscripten"]
+    "emitDeclarationOnly": false,
+    "types": [
+      "emscripten"
+    ]
   },
   "include": [
     "*.ts"

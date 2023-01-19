@@ -2,9 +2,7 @@ CLI = ./cli/devicescript
 
 all: em comp
 
-comp: compiler/built/compiler/src/devicescript.js
-
-compiler/built/compiler/src/devicescript.js: $(wildcard compiler/src/*.ts) $(wildcard compiler/lib/*.ts)
+comp:
 	yarn build
 
 comp-fast:
