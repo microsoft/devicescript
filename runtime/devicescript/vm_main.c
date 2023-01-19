@@ -75,7 +75,7 @@ static void recompute_brk_jump_tbl(devs_ctx_t *ctx) {
     devs_pc_t *l = ctx->brk_list;
     for (unsigned i = 0; i < ctx->brk_count; ++i) {
         if (l[i] && !ctx->brk_jump_tbl[brk_hash(l[i])])
-            ctx->brk_jump_tbl[brk_hash(l[i])] = i;
+            ctx->brk_jump_tbl[brk_hash(l[i])] = i + 1;
     }
 }
 
@@ -144,15 +144,17 @@ int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc) {
 }
 
 static inline bool devs_vm_chk_brk(devs_ctx_t *ctx, devs_activation_t *frame) {
-    devs_pc_t pc = frame->pc;
-    unsigned i = ctx->brk_jump_tbl[brk_hash(pc)];
+    if (ctx->dbg_en) {
+        devs_pc_t pc = frame->pc;
+        unsigned i = ctx->brk_jump_tbl[brk_hash(pc)];
 
-    if (i) {
-        devs_pc_t *l = ctx->brk_list;
-        for (; pc >= l[i]; ++i) {
-            if (pc == l[i]) {
-                devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_BREAKPOINT);
-                return true;
+        if (i) {
+            devs_pc_t *l = ctx->brk_list;
+            for (--i; pc >= l[i]; ++i) {
+                if (pc == l[i]) {
+                    devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_BREAKPOINT);
+                    return true;
+                }
             }
         }
     }
@@ -208,7 +210,7 @@ static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
 void devs_vm_exec_opcodes(devs_ctx_t *ctx) {
     unsigned maxsteps = DEVS_MAX_STEPS;
 
-    while (ctx->curr_fn && --maxsteps)
+    while (ctx->curr_fn && --maxsteps && !ctx->suspension)
         devs_vm_exec_opcode(ctx, ctx->curr_fn);
 
     if (maxsteps == 0)
