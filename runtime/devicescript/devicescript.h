@@ -51,6 +51,7 @@ int devsmgr_deploy(const void *img, unsigned imgsize);
 int devsmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]);
 int devsmgr_deploy_start(uint32_t sz);
 int devsmgr_deploy_write(const void *buf, unsigned size);
+void devsmgr_restart(void);
 
 void devsmgr_init_mem(unsigned size);
 

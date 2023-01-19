@@ -65,7 +65,7 @@ static value_t proto_value(devs_ctx_t *ctx, const devs_builtin_proto_entry_t *p)
 unsigned devs_maplike_iter(devs_ctx_t *ctx, devs_maplike_t *src, void *userdata,
                            devs_map_iter_cb_t cb) {
     if (devs_is_service_spec(ctx, src)) {
-        TODO();
+        TODO(); // Object.keys() etc on compiled spec
         return 0;
     } else if (devs_is_builtin_proto(src)) {
         const devs_builtin_proto_t *proto = (const devs_builtin_proto_t *)src;

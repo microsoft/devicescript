@@ -116,6 +116,7 @@ struct devs_ctx {
     uint8_t _num_builtin_protos;
     uint8_t in_throw;
     uint8_t suspension;
+    uint8_t dbg_en;
 
     uint32_t literal_int;
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
@@ -229,6 +230,7 @@ bool devs_vm_clear_breakpoint(devs_ctx_t *ctx, unsigned pc);
 void devs_vm_clear_breakpoints(devs_ctx_t *ctx);
 void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause);
 int devs_vm_resume(devs_ctx_t *ctx);
+void devs_vm_set_debug(devs_ctx_t *ctx, bool en);
 
 value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t buffer,
                        value_t *setv);

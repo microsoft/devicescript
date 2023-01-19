@@ -16,6 +16,7 @@
 #define LOGV JD_NOLOG
 
 #define SECONDS(n) (uint32_t)((n)*1024 * 1024)
+#define MS(n) (uint32_t)((n)*1024)
 
 typedef struct {
     uint32_t magic0;
@@ -51,7 +52,7 @@ struct srv_state {
 static srv_t *_state;
 
 REG_DEFINITION(                                     //
-    devsmgr_regs,                           //
+    devsmgr_regs,                                   //
     REG_SRV_COMMON,                                 //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING),   //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART), //
@@ -92,13 +93,19 @@ static void send_status(srv_t *state) {
     jd_send_event_ext(state, JD_EV_STATUS_CODE_CHANGED, &st, sizeof(st));
 }
 
+__attribute__((weak)) void devs_panic_handler(int exitcode) {}
+__attribute__((weak)) void devsdbg_restarted(devs_ctx_t *ctx) {}
+
 static void run_img(srv_t *state, const void *img, unsigned size) {
     if (state->ctx)
         devs_free_ctx(state->ctx);
     devs_cfg_t cfg = {.mgr_service_idx = state->service_index};
     state->ctx = devs_create_ctx(img, size, &cfg);
-    if (state->ctx)
+    if (state->ctx) {
         devs_set_logging(state->ctx, state->logging);
+        if (img != devs_empty_program)
+            devsdbg_restarted(state->ctx);
+    }
 }
 
 static void try_run(srv_t *state) {
@@ -116,8 +123,6 @@ static void stop_program(srv_t *state) {
     state->ctx = NULL;
     send_status(state);
 }
-
-__attribute__((weak)) void devs_panic_handler(int exitcode) {}
 
 void devsmgr_process(srv_t *state) {
     if (state->read_program_ptr >= 0) {
@@ -162,6 +167,12 @@ void devsmgr_process(srv_t *state) {
         stop_program(state);
         state->next_restart = now + SECONDS(code == DEVS_PANIC_REBOOT ? 1 : 5);
     }
+}
+
+void devsmgr_restart() {
+    srv_t *state = _state;
+    stop_program(state);
+    state->next_restart = now + MS(50);
 }
 
 int devsmgr_deploy_start(uint32_t sz) {
@@ -221,8 +232,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
     }
 
     uint8_t *dst = state->cfg->program_base;
-    uint32_t endp =
-        ((devsmgr_program_header_t *)dst)->size + sizeof(devsmgr_program_header_t);
+    uint32_t endp = ((devsmgr_program_header_t *)dst)->size + sizeof(devsmgr_program_header_t);
     if (size & (DEVSMGR_ALIGN - 1) || state->write_offset + size > endp ||
         size >= JD_FLASH_PAGE_SIZE) {
         DMESG("invalid pkt size: %d (off=%d endp=%d)", size, (int)state->write_offset, (int)endp);

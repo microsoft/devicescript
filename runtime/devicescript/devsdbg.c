@@ -377,6 +377,25 @@ static void read_indexed(cmd_t *cmd) {
     }
 }
 
+static void sync_en(srv_t *state) {
+    devs_ctx_t *ctx = devsmgr_get_ctx();
+    if (ctx)
+        devs_vm_set_debug(ctx, state->enabled);
+    if (!state->enabled)
+        state->suspended = false;
+}
+
+static void dbg_en(srv_t *state) {
+    state->enabled = true;
+    sync_en(state);
+}
+
+void devsdbg_restarted(devs_ctx_t *ctx) {
+    srv_t *state = _state;
+    sync_en(state);
+    devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_RESTART);
+}
+
 static void respond_value(cmd_t *cmd, value_t v) {
     jd_devs_dbg_value_t trg;
     expand_value(cmd->ctx, &trg, v);
@@ -441,6 +460,26 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
     cmd_t _cmd = {.state = state, .pkt = pkt, .ctx = ctx};
     cmd_t *cmd = &_cmd;
 
+    if (!ctx || !state->suspended)
+        switch (pkt->service_command) {
+        case JD_DEVS_DBG_CMD_READ_STACK:
+        case JD_DEVS_DBG_CMD_READ_INDEXED_VALUES:
+        case JD_DEVS_DBG_CMD_READ_NAMED_VALUES:
+            send_empty(cmd);
+            return;
+
+        case JD_DEVS_DBG_CMD_READ_VALUE:
+            respond_no_value(cmd);
+            break;
+
+        case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINT:
+        case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINTS:
+        case JD_DEVS_DBG_CMD_SET_BREAKPOINT:
+            if (!ctx)
+                return;
+            break;
+        }
+
     switch (pkt->service_command) {
     case JD_DEVS_DBG_CMD_READ_FIBERS: {
         unsigned num_fib = 0;
@@ -459,8 +498,7 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_DEVS_DBG_CMD_READ_STACK: {
         devs_fiber_t *fib =
-            ctx ? devs_fiber_by_tag(ctx, ((jd_devs_dbg_read_stack_t *)pkt->data)->fiber_handle)
-                : NULL;
+            devs_fiber_by_tag(ctx, ((jd_devs_dbg_read_stack_t *)pkt->data)->fiber_handle);
         unsigned num_fr = 0;
         for (devs_activation_t *a = fib ? fib->activation : NULL; a; a = a->caller)
             num_fr++;
@@ -480,65 +518,70 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
     }
 
     case JD_DEVS_DBG_CMD_READ_INDEXED_VALUES:
-        if (ctx == NULL)
-            send_empty(cmd);
-        else
-            read_indexed(cmd);
+        read_indexed(cmd);
         break;
 
     case JD_DEVS_DBG_CMD_READ_NAMED_VALUES:
-        if (ctx == NULL)
-            send_empty(cmd);
-        else
-            read_named(cmd);
+        read_named(cmd);
         break;
 
     case JD_DEVS_DBG_CMD_READ_VALUE:
-        if (ctx == NULL)
-            respond_no_value(cmd);
-        else
-            read_value(cmd);
+        read_value(cmd);
         break;
 
     case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINT:
-        if (ctx)
-            devs_vm_clear_breakpoint(ctx, *((uint16_t *)pkt->data));
+        devs_vm_clear_breakpoint(ctx, *((uint16_t *)pkt->data));
         break;
 
     case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINTS:
-        if (ctx)
-            devs_vm_clear_breakpoints(ctx);
+        devs_vm_clear_breakpoints(ctx);
         break;
 
     case JD_DEVS_DBG_CMD_SET_BREAKPOINT:
-        if (ctx)
-            devs_vm_set_breakpoint(ctx, *((uint16_t *)pkt->data));
+        devs_vm_set_breakpoint(ctx, *((uint16_t *)pkt->data));
         break;
 
     case JD_DEVS_DBG_CMD_HALT:
+        dbg_en(state);
         if (ctx)
             devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_HALT);
         break;
 
     case JD_DEVS_DBG_CMD_RESUME:
-        if (ctx)
+        if (ctx) {
+            state->suspended = 0;
             devs_vm_resume(ctx);
+        }
         break;
 
     case JD_DEVS_DBG_CMD_RESTART_AND_HALT:
-        TODO();
+        dbg_en(state);
+        devsmgr_restart();
         break;
 
     default:
         switch (service_handle_register_final(state, pkt, devsdbg_regs)) {
         case JD_DEVS_DBG_REG_ENABLED:
+            sync_en(state);
+            break;
+
         case JD_DEVS_DBG_REG_BREAK_AT_HANDLED_EXN:
         case JD_DEVS_DBG_REG_BREAK_AT_UNHANDLED_EXN:
-            TODO();
+            // TODO ignore for now
             break;
         }
         break;
     }
+}
+
+void devsdbg_suspend_cb(devs_ctx_t *ctx) {
+    srv_t *state = _state;
+    jd_devs_dbg_suspended_t args = {
+        .fiber = ctx->curr_fiber ? ctx->curr_fiber->handle_tag : JD_DEVS_DBG_FIBER_HANDLE_NONE,
+        .type = ctx->suspension,
+    };
+    state->suspended = true;
+    jd_send_event_ext(state, JD_DEVS_DBG_EV_SUSPENDED, &args, sizeof(args));
 }
 
 SRV_DEF(devsdbg, JD_SERVICE_CLASS_DEVS_DBG);

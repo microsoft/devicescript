@@ -46,12 +46,24 @@ int devs_vm_resume(devs_ctx_t *ctx) {
     if (!devs_is_suspended(ctx))
         return -1;
     ctx->suspension = JD_DEVS_DBG_SUSPENSION_TYPE_NONE;
-    TODO();
+    return 0;
 }
 
+__attribute__((weak)) void devsdbg_suspend_cb(devs_ctx_t *ctx) {}
+
 void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause) {
-    ctx->suspension = cause;
-    TODO();
+    if (!ctx->dbg_en)
+        return;
+    if (ctx->suspension == JD_DEVS_DBG_SUSPENSION_TYPE_NONE) {
+        ctx->suspension = cause;
+        devsdbg_suspend_cb(ctx);
+    }
+}
+
+void devs_vm_set_debug(devs_ctx_t *ctx, bool en) {
+    ctx->dbg_en = en;
+    if (!en)
+        devs_vm_resume(ctx);
 }
 
 static inline unsigned brk_hash(unsigned pc) {
