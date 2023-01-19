@@ -413,20 +413,18 @@ static value_t exprx_role_proto(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_gc_obj(ctx, devs_get_role_proto(ctx, idx));
 }
 
-static inline int string_index(devs_ctx_t *ctx, unsigned tp) {
-    uint32_t v = (tp << DEVS_STRIDX__SHIFT) | ctx->literal_int;
+value_t devs_value_bufferish(devs_ctx_t *ctx, unsigned tp, uint32_t lit) {
+    uint32_t v = (tp << DEVS_STRIDX__SHIFT) | lit;
     if (!devs_img_stridx_ok(ctx->img, v))
-        return -1;
-    return v;
+        return devs_undefined;
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_IMG_BUFFERISH, v);
 }
 
 static value_t static_something(devs_ctx_t *ctx, unsigned tp) {
-    int v = string_index(ctx, tp);
-    if (v < 0) {
+    value_t r = devs_value_bufferish(ctx, tp, ctx->literal_int);
+    if (devs_is_null(r))
         devs_runtime_failure(ctx, 60122);
-        return devs_undefined;
-    }
-    return devs_value_from_handle(DEVS_HANDLE_TYPE_IMG_BUFFERISH, v);
+    return r;
 }
 
 static inline value_t get_field_ex(devs_ctx_t *ctx, unsigned tp, value_t obj) {

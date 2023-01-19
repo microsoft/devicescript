@@ -163,6 +163,8 @@ bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b);
 // returns one of DEVS_OBJECT_TYPE_*
 unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v);
 
+value_t devs_value_bufferish(devs_ctx_t *ctx, unsigned tp, uint32_t lit);
+
 extern const value_t devs_zero;
 extern const value_t devs_one;
 extern const value_t devs_nan;
