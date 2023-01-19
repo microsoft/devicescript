@@ -7,3 +7,6 @@
 [submodule "runtime/network/tiny-AES-c"]
 	path = runtime/network/tiny-AES-c
 	url = https://github.com/kokke/tiny-AES-c
+[submodule "jacdac-ts"]
+	path = jacdac-ts
+	url = https://github.com/microsoft/jacdac-ts
