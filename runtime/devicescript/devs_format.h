@@ -32,7 +32,6 @@ typedef struct {
     devs_img_section_t service_specs;  // devs_service_spec_t[] followed by other stuff
 } devs_img_header_t;
 
-#define DEVS_ROLE_BITS 15
 #define DEVS_ROLE_MASK ((1U << DEVS_ROLE_BITS) - 1)
 #define DEVS_ROLE_INVALID DEVS_ROLE_MASK
 

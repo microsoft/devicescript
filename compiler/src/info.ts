@@ -17,14 +17,18 @@ export interface FunctionDebugInfo {
     // start is offset in bytes from the start of the function
     // len is in bytes
     srcmap: number[]
-    locals: CellDebugInfo[]
+    slots: VarDebugInfo[]
 }
 
-export interface CellDebugInfo {
+export type DebugVarType = "loc" | "glb" | "arg" | "tmp"
+
+export interface VarDebugInfo {
     name: string
+    type: string
 }
 
-export interface RoleDebugInfo extends CellDebugInfo {
+export interface RoleDebugInfo {
+    name: string
     serviceClass: number
 }
 
@@ -38,7 +42,7 @@ export interface DebugInfo {
     }
     functions: FunctionDebugInfo[]
     roles: RoleDebugInfo[]
-    globals: CellDebugInfo[]
+    globals: VarDebugInfo[]
     tables: {
         ascii: string[]
         utf8: string[]

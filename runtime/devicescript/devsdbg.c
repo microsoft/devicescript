@@ -80,10 +80,17 @@ void devsdbg_process(srv_t *state) {
             devsdbg_stop_pipe(state);
         else {
             unsigned sz = state->pipe_elt_size;
+            unsigned chunksz = 1;
+            if (sz == 1) {
+                chunksz = state->pipe_num_elts - state->pipe_curr_elt;
+                if (chunksz > 200)
+                    chunksz = 200;
+            }
             int r = jd_opipe_write(&state->results_pipe,
-                                   (uint8_t *)state->pipe_data + (state->pipe_curr_elt * sz), sz);
+                                   (uint8_t *)state->pipe_data + (state->pipe_curr_elt * sz),
+                                   sz * chunksz);
             if (r == JD_PIPE_OK) {
-                state->pipe_curr_elt++;
+                state->pipe_curr_elt += chunksz;
             } else if (r == JD_PIPE_TRY_AGAIN) {
                 // OK, will try again
                 break;
@@ -178,9 +185,8 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
     }
 
     case DEVS_HANDLE_TYPE_ROLE_MEMBER:
-        trg->tag = JD_DEVS_DBG_VALUE_TAG_ROLE_MEMBER;
-        trg->v0 = hv & DEVS_ROLE_MASK;
-        trg->v1 = hv >> DEVS_ROLE_BITS;
+        trg->tag = JD_DEVS_DBG_VALUE_TAG_IMG_ROLE_MEMBER;
+        trg->v0 = hv;
         return;
     }
 
@@ -224,10 +230,11 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
         trg->v1 = obj_get_props(ctx, v, NULL);
         break;
 
-    case DEVS_OBJECT_TYPE_FIBER:
+    case DEVS_OBJECT_TYPE_FIBER: {
         trg->tag = JD_DEVS_DBG_VALUE_TAG_FIBER;
         trg->v0 = hv;
         break;
+    }
 
     case DEVS_OBJECT_TYPE_STRING:
         JD_ASSERT(devs_gc_tag(devs_handle_ptr_value(ctx, v)) == DEVS_GC_TAG_STRING);
@@ -501,6 +508,35 @@ static void read_named(cmd_t *cmd) {
     }
 }
 
+static void read_bytes(cmd_t *cmd) {
+    devs_ctx_t *ctx = cmd->ctx;
+    jd_devs_dbg_read_bytes_t *args = (void *)cmd->pkt->data;
+
+    value_t v = value_from_tag_v0(ctx, args->tag, args->v0);
+    unsigned sz = 0;
+    const uint8_t *data = NULL;
+
+    void *p = devs_value_to_gc_obj(ctx, v);
+
+    if (devs_gc_tag(p) == DEVS_GC_TAG_PACKET)
+        v = devs_value_from_gc_obj(ctx, ((devs_packet_t *)p)->payload);
+
+    if (devs_is_buffer(ctx, v) || devs_is_string(ctx, v))
+        data = devs_bufferish_data(ctx, v, &sz);
+
+    if (args->start >= sz)
+        send_empty(cmd);
+    else {
+        sz -= args->start;
+        data += args->start;
+        if (sz > args->length)
+            sz = args->length;
+        uint8_t *r = devsdbg_open_results_pipe(cmd, 1, sz);
+        if (r)
+            memcpy(r, data, sz);
+    }
+}
+
 void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
     devs_ctx_t *ctx = devsmgr_get_ctx();
     cmd_t _cmd = {.state = state, .pkt = pkt, .ctx = ctx};
@@ -531,11 +567,17 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
         unsigned num_fib = 0;
         for (devs_fiber_t *f = ctx ? ctx->fibers : NULL; f; f = f->next)
             num_fib++;
-        uint32_t *data = devsdbg_open_results_pipe(cmd, sizeof(uint32_t), num_fib);
+        jd_devs_dbg_fiber_t *data =
+            devsdbg_open_results_pipe(cmd, sizeof(jd_devs_dbg_fiber_t), num_fib);
         if (data) {
             num_fib = 0;
             for (devs_fiber_t *f = ctx ? ctx->fibers : NULL; f; f = f->next) {
-                data[num_fib] = f->handle_tag;
+                data[num_fib].handle = f->handle_tag;
+                data[num_fib].initial_fn = map_fn_idx(f->bottom_function_idx);
+                data[num_fib].curr_fn =
+                    f->activation
+                        ? map_fn_idx(f->activation->func - devs_img_get_function(ctx->img, 0))
+                        : 0;
                 num_fib++;
             }
         }
@@ -565,6 +607,10 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_DEVS_DBG_CMD_READ_INDEXED_VALUES:
         read_indexed(cmd);
+        break;
+
+    case JD_DEVS_DBG_CMD_READ_BYTES:
+        read_bytes(cmd);
         break;
 
     case JD_DEVS_DBG_CMD_READ_NAMED_VALUES:

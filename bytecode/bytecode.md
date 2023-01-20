@@ -276,6 +276,7 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
     service_spec_header_size = 16
     service_spec_packet_size = 8
     service_spec_field_size = 4
+    role_bits = 15
 
 ## Enum: StrIdx
 

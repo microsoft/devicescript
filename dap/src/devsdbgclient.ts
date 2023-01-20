@@ -2,6 +2,7 @@ import { assert } from "console"
 import { Mutex } from "async-mutex"
 import {
     bufferConcat,
+    bufferConcatMany,
     delay,
     EVENT,
     getNumber,
@@ -27,19 +28,62 @@ import {
     DevsDbgValueSpecial,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 
+export interface DevsKeyValue {
+    key: DevsValue | string
+    value: DevsValue
+}
+
 export class DevsValue {
     index: number
     tag: DevsDbgValueTag
     v0: number
     arg: DevsValue
 
+    cachedBytes: Uint8Array
+
     numNamed: number
     hasNamed: boolean
     numIndexed: number
 
+    private _indexed: DevsValue[]
+    private _named: DevsKeyValue[]
+
+    stackFrame?: {
+        pc: number
+        closure: DevsValue
+        fnIdx: number
+    }
+
     constructor(public parent: DevsDbgClient) {
         this.index = this.parent.values.length
         this.parent.values.push(this)
+    }
+
+    get genericText() {
+        const t = DevsDbgValueTag[this.tag] || "t" + this.tag
+        return `[${t}:0x${this.v0.toString(16)}]`
+    }
+
+    async readIndexed() {
+        if (!this._indexed) {
+            if (this.numIndexed === 0) {
+                this._indexed = []
+            } else {
+                this._indexed = await this.parent.readIndexed(this)
+            }
+        }
+        return this._indexed
+    }
+
+    async readNamed() {
+        if (!this._named) {
+            if (this.numNamed === 0 || this.hasNamed === false) {
+                this._named = []
+            } else {
+                this._named = await this.parent.readNamed(this)
+            }
+        }
+        return this._named
     }
 }
 
@@ -148,14 +192,34 @@ export class DevsDbgClient extends JDServiceClient {
         return this.values[0]
     }
 
-    private getValue(tag: DevsDbgValueTag, v0: number, arg?: DevsValue) {
+    getValueByIndex(idx: number) {
+        const v = this.values[idx]
+        if (!v) throw new Error(`no such value: ${idx}`)
+        return v
+    }
+
+    getCachedValue(tag: DevsDbgValueTag, v0: number, arg?: DevsValue) {
+        return this.getValue(tag, v0, arg, true)
+    }
+
+    mkSynthValue(tag: DevsDbgValueTag, v0: number, arg?: DevsValue) {
+        assert(tag == DevsDbgValueTag.User1)
+        return this.getValue(tag, v0, arg)
+    }
+
+    private getValue(
+        tag: DevsDbgValueTag,
+        v0: number,
+        arg?: DevsValue,
+        noCreate = false
+    ) {
         const isObj = tagIsObj(tag)
         if (isObj && v0 == 0) return this.nullValue
         let suff = `/${v0}`
         if (arg) suff += `@${arg.index}`
         let key = tag + suff
         let r = this.valueMap[key]
-        if (r) return r
+        if (r || noCreate) return r
         r = new DevsValue(this)
         r.tag = tag
         r.v0 = v0
@@ -174,27 +238,30 @@ export class DevsDbgClient extends JDServiceClient {
             const [stackFrameId, pc, closureId, fnIdx] = pkt.jdunpack<number[]>(
                 "u32 u32 u32 u16 x[2]"
             )
-            return {
-                stackFrameId: this.getValue(
-                    DevsDbgValueTag.ObjStackFrame,
-                    stackFrameId
-                ),
+            const st = this.getValue(
+                DevsDbgValueTag.ObjStackFrame,
+                stackFrameId
+            )
+            st.stackFrame = {
                 pc,
-                closureId: this.getValue(
+                closure: this.getValue(
                     DevsDbgValueTag.ObjStackFrame,
                     closureId
                 ),
                 fnIdx,
             }
+            return st
         })
     }
 
     async readFibers() {
         const pkts = await this.pipeGet(DevsDbgCmd.ReadFibers)
         return pkts.output.map(pkt => {
-            const [fiberId] = pkt.jdunpack("u32")
+            const [fiberId, initialFn, currFn] = pkt.jdunpack("u32 u16 u16")
             return {
                 fiberId,
+                initialFn,
+                currFn,
             }
         })
     }
@@ -218,11 +285,27 @@ export class DevsDbgClient extends JDServiceClient {
         else return v
     }
 
-    async readIndexed(v: DevsValue, start?: number, length?: number) {
+    private indexedArg(v: DevsValue, start?: number, length?: number) {
         if (start == undefined) start = 0
         if (length == undefined) length = 0xffff
+        assert(v.tag < DevsDbgValueTag.User1)
         const arg = jdpack("u32 u8 x[1] u16 u16", [v.v0, v.tag, start, length])
-        const pkts = await this.pipeGet(DevsDbgCmd.ReadIndexedValues, arg)
+        return arg
+    }
+
+    async readBytes(v: DevsValue, start?: number, length?: number) {
+        const pkts = await this.pipeGet(
+            DevsDbgCmd.ReadBytes,
+            this.indexedArg(v, start, length)
+        )
+        return bufferConcatMany(pkts.output.map(pkt => pkt.data))
+    }
+
+    async readIndexed(v: DevsValue, start?: number, length?: number) {
+        const pkts = await this.pipeGet(
+            DevsDbgCmd.ReadIndexedValues,
+            this.indexedArg(v, start, length)
+        )
         return pkts.output.map(pkt => this.unpackValue(pkt.data))
     }
 
@@ -245,7 +328,7 @@ export class DevsDbgClient extends JDServiceClient {
     async readNamed(v: DevsValue) {
         const arg = jdpack("u32 u8", [v.v0, v.tag])
         const pkts = await this.pipeGet(DevsDbgCmd.ReadNamedValues, arg)
-        return pkts.output.map(pkt => {
+        return pkts.output.map((pkt): DevsKeyValue => {
             const key = this.decodeString(
                 pkt.getNumber(NumberFormat.UInt32LE, 0)
             )
@@ -255,7 +338,9 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     private async pipeGet(cmd: number, suff?: Uint8Array) {
+        assert(cmd == DevsDbgCmd.ReadFibers || !!this.suspendedFiber)
         return this.lock.runExclusive(async () => {
+            assert(cmd == DevsDbgCmd.ReadFibers || !!this.suspendedFiber)
             const inp = new InPipeReader(this.device.bus)
             const openPkt = inp.openCommand(cmd)
             if (suff) openPkt.data = bufferConcat(openPkt.data, suff)

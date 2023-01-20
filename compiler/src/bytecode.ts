@@ -120,6 +120,7 @@ export enum BinFmt {
     SERVICE_SPEC_HEADER_SIZE = 16,
     SERVICE_SPEC_PACKET_SIZE = 8,
     SERVICE_SPEC_FIELD_SIZE = 4,
+    ROLE_BITS = 15,
 }
 
 export enum StrIdx {

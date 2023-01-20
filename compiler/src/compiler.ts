@@ -63,11 +63,12 @@ import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
 import { preludeFiles } from "./specgen"
 import { jacdacDefaultSpecifications } from "./embedspecs"
 import {
-    CellDebugInfo,
+    VarDebugInfo,
     RoleDebugInfo,
     FunctionDebugInfo,
     DebugInfo,
     SrcLocation,
+    DebugVarType,
 } from "./info"
 
 export const JD_SERIAL_HEADER_SIZE = 16
@@ -137,11 +138,6 @@ class Cell {
         }
         return this._name
     }
-    debugInfo(): CellDebugInfo {
-        return {
-            name: this.getName(),
-        }
-    }
 }
 
 class Role extends Cell {
@@ -183,7 +179,7 @@ class Role extends Cell {
     }
     debugInfo(): RoleDebugInfo {
         return {
-            ...super.debugInfo(),
+            name: this.getName(),
             serviceClass: this.spec.classIdentifier,
         }
     }
@@ -276,6 +272,28 @@ class Variable extends Cell {
     }
     toString() {
         return `var ${this.getName()}`
+    }
+    debugInfo(): VarDebugInfo {
+        return {
+            name: this.getName(),
+            type: vkindToDbg(this.vkind),
+        }
+    }
+}
+
+function vkindToDbg(vkind: VariableKind): DebugVarType {
+    switch (vkind) {
+        case VariableKind.Global:
+            return "glb"
+        case VariableKind.ThisParam:
+        case VariableKind.Parameter:
+            return "arg"
+        case VariableKind.Cached:
+            return "tmp"
+        case VariableKind.Local:
+            return "loc"
+        default:
+            return "tmp"
     }
 }
 
@@ -412,7 +430,7 @@ class Procedure {
                 : undefined,
             size: this.writer.size,
             users: this.users.map(toSrcLocation),
-            locals: this.params.concat(this.locals).map(v => v.debugInfo()),
+            slots: this.params.concat(this.locals).map(v => v.debugInfo()),
         }
     }
 
