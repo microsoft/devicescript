@@ -3,7 +3,7 @@ import {
     cStorage,
     addComment,
     wrapComment,
-} from "../../runtime/jacdac-c/jacdac/spectool/jdspec"
+} from "../../jacdac-ts/jacdac-spec/spectool/jdspec"
 import {
     SRV_BOOTLOADER,
     SRV_BRIDGE,

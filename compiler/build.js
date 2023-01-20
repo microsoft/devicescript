@@ -155,7 +155,7 @@ async function main() {
         console.log("bundle done")
         copyCompiler()
         if (!fast) {
-            await runTSC(["-b", "src", "../cli/src", "../dap/src"])
+            await runTSC(["-b", "src", "../dap/src", "../cli/src"])
         }
         const ds = require("./built/devicescript-compiler.node.cjs")
         fs.writeFileSync("../devs/lib/" + specname, ds.preludeFiles()[specname])

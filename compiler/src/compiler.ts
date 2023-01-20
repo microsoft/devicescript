@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../runtime/jacdac-c/jacdac/spectool/jdspec.d.ts" />
+/// <reference path="../../jacdac-ts/jacdac-spec/spectool/jdspec.d.ts" />
 
 import * as ts from "typescript"
 import { SyntaxKind as SK } from "typescript"
