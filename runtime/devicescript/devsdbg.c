@@ -454,6 +454,17 @@ static value_t value_from_tag_v0(devs_ctx_t *ctx, uint8_t tag, uint32_t v0) {
     case JD_DEVS_DBG_VALUE_TAG_IMG_STRING_ASCII:
     case JD_DEVS_DBG_VALUE_TAG_IMG_STRING_UTF8:
         return devs_value_bufferish(ctx, tag - JD_DEVS_DBG_VALUE_TAG_IMG_BUFFER, v0);
+
+    case JD_DEVS_DBG_VALUE_TAG_IMG_FUNCTION:
+        JD_ASSERT(JD_DEVS_DBG_FUN_IDX_FIRST_BUILT_IN == DEVS_FIRST_BUILTIN_FUNCTION);
+        if (v0 == JD_DEVS_DBG_FUN_IDX_MAIN)
+            v0 = 0;
+        if (v0 < devs_img_num_functions(ctx->img) ||
+            (DEVS_FIRST_BUILTIN_FUNCTION <= v0 &&
+             v0 < DEVS_FIRST_BUILTIN_FUNCTION + devs_num_builtin_functions))
+            return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, v0);
+        break;
+
     case JD_DEVS_DBG_VALUE_TAG_IMG_ROLE:
         if (v0 < devs_img_num_roles(ctx->img))
             return ctx->roles[v0].attached ? devs_value_from_gc_obj(ctx, ctx->roles[v0].attached)

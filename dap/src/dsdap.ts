@@ -3,9 +3,14 @@ import {
     logger,
     LoggingDebugSession,
     OutputEvent,
+    StoppedEvent,
+    TerminatedEvent,
 } from "@vscode/debugadapter"
 import { LogLevel } from "@vscode/debugadapter/lib/logger"
 import { DebugProtocol } from "@vscode/debugprotocol"
+import { DevsDbgClient, EV_SUSPENDED } from "./devsdbgclient"
+import { DebugInfo } from "@devicescript/compiler"
+import { DevsDbgSuspensionType } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 
 let trace = true
 function exnToString(err: unknown) {
@@ -21,7 +26,9 @@ export interface StartArgs
 }
 
 export class DsDapSession extends LoggingDebugSession {
-    constructor() {
+    private clearSusp: () => void
+
+    constructor(public client: DevsDbgClient, public dbginfo: DebugInfo) {
         super()
         this.setDebuggerLinesStartAt1(true)
         this.setDebuggerColumnsStartAt1(true)
@@ -35,6 +42,15 @@ export class DsDapSession extends LoggingDebugSession {
                 logger.error("Uncaught Exception: " + exnToString(err))
                 process.exit(1)
             })
+    }
+
+    dispose() {
+        super.dispose()
+        const f = this.clearSusp
+        if (f) {
+            this.clearSusp = null
+            f()
+        }
     }
 
     protected override initializeRequest(
@@ -63,16 +79,14 @@ export class DsDapSession extends LoggingDebugSession {
 
     protected override launchRequest(
         response: DebugProtocol.LaunchResponse,
-        args: DebugProtocol.LaunchRequestArguments,
-        request?: DebugProtocol.Request
+        args: DebugProtocol.LaunchRequestArguments
     ): void {
         this.asyncReq(response, () => this.startDebugger(response, args, true))
     }
 
     protected override attachRequest(
         response: DebugProtocol.AttachResponse,
-        args: DebugProtocol.AttachRequestArguments,
-        request?: DebugProtocol.Request
+        args: DebugProtocol.AttachRequestArguments
     ): void {
         this.asyncReq(response, () => this.startDebugger(response, args, false))
     }
@@ -85,9 +99,51 @@ export class DsDapSession extends LoggingDebugSession {
         logger.init(e => this.sendEvent(e))
         logger.setup(LogLevel.Verbose)
 
+        if (!this.clearSusp)
+            this.clearSusp = this.client.subscribe(EV_SUSPENDED, () => {
+                const type = this.client.suspensionReason
+                switch (type) {
+                    case DevsDbgSuspensionType.Panic:
+                        this.sendEvent(new TerminatedEvent())
+                        break
+
+                    case DevsDbgSuspensionType.Breakpoint:
+                    case DevsDbgSuspensionType.UnhandledException:
+                    case DevsDbgSuspensionType.HandledException:
+                    case DevsDbgSuspensionType.DebuggerStmt:
+                    case DevsDbgSuspensionType.Halt:
+                    case DevsDbgSuspensionType.Restart:
+                    default:
+                        this.sendEvent(
+                            new StoppedEvent(
+                                DevsDbgSuspensionType[type] || "stop_" + type,
+                                this.client.suspendedFiber
+                            )
+                        )
+                        break
+                }
+            })
+
         this.sendEvent(new OutputEvent("Welcome to DsDap!", "console"))
+        if (isLaunch) await this.client.restartAndHalt()
+        else await this.client.halt()
+        await this.client.waitSuspended()
         this.sendEvent(new InitializedEvent())
     }
+
+    protected override threadsRequest(
+        response: DebugProtocol.ThreadsResponse
+    ): void {}
+
+    protected override stackTraceRequest(
+        response: DebugProtocol.StackTraceResponse,
+        args: DebugProtocol.StackTraceArguments
+    ): void {}
+
+    protected override scopesRequest(
+        response: DebugProtocol.ScopesResponse,
+        args: DebugProtocol.ScopesArguments
+    ): void {}
 
     private async asyncReq(
         response: DebugProtocol.Response,

@@ -3163,8 +3163,7 @@ class Program implements TopOpWriter {
             if (spec.extends.indexOf("_sensor") >= 0)
                 flags |= ServiceSpecFlag.DERIVE_SENSOR
 
-            const name =
-                spec.camelName[0].toUpperCase() + spec.camelName.slice(1)
+            const name = upperCamel(spec.camelName)
             write16(specDesc, 0, this.addString(name))
             write32(specDesc, 4, spec.classIdentifier)
             write16(specDesc, 2, flags)
