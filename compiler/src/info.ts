@@ -39,6 +39,11 @@ export interface DebugInfo {
     functions: FunctionDebugInfo[]
     roles: RoleDebugInfo[]
     globals: CellDebugInfo[]
+    tables: {
+        ascii: string[]
+        utf8: string[]
+        buffer: string[] // hex-encoded
+    }
     source: string
 }
 
@@ -50,6 +55,11 @@ export function emptyDebugInfo(): DebugInfo {
             strings: 0,
             roles: 0,
             align: 0,
+        },
+        tables: {
+            ascii: [],
+            utf8: [],
+            buffer: [],
         },
         functions: [],
         globals: [],

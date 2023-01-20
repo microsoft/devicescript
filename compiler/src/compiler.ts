@@ -3396,6 +3396,11 @@ class Program implements TopOpWriter {
                 roles: roleData.size,
                 align: left,
             },
+            tables: {
+                ascii: this.asciiLiterals.slice(),
+                utf8: this.utf8Literals.slice(),
+                buffer: this.bufferLiterals.map(b => toHex(b)),
+            },
             roles: this.roles.map(r => r.debugInfo()),
             functions: this.procs.map(p => p.debugInfo()),
             globals: this.globals.map(r => r.debugInfo()),
