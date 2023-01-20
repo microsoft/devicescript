@@ -1,10 +1,20 @@
-export interface SrcLocation {
-    file: string
-    line: number
-    col: number
-    len: number
-    pos: number
+// location is offset into concatenation of all SrcFile's plus length
+// both are in 16-bit JS codepoints
+export type SrcLocation = [number, number]
+export interface SrcFile {
+    path: string
+    length: number // in 16-bit codepoints; useful if text is missing
+    text?: string
 }
+
+export const srcMapEntrySize = 3
+
+// format is (Dpos, len, Dpc) repeated
+// [pos, len] is SrcLocation
+// pc is byte offset in the image
+// pc is Dpc + previous pc
+// pos is Dpos + previous pos
+export type SrcMap = number[]
 
 export interface FunctionDebugInfo {
     name: string
@@ -13,10 +23,6 @@ export interface FunctionDebugInfo {
     location?: SrcLocation
     // where the function is called from; may include `location` eg. for inline handlers
     users: SrcLocation[]
-    // format is (line-number, start, len)
-    // start is offset in bytes from the start of the function
-    // len is in bytes
-    srcmap: number[]
     slots: VarDebugInfo[]
 }
 
@@ -48,7 +54,10 @@ export interface DebugInfo {
         utf8: string[]
         buffer: string[] // hex-encoded
     }
-    source: string
+    srcmap: SrcMap
+    sources: SrcFile[]
+
+    _resolverCache?: any
 }
 
 export function emptyDebugInfo(): DebugInfo {
@@ -68,6 +77,7 @@ export function emptyDebugInfo(): DebugInfo {
         functions: [],
         globals: [],
         roles: [],
-        source: "",
+        srcmap: [],
+        sources: [],
     }
 }

@@ -19,6 +19,7 @@ import {
     DebugInfo,
     parseStackFrame,
     CompileFlags,
+    DebugInfoResolver,
 } from "@devicescript/compiler"
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
@@ -181,12 +182,13 @@ async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
                     .join(", ")
         )
         log(`  functions:`)
+        const resolver = DebugInfoResolver.from(dbg)
         functions
             .sort((l, r) => l.size - r.size)
             .forEach(fn => {
                 log(`  ${fn.name} (${prettySize(fn.size)})`)
                 fn.users.forEach(user =>
-                    debug(`    <-- ${user.file}: ${user.line}, ${user.col}`)
+                    debug(`    <-- ${resolver.posToString(user[0])}`)
                 )
             })
     }

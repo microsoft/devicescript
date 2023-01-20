@@ -22,6 +22,7 @@ import {
     uniqueMap,
     encodeU16LE,
     range,
+    arrayConcatMany,
 } from "./jdutil"
 
 import {
@@ -69,6 +70,8 @@ import {
     DebugInfo,
     SrcLocation,
     DebugVarType,
+    SrcFile,
+    srcMapEntrySize,
 } from "./info"
 
 export const JD_SERIAL_HEADER_SIZE = 16
@@ -224,7 +227,7 @@ class Variable extends Cell {
         return packVarIndex(this.vkind, this._index)
     }
 
-    private getClosureIndex() {
+    getClosureIndex() {
         assert(this.vkind != VariableKind.Global)
         return this.parentProc.mapVarOffset(this.packedIndex)
     }
@@ -331,18 +334,6 @@ class FunctionDecl extends Cell {
     }
 }
 
-function toSrcLocation(n: ts.Node): SrcLocation {
-    const f = n.getSourceFile()
-    const pp = f.getLineAndCharacterOfPosition(n.pos)
-    return {
-        file: f.fileName,
-        line: pp.line + 1,
-        col: pp.character + 1,
-        len: n.end - n.pos,
-        pos: n.pos,
-    }
-}
-
 function idName(pat: Expr | ts.DeclarationName) {
     if (pat && ts.isIdentifier(pat)) return pat.text
     else return null
@@ -422,15 +413,26 @@ class Procedure {
     }
     debugInfo(): FunctionDebugInfo {
         this.writer._forceFinStmt()
+        const slots: VarDebugInfo[] = []
+        for (const v of this.params.concat(this.locals)) {
+            slots[v.getClosureIndex()] = v.debugInfo()
+        }
+        const numslots = this.writer.numSlots()
+        for (let i = 0; i < numslots; ++i) {
+            if (!slots[i])
+                slots[i] = {
+                    name: `_tmp${i}`,
+                    type: "tmp",
+                }
+        }
         return {
             name: this.name,
-            srcmap: this.writer.srcmap,
             location: this.sourceNode
-                ? toSrcLocation(this.sourceNode)
+                ? this.parent.getSrcLocation(this.sourceNode)
                 : undefined,
             size: this.writer.size,
-            users: this.users.map(toSrcLocation),
-            slots: this.params.concat(this.locals).map(v => v.debugInfo()),
+            users: this.users.map(u => this.parent.getSrcLocation(u)),
+            slots,
         }
     }
 
@@ -575,6 +577,7 @@ class Program implements TopOpWriter {
     onStart: DelayedCodeSection
     flags: CompileFlags = {}
     isLibrary: boolean
+    srcFiles: SrcFile[] = []
 
     constructor(public host: Host, public _source: string) {
         this.serviceSpecs = {}
@@ -631,12 +634,27 @@ class Program implements TopOpWriter {
         return addUnique(this.floatLiterals, f)
     }
 
-    indexToLine(node: ts.Node) {
-        const { line } = ts.getLineAndCharacterOfPosition(
-            node.getSourceFile(),
-            node.getStart()
-        )
-        return line + 1
+    getSrcLocation(node: ts.Node): SrcLocation {
+        const sf = node.getSourceFile() as ts.SourceFile & {
+            __ds_srcidx: number
+            __ds_srcoffset: number
+        }
+        if (sf.__ds_srcidx === undefined) {
+            let idx = this.srcFiles.findIndex(s => s.path == sf.fileName)
+            if (idx < 0) {
+                idx = this.srcFiles.length
+                this.srcFiles.push({
+                    path: sf.fileName,
+                    length: sf.text.length,
+                    text: sf.text,
+                })
+            }
+            sf.__ds_srcidx = idx
+            let off = 0
+            for (let i = 0; i < idx; ++i) off += this.srcFiles[i].length
+            sf.__ds_srcoffset = off
+        }
+        return [node.pos + sf.__ds_srcoffset, node.end - node.pos]
     }
 
     printDiag(diag: ts.Diagnostic) {
@@ -3059,7 +3077,7 @@ class Program implements TopOpWriter {
 
         this.lastNode = stmt
 
-        wr.stmtStart(this.indexToLine(stmt))
+        wr.stmtStart(this.getSrcLocation(stmt))
 
         this.assignCellsToStmt(stmt)
 
@@ -3402,6 +3420,18 @@ class Program implements TopOpWriter {
         const left = outp.length - off
         assert(0 <= left && left < BinFmt.BINARY_SIZE_ALIGN)
 
+        const srcmap = arrayConcatMany(this.procs.map(p => p.writer.srcmap))
+        let prevPC = 0
+        let prevPos = 0
+        for (let i = 0; i < srcmap.length; i += srcMapEntrySize) {
+            const pos = srcmap[i]
+            const pc = srcmap[i + 2]
+            srcmap[i] = pos - prevPos
+            srcmap[i + 2] = pc - prevPC
+            prevPC = pc
+            prevPos = pos
+        }
+
         const dbg: DebugInfo = {
             sizes: {
                 header: fixHeader.size + sectDescs.size,
@@ -3422,7 +3452,8 @@ class Program implements TopOpWriter {
             roles: this.roles.map(r => r.debugInfo()),
             functions: this.procs.map(p => p.debugInfo()),
             globals: this.globals.map(r => r.debugInfo()),
-            source: this._source,
+            srcmap,
+            sources: this.srcFiles.slice(),
         }
 
         return { binary: outp, dbg }
@@ -3690,6 +3721,119 @@ export function toTable(header: string[], rows: (string | number)[][]) {
     }
 }
 
+function findSmaller(arr: Uint32Array, v: number) {
+    let l = 0
+    let r = arr.length - 1
+    while (l <= r) {
+        const m = (l + r) >> 1
+        if (arr[m] < v) l = m + 1
+        else r = m - 1
+    }
+    r--
+    if (r < 0) r = 0
+    while (r < arr.length && v >= arr[r]) r++
+    return r - 1
+}
+
+export class DebugInfoResolver {
+    private fileOff: Uint32Array
+    private fileCache: Uint32Array[]
+    private pcOff: Uint32Array
+    private pcPos: Uint32Array
+
+    static from(dbg: DebugInfo): DebugInfoResolver {
+        if (!dbg._resolverCache) {
+            Object.defineProperty(dbg, "_resolverCache", {
+                value: new DebugInfoResolver(dbg),
+                enumerable: false,
+            })
+        }
+        return dbg._resolverCache
+    }
+
+    private constructor(public dbg: DebugInfo) {}
+
+    private initPos() {
+        if (this.fileCache) return
+        this.fileCache = []
+        let off = 0
+        this.fileOff = new Uint32Array(
+            this.dbg.sources.map(src => {
+                const lineoff = [0]
+                const text = src.text
+                for (let pos = 0; pos < text.length; ++pos) {
+                    if (text.charCodeAt(pos) == 10) lineoff.push(pos + 1)
+                }
+                this.fileCache.push(new Uint32Array(lineoff))
+                const o = off
+                off += src.length
+                return o
+            })
+        )
+    }
+
+    resolvePos(pos: number) {
+        this.initPos()
+        const srcIdx = findSmaller(this.fileOff, pos)
+        const c = this.fileCache[srcIdx]
+        if (c) {
+            pos -= this.fileOff[srcIdx]
+            const lineIdx = findSmaller(c, pos)
+            if (0 <= lineIdx && lineIdx < c.length)
+                return {
+                    filepos: pos,
+                    line: lineIdx + 1,
+                    col: pos - c[lineIdx],
+                    src: this.dbg.sources[srcIdx],
+                }
+        }
+        return null
+    }
+
+    posToString(pos: number) {
+        const t = this.resolvePos(pos)
+        if (t) return `${t.src.path}(${t.line},${t.col})`
+        return `(pos=${pos})`
+    }
+
+    private initPc() {
+        if (this.pcOff) return
+
+        const srcmap = this.dbg.srcmap
+        const pcs: number[] = []
+        const poss: number[] = []
+
+        let prevPc = 0
+        let prevPos = 0
+
+        for (let i = 0; i < srcmap.length; i += srcMapEntrySize) {
+            let pos = srcmap[i]
+            const len = srcmap[i + 1]
+            let pc = srcmap[i + 2]
+            assert(pc >= 0 && len >= 0)
+
+            pc += prevPc
+            pos += prevPos
+
+            pcs.push(pc)
+            poss.push(pos, len)
+
+            prevPc = pc
+            prevPos = pos
+        }
+
+        this.pcOff = new Uint32Array(pcs)
+        this.pcPos = new Uint32Array(poss)
+    }
+
+    resolvePc(pc: number): SrcLocation {
+        this.initPc()
+        let idx = findSmaller(this.pcOff, pc)
+        if (idx < 0) idx = 0
+        return [this.pcPos[idx * 2], this.pcPos[idx * 2 + 1]]
+    }
+}
+
 export function computeSizes(dbg: DebugInfo) {
     const funs = dbg.functions.slice()
     funs.sort((a, b) => a.size - b.size || strcmp(a.name, b.name))
@@ -3699,6 +3843,7 @@ export function computeSizes(dbg: DebugInfo) {
     }
     let dtotal = 0
     for (const v of Object.values(dbg.sizes)) dtotal += v
+    const loc = DebugInfoResolver.from(dbg)
     return (
         "## Data\n\n" +
         toTable(
@@ -3720,7 +3865,7 @@ export function computeSizes(dbg: DebugInfo) {
     )
 
     function loc2str(l: SrcLocation) {
-        return `${l.file}(${l.line},${l.col})`
+        return loc.posToString(l[0])
     }
 
     function locs2str(ls: SrcLocation[]) {

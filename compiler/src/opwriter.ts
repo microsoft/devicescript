@@ -14,7 +14,8 @@ import {
     BuiltInObject,
     FunctionFlag,
 } from "./format"
-import { assert, write32, write16 } from "./jdutil"
+import { SrcLocation, srcMapEntrySize } from "./info"
+import { assert, write32, write16, read32, read16 } from "./jdutil"
 import { assertRange, oops } from "./util"
 
 export interface TopOpWriter extends InstrArgResolver {
@@ -239,10 +240,9 @@ export class OpWriter {
     funFlags: FunctionFlag = 0
     top: Label
     ret: Label
-    private lineNo = -1
-    private lineNoStart = -1
     desc = new Uint8Array(BinFmt.FUNCTION_HEADER_SIZE)
     offsetInFuncs = -1
+    offsetInImg = -1
     srcmap: number[] = []
     private nameIdx: number
     private lastReturnLocation = -1
@@ -268,6 +268,11 @@ export class OpWriter {
     }
 
     finalizeDesc(off: number) {
+        assert(this.offsetInImg == -1)
+        this.offsetInImg = off
+        for (let i = 0; i < this.srcmap.length; i += srcMapEntrySize) {
+            this.srcmap[i + 2] += off
+        }
         write32(this.desc, 0, off)
     }
 
@@ -275,17 +280,10 @@ export class OpWriter {
         this.emitComment(msg)
     }
 
-    _forceFinStmt() {
-        if (this.lineNo < 0) return
-        const len = this.location() - this.lineNoStart
-        if (len) this.srcmap.push(this.lineNo, this.lineNoStart, len)
-    }
+    _forceFinStmt() {}
 
-    stmtStart(lineNo: number) {
-        if (this.lineNo == lineNo) return
-        this._forceFinStmt()
-        this.lineNo = lineNo
-        this.lineNoStart = this.location()
+    stmtStart(pos: SrcLocation) {
+        this.srcmap.push(pos[0], pos[1], this.location())
     }
 
     private allocTmpLocals(num: number) {
@@ -509,11 +507,7 @@ export class OpWriter {
         }
     }
 
-    patchLabels(
-        numLocals: number,
-        numargs: number,
-        tryDepth: number
-    ) {
+    patchLabels(numLocals: number, numargs: number, tryDepth: number) {
         // we now patch at emit
         for (const l of this.labels) {
             if (l.uses) this.oops(`label ${l.name} not resolved`)
@@ -562,6 +556,11 @@ export class OpWriter {
         buf[14] = tryDepth
 
         return mapVarOffset
+    }
+
+    numSlots() {
+        assert(read32(this.desc, 4) != 0)
+        return read16(this.desc, 8)
     }
 
     private spillValue(v: Value) {
