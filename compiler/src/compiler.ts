@@ -656,7 +656,9 @@ class Program implements TopOpWriter {
             for (let i = 0; i < idx; ++i) off += this.srcFiles[i].length
             sf.__ds_srcoffset = off
         }
-        return [node.pos + sf.__ds_srcoffset, node.end - node.pos]
+        let pos = node.getStart(sf, false)
+        const endp = node.getEnd()
+        return [pos + sf.__ds_srcoffset, endp - pos]
     }
 
     printDiag(diag: ts.Diagnostic) {

@@ -102,11 +102,19 @@ export class DebugInfoResolver {
         if (c) {
             pos -= this.fileOff[srcIdx]
             const lineIdx = findSmaller(c, pos)
+            if (false)
+                console.log({
+                    pos,
+                    lineIdx,
+                    at: c[lineIdx],
+                    at1: c[lineIdx + 1],
+                    t: this.dbg.sources[srcIdx].text.slice(pos, pos + 10),
+                })
             if (0 <= lineIdx && lineIdx < c.length)
                 return {
                     filepos: pos,
                     line: lineIdx + 1,
-                    col: pos - c[lineIdx],
+                    col: pos - c[lineIdx] + 1,
                     src: this.dbg.sources[srcIdx],
                 }
         }
