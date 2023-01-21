@@ -18,6 +18,7 @@ export type SrcMap = number[]
 
 export interface FunctionDebugInfo {
     name: string
+    startpc: number
     size: number
     // where the function is defined; some functions are synthetic and miss location
     location?: SrcLocation

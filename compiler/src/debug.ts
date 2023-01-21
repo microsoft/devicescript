@@ -21,6 +21,7 @@ export function parseStackFrame(dbgInfo: DebugInfo, line: string) {
             const fnidx = parseInt(fnIdxStr)
             const fn = dbgInfo.functions[fnidx]
             if (!fn) return full
+            pc += fn.startpc
             let info = ""
             if (fnName && fnName != fn.name)
                 info = ` fn mismatch ${fnName} vs ${fn.name}`

@@ -11,7 +11,7 @@ comp-fast:
 native native1 em update-dist:
 	$(MAKE) -C runtime $@
 
-test-c: native comp
+test-c: native comp-fast
 	set -e ; for f in devs/run-tests/*.ts ; do \
 	  echo "*** $$f" ; \
 	  $(CLI) crun $$f ; done

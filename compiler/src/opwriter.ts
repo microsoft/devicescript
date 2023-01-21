@@ -243,6 +243,7 @@ export class OpWriter {
     desc = new Uint8Array(BinFmt.FUNCTION_HEADER_SIZE)
     offsetInFuncs = -1
     offsetInImg = -1
+    private locStack: SrcLocation[] = []
     srcmap: number[] = []
     private nameIdx: number
     private lastReturnLocation = -1
@@ -260,6 +261,7 @@ export class OpWriter {
     }
 
     serialize() {
+        assert(this.locStack.length == 0)
         return this.binary.slice(0, this.binPtr)
     }
 
@@ -282,8 +284,28 @@ export class OpWriter {
 
     _forceFinStmt() {}
 
-    stmtStart(pos: SrcLocation) {
-        this.srcmap.push(pos[0], pos[1], this.location())
+    private recordLocation() {
+        const pos = this.locStack[this.locStack.length - 1]
+        const pc = this.location()
+        const l = this.srcmap.length
+        if (l >= srcMapEntrySize && this.srcmap[l - 1] == pc) {
+            // if previous entry was already at this pc - overwrite it with new position
+            this.srcmap[l - 2] = pos[1]
+            this.srcmap[l - 3] = pos[0]
+        } else {
+            this.srcmap.push(pos[0], pos[1], pc)
+        }
+    }
+
+    locPush(pos: SrcLocation) {
+        this.locStack.push(pos)
+        this.recordLocation()
+    }
+
+    locPop() {
+        assert(this.locStack.length > 0)
+        this.locStack.pop()
+        if (this.locStack.length) this.recordLocation()
     }
 
     private allocTmpLocals(num: number) {

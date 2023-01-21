@@ -415,8 +415,10 @@ static void dbg_en(srv_t *state) {
 
 void devsdbg_restarted(devs_ctx_t *ctx) {
     srv_t *state = _state;
-    sync_en(state);
-    devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_RESTART);
+    if (state) {
+        sync_en(state);
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_RESTART);
+    }
 }
 
 static void respond_value(cmd_t *cmd, value_t v) {

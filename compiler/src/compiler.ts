@@ -430,6 +430,7 @@ class Procedure {
             location: this.sourceNode
                 ? this.parent.getSrcLocation(this.sourceNode)
                 : undefined,
+            startpc: this.writer.offsetInImg,
             size: this.writer.size,
             users: this.users.map(u => this.parent.getSrcLocation(u)),
             slots,
@@ -723,7 +724,7 @@ class Program implements TopOpWriter {
         wr.emitCall(wr.dsMember(BuiltInString.SLEEPMS), literal(ms))
     }
 
-    private withProcedure<T>(proc: Procedure, f: (wr: OpWriter) => T) {
+    private withProcedure(proc: Procedure, f: (wr: OpWriter) => void) {
         assert(!!proc)
         const prevProc = this.proc
         const prevAcc = this.accountingProc
@@ -731,7 +732,7 @@ class Program implements TopOpWriter {
             this.proc = proc
             if (!proc.skipAccounting) this.accountingProc = proc
             this.writer = proc.writer
-            return f(proc.writer)
+            this.withLocation(proc.sourceNode, f)
         } finally {
             this.proc = prevProc
             if (prevProc) this.writer = prevProc.writer
@@ -1285,30 +1286,32 @@ class Program implements TopOpWriter {
         cls: ts.ClassLikeDeclaration,
         ctor?: ts.ConstructorDeclaration
     ) {
-        const wr = this.writer
         assert(this.proc.usesThis)
         this.proc.writer.funFlags |=
             FunctionFlag.IS_CTOR | FunctionFlag.NEEDS_THIS
         for (const mem of cls.members) {
             if (!ts.isPropertyDeclaration(mem)) continue
             const id = this.forceName(mem.name)
-            if (mem.initializer) {
-                wr.emitStmt(
-                    Op.STMT3_INDEX_SET,
-                    this.emitThisExpression(mem),
-                    wr.emitString(id),
-                    this.emitExpr(mem.initializer)
-                )
-            }
+            if (mem.initializer)
+                this.withLocation(mem, wr => {
+                    wr.emitStmt(
+                        Op.STMT3_INDEX_SET,
+                        this.emitThisExpression(mem),
+                        wr.emitString(id),
+                        this.emitExpr(mem.initializer)
+                    )
+                })
         }
         for (const param of ctor?.parameters ?? []) {
             if (ts.isParameterPropertyDeclaration(param, ctor)) {
-                wr.emitStmt(
-                    Op.STMT3_INDEX_SET,
-                    this.emitThisExpression(param),
-                    wr.emitString(this.forceName(param.name)),
-                    this.getVarAtLocation(param).emit(wr)
-                )
+                this.withLocation(param, wr => {
+                    wr.emitStmt(
+                        Op.STMT3_INDEX_SET,
+                        this.emitThisExpression(param),
+                        wr.emitString(this.forceName(param.name)),
+                        this.getVarAtLocation(param).emit(wr)
+                    )
+                })
             }
         }
     }
@@ -1422,6 +1425,19 @@ class Program implements TopOpWriter {
         return v
     }
 
+    private withLocation(node: ts.Node, f: (wr: OpWriter) => void) {
+        const wr = this.writer
+
+        if (!node) return f(wr)
+
+        wr.locPush(this.getSrcLocation(node))
+        try {
+            f(wr)
+        } finally {
+            wr.locPop()
+        }
+    }
+
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
         if (proc.isMethod && idName(stmt.parameters[0]?.name) != "this")
             this.addParameter(proc, "this")
@@ -1436,14 +1452,18 @@ class Program implements TopOpWriter {
         }
         for (const paramdef of stmt.parameters) {
             if (paramdef.initializer) {
-                const wr = this.writer
-                const v = this.getVarAtLocation(paramdef)
-                wr.emitIfAndPop(
-                    wr.emitExpr(Op.EXPR1_IS_NULL, v.emit(wr)),
-                    () => {
-                        this.emitStore(v, this.emitExpr(paramdef.initializer))
-                    }
-                )
+                this.withLocation(paramdef, wr => {
+                    const v = this.getVarAtLocation(paramdef)
+                    wr.emitIfAndPop(
+                        wr.emitExpr(Op.EXPR1_IS_NULL, v.emit(wr)),
+                        () => {
+                            this.emitStore(
+                                v,
+                                this.emitExpr(paramdef.initializer)
+                            )
+                        }
+                    )
+                })
             }
         }
     }
@@ -1583,17 +1603,16 @@ class Program implements TopOpWriter {
     }
 
     private emitMethod(meth: ts.MethodDeclaration) {
-        const wr = this.writer
-
         const proc = new Procedure(this, this.forceName(meth.name), meth)
         this.emitFunction(meth, proc)
-
-        wr.emitStmt(
-            Op.STMT3_INDEX_SET,
-            this.ctorProc(meth.parent).dotPrototype(wr),
-            wr.emitString(this.forceName(meth.name)),
-            proc.reference(wr)
-        )
+        this.withLocation(meth, wr => {
+            wr.emitStmt(
+                Op.STMT3_INDEX_SET,
+                this.ctorProc(meth.parent).dotPrototype(wr),
+                wr.emitString(this.forceName(meth.name)),
+                proc.reference(wr)
+            )
+        })
     }
 
     private ctorProc(
@@ -1615,7 +1634,7 @@ class Program implements TopOpWriter {
             return false
         }
 
-        this.withProcedure(this.protoProc, wr => {
+        this.withProcedure(this.protoProc, () => {
             for (;;) {
                 let numemit = 0
                 for (const p of this.protoDefinitions) {
@@ -1624,7 +1643,13 @@ class Program implements TopOpWriter {
                         numemit++
                         if (this.flags.traceProto) trace("EMIT upd", p.names[0])
                         if (p.methodDecl) this.emitMethod(p.methodDecl)
-                        else this.emitAssignmentExpression(p.protoUpdate, true)
+                        else
+                            this.withLocation(p.protoUpdate, () =>
+                                this.emitAssignmentExpression(
+                                    p.protoUpdate,
+                                    true
+                                )
+                            )
                     }
                 }
                 this.emitNested(this.protoProc)
@@ -1636,10 +1661,12 @@ class Program implements TopOpWriter {
             for (const fdecl of this.functions) {
                 if (fdecl.baseCtor && fdecl.proc) {
                     assert(!!fdecl.baseCtor.proc)
-                    wr.emitCall(
-                        wr.objectMember(BuiltInString.SETPROTOTYPEOF),
-                        fdecl.proc.dotPrototype(wr),
-                        fdecl.baseCtor.proc.dotPrototype(wr)
+                    this.withLocation(fdecl.definition, wr =>
+                        wr.emitCall(
+                            wr.objectMember(BuiltInString.SETPROTOTYPEOF),
+                            fdecl.proc.dotPrototype(wr),
+                            fdecl.baseCtor.proc.dotPrototype(wr)
+                        )
                     )
                 }
             }
@@ -3077,9 +3104,9 @@ class Program implements TopOpWriter {
 
         this.lastNode = stmt
 
-        wr.stmtStart(this.getSrcLocation(stmt))
-
         this.assignCellsToStmt(stmt)
+
+        wr.locPush(this.getSrcLocation(stmt))
 
         try {
             switch (stmt.kind) {
@@ -3136,6 +3163,7 @@ class Program implements TopOpWriter {
             this.handleException(stmt, e)
         } finally {
             wr.stmtEnd()
+            wr.locPop()
         }
     }
 
@@ -3532,7 +3560,7 @@ class Program implements TopOpWriter {
             compiled: toHex(binary),
         }
         this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
-        this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg, null, 4))
+        this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg))
         this.host.write(DEVS_SIZES_FILE, computeSizes(dbg))
         if (this.numErrors == 0)
             this.host.write(DEVS_ASSEMBLY_FILE, this.getAssembly())
