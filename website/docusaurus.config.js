@@ -2,6 +2,7 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 const { configure } = require("@rise4fun/docusaurus-plugin-rise4fun")
 
+const { resolve } = require("node:path")
 const lightCodeTheme = require("prism-react-renderer/themes/github")
 const darkCodeTheme = require("prism-react-renderer/themes/dracula")
 
@@ -119,7 +120,8 @@ async function createConfig() {
                         langMeta: "build",
                         extension: "ts",
                         inputLang: "typescript",
-                        command: "./langs/ts.js",
+                        command: resolve("./langs/ts.js"),
+                        prefix: "import * from '@devicescript/core",
                     },
                 ],
             },

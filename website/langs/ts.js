@@ -1,7 +1,6 @@
-"use strict"
 const { stdout, stderr } = require("node:process")
 const { readJsonSync } = require("fs-extra")
-require("@devicescript/compiler")
+require("../compiler")
 
 const { compile } = globalThis.deviceScript
 
