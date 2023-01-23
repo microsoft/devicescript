@@ -22,7 +22,7 @@ environments (VM itself compiles to 10kB of code, with the floating point librar
 
 You do not need hardware or install any tools to try out DeviceScript.
 
-```ts
+```ts edit
 ds.every(1, () => {
     console.log(`hello`)
 })

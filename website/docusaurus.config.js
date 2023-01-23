@@ -47,15 +47,8 @@ async function createConfig() {
                     colorMode: {
                         disableSwitch: false,
                     },
-                    docs: {
-                        sidebar: {
-                            hideable: true,
-                            autoCollapseCategories: true,
-                        },
-                    },
                     navbar: {
                         title: "DeviceScript",
-                        hideOnScroll: true,
                         logo: {
                             alt: "DeviceScript language",
                             src: "img/logo.svg",
@@ -119,7 +112,29 @@ async function createConfig() {
                 }),
         },
         {
-            mermaid: true,
+            sideEditor: {
+                editors: [
+                    {
+                        id: "devicescript",
+                        type: "iframe",
+                        language: "typescript",
+                        lightUrl:
+                            "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&light=1",
+                        darkUrl:
+                            "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&dark=1",
+                        message: {
+                            channel: "devicescript",
+                            type: "source",
+                            force: true,
+                            startMissingSimulators: true,
+                        },
+                        messageTextFieldName: "source",
+                        readyMessage: {
+                            channel: "jacdac",
+                        },
+                    },
+                ],
+            },
         }
     )
 
