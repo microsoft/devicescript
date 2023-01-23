@@ -32,7 +32,6 @@ async function createConfig() {
                         docs: {
                             routeBasePath: "/",
                             sidebarPath: require.resolve("./sidebars.js"),
-                            remarkPlugins: [],
                         },
                         blog: false,
                         theme: {
@@ -113,6 +112,7 @@ async function createConfig() {
                 }),
         },
         {
+            /*
             compileCode: {
                 langs: [
                     {
@@ -121,10 +121,12 @@ async function createConfig() {
                         extension: "ts",
                         inputLang: "typescript",
                         command: resolve("./langs/ts.js"),
-                        prefix: "import * from '@devicescript/core",
+                        prefix: "import * as ds from '@devicescript/core'",
+                        failFast: true
                     },
                 ],
             },
+            */
             sideEditor: {
                 editors: [
                     {
