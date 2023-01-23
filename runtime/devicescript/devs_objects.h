@@ -213,6 +213,7 @@ static inline void *devs_gc_base_addr(devs_gc_t *gc) {
 #endif
 
 void *devs_value_to_gc_obj(devs_ctx_t *ctx, value_t v);
+bool devs_gc_obj_valid(devs_ctx_t *ctx, const void *ptr);
 
 // returns pointer to a static buffer!
 const char *devs_show_value(devs_ctx_t *ctx, value_t v);
