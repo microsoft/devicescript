@@ -24,7 +24,7 @@ export async function readCompiled(
                 "hex"
             ),
         }
-    if ((buf[0] = 0x7b)) {
+    if (buf[0] == 0x7b) {
         const dbg = JSON.parse(buf.toString("utf-8")) as DebugInfo
         return { dbg, binary: Buffer.from(dbg.binary.hex, "hex") }
     }
