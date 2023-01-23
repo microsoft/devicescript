@@ -197,7 +197,6 @@ static inline int devs_gc_tag(const void *ptr) {
                        : (((devs_gc_object_t *)ptr)->header >> DEVS_GC_TAG_POS) & DEVS_GC_TAG_MASK;
 }
 
-bool devs_gc_obj_valid(devs_ctx_t *ctx, const void *ptr);
 void devs_gc_obj_check(devs_ctx_t *ctx, const void *ptr);
 
 static inline bool devs_is_map(const void *ptr) {
