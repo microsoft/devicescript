@@ -1872,10 +1872,10 @@
     "@microsoft/applicationinsights-web" "^2.8.9"
     tslib "^2.4.0"
 
-"@rise4fun/docusaurus-plugin-rise4fun@^1.4.4":
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.4.4.tgz#a0424c271b241f874251b5440b677084b0b51463"
-  integrity sha512-T85YW3xIXK3IMdPmv0Qth8YjSDuT/1mvElwTHvVMnz2NrX0qqk6Y2B4CCS+etRIZHgxX2Trb9nzrOf/rP1GAHQ==
+"@rise4fun/docusaurus-plugin-rise4fun@^1.4.5":
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.4.5.tgz#d7ade595fef499f2cb7d0c8d0811b438e4b03ce3"
+  integrity sha512-fxTypH/fNNSQQ+8gp5k+uxr4l1oBlKcZ/LfMcqxW6WGPw6SMsFYMl4Ww3Dz2VgpmwTmBuGuOEEs6GJwbqpAC+w==
   dependencies:
     "@docusaurus/core" "^2.2.0"
     "@docusaurus/remark-plugin-npm2yarn" "^2.2.0"
@@ -1941,10 +1941,25 @@
     clsx "^1.2.1"
     tslib "^2.4.1"
 
-"@rise4fun/docusaurus-theme-side-editor@*", "@rise4fun/docusaurus-theme-side-editor@^1.0.2":
+"@rise4fun/docusaurus-theme-side-editor@*":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.2.tgz#0b64fc93a415685315e54aac2efa7c924269f144"
   integrity sha512-bcx/jvhx9lQhi4j5vnvkAyJjCAb91+nh7pHlLXWqUhB9S1GKd3ZXjBTZg+nWDnmfkiDhnSIHf1AlXHgo1Ryn3g==
+  dependencies:
+    "@docusaurus/core" "^2.2.0"
+    "@docusaurus/types" "^2.2.0"
+    "@docusaurus/utils-validation" "^2.2.0"
+    "@mdx-js/react" "^1.6.22"
+    "@monaco-editor/react" "^4.4.6"
+    clsx "^1.2.1"
+    monaco-editor "^0.34.1"
+    react-resizable-panels "^0.0.35"
+    tslib "^2.4.1"
+
+"@rise4fun/docusaurus-theme-side-editor@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.4.tgz#5278c7e31e66d8042d38b157beae285e7e824041"
+  integrity sha512-G76vTJ72E66n+pP+kh+mvEY9TQyJ0iPKao85zz2yOtpHD3I3tTNZurA17RdFBCvmnSas0R7oHqKNUrir+t6cFw==
   dependencies:
     "@docusaurus/core" "^2.2.0"
     "@docusaurus/types" "^2.2.0"
@@ -2110,7 +2125,7 @@
   resolved "https://registry.yarnpkg.com/@trysound/sax/-/sax-0.2.0.tgz#cccaab758af56761eb7bf37af6f03f326dd798ad"
   integrity sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==
 
-"@tsconfig/docusaurus@^1.0.5":
+"@tsconfig/docusaurus@^1.0.6":
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@tsconfig/docusaurus/-/docusaurus-1.0.6.tgz#7305a7fa590decc0d5968500234e95fd68788978"
   integrity sha512-1QxDaP54hpzM6bq9E+yFEo4F9WbWHhsDe4vktZXF/iDlc9FqGr9qlg+3X/nuKQXx8QxHV7ue8NXFazzajsxFBA==
@@ -6877,14 +6892,13 @@ react-dev-utils@^12.0.1:
     strip-ansi "^6.0.1"
     text-table "^0.2.0"
 
-react-dom@^17.0.2:
-  version "17.0.2"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-17.0.2.tgz#ecffb6845e3ad8dbfcdc498f0d0a939736502c23"
-  integrity sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
+react-dom@^18.2.0:
+  version "18.2.0"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
+  integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==
   dependencies:
     loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    scheduler "^0.20.2"
+    scheduler "^0.23.0"
 
 react-error-overlay@^6.0.11:
   version "6.0.11"
@@ -6999,13 +7013,12 @@ react-textarea-autosize@^8.3.2:
     use-composed-ref "^1.3.0"
     use-latest "^1.2.1"
 
-react@^17.0.2:
-  version "17.0.2"
-  resolved "https://registry.yarnpkg.com/react/-/react-17.0.2.tgz#d0b5cc516d29eb3eee383f75b62864cfb6800037"
-  integrity sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==
+react@^18.2.0:
+  version "18.2.0"
+  resolved "https://registry.yarnpkg.com/react/-/react-18.2.0.tgz#555bd98592883255fa00de14f1151a917b5d77d5"
+  integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==
   dependencies:
     loose-envify "^1.1.0"
-    object-assign "^4.1.1"
 
 readable-stream@^2.0.1:
   version "2.3.7"
@@ -7337,13 +7350,12 @@ sax@^1.2.4:
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
 
-scheduler@^0.20.2:
-  version "0.20.2"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.20.2.tgz#4baee39436e34aa93b4874bddcbf0fe8b8b50e91"
-  integrity sha512-2eWfGgAqqWFGqtdMmcL5zCMK1U8KlXv8SQFGglL3CEtd0aDVDWgeF/YoCmvln55m5zSk3J/20hTaSBeSObsQDQ==
+scheduler@^0.23.0:
+  version "0.23.0"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.23.0.tgz#ba8041afc3d30eb206a487b6b384002e4e61fdfe"
+  integrity sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==
   dependencies:
     loose-envify "^1.1.0"
-    object-assign "^4.1.1"
 
 schema-utils@2.7.0:
   version "2.7.0"
@@ -7956,11 +7968,6 @@ typedarray-to-buffer@^3.1.5:
   integrity sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==
   dependencies:
     is-typedarray "^1.0.0"
-
-typescript@^4.7.4:
-  version "4.8.4"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.8.4.tgz#c464abca159669597be5f96b8943500b238e60e6"
-  integrity sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==
 
 typescript@^4.9.4:
   version "4.9.4"
