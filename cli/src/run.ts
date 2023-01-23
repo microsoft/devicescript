@@ -1,3 +1,4 @@
+import { DebugInfo } from "@devicescript/compiler"
 import { readFileSync } from "node:fs"
 import { BuildOptions, compileFile, devsFactory } from "./build"
 import { CmdOptions, error } from "./command"
@@ -9,14 +10,27 @@ export interface RunOptions {
     testTimeout?: string
 }
 
-export async function readCompiled(fn: string, options: BuildOptions = {}) {
+export async function readCompiled(
+    fn: string,
+    options: BuildOptions = {}
+): Promise<{ binary: Uint8Array; dbg?: DebugInfo }> {
     const buf = readFileSync(fn)
-    if (buf.subarray(0, 8).toString("hex") == "446576530a7e6a9a") return buf
+    if (buf.subarray(0, 8).toString("hex") == "446576530a7e6a9a")
+        return { binary: buf }
     if (buf.subarray(0, 16).toString("binary") == "446576530a7e6a9a")
-        return Buffer.from(buf.toString("binary").replace(/\s*/g, ""), "hex")
+        return {
+            binary: Buffer.from(
+                buf.toString("binary").replace(/\s*/g, ""),
+                "hex"
+            ),
+        }
+    if ((buf[0] = 0x7b)) {
+        const dbg = JSON.parse(buf.toString("utf-8")) as DebugInfo
+        return { dbg, binary: Buffer.from(dbg.binary.hex, "hex") }
+    }
     const res = await compileFile(fn, options)
     if (!res.success) process.exit(1)
-    return res.binary
+    return { binary: res.binary, dbg: res.dbg }
 }
 
 export async function runTest(
@@ -47,7 +61,7 @@ export async function runTest(
         inst.devsGcStress(true)
         inst.devsSetDeviceId(devid)
         inst.devsStart()
-        inst.devsDeploy(prog)
+        inst.devsDeploy(prog.binary)
         inst.error = (...data) => {
             console.error(...data)
             process.exit(1)
@@ -93,7 +107,7 @@ export async function runScript(
 
     if (fn) {
         const prog = await readCompiled(fn, options)
-        const r = inst.devsDeploy(prog)
+        const r = inst.devsDeploy(prog.binary)
         if (r) throw new Error("deploy error: " + r)
         console.log(`self-deployed ${fn}`)
     }

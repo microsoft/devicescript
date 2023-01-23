@@ -710,7 +710,10 @@ export class Image {
     }
 }
 
-export function disassemble(data: Uint8Array, verbose = false): string {
+export function disassemble(
+    data: string | Uint8Array | DebugInfo,
+    verbose = false
+): string {
     const img = new Image(data)
     for (const err of img.errors) console.error("DevS disasm error: " + err)
     return img.disassemble(verbose)

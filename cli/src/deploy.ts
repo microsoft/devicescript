@@ -21,7 +21,7 @@ export async function deployScript(
     }
 
     const prog = await readCompiled(fn, options)
-    const r = inst.devsClientDeploy(prog)
+    const r = inst.devsClientDeploy(prog.binary)
     if (r) throw new Error("deploy error: " + r)
     console.log(`remote-deployed ${fn}`)
 }

@@ -20,9 +20,9 @@ export async function crunScript(
 ) {
     options.noVerify = true
     const prog = await readCompiled(fn, options)
-    const compfn = BINDIR + "/compiled.devs"
+    const compfn = BINDIR + "/crun.devs"
     await ensureDir(BINDIR)
-    writeFileSync(compfn, prog)
+    writeFileSync(compfn, prog.binary)
 
     const args = [compfn]
 
