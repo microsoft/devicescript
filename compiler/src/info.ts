@@ -50,13 +50,9 @@ export interface DebugInfo {
     functions: FunctionDebugInfo[]
     roles: RoleDebugInfo[]
     globals: VarDebugInfo[]
-    tables: {
-        ascii: string[]
-        utf8: string[]
-        buffer: string[] // hex-encoded
-    }
     srcmap: SrcMap
     sources: SrcFile[]
+    binary: string
 
     _resolverCache?: any
 }
@@ -70,15 +66,11 @@ export function emptyDebugInfo(): DebugInfo {
             roles: 0,
             align: 0,
         },
-        tables: {
-            ascii: [],
-            utf8: [],
-            buffer: [],
-        },
         functions: [],
         globals: [],
         roles: [],
         srcmap: [],
         sources: [],
+        binary: "",
     }
 }

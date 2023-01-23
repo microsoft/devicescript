@@ -19,9 +19,9 @@ import {
     BUILTIN_OBJECT__VAL,
     BUILTIN_STRING__VAL,
     DebugInfo,
-    DebugInfoResolver,
     DebugVarType,
-    TODO
+    Image,
+    TODO,
 } from "@devicescript/compiler"
 import {
     DevsDbgFunIdx,
@@ -61,12 +61,15 @@ for (const k0 of Object.keys(varTypeStrToNum)) {
 
 export class DsDapSession extends LoggingDebugSession {
     private clearSusp: () => void
-    dbgResolver: DebugInfoResolver
+    img: Image
 
-    constructor(public client: DevsDbgClient, public dbginfo: DebugInfo) {
+    constructor(
+        public client: DevsDbgClient,
+        dbg: string | Uint8Array | DebugInfo
+    ) {
         super()
 
-        this.dbgResolver = DebugInfoResolver.from(this.dbginfo)
+        this.img = new Image(dbg)
 
         this.setDebuggerLinesStartAt1(true)
         this.setDebuggerColumnsStartAt1(true)
@@ -224,14 +227,14 @@ export class DsDapSession extends LoggingDebugSession {
             )
             if (!fr.stackFrame) return // ???
 
-            const fdbg = this.dbginfo.functions[fr.stackFrame.fnIdx]
+            const fn = this.img.functions[fr.stackFrame.fnIdx]
 
             const mkScope = (
                 tp: DebugVarType,
                 presentationHint: "arguments" | "locals" | "registers",
                 name: string
             ) => {
-                const namedVariables = fdbg.slots.filter(
+                const namedVariables = fn.dbg.slots.filter(
                     s => s.type == tp
                 ).length
                 if (namedVariables == 0) return
@@ -249,7 +252,7 @@ export class DsDapSession extends LoggingDebugSession {
                 })
             }
 
-            if (fdbg) {
+            if (fn) {
                 mkScope("arg", "arguments", "Arguments")
                 mkScope("loc", "locals", "Local variables")
                 mkScope("tmp", "registers", "Temporaries")
@@ -271,10 +274,10 @@ export class DsDapSession extends LoggingDebugSession {
             if (v.tag == DevsDbgValueTag.User1) {
                 if (wantNamed) {
                     const tp = varTypeNumToStr[v.v0]
-                    const fdbg = this.dbginfo.functions[v.arg.stackFrame.fnIdx]
+                    const fn = this.img.functions[v.arg.stackFrame.fnIdx]
                     const vals = await v.arg.readIndexed()
-                    for (let idx = 0; idx < fdbg.slots.length; ++idx) {
-                        const s = fdbg.slots[idx]
+                    for (let idx = 0; idx < fn.dbg.slots.length; ++idx) {
+                        const s = fn.dbg.slots[idx]
                         if (s.type == tp && vals[idx]) {
                             lst.push({
                                 key: s.name,
@@ -324,10 +327,9 @@ export class DsDapSession extends LoggingDebugSession {
         args: DebugProtocol.SetBreakpointsArguments
     ): void {
         this.asyncReq(response, async () => {
-            const srcIdx = this.dbginfo.sources.findIndex(
+            const srcIdx = this.img.dbg.sources.findIndex(
                 s => s.path == args.source.path
             )
-            this.dbgResolver.resolvePc
         })
     }
 
@@ -356,9 +358,10 @@ export class DsDapSession extends LoggingDebugSession {
     } & {
         column: number
     } {
-        const [pos, len] = this.dbgResolver.resolvePc(pc)
-        const start = this.dbgResolver.resolvePos(pos)
-        const end = this.dbgResolver.resolvePos(pos + len)
+        const srcmap = this.img.srcmap
+        const [pos, len] = srcmap.resolvePc(pc)
+        const start = srcmap.resolvePos(pos)
+        const end = srcmap.resolvePos(pos + len)
         const sf = start.src
         return {
             line: start.line,
@@ -389,7 +392,7 @@ export class DsDapSession extends LoggingDebugSession {
             const bidx = idx - DevsDbgFunIdx.FirstBuiltIn
             return `BuiltIn #${bidx}`
         }
-        const f = this.dbginfo.functions[idx]
+        const f = this.img.functions[idx]
         if (f) return f.name
         return `#${idx}`
     }
@@ -401,17 +404,24 @@ export class DsDapSession extends LoggingDebugSession {
     }
 
     private async valueToString(v: DevsValue): Promise<string> {
+        const str = await this.valueToStringCore(v)
+        if (str === undefined || str === null) return v.genericText
+        else return str
+    }
+
+    private async valueToStringCore(v: DevsValue): Promise<string> {
         switch (v.tag) {
             case DevsDbgValueTag.ImgBuffer:
-                const buf = this.dbginfo.tables.buffer[v.v0]
+                const buf = this.img.bufferTable[v.v0]
                 if (buf) return `hex\`${buf}\``
                 break
-            case DevsDbgValueTag.ImgStringAscii:
-                return JSON.stringify(this.dbginfo.tables.ascii[v.v0])
             case DevsDbgValueTag.ImgStringUTF8:
-                return JSON.stringify(this.dbginfo.tables.utf8[v.v0])
             case DevsDbgValueTag.ImgStringBuiltin:
-                return JSON.stringify(BUILTIN_STRING__VAL[v.v0])
+            case DevsDbgValueTag.ImgStringAscii:
+                return this.img.describeString(
+                    v.tag - DevsDbgValueTag.ImgBuffer,
+                    v.v0
+                )
             case DevsDbgValueTag.Number:
                 return v.v0 + ""
 
@@ -440,7 +450,7 @@ export class DsDapSession extends LoggingDebugSession {
             }
 
             case DevsDbgValueTag.ImgRole: {
-                const r = this.dbginfo.roles[v.v0]
+                const r = this.img.roles[v.v0]
                 if (r) return `[Role ${r.name}]`
                 break
             }
@@ -470,7 +480,7 @@ export class DsDapSession extends LoggingDebugSession {
 
             case DevsDbgValueTag.ImgRoleMember: {
                 const mask = (1 << BinFmt.ROLE_BITS) - 1
-                const r = this.dbginfo.roles[v.v0 & mask]
+                const r = this.img.roles[v.v0 & mask]
                 if (r)
                     return `[RoleMember ${r.name} @${
                         v.v0 >>> BinFmt.ROLE_BITS

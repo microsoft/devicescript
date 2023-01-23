@@ -7,7 +7,7 @@ export * from "./embedspecs"
 export * from "./tsiface"
 export * from "./info"
 export * from "./util"
-export { parseStackFrame, DebugInfoResolver } from "./debug"
+export { parseStackFrame, SrcMapResolver } from "./debug"
 export { prettySize } from "./jdutil"
 
 import { compile } from "./compiler"

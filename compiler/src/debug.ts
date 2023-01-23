@@ -17,7 +17,7 @@ export interface StackFrame {
 }
 
 export function parseStackFrame(dbgInfo: DebugInfo, line: string) {
-    const resolver = DebugInfoResolver.from(dbgInfo)
+    const resolver = SrcMapResolver.from(dbgInfo)
     const frames: StackFrame[] = []
     const markedLine = line.replace(
         /\bpc=(\d+) \@ (\w*)_F(\d+)/g,
@@ -59,16 +59,16 @@ function findSmaller(arr: Uint32Array, v: number) {
     return r - 1
 }
 
-export class DebugInfoResolver {
+export class SrcMapResolver {
     private fileOff: Uint32Array
     private fileCache: Uint32Array[]
     private pcOff: Uint32Array
     private pcPos: Uint32Array
 
-    static from(dbg: DebugInfo): DebugInfoResolver {
+    static from(dbg: DebugInfo): SrcMapResolver {
         if (!dbg._resolverCache) {
             Object.defineProperty(dbg, "_resolverCache", {
-                value: new DebugInfoResolver(dbg),
+                value: new SrcMapResolver(dbg),
                 enumerable: false,
             })
         }
@@ -237,7 +237,7 @@ export function computeSizes(dbg: DebugInfo) {
     }
     let dtotal = 0
     for (const v of Object.values(dbg.sizes)) dtotal += v
-    const loc = DebugInfoResolver.from(dbg)
+    const loc = SrcMapResolver.from(dbg)
     return (
         "## Data\n\n" +
         toTable(

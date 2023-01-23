@@ -19,7 +19,7 @@ import {
     DebugInfo,
     parseStackFrame,
     CompileFlags,
-    DebugInfoResolver,
+    SrcMapResolver,
 } from "@devicescript/compiler"
 import { BINDIR, CmdOptions, debug, error, log } from "./command"
 import { devtools } from "./devtools"
@@ -182,7 +182,7 @@ async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
                     .join(", ")
         )
         log(`  functions:`)
-        const resolver = DebugInfoResolver.from(dbg)
+        const resolver = SrcMapResolver.from(dbg)
         functions
             .sort((l, r) => l.size - r.size)
             .forEach(fn => {

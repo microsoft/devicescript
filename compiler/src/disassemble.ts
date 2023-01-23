@@ -1,3 +1,4 @@
+import { SrcMapResolver } from "./debug"
 import {
     BinFmt,
     BUILTIN_OBJECT__VAL,
@@ -11,6 +12,7 @@ import {
     StrIdx,
     stringifyInstr,
 } from "./format"
+import { DebugInfo, FunctionDebugInfo, RoleDebugInfo } from "./info"
 import {
     range,
     read32,
@@ -20,6 +22,7 @@ import {
     toHex,
     stringToUint8Array,
     assert,
+    fromHex,
 } from "./jdutil"
 
 export class ImgRole {
@@ -27,7 +30,8 @@ export class ImgRole {
         public parent: Image,
         public index: number,
         public serviceClass: number,
-        public name: string
+        public name: string,
+        public dbg: RoleDebugInfo
     ) {}
 }
 
@@ -37,6 +41,7 @@ export class ImgFunction {
     flags: number
     numTryFrames: number
     imgOffset: number
+    dbg: FunctionDebugInfo
 
     get numLocals() {
         return this.numSlots - this.numArgs
@@ -122,6 +127,7 @@ export class ImgFunction {
 
 export class Image {
     errors: string[] = []
+    devsBinary: Uint8Array
 
     numGlobals: number
     numSpecs: number
@@ -134,10 +140,30 @@ export class Image {
 
     functions: ImgFunction[]
     roles: ImgRole[]
+    dbg: DebugInfo
+
+    srcmap: SrcMapResolver
 
     private specData: Uint8Array
 
-    constructor(public devsBinary: Uint8Array) {
+    constructor(input: Uint8Array | string | DebugInfo) {
+        if (typeof input == "string") {
+            this.dbg = JSON.parse(input)
+        } else if (input instanceof Uint8Array) {
+            if (input[0] == 0x7b) {
+                this.dbg = JSON.parse(fromUTF8(uint8ArrayToString(input)))
+            } else {
+                this.devsBinary = input
+            }
+        } else {
+            this.dbg = input
+        }
+
+        if (!this.devsBinary && this.dbg)
+            this.devsBinary = fromHex(this.dbg.binary)
+
+        this.srcmap = SrcMapResolver.from(this.dbg)
+
         this.load()
     }
 
@@ -244,7 +270,8 @@ export class Image {
                     read32(roleData, idx * BinFmt.ROLE_HEADER_SIZE),
                     getString1(
                         read16(roleData, idx * BinFmt.ROLE_HEADER_SIZE + 4)
-                    )
+                    ),
+                    this.dbg?.roles[idx]
                 )
         )
 
@@ -261,6 +288,8 @@ export class Image {
             fn.flags = funDesc[off + 11]
             fn.numSlots = read16(funDesc, off + 8)
             fn.imgOffset = read32(funDesc, off)
+
+            fn.dbg = this.dbg?.functions[idx]
 
             return fn
         })
