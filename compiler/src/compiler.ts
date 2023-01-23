@@ -82,7 +82,6 @@ export const CMD_GET_REG = 0x1000
 export const CMD_SET_REG = 0x2000
 
 export const DEVS_FILE_PREFIX = "bytecode"
-export const DEVS_ASSEMBLY_FILE = `${DEVS_FILE_PREFIX}.dasm`
 export const DEVS_BYTECODE_FILE = `${DEVS_FILE_PREFIX}.devs`
 
 export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
@@ -3474,7 +3473,7 @@ class Program implements TopOpWriter {
             globals: this.globals.map(r => r.debugInfo()),
             srcmap,
             sources: this.srcFiles.slice(),
-            binary: toHex(outp),
+            binary: { hex: toHex(outp) },
         }
 
         return { binary: outp, dbg }
@@ -3542,10 +3541,6 @@ class Program implements TopOpWriter {
             p.writer.makeFunctionsStatic(funIsStatic)
         }
 
-        // early assembly dump, in case serialization fails
-        if (this.numErrors == 0)
-            this.host.write(DEVS_ASSEMBLY_FILE, this.getAssembly())
-
         const { binary, dbg } = this.serialize()
         const progJson = {
             text: this._source,
@@ -3555,8 +3550,7 @@ class Program implements TopOpWriter {
         this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
         this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg))
         this.host.write(DEVS_SIZES_FILE, computeSizes(dbg))
-        if (this.numErrors == 0)
-            this.host.write(DEVS_ASSEMBLY_FILE, this.getAssembly())
+
         // this file is tracked by --watch and should be written last
         this.host.write(DEVS_BYTECODE_FILE, binary)
 

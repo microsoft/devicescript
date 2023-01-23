@@ -152,7 +152,7 @@ export async function mainCli() {
         .command("disasm")
         .description("disassemble .devs binary")
         .option("-d, --detailed", "include all details")
-        .arguments("<file.ts|file.devs>")
+        .arguments("<file-dbg.json|file.devs>")
         .action(disasm)
 
     program

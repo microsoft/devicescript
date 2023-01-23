@@ -11,6 +11,7 @@ import {
     OpCall,
     opIsStmt,
     opNumRealArgs,
+    opTakesNumber,
     OP_PRINT_FMTS,
     PacketSpecCode,
     PacketSpecFlag,
@@ -143,14 +144,16 @@ export class ImgFunction {
     }
 
     private parseBytecode(throwOnError = false) {
-        const stmts = parseBytecode(this.bytecode)
-        for (const stmt of stmts) {
-            if (stmt.pc !== undefined && !stmt.error) {
-                const [pos, len] = this.parent.srcmap.resolvePc(stmt.pc)
-                stmt.srcPos = pos
-                stmt.srcLen = len
+        const stmts = parseBytecode(this.bytecode, throwOnError)
+        const srcmap = this.parent.srcmap
+        if (srcmap)
+            for (const stmt of stmts) {
+                if (!stmt.error) {
+                    const [pos, len] = srcmap.resolvePc(stmt.pc)
+                    stmt.srcPos = pos
+                    stmt.srcLen = len
+                }
             }
-        }
         return stmts
     }
 }
@@ -165,7 +168,12 @@ export function parseBytecode(bytecode: Uint8Array, throwOnError = false) {
     const stmts: OpStmt[] = []
     const byPc: OpStmt[] = []
 
-    while (pc < bytecode.length) {
+    let bend = bytecode.length - 1
+    while (bytecode[bend] === 0x00) bend--
+    bend++
+    bend = Math.max(bytecode.length - 4, bend)
+
+    while (pc < bend) {
         try {
             stmtStart = pc
             jmpoff = NaN
@@ -189,7 +197,7 @@ export function parseBytecode(bytecode: Uint8Array, throwOnError = false) {
             if (throwOnError) {
                 throw e
             } else {
-                const stmt = new OpStmt(0)
+                const stmt = new OpStmt(Op.STMT0_DEBUGGER)
                 stmt.error = e.message
                 if (stmtStart == pc) pc++
                 stmt.pc = stmtStart
@@ -200,17 +208,22 @@ export function parseBytecode(bytecode: Uint8Array, throwOnError = false) {
     }
 
     for (const stmt of stmts) {
-        if (opJumps(stmt.opcode)) {
-            const trg = byPc[stmt.intArg]
-            if (!trg) error(`can't find jump target ${stmt.intArg}`)
-            stmt.jmpTrg = trg
+        try {
+            if (opJumps(stmt.opcode)) {
+                const trg = byPc[stmt.intArg]
+                if (!trg) error(`can't find jump target ${stmt.intArg}`)
+                stmt.jmpTrg = trg
+            }
+        } catch (e) {
+            if (throwOnError) throw e
+            else stmt.error = e.message
         }
     }
 
     return stmts
 
     function opJumps(op: Op) {
-        return OP_PRINT_FMTS[op].includes("%j")
+        return (OP_PRINT_FMTS[op] ?? "").includes("%j")
     }
 
     function decodeOp() {
@@ -220,7 +233,7 @@ export function parseBytecode(bytecode: Uint8Array, throwOnError = false) {
             if (op == 0 && pc - stmtStart == 1)
                 return new OpTree(Op.STMT0_DEBUGGER)
             const e = new OpTree(op)
-            if (opJumps(op)) {
+            if (opTakesNumber(op)) {
                 jmpoff = pc - 1
                 e.intArg = decodeInt()
             }
@@ -404,9 +417,9 @@ export class Image {
         }
 
         if (!this.devsBinary && this.dbg)
-            this.devsBinary = fromHex(this.dbg.binary)
+            this.devsBinary = fromHex(this.dbg.binary.hex)
 
-        this.srcmap = SrcMapResolver.from(this.dbg)
+        if (this.dbg) this.srcmap = SrcMapResolver.from(this.dbg)
 
         this.load()
     }

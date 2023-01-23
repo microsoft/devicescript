@@ -52,7 +52,7 @@ export interface DebugInfo {
     globals: VarDebugInfo[]
     srcmap: SrcMap
     sources: SrcFile[]
-    binary: string
+    binary: { hex: string }
 
     _resolverCache?: any
 }
@@ -71,6 +71,6 @@ export function emptyDebugInfo(): DebugInfo {
         roles: [],
         srcmap: [],
         sources: [],
-        binary: "",
+        binary: { hex: "" },
     }
 }
