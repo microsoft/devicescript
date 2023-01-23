@@ -556,9 +556,9 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
             respond_no_value(cmd);
             break;
 
-        case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINT:
         case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINTS:
-        case JD_DEVS_DBG_CMD_SET_BREAKPOINT:
+        case JD_DEVS_DBG_CMD_CLEAR_ALL_BREAKPOINTS:
+        case JD_DEVS_DBG_CMD_SET_BREAKPOINTS:
             if (!ctx)
                 return;
             break;
@@ -623,16 +623,18 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
         read_value(cmd);
         break;
 
-    case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINT:
-        devs_vm_clear_breakpoint(ctx, *((uint16_t *)pkt->data));
+    case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINTS:
+        for (unsigned i = 0; i < pkt->service_size; i += 4)
+            devs_vm_clear_breakpoint(ctx, *((uint32_t *)(pkt->data + i)));
         break;
 
-    case JD_DEVS_DBG_CMD_CLEAR_BREAKPOINTS:
+    case JD_DEVS_DBG_CMD_CLEAR_ALL_BREAKPOINTS:
         devs_vm_clear_breakpoints(ctx);
         break;
 
-    case JD_DEVS_DBG_CMD_SET_BREAKPOINT:
-        devs_vm_set_breakpoint(ctx, *((uint16_t *)pkt->data));
+    case JD_DEVS_DBG_CMD_SET_BREAKPOINTS:
+        for (unsigned i = 0; i < pkt->service_size; i += 4)
+            devs_vm_set_breakpoint(ctx, *((uint32_t *)(pkt->data + i)));
         break;
 
     case JD_DEVS_DBG_CMD_HALT:

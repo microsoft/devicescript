@@ -63,7 +63,7 @@ export class SrcMapResolver {
     private fileOff: Uint32Array
     private fileCache: Uint32Array[]
     private pcOff: Uint32Array
-    private pcPos: Uint32Array
+    private pcPos: SrcMapEntry[]
 
     static from(dbg: DebugInfo): SrcMapResolver {
         if (!dbg._resolverCache) {
@@ -75,7 +75,11 @@ export class SrcMapResolver {
         return dbg._resolverCache
     }
 
-    private constructor(public dbg: DebugInfo) {}
+    private constructor(public dbg: DebugInfo) {
+        dbg.sources.forEach((s, idx) => {
+            s.index = idx
+        })
+    }
 
     private initPos() {
         if (this.fileCache) return
@@ -103,16 +107,10 @@ export class SrcMapResolver {
         if (c) {
             pos -= this.fileOff[srcIdx]
             const lineIdx = findSmaller(c, pos)
-            if (false)
-                console.log({
-                    pos,
-                    lineIdx,
-                    at: c[lineIdx],
-                    at1: c[lineIdx + 1],
-                    t: this.dbg.sources[srcIdx].text.slice(pos, pos + 10),
-                })
             if (0 <= lineIdx && lineIdx < c.length)
                 return {
+                    fileOff: this.fileOff[srcIdx],
+                    lineOff: c[lineIdx],
                     filepos: pos,
                     line: lineIdx + 1,
                     col: pos - c[lineIdx] + 1,
@@ -130,11 +128,6 @@ export class SrcMapResolver {
         )
     }
 
-    posToPc(pos: number) {
-        this.initPc()
-        TODO()
-    }
-
     posToString(pos: number) {
         const t = this.resolvePos(pos)
         if (t) return `${t.src.path}(${t.line},${t.col})`
@@ -146,7 +139,7 @@ export class SrcMapResolver {
 
         const srcmap = this.dbg.srcmap
         const pcs: number[] = []
-        const poss: number[] = []
+        this.pcPos = []
 
         let prevPc = 0
         let prevPos = 0
@@ -161,22 +154,53 @@ export class SrcMapResolver {
             pos += prevPos
 
             pcs.push(pc)
-            poss.push(pos, len)
+
+            this.pcPos.push({
+                pos,
+                end: pos + len,
+                pc,
+            })
 
             prevPc = pc
             prevPos = pos
         }
 
         this.pcOff = new Uint32Array(pcs)
-        this.pcPos = new Uint32Array(poss)
+    }
+
+    filePos(srcIdx: number): SrcLocation {
+        this.initPos()
+        const s = this.dbg.sources[srcIdx]
+        return s ? [this.fileOff[srcIdx], s.length] : undefined
+    }
+
+    srcMapForPos(loc: SrcLocation) {
+        return filterOverlapping(this.pcPos, loc)
     }
 
     resolvePc(pc: number): SrcLocation {
         this.initPc()
         let idx = findSmaller(this.pcOff, pc)
         if (idx < 0) idx = 0
-        return [this.pcPos[idx * 2], this.pcPos[idx * 2 + 1]]
+        const e = this.pcPos[idx]
+        return [e.pos, e.end - e.pos]
     }
+}
+
+export function srcLocOverlaps(a: SrcLocation, b: SrcLocation) {
+    if (a[0] <= b[0]) return b[0] <= a[0] + a[1]
+    else return a[0] <= b[0] + b[1]
+}
+
+export interface SrcMapEntry {
+    pos: number
+    end: number
+    pc: number
+}
+
+export function filterOverlapping(arr: SrcMapEntry[], loc: SrcLocation) {
+    if (!loc) return []
+    return arr.filter(e => srcLocOverlaps(loc, [e.pos, e.end - e.pos]))
 }
 
 export function toTable(header: string[], rows: (string | number)[][]) {

@@ -5,6 +5,7 @@ export interface SrcFile {
     path: string
     length: number // in 16-bit codepoints; useful if text is missing
     text?: string
+    index?: number
 }
 
 export const srcMapEntrySize = 3

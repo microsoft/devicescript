@@ -21,7 +21,7 @@ import {
     DebugInfo,
     DebugVarType,
     Image,
-    TODO,
+    SrcFile,
 } from "@devicescript/compiler"
 import {
     DevsDbgFunIdx,
@@ -30,6 +30,9 @@ import {
     DevsDbgValueTag,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 import { fromUTF8, toHex, uint8ArrayToString } from "jacdac-ts"
+import {
+    SrcMapEntry,
+} from "@devicescript/compiler/built/types/compiler/src/debug"
 
 let trace = true
 function exnToString(err: unknown) {
@@ -61,6 +64,8 @@ for (const k0 of Object.keys(varTypeStrToNum)) {
 
 export class DsDapSession extends LoggingDebugSession {
     private clearSusp: () => void
+    private brkBySrc: number[][] = []
+
     img: Image
 
     constructor(
@@ -169,6 +174,7 @@ export class DsDapSession extends LoggingDebugSession {
         if (isLaunch) await this.client.restartAndHalt()
         else await this.client.halt()
         await this.client.waitSuspended()
+        await this.client.clearAllBreakpoints()
         this.sendEvent(new InitializedEvent())
     }
 
@@ -327,8 +333,73 @@ export class DsDapSession extends LoggingDebugSession {
         args: DebugProtocol.SetBreakpointsArguments
     ): void {
         this.asyncReq(response, async () => {
-            const srcIdx = this.img.dbg.sources.findIndex(
-                s => s.path == args.source.path
+            response.body.breakpoints = []
+            const srcIdx = this.findSource(args.source)
+            const srcmap = this.img.srcmap
+            const map = srcmap.srcMapForPos(srcmap.filePos(srcIdx))
+            if (map.length == 0) return
+
+            const brkPos = args.breakpoints.map(b =>
+                srcmap.locationToPos(srcIdx, b.line, b.column ?? 1)
+            )
+            const brkEntry: SrcMapEntry[] = []
+
+            // exact matching
+            for (const e of map) {
+                for (let i = 0; i < brkPos.length; ++i) {
+                    const pos = brkPos[i]
+                    if (e.pos <= pos && pos < e.end) {
+                        if (!brkEntry[i] || brkEntry[i].pos < e.pos)
+                            brkEntry[i] = e
+                    }
+                }
+            }
+
+            // whole-line matching as fallback
+            for (const e of map) {
+                const r = srcmap.resolvePos(e.pos)
+                const pos0 = r.fileOff + r.lineOff
+                for (let i = 0; i < brkPos.length; ++i) {
+                    if (brkEntry[i]) continue
+                    const pos = brkPos[i]
+                    if (pos0 <= pos && pos <= e.end) {
+                        brkEntry[i] = e
+                    }
+                }
+            }
+
+            const pcs = brkEntry.filter(e => !!e).map(e => e.pc)
+            if (!this.brkBySrc[srcIdx]) this.brkBySrc[srcIdx] = []
+            await this.client.clearBreakpoints(
+                this.brkBySrc[srcIdx].filter(e => pcs.indexOf(e) < 0)
+            )
+            await this.client.setBreakpoints(
+                pcs.filter(e => this.brkBySrc[srcIdx].indexOf(e) < 0)
+            )
+            this.brkBySrc[srcIdx] = pcs
+
+            response.body.breakpoints = args.breakpoints.map(
+                (b, idx): DebugProtocol.Breakpoint => {
+                    const e = brkEntry[idx]
+                    if (e) {
+                        const l = this.pcToLocation(e.pc)
+                        return {
+                            verified: true,
+                            line: l.line,
+                            column: l.column,
+                            endLine: l.endLine,
+                            endColumn: l.endColumn,
+                            instructionReference: "" + e.pc,
+                        }
+                    } else {
+                        return {
+                            verified: false,
+                            message: "could not find break",
+                            line: b.line,
+                            column: b.column,
+                        }
+                    }
+                }
             )
         })
     }
@@ -337,7 +408,11 @@ export class DsDapSession extends LoggingDebugSession {
         response: DebugProtocol.LoadedSourcesResponse,
         args: DebugProtocol.LoadedSourcesArguments
     ): void {
-        TODO()
+        this.asyncReq(response, async () => {
+            response.body.sources = this.img.dbg.sources.map(s =>
+                this.mapSrcFile(s)
+            )
+        })
     }
 
     private async asyncReq(
@@ -351,6 +426,14 @@ export class DsDapSession extends LoggingDebugSession {
             response.message = exnToString(err)
         }
         this.sendResponse(response)
+    }
+
+    private mapSrcFile(sf: SrcFile): DebugProtocol.Source {
+        return {
+            sourceReference: sf.index + 1,
+            path: sf.path,
+            name: sf.path,
+        }
     }
 
     private pcToLocation(pc: number): DebugProtocol.BreakpointLocation & {
@@ -368,10 +451,7 @@ export class DsDapSession extends LoggingDebugSession {
             column: start.col,
             endLine: end.line,
             endColumn: end.col,
-            source: {
-                name: sf.path,
-                path: sf.path,
-            },
+            source: this.mapSrcFile(sf),
         }
     }
 
@@ -508,5 +588,11 @@ export class DsDapSession extends LoggingDebugSession {
             default:
                 break
         }
+    }
+
+    private findSource(src: DebugProtocol.Source) {
+        if (src.sourceReference) return src.sourceReference - 1
+        const srcIdx = this.img.dbg.sources.findIndex(s => s.path == src.path)
+        return srcIdx
     }
 }

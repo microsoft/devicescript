@@ -163,16 +163,28 @@ export class DevsDbgClient extends JDServiceClient {
         assert(this.suspendedFiber)
         return this.lock.runExclusive(async () => {
             assert(this.suspendedFiber)
-            await this.service.sendCmdAsync(cmd, args)
+            await this.service.sendCmdAsync(cmd, args, true)
         })
     }
 
-    async clearBreakpoints() {
-        await this.runSuspCmd(DevsDbgCmd.ClearBreakpoints)
+    async clearAllBreakpoints() {
+        await this.runSuspCmd(DevsDbgCmd.ClearAllBreakpoints)
     }
 
-    async setBreakpoint(pc: number) {
-        await this.runSuspCmd(DevsDbgCmd.SetBreakpoint, jdpack("u32", [pc]))
+    async setBreakpoints(pc: number[]) {
+        if (pc.length)
+            await this.runSuspCmd(
+                DevsDbgCmd.SetBreakpoints,
+                jdpack("u32[]", pc)
+            )
+    }
+
+    async clearBreakpoints(pc: number[]) {
+        if (pc.length)
+            await this.runSuspCmd(
+                DevsDbgCmd.ClearBreakpoints,
+                jdpack("u32[]", pc)
+            )
     }
 
     private waitEvent(name: string) {
