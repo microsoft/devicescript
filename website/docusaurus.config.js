@@ -107,6 +107,43 @@ async function createConfig() {
                 }),
         },
         {
+            codeSandboxButton: {
+                languages: {
+                    ts: "devicescript",
+                },
+                codesandboxes: {
+                    devicescript: {
+                        files: {
+                            "package.json": {
+                                content: {
+                                    dependencies: {},
+                                    devDependencies: {
+                                        "@devicescript/cli": "*",
+                                    },
+                                    descriptscript: {},
+                                    scripts: {
+                                        setup: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs init",
+                                        build: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build",
+                                        watch: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build --watch",
+                                        start: "yarn setup && yarn watch",
+                                    },
+                                },
+                            },
+                            "sandbox.config.json": {
+                                content: {
+                                    template: "node",
+                                    view: "terminal",
+                                    container: {
+                                        node: "16",
+                                    },
+                                    startScript: "setup",
+                                },
+                            },
+                        },
+                        main: "main.ts",
+                    },
+                },
+            },
             sideEditor: {
                 languages: {
                     ts: "devicescript",
@@ -133,18 +170,6 @@ async function createConfig() {
                 ],
             },
         }
-    )
-
-    const renderCodeBlocks = (
-        await import("./src/remark/render-code-blocks.mjs")
-    ).default
-
-    // add custom codeblocks to the default docs
-    config.presets?.forEach(preset =>
-        preset[1].docs.remarkPlugins?.push(renderCodeBlocks)
-    )
-    config.plugins?.forEach(plugin =>
-        plugin[1]?.remarkPlugins?.push(renderCodeBlocks)
     )
 
     return config
