@@ -103,10 +103,6 @@ BUILTIN_OBJECT__VAL.forEach((n, i) => {
         builtInObjByName["#" + n.replace(/^Ds/, "ds.")] = i
 })
 
-function TODO(): never {
-    throwError(null, "TODO")
-}
-
 type TsFunctionDecl =
     | ts.FunctionDeclaration
     | ts.MethodDeclaration

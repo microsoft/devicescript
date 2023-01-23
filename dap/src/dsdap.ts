@@ -19,7 +19,9 @@ import {
     BUILTIN_OBJECT__VAL,
     BUILTIN_STRING__VAL,
     DebugInfo,
+    DebugInfoResolver,
     DebugVarType,
+    TODO
 } from "@devicescript/compiler"
 import {
     DevsDbgFunIdx,
@@ -59,9 +61,13 @@ for (const k0 of Object.keys(varTypeStrToNum)) {
 
 export class DsDapSession extends LoggingDebugSession {
     private clearSusp: () => void
+    dbgResolver: DebugInfoResolver
 
     constructor(public client: DevsDbgClient, public dbginfo: DebugInfo) {
         super()
+
+        this.dbgResolver = DebugInfoResolver.from(this.dbginfo)
+
         this.setDebuggerLinesStartAt1(true)
         this.setDebuggerColumnsStartAt1(true)
 
@@ -91,14 +97,12 @@ export class DsDapSession extends LoggingDebugSession {
     ): void {
         // these we might potentially support
         response.body.supportsStepInTargetsRequest = false
-        response.body.supportsGotoTargetsRequest = false
         response.body.supportsCompletionsRequest = false
         response.body.supportsRestartRequest = false
         response.body.supportsExceptionOptions = false
         response.body.supportsExceptionInfoRequest = false
         response.body.supportTerminateDebuggee = false
         response.body.supportsDelayedStackTraceLoading = false
-        response.body.supportsLoadedSourcesRequest = false
         response.body.supportsLogPoints = false
         response.body.supportsTerminateThreadsRequest = false
         response.body.supportsTerminateRequest = false
@@ -106,6 +110,8 @@ export class DsDapSession extends LoggingDebugSession {
         response.body.supportsBreakpointLocationsRequest = false
         response.body.supportsSteppingGranularity = false
         response.body.supportsInstructionBreakpoints = false
+
+        response.body.supportsLoadedSourcesRequest = true
         this.sendResponse(response)
     }
 
@@ -313,6 +319,25 @@ export class DsDapSession extends LoggingDebugSession {
         })
     }
 
+    protected override setBreakPointsRequest(
+        response: DebugProtocol.SetBreakpointsResponse,
+        args: DebugProtocol.SetBreakpointsArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            const srcIdx = this.dbginfo.sources.findIndex(
+                s => s.path == args.source.path
+            )
+            this.dbgResolver.resolvePc
+        })
+    }
+
+    protected override loadedSourcesRequest(
+        response: DebugProtocol.LoadedSourcesResponse,
+        args: DebugProtocol.LoadedSourcesArguments
+    ): void {
+        TODO()
+    }
+
     private async asyncReq(
         response: DebugProtocol.Response,
         fn: () => Promise<void>
@@ -331,11 +356,18 @@ export class DsDapSession extends LoggingDebugSession {
     } & {
         column: number
     } {
+        const [pos, len] = this.dbgResolver.resolvePc(pc)
+        const start = this.dbgResolver.resolvePos(pos)
+        const end = this.dbgResolver.resolvePos(pos + len)
+        const sf = start.src
         return {
-            line: 0,
-            column: 0,
+            line: start.line,
+            column: start.col,
+            endLine: end.line,
+            endColumn: end.col,
             source: {
-                sourceReference: 0,
+                name: sf.path,
+                path: sf.path,
             },
         }
     }

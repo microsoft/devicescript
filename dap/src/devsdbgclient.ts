@@ -87,10 +87,6 @@ export class DevsValue {
     }
 }
 
-function TODO(msg = ""): never {
-    throw new Error("TODO: " + msg)
-}
-
 export const EV_SUSPENDED = "dbgSuspended"
 
 function tagIsObj(tag: DevsDbgValueTag) {

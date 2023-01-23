@@ -104,3 +104,7 @@ export function numSetBits(n: number) {
     for (let i = 0; i < 32; ++i) if (n & (1 << i)) r++
     return r
 }
+
+export function TODO(msg = ""): never {
+    throw new Error("TODO: " + msg)
+}

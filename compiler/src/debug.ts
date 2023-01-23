@@ -5,6 +5,7 @@ import {
     srcMapEntrySize,
 } from "./info"
 import { assert, strcmp } from "./jdutil"
+import { TODO } from "./util"
 
 function warn(msg: string) {
     return `\u001b[36m${msg}\u001b[0m`
@@ -119,6 +120,19 @@ export class DebugInfoResolver {
                 }
         }
         return null
+    }
+
+    locationToPos(srcIdx: number, line: number, column: number) {
+        this.initPos()
+        const s = this.dbg.sources[srcIdx]
+        return (
+            this.fileOff[srcIdx] + this.fileCache[srcIdx][line - 1] + column - 1
+        )
+    }
+
+    posToPc(pos: number) {
+        this.initPc()
+        TODO()
     }
 
     posToString(pos: number) {
