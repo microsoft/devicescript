@@ -1,12 +1,13 @@
 "use strict"
 const { stdout, stderr } = require("node:process")
 const { readJsonSync } = require("fs-extra")
-require("../../../compiler")
+require("@devicescript/compiler")
 
 const { compile } = globalThis.deviceScript
 
 const PREFIX = `import * as ds from "@devicescript/core"`
-async function run(inputFile) {
+async function run() {
+    const inputFile = './input.ts'
     let input = readJsonSync(inputFile).input
     if (input.indexOf(PREFIX) < 0) input = PREFIX + "\n" + input
     const files = {}
@@ -21,8 +22,4 @@ async function run(inputFile) {
     errors.forEach(error => stderr.write(error.formatted + "\n"))
 }
 
-const inputFile = process.argv[2]
-if (!inputFile) {
-    throw new Error("Usage: node compile.js <input_file>")
-}
-;(async () => await run(inputFile))()
+;(async () => await run())()

@@ -20,7 +20,7 @@ async function createConfig() {
 
             // GitHub pages deployment config.
             // If you aren't using GitHub pages, you don't need these.
-            organizationName: "microsoft", // Usually your GitHub org/user name.
+            organizationName: "Microsoft", // Usually your GitHub org/user name.
             projectName: "devicescript", // Usually your repo name.
             deploymentBranch: "gh-pages",
             presets: [
@@ -47,15 +47,8 @@ async function createConfig() {
                     colorMode: {
                         disableSwitch: false,
                     },
-                    docs: {
-                        sidebar: {
-                            hideable: true,
-                            autoCollapseCategories: true,
-                        },
-                    },
                     navbar: {
                         title: "DeviceScript",
-                        hideOnScroll: true,
                         logo: {
                             alt: "DeviceScript language",
                             src: "img/logo.svg",
@@ -119,22 +112,42 @@ async function createConfig() {
                 }),
         },
         {
-            mermaid: true,
+            compileCode: {
+                langs: [
+                    {
+                        lang: "ts",
+                        langMeta: "build",
+                        extension: "ts",
+                        inputLang: "typescript",
+                        command: "./langs/ts.js",
+                    },
+                ],
+            },
+            sideEditor: {
+                editors: [
+                    {
+                        id: "devicescript",
+                        type: "iframe",
+                        language: "typescript",
+                        lightUrl:
+                            "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&light=1",
+                        darkUrl:
+                            "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&dark=1",
+                        message: {
+                            channel: "devicescript",
+                            type: "source",
+                            force: true,
+                            startMissingSimulators: true,
+                        },
+                        messageTextFieldName: "source",
+                        readyMessage: {
+                            channel: "jacdac",
+                        },
+                    },
+                ],
+            },
         }
     )
-
-    const renderCodeBlocks = (
-        await import("./src/remark/render-code-blocks.mjs")
-    ).default
-
-    // add custom codeblocks to the default docs
-    config.presets?.forEach(preset =>
-        preset[1].docs.remarkPlugins?.push(renderCodeBlocks)
-    )
-    config.plugins?.forEach(plugin =>
-        plugin[1]?.remarkPlugins?.push(renderCodeBlocks)
-    )
-
     return config
 }
 
