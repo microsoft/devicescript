@@ -1,3 +1,4 @@
+import { parseBytecode, stringifyInstr } from "./disassemble"
 import {
     BinFmt,
     bitSize,
@@ -6,7 +7,6 @@ import {
     NumFmt,
     Op,
     opTakesNumber,
-    stringifyInstr,
     opNumArgs,
     opIsStmt,
     StrIdx,
@@ -232,7 +232,6 @@ export class OpWriter {
     private binary: Uint8Array
     private binPtr: number = 0
     private labels: Label[] = []
-    private comments: Comment[] = []
     private bufferAllocated = false
     pendingStatefulValues: Value[] = []
     localOffsets: number[] = []
@@ -276,10 +275,6 @@ export class OpWriter {
             this.srcmap[i + 2] += off
         }
         write32(this.desc, 0, off)
-    }
-
-    emitDbg(msg: string) {
-        this.emitComment(msg)
     }
 
     _forceFinStmt() {}
@@ -393,31 +388,10 @@ export class OpWriter {
 
     getAssembly() {
         let res = `proc ${this.name}:\n`
-        let ptr = 0
-        let commentPtr = 0
-        const getbyte = () => {
-            if (ptr < this.binPtr) return this.binary[ptr++]
-            return 0
+        for (const stmt of parseBytecode(this.binary.slice(0, this.binPtr))) {
+            res += stringifyInstr(stmt, this.prog) + "\n"
         }
-
-        while (ptr < this.binPtr) {
-            while (commentPtr < this.comments.length) {
-                const c = this.comments[commentPtr]
-                if (c.offset > ptr) break
-                commentPtr++
-                res += "; " + c.comment.replace(/\n/g, "\n; ") + "\n"
-            }
-            this.prog.resolverPC = ptr
-            res += stringifyInstr(getbyte, this.prog) + "\n"
-        }
-
-        if (ptr > this.binPtr) res += "!!! binary mis-alignment\n"
-
         return res
-    }
-
-    emitComment(msg: string) {
-        this.comments.push(new Comment(this.location(), msg))
     }
 
     mkLabel(name: string) {

@@ -7,10 +7,14 @@ import {
     FunctionFlag,
     InstrArgResolver,
     numfmtToString,
+    Op,
+    OpCall,
+    opIsStmt,
+    opNumRealArgs,
+    OP_PRINT_FMTS,
     PacketSpecCode,
     PacketSpecFlag,
     StrIdx,
-    stringifyInstr,
 } from "./format"
 import { DebugInfo, FunctionDebugInfo, RoleDebugInfo } from "./info"
 import {
@@ -33,6 +37,21 @@ export class ImgRole {
         public name: string,
         public dbg: RoleDebugInfo
     ) {}
+}
+
+class OpTree {
+    args: OpTree[] = undefined
+    intArg: number = undefined
+    constructor(public opcode: number) {}
+}
+
+class OpStmt extends OpTree {
+    pc: number
+    pcEnd: number
+    srcPos: number
+    srcLen: number
+    jmpTrg: OpStmt
+    error: string
 }
 
 export class ImgFunction {
@@ -62,7 +81,6 @@ export class ImgFunction {
             I: StrIdx.BUILTIN,
         }
         const resolver: InstrArgResolver = {
-            resolverPC: 0,
             verboseDisasm: verbose,
             describeCell: (ff, idx) => {
                 switch (ff) {
@@ -112,17 +130,243 @@ export class ImgFunction {
         if (this.numLocals)
             r += `  locals: ${range(this.numLocals).map(i => "loc" + i)}\n`
 
-        const body = this.bytecode
-        let ptr = 0
-        const getbyte = () => body[ptr++]
-        while (ptr < body.length) {
-            resolver.resolverPC = ptr
-            r += stringifyInstr(getbyte, resolver) + `\n`
-            if (body[ptr] == 0 && body.length - ptr < 4) break // skip final padding
+        const stmts = this.parseBytecode()
+        for (const stmt of stmts) {
+            let res = stringifyInstr(stmt, resolver)
+            if (verbose) {
+                res += " // " + toHex(this.bytecode.slice(stmt.pc, stmt.pcEnd))
+            }
+            r += res + "\n"
         }
 
         return r
     }
+
+    private parseBytecode(throwOnError = false) {
+        const stmts = parseBytecode(this.bytecode)
+        for (const stmt of stmts) {
+            if (stmt.pc !== undefined && !stmt.error) {
+                const [pos, len] = this.parent.srcmap.resolvePc(stmt.pc)
+                stmt.srcPos = pos
+                stmt.srcLen = len
+            }
+        }
+        return stmts
+    }
+}
+
+export function parseBytecode(bytecode: Uint8Array, throwOnError = false) {
+    let pc = 0
+    let stmtStart = 0
+    let jmpoff = 0
+    const getbyte = () => {
+        return bytecode[pc++]
+    }
+    const stmts: OpStmt[] = []
+    const byPc: OpStmt[] = []
+
+    while (pc < bytecode.length) {
+        try {
+            stmtStart = pc
+            jmpoff = NaN
+            const op = decodeOp()
+            const stmt = new OpStmt(op.opcode)
+            stmt.pc = stmtStart
+            stmt.pcEnd = pc
+            stmt.intArg = op.intArg
+            stmt.args = op.args
+            if (opJumps(stmt.opcode)) {
+                const trg = jmpoff + stmt.intArg
+                if (!(0 <= trg && trg < bytecode.length)) {
+                    error(`invalid jmp target: ${jmpoff} + ${stmt.intArg}`)
+                }
+                stmt.intArg = trg
+            }
+
+            stmts.push(stmt)
+            byPc[stmt.pc] = stmt
+        } catch (e) {
+            if (throwOnError) {
+                throw e
+            } else {
+                const stmt = new OpStmt(0)
+                stmt.error = e.message
+                if (stmtStart == pc) pc++
+                stmt.pc = stmtStart
+                stmt.pcEnd = pc
+                stmts.push(stmt)
+            }
+        }
+    }
+
+    for (const stmt of stmts) {
+        if (opJumps(stmt.opcode)) {
+            const trg = byPc[stmt.intArg]
+            if (!trg) error(`can't find jump target ${stmt.intArg}`)
+            stmt.jmpTrg = trg
+        }
+    }
+
+    return stmts
+
+    function opJumps(op: Op) {
+        return OP_PRINT_FMTS[op].includes("%j")
+    }
+
+    function decodeOp() {
+        const stack: OpTree[] = []
+        for (;;) {
+            const op = getbyte()
+            if (op == 0 && pc - stmtStart == 1)
+                return new OpTree(Op.STMT0_DEBUGGER)
+            const e = new OpTree(op)
+            if (opJumps(op)) {
+                jmpoff = pc - 1
+                e.intArg = decodeInt()
+            }
+            let n = opNumRealArgs(op)
+            if (n) {
+                if (stack.length < n) error("stack underflow")
+                e.args = stack.slice(stack.length - n)
+                while (n--) stack.pop()
+            }
+            stack.push(e)
+            if (opIsStmt(op)) break
+        }
+        if (stack.length != 1) error(`bad stack ${stack.length}`)
+        return stack[0]
+    }
+
+    function currStmt() {
+        return toHex(bytecode.slice(stmtStart, pc))
+    }
+
+    function error(msg: string): never {
+        throw new Error("Op-decode: " + msg + "; " + currStmt())
+    }
+
+    function decodeInt() {
+        const v = getbyte()
+        if (v < BinFmt.FIRST_MULTIBYTE_INT) return v
+
+        let r = 0
+        const n = !!(v & 4)
+        const len = (v & 3) + 1
+
+        for (let i = 0; i < len; ++i) {
+            const v = getbyte()
+            r = r << 8
+            r |= v
+        }
+
+        return n ? -r : r
+    }
+}
+
+export function stringifyInstr(stmt: OpStmt, resolver?: InstrArgResolver) {
+    if (stmt.error) return `???oops: ${stmt.error}`
+
+    let res = "    " + stringifyExpr(resolver, stmt)
+
+    const pc = stmt.pc
+    if (pc !== undefined)
+        res = (pc > 9999 ? pc : ("    " + pc).slice(-4)) + ": " + res
+
+    return res
+}
+
+function stringifyExpr(resolver: InstrArgResolver, t: OpTree): string {
+    const op = t.opcode
+
+    if (op >= BinFmt.DIRECT_CONST_OP)
+        return "" + (op - BinFmt.DIRECT_CONST_OP - BinFmt.DIRECT_CONST_OFFSET)
+
+    let fmt = OP_PRINT_FMTS[op]
+    if (!fmt) return `???oops op${op}`
+
+    let ptr = 0
+    let beg = 0
+    let r = ""
+    const args = (t.args || []).map(e => stringifyExpr(resolver, e))
+    if (t.intArg != undefined) args.unshift(t.intArg + "")
+    t.intArg = undefined
+
+    if (fmt.startsWith("{swap}")) {
+        args.reverse()
+        fmt = fmt.slice(6)
+    }
+
+    while (ptr < fmt.length) {
+        if (fmt.charCodeAt(ptr) != 37) {
+            ptr++
+            continue
+        }
+
+        r += fmt.slice(beg, ptr)
+        ptr++
+        beg = ptr + 1
+
+        let e = args.shift() ?? "???oops"
+        const eNum = isNumber(e) ? +e : null
+
+        const ff = fmt[ptr]
+        switch (ff) {
+            case "e":
+                break
+
+            case "n":
+                e = numfmt(e)
+                break
+
+            case "o":
+                e = callop(e)
+                break
+
+            case "j":
+                e = eNum + ""
+                break
+
+            default:
+                e = "{" + ff + e + "}"
+                if (eNum != null && resolver) {
+                    const pref = resolver.describeCell(ff, eNum)
+                    if (pref) {
+                        if (resolver.verboseDisasm) e = pref + e
+                        else e = pref
+                    }
+                }
+                break
+        }
+
+        r += e
+        ptr++
+    }
+    r += fmt.slice(beg)
+    return r
+}
+
+function isNumber(s: string) {
+    return /^-?\d+$/.test(s)
+}
+
+function numfmt(vv: string) {
+    if (!isNumber(vv)) return vv
+    return numfmtToString(+vv)
+}
+
+function callop(op: string) {
+    if (isNumber(op))
+        switch (+op) {
+            case OpCall.SYNC:
+                return ""
+            case OpCall.BG:
+                return " bg"
+            case OpCall.BG_MAX1:
+                return " bg (max1)"
+            case OpCall.BG_MAX1_PEND1:
+                return " bg (max1 pend1)"
+        }
+    else return ` callop=${op}`
 }
 
 export class Image {

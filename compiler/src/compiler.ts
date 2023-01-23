@@ -565,7 +565,6 @@ class Program implements TopOpWriter {
     protoDefinitions: ProtoDefinition[] = []
     usedMethods: Record<string, boolean> = {}
     resolverParams: number[]
-    resolverPC: number
     prelude: Record<string, string>
     numErrors = 0
     mainProc: Procedure
@@ -3099,7 +3098,6 @@ class Program implements TopOpWriter {
     private emitStmt(stmt: ts.Statement) {
         const src = this.sourceFrag(stmt)
         const wr = this.writer
-        if (src) wr.emitComment(src)
 
         this.lastNode = stmt
 
