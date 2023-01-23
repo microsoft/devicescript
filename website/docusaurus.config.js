@@ -67,11 +67,6 @@ async function createConfig() {
                                 position: "left",
                                 label: "API",
                             },
-                            {
-                                href: "https://github.com/microsoft/devicescript/",
-                                label: "GitHub",
-                                position: "right",
-                            },
                         ],
                     },
                     footer: {
@@ -113,11 +108,13 @@ async function createConfig() {
         },
         {
             sideEditor: {
+                languages: {
+                    ts: "devicescript",
+                },
                 editors: [
                     {
                         id: "devicescript",
                         type: "iframe",
-                        language: "typescript",
                         lightUrl:
                             "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&light=1",
                         darkUrl:
