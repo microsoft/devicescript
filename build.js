@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 const esbuild = require("esbuild")
 const childProcess = require("child_process")
 const path = require("path")
@@ -17,14 +18,14 @@ function getMTime(path) {
 }
 
 function copyCompiler() {
-    const to = "../website/static/dist/devicescript-compiler.js"
-    const from = "built/devicescript-compiler.js"
+    const to = "website/static/dist/devicescript-compiler.js"
+    const from = "compiler/built/devicescript-compiler.js"
     distCopy(from, to)
 }
 
 function copyVM() {
-    const dist = "../website/static/dist/devicescript-vm.js"
-    const builtDir = "../runtime/devicescript-vm/built"
+    const dist = "website/static/dist/devicescript-vm.js"
+    const builtDir = "runtime/devicescript-vm/built"
     const built = builtDir + "/devicescript-vm.js"
     distCopy(dist, built)
 }
@@ -54,7 +55,7 @@ if (args[0] == "--fast" || args[0] == "-fast" || args[0] == "-f") {
 }
 
 if (args.length) {
-    console.log("Usage: ./build.js [--watch]")
+    console.log("Usage: ./build.js [--watch] [--fast]")
     process.exit(1)
 }
 
@@ -64,8 +65,6 @@ function runTSC(args) {
         if (watch) args.push("--watch", "--preserveWatchOutput")
         console.log("run tsc " + args.join(" "))
         let tscPath = "node_modules/typescript/lib/tsc.js"
-        if (!fs.existsSync(tscPath)) tscPath = "../" + tscPath
-        if (!fs.existsSync(tscPath)) tscPath = "../" + tscPath
         const process = childProcess.fork(tscPath, args)
         process.on("error", err => {
             if (invoked) return
@@ -91,13 +90,13 @@ function runTSC(args) {
 }
 
 const files = {
-    "built/devicescript-compiler.js": "src/devicescript.ts",
-    "built/devicescript-compiler.node.cjs": "src/devicescript.ts",
-    "../cli/built/devicescript-cli.cjs": "../cli/src/cli.ts",
-    "../dap/built/devicescript-dap.cjs": "../dap/src/dsdap.ts",
-    "../vscode/built/devicescript-vscode.js": "../vscode/src/extension.ts",
-    "../vscode/built/devicescript-vscode-web.js":
-        "../vscode/src/web-extension.ts",
+    "compiler/built/devicescript-compiler.js": "compiler/src/devicescript.ts",
+    "compiler/built/devicescript-compiler.node.cjs":
+        "compiler/src/devicescript.ts",
+    "cli/built/devicescript-cli.cjs": "cli/src/cli.ts",
+    "dap/built/devicescript-dap.cjs": "dap/src/dsdap.ts",
+    "vscode/built/devicescript-vscode.js": "vscode/src/extension.ts",
+    "vscode/built/devicescript-vscode-web.js": "vscode/src/web-extension.ts",
 }
 
 const specname = "devicescript-spec.d.ts"
@@ -133,9 +132,11 @@ function buildPrelude(folder, outp) {
 }
 
 async function main() {
+    const rootdir = __dirname
     try {
+        process.chdir(rootdir)
         copyVM()
-        buildPrelude("../devs/lib", "src/prelude.ts")
+        buildPrelude("devs/lib", "compiler/src/prelude.ts")
         for (const outfile of Object.keys(files)) {
             const src = files[outfile]
             const cjs = outfile.endsWith(".cjs") || outfile.includes("vscode")
@@ -143,11 +144,11 @@ async function main() {
             const t0 = Date.now()
             let platform = cjs ? "node" : "browser"
             if (outfile.endsWith("-web.js")) platform = "browser"
-            await esbuild.build({
-                entryPoints: [src],
+            const ctx = await esbuild.context({
+                entryPoints: [rootdir + "/" + src],
                 bundle: true,
                 sourcemap: true,
-                outfile,
+                outfile: rootdir + "/" + outfile,
                 logLevel: "warning",
                 external: [
                     "websocket-polyfill",
@@ -157,8 +158,12 @@ async function main() {
                 platform,
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",
-                watch,
             })
+            if (watch) await ctx.watch()
+            else {
+                await ctx.rebuild()
+                await ctx.dispose()
+            }
             let size = 0
             try {
                 const st = fs.statSync(outfile)
@@ -170,18 +175,21 @@ async function main() {
         console.log("bundle done")
         copyCompiler()
         if (!fast) {
+            const t0 = Date.now()
             await runTSC([
                 "-b",
-                "src",
-                "../dap/src",
-                "../cli/src",
-                "../vscode/src",
+                "compiler/src",
+                "dap/src",
+                "cli/src",
+                "vscode/src",
             ])
+            if (!watch) console.log(`   -> ${Date.now() - t0}ms`)
         }
-        const ds = require("./built/devicescript-compiler.node.cjs")
-        fs.writeFileSync("../devs/lib/" + specname, ds.preludeFiles()[specname])
+        const ds = require(rootdir +
+            "/compiler/built/devicescript-compiler.node.cjs")
+        fs.writeFileSync("devs/lib/" + specname, ds.preludeFiles()[specname])
         const mds = ds.markdownFiles()
-        const mdo = "../website/docs/api/clients"
+        const mdo = "website/docs/api/clients"
         fs.emptyDirSync(mdo)
         fs.writeJSONSync(path.join(mdo, "_category_.json"), {
             label: "Clients",
@@ -193,6 +201,7 @@ async function main() {
         )
     } catch (e) {
         console.error(e)
+        process.exit(1)
     }
 }
 

@@ -6,7 +6,7 @@ comp:
 	yarn build
 
 comp-fast:
-	cd compiler && node build.js --fast
+	yarn build-fast
 
 native native1 em update-dist:
 	$(MAKE) -C runtime $@
@@ -21,8 +21,11 @@ test-em: em comp-fast
 
 test: test-c test-em
 
+vscode-pkg:
+	cd vscode && yarn package
+
 clean:
-	rm -rf built compiler/built compiler/src/prelude.ts cli/built
+	rm -rf built compiler/built compiler/src/prelude.ts cli/built vscode/built
 	$(MAKE) -C runtime clean
 
 full-clean: clean
@@ -39,3 +42,6 @@ regen:
 		runtime/devicescript/devs_bytecode.h \
 		runtime/devicescript/impl_*.c
 	clang-format -i runtime/devicescript/protogen.c
+
+specs spec:
+	$(MAKE) -C runtime/jacdac-c/jacdac

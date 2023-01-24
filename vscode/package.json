@@ -31,7 +31,8 @@
     "package": "vsce package",
     "publish": "vsce publish",
     "publish-pre-release": "vsce publish --pre-release",
-    "vscode:prepublish": "cd ../compiler && node ./build.js"
+    "build": "node ../build.js --fast",
+    "vscode:prepublish": "yarn build"
   },
   "devDependencies": {
     "@types/vscode": "^1.66.0",
