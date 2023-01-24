@@ -140,6 +140,7 @@ static unsigned obj_get_props(devs_ctx_t *ctx, value_t v, jd_devs_dbg_key_value_
 static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
     value_t this_val;
     devs_activation_t *clo;
+    memset(trg, 0, sizeof(*trg));
     int fnidx = devs_get_fnidx(ctx, v, &this_val, &clo);
     if (fnidx >= 0) {
         if (clo && !devs_is_null(this_val)) {
@@ -218,9 +219,7 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
         trg->tag = JD_DEVS_DBG_VALUE_TAG_OBJ_ARRAY;
         devs_array_t *arr = devs_handle_ptr_value(ctx, v);
         trg->v0 = hv;
-        trg->v1 = arr->length;
-        if (arr->attached)
-            trg->v1 |= HAS_NAMED;
+        trg->v1 = arr->length | HAS_NAMED;
         break;
     }
 
@@ -247,9 +246,7 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
         JD_ASSERT(devs_gc_tag(b) == DEVS_GC_TAG_BUFFER);
         trg->tag = JD_DEVS_DBG_VALUE_TAG_OBJ_BUFFER;
         trg->v0 = hv;
-        trg->v1 = b->length;
-        if (b->attached)
-            trg->v1 |= HAS_NAMED;
+        trg->v1 = b->length | HAS_NAMED;
         break;
     }
 
@@ -320,13 +317,20 @@ static void kv_add(devs_ctx_t *ctx, void *userdata, value_t k, value_t v) {
 }
 
 static unsigned obj_get_props(devs_ctx_t *ctx, value_t v, jd_devs_dbg_key_value_t *trg) {
-    devs_maplike_t *obj = devs_object_get_attached_enum(ctx, v);
-    if (obj == NULL)
+    if (devs_is_null(v))
         return 0;
 
-    devs_maplike_t *proto = devs_maplike_get_proto(ctx, obj);
-    if (proto && devs_maplike_is_map(ctx, obj) && devs_gc_tag(obj) == DEVS_GC_TAG_HALF_STATIC_MAP)
-        proto = NULL; // proto invisible
+    devs_maplike_t *proto;
+    devs_maplike_t *obj = devs_object_get_attached_enum(ctx, v);
+    if (obj == NULL) {
+        proto = devs_object_get_attached_ro(ctx, v);
+    } else {
+        proto = devs_maplike_get_proto(ctx, obj);
+        if (proto && devs_maplike_is_map(ctx, obj) &&
+            devs_gc_tag(obj) == DEVS_GC_TAG_HALF_STATIC_MAP)
+            proto = NULL; // proto invisible
+    }
+
     unsigned idx = 0;
     if (proto) {
         if (trg)
@@ -335,10 +339,12 @@ static unsigned obj_get_props(devs_ctx_t *ctx, value_t v, jd_devs_dbg_key_value_
         idx++;
     }
 
-    if (trg)
-        idx += devs_maplike_iter(ctx, obj, &trg, kv_add);
-    else
-        idx += devs_maplike_iter(ctx, obj, NULL, NULL);
+    if (obj) {
+        if (trg)
+            idx += devs_maplike_iter(ctx, obj, &trg, kv_add);
+        else
+            idx += devs_maplike_iter(ctx, obj, NULL, NULL);
+    }
 
     return idx;
 }
@@ -437,6 +443,8 @@ static value_t value_from_tag_v0(devs_ctx_t *ctx, uint8_t tag, uint32_t v0) {
         tag = JD_DEVS_DBG_VALUE_TAG_OBJ_ANY;
 
     switch (tag) {
+    case JD_DEVS_DBG_VALUE_TAG_NUMBER:
+        return devs_value_from_int(v0);
     case JD_DEVS_DBG_VALUE_TAG_SPECIAL:
         switch (v0) {
         case JD_DEVS_DBG_VALUE_SPECIAL_NULL:

@@ -297,8 +297,10 @@ export class DevsDbgClient extends JDServiceClient {
             v.numIndexed = v1 & 0x7fff_ffff
         }
 
-        if (fnIdx) return this.getValue(DevsDbgValueTag.ImgFunction, fnIdx, v)
-        else return v
+        if (fnIdx) {
+            if (v == this.nullValue) v = undefined
+            return this.getValue(DevsDbgValueTag.ImgFunction, fnIdx, v)
+        } else return v
     }
 
     private indexedArg(v: DevsValue, start?: number, length?: number) {
@@ -328,7 +330,7 @@ export class DevsDbgClient extends JDServiceClient {
     private decodeString(stridx: number) {
         if (
             (stridx & DevsDbgString.StaticIndicatorMask) ==
-            DevsDbgString.StaticIndicatorMask
+            (DevsDbgString.StaticIndicatorMask | 0)
         ) {
             assert(DevsDbgString.StaticTagMask >> 23 == 0x7f << 1)
             assert(0 != (DevsDbgString.StaticIndexMask & 2))
