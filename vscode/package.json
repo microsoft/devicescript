@@ -1,30 +1,31 @@
 {
-  "name": "mock-debug",
-  "displayName": "Mock Debug",
-  "version": "0.52.0",
-  "publisher": "ms-vscode",
-  "description": "Starter extension for developing debug adapters for VS Code.",
+  "name": "@devicescript/vscode",
+  "displayName": "DeviceScript",
+  "version": "0.0.0",
+  "publisher": "Microsoft Research",
+  "description": "Language support for DeviceScript.",
   "author": {
     "name": "Microsoft Corporation"
   },
   "license": "MIT",
   "keywords": [
-    "multi-root ready"
+    "DeviceScript",
+    "IoT"
   ],
   "engines": {
     "vscode": "^1.66.0"
   },
-  "icon": "images/mock-debug-icon.png",
+  "icon": "images/ds-logo-color.png",
   "categories": [
     "Debuggers"
   ],
   "private": true,
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/vscode-mock-debug.git"
+    "url": "https://github.com/microsoft/devicescript.git"
   },
   "bugs": {
-    "url": "https://github.com/Microsoft/vscode-mock-debug/issues"
+    "url": "https://github.com/microsoft/devicescript/issues"
   },
   "scripts": {
     "compile": "tsc -p ./",
@@ -66,11 +67,11 @@
   "main": "./dist/extension.js",
   "browser": "./dist/web-extension.js",
   "activationEvents": [
-    "onDebugResolve:mock",
-    "onDebugDynamicConfigurations:mock",
-    "onCommand:extension.mock-debug.getProgramName",
-    "onCommand:extension.mock-debug.runEditorContents",
-    "onCommand:extension.mock-debug.debugEditorContents"
+    "onDebugResolve:devicescript",
+    "onDebugDynamicConfigurations:devicescript",
+    "onCommand:extension.devicescript.getProgramName",
+    "onCommand:extension.devicescript.runEditorContents",
+    "onCommand:extension.devicescript.debugEditorContents"
   ],
   "workspaceTrust": {
     "request": "never"
@@ -79,65 +80,65 @@
     "menus": {
       "editor/title/run": [
         {
-          "command": "extension.mock-debug.runEditorContents",
-          "when": "resourceLangId == markdown",
+          "command": "extension.devicescript.runEditorContents",
+          "when": "resourceLangId == typescript",
           "group": "navigation@1"
         },
         {
-          "command": "extension.mock-debug.debugEditorContents",
-          "when": "resourceLangId == markdown",
+          "command": "extension.devicescript.debugEditorContents",
+          "when": "resourceLangId == typescript",
           "group": "navigation@2"
         }
       ],
       "commandPalette": [
         {
-          "command": "extension.mock-debug.debugEditorContents",
-          "when": "resourceLangId == markdown"
+          "command": "extension.devicescript.debugEditorContents",
+          "when": "resourceLangId == typescript"
         },
         {
-          "command": "extension.mock-debug.runEditorContents",
-          "when": "resourceLangId == markdown"
+          "command": "extension.devicescript.runEditorContents",
+          "when": "resourceLangId == typescript"
         }
       ],
       "debug/variables/context": [
         {
-          "command": "extension.mock-debug.toggleFormatting",
-          "when": "debugType == 'mock' && debugProtocolVariableMenuContext == 'simple'"
+          "command": "extension.devicescript.toggleFormatting",
+          "when": "debugType == 'devicescript' && debugProtocolVariableMenuContext == 'simple'"
         }
       ]
     },
     "commands": [
       {
-        "command": "extension.mock-debug.debugEditorContents",
+        "command": "extension.devicescript.debugEditorContents",
         "title": "Debug File",
-        "category": "Mock Debug",
+        "category": "DeviceScript",
         "enablement": "!inDebugMode",
         "icon": "$(debug-alt)"
       },
       {
-        "command": "extension.mock-debug.runEditorContents",
+        "command": "extension.devicescript.runEditorContents",
         "title": "Run File",
-        "category": "Mock Debug",
+        "category": "DeviceScript",
         "enablement": "!inDebugMode",
         "icon": "$(play)"
       },
       {
-        "command": "extension.mock-debug.toggleFormatting",
+        "command": "extension.devicescript.toggleFormatting",
         "title": "Toggle between decimal and hex formatting"
       }
     ],
     "breakpoints": [
       {
-        "language": "markdown"
+        "language": "typescript"
       }
     ],
     "debuggers": [
       {
-        "type": "mock",
+        "type": "devicescript",
         "languages": [
-          "markdown"
+          "typescript"
         ],
-        "label": "Mock Debug",
+        "label": "DeviceScript",
         "program": "./out/debugAdapter.js",
         "runtime": "node",
         "configurationAttributes": {
@@ -216,7 +217,7 @@
         },
         "initialConfigurations": [
           {
-            "type": "mock",
+            "type": "devicescript",
             "request": "launch",
             "name": "Ask for file name",
             "program": "${workspaceFolder}/${command:AskForProgramName}",
@@ -225,10 +226,10 @@
         ],
         "configurationSnippets": [
           {
-            "label": "Mock Debug: Launch",
-            "description": "A new configuration for 'debugging' a user selected markdown file.",
+            "label": "DeviceScript: Launch",
+            "description": "A new configuration for 'debugging' a user selected typescript file.",
             "body": {
-              "type": "mock",
+              "type": "devicescript",
               "request": "launch",
               "name": "Ask for file name",
               "program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
@@ -237,7 +238,7 @@
           }
         ],
         "variables": {
-          "AskForProgramName": "extension.mock-debug.getProgramName"
+          "AskForProgramName": "extension.devicescript.getProgramName"
         }
       }
     ]
