@@ -241,8 +241,15 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op) {
     log_fiber_op(fiber, "start");
 
     // link fiber first, so activation linked to it are marked in GC
-    fiber->next = ctx->fibers;
-    ctx->fibers = fiber;
+    // also link it last
+    devs_fiber_t *last = ctx->fibers;
+    if (last) {
+        while (last->next)
+            last = last->next;
+        last->next = fiber;
+    } else {
+        ctx->fibers = fiber;
+    }
 
     devs_fiber_call_function(fiber, numargs);
 
