@@ -17,8 +17,7 @@ ds.every(1, () => {
 })
 ```
 
-You can edit it directly and press `Run` to load it in the DeviceScript simulator in the documentation.
-You can also click on `Fork` and open the sample in CodeSandbox.
+You can edit it directly and press `Edit` to load it in the DeviceScript simulator in the documentation.
 
 ## Try DeviceScript locally (or remotely)
 
