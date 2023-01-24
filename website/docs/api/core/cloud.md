@@ -26,7 +26,7 @@ Normally, status code 200 is returned to the cloud once the handler finishes.
 If the method is not found, 404 is returned.
 If the method is already running 429 is returned.
 
-```ts
+```ts edit
 const lightA = new ds.Led()
 const lightB = new ds.Led()
 const temp = new ds.Temperature()

@@ -12,7 +12,7 @@ the reading is in `hPa` and should be around 1000.
 
 To track pressure changes, we register a callback that triggers when the pressure reading changes by `10` hPa.
 
-```ts
+```ts edit
 console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()

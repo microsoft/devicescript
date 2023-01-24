@@ -7,7 +7,7 @@ hide_table_of_contents: true
 
 Commands are implemented directly on the role instance and are service specific.
 
-```ts
+```ts edit
 const buzzer = new ds.Buzzer()
 
 ds.every(1, () => {

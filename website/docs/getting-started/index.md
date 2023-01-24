@@ -13,7 +13,7 @@ Tag along this part of the guide even if you do not have hardware available, Dev
 
 You do not need hardware or install any tools to try out DeviceScript. Try running this snippet!
 
-```ts
+```ts edit codesandbox
 ds.every(1, () => {
     console.log(`hello`)
 })
