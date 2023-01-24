@@ -126,11 +126,9 @@ async function createConfig() {
                 }),
         },
         {
-            codeSandboxButton: {
-                languages: {
-                    ts: "devicescript",
-                },
-                codesandboxes: {
+            codeSandbox: {
+                templates: {
+                    defaultTemplate: "devicescript",
                     devicescript: {
                         files: {
                             "package.json": {
@@ -159,7 +157,6 @@ async function createConfig() {
                                 },
                             },
                         },
-                        main: "main.ts",
                     },
                 },
             },

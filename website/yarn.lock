@@ -1872,10 +1872,10 @@
     "@microsoft/applicationinsights-web" "^2.8.9"
     tslib "^2.4.0"
 
-"@rise4fun/docusaurus-plugin-rise4fun@^1.4.5":
-  version "1.4.5"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.4.5.tgz#d7ade595fef499f2cb7d0c8d0811b438e4b03ce3"
-  integrity sha512-fxTypH/fNNSQQ+8gp5k+uxr4l1oBlKcZ/LfMcqxW6WGPw6SMsFYMl4Ww3Dz2VgpmwTmBuGuOEEs6GJwbqpAC+w==
+"@rise4fun/docusaurus-plugin-rise4fun@^1.4.7":
+  version "1.4.7"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.4.7.tgz#0f4582a342a3bef504bd57a0a7a2a10424657f5c"
+  integrity sha512-C5oSpQ3IheTXLTEx+mb6nXWqJhW9igifuwiz21OLdN1TM8gPWJ11EbpjCHba4swSyuKiXB/E4AnJzLtnXNPJKQ==
   dependencies:
     "@docusaurus/core" "^2.2.0"
     "@docusaurus/remark-plugin-npm2yarn" "^2.2.0"
@@ -1956,10 +1956,10 @@
     react-resizable-panels "^0.0.35"
     tslib "^2.4.1"
 
-"@rise4fun/docusaurus-theme-side-editor@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.4.tgz#5278c7e31e66d8042d38b157beae285e7e824041"
-  integrity sha512-G76vTJ72E66n+pP+kh+mvEY9TQyJ0iPKao85zz2yOtpHD3I3tTNZurA17RdFBCvmnSas0R7oHqKNUrir+t6cFw==
+"@rise4fun/docusaurus-theme-side-editor@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.5.tgz#535d91ea45384292cc3e0fc31f0867fac794de0d"
+  integrity sha512-58dLtvOVgmT+72GsxJMNJEXzClLPYN7w0Uc5T7dtLElVOJ+41wIegkKRnx9vdgk0O3JVuQ68gp2TSLMnhUCZuQ==
   dependencies:
     "@docusaurus/core" "^2.2.0"
     "@docusaurus/types" "^2.2.0"
@@ -6188,13 +6188,6 @@ p-limit@^3.0.2:
   dependencies:
     yocto-queue "^0.1.0"
 
-p-limit@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/p-limit/-/p-limit-4.0.0.tgz#914af6544ed32bfa54670b061cafcbd04984b644"
-  integrity sha512-5b0R4txpzjPWVw/cXXUResoD4hb6U/x9BH08L7nw+GN1sezDzPdxeRvpc9c433fZhBan/wusjbCsqwqm4EIBIQ==
-  dependencies:
-    yocto-queue "^1.0.0"
-
 p-locate@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/p-locate/-/p-locate-3.0.0.tgz#322d69a05c0264b25997d9f40cd8a891ab0064a4"
@@ -6742,7 +6735,7 @@ prompts@^2.4.2:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-prop-types@^15.5.4, prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.8.1"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
@@ -6987,22 +6980,6 @@ react-router@5.3.4, react-router@^5.3.3:
     react-is "^16.6.0"
     tiny-invariant "^1.0.2"
     tiny-warning "^1.0.0"
-
-react-split-pane@^0.1.92:
-  version "0.1.92"
-  resolved "https://registry.yarnpkg.com/react-split-pane/-/react-split-pane-0.1.92.tgz#68242f72138aed95dd5910eeb9d99822c4fc3a41"
-  integrity sha512-GfXP1xSzLMcLJI5BM36Vh7GgZBpy+U/X0no+VM3fxayv+p1Jly5HpMofZJraeaMl73b3hvlr+N9zJKvLB/uz9w==
-  dependencies:
-    prop-types "^15.7.2"
-    react-lifecycles-compat "^3.0.4"
-    react-style-proptype "^3.2.2"
-
-react-style-proptype@^3.2.2:
-  version "3.2.2"
-  resolved "https://registry.yarnpkg.com/react-style-proptype/-/react-style-proptype-3.2.2.tgz#d8e998e62ce79ec35b087252b90f19f1c33968a0"
-  integrity sha512-ywYLSjNkxKHiZOqNlso9PZByNEY+FTyh3C+7uuziK0xFXu9xzdyfHwg4S9iyiRRoPCR4k2LqaBBsWVmSBwCWYQ==
-  dependencies:
-    prop-types "^15.5.4"
 
 react-textarea-autosize@^8.3.2:
   version "8.4.0"
@@ -8526,11 +8503,6 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
-
-yocto-queue@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-1.0.0.tgz#7f816433fb2cbc511ec8bf7d263c3b58a1a3c251"
-  integrity sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==
 
 zwitch@^1.0.0:
   version "1.0.5"
