@@ -16,6 +16,7 @@
         "runtime/devicescript-vm",
         "runtime/jacdac-c/jacdac",
         "jacdac-ts",
-        "dap"
+        "dap",
+        "vscode"
     ]
 }
