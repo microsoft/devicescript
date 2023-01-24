@@ -3,9 +3,7 @@
   "compilerOptions": {
     "declarationDir": "../built/types",
     "outDir": "../built",
-    "types": [
-      "node"
-    ]
+    "types": []
   },
   "include": [
     "."

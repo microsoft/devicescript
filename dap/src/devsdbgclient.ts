@@ -1,4 +1,4 @@
-import { assert } from "console"
+import { assert } from "@devicescript/compiler"
 import { Mutex } from "async-mutex"
 import {
     bufferConcat,
@@ -160,9 +160,9 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     private runSuspCmd(cmd: DevsDbgCmd, args?: Uint8Array) {
-        assert(this.suspendedFiber)
+        assert(!!this.suspendedFiber)
         return this.lock.runExclusive(async () => {
-            assert(this.suspendedFiber)
+            assert(!!this.suspendedFiber)
             await this.service.sendCmdAsync(cmd, args, true)
         })
     }
@@ -323,7 +323,7 @@ export class DevsDbgClient extends JDServiceClient {
             DevsDbgString.StaticIndicatorMask
         ) {
             assert(DevsDbgString.StaticTagMask >> 23 == 0x7f << 1)
-            assert(DevsDbgString.StaticIndexMask & 2)
+            assert(0 != (DevsDbgString.StaticIndexMask & 2))
             assert(!(DevsDbgString.StaticIndexMask & 1))
             const tag = (stridx & DevsDbgString.StaticTagMask) >> 24
             const idx = (stridx & DevsDbgString.StaticIndexMask) >> 1

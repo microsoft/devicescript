@@ -22,6 +22,7 @@ import {
     DebugVarType,
     Image,
     SrcFile,
+    SrcMapEntry,
 } from "@devicescript/compiler"
 import {
     DevsDbgFunIdx,
@@ -30,9 +31,8 @@ import {
     DevsDbgValueTag,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 import { fromUTF8, toHex, uint8ArrayToString } from "jacdac-ts"
-import {
-    SrcMapEntry,
-} from "@devicescript/compiler/built/types/compiler/src/debug"
+
+export { DevsDbgClient } from "./devsdbgclient"
 
 let trace = true
 function exnToString(err: unknown) {
