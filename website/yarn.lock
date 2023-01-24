@@ -1872,10 +1872,10 @@
     "@microsoft/applicationinsights-web" "^2.8.9"
     tslib "^2.4.0"
 
-"@rise4fun/docusaurus-plugin-rise4fun@^1.4.7":
-  version "1.4.7"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.4.7.tgz#0f4582a342a3bef504bd57a0a7a2a10424657f5c"
-  integrity sha512-C5oSpQ3IheTXLTEx+mb6nXWqJhW9igifuwiz21OLdN1TM8gPWJ11EbpjCHba4swSyuKiXB/E4AnJzLtnXNPJKQ==
+"@rise4fun/docusaurus-plugin-rise4fun@^1.5.1":
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.5.1.tgz#0b3b1b7c280f1aa2fae2748defb20b99da20e17e"
+  integrity sha512-7IKg82SRRkSBAt72jb0PE8w9tTmTppRmaeaAcfFwOoWFc7SAXmYaj7SZ0RbEh1NeWig3s+OX0vWewEdo/9Iyvw==
   dependencies:
     "@docusaurus/core" "^2.2.0"
     "@docusaurus/remark-plugin-npm2yarn" "^2.2.0"
@@ -1941,6 +1941,18 @@
     clsx "^1.2.1"
     tslib "^2.4.1"
 
+"@rise4fun/docusaurus-theme-codesandbox-button@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-codesandbox-button/-/docusaurus-theme-codesandbox-button-1.0.7.tgz#1545bfbc4aa19d4dec18325d443a9b07f8b7e5f1"
+  integrity sha512-7+cujY+6pkJObakBIpw+FNXkdc898TLnDbfb6PJZp+5k8GG/H9nFgi6WPAg0M4H0ZcG0wSR0rUJDZ4wYO2oEJw==
+  dependencies:
+    "@docusaurus/core" "^2.2.0"
+    "@docusaurus/types" "^2.2.0"
+    "@docusaurus/utils-validation" "^2.2.0"
+    "@mdx-js/react" "^1.6.22"
+    clsx "^1.2.1"
+    tslib "^2.4.1"
+
 "@rise4fun/docusaurus-theme-side-editor@*":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.2.tgz#0b64fc93a415685315e54aac2efa7c924269f144"
@@ -1956,10 +1968,10 @@
     react-resizable-panels "^0.0.35"
     tslib "^2.4.1"
 
-"@rise4fun/docusaurus-theme-side-editor@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.5.tgz#535d91ea45384292cc3e0fc31f0867fac794de0d"
-  integrity sha512-58dLtvOVgmT+72GsxJMNJEXzClLPYN7w0Uc5T7dtLElVOJ+41wIegkKRnx9vdgk0O3JVuQ68gp2TSLMnhUCZuQ==
+"@rise4fun/docusaurus-theme-side-editor@^1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.6.tgz#ee0a85182b726b788fba172b363b1cbf6f24d745"
+  integrity sha512-Ji9tJUyFutIQwkZV7CHCKljDY0U0PIii0LhvX46sLgHqD+L3WZeEg7n2xFx3grxk5buub+N+zHluhyfPwP6aXw==
   dependencies:
     "@docusaurus/core" "^2.2.0"
     "@docusaurus/types" "^2.2.0"

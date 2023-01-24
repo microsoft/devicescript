@@ -127,8 +127,8 @@ async function createConfig() {
         },
         {
             codeSandbox: {
+                defaultTemplate: "devicescript",
                 templates: {
-                    defaultTemplate: "devicescript",
                     devicescript: {
                         files: {
                             "package.json": {
