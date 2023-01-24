@@ -470,7 +470,7 @@ static value_t value_from_tag_v0(devs_ctx_t *ctx, uint8_t tag, uint32_t v0) {
             v0 = 0;
         if (v0 < devs_img_num_functions(ctx->img) ||
             (DEVS_FIRST_BUILTIN_FUNCTION <= v0 &&
-             v0 < DEVS_FIRST_BUILTIN_FUNCTION + devs_num_builtin_functions))
+             v0 < (unsigned)(DEVS_FIRST_BUILTIN_FUNCTION + devs_num_builtin_functions)))
             return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, v0);
         break;
 
