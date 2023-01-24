@@ -15,7 +15,7 @@ const pressure = sensor.pressure.read()
 Let's modify the snippet by `read()ing` the `pressure` reading
 and logging it to the console.
 
-```ts
+```ts edit
 console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()

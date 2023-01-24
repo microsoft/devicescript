@@ -1820,6 +1820,21 @@
   resolved "https://registry.yarnpkg.com/@microsoft/dynamicproto-js/-/dynamicproto-js-1.1.7.tgz#ede48dd3f85af14ee369c805e5ed5b84222b9fe2"
   integrity sha512-SK3D3aVt+5vOOccKPnGaJWB5gQ8FuKfjboUJHedMP7gu54HqSCXX5iFXhktGD8nfJb0Go30eDvs/UDoTnR2kOA==
 
+"@monaco-editor/loader@^1.3.2":
+  version "1.3.2"
+  resolved "https://registry.yarnpkg.com/@monaco-editor/loader/-/loader-1.3.2.tgz#04effbb87052d19cd7d3c9d81c0635490f9bb6d8"
+  integrity sha512-BTDbpHl3e47r3AAtpfVFTlAi7WXv4UQ/xZmz8atKl4q7epQV5e7+JbigFDViWF71VBi4IIBdcWP57Hj+OWuc9g==
+  dependencies:
+    state-local "^1.0.6"
+
+"@monaco-editor/react@^4.4.6":
+  version "4.4.6"
+  resolved "https://registry.yarnpkg.com/@monaco-editor/react/-/react-4.4.6.tgz#8ae500b0edf85276d860ed702e7056c316548218"
+  integrity sha512-Gr3uz3LYf33wlFE3eRnta4RxP5FSNxiIV9ENn2D2/rN8KgGAD8ecvcITRtsbbyuOuNkwbuHYxfeaz2Vr+CtyFA==
+  dependencies:
+    "@monaco-editor/loader" "^1.3.2"
+    prop-types "^15.7.2"
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -1857,10 +1872,10 @@
     "@microsoft/applicationinsights-web" "^2.8.9"
     tslib "^2.4.0"
 
-"@rise4fun/docusaurus-plugin-rise4fun@^1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.1.0.tgz#f1946ac97c3385e50694a78ea024284351f0a2e6"
-  integrity sha512-9PL4oZNhjXrNWg9sKqowLry0oLebIop/I4xjtCuF8iuv5l0Xn0YkA02RhLeHtlQoILXrcnYKUgAap1mHrjjVQg==
+"@rise4fun/docusaurus-plugin-rise4fun@^1.4.7":
+  version "1.4.7"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.4.7.tgz#0f4582a342a3bef504bd57a0a7a2a10424657f5c"
+  integrity sha512-C5oSpQ3IheTXLTEx+mb6nXWqJhW9igifuwiz21OLdN1TM8gPWJ11EbpjCHba4swSyuKiXB/E4AnJzLtnXNPJKQ==
   dependencies:
     "@docusaurus/core" "^2.2.0"
     "@docusaurus/remark-plugin-npm2yarn" "^2.2.0"
@@ -1868,11 +1883,27 @@
     "@docusaurus/types" "^2.2.0"
     "@docusaurus/utils-validation" "^2.2.0"
     "@rise4fun/docusaurus-plugin-application-insights" "*"
+    "@rise4fun/docusaurus-remark-plugin-code-tabs" "*"
     "@rise4fun/docusaurus-remark-plugin-compile-code" "*"
+    "@rise4fun/docusaurus-remark-plugin-side-editor" "*"
+    "@rise4fun/docusaurus-theme-codesandbox-button" "*"
+    "@rise4fun/docusaurus-theme-side-editor" "*"
     hast-util-is-element "1.1.0"
     rehype-katex "5"
     remark-math "3"
     tslib "^2.4.0"
+
+"@rise4fun/docusaurus-remark-plugin-code-tabs@*":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-code-tabs/-/docusaurus-remark-plugin-code-tabs-1.1.1.tgz#300112db114df318a499d7d92a08437fab8c6a27"
+  integrity sha512-BvSBL0WVEAy+kcyTbTUMdjIfcKZ9wpwCa1Bq7bjGix57weYF8PP2pl6rAxef7K8dAgyNqnXvd9sp7z+Vmi3LIw==
+  dependencies:
+    fs-extra "^11.1.0"
+    npm-to-yarn "^1.0.1"
+    p-all "^4.0.0"
+    tslib "^2.4.0"
+    typescript "^4.9.4"
+    unist-util-visit "^2.0.3"
 
 "@rise4fun/docusaurus-remark-plugin-compile-code@*":
   version "1.2.1"
@@ -1885,6 +1916,60 @@
     tslib "^2.4.0"
     typescript "^4.9.4"
     unist-util-visit "^2.0.3"
+
+"@rise4fun/docusaurus-remark-plugin-side-editor@*", "@rise4fun/docusaurus-remark-plugin-side-editor@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-side-editor/-/docusaurus-remark-plugin-side-editor-1.0.1.tgz#44e3c39db3e2fe28356ad5a76dc2909f9499beb8"
+  integrity sha512-zBSloOjkHOsC9T9k/6EIByyBxc0ZhLB2MQUJMb83g4MLYig7U396WLELs7uV7K4J4ZyAYlKNConEYip2Q0QOGQ==
+  dependencies:
+    fs-extra "^11.1.0"
+    npm-to-yarn "^1.0.1"
+    p-all "^4.0.0"
+    tslib "^2.4.0"
+    typescript "^4.9.4"
+    unist-util-visit "^2.0.3"
+
+"@rise4fun/docusaurus-theme-codesandbox-button@*":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-codesandbox-button/-/docusaurus-theme-codesandbox-button-1.0.2.tgz#18345a28c9f98c7578145a1ebd8d2a6647533fb9"
+  integrity sha512-QL9Hp+6rlLyKob7NAl+v4Hv3rocBt5aQYo1VKjdHrRZNtD4GNaUTs1+VU+jLrKorygbSh9KBtAA/rssLK1KcPQ==
+  dependencies:
+    "@docusaurus/core" "^2.2.0"
+    "@docusaurus/types" "^2.2.0"
+    "@docusaurus/utils-validation" "^2.2.0"
+    "@mdx-js/react" "^1.6.22"
+    clsx "^1.2.1"
+    tslib "^2.4.1"
+
+"@rise4fun/docusaurus-theme-side-editor@*":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.2.tgz#0b64fc93a415685315e54aac2efa7c924269f144"
+  integrity sha512-bcx/jvhx9lQhi4j5vnvkAyJjCAb91+nh7pHlLXWqUhB9S1GKd3ZXjBTZg+nWDnmfkiDhnSIHf1AlXHgo1Ryn3g==
+  dependencies:
+    "@docusaurus/core" "^2.2.0"
+    "@docusaurus/types" "^2.2.0"
+    "@docusaurus/utils-validation" "^2.2.0"
+    "@mdx-js/react" "^1.6.22"
+    "@monaco-editor/react" "^4.4.6"
+    clsx "^1.2.1"
+    monaco-editor "^0.34.1"
+    react-resizable-panels "^0.0.35"
+    tslib "^2.4.1"
+
+"@rise4fun/docusaurus-theme-side-editor@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.5.tgz#535d91ea45384292cc3e0fc31f0867fac794de0d"
+  integrity sha512-58dLtvOVgmT+72GsxJMNJEXzClLPYN7w0Uc5T7dtLElVOJ+41wIegkKRnx9vdgk0O3JVuQ68gp2TSLMnhUCZuQ==
+  dependencies:
+    "@docusaurus/core" "^2.2.0"
+    "@docusaurus/types" "^2.2.0"
+    "@docusaurus/utils-validation" "^2.2.0"
+    "@mdx-js/react" "^1.6.22"
+    "@monaco-editor/react" "^4.4.6"
+    clsx "^1.2.1"
+    monaco-editor "^0.34.1"
+    react-resizable-panels "^0.0.35"
+    tslib "^2.4.1"
 
 "@sideway/address@^4.1.3":
   version "4.1.4"
@@ -2040,7 +2125,7 @@
   resolved "https://registry.yarnpkg.com/@trysound/sax/-/sax-0.2.0.tgz#cccaab758af56761eb7bf37af6f03f326dd798ad"
   integrity sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==
 
-"@tsconfig/docusaurus@^1.0.5":
+"@tsconfig/docusaurus@^1.0.6":
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@tsconfig/docusaurus/-/docusaurus-1.0.6.tgz#7305a7fa590decc0d5968500234e95fd68788978"
   integrity sha512-1QxDaP54hpzM6bq9E+yFEo4F9WbWHhsDe4vktZXF/iDlc9FqGr9qlg+3X/nuKQXx8QxHV7ue8NXFazzajsxFBA==
@@ -5878,6 +5963,11 @@ moment-mini@^2.24.0:
   resolved "https://registry.yarnpkg.com/moment-mini/-/moment-mini-2.29.4.tgz#cbbcdc58ce1b267506f28ea6668dbe060a32758f"
   integrity sha512-uhXpYwHFeiTbY9KSgPPRoo1nt8OxNVdMVoTBYHfSEKeRkIkwGpO+gERmhuhBtzfaeOyTkykSrm2+noJBgqt3Hg==
 
+monaco-editor@^0.34.1:
+  version "0.34.1"
+  resolved "https://registry.yarnpkg.com/monaco-editor/-/monaco-editor-0.34.1.tgz#1b75c4ad6bc4c1f9da656d740d98e0b850a22f87"
+  integrity sha512-FKc80TyiMaruhJKKPz5SpJPIjL+dflGvz4CpuThaPMc94AyN7SeC9HQ8hrvaxX7EyHdJcUY5i4D0gNyJj1vSZQ==
+
 mrmime@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/mrmime/-/mrmime-1.0.1.tgz#5f90c825fad4bdd41dc914eff5d1a8cfdaf24f27"
@@ -6097,13 +6187,6 @@ p-limit@^3.0.2:
   integrity sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==
   dependencies:
     yocto-queue "^0.1.0"
-
-p-limit@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/p-limit/-/p-limit-4.0.0.tgz#914af6544ed32bfa54670b061cafcbd04984b644"
-  integrity sha512-5b0R4txpzjPWVw/cXXUResoD4hb6U/x9BH08L7nw+GN1sezDzPdxeRvpc9c433fZhBan/wusjbCsqwqm4EIBIQ==
-  dependencies:
-    yocto-queue "^1.0.0"
 
 p-locate@^3.0.0:
   version "3.0.0"
@@ -6652,7 +6735,7 @@ prompts@^2.4.2:
     kleur "^3.0.3"
     sisteransi "^1.0.5"
 
-prop-types@^15.5.4, prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.8.1"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.8.1.tgz#67d87bf1a694f48435cf332c24af10214a3140b5"
   integrity sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==
@@ -6802,14 +6885,13 @@ react-dev-utils@^12.0.1:
     strip-ansi "^6.0.1"
     text-table "^0.2.0"
 
-react-dom@^17.0.2:
-  version "17.0.2"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-17.0.2.tgz#ecffb6845e3ad8dbfcdc498f0d0a939736502c23"
-  integrity sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==
+react-dom@^18.2.0:
+  version "18.2.0"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
+  integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==
   dependencies:
     loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    scheduler "^0.20.2"
+    scheduler "^0.23.0"
 
 react-error-overlay@^6.0.11:
   version "6.0.11"
@@ -6859,6 +6941,11 @@ react-loadable-ssr-addon-v5-slorber@^1.0.1:
   dependencies:
     "@babel/runtime" "^7.10.3"
 
+react-resizable-panels@^0.0.35:
+  version "0.0.35"
+  resolved "https://registry.yarnpkg.com/react-resizable-panels/-/react-resizable-panels-0.0.35.tgz#ac8c8918c957bbd5c37b4b93ca50a40b5c012e6a"
+  integrity sha512-8HFm5w4AG13aUN2+JWM/3unYP+QVmW0xs9iWM7Sa+HvIGCQhdvLEEx3lFmUyEiWPYmsBnPZaq6o/4pAi2dt4yQ==
+
 react-router-config@^5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/react-router-config/-/react-router-config-5.1.1.tgz#0f4263d1a80c6b2dc7b9c1902c9526478194a988"
@@ -6894,22 +6981,6 @@ react-router@5.3.4, react-router@^5.3.3:
     tiny-invariant "^1.0.2"
     tiny-warning "^1.0.0"
 
-react-split-pane@^0.1.92:
-  version "0.1.92"
-  resolved "https://registry.yarnpkg.com/react-split-pane/-/react-split-pane-0.1.92.tgz#68242f72138aed95dd5910eeb9d99822c4fc3a41"
-  integrity sha512-GfXP1xSzLMcLJI5BM36Vh7GgZBpy+U/X0no+VM3fxayv+p1Jly5HpMofZJraeaMl73b3hvlr+N9zJKvLB/uz9w==
-  dependencies:
-    prop-types "^15.7.2"
-    react-lifecycles-compat "^3.0.4"
-    react-style-proptype "^3.2.2"
-
-react-style-proptype@^3.2.2:
-  version "3.2.2"
-  resolved "https://registry.yarnpkg.com/react-style-proptype/-/react-style-proptype-3.2.2.tgz#d8e998e62ce79ec35b087252b90f19f1c33968a0"
-  integrity sha512-ywYLSjNkxKHiZOqNlso9PZByNEY+FTyh3C+7uuziK0xFXu9xzdyfHwg4S9iyiRRoPCR4k2LqaBBsWVmSBwCWYQ==
-  dependencies:
-    prop-types "^15.5.4"
-
 react-textarea-autosize@^8.3.2:
   version "8.4.0"
   resolved "https://registry.yarnpkg.com/react-textarea-autosize/-/react-textarea-autosize-8.4.0.tgz#4d0244d6a50caa897806b8c44abc0540a69bfc8c"
@@ -6919,13 +6990,12 @@ react-textarea-autosize@^8.3.2:
     use-composed-ref "^1.3.0"
     use-latest "^1.2.1"
 
-react@^17.0.2:
-  version "17.0.2"
-  resolved "https://registry.yarnpkg.com/react/-/react-17.0.2.tgz#d0b5cc516d29eb3eee383f75b62864cfb6800037"
-  integrity sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==
+react@^18.2.0:
+  version "18.2.0"
+  resolved "https://registry.yarnpkg.com/react/-/react-18.2.0.tgz#555bd98592883255fa00de14f1151a917b5d77d5"
+  integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==
   dependencies:
     loose-envify "^1.1.0"
-    object-assign "^4.1.1"
 
 readable-stream@^2.0.1:
   version "2.3.7"
@@ -7257,13 +7327,12 @@ sax@^1.2.4:
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
 
-scheduler@^0.20.2:
-  version "0.20.2"
-  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.20.2.tgz#4baee39436e34aa93b4874bddcbf0fe8b8b50e91"
-  integrity sha512-2eWfGgAqqWFGqtdMmcL5zCMK1U8KlXv8SQFGglL3CEtd0aDVDWgeF/YoCmvln55m5zSk3J/20hTaSBeSObsQDQ==
+scheduler@^0.23.0:
+  version "0.23.0"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.23.0.tgz#ba8041afc3d30eb206a487b6b384002e4e61fdfe"
+  integrity sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==
   dependencies:
     loose-envify "^1.1.0"
-    object-assign "^4.1.1"
 
 schema-utils@2.7.0:
   version "2.7.0"
@@ -7585,6 +7654,11 @@ stable@^0.1.8:
   resolved "https://registry.yarnpkg.com/stable/-/stable-0.1.8.tgz#836eb3c8382fe2936feaf544631017ce7d47a3cf"
   integrity sha512-ji9qxRnOVfcuLDySj9qzhGSEFVobyt1kIOSkj1qZzYLzq7Tos/oUUWvotUPQLlrsidqsK6tBH89Bc9kL5zHA6w==
 
+state-local@^1.0.6:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/state-local/-/state-local-1.0.7.tgz#da50211d07f05748d53009bee46307a37db386d5"
+  integrity sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==
+
 state-toggle@^1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/state-toggle/-/state-toggle-1.0.3.tgz#e123b16a88e143139b09c6852221bc9815917dfe"
@@ -7842,7 +7916,7 @@ trough@^1.0.0:
   resolved "https://registry.yarnpkg.com/trough/-/trough-1.0.5.tgz#b8b639cefad7d0bb2abd37d433ff8293efa5f406"
   integrity sha512-rvuRbTarPXmMb79SmzEp8aqXNKcK+y0XaB298IXueQ8I2PsrATcPBCSPyK/dDNa2iWOhKlfNnOjdAOTBU/nkFA==
 
-tslib@^2.0.3, tslib@^2.1.0, tslib@^2.4.0:
+tslib@^2.0.3, tslib@^2.1.0, tslib@^2.4.0, tslib@^2.4.1:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.1.tgz#0d0bfbaac2880b91e22df0768e55be9753a5b17e"
   integrity sha512-tGyy4dAjRIEwI7BzsB0lynWgOpfqjUdq91XXAlIWD2OwKBH7oCl/GZG/HT4BOHrTlPMOASlMQ7veyTqpmRcrNA==
@@ -7871,11 +7945,6 @@ typedarray-to-buffer@^3.1.5:
   integrity sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==
   dependencies:
     is-typedarray "^1.0.0"
-
-typescript@^4.7.4:
-  version "4.8.4"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.8.4.tgz#c464abca159669597be5f96b8943500b238e60e6"
-  integrity sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==
 
 typescript@^4.9.4:
   version "4.9.4"
@@ -8434,11 +8503,6 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
-
-yocto-queue@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-1.0.0.tgz#7f816433fb2cbc511ec8bf7d263c3b58a1a3c251"
-  integrity sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==
 
 zwitch@^1.0.0:
   version "1.0.5"
