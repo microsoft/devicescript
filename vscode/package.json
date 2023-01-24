@@ -1,5 +1,5 @@
 {
-  "name": "@devicescript/vscode",
+  "name": "devicescript",
   "displayName": "DeviceScript",
   "version": "0.0.0",
   "publisher": "Microsoft Research",
@@ -40,8 +40,8 @@
     "typescript": "^4.6.3",
     "vsce": "^2.7.0"
   },
-  "main": "./built/devicescript-vscode.cjs",
-  "browser": "./built/devicescript-vscode-web.cjs",
+  "main": "./built/devicescript-vscode.js",
+  "browser": "./built/devicescript-vscode-web.js",
   "activationEvents": [
     "onDebugResolve:devicescript",
     "onDebugDynamicConfigurations:devicescript",

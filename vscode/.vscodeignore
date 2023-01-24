@@ -1,14 +1,6 @@
 .vscode/**/*
-.gitignore
-.travis.yml
-appveyor.yml
 src/**/*
-out/tests/**/*
 **/*.js.map
-build
-sampleworkspace
 node_modules
-tsconfig.json
-out
-sampleWebWorkerWorkspace
-sampleWorkspace
+..
+**/*.vsix

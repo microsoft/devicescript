@@ -95,8 +95,8 @@ const files = {
     "built/devicescript-compiler.node.cjs": "src/devicescript.ts",
     "../cli/built/devicescript-cli.cjs": "../cli/src/cli.ts",
     "../dap/built/devicescript-dap.cjs": "../dap/src/dsdap.ts",
-    "../vscode/built/devicescript-vscode.cjs": "../vscode/src/extension.ts",
-    "../vscode/built/devicescript-vscode-web.cjs":
+    "../vscode/built/devicescript-vscode.js": "../vscode/src/extension.ts",
+    "../vscode/built/devicescript-vscode-web.js":
         "../vscode/src/web-extension.ts",
 }
 
@@ -138,11 +138,11 @@ async function main() {
         buildPrelude("../devs/lib", "src/prelude.ts")
         for (const outfile of Object.keys(files)) {
             const src = files[outfile]
-            const cjs = outfile.endsWith(".cjs")
+            const cjs = outfile.endsWith(".cjs") || outfile.includes("vscode")
             const mjs = outfile.endsWith(".mjs")
             const t0 = Date.now()
             let platform = cjs ? "node" : "browser"
-            if (outfile.endsWith("-web.cjs")) platform = "browser"
+            if (outfile.endsWith("-web.js")) platform = "browser"
             await esbuild.build({
                 entryPoints: [src],
                 bundle: true,
@@ -170,7 +170,13 @@ async function main() {
         console.log("bundle done")
         copyCompiler()
         if (!fast) {
-            await runTSC(["-b", "src", "../dap/src", "../cli/src"])
+            await runTSC([
+                "-b",
+                "src",
+                "../dap/src",
+                "../cli/src",
+                "../vscode/src",
+            ])
         }
         const ds = require("./built/devicescript-compiler.node.cjs")
         fs.writeFileSync("../devs/lib/" + specname, ds.preludeFiles()[specname])
