@@ -672,8 +672,12 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 void devsdbg_suspend_cb(devs_ctx_t *ctx) {
     srv_t *state = _state;
+    devs_fiber_t *fib = ctx->curr_fiber;
+    // if no current thread, default to main (or oldest) thread
+    if (!fib)
+        fib = ctx->fibers;
     jd_devs_dbg_suspended_t args = {
-        .fiber = ctx->curr_fiber ? ctx->curr_fiber->handle_tag : JD_DEVS_DBG_FIBER_HANDLE_NONE,
+        .fiber = fib ? fib->handle_tag : JD_DEVS_DBG_FIBER_HANDLE_NONE,
         .type = ctx->suspension,
     };
     state->suspended = true;
