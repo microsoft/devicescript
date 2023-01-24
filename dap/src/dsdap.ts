@@ -409,9 +409,9 @@ export class DsDapSession extends LoggingDebugSession {
         args: DebugProtocol.LoadedSourcesArguments
     ): void {
         this.asyncReq(response, async () => {
-            response.body.sources = this.img.dbg.sources.map(s =>
-                this.mapSrcFile(s)
-            )
+            response.body = {
+                sources: this.img.dbg.sources.map(s => this.mapSrcFile(s)),
+            }
         })
     }
 

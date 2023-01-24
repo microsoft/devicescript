@@ -77,7 +77,7 @@ static void process_deploy(void) {
     if (r == 0) {
         deploy.offset += to_write;
         if (to_write == 0) {
-            DMESG("closed deploy pipe");
+            LOG("closed deploy pipe");
             deploy.isopen = false;
             deploy.finished = true;
             devs_deploy_handler(0);
@@ -111,7 +111,7 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
         if (deploy.img && serv && deploy.serv == serv) {
             if (jd_is_report(pkt) &&
                 pkt->service_command == JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE) {
-                DMESG("opening deploy pipe");
+                LOG("opening deploy pipe");
                 if (jd_opipe_open_report(&deploy.pipe, pkt) == 0)
                     deploy.isopen = true;
             }
@@ -134,7 +134,7 @@ static void client_event_handler(void *dummy, int event_id, void *arg0, void *ar
             if (deploy.serv) {
                 char id[5];
                 jd_device_short_id(id, dev->device_identifier);
-                DMESG("asking for deploy: %s", id);
+                LOG("asking for deploy: %s", id);
                 jd_service_send_cmd(deploy.serv, JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE,
                                     &deploy.size, 4);
             }
@@ -230,6 +230,8 @@ static void run_sample(const char *name, int keepgoing) {
             the_end = iter + 15;
         }
     }
+
+    LOG("terminating program");
 
     devsmgr_deploy(NULL, 0);
     jd_lstore_force_flush();
@@ -330,7 +332,7 @@ int main(int argc, const char **argv) {
         uint64_t devid = jd_device_id();
         char hexbuf[17];
         jd_to_hex(hexbuf, &devid, 8);
-        DMESG("self-device: %-s %s", jd_device_short_id_a(jd_device_id()), hexbuf);
+        LOG("self-device: %-s %s", jd_device_short_id_a(jd_device_id()), hexbuf);
     }
 
     if (devs_img && remote_deploy) {

@@ -3143,6 +3143,8 @@ class Program implements TopOpWriter {
                     return this.emitClassDeclaration(
                         stmt as ts.ClassDeclaration
                     )
+                case SK.DebuggerStatement:
+                    return this.writer.emitStmt(Op.STMT0_DEBUGGER)
                 case SK.TypeAliasDeclaration:
                 case SK.ExportDeclaration:
                 case SK.InterfaceDeclaration:

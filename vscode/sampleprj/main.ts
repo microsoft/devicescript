@@ -5,6 +5,7 @@ function foo() {
     let y = x + 1
     console.log(`x=${x} y=${y}`)
     debugger
+    console.log("past dbg")
 }
 
 function bar() {

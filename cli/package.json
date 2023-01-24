@@ -25,11 +25,13 @@
     "devDependencies": {
         "@types/debounce-promise": "^3.1.5",
         "@types/fs-extra": "^9.0.13",
-        "@types/node": "^18.11.9"
+        "@types/node": "^18.11.9",
+        "jacdac-ts": "*"
     },
     "dependencies": {
         "@devicescript/compiler": "*",
         "@devicescript/vm": "*",
+        "@devicescript/dap": "*",
         "commander": "^9.4.1",
         "debounce-promise": "^3.1.2",
         "faye-websocket": "^0.11.4",

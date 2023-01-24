@@ -94,22 +94,23 @@ function tagIsObj(tag: DevsDbgValueTag) {
 }
 
 export class DevsDbgClient extends JDServiceClient {
-    static async fromBus(bus: JDBus) {
-        for (let i = 0; i < 10; ++i) {
+    static async fromBus(bus: JDBus, timeout = 2000) {
+        const t0 = Date.now()
+        while (Date.now() - t0 < timeout) {
             const s = bus.services({
                 serviceClass: SRV_DEVS_DBG,
             })[0]
             if (s) return new DevsDbgClient(s)
             await delay(100)
         }
-        throw new Error("no debugger on the bus")
+        throw new Error(`no debugger on the bus; timeout=${timeout}ms`)
     }
 
     private regEn: JDRegister
     private lock = new Mutex()
     suspensionReason: DevsDbgSuspensionType
     suspendedFiber: number
-    values: DevsValue[]
+    values: DevsValue[] = []
     private valueMap: Record<string, DevsValue>
 
     constructor(service: JDService) {
@@ -127,8 +128,13 @@ export class DevsDbgClient extends JDServiceClient {
         )
     }
 
+    get suspended() {
+        return !!this.suspensionReason
+    }
+
     private clearValues() {
         this.suspendedFiber = 0
+        this.suspensionReason = 0
         for (const v of this.values) {
             v.parent = null
         }
@@ -146,7 +152,7 @@ export class DevsDbgClient extends JDServiceClient {
 
     private async haltCmd(cmd: DevsDbgCmd) {
         await this.lock.runExclusive(async () => {
-            await this.regEn.sendSetBoolAsync(true)
+            await this.regEn.sendSetAsync(new Uint8Array([1]))
             await this.service.sendCmdAsync(cmd)
         })
     }
@@ -160,9 +166,9 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     private runSuspCmd(cmd: DevsDbgCmd, args?: Uint8Array) {
-        assert(!!this.suspendedFiber)
+        assert(this.suspended)
         return this.lock.runExclusive(async () => {
-            assert(!!this.suspendedFiber)
+            assert(this.suspended)
             await this.service.sendCmdAsync(cmd, args, true)
         })
     }
@@ -192,7 +198,7 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     async waitSuspended() {
-        if (this.suspendedFiber) return
+        if (this.suspended) return
         await this.waitEvent(EV_SUSPENDED)
     }
 
@@ -346,9 +352,9 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     private async pipeGet(cmd: number, suff?: Uint8Array) {
-        assert(cmd == DevsDbgCmd.ReadFibers || !!this.suspendedFiber)
+        assert(cmd == DevsDbgCmd.ReadFibers || this.suspended)
         return this.lock.runExclusive(async () => {
-            assert(cmd == DevsDbgCmd.ReadFibers || !!this.suspendedFiber)
+            assert(cmd == DevsDbgCmd.ReadFibers || this.suspended)
             const inp = new InPipeReader(this.device.bus)
             const openPkt = inp.openCommand(cmd)
             if (suff) openPkt.data = bufferConcat(openPkt.data, suff)

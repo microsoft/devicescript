@@ -11,6 +11,7 @@ import init from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
+import { dbgsrv } from "./dbgsrv"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -154,6 +155,13 @@ export async function mainCli() {
         .option("-d, --detailed", "include all details")
         .arguments("<file.ts|file-dbg.json|file.devs>")
         .action(disasm)
+
+    program
+        .command("dbgsrv")
+        .description("start VSCode-compatible debug server")
+        .option("-p, --port <number>", "override default 8083 port")
+        .arguments("<file.ts|file-dbg.json>")
+        .action(dbgsrv)
 
     program
         .command("annotate")

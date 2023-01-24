@@ -6,14 +6,14 @@ import * as vscode from "vscode"
 import { activateDeviceScript } from "./activateDeviceScript"
 
 export function activate(context: vscode.ExtensionContext) {
-    activateDeviceScript(context, new MockDebugAdapterServerDescriptorFactory())
+    activateDeviceScript(context, new DeviceScriptAdapterServerDescriptorFactory())
 }
 
 export function deactivate() {
     // nothing to do
 }
 
-class MockDebugAdapterServerDescriptorFactory
+class DeviceScriptAdapterServerDescriptorFactory
     implements vscode.DebugAdapterDescriptorFactory
 {
     createDebugAdapterDescriptor(
