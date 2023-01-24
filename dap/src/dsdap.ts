@@ -1,5 +1,6 @@
 import {
     InitializedEvent,
+    Logger,
     logger,
     LoggingDebugSession,
     OutputEvent,
@@ -17,7 +18,6 @@ import {
 import {
     BinFmt,
     BUILTIN_OBJECT__VAL,
-    BUILTIN_STRING__VAL,
     DebugInfo,
     DebugVarType,
     Image,
@@ -60,6 +60,14 @@ const varTypeNumToStr: DebugVarType[] = []
 for (const k0 of Object.keys(varTypeStrToNum)) {
     const k = k0 as DebugVarType
     varTypeNumToStr[varTypeStrToNum[k]] = k
+}
+
+export function enableConsoleLog() {
+    const origLog = Logger.logger.log.bind(Logger.logger)
+    Logger.logger.log = (msg, level) => {
+        origLog(msg, level)
+        if (level > Logger.LogLevel.Verbose) console.log(msg.trim())
+    }
 }
 
 export class DsDapSession extends LoggingDebugSession {
@@ -211,10 +219,27 @@ export class DsDapSession extends LoggingDebugSession {
                         name: this.functionName(v.stackFrame.fnIdx),
                         instructionPointerReference: v.stackFrame.pc + "",
                         presentationHint: "normal",
-                        ...this.pcToLocation(v.stackFrame.pc),
+                        ...this.pcToLocation(v.stackFrame.pc - 1),
                     })
                 ),
                 totalFrames: frames.length,
+            }
+        })
+    }
+
+    protected override sourceRequest(
+        response: DebugProtocol.SourceResponse,
+        args: DebugProtocol.SourceArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            const s = this.findSource(
+                args.source ?? { sourceReference: args.sourceReference }
+            )
+            const sf = this.img.dbg.sources[s]
+            if (sf) {
+                response.body = {
+                    content: sf.text,
+                }
             }
         })
     }
@@ -227,11 +252,11 @@ export class DsDapSession extends LoggingDebugSession {
             response.body = {
                 scopes: [],
             }
-            const fr = this.client.getCachedValue(
-                DevsDbgValueTag.ObjStackFrame,
-                args.frameId
-            )
-            if (!fr.stackFrame) return // ???
+            const fr = this.client.getValueByIndex(args.frameId)
+            if (!fr?.stackFrame) {
+                logger.warn(`no stackframe on ${args.frameId}?`)
+                return
+            }
 
             const fn = this.img.functions[fr.stackFrame.fnIdx]
 
@@ -415,15 +440,25 @@ export class DsDapSession extends LoggingDebugSession {
         })
     }
 
+    protected override continueRequest(
+        response: DebugProtocol.ContinueResponse,
+        args: DebugProtocol.ContinueArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            await this.client.resume()
+        })
+    }
+
     private async asyncReq(
         response: DebugProtocol.Response,
         fn: () => Promise<void>
     ) {
         try {
-            fn()
+            await fn()
         } catch (err) {
             response.success = false
             response.message = exnToString(err)
+            console.error(response.message)
         }
         this.sendResponse(response)
     }

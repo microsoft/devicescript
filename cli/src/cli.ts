@@ -160,6 +160,10 @@ export async function mainCli() {
         .command("dbgsrv")
         .description("start VSCode-compatible debug server")
         .option("-p, --port <number>", "override default 8083 port")
+        .option(
+            "--trace <filename>",
+            "log all Jacdac packets to specified file"
+        )
         .arguments("<file.ts|file-dbg.json>")
         .action(dbgsrv)
 

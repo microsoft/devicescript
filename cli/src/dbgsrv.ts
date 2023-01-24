@@ -1,11 +1,24 @@
-import { DsDapSession, DevsDbgClient } from "@devicescript/dap"
+import { DsDapSession, DevsDbgClient, enableConsoleLog } from "@devicescript/dap"
 import { CmdOptions } from "./command"
 import { readCompiled } from "./run"
-import { createNodeSocketTransport, Flags, JDBus } from "jacdac-ts"
+import {
+    createNodeSocketTransport,
+    Flags,
+    JDBus,
+    loadServiceSpecifications,
+    Packet,
+    PACKET_RECEIVE,
+    PACKET_RECEIVE_ANNOUNCE,
+    PACKET_RECEIVE_NO_DEVICE,
+    printPacket,
+} from "jacdac-ts"
 import { createServer } from "node:net"
+import { open } from "node:fs/promises"
+import { jacdacDefaultSpecifications } from "@devicescript/compiler"
 
 export interface DbgSrvOptions {
     port?: string
+    trace?: string
 }
 
 export async function dbgsrv(fn: string, options: DbgSrvOptions & CmdOptions) {
@@ -18,6 +31,25 @@ export async function dbgsrv(fn: string, options: DbgSrvOptions & CmdOptions) {
     const bus = new JDBus([createNodeSocketTransport()])
     console.log("connecting the bus")
     await bus.connect()
+
+    loadServiceSpecifications(jacdacDefaultSpecifications)
+
+    enableConsoleLog()
+
+    if (options.trace) {
+        const fd = await open(options.trace, "w")
+        const opts = {
+            skipRepeatedAnnounce: false,
+            showTime: true,
+        }
+        const logPkt = (pkt: Packet) => {
+            fd.write(printPacket(pkt, opts) + "\n")
+        }
+        bus.on(PACKET_RECEIVE, logPkt)
+        bus.on(PACKET_RECEIVE_ANNOUNCE, logPkt)
+        bus.on(PACKET_RECEIVE_NO_DEVICE, logPkt)
+    }
+
     console.log("creating dbg client...")
     const client = await DevsDbgClient.fromBus(bus, Infinity)
     console.log("got dbg client")

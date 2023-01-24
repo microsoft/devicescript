@@ -133,6 +133,7 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     private clearValues() {
+        this.xlog("clear values")
         this.suspendedFiber = 0
         this.suspensionReason = 0
         for (const v of this.values) {
@@ -239,6 +240,7 @@ export class DevsDbgClient extends JDServiceClient {
         r.v0 = v0
         r.arg = arg
         this.valueMap[key] = r
+        this.xlog(`create ${r.genericText}`)
         if (isObj) this.valueMap[DevsDbgValueTag.ObjAny + suff] = r
         return r
     }
@@ -369,6 +371,11 @@ export class DevsDbgClient extends JDServiceClient {
         >(ev.data, "u32 u8")
         this.suspendedFiber = fiber
         this.suspensionReason = type
+        this.xlog(`suspended fib=${fiber} ${DevsDbgSuspensionType[type]}`)
         this.emit(EV_SUSPENDED)
+    }
+
+    private xlog(...args: any[]) {
+        console.log("DDBG:", ...args)
     }
 }
