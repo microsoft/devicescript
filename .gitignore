@@ -12,5 +12,5 @@ website/solutions
 website/static/dist/devicescript-compiler.js
 temp/
 devs/lib/devicescript-spec.d.ts
-.devicescript/bin
+.devicescript
 *.vsix
