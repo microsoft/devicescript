@@ -36,7 +36,7 @@ function distCopy(from, to) {
         console.debug(`cp ${from} ${to}`)
         try {
             fs.mkdirSync(path.dirname(to))
-        } catch { }
+        } catch {}
         fs.copyFileSync(from, to)
         fs.utimesSync(to, new Date(), new Date(fromT))
     }
@@ -95,6 +95,9 @@ const files = {
     "built/devicescript-compiler.node.cjs": "src/devicescript.ts",
     "../cli/built/devicescript-cli.cjs": "../cli/src/cli.ts",
     "../dap/built/devicescript-dap.cjs": "../dap/src/dsdap.ts",
+    "../vscode/built/devicescript-vscode.cjs": "../vscode/src/extension.ts",
+    "../vscode/built/devicescript-vscode-web.cjs":
+        "../vscode/src/web-extension.ts",
 }
 
 const specname = "devicescript-spec.d.ts"
@@ -122,7 +125,7 @@ function buildPrelude(folder, outp) {
     let curr = ""
     try {
         curr = fs.readFileSync(outp, "utf-8")
-    } catch { }
+    } catch {}
     if (curr != r) {
         console.log("updating " + outp)
         fs.writeFileSync(outp, r)
@@ -138,19 +141,31 @@ async function main() {
             const cjs = outfile.endsWith(".cjs")
             const mjs = outfile.endsWith(".mjs")
             const t0 = Date.now()
+            let platform = cjs ? "node" : "browser"
+            if (outfile.endsWith("-web.cjs")) platform = "browser"
             await esbuild.build({
                 entryPoints: [src],
                 bundle: true,
                 sourcemap: true,
                 outfile,
                 logLevel: "warning",
-                external: ["websocket-polyfill", "@devicescript/compiler"],
-                platform: cjs ? "node" : "browser",
+                external: [
+                    "websocket-polyfill",
+                    "@devicescript/compiler",
+                    "vscode",
+                ],
+                platform,
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",
                 watch,
             })
-            console.log(`build ${outfile}: ${Date.now() - t0}ms`)
+            let size = 0
+            try {
+                const st = fs.statSync(outfile)
+                size = st.size
+            } catch {}
+            const sizeStr = (size / 1024).toFixed(1)
+            console.log(`build ${outfile}: ${sizeStr}kB ${Date.now() - t0}ms`)
         }
         console.log("bundle done")
         copyCompiler()

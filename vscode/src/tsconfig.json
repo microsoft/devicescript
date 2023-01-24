@@ -1,0 +1,14 @@
+{
+	"extends": "../../tsconfig-base.json",
+	"compilerOptions": {
+		"declarationDir": "../built/types",
+		"outDir": "../built",
+		"lib": [
+			"WebWorker",
+			"ES2020"
+		]
+	},
+	"include": [
+		"."
+	]
+}
