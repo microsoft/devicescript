@@ -1905,12 +1905,37 @@
     typescript "^4.9.4"
     unist-util-visit "^2.0.3"
 
+"@rise4fun/docusaurus-remark-plugin-code-tabs@^1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-code-tabs/-/docusaurus-remark-plugin-code-tabs-1.1.3.tgz#7983755254d63971d0e0aefb178fb325f35bb352"
+  integrity sha512-dkqEqZjHMj810X0L0k4NybIVFYzJ3REEyAEiRElmYu31KMmVxvIBA7vjbtfza12DMlYar5iG8M2UlFJocWvRMQ==
+  dependencies:
+    fs-extra "^11.1.0"
+    npm-to-yarn "^1.0.1"
+    p-all "^4.0.0"
+    tslib "^2.4.0"
+    typescript "^4.9.4"
+    unist-util-visit "^2.0.3"
+
 "@rise4fun/docusaurus-remark-plugin-compile-code@*":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-compile-code/-/docusaurus-remark-plugin-compile-code-1.2.1.tgz#2dc6e0fcc314354aedd31f5c5411226cbe8ecaa7"
   integrity sha512-71kSP6xhkd/8vaW3FSmoVFWzx303uy6ovnJcF3D+TK6ZIrUgi51FYQoKR5FB3w5H27EuWVFqGiS7ptcIbvBs2g==
   dependencies:
     fs-extra "^11.1.0"
+    npm-to-yarn "^1.0.1"
+    p-all "^4.0.0"
+    tslib "^2.4.0"
+    typescript "^4.9.4"
+    unist-util-visit "^2.0.3"
+
+"@rise4fun/docusaurus-remark-plugin-compile-code@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-compile-code/-/docusaurus-remark-plugin-compile-code-1.3.0.tgz#89ead997949b213e300a7a4bac11fe1ea0897761"
+  integrity sha512-TA9bw3vhRW18d4EjO9QZlL5vv4PoEMqZ70nGCQ2WsmJolOourSkad4hyAa0zfW0O0yG9H/Qm/k64AB8+l7/CYw==
+  dependencies:
+    fs-extra "^11.1.0"
+    minimatch "^6.1.6"
     npm-to-yarn "^1.0.1"
     p-all "^4.0.0"
     tslib "^2.4.0"
@@ -1969,9 +1994,9 @@
     tslib "^2.4.1"
 
 "@rise4fun/docusaurus-theme-side-editor@^1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.6.tgz#ee0a85182b726b788fba172b363b1cbf6f24d745"
-  integrity sha512-Ji9tJUyFutIQwkZV7CHCKljDY0U0PIii0LhvX46sLgHqD+L3WZeEg7n2xFx3grxk5buub+N+zHluhyfPwP6aXw==
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-1.0.7.tgz#6c73f40066dfc9f971bce91f013194f3458becce"
+  integrity sha512-u6Cf+MTc8tBQF+GUaTyQqsbtdVsXXZb20kNKufCIa92ZaeQPx1T54YO0Ar5SdcK8GTAVUxe4gLWMUsOiLnJdUQ==
   dependencies:
     "@docusaurus/core" "^2.2.0"
     "@docusaurus/types" "^2.2.0"
@@ -2920,6 +2945,13 @@ brace-expansion@^1.1.7:
   dependencies:
     balanced-match "^1.0.0"
     concat-map "0.0.1"
+
+brace-expansion@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-2.0.1.tgz#1edc459e0f0c548486ecf9fc99f2221364b9a0ae"
+  integrity sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==
+  dependencies:
+    balanced-match "^1.0.0"
 
 braces@^3.0.2, braces@~3.0.2:
   version "3.0.2"
@@ -5964,6 +5996,13 @@ minimatch@3.1.2, minimatch@^3.0.4, minimatch@^3.0.5, minimatch@^3.1.1:
   integrity sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==
   dependencies:
     brace-expansion "^1.1.7"
+
+minimatch@^6.1.6:
+  version "6.1.6"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-6.1.6.tgz#5384bb324be5b5dae12a567c03d22908febd0ddd"
+  integrity sha512-6bR3UIeh/DF8+p6A9Spyuy67ShOq42rOkHWi7eUe3Ua99Zo5lZfGC6lJJWkeoK4k9jQFT3Pl7czhTXimG2XheA==
+  dependencies:
+    brace-expansion "^2.0.1"
 
 minimist@^1.2.0, minimist@^1.2.5:
   version "1.2.7"
