@@ -39,4 +39,5 @@ void init_devicescript_manager(void) {
     cfg.max_program_size = 32 * 1024;
     cfg.program_base = jd_alloc(cfg.max_program_size);
     devsmgr_init(&cfg);
+    devsdbg_init();
 }

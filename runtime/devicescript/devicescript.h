@@ -55,6 +55,9 @@ void devsmgr_restart(void);
 
 void devsmgr_init_mem(unsigned size);
 
+void devsdbg_init(void);
+void devsdbg_suspend_cb(devs_ctx_t *ctx);
+
 typedef struct {
     int (*upload)(const char *label, int numvals, double *vals);
     int (*bin_upload)(const void *data, unsigned datasize);
