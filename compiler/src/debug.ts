@@ -175,6 +175,7 @@ export class SrcMapResolver {
     }
 
     srcMapForPos(loc: SrcLocation) {
+        this.initPc()
         return filterOverlapping(this.pcPos, loc)
     }
 

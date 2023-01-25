@@ -96,7 +96,15 @@ void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *
     // devs_fiber_poke() does this anyway, so optimize it out
     if (event_id != JD_CLIENT_EV_PROCESS)
         devs_fiber_sync_now(ctx);
-    
+
+    if (ctx->flags & DEVS_CTX_PENDING_RESUME) {
+        ctx->flags ^= DEVS_CTX_PENDING_RESUME;
+        if (ctx->curr_fiber) {
+            devs_fiber_run(ctx->curr_fiber);
+            devs_fiber_poke(ctx);
+        }
+    }
+
     // all bytecode execution is called from one of these event handlers
     switch (event_id) {
     case JD_CLIENT_EV_SERVICE_PACKET:

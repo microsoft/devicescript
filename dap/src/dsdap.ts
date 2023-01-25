@@ -220,7 +220,7 @@ export class DsDapSession extends LoggingDebugSession {
                         name: this.functionName(v.stackFrame.fnIdx),
                         instructionPointerReference: v.stackFrame.pc + "",
                         presentationHint: "normal",
-                        ...this.pcToLocation(v.stackFrame.pc - 1),
+                        ...this.pcToLocation(v.stackFrame.userPc),
                     })
                 ),
                 totalFrames: frames.length,
@@ -359,37 +359,34 @@ export class DsDapSession extends LoggingDebugSession {
         args: DebugProtocol.SetBreakpointsArguments
     ): void {
         this.asyncReq(response, async () => {
-            response.body.breakpoints = []
+            response.body = { breakpoints: [] }
             const srcIdx = this.findSource(args.source)
             const srcmap = this.img.srcmap
             const map = srcmap.srcMapForPos(srcmap.filePos(srcIdx))
             if (map.length == 0) return
 
-            const brkPos = args.breakpoints.map(b =>
-                srcmap.locationToPos(srcIdx, b.line, b.column ?? 1)
-            )
+            const breakpoints = args.breakpoints.map(b => ({
+                ...b,
+                pos: srcmap.locationToPos(srcIdx, b.line, b.column ?? 1),
+            }))
+
             const brkEntry: SrcMapEntry[] = []
 
             // exact matching
             for (const e of map) {
-                for (let i = 0; i < brkPos.length; ++i) {
-                    const pos = brkPos[i]
-                    if (e.pos <= pos && pos < e.end) {
-                        if (!brkEntry[i] || brkEntry[i].pos < e.pos)
-                            brkEntry[i] = e
-                    }
-                }
-            }
-
-            // whole-line matching as fallback
-            for (const e of map) {
                 const r = srcmap.resolvePos(e.pos)
-                const pos0 = r.fileOff + r.lineOff
-                for (let i = 0; i < brkPos.length; ++i) {
-                    if (brkEntry[i]) continue
-                    const pos = brkPos[i]
-                    if (pos0 <= pos && pos <= e.end) {
-                        brkEntry[i] = e
+                for (let i = 0; i < breakpoints.length; ++i) {
+                    const brk = breakpoints[i]
+                    const col = brk.column ?? 1
+                    if (brk.line == r.line) {
+                        if (
+                            !brkEntry[i] ||
+                            (col > 1 &&
+                                e.pos <= brk.pos &&
+                                brk.pos < e.end &&
+                                brkEntry[i].pos < e.pos)
+                        )
+                            brkEntry[i] = e
                     }
                 }
             }
@@ -618,8 +615,8 @@ export class DsDapSession extends LoggingDebugSession {
                 return v.numNamed === 0
                     ? `{}`
                     : v.numNamed === undefined
-                    ? `{...}`
-                    : `{...${v.numNamed}...}`
+                    ? `{…}`
+                    : `{…${v.numNamed}…}`
 
             case DevsDbgValueTag.ObjStackFrame:
             case DevsDbgValueTag.ObjPacket:

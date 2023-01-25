@@ -46,6 +46,7 @@ int devs_vm_resume(devs_ctx_t *ctx) {
     if (!devs_is_suspended(ctx))
         return -1;
     ctx->suspension = JD_DEVS_DBG_SUSPENSION_TYPE_NONE;
+    ctx->flags |= DEVS_CTX_PENDING_RESUME;
     return 0;
 }
 
@@ -152,8 +153,14 @@ static inline bool devs_vm_chk_brk(devs_ctx_t *ctx, devs_activation_t *frame) {
             devs_pc_t *l = ctx->brk_list;
             for (--i; pc >= l[i]; ++i) {
                 if (pc == l[i]) {
-                    devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_BREAKPOINT);
-                    return true;
+                    ctx->flags ^= DEVS_CTX_BREAKPOINT_HIT; // flip flag
+                    if (ctx->flags & DEVS_CTX_BREAKPOINT_HIT) {
+                        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_BREAKPOINT);
+                        return true;
+                    } else {
+                        // we are resuming after previously hitting this very breakpoint
+                        return false;
+                    }
                 }
             }
         }

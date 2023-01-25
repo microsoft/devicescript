@@ -84,6 +84,8 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
 #define DEVS_CTX_LOGGING_ENABLED 0x0002
 #define DEVS_CTX_FREEING_ROLES 0x0004
 #define DEVS_CTX_TRACE_DISABLED 0x0008
+#define DEVS_CTX_PENDING_RESUME 0x0010
+#define DEVS_CTX_BREAKPOINT_HIT 0x0020
 
 typedef struct {
     jd_role_t *role;

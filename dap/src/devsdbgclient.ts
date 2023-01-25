@@ -50,6 +50,7 @@ export class DevsValue {
 
     stackFrame?: {
         pc: number
+        userPc: number
         closure: DevsValue
         fnIdx: number
     }
@@ -182,7 +183,7 @@ export class DevsDbgClient extends JDServiceClient {
         if (pc.length)
             await this.runSuspCmd(
                 DevsDbgCmd.SetBreakpoints,
-                jdpack("u32[]", pc)
+                jdpack("u32[]", [pc])
             )
     }
 
@@ -190,7 +191,7 @@ export class DevsDbgClient extends JDServiceClient {
         if (pc.length)
             await this.runSuspCmd(
                 DevsDbgCmd.ClearBreakpoints,
-                jdpack("u32[]", pc)
+                jdpack("u32[]", [pc])
             )
     }
 
@@ -250,7 +251,7 @@ export class DevsDbgClient extends JDServiceClient {
             DevsDbgCmd.ReadStack,
             jdpack("u32", [fibid])
         )
-        return pkts.output.map(pkt => {
+        return pkts.output.map((pkt, idx) => {
             const [stackFrameId, pc, closureId, fnIdx] = pkt.jdunpack<number[]>(
                 "u32 u32 u32 u16 x[2]"
             )
@@ -258,8 +259,16 @@ export class DevsDbgClient extends JDServiceClient {
                 DevsDbgValueTag.ObjStackFrame,
                 stackFrameId
             )
+            let userPc = pc
+            if (
+                pc > 0 &&
+                (idx > 0 ||
+                    this.suspensionReason != DevsDbgSuspensionType.Breakpoint)
+            )
+                userPc--
             st.stackFrame = {
                 pc,
+                userPc,
                 closure: this.getValue(
                     DevsDbgValueTag.ObjStackFrame,
                     closureId

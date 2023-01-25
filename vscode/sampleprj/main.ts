@@ -8,7 +8,9 @@ function foo() {
         y,
         q: [1, 2],
     }
+    console.log("hello")
     console.log(`x=${x} y=${y}`)
+    console.log("world")
     z.q.map(e => {
         console.log(e)
         if (e == 2) debugger
