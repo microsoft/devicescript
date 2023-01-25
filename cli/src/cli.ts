@@ -164,7 +164,7 @@ export async function mainCli() {
             "--trace <filename>",
             "log all Jacdac packets to specified file"
         )
-        .arguments("<file.ts|file-dbg.json>")
+        .arguments("[file.ts|file-dbg.json]")
         .action(dbgsrv)
 
     program

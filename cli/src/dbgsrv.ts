@@ -3,7 +3,7 @@ import {
     DevsDbgClient,
     enableConsoleLog,
 } from "@devicescript/dap"
-import { CmdOptions, LIBDIR } from "./command"
+import { BINDIR, CmdOptions } from "./command"
 import { readCompiled } from "./run"
 import {
     createNodeSocketTransport,
@@ -17,9 +17,13 @@ import {
     printPacket,
 } from "jacdac-ts"
 import { createServer } from "node:net"
-import { open, readFile, stat } from "node:fs/promises"
-import { jacdacDefaultSpecifications, SrcFile } from "@devicescript/compiler"
-import { resolve } from "node:path"
+import { open, readFile } from "node:fs/promises"
+import {
+    DEVS_DBG_FILE,
+    jacdacDefaultSpecifications,
+    SrcFile,
+} from "@devicescript/compiler"
+import { join, resolve } from "node:path"
 
 export interface DbgSrvOptions {
     port?: string
@@ -27,7 +31,7 @@ export interface DbgSrvOptions {
 }
 
 export async function dbgsrv(fn: string, options: DbgSrvOptions & CmdOptions) {
-    const tmp = await readCompiled(fn)
+    const tmp = await readCompiled(fn ?? join(BINDIR, DEVS_DBG_FILE))
 
     if (!tmp.dbg) throw new Error("need debug info")
 
