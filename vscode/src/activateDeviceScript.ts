@@ -63,7 +63,10 @@ export function activateDeviceScript(
                     ds.customRequest("toggleFormatting")
                 }
             }
-        )
+        ),
+        vscode.commands.registerCommand("extension.devicescript.start", () => {
+            console.log("Starting...")
+        })
     )
 
     context.subscriptions.push(
