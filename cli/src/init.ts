@@ -8,7 +8,7 @@ import {
     readFileSync,
     ensureDirSync,
 } from "fs-extra"
-import { preludeFiles } from "@devicescript/compiler"
+import { saveLibFiles } from "./build"
 
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"
@@ -89,7 +89,7 @@ export interface InitOptions {
     spaces?: number
 }
 
-export default function init(options: InitOptions & CmdOptions) {
+export default async function init(options: InitOptions & CmdOptions) {
     const { force, spaces = 4 } = options
     log(`Initializing files for DeviceScript project`)
     Object.keys(optionalFiles).forEach(fn => {
@@ -110,10 +110,7 @@ export default function init(options: InitOptions & CmdOptions) {
     // typescript definitions
     emptyDirSync(LIBDIR)
     debug(`write ${LIBDIR}/*`)
-    const prelude = preludeFiles()
-    for (const fn of Object.keys(prelude)) {
-        writeFileSync(join(LIBDIR, fn), prelude[fn])
-    }
+    await saveLibFiles()
 
     // .gitignore
     const gid = `${GENDIR}/\n`

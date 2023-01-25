@@ -6,6 +6,7 @@ import {
     ensureDirSync,
     pathExistsSync,
     readJSONSync,
+    mkdirp,
 } from "fs-extra"
 const debounce = require("debounce-promise")
 import {
@@ -20,11 +21,13 @@ import {
     parseStackFrame,
     CompileFlags,
     SrcMapResolver,
+    preludeFiles,
 } from "@devicescript/compiler"
-import { BINDIR, CmdOptions, debug, error, log } from "./command"
+import { BINDIR, CmdOptions, debug, error, LIBDIR, log } from "./command"
 import { devtools } from "./devtools"
 
 import type { DevsModule } from "@devicescript/vm"
+import { readFile, writeFile } from "node:fs/promises"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -105,6 +108,18 @@ export async function compileFile(fn: string, options: BuildOptions = {}) {
     return compileBuf(readFileSync(fn), { ...options, mainFileName: fn })
 }
 
+export async function saveLibFiles() {
+    const prelude = preludeFiles()
+    await mkdirp(LIBDIR)
+    for (const fn of Object.keys(prelude)) {
+        const ex = await readFile(fn, "utf-8").then(
+            r => r,
+            _ => null
+        )
+        if (prelude[fn] != ex) await writeFile(fn, prelude[fn])
+    }
+}
+
 export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
     const host = await getHost(options)
     const flags = (options.flag ?? {}) as CompileFlags
@@ -112,6 +127,7 @@ export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
         host,
         flags,
     })
+    await saveLibFiles()
     return res
 }
 
