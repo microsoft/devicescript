@@ -77,13 +77,23 @@ export async function mainCli() {
 
     program
         .command("devtools")
-        .description("launches a local deveplopement tools server")
+        .description("launches a local development tools server")
         .option("--internet", "allow connections from non-localhost")
         .option(
             "--localhost",
             "use localhost:8000 instead of the internet dashboard"
         )
-        .option("-t, --tcp", "open native TCP socket at 8082")
+        .option("-l, --logging", "print out device log messages as they come")
+        .option("-t, --trace <string>", "save all packets to named file")
+        .option("-u, --usb", "listen to Jacdac over USB (requires usb)")
+        .option(
+            "-s, --serial",
+            "listen to Jacdac over SERIAL (requires serialport)"
+        )
+        .option(
+            "-i, --spi",
+            "listen to Jacdac over SPI (requires rpio, experimental)"
+        )
         .action(devtools)
 
     program

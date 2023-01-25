@@ -8,6 +8,22 @@ import net from "net"
 import { CmdOptions, debug, error, log } from "./command"
 import { readFileSync, readJSONSync, watch } from "fs-extra"
 import { prettySize } from "@devicescript/compiler"
+import {
+    bufferConcat,
+    createNodeSPITransport,
+    createNodeUSBOptions,
+    createNodeWebSerialTransport,
+    createProxyBridge,
+    createUSBTransport,
+    ERROR,
+    FRAME_PROCESS,
+    JDBus,
+    JDFrameBuffer,
+    JSONTryParse,
+    serializeToTrace,
+    Transport,
+} from "jacdac-ts"
+import { appendFileSync } from "fs"
 
 const dasboardPath = "tools/devicescript-devtools"
 
@@ -51,14 +67,51 @@ function fetchProxy(localhost: boolean): Promise<string> {
 export interface DevToolsOptions {
     internet?: boolean
     localhost?: boolean
-    tcp?: boolean
-
     bytecodeFile?: string
     debugFile?: string
+    trace?: string
 }
 
-export async function devtools(options: DevToolsOptions & CmdOptions) {
-    const { internet, localhost, bytecodeFile, debugFile, tcp } = options
+export interface TransportsOptions {
+    usb?: boolean
+    serial?: boolean
+    spi?: boolean
+}
+
+function tryRequire(name: string) {
+    return require(name)
+}
+
+export function createTransports(options: TransportsOptions) {
+    const transports: Transport[] = []
+    if (options.usb) {
+        log(`adding USB transport (requires "usb" package)`)
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const usb = tryRequire("usb")
+        const options = createNodeUSBOptions(usb.WebUSB)
+        transports.push(createUSBTransport(options))
+    }
+    if (options.serial) {
+        log(`adding serial transport (requires "serialport" package)`)
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const SerialPort = tryRequire("serialport").SerialPort
+        transports.push(createNodeWebSerialTransport(SerialPort))
+    }
+    if (options.spi) {
+        log(`adding SPI transport (requires "rpio" package)`)
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const RPIO = tryRequire("rpio")
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const SpiDev = tryRequire("spi-device")
+        transports.push(createNodeSPITransport(RPIO, SpiDev))
+    }
+
+    return transports
+}
+export async function devtools(
+    options: DevToolsOptions & CmdOptions & TransportsOptions
+) {
+    const { internet, localhost, bytecodeFile, debugFile, trace } = options
     const port = 8081
     const tcpPort = 8082
     const listenHost = internet ? undefined : "127.0.0.1"
@@ -91,6 +144,37 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
           }
         : undefined
 
+    // passive bus to sniff packets
+    const transports = createTransports(options)
+    const bus = new JDBus(transports, {
+        client: false,
+        disableRoleManager: true,
+        proxy: true,
+    })
+    bus.passive = true
+    bus.on(ERROR, e => error(e))
+    const forwardFrame = (frame: JDFrameBuffer) => {
+        if (trace) appendFileSync(trace, serializeToTrace(frame, 0, bus) + "\n")
+        clients
+            .filter(c => (c as any)[SENDER_FIELD] !== frame._jacdac_sender)
+            .forEach(c => c.send(Buffer.from(frame)))
+    }
+    const bridge = createProxyBridge((data, sender) => {
+        // note that this is not invoked on bridge.receiveFrameOrPacket(), since these are our own frames
+        // FRAME_PROCESS event below is invoked for all frames
+    })
+    bridge.on(FRAME_PROCESS, forwardFrame)
+    bus.addBridge(bridge)
+    const processMessage = (message: string, sender: string) => {
+        const msg = JSONTryParse(message)
+        if (!msg) return
+        console.debug(msg)
+    }
+    const processPacket = (message: Buffer | Uint8Array, sender: string) => {
+        const data = new Uint8Array(message)
+        bridge.receiveFrameOrPacket(data, sender)
+    }
+
     log(`   websocket: ws://localhost:${port}`)
     const server = http.createServer(function (req, res) {
         const parsedUrl = url.parse(req.url)
@@ -120,6 +204,8 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
             log(`webclient: connected (${sender}, ${clients.length} clients)`)
             client.on("message", (event: any) => {
                 const { data } = event
+                if (typeof data === "string") processMessage(data, sender)
+                else processPacket(data, sender)
                 if (!firstDeviceScript && sendDeviceScript) {
                     firstDeviceScript = true
                     sendDeviceScript()
@@ -131,31 +217,56 @@ export async function devtools(options: DevToolsOptions & CmdOptions) {
     })
     server.listen(port, listenHost)
 
-    if (tcp) {
-        log(`   tcpsocket: tcp://localhost:${tcpPort}`)
-        const tcpServer = net.createServer((client: any) => {
-            const sender = "tcp" + Math.random()
-            client[SENDER_FIELD] = sender
-            client.send = (pkt0: Buffer) => {
-                const pkt = new Uint8Array(pkt0)
-                const b = new Uint8Array(1 + pkt.length)
-                b[0] = pkt.length
-                b.set(pkt, 1)
+    log(`   tcpsocket: tcp://localhost:${tcpPort}`)
+    const tcpServer = net.createServer((client: any) => {
+        const sender = "tcp" + Math.random()
+        client[SENDER_FIELD] = sender
+        client.send = (pkt0: Buffer | string) => {
+            if (typeof pkt0 == "string") return
+            const pkt = new Uint8Array(pkt0)
+            const b = new Uint8Array(1 + pkt.length)
+            b[0] = pkt.length
+            b.set(pkt, 1)
+            try {
+                client.write(b)
+            } catch {
                 try {
-                    client.write(b)
-                } catch {
-                    try {
-                        client.end()
-                    } catch {} // eslint-disable-line no-empty
+                    client.end()
+                } catch {} // eslint-disable-line no-empty
+            }
+        }
+        clients.push(client)
+        log(`tcpclient: connected (${sender} ${clients.length} clients)`)
+        let acc: Uint8Array
+        client.on("data", (buf: Uint8Array) => {
+            if (acc) {
+                buf = bufferConcat(acc, buf)
+                acc = null
+            } else {
+                buf = new Uint8Array(buf)
+            }
+            while (buf) {
+                const endp = buf[0] + 1
+                if (buf.length >= endp) {
+                    const pkt = buf.slice(1, endp)
+                    if (buf.length > endp) buf = buf.slice(endp)
+                    else buf = null
+                    processPacket(pkt, sender)
+                } else {
+                    acc = buf
+                    buf = null
                 }
             }
-            clients.push(client)
-            log(`tcpclient: connected (${sender} ${clients.length} clients)`)
-            client.on("end", () => removeClient(client))
-            client.on("error", (ev: Error) => error(ev))
         })
-        tcpServer.listen(tcpPort, listenHost)
-    }
+        client.on("end", () => removeClient(client))
+        client.on("error", (ev: Error) => error(ev))
+    })
+    tcpServer.listen(tcpPort, listenHost)
+
+    // if (logging) enableLogging(bus)
+
+    bus.start()
+    bus.connect(true)
 
     if (bytecodeFile) {
         debug(`watching ${bytecodeFile}...`)
