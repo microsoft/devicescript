@@ -4,8 +4,8 @@
 		"declarationDir": "../built/types",
 		"outDir": "../built",
 		"lib": [
-			"WebWorker",
-			"ES2020"
+			"ES2020",
+			"DOM"
 		]
 	},
 	"include": [
