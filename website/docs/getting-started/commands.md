@@ -13,7 +13,7 @@ can add code to generate a mouse click.
 that you will want to tune using the actual hardware sensors,
 not just a simulator.
 
-```ts no-build no-run
+```ts skip no-run
 if (pressure > 1400) {
     mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
 }

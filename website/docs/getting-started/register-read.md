@@ -8,7 +8,7 @@ hide_table_of_contents: true
 You can retreive the current value of a register by calling `read`.
 Internally, the client will handle all the necessary syncronization and communication with the sensor.
 
-```ts no-build no-run
+```ts skip no-run
 const pressure = sensor.pressure.read()
 ```
 

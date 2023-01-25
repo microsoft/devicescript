@@ -137,7 +137,7 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
         return
     }
 
-    log(`building ${file}`)
+    // log(`building ${file}`)
     ensureDirSync(options.outDir)
     await buildOnce(file, options)
     if (options.watch) await buildWatch(file, options)

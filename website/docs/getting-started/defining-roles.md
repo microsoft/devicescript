@@ -30,7 +30,7 @@ You can already interact with the simulators, but we don't have any interresting
 For consistency and breivity, the `@devicescript/core` module
 is implicitely imported as follows:
 
-```ts no-build no-run
+```ts skip no-run
 import * as ds from "@devicescript/core"
 ```
 

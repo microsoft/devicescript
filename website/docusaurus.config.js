@@ -166,9 +166,10 @@ async function createConfig() {
                         lang: "ts",
                         nodeBin: "devicescript",
                         npmPackage: "@devicescript/cli",
-                        excludedFiles: ["api/**.ts"]
-                    }
-                ]
+                        excludedFiles: ["**/api/clients/*.md"],
+                        prefix: 'import * as ds from "@devicescript/core"',
+                    },
+                ],
             },
             sideEditor: {
                 languages: {
