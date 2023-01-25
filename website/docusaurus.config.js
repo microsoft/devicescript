@@ -160,6 +160,16 @@ async function createConfig() {
                     },
                 },
             },
+            compileCode: {
+                langs: [
+                    {
+                        lang: "ts",
+                        nodeBin: "devicescript",
+                        npmPackage: "@devicescript/cli",
+                        excludedFiles: ["api/**.ts"]
+                    }
+                ]
+            },
             sideEditor: {
                 languages: {
                     ts: "devicescript",

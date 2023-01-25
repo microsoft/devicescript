@@ -12,7 +12,7 @@ Internally, the client will handle all the necessary syncronization and communic
 const pressure = sensor.pressure.read()
 ```
 
-Let's modify the snippet by `read()ing` the `pressure` reading
+Let's modify the snippet by `reading` the `pressure` reading
 and logging it to the console.
 
 ```ts edit

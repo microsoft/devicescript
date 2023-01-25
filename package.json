@@ -13,6 +13,7 @@
     "workspaces": [
         "compiler",
         "cli",
-        "runtime/devicescript-vm"
+        "runtime/devicescript-vm",
+        "website"
     ]
 }
