@@ -8,6 +8,7 @@ function foo() {
         y,
         q: [1, 2],
     }
+    ;(z as any)["foo" + 12] = z
     console.log("hello")
     console.log(`x=${x} y=${y}`)
     console.log("world")

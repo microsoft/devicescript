@@ -6,7 +6,7 @@ import * as vscode from "vscode"
 import { activateDeviceScript } from "./activateDeviceScript"
 
 export function activate(context: vscode.ExtensionContext) {
-    activateDeviceScript(context) // activateMockDebug without 2nd argument launches the Debug Adapter "inlined"
+    return activateDeviceScript(context) // activateMockDebug without 2nd argument launches the Debug Adapter "inlined"
 }
 
 export function deactivate() {

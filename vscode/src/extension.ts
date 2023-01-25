@@ -6,7 +6,7 @@ import * as vscode from "vscode"
 import { activateDeviceScript } from "./activateDeviceScript"
 
 export function activate(context: vscode.ExtensionContext) {
-    activateDeviceScript(context, new DeviceScriptAdapterServerDescriptorFactory())
+    return activateDeviceScript(context, new DeviceScriptAdapterServerDescriptorFactory())
 }
 
 export function deactivate() {

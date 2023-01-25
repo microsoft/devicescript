@@ -9,6 +9,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
+import { startJacdacBus } from "./jacdac"
 
 export function activateDeviceScript(
     context: vscode.ExtensionContext,
@@ -130,6 +131,28 @@ export function activateDeviceScript(
     if ("dispose" in factory) {
         context.subscriptions.push(factory as any)
     }
+
+    let redirectOutput =
+        context.extensionMode == vscode.ExtensionMode.Production
+    if (redirectOutput) {
+        const output = vscode.window.createOutputChannel("DeviceScript")
+        const addMsg = (level: number, args: any[]) => {
+            let msg = ""
+            for (const a of args) {
+                if (msg != "") msg += " "
+                msg += a
+            }
+            output.appendLine(msg)
+        }
+        // note that this is local to this extension - see inject.js
+        console.debug = (...a: any[]) => addMsg(0, a)
+        console.log = (...a: any[]) => addMsg(1, a)
+        console.warn = (...a: any[]) => addMsg(2, a)
+        console.error = (...a: any[]) => addMsg(3, a)
+        console.info = console.log
+    }
+
+    startJacdacBus()
 }
 
 class DeviceScriptConfigurationProvider

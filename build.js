@@ -4,6 +4,8 @@ const esbuild = require("esbuild")
 const childProcess = require("child_process")
 const path = require("path")
 const fs = require("fs-extra")
+const { existsSync } = require("fs")
+const { dirname, join } = require("path")
 
 let watch = false
 let fast = false
@@ -139,17 +141,23 @@ async function main() {
         buildPrelude("devs/lib", "compiler/src/prelude.ts")
         for (const outfile of Object.keys(files)) {
             const src = files[outfile]
-            const cjs = outfile.endsWith(".cjs") || outfile.includes("vscode")
+            const folder = dirname(src)
+            const isVSCode = outfile.includes("vscode")
+            const cjs = outfile.endsWith(".cjs") || isVSCode
             const mjs = outfile.endsWith(".mjs")
             const t0 = Date.now()
             let platform = cjs ? "node" : "browser"
             if (outfile.endsWith("-web.js")) platform = "browser"
+            const inj = join(folder, "inject.js")
+            const inject = []
+            if (existsSync(inj)) inject.push(inj)
             const ctx = await esbuild.context({
                 entryPoints: [rootdir + "/" + src],
                 bundle: true,
                 sourcemap: true,
                 outfile: rootdir + "/" + outfile,
                 logLevel: "warning",
+                inject,
                 external: [
                     "websocket-polyfill",
                     "@devicescript/compiler",
