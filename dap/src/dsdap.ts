@@ -78,7 +78,8 @@ export class DsDapSession extends LoggingDebugSession {
 
     constructor(
         public client: DevsDbgClient,
-        dbg: string | Uint8Array | DebugInfo
+        dbg: string | Uint8Array | DebugInfo,
+        private resolvePath = (s: SrcFile) => s.path
     ) {
         super()
 
@@ -464,11 +465,18 @@ export class DsDapSession extends LoggingDebugSession {
     }
 
     private mapSrcFile(sf: SrcFile): DebugProtocol.Source {
-        return {
-            sourceReference: sf.index + 1,
-            path: sf.path,
-            name: sf.path,
-        }
+        const path = this.resolvePath(sf)
+        if (path)
+            return {
+                path,
+                name: sf.path,
+            }
+        else
+            return {
+                sourceReference: sf.index + 1,
+                path: sf.path,
+                name: sf.path,
+            }
     }
 
     private pcToLocation(pc: number): DebugProtocol.BreakpointLocation & {
@@ -627,7 +635,9 @@ export class DsDapSession extends LoggingDebugSession {
 
     private findSource(src: DebugProtocol.Source) {
         if (src.sourceReference) return src.sourceReference - 1
-        const srcIdx = this.img.dbg.sources.findIndex(s => s.path == src.path)
+        const srcIdx = this.img.dbg.sources.findIndex(
+            s => s.path == src.path || this.resolvePath(s) == src.path
+        )
         return srcIdx
     }
 }

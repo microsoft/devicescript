@@ -167,13 +167,17 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
 
 export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
     if (!specs) specs = jacdacDefaultSpecifications
-    const r = { ...prelude }
+    const pref = ".devicescript/lib/"
+    const r: Record<string, string> = {}
+    for (const k of Object.keys(prelude)) {
+        r[pref + k] = prelude[k]
+    }
     const thespecs = specs
         .map(specToDeviceScript)
         .filter(n => !!n)
         .join("\n")
     const withmodule = `declare module "@devicescript/core" {\n${thespecs}\n}\n`
-    r["devicescript-spec.d.ts"] = withmodule
+    r[pref + "devicescript-spec.d.ts"] = withmodule
     return r
 }
 

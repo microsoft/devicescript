@@ -2,6 +2,7 @@ import { parseStackFrame } from "@devicescript/compiler"
 import { ensureDir } from "fs-extra"
 import { spawn } from "node:child_process"
 import { writeFileSync } from "node:fs"
+import { resolve } from "node:path"
 import { createInterface } from "node:readline"
 import { BuildOptions, readDebugInfo } from "./build"
 import { BINDIR, CmdOptions, log } from "./command"
@@ -32,7 +33,7 @@ export async function crunScript(
     if (!options.lazyGc) args.unshift("-X")
     if (!options.settings) args.unshift("-n")
 
-    const executable = "./runtime/built/jdcli"
+    const executable = resolve(__dirname, "../../runtime/built/jdcli")
     log(`run: ${executable} ${args.join(" ")}`)
 
     const child = spawn(executable, args, {

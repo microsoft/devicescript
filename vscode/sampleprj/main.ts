@@ -9,7 +9,10 @@ function foo() {
         q: [1, 2],
     }
     console.log(`x=${x} y=${y}`)
-    debugger
+    z.q.map(e => {
+        console.log(e)
+        if (e == 2) debugger
+    })
     console.log("past dbg")
 }
 

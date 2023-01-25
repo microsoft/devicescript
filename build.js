@@ -93,8 +93,8 @@ const files = {
     "compiler/built/devicescript-compiler.js": "compiler/src/devicescript.ts",
     "compiler/built/devicescript-compiler.node.cjs":
         "compiler/src/devicescript.ts",
-    "cli/built/devicescript-cli.cjs": "cli/src/cli.ts",
     "dap/built/devicescript-dap.cjs": "dap/src/dsdap.ts",
+    "cli/built/devicescript-cli.cjs": "cli/src/cli.ts",
     "vscode/built/devicescript-vscode.js": "vscode/src/extension.ts",
     "vscode/built/devicescript-vscode-web.js": "vscode/src/web-extension.ts",
 }
@@ -187,7 +187,10 @@ async function main() {
         }
         const ds = require(rootdir +
             "/compiler/built/devicescript-compiler.node.cjs")
-        fs.writeFileSync("devs/lib/" + specname, ds.preludeFiles()[specname])
+        fs.writeFileSync(
+            "devs/lib/" + specname,
+            ds.preludeFiles()[".devicescript/lib/" + specname]
+        )
         const mds = ds.markdownFiles()
         const mdo = "website/docs/api/clients"
         fs.emptyDirSync(mdo)
