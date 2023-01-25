@@ -8,14 +8,14 @@ hide_table_of_contents: true
 You can retreive the current value of a register by calling `read`.
 Internally, the client will handle all the necessary syncronization and communication with the sensor.
 
-```ts no-build no-run
+```ts skip no-run
 const pressure = sensor.pressure.read()
 ```
 
-Let's modify the snippet by `read()ing` the `pressure` reading
+Let's modify the snippet by `reading` the `pressure` reading
 and logging it to the console.
 
-```ts
+```ts edit
 console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()

@@ -24,7 +24,7 @@ To install the DeviceScript runtime on the board, follow these instructions:
 
 Once the .bin is copied and the board restarted,
 
--   open the DeviceScript developer tools (click `Run`)
+-   open the DeviceScript developer tools (click `Edit`)
 -   click `Connect`
 -   click `Connect Serial`
 -   select `USB JTag/...` in the system menu listing devices

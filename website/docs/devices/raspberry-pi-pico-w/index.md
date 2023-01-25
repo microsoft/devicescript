@@ -16,7 +16,7 @@ To install the DeviceScript runtime on the board, follow these instructions:
 
 Once the UF2 is copied and the board restarted,
 
--   open the DeviceScript developer tools (click `Run`)
+-   open the DeviceScript developer tools (click `Edit`)
 -   click `Connect`
 -   click `Connect USB`
 -   select `Raspberry Pico` in the system menu listing devices

@@ -47,15 +47,8 @@ async function createConfig() {
                     colorMode: {
                         disableSwitch: false,
                     },
-                    docs: {
-                        sidebar: {
-                            hideable: true,
-                            autoCollapseCategories: true,
-                        },
-                    },
                     navbar: {
                         title: "DeviceScript",
-                        hideOnScroll: true,
                         logo: {
                             alt: "DeviceScript language",
                             src: "img/logo.svg",
@@ -73,11 +66,6 @@ async function createConfig() {
                                 docId: "api/cli",
                                 position: "left",
                                 label: "API",
-                            },
-                            {
-                                href: "https://github.com/microsoft/devicescript/",
-                                label: "GitHub",
-                                position: "right",
                             },
                         ],
                     },
@@ -138,20 +126,77 @@ async function createConfig() {
                 }),
         },
         {
-            mermaid: true,
+            codeSandbox: {
+                defaultTemplate: "devicescript",
+                templates: {
+                    devicescript: {
+                        files: {
+                            "package.json": {
+                                content: {
+                                    dependencies: {},
+                                    devDependencies: {
+                                        "@devicescript/cli": "*",
+                                    },
+                                    descriptscript: {},
+                                    scripts: {
+                                        setup: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs init",
+                                        build: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build",
+                                        watch: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build --watch",
+                                        start: "yarn setup && yarn watch",
+                                    },
+                                },
+                            },
+                            "sandbox.config.json": {
+                                content: {
+                                    template: "node",
+                                    view: "terminal",
+                                    container: {
+                                        node: "16",
+                                    },
+                                    startScript: "setup",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            compileCode: {
+                langs: [
+                    {
+                        lang: "ts",
+                        nodeBin: "devicescript",
+                        npmPackage: "@devicescript/cli",
+                        excludedFiles: ["**/api/clients/*.md"],
+                        prefix: 'import * as ds from "@devicescript/core"',
+                    },
+                ],
+            },
+            sideEditor: {
+                languages: {
+                    ts: "devicescript",
+                },
+                editors: [
+                    {
+                        id: "devicescript",
+                        type: "iframe",
+                        lightUrl:
+                            "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&light=1",
+                        darkUrl:
+                            "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&dark=1",
+                        message: {
+                            channel: "devicescript",
+                            type: "source",
+                            force: true,
+                            startMissingSimulators: true,
+                        },
+                        messageTextFieldName: "source",
+                        readyMessage: {
+                            channel: "jacdac",
+                        },
+                    },
+                ],
+            },
         }
-    )
-
-    const renderCodeBlocks = (
-        await import("./src/remark/render-code-blocks.mjs")
-    ).default
-
-    // add custom codeblocks to the default docs
-    config.presets?.forEach(preset =>
-        preset[1].docs.remarkPlugins?.push(renderCodeBlocks)
-    )
-    config.plugins?.forEach(plugin =>
-        plugin[1]?.remarkPlugins?.push(renderCodeBlocks)
     )
 
     return config

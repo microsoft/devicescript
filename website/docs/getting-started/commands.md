@@ -13,7 +13,7 @@ can add code to generate a mouse click.
 that you will want to tune using the actual hardware sensors,
 not just a simulator.
 
-```ts no-build no-run
+```ts skip no-run
 if (pressure > 1400) {
     mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
 }
@@ -21,7 +21,7 @@ if (pressure > 1400) {
 
 The full sample looks like this.
 
-```ts
+```ts edit
 console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
@@ -45,7 +45,7 @@ We could do a much better job with debouncing but this
 is not really the point of this sample.
 
 :::note
-Click `Run` and try sliding the air pressure simulator left
+Click `Edit` and try sliding the air pressure simulator left
 and right to trigger clicks in the mouse simulator.
 :::
 

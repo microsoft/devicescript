@@ -11,7 +11,7 @@ To interact with Jacdac services, you define **roles** for each service you need
 
 In this scenario, we will need to measure air pressure and send HID mouse commands. Therefore, we declare a `airPressure` role and a `hidMouse` role.
 
-```ts
+```ts edit
 import * as ds from "@devicescript/core"
 
 console.log(`starting...`)
@@ -21,7 +21,7 @@ const mouse = new ds.HidMouse()
 
 ## Try it out
 
-- [ ]   Click `Run` to load the snippet in the developer tools
+- [ ]  Click `Edit` to load the snippet in the developer tools
 - [ ]  Check that a air pressure and mouse simulator was started by the tools.
 
 You can already interact with the simulators, but we don't have any interresting code using them yet.
@@ -30,7 +30,7 @@ You can already interact with the simulators, but we don't have any interresting
 For consistency and breivity, the `@devicescript/core` module
 is implicitely imported as follows:
 
-```ts no-build no-run
+```ts skip no-run
 import * as ds from "@devicescript/core"
 ```
 

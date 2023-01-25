@@ -50,7 +50,7 @@ and `X=7 Y=12` respectively).
 
 Concatenation and template literals can be also used to write registers.
 
-```ts no-build
+```ts skip
 const screen = new ds.CharacterScreen()
 let x = 7
 screen.message.write("X = " + x)
@@ -62,7 +62,7 @@ when setting string registers.
 Arguments are `{0}`, `{1}`, ..., `{9}`, `{A}`, `{B}`, ..., `{F}`.
 A second digit can be supplied to specify precision (though this doesn't work so well yet):
 
-```ts no-build
+```ts skip
 const screen = new ds.CharacterScreen()
 let x = 7, y = 12
 

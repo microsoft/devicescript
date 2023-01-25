@@ -17,7 +17,8 @@
         "runtime/jacdac-c/jacdac",
         "jacdac-ts",
         "dap",
-        "vscode"
+        "vscode",
+        "website"
     ],
     "devDependencies": {
         "esbuild": "^0.17.4"

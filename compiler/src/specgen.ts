@@ -254,7 +254,7 @@ const ${varname} = new ds.${clname}()
             "",
             pkt.description,
             `
-\`\`\`ts no-build no-run
+\`\`\`ts skip no-run
 ${varname}.${pname}(${fields}): void
 \`\`\`            
 `
@@ -267,7 +267,7 @@ ${varname}.${pname}(${fields}): void
     if (regs?.length) r.push("## Registers", "")
     regs.forEach(pkt => {
         const cmt = addComment(pkt)
-        const nobuild = status === "stable" && !pkt.client ? "" : "no-build"
+        const nobuild = status === "stable" && !pkt.client ? "" : "skip"
         // if there's a startRepeats before last field, we don't put ... before it
         const earlyRepeats = pkt.fields
             .slice(0, pkt.fields.length - 1)
@@ -375,7 +375,7 @@ ${varname}.${pname}.onChange(() => {
             "",
             pkt.description,
             `
-\`\`\`ts no-build no-run
+\`\`\`ts skip no-run
 ${varname}.${pname}.subscribe(() => {
 
 })

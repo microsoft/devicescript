@@ -11,14 +11,13 @@ This section will get you started at the level of the stack you're looking for.
 
 You do not need hardware or install any tools to try out DeviceScript. Try running this snippet!
 
-```ts
+```ts edit codesandbox
 ds.every(1, () => {
     console.log(`hello`)
 })
 ```
 
-You can edit it directly and press `Run` to load it in the DeviceScript simulator in the documentation.
-You can also click on `Fork` and open the sample in CodeSandbox.
+You can edit it directly and press `Edit` to load it in the DeviceScript simulator in the documentation.
 
 ## Try DeviceScript locally (or remotely)
 
