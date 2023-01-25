@@ -1,6 +1,5 @@
 built/
 build/
-.vscode/
 node_modules/
 tmp
 package-lock.json
@@ -14,3 +13,5 @@ temp/
 devs/lib/devicescript-spec.d.ts
 .devicescript
 *.vsix
+.vscode/settings.json
+vscode/sampleprj/.vscode

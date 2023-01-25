@@ -1,0 +1,45 @@
+{
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "DevS Compiler",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/cli/devicescript",
+            "args": [
+                "crun",
+                "devs/run-tests/basic.ts"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/compiler/built/**"
+            ],
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ],
+            "preLaunchTask": "npm: build-fast"
+        },
+        {
+            "name": "VSCode Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                
+                "--extensionDevelopmentPath=${workspaceFolder}/vscode",
+                "${workspaceFolder}/vscode/sampleprj"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/vscode/built/**"
+            ],
+            "preLaunchTask": "npm: build-fast",
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ]
+        }
+    ]
+}
