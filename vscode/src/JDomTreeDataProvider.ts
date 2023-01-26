@@ -19,6 +19,7 @@ import {
     REPORT_UPDATE,
     SystemReg,
     dashify,
+    JDServiceMemberNode,
 } from "jacdac-ts"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
@@ -90,7 +91,7 @@ export class JDomTreeItem extends vscode.TreeItem {
                 const item = new treeItemType(child, this._refresh)
                 return item
             })
-        return children.sort((l, r) => l.node.name.localeCompare(r.node.name))
+        return children
     }
 
     getChildren(): Thenable<JDomTreeItem[]> {
@@ -143,15 +144,33 @@ export class JDeviceTreeItem extends JDomTreeItem {
     }
 }
 
+export function toMarkdownString(value: string, jacdacDocsPath?: string) {
+    let text = value
+    if (jacdacDocsPath)
+        text += ` ([Documentation](https://microsoft.github.io/jacdac-docs/${jacdacDocsPath}))`
+    const tooltip = new vscode.MarkdownString(text, true)
+    tooltip.supportHtml = true
+    return tooltip
+}
+
 export class JDServiceTreeItem extends JDomTreeItem {
     constructor(service: JDService, refresh: RefreshFunction) {
         super(service, refresh)
+        const { specification } = service
+        const { notes, shortId } = specification || {}
+        this.tooltip = toMarkdownString(notes["short"], `services/${shortId}/`)
     }
 
     iconPath = new vscode.ThemeIcon("symbol-class")
 
     get service() {
         return this.node as JDService
+    }
+
+    protected createChildrenTreeItems(): JDomTreeItem[] {
+        return super
+            .createChildrenTreeItems()
+            .sort((l, r) => l.node.name.localeCompare(r.node.name))
     }
 
     protected handleChange() {
@@ -168,8 +187,14 @@ export class JDServiceTreeItem extends JDomTreeItem {
 }
 
 export class JDomServiceMemberTreeItem extends JDomTreeItem {
-    constructor(node: JDNode, refresh: RefreshFunction) {
+    constructor(node: JDServiceMemberNode, refresh: RefreshFunction) {
         super(node, refresh, vscode.TreeItemCollapsibleState.None)
+        const { specification } = node
+        const { description } = specification || {}
+        this.tooltip = toMarkdownString(
+            description,
+            `services/${node.service.specification.shortId}/`
+        )
     }
     getChildren(): Thenable<JDomTreeItem[]> {
         return Promise.resolve([])
