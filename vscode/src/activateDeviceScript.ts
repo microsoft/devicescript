@@ -17,6 +17,40 @@ export function activateDeviceScript(
     context: vscode.ExtensionContext,
     factory?: vscode.DebugAdapterDescriptorFactory
 ) {
+    let developerToolsPanel: vscode.WebviewPanel
+    const updateDeveloperToolsPanelUrl = () => {
+        if (!developerToolsPanel) return
+
+        const { kind: colorThemeKind } = vscode.window.activeColorTheme
+        const darkMode =
+            colorThemeKind === vscode.ColorThemeKind.Dark ||
+            colorThemeKind === vscode.ColorThemeKind.HighContrast
+                ? "dark"
+                : "light"
+        developerToolsPanel.webview.html = `
+        <html>
+        <head>
+        <style>
+        body {
+            margin: 0;
+            padding: 0; 
+            background-color: transparent;  
+        }
+        iframe {
+            position: absolute;
+            left: 0; right: 0;
+            width: 100%; height: 100%;
+            border: none;
+        }
+        </style>
+        </head>
+        <body>
+        <iframe src="http://localhost:8081/?${darkMode}=1" />
+        </body>
+        </html>                
+                        `
+    }
+
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.runEditorContents",
@@ -86,35 +120,22 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.openDevTools",
             () => {
-                console.log("Opening Developer Tools...")
-                // http://localhost:8081/
-                const panel = vscode.window.createWebviewPanel(
-                    "extension.devicescript.openDevTools", // Identifies the type of the webview. Used internally
-                    "DeviceScript Developer Tools", // Title of the panel displayed to the user
-                    vscode.ViewColumn.Nine, // Editor column to show the new webview panel in.
-                    { enableScripts: true } // Webview options. More on these later.
-                )
-                panel.webview.html = `
-<html>
-<head>
-<style>
-body {
-    margin: 0;
-    padding: 0;    
-}
-iframe {
-    position: absolute;
-    left: 0; right: 0;
-    width: 100%; height: 100%;
-    border: none;
-}
-</style>
-</head>
-<body>
-<iframe src="http://localhost:8081/" />
-</body>
-</html>                
-                `
+                if (developerToolsPanel) {
+                    developerToolsPanel.reveal()
+                } else {
+                    console.log("Opening Developer Tools...")
+                    // http://localhost:8081/
+                    developerToolsPanel = vscode.window.createWebviewPanel(
+                        "extension.devicescript.openDevTools", // Identifies the type of the webview. Used internally
+                        "DeviceScript Developer Tools", // Title of the panel displayed to the user
+                        vscode.ViewColumn.Nine, // Editor column to show the new webview panel in.
+                        { enableScripts: true } // Webview options. More on these later.
+                    )
+                    developerToolsPanel.onDidDispose(() => {
+                        developerToolsPanel = undefined
+                    })
+                    updateDeveloperToolsPanelUrl()
+                }
             }
         )
     )
@@ -131,6 +152,9 @@ iframe {
             }
         )
     )
+
+    // track color theme
+    vscode.window.onDidChangeActiveColorTheme(updateDeveloperToolsPanelUrl)
 
     // register a configuration provider for 'devicescript' debug type
     const provider = new DeviceScriptConfigurationProvider()
@@ -227,6 +251,8 @@ iframe {
         else statusBarItem.hide()
     })
     context.subscriptions.push(statusBarItem)
+
+    vscode.window.onDidChangeActiveColorTheme(colorTheme => {})
 }
 
 class DeviceScriptConfigurationProvider
