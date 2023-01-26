@@ -138,7 +138,7 @@ export class JDomTreeDataProvider
     implements vscode.TreeDataProvider<JDomTreeItem>
 {
     constructor(readonly bus: JDBus) {
-        this.bus.on(CHANGE, () => {
+        this.bus.on(DEVICE_CHANGE, () => {
             this.refresh()
         })
     }
@@ -149,7 +149,7 @@ export class JDomTreeDataProvider
 
     getChildren(element?: JDomTreeItem): Thenable<JDomTreeItem[]> {
         if (!element) {
-            const devices = this.bus.devices({ ignoreInfrastructure: false })
+            const devices = this.bus.devices({ ignoreInfrastructure: true })
             return Promise.resolve(
                 devices.map(
                     child =>
