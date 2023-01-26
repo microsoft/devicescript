@@ -241,8 +241,6 @@ export function activateDeviceScript(
     }
 
     const bus = startJacdacBus()
-    const config = vscode.workspace.getConfiguration("jacdac")
-    Flags.diagnostics = !!config.get("diagnostics")
 
     const jdomTreeDataProvider = new JDomTreeDataProvider(bus)
     vscode.window.registerTreeDataProvider(
@@ -266,18 +264,42 @@ export function activateDeviceScript(
     })
     context.subscriptions.push(statusBarItem)
 
-    vscode.window.onDidChangeActiveColorTheme(colorTheme => {})
+    vscode.window.onDidChangeActiveColorTheme(colorTheme => {
+        // TODO
+    }, context.subscriptions)
 
     // packet trace
-    const tracePackets = !!config.get("traceJacdacPackets")
-    if (tracePackets) {
-        const output = vscode.window.createOutputChannel("Jacdac Packets")
-        const logFrame = (frame: JDFrameBuffer) => {
-            const msg = serializeToTrace(frame, 0, bus)
-            if (msg) output.appendLine(msg)
-        }
-        bus.on(FRAME_PROCESS, logFrame)
+    let jacdacPacketsOutputChannel: vscode.OutputChannel = undefined
+    const logFrame = (frame: JDFrameBuffer) => {
+        const output = jacdacPacketsOutputChannel
+        if (!output) return
+        const msg = serializeToTrace(frame, 0, bus)
+        if (msg) output.appendLine(msg)
     }
+    // apply settings
+    const configure = () => {
+        const jacdacConfig = vscode.workspace.getConfiguration(
+            "devicescript.jacdac"
+        )
+        Flags.diagnostics = !!jacdacConfig.get("diagnostics")
+        const tracePackets = !!jacdacConfig.get("tracePackets")
+        if (tracePackets) {
+            if (!jacdacPacketsOutputChannel)
+                jacdacPacketsOutputChannel =
+                    vscode.window.createOutputChannel("Jacdac Packets")
+            bus.on(FRAME_PROCESS, logFrame)
+        } else if (!tracePackets && jacdacPacketsOutputChannel) {
+            bus.off(FRAME_PROCESS, logFrame)
+        }
+    }
+
+    // hook up to configurations
+    vscode.workspace.onDidChangeConfiguration(
+        configure,
+        undefined,
+        context.subscriptions
+    )
+    configure()
 }
 
 class DeviceScriptConfigurationProvider

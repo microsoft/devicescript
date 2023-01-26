@@ -62,12 +62,12 @@
     "configuration": {
       "title": "DeviceScript",
       "properties": {
-        "devicescript.diagnostics": {
+        "devicescript.jacdac.diagnostics": {
           "type": "boolean",
           "default": false,
           "description": "Enables additional debugging output from the Jacdac tooling."
         },
-        "devicescript.traceJacdacPackets": {
+        "devicescript.jacdac.tracePackets": {
           "type": "boolean",
           "default": false,
           "description": "Trace Jacdac packets to 'Jacdac Packets' Output pane."
