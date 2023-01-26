@@ -28,7 +28,9 @@ class JDomTreeItem extends vscode.TreeItem {
         collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
     ) {
         super(node.friendlyName, collapsibleState)
-        this.id = node.id
+        const { id, nodeKind } = node
+        this.id = id
+        this.contextValue = nodeKind
 
         this.handleChange = this.handleChange.bind(this)
         this.mount()

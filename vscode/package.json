@@ -140,7 +140,7 @@
         "command": "extension.devicescript.openDevTools",
         "title": "Open Developer Tools",
         "category": "DeviceScript",
-        "icon": "$(circuit-board)"
+        "icon": "$(dashboard)"
       },
       {
         "command": "extension.devicescript.toggleFormatting",
