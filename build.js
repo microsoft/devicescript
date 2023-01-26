@@ -159,7 +159,6 @@ async function main() {
                 logLevel: "warning",
                 inject,
                 external: [
-                    "websocket-polyfill",
                     "@devicescript/compiler",
                     "vscode",
                 ],

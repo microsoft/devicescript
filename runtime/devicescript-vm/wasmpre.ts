@@ -169,7 +169,8 @@ export module Exts {
         return new Promise<TransportResult>((resolve, reject) => {
             let sock: WebSocket = new WebSocket(url, protocols)
 
-            sock.binaryType = "arraybuffer"
+            if (sock.binaryType != "arraybuffer")
+                sock.binaryType = "arraybuffer"
 
             const send = (data: Uint8Array) => {
                 if (sock && sock.readyState == WebSocket.OPEN) {
@@ -332,7 +333,8 @@ export module Exts {
      * @param id1 the second 32 bits of the device id, undefined if id0 is a string
      */
     export function devsSetDeviceId(id0: string | number, id1?: number) {
-        if (devsIsRunning()) throw new Error("cannot change deviceid while running")
+        if (devsIsRunning())
+            throw new Error("cannot change deviceid while running")
         Module.devsInit()
         if (typeof id0 == "string") {
             if (id1 !== undefined) throw new Error("invalid arguments")
