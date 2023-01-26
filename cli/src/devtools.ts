@@ -1,4 +1,3 @@
-const SENDER_FIELD = "__jacdac_sender"
 /* eslint-disable @typescript-eslint/no-var-requires */
 const WebSocket = require("faye-websocket")
 import http from "http"
@@ -25,6 +24,7 @@ import {
     JDService,
     JSONTryParse,
     loadServiceSpecifications,
+    sendStayInBootloaderCommand,
     serializeToTrace,
     SRV_DEVICE_SCRIPT_MANAGER,
     Transport,
@@ -32,6 +32,7 @@ import {
 import { readCompiled } from "./run"
 import { deployToBus, deployToService } from "./deploy"
 import { open } from "fs/promises"
+import EventEmitter from "events"
 
 const dasboardPath = "tools/devicescript-devtools"
 
@@ -115,6 +116,42 @@ export function createTransports(options: TransportsOptions) {
     return transports
 }
 
+export interface DevToolsClient {
+    __devsSender: string
+    __devsWantsSideChannel: boolean
+
+    send(data: Buffer | string): void
+}
+
+export interface DevToolsSideMessage {
+    type: string
+    bcast?: boolean
+}
+
+export interface DevToolsErrorResponse {
+    type: "error"
+    message: string
+    stack?: string
+}
+
+const msgHandlers: Record<
+    string,
+    (msg: DevToolsSideMessage, sender: DevToolsClient) => Promise<void>
+> = {
+    enableBCast: async (msg, sender) => {
+        sender.__devsWantsSideChannel = true
+    },
+}
+
+export function sendError(cl: DevToolsClient, err: any) {
+    const info: DevToolsErrorResponse = {
+        type: "error",
+        message: err.message || "" + err,
+        stack: err.stack,
+    }
+    cl.send(JSON.stringify(info))
+}
+
 export async function devtools(
     fn: string | undefined,
     options: DevToolsOptions & CmdOptions & TransportsOptions = {}
@@ -135,7 +172,7 @@ export async function devtools(
     const traceFd = options.trace ? await open(options.trace, "w") : null
 
     // start http server
-    const clients: WebSocket[] = []
+    const clients: DevToolsClient[] = []
 
     let prevBytecode: Uint8Array
     const refreshProg = async (service?: JDService) => {
@@ -168,15 +205,33 @@ export async function devtools(
                 serializeToTrace(frame, 0, bus, { showTime: false }) + "\n"
             )
         clients
-            .filter(c => (c as any)[SENDER_FIELD] !== frame._jacdac_sender)
+            .filter(c => c.__devsSender !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))
     })
 
-    const processMessage = (message: string, sender: string) => {
-        const msg = JSONTryParse(message)
+    const processMessage = async (message: string, client: DevToolsClient) => {
+        const msg: DevToolsSideMessage = JSONTryParse(message)
         if (!msg) return
-        console.debug(msg)
+
+        const handler = msgHandlers[msg.type]
+        if (handler) {
+            try {
+                await handler(msg, client)
+            } catch (err) {
+                sendError(client, err)
+            }
+        }
+
+        if (msg.bcast)
+            for (const client of clients) {
+                if (client != client && client.__devsWantsSideChannel)
+                    client.send(message)
+            }
+
+        if (!msg.bcast && !handler)
+            sendError(client, new Error(`unknown msg type: ${msg.type}`))
     }
+
     const processPacket = (message: Buffer | Uint8Array, sender: string) => {
         const data: JDFrameBuffer = new Uint8Array(message)
         data._jacdac_sender = sender
@@ -195,7 +250,7 @@ export async function devtools(
             res.statusCode = 404
         }
     })
-    function removeClient(client: WebSocket) {
+    function removeClient(client: DevToolsClient) {
         const i = clients.indexOf(client)
         clients.splice(i, 1)
         log(`client: disconnected (${clients.length} clients)`)
@@ -203,27 +258,29 @@ export async function devtools(
     server.on("upgrade", (request, socket, body) => {
         // is this a socket?
         if (WebSocket.isWebSocket(request)) {
-            const client = new WebSocket(request, socket, body)
+            const client: DevToolsClient = new WebSocket(request, socket, body)
             const sender = "ws" + ++clientId
             // store sender id to deduped packet
-            client[SENDER_FIELD] = sender
+            client.__devsSender = sender
             clients.push(client)
             log(`webclient: connected (${sender}, ${clients.length} clients)`)
-            client.on("message", (event: any) => {
+            const ev = client as any as EventEmitter
+            ev.on("message", (event: any) => {
                 const { data } = event
-                if (typeof data === "string") processMessage(data, sender)
+                if (typeof data === "string") processMessage(data, client)
                 else processPacket(data, sender)
             })
-            client.on("close", () => removeClient(client))
-            client.on("error", (ev: Error) => error(ev.message))
+            ev.on("close", () => removeClient(client))
+            ev.on("error", (ev: Error) => error(ev.message))
         }
     })
     server.listen(port, listenHost)
 
     log(`   tcpsocket: tcp://localhost:${tcpPort}`)
-    const tcpServer = net.createServer((client: any) => {
+    const tcpServer = net.createServer(socket => {
         const sender = "tcp" + ++clientId
-        client[SENDER_FIELD] = sender
+        const client: DevToolsClient = socket as any
+        client.__devsSender = sender
         client.send = (pkt0: Buffer | string) => {
             if (typeof pkt0 == "string") return
             const pkt = new Uint8Array(pkt0)
@@ -231,17 +288,17 @@ export async function devtools(
             b[0] = pkt.length
             b.set(pkt, 1)
             try {
-                client.write(b)
+                socket.write(b)
             } catch {
                 try {
-                    client.end()
+                    socket.end()
                 } catch {} // eslint-disable-line no-empty
             }
         }
         clients.push(client)
         log(`tcpclient: connected (${sender} ${clients.length} clients)`)
         let acc: Uint8Array
-        client.on("data", (buf: Uint8Array) => {
+        socket.on("data", (buf: Uint8Array) => {
             if (acc) {
                 buf = bufferConcat(acc, buf)
                 acc = null
@@ -261,8 +318,8 @@ export async function devtools(
                 }
             }
         })
-        client.on("end", () => removeClient(client))
-        client.on("error", (ev: Error) => error(ev))
+        socket.on("end", () => removeClient(client))
+        socket.on("error", (ev: Error) => error(ev))
     })
     tcpServer.listen(tcpPort, listenHost)
 

@@ -1,4 +1,4 @@
-import { createWebSocketTransport, ERROR, JDBus } from "jacdac-ts"
+import { createWebSocketTransport, ERROR, JDBus, SIDE_DATA } from "jacdac-ts"
 import * as vscode from "vscode"
 
 let __bus: JDBus
@@ -8,10 +8,11 @@ export function startJacdacBus() {
 
 function uncachedStartJacdacBus() {
     try {
-        const bus = new JDBus(
-            [createWebSocketTransport("ws://127.0.0.1:8081/")],
-            { client: false }
-        )
+        const ws = createWebSocketTransport("ws://127.0.0.1:8081/")
+        ws.on(SIDE_DATA, data => {
+            console.log("SIDE", data)
+        })
+        const bus = new JDBus([ws], { client: false })
         bus.on(ERROR, err => {
             console.error("Bus error", err)
         })
