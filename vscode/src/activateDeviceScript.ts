@@ -121,7 +121,7 @@ export function activateDeviceScript(
             "extension.devicescript.openDevTools",
             () => {
                 if (developerToolsPanel) {
-                    developerToolsPanel.reveal()
+                    developerToolsPanel.reveal(vscode.ViewColumn.Nine)
                 } else {
                     console.log("Opening Developer Tools...")
                     // http://localhost:8081/
@@ -131,9 +131,13 @@ export function activateDeviceScript(
                         vscode.ViewColumn.Nine, // Editor column to show the new webview panel in.
                         { enableScripts: true } // Webview options. More on these later.
                     )
-                    developerToolsPanel.onDidDispose(() => {
-                        developerToolsPanel = undefined
-                    })
+                    developerToolsPanel.onDidDispose(
+                        () => {
+                            developerToolsPanel = undefined
+                        },
+                        undefined,
+                        context.subscriptions
+                    )
                     updateDeveloperToolsPanelUrl()
                 }
             }
