@@ -1,8 +1,4 @@
-import {
-    createNodeSocketTransport,
-    Flags,
-    JDBus,
-} from "jacdac-ts"
+import { createWebSocketTransport, ERROR, JDBus } from "jacdac-ts"
 import * as vscode from "vscode"
 
 let __bus: JDBus
@@ -12,9 +8,15 @@ export function startJacdacBus() {
 
 function uncachedStartJacdacBus() {
     try {
-        const bus = new JDBus([createNodeSocketTransport()])
-        // connect in background
-        bus.connect(true)
+        const bus = new JDBus(
+            [createWebSocketTransport("ws://127.0.0.1:8081/")],
+            { client: false }
+        )
+        bus.on(ERROR, err => {
+            console.error("Bus error", err)
+        })
+        // connect in foreground, otherwise we'll have no clue why it failed
+        bus.connect(false)
         return bus
     } catch (err) {
         console.error(err.stack)
@@ -23,7 +25,7 @@ function uncachedStartJacdacBus() {
 }
 
 export async function stopJacdacBus() {
-    const bus = __bus 
+    const bus = __bus
     if (bus) {
         __bus = undefined
         await bus.disconnect()

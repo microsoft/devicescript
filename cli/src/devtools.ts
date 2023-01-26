@@ -215,7 +215,7 @@ export async function devtools(
                 else processPacket(data, sender)
             })
             client.on("close", () => removeClient(client))
-            client.on("error", (ev: Error) => error(ev))
+            client.on("error", (ev: Error) => error(ev.message))
         }
     })
     server.listen(port, listenHost)

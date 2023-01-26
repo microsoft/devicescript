@@ -155,6 +155,7 @@ async function main() {
                 entryPoints: [rootdir + "/" + src],
                 bundle: true,
                 sourcemap: true,
+                sourcesContent: false,
                 outfile: rootdir + "/" + outfile,
                 logLevel: "warning",
                 inject,

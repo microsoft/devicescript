@@ -6,7 +6,17 @@ import * as vscode from "vscode"
 import { activateDeviceScript } from "./activateDeviceScript"
 
 export function activate(context: vscode.ExtensionContext) {
-    return activateDeviceScript(context, new DeviceScriptAdapterServerDescriptorFactory())
+    try {
+        require("websocket-polyfill")
+        global.Blob = require("buffer").Blob
+    } catch (err) {
+        console.error(err)
+    }
+
+    return activateDeviceScript(
+        context,
+        new DeviceScriptAdapterServerDescriptorFactory()
+    )
 }
 
 export function deactivate() {

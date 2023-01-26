@@ -40,7 +40,8 @@
     "@vscode/debugadapter-testsupport": "^1.58.0",
     "@vscode/vsce": "^2.16.0",
     "jacdac-ts": "*",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "websocket-polyfill": "^0.0.3"
   },
   "main": "./built/devicescript-vscode.js",
   "browser": "./built/devicescript-vscode-web.js",
