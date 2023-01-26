@@ -10,6 +10,7 @@ import {
     CancellationToken,
 } from "vscode"
 import { startJacdacBus } from "./jacdac"
+import { JDomTreeDataProvider } from "./JDomTreeDataProvider"
 
 export function activateDeviceScript(
     context: vscode.ExtensionContext,
@@ -155,7 +156,12 @@ export function activateDeviceScript(
         console.info = console.log
     }
 
-    startJacdacBus()
+    const bus = startJacdacBus()
+    const jdomTreeDataProvider = new JDomTreeDataProvider(bus)
+    vscode.window.registerTreeDataProvider(
+        "extension.devicescript.jacdac-jdom-explorer",
+        jdomTreeDataProvider
+    )
 }
 
 class DeviceScriptConfigurationProvider

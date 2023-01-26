@@ -10,11 +10,15 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 
-export async function startJacdacBus() {
+let __bus: JDBus
+export function startJacdacBus() {
+    return __bus || (__bus = uncachedStartJacdacBus())
+}
+
+function uncachedStartJacdacBus() {
     try {
         const bus = new JDBus([createNodeSocketTransport()])
         Flags.diagnostics = true
-        await bus.connect()
 
         // not sure how useful this is
         let logPackets = true
@@ -32,7 +36,13 @@ export async function startJacdacBus() {
             bus.on(PACKET_RECEIVE_ANNOUNCE, logPkt)
             bus.on(PACKET_RECEIVE_NO_DEVICE, logPkt)
         }
+
+        // connect in background
+        bus.connect(true)
+
+        return bus
     } catch (err) {
         console.error(err.stack)
+        return undefined
     }
 }
