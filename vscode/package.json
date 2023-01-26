@@ -45,17 +45,33 @@
   "main": "./built/devicescript-vscode.js",
   "browser": "./built/devicescript-vscode-web.js",
   "activationEvents": [
+    "onStartupFinished",
     "onDebugResolve:devicescript",
     "onDebugDynamicConfigurations:devicescript",
     "onCommand:extension.devicescript.start",
     "onCommand:extension.devicescript.getProgramName",
     "onCommand:extension.devicescript.runEditorContents",
-    "onCommand:extension.devicescript.debugEditorContents"
+    "onCommand:extension.devicescript.debugEditorContents",
+    "onView:extension.devicescript.jacdac-jdom-explorer"
   ],
   "workspaceTrust": {
     "request": "never"
   },
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "extension.devicescript.jacdac-jdom-explorer",
+          "name": "Device Explorer"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "extension.devicescript.jacdac-jdom-explorer",
+        "contents": "Connect a Jacdac device."
+      }
+    ],
     "menus": {
       "editor/title/run": [
         {
