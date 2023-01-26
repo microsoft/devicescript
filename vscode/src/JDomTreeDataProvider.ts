@@ -157,8 +157,13 @@ export class JDServiceTreeItem extends JDomTreeItem {
     constructor(service: JDService, refresh: RefreshFunction) {
         super(service, refresh)
         const { specification } = service
-        const { notes, shortId } = specification || {}
-        this.tooltip = toMarkdownString(notes["short"], `services/${shortId}/`)
+        if (specification) {
+            const { notes, shortId } = specification
+            this.tooltip = toMarkdownString(
+                notes["short"],
+                `services/${shortId}/`
+            )
+        }
     }
 
     iconPath = new vscode.ThemeIcon("symbol-class")
