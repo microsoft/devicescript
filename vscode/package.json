@@ -35,12 +35,12 @@
     "vscode:prepublish": "yarn build"
   },
   "devDependencies": {
-    "@types/vscode": "^1.66.0",
-    "@vscode/debugadapter": "^1.56.0",
-    "@vscode/debugadapter-testsupport": "^1.56.0",
-    "typescript": "^4.6.3",
-    "vsce": "^2.7.0",
-    "jacdac-ts": "*"
+    "@types/vscode": "^1.74.0",
+    "@vscode/debugadapter": "^1.58.0",
+    "@vscode/debugadapter-testsupport": "^1.58.0",
+    "@vscode/vsce": "^2.16.0",
+    "jacdac-ts": "*",
+    "typescript": "^4.9.4"
   },
   "main": "./built/devicescript-vscode.js",
   "browser": "./built/devicescript-vscode-web.js",
