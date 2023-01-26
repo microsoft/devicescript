@@ -6,7 +6,6 @@ import { crunScript } from "./crun"
 import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
-import { vscodeserver } from "./devtools"
 import { disasm } from "./disasm"
 import init from "./init"
 import { logParse } from "./logparse"
@@ -97,26 +96,6 @@ export async function mainCli() {
         )
         .arguments("[file.ts]")
         .action(devtools)
-
-        program
-        .command("vscodeserver")
-        .description("launches a development tools server to support the Visual Studio Code extension")
-        .option(
-            "--localhost",
-            "use localhost:8000 instead of the internet dashboard"
-        )
-        .option("-l, --logging", "print out device log messages as they come")
-        .option("-t, --trace <string>", "save all packets to named file")
-        .option("-u, --usb", "listen to Jacdac over USB (requires usb)")
-        .option(
-            "-s, --serial",
-            "listen to Jacdac over SERIAL (requires serialport)"
-        )
-        .option(
-            "-i, --spi",
-            "listen to Jacdac over SPI (requires rpio, experimental)"
-        )
-        .action(vscodeserver)
 
     program
         .command("ctool", { hidden: true })
