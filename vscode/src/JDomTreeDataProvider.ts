@@ -137,7 +137,7 @@ export class JDeviceTreeItem extends JDomTreeItem {
             const control = device.service(SRV_CONTROL)
             const description = control?.register(ControlReg.DeviceDescription)
             this.tooltip = description?.stringValue
-            description.on(CHANGE, this.refresh)
+            description.on(CHANGE, this.refresh.bind(this))
             description.scheduleRefresh()
         }
         this.refresh()
@@ -220,6 +220,7 @@ export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
                 ? "symbol-property"
                 : "symbol-field"
         )
+        this.handleChange = this.handleChange.bind(this)
     }
 
     protected mount(): void {
