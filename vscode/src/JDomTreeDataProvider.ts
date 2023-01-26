@@ -18,6 +18,7 @@ import {
     EVENT_NODE_NAME,
     REPORT_UPDATE,
     SystemReg,
+    dashify,
 } from "jacdac-ts"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
@@ -66,6 +67,9 @@ export class JDomTreeItem extends vscode.TreeItem {
                         return undefined
                     case REGISTER_NODE_NAME: {
                         const reg = child as JDRegister
+                        const { specification } = reg
+                        const { client } = specification
+                        if (client) return undefined
                         if (JDRegisterTreeItem.probablyIgnore(reg))
                             return undefined
                         break
@@ -86,7 +90,7 @@ export class JDomTreeItem extends vscode.TreeItem {
                 const item = new treeItemType(child, this._refresh)
                 return item
             })
-        return children
+        return children.sort((l, r) => l.node.name.localeCompare(r.node.name))
     }
 
     getChildren(): Thenable<JDomTreeItem[]> {
@@ -156,7 +160,7 @@ export class JDServiceTreeItem extends JDomTreeItem {
 
         this.label =
             instanceName ||
-            humanify(specification?.shortName?.toLowerCase()) ||
+            humanify(dashify(specification?.shortName?.toLowerCase())) ||
             `0x${serviceClass.toString(16)}`
 
         this.refresh()
@@ -206,7 +210,7 @@ export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
         const { optional, name } = specification || {}
 
         this.label = humanify(
-            `${name || `0x${code.toString(16)}${optional ? "?" : ""}`}`
+            dashify(`${name || `0x${code.toString(16)}${optional ? "?" : ""}`}`)
         )
         this.description = humanValue
         this.refresh()
