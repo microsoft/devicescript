@@ -67,7 +67,41 @@ export function activateDeviceScript(
         ),
         vscode.commands.registerCommand("extension.devicescript.start", () => {
             console.log("Starting...")
-        })
+        }),
+        vscode.commands.registerCommand(
+            "extension.devicescript.openDevTools",
+            () => {
+                console.log("Opening Developer Tools...")
+                // http://localhost:8081/
+                const panel = vscode.window.createWebviewPanel(
+                    "extension.devicescript.openDevTools", // Identifies the type of the webview. Used internally
+                    "DeviceScript Developer Tools", // Title of the panel displayed to the user
+                    vscode.ViewColumn.Nine, // Editor column to show the new webview panel in.
+                    { enableScripts: true } // Webview options. More on these later.
+                )
+                panel.webview.html = `
+<html>
+<head>
+<style>
+body {
+    margin: 0;
+    padding: 0;    
+}
+iframe {
+    position: absolute;
+    left: 0; right: 0;
+    width: 100%; height: 100%;
+    border: none;
+}
+</style>
+</head>
+<body>
+<iframe src="http://localhost:8081/" />
+</body>
+</html>                
+                `
+            }
+        )
     )
 
     context.subscriptions.push(

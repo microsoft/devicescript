@@ -27,7 +27,8 @@ class JDomTreeItem extends vscode.TreeItem {
     ) {
         super(node.friendlyName, collapsibleState)
 
-        this.node.on(CHANGE, this.handleChange.bind(this))
+        this.handleChange = this.handleChange.bind(this)
+        this.node.on(CHANGE, this.handleChange)
         this.handleChange()
     }
 
@@ -36,6 +37,10 @@ class JDomTreeItem extends vscode.TreeItem {
         this.description = this.node.toString()
 
         this.refresh()
+    }
+
+    destroy() {
+        this.node.off(CHANGE, this.handleChange)
     }
 }
 
@@ -51,8 +56,14 @@ class JDeviceTreeItem extends JDomTreeItem {
 
     protected handleChange() {
         const { device } = this
+        const { bus } = device
+
+        if (!bus) {
+            this.destroy()
+            return
+        }
+
         this.label = device.friendlyName
-        const control = device.service(SRV_CONTROL)
         if (!this.description) {
             const pid = device.productIdentifier
             if (pid) {
@@ -65,8 +76,9 @@ class JDeviceTreeItem extends JDomTreeItem {
         }
 
         if (!this.tooltip) {
-            const description = control.register(ControlReg.DeviceDescription)
-            this.tooltip = description.stringValue
+            const control = device.service(SRV_CONTROL)
+            const description = control?.register(ControlReg.DeviceDescription)
+            this.tooltip = description?.stringValue
             description.on(CHANGE, this.refresh)
             description.scheduleRefresh()
         }

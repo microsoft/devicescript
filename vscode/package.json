@@ -49,6 +49,7 @@
     "onDebugResolve:devicescript",
     "onDebugDynamicConfigurations:devicescript",
     "onCommand:extension.devicescript.start",
+    "onCommand:extension.devicescript.openDevTools",
     "onCommand:extension.devicescript.getProgramName",
     "onCommand:extension.devicescript.runEditorContents",
     "onCommand:extension.devicescript.debugEditorContents",
@@ -96,6 +97,9 @@
         },
         {
           "command": "extension.devicescript.start"
+        },
+        {
+          "command": "extension.devicescript.openDevTools"
         }
       ],
       "debug/variables/context": [
@@ -123,6 +127,11 @@
       {
         "command": "extension.devicescript.start",
         "title": "Start things",
+        "category": "DeviceScript"
+      },
+      {
+        "command": "extension.devicescript.openDevTools",
+        "title": "Open Developer Tools",
         "category": "DeviceScript"
       },
       {
