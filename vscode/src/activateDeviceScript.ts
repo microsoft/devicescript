@@ -17,6 +17,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
+import { spawnDevTools } from "./devtools"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import { JDeviceTreeItem, JDomTreeDataProvider } from "./JDomTreeDataProvider"
 
@@ -239,6 +240,9 @@ export function activateDeviceScript(
         console.error = (...a: any[]) => addMsg(3, a)
         console.info = console.log
     }
+
+    // launch devtools in backgroun
+    context.subscriptions.push(spawnDevTools())
 
     const bus = startJacdacBus()
     // make sure to stop bus when unloading extension
