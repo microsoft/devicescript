@@ -37,9 +37,10 @@ You will have the following files created.
     /bin          compilation file output
 .gitignore        if you are using git, make sure to ignore .devicescript
 main.ts           usual name for your entry point application
-package.json      additional dependencies and also has the `devicescript` field entry
+package.json      projet configuration
 tsconfig.json     configure the TypeScript compiler to compile DeviceScript syntax
-...               A few additional files supporting the coding experience in VS Code
+devsconfig.json   configure the DeviceScript compiler with additional flags. Also used by VSCode extension to activate.
+...
 ```
 
 -   open `main.ts` and copy the following code

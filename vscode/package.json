@@ -45,7 +45,7 @@
   "main": "./built/devicescript-vscode.js",
   "browser": "./built/devicescript-vscode-web.js",
   "activationEvents": [
-    "onStartupFinished",
+    "workspaceContains:**/devsconfig.json",
     "onDebugResolve:devicescript",
     "onDebugDynamicConfigurations:devicescript",
     "onCommand:extension.devicescript.start",

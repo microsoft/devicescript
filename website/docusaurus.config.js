@@ -131,13 +131,13 @@ async function createConfig() {
                 templates: {
                     devicescript: {
                         files: {
+                            "devsconfig.json": {},
                             "package.json": {
                                 content: {
                                     dependencies: {},
                                     devDependencies: {
                                         "@devicescript/cli": "*",
                                     },
-                                    descriptscript: {},
                                     scripts: {
                                         setup: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs init",
                                         build: "node node_modules/@devicescript/cli/built/devicescript-cli.cjs build",
