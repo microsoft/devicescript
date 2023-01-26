@@ -129,9 +129,8 @@ export async function devtools(
 
     loadServiceSpecifications(jacdacDefaultSpecifications)
 
-    // download proxy sources
-    const proxyHtml = await fetchProxy(options.localhost)
-
+    // download proxy sources, don't block
+    const proxyHtmlPromise = fetchProxy(options.localhost)
     const traceFd = options.trace ? await open(options.trace, "w") : null
 
     // start http server
@@ -188,9 +187,16 @@ export async function devtools(
         const parsedUrl = url.parse(req.url)
         const pathname = parsedUrl.pathname
         if (pathname === "/") {
-            res.setHeader("Cache-control", "no-cache")
-            res.setHeader("Content-type", "text/html")
-            res.end(proxyHtml)
+            proxyHtmlPromise
+                .then(proxyHtml => {
+                    res.setHeader("Cache-control", "no-cache")
+                    res.setHeader("Content-type", "text/html")
+                    res.end(proxyHtml)
+                })
+                .catch(e => {
+                    console.error(e)
+                    res.statusCode = 3
+                })
         } else {
             res.statusCode = 404
         }
