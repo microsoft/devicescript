@@ -81,6 +81,13 @@
           "group": "navigation"
         }
       ],
+      "view/item/context": [
+        {
+          "command": "extension.devicescript.identifyDevice",
+          "when": "view == extension.devicescript.jacdac-jdom-explorer && viewItem == device",
+          "group": "inline"
+        }
+      ],
       "editor/title/run": [
         {
           "command": "extension.devicescript.runEditorContents",
@@ -141,6 +148,12 @@
         "title": "Open Developer Tools",
         "category": "DeviceScript",
         "icon": "$(dashboard)"
+      },
+      {
+        "command": "extension.devicescript.identifyDevice",
+        "title": "Identify device",
+        "category": "DeviceScript",
+        "icon": "$(account)"
       },
       {
         "command": "extension.devicescript.toggleFormatting",

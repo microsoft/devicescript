@@ -10,7 +10,7 @@ import {
     CancellationToken,
 } from "vscode"
 import { startJacdacBus } from "./jacdac"
-import { JDomTreeDataProvider } from "./JDomTreeDataProvider"
+import { JDeviceTreeItem, JDomTreeDataProvider } from "./JDomTreeDataProvider"
 
 export function activateDeviceScript(
     context: vscode.ExtensionContext,
@@ -68,6 +68,13 @@ export function activateDeviceScript(
         vscode.commands.registerCommand("extension.devicescript.start", () => {
             console.log("Starting...")
         }),
+        vscode.commands.registerCommand(
+            "extension.devicescript.identifyDevice",
+            (item: JDeviceTreeItem) => {
+                const { device } = item
+                device.identify(); // async
+            }
+        ),
         vscode.commands.registerCommand(
             "extension.devicescript.openDevTools",
             () => {

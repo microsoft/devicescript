@@ -20,9 +20,9 @@ import {
     SystemReg,
 } from "jacdac-ts"
 
-type RefreshFunction = (item: JDomTreeItem) => void
+export type RefreshFunction = (item: JDomTreeItem) => void
 
-class JDomTreeItem extends vscode.TreeItem {
+export class JDomTreeItem extends vscode.TreeItem {
     constructor(
         public readonly node: JDNode,
         private readonly _refresh: RefreshFunction,
@@ -58,7 +58,7 @@ class JDomTreeItem extends vscode.TreeItem {
     }
 }
 
-class JDeviceTreeItem extends JDomTreeItem {
+export class JDeviceTreeItem extends JDomTreeItem {
     constructor(device: JDDevice, refresh: RefreshFunction) {
         super(device, refresh)
         this.device.resolveProductIdentifier()
@@ -102,7 +102,7 @@ class JDeviceTreeItem extends JDomTreeItem {
     }
 }
 
-class JDServiceTreeItem extends JDomTreeItem {
+export class JDServiceTreeItem extends JDomTreeItem {
     constructor(service: JDService, refresh: RefreshFunction) {
         super(service, refresh)
     }
@@ -126,7 +126,7 @@ class JDServiceTreeItem extends JDomTreeItem {
     }
 }
 
-class JDRegisterTreeItem extends JDomTreeItem {
+export class JDRegisterTreeItem extends JDomTreeItem {
     constructor(register: JDRegister, refresh: RefreshFunction) {
         super(register, refresh, vscode.TreeItemCollapsibleState.None)
         const { specification, code } = register
@@ -182,7 +182,7 @@ class JDRegisterTreeItem extends JDomTreeItem {
     }
 }
 
-class JDEventTreeItem extends JDomTreeItem {
+export class JDEventTreeItem extends JDomTreeItem {
     constructor(event: JDEvent, refresh: RefreshFunction) {
         super(event, refresh, vscode.TreeItemCollapsibleState.None)
     }
