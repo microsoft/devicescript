@@ -3,7 +3,7 @@ import * as vscode from "vscode"
 let terminal: vscode.Terminal
 export function spawnDevTools(): { dispose: () => void } {
     if (!terminal) {
-        const terminal = vscode.window.createTerminal({
+        terminal = vscode.window.createTerminal({
             name: "DeviceScript Server",
             hideFromUser: true,
             message: "Launching DeviceScript server process.",

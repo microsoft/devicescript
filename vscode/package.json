@@ -179,6 +179,11 @@
         "category": "DeviceScript"
       },
       {
+        "command": "extension.devicescript.showServerTerminal",
+        "title": "Show development server terminal",
+        "category": "DeviceScript"
+      },
+      {
         "command": "extension.devicescript.openDevTools",
         "title": "Open Developer Tools",
         "category": "DeviceScript",

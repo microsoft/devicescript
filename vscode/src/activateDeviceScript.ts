@@ -17,7 +17,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
-import { spawnDevTools } from "./devtools"
+import { spawnDevTools, showDevToolsTerminal } from "./devtools"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import { JDeviceTreeItem, JDomTreeDataProvider } from "./JDomTreeDataProvider"
 
@@ -111,6 +111,13 @@ export function activateDeviceScript(
         vscode.commands.registerCommand("extension.devicescript.start", () => {
             console.log("Starting...")
         }),
+        vscode.commands.registerCommand(
+            "extension.devicescript.showServerTerminal",
+            () => {
+                console.log("Showing terminal...")
+                showDevToolsTerminal()
+            }
+        ),
         vscode.commands.registerCommand(
             "extension.devicescript.identifyDevice",
             (item: JDeviceTreeItem) => {
