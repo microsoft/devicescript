@@ -10,10 +10,6 @@ import { jacdacDefaultSpecifications } from "@devicescript/compiler"
 import {
     bufferConcat,
     bufferEq,
-    createNodeSPITransport,
-    createNodeUSBOptions,
-    createNodeWebSerialTransport,
-    createUSBTransport,
     debounce,
     DEVICE_ANNOUNCE,
     ERROR,
@@ -27,93 +23,19 @@ import {
     sendStayInBootloaderCommand,
     serializeToTrace,
     SRV_DEVICE_SCRIPT_MANAGER,
-    Transport,
 } from "jacdac-ts"
 import { readCompiled } from "./run"
 import { deployToBus, deployToService } from "./deploy"
 import { open } from "fs/promises"
 import EventEmitter from "events"
 
-const dasboardPath = "tools/devicescript-devtools"
-
-function fetchProxy(localhost: boolean): Promise<string> {
-    const protocol = localhost ? http : https
-    const url = localhost
-        ? "http://localhost:8000/devtools/proxy.html"
-        : "https://microsoft.github.io/jacdac-docs/devtools/proxy"
-    //debug(`fetch jacdac devtools proxy at ${url}`)
-    return new Promise<string>((resolve, reject) => {
-        protocol
-            .get(url, res => {
-                if (res.statusCode != 200)
-                    reject(
-                        new Error(`proxy download failed (${res.statusCode})`)
-                    )
-                res.setEncoding("utf8")
-                let body = ""
-                res.on("data", data => (body += data))
-                res.on("end", () => {
-                    body = body
-                        .replace(
-                            /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
-                            localhost
-                                ? `http://localhost:8000/${dasboardPath}/`
-                                : `https://microsoft.github.io/jacdac-docs/${dasboardPath}/`
-                        )
-                        .replace("Jacdac DevTools", "DeviceScript DevTools")
-                        .replace(
-                            "https://microsoft.github.io/jacdac-docs/favicon.svg",
-                            "https://microsoft.github.io/devicescript/img/favicon.svg"
-                        )
-                    resolve(body)
-                })
-                res.on("error", reject)
-            })
-            .on("error", reject)
-    })
-}
+import { createTransports, TransportsOptions } from "./transport"
+import { fetchDevToolsProxy } from "./devtoolsproxy"
 
 export interface DevToolsOptions {
     internet?: boolean
     localhost?: boolean
     trace?: string
-}
-
-export interface TransportsOptions {
-    usb?: boolean
-    serial?: boolean
-    spi?: boolean
-}
-
-function tryRequire(name: string) {
-    return require(name)
-}
-
-export function createTransports(options: TransportsOptions) {
-    const transports: Transport[] = []
-    if (options.usb) {
-        log(`adding USB transport (requires "usb" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const usb = tryRequire("usb")
-        const options = createNodeUSBOptions(usb.WebUSB)
-        transports.push(createUSBTransport(options))
-    }
-    if (options.serial) {
-        log(`adding serial transport (requires "serialport" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const SerialPort = tryRequire("serialport").SerialPort
-        transports.push(createNodeWebSerialTransport(SerialPort))
-    }
-    if (options.spi) {
-        log(`adding SPI transport (requires "rpio" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const RPIO = tryRequire("rpio")
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const SpiDev = tryRequire("spi-device")
-        transports.push(createNodeSPITransport(RPIO, SpiDev))
-    }
-
-    return transports
 }
 
 export interface DevToolsClient {
@@ -165,9 +87,6 @@ export async function devtools(
     log(`starting dev tools at http://localhost:${port}`)
 
     loadServiceSpecifications(jacdacDefaultSpecifications)
-
-    // download proxy sources
-    const proxyHtml = await fetchProxy(options.localhost)
 
     const traceFd = options.trace ? await open(options.trace, "w") : null
 
@@ -243,9 +162,16 @@ export async function devtools(
         const parsedUrl = url.parse(req.url)
         const pathname = parsedUrl.pathname
         if (pathname === "/") {
-            res.setHeader("Cache-control", "no-cache")
-            res.setHeader("Content-type", "text/html")
-            res.end(proxyHtml)
+            fetchDevToolsProxy(options.localhost)
+                .then(proxyHtml => {
+                    res.setHeader("Cache-control", "no-cache")
+                    res.setHeader("Content-type", "text/html")
+                    res.end(proxyHtml)
+                })
+                .catch(e => {
+                    console.error(e)
+                    res.statusCode = 3
+                })
         } else {
             res.statusCode = 404
         }

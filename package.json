@@ -8,6 +8,7 @@
         "watch": "node ./build.js --watch",
         "docs": "cd website && yarn start",
         "dev": "yarn watch & yarn docs",
+        "devtools": "yarn build && node ./cli/devicescript devtools",
         "test": "node ./cli/devicescript ctool --test"
     },
     "workspaces": [

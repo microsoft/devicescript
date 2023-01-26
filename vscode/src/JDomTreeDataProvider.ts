@@ -287,10 +287,22 @@ export class JDEventTreeItem extends JDomServiceMemberTreeItem {
 export class JDomTreeDataProvider
     implements vscode.TreeDataProvider<JDomTreeItem>
 {
+    private _showInfrastructure = false
     constructor(readonly bus: JDBus) {
         this.bus.on(DEVICE_CHANGE, () => {
             this.refresh()
         })
+    }
+
+    get showInfrastructure() {
+        return this._showInfrastructure
+    }
+
+    set showInfrastructure(value: boolean) {
+        if (value !== this._showInfrastructure) {
+            this._showInfrastructure = value
+            this.refresh()
+        }
     }
 
     getTreeItem(element: JDomTreeItem): vscode.TreeItem {
@@ -301,7 +313,7 @@ export class JDomTreeDataProvider
         if (!element) {
             const refresh = (i: JDomTreeItem) => this.refresh(i)
             const devices = this.bus.devices({
-                ignoreInfrastructure: true,
+                ignoreInfrastructure: !this.showInfrastructure,
                 announced: true,
             })
             return Promise.resolve(
