@@ -21,3 +21,12 @@ function uncachedStartJacdacBus() {
         return undefined
     }
 }
+
+export async function stopJacdacBus() {
+    const bus = __bus 
+    if (bus) {
+        __bus = undefined
+        await bus.disconnect()
+        await bus.dispose()
+    }
+}

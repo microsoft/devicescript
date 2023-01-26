@@ -17,7 +17,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
-import { startJacdacBus } from "./jacdac"
+import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import { JDeviceTreeItem, JDomTreeDataProvider } from "./JDomTreeDataProvider"
 
 export function activateDeviceScript(
@@ -241,6 +241,10 @@ export function activateDeviceScript(
     }
 
     const bus = startJacdacBus()
+    // make sure to stop bus when unloading extension
+    context.subscriptions.push({
+        dispose: stopJacdacBus,
+    })
 
     const jdomTreeDataProvider = new JDomTreeDataProvider(bus)
     vscode.window.registerTreeDataProvider(
@@ -259,8 +263,6 @@ export function activateDeviceScript(
             announced: true,
         })
         statusBarItem.text = `DeviceScript ${devices.length} $(${JDeviceTreeItem.ICON})`
-        if (bus.connected) statusBarItem.show()
-        else statusBarItem.hide()
     })
     context.subscriptions.push(statusBarItem)
 
