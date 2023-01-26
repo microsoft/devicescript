@@ -252,8 +252,10 @@ export function activateDeviceScript(
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
-    if (devToolsConfig.get("autoStart"))
+    if (devToolsConfig.get("autoStart")) {
         context.subscriptions.push(spawnDevTools())
+        if (devToolsConfig.get("showOnStart")) showDevToolsTerminal()
+    }
 
     const bus = startJacdacBus()
     // make sure to stop bus when unloading extension
