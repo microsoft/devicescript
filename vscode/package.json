@@ -66,6 +66,11 @@
           "type": "boolean",
           "default": false,
           "description": "Enables additional debugging output from the Jacdac tooling."
+        },
+        "devicescript.traceJacdacPackets": {
+          "type": "boolean",
+          "default": false,
+          "description": "Trace Jacdac packets to 'Jacdac Packets' Output pane."
         }
       }
     },

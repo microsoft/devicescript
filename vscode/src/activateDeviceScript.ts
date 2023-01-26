@@ -2,7 +2,14 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { CONNECTION_STATE, DEVICE_CHANGE } from "jacdac-ts"
+import {
+    CONNECTION_STATE,
+    DEVICE_CHANGE,
+    Flags,
+    FRAME_PROCESS,
+    JDFrameBuffer,
+    serializeToTrace,
+} from "jacdac-ts"
 import * as vscode from "vscode"
 import {
     WorkspaceFolder,
@@ -234,6 +241,9 @@ export function activateDeviceScript(
     }
 
     const bus = startJacdacBus()
+    const config = vscode.workspace.getConfiguration("jacdac")
+    Flags.diagnostics = !!config.get("diagnostics")
+
     const jdomTreeDataProvider = new JDomTreeDataProvider(bus)
     vscode.window.registerTreeDataProvider(
         "extension.devicescript.jacdac-jdom-explorer",
@@ -257,6 +267,17 @@ export function activateDeviceScript(
     context.subscriptions.push(statusBarItem)
 
     vscode.window.onDidChangeActiveColorTheme(colorTheme => {})
+
+    // packet trace
+    const tracePackets = !!config.get("traceJacdacPackets")
+    if (tracePackets) {
+        const output = vscode.window.createOutputChannel("Jacdac Packets")
+        const logFrame = (frame: JDFrameBuffer) => {
+            const msg = serializeToTrace(frame, 0, bus)
+            if (msg) output.appendLine(msg)
+        }
+        bus.on(FRAME_PROCESS, logFrame)
+    }
 }
 
 class DeviceScriptConfigurationProvider
