@@ -72,7 +72,14 @@ export function activateDeviceScript(
             "extension.devicescript.identifyDevice",
             (item: JDeviceTreeItem) => {
                 const { device } = item
-                device.identify(); // async
+                device.identify() // async
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.resetDevice",
+            (item: JDeviceTreeItem) => {
+                const { device } = item
+                device.reset() // async
             }
         ),
         vscode.commands.registerCommand(

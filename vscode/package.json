@@ -83,6 +83,11 @@
       ],
       "view/item/context": [
         {
+          "command": "extension.devicescript.resetDevice",
+          "when": "view == extension.devicescript.jacdac-jdom-explorer && viewItem == device",
+          "group": "inline"
+        },
+        {
           "command": "extension.devicescript.identifyDevice",
           "when": "view == extension.devicescript.jacdac-jdom-explorer && viewItem == device",
           "group": "inline"
@@ -153,7 +158,13 @@
         "command": "extension.devicescript.identifyDevice",
         "title": "Identify device",
         "category": "DeviceScript",
-        "icon": "$(account)"
+        "icon": "$(eye)"
+      },
+      {
+        "command": "extension.devicescript.resetDevice",
+        "title": "Identify device",
+        "category": "DeviceScript",
+        "icon": "$(debug-restart)"
       },
       {
         "command": "extension.devicescript.toggleFormatting",
