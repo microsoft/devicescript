@@ -165,7 +165,8 @@ var Exts;
     function setupWebsocketTransport(url, protocols) {
         return new Promise((resolve, reject) => {
             let sock = new WebSocket(url, protocols);
-            sock.binaryType = "arraybuffer";
+            if (sock.binaryType != "arraybuffer")
+                sock.binaryType = "arraybuffer";
             const send = (data) => {
                 if (sock && sock.readyState == WebSocket.OPEN) {
                     sock.send(data);
