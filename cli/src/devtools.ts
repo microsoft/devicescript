@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const WebSocket = require("faye-websocket")
 import http from "http"
-import https from "https"
 import url from "url"
 import net from "net"
 import { CmdOptions, error, log } from "./command"
@@ -18,9 +17,7 @@ import {
     JDDevice,
     JDFrameBuffer,
     JDService,
-    JSONTryParse,
     loadServiceSpecifications,
-    sendStayInBootloaderCommand,
     serializeToTrace,
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
@@ -31,47 +28,12 @@ import EventEmitter from "events"
 
 import { createTransports, TransportsOptions } from "./transport"
 import { fetchDevToolsProxy } from "./devtoolsproxy"
+import { DevToolsClient, processSideMessage } from "./sidedata"
 
 export interface DevToolsOptions {
     internet?: boolean
     localhost?: boolean
     trace?: string
-}
-
-export interface DevToolsClient {
-    __devsSender: string
-    __devsWantsSideChannel: boolean
-
-    send(data: Buffer | string): void
-}
-
-export interface DevToolsSideMessage {
-    type: string
-    bcast?: boolean
-}
-
-export interface DevToolsErrorResponse {
-    type: "error"
-    message: string
-    stack?: string
-}
-
-const msgHandlers: Record<
-    string,
-    (msg: DevToolsSideMessage, sender: DevToolsClient) => Promise<void>
-> = {
-    enableBCast: async (msg, sender) => {
-        sender.__devsWantsSideChannel = true
-    },
-}
-
-export function sendError(cl: DevToolsClient, err: any) {
-    const info: DevToolsErrorResponse = {
-        type: "error",
-        message: err.message || "" + err,
-        stack: err.stack,
-    }
-    cl.send(JSON.stringify(info))
 }
 
 export async function devtools(
@@ -127,30 +89,6 @@ export async function devtools(
             .filter(c => c.__devsSender !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))
     })
-
-    const processMessage = async (message: string, client: DevToolsClient) => {
-        const msg: DevToolsSideMessage = JSONTryParse(message)
-        if (!msg) return
-
-        const handler = msgHandlers[msg.type]
-        if (handler) {
-            try {
-                await handler(msg, client)
-            } catch (err) {
-                sendError(client, err)
-            }
-        }
-
-        if (msg.bcast)
-            for (const client of clients) {
-                if (client != client && client.__devsWantsSideChannel)
-                    client.send(message)
-            }
-
-        if (!msg.bcast && !handler)
-            sendError(client, new Error(`unknown msg type: ${msg.type}`))
-    }
-
     const processPacket = (message: Buffer | Uint8Array, sender: string) => {
         const data: JDFrameBuffer = new Uint8Array(message)
         data._jacdac_sender = sender
@@ -193,7 +131,8 @@ export async function devtools(
             const ev = client as any as EventEmitter
             ev.on("message", (event: any) => {
                 const { data } = event
-                if (typeof data === "string") processMessage(data, client)
+                if (typeof data === "string")
+                    processSideMessage(data, client, clients)
                 else processPacket(data, sender)
             })
             ev.on("close", () => removeClient(client))
