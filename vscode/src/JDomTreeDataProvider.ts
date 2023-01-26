@@ -129,7 +129,7 @@ export class JDeviceTreeItem extends JDomTreeItem {
                     device.bus.deviceCatalog.specificationFromProductIdentifier(
                         pid
                     )
-                this.description = spec.name || `0x${pid.toString(16)}`
+                this.description = spec?.name || `0x${pid.toString(16)}`
             }
         }
 
