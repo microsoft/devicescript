@@ -74,6 +74,13 @@
       }
     ],
     "menus": {
+      "view/title": [
+        {
+          "command": "extension.devicescript.openDevTools",
+          "when": "view == extension.devicescript.jacdac-jdom-explorer",
+          "group": "navigation"
+        }
+      ],
       "editor/title/run": [
         {
           "command": "extension.devicescript.runEditorContents",
@@ -132,7 +139,8 @@
       {
         "command": "extension.devicescript.openDevTools",
         "title": "Open Developer Tools",
-        "category": "DeviceScript"
+        "category": "DeviceScript",
+        "icon": "$(circuit-board)"
       },
       {
         "command": "extension.devicescript.toggleFormatting",
