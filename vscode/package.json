@@ -39,9 +39,12 @@
     "@vscode/debugadapter": "^1.58.0",
     "@vscode/debugadapter-testsupport": "^1.58.0",
     "@vscode/vsce": "^2.16.0",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "websocket-polyfill": "^0.0.3",
     "jacdac-ts": "*",
-    "typescript": "^4.9.4",
-    "websocket-polyfill": "^0.0.3"
+    "@devicescript/cli": "*"
   },
   "main": "./built/devicescript-vscode.js",
   "browser": "./built/devicescript-vscode-web.js",
@@ -72,6 +75,11 @@
           "type": "boolean",
           "default": false,
           "description": "Show DeviceScript Server terminal when starting."
+        },
+        "devicescript.devtools.useShell": {
+          "type": "boolean",
+          "default": false,
+          "description": "Start DeviceScript Server in a shell rather than as a direct process."
         },
         "devicescript.jacdac.diagnostics": {
           "type": "boolean",

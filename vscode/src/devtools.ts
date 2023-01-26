@@ -1,22 +1,41 @@
 import * as vscode from "vscode"
+import { join } from "path"
 
 let terminal: vscode.Terminal
-export function spawnDevTools(): { dispose: () => void } {
+export function initDevTools(disposables: vscode.Disposable[]) {
+    vscode.window.onDidCloseTerminal(
+        t => {
+            if (t === terminal) {
+                terminal = undefined
+                vscode.window.showInformationMessage(
+                    `DeviceScript Server exited (exit code: ${t.exitStatus.code})`
+                )
+            }
+        },
+        undefined,
+        disposables
+    )
+    disposables.push({
+        dispose: killDevTools,
+    })
+}
+
+export function spawnDevTools(useShell: boolean) {
     if (!terminal) {
+        const cli = __dirname + "/../node_modules/.bin/devicescript"
+        const args = ["devtools"]
         terminal = vscode.window.createTerminal({
             name: "DeviceScript Server",
             hideFromUser: true,
-            message: "Launching DeviceScript server process.",
+            message: "Launching DeviceScript Server...",
             isTransient: true,
+            shellPath: useShell ? undefined : cli,
+            shellArgs: useShell ? undefined : args,
         })
-        terminal.sendText("", true)
-        terminal.sendText(
-            `node ../../node_modules/@devicescript/cli/built/devicescript-cli.cjs devtools`,
-            true
-        )
-    }
-    return {
-        dispose: killDevTools,
+        if (useShell) {
+            terminal.sendText("", true)
+            terminal.sendText(`${cli} ${args.join(" ")}`, true)
+        }
     }
 }
 
