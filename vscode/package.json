@@ -13,7 +13,7 @@
     "IoT"
   ],
   "engines": {
-    "vscode": "^1.66.0"
+    "vscode": "^1.74.0"
   },
   "icon": "images/ds-logo-color.png",
   "categories": [
