@@ -5,7 +5,7 @@ const childProcess = require("child_process")
 const path = require("path")
 const fs = require("fs-extra")
 const { existsSync } = require("fs")
-const { dirname, join } = require("path")
+const { dirname, join, resolve } = require("path")
 
 let watch = false
 let fast = false
@@ -141,7 +141,7 @@ async function main() {
         buildPrelude("devs/lib", "compiler/src/prelude.ts")
         for (const outfile of Object.keys(files)) {
             const src = files[outfile]
-            const folder = dirname(src)
+            const folder = resolve(rootdir, dirname(src))
             const isVSCode = outfile.includes("vscode")
             const cjs = outfile.endsWith(".cjs") || isVSCode
             const mjs = outfile.endsWith(".mjs")
