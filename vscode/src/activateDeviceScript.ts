@@ -17,7 +17,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
-import { spawnDevTools, showDevToolsTerminal } from "./devtools"
+import { spawnDevTools, showDevToolsTerminal, initDevTools } from "./devtools"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import { JDeviceTreeItem, JDomTreeDataProvider } from "./JDomTreeDataProvider"
 
@@ -253,7 +253,8 @@ export function activateDeviceScript(
         "devicescript.devtools"
     )
     if (devToolsConfig.get("autoStart")) {
-        context.subscriptions.push(spawnDevTools())
+        initDevTools(context.subscriptions)
+        spawnDevTools(!!devToolsConfig.get("useShell"))
         if (devToolsConfig.get("showOnStart")) showDevToolsTerminal()
     }
 
