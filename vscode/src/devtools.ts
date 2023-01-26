@@ -22,8 +22,8 @@ export function initDevTools(disposables: vscode.Disposable[]) {
 
 export function spawnDevTools(useShell: boolean) {
     if (!terminal) {
-        const cli = __dirname + "/../node_modules/.bin/devicescript"
-        const args = ["devtools"]
+        const cli = "yarn"
+        const args = ["devicescript", "devtools"]
         terminal = vscode.window.createTerminal({
             name: "DeviceScript Server",
             hideFromUser: true,

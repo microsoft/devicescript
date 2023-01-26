@@ -19,6 +19,7 @@
         "jacdac-ts",
         "dap",
         "vscode",
+        "vscode/sampleprj",
         "website"
     ],
     "devDependencies": {
