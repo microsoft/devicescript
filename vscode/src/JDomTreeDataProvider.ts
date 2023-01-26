@@ -31,7 +31,7 @@ class JDomTreeItem extends vscode.TreeItem {
         this.id = node.id
 
         this.handleChange = this.handleChange.bind(this)
-        this.node.on(CHANGE, this.handleChange)
+        this.mount()
         this.handleChange()
     }
 
@@ -46,7 +46,11 @@ class JDomTreeItem extends vscode.TreeItem {
         this._refresh(this)
     }
 
-    destroy() {
+    protected mount() {
+        this.node.on(CHANGE, this.handleChange)
+    }
+
+    unmount() {
         this.node.off(CHANGE, this.handleChange)
     }
 }
@@ -66,7 +70,7 @@ class JDeviceTreeItem extends JDomTreeItem {
         const { bus } = device
 
         if (!bus) {
-            this.destroy()
+            this.unmount()
             return
         }
 
@@ -120,16 +124,43 @@ class JDRegisterTreeItem extends JDomTreeItem {
         super(register, refresh, vscode.TreeItemCollapsibleState.None)
     }
 
+    protected mount(): void {
+        this.node.on(REPORT_UPDATE, this.handleChange)
+    }
+
+    unmount(): void {
+        this.node.off(REPORT_UPDATE, this.handleChange)
+    }
+
     get register() {
         return this.node as JDRegister
     }
 
     protected handleChange() {
         const { register } = this
-        const { humanValue, specification, code } = register
-        this.label = humanify(specification?.name) || `0x${code.toString(16)}`
+        const { humanValue, specification, code, service } = register
+        const { optional, name } = specification || {}
+
+        this.label = humanify(
+            `${name || `0x${code.toString(16)}${optional ? "?" : ""}`}`
+        )
         this.description = humanValue
         this.refresh()
+
+        if (JDRegisterTreeItem.probablyIgnore(register)) {
+            this.unmount()
+            service.emit(CHANGE)
+        }
+    }
+
+    public static probablyIgnore(register: JDRegister) {
+        const { notImplemented } = register
+        if (notImplemented) return true
+
+        const { data, specification, lastGetAttempts } = register
+        const { optional } = specification || {}
+
+        return optional && lastGetAttempts > 2 && data === undefined
     }
 }
 
@@ -166,19 +197,18 @@ export class JDomTreeDataProvider
     }
 
     getChildren(element?: JDomTreeItem): Thenable<JDomTreeItem[]> {
+        const refresh = (i: JDomTreeItem) => this.refresh(i)
         if (!element) {
-            const devices = this.bus.devices({ ignoreInfrastructure: true })
+            const devices = this.bus.devices({
+                ignoreInfrastructure: true,
+                announced: true,
+            })
             return Promise.resolve(
                 devices.map(
-                    child =>
-                        new JDeviceTreeItem(
-                            child as JDDevice,
-                            this.refresh.bind(this, child)
-                        )
+                    child => new JDeviceTreeItem(child as JDDevice, refresh)
                 )
             )
         } else {
-            const refresh = (i: JDomTreeItem) => this.refresh(i)
             const children = element?.node.children
                 .filter(child => {
                     const { nodeKind } = child
@@ -186,7 +216,8 @@ export class JDomTreeDataProvider
                         case FIELD_NODE_NAME: // ignore fields
                             return undefined
                         case REGISTER_NODE_NAME: {
-                            if ((child as JDRegister).notImplemented)
+                            const reg = child as JDRegister
+                            if (JDRegisterTreeItem.probablyIgnore(reg))
                                 return undefined
                             break
                         }
@@ -204,10 +235,9 @@ export class JDomTreeDataProvider
                             [EVENT_NODE_NAME]: JDEventTreeItem,
                         }[nodeKind] ?? JDomTreeItem
                     const item = new treeItemType(child, refresh)
-                    console.log({ nodeKind, name, item })
                     return item
                 })
-            return Promise.resolve(children.length ? children : undefined)
+            return Promise.resolve(children)
         }
     }
 
