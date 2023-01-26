@@ -17,6 +17,7 @@ import {
     FIELD_NODE_NAME,
     EVENT_NODE_NAME,
     REPORT_UPDATE,
+    SystemReg,
 } from "jacdac-ts"
 
 type RefreshFunction = (item: JDomTreeItem) => void
@@ -63,6 +64,8 @@ class JDeviceTreeItem extends JDomTreeItem {
         this.device.resolveProductIdentifier()
     }
 
+    iconPath = new vscode.ThemeIcon("circuit-board")
+
     get device() {
         return this.node as JDDevice
     }
@@ -104,6 +107,8 @@ class JDServiceTreeItem extends JDomTreeItem {
         super(service, refresh)
     }
 
+    iconPath = new vscode.ThemeIcon("symbol-class")
+
     get service() {
         return this.node as JDService
     }
@@ -124,6 +129,17 @@ class JDServiceTreeItem extends JDomTreeItem {
 class JDRegisterTreeItem extends JDomTreeItem {
     constructor(register: JDRegister, refresh: RefreshFunction) {
         super(register, refresh, vscode.TreeItemCollapsibleState.None)
+        const { specification, code } = register
+        const { kind } = specification || {}
+        this.iconPath = new vscode.ThemeIcon(
+            code === SystemReg.Reading
+                ? "symbol-numeric"
+                : kind === "const"
+                ? "symbol-constant"
+                : kind === "ro"
+                ? "symbol-property"
+                : "symbol-field"
+        )
     }
 
     protected mount(): void {
@@ -170,6 +186,8 @@ class JDEventTreeItem extends JDomTreeItem {
     constructor(event: JDEvent, refresh: RefreshFunction) {
         super(event, refresh, vscode.TreeItemCollapsibleState.None)
     }
+
+    iconPath = new vscode.ThemeIcon("symbol-event")
 
     get event() {
         return this.node as JDEvent
