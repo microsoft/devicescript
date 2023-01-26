@@ -19,10 +19,12 @@ import {
     REPORT_UPDATE,
 } from "jacdac-ts"
 
+type RefreshFunction = (item: JDomTreeItem) => void
+
 class JDomTreeItem extends vscode.TreeItem {
     constructor(
         public readonly node: JDNode,
-        public readonly refresh: () => void,
+        private readonly _refresh: RefreshFunction,
         collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
     ) {
         super(node.friendlyName, collapsibleState)
@@ -40,13 +42,17 @@ class JDomTreeItem extends vscode.TreeItem {
         this.refresh()
     }
 
+    refresh() {
+        this._refresh(this)
+    }
+
     destroy() {
         this.node.off(CHANGE, this.handleChange)
     }
 }
 
 class JDeviceTreeItem extends JDomTreeItem {
-    constructor(device: JDDevice, refresh: () => void) {
+    constructor(device: JDDevice, refresh: RefreshFunction) {
         super(device, refresh)
         this.device.resolveProductIdentifier()
     }
@@ -88,7 +94,7 @@ class JDeviceTreeItem extends JDomTreeItem {
 }
 
 class JDServiceTreeItem extends JDomTreeItem {
-    constructor(service: JDService, refresh: () => void) {
+    constructor(service: JDService, refresh: RefreshFunction) {
         super(service, refresh)
     }
 
@@ -110,9 +116,8 @@ class JDServiceTreeItem extends JDomTreeItem {
 }
 
 class JDRegisterTreeItem extends JDomTreeItem {
-    constructor(register: JDRegister, refresh: () => void) {
+    constructor(register: JDRegister, refresh: RefreshFunction) {
         super(register, refresh, vscode.TreeItemCollapsibleState.None)
-        this.register.on(REPORT_UPDATE, this.handleChange.bind(this))
     }
 
     get register() {
@@ -129,9 +134,8 @@ class JDRegisterTreeItem extends JDomTreeItem {
 }
 
 class JDEventTreeItem extends JDomTreeItem {
-    constructor(event: JDEvent, refresh: () => void) {
+    constructor(event: JDEvent, refresh: RefreshFunction) {
         super(event, refresh, vscode.TreeItemCollapsibleState.None)
-        this.event.on(REPORT_UPDATE, this.handleChange.bind(this))
     }
 
     get event() {
@@ -143,6 +147,7 @@ class JDEventTreeItem extends JDomTreeItem {
         const { specification, code, count } = event
         this.label = humanify(specification?.name) || `0x${code.toString(16)}`
         this.description = `#${count}`
+
         this.refresh()
     }
 }
@@ -173,6 +178,7 @@ export class JDomTreeDataProvider
                 )
             )
         } else {
+            const refresh = (i: JDomTreeItem) => this.refresh(i)
             const children = element?.node.children
                 .filter(child => {
                     const { nodeKind } = child
@@ -189,7 +195,6 @@ export class JDomTreeDataProvider
                 })
                 .filter(child => !!child)
                 .map(child => {
-                    const refresh = this.refresh.bind(this, child)
                     const { nodeKind, name } = child
                     const treeItemType =
                         {
