@@ -18,7 +18,9 @@ export function startJacdacBus() {
 function uncachedStartJacdacBus() {
     try {
         const bus = new JDBus([createNodeSocketTransport()])
-        Flags.diagnostics = true
+
+        const config = vscode.workspace.getConfiguration('jacdac')
+        Flags.diagnostics = !!config.get('diagnostics')
 
         // not sure how useful this is
         let logPackets = true

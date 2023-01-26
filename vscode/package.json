@@ -59,6 +59,16 @@
     "request": "never"
   },
   "contributes": {
+    "configuration": {
+      "title": "DeviceScript",
+      "properties": {
+        "devicescript.diagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enables additional debugging output from the Jacdac tooling."
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {
