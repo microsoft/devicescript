@@ -56,6 +56,42 @@ export class JDomTreeItem extends vscode.TreeItem {
     unmount() {
         this.node.off(CHANGE, this.handleChange)
     }
+
+    protected createChildrenTreeItems(): JDomTreeItem[] {
+        const children = this.node.children
+            .filter(child => {
+                const { nodeKind } = child
+                switch (nodeKind) {
+                    case FIELD_NODE_NAME: // ignore fields
+                        return undefined
+                    case REGISTER_NODE_NAME: {
+                        const reg = child as JDRegister
+                        if (JDRegisterTreeItem.probablyIgnore(reg))
+                            return undefined
+                        break
+                    }
+                }
+                return child
+            })
+            .filter(child => !!child)
+            .map(child => {
+                const { nodeKind } = child
+                const treeItemType =
+                    {
+                        [DEVICE_NODE_NAME]: JDeviceTreeItem,
+                        [SERVICE_NODE_NAME]: JDServiceTreeItem,
+                        [REGISTER_NODE_NAME]: JDRegisterTreeItem,
+                        [EVENT_NODE_NAME]: JDEventTreeItem,
+                    }[nodeKind] ?? JDomTreeItem
+                const item = new treeItemType(child, this._refresh)
+                return item
+            })
+        return children
+    }
+
+    getChildren(): Thenable<JDomTreeItem[]> {
+        return Promise.resolve(this.createChildrenTreeItems())
+    }
 }
 
 export class JDeviceTreeItem extends JDomTreeItem {
@@ -127,9 +163,18 @@ export class JDServiceTreeItem extends JDomTreeItem {
     }
 }
 
-export class JDRegisterTreeItem extends JDomTreeItem {
+export class JDomServiceMemberTreeItem extends JDomTreeItem {
+    constructor(node: JDNode, refresh: RefreshFunction) {
+        super(node, refresh, vscode.TreeItemCollapsibleState.None)
+    }
+    getChildren(): Thenable<JDomTreeItem[]> {
+        return Promise.resolve([])
+    }
+}
+
+export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
     constructor(register: JDRegister, refresh: RefreshFunction) {
-        super(register, refresh, vscode.TreeItemCollapsibleState.None)
+        super(register, refresh)
         const { specification, code } = register
         const { kind } = specification || {}
         this.iconPath = new vscode.ThemeIcon(
@@ -183,9 +228,9 @@ export class JDRegisterTreeItem extends JDomTreeItem {
     }
 }
 
-export class JDEventTreeItem extends JDomTreeItem {
+export class JDEventTreeItem extends JDomServiceMemberTreeItem {
     constructor(event: JDEvent, refresh: RefreshFunction) {
-        super(event, refresh, vscode.TreeItemCollapsibleState.None)
+        super(event, refresh)
     }
 
     iconPath = new vscode.ThemeIcon("symbol-event")
@@ -218,8 +263,8 @@ export class JDomTreeDataProvider
     }
 
     getChildren(element?: JDomTreeItem): Thenable<JDomTreeItem[]> {
-        const refresh = (i: JDomTreeItem) => this.refresh(i)
         if (!element) {
+            const refresh = (i: JDomTreeItem) => this.refresh(i)
             const devices = this.bus.devices({
                 ignoreInfrastructure: true,
                 announced: true,
@@ -230,35 +275,7 @@ export class JDomTreeDataProvider
                 )
             )
         } else {
-            const children = element?.node.children
-                .filter(child => {
-                    const { nodeKind } = child
-                    switch (nodeKind) {
-                        case FIELD_NODE_NAME: // ignore fields
-                            return undefined
-                        case REGISTER_NODE_NAME: {
-                            const reg = child as JDRegister
-                            if (JDRegisterTreeItem.probablyIgnore(reg))
-                                return undefined
-                            break
-                        }
-                    }
-                    return child
-                })
-                .filter(child => !!child)
-                .map(child => {
-                    const { nodeKind, name } = child
-                    const treeItemType =
-                        {
-                            [DEVICE_NODE_NAME]: JDeviceTreeItem,
-                            [SERVICE_NODE_NAME]: JDServiceTreeItem,
-                            [REGISTER_NODE_NAME]: JDRegisterTreeItem,
-                            [EVENT_NODE_NAME]: JDEventTreeItem,
-                        }[nodeKind] ?? JDomTreeItem
-                    const item = new treeItemType(child, refresh)
-                    return item
-                })
-            return Promise.resolve(children)
+            return element.getChildren()
         }
     }
 
