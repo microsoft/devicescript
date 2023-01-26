@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import { CONNECTION_STATE, DEVICE_CHANGE } from "jacdac-ts"
 import * as vscode from "vscode"
 import {
     WorkspaceFolder,
@@ -210,6 +211,22 @@ iframe {
         "extension.devicescript.jacdac-jdom-explorer",
         jdomTreeDataProvider
     )
+
+    const statusBarItem = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Right,
+        100
+    )
+    statusBarItem.tooltip = "Click to Connect to Device"
+    bus.on([DEVICE_CHANGE, CONNECTION_STATE], () => {
+        const devices = bus.devices({
+            ignoreInfrastructure: true,
+            announced: true,
+        })
+        statusBarItem.text = `DeviceScript ${devices.length} $(${JDeviceTreeItem.ICON})`
+        if (bus.connected) statusBarItem.show()
+        else statusBarItem.hide()
+    })
+    context.subscriptions.push(statusBarItem)
 }
 
 class DeviceScriptConfigurationProvider

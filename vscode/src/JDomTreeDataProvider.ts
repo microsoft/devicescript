@@ -64,7 +64,8 @@ export class JDeviceTreeItem extends JDomTreeItem {
         this.device.resolveProductIdentifier()
     }
 
-    iconPath = new vscode.ThemeIcon("circuit-board")
+    static ICON = "circuit-board"
+    iconPath = new vscode.ThemeIcon(JDeviceTreeItem.ICON)
 
     get device() {
         return this.node as JDDevice
