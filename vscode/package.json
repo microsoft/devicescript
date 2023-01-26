@@ -59,8 +59,17 @@
     "request": "never"
   },
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "deviceScriptViewContainer",
+          "title": "DeviceScript",
+          "icon": "./images/jacdac.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "deviceScriptViewContainer": [
         {
           "id": "extension.devicescript.jacdac-jdom-explorer",
           "name": "Device Explorer"
