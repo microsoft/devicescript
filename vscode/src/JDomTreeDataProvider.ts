@@ -10,14 +10,22 @@ import {
     JDService,
     SERVICE_NODE_NAME,
     SRV_CONTROL,
+    humanify,
+    JDRegister,
+    REGISTER_NODE_NAME,
+    JDEvent,
+    FIELD_NODE_NAME,
+    EVENT_NODE_NAME,
+    REPORT_UPDATE,
 } from "jacdac-ts"
 
 class JDomTreeItem extends vscode.TreeItem {
     constructor(
         public readonly node: JDNode,
-        public readonly refresh: () => void
+        public readonly refresh: () => void,
+        collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
     ) {
-        super(node.friendlyName, vscode.TreeItemCollapsibleState.Collapsed)
+        super(node.friendlyName, collapsibleState)
 
         this.node.on(CHANGE, this.handleChange.bind(this))
         this.handleChange()
@@ -77,9 +85,52 @@ class JDServiceTreeItem extends JDomTreeItem {
 
     protected handleChange() {
         const { service } = this
-        const { specification, instanceName } = service
+        const { specification, instanceName, serviceClass } = service
 
-        this.label = instanceName || specification?.shortName || service.name
+        this.label =
+            instanceName ||
+            humanify(specification?.shortName?.toLowerCase()) ||
+            `0x${serviceClass.toString(16)}`
+
+        this.refresh()
+    }
+}
+
+class JDRegisterTreeItem extends JDomTreeItem {
+    constructor(register: JDRegister, refresh: () => void) {
+        super(register, refresh, vscode.TreeItemCollapsibleState.None)
+        this.register.on(REPORT_UPDATE, this.handleChange.bind(this))
+    }
+
+    get register() {
+        return this.node as JDRegister
+    }
+
+    protected handleChange() {
+        const { register } = this
+        const { humanValue, specification, code } = register
+        this.label = humanify(specification?.name) || `0x${code.toString(16)}`
+        this.description = humanValue
+        this.refresh()
+    }
+}
+
+class JDEventTreeItem extends JDomTreeItem {
+    constructor(event: JDEvent, refresh: () => void) {
+        super(event, refresh, vscode.TreeItemCollapsibleState.None)
+        this.event.on(REPORT_UPDATE, this.handleChange.bind(this))
+    }
+
+    get event() {
+        return this.node as JDEvent
+    }
+
+    protected handleChange() {
+        const { event } = this
+        const { specification, code, count } = event
+        this.label = humanify(specification?.name) || `0x${code.toString(16)}`
+        this.description = `#${count}`
+        this.refresh()
     }
 }
 
@@ -109,17 +160,36 @@ export class JDomTreeDataProvider
                 )
             )
         } else {
-            const children = element?.node.children.map(child => {
-                const refresh = this.refresh.bind(this, child)
-                const { nodeKind } = child
-                const treeItemType =
-                    {
-                        [DEVICE_NODE_NAME]: JDeviceTreeItem,
-                        [SERVICE_NODE_NAME]: JDServiceTreeItem,
-                    }[nodeKind] || JDomTreeItem
-                return new treeItemType(child, refresh)
-            })
-            return Promise.resolve(children)
+            const children = element?.node.children
+                .filter(child => {
+                    const { nodeKind } = child
+                    switch (nodeKind) {
+                        case FIELD_NODE_NAME: // ignore fields
+                            return undefined
+                        case REGISTER_NODE_NAME: {
+                            if ((child as JDRegister).notImplemented)
+                                return undefined
+                            break
+                        }
+                    }
+                    return child
+                })
+                .filter(child => !!child)
+                .map(child => {
+                    const refresh = this.refresh.bind(this, child)
+                    const { nodeKind, name } = child
+                    const treeItemType =
+                        {
+                            [DEVICE_NODE_NAME]: JDeviceTreeItem,
+                            [SERVICE_NODE_NAME]: JDServiceTreeItem,
+                            [REGISTER_NODE_NAME]: JDRegisterTreeItem,
+                            [EVENT_NODE_NAME]: JDEventTreeItem,
+                        }[nodeKind] ?? JDomTreeItem
+                    const item = new treeItemType(child, refresh)
+                    console.log({ nodeKind, name, item })
+                    return item
+                })
+            return Promise.resolve(children.length ? children : undefined)
         }
     }
 
