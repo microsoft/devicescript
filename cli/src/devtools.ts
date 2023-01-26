@@ -11,10 +11,6 @@ import { jacdacDefaultSpecifications } from "@devicescript/compiler"
 import {
     bufferConcat,
     bufferEq,
-    createNodeSPITransport,
-    createNodeUSBOptions,
-    createNodeWebSerialTransport,
-    createUSBTransport,
     debounce,
     DEVICE_ANNOUNCE,
     ERROR,
@@ -27,11 +23,11 @@ import {
     loadServiceSpecifications,
     serializeToTrace,
     SRV_DEVICE_SCRIPT_MANAGER,
-    Transport,
 } from "jacdac-ts"
 import { readCompiled } from "./run"
 import { deployToBus, deployToService } from "./deploy"
 import { open } from "fs/promises"
+import { createTransports, TransportsOptions } from "./transport"
 
 const dasboardPath = "tools/devicescript-devtools"
 
@@ -76,43 +72,6 @@ export interface DevToolsOptions {
     internet?: boolean
     localhost?: boolean
     trace?: string
-}
-
-export interface TransportsOptions {
-    usb?: boolean
-    serial?: boolean
-    spi?: boolean
-}
-
-function tryRequire(name: string) {
-    return require(name)
-}
-
-export function createTransports(options: TransportsOptions) {
-    const transports: Transport[] = []
-    if (options.usb) {
-        log(`adding USB transport (requires "usb" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const usb = tryRequire("usb")
-        const options = createNodeUSBOptions(usb.WebUSB)
-        transports.push(createUSBTransport(options))
-    }
-    if (options.serial) {
-        log(`adding serial transport (requires "serialport" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const SerialPort = tryRequire("serialport").SerialPort
-        transports.push(createNodeWebSerialTransport(SerialPort))
-    }
-    if (options.spi) {
-        log(`adding SPI transport (requires "rpio" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const RPIO = tryRequire("rpio")
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const SpiDev = tryRequire("spi-device")
-        transports.push(createNodeSPITransport(RPIO, SpiDev))
-    }
-
-    return transports
 }
 
 export async function devtools(
