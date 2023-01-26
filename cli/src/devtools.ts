@@ -29,9 +29,9 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
     Transport,
 } from "jacdac-ts"
-import { appendFileSync, writeFileSync } from "fs"
 import { readCompiled } from "./run"
 import { deployToBus, deployToService } from "./deploy"
+import { open } from "fs/promises"
 
 const dasboardPath = "tools/devicescript-devtools"
 
@@ -117,21 +117,22 @@ export function createTransports(options: TransportsOptions) {
 
 export async function devtools(
     fn: string | undefined,
-    options: DevToolsOptions & CmdOptions & TransportsOptions
+    options: DevToolsOptions & CmdOptions & TransportsOptions = {}
 ) {
-    const { internet, localhost, trace } = options
     const port = 8081
     const tcpPort = 8082
-    const listenHost = internet ? undefined : "127.0.0.1"
+    const listenHost = options.internet ? undefined : "127.0.0.1"
+
+    let clientId = 0
 
     log(`starting dev tools at http://localhost:${port}`)
 
     loadServiceSpecifications(jacdacDefaultSpecifications)
 
     // download proxy sources
-    const proxyHtml = await fetchProxy(localhost)
+    const proxyHtml = await fetchProxy(options.localhost)
 
-    if (trace) writeFileSync(trace, "")
+    const traceFd = options.trace ? await open(options.trace, "w") : null
 
     // start http server
     const clients: WebSocket[] = []
@@ -162,7 +163,10 @@ export async function devtools(
     bus.passive = false
     bus.on(ERROR, e => error(e))
     bus.on(FRAME_PROCESS, (frame: JDFrameBuffer) => {
-        if (trace) appendFileSync(trace, serializeToTrace(frame, 0, bus) + "\n")
+        if (traceFd)
+            traceFd.write(
+                serializeToTrace(frame, 0, bus, { showTime: false }) + "\n"
+            )
         clients
             .filter(c => (c as any)[SENDER_FIELD] !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))
@@ -200,7 +204,7 @@ export async function devtools(
         // is this a socket?
         if (WebSocket.isWebSocket(request)) {
             const client = new WebSocket(request, socket, body)
-            const sender = "ws" + Math.random()
+            const sender = "ws" + ++clientId
             // store sender id to deduped packet
             client[SENDER_FIELD] = sender
             clients.push(client)
@@ -218,7 +222,7 @@ export async function devtools(
 
     log(`   tcpsocket: tcp://localhost:${tcpPort}`)
     const tcpServer = net.createServer((client: any) => {
-        const sender = "tcp" + Math.random()
+        const sender = "tcp" + ++clientId
         client[SENDER_FIELD] = sender
         client.send = (pkt0: Buffer | string) => {
             if (typeof pkt0 == "string") return
