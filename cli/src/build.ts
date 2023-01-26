@@ -157,27 +157,7 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
     // log(`building ${file}`)
     ensureDirSync(options.outDir)
     await buildOnce(file, options)
-    if (options.watch) await buildWatch(file, options)
-}
-
-async function buildWatch(file: string, options: BuildOptions) {
-    const bytecodeFile = join(options.outDir, DEVS_BYTECODE_FILE)
-    const debugFile = join(options.outDir, DEVS_DBG_FILE)
-
-    // start watch source file
-    log(`watching ${file}...`)
-    const work = debounce(
-        async () => {
-            debug(`change detected...`)
-            await buildOnce(file, options)
-        },
-        500,
-        { leading: true }
-    )
-    watch(file, work)
-
-    // start watching bytecode file
-    await devtools({ ...options, bytecodeFile, debugFile })
+    // if (options.watch) await buildWatch(file, options)
 }
 
 async function buildOnce(file: string, options: BuildOptions & CmdOptions) {

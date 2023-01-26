@@ -5,25 +5,33 @@ import http from "http"
 import https from "https"
 import url from "url"
 import net from "net"
-import { CmdOptions, debug, error, log } from "./command"
-import { readFileSync, readJSONSync, watch } from "fs-extra"
-import { prettySize } from "@devicescript/compiler"
+import { CmdOptions, error, log } from "./command"
+import { watch } from "fs-extra"
+import { jacdacDefaultSpecifications } from "@devicescript/compiler"
 import {
     bufferConcat,
+    bufferEq,
     createNodeSPITransport,
     createNodeUSBOptions,
     createNodeWebSerialTransport,
-    createProxyBridge,
     createUSBTransport,
+    debounce,
+    DEVICE_ANNOUNCE,
     ERROR,
     FRAME_PROCESS,
     JDBus,
+    JDDevice,
     JDFrameBuffer,
+    JDService,
     JSONTryParse,
+    loadServiceSpecifications,
     serializeToTrace,
+    SRV_DEVICE_SCRIPT_MANAGER,
     Transport,
 } from "jacdac-ts"
-import { appendFileSync } from "fs"
+import { appendFileSync, writeFileSync } from "fs"
+import { readCompiled } from "./run"
+import { deployToBus, deployToService } from "./deploy"
 
 const dasboardPath = "tools/devicescript-devtools"
 
@@ -67,8 +75,6 @@ function fetchProxy(localhost: boolean): Promise<string> {
 export interface DevToolsOptions {
     internet?: boolean
     localhost?: boolean
-    bytecodeFile?: string
-    debugFile?: string
     trace?: string
 }
 
@@ -108,41 +114,43 @@ export function createTransports(options: TransportsOptions) {
 
     return transports
 }
+
 export async function devtools(
+    fn: string | undefined,
     options: DevToolsOptions & CmdOptions & TransportsOptions
 ) {
-    const { internet, localhost, bytecodeFile, debugFile, trace } = options
+    const { internet, localhost, trace } = options
     const port = 8081
     const tcpPort = 8082
     const listenHost = internet ? undefined : "127.0.0.1"
 
     log(`starting dev tools at http://localhost:${port}`)
 
+    loadServiceSpecifications(jacdacDefaultSpecifications)
+
     // download proxy sources
     const proxyHtml = await fetchProxy(localhost)
+
+    if (trace) writeFileSync(trace, "")
 
     // start http server
     const clients: WebSocket[] = []
 
-    // upload DeviceScript file is needed
-    const sendDeviceScript = bytecodeFile
-        ? () => {
-              const bytecode = readFileSync(bytecodeFile)
-              const dbg = debugFile ? readJSONSync(debugFile) : undefined
-              debug(
-                  `refresh bytecode (${prettySize(bytecode.length)}) with ${
-                      clients.length
-                  } clients...`
-              )
-              const msg = JSON.stringify({
-                  type: "bytecode",
-                  channel: "devicescript",
-                  bytecode: bytecode.toString("hex"),
-                  dbg,
-              })
-              clients.forEach(c => c.send(msg))
-          }
-        : undefined
+    let prevBytecode: Uint8Array
+    const refreshProg = async (service?: JDService) => {
+        if (!fn) return
+        const { binary } = await readCompiled(fn, options)
+        if (prevBytecode && bufferEq(prevBytecode, binary)) {
+            if (service) await deployToService(service, binary)
+            else {
+                console.log("skipping identical deploy")
+            }
+        } else {
+            prevBytecode = binary
+            const num = await deployToBus(bus, binary)
+            if (num == 0) console.log(`no clients to deploy to`)
+        }
+    }
 
     // passive bus to sniff packets
     const transports = createTransports(options)
@@ -151,28 +159,24 @@ export async function devtools(
         disableRoleManager: true,
         proxy: true,
     })
-    bus.passive = true
+    bus.passive = false
     bus.on(ERROR, e => error(e))
-    const forwardFrame = (frame: JDFrameBuffer) => {
+    bus.on(FRAME_PROCESS, (frame: JDFrameBuffer) => {
         if (trace) appendFileSync(trace, serializeToTrace(frame, 0, bus) + "\n")
         clients
             .filter(c => (c as any)[SENDER_FIELD] !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))
-    }
-    const bridge = createProxyBridge((data, sender) => {
-        // note that this is not invoked on bridge.receiveFrameOrPacket(), since these are our own frames
-        // FRAME_PROCESS event below is invoked for all frames
     })
-    bridge.on(FRAME_PROCESS, forwardFrame)
-    bus.addBridge(bridge)
+
     const processMessage = (message: string, sender: string) => {
         const msg = JSONTryParse(message)
         if (!msg) return
         console.debug(msg)
     }
     const processPacket = (message: Buffer | Uint8Array, sender: string) => {
-        const data = new Uint8Array(message)
-        bridge.receiveFrameOrPacket(data, sender)
+        const data: JDFrameBuffer = new Uint8Array(message)
+        data._jacdac_sender = sender
+        bus.sendFrameAsync(data)
     }
 
     log(`   websocket: ws://localhost:${port}`)
@@ -197,7 +201,6 @@ export async function devtools(
         if (WebSocket.isWebSocket(request)) {
             const client = new WebSocket(request, socket, body)
             const sender = "ws" + Math.random()
-            let firstDeviceScript = false
             // store sender id to deduped packet
             client[SENDER_FIELD] = sender
             clients.push(client)
@@ -206,10 +209,6 @@ export async function devtools(
                 const { data } = event
                 if (typeof data === "string") processMessage(data, sender)
                 else processPacket(data, sender)
-                if (!firstDeviceScript && sendDeviceScript) {
-                    firstDeviceScript = true
-                    sendDeviceScript()
-                }
             })
             client.on("close", () => removeClient(client))
             client.on("error", (ev: Error) => error(ev))
@@ -266,10 +265,18 @@ export async function devtools(
     // if (logging) enableLogging(bus)
 
     bus.start()
-    bus.connect(true)
-
-    if (bytecodeFile) {
-        debug(`watching ${bytecodeFile}...`)
-        watch(bytecodeFile, sendDeviceScript)
+    await bus.connect(true)
+    if (fn) {
+        console.log(`watching ${fn}...`)
+        await refreshProg()
+        bus.on(DEVICE_ANNOUNCE, (d: JDDevice) => {
+            d.services({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER }).forEach(s =>
+                refreshProg(s)
+            )
+        })
+        watch(
+            fn,
+            debounce(() => refreshProg(), 500)
+        )
     }
 }

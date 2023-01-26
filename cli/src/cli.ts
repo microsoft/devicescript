@@ -94,6 +94,7 @@ export async function mainCli() {
             "-i, --spi",
             "listen to Jacdac over SPI (requires rpio, experimental)"
         )
+        .arguments("[file.ts]")
         .action(devtools)
 
     program
