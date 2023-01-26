@@ -297,6 +297,8 @@ export function activateDeviceScript(
         } else if (!tracePackets && jacdacPacketsOutputChannel) {
             bus.off(FRAME_PROCESS, logFrame)
         }
+        const showInfrastructure = !!jacdacConfig.get("showInfrastructure")
+        jdomTreeDataProvider.showInfrastructure = showInfrastructure
     }
 
     // hook up to configurations

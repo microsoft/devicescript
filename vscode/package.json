@@ -72,6 +72,11 @@
           "type": "boolean",
           "default": false,
           "description": "Trace Jacdac packets to 'Jacdac Packets' Output pane."
+        },
+        "devicescript.jacdac.showInfrastructure": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show infrastructure services in views."
         }
       }
     },
