@@ -256,15 +256,19 @@ export function activateDeviceScript(
         vscode.StatusBarAlignment.Right,
         100
     )
+    statusBarItem.command = "extension.devicescript.openDevTools"
     statusBarItem.tooltip = "Click to Connect to Device"
-    bus.on([DEVICE_CHANGE, CONNECTION_STATE], () => {
+    const updateStatusBar = () => {
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
         })
         statusBarItem.text = `DeviceScript ${devices.length} $(${JDeviceTreeItem.ICON})`
-    })
+    }
+    bus.on([DEVICE_CHANGE, CONNECTION_STATE], updateStatusBar)
+    updateStatusBar()
     context.subscriptions.push(statusBarItem)
+    statusBarItem.show()
 
     vscode.window.onDidChangeActiveColorTheme(colorTheme => {
         // TODO
