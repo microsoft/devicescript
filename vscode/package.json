@@ -63,6 +63,11 @@
     "configuration": {
       "title": "DeviceScript",
       "properties": {
+        "devicescript.devtools.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start DeviceScript server (requires reload)."
+        },
         "devicescript.jacdac.diagnostics": {
           "type": "boolean",
           "default": false,
@@ -176,6 +181,11 @@
       {
         "command": "extension.devicescript.start",
         "title": "Start things",
+        "category": "DeviceScript"
+      },
+      {
+        "command": "extension.devicescript.showServerTerminal",
+        "title": "Show development server terminal",
         "category": "DeviceScript"
       },
       {

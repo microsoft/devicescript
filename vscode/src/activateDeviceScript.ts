@@ -17,6 +17,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
+import { spawnDevTools, showDevToolsTerminal } from "./devtools"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import { JDeviceTreeItem, JDomTreeDataProvider } from "./JDomTreeDataProvider"
 
@@ -110,6 +111,13 @@ export function activateDeviceScript(
         vscode.commands.registerCommand("extension.devicescript.start", () => {
             console.log("Starting...")
         }),
+        vscode.commands.registerCommand(
+            "extension.devicescript.showServerTerminal",
+            () => {
+                console.log("Showing terminal...")
+                showDevToolsTerminal()
+            }
+        ),
         vscode.commands.registerCommand(
             "extension.devicescript.identifyDevice",
             (item: JDeviceTreeItem) => {
@@ -239,6 +247,13 @@ export function activateDeviceScript(
         console.error = (...a: any[]) => addMsg(3, a)
         console.info = console.log
     }
+
+    // launch devtools in background
+    const devToolsConfig = vscode.workspace.getConfiguration(
+        "devicescript.devtools"
+    )
+    if (devToolsConfig.get("autoStart"))
+        context.subscriptions.push(spawnDevTools())
 
     const bus = startJacdacBus()
     // make sure to stop bus when unloading extension
