@@ -99,4 +99,6 @@ export interface ConnectReqArgs {
 
 export interface VmReqArgs {
     nativePath?: string
+    deviceId?: string
+    gcStress?: boolean
 }

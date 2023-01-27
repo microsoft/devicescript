@@ -10,7 +10,7 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
     toHex,
 } from "jacdac-ts"
-import { BuildOptions, devsFactory } from "./build"
+import { BuildOptions, devsStartWithNetwork } from "./build"
 import { CmdOptions, error } from "./command"
 import { readCompiled } from "./run"
 
@@ -22,11 +22,7 @@ export async function deployScript(
     fn: string,
     options: RunOptions & CmdOptions & BuildOptions
 ) {
-    const inst = await devsFactory()
-    if (options.tcp)
-        await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
-    else await inst.setupWebsocketTransport("ws://127.0.0.1:8081")
-    inst.devsStart()
+    const inst = await devsStartWithNetwork(options)
     inst.deployHandler = code => {
         if (code) error(`deploy error ${code}`)
         process.exit(code)
