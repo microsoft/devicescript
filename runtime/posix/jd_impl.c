@@ -160,3 +160,15 @@ int jd_settings_set_bin(const char *key, const void *val, unsigned size) {
     }
     return 0;
 }
+
+uint64_t jd_device_id_from_string(const char *str) {
+    uint64_t devid;
+    if (strlen(str) == 16 && jd_from_hex(&devid, str) == 8) {
+        // set directly
+        return devid;
+    } else {
+        int bufsz = strlen(str);
+        return ((uint64_t)jd_hash_fnv1a(str, bufsz) << 32) |
+               ((uint64_t)jd_hash_fnv1a(str + 1, bufsz - 1));
+    }
+}
