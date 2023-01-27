@@ -25,7 +25,7 @@ export function spawnDevTools(useShell: boolean) {
         const cli = "yarn"
         const args = ["devicescript", "devtools"]
         terminal = vscode.window.createTerminal({
-            name: "DeviceScript Server",
+            name: "DeviceScript",
             hideFromUser: true,
             message: "Launching DeviceScript Server...",
             isTransient: true,

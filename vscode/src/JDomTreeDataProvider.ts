@@ -20,9 +20,51 @@ import {
     SystemReg,
     dashify,
     JDServiceMemberNode,
+    ellipseJoin,
+    isInfrastructure,
+    isReading,
 } from "jacdac-ts"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
+
+export function createChildrenTreeItems(
+    node: JDNode,
+    refresh: RefreshFunction
+): JDomTreeItem[] {
+    if (!node) return []
+
+    const children = node.children
+        .filter(child => {
+            const { nodeKind } = child
+            switch (nodeKind) {
+                case FIELD_NODE_NAME: // ignore fields
+                    return undefined
+                case REGISTER_NODE_NAME: {
+                    const reg = child as JDRegister
+                    const { specification } = reg
+                    const { client } = specification
+                    if (client) return undefined
+                    if (JDRegisterTreeItem.probablyIgnore(reg)) return undefined
+                    break
+                }
+            }
+            return child
+        })
+        .filter(child => !!child)
+        .map(child => {
+            const { nodeKind } = child
+            const treeItemType =
+                {
+                    [DEVICE_NODE_NAME]: JDeviceTreeItem,
+                    [SERVICE_NODE_NAME]: JDServiceTreeItem,
+                    [REGISTER_NODE_NAME]: JDRegisterTreeItem,
+                    [EVENT_NODE_NAME]: JDEventTreeItem,
+                }[nodeKind] ?? JDomTreeItem
+            const item = new treeItemType(child, refresh)
+            return item
+        })
+    return children
+}
 
 export class JDomTreeItem extends vscode.TreeItem {
     constructor(
@@ -42,8 +84,6 @@ export class JDomTreeItem extends vscode.TreeItem {
 
     protected handleChange() {
         this.label = this.node.friendlyName
-        this.description = this.node.toString()
-
         this.refresh()
     }
 
@@ -59,43 +99,10 @@ export class JDomTreeItem extends vscode.TreeItem {
         this.node.off(CHANGE, this.handleChange)
     }
 
-    protected createChildrenTreeItems(): JDomTreeItem[] {
-        const children = this.node.children
-            .filter(child => {
-                const { nodeKind } = child
-                switch (nodeKind) {
-                    case FIELD_NODE_NAME: // ignore fields
-                        return undefined
-                    case REGISTER_NODE_NAME: {
-                        const reg = child as JDRegister
-                        const { specification } = reg
-                        const { client } = specification
-                        if (client) return undefined
-                        if (JDRegisterTreeItem.probablyIgnore(reg))
-                            return undefined
-                        break
-                    }
-                }
-                return child
-            })
-            .filter(child => !!child)
-            .map(child => {
-                const { nodeKind } = child
-                const treeItemType =
-                    {
-                        [DEVICE_NODE_NAME]: JDeviceTreeItem,
-                        [SERVICE_NODE_NAME]: JDServiceTreeItem,
-                        [REGISTER_NODE_NAME]: JDRegisterTreeItem,
-                        [EVENT_NODE_NAME]: JDEventTreeItem,
-                    }[nodeKind] ?? JDomTreeItem
-                const item = new treeItemType(child, this._refresh)
-                return item
-            })
-        return children
-    }
-
     getChildren(): Thenable<JDomTreeItem[]> {
-        return Promise.resolve(this.createChildrenTreeItems())
+        return Promise.resolve(
+            createChildrenTreeItems(this.node, this._refresh)
+        )
     }
 }
 
@@ -114,25 +121,24 @@ export class JDeviceTreeItem extends JDomTreeItem {
 
     protected handleChange() {
         const { device } = this
-        const { bus } = device
+        const { bus, friendlyName } = device
 
         if (!bus) {
             this.unmount()
             return
         }
 
-        this.label = device.friendlyName
+        this.label = friendlyName
         if (!this.description) {
-            const pid = device.productIdentifier
-            if (pid) {
-                const spec =
-                    device.bus.deviceCatalog.specificationFromProductIdentifier(
-                        pid
-                    )
-                this.description = spec?.name || `0x${pid.toString(16)}`
-            }
+            const services = device.services({ mixins: false })
+            const serviceNames = ellipseJoin(
+                services
+                    .filter(srv => !isInfrastructure(srv.specification))
+                    .map(service => service.name),
+                18
+            )
+            this.description = serviceNames
         }
-
         if (!this.tooltip) {
             const control = device.service(SRV_CONTROL)
             const description = control?.register(ControlReg.DeviceDescription)
@@ -140,6 +146,7 @@ export class JDeviceTreeItem extends JDomTreeItem {
             description.on(CHANGE, this.refresh.bind(this))
             description.scheduleRefresh()
         }
+
         this.refresh()
     }
 }
@@ -172,21 +179,44 @@ export class JDServiceTreeItem extends JDomTreeItem {
         return this.node as JDService
     }
 
-    protected createChildrenTreeItems(): JDomTreeItem[] {
+    getChildren(): Thenable<JDomTreeItem[]> {
+        const nodeKindOrder: Record<string, number> = {
+            [REGISTER_NODE_NAME]: 0,
+            [EVENT_NODE_NAME]: 1,
+            [FIELD_NODE_NAME]: 2,
+        }
+        const sort = (
+            l: JDomServiceMemberTreeItem,
+            r: JDomServiceMemberTreeItem
+        ) => {
+            let c =
+                (isReading(l.member.specification) ? 0 : 1) -
+                (isReading(r.member.specification) ? 0 : 1)
+            if (c) return c
+            c =
+                (nodeKindOrder[l.node.nodeKind] ?? 50) -
+                (nodeKindOrder[r.node.nodeKind] ?? 50)
+            if (c) return c
+            c = l.node.name.localeCompare(r.node.name)
+            return c
+        }
+
         return super
-            .createChildrenTreeItems()
-            .sort((l, r) => l.node.name.localeCompare(r.node.name))
+            .getChildren()
+            .then(children =>
+                (children as JDomServiceMemberTreeItem[]).sort(sort)
+            )
     }
 
     protected handleChange() {
         const { service } = this
-        const { specification, instanceName, serviceClass } = service
+        const { specification, instanceName, serviceClass, role } = service
 
         this.label =
             instanceName ||
             humanify(dashify(specification?.shortName?.toLowerCase())) ||
             `0x${serviceClass.toString(16)}`
-
+        this.description = role || ""
         this.refresh()
     }
 }
@@ -201,6 +231,11 @@ export class JDomServiceMemberTreeItem extends JDomTreeItem {
             `services/${node.service.specification.shortId}/`
         )
     }
+
+    get member() {
+        return this.node as JDServiceMemberNode
+    }
+
     getChildren(): Thenable<JDomTreeItem[]> {
         return Promise.resolve([])
     }
