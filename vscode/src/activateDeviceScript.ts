@@ -8,6 +8,8 @@ import {
     Flags,
     FRAME_PROCESS,
     JDFrameBuffer,
+    JDRegister,
+    REGISTER_NODE_NAME,
     serializeToTrace,
 } from "jacdac-ts"
 import * as vscode from "vscode"
@@ -20,12 +22,23 @@ import {
 import { build, initBuild } from "./build"
 import { spawnDevTools, showDevToolsTerminal, initDevTools } from "./devtools"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
-import { JDeviceTreeItem, JDomTreeDataProvider } from "./JDomTreeDataProvider"
+import {
+    JDeviceTreeItem,
+    JDomDeviceTreeDataProvider,
+    JDomTreeDataProvider,
+    JDomTreeItem,
+    JDomWatchTreeDataProvider,
+    JDRegisterTreeItem,
+} from "./JDomTreeDataProvider"
+
+const STATE_WATCHES_KEY = "views.watch.ids"
 
 export function activateDeviceScript(
     context: vscode.ExtensionContext,
     factory?: vscode.DebugAdapterDescriptorFactory
 ) {
+    const { subscriptions, workspaceState, extensionMode } = context
+
     let developerToolsPanel: vscode.WebviewPanel
     const updateDeveloperToolsPanelUrl = () => {
         if (!developerToolsPanel) return
@@ -61,8 +74,7 @@ export function activateDeviceScript(
     }
 
     initBuild()
-
-    context.subscriptions.push(
+    subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.runEditorContents",
             async (resource: vscode.Uri) => {
@@ -154,7 +166,7 @@ export function activateDeviceScript(
         )
     )
 
-    context.subscriptions.push(
+    subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.getProgramName",
             config => {
@@ -172,7 +184,7 @@ export function activateDeviceScript(
 
     // register a configuration provider for 'devicescript' debug type
     const provider = new DeviceScriptConfigurationProvider()
-    context.subscriptions.push(
+    subscriptions.push(
         vscode.debug.registerDebugConfigurationProvider(
             "devicescript",
             provider
@@ -180,7 +192,7 @@ export function activateDeviceScript(
     )
 
     // register a dynamic configuration provider for 'devicescript' debug type
-    context.subscriptions.push(
+    subscriptions.push(
         vscode.debug.registerDebugConfigurationProvider(
             "devicescript",
             {
@@ -213,18 +225,17 @@ export function activateDeviceScript(
         )
     )
 
-    context.subscriptions.push(
+    subscriptions.push(
         vscode.debug.registerDebugAdapterDescriptorFactory(
             "devicescript",
             factory
         )
     )
     if ("dispose" in factory) {
-        context.subscriptions.push(factory as any)
+        subscriptions.push(factory as any)
     }
 
-    let redirectOutput =
-        context.extensionMode == vscode.ExtensionMode.Production
+    let redirectOutput = extensionMode == vscode.ExtensionMode.Production
     if (redirectOutput) {
         const output = vscode.window.createOutputChannel("DeviceScript")
         const addMsg = (level: number, args: any[]) => {
@@ -259,10 +270,75 @@ export function activateDeviceScript(
         dispose: stopJacdacBus,
     })
 
-    const jdomTreeDataProvider = new JDomTreeDataProvider(bus)
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.selectNode",
+            (item: JDomTreeItem) => {
+                const { node } = item
+                const { nodeKind } = node
+                console.log(`Select ${node}`)
+                switch (nodeKind) {
+                    case REGISTER_NODE_NAME: {
+                        ;(node as JDRegister).scheduleRefresh()
+                        break
+                    }
+                }
+            }
+        )
+    )
+    const selectNodeCommand: vscode.Command = {
+        title: "select node",
+        command: "extension.devicescript.selectNode",
+    }
+    const jdomTreeDataProvider = new JDomDeviceTreeDataProvider(
+        bus,
+        selectNodeCommand
+    )
     vscode.window.registerTreeDataProvider(
         "extension.devicescript.jacdac-jdom-explorer",
         jdomTreeDataProvider
+    )
+
+    const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
+        bus,
+        selectNodeCommand,
+        () => workspaceState.get(STATE_WATCHES_KEY) || []
+    )
+    vscode.window.registerTreeDataProvider(
+        "extension.devicescript.jacdac-jdom-watch",
+        jdomWatchTreeDataProvider
+    )
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.watchNode",
+            (item: JDomTreeItem) => {
+                console.log(`Watch ${item.node}`)
+                const id = item.node.id
+                const state = workspaceState
+                const watches = (state.get(STATE_WATCHES_KEY) as string[]) || []
+                if (!watches.includes(id)) {
+                    watches.push(id)
+                    state.update(STATE_WATCHES_KEY, watches)
+                    jdomWatchTreeDataProvider.refresh()
+                }
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.unwatchNode",
+            (item: JDomTreeItem) => {
+                console.log(`Unwatch ${item.node}`)
+                const id = item.node.id
+                const state = workspaceState
+                const watches = (state.get(STATE_WATCHES_KEY) as string[]) || []
+                let i = watches.indexOf(id)
+                if (i > -1) {
+                    watches.splice(i, 1)
+                    state.update(STATE_WATCHES_KEY, watches)
+                    jdomWatchTreeDataProvider.refresh()
+                }
+            }
+        )
     )
 
     const statusBarItem = vscode.window.createStatusBarItem(

@@ -27,12 +27,44 @@ import {
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
+export interface TreeItemProps {
+    refresh: RefreshFunction
+    command: vscode.Command
+    idPrefix?: string
+    fullName?: boolean
+}
+
+export function createTreeItem(
+    child: JDNode,
+    props: TreeItemProps
+): JDomTreeItem {
+    if (!child) return undefined
+    const { nodeKind } = child
+    const treeItemType =
+        {
+            [DEVICE_NODE_NAME]: JDeviceTreeItem,
+            [SERVICE_NODE_NAME]: JDServiceTreeItem,
+            [REGISTER_NODE_NAME]: JDRegisterTreeItem,
+            [EVENT_NODE_NAME]: JDEventTreeItem,
+        }[nodeKind] ?? JDomTreeItem
+    const item = new treeItemType(child, props)
+    return item
+}
+
+export function createTreeItemFromId(
+    bus: JDBus,
+    id: string,
+    props: TreeItemProps
+) {
+    const node = bus.node(id)
+    return createTreeItem(node, props)
+}
+
 export function createChildrenTreeItems(
     node: JDNode,
-    refresh: RefreshFunction
+    props: TreeItemProps
 ): JDomTreeItem[] {
     if (!node) return []
-
     const children = node.children
         .filter(child => {
             const { nodeKind } = child
@@ -51,31 +83,22 @@ export function createChildrenTreeItems(
             return child
         })
         .filter(child => !!child)
-        .map(child => {
-            const { nodeKind } = child
-            const treeItemType =
-                {
-                    [DEVICE_NODE_NAME]: JDeviceTreeItem,
-                    [SERVICE_NODE_NAME]: JDServiceTreeItem,
-                    [REGISTER_NODE_NAME]: JDRegisterTreeItem,
-                    [EVENT_NODE_NAME]: JDEventTreeItem,
-                }[nodeKind] ?? JDomTreeItem
-            const item = new treeItemType(child, refresh)
-            return item
-        })
-    return children
+        .map(child => createTreeItem(child, props))
+    return children.filter(n => !!n)
 }
 
 export class JDomTreeItem extends vscode.TreeItem {
     constructor(
         public readonly node: JDNode,
-        private readonly _refresh: RefreshFunction,
+        public readonly props: TreeItemProps,
         collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
     ) {
         super(node.friendlyName, collapsibleState)
         const { id, nodeKind } = node
-        this.id = id
+        const { idPrefix = "", command } = props
+        this.id = idPrefix + id
         this.contextValue = nodeKind
+        this.command = command
 
         this.handleChange = this.handleChange.bind(this)
         this.mount()
@@ -83,12 +106,14 @@ export class JDomTreeItem extends vscode.TreeItem {
     }
 
     protected handleChange() {
-        this.label = this.node.friendlyName
+        this.label = this.props.fullName
+            ? this.node.qualifiedName
+            : this.node.friendlyName
         this.refresh()
     }
 
     refresh() {
-        this._refresh(this)
+        this.props.refresh(this)
     }
 
     protected mount() {
@@ -100,15 +125,13 @@ export class JDomTreeItem extends vscode.TreeItem {
     }
 
     getChildren(): Thenable<JDomTreeItem[]> {
-        return Promise.resolve(
-            createChildrenTreeItems(this.node, this._refresh)
-        )
+        return Promise.resolve(createChildrenTreeItems(this.node, this.props))
     }
 }
 
 export class JDeviceTreeItem extends JDomTreeItem {
-    constructor(device: JDDevice, refresh: RefreshFunction) {
-        super(device, refresh)
+    constructor(device: JDDevice, props: TreeItemProps) {
+        super(device, props)
         this.device.resolveProductIdentifier()
     }
 
@@ -161,8 +184,8 @@ export function toMarkdownString(value: string, jacdacDocsPath?: string) {
 }
 
 export class JDServiceTreeItem extends JDomTreeItem {
-    constructor(service: JDService, refresh: RefreshFunction) {
-        super(service, refresh)
+    constructor(service: JDService, props: TreeItemProps) {
+        super(service, props)
         const { specification } = service
         if (specification) {
             const { notes, shortId } = specification
@@ -222,8 +245,8 @@ export class JDServiceTreeItem extends JDomTreeItem {
 }
 
 export class JDomServiceMemberTreeItem extends JDomTreeItem {
-    constructor(node: JDServiceMemberNode, refresh: RefreshFunction) {
-        super(node, refresh, vscode.TreeItemCollapsibleState.None)
+    constructor(node: JDServiceMemberNode, props: TreeItemProps) {
+        super(node, props, vscode.TreeItemCollapsibleState.None)
         const { specification } = node
         const { description } = specification || {}
         this.tooltip = toMarkdownString(
@@ -242,8 +265,8 @@ export class JDomServiceMemberTreeItem extends JDomTreeItem {
 }
 
 export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
-    constructor(register: JDRegister, refresh: RefreshFunction) {
-        super(register, refresh)
+    constructor(register: JDRegister, props: TreeItemProps) {
+        super(register, props)
         const { specification, code } = register
         const { kind } = specification || {}
         this.iconPath = new vscode.ThemeIcon(
@@ -271,13 +294,18 @@ export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
     }
 
     protected handleChange() {
-        const { register } = this
-        const { humanValue, specification, code, service } = register
-        const { optional, name } = specification || {}
+        const { register, props } = this
+        const { fullName } = props
+        const {
+            humanValue,
+            specification,
+            code,
+            service,
+            qualifiedName,
+            name,
+        } = register
 
-        this.label = humanify(
-            dashify(`${name || `0x${code.toString(16)}${optional ? "?" : ""}`}`)
-        )
+        this.label = fullName ? qualifiedName : humanify(dashify(name))
         this.description = humanValue
         this.refresh()
 
@@ -299,8 +327,8 @@ export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
 }
 
 export class JDEventTreeItem extends JDomServiceMemberTreeItem {
-    constructor(event: JDEvent, refresh: RefreshFunction) {
-        super(event, refresh)
+    constructor(event: JDEvent, props: TreeItemProps) {
+        super(event, props)
     }
 
     iconPath = new vscode.ThemeIcon("symbol-event")
@@ -310,20 +338,51 @@ export class JDEventTreeItem extends JDomServiceMemberTreeItem {
     }
 
     protected handleChange() {
-        const { event } = this
-        const { specification, code, count } = event
-        this.label = humanify(specification?.name) || `0x${code.toString(16)}`
+        const { event, props } = this
+        const { fullName } = props
+        const { count, qualifiedName, name } = event
+        this.label = fullName ? qualifiedName : humanify(dashify(name))
         this.description = `#${count}`
 
         this.refresh()
     }
 }
 
-export class JDomTreeDataProvider
+export abstract class JDomTreeDataProvider
     implements vscode.TreeDataProvider<JDomTreeItem>
 {
+    constructor(readonly bus: JDBus, readonly command: vscode.Command) {}
+
+    getTreeItem(element: JDomTreeItem): vscode.TreeItem {
+        return element
+    }
+
+    getChildren(element?: JDomTreeItem): Thenable<JDomTreeItem[]> {
+        if (!element) {
+            return Promise.resolve(this.getRoots())
+        } else {
+            return element.getChildren()
+        }
+    }
+
+    protected abstract getRoots(): JDomTreeItem[]
+
+    private _onDidChangeTreeData: vscode.EventEmitter<
+        JDomTreeItem | undefined | null | void
+    > = new vscode.EventEmitter<JDomTreeItem | undefined | null | void>()
+    readonly onDidChangeTreeData: vscode.Event<
+        JDomTreeItem | undefined | null | void
+    > = this._onDidChangeTreeData.event
+
+    refresh(treeItem?: JDomTreeItem): void {
+        this._onDidChangeTreeData.fire(treeItem)
+    }
+}
+
+export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
     private _showInfrastructure = false
-    constructor(readonly bus: JDBus) {
+    constructor(bus: JDBus, command: vscode.Command) {
+        super(bus, command)
         this.bus.on(DEVICE_CHANGE, () => {
             this.refresh()
         })
@@ -340,35 +399,42 @@ export class JDomTreeDataProvider
         }
     }
 
-    getTreeItem(element: JDomTreeItem): vscode.TreeItem {
-        return element
-    }
-
-    getChildren(element?: JDomTreeItem): Thenable<JDomTreeItem[]> {
-        if (!element) {
-            const refresh = (i: JDomTreeItem) => this.refresh(i)
-            const devices = this.bus.devices({
-                ignoreInfrastructure: !this.showInfrastructure,
-                announced: true,
-            })
-            return Promise.resolve(
-                devices.map(
-                    child => new JDeviceTreeItem(child as JDDevice, refresh)
-                )
-            )
-        } else {
-            return element.getChildren()
+    override getRoots() {
+        const refresh: RefreshFunction = i => this.refresh(i)
+        const props = {
+            refresh,
+            idPrefix: "e:",
+            command: this.command,
         }
+        const devices = this.bus.devices({
+            ignoreInfrastructure: !this.showInfrastructure,
+            announced: true,
+        })
+        return devices.map(child => createTreeItem(child, props))
+    }
+}
+
+export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
+    constructor(
+        bus: JDBus,
+        command: vscode.Command,
+        readonly fetchNodeIds: () => string[]
+    ) {
+        super(bus, command)
     }
 
-    private _onDidChangeTreeData: vscode.EventEmitter<
-        JDomTreeItem | undefined | null | void
-    > = new vscode.EventEmitter<JDomTreeItem | undefined | null | void>()
-    readonly onDidChangeTreeData: vscode.Event<
-        JDomTreeItem | undefined | null | void
-    > = this._onDidChangeTreeData.event
-
-    refresh(treeItem?: JDomTreeItem): void {
-        this._onDidChangeTreeData.fire(treeItem)
+    override getRoots() {
+        const refresh: RefreshFunction = i => this.refresh(i)
+        const props = {
+            refresh,
+            fullName: true,
+            idPrefix: "w:",
+            command: this.command,
+        }
+        const nodeIds = this.fetchNodeIds()
+        const items = nodeIds
+            .map(id => createTreeItemFromId(this.bus, id, props))
+            .filter(n => !!n)
+        return items
     }
 }

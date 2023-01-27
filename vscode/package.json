@@ -56,7 +56,8 @@
     "onCommand:extension.devicescript.getProgramName",
     "onCommand:extension.devicescript.runEditorContents",
     "onCommand:extension.devicescript.debugEditorContents",
-    "onView:extension.devicescript.jacdac-jdom-explorer"
+    "onView:extension.devicescript.jacdac-jdom-explorer",
+    "onView:extension.devicescript.jacdac-jdom-watch"
   ],
   "workspaceTrust": {
     "request": "never"
@@ -110,7 +111,11 @@
       "deviceScriptViewContainer": [
         {
           "id": "extension.devicescript.jacdac-jdom-explorer",
-          "name": "Device Explorer"
+          "name": "Devices"
+        },
+        {
+          "id": "extension.devicescript.jacdac-jdom-watch",
+          "name": "Watch"
         }
       ]
     },
@@ -118,6 +123,10 @@
       {
         "view": "extension.devicescript.jacdac-jdom-explorer",
         "contents": "Connect a Jacdac device."
+      },
+      {
+        "view": "extension.devicescript.jacdac-jdom-watch",
+        "contents": "Select Registers or Events to watch."
       }
     ],
     "menus": {
@@ -137,6 +146,26 @@
         {
           "command": "extension.devicescript.identifyDevice",
           "when": "view == extension.devicescript.jacdac-jdom-explorer && viewItem == device",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.watchNode",
+          "when": "view == extension.devicescript.jacdac-jdom-explorer && viewItem == register",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.unwatchNode",
+          "when": "view == extension.devicescript.jacdac-jdom-watch && viewItem == register",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.watchNode",
+          "when": "view == extension.devicescript.jacdac-jdom-explorer && viewItem == event",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.unwatchNode",
+          "when": "view == extension.devicescript.jacdac-jdom-watch && viewItem == event",
           "group": "inline"
         }
       ],
@@ -211,6 +240,23 @@
         "title": "Identify device",
         "category": "DeviceScript",
         "icon": "$(bell)"
+      },
+      {
+        "command": "extension.devicescript.selectNode",
+        "title": "Watch",
+        "category": "DeviceScript"
+      },
+      {
+        "command": "extension.devicescript.watchNode",
+        "title": "Watch",
+        "category": "DeviceScript",
+        "icon": "$(star-empty)"
+      },
+      {
+        "command": "extension.devicescript.unwatchNode",
+        "title": "Unwatch",
+        "category": "DeviceScript",
+        "icon": "$(star-full)"
       },
       {
         "command": "extension.devicescript.resetDevice",
