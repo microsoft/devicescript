@@ -102,13 +102,16 @@ export class ExtensionState extends JDEventSource {
                     }
             )
         )
-        if (!this.bus.device(virtualDeviceScriptManagerId, true))
+        let needsStart = false
+        if (!this.bus.device(virtualDeviceScriptManagerId, true)) {
+            needsStart = true
             items.push(<DeviceQuickItem>{
                 label: shortDeviceId(this.virtualDeviceScriptManagerId),
                 description: `Virtual Device`,
                 detail: `A virtual DeviceScript interpreter running in a separate process (devs ${this.runtimeVersion})`,
                 deviceId: virtualDeviceScriptManagerId,
             })
+        }
         const res = await vscode.window.showQuickPick(items, {
             title: `Pick a DeviceScript device`,
             matchOnDescription: true,
@@ -117,17 +120,24 @@ export class ExtensionState extends JDEventSource {
         })
         const did = res?.deviceId
 
-        if (did) {
+        if (needsStart && did == virtualDeviceScriptManagerId) {
             const config = vscode.workspace.getConfiguration("devicescript")
             await sideRequest<SideStartVmReq>({
                 req: "startVM",
                 data: {
                     nativePath: config.get("nativeVmPath") || undefined,
+                    deviceId: did,
                 },
             })
-            await delay(1000)
+            // wait for it to enumerate
+            let max = 20
+            while (max-- > 0 && !this.bus.device(did, true)) await delay(200)
         }
-        const service = services.find(srv => srv.device.deviceId === did)
+
+        const service = this.bus.device(did, true)?.services({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })?.[0]
+
         if (service && !skipUpdate) {
             await this.updateCurrentDeviceScriptManagerId(
                 service.device.deviceId
