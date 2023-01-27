@@ -1,3 +1,4 @@
+import { delay } from "jacdac-ts"
 import * as vscode from "vscode"
 
 let terminal: vscode.Terminal
@@ -7,7 +8,7 @@ export function initDevTools(disposables: vscode.Disposable[]) {
             if (t === terminal) {
                 terminal = undefined
                 vscode.window.showInformationMessage(
-                    `DeviceScript Server exited (exit code: ${t.exitStatus.code})`
+                    `DeviceScript Server exited. Make sure to install "@devicescript/cli" in your project.`
                 )
             }
         },
@@ -19,7 +20,7 @@ export function initDevTools(disposables: vscode.Disposable[]) {
     })
 }
 
-export function spawnDevTools() {
+export async function spawnDevTools() {
     if (terminal) return
 
     const devToolsConfig = vscode.workspace.getConfiguration(
@@ -49,6 +50,9 @@ export function spawnDevTools() {
         terminal.sendText("", true)
         terminal.sendText(`${cli} ${args.join(" ")}`, true)
     }
+
+    // TODO: wait for message
+    await delay(2000)
 }
 
 export function showDevToolsTerminal() {

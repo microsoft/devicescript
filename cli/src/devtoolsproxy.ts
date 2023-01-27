@@ -2,7 +2,7 @@ import http from "http"
 import https from "https"
 
 const DASHBOARD_PATH = "tools/devicescript-devtools"
-const VSCODE_DASHBOARD_PATH = "tools/devicescript-devtools-vscode?footer=0"
+const VSCODE_DASHBOARD_PATH = "tools/devicescript-devtools-vscode"
 
 let proxyHtmlPromise: Promise<string>
 

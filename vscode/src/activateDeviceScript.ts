@@ -22,7 +22,11 @@ import {
 } from "vscode"
 import type { SideConnectRequestMessage } from "../../cli/src/sideprotocol"
 import { build, initBuild } from "./build"
-import { spawnDevTools, showDevToolsTerminal, initDevTools } from "./devtools"
+import {
+    spawnDevTools,
+    showDevToolsTerminal,
+    initDevTools,
+} from "./devtoolsserver"
 import { sideRequest, startJacdacBus, stopJacdacBus } from "./jacdac"
 import {
     JDeviceTreeItem,
