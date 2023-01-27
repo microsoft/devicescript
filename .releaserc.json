@@ -52,7 +52,8 @@
                 "assets": [
                     "compiler/package.json",
                     "cli/package.json",
-                    "runtime/devicescript-vm/package.json"
+                    "runtime/devicescript-vm/package.json",
+                    "vscode/package.json"
                 ]
             }
         ]
