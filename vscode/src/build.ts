@@ -6,12 +6,15 @@ import {
 } from "../../cli/src/sideprotocol"
 import { sideRequest, subSideEvent } from "./jacdac"
 import * as vscode from "vscode"
+import { groupBy } from "jacdac-ts"
 
-let outputCh: vscode.OutputChannel
+// let outputCh: vscode.OutputChannel
+let diagColl: vscode.DiagnosticCollection
 let lastBuildFn = "???.ts"
 
 export function initBuild() {
-    outputCh = vscode.window.createOutputChannel("DevS Build")
+    // outputCh = vscode.window.createOutputChannel("DevS Build")
+    diagColl = vscode.languages.createDiagnosticCollection("DeviceScript")
 
     subSideEvent("watch", (msg: SideWatchEvent) => {
         showBuildResults(msg.data)
@@ -19,12 +22,38 @@ export function initBuild() {
 }
 
 export function showBuildResults(st: BuildStatus) {
-    // TODO use right APIs
-    outputCh.appendLine(`build ${lastBuildFn} ${st.success ? "OK" : "Failed"}`)
-    for (const msg of st.diagnostics) outputCh.appendLine(msg.formatted)
-    if (st.deployStatus) {
-        outputCh.appendLine(`deploy status: ${st.deployStatus}`)
+    diagColl.clear()
+
+    const severities = [
+        vscode.DiagnosticSeverity.Warning,
+        vscode.DiagnosticSeverity.Error,
+        vscode.DiagnosticSeverity.Hint,
+        vscode.DiagnosticSeverity.Information,
+    ]
+
+    const byFile = groupBy(st.diagnostics, s => s.filename)
+    for (const fn of Object.keys(byFile)) {
+        const diags = byFile[fn].map(d => {
+            const p0 = new vscode.Position(d.line - 1, d.column - 1)
+            const msg =
+                typeof d.messageText == "string"
+                    ? d.messageText
+                    : d.messageText.messageText
+            const sev =
+                severities[d.category] ?? vscode.DiagnosticSeverity.Error
+            const vd = new vscode.Diagnostic(
+                new vscode.Range(p0, p0.translate(0, 5)),
+                msg,
+                sev
+            )
+            vd.source = "DeviceScript"
+            vd.code = d.code
+            return vd
+        })
+        diagColl.set(vscode.Uri.file(fn), diags)
     }
+
+    if (st.deployStatus) vscode.window.showWarningMessage(st.deployStatus)
 }
 
 export async function build(fn: string) {
@@ -35,6 +64,7 @@ export async function build(fn: string) {
             data: {
                 filename: fn,
                 watch: true,
+                deployTo: "*",
             },
         }
         const res: SideBuildResponse = await sideRequest(msg)
