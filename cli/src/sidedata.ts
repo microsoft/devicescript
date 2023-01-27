@@ -1,4 +1,4 @@
-import { assert, JDBus, JSONTryParse } from "jacdac-ts"
+import { assert, JDBus, JSONTryParse, serviceSpecifications } from "jacdac-ts"
 import {
     BuildReqArgs,
     BuildStatus,
@@ -10,16 +10,22 @@ import {
     SideErrorResp,
     SideReq,
     SideResp,
+    SideSpecsReq,
+    SideSpecsResp,
+    SideWatchReq,
+    SideWatchResp,
 } from "./sideprotocol"
 
 export interface DevToolsIface {
     bus: JDBus
     clients: DevToolsClient[]
 
-    build: (
+    build: (args: BuildReqArgs) => Promise<BuildStatus>
+    watch: (
         args: BuildReqArgs,
         watchCb?: (st: BuildStatus) => void
-    ) => Promise<BuildStatus>
+    ) => Promise<void>
+
     connect: (req: ConnectReqArgs) => Promise<void>
 }
 
@@ -53,13 +59,21 @@ export function initSideProto(devtools_: DevToolsIface) {
     addReqHandler<SideBcastReq>("bcast", async (msg, client) => {
         client.__devsWantsSideChannel = msg.data.enabled
     })
-    addReqHandler<SideBuildReq, SideBuildResp>("build", async (msg, client) => {
-        return await devtools.build(msg.data, st =>
+    addReqHandler<SideBuildReq, SideBuildResp>("build", async msg => {
+        return await devtools.build(msg.data)
+    })
+    addReqHandler<SideWatchReq, SideWatchResp>("watch", async (msg, client) => {
+        return await devtools.watch(msg.data, st =>
             sendEvent(client, "watch", st)
         )
     })
-    addReqHandler<SideConnectReq>("connect", (msg, client) => {
+    addReqHandler<SideConnectReq>("connect", msg => {
         return devtools.connect(msg.data)
+    })
+    addReqHandler<SideSpecsReq, SideSpecsResp>("specs", async () => {
+        return {
+            specs: serviceSpecifications(),
+        }
     })
 }
 

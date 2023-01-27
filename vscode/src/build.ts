@@ -3,6 +3,7 @@ import type {
     SideBuildReq,
     SideBuildResp,
     SideWatchEvent,
+    SideWatchReq,
 } from "../../cli/src/sideprotocol"
 import { sideRequest, subSideEvent } from "./jacdac"
 import * as vscode from "vscode"
@@ -65,11 +66,17 @@ export async function build(filename: string, deviceId = "*") {
             req: "build",
             data: {
                 filename,
-                watch: true,
                 deployTo: deviceId,
             },
         })
         showBuildResults(res.data)
+        // also start watch
+        await sideRequest<SideWatchReq>({
+            req: "watch",
+            data: {
+                filename,
+            },
+        })
         return true
     } catch (err) {
         console.error(err) // TODO

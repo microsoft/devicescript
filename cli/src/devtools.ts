@@ -8,7 +8,6 @@ import { watch } from "fs-extra"
 import { jacdacDefaultSpecifications } from "@devicescript/compiler"
 import {
     bufferConcat,
-    bufferEq,
     debounce,
     ERROR,
     FRAME_PROCESS,
@@ -69,6 +68,7 @@ export async function devtools(
         clients: [],
         bus,
         build,
+        watch: watchCmd,
         connect,
     }
     initSideProto(devtoolsSelf)
@@ -193,18 +193,15 @@ export async function devtools(
     await bus.connect(true)
 
     if (fn) {
+        const args: BuildReqArgs = {
+            filename: fn,
+            deployTo: "*",
+            buildOptions: options,
+        }
+        console.log(`building ${fn}...`)
+        logBuildStatus(await build(args))
         console.log(`watching ${fn}...`)
-        logBuildStatus(
-            await build(
-                {
-                    filename: fn,
-                    watch: true,
-                    deployTo: "*",
-                    buildOptions: options,
-                },
-                logBuildStatus
-            )
-        )
+        await watchCmd(args, logBuildStatus)
     }
 
     function logBuildStatus(st: BuildStatus) {
@@ -223,95 +220,89 @@ export async function devtools(
         await Promise.all(transports.map(tr => tr.connect(background)))
     }
 
-    async function build(
+    async function build(args: BuildReqArgs) {
+        args = { ...args }
+        return await rebuild(args)
+    }
+
+    async function watchCmd(
         args: BuildReqArgs,
         watchCb?: (st: BuildStatus) => void
     ) {
-        let prevBytecode: Uint8Array
-
         args = { ...args }
+        watcher?.close()
+        watcher = watch(
+            args.filename,
+            debounce(async () => {
+                let res: BuildStatus
+                try {
+                    res = await rebuild(args)
+                } catch (err) {
+                    res = {
+                        success: false,
+                        dbg: null,
+                        binary: null,
+                        diagnostics: [],
+                        deployStatus: err.message || "" + err,
+                    }
+                }
+                watchCb(res)
+            }, 500)
+        )
+    }
 
+    async function rebuild(args: BuildReqArgs) {
         const opts = { ...args.buildOptions }
         if (!opts.cwd) opts.cwd = dirname(args.filename)
         opts.noVerify = true
         opts.quiet = true
         opts.watch = false
 
-        if (args.watch) {
-            watcher?.close()
-            watcher = watch(
-                args.filename,
-                debounce(async () => {
-                    let res: BuildStatus
-                    try {
-                        res = await rebuild()
-                    } catch (err) {
-                        res = {
-                            success: false,
-                            dbg: null,
-                            binary: null,
-                            diagnostics: [],
-                            deployStatus: err.message || "" + err,
-                        }
-                    }
-                    watchCb(res)
-                }, 500)
-            )
+        const res = await compileFile(args.filename, opts)
+        const binary = res.binary
+
+        let deployStatus = ""
+        if (args.deployTo) {
+            try {
+                const service = deployService(args)
+                await deployToService(service, binary)
+                deployStatus = `OK`
+            } catch (err) {
+                deployStatus = err.message || "" + err
+            }
         }
 
-        return await rebuild()
-
-        async function rebuild() {
-            const res = await compileFile(args.filename, opts)
-            const binary = res.binary
-
-            let deployStatus = ""
-            if (args.deployTo) {
-                if (prevBytecode && bufferEq(prevBytecode, binary)) {
-                    deployStatus = `skipping identical deploy`
-                } else {
-                    try {
-                        const service = deployService()
-                        await deployToService(service, binary)
-                        deployStatus = `OK`
-                    } catch (err) {
-                        deployStatus = err.message || "" + err
-                    }
-                }
-            }
-
-            delete res.binary
-            const r: BuildStatus = {
-                ...res,
-                deployStatus,
-            }
-            return r
+        delete res.binary
+        const r: BuildStatus = {
+            ...res,
+            deployStatus,
         }
+        return r
+    }
 
-        function deployService() {
-            if (args.deployTo == "*") {
-                const services = bus.services({
-                    serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
-                })
-                if (services.length > 1)
-                    throw new Error(`Multiple DeviceScript Managers found.`)
-                else if (services.length == 0)
-                    throw new Error(`No DeviceScript Managers found.`)
-
-                return services[0]
-            }
-
-            const dev = bus.device(args.deployTo, true)
-            if (!dev) throw new Error(`Device ${args.deployTo} not found`)
-
-            const service = dev.services({
+    function deployService(args: BuildReqArgs) {
+        if (args.deployTo == "*") {
+            const services = bus.services({
                 serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
-            })[0]
-            if (!service)
-                throw new Error(
-                    `Device ${dev} doesn't have a DeviceScript Manager.`
-                )
-            return service
+            })
+            if (services.length > 1)
+                throw new Error(`Multiple DeviceScript Managers found.`)
+            else if (services.length == 0)
+                throw new Error(`No DeviceScript Managers found.`)
+
+            return services[0]
         }
+
+        const dev = bus.device(args.deployTo, true)
+        if (!dev) throw new Error(`Device ${args.deployTo} not found`)
+
+        const service = dev.services({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })[0]
+        if (!service)
+            throw new Error(
+                `Device ${dev} doesn't have a DeviceScript Manager.`
+            )
+        return service
     }
 }

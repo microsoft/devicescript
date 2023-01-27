@@ -33,11 +33,18 @@ export interface SideBcastReq extends SideReq<"bcast"> {
 export interface SideBuildReq extends SideReq<"build"> {
     data: BuildReqArgs
 }
-
 export interface SideBuildResp extends SideResp<"build"> {
     data: BuildStatus
 }
 
+export interface SideWatchReq extends SideReq<"watch"> {
+    data: BuildReqArgs
+}
+export interface SideWatchResp extends SideResp<"watch"> {
+    // no real response
+    data: void
+}
+// but will get events every now and then
 export interface SideWatchEvent extends SideEvent<"watch"> {
     data: BuildStatus
 }
@@ -46,11 +53,19 @@ export interface SideConnectReq extends SideReq<"connect"> {
     data: ConnectReqArgs
 }
 
+export interface SideSpecsReq extends SideReq<"specs"> {
+    data: {}
+}
+export interface SideSpecsResp extends SideResp<"specs"> {
+    data: {
+        specs: jdspec.ServiceSpec[]
+    }
+}
+
 export type BuildStatus = CompilationResult & { deployStatus: string }
 export interface BuildReqArgs {
     filename: string
     buildOptions?: BuildOptions
-    watch?: boolean
     deployTo?: string // deviceId
 }
 export interface ConnectReqArgs {
