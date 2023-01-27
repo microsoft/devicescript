@@ -7,8 +7,7 @@ export async function pickDeviceManager(
     currentDeviceId?: string
 ): Promise<JDDevice> {
     const devices = bus.devices({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER })
-    if (devices.length === 1) return devices[0]
-    else if (devices.length > 0) {
+    if (devices.length > 0) {
         const items = devices.map(
             dev =>
                 <vscode.QuickPickItem & { deviceId: string }>{
