@@ -276,22 +276,19 @@ export function activateDeviceScript(
         subscriptions.push(factory as any)
     }
 
-    let redirectOutput = extensionMode == vscode.ExtensionMode.Production
-    if (redirectOutput) {
-        const output = vscode.window.createOutputChannel("DeviceScript")
-        const addMsg = (level: number, args: any[]) => {
-            let msg = ""
-            for (const a of args) {
-                if (msg != "") msg += " "
-                msg += a
-            }
-            output.appendLine(msg)
-        }
+    const config = vscode.workspace.getConfiguration("devicescript")
+    const redirectConsoleOutput =
+        !!config.get("redirectConsoleOutput") ||
+        extensionMode == vscode.ExtensionMode.Production
+    if (redirectConsoleOutput) {
+        const output = vscode.window.createOutputChannel("DeviceScript", {
+            log: true,
+        })
         // note that this is local to this extension - see inject.js
-        console.debug = (...a: any[]) => addMsg(0, a)
-        console.log = (...a: any[]) => addMsg(1, a)
-        console.warn = (...a: any[]) => addMsg(2, a)
-        console.error = (...a: any[]) => addMsg(3, a)
+        console.debug = output.debug
+        console.log = output.info
+        console.warn = output.warn
+        console.error = output.error
         console.info = console.log
     }
 
