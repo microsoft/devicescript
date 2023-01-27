@@ -13,6 +13,7 @@ import {
     REGISTER_NODE_NAME,
     serializeToTrace,
 } from "jacdac-ts"
+import { report } from "process"
 import * as vscode from "vscode"
 import {
     WorkspaceFolder,
@@ -21,6 +22,7 @@ import {
     CancellationToken,
 } from "vscode"
 import type { SideConnectRequestMessage } from "../../cli/src/sideprotocol"
+import { activateAnalytics, reporter } from "./analytics"
 import { build, initBuild } from "./build"
 import {
     spawnDevTools,
@@ -41,6 +43,8 @@ export function activateDeviceScript(
     factory?: vscode.DebugAdapterDescriptorFactory
 ) {
     const { subscriptions, workspaceState, extensionMode } = context
+    activateAnalytics(context)
+    reporter.sendTelemetryEvent('activate')
 
     // setup bus
     const bus = startJacdacBus()
@@ -91,6 +95,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.runEditorContents",
             async (resource: vscode.Uri) => {
+                reporter.sendTelemetryEvent("command", { command: "runEditorContents" })
                 let targetResource = resource
                 if (!targetResource && vscode.window.activeTextEditor) {
                     targetResource = vscode.window.activeTextEditor.document.uri
@@ -111,6 +116,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.debugEditorContents",
             async (resource: vscode.Uri) => {
+                reporter.sendTelemetryEvent("command", { command: "debugEditorContents" })
                 let targetResource = resource
                 if (!targetResource && vscode.window.activeTextEditor) {
                     targetResource = vscode.window.activeTextEditor.document.uri
@@ -138,6 +144,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.toggleFormatting",
             variable => {
+                reporter.sendTelemetryEvent("command", { command: "toggleFormatting" })
                 const ds = vscode.debug.activeDebugSession
                 if (ds) {
                     ds.customRequest("toggleFormatting")
@@ -150,6 +157,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.showServerTerminal",
             () => {
+                reporter.sendTelemetryEvent("command", { command: "showServerTerminal" })
                 console.log("Showing terminal...")
                 showDevToolsTerminal()
             }
@@ -157,6 +165,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.identifyDevice",
             (item: JDeviceTreeItem) => {
+                reporter.sendTelemetryEvent("command", { command: "identifyDevice" })
                 const { device } = item
                 device.identify() // async
             }
@@ -164,6 +173,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.resetDevice",
             (item: JDeviceTreeItem) => {
+                reporter.sendTelemetryEvent("command", { command: "resetDevice" })
                 const { device } = item
                 device.reset() // async
             }
@@ -171,6 +181,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
             async () => {
+                reporter.sendTelemetryEvent("command", { command: "connect" })
                 await spawnDevTools()
                 await bus.connect()
                 await sideRequest(<SideConnectRequestMessage>{
@@ -182,6 +193,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.openDevTools",
             async () => {
+                reporter.sendTelemetryEvent("command", { command: "openDevTools" })
                 if (developerToolsPanel) {
                     developerToolsPanel.reveal(vscode.ViewColumn.Nine)
                 } else {
@@ -350,6 +362,7 @@ export function activateDeviceScript(
             "extension.devicescript.watchNode",
             (item: JDomTreeItem) => {
                 console.log(`Watch ${item.node}`)
+                reporter.sendTelemetryEvent("command", { command: "watchNode" })
                 const id = item.node.id
                 const watches = extensionState.watchKeys()
                 if (!watches.includes(id)) {
@@ -365,6 +378,7 @@ export function activateDeviceScript(
             "extension.devicescript.unwatchNode",
             (item: JDomTreeItem) => {
                 console.log(`Unwatch ${item.node}`)
+                reporter.sendTelemetryEvent("command", { command: "unwatchNode" })
                 const id = item.node.id
                 const watches = extensionState.watchKeys()
                 if (watches.includes(id)) {

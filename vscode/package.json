@@ -42,8 +42,9 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
-    "websocket-polyfill": "^0.0.3",
-    "jacdac-ts": "*"
+    "@vscode/extension-telemetry": "^0.7.4-preview",
+    "jacdac-ts": "*",
+    "websocket-polyfill": "^0.0.3"
   },
   "main": "./built/devicescript-vscode.js",
   "browser": "./built/devicescript-vscode-web.js",
