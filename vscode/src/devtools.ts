@@ -20,10 +20,23 @@ export function initDevTools(disposables: vscode.Disposable[]) {
     })
 }
 
-export function spawnDevTools(useShell: boolean) {
+export function spawnDevTools() {
+    const devToolsConfig = vscode.workspace.getConfiguration(
+        "devicescript.devtools"
+    )
+    const transportsConfig = vscode.workspace.getConfiguration(
+        "devicescript.devtools.transports"
+    )
+    const useShell = !!devToolsConfig.get("useShell")
+    const serial = !!transportsConfig.get("serial")
+    const usb = !!transportsConfig.get("usb")
+
     if (!terminal) {
         const cli = "yarn"
         const args = ["devicescript", "devtools"]
+        if (serial) args.push("--serial")
+        if (usb) args.push("--usb")
+
         terminal = vscode.window.createTerminal({
             name: "DeviceScript",
             hideFromUser: true,

@@ -10,7 +10,7 @@ import { groupBy } from "jacdac-ts"
 
 // let outputCh: vscode.OutputChannel
 let diagColl: vscode.DiagnosticCollection
-let lastBuildFn = "???.ts"
+let lastBuildFilename = "???.ts"
 
 export function initBuild() {
     // outputCh = vscode.window.createOutputChannel("DevS Build")
@@ -58,15 +58,15 @@ export function showBuildResults(st: BuildStatus) {
     if (st.deployStatus) vscode.window.showWarningMessage(st.deployStatus)
 }
 
-export async function build(fn: string) {
-    lastBuildFn = fn
+export async function build(filename: string, deviceId = "*") {
+    lastBuildFilename = filename
     try {
         const msg: SideBuildRequest = {
             type: "build",
             data: {
-                filename: fn,
+                filename,
                 watch: true,
-                deployTo: "*",
+                deployTo: deviceId,
             },
         }
         const res: SideBuildResponse = await sideRequest(msg)
