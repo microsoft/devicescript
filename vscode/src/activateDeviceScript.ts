@@ -281,9 +281,9 @@ export function activateDeviceScript(
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
+    initDevTools(context.subscriptions)
     if (devToolsConfig.get("autoStart")) {
-        initDevTools(context.subscriptions)
-        spawnDevTools(!!devToolsConfig.get("useShell"))
+        spawnDevTools()
         if (devToolsConfig.get("showOnStart")) showDevToolsTerminal()
     }
 
