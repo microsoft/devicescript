@@ -1,5 +1,6 @@
 import {
     CHANGE,
+    delay,
     DEVICE_CHANGE,
     JDBus,
     JDDevice,
@@ -8,6 +9,8 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
 import * as vscode from "vscode"
+import { SideStartVmReq } from "../../cli/src/sideprotocol"
+import { sideRequest } from "./jacdac"
 import { JDeviceTreeItem } from "./JDomTreeDataProvider"
 
 const STATE_WATCHES_KEY = "views.watch.ids"
@@ -90,8 +93,14 @@ export class ExtensionState extends JDEventSource {
         const did = res?.deviceId
 
         if (did) {
-            // todo: start VM
-            console.log(`todo: start vm`)
+            const config = vscode.workspace.getConfiguration("devicescript")
+            await sideRequest<SideStartVmReq>({
+                req: "startVM",
+                data: {
+                    nativePath: config.get("nativeVmPath") || undefined,
+                },
+            })
+            await delay(1000)
         }
         const device = devices.find(d => d.deviceId === did)
         if (device && !skipUpdate) {

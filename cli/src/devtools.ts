@@ -33,6 +33,7 @@ import { compileFile } from "./build"
 import { dirname, resolve } from "path"
 import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
 import { DevsDbgClient, DsDapSession } from "@devicescript/dap"
+import { initVMCmds } from "./vmworker"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -75,6 +76,7 @@ export async function devtools(
         connect: connectCmd,
     }
     initSideProto(devtoolsSelf)
+    initVMCmds()
 
     bus.passive = false
     bus.on(ERROR, e => error(e))
