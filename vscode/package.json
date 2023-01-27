@@ -111,7 +111,7 @@
         {
           "id": "deviceScriptViewContainer",
           "title": "DeviceScript",
-          "icon": "./images/jacdac.svg"
+          "icon": "./images/jacdac.dark.svg"
         }
       ]
     },

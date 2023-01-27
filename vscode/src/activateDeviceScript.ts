@@ -184,7 +184,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
             async () => {
-                await spawnDevTools()
+                await spawnDevTools(context)
                 await bus.connect()
                 await sideRequest<SideConnectReq>({
                     req: "connect",
@@ -199,7 +199,7 @@ export function activateDeviceScript(
                     developerToolsPanel.reveal(vscode.ViewColumn.Nine)
                 } else {
                     console.log("Opening Developer Tools...")
-                    await spawnDevTools()
+                    await spawnDevTools(context)
                     // http://localhost:8081/
                     developerToolsPanel = vscode.window.createWebviewPanel(
                         "extension.devicescript.openDevTools", // Identifies the type of the webview. Used internally
@@ -311,7 +311,7 @@ export function activateDeviceScript(
     )
     initDevTools(context.subscriptions)
     if (devToolsConfig.get("autoStart")) {
-        spawnDevTools()
+        spawnDevTools(context)
         if (devToolsConfig.get("showOnStart")) showDevToolsTerminal()
     }
 
@@ -462,7 +462,9 @@ async function initDevtoolsConnection() {
     })
     const { specs, version, bytecodeVersion } = resp.data
     loadServiceSpecifications(specs)
-    console.log(`devicescript devtools version: ${version}, bytecode version: ${bytecodeVersion}`)
+    console.log(
+        `devicescript devtools version: ${version}, bytecode version: ${bytecodeVersion}`
+    )
 }
 
 class DeviceScriptConfigurationProvider

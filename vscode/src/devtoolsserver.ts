@@ -20,7 +20,7 @@ export function initDevTools(disposables: vscode.Disposable[]) {
     })
 }
 
-export async function spawnDevTools() {
+export async function spawnDevTools(context: vscode.ExtensionContext) {
     if (terminal) return
 
     const devToolsConfig = vscode.workspace.getConfiguration(
@@ -38,14 +38,27 @@ export async function spawnDevTools() {
     if (serial) args.push("--serial")
     if (usb) args.push("--usb")
 
-    terminal = vscode.window.createTerminal({
+    const options: vscode.TerminalOptions = {
         name: "DeviceScript",
         hideFromUser: true,
         message: "Launching DeviceScript Server...",
         isTransient: true,
         shellPath: useShell ? undefined : cli,
         shellArgs: useShell ? undefined : args,
-    })
+        iconPath: {
+            light: vscode.Uri.joinPath(
+                vscode.Uri.file(context.extensionPath),
+                "images",
+                "jacdac.light.svg"
+            ),
+            dark: vscode.Uri.joinPath(
+                vscode.Uri.file(context.extensionPath),
+                "images",
+                "jacdac.dark.svg"
+            ),
+        },
+    }
+    terminal = vscode.window.createTerminal(options)
     if (useShell) {
         terminal.sendText("", true)
         terminal.sendText(`${cli} ${args.join(" ")}`, true)
