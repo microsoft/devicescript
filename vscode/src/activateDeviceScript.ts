@@ -418,7 +418,7 @@ export function activateDeviceScript(
     const updateStatusBar = () => {
         const service = extensionState.deviceScriptManager
         const mgr = service?.device
-        const { bytecodeVersion } = extensionState
+        const { runtimeVersion } = extensionState
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
@@ -426,7 +426,7 @@ export function activateDeviceScript(
         statusBarItem.tooltip = mgr
             ? `Deploy and Debug on device ${mgr.shortId}`
             : `Click to pick a DeviceScript device`
-        statusBarItem.text = `DeviceScript ${bytecodeVersion} $(play) ${
+        statusBarItem.text = `DeviceScript ${runtimeVersion} $(play) ${
             mgr?.shortId || "???"
         } $(${JDeviceTreeItem.ICON}) ${devices.length}`
     }
@@ -481,14 +481,14 @@ async function initDevtoolsConnection(state: ExtensionState) {
         req: "specs",
         data: {},
     })
-    const { specs, version, bytecodeVersion } = resp.data
+    const { specs, version, runtimeVersion } = resp.data
     loadServiceSpecifications(specs)
     console.log(
-        `devicescript devtools version: ${version}, bytecode version: ${bytecodeVersion}`
+        `devicescript devtools version: ${version}, bytecode version: ${runtimeVersion}`
     )
 
     state.version = version
-    state.bytecodeVersion = bytecodeVersion
+    state.runtimeVersion = runtimeVersion
     state.emit(CHANGE)
 }
 

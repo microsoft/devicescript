@@ -60,7 +60,7 @@ export interface SideSpecsResp extends SideResp<"specs"> {
     data: {
         specs: jdspec.ServiceSpec[]
         version: string
-        bytecodeVersion: string
+        runtimeVersion: string
     }
 }
 

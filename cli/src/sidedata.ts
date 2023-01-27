@@ -82,7 +82,7 @@ export function initSideProto(devtools_: DevToolsIface) {
         return {
             specs: serviceSpecifications(),
             version: pkg.version,
-            bytecodeVersion: `v${v.major}.${v.minor}.${v.patch}`,
+            runtimeVersion: `v${v.major}.${v.minor}.${v.patch}`,
         }
     })
 }
