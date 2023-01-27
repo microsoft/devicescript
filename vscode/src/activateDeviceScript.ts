@@ -19,6 +19,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
+import { build, initBuild } from "./build"
 import { spawnDevTools, showDevToolsTerminal, initDevTools } from "./devtools"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import {
@@ -72,43 +73,46 @@ export function activateDeviceScript(
                         `
     }
 
+    initBuild()
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.runEditorContents",
-            (resource: vscode.Uri) => {
+            async (resource: vscode.Uri) => {
                 let targetResource = resource
                 if (!targetResource && vscode.window.activeTextEditor) {
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    vscode.debug.startDebugging(
-                        undefined,
-                        {
-                            type: "devicescript",
-                            name: "Run File",
-                            request: "launch",
-                            program: targetResource.fsPath,
-                        },
-                        { noDebug: true }
-                    )
+                    if (await build(targetResource.fsPath))
+                        vscode.debug.startDebugging(
+                            undefined,
+                            {
+                                type: "devicescript",
+                                name: "Run File",
+                                request: "launch",
+                                program: targetResource.fsPath,
+                            },
+                            { noDebug: true }
+                        )
                 }
             }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.debugEditorContents",
-            (resource: vscode.Uri) => {
+            async (resource: vscode.Uri) => {
                 let targetResource = resource
                 if (!targetResource && vscode.window.activeTextEditor) {
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    vscode.debug.startDebugging(undefined, {
-                        type: "devicescript",
-                        name: "Debug File",
-                        request: "launch",
-                        program: targetResource.fsPath,
-                        stopOnEntry: true,
-                    })
+                    if (await build(targetResource.fsPath))
+                        vscode.debug.startDebugging(undefined, {
+                            type: "devicescript",
+                            name: "Debug File",
+                            request: "launch",
+                            program: targetResource.fsPath,
+                            stopOnEntry: true,
+                        })
                 }
             }
         ),

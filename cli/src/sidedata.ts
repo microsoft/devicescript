@@ -1,4 +1,20 @@
-import { JSONTryParse } from "jacdac-ts"
+import { JDBus, JSONTryParse } from "jacdac-ts"
+import {
+    BuildReqArgs,
+    BuildStatus,
+    SideErrorResponse,
+    SideMessage,
+} from "./sideprotocol"
+
+export interface DevToolsIface {
+    bus: JDBus
+    clients: DevToolsClient[]
+
+    build: (
+        args: BuildReqArgs,
+        watchCb?: (st: BuildStatus) => void
+    ) => Promise<BuildStatus>
+}
 
 export interface DevToolsClient {
     __devsSender: string
@@ -7,58 +23,78 @@ export interface DevToolsClient {
     send(data: Buffer | string): void
 }
 
-export interface DevToolsSideMessage {
-    type: string
-    bcast?: boolean
-}
-
-export interface DevToolsErrorResponse {
-    type: "error"
-    message: string
-    stack?: string
-}
-
 const msgHandlers: Record<
     string,
-    (msg: DevToolsSideMessage, sender: DevToolsClient) => Promise<void>
+    (
+        devtools: DevToolsIface,
+        msg: SideMessage,
+        sender: DevToolsClient
+    ) => Promise<any>
 > = {
-    enableBCast: async (msg, sender) => {
-        sender.__devsWantsSideChannel = true
+    enableBCast: async (devtools, msg, client) => {
+        client.__devsWantsSideChannel = true
+    },
+    build: async (devtools, msg, client) => {
+        return await devtools.build(msg.data, st =>
+            sendEvent(client, "watch", st)
+        )
     },
 }
 
-export function sendError(cl: DevToolsClient, err: any) {
-    const info: DevToolsErrorResponse = {
+export function sendError(
+    req: SideMessage,
+    cl: DevToolsClient,
+    err: any
+) {
+    const info: SideErrorResponse = {
         type: "error",
-        message: err.message || "" + err,
-        stack: err.stack,
+        seq: req.seq,
+        data: {
+            message: err.message || "" + err,
+            stack: err.stack,
+        },
     }
     cl.send(JSON.stringify(info))
 }
 
+export function sendEvent(cl: DevToolsClient, type: string, data: any) {
+    cl.send(
+        JSON.stringify({
+            type,
+            data,
+        })
+    )
+}
+
 export async function processSideMessage(
+    devtools: DevToolsIface,
     message: string,
-    client: DevToolsClient,
-    clients: DevToolsClient[]
+    client: DevToolsClient
 ) {
-    const msg: DevToolsSideMessage = JSONTryParse(message)
+    const msg: SideMessage = JSONTryParse(message)
     if (!msg) return
 
     const handler = msgHandlers[msg.type]
     if (handler) {
         try {
-            await handler(msg, client)
+            const data = await handler(devtools, msg, client)
+            const resp: SideMessage = {
+                type: msg.type,
+                seq: msg.seq,
+                data: data ?? {},
+            }
+            client.send(JSON.stringify(resp))
         } catch (err) {
-            sendError(client, err)
+            sendError(msg, client, err)
         }
     }
 
-    if (msg.bcast)
-        for (const client of clients) {
+    if (!msg.seq)
+        for (const client of devtools.clients) {
             if (client != client && client.__devsWantsSideChannel)
                 client.send(message)
         }
 
-    if (!msg.bcast && !handler)
-        sendError(client, new Error(`unknown msg type: ${msg.type}`))
+    if (msg.seq && !handler)
+        sendError(msg, client, new Error(`unknown msg type: ${msg.type}`))
 }

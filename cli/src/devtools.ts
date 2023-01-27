@@ -10,25 +10,24 @@ import {
     bufferConcat,
     bufferEq,
     debounce,
-    DEVICE_ANNOUNCE,
     ERROR,
     FRAME_PROCESS,
     JDBus,
-    JDDevice,
     JDFrameBuffer,
-    JDService,
     loadServiceSpecifications,
     serializeToTrace,
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
-import { readCompiled } from "./run"
-import { deployToBus, deployToService } from "./deploy"
+import { deployToService } from "./deploy"
 import { open } from "fs/promises"
 import EventEmitter from "events"
-
 import { createTransports, TransportsOptions } from "./transport"
 import { fetchDevToolsProxy } from "./devtoolsproxy"
-import { DevToolsClient, processSideMessage } from "./sidedata"
+import { DevToolsClient, DevToolsIface, processSideMessage } from "./sidedata"
+import { FSWatcher } from "fs"
+import { compileFile } from "./build"
+import { dirname } from "path"
+import { BuildStatus, BuildReqArgs } from "./sideprotocol"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -43,33 +42,14 @@ export async function devtools(
     const port = 8081
     const tcpPort = 8082
     const listenHost = options.internet ? undefined : "127.0.0.1"
-
     let clientId = 0
+    let watcher: FSWatcher
 
     log(`starting dev tools at http://localhost:${port}`)
 
     loadServiceSpecifications(jacdacDefaultSpecifications)
 
     const traceFd = options.trace ? await open(options.trace, "w") : null
-
-    // start http server
-    const clients: DevToolsClient[] = []
-
-    let prevBytecode: Uint8Array
-    const refreshProg = async (service?: JDService) => {
-        if (!fn) return
-        const { binary } = await readCompiled(fn, options)
-        if (prevBytecode && bufferEq(prevBytecode, binary)) {
-            if (service) await deployToService(service, binary)
-            else {
-                console.log("skipping identical deploy")
-            }
-        } else {
-            prevBytecode = binary
-            const num = await deployToBus(bus, binary)
-            if (num == 0) console.log(`no clients to deploy to`)
-        }
-    }
 
     // passive bus to sniff packets
     const transports = createTransports(options)
@@ -78,6 +58,13 @@ export async function devtools(
         disableRoleManager: true,
         proxy: true,
     })
+
+    const devtoolsSelf: DevToolsIface = {
+        clients: [],
+        bus,
+        build,
+    }
+
     bus.passive = false
     bus.on(ERROR, e => error(e))
     bus.on(FRAME_PROCESS, (frame: JDFrameBuffer) => {
@@ -85,7 +72,7 @@ export async function devtools(
             traceFd.write(
                 serializeToTrace(frame, 0, bus, { showTime: false }) + "\n"
             )
-        clients
+        devtoolsSelf.clients
             .filter(c => c.__devsSender !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))
     })
@@ -115,9 +102,9 @@ export async function devtools(
         }
     })
     function removeClient(client: DevToolsClient) {
-        const i = clients.indexOf(client)
-        clients.splice(i, 1)
-        log(`client: disconnected (${clients.length} clients)`)
+        const i = devtoolsSelf.clients.indexOf(client)
+        devtoolsSelf.clients.splice(i, 1)
+        log(`client: disconnected (${devtoolsSelf.clients.length} clients)`)
     }
     server.on("upgrade", (request, socket, body) => {
         // is this a socket?
@@ -126,13 +113,15 @@ export async function devtools(
             const sender = "ws" + ++clientId
             // store sender id to deduped packet
             client.__devsSender = sender
-            clients.push(client)
-            log(`webclient: connected (${sender}, ${clients.length} clients)`)
+            devtoolsSelf.clients.push(client)
+            log(
+                `webclient: connected (${sender}, ${devtoolsSelf.clients.length} clients)`
+            )
             const ev = client as any as EventEmitter
             ev.on("message", (event: any) => {
                 const { data } = event
                 if (typeof data === "string")
-                    processSideMessage(data, client, clients)
+                    processSideMessage(devtoolsSelf, data, client)
                 else processPacket(data, sender)
             })
             ev.on("close", () => removeClient(client))
@@ -160,8 +149,10 @@ export async function devtools(
                 } catch {} // eslint-disable-line no-empty
             }
         }
-        clients.push(client)
-        log(`tcpclient: connected (${sender} ${clients.length} clients)`)
+        devtoolsSelf.clients.push(client)
+        log(
+            `tcpclient: connected (${sender} ${devtoolsSelf.clients.length} clients)`
+        )
         let acc: Uint8Array
         socket.on("data", (buf: Uint8Array) => {
             if (acc) {
@@ -192,17 +183,116 @@ export async function devtools(
 
     bus.start()
     await bus.connect(true)
+
     if (fn) {
         console.log(`watching ${fn}...`)
-        await refreshProg()
-        bus.on(DEVICE_ANNOUNCE, (d: JDDevice) => {
-            d.services({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER }).forEach(s =>
-                refreshProg(s)
+        logBuildStatus(
+            await build(
+                {
+                    filename: fn,
+                    watch: true,
+                    deployTo: "*",
+                    buildOptions: options,
+                },
+                logBuildStatus
             )
-        })
-        watch(
-            fn,
-            debounce(() => refreshProg(), 500)
         )
+    }
+
+    function logBuildStatus(st: BuildStatus) {
+        console.log(`build ${fn} ${st.success ? "OK" : "Failed"}`)
+        for (const msg of st.diagnostics) console.error(msg.formatted)
+        if (st.deployStatus) {
+            console.log(`deploy status: ${st.deployStatus}`)
+        }
+    }
+
+    async function build(
+        args: BuildReqArgs,
+        watchCb?: (st: BuildStatus) => void
+    ) {
+        let prevBytecode: Uint8Array
+
+        args = { ...args }
+
+        const opts = { ...args.buildOptions }
+        if (!opts.cwd) opts.cwd = dirname(args.filename)
+        opts.noVerify = true
+        opts.quiet = true
+        opts.watch = false
+
+        if (args.watch) {
+            watcher?.close()
+            watcher = watch(
+                args.filename,
+                debounce(async () => {
+                    let res: BuildStatus
+                    try {
+                        res = await rebuild()
+                    } catch (err) {
+                        res = {
+                            success: false,
+                            dbg: null,
+                            binary: null,
+                            diagnostics: [],
+                            deployStatus: err.message || "" + err,
+                        }
+                    }
+                    watchCb(res)
+                }, 500)
+            )
+        }
+
+        return await rebuild()
+
+        async function rebuild() {
+            const res = await compileFile(args.filename, opts)
+            const binary = res.binary
+
+            let deployStatus = ""
+            if (args.deployTo) {
+                if (prevBytecode && bufferEq(prevBytecode, binary)) {
+                    deployStatus = `skipping identical deploy`
+                } else {
+                    try {
+                        const service = deployService()
+                        await deployToService(service, binary)
+                        deployStatus = `OK`
+                    } catch (err) {
+                        deployStatus = err.message || "" + err
+                    }
+                }
+            }
+
+            delete res.binary
+            const r: BuildStatus = {
+                ...res,
+                deployStatus,
+            }
+            return r
+        }
+
+        function deployService() {
+            if (args.deployTo == "*") {
+                const services = bus.services({
+                    serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+                })
+                if (services.length > 1)
+                    throw new Error(`more than one devs mgr`)
+                else if (services.length == 0)
+                    throw new Error(`no devs mgr found`)
+
+                return services[0]
+            }
+
+            const dev = bus.device(args.deployTo, true)
+            if (!dev) throw new Error(`device ${args.deployTo} not found`)
+
+            const service = dev.services({
+                serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+            })[0]
+            if (!service) throw new Error(`device ${dev} doesn't have devsmgr`)
+            return service
+        }
     }
 }

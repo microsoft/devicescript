@@ -110,7 +110,7 @@ export default async function init(options: InitOptions & CmdOptions) {
     // typescript definitions
     emptyDirSync(LIBDIR)
     debug(`write ${LIBDIR}/*`)
-    await saveLibFiles()
+    await saveLibFiles({})
 
     // .gitignore
     const gid = `${GENDIR}/\n`
