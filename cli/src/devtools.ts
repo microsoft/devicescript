@@ -224,7 +224,7 @@ export async function devtools(
         if (args.watch) {
             watcher?.close()
             watcher = watch(
-                fn,
+                args.filename,
                 debounce(async () => {
                     let res: BuildStatus
                     try {

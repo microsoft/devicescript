@@ -675,7 +675,7 @@ class Program implements TopOpWriter {
             jdiag.column = character + 1
             jdiag.filename = diag.file.fileName
         }
-        this.diagnostics.push(jdiag)
+        this.diagnostics.push(sanitizeDiagnostic(jdiag))
         if (this.host.error) this.host.error(jdiag)
         else console.error(jdiag.formatted)
     }
@@ -3582,6 +3582,31 @@ export interface CompilationResult {
     binary: Uint8Array
     dbg: DebugInfo
     diagnostics: DevsDiagnostic[]
+}
+
+export function sanitizeDiagnostic(d: DevsDiagnostic) {
+    return {
+        ...related(d),
+        filename: d.filename,
+        line: d.line,
+        column: d.column,
+        formatted: d.formatted,
+        relatedInformation: d.relatedInformation?.map(related),
+    }
+
+    function related(
+        d: ts.DiagnosticRelatedInformation
+    ): ts.DiagnosticRelatedInformation & { filename: string } {
+        return {
+            category: d.category,
+            code: d.code,
+            file: undefined,
+            filename: d.file?.fileName,
+            start: d.start,
+            length: d.length,
+            messageText: d.messageText,
+        }
+    }
 }
 
 /**
