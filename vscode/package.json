@@ -111,7 +111,7 @@
       "deviceScriptViewContainer": [
         {
           "id": "extension.devicescript.jacdac-jdom-explorer",
-          "name": "Device Explorer"
+          "name": "Devices"
         },
         {
           "id": "extension.devicescript.jacdac-jdom-watch",
@@ -126,7 +126,7 @@
       },
       {
         "view": "extension.devicescript.jacdac-jdom-watch",
-        "contents": "Connect a Jacdac device."
+        "contents": "Select Registers or Events to watch."
       }
     ],
     "menus": {
