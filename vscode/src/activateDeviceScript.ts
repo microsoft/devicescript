@@ -49,18 +49,18 @@ export function activateDeviceScript(
 
     // setup bus
     const bus = startJacdacBus()
-    let unsub = bus.subscribe(CHANGE, () => {
-        if (bus.connected && unsub) {
-            unsub()
-            unsub = null
-            initDevtoolsConnection()
-        }
-    })
     context.subscriptions.push({
         dispose: stopJacdacBus,
     })
-
     const extensionState = new ExtensionState(bus, workspaceState)
+
+    let unsub = bus.subscribe(CHANGE, async () => {
+        if (bus.connected && unsub) {
+            unsub()
+            unsub = null
+            await initDevtoolsConnection(extensionState)
+        }
+    })
 
     // devtool web panel
     let developerToolsPanel: vscode.WebviewPanel
@@ -108,15 +108,16 @@ export function activateDeviceScript(
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    const device =
+                    const service =
                         await extensionState.resolveDeviceScriptManager()
-                    if (!device) {
+                    if (!service) {
                         vscode.window.showWarningMessage(
                             "No DeviceScript device found."
                         )
                         return
                     }
-                    await build(targetResource.fsPath, device.deviceId)
+
+                    await build(targetResource.fsPath, service.device.deviceId)
                 }
             }
         ),
@@ -128,15 +129,20 @@ export function activateDeviceScript(
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    const device =
+                    const service =
                         await extensionState.resolveDeviceScriptManager()
-                    if (!device) {
+                    if (!service) {
                         vscode.window.showWarningMessage(
                             "No DeviceScript device found."
                         )
                         return
                     }
-                    if (await build(targetResource.fsPath, device.deviceId))
+                    if (
+                        await build(
+                            targetResource.fsPath,
+                            service.device.deviceId
+                        )
+                    )
                         vscode.debug.startDebugging(undefined, {
                             type: "devicescript",
                             name: "Debug File",
@@ -168,7 +174,7 @@ export function activateDeviceScript(
             async (item: JDeviceTreeItem) => {
                 const device =
                     item?.device ||
-                    (await extensionState.pickDeviceScriptManager(true))
+                    (await extensionState.pickDeviceScriptManager(true))?.device
                 await device?.identify()
             }
         ),
@@ -177,7 +183,7 @@ export function activateDeviceScript(
             async (item: JDeviceTreeItem) => {
                 const device =
                     item?.device ||
-                    (await extensionState.pickDeviceScriptManager(true))
+                    (await extensionState.pickDeviceScriptManager(true))?.device
                 await device.reset() // async
             }
         ),
@@ -397,7 +403,9 @@ export function activateDeviceScript(
     )
     statusBarItem.command = "extension.devicescript.pickDeviceScriptManager"
     const updateStatusBar = () => {
-        const mgr = extensionState.deviceScriptManager
+        const service = extensionState.deviceScriptManager
+        const mgr = service?.device
+        const { bytecodeVersion } = extensionState
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
@@ -405,9 +413,9 @@ export function activateDeviceScript(
         statusBarItem.tooltip = mgr
             ? `Deploy and Debug on device ${mgr.shortId}`
             : `Click to pick a DeviceScript device`
-        statusBarItem.text = `DeviceScript $(play) ${mgr?.shortId || "???"} $(${
-            JDeviceTreeItem.ICON
-        }) ${devices.length}`
+        statusBarItem.text = `DeviceScript ${bytecodeVersion} $(play) ${
+            mgr?.shortId || "???"
+        } $(${JDeviceTreeItem.ICON}) ${devices.length}`
     }
     extensionState.on(CHANGE, updateStatusBar)
     bus.on([DEVICE_CHANGE, CONNECTION_STATE], updateStatusBar)
@@ -455,7 +463,7 @@ export function activateDeviceScript(
     configure()
 }
 
-async function initDevtoolsConnection() {
+async function initDevtoolsConnection(state: ExtensionState) {
     const resp = await sideRequest<SideSpecsReq, SideSpecsResp>({
         req: "specs",
         data: {},
@@ -465,6 +473,9 @@ async function initDevtoolsConnection() {
     console.log(
         `devicescript devtools version: ${version}, bytecode version: ${bytecodeVersion}`
     )
+
+    state.version = version
+    state.bytecodeVersion = bytecodeVersion
 }
 
 class DeviceScriptConfigurationProvider

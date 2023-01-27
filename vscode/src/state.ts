@@ -1,10 +1,13 @@
 import {
     CHANGE,
+    ControlReg,
+    DeviceScriptManagerReg,
     DEVICE_CHANGE,
     JDBus,
-    JDDevice,
     JDEventSource,
+    JDService,
     randomDeviceId,
+    shortDeviceId,
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
 import * as vscode from "vscode"
@@ -17,6 +20,10 @@ const STATE_VM_DEVICE = "devices.virtual"
 type DeviceQuickItem = vscode.QuickPickItem & { deviceId: string }
 
 export class ExtensionState extends JDEventSource {
+    // TODO CHANGE
+    version = ""
+    bytecodeVersion = ""
+
     constructor(readonly bus: JDBus, readonly state: vscode.Memento) {
         super()
         if (!this.virtualDeviceScriptManagerId) {
@@ -47,7 +54,7 @@ export class ExtensionState extends JDEventSource {
     get deviceScriptManager() {
         const id = this.state.get(STATE_CURRENT_DEVICE) as string
         const current = this.bus.device(id, true)
-        return current
+        return current?.services({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER })[0]
     }
 
     private async updateCurrentDeviceScriptManagerId(id: string) {
@@ -55,34 +62,53 @@ export class ExtensionState extends JDEventSource {
         this.emit(CHANGE)
     }
 
-    async resolveDeviceScriptManager(): Promise<JDDevice> {
+    async resolveDeviceScriptManager(): Promise<JDService> {
         return this.deviceScriptManager || this.pickDeviceScriptManager()
     }
 
-    async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDDevice> {
+    async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {
         const { virtualDeviceScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
-        const devices = this.bus.devices({
+        const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })
-        const items = devices.map(
-            dev =>
-                <DeviceQuickItem>{
-                    label: `$(${JDeviceTreeItem.ICON}) ${dev.friendlyName}`,
-                    description: dev.deviceId,
-                    detail: dev.describe(),
-                    deviceId: dev.deviceId,
-                    picked: dev.deviceId === cid,
-                }
+        const detail = async (srv: JDService) => {
+            const runtimeVersion = srv.register(
+                DeviceScriptManagerReg.RuntimeVersion
+            )
+            await runtimeVersion.refresh(true)
+            const v = runtimeVersion.unpackedValue || []
+            const [patch, minor, major] = v as [number, number, number]
+            const description = srv.device
+                .service(0)
+                .register(ControlReg.DeviceDescription)
+            await description.refresh(true)
+
+            return `${description.stringValue || ""} ${
+                patch !== undefined ? `(devs v${major}.${minor}.${patch})` : ""
+            }`
+        }
+        const items = await Promise.all(
+            services.map(
+                async srv =>
+                    <DeviceQuickItem>{
+                        label: `$(${JDeviceTreeItem.ICON}) ${srv.device.friendlyName}`,
+                        description: srv.device.deviceId,
+                        detail: await detail(srv),
+                        deviceId: srv.device.deviceId,
+                        picked: srv.device.deviceId === cid,
+                    }
+            )
         )
         if (!this.bus.device(virtualDeviceScriptManagerId, true))
             items.push(<DeviceQuickItem>{
-                label: `Virtual Device`,
-                description: `A device simulator running in a separate process.`,
+                label: shortDeviceId(this.virtualDeviceScriptManagerId),
+                description: `Virtual Device`,
+                detail: `A virtual DeviceScript interpreter running in a separate process (devs ${this.bytecodeVersion})`,
                 deviceId: virtualDeviceScriptManagerId,
             })
         const res = await vscode.window.showQuickPick(items, {
-            title: "Pick a DeviceScript device",
+            title: `Pick a DeviceScript device`,
             matchOnDescription: true,
             matchOnDetail: true,
             canPickMany: false,
@@ -93,10 +119,12 @@ export class ExtensionState extends JDEventSource {
             // todo: start VM
             console.log(`todo: start vm`)
         }
-        const device = devices.find(d => d.deviceId === did)
-        if (device && !skipUpdate) {
-            await this.updateCurrentDeviceScriptManagerId(device.deviceId)
-            return device
+        const service = services.find(srv => srv.device.deviceId === did)
+        if (service && !skipUpdate) {
+            await this.updateCurrentDeviceScriptManagerId(
+                service.device.deviceId
+            )
+            return service
         }
         return undefined
     }
