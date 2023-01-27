@@ -369,13 +369,15 @@ export function activateDeviceScript(
         100
     )
     statusBarItem.command = "extension.devicescript.pickDeviceScriptManager"
-    statusBarItem.tooltip = "Pick DeviceScript device"
     const updateStatusBar = () => {
         const mgr = extensionState.deviceScriptManager
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
         })
+        statusBarItem.tooltip = mgr
+            ? `Deploy and Debug on device ${mgr.shortId}`
+            : `Click to pick a DeviceScript device`
         statusBarItem.text = `DeviceScript $(play) ${mgr?.shortId || "???"} $(${
             JDeviceTreeItem.ICON
         }) ${devices.length}`
