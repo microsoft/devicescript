@@ -460,7 +460,9 @@ async function initDevtoolsConnection() {
         req: "specs",
         data: {},
     })
-    loadServiceSpecifications(resp.data.specs)
+    const { specs, version } = resp.data
+    loadServiceSpecifications(specs)
+    console.log(`devicescript devtools version: ${version}`)
 }
 
 class DeviceScriptConfigurationProvider
