@@ -50,14 +50,7 @@
   "activationEvents": [
     "workspaceContains:**/devsconfig.json",
     "onDebugResolve:devicescript",
-    "onDebugDynamicConfigurations:devicescript",
-    "onCommand:extension.devicescript.start",
-    "onCommand:extension.devicescript.openDevTools",
-    "onCommand:extension.devicescript.getProgramName",
-    "onCommand:extension.devicescript.runEditorContents",
-    "onCommand:extension.devicescript.debugEditorContents",
-    "onView:extension.devicescript.jacdac-jdom-explorer",
-    "onView:extension.devicescript.jacdac-jdom-watch"
+    "onDebugDynamicConfigurations:devicescript"
   ],
   "workspaceTrust": {
     "request": "never"
@@ -211,9 +204,6 @@
           "when": "resourceLangId == typescript"
         },
         {
-          "command": "extension.devicescript.start"
-        },
-        {
           "command": "extension.devicescript.openDevTools"
         },
         {
@@ -246,11 +236,6 @@
         "icon": "$(play)"
       },
       {
-        "command": "extension.devicescript.start",
-        "title": "Start things",
-        "category": "DeviceScript"
-      },
-      {
         "command": "extension.devicescript.showServerTerminal",
         "title": "Show development server terminal",
         "category": "DeviceScript"
@@ -277,7 +262,7 @@
         "command": "extension.devicescript.pickDeviceScriptManager",
         "title": "Pick DeviceScript device",
         "category": "DeviceScript",
-        "icon": "$(play)"
+        "icon": "$(circuit-board)"
       },
       {
         "command": "extension.devicescript.selectNode",

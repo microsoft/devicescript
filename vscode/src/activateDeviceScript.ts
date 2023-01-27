@@ -144,9 +144,6 @@ export function activateDeviceScript(
                 }
             }
         ),
-        vscode.commands.registerCommand("extension.devicescript.start", () => {
-            console.log("Starting...")
-        }),
         vscode.commands.registerCommand(
             "extension.devicescript.showServerTerminal",
             () => {
@@ -156,16 +153,20 @@ export function activateDeviceScript(
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.identifyDevice",
-            (item: JDeviceTreeItem) => {
-                const { device } = item
-                device.identify() // async
+            async (item: JDeviceTreeItem) => {
+                const device =
+                    item?.device ||
+                    (await extensionState.pickDeviceScriptManager(true))
+                await device?.identify()
             }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.resetDevice",
-            (item: JDeviceTreeItem) => {
-                const { device } = item
-                device.reset() // async
+            async (item: JDeviceTreeItem) => {
+                const device =
+                    item?.device ||
+                    (await extensionState.pickDeviceScriptManager(true))
+                await device.reset() // async
             }
         ),
         vscode.commands.registerCommand(
