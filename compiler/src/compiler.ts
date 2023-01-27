@@ -574,6 +574,7 @@ class Program implements TopOpWriter {
     flags: CompileFlags = {}
     isLibrary: boolean
     srcFiles: SrcFile[] = []
+    diagnostics: DevsDiagnostic[] = []
 
     constructor(public host: Host, public _source: string) {
         this.serviceSpecs = {}
@@ -674,6 +675,7 @@ class Program implements TopOpWriter {
             jdiag.column = character + 1
             jdiag.filename = diag.file.fileName
         }
+        this.diagnostics.push(jdiag)
         if (this.host.error) this.host.error(jdiag)
         else console.error(jdiag.formatted)
     }
@@ -3516,7 +3518,7 @@ class Program implements TopOpWriter {
         this.host.write(DEVS_LIB_FILE, JSON.stringify(lib, null, 1))
     }
 
-    emit() {
+    emit(): CompilationResult {
         assert(!this.tree)
 
         this.tree = buildAST(this.host, this._source, this.prelude)
@@ -3570,6 +3572,7 @@ class Program implements TopOpWriter {
             success: this.numErrors == 0,
             binary: binary,
             dbg: dbg,
+            diagnostics: this.diagnostics,
         }
     }
 }
@@ -3578,6 +3581,7 @@ export interface CompilationResult {
     success: boolean
     binary: Uint8Array
     dbg: DebugInfo
+    diagnostics: DevsDiagnostic[]
 }
 
 /**

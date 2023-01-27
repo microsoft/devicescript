@@ -1,5 +1,5 @@
-import { join } from "node:path"
-import { existsSync, watch } from "node:fs"
+import { join, resolve } from "node:path"
+import { existsSync } from "node:fs"
 import {
     readFileSync,
     writeFileSync,
@@ -64,7 +64,7 @@ export function devsFactory() {
 
 export async function getHost(options: BuildOptions & CmdOptions) {
     const inst = options.noVerify ? undefined : await devsFactory()
-    const outdir = options.outDir || BINDIR
+    const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
 
     const devsHost = {
@@ -83,7 +83,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
             if (options.verbose) log(msg)
         },
         error: (err: DevsDiagnostic) => {
-            error(formatDiagnostics([err]))
+            if (!options.quiet) error(formatDiagnostics([err]))
         },
         mainFileName: () => options.mainFileName || "main.ts",
         getSpecs: () => jacdacDefaultSpecifications,
@@ -108,15 +108,17 @@ export async function compileFile(fn: string, options: BuildOptions = {}) {
     return compileBuf(readFileSync(fn), { ...options, mainFileName: fn })
 }
 
-export async function saveLibFiles() {
+export async function saveLibFiles(options: BuildOptions) {
     const prelude = preludeFiles()
-    await mkdirp(LIBDIR)
+    const pref = resolve(options.cwd ?? ".")
+    await mkdirp(join(pref, LIBDIR))
     for (const fn of Object.keys(prelude)) {
-        const ex = await readFile(fn, "utf-8").then(
+        const fnpath = join(pref, fn)
+        const ex = await readFile(fnpath, "utf-8").then(
             r => r,
             _ => null
         )
-        if (prelude[fn] != ex) await writeFile(fn, prelude[fn])
+        if (prelude[fn] != ex) await writeFile(fnpath, prelude[fn])
     }
 }
 
@@ -127,7 +129,7 @@ export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
         host,
         flags,
     })
-    await saveLibFiles()
+    await saveLibFiles(options)
     return res
 }
 
@@ -137,6 +139,8 @@ export interface BuildOptions {
     watch?: boolean
     stats?: boolean
     flag?: Record<string, boolean>
+    cwd?: string
+    quiet?: boolean
 
     // internal option
     mainFileName?: string
