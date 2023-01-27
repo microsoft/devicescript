@@ -207,14 +207,14 @@
     "commands": [
       {
         "command": "extension.devicescript.debugEditorContents",
-        "title": "Debug File",
+        "title": "Deploy and Debug with DeviceScript",
         "category": "DeviceScript",
         "enablement": "!inDebugMode",
         "icon": "$(debug-alt)"
       },
       {
         "command": "extension.devicescript.runEditorContents",
-        "title": "Run File",
+        "title": "Deploy and Run with DeviceScript",
         "category": "DeviceScript",
         "enablement": "!inDebugMode",
         "icon": "$(play)"

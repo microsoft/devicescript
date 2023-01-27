@@ -278,20 +278,23 @@ export async function devtools(
                     serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
                 })
                 if (services.length > 1)
-                    throw new Error(`more than one devs mgr`)
+                    throw new Error(`Multiple DeviceScript Managers found.`)
                 else if (services.length == 0)
-                    throw new Error(`no devs mgr found`)
+                    throw new Error(`No DeviceScript Managers found.`)
 
                 return services[0]
             }
 
             const dev = bus.device(args.deployTo, true)
-            if (!dev) throw new Error(`device ${args.deployTo} not found`)
+            if (!dev) throw new Error(`Device ${args.deployTo} not found`)
 
             const service = dev.services({
                 serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
             })[0]
-            if (!service) throw new Error(`device ${dev} doesn't have devsmgr`)
+            if (!service)
+                throw new Error(
+                    `Device ${dev} doesn't have a DeviceScript Manager.`
+                )
             return service
         }
     }
