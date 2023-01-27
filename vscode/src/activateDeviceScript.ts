@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import {
+    CHANGE,
     CONNECTION_STATE,
     DEVICE_CHANGE,
     Flags,
@@ -20,19 +21,15 @@ import {
     CancellationToken,
 } from "vscode"
 import { build, initBuild } from "./build"
-import { pickDeviceManager } from "./devicepicker"
 import { spawnDevTools, showDevToolsTerminal, initDevTools } from "./devtools"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import {
     JDeviceTreeItem,
     JDomDeviceTreeDataProvider,
-    JDomTreeDataProvider,
     JDomTreeItem,
     JDomWatchTreeDataProvider,
-    JDRegisterTreeItem,
 } from "./JDomTreeDataProvider"
-
-const STATE_WATCHES_KEY = "views.watch.ids"
+import { ExtensionState } from "./state"
 
 export function activateDeviceScript(
     context: vscode.ExtensionContext,
@@ -45,6 +42,8 @@ export function activateDeviceScript(
     context.subscriptions.push({
         dispose: stopJacdacBus,
     })
+
+    const extensionState = new ExtensionState(bus, workspaceState)
 
     // devtool web panel
     let developerToolsPanel: vscode.WebviewPanel
@@ -92,7 +91,8 @@ export function activateDeviceScript(
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    const device = await pickDeviceManager(bus)
+                    const device =
+                        await extensionState.resolveDeviceScriptManager()
                     if (!device) {
                         vscode.window.showWarningMessage(
                             "No DeviceScript device found."
@@ -111,7 +111,8 @@ export function activateDeviceScript(
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    const device = await pickDeviceManager(bus)
+                    const device =
+                        await extensionState.resolveDeviceScriptManager()
                     if (!device) {
                         vscode.window.showWarningMessage(
                             "No DeviceScript device found."
@@ -319,7 +320,7 @@ export function activateDeviceScript(
     const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
         bus,
         selectNodeCommand,
-        () => workspaceState.get(STATE_WATCHES_KEY) || []
+        extensionState
     )
     vscode.window.registerTreeDataProvider(
         "extension.devicescript.jacdac-jdom-watch",
@@ -328,16 +329,21 @@ export function activateDeviceScript(
 
     context.subscriptions.push(
         vscode.commands.registerCommand(
+            "extension.devicescript.pickDeviceScriptManager",
+            () => extensionState.pickDeviceScriptManager()
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.watchNode",
             (item: JDomTreeItem) => {
                 console.log(`Watch ${item.node}`)
                 const id = item.node.id
-                const state = workspaceState
-                const watches = (state.get(STATE_WATCHES_KEY) as string[]) || []
+                const watches = extensionState.watchKeys()
                 if (!watches.includes(id)) {
-                    watches.push(id)
-                    state.update(STATE_WATCHES_KEY, watches)
-                    jdomWatchTreeDataProvider.refresh()
+                    extensionState
+                        .updateWatchKeys([...watches, id])
+                        .then(() => {
+                            jdomWatchTreeDataProvider.refresh()
+                        })
                 }
             }
         ),
@@ -346,13 +352,13 @@ export function activateDeviceScript(
             (item: JDomTreeItem) => {
                 console.log(`Unwatch ${item.node}`)
                 const id = item.node.id
-                const state = workspaceState
-                const watches = (state.get(STATE_WATCHES_KEY) as string[]) || []
-                let i = watches.indexOf(id)
-                if (i > -1) {
-                    watches.splice(i, 1)
-                    state.update(STATE_WATCHES_KEY, watches)
-                    jdomWatchTreeDataProvider.refresh()
+                const watches = extensionState.watchKeys()
+                if (watches.includes(id)) {
+                    extensionState
+                        .updateWatchKeys(watches.filter(i => i !== id))
+                        .then(() => {
+                            jdomWatchTreeDataProvider.refresh()
+                        })
                 }
             }
         )
@@ -362,15 +368,19 @@ export function activateDeviceScript(
         vscode.StatusBarAlignment.Right,
         100
     )
-    statusBarItem.command = "extension.devicescript.openDevTools"
-    statusBarItem.tooltip = "Click to Connect to Device"
+    statusBarItem.command = "extension.devicescript.pickDeviceScriptManager"
+    statusBarItem.tooltip = "Pick DeviceScript device"
     const updateStatusBar = () => {
+        const mgr = extensionState.deviceScriptManager
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
         })
-        statusBarItem.text = `DeviceScript ${devices.length} $(${JDeviceTreeItem.ICON})`
+        statusBarItem.text = `DeviceScript $(play) ${mgr?.shortId || "???"} $(${
+            JDeviceTreeItem.ICON
+        }) ${devices.length}`
     }
+    extensionState.on(CHANGE, updateStatusBar)
     bus.on([DEVICE_CHANGE, CONNECTION_STATE], updateStatusBar)
     updateStatusBar()
     context.subscriptions.push(statusBarItem)

@@ -205,6 +205,9 @@
         },
         {
           "command": "extension.devicescript.openDevTools"
+        },
+        {
+          "command": "extension.devicescript.pickDeviceScriptManager"
         }
       ],
       "debug/variables/context": [
@@ -250,6 +253,12 @@
         "title": "Identify device",
         "category": "DeviceScript",
         "icon": "$(bell)"
+      },
+      {
+        "command": "extension.devicescript.pickDeviceScriptManager",
+        "title": "Pick DeviceScript device",
+        "category": "DeviceScript",
+        "icon": "$(play)"
       },
       {
         "command": "extension.devicescript.selectNode",

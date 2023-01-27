@@ -24,6 +24,7 @@ import {
     isInfrastructure,
     isReading,
 } from "jacdac-ts"
+import { ExtensionState } from "./state"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -418,9 +419,10 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
     constructor(
         bus: JDBus,
         command: vscode.Command,
-        readonly fetchNodeIds: () => string[]
+        readonly state: ExtensionState
     ) {
         super(bus, command)
+        this.state.on(CHANGE, this.refresh.bind(this))
     }
 
     override getRoots() {
@@ -431,7 +433,7 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
             idPrefix: "w:",
             command: this.command,
         }
-        const nodeIds = this.fetchNodeIds()
+        const nodeIds = this.state.watchKeys()
         const items = nodeIds
             .map(id => createTreeItemFromId(this.bus, id, props))
             .filter(n => !!n)
