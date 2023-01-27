@@ -1,7 +1,7 @@
 import type {
     BuildStatus,
-    SideBuildRequest,
-    SideBuildResponse,
+    SideBuildReq,
+    SideBuildResp,
     SideWatchEvent,
 } from "../../cli/src/sideprotocol"
 import { sideRequest, subSideEvent } from "./jacdac"
@@ -16,7 +16,7 @@ export function initBuild() {
     // outputCh = vscode.window.createOutputChannel("DevS Build")
     diagColl = vscode.languages.createDiagnosticCollection("DeviceScript")
 
-    subSideEvent("watch", (msg: SideWatchEvent) => {
+    subSideEvent<SideWatchEvent>("watch", msg => {
         showBuildResults(msg.data)
     })
 
@@ -61,15 +61,14 @@ export function showBuildResults(st: BuildStatus) {
 export async function build(filename: string, deviceId = "*") {
     lastBuildFilename = filename
     try {
-        const msg: SideBuildRequest = {
-            type: "build",
+        const res = await sideRequest<SideBuildReq, SideBuildResp>({
+            req: "build",
             data: {
                 filename,
                 watch: true,
                 deployTo: deviceId,
             },
-        }
-        const res: SideBuildResponse = await sideRequest(msg)
+        })
         showBuildResults(res.data)
         return true
     } catch (err) {

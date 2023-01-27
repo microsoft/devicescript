@@ -23,11 +23,16 @@ import { open } from "fs/promises"
 import EventEmitter from "events"
 import { createTransports, TransportsOptions } from "./transport"
 import { fetchDevToolsProxy } from "./devtoolsproxy"
-import { DevToolsClient, DevToolsIface, processSideMessage } from "./sidedata"
+import {
+    DevToolsClient,
+    DevToolsIface,
+    initSideProto,
+    processSideMessage,
+} from "./sidedata"
 import { FSWatcher } from "fs"
 import { compileFile } from "./build"
 import { dirname } from "path"
-import { BuildStatus, BuildReqArgs, SideConnectRequest } from "./sideprotocol"
+import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -66,6 +71,7 @@ export async function devtools(
         build,
         connect,
     }
+    initSideProto(devtoolsSelf)
 
     bus.passive = false
     bus.on(ERROR, e => error(e))
@@ -209,7 +215,7 @@ export async function devtools(
         }
     }
 
-    async function connect(req: SideConnectRequest) {
+    async function connect(req: ConnectReqArgs) {
         const { background = false, transport } = req
         const transports = bus.transports.filter(
             tr => !transport || transport === tr.type

@@ -20,7 +20,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
-import type { SideConnectRequestMessage } from "../../cli/src/sideprotocol"
+import type { SideConnectReq } from "../../cli/src/sideprotocol"
 import { build, initBuild } from "./build"
 import {
     spawnDevTools,
@@ -174,8 +174,8 @@ export function activateDeviceScript(
             async () => {
                 await spawnDevTools()
                 await bus.connect()
-                await sideRequest(<SideConnectRequestMessage>{
-                    type: "connect",
+                await sideRequest<SideConnectReq>({
+                    req: "connect",
                     data: {},
                 })
             }

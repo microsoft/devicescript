@@ -1,10 +1,15 @@
-import { JDBus, JSONTryParse } from "jacdac-ts"
+import { assert, JDBus, JSONTryParse } from "jacdac-ts"
 import {
     BuildReqArgs,
     BuildStatus,
-    SideConnectRequest,
-    SideErrorResponse,
-    SideMessage,
+    ConnectReqArgs,
+    SideBcastReq,
+    SideBuildReq,
+    SideBuildResp,
+    SideConnectReq,
+    SideErrorResp,
+    SideReq,
+    SideResp,
 } from "./sideprotocol"
 
 export interface DevToolsIface {
@@ -15,7 +20,7 @@ export interface DevToolsIface {
         args: BuildReqArgs,
         watchCb?: (st: BuildStatus) => void
     ) => Promise<BuildStatus>
-    connect: (req: SideConnectRequest) => Promise<void>
+    connect: (req: ConnectReqArgs) => Promise<void>
 }
 
 export interface DevToolsClient {
@@ -27,26 +32,40 @@ export interface DevToolsClient {
 
 const msgHandlers: Record<
     string,
-    (
-        devtools: DevToolsIface,
-        msg: SideMessage,
-        sender: DevToolsClient
-    ) => Promise<any>
-> = {
-    enableBCast: async (devtools, msg, client) => {
-        client.__devsWantsSideChannel = true
-    },
-    build: async (devtools, msg, client) => {
+    (msg: SideReq<string>, sender: DevToolsClient) => Promise<any>
+> = {}
+
+export function addReqHandler<
+    Req extends SideReq,
+    Resp extends SideResp<Req["req"]> = SideResp<Req["req"]>
+>(
+    req: Req["req"],
+    cb: (msg: Req, sender: DevToolsClient) => Promise<Resp["data"]>
+) {
+    msgHandlers[req] = cb as any
+}
+
+let devtools: DevToolsIface
+
+export function initSideProto(devtools_: DevToolsIface) {
+    assert(devtools === undefined)
+    devtools = devtools_
+    addReqHandler<SideBcastReq>("bcast", async (msg, client) => {
+        client.__devsWantsSideChannel = msg.data.enabled
+    })
+    addReqHandler<SideBuildReq, SideBuildResp>("build", async (msg, client) => {
         return await devtools.build(msg.data, st =>
             sendEvent(client, "watch", st)
         )
-    },
-    connect: async (devtools, msg) => devtools.connect(msg.data),
+    })
+    addReqHandler<SideConnectReq>("connect", (msg, client) => {
+        return devtools.connect(msg.data)
+    })
 }
 
-export function sendError(req: SideMessage, cl: DevToolsClient, err: any) {
-    const info: SideErrorResponse = {
-        type: "error",
+export function sendError(req: SideReq, cl: DevToolsClient, err: any) {
+    const info: SideErrorResp = {
+        resp: "error",
         seq: req.seq,
         data: {
             message: err.message || "" + err,
@@ -59,26 +78,28 @@ export function sendError(req: SideMessage, cl: DevToolsClient, err: any) {
 export function sendEvent(cl: DevToolsClient, type: string, data: any) {
     cl.send(
         JSON.stringify({
-            type,
+            ev: type,
             data,
         })
     )
 }
 
 export async function processSideMessage(
-    devtools: DevToolsIface,
+    devtools_: DevToolsIface,
     message: string,
     client: DevToolsClient
 ) {
-    const msg: SideMessage = JSONTryParse(message)
+    const msg: SideReq = JSONTryParse(message)
     if (!msg) return
 
-    const handler = msgHandlers[msg.type]
+    assert(devtools === devtools_)
+
+    const handler = msgHandlers[msg.req]
     if (handler) {
         try {
-            const data = await handler(devtools, msg, client)
-            const resp: SideMessage = {
-                type: msg.type,
+            const data = await handler(msg, client)
+            const resp: SideResp = {
+                resp: msg.req,
                 seq: msg.seq,
                 data: data ?? {},
             }
@@ -95,5 +116,5 @@ export async function processSideMessage(
         }
 
     if (msg.seq && !handler)
-        sendError(msg, client, new Error(`unknown msg type: ${msg.type}`))
+        sendError(msg, client, new Error(`unknown msg type: ${msg.req}`))
 }

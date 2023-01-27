@@ -1,33 +1,49 @@
 import type { CompilationResult } from "@devicescript/compiler"
 import type { BuildOptions } from "./build"
 
-export interface SideMessage<T extends string = string> {
-    type: T
+export interface SideReq<T extends string = string> {
+    req: T
     seq?: number
-    data?: any
+    data: any
 }
 
-export interface SideErrorResponse extends SideMessage<"error"> {
+export interface SideResp<T extends string = string> {
+    resp: T
+    seq?: number
+    data: any
+}
+
+export interface SideEvent<T extends string = string> {
+    ev: T
+    data: any
+}
+
+export interface SideErrorResp extends SideResp<"error"> {
     data: {
         message: string
         stack?: string
     }
 }
 
-export interface SideBuildRequest extends SideMessage<"build"> {
+// enable/disable reception of {bcast:true} packets
+export interface SideBcastReq extends SideReq<"bcast"> {
+    data: { enabled: boolean }
+}
+
+export interface SideBuildReq extends SideReq<"build"> {
     data: BuildReqArgs
 }
 
-export interface SideBuildResponse extends SideMessage<"build"> {
+export interface SideBuildResp extends SideResp<"build"> {
     data: BuildStatus
 }
 
-export interface SideWatchEvent extends SideMessage<"watch"> {
+export interface SideWatchEvent extends SideEvent<"watch"> {
     data: BuildStatus
 }
 
-export interface SideConnectRequestMessage extends SideMessage<"connect"> {
-    data: SideConnectRequest
+export interface SideConnectReq extends SideReq<"connect"> {
+    data: ConnectReqArgs
 }
 
 export type BuildStatus = CompilationResult & { deployStatus: string }
@@ -37,7 +53,7 @@ export interface BuildReqArgs {
     watch?: boolean
     deployTo?: string // deviceId
 }
-export interface SideConnectRequest {
+export interface ConnectReqArgs {
     transport?: "serial" | string
     background?: boolean
 }
