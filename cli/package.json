@@ -26,17 +26,19 @@
         "@types/debounce-promise": "^3.1.5",
         "@types/fs-extra": "^9.0.13",
         "@types/node": "^18.11.9",
-        "jacdac-ts": "*",
-        "websocket-polyfill": "^0.0.3"
-    },
-    "dependencies": {
-        "@devicescript/compiler": "*",
-        "@devicescript/dap": "*",
-        "@devicescript/vm": "*",
         "commander": "^9.4.1",
         "debounce-promise": "^3.1.2",
         "faye-websocket": "^0.11.4",
         "fs-extra": "^10.1.0",
+        "websocket-polyfill": "^0.0.3",
+        "@devicescript/dap": "*",
+        "@devicescript/vm": "*",
+        "jacdac-ts": "*"
+    },
+    "dependencies": {
+        "@devicescript/compiler": "*"
+    },
+    "optionalDependencies": {
         "serialport": "^10.5.0"
     },
     "publishConfig": {

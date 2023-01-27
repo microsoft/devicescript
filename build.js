@@ -161,6 +161,7 @@ async function main() {
                 inject,
                 external: [
                     "@devicescript/compiler",
+                    "serialport",
                     "vscode",
                 ],
                 platform,
