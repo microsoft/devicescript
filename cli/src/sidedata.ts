@@ -16,6 +16,7 @@ import {
     SideWatchResp,
 } from "./sideprotocol"
 import pkg from "../package.json"
+import { BinFmt, parseImgVersion } from "@devicescript/compiler"
 
 export interface DevToolsIface {
     bus: JDBus
@@ -73,9 +74,11 @@ export function initSideProto(devtools_: DevToolsIface) {
         return devtools.connect(msg.data)
     })
     addReqHandler<SideSpecsReq, SideSpecsResp>("specs", async () => {
+        const v = parseImgVersion(BinFmt.IMG_VERSION)
         return {
             specs: serviceSpecifications(),
             version: pkg.version,
+            bytecodeVersion: `v${v.major}.${v.minor}.${v.patch}`,
         }
     })
 }
