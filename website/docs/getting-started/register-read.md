@@ -18,7 +18,6 @@ and logging it to the console.
 ```ts edit
 console.log("starting...")
 const sensor = new ds.AirPressure()
-const mouse = new ds.HidMouse()
 // listen for pressure changes
 sensor.pressure.onChange(10, () => {
     // read sensor reading

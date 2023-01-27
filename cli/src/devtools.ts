@@ -33,6 +33,7 @@ export interface DevToolsOptions {
     internet?: boolean
     localhost?: boolean
     trace?: string
+    vscode?: boolean
 }
 
 export async function devtools(
@@ -88,7 +89,7 @@ export async function devtools(
         const parsedUrl = url.parse(req.url)
         const pathname = parsedUrl.pathname
         if (pathname === "/") {
-            fetchDevToolsProxy(options.localhost)
+            fetchDevToolsProxy(options.localhost, options.vscode)
                 .then(proxyHtml => {
                     res.setHeader("Cache-control", "no-cache")
                     res.setHeader("Content-type", "text/html")

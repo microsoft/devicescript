@@ -1,21 +1,32 @@
 import http from "http"
 import https from "https"
 
-const dasboardPath = "tools/devicescript-devtools"
+const DASHBOARD_PATH = "tools/devicescript-devtools"
+const VSCODE_DASHBOARD_PATH = "tools/devicescript-devtools-vscode?footer=0"
 
 let proxyHtmlPromise: Promise<string>
 
-export function fetchDevToolsProxy(localhost: boolean): Promise<string> {
+export function fetchDevToolsProxy(
+    localhost: boolean,
+    vscode: boolean
+): Promise<string> {
     if (!proxyHtmlPromise)
-        proxyHtmlPromise = uncachedFetchDevToolsProxy(localhost)
+        proxyHtmlPromise = uncachedFetchDevToolsProxy(localhost, vscode)
     return proxyHtmlPromise
 }
 
-function uncachedFetchDevToolsProxy(localhost: boolean): Promise<string> {
+function uncachedFetchDevToolsProxy(
+    localhost: boolean,
+    vscode: boolean
+): Promise<string> {
     const protocol = localhost ? http : https
     const url = localhost
         ? "http://localhost:8000/devtools/proxy.html"
         : "https://microsoft.github.io/jacdac-docs/devtools/proxy"
+    const dashboardPath = vscode ? VSCODE_DASHBOARD_PATH : DASHBOARD_PATH
+    const root = localhost
+        ? "http://localhost:8000"
+        : "https://microsoft.github.io/jacdac-docs"
     //debug(`fetch jacdac devtools proxy at ${url}`)
     return new Promise<string>((resolve, reject) => {
         protocol
@@ -31,9 +42,7 @@ function uncachedFetchDevToolsProxy(localhost: boolean): Promise<string> {
                     body = body
                         .replace(
                             /https:\/\/microsoft.github.io\/jacdac-docs\/dashboard/g,
-                            localhost
-                                ? `http://localhost:8000/${dasboardPath}/`
-                                : `https://microsoft.github.io/jacdac-docs/${dasboardPath}/`
+                            `${root}/${dashboardPath}/`
                         )
                         .replace("Jacdac DevTools", "DeviceScript DevTools")
                         .replace(

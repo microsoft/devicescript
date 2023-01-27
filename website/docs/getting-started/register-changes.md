@@ -15,7 +15,6 @@ To track pressure changes, we register a callback that triggers when the pressur
 ```ts edit
 console.log("starting...")
 const sensor = new ds.AirPressure()
-const mouse = new ds.HidMouse()
 // listen for pressure changes
 sensor.pressure.onChange(10, () => {
     console.log("pressure changed")

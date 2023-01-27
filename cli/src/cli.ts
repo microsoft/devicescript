@@ -94,6 +94,7 @@ export async function mainCli() {
             "-i, --spi",
             "listen to Jacdac over SPI (requires rpio, experimental)"
         )
+        .option("--vscode", "update behavior to match executing within Visual Studio Code")
         .arguments("[file.ts]")
         .action(devtools)
 

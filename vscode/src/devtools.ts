@@ -33,7 +33,7 @@ export function spawnDevTools() {
     const usb = !!transportsConfig.get("usb")
 
     const cli = "yarn"
-    const args = ["devicescript", "devtools"]
+    const args = ["devicescript", "devtools", "--vscode"]
     if (serial) args.push("--serial")
     if (usb) args.push("--usb")
 
