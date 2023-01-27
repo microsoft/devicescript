@@ -27,6 +27,7 @@ import {
     deviceCatalogImage,
 } from "jacdac-ts"
 import { ExtensionState } from "./state"
+import { deviceIconUri, toMarkdownString } from "./catalog"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -170,7 +171,7 @@ export class JDeviceTreeItem extends JDomTreeItem {
                 productIdentifier
             )
         if (spec) {
-            this.iconPath = vscode.Uri.parse(deviceCatalogImage(spec, "avatar"))
+            this.iconPath = deviceIconUri(spec)
             this.tooltip = toMarkdownString(
                 `#### ${spec.name} ${spec.version || ""} by ${spec.company}
 
@@ -188,16 +189,6 @@ ${spec.description}`,
 
         this.refresh()
     }
-}
-
-const DOCS_ROOT = "https://microsoft.github.io/jacdac-docs/"
-export function toMarkdownString(value: string, jacdacDocsPath?: string) {
-    let text = value
-    if (jacdacDocsPath)
-        text += ` ([Documentation](${DOCS_ROOT}${jacdacDocsPath}))`
-    const tooltip = new vscode.MarkdownString(text, true)
-    tooltip.supportHtml = true
-    return tooltip
 }
 
 export class JDServiceTreeItem extends JDomTreeItem {
@@ -313,14 +304,7 @@ export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
     protected handleChange() {
         const { register, props } = this
         const { fullName } = props
-        const {
-            humanValue,
-            specification,
-            code,
-            service,
-            qualifiedName,
-            name,
-        } = register
+        const { humanValue, service, qualifiedName, name } = register
 
         this.label = fullName ? qualifiedName : humanify(dashify(name))
         this.description = humanValue
