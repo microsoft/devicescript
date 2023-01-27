@@ -68,7 +68,7 @@
         "devicescript.devtools.autoStart": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically start DeviceScript server (requires reload)."
+          "description": "Automatically start DeviceScript Server (requires reload)."
         },
         "devicescript.devtools.showOnStart": {
           "type": "boolean",
