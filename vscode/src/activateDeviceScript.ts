@@ -10,6 +10,7 @@ import {
     FRAME_PROCESS,
     JDFrameBuffer,
     JDRegister,
+    loadServiceSpecifications,
     REGISTER_NODE_NAME,
     serializeToTrace,
 } from "jacdac-ts"
@@ -20,7 +21,11 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
-import type { SideConnectReq } from "../../cli/src/sideprotocol"
+import type {
+    SideConnectReq,
+    SideSpecsReq,
+    SideSpecsResp,
+} from "../../cli/src/sideprotocol"
 import { build, initBuild } from "./build"
 import {
     spawnDevTools,
@@ -44,6 +49,13 @@ export function activateDeviceScript(
 
     // setup bus
     const bus = startJacdacBus()
+    let unsub = bus.subscribe(CHANGE, () => {
+        if (bus.connected && unsub) {
+            unsub()
+            unsub = null
+            initDevtoolsConnection()
+        }
+    })
     context.subscriptions.push({
         dispose: stopJacdacBus,
     })
@@ -441,6 +453,14 @@ export function activateDeviceScript(
         context.subscriptions
     )
     configure()
+}
+
+async function initDevtoolsConnection() {
+    const resp = await sideRequest<SideSpecsReq, SideSpecsResp>({
+        req: "specs",
+        data: {},
+    })
+    loadServiceSpecifications(resp.data.specs)
 }
 
 class DeviceScriptConfigurationProvider
