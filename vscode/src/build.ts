@@ -19,6 +19,11 @@ export function initBuild() {
     subSideEvent("watch", (msg: SideWatchEvent) => {
         showBuildResults(msg.data)
     })
+
+    // clear errors when file edited
+    vscode.workspace.onDidChangeTextDocument(ev => {
+        diagColl.set(ev.document.uri, [])
+    })
 }
 
 export function showBuildResults(st: BuildStatus) {
