@@ -24,6 +24,7 @@ import {
     isInfrastructure,
     isReading,
     identifierToUrlPath,
+    deviceCatalogImage,
 } from "jacdac-ts"
 import { ExtensionState } from "./state"
 
@@ -134,11 +135,9 @@ export class JDomTreeItem extends vscode.TreeItem {
 export class JDeviceTreeItem extends JDomTreeItem {
     constructor(device: JDDevice, props: TreeItemProps) {
         super(device, props)
-        this.device.resolveProductIdentifier()
     }
 
     static ICON = "circuit-board"
-    iconPath = new vscode.ThemeIcon(JDeviceTreeItem.ICON)
 
     get device() {
         return this.node as JDDevice
@@ -171,13 +170,11 @@ export class JDeviceTreeItem extends JDomTreeItem {
                 productIdentifier
             )
         if (spec) {
-            const sz = `list`
+            this.iconPath = vscode.Uri.parse(deviceCatalogImage(spec, "avatar"))
             this.tooltip = toMarkdownString(
                 `#### ${spec.name} ${spec.version || ""} by ${spec.company}
 
-![Device image](${DOCS_ROOT}images/devices/${identifierToUrlPath(
-                    spec.id
-                )}.${sz}.jpg) 
+![Device image](${deviceCatalogImage(spec, "list")}) 
 
 ${spec.description}`,
                 `devices/${identifierToUrlPath(spec.id)}`
@@ -186,6 +183,7 @@ ${spec.description}`,
             const control = device.service(SRV_CONTROL)
             const description = control?.register(ControlReg.DeviceDescription)
             this.tooltip = description?.stringValue
+            this.iconPath = new vscode.ThemeIcon(JDeviceTreeItem.ICON)
         }
 
         this.refresh()
