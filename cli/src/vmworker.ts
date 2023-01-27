@@ -72,11 +72,21 @@ export async function startVmWorker(
     const args = req.data
     await stopVmWorker()
 
-    if (args.nativePath)
-        worker = spawn(args.nativePath, ["-n", "-w", "8082"], {
+    if (args.nativePath) {
+        const vargs = ["-n", "-w", "8082"]
+        if (args.gcStress) vargs.push("-X")
+        if (args.deviceId) vargs.push("-d:" + args.deviceId)
+        console.debug("starting", args.nativePath, vargs.join(" "))
+        worker = spawn(args.nativePath, vargs, {
             shell: false,
         })
-    else worker = fork(__filename, ["vm", "--devtools"], { silent: true })
+    } else {
+        const vargs = ["vm", "--devtools"]
+        if (args.deviceId) vargs.push("--device-id", args.deviceId)
+        if (args.gcStress) vargs.push("--gc-stress")
+        console.debug("starting", __filename, vargs.join(" "))
+        worker = fork(__filename, vargs, { silent: true })
+    }
 
     worker.stdin.end()
     worker.stdout.setEncoding("utf-8")

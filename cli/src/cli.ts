@@ -11,6 +11,7 @@ import init from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
+import { startVm } from "./vm"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -93,7 +94,10 @@ export async function mainCli() {
             "-i, --spi",
             "listen to Jacdac over SPI (requires rpio, experimental)"
         )
-        .option("--vscode", "update behavior to match executing within Visual Studio Code")
+        .option(
+            "--vscode",
+            "update behavior to match executing within Visual Studio Code"
+        )
         .arguments("[file.ts]")
         .action(devtools)
 
@@ -141,6 +145,18 @@ export async function mainCli() {
         )
         .arguments("<file.ts|file.devs>")
         .action(deployScript)
+
+    program
+        .command("vm")
+        .description("start DeviceScript VM interpreter process")
+        .option(
+            "--tcp",
+            "use tcp jacdac proxy on 127.0.0.1:8082 (otherwise ws://127.0.0.1:8081)"
+        )
+        .option("--gc-stress", "stress-test the GC")
+        .option("--device-id <string>", "set device ID")
+        .option("--devtools", "set when spawned from devtools")
+        .action(startVm)
 
     buildCommand("crun", { hidden: true })
         .description("run a script using native runner")

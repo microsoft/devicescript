@@ -62,6 +62,27 @@ export function devsFactory() {
     })
 }
 
+export async function devsStartWithNetwork(options: {
+    tcp?: boolean
+    test?: boolean
+    deviceId?: string
+    gcStress?: boolean
+}) {
+    const inst = await devsFactory()
+
+    if (options.deviceId) inst.devsSetDeviceId(options.deviceId)
+
+    inst.devsGcStress(!!options.gcStress)
+
+    if (options.tcp)
+        await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
+    else await inst.setupWebsocketTransport("ws://127.0.0.1:8081")
+
+    inst.devsStart()
+
+    return inst
+}
+
 export async function getHost(options: BuildOptions & CmdOptions) {
     const inst = options.noVerify ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)

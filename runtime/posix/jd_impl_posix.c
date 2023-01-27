@@ -13,7 +13,7 @@
 
 #define LOG(msg, ...) DMESG("%s: " msg, __func__, ##__VA_ARGS__)
 
-static uint64_t cached_devid;
+uint64_t cached_devid;
 uint64_t hw_device_id(void) {
     if (!cached_devid) {
         char buf[100];

@@ -13,6 +13,8 @@
 #define LOG_TAG "main"
 #include "devs_logging.h"
 
+extern uint64_t cached_devid;
+
 static bool test_mode;
 static bool remote_deploy;
 
@@ -303,6 +305,8 @@ int main(int argc, const char **argv) {
             websock = 1;
         } else if (strcmp(arg, "-n") == 0) {
             settings_in_files = 0;
+        } else if (strncmp(arg, "-d:", 3) == 0) {
+            cached_devid = jd_device_id_from_string(arg + 3);
         } else {
             fprintf(stderr, "unknown arg: %s\n", arg);
             return 1;
