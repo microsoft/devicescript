@@ -1,13 +1,19 @@
 {
   "name": "devicescript",
-  "displayName": "DeviceScript",
+  "displayName": "Microsoft DeviceScript",
   "version": "0.0.0",
   "publisher": "Microsoft Research",
-  "description": "Language support for DeviceScript.",
+  "description": "A TypeScript-like language and runtime for small embedded devices.",
   "author": {
     "name": "Microsoft Corporation"
   },
+  "homepage": "https://microsoft.github.io/devicescript/",
   "license": "MIT",
+  "preview": true,
+  "extensionKind": [
+    "ui",
+    "remote"
+  ],
   "keywords": [
     "DeviceScript",
     "IoT"
