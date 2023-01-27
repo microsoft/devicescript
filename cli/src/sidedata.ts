@@ -15,6 +15,7 @@ import {
     SideWatchReq,
     SideWatchResp,
 } from "./sideprotocol"
+import pkg from "../package.json"
 
 export interface DevToolsIface {
     bus: JDBus
@@ -73,6 +74,7 @@ export function initSideProto(devtools_: DevToolsIface) {
     addReqHandler<SideSpecsReq, SideSpecsResp>("specs", async () => {
         return {
             specs: serviceSpecifications(),
+            version: pkg.version,
         }
     })
 }
