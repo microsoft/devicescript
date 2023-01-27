@@ -20,6 +20,7 @@ import {
     CancellationToken,
 } from "vscode"
 import { build, initBuild } from "./build"
+import { pickDeviceManager } from "./devicepicker"
 import { spawnDevTools, showDevToolsTerminal, initDevTools } from "./devtools"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import {
@@ -39,6 +40,13 @@ export function activateDeviceScript(
 ) {
     const { subscriptions, workspaceState, extensionMode } = context
 
+    // setup bus
+    const bus = startJacdacBus()
+    context.subscriptions.push({
+        dispose: stopJacdacBus,
+    })
+
+    // devtool web panel
     let developerToolsPanel: vscode.WebviewPanel
     const updateDeveloperToolsPanelUrl = () => {
         if (!developerToolsPanel) return
@@ -73,6 +81,7 @@ export function activateDeviceScript(
                         `
     }
 
+    // build
     initBuild()
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -83,7 +92,14 @@ export function activateDeviceScript(
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    await build(targetResource.fsPath)
+                    const device = await pickDeviceManager(bus)
+                    if (!device) {
+                        vscode.window.showWarningMessage(
+                            "No DeviceScript device found."
+                        )
+                        return
+                    }
+                    await build(targetResource.fsPath, device.deviceId)
                 }
             }
         ),
@@ -95,7 +111,14 @@ export function activateDeviceScript(
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    if (await build(targetResource.fsPath))
+                    const device = await pickDeviceManager(bus)
+                    if (!device) {
+                        vscode.window.showWarningMessage(
+                            "No DeviceScript device found."
+                        )
+                        return
+                    }
+                    if (await build(targetResource.fsPath, device.deviceId))
                         vscode.debug.startDebugging(undefined, {
                             type: "devicescript",
                             name: "Debug File",
@@ -263,12 +286,6 @@ export function activateDeviceScript(
         spawnDevTools(!!devToolsConfig.get("useShell"))
         if (devToolsConfig.get("showOnStart")) showDevToolsTerminal()
     }
-
-    const bus = startJacdacBus()
-    // make sure to stop bus when unloading extension
-    context.subscriptions.push({
-        dispose: stopJacdacBus,
-    })
 
     context.subscriptions.push(
         vscode.commands.registerCommand(
