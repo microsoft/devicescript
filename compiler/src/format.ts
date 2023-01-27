@@ -79,6 +79,8 @@ export interface DevsDiagnostic extends ts.Diagnostic {
     filename: string
     line: number
     column: number
+    endLine: number
+    endColumn: number
     formatted: string
 }
 

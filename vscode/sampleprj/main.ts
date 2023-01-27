@@ -9,6 +9,7 @@ function foo() {
         q: [1, 2],
     }
     ;(z as any)["foo" + 12] = z
+    // ;[x]=[1] // uncomment to trigger DS error
     console.log("hello")
     console.log(`x=${x} y=${y}`)
     console.log("world")

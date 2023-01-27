@@ -664,15 +664,20 @@ class Program implements TopOpWriter {
             filename: this.host?.mainFileName() || "main.ts",
             line: 1,
             column: 1,
+            endLine: 1,
+            endColumn: 1,
             formatted: formatDiagnostics([diag]),
         }
 
         if (diag.file) {
-            const { character, line } = diag.file.getLineAndCharacterOfPosition(
-                diag.start
+            const st = diag.file.getLineAndCharacterOfPosition(diag.start)
+            const en = diag.file.getLineAndCharacterOfPosition(
+                diag.start + diag.length
             )
-            jdiag.line = line + 1
-            jdiag.column = character + 1
+            jdiag.line = st.line + 1
+            jdiag.column = st.character + 1
+            jdiag.endLine = en.line + 1
+            jdiag.endColumn = en.character + 1
             jdiag.filename = diag.file.fileName
         }
         this.diagnostics.push(sanitizeDiagnostic(jdiag))
@@ -3584,12 +3589,14 @@ export interface CompilationResult {
     diagnostics: DevsDiagnostic[]
 }
 
-export function sanitizeDiagnostic(d: DevsDiagnostic) {
+export function sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {
     return {
         ...related(d),
         filename: d.filename,
         line: d.line,
         column: d.column,
+        endLine: d.endLine,
+        endColumn: d.endColumn,
         formatted: d.formatted,
         relatedInformation: d.relatedInformation?.map(related),
     }

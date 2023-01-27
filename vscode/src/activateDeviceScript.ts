@@ -71,17 +71,7 @@ export function activateDeviceScript(
                     targetResource = vscode.window.activeTextEditor.document.uri
                 }
                 if (targetResource) {
-                    if (await build(targetResource.fsPath))
-                        vscode.debug.startDebugging(
-                            undefined,
-                            {
-                                type: "devicescript",
-                                name: "Run File",
-                                request: "launch",
-                                program: targetResource.fsPath,
-                            },
-                            { noDebug: true }
-                        )
+                    await build(targetResource.fsPath)
                 }
             }
         ),
