@@ -2,6 +2,7 @@ import { JDBus, JSONTryParse } from "jacdac-ts"
 import {
     BuildReqArgs,
     BuildStatus,
+    SideConnectRequest,
     SideErrorResponse,
     SideMessage,
 } from "./sideprotocol"
@@ -14,6 +15,7 @@ export interface DevToolsIface {
         args: BuildReqArgs,
         watchCb?: (st: BuildStatus) => void
     ) => Promise<BuildStatus>
+    connect: (req: SideConnectRequest) => Promise<void>
 }
 
 export interface DevToolsClient {
@@ -39,13 +41,10 @@ const msgHandlers: Record<
             sendEvent(client, "watch", st)
         )
     },
+    connect: async (devtools, msg) => devtools.connect(msg.data),
 }
 
-export function sendError(
-    req: SideMessage,
-    cl: DevToolsClient,
-    err: any
-) {
+export function sendError(req: SideMessage, cl: DevToolsClient, err: any) {
     const info: SideErrorResponse = {
         type: "error",
         seq: req.seq,

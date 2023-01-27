@@ -1,5 +1,4 @@
 import * as vscode from "vscode"
-import { join } from "path"
 
 let terminal: vscode.Terminal
 export function initDevTools(disposables: vscode.Disposable[]) {
@@ -21,6 +20,8 @@ export function initDevTools(disposables: vscode.Disposable[]) {
 }
 
 export function spawnDevTools() {
+    if (terminal) return
+
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
@@ -31,24 +32,22 @@ export function spawnDevTools() {
     const serial = !!transportsConfig.get("serial")
     const usb = !!transportsConfig.get("usb")
 
-    if (!terminal) {
-        const cli = "yarn"
-        const args = ["devicescript", "devtools"]
-        if (serial) args.push("--serial")
-        if (usb) args.push("--usb")
+    const cli = "yarn"
+    const args = ["devicescript", "devtools"]
+    if (serial) args.push("--serial")
+    if (usb) args.push("--usb")
 
-        terminal = vscode.window.createTerminal({
-            name: "DeviceScript",
-            hideFromUser: true,
-            message: "Launching DeviceScript Server...",
-            isTransient: true,
-            shellPath: useShell ? undefined : cli,
-            shellArgs: useShell ? undefined : args,
-        })
-        if (useShell) {
-            terminal.sendText("", true)
-            terminal.sendText(`${cli} ${args.join(" ")}`, true)
-        }
+    terminal = vscode.window.createTerminal({
+        name: "DeviceScript",
+        hideFromUser: true,
+        message: "Launching DeviceScript Server...",
+        isTransient: true,
+        shellPath: useShell ? undefined : cli,
+        shellArgs: useShell ? undefined : args,
+    })
+    if (useShell) {
+        terminal.sendText("", true)
+        terminal.sendText(`${cli} ${args.join(" ")}`, true)
     }
 }
 

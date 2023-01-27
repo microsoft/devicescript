@@ -26,10 +26,18 @@ export interface SideWatchEvent extends SideMessage<"watch"> {
     data: BuildStatus
 }
 
+export interface SideConnectRequestMessage extends SideMessage<"connect"> {
+    data: SideConnectRequest
+}
+
 export type BuildStatus = CompilationResult & { deployStatus: string }
 export interface BuildReqArgs {
     filename: string
     buildOptions?: BuildOptions
     watch?: boolean
     deployTo?: string // deviceId
+}
+export interface SideConnectRequest {
+    transport?: "serial" | string
+    background?: boolean
 }

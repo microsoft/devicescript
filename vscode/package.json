@@ -142,6 +142,11 @@
     "menus": {
       "view/title": [
         {
+          "command": "extension.devicescript.connect",
+          "when": "view == extension.devicescript.jacdac-jdom-explorer",
+          "group": "navigation"
+        },
+        {
           "command": "extension.devicescript.openDevTools",
           "when": "view == extension.devicescript.jacdac-jdom-explorer",
           "group": "navigation"
@@ -208,6 +213,9 @@
         },
         {
           "command": "extension.devicescript.pickDeviceScriptManager"
+        },
+        {
+          "command": "extension.devicescript.connect"
         }
       ],
       "debug/variables/context": [
@@ -253,6 +261,12 @@
         "title": "Identify device",
         "category": "DeviceScript",
         "icon": "$(bell)"
+      },
+      {
+        "command": "extension.devicescript.connect",
+        "title": "Connect device",
+        "category": "DeviceScript",
+        "icon": "$(plug)"
       },
       {
         "command": "extension.devicescript.pickDeviceScriptManager",

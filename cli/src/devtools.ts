@@ -27,7 +27,7 @@ import { DevToolsClient, DevToolsIface, processSideMessage } from "./sidedata"
 import { FSWatcher } from "fs"
 import { compileFile } from "./build"
 import { dirname } from "path"
-import { BuildStatus, BuildReqArgs } from "./sideprotocol"
+import { BuildStatus, BuildReqArgs, SideConnectRequest } from "./sideprotocol"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -63,6 +63,7 @@ export async function devtools(
         clients: [],
         bus,
         build,
+        connect,
     }
 
     bus.passive = false
@@ -205,6 +206,14 @@ export async function devtools(
         if (st.deployStatus) {
             console.log(`deploy status: ${st.deployStatus}`)
         }
+    }
+
+    async function connect(req: SideConnectRequest) {
+        const { background = false, transport } = req
+        const transports = bus.transports.filter(
+            tr => !transport || transport === tr.type
+        )
+        await Promise.all(transports.map(tr => tr.connect(background)))
     }
 
     async function build(

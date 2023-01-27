@@ -7,7 +7,6 @@ import {
     WebSocketTransport,
 } from "jacdac-ts"
 import type { SideMessage } from "../../cli/src/sideprotocol"
-import * as vscode from "vscode"
 
 let __bus: JDBus
 let ws: WebSocketTransport

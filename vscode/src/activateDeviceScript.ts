@@ -20,9 +20,10 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
+import type { SideConnectRequestMessage } from "../../cli/src/sideprotocol"
 import { build, initBuild } from "./build"
 import { spawnDevTools, showDevToolsTerminal, initDevTools } from "./devtools"
-import { startJacdacBus, stopJacdacBus } from "./jacdac"
+import { sideRequest, startJacdacBus, stopJacdacBus } from "./jacdac"
 import {
     JDeviceTreeItem,
     JDomDeviceTreeDataProvider,
@@ -164,12 +165,24 @@ export function activateDeviceScript(
             }
         ),
         vscode.commands.registerCommand(
+            "extension.devicescript.connect",
+            async () => {
+                spawnDevTools() // todo
+                await bus.connect()
+                await sideRequest(<SideConnectRequestMessage>{
+                    type: "connect",
+                    data: {},
+                })
+            }
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.openDevTools",
             () => {
                 if (developerToolsPanel) {
                     developerToolsPanel.reveal(vscode.ViewColumn.Nine)
                 } else {
                     console.log("Opening Developer Tools...")
+                    spawnDevTools()
                     // http://localhost:8081/
                     developerToolsPanel = vscode.window.createWebviewPanel(
                         "extension.devicescript.openDevTools", // Identifies the type of the webview. Used internally
