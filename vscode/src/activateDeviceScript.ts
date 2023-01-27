@@ -167,7 +167,7 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
             async () => {
-                spawnDevTools() // todo
+                await spawnDevTools()
                 await bus.connect()
                 await sideRequest(<SideConnectRequestMessage>{
                     type: "connect",
@@ -177,12 +177,12 @@ export function activateDeviceScript(
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.openDevTools",
-            () => {
+            async () => {
                 if (developerToolsPanel) {
                     developerToolsPanel.reveal(vscode.ViewColumn.Nine)
                 } else {
                     console.log("Opening Developer Tools...")
-                    spawnDevTools()
+                    await spawnDevTools()
                     // http://localhost:8081/
                     developerToolsPanel = vscode.window.createWebviewPanel(
                         "extension.devicescript.openDevTools", // Identifies the type of the webview. Used internally
