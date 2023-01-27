@@ -43,6 +43,9 @@ jobs:
             - name: update pre-compiled WASM
               run: make update-dist
               if: github.ref == 'refs/heads/main'
+            - name: prep jacdac-ts for release
+              run: yarn presemantic
+              if: github.ref == 'refs/heads/main'
             - name: semantic release prep
               run: yarn add -D -W semantic-release semantic-release-monorepo @semantic-release/git
               if: github.ref == 'refs/heads/main'
