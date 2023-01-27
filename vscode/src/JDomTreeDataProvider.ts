@@ -23,6 +23,7 @@ import {
     ellipseJoin,
     isInfrastructure,
     isReading,
+    identifierToUrlPath,
 } from "jacdac-ts"
 import { ExtensionState } from "./state"
 
@@ -163,22 +164,39 @@ export class JDeviceTreeItem extends JDomTreeItem {
             )
             this.description = serviceNames
         }
-        if (!this.tooltip) {
+
+        const productIdentifier = device.productIdentifier
+        const spec =
+            bus.deviceCatalog.specificationFromProductIdentifier(
+                productIdentifier
+            )
+        if (spec) {
+            const sz = `list`
+            this.tooltip = toMarkdownString(
+                `#### ${spec.name} ${spec.version || ""} by ${spec.company}
+
+![Device image](${DOCS_ROOT}images/devices/${identifierToUrlPath(
+                    spec.id
+                )}.${sz}.jpg) 
+
+${spec.description}`,
+                `devices/${identifierToUrlPath(spec.id)}`
+            )
+        } else {
             const control = device.service(SRV_CONTROL)
             const description = control?.register(ControlReg.DeviceDescription)
             this.tooltip = description?.stringValue
-            description.on(CHANGE, this.refresh.bind(this))
-            description.scheduleRefresh()
         }
 
         this.refresh()
     }
 }
 
+const DOCS_ROOT = "https://microsoft.github.io/jacdac-docs/"
 export function toMarkdownString(value: string, jacdacDocsPath?: string) {
     let text = value
     if (jacdacDocsPath)
-        text += ` ([Documentation](https://microsoft.github.io/jacdac-docs/${jacdacDocsPath}))`
+        text += ` ([Documentation](${DOCS_ROOT}${jacdacDocsPath}))`
     const tooltip = new vscode.MarkdownString(text, true)
     tooltip.supportHtml = true
     return tooltip
