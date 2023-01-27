@@ -23,6 +23,7 @@ import {
 } from "vscode"
 import type {
     SideConnectReq,
+    SideOutputEvent,
     SideSpecsReq,
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
@@ -32,7 +33,12 @@ import {
     showDevToolsTerminal,
     initDevTools,
 } from "./devtoolsserver"
-import { sideRequest, startJacdacBus, stopJacdacBus } from "./jacdac"
+import {
+    sideRequest,
+    startJacdacBus,
+    stopJacdacBus,
+    subSideEvent,
+} from "./jacdac"
 import {
     JDeviceTreeItem,
     JDomDeviceTreeDataProvider,
@@ -295,14 +301,21 @@ export function activateDeviceScript(
         subscriptions.push(factory as any)
     }
 
+    const output = vscode.window.createOutputChannel("DeviceScript", {
+        log: true,
+    })
+    subSideEvent<SideOutputEvent>("output", msg => {
+        const tag = msg.data.from
+        let fn = output.info
+        if (tag.endsWith("err")) fn = output.error
+        for (const l of msg.data.lines) fn(tag + ":", l)
+    })
+
     const config = vscode.workspace.getConfiguration("devicescript")
     const redirectConsoleOutput =
         !!config.get("redirectConsoleOutput") ||
         extensionMode == vscode.ExtensionMode.Production
     if (redirectConsoleOutput) {
-        const output = vscode.window.createOutputChannel("DeviceScript", {
-            log: true,
-        })
         // note that this is local to this extension - see inject.js
         console.debug = output.debug
         console.log = output.info
@@ -476,6 +489,7 @@ async function initDevtoolsConnection(state: ExtensionState) {
 
     state.version = version
     state.bytecodeVersion = bytecodeVersion
+    state.emit(CHANGE)
 }
 
 class DeviceScriptConfigurationProvider

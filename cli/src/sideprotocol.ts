@@ -64,6 +64,28 @@ export interface SideSpecsResp extends SideResp<"specs"> {
     }
 }
 
+export interface SideStartVmReq extends SideReq<"startVM"> {
+    data: VmReqArgs
+}
+export interface SideStartVmResp extends SideResp<"startVM"> {
+    data: {}
+}
+
+export interface SideStopVmReq extends SideReq<"stopVM"> {
+    data: {}
+}
+export interface SideStopVmResp extends SideResp<"stopVM"> {
+    data: void
+}
+
+export type OutputFrom = "vm" | "vm-err"
+export interface SideOutputEvent extends SideEvent<"output"> {
+    data: {
+        from: OutputFrom
+        lines: string[]
+    }
+}
+
 export type BuildStatus = CompilationResult & { deployStatus: string }
 export interface BuildReqArgs {
     filename: string
@@ -73,4 +95,8 @@ export interface BuildReqArgs {
 export interface ConnectReqArgs {
     transport?: "serial" | string
     background?: boolean
+}
+
+export interface VmReqArgs {
+    nativePath?: string
 }

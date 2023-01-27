@@ -3,15 +3,19 @@ import {
     BuildReqArgs,
     BuildStatus,
     ConnectReqArgs,
+    OutputFrom,
     SideBcastReq,
     SideBuildReq,
     SideBuildResp,
     SideConnectReq,
     SideErrorResp,
+    SideEvent,
+    SideOutputEvent,
     SideReq,
     SideResp,
     SideSpecsReq,
     SideSpecsResp,
+    SideWatchEvent,
     SideWatchReq,
     SideWatchResp,
 } from "./sideprotocol"
@@ -67,7 +71,7 @@ export function initSideProto(devtools_: DevToolsIface) {
     })
     addReqHandler<SideWatchReq, SideWatchResp>("watch", async (msg, client) => {
         return await devtools.watch(msg.data, st =>
-            sendEvent(client, "watch", st)
+            sendEvent<SideWatchEvent>(client, "watch", st)
         )
     })
     addReqHandler<SideConnectReq>("connect", msg => {
@@ -95,13 +99,28 @@ export function sendError(req: SideReq, cl: DevToolsClient, err: any) {
     cl.send(JSON.stringify(info))
 }
 
-export function sendEvent(cl: DevToolsClient, type: string, data: any) {
+export function sendEvent<T extends SideEvent>(
+    cl: DevToolsClient,
+    ev: T["ev"],
+    data: T["data"]
+) {
     cl.send(
         JSON.stringify({
-            ev: type,
+            ev,
             data,
         })
     )
+}
+
+export function sendOutput(
+    cl: DevToolsClient,
+    from: OutputFrom,
+    lines: string[]
+) {
+    return sendEvent<SideOutputEvent>(cl, "output", {
+        from,
+        lines,
+    })
 }
 
 export async function processSideMessage(

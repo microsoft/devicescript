@@ -103,6 +103,11 @@
           "type": "boolean",
           "default": false,
           "description": "Always redirect console output to output pane (requires reload)."
+        },
+        "devicescript.nativeVmPath": {
+          "type": "string",
+          "default": "",
+          "description": "Run this executable (jdcli) as the VM instead of bundled WASM binary."
         }
       }
     },
