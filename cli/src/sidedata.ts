@@ -19,6 +19,7 @@ import {
 export interface DevToolsIface {
     bus: JDBus
     clients: DevToolsClient[]
+    lastOKBuild: BuildStatus
 
     build: (args: BuildReqArgs) => Promise<BuildStatus>
     watch: (
