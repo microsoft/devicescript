@@ -74,6 +74,7 @@ export async function devtools(
         clients: [],
         bus,
         lastOKBuild: null,
+        mainClient: null,
         build: buildCmd,
         watch: watchCmd,
         connect: connectCmd,
