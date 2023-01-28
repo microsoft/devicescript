@@ -1,11 +1,8 @@
-# DeviceScript VSCode Extension
+# Visual Studio Code Extension for DeviceScript
 
-## Development
+[DeviceScript](https://aka.ms/devicescript) is a TypeScript-like language and runtime for embedded devices.
 
-* run VSCode
-* in debug pane, run the 'VSCode Extension' configuration
-* go to Extension VSCode
-* run `jacdac devtools`
-* run "DeviceScript: Start things" command (extension is only activated when you run some command!)
-* switch to Debug Console in the main VSCode - you should see some output from jacdac-ts there
-* look in "Jacdac Packets" output window
+-   Compile DeviceScript to bytecode
+-   live Jacdac device explorer
+-   Running a Virtual Device on the developer machine
+-   Debugging, including stepping, variables, stack traces, of DeviceScript programs on Virtual Device or hardware
