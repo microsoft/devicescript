@@ -27,6 +27,7 @@ import type {
     SideSpecsReq,
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
+import { logo } from "./assets"
 import { build, initBuild } from "./build"
 import {
     spawnDevTools,
@@ -236,11 +237,12 @@ export function activateDeviceScript(
                     await spawnDevTools(context)
                     // http://localhost:8081/
                     developerToolsPanel = vscode.window.createWebviewPanel(
-                        "extension.devicescript.openSimulators", // Identifies the type of the webview. Used internally
-                        "DeviceScript Simulators", // Title of the panel displayed to the user
-                        vscode.ViewColumn.Nine, // Editor column to show the new webview panel in.
-                        { enableScripts: true } // Webview options. More on these later.
+                        "extension.devicescript.simulators",
+                        "DeviceScript Simulators",
+                        vscode.ViewColumn.Nine,
+                        { enableScripts: true, retainContextWhenHidden: true }
                     )
+                    developerToolsPanel.iconPath = logo(context)
                     developerToolsPanel.onDidDispose(
                         () => {
                             developerToolsPanel = undefined

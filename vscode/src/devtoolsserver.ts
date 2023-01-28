@@ -1,5 +1,6 @@
 import { delay } from "jacdac-ts"
 import * as vscode from "vscode"
+import { logo } from "./assets"
 
 let terminalPromise: Promise<vscode.Terminal>
 export function initDevTools(disposables: vscode.Disposable[]) {
@@ -8,7 +9,7 @@ export function initDevTools(disposables: vscode.Disposable[]) {
             if (terminalPromise && t === (await terminalPromise)) {
                 terminalPromise = undefined
                 vscode.window.showInformationMessage(
-                    `DeviceScript Server exited. Make sure to install "@devicescript/cli" in your project.`
+                    `DeviceScript Server exited. Make sure to install '@devicescript/cli' in your project.`
                 )
             }
         },
@@ -50,18 +51,7 @@ async function uncachedSpawnDevTools(context: vscode.ExtensionContext) {
         isTransient: true,
         shellPath: useShell ? undefined : cli,
         shellArgs: useShell ? undefined : args,
-        iconPath: {
-            light: vscode.Uri.joinPath(
-                vscode.Uri.file(context.extensionPath),
-                "images",
-                "jacdac.light.svg"
-            ),
-            dark: vscode.Uri.joinPath(
-                vscode.Uri.file(context.extensionPath),
-                "images",
-                "jacdac.dark.svg"
-            ),
-        },
+        iconPath: logo(context),
     }
     const t = vscode.window.createTerminal(options)
     if (useShell) {
