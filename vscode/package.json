@@ -74,7 +74,7 @@
           "default": false,
           "description": "Show DeviceScript Server terminal when starting."
         },
-        "devicescript.devtools.useShell": {
+        "devicescript.devtools.shell": {
           "type": "boolean",
           "default": false,
           "description": "Start DeviceScript Server in a shell rather than as a direct process."
@@ -104,10 +104,15 @@
           "default": false,
           "description": "Show infrastructure services in views."
         },
-        "devicescript.redirectConsoleOutput": {
+        "devicescript.output.redirectConsole": {
           "type": "boolean",
           "default": false,
           "description": "Always redirect console output to output pane (requires reload)."
+        },
+        "devicescript.debugger.showOutputOnStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show DeviceScript output when starting debug session."
         },
         "devicescript.virtualDevice.nativePath": {
           "type": "string",

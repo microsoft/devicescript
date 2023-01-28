@@ -34,7 +34,7 @@ async function uncachedSpawnDevTools(context: vscode.ExtensionContext) {
     const transportsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools.transports"
     )
-    const useShell = !!devToolsConfig.get("useShell")
+    const useShell = !!devToolsConfig.get("shell")
     const serial = !!transportsConfig.get("serial")
     const usb = !!transportsConfig.get("usb")
 

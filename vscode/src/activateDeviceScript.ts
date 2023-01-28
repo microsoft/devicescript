@@ -52,6 +52,16 @@ export function activateDeviceScript(
     factory?: vscode.DebugAdapterDescriptorFactory
 ) {
     const { subscriptions, workspaceState, extensionMode } = context
+    const debugConfig = vscode.workspace.getConfiguration("devicescript.debugger")
+    const outputConfig = vscode.workspace.getConfiguration(
+        "devicescript.output"
+    )
+    const devToolsConfig = vscode.workspace.getConfiguration(
+        "devicescript.devtools"
+    )
+    const jacdacConfig = vscode.workspace.getConfiguration(
+        "devicescript.jacdac"
+    )
 
     // setup bus
     const bus = startJacdacBus()
@@ -149,7 +159,8 @@ export function activateDeviceScript(
                             targetResource.fsPath,
                             service.device.deviceId
                         )
-                    )
+                    ) {
+                        if (debugConfig.get("showOutputOnStart")) output.show()
                         vscode.debug.startDebugging(undefined, {
                             type: "devicescript",
                             name: "Debug File",
@@ -157,6 +168,7 @@ export function activateDeviceScript(
                             program: targetResource.fsPath,
                             stopOnEntry: true,
                         })
+                    }
                 }
             }
         ),
@@ -312,9 +324,8 @@ export function activateDeviceScript(
         for (const l of msg.data.lines) fn(tag + ":", l)
     })
 
-    const config = vscode.workspace.getConfiguration("devicescript")
     const redirectConsoleOutput =
-        !!config.get("redirectConsoleOutput") ||
+        !!outputConfig.get("redirectConsole") ||
         extensionMode == vscode.ExtensionMode.Production
     if (redirectConsoleOutput) {
         // note that this is local to this extension - see inject.js
@@ -326,9 +337,6 @@ export function activateDeviceScript(
     }
 
     // launch devtools in background
-    const devToolsConfig = vscode.workspace.getConfiguration(
-        "devicescript.devtools"
-    )
     initDevTools(context.subscriptions)
     if (devToolsConfig.get("autoStart")) {
         spawnDevTools(context)
@@ -466,9 +474,6 @@ export function activateDeviceScript(
     }
     // apply settings
     const configure = () => {
-        const jacdacConfig = vscode.workspace.getConfiguration(
-            "devicescript.jacdac"
-        )
         Flags.diagnostics = !!jacdacConfig.get("diagnostics")
         const tracePackets = !!jacdacConfig.get("tracePackets")
         if (tracePackets) {
