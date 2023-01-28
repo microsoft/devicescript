@@ -38,6 +38,8 @@ struct srv_state {
     uint8_t autostart;
     uint8_t logging;
 
+    uint8_t force_start : 1;
+
     uint32_t next_restart;
 
     const devsmgr_cfg_t *cfg;
@@ -148,7 +150,8 @@ void devsmgr_process(srv_t *state) {
     }
 
     if (jd_should_sample(&state->next_restart, SECONDS(8))) {
-        if (state->autostart && !state->ctx) {
+        if ((state->force_start || state->autostart) && !state->ctx) {
+            state->force_start = 0;
             try_run(state);
         }
     }
@@ -173,6 +176,7 @@ void devsmgr_restart() {
     srv_t *state = _state;
     stop_program(state);
     state->next_restart = now + MS(50);
+    state->force_start = 1;
 }
 
 int devsmgr_deploy_start(uint32_t sz) {
@@ -227,6 +231,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
             stop_program(state);
             jd_send_event(state, JD_EV_CHANGE);
             state->next_restart = now; // make it more responsive
+            state->force_start = 1;
             return 0;
         }
     }
