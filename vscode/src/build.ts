@@ -55,8 +55,6 @@ export function showBuildResults(st: BuildStatus) {
         })
         diagColl.set(vscode.Uri.file(fn), diags)
     }
-
-    if (st.deployStatus) vscode.window.showWarningMessage(st.deployStatus)
 }
 
 export async function build(filename: string, deviceId = "*") {

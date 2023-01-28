@@ -34,6 +34,7 @@ import { dirname, resolve } from "path"
 import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
 import { DevsDbgClient, DsDapSession } from "@devicescript/dap"
 import { initVMCmds } from "./vmworker"
+import { enableLogging } from "./logging"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -93,7 +94,7 @@ export async function devtools(
     startProxyServers(port, tcpPort, options)
     startDbgServer(dbgPort, options)
 
-    // if (logging) enableLogging(bus)
+    enableLogging(bus)
 
     bus.start()
     await bus.connect(true)
@@ -342,6 +343,7 @@ async function rebuild(args: BuildReqArgs) {
             deployStatus = `OK`
         } catch (err) {
             deployStatus = err.message || "" + err
+            console.error("Deploy error: " + deployStatus)
         }
     }
 
