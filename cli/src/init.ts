@@ -56,7 +56,7 @@ const optionalFiles: Record<string, Object | string> = {
             setup: "devicescript init",
             build: "devicescript build",
             watch: "devicescript build --watch",
-            start: "yarn setup && yarn watch",
+            start: "yarn watch",
         },
     },
     "README.md": `# - project name -
@@ -65,13 +65,34 @@ This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
 
 ## Local/container development
 
--  install node.js 16+ and dependencies
+-  install node.js 16+
+
+\`\`\`bash
+nvm install 18
+nvm use 18
+\`\`\`
+
+-  install dependencies
 
 \`\`\`bash
 yarn install
 \`\`\`
 
-- launch developer server
+### Using Visual Studio Code
+
+- open the project folder in code
+
+\`\`\`bash
+code .
+\`\`\`
+
+- install the DeviceScript extension (it will be recommended by code)
+
+- start debugging!
+
+### Using the command line
+
+- start the watch build and developer tools server
 
 \`\`\`bash
 yarn start
@@ -113,24 +134,31 @@ export default async function init(options: InitOptions & CmdOptions) {
     await saveLibFiles({})
 
     // .gitignore
-    const gid = `${GENDIR}/\n`
+    const gids = ["node_modules", GENDIR]
     if (!pathExistsSync(GITIGNORE)) {
         debug(`write ${GITIGNORE}`)
-        writeFileSync(GITIGNORE, gid, { encoding: "utf8" })
+        writeFileSync(GITIGNORE, gids.join("\n"), { encoding: "utf8" })
     } else {
-        const gitignore = readFileSync(GITIGNORE, { encoding: "utf8" })
-        if (gitignore.indexOf(gid) < 0) {
-            debug(`update ${GITIGNORE}`)
-            writeFileSync(GITIGNORE, `${gitignore}\n${gid}`, {
-                encoding: "utf8",
-            })
-        }
+        let gitignore = readFileSync(GITIGNORE, { encoding: "utf8" })
+        let needsWrite = false
+        gids.forEach(gid => {
+            const k = `\n${gid}\n`
+            if (gitignore.indexOf(k) < 0) {
+                gitignore += k
+            }
+        })
+        debug(`update ${GITIGNORE}`)
+        writeFileSync(GITIGNORE, gitignore, {
+            encoding: "utf8",
+        })
     }
 
     // main.ts
     if (!pathExistsSync(MAIN)) {
         debug(`write ${MAIN}`)
-        writeFileSync(MAIN, `${IMPORT_PREFIX}\n\n`, { encoding: "utf8" })
+        writeFileSync(MAIN, `${IMPORT_PREFIX}\n\nconsole.log(":)")\n`, {
+            encoding: "utf8",
+        })
     }
 
     // help message

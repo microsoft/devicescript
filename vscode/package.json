@@ -164,19 +164,9 @@
             "completionEvents": []
           },
           {
-            "id": "devicescript.installdevicescriptcli",
-            "title": "Install DeviceScript",
-            "description": "Open a terminal and install the DeviceScript command line.\n``    npm install -g @devicescript/cli``\n[Create new Terminal](command:workbench.action.terminal.new)",
-            "media": {
-              "image": "media/image.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          },
-          {
             "id": "devicescript.initproject",
             "title": "Create New DeviceScript Project",
-            "description": "Use the command line to create a new DeviceScript project.\n    ``devicescript init``",
+            "description": "Use the command line to create a new DeviceScript project in a new folder.\n    ``npx @devicescript/cli init``",
             "media": {
               "image": "media/image.png",
               "altText": "Empty image"
