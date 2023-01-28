@@ -147,6 +147,55 @@
         "contents": "Select Registers or Events to watch."
       }
     ],
+    "walkthroughs": [
+      {
+        "id": "devicescript.gettingstarted",
+        "title": "Get Started with DeviceScript",
+        "description": "Get your first DeviceScript program running",
+        "steps": [
+          {
+            "id": "installnode.js",
+            "title": "Install Node.js",
+            "description": "Node.js is an easy way to run JavaScript code. It comes with a package manager, yarn, that you will use to install the DeviceScript command line.\n[Install Node.js](https://nodejs.org/en/download/)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": []
+          },
+          {
+            "id": "devicescript.installdevicescriptcli",
+            "title": "Install DeviceScript",
+            "description": "Open a terminal and install the DeviceScript command line.\n``    npm install -g @devicescript/cli``\n[Create new Terminal](command:workbench.action.terminal.new)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": []
+          },
+          {
+            "id": "devicescript.initproject",
+            "title": "Create New DeviceScript Project",
+            "description": "Use the command line to create a new DeviceScript project.\n    ``devicescript init``",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": []
+          },
+          {
+            "id": "devicescript.deployanddebug",
+            "title": "Deploy and Debug your DeviceScript",
+            "description": "Once you've installed the command line, you can build and deploy DeviceScript programs at a terminal by entering ``devicescript your-file-name.ts``.\nAnother easy way to run DeviceScript programs is by using VS Code's debugger which lets you run the code, pause at different points, and help you what's going on step-by-step.\n[Start Debugging](command:workbench.action.debug.start)",
+            "media": {
+              "image": "media/image.png",
+              "altText": "Empty image"
+            },
+            "completionEvents": []
+          }
+        ]
+      }
+    ],
     "menus": {
       "view/title": [
         {
