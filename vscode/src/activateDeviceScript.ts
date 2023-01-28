@@ -123,6 +123,7 @@ export function activateDeviceScript(
                         return
                     }
 
+                    await vscode.window.activeTextEditor?.document?.save()
                     await build(targetResource.fsPath, service.device.deviceId)
                 }
             }
