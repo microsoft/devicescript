@@ -12,7 +12,7 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { SideStartVmReq } from "../../cli/src/sideprotocol"
+import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
 import { sideRequest } from "./jacdac"
 import { JDeviceTreeItem } from "./JDomTreeDataProvider"
 
@@ -61,6 +61,14 @@ export class ExtensionState extends JDEventSource {
 
     private async updateCurrentDeviceScriptManagerId(id: string) {
         await this.state.update(STATE_CURRENT_DEVICE, id)
+        if (id !== this.virtualDeviceScriptManagerId) {
+            console.log(`stop virtual device ${shortDeviceId(id)}`)
+            await sideRequest<SideStopVmReq>({
+                req: "stopVM",
+                data: {},
+            })
+        }
+
         this.emit(CHANGE)
     }
 
@@ -121,11 +129,14 @@ export class ExtensionState extends JDEventSource {
         const did = res?.deviceId
 
         if (startVM && did == virtualDeviceScriptManagerId) {
-            const config = vscode.workspace.getConfiguration("devicescript")
+            const config = vscode.workspace.getConfiguration(
+                "devicescript.virtualDevice"
+            )
+            const nativePath = (config.get("nativePath") as string) || undefined
             await sideRequest<SideStartVmReq>({
                 req: "startVM",
                 data: {
-                    nativePath: config.get("nativeVmPath") || undefined,
+                    nativePath,
                     deviceId: did,
                 },
             })
