@@ -48,6 +48,16 @@ import {
 } from "./JDomTreeDataProvider"
 import { ExtensionState } from "./state"
 
+class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
+    constructor(readonly updateHtml: () => string) {}
+    async deserializeWebviewPanel(
+        webviewPanel: vscode.WebviewPanel,
+        state: any
+    ) {
+        webviewPanel.webview.html = this.updateHtml()
+    }
+}
+
 export function activateDeviceScript(
     context: vscode.ExtensionContext,
     factory?: vscode.DebugAdapterDescriptorFactory
@@ -82,17 +92,15 @@ export function activateDeviceScript(
     })
 
     // devtool web panel
-    let developerToolsPanel: vscode.WebviewPanel
-    const updateDeveloperToolsPanelUrl = () => {
-        if (!developerToolsPanel) return
-
+    let simulatorsWebviewPanel: vscode.WebviewPanel
+    const generateSimulatorsHtml = () => {
         const { kind: colorThemeKind } = vscode.window.activeColorTheme
         const darkMode =
             colorThemeKind === vscode.ColorThemeKind.Dark ||
             colorThemeKind === vscode.ColorThemeKind.HighContrast
                 ? "dark"
                 : "light"
-        developerToolsPanel.webview.html = `
+        return `
         <html>
         <head>
         <style>
@@ -115,6 +123,14 @@ export function activateDeviceScript(
         </html>                
                         `
     }
+    const updateDeveloperToolsPanelUrl = () => {
+        if (!simulatorsWebviewPanel) return
+        simulatorsWebviewPanel.webview.html = generateSimulatorsHtml()
+    }
+    vscode.window.registerWebviewPanelSerializer(
+        "extension.devicescript.simulators",
+        new SimulatorsSerializer(generateSimulatorsHtml)
+    )
 
     // build
     initBuild()
@@ -230,22 +246,22 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.openSimulators",
             async () => {
-                if (developerToolsPanel) {
-                    developerToolsPanel.reveal(vscode.ViewColumn.Nine)
+                if (simulatorsWebviewPanel) {
+                    simulatorsWebviewPanel.reveal(vscode.ViewColumn.Nine)
                 } else {
                     console.log("Opening Developer Tools...")
                     await spawnDevTools(context)
                     // http://localhost:8081/
-                    developerToolsPanel = vscode.window.createWebviewPanel(
+                    simulatorsWebviewPanel = vscode.window.createWebviewPanel(
                         "extension.devicescript.simulators",
                         "DeviceScript Simulators",
                         vscode.ViewColumn.Nine,
                         { enableScripts: true, retainContextWhenHidden: true }
                     )
-                    developerToolsPanel.iconPath = logo(context)
-                    developerToolsPanel.onDidDispose(
+                    simulatorsWebviewPanel.iconPath = logo(context)
+                    simulatorsWebviewPanel.onDidDispose(
                         () => {
-                            developerToolsPanel = undefined
+                            simulatorsWebviewPanel = undefined
                         },
                         undefined,
                         context.subscriptions

@@ -55,7 +55,8 @@
   "activationEvents": [
     "workspaceContains:**/devsconfig.json",
     "onDebugResolve:devicescript",
-    "onDebugDynamicConfigurations:devicescript"
+    "onDebugDynamicConfigurations:devicescript",
+    "onWebviewPanel:extension.devicescript.simulators"
   ],
   "workspaceTrust": {
     "request": "never"
