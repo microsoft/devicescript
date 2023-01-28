@@ -339,7 +339,7 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
     pkt->flags = 0;
 
     if (print)
-        DMESG("JSCR: %s", str);
+        DMESG("> %s", str);
 
     if (!(ctx->flags & DEVS_CTX_LOGGING_ENABLED))
         return RESUME_USER_CODE;

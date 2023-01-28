@@ -51,7 +51,7 @@ const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc) {
 
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
     if (!devs_is_buffer(ctx, stack)) {
-        devs_log_value(ctx, "expecting stack, got", stack);
+        devs_log_value(ctx, "! expecting stack, got", stack);
         return;
     }
 
@@ -64,9 +64,9 @@ void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
         const devs_function_desc_t *desc = devs_function_by_pc(ctx, data[i]);
         if (desc) {
             int fn = desc - devs_img_get_function(ctx->img, 0);
-            DMESG("  pc=%d @ %s_F%d", (int)(pc - desc->start), devs_img_fun_name(ctx->img, fn), fn);
+            DMESG("*  pc=%d @ %s_F%d", (int)(pc - desc->start), devs_img_fun_name(ctx->img, fn), fn);
         } else {
-            DMESG("  pc=%d @ ???", pc);
+            DMESG("*  pc=%d @ ???", pc);
         }
     }
 }
@@ -76,13 +76,13 @@ void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
     if (devs_can_attach(ctx, exn)) {
         value_t ctor = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_NAME);
         if (!devs_is_null(ctor)) {
-            devs_log_value(ctx, "Exception", ctor);
+            devs_log_value(ctx, "* Exception", ctor);
             hadinfo++;
         }
 
         value_t msg = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_MESSAGE);
         if (!devs_is_null(msg)) {
-            devs_log_value(ctx, "  message", msg);
+            devs_log_value(ctx, "*  message", msg);
             value_t stack = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING___STACK__);
             if (!devs_is_null(stack))
                 devs_dump_stack(ctx, stack);
@@ -91,7 +91,7 @@ void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
     }
 
     if (!hadinfo)
-        devs_log_value(ctx, "Exception", exn);
+        devs_log_value(ctx, "* Exception", exn);
 }
 
 value_t devs_capture_stack(devs_ctx_t *ctx) {
@@ -114,7 +114,7 @@ value_t devs_capture_stack(devs_ctx_t *ctx) {
 }
 
 void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn) {
-    DMESG("Unhandled exception");
+    DMESG("! Unhandled exception");
     ctx->in_throw = 0;
     devs_dump_exception(ctx, exn);
     devs_panic(ctx, DEVS_PANIC_UNHANDLED_EXCEPTION); // TODO should we continue instead?
@@ -124,7 +124,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
     LOG_VAL("throw", exn);
 
     if (ctx->in_throw) {
-        devs_log_value(ctx, "double throw", exn);
+        devs_log_value(ctx, "! double throw", exn);
         return;
     }
 

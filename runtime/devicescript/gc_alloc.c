@@ -302,7 +302,7 @@ static void validate_heap(devs_gc_t *gc) {
                 unsigned size = (block_size(block) - 2) * sizeof(uintptr_t);
                 for (unsigned i = 0; i < size; ++i) {
                     if (block->free.data[i] != FREE_FILL) {
-                        DMESG("block corruption: %p off=%u v=%x", block,
+                        DMESG("! block corruption: %p off=%u v=%x", block,
                               (unsigned)(i + sizeof(uintptr_t)), block->free.data[i]);
                         JD_PANIC();
                     }
@@ -597,7 +597,7 @@ bool devs_gc_obj_valid(devs_ctx_t *ctx, const void *ptr) {
 
 void devs_gc_obj_check(devs_ctx_t *ctx, const void *ptr) {
     if (!devs_gc_obj_valid(ctx, ptr)) {
-        DMESG("invalid GC obj: %p", ptr);
+        DMESG("! invalid GC obj: %p", ptr);
         JD_PANIC();
     }
 }

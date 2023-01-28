@@ -306,16 +306,16 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
         ctx->error_pc = ctx->curr_fn ? ctx->curr_fn->pc : 0;
         // using DMESG here since this logging should never be disabled
         if (code == DEVS_PANIC_REBOOT) {
-            DMESG("RESTART requested");
+            DMESG("! RESTART requested");
         } else {
-            DMESG("PANIC %d at pc=%d", code, ctx->error_pc);
+            DMESG("! PANIC %d at pc=%d", code, ctx->error_pc);
         }
         ctx->error_code = code;
 
         if (code != DEVS_PANIC_REBOOT)
             for (devs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
                 int idx = fn->func - devs_img_get_function(ctx->img, 0);
-                DMESG("  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),
+                DMESG("!  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),
                       devs_img_fun_name(ctx->img, idx), idx);
             }
 

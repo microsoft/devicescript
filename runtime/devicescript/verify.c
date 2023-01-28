@@ -9,7 +9,7 @@ STATIC_ASSERT(sizeof(devs_packet_spec_t) == DEVS_SERVICE_SPEC_PACKET_SIZE);
 STATIC_ASSERT(sizeof(devs_field_spec_t) == DEVS_SERVICE_SPEC_FIELD_SIZE);
 
 static int fail(int code, uint32_t offset) {
-    DMESG("verification failure: %d at %x", code, (unsigned)offset);
+    DMESG("! verification failure: %d at %x", code, (unsigned)offset);
     return -code;
 }
 
@@ -61,7 +61,7 @@ bool devs_img_stridx_ok(devs_img_t img, uint32_t nameidx) {
 void devs_dump_versions(const void *imgdata) {
     uint32_t v;
     memcpy(&v, (const uint8_t *)imgdata + 8, 4);
-    DMESG("DeviceScript runtime v%d.%d.%d; file v%d.%d.%d", DEVS_VERSION_MAJOR(DEVS_IMG_VERSION),
+    DMESG("* DeviceScript runtime v%d.%d.%d; file v%d.%d.%d", DEVS_VERSION_MAJOR(DEVS_IMG_VERSION),
           DEVS_VERSION_MINOR(DEVS_IMG_VERSION), DEVS_VERSION_PATCH(DEVS_IMG_VERSION),
           DEVS_VERSION_MAJOR(v), DEVS_VERSION_MINOR(v), DEVS_VERSION_PATCH(v));
 }
@@ -83,7 +83,7 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
         DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION)) {
         // OK
     } else {
-        DMESG("version mismatch");
+        DMESG("! version mismatch");
         devs_dump_versions(imgdata);
         return fail(1050, offset);
     }
