@@ -33,7 +33,7 @@ import { compileFile } from "./build"
 import { dirname, resolve } from "path"
 import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
 import { DevsDbgClient, DsDapSession } from "@devicescript/dap"
-import { initVMCmds } from "./vmworker"
+import { initVMCmds, overrideConsoleDebug } from "./vmworker"
 import { enableLogging } from "./logging"
 
 export interface DevToolsOptions {
@@ -53,6 +53,8 @@ export async function devtools(
     const port = 8081
     const tcpPort = 8082
     const dbgPort = 8083
+
+    overrideConsoleDebug()
 
     log(`starting dev tools at http://localhost:${port}`)
 
@@ -225,6 +227,7 @@ function startProxyServers(
     function removeClient(client: DevToolsClient) {
         const i = devtoolsSelf.clients.indexOf(client)
         devtoolsSelf.clients.splice(i, 1)
+        if (devtoolsSelf.mainClient == client) devtoolsSelf.mainClient = null
         log(`client: disconnected (${devtoolsSelf.clients.length} clients)`)
     }
 

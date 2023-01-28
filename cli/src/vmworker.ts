@@ -73,6 +73,48 @@ export async function stopVmWorker() {
     }
 }
 
+export function overrideConsoleDebug() {
+    const dbg = console.debug
+    console.debug = (...args: any[]) => {
+        const cl = devtoolsIface?.mainClient
+        if (
+            cl &&
+            args.length == 1 &&
+            typeof args[0] == "string" &&
+            args[0].startsWith("DEV: ")
+        ) {
+            let line = args[0].replace(/\x1B\[[0-9;]+m/g, "").slice(5)
+            sendOutput(cl, "dev", [line])
+            line = line.replace(/^DM \(\d+\): ?/, "")
+            if (line) printDmesg(line)
+        } else {
+            if (cl) {
+                let str = ""
+                for (const a of args) {
+                    if (str) str += " "
+                    str += a
+                }
+                sendOutput(cl, "verbose", [str])
+            } else {
+                dbg(...args)
+            }
+        }
+    }
+}
+
+export function printDmesg(line: string) {
+    const m = /^\s*([\*\!>]) (.*)/.exec(line)
+    if (m) {
+        let [_full, marker, text] = m
+        const dbg = devtoolsIface.lastOKBuild?.dbg
+        if (dbg) text = parseStackFrame(dbg, text).markedLine
+        if (marker == "!") text = wrapColor(91, text)
+        else if (marker == ">") text = wrapColor(95, text)
+        else text = wrapColor(92, text)
+        console.log("VM> " + text)
+    }
+}
+
 export async function startVmWorker(
     req: SideStartVmReq,
     sender: DevToolsClient
@@ -108,16 +150,7 @@ export async function startVmWorker(
         return lineBuffer(lines => {
             sendOutput(sender, kind, lines)
             for (const l of lines) {
-                const m = /^    ([\*\!>]) (.*)/.exec(l)
-                if (m) {
-                    let [_full, marker, text] = m
-                    const dbg = devtoolsIface.lastOKBuild?.dbg
-                    if (dbg) text = parseStackFrame(dbg, text).markedLine
-                    if (marker == "!") text = wrapColor(91, text)
-                    else if (marker == ">") text = wrapColor(95, text)
-                    else text = wrapColor(92, text)
-                    console.log("VM> " + text)
-                }
+                if (l.startsWith("    ")) printDmesg(l.slice(4))
             }
         })
     }

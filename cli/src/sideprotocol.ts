@@ -78,7 +78,7 @@ export interface SideStopVmResp extends SideResp<"stopVM"> {
     data: void
 }
 
-export type OutputFrom = "vm" | "vm-err"
+export type OutputFrom = "vm" | "vm-err" | "dev" | "verbose"
 export interface SideOutputEvent extends SideEvent<"output"> {
     data: {
         from: OutputFrom

@@ -26,6 +26,7 @@ export interface DevToolsIface {
     bus: JDBus
     clients: DevToolsClient[]
     lastOKBuild: BuildStatus
+    mainClient: DevToolsClient
 
     build: (args: BuildReqArgs) => Promise<BuildStatus>
     watch: (
@@ -136,6 +137,7 @@ export async function processSideMessage(
     const handler = msgHandlers[msg.req]
     if (handler) {
         try {
+            devtoolsIface.mainClient = client
             const data = await handler(msg, client)
             const resp: SideResp = {
                 resp: msg.req,
