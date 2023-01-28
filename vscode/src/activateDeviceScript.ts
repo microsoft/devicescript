@@ -377,11 +377,18 @@ export function activateDeviceScript(
     context.subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.stopVirtualDevice",
-            () => extensionState.stopVM()
+            async () => {
+                await spawnDevTools(context)
+                // TODO wait till ready
+                await extensionState.stopVM()
+            }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.startVirtualDevice",
-            () => extensionState.startVM()
+            async () => {
+                await spawnDevTools(context)
+                await extensionState.startVM()
+            }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.pickDeviceScriptManager",

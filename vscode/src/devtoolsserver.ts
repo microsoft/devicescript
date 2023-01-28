@@ -1,12 +1,12 @@
 import { delay } from "jacdac-ts"
 import * as vscode from "vscode"
 
-let terminal: vscode.Terminal
+let terminalPromise: Promise<vscode.Terminal>
 export function initDevTools(disposables: vscode.Disposable[]) {
     vscode.window.onDidCloseTerminal(
-        t => {
-            if (t === terminal) {
-                terminal = undefined
+        async t => {
+            if (terminalPromise && t === (await terminalPromise)) {
+                terminalPromise = undefined
                 vscode.window.showInformationMessage(
                     `DeviceScript Server exited. Make sure to install "@devicescript/cli" in your project.`
                 )
@@ -21,8 +21,13 @@ export function initDevTools(disposables: vscode.Disposable[]) {
 }
 
 export async function spawnDevTools(context: vscode.ExtensionContext) {
-    if (terminal) return
+    return (
+        terminalPromise ||
+        (terminalPromise = uncachedSpawnDevTools(context).then(t => t))
+    )
+}
 
+async function uncachedSpawnDevTools(context: vscode.ExtensionContext) {
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
@@ -58,24 +63,29 @@ export async function spawnDevTools(context: vscode.ExtensionContext) {
             ),
         },
     }
-    terminal = vscode.window.createTerminal(options)
+    const t = vscode.window.createTerminal(options)
     if (useShell) {
-        terminal.sendText("", true)
-        terminal.sendText(`${cli} ${args.join(" ")}`, true)
+        t.sendText("", true)
+        t.sendText(`${cli} ${args.join(" ")}`, true)
     }
 
     // TODO: wait for message
     await delay(2000)
+
+    return t
 }
 
-export function showDevToolsTerminal() {
-    terminal?.show()
+export async function showDevToolsTerminal() {
+    if (terminalPromise) {
+        const terminal = await terminalPromise
+        terminal?.show()
+    }
 }
 
-export function killDevTools() {
-    const p = terminal
-    terminal = undefined
-    if (p) {
-        p.dispose()
+export async function killDevTools() {
+    if (terminalPromise) {
+        const terminal = await terminalPromise
+        terminalPromise = undefined
+        terminal?.dispose()
     }
 }
