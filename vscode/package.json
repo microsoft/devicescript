@@ -114,6 +114,11 @@
           "default": true,
           "description": "Show DeviceScript output when starting debug session."
         },
+        "devicescript.debugger.showDevToolsOnStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open DeviceScript Developer Tools pane when starting debug session."
+        },
         "devicescript.virtualDevice.nativePath": {
           "type": "string",
           "default": "",
@@ -199,7 +204,12 @@
           "group": "navigation"
         },
         {
-          "command": "extension.devicescript.openDevTools",
+          "command": "extension.devicescript.openSimulators",
+          "when": "view == extension.devicescript.jacdac-jdom-explorer",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.devicescript.showOutput",
           "when": "view == extension.devicescript.jacdac-jdom-explorer",
           "group": "navigation"
         }
@@ -258,7 +268,7 @@
           "when": "resourceLangId == typescript"
         },
         {
-          "command": "extension.devicescript.openDevTools"
+          "command": "extension.devicescript.openSimulators"
         },
         {
           "command": "extension.devicescript.pickDeviceScriptManager"
@@ -271,6 +281,9 @@
         },
         {
           "command": "extension.devicescript.stopVirtualDevice"
+        },
+        {
+          "command": "extension.devicescript.showOutput"
         }
       ],
       "debug/variables/context": [
@@ -297,12 +310,18 @@
       },
       {
         "command": "extension.devicescript.showServerTerminal",
-        "title": "Show development server terminal",
+        "title": "Show Development Server Terminal",
         "category": "DeviceScript"
       },
       {
-        "command": "extension.devicescript.openDevTools",
-        "title": "Open Developer Tools",
+        "command": "extension.devicescript.showOutput",
+        "title": "Show DeviceScript Output",
+        "category": "DeviceScript",
+        "icon": "$(output)"
+      },
+      {
+        "command": "extension.devicescript.openSimulators",
+        "title": "Open Simulators",
         "category": "DeviceScript",
         "icon": "$(dashboard)"
       },

@@ -52,7 +52,9 @@ export function activateDeviceScript(
     factory?: vscode.DebugAdapterDescriptorFactory
 ) {
     const { subscriptions, workspaceState, extensionMode } = context
-    const debugConfig = vscode.workspace.getConfiguration("devicescript.debugger")
+    const debugConfig = vscode.workspace.getConfiguration(
+        "devicescript.debugger"
+    )
     const outputConfig = vscode.workspace.getConfiguration(
         "devicescript.output"
     )
@@ -160,7 +162,6 @@ export function activateDeviceScript(
                             service.device.deviceId
                         )
                     ) {
-                        if (debugConfig.get("showOutputOnStart")) output.show()
                         vscode.debug.startDebugging(undefined, {
                             type: "devicescript",
                             name: "Debug File",
@@ -168,6 +169,14 @@ export function activateDeviceScript(
                             program: targetResource.fsPath,
                             stopOnEntry: true,
                         })
+                        if (debugConfig.get("showOutputOnStart"))
+                            vscode.commands.executeCommand(
+                                "extension.devicescript.showOutput"
+                            )
+                        if (debugConfig.get("showDevToolsOnStart"))
+                            vscode.commands.executeCommand(
+                                "extension.devicescript.openSimulators"
+                            )
                     }
                 }
             }
@@ -218,7 +227,7 @@ export function activateDeviceScript(
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.openDevTools",
+            "extension.devicescript.openSimulators",
             async () => {
                 if (developerToolsPanel) {
                     developerToolsPanel.reveal(vscode.ViewColumn.Nine)
@@ -227,8 +236,8 @@ export function activateDeviceScript(
                     await spawnDevTools(context)
                     // http://localhost:8081/
                     developerToolsPanel = vscode.window.createWebviewPanel(
-                        "extension.devicescript.openDevTools", // Identifies the type of the webview. Used internally
-                        "DeviceScript Developer Tools", // Title of the panel displayed to the user
+                        "extension.devicescript.openSimulators", // Identifies the type of the webview. Used internally
+                        "DeviceScript Simulators", // Title of the panel displayed to the user
                         vscode.ViewColumn.Nine, // Editor column to show the new webview panel in.
                         { enableScripts: true } // Webview options. More on these later.
                     )
@@ -323,7 +332,12 @@ export function activateDeviceScript(
         if (tag.endsWith("err")) fn = output.error
         for (const l of msg.data.lines) fn(tag + ":", l)
     })
-
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.showOutput",
+            () => output.show()
+        )
+    )
     const redirectConsoleOutput =
         !!outputConfig.get("redirectConsole") ||
         extensionMode == vscode.ExtensionMode.Production
