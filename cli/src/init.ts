@@ -162,6 +162,13 @@ export default async function init(options: InitOptions & CmdOptions) {
     }
 
     // help message
-    log(`Your DeviceScript project is ready.`)
-    log(`- to start the local development, run "yarn start"`)
+    log(`Your DeviceScript project is create.`)
+    log(`- install dependencies`)
+    log(``)
+    log(`    yarn install`)
+    log(``)
+    log(`- to start a watch build and development server`)
+    log(``)
+    log(`    yarn start`)
+    log(``)
 }
