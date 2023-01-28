@@ -58,24 +58,24 @@ export function addReqHandler<
     msgHandlers[req] = cb as any
 }
 
-let devtools: DevToolsIface
+export let devtoolsIface: DevToolsIface
 
 export function initSideProto(devtools_: DevToolsIface) {
-    assert(devtools === undefined)
-    devtools = devtools_
+    assert(devtoolsIface === undefined)
+    devtoolsIface = devtools_
     addReqHandler<SideBcastReq>("bcast", async (msg, client) => {
         client.__devsWantsSideChannel = msg.data.enabled
     })
     addReqHandler<SideBuildReq, SideBuildResp>("build", async msg => {
-        return await devtools.build(msg.data)
+        return await devtoolsIface.build(msg.data)
     })
     addReqHandler<SideWatchReq, SideWatchResp>("watch", async (msg, client) => {
-        return await devtools.watch(msg.data, st =>
+        return await devtoolsIface.watch(msg.data, st =>
             sendEvent<SideWatchEvent>(client, "watch", st)
         )
     })
     addReqHandler<SideConnectReq>("connect", msg => {
-        return devtools.connect(msg.data)
+        return devtoolsIface.connect(msg.data)
     })
     addReqHandler<SideSpecsReq, SideSpecsResp>("specs", async () => {
         const v = parseImgVersion(BinFmt.IMG_VERSION)
@@ -131,7 +131,7 @@ export async function processSideMessage(
     const msg: SideReq = JSONTryParse(message)
     if (!msg) return
 
-    assert(devtools === devtools_)
+    assert(devtoolsIface === devtools_)
 
     const handler = msgHandlers[msg.req]
     if (handler) {
@@ -149,7 +149,7 @@ export async function processSideMessage(
     }
 
     if (!msg.seq)
-        for (const client of devtools.clients) {
+        for (const client of devtoolsIface.clients) {
             if (client != client && client.__devsWantsSideChannel)
                 client.send(message)
         }

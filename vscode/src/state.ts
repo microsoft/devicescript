@@ -102,9 +102,9 @@ export class ExtensionState extends JDEventSource {
                     }
             )
         )
-        let needsStart = false
+        let startVM = false
         if (!this.bus.device(virtualDeviceScriptManagerId, true)) {
-            needsStart = true
+            startVM = true
             items.push(<DeviceQuickItem>{
                 label: shortDeviceId(this.virtualDeviceScriptManagerId),
                 description: `Virtual Device`,
@@ -120,7 +120,7 @@ export class ExtensionState extends JDEventSource {
         })
         const did = res?.deviceId
 
-        if (needsStart && did == virtualDeviceScriptManagerId) {
+        if (startVM && did == virtualDeviceScriptManagerId) {
             const config = vscode.workspace.getConfiguration("devicescript")
             await sideRequest<SideStartVmReq>({
                 req: "startVM",
@@ -132,11 +132,25 @@ export class ExtensionState extends JDEventSource {
             // wait for it to enumerate
             let max = 20
             while (max-- > 0 && !this.bus.device(did, true)) await delay(200)
+        } else {
+            startVM = false
         }
 
         const service = this.bus.device(did, true)?.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })?.[0]
+
+        if (service) {
+            // disable autostart (which is really auto-restart when the program stops)
+            await service
+                .register(DeviceScriptManagerReg.Autostart)
+                .sendSetAsync(new Uint8Array([0]))
+            // for VM we started, disable logging - logging will go through DMESG
+            if (startVM)
+                await service
+                    .register(DeviceScriptManagerReg.Logging)
+                    .sendSetAsync(new Uint8Array([0]))
+        }
 
         if (service && !skipUpdate) {
             await this.updateCurrentDeviceScriptManagerId(

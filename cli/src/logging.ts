@@ -14,23 +14,24 @@ function prefixMsg(shortId: string, content: string) {
     return `${prefix}${content.trimEnd()}`
 }
 
-function color(n: number | string, message: string) {
+// https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
+export function wrapColor(n: number | string, message: string) {
     return `\u001B[${n}m${message}\u001B[0m`
 }
 
 export function logToConsole(priority: LoggerPriority, message: string) {
     switch (priority) {
         case LoggerPriority.Debug:
-            console.debug(message)
+            console.debug(wrapColor(34, message))
             break
         case LoggerPriority.Log:
-            console.log(color(96, message))
+            console.log(wrapColor(96, message))
             break
         case LoggerPriority.Warning:
-            console.warn(message)
+            console.warn(wrapColor(93, message))
             break
         case LoggerPriority.Error:
-            console.error(message)
+            console.error(wrapColor(91, message))
             break
     }
 }

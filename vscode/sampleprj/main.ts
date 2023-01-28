@@ -10,10 +10,11 @@ function foo() {
     }
     ;(z as any)["foo" + 12] = z
     // ;[x]=[1] // uncomment to trigger DS error
-    console.log("hello")
+    console.log("hello 1")
     console.log(`x=${x} y=${y}`)
     console.log("world")
-    // ds.panic(122)
+     
+     ds.panic(122)
     z.q.map(e => {
         console.log(e)
         if (e == 2) debugger

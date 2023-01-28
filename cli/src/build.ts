@@ -55,7 +55,7 @@ export function devsFactory() {
         const dbg = readDebugInfo()
         if (dbg)
             m.dmesg = (s: string) => {
-                console.debug(parseStackFrame(dbg, s).markedLine)
+                console.debug("    " + parseStackFrame(dbg, s).markedLine)
             }
         m.devsInit()
         return m

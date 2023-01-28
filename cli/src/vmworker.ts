@@ -1,6 +1,14 @@
+import { parseStackFrame } from "@devicescript/compiler"
 import { ChildProcess, fork, spawn } from "node:child_process"
-import { addReqHandler, DevToolsClient, sendOutput } from "./sidedata"
+import { wrapColor } from "./logging"
 import {
+    addReqHandler,
+    DevToolsClient,
+    devtoolsIface,
+    sendOutput,
+} from "./sidedata"
+import {
+    OutputFrom,
     SideStartVmReq,
     SideStartVmResp,
     SideStopVmReq,
@@ -96,14 +104,26 @@ export async function startVmWorker(
         sendOutput(sender, "vm-err", [`Exit code: ${code} ${signal ?? ""}`])
     })
 
-    worker.stdout.on(
-        "data",
-        lineBuffer(lines => sendOutput(sender, "vm", lines))
-    )
-    worker.stderr.on(
-        "data",
-        lineBuffer(lines => sendOutput(sender, "vm-err", lines))
-    )
+    function buffered(kind: OutputFrom) {
+        return lineBuffer(lines => {
+            sendOutput(sender, kind, lines)
+            for (const l of lines) {
+                const m = /^    ([\*\!>]) (.*)/.exec(l)
+                if (m) {
+                    let [_full, marker, text] = m
+                    const dbg = devtoolsIface.lastOKBuild?.dbg
+                    if (dbg) text = parseStackFrame(dbg, text).markedLine
+                    if (marker == "!") text = wrapColor(91, text)
+                    else if (marker == ">") text = wrapColor(95, text)
+                    else text = wrapColor(92, text)
+                    console.log("VM> " + text)
+                }
+            }
+        })
+    }
+
+    worker.stdout.on("data", buffered("vm"))
+    worker.stderr.on("data", buffered("vm-err"))
     return {}
 }
 

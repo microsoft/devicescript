@@ -50,7 +50,7 @@ export module Exts {
     /**
      * Debug output and stack traces are sent here.
      */
-    export let dmesg = (s: string) => console.debug(s)
+    export let dmesg = (s: string) => console.debug("    " + s)
 
     /**
      * Logging function
