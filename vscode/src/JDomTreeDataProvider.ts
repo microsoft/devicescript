@@ -20,7 +20,6 @@ import {
     SystemReg,
     dashify,
     JDServiceMemberNode,
-    ellipseJoin,
     isInfrastructure,
     isReading,
     identifierToUrlPath,
@@ -156,12 +155,10 @@ export class JDeviceTreeItem extends JDomTreeItem {
         this.label = friendlyName
         if (!this.description) {
             const services = device.services({ mixins: false })
-            const serviceNames = ellipseJoin(
-                services
-                    .filter(srv => !isInfrastructure(srv.specification))
-                    .map(service => service.name),
-                18
-            )
+            const serviceNames = services
+                .filter(srv => !isInfrastructure(srv.specification))
+                .map(service => service.name)
+                .join(" ")
             this.description = serviceNames
         }
 

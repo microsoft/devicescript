@@ -376,6 +376,14 @@ export function activateDeviceScript(
 
     context.subscriptions.push(
         vscode.commands.registerCommand(
+            "extension.devicescript.stopVirtualDevice",
+            () => extensionState.stopVM()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.startVirtualDevice",
+            () => extensionState.startVM()
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.pickDeviceScriptManager",
             () => extensionState.pickDeviceScriptManager()
         ),

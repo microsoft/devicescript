@@ -61,19 +61,38 @@ export class ExtensionState extends JDEventSource {
 
     private async updateCurrentDeviceScriptManagerId(id: string) {
         await this.state.update(STATE_CURRENT_DEVICE, id)
-        if (id !== this.virtualDeviceScriptManagerId) {
-            console.log(`stop virtual device ${shortDeviceId(id)}`)
-            await sideRequest<SideStopVmReq>({
-                req: "stopVM",
-                data: {},
-            })
-        }
-
+        if (id !== this.virtualDeviceScriptManagerId) await this.stopVM()
         this.emit(CHANGE)
     }
 
     async resolveDeviceScriptManager(): Promise<JDService> {
         return this.deviceScriptManager || this.pickDeviceScriptManager()
+    }
+
+    async startVM() {
+        const did = this.virtualDeviceScriptManagerId
+        if (this.bus.device(did, true)) return // already running
+        const config = vscode.workspace.getConfiguration(
+            "devicescript.virtualDevice"
+        )
+        const nativePath = (config.get("nativePath") as string) || undefined
+        await sideRequest<SideStartVmReq>({
+            req: "startVM",
+            data: {
+                nativePath,
+                deviceId: did,
+            },
+        })
+        // wait for it to enumerate
+        let max = 20
+        while (max-- > 0 && !this.bus.device(did, true)) await delay(200)
+    }
+
+    async stopVM() {
+        await sideRequest<SideStopVmReq>({
+            req: "stopVM",
+            data: {},
+        })
     }
 
     async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {
@@ -129,20 +148,7 @@ export class ExtensionState extends JDEventSource {
         const did = res?.deviceId
 
         if (startVM && did == virtualDeviceScriptManagerId) {
-            const config = vscode.workspace.getConfiguration(
-                "devicescript.virtualDevice"
-            )
-            const nativePath = (config.get("nativePath") as string) || undefined
-            await sideRequest<SideStartVmReq>({
-                req: "startVM",
-                data: {
-                    nativePath,
-                    deviceId: did,
-                },
-            })
-            // wait for it to enumerate
-            let max = 20
-            while (max-- > 0 && !this.bus.device(did, true)) await delay(200)
+            await this.startVM()
         } else {
             startVM = false
         }

@@ -140,7 +140,7 @@
     "viewsWelcome": [
       {
         "view": "extension.devicescript.jacdac-jdom-explorer",
-        "contents": "Connect a Jacdac device."
+        "contents": "Connect a DeviceScript device or start a Virtual Device.\n[Start Virtual Device](command:extension.devicescript.startVirtualDevice)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
       },
       {
         "view": "extension.devicescript.jacdac-jdom-watch",
@@ -221,6 +221,12 @@
         },
         {
           "command": "extension.devicescript.connect"
+        },
+        {
+          "command": "extension.devicescript.startVirtualDevice"
+        },
+        {
+          "command": "extension.devicescript.stopVirtualDevice"
         }
       ],
       "debug/variables/context": [
@@ -300,6 +306,16 @@
       {
         "command": "extension.devicescript.toggleFormatting",
         "title": "Toggle between decimal and hex formatting"
+      },
+      {
+        "command": "extension.devicescript.startVirtualDevice",
+        "title": "Start Virtual Device",
+        "category": "DeviceScript"
+      },
+      {
+        "command": "extension.devicescript.stopVirtualDevice",
+        "title": "Stop Virtual Device",
+        "category": "DeviceScript"
       }
     ],
     "breakpoints": [
