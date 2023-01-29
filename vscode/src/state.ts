@@ -16,11 +16,17 @@ import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
 import { sideRequest } from "./jacdac"
 import { JDeviceTreeItem } from "./JDomTreeDataProvider"
 
-const STATE_WATCHES_KEY = "views.watch.ids"
+const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
 const STATE_VM_DEVICE = "devices.virtual"
 
 type DeviceQuickItem = vscode.QuickPickItem & { deviceId: string }
+
+export interface NodeWatch {
+    id: string
+    label: string
+    icon: string
+}
 
 export class ExtensionState extends JDEventSource {
     version = ""
@@ -36,15 +42,12 @@ export class ExtensionState extends JDEventSource {
         })
     }
 
-    watchKeys(): string[] {
+    watches(): NodeWatch[] {
         return this.state.get(STATE_WATCHES_KEY) || []
     }
 
-    async updateWatchKeys(keys: string[]) {
-        await this.state.update(
-            STATE_WATCHES_KEY,
-            Array.from(new Set(keys || []).entries())
-        )
+    async updateWatches(watches: NodeWatch[]) {
+        await this.state.update(STATE_WATCHES_KEY, watches || [])
         this.emit(CHANGE)
     }
 

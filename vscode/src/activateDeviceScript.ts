@@ -46,7 +46,7 @@ import {
     JDomTreeItem,
     JDomWatchTreeDataProvider,
 } from "./JDomTreeDataProvider"
-import { ExtensionState } from "./state"
+import { ExtensionState, NodeWatch } from "./state"
 
 class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
     constructor(readonly updateHtml: () => string) {}
@@ -403,7 +403,6 @@ export function activateDeviceScript(
         "extension.devicescript.jacdac-jdom-explorer",
         jdomTreeDataProvider
     )
-
     const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
         bus,
         selectNodeCommand,
@@ -437,13 +436,20 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.watchNode",
             (item: JDomTreeItem) => {
+                if (!item) return
                 console.log(`Watch ${item.node}`)
                 const id = item.node.id
-                const watches = extensionState.watchKeys()
-                if (!watches.includes(id)) {
+                const watches = extensionState.watches()
+                if (!watches.find(w => w.id === id)) {
+                    const label = item.label || item.node.name
+                    const icon = (item.iconPath as vscode.ThemeIcon)?.id
                     extensionState
-                        .updateWatchKeys([...watches, id])
+                        .updateWatches([
+                            ...watches,
+                            <NodeWatch>{ id, label, icon },
+                        ])
                         .then(() => {
+                            item.refresh()
                             jdomWatchTreeDataProvider.refresh()
                         })
                 }
@@ -452,13 +458,15 @@ export function activateDeviceScript(
         vscode.commands.registerCommand(
             "extension.devicescript.unwatchNode",
             (item: JDomTreeItem) => {
+                if (!item) return
                 console.log(`Unwatch ${item.node}`)
                 const id = item.node.id
-                const watches = extensionState.watchKeys()
-                if (watches.includes(id)) {
+                const watches = extensionState.watches()
+                if (watches.find(w => w.id === id)) {
                     extensionState
-                        .updateWatchKeys(watches.filter(i => i !== id))
+                        .updateWatches(watches.filter(w => w.id !== id))
                         .then(() => {
+                            item.refresh()
                             jdomWatchTreeDataProvider.refresh()
                         })
                 }

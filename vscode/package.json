@@ -130,14 +130,14 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "deviceScriptViewContainer",
+          "id": "devicescript",
           "title": "DeviceScript",
           "icon": "./images/jacdac.dark.svg"
         }
       ]
     },
     "views": {
-      "deviceScriptViewContainer": [
+      "devicescript": [
         {
           "id": "extension.devicescript.jacdac-jdom-explorer",
           "name": "Devices"

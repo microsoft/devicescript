@@ -346,10 +346,50 @@ export class JDEventTreeItem extends JDomServiceMemberTreeItem {
     }
 }
 
+class MissingNode extends JDNode {
+    constructor(
+        readonly _id: string,
+        readonly label: string,
+        readonly icon: string
+    ) {
+        super()
+    }
+    get id(): string {
+        return this._id
+    }
+    get nodeKind(): string {
+        return "missing"
+    }
+    get name(): string {
+        return this.label
+    }
+    get qualifiedName(): string {
+        return this.name
+    }
+    get parent(): JDNode {
+        return null
+    }
+    get children(): JDNode[] {
+        return []
+    }
+}
+
+class JDMissingTreeItem extends JDomTreeItem {
+    constructor(node: MissingNode, props: TreeItemProps) {
+        super(node, props)
+        this.iconPath = new vscode.ThemeIcon(node.icon)
+        this.description = "?"
+    }
+}
+
 export abstract class JDomTreeDataProvider
     implements vscode.TreeDataProvider<JDomTreeItem>
 {
-    constructor(readonly bus: JDBus, readonly command: vscode.Command) {}
+    constructor(
+        readonly bus: JDBus,
+        readonly command: vscode.Command,
+        readonly idPrefix: string
+    ) {}
 
     getTreeItem(element: JDomTreeItem): vscode.TreeItem {
         return element
@@ -380,7 +420,7 @@ export abstract class JDomTreeDataProvider
 export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
     private _showInfrastructure = false
     constructor(bus: JDBus, command: vscode.Command) {
-        super(bus, command)
+        super(bus, command, "devs:")
         this.bus.on(DEVICE_CHANGE, () => {
             this.refresh()
         })
@@ -401,7 +441,7 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
         const refresh: RefreshFunction = i => this.refresh(i)
         const props = {
             refresh,
-            idPrefix: "e:",
+            idPrefix: this.idPrefix,
             command: this.command,
         }
         const devices = this.bus.devices({
@@ -418,7 +458,7 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
         command: vscode.Command,
         readonly state: ExtensionState
     ) {
-        super(bus, command)
+        super(bus, command, "watch:")
         this.state.on(CHANGE, this.refresh.bind(this))
     }
 
@@ -427,13 +467,18 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
         const props = {
             refresh,
             fullName: true,
-            idPrefix: "w:",
+            idPrefix: this.idPrefix,
             command: this.command,
         }
-        const nodeIds = this.state.watchKeys()
-        const items = nodeIds
-            .map(id => createTreeItemFromId(this.bus, id, props))
-            .filter(n => !!n)
+        const watches = this.state.watches()
+        const items = watches.map(
+            w =>
+                createTreeItemFromId(this.bus, w.id, props) ||
+                new JDMissingTreeItem(
+                    new MissingNode(w.id, w.label, w.icon),
+                    props
+                )
+        )
         return items
     }
 }
