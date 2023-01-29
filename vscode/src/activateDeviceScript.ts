@@ -409,7 +409,7 @@ export function activateDeviceScript(
         extensionState
     )
     vscode.window.registerTreeDataProvider(
-        "extension.devicescript.jacdac-jdom-watch",
+        "extension.devicescript.watch",
         jdomWatchTreeDataProvider
     )
 
@@ -434,8 +434,15 @@ export function activateDeviceScript(
             () => extensionState.pickDeviceScriptManager()
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.watchNode",
-            (item: JDomTreeItem) => {
+            "extension.devicescript.watch.clear",
+            async () => {
+                await extensionState.updateWatches([])
+                jdomWatchTreeDataProvider.refresh()
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.watch.add",
+            async (item: JDomTreeItem) => {
                 if (!item) return
                 console.log(`Watch ${item.node}`)
                 const id = item.node.id
@@ -443,32 +450,28 @@ export function activateDeviceScript(
                 if (!watches.find(w => w.id === id)) {
                     const label = item.label || item.node.name
                     const icon = (item.iconPath as vscode.ThemeIcon)?.id
-                    extensionState
-                        .updateWatches([
-                            ...watches,
-                            <NodeWatch>{ id, label, icon },
-                        ])
-                        .then(() => {
-                            item.refresh()
-                            jdomWatchTreeDataProvider.refresh()
-                        })
+                    await extensionState.updateWatches([
+                        ...watches,
+                        <NodeWatch>{ id, label, icon },
+                    ])
+                    item.refresh()
+                    jdomWatchTreeDataProvider.refresh()
                 }
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.unwatchNode",
-            (item: JDomTreeItem) => {
+            "extension.devicescript.watch.remove",
+            async (item: JDomTreeItem) => {
                 if (!item) return
                 console.log(`Unwatch ${item.node}`)
                 const id = item.node.id
                 const watches = extensionState.watches()
                 if (watches.find(w => w.id === id)) {
-                    extensionState
-                        .updateWatches(watches.filter(w => w.id !== id))
-                        .then(() => {
-                            item.refresh()
-                            jdomWatchTreeDataProvider.refresh()
-                        })
+                    await extensionState.updateWatches(
+                        watches.filter(w => w.id !== id)
+                    )
+                    item.refresh()
+                    jdomWatchTreeDataProvider.refresh()
                 }
             }
         )

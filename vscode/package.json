@@ -143,7 +143,7 @@
           "name": "Devices"
         },
         {
-          "id": "extension.devicescript.jacdac-jdom-watch",
+          "id": "extension.devicescript.watch",
           "name": "Watch"
         }
       ]
@@ -154,7 +154,7 @@
         "contents": "Connect a DeviceScript device or start a Virtual Device.\n[Start Virtual Device](command:extension.devicescript.startVirtualDevice)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
       },
       {
-        "view": "extension.devicescript.jacdac-jdom-watch",
+        "view": "extension.devicescript.watch",
         "contents": "Select Registers or Events to watch."
       }
     ],
@@ -213,6 +213,11 @@
           "command": "extension.devicescript.showOutput",
           "when": "view == extension.devicescript.jacdac-jdom-explorer",
           "group": "navigation"
+        },
+        {
+          "command": "extension.devicescript.watch.clear",
+          "when": "view == extension.devicescript.watch",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -227,23 +232,28 @@
           "group": "inline"
         },
         {
-          "command": "extension.devicescript.watchNode",
+          "command": "extension.devicescript.watch.add",
           "when": "view == extension.devicescript.jacdac-jdom-explorer && viewItem == register",
           "group": "inline"
         },
         {
-          "command": "extension.devicescript.unwatchNode",
-          "when": "view == extension.devicescript.jacdac-jdom-watch && viewItem == register",
+          "command": "extension.devicescript.watch.remove",
+          "when": "view == extension.devicescript.watch && viewItem == register",
           "group": "inline"
         },
         {
-          "command": "extension.devicescript.watchNode",
+          "command": "extension.devicescript.watch.add",
           "when": "view == extension.devicescript.jacdac-jdom-explorer && viewItem == event",
           "group": "inline"
         },
         {
-          "command": "extension.devicescript.unwatchNode",
-          "when": "view == extension.devicescript.jacdac-jdom-watch && viewItem == event",
+          "command": "extension.devicescript.watch.remove",
+          "when": "view == extension.devicescript.watch && viewItem == event",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.watch.remove",
+          "when": "view == extension.devicescript.watch && viewItem == missing",
           "group": "inline"
         }
       ],
@@ -350,16 +360,22 @@
         "category": "DeviceScript"
       },
       {
-        "command": "extension.devicescript.watchNode",
+        "command": "extension.devicescript.watch.clear",
         "title": "Watch",
         "category": "DeviceScript",
-        "icon": "$(star-empty)"
+        "icon": "$(close-all)"
       },
       {
-        "command": "extension.devicescript.unwatchNode",
+        "command": "extension.devicescript.watch.add",
+        "title": "Watch",
+        "category": "DeviceScript",
+        "icon": "$(pin)"
+      },
+      {
+        "command": "extension.devicescript.watch.remove",
         "title": "Unwatch",
         "category": "DeviceScript",
-        "icon": "$(star-full)"
+        "icon": "$(close)"
       },
       {
         "command": "extension.devicescript.resetDevice",

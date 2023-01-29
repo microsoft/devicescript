@@ -376,7 +376,7 @@ class MissingNode extends JDNode {
 
 class JDMissingTreeItem extends JDomTreeItem {
     constructor(node: MissingNode, props: TreeItemProps) {
-        super(node, props)
+        super(node, props, vscode.TreeItemCollapsibleState.None)
         this.iconPath = new vscode.ThemeIcon(node.icon)
         this.description = "?"
     }
