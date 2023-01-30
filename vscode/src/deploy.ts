@@ -1,4 +1,4 @@
-import { delay, DeviceScriptManagerReg, JDService, semverCmp } from "jacdac-ts"
+import { DeviceScriptManagerReg, JDService, semverCmp } from "jacdac-ts"
 import * as vscode from "vscode"
 
 export async function readRuntimeVersion(srv: JDService) {
@@ -13,7 +13,7 @@ export async function readRuntimeVersion(srv: JDService) {
 export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     const version = await readRuntimeVersion(srv)
     console.debug(`deploy: version min ${minVersion}, device ${version}`)
-    if (!version) {
+    if (version === undefined) {
         await vscode.window.showErrorMessage(
             `Deploy cancelled. Your device firmware does not have a runtime version. Update your firmware.`
         )
@@ -34,7 +34,7 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     return true
 }
 
-export function ignoreRuntimeVersion() {
+export function shouldIgnoreRuntimeVersion() {
     const config = vscode.workspace.getConfiguration("devicescript.deploy")
     return !!config.get("ignoreRuntimeVersion")
 }

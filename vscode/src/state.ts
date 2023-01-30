@@ -106,7 +106,7 @@ export class ExtensionState extends JDEventSource {
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })
         const detail = async (srv: JDService) => {
-            const runtimeVersion = await readRuntimeVersion(src)
+            const runtimeVersion = await readRuntimeVersion(srv)
             const description = srv.device
                 .service(0)
                 .register(ControlReg.DeviceDescription)
