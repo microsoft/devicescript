@@ -149,6 +149,7 @@ export class ExtensionState extends JDEventSource {
             canPickMany: false,
         })
         const did = res?.deviceId
+        if (!did) return undefined
 
         if (startVM && did == virtualDeviceScriptManagerId) {
             await this.startVM()

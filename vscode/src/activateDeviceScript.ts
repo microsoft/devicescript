@@ -29,6 +29,7 @@ import type {
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { build, initBuild } from "./build"
+import { checkDeploy } from "./deploy"
 import {
     spawnDevTools,
     showDevToolsTerminal,
@@ -145,13 +146,8 @@ export function activateDeviceScript(
                 if (targetResource) {
                     const service =
                         await extensionState.resolveDeviceScriptManager()
-                    if (!service) {
-                        vscode.window.showWarningMessage(
-                            "No DeviceScript device found."
-                        )
+                    if (!checkDeploy(extensionState.runtimeVersion, service))
                         return
-                    }
-
                     await vscode.window.activeTextEditor?.document?.save()
                     await build(targetResource.fsPath, service.device.deviceId)
                 }
@@ -167,12 +163,8 @@ export function activateDeviceScript(
                 if (targetResource) {
                     const service =
                         await extensionState.resolveDeviceScriptManager()
-                    if (!service) {
-                        vscode.window.showWarningMessage(
-                            "No DeviceScript device found."
-                        )
+                    if (!checkDeploy(extensionState.runtimeVersion, service))
                         return
-                    }
                     if (
                         await build(
                             targetResource.fsPath,

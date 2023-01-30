@@ -124,6 +124,11 @@
           "type": "string",
           "default": "",
           "description": "Run this executable (jdcli) as the VM instead of bundled WASM binary."
+        },
+        "devicescript.deploy.ignoreRuntimeVersion": {
+          "type": "boolean",
+          "default": false,
+          "description": "Ignore incompatible runtime versions when deploying."
         }
       }
     },
