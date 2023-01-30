@@ -13,6 +13,7 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
+import { readRuntimeVersion } from "./deploy"
 import { sideRequest } from "./jacdac"
 import { JDeviceTreeItem } from "./JDomTreeDataProvider"
 
@@ -105,20 +106,13 @@ export class ExtensionState extends JDEventSource {
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })
         const detail = async (srv: JDService) => {
-            const runtimeVersion = srv.register(
-                DeviceScriptManagerReg.RuntimeVersion
-            )
-            await runtimeVersion.refresh(true)
-            const v = runtimeVersion.unpackedValue || []
-            const [patch, minor, major] = v as [number, number, number]
+            const runtimeVersion = await readRuntimeVersion(src)
             const description = srv.device
                 .service(0)
                 .register(ControlReg.DeviceDescription)
             await description.refresh(true)
 
-            return `${description.stringValue || ""} ${
-                patch !== undefined ? `(devs v${major}.${minor}.${patch})` : ""
-            }`
+            return `${description.stringValue || ""} (${runtimeVersion || "?"})`
         }
         const items = await Promise.all(
             services.map(
@@ -138,7 +132,7 @@ export class ExtensionState extends JDEventSource {
             items.push(<DeviceQuickItem>{
                 label: shortDeviceId(this.virtualDeviceScriptManagerId),
                 description: `Virtual Device`,
-                detail: `A virtual DeviceScript interpreter running in a separate process (devs ${this.runtimeVersion})`,
+                detail: `A virtual DeviceScript interpreter running in a separate process (${this.runtimeVersion})`,
                 deviceId: virtualDeviceScriptManagerId,
             })
         }
