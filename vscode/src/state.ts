@@ -135,7 +135,10 @@ export class ExtensionState extends JDEventSource {
             items.push(<DeviceQuickItem>{
                 label: shortDeviceId(this.virtualDeviceScriptManagerId),
                 description: `Virtual Device`,
-                detail: `A virtual DeviceScript interpreter running in a separate process (v${this.runtimeVersion.slice(0).reverse().join("."))})`,
+                detail: `A virtual DeviceScript interpreter running in a separate process (v${this.runtimeVersion
+                    .slice(0)
+                    .reverse()
+                    .join(".")})`,
                 deviceId: virtualDeviceScriptManagerId,
             })
         }
