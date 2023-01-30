@@ -2,6 +2,7 @@
 sidebar_position: 1
 hide_table_of_contents: true
 ---
+
 # Installation
 
 DeviceScript has been designed to gradual adoption. From editing scripts online in the docs, to building customized embedded firmware images.
@@ -26,12 +27,10 @@ Install the [DeviceScript command line](/api/cli) and use your favorite TypeScri
 Getting started with a fresh project can be done with 3 commands.
 
 ```bash
-# install DeviceScript command line (requires node.js 16+)
-npm install -g -u @devicescript/cli
-# setup files for project
-devsc init
+# setup DeviceScript project
+npx @devicescript/cli init
 # start developer build
-devsc build --watch
+yarn watch
 ```
 
 :::tip

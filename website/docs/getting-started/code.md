@@ -17,16 +17,10 @@ Let's get started by installing the [DeviceScript command line](/api/cli) and cr
 
 -   Open `code` in a new empty folder
 -   Open a terminal (`` Ctrl + ` ``)
--   Install the command line globally. You can call it using `devsc`
+-   Use the `init` command to setup a new project
 
 ```bash
-npm install -g -u @devicescript/cli
-```
-
--   Use the `init` command to setup the files
-
-```bash
-devsc init
+npx @devicescript/cli ini install -g -u @devicescript/cli
 ```
 
 You will have the following files created.
@@ -41,6 +35,12 @@ package.json      projet configuration
 tsconfig.json     configure the TypeScript compiler to compile DeviceScript syntax
 devsconfig.json   configure the DeviceScript compiler with additional flags. Also used by VSCode extension to activate.
 ...
+```
+
+-   start a build watch
+
+```bash
+yarn watch
 ```
 
 -   open `main.ts` and copy the following code
