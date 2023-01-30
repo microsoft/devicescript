@@ -1,20 +1,15 @@
-import {
-    DeviceScriptManagerReg,
-    JDService,
-    semverCmp,
-    Version,
-} from "jacdac-ts"
+import { DeviceScriptManagerReg, JDService, versionTryParse } from "jacdac-ts"
 import * as vscode from "vscode"
 
-export async function readRuntimeVersion(srv: JDService): Promise<Version> {
+export async function readRuntimeVersion(srv: JDService) {
     const runtimeVersion = srv.register(DeviceScriptManagerReg.RuntimeVersion)
     await runtimeVersion.refresh()
     const v = runtimeVersion.unpackedValue
     if (!v) return undefined
-    return v as Version
+    return `v${v[2]}.${v[1]}.${v[0]}`
 }
 
-export async function checkRuntimeVersion(minVersion: Version, srv: JDService) {
+export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     const version = await readRuntimeVersion(srv)
     console.debug(`deploy: version min ${minVersion}, device ${version}`)
     if (version === undefined) {
@@ -24,16 +19,18 @@ export async function checkRuntimeVersion(minVersion: Version, srv: JDService) {
         return false
     }
 
-    const minMajor = minVersion[2]
-    const major = version[2]
-    const minMinor = minVersion[1]
-    const minor = version[1]
-    if (major < minMajor || (major == minMajor && minor < minMinor)) {
+    const vmin = versionTryParse(minVersion)
+    const vcurr = versionTryParse(version)
+
+    if (
+        vcurr.major < vmin.major ||
+        (vcurr.major == vmin.major && vcurr.minor < vmin.minor)
+    ) {
         await vscode.window.showErrorMessage(
             `Deploy cancelled. Your device firmware (${version}) is outdated (min ${minVersion}). Update your firmware.`
         )
         return false
-    } else if (major > minMajor) {
+    } else if (vcurr.major > vmin.major) {
         await vscode.window.showErrorMessage(
             `Deploy cancelled. Your device firmware (${version}) is ahead of the device script tools (${minVersion}). Update your dependencies.`
         )
@@ -53,7 +50,7 @@ export function shouldIgnoreRuntimeVersion() {
  * @param service
  * @returns
  */
-export function checkDeploy(runtimeVersion: Version, service: JDService) {
+export function checkDeploy(runtimeVersion: string, service: JDService) {
     if (!runtimeVersion) {
         vscode.window.showErrorMessage(
             "Deploy cancelled. Developer tools not started."

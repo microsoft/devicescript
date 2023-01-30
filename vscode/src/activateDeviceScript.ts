@@ -490,9 +490,9 @@ export function activateDeviceScript(
             : `Click to pick a DeviceScript device`
         statusBarItem.text = `DeviceScript ${
             runtimeVersion
-                ? `v${runtimeVersion.slice(0).reverse().join(".")} $(play) ${
-                      mgr?.shortId || "???"
-                  } $(${JDeviceTreeItem.ICON}) ${devices.length}`
+                ? `${runtimeVersion} $(play) ${mgr?.shortId || "???"} $(${
+                      JDeviceTreeItem.ICON
+                  }) ${devices.length}`
                 : "..."
         }`
     }
