@@ -145,7 +145,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
     }
 
     int jump_pc = 0;
-    unsigned jump_level;
+    unsigned jump_level = 0;
 
     if (devs_is_special(exn) && devs_handle_is_throw_jmp(devs_handle_value(exn))) {
         jump_pc = devs_handle_decode_throw_jmp_pc(devs_handle_value(exn), &jump_level);

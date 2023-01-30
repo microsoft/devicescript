@@ -8,7 +8,7 @@
 
 #include "jd_sdk.h"
 #include "services/interfaces/jd_flash.h"
-#include "devicescript/devicescript.h"
+#include "devicescript.h"
 
 static devsmgr_cfg_t cfg;
 

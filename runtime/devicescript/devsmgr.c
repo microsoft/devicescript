@@ -5,8 +5,8 @@
 #include "services/interfaces/jd_flash.h"
 #include "jd_client.h"
 #include "jacdac/dist/c/devicescriptmanager.h"
-#include "devicescript/devicescript.h"
-#include "devicescript/devs_bytecode.h"
+#include "devicescript.h"
+#include "devs_bytecode.h"
 
 #define DEVSMGR_ALIGN 32
 

@@ -1,7 +1,7 @@
 #include "services/jd_services.h"
 #include "services/interfaces/jd_flash.h"
 #include "jd_client.h"
-#include "devicescript/devicescript.h"
+#include "devicescript.h"
 
 #ifndef JD_FLASH_IN_SETTINGS
 #define JD_FLASH_IN_SETTINGS 0

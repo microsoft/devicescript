@@ -391,7 +391,7 @@ void *jd_gc_any_try_alloc(devs_gc_t *gc, unsigned tag, uint32_t size) {
     return b;
 }
 
-void *devs_any_try_alloc(devs_ctx_t *ctx, unsigned tag, uint32_t size) {
+void *devs_any_try_alloc(devs_ctx_t *ctx, unsigned tag, unsigned size) {
     void *r = jd_gc_any_try_alloc(ctx->gc, tag, size);
     if (r == NULL)
         devs_oom(ctx, size);
