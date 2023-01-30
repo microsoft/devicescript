@@ -50,12 +50,12 @@ import {
 import { ExtensionState, NodeWatch } from "./state"
 
 class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
-    constructor(readonly updateHtml: () => string) {}
+    constructor(readonly deserialize: (view: vscode.WebviewPanel) => void) {}
     async deserializeWebviewPanel(
         webviewPanel: vscode.WebviewPanel,
         state: any
     ) {
-        webviewPanel.webview.html = this.updateHtml()
+        this.deserialize(webviewPanel)
     }
 }
 
@@ -130,7 +130,10 @@ export function activateDeviceScript(
     }
     vscode.window.registerWebviewPanelSerializer(
         "extension.devicescript.simulators",
-        new SimulatorsSerializer(generateSimulatorsHtml)
+        new SimulatorsSerializer(view => {
+            if (!simulatorsWebviewPanel) simulatorsWebviewPanel = view
+            updateDeveloperToolsPanelUrl()
+        })
     )
 
     // build
