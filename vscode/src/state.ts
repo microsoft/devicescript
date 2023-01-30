@@ -10,6 +10,7 @@ import {
     randomDeviceId,
     shortDeviceId,
     SRV_DEVICE_SCRIPT_MANAGER,
+    Version,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
@@ -31,7 +32,7 @@ export interface NodeWatch {
 
 export class ExtensionState extends JDEventSource {
     version = ""
-    runtimeVersion = ""
+    runtimeVersion: Version
 
     constructor(readonly bus: JDBus, readonly state: vscode.Memento) {
         super()
@@ -112,7 +113,9 @@ export class ExtensionState extends JDEventSource {
                 .register(ControlReg.DeviceDescription)
             await description.refresh(true)
 
-            return `${description.stringValue || ""} (${runtimeVersion || "?"})`
+            return `${description.stringValue || ""} (v${
+                runtimeVersion.slice(0).reverse().join(".") || "?"
+            })`
         }
         const items = await Promise.all(
             services.map(
@@ -132,7 +135,7 @@ export class ExtensionState extends JDEventSource {
             items.push(<DeviceQuickItem>{
                 label: shortDeviceId(this.virtualDeviceScriptManagerId),
                 description: `Virtual Device`,
-                detail: `A virtual DeviceScript interpreter running in a separate process (${this.runtimeVersion})`,
+                detail: `A virtual DeviceScript interpreter running in a separate process (v${this.runtimeVersion.slice(0).reverse().join("."))})`,
                 deviceId: virtualDeviceScriptManagerId,
             })
         }

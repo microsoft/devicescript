@@ -488,9 +488,13 @@ export function activateDeviceScript(
         statusBarItem.tooltip = mgr
             ? `Deploy and Debug on device ${mgr.shortId}`
             : `Click to pick a DeviceScript device`
-        statusBarItem.text = `DeviceScript ${runtimeVersion} $(play) ${
-            mgr?.shortId || "???"
-        } $(${JDeviceTreeItem.ICON}) ${devices.length}`
+        statusBarItem.text = `DeviceScript ${
+            runtimeVersion
+                ? `v${runtimeVersion.slice(0).reverse().join(".")} $(play) ${
+                      mgr?.shortId || "???"
+                  } $(${JDeviceTreeItem.ICON}) ${devices.length}`
+                : "..."
+        }`
     }
     extensionState.on(CHANGE, updateStatusBar)
     bus.on([DEVICE_CHANGE, CONNECTION_STATE], updateStatusBar)
