@@ -11,6 +11,8 @@
 
 #include "interfaces/jd_hw.h"
 
+const char app_dev_class_name[] = "Virtual DeviceScript Brain (native)";
+
 #define LOG(msg, ...) DMESG("%s: " msg, __func__, ##__VA_ARGS__)
 
 uint64_t cached_devid;

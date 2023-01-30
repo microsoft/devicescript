@@ -8,6 +8,8 @@
 #include "devicescript.h"
 #include "storage/jd_storage.h"
 
+const char app_dev_class_name[] = "Virtual DeviceScript Brain (WASM)";
+
 uint64_t cached_devid = 0x1d46a30eef48919;
 static uint8_t inited;
 

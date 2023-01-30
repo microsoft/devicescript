@@ -10,7 +10,6 @@
 
 #include "interfaces/jd_hw.h"
 
-const char app_dev_class_name[] = "jacdac-posix device";
 const char app_fw_version[] = "0.0.0";
 uint32_t app_get_device_class(void) {
     return 0x3fe5b46f;
