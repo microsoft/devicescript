@@ -15,12 +15,7 @@ import {
     serializeToTrace,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import {
-    WorkspaceFolder,
-    DebugConfiguration,
-    ProviderResult,
-    CancellationToken,
-} from "vscode"
+import { WorkspaceFolder, DebugConfiguration, ProviderResult } from "vscode"
 import type {
     SideConnectReq,
     SideOutputEvent,
@@ -28,9 +23,11 @@ import type {
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
-import { build, initBuild } from "./build"
-import { DeviceScriptAdapterServerDescriptorFactory } from "./debuggeradapter"
-import { checkDeviceScriptManagerRuntimeVersion } from "./deploy"
+import { initBuild } from "./build"
+import {
+    DeviceScriptAdapterServerDescriptorFactory,
+    DeviceScriptConfigurationProvider,
+} from "./debugger"
 import {
     spawnDevTools,
     showDevToolsTerminal,
@@ -228,7 +225,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveColorTheme(updateDeveloperToolsPanelUrl)
 
     // register a configuration provider for 'devicescript' debug type
-    const provider = new DeviceScriptConfigurationProvider()
+    const provider = new DeviceScriptConfigurationProvider(extensionState)
     subscriptions.push(
         vscode.debug.registerDebugConfigurationProvider(
             "devicescript",
@@ -246,18 +243,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 ): ProviderResult<DebugConfiguration[]> {
                     return [
                         {
-                            name: "Dynamic Launch",
-                            request: "launch",
-                            type: "devicescript",
-                            program: "${file}",
-                        },
-                        {
-                            name: "Another Dynamic Launch",
-                            request: "launch",
-                            type: "devicescript",
-                            program: "${file}",
-                        },
-                        {
                             name: "devicescript Launch",
                             request: "launch",
                             type: "devicescript",
@@ -271,7 +256,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     )
 
     const debuggerAdapterFactory =
-        new DeviceScriptAdapterServerDescriptorFactory(extensionState)
+        new DeviceScriptAdapterServerDescriptorFactory()
     subscriptions.push(
         vscode.debug.registerDebugAdapterDescriptorFactory(
             "devicescript",
@@ -497,42 +482,6 @@ async function initDevtoolsConnection(state: ExtensionState) {
     state.version = version
     state.runtimeVersion = runtimeVersion
     state.emit(CHANGE)
-}
-
-class DeviceScriptConfigurationProvider
-    implements vscode.DebugConfigurationProvider
-{
-    /**
-     * Massage a debug configuration just before a debug session is being launched,
-     * e.g. add all missing attributes to the debug configuration.
-     */
-    resolveDebugConfiguration(
-        folder: WorkspaceFolder | undefined,
-        config: DebugConfiguration,
-        token?: CancellationToken
-    ): ProviderResult<DebugConfiguration> {
-        // if launch.json is missing or empty
-        if (!config.type && !config.request && !config.name) {
-            const editor = vscode.window.activeTextEditor
-            if (editor && editor.document.languageId === "typescript") {
-                config.type = "devicescript"
-                config.name = "Launch"
-                config.request = "launch"
-                config.program = "${file}"
-                config.stopOnEntry = true
-            }
-        }
-
-        if (!config.program) {
-            return vscode.window
-                .showInformationMessage("Cannot find a program to debug")
-                .then(_ => {
-                    return undefined // abort launch
-                })
-        }
-
-        return config
-    }
 }
 
 /*
