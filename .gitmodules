@@ -1,9 +1,12 @@
 [submodule "jacdac-c"]
 	path = runtime/jacdac-c
-	url = https://github.com/microsoft/jacdac-c
+	url = https://github.com/microsoft/jacdac-c	
 [submodule "runtime/devicescript/sha-2"]
 	path = runtime/devicescript/sha-2
 	url = https://github.com/amosnier/sha-2
+[submodule "runtime/network/tiny-AES-c"]
+	path = runtime/devicescript/network/tiny-AES-c
+	url = https://github.com/kokke/tiny-AES-c	
 [submodule "jacdac-ts"]
 	path = jacdac-ts
 	url = https://github.com/microsoft/jacdac-ts
