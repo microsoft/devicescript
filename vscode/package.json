@@ -384,7 +384,7 @@
       },
       {
         "command": "extension.devicescript.resetDevice",
-        "title": "Identify device",
+        "title": "Reset device",
         "category": "DeviceScript",
         "icon": "$(debug-restart)"
       },
