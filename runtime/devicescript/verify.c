@@ -77,7 +77,7 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     CHECK(1000, header->magic0 == DEVS_MAGIC0 && header->magic1 == DEVS_MAGIC1);
 
     // precise match on major,
-    // bytecode minor should only load if no older than current runtime,
+    // bytecode minor should only load if no newer than current runtime,
     // ignore patch
     if (DEVS_VERSION_MAJOR(header->version) == DEVS_VERSION_MAJOR(DEVS_IMG_VERSION) &&
         DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION)) {

@@ -265,13 +265,13 @@ function startDbgServer(port: number, options: DevToolsOptions) {
     }
 
     const listenHost = options.internet ? undefined : "127.0.0.1"
-    console.log(`  dbgsrv: tcp://localhost:${port}`)
+    console.log(`   dbgsrv: tcp://localhost:${port}`)
     net.createServer(async socket => {
         console.log("got debug server connection")
         if (!client) {
-            console.log("creating dbg client...")
+            console.debug("creating dbg client...")
             client = await DevsDbgClient.fromBus(devtoolsSelf.bus, 10000)
-            console.log("got dbg client")
+            console.debug("got dbg client")
         }
         socket.on("end", () => {
             console.log("debug connection closed")

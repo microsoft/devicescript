@@ -1,13 +1,10 @@
 import {
+    DebugSession,
     InitializedEvent,
-    Logger,
-    logger,
-    LoggingDebugSession,
     OutputEvent,
     StoppedEvent,
     TerminatedEvent,
 } from "@vscode/debugadapter"
-import { LogLevel } from "@vscode/debugadapter/lib/logger"
 import { DebugProtocol } from "@vscode/debugprotocol"
 import {
     DevsDbgClient,
@@ -62,15 +59,7 @@ for (const k0 of Object.keys(varTypeStrToNum)) {
     varTypeNumToStr[varTypeStrToNum[k]] = k
 }
 
-export function enableConsoleLog() {
-    const origLog = Logger.logger.log.bind(Logger.logger)
-    Logger.logger.log = (msg, level) => {
-        origLog(msg, level)
-        if (level > Logger.LogLevel.Verbose) console.log(msg.trim())
-    }
-}
-
-export class DsDapSession extends LoggingDebugSession {
+export class DsDapSession extends DebugSession {
     private clearSusp: () => void
     private brkBySrc: number[][] = []
 
@@ -88,15 +77,9 @@ export class DsDapSession extends LoggingDebugSession {
         this.setDebuggerLinesStartAt1(true)
         this.setDebuggerColumnsStartAt1(true)
 
-        process
-            .on("unhandledRejection", (reason, promise) => {
-                logger.error("Unhandled Rejection: " + exnToString(reason))
-                process.exit(1)
-            })
-            .on("uncaughtException", err => {
-                logger.error("Uncaught Exception: " + exnToString(err))
-                process.exit(1)
-            })
+        this.on("error", (event: DebugProtocol.Event) => {
+            this.sendLog("proto-error", event.body)
+        })
     }
 
     dispose() {
@@ -151,9 +134,6 @@ export class DsDapSession extends LoggingDebugSession {
         args: StartArgs,
         isLaunch: boolean
     ) {
-        logger.init(e => this.sendEvent(e))
-        logger.setup(LogLevel.Verbose)
-
         if (!this.clearSusp)
             this.clearSusp = this.client.subscribe(EV_SUSPENDED, () => {
                 const type = this.client.suspensionReason
@@ -255,7 +235,7 @@ export class DsDapSession extends LoggingDebugSession {
             }
             const fr = this.client.getValueByIndex(args.frameId)
             if (!fr?.stackFrame) {
-                logger.warn(`no stackframe on ${args.frameId}?`)
+                this.warn(`no stackframe on ${args.frameId}?`)
                 return
             }
 
@@ -636,5 +616,74 @@ export class DsDapSession extends LoggingDebugSession {
             s => s.path == src.path || this.resolvePath(s) == src.path
         )
         return srcIdx
+    }
+
+    //
+    // Logging
+    //
+
+    public sendLog(msg: string, data?: any, cat = "console") {
+        if (data !== undefined) msg += " " + JSON.stringify(data)
+        msg += "\n"
+        this.sendEvent(new DsLogOutputEvent(msg, data))
+    }
+
+    public warn(msg: string, data?: any) {
+        this.sendLog(msg, data, "warn")
+    }
+
+    public sendEvent(event: DebugProtocol.Event): void {
+        if (!(event instanceof DsLogOutputEvent)) {
+            // Don't create an infinite loop...
+
+            let objectToLog = event
+            if (
+                event instanceof OutputEvent &&
+                event.body &&
+                event.body.data &&
+                event.body.data.doNotLogOutput
+            ) {
+                delete event.body.data.doNotLogOutput
+                objectToLog = { ...event }
+                objectToLog.body = {
+                    ...event.body,
+                    output: "<output not logged>",
+                }
+            }
+
+            this.sendLog(`SRV: EV ${event.event}`, objectToLog.body)
+        }
+
+        super.sendEvent(event)
+    }
+
+    // this is not really used
+    public sendRequest(
+        command: string,
+        args: any,
+        timeout: number,
+        cb: (response: DebugProtocol.Response) => void
+    ): void {
+        this.sendLog(`SRV: ${command}`, args)
+        super.sendRequest(command, args, timeout, cb)
+    }
+
+    public sendResponse(response: DebugProtocol.Response): void {
+        this.sendLog(
+            `SRV: ${response.success ? "" : "ERR "}${response.command}`,
+            response.body
+        )
+        super.sendResponse(response)
+    }
+
+    protected dispatchRequest(request: DebugProtocol.Request): void {
+        this.sendLog(`VSCode: ${request.command}`, request.arguments)
+        super.dispatchRequest(request)
+    }
+}
+
+class DsLogOutputEvent extends OutputEvent {
+    constructor(msg: string, data: any, cat = "console") {
+        super(msg, cat, data)
     }
 }

@@ -387,6 +387,6 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     private xlog(...args: any[]) {
-        console.log("DDBG:", ...args)
+        console.debug("DDBG:", ...args)
     }
 }
