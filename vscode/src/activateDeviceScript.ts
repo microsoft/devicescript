@@ -15,12 +15,7 @@ import {
     serializeToTrace,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import {
-    WorkspaceFolder,
-    DebugConfiguration,
-    ProviderResult,
-    CancellationToken,
-} from "vscode"
+import { WorkspaceFolder, DebugConfiguration, ProviderResult } from "vscode"
 import type {
     SideConnectReq,
     SideOutputEvent,
@@ -28,7 +23,11 @@ import type {
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
-import { build, initBuild } from "./build"
+import { initBuild } from "./build"
+import {
+    DeviceScriptAdapterServerDescriptorFactory,
+    DeviceScriptConfigurationProvider,
+} from "./debugger"
 import {
     spawnDevTools,
     showDevToolsTerminal,
@@ -49,19 +48,16 @@ import {
 import { ExtensionState, NodeWatch } from "./state"
 
 class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
-    constructor(readonly updateHtml: () => string) {}
+    constructor(readonly deserialize: (view: vscode.WebviewPanel) => void) {}
     async deserializeWebviewPanel(
         webviewPanel: vscode.WebviewPanel,
         state: any
     ) {
-        webviewPanel.webview.html = this.updateHtml()
+        this.deserialize(webviewPanel)
     }
 }
 
-export function activateDeviceScript(
-    context: vscode.ExtensionContext,
-    factory?: vscode.DebugAdapterDescriptorFactory
-) {
+export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, workspaceState, extensionMode } = context
     const debugConfig = vscode.workspace.getConfiguration(
         "devicescript.debugger"
@@ -129,75 +125,15 @@ export function activateDeviceScript(
     }
     vscode.window.registerWebviewPanelSerializer(
         "extension.devicescript.simulators",
-        new SimulatorsSerializer(generateSimulatorsHtml)
+        new SimulatorsSerializer(view => {
+            if (!simulatorsWebviewPanel) simulatorsWebviewPanel = view
+            updateDeveloperToolsPanelUrl()
+        })
     )
 
     // build
     initBuild()
     subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.runEditorContents",
-            async (resource: vscode.Uri) => {
-                let targetResource = resource
-                if (!targetResource && vscode.window.activeTextEditor) {
-                    targetResource = vscode.window.activeTextEditor.document.uri
-                }
-                if (targetResource) {
-                    const service =
-                        await extensionState.resolveDeviceScriptManager()
-                    if (!service) {
-                        vscode.window.showWarningMessage(
-                            "No DeviceScript device found."
-                        )
-                        return
-                    }
-
-                    await vscode.window.activeTextEditor?.document?.save()
-                    await build(targetResource.fsPath, service.device.deviceId)
-                }
-            }
-        ),
-        vscode.commands.registerCommand(
-            "extension.devicescript.debugEditorContents",
-            async (resource: vscode.Uri) => {
-                let targetResource = resource
-                if (!targetResource && vscode.window.activeTextEditor) {
-                    targetResource = vscode.window.activeTextEditor.document.uri
-                }
-                if (targetResource) {
-                    const service =
-                        await extensionState.resolveDeviceScriptManager()
-                    if (!service) {
-                        vscode.window.showWarningMessage(
-                            "No DeviceScript device found."
-                        )
-                        return
-                    }
-                    if (
-                        await build(
-                            targetResource.fsPath,
-                            service.device.deviceId
-                        )
-                    ) {
-                        vscode.debug.startDebugging(undefined, {
-                            type: "devicescript",
-                            name: "Debug File",
-                            request: "launch",
-                            program: targetResource.fsPath,
-                            stopOnEntry: true,
-                        })
-                        if (debugConfig.get("showOutputOnStart"))
-                            vscode.commands.executeCommand(
-                                "extension.devicescript.showOutput"
-                            )
-                        if (debugConfig.get("showDevToolsOnStart"))
-                            vscode.commands.executeCommand(
-                                "extension.devicescript.openSimulators"
-                            )
-                    }
-                }
-            }
-        ),
         vscode.commands.registerCommand(
             "extension.devicescript.toggleFormatting",
             variable => {
@@ -289,7 +225,7 @@ export function activateDeviceScript(
     vscode.window.onDidChangeActiveColorTheme(updateDeveloperToolsPanelUrl)
 
     // register a configuration provider for 'devicescript' debug type
-    const provider = new DeviceScriptConfigurationProvider()
+    const provider = new DeviceScriptConfigurationProvider(extensionState)
     subscriptions.push(
         vscode.debug.registerDebugConfigurationProvider(
             "devicescript",
@@ -307,18 +243,6 @@ export function activateDeviceScript(
                 ): ProviderResult<DebugConfiguration[]> {
                     return [
                         {
-                            name: "Dynamic Launch",
-                            request: "launch",
-                            type: "devicescript",
-                            program: "${file}",
-                        },
-                        {
-                            name: "Another Dynamic Launch",
-                            request: "launch",
-                            type: "devicescript",
-                            program: "${file}",
-                        },
-                        {
                             name: "devicescript Launch",
                             request: "launch",
                             type: "devicescript",
@@ -331,15 +255,15 @@ export function activateDeviceScript(
         )
     )
 
+    const debuggerAdapterFactory =
+        new DeviceScriptAdapterServerDescriptorFactory()
     subscriptions.push(
         vscode.debug.registerDebugAdapterDescriptorFactory(
             "devicescript",
-            factory
+            debuggerAdapterFactory
         )
     )
-    if ("dispose" in factory) {
-        subscriptions.push(factory as any)
-    }
+    subscriptions.push(debuggerAdapterFactory)
 
     const output = vscode.window.createOutputChannel("DeviceScript", {
         log: true,
@@ -493,9 +417,13 @@ export function activateDeviceScript(
         statusBarItem.tooltip = mgr
             ? `Deploy and Debug on device ${mgr.shortId}`
             : `Click to pick a DeviceScript device`
-        statusBarItem.text = `DeviceScript ${runtimeVersion} $(play) ${
-            mgr?.shortId || "???"
-        } $(${JDeviceTreeItem.ICON}) ${devices.length}`
+        statusBarItem.text = `DeviceScript ${
+            runtimeVersion
+                ? `${runtimeVersion} $(play) ${mgr?.shortId || "???"} $(${
+                      JDeviceTreeItem.ICON
+                  }) ${devices.length}`
+                : "..."
+        }`
     }
     extensionState.on(CHANGE, updateStatusBar)
     bus.on([DEVICE_CHANGE, CONNECTION_STATE], updateStatusBar)
@@ -554,42 +482,6 @@ async function initDevtoolsConnection(state: ExtensionState) {
     state.version = version
     state.runtimeVersion = runtimeVersion
     state.emit(CHANGE)
-}
-
-class DeviceScriptConfigurationProvider
-    implements vscode.DebugConfigurationProvider
-{
-    /**
-     * Massage a debug configuration just before a debug session is being launched,
-     * e.g. add all missing attributes to the debug configuration.
-     */
-    resolveDebugConfiguration(
-        folder: WorkspaceFolder | undefined,
-        config: DebugConfiguration,
-        token?: CancellationToken
-    ): ProviderResult<DebugConfiguration> {
-        // if launch.json is missing or empty
-        if (!config.type && !config.request && !config.name) {
-            const editor = vscode.window.activeTextEditor
-            if (editor && editor.document.languageId === "typescript") {
-                config.type = "devicescript"
-                config.name = "Launch"
-                config.request = "launch"
-                config.program = "${file}"
-                config.stopOnEntry = true
-            }
-        }
-
-        if (!config.program) {
-            return vscode.window
-                .showInformationMessage("Cannot find a program to debug")
-                .then(_ => {
-                    return undefined // abort launch
-                })
-        }
-
-        return config
-    }
 }
 
 /*
