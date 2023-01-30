@@ -7,7 +7,7 @@
 #include <assert.h>
 
 #include "jd_sdk.h"
-#include "devicescript/devicescript.h"
+#include "devicescript.h"
 #include "storage/jd_storage.h"
 
 #define LOG_TAG "main"

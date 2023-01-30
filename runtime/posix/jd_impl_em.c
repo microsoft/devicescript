@@ -5,7 +5,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <emscripten/emscripten.h>
-#include "devicescript/devicescript.h"
+#include "devicescript.h"
 #include "storage/jd_storage.h"
 
 uint64_t cached_devid = 0x1d46a30eef48919;
