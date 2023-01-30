@@ -185,10 +185,6 @@ export function activateDeviceScript(
                             vscode.commands.executeCommand(
                                 "extension.devicescript.showOutput"
                             )
-                        if (debugConfig.get("showDevToolsOnStart"))
-                            vscode.commands.executeCommand(
-                                "extension.devicescript.openSimulators"
-                            )
                     }
                 }
             }

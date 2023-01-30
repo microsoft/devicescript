@@ -115,11 +115,6 @@
           "default": true,
           "description": "Show DeviceScript output when starting debug session."
         },
-        "devicescript.debugger.showDevToolsOnStart": {
-          "type": "boolean",
-          "default": true,
-          "description": "Open DeviceScript Developer Tools pane when starting debug session."
-        },
         "devicescript.virtualDevice.nativePath": {
           "type": "string",
           "default": "",
