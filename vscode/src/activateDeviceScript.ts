@@ -29,7 +29,8 @@ import type {
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { build, initBuild } from "./build"
-import { checkDeploy } from "./deploy"
+import { DeviceScriptAdapterServerDescriptorFactory } from "./debuggeradapter"
+import { checkDeviceScriptManagerRuntimeVersion } from "./deploy"
 import {
     spawnDevTools,
     showDevToolsTerminal,
@@ -59,10 +60,7 @@ class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
     }
 }
 
-export function activateDeviceScript(
-    context: vscode.ExtensionContext,
-    factory?: vscode.DebugAdapterDescriptorFactory
-) {
+export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, workspaceState, extensionMode } = context
     const debugConfig = vscode.workspace.getConfiguration(
         "devicescript.debugger"
@@ -139,56 +137,6 @@ export function activateDeviceScript(
     // build
     initBuild()
     subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.runEditorContents",
-            async (resource: vscode.Uri) => {
-                let targetResource = resource
-                if (!targetResource && vscode.window.activeTextEditor) {
-                    targetResource = vscode.window.activeTextEditor.document.uri
-                }
-                if (targetResource) {
-                    const service =
-                        await extensionState.resolveDeviceScriptManager()
-                    if (!checkDeploy(extensionState.runtimeVersion, service))
-                        return
-                    await vscode.window.activeTextEditor?.document?.save()
-                    await build(targetResource.fsPath, service.device.deviceId)
-                }
-            }
-        ),
-        vscode.commands.registerCommand(
-            "extension.devicescript.debugEditorContents",
-            async (resource: vscode.Uri) => {
-                let targetResource = resource
-                if (!targetResource && vscode.window.activeTextEditor) {
-                    targetResource = vscode.window.activeTextEditor.document.uri
-                }
-                if (targetResource) {
-                    const service =
-                        await extensionState.resolveDeviceScriptManager()
-                    if (!checkDeploy(extensionState.runtimeVersion, service))
-                        return
-                    if (
-                        await build(
-                            targetResource.fsPath,
-                            service.device.deviceId
-                        )
-                    ) {
-                        vscode.debug.startDebugging(undefined, {
-                            type: "devicescript",
-                            name: "Debug File",
-                            request: "launch",
-                            program: targetResource.fsPath,
-                            stopOnEntry: true,
-                        })
-                        if (debugConfig.get("showOutputOnStart"))
-                            vscode.commands.executeCommand(
-                                "extension.devicescript.showOutput"
-                            )
-                    }
-                }
-            }
-        ),
         vscode.commands.registerCommand(
             "extension.devicescript.toggleFormatting",
             variable => {
@@ -322,15 +270,15 @@ export function activateDeviceScript(
         )
     )
 
+    const debuggerAdapterFactory =
+        new DeviceScriptAdapterServerDescriptorFactory(extensionState)
     subscriptions.push(
         vscode.debug.registerDebugAdapterDescriptorFactory(
             "devicescript",
-            factory
+            debuggerAdapterFactory
         )
     )
-    if ("dispose" in factory) {
-        subscriptions.push(factory as any)
-    }
+    subscriptions.push(debuggerAdapterFactory)
 
     const output = vscode.window.createOutputChannel("DeviceScript", {
         log: true,

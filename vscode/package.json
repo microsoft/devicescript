@@ -257,27 +257,7 @@
           "group": "inline"
         }
       ],
-      "editor/title/run": [
-        {
-          "command": "extension.devicescript.runEditorContents",
-          "when": "resourceLangId == typescript",
-          "group": "navigation@1"
-        },
-        {
-          "command": "extension.devicescript.debugEditorContents",
-          "when": "resourceLangId == typescript",
-          "group": "navigation@2"
-        }
-      ],
       "commandPalette": [
-        {
-          "command": "extension.devicescript.debugEditorContents",
-          "when": "resourceLangId == typescript"
-        },
-        {
-          "command": "extension.devicescript.runEditorContents",
-          "when": "resourceLangId == typescript"
-        },
         {
           "command": "extension.devicescript.openSimulators"
         },
@@ -305,20 +285,6 @@
       ]
     },
     "commands": [
-      {
-        "command": "extension.devicescript.debugEditorContents",
-        "title": "Deploy and Debug with DeviceScript",
-        "category": "DeviceScript",
-        "enablement": "!inDebugMode",
-        "icon": "$(debug-alt)"
-      },
-      {
-        "command": "extension.devicescript.runEditorContents",
-        "title": "Deploy and Run with DeviceScript",
-        "category": "DeviceScript",
-        "enablement": "!inDebugMode",
-        "icon": "$(play)"
-      },
       {
         "command": "extension.devicescript.showServerTerminal",
         "title": "Show Development Server Terminal",

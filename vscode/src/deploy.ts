@@ -50,7 +50,7 @@ export function shouldIgnoreRuntimeVersion() {
  * @param service
  * @returns
  */
-export function checkDeploy(runtimeVersion: string, service: JDService) {
+export function checkDeviceScriptManagerRuntimeVersion(runtimeVersion: string, service: JDService) {
     if (!runtimeVersion) {
         vscode.window.showErrorMessage(
             "Deploy cancelled. Developer tools not started."
