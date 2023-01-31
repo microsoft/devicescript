@@ -256,7 +256,10 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 
 ## Format Constants
 
-    img_version = 0x04_04_0000
+    img_version_major = 4
+    img_version_minor = 4
+    img_version_patch = 0
+    img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9

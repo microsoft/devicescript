@@ -100,7 +100,7 @@ function processSpec(filecontent: string): Spec {
     }
 
     finish()
-
+    expandEnums()
     checkCont(res.ops)
 
     if (hasErrors) throw new Error()
@@ -253,7 +253,7 @@ function processSpec(filecontent: string): Spec {
                 lineTr = lineTr.slice(6).trim()
             }
             let m =
-                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*([\d_]+|0[bB][01_]+|0[Xx][a-fA-F0-9_]+|\?)\s*(\/\/\s*(.*))?$/.exec(
+                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*([\d_]+|0[bB][01_]+|0[Xx][a-fA-F0-9_]+|\?|\$\w+)\s*(\/\/\s*(.*))?$/.exec(
                     lineTr
                 )
             if (!m) {
@@ -316,6 +316,36 @@ function processSpec(filecontent: string): Spec {
         if (currObj?.description)
             currObj.description = currObj.description.trim()
         if (currObj) computePrintFmt(currObj)
+    }
+
+    function expandEnums() {
+        function enumField(en: string, fld: string, lineNo?: number) {
+            const e = res.enums[en]?.find(e => e.name == fld)
+            if (e == undefined || parseInt(e.code) === undefined) {
+                error(`${en}.${fld} not found`, lineNo)
+                return 0
+            }
+            return +e.code
+        }
+
+        for (const en of Object.keys(res.enums)) {
+            for (const ent of Object.values(res.enums[en])) {
+                const lk = (suff: string) =>
+                    enumField(en, ent.name + "_" + suff, ent.lineNo)
+                if (ent.code == "$version") {
+                    ent.code =
+                        "0x" +
+                        (
+                            (lk("major") << 24) |
+                            (lk("minor") << 16) |
+                            lk("patch")
+                        ).toString(16)
+                }
+                if (ent.code?.[0] == "$") {
+                    error(`undefined function ${ent.code}`, ent.lineNo)
+                }
+            }
+        }
     }
 }
 

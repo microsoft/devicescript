@@ -104,7 +104,10 @@
     "\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
     "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x08"
 
-#define DEVS_IMG_VERSION 0x04040000
+#define DEVS_IMG_VERSION_MAJOR 4
+#define DEVS_IMG_VERSION_MINOR 4
+#define DEVS_IMG_VERSION_PATCH 0
+#define DEVS_IMG_VERSION 0x4040000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 9

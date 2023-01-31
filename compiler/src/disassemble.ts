@@ -15,6 +15,7 @@ import {
     OP_PRINT_FMTS,
     PacketSpecCode,
     PacketSpecFlag,
+    parseImgVersion,
     stmtIsFinal,
     StrIdx,
 } from "./format"
@@ -536,9 +537,16 @@ export class Image {
             this.error(`invalid magic`)
             return
         }
-        if (read32(img, 8) != BinFmt.IMG_VERSION) {
+
+        const v = parseImgVersion(read32(img, 8))
+        if (
+            v.major != BinFmt.IMG_VERSION_MAJOR ||
+            v.minor > BinFmt.IMG_VERSION_MINOR
+        ) {
             this.error(
-                `invalid version ${read32(img, 8)} (exp: ${BinFmt.IMG_VERSION})`
+                `invalid version ${read32(img, 8).toString(
+                    16
+                )} (exp: ${BinFmt.IMG_VERSION.toString(16)})`
             )
             return
         }
