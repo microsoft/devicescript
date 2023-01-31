@@ -44,7 +44,13 @@ export function opIsStmt(op: Op) {
 }
 
 export function exprIsStateful(op: Op) {
-    return !(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
+    return (
+        opIsStmt(op) || !(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
+    )
+}
+
+export function stmtIsFinal(op: Op) {
+    return opIsStmt(op) && OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_FINAL_STMT
 }
 
 export interface InstrArgResolver {

@@ -12,6 +12,7 @@ interface OpCode {
     comment2?: string
     isExpr?: boolean
     isFun?: boolean
+    isFinal?: boolean
     takesNumber?: boolean
 }
 interface SMap<T> {
@@ -246,6 +247,11 @@ function processSpec(filecontent: string): Spec {
                 isFun = true
                 lineTr = lineTr.slice(4).trim()
             }
+            let isFinal = undefined
+            if (lineTr.startsWith("final ")) {
+                isFinal = true
+                lineTr = lineTr.slice(6).trim()
+            }
             let m =
                 /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*([\d_]+|0[bB][01_]+|0[Xx][a-fA-F0-9_]+|\?)\s*(\/\/\s*(.*))?$/.exec(
                     lineTr
@@ -269,6 +275,14 @@ function processSpec(filecontent: string): Spec {
                 _cmt,
                 comment,
             ] = m
+            if (rettype && isFinal) {
+                error("only stmts can be final")
+                return
+            }
+            if (!rettype && isFun) {
+                error("no ret type on fun")
+                return
+            }
             let args: string[] = []
             if (args_str) args = args_str.split(/,\s*/).filter(s => !!s.trim())
             finish()
@@ -279,6 +293,7 @@ function processSpec(filecontent: string): Spec {
                 comment,
                 rettype: rettype || "void",
                 isFun,
+                isFinal,
                 lineNo,
             }
             if (args[0] && args[0][0] == "*") {
@@ -466,6 +481,7 @@ function opcodeProps(obj: OpCode) {
         r |= lookupEnum("BytecodeFlag", "takes_number")
     }
     if (obj.isFun) r |= lookupEnum("BytecodeFlag", "is_stateless")
+    if (obj.isFinal) r |= lookupEnum("BytecodeFlag", "is_final_stmt")
     if (!obj.isExpr) r |= lookupEnum("BytecodeFlag", "is_stmt")
     if (r == undefined) throw new Error()
     return r
