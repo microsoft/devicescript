@@ -33,6 +33,7 @@ export type RefreshFunction = (item: JDomTreeItem) => void
 export interface TreeItemProps {
     refresh: RefreshFunction
     command: vscode.Command
+    state: ExtensionState
     idPrefix?: string
     fullName?: boolean
 }
@@ -141,8 +142,10 @@ export class JDeviceTreeItem extends JDomTreeItem {
     }
 
     protected handleChange() {
-        const { device } = this
-        const { bus, friendlyName } = device
+        const { device, props } = this
+        const { state } = props
+        const { bus, friendlyName, deviceId } = device
+        const { virtualDeviceScriptManagerId } = state
 
         if (!bus) {
             this.unmount()
@@ -150,6 +153,8 @@ export class JDeviceTreeItem extends JDomTreeItem {
         }
 
         this.label = friendlyName
+        if (deviceId === virtualDeviceScriptManagerId)
+            this.label += " (virtual device)"
         if (!this.description) {
             const services = device.services({ mixins: false })
             const serviceNames = services
@@ -444,6 +449,7 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
             refresh,
             idPrefix: this.idPrefix,
             command: this.command,
+            state: this.state,
         }
         const devices = this.bus.devices({
             ignoreInfrastructure: !this.showInfrastructure,
@@ -454,12 +460,8 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
 }
 
 export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
-    constructor(
-        bus: JDBus,
-        extensionState: ExtensionState,
-        command: vscode.Command
-    ) {
-        super(bus, extensionState, command, "watch:")
+    constructor(bus: JDBus, state: ExtensionState, command: vscode.Command) {
+        super(bus, state, command, "watch:")
         this.state.on(CHANGE, this.refresh.bind(this))
     }
 
@@ -470,6 +472,7 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
             fullName: true,
             idPrefix: this.idPrefix,
             command: this.command,
+            state: this.state,
         }
         const watches = this.state.watches()
         const items = watches.map(
