@@ -133,6 +133,9 @@ export class JDomTreeItem extends vscode.TreeItem {
 export class JDeviceTreeItem extends JDomTreeItem {
     constructor(device: JDDevice, props: TreeItemProps) {
         super(device, props)
+
+        if (device.deviceId === this.props.state.simulatorScriptManagerId)
+            this.contextValue = "simulator"
     }
 
     static ICON = "circuit-board"
@@ -153,8 +156,7 @@ export class JDeviceTreeItem extends JDomTreeItem {
         }
 
         this.label = friendlyName
-        if (deviceId === simulatorScriptManagerId)
-            this.label += " (simulator)"
+        if (deviceId === simulatorScriptManagerId) this.label += " (simulator)"
         if (!this.description) {
             const services = device.services({ mixins: false })
             const serviceNames = services

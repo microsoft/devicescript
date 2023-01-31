@@ -364,7 +364,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             "extension.devicescript.stopSimulator",
             async () => {
                 await spawnDevTools(context)
-                // TODO wait till ready
                 await extensionState.stopSimulator()
             }
         ),
