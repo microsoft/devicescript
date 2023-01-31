@@ -88,8 +88,10 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     callee->caller = fiber->activation;
     callee->func = func;
 
+    devs_activation_t *caller = fiber->activation;
+
     // if fiber already activated, move the activation pointer
-    if (fiber->activation) {
+    if (caller) {
         devs_fiber_activate(fiber, callee);
     } else {
         fiber->activation = callee;
@@ -98,6 +100,10 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_null(callee->slots[0])) {
         devs_map_t *m = devs_map_try_alloc(ctx, devs_get_prototype_field(ctx, fn));
         callee->slots[0] = devs_value_from_gc_obj(ctx, m);
+    }
+
+    if (ctx->dbg_en && ctx->step_fn == caller && (ctx->step_flags & DEVS_CTX_STEP_IN)) {
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
     }
 
     return 0;
@@ -134,11 +140,11 @@ static void log_fiber_op(devs_fiber_t *fiber, const char *op) {
 
 void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
     devs_ctx_t *ctx = fiber->ctx;
-    act->maxpc = 0; // protect against re-activation
     if (act->caller) {
         if (devs_is_null(fiber->ret_val) && (act->func->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
             fiber->ret_val = act->slots[0];
         devs_fiber_activate(fiber, act->caller);
+        act->maxpc = 0; // protect against re-activation
         // act may survive as a closure past the caller intended lifetime
         act->caller = NULL;
     } else {
@@ -150,7 +156,12 @@ void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
             log_fiber_op(fiber, "free");
             devs_fiber_yield(ctx);
             free_fiber(fiber);
+            return;
         }
+    }
+
+    if (ctx->dbg_en && ctx->step_fn == act && (ctx->step_flags & DEVS_CTX_STEP_OUT)) {
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
     }
 }
 

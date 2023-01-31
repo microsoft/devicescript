@@ -15,6 +15,7 @@ import {
     OP_PRINT_FMTS,
     PacketSpecCode,
     PacketSpecFlag,
+    stmtIsFinal,
     StrIdx,
 } from "./format"
 import { DebugInfo, FunctionDebugInfo, RoleDebugInfo } from "./info"
@@ -40,13 +41,14 @@ export class ImgRole {
     ) {}
 }
 
-class OpTree {
+export class OpTree {
     args: OpTree[] = undefined
     intArg: number = undefined
     constructor(public opcode: number) {}
 }
 
-class OpStmt extends OpTree {
+export class OpStmt extends OpTree {
+    index: number
     pc: number
     pcEnd: number
     srcPos: number
@@ -62,6 +64,7 @@ export class ImgFunction {
     numTryFrames: number
     imgOffset: number
     dbg: FunctionDebugInfo
+    private stmtsCache: OpStmt[]
 
     get numLocals() {
         return this.numSlots - this.numArgs
@@ -132,8 +135,19 @@ export class ImgFunction {
             r += `  locals: ${range(this.numLocals).map(i => "loc" + i)}\n`
 
         const stmts = this.parseBytecode()
+        const srcmap = this.parent.srcmap
+        let prevPos = ""
+
         for (const stmt of stmts) {
             let res = stringifyInstr(stmt, resolver)
+            const pos =
+                srcmap && stmt.srcPos
+                    ? srcmap.posToString(stmt.srcPos).replace(/.*\//, "")
+                    : ""
+            if (pos && pos != prevPos) {
+                res = "//                           " + pos + "\n" + res
+                prevPos = pos
+            }
             if (verbose) {
                 res += " // " + toHex(this.bytecode.slice(stmt.pc, stmt.pcEnd))
             }
@@ -143,13 +157,66 @@ export class ImgFunction {
         return r
     }
 
+    toStmts() {
+        if (!this.stmtsCache) this.stmtsCache = this.parseBytecode(true)
+        return this.stmtsCache
+    }
+
+    stmtByGlobalPc(pc: number) {
+        pc -= this.imgOffset
+        if (pc < 0 || pc > this.bytecode.length)
+            throw new Error("pc out of range")
+        const stmts = this.toStmts()
+        for (let i = 0; i < stmts.length; ++i) {
+            const s = stmts[i]
+            if (s.pc <= pc && pc < s.pcEnd) return s
+        }
+        throw new Error("pc not found?")
+    }
+
+    findZoneExits(start: OpStmt, inZone: (s: OpStmt) => boolean) {
+        const stmts = this.toStmts()
+        const exits: OpStmt[] = []
+        assert(stmts[start.index] === start)
+        assert(inZone(start))
+        const visited: boolean[] = []
+        find(start.index)
+        return exits
+
+        function find(idx: number): void {
+            if (visited[idx]) return
+            visited[idx] = true
+            const s = stmts[idx]
+            const zone = inZone(s)
+            // console.log(`visit ${s.pc} ${zone ? "zone" : "exit"}`)
+            if (zone) {
+                if (s.jmpTrg) {
+                    if (stmtIsFinal(s.opcode)) {
+                        return find(s.jmpTrg.index)
+                    } else if (s.opcode == Op.STMTx1_JMP_Z) {
+                        find(idx + 1)
+                        return find(s.jmpTrg.index)
+                    } else {
+                        throw new Error("unknown jump")
+                    }
+                } else {
+                    if (!stmtIsFinal(s.opcode)) return find(idx + 1)
+                }
+            } else {
+                exits.push(s)
+            }
+        }
+    }
+
     private parseBytecode(throwOnError = false) {
         const stmts = parseBytecode(this.bytecode, throwOnError)
         const srcmap = this.parent.srcmap
         if (srcmap)
             for (const stmt of stmts) {
                 if (!stmt.error) {
-                    const [pos, len] = srcmap.resolvePc(stmt.pc)
+                    const [pos, len] = srcmap.resolvePc(
+                        this.imgOffset + stmt.pc
+                    )
                     stmt.srcPos = pos
                     stmt.srcLen = len
                 }
@@ -191,6 +258,7 @@ export function parseBytecode(bytecode: Uint8Array, throwOnError = false) {
                 stmt.intArg = trg
             }
 
+            stmt.index = stmts.length
             stmts.push(stmt)
             byPc[stmt.pc] = stmt
         } catch (e) {

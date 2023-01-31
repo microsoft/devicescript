@@ -7,6 +7,7 @@ import {
 import { ExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { JDBus, SRV_DEVICE_SCRIPT_MANAGER } from "jacdac-ts"
+import type { StartArgs } from "@devicescript/dap"
 
 export class DeviceScriptAdapterServerDescriptorFactory
     implements vscode.DebugAdapterDescriptorFactory
@@ -28,18 +29,6 @@ export class DeviceScriptAdapterServerDescriptorFactory
     dispose() {}
 }
 
-export interface DeviceScriptDebugConfiguration
-    extends vscode.DebugConfiguration {
-    /**
-     * Device idenfier of the device manager device
-     */
-    deviceId?: string
-    /**
-     * Instance index of the device manager service. Default is 0
-     */
-    serviceIndex?: number
-}
-
 export class DeviceScriptConfigurationProvider
     implements vscode.DebugConfigurationProvider
 {
@@ -53,7 +42,7 @@ export class DeviceScriptConfigurationProvider
         if (token?.isCancellationRequested) return undefined
 
         // find device
-        const dsConfig = config as DeviceScriptDebugConfiguration
+        const dsConfig = config as StartArgs
         if (!dsConfig.deviceId) {
             const service =
                 await this.extensionState.resolveDeviceScriptManager()
@@ -86,7 +75,7 @@ export class DeviceScriptConfigurationProvider
         // find service
         const service = this.bus.device(dsConfig.deviceId, true)?.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
-        })?.[dsConfig.serviceIndex || 0]
+        })?.[dsConfig.serviceInstance || 0]
         if (!service) {
             vscode.window.showErrorMessage(
                 `Debug cancelled. Could not find device ${dsConfig.deviceId}.`

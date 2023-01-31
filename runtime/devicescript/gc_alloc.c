@@ -232,6 +232,14 @@ static inline bool can_free(uintptr_t header) {
            (tag & (DEVS_GC_TAG_MASK_SCANNED | DEVS_GC_TAG_MASK_PINNED)) == 0;
 }
 
+static void clear_weak_pointers(devs_ctx_t *ctx) {
+    if (!ctx)
+        return;
+
+    if (ctx->step_fn && can_free(ctx->step_fn->gc.header))
+        ctx->step_fn = NULL;
+}
+
 static void sweep(devs_gc_t *gc) {
     int sweep = 0;
     block_t *prev = NULL;
@@ -284,8 +292,10 @@ static void sweep(devs_gc_t *gc) {
         }
         if (sweep)
             break;
-        if (!had_pending)
+        if (!had_pending) {
+            clear_weak_pointers(gc->ctx);
             sweep = 1;
+        }
     }
 }
 

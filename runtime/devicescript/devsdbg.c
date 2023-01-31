@@ -547,6 +547,42 @@ static void read_bytes(cmd_t *cmd) {
     }
 }
 
+static void resume_cmd(cmd_t *cmd) {
+    cmd->state->suspended = 0;
+    if (cmd->ctx)
+        devs_vm_resume(cmd->ctx);
+}
+
+static void step_cmd(cmd_t *cmd) {
+    devs_ctx_t *ctx = cmd->ctx;
+
+    if (ctx) {
+        jd_devs_dbg_step_t *args = (void *)cmd->pkt->data;
+        value_t stv = gcref_to_value(ctx, args->stackframe);
+        devs_activation_t *frame = devs_value_to_gc_obj(ctx, stv);
+
+        if (devs_gc_tag(frame) != DEVS_GC_TAG_ACTIVATION) {
+            DMESG("! step frame %x", args->stackframe);
+            return;
+        }
+
+        unsigned numbrk = (cmd->pkt->service_size - 8) / sizeof(uint32_t);
+
+        ctx->step_flags = numbrk ? DEVS_CTX_STEP_BRK : 0;
+        if (args->flags & JD_DEVS_DBG_STEP_FLAGS_STEP_OUT)
+            ctx->step_flags |= DEVS_CTX_STEP_OUT;
+        if (args->flags & JD_DEVS_DBG_STEP_FLAGS_STEP_IN)
+            ctx->step_flags |= DEVS_CTX_STEP_IN;
+        ctx->step_fn = frame;
+
+        for (unsigned i = 0; i < numbrk; ++i) {
+            devs_vm_set_breakpoint(ctx, args->break_pc[i], DEVS_BRK_FLAG_STEP);
+        }
+    }
+
+    resume_cmd(cmd);
+}
+
 void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
     devs_ctx_t *ctx = devsmgr_get_ctx();
     cmd_t _cmd = {.state = state, .pkt = pkt, .ctx = ctx};
@@ -642,7 +678,7 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_DEVS_DBG_CMD_SET_BREAKPOINTS:
         for (unsigned i = 0; i < pkt->service_size; i += 4)
-            devs_vm_set_breakpoint(ctx, *((uint32_t *)(pkt->data + i)));
+            devs_vm_set_breakpoint(ctx, *((uint32_t *)(pkt->data + i)), 0);
         break;
 
     case JD_DEVS_DBG_CMD_HALT:
@@ -652,15 +688,16 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     case JD_DEVS_DBG_CMD_RESUME:
-        if (ctx) {
-            state->suspended = 0;
-            devs_vm_resume(ctx);
-        }
+        resume_cmd(cmd);
         break;
 
     case JD_DEVS_DBG_CMD_RESTART_AND_HALT:
         dbg_en(state);
         devsmgr_restart();
+        break;
+
+    case JD_DEVS_DBG_CMD_STEP:
+        step_cmd(cmd);
         break;
 
     default:

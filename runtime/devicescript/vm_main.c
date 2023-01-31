@@ -52,15 +52,6 @@ int devs_vm_resume(devs_ctx_t *ctx) {
 
 __attribute__((weak)) void devsdbg_suspend_cb(devs_ctx_t *ctx) {}
 
-void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause) {
-    if (!ctx->dbg_en)
-        return;
-    if (ctx->suspension == JD_DEVS_DBG_SUSPENSION_TYPE_NONE) {
-        ctx->suspension = cause;
-        devsdbg_suspend_cb(ctx);
-    }
-}
-
 void devs_vm_set_debug(devs_ctx_t *ctx, bool en) {
     ctx->dbg_en = en;
     if (!en)
@@ -73,10 +64,10 @@ static inline unsigned brk_hash(unsigned pc) {
 
 static void recompute_brk_jump_tbl(devs_ctx_t *ctx) {
     memset(ctx->brk_jump_tbl, 0, DEVS_BRK_HASH_SIZE);
-    devs_pc_t *l = ctx->brk_list;
+    devs_brk_t *l = ctx->brk_list;
     for (unsigned i = 0; i < ctx->brk_count; ++i) {
-        if (l[i] && !ctx->brk_jump_tbl[brk_hash(l[i])])
-            ctx->brk_jump_tbl[brk_hash(l[i])] = i + 1;
+        if (l[i].pc && !ctx->brk_jump_tbl[brk_hash(l[i].pc)])
+            ctx->brk_jump_tbl[brk_hash(l[i].pc)] = i + 1;
     }
 }
 
@@ -91,11 +82,11 @@ bool devs_vm_clear_breakpoint(devs_ctx_t *ctx, unsigned pc) {
     if (pc == 0)
         return false;
     JD_ASSERT(pc == (devs_pc_t)pc);
-    devs_pc_t *l = ctx->brk_list;
+    devs_brk_t *l = ctx->brk_list;
     for (unsigned i = 0; i < ctx->brk_count; ++i) {
-        if (l[i] == pc) {
-            memmove(l + i, l + i + 1, (ctx->brk_count - i - 1) * sizeof(devs_pc_t));
-            ctx->brk_list[ctx->brk_count - 1] = 0;
+        if (l[i].pc == pc) {
+            memmove(l + i, l + i + 1, (ctx->brk_count - i - 1) * sizeof(devs_brk_t));
+            ctx->brk_list[ctx->brk_count - 1].pc = 0;
             recompute_brk_jump_tbl(ctx);
             return true;
         }
@@ -103,13 +94,39 @@ bool devs_vm_clear_breakpoint(devs_ctx_t *ctx, unsigned pc) {
     return false;
 }
 
-int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc) {
+static void clear_breakpoints_with_flag(devs_ctx_t *ctx, unsigned flag) {
+    devs_brk_t *l = ctx->brk_list;
+    unsigned tp = 0;
+    for (unsigned i = 0; i < ctx->brk_count; ++i) {
+        if ((l[i].flags & flag) == 0)
+            l[tp++] = l[i];
+    }
+    memset(l + tp, 0, (ctx->brk_count - tp) * sizeof(devs_brk_t));
+    recompute_brk_jump_tbl(ctx);
+}
+
+void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause) {
+    if (!ctx->dbg_en)
+        return;
+
+    if (ctx->step_flags & DEVS_CTX_STEP_BRK)
+        clear_breakpoints_with_flag(ctx, DEVS_BRK_FLAG_STEP);
+    ctx->step_fn = NULL;
+    ctx->step_flags = 0;
+
+    if (ctx->suspension == JD_DEVS_DBG_SUSPENSION_TYPE_NONE) {
+        ctx->suspension = cause;
+        devsdbg_suspend_cb(ctx);
+    }
+}
+
+int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc, unsigned flags) {
     JD_ASSERT(pc == (devs_pc_t)pc);
     if (pc == 0)
         return -2;
-    devs_pc_t *l = ctx->brk_list;
+    devs_brk_t *l = ctx->brk_list;
     unsigned cnt = ctx->brk_count;
-    if (cnt == 0 || l[cnt - 1] != 0) {
+    if (cnt == 0 || l[cnt - 1].pc != 0) {
         if (cnt >= DEVS_BRK_MAX_COUNT)
             return -1;
 
@@ -117,8 +134,8 @@ int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc) {
         if (cnt > DEVS_BRK_MAX_COUNT)
             cnt = DEVS_BRK_MAX_COUNT;
 
-        l = jd_alloc(cnt * sizeof(devs_pc_t));
-        memcpy(l, ctx->brk_list, ctx->brk_count * sizeof(devs_pc_t));
+        l = jd_alloc(cnt * sizeof(devs_brk_t));
+        memcpy(l, ctx->brk_list, ctx->brk_count * sizeof(devs_brk_t));
         jd_free(ctx->brk_list);
         ctx->brk_list = l;
         ctx->brk_count = cnt;
@@ -126,15 +143,17 @@ int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc) {
 
     bool was_in_section = false;
     for (unsigned i = 0; i < cnt; ++i) {
-        bool in_section = brk_hash(l[i]) == brk_hash(pc);
-        if (l[i] == 0) {
-            l[i] = pc;
+        bool in_section = brk_hash(l[i].pc) == brk_hash(pc);
+        if (l[i].pc == 0) {
+            l[i].pc = pc;
+            l[i].flags = flags;
             break;
-        } else if ((was_in_section && !in_section) || (in_section && l[i] >= pc)) {
-            if (l[i] == pc)
+        } else if ((was_in_section && !in_section) || (in_section && l[i].pc >= pc)) {
+            if (l[i].pc == pc && l[i].flags == flags)
                 return 0;
-            memmove(l + i + 1, l + i, (cnt - i - 1) * sizeof(devs_pc_t));
-            l[i] = pc;
+            memmove(l + i + 1, l + i, (cnt - i - 1) * sizeof(devs_brk_t));
+            l[i].pc = pc;
+            l[i].flags = flags;
             break;
         }
         was_in_section = in_section;
@@ -146,20 +165,29 @@ int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc) {
 
 static inline bool devs_vm_chk_brk(devs_ctx_t *ctx, devs_activation_t *frame) {
     if (ctx->dbg_en) {
+        if (ctx->ignore_brk) {
+            ctx->ignore_brk = false;
+            return false;
+        }
+
         devs_pc_t pc = frame->pc;
         unsigned i = ctx->brk_jump_tbl[brk_hash(pc)];
 
         if (i) {
-            devs_pc_t *l = ctx->brk_list;
-            for (--i; pc >= l[i]; ++i) {
-                if (pc == l[i]) {
-                    ctx->flags ^= DEVS_CTX_BREAKPOINT_HIT; // flip flag
-                    if (ctx->flags & DEVS_CTX_BREAKPOINT_HIT) {
+            devs_brk_t *l = ctx->brk_list;
+            for (--i; pc >= l[i].pc; ++i) {
+                if (pc == l[i].pc) {
+                    if (l[i].flags & DEVS_BRK_FLAG_STEP) {
+                        // DMESG("chk step %d %p %p", pc, frame, ctx->step_fn);
+                        if (frame == ctx->step_fn) {
+                            devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
+                            return true;
+                        } else {
+                            continue;
+                        }
+                    } else {
                         devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_BREAKPOINT);
                         return true;
-                    } else {
-                        // we are resuming after previously hitting this very breakpoint
-                        return false;
                     }
                 }
             }
