@@ -29,40 +29,49 @@ export async function spawnDevTools(context: vscode.ExtensionContext) {
 }
 
 async function uncachedSpawnDevTools(context: vscode.ExtensionContext) {
-    const devToolsConfig = vscode.workspace.getConfiguration(
-        "devicescript.devtools"
+    return vscode.window.withProgress<vscode.Terminal>(
+        {
+            location: vscode.ProgressLocation.Notification,
+            title: "Starting DeviceScript Development Server...",
+            cancellable: false,
+        },
+        async () => {
+            const devToolsConfig = vscode.workspace.getConfiguration(
+                "devicescript.devtools"
+            )
+            const transportsConfig = vscode.workspace.getConfiguration(
+                "devicescript.devtools.transports"
+            )
+            const useShell = !!devToolsConfig.get("shell")
+            const serial = !!transportsConfig.get("serial")
+            const usb = !!transportsConfig.get("usb")
+
+            const cli = "yarn"
+            const args = ["devicescript", "devtools", "--vscode"]
+            if (serial) args.push("--serial")
+            if (usb) args.push("--usb")
+
+            const options: vscode.TerminalOptions = {
+                name: "DeviceScript",
+                hideFromUser: true,
+                message: "Launching DeviceScript Server...",
+                isTransient: true,
+                shellPath: useShell ? undefined : cli,
+                shellArgs: useShell ? undefined : args,
+                iconPath: logo(context),
+            }
+            const t = vscode.window.createTerminal(options)
+            if (useShell) {
+                t.sendText("", true)
+                t.sendText(`${cli} ${args.join(" ")}`, true)
+            }
+
+            // TODO: wait for message
+            await delay(2000)
+
+            return t
+        }
     )
-    const transportsConfig = vscode.workspace.getConfiguration(
-        "devicescript.devtools.transports"
-    )
-    const useShell = !!devToolsConfig.get("shell")
-    const serial = !!transportsConfig.get("serial")
-    const usb = !!transportsConfig.get("usb")
-
-    const cli = "yarn"
-    const args = ["devicescript", "devtools", "--vscode"]
-    if (serial) args.push("--serial")
-    if (usb) args.push("--usb")
-
-    const options: vscode.TerminalOptions = {
-        name: "DeviceScript",
-        hideFromUser: true,
-        message: "Launching DeviceScript Server...",
-        isTransient: true,
-        shellPath: useShell ? undefined : cli,
-        shellArgs: useShell ? undefined : args,
-        iconPath: logo(context),
-    }
-    const t = vscode.window.createTerminal(options)
-    if (useShell) {
-        t.sendText("", true)
-        t.sendText(`${cli} ${args.join(" ")}`, true)
-    }
-
-    // TODO: wait for message
-    await delay(2000)
-
-    return t
 }
 
 export async function showDevToolsTerminal() {
