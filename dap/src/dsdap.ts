@@ -23,6 +23,7 @@ import {
 } from "@devicescript/compiler"
 import {
     DevsDbgFunIdx,
+    DevsDbgStepFlags,
     DevsDbgSuspensionType,
     DevsDbgValueSpecial,
     DevsDbgValueTag,
@@ -30,6 +31,7 @@ import {
 import {
     assert,
     delay,
+    DISCONNECT,
     fromUTF8,
     JDBus,
     JDDevice,
@@ -48,9 +50,7 @@ function exnToString(err: unknown) {
     return err + ""
 }
 
-export interface StartArgs
-    extends DebugProtocol.AttachRequestArguments,
-        DebugProtocol.LaunchRequestArguments {
+export interface StartArgs {
     deviceId?: string
     serviceInstance?: number
 }
@@ -73,7 +73,6 @@ for (const k0 of Object.keys(varTypeStrToNum)) {
 export class DsDapSession extends DebugSession {
     private brkBySrc: number[][] = []
     public client: DevsDbgClient
-
     img: Image
 
     constructor(
@@ -159,14 +158,18 @@ export class DsDapSession extends DebugSession {
         response: DebugProtocol.LaunchResponse,
         args: DebugProtocol.LaunchRequestArguments
     ): void {
-        this.asyncReq(response, () => this.startDebugger(response, args, true))
+        this.asyncReq(response, () =>
+            this.startDebugger(response, args as any, true)
+        )
     }
 
     protected override attachRequest(
         response: DebugProtocol.AttachResponse,
         args: DebugProtocol.AttachRequestArguments
     ): void {
-        this.asyncReq(response, () => this.startDebugger(response, args, false))
+        this.asyncReq(response, () =>
+            this.startDebugger(response, args as any, false)
+        )
     }
 
     private handleSuspendedEvent() {
@@ -200,6 +203,10 @@ export class DsDapSession extends DebugSession {
         isLaunch: boolean
     ) {
         await this.startClient(args)
+
+        this.client.service.device.on(DISCONNECT, () => {
+            this.stop()
+        })
 
         if (isLaunch) await this.client.restartAndHalt()
         else await this.client.halt()
@@ -266,6 +273,11 @@ export class DsDapSession extends DebugSession {
         })
     }
 
+    private getFunctionByIdx(idx: DevsDbgFunIdx) {
+        if (idx == DevsDbgFunIdx.Main) idx = 0
+        return this.img.functions[idx]
+    }
+
     protected override scopesRequest(
         response: DebugProtocol.ScopesResponse,
         args: DebugProtocol.ScopesArguments
@@ -280,7 +292,7 @@ export class DsDapSession extends DebugSession {
                 return
             }
 
-            const fn = this.img.functions[fr.stackFrame.fnIdx]
+            const fn = this.getFunctionByIdx(fr.stackFrame.fnIdx)
 
             const mkScope = (
                 tp: DebugVarType,
@@ -327,7 +339,7 @@ export class DsDapSession extends DebugSession {
             if (v.tag == DevsDbgValueTag.User1) {
                 if (wantNamed) {
                     const tp = varTypeNumToStr[v.v0]
-                    const fn = this.img.functions[v.arg.stackFrame.fnIdx]
+                    const fn = this.getFunctionByIdx(v.arg.stackFrame.fnIdx)
                     const vals = await v.arg.readIndexed()
                     for (let idx = 0; idx < fn.dbg.slots.length; ++idx) {
                         const s = fn.dbg.slots[idx]
@@ -465,6 +477,74 @@ export class DsDapSession extends DebugSession {
     ): void {
         this.asyncReq(response, async () => {
             await this.client.resume()
+        })
+    }
+
+    protected override nextRequest(
+        response: DebugProtocol.NextResponse,
+        args: DebugProtocol.NextArguments
+    ): void {
+        this.stepRequest(response, args, 0)
+    }
+
+    protected override stepOutRequest(
+        response: DebugProtocol.StepOutResponse,
+        args: DebugProtocol.StepOutArguments
+    ): void {
+        this.stepRequest(response, args, DevsDbgStepFlags.StepOut)
+    }
+
+    protected override stepInRequest(
+        response: DebugProtocol.StepInResponse,
+        args: DebugProtocol.StepInArguments
+    ): void {
+        this.stepRequest(response, args, DevsDbgStepFlags.StepIn)
+    }
+
+    private stepRequest(
+        response: DebugProtocol.Response,
+        args: DebugProtocol.StepInArguments,
+        flags: DevsDbgStepFlags
+    ) {
+        this.asyncReq(response, async () => {
+            const stack = await this.client.readStacktrace(args.threadId)
+            const frame = stack[0]?.stackFrame
+            if (!frame) throw new Error("bad stack frame")
+            let brks: number[] = []
+
+            if (!(flags & DevsDbgStepFlags.StepOut)) {
+                const fn = this.getFunctionByIdx(frame.fnIdx)
+                const currStmt = fn.stmtByGlobalPc(frame.pc)
+                const srcmap = this.img.srcmap
+                const p0 = srcmap.resolvePos(currStmt.srcPos)
+
+                // console.log("P0", srcmap.posToString(currStmt.srcPos))
+
+                const exits = fn.findZoneExits(currStmt, other => {
+                    // console.log(currStmt.pc, other.pc, args.granularity, currStmt.srcPos, other.srcPos)
+                    // console.log(srcmap.posToString(other.srcPos))
+                    switch (args.granularity) {
+                        case "line":
+                            const p1 = srcmap.resolvePos(other.srcPos)
+                            return p0.src === p1.src && p0.line === p1.line
+                        case "instruction":
+                            return currStmt === other
+                        case "statement":
+                        default:
+                            return (
+                                currStmt.srcPos == other.srcPos &&
+                                currStmt.srcLen == other.srcLen
+                            )
+                    }
+                })
+                brks = exits.map(e => e.pc + fn.imgOffset)
+            }
+
+            await this.client.step(
+                stack[0],
+                flags | DevsDbgStepFlags.StepOut,
+                brks
+            )
         })
     }
 

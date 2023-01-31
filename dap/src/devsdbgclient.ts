@@ -26,6 +26,7 @@ import {
     DevsDbgValueTag,
     DevsDbgString,
     DevsDbgValueSpecial,
+    DevsDbgStepFlags,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 
 export interface DevsKeyValue {
@@ -155,6 +156,16 @@ export class DevsDbgClient extends JDServiceClient {
         await this.haltCmd(DevsDbgCmd.RestartAndHalt)
     }
 
+    async step(frame: DevsValue, flags: DevsDbgStepFlags, brkPCs: number[]) {
+        await this.lock.runExclusive(async () => {
+            assert(!!frame.stackFrame)
+            await this.service.sendCmdAsync(
+                DevsDbgCmd.Step,
+                jdpack("u32 u16 x[2] u32[]", [frame.v0, flags, brkPCs])
+            )
+        })
+    }
+
     private runSuspCmd(cmd: DevsDbgCmd, args?: Uint8Array) {
         assert(this.suspended)
         return this.lock.runExclusive(async () => {
@@ -248,19 +259,17 @@ export class DevsDbgClient extends JDServiceClient {
                 stackFrameId
             )
             let userPc = pc
-            if (
-                pc > 0 &&
-                (idx > 0 ||
-                    this.suspensionReason != DevsDbgSuspensionType.Breakpoint)
-            )
-                userPc--
+            let isBrk =
+                this.suspensionReason == DevsDbgSuspensionType.Breakpoint ||
+                this.suspensionReason == DevsDbgSuspensionType.Step
+            if (idx > 0) isBrk = false
+            if (pc > 0 && !isBrk) userPc--
             st.stackFrame = {
                 pc,
                 userPc,
-                closure: this.getValue(
-                    DevsDbgValueTag.ObjStackFrame,
-                    closureId
-                ),
+                closure: closureId
+                    ? this.getValue(DevsDbgValueTag.ObjStackFrame, closureId)
+                    : null,
                 fnIdx,
             }
             return st

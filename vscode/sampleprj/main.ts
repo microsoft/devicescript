@@ -14,7 +14,7 @@ function foo() {
     console.log(`x=${x} y=${y}`)
     console.log("world")
      
-     ds.panic(122)
+     //ds.panic(122)
     z.q.map(e => {
         console.log(e)
         if (e == 2) debugger
@@ -27,3 +27,7 @@ function bar() {
 }
 
 bar()
+console.log("Test1")
+console.log("Test2")
+console.log("Test3")
+
