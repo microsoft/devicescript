@@ -210,7 +210,7 @@
           "group": "navigation"
         },
         {
-          "command": "extension.devicescript.showOutput",
+          "command": "extension.devicescript.showServerTerminal",
           "when": "view == extension.devicescript.jacdac-jdom-explorer",
           "group": "navigation"
         },
@@ -275,6 +275,9 @@
         },
         {
           "command": "extension.devicescript.showOutput"
+        },
+        {
+          "command": "extension.devicescript.showServerTerminal"
         }
       ],
       "debug/variables/context": [
@@ -288,13 +291,13 @@
       {
         "command": "extension.devicescript.showServerTerminal",
         "title": "Show Development Server Terminal",
-        "category": "DeviceScript"
+        "category": "DeviceScript",
+        "icon": "$(output)"
       },
       {
         "command": "extension.devicescript.showOutput",
         "title": "Show DeviceScript Output",
-        "category": "DeviceScript",
-        "icon": "$(output)"
+        "category": "DeviceScript"
       },
       {
         "command": "extension.devicescript.openSimulators",

@@ -148,10 +148,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.showServerTerminal",
-            () => {
-                console.log("Showing terminal...")
-                showDevToolsTerminal()
-            }
+            () => showDevToolsTerminal()
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.identifyDevice",
@@ -329,6 +326,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     }
     const jdomTreeDataProvider = new JDomDeviceTreeDataProvider(
         bus,
+        extensionState,
         selectNodeCommand
     )
     vscode.window.registerTreeDataProvider(
@@ -337,8 +335,8 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     )
     const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
         bus,
-        selectNodeCommand,
-        extensionState
+        extensionState,
+        selectNodeCommand
     )
     vscode.window.registerTreeDataProvider(
         "extension.devicescript.watch",
@@ -396,7 +394,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const id = item.node.id
                 const watches = extensionState.watches()
                 if (!watches.find(w => w.id === id)) {
-                    const label = item.label || item.node.name
+                    const label = item.node.friendlyName
                     const icon = (item.iconPath as vscode.ThemeIcon)?.id
                     await extensionState.updateWatches([
                         ...watches,

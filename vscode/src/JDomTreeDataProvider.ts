@@ -96,7 +96,7 @@ export class JDomTreeItem extends vscode.TreeItem {
         public readonly props: TreeItemProps,
         collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
     ) {
-        super(node.friendlyName, collapsibleState)
+        super(props.fullName ? node.friendlyName : node.name, collapsibleState)
         const { id, nodeKind } = node
         const { idPrefix = "", command } = props
         this.id = idPrefix + id
@@ -109,9 +109,6 @@ export class JDomTreeItem extends vscode.TreeItem {
     }
 
     protected handleChange() {
-        this.label = this.props.fullName
-            ? this.node.qualifiedName
-            : this.node.friendlyName
         this.refresh()
     }
 
@@ -238,12 +235,11 @@ export class JDServiceTreeItem extends JDomTreeItem {
 
     protected handleChange() {
         const { service } = this
-        const { specification, instanceName, serviceClass, role } = service
+        const { role } = service
 
-        this.label =
-            instanceName ||
-            humanify(dashify(specification?.shortName?.toLowerCase())) ||
-            `0x${serviceClass.toString(16)}`
+        this.label = this.props.fullName
+            ? this.node.friendlyName
+            : this.node.name
         this.description = role || ""
         this.refresh()
     }
@@ -301,9 +297,9 @@ export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
     protected handleChange() {
         const { register, props } = this
         const { fullName } = props
-        const { humanValue, service, qualifiedName, name } = register
+        const { humanValue, service, friendlyName, name } = register
 
-        this.label = fullName ? qualifiedName : humanify(dashify(name))
+        this.label = fullName ? friendlyName : humanify(dashify(name))
         this.description = humanValue
         this.refresh()
 
@@ -338,8 +334,8 @@ export class JDEventTreeItem extends JDomServiceMemberTreeItem {
     protected handleChange() {
         const { event, props } = this
         const { fullName } = props
-        const { count, qualifiedName, name } = event
-        this.label = fullName ? qualifiedName : humanify(dashify(name))
+        const { count, friendlyName, name } = event
+        this.label = fullName ? friendlyName : humanify(dashify(name))
         this.description = `#${count}`
 
         this.refresh()
@@ -387,6 +383,7 @@ export abstract class JDomTreeDataProvider
 {
     constructor(
         readonly bus: JDBus,
+        readonly state: ExtensionState,
         readonly command: vscode.Command,
         readonly idPrefix: string
     ) {}
@@ -419,8 +416,12 @@ export abstract class JDomTreeDataProvider
 
 export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
     private _showInfrastructure = false
-    constructor(bus: JDBus, command: vscode.Command) {
-        super(bus, command, "devs:")
+    constructor(
+        bus: JDBus,
+        extensionState: ExtensionState,
+        command: vscode.Command
+    ) {
+        super(bus, extensionState, command, "devs:")
         this.bus.on(DEVICE_CHANGE, () => {
             this.refresh()
         })
@@ -455,10 +456,10 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
 export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
     constructor(
         bus: JDBus,
-        command: vscode.Command,
-        readonly state: ExtensionState
+        extensionState: ExtensionState,
+        command: vscode.Command
     ) {
-        super(bus, command, "watch:")
+        super(bus, extensionState, command, "watch:")
         this.state.on(CHANGE, this.refresh.bind(this))
     }
 
