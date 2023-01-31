@@ -439,7 +439,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             ? `Deploy and Debug on device ${mgr.shortId}`
             : `Click to pick a DeviceScript device`
         statusBarItem.text = [
-            !runtimeVersion ? "$(loading~spin)" : "",
+            !runtimeVersion ? "$(loading~spin)" : "$(devicescript-logo)",
             "DeviceScript",
             runtimeVersion,
             mgr ? `$(play) ${mgr?.shortId}` : "",

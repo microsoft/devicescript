@@ -210,7 +210,7 @@
         "description": "Devicescript logo",
         "default": {
           "fontPath": "./built/devicescript.woff",
-          "fontCharacter": "\\E001"
+          "fontCharacter": "\\E000"
         }
       }
     },
