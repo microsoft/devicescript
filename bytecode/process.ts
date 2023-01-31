@@ -383,7 +383,8 @@ function serializeProps(lst: OpCode[], fn: (o: OpCode) => number) {
 function genJmpTables(spec: Spec) {
     let r = "\n#define DEVS_OP_HANDLERS expr_invalid, \\\n"
     for (const obj of sortByCode(spec.ops)) {
-        r += `${sig(obj).toLowerCase()}_${obj.name}, \\\n`
+        if (obj.name.startsWith("removed_")) r += `expr_invalid, \\\n`
+        else r += `${sig(obj).toLowerCase()}_${obj.name}, \\\n`
     }
     r += "expr_invalid\n\n"
 

@@ -9,8 +9,8 @@ void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx) {
 
 void fun1_DeviceScript_panic(devs_ctx_t *ctx) {
     unsigned code = devs_arg_int(ctx, 0);
-    if (code == 0 || code > 0xffff)
-        code = 127;
+    if (code == 0 || code >= 60000)
+        code = 59999;
     devs_panic(ctx, code);
 }
 

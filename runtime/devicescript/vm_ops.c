@@ -69,11 +69,6 @@ static void stmt2_index_delete(devs_activation_t *frame, devs_ctx_t *ctx) {
         devs_value_unpin(ctx, idx);
 }
 
-static void stmt1_panic(devs_activation_t *frame, devs_ctx_t *ctx) {
-    uint32_t code = devs_vm_pop_arg_u32(ctx);
-    devs_panic(ctx, code);
-}
-
 static void stmt_callN(devs_activation_t *frame, devs_ctx_t *ctx, unsigned N) {
     JD_ASSERT(ctx->stack_top == N + 1);
     ctx->stack_top = 0;

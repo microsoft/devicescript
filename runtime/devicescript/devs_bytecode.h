@@ -14,7 +14,6 @@
 #define DEVS_STMT1_RETURN 12     // value
 #define DEVS_STMTx_JMP 13        // JMP jmpoffset
 #define DEVS_STMTx1_JMP_Z 14     // JMP jmpoffset IF NOT x
-#define DEVS_STMT1_PANIC 15      // error_code
 #define DEVS_STMTx_TRY 80        // TRY jmpoffset
 #define DEVS_STMTx_END_TRY 81    // *jmpoffset
 #define DEVS_STMT0_CATCH 82
@@ -91,10 +90,11 @@
 #define DEVS_STMT1_TERMINATE_FIBER 72      // fiber_handle
 #define DEVS_EXPR0_NOW_MS 77
 #define DEVS_EXPR1_GET_FIBER_HANDLE 78 // func
+#define DEVS_STMT0_REMOVED_PANIC 15
 #define DEVS_OP_PAST_LAST 91
 
 #define DEVS_OP_PROPS                                                                              \
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x51\x60\x31\x31\x14\x40\x20\x20" \
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x10\x60\x31\x31\x14\x40\x20\x20" \
     "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
     "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x42"
@@ -375,7 +375,7 @@
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
         stmt5_call4, stmt6_call5, stmt7_call6, stmt8_call7, stmt9_call8, stmt2_index_delete,       \
-        stmt1_return, stmtx_jmp, stmtx1_jmp_z, stmt1_panic, exprx_object_field,                    \
+        stmt1_return, stmtx_jmp, stmtx1_jmp_z, expr_invalid, exprx_object_field,                   \
         stmtx1_store_local, stmtx1_store_global, stmt4_store_buffer, expr0_inf, exprx_load_local,  \
         exprx_load_global, expr1_uplus, expr2_index, stmt3_index_set, exprx1_builtin_field,        \
         exprx1_ascii_field, exprx1_utf8_field, exprx_math_field, exprx_ds_field, stmt0_alloc_map,  \

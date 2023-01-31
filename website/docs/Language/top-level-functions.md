@@ -62,7 +62,8 @@ All of the above should have the same semantics as JavaScript.
 ## Misc functions
 
 The `panic()` function takes a numeric error code and terminates or restarts the program.
-`reboot()` is similar, but doesn't print error message.
+`reboot()` is similar, but doesn't print error message and wait less before restarting program.
+You generally should use `throw ...` instead of `panic()`.
 
 ```ts
 ds.panic(348)

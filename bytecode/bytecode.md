@@ -30,8 +30,6 @@ Passes arguments to a function as an array. The array can be at most `max_stack_
 
 Jump if condition is false.
 
-    final panic(error_code) = 15
-
     try(*jmpoffset) = 80                // TRY jmpoffset
 
 Start try-catch block - catch/finally handler is at the jmpoffset.
@@ -253,6 +251,10 @@ Time since device restart in ms; time only advances when sleeping.
 
 If `func == null` returns self-handle.
 Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
+
+    removed_panic() = 15
+
+These were once used, to be cleaned up on major bytecode upgrade.
 
 ## Format Constants
 
