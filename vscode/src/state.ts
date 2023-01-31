@@ -79,7 +79,9 @@ export class ExtensionState extends JDEventSource {
         const config = vscode.workspace.getConfiguration(
             "devicescript.virtualDevice"
         )
-        const nativePath = (config.get("nativePath") as string) || undefined
+        const nativePath = config.get("runNative")
+            ? (config.get("nativePath") as string) || undefined
+            : undefined
         await sideRequest<SideStartVmReq>({
             req: "startVM",
             data: {

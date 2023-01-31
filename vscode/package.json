@@ -115,10 +115,15 @@
           "default": true,
           "description": "Show DeviceScript terminal when starting debug session."
         },
+        "devicescript.virtualDevice.runNative": {
+          "type": "boolean",
+          "default": false,
+          "description": "Run a jdcli executable as the VM instead of bundled WASM binary."
+        },
         "devicescript.virtualDevice.nativePath": {
           "type": "string",
           "default": "",
-          "description": "Run this executable (jdcli) as the VM instead of bundled WASM binary."
+          "description": "Path to jdcli."
         },
         "devicescript.deploy.ignoreRuntimeVersion": {
           "type": "boolean",
