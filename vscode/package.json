@@ -115,7 +115,7 @@
           "default": true,
           "description": "Show DeviceScript terminal when starting debug session."
         },
-        "devicescript.virtualDevice.nativePath": {
+        "devicescript.simulator.nativePath": {
           "type": "string",
           "default": "",
           "description": "Run this executable (jdcli) as the VM instead of bundled WASM binary."
@@ -151,7 +151,7 @@
     "viewsWelcome": [
       {
         "view": "extension.devicescript.jacdac-jdom-explorer",
-        "contents": "Connect a DeviceScript device or start a Virtual Device.\n[Start Virtual Device](command:extension.devicescript.startVirtualDevice)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
+        "contents": "Connect a DeviceScript device or start a Simulator.\n[Start Simulator](command:extension.devicescript.startSimulator)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
       },
       {
         "view": "extension.devicescript.watch",
@@ -268,10 +268,10 @@
           "command": "extension.devicescript.connect"
         },
         {
-          "command": "extension.devicescript.startVirtualDevice"
+          "command": "extension.devicescript.startSimulator"
         },
         {
-          "command": "extension.devicescript.stopVirtualDevice"
+          "command": "extension.devicescript.stopSimulator"
         },
         {
           "command": "extension.devicescript.showOutput"
@@ -357,13 +357,13 @@
         "title": "Toggle between decimal and hex formatting"
       },
       {
-        "command": "extension.devicescript.startVirtualDevice",
-        "title": "Start Virtual Device",
+        "command": "extension.devicescript.startSimulator",
+        "title": "Start Simulator",
         "category": "DeviceScript"
       },
       {
-        "command": "extension.devicescript.stopVirtualDevice",
-        "title": "Stop Virtual Device",
+        "command": "extension.devicescript.stopSimulator",
+        "title": "Stop Simulator",
         "category": "DeviceScript"
       },
       {
@@ -405,7 +405,7 @@
               },
               "deviceId": {
                 "type": "string",
-                "description": "Device identifier of the device (long or short). Use ${VirtualDevice} for the Virtual Device."
+                "description": "Device identifier of the device (long or short). Use ${command:simulator} for the Simulator."
               },
               "serviceInstance": {
                 "type": "number",
@@ -438,7 +438,7 @@
         ],
         "variables": {
           "askForProgramName": "extension.devicescript.variables.askForProgramName",
-          "virtualDevice": "extension.devicescript.variables.virtualDevice"
+          "simulator": "extension.devicescript.variables.simulator"
         }
       }
     ]

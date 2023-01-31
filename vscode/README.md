@@ -4,5 +4,5 @@
 
 -   Compile DeviceScript to bytecode
 -   live Jacdac device explorer
--   Running a Virtual Device on the developer machine
--   Debugging, including stepping, variables, stack traces, of DeviceScript programs on Virtual Device or hardware
+-   Running a simulator on the developer machine
+-   Debugging, including stepping, variables, stack traces, of DeviceScript programs on a simulator or hardware device.

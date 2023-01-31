@@ -9,3 +9,5 @@
 * run "DeviceScript: Start things" command (extension is only activated when you run some command!)
 * switch to Debug Console in the main VSCode - you should see some output from jacdac-ts there
 * look in "Jacdac Packets" output window
+
+See [CONTRIBUTING](https://github.com/microsoft/devicescript/).

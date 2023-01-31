@@ -96,7 +96,7 @@ devsc build --watch
 ```
 
 When the build is run in watch mode, it also opens a developer tool web server that allows
-to execute the compiled program in a virtual device or physical devices. Follow the console
+to execute the compiled program in a simulator or physical devices. Follow the console
 application instructions to open the web page.
 
 ```mermaid
@@ -105,11 +105,11 @@ stateDiagram-v2
     sources
     cli: CLI\n(compiler + web server)
     browser: Dev Tools\n(browser)
-    vdev: Virtual Device
+    sim: Simulator
     dev: Hardware Device
     cli --> sources: watch files
     cli --> browser: bytecode
-    browser --> vdev
+    browser --> sim
     browser --> dev: WebSerial, WebUsb, ...
 ```
 

@@ -20,7 +20,7 @@ import { JDeviceTreeItem } from "./JDomTreeDataProvider"
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
-const STATE_VM_DEVICE = "devices.virtual"
+const STATE_SIMULATOR_DEVICE = "devices.simulator"
 
 type DeviceQuickItem = vscode.QuickPickItem & { deviceId: string }
 
@@ -40,8 +40,8 @@ export class ExtensionState extends JDEventSource {
         readonly state: vscode.Memento
     ) {
         super()
-        if (!this.virtualDeviceScriptManagerId) {
-            this.state.update(STATE_VM_DEVICE, randomDeviceId())
+        if (!this.simulatorScriptManagerId) {
+            this.state.update(STATE_SIMULATOR_DEVICE, randomDeviceId())
         }
         this.bus.on(DEVICE_CHANGE, () => {
             this.emit(CHANGE)
@@ -57,8 +57,8 @@ export class ExtensionState extends JDEventSource {
         this.emit(CHANGE)
     }
 
-    get virtualDeviceScriptManagerId() {
-        const id = this.state.get(STATE_VM_DEVICE) as string
+    get simulatorScriptManagerId() {
+        const id = this.state.get(STATE_SIMULATOR_DEVICE) as string
         return id
     }
 
@@ -72,7 +72,7 @@ export class ExtensionState extends JDEventSource {
         const oldid = this.state.get(STATE_CURRENT_DEVICE) as string
         if (oldid !== id) {
             await this.state.update(STATE_CURRENT_DEVICE, id)
-            if (id !== this.virtualDeviceScriptManagerId) await this.stopVM()
+            if (id !== this.simulatorScriptManagerId) await this.stopSimulator()
             this.emit(CHANGE)
         }
     }
@@ -81,11 +81,11 @@ export class ExtensionState extends JDEventSource {
         return this.deviceScriptManager || this.pickDeviceScriptManager()
     }
 
-    async startVM() {
-        const did = this.virtualDeviceScriptManagerId
+    async startSimulator() {
+        const did = this.simulatorScriptManagerId
         if (this.bus.device(did, true)) return // already running
         const config = vscode.workspace.getConfiguration(
-            "devicescript.virtualDevice"
+            "devicescript.simulator"
         )
         const nativePath = (config.get("nativePath") as string) || undefined
         await sideRequest<SideStartVmReq>({
@@ -100,7 +100,7 @@ export class ExtensionState extends JDEventSource {
         while (max-- > 0 && !this.bus.device(did, true)) await delay(200)
     }
 
-    async stopVM() {
+    async stopSimulator() {
         await sideRequest<SideStopVmReq>({
             req: "stopVM",
             data: {},
@@ -108,7 +108,7 @@ export class ExtensionState extends JDEventSource {
     }
 
     async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {
-        const { virtualDeviceScriptManagerId } = this
+        const { simulatorScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
 
         await spawnDevTools(this.context)
@@ -138,13 +138,13 @@ export class ExtensionState extends JDEventSource {
             )
         )
         let startVM = false
-        if (!this.bus.device(virtualDeviceScriptManagerId, true)) {
+        if (!this.bus.device(simulatorScriptManagerId, true)) {
             startVM = true
             items.push(<DeviceQuickItem>{
-                label: shortDeviceId(this.virtualDeviceScriptManagerId),
-                description: `Virtual Device`,
+                label: shortDeviceId(this.simulatorScriptManagerId),
+                description: `Simulator`,
                 detail: `A virtual DeviceScript interpreter running in a separate process (${this.runtimeVersion})`,
-                deviceId: virtualDeviceScriptManagerId,
+                deviceId: simulatorScriptManagerId,
             })
         }
         const res = await vscode.window.showQuickPick(items, {
@@ -156,8 +156,8 @@ export class ExtensionState extends JDEventSource {
         const did = res?.deviceId
         if (!did) return undefined
 
-        if (startVM && did == virtualDeviceScriptManagerId) {
-            await this.startVM()
+        if (startVM && did == simulatorScriptManagerId) {
+            await this.startSimulator()
         } else {
             startVM = false
         }

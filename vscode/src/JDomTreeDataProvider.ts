@@ -145,7 +145,7 @@ export class JDeviceTreeItem extends JDomTreeItem {
         const { device, props } = this
         const { state } = props
         const { bus, friendlyName, deviceId } = device
-        const { virtualDeviceScriptManagerId } = state
+        const { simulatorScriptManagerId } = state
 
         if (!bus) {
             this.unmount()
@@ -153,8 +153,8 @@ export class JDeviceTreeItem extends JDomTreeItem {
         }
 
         this.label = friendlyName
-        if (deviceId === virtualDeviceScriptManagerId)
-            this.label += " (virtual device)"
+        if (deviceId === simulatorScriptManagerId)
+            this.label += " (simulator)"
         if (!this.description) {
             const services = device.services({ mixins: false })
             const serviceNames = services

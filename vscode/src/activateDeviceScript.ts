@@ -220,8 +220,8 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.variables.virtualDevice",
-            config => extensionState.virtualDeviceScriptManagerId
+            "extension.devicescript.variables.simulator",
+            config => extensionState.simulatorScriptManagerId
         )
     )
 
@@ -361,18 +361,18 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.stopVirtualDevice",
+            "extension.devicescript.stopSimulator",
             async () => {
                 await spawnDevTools(context)
                 // TODO wait till ready
-                await extensionState.stopVM()
+                await extensionState.stopSimulator()
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.startVirtualDevice",
+            "extension.devicescript.startSimulator",
             async () => {
                 await spawnDevTools(context)
-                await extensionState.startVM()
+                await extensionState.startSimulator()
             }
         ),
         vscode.commands.registerCommand(

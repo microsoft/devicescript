@@ -79,9 +79,9 @@ export class DeviceScriptConfigurationProvider
         // start vm if needed
         if (
             dsConfig.deviceId ===
-            this.extensionState.virtualDeviceScriptManagerId
+            this.extensionState.simulatorScriptManagerId
         )
-            await this.extensionState.startVM()
+            await this.extensionState.startSimulator()
 
         // find service
         const service = this.bus.device(dsConfig.deviceId, true)?.services({
