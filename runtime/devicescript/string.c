@@ -217,7 +217,7 @@ value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
 
     if (ap == NULL || bp == NULL) {
         // strange...
-        devs_runtime_failure(ctx, 60126);
+        devs_invalid_program(ctx, 60126);
         r = devs_undefined;
     } else if (alen == 0) {
         r = b;

@@ -335,7 +335,7 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
     devs_fiber_yield(ctx);
 }
 
-value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
+value_t _devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
     if (code < 100)
         code = 100;
     devs_panic(ctx, 60000 + code);

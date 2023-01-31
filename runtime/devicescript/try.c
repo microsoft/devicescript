@@ -19,7 +19,7 @@ void devs_push_tryframe(devs_activation_t *frame, devs_ctx_t *ctx, int pc) {
             return;
         }
     }
-    devs_runtime_failure(ctx, 60123);
+    devs_invalid_program(ctx, 60123);
 }
 
 int devs_pop_tryframe(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -163,7 +163,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
         LOG("pc=%d", pc);
         if (pc == 0) {
             if (jump_pc != 0) {
-                devs_runtime_failure(ctx, 60124);
+                devs_invalid_program(ctx, 60124);
                 break;
             }
             int hadcaller = frame->caller != NULL;
@@ -191,7 +191,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
                 ctx->exn_val = exn;
                 break;
             } else {
-                devs_runtime_failure(ctx, 60125);
+                devs_invalid_program(ctx, 60125);
                 break;
             }
         }
