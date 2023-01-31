@@ -95,18 +95,6 @@ function tagIsObj(tag: DevsDbgValueTag) {
 }
 
 export class DevsDbgClient extends JDServiceClient {
-    static async fromBus(bus: JDBus, timeout = 2000) {
-        const t0 = Date.now()
-        while (Date.now() - t0 < timeout) {
-            const s = bus.services({
-                serviceClass: SRV_DEVS_DBG,
-            })[0]
-            if (s) return new DevsDbgClient(s)
-            await delay(100)
-        }
-        throw new Error(`no debugger on the bus; timeout=${timeout}ms`)
-    }
-
     private regEn: JDRegister
     private lock = new Mutex()
     suspensionReason: DevsDbgSuspensionType

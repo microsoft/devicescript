@@ -27,7 +27,17 @@ import {
     DevsDbgValueSpecial,
     DevsDbgValueTag,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
-import { fromUTF8, toHex, uint8ArrayToString } from "jacdac-ts"
+import {
+    assert,
+    delay,
+    fromUTF8,
+    JDBus,
+    JDDevice,
+    JDService,
+    SRV_DEVS_DBG,
+    toHex,
+    uint8ArrayToString,
+} from "jacdac-ts"
 
 export { DevsDbgClient } from "./devsdbgclient"
 
@@ -41,7 +51,10 @@ function exnToString(err: unknown) {
 export interface StartArgs
     extends DebugProtocol.AttachRequestArguments,
         DebugProtocol.LaunchRequestArguments {
-    // ...
+    devicescript?: {
+        deviceId: string
+        serviceInstance: number
+    }
 }
 
 const maxStrLen = 1024
@@ -60,13 +73,13 @@ for (const k0 of Object.keys(varTypeStrToNum)) {
 }
 
 export class DsDapSession extends DebugSession {
-    private clearSusp: () => void
     private brkBySrc: number[][] = []
+    public client: DevsDbgClient
 
     img: Image
 
     constructor(
-        public client: DevsDbgClient,
+        public bus: JDBus,
         dbg: string | Uint8Array | DebugInfo,
         private resolvePath = (s: SrcFile) => s.path
     ) {
@@ -84,11 +97,40 @@ export class DsDapSession extends DebugSession {
 
     dispose() {
         super.dispose()
-        const f = this.clearSusp
-        if (f) {
-            this.clearSusp = null
-            f()
+        this.client?.unmount()
+        this.client = null
+    }
+
+    private async createClient(cfg: StartArgs, timeout = 2000) {
+        const did = cfg?.devicescript?.deviceId
+        const t0 = Date.now()
+        while (Date.now() - t0 < timeout) {
+            let s: JDService
+            if (did) {
+                const dev = this.bus.device(did, true)
+                s = dev?.services({
+                    serviceClass: SRV_DEVS_DBG,
+                })[cfg.devicescript.serviceInstance ?? 0]
+            } else {
+                s = this.bus.services({
+                    serviceClass: SRV_DEVS_DBG,
+                })[0]
+            }
+            if (s) return new DevsDbgClient(s)
+            await delay(100)
         }
+        throw new Error(`no debugger on the bus; timeout=${timeout}ms`)
+    }
+
+    private async startClient(cfg: StartArgs) {
+        assert(!this.client)
+        this.client = await this.createClient(cfg)
+        this.client.mount(
+            this.client.subscribe(
+                EV_SUSPENDED,
+                this.handleSuspendedEvent.bind(this)
+            )
+        )
     }
 
     protected override initializeRequest(
@@ -129,37 +171,37 @@ export class DsDapSession extends DebugSession {
         this.asyncReq(response, () => this.startDebugger(response, args, false))
     }
 
+    private handleSuspendedEvent() {
+        const type = this.client.suspensionReason
+        switch (type) {
+            case DevsDbgSuspensionType.Panic:
+                this.sendEvent(new TerminatedEvent())
+                break
+
+            case DevsDbgSuspensionType.Breakpoint:
+            case DevsDbgSuspensionType.UnhandledException:
+            case DevsDbgSuspensionType.HandledException:
+            case DevsDbgSuspensionType.DebuggerStmt:
+            case DevsDbgSuspensionType.Halt:
+            case DevsDbgSuspensionType.Restart:
+            default:
+                this.sendEvent(
+                    new StoppedEvent(
+                        DevsDbgSuspensionType[type] || "stop_" + type,
+                        this.client.suspendedFiber
+                    )
+                )
+                break
+        }
+    }
+
     private async startDebugger(
         response: DebugProtocol.Response,
         args: StartArgs,
         isLaunch: boolean
     ) {
-        if (!this.clearSusp)
-            this.clearSusp = this.client.subscribe(EV_SUSPENDED, () => {
-                const type = this.client.suspensionReason
-                switch (type) {
-                    case DevsDbgSuspensionType.Panic:
-                        this.sendEvent(new TerminatedEvent())
-                        break
+        await this.startClient(args)
 
-                    case DevsDbgSuspensionType.Breakpoint:
-                    case DevsDbgSuspensionType.UnhandledException:
-                    case DevsDbgSuspensionType.HandledException:
-                    case DevsDbgSuspensionType.DebuggerStmt:
-                    case DevsDbgSuspensionType.Halt:
-                    case DevsDbgSuspensionType.Restart:
-                    default:
-                        this.sendEvent(
-                            new StoppedEvent(
-                                DevsDbgSuspensionType[type] || "stop_" + type,
-                                this.client.suspendedFiber
-                            )
-                        )
-                        break
-                }
-            })
-
-        this.sendEvent(new OutputEvent("Welcome to DsDap!", "console"))
         if (isLaunch) await this.client.restartAndHalt()
         else await this.client.halt()
         await this.client.waitSuspended()
@@ -436,7 +478,7 @@ export class DsDapSession extends DebugSession {
         } catch (err) {
             response.success = false
             response.message = exnToString(err)
-            console.error(response.message)
+            this.warn(response.message)
         }
         this.sendResponse(response)
     }

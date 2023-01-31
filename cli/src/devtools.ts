@@ -240,8 +240,6 @@ function startProxyServers(
 }
 
 function startDbgServer(port: number, options: DevToolsOptions) {
-    let client: DevsDbgClient
-
     let fnResolveMap: Record<string, string> = {}
 
     const resolvePath = (s: SrcFile) => fnResolveMap[s.path]
@@ -268,11 +266,6 @@ function startDbgServer(port: number, options: DevToolsOptions) {
     console.log(`   dbgsrv: tcp://localhost:${port}`)
     net.createServer(async socket => {
         console.log("got debug server connection")
-        if (!client) {
-            console.debug("creating dbg client...")
-            client = await DevsDbgClient.fromBus(devtoolsSelf.bus, 10000)
-            console.debug("got dbg client")
-        }
         socket.on("end", () => {
             console.log("debug connection closed")
         })
@@ -284,7 +277,7 @@ function startDbgServer(port: number, options: DevToolsOptions) {
             return
         }
         await checkFiles()
-        const session = new DsDapSession(client, dbg, resolvePath)
+        const session = new DsDapSession(devtoolsSelf.bus, dbg, resolvePath)
         session.setRunAsServer(true)
         session.start(socket, socket)
     }).listen(port, listenHost)

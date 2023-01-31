@@ -45,9 +45,13 @@ export class DeviceScriptConfigurationProvider
             return undefined
         }
 
+        const idx = service.device
+            .services({ serviceClass: service.serviceClass })
+            .indexOf(service)
+
         config.devicescript = {
             deviceId: service.device.deviceId,
-            serviceIndex: service.serviceIndex,
+            serviceInstance: idx,
         }
 
         if (token?.isCancellationRequested) return undefined

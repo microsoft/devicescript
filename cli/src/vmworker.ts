@@ -86,7 +86,7 @@ export function overrideConsoleDebug() {
             let line = args[0].replace(/\x1B\[[0-9;]+m/g, "").slice(5)
             sendOutput(cl, "dev", [line])
             line = line.replace(/^DM \(\d+\): ?/, "")
-            if (line) printDmesg(line)
+            if (line) printDmesg("DEV", line)
         } else {
             if (cl) {
                 let str = ""
@@ -102,7 +102,7 @@ export function overrideConsoleDebug() {
     }
 }
 
-export function printDmesg(line: string) {
+export function printDmesg(pref: string, line: string) {
     const m = /^\s*([\*\!>]) (.*)/.exec(line)
     if (m) {
         let [_full, marker, text] = m
@@ -111,7 +111,7 @@ export function printDmesg(line: string) {
         if (marker == "!") text = wrapColor(91, text)
         else if (marker == ">") text = wrapColor(95, text)
         else text = wrapColor(92, text)
-        console.log("VM> " + text)
+        console.log(pref + "> " + text)
     }
 }
 
@@ -150,7 +150,7 @@ export async function startVmWorker(
         return lineBuffer(lines => {
             sendOutput(sender, kind, lines)
             for (const l of lines) {
-                if (l.startsWith("    ")) printDmesg(l.slice(4))
+                if (l.startsWith("    ")) printDmesg("VM", l.slice(4))
             }
         })
     }
