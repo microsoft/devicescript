@@ -178,6 +178,7 @@ static inline bool devs_vm_chk_brk(devs_ctx_t *ctx, devs_activation_t *frame) {
             for (--i; pc >= l[i].pc; ++i) {
                 if (pc == l[i].pc) {
                     if (l[i].flags & DEVS_BRK_FLAG_STEP) {
+                        // DMESG("chk step %d %p %p", pc, frame, ctx->step_fn);
                         if (frame == ctx->step_fn) {
                             devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
                             return true;

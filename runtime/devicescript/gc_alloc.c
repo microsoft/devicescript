@@ -233,6 +233,9 @@ static inline bool can_free(uintptr_t header) {
 }
 
 static void clear_weak_pointers(devs_ctx_t *ctx) {
+    if (!ctx)
+        return;
+
     if (ctx->step_fn && can_free(ctx->step_fn->gc.header))
         ctx->step_fn = NULL;
 }

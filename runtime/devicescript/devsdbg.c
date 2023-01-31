@@ -573,6 +573,7 @@ static void step_cmd(cmd_t *cmd) {
             ctx->step_flags |= DEVS_CTX_STEP_OUT;
         if (args->flags & JD_DEVS_DBG_STEP_FLAGS_STEP_IN)
             ctx->step_flags |= DEVS_CTX_STEP_IN;
+        ctx->step_fn = frame;
 
         for (unsigned i = 0; i < numbrk; ++i) {
             devs_vm_set_breakpoint(ctx, args->break_pc[i], DEVS_BRK_FLAG_STEP);
