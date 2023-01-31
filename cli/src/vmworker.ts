@@ -143,16 +143,21 @@ export async function startVmWorker(
     worker.stderr.setEncoding("utf-8")
 
     worker.on("exit", (code, signal) => {
-        sendOutput(sender, "vm-err", [`Exit code: ${code} ${signal ?? ""}`])
+        sendLines("vm-err", [`Exit code: ${code} ${signal ?? ""}`])
     })
 
-    function buffered(kind: OutputFrom) {
-        return lineBuffer(lines => {
-            sendOutput(sender, kind, lines)
-            for (const l of lines) {
-                if (l.startsWith("    ")) printDmesg("VM", l.slice(4))
+    function sendLines(kind: OutputFrom, lines: string[]) {
+        sendOutput(sender, kind, lines)
+        for (const l of lines) {
+            if (l.startsWith("    ")) printDmesg("VM", l.slice(4))
+            else if (kind == "vm-err") {
+                console.log("VMERR> " + wrapColor(91, l))
             }
-        })
+        }
+    }
+
+    function buffered(kind: OutputFrom) {
+        return lineBuffer(lines => sendLines(kind, lines))
     }
 
     worker.stdout.on("data", buffered("vm"))
