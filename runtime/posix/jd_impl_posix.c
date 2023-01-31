@@ -11,9 +11,13 @@
 
 #include "interfaces/jd_hw.h"
 
-const char app_dev_class_name[] = "Virtual DeviceScript Brain (native)";
+const char app_dev_class_name[] = "DeviceScript Simulator (native)";
 
 #define LOG(msg, ...) DMESG("%s: " msg, __func__, ##__VA_ARGS__)
+
+uint32_t app_get_device_class(void) {
+    return 0x3aac7f0e;
+}
 
 uint64_t cached_devid;
 uint64_t hw_device_id(void) {
