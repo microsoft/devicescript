@@ -25,8 +25,23 @@ export class DeviceScriptAdapterServerDescriptorFactory
     dispose() {}
 }
 
-export interface DeviceScriptDebugConfiguration
-    extends vscode.DebugConfiguration {
+// don't derive from vscode.DebugConfiguration - it has a generic [key:string]
+export interface DeviceScriptDebugConfiguration {
+    /**
+     * The type of the debug session.
+     */
+    type: string
+
+    /**
+     * The name of the debug session.
+     */
+    name: string
+
+    /**
+     * The request type of the debug session.
+     */
+    request: string
+
     /**
      * Device idenfier of the device manager device
      */
@@ -34,7 +49,7 @@ export interface DeviceScriptDebugConfiguration
     /**
      * Instance index of the device manager service. Default is 0
      */
-    serviceIndex?: number
+    serviceInstance?: number
 }
 
 export class DeviceScriptConfigurationProvider
@@ -76,7 +91,7 @@ export class DeviceScriptConfigurationProvider
         // find service
         const service = this.bus.device(dsConfig.deviceId, true)?.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
-        })?.[dsConfig.serviceIndex || 0]
+        })?.[dsConfig.serviceInstance || 0]
         if (!service) {
             vscode.window.showErrorMessage(
                 `Debug cancelled. Could not find device ${dsConfig.deviceId}.`
