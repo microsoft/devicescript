@@ -27,6 +27,7 @@ import type {
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { initBuild } from "./build"
+import { toMarkdownString } from "./catalog"
 import {
     DeviceScriptAdapterServerDescriptorFactory,
     DeviceScriptConfigurationProvider,
@@ -430,18 +431,28 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     const updateStatusBar = () => {
         const service = extensionState.deviceScriptManager
         const mgr = service?.device
-        const { runtimeVersion } = extensionState
+        const { runtimeVersion, version } = extensionState
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
         })
-        statusBarItem.tooltip = mgr
-            ? `Deploy and Debug on device ${mgr.shortId}`
-            : `Click to pick a DeviceScript device`
+        statusBarItem.tooltip = !runtimeVersion
+            ? `Starting DeviceScript Development Server...`
+            : toMarkdownString(`
+${
+    mgr
+        ? `Deploy and Debug on device ${mgr.shortId}`
+        : `Click to pick a DeviceScript device`
+}
+
+---
+
+${runtimeVersion.slice(1)} - Runtime version   
+${version.slice(1)} - Tools version     
+        `)
         statusBarItem.text = [
             !runtimeVersion ? "$(loading~spin)" : "$(devicescript-logo)",
             "DeviceScript",
-            runtimeVersion,
             mgr ? `$(play) ${mgr?.shortId}` : "",
             devices.length > 0 ? `$(circuit-board) ${devices.length}` : "",
         ]

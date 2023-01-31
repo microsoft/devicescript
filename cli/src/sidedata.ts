@@ -82,7 +82,7 @@ export function initSideProto(devtools_: DevToolsIface) {
         const v = parseImgVersion(BinFmt.IMG_VERSION)
         return {
             specs: serviceSpecifications(),
-            version: pkg.version,
+            version: `v${pkg.version}`,
             runtimeVersion: `v${v.major}.${v.minor}.${v.patch}`,
         }
     })
