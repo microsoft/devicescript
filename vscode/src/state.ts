@@ -14,6 +14,7 @@ import {
 import * as vscode from "vscode"
 import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
+import { spawnDevTools } from "./devtoolsserver"
 import { sideRequest } from "./jacdac"
 import { JDeviceTreeItem } from "./JDomTreeDataProvider"
 
@@ -33,7 +34,11 @@ export class ExtensionState extends JDEventSource {
     version = ""
     runtimeVersion: string
 
-    constructor(readonly bus: JDBus, readonly state: vscode.Memento) {
+    constructor(
+        readonly context: vscode.ExtensionContext,
+        readonly bus: JDBus,
+        readonly state: vscode.Memento
+    ) {
         super()
         if (!this.virtualDeviceScriptManagerId) {
             this.state.update(STATE_VM_DEVICE, randomDeviceId())
@@ -105,6 +110,9 @@ export class ExtensionState extends JDEventSource {
     async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {
         const { virtualDeviceScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
+
+        await spawnDevTools(this.context)
+
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })

@@ -80,7 +80,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     context.subscriptions.push({
         dispose: stopJacdacBus,
     })
-    const extensionState = new ExtensionState(bus, workspaceState)
+    const extensionState = new ExtensionState(context, bus, workspaceState)
 
     let unsub = bus.subscribe(CHANGE, async () => {
         if (bus.connected && unsub) {
@@ -439,13 +439,15 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         statusBarItem.tooltip = mgr
             ? `Deploy and Debug on device ${mgr.shortId}`
             : `Click to pick a DeviceScript device`
-        statusBarItem.text = `DeviceScript ${
-            runtimeVersion
-                ? `${runtimeVersion} $(play) ${mgr?.shortId || "???"} $(${
-                      JDeviceTreeItem.ICON
-                  }) ${devices.length}`
-                : "..."
-        }`
+        statusBarItem.text = [
+            !runtimeVersion ? "$(loading~spin)" : "",
+            "DeviceScript",
+            runtimeVersion,
+            mgr ? `$(play) ${mgr?.shortId}` : "",
+            devices.length > 0 ? `$(circuit-board) ${devices.length}` : "",
+        ]
+            .filter(p => !!p)
+            .join(" ")
     }
     extensionState.on(CHANGE, updateStatusBar)
     bus.on([DEVICE_CHANGE, CONNECTION_STATE], updateStatusBar)
