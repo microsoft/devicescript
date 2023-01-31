@@ -4,6 +4,7 @@ import { checkDeviceScriptManagerRuntimeVersion } from "./deploy"
 import { ExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { JDBus, SRV_DEVICE_SCRIPT_MANAGER } from "jacdac-ts"
+import type { StartArgs } from "@devicescript/dap"
 
 export class DeviceScriptAdapterServerDescriptorFactory
     implements vscode.DebugAdapterDescriptorFactory
@@ -25,33 +26,6 @@ export class DeviceScriptAdapterServerDescriptorFactory
     dispose() {}
 }
 
-// don't derive from vscode.DebugConfiguration - it has a generic [key:string]
-export interface DeviceScriptDebugConfiguration {
-    /**
-     * The type of the debug session.
-     */
-    type: string
-
-    /**
-     * The name of the debug session.
-     */
-    name: string
-
-    /**
-     * The request type of the debug session.
-     */
-    request: string
-
-    /**
-     * Device idenfier of the device manager device
-     */
-    deviceId?: string
-    /**
-     * Instance index of the device manager service. Default is 0
-     */
-    serviceInstance?: number
-}
-
 export class DeviceScriptConfigurationProvider
     implements vscode.DebugConfigurationProvider
 {
@@ -65,7 +39,7 @@ export class DeviceScriptConfigurationProvider
         if (token?.isCancellationRequested) return undefined
 
         // find device
-        const dsConfig = config as DeviceScriptDebugConfiguration
+        const dsConfig = config as StartArgs
         if (!dsConfig.deviceId) {
             const service =
                 await this.extensionState.resolveDeviceScriptManager()
