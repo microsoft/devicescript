@@ -343,11 +343,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         "extension.devicescript.watch",
         jdomWatchTreeDataProvider
     )
-    const cloudTreeDataProvider = new CloudTreeDataProvider(
-        bus,
-        extensionState,
-        selectNodeCommand
-    )
+    const cloudTreeDataProvider = new CloudTreeDataProvider(bus, extensionState)
     vscode.window.registerTreeDataProvider(
         "extension.devicescript.cloud-explorer",
         cloudTreeDataProvider
@@ -508,7 +504,28 @@ ${version.slice(1)} - Tools version
         undefined,
         context.subscriptions
     )
-    configure()
+
+    //cloud
+    vscode.commands.registerCommand(
+        "extension.devicescript.cloud.askForToken",
+        async () => {
+            let apiRoot = cloudTreeDataProvider.apiRoot
+            if (!apiRoot) {
+                apiRoot = await vscode.window.showInputBox({
+                    placeHolder: "Enter Cloud Web API Root",
+                    value: "https://jacdac-portal2.azurewebsites.net",
+                })
+                if (apiRoot !== undefined)
+                    await cloudTreeDataProvider.setApiRoot(apiRoot)
+            }
+            const token = await vscode.window.showInputBox({
+                placeHolder: "Enter Cloud Authentication Token",
+                value: "",
+            })
+            if (token !== undefined) await cloudTreeDataProvider.setToken(token)
+        }
+    ),
+        configure()
 }
 
 async function initDevtoolsConnection(state: ExtensionState) {

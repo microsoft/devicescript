@@ -38,14 +38,25 @@ export class CloudTreeDataProvider
         this.handleRefreshConnection()
     }
 
-    private get apiRoot(): string {
+    get apiRoot(): string {
         return vscode.workspace
             .getConfiguration("devicescript.cloud")
-            .get("apiUrl")
+            .get("apiRoot")
     }
 
-    private get token() {
+    async setApiRoot(apiRoot: string) {
+        await vscode.workspace.getConfiguration("devicescript.cloud").update("apiRoot", apiRoot)
+    }
+
+    get token() {
         return this.state.context.secrets.get("devicescript.cloud.token")
+    }
+
+    async setToken(token: string) {
+        await this.state.context.secrets.store(
+            "devicescript.cloud.token",
+            token
+        )
     }
 
     private async handleRefreshConnection() {

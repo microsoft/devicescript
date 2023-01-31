@@ -132,6 +132,11 @@
           "type": "boolean",
           "default": false,
           "description": "Ignore incompatible runtime versions when deploying."
+        },
+        "devicescript.cloud.apiRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Web API root url for device management"
         }
       }
     },
@@ -156,7 +161,7 @@
         },
         {
           "id": "extension.devicescript.cloud-explorer",
-          "name": "Devices"
+          "name": "Cloud"
         }
       ]
     },
@@ -238,6 +243,11 @@
         {
           "command": "extension.devicescript.watch.clear",
           "when": "view == extension.devicescript.watch",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.devicescript.cloud.askForToken",
+          "when": "view == extension.devicescript.cloud-explorer",
           "group": "navigation"
         }
       ],
@@ -402,6 +412,12 @@
         "command": "extension.devicescript.showFirmwareInformation",
         "title": "Update Firmware",
         "category": "DeviceScript"
+      },
+      {
+        "command": "extension.devicescript.cloud.askForToken",
+        "title": "Enter authentication token",
+        "category": "DeviceScript",
+        "icon": "$(plug)"
       }
     ],
     "breakpoints": [
