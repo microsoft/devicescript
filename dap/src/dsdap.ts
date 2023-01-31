@@ -176,6 +176,7 @@ export class DsDapSession extends DebugSession {
                 this.sendEvent(new TerminatedEvent())
                 break
 
+            case DevsDbgSuspensionType.Step:
             case DevsDbgSuspensionType.Breakpoint:
             case DevsDbgSuspensionType.UnhandledException:
             case DevsDbgSuspensionType.HandledException:

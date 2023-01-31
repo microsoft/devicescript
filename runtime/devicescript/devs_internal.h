@@ -80,18 +80,28 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
     return fib->pkt_kind == DEVS_PKT_KIND_LOGMSG;
 }
 
-#define DEVS_CTX_FLAG_BUSY 0x0001
-#define DEVS_CTX_LOGGING_ENABLED 0x0002
-#define DEVS_CTX_FREEING_ROLES 0x0004
-#define DEVS_CTX_TRACE_DISABLED 0x0008
-#define DEVS_CTX_PENDING_RESUME 0x0010
-#define DEVS_CTX_BREAKPOINT_HIT 0x0020
+#define DEVS_CTX_FLAG_BUSY 0x01
+#define DEVS_CTX_LOGGING_ENABLED 0x02
+#define DEVS_CTX_FREEING_ROLES 0x04
+#define DEVS_CTX_TRACE_DISABLED 0x08
+#define DEVS_CTX_PENDING_RESUME 0x10
+
+#define DEVS_CTX_STEP_BRK 0x01
+#define DEVS_CTX_STEP_IN 0x02
+#define DEVS_CTX_STEP_OUT 0x04
 
 typedef struct {
     jd_role_t *role;
     devs_map_t *dynproto;
     devs_map_t *attached;
 } devs_role_t;
+
+#define DEVS_BRK_FLAG_STEP 0x01
+typedef struct {
+    devs_pc_t pc;
+    uint8_t flags;
+    uint8_t reserved;
+} devs_brk_t;
 
 // has to be power of 2
 #define DEVS_BRK_HASH_SIZE 32
@@ -101,7 +111,8 @@ typedef struct {
 struct devs_ctx {
     value_t *globals;
     uint16_t opstack;
-    uint16_t flags;
+    uint8_t flags;
+    uint8_t step_flags;
     uint16_t error_code;
     devs_pc_t error_pc;
 
@@ -119,6 +130,7 @@ struct devs_ctx {
     uint8_t in_throw;
     uint8_t suspension;
     uint8_t dbg_en;
+    uint8_t ignore_brk;
 
     uint32_t literal_int;
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
@@ -150,7 +162,8 @@ struct devs_ctx {
 
     devs_cfg_t cfg;
 
-    devs_pc_t *brk_list;
+    devs_activation_t *step_fn;
+    devs_brk_t *brk_list;
     uint16_t brk_count;
     uint8_t brk_jump_tbl[DEVS_BRK_HASH_SIZE];
 
@@ -227,7 +240,7 @@ void devs_fiber_free_all_fibers(devs_ctx_t *ctx);
 void devs_vm_exec_opcodes(devs_ctx_t *ctx);
 uint8_t devs_fetch_opcode(devs_activation_t *frame, devs_ctx_t *ctx);
 
-int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc);
+int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc, unsigned flags);
 bool devs_vm_clear_breakpoint(devs_ctx_t *ctx, unsigned pc);
 void devs_vm_clear_breakpoints(devs_ctx_t *ctx);
 void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause);
