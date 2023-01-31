@@ -1,10 +1,20 @@
-import { DeviceScriptManagerReg, JDService, versionTryParse } from "jacdac-ts"
+import {
+    delay,
+    DeviceScriptManagerReg,
+    JDService,
+    versionTryParse,
+} from "jacdac-ts"
 import * as vscode from "vscode"
 
 export async function readRuntimeVersion(srv: JDService) {
     const runtimeVersion = srv.register(DeviceScriptManagerReg.RuntimeVersion)
-    await runtimeVersion.refresh()
-    const v = runtimeVersion.unpackedValue
+
+    let retry = 3
+    while (retry-- >= 0 && runtimeVersion.data === undefined) {
+        await runtimeVersion.refresh(true)
+        await delay(50)
+    }
+    const v = runtimeVersion?.unpackedValue
     if (!v) return undefined
     return `v${v[2]}.${v[1]}.${v[0]}`
 }
@@ -15,7 +25,7 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     const version = await readRuntimeVersion(srv)
     console.debug(`deploy: version min ${minVersion}, device ${version}`)
     if (version === undefined) {
-        await vscode.window.showErrorMessage(
+        vscode.window.showErrorMessage(
             `Deploy cancelled. Your device firmware does not have a runtime version. Update your firmware.`
         )
         return false
@@ -28,12 +38,12 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
         vcurr.major < vmin.major ||
         (vcurr.major == vmin.major && vcurr.minor < vmin.minor)
     ) {
-        await vscode.window.showErrorMessage(
+        vscode.window.showErrorMessage(
             `Deploy cancelled. Your device firmware (${version}) is outdated (min ${minVersion}). Update your firmware.`
         )
         return false
     } else if (vcurr.major > vmin.major) {
-        await vscode.window.showErrorMessage(
+        vscode.window.showErrorMessage(
             `Deploy cancelled. Your device firmware (${version}) is ahead of the device script tools (${minVersion}). Update your dependencies.`
         )
         return false
@@ -52,7 +62,7 @@ function shouldIgnoreRuntimeVersion() {
  * @param service
  * @returns
  */
-export function checkDeviceScriptManagerRuntimeVersion(
+export async function checkDeviceScriptManagerRuntimeVersion(
     runtimeVersion: string,
     service: JDService
 ) {
@@ -68,5 +78,5 @@ export function checkDeviceScriptManagerRuntimeVersion(
         )
         return false
     }
-    return checkRuntimeVersion(runtimeVersion, service)
+    return await checkRuntimeVersion(runtimeVersion, service)
 }

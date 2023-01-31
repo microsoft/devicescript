@@ -2,13 +2,8 @@ import * as vscode from "vscode"
 import { build } from "./build"
 import { checkDeviceScriptManagerRuntimeVersion } from "./deploy"
 import { ExtensionState } from "./state"
-import {
-    WorkspaceFolder,
-    DebugConfiguration,
-    ProviderResult,
-    CancellationToken,
-} from "vscode"
-import { JDBus, shortDeviceId, SRV_DEVICE_SCRIPT_MANAGER } from "jacdac-ts"
+import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
+import { JDBus, SRV_DEVICE_SCRIPT_MANAGER } from "jacdac-ts"
 
 export class DeviceScriptAdapterServerDescriptorFactory
     implements vscode.DebugAdapterDescriptorFactory
@@ -17,6 +12,13 @@ export class DeviceScriptAdapterServerDescriptorFactory
         session: vscode.DebugSession,
         executable: vscode.DebugAdapterExecutable | undefined
     ) {
+        const config = vscode.workspace.getConfiguration(
+            "devicescript.debugger"
+        )
+        if (config.get("showTerminalOnStart"))
+            vscode.commands.executeCommand(
+                "extension.devicescript.showServerTerminal"
+            )
         return new vscode.DebugAdapterServer(8083, "localhost")
     }
 
@@ -52,15 +54,6 @@ export class DeviceScriptConfigurationProvider
         if (!dsConfig.deviceId) {
             const service =
                 await this.extensionState.resolveDeviceScriptManager()
-            if (
-                !checkDeviceScriptManagerRuntimeVersion(
-                    this.extensionState.runtimeVersion,
-                    service
-                )
-            ) {
-                // don't start debugging
-                return undefined
-            }
             const idx = service.device
                 .services({ serviceClass: service.serviceClass })
                 .indexOf(service)
@@ -78,17 +71,29 @@ export class DeviceScriptConfigurationProvider
             if (shortIdDevice) dsConfig.deviceId = shortIdDevice.deviceId
         }
 
-        // final check
-        if (!this.bus.device(dsConfig.deviceId, true)) {
+        // find service
+        const service = this.bus.device(dsConfig.deviceId, true)?.services({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })?.[dsConfig.serviceIndex || 0]
+        if (!service) {
             vscode.window.showErrorMessage(
                 `Debug cancelled. Could not find device ${dsConfig.deviceId}.`
             )
             return undefined
         }
 
-        if (!(await build(config.program, dsConfig.deviceId))) {
-            // build
+        // check version
+        const versionOk = await checkDeviceScriptManagerRuntimeVersion(
+            this.extensionState.runtimeVersion,
+            service
+        )
+        if (!versionOk) {
             // don't start debugging
+            return undefined
+        }
+
+        // build and deploy
+        if (!(await build(config.program, dsConfig.deviceId))) {
             return undefined
         }
 
@@ -117,7 +122,7 @@ export class DeviceScriptConfigurationProvider
         }
 
         if (!config.program) {
-            await vscode.window.showInformationMessage(
+            vscode.window.showInformationMessage(
                 "Debug cancelled. Cannot find a program to debug."
             )
             return undefined
