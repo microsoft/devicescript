@@ -33,10 +33,12 @@
     "url": "https://github.com/microsoft/devicescript/issues"
   },
   "scripts": {
+    "buildicons": "node ./scripts/updateFonts.js",
+    "buildts": "node ../build.js --fast",
     "package": "vsce package",
     "publish": "vsce publish",
     "publish-pre-release": "vsce publish --pre-release",
-    "build": "node ../build.js --fast",
+    "build": "yarn buildicons && yarn buildts",
     "vscode:prepublish": "yarn build"
   },
   "devDependencies": {
@@ -44,11 +46,12 @@
     "@vscode/debugadapter": "^1.58.0",
     "@vscode/debugadapter-testsupport": "^1.58.0",
     "@vscode/vsce": "^2.16.0",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.4",
+    "webfont": "^11.2.26"
   },
   "dependencies": {
-    "websocket-polyfill": "^0.0.3",
-    "jacdac-ts": "*"
+    "jacdac-ts": "*",
+    "websocket-polyfill": "^0.0.3"
   },
   "main": "./built/devicescript-vscode.js",
   "browser": "./built/devicescript-vscode-web.js",
@@ -202,6 +205,15 @@
         ]
       }
     ],
+    "icons": {
+      "devicescript-logo": {
+        "description": "Devicescript logo",
+        "default": {
+          "fontPath": "./built/devicescript.woff",
+          "fontCharacter": "\\E001"
+        }
+      }
+    },
     "menus": {
       "view/title": [
         {
