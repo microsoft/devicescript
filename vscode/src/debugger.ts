@@ -8,6 +8,7 @@ import {
     ProviderResult,
     CancellationToken,
 } from "vscode"
+import { JDBus, shortDeviceId, SRV_DEVICE_SCRIPT_MANAGER } from "jacdac-ts"
 
 export class DeviceScriptAdapterServerDescriptorFactory
     implements vscode.DebugAdapterDescriptorFactory
@@ -22,10 +23,22 @@ export class DeviceScriptAdapterServerDescriptorFactory
     dispose() {}
 }
 
+export interface DeviceScriptDebugConfiguration
+    extends vscode.DebugConfiguration {
+    /**
+     * Device idenfier of the device manager device
+     */
+    deviceId?: string
+    /**
+     * Instance index of the device manager service. Default is 0
+     */
+    serviceIndex?: number
+}
+
 export class DeviceScriptConfigurationProvider
     implements vscode.DebugConfigurationProvider
 {
-    constructor(readonly extensionState: ExtensionState) {}
+    constructor(readonly bus: JDBus, readonly extensionState: ExtensionState) {}
 
     async resolveDebugConfigurationWithSubstitutedVariables(
         folder: vscode.WorkspaceFolder,
@@ -34,29 +47,47 @@ export class DeviceScriptConfigurationProvider
     ) {
         if (token?.isCancellationRequested) return undefined
 
-        const service = await this.extensionState.resolveDeviceScriptManager()
-        if (
-            !checkDeviceScriptManagerRuntimeVersion(
-                this.extensionState.runtimeVersion,
-                service
-            )
-        ) {
-            // don't start debugging
-            return undefined
-        }
-
-        const idx = service.device
-            .services({ serviceClass: service.serviceClass })
-            .indexOf(service)
-
-        config.devicescript = {
-            deviceId: service.device.deviceId,
-            serviceInstance: idx,
+        // find device
+        const dsConfig = config as DeviceScriptDebugConfiguration
+        if (!dsConfig.deviceId) {
+            const service =
+                await this.extensionState.resolveDeviceScriptManager()
+            if (
+                !checkDeviceScriptManagerRuntimeVersion(
+                    this.extensionState.runtimeVersion,
+                    service
+                )
+            ) {
+                // don't start debugging
+                return undefined
+            }
+            const idx = service.device
+                .services({ serviceClass: service.serviceClass })
+                .indexOf(service)
+            dsConfig.deviceId = service.device.deviceId
+            dsConfig.serviceInstance = idx
         }
 
         if (token?.isCancellationRequested) return undefined
 
-        if (!(await build(config.program, service.device.deviceId))) {
+        // expand device short name
+        if (/^[A-Z][A-Z][0-9][0-9]$/i.test(dsConfig.deviceId)) {
+            const shortIdDevice = this.bus
+                .devices({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER })
+                .find(d => d.shortId === dsConfig.deviceId)
+            if (shortIdDevice) dsConfig.deviceId = shortIdDevice.deviceId
+        }
+
+        // final check
+        if (!this.bus.device(dsConfig.deviceId, true)) {
+            vscode.window.showErrorMessage(
+                `Debug cancelled. Could not find device ${dsConfig.deviceId}.`
+            )
+            return undefined
+        }
+
+        if (!(await build(config.program, dsConfig.deviceId))) {
+            // build
             // don't start debugging
             return undefined
         }

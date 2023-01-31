@@ -210,7 +210,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     subscriptions.push(
         vscode.commands.registerCommand(
-            "extension.devicescript.getProgramName",
+            "extension.devicescript.variables.askForProgramName",
             config => {
                 return vscode.window.showInputBox({
                     placeHolder:
@@ -218,6 +218,10 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     value: "main.ts",
                 })
             }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.variables.virtualDevice",
+            config => extensionState.virtualDeviceScriptManagerId
         )
     )
 
@@ -225,7 +229,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     vscode.window.onDidChangeActiveColorTheme(updateDeveloperToolsPanelUrl)
 
     // register a configuration provider for 'devicescript' debug type
-    const provider = new DeviceScriptConfigurationProvider(extensionState)
+    const provider = new DeviceScriptConfigurationProvider(bus, extensionState)
     subscriptions.push(
         vscode.debug.registerDebugConfigurationProvider(
             "devicescript",
@@ -243,10 +247,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 ): ProviderResult<DebugConfiguration[]> {
                     return [
                         {
-                            name: "devicescript Launch",
+                            name: "Devicescript: Launch",
                             request: "launch",
                             type: "devicescript",
-                            program: "${file}",
+                            program:
+                                "${workspaceFolder}/${command:askForProgramName}",
                         },
                     ]
                 },

@@ -381,73 +381,27 @@
         "configurationAttributes": {
           "launch": {
             "required": [
-              "program"
+              "program",
+              "deviceId"
             ],
             "properties": {
               "program": {
                 "type": "string",
                 "description": "Absolute path to a text file.",
-                "default": "${workspaceFolder}/${command:AskForProgramName}"
+                "default": "${workspaceFolder}/main.ts"
               },
               "stopOnEntry": {
                 "type": "boolean",
                 "description": "Automatically stop after launch.",
                 "default": true
               },
-              "trace": {
-                "type": "boolean",
-                "description": "Enable logging of the Debug Adapter Protocol.",
-                "default": true
-              },
-              "compileError": {
+              "deviceId": {
                 "type": "string",
-                "description": "Simulates a compile error in 'launch' request.",
-                "enum": [
-                  "default",
-                  "show",
-                  "hide"
-                ],
-                "enumDescriptions": [
-                  "default: show fake compile error to user",
-                  "show fake compile error to user",
-                  "do not show fake compile error to user"
-                ]
-              }
-            }
-          },
-          "attach": {
-            "required": [
-              "program"
-            ],
-            "properties": {
-              "program": {
-                "type": "string",
-                "description": "Absolute path to a text file.",
-                "default": "${workspaceFolder}/${command:AskForProgramName}"
+                "description": "Device identifier of the device (long or short). Use ${VirtualDevice} for the Virtual Device."
               },
-              "stopOnEntry": {
-                "type": "boolean",
-                "description": "Automatically stop after attach.",
-                "default": true
-              },
-              "trace": {
-                "type": "boolean",
-                "description": "Enable logging of the Debug Adapter Protocol.",
-                "default": true
-              },
-              "compileError": {
-                "type": "string",
-                "description": "Simulates a compile error in 'attach' request.",
-                "enum": [
-                  "default",
-                  "show",
-                  "hide"
-                ],
-                "enumDescriptions": [
-                  "default: show fake compile error to user",
-                  "show fake compile error to user",
-                  "do not show fake compile error to user"
-                ]
+              "serviceInstance": {
+                "type": "number",
+                "description": "Instance index of the device manger service. Default is 0."
               }
             }
           }
@@ -456,8 +410,8 @@
           {
             "type": "devicescript",
             "request": "launch",
-            "name": "Ask for file name",
-            "program": "${workspaceFolder}/${command:AskForProgramName}",
+            "name": "DeviceScript: Launch",
+            "program": "${workspaceFolder}/main.ts",
             "stopOnEntry": true
           }
         ],
@@ -468,14 +422,15 @@
             "body": {
               "type": "devicescript",
               "request": "launch",
-              "name": "Ask for file name",
-              "program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
+              "name": "DeviceScript: Launch",
+              "program": "^\"\\${workspaceFolder}/main.ts",
               "stopOnEntry": true
             }
           }
         ],
         "variables": {
-          "AskForProgramName": "extension.devicescript.getProgramName"
+          "askForProgramName": "extension.devicescript.variables.askForProgramName",
+          "virtualDevice": "extension.devicescript.variables.virtualDevice"
         }
       }
     ]

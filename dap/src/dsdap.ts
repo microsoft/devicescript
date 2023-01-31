@@ -51,10 +51,8 @@ function exnToString(err: unknown) {
 export interface StartArgs
     extends DebugProtocol.AttachRequestArguments,
         DebugProtocol.LaunchRequestArguments {
-    devicescript?: {
-        deviceId: string
-        serviceInstance: number
-    }
+    deviceId?: string
+    serviceInstance?: number
 }
 
 const maxStrLen = 1024
@@ -102,7 +100,7 @@ export class DsDapSession extends DebugSession {
     }
 
     private async createClient(cfg: StartArgs, timeout = 2000) {
-        const did = cfg?.devicescript?.deviceId
+        const did = cfg?.deviceId
         const t0 = Date.now()
         while (Date.now() - t0 < timeout) {
             let s: JDService
@@ -110,7 +108,7 @@ export class DsDapSession extends DebugSession {
                 const dev = this.bus.device(did, true)
                 s = dev?.services({
                     serviceClass: SRV_DEVS_DBG,
-                })[cfg.devicescript.serviceInstance ?? 0]
+                })[cfg.serviceInstance ?? 0]
             } else {
                 s = this.bus.services({
                     serviceClass: SRV_DEVS_DBG,

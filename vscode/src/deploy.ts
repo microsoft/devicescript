@@ -10,6 +10,8 @@ export async function readRuntimeVersion(srv: JDService) {
 }
 
 export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
+    if (shouldIgnoreRuntimeVersion()) return true
+
     const version = await readRuntimeVersion(srv)
     console.debug(`deploy: version min ${minVersion}, device ${version}`)
     if (version === undefined) {
@@ -39,7 +41,7 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     return true
 }
 
-export function shouldIgnoreRuntimeVersion() {
+function shouldIgnoreRuntimeVersion() {
     const config = vscode.workspace.getConfiguration("devicescript.deploy")
     return !!config.get("ignoreRuntimeVersion")
 }
@@ -50,7 +52,10 @@ export function shouldIgnoreRuntimeVersion() {
  * @param service
  * @returns
  */
-export function checkDeviceScriptManagerRuntimeVersion(runtimeVersion: string, service: JDService) {
+export function checkDeviceScriptManagerRuntimeVersion(
+    runtimeVersion: string,
+    service: JDService
+) {
     if (!runtimeVersion) {
         vscode.window.showErrorMessage(
             "Deploy cancelled. Developer tools not started."
