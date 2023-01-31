@@ -54,11 +54,13 @@ export class DeviceScriptConfigurationProvider
         if (!dsConfig.deviceId) {
             const service =
                 await this.extensionState.resolveDeviceScriptManager()
-            const idx = service.device
-                .services({ serviceClass: service.serviceClass })
-                .indexOf(service)
-            dsConfig.deviceId = service.device.deviceId
-            dsConfig.serviceInstance = idx
+            if (service) {
+                const idx = service.device
+                    .services({ serviceClass: service.serviceClass })
+                    .indexOf(service)
+                dsConfig.deviceId = service.device.deviceId
+                dsConfig.serviceInstance = idx
+            }
         }
 
         if (token?.isCancellationRequested) return undefined

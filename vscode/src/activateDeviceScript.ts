@@ -6,8 +6,11 @@ import {
     CHANGE,
     CONNECTION_STATE,
     DEVICE_CHANGE,
+    DOCS_ROOT,
     Flags,
     FRAME_PROCESS,
+    identifierToUrlPath,
+    JDDevice,
     JDFrameBuffer,
     JDRegister,
     loadServiceSpecifications,
@@ -343,6 +346,22 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     )
 
     context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.showFirmwareInformation",
+            (device: JDDevice) => {
+                if (!device) return
+                const spec =
+                    bus.deviceCatalog.specificationFromProductIdentifier(
+                        device.productIdentifier
+                    )
+                if (spec) {
+                    const uri = `${DOCS_ROOT}${`devices/${identifierToUrlPath(
+                        spec.id
+                    )}`}`
+                    vscode.commands.executeCommand("vscode.open", uri)
+                }
+            }
+        ),
         vscode.commands.registerCommand(
             "extension.devicescript.stopVirtualDevice",
             async () => {

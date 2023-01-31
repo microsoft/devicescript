@@ -19,15 +19,25 @@ export async function readRuntimeVersion(srv: JDService) {
     return `v${v[2]}.${v[1]}.${v[0]}`
 }
 
+const infoCommand = "Update Firmware"
 export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     if (shouldIgnoreRuntimeVersion()) return true
 
     const version = await readRuntimeVersion(srv)
     console.debug(`deploy: version min ${minVersion}, device ${version}`)
     if (version === undefined) {
-        vscode.window.showErrorMessage(
-            `Deploy cancelled. Your device firmware does not have a runtime version. Update your firmware.`
-        )
+        vscode.window
+            .showErrorMessage(
+                `Deploy cancelled. Your device firmware does not have a runtime version. Update your firmware.`,
+                infoCommand
+            )
+            .then(cmd => {
+                if (cmd)
+                    vscode.commands.executeCommand(
+                        "extension.devicescript.showFirmwareInformation",
+                        srv.device
+                    )
+            })
         return false
     }
 
@@ -38,9 +48,18 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
         vcurr.major < vmin.major ||
         (vcurr.major == vmin.major && vcurr.minor < vmin.minor)
     ) {
-        vscode.window.showErrorMessage(
-            `Deploy cancelled. Your device firmware (${version}) is outdated (min ${minVersion}). Update your firmware.`
-        )
+        vscode.window
+            .showErrorMessage(
+                `Deploy cancelled. Your device firmware (${version}) is outdated (min ${minVersion}). Update your firmware.`,
+                infoCommand
+            )
+            .then(cmd => {
+                if (cmd)
+                    vscode.commands.executeCommand(
+                        "extension.devicescript.showFirmwareInformation",
+                        srv.device
+                    )
+            })
         return false
     } else if (vcurr.major > vmin.major) {
         vscode.window.showErrorMessage(

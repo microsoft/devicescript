@@ -362,6 +362,11 @@
         "command": "extension.devicescript.stopVirtualDevice",
         "title": "Stop Virtual Device",
         "category": "DeviceScript"
+      },
+      {
+        "command": "extension.devicescript.showFirmwareInformation",
+        "title": "Update Firmware",
+        "category": "DeviceScript"
       }
     ],
     "breakpoints": [
