@@ -23,6 +23,7 @@ export class DeviceScriptAdapterServerDescriptorFactory
             vscode.commands.executeCommand(
                 "extension.devicescript.showServerTerminal"
             )
+
         return new vscode.DebugAdapterServer(8083, "localhost")
     }
 
@@ -39,10 +40,10 @@ export class DeviceScriptConfigurationProvider
         config: vscode.DebugConfiguration,
         token?: vscode.CancellationToken
     ) {
-        if (token?.isCancellationRequested) return undefined
+        const sessionConfig = config as vscode.DebugSessionOptions
+        const dsConfig = config as StartArgs
 
         // find device
-        const dsConfig = config as StartArgs
         if (!dsConfig.deviceId) {
             const service =
                 await this.extensionState.resolveDeviceScriptManager()
@@ -66,10 +67,7 @@ export class DeviceScriptConfigurationProvider
         }
 
         // start vm if needed
-        if (
-            dsConfig.deviceId ===
-            this.extensionState.simulatorScriptManagerId
-        )
+        if (dsConfig.deviceId === this.extensionState.simulatorScriptManagerId)
             await this.extensionState.startSimulator()
 
         // find service
@@ -105,6 +103,11 @@ export class DeviceScriptConfigurationProvider
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId
         )
+
+        // run, no debug
+        if (sessionConfig?.noDebug) {
+            return undefined
+        }
 
         return config
     }
