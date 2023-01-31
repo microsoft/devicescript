@@ -1,6 +1,9 @@
 import * as vscode from "vscode"
 import { build } from "./build"
-import { checkDeviceScriptManagerRuntimeVersion } from "./deploy"
+import {
+    checkDeviceScriptManagerRuntimeVersion,
+    prepareForDeploy,
+} from "./deploy"
 import { ExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { JDBus, SRV_DEVICE_SCRIPT_MANAGER } from "jacdac-ts"
@@ -73,6 +76,13 @@ export class DeviceScriptConfigurationProvider
             if (shortIdDevice) dsConfig.deviceId = shortIdDevice.deviceId
         }
 
+        // start vm if needed
+        if (
+            dsConfig.deviceId ===
+            this.extensionState.virtualDeviceScriptManagerId
+        )
+            await this.extensionState.startVM()
+
         // find service
         const service = this.bus.device(dsConfig.deviceId, true)?.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
@@ -94,10 +104,18 @@ export class DeviceScriptConfigurationProvider
             return undefined
         }
 
+        // prepare for deploy
+        await prepareForDeploy(this.extensionState, service)
+
         // build and deploy
-        if (!(await build(config.program, dsConfig.deviceId))) {
+        if (!(await build(config.program, service))) {
             return undefined
         }
+
+        // save as currently debugged project
+        await this.extensionState.updateCurrentDeviceScriptManagerId(
+            service.device.deviceId
+        )
 
         return config
     }

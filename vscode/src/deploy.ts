@@ -5,6 +5,7 @@ import {
     versionTryParse,
 } from "jacdac-ts"
 import * as vscode from "vscode"
+import { ExtensionState } from "./state"
 
 export async function readRuntimeVersion(srv: JDService) {
     const runtimeVersion = srv.register(DeviceScriptManagerReg.RuntimeVersion)
@@ -98,4 +99,19 @@ export async function checkDeviceScriptManagerRuntimeVersion(
         return false
     }
     return await checkRuntimeVersion(runtimeVersion, service)
+}
+
+export async function prepareForDeploy(
+    extensionState: ExtensionState,
+    service: JDService
+) {
+    // disable autostart (which is really auto-restart when the program stops)
+    await service
+        .register(DeviceScriptManagerReg.Autostart)
+        .sendSetAsync(new Uint8Array([0]))
+    // for VM we started, disable logging - logging will go through DMESG
+    if (extensionState.virtualDeviceScriptManagerId === service.device.deviceId)
+        await service
+            .register(DeviceScriptManagerReg.Logging)
+            .sendSetAsync(new Uint8Array([0]))
 }

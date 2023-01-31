@@ -7,11 +7,10 @@ import type {
 } from "../../cli/src/sideprotocol"
 import { sideRequest, subSideEvent } from "./jacdac"
 import * as vscode from "vscode"
-import { groupBy } from "jacdac-ts"
+import { groupBy, JDService } from "jacdac-ts"
 
 // let outputCh: vscode.OutputChannel
 let diagColl: vscode.DiagnosticCollection
-let lastBuildFilename = "???.ts"
 
 export function initBuild() {
     // outputCh = vscode.window.createOutputChannel("DevS Build")
@@ -57,8 +56,8 @@ export function showBuildResults(st: BuildStatus) {
     }
 }
 
-export async function build(filename: string, deviceId = "*") {
-    lastBuildFilename = filename
+export async function build(filename: string, service: JDService) {
+    const deviceId = service.device.deviceId
     try {
         const res = await sideRequest<SideBuildReq, SideBuildResp>({
             req: "build",

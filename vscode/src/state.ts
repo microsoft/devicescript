@@ -13,7 +13,7 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
-import { readRuntimeVersion } from "./deploy"
+import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { sideRequest } from "./jacdac"
 import { JDeviceTreeItem } from "./JDomTreeDataProvider"
 
@@ -63,10 +63,13 @@ export class ExtensionState extends JDEventSource {
         return current?.services({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER })[0]
     }
 
-    private async updateCurrentDeviceScriptManagerId(id: string) {
-        await this.state.update(STATE_CURRENT_DEVICE, id)
-        if (id !== this.virtualDeviceScriptManagerId) await this.stopVM()
-        this.emit(CHANGE)
+    public async updateCurrentDeviceScriptManagerId(id: string) {
+        const oldid = this.state.get(STATE_CURRENT_DEVICE) as string
+        if (oldid !== id) {
+            await this.state.update(STATE_CURRENT_DEVICE, id)
+            if (id !== this.virtualDeviceScriptManagerId) await this.stopVM()
+            this.emit(CHANGE)
+        }
     }
 
     async resolveDeviceScriptManager(): Promise<JDService> {
@@ -150,29 +153,14 @@ export class ExtensionState extends JDEventSource {
         } else {
             startVM = false
         }
-
         const service = this.bus.device(did, true)?.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })?.[0]
-
-        if (service) {
-            // disable autostart (which is really auto-restart when the program stops)
-            await service
-                .register(DeviceScriptManagerReg.Autostart)
-                .sendSetAsync(new Uint8Array([0]))
-            // for VM we started, disable logging - logging will go through DMESG
-            if (startVM)
-                await service
-                    .register(DeviceScriptManagerReg.Logging)
-                    .sendSetAsync(new Uint8Array([0]))
-        }
-
-        if (service && !skipUpdate) {
+        if (service) await prepareForDeploy(this, service)
+        if (service && !skipUpdate)
             await this.updateCurrentDeviceScriptManagerId(
                 service.device.deviceId
             )
-            return service
-        }
-        return undefined
+        return service
     }
 }
