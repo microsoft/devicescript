@@ -300,7 +300,7 @@
           "group": "inline"
         },
         {
-          "command": "extension.devicescript.cloud.device.upgradeScript",
+          "command": "extension.devicescript.cloud.device.updateScript",
           "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
           "group": "inline"
         }
@@ -439,7 +439,7 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "extension.devicescript.cloud.device.upgradeScript",
+        "command": "extension.devicescript.cloud.device.updateScript",
         "title": "Upgrade Script",
         "category": "DeviceScript Cloud",
         "icon": "$(refresh)"

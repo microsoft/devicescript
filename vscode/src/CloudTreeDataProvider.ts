@@ -4,6 +4,7 @@ import {
     CloudDevice,
     CloudManager,
     CloudNode,
+    CloudScript,
     CLOUD_DEVICE_NODE,
     CLOUD_SCRIPT_NODE,
     JDBus,
@@ -60,10 +61,26 @@ export class CloudTreeDataProvider
             subscriptions
         )
         vscode.commands.registerCommand(
-            "extension.devicescript.cloud.device.upgradeScript",
+            "extension.devicescript.cloud.device.updateScript",
             async (device: CloudDevice) => {
-                const script = this._manager?.script(device.scriptId)
-                if (!script) return
+                const current = this._manager?.script(device.scriptId)
+                const scripts = this._manager.scripts()
+
+                const res = await vscode.window.showQuickPick(
+                    scripts.map(
+                        script =>
+                            <vscode.QuickPickItem & { script: CloudScript }>{
+                                script,
+                                label: script.displayName,
+                                description: `v${script.version}`,
+                                detail: script.creationTime.toLocaleString(),
+                                picked: script === current,
+                            }
+                    )
+                )
+                if (res === undefined) return
+
+                const script = res.script
                 await script.refreshVersions()
                 const versions = script.versions()
                 const v = await vscode.window.showQuickPick(
@@ -77,7 +94,7 @@ export class CloudTreeDataProvider
                     )
                 )
                 if (v !== undefined)
-                    await device.updateScript(device.scriptId, v.version)
+                    await device.updateScript(script.scriptId, v.version)
             },
             subscriptions
         )
