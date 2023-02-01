@@ -481,7 +481,7 @@ ${version.slice(1)} - Tools version
     const logFrame = (frame: JDFrameBuffer) => {
         const output = jacdacPacketsOutputChannel
         if (!output) return
-        const msg = serializeToTrace(frame, 0, bus)
+        const msg = serializeToTrace(frame, 0, bus, {})
         if (msg) output.appendLine(msg)
     }
     // apply settings
