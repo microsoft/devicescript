@@ -20,8 +20,9 @@ function foo() {
             throw new Error("test123")
             if (e == 2) debugger
         })
-    } catch (e: any) {
-        console.log("got it", e)
+    } catch (exn: any) {
+        console.log("got it", exn)
+        exn.print()
     }
     console.log("past dbg")
 }

@@ -165,6 +165,7 @@ export class DevsDbgClient extends JDServiceClient {
     async step(frame: DevsValue, flags: DevsDbgStepFlags, brkPCs: number[]) {
         await this.lock.runExclusive(async () => {
             assert(!!frame.stackFrame)
+            this.clearValues()
             await this.service.sendCmdAsync(
                 DevsDbgCmd.Step,
                 jdpack("u32 u16 x[2] u32[]", [frame.v0, flags, brkPCs])
@@ -380,12 +381,14 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     private suspendedHandler(ev: JDEvent) {
-        const [fiber, type] = jdunpack<
+        const [fiber, reason] = jdunpack<
             [DevsDbgFiberHandle, DevsDbgSuspensionType]
         >(ev.data, "u32 u8")
+        if (this.suspensionReason == reason && this.suspendedFiber == fiber)
+            return
         this.suspendedFiber = fiber
-        this.suspensionReason = type
-        this.xlog(`suspended fib=${fiber} ${DevsDbgSuspensionType[type]}`)
+        this.suspensionReason = reason
+        this.xlog(`suspended fib=${fiber} ${DevsDbgSuspensionType[reason]}`)
         this.emit(EV_SUSPENDED)
     }
 
