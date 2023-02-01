@@ -4,7 +4,8 @@
 #include "devs_logging.h"
 
 static inline devs_pc_t *get_tryframes(devs_activation_t *frame) {
-    JD_ASSERT(frame->func->num_try_frames > 0);
+    if (frame->func->num_try_frames == 0)
+        return NULL;
     return (devs_pc_t *)(frame->slots + frame->func->num_slots);
 }
 
@@ -169,7 +170,6 @@ void devs_process_throw(devs_ctx_t *ctx) {
     value_t exn = ctx->exn_val;
     int jump_pc = 0;
     unsigned jump_level = 0;
-    bool step_frame_popped = false;
 
     if (devs_is_special(exn) && devs_handle_is_throw_jmp(devs_handle_value(exn))) {
         jump_pc = devs_handle_decode_throw_jmp_pc(devs_handle_value(exn), &jump_level);
@@ -206,9 +206,8 @@ void devs_process_throw(devs_ctx_t *ctx) {
                 break;
             }
             int hadcaller = frame->caller != NULL;
-            if (frame == ctx->step_fn)
-                step_frame_popped = true;
-            LOG("up hadcaller=%d", hadcaller);
+            LOG("up from %s (caller=%d)", devs_img_get_utf8(ctx->img, frame->func->name_idx, NULL),
+                hadcaller);
             devs_fiber_return_from_call(ctx->curr_fiber, frame);
             if (!hadcaller) {
                 devs_unhandled_exn(ctx, exn);
@@ -245,7 +244,7 @@ void devs_process_throw(devs_ctx_t *ctx) {
         ctx->curr_fiber->ret_val = ctx->exn_val;
     ctx->exn_val = devs_undefined;
 
-    if (step_frame_popped)
+    if (ctx->step_flags)
         devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
 }
 

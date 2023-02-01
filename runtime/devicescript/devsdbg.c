@@ -574,7 +574,9 @@ static void step_cmd(cmd_t *cmd) {
 
         unsigned numbrk = (cmd->pkt->service_size - 8) / sizeof(uint32_t);
 
-        ctx->step_flags = numbrk ? DEVS_CTX_STEP_BRK : 0;
+        ctx->step_flags = DEVS_CTX_STEP_EN;
+        if (numbrk)
+            ctx->step_flags |= DEVS_CTX_STEP_BRK;
         if (args->flags & JD_DEVS_DBG_STEP_FLAGS_STEP_OUT)
             ctx->step_flags |= DEVS_CTX_STEP_OUT;
         if (args->flags & JD_DEVS_DBG_STEP_FLAGS_STEP_IN)
@@ -720,6 +722,7 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
 void devsdbg_suspend_cb(devs_ctx_t *ctx) {
     srv_t *state = _state;
+    LOG("suspend %d", ctx->suspension);
     devs_fiber_t *fib = ctx->curr_fiber;
     // if no current thread, default to main (or oldest) thread
     if (!fib)

@@ -159,10 +159,6 @@ void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
             return;
         }
     }
-
-    if (ctx->dbg_en && ctx->step_fn == act && (ctx->step_flags & DEVS_CTX_STEP_OUT)) {
-        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
-    }
 }
 
 void devs_fiber_free_all_fibers(devs_ctx_t *ctx) {
