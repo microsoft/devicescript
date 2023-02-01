@@ -40,7 +40,7 @@ export enum Op {
     EXPRx_DS_FIELD = 30, // ds.builtin_idx
     EXPRx_OBJECT_FIELD = 16, // Object.builtin_idx
     EXPR1_NEW = 88, // new func
-    EXPR2_BIND = 90, // func.bind(obj)
+    EXPR2_BIND = 15, // func.bind(obj)
     STMT0_ALLOC_MAP = 31,
     STMT1_ALLOC_ARRAY = 32, // initial_size
     STMT1_ALLOC_BUFFER = 33, // size
@@ -90,20 +90,19 @@ export enum Op {
     STMT1_TERMINATE_FIBER = 72, // fiber_handle
     EXPR0_NOW_MS = 77,
     EXPR1_GET_FIBER_HANDLE = 78, // func
-    STMT0_REMOVED_PANIC = 15,
-    OP_PAST_LAST = 91,
+    OP_PAST_LAST = 90,
 }
 
 export const OP_PROPS =
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x10\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x42"
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42"
 export const OP_TYPES =
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x08"
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06"
 
 export enum BinFmt {
-    IMG_VERSION_MAJOR = 4,
-    IMG_VERSION_MINOR = 4,
+    IMG_VERSION_MAJOR = 5,
+    IMG_VERSION_MINOR = 0,
     IMG_VERSION_PATCH = 0,
-    IMG_VERSION = 0x4040000,
+    IMG_VERSION = 0x5000000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 9,
@@ -267,7 +266,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 124,
+    __MAX = 131,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -316,7 +315,7 @@ export enum BuiltInString {
     ONCONNECTED = 45,
     ONDISCONNECTED = 46,
     PACKET = 47,
-    PANIC = 48,
+    _PANIC = 48,
     POP = 49,
     POW = 50,
     PREV = 51,
@@ -393,6 +392,13 @@ export enum BuiltInString {
     GETPROTOTYPEOF = 122,
     CONSTRUCTOR = 123,
     __PROTO__ = 124,
+    _LOGREPR = 125,
+    PRINT = 126,
+    EVERYMS = 127,
+    SETINTERVAL = 128,
+    SETTIMEOUT = 129,
+    CLEARINTERVAL = 130,
+    CLEARTIMEOUT = 131,
 }
 
 export const OP_PRINT_FMTS = [
@@ -411,7 +417,7 @@ export const OP_PRINT_FMTS = [
     "RETURN %e",
     "JMP %j",
     "JMP %j IF NOT %e",
-    "REMOVED_PANIC ",
+    "%e.bind(%e)",
     "Object.%I",
     "%L := %e",
     "%G := %e",
@@ -486,7 +492,6 @@ export const OP_PRINT_FMTS = [
     "DEBUGGER ",
     "(new %e)",
     "instance_of(obj=%e, cls=%e)",
-    "%e.bind(%e)",
 ]
 export const OBJECT_TYPE = [
     "null",
@@ -552,7 +557,7 @@ export const BUILTIN_STRING__VAL = [
     "onConnected",
     "onDisconnected",
     "packet",
-    "panic",
+    "_panic",
     "pop",
     "pow",
     "prev",
@@ -629,6 +634,13 @@ export const BUILTIN_STRING__VAL = [
     "getPrototypeOf",
     "constructor",
     "__proto__",
+    "_logRepr",
+    "print",
+    "everyMs",
+    "setInterval",
+    "setTimeout",
+    "clearInterval",
+    "clearTimeout",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

@@ -7,16 +7,16 @@ hide_table_of_contents: true
 
 ## Time
 
-Run a function periodically (`0.3s` in the example below; `20ms` minimum):
+Run a function periodically (`300ms` in the example below; `20ms` minimum):
 ```ts
-ds.every(0.3, () => {
+ds.everyMs(300, () => {
     // ...
 })
 ```
 
-Wait given number of seconds:
+Wait given number of milliseconds:
 ```ts
-ds.wait(0.3)
+ds.sleepMs(300)
 ```
 
 ## Math
@@ -61,11 +61,11 @@ All of the above should have the same semantics as JavaScript.
 
 ## Misc functions
 
-The `panic()` function takes a numeric error code and terminates or restarts the program.
+The `_panic()` function takes a numeric error code and terminates or restarts the program.
 `reboot()` is similar, but doesn't print error message and wait less before restarting program.
-You generally should use `throw ...` instead of `panic()`.
+You generally should use `throw ...` instead of `_panic()`.
 
 ```ts
-ds.panic(348)
+ds._panic(348)
 ds.reboot()
 ```

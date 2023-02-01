@@ -15,6 +15,6 @@ led.brightness.onChange(0.1, () => {
     relay.active.write(!relay.active.read())
 })
 
-ds.every(0.2, () => {
+ds.everyMs(200, () => {
     console.log("lb", led.brightness.read())
 })

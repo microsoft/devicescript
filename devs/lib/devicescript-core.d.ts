@@ -196,15 +196,45 @@ declare module "@devicescript/core" {
     }
     export const cloud: CloudAdapter
 
-    export function print(fmt: string, ...args: number[]): void
+    /**
+     * Format string. Best use backtick templates instead.
+     */
     export function format(fmt: string, ...args: number[]): string
-    export function wait(seconds: number): void
-    export function every(seconds: number, callback: () => void): void
+
+    /**
+     * Run a callback every given number of milliseconds.
+     */
+    export function everyMs(milliseconds: number, callback: () => void): void
+
+    /**
+     * Wait for specified number of milliseconds.
+     */
     export function sleepMs(milliseconds: number): void
-    export function panic(code: number): never
+
+    /**
+     * Restart current script.
+     */
     export function reboot(): never
-    export function onStart(handler: () => void): void
+
+    /**
+     * Throw an exception if the condition is not met.
+     */
     export function assert(cond: boolean, msg?: string): void
+
+    /**
+     * Best use `throw new Error(...)` instead.
+     */
+    export function _panic(code: number): never
+
+    /**
+     * Moved by the compiler to the beginning of execution.
+     */
+    export function _onStart(handler: () => void): void
+
+    /**
+     * Print out internal representation of a given value, possibly prefixed by label.
+     */
+    export function _logRepr(v: any, label?: string): void
 
     export { Buffer }
 

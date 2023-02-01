@@ -7,7 +7,7 @@ void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx) {
         devs_fiber_sleep(ctx->curr_fiber, time);
 }
 
-void fun1_DeviceScript_panic(devs_ctx_t *ctx) {
+void fun1_DeviceScript__panic(devs_ctx_t *ctx) {
     unsigned code = devs_arg_int(ctx, 0);
     if (code == 0 || code >= 60000)
         code = 59999;
@@ -55,4 +55,18 @@ void fun1_DeviceScript_parseFloat(devs_ctx_t *ctx) {
 
 void fun1_DeviceScript_parseInt(devs_ctx_t *ctx) {
     devs_ret_double(ctx, trunc(devs_arg_double(ctx, 0)));
+}
+
+void fun2_DeviceScript__logRepr(devs_ctx_t *ctx) {
+    value_t v = devs_arg(ctx, 0);
+    value_t lbl = devs_arg(ctx, 1);
+    if (devs_is_null(lbl)) {
+        DMESG("> %s", devs_show_value(ctx, v));
+    } else {
+        lbl = devs_value_to_string(ctx, lbl);
+        devs_value_pin(ctx, lbl);
+        const char *p = devs_string_get_utf8(ctx, lbl, NULL);
+        DMESG("> %s: %s", p, devs_show_value(ctx, v));
+        devs_value_unpin(ctx, lbl);
+    }
 }

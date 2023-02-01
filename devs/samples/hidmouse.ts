@@ -15,5 +15,5 @@ rot.position.onChange(1, () => {
     const v = rot.position.read()
     mouse.move(scale * (v - prevV), 0, 100)
     prevV = v
-    ds.wait(0.1)
+    ds.sleepMs(100)
 })

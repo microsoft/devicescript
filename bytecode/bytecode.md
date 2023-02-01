@@ -119,7 +119,7 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun new(func): function = 88                // new func
 
-    fun bind(func, obj): function = 90          // func.bind(obj)
+    fun bind(func, obj): function = 15          // func.bind(obj)
 
 ### Objects
 
@@ -252,14 +252,10 @@ Time since device restart in ms; time only advances when sleeping.
 If `func == null` returns self-handle.
 Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
 
-    removed_panic() = 15
-
-These were once used, to be cleaned up on major bytecode upgrade.
-
 ## Format Constants
 
-    img_version_major = 4
-    img_version_minor = 4
+    img_version_major = 5
+    img_version_minor = 0
     img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
@@ -504,7 +500,7 @@ Only `true` and `false` values.
     onConnected = 45
     onDisconnected = 46
     packet = 47
-    panic = 48
+    _panic = 48
     pop = 49
     pow = 50
     prev = 51
@@ -582,3 +578,10 @@ Only `true` and `false` values.
     getPrototypeOf = 122
     constructor = 123
     __proto__ = 124
+    _logRepr = 125
+    print = 126
+    everyMs = 127
+    setInterval = 128
+    setTimeout = 129
+    clearInterval = 130
+    clearTimeout = 131

@@ -15,13 +15,11 @@
 * add `JSON.parse/stringify()`
 * limit call stack depth
 * drop code alignment requirement
-* ds.panic -> throw
 
 ## Big ticket
 * Jacdac packet queue overflow when printing a lot
 
 ## General usability
-* drop seconds, use milliseconds everywhere
 * tree strings?
 * introduce Fiber class (also Fiber.suspend() and Fiber.resume())
 * drop `length` field from fun-descriptor
