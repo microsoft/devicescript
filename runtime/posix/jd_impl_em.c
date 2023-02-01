@@ -24,7 +24,8 @@ EM_JS(void, em_send_frame, (void *frame), {
 });
 
 EM_JS(void, _devs_panic_handler, (int exitcode), {
-    console.log("PANIC", exitcode);
+    if (exitcode)
+        console.log("PANIC", exitcode);
     if (Module.panicHandler)
         Module.panicHandler(exitcode);
 });

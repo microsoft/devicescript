@@ -8,6 +8,8 @@
 
 ## Random stuff
 * support `import` for user code (also for side-effects work)
+* add "Internal exception" break category (ones with .internal property; normally we would not break on these if caught)
+* have event_breakpoints 32 bit flags enum register - unhandled exns, handled exns, debugger stmts, internal exns, ...
 * change `ALLOC_*` opcodes to expressions
 * `Object.keys(spec_object)` ?
 * validate UTF8 on input

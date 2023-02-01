@@ -330,6 +330,9 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
                       devs_img_fun_name(ctx->img, idx), idx);
             }
 
+        // TODO for OOM we probably want to free up some memory first...
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_PANIC);
+
         devs_panic_handler(orig_code);
     }
     devs_fiber_yield(ctx);

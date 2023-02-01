@@ -23,6 +23,7 @@ import {
 } from "@devicescript/compiler"
 import {
     DevsDbgFunIdx,
+    DevsDbgReg,
     DevsDbgStepFlags,
     DevsDbgSuspensionType,
     DevsDbgValueSpecial,
@@ -34,7 +35,6 @@ import {
     DISCONNECT,
     fromUTF8,
     JDBus,
-    JDDevice,
     JDService,
     SRV_DEVS_DBG,
     toHex,
@@ -134,6 +134,22 @@ export class DsDapSession extends DebugSession {
         response: DebugProtocol.InitializeResponse,
         args: DebugProtocol.InitializeRequestArguments
     ): void {
+        response.body.exceptionBreakpointFilters = [
+            {
+                filter: "unhandled",
+                label: "Uncaught Exceptions",
+                description:
+                    "Break on errors not handled with try{...}catch{...}",
+                default: true,
+            },
+            {
+                filter: "handled",
+                label: "Caught Exceptions",
+                description:
+                    "Break on all errors, regardless if handled with try{...}catch{...}",
+                default: false,
+            },
+        ]
         // these we might potentially support
         response.body.supportsStepInTargetsRequest = false
         response.body.supportsCompletionsRequest = false
@@ -544,6 +560,23 @@ export class DsDapSession extends DebugSession {
                 stack[0],
                 flags | DevsDbgStepFlags.StepOut,
                 brks
+            )
+        })
+    }
+
+    protected override setExceptionBreakPointsRequest(
+        response: DebugProtocol.SetExceptionBreakpointsResponse,
+        args: DebugProtocol.SetExceptionBreakpointsArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            await this.client.setBoolReg(
+                DevsDbgReg.BreakAtHandledExn,
+                args.filters.includes("handled")
+            )
+            await this.client.setBoolReg(
+                DevsDbgReg.BreakAtUnhandledExn,
+                args.filters.includes("handled") ||
+                    args.filters.includes("unhandled")
             )
         })
     }
