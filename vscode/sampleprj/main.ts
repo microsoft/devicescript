@@ -2,6 +2,7 @@ import * as ds from "@devicescript/core"
 
 function foo() {
     let x = 1.5
+    let qq = "blah blah" + x
     let y = x + 1
     let z = {
         x,
@@ -15,11 +16,13 @@ function foo() {
     console.log("world")
 
     try {
+        console.log("a")
         z.q.map(e => {
             console.log(e)
-            throw new Error("test123 " + e)
-            if (e == 2) debugger
+            // throw new Error("test123 " + e)
+            // if (e == 2) debugger
         })
+        console.log("b")
     } catch (exn: any) {
         console.log("got it", exn)
         exn.print()
@@ -31,6 +34,21 @@ function bar() {
     foo()
 }
 
+function every1() {
+    let x = 1
+    console.log(x)
+    ds.sleepMs(1000)
+    console.log("ex")
+}
+
+function every2() {
+    every1()
+}
+
+ds.everyMs(20, () => {
+    every2()
+})
+ds.sleepMs(100)
 bar()
 console.log("Test1")
 console.log("Test2")

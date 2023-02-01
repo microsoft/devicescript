@@ -118,6 +118,36 @@ export class DevsValue {
         return this.cachedBytes?.length == maxBytesFetch
     }
 
+    get isPrimitive() {
+        if (this.isString) return true
+        switch (this.tag) {
+            case DevsDbgValueTag.Number:
+                return true
+            case DevsDbgValueTag.Special:
+                switch (this.v0) {
+                    case DevsDbgValueSpecial.False:
+                    case DevsDbgValueSpecial.True:
+                    case DevsDbgValueSpecial.Null:
+                        return true
+                    default:
+                        return false
+                }
+            default:
+                return false
+        }
+    }
+
+    get isBuffer() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgBuffer:
+            case DevsDbgValueTag.ObjBuffer:
+                return true
+
+            default:
+                return false
+        }
+    }
+
     async readBuffer() {
         switch (this.tag) {
             case DevsDbgValueTag.ImgBuffer:
@@ -128,6 +158,19 @@ export class DevsValue {
 
             default:
                 return undefined
+        }
+    }
+
+    get isString() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgStringUTF8:
+            case DevsDbgValueTag.ImgStringBuiltin:
+            case DevsDbgValueTag.ImgStringAscii:
+            case DevsDbgValueTag.ObjString:
+                return true
+
+            default:
+                return false
         }
     }
 

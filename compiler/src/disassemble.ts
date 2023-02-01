@@ -185,26 +185,31 @@ export class ImgFunction {
         return exits
 
         function find(idx: number): void {
-            if (visited[idx]) return
-            visited[idx] = true
-            const s = stmts[idx]
-            const zone = inZone(s)
-            // console.log(`visit ${s.pc} ${zone ? "zone" : "exit"}`)
-            if (zone) {
-                if (s.jmpTrg) {
-                    if (stmtIsFinal(s.opcode)) {
-                        return find(s.jmpTrg.index)
-                    } else if (s.opcode == Op.STMTx1_JMP_Z) {
-                        find(idx + 1)
-                        return find(s.jmpTrg.index)
+            while (!visited[idx]) {
+                visited[idx] = true
+                const s = stmts[idx]
+                const zone = inZone(s)
+                // console.log(`visit ${s.pc} ${zone ? "zone" : "exit"}`)
+                if (zone) {
+                    if (s.jmpTrg) {
+                        if (stmtIsFinal(s.opcode)) {
+                            idx = s.jmpTrg.index
+                        } else if (s.opcode == Op.STMTx_TRY) {
+                            idx++
+                        } else if (s.opcode == Op.STMTx1_JMP_Z) {
+                            find(idx + 1)
+                            idx = s.jmpTrg.index
+                        } else {
+                            throw new Error("unknown jump: " + Op[s.opcode])
+                        }
                     } else {
-                        throw new Error("unknown jump")
+                        if (stmtIsFinal(s.opcode)) break
+                        idx++
                     }
                 } else {
-                    if (!stmtIsFinal(s.opcode)) return find(idx + 1)
+                    exits.push(s)
+                    break
                 }
-            } else {
-                exits.push(s)
             }
         }
     }

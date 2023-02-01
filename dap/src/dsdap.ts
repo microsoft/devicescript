@@ -193,16 +193,18 @@ export class DsDapSession extends DebugSession {
         switch (type) {
             case DevsDbgSuspensionType.Panic:
                 return "terminated"
-
             case DevsDbgSuspensionType.UnhandledException:
             case DevsDbgSuspensionType.HandledException:
                 return "exception"
-
-            case DevsDbgSuspensionType.Step:
-            case DevsDbgSuspensionType.Breakpoint:
-            case DevsDbgSuspensionType.DebuggerStmt:
             case DevsDbgSuspensionType.Halt:
+                return "pause"
             case DevsDbgSuspensionType.Restart:
+                return "entry"
+            case DevsDbgSuspensionType.Step:
+                return "step"
+            case DevsDbgSuspensionType.DebuggerStmt:
+            case DevsDbgSuspensionType.Breakpoint:
+                return "breakpoint"
             default:
                 return (
                     DevsDbgSuspensionType[type]?.toLowerCase() || "stop_" + type
@@ -218,12 +220,17 @@ export class DsDapSession extends DebugSession {
                 break
 
             default:
-                this.sendEvent(
-                    new StoppedEvent(
-                        this.mapSuspensionReason(type),
-                        this.client.suspendedFiber
-                    )
-                )
+                this.sendEvent<DebugProtocol.StoppedEvent>({
+                    type: "event",
+                    seq: 0,
+                    event: "stopped",
+                    body: {
+                        reason: this.mapSuspensionReason(type),
+                        preserveFocusHint: false,
+                        threadId: this.client.suspendedFiber,
+                        allThreadsStopped: true,
+                    },
+                })
                 break
         }
     }
@@ -671,6 +678,8 @@ export class DsDapSession extends DebugSession {
             variablesReference: v.index,
         }
 
+        if (v.isPrimitive) res.variablesReference = 0
+
         return res
     }
 
@@ -699,13 +708,19 @@ export class DsDapSession extends DebugSession {
     }
 
     private async valueToStringCore(v: DevsValue): Promise<string> {
-        const str = await v.readString()
-        if (str !== undefined)
-            return JSON.stringify(str) + (v.isPartial ? "..." : "")
+        if (v.isString)
+            return (
+                JSON.stringify(await v.readString()) +
+                (v.isPartial ? "..." : "")
+            )
 
-        const buf = await v.readBuffer()
-        if (buf !== undefined)
-            return "hex`" + toHex(buf) + (v.isPartial ? " ..." : "") + "`"
+        if (v.isBuffer)
+            return (
+                "hex`" +
+                toHex(await v.readBuffer()) +
+                (v.isPartial ? " ..." : "") +
+                "`"
+            )
 
         switch (v.tag) {
             case DevsDbgValueTag.Number:
@@ -801,7 +816,7 @@ export class DsDapSession extends DebugSession {
         this.sendLog(msg, data, "warn")
     }
 
-    public sendEvent(event: DebugProtocol.Event): void {
+    public sendEvent<T extends DebugProtocol.Event>(event: T): void {
         if (!(event instanceof DsLogOutputEvent)) {
             // Don't create an infinite loop...
 
