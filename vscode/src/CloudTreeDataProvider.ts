@@ -284,7 +284,9 @@ $(${iconName}) ${connected ? `connected` : `disconnected`}
 ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
 
 `,
-                    spec ? `devices/${identifierToUrlPath(spec.id)}` : undefined
+                    spec
+                        ? `jacdac:devices/${identifierToUrlPath(spec.id)}`
+                        : undefined
                 )
 
                 break

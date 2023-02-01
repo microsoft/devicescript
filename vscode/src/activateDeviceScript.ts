@@ -48,11 +48,11 @@ import {
     subSideEvent,
 } from "./jacdac"
 import {
-    JDeviceTreeItem,
+    JDomDeviceTreeItem,
     JDomDeviceTreeDataProvider,
     JDomTreeItem,
     JDomWatchTreeDataProvider,
-    JDRegisterTreeItem,
+    JDomRegisterTreeItem,
 } from "./JDomTreeDataProvider"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
@@ -162,7 +162,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.identifyDevice",
-            async (item: JDeviceTreeItem) => {
+            async (item: JDomDeviceTreeItem) => {
                 const device =
                     item?.device ||
                     (await extensionState.pickDeviceScriptManager(true))?.device
@@ -171,7 +171,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.resetDevice",
-            async (item: JDeviceTreeItem) => {
+            async (item: JDomDeviceTreeItem) => {
                 const device =
                     item?.device ||
                     (await extensionState.pickDeviceScriptManager(true))?.device
@@ -390,7 +390,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.register.edit",
-            async (item: JDRegisterTreeItem) => {
+            async (item: JDomRegisterTreeItem) => {
                 if (!item) return
 
                 const { register } = item
