@@ -8,6 +8,7 @@ import {
     CLOUD_DEVICE_NODE,
     CLOUD_SCRIPT_NODE,
     deviceCatalogImage,
+    ellipse,
     identifierToUrlPath,
     JDBus,
     JDDevice,
@@ -264,6 +265,34 @@ export class CloudTreeDataProvider
         this.refresh()
     }
 
+    async resolveTreeItem(
+        item: vscode.TreeItem,
+        node: CloudNode,
+        token: vscode.CancellationToken
+    ) {
+        const { nodeKind } = node
+        switch (nodeKind) {
+            case CLOUD_SCRIPT_NODE: {
+                const script = node as CloudScript
+                const body = await script.refreshBody()
+                if (body)
+                    item.tooltip =
+                        toMarkdownString(`-  creation time: ${script.creationTime.toLocaleString()}
+                    }
+-  source preview
+
+\`\`\`typescript
+${ellipse(body.text, 1000, "...")}
+\`\`\`\
+                
+                
+                `)
+                break
+            }
+        }
+        return item
+    }
+
     getTreeItem(node: CloudNode) {
         const id = `cloud:` + node.id
         let label = node.name
@@ -278,6 +307,11 @@ export class CloudTreeDataProvider
         )
 
         switch (node.nodeKind) {
+            case CLOUD_SCRIPT_NODE: {
+                const script = node as CloudScript
+                description = `v${script.version}`
+                break
+            }
             case CLOUD_DEVICE_NODE: {
                 const d = node as CloudDevice
                 const meta = d.meta
