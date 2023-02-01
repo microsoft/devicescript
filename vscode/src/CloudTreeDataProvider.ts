@@ -7,6 +7,8 @@ import {
     CloudScript,
     CLOUD_DEVICE_NODE,
     CLOUD_SCRIPT_NODE,
+    deviceCatalogImage,
+    identifierToUrlPath,
     JDBus,
     JDDevice,
     shortDeviceId,
@@ -279,24 +281,32 @@ export class CloudTreeDataProvider
             case CLOUD_DEVICE_NODE: {
                 const d = node as CloudDevice
                 const meta = d.meta
+                const connected = d.connected
                 const script = this._manager?.script(d.scriptId)
-                label = `${shortDeviceId(d.deviceId)}, ${d.name}`
-                description = script
-                    ? `${script.displayName} v${d.scriptVersion}`
-                    : "no script"
                 const spec =
                     this.bus.deviceCatalog.specificationFromProductIdentifier(
                         meta.productId
                     )
-                if (spec) iconPath = deviceIconUri(spec)
 
+                label = `${shortDeviceId(d.deviceId)}, ${d.name}`
+                description = script
+                    ? `${script.displayName} v${d.scriptVersion}`
+                    : "no script"
+                iconPath = new vscode.ThemeIcon(
+                    connected ? "circle-large-filled" : "circle-slash"
+                )
                 tooltip = toMarkdownString(
                     `
+${connected ? `connected` : `disconnected`}
+
+${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
+
 - last activity: ${d.lastActivity}
-- product identifier: ${meta.productId?.toString(16) || ""}
+- product: ${spec?.name || meta.productId?.toString(16) || ""}
 - firmware version: ${meta.fwVersion || ""}
-- deployed hash: ${d.deployedHash || ""}
-`
+
+`,
+                    spec ? `devices/${identifierToUrlPath(spec.id)}` : undefined
                 )
 
                 break
@@ -329,9 +339,7 @@ export class CloudTreeDataProvider
                     .devices()
                     .sort((l, r) => l.name.localeCompare(r.name)),
             ]
-        } else {
-            return element?.children as CloudNode[]
-        }
+        } else return element?.children as CloudNode[]
     }
 
     private _onDidChangeTreeData: vscode.EventEmitter<
