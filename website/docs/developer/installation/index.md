@@ -13,7 +13,7 @@ This section will get you started at the level of the stack you're looking for.
 You do not need hardware or install any tools to try out DeviceScript. Try running this snippet!
 
 ```ts edit codesandbox
-ds.every(1, () => {
+ds.everyMs(1000, () => {
     console.log(`hello`)
 })
 ```

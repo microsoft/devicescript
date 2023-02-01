@@ -12,6 +12,7 @@ export declare type DevsModule = EmscriptenModule &
         _jd_em_devs_verify(img: ptr, size: int32): int32
         _jd_em_devs_client_deploy(img: ptr, size: int32): int32
         _jd_em_devs_enable_gc_stress(en: int32): void
+        _jd_em_devs_enable_logging(en: int32): void
         sendPacket(pkt: Uint8Array): void
 
         /**
@@ -287,6 +288,13 @@ export module Exts {
      */
     export function devsGcStress(en: boolean) {
         Module._jd_em_devs_enable_gc_stress(en ? 1 : 0)
+    }
+
+    /**
+     * Enables/disables logging via Jacdac (devsmgr logging register).
+     */
+    export function devsSetLogging(en: boolean) {
+        Module._jd_em_devs_enable_logging(en ? 1 : 0)
     }
 
     /**

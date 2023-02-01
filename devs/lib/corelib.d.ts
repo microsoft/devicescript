@@ -361,9 +361,26 @@ declare var Math: Math
 interface TemplateStringsArray {}
 
 interface Error {
+    /**
+     * "Error", "TypeError" etc.
+     */
     name: string
+    /**
+     * Reason for error.
+     */
     message: string
-    stack?: string
+    /**
+     * Logs the exception message and stack.
+     */
+    print(): void
+    
+    // stack not impl. yet
+    // stack?: string
+
+    /**
+     * Binary-encoded stack-dump.
+     */
+    __stack__: Buffer
 }
 
 interface ErrorConstructor {

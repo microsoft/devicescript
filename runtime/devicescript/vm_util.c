@@ -7,7 +7,7 @@
 
 static inline value_t pop_arg(devs_ctx_t *ctx) {
     if (ctx->stack_top == 0)
-        return devs_runtime_failure(ctx, 60108);
+        return devs_invalid_program(ctx, 60108);
 
     return ctx->the_stack[--ctx->stack_top];
 }

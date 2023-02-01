@@ -1,16 +1,16 @@
 import * as ds from "@devicescript/core"
-import { onStart, wait } from "@devicescript/core"
+import { _onStart, sleepMs } from "@devicescript/core"
 
-onStart(() => {
+_onStart(() => {
     console.log("3")
-    wait(0.5)
+    sleepMs(500)
     console.log("4")
 })
 console.log("1")
-onStart(() => {
+_onStart(() => {
     console.log("5")
-    wait(0.5)
+    sleepMs(500)
     console.log("6")
 })
-wait(0.5)
+sleepMs(500)
 console.log("2")

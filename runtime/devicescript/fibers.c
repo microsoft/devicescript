@@ -317,7 +317,7 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
         ctx->error_pc = ctx->curr_fn ? ctx->curr_fn->pc : 0;
         // using DMESG here since this logging should never be disabled
         if (code == DEVS_PANIC_REBOOT) {
-            DMESG("! RESTART requested");
+            DMESG("* RESTART requested");
         } else {
             DMESG("! PANIC %d at pc=%d", code, ctx->error_pc);
         }
@@ -335,7 +335,7 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
     devs_fiber_yield(ctx);
 }
 
-value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
+value_t _devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
     if (code < 100)
         code = 100;
     devs_panic(ctx, 60000 + code);

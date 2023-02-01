@@ -1,26 +1,26 @@
 import * as ds from "@devicescript/core"
-import { panic } from "@devicescript/core"
+import { _panic } from "@devicescript/core"
 
 function isClose(x: number, y: number): void {
     if (isNaN(x) && isNaN(y)) return
     const d = Math.abs(x - y)
     if (d < 0.00000001 || d / Math.abs(x + y) < 0.00001) return
     console.log(x, " != ", y, "!")
-    panic(108)
+    _panic(108)
 }
 
 function isEq(x: any, y: any): void {
     // console.log(x, " == ", y, "?")
     if (x != y) {
         console.log(ds.format("fail: {0} != {1}", x, y))
-        panic(109)
+        _panic(109)
     }
 }
 
 function strEq(a: string, b: string) {
     if (a != b) {
         console.log(`fail: '${a}' != '${b}'`)
-        panic(110)
+        _panic(110)
     }
 }
 
@@ -28,32 +28,32 @@ let x = 0
 
 function testFlow() {
     x = 1
-    if (x != 1) panic(1)
-    if (x !== 1) panic(1)
+    if (x != 1) _panic(1)
+    if (x !== 1) _panic(1)
     if (x == 1) {
         x = 2
-        if (x != 2) panic(3)
+        if (x != 2) _panic(3)
     } else {
-        panic(2)
+        _panic(2)
     }
     x = 1
-    if (x < 1) panic(1)
-    if (x > 1) panic(1)
+    if (x < 1) _panic(1)
+    if (x > 1) _panic(1)
     if (x >= 1) {
-    } else panic(1)
+    } else _panic(1)
     if (x <= 1) {
-    } else panic(1)
-    if (x < 0.5) panic(1)
-    if (x > 1.5) panic(1)
+    } else _panic(1)
+    if (x < 0.5) _panic(1)
+    if (x > 1.5) _panic(1)
     if (0 <= x && x <= 2) {
-    } else panic(1)
+    } else _panic(1)
     if (0 <= x || x < 1) {
-    } else panic(1)
-    if (x < 0 || x > 10) panic(1)
+    } else _panic(1)
+    if (x < 0 || x > 10) _panic(1)
     x = -1
-    if (Math.abs(x) != 1) panic(4)
+    if (Math.abs(x) != 1) _panic(4)
     x = Math.random()
-    if (x < 0 || x > 1 || isNaN(x)) panic(5)
+    if (x < 0 || x > 1 || isNaN(x)) _panic(5)
     x = 42
     console.log("rand=", Math.random())
 }
@@ -146,7 +146,7 @@ function lazyX(v: number) {
 function checkX(v: number) {
     if (x != v) {
         console.log(ds.format("{0} != {1} !!", x, v))
-        panic(11)
+        _panic(11)
     }
     x = 0
 }
@@ -156,19 +156,19 @@ function testLazy() {
     if (lazyX(0) || lazyX(1)) {
         checkX(3)
     } else {
-        panic(10)
+        _panic(10)
     }
 
     if (lazyX(0) && lazyX(1)) {
-        panic(10)
+        _panic(10)
     } else {
         checkX(1)
     }
 
     if (lazyX(NaN) && lazyX(1)) {
-        panic(101)
+        _panic(101)
     } else {
-        if (!isNaN(x)) panic(12)
+        if (!isNaN(x)) _panic(12)
     }
 }
 
@@ -432,7 +432,7 @@ function testClosures3() {
 function testForOf() {
     let coll2 = [1, 2]
     if (coll2) {
-    } else ds.panic(111)
+    } else _panic(111)
     let tmp = coll2
     let sum = 0
     for (const e of coll2) {
@@ -524,7 +524,7 @@ function testFunName() {
 }
 
 testFlow()
-if (x != 42) panic(10)
+if (x != 42) _panic(10)
 testMath()
 testLazy()
 testBuffer()

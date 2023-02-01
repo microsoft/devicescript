@@ -28,10 +28,6 @@ import * as ds from "@devicescript/core"
 
 declare var ds_impl: typeof ds
 
-ds_impl.wait = function (seconds: number) {
-    ds.sleepMs(seconds * 1000)
-}
-
 ds_impl.assert = function (cond: boolean, msg?: string) {
     if (!cond) throw new Error("Assertion failed: " + msg)
 }

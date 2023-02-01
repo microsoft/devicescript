@@ -4,7 +4,7 @@
 static inline uint8_t devs_vm_fetch_byte(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (frame->pc < frame->maxpc)
         return ctx->img.data[frame->pc++];
-    devs_runtime_failure(ctx, 60100);
+    devs_invalid_program(ctx, 60100);
     return 0;
 }
 
@@ -31,7 +31,7 @@ static inline int32_t devs_vm_fetch_int(devs_activation_t *frame, devs_ctx_t *ct
 
 static inline void devs_vm_push(devs_ctx_t *ctx, value_t v) {
     if (ctx->stack_top >= DEVS_MAX_STACK_DEPTH)
-        devs_runtime_failure(ctx, 60101);
+        devs_invalid_program(ctx, 60101);
     else
         ctx->the_stack[ctx->stack_top++] = v;
 }
@@ -210,7 +210,7 @@ static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
     }
 
     if (op >= DEVS_OP_PAST_LAST) {
-        devs_runtime_failure(ctx, 60102);
+        devs_invalid_program(ctx, 60102);
     } else {
         uint8_t flags = DEVS_OP_PROPS[op];
 
@@ -226,7 +226,7 @@ static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
         if (flags & DEVS_BYTECODEFLAG_IS_STMT) {
             ((devs_vm_stmt_handler_t)devs_vm_op_handlers[op])(frame, ctx);
             if (ctx->stack_top)
-                devs_runtime_failure(ctx, 60103);
+                devs_invalid_program(ctx, 60103);
         } else {
             value_t v = ((devs_vm_expr_handler_t)devs_vm_op_handlers[op])(frame, ctx);
             devs_vm_push(ctx, v);
@@ -311,7 +311,7 @@ const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
 const char *devs_get_static_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size) {
     const char *r = devs_img_get_utf8(ctx->img, idx, size);
     if (r == NULL) {
-        devs_runtime_failure(ctx, 60104);
+        devs_invalid_program(ctx, 60104);
         return "";
     }
     return r;

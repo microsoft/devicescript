@@ -36,7 +36,7 @@ sensor.pressure.onChange(10, () => {
         console.log(`click!`)
         mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
         // debouncing
-        ds.wait(0.05)
+        ds.sleepMs(50)
     }
 })
 ```

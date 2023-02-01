@@ -30,8 +30,6 @@ Passes arguments to a function as an array. The array can be at most `max_stack_
 
 Jump if condition is false.
 
-    final panic(error_code) = 15
-
     try(*jmpoffset) = 80                // TRY jmpoffset
 
 Start try-catch block - catch/finally handler is at the jmpoffset.
@@ -121,7 +119,7 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun new(func): function = 88                // new func
 
-    fun bind(func, obj): function = 90          // func.bind(obj)
+    fun bind(func, obj): function = 15          // func.bind(obj)
 
 ### Objects
 
@@ -256,7 +254,10 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 
 ## Format Constants
 
-    img_version = 0x04_04_0000
+    img_version_major = 5
+    img_version_minor = 0
+    img_version_patch = 0
+    img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9
@@ -499,7 +500,7 @@ Only `true` and `false` values.
     onConnected = 45
     onDisconnected = 46
     packet = 47
-    panic = 48
+    _panic = 48
     pop = 49
     pow = 50
     prev = 51
@@ -577,3 +578,10 @@ Only `true` and `false` values.
     getPrototypeOf = 122
     constructor = 123
     __proto__ = 124
+    _logRepr = 125
+    print = 126
+    everyMs = 127
+    setInterval = 128
+    setTimeout = 129
+    clearInterval = 130
+    clearTimeout = 131
