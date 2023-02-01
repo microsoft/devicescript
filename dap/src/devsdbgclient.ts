@@ -1,10 +1,11 @@
-import { assert } from "@devicescript/compiler"
+import { assert, Image } from "@devicescript/compiler"
 import { Mutex } from "async-mutex"
 import {
     bufferConcat,
     bufferConcatMany,
     delay,
     EVENT,
+    fromUTF8,
     getNumber,
     InPipeReader,
     JDBus,
@@ -15,6 +16,7 @@ import {
     JDServiceClient,
     jdunpack,
     NumberFormat,
+    uint8ArrayToString,
 } from "jacdac-ts"
 import {
     DevsDbgEvent,
@@ -34,13 +36,15 @@ export interface DevsKeyValue {
     value: DevsValue
 }
 
+const maxBytesFetch = 512
+
 export class DevsValue {
     index: number
     tag: DevsDbgValueTag
     v0: number
     arg: DevsValue
 
-    cachedBytes: Uint8Array
+    private cachedBytes: Uint8Array
 
     numNamed: number
     hasNamed: boolean
@@ -87,6 +91,106 @@ export class DevsValue {
         }
         return this._named
     }
+
+    async readField(name: string) {
+        const named = await this.readNamed()
+        const direct = named.find(e => e.key == name)
+        if (direct) return direct.value
+        for (const e of named) {
+            if (typeof e.key == "string") return
+            const s = await e.key.readString()
+            if (s == name) return e.value
+        }
+        return undefined
+    }
+
+    private async readBytes() {
+        if (!this.cachedBytes)
+            this.cachedBytes = await this.parent.readBytes(
+                this,
+                0,
+                maxBytesFetch
+            )
+        return this.cachedBytes
+    }
+
+    get isPartial() {
+        return this.cachedBytes?.length == maxBytesFetch
+    }
+
+    get isPrimitive() {
+        if (this.isString) return true
+        switch (this.tag) {
+            case DevsDbgValueTag.Number:
+                return true
+            case DevsDbgValueTag.Special:
+                switch (this.v0) {
+                    case DevsDbgValueSpecial.False:
+                    case DevsDbgValueSpecial.True:
+                    case DevsDbgValueSpecial.Null:
+                        return true
+                    default:
+                        return false
+                }
+            default:
+                return false
+        }
+    }
+
+    get isBuffer() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgBuffer:
+            case DevsDbgValueTag.ObjBuffer:
+                return true
+
+            default:
+                return false
+        }
+    }
+
+    async readBuffer() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgBuffer:
+                return this.parent.img.bufferTable[this.v0]
+
+            case DevsDbgValueTag.ObjBuffer:
+                return await this.readBytes()
+
+            default:
+                return undefined
+        }
+    }
+
+    get isString() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgStringUTF8:
+            case DevsDbgValueTag.ImgStringBuiltin:
+            case DevsDbgValueTag.ImgStringAscii:
+            case DevsDbgValueTag.ObjString:
+                return true
+
+            default:
+                return false
+        }
+    }
+
+    async readString() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgStringUTF8:
+            case DevsDbgValueTag.ImgStringBuiltin:
+            case DevsDbgValueTag.ImgStringAscii:
+                return this.parent.img.getString(
+                    this.tag - DevsDbgValueTag.ImgBuffer,
+                    this.v0
+                ) as string
+
+            case DevsDbgValueTag.ObjString:
+                return fromUTF8(uint8ArrayToString(await this.readBytes()))
+
+            default:
+                return undefined
+        }
+    }
 }
 
 export const EV_SUSPENDED = "dbgSuspended"
@@ -103,7 +207,7 @@ export class DevsDbgClient extends JDServiceClient {
     values: DevsValue[] = []
     private valueMap: Record<string, DevsValue>
 
-    constructor(service: JDService) {
+    constructor(service: JDService, public img: Image) {
         super(service)
         assert(service.serviceClass == SRV_DEVS_DBG)
 
@@ -227,6 +331,13 @@ export class DevsDbgClient extends JDServiceClient {
     mkSynthValue(tag: DevsDbgValueTag, v0: number, arg?: DevsValue) {
         assert(tag == DevsDbgValueTag.User1)
         return this.getValue(tag, v0, arg)
+    }
+
+    exnValue() {
+        return this.getValue(
+            DevsDbgValueTag.Special,
+            DevsDbgValueSpecial.CurrentException
+        )
     }
 
     private getValue(
