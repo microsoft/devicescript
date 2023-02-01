@@ -248,7 +248,7 @@
           "group": "navigation"
         },
         {
-          "command": "extension.devicescript.cloud.askForToken",
+          "command": "extension.devicescript.cloud.refresh",
           "when": "view == extension.devicescript.cloud-explorer",
           "group": "navigation"
         }
@@ -321,6 +321,12 @@
         },
         {
           "command": "extension.devicescript.showServerTerminal"
+        },
+        {
+          "command": "extension.devicescript.cloud.configure"
+        },
+        {
+          "command": "extension.devicescript.cloud.refresh"
         }
       ],
       "debug/variables/context": [
@@ -416,10 +422,16 @@
         "category": "DeviceScript"
       },
       {
-        "command": "extension.devicescript.cloud.askForToken",
-        "title": "Enter authentication token",
-        "category": "DeviceScript",
+        "command": "extension.devicescript.cloud.configure",
+        "title": "Configure",
+        "category": "DeviceScript Cloud",
         "icon": "$(plug)"
+      },
+      {
+        "command": "extension.devicescript.cloud.refresh",
+        "title": "Refresh",
+        "category": "DeviceScript Cloud",
+        "icon": "$(refresh)"
       }
     ],
     "breakpoints": [

@@ -1,6 +1,7 @@
 import {
     CHANGE,
     CloudData,
+    CloudDevice,
     CloudManager,
     CloudNode,
     CLOUD_DEVICE_NODE,
@@ -22,6 +23,7 @@ export class CloudTreeDataProvider
     constructor(readonly bus: JDBus, readonly state: ExtensionState) {
         this.handleChange = this.handleChange.bind(this)
         const { context } = this.state
+        const { subscriptions } = context
 
         // track config changes
         vscode.workspace.onDidChangeConfiguration(
@@ -30,7 +32,7 @@ export class CloudTreeDataProvider
                     this.handleRefreshConnection()
             },
             undefined,
-            context.subscriptions
+            subscriptions
         )
 
         // track secret changes
@@ -41,7 +43,19 @@ export class CloudTreeDataProvider
                     this.handleRefreshConnection()
             },
             undefined,
-            context.subscriptions
+            subscriptions
+        )
+
+        // commands
+        vscode.commands.registerCommand(
+            "extension.devicescript.cloud.refresh",
+            async () => {
+                const apiRoot = this.apiRoot
+                const token = await this.token
+                if (!apiRoot || !token) await this.configure()
+                else await this._manager.refresh()
+            },
+            subscriptions
         )
 
         // first connection - async
@@ -58,6 +72,28 @@ export class CloudTreeDataProvider
         await vscode.workspace
             .getConfiguration("devicescript.cloud")
             .update("apiRoot", apiRoot)
+    }
+
+    async configure() {
+        let changed = false
+        const apiRoot = this.apiRoot
+        const newApiRoot = await vscode.window.showInputBox({
+            placeHolder: "Enter Cloud Web API Root",
+            value: apiRoot || "https://jacdac-portal2.azurewebsites.net",
+        })
+        if (newApiRoot !== undefined && newApiRoot !== apiRoot) {
+            await this.setApiRoot(apiRoot)
+            changed = true
+        }
+        const token = await vscode.window.showInputBox({
+            placeHolder: "Enter Cloud Authentication Token",
+            value: "",
+        })
+        if (token !== undefined) {
+            await this.setToken(token)
+            changed = true
+        }
+        if (changed) this.handleRefreshConnection()
     }
 
     get token() {
@@ -104,6 +140,7 @@ export class CloudTreeDataProvider
             [CLOUD_DEVICE_NODE]: "circuit-board",
             [CLOUD_SCRIPT_NODE]: "file-code",
         }[contextValue]
+        const d = node as CloudDevice
         return <vscode.TreeItem>{
             id,
             label,
@@ -121,10 +158,10 @@ export class CloudTreeDataProvider
             }
             return [
                 ...this._manager
-                    .devices()
+                    .scripts()
                     .sort((l, r) => l.name.localeCompare(r.name)),
                 ...this._manager
-                    .scripts()
+                    .devices()
                     .sort((l, r) => l.name.localeCompare(r.name)),
             ]
         } else {

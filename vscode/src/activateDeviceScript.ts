@@ -507,25 +507,11 @@ ${version.slice(1)} - Tools version
 
     //cloud
     vscode.commands.registerCommand(
-        "extension.devicescript.cloud.askForToken",
-        async () => {
-            let apiRoot = cloudTreeDataProvider.apiRoot
-            if (!apiRoot) {
-                apiRoot = await vscode.window.showInputBox({
-                    placeHolder: "Enter Cloud Web API Root",
-                    value: "https://jacdac-portal2.azurewebsites.net",
-                })
-                if (apiRoot !== undefined)
-                    await cloudTreeDataProvider.setApiRoot(apiRoot)
-            }
-            const token = await vscode.window.showInputBox({
-                placeHolder: "Enter Cloud Authentication Token",
-                value: "",
-            })
-            if (token !== undefined) await cloudTreeDataProvider.setToken(token)
-        }
-    ),
-        configure()
+        "extension.devicescript.cloud.configure",
+        async () => cloudTreeDataProvider.configure()
+    )
+
+    configure()
 }
 
 async function initDevtoolsConnection(state: ExtensionState) {
