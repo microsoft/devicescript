@@ -378,9 +378,10 @@ export class DevsDbgClient extends JDServiceClient {
             )
             let userPc = pc
             let isBrk =
-                this.suspensionReason == DevsDbgSuspensionType.Breakpoint ||
-                this.suspensionReason == DevsDbgSuspensionType.Step
-            if (idx > 0) isBrk = false
+                fibid == this.suspendedFiber &&
+                idx == 0 &&
+                (this.suspensionReason == DevsDbgSuspensionType.Breakpoint ||
+                    this.suspensionReason == DevsDbgSuspensionType.Step)
             if (pc > 0 && !isBrk) userPc--
             st.stackFrame = {
                 pc,
