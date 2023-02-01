@@ -248,11 +248,6 @@
           "group": "navigation"
         },
         {
-          "command": "extension.devicescript.cloud.registerDevice",
-          "when": "view == extension.devicescript.cloud-explorer",
-          "group": "navigation"
-        },
-        {
           "command": "extension.devicescript.cloud.refresh",
           "when": "view == extension.devicescript.cloud-explorer",
           "group": "navigation"
@@ -307,6 +302,11 @@
         {
           "command": "extension.devicescript.cloud.device.updateScript",
           "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.cloud.registerDevice",
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevices",
           "group": "inline"
         },
         {
