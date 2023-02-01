@@ -28,6 +28,7 @@ import { devtools } from "./devtools"
 
 import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
+import { printDmesg } from "./vmworker"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -55,7 +56,8 @@ export function devsFactory() {
         const dbg = readDebugInfo()
         if (dbg)
             m.dmesg = (s: string) => {
-                console.debug("    " + parseStackFrame(dbg, s).markedLine)
+                printDmesg(dbg, "WASM", s)
+                // console.debug("    " + parseStackFrame(dbg, s).markedLine)
             }
         m.devsInit()
         return m

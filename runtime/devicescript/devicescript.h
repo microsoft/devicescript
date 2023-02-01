@@ -45,6 +45,7 @@ typedef struct {
 } devsmgr_cfg_t;
 
 void devsmgr_init(const devsmgr_cfg_t *cfg);
+void devsmgr_set_logging(bool logging);
 
 devs_ctx_t *devsmgr_get_ctx(void);
 int devsmgr_deploy(const void *img, unsigned imgsize);

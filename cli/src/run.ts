@@ -64,6 +64,7 @@ export async function runTest(
         }
         inst.devsStop()
         inst.devsGcStress(true)
+        inst.devsSetLogging(false)
         inst.devsSetDeviceId(devid)
         inst.devsStart()
         inst.devsDeploy(prog.binary)

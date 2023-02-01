@@ -317,7 +317,7 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
         ctx->error_pc = ctx->curr_fn ? ctx->curr_fn->pc : 0;
         // using DMESG here since this logging should never be disabled
         if (code == DEVS_PANIC_REBOOT) {
-            DMESG("! RESTART requested");
+            DMESG("* RESTART requested");
         } else {
             DMESG("! PANIC %d at pc=%d", code, ctx->error_pc);
         }

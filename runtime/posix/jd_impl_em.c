@@ -137,6 +137,11 @@ void jd_em_devs_enable_gc_stress(int en) {
         devs_reset_global_flags(DEVS_FLAG_GC_STRESS);
 }
 
+EMSCRIPTEN_KEEPALIVE
+void jd_em_devs_enable_logging(int en) {
+    devsmgr_set_logging(en);
+}
+
 #if 0
 void run_emscripten_loop(void) {
     emscripten_set_interval(em_process, 10, NULL);

@@ -1,4 +1,4 @@
-import { parseStackFrame } from "@devicescript/compiler"
+import { DebugInfo, parseStackFrame } from "@devicescript/compiler"
 import { ChildProcess, fork, spawn } from "node:child_process"
 import { wrapColor } from "./logging"
 import {
@@ -74,7 +74,7 @@ export async function stopVmWorker() {
 }
 
 export function overrideConsoleDebug() {
-    const dbg = console.debug
+    const condbg = console.debug
     console.debug = (...args: any[]) => {
         const cl = devtoolsIface?.mainClient
         if (
@@ -86,7 +86,7 @@ export function overrideConsoleDebug() {
             let line = args[0].replace(/\x1B\[[0-9;]+m/g, "").slice(5)
             sendOutput(cl, "dev", [line])
             line = line.replace(/^DM \(\d+\): ?/, "")
-            if (line) printDmesg("DEV", line)
+            if (line) printDmesg(devtoolsIface.lastOKBuild?.dbg, "DEV", line)
         } else {
             if (cl) {
                 let str = ""
@@ -96,21 +96,20 @@ export function overrideConsoleDebug() {
                 }
                 sendOutput(cl, "verbose", [str])
             } else {
-                dbg(...args)
+                condbg(...args)
             }
         }
     }
 }
 
-export function printDmesg(pref: string, line: string) {
+export function printDmesg(dbg: DebugInfo, pref: string, line: string) {
     const m = /^\s*([\*\!>]) (.*)/.exec(line)
     if (m) {
         let [_full, marker, text] = m
-        const dbg = devtoolsIface.lastOKBuild?.dbg
         if (dbg) text = parseStackFrame(dbg, text).markedLine
         if (marker == "!") text = wrapColor(91, text)
         else if (marker == ">") text = wrapColor(95, text)
-        else text = wrapColor(92, text)
+        else text = wrapColor(33, text)
         console.log(pref + "> " + text)
     }
 }
@@ -149,7 +148,8 @@ export async function startVmWorker(
     function sendLines(kind: OutputFrom, lines: string[]) {
         sendOutput(sender, kind, lines)
         for (const l of lines) {
-            if (l.startsWith("    ")) printDmesg("VM", l.slice(4))
+            if (l.startsWith("    "))
+                printDmesg(devtoolsIface.lastOKBuild?.dbg, "VM", l.slice(4))
             else if (kind == "vm-err") {
                 console.log("VMERR> " + wrapColor(91, l))
             }
