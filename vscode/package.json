@@ -273,6 +273,10 @@
           "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
         },
         {
+          "command": "extension.devicescript.register.edit",
+          "when": "view == extension.devicescript.jdom-explorer && viewItem == register"
+        },
+        {
           "command": "extension.devicescript.watch.add",
           "when": "view == extension.devicescript.jdom-explorer && viewItem == register",
           "group": "inline"
@@ -390,6 +394,11 @@
       {
         "command": "extension.devicescript.selectNode",
         "title": "Watch",
+        "category": "DeviceScript"
+      },
+      {
+        "command": "extension.devicescript.register.edit",
+        "title": "Edit...",
         "category": "DeviceScript"
       },
       {
