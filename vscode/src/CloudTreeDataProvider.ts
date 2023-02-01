@@ -8,7 +8,9 @@ import {
     CLOUD_DEVICE_NODE,
     CLOUD_SCRIPT_NODE,
     JDBus,
+    JDDevice,
     shortDeviceId,
+    SRV_CLOUD_ADAPTER,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { ExtensionState } from "./state"
@@ -50,6 +52,62 @@ export class CloudTreeDataProvider
         )
 
         // commands
+        vscode.commands.registerCommand(
+            "extension.devicescript.cloud.registerDevice",
+            async () => {
+                const manager = this._manager
+                if (!manager) return
+
+                const simId = this.state.simulatorScriptManagerId
+                const devices = this.bus
+                    .devices({
+                        serviceClass: SRV_CLOUD_ADAPTER,
+                    })
+                    .filter(d => d.deviceId !== simId)
+                const cloudDevices = manager.devices()
+                const unregisteredDevices = devices.filter(
+                    dev => !cloudDevices.find(cd => cd.deviceId === dev.id)
+                )
+
+                if (!unregisteredDevices.length) {
+                    vscode.window.showInformationMessage(
+                        "DeviceScript Cloud: no cloud adapter device found to register."
+                    )
+                    return
+                }
+
+                const res = await vscode.window.showQuickPick(
+                    unregisteredDevices.map(
+                        device =>
+                            <vscode.QuickPickItem & { device: JDDevice }>{
+                                device,
+                                label: device.shortId,
+                                description: device.deviceId,
+                                detail: device.describe(),
+                            }
+                    ),
+                    {
+                        title: "Register a Device",
+                        placeHolder: "Select a device",
+                        matchOnDescription: true,
+                        matchOnDetail: true,
+                    }
+                )
+                if (res === undefined) return
+                const device = res.device
+                const name = await vscode.window.showInputBox({
+                    title: "Enter a name for your device",
+                    placeHolder: "my device",
+                })
+
+                if (!name) return
+
+                await this.withProgress("Registering Device", () =>
+                    manager.registerDevice(device, name)
+                )
+            },
+            subscriptions
+        )
         vscode.commands.registerCommand(
             "extension.devicescript.cloud.refresh",
             async () => {
@@ -93,8 +151,11 @@ export class CloudTreeDataProvider
                             }
                     )
                 )
-                if (v !== undefined)
-                    await device.updateScript(script.scriptId, v.version)
+                if (v === undefined) return
+
+                await this.withProgress("Updating Script", () =>
+                    device.updateScript(script.scriptId, v.version)
+                )
             },
             subscriptions
         )
@@ -253,5 +314,26 @@ export class CloudTreeDataProvider
 
     refresh(treeItem?: CloudNode): void {
         this._onDidChangeTreeData.fire(treeItem)
+    }
+
+    private withProgress(title: string, transaction: () => Promise<void>) {
+        return vscode.window.withProgress(
+            {
+                title,
+                location: vscode.ProgressLocation.SourceControl,
+            },
+            async () => {
+                try {
+                    await transaction()
+                } catch (e) {
+                    console.error(e)
+                    vscode.window.showErrorMessage(
+                        "DeviceScript Cloud: Updated failed."
+                    )
+                } finally {
+                    this.refresh()
+                }
+            }
+        )
     }
 }

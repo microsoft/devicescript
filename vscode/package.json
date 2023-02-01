@@ -248,6 +248,11 @@
           "group": "navigation"
         },
         {
+          "command": "extension.devicescript.cloud.registerDevice",
+          "when": "view == extension.devicescript.cloud-explorer",
+          "group": "navigation"
+        },
+        {
           "command": "extension.devicescript.cloud.refresh",
           "when": "view == extension.devicescript.cloud-explorer",
           "group": "navigation"
@@ -437,6 +442,12 @@
         "title": "Refresh",
         "category": "DeviceScript Cloud",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "extension.devicescript.cloud.registerDevice",
+        "title": "Register Device",
+        "category": "DeviceScript Cloud",
+        "icon": "$(add)"
       },
       {
         "command": "extension.devicescript.cloud.device.updateScript",
