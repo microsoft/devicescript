@@ -108,7 +108,7 @@ export class CloudTreeDataProvider
             id,
             label,
             contextValue: contextValue,
-            iconPath: icon ?? new vscode.ThemeIcon(icon),
+            iconPath: icon ? new vscode.ThemeIcon(icon) : undefined,
         }
     }
 
@@ -119,7 +119,14 @@ export class CloudTreeDataProvider
                 this.firstLoad = false
                 this._manager.refresh()
             }
-            return [...this._manager.devices(), ...this._manager.scripts()]
+            return [
+                ...this._manager
+                    .devices()
+                    .sort((l, r) => l.name.localeCompare(r.name)),
+                ...this._manager
+                    .scripts()
+                    .sort((l, r) => l.name.localeCompare(r.name)),
+            ]
         } else {
             return element?.children as CloudNode[]
         }
