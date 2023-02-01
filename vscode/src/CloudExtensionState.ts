@@ -1,6 +1,7 @@
 import {
     CHANGE,
     CloudManager,
+    ERROR,
     JDDevice,
     JDEventSource,
     SRV_CLOUD_ADAPTER,
@@ -18,6 +19,7 @@ export class CloudExtensionState extends JDEventSource {
     ) {
         super()
         this.handleChange = this.handleChange.bind(this)
+        this.handleError = this.handleError.bind(this)
         const { subscriptions } = this.context
 
         // track config changes
@@ -116,9 +118,14 @@ export class CloudExtensionState extends JDEventSource {
         this.emit(CHANGE)
     }
 
+    private handleError(err: any) {
+        console.error(err)
+    }
+
     private async handleRefreshConnection() {
         if (this._manager) {
             this._manager.off(CHANGE, this.handleChange)
+            this._manager.off(ERROR, this.handleError)
             this._manager = undefined
             this.emit(CHANGE)
         }
@@ -130,6 +137,7 @@ export class CloudExtensionState extends JDEventSource {
         if (token && apiRoot && !this._manager) {
             this._manager = new CloudManager(this.bus, apiRoot, token)
             this._manager.on(CHANGE, this.handleChange)
+            this._manager.on(ERROR, this.handleError)
             forceRefresh = true
         }
         if (this._manager && forceRefresh) await this._manager.refresh()
