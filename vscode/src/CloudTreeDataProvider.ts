@@ -102,9 +102,10 @@ export class CloudTreeDataProvider
 
                 if (!name) return
 
-                await this.withProgress("Registering Device", () =>
-                    manager.registerDevice(device, name)
-                )
+                await this.withProgress("Registering Device", async () => {
+                    await manager.registerDevice(device, name)
+                    this.refresh()
+                })
             },
             subscriptions
         )
@@ -153,9 +154,10 @@ export class CloudTreeDataProvider
                 )
                 if (v === undefined) return
 
-                await this.withProgress("Updating Script", () =>
-                    device.updateScript(script.scriptId, v.version)
-                )
+                await this.withProgress("Updating Script", async () => {
+                    await device.updateScript(script.scriptId, v.version)
+                    this.refresh(device)
+                })
             },
             subscriptions
         )
@@ -330,8 +332,8 @@ export class CloudTreeDataProvider
                     vscode.window.showErrorMessage(
                         "DeviceScript Cloud: Updated failed."
                     )
-                } finally {
-                    this.refresh()
+                    // async
+                    this._manager?.refresh()
                 }
             }
         )
