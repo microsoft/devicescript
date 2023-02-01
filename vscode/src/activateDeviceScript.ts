@@ -14,6 +14,7 @@ import {
     JDFrameBuffer,
     JDRegister,
     loadServiceSpecifications,
+    prettyUnit,
     REGISTER_NODE_NAME,
     serializeToTrace,
 } from "jacdac-ts"
@@ -51,6 +52,7 @@ import {
     JDomDeviceTreeDataProvider,
     JDomTreeItem,
     JDomWatchTreeDataProvider,
+    JDRegisterTreeItem,
 } from "./JDomTreeDataProvider"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
@@ -385,6 +387,114 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.pickDeviceScriptManager",
             () => extensionState.pickDeviceScriptManager()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.register.edit",
+            async (item: JDRegisterTreeItem) => {
+                if (!item) return
+
+                const { register } = item
+                const { specification } = register
+
+                if (!specification) {
+                    vscode.window.showWarningMessage(
+                        `DeviceScript: no specification found for register`
+                    )
+                    return
+                }
+
+                const { kind, fields, description } = specification
+                if (kind !== "rw") {
+                    vscode.window.showWarningMessage(
+                        "DeviceScript: register cannot be modified"
+                    )
+                    return
+                }
+
+                await register.refresh()
+                const { name, unpackedValue } = register
+                const title = `Edit register ${name}`
+                if (fields?.length === 1) {
+                    const field = fields[0]
+                    const { type, unit, isFloat } = field
+                    const prompt = `${description} ${
+                        unit ? `(${prettyUnit(unit)})` : ""
+                    }`
+                    const value = unpackedValue?.[0]
+
+                    // strings
+                    if (type === "string" || type === "string0") {
+                        const v = value as string
+                        const res = await vscode.window.showInputBox({
+                            title,
+                            prompt,
+                            value: v || "",
+                        })
+                        if (res !== undefined && v !== res) {
+                            await register.sendSetStringAsync(res, true)
+                        }
+                        return
+                    }
+                    // boolean
+                    else if (type === "bool") {
+                        const v = value ? "yes" : "no"
+                        const res = await vscode.window.showQuickPick(
+                            ["yes", "no"],
+                            <vscode.QuickPickOptions>{
+                                title,
+                            }
+                        )
+                        if (res !== undefined && v !== res) {
+                            await register.sendSetBoolAsync(res === "yes", true)
+                        }
+                        return
+                    }
+                    // float
+                    else if (isFloat) {
+                        const v = (value as number)?.toLocaleString()
+                        // TODO: min, max
+                        const res = await vscode.window.showInputBox({
+                            title,
+                            prompt,
+                            value: v || "0",
+                            validateInput: i => {
+                                if (isNaN(parseFloat(i)))
+                                    return "invalid number format"
+                                return undefined
+                            },
+                        })
+                        if (res !== undefined && v !== res) {
+                            const newValue = parseFloat(res)
+                            await register.sendSetPackedAsync([newValue], true)
+                        }
+                        return
+                    }
+                    // int, uint
+                    else if (field.unit) {
+                        const v = (value as number)?.toLocaleString()
+                        // TODO: min, max
+                        const res = await vscode.window.showInputBox({
+                            title,
+                            prompt,
+                            value: v || "0",
+                            validateInput: i => {
+                                if (isNaN(parseInt(i)))
+                                    return `invalid ${field.type} number format`
+                                return undefined
+                            },
+                        })
+                        if (res !== undefined && v !== res) {
+                            const newValue = parseInt(res)
+                            await register.sendSetPackedAsync([newValue], true)
+                        }
+                        return
+                    }
+                }
+
+                vscode.window.showWarningMessage(
+                    "DeviceScript: Sorry, this register cannot be edited by the extension."
+                )
+            }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.watch.clear",
