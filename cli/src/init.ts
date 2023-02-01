@@ -55,7 +55,7 @@ const optionalFiles: Record<string, Object | string> = {
         scripts: {
             setup: "devicescript init",
             build: "devicescript build",
-            watch: "devicescript build --watch",
+            watch: "devicescript devtools --watch",
             start: "yarn watch",
         },
     },
@@ -95,7 +95,7 @@ code .
 - start the watch build and developer tools server
 
 \`\`\`bash
-yarn start
+yarn watch
 \`\`\`
 
 -  navigate to devtools page (see terminal output) 

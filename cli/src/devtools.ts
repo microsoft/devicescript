@@ -327,7 +327,6 @@ async function rebuild(args: BuildReqArgs) {
     if (!opts.cwd) opts.cwd = dirname(args.filename)
     opts.noVerify = true
     opts.quiet = true
-    opts.watch = false
 
     const res = await compileFile(args.filename, opts)
     const binary = res.binary

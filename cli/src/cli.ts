@@ -45,13 +45,6 @@ export async function mainCli() {
 
     buildCommand("build", { isDefault: true })
         .description("build a DeviceScript file")
-        .option("-w, --watch", "watch file changes and rebuild automatically")
-        .option("--internet", "allow connections from non-localhost")
-        .option(
-            "--localhost",
-            "use localhost:8000 instead of the internet dashboard"
-        )
-        .option("-t, --tcp", "open native TCP socket at 8082")
         .arguments("[file.ts]")
         .action(build)
 
