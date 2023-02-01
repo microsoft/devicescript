@@ -17,6 +17,20 @@ import { ExtensionState } from "./state"
 import "isomorphic-fetch"
 import { deviceIconUri, toMarkdownString } from "./catalog"
 
+async function createFile(
+    fileName: string,
+    fileContent: string
+): Promise<void> {
+    const workspaceFolder = vscode.workspace.workspaceFolders[0]
+    const file = vscode.Uri.joinPath(workspaceFolder.uri, fileName)
+    await vscode.workspace.fs.writeFile(
+        file,
+        new TextEncoder().encode(fileContent)
+    )
+    const document = await vscode.workspace.openTextDocument(file)
+    await vscode.window.showTextDocument(document)
+}
+
 export interface CloudTreeItem extends vscode.TreeItem {}
 
 export class CloudTreeDataProvider
@@ -158,6 +172,21 @@ export class CloudTreeDataProvider
                     await device.updateScript(script.scriptId, v.version)
                     this.refresh(device)
                 })
+            },
+            subscriptions
+        )
+        vscode.commands.registerCommand(
+            "extension.devicescript.cloud.device.downloadScriptSource",
+            async (script: CloudScript) => {
+                const name = script.name
+                const version = script.version
+                const body = await script.refreshBody()
+                if (!body) return
+                const text = body.text
+                await createFile(
+                    `./.devicescript/cloud/${name}.v${version}.ts`,
+                    text
+                )
             },
             subscriptions
         )

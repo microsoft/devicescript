@@ -308,6 +308,11 @@
           "command": "extension.devicescript.cloud.device.updateScript",
           "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
           "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.cloud.device.downloadScriptSource",
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScript",
+          "group": "inline"
         }
       ],
       "commandPalette": [
@@ -454,6 +459,12 @@
         "title": "Upgrade Script",
         "category": "DeviceScript Cloud",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "extension.devicescript.cloud.device.downloadScriptSource",
+        "title": "Download",
+        "category": "DeviceScript Cloud",
+        "icon": "$(cloud-download)"
       }
     ],
     "breakpoints": [
