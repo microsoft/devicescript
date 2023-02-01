@@ -12,6 +12,7 @@ import {
     identifierToUrlPath,
     JDBus,
     JDDevice,
+    JDNode,
     shortDeviceId,
     SRV_CLOUD_ADAPTER,
 } from "jacdac-ts"
@@ -34,11 +35,41 @@ async function createFile(
     await vscode.window.showTextDocument(document)
 }
 
-export interface CloudTreeItem extends vscode.TreeItem {}
+const CLOUD_SCRIPTS_NODE = "cloudScripts"
+const CLOUD_DEVICES_NODE = "cloudDevices"
 
-export class CloudTreeDataProvider
-    implements vscode.TreeDataProvider<CloudNode>
-{
+class CloudCollection extends JDNode {
+    constructor(
+        readonly manager: CloudManager,
+        private readonly _nodeKind: string,
+        private readonly _name: string,
+        private readonly _children: (manager: CloudManager) => JDNode[]
+    ) {
+        super()
+    }
+    get id(): string {
+        return `${this.manager.id}.${this.nodeKind}`
+    }
+    get nodeKind(): string {
+        return this._nodeKind
+    }
+    get name(): string {
+        return this._name
+    }
+    get qualifiedName(): string {
+        return `${this.parent.qualifiedName}.${this.name}`
+    }
+    get parent(): JDNode {
+        return this.manager
+    }
+    get children(): JDNode[] {
+        return this._children(this.manager).sort((l, r) =>
+            l.name.localeCompare(r.name)
+        )
+    }
+}
+
+export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
     private _manager: CloudManager
     private firstLoad = false
 
@@ -267,7 +298,7 @@ export class CloudTreeDataProvider
 
     async resolveTreeItem(
         item: vscode.TreeItem,
-        node: CloudNode,
+        node: JDNode,
         token: vscode.CancellationToken
     ) {
         const { nodeKind } = node
@@ -293,8 +324,9 @@ ${ellipse(body.text, 1000, "...")}
         return item
     }
 
-    getTreeItem(node: CloudNode) {
+    getTreeItem(node: JDNode) {
         const id = `cloud:` + node.id
+        let collapsibleState = vscode.TreeItemCollapsibleState.None
         let label = node.name
         let description = ""
         let tooltip: vscode.MarkdownString = undefined
@@ -303,10 +335,17 @@ ${ellipse(body.text, 1000, "...")}
             {
                 [CLOUD_DEVICE_NODE]: "circuit-board",
                 [CLOUD_SCRIPT_NODE]: "file-code",
+                [CLOUD_DEVICES_NODE]: "circuit-board",
+                [CLOUD_SCRIPTS_NODE]: "file-code",
             }[contextValue] || "question"
         )
 
         switch (node.nodeKind) {
+            case CLOUD_DEVICES_NODE:
+            case CLOUD_SCRIPTS_NODE: {
+                collapsibleState = vscode.TreeItemCollapsibleState.Expanded
+                break
+            }
             case CLOUD_SCRIPT_NODE: {
                 const script = node as CloudScript
                 description = `v${script.version}`
@@ -355,35 +394,47 @@ ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
             iconPath,
             tooltip,
             description,
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            collapsibleState,
         }
     }
 
-    async getChildren(element?: CloudNode) {
+    async getChildren(element?: JDNode) {
         if (!element) {
             if (!this._manager) return undefined
+            const items = [
+                new CloudCollection(
+                    this._manager,
+                    CLOUD_SCRIPTS_NODE,
+                    "scripts",
+                    _ => _.scripts()
+                ),
+                new CloudCollection(
+                    this._manager,
+                    CLOUD_DEVICES_NODE,
+                    "devices",
+                    _ => _.devices()
+                ),
+            ]
             if (this.firstLoad) {
                 this.firstLoad = false
-                this._manager.refresh()
+                this._manager
+                    .refreshScripts()
+                    .then(() => this.refresh(items[0]))
+                this._manager
+                    .refreshDevices()
+                    .then(() => this.refresh(items[1]))
             }
-            return [
-                ...this._manager
-                    .scripts()
-                    .sort((l, r) => l.name.localeCompare(r.name)),
-                ...this._manager
-                    .devices()
-                    .sort((l, r) => l.name.localeCompare(r.name)),
-            ]
-        } else return element?.children as CloudNode[]
+            return items
+        } else return element?.children as JDNode[]
     }
 
     private _onDidChangeTreeData: vscode.EventEmitter<
-        void | CloudNode | CloudNode[]
-    > = new vscode.EventEmitter<void | CloudNode | CloudNode[]>()
-    readonly onDidChangeTreeData: vscode.Event<void | CloudNode | CloudNode[]> =
+        void | JDNode | JDNode[]
+    > = new vscode.EventEmitter<void | JDNode | JDNode[]>()
+    readonly onDidChangeTreeData: vscode.Event<void | JDNode | JDNode[]> =
         this._onDidChangeTreeData.event
 
-    refresh(treeItem?: CloudNode): void {
+    refresh(treeItem?: JDNode): void {
         this._onDidChangeTreeData.fire(treeItem)
     }
 
