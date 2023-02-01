@@ -56,8 +56,15 @@ export function showBuildResults(st: BuildStatus) {
     }
 }
 
-export async function build(filename: string, service: JDService) {
-    const deviceId = service.device.deviceId
+export async function build(
+    filename: string,
+    options?: {
+        service?: JDService
+        watch?: boolean
+    }
+): Promise<BuildStatus> {
+    const { service, watch } = options || {}
+    const deviceId = service?.device?.deviceId
     try {
         const res = await sideRequest<SideBuildReq, SideBuildResp>({
             req: "build",
@@ -68,15 +75,16 @@ export async function build(filename: string, service: JDService) {
         })
         showBuildResults(res.data)
         // also start watch
-        await sideRequest<SideWatchReq>({
-            req: "watch",
-            data: {
-                filename,
-            },
-        })
-        return true
+        if (watch)
+            await sideRequest<SideWatchReq>({
+                req: "watch",
+                data: {
+                    filename,
+                },
+            })
+        return res.data
     } catch (err) {
         console.error(err) // TODO
-        return false
+        return undefined
     }
 }

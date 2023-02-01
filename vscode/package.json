@@ -49,6 +49,7 @@
     "@vscode/vsce": "^2.16.0",
     "isomorphic-fetch": "^3.0.0",
     "typescript": "^4.9.4",
+    "vscode-uri": "^3.0.7",
     "webfont": "^11.2.26"
   },
   "dependencies": {
@@ -310,6 +311,11 @@
           "group": "inline"
         },
         {
+          "command": "extension.devicescript.cloud.device.uploadScriptSource",
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScripts",
+          "group": "inline"
+        },
+        {
           "command": "extension.devicescript.cloud.device.downloadScriptSource",
           "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScript",
           "group": "inline"
@@ -465,6 +471,12 @@
         "title": "Download",
         "category": "DeviceScript Cloud",
         "icon": "$(cloud-download)"
+      },
+      {
+        "command": "extension.devicescript.cloud.device.uploadScriptSource",
+        "title": "Upload",
+        "category": "DeviceScript Cloud",
+        "icon": "$(cloud-upload)"
       }
     ],
     "breakpoints": [

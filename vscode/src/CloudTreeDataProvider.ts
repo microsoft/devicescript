@@ -1,9 +1,7 @@
 import {
     CHANGE,
-    CloudData,
     CloudDevice,
     CloudManager,
-    CloudNode,
     CloudScript,
     CLOUD_DEVICE_NODE,
     CLOUD_SCRIPT_NODE,
@@ -15,11 +13,14 @@ import {
     JDNode,
     shortDeviceId,
     SRV_CLOUD_ADAPTER,
+    toHex,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { ExtensionState } from "./state"
 import "isomorphic-fetch"
-import { deviceIconUri, toMarkdownString } from "./catalog"
+import { toMarkdownString } from "./catalog"
+import { build } from "./build"
+import { Utils } from "vscode-uri"
 
 async function createFile(
     fileName: string,
@@ -183,7 +184,10 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                                 detail: script.creationTime.toLocaleString(),
                                 picked: script === current,
                             }
-                    )
+                    ),
+                    {
+                        title: "Select a script",
+                    }
                 )
                 if (res === undefined) return
 
@@ -198,7 +202,10 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                                 label: `v${v.version}`,
                                 description: v.creationTime.toLocaleString(),
                             }
-                    )
+                    ),
+                    {
+                        title: "Select a version",
+                    }
                 )
                 if (v === undefined) return
 
@@ -213,11 +220,76 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
             "extension.devicescript.cloud.device.downloadScriptSource",
             async (script: CloudScript) => {
                 const name = script.name
-                const version = script.version
                 const body = await script.refreshBody()
                 if (!body) return
                 const text = body.text
-                await createFile(`./cloud/${name}.ts`, text)
+                await createFile(
+                    `./${name}${name.endsWith(".ts" ? "" : ".ts")}`,
+                    text
+                )
+            },
+            subscriptions
+        )
+        vscode.commands.registerCommand(
+            "extension.devicescript.cloud.device.uploadScriptSource",
+            async () => {
+                const manager = this._manager
+                if (!manager) return
+
+                const editor = vscode.window.activeTextEditor
+                if (!editor || editor.document.languageId !== "typescript") {
+                    vscode.window.showErrorMessage(
+                        "DeviceScript Cloud: no DeviceScript file open."
+                    )
+                    return
+                }
+
+                const file = vscode.window.activeTextEditor.document.uri
+                const base = Utils.basename(file).replace(/\.ts$/i, "")
+                const text = new TextDecoder().decode(
+                    await vscode.workspace.fs.readFile(file)
+                )
+                // try to build
+                const status = await build(file.fsPath)
+                if (!status?.success) {
+                    vscode.window.showErrorMessage(
+                        "DeviceScript Cloud: file have build errors."
+                    )
+                    return
+                }
+
+                const compiled = toHex(status.binary)
+
+                // find script to override
+                await manager.refreshScripts()
+                const sres = await vscode.window.showQuickPick(
+                    <(vscode.QuickPickItem & { script?: CloudScript })[]>[
+                        ...manager.scripts().map(script => ({
+                            script,
+                            label: script.name,
+                            description: `v${script.version}`,
+                            picked: script.name === base,
+                        })),
+                        {
+                            label: "Create new cloud script",
+                        },
+                    ],
+                    {
+                        title: `Select cloud script to override with '${base}'`,
+                    }
+                )
+                if (sres === undefined) return
+                const script = sres.script || (await manager.createScript(base))
+
+                // upload
+                this.withProgress("Uploading script", async () => {
+                    await script.uploadBody({ compiled, text })
+                    this.refresh(script)
+
+                    vscode.window.showInformationMessage(
+                        "DeviceScript Cloud: Script updated"
+                    )
+                })
             },
             subscriptions
         )
