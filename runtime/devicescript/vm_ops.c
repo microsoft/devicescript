@@ -8,6 +8,10 @@ static void stmt1_return(devs_activation_t *frame, devs_ctx_t *ctx) {
     devs_fiber_t *f = ctx->curr_fiber;
     f->ret_val = devs_vm_pop_arg(ctx);
     devs_fiber_return_from_call(f, frame);
+
+    if (ctx->dbg_en && ctx->step_fn == frame && (ctx->step_flags & DEVS_CTX_STEP_OUT)) {
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
+    }
 }
 
 static void stmt0_debugger(devs_activation_t *frame, devs_ctx_t *ctx) {

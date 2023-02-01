@@ -13,11 +13,16 @@ function foo() {
     console.log("hello 1")
     console.log(`x=${x} y=${y}`)
     console.log("world")
-     
-    z.q.map(e => {
-        console.log(e)
-        if (e == 2) debugger
-    })
+
+    try {
+        z.q.map(e => {
+            console.log(e)
+            throw new Error("test123")
+            if (e == 2) debugger
+        })
+    } catch (e: any) {
+        console.log("got it", e)
+    }
     console.log("past dbg")
 }
 
@@ -29,4 +34,3 @@ bar()
 console.log("Test1")
 console.log("Test2")
 console.log("Test3")
-

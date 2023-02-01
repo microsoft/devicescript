@@ -86,9 +86,10 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
 #define DEVS_CTX_TRACE_DISABLED 0x08
 #define DEVS_CTX_PENDING_RESUME 0x10
 
-#define DEVS_CTX_STEP_BRK 0x01
-#define DEVS_CTX_STEP_IN 0x02
-#define DEVS_CTX_STEP_OUT 0x04
+#define DEVS_CTX_STEP_EN 0x01
+#define DEVS_CTX_STEP_BRK 0x02
+#define DEVS_CTX_STEP_IN 0x04
+#define DEVS_CTX_STEP_OUT 0x08
 
 typedef struct {
     jd_role_t *role;
@@ -107,6 +108,9 @@ typedef struct {
 #define DEVS_BRK_HASH_SIZE 32
 // has to be under 0xff
 #define DEVS_BRK_MAX_COUNT 0xf0
+
+#define DEVS_DBG_BRK_UNHANDLED_EXN 0x01
+#define DEVS_DBG_BRK_HANDLED_EXN 0x02
 
 struct devs_ctx {
     value_t *globals;
@@ -131,6 +135,7 @@ struct devs_ctx {
     uint8_t suspension;
     uint8_t dbg_en;
     uint8_t ignore_brk;
+    uint8_t dbg_flags;
 
     uint32_t literal_int;
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
@@ -202,7 +207,7 @@ value_t _devs_invalid_program(devs_ctx_t *ctx, unsigned code);
 /**
  * Indicates an invalid bytecode program.
  * The compiler should never generate code that triggers this.
- * Next free error: 60127
+ * Next free error: 60128
  */
 static inline value_t devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
     return _devs_invalid_program(ctx, code - 60000);
@@ -319,6 +324,7 @@ value_t devs_throw_not_supported_error(devs_ctx_t *ctx, const char *what);
 value_t devs_throw_expecting_error_ext(devs_ctx_t *ctx, const char *what, value_t v);
 value_t devs_throw_expecting_error(devs_ctx_t *ctx, unsigned builtinstr, value_t v);
 value_t devs_throw_too_big_error(devs_ctx_t *ctx, unsigned builtinstr);
+void devs_process_throw(devs_ctx_t *ctx);
 
 const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack);

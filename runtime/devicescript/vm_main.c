@@ -232,13 +232,8 @@ static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
             devs_vm_push(ctx, v);
         }
 
-        if (ctx->in_throw) {
-            ctx->stack_top = 0;
-            ctx->in_throw = 0;
-            if (ctx->curr_fiber)
-                ctx->curr_fiber->ret_val = ctx->exn_val;
-            ctx->exn_val = devs_undefined;
-        }
+        if (ctx->in_throw)
+            devs_process_throw(ctx);
     }
 }
 

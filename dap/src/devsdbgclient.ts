@@ -141,6 +141,12 @@ export class DevsDbgClient extends JDServiceClient {
         })
     }
 
+    async setBoolReg(reg: DevsDbgReg, v: boolean) {
+        await this.lock.runExclusive(async () => {
+            this.service.register(reg).sendSetAsync(new Uint8Array([v ? 1 : 0]))
+        })
+    }
+
     private async haltCmd(cmd: DevsDbgCmd) {
         await this.lock.runExclusive(async () => {
             await this.regEn.sendSetAsync(new Uint8Array([1]))

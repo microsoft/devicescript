@@ -61,7 +61,7 @@ bool devs_img_stridx_ok(devs_img_t img, uint32_t nameidx) {
 void devs_dump_versions(const void *imgdata) {
     uint32_t v;
     memcpy(&v, (const uint8_t *)imgdata + 8, 4);
-    DMESG("* DeviceScript runtime v%d.%d.%d; file v%d.%d.%d", DEVS_IMG_VERSION_MAJOR,
+    DMESG("* %s v%d.%d.%d; file v%d.%d.%d", app_get_dev_class_name(), DEVS_IMG_VERSION_MAJOR,
           DEVS_IMG_VERSION_MINOR, DEVS_IMG_VERSION_PATCH, DEVS_VERSION_MAJOR(v),
           DEVS_VERSION_MINOR(v), DEVS_VERSION_PATCH(v));
 }
