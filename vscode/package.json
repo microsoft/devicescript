@@ -462,13 +462,13 @@
       },
       {
         "command": "extension.devicescript.cloud.device.downloadScriptSource",
-        "title": "Download Source",
+        "title": "Download Latest Version",
         "category": "DeviceScript Cloud",
         "icon": "$(cloud-download)"
       },
       {
         "command": "extension.devicescript.cloud.device.uploadScriptSource",
-        "title": "Upload Source",
+        "title": "Upload Version",
         "category": "DeviceScript Cloud",
         "icon": "$(cloud-upload)"
       }
