@@ -7,10 +7,12 @@ import {
     CLOUD_DEVICE_NODE,
     CLOUD_SCRIPT_NODE,
     JDBus,
+    shortDeviceId,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { ExtensionState } from "./state"
 import "isomorphic-fetch"
+import { deviceIconUri, toMarkdownString } from "./catalog"
 
 export interface CloudTreeItem extends vscode.TreeItem {}
 
@@ -132,20 +134,55 @@ export class CloudTreeDataProvider
         this.refresh()
     }
 
-    getTreeItem(node: CloudNode<CloudData>) {
+    getTreeItem(node: CloudNode) {
         const id = `cloud:` + node.id
-        const label = node.name
+        let label = node.name
+        let description = ""
+        let tooltip: vscode.MarkdownString = undefined
         const contextValue = node.nodeKind
-        const icon = {
-            [CLOUD_DEVICE_NODE]: "circuit-board",
-            [CLOUD_SCRIPT_NODE]: "file-code",
-        }[contextValue]
-        const d = node as CloudDevice
+        let iconPath: vscode.ThemeIcon | vscode.Uri = new vscode.ThemeIcon(
+            {
+                [CLOUD_DEVICE_NODE]: "circuit-board",
+                [CLOUD_SCRIPT_NODE]: "file-code",
+            }[contextValue] || "question"
+        )
+
+        switch (node.nodeKind) {
+            case CLOUD_DEVICE_NODE: {
+                const d = node as CloudDevice
+                const meta = d.meta
+
+                label = `${shortDeviceId(d.deviceId)}, ${d.name}`
+                description = d.scriptId
+                    ? `${d.scriptId} ${d.scriptVersion}`
+                    : "no script"
+                const spec =
+                    this.bus.deviceCatalog.specificationFromProductIdentifier(
+                        meta.productId
+                    )
+                if (spec) iconPath = deviceIconUri(spec)
+
+                tooltip = toMarkdownString(
+                    `
+- last activity: ${d.lastActivity}
+- product identifier: ${meta.productId?.toString(16) || ""}
+- firmware version: ${meta.fwVersion || ""}
+- deployed hash: ${d.deployedHash || ""}
+`
+                )
+
+                break
+            }
+        }
+
         return <vscode.TreeItem>{
             id,
             label,
-            contextValue: contextValue,
-            iconPath: icon ? new vscode.ThemeIcon(icon) : undefined,
+            contextValue,
+            iconPath,
+            tooltip,
+            description,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
         }
     }
 
