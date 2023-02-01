@@ -17,7 +17,7 @@ function foo() {
     try {
         z.q.map(e => {
             console.log(e)
-            throw new Error("test123")
+            throw new Error("test123 " + e)
             if (e == 2) debugger
         })
     } catch (exn: any) {

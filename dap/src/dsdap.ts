@@ -113,7 +113,7 @@ export class DsDapSession extends DebugSession {
                     serviceClass: SRV_DEVS_DBG,
                 })[0]
             }
-            if (s) return new DevsDbgClient(s)
+            if (s) return new DevsDbgClient(s, this.img)
             await delay(100)
         }
         throw new Error(`no debugger on the bus; timeout=${timeout}ms`)
@@ -150,12 +150,12 @@ export class DsDapSession extends DebugSession {
                 default: false,
             },
         ]
+
         // these we might potentially support
         response.body.supportsStepInTargetsRequest = false
         response.body.supportsCompletionsRequest = false
         response.body.supportsRestartRequest = false
         response.body.supportsExceptionOptions = false
-        response.body.supportsExceptionInfoRequest = false
         response.body.supportTerminateDebuggee = false
         response.body.supportsDelayedStackTraceLoading = false
         response.body.supportsLogPoints = false
@@ -163,10 +163,11 @@ export class DsDapSession extends DebugSession {
         response.body.supportsTerminateRequest = false
         response.body.supportsDisassembleRequest = false
         response.body.supportsBreakpointLocationsRequest = false
-        response.body.supportsSteppingGranularity = false
         response.body.supportsInstructionBreakpoints = false
 
+        response.body.supportsSteppingGranularity = true
         response.body.supportsLoadedSourcesRequest = true
+        response.body.supportsExceptionInfoRequest = true
         this.sendResponse(response)
     }
 
@@ -188,6 +189,27 @@ export class DsDapSession extends DebugSession {
         )
     }
 
+    private mapSuspensionReason(type: DevsDbgSuspensionType) {
+        switch (type) {
+            case DevsDbgSuspensionType.Panic:
+                return "terminated"
+
+            case DevsDbgSuspensionType.UnhandledException:
+            case DevsDbgSuspensionType.HandledException:
+                return "exception"
+
+            case DevsDbgSuspensionType.Step:
+            case DevsDbgSuspensionType.Breakpoint:
+            case DevsDbgSuspensionType.DebuggerStmt:
+            case DevsDbgSuspensionType.Halt:
+            case DevsDbgSuspensionType.Restart:
+            default:
+                return (
+                    DevsDbgSuspensionType[type]?.toLowerCase() || "stop_" + type
+                )
+        }
+    }
+
     private handleSuspendedEvent() {
         const type = this.client.suspensionReason
         switch (type) {
@@ -195,17 +217,10 @@ export class DsDapSession extends DebugSession {
                 this.sendEvent(new TerminatedEvent())
                 break
 
-            case DevsDbgSuspensionType.Step:
-            case DevsDbgSuspensionType.Breakpoint:
-            case DevsDbgSuspensionType.UnhandledException:
-            case DevsDbgSuspensionType.HandledException:
-            case DevsDbgSuspensionType.DebuggerStmt:
-            case DevsDbgSuspensionType.Halt:
-            case DevsDbgSuspensionType.Restart:
             default:
                 this.sendEvent(
                     new StoppedEvent(
-                        DevsDbgSuspensionType[type] || "stop_" + type,
+                        this.mapSuspensionReason(type),
                         this.client.suspendedFiber
                     )
                 )
@@ -581,6 +596,26 @@ export class DsDapSession extends DebugSession {
         })
     }
 
+    protected override exceptionInfoRequest(
+        response: DebugProtocol.ExceptionInfoResponse,
+        args: DebugProtocol.ExceptionInfoArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            const exn = this.client.exnValue()
+            const msg = await exn.readField("message")
+            const msgStr = await msg?.readString()
+            response.body = {
+                breakMode:
+                    this.client.suspensionReason ==
+                    DevsDbgSuspensionType.HandledException
+                        ? "always"
+                        : "unhandled",
+                exceptionId: "Error", // TODO
+                description: msgStr ?? exn.genericText,
+            }
+        })
+    }
+
     private async asyncReq(
         response: DebugProtocol.Response,
         fn: () => Promise<void>
@@ -664,18 +699,15 @@ export class DsDapSession extends DebugSession {
     }
 
     private async valueToStringCore(v: DevsValue): Promise<string> {
+        const str = await v.readString()
+        if (str !== undefined)
+            return JSON.stringify(str) + (v.isPartial ? "..." : "")
+
+        const buf = await v.readBuffer()
+        if (buf !== undefined)
+            return "hex`" + toHex(buf) + (v.isPartial ? " ..." : "") + "`"
+
         switch (v.tag) {
-            case DevsDbgValueTag.ImgBuffer:
-                const buf = this.img.bufferTable[v.v0]
-                if (buf) return `hex\`${buf}\``
-                break
-            case DevsDbgValueTag.ImgStringUTF8:
-            case DevsDbgValueTag.ImgStringBuiltin:
-            case DevsDbgValueTag.ImgStringAscii:
-                return this.img.describeString(
-                    v.tag - DevsDbgValueTag.ImgBuffer,
-                    v.v0
-                )
             case DevsDbgValueTag.Number:
                 return v.v0 + ""
 
@@ -714,23 +746,6 @@ export class DsDapSession extends DebugSession {
 
             case DevsDbgValueTag.BuiltinObject:
                 return BUILTIN_OBJECT__VAL[v.v0]?.replace(/_/g, ".")
-
-            case DevsDbgValueTag.ObjBuffer:
-            case DevsDbgValueTag.ObjString:
-                if (!v.cachedBytes)
-                    v.cachedBytes = await this.client.readBytes(
-                        v,
-                        0,
-                        maxBytesFetch
-                    )
-                let r =
-                    v.tag == DevsDbgValueTag.ObjBuffer
-                        ? toHex(v.cachedBytes)
-                        : JSON.stringify(
-                              fromUTF8(uint8ArrayToString(v.cachedBytes))
-                          )
-                if (v.cachedBytes.length == maxBytesFetch) r += "..."
-                return r
 
             case DevsDbgValueTag.ImgRoleMember: {
                 const mask = (1 << BinFmt.ROLE_BITS) - 1
