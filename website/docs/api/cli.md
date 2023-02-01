@@ -30,7 +30,6 @@ npm install -g -u @devicescript/cli
 The command tool is named `devicescript` or `devsc` for short.
 The full list of options for each command is available through the CLI by running `devsc help <command>`.
 
-
 ## devsc init
 
 The `init` commands creates or updates the necessary files to get syntax completion
@@ -79,20 +78,28 @@ devsc build
 
 ### --stats
 
-The ``--stats`` flag enables printing additional debugging information about code size,
+The `--stats` flag enables printing additional debugging information about code size,
 and other useful metrics.
 
 ```bash
 devsc build --stats
 ```
 
-### --watch
+## devsc devtools
 
-To automatically rebuild your program based on file changes,
-add `--watch`.
+The `devtools` command launches the developer tool server, without trying to build a project.
 
 ```bash
-devsc build --watch
+devsc devtools
+```
+
+### build watch
+
+To automatically rebuild your program based on file changes,
+add the file name.
+
+```bash
+devsc devtools main.ts
 ```
 
 When the build is run in watch mode, it also opens a developer tool web server that allows
@@ -111,23 +118,6 @@ stateDiagram-v2
     cli --> browser: bytecode
     browser --> sim
     browser --> dev: WebSerial, WebUsb, ...
-```
-
-
-#### --internet
-
-To access the developer tools outside localhost, add `--internet`
-
-```bash
-devsc build --watch --internet
-```
-
-## devsc devtools
-
-The `devtools` command launches the developer tool server, without trying to build a project.
-
-```bash
-devsc devtools
 ```
 
 #### --internet

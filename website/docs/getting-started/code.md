@@ -73,7 +73,7 @@ Assuming `main.ts` is the root file of your application,
 launch a compilation task in watch mode using this command.
 
 ```bash
-devsc build --watch
+devsc devtools main.ts
 ```
 
 The command line task will also start a local web server that will send the compiled bytecode
