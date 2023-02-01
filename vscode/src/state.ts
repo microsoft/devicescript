@@ -16,7 +16,7 @@ import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { spawnDevTools } from "./devtoolsserver"
 import { sideRequest } from "./jacdac"
-import { JDeviceTreeItem } from "./JDomTreeDataProvider"
+import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
@@ -131,7 +131,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             services.map(
                 async srv =>
                     <DeviceQuickItem>{
-                        label: `$(${JDeviceTreeItem.ICON}) ${srv.device.friendlyName}`,
+                        label: `$(${JDomDeviceTreeItem.ICON}) ${srv.device.friendlyName}`,
                         description: srv.device.deviceId,
                         detail: await detail(srv),
                         deviceId: srv.device.deviceId,

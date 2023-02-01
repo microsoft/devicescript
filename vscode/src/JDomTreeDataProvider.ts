@@ -46,10 +46,10 @@ export function createTreeItem(
     const { nodeKind } = child
     const treeItemType =
         {
-            [DEVICE_NODE_NAME]: JDeviceTreeItem,
-            [SERVICE_NODE_NAME]: JDServiceTreeItem,
-            [REGISTER_NODE_NAME]: JDRegisterTreeItem,
-            [EVENT_NODE_NAME]: JDEventTreeItem,
+            [DEVICE_NODE_NAME]: JDomDeviceTreeItem,
+            [SERVICE_NODE_NAME]: JDomServiceTreeItem,
+            [REGISTER_NODE_NAME]: JDomRegisterTreeItem,
+            [EVENT_NODE_NAME]: JDomEventTreeItem,
         }[nodeKind] ?? JDomTreeItem
     const item = new treeItemType(child, props)
     return item
@@ -80,7 +80,8 @@ export function createChildrenTreeItems(
                     const { specification } = reg
                     const { client } = specification
                     if (client) return undefined
-                    if (JDRegisterTreeItem.probablyIgnore(reg)) return undefined
+                    if (JDomRegisterTreeItem.probablyIgnore(reg))
+                        return undefined
                     break
                 }
             }
@@ -128,9 +129,13 @@ export class JDomTreeItem extends vscode.TreeItem {
     getChildren(): Thenable<JDomTreeItem[]> {
         return Promise.resolve(createChildrenTreeItems(this.node, this.props))
     }
+
+    resolveTreeItem(token: vscode.CancellationToken): Promise<vscode.TreeItem> {
+        return Promise.resolve(this)
+    }
 }
 
-export class JDeviceTreeItem extends JDomTreeItem {
+export class JDomDeviceTreeItem extends JDomTreeItem {
     constructor(device: JDDevice, props: TreeItemProps) {
         super(device, props)
 
@@ -179,30 +184,22 @@ export class JDeviceTreeItem extends JDomTreeItem {
 ![Device image](${deviceCatalogImage(spec, "list")}) 
 
 ${spec.description}`,
-                `devices/${identifierToUrlPath(spec.id)}`
+                `jacdac:devices/${identifierToUrlPath(spec.id)}`
             )
         } else {
             const control = device.service(SRV_CONTROL)
             const description = control?.register(ControlReg.DeviceDescription)
             this.tooltip = description?.stringValue
-            this.iconPath = new vscode.ThemeIcon(JDeviceTreeItem.ICON)
+            this.iconPath = new vscode.ThemeIcon(JDomDeviceTreeItem.ICON)
         }
 
         this.refresh()
     }
 }
 
-export class JDServiceTreeItem extends JDomTreeItem {
+export class JDomServiceTreeItem extends JDomTreeItem {
     constructor(service: JDService, props: TreeItemProps) {
         super(service, props)
-        const { specification } = service
-        if (specification) {
-            const { notes, shortId } = specification
-            this.tooltip = toMarkdownString(
-                notes["short"],
-                `services/${shortId}/`
-            )
-        }
     }
 
     iconPath = new vscode.ThemeIcon("symbol-class")
@@ -240,6 +237,22 @@ export class JDServiceTreeItem extends JDomTreeItem {
             )
     }
 
+    override async resolveTreeItem(
+        token: vscode.CancellationToken
+    ): Promise<vscode.TreeItem> {
+        const { service } = this
+        const { specification } = service
+        if (!specification) this.tooltip = "Unknown service specification"
+        else {
+            const { notes, shortId } = specification
+            this.tooltip = toMarkdownString(
+                notes["short"],
+                `devicescript:api/clients/${shortId}`
+            )
+        }
+        return this
+    }
+
     protected handleChange() {
         const { service } = this
         const { role } = service
@@ -259,7 +272,7 @@ export class JDomServiceMemberTreeItem extends JDomTreeItem {
         const { description } = specification || {}
         this.tooltip = toMarkdownString(
             description,
-            `services/${node.service.specification.shortId}/`
+            `devicescript:api/clients/${node.service.specification.shortId}/`
         )
     }
 
@@ -272,7 +285,7 @@ export class JDomServiceMemberTreeItem extends JDomTreeItem {
     }
 }
 
-export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
+export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
     constructor(register: JDRegister, props: TreeItemProps) {
         super(register, props)
         const { specification, code } = register
@@ -310,7 +323,7 @@ export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
         this.description = humanValue
         this.refresh()
 
-        if (JDRegisterTreeItem.probablyIgnore(register)) {
+        if (JDomRegisterTreeItem.probablyIgnore(register)) {
             this.unmount()
             service.emit(CHANGE)
         }
@@ -327,7 +340,7 @@ export class JDRegisterTreeItem extends JDomServiceMemberTreeItem {
     }
 }
 
-export class JDEventTreeItem extends JDomServiceMemberTreeItem {
+export class JDomEventTreeItem extends JDomServiceMemberTreeItem {
     constructor(event: JDEvent, props: TreeItemProps) {
         super(event, props)
     }
@@ -408,6 +421,14 @@ export abstract class JDomTreeDataProvider
         } else {
             return element.getChildren()
         }
+    }
+
+    resolveTreeItem(
+        item: vscode.TreeItem,
+        element: JDomTreeItem,
+        token: vscode.CancellationToken
+    ) {
+        return element.resolveTreeItem(token)
     }
 
     protected abstract getRoots(): JDomTreeItem[]
