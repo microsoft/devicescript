@@ -299,11 +299,11 @@ export class CloudTreeDataProvider
                     `
 ${connected ? `connected` : `disconnected`}
 
-${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
-
 - last activity: ${d.lastActivity}
 - product: ${spec?.name || meta.productId?.toString(16) || ""}
 - firmware version: ${meta.fwVersion || ""}
+
+${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
 
 `,
                     spec ? `devices/${identifierToUrlPath(spec.id)}` : undefined
