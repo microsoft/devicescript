@@ -28,7 +28,6 @@
             "type": "extensionHost",
             "request": "launch",
             "args": [
-                
                 "--extensionDevelopmentPath=${workspaceFolder}/vscode",
                 "${workspaceFolder}/vscode/sampleprj"
             ],

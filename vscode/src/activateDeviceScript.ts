@@ -28,7 +28,9 @@ import type {
 import { logo } from "./assets"
 import { initBuild } from "./build"
 import { toMarkdownString } from "./catalog"
-import { CloudTreeDataProvider } from "./CloudTreeDataProvider"
+import { CloudExtensionState } from "./CloudExtensionState"
+import { registerCloudStatusBar } from "./CloudStatusBar"
+import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
 import {
     DeviceScriptAdapterServerDescriptorFactory,
     DeviceScriptConfigurationProvider,
@@ -50,7 +52,7 @@ import {
     JDomTreeItem,
     JDomWatchTreeDataProvider,
 } from "./JDomTreeDataProvider"
-import { ExtensionState, NodeWatch } from "./state"
+import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
 class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
     constructor(readonly deserialize: (view: vscode.WebviewPanel) => void) {}
@@ -82,7 +84,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     context.subscriptions.push({
         dispose: stopJacdacBus,
     })
-    const extensionState = new ExtensionState(context, bus, workspaceState)
+    const extensionState = new DeviceScriptExtensionState(
+        context,
+        bus,
+        workspaceState
+    )
 
     let unsub = bus.subscribe(CHANGE, async () => {
         if (bus.connected && unsub) {
@@ -326,7 +332,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         command: "extension.devicescript.selectNode",
     }
     const jdomTreeDataProvider = new JDomDeviceTreeDataProvider(
-        bus,
         extensionState,
         selectNodeCommand
     )
@@ -335,7 +340,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         jdomTreeDataProvider
     )
     const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
-        bus,
         extensionState,
         selectNodeCommand
     )
@@ -343,11 +347,9 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         "extension.devicescript.watch",
         jdomWatchTreeDataProvider
     )
-    const cloudTreeDataProvider = new CloudTreeDataProvider(bus, extensionState)
-    vscode.window.registerTreeDataProvider(
-        "extension.devicescript.cloud-explorer",
-        cloudTreeDataProvider
-    )
+    const cloudState = new CloudExtensionState(context, extensionState)
+    registerCloudTreeDataProvider(cloudState)
+    registerCloudStatusBar(cloudState)
 
     context.subscriptions.push(
         vscode.commands.registerCommand(
@@ -430,7 +432,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     const statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
-        100
+        120
     )
     statusBarItem.command = "extension.devicescript.pickDeviceScriptManager"
     const updateStatusBar = () => {
@@ -508,13 +510,13 @@ ${version.slice(1)} - Tools version
     //cloud
     vscode.commands.registerCommand(
         "extension.devicescript.cloud.configure",
-        async () => cloudTreeDataProvider.configure()
+        async () => cloudState.configure()
     )
 
     configure()
 }
 
-async function initDevtoolsConnection(state: ExtensionState) {
+async function initDevtoolsConnection(state: DeviceScriptExtensionState) {
     const resp = await sideRequest<SideSpecsReq, SideSpecsResp>({
         req: "specs",
         data: {},

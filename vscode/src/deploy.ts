@@ -5,7 +5,7 @@ import {
     versionTryParse,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { ExtensionState } from "./state"
+import { DeviceScriptExtensionState } from "./state"
 
 export async function readRuntimeVersion(srv: JDService) {
     const runtimeVersion = srv.register(DeviceScriptManagerReg.RuntimeVersion)
@@ -102,7 +102,7 @@ export async function checkDeviceScriptManagerRuntimeVersion(
 }
 
 export async function prepareForDeploy(
-    extensionState: ExtensionState,
+    extensionState: DeviceScriptExtensionState,
     service: JDService
 ) {
     // disable autostart (which is really auto-restart when the program stops)

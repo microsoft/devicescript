@@ -4,7 +4,7 @@ import {
     checkDeviceScriptManagerRuntimeVersion,
     prepareForDeploy,
 } from "./deploy"
-import { ExtensionState } from "./state"
+import { DeviceScriptExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { JDBus, SRV_DEVICE_SCRIPT_MANAGER } from "jacdac-ts"
 import type { StartArgs } from "@devicescript/dap"
@@ -33,7 +33,7 @@ export class DeviceScriptAdapterServerDescriptorFactory
 export class DeviceScriptConfigurationProvider
     implements vscode.DebugConfigurationProvider
 {
-    constructor(readonly bus: JDBus, readonly extensionState: ExtensionState) {}
+    constructor(readonly bus: JDBus, readonly extensionState: DeviceScriptExtensionState) {}
 
     async resolveDebugConfigurationWithSubstitutedVariables(
         folder: vscode.WorkspaceFolder,

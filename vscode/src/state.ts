@@ -30,7 +30,7 @@ export interface NodeWatch {
     icon: string
 }
 
-export class ExtensionState extends JDEventSource {
+export class DeviceScriptExtensionState extends JDEventSource {
     version = ""
     runtimeVersion: string
 

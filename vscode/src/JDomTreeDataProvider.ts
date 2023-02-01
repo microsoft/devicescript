@@ -25,7 +25,7 @@ import {
     identifierToUrlPath,
     deviceCatalogImage,
 } from "jacdac-ts"
-import { ExtensionState } from "./state"
+import { DeviceScriptExtensionState } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
@@ -33,7 +33,7 @@ export type RefreshFunction = (item: JDomTreeItem) => void
 export interface TreeItemProps {
     refresh: RefreshFunction
     command: vscode.Command
-    state: ExtensionState
+    state: DeviceScriptExtensionState
     idPrefix?: string
     fullName?: boolean
 }
@@ -389,11 +389,14 @@ export abstract class JDomTreeDataProvider
     implements vscode.TreeDataProvider<JDomTreeItem>
 {
     constructor(
-        readonly bus: JDBus,
-        readonly state: ExtensionState,
+        readonly state: DeviceScriptExtensionState,
         readonly command: vscode.Command,
         readonly idPrefix: string
     ) {}
+
+    get bus() {
+        return this.state.bus
+    }
 
     getTreeItem(element: JDomTreeItem): vscode.TreeItem {
         return element
@@ -424,11 +427,10 @@ export abstract class JDomTreeDataProvider
 export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
     private _showInfrastructure = false
     constructor(
-        bus: JDBus,
-        extensionState: ExtensionState,
+        extensionState: DeviceScriptExtensionState,
         command: vscode.Command
     ) {
-        super(bus, extensionState, command, "devs:")
+        super(extensionState, command, "devs:")
         this.bus.on(DEVICE_CHANGE, () => {
             this.refresh()
         })
@@ -462,8 +464,8 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
 }
 
 export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
-    constructor(bus: JDBus, state: ExtensionState, command: vscode.Command) {
-        super(bus, state, command, "watch:")
+    constructor(state: DeviceScriptExtensionState, command: vscode.Command) {
+        super(state, command, "watch:")
         this.state.on(CHANGE, this.refresh.bind(this))
     }
 
