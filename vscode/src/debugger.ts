@@ -95,7 +95,7 @@ export class DeviceScriptConfigurationProvider
         await prepareForDeploy(this.extensionState, service)
 
         // build and deploy
-        if (!(await build(config.program, service))) {
+        if (!(await build(config.program, { service, watch: true }))) {
             return undefined
         }
 

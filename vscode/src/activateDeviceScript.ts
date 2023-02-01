@@ -28,6 +28,7 @@ import type {
 import { logo } from "./assets"
 import { initBuild } from "./build"
 import { toMarkdownString } from "./catalog"
+import { CloudTreeDataProvider } from "./CloudTreeDataProvider"
 import {
     DeviceScriptAdapterServerDescriptorFactory,
     DeviceScriptConfigurationProvider,
@@ -311,7 +312,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             (item: JDomTreeItem) => {
                 const { node } = item
                 const { nodeKind } = node
-                console.log(`Select ${node}`)
                 switch (nodeKind) {
                     case REGISTER_NODE_NAME: {
                         ;(node as JDRegister).scheduleRefresh()
@@ -331,7 +331,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         selectNodeCommand
     )
     vscode.window.registerTreeDataProvider(
-        "extension.devicescript.jacdac-jdom-explorer",
+        "extension.devicescript.jdom-explorer",
         jdomTreeDataProvider
     )
     const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
@@ -342,6 +342,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider(
         "extension.devicescript.watch",
         jdomWatchTreeDataProvider
+    )
+    const cloudTreeDataProvider = new CloudTreeDataProvider(bus, extensionState)
+    vscode.window.registerTreeDataProvider(
+        "extension.devicescript.cloud-explorer",
+        cloudTreeDataProvider
     )
 
     context.subscriptions.push(
@@ -499,6 +504,13 @@ ${version.slice(1)} - Tools version
         undefined,
         context.subscriptions
     )
+
+    //cloud
+    vscode.commands.registerCommand(
+        "extension.devicescript.cloud.configure",
+        async () => cloudTreeDataProvider.configure()
+    )
+
     configure()
 }
 
