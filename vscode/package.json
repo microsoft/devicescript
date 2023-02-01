@@ -42,10 +42,12 @@
     "vscode:prepublish": "yarn build"
   },
   "devDependencies": {
+    "@types/isomorphic-fetch": "^0.0.36",
     "@types/vscode": "^1.74.0",
     "@vscode/debugadapter": "^1.58.0",
     "@vscode/debugadapter-testsupport": "^1.58.0",
     "@vscode/vsce": "^2.16.0",
+    "isomorphic-fetch": "^3.0.0",
     "typescript": "^4.9.4",
     "webfont": "^11.2.26"
   },
