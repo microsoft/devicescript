@@ -59,6 +59,29 @@ export class CloudTreeDataProvider
             },
             subscriptions
         )
+        vscode.commands.registerCommand(
+            "extension.devicescript.cloud.device.upgradeScript",
+            async (device: CloudDevice) => {
+                const script = this._manager?.script(device.scriptId)
+                if (!script) return
+                await script.refreshVersions()
+                const versions = script.versions()
+                const v = await vscode.window.showQuickPick(
+                    versions.map(
+                        v =>
+                            <vscode.QuickPickItem & { version: number }>{
+                                version: v.version,
+                                label: `v${v.version}`,
+                                description: v.creationTime.toLocaleString(),
+                            }
+                    )
+                )
+                if (v !== undefined) {
+                    await device.updateScript(device.scriptId, v.version)
+                }
+            },
+            subscriptions
+        )
 
         // first connection - async
         this.handleRefreshConnection()
@@ -151,10 +174,10 @@ export class CloudTreeDataProvider
             case CLOUD_DEVICE_NODE: {
                 const d = node as CloudDevice
                 const meta = d.meta
-
+                const script = this._manager?.script(d.scriptId)
                 label = `${shortDeviceId(d.deviceId)}, ${d.name}`
-                description = d.scriptId
-                    ? `${d.scriptId} ${d.scriptVersion}`
+                description = script
+                    ? `${script.displayName} v${d.scriptVersion}`
                     : "no script"
                 const spec =
                     this.bus.deviceCatalog.specificationFromProductIdentifier(

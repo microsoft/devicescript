@@ -298,6 +298,11 @@
           "command": "extension.devicescript.watch.remove",
           "when": "view == extension.devicescript.watch && viewItem == missing",
           "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.cloud.device.upgradeScript",
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
+          "group": "inline"
         }
       ],
       "commandPalette": [
@@ -430,6 +435,12 @@
       {
         "command": "extension.devicescript.cloud.refresh",
         "title": "Refresh",
+        "category": "DeviceScript Cloud",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "extension.devicescript.cloud.device.upgradeScript",
+        "title": "Upgrade Script",
         "category": "DeviceScript Cloud",
         "icon": "$(refresh)"
       }
