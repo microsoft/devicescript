@@ -76,9 +76,8 @@ export class CloudTreeDataProvider
                             }
                     )
                 )
-                if (v !== undefined) {
+                if (v !== undefined)
                     await device.updateScript(device.scriptId, v.version)
-                }
             },
             subscriptions
         )
