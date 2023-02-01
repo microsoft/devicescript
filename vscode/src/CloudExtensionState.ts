@@ -171,7 +171,7 @@ export class CloudExtensionState extends JDEventSource {
             value: apiRoot || "https://jacdac-portal2.azurewebsites.net",
         })
         if (newApiRoot !== undefined && newApiRoot !== apiRoot) {
-            await this.setApiRoot(apiRoot)
+            await this.setApiRoot(newApiRoot)
             changed = true
         }
         const token = await vscode.window.showInputBox({
