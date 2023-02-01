@@ -262,18 +262,15 @@
         },
         {
           "command": "extension.devicescript.resetDevice",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator",
-          "group": "inline"
+          "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator"
         },
         {
           "command": "extension.devicescript.resetDevice",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == device",
-          "group": "inline"
+          "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
         },
         {
           "command": "extension.devicescript.identifyDevice",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == device",
-          "group": "inline"
+          "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
         },
         {
           "command": "extension.devicescript.watch.add",
@@ -302,8 +299,7 @@
         },
         {
           "command": "extension.devicescript.cloud.device.updateScript",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
-          "group": "inline"
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice"
         },
         {
           "command": "extension.devicescript.cloud.registerDevice",
@@ -312,13 +308,11 @@
         },
         {
           "command": "extension.devicescript.cloud.device.uploadScriptSource",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScripts",
-          "group": "inline"
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScripts"
         },
         {
           "command": "extension.devicescript.cloud.device.downloadScriptSource",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScript",
-          "group": "inline"
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScript"
         }
       ],
       "commandPalette": [
@@ -444,7 +438,7 @@
       },
       {
         "command": "extension.devicescript.cloud.configure",
-        "title": "Configure",
+        "title": "Configure Connection",
         "category": "DeviceScript Cloud",
         "icon": "$(plug)"
       },
@@ -468,13 +462,13 @@
       },
       {
         "command": "extension.devicescript.cloud.device.downloadScriptSource",
-        "title": "Download",
+        "title": "Download Source",
         "category": "DeviceScript Cloud",
         "icon": "$(cloud-download)"
       },
       {
         "command": "extension.devicescript.cloud.device.uploadScriptSource",
-        "title": "Upload",
+        "title": "Upload Source",
         "category": "DeviceScript Cloud",
         "icon": "$(cloud-upload)"
       }

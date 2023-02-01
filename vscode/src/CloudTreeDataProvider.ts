@@ -129,7 +129,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                 if (!body) return
                 const text = body.text
                 await createFile(
-                    `./${name}${name.endsWith(".ts" ? "" : ".ts")}`,
+                    `./${name}${name.endsWith(".ts") ? "" : ".ts"}`,
                     text
                 )
             },
