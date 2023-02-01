@@ -326,12 +326,13 @@ ${ellipse(body.text, 1000, "...")}
                 description = script
                     ? `${script.displayName} v${d.scriptVersion}`
                     : "no script"
-                iconPath = new vscode.ThemeIcon(
-                    connected ? "circle-large-filled" : "circle-slash"
-                )
+                const iconName = connected
+                    ? "circle-large-filled"
+                    : "circle-slash"
+                iconPath = new vscode.ThemeIcon(iconName)
                 tooltip = toMarkdownString(
                     `
-${connected ? `connected` : `disconnected`}
+$(${iconName}) ${connected ? `connected` : `disconnected`}
 
 - last activity: ${d.lastActivity}
 - product: ${spec?.name || meta.productId?.toString(16) || ""}
