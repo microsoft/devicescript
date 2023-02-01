@@ -183,10 +183,7 @@ export class CloudTreeDataProvider
                 const body = await script.refreshBody()
                 if (!body) return
                 const text = body.text
-                await createFile(
-                    `./.devicescript/cloud/${name}.v${version}.ts`,
-                    text
-                )
+                await createFile(`./cloud/${name}.ts`, text)
             },
             subscriptions
         )
