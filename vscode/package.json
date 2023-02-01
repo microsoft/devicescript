@@ -458,7 +458,7 @@
         "command": "extension.devicescript.cloud.device.updateScript",
         "title": "Upgrade Script",
         "category": "DeviceScript Cloud",
-        "icon": "$(refresh)"
+        "icon": "$(file-code)"
       },
       {
         "command": "extension.devicescript.cloud.device.downloadScriptSource",
