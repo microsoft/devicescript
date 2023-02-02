@@ -18,7 +18,6 @@ import {
     REGISTER_NODE_NAME,
     serializeToTrace,
 } from "jacdac-ts"
-import { report } from "process"
 import * as vscode from "vscode"
 import { WorkspaceFolder, DebugConfiguration, ProviderResult } from "vscode"
 import type {
@@ -27,6 +26,7 @@ import type {
     SideSpecsReq,
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
+import { activateAnalytics } from "./analytics"
 import { logo } from "./assets"
 import { initBuild } from "./build"
 import { toMarkdownString } from "./catalog"
@@ -68,6 +68,7 @@ class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
 }
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
+    const reporter = activateAnalytics(context)
     const { subscriptions, workspaceState, extensionMode } = context
     const debugConfig = vscode.workspace.getConfiguration(
         "devicescript.debugger"
@@ -151,7 +152,9 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.toggleFormatting",
             variable => {
-                reporter.sendTelemetryEvent("command", { command: "toggleFormatting" })
+                reporter.sendTelemetryEvent("command", {
+                    command: "toggleFormatting",
+                })
                 const ds = vscode.debug.activeDebugSession
                 if (ds) {
                     ds.customRequest("toggleFormatting")
@@ -518,7 +521,9 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async (item: JDomTreeItem) => {
                 if (!item) return
                 console.log(`Unwatch ${item.node}`)
-                reporter.sendTelemetryEvent("command", { command: "unwatchNode" })
+                reporter.sendTelemetryEvent("command", {
+                    command: "unwatchNode",
+                })
                 const id = item.node.id
                 const watches = extensionState.watches()
                 if (watches.find(w => w.id === id)) {
