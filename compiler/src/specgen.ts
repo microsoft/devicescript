@@ -194,6 +194,7 @@ function specToMarkdown(info: jdspec.ServiceSpec): string {
 pagination_prev: null
 pagination_next: null
 hide_table_of_contents: true
+unlisted: true
 ---
 # ${clname}
         
@@ -207,6 +208,7 @@ The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${in
 pagination_prev: null
 pagination_next: null
 hide_table_of_contents: true
+unlisted: true
 ---
 # ${clname}
         
@@ -220,6 +222,8 @@ and is not directly programmable in DeviceScript.
         `---
 pagination_prev: null
 pagination_next: null
+description: DeviceScript client for Jacdac ${info.name} service
+keywords: DeviceScript, Jacdac, TypeScript, ${info.name}
 ---
 # ${clname}
 `,
