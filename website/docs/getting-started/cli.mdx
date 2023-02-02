@@ -33,12 +33,6 @@ devsconfig.json   configure the DeviceScript compiler with additional flags. Als
 ...
 ```
 
--   start a build watch
-
-```bash
-yarn watch
-```
-
 -   open `main.ts` and copy the following code
 
 ```ts
@@ -70,6 +64,12 @@ launch a compilation task in watch mode using this command.
 
 ```bash
 devsc devtools main.ts
+```
+
+or, for short,
+
+```bash
+yarn watch
 ```
 
 The command line task will also start a local web server that will send the compiled bytecode
