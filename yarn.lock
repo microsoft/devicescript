@@ -3191,12 +3191,12 @@
     "@typescript-eslint/types" "5.49.0"
     eslint-visitor-keys "^3.3.0"
 
-"@vscode/debugadapter-testsupport@^1.58.0":
-  version "1.58.0"
-  resolved "https://registry.yarnpkg.com/@vscode/debugadapter-testsupport/-/debugadapter-testsupport-1.58.0.tgz#86884da14fff53d8b601511eb0f73a094e8a15a9"
-  integrity sha512-a6Q4K6jTG0J5+yb7bRKiAPu3Ob+rnkRJRSagK5SHsZi64s4JhEpqf842IeTqqEjAmjt9/FXcpk1WViqEtx53qw==
+"@vscode/debugadapter-testsupport@^1.59.0":
+  version "1.59.0"
+  resolved "https://registry.yarnpkg.com/@vscode/debugadapter-testsupport/-/debugadapter-testsupport-1.59.0.tgz#d29b89f6285424435499e9bb5ad42e5db01f3a11"
+  integrity sha512-Q25IHmZCTHispSg/h3kBa8M2EGPFgZGbwt3hlGA53ydWlF0TUEJ12oW9ODMEBO+VAk+GGrHW/C6iCLgyLvcPPw==
   dependencies:
-    "@vscode/debugprotocol" "1.58.0"
+    "@vscode/debugprotocol" "1.59.0"
 
 "@vscode/debugadapter@^1.58.0":
   version "1.58.0"
@@ -3205,15 +3205,27 @@
   dependencies:
     "@vscode/debugprotocol" "1.58.0"
 
+"@vscode/debugadapter@^1.59.0":
+  version "1.59.0"
+  resolved "https://registry.yarnpkg.com/@vscode/debugadapter/-/debugadapter-1.59.0.tgz#ed89afe9b50e28f81c642e635634076f9ca8b6d4"
+  integrity sha512-KfrQ/9QhTxBumxkqIWs9rsFLScdBIqEXx5pGbTXP7V9I3IIcwgdi5N55FbMxQY9tq6xK3KfJHAZLIXDwO7YfVg==
+  dependencies:
+    "@vscode/debugprotocol" "1.59.0"
+
 "@vscode/debugprotocol@1.58.0":
   version "1.58.0"
   resolved "https://registry.yarnpkg.com/@vscode/debugprotocol/-/debugprotocol-1.58.0.tgz#3416047d72103784daebab27b3834481e2960598"
   integrity sha512-64gY3PdU7jmYDwLRJFZ5XL2BC8TK5mdhZ60XLTZn17yfbJPKCcmFDuQAkVfOPsjn7o4f6YWFy3AXSR0V9gY6jA==
 
-"@vscode/vsce@^2.16.0":
-  version "2.16.0"
-  resolved "https://registry.yarnpkg.com/@vscode/vsce/-/vsce-2.16.0.tgz#a3ddcf7e84914576f35d891e236bc496c568776f"
-  integrity sha512-BhJ0zO7UxShLFBZM6jwOLt1ZVoqQ4r5Lj/kHNeYp0ICPXhz/erqBSMQnHkRgkjn2L/bh+TYFGkZyguhu/SKsjw==
+"@vscode/debugprotocol@1.59.0":
+  version "1.59.0"
+  resolved "https://registry.yarnpkg.com/@vscode/debugprotocol/-/debugprotocol-1.59.0.tgz#f173ff725f60e4ff1002f089105634900c88bd77"
+  integrity sha512-Ks8NiZrCvybf9ebGLP8OUZQbEMIJYC8X0Ds54Q/szpT/SYEDjTksPvZlcWGTo7B9t5abjvbd0jkNH3blYaSuVw==
+
+"@vscode/vsce@^2.17.0":
+  version "2.17.0"
+  resolved "https://registry.yarnpkg.com/@vscode/vsce/-/vsce-2.17.0.tgz#64093e1e083673081ea8bd7e69745ff2f632003e"
+  integrity sha512-W4HN5MtTVj/mroQU1d82bUEeWM3dUykMFnMYZPtZ6jrMiHN1PUoN3RGcS896N0r2rIq8KpWDtufcQHgK8VfgpA==
   dependencies:
     azure-devops-node-api "^11.0.1"
     chalk "^2.4.2"
