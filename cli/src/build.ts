@@ -159,7 +159,6 @@ export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
 export interface BuildOptions {
     noVerify?: boolean
     outDir?: string
-    watch?: boolean
     stats?: boolean
     flag?: Record<string, boolean>
     cwd?: string
@@ -184,16 +183,12 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
     // log(`building ${file}`)
     ensureDirSync(options.outDir)
     await buildOnce(file, options)
-    // if (options.watch) await buildWatch(file, options)
 }
 
 async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
-    const { watch, stats } = options
+    const { stats } = options
     const { success, binary, dbg } = await compileFile(file, options)
-    if (!success) {
-        if (watch) return
-        throw new CompilationError("compilation failed")
-    }
+    if (!success) throw new CompilationError("compilation failed")
 
     log(`bytecode: ${prettySize(binary.length)}`)
     if (stats) {

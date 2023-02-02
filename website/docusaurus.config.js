@@ -143,8 +143,8 @@ async function createConfig() {
                                     scripts: {
                                         "setup": "devicescript init",
                                         "build": "devicescript build",
-                                        "watch": "devicescript build --watch",
-                                        start: "yarn setup && yarn watch",
+                                        "watch": "devicescript devtools main.ts",
+                                        "start": "yarn watch",
                                     },
                                 },
                             },
