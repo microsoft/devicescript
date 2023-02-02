@@ -9,6 +9,7 @@ import { jacdacDefaultSpecifications, SrcFile } from "@devicescript/compiler"
 import {
     bufferConcat,
     debounce,
+    delay,
     ERROR,
     FRAME_PROCESS,
     JDBus,
@@ -107,6 +108,10 @@ export async function devtools(
             filename: fn,
             deployTo: "*",
             buildOptions: options,
+        }
+        if (transports.length) {
+            console.log("waiting for enumeration...")
+            await delay(1000)
         }
         console.log(`building ${fn}...`)
         logBuildStatus(await buildCmd(args))
