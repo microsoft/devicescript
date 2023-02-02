@@ -460,7 +460,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         async (item: JDomTreeItem) => {
             if (!item) return
             console.log(`Watch ${item.node}`)
-            reporter.sendTelemetryEvent("command", { command: "watchNode" })
             const id = item.node.id
             const watches = extensionState.watches()
             if (!watches.find(w => w.id === id)) {
