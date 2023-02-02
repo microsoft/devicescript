@@ -86,7 +86,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     context.subscriptions.push({
         dispose: stopJacdacBus,
     })
-    const extensionState = new DeviceScriptExtensionState(context, bus, telemetry)
+    const extensionState = new DeviceScriptExtensionState(
+        context,
+        bus,
+        telemetry
+    )
 
     let unsub = bus.subscribe(CHANGE, async () => {
         if (bus.connected && unsub) {
