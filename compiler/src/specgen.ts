@@ -193,7 +193,6 @@ function specToMarkdown(info: jdspec.ServiceSpec): string {
         return `---
 pagination_prev: null
 pagination_next: null
-hide_table_of_contents: true
 unlisted: true
 ---
 # ${clname}
@@ -207,7 +206,6 @@ The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${in
         return `---
 pagination_prev: null
 pagination_next: null
-hide_table_of_contents: true
 unlisted: true
 ---
 # ${clname}
