@@ -33,7 +33,10 @@ export class DeviceScriptAdapterServerDescriptorFactory
 export class DeviceScriptConfigurationProvider
     implements vscode.DebugConfigurationProvider
 {
-    constructor(readonly bus: JDBus, readonly extensionState: DeviceScriptExtensionState) {}
+    constructor(
+        readonly bus: JDBus,
+        readonly extensionState: DeviceScriptExtensionState
+    ) {}
 
     async resolveDebugConfigurationWithSubstitutedVariables(
         folder: vscode.WorkspaceFolder,
@@ -42,6 +45,17 @@ export class DeviceScriptConfigurationProvider
     ) {
         const sessionConfig = config as vscode.DebugSessionOptions
         const dsConfig = config as StartArgs
+
+        if (!config.program) {
+            vscode.window.showErrorMessage(
+                "Debug cancelled. Cannot find a program to debug.",
+                {
+                    modal: true,
+                    detail: "Open a source file to debug or configure launch.json `program` field.",
+                }
+            )
+            return undefined
+        }
 
         // find device
         if (!dsConfig.deviceId) {
@@ -76,7 +90,11 @@ export class DeviceScriptConfigurationProvider
         })?.[dsConfig.serviceInstance || 0]
         if (!service) {
             vscode.window.showErrorMessage(
-                `Debug cancelled. Could not find device ${dsConfig.deviceId}.`
+                `Debug cancelled. Could not find device ${dsConfig.deviceId}.`,
+                {
+                    modal: true,
+                    detail: `Your launch configuration requires to attach to device ${dsConfig.deviceId}.`,
+                }
             )
             return undefined
         }
@@ -96,6 +114,13 @@ export class DeviceScriptConfigurationProvider
 
         // build and deploy
         if (!(await build(config.program, { service, watch: true }))) {
+            vscode.window.showErrorMessage(
+                `Debug cancelled. Program has build errors.`,
+                {
+                    modal: true,
+                    detail: `Fix the build errors and try to debug again.`,
+                }
+            )
             return undefined
         }
 
@@ -106,6 +131,7 @@ export class DeviceScriptConfigurationProvider
 
         // run, no debug
         if (sessionConfig?.noDebug) {
+            console.debug(`skip debugger`)
             return undefined
         }
 
@@ -133,12 +159,18 @@ export class DeviceScriptConfigurationProvider
             }
         }
 
-        if (!config.program) {
-            vscode.window.showInformationMessage(
-                "Debug cancelled. Cannot find a program to debug."
-            )
-            return undefined
+        // default to current file
+        if (
+            !config.program &&
+            config.request === "launch" &&
+            config.type === "devicescript"
+        ) {
+            const editor = vscode.window.activeTextEditor
+            if (editor && editor.document.languageId === "typescript") {
+                config.program = "${file}"
+            }
         }
+
         return config
     }
 }

@@ -516,7 +516,7 @@
               },
               "deviceId": {
                 "type": "string",
-                "description": "Device identifier of the device (long or short). Use ${command:simulator} for the Simulator."
+                "description": "Device identifier of the device (long or short). Use ${command:deviceScriptSimulator} for the Simulator."
               },
               "serviceInstance": {
                 "type": "number",
@@ -548,8 +548,7 @@
           }
         ],
         "variables": {
-          "askForProgramName": "extension.devicescript.variables.askForProgramName",
-          "simulator": "extension.devicescript.variables.simulator"
+          "deviceScriptSimulator": "extension.devicescript.variables.simulator"
         }
       }
     ]

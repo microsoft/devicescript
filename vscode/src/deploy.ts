@@ -93,7 +93,7 @@ export async function checkDeviceScriptManagerRuntimeVersion(
         return false
     }
     if (!service) {
-        vscode.window.showWarningMessage(
+        vscode.window.showErrorMessage(
             "Deploy cancelled. No DeviceScript device found."
         )
         return false

@@ -220,16 +220,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     subscriptions.push(
         vscode.commands.registerCommand(
-            "extension.devicescript.variables.askForProgramName",
-            config => {
-                return vscode.window.showInputBox({
-                    placeHolder:
-                        "Please enter the name of a typescript file in the workspace folder",
-                    value: "main.ts",
-                })
-            }
-        ),
-        vscode.commands.registerCommand(
             "extension.devicescript.variables.simulator",
             config => extensionState.simulatorScriptManagerId
         )
@@ -260,8 +250,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                             name: "Devicescript: Launch",
                             request: "launch",
                             type: "devicescript",
-                            program:
-                                "${workspaceFolder}/${command:askForProgramName}",
                         },
                     ]
                 },
