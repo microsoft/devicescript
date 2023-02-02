@@ -34,6 +34,27 @@ The extension is not yet available from the marketplace and needs to be installe
 Using the **Install from VSIX** command in the Extensions view command dropdown,
 or the **Extensions: Install from VSIX** command in the Command Palette, point to the .vsix file.
 
+## Setting up the project
+
+The extension activates lazily when it detects a DeviceScript,
+so let's use a terminal to create the initial project structure.
+
+-   Open a terminal (`` Ctrl + ` ``)
+-   Create a new folder if needed
+
+```bash
+mkdir mydevice
+cd mydevice
+```
+
+-   Use the `init` command to setup a new project
+
+```bash
+npx @devicescript/cli init
+```
+
+The extension should now be loaded. Go to the debug section and start debugging!
+
 ## DeviceScript basics
 
 Navigate to the [Developer section](/developer) to learn the basics of the language.
