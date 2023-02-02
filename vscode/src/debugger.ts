@@ -49,11 +49,7 @@ export class DeviceScriptConfigurationProvider
 
         if (!config.program) {
             vscode.window.showErrorMessage(
-                "Debug cancelled. Cannot find a program to debug.",
-                {
-                    modal: true,
-                    detail: "Open a source file to debug or configure launch.json `program` field.",
-                }
+                "Debug cancelled. Cannot find a program to debug."
             )
             return undefined
         }
@@ -91,11 +87,7 @@ export class DeviceScriptConfigurationProvider
         })?.[dsConfig.serviceInstance || 0]
         if (!service) {
             vscode.window.showErrorMessage(
-                `Debug cancelled. Could not find device ${dsConfig.deviceId}.`,
-                {
-                    modal: true,
-                    detail: `Your launch configuration requires to attach to device ${dsConfig.deviceId}.`,
-                }
+                `Debug cancelled. Could not find device ${dsConfig.deviceId}.`
             )
             return undefined
         }
@@ -116,11 +108,7 @@ export class DeviceScriptConfigurationProvider
         // build and deploy
         if (!(await build(config.program, { service, watch: true }))) {
             vscode.window.showErrorMessage(
-                `Debug cancelled. Program has build errors.`,
-                {
-                    modal: true,
-                    detail: `Fix the build errors and try to debug again.`,
-                }
+                `Debug cancelled. Program has build errors.`
             )
             return undefined
         }
