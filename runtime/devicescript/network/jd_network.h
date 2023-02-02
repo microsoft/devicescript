@@ -1,6 +1,7 @@
 #pragma once
 
 #include "jd_protocol.h"
+#include "jacdac/dist/c/wifi.h"
 
 #ifndef JD_WEBSOCK_IMPL
 #define JD_WEBSOCK_IMPL 1
@@ -78,3 +79,16 @@ void wsskhealth_init(void);
 // to implement:
 void jd_crypto_get_random(uint8_t *buf, unsigned size);
 
+// WiFi service
+void wifi_init(void);
+
+void jd_wifi_scan_done_cb(jd_wifi_results_t *res, unsigned num_res);
+void jd_wifi_got_ip_cb(uint32_t ipv4);
+void jd_wifi_lost_ip_cb(void);
+
+// to implement:
+int jd_wifi_start_scan(void);
+int jd_wifi_connect(const char *ssid, const char *pw);
+int jd_wifi_init(uint8_t mac_out[6]);
+int jd_wifi_disconnect(void);
+int jd_wifi_rssi(void);
