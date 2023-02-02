@@ -8,6 +8,7 @@ import { DeviceScriptExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { JDBus, SRV_DEVICE_SCRIPT_MANAGER } from "jacdac-ts"
 import type { StartArgs } from "@devicescript/dap"
+import { pickDeviceScriptFile } from "./pickers"
 
 export class DeviceScriptAdapterServerDescriptorFactory
     implements vscode.DebugAdapterDescriptorFactory
@@ -147,28 +148,15 @@ export class DeviceScriptConfigurationProvider
         config: DebugConfiguration,
         token?: CancellationToken
     ) {
-        // if launch.json is missing or empty
-        if (!config.type && !config.request && !config.name) {
-            const editor = vscode.window.activeTextEditor
-            if (editor && editor.document.languageId === "typescript") {
-                config.type = "devicescript"
-                config.name = "Launch"
-                config.request = "launch"
-                config.program = "${file}"
-                config.stopOnEntry = true
-            }
-        }
-
-        // default to current file
         if (
             !config.program &&
             config.request === "launch" &&
             config.type === "devicescript"
         ) {
-            const editor = vscode.window.activeTextEditor
-            if (editor && editor.document.languageId === "typescript") {
-                config.program = "${file}"
-            }
+            const file = await pickDeviceScriptFile({
+                title: "Pick a file to debug.",
+            })
+            if (file) config.program = file.fsPath
         }
 
         return config
