@@ -44,7 +44,10 @@
             "@semantic-release/github",
             {
                 "successComment": false,
-                "failComment": false
+                "failComment": false,
+                "assets": [
+                    "devicescript.vsix"
+                ]
             }
         ],
         [
@@ -54,8 +57,7 @@
             "@semantic-release/git",
             {
                 "assets": [
-                    "package.json",
-                    "devicescript.vsix"
+                    "package.json"
                 ]
             }
         ]
