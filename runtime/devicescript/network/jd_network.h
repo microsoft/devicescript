@@ -82,6 +82,7 @@ void jd_crypto_get_random(uint8_t *buf, unsigned size);
 // WiFi service
 void wifi_init(void);
 
+// this will eventually jd_free(res)
 void jd_wifi_scan_done_cb(jd_wifi_results_t *res, unsigned num_res);
 void jd_wifi_got_ip_cb(uint32_t ipv4);
 void jd_wifi_lost_ip_cb(void);

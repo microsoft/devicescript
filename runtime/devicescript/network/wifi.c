@@ -332,7 +332,11 @@ void wifi_init(void) {
 
     _wifi_state = state;
 
-    jd_wifi_init(state->mac);
+    if (jd_wifi_init(state->mac) != 0) {
+        DMESG("! can't init wifi!");
+        JD_PANIC();
+    }
+
     wifi_scan(state);
 }
 
