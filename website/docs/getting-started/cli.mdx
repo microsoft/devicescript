@@ -1,12 +1,8 @@
 ---
 sidebar_position: 20
-hide_table_of_contents: true
 ---
 
-# Visual Studio Code
-
-[Visual Studio Code](https://code.visualstudio.com/) (`code`) is a popular editor for TypeScript program. It is the
-preferred editor for DeviceScript projects.
+# Command Line
 
 The command line tool is compatible with container and virtual machines so you can run it
 in Docker, GitHub Codespaces, ...
@@ -20,7 +16,7 @@ Let's get started by installing the [DeviceScript command line](/api/cli) and cr
 -   Use the `init` command to setup a new project
 
 ```bash
-npx @devicescript/cli ini install -g -u @devicescript/cli
+npx @devicescript/cli init
 ```
 
 You will have the following files created.
@@ -90,3 +86,57 @@ From here, your developer inner loop will be very similar to building/debugging 
 -   after a couple seconds, the compiler picks up the changes, produces a new bytecode and sends it to the developer tools
 -   the developer tools automatically deploy thew bytecode to the select device (by default the simulator)
 -   switch from VS Code to the browser and debug your new code
+
+## DeviceScript basics
+
+Navigate to the [Developer section](/developer) to learn the basics of the language.
+
+## How tools work
+
+Communicating with hardware device typically involves a native connection using serial (UARL), USB or Bluetooth.
+This kind of communication is typically platform specific and creates a lot of complexity to support cross-platform tools.
+Native communication connection typically do not work when working from a container/virtual machine.
+
+On the other hand, modern browsers have been supporting communication with hardware devices, with WebSerial, WebUSB and WebBluetooth. Therefore, this is the preferred solution used by DeviceScript to communicate with hardware.
+
+### Deployment
+
+When developing a DeviceScript program, the command line will start a web server that acts as a bridge between
+a developer tools web page and the compilation results.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    code: Your Editor
+    cli: cli (DeviceScript compiler/server)
+    browser: DeviceScript DevTools (browser)
+    device: Hardware device
+    simulator: Virtual device (browser)
+    code --> cli
+    cli --> browser
+    browser --> simulator: DeviceScript bytecode
+    browser --> device: DeviceScript bytecode over serial, usb
+```
+
+### Simulation
+
+The DeviceScript developer tool page also acts as a bridge routing the Jacdac packets to all players. This means
+that you can test and debug your scripts in a virtual or hardware device, using virtual or hardware sensors.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    browser: DeviceScript DevTools (browser)
+    device: Hardware device
+    simulator: Virtual device
+    hwsensor: Hardware sensor
+    vsensor: Virtual sensor
+    browser --> simulator
+    simulator --> browser
+    browser --> device: serial, USB, web sockets
+    device --> browser
+    device --> hwsensor: I2C, SPI, GPIO, Jacdac, ...
+    hwsensor --> device
+    browser --> vsensor
+    vsensor --> browser
+```
