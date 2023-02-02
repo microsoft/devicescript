@@ -246,18 +246,23 @@ export class JDomServiceTreeItem extends JDomTreeItem {
 
         if (!specification) this.tooltip = "Unknown service specification"
         else {
-            const { notes, shortId, camelName } = specification
+            const { notes, shortId, camelName, status } = specification
             const clname = capitalize(camelName)
             const reserved: Record<string, string> = { switch: "sw" }
             const varname = reserved[camelName] || camelName
-
-            this.tooltip = toMarkdownString(
-                `${notes["short"]}
-
+            const snippet =
+                status !== "deprecated" && !isInfrastructure(specification)
+                    ? `
+            
 \`\`\`ts
 const ${varname} = new ds.${clname}()
 \`\`\`
 
+`
+                    : `This service is not directly programmable in DeviceScript/`
+            this.tooltip = toMarkdownString(
+                `${notes["short"]}
+${snippet}
 `,
                 `devicescript:api/clients/${shortId}`
             )
