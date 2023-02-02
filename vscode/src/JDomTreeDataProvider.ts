@@ -24,6 +24,7 @@ import {
     isReading,
     identifierToUrlPath,
     deviceCatalogImage,
+    capitalize,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -242,11 +243,22 @@ export class JDomServiceTreeItem extends JDomTreeItem {
     ): Promise<vscode.TreeItem> {
         const { service } = this
         const { specification } = service
+
         if (!specification) this.tooltip = "Unknown service specification"
         else {
-            const { notes, shortId } = specification
+            const { notes, shortId, camelName } = specification
+            const clname = capitalize(camelName)
+            const reserved: Record<string, string> = { switch: "sw" }
+            const varname = reserved[camelName] || camelName
+
             this.tooltip = toMarkdownString(
-                notes["short"],
+                `${notes["short"]}
+
+\`\`\`ts
+const ${varname} = new ds.${clname}()
+\`\`\`
+
+`,
                 `devicescript:api/clients/${shortId}`
             )
         }
