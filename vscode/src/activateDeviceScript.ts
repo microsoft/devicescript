@@ -152,9 +152,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.toggleFormatting",
             variable => {
-                reporter.sendTelemetryEvent("command", {
-                    command: "toggleFormatting",
-                })
                 const ds = vscode.debug.activeDebugSession
                 if (ds) {
                     ds.customRequest("toggleFormatting")
@@ -520,10 +517,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             "extension.devicescript.watch.remove",
             async (item: JDomTreeItem) => {
                 if (!item) return
-                console.log(`Unwatch ${item.node}`)
-                reporter.sendTelemetryEvent("command", {
-                    command: "unwatchNode",
-                })
                 const id = item.node.id
                 const watches = extensionState.watches()
                 if (watches.find(w => w.id === id)) {
