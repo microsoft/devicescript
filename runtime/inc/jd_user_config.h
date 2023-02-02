@@ -36,5 +36,6 @@ void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
 #define JD_CONFIG_WATCHDOG 0
 
 // #define JD_THR_PTHREAD 1
+#define JD_WIFI_SERVICE 0
 
 #endif

@@ -2,6 +2,12 @@
 #include "services/interfaces/jd_flash.h"
 #include "devicescript.h"
 
+#ifndef JD_WIFI_SERVICE
+#define JD_WIFI_SERVICE 1
+#endif
+
+#if JD_WIFI_SERVICE
+
 #define LOG_TAG "wifi"
 // #define VLOGGING 1
 #include "devs_logging.h"
@@ -329,3 +335,5 @@ void wifi_init(void) {
     jd_wifi_init(state->mac);
     wifi_scan(state);
 }
+
+#endif
