@@ -100,6 +100,7 @@ export async function devtools(
 
     enableLogging(bus)
 
+    bus.autoConnect = true
     bus.start()
     await bus.connect(true)
 
