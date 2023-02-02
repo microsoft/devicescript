@@ -30,7 +30,6 @@ export async function crunScript(
 
     if (options.serial) args.unshift(options.serial)
     else if (options.net) args.unshift("8082", "-w")
-    else args.unshift("-L")
 
     if (!options.lazyGc) args.unshift("-X")
     if (!options.settings) args.unshift("-n")

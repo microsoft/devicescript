@@ -287,7 +287,7 @@ int main(int argc, const char **argv) {
 #endif
     int enable_lstore = 0;
     int websock = 0;
-    int disable_logging = 0;
+    int enable_logging = 0;
 
     for (int i = 1; i < argc; ++i) {
         const char *arg = argv[i];
@@ -303,7 +303,7 @@ int main(int argc, const char **argv) {
         } else if (strcmp(arg, "-l") == 0) {
             enable_lstore = 1;
         } else if (strcmp(arg, "-L") == 0) {
-            disable_logging = 1;
+            enable_logging = 1;
         } else if (strcmp(arg, "-X") == 0) {
             devs_set_global_flags(DEVS_FLAG_GC_STRESS);
         } else if (strcmp(arg, "-w") == 0) {
@@ -337,8 +337,8 @@ int main(int argc, const char **argv) {
         jd_lstore_init();
     jd_services_init();
 
-    if (disable_logging)
-        devsmgr_set_logging(0);
+    if (enable_logging)
+        devsmgr_set_logging(1);
 
     {
         uint64_t devid = jd_device_id();

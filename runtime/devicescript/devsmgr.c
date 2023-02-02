@@ -418,7 +418,7 @@ void devsmgr_init(const devsmgr_cfg_t *cfg) {
     state->cfg = cfg;
     state->read_program_ptr = -1;
     state->autostart = 1;
-    state->logging = 1;
+    state->logging = 0;
     // first start 1.5s after brain boot up - allow devices to enumerate
     state->next_restart = now + SECONDS(1.5);
 
