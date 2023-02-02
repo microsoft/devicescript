@@ -8,12 +8,14 @@
 #include "devicescript.h"
 #include "devs_bytecode.h"
 
+#define LOG_TAG "mgr"
+// #define VLOGGING 1
+#include "devs_logging.h"
+
 #define DEVSMGR_ALIGN 32
 
 #define DEVSMGR_PROG_MAGIC0 0x8d8abd53
 #define DEVSMGR_PROG_MAGIC1 0xb27c4b2b
-
-#define LOGV JD_NOLOG
 
 #define SECONDS(n) (uint32_t)((n)*1024 * 1024)
 #define MS(n) (uint32_t)((n)*1024)
@@ -29,8 +31,6 @@ typedef struct {
 
     uint8_t image[0];
 } devsmgr_program_header_t;
-
-#define LOG JD_LOG
 
 struct srv_state {
     SRV_COMMON;
@@ -185,14 +185,16 @@ int devsmgr_deploy_start(uint32_t sz) {
 
     devsmgr_program_header_t hd;
 
-    DMESG("deploy %d b", (int)sz);
+    LOG("deploy %d b", (int)sz);
 
     if (sz >= state->cfg->max_program_size - sizeof(hd) || (sz & (DEVSMGR_ALIGN - 1)))
         return -1;
 
     stop_program(state);
 
+    LOGV("flash erase");
     flash_erase(state->cfg->program_base);
+    LOGV("flash erase done");
 
     if (sz == 0)
         return 0;
@@ -223,12 +225,12 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
         };
         unsigned endp = hdf->size + sizeof(hd);
         if (state->write_offset != endp) {
-            DMESG("missing %d bytes (of %d)", (int)(endp - state->write_offset), (int)hdf->size);
+            DMESG("! missing %d bytes (of %d)", (int)(endp - state->write_offset), (int)hdf->size);
             return -1;
         } else {
             flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             flash_sync();
-            DMESG("program written");
+            LOG("program written");
             stop_program(state);
             jd_send_event(state, JD_EV_CHANGE);
             state->next_restart = now; // make it more responsive
@@ -241,7 +243,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
     uint32_t endp = ((devsmgr_program_header_t *)dst)->size + sizeof(devsmgr_program_header_t);
     if (size & (DEVSMGR_ALIGN - 1) || state->write_offset + size > endp ||
         size >= JD_FLASH_PAGE_SIZE) {
-        DMESG("invalid pkt size: %d (off=%d endp=%d)", size, (int)state->write_offset, (int)endp);
+        DMESG("! invalid pkt size: %d (off=%d endp=%d)", size, (int)state->write_offset, (int)endp);
         state->write_offset = 0;
         return -1;
     }
@@ -287,6 +289,8 @@ static void deploy_bytecode(srv_t *state, jd_packet_t *pkt) {
 
     int port = jd_ipipe_open(&state->write_program_pipe, deploy_handler, deploy_meta_handler);
     jd_respond_u16(pkt, port);
+
+    LOGV("pipe open");
 }
 
 int devsmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]) {
