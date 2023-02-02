@@ -1,7 +1,7 @@
 {
   "name": "devicescript",
   "displayName": "Microsoft DeviceScript",
-  "version": "0.0.0",
+  "version": "1.2.4",
   "publisher": "Microsoft Research",
   "description": "A TypeScript-like language and runtime for small embedded devices.",
   "author": {
