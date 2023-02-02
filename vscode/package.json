@@ -1,7 +1,7 @@
 {
   "name": "devicescript-vscode",
   "displayName": "DeviceScript Visual Studio Code Extension",
-  "version": "1.2.5",
+  "version": "1.0.0",
   "publisher": "Microsoft",
   "description": "DeviceScript extension for Visual Studio Code.",
   "author": {
