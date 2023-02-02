@@ -12,6 +12,6 @@ website/static/dist/devicescript-compiler.js
 temp/
 devs/lib/devicescript-spec.d.ts
 .devicescript
-*.vsix
+**/*.vsix
 .vscode/settings.json
 vscode/sampleprj/.vscode
