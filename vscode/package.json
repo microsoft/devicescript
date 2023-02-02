@@ -35,7 +35,7 @@
   "scripts": {
     "buildicons": "node ./scripts/updateFonts.js",
     "buildts": "node ../build.js --fast",
-    "package": "vsce package",
+    "package": "vsce package --out devicescript.vsix --yarn",
     "publish": "vsce publish",
     "publish-pre-release": "vsce publish --pre-release",
     "build": "yarn buildicons && yarn buildts",
