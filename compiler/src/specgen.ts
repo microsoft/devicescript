@@ -223,7 +223,6 @@ and is not directly programmable in DeviceScript.
 pagination_prev: null
 pagination_next: null
 description: DeviceScript client for Jacdac ${info.name} service
-keywords: DeviceScript, Jacdac, TypeScript, ${info.name}
 ---
 # ${clname}
 `,
