@@ -2341,10 +2341,10 @@
     "@microsoft/applicationinsights-web" "^2.8.9"
     tslib "^2.4.0"
 
-"@rise4fun/docusaurus-plugin-rise4fun@^1.7.0":
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.7.0.tgz#d9bcfafc37920bd088a38fd66e56233d2b7c97d8"
-  integrity sha512-PSJ2FL2ppFPC7S0+TtFv2s/esCEDdAJ0qMjl0PNcXq7J7BKX4X2QU+hACg2mXFRPbL9BpOWMtWlhYda932zmDw==
+"@rise4fun/docusaurus-plugin-rise4fun@^1.7.1":
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-1.7.1.tgz#cd670ce2b2f46ae4fd8625dbab211b112be005eb"
+  integrity sha512-F03V5xREzOEjGv8zXM/OmlJ3tJ4155AnhWOorIdpqwQDzmMHRUVaukJ2jW1DMlVmtDtm+5FJ6avH8IuGemMayg==
   dependencies:
     "@docusaurus/core" "^2.3.0"
     "@docusaurus/remark-plugin-npm2yarn" "^2.3.0"
@@ -2358,6 +2358,7 @@
     "@rise4fun/docusaurus-remark-plugin-side-editor" "*"
     "@rise4fun/docusaurus-theme-codesandbox-button" "*"
     "@rise4fun/docusaurus-theme-side-editor" "*"
+    fs-extra "^11.1.0"
     hast-util-is-element "1.1.0"
     rehype-katex "5"
     remark-math "3"
