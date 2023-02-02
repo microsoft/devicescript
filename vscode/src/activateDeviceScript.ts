@@ -459,7 +459,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         "extension.devicescript.watch.add",
         async (item: JDomTreeItem) => {
             if (!item) return
-            console.log(`Watch ${item.node}`)
             const id = item.node.id
             const watches = extensionState.watches()
             if (!watches.find(w => w.id === id)) {
