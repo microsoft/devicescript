@@ -36,7 +36,7 @@ sensor.pressure.onChange(10, () => {
         console.log(`click!`)
         mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
         // debouncing
-        ds.wait(0.05)
+        ds.sleepMs(50)
     }
 })
 ```
@@ -45,7 +45,8 @@ We could do a much better job with debouncing but this
 is not really the point of this sample.
 
 :::note
+
 Click `Edit` and try sliding the air pressure simulator left
 and right to trigger clicks in the mouse simulator.
-:::
 
+:::

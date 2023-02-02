@@ -5,11 +5,11 @@ import url from "url"
 import net from "net"
 import { CmdOptions, error, log } from "./command"
 import { watch } from "fs-extra"
-import { jacdacDefaultSpecifications } from "@devicescript/compiler"
+import { jacdacDefaultSpecifications, SrcFile } from "@devicescript/compiler"
 import {
     bufferConcat,
-    bufferEq,
     debounce,
+    delay,
     ERROR,
     FRAME_PROCESS,
     JDBus,
@@ -19,15 +19,23 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
 import { deployToService } from "./deploy"
-import { open } from "fs/promises"
+import { open, readFile } from "fs/promises"
 import EventEmitter from "events"
 import { createTransports, TransportsOptions } from "./transport"
 import { fetchDevToolsProxy } from "./devtoolsproxy"
-import { DevToolsClient, DevToolsIface, processSideMessage } from "./sidedata"
+import {
+    DevToolsClient,
+    DevToolsIface,
+    initSideProto,
+    processSideMessage,
+} from "./sidedata"
 import { FSWatcher } from "fs"
 import { compileFile } from "./build"
-import { dirname } from "path"
-import { BuildStatus, BuildReqArgs, SideConnectRequest } from "./sideprotocol"
+import { dirname, resolve } from "path"
+import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
+import { DevsDbgClient, DsDapSession } from "@devicescript/dap"
+import { initVMCmds, overrideConsoleDebug } from "./vmworker"
+import { enableLogging } from "./logging"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -36,15 +44,18 @@ export interface DevToolsOptions {
     vscode?: boolean
 }
 
+let devtoolsSelf: DevToolsIface
+let watcher: FSWatcher
+
 export async function devtools(
     fn: string | undefined,
     options: DevToolsOptions & CmdOptions & TransportsOptions = {}
 ) {
     const port = 8081
     const tcpPort = 8082
-    const listenHost = options.internet ? undefined : "127.0.0.1"
-    let clientId = 0
-    let watcher: FSWatcher
+    const dbgPort = 8083
+
+    overrideConsoleDebug()
 
     log(`starting dev tools at http://localhost:${port}`)
 
@@ -60,12 +71,17 @@ export async function devtools(
         proxy: true,
     })
 
-    const devtoolsSelf: DevToolsIface = {
+    devtoolsSelf = {
         clients: [],
         bus,
-        build,
-        connect,
+        lastOKBuild: null,
+        mainClient: null,
+        build: buildCmd,
+        watch: watchCmd,
+        connect: connectCmd,
     }
+    initSideProto(devtoolsSelf)
+    initVMCmds()
 
     bus.passive = false
     bus.on(ERROR, e => error(e))
@@ -78,12 +94,50 @@ export async function devtools(
             .filter(c => c.__devsSender !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))
     })
-    const processPacket = (message: Buffer | Uint8Array, sender: string) => {
-        const data: JDFrameBuffer = new Uint8Array(message)
-        data._jacdac_sender = sender
-        bus.sendFrameAsync(data)
+
+    startProxyServers(port, tcpPort, options)
+    startDbgServer(dbgPort, options)
+
+    enableLogging(bus)
+
+    bus.start()
+    await bus.connect(true)
+
+    if (fn) {
+        const args: BuildReqArgs = {
+            filename: fn,
+            deployTo: "*",
+            buildOptions: options,
+        }
+        if (transports.length) {
+            console.log("waiting for enumeration...")
+            await delay(1000)
+        }
+        console.log(`building ${fn}...`)
+        logBuildStatus(await buildCmd(args))
+        console.log(`watching ${fn}...`)
+        await watchCmd(args, logBuildStatus)
     }
 
+    function logBuildStatus(st: BuildStatus) {
+        console.log(`build ${fn} ${st.success ? "OK" : "Failed"}`)
+        for (const msg of st.diagnostics) console.error(msg.formatted)
+        if (st.deployStatus) {
+            console.log(`deploy status: ${st.deployStatus}`)
+        }
+    }
+}
+
+function startProxyServers(
+    port: number,
+    tcpPort: number,
+    options: DevToolsOptions
+) {
+    let clientId = 0
+
+    const bus = devtoolsSelf.bus
+
+    const listenHost = options.internet ? undefined : "127.0.0.1"
     log(`   websocket: ws://localhost:${port}`)
     const server = http.createServer(function (req, res) {
         const parsedUrl = url.parse(req.url)
@@ -103,11 +157,6 @@ export async function devtools(
             res.statusCode = 404
         }
     })
-    function removeClient(client: DevToolsClient) {
-        const i = devtoolsSelf.clients.indexOf(client)
-        devtoolsSelf.clients.splice(i, 1)
-        log(`client: disconnected (${devtoolsSelf.clients.length} clients)`)
-    }
     server.on("upgrade", (request, socket, body) => {
         // is this a socket?
         if (WebSocket.isWebSocket(request)) {
@@ -181,131 +230,154 @@ export async function devtools(
     })
     tcpServer.listen(tcpPort, listenHost)
 
-    // if (logging) enableLogging(bus)
-
-    bus.start()
-    await bus.connect(true)
-
-    if (fn) {
-        console.log(`watching ${fn}...`)
-        logBuildStatus(
-            await build(
-                {
-                    filename: fn,
-                    watch: true,
-                    deployTo: "*",
-                    buildOptions: options,
-                },
-                logBuildStatus
-            )
-        )
+    function removeClient(client: DevToolsClient) {
+        const i = devtoolsSelf.clients.indexOf(client)
+        devtoolsSelf.clients.splice(i, 1)
+        if (devtoolsSelf.mainClient == client) devtoolsSelf.mainClient = null
+        log(`client: disconnected (${devtoolsSelf.clients.length} clients)`)
     }
 
-    function logBuildStatus(st: BuildStatus) {
-        console.log(`build ${fn} ${st.success ? "OK" : "Failed"}`)
-        for (const msg of st.diagnostics) console.error(msg.formatted)
-        if (st.deployStatus) {
-            console.log(`deploy status: ${st.deployStatus}`)
+    function processPacket(message: Buffer | Uint8Array, sender: string) {
+        const data: JDFrameBuffer = new Uint8Array(message)
+        data._jacdac_sender = sender
+        bus.sendFrameAsync(data)
+    }
+}
+
+function startDbgServer(port: number, options: DevToolsOptions) {
+    let fnResolveMap: Record<string, string> = {}
+
+    const resolvePath = (s: SrcFile) => fnResolveMap[s.path]
+
+    async function checkFiles() {
+        fnResolveMap = {}
+        const folder = process.cwd()
+        const dbg = devtoolsSelf.lastOKBuild.dbg
+        for (const f of dbg.sources) {
+            const fn = resolve(folder, f.path)
+            try {
+                const src = await readFile(fn, "utf-8")
+                if (src == f.text) fnResolveMap[f.path] = fn
+                else {
+                    console.log(`file ${f.path} different on disk`)
+                }
+            } catch {
+                console.log(`can't find ${f.path}`)
+            }
         }
     }
 
-    async function connect(req: SideConnectRequest) {
-        const { background = false, transport } = req
-        const transports = bus.transports.filter(
-            tr => !transport || transport === tr.type
-        )
-        await Promise.all(transports.map(tr => tr.connect(background)))
-    }
-
-    async function build(
-        args: BuildReqArgs,
-        watchCb?: (st: BuildStatus) => void
-    ) {
-        let prevBytecode: Uint8Array
-
-        args = { ...args }
-
-        const opts = { ...args.buildOptions }
-        if (!opts.cwd) opts.cwd = dirname(args.filename)
-        opts.noVerify = true
-        opts.quiet = true
-        opts.watch = false
-
-        if (args.watch) {
-            watcher?.close()
-            watcher = watch(
-                args.filename,
-                debounce(async () => {
-                    let res: BuildStatus
-                    try {
-                        res = await rebuild()
-                    } catch (err) {
-                        res = {
-                            success: false,
-                            dbg: null,
-                            binary: null,
-                            diagnostics: [],
-                            deployStatus: err.message || "" + err,
-                        }
-                    }
-                    watchCb(res)
-                }, 500)
-            )
+    const listenHost = options.internet ? undefined : "127.0.0.1"
+    console.log(`   dbgsrv: tcp://localhost:${port}`)
+    net.createServer(async socket => {
+        console.log("got debug server connection")
+        socket.on("end", () => {
+            console.log("debug connection closed")
+        })
+        const dbg = devtoolsSelf.lastOKBuild?.dbg
+        if (!dbg) {
+            console.error("can't find any build to debug")
+            // TODO compare sha256
+            socket.end()
+            return
         }
+        await checkFiles()
+        const session = new DsDapSession(devtoolsSelf.bus, dbg, resolvePath)
+        session.setRunAsServer(true)
+        session.start(socket, socket)
+    }).listen(port, listenHost)
+}
 
-        return await rebuild()
+async function connectCmd(req: ConnectReqArgs) {
+    const { background = false, transport } = req
+    const transports = devtoolsSelf.bus.transports.filter(
+        tr => !transport || transport === tr.type
+    )
+    await Promise.all(transports.map(tr => tr.connect(background)))
+}
 
-        async function rebuild() {
-            const res = await compileFile(args.filename, opts)
-            const binary = res.binary
+async function buildCmd(args: BuildReqArgs) {
+    args = { ...args }
+    return await rebuild(args)
+}
 
-            let deployStatus = ""
-            if (args.deployTo) {
-                if (prevBytecode && bufferEq(prevBytecode, binary)) {
-                    deployStatus = `skipping identical deploy`
-                } else {
-                    try {
-                        const service = deployService()
-                        await deployToService(service, binary)
-                        deployStatus = `OK`
-                    } catch (err) {
-                        deployStatus = err.message || "" + err
-                    }
+async function watchCmd(
+    args: BuildReqArgs,
+    watchCb?: (st: BuildStatus) => void
+) {
+    args = { ...args }
+    watcher?.close()
+    watcher = watch(
+        args.filename,
+        debounce(async () => {
+            let res: BuildStatus
+            try {
+                res = await rebuild(args)
+            } catch (err) {
+                res = {
+                    success: false,
+                    dbg: null,
+                    binary: null,
+                    diagnostics: [],
+                    deployStatus: err.message || "" + err,
                 }
             }
+            watchCb(res)
+        }, 500)
+    )
+}
 
-            delete res.binary
-            const r: BuildStatus = {
-                ...res,
-                deployStatus,
-            }
-            return r
-        }
+async function rebuild(args: BuildReqArgs) {
+    const opts = { ...args.buildOptions }
+    if (!opts.cwd) opts.cwd = dirname(args.filename)
+    opts.noVerify = true
+    opts.quiet = true
 
-        function deployService() {
-            if (args.deployTo == "*") {
-                const services = bus.services({
-                    serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
-                })
-                if (services.length > 1)
-                    throw new Error(`Multiple DeviceScript Managers found.`)
-                else if (services.length == 0)
-                    throw new Error(`No DeviceScript Managers found.`)
+    const res = await compileFile(args.filename, opts)
+    const binary = res.binary
 
-                return services[0]
-            }
-
-            const dev = bus.device(args.deployTo, true)
-            if (!dev) throw new Error(`Device ${args.deployTo} not found`)
-
-            const service = dev.services({
-                serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
-            })[0]
-            if (!service)
-                throw new Error(
-                    `Device ${dev} doesn't have a DeviceScript Manager.`
-                )
-            return service
+    let deployStatus = ""
+    if (args.deployTo && res.success) {
+        try {
+            const service = deployService(args)
+            await deployToService(service, binary)
+            deployStatus = `OK`
+        } catch (err) {
+            deployStatus = err.message || "" + err
+            console.error("Deploy error: " + deployStatus)
         }
     }
+
+    delete res.binary
+    const r: BuildStatus = {
+        ...res,
+        deployStatus,
+    }
+    if (res.success) devtoolsSelf.lastOKBuild = r
+    return r
+}
+
+function deployService(args: BuildReqArgs) {
+    const bus = devtoolsSelf.bus
+    if (args.deployTo == "*") {
+        const services = bus.services({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })
+        if (services.length > 1)
+            throw new Error(`Multiple DeviceScript Managers found.`)
+        else if (services.length == 0)
+            throw new Error(`No DeviceScript Managers found.`)
+
+        return services[0]
+    }
+
+    const dev = bus.device(args.deployTo, true)
+    if (!dev) throw new Error(`Device ${args.deployTo} not found`)
+
+    const service = dev.services({
+        serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+    })[0]
+    if (!service)
+        throw new Error(`Device ${dev} doesn't have a DeviceScript Manager.`)
+    return service
 }

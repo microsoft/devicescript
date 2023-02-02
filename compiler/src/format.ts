@@ -44,7 +44,13 @@ export function opIsStmt(op: Op) {
 }
 
 export function exprIsStateful(op: Op) {
-    return !(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
+    return (
+        opIsStmt(op) || !(OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_STATELESS)
+    )
+}
+
+export function stmtIsFinal(op: Op) {
+    return opIsStmt(op) && OP_PROPS.charCodeAt(op) & BytecodeFlag.IS_FINAL_STMT
 }
 
 export interface InstrArgResolver {
@@ -54,12 +60,6 @@ export interface InstrArgResolver {
 
 export function bitSize(fmt: NumFmt) {
     return 8 << (fmt & 0b11)
-}
-
-class OpTree {
-    args: OpTree[]
-    arg: number
-    constructor(public opcode: number) {}
 }
 
 export function numfmtToString(v: number) {
@@ -91,4 +91,12 @@ export interface Host {
     error?(err: DevsDiagnostic): void
     getSpecs(): jdspec.ServiceSpec[]
     verifyBytecode?(buf: Uint8Array, dbgInfo?: DebugInfo): void
+}
+
+export function parseImgVersion(v: number) {
+    return {
+        major: (v >> 24) & 0xff,
+        minor: (v >> 16) & 0xff,
+        patch: (v >> 0) & 0xffff,
+    }
 }

@@ -1,6 +1,11 @@
 import { DebugInfo } from "@devicescript/compiler"
 import { readFileSync } from "node:fs"
-import { BuildOptions, compileFile, devsFactory } from "./build"
+import {
+    BuildOptions,
+    compileFile,
+    devsFactory,
+    devsStartWithNetwork,
+} from "./build"
 import { CmdOptions, error } from "./command"
 
 export interface RunOptions {
@@ -59,6 +64,7 @@ export async function runTest(
         }
         inst.devsStop()
         inst.devsGcStress(true)
+        inst.devsSetLogging(false)
         inst.devsSetDeviceId(devid)
         inst.devsStart()
         inst.devsDeploy(prog.binary)
@@ -98,12 +104,7 @@ export async function runScript(
             }
         )
 
-    const inst = await devsFactory()
-    if (options.test) inst.sendPacket = () => {}
-    else if (options.tcp)
-        await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
-    else await inst.setupWebsocketTransport("ws://127.0.0.1:8081")
-    inst.devsStart()
+    const inst = await devsStartWithNetwork(options)
 
     if (fn) {
         const prog = await readCompiled(fn, options)

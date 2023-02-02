@@ -5,15 +5,17 @@
 #include "services/interfaces/jd_flash.h"
 #include "jd_client.h"
 #include "jacdac/dist/c/devicescriptmanager.h"
-#include "devicescript/devicescript.h"
-#include "devicescript/devs_bytecode.h"
+#include "devicescript.h"
+#include "devs_bytecode.h"
+
+#define LOG_TAG "mgr"
+// #define VLOGGING 1
+#include "devs_logging.h"
 
 #define DEVSMGR_ALIGN 32
 
 #define DEVSMGR_PROG_MAGIC0 0x8d8abd53
 #define DEVSMGR_PROG_MAGIC1 0xb27c4b2b
-
-#define LOGV JD_NOLOG
 
 #define SECONDS(n) (uint32_t)((n)*1024 * 1024)
 #define MS(n) (uint32_t)((n)*1024)
@@ -30,13 +32,13 @@ typedef struct {
     uint8_t image[0];
 } devsmgr_program_header_t;
 
-#define LOG JD_LOG
-
 struct srv_state {
     SRV_COMMON;
     uint8_t running;
     uint8_t autostart;
     uint8_t logging;
+
+    uint8_t force_start : 1;
 
     uint32_t next_restart;
 
@@ -60,7 +62,7 @@ REG_DEFINITION(                                     //
 )
 
 __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[160] = {
-    0x44, 0x65, 0x76, 0x53, 0x0a, 0x7e, 0x6a, 0x9a, 0x00, 0x00, 0x00, 0x04, 0x01, 0x00, 0x00, 0x00,
+    0x44, 0x65, 0x76, 0x53, 0x0a, 0x7e, 0x6a, 0x9a, 0x00, 0x00, 0x00, 0x05, 0x01, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x68, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x88, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
     0x94, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x94, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -71,6 +73,7 @@ __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program
     0x00, 0x00, 0x00, 0x00, 0x34, 0x40, 0x00, 0x00, 0x27, 0x01, 0x02, 0x90, 0x0c, 0x00, 0x00, 0x00,
     0x2e, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 };
+
 static const devsmgr_program_header_t *devs_header(srv_t *state) {
     const devsmgr_program_header_t *hd = state->cfg->program_base;
     if (hd->magic0 == DEVSMGR_PROG_MAGIC0 && hd->magic1 == DEVSMGR_PROG_MAGIC1)
@@ -148,7 +151,8 @@ void devsmgr_process(srv_t *state) {
     }
 
     if (jd_should_sample(&state->next_restart, SECONDS(8))) {
-        if (state->autostart && !state->ctx) {
+        if ((state->force_start || state->autostart) && !state->ctx) {
+            state->force_start = 0;
             try_run(state);
         }
     }
@@ -173,6 +177,7 @@ void devsmgr_restart() {
     srv_t *state = _state;
     stop_program(state);
     state->next_restart = now + MS(50);
+    state->force_start = 1;
 }
 
 int devsmgr_deploy_start(uint32_t sz) {
@@ -180,14 +185,16 @@ int devsmgr_deploy_start(uint32_t sz) {
 
     devsmgr_program_header_t hd;
 
-    DMESG("deploy %d b", (int)sz);
+    LOG("deploy %d b", (int)sz);
 
     if (sz >= state->cfg->max_program_size - sizeof(hd) || (sz & (DEVSMGR_ALIGN - 1)))
         return -1;
 
     stop_program(state);
 
+    LOGV("flash erase");
     flash_erase(state->cfg->program_base);
+    LOGV("flash erase done");
 
     if (sz == 0)
         return 0;
@@ -218,15 +225,16 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
         };
         unsigned endp = hdf->size + sizeof(hd);
         if (state->write_offset != endp) {
-            DMESG("missing %d bytes (of %d)", (int)(endp - state->write_offset), (int)hdf->size);
+            DMESG("! missing %d bytes (of %d)", (int)(endp - state->write_offset), (int)hdf->size);
             return -1;
         } else {
             flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             flash_sync();
-            DMESG("program written");
+            LOG("program written");
             stop_program(state);
             jd_send_event(state, JD_EV_CHANGE);
             state->next_restart = now; // make it more responsive
+            state->force_start = 1;
             return 0;
         }
     }
@@ -235,7 +243,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
     uint32_t endp = ((devsmgr_program_header_t *)dst)->size + sizeof(devsmgr_program_header_t);
     if (size & (DEVSMGR_ALIGN - 1) || state->write_offset + size > endp ||
         size >= JD_FLASH_PAGE_SIZE) {
-        DMESG("invalid pkt size: %d (off=%d endp=%d)", size, (int)state->write_offset, (int)endp);
+        DMESG("! invalid pkt size: %d (off=%d endp=%d)", size, (int)state->write_offset, (int)endp);
         state->write_offset = 0;
         return -1;
     }
@@ -281,6 +289,8 @@ static void deploy_bytecode(srv_t *state, jd_packet_t *pkt) {
 
     int port = jd_ipipe_open(&state->write_program_pipe, deploy_handler, deploy_meta_handler);
     jd_respond_u16(pkt, port);
+
+    LOGV("pipe open");
 }
 
 int devsmgr_get_hash(uint8_t hash[JD_SHA256_HASH_BYTES]) {
@@ -395,12 +405,20 @@ static void devsmgr_client_ev(void *state0, int event_id, void *arg0, void *arg1
         devs_client_event_handler(state->ctx, event_id, arg0, arg1);
 }
 
+void devsmgr_set_logging(bool logging) {
+    srv_t *state = _state;
+    state->logging = logging;
+    if (state->ctx) {
+        devs_set_logging(state->ctx, state->logging);
+    }
+}
+
 void devsmgr_init(const devsmgr_cfg_t *cfg) {
     SRV_ALLOC(devsmgr);
     state->cfg = cfg;
     state->read_program_ptr = -1;
     state->autostart = 1;
-    state->logging = 1;
+    state->logging = 0;
     // first start 1.5s after brain boot up - allow devices to enumerate
     state->next_restart = now + SECONDS(1.5);
 

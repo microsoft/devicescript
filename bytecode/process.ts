@@ -12,6 +12,7 @@ interface OpCode {
     comment2?: string
     isExpr?: boolean
     isFun?: boolean
+    isFinal?: boolean
     takesNumber?: boolean
 }
 interface SMap<T> {
@@ -99,7 +100,7 @@ function processSpec(filecontent: string): Spec {
     }
 
     finish()
-
+    expandEnums()
     checkCont(res.ops)
 
     if (hasErrors) throw new Error()
@@ -246,8 +247,13 @@ function processSpec(filecontent: string): Spec {
                 isFun = true
                 lineTr = lineTr.slice(4).trim()
             }
+            let isFinal = undefined
+            if (lineTr.startsWith("final ")) {
+                isFinal = true
+                lineTr = lineTr.slice(6).trim()
+            }
             let m =
-                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*([\d_]+|0[bB][01_]+|0[Xx][a-fA-F0-9_]+|\?)\s*(\/\/\s*(.*))?$/.exec(
+                /^(\w+)(\s*\((.*)\))?\s*(:\s*(\w+))?\s*=\s*([\d_]+|0[bB][01_]+|0[Xx][a-fA-F0-9_]+|\?|\$\w+)\s*(\/\/\s*(.*))?$/.exec(
                     lineTr
                 )
             if (!m) {
@@ -269,6 +275,14 @@ function processSpec(filecontent: string): Spec {
                 _cmt,
                 comment,
             ] = m
+            if (rettype && isFinal) {
+                error("only stmts can be final")
+                return
+            }
+            if (!rettype && isFun) {
+                error("no ret type on fun")
+                return
+            }
             let args: string[] = []
             if (args_str) args = args_str.split(/,\s*/).filter(s => !!s.trim())
             finish()
@@ -279,6 +293,7 @@ function processSpec(filecontent: string): Spec {
                 comment,
                 rettype: rettype || "void",
                 isFun,
+                isFinal,
                 lineNo,
             }
             if (args[0] && args[0][0] == "*") {
@@ -301,6 +316,36 @@ function processSpec(filecontent: string): Spec {
         if (currObj?.description)
             currObj.description = currObj.description.trim()
         if (currObj) computePrintFmt(currObj)
+    }
+
+    function expandEnums() {
+        function enumField(en: string, fld: string, lineNo?: number) {
+            const e = res.enums[en]?.find(e => e.name == fld)
+            if (e == undefined || parseInt(e.code) === undefined) {
+                error(`${en}.${fld} not found`, lineNo)
+                return 0
+            }
+            return +e.code
+        }
+
+        for (const en of Object.keys(res.enums)) {
+            for (const ent of Object.values(res.enums[en])) {
+                const lk = (suff: string) =>
+                    enumField(en, ent.name + "_" + suff, ent.lineNo)
+                if (ent.code == "$version") {
+                    ent.code =
+                        "0x" +
+                        (
+                            (lk("major") << 24) |
+                            (lk("minor") << 16) |
+                            lk("patch")
+                        ).toString(16)
+                }
+                if (ent.code?.[0] == "$") {
+                    error(`undefined function ${ent.code}`, ent.lineNo)
+                }
+            }
+        }
     }
 }
 
@@ -338,7 +383,8 @@ function serializeProps(lst: OpCode[], fn: (o: OpCode) => number) {
 function genJmpTables(spec: Spec) {
     let r = "\n#define DEVS_OP_HANDLERS expr_invalid, \\\n"
     for (const obj of sortByCode(spec.ops)) {
-        r += `${sig(obj).toLowerCase()}_${obj.name}, \\\n`
+        if (obj.name.startsWith("removed_")) r += `expr_invalid, \\\n`
+        else r += `${sig(obj).toLowerCase()}_${obj.name}, \\\n`
     }
     r += "expr_invalid\n\n"
 
@@ -466,6 +512,7 @@ function opcodeProps(obj: OpCode) {
         r |= lookupEnum("BytecodeFlag", "takes_number")
     }
     if (obj.isFun) r |= lookupEnum("BytecodeFlag", "is_stateless")
+    if (obj.isFinal) r |= lookupEnum("BytecodeFlag", "is_final_stmt")
     if (!obj.isExpr) r |= lookupEnum("BytecodeFlag", "is_stmt")
     if (r == undefined) throw new Error()
     return r

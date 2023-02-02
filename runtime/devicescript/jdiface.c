@@ -330,7 +330,7 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
     pkt->data[1] = 0;                      // flags
     if (sz > JD_SERIAL_PAYLOAD_SIZE - 2)
         sz = JD_SERIAL_PAYLOAD_SIZE - 2;
-    memcpy(pkt->data, str, sz);
+    memcpy(pkt->data + 2, str, sz);
     pkt->service_size = sz + 2;
     pkt->service_command = JD_DEVICE_SCRIPT_MANAGER_CMD_LOG_MESSAGE;
     pkt->service_index = ctx->cfg.mgr_service_idx;
@@ -339,7 +339,7 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
     pkt->flags = 0;
 
     if (print)
-        DMESG("JSCR: %s", str);
+        DMESG("> %s", str);
 
     if (!(ctx->flags & DEVS_CTX_LOGGING_ENABLED))
         return RESUME_USER_CODE;

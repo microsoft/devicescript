@@ -7,6 +7,7 @@ import { createInterface } from "node:readline"
 import { BuildOptions, readDebugInfo } from "./build"
 import { BINDIR, CmdOptions, log } from "./command"
 import { readCompiled } from "./run"
+import { printDmesg } from "./vmworker"
 
 export interface CRunOptions {
     net?: boolean
@@ -43,8 +44,7 @@ export async function crunScript(
     const rl = createInterface({ input: child.stdout })
     const dbg = readDebugInfo()
     rl.on("line", line => {
-        if (dbg) line = parseStackFrame(dbg, line).markedLine
-        console.log(line)
+        printDmesg(dbg, "C", line)
     })
 
     child.on("exit", (code, err) => {

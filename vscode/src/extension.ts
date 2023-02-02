@@ -13,26 +13,9 @@ export function activate(context: vscode.ExtensionContext) {
         console.error(err)
     }
 
-    return activateDeviceScript(
-        context,
-        new DeviceScriptAdapterServerDescriptorFactory()
-    )
+    return activateDeviceScript(context)
 }
 
 export function deactivate() {
     // nothing to do
-}
-
-class DeviceScriptAdapterServerDescriptorFactory
-    implements vscode.DebugAdapterDescriptorFactory
-{
-    createDebugAdapterDescriptor(
-        session: vscode.DebugSession,
-        executable: vscode.DebugAdapterExecutable | undefined
-    ): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
-        // make VS Code connect to debug server
-        return new vscode.DebugAdapterServer(8083, "localhost")
-    }
-
-    dispose() {}
 }

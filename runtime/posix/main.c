@@ -7,11 +7,13 @@
 #include <assert.h>
 
 #include "jd_sdk.h"
-#include "devicescript/devicescript.h"
+#include "devicescript.h"
 #include "storage/jd_storage.h"
 
 #define LOG_TAG "main"
 #include "devs_logging.h"
+
+extern uint64_t cached_devid;
 
 static bool test_mode;
 static bool remote_deploy;
@@ -198,9 +200,11 @@ void app_process(void) {
     tx_process();
     jd_tcpsock_process();
 
+#if 0
     static uint32_t uptime_cnt;
     if (jd_should_sample_ms(&uptime_cnt, 5000))
         tsagg_update("uptime", (double)now_ms_long / 1000);
+#endif
 }
 
 static void client_process(void) {
@@ -283,6 +287,7 @@ int main(int argc, const char **argv) {
 #endif
     int enable_lstore = 0;
     int websock = 0;
+    int enable_logging = 0;
 
     for (int i = 1; i < argc; ++i) {
         const char *arg = argv[i];
@@ -297,12 +302,16 @@ int main(int argc, const char **argv) {
             devs_img = arg;
         } else if (strcmp(arg, "-l") == 0) {
             enable_lstore = 1;
+        } else if (strcmp(arg, "-L") == 0) {
+            enable_logging = 1;
         } else if (strcmp(arg, "-X") == 0) {
             devs_set_global_flags(DEVS_FLAG_GC_STRESS);
         } else if (strcmp(arg, "-w") == 0) {
             websock = 1;
         } else if (strcmp(arg, "-n") == 0) {
             settings_in_files = 0;
+        } else if (strncmp(arg, "-d:", 3) == 0) {
+            cached_devid = jd_device_id_from_string(arg + 3);
         } else {
             fprintf(stderr, "unknown arg: %s\n", arg);
             return 1;
@@ -327,6 +336,9 @@ int main(int argc, const char **argv) {
     if (enable_lstore)
         jd_lstore_init();
     jd_services_init();
+
+    if (enable_logging)
+        devsmgr_set_logging(1);
 
     {
         uint64_t devid = jd_device_id();

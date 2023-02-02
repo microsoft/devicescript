@@ -5,10 +5,16 @@
 #include <sys/time.h>
 #include <time.h>
 #include <emscripten/emscripten.h>
-#include "devicescript/devicescript.h"
+#include "devicescript.h"
 #include "storage/jd_storage.h"
 
-static uint64_t cached_devid = 0x1d46a30eef48919;
+const char app_dev_class_name[] = "DeviceScript Simulator (WASM)";
+
+uint32_t app_get_device_class(void) {
+    return 0x3fe5b46f;
+}
+
+uint64_t cached_devid = 0x1d46a30eef48919;
 static uint8_t inited;
 
 EM_JS(void, em_send_frame, (void *frame), {
@@ -18,7 +24,8 @@ EM_JS(void, em_send_frame, (void *frame), {
 });
 
 EM_JS(void, _devs_panic_handler, (int exitcode), {
-    console.log("PANIC", exitcode);
+    if (exitcode)
+        console.log("PANIC", exitcode);
     if (Module.panicHandler)
         Module.panicHandler(exitcode);
 });
@@ -69,15 +76,7 @@ void jd_em_set_device_id_2x_i32(int32_t id0, int32_t id1) {
 
 EMSCRIPTEN_KEEPALIVE
 void jd_em_set_device_id_string(const char *str) {
-    uint64_t devid;
-    if (strlen(str) == 16 && jd_from_hex(&devid, str) == 8) {
-        // set directly
-        cached_devid = devid;
-    } else {
-        int bufsz = strlen(str);
-        cached_devid = ((uint64_t)jd_hash_fnv1a(str, bufsz) << 32) |
-                       ((uint64_t)jd_hash_fnv1a(str + 1, bufsz - 1));
-    }
+    cached_devid = jd_device_id_from_string(str);
 }
 
 EMSCRIPTEN_KEEPALIVE
@@ -137,6 +136,11 @@ void jd_em_devs_enable_gc_stress(int en) {
         devs_set_global_flags(DEVS_FLAG_GC_STRESS);
     else
         devs_reset_global_flags(DEVS_FLAG_GC_STRESS);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void jd_em_devs_enable_logging(int en) {
+    devsmgr_set_logging(en);
 }
 
 #if 0

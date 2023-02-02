@@ -1,22 +1,22 @@
 import type {
     BuildStatus,
-    SideBuildRequest,
-    SideBuildResponse,
+    SideBuildReq,
+    SideBuildResp,
     SideWatchEvent,
+    SideWatchReq,
 } from "../../cli/src/sideprotocol"
 import { sideRequest, subSideEvent } from "./jacdac"
 import * as vscode from "vscode"
-import { groupBy } from "jacdac-ts"
+import { groupBy, JDService } from "jacdac-ts"
 
 // let outputCh: vscode.OutputChannel
 let diagColl: vscode.DiagnosticCollection
-let lastBuildFilename = "???.ts"
 
 export function initBuild() {
     // outputCh = vscode.window.createOutputChannel("DevS Build")
     diagColl = vscode.languages.createDiagnosticCollection("DeviceScript")
 
-    subSideEvent("watch", (msg: SideWatchEvent) => {
+    subSideEvent<SideWatchEvent>("watch", msg => {
         showBuildResults(msg.data)
     })
 
@@ -54,26 +54,37 @@ export function showBuildResults(st: BuildStatus) {
         })
         diagColl.set(vscode.Uri.file(fn), diags)
     }
-
-    if (st.deployStatus) vscode.window.showWarningMessage(st.deployStatus)
 }
 
-export async function build(filename: string, deviceId = "*") {
-    lastBuildFilename = filename
+export async function build(
+    filename: string,
+    options?: {
+        service?: JDService
+        watch?: boolean
+    }
+): Promise<BuildStatus> {
+    const { service, watch } = options || {}
+    const deviceId = service?.device?.deviceId
     try {
-        const msg: SideBuildRequest = {
-            type: "build",
+        const res = await sideRequest<SideBuildReq, SideBuildResp>({
+            req: "build",
             data: {
                 filename,
-                watch: true,
                 deployTo: deviceId,
             },
-        }
-        const res: SideBuildResponse = await sideRequest(msg)
+        })
         showBuildResults(res.data)
-        return true
+        // also start watch
+        if (watch)
+            await sideRequest<SideWatchReq>({
+                req: "watch",
+                data: {
+                    filename,
+                },
+            })
+        return res.data
     } catch (err) {
         console.error(err) // TODO
-        return false
+        return undefined
     }
 }

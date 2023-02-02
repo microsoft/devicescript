@@ -9,7 +9,7 @@ STATIC_ASSERT(sizeof(devs_packet_spec_t) == DEVS_SERVICE_SPEC_PACKET_SIZE);
 STATIC_ASSERT(sizeof(devs_field_spec_t) == DEVS_SERVICE_SPEC_FIELD_SIZE);
 
 static int fail(int code, uint32_t offset) {
-    DMESG("verification failure: %d at %x", code, (unsigned)offset);
+    DMESG("! verification failure: %d at %x", code, (unsigned)offset);
     return -code;
 }
 
@@ -61,9 +61,9 @@ bool devs_img_stridx_ok(devs_img_t img, uint32_t nameidx) {
 void devs_dump_versions(const void *imgdata) {
     uint32_t v;
     memcpy(&v, (const uint8_t *)imgdata + 8, 4);
-    DMESG("DeviceScript runtime v%d.%d.%d; file v%d.%d.%d", DEVS_VERSION_MAJOR(DEVS_IMG_VERSION),
-          DEVS_VERSION_MINOR(DEVS_IMG_VERSION), DEVS_VERSION_PATCH(DEVS_IMG_VERSION),
-          DEVS_VERSION_MAJOR(v), DEVS_VERSION_MINOR(v), DEVS_VERSION_PATCH(v));
+    DMESG("* %s v%d.%d.%d; file v%d.%d.%d", app_get_dev_class_name(), DEVS_IMG_VERSION_MAJOR,
+          DEVS_IMG_VERSION_MINOR, DEVS_IMG_VERSION_PATCH, DEVS_VERSION_MAJOR(v),
+          DEVS_VERSION_MINOR(v), DEVS_VERSION_PATCH(v));
 }
 
 int devs_verify(const uint8_t *imgdata, uint32_t size) {
@@ -77,13 +77,13 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     CHECK(1000, header->magic0 == DEVS_MAGIC0 && header->magic1 == DEVS_MAGIC1);
 
     // precise match on major,
-    // bytecode minor should only load if no older than current runtime,
+    // bytecode minor should only load if no newer than current runtime,
     // ignore patch
     if (DEVS_VERSION_MAJOR(header->version) == DEVS_VERSION_MAJOR(DEVS_IMG_VERSION) &&
         DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION)) {
         // OK
     } else {
-        DMESG("version mismatch");
+        DMESG("! version mismatch");
         devs_dump_versions(imgdata);
         return fail(1050, offset);
     }

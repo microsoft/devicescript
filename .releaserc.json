@@ -1,6 +1,8 @@
 {
     "branch": "main",
-    "branches": ["main"],
+    "branches": [
+        "main"
+    ],
     "plugins": [
         [
             "@semantic-release/commit-analyzer",
@@ -42,18 +44,20 @@
             "@semantic-release/github",
             {
                 "successComment": false,
-                "failComment": false
+                "failComment": false,
+                "assets": [
+                    "devicescript.vsix"
+                ]
             }
         ],
-        ["@semantic-release/npm"],
+        [
+            "@semantic-release/npm"
+        ],
         [
             "@semantic-release/git",
             {
                 "assets": [
-                    "compiler/package.json",
-                    "cli/package.json",
-                    "runtime/devicescript-vm/package.json",
-                    "vscode/package.json"
+                    "package.json"
                 ]
             }
         ]

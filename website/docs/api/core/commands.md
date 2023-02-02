@@ -10,7 +10,7 @@ Commands are implemented directly on the role instance and are service specific.
 ```ts edit
 const buzzer = new ds.Buzzer()
 
-ds.every(1, () => {
+ds.everyMs(1000, () => {
     buzzer.playNote(440, 1, 100)
 })
 ```

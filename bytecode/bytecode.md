@@ -22,21 +22,19 @@ Call a function with given number of parameters.
 
 Passes arguments to a function as an array. The array can be at most `max_stack_depth - 1` elements long.
 
-    return(value) = 12
+    final return(value) = 12
 
-    jmp(*jmpoffset) = 13               // JMP jmpoffset
+    final jmp(*jmpoffset) = 13               // JMP jmpoffset
 
     jmp_z(*jmpoffset, x) = 14          // JMP jmpoffset IF NOT x
 
 Jump if condition is false.
 
-    panic(error_code) = 15
-
     try(*jmpoffset) = 80                // TRY jmpoffset
 
 Start try-catch block - catch/finally handler is at the jmpoffset.
 
-    end_try(*jmpoffset) = 81
+    final end_try(*jmpoffset) = 81
 
 Try block has to end with this. jmpoffset is for continuation code.
 
@@ -52,16 +50,16 @@ Finally block should be followed by storing exception value in a local
 and finish with `re_throw` of the exception.
 `retval` set to `null` when block executed not due to an exception.
 
-    throw(value) = 84
+    final throw(value) = 84
 
 Throw an exception.
 
-    re_throw(value) = 85
+    final re_throw(value) = 85
 
 Throw an exception without setting the `__stack__` field.
 Does nothing if `value` is `null`.
 
-    throw_jmp(*jmpoffset, level) = 86
+    final throw_jmp(*jmpoffset, level) = 86
 
 Jump to given offset popping `level` try blocks, activating the finally blocks on the way.
 
@@ -121,7 +119,7 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun new(func): function = 88                // new func
 
-    fun bind(func, obj): function = 90          // func.bind(obj)
+    fun bind(func, obj): function = 15          // func.bind(obj)
 
 ### Objects
 
@@ -256,7 +254,10 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 
 ## Format Constants
 
-    img_version = 0x04_04_0000
+    img_version_major = 5
+    img_version_minor = 0
+    img_version_patch = 0
+    img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
     num_img_sections = 9
@@ -314,7 +315,8 @@ Start new fiber. If it's already running, replace it.
     num_args_mask = 0xf
     is_stmt = 0x10
     takes_number = 0x20
-    is_stateless = 0x40 // fun modifier
+    is_stateless = 0x40  // fun modifier - only valid when !is_stmt
+    is_final_stmt = 0x40 // final modifier - only valid when is_stmt
 
 ## Enum: FunctionFlag
 
@@ -498,7 +500,7 @@ Only `true` and `false` values.
     onConnected = 45
     onDisconnected = 46
     packet = 47
-    panic = 48
+    _panic = 48
     pop = 49
     pow = 50
     prev = 51
@@ -576,3 +578,10 @@ Only `true` and `false` values.
     getPrototypeOf = 122
     constructor = 123
     __proto__ = 124
+    _logRepr = 125
+    print = 126
+    everyMs = 127
+    setInterval = 128
+    setTimeout = 129
+    clearInterval = 130
+    clearTimeout = 131

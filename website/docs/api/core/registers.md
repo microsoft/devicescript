@@ -27,7 +27,7 @@ The `read` method gets the current reported value stored in the register.
 
 ```ts
 const sensor = new ds.Temperature()
-ds.every(1 /* s */, () => {
+ds.everyMs(1000, () => {
     const t = sensor.temperature.read()
     console.log(t)
 })

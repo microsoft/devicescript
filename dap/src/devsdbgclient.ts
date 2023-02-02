@@ -1,10 +1,11 @@
-import { assert } from "@devicescript/compiler"
+import { assert, Image } from "@devicescript/compiler"
 import { Mutex } from "async-mutex"
 import {
     bufferConcat,
     bufferConcatMany,
     delay,
     EVENT,
+    fromUTF8,
     getNumber,
     InPipeReader,
     JDBus,
@@ -15,6 +16,7 @@ import {
     JDServiceClient,
     jdunpack,
     NumberFormat,
+    uint8ArrayToString,
 } from "jacdac-ts"
 import {
     DevsDbgEvent,
@@ -26,6 +28,7 @@ import {
     DevsDbgValueTag,
     DevsDbgString,
     DevsDbgValueSpecial,
+    DevsDbgStepFlags,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 
 export interface DevsKeyValue {
@@ -33,13 +36,15 @@ export interface DevsKeyValue {
     value: DevsValue
 }
 
+const maxBytesFetch = 512
+
 export class DevsValue {
     index: number
     tag: DevsDbgValueTag
     v0: number
     arg: DevsValue
 
-    cachedBytes: Uint8Array
+    private cachedBytes: Uint8Array
 
     numNamed: number
     hasNamed: boolean
@@ -86,6 +91,106 @@ export class DevsValue {
         }
         return this._named
     }
+
+    async readField(name: string) {
+        const named = await this.readNamed()
+        const direct = named.find(e => e.key == name)
+        if (direct) return direct.value
+        for (const e of named) {
+            if (typeof e.key == "string") return
+            const s = await e.key.readString()
+            if (s == name) return e.value
+        }
+        return undefined
+    }
+
+    private async readBytes() {
+        if (!this.cachedBytes)
+            this.cachedBytes = await this.parent.readBytes(
+                this,
+                0,
+                maxBytesFetch
+            )
+        return this.cachedBytes
+    }
+
+    get isPartial() {
+        return this.cachedBytes?.length == maxBytesFetch
+    }
+
+    get isPrimitive() {
+        if (this.isString) return true
+        switch (this.tag) {
+            case DevsDbgValueTag.Number:
+                return true
+            case DevsDbgValueTag.Special:
+                switch (this.v0) {
+                    case DevsDbgValueSpecial.False:
+                    case DevsDbgValueSpecial.True:
+                    case DevsDbgValueSpecial.Null:
+                        return true
+                    default:
+                        return false
+                }
+            default:
+                return false
+        }
+    }
+
+    get isBuffer() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgBuffer:
+            case DevsDbgValueTag.ObjBuffer:
+                return true
+
+            default:
+                return false
+        }
+    }
+
+    async readBuffer() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgBuffer:
+                return this.parent.img.bufferTable[this.v0]
+
+            case DevsDbgValueTag.ObjBuffer:
+                return await this.readBytes()
+
+            default:
+                return undefined
+        }
+    }
+
+    get isString() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgStringUTF8:
+            case DevsDbgValueTag.ImgStringBuiltin:
+            case DevsDbgValueTag.ImgStringAscii:
+            case DevsDbgValueTag.ObjString:
+                return true
+
+            default:
+                return false
+        }
+    }
+
+    async readString() {
+        switch (this.tag) {
+            case DevsDbgValueTag.ImgStringUTF8:
+            case DevsDbgValueTag.ImgStringBuiltin:
+            case DevsDbgValueTag.ImgStringAscii:
+                return this.parent.img.getString(
+                    this.tag - DevsDbgValueTag.ImgBuffer,
+                    this.v0
+                ) as string
+
+            case DevsDbgValueTag.ObjString:
+                return fromUTF8(uint8ArrayToString(await this.readBytes()))
+
+            default:
+                return undefined
+        }
+    }
 }
 
 export const EV_SUSPENDED = "dbgSuspended"
@@ -95,18 +200,6 @@ function tagIsObj(tag: DevsDbgValueTag) {
 }
 
 export class DevsDbgClient extends JDServiceClient {
-    static async fromBus(bus: JDBus, timeout = 2000) {
-        const t0 = Date.now()
-        while (Date.now() - t0 < timeout) {
-            const s = bus.services({
-                serviceClass: SRV_DEVS_DBG,
-            })[0]
-            if (s) return new DevsDbgClient(s)
-            await delay(100)
-        }
-        throw new Error(`no debugger on the bus; timeout=${timeout}ms`)
-    }
-
     private regEn: JDRegister
     private lock = new Mutex()
     suspensionReason: DevsDbgSuspensionType
@@ -114,7 +207,7 @@ export class DevsDbgClient extends JDServiceClient {
     values: DevsValue[] = []
     private valueMap: Record<string, DevsValue>
 
-    constructor(service: JDService) {
+    constructor(service: JDService, public img: Image) {
         super(service)
         assert(service.serviceClass == SRV_DEVS_DBG)
 
@@ -152,6 +245,12 @@ export class DevsDbgClient extends JDServiceClient {
         })
     }
 
+    async setBoolReg(reg: DevsDbgReg, v: boolean) {
+        await this.lock.runExclusive(async () => {
+            this.service.register(reg).sendSetAsync(new Uint8Array([v ? 1 : 0]))
+        })
+    }
+
     private async haltCmd(cmd: DevsDbgCmd) {
         await this.lock.runExclusive(async () => {
             await this.regEn.sendSetAsync(new Uint8Array([1]))
@@ -165,6 +264,17 @@ export class DevsDbgClient extends JDServiceClient {
 
     async restartAndHalt() {
         await this.haltCmd(DevsDbgCmd.RestartAndHalt)
+    }
+
+    async step(frame: DevsValue, flags: DevsDbgStepFlags, brkPCs: number[]) {
+        await this.lock.runExclusive(async () => {
+            assert(!!frame.stackFrame)
+            this.clearValues()
+            await this.service.sendCmdAsync(
+                DevsDbgCmd.Step,
+                jdpack("u32 u16 x[2] u32[]", [frame.v0, flags, brkPCs])
+            )
+        })
     }
 
     private runSuspCmd(cmd: DevsDbgCmd, args?: Uint8Array) {
@@ -223,6 +333,13 @@ export class DevsDbgClient extends JDServiceClient {
         return this.getValue(tag, v0, arg)
     }
 
+    exnValue() {
+        return this.getValue(
+            DevsDbgValueTag.Special,
+            DevsDbgValueSpecial.CurrentException
+        )
+    }
+
     private getValue(
         tag: DevsDbgValueTag,
         v0: number,
@@ -260,19 +377,18 @@ export class DevsDbgClient extends JDServiceClient {
                 stackFrameId
             )
             let userPc = pc
-            if (
-                pc > 0 &&
-                (idx > 0 ||
-                    this.suspensionReason != DevsDbgSuspensionType.Breakpoint)
-            )
-                userPc--
+            let isBrk =
+                fibid == this.suspendedFiber &&
+                idx == 0 &&
+                (this.suspensionReason == DevsDbgSuspensionType.Breakpoint ||
+                    this.suspensionReason == DevsDbgSuspensionType.Step)
+            if (pc > 0 && !isBrk) userPc--
             st.stackFrame = {
                 pc,
                 userPc,
-                closure: this.getValue(
-                    DevsDbgValueTag.ObjStackFrame,
-                    closureId
-                ),
+                closure: closureId
+                    ? this.getValue(DevsDbgValueTag.ObjStackFrame, closureId)
+                    : null,
                 fnIdx,
             }
             return st
@@ -377,16 +493,18 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     private suspendedHandler(ev: JDEvent) {
-        const [fiber, type] = jdunpack<
+        const [fiber, reason] = jdunpack<
             [DevsDbgFiberHandle, DevsDbgSuspensionType]
         >(ev.data, "u32 u8")
+        if (this.suspensionReason == reason && this.suspendedFiber == fiber)
+            return
         this.suspendedFiber = fiber
-        this.suspensionReason = type
-        this.xlog(`suspended fib=${fiber} ${DevsDbgSuspensionType[type]}`)
+        this.suspensionReason = reason
+        this.xlog(`suspended fib=${fiber} ${DevsDbgSuspensionType[reason]}`)
         this.emit(EV_SUSPENDED)
     }
 
     private xlog(...args: any[]) {
-        console.log("DDBG:", ...args)
+        console.debug("DDBG:", ...args)
     }
 }

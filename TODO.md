@@ -7,23 +7,25 @@
 * run handlers in background - some sort of object to keep track if it's running?
 
 ## Random stuff
+* support `import` for user code (also for side-effects work)
+* add "Internal exception" break category (ones with .internal property; normally we would not break on these if caught)
+* have event_breakpoints 32 bit flags enum register - unhandled exns, handled exns, debugger stmts, internal exns, ...
 * change `ALLOC_*` opcodes to expressions
 * `Object.keys(spec_object)` ?
 * validate UTF8 on input
 * fix charAt() etc to decode UTF8
 * add `JSON.parse/stringify()`
 * limit call stack depth
+* drop code alignment requirement
 
 ## Big ticket
 * Jacdac packet queue overflow when printing a lot
 
 ## General usability
-* drop seconds, use milliseconds everywhere
 * tree strings?
 * introduce Fiber class (also Fiber.suspend() and Fiber.resume())
 * drop `length` field from fun-descriptor
 * automatically add `ds.reboot()` in tests
-* make `import` for side-effects work
 
 ## Later
 * multi-program

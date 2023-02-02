@@ -4,7 +4,8 @@
 #include "devs_logging.h"
 
 static inline devs_pc_t *get_tryframes(devs_activation_t *frame) {
-    JD_ASSERT(frame->func->num_try_frames > 0);
+    if (frame->func->num_try_frames == 0)
+        return NULL;
     return (devs_pc_t *)(frame->slots + frame->func->num_slots);
 }
 
@@ -19,7 +20,7 @@ void devs_push_tryframe(devs_activation_t *frame, devs_ctx_t *ctx, int pc) {
             return;
         }
     }
-    devs_runtime_failure(ctx, 60123);
+    devs_invalid_program(ctx, 60123);
 }
 
 int devs_pop_tryframe(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -51,7 +52,7 @@ const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc) {
 
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
     if (!devs_is_buffer(ctx, stack)) {
-        devs_log_value(ctx, "expecting stack, got", stack);
+        devs_log_value(ctx, "! expecting stack, got", stack);
         return;
     }
 
@@ -64,9 +65,10 @@ void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
         const devs_function_desc_t *desc = devs_function_by_pc(ctx, data[i]);
         if (desc) {
             int fn = desc - devs_img_get_function(ctx->img, 0);
-            DMESG("  pc=%d @ %s_F%d", (int)(pc - desc->start), devs_img_fun_name(ctx->img, fn), fn);
+            DMESG("*  pc=%d @ %s_F%d", (int)(pc - desc->start), devs_img_fun_name(ctx->img, fn),
+                  fn);
         } else {
-            DMESG("  pc=%d @ ???", pc);
+            DMESG("*  pc=%d @ ???", pc);
         }
     }
 }
@@ -76,13 +78,13 @@ void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
     if (devs_can_attach(ctx, exn)) {
         value_t ctor = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_NAME);
         if (!devs_is_null(ctor)) {
-            devs_log_value(ctx, "Exception", ctor);
+            devs_log_value(ctx, "* Exception", ctor);
             hadinfo++;
         }
 
         value_t msg = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_MESSAGE);
         if (!devs_is_null(msg)) {
-            devs_log_value(ctx, "  message", msg);
+            devs_log_value(ctx, "*  message", msg);
             value_t stack = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING___STACK__);
             if (!devs_is_null(stack))
                 devs_dump_stack(ctx, stack);
@@ -91,7 +93,7 @@ void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
     }
 
     if (!hadinfo)
-        devs_log_value(ctx, "Exception", exn);
+        devs_log_value(ctx, "* Exception", exn);
 }
 
 value_t devs_capture_stack(devs_ctx_t *ctx) {
@@ -114,7 +116,7 @@ value_t devs_capture_stack(devs_ctx_t *ctx) {
 }
 
 void devs_unhandled_exn(devs_ctx_t *ctx, value_t exn) {
-    DMESG("Unhandled exception");
+    DMESG("! Unhandled exception");
     ctx->in_throw = 0;
     devs_dump_exception(ctx, exn);
     devs_panic(ctx, DEVS_PANIC_UNHANDLED_EXCEPTION); // TODO should we continue instead?
@@ -124,7 +126,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
     LOG_VAL("throw", exn);
 
     if (ctx->in_throw) {
-        devs_log_value(ctx, "double throw", exn);
+        devs_log_value(ctx, "! double throw", exn);
         return;
     }
 
@@ -135,7 +137,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
 
     ctx->in_throw = 1;
 
-    devs_value_pin(ctx, exn);
+    ctx->exn_val = exn;
 
     if (devs_can_attach(ctx, exn) && !(flags & DEVS_THROW_NO_STACK)) {
         value_t stack = devs_capture_stack(ctx);
@@ -143,12 +145,49 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
         devs_any_set(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING___STACK__), stack);
         devs_value_unpin(ctx, stack);
     }
+}
 
+static bool has_catch(devs_ctx_t *ctx) {
+    for (devs_activation_t *frame = ctx->curr_fn; frame; frame = frame->caller) {
+        int pc0 = frame->pc;
+        devs_pc_t *tf = get_tryframes(frame);
+        for (int i = frame->func->num_try_frames - 1; i >= 0; --i) {
+            if (tf[i] == 0)
+                continue;
+            frame->pc = tf[i];
+            int op = devs_fetch_opcode(frame, ctx);
+            if (op == DEVS_STMT0_CATCH) {
+                frame->pc = pc0;
+                return true;
+            }
+        }
+        frame->pc = pc0;
+    }
+    return false;
+}
+
+void devs_process_throw(devs_ctx_t *ctx) {
+    value_t exn = ctx->exn_val;
     int jump_pc = 0;
-    unsigned jump_level;
+    unsigned jump_level = 0;
 
     if (devs_is_special(exn) && devs_handle_is_throw_jmp(devs_handle_value(exn))) {
         jump_pc = devs_handle_decode_throw_jmp_pc(devs_handle_value(exn), &jump_level);
+    } else if (ctx->dbg_en) {
+        unsigned dbg_reason = JD_DEVS_DBG_SUSPENSION_TYPE_NONE;
+        if (!ctx->ignore_brk &&
+            (ctx->dbg_flags & (DEVS_DBG_BRK_HANDLED_EXN | DEVS_DBG_BRK_UNHANDLED_EXN))) {
+            if (has_catch(ctx)) {
+                if (ctx->dbg_flags & DEVS_DBG_BRK_HANDLED_EXN)
+                    dbg_reason = JD_DEVS_DBG_SUSPENSION_TYPE_HANDLED_EXCEPTION;
+            } else {
+                dbg_reason = JD_DEVS_DBG_SUSPENSION_TYPE_UNHANDLED_EXCEPTION;
+            }
+        }
+        if (dbg_reason) {
+            devs_vm_suspend(ctx, dbg_reason);
+            return;
+        }
     }
 
     while (ctx->curr_fn) {
@@ -163,11 +202,12 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
         LOG("pc=%d", pc);
         if (pc == 0) {
             if (jump_pc != 0) {
-                devs_runtime_failure(ctx, 60124);
+                devs_invalid_program(ctx, 60124);
                 break;
             }
             int hadcaller = frame->caller != NULL;
-            LOG("up hadcaller=%d", hadcaller);
+            LOG("up from %s (caller=%d)", devs_img_get_utf8(ctx->img, frame->func->name_idx, NULL),
+                hadcaller);
             devs_fiber_return_from_call(ctx->curr_fiber, frame);
             if (!hadcaller) {
                 devs_unhandled_exn(ctx, exn);
@@ -182,22 +222,30 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
                 if (jump_pc) {
                     jump_level--;
                 } else {
-                    ctx->exn_val = exn;
                     break;
                 }
             } else if (op == DEVS_STMT0_FINALLY) {
-                if (jump_pc)
-                    exn = devs_value_encode_throw_jmp_pc(jump_pc, jump_level - 1);
-                ctx->exn_val = exn;
+                if (jump_pc) {
+                    ctx->exn_val = devs_value_encode_throw_jmp_pc(jump_pc, jump_level - 1);
+                    if (ctx->dbg_en && ctx->step_fn == ctx->curr_fn)
+                        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
+                }
                 break;
             } else {
-                devs_runtime_failure(ctx, 60125);
+                devs_invalid_program(ctx, 60125);
                 break;
             }
         }
     }
 
-    devs_value_unpin(ctx, exn);
+    ctx->stack_top = 0;
+    ctx->in_throw = 0;
+    if (ctx->curr_fiber)
+        ctx->curr_fiber->ret_val = ctx->exn_val;
+    ctx->exn_val = devs_undefined;
+
+    if (ctx->step_flags)
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
 }
 
 static value_t devs_throw_internal_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format,

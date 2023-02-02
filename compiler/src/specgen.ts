@@ -182,20 +182,46 @@ export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
 }
 
 function specToMarkdown(info: jdspec.ServiceSpec): string {
-    if (ignoreSpec(info)) return undefined
-
     const { status, camelName } = info
-    const reserved: Record<string, string> = { switch: "sw" }
 
+    const reserved: Record<string, string> = { switch: "sw" }
     const clname = upperCamel(camelName)
     const varname = reserved[camelName] || camelName
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
+
+    if (status === "deprecated") {
+        return `---
+pagination_prev: null
+pagination_next: null
+unlisted: true
+---
+# ${clname}
+        
+The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/) is deprecated and not supported in DeviceScript.        
+
+`
+    }
+
+    if (ignoreSpec(info)) {
+        return `---
+pagination_prev: null
+pagination_next: null
+unlisted: true
+---
+# ${clname}
+        
+The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/) is used internally by the runtime
+and is not directly programmable in DeviceScript.
+
+`
+    }
 
     let r: string[] = [
         `---
 pagination_prev: null
 pagination_next: null
----        
+description: DeviceScript client for Jacdac ${info.name} service
+---
 # ${clname}
 `,
         status !== "stable" && info.shortId[0] !== "_"

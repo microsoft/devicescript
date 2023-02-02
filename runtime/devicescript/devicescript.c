@@ -100,7 +100,13 @@ void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *
     if (ctx->flags & DEVS_CTX_PENDING_RESUME) {
         ctx->flags ^= DEVS_CTX_PENDING_RESUME;
         if (ctx->curr_fiber) {
-            devs_fiber_run(ctx->curr_fiber);
+            ctx->ignore_brk = true;
+            // re-process throw if needed
+            if (ctx->in_throw)
+                devs_process_throw(ctx);
+            if (ctx->curr_fiber) // throw might have killed the thread
+                devs_fiber_run(ctx->curr_fiber);
+            ctx->ignore_brk = false; // just in case
             devs_fiber_poke(ctx);
         }
     }

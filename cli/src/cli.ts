@@ -11,7 +11,7 @@ import init from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
-import { dbgsrv } from "./dbgsrv"
+import { startVm } from "./vm"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -45,13 +45,6 @@ export async function mainCli() {
 
     buildCommand("build", { isDefault: true })
         .description("build a DeviceScript file")
-        .option("-w, --watch", "watch file changes and rebuild automatically")
-        .option("--internet", "allow connections from non-localhost")
-        .option(
-            "--localhost",
-            "use localhost:8000 instead of the internet dashboard"
-        )
-        .option("-t, --tcp", "open native TCP socket at 8082")
         .arguments("[file.ts]")
         .action(build)
 
@@ -94,7 +87,10 @@ export async function mainCli() {
             "-i, --spi",
             "listen to Jacdac over SPI (requires rpio, experimental)"
         )
-        .option("--vscode", "update behavior to match executing within Visual Studio Code")
+        .option(
+            "--vscode",
+            "update behavior to match executing within Visual Studio Code"
+        )
         .arguments("[file.ts]")
         .action(devtools)
 
@@ -143,6 +139,18 @@ export async function mainCli() {
         .arguments("<file.ts|file.devs>")
         .action(deployScript)
 
+    program
+        .command("vm")
+        .description("start DeviceScript VM interpreter process")
+        .option(
+            "--tcp",
+            "use tcp jacdac proxy on 127.0.0.1:8082 (otherwise ws://127.0.0.1:8081)"
+        )
+        .option("--gc-stress", "stress-test the GC")
+        .option("--device-id <string>", "set device ID")
+        .option("--devtools", "set when spawned from devtools")
+        .action(startVm)
+
     buildCommand("crun", { hidden: true })
         .description("run a script using native runner")
         .option("-n, --net", "connect to 127.0.0.1:8082 for Jacdac proxy")
@@ -167,17 +175,6 @@ export async function mainCli() {
         .option("-d, --detailed", "include all details")
         .arguments("<file.ts|file-dbg.json|file.devs>")
         .action(disasm)
-
-    program
-        .command("dbgsrv")
-        .description("start VSCode-compatible debug server")
-        .option("-p, --port <number>", "override default 8083 port")
-        .option(
-            "--trace <filename>",
-            "log all Jacdac packets to specified file"
-        )
-        .arguments("[file.ts|file-dbg.json]")
-        .action(dbgsrv)
 
     program
         .command("annotate")

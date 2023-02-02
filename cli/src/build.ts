@@ -28,6 +28,7 @@ import { devtools } from "./devtools"
 
 import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
+import { printDmesg } from "./vmworker"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -55,11 +56,33 @@ export function devsFactory() {
         const dbg = readDebugInfo()
         if (dbg)
             m.dmesg = (s: string) => {
-                console.debug(parseStackFrame(dbg, s).markedLine)
+                printDmesg(dbg, "WASM", s)
+                // console.debug("    " + parseStackFrame(dbg, s).markedLine)
             }
         m.devsInit()
         return m
     })
+}
+
+export async function devsStartWithNetwork(options: {
+    tcp?: boolean
+    test?: boolean
+    deviceId?: string
+    gcStress?: boolean
+}) {
+    const inst = await devsFactory()
+
+    if (options.deviceId) inst.devsSetDeviceId(options.deviceId)
+
+    inst.devsGcStress(!!options.gcStress)
+
+    if (options.tcp)
+        await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
+    else await inst.setupWebsocketTransport("ws://127.0.0.1:8081")
+
+    inst.devsStart()
+
+    return inst
 }
 
 export async function getHost(options: BuildOptions & CmdOptions) {
@@ -136,7 +159,6 @@ export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
 export interface BuildOptions {
     noVerify?: boolean
     outDir?: string
-    watch?: boolean
     stats?: boolean
     flag?: Record<string, boolean>
     cwd?: string
@@ -161,16 +183,12 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
     // log(`building ${file}`)
     ensureDirSync(options.outDir)
     await buildOnce(file, options)
-    // if (options.watch) await buildWatch(file, options)
 }
 
 async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
-    const { watch, stats } = options
+    const { stats } = options
     const { success, binary, dbg } = await compileFile(file, options)
-    if (!success) {
-        if (watch) return
-        throw new CompilationError("compilation failed")
-    }
+    if (!success) throw new CompilationError("compilation failed")
 
     log(`bytecode: ${prettySize(binary.length)}`)
     if (stats) {

@@ -15,6 +15,7 @@ _IGNORE3 := $(shell test -f jacdac-c/jacdac/README.md || (cd jacdac-c && git sub
 DEPS = $(wildcard \
 	inc/*.h \
 	devicescript/*.h \
+	devicescript/network/*.h \
 	jacdac-c/jacdac/dist/c/*.h \
 	jacdac-c/inc/*.h \
 	jacdac-c/inc/interfaces/*.h \
@@ -28,7 +29,7 @@ BUILT = built
 JDS = jacdac-c/source
 SRC = $(wildcard posix/*.c) \
 	$(wildcard devicescript/*.c) \
-	$(wildcard network/*.c) \
+	$(wildcard devicescript/network/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
 	jacdac-c/jacdac/dist/c/jd_spec_pack.c \
 	$(wildcard $(JDS)/*.c) \

@@ -34,3 +34,8 @@ value_t prop_Error_name(devs_ctx_t *ctx, value_t self) {
         return devs_undefined;
     return devs_object_get_built_in_field(ctx, ctor, DEVS_BUILTIN_STRING_NAME);
 }
+
+void meth0_Error_print(devs_ctx_t *ctx) {
+    value_t exn = devs_arg_self(ctx);
+    devs_dump_exception(ctx, exn);
+}

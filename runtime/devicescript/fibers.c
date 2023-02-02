@@ -88,8 +88,10 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     callee->caller = fiber->activation;
     callee->func = func;
 
+    devs_activation_t *caller = fiber->activation;
+
     // if fiber already activated, move the activation pointer
-    if (fiber->activation) {
+    if (caller) {
         devs_fiber_activate(fiber, callee);
     } else {
         fiber->activation = callee;
@@ -98,6 +100,10 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_null(callee->slots[0])) {
         devs_map_t *m = devs_map_try_alloc(ctx, devs_get_prototype_field(ctx, fn));
         callee->slots[0] = devs_value_from_gc_obj(ctx, m);
+    }
+
+    if (ctx->dbg_en && ctx->step_fn == caller && (ctx->step_flags & DEVS_CTX_STEP_IN)) {
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
     }
 
     return 0;
@@ -134,11 +140,11 @@ static void log_fiber_op(devs_fiber_t *fiber, const char *op) {
 
 void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
     devs_ctx_t *ctx = fiber->ctx;
-    act->maxpc = 0; // protect against re-activation
     if (act->caller) {
         if (devs_is_null(fiber->ret_val) && (act->func->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
             fiber->ret_val = act->slots[0];
         devs_fiber_activate(fiber, act->caller);
+        act->maxpc = 0; // protect against re-activation
         // act may survive as a closure past the caller intended lifetime
         act->caller = NULL;
     } else {
@@ -150,6 +156,7 @@ void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
             log_fiber_op(fiber, "free");
             devs_fiber_yield(ctx);
             free_fiber(fiber);
+            return;
         }
     }
 }
@@ -306,25 +313,28 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
         ctx->error_pc = ctx->curr_fn ? ctx->curr_fn->pc : 0;
         // using DMESG here since this logging should never be disabled
         if (code == DEVS_PANIC_REBOOT) {
-            DMESG("RESTART requested");
+            DMESG("* RESTART requested");
         } else {
-            DMESG("PANIC %d at pc=%d", code, ctx->error_pc);
+            DMESG("! PANIC %d at pc=%d", code, ctx->error_pc);
         }
         ctx->error_code = code;
 
         if (code != DEVS_PANIC_REBOOT)
             for (devs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
                 int idx = fn->func - devs_img_get_function(ctx->img, 0);
-                DMESG("  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),
+                DMESG("!  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),
                       devs_img_fun_name(ctx->img, idx), idx);
             }
+
+        // TODO for OOM we probably want to free up some memory first...
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_PANIC);
 
         devs_panic_handler(orig_code);
     }
     devs_fiber_yield(ctx);
 }
 
-value_t _devs_runtime_failure(devs_ctx_t *ctx, unsigned code) {
+value_t _devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
     if (code < 100)
         code = 100;
     devs_panic(ctx, 60000 + code);

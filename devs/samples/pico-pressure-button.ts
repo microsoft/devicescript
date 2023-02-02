@@ -11,6 +11,6 @@ sensor.pressure.onChange(10, () => {
         // click!
         mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
         // debouncing
-        ds.wait(0.05)
+        ds.sleepMs(50)
     }
 })

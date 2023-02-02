@@ -6,66 +6,111 @@ import {
     CHANGE,
     CONNECTION_STATE,
     DEVICE_CHANGE,
+    DOCS_ROOT,
     Flags,
     FRAME_PROCESS,
+    identifierToUrlPath,
+    JDDevice,
     JDFrameBuffer,
     JDRegister,
+    loadServiceSpecifications,
+    prettyUnit,
     REGISTER_NODE_NAME,
     serializeToTrace,
 } from "jacdac-ts"
 import { report } from "process"
 import * as vscode from "vscode"
+import { WorkspaceFolder, DebugConfiguration, ProviderResult } from "vscode"
+import type {
+    SideConnectReq,
+    SideOutputEvent,
+    SideSpecsReq,
+    SideSpecsResp,
+} from "../../cli/src/sideprotocol"
+import { logo } from "./assets"
+import { initBuild } from "./build"
+import { toMarkdownString } from "./catalog"
+import { CloudExtensionState } from "./CloudExtensionState"
+import { registerCloudStatusBar } from "./CloudStatusBar"
+import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
 import {
-    WorkspaceFolder,
-    DebugConfiguration,
-    ProviderResult,
-    CancellationToken,
-} from "vscode"
-import type { SideConnectRequestMessage } from "../../cli/src/sideprotocol"
-import { activateAnalytics, reporter } from "./analytics"
-import { build, initBuild } from "./build"
+    DeviceScriptAdapterServerDescriptorFactory,
+    DeviceScriptConfigurationProvider,
+} from "./debugger"
 import {
     spawnDevTools,
     showDevToolsTerminal,
     initDevTools,
 } from "./devtoolsserver"
-import { sideRequest, startJacdacBus, stopJacdacBus } from "./jacdac"
 import {
-    JDeviceTreeItem,
+    sideRequest,
+    startJacdacBus,
+    stopJacdacBus,
+    subSideEvent,
+} from "./jacdac"
+import {
+    JDomDeviceTreeItem,
     JDomDeviceTreeDataProvider,
     JDomTreeItem,
     JDomWatchTreeDataProvider,
+    JDomRegisterTreeItem,
 } from "./JDomTreeDataProvider"
-import { ExtensionState } from "./state"
+import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
-export function activateDeviceScript(
-    context: vscode.ExtensionContext,
-    factory?: vscode.DebugAdapterDescriptorFactory
-) {
+class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
+    constructor(readonly deserialize: (view: vscode.WebviewPanel) => void) {}
+    async deserializeWebviewPanel(
+        webviewPanel: vscode.WebviewPanel,
+        state: any
+    ) {
+        this.deserialize(webviewPanel)
+    }
+}
+
+export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, workspaceState, extensionMode } = context
-    activateAnalytics(context)
-    reporter.sendTelemetryEvent('activate')
+    const debugConfig = vscode.workspace.getConfiguration(
+        "devicescript.debugger"
+    )
+    const outputConfig = vscode.workspace.getConfiguration(
+        "devicescript.output"
+    )
+    const devToolsConfig = vscode.workspace.getConfiguration(
+        "devicescript.devtools"
+    )
+    const jacdacConfig = vscode.workspace.getConfiguration(
+        "devicescript.jacdac"
+    )
 
     // setup bus
     const bus = startJacdacBus()
     context.subscriptions.push({
         dispose: stopJacdacBus,
     })
+    const extensionState = new DeviceScriptExtensionState(
+        context,
+        bus,
+        workspaceState
+    )
 
-    const extensionState = new ExtensionState(bus, workspaceState)
+    let unsub = bus.subscribe(CHANGE, async () => {
+        if (bus.connected && unsub) {
+            unsub()
+            unsub = null
+            await initDevtoolsConnection(extensionState)
+        }
+    })
 
     // devtool web panel
-    let developerToolsPanel: vscode.WebviewPanel
-    const updateDeveloperToolsPanelUrl = () => {
-        if (!developerToolsPanel) return
-
+    let simulatorsWebviewPanel: vscode.WebviewPanel
+    const generateSimulatorsHtml = () => {
         const { kind: colorThemeKind } = vscode.window.activeColorTheme
         const darkMode =
             colorThemeKind === vscode.ColorThemeKind.Dark ||
             colorThemeKind === vscode.ColorThemeKind.HighContrast
                 ? "dark"
                 : "light"
-        developerToolsPanel.webview.html = `
+        return `
         <html>
         <head>
         <style>
@@ -88,59 +133,21 @@ export function activateDeviceScript(
         </html>                
                         `
     }
+    const updateDeveloperToolsPanelUrl = () => {
+        if (!simulatorsWebviewPanel) return
+        simulatorsWebviewPanel.webview.html = generateSimulatorsHtml()
+    }
+    vscode.window.registerWebviewPanelSerializer(
+        "extension.devicescript.simulators",
+        new SimulatorsSerializer(view => {
+            if (!simulatorsWebviewPanel) simulatorsWebviewPanel = view
+            updateDeveloperToolsPanelUrl()
+        })
+    )
 
     // build
     initBuild()
     subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.runEditorContents",
-            async (resource: vscode.Uri) => {
-                reporter.sendTelemetryEvent("command", { command: "runEditorContents" })
-                let targetResource = resource
-                if (!targetResource && vscode.window.activeTextEditor) {
-                    targetResource = vscode.window.activeTextEditor.document.uri
-                }
-                if (targetResource) {
-                    const device =
-                        await extensionState.resolveDeviceScriptManager()
-                    if (!device) {
-                        vscode.window.showWarningMessage(
-                            "No DeviceScript device found."
-                        )
-                        return
-                    }
-                    await build(targetResource.fsPath, device.deviceId)
-                }
-            }
-        ),
-        vscode.commands.registerCommand(
-            "extension.devicescript.debugEditorContents",
-            async (resource: vscode.Uri) => {
-                reporter.sendTelemetryEvent("command", { command: "debugEditorContents" })
-                let targetResource = resource
-                if (!targetResource && vscode.window.activeTextEditor) {
-                    targetResource = vscode.window.activeTextEditor.document.uri
-                }
-                if (targetResource) {
-                    const device =
-                        await extensionState.resolveDeviceScriptManager()
-                    if (!device) {
-                        vscode.window.showWarningMessage(
-                            "No DeviceScript device found."
-                        )
-                        return
-                    }
-                    if (await build(targetResource.fsPath, device.deviceId))
-                        vscode.debug.startDebugging(undefined, {
-                            type: "devicescript",
-                            name: "Debug File",
-                            request: "launch",
-                            program: targetResource.fsPath,
-                            stopOnEntry: true,
-                        })
-                }
-            }
-        ),
         vscode.commands.registerCommand(
             "extension.devicescript.toggleFormatting",
             variable => {
@@ -151,64 +158,58 @@ export function activateDeviceScript(
                 }
             }
         ),
-        vscode.commands.registerCommand("extension.devicescript.start", () => {
-            console.log("Starting...")
-        }),
         vscode.commands.registerCommand(
             "extension.devicescript.showServerTerminal",
-            () => {
-                reporter.sendTelemetryEvent("command", { command: "showServerTerminal" })
-                console.log("Showing terminal...")
-                showDevToolsTerminal()
-            }
+            () => showDevToolsTerminal()
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.identifyDevice",
-            (item: JDeviceTreeItem) => {
-                reporter.sendTelemetryEvent("command", { command: "identifyDevice" })
-                const { device } = item
-                device.identify() // async
+            async (item: JDomDeviceTreeItem) => {
+                const device =
+                    item?.device ||
+                    (await extensionState.pickDeviceScriptManager(true))?.device
+                await device?.identify()
             }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.resetDevice",
-            (item: JDeviceTreeItem) => {
-                reporter.sendTelemetryEvent("command", { command: "resetDevice" })
-                const { device } = item
-                device.reset() // async
+            async (item: JDomDeviceTreeItem) => {
+                const device =
+                    item?.device ||
+                    (await extensionState.pickDeviceScriptManager(true))?.device
+                await device.reset() // async
             }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
             async () => {
-                reporter.sendTelemetryEvent("command", { command: "connect" })
-                await spawnDevTools()
+                await spawnDevTools(context)
                 await bus.connect()
-                await sideRequest(<SideConnectRequestMessage>{
-                    type: "connect",
+                await sideRequest<SideConnectReq>({
+                    req: "connect",
                     data: {},
                 })
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.openDevTools",
+            "extension.devicescript.openSimulators",
             async () => {
-                reporter.sendTelemetryEvent("command", { command: "openDevTools" })
-                if (developerToolsPanel) {
-                    developerToolsPanel.reveal(vscode.ViewColumn.Nine)
+                if (simulatorsWebviewPanel) {
+                    simulatorsWebviewPanel.reveal(vscode.ViewColumn.Nine)
                 } else {
                     console.log("Opening Developer Tools...")
-                    await spawnDevTools()
+                    await spawnDevTools(context)
                     // http://localhost:8081/
-                    developerToolsPanel = vscode.window.createWebviewPanel(
-                        "extension.devicescript.openDevTools", // Identifies the type of the webview. Used internally
-                        "DeviceScript Developer Tools", // Title of the panel displayed to the user
-                        vscode.ViewColumn.Nine, // Editor column to show the new webview panel in.
-                        { enableScripts: true } // Webview options. More on these later.
+                    simulatorsWebviewPanel = vscode.window.createWebviewPanel(
+                        "extension.devicescript.simulators",
+                        "DeviceScript Simulators",
+                        vscode.ViewColumn.Nine,
+                        { enableScripts: true, retainContextWhenHidden: true }
                     )
-                    developerToolsPanel.onDidDispose(
+                    simulatorsWebviewPanel.iconPath = logo(context)
+                    simulatorsWebviewPanel.onDidDispose(
                         () => {
-                            developerToolsPanel = undefined
+                            simulatorsWebviewPanel = undefined
                         },
                         undefined,
                         context.subscriptions
@@ -221,14 +222,8 @@ export function activateDeviceScript(
 
     subscriptions.push(
         vscode.commands.registerCommand(
-            "extension.devicescript.getProgramName",
-            config => {
-                return vscode.window.showInputBox({
-                    placeHolder:
-                        "Please enter the name of a typescript file in the workspace folder",
-                    value: "main.ts",
-                })
-            }
+            "extension.devicescript.variables.simulator",
+            config => extensionState.simulatorScriptManagerId
         )
     )
 
@@ -236,7 +231,7 @@ export function activateDeviceScript(
     vscode.window.onDidChangeActiveColorTheme(updateDeveloperToolsPanelUrl)
 
     // register a configuration provider for 'devicescript' debug type
-    const provider = new DeviceScriptConfigurationProvider()
+    const provider = new DeviceScriptConfigurationProvider(bus, extensionState)
     subscriptions.push(
         vscode.debug.registerDebugConfigurationProvider(
             "devicescript",
@@ -254,22 +249,9 @@ export function activateDeviceScript(
                 ): ProviderResult<DebugConfiguration[]> {
                     return [
                         {
-                            name: "Dynamic Launch",
+                            name: "Devicescript: Launch",
                             request: "launch",
                             type: "devicescript",
-                            program: "${file}",
-                        },
-                        {
-                            name: "Another Dynamic Launch",
-                            request: "launch",
-                            type: "devicescript",
-                            program: "${file}",
-                        },
-                        {
-                            name: "devicescript Launch",
-                            request: "launch",
-                            type: "devicescript",
-                            program: "${file}",
                         },
                     ]
                 },
@@ -278,24 +260,35 @@ export function activateDeviceScript(
         )
     )
 
+    const debuggerAdapterFactory =
+        new DeviceScriptAdapterServerDescriptorFactory()
     subscriptions.push(
         vscode.debug.registerDebugAdapterDescriptorFactory(
             "devicescript",
-            factory
+            debuggerAdapterFactory
         )
     )
-    if ("dispose" in factory) {
-        subscriptions.push(factory as any)
-    }
+    subscriptions.push(debuggerAdapterFactory)
 
-    const config = vscode.workspace.getConfiguration("devicescript")
+    const output = vscode.window.createOutputChannel("DeviceScript", {
+        log: true,
+    })
+    subSideEvent<SideOutputEvent>("output", msg => {
+        const tag = msg.data.from
+        let fn = output.info
+        if (tag.endsWith("err")) fn = output.error
+        for (const l of msg.data.lines) fn(tag + ":", l)
+    })
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.showOutput",
+            () => output.show()
+        )
+    )
     const redirectConsoleOutput =
-        !!config.get("redirectConsoleOutput") ||
+        !!outputConfig.get("redirectConsole") ||
         extensionMode == vscode.ExtensionMode.Production
     if (redirectConsoleOutput) {
-        const output = vscode.window.createOutputChannel("DeviceScript", {
-            log: true,
-        })
         // note that this is local to this extension - see inject.js
         console.debug = output.debug
         console.log = output.info
@@ -305,12 +298,9 @@ export function activateDeviceScript(
     }
 
     // launch devtools in background
-    const devToolsConfig = vscode.workspace.getConfiguration(
-        "devicescript.devtools"
-    )
     initDevTools(context.subscriptions)
     if (devToolsConfig.get("autoStart")) {
-        spawnDevTools()
+        spawnDevTools(context)
         if (devToolsConfig.get("showOnStart")) showDevToolsTerminal()
     }
 
@@ -320,7 +310,6 @@ export function activateDeviceScript(
             (item: JDomTreeItem) => {
                 const { node } = item
                 const { nodeKind } = node
-                console.log(`Select ${node}`)
                 switch (nodeKind) {
                     case REGISTER_NODE_NAME: {
                         ;(node as JDRegister).scheduleRefresh()
@@ -335,58 +324,209 @@ export function activateDeviceScript(
         command: "extension.devicescript.selectNode",
     }
     const jdomTreeDataProvider = new JDomDeviceTreeDataProvider(
-        bus,
+        extensionState,
         selectNodeCommand
     )
     vscode.window.registerTreeDataProvider(
-        "extension.devicescript.jacdac-jdom-explorer",
+        "extension.devicescript.jdom-explorer",
         jdomTreeDataProvider
     )
-
     const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
-        bus,
-        selectNodeCommand,
-        extensionState
+        extensionState,
+        selectNodeCommand
     )
     vscode.window.registerTreeDataProvider(
-        "extension.devicescript.jacdac-jdom-watch",
+        "extension.devicescript.watch",
         jdomWatchTreeDataProvider
     )
+    const cloudState = new CloudExtensionState(context, extensionState)
+    registerCloudTreeDataProvider(cloudState)
+    registerCloudStatusBar(cloudState)
 
     context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.showFirmwareInformation",
+            (device: JDDevice) => {
+                if (!device) return
+                const spec =
+                    bus.deviceCatalog.specificationFromProductIdentifier(
+                        device.productIdentifier
+                    )
+                if (spec) {
+                    const uri = `${DOCS_ROOT}${`devices/${identifierToUrlPath(
+                        spec.id
+                    )}`}`
+                    vscode.commands.executeCommand("vscode.open", uri)
+                }
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.stopSimulator",
+            async () => {
+                await spawnDevTools(context)
+                await extensionState.stopSimulator()
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.startSimulator",
+            async () => {
+                await spawnDevTools(context)
+                await extensionState.startSimulator()
+            }
+        ),
         vscode.commands.registerCommand(
             "extension.devicescript.pickDeviceScriptManager",
             () => extensionState.pickDeviceScriptManager()
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.watchNode",
-            (item: JDomTreeItem) => {
+            "extension.devicescript.register.edit",
+            async (item: JDomRegisterTreeItem) => {
+                if (!item) return
+
+                const { register } = item
+                const { specification } = register
+
+                if (!specification) {
+                    vscode.window.showWarningMessage(
+                        `DeviceScript: no specification found for register`
+                    )
+                    return
+                }
+
+                const { kind, fields, description } = specification
+                if (kind !== "rw") {
+                    vscode.window.showWarningMessage(
+                        "DeviceScript: register cannot be modified"
+                    )
+                    return
+                }
+
+                await register.refresh()
+                const { name, unpackedValue } = register
+                const title = `Edit register ${name}`
+                if (fields?.length === 1) {
+                    const field = fields[0]
+                    const { type, unit, isFloat } = field
+                    const prompt = `${description} ${
+                        unit ? `(${prettyUnit(unit)})` : ""
+                    }`
+                    const value = unpackedValue?.[0]
+
+                    // strings
+                    if (type === "string" || type === "string0") {
+                        const v = value as string
+                        const res = await vscode.window.showInputBox({
+                            title,
+                            prompt,
+                            value: v || "",
+                        })
+                        if (res !== undefined && v !== res) {
+                            await register.sendSetStringAsync(res, true)
+                        }
+                        return
+                    }
+                    // boolean
+                    else if (type === "bool") {
+                        const v = value ? "yes" : "no"
+                        const res = await vscode.window.showQuickPick(
+                            ["yes", "no"],
+                            <vscode.QuickPickOptions>{
+                                title,
+                            }
+                        )
+                        if (res !== undefined && v !== res) {
+                            await register.sendSetBoolAsync(res === "yes", true)
+                        }
+                        return
+                    }
+                    // float
+                    else if (isFloat) {
+                        const v = (value as number)?.toLocaleString()
+                        // TODO: min, max
+                        const res = await vscode.window.showInputBox({
+                            title,
+                            prompt,
+                            value: v || "0",
+                            validateInput: i => {
+                                if (isNaN(parseFloat(i)))
+                                    return "invalid number format"
+                                return undefined
+                            },
+                        })
+                        if (res !== undefined && v !== res) {
+                            const newValue = parseFloat(res)
+                            await register.sendSetPackedAsync([newValue], true)
+                        }
+                        return
+                    }
+                    // int, uint
+                    else if (field.unit) {
+                        const v = (value as number)?.toLocaleString()
+                        // TODO: min, max
+                        const res = await vscode.window.showInputBox({
+                            title,
+                            prompt,
+                            value: v || "0",
+                            validateInput: i => {
+                                if (isNaN(parseInt(i)))
+                                    return `invalid ${field.type} number format`
+                                return undefined
+                            },
+                        })
+                        if (res !== undefined && v !== res) {
+                            const newValue = parseInt(res)
+                            await register.sendSetPackedAsync([newValue], true)
+                        }
+                        return
+                    }
+                }
+
+                vscode.window.showWarningMessage(
+                    "DeviceScript: Sorry, this register cannot be edited by the extension."
+                )
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.watch.clear",
+            async () => {
+                await extensionState.updateWatches([])
+                jdomWatchTreeDataProvider.refresh()
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.watch.add",
+            async (item: JDomTreeItem) => {
+                if (!item) return
                 console.log(`Watch ${item.node}`)
                 reporter.sendTelemetryEvent("command", { command: "watchNode" })
                 const id = item.node.id
-                const watches = extensionState.watchKeys()
-                if (!watches.includes(id)) {
-                    extensionState
-                        .updateWatchKeys([...watches, id])
-                        .then(() => {
-                            jdomWatchTreeDataProvider.refresh()
-                        })
+                const watches = extensionState.watches()
+                if (!watches.find(w => w.id === id)) {
+                    const label = item.node.friendlyName
+                    const icon = (item.iconPath as vscode.ThemeIcon)?.id
+                    await extensionState.updateWatches([
+                        ...watches,
+                        <NodeWatch>{ id, label, icon },
+                    ])
+                    item.refresh()
+                    jdomWatchTreeDataProvider.refresh()
                 }
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.unwatchNode",
-            (item: JDomTreeItem) => {
+            "extension.devicescript.watch.remove",
+            async (item: JDomTreeItem) => {
+                if (!item) return
                 console.log(`Unwatch ${item.node}`)
                 reporter.sendTelemetryEvent("command", { command: "unwatchNode" })
                 const id = item.node.id
-                const watches = extensionState.watchKeys()
-                if (watches.includes(id)) {
-                    extensionState
-                        .updateWatchKeys(watches.filter(i => i !== id))
-                        .then(() => {
-                            jdomWatchTreeDataProvider.refresh()
-                        })
+                const watches = extensionState.watches()
+                if (watches.find(w => w.id === id)) {
+                    await extensionState.updateWatches(
+                        watches.filter(w => w.id !== id)
+                    )
+                    item.refresh()
+                    jdomWatchTreeDataProvider.refresh()
                 }
             }
         )
@@ -394,21 +534,39 @@ export function activateDeviceScript(
 
     const statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
-        100
+        120
     )
     statusBarItem.command = "extension.devicescript.pickDeviceScriptManager"
     const updateStatusBar = () => {
-        const mgr = extensionState.deviceScriptManager
+        const service = extensionState.deviceScriptManager
+        const mgr = service?.device
+        const { runtimeVersion, version } = extensionState
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
         })
-        statusBarItem.tooltip = mgr
-            ? `Deploy and Debug on device ${mgr.shortId}`
-            : `Click to pick a DeviceScript device`
-        statusBarItem.text = `DeviceScript $(play) ${mgr?.shortId || "???"} $(${
-            JDeviceTreeItem.ICON
-        }) ${devices.length}`
+        statusBarItem.tooltip = !runtimeVersion
+            ? `Starting DeviceScript Development Server...`
+            : toMarkdownString(`
+${
+    mgr
+        ? `Deploy and Debug on device ${mgr.shortId}`
+        : `Click to pick a DeviceScript device`
+}
+
+---
+
+${runtimeVersion.slice(1)} - Runtime version   
+${version.slice(1)} - Tools version     
+        `)
+        statusBarItem.text = [
+            !runtimeVersion ? "$(loading~spin)" : "$(devicescript-logo)",
+            "DeviceScript",
+            mgr ? `$(play) ${mgr?.shortId}` : "",
+            devices.length > 0 ? `$(circuit-board) ${devices.length}` : "",
+        ]
+            .filter(p => !!p)
+            .join(" ")
     }
     extensionState.on(CHANGE, updateStatusBar)
     bus.on([DEVICE_CHANGE, CONNECTION_STATE], updateStatusBar)
@@ -425,14 +583,11 @@ export function activateDeviceScript(
     const logFrame = (frame: JDFrameBuffer) => {
         const output = jacdacPacketsOutputChannel
         if (!output) return
-        const msg = serializeToTrace(frame, 0, bus)
+        const msg = serializeToTrace(frame, 0, bus, {})
         if (msg) output.appendLine(msg)
     }
     // apply settings
     const configure = () => {
-        const jacdacConfig = vscode.workspace.getConfiguration(
-            "devicescript.jacdac"
-        )
         Flags.diagnostics = !!jacdacConfig.get("diagnostics")
         const tracePackets = !!jacdacConfig.get("tracePackets")
         if (tracePackets) {
@@ -453,43 +608,30 @@ export function activateDeviceScript(
         undefined,
         context.subscriptions
     )
+
+    //cloud
+    vscode.commands.registerCommand(
+        "extension.devicescript.cloud.configure",
+        async () => cloudState.configure()
+    )
+
     configure()
 }
 
-class DeviceScriptConfigurationProvider
-    implements vscode.DebugConfigurationProvider
-{
-    /**
-     * Massage a debug configuration just before a debug session is being launched,
-     * e.g. add all missing attributes to the debug configuration.
-     */
-    resolveDebugConfiguration(
-        folder: WorkspaceFolder | undefined,
-        config: DebugConfiguration,
-        token?: CancellationToken
-    ): ProviderResult<DebugConfiguration> {
-        // if launch.json is missing or empty
-        if (!config.type && !config.request && !config.name) {
-            const editor = vscode.window.activeTextEditor
-            if (editor && editor.document.languageId === "typescript") {
-                config.type = "devicescript"
-                config.name = "Launch"
-                config.request = "launch"
-                config.program = "${file}"
-                config.stopOnEntry = true
-            }
-        }
+async function initDevtoolsConnection(state: DeviceScriptExtensionState) {
+    const resp = await sideRequest<SideSpecsReq, SideSpecsResp>({
+        req: "specs",
+        data: {},
+    })
+    const { specs, version, runtimeVersion } = resp.data
+    loadServiceSpecifications(specs)
+    console.log(
+        `devicescript devtools version: ${version}, bytecode version: ${runtimeVersion}`
+    )
 
-        if (!config.program) {
-            return vscode.window
-                .showInformationMessage("Cannot find a program to debug")
-                .then(_ => {
-                    return undefined // abort launch
-                })
-        }
-
-        return config
-    }
+    state.version = version
+    state.runtimeVersion = runtimeVersion
+    state.emit(CHANGE)
 }
 
 /*

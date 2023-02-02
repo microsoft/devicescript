@@ -8,8 +8,8 @@
 
 #define DEVS_PANIC_REBOOT 60000
 #define DEVS_PANIC_TIMEOUT 60001
-#define DEVS_PANIC_INTERNAL_ERROR 60002
-#define DEVS_PANIC_RUNTIME_FAILURE 60003
+#define DEVS_PANIC_INTERNAL_ERROR 60002  // not used
+#define DEVS_PANIC_RUNTIME_FAILURE 60003 // not used
 #define DEVS_PANIC_OOM 60004
 #define DEVS_PANIC_UNHANDLED_EXCEPTION 60005
 
@@ -45,6 +45,7 @@ typedef struct {
 } devsmgr_cfg_t;
 
 void devsmgr_init(const devsmgr_cfg_t *cfg);
+void devsmgr_set_logging(bool logging);
 
 devs_ctx_t *devsmgr_get_ctx(void);
 int devsmgr_deploy(const void *img, unsigned imgsize);

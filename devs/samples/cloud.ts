@@ -4,7 +4,7 @@ import { cloud } from "@devicescript/core"
 let q = 0
         
 // if (false)
-    ds.every(5, () => {
+    ds.everyMs(5000, () => {
         console.log("upl", q)
         cloud.upload("hello", q, 2 * q, q + 10000)
         q = q + 1
@@ -17,7 +17,7 @@ cloud.onMethod("foo", (a, b) => {
 
 cloud.onMethod("bar", (a) => {
     console.log("bar a=", a)
-    ds.wait(5)
+    ds.sleepMs(5000)
     return [108]
 })
 

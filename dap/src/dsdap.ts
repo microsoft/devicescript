@@ -1,13 +1,10 @@
 import {
+    DebugSession,
     InitializedEvent,
-    Logger,
-    logger,
-    LoggingDebugSession,
     OutputEvent,
     StoppedEvent,
     TerminatedEvent,
 } from "@vscode/debugadapter"
-import { LogLevel } from "@vscode/debugadapter/lib/logger"
 import { DebugProtocol } from "@vscode/debugprotocol"
 import {
     DevsDbgClient,
@@ -26,11 +23,23 @@ import {
 } from "@devicescript/compiler"
 import {
     DevsDbgFunIdx,
+    DevsDbgReg,
+    DevsDbgStepFlags,
     DevsDbgSuspensionType,
     DevsDbgValueSpecial,
     DevsDbgValueTag,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
-import { fromUTF8, toHex, uint8ArrayToString } from "jacdac-ts"
+import {
+    assert,
+    delay,
+    DISCONNECT,
+    fromUTF8,
+    JDBus,
+    JDService,
+    SRV_DEVS_DBG,
+    toHex,
+    uint8ArrayToString,
+} from "jacdac-ts"
 
 export { DevsDbgClient } from "./devsdbgclient"
 
@@ -41,10 +50,9 @@ function exnToString(err: unknown) {
     return err + ""
 }
 
-export interface StartArgs
-    extends DebugProtocol.AttachRequestArguments,
-        DebugProtocol.LaunchRequestArguments {
-    // ...
+export interface StartArgs {
+    deviceId?: string
+    serviceInstance?: number
 }
 
 const maxStrLen = 1024
@@ -62,22 +70,13 @@ for (const k0 of Object.keys(varTypeStrToNum)) {
     varTypeNumToStr[varTypeStrToNum[k]] = k
 }
 
-export function enableConsoleLog() {
-    const origLog = Logger.logger.log.bind(Logger.logger)
-    Logger.logger.log = (msg, level) => {
-        origLog(msg, level)
-        if (level > Logger.LogLevel.Verbose) console.log(msg.trim())
-    }
-}
-
-export class DsDapSession extends LoggingDebugSession {
-    private clearSusp: () => void
+export class DsDapSession extends DebugSession {
     private brkBySrc: number[][] = []
-
+    public client: DevsDbgClient
     img: Image
 
     constructor(
-        public client: DevsDbgClient,
+        public bus: JDBus,
         dbg: string | Uint8Array | DebugInfo,
         private resolvePath = (s: SrcFile) => s.path
     ) {
@@ -88,36 +87,75 @@ export class DsDapSession extends LoggingDebugSession {
         this.setDebuggerLinesStartAt1(true)
         this.setDebuggerColumnsStartAt1(true)
 
-        process
-            .on("unhandledRejection", (reason, promise) => {
-                logger.error("Unhandled Rejection: " + exnToString(reason))
-                process.exit(1)
-            })
-            .on("uncaughtException", err => {
-                logger.error("Uncaught Exception: " + exnToString(err))
-                process.exit(1)
-            })
+        this.on("error", (event: DebugProtocol.Event) => {
+            this.sendLog("proto-error", event.body)
+        })
     }
 
     dispose() {
         super.dispose()
-        const f = this.clearSusp
-        if (f) {
-            this.clearSusp = null
-            f()
+        this.client?.unmount()
+        this.client = null
+    }
+
+    private async createClient(cfg: StartArgs, timeout = 2000) {
+        const did = cfg?.deviceId
+        const t0 = Date.now()
+        while (Date.now() - t0 < timeout) {
+            let s: JDService
+            if (did) {
+                const dev = this.bus.device(did, true)
+                s = dev?.services({
+                    serviceClass: SRV_DEVS_DBG,
+                })[cfg.serviceInstance ?? 0]
+            } else {
+                s = this.bus.services({
+                    serviceClass: SRV_DEVS_DBG,
+                })[0]
+            }
+            if (s) return new DevsDbgClient(s, this.img)
+            await delay(100)
         }
+        throw new Error(`no debugger on the bus; timeout=${timeout}ms`)
+    }
+
+    private async startClient(cfg: StartArgs) {
+        assert(!this.client)
+        this.client = await this.createClient(cfg)
+        this.client.mount(
+            this.client.subscribe(
+                EV_SUSPENDED,
+                this.handleSuspendedEvent.bind(this)
+            )
+        )
     }
 
     protected override initializeRequest(
         response: DebugProtocol.InitializeResponse,
         args: DebugProtocol.InitializeRequestArguments
     ): void {
+        response.body.exceptionBreakpointFilters = [
+            {
+                filter: "unhandled",
+                label: "Uncaught Exceptions",
+                description:
+                    "Break on errors not handled with try{...}catch{...}",
+                default: true,
+            },
+            {
+                filter: "handled",
+                label: "Caught Exceptions",
+                description:
+                    "Break on all errors, regardless if handled with try{...}catch{...}",
+                default: false,
+            },
+        ]
+
         // these we might potentially support
         response.body.supportsStepInTargetsRequest = false
         response.body.supportsCompletionsRequest = false
         response.body.supportsRestartRequest = false
         response.body.supportsExceptionOptions = false
-        response.body.supportsExceptionInfoRequest = false
         response.body.supportTerminateDebuggee = false
         response.body.supportsDelayedStackTraceLoading = false
         response.body.supportsLogPoints = false
@@ -125,10 +163,11 @@ export class DsDapSession extends LoggingDebugSession {
         response.body.supportsTerminateRequest = false
         response.body.supportsDisassembleRequest = false
         response.body.supportsBreakpointLocationsRequest = false
-        response.body.supportsSteppingGranularity = false
         response.body.supportsInstructionBreakpoints = false
 
+        response.body.supportsSteppingGranularity = true
         response.body.supportsLoadedSourcesRequest = true
+        response.body.supportsExceptionInfoRequest = true
         this.sendResponse(response)
     }
 
@@ -136,14 +175,64 @@ export class DsDapSession extends LoggingDebugSession {
         response: DebugProtocol.LaunchResponse,
         args: DebugProtocol.LaunchRequestArguments
     ): void {
-        this.asyncReq(response, () => this.startDebugger(response, args, true))
+        this.asyncReq(response, () =>
+            this.startDebugger(response, args as any, true)
+        )
     }
 
     protected override attachRequest(
         response: DebugProtocol.AttachResponse,
         args: DebugProtocol.AttachRequestArguments
     ): void {
-        this.asyncReq(response, () => this.startDebugger(response, args, false))
+        this.asyncReq(response, () =>
+            this.startDebugger(response, args as any, false)
+        )
+    }
+
+    private mapSuspensionReason(type: DevsDbgSuspensionType) {
+        switch (type) {
+            case DevsDbgSuspensionType.Panic:
+                return "terminated"
+            case DevsDbgSuspensionType.UnhandledException:
+            case DevsDbgSuspensionType.HandledException:
+                return "exception"
+            case DevsDbgSuspensionType.Halt:
+                return "pause"
+            case DevsDbgSuspensionType.Restart:
+                return "entry"
+            case DevsDbgSuspensionType.Step:
+                return "step"
+            case DevsDbgSuspensionType.DebuggerStmt:
+            case DevsDbgSuspensionType.Breakpoint:
+                return "breakpoint"
+            default:
+                return (
+                    DevsDbgSuspensionType[type]?.toLowerCase() || "stop_" + type
+                )
+        }
+    }
+
+    private handleSuspendedEvent() {
+        const type = this.client.suspensionReason
+        switch (type) {
+            case DevsDbgSuspensionType.Panic:
+                this.sendEvent(new TerminatedEvent())
+                break
+
+            default:
+                this.sendEvent<DebugProtocol.StoppedEvent>({
+                    type: "event",
+                    seq: 0,
+                    event: "stopped",
+                    body: {
+                        reason: this.mapSuspensionReason(type),
+                        preserveFocusHint: false,
+                        threadId: this.client.suspendedFiber,
+                        allThreadsStopped: true,
+                    },
+                })
+                break
+        }
     }
 
     private async startDebugger(
@@ -151,35 +240,12 @@ export class DsDapSession extends LoggingDebugSession {
         args: StartArgs,
         isLaunch: boolean
     ) {
-        logger.init(e => this.sendEvent(e))
-        logger.setup(LogLevel.Verbose)
+        await this.startClient(args)
 
-        if (!this.clearSusp)
-            this.clearSusp = this.client.subscribe(EV_SUSPENDED, () => {
-                const type = this.client.suspensionReason
-                switch (type) {
-                    case DevsDbgSuspensionType.Panic:
-                        this.sendEvent(new TerminatedEvent())
-                        break
+        this.client.service.device.on(DISCONNECT, () => {
+            this.stop()
+        })
 
-                    case DevsDbgSuspensionType.Breakpoint:
-                    case DevsDbgSuspensionType.UnhandledException:
-                    case DevsDbgSuspensionType.HandledException:
-                    case DevsDbgSuspensionType.DebuggerStmt:
-                    case DevsDbgSuspensionType.Halt:
-                    case DevsDbgSuspensionType.Restart:
-                    default:
-                        this.sendEvent(
-                            new StoppedEvent(
-                                DevsDbgSuspensionType[type] || "stop_" + type,
-                                this.client.suspendedFiber
-                            )
-                        )
-                        break
-                }
-            })
-
-        this.sendEvent(new OutputEvent("Welcome to DsDap!", "console"))
         if (isLaunch) await this.client.restartAndHalt()
         else await this.client.halt()
         await this.client.waitSuspended()
@@ -245,6 +311,11 @@ export class DsDapSession extends LoggingDebugSession {
         })
     }
 
+    private getFunctionByIdx(idx: DevsDbgFunIdx) {
+        if (idx == DevsDbgFunIdx.Main) idx = 0
+        return this.img.functions[idx]
+    }
+
     protected override scopesRequest(
         response: DebugProtocol.ScopesResponse,
         args: DebugProtocol.ScopesArguments
@@ -255,11 +326,11 @@ export class DsDapSession extends LoggingDebugSession {
             }
             const fr = this.client.getValueByIndex(args.frameId)
             if (!fr?.stackFrame) {
-                logger.warn(`no stackframe on ${args.frameId}?`)
+                this.warn(`no stackframe on ${args.frameId}?`)
                 return
             }
 
-            const fn = this.img.functions[fr.stackFrame.fnIdx]
+            const fn = this.getFunctionByIdx(fr.stackFrame.fnIdx)
 
             const mkScope = (
                 tp: DebugVarType,
@@ -306,7 +377,7 @@ export class DsDapSession extends LoggingDebugSession {
             if (v.tag == DevsDbgValueTag.User1) {
                 if (wantNamed) {
                     const tp = varTypeNumToStr[v.v0]
-                    const fn = this.img.functions[v.arg.stackFrame.fnIdx]
+                    const fn = this.getFunctionByIdx(v.arg.stackFrame.fnIdx)
                     const vals = await v.arg.readIndexed()
                     for (let idx = 0; idx < fn.dbg.slots.length; ++idx) {
                         const s = fn.dbg.slots[idx]
@@ -447,6 +518,111 @@ export class DsDapSession extends LoggingDebugSession {
         })
     }
 
+    protected override nextRequest(
+        response: DebugProtocol.NextResponse,
+        args: DebugProtocol.NextArguments
+    ): void {
+        this.stepRequest(response, args, 0)
+    }
+
+    protected override stepOutRequest(
+        response: DebugProtocol.StepOutResponse,
+        args: DebugProtocol.StepOutArguments
+    ): void {
+        this.stepRequest(response, args, DevsDbgStepFlags.StepOut)
+    }
+
+    protected override stepInRequest(
+        response: DebugProtocol.StepInResponse,
+        args: DebugProtocol.StepInArguments
+    ): void {
+        this.stepRequest(response, args, DevsDbgStepFlags.StepIn)
+    }
+
+    private stepRequest(
+        response: DebugProtocol.Response,
+        args: DebugProtocol.StepInArguments,
+        flags: DevsDbgStepFlags
+    ) {
+        this.asyncReq(response, async () => {
+            const stack = await this.client.readStacktrace(args.threadId)
+            const frame = stack[0]?.stackFrame
+            if (!frame) throw new Error("bad stack frame")
+            let brks: number[] = []
+
+            if (!(flags & DevsDbgStepFlags.StepOut)) {
+                const fn = this.getFunctionByIdx(frame.fnIdx)
+                const currStmt = fn.stmtByGlobalPc(frame.pc)
+                const srcmap = this.img.srcmap
+                const p0 = srcmap.resolvePos(currStmt.srcPos)
+
+                // console.log("P0", srcmap.posToString(currStmt.srcPos))
+
+                const exits = fn.findZoneExits(currStmt, other => {
+                    // console.log(currStmt.pc, other.pc, args.granularity, currStmt.srcPos, other.srcPos)
+                    // console.log(srcmap.posToString(other.srcPos))
+                    switch (args.granularity) {
+                        case "line":
+                            const p1 = srcmap.resolvePos(other.srcPos)
+                            return p0.src === p1.src && p0.line === p1.line
+                        case "instruction":
+                            return currStmt === other
+                        case "statement":
+                        default:
+                            return (
+                                currStmt.srcPos == other.srcPos &&
+                                currStmt.srcLen == other.srcLen
+                            )
+                    }
+                })
+                brks = exits.map(e => e.pc + fn.imgOffset)
+            }
+
+            await this.client.step(
+                stack[0],
+                flags | DevsDbgStepFlags.StepOut,
+                brks
+            )
+        })
+    }
+
+    protected override setExceptionBreakPointsRequest(
+        response: DebugProtocol.SetExceptionBreakpointsResponse,
+        args: DebugProtocol.SetExceptionBreakpointsArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            await this.client.setBoolReg(
+                DevsDbgReg.BreakAtHandledExn,
+                args.filters.includes("handled")
+            )
+            await this.client.setBoolReg(
+                DevsDbgReg.BreakAtUnhandledExn,
+                args.filters.includes("handled") ||
+                    args.filters.includes("unhandled")
+            )
+        })
+    }
+
+    protected override exceptionInfoRequest(
+        response: DebugProtocol.ExceptionInfoResponse,
+        args: DebugProtocol.ExceptionInfoArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            const exn = this.client.exnValue()
+            const msg = await exn.readField("message")
+            const msgStr = await msg?.readString()
+            response.body = {
+                breakMode:
+                    this.client.suspensionReason ==
+                    DevsDbgSuspensionType.HandledException
+                        ? "always"
+                        : "unhandled",
+                exceptionId: "Error", // TODO
+                description: msgStr ?? exn.genericText,
+            }
+        })
+    }
+
     private async asyncReq(
         response: DebugProtocol.Response,
         fn: () => Promise<void>
@@ -456,7 +632,7 @@ export class DsDapSession extends LoggingDebugSession {
         } catch (err) {
             response.success = false
             response.message = exnToString(err)
-            console.error(response.message)
+            this.warn(response.message)
         }
         this.sendResponse(response)
     }
@@ -502,6 +678,8 @@ export class DsDapSession extends LoggingDebugSession {
             variablesReference: v.index,
         }
 
+        if (v.isPrimitive) res.variablesReference = 0
+
         return res
     }
 
@@ -530,18 +708,21 @@ export class DsDapSession extends LoggingDebugSession {
     }
 
     private async valueToStringCore(v: DevsValue): Promise<string> {
+        if (v.isString)
+            return (
+                JSON.stringify(await v.readString()) +
+                (v.isPartial ? "..." : "")
+            )
+
+        if (v.isBuffer)
+            return (
+                "hex`" +
+                toHex(await v.readBuffer()) +
+                (v.isPartial ? " ..." : "") +
+                "`"
+            )
+
         switch (v.tag) {
-            case DevsDbgValueTag.ImgBuffer:
-                const buf = this.img.bufferTable[v.v0]
-                if (buf) return `hex\`${buf}\``
-                break
-            case DevsDbgValueTag.ImgStringUTF8:
-            case DevsDbgValueTag.ImgStringBuiltin:
-            case DevsDbgValueTag.ImgStringAscii:
-                return this.img.describeString(
-                    v.tag - DevsDbgValueTag.ImgBuffer,
-                    v.v0
-                )
             case DevsDbgValueTag.Number:
                 return v.v0 + ""
 
@@ -581,23 +762,6 @@ export class DsDapSession extends LoggingDebugSession {
             case DevsDbgValueTag.BuiltinObject:
                 return BUILTIN_OBJECT__VAL[v.v0]?.replace(/_/g, ".")
 
-            case DevsDbgValueTag.ObjBuffer:
-            case DevsDbgValueTag.ObjString:
-                if (!v.cachedBytes)
-                    v.cachedBytes = await this.client.readBytes(
-                        v,
-                        0,
-                        maxBytesFetch
-                    )
-                let r =
-                    v.tag == DevsDbgValueTag.ObjBuffer
-                        ? toHex(v.cachedBytes)
-                        : JSON.stringify(
-                              fromUTF8(uint8ArrayToString(v.cachedBytes))
-                          )
-                if (v.cachedBytes.length == maxBytesFetch) r += "..."
-                return r
-
             case DevsDbgValueTag.ImgRoleMember: {
                 const mask = (1 << BinFmt.ROLE_BITS) - 1
                 const r = this.img.roles[v.v0 & mask]
@@ -636,5 +800,74 @@ export class DsDapSession extends LoggingDebugSession {
             s => s.path == src.path || this.resolvePath(s) == src.path
         )
         return srcIdx
+    }
+
+    //
+    // Logging
+    //
+
+    public sendLog(msg: string, data?: any, cat = "console") {
+        if (data !== undefined) msg += " " + JSON.stringify(data)
+        msg += "\n"
+        this.sendEvent(new DsLogOutputEvent(msg, data))
+    }
+
+    public warn(msg: string, data?: any) {
+        this.sendLog(msg, data, "warn")
+    }
+
+    public sendEvent<T extends DebugProtocol.Event>(event: T): void {
+        if (!(event instanceof DsLogOutputEvent)) {
+            // Don't create an infinite loop...
+
+            let objectToLog = event
+            if (
+                event instanceof OutputEvent &&
+                event.body &&
+                event.body.data &&
+                event.body.data.doNotLogOutput
+            ) {
+                delete event.body.data.doNotLogOutput
+                objectToLog = { ...event }
+                objectToLog.body = {
+                    ...event.body,
+                    output: "<output not logged>",
+                }
+            }
+
+            this.sendLog(`SRV: EV ${event.event}`, objectToLog.body)
+        }
+
+        super.sendEvent(event)
+    }
+
+    // this is not really used
+    public sendRequest(
+        command: string,
+        args: any,
+        timeout: number,
+        cb: (response: DebugProtocol.Response) => void
+    ): void {
+        this.sendLog(`SRV: ${command}`, args)
+        super.sendRequest(command, args, timeout, cb)
+    }
+
+    public sendResponse(response: DebugProtocol.Response): void {
+        this.sendLog(
+            `SRV: ${response.success ? "" : "ERR "}${response.command}`,
+            response.body
+        )
+        super.sendResponse(response)
+    }
+
+    protected dispatchRequest(request: DebugProtocol.Request): void {
+        this.sendLog(`VSCode: ${request.command}`, request.arguments)
+        super.dispatchRequest(request)
+    }
+}
+
+class DsLogOutputEvent extends OutputEvent {
+    constructor(msg: string, data: any, cat = "console") {
+        super(msg, cat, data)
     }
 }
