@@ -20,7 +20,9 @@ export class CloudExtensionState extends JDEventSource {
         super()
         this.handleChange = this.handleChange.bind(this)
         this.handleError = this.handleError.bind(this)
+
         const { subscriptions } = this.context
+        const {registerCommand} = this.deviceScriptState.telemetry
 
         // track config changes
         vscode.workspace.onDidChangeConfiguration(
@@ -43,17 +45,13 @@ export class CloudExtensionState extends JDEventSource {
             subscriptions
         )
 
-        vscode.commands.registerCommand(
-            "extension.devicescript.cloud.refresh",
-            async () => {
-                const apiRoot = this.apiRoot
-                const token = await this.token
-                if (!apiRoot || !token) await this.configure()
-                else await this.connect(true)
-            },
-            subscriptions
-        )
-        vscode.commands.registerCommand(
+        registerCommand("extension.devicescript.cloud.refresh", async () => {
+            const apiRoot = this.apiRoot
+            const token = await this.token
+            if (!apiRoot || !token) await this.configure()
+            else await this.connect(true)
+        })
+        registerCommand(
             "extension.devicescript.cloud.registerDevice",
             async () => {
                 const manager = this.manager
@@ -106,8 +104,7 @@ export class CloudExtensionState extends JDEventSource {
                 await this.withProgress("Registering Device", async () => {
                     await manager.registerDevice(device, name)
                 })
-            },
-            subscriptions
+            }
         )
 
         // first connection - async

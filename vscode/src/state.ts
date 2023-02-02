@@ -13,6 +13,7 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
+import { Telemetry } from "./telemetry"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { spawnDevTools } from "./devtoolsserver"
 import { sideRequest } from "./jacdac"
@@ -37,7 +38,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
     constructor(
         readonly context: vscode.ExtensionContext,
         readonly bus: JDBus,
-        readonly state: vscode.Memento
+        readonly telemetry: Telemetry
     ) {
         super()
         if (!this.simulatorScriptManagerId) {
@@ -46,6 +47,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
         this.bus.on(DEVICE_CHANGE, () => {
             this.emit(CHANGE)
         })
+    }
+
+    get state() {
+        return this.context.workspaceState
     }
 
     watches(): NodeWatch[] {

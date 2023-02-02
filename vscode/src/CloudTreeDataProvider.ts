@@ -67,11 +67,11 @@ class CloudCollection extends JDNode {
 
 export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
     constructor(readonly state: CloudExtensionState) {
-        const { deviceScriptState, context } = this.state
-        const { subscriptions } = context
-        const { bus } = deviceScriptState
+        const { deviceScriptState } = this.state
+        const { telemetry } = deviceScriptState
+        const { registerCommand } = telemetry
 
-        vscode.commands.registerCommand(
+        registerCommand(
             "extension.devicescript.cloud.device.updateScript",
             async (device: CloudDevice) => {
                 const manager = this.state.manager
@@ -118,10 +118,9 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                     await device.updateScript(script.scriptId, v.version)
                     this.refresh(device)
                 })
-            },
-            subscriptions
+            }
         )
-        vscode.commands.registerCommand(
+        registerCommand(
             "extension.devicescript.cloud.device.downloadScriptSource",
             async (script: CloudScript) => {
                 const name = script.name
@@ -132,10 +131,9 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                     `./${name}${name.endsWith(".ts") ? "" : ".ts"}`,
                     text
                 )
-            },
-            subscriptions
+            }
         )
-        vscode.commands.registerCommand(
+        registerCommand(
             "extension.devicescript.cloud.device.uploadScriptSource",
             async () => {
                 const manager = this.state.manager
@@ -195,8 +193,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                         "DeviceScript Cloud: Script updated"
                     )
                 })
-            },
-            subscriptions
+            }
         )
     }
 
