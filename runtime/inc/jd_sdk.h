@@ -27,3 +27,4 @@ void tx_process(void);
 int devs_client_deploy(const void *img, unsigned imgsize);
 
 uint64_t jd_device_id_from_string(const char *str);
+void flash_init(void);

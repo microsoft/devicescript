@@ -40,8 +40,10 @@ uint32_t devs_get_global_flags(void);
 
 // DeviceScript manager service
 typedef struct {
+#if !JD_SETTINGS_LARGE
     void *program_base;
     uint32_t max_program_size;
+#endif
 } devsmgr_cfg_t;
 
 void devsmgr_init(const devsmgr_cfg_t *cfg);

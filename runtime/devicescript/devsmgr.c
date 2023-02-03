@@ -42,6 +42,8 @@ struct srv_state {
 
     uint32_t next_restart;
 
+    void *program_base;
+
     const devsmgr_cfg_t *cfg;
     devs_ctx_t *ctx;
 
@@ -75,8 +77,8 @@ __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program
 };
 
 static const devsmgr_program_header_t *devs_header(srv_t *state) {
-    const devsmgr_program_header_t *hd = state->cfg->program_base;
-    if (hd->magic0 == DEVSMGR_PROG_MAGIC0 && hd->magic1 == DEVSMGR_PROG_MAGIC1)
+    const devsmgr_program_header_t *hd = state->program_base;
+    if (hd && hd->magic0 == DEVSMGR_PROG_MAGIC0 && hd->magic1 == DEVSMGR_PROG_MAGIC1)
         return hd;
     return NULL;
 }
@@ -187,13 +189,24 @@ int devsmgr_deploy_start(uint32_t sz) {
 
     LOG("deploy %d b", (int)sz);
 
-    if (sz >= state->cfg->max_program_size - sizeof(hd) || (sz & (DEVSMGR_ALIGN - 1)))
+    if (sz & (DEVSMGR_ALIGN - 1))
         return -1;
+
+#if !JD_SETTINGS_LARGE
+    if (sz >= state->cfg->max_program_size - sizeof(hd))
+        return -1;
+#endif
 
     stop_program(state);
 
     LOGV("flash erase");
-    flash_erase(state->cfg->program_base);
+#if JD_SETTINGS_LARGE
+    state->program_base = jd_settings_prep_large("*prog", sz);
+    if (state->program_base == NULL)
+        return -2;
+#else
+    flash_erase(state->program_base);
+#endif
     LOGV("flash erase done");
 
     if (sz == 0)
@@ -201,7 +214,11 @@ int devsmgr_deploy_start(uint32_t sz) {
 
     hd.magic0 = DEVSMGR_PROG_MAGIC0;
     hd.size = sz;
-    flash_program(state->cfg->program_base, &hd, 8);
+#if JD_SETTINGS_LARGE
+    jd_settings_write_large(state->program_base, &hd, 8);
+#else
+    flash_program(state->program_base, &hd, 8);
+#endif
 
     state->write_offset = sizeof(hd);
 
@@ -218,7 +235,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
 
     if (buf == NULL) {
         // pipe closed
-        devsmgr_program_header_t *hdf = state->cfg->program_base;
+        devsmgr_program_header_t *hdf = state->program_base;
         devsmgr_program_header_t hd = {
             .magic1 = DEVSMGR_PROG_MAGIC1,
             .hash = jd_hash_fnv1a(hdf->image, hdf->size),
@@ -228,8 +245,13 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
             DMESG("! missing %d bytes (of %d)", (int)(endp - state->write_offset), (int)hdf->size);
             return -1;
         } else {
+#if JD_SETTINGS_LARGE
+            jd_settings_write_large(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
+            jd_settings_sync_large();
+#else
             flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             flash_sync();
+#endif
             LOG("program written");
             stop_program(state);
             jd_send_event(state, JD_EV_CHANGE);
@@ -239,7 +261,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
         }
     }
 
-    uint8_t *dst = state->cfg->program_base;
+    uint8_t *dst = state->program_base;
     uint32_t endp = ((devsmgr_program_header_t *)dst)->size + sizeof(devsmgr_program_header_t);
     if (size & (DEVSMGR_ALIGN - 1) || state->write_offset + size > endp ||
         size >= JD_FLASH_PAGE_SIZE) {
@@ -248,17 +270,23 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
         return -1;
     }
 
+#if !JD_SETTINGS_LARGE
     if (state->write_offset / JD_FLASH_PAGE_SIZE !=
         (state->write_offset + size) / JD_FLASH_PAGE_SIZE) {
         unsigned page_off = (state->write_offset + size) & ~(JD_FLASH_PAGE_SIZE - 1);
         LOGV("erase %p %u", dst + page_off, page_off);
         flash_erase(dst + page_off);
     }
+#endif
 
     dst += state->write_offset;
 
     LOGV("wr %p (%u) sz=%d", dst, (unsigned)state->write_offset, size);
+#if JD_SETTINGS_LARGE
+    jd_settings_write_large(dst, buf, size);
+#else
     flash_program(dst, buf, size);
+#endif
     state->write_offset += size;
 
     return 0;
@@ -416,6 +444,9 @@ void devsmgr_set_logging(bool logging) {
 void devsmgr_init(const devsmgr_cfg_t *cfg) {
     SRV_ALLOC(devsmgr);
     state->cfg = cfg;
+#if !JD_SETTINGS_LARGE
+    state->program_base = cfg->program_base;
+#endif
     state->read_program_ptr = -1;
     state->autostart = 1;
     state->logging = 0;

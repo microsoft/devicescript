@@ -9,6 +9,7 @@
 #include "jd_sdk.h"
 #include "devicescript.h"
 #include "storage/jd_storage.h"
+#include "services/interfaces/jd_flash.h"
 
 #define LOG_TAG "main"
 #include "devs_logging.h"
@@ -40,11 +41,12 @@ bool starts_with(const char *str, const char *pref) {
     return memcmp(str, pref, strlen(pref)) == 0;
 }
 
-void init_devicescript_manager(void);
 void app_init_services() {
-    jd_role_manager_init();
-    init_devicescript_manager();
+    flash_init();
 
+    jd_role_manager_init();
+    devsmgr_init(NULL);
+    devsdbg_init();
     wsskhealth_init();
     devscloud_init(&wssk_cloud);
     tsagg_init(&wssk_cloud);
@@ -288,6 +290,7 @@ int main(int argc, const char **argv) {
     int enable_lstore = 0;
     int websock = 0;
     int enable_logging = 0;
+    int test_settings = 0;
 
     for (int i = 1; i < argc; ++i) {
         const char *arg = argv[i];
@@ -310,12 +313,20 @@ int main(int argc, const char **argv) {
             websock = 1;
         } else if (strcmp(arg, "-n") == 0) {
             settings_in_files = 0;
+        } else if (strcmp(arg, "-T") == 0) {
+            test_settings = 1;
         } else if (strncmp(arg, "-d:", 3) == 0) {
             cached_devid = jd_device_id_from_string(arg + 3);
         } else {
             fprintf(stderr, "unknown arg: %s\n", arg);
             return 1;
         }
+    }
+
+    if (test_settings) {
+        flash_init();
+        jd_settings_test();
+        return 0;
     }
 
     if (!transport && !devs_img && !websock) {

@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#define DMESG_PRINTF_ATTR __attribute__ ((format (printf, 1, 2)))
+#define DMESG_PRINTF_ATTR __attribute__((format(printf, 1, 2)))
 
 void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
 
@@ -19,7 +19,7 @@ void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
 #define JD_VERBOSE_ASSERT 1
 #define JD_PHYSICAL 0
 
-#define JD_FLASH_PAGE_SIZE 2048
+#define JD_FLASH_PAGE_SIZE 4096
 
 #ifdef __EMSCRIPTEN__
 #define JD_LSTORE 0
@@ -37,5 +37,10 @@ void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
 
 // #define JD_THR_PTHREAD 1
 #define JD_WIFI_SERVICE 0
+
+extern uintptr_t flash_base_addr(void);
+#define JD_FSTOR_BASE_ADDR flash_base_addr()
+#define JD_SETTINGS_LARGE 1
+
 
 #endif
