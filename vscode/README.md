@@ -1,13 +1,19 @@
-# Visual Studio Code Extension for DeviceScript
+# DeviceScript
 
 [DeviceScript](https://aka.ms/devicescript) is a TypeScript-like language and runtime for embedded devices.
 
 ![screenshot of the extension](./screenshot.png)
 
--   Compile DeviceScript to bytecode
--   live Jacdac device explorer
--   Running a simulator on the developer machine
--   Debugging, including stepping, variables, stack traces, of DeviceScript programs on a simulator or hardware device.
+## Features
+
+-   Build and watch using DeviceScript compiler
+    Deploy to simulator or hardware
+-   Debugger with breakpoints, stack traces, exceptions, stepping
+-   DeviceScript simulator
+-   Sensor and Jacdac simulator
+-   Connection to native DeviceScript device
+-   Device, services, register Explorer view
+-   Register and Event watch
 
 ## Contributing
 
