@@ -15,12 +15,18 @@
   ],
   "keywords": [
     "DeviceScript",
-    "IoT"
+    "IoT",
+    "TypeScript",
+    "Embdded"
   ],
   "engines": {
     "vscode": "^1.74.0"
   },
-  "icon": "images/ds-logo-color.png",
+  "icon": "images/jacdac-logo.png",
+  "galleryBanner": {
+    "color": "#C80000",
+    "theme": "dark"
+  },
   "categories": [
     "Debuggers"
   ],
