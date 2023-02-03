@@ -335,6 +335,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.selectNode",
             (item: JDomTreeItem) => {
+                if (!item) return
                 const { node } = item
                 const { nodeKind } = node
                 switch (nodeKind) {

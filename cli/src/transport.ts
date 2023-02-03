@@ -50,7 +50,10 @@ function createSerial() {
 }
 
 function createWebSocket(url: string, protocol: string) {
-    return createWebSocketTransport(url, { protocols: protocol, WebSocket })
+    return createWebSocketTransport(url, {
+        protocols: protocol,
+        WebSocket: WebSocket.Client,
+    })
 }
 
 export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {
