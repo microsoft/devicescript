@@ -416,7 +416,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
                 if (!specification) {
                     vscode.window.showWarningMessage(
-                        `DeviceScript: no specification found for register`
+                        `DeviceScript: no specification found for register.`
                     )
                     return
                 }
@@ -424,7 +424,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const { kind, fields, description } = specification
                 if (kind !== "rw") {
                     vscode.window.showWarningMessage(
-                        "DeviceScript: register cannot be modified"
+                        "DeviceScript: register cannot be modified."
                     )
                     return
                 }

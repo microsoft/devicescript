@@ -79,8 +79,9 @@ export function createChildrenTreeItems(
                 case REGISTER_NODE_NAME: {
                     const reg = child as JDRegister
                     const { specification } = reg
-                    const { client } = specification
+                    const { client, kind } = specification
                     if (client) return undefined
+                    if (!["rw", "const", "ro"].includes(kind)) return undefined
                     if (JDomRegisterTreeItem.probablyIgnore(reg))
                         return undefined
                     break
@@ -307,6 +308,7 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
         super(register, props)
         const { specification, code } = register
         const { kind } = specification || {}
+        this.contextValue = kind === "rw" ? "rw" : "register"
         this.iconPath = new vscode.ThemeIcon(
             code === SystemReg.Reading
                 ? "symbol-numeric"

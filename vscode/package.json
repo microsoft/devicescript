@@ -276,7 +276,18 @@
         },
         {
           "command": "extension.devicescript.register.edit",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == register"
+          "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.watch.add",
+          "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.watch.remove",
+          "when": "view == extension.devicescript.watch && viewItem == rw",
+          "group": "inline"
         },
         {
           "command": "extension.devicescript.watch.add",
@@ -408,7 +419,8 @@
       {
         "command": "extension.devicescript.register.edit",
         "title": "Edit...",
-        "category": "DeviceScript"
+        "category": "DeviceScript",
+        "icon": "$(edit)"
       },
       {
         "command": "extension.devicescript.watch.clear",
