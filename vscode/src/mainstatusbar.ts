@@ -33,8 +33,8 @@ ${
 ---
 
 ${transport.transports.map(
-    ({ type, connectionState }) => `
-${type} - ${connectionState}
+    ({ type, connectionState, description }) => `
+${type} - ${connectionState} ${description || ""}
 `
 )}
 

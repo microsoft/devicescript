@@ -88,6 +88,7 @@ export interface TransportStatus {
     transports: {
         type: string
         connectionState: ConnectionState
+        description?: string
     }[]
 }
 

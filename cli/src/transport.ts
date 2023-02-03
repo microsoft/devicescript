@@ -95,6 +95,7 @@ export function initTransportCmds(devtools: DevToolsIface, bus: JDBus) {
             transports: bus.transports.map(tr => ({
                 type: tr.type,
                 connectionState: tr.connectionState,
+                description: tr.description()
             })),
         }
     const send = () =>
