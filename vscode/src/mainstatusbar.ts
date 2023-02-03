@@ -46,6 +46,14 @@ ${version.slice(1)} - Tools version
         statusBarItem.text = [
             !runtimeVersion ? "$(loading~spin)" : "$(devicescript-logo)",
             "DeviceScript",
+            ...transport.transports.map(
+                tr =>
+                    `$(${
+                        tr.connectionState === "connected"
+                            ? "plug"
+                            : "debug-disconnect"
+                    }) ${tr.type}`
+            ),
             mgr ? `$(play) ${mgr?.shortId}` : "",
             devices.length > 0 ? `$(circuit-board) ${devices.length}` : "",
         ]
