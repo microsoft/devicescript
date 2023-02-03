@@ -246,6 +246,11 @@
           "group": "navigation"
         },
         {
+          "command": "extension.devicescript.cloud.configure",
+          "when": "view == extension.devicescript.cloud-explorer",
+          "group": "navigation"
+        },
+        {
           "command": "extension.devicescript.cloud.refresh",
           "when": "view == extension.devicescript.cloud-explorer",
           "group": "navigation"
@@ -300,7 +305,13 @@
         },
         {
           "command": "extension.devicescript.cloud.device.updateScript",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice"
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
+          "group": "inline"
+        },
+        {
+          "command": "extension.devicescript.cloud.device.connect",
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
+          "group": "inline"
         },
         {
           "command": "extension.devicescript.cloud.registerDevice",
@@ -309,7 +320,8 @@
         },
         {
           "command": "extension.devicescript.cloud.device.uploadScriptSource",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScripts"
+          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScripts",
+          "group": "inline"
         },
         {
           "command": "extension.devicescript.cloud.device.downloadScriptSource",
@@ -465,6 +477,12 @@
         "title": "Upgrade Script",
         "category": "DeviceScript Cloud",
         "icon": "$(file-code)"
+      },
+      {
+        "command": "extension.devicescript.cloud.device.connect",
+        "title": "Connect",
+        "category": "DeviceScript Cloud",
+        "icon": "$(plug)"
       },
       {
         "command": "extension.devicescript.cloud.device.downloadScriptSource",

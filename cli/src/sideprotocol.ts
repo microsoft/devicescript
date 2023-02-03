@@ -111,8 +111,14 @@ export interface BuildReqArgs {
     deployTo?: string // deviceId
 }
 export interface ConnectReqArgs {
-    transport?: "serial" | "usb" | "spi" | string
+    transport?: "serial" | "usb" | "spi" | "websocket" | string
     background?: boolean
+    resourceGroupId?: string
+}
+export interface WebSocketConnectReqArgs extends ConnectReqArgs {
+    transport: "websocket"
+    url: string
+    protocol: string
 }
 
 export interface VmReqArgs {

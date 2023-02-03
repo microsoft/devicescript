@@ -296,9 +296,7 @@ function startDbgServer(port: number, options: DevToolsOptions) {
 }
 
 async function connectCmd(req: ConnectReqArgs) {
-    const { background = false, transport } = req
-
-    await connectTransport(devtoolsSelf.bus, transport, background)
+    await connectTransport(devtoolsSelf.bus, req)
 }
 
 async function buildCmd(args: BuildReqArgs) {

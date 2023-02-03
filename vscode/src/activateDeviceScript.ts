@@ -29,6 +29,7 @@ import { initBuild } from "./build"
 import { CloudExtensionState } from "./CloudExtensionState"
 import { registerCloudStatusBar } from "./CloudStatusBar"
 import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
+import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import {
     DeviceScriptAdapterServerDescriptorFactory,
     DeviceScriptConfigurationProvider,
@@ -180,18 +181,28 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             "extension.devicescript.connect",
             async () => {
                 await spawnDevTools(context)
-                await bus.connect()
 
-                const items = [
-                    {
-                        transport: "serial",
-                        label: "Serial",
-                    },
-                    {
-                        transport: "usb",
-                        label: "USB",
-                    },
-                ]
+                const { transports } = extensionState.transport
+
+                const items: (vscode.QuickPickItem & { transport: string })[] =
+                    [
+                        {
+                            transport: "serial",
+                            label: "Serial",
+                            description: transports.find(
+                                t => t.type === "serial"
+                            )
+                                ? `(connected)`
+                                : "",
+                        },
+                        {
+                            transport: "usb",
+                            label: "USB",
+                            description: transports.find(t => t.type === "usb")
+                                ? `(connected)`
+                                : "",
+                        },
+                    ]
                 const res = await vscode.window.showQuickPick(items, {
                     title: "Choose the communication channel",
                 })
@@ -199,7 +210,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
                 await sideRequest<SideConnectReq>({
                     req: "connect",
-                    data: { transport: res.transport, background: false },
+                    data: {
+                        transport: res.transport,
+                        background: false,
+                        resourceGroupId: CONNECTION_RESOURCE_GROUP,
+                    },
                 })
             }
         ),
@@ -316,7 +331,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         if (devToolsConfig.get("showOnStart")) showDevToolsTerminal()
     }
 
-    context.subscriptions.push(
+    subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.selectNode",
             (item: JDomTreeItem) => {
@@ -355,7 +370,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     registerCloudTreeDataProvider(cloudState)
     registerCloudStatusBar(cloudState)
 
-    context.subscriptions.push(
+    subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.showFirmwareInformation",
             (device: JDDevice) => {

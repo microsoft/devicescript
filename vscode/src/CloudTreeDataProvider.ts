@@ -1,4 +1,5 @@
 import {
+    CHANGE,
     CloudDevice,
     CloudManager,
     CloudScript,
@@ -16,6 +17,16 @@ import { toMarkdownString } from "./catalog"
 import { build } from "./build"
 import { Utils } from "vscode-uri"
 import { CloudExtensionState } from "./CloudExtensionState"
+import { sideRequest } from "./jacdac"
+import type {
+    SideConnectReq,
+    WebSocketConnectReqArgs,
+} from "../../cli/src/sideprotocol"
+import {
+    CLOUD_DEVICES_NODE,
+    CLOUD_SCRIPTS_NODE,
+    CONNECTION_RESOURCE_GROUP,
+} from "./constants"
 
 async function createFile(
     fileName: string,
@@ -30,9 +41,6 @@ async function createFile(
     const document = await vscode.workspace.openTextDocument(file)
     await vscode.window.showTextDocument(document)
 }
-
-const CLOUD_SCRIPTS_NODE = "cloudScripts"
-const CLOUD_DEVICES_NODE = "cloudDevices"
 
 class CloudCollection extends JDNode {
     constructor(
@@ -67,136 +75,178 @@ class CloudCollection extends JDNode {
 
 export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
     constructor(readonly state: CloudExtensionState) {
-        const { deviceScriptState, context } = this.state
+        const { context } = this.state
         const { subscriptions } = context
-        const { bus } = deviceScriptState
 
-        vscode.commands.registerCommand(
-            "extension.devicescript.cloud.device.updateScript",
-            async (device: CloudDevice) => {
-                const manager = this.state.manager
-                if (!manager) return
-                const current = manager?.script(device.scriptId)
-                const scripts = manager.scripts()
+        state.on(CHANGE, () => this.refresh(undefined))
 
-                const res = await vscode.window.showQuickPick(
-                    scripts.map(
-                        script =>
-                            <vscode.QuickPickItem & { script: CloudScript }>{
-                                script,
-                                label: script.displayName,
-                                description: `v${script.version}`,
-                                detail: script.creationTime.toLocaleString(),
-                                picked: script === current,
-                            }
-                    ),
-                    {
-                        title: "Select a script",
+        subscriptions.push(
+            vscode.commands.registerCommand(
+                "extension.devicescript.cloud.device.connect",
+                async (device: CloudDevice) => {
+                    const manager = this.state.manager
+                    if (!manager || !device) return
+
+                    const { url, protocol } =
+                        (await device.createConnection()) || {}
+                    if (!url) {
+                        vscode.window.showErrorMessage(
+                            "DeviceScript Cloud: Unable to open connection."
+                        )
+                        return
                     }
-                )
-                if (res === undefined) return
 
-                const script = res.script
-                await script.refreshVersions()
-                const versions = script.versions()
-                const v = await vscode.window.showQuickPick(
-                    versions.map(
-                        v =>
-                            <vscode.QuickPickItem & { version: number }>{
-                                version: v.version,
-                                label: `v${v.version}`,
-                                description: v.creationTime.toLocaleString(),
-                            }
-                    ),
-                    {
-                        title: "Select a version",
-                    }
-                )
-                if (v === undefined) return
-
-                await this.state.withProgress("Updating Script", async () => {
-                    await device.updateScript(script.scriptId, v.version)
-                    this.refresh(device)
-                })
-            },
-            subscriptions
-        )
-        vscode.commands.registerCommand(
-            "extension.devicescript.cloud.device.downloadScriptSource",
-            async (script: CloudScript) => {
-                const name = script.name
-                const body = await script.refreshBody()
-                if (!body) return
-                const text = body.text
-                await createFile(
-                    `./${name}${name.endsWith(".ts") ? "" : ".ts"}`,
-                    text
-                )
-            },
-            subscriptions
-        )
-        vscode.commands.registerCommand(
-            "extension.devicescript.cloud.device.uploadScriptSource",
-            async () => {
-                const manager = this.state.manager
-                if (!manager) return
-
-                const editor = vscode.window.activeTextEditor
-                if (!editor || editor.document.languageId !== "typescript") {
-                    vscode.window.showErrorMessage(
-                        "DeviceScript Cloud: no DeviceScript file open."
-                    )
-                    return
-                }
-
-                const file = vscode.window.activeTextEditor.document.uri
-                const base = Utils.basename(file).replace(/\.ts$/i, "")
-                const text = new TextDecoder().decode(
-                    await vscode.workspace.fs.readFile(file)
-                )
-                // try to build
-                const status = await build(file.fsPath)
-                if (!status?.success) {
-                    vscode.window.showErrorMessage(
-                        "DeviceScript Cloud: file have build errors."
-                    )
-                    return
-                }
-
-                const compiled = toHex(status.binary)
-
-                // find script to override
-                await manager.refreshScripts()
-                const sres = await vscode.window.showQuickPick(
-                    <(vscode.QuickPickItem & { script?: CloudScript })[]>[
-                        ...manager.scripts().map(script => ({
-                            script,
-                            label: script.name,
-                            description: `v${script.version}`,
-                            picked: script.name === base,
-                        })),
-                        {
-                            label: "Create new cloud script",
+                    await sideRequest<SideConnectReq>({
+                        req: "connect",
+                        data: <WebSocketConnectReqArgs>{
+                            transport: "websocket",
+                            background: false,
+                            resourceGroupId: CONNECTION_RESOURCE_GROUP,
+                            url,
+                            protocol,
                         },
-                    ],
-                    {
-                        title: `Select cloud script to override with '${base}'`,
-                    }
-                )
-                if (sres === undefined) return
-                const script = sres.script || (await manager.createScript(base))
+                    })
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.cloud.device.updateScript",
+                async (device: CloudDevice) => {
+                    const manager = this.state.manager
+                    if (!manager || !device) return
+                    const current = manager?.script(device.scriptId)
+                    const scripts = manager.scripts()
 
-                // upload
-                this.state.withProgress("Uploading script", async () => {
-                    await script.uploadBody({ compiled, text })
-                    this.refresh(script)
-
-                    vscode.window.showInformationMessage(
-                        "DeviceScript Cloud: Script updated"
+                    const res = await vscode.window.showQuickPick(
+                        scripts.map(
+                            script =>
+                                <
+                                    vscode.QuickPickItem & {
+                                        script: CloudScript
+                                    }
+                                >{
+                                    script,
+                                    label: script.displayName,
+                                    description: `v${script.version}`,
+                                    detail: script.creationTime.toLocaleString(),
+                                    picked: script === current,
+                                }
+                        ),
+                        {
+                            title: "Select a script",
+                        }
                     )
-                })
-            },
-            subscriptions
+                    if (res === undefined) return
+
+                    const script = res.script
+                    await script.refreshVersions()
+                    const versions = script.versions()
+                    const v = await vscode.window.showQuickPick(
+                        versions.map(
+                            v =>
+                                <vscode.QuickPickItem & { version: number }>{
+                                    version: v.version,
+                                    label: `v${v.version}`,
+                                    description:
+                                        v.creationTime.toLocaleString(),
+                                }
+                        ),
+                        {
+                            title: "Select a version",
+                        }
+                    )
+                    if (v === undefined) return
+
+                    await this.state.withProgress(
+                        "Updating Script",
+                        async () => {
+                            await device.updateScript(
+                                script.scriptId,
+                                v.version
+                            )
+                            this.refresh(device)
+                        }
+                    )
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.cloud.device.downloadScriptSource",
+                async (script: CloudScript) => {
+                    const name = script.name
+                    const body = await script.refreshBody()
+                    if (!body) return
+                    const text = body.text
+                    await createFile(
+                        `./${name}${name.endsWith(".ts") ? "" : ".ts"}`,
+                        text
+                    )
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.cloud.device.uploadScriptSource",
+                async () => {
+                    const manager = this.state.manager
+                    if (!manager) return
+
+                    const editor = vscode.window.activeTextEditor
+                    if (
+                        !editor ||
+                        editor.document.languageId !== "typescript"
+                    ) {
+                        vscode.window.showErrorMessage(
+                            "DeviceScript Cloud: no DeviceScript file open."
+                        )
+                        return
+                    }
+
+                    const file = vscode.window.activeTextEditor.document.uri
+                    const base = Utils.basename(file).replace(/\.ts$/i, "")
+                    const text = new TextDecoder().decode(
+                        await vscode.workspace.fs.readFile(file)
+                    )
+                    // try to build
+                    const status = await build(file.fsPath)
+                    if (!status?.success) {
+                        vscode.window.showErrorMessage(
+                            "DeviceScript Cloud: file have build errors."
+                        )
+                        return
+                    }
+
+                    const compiled = toHex(status.binary)
+
+                    // find script to override
+                    await manager.refreshScripts()
+                    const sres = await vscode.window.showQuickPick(
+                        <(vscode.QuickPickItem & { script?: CloudScript })[]>[
+                            ...manager.scripts().map(script => ({
+                                script,
+                                label: script.name,
+                                description: `v${script.version}`,
+                                picked: script.name === base,
+                            })),
+                            {
+                                label: "Create new cloud script",
+                            },
+                        ],
+                        {
+                            title: `Select cloud script to override with '${base}'`,
+                        }
+                    )
+                    if (sres === undefined) return
+                    const script =
+                        sres.script || (await manager.createScript(base))
+
+                    // upload
+                    this.state.withProgress("Uploading script", async () => {
+                        await script.uploadBody({ compiled, text })
+                        this.refresh(script)
+
+                        vscode.window.showInformationMessage(
+                            "DeviceScript Cloud: Script updated"
+                        )
+                    })
+                }
+            )
         )
     }
 
@@ -309,6 +359,7 @@ ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
             await this.state.connect()
             const manager = this.state.manager
             if (!manager) return undefined
+
             const items = [
                 new CloudCollection(manager, CLOUD_SCRIPTS_NODE, "scripts", _ =>
                     _.scripts()

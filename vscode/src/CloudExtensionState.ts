@@ -43,71 +43,72 @@ export class CloudExtensionState extends JDEventSource {
             subscriptions
         )
 
-        vscode.commands.registerCommand(
-            "extension.devicescript.cloud.refresh",
-            async () => {
-                const apiRoot = this.apiRoot
-                const token = await this.token
-                if (!apiRoot || !token) await this.configure()
-                else await this.connect(true)
-            },
-            subscriptions
-        )
-        vscode.commands.registerCommand(
-            "extension.devicescript.cloud.registerDevice",
-            async () => {
-                const manager = this.manager
-                if (!manager) return
-
-                const simId = this.deviceScriptState.simulatorScriptManagerId
-                const devices = this.bus
-                    .devices({
-                        serviceClass: SRV_CLOUD_ADAPTER,
-                    })
-                    .filter(d => d.deviceId !== simId)
-                const cloudDevices = manager.devices()
-                const unregisteredDevices = devices.filter(
-                    dev => !cloudDevices.find(cd => cd.deviceId === dev.id)
-                )
-
-                if (!unregisteredDevices.length) {
-                    vscode.window.showInformationMessage(
-                        "DeviceScript Cloud: no cloud adapter device found to register."
-                    )
-                    return
+        subscriptions.push(
+            vscode.commands.registerCommand(
+                "extension.devicescript.cloud.refresh",
+                async () => {
+                    const apiRoot = this.apiRoot
+                    const token = await this.token
+                    if (!apiRoot || !token) await this.configure()
+                    else await this.connect(true)
                 }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.cloud.registerDevice",
+                async () => {
+                    const manager = this.manager
+                    if (!manager) return
 
-                const res = await vscode.window.showQuickPick(
-                    unregisteredDevices.map(
-                        device =>
-                            <vscode.QuickPickItem & { device: JDDevice }>{
-                                device,
-                                label: device.shortId,
-                                description: device.deviceId,
-                                detail: device.describe(),
-                            }
-                    ),
-                    {
-                        title: "Register a Device",
-                        placeHolder: "Select a device",
-                        matchOnDescription: true,
-                        matchOnDetail: true,
+                    const simId =
+                        this.deviceScriptState.simulatorScriptManagerId
+                    const devices = this.bus
+                        .devices({
+                            serviceClass: SRV_CLOUD_ADAPTER,
+                        })
+                        .filter(d => d.deviceId !== simId)
+                    const cloudDevices = manager.devices()
+                    const unregisteredDevices = devices.filter(
+                        dev => !cloudDevices.find(cd => cd.deviceId === dev.id)
+                    )
+
+                    if (!unregisteredDevices.length) {
+                        vscode.window.showInformationMessage(
+                            "DeviceScript Cloud: no cloud adapter device found to register."
+                        )
+                        return
                     }
-                )
-                if (res === undefined) return
-                const device = res.device
-                const name = await vscode.window.showInputBox({
-                    title: "Enter a name for your device",
-                    placeHolder: "my device",
-                })
 
-                if (!name) return
+                    const res = await vscode.window.showQuickPick(
+                        unregisteredDevices.map(
+                            device =>
+                                <vscode.QuickPickItem & { device: JDDevice }>{
+                                    device,
+                                    label: device.shortId,
+                                    description: device.deviceId,
+                                    detail: device.describe(),
+                                }
+                        ),
+                        {
+                            title: "Register a Device",
+                            placeHolder: "Select a device",
+                            matchOnDescription: true,
+                            matchOnDetail: true,
+                        }
+                    )
+                    if (res === undefined) return
+                    const device = res.device
+                    const name = await vscode.window.showInputBox({
+                        title: "Enter a name for your device",
+                        placeHolder: "my device",
+                    })
 
-                await this.withProgress("Registering Device", async () => {
-                    await manager.registerDevice(device, name)
-                })
-            },
-            subscriptions
+                    if (!name) return
+
+                    await this.withProgress("Registering Device", async () => {
+                        await manager.registerDevice(device, name)
+                    })
+                }
+            )
         )
 
         // first connection - async

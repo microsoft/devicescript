@@ -5,11 +5,18 @@ import {
     createNodeUSBOptions,
     createNodeWebSerialTransport,
     createUSBTransport,
+    createWebSocketTransport,
     JDBus,
     Transport,
 } from "jacdac-ts"
 import { DevToolsIface, sendEvent } from "./sidedata"
-import { SideTransportEvent, TransportStatus } from "./sideprotocol"
+import {
+    ConnectReqArgs,
+    SideTransportEvent,
+    TransportStatus,
+    WebSocketConnectReqArgs,
+} from "./sideprotocol"
+const WebSocket = require("faye-websocket")
 
 export interface TransportsOptions {
     usb?: boolean
@@ -42,42 +49,56 @@ function createSerial() {
     return createNodeWebSerialTransport(SerialPort)
 }
 
-export async function connectTransport(
-    bus: JDBus,
-    type: string,
-    background: boolean
-) {
-    let transports = bus.transports.filter(tr => !type || type === tr.type)
-    if (!transports.length && type) {
-        const excluded = ["serial", "spi", "usb"].filter(t => t !== type)
-        // stop other transports
-        for (const transport of bus.transports.filter(({ type }) =>
-            excluded.includes(type)
-        )) {
-            console.log(`stopping ${transport.type} transport`)
-            await transport.disconnect()
-            transport.dispose()
-            console.log(bus.transports.map(tr => tr.type).join(","))
-        }
-        // need to start transport
-        switch (type) {
-            case "spi": {
-                bus.addTransport(createSPI())
-                break
-            }
-            case "serial": {
-                bus.addTransport(createSerial())
-                break
-            }
-            case "usb": {
-                bus.addTransport(createUSB())
-                break
-            }
-        }
-        transports = bus.transports.filter(tr => !type || type === tr.type)
+function createWebSocket(url: string, protocol: string) {
+    return createWebSocketTransport(url, { protocols: protocol, WebSocket })
+}
+
+export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {
+    const { transport: type, background, resourceGroupId } = req
+    // no type, reconnect all
+    if (!type) {
+        await Promise.all(bus.transports.map(tr => tr.connect(background)))
+        return
     }
 
-    await Promise.all(transports.map(tr => tr.connect(background)))
+    // cancel all existing connectin in resource group
+    const old = bus.transports.filter(
+        tr => resourceGroupId === tr.resourceGroupId
+    )
+    for (const transport of old) {
+        console.log(`stopping ${transport.type} transport`)
+        await transport.disconnect()
+        transport.dispose()
+    }
+
+    // need to start transport
+    let newTransport: Transport
+    switch (type) {
+        case "websocket": {
+            const { url, protocol } = req as WebSocketConnectReqArgs
+            newTransport = createWebSocket(url, protocol)
+            break
+        }
+        case "spi": {
+            newTransport = createSPI()
+            break
+        }
+        case "serial": {
+            newTransport = createSerial()
+            break
+        }
+        case "usb": {
+            newTransport = createUSB()
+            break
+        }
+    }
+
+    if (newTransport) {
+        newTransport.resourceGroupId = resourceGroupId
+        bus.addTransport(newTransport)
+    }
+
+    await Promise.all(bus.transports.map(tr => tr.connect(background)))
 }
 
 export function createTransports(options: TransportsOptions) {
@@ -95,7 +116,7 @@ export function initTransportCmds(devtools: DevToolsIface, bus: JDBus) {
             transports: bus.transports.map(tr => ({
                 type: tr.type,
                 connectionState: tr.connectionState,
-                description: tr.description()
+                description: tr.description(),
             })),
         }
     const send = () =>
