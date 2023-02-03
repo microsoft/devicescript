@@ -181,9 +181,25 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async () => {
                 await spawnDevTools(context)
                 await bus.connect()
+
+                const items = [
+                    {
+                        transport: "serial",
+                        label: "Serial",
+                    },
+                    {
+                        transport: "usb",
+                        label: "USB",
+                    },
+                ]
+                const res = await vscode.window.showQuickPick(items, {
+                    title: "Choose the communication channel",
+                })
+                if (res === undefined) return
+
                 await sideRequest<SideConnectReq>({
                     req: "connect",
-                    data: {},
+                    data: { transport: res.transport, background: false },
                 })
             }
         ),

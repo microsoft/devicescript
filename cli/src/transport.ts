@@ -8,13 +8,8 @@ import {
     JDBus,
     Transport,
 } from "jacdac-ts"
-import { addReqHandler, DevToolsIface, sendEvent } from "./sidedata"
-import {
-    SideTransportEvent,
-    SideTransportReq,
-    SideTransportResp,
-    TransportStatus,
-} from "./sideprotocol"
+import { DevToolsIface, sendEvent } from "./sidedata"
+import { SideTransportEvent, TransportStatus } from "./sideprotocol"
 
 export interface TransportsOptions {
     usb?: boolean
@@ -26,30 +21,70 @@ function tryRequire(name: string) {
     return require(name)
 }
 
-export function createTransports(options: TransportsOptions) {
-    const transports: Transport[] = []
-    if (options.usb) {
-        log(`adding USB transport (requires "usb" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const usb = tryRequire("usb")
-        const options = createNodeUSBOptions(usb.WebUSB)
-        transports.push(createUSBTransport(options))
-    }
-    if (options.serial) {
-        log(`adding serial transport (requires "serialport" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const SerialPort = tryRequire("serialport").SerialPort
-        transports.push(createNodeWebSerialTransport(SerialPort))
-    }
-    if (options.spi) {
-        log(`adding SPI transport (requires "rpio" package)`)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const RPIO = tryRequire("rpio")
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const SpiDev = tryRequire("spi-device")
-        transports.push(createNodeSPITransport(RPIO, SpiDev))
+function createSPI() {
+    log(`adding SPI transport (requires "rpio" package)`)
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const RPIO = tryRequire("rpio")
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const SpiDev = tryRequire("spi-device")
+    return createNodeSPITransport(RPIO, SpiDev)
+}
+function createUSB() {
+    log(`adding USB transport (requires "usb" package)`)
+    const usb = tryRequire("usb")
+    const options = createNodeUSBOptions(usb.WebUSB)
+    return createUSBTransport(options)
+}
+function createSerial() {
+    log(`adding serial transport (requires "serialport" package)`)
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const SerialPort = tryRequire("serialport").SerialPort
+    return createNodeWebSerialTransport(SerialPort)
+}
+
+export async function connectTransport(
+    bus: JDBus,
+    type: string,
+    background: boolean
+) {
+    let transports = bus.transports.filter(tr => !type || type === tr.type)
+    if (!transports.length && type) {
+        const excluded = ["serial", "spi", "usb"].filter(t => t !== type)
+        // stop other transports
+        for (const transport of bus.transports.filter(({ type }) =>
+            excluded.includes(type)
+        )) {
+            console.log(`stopping ${transport.type} transport`)
+            await transport.disconnect()
+            transport.dispose()
+            console.log(bus.transports.map(tr => tr.type).join(","))
+        }
+        // need to start transport
+        switch (type) {
+            case "spi": {
+                bus.addTransport(createSPI())
+                break
+            }
+            case "serial": {
+                bus.addTransport(createSerial())
+                break
+            }
+            case "usb": {
+                bus.addTransport(createUSB())
+                break
+            }
+        }
+        transports = bus.transports.filter(tr => !type || type === tr.type)
     }
 
+    await Promise.all(transports.map(tr => tr.connect(background)))
+}
+
+export function createTransports(options: TransportsOptions) {
+    const transports: Transport[] = []
+    if (options.usb) transports.push(createUSB())
+    if (options.serial) transports.push(createSerial())
+    if (options.spi) transports.push(createSPI())
     return transports
 }
 
@@ -71,37 +106,6 @@ export function initTransportCmds(devtools: DevToolsIface, bus: JDBus) {
 
     // notify about connection
     bus.on(CONNECTION_STATE, send)
-
-    // handle commandts
-    addReqHandler<SideTransportReq, SideTransportResp>(
-        "transport",
-        async msg => {
-            const { data } = msg
-            const { type, action } = data
-            const transports = bus.transports.filter(tr => tr.type === type)
-            switch (action) {
-                case "unmount": {
-                    await Promise.all(transports.map(tr => tr.disconnect()))
-                    transports.forEach(tr => tr.dispose())
-                    break
-                }
-                case "connect": {
-                    await Promise.all(transports.map(tr => tr.connect()))
-                    break
-                }
-                case "disconnect": {
-                    await Promise.all(transports.map(tr => tr.disconnect()))
-                    break
-                }
-                case "status": {
-                    // do nothing
-                    break
-                }
-            }
-
-            return snapshot()
-        }
-    )
 
     send()
 }

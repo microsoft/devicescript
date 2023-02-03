@@ -22,6 +22,7 @@ import { deployToService } from "./deploy"
 import { open, readFile } from "fs/promises"
 import EventEmitter from "events"
 import {
+    connectTransport,
     createTransports,
     initTransportCmds,
     TransportsOptions,
@@ -296,10 +297,8 @@ function startDbgServer(port: number, options: DevToolsOptions) {
 
 async function connectCmd(req: ConnectReqArgs) {
     const { background = false, transport } = req
-    const transports = devtoolsSelf.bus.transports.filter(
-        tr => !transport || transport === tr.type
-    )
-    await Promise.all(transports.map(tr => tr.connect(background)))
+
+    await connectTransport(devtoolsSelf.bus, transport, background)
 }
 
 async function buildCmd(args: BuildReqArgs) {

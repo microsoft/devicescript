@@ -93,16 +93,6 @@
           "default": false,
           "description": "Start DeviceScript Server in a shell rather than as a direct process."
         },
-        "devicescript.devtools.transports.serial": {
-          "type": "boolean",
-          "default": true,
-          "description": "Connect to hardware devices using serial."
-        },
-        "devicescript.devtools.transports.usb": {
-          "type": "boolean",
-          "default": false,
-          "description": "Connect to hardware devices using USB."
-        },
         "devicescript.jacdac.diagnostics": {
           "type": "boolean",
           "default": false,
@@ -178,7 +168,7 @@
     "viewsWelcome": [
       {
         "view": "extension.devicescript.jdom-explorer",
-        "contents": "Connect a DeviceScript device or start a Simulator.\n[Start Simulator](command:extension.devicescript.startSimulator)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
+        "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.startSimulator)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
       },
       {
         "view": "extension.devicescript.watch",

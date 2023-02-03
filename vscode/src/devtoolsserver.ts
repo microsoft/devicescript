@@ -39,17 +39,10 @@ async function uncachedSpawnDevTools(context: vscode.ExtensionContext) {
             const devToolsConfig = vscode.workspace.getConfiguration(
                 "devicescript.devtools"
             )
-            const transportsConfig = vscode.workspace.getConfiguration(
-                "devicescript.devtools.transports"
-            )
             const useShell = !!devToolsConfig.get("shell")
-            const serial = !!transportsConfig.get("serial")
-            const usb = !!transportsConfig.get("usb")
 
             const cli = "yarn"
             const args = ["devicescript", "devtools", "--vscode"]
-            if (serial) args.push("--serial")
-            if (usb) args.push("--usb")
 
             const options: vscode.TerminalOptions = {
                 name: "DeviceScript",

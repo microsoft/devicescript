@@ -83,13 +83,6 @@ export interface SideTransportEvent extends SideEvent<"transport"> {
     data: TransportStatus
 }
 
-export interface SideTransportReq extends SideReq<"transport"> {
-    data: {
-        type: "serial" | "usb"
-        action: "connect" | "disconnect" | "unmount" | "status"
-    }
-}
-
 export interface TransportStatus {
     autoConnect?: boolean
     transports: {
@@ -117,7 +110,7 @@ export interface BuildReqArgs {
     deployTo?: string // deviceId
 }
 export interface ConnectReqArgs {
-    transport?: "serial" | string
+    transport?: "serial" | "usb" | "spi" | string
     background?: boolean
 }
 
