@@ -21,7 +21,11 @@ import {
 import { deployToService } from "./deploy"
 import { open, readFile } from "fs/promises"
 import EventEmitter from "events"
-import { createTransports, TransportsOptions } from "./transport"
+import {
+    createTransports,
+    initTransportCmds,
+    TransportsOptions,
+} from "./transport"
 import { fetchDevToolsProxy } from "./devtoolsproxy"
 import {
     DevToolsClient,
@@ -33,7 +37,7 @@ import { FSWatcher } from "fs"
 import { compileFile } from "./build"
 import { dirname, resolve } from "path"
 import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
-import { DevsDbgClient, DsDapSession } from "@devicescript/dap"
+import { DsDapSession } from "@devicescript/dap"
 import { initVMCmds, overrideConsoleDebug } from "./vmworker"
 import { enableLogging } from "./logging"
 
@@ -82,6 +86,7 @@ export async function devtools(
     }
     initSideProto(devtoolsSelf)
     initVMCmds()
+    initTransportCmds(devtoolsSelf, bus)
 
     bus.passive = false
     bus.on(ERROR, e => error(e))

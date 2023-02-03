@@ -1,12 +1,20 @@
-
 import { log } from "./command"
 import {
+    CONNECTION_STATE,
     createNodeSPITransport,
     createNodeUSBOptions,
     createNodeWebSerialTransport,
     createUSBTransport,
+    JDBus,
     Transport,
 } from "jacdac-ts"
+import { addReqHandler, DevToolsIface, sendEvent } from "./sidedata"
+import {
+    SideTransportEvent,
+    SideTransportReq,
+    SideTransportResp,
+    TransportStatus,
+} from "./sideprotocol"
 
 export interface TransportsOptions {
     usb?: boolean
@@ -43,4 +51,57 @@ export function createTransports(options: TransportsOptions) {
     }
 
     return transports
+}
+
+export function initTransportCmds(devtools: DevToolsIface, bus: JDBus) {
+    const snapshot = () =>
+        <TransportStatus>{
+            autoConnect: bus.autoConnect,
+            transports: bus.transports.map(tr => ({
+                type: tr.type,
+                connectionState: tr.connectionState,
+            })),
+        }
+    const send = () =>
+        sendEvent<SideTransportEvent>(
+            devtools?.mainClient,
+            "transport",
+            snapshot()
+        )
+
+    // notify about connection
+    bus.on(CONNECTION_STATE, send)
+
+    // handle commandts
+    addReqHandler<SideTransportReq, SideTransportResp>(
+        "transport",
+        async msg => {
+            const { data } = msg
+            const { type, action } = data
+            const transports = bus.transports.filter(tr => tr.type === type)
+            switch (action) {
+                case "unmount": {
+                    await Promise.all(transports.map(tr => tr.disconnect()))
+                    transports.forEach(tr => tr.dispose())
+                    break
+                }
+                case "connect": {
+                    await Promise.all(transports.map(tr => tr.connect()))
+                    break
+                }
+                case "disconnect": {
+                    await Promise.all(transports.map(tr => tr.disconnect()))
+                    break
+                }
+                case "status": {
+                    // do nothing
+                    break
+                }
+            }
+
+            return snapshot()
+        }
+    )
+
+    send()
 }

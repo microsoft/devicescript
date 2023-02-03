@@ -105,7 +105,7 @@ export function sendEvent<T extends SideEvent>(
     ev: T["ev"],
     data: T["data"]
 ) {
-    cl.send(
+    cl?.send(
         JSON.stringify({
             ev,
             data,

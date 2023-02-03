@@ -1,7 +1,6 @@
 import {
     CHANGE,
     ControlReg,
-    DeviceScriptManagerReg,
     delay,
     DEVICE_CHANGE,
     JDBus,
@@ -10,12 +9,18 @@ import {
     randomDeviceId,
     shortDeviceId,
     SRV_DEVICE_SCRIPT_MANAGER,
+    CONNECTION_STATE,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { SideStartVmReq, SideStopVmReq } from "../../cli/src/sideprotocol"
+import type {
+    SideStartVmReq,
+    SideStopVmReq,
+    SideTransportEvent,
+    TransportStatus,
+} from "../../cli/src/sideprotocol"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { spawnDevTools } from "./devtoolsserver"
-import { sideRequest } from "./jacdac"
+import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 
 const STATE_WATCHES_KEY = "views.watches.3"
@@ -33,6 +38,9 @@ export interface NodeWatch {
 export class DeviceScriptExtensionState extends JDEventSource {
     version = ""
     runtimeVersion: string
+    private _transport: TransportStatus = {
+        transports: [],
+    }
 
     constructor(
         readonly context: vscode.ExtensionContext,
@@ -43,12 +51,26 @@ export class DeviceScriptExtensionState extends JDEventSource {
         if (!this.simulatorScriptManagerId) {
             this.state.update(STATE_SIMULATOR_DEVICE, randomDeviceId())
         }
-        this.bus.on(DEVICE_CHANGE, () => {
+        this.bus.on([DEVICE_CHANGE, CONNECTION_STATE], () => {
             this.emit(CHANGE)
+        })
+
+        subSideEvent<SideTransportEvent>("transport", msg => {
+            const _transport = msg.data
+            if (
+                JSON.stringify(_transport) !== JSON.stringify(this._transport)
+            ) {
+                this._transport = _transport
+                this.emit(CHANGE)
+            }
         })
     }
 
-    watches(): NodeWatch[] {
+    get transport() {
+        return this._transport
+    }
+
+    get watches(): NodeWatch[] {
         return this.state.get(STATE_WATCHES_KEY) || []
     }
 

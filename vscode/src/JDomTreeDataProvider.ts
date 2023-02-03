@@ -516,7 +516,7 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
             command: this.command,
             state: this.state,
         }
-        const watches = this.state.watches()
+        const { watches } = this.state
         const items = watches.map(
             w =>
                 createTreeItemFromId(this.bus, w.id, props) ||

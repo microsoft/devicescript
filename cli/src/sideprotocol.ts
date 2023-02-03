@@ -1,4 +1,5 @@
 import type { CompilationResult } from "@devicescript/compiler"
+import { ConnectionState } from "jacdac-ts"
 import type { BuildOptions } from "./build"
 
 export interface SideReq<T extends string = string> {
@@ -76,6 +77,29 @@ export interface SideStopVmReq extends SideReq<"stopVM"> {
 }
 export interface SideStopVmResp extends SideResp<"stopVM"> {
     data: void
+}
+
+export interface SideTransportEvent extends SideEvent<"transport"> {
+    data: TransportStatus
+}
+
+export interface SideTransportReq extends SideReq<"transport"> {
+    data: {
+        type: "serial" | "usb"
+        action: "connect" | "disconnect" | "unmount" | "status"
+    }
+}
+
+export interface TransportStatus {
+    autoConnect?: boolean
+    transports: {
+        type: string
+        connectionState: ConnectionState
+    }[]
+}
+
+export interface SideTransportResp extends SideResp<"transport"> {
+    data: TransportStatus
 }
 
 export type OutputFrom = "vm" | "vm-err" | "dev" | "verbose"

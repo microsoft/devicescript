@@ -4,8 +4,6 @@
 
 import {
     CHANGE,
-    CONNECTION_STATE,
-    DEVICE_CHANGE,
     DOCS_ROOT,
     Flags,
     FRAME_PROCESS,
@@ -28,7 +26,6 @@ import type {
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { initBuild } from "./build"
-import { toMarkdownString } from "./catalog"
 import { CloudExtensionState } from "./CloudExtensionState"
 import { registerCloudStatusBar } from "./CloudStatusBar"
 import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
@@ -54,6 +51,7 @@ import {
     JDomWatchTreeDataProvider,
     JDomRegisterTreeItem,
 } from "./JDomTreeDataProvider"
+import { registerMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
 class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
@@ -497,7 +495,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 if (!item) return
                 console.log(`Watch ${item.node}`)
                 const id = item.node.id
-                const watches = extensionState.watches()
+                const { watches } = extensionState
                 if (!watches.find(w => w.id === id)) {
                     const label = item.node.friendlyName
                     const icon = (item.iconPath as vscode.ThemeIcon)?.id
@@ -516,7 +514,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 if (!item) return
                 console.log(`Unwatch ${item.node}`)
                 const id = item.node.id
-                const watches = extensionState.watches()
+                const { watches } = extensionState
                 if (watches.find(w => w.id === id)) {
                     await extensionState.updateWatches(
                         watches.filter(w => w.id !== id)
@@ -528,47 +526,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         )
     )
 
-    const statusBarItem = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        120
-    )
-    statusBarItem.command = "extension.devicescript.pickDeviceScriptManager"
-    const updateStatusBar = () => {
-        const service = extensionState.deviceScriptManager
-        const mgr = service?.device
-        const { runtimeVersion, version } = extensionState
-        const devices = bus.devices({
-            ignoreInfrastructure: true,
-            announced: true,
-        })
-        statusBarItem.tooltip = !runtimeVersion
-            ? `Starting DeviceScript Development Server...`
-            : toMarkdownString(`
-${
-    mgr
-        ? `Deploy and Debug on device ${mgr.shortId}`
-        : `Click to pick a DeviceScript device`
-}
-
----
-
-${runtimeVersion.slice(1)} - Runtime version   
-${version.slice(1)} - Tools version     
-        `)
-        statusBarItem.text = [
-            !runtimeVersion ? "$(loading~spin)" : "$(devicescript-logo)",
-            "DeviceScript",
-            mgr ? `$(play) ${mgr?.shortId}` : "",
-            devices.length > 0 ? `$(circuit-board) ${devices.length}` : "",
-        ]
-            .filter(p => !!p)
-            .join(" ")
-    }
-    extensionState.on(CHANGE, updateStatusBar)
-    bus.on([DEVICE_CHANGE, CONNECTION_STATE], updateStatusBar)
-    updateStatusBar()
-    context.subscriptions.push(statusBarItem)
-    statusBarItem.show()
+    registerMainStatusBar(extensionState)
 
     vscode.window.onDidChangeActiveColorTheme(colorTheme => {
         // TODO
