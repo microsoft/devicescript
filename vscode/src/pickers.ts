@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 
-type FilePickItem = vscode.QuickPickItem & { file: vscode.Uri }
+export type TaggedQuickPickItem<T> = vscode.QuickPickItem & { data?: T }
 
 export async function pickDeviceScriptFile(options: vscode.QuickPickOptions) {
     const folder = vscode.workspace.workspaceFolders?.[0]
@@ -33,8 +33,8 @@ export async function pickDeviceScriptFile(options: vscode.QuickPickOptions) {
     const res = await vscode.window.showQuickPick(
         files.map(
             file =>
-                <FilePickItem>{
-                    file,
+                <TaggedQuickPickItem<vscode.Uri>>{
+                    data: file,
                     label: file.path,
                 }
         ),
@@ -43,5 +43,5 @@ export async function pickDeviceScriptFile(options: vscode.QuickPickOptions) {
             canPickMany: false,
         }
     )
-    return res?.file
+    return res?.data
 }

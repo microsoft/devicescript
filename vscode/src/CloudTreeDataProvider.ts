@@ -27,6 +27,7 @@ import {
     CLOUD_SCRIPTS_NODE,
     CONNECTION_RESOURCE_GROUP,
 } from "./constants"
+import { TaggedQuickPickItem } from "./pickers"
 
 async function createFile(
     fileName: string,
@@ -70,6 +71,30 @@ class CloudCollection extends JDNode {
         return this._children(this.manager).sort((l, r) =>
             l.name.localeCompare(r.name)
         )
+    }
+}
+
+type CloudScriptPickItem = TaggedQuickPickItem<CloudScript>
+
+function cloudScriptToQuickPickItem(
+    script: CloudScript,
+    options?: { picked?: boolean }
+) {
+    return <CloudScriptPickItem>{
+        data: script,
+        label: script.name,
+        description:
+            script.version !== undefined ? `v${script.version}` : "no version",
+        detail: script.creationTime.toLocaleString(),
+        ...(options || {}),
+    }
+}
+
+function cloudScriptVersionToQuickPickItem(v: CloudScript) {
+    return <CloudScriptPickItem>{
+        version: v.version,
+        label: `v${v.version}`,
+        description: v.creationTime.toLocaleString(),
     }
 }
 
@@ -117,39 +142,42 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                     const scripts = manager.scripts()
 
                     const res = await vscode.window.showQuickPick(
-                        scripts.map(
-                            script =>
-                                <
-                                    vscode.QuickPickItem & {
-                                        script: CloudScript
-                                    }
-                                >{
-                                    script,
-                                    label: script.displayName,
-                                    description: `v${script.version}`,
-                                    detail: script.creationTime.toLocaleString(),
+                        [
+                            ...scripts.map(script =>
+                                cloudScriptToQuickPickItem(script, {
                                     picked: script === current,
-                                }
-                        ),
+                                })
+                            ),
+                            {
+                                label: "no script",
+                                description: "unassign script to this device",
+                            },
+                        ],
                         {
                             title: "Select a script",
                         }
                     )
                     if (res === undefined) return
 
-                    const script = res.script
+                    const script = res.data
+                    if (!script) {
+                        // unassign
+                        await this.state.withProgress(
+                            "Updating Script",
+                            async () => {
+                                await device.updateScript("")
+                                await device.refresh()
+                                this.refresh(device)
+                            }
+                        )
+                        return
+                    }
+
+                    // get version and such
                     await script.refreshVersions()
                     const versions = script.versions()
                     const v = await vscode.window.showQuickPick(
-                        versions.map(
-                            v =>
-                                <vscode.QuickPickItem & { version: number }>{
-                                    version: v.version,
-                                    label: `v${v.version}`,
-                                    description:
-                                        v.creationTime.toLocaleString(),
-                                }
-                        ),
+                        versions.map(v => cloudScriptVersionToQuickPickItem(v)),
                         {
                             title: "Select a version",
                         }
@@ -161,8 +189,9 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                         async () => {
                             await device.updateScript(
                                 script.scriptId,
-                                v.version
+                                v.data.version
                             )
+                            await device.refresh()
                             this.refresh(device)
                         }
                     )
@@ -217,13 +246,12 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                     // find script to override
                     await manager.refreshScripts()
                     const sres = await vscode.window.showQuickPick(
-                        <(vscode.QuickPickItem & { script?: CloudScript })[]>[
-                            ...manager.scripts().map(script => ({
-                                script,
-                                label: script.name,
-                                description: `v${script.version}`,
-                                picked: script.name === base,
-                            })),
+                        <CloudScriptPickItem[]>[
+                            ...manager.scripts().map(script =>
+                                cloudScriptToQuickPickItem(script, {
+                                    picked: script.name === base,
+                                })
+                            ),
                             {
                                 label: "Create new cloud script",
                             },
@@ -234,7 +262,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                     )
                     if (sres === undefined) return
                     const script =
-                        sres.script || (await manager.createScript(base))
+                        sres.data || (await manager.createScript(base))
 
                     // upload
                     this.state.withProgress("Uploading script", async () => {
