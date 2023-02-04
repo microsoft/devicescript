@@ -11,7 +11,8 @@
   "license": "MIT",
   "preview": true,
   "extensionKind": [
-    "ui"
+    "ui",
+    "workspace"
   ],
   "keywords": [
     "DeviceScript",

@@ -66,10 +66,8 @@ class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
 }
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
-    const { subscriptions, workspaceState, extensionMode } = context
-    const debugConfig = vscode.workspace.getConfiguration(
-        "devicescript.debugger"
-    )
+    const { subscriptions, workspaceState, extensionMode, extension } = context
+    const { extensionKind } = extension
     const outputConfig = vscode.workspace.getConfiguration(
         "devicescript.output"
     )
@@ -180,26 +178,34 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
             async () => {
+                const isWorkspace =
+                    extensionKind === vscode.ExtensionKind.Workspace
+                if (isWorkspace) {
+                    vscode.window.showErrorMessage(
+                        "DeviceScript: Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
+                    )
+                    return
+                }
+
                 await spawnDevTools(context)
 
                 const { transports } = extensionState.transport
-
+                const serial = transports.find(t => t.type === "serial")
+                const usb = transports.find(t => t.type === "usb")
                 const items: (vscode.QuickPickItem & { transport: string })[] =
                     [
                         {
                             transport: "serial",
                             label: "Serial",
-                            description: transports.find(
-                                t => t.type === "serial"
-                            )
-                                ? `(connected)`
+                            description: serial
+                                ? `${serial.description}(${serial.connectionState})`
                                 : "",
                         },
                         {
                             transport: "usb",
                             label: "USB",
-                            description: transports.find(t => t.type === "usb")
-                                ? `(connected)`
+                            description: usb
+                                ? `${usb.description}(${usb.connectionState})`
                                 : "",
                         },
                     ]
