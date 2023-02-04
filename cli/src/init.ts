@@ -171,4 +171,8 @@ export default async function init(options: InitOptions & CmdOptions) {
     log(``)
     log(`    yarn start`)
     log(``)
+    log(
+        `To get more help, https://microsoft.github.io/devicescript/getting-started/ .`
+    )
+    log(``)
 }
