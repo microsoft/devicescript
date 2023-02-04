@@ -329,6 +329,7 @@ void wifi_init(void) {
     state->password = jd_settings_get("wifi_psk");
 
     state->enabled = 1;
+    state->next_scan = now_ms + (2 << 10);
 
     _wifi_state = state;
 
@@ -336,8 +337,6 @@ void wifi_init(void) {
         DMESG("! can't init wifi!");
         JD_PANIC();
     }
-
-    wifi_scan(state);
 }
 
 #endif
