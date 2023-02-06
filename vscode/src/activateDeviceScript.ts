@@ -615,7 +615,7 @@ async function initDevtoolsConnection(state: DeviceScriptExtensionState) {
         req: "specs",
         data: {},
     })
-    const { specs, version, runtimeVersion } = resp.data
+    const { specs, version, runtimeVersion, nodeVersion } = resp.data
     loadServiceSpecifications(specs)
     console.log(
         `devicescript devtools version: ${version}, bytecode version: ${runtimeVersion}`
@@ -623,6 +623,7 @@ async function initDevtoolsConnection(state: DeviceScriptExtensionState) {
 
     state.version = version
     state.runtimeVersion = runtimeVersion
+    state.nodeVersion = nodeVersion
     state.emit(CHANGE)
 }
 

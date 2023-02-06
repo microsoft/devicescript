@@ -38,6 +38,8 @@ export interface NodeWatch {
 export class DeviceScriptExtensionState extends JDEventSource {
     version = ""
     runtimeVersion: string
+    nodeVersion: string
+
     private _transport: TransportStatus = {
         transports: [],
     }

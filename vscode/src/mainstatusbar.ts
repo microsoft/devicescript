@@ -16,7 +16,8 @@ export function registerMainStatusBar(
     const updateStatusBar = () => {
         const service = extensionState.deviceScriptManager
         const mgr = service?.device
-        const { runtimeVersion, version, transport } = extensionState
+        const { runtimeVersion, nodeVersion, version, transport } =
+            extensionState
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
@@ -40,8 +41,9 @@ ${type} - ${connectionState} ${description || ""}
 
 ---
 
-${runtimeVersion.slice(1)} - Runtime version   
-${version.slice(1)} - Tools version     
+${runtimeVersion?.slice(1) || "?"} - runtime version   
+${version?.slice(1) || "?"} - tools version     
+${nodeVersion?.slice(1) || "?"} - node version     
         `)
         statusBarItem.text = [
             !runtimeVersion ? "$(loading~spin)" : "$(devicescript-logo)",
