@@ -45,3 +45,8 @@ regen:
 
 specs spec:
 	$(MAKE) -C runtime/jacdac-c/jacdac
+
+docker:
+	$(MAKE) clean
+	docker run -v `pwd`:/src -w /src  library/gcc make native
+	$(MAKE) clean
