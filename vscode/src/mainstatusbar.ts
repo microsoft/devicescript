@@ -63,6 +63,7 @@ ${nodeVersion?.slice(1) || "?"} - node version
             .join(" ")
     }
     extensionState.on(CHANGE, updateStatusBar)
+    extensionState.devtools.on(CHANGE, updateStatusBar)
     updateStatusBar()
     context.subscriptions.push(statusBarItem)
     statusBarItem.show()

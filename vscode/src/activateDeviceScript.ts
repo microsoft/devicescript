@@ -35,11 +35,6 @@ import {
     DeviceScriptConfigurationProvider,
 } from "./debugger"
 import {
-    spawnDevTools,
-    showDevToolsTerminal,
-    initDevTools,
-} from "./devtoolsserver"
-import {
     sideRequest,
     startJacdacBus,
     stopJacdacBus,
@@ -83,11 +78,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     context.subscriptions.push({
         dispose: stopJacdacBus,
     })
-    const extensionState = new DeviceScriptExtensionState(
-        context,
-        bus,
-        workspaceState
-    )
+    const extensionState = new DeviceScriptExtensionState(context, bus)
 
     let unsub = bus.subscribe(CHANGE, async () => {
         if (bus.connected && unsub) {
@@ -187,7 +178,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     return
                 }
 
-                await spawnDevTools(context)
+                await extensionState.devtools.spawn()
 
                 const { transports } = extensionState.transport
                 const serial = transports.find(t => t.type === "serial")
@@ -231,7 +222,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     simulatorsWebviewPanel.reveal(vscode.ViewColumn.Nine)
                 } else {
                     console.log("Opening Developer Tools...")
-                    await spawnDevTools(context)
+                    await extensionState.devtools.spawn()
                     // http://localhost:8081/
                     simulatorsWebviewPanel = vscode.window.createWebviewPanel(
                         "extension.devicescript.simulators",
@@ -331,10 +322,9 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     }
 
     // launch devtools in background
-    initDevTools(context.subscriptions)
     if (devToolsConfig.get("autoStart")) {
-        spawnDevTools(context)
-        if (devToolsConfig.get("showOnStart")) showDevToolsTerminal()
+        extensionState.devtools.spawn()
+        if (devToolsConfig.get("showOnStart")) extensionState.devtools.show()
     }
 
     subscriptions.push(
@@ -397,14 +387,14 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.stopSimulator",
             async () => {
-                await spawnDevTools(context)
+                await extensionState.devtools.spawn()
                 await extensionState.stopSimulator()
             }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.startSimulator",
             async () => {
-                await spawnDevTools(context)
+                await extensionState.devtools.spawn()
                 await extensionState.startSimulator()
             }
         ),

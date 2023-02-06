@@ -19,7 +19,7 @@ import type {
     TransportStatus,
 } from "../../cli/src/sideprotocol"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
-import { spawnDevTools } from "./devtoolsserver"
+import { DeveloperToolsManager } from "./devtoolsserver"
 import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 
@@ -39,6 +39,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
     version = ""
     runtimeVersion: string
     nodeVersion: string
+    devtools: DeveloperToolsManager
 
     private _transport: TransportStatus = {
         transports: [],
@@ -46,10 +47,11 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
     constructor(
         readonly context: vscode.ExtensionContext,
-        readonly bus: JDBus,
-        readonly state: vscode.Memento
+        readonly bus: JDBus
     ) {
         super()
+        this.devtools = new DeveloperToolsManager(this.context)
+
         if (!this.simulatorScriptManagerId) {
             this.state.update(STATE_SIMULATOR_DEVICE, randomDeviceId())
         }
@@ -66,6 +68,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 this.emit(CHANGE)
             }
         })
+    }
+
+    get state() {
+        return this.context.workspaceState
     }
 
     get transport() {
@@ -137,7 +143,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { simulatorScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
 
-        await spawnDevTools(this.context)
+        await this.devtools.spawn()
 
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
