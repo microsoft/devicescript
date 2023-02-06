@@ -1,6 +1,16 @@
-import { CHANGE, delay, JDEventSource, JDNode } from "jacdac-ts"
+import {
+    CHANGE,
+    ConnectionState,
+    delay,
+    ERROR_TRANSPORT_CLOSED,
+    isCodeError,
+    JDEventSource,
+    loadServiceSpecifications,
+} from "jacdac-ts"
 import * as vscode from "vscode"
+import type { SideSpecsReq, SideSpecsResp } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
+import { sideRequest } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 
 const HELP_URI = vscode.Uri.parse(
@@ -16,8 +26,12 @@ function showTerminalError(message: string) {
 }
 
 export class DeveloperToolsManager extends JDEventSource {
+    private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _workspaceFolder: vscode.WorkspaceFolder
     private _terminalPromise: Promise<vscode.Terminal>
+    version = ""
+    runtimeVersion: string
+    nodeVersion: string
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
         super()
@@ -37,6 +51,31 @@ export class DeveloperToolsManager extends JDEventSource {
         subscriptions.push(this)
     }
 
+    private async init() {
+        let resp: SideSpecsResp
+        try {
+            resp = await sideRequest<SideSpecsReq, SideSpecsResp>({
+                req: "specs",
+                data: {},
+            })
+        } catch (e) {
+            if (isCodeError(e, ERROR_TRANSPORT_CLOSED)) return false
+            else throw e
+        }
+        const { specs, version, runtimeVersion, nodeVersion } = resp.data
+        loadServiceSpecifications(specs)
+        this.version = version
+        this.runtimeVersion = runtimeVersion
+        this.nodeVersion = nodeVersion
+
+        console.log(
+            `devicescript devtools version: ${version}, bytecode version: ${runtimeVersion}`
+        )
+
+        this.extensionState.bus.emit(CHANGE)
+        return true
+    }
+
     get workspaceFolder() {
         return this._workspaceFolder
     }
@@ -49,7 +88,18 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async start() {
+    get connectionState() {
+        return this._connectionState
+    }
+
+    private set connectionState(state: ConnectionState) {
+        if (state !== this._connectionState) {
+            this._connectionState = state
+            this.emit(CHANGE)
+        }
+    }
+
+    async start(): Promise<boolean> {
         if (!this._workspaceFolder) {
             const ws = vscode.workspace.workspaceFolders?.filter(ws =>
                 checkFileExists(ws.uri, "./devsconfig.json")
@@ -59,10 +109,23 @@ export class DeveloperToolsManager extends JDEventSource {
 
         return (
             this._terminalPromise ||
-            (this._terminalPromise = this.uncachedSpawnDevTools().then(t => {
-                return t
-            }))
-        )
+            (this._terminalPromise = (async () => {
+                try {
+                    this.connectionState = ConnectionState.Connecting
+                    const t = await this.uncachedSpawnDevTools()
+                    if (!t) {
+                        this.clear()
+                        return undefined
+                    }
+                    this._terminalPromise = Promise.resolve(t)
+                    this.connectionState = ConnectionState.Connected
+                    return this._terminalPromise
+                } catch (e) {
+                    this.clear()
+                    return undefined
+                }
+            })())
+        ).then(() => this.connectionState === ConnectionState.Connected)
     }
 
     dispose() {
@@ -83,20 +146,31 @@ export class DeveloperToolsManager extends JDEventSource {
 
     private async handleCloseTerminal(t: vscode.Terminal) {
         if (this._terminalPromise && t === (await this._terminalPromise)) {
-            this._terminalPromise = undefined
+            this.clear()
             if (t.exitStatus.reason === vscode.TerminalExitReason.Process)
                 showTerminalError(`DeviceScript Server exited unexpectedly.`)
-            this.emit(CHANGE)
         }
+    }
+
+    private clear() {
+        this._terminalPromise = undefined
+        this.version = undefined
+        this.runtimeVersion = undefined
+        this.nodeVersion = undefined
+        this.connectionState = ConnectionState.Disconnected
     }
 
     private async kill() {
         if (!this._terminalPromise) return
 
-        const terminal = await this._terminalPromise
-        this._terminalPromise = undefined
-        terminal?.dispose()
-        this.emit(CHANGE)
+        this.connectionState = ConnectionState.Disconnecting
+        try {
+            const p = this._terminalPromise
+            const terminal = await p
+            terminal?.dispose()
+        } finally {
+            this.clear()
+        }
     }
 
     async show() {
@@ -159,9 +233,18 @@ export class DeveloperToolsManager extends JDEventSource {
                     t.sendText("", true)
                     t.sendText(`${cli} ${args.join(" ")}`, true)
                 }
-
-                // TODO: wait for message
-                await delay(2000)
+                await delay(1000)
+                let retry = 0
+                let inited = false
+                while (retry++ < 5) {
+                    inited = await this.init()
+                    if (inited) break
+                    await delay(1000)
+                }
+                if (!inited) {
+                    this.clear()
+                    return undefined
+                }
 
                 return t
             }

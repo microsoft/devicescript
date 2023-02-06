@@ -50,7 +50,6 @@ import {
 import { registerMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
-
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, workspaceState, extensionMode, extension } = context
     const { extensionKind } = extension
@@ -70,15 +69,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         dispose: stopJacdacBus,
     })
     const extensionState = new DeviceScriptExtensionState(context, bus)
-
-    let unsub = bus.subscribe(CHANGE, async () => {
-        if (bus.connected && unsub) {
-            unsub()
-            unsub = null
-            await initDevtoolsConnection(extensionState)
-        }
-    })
-
 
     // build
     initBuild()
@@ -239,12 +229,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         console.info = console.log
     }
 
-    // launch devtools in background
-    if (devToolsConfig.get("autoStart")) {
-        extensionState.devtools.start()
-        if (devToolsConfig.get("showOnStart")) extensionState.devtools.show()
-    }
-
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.selectNode",
@@ -298,14 +282,13 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     const uri = `${DOCS_ROOT}${`devices/${identifierToUrlPath(
                         spec.id
                     )}`}`
-                    vscode.commands.executeCommand("vscode.open", uri)
+                    vscode.env.openExternal(vscode.Uri.parse(uri))
                 }
             }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.stopSimulator",
             async () => {
-                await extensionState.devtools.start()
                 await extensionState.stopSimulator()
             }
         ),
@@ -474,10 +457,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     registerMainStatusBar(extensionState)
 
-    vscode.window.onDidChangeActiveColorTheme(colorTheme => {
-        // TODO
-    }, context.subscriptions)
-
     // packet trace
     let jacdacPacketsOutputChannel: vscode.OutputChannel = undefined
     const logFrame = (frame: JDFrameBuffer) => {
@@ -516,23 +495,12 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     )
 
     configure()
-}
 
-async function initDevtoolsConnection(state: DeviceScriptExtensionState) {
-    const resp = await sideRequest<SideSpecsReq, SideSpecsResp>({
-        req: "specs",
-        data: {},
-    })
-    const { specs, version, runtimeVersion, nodeVersion } = resp.data
-    loadServiceSpecifications(specs)
-    console.log(
-        `devicescript devtools version: ${version}, bytecode version: ${runtimeVersion}`
-    )
-
-    state.version = version
-    state.runtimeVersion = runtimeVersion
-    state.nodeVersion = nodeVersion
-    state.emit(CHANGE)
+    // launch devtools in background
+    if (devToolsConfig.get("autoStart")) {
+        extensionState.devtools.start()
+        if (devToolsConfig.get("showOnStart")) extensionState.devtools.show()
+    }
 }
 
 /*

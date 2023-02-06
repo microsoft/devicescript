@@ -37,9 +37,6 @@ export interface NodeWatch {
 }
 
 export class DeviceScriptExtensionState extends JDEventSource {
-    version = ""
-    runtimeVersion: string
-    nodeVersion: string
     readonly devtools: DeveloperToolsManager
     readonly simulators: SimulatorsWebView
 
@@ -136,18 +133,20 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async stopSimulator() {
-        await sideRequest<SideStopVmReq>({
-            req: "stopVM",
-            data: {},
-        })
+        if (this.devtools.start)
+            await sideRequest<SideStopVmReq>({
+                req: "stopVM",
+                data: {},
+            })
     }
 
     async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {
         const { simulatorScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
 
-        await this.devtools.start()
-
+        const connected = await this.devtools.start()
+        if (!connected) return
+        await delay(500) // announce
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })
@@ -178,7 +177,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             items.push(<DeviceQuickItem>{
                 label: shortDeviceId(this.simulatorScriptManagerId),
                 description: `Simulator`,
-                detail: `A virtual DeviceScript interpreter running in a separate process (${this.runtimeVersion})`,
+                detail: `A virtual DeviceScript interpreter running in a separate process.`,
                 deviceId: simulatorScriptManagerId,
             })
         }

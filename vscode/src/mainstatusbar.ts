@@ -1,4 +1,4 @@
-import { CHANGE } from "jacdac-ts"
+import { CHANGE, ConnectionState } from "jacdac-ts"
 import * as vscode from "vscode"
 import { toMarkdownString } from "./catalog"
 
@@ -16,13 +16,15 @@ export function registerMainStatusBar(
     const updateStatusBar = () => {
         const service = extensionState.deviceScriptManager
         const mgr = service?.device
-        const { runtimeVersion, nodeVersion, version, transport } =
-            extensionState
+        const { transport } = extensionState
+        const { connectionState, runtimeVersion, nodeVersion, version } =
+            extensionState.devtools
+        const connected = connectionState === ConnectionState.Connected
         const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
         })
-        statusBarItem.tooltip = !runtimeVersion
+        statusBarItem.tooltip = !connected
             ? `Starting DeviceScript Development Server...`
             : toMarkdownString(`
 ${
@@ -41,17 +43,21 @@ ${type} - ${connectionState} ${description || ""}
 
 ---
 
-${runtimeVersion?.slice(1) || "?"} - runtime version   
-${version?.slice(1) || "?"} - tools version     
-${nodeVersion?.slice(1) || "?"} - node version     
-        `)
+${runtimeVersion?.slice(1) || "?"} - runtime version<br/>
+${version?.slice(1) || "?"} - tools version<br/>
+${nodeVersion?.slice(1) || "?"} - node version<br/>
+`)
         statusBarItem.text = [
-            !runtimeVersion ? "$(loading~spin)" : "$(devicescript-logo)",
+            connectionState === ConnectionState.Connected
+                ? "$(devicescript-logo)"
+                : connectionState === ConnectionState.Disconnected
+                ? "$(plug)"
+                : "$(loading~spin)",
             "DeviceScript",
             ...transport.transports.map(
                 tr =>
                     `$(${
-                        tr.connectionState === "connected"
+                        tr.connectionState === ConnectionState.Connected
                             ? "plug"
                             : "debug-disconnect"
                     }) ${tr.type}`

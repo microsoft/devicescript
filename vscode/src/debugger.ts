@@ -49,12 +49,17 @@ export class DeviceScriptConfigurationProvider
 
         if (!config.program) {
             vscode.window.showErrorMessage(
-                "Debug cancelled. Cannot find a program to debug."
+                "DeviceScript: Debug cancelled. Cannot find a program to debug."
             )
             return undefined
         }
 
-        await this.extensionState.devtools.start()
+        if (!(await this.extensionState.devtools.start())) {
+            vscode.window.showErrorMessage(
+                "DeviceScript: Debug cancelled. Cannot start development server."
+            )
+            return undefined
+        }
 
         // find device
         if (!dsConfig.deviceId) {
@@ -96,7 +101,7 @@ export class DeviceScriptConfigurationProvider
 
         // check version
         const versionOk = await checkDeviceScriptManagerRuntimeVersion(
-            this.extensionState.runtimeVersion,
+            this.extensionState.devtools.runtimeVersion,
             service
         )
         if (!versionOk) {
