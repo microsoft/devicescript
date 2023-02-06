@@ -54,6 +54,8 @@ export class DeviceScriptConfigurationProvider
             return undefined
         }
 
+        await this.extensionState.devtools.start()
+
         // find device
         if (!dsConfig.deviceId) {
             const service =
@@ -136,12 +138,13 @@ export class DeviceScriptConfigurationProvider
         config: DebugConfiguration,
         token?: CancellationToken
     ) {
+        this.extensionState.devtools.workspaceFolder = folder
         if (
             !config.program &&
             config.request === "launch" &&
             config.type === "devicescript"
         ) {
-            const file = await pickDeviceScriptFile({
+            const file = await pickDeviceScriptFile(folder, {
                 title: "Pick a file to debug.",
             })
             if (file) config.program = file.fsPath

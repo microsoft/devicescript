@@ -22,6 +22,7 @@ import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
 import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
+import { SimulatorsWebView } from "./simulatorWebView"
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
@@ -39,7 +40,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
     version = ""
     runtimeVersion: string
     nodeVersion: string
-    devtools: DeveloperToolsManager
+    readonly devtools: DeveloperToolsManager
+    readonly simulators: SimulatorsWebView
 
     private _transport: TransportStatus = {
         transports: [],
@@ -50,7 +52,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
         readonly bus: JDBus
     ) {
         super()
-        this.devtools = new DeveloperToolsManager(this.context)
+        this.devtools = new DeveloperToolsManager(this)
+        this.simulators = new SimulatorsWebView(this)
 
         if (!this.simulatorScriptManagerId) {
             this.state.update(STATE_SIMULATOR_DEVICE, randomDeviceId())
@@ -143,7 +146,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { simulatorScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
 
-        await this.devtools.spawn()
+        await this.devtools.start()
 
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,

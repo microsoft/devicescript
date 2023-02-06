@@ -3,8 +3,10 @@ import { Utils } from "vscode-uri"
 
 export type TaggedQuickPickItem<T> = vscode.QuickPickItem & { data?: T }
 
-export async function pickDeviceScriptFile(options: vscode.QuickPickOptions) {
-    const folder = vscode.workspace.workspaceFolders?.[0]
+export async function pickDeviceScriptFile(
+    folder: vscode.WorkspaceFolder,
+    options: vscode.QuickPickOptions
+) {
     if (!folder) return undefined
 
     // find file marker

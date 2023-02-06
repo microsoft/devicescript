@@ -33,7 +33,7 @@ async function createFile(
     fileName: string,
     fileContent: string
 ): Promise<void> {
-    const workspaceFolder = vscode.workspace.workspaceFolders[0]
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
     const file = vscode.Uri.joinPath(workspaceFolder.uri, fileName)
     await vscode.workspace.fs.writeFile(
         file,

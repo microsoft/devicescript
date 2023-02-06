@@ -50,15 +50,6 @@ import {
 import { registerMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
-class SimulatorsSerializer implements vscode.WebviewPanelSerializer {
-    constructor(readonly deserialize: (view: vscode.WebviewPanel) => void) {}
-    async deserializeWebviewPanel(
-        webviewPanel: vscode.WebviewPanel,
-        state: any
-    ) {
-        this.deserialize(webviewPanel)
-    }
-}
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, workspaceState, extensionMode, extension } = context
@@ -88,49 +79,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         }
     })
 
-    // devtool web panel
-    let simulatorsWebviewPanel: vscode.WebviewPanel
-    const generateSimulatorsHtml = () => {
-        const { kind: colorThemeKind } = vscode.window.activeColorTheme
-        const darkMode =
-            colorThemeKind === vscode.ColorThemeKind.Dark ||
-            colorThemeKind === vscode.ColorThemeKind.HighContrast
-                ? "dark"
-                : "light"
-        return `
-        <html>
-        <head>
-        <style>
-        body {
-            margin: 0;
-            padding: 0; 
-            background-color: transparent;  
-        }
-        iframe {
-            position: absolute;
-            left: 0; right: 0;
-            width: 100%; height: 100%;
-            border: none;
-        }
-        </style>
-        </head>
-        <body>
-        <iframe src="http://localhost:8081/?${darkMode}=1" />
-        </body>
-        </html>                
-                        `
-    }
-    const updateDeveloperToolsPanelUrl = () => {
-        if (!simulatorsWebviewPanel) return
-        simulatorsWebviewPanel.webview.html = generateSimulatorsHtml()
-    }
-    vscode.window.registerWebviewPanelSerializer(
-        "extension.devicescript.simulators",
-        new SimulatorsSerializer(view => {
-            if (!simulatorsWebviewPanel) simulatorsWebviewPanel = view
-            updateDeveloperToolsPanelUrl()
-        })
-    )
 
     // build
     initBuild()
@@ -178,7 +126,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     return
                 }
 
-                await extensionState.devtools.spawn()
+                await extensionState.devtools.start()
 
                 const { transports } = extensionState.transport
                 const serial = transports.find(t => t.type === "serial")
@@ -214,33 +162,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     },
                 })
             }
-        ),
-        vscode.commands.registerCommand(
-            "extension.devicescript.openSimulators",
-            async () => {
-                if (simulatorsWebviewPanel) {
-                    simulatorsWebviewPanel.reveal(vscode.ViewColumn.Nine)
-                } else {
-                    console.log("Opening Developer Tools...")
-                    await extensionState.devtools.spawn()
-                    // http://localhost:8081/
-                    simulatorsWebviewPanel = vscode.window.createWebviewPanel(
-                        "extension.devicescript.simulators",
-                        "DeviceScript Simulators",
-                        vscode.ViewColumn.Nine,
-                        { enableScripts: true, retainContextWhenHidden: true }
-                    )
-                    simulatorsWebviewPanel.iconPath = logo(context)
-                    simulatorsWebviewPanel.onDidDispose(
-                        () => {
-                            simulatorsWebviewPanel = undefined
-                        },
-                        undefined,
-                        context.subscriptions
-                    )
-                    updateDeveloperToolsPanelUrl()
-                }
-            }
         )
     )
 
@@ -250,9 +171,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             config => extensionState.simulatorScriptManagerId
         )
     )
-
-    // track color theme
-    vscode.window.onDidChangeActiveColorTheme(updateDeveloperToolsPanelUrl)
 
     // register a configuration provider for 'devicescript' debug type
     const provider = new DeviceScriptConfigurationProvider(bus, extensionState)
@@ -323,7 +241,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) {
-        extensionState.devtools.spawn()
+        extensionState.devtools.start()
         if (devToolsConfig.get("showOnStart")) extensionState.devtools.show()
     }
 
@@ -387,14 +305,14 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.stopSimulator",
             async () => {
-                await extensionState.devtools.spawn()
+                await extensionState.devtools.start()
                 await extensionState.stopSimulator()
             }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.startSimulator",
             async () => {
-                await extensionState.devtools.spawn()
+                await extensionState.devtools.start()
                 await extensionState.startSimulator()
             }
         ),
