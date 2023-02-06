@@ -2,27 +2,26 @@ import { delay } from "jacdac-ts"
 import * as vscode from "vscode"
 import { logo } from "./assets"
 
+const HELP_URI = vscode.Uri.parse(
+    "https://microsoft.github.io/devicescript/getting-started/vscode#setting-up-the-project"
+)
+
+function showTerminalError(message: string) {
+    const help = "Open Help"
+    vscode.window.showInformationMessage(message, help).then(res => {
+        if (res === help) {
+            vscode.env.openExternal(HELP_URI)
+        }
+    })
+}
+
 let terminalPromise: Promise<vscode.Terminal>
 export function initDevTools(disposables: vscode.Disposable[]) {
     vscode.window.onDidCloseTerminal(
         async t => {
             if (terminalPromise && t === (await terminalPromise)) {
                 terminalPromise = undefined
-                const help = "Open Help"
-                vscode.window
-                    .showInformationMessage(
-                        `DeviceScript Server exited. Make sure to install '@devicescript/cli' in your project.`,
-                        help
-                    )
-                    .then(res => {
-                        if (res === help) {
-                            vscode.env.openExternal(
-                                vscode.Uri.parse(
-                                    "https://microsoft.github.io/devicescript/getting-started/vscode#setting-up-the-project"
-                                )
-                            )
-                        }
-                    })
+                showTerminalError(`DeviceScript Server exited unexpectedly.`)
             }
         },
         undefined,
@@ -40,7 +39,30 @@ export async function spawnDevTools(context: vscode.ExtensionContext) {
     )
 }
 
+async function checkFileExists(filePath: string): Promise<boolean> {
+    try {
+        const workspaceFolder = vscode.workspace.workspaceFolders[0]
+        const file = vscode.Uri.joinPath(workspaceFolder.uri, filePath)
+        await vscode.workspace.fs.stat(file)
+        return true
+    } catch (error) {
+        return false
+    }
+}
+
 async function uncachedSpawnDevTools(context: vscode.ExtensionContext) {
+    const devsConfig = await checkFileExists("./devsconfig.json")
+    if (!devsConfig) return // not a devicescript folder
+
+    const cliBin = "./node_modules/.bin/devicescript"
+    const cliInstalled = await checkFileExists(cliBin)
+    if (!cliInstalled) {
+        showTerminalError(
+            "DeviceScript: Install Node.JS dependencies to enable tools."
+        )
+        return
+    }
+
     return vscode.window.withProgress<vscode.Terminal>(
         {
             location: vscode.ProgressLocation.Notification,
@@ -54,11 +76,7 @@ async function uncachedSpawnDevTools(context: vscode.ExtensionContext) {
             const useShell = !!devToolsConfig.get("shell")
 
             const cli = "node"
-            const args = [
-                "./node_modules/.bin/devicescript",
-                "devtools",
-                "--vscode",
-            ]
+            const args = [cliBin, "devtools", "--vscode"]
 
             const options: vscode.TerminalOptions = {
                 name: "DeviceScript",
