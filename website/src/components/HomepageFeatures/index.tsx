@@ -53,7 +53,7 @@ export default function HomepageFeatures(): JSX.Element {
         {
             title: "Developer Experience",
             description:
-                "Get started in seconds with modern tooling supporting online IDEs and containers.",
+                "Get started in seconds with modern tooling in Visual Studio Code.",
         },
     ]
 
