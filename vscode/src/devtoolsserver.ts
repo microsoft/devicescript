@@ -49,13 +49,17 @@ async function uncachedSpawnDevTools(context: vscode.ExtensionContext) {
             )
             const useShell = !!devToolsConfig.get("shell")
 
-            const cli = "yarn"
-            const args = ["devicescript", "devtools", "--vscode"]
+            const cli = "node"
+            const args = [
+                "./node_modules/.bin/devicescript",
+                "devtools",
+                "--vscode",
+            ]
 
             const options: vscode.TerminalOptions = {
                 name: "DeviceScript",
                 hideFromUser: true,
-                message: "Launching DeviceScript Server...",
+                message: "DeviceScript Development Server",
                 isTransient: true,
                 shellPath: useShell ? undefined : cli,
                 shellArgs: useShell ? undefined : args,
