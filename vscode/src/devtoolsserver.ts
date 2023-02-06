@@ -8,17 +8,21 @@ export function initDevTools(disposables: vscode.Disposable[]) {
         async t => {
             if (terminalPromise && t === (await terminalPromise)) {
                 terminalPromise = undefined
-                const help = "Open Help..."
-                const res = vscode.window.showInformationMessage(
-                    `DeviceScript Server exited. Make sure to install '@devicescript/cli' in your project.`,
-                    help
-                )
-                if (res) {
-                    vscode.commands.executeCommand(
-                        "vscode.open",
-                        "https://microsoft.github.io/devicescript/getting-started/vscode#setting-up-the-project"
+                const help = "Open Help"
+                vscode.window
+                    .showInformationMessage(
+                        `DeviceScript Server exited. Make sure to install '@devicescript/cli' in your project.`,
+                        help
                     )
-                }
+                    .then(res => {
+                        if (res === help) {
+                            vscode.env.openExternal(
+                                vscode.Uri.parse(
+                                    "https://microsoft.github.io/devicescript/getting-started/vscode#setting-up-the-project"
+                                )
+                            )
+                        }
+                    })
             }
         },
         undefined,
