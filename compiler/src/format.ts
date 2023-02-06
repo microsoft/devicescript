@@ -100,3 +100,8 @@ export function parseImgVersion(v: number) {
         patch: (v >> 0) & 0xffff,
     }
 }
+
+export function runtimeVersion() {
+    const v = parseImgVersion(BinFmt.IMG_VERSION)
+    return `v${v.major}.${v.minor}.${v.patch}`
+}

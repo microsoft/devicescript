@@ -7,11 +7,12 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import init from "./init"
+import { init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
-import { compileFlagHelp } from "@devicescript/compiler"
+import { compileFlagHelp, runtimeVersion } from "@devicescript/compiler"
 import { startVm } from "./vm"
+import { cliVersion } from "./version"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -40,7 +41,7 @@ export async function mainCli() {
         .description(
             "build and run DeviceScript program https://aka.ms/devicescript"
         )
-        .version(pkg.version)
+        .version(cliVersion())
         .option("-v, --verbose", "more logging")
 
     buildCommand("build", { isDefault: true })

@@ -41,6 +41,7 @@ import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
 import { DsDapSession } from "@devicescript/dap"
 import { initVMCmds, overrideConsoleDebug } from "./vmworker"
 import { enableLogging } from "./logging"
+import { cliVersion } from "./version"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -63,6 +64,7 @@ export async function devtools(
     overrideConsoleDebug()
 
     log(`starting dev tools at http://localhost:${port}`)
+    log(cliVersion())
 
     loadServiceSpecifications(jacdacDefaultSpecifications)
 

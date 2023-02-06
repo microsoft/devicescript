@@ -62,6 +62,7 @@ export interface SideSpecsResp extends SideResp<"specs"> {
         specs: jdspec.ServiceSpec[]
         version: string
         runtimeVersion: string
+        nodeVersion: string
     }
 }
 

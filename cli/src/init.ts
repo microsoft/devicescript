@@ -110,7 +110,7 @@ export interface InitOptions {
     spaces?: number
 }
 
-export default async function init(options: InitOptions & CmdOptions) {
+export async function init(options: InitOptions & CmdOptions) {
     const { force, spaces = 4 } = options
     log(`Initializing files for DeviceScript project`)
     Object.keys(optionalFiles).forEach(fn => {
