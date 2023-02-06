@@ -146,7 +146,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { simulatorScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
 
-        await this.devtools.spawn()
+        await this.devtools.start()
 
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,

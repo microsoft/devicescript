@@ -49,9 +49,9 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async spawn() {
+    async start() {
         if (!this._workspaceFolder) {
-            const ws = vscode.workspace.workspaceFolders.filter(ws =>
+            const ws = vscode.workspace.workspaceFolders?.filter(ws =>
                 checkFileExists(ws.uri, "./devsconfig.json")
             )?.[0]
             this.workspaceFolder = ws
@@ -76,7 +76,7 @@ export class DeveloperToolsManager extends JDEventSource {
         // make sure current workspace folder still exists
         if (
             this._workspaceFolder &&
-            !vscode.workspace.workspaceFolders.includes(this._workspaceFolder)
+            !vscode.workspace.workspaceFolders?.includes(this._workspaceFolder)
         )
             this.workspaceFolder = undefined
     }

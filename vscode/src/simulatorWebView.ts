@@ -111,7 +111,7 @@ export class SimulatorsWebView extends JDEventSource {
 
     private async handleDeserialize(view: vscode.WebviewPanel) {
         if (!this.simulatorsWebviewPanel) {
-            await this.extensionState.devtools.spawn()
+            await this.extensionState.devtools.start()
             this.simulatorsWebviewPanel = view
         }
         await this.updateDeveloperToolsPanelUrl()
@@ -124,7 +124,7 @@ export class SimulatorsWebView extends JDEventSource {
         }
 
         console.log("Opening Developer Tools...")
-        await this.extensionState.devtools.spawn()
+        await this.extensionState.devtools.start()
         // http://localhost:8081/
         this.simulatorsWebviewPanel = vscode.window.createWebviewPanel(
             "extension.devicescript.simulators",

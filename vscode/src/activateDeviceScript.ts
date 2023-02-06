@@ -126,7 +126,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     return
                 }
 
-                await extensionState.devtools.spawn()
+                await extensionState.devtools.start()
 
                 const { transports } = extensionState.transport
                 const serial = transports.find(t => t.type === "serial")
@@ -241,7 +241,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) {
-        extensionState.devtools.spawn()
+        extensionState.devtools.start()
         if (devToolsConfig.get("showOnStart")) extensionState.devtools.show()
     }
 
@@ -305,14 +305,14 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.stopSimulator",
             async () => {
-                await extensionState.devtools.spawn()
+                await extensionState.devtools.start()
                 await extensionState.stopSimulator()
             }
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.startSimulator",
             async () => {
-                await extensionState.devtools.spawn()
+                await extensionState.devtools.start()
                 await extensionState.startSimulator()
             }
         ),
