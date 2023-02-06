@@ -146,7 +146,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.showServerTerminal",
-            () => showDevToolsTerminal()
+            () => extensionState.devtools.show()
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.identifyDevice",
