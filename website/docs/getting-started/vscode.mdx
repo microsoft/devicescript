@@ -60,6 +60,36 @@ The extension should now be loaded. Go to the debug section and start debugging!
 
 Navigate to the [Developer section](/developer) to learn the basics of the language.
 
-## Local vs Remote Workspaces
+## Troubleshooting {#troubleshooting}
 
-Connection to Serial or USB is not supported when working from a remote workspace, such as GitHub Codespaces.
+### DeviceScript CLI not installed
+
+The developement server runs the DeviceScript command line (`@devicescript/cli`) installed
+locally in your project.
+Make sure `@devicescript/cli` has been
+added as a developer dependency to your project, and that dependecies have been installed.
+
+```bash
+yarn add -D @devicescript/cli
+yarn install
+```
+
+### Node.JS won't start
+
+The DeviceScript extension spawns a Node.JS process to
+run the debugger adapter, connect to hardware device and build sources.
+Depending on your machine configuration, you may have to specify where the Node.JS binaries
+are located.
+
+-   Open the **Settings**
+-   Search for **DeviceScript node** and update the Node.JS binary path
+-   Reload Visual Studio Code
+
+### Local vs Remote Workspaces
+
+Connection to Serial or USB is not supported when working
+from a remote workspace, such as GitHub Codespaces.
+
+### Multiple-root workspaces
+
+The extension does not currently handle well workspaces with multiple root folders. It will pick the first one.

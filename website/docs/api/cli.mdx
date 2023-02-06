@@ -9,22 +9,11 @@ The CLI also also usable within containers (Docker, GitHub Codespaces, CodeSandb
 
 ## Setup
 
--   install [Node.js](https://nodejs.org/en/download/)
--   install the CLI using `npm` or `yarn`
+-   install [Node.js](https://nodejs.org/en/download/) 18+
+-   install the CLI
 
-```bash
-# yarn
-yarn add -D @devicescript/cli
-```
-
-```bash
-#npm developer dependency
+```bash npm2yarn
 npm install @devicescript/cli --save-dev
-```
-
-```bash
-#npm globally
-npm install -g -u @devicescript/cli
 ```
 
 The command tool is named `devicescript` or `devsc` for short.
@@ -52,6 +41,11 @@ tsconfig.json     configure the TypeScript compiler to compile DeviceScript synt
 devsconfig.json   configure the DeviceScript compiler with additional flags. Also used by VSCode extension to activate.
 ...               A few additional files supporting the coding experience in VS Code
 ```
+
+::: note
+
+Make sure to keep the `devsconfig.json` file even if it is empty.
+It is used as a marker to activate the [Visual Studio Code extension](/getting-started/vscode).
 
 ### --force
 
