@@ -19,20 +19,22 @@ export class DeveloperToolsManager extends JDEventSource {
     private _workspaceFolder: vscode.WorkspaceFolder
     private _terminalPromise: Promise<vscode.Terminal>
 
-    constructor(readonly context: vscode.ExtensionContext) {
+    constructor(readonly extensionState: DeviceScriptExtensionState) {
         super()
+        const { context } = this.extensionState
+        const { subscriptions } = context
 
         vscode.workspace.onDidChangeWorkspaceFolders(
             this.handleWorkspaceFoldersChange,
             this,
-            context.subscriptions
+            subscriptions
         )
         vscode.window.onDidCloseTerminal(
             this.handleCloseTerminal,
             this,
-            context.subscriptions
+            subscriptions
         )
-        context.subscriptions.push(this)
+        subscriptions.push(this)
     }
 
     get workspaceFolder() {
@@ -149,7 +151,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     isTransient: true,
                     shellPath: useShell ? undefined : cli,
                     shellArgs: useShell ? undefined : args,
-                    iconPath: logo(this.context),
+                    iconPath: logo(this.extensionState.context),
                     cwd,
                 }
                 const t = vscode.window.createTerminal(options)

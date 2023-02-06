@@ -93,13 +93,13 @@
           "type": "string",
           "default": "",
           "description": "Path to the Node.JS executable. If not specified, defaults to `node`.",
-          "scope": "machine"
+          "scope": "machine-overridable"
         },
         "devicescript.devtools.shell": {
           "type": "boolean",
           "default": false,
           "description": "Start DeviceScript Server in the default shell rather than as a direct process.",
-          "scope": "machine"
+          "scope": "machine-overridable"
         },
         "devicescript.jacdac.diagnostics": {
           "type": "boolean",
