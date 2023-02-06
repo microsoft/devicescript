@@ -137,12 +137,14 @@ export class SimulatorsWebView extends JDEventSource {
         )
         this.simulatorsWebviewPanel.iconPath = logo(this.extensionState.context)
         this.simulatorsWebviewPanel.onDidDispose(
-            () => {
-                this.simulatorsWebviewPanel = undefined
-            },
-            undefined,
+            this.handleViewDispose,
+            this,
             this.extensionState.context.subscriptions
         )
         await this.updateDeveloperToolsPanelUrl()
+    }
+
+    private handleViewDispose() {
+        this.simulatorsWebviewPanel = undefined
     }
 }
