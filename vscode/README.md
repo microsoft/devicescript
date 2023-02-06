@@ -2,7 +2,7 @@
 
 [DeviceScript](https://aka.ms/devicescript) is a TypeScript-like language and runtime for embedded devices.
 
-![screenshot of the extension](./screenshot.png)
+![Screenshot of the extension](https://github.com/microsoft/devicescript/blob/main/vscode/screenshot.png?raw=true "Annotated screenshot of DeviceScript in Visual Studio Code")
 
 ## Features
 
