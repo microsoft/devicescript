@@ -4,6 +4,7 @@
 #define JD_CONFIG_TEMPERATURE 0
 
 #include <stdio.h>
+#include <stdint.h>
 
 #define DMESG_PRINTF_ATTR __attribute__((format(printf, 1, 2)))
 
