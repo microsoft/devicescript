@@ -98,6 +98,8 @@ npx kill-port 8081
 Connection to Serial or USB is not supported when working
 from a remote workspace, such as GitHub Codespaces.
 
-### Multiple-root workspaces
+### Serial connection won't connect
 
-The extension does not currently handle well workspaces with multiple root folders. It will pick the first one.
+-   serial connection used by another application
+-   make sure the [serialport](https://www.npmjs.com/package/serialport) package is installed
+-   running in remote workspace
