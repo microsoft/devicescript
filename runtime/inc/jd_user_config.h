@@ -37,7 +37,6 @@ void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
 #define JD_CONFIG_WATCHDOG 0
 
 // #define JD_THR_PTHREAD 1
-#define JD_WIFI_SERVICE 0
 
 extern uintptr_t flash_base_addr(void);
 #define JD_FSTOR_BASE_ADDR flash_base_addr()

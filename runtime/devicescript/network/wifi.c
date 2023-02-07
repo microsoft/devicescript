@@ -2,11 +2,7 @@
 #include "services/interfaces/jd_flash.h"
 #include "devicescript.h"
 
-#ifndef JD_WIFI_SERVICE
-#define JD_WIFI_SERVICE 1
-#endif
-
-#if JD_WIFI_SERVICE
+#if JD_WIFI
 
 #define LOG_TAG "wifi"
 // #define VLOGGING 1
