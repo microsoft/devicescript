@@ -39,6 +39,16 @@ export function readDebugInfo() {
 }
 
 let devsInst: DevsModule
+export function setDevsDmesg() {
+    if (devsInst) {
+        const dbg = readDebugInfo()
+        devsInst.dmesg = (s: string) => {
+            printDmesg(dbg, "WASM", s)
+            // console.debug("    " + parseStackFrame(dbg, s).markedLine)
+        }
+    }
+}
+
 export function devsFactory() {
     // emscripten doesn't like multiple instances
     if (devsInst) return Promise.resolve(devsInst)
@@ -53,12 +63,7 @@ export function devsFactory() {
 
     return (d() as Promise<DevsModule>).then(m => {
         devsInst = m
-        const dbg = readDebugInfo()
-        if (dbg)
-            m.dmesg = (s: string) => {
-                printDmesg(dbg, "WASM", s)
-                // console.debug("    " + parseStackFrame(dbg, s).markedLine)
-            }
+        setDevsDmesg()
         m.devsInit()
         return m
     })
@@ -153,6 +158,7 @@ export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
         flags,
     })
     await saveLibFiles(options)
+    setDevsDmesg() // set again after we have re-created -dbg.json file
     return res
 }
 
