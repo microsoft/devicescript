@@ -35,7 +35,7 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
             .then(cmd => {
                 if (cmd)
                     vscode.commands.executeCommand(
-                        "extension.devicescript.showFirmwareInformation",
+                        "extension.devicescript.device.showFirmwareInformation",
                         srv.device
                     )
             })
@@ -57,7 +57,7 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
             .then(cmd => {
                 if (cmd)
                     vscode.commands.executeCommand(
-                        "extension.devicescript.showFirmwareInformation",
+                        "extension.devicescript.device.showFirmwareInformation",
                         srv.device
                     )
             })

@@ -69,7 +69,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     initBuild()
     subscriptions.push(
         vscode.commands.registerCommand(
-            "extension.devicescript.toggleFormatting",
+            "extension.devicescript.debug.toggleFormatting",
             variable => {
                 const ds = vscode.debug.activeDebugSession
                 if (ds) {
@@ -260,7 +260,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     subscriptions.push(
         vscode.commands.registerCommand(
-            "extension.devicescript.showFirmwareInformation",
+            "extension.devicescript.device.showFirmwareInformation",
             (device: JDDevice) => {
                 if (!device) return
                 const spec =
@@ -276,13 +276,13 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.stopSimulator",
+            "extension.devicescript.simulator.stop",
             async () => {
                 await extensionState.stopSimulator()
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.startSimulator",
+            "extension.devicescript.simulator.start",
             async () => {
                 await extensionState.startSimulator()
             }
@@ -342,13 +342,16 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     else if (type === "bool") {
                         const v = value ? "yes" : "no"
                         const res = await vscode.window.showQuickPick(
-                            ["yes", "no"],
+                            ["true", "false"],
                             <vscode.QuickPickOptions>{
                                 title,
                             }
                         )
                         if (res !== undefined && v !== res) {
-                            await register.sendSetBoolAsync(res === "yes", true)
+                            await register.sendSetBoolAsync(
+                                res === "true",
+                                true
+                            )
                         }
                         return
                     }

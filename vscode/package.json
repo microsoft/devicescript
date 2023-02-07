@@ -166,7 +166,7 @@
     "viewsWelcome": [
       {
         "view": "extension.devicescript.jdom-explorer",
-        "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.startSimulator)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
+        "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
       },
       {
         "view": "extension.devicescript.watch",
@@ -256,7 +256,7 @@
       ],
       "view/item/context": [
         {
-          "command": "extension.devicescript.stopSimulator",
+          "command": "extension.devicescript.simulator.stop",
           "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator",
           "group": "inline"
         },
@@ -348,10 +348,10 @@
           "command": "extension.devicescript.connect"
         },
         {
-          "command": "extension.devicescript.startSimulator"
+          "command": "extension.devicescript.simulator.start"
         },
         {
-          "command": "extension.devicescript.stopSimulator"
+          "command": "extension.devicescript.simulator.stop"
         },
         {
           "command": "extension.devicescript.terminal.show"
@@ -365,7 +365,7 @@
       ],
       "debug/variables/context": [
         {
-          "command": "extension.devicescript.toggleFormatting",
+          "command": "extension.devicescript.debug.toggleFormatting",
           "when": "debugType == 'devicescript' && debugProtocolVariableMenuContext == 'simple'"
         }
       ]
@@ -437,22 +437,22 @@
         "icon": "$(debug-restart)"
       },
       {
-        "command": "extension.devicescript.toggleFormatting",
+        "command": "extension.devicescript.debug.toggleFormatting",
         "title": "Toggle between decimal and hex formatting"
       },
       {
-        "command": "extension.devicescript.startSimulator",
+        "command": "extension.devicescript.simulator.start",
         "title": "Start Simulator",
         "category": "DeviceScript"
       },
       {
-        "command": "extension.devicescript.stopSimulator",
+        "command": "extension.devicescript.simulator.stop",
         "title": "Stop Simulator",
         "category": "DeviceScript",
         "icon": "$(close)"
       },
       {
-        "command": "extension.devicescript.showFirmwareInformation",
+        "command": "extension.devicescript.device.showFirmwareInformation",
         "title": "Update Firmware",
         "category": "DeviceScript"
       },
