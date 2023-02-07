@@ -10,6 +10,8 @@ import {
     SideConnectReq,
     SideErrorResp,
     SideEvent,
+    SideKillReq,
+    SideKillResp,
     SideOutputEvent,
     SideReq,
     SideResp,
@@ -85,6 +87,9 @@ export function initSideProto(devtools_: DevToolsIface) {
             runtimeVersion: runtimeVersion(),
             nodeVersion: process.version,
         }
+    })
+    addReqHandler<SideKillReq, SideKillResp>("kill", async () => {
+        process.exit(0)
     })
 }
 

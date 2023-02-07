@@ -37,7 +37,11 @@ export interface SideBuildReq extends SideReq<"build"> {
 export interface SideBuildResp extends SideResp<"build"> {
     data: BuildStatus
 }
-
+export interface SideKillReq extends SideReq<"kill"> {
+}
+export interface SideKillResp extends SideResp<"kill"> {
+    data: void
+}
 export interface SideWatchReq extends SideReq<"watch"> {
     data: BuildReqArgs
 }

@@ -8,7 +8,12 @@ import {
     loadServiceSpecifications,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import type { SideSpecsReq, SideSpecsResp } from "../../cli/src/sideprotocol"
+import type {
+    SideKillReq,
+    SideKillResp,
+    SideSpecsReq,
+    SideSpecsResp,
+} from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { sideRequest } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
@@ -161,6 +166,12 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     private async kill() {
+        try {
+            await sideRequest<SideKillReq, SideKillResp>({
+                req: "kill",
+                data: {},
+            })
+        } catch {}
         const p = this._terminalPromise
         this.clear()
         if (p) {
