@@ -42,7 +42,7 @@ import { DsDapSession } from "@devicescript/dap"
 import { initVMCmds, overrideConsoleDebug } from "./vmworker"
 import { enableLogging } from "./logging"
 import { cliVersion } from "./version"
-import { PORT_IN_USE } from "./exitcodes"
+import { EXIT_CODE_EADDRINUSE } from "./exitcodes"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -103,14 +103,8 @@ export async function devtools(
             .forEach(c => c.send(Buffer.from(frame)))
     })
 
-    try {
-        startProxyServers(port, tcpPort, options)
-        startDbgServer(dbgPort, options)
-    } catch (e) {
-        console.error(`error while starting servers`)
-        console.debug(e)
-        process.exit(PORT_IN_USE)
-    }
+    startProxyServers(port, tcpPort, options)
+    startDbgServer(dbgPort, options)
 
     enableLogging(bus)
 
@@ -174,6 +168,7 @@ function startProxyServers(
             res.statusCode = 404
         }
     })
+    server.on("error", handleError)
     server.on("upgrade", (request, socket, body) => {
         // is this a socket?
         if (WebSocket.isWebSocket(request)) {
@@ -245,7 +240,16 @@ function startProxyServers(
         socket.on("end", () => removeClient(client))
         socket.on("error", (ev: Error) => error(ev))
     })
+    tcpServer.on("error", handleError)
     tcpServer.listen(tcpPort, listenHost)
+
+    function handleError(err: Error) {
+        if (/EADDRINUSE/.test(err.message)) process.exit(EXIT_CODE_EADDRINUSE)
+        else {
+            console.error(err)
+            process.exit(-1)
+        }
+    }
 
     function removeClient(client: DevToolsClient) {
         const i = devtoolsSelf.clients.indexOf(client)

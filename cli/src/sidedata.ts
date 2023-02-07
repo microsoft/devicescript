@@ -89,7 +89,8 @@ export function initSideProto(devtools_: DevToolsIface) {
         }
     })
     addReqHandler<SideKillReq, SideKillResp>("kill", async () => {
-        process.exit(0)
+        // allow send answer
+        setTimeout(() => process.exit(0), 500)
     })
 }
 

@@ -19,6 +19,7 @@ import { sideRequest } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { TaggedQuickPickItem } from "./pickers"
+import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 
 const HELP_URI = vscode.Uri.parse(
     "https://microsoft.github.io/devicescript/getting-started/vscode#setting-up-the-project"
@@ -165,13 +166,21 @@ export class DeveloperToolsManager extends JDEventSource {
         this.kill()
     }
 
-    private async kill() {
+    private async sendKillRequest() {
         try {
             await sideRequest<SideKillReq, SideKillResp>({
                 req: "kill",
                 data: {},
             })
-        } catch {}
+            // process acknoledged the message
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private async kill() {
+        this.sendKillRequest()
         const p = this._terminalPromise
         this.clear()
         if (p) {
@@ -199,8 +208,27 @@ export class DeveloperToolsManager extends JDEventSource {
     private async handleCloseTerminal(t: vscode.Terminal) {
         if (this._terminalPromise && t === (await this._terminalPromise)) {
             this.clear()
-            if (t.exitStatus.reason === vscode.TerminalExitReason.Process)
-                showTerminalError(`Development Server exited unexpectedly.`)
+            if (t.exitStatus.reason === vscode.TerminalExitReason.Process) {
+                switch (t.exitStatus.code) {
+                    case EXIT_CODE_EADDRINUSE:
+                        // try to send a kill command
+                        console.debug(`trying to shutdown other developement server`)
+                        const killed = await this.sendKillRequest()
+                        if (killed) {
+                            await delay(1000)
+                            await this.start()
+                        } else
+                            showTerminalError(
+                                `Development Server ports already in use.`
+                            )
+                        break
+                    default:
+                        showTerminalError(
+                            `Development Server exited unexpectedly.`
+                        )
+                        break
+                }
+            }
         }
     }
 
