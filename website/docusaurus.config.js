@@ -76,6 +76,10 @@ async function createConfig() {
                                 title: "Docs",
                                 items: [
                                     {
+                                        label: "Introduction",
+                                        to: "/intro",
+                                    },
+                                    {
                                         label: "Developer",
                                         to: "/developer",
                                     },
