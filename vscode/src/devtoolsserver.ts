@@ -12,6 +12,8 @@ import type { SideSpecsReq, SideSpecsResp } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { sideRequest } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
+import { Utils } from "vscode-uri"
+import { TaggedQuickPickItem } from "./pickers"
 
 const HELP_URI = vscode.Uri.parse(
     "https://microsoft.github.io/devicescript/getting-started/vscode#setting-up-the-project"
@@ -29,11 +31,12 @@ function showTerminalError(message: string) {
 
 export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
-    private _workspaceFolder: vscode.WorkspaceFolder
-    private _terminalPromise: Promise<vscode.Terminal>
+    private _projectFolder: vscode.Uri
     version = ""
     runtimeVersion: string
     nodeVersion: string
+
+    private _terminalPromise: Promise<vscode.Terminal>
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
         super()
@@ -71,27 +74,31 @@ export class DeveloperToolsManager extends JDEventSource {
         this.nodeVersion = nodeVersion
 
         console.log(
-            `devicescript devtools version: ${version}, bytecode version: ${runtimeVersion}`
+            `devicescript devtools ${version}, runtime ${runtimeVersion}, node ${nodeVersion}`
         )
 
         this.extensionState.bus.emit(CHANGE)
         return true
     }
 
-    get workspaceFolder() {
-        return this._workspaceFolder
+    get projectFolder() {
+        return this._projectFolder
     }
 
-    set workspaceFolder(folder: vscode.WorkspaceFolder) {
-        if (folder !== this._workspaceFolder) {
-            this.kill()
-            this._workspaceFolder = folder
+    set projectFolder(folder: vscode.Uri) {
+        if (folder?.toString() !== this._projectFolder?.toString()) {
+            if (this._projectFolder) this.kill()
+            this._projectFolder = folder
             this.emit(CHANGE)
         }
     }
 
     get connectionState() {
         return this._connectionState
+    }
+
+    get connected() {
+        return this.connectionState === ConnectionState.Connected
     }
 
     private set connectionState(state: ConnectionState) {
@@ -101,54 +108,81 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async start(): Promise<boolean> {
-        if (!this._workspaceFolder) {
-            const ws = vscode.workspace.workspaceFolders?.filter(ws =>
-                checkFileExists(ws.uri, "./devsconfig.json")
-            )?.[0]
-            this.workspaceFolder = ws
+    async pickProject() {
+        const projects = await this.findProjects()
+        if (projects.length == 0) return undefined
+        else if (projects.length == 1) return projects[0]
+        else {
+            const items = projects.map(
+                project =>
+                    <TaggedQuickPickItem<vscode.Uri>>{
+                        data: project,
+                        description: Utils.dirname(project).fsPath,
+                        label: Utils.basename(project),
+                    }
+            )
+            const res = await vscode.window.showQuickPick(items, {
+                title: "Choose a project",
+            })
+            return res?.data
         }
+    }
 
+    private async createTerminal(): Promise<vscode.Terminal> {
+        if (!this._projectFolder) this._projectFolder = await this.pickProject()
+        if (!this._projectFolder) {
+            showTerminalError("No DeviceScript project in workspace.")
+            return undefined
+        }
+        try {
+            this.connectionState = ConnectionState.Connecting
+            const t = await this.uncachedSpawnDevTools()
+            if (!t) {
+                this.clear()
+                return undefined
+            }
+            this.connectionState = ConnectionState.Connected
+            return t
+        } catch (e) {
+            this.clear()
+            return undefined
+        }
+    }
+
+    async start(): Promise<void> {
         return (
             this._terminalPromise ||
-            (this._terminalPromise = (async () => {
-                try {
-                    this.connectionState = ConnectionState.Connecting
-                    const t = await this.uncachedSpawnDevTools()
-                    if (!t) {
-                        this.clear()
-                        return undefined
-                    }
-                    this._terminalPromise = Promise.resolve(t)
-                    this.connectionState = ConnectionState.Connected
-
-                    const devToolsConfig = vscode.workspace.getConfiguration(
-                        "devicescript.devtools"
-                    )
-                    if (devToolsConfig.get("showOnStart")) t.show()
-                    return this._terminalPromise
-                } catch (e) {
-                    this.clear()
-                    return undefined
-                }
-            })())
-        ).then(() => this.connectionState === ConnectionState.Connected)
+            (this._terminalPromise = this.createTerminal())
+        ).then(() => {})
     }
 
     dispose() {
-        // not awaited
         this.kill()
+    }
+
+    private async kill() {
+        const p = this._terminalPromise
+        this.clear()
+        if (p) {
+            const t = await p
+            if (t) {
+                try {
+                    t.sendText("\u001c")
+                } catch {}
+            }
+        }
     }
 
     private async handleWorkspaceFoldersChange(
         e: vscode.WorkspaceFoldersChangeEvent
     ) {
-        // make sure current workspace folder still exists
-        if (
-            this._workspaceFolder &&
-            !vscode.workspace.workspaceFolders?.includes(this._workspaceFolder)
-        )
-            this.workspaceFolder = undefined
+        if (e.removed && this._projectFolder) {
+            const projects = (await this.findProjects()).map(uri =>
+                uri.toString()
+            )
+            if (!projects.includes(this._projectFolder?.toString()))
+                this.projectFolder = undefined
+        }
     }
 
     private async handleCloseTerminal(t: vscode.Terminal) {
@@ -161,23 +195,20 @@ export class DeveloperToolsManager extends JDEventSource {
 
     private clear() {
         this._terminalPromise = undefined
+        this._projectFolder = undefined
         this.version = undefined
         this.runtimeVersion = undefined
         this.nodeVersion = undefined
         this.connectionState = ConnectionState.Disconnected
     }
 
-    private async kill() {
-        if (!this._terminalPromise) return
-
-        this.connectionState = ConnectionState.Disconnecting
-        try {
-            const p = this._terminalPromise
-            const terminal = await p
-            terminal?.dispose()
-        } finally {
-            this.clear()
-        }
+    async findProjects() {
+        // find file marker
+        const configs = await vscode.workspace.findFiles(
+            "**/devsconfig.json",
+            "**​/node_modules/**"
+        )
+        return configs.map(cfg => Utils.dirname(cfg))
     }
 
     async show() {
@@ -187,11 +218,11 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     private async uncachedSpawnDevTools(): Promise<vscode.Terminal> {
-        if (!this._workspaceFolder) {
+        if (!this._projectFolder) {
             return undefined
         }
 
-        const cwd = this._workspaceFolder.uri
+        const cwd = this._projectFolder
         const devsConfig = await checkFileExists(cwd, "./devsconfig.json")
         if (!devsConfig) {
             showTerminalError("Could not find file `devsconfig.json`.")
@@ -218,9 +249,8 @@ export class DeveloperToolsManager extends JDEventSource {
                 const useShell = !!devToolsConfig.get("shell")
                 const nodePath = devToolsConfig.get("node") as string
 
-                const args = ["devtools", "--vscode"]
-                const cli = nodePath || cliBin
-                if (nodePath) args.unshift(cliBin)
+                const args = [cliBin, "devtools", "--vscode"]
+                const cli = nodePath || "node"
 
                 console.debug(
                     `create terminal: ${
@@ -230,7 +260,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 console.debug(`cwd: ${cwd}`)
                 const options: vscode.TerminalOptions = {
                     name: "DeviceScript",
-                    hideFromUser: true,
+                    hideFromUser: false,
                     message: "DeviceScript Development Server\n",
                     isTransient: true,
                     shellPath: useShell ? undefined : cli,
@@ -243,13 +273,12 @@ export class DeveloperToolsManager extends JDEventSource {
                     t.sendText("", true)
                     t.sendText(`${cli} ${args.join(" ")}`, true)
                 }
-                await delay(1000)
                 let retry = 0
                 let inited = false
-                while (retry++ < 5) {
+                while (retry++ < 20) {
                     inited = await this.init()
                     if (inited) break
-                    await delay(1000)
+                    await delay(500)
                 }
                 if (!inited) {
                     this.clear()

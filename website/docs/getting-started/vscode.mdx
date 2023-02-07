@@ -85,6 +85,14 @@ are located.
 -   Search for **DeviceScript node** and update the Node.JS binary path
 -   Reload Visual Studio Code
 
+### Port 8081 is used
+
+It may happen that a previous session left the development server dangling, run this command to kill processes hanging on port `8081`.
+
+```bash
+npx kill-port 8081
+```
+
 ### Local vs Remote Workspaces
 
 Connection to Serial or USB is not supported when working

@@ -115,7 +115,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
     async startSimulator() {
         const did = this.simulatorScriptManagerId
 
-        if (!(await this.devtools.start())) return
+        await this.devtools.start()
+        if (!this.devtools.connected) return
 
         if (this.bus.device(did, true)) return // already running
         const config = vscode.workspace.getConfiguration(
@@ -148,9 +149,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { simulatorScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
 
-        const connected = await this.devtools.start()
-        if (!connected) return
-        await delay(500) // announce
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })

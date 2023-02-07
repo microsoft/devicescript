@@ -14,7 +14,7 @@ export async function pickDeviceScriptFile(
         new vscode.RelativePattern(folder, "**/devsconfig.json"),
         "**​/node_modules/**"
     )
-    // get all typescript files next to config fie
+    // get all typescript files next to config file
     const files = (
         await Promise.all(
             configs.map(async cfg => {

@@ -1,6 +1,7 @@
 import { CHANGE, ConnectionState } from "jacdac-ts"
 import * as vscode from "vscode"
 import { toMarkdownString } from "./catalog"
+import { Utils } from "vscode-uri"
 
 import { DeviceScriptExtensionState } from "./state"
 export function registerMainStatusBar(
@@ -17,8 +18,13 @@ export function registerMainStatusBar(
         const service = extensionState.deviceScriptManager
         const mgr = service?.device
         const { transport } = extensionState
-        const { connectionState, runtimeVersion, nodeVersion, version } =
-            extensionState.devtools
+        const {
+            connectionState,
+            runtimeVersion,
+            nodeVersion,
+            version,
+            projectFolder,
+        } = extensionState.devtools
         const connected = connectionState === ConnectionState.Connected
         const devices = bus.devices({
             ignoreInfrastructure: true,
@@ -46,6 +52,18 @@ ${type} - ${connectionState} ${description || ""}
 ${runtimeVersion?.slice(1) || "?"} - runtime version<br/>
 ${version?.slice(1) || "?"} - tools version<br/>
 ${nodeVersion?.slice(1) || "?"} - node version<br/>
+
+---
+
+project: ${
+                  projectFolder
+                      ? `[${Utils.basename(projectFolder)}](${Utils.joinPath(
+                            projectFolder,
+                            "devsconfig.json"
+                        )})`
+                      : ""
+              }
+
 `)
         statusBarItem.text = [
             connectionState === ConnectionState.Connected

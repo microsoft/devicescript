@@ -54,7 +54,8 @@ export class DeviceScriptConfigurationProvider
             return undefined
         }
 
-        if (!(await this.extensionState.devtools.start())) {
+        await this.extensionState.devtools.start()
+        if (!this.extensionState.devtools.connected) {
             vscode.window.showErrorMessage(
                 "DeviceScript: Debug cancelled. Cannot start development server."
             )
@@ -143,7 +144,7 @@ export class DeviceScriptConfigurationProvider
         config: DebugConfiguration,
         token?: CancellationToken
     ) {
-        this.extensionState.devtools.workspaceFolder = folder
+        this.extensionState.devtools.projectFolder = folder.uri
         if (
             !config.program &&
             config.request === "launch" &&

@@ -84,11 +84,6 @@
           "default": true,
           "description": "Automatically start DeviceScript Server (requires reload)."
         },
-        "devicescript.devtools.showOnStart": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show DeviceScript Server terminal when starting."
-        },
         "devicescript.devtools.node": {
           "type": "string",
           "default": "",

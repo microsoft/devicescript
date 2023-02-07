@@ -3,7 +3,6 @@
  *--------------------------------------------------------*/
 
 import {
-    CHANGE,
     DOCS_ROOT,
     Flags,
     FRAME_PROCESS,
@@ -11,7 +10,6 @@ import {
     JDDevice,
     JDFrameBuffer,
     JDRegister,
-    loadServiceSpecifications,
     prettyUnit,
     REGISTER_NODE_NAME,
     serializeToTrace,
@@ -21,10 +19,7 @@ import { WorkspaceFolder, DebugConfiguration, ProviderResult } from "vscode"
 import type {
     SideConnectReq,
     SideOutputEvent,
-    SideSpecsReq,
-    SideSpecsResp,
 } from "../../cli/src/sideprotocol"
-import { logo } from "./assets"
 import { initBuild } from "./build"
 import { CloudExtensionState } from "./CloudExtensionState"
 import { registerCloudStatusBar } from "./CloudStatusBar"
@@ -117,6 +112,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 }
 
                 await extensionState.devtools.start()
+                if (!extensionState.devtools.connected) return
 
                 const { transports } = extensionState.transport
                 const serial = transports.find(t => t.type === "serial")
