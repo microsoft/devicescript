@@ -10,6 +10,7 @@ import {
     shortDeviceId,
     SRV_DEVICE_SCRIPT_MANAGER,
     CONNECTION_STATE,
+    ConnectionState,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type {
@@ -113,6 +114,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
     async startSimulator() {
         const did = this.simulatorScriptManagerId
+
+        if (!(await this.devtools.start())) return
+
         if (this.bus.device(did, true)) return // already running
         const config = vscode.workspace.getConfiguration(
             "devicescript.simulator"
@@ -133,7 +137,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async stopSimulator() {
-        if (this.devtools.start)
+        if (this.devtools.connectionState === ConnectionState.Connected)
             await sideRequest<SideStopVmReq>({
                 req: "stopVM",
                 data: {},

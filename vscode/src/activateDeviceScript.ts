@@ -218,7 +218,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         )
     )
     const redirectConsoleOutput =
-        !!outputConfig.get("redirectConsole") ||
         extensionMode == vscode.ExtensionMode.Production
     if (redirectConsoleOutput) {
         // note that this is local to this extension - see inject.js
@@ -295,7 +294,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.startSimulator",
             async () => {
-                await extensionState.devtools.start()
                 await extensionState.startSimulator()
             }
         ),
@@ -497,10 +495,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     configure()
 
     // launch devtools in background
-    if (devToolsConfig.get("autoStart")) {
-        extensionState.devtools.start()
-        if (devToolsConfig.get("showOnStart")) extensionState.devtools.show()
-    }
+    if (devToolsConfig.get("autoStart")) extensionState.devtools.start()
 }
 
 /*

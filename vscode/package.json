@@ -116,11 +116,6 @@
           "default": false,
           "description": "Show infrastructure services in views."
         },
-        "devicescript.output.redirectConsole": {
-          "type": "boolean",
-          "default": false,
-          "description": "Always redirect console output to output pane (requires reload)."
-        },
         "devicescript.debugger.showTerminalOnStart": {
           "type": "boolean",
           "default": true,

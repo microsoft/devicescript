@@ -18,11 +18,13 @@ const HELP_URI = vscode.Uri.parse(
 )
 function showTerminalError(message: string) {
     const help = "Open Help"
-    vscode.window.showInformationMessage(message, help).then(res => {
-        if (res === help) {
-            vscode.env.openExternal(HELP_URI)
-        }
-    })
+    vscode.window
+        .showInformationMessage("DeviceScript: " + message, help)
+        .then(res => {
+            if (res === help) {
+                vscode.env.openExternal(HELP_URI)
+            }
+        })
 }
 
 export class DeveloperToolsManager extends JDEventSource {
@@ -119,6 +121,11 @@ export class DeveloperToolsManager extends JDEventSource {
                     }
                     this._terminalPromise = Promise.resolve(t)
                     this.connectionState = ConnectionState.Connected
+
+                    const devToolsConfig = vscode.workspace.getConfiguration(
+                        "devicescript.devtools"
+                    )
+                    if (devToolsConfig.get("showOnStart")) t.show()
                     return this._terminalPromise
                 } catch (e) {
                     this.clear()
@@ -148,7 +155,7 @@ export class DeveloperToolsManager extends JDEventSource {
         if (this._terminalPromise && t === (await this._terminalPromise)) {
             this.clear()
             if (t.exitStatus.reason === vscode.TerminalExitReason.Process)
-                showTerminalError(`DeviceScript Server exited unexpectedly.`)
+                showTerminalError(`Development Server exited unexpectedly.`)
         }
     }
 
@@ -180,18 +187,21 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     private async uncachedSpawnDevTools(): Promise<vscode.Terminal> {
-        if (!this._workspaceFolder) return undefined
+        if (!this._workspaceFolder) {
+            return undefined
+        }
 
         const cwd = this._workspaceFolder.uri
         const devsConfig = await checkFileExists(cwd, "./devsconfig.json")
-        if (!devsConfig) return undefined // not a devicescript folder
+        if (!devsConfig) {
+            showTerminalError("Could not find file `devsconfig.json`.")
+            return undefined // not a devicescript folder
+        }
 
         const cliBin = "./node_modules/.bin/devicescript"
         const cliInstalled = await checkFileExists(cwd, cliBin)
         if (!cliInstalled) {
-            showTerminalError(
-                "DeviceScript: Install Node.JS dependencies to enable tools."
-            )
+            showTerminalError("Install Node.JS dependencies to enable tools.")
             return undefined
         }
 
