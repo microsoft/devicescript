@@ -33,6 +33,7 @@ full-clean: clean
 
 check:
 	$(MAKE) clean
+	$(MAKE) docker
 	$(MAKE) all
 	$(MAKE) test
 

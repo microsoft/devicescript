@@ -132,7 +132,7 @@ int32_t dcfg_get_i32(const char *key, int32_t defl) {
     entry_t *e = dcfg_get_entry(key);
     switch (dcfg_entry_type(e)) {
     case DCFG_TYPE_U32:
-        return e->value > 0x7fffffff ? defl : e->value;
+        return e->value > 0x7fffffff ? defl : (int32_t)e->value;
     case DCFG_TYPE_I32:
         return (int32_t)e->value;
     default:
