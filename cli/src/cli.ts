@@ -13,6 +13,7 @@ import { runScript } from "./run"
 import { compileFlagHelp, runtimeVersion } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
+import { dcfg } from "./dcfg"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -181,6 +182,12 @@ export async function mainCli() {
         .command("annotate")
         .description("annotate stack frames in stdin")
         .action(annotate)
+
+    program
+        .command("dcfg", { hidden: true })
+        .description("compile/decompile DCFG files")
+        .arguments("<file.json|file.bin>")
+        .action(dcfg)
 
     program.parse(process.argv)
 }

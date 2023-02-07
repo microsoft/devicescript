@@ -18,6 +18,7 @@
 #include "devs_pack.h"
 #include "devs_trace.h"
 #include "devs_objects.h"
+#include "devs_dcfg.h"
 
 // this can't be more than a week; unit = ms
 #define DEVS_MAX_REG_VALIDITY (15 * 60 * 1000)

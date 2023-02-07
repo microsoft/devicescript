@@ -71,6 +71,14 @@ export function fnv1(data: Uint8Array) {
     return h
 }
 
+export function fnv1a(data: Uint8Array) {
+    let h = 0x811c9dc5
+    for (let i = 0; i < data.length; ++i) {
+        h = Math.imul(h ^ data[i], 0x1000193)
+    }
+    return h
+}
+
 export function crc(p: Uint8Array) {
     let crc = 0xffff
     for (let i = 0; i < p.length; ++i) {
