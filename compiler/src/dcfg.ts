@@ -10,82 +10,111 @@ import {
     fromUTF8,
     uint8ArrayToString,
     bufferConcat,
+    bufferEq,
+    fromHex,
 } from "./jdutil"
 
 export const DCFG_MAGIC0 = 0x47464344 // DCFG
 export const DCFG_MAGIC1 = 0xcab49b0a // '\n' + random
 export const DCFG_KEYSIZE = 15
-export const DCFG_HASH_BITS = 5
-export const DCFG_HASH_SHIFT = 8 - DCFG_HASH_BITS
-export const DCFG_HASH_JUMP_SIZE = 1 << DCFG_HASH_BITS
-export const DCFG_TYPE_OFFSET_MASK = 0x80
-export const DCFG_TYPE_EMPTY = 0xff
-export const DCFG_TYPE_U32 = 0x01
-export const DCFG_TYPE_I32 = 0x02
-// export const DCFG_TYPE_F32 = 0x03
-export const DCFG_TYPE_STRING = 0x81
-export const DCFG_TYPE_BLOB = 0x82
-// export const DCFG_TYPE_F64 = 0x83
 
-export const DCFG_HEADER_HASH_JUMP_OFFSET = 4 * 4
+export const DCFG_TYPE_BITS = 2
+export const DCFG_TYPE_MASK = (1 << DCFG_TYPE_BITS) - 1
+export const DCFG_SIZE_BITS = 16 - DCFG_TYPE_BITS
+export const DCFG_HASH_BITS = 16
+export const DCFG_HASH_JUMP_BITS = 5
+export const DCFG_HASH_JUMP_ENTRIES = 1 << DCFG_HASH_JUMP_BITS
+export const DCFG_HASH_SHIFT = DCFG_HASH_BITS - DCFG_HASH_JUMP_BITS
+export const DCFG_TYPE_U32 = 0
+export const DCFG_TYPE_I32 = 1
+export const DCFG_TYPE_STRING = 2
+export const DCFG_TYPE_BLOB = 3
+export const DCFG_TYPE_INVALID = 0xff
+export const DCFG_HEADER_HASH_JUMP_OFFSET = 6 * 4
 export const DCFG_HEADER_SIZE =
-    DCFG_HEADER_HASH_JUMP_OFFSET + DCFG_HASH_JUMP_SIZE
+    DCFG_HEADER_HASH_JUMP_OFFSET + 2 * DCFG_HASH_JUMP_ENTRIES
 export const DCFG_ENTRY_SIZE = DCFG_KEYSIZE + 1 + 2 * 4
 
 /*
 typedef struct {
     char key[DCFG_KEYSIZE + 1];
-    uint8_t hash;
-    uint8_t type;
-    uint16_t size;
+    uint16_t hash;
+    uint16_t type_size;
     uint32_t value;
 } dcfg_entry_t;
+
+static inline unsigned dcfg_entry_type(const dcfg_entry_t *e) {
+    return e ? (e->type_size & DCFG_TYPE_MASK) : DCFG_TYPE_INVALID;
+}
+static inline unsigned dcfg_entry_size(const dcfg_entry_t *e) {
+    return e->type_size >> DCFG_TYPE_BITS;
+}
 
 typedef struct {
     uint32_t magic0;
     uint32_t magic1;
+    uint32_t total_bytes; // including the header the data after entries[]
     uint16_t num_entries;
-    uint16_t reserved[3];
-    // let A(key) = fn1v(key) & DCFG_HASH_MASK
-    // let B(key) = fn1v(key) & 0xff
-    // entries are ordered lexicographically by (A, B)
-    // hash_jump[A(key)] is either 0 when no entry e with A(e)==A(key) exists,
-    // or index+1 into entries where a run of entries e with A(e)==A(key) starts
-    uint8_t hash_jump[DCFG_HASH_MASK + 1];
+    uint16_t reserved[5];
+    // entries are ordered by hash
+    // hash_jump[x] points to first entry where (entry.hash >> DCFG_HASH_SHIFT) >= x
+    uint16_t hash_jump[DCFG_HASH_JUMP_ENTRIES];
     dcfg_entry_t entries[];
-} dcfg_header_t;
-*/
+} dcfg_header_t;*/
 
 export type DcfgValue = string | Uint8Array | number
 export type DcfgSettings = Record<string, DcfgValue>
 
+const entoff = DCFG_KEYSIZE + 1
+function entrySize(e: Uint8Array, off = 0) {
+    return read16(e, off + entoff + 2) >> DCFG_TYPE_BITS
+}
+function entryType(e: Uint8Array, off = 0) {
+    return read16(e, off + entoff + 2) & DCFG_TYPE_MASK
+}
+function entryHash(e: Uint8Array, off = 0) {
+    return read16(e, off + entoff)
+}
+function entryValue(e: Uint8Array, off = 0) {
+    return read32(e, off + entoff + 4)
+}
+function keyhash(key: string | Uint8Array) {
+    if (typeof key == "string") key = stringToBuffer(key)
+    const h = fnv1a(key)
+    return (h >>> 16) ^ (h & 0xffff)
+}
+
 export function serializeDcfg(entries: DcfgSettings) {
     const numEntries = Object.keys(entries).length
-    if (numEntries > 0xf0) throw new Error("dcfg: too many entries")
+    if (numEntries > 0xf000) throw new Error("dcfg: too many entries")
     let dataOff = DCFG_HEADER_SIZE + (numEntries + 1) * DCFG_ENTRY_SIZE
     let dataEntries: Uint8Array[] = []
-    const doff = DCFG_KEYSIZE + 1
     const binEntries = Object.keys(entries).map(mkEntry)
-    binEntries.sort((a, b) => a[doff] - b[doff])
+    binEntries.sort((a, b) => entryHash(a) - entryHash(b))
+    for (const e of binEntries) {
+        const h = entryHash(e)
+        // console.log(h, h >> DCFG_HASH_SHIFT, uint8ArrayToString(e.slice(0, 16)))
+    }
     const hd = new Uint8Array(DCFG_HEADER_SIZE)
     write32(hd, 0, DCFG_MAGIC0)
     write32(hd, 4, DCFG_MAGIC1)
-    write16(hd, 8, numEntries)
-    for (let i = 0; i < DCFG_HASH_JUMP_SIZE; ++i) {
-        hd[DCFG_HEADER_HASH_JUMP_OFFSET + i] =
-            binEntries.findIndex(e => i == e[doff] >> DCFG_HASH_SHIFT) + 1
-    }
+    write32(hd, 8, dataOff)
+    write16(hd, 12, numEntries)
 
     const finalEntry = new Uint8Array(DCFG_ENTRY_SIZE)
     finalEntry.fill(0xff)
     finalEntry[0] = 0
+    binEntries.push(finalEntry)
 
-    const res = bufferConcatMany([
-        hd,
-        ...binEntries,
-        finalEntry,
-        ...dataEntries,
-    ])
+    for (let i = 0; i < DCFG_HASH_JUMP_ENTRIES; ++i) {
+        const idx = binEntries.findIndex(
+            e => entryHash(e) >> DCFG_HASH_SHIFT >= i
+        )
+        // console.log(`${i} => ${idx}`)
+        write16(hd, DCFG_HEADER_HASH_JUMP_OFFSET + 2 * i, idx)
+    }
+
+    const res = bufferConcatMany([hd, ...binEntries, ...dataEntries])
     assert(res.length == dataOff)
 
     return res
@@ -104,7 +133,7 @@ export function serializeDcfg(entries: DcfgSettings) {
             throw new Error(`dcfg key too long: '${k}' (limit ${DCFG_KEYSIZE})`)
         let value = 0
         let type = 0
-        let size = 4
+        let size = 0
         if (typeof v == "string") {
             value = dataOff
             size = pushBuffer(stringToBuffer(v))
@@ -113,7 +142,7 @@ export function serializeDcfg(entries: DcfgSettings) {
             value = dataOff
             size = pushBuffer(v)
             type = DCFG_TYPE_BLOB
-        } else {
+        } else if (typeof v == "number") {
             if ((v | 0) == v) {
                 value = v
                 type = DCFG_TYPE_I32
@@ -123,13 +152,20 @@ export function serializeDcfg(entries: DcfgSettings) {
             } else {
                 throw new Error(`dcfg number has to be i32 or u32: ${k}=${v}`)
             }
+        } else {
+            throw new Error(`invalid dcfg value: ${k}=${v}`)
         }
+        if (size >= 1 << DCFG_SIZE_BITS)
+            throw new Error(
+                `value for '${k}' too big (${size} bytes, max ${
+                    1 << DCFG_SIZE_BITS
+                })`
+            )
         const e = new Uint8Array(DCFG_ENTRY_SIZE)
         e.set(kb)
-        e[doff + 0] = fnv1a(kb) & 0xff
-        e[doff + 1] = type
-        write16(e, doff + 2, size)
-        write32(e, doff + 4, value)
+        write16(e, entoff, keyhash(kb))
+        write16(e, entoff + 2, type | (size << DCFG_TYPE_BITS))
+        write32(e, entoff + 4, value)
         return e
     }
 }
@@ -145,13 +181,40 @@ export function findDcfgOffsets(buf: Uint8Array) {
 
 function collisions() {
     const tree: string[][] = []
-    for (let i = 0; i < 300; ++i) {
+    for (let i = 0; i < 20000; ++i) {
         const k = `k${i}`
-        const idx = (fnv1a(stringToBuffer(k)) & 0xff) >> DCFG_HASH_SHIFT
+        const idx = keyhash(k)
         if (!tree[idx]) tree[idx] = []
         tree[idx].push(k)
     }
-    console.log(tree)
+    for (const e of tree) {
+        if (e?.length >= 2) console.log(e)
+    }
+}
+
+function getEntry(buf: Uint8Array, key: string) {
+    const kb = stringToBuffer(key)
+    if (kb.length > DCFG_KEYSIZE) return null
+
+    const hash = keyhash(kb)
+    const hidx = hash >> DCFG_HASH_SHIFT
+    let idx = read16(buf, DCFG_HEADER_HASH_JUMP_OFFSET + 2 * hidx)
+    const num = read16(buf, 12)
+
+    const kb0 = [...kb, 0]
+
+    while (idx < num) {
+        const eoff = DCFG_HEADER_SIZE + idx * DCFG_ENTRY_SIZE
+        if (!(entryHash(buf, eoff) <= hash)) break
+        if (
+            entryHash(buf, eoff) == hash &&
+            bufferEq(buf.slice(eoff, eoff + kb0.length), kb0)
+        )
+            return buf.slice(eoff, eoff + DCFG_ENTRY_SIZE)
+        idx++
+    }
+
+    return null
 }
 
 export function decodeDcfg(buf: Uint8Array) {
@@ -167,20 +230,46 @@ export function decodeDcfg(buf: Uint8Array) {
     if (read32(buf, 0) != DCFG_MAGIC0 || read32(buf, 4) != DCFG_MAGIC1)
         return error("bad magic")
 
-    const numEntries = read16(buf, 8)
+    const totalBytes = read32(buf, 8)
+
+    if (buf.length < totalBytes)
+        return error(
+            `buffer declared ${totalBytes} bytes but only ${buf.length} long`
+        )
+
+    buf = new Uint8Array(buf.slice(0, totalBytes)) // make sure we're not working with a node.js buffer
+    const numEntries = read16(buf, 12)
 
     {
         const eoff = DCFG_HEADER_SIZE + numEntries * DCFG_ENTRY_SIZE
-        const doff = eoff + DCFG_KEYSIZE + 1
-        if (buf[doff + 0] != 0xff || buf[doff + 1] != 0xff)
-            error("final entry hash non 0xff hash/type")
+        const doff = eoff + entoff
+        if (entryHash(buf, eoff) != 0xffff || read16(buf, doff + 2) != 0xffff)
+            error("final entry hash non 0xffff hash/size/type")
+    }
+
+    const hash_jump = buf.slice(
+        DCFG_HEADER_HASH_JUMP_OFFSET,
+        DCFG_HEADER_HASH_JUMP_OFFSET + DCFG_HASH_JUMP_ENTRIES * 2
+    )
+
+    const hashAt = (idx: number) =>
+        entryHash(buf, DCFG_HEADER_SIZE + idx * DCFG_ENTRY_SIZE) >>
+        DCFG_HASH_SHIFT
+
+    for (let i = 0; i < DCFG_HASH_JUMP_ENTRIES; ++i) {
+        let idx = read16(hash_jump, i * 2)
+        if (idx > numEntries) error(`hash jump idx out of range`)
+        else if (hashAt(idx) < i) error(`hash jump too large at ${i}`)
+        else if (idx > 0 && hashAt(idx - 1) >= i)
+            error(`hash jump too small at ${i}`)
     }
 
     const dataPtrMin = DCFG_HEADER_SIZE + (numEntries + 1) * DCFG_ENTRY_SIZE
 
+    let prevHash = 0
+
     for (let i = 0; i < numEntries; ++i) {
         const eoff = DCFG_HEADER_SIZE + i * DCFG_ENTRY_SIZE
-        const doff = eoff + DCFG_KEYSIZE + 1
 
         let ep = eoff
         while (buf[ep]) ep++
@@ -192,22 +281,33 @@ export function decodeDcfg(buf: Uint8Array) {
         const kb = buf.slice(eoff, ep)
         const key = fromUTF8(uint8ArrayToString(kb))
 
-        const hash = buf[doff + 0]
-        const type = buf[doff + 1]
-        const size = read16(buf, doff + 2)
-        const value = read32(buf, doff + 4)
+        const ent = buf.slice(eoff, eoff + DCFG_ENTRY_SIZE)
+
+        {
+            const ent2 = getEntry(buf, key)
+            if (!ent2 || !bufferEq(ent2, ent))
+                error(`invalid lookup at '${key}'`)
+        }
+
+        const hash = entryHash(ent)
+        const type = entryType(ent)
+        const size = entrySize(ent)
+        const value = entryValue(ent)
         let realValue: DcfgValue
 
-        if ((fnv1a(kb) & 0xff) != hash) error(`invalid hash at key '${key}'`)
+        if (!(prevHash <= hash)) error(`hash not in order at '${key}'`)
+        prevHash = hash
+
+        if (keyhash(kb) != hash) error(`invalid hash at key '${key}'`)
 
         switch (type) {
             case DCFG_TYPE_I32:
-                if (size != 4)
+                if (size != 0)
                     error(`invalid size ${size} for i32 entry '${key}'`)
                 realValue = value | 0
                 break
             case DCFG_TYPE_U32:
-                if (size != 4)
+                if (size != 0)
                     error(`invalid size ${size} for u32 entry '${key}'`)
                 realValue = value >>> 0
                 break
@@ -219,7 +319,7 @@ export function decodeDcfg(buf: Uint8Array) {
                 } else {
                     if (buf[value + size] != 0)
                         error(`string not NUL terminated '${key}'`)
-                    realValue = new Uint8Array(buf.slice(value, value + size))
+                    realValue = buf.slice(value, value + size)
                     if (type == DCFG_TYPE_STRING) {
                         realValue = fromUTF8(uint8ArrayToString(realValue))
                         if (realValue.includes("\u0000"))
@@ -235,34 +335,66 @@ export function decodeDcfg(buf: Uint8Array) {
         res.settings[key] = realValue
     }
 
-    let prev_hash_idx = -1
-    const hash_jump = buf.slice(
-        DCFG_HEADER_HASH_JUMP_OFFSET,
-        DCFG_HEADER_HASH_JUMP_OFFSET + DCFG_HASH_JUMP_SIZE
-    )
-
-    for (let i = 0; i < numEntries; ++i) {
-        if (i > 0 && eHash(i - 1) > eHash(i)) error("unordered hash")
-
-        let curr_hidx = eHash(i) >> DCFG_HASH_SHIFT
-        if (i == 0 || eHash(i - 1) >> DCFG_HASH_SHIFT != curr_hidx) {
-            for (prev_hash_idx++; prev_hash_idx < curr_hidx; prev_hash_idx++)
-                if (hash_jump[prev_hash_idx] != 0) error("non-0 hash jump")
-            if (hash_jump[prev_hash_idx] != i + 1) error("invalid hash jump")
-        } else {
-        }
-    }
-
     return res
-
-    function eHash(i: number) {
-        const eoff = DCFG_HEADER_SIZE + i * DCFG_ENTRY_SIZE
-        const doff = eoff + DCFG_KEYSIZE + 1
-        return buf[doff + 0]
-    }
 
     function error(msg: string) {
         res.errors.push(msg)
         return res
+    }
+}
+
+function parseAnyInt(s: string) {
+    s = s.replace(/_/g, "")
+    let m = 1
+    if (s[0] == "-") {
+        s = s.slice(1)
+        m = -1
+    } else if (s[0] == "+") s = s.slice(1)
+
+    if (/^0o[0-7]+$/i.test(s)) return m * parseInt(s.slice(2), 8)
+    if (/^0x[0-9a-f]+$/i.test(s)) return m * parseInt(s.slice(2), 16)
+    if (/^[0-9]+$/i.test(s)) return m * parseInt(s.slice(2), 16)
+    return undefined
+}
+
+export async function compileDcfg(
+    fn: string,
+    readFile: (fn: string) => Promise<string>
+) {
+    return await normalizeKeys(fn)
+
+    async function normalizeKeys(fn: string) {
+        const mainJson = await readJSON(fn)
+        const res: DcfgSettings = {}
+        try {
+            for (const key of Object.keys(mainJson)) {
+                let val = mainJson[key]
+                if (typeof val == "string") {
+                    const tmp = parseAnyInt(val)
+                    if (tmp != undefined) val = tmp
+                    else if (/^hex:[0-9a-f ]+$/.test(val)) {
+                        val = fromHex(val.slice(4).replace(/ /g, ""))
+                    }
+                } else if (typeof val == "number") {
+                    if ((val | 0) != val && val >>> 0 != val) throw new Error()
+                }
+                res[key] = val
+            }
+            return res
+        } catch (e) {
+            throw new Error(`${fn}: ${e.message}`)
+        }
+    }
+
+    async function readJSON(fn: string) {
+        const input = await readFile(fn)
+        try {
+            const r = JSON.parse(input)
+            if (!r || typeof r != "object" || Array.isArray(r))
+                throw new Error("expecting JSON object")
+            return r
+        } catch (e) {
+            throw new Error(`${fn}: JSON parsing: ${e.message}`)
+        }
     }
 }

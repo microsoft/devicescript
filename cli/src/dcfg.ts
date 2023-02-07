@@ -4,39 +4,63 @@ import {
     decodeDcfg,
     serializeDcfg,
     findDcfgOffsets,
+    compileDcfg,
 } from "@devicescript/compiler"
+import { toHex } from "jacdac-ts"
 
-export interface DcfgOptions {}
+export interface DcfgOptions {
+    update?: string
+    output?: string
+}
 
 export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
     const buf = readFileSync(fn)
 
-    if (buf[0] == 123) {
-        let json: any
-        try {
-            json = JSON.parse(buf.toString("utf-8"))
-        } catch {}
-        if (json) {
-            const bin = serializeDcfg(json)
-            const res = decodeDcfg(bin)
-            if (res.errors.length == 0) {
-                for (const k of Object.keys(json)) {
-                    if (json[k] != res.settings[k])
-                        res.errors.push(`mismatch at ${k}`)
-                }
-                for (const k of Object.keys(res.settings)) {
-                    if (json[k] != res.settings[k])
-                        res.errors.push(`mismatch at ${k}`)
-                }
+    if (fn.endsWith(".json")) {
+        const json = await compileDcfg(fn, async fn => {
+            return readFileSync(fn, "utf-8")
+        })
+        const bin = serializeDcfg(json)
+        const res = decodeDcfg(bin)
+        if (res.errors.length == 0) {
+            for (const k of Object.keys(json)) {
+                if (json[k] != res.settings[k])
+                    res.errors.push(`mismatch at ${k}`)
             }
-            if (res.errors.length) {
-                for (const e of res.errors) console.error(e)
-                process.exit(1)
+            for (const k of Object.keys(res.settings)) {
+                if (json[k] != res.settings[k])
+                    res.errors.push(`mismatch at ${k}`)
             }
-            console.log("writing settings.bin")
-            writeFileSync("settings.bin", bin)
-            return
         }
+        if (res.errors.length) {
+            for (const e of res.errors) console.error(e)
+            process.exit(1)
+        }
+
+        if (options.output) {
+            console.log(`writing ${options.output}`)
+            writeFileSync(options.output, bin)
+        } else if (options.update) {
+            const f = readFileSync(options.update, "utf-8")
+            let hits = 0
+            const f2 = f.replace(/\/\/ DCFG_BEGIN[^]*\/\/ DCFG_END\n?/g, () => {
+                hits++
+                const inner = [...toHex(bin).match(/../g)]
+                    .map(e => `0x${e}`)
+                    .join(",")
+                return `// DCFG_BEGIN\n${inner}\n// DCFG_END\n`
+            })
+            if (hits == 0)
+                fatal(`DCFG_BEGIN/END markers not found in ${options.update}`)
+            else if (hits > 1)
+                fatal(
+                    `too many DCFG_BEGIN/END markers found in ${options.update}`
+                )
+            writeFileSync(options.update, f2)
+        } else {
+            fatal("either --update or --output required")
+        }
+        return
     }
 
     const idx = findDcfgOffsets(buf)
@@ -49,5 +73,10 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
         const res = decodeDcfg(buf.slice(off))
         for (const e of res.errors) console.error(e)
         console.log(res.settings)
+    }
+
+    function fatal(msg: string) {
+        console.error(msg)
+        process.exit(1)
     }
 }

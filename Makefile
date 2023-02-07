@@ -42,6 +42,10 @@ regen:
 		runtime/devicescript/devs_bytecode.h \
 		runtime/devicescript/impl_*.c
 	clang-format -i runtime/devicescript/protogen.c
+	$(CLI) dcfg runtime/config/native.json --update runtime/posix/native_cfg.c
+	clang-format -i runtime/posix/native_cfg.c
+	$(CLI) dcfg runtime/config/wasm.json --update runtime/posix/wasm_cfg.c
+	clang-format -i runtime/posix/wasm_cfg.c
 
 specs spec:
 	$(MAKE) -C runtime/jacdac-c/jacdac

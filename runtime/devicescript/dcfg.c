@@ -6,21 +6,17 @@
 #define LOG_TAG "cfg"
 #include "devs_logging.h"
 
+STATIC_ASSERT(sizeof(dcfg_entry_t) == DCFG_ENTRY_SIZE);
+STATIC_ASSERT(sizeof(dcfg_header_t) == DCFG_HEADER_SIZE);
+STATIC_ASSERT(offsetof(dcfg_header_t, hash_jump) == DCFG_HEADER_HASH_JUMP_OFFSET);
+STATIC_ASSERT(offsetof(dcfg_header_t, entries) == DCFG_HEADER_SIZE);
+
 #ifdef JD_DCFG_BASE_ADDR
 
 static bool dcfg_inited;
 static const dcfg_header_t *dcfg_header;
 
 typedef const dcfg_entry_t entry_t;
-
-static inline const void *data_ptr(entry_t *e) {
-    if (e->type == 0 || e->type == DCFG_TYPE_EMPTY)
-        return NULL;
-    if (e->type & DCFG_TYPE_OFFSET_MASK)
-        return (const uint8_t *)dcfg_header + e->value;
-    else
-        return &e->value;
-}
 
 static bool dcfg_ok(void) {
     if (dcfg_inited)
@@ -38,10 +34,15 @@ static bool dcfg_ok(void) {
         return false;
     }
 
-    LOG("inited, %d entries", hd->num_entries);
+    LOG("inited, %d entries, %u bytes", hd->num_entries, hd->total_bytes);
 
     dcfg_header = hd;
     return true;
+}
+
+static uint16_t keyhash(const void *key, unsigned klen) {
+    uint32_t h = jd_hash_fnv1a(key, klen);
+    return h ^ (h >> 16);
 }
 
 void dcfg_validate(void) {
@@ -50,27 +51,45 @@ void dcfg_validate(void) {
 
     unsigned num = dcfg_header->num_entries;
     entry_t *entries = dcfg_header->entries;
+    const uint8_t *data_base = (const uint8_t *)dcfg_header;
 
-    JD_ASSERT(entries[num].hash == 0xff);
-    JD_ASSERT(entries[num].type == 0xff);
+    unsigned data_start = sizeof(dcfg_header_t) + sizeof(dcfg_entry_t) * (num + 1);
+    unsigned total_bytes = dcfg_header->total_bytes;
+    JD_ASSERT(data_start <= total_bytes);
+
+    JD_ASSERT(entries[num].hash == 0xffff);
+    JD_ASSERT(entries[num].type_size == 0xffff);
+
+    for (unsigned i = 0; i < DCFG_HASH_JUMP_ENTRIES; ++i) {
+        unsigned idx = dcfg_header->hash_jump[i];
+        JD_ASSERT(idx <= num);
+        JD_ASSERT((entries[idx].hash >> DCFG_HASH_SHIFT) >= i);
+        JD_ASSERT(idx == 0 || (entries[idx - 1].hash >> DCFG_HASH_SHIFT) < i);
+    }
 
     if (num == 0)
         return;
 
-    int prev_hash_idx = -1;
-
     for (unsigned i = 0; i < num; ++i) {
-        unsigned klen = strlen(entries[i].key);
+        entry_t *e = &entries[i];
+        unsigned klen = strlen(e->key);
         JD_ASSERT(klen <= DCFG_KEYSIZE);
-        JD_ASSERT((jd_hash_fnv1a(entries[i].key, klen) & 0xff) == entries[i].hash);
-
+        JD_ASSERT(keyhash(e->key, klen) == e->hash);
         JD_ASSERT(i == 0 || entries[i - 1].hash <= entries[i].hash);
 
-        int curr_hidx = entries[i].hash >> DCFG_HASH_SHIFT;
-        if (i == 0 || (entries[i - 1].hash >> DCFG_HASH_SHIFT) != curr_hidx) {
-            for (prev_hash_idx++; prev_hash_idx < curr_hidx; prev_hash_idx++)
-                JD_ASSERT(dcfg_header->hash_jump[prev_hash_idx] == 0);
-            JD_ASSERT(dcfg_header->hash_jump[prev_hash_idx] == i + 1);
+        unsigned size = dcfg_entry_size(e);
+        switch (dcfg_entry_type(e)) {
+        case DCFG_TYPE_U32:
+        case DCFG_TYPE_I32:
+            JD_ASSERT(size == 0);
+            break;
+        case DCFG_TYPE_STRING:
+        case DCFG_TYPE_BLOB:
+            JD_ASSERT(e->value >= data_start);
+            JD_ASSERT(e->value < total_bytes);
+            JD_ASSERT(e->value + size < total_bytes);
+            JD_ASSERT(data_base[size] == 0x00);
+            break;
         }
     }
 
@@ -96,12 +115,9 @@ const dcfg_entry_t *dcfg_get_entry(const char *key) {
     if (len > DCFG_KEYSIZE)
         return NULL;
 
-    unsigned hash = jd_hash_fnv1a(key, len) & 0xff;
+    unsigned hash = keyhash(key,len);
     unsigned hidx = hash >> DCFG_HASH_SHIFT;
     unsigned idx = dcfg_header->hash_jump[hidx];
-    if (idx == 0)
-        return NULL;
-    idx--;
     unsigned num = dcfg_header->num_entries;
     entry_t *entries = dcfg_header->entries;
     while (idx < num && entries[idx].hash <= hash) {
@@ -114,7 +130,7 @@ const dcfg_entry_t *dcfg_get_entry(const char *key) {
 
 int32_t dcfg_get_i32(const char *key, int32_t defl) {
     entry_t *e = dcfg_get_entry(key);
-    switch (e ? e->type : 0) {
+    switch (dcfg_entry_type(e)) {
     case DCFG_TYPE_U32:
         return e->value > 0x7fffffff ? defl : e->value;
     case DCFG_TYPE_I32:
@@ -126,7 +142,7 @@ int32_t dcfg_get_i32(const char *key, int32_t defl) {
 
 uint32_t dcfg_get_u32(const char *key, uint32_t defl) {
     entry_t *e = dcfg_get_entry(key);
-    switch (e ? e->type : 0) {
+    switch (dcfg_entry_type(e)) {
     case DCFG_TYPE_I32:
         return (int32_t)e->value < 0 ? defl : e->value;
     case DCFG_TYPE_U32:
@@ -138,11 +154,11 @@ uint32_t dcfg_get_u32(const char *key, uint32_t defl) {
 
 const char *dcfg_get_string(const char *key, unsigned *sizep) {
     entry_t *e = dcfg_get_entry(key);
-    switch (e ? e->type : 0) {
+    switch (dcfg_entry_type(e)) {
     case DCFG_TYPE_BLOB:
     case DCFG_TYPE_STRING: {
         if (sizep)
-            *sizep = e->size;
+            *sizep = dcfg_entry_size(e);
         return (const char *)dcfg_header + e->value;
     }
     default:

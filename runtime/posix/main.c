@@ -343,6 +343,8 @@ int main(int argc, const char **argv) {
 
     tx_init(transport, transport_ctx);
 
+    dcfg_validate();
+
     jd_rx_init();
     if (enable_lstore)
         jd_lstore_init();

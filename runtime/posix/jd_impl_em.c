@@ -84,6 +84,7 @@ void jd_em_init(void) {
     if (inited)
         return;
     inited = 1;
+    dcfg_validate();
     tx_init(&em_transport, NULL);
     jd_rx_init();
     jd_lstore_init();

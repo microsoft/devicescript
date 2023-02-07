@@ -5,6 +5,7 @@
 #include "network/jd_network.h"
 #include "jacdac/dist/c/devicescriptmanager.h"
 #include "jacdac/dist/c/timeseriesaggregator.h"
+#include "devs_dcfg.h"
 
 #define DEVS_PANIC_REBOOT 60000
 #define DEVS_PANIC_TIMEOUT 60001
