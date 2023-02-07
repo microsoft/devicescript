@@ -4,10 +4,12 @@
 
 import {
     DOCS_ROOT,
+    EVENT_NODE_NAME,
     Flags,
     FRAME_PROCESS,
     identifierToUrlPath,
     JDDevice,
+    JDEvent,
     JDFrameBuffer,
     JDRegister,
     prettyUnit,
@@ -220,7 +222,27 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     subscriptions.push(
         vscode.commands.registerCommand(
-            "extension.devicescript.selectNode",
+            "extension.devicescript.node.copy",
+            async (item: JDomTreeItem) => {
+                if (!item) return
+                const { node } = item
+                const { nodeKind } = node
+                switch (nodeKind) {
+                    case REGISTER_NODE_NAME: {
+                        const reg = node as JDRegister
+                        const value = reg.humanValue
+                        await vscode.env.clipboard.writeText(
+                            `${reg.qualifiedName}: ${value}`
+                        )
+                        break
+                    }
+                }
+            }
+        )
+    )
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.node.select",
             (item: JDomTreeItem) => {
                 if (!item) return
                 const { node } = item
@@ -236,7 +258,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     )
     const selectNodeCommand: vscode.Command = {
         title: "select node",
-        command: "extension.devicescript.selectNode",
+        command: "extension.devicescript.node.select",
     }
     const jdomTreeDataProvider = new JDomDeviceTreeDataProvider(
         extensionState,

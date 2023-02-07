@@ -277,6 +277,14 @@
           "group": "inline"
         },
         {
+          "command": "extension.devicescript.node.copy",
+          "when": "view == extension.devicescript.jdom-explorer && viewItem == rw"
+        },
+        {
+          "command": "extension.devicescript.node.copy",
+          "when": "view == extension.devicescript.jdom-explorer && viewItem == register"
+        },
+        {
           "command": "extension.devicescript.watch.add",
           "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
           "group": "inline"
@@ -401,8 +409,13 @@
         "icon": "$(circuit-board)"
       },
       {
-        "command": "extension.devicescript.selectNode",
-        "title": "Watch",
+        "command": "extension.devicescript.node.copy",
+        "title": "Copy",
+        "category": "DeviceScript"
+      },
+      {
+        "command": "extension.devicescript.node.select",
+        "title": "Select",
         "category": "DeviceScript"
       },
       {
