@@ -42,6 +42,7 @@ import { DsDapSession } from "@devicescript/dap"
 import { initVMCmds, overrideConsoleDebug } from "./vmworker"
 import { enableLogging } from "./logging"
 import { cliVersion } from "./version"
+import { PORT_IN_USE } from "./exitcodes"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -63,7 +64,6 @@ export async function devtools(
 
     overrideConsoleDebug()
 
-    log(`starting dev tools at http://localhost:${port}`)
     log(cliVersion())
 
     loadServiceSpecifications(jacdacDefaultSpecifications)
@@ -103,8 +103,14 @@ export async function devtools(
             .forEach(c => c.send(Buffer.from(frame)))
     })
 
-    startProxyServers(port, tcpPort, options)
-    startDbgServer(dbgPort, options)
+    try {
+        startProxyServers(port, tcpPort, options)
+        startDbgServer(dbgPort, options)
+    } catch (e) {
+        console.error(`error while starting servers`)
+        console.debug(e)
+        process.exit(PORT_IN_USE)
+    }
 
     enableLogging(bus)
 
@@ -147,7 +153,9 @@ function startProxyServers(
     const bus = devtoolsSelf.bus
 
     const listenHost = options.internet ? undefined : "127.0.0.1"
-    log(`   websocket: ws://localhost:${port}`)
+    const domain = listenHost || "localhost"
+    log(`   http     : http://${domain}:${port}`)
+    log(`   websocket: ws://${domain}:${port}`)
     const server = http.createServer(function (req, res) {
         const parsedUrl = url.parse(req.url)
         const pathname = parsedUrl.pathname
@@ -190,7 +198,7 @@ function startProxyServers(
     })
     server.listen(port, listenHost)
 
-    log(`   tcpsocket: tcp://localhost:${tcpPort}`)
+    log(`   tcpsocket: tcp://${domain}:${tcpPort}`)
     const tcpServer = net.createServer(socket => {
         const sender = "tcp" + ++clientId
         const client: DevToolsClient = socket as any
@@ -277,7 +285,8 @@ function startDbgServer(port: number, options: DevToolsOptions) {
     }
 
     const listenHost = options.internet ? undefined : "127.0.0.1"
-    console.log(`   dbgsrv: tcp://localhost:${port}`)
+    const domain = listenHost || "localhost"
+    console.log(`   dbgserver: tcp://${domain}:${port}`)
     net.createServer(async socket => {
         console.log("got debug server connection")
         socket.on("end", () => {

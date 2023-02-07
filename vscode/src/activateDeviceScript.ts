@@ -78,11 +78,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.showServerTerminal",
+            "extension.devicescript.terminal.show",
             () => extensionState.devtools.show()
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.identifyDevice",
+            "extension.devicescript.device.identify",
             async (item: JDomDeviceTreeItem) => {
                 const device =
                     item?.device ||
@@ -91,7 +91,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.resetDevice",
+            "extension.devicescript.device.reset",
             async (item: JDomDeviceTreeItem) => {
                 const device =
                     item?.device ||
@@ -207,12 +207,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         if (tag.endsWith("err")) fn = output.error
         for (const l of msg.data.lines) fn(tag + ":", l)
     })
-    subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.showOutput",
-            () => output.show()
-        )
-    )
     const redirectConsoleOutput =
         extensionMode == vscode.ExtensionMode.Production
     if (redirectConsoleOutput) {

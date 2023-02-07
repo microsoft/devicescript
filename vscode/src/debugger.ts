@@ -22,7 +22,7 @@ export class DeviceScriptAdapterServerDescriptorFactory
         )
         if (config.get("showTerminalOnStart"))
             vscode.commands.executeCommand(
-                "extension.devicescript.showServerTerminal"
+                "extension.devicescript.terminal.show"
             )
 
         return new vscode.DebugAdapterServer(8083, "localhost")

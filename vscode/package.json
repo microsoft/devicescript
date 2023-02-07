@@ -234,7 +234,7 @@
           "group": "navigation"
         },
         {
-          "command": "extension.devicescript.showServerTerminal",
+          "command": "extension.devicescript.terminal.show",
           "when": "view == extension.devicescript.jdom-explorer",
           "group": "navigation"
         },
@@ -261,15 +261,15 @@
           "group": "inline"
         },
         {
-          "command": "extension.devicescript.resetDevice",
+          "command": "extension.devicescript.device.reset",
           "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator"
         },
         {
-          "command": "extension.devicescript.resetDevice",
+          "command": "extension.devicescript.device.reset",
           "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
         },
         {
-          "command": "extension.devicescript.identifyDevice",
+          "command": "extension.devicescript.device.identify",
           "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
         },
         {
@@ -354,10 +354,7 @@
           "command": "extension.devicescript.stopSimulator"
         },
         {
-          "command": "extension.devicescript.showOutput"
-        },
-        {
-          "command": "extension.devicescript.showServerTerminal"
+          "command": "extension.devicescript.terminal.show"
         },
         {
           "command": "extension.devicescript.cloud.configure"
@@ -375,15 +372,10 @@
     },
     "commands": [
       {
-        "command": "extension.devicescript.showServerTerminal",
+        "command": "extension.devicescript.terminal.show",
         "title": "Show Development Server Terminal",
         "category": "DeviceScript",
         "icon": "$(output)"
-      },
-      {
-        "command": "extension.devicescript.showOutput",
-        "title": "Show DeviceScript Output",
-        "category": "DeviceScript"
       },
       {
         "command": "extension.devicescript.openSimulators",
@@ -392,14 +384,14 @@
         "icon": "$(dashboard)"
       },
       {
-        "command": "extension.devicescript.identifyDevice",
+        "command": "extension.devicescript.device.identify",
         "title": "Identify device",
         "category": "DeviceScript",
         "icon": "$(bell)"
       },
       {
         "command": "extension.devicescript.connect",
-        "title": "Connect device",
+        "title": "Connect",
         "category": "DeviceScript",
         "icon": "$(plug)"
       },
@@ -439,7 +431,7 @@
         "icon": "$(close)"
       },
       {
-        "command": "extension.devicescript.resetDevice",
+        "command": "extension.devicescript.device.reset",
         "title": "Reset device",
         "category": "DeviceScript",
         "icon": "$(debug-restart)"
