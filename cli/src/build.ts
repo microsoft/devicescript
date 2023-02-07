@@ -13,22 +13,19 @@ import {
     compile,
     jacdacDefaultSpecifications,
     DevsDiagnostic,
-    DEVS_BYTECODE_FILE,
     formatDiagnostics,
     DEVS_DBG_FILE,
     prettySize,
     DebugInfo,
-    parseStackFrame,
     CompileFlags,
     SrcMapResolver,
     preludeFiles,
 } from "@devicescript/compiler"
 import { BINDIR, CmdOptions, debug, error, LIBDIR, log } from "./command"
-import { devtools } from "./devtools"
 
 import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
-import { printDmesg } from "./vmworker"
+import { printDmesg, verboseLog } from "./vmworker"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -44,7 +41,6 @@ export function setDevsDmesg() {
         const dbg = readDebugInfo()
         devsInst.dmesg = (s: string) => {
             printDmesg(dbg, "WASM", s)
-            // console.debug("    " + parseStackFrame(dbg, s).markedLine)
         }
     }
 }
@@ -98,7 +94,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
     const devsHost = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
-            if (options.verbose) debug(`write ${p}`)
+            verboseLog(`write ${p}`)
             writeFileSync(p, cont)
             if (
                 fn.endsWith(".jasm") &&
@@ -107,9 +103,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
             )
                 throw new Error("bad disassembly")
         },
-        log: (msg: string) => {
-            if (options.verbose) log(msg)
-        },
+        log: verboseLog,
         error: (err: DevsDiagnostic) => {
             if (!options.quiet) error(formatDiagnostics([err]))
         },

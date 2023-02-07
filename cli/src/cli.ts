@@ -14,6 +14,7 @@ import { compileFlagHelp, runtimeVersion } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
+import { setVerbose } from "./vmworker"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -186,8 +187,15 @@ export async function mainCli() {
     program
         .command("dcfg", { hidden: true })
         .description("compile/decompile DCFG files")
+        .option(
+            "-u, --update <file.c>",
+            "update given C file with compiled output"
+        )
+        .option("-o, --output <file.bin>", "specify output file name")
         .arguments("<file.json|file.bin>")
         .action(dcfg)
+
+    program.on("option:verbose", () => setVerbose(true))
 
     program.parse(process.argv)
 }

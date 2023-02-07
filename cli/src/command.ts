@@ -1,5 +1,4 @@
 export interface CmdOptions {
-    verbose?: boolean
     noVerify?: boolean
 }
 export const GENDIR = ".devicescript"

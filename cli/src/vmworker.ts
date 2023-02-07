@@ -16,6 +16,15 @@ import {
 } from "./sideprotocol"
 
 let worker: ChildProcess
+export let isVerbose = false
+
+export function setVerbose(v: boolean) {
+    isVerbose = v
+}
+
+export function verboseLog(msg: string) {
+    if (isVerbose) console.debug(wrapColor(90, msg))
+}
 
 export function waitForEvent<T>(
     ms: number,
@@ -111,6 +120,8 @@ export function printDmesg(dbg: DebugInfo, pref: string, line: string) {
         else if (marker == ">") text = wrapColor(95, text)
         else text = wrapColor(33, text)
         console.log(pref + "> " + text)
+    } else if (isVerbose) {
+        console.log(wrapColor(90, "V> " + line.trim()))
     }
 }
 
