@@ -219,7 +219,9 @@ export class DeveloperToolsManager extends JDEventSource {
             "**/devsconfig.json",
             "**​/node_modules/**"
         )
-        return configs.map(cfg => Utils.dirname(cfg))
+        return configs
+            .map(cfg => Utils.dirname(cfg))
+            .filter(d => !/\/node_modules\//.test(d.fsPath))
     }
 
     async show() {

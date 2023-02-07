@@ -15,19 +15,23 @@ export async function pickDeviceScriptFile(
         "**​/node_modules/**"
     )
     // get all typescript files next to config file
-    const files = (
+    let files = (
         await Promise.all(
-            configs.map(async cfg => {
-                const d = Utils.dirname(cfg).fsPath
-                const res = await vscode.workspace.findFiles(
-                    new vscode.RelativePattern(d, "*.ts")
-                )
-                return res
-            })
+            configs
+                .filter(cfg => !/\/node_modules\//.test(cfg.fsPath))
+                .map(async cfg => {
+                    const d = Utils.dirname(cfg).fsPath
+                    const res = await vscode.workspace.findFiles(
+                        new vscode.RelativePattern(d, "*.ts")
+                    )
+                    return res
+                })
         )
     ).flat()
     // sort
     files.sort((l, r) => l.path.localeCompare(r.path))
+    // unique
+    files = [...new Set(files)]
 
     if (!files.length) return undefined
 
@@ -37,7 +41,8 @@ export async function pickDeviceScriptFile(
             file =>
                 <TaggedQuickPickItem<vscode.Uri>>{
                     data: file,
-                    label: file.path,
+                    label: Utils.basename(file),
+                    description: Utils.dirname(file).fsPath,
                 }
         ),
         {
