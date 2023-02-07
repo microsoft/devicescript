@@ -206,11 +206,11 @@ export class DeveloperToolsManager extends JDEventSource {
                     "devicescript.devtools"
                 )
                 const useShell = !!devToolsConfig.get("shell")
-                const nodePath =
-                    (devToolsConfig.get("node") as string) || "node"
+                const nodePath = devToolsConfig.get("node") as string
 
-                const cli = nodePath
-                const args = [cliBin, "devtools", "--vscode"]
+                const args = ["devtools", "--vscode"]
+                const cli = nodePath || cliBin
+                if (nodePath) args.unshift(cliBin)
 
                 console.debug(
                     `create terminal: ${
