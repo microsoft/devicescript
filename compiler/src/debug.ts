@@ -5,7 +5,6 @@ import {
     srcMapEntrySize,
 } from "./info"
 import { assert, strcmp } from "./jdutil"
-import { TODO } from "./util"
 
 function warn(msg: string) {
     return `\u001b[36m${msg}\u001b[0m`

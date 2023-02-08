@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs"
-import { CmdOptions, log } from "./command"
+import { CmdOptions, error, log, verboseLog } from "./command"
 import {
     decodeDcfg,
     serializeDcfg,
@@ -8,7 +8,6 @@ import {
     decompileDcfg,
 } from "@devicescript/compiler"
 import { toHex } from "jacdac-ts"
-import { errorLog, verboseLog } from "./vmworker"
 
 export interface DcfgOptions {
     update?: string
@@ -36,7 +35,7 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
             }
         }
         if (res.errors.length) {
-            res.errors.forEach(errorLog)
+            for (const e of res.errors) error(e)
             process.exit(1)
         }
 
@@ -80,12 +79,12 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
     for (const off of idx) {
         console.log(`parsing at ${off}`)
         const res = decodeDcfg(buf.slice(off))
-        res.errors.forEach(errorLog)
+        for (const e of res.errors) error(e)
         console.log(res.settings)
     }
 
     function fatal(msg: string) {
-        errorLog(msg)
+        error(msg)
         process.exit(1)
     }
 }

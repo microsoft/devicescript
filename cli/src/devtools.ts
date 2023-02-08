@@ -165,7 +165,7 @@ function startProxyServers(
                     res.end(proxyHtml)
                 })
                 .catch(e => {
-                    console.error(e)
+                    error(e)
                     res.statusCode = 3
                 })
         } else {
@@ -250,8 +250,8 @@ function startProxyServers(
     function handleError(err: Error) {
         if (/EADDRINUSE/.test(err.message)) process.exit(EXIT_CODE_EADDRINUSE)
         else {
-            console.error(err)
-            process.exit(-1)
+            error(err)
+            process.exit(1)
         }
     }
 
@@ -302,7 +302,7 @@ function startDbgServer(port: number, options: DevToolsOptions) {
         })
         const dbg = devtoolsSelf.lastOKBuild?.dbg
         if (!dbg) {
-            console.error("can't find any build to debug")
+            error("can't find any build to debug")
             // TODO compare sha256
             socket.end()
             return
@@ -366,7 +366,7 @@ async function rebuild(args: BuildReqArgs) {
             deployStatus = `OK`
         } catch (err) {
             deployStatus = err.message || "" + err
-            console.error("Deploy error: " + deployStatus)
+            error("Deploy error: " + deployStatus)
         }
     }
 

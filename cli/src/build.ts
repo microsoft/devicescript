@@ -21,11 +21,11 @@ import {
     SrcMapResolver,
     preludeFiles,
 } from "@devicescript/compiler"
-import { BINDIR, CmdOptions, debug, error, LIBDIR, log } from "./command"
+import { BINDIR, CmdOptions, debug, error, LIBDIR, log, verboseLog } from "./command"
 
 import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
-import { printDmesg, verboseLog } from "./vmworker"
+import { printDmesg } from "./vmworker"
 
 export function readDebugInfo() {
     let dbg: DebugInfo

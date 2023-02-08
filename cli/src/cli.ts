@@ -13,7 +13,7 @@ import { compileFlagHelp, runtimeVersion } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
-import { setVerbose } from "./vmworker"
+import { setVerbose } from "./command"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30

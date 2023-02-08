@@ -69,7 +69,7 @@ export async function runTest(
         inst.devsStart()
         inst.devsDeploy(prog.binary)
         inst.error = (...data) => {
-            console.error(...data)
+            error(...data)
             process.exit(1)
         }
         setTimeout(() => {

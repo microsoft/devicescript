@@ -1,9 +1,61 @@
+import { LoggerPriority } from "jacdac-ts"
+
 export interface CmdOptions {
     noVerify?: boolean
 }
 export const GENDIR = ".devicescript"
 export const LIBDIR = `${GENDIR}/lib`
 export const BINDIR = `${GENDIR}/bin`
+
 export const log = console.log
-export const debug = console.debug
-export const error = console.error
+
+export function debug(...args: any[]) {
+    console.debug(...wrapArgs(34, args))
+}
+
+export function error(...args: any[]) {
+    console.error(...wrapArgs(91, args))
+}
+
+// https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
+export function wrapColor(n: number | string, message: string) {
+    return `\x1B[${n}m${message}\x1B[0m`
+}
+
+function wrapArgs(color: number, ...args: any[]) {
+    if (args.every(e => typeof e == "string" || typeof e == "number")) {
+        // if it's just strings & numbers use the coloring
+        const msg = args.join(" ")
+        return [wrapColor(color, msg)]
+    } else {
+        // otherwise use the console.log() etc built-in formatting
+        return args
+    }
+}
+
+export function logToConsole(priority: LoggerPriority, message: string) {
+    switch (priority) {
+        case LoggerPriority.Debug:
+            console.debug(wrapColor(34, message))
+            break
+        case LoggerPriority.Log:
+            console.log(wrapColor(96, message))
+            break
+        case LoggerPriority.Warning:
+            console.warn(wrapColor(93, message))
+            break
+        case LoggerPriority.Error:
+            console.error(wrapColor(91, message))
+            break
+    }
+}
+
+export let isVerbose = false
+
+export function setVerbose(v: boolean) {
+    isVerbose = v
+}
+
+export function verboseLog(msg: string) {
+    if (isVerbose) console.debug(wrapColor(90, msg))
+}

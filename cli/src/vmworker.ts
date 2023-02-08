@@ -1,7 +1,6 @@
 import { DebugInfo, parseStackFrame } from "@devicescript/compiler"
-import { LoggerPriority } from "jacdac-ts"
 import { ChildProcess, fork, spawn } from "node:child_process"
-import { logToConsole, wrapColor } from "./logging"
+import { isVerbose, wrapColor } from "./command"
 import {
     addReqHandler,
     DevToolsClient,
@@ -17,19 +16,6 @@ import {
 } from "./sideprotocol"
 
 let worker: ChildProcess
-export let isVerbose = false
-
-export function setVerbose(v: boolean) {
-    isVerbose = v
-}
-
-export function verboseLog(msg: string) {
-    if (isVerbose) console.debug(wrapColor(90, msg))
-}
-
-export function errorLog(msg: string) {
-    logToConsole(LoggerPriority.Error, msg)
-}
 
 export function waitForEvent<T>(
     ms: number,
@@ -87,6 +73,10 @@ export async function stopVmWorker() {
     }
 }
 
+function stripColors(str: string) {
+    return str.replace(/\x1B\[[0-9;]+m/g, "")
+}
+
 export function overrideConsoleDebug() {
     const condbg = console.debug
     console.debug = (...args: any[]) => {
@@ -97,7 +87,7 @@ export function overrideConsoleDebug() {
             typeof args[0] == "string" &&
             args[0].startsWith("DEV: ")
         ) {
-            let line = args[0].replace(/\x1B\[[0-9;]+m/g, "").slice(5)
+            let line = stripColors(args[0]).slice(5)
             sendOutput(cl, "dev", [line])
             line = line.replace(/^DM \(\d+\): ?/, "")
             if (line) printDmesg(devtoolsIface.lastOKBuild?.dbg, "DEV", line)
@@ -108,7 +98,7 @@ export function overrideConsoleDebug() {
                     if (str) str += " "
                     str += a
                 }
-                sendOutput(cl, "verbose", [str])
+                sendOutput(cl, "verbose", [stripColors(str)])
             } else {
                 condbg(...args)
             }

@@ -8,32 +8,11 @@ import {
     SRV_LOGGER,
     LoggerCmd,
 } from "jacdac-ts"
+import { logToConsole } from "./command"
 
 function prefixMsg(shortId: string, content: string) {
     const prefix = content.startsWith(shortId) ? "" : `${shortId}> `
     return `${prefix}${content.trimEnd()}`
-}
-
-// https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
-export function wrapColor(n: number | string, message: string) {
-    return `\u001B[${n}m${message}\u001B[0m`
-}
-
-export function logToConsole(priority: LoggerPriority, message: string) {
-    switch (priority) {
-        case LoggerPriority.Debug:
-            console.debug(wrapColor(34, message))
-            break
-        case LoggerPriority.Log:
-            console.log(wrapColor(96, message))
-            break
-        case LoggerPriority.Warning:
-            console.warn(wrapColor(93, message))
-            break
-        case LoggerPriority.Error:
-            console.error(wrapColor(91, message))
-            break
-    }
 }
 
 export function enableLogging(bus: JDBus, logFn = logToConsole) {
