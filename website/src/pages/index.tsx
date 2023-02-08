@@ -26,7 +26,16 @@ function HomepageHeader() {
                     Script
                 </h1>
                 <p className="hero__subtitle">{siteConfig.tagline}</p>
-                <div className={styles.buttons}></div>
+                <div className={styles.buttons}>
+                    <div className={styles.buttons}>
+                        <Link
+                            className="button button--secondary button--lg"
+                            to="/docs/intro"
+                        >
+                            Getting Started - 5min ⏱️
+                        </Link>
+                    </div>
+                </div>
             </div>
         </header>
     )
