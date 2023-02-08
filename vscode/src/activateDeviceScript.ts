@@ -46,13 +46,12 @@ import {
 } from "./JDomTreeDataProvider"
 import { registerMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
+import { activeTelemetry } from "./telemetry"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
-    const { subscriptions, workspaceState, extensionMode, extension } = context
+    activeTelemetry(context)
+    const { subscriptions, extensionMode, extension } = context
     const { extensionKind } = extension
-    const outputConfig = vscode.workspace.getConfiguration(
-        "devicescript.output"
-    )
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
@@ -72,7 +71,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.debug.toggleFormatting",
-            variable => {
+            () => {
                 const ds = vscode.debug.activeDebugSession
                 if (ds) {
                     ds.customRequest("toggleFormatting")
@@ -156,7 +155,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.variables.simulator",
-            config => extensionState.simulatorScriptManagerId
+            () => extensionState.simulatorScriptManagerId
         )
     )
 
