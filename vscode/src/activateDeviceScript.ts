@@ -48,11 +48,8 @@ import { registerMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
-    const { subscriptions, workspaceState, extensionMode, extension } = context
+    const { subscriptions, extensionMode, extension } = context
     const { extensionKind } = extension
-    const outputConfig = vscode.workspace.getConfiguration(
-        "devicescript.output"
-    )
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
@@ -72,7 +69,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.debug.toggleFormatting",
-            variable => {
+            () => {
                 const ds = vscode.debug.activeDebugSession
                 if (ds) {
                     ds.customRequest("toggleFormatting")
@@ -107,7 +104,8 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const isWorkspace =
                     extensionKind === vscode.ExtensionKind.Workspace
                 if (isWorkspace) {
-                    vscode.window.showErrorMessage(
+                    extensionState.telemetry.showErrorMessage(
+                        "connection.remote",
                         "DeviceScript: Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
                     )
                     return
@@ -156,7 +154,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.variables.simulator",
-            config => extensionState.simulatorScriptManagerId
+            () => extensionState.simulatorScriptManagerId
         )
     )
 

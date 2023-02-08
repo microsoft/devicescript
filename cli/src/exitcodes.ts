@@ -1,1 +1,1 @@
-export const EXIT_CODE_EADDRINUSE = 1000
+export const EXIT_CODE_EADDRINUSE = 100

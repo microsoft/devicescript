@@ -1,584 +1,585 @@
 {
-  "name": "devicescript-vscode",
-  "displayName": "DeviceScript",
-  "version": "1.0.15",
-  "publisher": "Microsoft",
-  "description": "DeviceScript extension for Visual Studio Code.",
-  "author": {
-    "name": "Microsoft Corporation"
-  },
-  "homepage": "https://microsoft.github.io/devicescript/",
-  "license": "MIT",
-  "preview": true,
-  "extensionKind": [
-    "workspace"
-  ],
-  "keywords": [
-    "DeviceScript",
-    "IoT",
-    "TypeScript",
-    "Embdded"
-  ],
-  "engines": {
-    "vscode": "^1.74.0"
-  },
-  "icon": "images/jacdac-logo.png",
-  "galleryBanner": {
-    "color": "#C80000",
-    "theme": "dark"
-  },
-  "categories": [
-    "Debuggers"
-  ],
-  "private": true,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/devicescript.git",
-    "directory": "vscode"
-  },
-  "bugs": {
-    "url": "https://github.com/microsoft/devicescript/issues"
-  },
-  "scripts": {
-    "buildicons": "node ./scripts/updateFonts.js",
-    "buildts": "node ../build.js --fast",
-    "package": "vsce package --out devicescript.vsix --yarn",
-    "publish": "vsce publish",
-    "publish-pre-release": "vsce publish --pre-release",
-    "build": "yarn buildicons && yarn buildts",
-    "vscode:prepublish": "yarn build"
-  },
-  "devDependencies": {
-    "@types/isomorphic-fetch": "^0.0.36",
-    "@types/vscode": "^1.74.0",
-    "@vscode/debugadapter": "^1.59.0",
-    "@vscode/debugadapter-testsupport": "^1.59.0",
-    "@vscode/vsce": "^2.17.0",
-    "isomorphic-fetch": "^3.0.0",
-    "typescript": "^4.9.5",
-    "vscode-uri": "^3.0.7",
-    "webfont": "^11.2.26"
-  },
-  "dependencies": {
-    "jacdac-ts": "*",
-    "websocket-polyfill": "^0.0.3"
-  },
-  "main": "./built/devicescript-vscode.js",
-  "browser": "./built/devicescript-vscode-web.js",
-  "activationEvents": [
-    "workspaceContains:**/devsconfig.json",
-    "onDebugResolve:devicescript",
-    "onDebugDynamicConfigurations:devicescript",
-    "onWebviewPanel:extension.devicescript.simulators"
-  ],
-  "workspaceTrust": {
-    "request": "never"
-  },
-  "contributes": {
-    "configuration": {
-      "title": "DeviceScript",
-      "properties": {
-        "devicescript.devtools.autoStart": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically start DeviceScript Server (requires reload)."
-        },
-        "devicescript.devtools.node": {
-          "type": "string",
-          "default": "",
-          "description": "Path to the Node.JS executable. If not specified, defaults to `node`.",
-          "scope": "machine-overridable"
-        },
-        "devicescript.devtools.shell": {
-          "type": "boolean",
-          "default": false,
-          "description": "Start DeviceScript Server in the default shell rather than as a direct process.",
-          "scope": "machine-overridable"
-        },
-        "devicescript.jacdac.diagnostics": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enables additional debugging output from the Jacdac tooling."
-        },
-        "devicescript.jacdac.tracePackets": {
-          "type": "boolean",
-          "default": false,
-          "description": "Trace Jacdac packets to 'Jacdac Packets' Output pane."
-        },
-        "devicescript.jacdac.showInfrastructure": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show infrastructure services in views."
-        },
-        "devicescript.debugger.showTerminalOnStart": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show DeviceScript terminal when starting debug session."
-        },
-        "devicescript.simulator.runNative": {
-          "type": "boolean",
-          "default": false,
-          "description": "Run a jdcli executable as the VM instead of bundled WASM binary."
-        },
-        "devicescript.simulator.nativePath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to jdcli."
-        },
-        "devicescript.deploy.ignoreRuntimeVersion": {
-          "type": "boolean",
-          "default": false,
-          "description": "Ignore incompatible runtime versions when deploying."
-        },
-        "devicescript.cloud.apiRoot": {
-          "type": "string",
-          "default": "",
-          "description": "Web API root url for device management"
-        }
-      }
+    "name": "devicescript-vscode",
+    "displayName": "DeviceScript",
+    "version": "1.0.15",
+    "publisher": "Microsoft",
+    "description": "DeviceScript extension for Visual Studio Code.",
+    "author": {
+        "name": "Microsoft Corporation"
     },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "devicescript",
-          "title": "DeviceScript",
-          "icon": "./images/jacdac.dark.svg"
-        }
-      ]
-    },
-    "views": {
-      "devicescript": [
-        {
-          "id": "extension.devicescript.jdom-explorer",
-          "name": "Devices"
-        },
-        {
-          "id": "extension.devicescript.watch",
-          "name": "Watch"
-        },
-        {
-          "id": "extension.devicescript.cloud-explorer",
-          "name": "Cloud"
-        }
-      ]
-    },
-    "viewsWelcome": [
-      {
-        "view": "extension.devicescript.jdom-explorer",
-        "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
-      },
-      {
-        "view": "extension.devicescript.watch",
-        "contents": "Select Registers or Events to watch."
-      }
+    "homepage": "https://microsoft.github.io/devicescript/",
+    "license": "MIT",
+    "preview": true,
+    "extensionKind": [
+        "workspace"
     ],
-    "walkthroughs": [
-      {
-        "id": "devicescript.gettingstarted",
-        "title": "Get Started with DeviceScript",
-        "description": "Get your first DeviceScript program running",
-        "steps": [
-          {
-            "id": "installnode.js",
-            "title": "Install Node.js",
-            "description": "Node.js is an easy way to run JavaScript code. It comes with a package manager, yarn, that you will use to install the DeviceScript command line.\n[Install Node.js](https://nodejs.org/en/download/)",
-            "media": {
-              "image": "media/image.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          },
-          {
-            "id": "devicescript.initproject",
-            "title": "Create New DeviceScript Project",
-            "description": "Use the command line to create a new DeviceScript project in a new folder.\n    ``npx @devicescript/cli init``",
-            "media": {
-              "image": "media/image.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          },
-          {
-            "id": "devicescript.deployanddebug",
-            "title": "Deploy and Debug your DeviceScript",
-            "description": "Once you've installed the command line, you can build and deploy DeviceScript programs at a terminal by entering ``devicescript your-file-name.ts``.\nAnother easy way to run DeviceScript programs is by using VS Code's debugger which lets you run the code, pause at different points, and help you what's going on step-by-step.\n[Start Debugging](command:workbench.action.debug.start)",
-            "media": {
-              "image": "media/image.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          }
-        ]
-      }
+    "keywords": [
+        "DeviceScript",
+        "IoT",
+        "TypeScript",
+        "Embdded"
     ],
-    "icons": {
-      "devicescript-logo": {
-        "description": "Devicescript logo",
-        "default": {
-          "fontPath": "./built/devicescript.woff",
-          "fontCharacter": "\\E000"
-        }
-      }
+    "engines": {
+        "vscode": "^1.75.0"
     },
-    "menus": {
-      "view/title": [
-        {
-          "command": "extension.devicescript.connect",
-          "when": "view == extension.devicescript.jdom-explorer",
-          "group": "navigation"
-        },
-        {
-          "command": "extension.devicescript.openSimulators",
-          "when": "view == extension.devicescript.jdom-explorer",
-          "group": "navigation"
-        },
-        {
-          "command": "extension.devicescript.terminal.show",
-          "when": "view == extension.devicescript.jdom-explorer",
-          "group": "navigation"
-        },
-        {
-          "command": "extension.devicescript.watch.clear",
-          "when": "view == extension.devicescript.watch",
-          "group": "navigation"
-        },
-        {
-          "command": "extension.devicescript.cloud.configure",
-          "when": "view == extension.devicescript.cloud-explorer",
-          "group": "navigation"
-        },
-        {
-          "command": "extension.devicescript.cloud.refresh",
-          "when": "view == extension.devicescript.cloud-explorer",
-          "group": "navigation"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "extension.devicescript.simulator.stop",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.device.reset",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator"
-        },
-        {
-          "command": "extension.devicescript.device.reset",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
-        },
-        {
-          "command": "extension.devicescript.device.identify",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
-        },
-        {
-          "command": "extension.devicescript.register.edit",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.node.copy",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == rw"
-        },
-        {
-          "command": "extension.devicescript.node.copy",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == register"
-        },
-        {
-          "command": "extension.devicescript.watch.add",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.watch.remove",
-          "when": "view == extension.devicescript.watch && viewItem == rw",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.watch.add",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == register",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.watch.remove",
-          "when": "view == extension.devicescript.watch && viewItem == register",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.watch.add",
-          "when": "view == extension.devicescript.jdom-explorer && viewItem == event",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.watch.remove",
-          "when": "view == extension.devicescript.watch && viewItem == event",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.watch.remove",
-          "when": "view == extension.devicescript.watch && viewItem == missing",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.cloud.device.updateScript",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.cloud.device.connect",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.cloud.registerDevice",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevices",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.cloud.device.uploadScriptSource",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScripts",
-          "group": "inline"
-        },
-        {
-          "command": "extension.devicescript.cloud.device.downloadScriptSource",
-          "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScript"
-        }
-      ],
-      "commandPalette": [
-        {
-          "command": "extension.devicescript.openSimulators"
-        },
-        {
-          "command": "extension.devicescript.pickDeviceScriptManager"
-        },
-        {
-          "command": "extension.devicescript.connect"
-        },
-        {
-          "command": "extension.devicescript.simulator.start"
-        },
-        {
-          "command": "extension.devicescript.simulator.stop"
-        },
-        {
-          "command": "extension.devicescript.terminal.show"
-        },
-        {
-          "command": "extension.devicescript.cloud.configure"
-        },
-        {
-          "command": "extension.devicescript.cloud.refresh"
-        }
-      ],
-      "debug/variables/context": [
-        {
-          "command": "extension.devicescript.debug.toggleFormatting",
-          "when": "debugType == 'devicescript' && debugProtocolVariableMenuContext == 'simple'"
-        }
-      ]
+    "icon": "images/jacdac-logo.png",
+    "galleryBanner": {
+        "color": "#C80000",
+        "theme": "dark"
     },
-    "commands": [
-      {
-        "command": "extension.devicescript.terminal.show",
-        "title": "Show Development Server Terminal",
-        "category": "DeviceScript",
-        "icon": "$(output)"
-      },
-      {
-        "command": "extension.devicescript.openSimulators",
-        "title": "Open Simulators",
-        "category": "DeviceScript",
-        "icon": "$(dashboard)"
-      },
-      {
-        "command": "extension.devicescript.device.identify",
-        "title": "Identify device",
-        "category": "DeviceScript",
-        "icon": "$(bell)"
-      },
-      {
-        "command": "extension.devicescript.connect",
-        "title": "Connect",
-        "category": "DeviceScript",
-        "icon": "$(plug)"
-      },
-      {
-        "command": "extension.devicescript.pickDeviceScriptManager",
-        "title": "Pick DeviceScript device",
-        "category": "DeviceScript",
-        "icon": "$(circuit-board)"
-      },
-      {
-        "command": "extension.devicescript.node.copy",
-        "title": "Copy",
-        "category": "DeviceScript"
-      },
-      {
-        "command": "extension.devicescript.node.select",
-        "title": "Select",
-        "category": "DeviceScript"
-      },
-      {
-        "command": "extension.devicescript.register.edit",
-        "title": "Edit...",
-        "category": "DeviceScript",
-        "icon": "$(edit)"
-      },
-      {
-        "command": "extension.devicescript.watch.clear",
-        "title": "Watch",
-        "category": "DeviceScript",
-        "icon": "$(close-all)"
-      },
-      {
-        "command": "extension.devicescript.watch.add",
-        "title": "Watch",
-        "category": "DeviceScript",
-        "icon": "$(pin)"
-      },
-      {
-        "command": "extension.devicescript.watch.remove",
-        "title": "Unwatch",
-        "category": "DeviceScript",
-        "icon": "$(close)"
-      },
-      {
-        "command": "extension.devicescript.device.reset",
-        "title": "Reset device",
-        "category": "DeviceScript",
-        "icon": "$(debug-restart)"
-      },
-      {
-        "command": "extension.devicescript.debug.toggleFormatting",
-        "title": "Toggle between decimal and hex formatting"
-      },
-      {
-        "command": "extension.devicescript.simulator.start",
-        "title": "Start Simulator",
-        "category": "DeviceScript"
-      },
-      {
-        "command": "extension.devicescript.simulator.stop",
-        "title": "Stop Simulator",
-        "category": "DeviceScript",
-        "icon": "$(close)"
-      },
-      {
-        "command": "extension.devicescript.device.showFirmwareInformation",
-        "title": "Update Firmware",
-        "category": "DeviceScript"
-      },
-      {
-        "command": "extension.devicescript.cloud.configure",
-        "title": "Configure Connection",
-        "category": "DeviceScript Cloud",
-        "icon": "$(plug)"
-      },
-      {
-        "command": "extension.devicescript.cloud.refresh",
-        "title": "Refresh",
-        "category": "DeviceScript Cloud",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "extension.devicescript.cloud.registerDevice",
-        "title": "Register Device",
-        "category": "DeviceScript Cloud",
-        "icon": "$(add)"
-      },
-      {
-        "command": "extension.devicescript.cloud.device.updateScript",
-        "title": "Upgrade Script",
-        "category": "DeviceScript Cloud",
-        "icon": "$(file-code)"
-      },
-      {
-        "command": "extension.devicescript.cloud.device.connect",
-        "title": "Connect",
-        "category": "DeviceScript Cloud",
-        "icon": "$(plug)"
-      },
-      {
-        "command": "extension.devicescript.cloud.device.downloadScriptSource",
-        "title": "Download Latest Version",
-        "category": "DeviceScript Cloud",
-        "icon": "$(cloud-download)"
-      },
-      {
-        "command": "extension.devicescript.cloud.device.uploadScriptSource",
-        "title": "Upload Version",
-        "category": "DeviceScript Cloud",
-        "icon": "$(cloud-upload)"
-      }
+    "categories": [
+        "Debuggers"
     ],
-    "breakpoints": [
-      {
-        "language": "typescript"
-      }
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "vscode"
+    },
+    "bugs": {
+        "url": "https://github.com/microsoft/devicescript/issues"
+    },
+    "scripts": {
+        "buildicons": "node ./scripts/updateFonts.js",
+        "buildts": "node ../build.js --fast",
+        "package": "vsce package --out devicescript.vsix --yarn",
+        "publish": "vsce publish",
+        "publish-pre-release": "vsce publish --pre-release",
+        "build": "yarn buildicons && yarn buildts",
+        "vscode:prepublish": "yarn build"
+    },
+    "devDependencies": {
+        "@types/isomorphic-fetch": "^0.0.36",
+        "@types/vscode": "^1.75.0",
+        "@vscode/debugadapter": "^1.59.0",
+        "@vscode/debugadapter-testsupport": "^1.59.0",
+        "@vscode/vsce": "^2.17.0",
+        "isomorphic-fetch": "^3.0.0",
+        "typescript": "^4.9.5",
+        "vscode-uri": "^3.0.7",
+        "webfont": "^11.2.26"
+    },
+    "dependencies": {
+        "@vscode/extension-telemetry": "^0.7.5",
+        "jacdac-ts": "*",
+        "websocket-polyfill": "^0.0.3"
+    },
+    "main": "./built/devicescript-vscode.js",
+    "browser": "./built/devicescript-vscode-web.js",
+    "activationEvents": [
+        "workspaceContains:**/devsconfig.json",
+        "onDebugResolve:devicescript",
+        "onDebugDynamicConfigurations:devicescript",
+        "onWebviewPanel:extension.devicescript.simulators"
     ],
-    "debuggers": [
-      {
-        "type": "devicescript",
-        "languages": [
-          "typescript"
-        ],
-        "label": "DeviceScript",
-        "program": "./out/debugAdapter.js",
-        "runtime": "node",
-        "configurationAttributes": {
-          "launch": {
-            "required": [
-              "program",
-              "deviceId"
-            ],
+    "workspaceTrust": {
+        "request": "never"
+    },
+    "contributes": {
+        "configuration": {
+            "title": "DeviceScript",
             "properties": {
-              "program": {
-                "type": "string",
-                "description": "Absolute path to a text file.",
-                "default": "${workspaceFolder}/main.ts"
-              },
-              "stopOnEntry": {
-                "type": "boolean",
-                "description": "Automatically stop after launch.",
-                "default": true
-              },
-              "deviceId": {
-                "type": "string",
-                "description": "Device identifier of the device (long or short). Use ${command:deviceScriptSimulator} for the Simulator."
-              },
-              "serviceInstance": {
-                "type": "number",
-                "description": "Instance index of the device manger service. Default is 0."
-              }
+                "devicescript.devtools.autoStart": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically start DeviceScript Server (requires reload)."
+                },
+                "devicescript.devtools.node": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to the Node.JS executable. If not specified, defaults to `node`.",
+                    "scope": "machine-overridable"
+                },
+                "devicescript.devtools.shell": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Start DeviceScript Server in the default shell rather than as a direct process.",
+                    "scope": "machine-overridable"
+                },
+                "devicescript.jacdac.diagnostics": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables additional debugging output from the Jacdac tooling."
+                },
+                "devicescript.jacdac.tracePackets": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Trace Jacdac packets to 'Jacdac Packets' Output pane."
+                },
+                "devicescript.jacdac.showInfrastructure": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show infrastructure services in views."
+                },
+                "devicescript.debugger.showTerminalOnStart": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show DeviceScript terminal when starting debug session."
+                },
+                "devicescript.simulator.runNative": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run a jdcli executable as the VM instead of bundled WASM binary."
+                },
+                "devicescript.simulator.nativePath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to jdcli."
+                },
+                "devicescript.deploy.ignoreRuntimeVersion": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Ignore incompatible runtime versions when deploying."
+                },
+                "devicescript.cloud.apiRoot": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Web API root url for device management"
+                }
             }
-          }
         },
-        "initialConfigurations": [
-          {
-            "type": "devicescript",
-            "request": "launch",
-            "name": "DeviceScript: Launch",
-            "program": "${workspaceFolder}/main.ts",
-            "stopOnEntry": true
-          }
-        ],
-        "configurationSnippets": [
-          {
-            "label": "DeviceScript: Launch",
-            "description": "A new configuration for 'debugging' a user selected typescript file.",
-            "body": {
-              "type": "devicescript",
-              "request": "launch",
-              "name": "DeviceScript: Launch",
-              "program": "^\"\\${workspaceFolder}/main.ts",
-              "stopOnEntry": true
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "devicescript",
+                    "title": "DeviceScript",
+                    "icon": "./images/jacdac.dark.svg"
+                }
+            ]
+        },
+        "views": {
+            "devicescript": [
+                {
+                    "id": "extension.devicescript.jdom-explorer",
+                    "name": "Devices"
+                },
+                {
+                    "id": "extension.devicescript.watch",
+                    "name": "Watch"
+                },
+                {
+                    "id": "extension.devicescript.cloud-explorer",
+                    "name": "Cloud"
+                }
+            ]
+        },
+        "viewsWelcome": [
+            {
+                "view": "extension.devicescript.jdom-explorer",
+                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
+            },
+            {
+                "view": "extension.devicescript.watch",
+                "contents": "Select Registers or Events to watch."
             }
-          }
         ],
-        "variables": {
-          "deviceScriptSimulator": "extension.devicescript.variables.simulator"
-        }
-      }
-    ]
-  }
+        "walkthroughs": [
+            {
+                "id": "devicescript.gettingstarted",
+                "title": "Get Started with DeviceScript",
+                "description": "Get your first DeviceScript program running",
+                "steps": [
+                    {
+                        "id": "installnode.js",
+                        "title": "Install Node.js",
+                        "description": "Node.js is an easy way to run JavaScript code. It comes with a package manager, yarn, that you will use to install the DeviceScript command line.\n[Install Node.js](https://nodejs.org/en/download/)",
+                        "media": {
+                            "image": "media/image.png",
+                            "altText": "Empty image"
+                        },
+                        "completionEvents": []
+                    },
+                    {
+                        "id": "devicescript.initproject",
+                        "title": "Create New DeviceScript Project",
+                        "description": "Use the command line to create a new DeviceScript project in a new folder.\n    ``npx @devicescript/cli init``",
+                        "media": {
+                            "image": "media/image.png",
+                            "altText": "Empty image"
+                        },
+                        "completionEvents": []
+                    },
+                    {
+                        "id": "devicescript.deployanddebug",
+                        "title": "Deploy and Debug your DeviceScript",
+                        "description": "Once you've installed the command line, you can build and deploy DeviceScript programs at a terminal by entering ``devicescript your-file-name.ts``.\nAnother easy way to run DeviceScript programs is by using VS Code's debugger which lets you run the code, pause at different points, and help you what's going on step-by-step.\n[Start Debugging](command:workbench.action.debug.start)",
+                        "media": {
+                            "image": "media/image.png",
+                            "altText": "Empty image"
+                        },
+                        "completionEvents": []
+                    }
+                ]
+            }
+        ],
+        "icons": {
+            "devicescript-logo": {
+                "description": "Devicescript logo",
+                "default": {
+                    "fontPath": "./built/devicescript.woff",
+                    "fontCharacter": "\\E000"
+                }
+            }
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "extension.devicescript.connect",
+                    "when": "view == extension.devicescript.jdom-explorer",
+                    "group": "navigation"
+                },
+                {
+                    "command": "extension.devicescript.openSimulators",
+                    "when": "view == extension.devicescript.jdom-explorer",
+                    "group": "navigation"
+                },
+                {
+                    "command": "extension.devicescript.terminal.show",
+                    "when": "view == extension.devicescript.jdom-explorer",
+                    "group": "navigation"
+                },
+                {
+                    "command": "extension.devicescript.watch.clear",
+                    "when": "view == extension.devicescript.watch",
+                    "group": "navigation"
+                },
+                {
+                    "command": "extension.devicescript.cloud.configure",
+                    "when": "view == extension.devicescript.cloud-explorer",
+                    "group": "navigation"
+                },
+                {
+                    "command": "extension.devicescript.cloud.refresh",
+                    "when": "view == extension.devicescript.cloud-explorer",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "extension.devicescript.simulator.stop",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.device.reset",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator"
+                },
+                {
+                    "command": "extension.devicescript.device.reset",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
+                },
+                {
+                    "command": "extension.devicescript.device.identify",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
+                },
+                {
+                    "command": "extension.devicescript.register.edit",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.node.copy",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == rw"
+                },
+                {
+                    "command": "extension.devicescript.node.copy",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == register"
+                },
+                {
+                    "command": "extension.devicescript.watch.add",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.watch.remove",
+                    "when": "view == extension.devicescript.watch && viewItem == rw",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.watch.add",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == register",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.watch.remove",
+                    "when": "view == extension.devicescript.watch && viewItem == register",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.watch.add",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem == event",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.watch.remove",
+                    "when": "view == extension.devicescript.watch && viewItem == event",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.watch.remove",
+                    "when": "view == extension.devicescript.watch && viewItem == missing",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.cloud.device.updateScript",
+                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.cloud.device.connect",
+                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.cloud.registerDevice",
+                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevices",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.cloud.device.uploadScriptSource",
+                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScripts",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.cloud.device.downloadScriptSource",
+                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScript"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "extension.devicescript.openSimulators"
+                },
+                {
+                    "command": "extension.devicescript.pickDeviceScriptManager"
+                },
+                {
+                    "command": "extension.devicescript.connect"
+                },
+                {
+                    "command": "extension.devicescript.simulator.start"
+                },
+                {
+                    "command": "extension.devicescript.simulator.stop"
+                },
+                {
+                    "command": "extension.devicescript.terminal.show"
+                },
+                {
+                    "command": "extension.devicescript.cloud.configure"
+                },
+                {
+                    "command": "extension.devicescript.cloud.refresh"
+                }
+            ],
+            "debug/variables/context": [
+                {
+                    "command": "extension.devicescript.debug.toggleFormatting",
+                    "when": "debugType == 'devicescript' && debugProtocolVariableMenuContext == 'simple'"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "extension.devicescript.terminal.show",
+                "title": "Show Development Server Terminal",
+                "category": "DeviceScript",
+                "icon": "$(output)"
+            },
+            {
+                "command": "extension.devicescript.openSimulators",
+                "title": "Open Simulators",
+                "category": "DeviceScript",
+                "icon": "$(dashboard)"
+            },
+            {
+                "command": "extension.devicescript.device.identify",
+                "title": "Identify device",
+                "category": "DeviceScript",
+                "icon": "$(bell)"
+            },
+            {
+                "command": "extension.devicescript.connect",
+                "title": "Connect",
+                "category": "DeviceScript",
+                "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.pickDeviceScriptManager",
+                "title": "Pick DeviceScript device",
+                "category": "DeviceScript",
+                "icon": "$(circuit-board)"
+            },
+            {
+                "command": "extension.devicescript.node.copy",
+                "title": "Copy",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.node.select",
+                "title": "Select",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.register.edit",
+                "title": "Edit...",
+                "category": "DeviceScript",
+                "icon": "$(edit)"
+            },
+            {
+                "command": "extension.devicescript.watch.clear",
+                "title": "Watch",
+                "category": "DeviceScript",
+                "icon": "$(close-all)"
+            },
+            {
+                "command": "extension.devicescript.watch.add",
+                "title": "Watch",
+                "category": "DeviceScript",
+                "icon": "$(pin)"
+            },
+            {
+                "command": "extension.devicescript.watch.remove",
+                "title": "Unwatch",
+                "category": "DeviceScript",
+                "icon": "$(close)"
+            },
+            {
+                "command": "extension.devicescript.device.reset",
+                "title": "Reset device",
+                "category": "DeviceScript",
+                "icon": "$(debug-restart)"
+            },
+            {
+                "command": "extension.devicescript.debug.toggleFormatting",
+                "title": "Toggle between decimal and hex formatting"
+            },
+            {
+                "command": "extension.devicescript.simulator.start",
+                "title": "Start Simulator",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.simulator.stop",
+                "title": "Stop Simulator",
+                "category": "DeviceScript",
+                "icon": "$(close)"
+            },
+            {
+                "command": "extension.devicescript.device.showFirmwareInformation",
+                "title": "Update Firmware",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.cloud.configure",
+                "title": "Configure Connection",
+                "category": "DeviceScript Cloud",
+                "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.cloud.refresh",
+                "title": "Refresh",
+                "category": "DeviceScript Cloud",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "extension.devicescript.cloud.registerDevice",
+                "title": "Register Device",
+                "category": "DeviceScript Cloud",
+                "icon": "$(add)"
+            },
+            {
+                "command": "extension.devicescript.cloud.device.updateScript",
+                "title": "Upgrade Script",
+                "category": "DeviceScript Cloud",
+                "icon": "$(file-code)"
+            },
+            {
+                "command": "extension.devicescript.cloud.device.connect",
+                "title": "Connect",
+                "category": "DeviceScript Cloud",
+                "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.cloud.device.downloadScriptSource",
+                "title": "Download Latest Version",
+                "category": "DeviceScript Cloud",
+                "icon": "$(cloud-download)"
+            },
+            {
+                "command": "extension.devicescript.cloud.device.uploadScriptSource",
+                "title": "Upload Version",
+                "category": "DeviceScript Cloud",
+                "icon": "$(cloud-upload)"
+            }
+        ],
+        "breakpoints": [
+            {
+                "language": "typescript"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "devicescript",
+                "languages": [
+                    "typescript"
+                ],
+                "label": "DeviceScript",
+                "program": "./out/debugAdapter.js",
+                "runtime": "node",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "program",
+                            "deviceId"
+                        ],
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "Absolute path to a text file.",
+                                "default": "${workspaceFolder}/main.ts"
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Automatically stop after launch.",
+                                "default": true
+                            },
+                            "deviceId": {
+                                "type": "string",
+                                "description": "Device identifier of the device (long or short). Use ${command:deviceScriptSimulator} for the Simulator."
+                            },
+                            "serviceInstance": {
+                                "type": "number",
+                                "description": "Instance index of the device manger service. Default is 0."
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "devicescript",
+                        "request": "launch",
+                        "name": "DeviceScript: Launch",
+                        "program": "${workspaceFolder}/main.ts",
+                        "stopOnEntry": true
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "DeviceScript: Launch",
+                        "description": "A new configuration for 'debugging' a user selected typescript file.",
+                        "body": {
+                            "type": "devicescript",
+                            "request": "launch",
+                            "name": "DeviceScript: Launch",
+                            "program": "^\"\\${workspaceFolder}/main.ts",
+                            "stopOnEntry": true
+                        }
+                    }
+                ],
+                "variables": {
+                    "deviceScriptSimulator": "extension.devicescript.variables.simulator"
+                }
+            }
+        ]
+    }
 }
