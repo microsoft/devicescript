@@ -46,10 +46,8 @@ import {
 } from "./JDomTreeDataProvider"
 import { registerMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
-import { activeTelemetry } from "./telemetry"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
-    activeTelemetry(context)
     const { subscriptions, extensionMode, extension } = context
     const { extensionKind } = extension
     const devToolsConfig = vscode.workspace.getConfiguration(
@@ -106,7 +104,8 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const isWorkspace =
                     extensionKind === vscode.ExtensionKind.Workspace
                 if (isWorkspace) {
-                    vscode.window.showErrorMessage(
+                    extensionState.telemetry.showErrorMessage(
+                        "connection.remote",
                         "DeviceScript: Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
                     )
                     return

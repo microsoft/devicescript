@@ -10,6 +10,11 @@ export interface Telemetry {
         eventName: string,
         properties?: Record<string, string>
     ) => void
+    showErrorMessage: (
+        eventName: string,
+        message: string,
+        ...items: string[]
+    ) => Thenable<string>
 }
 
 export function activeTelemetry(context: vscode.ExtensionContext): Telemetry {
@@ -25,6 +30,14 @@ export function activeTelemetry(context: vscode.ExtensionContext): Telemetry {
             properties?: Record<string, string>
         ) => {
             reporter.sendTelemetryEvent(eventName, properties)
+        },
+        showErrorMessage: (
+            eventName: string,
+            message: string,
+            ...items: string[]
+        ) => {
+            reporter.sendTelemetryErrorEvent(eventName)
+            return vscode.window.showErrorMessage(message, ...items)
         },
     }
 }
