@@ -100,21 +100,29 @@ export class DeviceScriptConfigurationProvider
             return undefined
         }
 
-        // check version
-        const versionOk = await checkDeviceScriptManagerRuntimeVersion(
-            this.extensionState.devtools.runtimeVersion,
-            service
-        )
-        if (!versionOk) {
-            // don't start debugging
-            return undefined
+        // check version (show it's own error dialogs)
+        if (
+            dsConfig.deviceId !== this.extensionState.simulatorScriptManagerId
+        ) {
+            const versionOk = await checkDeviceScriptManagerRuntimeVersion(
+                this.extensionState.devtools.runtimeVersion,
+                service
+            )
+            if (!versionOk) {
+                // don't start debugging
+                return undefined
+            }
         }
 
         // prepare for deploy
         await prepareForDeploy(this.extensionState, service)
 
         // build and deploy
-        if (!(await build(config.program, { service, watch: true }))) {
+        const buildResult = await build(config.program, {
+            service,
+            watch: true,
+        })
+        if (!buildResult?.success) {
             vscode.window.showErrorMessage(
                 `Debug cancelled. Program has build errors.`
             )
@@ -147,13 +155,18 @@ export class DeviceScriptConfigurationProvider
         this.extensionState.devtools.projectFolder = folder.uri
         if (
             !config.program &&
-            config.request === "launch" &&
-            config.type === "devicescript"
+            ((config.request === "launch" && config.type === "devicescript") ||
+                (!config.request && !config.type))
         ) {
             const file = await pickDeviceScriptFile(folder, {
                 title: "Pick a file to debug.",
             })
-            if (file) config.program = file.fsPath
+            if (!file) return undefined
+
+            // TODO: support workspace !== projectfolder
+            config.program = vscode.workspace.asRelativePath(file)
+            config.request = "launch"
+            config.type = "devicescript"
         }
 
         return config

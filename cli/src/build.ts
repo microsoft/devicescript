@@ -1,14 +1,6 @@
 import { join, resolve } from "node:path"
-import { existsSync } from "node:fs"
-import {
-    readFileSync,
-    writeFileSync,
-    ensureDirSync,
-    pathExistsSync,
-    readJSONSync,
-    mkdirp,
-} from "fs-extra"
-const debounce = require("debounce-promise")
+import { readFileSync, writeFileSync, existsSync } from "node:fs"
+import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
 import {
     compile,
     jacdacDefaultSpecifications,
@@ -21,7 +13,15 @@ import {
     SrcMapResolver,
     preludeFiles,
 } from "@devicescript/compiler"
-import { BINDIR, CmdOptions, debug, error, LIBDIR, log, verboseLog } from "./command"
+import {
+    BINDIR,
+    CmdOptions,
+    debug,
+    error,
+    LIBDIR,
+    log,
+    verboseLog,
+} from "./command"
 
 import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
@@ -126,8 +126,10 @@ export class CompilationError extends Error {
 }
 
 export async function compileFile(fn: string, options: BuildOptions = {}) {
-    if (!pathExistsSync(fn)) throw new Error(`source file ${fn} not found`)
-    return compileBuf(readFileSync(fn), { ...options, mainFileName: fn })
+    const exists = existsSync(fn)
+    if (!exists) throw new Error(`source file "${fn}" not found`)
+    const source = readFileSync(fn)
+    return compileBuf(source, { ...options, mainFileName: fn })
 }
 
 export async function saveLibFiles(options: BuildOptions) {

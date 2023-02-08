@@ -33,7 +33,10 @@ export async function pickDeviceScriptFile(
     // unique
     files = [...new Set(files)]
 
-    if (!files.length) return undefined
+    if (!files.length) {
+        vscode.window.showErrorMessage("DeviceScript: could not find any file to debug.")
+        return undefined
+    }
 
     // ask user
     const res = await vscode.window.showQuickPick(
