@@ -16,7 +16,6 @@ import {
     TransportStatus,
     WebSocketConnectReqArgs,
 } from "./sideprotocol"
-const WebSocket = require("faye-websocket")
 
 export interface TransportsOptions {
     usb?: boolean
@@ -50,9 +49,10 @@ function createSerial() {
 }
 
 function createWebSocket(url: string, protocol: string) {
+    require("websocket-polyfill")
     return createWebSocketTransport(url, {
         protocols: protocol,
-        WebSocket: WebSocket.Client,
+        WebSocket: WebSocket,
     })
 }
 
