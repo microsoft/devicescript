@@ -292,20 +292,20 @@ export class DeveloperToolsManager extends JDEventSource {
                 const jacdacConfig = vscode.workspace.getConfiguration(
                     "devicescript.jacdac"
                 )
+                const isWindows = globalThis.process?.platform === "win32"
                 const useShell = !!devToolsConfig.get("shell")
                 const nodePath = devToolsConfig.get("node") as string
-
-                const args = [cliBin, "devtools", "--vscode"]
-                const cli = nodePath || "node"
-
+                const args = ["devtools", "--vscode"]
+                let cli = nodePath || "node"
+                if (isWindows) {
+                    cli = "node_modules\\.bin\\devicescript.cmd"
+                } else args.unshift("./node_modules/.bin/devicescript")
                 if (jacdacConfig.get("diagnostics")) args.push("--diagnostics")
-
                 console.debug(
-                    `create terminal: ${
-                        useShell ? "shell>" : ""
-                    } ${cli} ${args.join(" ")}`
+                    `create terminal: ${useShell ? "shell:" : ""}${
+                        cwd.fsPath
+                    }> ${cli} ${args.join(" ")}`
                 )
-                console.debug(`cwd: ${cwd}`)
                 const options: vscode.TerminalOptions = {
                     name: "DeviceScript",
                     hideFromUser: false,
@@ -314,7 +314,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     shellPath: useShell ? undefined : cli,
                     shellArgs: useShell ? undefined : args,
                     iconPath: logo(this.extensionState.context),
-                    cwd,
+                    cwd: cwd.fsPath,
                 }
                 const t = vscode.window.createTerminal(options)
                 if (useShell) {
