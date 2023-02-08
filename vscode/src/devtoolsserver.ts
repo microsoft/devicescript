@@ -212,7 +212,9 @@ export class DeveloperToolsManager extends JDEventSource {
                 switch (t.exitStatus.code) {
                     case EXIT_CODE_EADDRINUSE:
                         // try to send a kill command
-                        console.debug(`trying to shutdown other developement server`)
+                        console.debug(
+                            `trying to shutdown other developement server`
+                        )
                         const killed = await this.sendKillRequest()
                         if (killed) {
                             await delay(1000)
@@ -287,11 +289,16 @@ export class DeveloperToolsManager extends JDEventSource {
                 const devToolsConfig = vscode.workspace.getConfiguration(
                     "devicescript.devtools"
                 )
+                const jacdacConfig = vscode.workspace.getConfiguration(
+                    "devicescript.jacdac"
+                )
                 const useShell = !!devToolsConfig.get("shell")
                 const nodePath = devToolsConfig.get("node") as string
 
                 const args = [cliBin, "devtools", "--vscode"]
                 const cli = nodePath || "node"
+
+                if (jacdacConfig.get("diagnostics")) args.push("--diagnostics")
 
                 console.debug(
                     `create terminal: ${

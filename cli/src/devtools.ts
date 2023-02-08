@@ -11,6 +11,7 @@ import {
     debounce,
     delay,
     ERROR,
+    Flags,
     FRAME_PROCESS,
     JDBus,
     JDFrameBuffer,
@@ -49,6 +50,7 @@ export interface DevToolsOptions {
     localhost?: boolean
     trace?: string
     vscode?: boolean
+    diagnostics?: boolean
 }
 
 let devtoolsSelf: DevToolsIface
@@ -61,6 +63,8 @@ export async function devtools(
     const port = 8081
     const tcpPort = 8082
     const dbgPort = 8083
+
+    if (options.diagnostics) Flags.diagnostics = true
 
     overrideConsoleDebug()
 

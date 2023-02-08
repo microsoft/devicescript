@@ -94,6 +94,7 @@ export async function mainCli() {
             "--vscode",
             "update behavior to match executing within Visual Studio Code"
         )
+        .option("--diagnostics", "enable Jacdac-ts diagnostics")
         .arguments("[file.ts]")
         .action(devtools)
 
