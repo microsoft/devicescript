@@ -423,6 +423,7 @@ export async function compileDcfg(
                     }
                 } else if (typeof val == "object") {
                     for (const subkey of Object.keys(val)) {
+                        if (subkey.startsWith("$")) continue
                         let suff = subkey == "_" ? "" : subkey
                         if (
                             suff.length &&

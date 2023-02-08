@@ -47,6 +47,7 @@ regen:
 	clang-format -i runtime/posix/native_cfg.c
 	$(CLI) dcfg runtime/config/wasm.json --update runtime/posix/wasm_cfg.c
 	clang-format -i runtime/posix/wasm_cfg.c
+	cd runtime/jacdac-c/dcfg && ./regen.sh
 
 specs spec:
 	$(MAKE) -C runtime/jacdac-c/jacdac

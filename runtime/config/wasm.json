@@ -1,4 +1,5 @@
 {
+    "$schema": "../jacdac-c/dcfg/deviceconfig-generated.schema.json",
     "devName": "DeviceScript Simulator (WASM)",
     "devClass": "0x3fe5b46f"
 }
