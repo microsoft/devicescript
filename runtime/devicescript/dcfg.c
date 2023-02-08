@@ -23,6 +23,8 @@ static bool dcfg_ok(void) {
         return dcfg_header != NULL;
     dcfg_inited = true;
 
+    JD_ASSERT(!target_in_irq());
+
     const dcfg_header_t *hd = (void *)(JD_DCFG_BASE_ADDR);
     if (!hd || ((uintptr_t)hd) & 3) {
         LOG("invalid ptr");
@@ -115,7 +117,7 @@ const dcfg_entry_t *dcfg_get_entry(const char *key) {
     if (len > DCFG_KEYSIZE)
         return NULL;
 
-    unsigned hash = keyhash(key,len);
+    unsigned hash = keyhash(key, len);
     unsigned hidx = hash >> DCFG_HASH_SHIFT;
     unsigned idx = dcfg_header->hash_jump[hidx];
     unsigned num = dcfg_header->num_entries;
@@ -166,6 +168,38 @@ const char *dcfg_get_string(const char *key, unsigned *sizep) {
             *sizep = 0;
         return NULL;
     }
+}
+
+char *dcfg_idx_key(const char *prefix, unsigned idx, const char *suffix) {
+    static char keybuf[DCFG_KEYSIZE + 1];
+
+    unsigned ptr = 0;
+    unsigned len;
+
+    if (prefix) {
+        len = strlen(prefix);
+        if (len > DCFG_KEYSIZE - 1)
+            return NULL;
+        if (prefix != keybuf)
+            memcpy(keybuf, prefix, len);
+        ptr += len;
+    }
+
+    if (idx > 100)
+        return NULL;
+
+    keybuf[ptr++] = 0x80 + idx;
+
+    if (suffix) {
+        len = strlen(suffix);
+        if (ptr + len > DCFG_KEYSIZE)
+            return NULL;
+        memcpy(keybuf + ptr, suffix, len);
+        ptr += len;
+    }
+
+    keybuf[ptr] = 0;
+    return keybuf;
 }
 
 #endif

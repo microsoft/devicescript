@@ -1,6 +1,7 @@
 import { DebugInfo, parseStackFrame } from "@devicescript/compiler"
+import { LoggerPriority } from "jacdac-ts"
 import { ChildProcess, fork, spawn } from "node:child_process"
-import { wrapColor } from "./logging"
+import { logToConsole, wrapColor } from "./logging"
 import {
     addReqHandler,
     DevToolsClient,
@@ -24,6 +25,10 @@ export function setVerbose(v: boolean) {
 
 export function verboseLog(msg: string) {
     if (isVerbose) console.debug(wrapColor(90, msg))
+}
+
+export function errorLog(msg: string) {
+    logToConsole(LoggerPriority.Error, msg)
 }
 
 export function waitForEvent<T>(

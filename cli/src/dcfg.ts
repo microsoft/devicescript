@@ -5,8 +5,10 @@ import {
     serializeDcfg,
     findDcfgOffsets,
     compileDcfg,
+    decompileDcfg,
 } from "@devicescript/compiler"
 import { toHex } from "jacdac-ts"
+import { errorLog, verboseLog } from "./vmworker"
 
 export interface DcfgOptions {
     update?: string
@@ -20,6 +22,7 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
         const json = await compileDcfg(fn, async fn => {
             return readFileSync(fn, "utf-8")
         })
+        verboseLog(JSON.stringify(json, null, 4))
         const bin = serializeDcfg(json)
         const res = decodeDcfg(bin)
         if (res.errors.length == 0) {
@@ -33,8 +36,15 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
             }
         }
         if (res.errors.length) {
-            for (const e of res.errors) console.error(e)
+            res.errors.forEach(errorLog)
             process.exit(1)
+        }
+
+        try {
+            const decomp = decompileDcfg(res.settings)
+            verboseLog(JSON.stringify(decomp, null, 4))
+        } catch (e) {
+            fatal(e.message)
         }
 
         if (options.output) {
@@ -65,18 +75,17 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
 
     const idx = findDcfgOffsets(buf)
     if (idx.length == 0) {
-        console.error("no binary DCFG and can't parse JSON")
-        process.exit(1)
+        fatal("no binary DCFG and can't parse JSON")
     }
     for (const off of idx) {
         console.log(`parsing at ${off}`)
         const res = decodeDcfg(buf.slice(off))
-        for (const e of res.errors) console.error(e)
+        res.errors.forEach(errorLog)
         console.log(res.settings)
     }
 
     function fatal(msg: string) {
-        console.error(msg)
+        errorLog(msg)
         process.exit(1)
     }
 }

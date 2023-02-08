@@ -12,6 +12,7 @@ import {
     bufferConcat,
     bufferEq,
     fromHex,
+    stringToUint8Array,
 } from "./jdutil"
 
 export const DCFG_MAGIC0 = 0x47464344 // DCFG
@@ -79,7 +80,7 @@ function entryValue(e: Uint8Array, off = 0) {
     return read32(e, off + entoff + 4)
 }
 function keyhash(key: string | Uint8Array) {
-    if (typeof key == "string") key = stringToBuffer(key)
+    if (typeof key == "string") key = stringToUint8Array(key)
     const h = fnv1a(key)
     return (h >>> 16) ^ (h & 0xffff)
 }
@@ -128,7 +129,7 @@ export function serializeDcfg(entries: DcfgSettings) {
 
     function mkEntry(k: string) {
         const v = entries[k]
-        const kb = stringToBuffer(k)
+        const kb = stringToUint8Array(k)
         if (kb.length > DCFG_KEYSIZE)
             throw new Error(`dcfg key too long: '${k}' (limit ${DCFG_KEYSIZE})`)
         let value = 0
@@ -193,7 +194,7 @@ function collisions() {
 }
 
 function getEntry(buf: Uint8Array, key: string) {
-    const kb = stringToBuffer(key)
+    const kb = stringToUint8Array(key)
     if (kb.length > DCFG_KEYSIZE) return null
 
     const hash = keyhash(kb)
@@ -279,7 +280,7 @@ export function decodeDcfg(buf: Uint8Array) {
             continue
         }
         const kb = buf.slice(eoff, ep)
-        const key = fromUTF8(uint8ArrayToString(kb))
+        const key = uint8ArrayToString(kb)
 
         const ent = buf.slice(eoff, eoff + DCFG_ENTRY_SIZE)
 
@@ -357,6 +358,43 @@ function parseAnyInt(s: string) {
     return undefined
 }
 
+export function decompileDcfg(settings: DcfgSettings) {
+    const res: any = {}
+    const dot = ".".charCodeAt(0)
+    for (const key of Object.keys(settings)) {
+        let prevI = 0
+        let obj: any = res
+        for (let i = 0; i < key.length; ++i) {
+            const c = key.charCodeAt(i)
+            const isArrayElt = c >= 0x80
+            const isObjSep = c == dot
+            if (isArrayElt || isObjSep) {
+                let pref = key.slice(prevI, i)
+                prevI = i + 1
+                if (pref == "") pref = "_"
+
+                if (obj[pref] === undefined) obj[pref] = isArrayElt ? [] : {}
+                obj = obj[pref]
+                if (isArrayElt != Array.isArray(obj))
+                    throw new Error(`obj/array mismatch at ${key}`)
+
+                if (isArrayElt) {
+                    const aidx = c - 0x80
+                    if (i == key.length - 1) {
+                        obj[aidx] = settings[key]
+                        prevI = -1
+                    } else {
+                        if (obj[aidx] === undefined) obj[aidx] = {}
+                        obj = obj[aidx]
+                    }
+                }
+            }
+        }
+        if (prevI != -1) obj[key.slice(prevI)] = settings[key]
+    }
+    return res
+}
+
 export async function compileDcfg(
     fn: string,
     readFile: (fn: string) => Promise<string>
@@ -367,19 +405,39 @@ export async function compileDcfg(
         const mainJson = await readJSON(fn)
         const res: DcfgSettings = {}
         try {
-            for (const key of Object.keys(mainJson)) {
-                let val = mainJson[key]
+            const flattenObj = (val: any, key: string) => {
                 if (typeof val == "string") {
                     const tmp = parseAnyInt(val)
                     if (tmp != undefined) val = tmp
                     else if (/^hex:[0-9a-f ]+$/.test(val)) {
                         val = fromHex(val.slice(4).replace(/ /g, ""))
                     }
+                    res[key] = val
                 } else if (typeof val == "number") {
-                    if ((val | 0) != val && val >>> 0 != val) throw new Error()
+                    if ((val | 0) != val && val >>> 0 != val)
+                        throw new Error("non u32/i32 number")
+                    res[key] = val
+                } else if (Array.isArray(val)) {
+                    for (let i = 0; i < val.length; ++i) {
+                        flattenObj(val[i], key + String.fromCharCode(0x80 + i))
+                    }
+                } else if (typeof val == "object") {
+                    for (const subkey of Object.keys(val)) {
+                        let suff = subkey == "_" ? "" : subkey
+                        if (
+                            suff.length &&
+                            key.length &&
+                            key.charCodeAt(key.length - 1) < 0x80
+                        )
+                            suff = "." + suff
+                        flattenObj(val[subkey], key + suff)
+                    }
+                } else {
+                    throw new Error(`invalid value ${key}: ${val}`)
                 }
-                res[key] = val
             }
+            flattenObj(mainJson, "")
+
             return res
         } catch (e) {
             throw new Error(`${fn}: ${e.message}`)
