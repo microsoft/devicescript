@@ -1,5 +1,4 @@
 import { program, CommandOptions } from "commander"
-import pkg from "../package.json"
 import { annotate } from "./annotate"
 import { build } from "./build"
 import { crunScript } from "./crun"
