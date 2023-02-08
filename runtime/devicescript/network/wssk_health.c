@@ -10,12 +10,9 @@
 
 #define WATCHDOG_SECONDS 32
 
-#define LOG(fmt, ...) DMESG("WSSK-H: " fmt, ##__VA_ARGS__)
-#if 1
-#define LOGV(...) ((void)0)
-#else
-#define LOGV LOG
-#endif
+#define LOG_TAG "WSSK-H"
+#define VLOGGING 0
+#include "devs_logging.h"
 
 struct srv_state {
     SRV_COMMON;
@@ -48,9 +45,9 @@ STATIC_ASSERT(sizeof(uint8_t) == 1);
 
 static srv_t *_wsskhealth_state;
 
-REG_DEFINITION(                                                //
-    wsskhealth_regs,                                           //
-    REG_SRV_COMMON,                                            //
+REG_DEFINITION(                                               //
+    wsskhealth_regs,                                          //
+    REG_SRV_COMMON,                                           //
     REG_U16(JD_CLOUD_CONFIGURATION_REG_CONNECTION_STATUS),    //
     REG_U32(JD_CLOUD_CONFIGURATION_REG_PUSH_PERIOD),          //
     REG_U32(JD_CLOUD_CONFIGURATION_REG_PUSH_WATCHDOG_PERIOD), //
@@ -273,8 +270,7 @@ static const uint32_t glows[] = {
     [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED] = JD_GLOW_CLOUD_CONNECTED_TO_CLOUD,
     [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED] = JD_GLOW_CLOUD_NOT_CONNECTED_TO_CLOUD,
     [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTING] = JD_GLOW_CLOUD_CONNECTING_TO_CLOUD,
-    [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTING] =
-        JD_GLOW_CLOUD_NOT_CONNECTED_TO_CLOUD,
+    [JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTING] = JD_GLOW_CLOUD_NOT_CONNECTED_TO_CLOUD,
 };
 #endif
 
@@ -286,7 +282,10 @@ void wsskhealth_process(srv_t *state) {
 
     if (jd_should_sample(&state->fwd_timer, 16 << 20)) {
         // fwd_en expires after around 16s
-        state->fwd_en = 0;
+        if (state->fwd_en) {
+            LOG("fwd expired");
+            state->fwd_en = 0;
+        }
     }
 
     if (state->fwdqueue) {
@@ -487,6 +486,7 @@ static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
         }
         state->fwd_en = payload[0];
         state->fwd_timer = (16 << 20) + now;
+        LOG("fwd_en: %d", payload[0]);
     } else if (cmd == 0x91) {
         send_empty(0x91);
     } else if (cmd == 0x92) {
