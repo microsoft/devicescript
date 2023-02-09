@@ -23,6 +23,7 @@ import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
 import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
+import { TaggedQuickPickItem } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
 import { activeTelemetry, Telemetry } from "./telemetry"
 
@@ -30,7 +31,7 @@ const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
 const STATE_SIMULATOR_DEVICE = "devices.simulator"
 
-type DeviceQuickItem = vscode.QuickPickItem & { deviceId: string }
+type DeviceQuickItem = TaggedQuickPickItem<string>
 
 export interface NodeWatch {
     id: string
@@ -167,26 +168,26 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
             return `${description.stringValue || ""} (${runtimeVersion || "?"})`
         }
-        const items = await Promise.all(
+        const items: DeviceQuickItem[] = await Promise.all(
             services.map(
                 async srv =>
                     <DeviceQuickItem>{
                         label: `$(${JDomDeviceTreeItem.ICON}) ${srv.device.friendlyName}`,
                         description: srv.device.deviceId,
                         detail: await detail(srv),
-                        deviceId: srv.device.deviceId,
+                        data: srv.device.deviceId,
                         picked: srv.device.deviceId === cid,
                     }
             )
         )
         let startVM = false
-        if (!this.bus.device(simulatorScriptManagerId, true)) {
+        if (!items.find(({ data }) => data === simulatorScriptManagerId)) {
             startVM = true
             items.push(<DeviceQuickItem>{
-                label: shortDeviceId(this.simulatorScriptManagerId),
+                label: shortDeviceId(simulatorScriptManagerId),
                 description: `Simulator`,
                 detail: `A virtual DeviceScript interpreter running in a separate process.`,
-                deviceId: simulatorScriptManagerId,
+                data: simulatorScriptManagerId,
             })
         }
         const res = await vscode.window.showQuickPick(items, {
@@ -195,7 +196,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             matchOnDetail: true,
             canPickMany: false,
         })
-        const did = res?.deviceId
+        const did = res?.data
         if (!did) return undefined
 
         if (startVM && did == simulatorScriptManagerId) {
