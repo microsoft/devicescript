@@ -156,7 +156,7 @@ export async function init(options: InitOptions & CmdOptions) {
     // main.ts
     if (!pathExistsSync(MAIN)) {
         debug(`write ${MAIN}`)
-        writeFileSync(MAIN, `${IMPORT_PREFIX}\n\nconsole.log(":)")\n`, {
+        writeFileSync(MAIN, `${IMPORT_PREFIX}\n\nds.everyMs(1000,\n    console.log(":)")\n})\n`, {
             encoding: "utf8",
         })
     }
