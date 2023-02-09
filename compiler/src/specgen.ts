@@ -85,7 +85,8 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
         if (!info.status || info.status === "experimental")
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
-        if (info.tags?.length) cmt += `@category ${info.tags[0]}\n`
+        if (info.tags?.length) cmt += `@category ${info.tags.join(", ")}\n`
+        cmt += `@see {@link https://microsoft.github.io/devicescript/api/clients/${info.shortId}/ Documentation}`
         r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class

@@ -142,23 +142,29 @@ export async function init(options: InitOptions & CmdOptions) {
         let gitignore = readFileSync(GITIGNORE, { encoding: "utf8" })
         let needsWrite = false
         gids.forEach(gid => {
-            const k = `\n${gid}\n`
-            if (gitignore.indexOf(k) < 0) {
-                gitignore += k
+            if (gitignore.indexOf(gid) < 0) {
+                needsWrite = true
+                gitignore += `\n${gid}/`
             }
         })
-        debug(`update ${GITIGNORE}`)
-        writeFileSync(GITIGNORE, gitignore, {
-            encoding: "utf8",
-        })
+        if (needsWrite) {
+            debug(`update ${GITIGNORE}`)
+            writeFileSync(GITIGNORE, gitignore, {
+                encoding: "utf8",
+            })
+        }
     }
 
     // main.ts
     if (!pathExistsSync(MAIN)) {
         debug(`write ${MAIN}`)
-        writeFileSync(MAIN, `${IMPORT_PREFIX}\n\nds.everyMs(1000,\n    console.log(":)")\n})\n`, {
-            encoding: "utf8",
-        })
+        writeFileSync(
+            MAIN,
+            `${IMPORT_PREFIX}\n\nds.everyMs(1000,\n    console.log(":)")\n})\n`,
+            {
+                encoding: "utf8",
+            }
+        )
     }
 
     // help message
