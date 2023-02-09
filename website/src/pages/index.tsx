@@ -7,14 +7,6 @@ import HomepageFeatures from "@site/src/components/HomepageFeatures"
 
 import styles from "./index.module.css"
 
-/**
-<Link
-className="button button--secondary button--lg"
-to="/intro">
-Docusaurus Tutorial - 5min ⏱️
-</Link>
-*/
-
 function HomepageHeader() {
     const { siteConfig } = useDocusaurusContext()
     return (
@@ -30,7 +22,7 @@ function HomepageHeader() {
                     <div className={styles.buttons}>
                         <Link
                             className="button button--secondary button--lg"
-                            to="/intro"
+                            to="/getting-started"
                         >
                             Getting Started - 5min ⏱️
                         </Link>

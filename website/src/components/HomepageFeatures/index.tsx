@@ -48,12 +48,12 @@ export default function HomepageFeatures(): JSX.Element {
         {
             title: "Simulation & Tracing",
             description:
-                "Develop and debug your firmware using simulated or real sensors.",
+                "Develop and test your firmware using simulated or real sensors.",
         },
         {
-            title: "Developer Experience",
+            title: "Debugging",
             description:
-                "Get started in seconds with modern tooling in Visual Studio Code.",
+                "Full debuggin experience in Visual Studio Code, for hardware or simulated devices.",
         },
     ]
 
