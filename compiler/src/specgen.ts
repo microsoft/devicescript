@@ -20,6 +20,7 @@ import {
     SRV_UNIQUE_BRAIN,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 import { jacdacDefaultSpecifications } from "./embedspecs"
+import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
 
@@ -179,7 +180,14 @@ export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
         .map(specToDeviceScript)
         .filter(n => !!n)
         .join("\n")
-    const withmodule = `declare module "@devicescript/core" {\n${thespecs}\n}\n`
+    const withmodule = `declare module "@devicescript/core" {
+    /**
+     * Version of the DeviceScript runtime corresponding to this declaration file.
+     */
+    const RUNTIME_VERSION = "${runtimeVersion()}"
+${thespecs}
+}
+`
     r[pref + "devicescript-spec.d.ts"] = withmodule
     return r
 }
