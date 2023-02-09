@@ -1,6 +1,6 @@
 import { DebugInfo, parseStackFrame } from "@devicescript/compiler"
 import { ChildProcess, fork, spawn } from "node:child_process"
-import { isVerbose, wrapColor } from "./command"
+import { isVerbose, verboseLog, wrapColor } from "./command"
 import {
     addReqHandler,
     DevToolsClient,
@@ -64,15 +64,15 @@ export async function stopVmWorker() {
     const w = worker
     worker = null
     if (w) {
+        verboseLog(`vmworker: stopping`)
         try {
             if (w.exitCode === null && w.signalCode === null) {
                 w.kill()
                 await waitForEvent(500, f => w.on("exit", f))
             }
             w.kill("SIGKILL")
-            // tree-kill package?
         } catch (e) {
-            console.debug(e)
+            verboseLog(`vmworker: kill error: ` + e)
         }
     }
 }
