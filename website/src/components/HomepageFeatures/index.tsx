@@ -29,31 +29,31 @@ export default function HomepageFeatures(): JSX.Element {
         {
             title: "TypeScript Syntax",
             description:
-                "The goodness of TypeScript with some Embedded extras.",
+                "The goodness of TypeScript with embedded extras",
         },
         {
             title: "Portable",
             description:
-                "Integrate the DeviceScript VM into your existing embedded projects.",
+                "Integrate the DeviceScript VM into your existing embedded projects",
         },
         {
             title: "Hardware as Services",
-            description: "Write reusable firmware using Jacdac services.",
+            description: "Write reusable firmware using Jacdac services",
         },
         {
             title: "Small",
             description:
-                "Designed for low power, low flash, low memory embedded projects.",
+                "Designed for low power, low flash, low memory embedded projects",
         },
         {
             title: "Simulation & Tracing",
             description:
-                "Develop and test your firmware using simulated or real sensors.",
+                "Develop and test your firmware using simulated or real sensors",
         },
         {
             title: "Debugging",
             description:
-                "Full debuggin experience in Visual Studio Code, for hardware or simulated devices.",
+                "Full debugging experience in Visual Studio Code, for hardware or simulated devices",
         },
     ]
 
