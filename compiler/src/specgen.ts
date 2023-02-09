@@ -77,6 +77,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     const clname = upperCamel(info.camelName)
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
 
+    const docUrl = `https://microsoft.github.io/devicescript/api/clients/${info.shortId}/`
     // emit stats as attributes
     {
         let cmt = (info.notes["short"] || info.name) + "\n\n"
@@ -86,7 +87,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
         if (info.tags?.length) cmt += `@category ${info.tags.join(", ")}\n`
-        cmt += `@see {@link https://microsoft.github.io/devicescript/api/clients/${info.shortId}/ Documentation}`
+        cmt += `@see {@link ${docUrl} Documentation}`
         r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class
@@ -149,6 +150,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
         }
 
         if (tp) {
+            cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
             r += wrapComment("devs", cmt.comment)
             r += `    ${kw}${camelize(pkt.name)}: ${tp}\n`
         }
@@ -331,7 +333,7 @@ ${varname}.${pname}(${fields}): void
         const isBoolean = tp === REGISTER_BOOL
         const isString = tp === REGISTER_STRING
         r.push(
-            `### ${pname}
+            `### ${pname} {#${pkt.kind}:${pkt.name}}
 `,
             pkt.description,
             "",
