@@ -61,15 +61,19 @@ export function lineBuffer(cb: (lines: string[]) => void) {
 }
 
 export async function stopVmWorker() {
-    if (worker) {
+    const w = worker
+    worker = null
+    if (w) {
         try {
-            if (worker.exitCode === null && worker.signalCode === null) {
-                worker.kill()
-                await waitForEvent(500, f => worker.on("exit", f))
+            if (w.exitCode === null && w.signalCode === null) {
+                w.kill()
+                await waitForEvent(500, f => w.on("exit", f))
             }
-            worker.kill("SIGKILL")
-        } catch {}
-        worker = null
+            w.kill("SIGKILL")
+            // tree-kill package?
+        } catch (e) {
+            console.debug(e)
+        }
     }
 }
 
