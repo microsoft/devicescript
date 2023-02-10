@@ -26,6 +26,7 @@ import {
 import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
+import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -105,7 +106,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         },
         log: verboseLog,
         error: (err: DevsDiagnostic) => {
-            if (!options.quiet) error(formatDiagnostics([err]))
+            if (!options.quiet) console.error(formatDiagnostics([err]))
         },
         mainFileName: () => options.mainFileName || "main.ts",
         getSpecs: () => jacdacDefaultSpecifications,
@@ -119,9 +120,10 @@ export async function getHost(options: BuildOptions & CmdOptions) {
 }
 
 export class CompilationError extends Error {
+    static NAME = "CompilationError"
     constructor(message: string) {
         super(message)
-        this.name = "CompilationError"
+        this.name = CompilationError.NAME
     }
 }
 
@@ -184,7 +186,12 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
 
     // log(`building ${file}`)
     ensureDirSync(options.outDir)
-    await buildOnce(file, options)
+    try {
+        await buildOnce(file, options)
+    } catch (e) {
+        if (e.name === CompilationError.NAME)
+            process.exit(EXIT_CODE_COMPILATION_ERROR)
+    }
 }
 
 async function buildOnce(file: string, options: BuildOptions & CmdOptions) {

@@ -1,1 +1,2 @@
 export const EXIT_CODE_EADDRINUSE = 100
+export const EXIT_CODE_COMPILATION_ERROR = 101
