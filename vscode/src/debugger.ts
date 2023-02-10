@@ -77,6 +77,13 @@ export class DeviceScriptConfigurationProvider
 
         if (token?.isCancellationRequested) return undefined
 
+        if (!dsConfig.deviceId) {
+            vscode.window.showErrorMessage(
+                `Debug cancelled. No device selected.`
+            )
+            return undefined
+        }
+
         // expand device short name
         if (/^[A-Z][A-Z][0-9][0-9]$/i.test(dsConfig.deviceId)) {
             const shortIdDevice = this.bus

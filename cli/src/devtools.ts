@@ -40,7 +40,7 @@ import { compileFile } from "./build"
 import { dirname, resolve } from "path"
 import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
 import { DsDapSession } from "@devicescript/dap"
-import { initVMCmds, overrideConsoleDebug } from "./vmworker"
+import { initVMCmds, overrideConsoleDebug, stopVmWorker } from "./vmworker"
 import { enableLogging } from "./logging"
 import { cliVersion } from "./version"
 import { EXIT_CODE_EADDRINUSE } from "./exitcodes"
@@ -296,13 +296,14 @@ function startDbgServer(port: number, options: DevToolsOptions) {
     const domain = listenHost || "localhost"
     console.log(`   dbgserver: tcp://${domain}:${port}`)
     net.createServer(async socket => {
-        console.log("got debug server connection")
-        socket.on("end", () => {
-            console.log("debug connection closed")
+        console.log("dbgserver: connection")
+        socket.on("end", async () => {
+            console.log("dbgserver: connection closed")
+            await stopVmWorker()
         })
         const dbg = devtoolsSelf.lastOKBuild?.dbg
         if (!dbg) {
-            error("can't find any build to debug")
+            error("dbgserver: can't find any build to debug")
             // TODO compare sha256
             socket.end()
             return

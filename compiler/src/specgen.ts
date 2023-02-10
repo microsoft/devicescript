@@ -20,6 +20,7 @@ import {
     SRV_UNIQUE_BRAIN,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
 import { jacdacDefaultSpecifications } from "./embedspecs"
+import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
 
@@ -77,6 +78,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     const clname = upperCamel(info.camelName)
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
 
+    const docUrl = `https://microsoft.github.io/devicescript/api/clients/${info.shortId}/`
     // emit stats as attributes
     {
         let cmt = (info.notes["short"] || info.name) + "\n\n"
@@ -85,7 +87,8 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
         if (!info.status || info.status === "experimental")
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
-        if (info.tags?.length) cmt += `@category ${info.tags[0]}\n`
+        if (info.tags?.length) cmt += `@category ${info.tags.join(", ")}\n`
+        cmt += `@see {@link ${docUrl} Documentation}`
         r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class
@@ -148,6 +151,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
         }
 
         if (tp) {
+            cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
             r += wrapComment("devs", cmt.comment)
             r += `    ${kw}${camelize(pkt.name)}: ${tp}\n`
         }
@@ -176,7 +180,14 @@ export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
         .map(specToDeviceScript)
         .filter(n => !!n)
         .join("\n")
-    const withmodule = `declare module "@devicescript/core" {\n${thespecs}\n}\n`
+    const withmodule = `declare module "@devicescript/core" {
+    /**
+     * Version of the DeviceScript runtime corresponding to this declaration file.
+     */
+    const RUNTIME_VERSION = "${runtimeVersion()}"
+${thespecs}
+}
+`
     r[pref + "devicescript-spec.d.ts"] = withmodule
     return r
 }
@@ -330,7 +341,7 @@ ${varname}.${pname}(${fields}): void
         const isBoolean = tp === REGISTER_BOOL
         const isString = tp === REGISTER_STRING
         r.push(
-            `### ${pname}
+            `### ${pname} {#${pkt.kind}:${pkt.name}}
 `,
             pkt.description,
             "",

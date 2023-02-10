@@ -60,6 +60,24 @@ The extension should now be loaded. Go to the debug section and start debugging!
 
 Navigate to the [Developer section](/developer) to learn the basics of the language.
 
+### Local, Remote and Web Workspaces
+
+Some features, like connection to hardware devices, are only supported in local workspaces (currently).
+
+| Feature                       | Local (Windows, MacOS, Linux) | Remote | Web |
+| ----------------------------- | ----------------------------- | ------ | --- |
+| TypeScript completion, syntax | ✓                             | ✓      |     |
+| Compiler                      | ✓                             | ✓      |     |
+| Device Simulator              | ✓                             | ✓      |     |
+| Debugger                      | ✓                             | ✓      |     |
+| Simulator Dashboard           | ✓                             | ✓      |     |
+| Devices/Watch views           | ✓                             | ✓      |     |
+| Serial connection to hardware | ✓ (1)                         |        |     |
+| USB connection to hardware    | (2)                           |        |     |
+
+-   (1) There may be [a way to connect to USB/Serial in WSL](https://learn.microsoft.com/en-us/windows/wsl/connect-usb) in the future.
+-   (2) No board with USB connection supported yet
+
 ## Troubleshooting {#troubleshooting}
 
 ### DeviceScript CLI not installed
@@ -92,11 +110,6 @@ It may happen that a previous session left the development server dangling, run 
 ```bash
 npx kill-port 8081
 ```
-
-### Local vs Remote Workspaces
-
-Connection to Serial or USB is not supported when working
-from a remote workspace, such as GitHub Codespaces.
 
 ### Serial connection won't connect
 
