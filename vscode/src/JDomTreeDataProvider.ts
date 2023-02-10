@@ -43,7 +43,7 @@ export interface TreeItemProps {
 }
 
 export function createTreeItem(
-    parent: JDNode,
+    parent: JDomTreeItem,
     child: JDNode,
     props: TreeItemProps
 ): JDomTreeItem {
@@ -70,10 +70,11 @@ export function createTreeItemFromId(
 }
 
 export function createChildrenTreeItems(
-    node: JDNode,
+    parent: JDomTreeItem,
     props: TreeItemProps
 ): JDomTreeItem[] {
-    if (!node) return []
+    if (!parent) return []
+    const { node } = parent
     const children = node.children
         .filter(child => {
             const { nodeKind } = child
@@ -94,14 +95,14 @@ export function createChildrenTreeItems(
             return child
         })
         .filter(child => !!child)
-        .map(child => createTreeItem(node, child, props))
+        .map(child => createTreeItem(parent, child, props))
     return children.filter(n => !!n)
 }
 
 export class JDomTreeItem extends vscode.TreeItem {
     private children: JDomTreeItem[]
     constructor(
-        public readonly parent: JDNode,
+        public readonly parent: JDomTreeItem,
         public readonly node: JDNode,
         public readonly props: TreeItemProps,
         collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
@@ -158,7 +159,7 @@ export class JDomTreeItem extends vscode.TreeItem {
 
     getChildren(): Thenable<JDomTreeItem[]> {
         this.children?.forEach(child => child.unmount())
-        this.children = createChildrenTreeItems(this.node, this.props)
+        this.children = createChildrenTreeItems(this, this.props)
         return Promise.resolve(this.children)
     }
 
@@ -168,7 +169,7 @@ export class JDomTreeItem extends vscode.TreeItem {
 }
 
 export class JDomDeviceTreeItem extends JDomTreeItem {
-    constructor(parent: JDNode, device: JDDevice, props: TreeItemProps) {
+    constructor(parent: JDomTreeItem, device: JDDevice, props: TreeItemProps) {
         super(parent, device, props)
 
         if (device.deviceId === this.props.state.simulatorScriptManagerId)
@@ -263,7 +264,11 @@ ${spec.description}`,
 }
 
 export class JDomServiceTreeItem extends JDomTreeItem {
-    constructor(parent: JDNode, service: JDService, props: TreeItemProps) {
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
         super(parent, service, props)
     }
 
@@ -352,7 +357,7 @@ ${snippet}
 
 export class JDomServiceMemberTreeItem extends JDomTreeItem {
     constructor(
-        parent: JDNode,
+        parent: JDomTreeItem,
         node: JDServiceMemberNode,
         props: TreeItemProps
     ) {
@@ -375,7 +380,11 @@ export class JDomServiceMemberTreeItem extends JDomTreeItem {
 }
 
 export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
-    constructor(parent: JDNode, register: JDRegister, props: TreeItemProps) {
+    constructor(
+        parent: JDomTreeItem,
+        register: JDRegister,
+        props: TreeItemProps
+    ) {
         super(parent, register, props)
         const { specification, code } = register
         const { kind } = specification || {}
@@ -437,7 +446,7 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
 }
 
 export class JDomEventTreeItem extends JDomServiceMemberTreeItem {
-    constructor(parent: JDNode, event: JDEvent, props: TreeItemProps) {
+    constructor(parent: JDomTreeItem, event: JDEvent, props: TreeItemProps) {
         super(parent, event, props)
     }
 
@@ -491,7 +500,7 @@ class MissingNode extends JDNode {
 }
 
 class JDMissingTreeItem extends JDomTreeItem {
-    constructor(parent: JDNode, node: MissingNode, props: TreeItemProps) {
+    constructor(parent: JDomTreeItem, node: MissingNode, props: TreeItemProps) {
         super(parent, node, props, vscode.TreeItemCollapsibleState.None)
         this.iconPath = new vscode.ThemeIcon(node.icon)
         this.description = "?"
@@ -534,6 +543,10 @@ export abstract class JDomTreeDataProvider
         } else {
             return element.getChildren()
         }
+    }
+
+    getParent?(element: JDomTreeItem): vscode.ProviderResult<JDomTreeItem> {
+        return element?.parent
     }
 
     resolveTreeItem(
