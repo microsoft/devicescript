@@ -14,6 +14,7 @@ import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
 import { setVerbose } from "./command"
+import { binPatch } from "./binpatch"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -194,6 +195,22 @@ export async function mainCli() {
         .option("-o, --output <file.bin>", "specify output file name")
         .arguments("<file.json|file.bin>")
         .action(dcfg)
+
+    program
+        .command("binpatch", { hidden: true })
+        .description("patch an interpreter binary with board configuration")
+        .option("--uf2 <file.uf2>", "interpreter binary in UF2 format")
+        .option("--bin <file.bin>", "interpreter binary in BIN format")
+        .option(
+            "-o, --outdir <folder>",
+            "specify output directory, default to 'dist'"
+        )
+        .option(
+            "--generic",
+            "copy the uf2/bin file and corresponding ELF file as 'generic' variant"
+        )
+        .arguments("<file.board.json...>")
+        .action(binPatch)
 
     program.on("option:verbose", () => setVerbose(true))
 

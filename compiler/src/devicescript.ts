@@ -9,6 +9,7 @@ export * from "./info"
 export * from "./util"
 export * from "./debug"
 export * from "./dcfg"
+export * from "./srvcfg"
 export { prettySize } from "./jdutil"
 
 import { compile } from "./compiler"

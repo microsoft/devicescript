@@ -344,7 +344,8 @@ export function decodeDcfg(buf: Uint8Array) {
     }
 }
 
-function parseAnyInt(s: string) {
+export function parseAnyInt(s: string | number) {
+    if (typeof s == "number") return s
     s = s.replace(/_/g, "")
     let m = 1
     if (s[0] == "-") {

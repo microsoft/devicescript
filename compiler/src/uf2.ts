@@ -26,6 +26,7 @@ export interface UF2Block {
     familyId: number
     filename?: string
     data: Uint8Array
+    origData?: Uint8Array
 }
 
 function parseUF2Block(block: Uint8Array): UF2Block {
@@ -76,6 +77,7 @@ function parseUF2Block(block: Uint8Array): UF2Block {
         familyId,
         data: block.slice(32, 32 + payloadSize),
         filename,
+        origData: block,
     }
 }
 
@@ -156,167 +158,160 @@ function setWord(block: Uint8Array, ptr: number, v: number) {
     block[ptr + 3] = (v >> 24) & 0xff
 }
 
-export interface UF2File {
-    currBlock: Uint8Array
-    currPtr: number
-    blocks: Uint8Array[]
-    ptrs: number[]
-    filename?: string
-    filesize: number
-    familyId: number
-}
+export class UF2File {
+    currBlock: Uint8Array = null
+    currPtr = -1
+    blocks: Uint8Array[] = []
+    ptrs: number[] = []
+    filename: string
+    filesize = 0
+    familyId = 0
 
-export function newUF2File(familyId?: string | number): UF2File {
-    if (typeof familyId == "string") familyId = parseInt(familyId)
-    return {
-        currBlock: null,
-        currPtr: -1,
-        blocks: [],
-        ptrs: [],
-        filesize: 0,
-        familyId: familyId || 0,
+    constructor(familyId?: string | number) {
+        this.familyId =
+            typeof familyId == "string" ? parseInt(familyId) : familyId
     }
-}
 
-export function finalizeUF2File(f: UF2File) {
-    for (let i = 0; i < f.blocks.length; ++i) {
-        setWord(f.blocks[i], 20, i)
-        setWord(f.blocks[i], 24, f.blocks.length)
-        if (f.filename) setWord(f.blocks[i], 28, f.filesize)
+    static concat(fs: UF2File[]) {
+        for (let f of fs) {
+            f.finalize()
+            f.filename = null
+        }
+        let r = new UF2File()
+        r.blocks = arrayConcatMany(fs.map(f => f.blocks))
+        for (let f of fs) {
+            f.blocks = []
+        }
+        return r
     }
-}
 
-export function concatUF2Files(fs: UF2File[]) {
-    for (let f of fs) {
-        finalizeUF2File(f)
-        f.filename = null
+    static isUF2(uf2: Uint8Array) {
+        return parseUF2Block(uf2.slice(0, 512)) != null
     }
-    let r = newUF2File()
-    r.blocks = arrayConcatMany(fs.map(f => f.blocks))
-    for (let f of fs) {
-        f.blocks = []
+
+    static fromFile(uf2: Uint8Array) {
+        const blocks = parseUF2File(uf2)
+        const r = new UF2File(blocks[0].familyId)
+        r.blocks = blocks.map(b => new Uint8Array(b.origData))
+        r.ptrs = blocks.map(b => b.targetAddr >> 8)
+        r.filename = blocks[0].filename
+        return r
     }
-    return r
-}
 
-export function serializeUF2File(f: UF2File) {
-    finalizeUF2File(f)
-    return bufferConcatMany(f.blocks)
-}
+    finalize() {
+        for (let i = 0; i < this.blocks.length; ++i) {
+            setWord(this.blocks[i], 20, i)
+            setWord(this.blocks[i], 24, this.blocks.length)
+            if (this.filename) setWord(this.blocks[i], 28, this.filesize)
+        }
+    }
 
-export function readBytesFromUF2File(
-    f: UF2File,
-    addr: number,
-    length: number
-): Uint8Array {
-    //console.log(`read @${addr} len=${length}`)
-    let needAddr = addr >> 8
-    let bl: Uint8Array
-    if (needAddr == f.currPtr) bl = f.currBlock
-    else {
-        for (let i = 0; i < f.ptrs.length; ++i) {
-            if (f.ptrs[i] == needAddr) {
-                bl = f.blocks[i]
-                break
+    serialize() {
+        this.finalize()
+        return bufferConcatMany(this.blocks)
+    }
+
+    readBytes(addr: number, length: number): Uint8Array {
+        //console.log(`read @${addr} len=${length}`)
+        let needAddr = addr >> 8
+        let bl: Uint8Array
+        if (needAddr == this.currPtr) bl = this.currBlock
+        else {
+            for (let i = 0; i < this.ptrs.length; ++i) {
+                if (this.ptrs[i] == needAddr) {
+                    bl = this.blocks[i]
+                    break
+                }
+            }
+            if (bl) {
+                this.currPtr = needAddr
+                this.currBlock = bl
             }
         }
-        if (bl) {
-            f.currPtr = needAddr
-            f.currBlock = bl
+        if (!bl) return null
+        let res = new Uint8Array(length)
+        let toRead = Math.min(length, 256 - (addr & 0xff))
+        memcpy(res, 0, bl, (addr & 0xff) + 32, toRead)
+        let leftOver = length - toRead
+        if (leftOver > 0) {
+            let le = this.readBytes(addr + toRead, leftOver)
+            memcpy(res, toRead, le)
         }
-    }
-    if (!bl) return null
-    let res = new Uint8Array(length)
-    let toRead = Math.min(length, 256 - (addr & 0xff))
-    memcpy(res, 0, bl, (addr & 0xff) + 32, toRead)
-    let leftOver = length - toRead
-    if (leftOver > 0) {
-        let le = readBytesFromUF2File(f, addr + toRead, leftOver)
-        memcpy(res, toRead, le)
-    }
-    return res
-}
-
-export function writeBytesToUF2File(
-    f: UF2File,
-    addr: number,
-    bytes: ArrayLike<number>,
-    flags = 0
-) {
-    let currBlock = f.currBlock
-    let needAddr = addr >> 8
-
-    // account for unaligned writes
-    let thisChunk = 256 - (addr & 0xff)
-    if (bytes.length > thisChunk) {
-        let b = new Uint8Array(bytes)
-        writeBytesToUF2File(f, addr, b.slice(0, thisChunk))
-        while (thisChunk < bytes.length) {
-            let nextOff = Math.min(thisChunk + 256, bytes.length)
-            writeBytesToUF2File(
-                f,
-                addr + thisChunk,
-                b.slice(thisChunk, nextOff)
-            )
-            thisChunk = nextOff
-        }
-        return
+        return res
     }
 
-    if (needAddr != f.currPtr) {
-        let i = 0
-        currBlock = null
-        for (let i = 0; i < f.ptrs.length; ++i) {
-            if (f.ptrs[i] == needAddr) {
-                currBlock = f.blocks[i]
-                break
+    writeBytes(addr: number, bytes: ArrayLike<number>, flags = 0) {
+        let currBlock = this.currBlock
+        let needAddr = addr >> 8
+
+        // account for unaligned writes
+        let thisChunk = 256 - (addr & 0xff)
+        if (bytes.length > thisChunk) {
+            let b = new Uint8Array(bytes)
+            this.writeBytes(addr, b.slice(0, thisChunk))
+            while (thisChunk < bytes.length) {
+                let nextOff = Math.min(thisChunk + 256, bytes.length)
+                this.writeBytes(addr + thisChunk, b.slice(thisChunk, nextOff))
+                thisChunk = nextOff
             }
+            return
         }
-        if (!currBlock) {
-            currBlock = new Uint8Array(512)
-            if (f.filename) flags |= UF2_FLAG_FILE
-            else if (f.familyId) flags |= UF2_FLAG_FAMILY_ID_PRESENT
-            setWord(currBlock, 0, UF2_MAGIC_START0)
-            setWord(currBlock, 4, UF2_MAGIC_START1)
-            setWord(currBlock, 8, flags)
-            setWord(currBlock, 12, needAddr << 8)
-            setWord(currBlock, 16, 256)
-            setWord(currBlock, 20, f.blocks.length)
-            setWord(currBlock, 28, f.familyId)
-            setWord(currBlock, 512 - 4, UF2_MAGIC_END)
-            // if bytes are not written, leave them at erase value
-            for (let i = 32; i < 32 + 256; ++i) currBlock[i] = 0xff
-            if (f.filename) {
-                memcpy(currBlock, 32 + 256, stringToBuffer(f.filename))
+
+        if (needAddr != this.currPtr) {
+            let i = 0
+            currBlock = null
+            for (let i = 0; i < this.ptrs.length; ++i) {
+                if (this.ptrs[i] == needAddr) {
+                    currBlock = this.blocks[i]
+                    break
+                }
             }
-            f.blocks.push(currBlock)
-            f.ptrs.push(needAddr)
+            if (!currBlock) {
+                currBlock = new Uint8Array(512)
+                if (this.filename) flags |= UF2_FLAG_FILE
+                else if (this.familyId) flags |= UF2_FLAG_FAMILY_ID_PRESENT
+                setWord(currBlock, 0, UF2_MAGIC_START0)
+                setWord(currBlock, 4, UF2_MAGIC_START1)
+                setWord(currBlock, 8, flags)
+                setWord(currBlock, 12, needAddr << 8)
+                setWord(currBlock, 16, 256)
+                setWord(currBlock, 20, this.blocks.length)
+                setWord(currBlock, 28, this.familyId)
+                setWord(currBlock, 512 - 4, UF2_MAGIC_END)
+                // if bytes are not written, leave them at erase value
+                for (let i = 32; i < 32 + 256; ++i) currBlock[i] = 0xff
+                if (this.filename) {
+                    memcpy(currBlock, 32 + 256, stringToBuffer(this.filename))
+                }
+                this.blocks.push(currBlock)
+                this.ptrs.push(needAddr)
+            }
+            this.currPtr = needAddr
+            this.currBlock = currBlock
         }
-        f.currPtr = needAddr
-        f.currBlock = currBlock
+        let p = (addr & 0xff) + 32
+        for (let i = 0; i < bytes.length; ++i) currBlock[p + i] = bytes[i]
+        this.filesize = Math.max(this.filesize, bytes.length + addr)
     }
-    let p = (addr & 0xff) + 32
-    for (let i = 0; i < bytes.length; ++i) currBlock[p + i] = bytes[i]
-    f.filesize = Math.max(f.filesize, bytes.length + addr)
-}
 
-export function writeHexToUF2File(f: UF2File, hex: string[]) {
-    let upperAddr = "0000"
+    writeHex(hex: string[]) {
+        let upperAddr = "0000"
 
-    for (let i = 0; i < hex.length; ++i) {
-        let m = /:02000004(....)/.exec(hex[i])
-        if (m) {
-            upperAddr = m[1]
-        }
-        m = /^:..(....)00(.*)[0-9A-F][0-9A-F]$/.exec(hex[i])
-        if (m) {
-            let newAddr = parseInt(upperAddr + m[1], 16)
-            let hh = m[2]
-            let arr: number[] = []
-            for (let j = 0; j < hh.length; j += 2) {
-                arr.push(parseInt(hh[j] + hh[j + 1], 16))
+        for (let i = 0; i < hex.length; ++i) {
+            let m = /:02000004(....)/.exec(hex[i])
+            if (m) {
+                upperAddr = m[1]
             }
-            writeBytesToUF2File(f, newAddr, arr)
+            m = /^:..(....)00(.*)[0-9A-F][0-9A-F]$/.exec(hex[i])
+            if (m) {
+                let newAddr = parseInt(upperAddr + m[1], 16)
+                let hh = m[2]
+                let arr: number[] = []
+                for (let j = 0; j < hh.length; j += 2) {
+                    arr.push(parseInt(hh[j] + hh[j + 1], 16))
+                }
+                this.writeBytes(newAddr, arr)
+            }
         }
     }
 }
