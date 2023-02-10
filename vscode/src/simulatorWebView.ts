@@ -1,6 +1,5 @@
 import * as vscode from "vscode"
 import { JDEventSource } from "jacdac-ts"
-import { ExtensionContext } from "vscode"
 import { DeviceScriptExtensionState } from "./state"
 import { logo } from "./assets"
 
@@ -111,8 +110,8 @@ export class SimulatorsWebView extends JDEventSource {
 
     private async handleDeserialize(view: vscode.WebviewPanel) {
         if (!this.simulatorsWebviewPanel) {
-            await this.extensionState.devtools.start()
             this.simulatorsWebviewPanel = view
+            await this.extensionState.devtools.start()
         }
         await this.updateDeveloperToolsPanelUrl()
     }
@@ -120,6 +119,8 @@ export class SimulatorsWebView extends JDEventSource {
     private async handleOpen() {
         if (this.simulatorsWebviewPanel) {
             this.simulatorsWebviewPanel.reveal(vscode.ViewColumn.Nine)
+            // make sure the tools are running
+            await this.extensionState.devtools.start()
             return
         }
 
