@@ -5,7 +5,7 @@ console.log('starting')
 const temp = new ds.Temperature()
 const relay = new ds.Relay()
 let target = 21 // deg C
-
+temp.variant
 ds.everyMs(5000, () => {
     const t = temp.temperature.read()
     console.log(`t: ${t}, s: ${target}`)

@@ -4,7 +4,7 @@ import { toMarkdownString } from "./catalog"
 import { Utils } from "vscode-uri"
 
 import { DeviceScriptExtensionState } from "./state"
-export function registerMainStatusBar(
+export function activateMainStatusBar(
     extensionState: DeviceScriptExtensionState
 ) {
     const { bus, context } = extensionState
