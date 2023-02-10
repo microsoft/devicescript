@@ -67,7 +67,7 @@ function uncachedStartJacdacBus() {
                 console.warn("invalid msg: " + JSON.stringify(msg))
             }
         })
-        const bus = new JDBus([ws], { client: false })
+        const bus = new JDBus([ws], { client: false, disableRoleManager: true })
         bus.on(ERROR, err => {
             console.error("Bus error", err)
         })
