@@ -116,6 +116,11 @@
                     "default": true,
                     "description": "Show DeviceScript terminal when starting debug session."
                 },
+                "devicescript.debugger.showSimulatorsOnStart": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show DeviceScript simulators when starting debug session."
+                },
                 "devicescript.simulator.runNative": {
                     "type": "boolean",
                     "default": false,

@@ -77,6 +77,19 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
     vscode.debug.onDidStartDebugSession(
         session => {
             if (session.type !== "devicescript") return
+
+            const settings = vscode.workspace.getConfiguration(
+                "devicescript.debugger"
+            )
+            if (settings.get("showTerminalOnStart"))
+                vscode.commands.executeCommand(
+                    "extension.devicescript.terminal.show"
+                )
+            if (settings.get("showSimulatorsOnStart"))
+                vscode.commands.executeCommand(
+                    "extension.devicescript.openSimulators"
+                )
+
             const config = session.configuration
             const dsConfig = config as StartArgs
             const dev = extensionState.bus.device(dsConfig.deviceId, true)
@@ -140,14 +153,6 @@ export class DeviceScriptAdapterServerDescriptorFactory
         session: vscode.DebugSession,
         executable: vscode.DebugAdapterExecutable | undefined
     ) {
-        const config = vscode.workspace.getConfiguration(
-            "devicescript.debugger"
-        )
-        if (config.get("showTerminalOnStart"))
-            vscode.commands.executeCommand(
-                "extension.devicescript.terminal.show"
-            )
-
         return new vscode.DebugAdapterServer(8083, "localhost")
     }
 
