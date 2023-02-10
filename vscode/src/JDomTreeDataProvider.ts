@@ -26,15 +26,15 @@ import {
     deviceCatalogImage,
     capitalize,
     DOCS_ROOT,
+    prettyUnit,
+    JDEventSource,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
 
-export type AliveFunction = (item: JDomTreeItem) => boolean
 export type RefreshFunction = (item: JDomTreeItem) => void
 
 export interface TreeItemProps {
-    isAlive: AliveFunction
     refresh: RefreshFunction
     command: vscode.Command
     state: DeviceScriptExtensionState
@@ -43,6 +43,7 @@ export interface TreeItemProps {
 }
 
 export function createTreeItem(
+    parent: JDNode,
     child: JDNode,
     props: TreeItemProps
 ): JDomTreeItem {
@@ -55,7 +56,7 @@ export function createTreeItem(
             [REGISTER_NODE_NAME]: JDomRegisterTreeItem,
             [EVENT_NODE_NAME]: JDomEventTreeItem,
         }[nodeKind] ?? JDomTreeItem
-    const item = new treeItemType(child, props)
+    const item = new treeItemType(parent, child, props)
     return item
 }
 
@@ -65,7 +66,7 @@ export function createTreeItemFromId(
     props: TreeItemProps
 ) {
     const node = bus.node(id)
-    return createTreeItem(node, props)
+    return createTreeItem(undefined, node, props)
 }
 
 export function createChildrenTreeItems(
@@ -93,12 +94,14 @@ export function createChildrenTreeItems(
             return child
         })
         .filter(child => !!child)
-        .map(child => createTreeItem(child, props))
+        .map(child => createTreeItem(node, child, props))
     return children.filter(n => !!n)
 }
 
 export class JDomTreeItem extends vscode.TreeItem {
+    private children: JDomTreeItem[]
     constructor(
+        public readonly parent: JDNode,
         public readonly node: JDNode,
         public readonly props: TreeItemProps,
         collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
@@ -111,20 +114,19 @@ export class JDomTreeItem extends vscode.TreeItem {
         this.command = command
 
         this.handleChange = this.handleChange.bind(this)
+        this.handleParentUnmount = this.handleParentUnmount.bind(this)
         this.mount()
-        this.update()
     }
 
     protected update(): boolean {
         return false
     }
 
-    protected handleChange() {
-        if (!this.props.isAlive(this)) {
-            console.log(`dead ${this}`)
-            this.unmount()
-        }
+    private handleParentUnmount() {
+        this.unmount()
+    }
 
+    protected handleChange() {
         const updated = this.update()
         if (updated) this.refresh()
     }
@@ -133,18 +135,31 @@ export class JDomTreeItem extends vscode.TreeItem {
         this.props.refresh(this)
     }
 
+    mountChildren() {
+        this.children?.forEach(c => c.mount())
+    }
+
+    unmountChildren() {
+        this.children?.forEach(c => c.unmount())
+    }
+
     mount() {
         console.log(`mount ${this.id}`)
         this.node.on(CHANGE, this.handleChange)
+        this.handleChange()
+        this.mountChildren()
     }
 
     unmount() {
         console.log(`unmount ${this.id}`)
         this.node.off(CHANGE, this.handleChange)
+        this.unmountChildren()
     }
 
     getChildren(): Thenable<JDomTreeItem[]> {
-        return Promise.resolve(createChildrenTreeItems(this.node, this.props))
+        this.children?.forEach(child => child.unmount())
+        this.children = createChildrenTreeItems(this.node, this.props)
+        return Promise.resolve(this.children)
     }
 
     resolveTreeItem(token: vscode.CancellationToken): Promise<vscode.TreeItem> {
@@ -153,8 +168,8 @@ export class JDomTreeItem extends vscode.TreeItem {
 }
 
 export class JDomDeviceTreeItem extends JDomTreeItem {
-    constructor(device: JDDevice, props: TreeItemProps) {
-        super(device, props)
+    constructor(parent: JDNode, device: JDDevice, props: TreeItemProps) {
+        super(parent, device, props)
 
         if (device.deviceId === this.props.state.simulatorScriptManagerId)
             this.contextValue = "simulator"
@@ -248,8 +263,8 @@ ${spec.description}`,
 }
 
 export class JDomServiceTreeItem extends JDomTreeItem {
-    constructor(service: JDService, props: TreeItemProps) {
-        super(service, props)
+    constructor(parent: JDNode, service: JDService, props: TreeItemProps) {
+        super(parent, service, props)
     }
 
     iconPath = new vscode.ThemeIcon("symbol-class")
@@ -336,8 +351,12 @@ ${snippet}
 }
 
 export class JDomServiceMemberTreeItem extends JDomTreeItem {
-    constructor(node: JDServiceMemberNode, props: TreeItemProps) {
-        super(node, props, vscode.TreeItemCollapsibleState.None)
+    constructor(
+        parent: JDNode,
+        node: JDServiceMemberNode,
+        props: TreeItemProps
+    ) {
+        super(parent, node, props, vscode.TreeItemCollapsibleState.None)
         const { specification } = node
         const { description } = specification || {}
         this.tooltip = toMarkdownString(
@@ -356,8 +375,8 @@ export class JDomServiceMemberTreeItem extends JDomTreeItem {
 }
 
 export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
-    constructor(register: JDRegister, props: TreeItemProps) {
-        super(register, props)
+    constructor(parent: JDNode, register: JDRegister, props: TreeItemProps) {
+        super(parent, register, props)
         const { specification, code } = register
         const { kind } = specification || {}
         this.contextValue = kind === "rw" ? "rw" : "register"
@@ -418,8 +437,8 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
 }
 
 export class JDomEventTreeItem extends JDomServiceMemberTreeItem {
-    constructor(event: JDEvent, props: TreeItemProps) {
-        super(event, props)
+    constructor(parent: JDNode, event: JDEvent, props: TreeItemProps) {
+        super(parent, event, props)
     }
 
     iconPath = new vscode.ThemeIcon("symbol-event")
@@ -472,34 +491,41 @@ class MissingNode extends JDNode {
 }
 
 class JDMissingTreeItem extends JDomTreeItem {
-    constructor(node: MissingNode, props: TreeItemProps) {
-        super(node, props, vscode.TreeItemCollapsibleState.None)
+    constructor(parent: JDNode, node: MissingNode, props: TreeItemProps) {
+        super(parent, node, props, vscode.TreeItemCollapsibleState.None)
         this.iconPath = new vscode.ThemeIcon(node.icon)
         this.description = "?"
     }
 }
 
 export abstract class JDomTreeDataProvider
+    extends JDEventSource
     implements vscode.TreeDataProvider<JDomTreeItem>
 {
+    private roots: JDomTreeItem[]
+
     constructor(
         readonly state: DeviceScriptExtensionState,
         readonly command: vscode.Command,
         readonly idPrefix: string
-    ) {}
+    ) {
+        super()
+    }
 
     get bus() {
         return this.state.bus
     }
 
-    private readonly _items = new WeakSet<JDomTreeItem>()
-    getTreeItem(element: JDomTreeItem): JDomTreeItem {
-        this._items.add(element)
-        return element
+    mount() {
+        this.roots.forEach(r => r.mount())
     }
 
-    isAlive(element?: JDomTreeItem) {
-        return element && this._items.has(element)
+    unmount() {
+        this.roots.forEach(r => r.unmount())
+    }
+
+    getTreeItem(element: JDomTreeItem): JDomTreeItem {
+        return element
     }
 
     getChildren(element?: JDomTreeItem): Thenable<JDomTreeItem[]> {
@@ -518,7 +544,13 @@ export abstract class JDomTreeDataProvider
         return element.resolveTreeItem(token)
     }
 
-    protected abstract getRoots(): JDomTreeItem[]
+    protected getRoots(): JDomTreeItem[] {
+        this.roots?.forEach(root => root.unmount())
+        this.roots = this.createRoots()
+        return this.roots
+    }
+
+    abstract createRoots(): JDomTreeItem[]
 
     private _onDidChangeTreeData: vscode.EventEmitter<
         JDomTreeItem | undefined | null | void
@@ -543,21 +575,24 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
         })
     }
 
-    override getRoots() {
-        const isAlive: AliveFunction = i => this.isAlive(i)
+    get devices() {
+        const devices = this.bus.devices({
+            ignoreInfrastructure: true,
+            announced: true,
+        })
+        return devices
+    }
+
+    override createRoots() {
+        const { devices } = this
         const refresh: RefreshFunction = i => this.refresh(i)
         const props = {
-            isAlive,
             refresh,
             idPrefix: this.idPrefix,
             command: this.command,
             state: this.state,
         }
-        const devices = this.bus.devices({
-            ignoreInfrastructure: true,
-            announced: true,
-        })
-        return devices.map(child => createTreeItem(child, props))
+        return devices.map(child => createTreeItem(undefined, child, props))
     }
 }
 
@@ -567,11 +602,9 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
         this.state.on(CHANGE, this.refresh.bind(this))
     }
 
-    override getRoots() {
+    override createRoots() {
         const refresh: RefreshFunction = i => this.refresh(i)
-        const isAlive: AliveFunction = i => this.isAlive(i)
         const props = {
-            isAlive,
             refresh,
             fullName: true,
             idPrefix: this.idPrefix,
@@ -583,6 +616,7 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
             w =>
                 createTreeItemFromId(this.bus, w.id, props) ||
                 new JDMissingTreeItem(
+                    undefined,
                     new MissingNode(w.id, w.label, w.icon),
                     props
                 )
@@ -591,9 +625,62 @@ export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
     }
 }
 
+function activateTreeView(
+    extensionState: DeviceScriptExtensionState,
+    viewId: string,
+    treeDataProvider: JDomTreeDataProvider
+) {
+    const { context, bus } = extensionState
+    const { subscriptions } = context
+    const view = vscode.window.createTreeView(viewId, { treeDataProvider })
+    subscriptions.push(view)
+    view.onDidChangeVisibility(
+        ({ visible }) => {
+            if (visible) treeDataProvider.mount()
+            else treeDataProvider.unmount()
+        },
+        undefined,
+        subscriptions
+    )
+    view.onDidExpandElement(
+        ({ element }) => element.mountChildren(),
+        undefined,
+        subscriptions
+    )
+    view.onDidCollapseElement(
+        ({ element }) => element.unmountChildren(),
+        undefined,
+        subscriptions
+    )
+    return view
+}
+
 export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
     const { context, bus } = extensionState
     const { subscriptions } = context
+    const selectNodeCommand: vscode.Command = {
+        title: "select node",
+        command: "extension.devicescript.node.select",
+    }
+    const jdomTreeDataProvider = new JDomDeviceTreeDataProvider(
+        extensionState,
+        selectNodeCommand
+    )
+    activateTreeView(
+        extensionState,
+        "extension.devicescript.jdom-explorer",
+        jdomTreeDataProvider
+    )
+
+    const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
+        extensionState,
+        selectNodeCommand
+    )
+    activateTreeView(
+        extensionState,
+        "extension.devicescript.watch",
+        jdomWatchTreeDataProvider
+    )
 
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -648,26 +735,6 @@ export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
                 }
             }
         )
-    )
-    const selectNodeCommand: vscode.Command = {
-        title: "select node",
-        command: "extension.devicescript.node.select",
-    }
-    const jdomTreeDataProvider = new JDomDeviceTreeDataProvider(
-        extensionState,
-        selectNodeCommand
-    )
-    vscode.window.registerTreeDataProvider(
-        "extension.devicescript.jdom-explorer",
-        jdomTreeDataProvider
-    )
-    const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
-        extensionState,
-        selectNodeCommand
-    )
-    vscode.window.registerTreeDataProvider(
-        "extension.devicescript.watch",
-        jdomWatchTreeDataProvider
     )
 
     subscriptions.push(
