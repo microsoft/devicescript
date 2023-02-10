@@ -74,6 +74,8 @@ import {
     srcMapEntrySize,
 } from "./info"
 import { computeSizes } from "./debug"
+import { BaseServiceConfig } from "@devicescript/srvcfg"
+import { jsonToDcfg, serializeDcfg } from "./dcfg"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -575,6 +577,7 @@ class Program implements TopOpWriter {
     isLibrary: boolean
     srcFiles: SrcFile[] = []
     diagnostics: DevsDiagnostic[] = []
+    startServices: BaseServiceConfig[] = []
 
     constructor(public host: Host, public _source: string) {
         this.serviceSpecs = {}
@@ -758,6 +761,37 @@ class Program implements TopOpWriter {
         return r
     }
 
+    private toLiteralJSON(node: ts.Expression): any {
+        if (this.isStringLiteral(node)) return node.text
+        if (ts.isNumericLiteral(node)) return parseFloat(node.text)
+        if (node.kind == SK.NullKeyword) return null
+
+        if (ts.isArrayLiteralExpression(node))
+            return node.elements.map(e => this.toLiteralJSON(e))
+
+        if (ts.isObjectLiteralExpression(node)) {
+            const json: Record<string, any> = {}
+            for (const prop of node.properties) {
+                if (!ts.isPropertyAssignment(prop))
+                    throwError(
+                        prop,
+                        `only simple property assignments supported`
+                    )
+                const id = this.forceName(prop.name)
+                const val = this.toLiteralJSON(prop.initializer)
+                if (val === undefined)
+                    throwError(
+                        prop.initializer,
+                        `only literals supported currently`
+                    )
+                json[id] = val
+            }
+            return json
+        }
+
+        throwError(node, `expecting JSON literal here`)
+    }
+
     private parseRole(decl: ts.VariableDeclaration): Cell {
         if (this.getCellAtLocation(decl)) return
 
@@ -771,6 +805,28 @@ class Program implements TopOpWriter {
             )
 
         if (!expr) return null
+
+        const startPref = '#"@devicescript/srvcfg".start'
+
+        if (
+            ts.isCallExpression(expr) &&
+            this.nodeName(expr.expression)?.startsWith(startPref)
+        ) {
+            this.requireArgs(expr, 1)
+            const arg = expr.arguments[0]
+            const obj: BaseServiceConfig = this.toLiteralJSON(arg)
+            if (!obj || typeof obj != "object")
+                throwError(arg, `expecting { ... }`)
+            const specName = this.lowerFirst(
+                this.nodeName(expr.expression).slice(startPref.length)
+            )
+            obj.service = specName
+            const spec = this.lookupRoleSpec(arg, specName)
+            if (!obj.name) obj.name = this.forceName(decl.name)
+            this.startServices.push(obj)
+            const role = new Role(this, decl, this.roles, spec, obj.name)
+            return this.assignCell(decl, role)
+        }
 
         if (ts.isNewExpression(expr)) {
             const spec = this.specFromTypeName(
@@ -1269,6 +1325,10 @@ class Program implements TopOpWriter {
         }
     }
 
+    private lowerFirst(r: string) {
+        return r[0].toLowerCase() + r.slice(1)
+    }
+
     private specFromTypeName(
         expr: ts.Node,
         nm?: string,
@@ -1276,8 +1336,7 @@ class Program implements TopOpWriter {
     ): jdspec.ServiceSpec {
         if (!nm) nm = this.nodeName(expr)
         if (nm && nm.startsWith("#ds.")) {
-            let r = nm.slice(4)
-            r = r[0].toLowerCase() + r.slice(1)
+            let r = this.lowerFirst(nm.slice(4))
             if (r == "condition") r = "deviceScriptCondition"
             return this.lookupRoleSpec(expr, r)
         } else {
@@ -3207,6 +3266,19 @@ class Program implements TopOpWriter {
         }
     }
 
+    private serializeStartServices() {
+        const cfg = jsonToDcfg({
+            _: new Array(0x40).concat(this.startServices),
+        })
+        const bin = serializeDcfg(cfg)
+        const writer = new SectionWriter()
+        if (this.startServices.length) {
+            writer.append(bin)
+            writer.align()
+        }
+        return writer
+    }
+
     private serializeSpecs() {
         let usedSpecs = uniqueMap(
             this.roles,
@@ -3350,6 +3422,7 @@ class Program implements TopOpWriter {
         const bufferDesc = new SectionWriter()
         const strData = new SectionWriter()
         const { specWriter, numSpecs } = this.serializeSpecs()
+        const dcfgWriter = this.serializeStartServices()
         write16(hd, 14, numSpecs)
 
         const writers = [
@@ -3362,6 +3435,7 @@ class Program implements TopOpWriter {
             bufferDesc,
             strData,
             specWriter,
+            dcfgWriter,
         ]
 
         assert(BinFmt.NUM_IMG_SECTIONS == writers.length)

@@ -396,6 +396,47 @@ export function decompileDcfg(settings: DcfgSettings) {
     return res
 }
 
+export function jsonToDcfg(obj: any, interpretStrings = false) {
+    const res: DcfgSettings = {}
+    const flattenObj = (val: any, key: string) => {
+        if (typeof val == "string") {
+            if (interpretStrings) {
+                const tmp = parseAnyInt(val)
+                if (tmp != undefined) val = tmp
+                else if (/^hex:[0-9a-f ]+$/.test(val)) {
+                    val = fromHex(val.slice(4).replace(/ /g, ""))
+                }
+            }
+            res[key] = val
+        } else if (typeof val == "number") {
+            if ((val | 0) != val && val >>> 0 != val)
+                throw new Error("non u32/i32 number")
+            res[key] = val
+        } else if (Array.isArray(val)) {
+            for (let i = 0; i < val.length; ++i) {
+                if (val[i] != null)
+                    flattenObj(val[i], key + String.fromCharCode(0x80 + i))
+            }
+        } else if (typeof val == "object") {
+            for (const subkey of Object.keys(val)) {
+                if (subkey.startsWith("$")) continue
+                let suff = subkey == "_" ? "" : subkey
+                if (
+                    suff.length &&
+                    key.length &&
+                    key.charCodeAt(key.length - 1) < 0x80
+                )
+                    suff = "." + suff
+                flattenObj(val[subkey], key + suff)
+            }
+        } else {
+            throw new Error(`invalid value ${key}: ${val}`)
+        }
+    }
+    flattenObj(obj, "")
+    return res
+}
+
 export async function compileDcfg(
     fn: string,
     readFile: (fn: string) => Promise<string>
@@ -404,43 +445,8 @@ export async function compileDcfg(
 
     async function normalizeKeys(fn: string) {
         const mainJson = await readJSON(fn)
-        const res: DcfgSettings = {}
         try {
-            const flattenObj = (val: any, key: string) => {
-                if (typeof val == "string") {
-                    const tmp = parseAnyInt(val)
-                    if (tmp != undefined) val = tmp
-                    else if (/^hex:[0-9a-f ]+$/.test(val)) {
-                        val = fromHex(val.slice(4).replace(/ /g, ""))
-                    }
-                    res[key] = val
-                } else if (typeof val == "number") {
-                    if ((val | 0) != val && val >>> 0 != val)
-                        throw new Error("non u32/i32 number")
-                    res[key] = val
-                } else if (Array.isArray(val)) {
-                    for (let i = 0; i < val.length; ++i) {
-                        flattenObj(val[i], key + String.fromCharCode(0x80 + i))
-                    }
-                } else if (typeof val == "object") {
-                    for (const subkey of Object.keys(val)) {
-                        if (subkey.startsWith("$")) continue
-                        let suff = subkey == "_" ? "" : subkey
-                        if (
-                            suff.length &&
-                            key.length &&
-                            key.charCodeAt(key.length - 1) < 0x80
-                        )
-                            suff = "." + suff
-                        flattenObj(val[subkey], key + suff)
-                    }
-                } else {
-                    throw new Error(`invalid value ${key}: ${val}`)
-                }
-            }
-            flattenObj(mainJson, "")
-
-            return res
+            return jsonToDcfg(mainJson, true)
         } catch (e) {
             throw new Error(`${fn}: ${e.message}`)
         }

@@ -509,7 +509,7 @@ export class Image {
             case StrIdx.ASCII:
                 return this.asciiTable
             case StrIdx.UTF8:
-                return this.asciiTable
+                return this.utf8Table
             case StrIdx.BUILTIN:
                 return this.bultinTable
         }
@@ -720,7 +720,18 @@ export class Image {
             r += ("     " + i).slice(-4) + ": " + this.floatTable[i] + "\n"
         }
 
-        r += `\n`
+        r += `\nRoles:\n`
+        for (const role of this.roles) {
+            r +=
+                ("     " + role.index).slice(-4) +
+                ": " +
+                role.name +
+                " cls: 0x" +
+                role.serviceClass.toString(16) +
+                "\n"
+        }
+
+        r += "\n"
 
         const specData = this.specData
 

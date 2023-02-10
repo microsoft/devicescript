@@ -254,13 +254,13 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 
 ## Format Constants
 
-    img_version_major = 5
+    img_version_major = 6
     img_version_minor = 0
     img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0x9a6a7e0a
-    num_img_sections = 9
+    num_img_sections = 10
     fix_header_size = 32
     section_header_size = 8
     function_header_size = 16

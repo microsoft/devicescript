@@ -103,6 +103,26 @@ const files = {
 
 const specname = "devicescript-spec.d.ts"
 function buildPrelude(folder, outp) {
+    let srvcfg = fs.readFileSync("runtime/jacdac-c/dcfg/srvcfg.d.ts", "utf-8")
+    // no reason to encode hex number as strings in full TS syntax
+    srvcfg = srvcfg
+        .replace("type HexInt = integer | string", "type HexInt = integer")
+        .replace(
+            /(interface BaseServiceConfig[^}]* name)(: string)/,
+            (_, a, b) => a + "?" + b
+        )
+        .replace(/service: /g, `service?: `)
+    const m = /^\s*type ServiceConfig([^{]+)/m.exec(srvcfg)
+    let startServ = `\n    import * as ds from "@devicescript/core"\n\n`
+    m[1].replace(/\| (\w+)Config/g, (_, s) => {
+        startServ += `    function start${s}(cfg: ${s}Config): ds.${s}\n`
+        return ""
+    })
+    srvcfg = srvcfg.replace(m[0], startServ + m[0])
+    srvcfg = "// auto-generated! do not edit here\n" + srvcfg
+
+    fs.writeFileSync(folder + "/srvcfg.d.ts", srvcfg)
+
     const files = fs.readdirSync(folder)
     files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
 
@@ -159,11 +179,7 @@ async function main() {
                 outfile: rootdir + "/" + outfile,
                 logLevel: "warning",
                 inject,
-                external: [
-                    "@devicescript/compiler",
-                    "serialport",
-                    "vscode",
-                ],
+                external: ["@devicescript/compiler", "serialport", "vscode"],
                 platform,
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",

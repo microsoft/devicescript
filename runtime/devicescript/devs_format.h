@@ -30,6 +30,7 @@ typedef struct {
     devs_img_section_t buffers;        // devs_img_section_t[]
     devs_img_section_t string_data;    // "strings" points in here
     devs_img_section_t service_specs;  // devs_service_spec_t[] followed by other stuff
+    devs_img_section_t dcfg;           // see jd_dcfg.h
 } devs_img_header_t;
 
 #define DEVS_ROLE_MASK ((1U << DEVS_ROLE_BITS) - 1)

@@ -13,7 +13,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1077
+// next error 1078
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -199,6 +199,16 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
                 }
                 CHECK(1073, terminated);
             }
+        }
+    }
+
+    if (header->dcfg.length) {
+        const dcfg_header_t *hd = FIRST_DESC(dcfg);
+        CHECK(1077, hd->total_bytes <= header->dcfg.length);
+        int r = dcfg_validate(hd);
+        if (r) {
+            fail(r, header->dcfg.start);
+            return -r;
         }
     }
 
