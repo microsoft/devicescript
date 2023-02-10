@@ -53,7 +53,7 @@ export default function HomepageFeatures(): JSX.Element {
         {
             title: "Debugging",
             description:
-                "Full debuggin experience in Visual Studio Code, for hardware or simulated devices.",
+                "Full debugging experience in Visual Studio Code, for hardware or simulated devices.",
         },
     ]
 
