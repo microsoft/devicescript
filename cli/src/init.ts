@@ -34,7 +34,8 @@ const optionalFiles: Record<string, Object | string> = {
             moduleDetection: "force",
             types: [],
         },
-        include: ["*.ts", `${LIBDIR}/*.ts`],
+        include: ["**/*.ts", `${LIBDIR}/*.ts`],
+        exclude: ["**/node_modules/*"],
     },
     ".prettierrc": {
         arrowParens: "avoid",

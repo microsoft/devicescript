@@ -4,12 +4,10 @@
 
 import {
     DOCS_ROOT,
-    EVENT_NODE_NAME,
     Flags,
     FRAME_PROCESS,
     identifierToUrlPath,
     JDDevice,
-    JDEvent,
     JDFrameBuffer,
     JDRegister,
     prettyUnit,
@@ -17,7 +15,6 @@ import {
     serializeToTrace,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { WorkspaceFolder, DebugConfiguration, ProviderResult } from "vscode"
 import type {
     SideConnectReq,
     SideOutputEvent,
@@ -27,10 +24,7 @@ import { CloudExtensionState } from "./CloudExtensionState"
 import { registerCloudStatusBar } from "./CloudStatusBar"
 import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
 import { CONNECTION_RESOURCE_GROUP } from "./constants"
-import {
-    DeviceScriptAdapterServerDescriptorFactory,
-    DeviceScriptConfigurationProvider,
-} from "./debugger"
+import { activateDebugger } from "./debugger"
 import {
     sideRequest,
     startJacdacBus,
@@ -44,7 +38,7 @@ import {
     JDomWatchTreeDataProvider,
     JDomRegisterTreeItem,
 } from "./JDomTreeDataProvider"
-import { registerMainStatusBar } from "./mainstatusbar"
+import { activateMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
@@ -67,15 +61,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     // build
     initBuild()
     subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.debug.toggleFormatting",
-            () => {
-                const ds = vscode.debug.activeDebugSession
-                if (ds) {
-                    ds.customRequest("toggleFormatting")
-                }
-            }
-        ),
         vscode.commands.registerCommand(
             "extension.devicescript.terminal.show",
             () => extensionState.devtools.show()
@@ -158,45 +143,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         )
     )
 
-    // register a configuration provider for 'devicescript' debug type
-    const provider = new DeviceScriptConfigurationProvider(bus, extensionState)
-    subscriptions.push(
-        vscode.debug.registerDebugConfigurationProvider(
-            "devicescript",
-            provider
-        )
-    )
-
-    // register a dynamic configuration provider for 'devicescript' debug type
-    subscriptions.push(
-        vscode.debug.registerDebugConfigurationProvider(
-            "devicescript",
-            {
-                provideDebugConfigurations(
-                    folder: WorkspaceFolder | undefined
-                ): ProviderResult<DebugConfiguration[]> {
-                    return [
-                        {
-                            name: "Devicescript: Launch",
-                            request: "launch",
-                            type: "devicescript",
-                        },
-                    ]
-                },
-            },
-            vscode.DebugConfigurationProviderTriggerKind.Dynamic
-        )
-    )
-
-    const debuggerAdapterFactory =
-        new DeviceScriptAdapterServerDescriptorFactory()
-    subscriptions.push(
-        vscode.debug.registerDebugAdapterDescriptorFactory(
-            "devicescript",
-            debuggerAdapterFactory
-        )
-    )
-    subscriptions.push(debuggerAdapterFactory)
+    activateDebugger(extensionState)
 
     const output = vscode.window.createOutputChannel("DeviceScript", {
         log: true,
@@ -466,7 +413,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         )
     )
 
-    registerMainStatusBar(extensionState)
+    activateMainStatusBar(extensionState)
 
     // packet trace
     let jacdacPacketsOutputChannel: vscode.OutputChannel = undefined
