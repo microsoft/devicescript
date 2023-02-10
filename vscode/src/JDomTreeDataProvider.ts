@@ -533,7 +533,6 @@ export abstract class JDomTreeDataProvider
 }
 
 export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
-    private _showInfrastructure = false
     constructor(
         extensionState: DeviceScriptExtensionState,
         command: vscode.Command
@@ -542,17 +541,6 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
         this.bus.on(DEVICE_CHANGE, () => {
             this.refresh()
         })
-    }
-
-    get showInfrastructure() {
-        return this._showInfrastructure
-    }
-
-    set showInfrastructure(value: boolean) {
-        if (value !== this._showInfrastructure) {
-            this._showInfrastructure = value
-            this.refresh()
-        }
     }
 
     override getRoots() {
@@ -566,7 +554,7 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
             state: this.state,
         }
         const devices = this.bus.devices({
-            ignoreInfrastructure: !this.showInfrastructure,
+            ignoreInfrastructure: true,
             announced: true,
         })
         return devices.map(child => createTreeItem(child, props))

@@ -25,10 +25,7 @@ import {
     stopJacdacBus,
     subSideEvent,
 } from "./jacdac"
-import {
-    JDomDeviceTreeItem,
-    activateTreeViews,
-} from "./JDomTreeDataProvider"
+import { JDomDeviceTreeItem, activateTreeViews } from "./JDomTreeDataProvider"
 import { activateMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState } from "./state"
 
@@ -202,8 +199,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         } else if (!tracePackets && jacdacPacketsOutputChannel) {
             bus.off(FRAME_PROCESS, logFrame)
         }
-        const showInfrastructure = !!jacdacConfig.get("showInfrastructure")
-        jdomTreeDataProvider.showInfrastructure = showInfrastructure
     }
 
     // hook up to configurations
