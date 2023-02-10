@@ -111,9 +111,8 @@ export class SimulatorsWebView extends JDEventSource {
     private async handleDeserialize(view: vscode.WebviewPanel) {
         if (!this.simulatorsWebviewPanel) {
             this.simulatorsWebviewPanel = view
-            await this.extensionState.devtools.start()
+            await this.configureWebviewPanel()
         }
-        await this.updateDeveloperToolsPanelUrl()
     }
 
     private async handleOpen() {
@@ -125,7 +124,6 @@ export class SimulatorsWebView extends JDEventSource {
         }
 
         console.log("Opening Developer Tools...")
-        await this.extensionState.devtools.start()
         // http://localhost:8081/
         this.simulatorsWebviewPanel = vscode.window.createWebviewPanel(
             "extension.devicescript.simulators",
@@ -136,12 +134,17 @@ export class SimulatorsWebView extends JDEventSource {
                 retainContextWhenHidden: true,
             }
         )
+        await this.configureWebviewPanel()
+    }
+
+    private async configureWebviewPanel() {
         this.simulatorsWebviewPanel.iconPath = logo(this.extensionState.context)
         this.simulatorsWebviewPanel.onDidDispose(
             this.handleViewDispose,
             this,
             this.extensionState.context.subscriptions
         )
+        await this.extensionState.devtools.start()
         await this.updateDeveloperToolsPanelUrl()
     }
 
