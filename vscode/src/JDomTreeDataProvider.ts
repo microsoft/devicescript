@@ -28,6 +28,7 @@ import {
     DOCS_ROOT,
     prettyUnit,
     JDEventSource,
+    isValueOrIntensity,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -115,14 +116,12 @@ export class JDomTreeItem extends vscode.TreeItem {
     }
 
     mount() {
-        console.log(`mount ${this.id}`)
         this.node.on(CHANGE, this.handleChange)
         this.handleChange()
         this.mountChildren()
     }
 
     unmount() {
-        console.log(`unmount ${this.id}`)
         this.node.off(CHANGE, this.handleChange)
         this.unmountChildren()
     }
@@ -260,7 +259,29 @@ ${spec.description}`,
     }
 
     protected override createChildrenTreeItems(): JDomTreeItem[] {
-        return [new JDomServicesTreeItem(this)]
+        const { device } = this
+        const registers = device
+            .services()
+            .map(srv =>
+                srv
+                    .registers()
+                    .filter(
+                        reg =>
+                            isReading(reg.specification) ||
+                            isValueOrIntensity(reg.specification)
+                    )
+            )
+            .flat(2)
+            .filter(r => !!r)
+            .map(
+                reg =>
+                    new JDomRegisterTreeItem(this, reg, {
+                        ...this.props,
+                        idPrefix: this.props.idPrefix + "readings:",
+                        fullName: false,
+                    })
+            )
+        return [...registers, new JDomServicesTreeItem(this)]
     }
 }
 
@@ -422,12 +443,10 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
     }
 
     mount(): void {
-        console.log(`mount ${this.id}`)
         this.node.on(REPORT_UPDATE, this.handleChange)
     }
 
     unmount(): void {
-        console.log(`unmount ${this.id}`)
         this.node.off(REPORT_UPDATE, this.handleChange)
     }
 
@@ -436,7 +455,6 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
     }
 
     protected update(): boolean {
-        console.log(`update ${this.id}`)
         const { register, props } = this
         const { fullName } = props
         const { humanValue, service, friendlyName, name } = register
@@ -906,7 +924,6 @@ export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
             "extension.devicescript.watch.add",
             async (item: JDomTreeItem) => {
                 if (!item) return
-                console.log(`Watch ${item.node}`)
                 const id = item.node.id
                 const { watches } = extensionState
                 if (!watches.find(w => w.id === id)) {
@@ -925,7 +942,6 @@ export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
             "extension.devicescript.watch.remove",
             async (item: JDomTreeItem) => {
                 if (!item) return
-                console.log(`Unwatch ${item.node}`)
                 const id = item.node.id
                 const { watches } = extensionState
                 if (watches.find(w => w.id === id)) {
