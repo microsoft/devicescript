@@ -35,7 +35,7 @@ function callHandlers(hh: ds.Handler[]) {
     if (hh) for (const h of hh) h()
 }
 
-function roleOnPacket(this: ds.Role, pkt: ds.Packet) {
+ds.Role.prototype.onPacket = function (pkt: ds.Packet) {
     if (!pkt || pkt.serviceCommand == 0) {
         const conn = this.isConnected
         if (this._connHandlers || this._disconHandlers) {
@@ -94,14 +94,14 @@ ds.Role.prototype.onConnected = function onConnected(
     this: ds.Role,
     h: ds.Handler
 ) {
-    this.onPacket = roleOnPacket
+    ds._use(this.onPacket)
     this._connHandlers = addElement(this._connHandlers, h)
 }
 ds.Role.prototype.onDisconnected = function onConnected(
     this: ds.Role,
     h: ds.Handler
 ) {
-    this.onPacket = roleOnPacket
+    ds._use(this.onPacket)
     this._disconHandlers = addElement(this._disconHandlers, h)
 }
 
@@ -118,7 +118,7 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     const role = this.role
     if (!role._changeHandlers) {
         role._changeHandlers = {}
-        role.onPacket = roleOnPacket
+        ds._use(role.onPacket)
     }
     const key = this.code + ""
     let lst: ChangeHandler[] = role._changeHandlers[key]
@@ -161,7 +161,7 @@ ds.Event.prototype.subscribe = function (handler) {
     if (!m) {
         m = {}
         this.role._eventHandlers = m
-        this.role.onPacket = roleOnPacket
+        ds._use(this.role.onPacket)
     }
     const k = this.code + ""
     if (!m[k]) m[k] = []
