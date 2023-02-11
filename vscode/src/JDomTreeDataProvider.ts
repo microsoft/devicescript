@@ -29,6 +29,12 @@ import {
     prettyUnit,
     JDEventSource,
     isValueOrIntensity,
+    DISPOSE,
+    SRV_CLOUD_CONFIGURATION,
+    SRV_CLOUD_ADAPTER,
+    CloudConfigurationReg,
+    EventHandler,
+    CloudConfigurationConnectionStatus,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -45,6 +51,7 @@ export interface TreeItemProps {
     label?: string
     contextValue?: string
     description?: string
+    iconPath?: string
 }
 
 export function createTreeItem(
@@ -61,7 +68,7 @@ export function createTreeItem(
             [REGISTER_NODE_NAME]: JDomRegisterTreeItem,
             [EVENT_NODE_NAME]: JDomEventTreeItem,
         }[nodeKind] ?? JDomTreeItem
-    const item = new treeItemType(parent, child, props)
+    const item = new treeItemType(parent, child, { ...props })
     return item
 }
 
@@ -76,6 +83,7 @@ export function createTreeItemFromId(
 
 export class JDomTreeItem extends vscode.TreeItem {
     private children: JDomTreeItem[]
+    private unsubs: (() => void)[]
     constructor(
         public readonly parent: JDomTreeItem,
         public readonly node: JDNode,
@@ -86,11 +94,18 @@ export class JDomTreeItem extends vscode.TreeItem {
             props.collapsibleState ?? vscode.TreeItemCollapsibleState.Collapsed
         )
         const { id, nodeKind } = node
-        const { idPrefix = "", command, contextValue, description } = props
+        const {
+            idPrefix = "",
+            command,
+            contextValue,
+            description,
+            iconPath,
+        } = props
         this.id = idPrefix + id
         this.contextValue = contextValue ?? nodeKind
-        this.command = command
+        this.command = command ? { ...command, arguments: [this] } : undefined
         this.description = description
+        this.iconPath = iconPath ?? new vscode.ThemeIcon(iconPath)
 
         this.handleChange = this.handleChange.bind(this)
         this.handleParentUnmount = this.handleParentUnmount.bind(this)
@@ -116,6 +131,9 @@ export class JDomTreeItem extends vscode.TreeItem {
     refresh() {
         this.props.refresh(this)
     }
+    copy() {}
+
+    edit() {}
 
     mountChildren() {
         this.children?.forEach(c => c.mount())
@@ -125,14 +143,25 @@ export class JDomTreeItem extends vscode.TreeItem {
         this.children?.forEach(c => c.unmount())
     }
 
+    protected subscribe(
+        node: JDNode,
+        eventName: string | string[],
+        handler: EventHandler
+    ) {
+        const unsub = node.subscribe(eventName, handler)
+        if (!this.unsubs) this.unsubs = []
+        this.unsubs.push(unsub)
+    }
+
     mount() {
-        this.node.on(CHANGE, this.handleChange)
+        this.subscribe(this.node, CHANGE, this.handleChange)
         this.handleChange()
         this.mountChildren()
     }
 
     unmount() {
-        this.node.off(CHANGE, this.handleChange)
+        this.unsubs?.forEach(unsub => unsub())
+        this.unsubs = undefined
         this.unmountChildren()
     }
 
@@ -270,6 +299,8 @@ ${spec.description}`,
 
     protected override createChildrenTreeItems(): JDomTreeItem[] {
         const { device } = this
+
+        // interresting registers
         const registers = device
             .services({ specification: true })
             .filter(({ specification }) => !isInfrastructure(specification))
@@ -292,7 +323,17 @@ ${spec.description}`,
                         label: humanify(`${reg.service.name} ${reg.name}`),
                     })
             )
-        return [...registers, new JDomServicesTreeItem(this)]
+
+        // cloud
+        const cloudAdapter = device.hasService(SRV_CLOUD_ADAPTER)
+            ? new JDomCloudTreeItem(this, this.props)
+            : undefined
+
+        return [
+            ...registers,
+            cloudAdapter,
+            new JDomServicesTreeItem(this),
+        ].filter(e => !!e)
     }
 }
 
@@ -456,16 +497,121 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
         )
     }
 
-    selected() {
-        this.register.refresh()
+    override async edit() {
+        const { register } = this
+        const { specification } = register
+
+        if (!specification) {
+            vscode.window.showWarningMessage(
+                `DeviceScript: no specification found for register.`
+            )
+            return
+        }
+
+        const { kind, fields, description } = specification
+        if (kind !== "rw") {
+            vscode.window.showWarningMessage(
+                "DeviceScript: register cannot be modified."
+            )
+            return
+        }
+
+        await register.refresh()
+        const { name, unpackedValue } = register
+        const title = `Edit register ${name}`
+        if (fields?.length === 1) {
+            const field = fields[0]
+            const { type, unit, isFloat } = field
+            const prompt = `${description} ${
+                unit ? `(${prettyUnit(unit)})` : ""
+            }`
+            const value = unpackedValue?.[0]
+
+            // strings
+            if (type === "string" || type === "string0") {
+                const v = value as string
+                const res = await vscode.window.showInputBox({
+                    title,
+                    prompt,
+                    value: v || "",
+                })
+                if (res !== undefined && v !== res) {
+                    await register.sendSetStringAsync(res, true)
+                }
+                return
+            }
+            // boolean
+            else if (type === "bool") {
+                const v = value ? "yes" : "no"
+                const res = await vscode.window.showQuickPick(
+                    ["true", "false"],
+                    <vscode.QuickPickOptions>{
+                        title,
+                    }
+                )
+                if (res !== undefined && v !== res) {
+                    await register.sendSetBoolAsync(res === "true", true)
+                }
+                return
+            }
+            // float
+            else if (isFloat) {
+                const v = (value as number)?.toLocaleString()
+                // TODO: min, max
+                const res = await vscode.window.showInputBox({
+                    title,
+                    prompt,
+                    value: v || "0",
+                    validateInput: i => {
+                        if (isNaN(parseFloat(i))) return "invalid number format"
+                        return undefined
+                    },
+                })
+                if (res !== undefined && v !== res) {
+                    const newValue = parseFloat(res)
+                    await register.sendSetPackedAsync([newValue], true)
+                }
+                return
+            }
+            // int, uint
+            else if (field.unit) {
+                const v = (value as number)?.toLocaleString()
+                // TODO: min, max
+                const res = await vscode.window.showInputBox({
+                    title,
+                    prompt,
+                    value: v || "0",
+                    validateInput: i => {
+                        if (isNaN(parseInt(i)))
+                            return `invalid ${field.type} number format`
+                        return undefined
+                    },
+                })
+                if (res !== undefined && v !== res) {
+                    const newValue = parseInt(res)
+                    await register.sendSetPackedAsync([newValue], true)
+                }
+                return
+            }
+        }
+
+        vscode.window.showWarningMessage(
+            "DeviceScript: Sorry, this register cannot be edited by the extension."
+        )
+    }
+
+    override async copy() {
+        const { register } = this
+        const { humanValue, qualifiedName } = register
+        await vscode.env.clipboard.writeText(`${qualifiedName}: ${humanValue}`)
+    }
+
+    override async selected() {
+        await this.register.refresh()
     }
 
     mount(): void {
-        this.node.on(REPORT_UPDATE, this.handleChange)
-    }
-
-    unmount(): void {
-        this.node.off(REPORT_UPDATE, this.handleChange)
+        this.subscribe(this.node, REPORT_UPDATE, this.handleChange)
     }
 
     get register() {
@@ -587,6 +733,11 @@ export abstract class JDomTreeDataProvider
         return this.state.bus
     }
 
+    dispose() {
+        this.unmount()
+        this.emit(DISPOSE)
+    }
+
     mount() {
         this.roots.forEach(r => r.mount())
     }
@@ -625,7 +776,7 @@ export abstract class JDomTreeDataProvider
         return this.roots
     }
 
-    abstract createRoots(): JDomTreeItem[]
+    protected abstract createRoots(): JDomTreeItem[]
 
     private _onDidChangeTreeData: vscode.EventEmitter<
         JDomTreeItem | undefined | null | void
@@ -639,19 +790,95 @@ export abstract class JDomTreeDataProvider
     }
 }
 
+export class JDomCloudTreeItem extends JDomTreeItem {
+    constructor(parent: JDomDeviceTreeItem, props: TreeItemProps) {
+        super(parent, parent.device, {
+            ...props,
+            contextValue: "cloud",
+            idPrefix: props.idPrefix + "cloud:",
+        })
+        this.label = "cloud"
+        this.iconPath = new vscode.ThemeIcon("cloud")
+    }
+
+    protected createChildrenTreeItems(): JDomTreeItem[] {
+        const device = this.node as JDDevice
+        const props = this.props
+        const configurations = device
+            .services({ serviceClass: SRV_CLOUD_CONFIGURATION })
+            .map(srv => new JDomCloudConfigurationTreeItem(this, srv, props))
+
+        return [...configurations]
+    }
+}
+
+export class JDomCloudConfigurationTreeItem extends JDomTreeItem {
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            contextValue: props.idPrefix + "configuration:",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            iconPath: "settings-gear",
+        })
+    }
+
+    get service() {
+        return this.node as JDService
+    }
+
+    mount() {
+        const { service } = this
+        this.subscribe(service, REPORT_UPDATE, this.handleChange)
+    }
+
+    update() {
+        const { service } = this
+        const oldLabel = this.label
+        const oldDescription = this.description
+
+        const cloudType = service.register(
+            CloudConfigurationReg.CloudType
+        ).stringValue
+        const connectionState = service.register(
+            CloudConfigurationReg.ConnectionStatus
+        ).uintValue
+        const serverName = service.register(
+            CloudConfigurationReg.ServerName
+        ).stringValue
+
+        this.label = cloudType || "cloud"
+        this.description = serverName
+            ? serverName
+            : !isNaN(connectionState)
+            ? CloudConfigurationConnectionStatus[connectionState] ||
+              connectionState.toString()
+            : "..."
+
+        return oldLabel !== this.label || oldDescription !== this.description
+    }
+}
+
 export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
     constructor(
         extensionState: DeviceScriptExtensionState,
         command: vscode.Command
     ) {
         super(extensionState, command, "devs:")
-        this.bus.on(DEVICE_CHANGE, () => {
+        const unsub = this.bus.subscribe(DEVICE_CHANGE, () => {
             this.refresh()
+        })
+        this.on(DISPOSE, () => {
+            unsub()
         })
     }
 
     get devices() {
-        const devices = this.bus.devices({
+        const { bus } = this
+        const devices = bus.devices({
             ignoreInfrastructure: true,
             announced: true,
         })
@@ -674,7 +901,8 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
 export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
     constructor(state: DeviceScriptExtensionState, command: vscode.Command) {
         super(state, command, "watch:")
-        this.state.on(CHANGE, this.refresh.bind(this))
+        const unsub = this.state.subscribe(CHANGE, this.refresh.bind(this))
+        this.on(DISPOSE, unsub)
     }
 
     override createRoots() {
@@ -730,43 +958,111 @@ function activateTreeView(
     return view
 }
 
-export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
+function activateWatchTreeView(extensionState: DeviceScriptExtensionState) {
     const { context, bus } = extensionState
     const { subscriptions } = context
-    const selectNodeCommand: vscode.Command = {
+    const treeDataProvider = new JDomWatchTreeDataProvider(extensionState, {
         title: "select node",
         command: "extension.devicescript.node.select",
-    }
-    const jdomTreeDataProvider = new JDomDeviceTreeDataProvider(
-        extensionState,
-        selectNodeCommand
-    )
-    const explorer = activateTreeView(
-        extensionState,
-        "extension.devicescript.jdom-explorer",
-        jdomTreeDataProvider
-    )
-    bus.on(DEVICE_CHANGE, () => {
-        const devices = jdomTreeDataProvider.devices
-        explorer.badge = {
-            tooltip: `Explore connected devices (${devices.length})`,
-            value: devices.length,
-        }
     })
-    explorer.badge = {
-        tooltip: "list of devices in jacdac",
-        value: 4,
-    }
-
-    const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
-        extensionState,
-        selectNodeCommand
-    )
+    subscriptions.push(treeDataProvider)
     activateTreeView(
         extensionState,
         "extension.devicescript.watch",
-        jdomWatchTreeDataProvider
+        treeDataProvider
     )
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.watch.clear",
+            async () => {
+                await extensionState.updateWatches([])
+                treeDataProvider.refresh()
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.watch.add",
+            async (item: JDomTreeItem) => {
+                if (!item) return
+                const id = item.node.id
+                const { watches } = extensionState
+                if (!watches.find(w => w.id === id)) {
+                    const label = item.node.friendlyName
+                    const icon = (item.iconPath as vscode.ThemeIcon)?.id
+                    await extensionState.updateWatches([
+                        ...watches,
+                        <NodeWatch>{ id, label, icon },
+                    ])
+                    item.refresh()
+                    treeDataProvider.refresh()
+                }
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.watch.remove",
+            async (item: JDomTreeItem) => {
+                if (!item) return
+                const id = item.node.id
+                const { watches } = extensionState
+                if (watches.find(w => w.id === id)) {
+                    await extensionState.updateWatches(
+                        watches.filter(w => w.id !== id)
+                    )
+                    item.refresh()
+                    treeDataProvider.refresh()
+                }
+            }
+        )
+    )
+}
+
+function activateNodeCommands(extensionState: DeviceScriptExtensionState) {
+    const { context, bus } = extensionState
+    const { subscriptions } = context
+
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.node.copy",
+            (item: JDomTreeItem) => item?.copy()
+        )
+    )
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.node.select",
+            (item: JDomTreeItem) => item?.selected()
+        )
+    )
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.register.edit",
+            (item: JDomTreeItem) => item?.edit()
+        )
+    )
+}
+
+function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
+    const { context, bus } = extensionState
+    const { subscriptions } = context
+    const treeDataProvider = new JDomDeviceTreeDataProvider(extensionState, {
+        title: "select node",
+        command: "extension.devicescript.node.select",
+    })
+    subscriptions.push(treeDataProvider)
+    const explorer = activateTreeView(
+        extensionState,
+        "extension.devicescript.jdom-explorer",
+        treeDataProvider
+    )
+    const updateBadge = () => {
+        const devices = treeDataProvider.devices
+        explorer.badge = {
+            tooltip: `DeviceScript: ${devices.length} devices`,
+            value: devices.length,
+        }
+    }
+    // subscriptions.push({
+    //     dispose: bus.subscribe(DEVICE_CHANGE, updateBadge),
+    // })
+    // updateBadge()
 
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -786,184 +1082,10 @@ export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
             }
         )
     )
-    subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.node.copy",
-            async (item: JDomTreeItem) => {
-                if (!item) return
-                const { node } = item
-                const { nodeKind } = node
-                switch (nodeKind) {
-                    case REGISTER_NODE_NAME: {
-                        const reg = node as JDRegister
-                        const value = reg.humanValue
-                        await vscode.env.clipboard.writeText(
-                            `${reg.qualifiedName}: ${value}`
-                        )
-                        break
-                    }
-                }
-            }
-        )
-    )
-    subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.node.select",
-            (item: JDomTreeItem) => item?.selected()
-        )
-    )
+}
 
-    subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.register.edit",
-            async (item: JDomRegisterTreeItem) => {
-                if (!item) return
-
-                const { register } = item
-                const { specification } = register
-
-                if (!specification) {
-                    vscode.window.showWarningMessage(
-                        `DeviceScript: no specification found for register.`
-                    )
-                    return
-                }
-
-                const { kind, fields, description } = specification
-                if (kind !== "rw") {
-                    vscode.window.showWarningMessage(
-                        "DeviceScript: register cannot be modified."
-                    )
-                    return
-                }
-
-                await register.refresh()
-                const { name, unpackedValue } = register
-                const title = `Edit register ${name}`
-                if (fields?.length === 1) {
-                    const field = fields[0]
-                    const { type, unit, isFloat } = field
-                    const prompt = `${description} ${
-                        unit ? `(${prettyUnit(unit)})` : ""
-                    }`
-                    const value = unpackedValue?.[0]
-
-                    // strings
-                    if (type === "string" || type === "string0") {
-                        const v = value as string
-                        const res = await vscode.window.showInputBox({
-                            title,
-                            prompt,
-                            value: v || "",
-                        })
-                        if (res !== undefined && v !== res) {
-                            await register.sendSetStringAsync(res, true)
-                        }
-                        return
-                    }
-                    // boolean
-                    else if (type === "bool") {
-                        const v = value ? "yes" : "no"
-                        const res = await vscode.window.showQuickPick(
-                            ["true", "false"],
-                            <vscode.QuickPickOptions>{
-                                title,
-                            }
-                        )
-                        if (res !== undefined && v !== res) {
-                            await register.sendSetBoolAsync(
-                                res === "true",
-                                true
-                            )
-                        }
-                        return
-                    }
-                    // float
-                    else if (isFloat) {
-                        const v = (value as number)?.toLocaleString()
-                        // TODO: min, max
-                        const res = await vscode.window.showInputBox({
-                            title,
-                            prompt,
-                            value: v || "0",
-                            validateInput: i => {
-                                if (isNaN(parseFloat(i)))
-                                    return "invalid number format"
-                                return undefined
-                            },
-                        })
-                        if (res !== undefined && v !== res) {
-                            const newValue = parseFloat(res)
-                            await register.sendSetPackedAsync([newValue], true)
-                        }
-                        return
-                    }
-                    // int, uint
-                    else if (field.unit) {
-                        const v = (value as number)?.toLocaleString()
-                        // TODO: min, max
-                        const res = await vscode.window.showInputBox({
-                            title,
-                            prompt,
-                            value: v || "0",
-                            validateInput: i => {
-                                if (isNaN(parseInt(i)))
-                                    return `invalid ${field.type} number format`
-                                return undefined
-                            },
-                        })
-                        if (res !== undefined && v !== res) {
-                            const newValue = parseInt(res)
-                            await register.sendSetPackedAsync([newValue], true)
-                        }
-                        return
-                    }
-                }
-
-                vscode.window.showWarningMessage(
-                    "DeviceScript: Sorry, this register cannot be edited by the extension."
-                )
-            }
-        ),
-        vscode.commands.registerCommand(
-            "extension.devicescript.watch.clear",
-            async () => {
-                await extensionState.updateWatches([])
-                jdomWatchTreeDataProvider.refresh()
-            }
-        ),
-        vscode.commands.registerCommand(
-            "extension.devicescript.watch.add",
-            async (item: JDomTreeItem) => {
-                if (!item) return
-                const id = item.node.id
-                const { watches } = extensionState
-                if (!watches.find(w => w.id === id)) {
-                    const label = item.node.friendlyName
-                    const icon = (item.iconPath as vscode.ThemeIcon)?.id
-                    await extensionState.updateWatches([
-                        ...watches,
-                        <NodeWatch>{ id, label, icon },
-                    ])
-                    item.refresh()
-                    jdomWatchTreeDataProvider.refresh()
-                }
-            }
-        ),
-        vscode.commands.registerCommand(
-            "extension.devicescript.watch.remove",
-            async (item: JDomTreeItem) => {
-                if (!item) return
-                const id = item.node.id
-                const { watches } = extensionState
-                if (watches.find(w => w.id === id)) {
-                    await extensionState.updateWatches(
-                        watches.filter(w => w.id !== id)
-                    )
-                    item.refresh()
-                    jdomWatchTreeDataProvider.refresh()
-                }
-            }
-        )
-    )
+export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
+    activateNodeCommands(extensionState)
+    activateDevicesTreeView(extensionState)
+    activateWatchTreeView(extensionState)
 }
