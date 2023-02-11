@@ -262,11 +262,7 @@
                 },
                 {
                     "command": "extension.devicescript.device.reset",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator"
-                },
-                {
-                    "command": "extension.devicescript.device.reset",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem =~ /(device|simulator)/"
                 },
                 {
                     "command": "extension.devicescript.device.identify",
@@ -274,45 +270,21 @@
                 },
                 {
                     "command": "extension.devicescript.register.edit",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem =~ /^register:rw/",
                     "group": "inline"
                 },
                 {
                     "command": "extension.devicescript.node.copy",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == rw"
-                },
-                {
-                    "command": "extension.devicescript.node.copy",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == register"
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem =~ /^register/"
                 },
                 {
                     "command": "extension.devicescript.watch.add",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == rw",
+                    "when": "view == extension.devicescript.jdom-explorer && viewItem =~ /^(register|event)/",
                     "group": "inline"
                 },
                 {
                     "command": "extension.devicescript.watch.remove",
-                    "when": "view == extension.devicescript.watch && viewItem == rw",
-                    "group": "inline"
-                },
-                {
-                    "command": "extension.devicescript.watch.add",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == register",
-                    "group": "inline"
-                },
-                {
-                    "command": "extension.devicescript.watch.remove",
-                    "when": "view == extension.devicescript.watch && viewItem == register",
-                    "group": "inline"
-                },
-                {
-                    "command": "extension.devicescript.watch.add",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == event",
-                    "group": "inline"
-                },
-                {
-                    "command": "extension.devicescript.watch.remove",
-                    "when": "view == extension.devicescript.watch && viewItem == event",
+                    "when": "view == extension.devicescript.watch && viewItem =~ /^(register|event)/",
                     "group": "inline"
                 },
                 {

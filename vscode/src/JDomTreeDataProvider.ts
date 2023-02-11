@@ -444,7 +444,7 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
         super(parent, register, props)
         const { specification, code } = register
         const { kind } = specification || {}
-        this.contextValue = kind === "rw" ? "rw" : "register"
+        this.contextValue = props.contextValue || `register:${kind}`
         this.iconPath = new vscode.ThemeIcon(
             code === SystemReg.Reading
                 ? "symbol-numeric"
