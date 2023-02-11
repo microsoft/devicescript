@@ -679,11 +679,22 @@ export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
         extensionState,
         selectNodeCommand
     )
-    activateTreeView(
+    const explorer = activateTreeView(
         extensionState,
         "extension.devicescript.jdom-explorer",
         jdomTreeDataProvider
     )
+    bus.on(DEVICE_CHANGE, () => {
+        const devices = jdomTreeDataProvider.devices
+        explorer.badge = {
+            tooltip: `Explore connected devices (${devices.length})`,
+            value: devices.length,
+        }
+    })
+    explorer.badge = {
+        tooltip: "list of devices in jacdac",
+        value: 4,
+    }
 
     const jdomWatchTreeDataProvider = new JDomWatchTreeDataProvider(
         extensionState,
