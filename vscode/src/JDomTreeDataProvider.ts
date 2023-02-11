@@ -69,36 +69,6 @@ export function createTreeItemFromId(
     return createTreeItem(undefined, node, props)
 }
 
-export function createChildrenTreeItems(
-    parent: JDomTreeItem,
-    props: TreeItemProps
-): JDomTreeItem[] {
-    if (!parent) return []
-    const { node } = parent
-    const children = node.children
-        .filter(child => {
-            const { nodeKind } = child
-            switch (nodeKind) {
-                case FIELD_NODE_NAME: // ignore fields
-                    return undefined
-                case REGISTER_NODE_NAME: {
-                    const reg = child as JDRegister
-                    const { specification } = reg
-                    const { client, kind } = specification
-                    if (client) return undefined
-                    if (!["rw", "const", "ro"].includes(kind)) return undefined
-                    if (JDomRegisterTreeItem.probablyIgnore(reg))
-                        return undefined
-                    break
-                }
-            }
-            return child
-        })
-        .filter(child => !!child)
-        .map(child => createTreeItem(parent, child, props))
-    return children.filter(n => !!n)
-}
-
 export class JDomTreeItem extends vscode.TreeItem {
     private children: JDomTreeItem[]
     constructor(
@@ -157,9 +127,36 @@ export class JDomTreeItem extends vscode.TreeItem {
         this.unmountChildren()
     }
 
+    protected createChildrenTreeItems(): JDomTreeItem[] {
+        const { node, parent, props } = this
+        const children = node.children
+            .filter(child => {
+                const { nodeKind } = child
+                switch (nodeKind) {
+                    case FIELD_NODE_NAME: // ignore fields
+                        return undefined
+                    case REGISTER_NODE_NAME: {
+                        const reg = child as JDRegister
+                        const { specification } = reg
+                        const { client, kind } = specification
+                        if (client) return undefined
+                        if (!["rw", "const", "ro"].includes(kind))
+                            return undefined
+                        if (JDomRegisterTreeItem.probablyIgnore(reg))
+                            return undefined
+                        break
+                    }
+                }
+                return child
+            })
+            .filter(child => !!child)
+            .map(child => createTreeItem(parent, child, props))
+        return children.filter(n => !!n)
+    }
+
     getChildren(): Thenable<JDomTreeItem[]> {
         this.children?.forEach(child => child.unmount())
-        this.children = createChildrenTreeItems(this, this.props)
+        this.children = this.createChildrenTreeItems()
         return Promise.resolve(this.children)
     }
 
@@ -261,6 +258,29 @@ ${spec.description}`,
         }
         return Promise.resolve(this)
     }
+
+    protected override createChildrenTreeItems(): JDomTreeItem[] {
+        return [new JDomServicesTreeItem(this)]
+    }
+}
+
+export class JDomServicesTreeItem extends JDomTreeItem {
+    constructor(parent: JDomDeviceTreeItem) {
+        super(parent, parent.device, parent.props)
+        this.contextValue = "services"
+        this.label = "services"
+        this.description = undefined
+        this.id = this.parent.id + ":services"
+        this.iconPath = new vscode.ThemeIcon(JDomServiceTreeItem.ICON)
+    }
+
+    get device() {
+        return this.node as JDDevice
+    }
+
+    protected update(): boolean {
+        return false
+    }
 }
 
 export class JDomServiceTreeItem extends JDomTreeItem {
@@ -272,7 +292,8 @@ export class JDomServiceTreeItem extends JDomTreeItem {
         super(parent, service, props)
     }
 
-    iconPath = new vscode.ThemeIcon("symbol-class")
+    static ICON = "symbol-class"
+    iconPath = new vscode.ThemeIcon(JDomServiceTreeItem.ICON)
 
     get service() {
         return this.node as JDService
@@ -341,14 +362,14 @@ ${snippet}
 
     protected update(): boolean {
         const { service } = this
-        const { role } = service
+        const { role, specification } = service
 
         const oldLabel = this.label
         const oldDescription = this.description
 
         this.label = this.props.fullName
             ? this.node.friendlyName
-            : this.node.name
+            : specification?.name?.toLocaleLowerCase() ?? this.node.name
         this.description = role || ""
 
         return oldLabel !== this.label || oldDescription !== this.description
@@ -450,7 +471,8 @@ export class JDomEventTreeItem extends JDomServiceMemberTreeItem {
         super(parent, event, props)
     }
 
-    iconPath = new vscode.ThemeIcon("symbol-event")
+    static ICON = "symbol-event"
+    iconPath = new vscode.ThemeIcon(JDomEventTreeItem.ICON)
 
     get event() {
         return this.node as JDEvent
