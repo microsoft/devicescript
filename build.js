@@ -107,6 +107,7 @@ function buildPrelude(folder, outp) {
     // no reason to encode hex number as strings in full TS syntax
     srvcfg = srvcfg
         .replace("type HexInt = integer | string", "type HexInt = integer")
+        .replace("/srvcfg", "/servers")
         .replace(
             /(interface BaseServiceConfig[^}]* name)(: string)/,
             (_, a, b) => a + "?" + b
@@ -121,7 +122,7 @@ function buildPrelude(folder, outp) {
     srvcfg = srvcfg.replace(m[0], startServ + m[0])
     srvcfg = "// auto-generated! do not edit here\n" + srvcfg
 
-    fs.writeFileSync(folder + "/srvcfg.d.ts", srvcfg)
+    fs.writeFileSync(folder + "/servers.d.ts", srvcfg)
 
     const files = fs.readdirSync(folder)
     files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))

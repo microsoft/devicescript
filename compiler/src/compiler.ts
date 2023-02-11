@@ -806,7 +806,7 @@ class Program implements TopOpWriter {
 
         if (!expr) return null
 
-        const startPref = '#"@devicescript/srvcfg".start'
+        const startPref = '#"@devicescript/servers".start'
 
         if (
             ts.isCallExpression(expr) &&
