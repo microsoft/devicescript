@@ -227,6 +227,11 @@ declare module "@devicescript/core" {
     export function _panic(code: number): never
 
     /**
+     * Mark method as used but do not call it.
+     */
+    export function _use(method: any): void
+
+    /**
      * Moved by the compiler to the beginning of execution.
      */
     export function _onStart(handler: () => void): void

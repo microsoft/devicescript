@@ -2301,6 +2301,12 @@ class Program implements TopOpWriter {
                 return unit()
             }
 
+            case "ds._use": {
+                this.requireArgs(expr, 1)
+                this.ignore(this.emitExpr(expr.arguments[0]))
+                return unit()
+            }
+
             default:
                 return null
         }
