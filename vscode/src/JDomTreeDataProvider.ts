@@ -41,6 +41,10 @@ export interface TreeItemProps {
     state: DeviceScriptExtensionState
     idPrefix?: string
     fullName?: boolean
+    collapsibleState?: vscode.TreeItemCollapsibleState
+    label?: string
+    contextValue?: string
+    description?: string
 }
 
 export function createTreeItem(
@@ -75,19 +79,23 @@ export class JDomTreeItem extends vscode.TreeItem {
     constructor(
         public readonly parent: JDomTreeItem,
         public readonly node: JDNode,
-        public readonly props: TreeItemProps,
-        collapsibleState = vscode.TreeItemCollapsibleState.Collapsed
+        public readonly props: TreeItemProps
     ) {
-        super(props.fullName ? node.friendlyName : node.name, collapsibleState)
+        super(
+            props.label ?? (props.fullName ? node.friendlyName : node.name),
+            props.collapsibleState ?? vscode.TreeItemCollapsibleState.Collapsed
+        )
         const { id, nodeKind } = node
-        const { idPrefix = "", command } = props
+        const { idPrefix = "", command, contextValue, description } = props
         this.id = idPrefix + id
-        this.contextValue = nodeKind
+        this.contextValue = contextValue ?? nodeKind
         this.command = command
+        this.description = description
 
         this.handleChange = this.handleChange.bind(this)
         this.handleParentUnmount = this.handleParentUnmount.bind(this)
         this.mount()
+        this.handleChange()
     }
 
     protected update(): boolean {
@@ -102,6 +110,8 @@ export class JDomTreeItem extends vscode.TreeItem {
         const updated = this.update()
         if (updated) this.refresh()
     }
+
+    selected(): void {}
 
     refresh() {
         this.props.refresh(this)
@@ -261,7 +271,8 @@ ${spec.description}`,
     protected override createChildrenTreeItems(): JDomTreeItem[] {
         const { device } = this
         const registers = device
-            .services()
+            .services({ specification: true })
+            .filter(({ specification }) => !isInfrastructure(specification))
             .map(srv =>
                 srv
                     .registers()
@@ -278,7 +289,7 @@ ${spec.description}`,
                     new JDomRegisterTreeItem(this, reg, {
                         ...this.props,
                         idPrefix: this.props.idPrefix + "readings:",
-                        fullName: false,
+                        label: humanify(`${reg.service.name} ${reg.name}`),
                     })
             )
         return [...registers, new JDomServicesTreeItem(this)]
@@ -403,7 +414,10 @@ export class JDomServiceMemberTreeItem extends JDomTreeItem {
         node: JDServiceMemberNode,
         props: TreeItemProps
     ) {
-        super(parent, node, props, vscode.TreeItemCollapsibleState.None)
+        super(parent, node, {
+            ...props,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+        })
         const { specification } = node
         const { description } = specification || {}
         this.tooltip = toMarkdownString(
@@ -442,6 +456,10 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
         )
     }
 
+    selected() {
+        this.register.refresh()
+    }
+
     mount(): void {
         this.node.on(REPORT_UPDATE, this.handleChange)
     }
@@ -462,7 +480,8 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
         const oldLabel = this.label
         const oldDescription = this.description
 
-        this.label = fullName ? friendlyName : humanify(dashify(name))
+        if (!this.props.label)
+            this.label = fullName ? friendlyName : humanify(dashify(name))
         this.description = humanValue
 
         if (JDomRegisterTreeItem.probablyIgnore(register)) {
@@ -541,7 +560,10 @@ class MissingNode extends JDNode {
 
 class JDMissingTreeItem extends JDomTreeItem {
     constructor(parent: JDomTreeItem, node: MissingNode, props: TreeItemProps) {
-        super(parent, node, props, vscode.TreeItemCollapsibleState.None)
+        super(parent, node, {
+            ...props,
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+        })
         this.iconPath = new vscode.ThemeIcon(node.icon)
         this.description = "?"
     }
@@ -787,17 +809,7 @@ export function activateTreeViews(extensionState: DeviceScriptExtensionState) {
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.node.select",
-            (item: JDomTreeItem) => {
-                if (!item) return
-                const { node } = item
-                const { nodeKind } = node
-                switch (nodeKind) {
-                    case REGISTER_NODE_NAME: {
-                        ;(node as JDRegister).scheduleRefresh()
-                        break
-                    }
-                }
-            }
+            (item: JDomTreeItem) => item?.selected()
         )
     )
 
