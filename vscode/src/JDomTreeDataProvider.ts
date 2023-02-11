@@ -849,14 +849,24 @@ export class JDomCloudConfigurationTreeItem extends JDomTreeItem {
         const serverName = service.register(
             CloudConfigurationReg.ServerName
         ).stringValue
+        const cloudDeviceId = service.register(
+            CloudConfigurationReg.CloudDeviceId
+        ).stringValue
 
-        this.label = cloudType || "cloud"
-        this.description = serverName
-            ? serverName
-            : !isNaN(connectionState)
-            ? CloudConfigurationConnectionStatus[connectionState] ||
-              connectionState.toString()
-            : "..."
+        this.label = serverName || "cloud"
+        this.description =
+            CloudConfigurationConnectionStatus[connectionState] ||
+            connectionState?.toString() ||
+            "..."
+        this.tooltip = toMarkdownString(
+            `## cloud configuration
+
+- cloud type ${cloudType || "?"}
+- device id: ${cloudDeviceId || "?"}
+
+`,
+            `services/cloudconfiguration`
+        )
 
         return oldLabel !== this.label || oldDescription !== this.description
     }
