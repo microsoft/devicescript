@@ -35,6 +35,8 @@ import {
     CloudConfigurationReg,
     EventHandler,
     CloudConfigurationConnectionStatus,
+    CloudConfigurationCmd,
+    isAckError,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -319,7 +321,7 @@ ${spec.description}`,
                 reg =>
                     new JDomRegisterTreeItem(this, reg, {
                         ...this.props,
-                        idPrefix: this.props.idPrefix + "readings:",
+                        idPrefix: this.props.idPrefix + "readings_",
                         label: humanify(`${reg.service.name} ${reg.name}`),
                     })
             )
@@ -485,7 +487,7 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
         super(parent, register, props)
         const { specification, code } = register
         const { kind } = specification || {}
-        this.contextValue = props.contextValue || `register:${kind}`
+        this.contextValue = props.contextValue || `register_${kind}`
         this.iconPath = new vscode.ThemeIcon(
             code === SystemReg.Reading
                 ? "symbol-numeric"
@@ -794,8 +796,8 @@ export class JDomCloudTreeItem extends JDomTreeItem {
     constructor(parent: JDomDeviceTreeItem, props: TreeItemProps) {
         super(parent, parent.device, {
             ...props,
-            contextValue: "cloud",
-            idPrefix: props.idPrefix + "cloud:",
+            contextValue: props.idPrefix + "cloud",
+            idPrefix: props.idPrefix + "cloud_",
         })
         this.label = "cloud"
         this.iconPath = new vscode.ThemeIcon("cloud")
@@ -820,7 +822,8 @@ export class JDomCloudConfigurationTreeItem extends JDomTreeItem {
     ) {
         super(parent, service, {
             ...props,
-            contextValue: props.idPrefix + "configuration:",
+            idPrefix: props.idPrefix + "configuration_",
+            contextValue: props.idPrefix + "configuration",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             iconPath: "settings-gear",
         })
@@ -830,9 +833,43 @@ export class JDomCloudConfigurationTreeItem extends JDomTreeItem {
         return this.node as JDService
     }
 
+    async configure() {
+        const res = await vscode.window.showInputBox({
+            title: "Enter connection string",
+            prompt: "Refer to the cloud configuration documentation to generate the authentication token or connection string.",
+            password: true,
+        })
+        if (res !== undefined) {
+            const { service } = this
+            try {
+                await service.sendCmdPackedAsync(
+                    CloudConfigurationCmd.SetConnectionString,
+                    [res],
+                    true
+                )
+                this.refresh()
+            } catch (e) {
+                if (isAckError(e))
+                    vscode.window.showErrorMessage(
+                        "DeviceScript: service did not respond in time."
+                    )
+                throw e
+            }
+        }
+    }
+
     mount() {
         const { service } = this
-        this.subscribe(service, REPORT_UPDATE, this.handleChange)
+        ;[
+            CloudConfigurationReg.CloudType,
+            CloudConfigurationReg.CloudDeviceId,
+            CloudConfigurationReg.ConnectionStatus,
+            CloudConfigurationReg.ServerName,
+        ]
+            .map(code => service.register(code))
+            .forEach(register =>
+                this.subscribe(register, REPORT_UPDATE, this.handleChange)
+            )
     }
 
     update() {
@@ -877,7 +914,7 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
         extensionState: DeviceScriptExtensionState,
         command: vscode.Command
     ) {
-        super(extensionState, command, "devs:")
+        super(extensionState, command, "devs_")
         const unsub = this.bus.subscribe(DEVICE_CHANGE, () => {
             this.refresh()
         })
@@ -910,7 +947,7 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
 
 export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
     constructor(state: DeviceScriptExtensionState, command: vscode.Command) {
-        super(state, command, "watch:")
+        super(state, command, "watch_")
         const unsub = this.state.subscribe(CHANGE, this.refresh.bind(this))
         this.on(DISPOSE, unsub)
     }
@@ -1059,7 +1096,7 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
     subscriptions.push(treeDataProvider)
     const explorer = activateTreeView(
         extensionState,
-        "extension.devicescript.jdom-explorer",
+        "extension.devicescript.jdom",
         treeDataProvider
     )
     const updateBadge = () => {
@@ -1069,10 +1106,10 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
             value: devices.length,
         }
     }
-    // subscriptions.push({
-    //     dispose: bus.subscribe(DEVICE_CHANGE, updateBadge),
-    // })
-    // updateBadge()
+    subscriptions.push({
+        dispose: bus.subscribe(DEVICE_CHANGE, updateBadge),
+    })
+    updateBadge()
 
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -1090,6 +1127,13 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
                     vscode.env.openExternal(vscode.Uri.parse(uri))
                 }
             }
+        )
+    )
+
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.cloud.edit",
+            (item: JDomCloudConfigurationTreeItem) => item?.configure()
         )
     )
 }
