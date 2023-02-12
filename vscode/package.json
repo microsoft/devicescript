@@ -292,7 +292,7 @@
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.jdom.wifi.scan",
+                    "command": "extension.devicescript.jdom.wifi.reconnect",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_wifi",
                     "group": "inline"
                 },
@@ -439,8 +439,8 @@
                 "icon": "$(edit)"
             },
             {
-                "command": "extension.devicescript.jdom.wifi.scan",
-                "title": "Scan",
+                "command": "extension.devicescript.jdom.wifi.reconnect",
+                "title": "Reconnect",
                 "category": "DeviceScript",
                 "icon": "$(refresh)"
             },

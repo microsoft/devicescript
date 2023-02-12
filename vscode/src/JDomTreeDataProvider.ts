@@ -793,8 +793,7 @@ class JDomWifiTreeItem extends JDomTreeItem {
             iconPath: "radio-tower",
         })
 
-        this.handleScanComplete()
-        this.handleNetworkdChanged()
+        this.updateScansAndInfos()
     }
 
     scheduleRefresh() {
@@ -830,7 +829,11 @@ class JDomWifiTreeItem extends JDomTreeItem {
         this.subscribe(
             service.event(WifiEvent.ConnectionFailed),
             EVENT,
-            this.handleChange
+            async (ssid: string) => {
+                await vscode.window.showErrorMessage(
+                    `DeviceScript: connection to ${ssid} failed.`
+                )
+            }
         )
         ;[WifiReg.Enabled, WifiReg.IpAddress, WifiReg.Ssid, WifiReg.Eui48]
             .map(code => service.register(code))
@@ -843,7 +846,7 @@ class JDomWifiTreeItem extends JDomTreeItem {
         return this.node as JDService
     }
 
-    private async handleScanComplete() {
+    private async syncScans() {
         const { service } = this
         const scans = await service.receiveWithInPipe<ScanResult>(
             WifiCmd.LastScanResults,
@@ -851,10 +854,14 @@ class JDomWifiTreeItem extends JDomTreeItem {
             30000
         )
         this.scans = scans || []
-        this.handleChange()
     }
 
-    private async handleNetworkdChanged() {
+    private async handleScanComplete() {
+        await this.syncScans()
+        this.refresh()
+    }
+
+    private async syncInfos() {
         const { service } = this
         const infos = await service.receiveWithInPipe<NetworkResult>(
             WifiCmd.ListKnownNetworks,
@@ -862,7 +869,17 @@ class JDomWifiTreeItem extends JDomTreeItem {
             30000
         )
         this.infos = infos || []
-        this.handleChange()
+    }
+
+    private async handleNetworkdChanged() {
+        await this.syncInfos()
+        this.refresh()
+    }
+
+    private async updateScansAndInfos() {
+        await this.syncScans()
+        await this.syncInfos()
+        this.refresh()
     }
 
     async scan() {
@@ -923,6 +940,7 @@ class JDomWifiTreeItem extends JDomTreeItem {
             ssid =>
                 new JDomWifiAPTreeItem(this, service, {
                     ...props,
+                    ssid,
                     info: infos.find(i => i[2] === ssid),
                     scan: scans.find(s => s[5] === ssid),
                 })
@@ -930,13 +948,17 @@ class JDomWifiTreeItem extends JDomTreeItem {
     }
 }
 
+type WifiApTreeProps = TreeItemProps & {
+    ssid: string
+    scan?: ScanResult
+    info?: NetworkResult
+}
+
 class JDomWifiAPTreeItem extends JDomTreeItem {
-    readonly scan: ScanResult
-    readonly info: NetworkResult
     constructor(
         parent: JDomWifiTreeItem,
         service: JDService,
-        props: TreeItemProps & { scan?: ScanResult; info?: NetworkResult }
+        props: WifiApTreeProps
     ) {
         super(parent, service, {
             ...props,
@@ -944,10 +966,16 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
             contextValue: props.idPrefix + "ap",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
         })
-        this.scan = props.scan
-        this.info = props.info
         this.id = this.props.idPrefix + this.ssid
         this.contextValue += this.known ? "_known" : "_unknown"
+    }
+
+    get scan() {
+        return (this.props as WifiApTreeProps).scan
+    }
+
+    get info() {
+        return (this.props as WifiApTreeProps).info
     }
 
     get service() {
@@ -955,7 +983,7 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
     }
 
     get ssid() {
-        return this.scan?.[5] || this.info?.[2]
+        return (this.props as WifiApTreeProps).ssid
     }
 
     get priority() {
@@ -1498,8 +1526,8 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
             (item: JDomWifiAPTreeItem) => item?.forget()
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.jdom.wifi.scan",
-            (item: JDomWifiTreeItem) => item?.scan()
+            "extension.devicescript.jdom.wifi.reconnect",
+            (item: JDomWifiTreeItem) => item?.reconnect()
         )
     )
 }
