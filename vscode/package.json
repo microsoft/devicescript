@@ -150,7 +150,7 @@
         "views": {
             "devicescript": [
                 {
-                    "id": "extension.devicescript.jdom-explorer",
+                    "id": "extension.devicescript.jdom",
                     "name": "Devices"
                 },
                 {
@@ -165,7 +165,7 @@
         },
         "viewsWelcome": [
             {
-                "view": "extension.devicescript.jdom-explorer",
+                "view": "extension.devicescript.jdom",
                 "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
             },
             {
@@ -225,17 +225,17 @@
             "view/title": [
                 {
                     "command": "extension.devicescript.connect",
-                    "when": "view == extension.devicescript.jdom-explorer",
+                    "when": "view == extension.devicescript.jdom",
                     "group": "navigation"
                 },
                 {
                     "command": "extension.devicescript.openSimulators",
-                    "when": "view == extension.devicescript.jdom-explorer",
+                    "when": "view == extension.devicescript.jdom",
                     "group": "navigation"
                 },
                 {
                     "command": "extension.devicescript.terminal.show",
-                    "when": "view == extension.devicescript.jdom-explorer",
+                    "when": "view == extension.devicescript.jdom",
                     "group": "navigation"
                 },
                 {
@@ -257,29 +257,58 @@
             "view/item/context": [
                 {
                     "command": "extension.devicescript.simulator.stop",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == simulator",
+                    "when": "view == extension.devicescript.jdom && viewItem == simulator",
                     "group": "inline"
                 },
                 {
                     "command": "extension.devicescript.device.reset",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem =~ /(device|simulator)/"
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /(device|simulator)/"
                 },
                 {
                     "command": "extension.devicescript.device.identify",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem == device"
+                    "when": "view == extension.devicescript.jdom && viewItem == device"
                 },
                 {
                     "command": "extension.devicescript.register.edit",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem =~ /^register:rw/",
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^register_rw/",
                     "group": "inline"
                 },
                 {
                     "command": "extension.devicescript.node.copy",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem =~ /^register/"
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^register/"
+                },
+                {
+                    "command": "extension.devicescript.node.copy",
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^register/"
+                },
+                {
+                    "command": "extension.devicescript.jdom.cloud.connect",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_cloud_configuration",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.jdom.cloud.edit",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_cloud_configuration",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.jdom.wifi.reconnect",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_wifi",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.jdom.wifi.ap.add",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_unknown",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.jdom.wifi.ap.forget",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_known",
+                    "group": "inline"
                 },
                 {
                     "command": "extension.devicescript.watch.add",
-                    "when": "view == extension.devicescript.jdom-explorer && viewItem =~ /^(register|event)/",
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^(register|event)/",
                     "group": "inline"
                 },
                 {
@@ -396,6 +425,36 @@
                 "title": "Edit...",
                 "category": "DeviceScript",
                 "icon": "$(edit)"
+            },
+            {
+                "command": "extension.devicescript.jdom.cloud.connect",
+                "title": "Connect",
+                "category": "DeviceScript",
+                "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.jdom.cloud.edit",
+                "title": "Edit Connection...",
+                "category": "DeviceScript",
+                "icon": "$(edit)"
+            },
+            {
+                "command": "extension.devicescript.jdom.wifi.reconnect",
+                "title": "Reconnect",
+                "category": "DeviceScript",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "extension.devicescript.jdom.wifi.ap.add",
+                "title": "Add Network...",
+                "category": "DeviceScript",
+                "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.jdom.wifi.ap.forget",
+                "title": "Forget Network",
+                "category": "DeviceScript",
+                "icon": "$(close)"
             },
             {
                 "command": "extension.devicescript.watch.clear",
