@@ -282,6 +282,11 @@
                     "when": "view == extension.devicescript.jdom && viewItem =~ /^register/"
                 },
                 {
+                    "command": "extension.devicescript.jdom.cloud.connect",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_cloud_configuration",
+                    "group": "inline"
+                },
+                {
                     "command": "extension.devicescript.jdom.cloud.edit",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_cloud_configuration",
                     "group": "inline"
@@ -405,6 +410,12 @@
                 "title": "Edit...",
                 "category": "DeviceScript",
                 "icon": "$(edit)"
+            },
+            {
+                "command": "extension.devicescript.jdom.cloud.connect",
+                "title": "Connect",
+                "category": "DeviceScript",
+                "icon": "$(plug)"
             },
             {
                 "command": "extension.devicescript.jdom.cloud.edit",

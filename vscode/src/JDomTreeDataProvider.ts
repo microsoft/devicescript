@@ -37,9 +37,12 @@ import {
     CloudConfigurationConnectionStatus,
     CloudConfigurationCmd,
     isAckError,
+    CloudConfigurationEvent,
+    EVENT,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
+import { withProgress } from "./commands"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -827,10 +830,26 @@ export class JDomCloudConfigurationTreeItem extends JDomTreeItem {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             iconPath: "settings-gear",
         })
+        this.subscribe(
+            this.service.event(CloudConfigurationEvent.ConnectionStatusChange),
+            EVENT,
+            this.refresh.bind(this)
+        )
     }
 
     get service() {
         return this.node as JDService
+    }
+
+    async connect() {
+        const { service } = this
+        withProgress("Connecting...", async () => {
+            await service.sendCmdAsync(
+                CloudConfigurationCmd.Connect,
+                undefined,
+                true
+            )
+        })
     }
 
     async configure() {
@@ -1134,6 +1153,10 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.cloud.edit",
             (item: JDomCloudConfigurationTreeItem) => item?.configure()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.cloud.connect",
+            (item: JDomCloudConfigurationTreeItem) => item?.connect()
         )
     )
 }
