@@ -794,7 +794,13 @@ class JDomWifiTreeItem extends JDomTreeItem {
         })
 
         this.handleScanComplete()
-        this.handleNetworkdCanged()
+        this.handleNetworkdChanged()
+    }
+
+    refresh() {
+        const { service } = this
+        service.register(WifiReg.Ssid).scheduleRefresh()
+        service.register(WifiReg.IpAddress).scheduleRefresh()
     }
 
     mount() {
@@ -809,13 +815,17 @@ class JDomWifiTreeItem extends JDomTreeItem {
         this.subscribe(
             service.event(WifiEvent.NetworksChanged),
             EVENT,
-            this.handleNetworkdCanged.bind(this)
+            this.handleNetworkdChanged.bind(this)
         )
-        this.subscribe(service.event(WifiEvent.GotIp), EVENT, this.handleChange)
+        this.subscribe(
+            service.event(WifiEvent.GotIp),
+            EVENT,
+            this.refresh.bind(this)
+        )
         this.subscribe(
             service.event(WifiEvent.LostIp),
             EVENT,
-            this.handleChange
+            this.refresh.bind(this)
         )
         this.subscribe(
             service.event(WifiEvent.ConnectionFailed),
@@ -827,8 +837,6 @@ class JDomWifiTreeItem extends JDomTreeItem {
             .forEach(register =>
                 this.subscribe(register, REPORT_UPDATE, this.handleChange)
             )
-
-        super.mount()
     }
 
     get service() {
@@ -846,7 +854,7 @@ class JDomWifiTreeItem extends JDomTreeItem {
         this.handleChange()
     }
 
-    private async handleNetworkdCanged() {
+    private async handleNetworkdChanged() {
         const { service } = this
         const infos = await service.receiveWithInPipe<NetworkResult>(
             WifiCmd.ListKnownNetworks,
