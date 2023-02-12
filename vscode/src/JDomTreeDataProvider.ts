@@ -40,10 +40,13 @@ import {
     CloudConfigurationEvent,
     EVENT,
     CloudAdapterReg,
+    SRV_WIFI,
+    WifiReg,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
 import { withProgress } from "./commands"
+import { ICON_LOADING } from "./constants"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -90,6 +93,7 @@ export function createTreeItemFromId(
 export class JDomTreeItem extends vscode.TreeItem {
     private children: JDomTreeItem[]
     private unsubs: (() => void)[]
+
     constructor(
         public readonly parent: JDomTreeItem,
         public readonly node: JDNode,
@@ -132,11 +136,33 @@ export class JDomTreeItem extends vscode.TreeItem {
         if (updated) this.refresh()
     }
 
+    get loading() {
+        return (this.iconPath as vscode.ThemeIcon).id === ICON_LOADING
+    }
+    private _restoreIconPath: () => void
+    set loading(value: boolean) {
+        if (this.loading === value) return
+
+        if (value) {
+            if (!this.loading) {
+                const ip = this.iconPath
+                this._restoreIconPath = () => (this.iconPath = ip)
+            }
+            this.iconPath = new vscode.ThemeIcon(ICON_LOADING)
+        } else {
+            this.iconPath = undefined
+            this._restoreIconPath?.()
+            this._restoreIconPath = undefined
+        }
+        this.handleChange()
+    }
+
     selected(): void {}
 
     refresh() {
         this.props.refresh(this)
     }
+
     copy() {}
 
     edit() {}
@@ -304,7 +330,7 @@ ${spec.description}`,
     }
 
     protected override createChildrenTreeItems(): JDomTreeItem[] {
-        const { device } = this
+        const { device, props } = this
 
         // interresting registers
         const registers = device
@@ -330,17 +356,21 @@ ${spec.description}`,
                     })
             )
 
-        // cloud
-        const cloudAdapter = device.services({
+        const wifis = device.services({ serviceClass: SRV_WIFI })
+        const cloudAdapters = device.services({
             serviceClass: SRV_CLOUD_ADAPTER,
-        })[0]
-        return [
-            ...registers,
-            cloudAdapter
-                ? new JDomCloudTreeItem(this, cloudAdapter, this.props)
-                : undefined,
-            new JDomServicesTreeItem(this),
-        ].filter(e => !!e)
+        })
+
+        return <JDomTreeItem[]>(
+            [
+                ...registers,
+                ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
+                ...cloudAdapters.map(
+                    srv => new JDomCloudAdapterTreeItem(this, srv, props)
+                ),
+                new JDomServicesTreeItem(this),
+            ].filter(e => !!e)
+        )
     }
 }
 
@@ -723,7 +753,41 @@ class JDMissingTreeItem extends JDomTreeItem {
     }
 }
 
-class JDomCloudTreeItem extends JDomTreeItem {
+class JDomWifiTreeItem extends JDomTreeItem {
+    constructor(
+        parent: JDomDeviceTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "wifi_",
+            contextValue: props.idPrefix + "wifi",
+            iconPath: "radio-tower",
+        })
+    }
+
+    get service() {
+        return this.node as JDService
+    }
+
+    update() {
+        const oldLabel = this.label
+        const oldDescription = this.description
+
+        const { service } = this
+
+        const ssid = service.register(WifiReg.Ssid).stringValue
+        const rssi = service.register(WifiReg.Rssi).unpackedValue?.[0]
+
+        this.label = ssid || "not connected"
+        this.description = rssi || ""
+
+        return oldLabel !== this.label || oldDescription !== this.description
+    }
+}
+
+class JDomCloudAdapterTreeItem extends JDomTreeItem {
     constructor(
         parent: JDomDeviceTreeItem,
         service: JDService,
@@ -889,6 +953,9 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
 `,
             `services/cloudconfiguration`
         )
+        this.loading =
+            connectionState === CloudConfigurationConnectionStatus.Connecting ||
+            connectionState === CloudConfigurationConnectionStatus.Disconnecting
 
         return oldLabel !== this.label || oldDescription !== this.description
     }
