@@ -797,7 +797,7 @@ class JDomWifiTreeItem extends JDomTreeItem {
         this.handleNetworkdChanged()
     }
 
-    refresh() {
+    scheduleRefresh() {
         const { service } = this
         service.register(WifiReg.Ssid).scheduleRefresh()
         service.register(WifiReg.IpAddress).scheduleRefresh()
@@ -820,12 +820,12 @@ class JDomWifiTreeItem extends JDomTreeItem {
         this.subscribe(
             service.event(WifiEvent.GotIp),
             EVENT,
-            this.refresh.bind(this)
+            this.scheduleRefresh.bind(this)
         )
         this.subscribe(
             service.event(WifiEvent.LostIp),
             EVENT,
-            this.refresh.bind(this)
+            this.scheduleRefresh.bind(this)
         )
         this.subscribe(
             service.event(WifiEvent.ConnectionFailed),
@@ -895,14 +895,12 @@ class JDomWifiTreeItem extends JDomTreeItem {
     ): Promise<vscode.TreeItem> {
         const { service } = this
         const ssid = service.register(WifiReg.Ssid).stringValue
-        const rssi = service.register(WifiReg.Rssi).unpackedValue?.[0]
         const ip = service.register(WifiReg.IpAddress).data
         const mac = service.register(WifiReg.Eui48).data
         this.tooltip = toMarkdownString(
             `
 ### ${ssid}
 
-- rssi: ${rssi || ""}bB
 - ip  : ${toIP(ip) || ""}
 - mac : ${toMAC(mac) || ""}
 `
