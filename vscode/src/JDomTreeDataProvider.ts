@@ -42,6 +42,12 @@ import {
     CloudAdapterReg,
     SRV_WIFI,
     WifiReg,
+    WifiCmd,
+    toHex,
+    WifiAPFlags,
+    unique,
+    WifiEvent,
+    WifiPipePack,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -753,7 +759,28 @@ class JDMissingTreeItem extends JDomTreeItem {
     }
 }
 
+// flags, reserved, rssi, channel, bssid, ssid
+type ScanResult = [WifiAPFlags, number, number, number, Uint8Array, string]
+
+// priority, flags, ssid
+type NetworkResult = [number, number, string]
+
+function toMAC(buffer: Uint8Array) {
+    const hex = toHex(buffer, ":")
+    return hex
+}
+
+function toIP(buffer: Uint8Array): string {
+    if (!buffer) return undefined
+    if (buffer.length === 4)
+        return `${buffer[0]}.${buffer[1]}.${buffer[2]}.${buffer[3]}`
+    else return toHex(buffer, ".")
+}
+
 class JDomWifiTreeItem extends JDomTreeItem {
+    private scans: ScanResult[] = []
+    private infos: NetworkResult[] = []
+
     constructor(
         parent: JDomDeviceTreeItem,
         service: JDService,
@@ -765,10 +792,79 @@ class JDomWifiTreeItem extends JDomTreeItem {
             contextValue: props.idPrefix + "wifi",
             iconPath: "radio-tower",
         })
+
+        this.handleScanComplete()
+        this.handleNetworkdCanged()
+    }
+
+    mount() {
+        super.mount()
+
+        const { service } = this
+        this.subscribe(
+            service.event(WifiEvent.ScanComplete),
+            EVENT,
+            this.handleScanComplete.bind(this)
+        )
+        this.subscribe(
+            service.event(WifiEvent.NetworksChanged),
+            EVENT,
+            this.handleNetworkdCanged.bind(this)
+        )
+        this.subscribe(service.event(WifiEvent.GotIp), EVENT, this.handleChange)
+        this.subscribe(
+            service.event(WifiEvent.LostIp),
+            EVENT,
+            this.handleChange
+        )
+        this.subscribe(
+            service.event(WifiEvent.ConnectionFailed),
+            EVENT,
+            this.handleChange
+        )
+        ;[WifiReg.Enabled, WifiReg.IpAddress, WifiReg.Ssid, WifiReg.Eui48]
+            .map(code => service.register(code))
+            .forEach(register =>
+                this.subscribe(register, REPORT_UPDATE, this.handleChange)
+            )
+
+        super.mount()
     }
 
     get service() {
         return this.node as JDService
+    }
+
+    private async handleScanComplete() {
+        const { service } = this
+        const scans = await service.receiveWithInPipe<ScanResult>(
+            WifiCmd.LastScanResults,
+            WifiPipePack.Results,
+            30000
+        )
+        this.scans = scans || []
+        this.handleChange()
+    }
+
+    private async handleNetworkdCanged() {
+        const { service } = this
+        const infos = await service.receiveWithInPipe<NetworkResult>(
+            WifiCmd.ListKnownNetworks,
+            WifiPipePack.NetworkResults,
+            30000
+        )
+        this.infos = infos || []
+        this.handleChange()
+    }
+
+    async scan() {
+        const { service } = this
+        await service.sendCmdAsync(WifiCmd.Scan, undefined, true)
+    }
+
+    async reconnect() {
+        const { service } = this
+        await service.sendCmdAsync(WifiCmd.Reconnect, undefined, true)
     }
 
     update() {
@@ -778,12 +874,107 @@ class JDomWifiTreeItem extends JDomTreeItem {
         const { service } = this
 
         const ssid = service.register(WifiReg.Ssid).stringValue
-        const rssi = service.register(WifiReg.Rssi).unpackedValue?.[0]
+        const ip = service.register(WifiReg.IpAddress).data
 
         this.label = ssid || "not connected"
-        this.description = rssi || ""
+        this.description = toIP(ip)
 
         return oldLabel !== this.label || oldDescription !== this.description
+    }
+
+    async resolveTreeItem(
+        token: vscode.CancellationToken
+    ): Promise<vscode.TreeItem> {
+        const { service } = this
+        const ssid = service.register(WifiReg.Ssid).stringValue
+        const rssi = service.register(WifiReg.Rssi).unpackedValue?.[0]
+        const ip = service.register(WifiReg.IpAddress).data
+        const mac = service.register(WifiReg.Eui48).data
+        this.tooltip = toMarkdownString(
+            `
+- ssid: ${ssid}
+- rssi: ${rssi || ""}bB
+- ip  : ${toIP(ip) || ""}
+- mac : ${toMAC(mac) || ""}
+`
+        )
+        return this
+    }
+
+    protected createChildrenTreeItems(): JDomTreeItem[] {
+        const { scans, infos, service, props } = this
+
+        const priority = (s: string) =>
+            infos.find(n => n[2] === s)?.[0] || -Infinity
+
+        const ssids = unique([
+            ...(infos || []).map(kn => kn[2]),
+            ...(scans || []).map(ap => ap[5]),
+        ]).sort((l, r) => -priority(l) + priority(r))
+
+        return ssids.map(
+            ssid =>
+                new JDomWifiAPTreeItem(this, service, {
+                    ...props,
+                    info: infos.find(i => i[2] === ssid),
+                    scan: scans.find(s => s[5] === ssid),
+                })
+        )
+    }
+}
+
+class JDomWifiAPTreeItem extends JDomTreeItem {
+    readonly scan: ScanResult
+    readonly info: NetworkResult
+    constructor(
+        parent: JDomWifiTreeItem,
+        service: JDService,
+        props: TreeItemProps & { scan?: ScanResult; info?: NetworkResult }
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "ap_",
+            contextValue: props.idPrefix + "ap",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+        })
+        this.scan = props.scan
+        this.info = props.info
+        this.id = this.props.idPrefix + this.ssid
+    }
+
+    get ssid() {
+        return this.scan?.[5] || this.info?.[2]
+    }
+
+    get priority() {
+        return this.info?.[0] || -1
+    }
+
+    update() {
+        const { scan, info } = this
+        const [priority, networkFlags, infoSsid] = info || []
+        const [scanFlags, , rssi, channel, , scanSsid] = scan || []
+        const ssid = infoSsid || scanSsid
+        const known = !!info
+        const scanned = !!scan
+
+        this.label = ssid
+        this.description = rssi ? `${rssi}dB` : "not found"
+
+        this.tooltip = toMarkdownString(
+            `
+### ${ssid}
+
+-  ${known ? "known" : "unknown"}
+-  ${scanned ? "scanned" : "not found"}
+-  priority: ${priority || ""}
+-  network flags: ${networkFlags ?? ""}
+-  channel: ${channel || ""}
+-  scan flags: ${scanFlags || ""}
+`
+        )
+
+        return true
     }
 }
 
@@ -858,11 +1049,6 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             iconPath: "settings-gear",
         })
-        this.subscribe(
-            this.service.event(CloudConfigurationEvent.ConnectionStatusChange),
-            EVENT,
-            this.refresh.bind(this)
-        )
     }
 
     get service() {
@@ -909,6 +1095,11 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
         super.mount()
         const { service } = this
 
+        this.subscribe(
+            this.service.event(CloudConfigurationEvent.ConnectionStatusChange),
+            EVENT,
+            this.refresh.bind(this)
+        )
         ;[
             CloudConfigurationReg.CloudType,
             CloudConfigurationReg.CloudDeviceId,
