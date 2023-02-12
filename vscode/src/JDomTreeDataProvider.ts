@@ -52,7 +52,7 @@ import {
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
 import { withProgress } from "./commands"
-import { ICON_LOADING } from "./constants"
+import { ICON_LOADING, WIFI_PIPE_TIMEOUT } from "./constants"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -851,7 +851,7 @@ class JDomWifiTreeItem extends JDomTreeItem {
         const scans = await service.receiveWithInPipe<ScanResult>(
             WifiCmd.LastScanResults,
             WifiPipePack.Results,
-            30000
+            WIFI_PIPE_TIMEOUT
         )
         this.scans = scans || []
     }
@@ -866,7 +866,7 @@ class JDomWifiTreeItem extends JDomTreeItem {
         const infos = await service.receiveWithInPipe<NetworkResult>(
             WifiCmd.ListKnownNetworks,
             WifiPipePack.NetworkResults,
-            30000
+            WIFI_PIPE_TIMEOUT
         )
         this.infos = infos || []
     }
@@ -965,6 +965,7 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
             idPrefix: props.idPrefix + "ap_",
             contextValue: props.idPrefix + "ap",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
+            iconPath: props.info ? "verified-filled" : "unverified",
         })
         this.id = this.props.idPrefix + this.ssid
         this.contextValue += this.known ? "_known" : "_unknown"
@@ -1017,9 +1018,7 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
         const scanned = !!scan
 
         this.label = ssid
-        this.description = `${known ? "known, " : ""}${
-            rssi ? `${rssi}dB` : "not found"
-        }`
+        this.description = rssi ? `${rssi}dB` : "not found"
 
         this.tooltip = toMarkdownString(
             `

@@ -1,4 +1,4 @@
-import { isAckError, isCancelError } from "jacdac-ts"
+import { isAckError, isCancelError, isTimeoutError } from "jacdac-ts"
 import * as vscode from "vscode"
 
 export function withProgress(
@@ -17,7 +17,14 @@ export function withProgress(
                 await handler(progress)
             } catch (e) {
                 if (isCancelError(e)) return
-                if (isAckError(e)) vscode.window.showErrorMessage("")
+                else if (isTimeoutError(e))
+                    vscode.window.showErrorMessage(
+                        "DeviceScript: the operation timed out."
+                    )
+                else if (isAckError(e))
+                    vscode.window.showErrorMessage(
+                        "DeviceScript: the service did not respond to this command."
+                    )
             }
         }
     )
