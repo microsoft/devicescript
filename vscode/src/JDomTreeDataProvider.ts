@@ -765,18 +765,6 @@ type ScanResult = [WifiAPFlags, number, number, number, Uint8Array, string]
 // priority, flags, ssid
 type NetworkResult = [number, number, string]
 
-function toMAC(buffer: Uint8Array) {
-    const hex = toHex(buffer, ":")
-    return hex
-}
-
-function toIP(buffer: Uint8Array): string {
-    if (!buffer) return undefined
-    if (buffer.length === 4)
-        return `${buffer[0]}.${buffer[1]}.${buffer[2]}.${buffer[3]}`
-    else return toHex(buffer, ".")
-}
-
 class JDomWifiTreeItem extends JDomTreeItem {
     private scans: ScanResult[] = []
     private infos: NetworkResult[] = []
@@ -899,10 +887,11 @@ class JDomWifiTreeItem extends JDomTreeItem {
         const { service } = this
 
         const ssid = service.register(WifiReg.Ssid).stringValue
-        const ip = service.register(WifiReg.IpAddress).data
+        const ip = service.register(WifiReg.IpAddress).decoded?.decoded?.[0]
+            ?.humanValue
 
         this.label = ssid || "not connected"
-        this.description = toIP(ip)
+        this.description = ip
 
         return oldLabel !== this.label || oldDescription !== this.description
     }
@@ -912,14 +901,14 @@ class JDomWifiTreeItem extends JDomTreeItem {
     ): Promise<vscode.TreeItem> {
         const { service } = this
         const ssid = service.register(WifiReg.Ssid).stringValue
-        const ip = service.register(WifiReg.IpAddress).data
-        const mac = service.register(WifiReg.Eui48).data
+        const ip = service.register(WifiReg.IpAddress).humanValue
+        const mac = service.register(WifiReg.Eui48).humanValue
         this.tooltip = toMarkdownString(
             `
 ### ${ssid}
 
-- ip  : ${toIP(ip) || ""}
-- mac : ${toMAC(mac) || ""}
+- ip  : ${ip || ""}
+- mac : ${mac || ""}
 `
         )
         return this
