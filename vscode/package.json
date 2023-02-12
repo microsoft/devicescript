@@ -292,6 +292,11 @@
                     "group": "inline"
                 },
                 {
+                    "command": "extension.devicescript.jdom.wifi.scan",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_wifi",
+                    "group": "inline"
+                },
+                {
                     "command": "extension.devicescript.jdom.wifi.ap.add",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_unknown",
                     "group": "inline"
@@ -432,6 +437,12 @@
                 "title": "Edit Connection...",
                 "category": "DeviceScript",
                 "icon": "$(edit)"
+            },
+            {
+                "command": "extension.devicescript.jdom.wifi.scan",
+                "title": "Scan",
+                "category": "DeviceScript",
+                "icon": "$(refresh)"
             },
             {
                 "command": "extension.devicescript.jdom.wifi.ap.add",

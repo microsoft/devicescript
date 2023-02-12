@@ -892,7 +892,8 @@ class JDomWifiTreeItem extends JDomTreeItem {
         const mac = service.register(WifiReg.Eui48).data
         this.tooltip = toMarkdownString(
             `
-- ssid: ${ssid}
+### ${ssid}
+
 - rssi: ${rssi || ""}bB
 - ip  : ${toIP(ip) || ""}
 - mac : ${toMAC(mac) || ""}
@@ -982,7 +983,9 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
         const scanned = !!scan
 
         this.label = ssid
-        this.description = rssi ? `${rssi}dB` : "not found"
+        this.description = `${known ? "known, " : ""}${
+            rssi ? `${rssi}dB` : "not found"
+        }`
 
         this.tooltip = toMarkdownString(
             `
@@ -1487,6 +1490,10 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.wifi.ap.forget",
             (item: JDomWifiAPTreeItem) => item?.forget()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.wifi.scan",
+            (item: JDomWifiTreeItem) => item?.scan()
         )
     )
 }
