@@ -292,6 +292,16 @@
                     "group": "inline"
                 },
                 {
+                    "command": "extension.devicescript.jdom.wifi.ap.add",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_unknown",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.jdom.wifi.ap.forget",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_known",
+                    "group": "inline"
+                },
+                {
                     "command": "extension.devicescript.watch.add",
                     "when": "view == extension.devicescript.jdom && viewItem =~ /^(register|event)/",
                     "group": "inline"
@@ -422,6 +432,18 @@
                 "title": "Edit Connection...",
                 "category": "DeviceScript",
                 "icon": "$(edit)"
+            },
+            {
+                "command": "extension.devicescript.jdom.wifi.ap.add",
+                "title": "Add Network...",
+                "category": "DeviceScript",
+                "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.jdom.wifi.ap.forget",
+                "title": "Forget Network",
+                "category": "DeviceScript",
+                "icon": "$(close)"
             },
             {
                 "command": "extension.devicescript.watch.clear",

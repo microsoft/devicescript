@@ -940,6 +940,11 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
         this.scan = props.scan
         this.info = props.info
         this.id = this.props.idPrefix + this.ssid
+        this.contextValue += this.known ? "_known" : "_unknown"
+    }
+
+    get service() {
+        return this.node as JDService
     }
 
     get ssid() {
@@ -950,12 +955,30 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
         return this.info?.[0] || -1
     }
 
+    get known() {
+        return !!this.info
+    }
+
+    async add() {
+        const { service, ssid } = this
+        const res = await vscode.window.showInputBox({
+            title: `Enter password for ${ssid}`,
+            password: true,
+        })
+        if (res === undefined) return
+        await service.sendCmdPackedAsync(WifiCmd.AddNetwork, [ssid, res])
+    }
+
+    async forget() {
+        const { service, ssid } = this
+        await service.sendCmdPackedAsync(WifiCmd.ForgetNetwork, [ssid])
+    }
+
     update() {
-        const { scan, info } = this
+        const { scan, info, known } = this
         const [priority, networkFlags, infoSsid] = info || []
         const [scanFlags, , rssi, channel, , scanSsid] = scan || []
         const ssid = infoSsid || scanSsid
-        const known = !!info
         const scanned = !!scan
 
         this.label = ssid
@@ -1456,6 +1479,14 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.cloud.connect",
             (item: JDomCloudConfigurationTreeItem) => item?.connect()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.wifi.ap.add",
+            (item: JDomWifiAPTreeItem) => item?.add()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.wifi.ap.forget",
+            (item: JDomWifiAPTreeItem) => item?.forget()
         )
     )
 }
