@@ -39,6 +39,7 @@ import {
     isAckError,
     CloudConfigurationEvent,
     EVENT,
+    CloudAdapterReg,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -110,7 +111,7 @@ export class JDomTreeItem extends vscode.TreeItem {
         this.contextValue = contextValue ?? nodeKind
         this.command = command ? { ...command, arguments: [this] } : undefined
         this.description = description
-        this.iconPath = iconPath ?? new vscode.ThemeIcon(iconPath)
+        this.iconPath = iconPath ? new vscode.ThemeIcon(iconPath) : undefined
 
         this.handleChange = this.handleChange.bind(this)
         this.handleParentUnmount = this.handleParentUnmount.bind(this)
@@ -210,7 +211,7 @@ export class JDomTreeItem extends vscode.TreeItem {
 
 export class JDomDeviceTreeItem extends JDomTreeItem {
     constructor(parent: JDomTreeItem, device: JDDevice, props: TreeItemProps) {
-        super(parent, device, props)
+        super(parent, device, { ...props, iconPath: JDomDeviceTreeItem.ICON })
 
         if (device.deviceId === this.props.state.simulatorScriptManagerId)
             this.contextValue = "simulator"
@@ -330,26 +331,29 @@ ${spec.description}`,
             )
 
         // cloud
-        const cloudAdapter = device.hasService(SRV_CLOUD_ADAPTER)
-            ? new JDomCloudTreeItem(this, this.props)
-            : undefined
-
+        const cloudAdapter = device.services({
+            serviceClass: SRV_CLOUD_ADAPTER,
+        })[0]
         return [
             ...registers,
-            cloudAdapter,
+            cloudAdapter
+                ? new JDomCloudTreeItem(this, cloudAdapter, this.props)
+                : undefined,
             new JDomServicesTreeItem(this),
         ].filter(e => !!e)
     }
 }
 
-export class JDomServicesTreeItem extends JDomTreeItem {
+class JDomServicesTreeItem extends JDomTreeItem {
     constructor(parent: JDomDeviceTreeItem) {
-        super(parent, parent.device, parent.props)
+        super(parent, parent.device, {
+            ...parent.props,
+            iconPath: JDomServiceTreeItem.ICON,
+        })
         this.contextValue = "services"
         this.label = "services"
         this.description = undefined
         this.id = this.parent.id + ":services"
-        this.iconPath = new vscode.ThemeIcon(JDomServiceTreeItem.ICON)
     }
 
     get device() {
@@ -361,17 +365,16 @@ export class JDomServicesTreeItem extends JDomTreeItem {
     }
 }
 
-export class JDomServiceTreeItem extends JDomTreeItem {
+class JDomServiceTreeItem extends JDomTreeItem {
     constructor(
         parent: JDomTreeItem,
         service: JDService,
         props: TreeItemProps
     ) {
-        super(parent, service, props)
+        super(parent, service, { ...props, iconPath: JDomServiceTreeItem.ICON })
     }
 
     static ICON = "symbol-class"
-    iconPath = new vscode.ThemeIcon(JDomServiceTreeItem.ICON)
 
     get service() {
         return this.node as JDService
@@ -454,7 +457,7 @@ ${snippet}
     }
 }
 
-export class JDomServiceMemberTreeItem extends JDomTreeItem {
+class JDomServiceMemberTreeItem extends JDomTreeItem {
     constructor(
         parent: JDomTreeItem,
         node: JDServiceMemberNode,
@@ -481,7 +484,7 @@ export class JDomServiceMemberTreeItem extends JDomTreeItem {
     }
 }
 
-export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
+class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
     constructor(
         parent: JDomTreeItem,
         register: JDRegister,
@@ -654,7 +657,7 @@ export class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
     }
 }
 
-export class JDomEventTreeItem extends JDomServiceMemberTreeItem {
+class JDomEventTreeItem extends JDomServiceMemberTreeItem {
     constructor(parent: JDomTreeItem, event: JDEvent, props: TreeItemProps) {
         super(parent, event, props)
     }
@@ -720,7 +723,178 @@ class JDMissingTreeItem extends JDomTreeItem {
     }
 }
 
-export abstract class JDomTreeDataProvider
+class JDomCloudTreeItem extends JDomTreeItem {
+    constructor(
+        parent: JDomDeviceTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            contextValue: props.idPrefix + "cloud",
+            idPrefix: props.idPrefix + "cloud_",
+            iconPath: "cloud",
+        })
+    }
+
+    mount(): void {
+        super.mount()
+        const { service } = this
+        ;[CloudAdapterReg.Connected, CloudAdapterReg.ConnectionName]
+            .map(code => service.register(code))
+            .forEach(register =>
+                this.subscribe(register, REPORT_UPDATE, this.handleChange)
+            )
+    }
+
+    update() {
+        const { service } = this
+        const oldlabel = this.label
+        const oldDescription = this.description
+
+        const connected = service.register(CloudAdapterReg.Connected).boolValue
+        const connectionName = service.register(
+            CloudAdapterReg.ConnectionName
+        ).stringValue
+
+        this.label = connected ? "connected" : "disconnected"
+        this.description = connectionName || "cloud adapter"
+
+        return oldlabel !== this.label || oldDescription !== this.description
+    }
+
+    get service() {
+        return this.node as JDService
+    }
+
+    get device() {
+        return this.service.device
+    }
+
+    protected createChildrenTreeItems(): JDomTreeItem[] {
+        const { device } = this
+        const props = this.props
+        const configurations = device
+            .services({ serviceClass: SRV_CLOUD_CONFIGURATION })
+            .map(srv => new JDomCloudConfigurationTreeItem(this, srv, props))
+        return [...configurations]
+    }
+}
+
+class JDomCloudConfigurationTreeItem extends JDomTreeItem {
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "configuration_",
+            contextValue: props.idPrefix + "configuration",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            iconPath: "settings-gear",
+        })
+        this.subscribe(
+            this.service.event(CloudConfigurationEvent.ConnectionStatusChange),
+            EVENT,
+            this.refresh.bind(this)
+        )
+    }
+
+    get service() {
+        return this.node as JDService
+    }
+
+    async connect() {
+        const { service } = this
+        withProgress("Connecting...", async () => {
+            await service.sendCmdAsync(
+                CloudConfigurationCmd.Connect,
+                undefined,
+                true
+            )
+        })
+    }
+
+    async configure() {
+        const res = await vscode.window.showInputBox({
+            title: "Enter connection string",
+            prompt: "Refer to the cloud configuration documentation to generate the authentication token or connection string.",
+            password: true,
+        })
+        if (res !== undefined) {
+            const { service } = this
+            try {
+                await service.sendCmdPackedAsync(
+                    CloudConfigurationCmd.SetConnectionString,
+                    [res],
+                    true
+                )
+                this.refresh()
+            } catch (e) {
+                if (isAckError(e))
+                    vscode.window.showErrorMessage(
+                        "DeviceScript: service did not respond in time."
+                    )
+                throw e
+            }
+        }
+    }
+
+    mount() {
+        super.mount()
+        const { service } = this
+
+        ;[
+            CloudConfigurationReg.CloudType,
+            CloudConfigurationReg.CloudDeviceId,
+            CloudConfigurationReg.ConnectionStatus,
+            CloudConfigurationReg.ServerName,
+        ]
+            .map(code => service.register(code))
+            .forEach(register =>
+                this.subscribe(register, REPORT_UPDATE, this.handleChange)
+            )
+    }
+
+    update() {
+        const { service } = this
+        const oldLabel = this.label
+        const oldDescription = this.description
+
+        const cloudType = service.register(
+            CloudConfigurationReg.CloudType
+        ).stringValue
+        const connectionState = service.register(
+            CloudConfigurationReg.ConnectionStatus
+        ).uintValue
+        const serverName = service.register(
+            CloudConfigurationReg.ServerName
+        ).stringValue
+        const cloudDeviceId = service.register(
+            CloudConfigurationReg.CloudDeviceId
+        ).stringValue
+
+        this.label = serverName || "configuration"
+        this.description =
+            CloudConfigurationConnectionStatus[connectionState] ||
+            connectionState?.toString() ||
+            "..."
+        this.tooltip = toMarkdownString(
+            `## cloud configuration
+
+- cloud type ${cloudType || "?"}
+- device id: ${cloudDeviceId || "?"}
+
+`,
+            `services/cloudconfiguration`
+        )
+
+        return oldLabel !== this.label || oldDescription !== this.description
+    }
+}
+
+abstract class JDomTreeDataProvider
     extends JDEventSource
     implements vscode.TreeDataProvider<JDomTreeItem>
 {
@@ -795,140 +969,7 @@ export abstract class JDomTreeDataProvider
     }
 }
 
-export class JDomCloudTreeItem extends JDomTreeItem {
-    constructor(parent: JDomDeviceTreeItem, props: TreeItemProps) {
-        super(parent, parent.device, {
-            ...props,
-            contextValue: props.idPrefix + "cloud",
-            idPrefix: props.idPrefix + "cloud_",
-        })
-        this.label = "cloud"
-        this.iconPath = new vscode.ThemeIcon("cloud")
-    }
-
-    protected createChildrenTreeItems(): JDomTreeItem[] {
-        const device = this.node as JDDevice
-        const props = this.props
-        const configurations = device
-            .services({ serviceClass: SRV_CLOUD_CONFIGURATION })
-            .map(srv => new JDomCloudConfigurationTreeItem(this, srv, props))
-
-        return [...configurations]
-    }
-}
-
-export class JDomCloudConfigurationTreeItem extends JDomTreeItem {
-    constructor(
-        parent: JDomTreeItem,
-        service: JDService,
-        props: TreeItemProps
-    ) {
-        super(parent, service, {
-            ...props,
-            idPrefix: props.idPrefix + "configuration_",
-            contextValue: props.idPrefix + "configuration",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
-            iconPath: "settings-gear",
-        })
-        this.subscribe(
-            this.service.event(CloudConfigurationEvent.ConnectionStatusChange),
-            EVENT,
-            this.refresh.bind(this)
-        )
-    }
-
-    get service() {
-        return this.node as JDService
-    }
-
-    async connect() {
-        const { service } = this
-        withProgress("Connecting...", async () => {
-            await service.sendCmdAsync(
-                CloudConfigurationCmd.Connect,
-                undefined,
-                true
-            )
-        })
-    }
-
-    async configure() {
-        const res = await vscode.window.showInputBox({
-            title: "Enter connection string",
-            prompt: "Refer to the cloud configuration documentation to generate the authentication token or connection string.",
-            password: true,
-        })
-        if (res !== undefined) {
-            const { service } = this
-            try {
-                await service.sendCmdPackedAsync(
-                    CloudConfigurationCmd.SetConnectionString,
-                    [res],
-                    true
-                )
-                this.refresh()
-            } catch (e) {
-                if (isAckError(e))
-                    vscode.window.showErrorMessage(
-                        "DeviceScript: service did not respond in time."
-                    )
-                throw e
-            }
-        }
-    }
-
-    mount() {
-        const { service } = this
-        ;[
-            CloudConfigurationReg.CloudType,
-            CloudConfigurationReg.CloudDeviceId,
-            CloudConfigurationReg.ConnectionStatus,
-            CloudConfigurationReg.ServerName,
-        ]
-            .map(code => service.register(code))
-            .forEach(register =>
-                this.subscribe(register, REPORT_UPDATE, this.handleChange)
-            )
-    }
-
-    update() {
-        const { service } = this
-        const oldLabel = this.label
-        const oldDescription = this.description
-
-        const cloudType = service.register(
-            CloudConfigurationReg.CloudType
-        ).stringValue
-        const connectionState = service.register(
-            CloudConfigurationReg.ConnectionStatus
-        ).uintValue
-        const serverName = service.register(
-            CloudConfigurationReg.ServerName
-        ).stringValue
-        const cloudDeviceId = service.register(
-            CloudConfigurationReg.CloudDeviceId
-        ).stringValue
-
-        this.label = serverName || "cloud"
-        this.description =
-            CloudConfigurationConnectionStatus[connectionState] ||
-            connectionState?.toString() ||
-            "..."
-        this.tooltip = toMarkdownString(
-            `## cloud configuration
-
-- cloud type ${cloudType || "?"}
-- device id: ${cloudDeviceId || "?"}
-
-`,
-            `services/cloudconfiguration`
-        )
-
-        return oldLabel !== this.label || oldDescription !== this.description
-    }
-}
-
-export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
+class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
     constructor(
         extensionState: DeviceScriptExtensionState,
         command: vscode.Command
@@ -964,7 +1005,7 @@ export class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
     }
 }
 
-export class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
+class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
     constructor(state: DeviceScriptExtensionState, command: vscode.Command) {
         super(state, command, "watch_")
         const unsub = this.state.subscribe(CHANGE, this.refresh.bind(this))
