@@ -36,14 +36,12 @@ import {
     EventHandler,
     CloudConfigurationConnectionStatus,
     CloudConfigurationCmd,
-    isAckError,
     CloudConfigurationEvent,
     EVENT,
     CloudAdapterReg,
     SRV_WIFI,
     WifiReg,
     WifiCmd,
-    toHex,
     WifiAPFlags,
     unique,
     WifiEvent,
@@ -52,7 +50,7 @@ import {
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
-import { execute, withProgress } from "./commands"
+import { sendCmd, withProgress } from "./commands"
 import { ICON_LOADING, WIFI_PIPE_TIMEOUT } from "./constants"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
@@ -873,12 +871,17 @@ class JDomWifiTreeItem extends JDomTreeItem {
 
     async scan() {
         const { service } = this
-        await service.sendCmdAsync(WifiCmd.Scan, undefined, true)
+        await sendCmd(service, WifiCmd.Scan)
     }
 
     async reconnect() {
         const { service } = this
-        await service.sendCmdAsync(WifiCmd.Reconnect, undefined, true)
+
+        await withProgress("Connecting...", async () => {
+            await service.sendCmdAsync(WifiCmd.Reconnect, undefined, true)
+            const connectionFailedEvent = service.event(WifiEvent.ConnectionFailed)
+            const gotIpEvent = service.event(WifiEvent.GotIp)
+        })
     }
 
     update() {
@@ -992,12 +995,12 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
             password: true,
         })
         if (res === undefined) return
-        await service.sendCmdPackedAsync(WifiCmd.AddNetwork, [ssid, res])
+        await sendCmd(service, WifiCmd.AddNetwork, [ssid, res])
     }
 
     async forget() {
         const { service, ssid } = this
-        await service.sendCmdPackedAsync(WifiCmd.ForgetNetwork, [ssid])
+        await sendCmd(service, WifiCmd.ForgetNetwork, [ssid])
     }
 
     async setPriority() {
@@ -1008,14 +1011,7 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
         })
         const priority = parseInt(res)
         if (!isNaN(priority))
-            await execute(
-                async () =>
-                    await service.sendCmdPackedAsync(
-                        WifiCmd.SetNetworkPriority,
-                        [priority, ssid],
-                        true
-                    )
-            )
+            await sendCmd(service, WifiCmd.SetNetworkPriority, [priority, ssid])
     }
 
     update() {
@@ -1126,11 +1122,7 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
     async connect() {
         const { service } = this
         withProgress("Connecting...", async () => {
-            await service.sendCmdAsync(
-                CloudConfigurationCmd.Connect,
-                undefined,
-                true
-            )
+            await sendCmd(service, CloudConfigurationCmd.Connect)
         })
     }
 
@@ -1142,20 +1134,10 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
         })
         if (res !== undefined) {
             const { service } = this
-            try {
-                await service.sendCmdPackedAsync(
-                    CloudConfigurationCmd.SetConnectionString,
-                    [res],
-                    true
-                )
-                this.refresh()
-            } catch (e) {
-                if (isAckError(e))
-                    vscode.window.showErrorMessage(
-                        "DeviceScript: service did not respond in time."
-                    )
-                throw e
-            }
+            await sendCmd(service, CloudConfigurationCmd.SetConnectionString, [
+                res,
+            ])
+            this.refresh()
         }
     }
 

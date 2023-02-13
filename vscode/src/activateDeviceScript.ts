@@ -79,7 +79,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 if (isWorkspace) {
                     extensionState.telemetry.showErrorMessage(
                         "connection.remote",
-                        "DeviceScript: Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
+                        "DeviceScript - Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
                     )
                     return
                 }

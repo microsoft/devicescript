@@ -1,5 +1,13 @@
-import { isAckError, isCancelError, isTimeoutError } from "jacdac-ts"
+import {
+    isAckError,
+    isCancelError,
+    isTimeoutError,
+    JDService,
+    PackedValues,
+} from "jacdac-ts"
 import * as vscode from "vscode"
+
+export const MESSAGE_PREFIX = "DeviceScript - "
 
 export function showError(error: Error) {
     if (!error || isCancelError(error)) return
@@ -7,12 +15,27 @@ export function showError(error: Error) {
     console.error(error)
 
     if (isTimeoutError(error))
-        vscode.window.showErrorMessage("DeviceScript: the operation timed out.")
+        vscode.window.showErrorMessage(
+            MESSAGE_PREFIX + "the operation timed out."
+        )
     else if (isAckError(error))
         vscode.window.showErrorMessage(
-            "DeviceScript: the service did not respond to this command."
+            MESSAGE_PREFIX + "the device did not respond to this command."
         )
-    else vscode.window.showErrorMessage("DeviceScript: Unexpected error.")
+    else vscode.window.showErrorMessage(MESSAGE_PREFIX + error?.message)
+}
+
+export async function sendCmd(
+    service: JDService,
+    cmd: number,
+    values?: PackedValues
+) {
+    try {
+        if (values) await service.sendCmdPackedAsync(cmd, values, true)
+        else await service.sendCmdAsync(cmd, undefined, true)
+    } catch (error) {
+        showError(error)
+    }
 }
 
 export async function execute(handler: () => Promise<void>) {
@@ -32,7 +55,7 @@ export async function withProgress(
     let error: Error
     await vscode.window.withProgress(
         {
-            title,
+            title: MESSAGE_PREFIX + title,
             location: vscode.ProgressLocation.Notification,
         },
         async progress => {
