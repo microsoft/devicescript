@@ -307,6 +307,10 @@
                     "group": "inline"
                 },
                 {
+                    "command": "extension.devicescript.jdom.wifi.ap.setPriority",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_known"
+                },
+                {
                     "command": "extension.devicescript.watch.add",
                     "when": "view == extension.devicescript.jdom && viewItem =~ /^(register|event)/",
                     "group": "inline"
@@ -455,6 +459,11 @@
                 "title": "Forget Network",
                 "category": "DeviceScript",
                 "icon": "$(close)"
+            },
+            {
+                "command": "extension.devicescript.jdom.wifi.ap.setPriority",
+                "title": "Set Priority...",
+                "category": "DeviceScript"
             },
             {
                 "command": "extension.devicescript.watch.clear",

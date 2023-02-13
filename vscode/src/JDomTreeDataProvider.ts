@@ -48,10 +48,11 @@ import {
     unique,
     WifiEvent,
     WifiPipePack,
+    prettyEnum,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
-import { withProgress } from "./commands"
+import { execute, withProgress } from "./commands"
 import { ICON_LOADING, WIFI_PIPE_TIMEOUT } from "./constants"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
@@ -999,8 +1000,27 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
         await service.sendCmdPackedAsync(WifiCmd.ForgetNetwork, [ssid])
     }
 
+    async setPriority() {
+        const { service, ssid } = this
+        const res = await vscode.window.showInputBox({
+            title: `Enter the priority ${ssid}`,
+            prompt: "Integral number, higher gets picked first.",
+        })
+        const priority = parseInt(res)
+        if (!isNaN(priority))
+            await execute(
+                async () =>
+                    await service.sendCmdPackedAsync(
+                        WifiCmd.SetNetworkPriority,
+                        [priority, ssid],
+                        true
+                    )
+            )
+    }
+
     update() {
-        const { scan, info, known } = this
+        const { scan, info, known, service } = this
+        const { specification } = service
         const [priority, networkFlags, infoSsid] = info || []
         const [scanFlags, , rssi, channel, , scanSsid] = scan || []
         const ssid = infoSsid || scanSsid
@@ -1015,10 +1035,10 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
 
 -  ${known ? "known" : "unknown"}
 -  ${scanned ? "scanned" : "not found"}
--  priority: ${priority || ""}
+-  priority: ${priority || "0"}
+-  scan flags: ${prettyEnum(specification.enums["APFlags"], scanFlags) || ""}
 -  network flags: ${networkFlags ?? ""}
 -  channel: ${channel || ""}
--  scan flags: ${scanFlags || ""}
 `
         )
 
@@ -1512,6 +1532,10 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.wifi.ap.forget",
             (item: JDomWifiAPTreeItem) => item?.forget()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.wifi.ap.setPriority",
+            (item: JDomWifiAPTreeItem) => item?.setPriority()
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.wifi.reconnect",

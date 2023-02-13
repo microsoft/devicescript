@@ -1,13 +1,36 @@
 import { isAckError, isCancelError, isTimeoutError } from "jacdac-ts"
 import * as vscode from "vscode"
 
-export function withProgress(
+export function showError(error: Error) {
+    if (!error || isCancelError(error)) return
+
+    console.error(error)
+
+    if (isTimeoutError(error))
+        vscode.window.showErrorMessage("DeviceScript: the operation timed out.")
+    else if (isAckError(error))
+        vscode.window.showErrorMessage(
+            "DeviceScript: the service did not respond to this command."
+        )
+    else vscode.window.showErrorMessage("DeviceScript: Unexpected error.")
+}
+
+export async function execute(handler: () => Promise<void>) {
+    try {
+        await handler?.()
+    } catch (error) {
+        showError(error)
+    }
+}
+
+export async function withProgress(
     title: string,
     handler: (
         progress: vscode.Progress<{ message?: string; increment?: number }>
     ) => Promise<void>
 ) {
-    vscode.window.withProgress(
+    let error: Error
+    await vscode.window.withProgress(
         {
             title,
             location: vscode.ProgressLocation.Notification,
@@ -16,16 +39,10 @@ export function withProgress(
             try {
                 await handler(progress)
             } catch (e) {
-                if (isCancelError(e)) return
-                else if (isTimeoutError(e))
-                    vscode.window.showErrorMessage(
-                        "DeviceScript: the operation timed out."
-                    )
-                else if (isAckError(e))
-                    vscode.window.showErrorMessage(
-                        "DeviceScript: the service did not respond to this command."
-                    )
+                error = e
             }
         }
     )
+
+    showError(error)
 }
