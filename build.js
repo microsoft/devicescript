@@ -116,7 +116,12 @@ function buildPrelude(folder, outp) {
     const m = /^\s*type ServiceConfig([^{]+)/m.exec(srvcfg)
     let startServ = `\n    import * as ds from "@devicescript/core"\n\n`
     m[1].replace(/\| (\w+)Config/g, (_, s) => {
-        startServ += `    function start${s}(cfg: ${s}Config): ds.${s}\n`
+        const url = `https://microsoft.github.io/devicescript/api/clients/${s.toLowerCase()}`
+        startServ += `    /**\n`
+        startServ += `     * Start on-board server for ${s}\n`
+        startServ += `     * @see {@link ${url} Client APIs}\n`
+        startServ += `     */\n`
+        startServ += `    function start${s}(cfg: ${s}Config): ds.${s}\n\n`
         return ""
     })
     srvcfg = srvcfg.replace(m[0], startServ + m[0])
