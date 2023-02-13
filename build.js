@@ -39,7 +39,7 @@ function distCopy(from, to) {
         console.debug(`cp ${from} ${to}`)
         try {
             fs.mkdirSync(path.dirname(to))
-        } catch {}
+        } catch { }
         fs.copyFileSync(from, to)
         fs.utimesSync(to, new Date(), new Date(fromT))
     }
@@ -118,8 +118,9 @@ function buildPrelude(folder, outp) {
     m[1].replace(/\| (\w+)Config/g, (_, s) => {
         const url = `https://microsoft.github.io/devicescript/api/clients/${s.toLowerCase()}`
         startServ += `    /**\n`
-        startServ += `     * Start on-board server for ${s}\n`
-        startServ += `     * @see {@link ${url} Client APIs}\n`
+        startServ += `     * Start on-board server for ${s}, and returns the client for it.\n`
+        startServ += `     * @returns client for the on-board server\n`
+        startServ += `     * @see {@link ${url} Documentation}\n`
         startServ += `     */\n`
         startServ += `    function start${s}(cfg: ${s}Config): ds.${s}\n\n`
         return ""
@@ -152,7 +153,7 @@ function buildPrelude(folder, outp) {
     let curr = ""
     try {
         curr = fs.readFileSync(outp, "utf-8")
-    } catch {}
+    } catch { }
     if (curr != r) {
         console.log("updating " + outp)
         fs.writeFileSync(outp, r)
@@ -199,7 +200,7 @@ async function main() {
             try {
                 const st = fs.statSync(outfile)
                 size = st.size
-            } catch {}
+            } catch { }
             const sizeStr = (size / 1024).toFixed(1)
             console.log(`build ${outfile}: ${sizeStr}kB ${Date.now() - t0}ms`)
         }
