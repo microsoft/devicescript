@@ -23,24 +23,8 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
         })
         verboseLog(JSON.stringify(json, null, 4))
         const bin = serializeDcfg(json)
-        const res = decodeDcfg(bin)
-        if (res.errors.length == 0) {
-            for (const k of Object.keys(json)) {
-                if (json[k] != res.settings[k])
-                    res.errors.push(`mismatch at ${k}`)
-            }
-            for (const k of Object.keys(res.settings)) {
-                if (json[k] != res.settings[k])
-                    res.errors.push(`mismatch at ${k}`)
-            }
-        }
-        if (res.errors.length) {
-            for (const e of res.errors) error(e)
-            process.exit(1)
-        }
-
         try {
-            const decomp = decompileDcfg(res.settings)
+            const decomp = decompileDcfg(json)
             verboseLog(JSON.stringify(decomp, null, 4))
         } catch (e) {
             fatal(e.message)

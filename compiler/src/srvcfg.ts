@@ -15,6 +15,26 @@ export function patchUF2File(
     if (!UF2File.isUF2(uf2)) throw new Error("not a UF2 file")
 
     const f = UF2File.fromFile(uf2)
+
+    // needed for RP2040-E14
+    const align = parseAnyInt(arch.uf2Align)
+    if (align) {
+        const amask = align - 1
+        let maxAddr = 0
+        for (const b of f.fromBlocks) {
+            maxAddr = Math.max(b.targetAddr + b.payloadSize, maxAddr)
+        }
+        if (maxAddr & amask) {
+            const left = align - (maxAddr & amask)
+            const filler = new Uint8Array(left)
+            filler.fill(0xff)
+            f.writeBytes(maxAddr, filler)
+        }
+    }
+
+    //const aligned = new Uint8Array((buf.length + amask) & ~amask)
+    //aligned.set(buf)
+
     f.writeBytes(off, buf)
     return f.serialize()
 }

@@ -166,6 +166,7 @@ export class UF2File {
     filename: string
     filesize = 0
     familyId = 0
+    fromBlocks: UF2Block[]
 
     constructor(familyId?: string | number) {
         this.familyId =
@@ -192,6 +193,7 @@ export class UF2File {
     static fromFile(uf2: Uint8Array) {
         const blocks = parseUF2File(uf2)
         const r = new UF2File(blocks[0].familyId)
+        r.fromBlocks = blocks
         r.blocks = blocks.map(b => new Uint8Array(b.origData))
         r.ptrs = blocks.map(b => b.targetAddr >> 8)
         r.filename = blocks[0].filename

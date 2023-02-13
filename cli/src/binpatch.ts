@@ -4,11 +4,14 @@ import {
     patchBinFile,
     patchUF2File,
     compileDcfg,
+    serializeDcfg,
+    decodeDcfg,
+    decompileDcfg,
 } from "@devicescript/compiler"
 import { readFile, writeFile } from "fs/promises"
 import { JSONTryParse } from "jacdac-ts"
 import { basename, dirname, join } from "path"
-import { error, log } from "./command"
+import { error, isVerbose, log, verboseLog } from "./command"
 
 export interface BinPatchOptions {
     uf2?: string
@@ -48,6 +51,13 @@ export async function binPatch(
         const outname = (devid: string, ext = outext) =>
             join(outpath, `devicescript-${arch.id}-${devid}.${ext}`)
         const compiled = await compileDcfg(fn, f => readFile(f, "utf-8"))
+        if (isVerbose) {
+            verboseLog(JSON.stringify(compiled, null, 4))
+            const ser = serializeDcfg(compiled)
+            const dec = decodeDcfg(ser)
+            verboseLog(dec.errors.join("\n"))
+            verboseLog(JSON.stringify(decompileDcfg(dec.settings), null, 4))
+        }
         const patched = patchFile(binFileBuf, arch, compiled)
         const outp = outname(devid)
         log(`writing ${outp}: ${patched.length} bytes`)

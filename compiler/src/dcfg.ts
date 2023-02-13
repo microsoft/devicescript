@@ -85,7 +85,7 @@ function keyhash(key: string | Uint8Array) {
     return (h >>> 16) ^ (h & 0xffff)
 }
 
-export function serializeDcfg(entries: DcfgSettings) {
+export function serializeDcfg(entries: DcfgSettings, noVerify = false) {
     const numEntries = Object.keys(entries).length
     if (numEntries > 0xf000) throw new Error("dcfg: too many entries")
     let dataOff = DCFG_HEADER_SIZE + (numEntries + 1) * DCFG_ENTRY_SIZE
@@ -117,6 +117,21 @@ export function serializeDcfg(entries: DcfgSettings) {
 
     const res = bufferConcatMany([hd, ...binEntries, ...dataEntries])
     assert(res.length == dataOff)
+
+    if (!noVerify) {
+        const decoded = decodeDcfg(res)
+        if (decoded.errors.length == 0) {
+            for (const k of Object.keys(entries)) {
+                if (entries[k] != decoded.settings[k])
+                    decoded.errors.push(`mismatch at ${k}`)
+            }
+            for (const k of Object.keys(decoded.settings)) {
+                if (entries[k] != decoded.settings[k])
+                    decoded.errors.push(`mismatch at ${k}`)
+            }
+        }
+        if (decoded.errors.length) throw new Error(decoded.errors.join("\n"))
+    }
 
     return res
 
@@ -345,6 +360,7 @@ export function decodeDcfg(buf: Uint8Array) {
 }
 
 export function parseAnyInt(s: string | number) {
+    if (s === null || s === undefined) return undefined
     if (typeof s == "number") return s
     s = s.replace(/_/g, "")
     let m = 1
