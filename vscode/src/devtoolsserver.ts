@@ -20,6 +20,7 @@ import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
+import { MESSAGE_PREFIX } from "./commands"
 
 const HELP_URI = vscode.Uri.parse(
     "https://microsoft.github.io/devicescript/getting-started/vscode#setting-up-the-project"
@@ -282,7 +283,7 @@ export class DeveloperToolsManager extends JDEventSource {
         return vscode.window.withProgress<vscode.Terminal>(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: "Starting DeviceScript Development Server...",
+                title: MESSAGE_PREFIX + "Starting Development Server...",
                 cancellable: false,
             },
             async () => {

@@ -47,11 +47,21 @@ import {
     WifiEvent,
     WifiPipePack,
     prettyEnum,
+    delay,
+    throwError,
+    ERROR_TIMEOUT,
+    RESET,
+    DISCONNECT,
+    JDCancellationToken,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
-import { sendCmd, withProgress } from "./commands"
-import { ICON_LOADING, WIFI_PIPE_TIMEOUT } from "./constants"
+import { MESSAGE_PREFIX, sendCmd, withProgress } from "./commands"
+import {
+    ICON_LOADING,
+    WIFI_PIPE_TIMEOUT,
+    WIFI_RECONNECT_TIMEOUT,
+} from "./constants"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -877,11 +887,37 @@ class JDomWifiTreeItem extends JDomTreeItem {
     async reconnect() {
         const { service } = this
 
-        await withProgress("Connecting...", async () => {
+        let message: string
+        await withProgress("Connecting...", async progress => {
             await service.sendCmdAsync(WifiCmd.Reconnect, undefined, true)
-            const connectionFailedEvent = service.event(WifiEvent.ConnectionFailed)
-            const gotIpEvent = service.event(WifiEvent.GotIp)
+            const token = new JDCancellationToken()
+            try {
+                const deviceDisconnect = service.device
+                    .awaitOnce([RESET, DISCONNECT], token)
+                    .then(() => "Device disconnected")
+                const connectionFailedEvent = service
+                    .event(WifiEvent.ConnectionFailed)
+                    .awaitOnce(EVENT, token)
+                    .then(() => "Connection failed")
+                const gotIpEvent = service
+                    .event(WifiEvent.GotIp)
+                    .awaitOnce(EVENT, token)
+                    .then(() => "")
+                const timeout = delay(WIFI_RECONNECT_TIMEOUT)
+                    .then(() => throwError("Timeout", { code: ERROR_TIMEOUT }))
+                    .then(() => undefined)
+
+                message = await Promise.race([
+                    deviceDisconnect,
+                    connectionFailedEvent,
+                    gotIpEvent,
+                    timeout,
+                ])
+            } finally {
+                token.unmount()
+            }
         })
+        if (message) vscode.window.showErrorMessage(MESSAGE_PREFIX + message)
     }
 
     update() {
