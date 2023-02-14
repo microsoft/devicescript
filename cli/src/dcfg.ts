@@ -4,10 +4,10 @@ import {
     decodeDcfg,
     serializeDcfg,
     findDcfgOffsets,
-    compileDcfg,
     decompileDcfg,
 } from "@devicescript/compiler"
 import { toHex } from "jacdac-ts"
+import { compileDcfgFile } from "./binpatch"
 
 export interface DcfgOptions {
     update?: string
@@ -18,9 +18,7 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
     const buf = readFileSync(fn)
 
     if (fn.endsWith(".json")) {
-        const json = await compileDcfg(fn, async fn => {
-            return readFileSync(fn, "utf-8")
-        })
+        const json = await compileDcfgFile(fn)
         verboseLog(JSON.stringify(json, null, 4))
         const bin = serializeDcfg(json)
         try {

@@ -412,8 +412,12 @@ export function decompileDcfg(settings: DcfgSettings) {
     return res
 }
 
-export function jsonToDcfg(obj: any, interpretStrings = false) {
-    const res: DcfgSettings = {}
+export function jsonToDcfg(
+    obj: any,
+    interpretStrings = false,
+    initial: DcfgSettings = {}
+) {
+    const res = Object.assign({}, initial)
     const flattenObj = (val: any, key: string) => {
         if (typeof val == "string") {
             if (interpretStrings) {
@@ -462,8 +466,11 @@ export async function compileDcfg(
 
     async function normalizeKeys(fn: string) {
         const mainJson = await readJSON(fn)
+        let prev: DcfgSettings = {}
+        if (mainJson["$include"])
+            prev = await normalizeKeys(mainJson["$include"])
         try {
-            return jsonToDcfg(mainJson, true)
+            return jsonToDcfg(mainJson, true, prev)
         } catch (e) {
             throw new Error(`${fn}: ${e.message}`)
         }

@@ -14,7 +14,7 @@ import {
 import { HexInt } from "@devicescript/srvcfg"
 import { readFile, writeFile } from "fs/promises"
 import { JSONTryParse, read32, toHex } from "jacdac-ts"
-import { basename, dirname, join, parse } from "path"
+import { basename, dirname, join, resolve } from "path"
 import { error, isVerbose, log, verboseLog } from "./command"
 import { EspImage } from "./esp"
 
@@ -151,6 +151,13 @@ async function patchEspFile(
     // return bufferConcat(binFile.slice(0, imgoffset), res)
 }
 
+export async function compileDcfgFile(fn: string) {
+    const folder = dirname(fn)
+    return await compileDcfg(basename(fn), f =>
+        readFile(resolve(folder, f), "utf-8")
+    )
+}
+
 export async function binPatch(files: string[], options: BinPatchOptions) {
     const patch: Record<
         keyof FileTypes,
@@ -190,8 +197,6 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
         log(`processing ${fn}...`)
         if (!fn.endsWith(".board.json")) fatal("file has to match *.board.json")
         const devid = basename(fn, ".board.json")
-        const json: DeviceConfig = JSONTryParse(await readFile(fn, "utf-8"))
-        if (!json?.devName) fatal(`no devName in ${fn}`)
         const archName = join(dirname(fn), "arch.json")
         const arch: ArchConfig = JSONTryParse(await readFile(archName, "utf-8"))
         if (arch?.dcfgOffset === undefined)
@@ -199,7 +204,9 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
         const suff = binext(arch.binFlashOffset)
         const outname = (devid: string, ext = suff) =>
             join(outpath, `devicescript-${arch.id}-${devid}${ext}`)
-        const compiled = await compileDcfg(fn, f => readFile(f, "utf-8"))
+        const compiled = await compileDcfgFile(fn)
+        if (!compiled["devName"]) fatal(`no devName in ${fn}`)
+        if (!compiled["devClass"]) fatal(`no devClass in ${fn}`)
         if (isVerbose) {
             verboseLog(JSON.stringify(compiled, null, 4))
             const ser = serializeDcfg(compiled)
@@ -221,8 +228,7 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
                 binFileBuf.slice(off)
             )
             const elfFileBuf = await readFile(
-                options.elf ??
-                binFn.replace(/\.[^\.]+$/, ".elf")
+                options.elf ?? binFn.replace(/\.[^\.]+$/, ".elf")
             )
             await writeFile(outname("generic", ".elf"), elfFileBuf)
         }
