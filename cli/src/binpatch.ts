@@ -11,9 +11,10 @@ import {
     DCFG_MAGIC0,
     DCFG_MAGIC1,
 } from "@devicescript/compiler"
+import { HexInt } from "@devicescript/srvcfg"
 import { readFile, writeFile } from "fs/promises"
 import { JSONTryParse, read32, toHex } from "jacdac-ts"
-import { basename, dirname, join } from "path"
+import { basename, dirname, join, parse } from "path"
 import { error, isVerbose, log, verboseLog } from "./command"
 import { EspImage } from "./esp"
 
@@ -25,6 +26,7 @@ export interface FileTypes {
 
 export interface BinPatchOptions extends FileTypes {
     outdir?: string
+    elf?: string
     generic?: boolean
 }
 
@@ -178,7 +180,11 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
     const binFileBuf = await readFile(binFn)
     const patchFile = patch[ft]
     const outpath = options.outdir || "dist"
-    const outext = options.uf2 ? "uf2" : "bin"
+    const outext = options.uf2 ? ".uf2" : ".bin"
+    const binext = (off: HexInt) => {
+        const v = parseAnyInt(off)
+        return v == undefined ? outext : `-0x${v.toString(16)}${outext}`
+    }
 
     for (const fn of files) {
         log(`processing ${fn}...`)
@@ -190,8 +196,9 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
         const arch: ArchConfig = JSONTryParse(await readFile(archName, "utf-8"))
         if (arch?.dcfgOffset === undefined)
             fatal(`no dcfgOffset in ${archName}`)
-        const outname = (devid: string, ext = outext) =>
-            join(outpath, `devicescript-${arch.id}-${devid}.${ext}`)
+        const suff = binext(arch.binFlashOffset)
+        const outname = (devid: string, ext = suff) =>
+            join(outpath, `devicescript-${arch.id}-${devid}${ext}`)
         const compiled = await compileDcfg(fn, f => readFile(f, "utf-8"))
         if (isVerbose) {
             verboseLog(JSON.stringify(compiled, null, 4))
@@ -204,12 +211,20 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
         const outp = outname(devid)
         log(`writing ${outp}: ${patched.length} bytes`)
         await writeFile(outp, patched)
-        if (options.generic) {
-            await writeFile(outname("generic"), binFileBuf)
+        if (options.generic || arch.binGenericFlashOffset !== undefined) {
+            const offpatched = parseAnyInt(arch.binFlashOffset)
+            const offgen = parseAnyInt(arch.binGenericFlashOffset)
+            let off = 0
+            if (offgen !== undefined) off = offgen - offpatched
+            await writeFile(
+                outname("generic", binext(offgen ?? offpatched)),
+                binFileBuf.slice(off)
+            )
             const elfFileBuf = await readFile(
+                options.elf ??
                 binFn.replace(/\.[^\.]+$/, ".elf")
             )
-            await writeFile(outname("generic", "elf"), elfFileBuf)
+            await writeFile(outname("generic", ".elf"), elfFileBuf)
         }
     }
 }

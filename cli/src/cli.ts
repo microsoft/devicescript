@@ -213,6 +213,7 @@ export async function mainCli() {
             "--generic",
             "copy the uf2/bin file and corresponding ELF file as 'generic' variant"
         )
+        .option("--elf <file.elf>", "specify ELF file name")
         .arguments("<file.board.json...>")
         .action(binPatch)
 
