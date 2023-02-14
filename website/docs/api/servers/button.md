@@ -7,7 +7,7 @@ title: Button
 # Button
 
 The `startButton` function starts a [button](https://microsoft.github.io/jacdac-docs/services/button) server on the device
-and returns [client](/docs/api/button).
+and returns a [client](/api/clients/button).
 
 ```ts no-run
 import { startButton } from "@devicescript/servers"
