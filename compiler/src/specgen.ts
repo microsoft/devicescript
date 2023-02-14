@@ -423,7 +423,7 @@ ${varname}.${pname}.subscribe(() => {
     })
 
     // import custom files
-    r.push(`\n{@import optional ../custom/${info.shortId}.mdp}\n`)
+    r.push(`\n{@import optional ../clients-custom/${info.shortId}.mdp}\n`)
 
     return r.filter(s => s !== undefined).join("\n")
     function enumName(n: string) {

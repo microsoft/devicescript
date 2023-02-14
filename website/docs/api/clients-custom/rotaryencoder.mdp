@@ -1,0 +1,10 @@
+## Server
+
+- [startRotaryEncoder](/api/servers/rotaryencoder) starts a rotary encoder server on the current device.
+
+```ts skip
+const button = startRotaryEncoder({
+    pin0: 2
+    pin1: 3
+})
+```

@@ -199,8 +199,8 @@ async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
     const { success, binary, dbg } = await compileFile(file, options)
     if (!success) throw new CompilationError("compilation failed")
 
-    debug(`bytecode: ${prettySize(binary.length)}`)
     if (stats) {
+        log(`bytecode: ${prettySize(binary.length)}`)
         const { sizes, functions } = dbg
         log(
             "  " +

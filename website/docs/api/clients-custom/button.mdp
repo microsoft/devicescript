@@ -2,7 +2,7 @@
 
 - [startButton](/api/servers/button) starts a button server on the current device.
 
-```ts skip no-run
+```ts skip
 const button = startButton({
     pin: 2,
 })
