@@ -670,7 +670,7 @@ class Program implements TopOpWriter {
             column: 1,
             endLine: 1,
             endColumn: 1,
-            formatted: formatDiagnostics([diag]),
+            formatted: formatDiagnostics([diag], this.host.isBasicOutput?.()),
         }
 
         if (diag.file) {

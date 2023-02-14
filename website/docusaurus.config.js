@@ -157,6 +157,7 @@ const config = configure(
                 {
                     lang: "ts",
                     nodeBin: "devicescript",
+                    args: ["--no-colors"],
                     npmPackage: "@devicescript/cli",
                     excludedFiles: ["**/api/clients/*.md"],
                     prefix: 'import * as ds from "@devicescript/core"',

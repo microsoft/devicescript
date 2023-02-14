@@ -13,7 +13,7 @@ import { compileFlagHelp, runtimeVersion } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
-import { setVerbose } from "./command"
+import { setConsoleColors, setVerbose } from "./command"
 import { binPatch } from "./binpatch"
 
 export async function mainCli() {
@@ -45,6 +45,7 @@ export async function mainCli() {
         )
         .version(cliVersion())
         .option("-v, --verbose", "more logging")
+        .option("--no-colors", "disable color output")
 
     buildCommand("build", { isDefault: true })
         .description("build a DeviceScript file")
@@ -218,6 +219,7 @@ export async function mainCli() {
         .action(binPatch)
 
     program.on("option:verbose", () => setVerbose(true))
+    program.on("option:no-colors", () => setConsoleColors(false))
 
     program.parse(process.argv)
 }
