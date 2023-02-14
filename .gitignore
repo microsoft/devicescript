@@ -11,7 +11,7 @@ website/solutions
 website/static/dist/devicescript-compiler.js
 temp/
 devs/lib/devicescript-spec.d.ts
-devs/lib/servers.d.ts
+devs/lib/devicescript-servers.d.ts
 .devicescript
 **/*.vsix
 .vscode/settings.json

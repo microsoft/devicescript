@@ -102,6 +102,7 @@ const files = {
 }
 
 const specname = "devicescript-spec.d.ts"
+const serversname = "devicescript-servers.d.ts"
 function buildPrelude(folder, outp) {
     let srvcfg = fs.readFileSync("runtime/jacdac-c/dcfg/srvcfg.d.ts", "utf-8")
     // no reason to encode hex number as strings in full TS syntax
@@ -128,7 +129,7 @@ function buildPrelude(folder, outp) {
     srvcfg = srvcfg.replace(m[0], startServ + m[0])
     srvcfg = "// auto-generated! do not edit here\n" + srvcfg
 
-    fs.writeFileSync(folder + "/servers.d.ts", srvcfg)
+    fs.writeFileSync(join(folder, serversname), srvcfg)
 
     const files = fs.readdirSync(folder)
     files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
