@@ -1,0 +1,9 @@
+## Server
+
+- [startButton](/api/servers/button) starts a button server on the current device.
+
+```ts skip no-run
+const button = startButton({
+    pin: 2,
+})
+```

@@ -206,6 +206,7 @@ pagination_prev: null
 pagination_next: null
 unlisted: true
 ---
+
 # ${clname}
         
 The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/) is deprecated and not supported in DeviceScript.        
@@ -420,6 +421,9 @@ ${varname}.${pname}.subscribe(() => {
 `
         )
     })
+
+    // import custom files
+    r.push(`\n{@import optional ../custom/${info.shortId}.mdp}\n`)
 
     return r.filter(s => s !== undefined).join("\n")
     function enumName(n: string) {
