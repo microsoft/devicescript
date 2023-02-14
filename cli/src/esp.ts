@@ -3,8 +3,11 @@ import {
     read16,
     read32,
     write32,
-} from "@devicescript/compiler/src/jdutil"
-import { flatClone, sha256, toHex } from "jacdac-ts"
+    flatClone,
+    sha256,
+    toHex,
+} from "jacdac-ts"
+import { verboseLog } from "./command"
 
 export interface EspSegment {
     addr: number
@@ -134,9 +137,27 @@ export class EspImage {
     private constructor() {}
 
     clone() {
-        const res = flatClone(this)
-        res.segments = res.segments.map(flatClone)
+        const res = new EspImage()
+        res.header = this.header
+        res.chipName = this.chipName
+        res.segments = this.segments.map(flatClone)
         return res
+    }
+
+    get size() {
+        let sz = 0
+        for (const s of this.segments) sz += s.data.length
+        return sz
+    }
+
+    get looksValid() {
+        return this.segments.some(s => s.isDROM) && this.size > 128 * 1024
+    }
+
+    getLastDROM() {
+        return this.segments
+            .filter(s => s.isDROM)
+            .sort((a, b) => b.addr - a.addr)[0]
     }
 
     async toBuffer(digest = true) {
@@ -215,6 +236,8 @@ export class EspImage {
                 })
         }
 
+        verboseLog(`loaded:\n${image.toString()}\n`)
+
         return image
 
         function isInSection(addr: number, sect: string) {
@@ -224,6 +247,10 @@ export class EspImage {
         }
     }
 
+    toString() {
+        return this.segments.map(segToString).join("\n")
+    }
+
     private padSegments() {
         const align = 0x10000
         const alignMask = align - 1
@@ -231,9 +258,7 @@ export class EspImage {
         const image = this.clone()
         image.segments.sort((a, b) => a.addr - b.addr)
 
-        console.debug(
-            "esp padding:\n" + image.segments.map(segToString).join("\n") + "\n"
-        )
+        verboseLog("esp padding:\n" + image.toString() + "\n")
 
         const mapped = image.segments.filter(s => s.isMapped)
         const nonMapped = image.segments.filter(s => !s.isMapped)
@@ -270,9 +295,7 @@ export class EspImage {
         // append any remaining non-mapped segments
         image.segments = image.segments.concat(nonMapped)
 
-        console.debug(
-            "esp padded:\n" + image.segments.map(segToString).join("\n") + "\n"
-        )
+        verboseLog("esp padded:\n" + image.toString() + "\n")
 
         return image
 

@@ -202,6 +202,10 @@ export async function mainCli() {
         .option("--uf2 <file.uf2>", "interpreter binary in UF2 format")
         .option("--bin <file.bin>", "interpreter binary in BIN format")
         .option(
+            "--esp <file.bin>",
+            "interpreter binary as a combined ESP32 image (with bootloader and partition table)"
+        )
+        .option(
             "-o, --outdir <folder>",
             "specify output directory, default to 'dist'"
         )

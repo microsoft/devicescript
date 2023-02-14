@@ -205,7 +205,7 @@ int devsmgr_deploy_start(uint32_t sz) {
     if (state->program_base == NULL)
         return -2;
 #else
-    flash_erase(state->program_base);
+    flash_erase((void *)state->program_base);
 #endif
     LOGV("flash erase done");
 
@@ -218,7 +218,7 @@ int devsmgr_deploy_start(uint32_t sz) {
     jd_settings_write_large((void *)state->program_base, &hd, 8);
     jd_settings_sync_large();
 #else
-    flash_program(state->program_base, &hd, 8);
+    flash_program((void *)state->program_base, &hd, 8);
 #endif
 
     // const devsmgr_program_header_t *hdf = state->program_base;
@@ -253,7 +253,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
             jd_settings_write_large((void *)&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             jd_settings_sync_large();
 #else
-            flash_program(&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
+            flash_program((void *)&hdf->magic1, &hd.magic1, sizeof(hd) - 8);
             flash_sync();
 #endif
             LOG("program written");
@@ -280,7 +280,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
         (state->write_offset + size) / JD_FLASH_PAGE_SIZE) {
         unsigned page_off = (state->write_offset + size) & ~(JD_FLASH_PAGE_SIZE - 1);
         LOGV("erase %p %u", dst + page_off, page_off);
-        flash_erase(dst + page_off);
+        flash_erase((void *)(dst + page_off));
     }
 #endif
 
@@ -290,7 +290,7 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
 #if JD_SETTINGS_LARGE
     jd_settings_write_large((void *)dst, buf, size);
 #else
-    flash_program(dst, buf, size);
+    flash_program((void *)dst, buf, size);
 #endif
     state->write_offset += size;
 

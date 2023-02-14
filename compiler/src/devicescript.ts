@@ -9,8 +9,15 @@ export * from "./info"
 export * from "./util"
 export * from "./debug"
 export * from "./dcfg"
-export * from "./srvcfg"
+export * from "./uf2"
 export { prettySize } from "./jdutil"
+
+export type {
+    ArchConfig,
+    DeviceConfig,
+    JsonComment,
+    ServiceConfig,
+} from "@devicescript/srvcfg"
 
 import { compile } from "./compiler"
 

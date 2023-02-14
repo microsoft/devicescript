@@ -436,6 +436,7 @@ export function jsonToDcfg(obj: any, interpretStrings = false) {
         } else if (typeof val == "object") {
             for (const subkey of Object.keys(val)) {
                 if (subkey.startsWith("$")) continue
+                if (subkey.startsWith("#")) continue
                 let suff = subkey == "_" ? "" : subkey
                 if (
                     suff.length &&
