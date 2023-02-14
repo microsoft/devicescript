@@ -2,7 +2,7 @@
 pagination_prev: null
 pagination_next: null
 description: Mounts a button server
-title: startButton
+title: Button
 ---
 # Button
 
