@@ -91,6 +91,7 @@ export interface Host {
     error?(err: DevsDiagnostic): void
     getSpecs(): jdspec.ServiceSpec[]
     verifyBytecode?(buf: Uint8Array, dbgInfo?: DebugInfo): void
+    isBasicOutput?(): boolean
 }
 
 export function parseImgVersion(v: number) {

@@ -12,10 +12,12 @@ import {
     CompileFlags,
     SrcMapResolver,
     preludeFiles,
+    Host,
 } from "@devicescript/compiler"
 import {
     BINDIR,
     CmdOptions,
+    consoleColors,
     debug,
     error,
     LIBDIR,
@@ -92,7 +94,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
 
-    const devsHost = {
+    const devsHost: Host = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
             verboseLog(`write ${p}`)
@@ -105,8 +107,9 @@ export async function getHost(options: BuildOptions & CmdOptions) {
                 throw new Error("bad disassembly")
         },
         log: verboseLog,
+        isBasicOutput: () => !consoleColors,
         error: (err: DevsDiagnostic) => {
-            if (!options.quiet) console.error(formatDiagnostics([err]))
+            if (!options.quiet) console.error(formatDiagnostics([err], !consoleColors))
         },
         mainFileName: () => options.mainFileName || "main.ts",
         getSpecs: () => jacdacDefaultSpecifications,
