@@ -81,7 +81,9 @@ async function patchBinFile(
     arch: ArchConfig,
     devcfg: DcfgSettings
 ) {
-    const off = parseAnyInt(arch.dcfgOffset)
+    const off0 = parseAnyInt(arch.dcfgOffset)
+    const shift = parseAnyInt(arch.binFlashOffset) ?? 0
+    const off = off0 - shift
     const buf = serializeDcfg(devcfg)
 
     if (UF2File.isUF2(binFile)) throw new Error("expecting BIN, not UF2 file")
