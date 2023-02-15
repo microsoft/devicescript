@@ -27,18 +27,17 @@ function Feature({ title, Svg, description }: FeatureItem) {
 export default function HomepageFeatures(): JSX.Element {
     const features: FeatureItem[] = [
         {
-            title: "TypeScript Syntax",
+            title: "TypeScript Goodness",
             description:
-                "The goodness of TypeScript with some Embedded extras.",
+                "The familiar syntax, the tooling, the language, all at your fingertips for your project.",
         },
         {
             title: "Portable",
-            description:
-                "Integrate the DeviceScript VM into your existing embedded projects.",
+            description: "Port the DeviceScript VM to your microcontroller.",
         },
         {
             title: "Hardware as Services",
-            description: "Write reusable firmware using Jacdac services.",
+            description: "Write reusable application/firmware on top abstrated hardware services.",
         },
         {
             title: "Small",
