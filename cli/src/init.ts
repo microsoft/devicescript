@@ -163,7 +163,7 @@ export async function init(options: InitOptions & CmdOptions) {
         debug(`write ${MAIN}`)
         writeFileSync(
             MAIN,
-            `${IMPORT_PREFIX}\n\nds.everyMs(1000,\n    console.log(":)")\n})\n`,
+            `${IMPORT_PREFIX}\n\nds.everyMs(1000, () => {\n    console.log(":)")\n})\n`,
             {
                 encoding: "utf8",
             }
