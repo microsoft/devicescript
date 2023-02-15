@@ -182,10 +182,10 @@
                     {
                         "id": "installnode.js",
                         "title": "Install Node.js",
-                        "description": "Node.js is an easy way to run JavaScript code. It comes with a package manager, yarn, that you will use to install the DeviceScript command line.\n[Install Node.js](https://nodejs.org/en/download/)",
+                        "description": "Node.js is an easy way to run JavaScript code. It comes with a package manager that you will use to install the DeviceScript command line.\n[Install Node.js](https://nodejs.org/en/download/)",
                         "media": {
-                            "image": "media/image.png",
-                            "altText": "Empty image"
+                            "image": "media/installnodejs.png",
+                            "altText": "Screenshot of the node.js download page"
                         },
                         "completionEvents": []
                     },
@@ -194,8 +194,8 @@
                         "title": "Create New DeviceScript Project",
                         "description": "Use the command line to create a new DeviceScript project in a new folder.\n    ``npx @devicescript/cli init``",
                         "media": {
-                            "image": "media/image.png",
-                            "altText": "Empty image"
+                            "image": "media/newproject.png",
+                            "altText": "Project structure after the init command."
                         },
                         "completionEvents": []
                     },
@@ -204,8 +204,8 @@
                         "title": "Deploy and Debug your DeviceScript",
                         "description": "Once you've installed the command line, you can build and deploy DeviceScript programs at a terminal by entering ``devicescript your-file-name.ts``.\nAnother easy way to run DeviceScript programs is by using VS Code's debugger which lets you run the code, pause at different points, and help you what's going on step-by-step.\n[Start Debugging](command:workbench.action.debug.start)",
                         "media": {
-                            "image": "media/image.png",
-                            "altText": "Empty image"
+                            "image": "media/debugger.png",
+                            "altText": "Program paused on the debugger with simulators"
                         },
                         "completionEvents": []
                     }
