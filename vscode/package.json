@@ -192,7 +192,7 @@
                     {
                         "id": "devicescript.initproject",
                         "title": "Create New DeviceScript Project",
-                        "description": "Use the command line to create a new DeviceScript project in a new folder.\n    ``npx @devicescript/cli init --install``",
+                        "description": "Use the command line to create a new DeviceScript project in a new folder.\n    ``npx --no @devicescript/cli init --install``",
                         "media": {
                             "image": "media/newproject.png",
                             "altText": "Project structure after the init command."
