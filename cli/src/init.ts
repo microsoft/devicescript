@@ -1,5 +1,5 @@
 import { CmdOptions, debug, GENDIR, LIBDIR, log } from "./command"
-import { dirname, join } from "node:path"
+import { dirname } from "node:path"
 import {
     pathExistsSync,
     writeFileSync,
@@ -9,6 +9,7 @@ import {
     ensureDirSync,
 } from "fs-extra"
 import { saveLibFiles } from "./build"
+import { spawnSync } from "node:child_process"
 
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"
@@ -87,7 +88,7 @@ yarn install
 code .
 \`\`\`
 
-- install the DeviceScript extension (it will be recommended by code)
+- install the [DeviceScript extension](https://microsoft.github.io/devicescript/getting-started/vscode)
 
 - start debugging!
 
@@ -109,10 +110,11 @@ to use the simulators or deploy to hardware.
 export interface InitOptions {
     force?: boolean
     spaces?: number
+    install?: boolean
 }
 
 export async function init(options: InitOptions & CmdOptions) {
-    const { force, spaces = 4 } = options
+    const { force, spaces = 4, install } = options
     log(`Initializing files for DeviceScript project`)
     Object.keys(optionalFiles).forEach(fn => {
         // tsconfig.json
@@ -168,16 +170,19 @@ export async function init(options: InitOptions & CmdOptions) {
         )
     }
 
+    if (install) {
+        const npm = pathExistsSync("package-lock.json")
+        const cmd = npm ? "npm" : "yarn"
+        log(`install dependencies...`)
+        spawnSync(cmd, ["install"], {
+            shell: true,
+            stdio: "inherit",
+        })
+    }
+
     // help message
-    log(`Your DeviceScript project is create.`)
-    log(`- install dependencies`)
     log(``)
-    log(`    yarn install`)
-    log(``)
-    log(`- to start a watch build and development server`)
-    log(``)
-    log(`    yarn start`)
-    log(``)
+    log(`Your DeviceScript project is initialized.`)
     log(
         `To get more help, https://microsoft.github.io/devicescript/getting-started/ .`
     )

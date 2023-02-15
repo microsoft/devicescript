@@ -31,7 +31,7 @@ export function wrapColor(n: number | string, message: string) {
         return message
 }
 
-function wrapArgs(color: number, ...args: any[]) {
+function wrapArgs(color: number, args: any[]) {
     if (consoleColors && args.every(e => typeof e == "string" || typeof e == "number")) {
         // if it's just strings & numbers use the coloring
         const msg = args.join(" ")

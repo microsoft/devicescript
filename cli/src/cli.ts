@@ -70,6 +70,7 @@ export async function mainCli() {
         .description("configures the current directory for devicescript")
         .option("-f, --force", "force overwrite existing files")
         .option("--spaces <number>", "number of spaces when generating JSON")
+        .option("--install", "Run npm install or yarn install after creating files")
         .action(init)
 
     program
