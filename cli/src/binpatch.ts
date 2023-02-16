@@ -164,6 +164,9 @@ export async function compileDcfgFile(fn: string) {
     if (arch?.dcfgOffset === undefined || arch?.id === undefined)
         throw new Error(`no dcfgOffset or id in arch.json`)
     const json: DeviceConfig = await expandDcfgJSON(basename(fn), readF)
+    for (const s of json._ || []) {
+        if (!s.name) s.name = s.service
+    }
     json.id = basename(fn, ".board.json")
     json.archId = arch.id
     try {
@@ -338,7 +341,7 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
     })
 
     const b: BoardInfo = {
-        name: cfg.devName.replace(/\s*DeviceScript\s*/i, " "),
+        name: cfg.devName.replace(/\s*DeviceScript\s*/i, " ").trim(),
         arch: arch?.name,
         description: cfg.$description,
         urls: {
