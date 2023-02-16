@@ -412,12 +412,8 @@ export function decompileDcfg(settings: DcfgSettings) {
     return res
 }
 
-export function jsonToDcfg(
-    obj: any,
-    interpretStrings = false,
-    initial: DcfgSettings = {}
-) {
-    const res = Object.assign({}, initial)
+export function jsonToDcfg(obj: any, interpretStrings = false) {
+    const res: DcfgSettings = {}
     const flattenObj = (val: any, key: string) => {
         if (typeof val == "string") {
             if (interpretStrings) {
@@ -458,22 +454,36 @@ export function jsonToDcfg(
     return res
 }
 
-export async function compileDcfg(
+export async function expandDcfgJSON(
     fn: string,
     readFile: (fn: string) => Promise<string>
 ) {
-    return await normalizeKeys(fn)
+    return await expand(fn)
 
-    async function normalizeKeys(fn: string) {
+    async function expand(fn: string): Promise<any> {
         const mainJson = await readJSON(fn)
-        let prev: DcfgSettings = {}
-        if (mainJson["$include"])
-            prev = await normalizeKeys(mainJson["$include"])
-        try {
-            return jsonToDcfg(mainJson, true, prev)
-        } catch (e) {
-            throw new Error(`${fn}: ${e.message}`)
+        if (mainJson["$include"]) {
+            const prev = await expand(mainJson["$include"])
+            delete mainJson["$include"]
+            if (Array.isArray(mainJson["_"]) && Array.isArray(prev["_"])) {
+                for (const p of prev["_"]) {
+                    const ex = mainJson["_"].findIndex(
+                        e => e.service == p.service
+                    )
+                    if (ex >= 0) {
+                        Object.assign(p, mainJson["_"][ex])
+                        mainJson["_"][ex] = p
+                    } else {
+                        mainJson["_"].push(p)
+                    }
+                }
+                delete prev["_"]
+            }
+            for (const k of Object.keys(prev)) {
+                if (mainJson[k] === undefined) mainJson[k] = prev[k]
+            }
         }
+        return mainJson
     }
 
     async function readJSON(fn: string) {

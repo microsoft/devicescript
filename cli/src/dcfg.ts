@@ -18,11 +18,11 @@ export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
     const buf = readFileSync(fn)
 
     if (fn.endsWith(".json")) {
-        const json = await compileDcfgFile(fn)
-        verboseLog(JSON.stringify(json, null, 4))
-        const bin = serializeDcfg(json)
+        const { dcfg } = await compileDcfgFile(fn)
+        verboseLog(JSON.stringify(dcfg, null, 4))
+        const bin = serializeDcfg(dcfg)
         try {
-            const decomp = decompileDcfg(json)
+            const decomp = decompileDcfg(dcfg)
             verboseLog(JSON.stringify(decomp, null, 4))
         } catch (e) {
             fatal(e.message)
