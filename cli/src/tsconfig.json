@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig-base.json",
   "compilerOptions": {
+    "module": "es2020",
     "declarationDir": "../built/types",
     "outDir": "../built",
     "types": [

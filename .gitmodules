@@ -10,3 +10,6 @@
 [submodule "jacdac-ts"]
 	path = jacdac-ts
 	url = https://github.com/microsoft/jacdac-ts
+[submodule "cli/esptool-js"]
+	path = cli/esptool-js
+	url = https://github.com/mmoskal/esptool-js
