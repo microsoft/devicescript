@@ -15,6 +15,7 @@ import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
 import { setConsoleColors, setVerbose } from "./command"
 import { binPatch } from "./binpatch"
+import { flash } from "./flash"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -70,7 +71,10 @@ export async function mainCli() {
         .description("configures the current directory for devicescript")
         .option("-f, --force", "force overwrite existing files")
         .option("--spaces <number>", "number of spaces when generating JSON")
-        .option("--install", "Run npm install or yarn install after creating files")
+        .option(
+            "--install",
+            "Run npm install or yarn install after creating files"
+        )
         .action(init)
 
     program
@@ -197,6 +201,17 @@ export async function mainCli() {
         .option("-o, --output <file.bin>", "specify output file name")
         .arguments("<file.json|file.bin>")
         .action(dcfg)
+
+    program
+        .command("flash", { hidden: true })
+        .description("flash DeviceScript runtime (interpreter/VM) to a board")
+        .option("--all-serial", "do not filter serial ports by vendor")
+        .option(
+            "--baud <rate>",
+            "specify speed of serial port (default: 1500000)"
+        )
+        .option("--port <path>", "specify port")
+        .action(flash)
 
     program
         .command("binpatch", { hidden: true })
