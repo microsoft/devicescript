@@ -170,13 +170,16 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
 }
 
 function boardFile(binfo: DeviceConfig) {
-    let r = `declare module "@devicescript/${binfo.id}" {\n`
+    let r = `declare module "@devicescript/board-${binfo.id}" {\n`
     r += `    import * as ds from "@devicescript/core"\n`
+    r += `    interface Board {\n`
     for (const service of binfo._ ?? []) {
         const n = service.service.replace(/.*:/, "")
         const nu = n[0].toUpperCase() + n.slice(1)
-        r += `    const ${service.name ?? n}: ds.${nu}\n`
+        r += `        ${service.name ?? n}: ds.${nu}\n`
     }
+    r += `    }\n`
+    r += `    const board: Board\n`
     r += `}\n`
     return r
 }
@@ -203,7 +206,7 @@ ${thespecs}
     r[pref + "devicescript-spec.d.ts"] = withmodule
 
     for (const board of Object.values(boardSpecifications.boards)) {
-        r[pref + `devicescript-${board.id}.d.ts`] = boardFile(board)
+        r[pref + `devicescript-board-${board.id}.d.ts`] = boardFile(board)
     }
 
     return r
