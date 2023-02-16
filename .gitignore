@@ -16,3 +16,4 @@ devs/lib/devicescript-servers.d.ts
 **/*.vsix
 .vscode/settings.json
 vscode/sampleprj/.vscode
+compiler/src/boards.json

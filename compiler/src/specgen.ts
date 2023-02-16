@@ -1,4 +1,4 @@
-import ts from "typescript"
+import { DeviceConfig } from "@devicescript/srvcfg"
 import {
     cStorage,
     addComment,
@@ -19,7 +19,7 @@ import {
     SRV_SETTINGS,
     SRV_UNIQUE_BRAIN,
 } from "../../runtime/jacdac-c/jacdac/dist/specconstants"
-import { jacdacDefaultSpecifications } from "./embedspecs"
+import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
@@ -169,6 +169,18 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     }
 }
 
+function boardFile(binfo: DeviceConfig) {
+    let r = `declare module "@devicescript/${binfo.id}" {\n`
+    r += `    import * as ds from "@devicescript/core"\n`
+    for (const service of binfo._ ?? []) {
+        const n = service.service.replace(/.*:/, "")
+        const nu = n[0].toUpperCase() + n.slice(1)
+        r += `    const ${service.name ?? n}: ds.${nu}\n`
+    }
+    r += `}\n`
+    return r
+}
+
 export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
     if (!specs) specs = jacdacDefaultSpecifications
     const pref = ".devicescript/lib/"
@@ -189,6 +201,11 @@ ${thespecs}
 }
 `
     r[pref + "devicescript-spec.d.ts"] = withmodule
+
+    for (const board of Object.values(boardSpecifications.boards)) {
+        r[pref + `devicescript-${board.id}.d.ts`] = boardFile(board)
+    }
+
     return r
 }
 

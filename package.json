@@ -10,7 +10,8 @@
         "dev": "yarn watch & yarn docs",
         "devtools": "yarn build && node ./cli/devicescript devtools",
         "test": "node ./cli/devicescript ctool --test",
-        "presemantic": "node ./scripts/presemantic.mjs"
+        "presemantic": "node ./scripts/presemantic.mjs",
+        "postinstall": "node ./scripts/fetch-boards.mjs"
     },
     "workspaces": [
         "compiler",
