@@ -94,7 +94,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
     const inst = options.noVerify ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
-
+    const specs = [...jacdacDefaultSpecifications, ...(options.services || [])]
     const devsHost: Host = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
@@ -114,7 +114,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
                 console.error(formatDiagnostics([err], !consoleColors))
         },
         mainFileName: () => options.mainFileName || "main.ts",
-        getSpecs: () => jacdacDefaultSpecifications,
+        getSpecs: () => specs,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
             const res = inst.devsVerify(buf)
@@ -202,7 +202,7 @@ export interface BuildOptions {
     // internal option
     mainFileName?: string
     // custom service specifications
-    services?: jdspec.ServiceSpec
+    services?: jdspec.ServiceSpec[]
 }
 
 export async function build(file: string, options: BuildOptions & CmdOptions) {
