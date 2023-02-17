@@ -80,8 +80,10 @@ export class DeveloperToolsManager extends JDEventSource {
             `devicescript devtools ${this.version}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
         )
 
-        if (JSON.stringify(oldSpecs) !== JSON.stringify(this._specs))
+        if (JSON.stringify(oldSpecs) !== JSON.stringify(this._specs)) {
             this.extensionState.bus.emit(CHANGE)
+            this.emit(CHANGE)
+        }
     }
 
     private async init() {
