@@ -1,10 +1,5 @@
 import { DeviceConfig } from "@devicescript/srvcfg"
 import {
-    cStorage,
-    addComment,
-    wrapComment,
-} from "../../jacdac-ts/jacdac-spec/spectool/jdspec"
-import {
     SRV_BOOTLOADER,
     SRV_BRIDGE,
     SRV_CONTROL,
@@ -18,9 +13,12 @@ import {
     SRV_ROLE_MANAGER,
     SRV_SETTINGS,
     SRV_UNIQUE_BRAIN,
-} from "../../jacdac-ts/src/jdom/constants"
-import { DeviceCatalog } from "../../jacdac-ts/src/jdom/catalog"
-import { deviceCatalogImage } from "../../jacdac-ts/src/jacdac"
+    deviceCatalogImage,
+    DeviceCatalog,
+    cStorage,
+    addComment,
+    wrapComment,
+} from "jacdac-ts"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
