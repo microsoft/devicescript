@@ -111,10 +111,11 @@ ${$description || spec?.description || ""}
         ...info.features.map(f => `- ${f}`),
         ...info.services.map(f => `- Service: ${f}`),
         url ? `- [Store](${url})` : undefined,
+        "\n\n",
         id
             ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
             : undefined,
-        `## Firmware update
+        `\n## Firmware update
 
 \`\`\`bash
 devicescript flash ${arches[archId] || archId} --board ${devId}
