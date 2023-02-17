@@ -64,22 +64,16 @@ export class DeveloperToolsManager extends JDEventSource {
 
     async refreshSpecs() {
         const oldSpecs = this._specs
-        try {
-            const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
-                req: "specs",
-                data: {},
-            })
-            this._specs = res.data
-        } catch (e) {
-            if (isCodeError(e, ERROR_TRANSPORT_CLOSED)) return false
-            else throw e
-        }
+        const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
+            req: "specs",
+            data: {},
+        })
+        this._specs = res.data
         const { specs } = this._specs
         loadServiceSpecifications(specs)
         console.log(
             `devicescript devtools ${this.version}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
         )
-
         if (JSON.stringify(oldSpecs) !== JSON.stringify(this._specs)) {
             this.extensionState.bus.emit(CHANGE)
             this.emit(CHANGE)
@@ -87,7 +81,12 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     private async init() {
-        await this.refreshSpecs()
+        try {
+            await this.refreshSpecs()
+        } catch (e) {
+            if (isCodeError(e, ERROR_TRANSPORT_CLOSED)) return false
+            else throw e
+        }
         return true
     }
 
