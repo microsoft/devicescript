@@ -15,13 +15,12 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import {
-    SideBoardsReq,
-    SideBoardsResp,
     SideStartVmReq,
     SideStopVmReq,
     SideTransportEvent,
     TransportStatus,
 } from "../../cli/src/sideprotocol"
+import { withProgress } from "./commands"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
 import { sideRequest, subSideEvent } from "./jacdac"
@@ -122,12 +121,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
     async flashFirmware() {
         await this.devtools.start()
         if (!this.devtools.connected) return
-        const resp = await sideRequest<SideBoardsReq, SideBoardsResp>({
-            req: "boards",
-            data: {},
-        })
-        const { data } = resp
-        const { boards } = data
+        await this.devtools.refreshSpecs()
+        const { boards } = this.devtools
         if (!boards?.length) return
 
         const res = await vscode.window.showQuickPick(
@@ -153,9 +148,20 @@ export class DeviceScriptExtensionState extends JDEventSource {
         if (confirm !== "yes") return
 
         const { data: board } = res
+        const arches: Record<string, string> = {
+            esp32s2: "esp32",
+            esp32c3: "esp32",
+            rp2040w: "rp2040",
+        }
         const { archId, id } = board
-        const t = vscode.window.createTerminal("DeviceScript Flash")
-        t.sendText(`devicescript flash ${archId} --board ${id}`)
+        const arch = arches[archId] || archId
+        const t = await this.devtools.createCliTerminal({
+            title: "DeviceScript Flasher",
+            progress: "Starting flashing tools...",
+            useShell: true,
+            args: ["flash", arch, "--board", id],
+            diagnostics: false,
+        })
         t.show()
     }
 

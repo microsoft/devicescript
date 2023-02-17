@@ -37,8 +37,7 @@ export interface SideBuildReq extends SideReq<"build"> {
 export interface SideBuildResp extends SideResp<"build"> {
     data: BuildStatus
 }
-export interface SideKillReq extends SideReq<"kill"> {
-}
+export interface SideKillReq extends SideReq<"kill"> {}
 export interface SideKillResp extends SideResp<"kill"> {
     data: void
 }
@@ -61,21 +60,15 @@ export interface SideConnectReq extends SideReq<"connect"> {
 export interface SideSpecsReq extends SideReq<"specs"> {
     data: {}
 }
+export interface SideSpecsData {
+    specs: jdspec.ServiceSpec[]
+    boards: DeviceConfig[]
+    version: string
+    runtimeVersion: string
+    nodeVersion: string
+}
 export interface SideSpecsResp extends SideResp<"specs"> {
-    data: {
-        specs: jdspec.ServiceSpec[]
-        version: string
-        runtimeVersion: string
-        nodeVersion: string
-    }
-}
-export interface SideBoardsReq extends SideReq<"boards"> {
-    data: {}
-}
-export interface SideBoardsResp extends SideResp<"boards"> {
-    data: {
-        boards: DeviceConfig[]
-    }
+    data: SideSpecsData
 }
 export interface SideStartVmReq extends SideReq<"startVM"> {
     data: VmReqArgs
