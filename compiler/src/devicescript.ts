@@ -10,6 +10,7 @@ export * from "./util"
 export * from "./debug"
 export * from "./dcfg"
 export * from "./uf2"
+export * from "./board"
 export { prettySize } from "./jdutil"
 
 export type {
