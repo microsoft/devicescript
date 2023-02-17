@@ -29,11 +29,11 @@ export default function HomepageFeatures(): JSX.Element {
         {
             title: "TypeScript",
             description:
-                "The familiar syntax, the tooling, the language, all at your fingertips for your project.",
+                "The familiar syntax and tooling, all at your fingertips.",
         },
         {
-            title: "Portable",
-            description: "Port the DeviceScript VM to your microcontroller.",
+            title: "Portable VM",
+            description: "Small footprint DeviceScript bytecode interpreter.",
         },
         {
             title: "Hardware as Services",
