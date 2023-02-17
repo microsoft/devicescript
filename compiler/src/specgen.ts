@@ -18,7 +18,8 @@ import {
     SRV_ROLE_MANAGER,
     SRV_SETTINGS,
     SRV_UNIQUE_BRAIN,
-} from "../../runtime/jacdac-c/jacdac/dist/specconstants"
+} from "../../jacdac-ts/src/jdom/constants"
+import { DeviceCatalog } from "../../jacdac-ts/src/jdom/catalog"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
@@ -492,16 +493,17 @@ const arches: Record<string, string> = {
 }
 export function boardMarkdownFiles() {
     const { boards } = boardSpecifications
+    const catalog = new DeviceCatalog()
     //const catalog = new DeviceCatalog()
     const r: Record<string, string> = {}
     Object.keys(boards).forEach(boardid => {
         const board = boards[boardid]
         const { archId, devClass } = board
         if (!archId || archId === "wasm") return
-        const spec: jdspec.DeviceSpec = undefined
-        //catalog.specificationFromProductIdentifier(
-        //    typeof devClass === "string" ? parseInt(devClass, 16) : devClass
-        //)
+        const spec: jdspec.DeviceSpec =
+            catalog.specificationFromProductIdentifier(
+                typeof devClass === "string" ? parseInt(devClass, 16) : devClass
+            )
         r[`${arches[archId] || archId}/${boardid.replace(/_/g, "-")}`] =
             deviceConfigToMarkdown(board, spec)
     })
