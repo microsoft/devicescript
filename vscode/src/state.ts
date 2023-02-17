@@ -131,7 +131,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                         data: board,
                         label: board.devName,
                         description: board.id,
-                        details: board.$description,
+                        detail: board.$description,
                     }
             ),
             {

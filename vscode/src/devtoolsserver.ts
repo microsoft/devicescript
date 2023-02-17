@@ -166,6 +166,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 title: "DeviceScript",
                 progress: "Starting Development Server...",
                 args: ["devtools", "--vscode"],
+                message: "DeviceScript Development Server\n",
             })
             if (!t) {
                 this.clear()
@@ -287,6 +288,7 @@ export class DeveloperToolsManager extends JDEventSource {
         progress: string
         useShell?: boolean
         diagnostics?: boolean
+        message?: string
         args: string[]
     }): Promise<vscode.Terminal> {
         if (!this._projectFolder) {
@@ -307,7 +309,7 @@ export class DeveloperToolsManager extends JDEventSource {
             return undefined
         }
 
-        const { title, progress, args } = options
+        const { title, progress, args, message } = options
         return vscode.window.withProgress<vscode.Terminal>(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -340,7 +342,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 const terminalOptions: vscode.TerminalOptions = {
                     name: "DeviceScript" || title,
                     hideFromUser: false,
-                    message: "DeviceScript Development Server\n",
+                    message,
                     isTransient: true,
                     shellPath: useShell ? undefined : cli,
                     shellArgs: useShell ? undefined : args,
