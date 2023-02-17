@@ -495,7 +495,7 @@ ${$description || spec?.description || ""}
         `## Firmware update
 
 \`\`\`bash
-devicescript ${arches[archId] || archId} --board ${devId}
+devicescript flash ${arches[archId] || archId} --board ${devId}
 \`\`\`
 
 `,

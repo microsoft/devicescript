@@ -202,7 +202,8 @@ export async function mainCli() {
         .arguments("<file.json|file.bin>")
         .action(dcfg)
 
-    program
+    const flash = program.command("flash")
+    flash
         .command("esp32")
         .description(
             "flash DeviceScript runtime (interpreter/VM) to an ESP32-based board"
@@ -217,7 +218,7 @@ export async function mainCli() {
         .option("-b, --board <board-id>", "specify board to flash")
         .action(flashESP32)
 
-    program
+    flash
         .command("rp2040")
         .description(
             "flash DeviceScript runtime (interpreter/VM) to a RP2040-based board"
