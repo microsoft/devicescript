@@ -468,11 +468,16 @@ export function clientsMarkdownFiles(specs?: jdspec.ServiceSpec[]) {
     return r
 }
 
+const arches: Record<string, string> = {
+    esp32s2: "esp32",
+    esp32c3: "esp32",
+    rp2040w: "rp2040",
+}
 function deviceConfigToMarkdown(
     board: DeviceConfig,
     spec: jdspec.DeviceSpec
 ): string {
-    const { devName, $description, url, $fwUrl } = board
+    const { devName, $description, url, $fwUrl, id: devId, archId } = board
     const { id } = spec || {}
     const r: string[] = [
         `---
@@ -483,20 +488,22 @@ description: ${devName}
 ${$description || spec?.description || ""}
 
 `,
-        id
-            ? `![${devName} picture](${deviceCatalogImage(spec, "full")})\n`
-            : undefined,
         url ? `- [Store](${url})` : undefined,
+        id
+            ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
+            : undefined,
+        `## Firmware update
+
+\`\`\`bash
+devicescript ${arches[archId] || archId} --board ${devId}
+\`\`\`
+
+`,
         $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
     ]
     return r.filter(s => s !== undefined).join("\n")
 }
 
-const arches: Record<string, string> = {
-    esp32s2: "esp32",
-    esp32c3: "esp32",
-    rp2040w: "rp2040",
-}
 export function boardMarkdownFiles() {
     const { boards } = boardSpecifications
     const catalog = new DeviceCatalog()
