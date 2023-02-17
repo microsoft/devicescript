@@ -19,6 +19,7 @@ import {
     addComment,
     wrapComment,
 } from "jacdac-ts"
+import { parseAnyInt } from "./dcfg"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
@@ -514,9 +515,7 @@ export function boardMarkdownFiles() {
         const { archId, devClass, devName } = board
         if (!archId || archId === "wasm") return
         const spec: jdspec.DeviceSpec =
-            catalog.specificationFromProductIdentifier(
-                typeof devClass === "string" ? parseInt(devClass, 16) : devClass
-            )
+            catalog.specificationFromProductIdentifier(parseAnyInt(devClass))
         const aid = arches[archId] || archId
         const pa = `${aid}/${boardid.replace(/_/g, "-")}`
         r[`${pa}.mdx`] = deviceConfigToMarkdown(board, spec)

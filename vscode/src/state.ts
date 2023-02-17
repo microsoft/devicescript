@@ -1,4 +1,4 @@
-import { DeviceConfig } from "@devicescript/compiler"
+import { DeviceConfig, parseAnyInt } from "@devicescript/compiler"
 import {
     CHANGE,
     ControlReg,
@@ -125,11 +125,12 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { boards } = this.devtools
         if (!boards?.length) return
 
-        await device?.resolveProductIdentifier()
+        const productIdentifier = await device?.resolveProductIdentifier()
         let board: DeviceConfig =
-            device?.productIdentifier &&
-            boards.find(board => board.devClass === device?.productIdentifier)
-
+            productIdentifier &&
+            boards.find(
+                board => parseAnyInt(board.devClass) === productIdentifier
+            )
         if (!board) {
             const res = await vscode.window.showQuickPick(
                 boards.map(

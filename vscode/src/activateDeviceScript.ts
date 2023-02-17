@@ -73,7 +73,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             }
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.flash",
+            "extension.devicescript.device.flash",
             async (device?: JDDevice) =>
                 await extensionState.flashFirmware(device)
         ),
