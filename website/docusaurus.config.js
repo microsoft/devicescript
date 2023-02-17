@@ -60,6 +60,12 @@ const config = configure(
                         },
                         {
                             type: "doc",
+                            docId: "devices/index",
+                            position: "left",
+                            label: "Devices",
+                        },
+                        {
+                            type: "doc",
                             docId: "api/cli",
                             position: "left",
                             label: "API",
