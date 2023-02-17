@@ -3,3 +3,31 @@
 The following devices use the firmware from https://github.com/microsoft/jacdac-pico.
 
 -   [Raspberry Pi Pico W](/devices/rp2040/raspberry-pi-pico-w/)
+
+You can use `devicescript rp2040` command to flash RP2040-based boards.
+First, plug in your RP2040 board while holding `BOOTSEL` button.
+Next, run `devicescript rp2040`, you should see something like the following:
+
+```console
+$ devicescript rp2040
+Please select board, available options:
+    --board msr124                     RP2040 124 v0.1
+    --board msr59                      RP2040 59 v0.1
+    --board pico_w                     Raspberry Pi Pico W
+fatal: missing --board
+$
+```
+
+Let's say your board is `pico_w`, you run `devicescript rp2040 --board pico_w`:
+
+```console
+$ ./cli/devicescript rp2040 --board pico_w
+using drive /Volumes/RPI-RP2/
+fetch https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2
+saved .devicescript/cache/devicescript-rp2040w-pico_w.uf2 336896 bytes
+cp .devicescript/cache/devicescript-rp2040w-pico_w.uf2 /Volumes/RPI-RP2/
+OK
+$
+```
+
+Done!
