@@ -27,7 +27,7 @@ function Feature({ title, Svg, description }: FeatureItem) {
 export default function HomepageFeatures(): JSX.Element {
     const features: FeatureItem[] = [
         {
-            title: "TypeScript Goodness",
+            title: "TypeScript",
             description:
                 "The familiar syntax, the tooling, the language, all at your fingertips for your project.",
         },
