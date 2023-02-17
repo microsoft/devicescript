@@ -1,5 +1,5 @@
-import { join, resolve } from "node:path"
-import { readFileSync, writeFileSync, existsSync } from "node:fs"
+import { basename, join, resolve } from "node:path"
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
 import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
 import {
     compile,
@@ -29,6 +29,7 @@ import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
+import { parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -109,7 +110,8 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         log: verboseLog,
         isBasicOutput: () => !consoleColors,
         error: (err: DevsDiagnostic) => {
-            if (!options.quiet) console.error(formatDiagnostics([err], !consoleColors))
+            if (!options.quiet)
+                console.error(formatDiagnostics([err], !consoleColors))
         },
         mainFileName: () => options.mainFileName || "main.ts",
         getSpecs: () => jacdacDefaultSpecifications,
@@ -120,6 +122,28 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         },
     }
     return devsHost
+}
+
+function compileServiceSpecs(dir: string) {
+    const includes: Record<string, jdspec.ServiceSpec> = {}
+    const services: jdspec.ServiceSpec[] = []
+    if (existsSync(dir)) {
+        const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
+            /\.md$/i.test(fn)
+        )
+        for (const mdf of markdowns) {
+            debug(`importing service ${mdf}`)
+            const fn = join(dir, mdf)
+            const content = readFileSync(fn, { encoding: "utf-8" })
+            const json = parseServiceSpecificationMarkdownToJSON(
+                content,
+                includes,
+                fn
+            )
+            services.push(json)
+        }
+    }
+    return services
 }
 
 export class CompilationError extends Error {
@@ -133,8 +157,12 @@ export class CompilationError extends Error {
 export async function compileFile(fn: string, options: BuildOptions = {}) {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
+
+    const services = compileServiceSpecs(
+        join(basename(resolve(fn)), "services")
+    )
     const source = readFileSync(fn)
-    return compileBuf(source, { ...options, mainFileName: fn })
+    return compileBuf(source, { ...options, mainFileName: fn, services })
 }
 
 export async function saveLibFiles(options: BuildOptions) {
@@ -173,6 +201,8 @@ export interface BuildOptions {
 
     // internal option
     mainFileName?: string
+    // custom service specifications
+    services?: jdspec.ServiceSpec
 }
 
 export async function build(file: string, options: BuildOptions & CmdOptions) {
