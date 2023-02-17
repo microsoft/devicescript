@@ -137,6 +137,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
             {
                 title: "What kind of device are you flashing?",
                 canPickMany: false,
+                matchOnDetail: true,
+                matchOnDescription: true
             }
         )
         if (!res) return
