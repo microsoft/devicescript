@@ -1,3 +1,4 @@
+import { DeviceConfig } from "@devicescript/compiler"
 import {
     CHANGE,
     ControlReg,
@@ -13,7 +14,9 @@ import {
     ConnectionState,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import type {
+import {
+    SideBoardsReq,
+    SideBoardsResp,
     SideStartVmReq,
     SideStopVmReq,
     SideTransportEvent,
@@ -114,6 +117,46 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
     async resolveDeviceScriptManager(): Promise<JDService> {
         return this.deviceScriptManager || this.pickDeviceScriptManager()
+    }
+
+    async flashFirmware() {
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+        const resp = await sideRequest<SideBoardsReq, SideBoardsResp>({
+            req: "boards",
+            data: {},
+        })
+        const { data } = resp
+        const { boards } = data
+        if (!boards?.length) return
+
+        const res = await vscode.window.showQuickPick(
+            boards.map(
+                board =>
+                    <TaggedQuickPickItem<DeviceConfig>>{
+                        data: board,
+                        label: board.devName,
+                        description: board.id,
+                        details: board.$description,
+                    }
+            ),
+            {
+                title: "What kind of device are you flashing?",
+                canPickMany: false,
+            }
+        )
+        if (!res) return
+
+        const confirm = await vscode.window.showQuickPick(["yes", "no"], {
+            title: "The DeviceScript runtime will be flashed on your device. There is no undo. Confirm?",
+        })
+        if (confirm !== "yes") return
+
+        const { data: board } = res
+        const { archId, id } = board
+        const t = vscode.window.createTerminal("DeviceScript Flash")
+        t.sendText(`devicescript flash ${archId} --board ${id}`)
+        t.show()
     }
 
     async startSimulator() {

@@ -1,4 +1,4 @@
-import type { CompilationResult } from "@devicescript/compiler"
+import type { CompilationResult, DeviceConfig } from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
 import type { BuildOptions } from "./build"
 
@@ -69,7 +69,14 @@ export interface SideSpecsResp extends SideResp<"specs"> {
         nodeVersion: string
     }
 }
-
+export interface SideBoardsReq extends SideReq<"boards"> {
+    data: {}
+}
+export interface SideBoardsResp extends SideResp<"boards"> {
+    data: {
+        boards: DeviceConfig[]
+    }
+}
 export interface SideStartVmReq extends SideReq<"startVM"> {
     data: VmReqArgs
 }

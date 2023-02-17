@@ -20,7 +20,7 @@ export class CloudExtensionState extends JDEventSource {
         super()
         this.handleChange = this.handleChange.bind(this)
         this.handleError = this.handleError.bind(this)
-        const { subscriptions } = this.context
+        const { subscriptions, secrets } = this.context
 
         // track config changes
         vscode.workspace.onDidChangeConfiguration(
@@ -33,7 +33,7 @@ export class CloudExtensionState extends JDEventSource {
         )
 
         // track secret changes
-        deviceScriptState.context.secrets.onDidChange(
+        secrets.onDidChange(
             async () => {
                 const token = await this.token
                 if (this._manager?.token !== token)
@@ -187,13 +187,13 @@ export class CloudExtensionState extends JDEventSource {
     }
 
     get token() {
-        return this.deviceScriptState.context.secrets.get(
+        return this.context.secrets.get(
             "devicescript.cloud.token"
         )
     }
 
     async setToken(token: string) {
-        await this.deviceScriptState.context.secrets.store(
+        await this.context.secrets.store(
             "devicescript.cloud.token",
             token
         )

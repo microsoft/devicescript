@@ -71,6 +71,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 await device.reset() // async
             }
         ),
+        vscode.commands.registerCommand("extension.devicescript.flash", async () => extensionState.flashFirmware()),
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
             async () => {

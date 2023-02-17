@@ -5,6 +5,8 @@ import {
     ConnectReqArgs,
     OutputFrom,
     SideBcastReq,
+    SideBoardsReq,
+    SideBoardsResp,
     SideBuildReq,
     SideBuildResp,
     SideConnectReq,
@@ -21,7 +23,7 @@ import {
     SideWatchReq,
     SideWatchResp,
 } from "./sideprotocol"
-import { runtimeVersion } from "@devicescript/compiler"
+import { runtimeVersion, boardSpecifications } from "@devicescript/compiler"
 import { packageVersion } from "./version"
 
 export interface DevToolsIface {
@@ -86,6 +88,11 @@ export function initSideProto(devtools_: DevToolsIface) {
             version: packageVersion(),
             runtimeVersion: runtimeVersion(),
             nodeVersion: process.version,
+        }
+    })
+    addReqHandler<SideBoardsReq, SideBoardsResp>("boards", async () => {
+        return {
+            boards: Object.values(boardSpecifications.boards),
         }
     })
     addReqHandler<SideKillReq, SideKillResp>("kill", async () => {
