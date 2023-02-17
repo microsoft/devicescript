@@ -124,9 +124,26 @@ export async function getHost(options: BuildOptions & CmdOptions) {
     }
     return devsHost
 }
+function toDevsDiag(d: jdspec.Diagnostic): DevsDiagnostic {
+    return {
+        category: 1,
+        code: 9998,
+        file: undefined,
+        filename: d.file,
+        start: 0,
+        length: 1,
+        messageText: d.message,
+        line: d.line,
+        column: 1,
+        endLine: d.line,
+        endColumn: 100,
+        formatted: "",
+    }
+}
 
 function compileServiceSpecs(dir: string) {
     const services: jdspec.ServiceSpec[] = jacdacDefaultSpecifications.slice(0)
+    const errors: DevsDiagnostic[] = []
     if (existsSync(dir)) {
         const includes: Record<string, jdspec.ServiceSpec> = {}
         jacdacDefaultSpecifications.forEach(
@@ -135,9 +152,6 @@ function compileServiceSpecs(dir: string) {
         const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
             /\.md$/i.test(fn)
         )
-        let ts = `// auto-generated! do not edit here
-declare module "@devicescript/core" {
-`
         for (const mdf of markdowns) {
             const fn = join(dir, mdf)
             const content = readFileSync(fn, { encoding: "utf-8" })
@@ -148,20 +162,14 @@ declare module "@devicescript/core" {
             )
             json.catalog = false
             if (json?.errors?.length)
-                json?.errors?.forEach(err => error(err.message))
+                errors.push(...json.errors.map(toDevsDiag))
             else {
                 includes[json.shortId] = json
-                const spects = specToDeviceScript(json)
-                ts += "\n" + spects
                 services.push(json)
             }
         }
-        ts += "\n}\n"
-        const ofn = join(".devicescript", "lib", "services.d.ts")
-        if (!existsSync(ofn) || readFileSync(ofn, { encoding: "utf-8" }) !== ts)
-            writeFileSync(join(".devicescript", "lib", "services.d.ts"), ts)
     }
-    return services
+    return { errors, services }
 }
 
 export class CompilationError extends Error {
@@ -175,14 +183,29 @@ export class CompilationError extends Error {
 export async function compileFile(fn: string, options: BuildOptions = {}) {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
-
-    const services = compileServiceSpecs(join(dirname(resolve(fn)), "services"))
+    const { errors, services } = compileServiceSpecs(
+        join(dirname(resolve(fn)), "services")
+    )
+    if (!options.quiet)
+        for (const e of errors)
+            console.error(`${e.filename}(${e.line}): ${e.messageText}`)
     const source = readFileSync(fn)
-    return compileBuf(source, { ...options, mainFileName: fn, services })
+    const res = await compileBuf(source, {
+        ...options,
+        mainFileName: fn,
+        services,
+    })
+    if (errors.length) {
+        res.diagnostics.unshift(...errors)
+        res.success = false
+    }
+    return res
 }
 
 export async function saveLibFiles(options: BuildOptions) {
-    const prelude = preludeFiles()
+    // pass the user-provided services so they are included in devicescript-specs.d.ts
+    const prelude = preludeFiles(options.services)
+
     const pref = resolve(options.cwd ?? ".")
     await mkdirp(join(pref, LIBDIR))
     for (const fn of Object.keys(prelude)) {
