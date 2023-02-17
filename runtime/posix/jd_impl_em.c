@@ -97,7 +97,6 @@ void jd_em_process(void) {
 
     jd_process_everything();
     tx_process();
-    jd_lstore_process();
 }
 
 EMSCRIPTEN_KEEPALIVE
