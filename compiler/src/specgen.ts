@@ -477,8 +477,11 @@ description: ${devName}
 # ${devName}
 
 ${$description || spec?.description || ""}
+
 `,
-        id ? `![Image](${deviceCatalogImage(spec, "catalog")})` : undefined,
+        id
+            ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
+            : undefined,
         url ? `- [Store](${url})` : undefined,
         $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
     ]
