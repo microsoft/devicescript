@@ -61,7 +61,7 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
     )
 }
 
-function specToDeviceScript(info: jdspec.ServiceSpec): string {
+export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     if (ignoreSpec(info)) return undefined
 
     let r = ""

@@ -13,6 +13,7 @@ import {
     SrcMapResolver,
     preludeFiles,
     Host,
+    specToDeviceScript,
 } from "@devicescript/compiler"
 import {
     BINDIR,
@@ -140,6 +141,9 @@ function compileServiceSpecs(dir: string) {
                 includes,
                 fn
             )
+            json?.errors?.forEach(err => error(err.message))
+            const ts = specToDeviceScript(json)
+            writeFileSync(fn.replace(/\.md$/, ".d.ts"), ts)
             services.push(json)
         }
     }
