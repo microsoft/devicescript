@@ -2,7 +2,7 @@
 
 The following devices use the firmware from https://github.com/microsoft/jacdac-esp32.
 
--   [Adafruit QTPY ESP32 C3 WiFi Dev Board](/devices/esp32/adafruit-qt-py-esp32-c3-wifi-dev-board/)
+{@import ./boards.mdp}
 
 ## Requirements
 
@@ -20,7 +20,7 @@ Connect your ESP32 board and run `devicescript esp32` to flash DeviceScript runt
 devicescript esp32
 ```
 
-```bash title="Output"
+```console title="Output"
 $ devicescript esp32
 using serial port /dev/cu.usbmodem01 at 1500000
 esptool: /usr/local/bin/esptool.py
@@ -65,7 +65,7 @@ Let's say your board is `adafruit_qt_py_c3`. To target this board, use the `--bo
 devicescript esp32 --board adafruit_qt_py_c3
 ```
 
-```bash title="Output"
+```console title="Output"
 $ devicescript esp32 --board adafruit_qt_py_c3
 using serial port /dev/cu.usbmodem14211401 at 1500000
 esptool: /usr/local/bin/esptool.py

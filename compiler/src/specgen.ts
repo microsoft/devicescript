@@ -463,7 +463,7 @@ export function clientsMarkdownFiles(specs?: jdspec.ServiceSpec[]) {
     const r: Record<string, string> = {}
     specs.forEach(spec => {
         const md = serviceSpecificationToMarkdown(spec)
-        if (md) r[spec.shortId] = md
+        if (md) r[`${spec.shortId}.md`] = md
     })
     return r
 }
@@ -484,7 +484,7 @@ ${$description || spec?.description || ""}
 
 `,
         id
-            ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
+            ? `![${devName} picture](${deviceCatalogImage(spec, "full")})\n`
             : undefined,
         url ? `- [Store](${url})` : undefined,
         $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
@@ -504,14 +504,23 @@ export function boardMarkdownFiles() {
     const r: Record<string, string> = {}
     Object.keys(boards).forEach(boardid => {
         const board = boards[boardid]
-        const { archId, devClass } = board
+        const { archId, devClass, devName } = board
         if (!archId || archId === "wasm") return
         const spec: jdspec.DeviceSpec =
             catalog.specificationFromProductIdentifier(
                 typeof devClass === "string" ? parseInt(devClass, 16) : devClass
             )
-        r[`${arches[archId] || archId}/${boardid.replace(/_/g, "-")}`] =
-            deviceConfigToMarkdown(board, spec)
+        const aid = arches[archId] || archId
+        const pa = `${aid}/${boardid.replace(/_/g, "-")}`
+        r[`${pa}.mdx`] = deviceConfigToMarkdown(board, spec)
+
+        const aidmd = `${aid}/boards.mdp`
+        const img = deviceCatalogImage(spec, "avatar")
+        if (img)
+            r[aidmd] =
+                (r[aidmd] || "") +
+                `
+- [![photograph of ${devName}](${img}) ${devName}](/devices/${pa})`
     })
     return r
 }

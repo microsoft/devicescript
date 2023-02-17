@@ -38,7 +38,7 @@ function distCopy(from, to) {
         console.debug(`cp ${from} ${to}`)
         try {
             fs.mkdirSync(path.dirname(to))
-        } catch {}
+        } catch { }
         fs.copyFileSync(from, to)
         fs.utimesSync(to, new Date(), new Date(fromT))
     }
@@ -153,7 +153,7 @@ function buildPrelude(folder, outp) {
     let curr = ""
     try {
         curr = fs.readFileSync(outp, "utf-8")
-    } catch {}
+    } catch { }
     if (curr != r) {
         console.log("updating " + outp)
         fs.writeFileSync(outp, r)
@@ -205,7 +205,7 @@ async function main() {
             try {
                 const st = fs.statSync(outfile)
                 size = st.size
-            } catch {}
+            } catch { }
             const sizeStr = (size / 1024).toFixed(1)
             console.log(`build ${outfile}: ${sizeStr}kB ${Date.now() - t0}ms`)
         }
@@ -239,7 +239,7 @@ async function main() {
                 collapsible: true,
             })
             Object.keys(mds).forEach(fn =>
-                fs.writeFileSync(path.join(mdo, `${fn}.md`), mds[fn])
+                fs.writeFileSync(path.join(mdo, fn), mds[fn])
             )
         }
         {
@@ -248,7 +248,7 @@ async function main() {
             const mdo = "website/docs/devices"
             Object.keys(mds).forEach(fn => {
                 fs.ensureDirSync(join(mdo, dirname(fn)))
-                fs.writeFileSync(path.join(mdo, `${fn}.mdx`), mds[fn])
+                fs.writeFileSync(path.join(mdo, fn), mds[fn])
             })
         }
     } catch (e) {
