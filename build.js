@@ -4,7 +4,6 @@ const esbuild = require("esbuild")
 const childProcess = require("child_process")
 const path = require("path")
 const fs = require("fs-extra")
-const { existsSync } = require("fs")
 const { dirname, join, resolve } = require("path")
 
 let watch = false
@@ -178,7 +177,7 @@ async function main() {
             if (outfile.endsWith("-web.js")) platform = "browser"
             const inj = join(folder, "inject.js")
             const inject = []
-            if (existsSync(inj)) inject.push(inj)
+            if (fs.existsSync(inj)) inject.push(inj)
             const ctx = await esbuild.context({
                 entryPoints: [rootdir + "/" + src],
                 bundle: true,
@@ -224,17 +223,27 @@ async function main() {
             "devs/lib/" + specname,
             ds.preludeFiles()[".devicescript/lib/" + specname]
         )
-        const mds = ds.markdownFiles()
-        const mdo = "website/docs/api/clients"
-        fs.emptyDirSync(mdo)
-        fs.writeJSONSync(path.join(mdo, "_category_.json"), {
-            label: "Clients",
-            position: 1,
-            collapsible: true,
-        })
-        Object.keys(mds).forEach(fn =>
-            fs.writeFileSync(path.join(mdo, `${fn}.md`), mds[fn])
-        )
+        { // clients
+            const mds = ds.clientsMarkdownFiles()
+            const mdo = "website/docs/api/clients"
+            fs.emptyDirSync(mdo)
+            fs.writeJSONSync(path.join(mdo, "_category_.json"), {
+                label: "Clients",
+                position: 1,
+                collapsible: true,
+            })
+            Object.keys(mds).forEach(fn =>
+                fs.writeFileSync(path.join(mdo, `${fn}.md`), mds[fn])
+            )
+        }
+        { // devices
+            const mds = ds.boardMarkdownFiles()
+            const mdo = "website/docs/devices"
+            Object.keys(mds).forEach(fn => {
+                fs.ensureDirSync(join(mdo, dirname(fn)))
+                fs.writeFileSync(path.join(mdo, `${fn}.mdx`), mds[fn])
+            })
+        }
     } catch (e) {
         console.error(e)
         process.exit(1)

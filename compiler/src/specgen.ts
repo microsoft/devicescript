@@ -212,7 +212,7 @@ ${thespecs}
     return r
 }
 
-function specToMarkdown(info: jdspec.ServiceSpec): string {
+function serviceSpecificationToMarkdown(info: jdspec.ServiceSpec): string {
     const { status, camelName } = info
 
     const reserved: Record<string, string> = { switch: "sw" }
@@ -454,12 +454,56 @@ ${varname}.${pname}.subscribe(() => {
     }
 }
 
-export function markdownFiles(specs?: jdspec.ServiceSpec[]) {
+export function clientsMarkdownFiles(specs?: jdspec.ServiceSpec[]) {
     if (!specs) specs = jacdacDefaultSpecifications
     const r: Record<string, string> = {}
     specs.forEach(spec => {
-        const md = specToMarkdown(spec)
+        const md = serviceSpecificationToMarkdown(spec)
         if (md) r[spec.shortId] = md
+    })
+    return r
+}
+
+function deviceConfigToMarkdown(
+    board: DeviceConfig,
+    spec: jdspec.DeviceSpec
+): string {
+    const { devName, $description, url, $fwUrl } = board
+    const { id } = spec || {}
+    const r: string[] = [
+        `---
+description: ${devName}
+---
+# ${devName}
+
+${$description || spec?.description || ""}
+`,
+        //   id ? `![Image](${deviceCatalogImage(spec, "catalog")})` : undefined,
+        url ? `- [Store](${url})` : undefined,
+        $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
+    ]
+    return r.filter(s => s !== undefined).join("\n")
+}
+
+const arches: Record<string, string> = {
+    esp32s2: "esp32",
+    esp32c3: "esp32",
+    rp2040w: "rp2040",
+}
+export function boardMarkdownFiles() {
+    const { boards } = boardSpecifications
+    //const catalog = new DeviceCatalog()
+    const r: Record<string, string> = {}
+    Object.keys(boards).forEach(boardid => {
+        const board = boards[boardid]
+        const { archId, devClass } = board
+        if (!archId || archId === "wasm") return
+        const spec: jdspec.DeviceSpec = undefined
+        //catalog.specificationFromProductIdentifier(
+        //    typeof devClass === "string" ? parseInt(devClass, 16) : devClass
+        //)
+        r[`${arches[archId] || archId}/${boardid.replace(/_/g, "-")}`] =
+            deviceConfigToMarkdown(board, spec)
     })
     return r
 }
