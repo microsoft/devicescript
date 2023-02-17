@@ -20,7 +20,6 @@ import {
     SideTransportEvent,
     TransportStatus,
 } from "../../cli/src/sideprotocol"
-import { withProgress } from "./commands"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
 import { sideRequest, subSideEvent } from "./jacdac"
