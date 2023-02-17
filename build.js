@@ -4,7 +4,6 @@ const esbuild = require("esbuild")
 const childProcess = require("child_process")
 const path = require("path")
 const fs = require("fs-extra")
-const { existsSync } = require("fs")
 const { dirname, join, resolve } = require("path")
 
 let watch = false
@@ -39,7 +38,7 @@ function distCopy(from, to) {
         console.debug(`cp ${from} ${to}`)
         try {
             fs.mkdirSync(path.dirname(to))
-        } catch { }
+        } catch {}
         fs.copyFileSync(from, to)
         fs.utimesSync(to, new Date(), new Date(fromT))
     }
@@ -154,7 +153,7 @@ function buildPrelude(folder, outp) {
     let curr = ""
     try {
         curr = fs.readFileSync(outp, "utf-8")
-    } catch { }
+    } catch {}
     if (curr != r) {
         console.log("updating " + outp)
         fs.writeFileSync(outp, r)
@@ -178,7 +177,7 @@ async function main() {
             if (outfile.endsWith("-web.js")) platform = "browser"
             const inj = join(folder, "inject.js")
             const inject = []
-            if (existsSync(inj)) inject.push(inj)
+            if (fs.existsSync(inj)) inject.push(inj)
             const ctx = await esbuild.context({
                 entryPoints: [rootdir + "/" + src],
                 bundle: true,
@@ -187,7 +186,12 @@ async function main() {
                 outfile: rootdir + "/" + outfile,
                 logLevel: "warning",
                 inject,
-                external: ["@devicescript/compiler", "serialport", "vscode"],
+                external: [
+                    "@devicescript/compiler",
+                    "serialport",
+                    "vscode",
+                    "crypto",
+                ],
                 platform,
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",
@@ -201,7 +205,7 @@ async function main() {
             try {
                 const st = fs.statSync(outfile)
                 size = st.size
-            } catch { }
+            } catch {}
             const sizeStr = (size / 1024).toFixed(1)
             console.log(`build ${outfile}: ${sizeStr}kB ${Date.now() - t0}ms`)
         }
@@ -224,17 +228,29 @@ async function main() {
             "devs/lib/" + specname,
             ds.preludeFiles()[".devicescript/lib/" + specname]
         )
-        const mds = ds.markdownFiles()
-        const mdo = "website/docs/api/clients"
-        fs.emptyDirSync(mdo)
-        fs.writeJSONSync(path.join(mdo, "_category_.json"), {
-            label: "Clients",
-            position: 1,
-            collapsible: true,
-        })
-        Object.keys(mds).forEach(fn =>
-            fs.writeFileSync(path.join(mdo, `${fn}.md`), mds[fn])
-        )
+        {
+            // clients
+            const mds = ds.clientsMarkdownFiles()
+            const mdo = "website/docs/api/clients"
+            fs.emptyDirSync(mdo)
+            fs.writeJSONSync(path.join(mdo, "_category_.json"), {
+                label: "Clients",
+                position: 1,
+                collapsible: true,
+            })
+            Object.keys(mds).forEach(fn =>
+                fs.writeFileSync(path.join(mdo, `${fn}.md`), mds[fn])
+            )
+        }
+        {
+            // devices
+            const mds = ds.boardMarkdownFiles()
+            const mdo = "website/docs/devices"
+            Object.keys(mds).forEach(fn => {
+                fs.ensureDirSync(join(mdo, dirname(fn)))
+                fs.writeFileSync(path.join(mdo, `${fn}.mdx`), mds[fn])
+            })
+        }
     } catch (e) {
         console.error(e)
         process.exit(1)

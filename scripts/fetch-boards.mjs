@@ -28,7 +28,7 @@ async function main() {
             ginfo.archs[arch.id] = arch
         }
     }
-    writeFileSync("compiler/src/boards.json", JSON.stringify(ginfo))
+    writeFileSync("compiler/src/boards.json", JSON.stringify(ginfo, null, 2))
     process.exit(0)
 }
 
