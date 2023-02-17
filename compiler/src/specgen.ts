@@ -1,10 +1,5 @@
 import { DeviceConfig } from "@devicescript/srvcfg"
 import {
-    cStorage,
-    addComment,
-    wrapComment,
-} from "../../jacdac-ts/jacdac-spec/spectool/jdspec"
-import {
     SRV_BOOTLOADER,
     SRV_BRIDGE,
     SRV_CONTROL,
@@ -18,7 +13,12 @@ import {
     SRV_ROLE_MANAGER,
     SRV_SETTINGS,
     SRV_UNIQUE_BRAIN,
-} from "../../runtime/jacdac-c/jacdac/dist/specconstants"
+    deviceCatalogImage,
+    DeviceCatalog,
+    cStorage,
+    addComment,
+    wrapComment,
+} from "jacdac-ts"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
@@ -477,8 +477,11 @@ description: ${devName}
 # ${devName}
 
 ${$description || spec?.description || ""}
+
 `,
-        //   id ? `![Image](${deviceCatalogImage(spec, "catalog")})` : undefined,
+        id
+            ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
+            : undefined,
         url ? `- [Store](${url})` : undefined,
         $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
     ]
@@ -492,16 +495,17 @@ const arches: Record<string, string> = {
 }
 export function boardMarkdownFiles() {
     const { boards } = boardSpecifications
+    const catalog = new DeviceCatalog()
     //const catalog = new DeviceCatalog()
     const r: Record<string, string> = {}
     Object.keys(boards).forEach(boardid => {
         const board = boards[boardid]
         const { archId, devClass } = board
         if (!archId || archId === "wasm") return
-        const spec: jdspec.DeviceSpec = undefined
-        //catalog.specificationFromProductIdentifier(
-        //    typeof devClass === "string" ? parseInt(devClass, 16) : devClass
-        //)
+        const spec: jdspec.DeviceSpec =
+            catalog.specificationFromProductIdentifier(
+                typeof devClass === "string" ? parseInt(devClass, 16) : devClass
+            )
         r[`${arches[archId] || archId}/${boardid.replace(/_/g, "-")}`] =
             deviceConfigToMarkdown(board, spec)
     })

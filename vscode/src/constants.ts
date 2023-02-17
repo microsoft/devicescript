@@ -7,3 +7,5 @@ export const ICON_LOADING = "loading~spin"
 
 export const WIFI_PIPE_TIMEOUT = 5000
 export const WIFI_RECONNECT_TIMEOUT = 60000
+
+export const DEVICESCRIPT_DOCS_ROOT = "https://microsoft.github.io/devicescript/"
