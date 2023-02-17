@@ -3,3 +3,80 @@
 The following devices use the firmware from https://github.com/microsoft/jacdac-esp32.
 
 -   [Adafruit QTPY ESP32 C3 WiFi Dev Board](/devices/esp32/adafruit-qt-py-esp32-c3-wifi-dev-board/)
+
+The ESP32 boards can be flashed using `devicescript esp32` command.
+You will need to install `esptool.py` first - you can do that using `pip install esptool`.
+Once installed, connect your ESP32 board and run `devicescript esp32`, you should see something
+like this:
+
+```console
+$ devicescript esp32
+using serial port /dev/cu.usbmodem01 at 1500000
+esptool: /usr/local/bin/esptool.py
+Identify arch
+esptool.py v4.5
+Serial port /dev/cu.usbmodem01
+Connecting...
+Detecting chip type... Unsupported detection protocol, switching and trying again...
+Detecting chip type... ESP32-S2
+Chip is ESP32-S2 (revision v0.0)
+Features: WiFi, No Embedded Flash, No Embedded PSRAM, ADC and temperature sensor calibration in BLK2 of efuse V1
+Crystal is 40MHz
+MAC: 7c:df:a1:03:99:f4
+Uploading stub...
+Running stub...
+Stub running...
+Changing baud rate to 1500000
+Changed.
+Warning: ESP32-S2 has no Chip ID. Reading MAC instead.
+MAC: 7c:df:a1:03:99:f4
+Staying in bootloader.
+Please select board, available options:
+    --board msr207_v42                 JM Brain S2-mini 207 v4.2
+    --board msr207_v43                 JM Brain S2-mini 207 v4.3
+    --board msr48                      JacdacIoT 48 v0.2
+$
+```
+
+You can also run `devicescript esp32 --board list` to get a full list of ESP32 boards
+without attempting any auto-detect.
+
+Let's say your board is `adafruit_qt_py_c3`. To flush run `devicescript esp32 --board adafruit_qt_py_c3`:
+
+```console
+$ devicescript esp32 --board adafruit_qt_py_c3
+using serial port /dev/cu.usbmodem14211401 at 1500000
+esptool: /usr/local/bin/esptool.py
+fetch https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin
+saved .devicescript/cache/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin 982208 bytes
+esptool.py v4.5
+Serial port /dev/cu.usbmodem14211401
+Connecting....
+Detecting chip type... ESP32-C3
+Chip is ESP32-C3 (revision v0.3)
+Features: WiFi, BLE
+Crystal is 40MHz
+MAC: 34:b4:72:ea:17:88
+Uploading stub...
+Running stub...
+Stub running...
+Changing baud rate to 1500000
+Changed.
+Configuring flash size...
+Flash will be erased from 0x00000000 to 0x000effff...
+Compressed 982208 bytes to 532293...
+Writing at 0x00000000... (3 %)
+Writing at 0x00011e9e... (6 %)
+[...snip...]
+Writing at 0x000e576f... (96 %)
+Writing at 0x000ec5d7... (100 %)
+Wrote 982208 bytes (532293 compressed) at 0x00000000 in 7.5 seconds (effective 1042.1 kbit/s)...
+Hash of data verified.
+
+Leaving...
+Hard resetting via RTS pin...
+$
+```
+
+If the esptool complains about not being able to connect, try plugging your board in
+while holding `IO0`/`BOOT` button.

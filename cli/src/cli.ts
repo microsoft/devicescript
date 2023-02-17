@@ -15,7 +15,7 @@ import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
 import { setConsoleColors, setVerbose } from "./command"
 import { binPatch } from "./binpatch"
-import { flash } from "./flash"
+import { flashESP32, flashRP2040 } from "./flash"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -203,15 +203,27 @@ export async function mainCli() {
         .action(dcfg)
 
     program
-        .command("flash", { hidden: true })
-        .description("flash DeviceScript runtime (interpreter/VM) to a board")
+        .command("esp32")
+        .description(
+            "flash DeviceScript runtime (interpreter/VM) to an ESP32-based board"
+        )
         .option("--all-serial", "do not filter serial ports by vendor")
         .option(
             "--baud <rate>",
             "specify speed of serial port (default: 1500000)"
         )
         .option("--port <path>", "specify port")
-        .action(flash)
+        .option("--esptool <path>", "explicitly specify path to esptool.py")
+        .option("-b, --board <board-id>", "specify board to flash")
+        .action(flashESP32)
+
+    program
+        .command("rp2040")
+        .description(
+            "flash DeviceScript runtime (interpreter/VM) to a RP2040-based board"
+        )
+        .option("-b, --board <board-id>", "specify board to flash")
+        .action(flashRP2040)
 
     program
         .command("binpatch", { hidden: true })
