@@ -20,6 +20,7 @@ import {
     SRV_UNIQUE_BRAIN,
 } from "../../jacdac-ts/src/jdom/constants"
 import { DeviceCatalog } from "../../jacdac-ts/src/jdom/catalog"
+import { deviceCatalogImage } from "../../jacdac-ts/src/jacdac"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
@@ -479,7 +480,7 @@ description: ${devName}
 
 ${$description || spec?.description || ""}
 `,
-        //   id ? `![Image](${deviceCatalogImage(spec, "catalog")})` : undefined,
+        id ? `![Image](${deviceCatalogImage(spec, "catalog")})` : undefined,
         url ? `- [Store](${url})` : undefined,
         $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
     ]
