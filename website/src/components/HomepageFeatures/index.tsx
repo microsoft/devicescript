@@ -37,7 +37,7 @@ export default function HomepageFeatures(): JSX.Element {
         },
         {
             title: "Hardware as Services",
-            description: "Write reusable application/firmware on top abstrated hardware services.",
+            description: "Write reusable application/firmware on top of abstract hardware services.",
         },
         {
             title: "Small",
