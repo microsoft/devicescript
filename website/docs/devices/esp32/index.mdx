@@ -4,12 +4,23 @@ The following devices use the firmware from https://github.com/microsoft/jacdac-
 
 -   [Adafruit QTPY ESP32 C3 WiFi Dev Board](/devices/esp32/adafruit-qt-py-esp32-c3-wifi-dev-board/)
 
-The ESP32 boards can be flashed using `devicescript esp32` command.
-You will need to install `esptool.py` first - you can do that using `pip install esptool`.
-Once installed, connect your ESP32 board and run `devicescript esp32`, you should see something
-like this:
+## Requirements
 
-```console
+You will need to install `esptool.py` first - you can do that using [pip](https://pip.pypa.io/en/stable/).
+
+```bash
+pip install esptool
+```
+
+## Usage
+
+Connect your ESP32 board and run `devicescript esp32` to flash DeviceScript runtime on it.
+
+```bash
+devicescript esp32
+```
+
+```bash title="Output"
 $ devicescript esp32
 using serial port /dev/cu.usbmodem01 at 1500000
 esptool: /usr/local/bin/esptool.py
@@ -38,12 +49,23 @@ Please select board, available options:
 $
 ```
 
-You can also run `devicescript esp32 --board list` to get a full list of ESP32 boards
-without attempting any auto-detect.
+### Listing boards
 
-Let's say your board is `adafruit_qt_py_c3`. To flush run `devicescript esp32 --board adafruit_qt_py_c3`:
+You can also get a full list of ESP32 boards without attempting any auto-detect.
 
-```console
+```bash
+devicescript esp32 --board list
+```
+
+### Targeting a specific board
+
+Let's say your board is `adafruit_qt_py_c3`. To target this board, use the `--board [boardid]` flag.
+
+```bash
+devicescript esp32 --board adafruit_qt_py_c3
+```
+
+```bash title="Output"
 $ devicescript esp32 --board adafruit_qt_py_c3
 using serial port /dev/cu.usbmodem14211401 at 1500000
 esptool: /usr/local/bin/esptool.py
@@ -78,5 +100,9 @@ Hard resetting via RTS pin...
 $
 ```
 
-If the esptool complains about not being able to connect, try plugging your board in
+## Troubleshooting
+
+### esptool cannot connect
+
+If the `esptool`` complains about not being able to connect, try plugging your board in
 while holding `IO0`/`BOOT` button.

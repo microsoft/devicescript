@@ -61,7 +61,7 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
     )
 }
 
-function specToDeviceScript(info: jdspec.ServiceSpec): string {
+export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     if (ignoreSpec(info)) return undefined
 
     let r = ""
@@ -78,7 +78,10 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     const clname = upperCamel(info.camelName)
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
 
-    const docUrl = `https://microsoft.github.io/devicescript/api/clients/${info.shortId}/`
+    const docUrl =
+        info.catalog !== false
+            ? `https://microsoft.github.io/devicescript/api/clients/${info.shortId}/`
+            : undefined
     // emit stats as attributes
     {
         let cmt = (info.notes["short"] || info.name) + "\n\n"
@@ -88,7 +91,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
         if (info.tags?.length) cmt += `@category ${info.tags.join(", ")}\n`
-        cmt += `@see {@link ${docUrl} Documentation}`
+        if (docUrl) cmt += `@see {@link ${docUrl} Documentation}`
         r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class
@@ -151,7 +154,8 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
         }
 
         if (tp) {
-            cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
+            if (docUrl)
+                cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
             r += wrapComment("devs", cmt.comment)
             r += `    ${kw}${camelize(pkt.name)}: ${tp}\n`
         }

@@ -1,5 +1,5 @@
-import { join, resolve } from "node:path"
-import { readFileSync, writeFileSync, existsSync } from "node:fs"
+import { dirname, join, resolve } from "node:path"
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
 import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
 import {
     compile,
@@ -13,6 +13,7 @@ import {
     SrcMapResolver,
     preludeFiles,
     Host,
+    specToDeviceScript,
 } from "@devicescript/compiler"
 import {
     BINDIR,
@@ -29,6 +30,7 @@ import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
+import { parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -93,7 +95,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
     const inst = options.noVerify ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
-
+    const specs = options.services || jacdacDefaultSpecifications
     const devsHost: Host = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
@@ -109,10 +111,11 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         log: verboseLog,
         isBasicOutput: () => !consoleColors,
         error: (err: DevsDiagnostic) => {
-            if (!options.quiet) console.error(formatDiagnostics([err], !consoleColors))
+            if (!options.quiet)
+                console.error(formatDiagnostics([err], !consoleColors))
         },
         mainFileName: () => options.mainFileName || "main.ts",
-        getSpecs: () => jacdacDefaultSpecifications,
+        getSpecs: () => specs,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
             const res = inst.devsVerify(buf)
@@ -120,6 +123,45 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         },
     }
     return devsHost
+}
+
+function compileServiceSpecs(dir: string) {
+    const services: jdspec.ServiceSpec[] = jacdacDefaultSpecifications.slice(0)
+    if (existsSync(dir)) {
+        const includes: Record<string, jdspec.ServiceSpec> = {}
+        jacdacDefaultSpecifications.forEach(
+            spec => (includes[spec.shortId] = spec)
+        )
+        const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
+            /\.md$/i.test(fn)
+        )
+        let ts = `// auto-generated! do not edit here
+declare module "@devicescript/core" {
+`
+        for (const mdf of markdowns) {
+            const fn = join(dir, mdf)
+            const content = readFileSync(fn, { encoding: "utf-8" })
+            const json = parseServiceSpecificationMarkdownToJSON(
+                content,
+                includes,
+                fn
+            )
+            json.catalog = false
+            if (json?.errors?.length)
+                json?.errors?.forEach(err => error(err.message))
+            else {
+                includes[json.shortId] = json
+                const spects = specToDeviceScript(json)
+                ts += "\n" + spects
+                services.push(json)
+            }
+        }
+        ts += "\n}\n"
+        const ofn = join(".devicescript", "lib", "services.d.ts")
+        if (!existsSync(ofn) || readFileSync(ofn, { encoding: "utf-8" }) !== ts)
+            writeFileSync(join(".devicescript", "lib", "services.d.ts"), ts)
+    }
+    return services
 }
 
 export class CompilationError extends Error {
@@ -133,8 +175,10 @@ export class CompilationError extends Error {
 export async function compileFile(fn: string, options: BuildOptions = {}) {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
+
+    const services = compileServiceSpecs(join(dirname(resolve(fn)), "services"))
     const source = readFileSync(fn)
-    return compileBuf(source, { ...options, mainFileName: fn })
+    return compileBuf(source, { ...options, mainFileName: fn, services })
 }
 
 export async function saveLibFiles(options: BuildOptions) {
@@ -173,6 +217,8 @@ export interface BuildOptions {
 
     // internal option
     mainFileName?: string
+    // custom service specifications
+    services?: jdspec.ServiceSpec[]
 }
 
 export async function build(file: string, options: BuildOptions & CmdOptions) {
