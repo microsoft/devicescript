@@ -1,3 +1,4 @@
+import { DeviceConfig } from "@devicescript/compiler"
 import {
     CHANGE,
     ControlReg,
@@ -13,7 +14,7 @@ import {
     ConnectionState,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import type {
+import {
     SideStartVmReq,
     SideStopVmReq,
     SideTransportEvent,
@@ -114,6 +115,55 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
     async resolveDeviceScriptManager(): Promise<JDService> {
         return this.deviceScriptManager || this.pickDeviceScriptManager()
+    }
+
+    async flashFirmware() {
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+        await this.devtools.refreshSpecs()
+        const { boards } = this.devtools
+        if (!boards?.length) return
+
+        const res = await vscode.window.showQuickPick(
+            boards.map(
+                board =>
+                    <TaggedQuickPickItem<DeviceConfig>>{
+                        data: board,
+                        label: board.devName,
+                        description: board.id,
+                        detail: board.$description,
+                    }
+            ),
+            {
+                title: "What kind of device are you flashing?",
+                canPickMany: false,
+                matchOnDetail: true,
+                matchOnDescription: true
+            }
+        )
+        if (!res) return
+
+        const confirm = await vscode.window.showQuickPick(["yes", "no"], {
+            title: "The DeviceScript runtime will be flashed on your device. There is no undo. Confirm?",
+        })
+        if (confirm !== "yes") return
+
+        const { data: board } = res
+        const arches: Record<string, string> = {
+            esp32s2: "esp32",
+            esp32c3: "esp32",
+            rp2040w: "rp2040",
+        }
+        const { archId, id } = board
+        const arch = arches[archId] || archId
+        const t = await this.devtools.createCliTerminal({
+            title: "DeviceScript Flasher",
+            progress: "Starting flashing tools...",
+            useShell: true,
+            args: ["flash", arch, "--board", id],
+            diagnostics: false,
+        })
+        t.show()
     }
 
     async startSimulator() {

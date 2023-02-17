@@ -361,6 +361,9 @@
                     "command": "extension.devicescript.connect"
                 },
                 {
+                    "command": "extension.devicescript.flash"
+                },
+                {
                     "command": "extension.devicescript.simulator.start"
                 },
                 {
@@ -407,6 +410,11 @@
                 "title": "Connect",
                 "category": "DeviceScript",
                 "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.flash",
+                "title": "Flash firmware...",
+                "category": "DeviceScript"
             },
             {
                 "command": "extension.devicescript.pickDeviceScriptManager",

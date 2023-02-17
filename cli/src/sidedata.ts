@@ -21,7 +21,7 @@ import {
     SideWatchReq,
     SideWatchResp,
 } from "./sideprotocol"
-import { runtimeVersion } from "@devicescript/compiler"
+import { runtimeVersion, boardSpecifications } from "@devicescript/compiler"
 import { packageVersion } from "./version"
 
 export interface DevToolsIface {
@@ -83,6 +83,7 @@ export function initSideProto(devtools_: DevToolsIface) {
     addReqHandler<SideSpecsReq, SideSpecsResp>("specs", async () => {
         return {
             specs: serviceSpecifications(),
+            boards: Object.values(boardSpecifications.boards),
             version: packageVersion(),
             runtimeVersion: runtimeVersion(),
             nodeVersion: process.version,

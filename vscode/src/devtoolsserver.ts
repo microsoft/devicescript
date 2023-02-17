@@ -11,6 +11,7 @@ import * as vscode from "vscode"
 import type {
     SideKillReq,
     SideKillResp,
+    SideSpecsData,
     SideSpecsReq,
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
@@ -39,10 +40,8 @@ function showTerminalError(message: string) {
 export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
-    version = ""
-    runtimeVersion: string
-    nodeVersion: string
 
+    private _specs: SideSpecsData
     private _terminalPromise: Promise<vscode.Terminal>
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
@@ -63,29 +62,49 @@ export class DeveloperToolsManager extends JDEventSource {
         subscriptions.push(this)
     }
 
-    private async init() {
-        let resp: SideSpecsResp
+    async refreshSpecs() {
+        const oldSpecs = this._specs
         try {
-            resp = await sideRequest<SideSpecsReq, SideSpecsResp>({
+            const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
                 req: "specs",
                 data: {},
             })
+            this._specs = res.data
         } catch (e) {
             if (isCodeError(e, ERROR_TRANSPORT_CLOSED)) return false
             else throw e
         }
-        const { specs, version, runtimeVersion, nodeVersion } = resp.data
+        const { specs } = this._specs
         loadServiceSpecifications(specs)
-        this.version = version
-        this.runtimeVersion = runtimeVersion
-        this.nodeVersion = nodeVersion
-
         console.log(
-            `devicescript devtools ${version}, runtime ${runtimeVersion}, node ${nodeVersion}`
+            `devicescript devtools ${this.version}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
         )
 
-        this.extensionState.bus.emit(CHANGE)
+        if (JSON.stringify(oldSpecs) !== JSON.stringify(this._specs)) {
+            this.extensionState.bus.emit(CHANGE)
+            this.emit(CHANGE)
+        }
+    }
+
+    private async init() {
+        await this.refreshSpecs()
         return true
+    }
+
+    get version() {
+        return this._specs?.version
+    }
+
+    get runtimeVersion() {
+        return this._specs?.runtimeVersion
+    }
+
+    get nodeVersion() {
+        return this._specs?.nodeVersion
+    }
+
+    get boards() {
+        return this._specs?.boards
     }
 
     get projectFolder() {
@@ -143,7 +162,12 @@ export class DeveloperToolsManager extends JDEventSource {
         }
         try {
             this.connectionState = ConnectionState.Connecting
-            const t = await this.uncachedSpawnDevTools()
+            const t = await this.createCliTerminal({
+                title: "DeviceScript",
+                progress: "Starting Development Server...",
+                args: ["devtools", "--vscode"],
+                message: "DeviceScript Development Server\n",
+            })
             if (!t) {
                 this.clear()
                 return undefined
@@ -238,9 +262,7 @@ export class DeveloperToolsManager extends JDEventSource {
     private clear() {
         this._terminalPromise = undefined
         this._projectFolder = undefined
-        this.version = undefined
-        this.runtimeVersion = undefined
-        this.nodeVersion = undefined
+        this._specs = undefined
         this.connectionState = ConnectionState.Disconnected
     }
 
@@ -261,7 +283,14 @@ export class DeveloperToolsManager extends JDEventSource {
         terminal?.show()
     }
 
-    private async uncachedSpawnDevTools(): Promise<vscode.Terminal> {
+    public async createCliTerminal(options: {
+        title?: string
+        progress: string
+        useShell?: boolean
+        diagnostics?: boolean
+        message?: string
+        args: string[]
+    }): Promise<vscode.Terminal> {
         if (!this._projectFolder) {
             return undefined
         }
@@ -280,10 +309,11 @@ export class DeveloperToolsManager extends JDEventSource {
             return undefined
         }
 
+        const { title, progress, args, message } = options
         return vscode.window.withProgress<vscode.Terminal>(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: MESSAGE_PREFIX + "Starting Development Server...",
+                title: MESSAGE_PREFIX + progress,
                 cancellable: false,
             },
             async () => {
@@ -294,30 +324,32 @@ export class DeveloperToolsManager extends JDEventSource {
                     "devicescript.jacdac"
                 )
                 const isWindows = globalThis.process?.platform === "win32"
-                const useShell = !!devToolsConfig.get("shell")
+                const useShell =
+                    options.useShell ?? !!devToolsConfig.get("shell")
                 const nodePath = devToolsConfig.get("node") as string
-                const args = ["devtools", "--vscode"]
+                const diagnostics =
+                    options.diagnostics ?? jacdacConfig.get("diagnostics")
                 let cli = nodePath || "node"
                 if (isWindows) {
                     cli = "node_modules\\.bin\\devicescript.cmd"
                 } else args.unshift("./node_modules/.bin/devicescript")
-                if (jacdacConfig.get("diagnostics")) args.push("--diagnostics")
+                if (diagnostics) args.push("--diagnostics")
                 console.debug(
                     `create terminal: ${useShell ? "shell:" : ""}${
                         cwd.fsPath
                     }> ${cli} ${args.join(" ")}`
                 )
-                const options: vscode.TerminalOptions = {
-                    name: "DeviceScript",
+                const terminalOptions: vscode.TerminalOptions = {
+                    name: "DeviceScript" || title,
                     hideFromUser: false,
-                    message: "DeviceScript Development Server\n",
+                    message,
                     isTransient: true,
                     shellPath: useShell ? undefined : cli,
                     shellArgs: useShell ? undefined : args,
                     iconPath: logo(this.extensionState.context),
                     cwd: cwd.fsPath,
                 }
-                const t = vscode.window.createTerminal(options)
+                const t = vscode.window.createTerminal(terminalOptions)
                 if (useShell) {
                     t.sendText("", true)
                     t.sendText(`${cli} ${args.join(" ")}`, true)
