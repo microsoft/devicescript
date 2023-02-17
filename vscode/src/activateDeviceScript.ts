@@ -5,6 +5,7 @@
 import {
     Flags,
     FRAME_PROCESS,
+    JDDevice,
     JDFrameBuffer,
     serializeToTrace,
 } from "jacdac-ts"
@@ -71,7 +72,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 await device.reset() // async
             }
         ),
-        vscode.commands.registerCommand("extension.devicescript.flash", async () => extensionState.flashFirmware()),
+        vscode.commands.registerCommand(
+            "extension.devicescript.flash",
+            async (device?: JDDevice) =>
+                await extensionState.flashFirmware(device)
+        ),
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
             async () => {

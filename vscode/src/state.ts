@@ -12,6 +12,7 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
     CONNECTION_STATE,
     ConnectionState,
+    JDDevice,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import {
@@ -117,38 +118,45 @@ export class DeviceScriptExtensionState extends JDEventSource {
         return this.deviceScriptManager || this.pickDeviceScriptManager()
     }
 
-    async flashFirmware() {
+    async flashFirmware(device?: JDDevice) {
         await this.devtools.start()
         if (!this.devtools.connected) return
         await this.devtools.refreshSpecs()
         const { boards } = this.devtools
         if (!boards?.length) return
 
-        const res = await vscode.window.showQuickPick(
-            boards.map(
-                board =>
-                    <TaggedQuickPickItem<DeviceConfig>>{
-                        data: board,
-                        label: board.devName,
-                        description: board.id,
-                        detail: board.$description,
-                    }
-            ),
-            {
-                title: "What kind of device are you flashing?",
-                canPickMany: false,
-                matchOnDetail: true,
-                matchOnDescription: true
-            }
-        )
-        if (!res) return
+        await device?.resolveProductIdentifier()
+        let board: DeviceConfig =
+            device?.productIdentifier &&
+            boards.find(board => board.devClass === device?.productIdentifier)
+
+        if (!board) {
+            const res = await vscode.window.showQuickPick(
+                boards.map(
+                    board =>
+                        <TaggedQuickPickItem<DeviceConfig>>{
+                            data: board,
+                            label: board.devName,
+                            description: board.id,
+                            detail: board.$description,
+                        }
+                ),
+                {
+                    title: "What kind of device are you flashing?",
+                    canPickMany: false,
+                    matchOnDetail: true,
+                    matchOnDescription: true,
+                }
+            )
+            if (!res) return
+            board = res.data
+        }
 
         const confirm = await vscode.window.showQuickPick(["yes", "no"], {
             title: "The DeviceScript runtime will be flashed on your device. There is no undo. Confirm?",
         })
         if (confirm !== "yes") return
 
-        const { data: board } = res
         const arches: Record<string, string> = {
             esp32s2: "esp32",
             esp32c3: "esp32",
