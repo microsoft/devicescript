@@ -266,7 +266,11 @@
                 },
                 {
                     "command": "extension.devicescript.device.identify",
-                    "when": "view == extension.devicescript.jdom && viewItem == device"
+                    "when": "view == extension.devicescript.jdom && viewItem == /device/"
+                },
+                {
+                    "command": "extension.devicescript.device.flash",
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /flash/"
                 },
                 {
                     "command": "extension.devicescript.register.edit",
