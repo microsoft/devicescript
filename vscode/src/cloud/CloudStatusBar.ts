@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import { CHANGE } from "jacdac-ts"
-import { toMarkdownString } from "./catalog"
+import { toMarkdownString } from "../catalog"
 import { CloudExtensionState } from "./CloudExtensionState"
 
 export async function registerCloudStatusBar(state: CloudExtensionState) {

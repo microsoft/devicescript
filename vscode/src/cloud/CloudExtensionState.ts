@@ -2,12 +2,12 @@ import {
     CHANGE,
     CloudManager,
     ERROR,
+    JDBus,
     JDDevice,
     JDEventSource,
     SRV_CLOUD_ADAPTER,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { DeviceScriptExtensionState } from "./state"
 import "isomorphic-fetch"
 
 export class CloudExtensionState extends JDEventSource {
@@ -15,7 +15,7 @@ export class CloudExtensionState extends JDEventSource {
 
     constructor(
         readonly context: vscode.ExtensionContext,
-        readonly deviceScriptState: DeviceScriptExtensionState
+        readonly bus: JDBus // remove this when factoring out
     ) {
         super()
         this.handleChange = this.handleChange.bind(this)
@@ -59,13 +59,9 @@ export class CloudExtensionState extends JDEventSource {
                     const manager = this.manager
                     if (!manager) return
 
-                    const simId =
-                        this.deviceScriptState.simulatorScriptManagerId
-                    const devices = this.bus
-                        .devices({
-                            serviceClass: SRV_CLOUD_ADAPTER,
-                        })
-                        .filter(d => d.deviceId !== simId)
+                    const devices = this.bus.devices({
+                        serviceClass: SRV_CLOUD_ADAPTER,
+                    })
                     const cloudDevices = manager.devices()
                     const unregisteredDevices = devices.filter(
                         dev => !cloudDevices.find(cd => cd.deviceId === dev.id)
@@ -148,10 +144,6 @@ export class CloudExtensionState extends JDEventSource {
         return this._manager
     }
 
-    get bus() {
-        return this.deviceScriptState.bus
-    }
-
     get apiRoot(): string {
         return vscode.workspace
             .getConfiguration("devicescript.cloud")
@@ -187,16 +179,11 @@ export class CloudExtensionState extends JDEventSource {
     }
 
     get token() {
-        return this.context.secrets.get(
-            "devicescript.cloud.token"
-        )
+        return this.context.secrets.get("devicescript.cloud.token")
     }
 
     async setToken(token: string) {
-        await this.context.secrets.store(
-            "devicescript.cloud.token",
-            token
-        )
+        await this.context.secrets.store("devicescript.cloud.token", token)
     }
 
     withProgress(title: string, transaction: () => Promise<void>) {

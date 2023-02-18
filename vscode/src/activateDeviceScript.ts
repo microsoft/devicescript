@@ -5,7 +5,7 @@
 import {
     Flags,
     FRAME_PROCESS,
-    JDDevice,
+    JDBus,
     JDFrameBuffer,
     serializeToTrace,
 } from "jacdac-ts"
@@ -15,9 +15,7 @@ import type {
     SideOutputEvent,
 } from "../../cli/src/sideprotocol"
 import { initBuild } from "./build"
-import { CloudExtensionState } from "./CloudExtensionState"
-import { registerCloudStatusBar } from "./CloudStatusBar"
-import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
+import { activateCloud } from "./cloud/extension"
 import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import { activateDebugger } from "./debugger"
 import {
@@ -29,6 +27,10 @@ import {
 import { JDomDeviceTreeItem, activateTreeViews } from "./JDomTreeDataProvider"
 import { activateMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState } from "./state"
+
+export interface DeviceScriptExtension {
+    bus: JDBus
+}
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, extensionMode, extension } = context
@@ -173,10 +175,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         console.info = console.log
     }
 
-    const cloudState = new CloudExtensionState(context, extensionState)
-    registerCloudTreeDataProvider(cloudState)
-    registerCloudStatusBar(cloudState)
-
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.simulator.stop",
@@ -228,16 +226,17 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         context.subscriptions
     )
 
-    //cloud
-    vscode.commands.registerCommand(
-        "extension.devicescript.cloud.configure",
-        async () => cloudState.configure()
-    )
-
     configure()
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) extensionState.devtools.start()
+
+    activateCloud(context, bus)
+
+    // support for vscode.extensions.getExtension(...)
+    return {
+        bus,
+    } as DeviceScriptExtension
 }
 
 /*

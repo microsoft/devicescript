@@ -13,21 +13,21 @@ import {
     toHex,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { toMarkdownString } from "./catalog"
-import { build } from "./build"
+import { toMarkdownString } from "../catalog"
+import { build } from "../build"
 import { Utils } from "vscode-uri"
 import { CloudExtensionState } from "./CloudExtensionState"
-import { sideRequest } from "./jacdac"
+import { sideRequest } from "../jacdac"
 import type {
     SideConnectReq,
     WebSocketConnectReqArgs,
-} from "../../cli/src/sideprotocol"
+} from "../../../cli/src/sideprotocol"
 import {
     CLOUD_DEVICES_NODE,
     CLOUD_SCRIPTS_NODE,
     CONNECTION_RESOURCE_GROUP,
-} from "./constants"
-import { TaggedQuickPickItem } from "./pickers"
+} from "../constants"
+import { TaggedQuickPickItem } from "../pickers"
 
 async function createFile(
     fileName: string,
