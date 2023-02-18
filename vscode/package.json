@@ -166,7 +166,7 @@
         "viewsWelcome": [
             {
                 "view": "extension.devicescript.jdom",
-                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
+                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://microsoft.github.io/devicescript/intro) or browse the list of [devices](https://microsoft.github.io/devicescript/devices/)."
             },
             {
                 "view": "extension.devicescript.watch",
