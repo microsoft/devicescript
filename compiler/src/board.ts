@@ -1,5 +1,6 @@
 import { DeviceConfig, ArchConfig, RepoInfo } from "@devicescript/srvcfg"
 import { DeviceCatalog, deviceCatalogImage } from "jacdac-ts"
+import { arch } from "os"
 import { parseAnyInt } from "./dcfg"
 import { boardSpecifications } from "./embedspecs"
 
@@ -86,11 +87,15 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
     return b
 }
 
-const arches: Record<string, string> = {
-    esp32s2: "esp32",
-    esp32c3: "esp32",
-    rp2040w: "rp2040",
+export function architectureFamily(id: string) {
+    const arches: Record<string, string> = {
+        esp32s2: "esp32",
+        esp32c3: "esp32",
+        rp2040w: "rp2040",
+    }
+    return arches[id] || id
 }
+
 function deviceConfigToMarkdown(
     board: DeviceConfig,
     spec: jdspec.DeviceSpec
@@ -117,9 +122,14 @@ ${$description || spec?.description || ""}
             : undefined,
         `\n## Firmware update
 
+Run this [command line](/api/cli) command and follow the instructions.
+
 \`\`\`bash
-devicescript flash ${arches[archId] || archId} --board ${devId}
+devicescript flash ${architectureFamily(archId)} --board ${devId}
 \`\`\`
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
 
 `,
         $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
@@ -138,7 +148,7 @@ export function boardMarkdownFiles() {
         if (!archId || archId === "wasm") return
         const spec: jdspec.DeviceSpec =
             catalog.specificationFromProductIdentifier(parseAnyInt(devClass))
-        const aid = arches[archId] || archId
+        const aid = architectureFamily(archId)
         const pa = `${aid}/${boardid.replace(/_/g, "-")}`
         r[`${pa}.mdx`] = deviceConfigToMarkdown(board, spec)
 

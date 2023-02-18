@@ -1,4 +1,8 @@
-import { DeviceConfig, parseAnyInt } from "@devicescript/compiler"
+import {
+    architectureFamily,
+    DeviceConfig,
+    parseAnyInt,
+} from "@devicescript/compiler"
 import {
     CHANGE,
     ControlReg,
@@ -158,13 +162,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
         })
         if (confirm !== "yes") return
 
-        const arches: Record<string, string> = {
-            esp32s2: "esp32",
-            esp32c3: "esp32",
-            rp2040w: "rp2040",
-        }
         const { archId, id } = board
-        const arch = arches[archId] || archId
+        const arch = architectureFamily(archId)
         const t = await this.devtools.createCliTerminal({
             title: "DeviceScript Flasher",
             progress: "Starting flashing tools...",
