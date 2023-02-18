@@ -68,13 +68,14 @@ export async function mainCli() {
 
     program
         .command("init")
-        .description("configures the current directory for devicescript")
+        .description("creates or configures a devicescript project")
         .option("-f, --force", "force overwrite existing files")
         .option("--spaces <number>", "number of spaces when generating JSON")
         .option(
             "--install",
             "Run npm install or yarn install after creating files"
         )
+        .argument("[dir]", "path to create the project", "./")
         .action(init)
 
     program

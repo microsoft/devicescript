@@ -13,22 +13,22 @@ The CLI also also usable within containers (Docker, GitHub Codespaces, CodeSandb
 -   install the CLI
 
 ```bash npm2yarn
-npm install @devicescript/cli --save-dev
+npm install @devicescript/cli@latest --save-dev
 ```
 
 The command tool is named `devicescript` or `devsc` for short.
 The full list of options for each command is available through the CLI by running `devsc help <command>`.
 
-## devsc init
+## devsc init \[dir\]
 
 The `init` commands creates or updates the necessary files to get syntax completion
-and checking in DeviceScript project (typically from Visual Studio Code). The command expects to be in the project folder.
+and checking in DeviceScript project (typically from Visual Studio Code).
 
 ```bash
-devsc init
+devsc init myproject
 ```
 
-A device script project will look as follows:
+The command will create the files under `myproject`. A device script project will look as follows:
 
 ```
 .devicescript     reserved folder for devicescript generated
