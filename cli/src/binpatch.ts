@@ -11,6 +11,7 @@ import {
     DCFG_MAGIC1,
     expandDcfgJSON,
     jsonToDcfg,
+    boardInfos,
 } from "@devicescript/compiler"
 import { HexInt, RepoInfo } from "@devicescript/srvcfg"
 import { readFile, writeFile } from "fs/promises"
@@ -283,85 +284,3 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
     )
 }
 
-export function boardInfos(info: RepoInfo) {
-    return Object.values(info.boards).map(b =>
-        boardInfo(b, info.archs[b.archId])
-    )
-}
-
-export interface BoardInfo {
-    name: string
-    arch: string
-    description: string
-    urls: { info: string; firmware: string } & Record<string, string>
-    features: string[]
-    services: string[]
-    markdown: string
-}
-
-export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
-    const features: string[] = []
-
-    const conn = (c: { $connector?: string }) =>
-        c?.$connector ? ` using ${c.$connector} connector` : ``
-
-    if (cfg.jacdac?.pin !== undefined)
-        features.push(`Jacdac on ${cfg.jacdac.pin}${conn(cfg.jacdac)}`)
-
-    if (cfg.i2c?.pinSDA !== undefined) {
-        features.push(
-            `I2C on SDA/SCL: ${cfg.i2c.pinSDA}/${cfg.i2c.pinSCL}${conn(
-                cfg.i2c
-            )}`
-        )
-    }
-
-    if (cfg.led) {
-        if (cfg.led.type === 1)
-            features.push(`WS2812B RGB LED on ${cfg.led.pin}`)
-        else if (cfg.led.rgb?.length == 3)
-            features.push(
-                `RGB LED on pins ${cfg.led.rgb.map(l => l.pin).join(", ")}`
-            )
-        else if (cfg.led.pin !== undefined)
-            features.push(`LED on pin ${cfg.led.pin}`)
-    }
-
-    if (cfg.log?.pinTX !== undefined)
-        features.push(
-            `serial logging on ${cfg.log.pinTX} at ${
-                cfg.log.baud || 115200
-            } 8N1`
-        )
-
-    const services = (cfg._ ?? []).map(s => {
-        let r = s.name
-        if (s.service != s.name) r += ` (${s.service})`
-        return r
-    })
-
-    const b: BoardInfo = {
-        name: cfg.devName.replace(/\s*DeviceScript\s*/i, " ").trim(),
-        arch: arch?.name,
-        description: cfg.$description,
-        urls: {
-            info: cfg.url,
-            firmware: cfg.$fwUrl,
-        },
-        features,
-        services,
-        markdown: "",
-    }
-
-    const lines = [`## ${b.name}`, b.description]
-    const urlkeys = Object.keys(b.urls || {}).filter(k => !!b.urls[k])
-    if (urlkeys.length)
-        lines.push(
-            "Links: " + urlkeys.map(k => `[${k}](${b.urls[k]})`).join(" ")
-        )
-    lines.push(...b.features.map(f => `* ${f}`))
-    lines.push(...b.services.map(f => `* Service: ${f}`))
-    b.markdown = lines.filter(l => !!l).join("\n")
-
-    return b
-}
