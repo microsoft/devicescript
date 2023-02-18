@@ -26,7 +26,7 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
         c?.$connector ? ` using ${c.$connector} connector` : ``
 
     if (cfg.jacdac?.pin !== undefined)
-        features.push(`Jacdac on ${cfg.jacdac.pin}${conn(cfg.jacdac)}`)
+        features.push(`Jacdac on pin ${cfg.jacdac.pin}${conn(cfg.jacdac)}`)
 
     if (cfg.i2c?.pinSDA !== undefined) {
         features.push(
