@@ -96,11 +96,12 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const { transports } = extensionState.transport
                 const serial = transports.find(t => t.type === "serial")
                 const usb = transports.find(t => t.type === "usb")
-                const items: (vscode.QuickPickItem & { transport: string })[] =
+                const items: (vscode.QuickPickItem & { transport?: string })[] =
                     [
                         {
                             transport: "serial",
                             label: "Serial",
+                            detail: "ESP32, RP2040, ...",
                             description: serial
                                 ? `${serial.description}(${serial.connectionState})`
                                 : "",
@@ -108,24 +109,37 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                         {
                             transport: "usb",
                             label: "USB",
+                            detail: "micro:bit",
                             description: usb
                                 ? `${usb.description}(${usb.connectionState})`
                                 : "",
+                        },
+                        {
+                            label: "",
+                            kind: vscode.QuickPickItemKind.Separator,
+                        },
+                        {
+                            label: "Flash Firmware...",
+                            transport: "flash",
+                            detail: "Flash the DeviceScript runtime on new devices.",
                         },
                     ]
                 const res = await vscode.window.showQuickPick(items, {
                     title: "Choose the communication channel",
                 })
-                if (res === undefined) return
+                if (res === undefined || !res.transport) return
 
-                await sideRequest<SideConnectReq>({
-                    req: "connect",
-                    data: {
-                        transport: res.transport,
-                        background: false,
-                        resourceGroupId: CONNECTION_RESOURCE_GROUP,
-                    },
-                })
+                if (res.transport === "flash")
+                    await extensionState.flashFirmware()
+                else
+                    await sideRequest<SideConnectReq>({
+                        req: "connect",
+                        data: {
+                            transport: res.transport,
+                            background: false,
+                            resourceGroupId: CONNECTION_RESOURCE_GROUP,
+                        },
+                    })
             }
         )
     )
