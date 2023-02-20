@@ -62,7 +62,7 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
     })
 
     const b: BoardInfo = {
-        name: cfg.devName.replace(/\s*DeviceScript\s*/i, " ").trim(),
+        name: cfg.devName,
         arch: arch?.name,
         description: cfg.$description,
         urls: {

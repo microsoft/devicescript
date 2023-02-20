@@ -11,7 +11,7 @@
         "devtools": "yarn build && node ./cli/devicescript devtools",
         "test": "node ./cli/devicescript ctool --test",
         "presemantic": "node ./scripts/presemantic.mjs",
-        "postinstall": "node ./scripts/fetch-boards.mjs"
+        "boards": "node ./cli/devicescript ctool --fetch-boards compiler/src/boards.json"
     },
     "workspaces": [
         "compiler",

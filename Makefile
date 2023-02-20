@@ -48,6 +48,7 @@ regen:
 	$(CLI) dcfg runtime/boards/wasm/wasm.board.json --update runtime/posix/wasm_cfg.c
 	clang-format -i runtime/posix/wasm_cfg.c
 	cd runtime/jacdac-c/dcfg && ./regen.sh
+	yarn boards
 
 specs spec:
 	$(MAKE) -C runtime/jacdac-c/jacdac
