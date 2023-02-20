@@ -1,0 +1,1396 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "AccelerometerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "service": {
+                    "enum": [
+                        "accelerometer"
+                    ],
+                    "type": "string"
+                },
+                "trX": {
+                    "default": 1,
+                    "description": "Transform for X axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).\nValues -1, -2, -3 will do likewise but will negate the axis.",
+                    "type": "integer"
+                },
+                "trY": {
+                    "default": 2,
+                    "description": "Transform for Y axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).\nValues -1, -2, -3 will do likewise but will negate the axis.",
+                    "type": "integer"
+                },
+                "trZ": {
+                    "default": 3,
+                    "description": "Transform for Z axis. Values of 1, 2, 3 will return the corresponding raw axis (indexed from 1).\nValues -1, -2, -3 will do likewise but will negate the axis.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
+        "ButtonConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeHigh": {
+                    "description": "Button is normally active-low and pulled high.\nThis makes it active-high and pulled low.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "pinBacklight": {
+                    "description": "This pin is set high when the button is pressed.",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "button"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "HexInt": {
+            "type": [
+                "string",
+                "integer"
+            ]
+        },
+        "I2CConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "$connector": {
+                    "description": "How I2C devices are attached.",
+                    "enum": [
+                        "Grove",
+                        "Header",
+                        "Qwiic"
+                    ],
+                    "type": "string"
+                },
+                "inst": {
+                    "description": "Hardware instance index.",
+                    "type": "integer"
+                },
+                "kHz": {
+                    "default": 100,
+                    "description": "How fast to run the I2C, typically either 100 or 400.",
+                    "type": "integer"
+                },
+                "pinSCL": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "pinSDA": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "pinSCL",
+                "pinSDA"
+            ],
+            "type": "object"
+        },
+        "JacdacConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "$connector": {
+                    "enum": [
+                        "Header",
+                        "Jacdac"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "pin"
+            ],
+            "type": "object"
+        },
+        "LedChannel": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "mult": {
+                    "description": "Multiplier to compensate for different LED strengths.",
+                    "maximum": 255,
+                    "minimum": 0,
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "pin"
+            ],
+            "type": "object"
+        },
+        "LedConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeHigh": {
+                    "description": "Applies to all LED channels/pins.",
+                    "type": "boolean"
+                },
+                "isMono": {
+                    "description": "Defaults to `true` if `pin` is set and `type` is 0.\nOtherwise `false`.",
+                    "type": "boolean"
+                },
+                "pin": {
+                    "description": "If a single mono LED.",
+                    "type": "integer"
+                },
+                "rgb": {
+                    "description": "RGB LED driven by PWM.",
+                    "items": {
+                        "$ref": "#/definitions/LedChannel"
+                    },
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "type": "array"
+                },
+                "type": {
+                    "default": 0,
+                    "description": "0 - use `pin` or `rgb` as regular pins\n1 - use `pin` as WS2812B (supported only on some boards)\nOther options (in range 100+) are also possible on some boards.",
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "LightLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:lightLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "LogConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "baud": {
+                    "default": 115200,
+                    "description": "Speed to use.",
+                    "type": "integer"
+                },
+                "pinTX": {
+                    "description": "Where to send logs.",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "pinTX"
+            ],
+            "type": "object"
+        },
+        "PinLabels": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "A0": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A1": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A10": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A11": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A12": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A13": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A14": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A15": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A2": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A3": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A4": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A5": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A6": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A7": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A8": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "A9": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "CS": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D0": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D1": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D10": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D11": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D12": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D13": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D14": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D15": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D2": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D3": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D4": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D5": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D6": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D7": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D8": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "D9": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "LED": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "MISO": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "MOSI": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P0": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P1": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P10": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P11": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P12": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P13": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P14": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P15": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P16": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P17": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P18": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P19": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P2": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P20": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P21": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P22": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P23": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P24": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P25": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P26": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P27": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P28": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P29": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P3": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P30": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P31": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P32": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P33": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P34": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P35": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P36": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P37": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P38": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P39": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P4": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P40": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P41": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P42": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P43": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P44": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P45": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P46": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P47": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P48": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P49": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P5": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P50": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P51": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P52": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P53": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P54": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P55": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P56": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P57": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P58": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P59": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P6": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P60": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P61": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P62": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P63": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P7": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P8": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "P9": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "RX": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "SCK": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "SCL": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "SDA": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "TX": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "PotentiometerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:potentiometer"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "PowerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "faultIgnoreMs": {
+                    "default": 16,
+                    "description": "How long (in milliseconds) to ignore the `pinFault` after enabling.",
+                    "type": "integer"
+                },
+                "mode": {
+                    "description": "Operation mode of pinEn\n0 - `pinEn` is active high\n1 - `pinEn` is active low\n2 - transistor-on-EN setup, where flt and en are connected at limiter\n3 - EN should be pulsed at 50Hz (10ms on, 10ms off) to enable the limiter",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pinEn": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "pinFault": {
+                    "description": "Always active low.",
+                    "type": "integer"
+                },
+                "pinLedPulse": {
+                    "description": "Additional power LED to pulse.",
+                    "type": "integer"
+                },
+                "pinPulse": {
+                    "description": "Active-low pin for pulsing battery banks.",
+                    "type": "integer"
+                },
+                "pinUsbDetect": {
+                    "description": "Pin that is high when we are connected to USB or similar power source.",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "power"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "faultIgnoreMs",
+                "mode",
+                "name",
+                "pinEn",
+                "pinFault",
+                "service"
+            ],
+            "type": "object"
+        },
+        "ReflectedLightConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:reflectedLight"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "RelayConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "initalActive": {
+                    "description": "Whether to activate the relay upon boot.",
+                    "type": "boolean"
+                },
+                "ledActiveLow": {
+                    "description": "Which way to drive the `pinLed`",
+                    "type": "boolean"
+                },
+                "maxCurrent": {
+                    "description": "Maximum switching current in mA.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "description": "The driving pin.",
+                    "type": "integer"
+                },
+                "pinActiveLow": {
+                    "description": "When set, the relay is considered 'active' when `pin` is low.",
+                    "type": "boolean"
+                },
+                "pinFeedback": {
+                    "description": "Active-high pin that indicates the actual state of the relay.",
+                    "type": "integer"
+                },
+                "pinLed": {
+                    "description": "This pin will be driven when relay is active.",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "relay"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "RotaryEncoderConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "clicksPerTurn": {
+                    "default": 12,
+                    "description": "How many clicks for full 360 turn.",
+                    "type": "integer"
+                },
+                "dense": {
+                    "description": "Encoder supports \"half-clicks\".",
+                    "type": "boolean"
+                },
+                "inverted": {
+                    "description": "Invert direction.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin0": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "pin1": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "rotaryEncoder"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin0",
+                "pin1",
+                "service"
+            ],
+            "type": "object"
+        },
+        "ServiceConfig": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/RotaryEncoderConfig"
+                },
+                {
+                    "$ref": "#/definitions/ButtonConfig"
+                },
+                {
+                    "$ref": "#/definitions/RelayConfig"
+                },
+                {
+                    "$ref": "#/definitions/PowerConfig"
+                },
+                {
+                    "$ref": "#/definitions/LightLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/ReflectedLightConfig"
+                },
+                {
+                    "$ref": "#/definitions/WaterLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/SoundLevelConfig"
+                },
+                {
+                    "$ref": "#/definitions/SoilMoistureConfig"
+                },
+                {
+                    "$ref": "#/definitions/PotentiometerConfig"
+                },
+                {
+                    "$ref": "#/definitions/AccelerometerConfig"
+                }
+            ]
+        },
+        "SoilMoistureConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:soilMoisture"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "SoundLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:soundLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
+        "WaterLevelConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "offset": {
+                    "default": 1024,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Pin to analog read.",
+                    "type": "integer"
+                },
+                "pinHigh": {
+                    "description": "Pin to pull high before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "pinLow": {
+                    "description": "Pin to pull low before analog read and release afterwards.",
+                    "type": "integer"
+                },
+                "samplingDelay": {
+                    "default": 0,
+                    "description": "How many milliseconds to wait after setting `pinLow`/`pinHigh` before sampling.",
+                    "type": "integer"
+                },
+                "samplingItv": {
+                    "default": 9,
+                    "description": "Interval in milliseconds between samplings of the sensor.",
+                    "type": "integer"
+                },
+                "scale": {
+                    "default": 0,
+                    "description": "Reading is `offset + (raw_reading * scale) / 1024`",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "analog:waterLevel"
+                    ],
+                    "type": "string"
+                },
+                "streamingItv": {
+                    "default": 100,
+                    "description": "Default interval in milliseconds between streaming samples.",
+                    "type": "integer"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "#": {
+            "description": "All fields starting with '#' arg ignored",
+            "type": "string"
+        },
+        "$description": {
+            "description": "Short description of the board.",
+            "type": "string"
+        },
+        "$fwUrl": {
+            "description": "Where to download BIN/UF2 file.\nAuto-populated.",
+            "type": "string"
+        },
+        "$schema": {
+            "type": "string"
+        },
+        "_": {
+            "description": "Services to mount.",
+            "items": {
+                "$ref": "#/definitions/ServiceConfig"
+            },
+            "type": "array"
+        },
+        "archId": {
+            "description": "Architecture for the board.\nThis is auto-populated from arch.json file.",
+            "examples": [
+                "esp32c3",
+                "rp2040w"
+            ],
+            "type": "string"
+        },
+        "devName": {
+            "description": "Name of the device.",
+            "examples": [
+                "Acme Corp. SuperIoT v1.3"
+            ],
+            "type": "string"
+        },
+        "i2c": {
+            "$ref": "#/definitions/I2CConfig"
+        },
+        "id": {
+            "description": "A short ID of the board.\nThis is auto-populated from file name.",
+            "examples": [
+                "adafruit_qt_py_c3",
+                "esp32_devkit_c"
+            ],
+            "type": "string"
+        },
+        "jacdac": {
+            "$ref": "#/definitions/JacdacConfig"
+        },
+        "led": {
+            "$ref": "#/definitions/LedConfig"
+        },
+        "log": {
+            "$ref": "#/definitions/LogConfig"
+        },
+        "pins": {
+            "$ref": "#/definitions/PinLabels"
+        },
+        "productId": {
+            "$ref": "#/definitions/HexInt",
+            "description": "Identifier for a particular firmware running on a particular device, typically given as a hex number starting with 0x3.",
+            "examples": [
+                "0x379ea214"
+            ]
+        },
+        "url": {
+            "description": "Where to buy/read more.",
+            "type": "string"
+        }
+    },
+    "required": [
+        "devName",
+        "productId"
+    ],
+    "type": "object"
+}
+

@@ -174,7 +174,7 @@ export async function compileDcfgFile(fn: string) {
     try {
         const dcfg = jsonToDcfg(json, true)
         if (!dcfg["devName"]) throw new Error(`no devName`)
-        if (!dcfg["devClass"]) throw new Error(`no devClass`)
+        if (!dcfg["productId"]) throw new Error(`no productId`)
         if (isVerbose) {
             verboseLog(JSON.stringify(dcfg, null, 4))
             const ser = serializeDcfg(dcfg)

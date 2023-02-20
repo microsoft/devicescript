@@ -1,3 +1,5 @@
+/// <reference path="../../runtime/jacdac-c/dcfg/srvcfg.d.ts" />
+
 import {
     DeviceHardwareInfo,
     HexInt,

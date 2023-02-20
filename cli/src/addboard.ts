@@ -51,7 +51,7 @@ export async function addBoard(options: AddBoardOptions) {
 
     const board = clone(baseBoard)
     board.devName = options.name
-    board.devClass = "0x" + (randomUInt(0xfff_ffff) | 0x3000_0000).toString(16)
+    board.productId = "0x" + (randomUInt(0xfff_ffff) | 0x3000_0000).toString(16)
     delete board.id
     delete board.archId
     delete board.$fwUrl

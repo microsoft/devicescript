@@ -144,10 +144,10 @@ export function boardMarkdownFiles() {
     const r: Record<string, string> = {}
     Object.keys(boards).forEach(boardid => {
         const board = boards[boardid]
-        const { archId, devClass, devName } = board
+        const { archId, productId, devName } = board
         if (!archId || archId === "wasm") return
         const spec: jdspec.DeviceSpec =
-            catalog.specificationFromProductIdentifier(parseAnyInt(devClass))
+            catalog.specificationFromProductIdentifier(parseAnyInt(productId))
         const aid = architectureFamily(archId)
         const pa = `${aid}/${boardid.replace(/_/g, "-")}`
         r[`${pa}.mdx`] = deviceConfigToMarkdown(board, spec)

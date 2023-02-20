@@ -133,7 +133,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         let board: DeviceConfig =
             productIdentifier &&
             boards.find(
-                board => parseAnyInt(board.devClass) === productIdentifier
+                board => parseAnyInt(board.productId) === productIdentifier
             )
         if (!board) {
             const res = await vscode.window.showQuickPick(
