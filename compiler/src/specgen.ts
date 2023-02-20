@@ -1,4 +1,4 @@
-import { DeviceConfig } from "@devicescript/srvcfg"
+import { DeviceConfig } from "./archconfig"
 import {
     SRV_BOOTLOADER,
     SRV_BRIDGE,
@@ -13,13 +13,10 @@ import {
     SRV_ROLE_MANAGER,
     SRV_SETTINGS,
     SRV_UNIQUE_BRAIN,
-    deviceCatalogImage,
-    DeviceCatalog,
     cStorage,
     addComment,
     wrapComment,
 } from "jacdac-ts"
-import { parseAnyInt } from "./dcfg"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"

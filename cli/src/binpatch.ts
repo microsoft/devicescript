@@ -12,8 +12,9 @@ import {
     expandDcfgJSON,
     jsonToDcfg,
     boardInfos,
+    RepoInfo,
 } from "@devicescript/compiler"
-import { HexInt, RepoInfo } from "@devicescript/srvcfg"
+import { HexInt } from "@devicescript/srvcfg"
 import { readFile, writeFile } from "fs/promises"
 import { JSONTryParse, read32, toHex } from "jacdac-ts"
 import { basename, dirname, join, resolve } from "path"
@@ -283,4 +284,3 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
             .join("\n\n")
     )
 }
-

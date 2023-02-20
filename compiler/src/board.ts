@@ -1,4 +1,4 @@
-import { DeviceConfig, ArchConfig, RepoInfo } from "@devicescript/srvcfg"
+import { DeviceConfig, ArchConfig, RepoInfo } from "./archconfig"
 import { DeviceCatalog, deviceCatalogImage } from "jacdac-ts"
 import { arch } from "os"
 import { parseAnyInt } from "./dcfg"

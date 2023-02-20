@@ -3,8 +3,11 @@ import { delimiter, join, resolve } from "path"
 import { existsSync, readFileSync, Stats, writeFileSync } from "fs"
 import { spawn } from "child_process"
 import { log, verboseLog, error, fatal } from "./command"
-import { boardSpecifications, boardInfo } from "@devicescript/compiler"
-import { DeviceConfig } from "@devicescript/srvcfg"
+import {
+    DeviceConfig,
+    boardSpecifications,
+    boardInfo,
+} from "@devicescript/compiler"
 import { readdir, stat, writeFile } from "fs/promises"
 import { mkdirp } from "fs-extra"
 import { delay } from "jacdac-ts"
