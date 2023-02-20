@@ -10,6 +10,7 @@ import {
 } from "fs-extra"
 import { saveLibFiles } from "./build"
 import { spawnSync } from "node:child_process"
+import { resolveBuildConfig } from "@devicescript/compiler"
 
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"
@@ -143,7 +144,7 @@ export async function init(
     const libdirn = join(cwd, LIBDIR)
     emptyDirSync(libdirn)
     debug(`write ${libdirn}/*`)
-    await saveLibFiles({
+    await saveLibFiles(resolveBuildConfig(), {
         cwd,
     })
 

@@ -1,4 +1,4 @@
-import { dirname, join, resolve } from "node:path"
+import { basename, dirname, join, resolve } from "node:path"
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
 import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
 import {
@@ -13,7 +13,10 @@ import {
     SrcMapResolver,
     preludeFiles,
     Host,
-    specToDeviceScript,
+    LocalBuildConfig,
+    ResolvedBuildConfig,
+    resolveBuildConfig,
+    DeviceConfig,
 } from "@devicescript/compiler"
 import {
     BINDIR,
@@ -91,11 +94,13 @@ export async function devsStartWithNetwork(options: {
     return inst
 }
 
-export async function getHost(options: BuildOptions & CmdOptions) {
+export async function getHost(
+    buildConfig: ResolvedBuildConfig,
+    options: BuildOptions & CmdOptions
+) {
     const inst = options.noVerify ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
-    const specs = options.services || jacdacDefaultSpecifications
     const devsHost: Host = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
@@ -115,7 +120,7 @@ export async function getHost(options: BuildOptions & CmdOptions) {
                 console.error(formatDiagnostics([err], !consoleColors))
         },
         mainFileName: () => options.mainFileName || "main.ts",
-        getSpecs: () => specs,
+        getConfig: () => buildConfig,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
             const res = inst.devsVerify(buf)
@@ -141,9 +146,14 @@ function toDevsDiag(d: jdspec.Diagnostic): DevsDiagnostic {
     }
 }
 
-function compileServiceSpecs(dir: string) {
-    const services: jdspec.ServiceSpec[] = jacdacDefaultSpecifications.slice(0)
-    const errors: DevsDiagnostic[] = []
+function compileServiceSpecs(
+    tsdir: string,
+    lcfg: LocalBuildConfig,
+    errors: DevsDiagnostic[]
+) {
+    const dir = join(tsdir, "services")
+    lcfg.addServices = []
+
     if (existsSync(dir)) {
         const includes: Record<string, jdspec.ServiceSpec> = {}
         jacdacDefaultSpecifications.forEach(
@@ -165,11 +175,54 @@ function compileServiceSpecs(dir: string) {
                 errors.push(...json.errors.map(toDevsDiag))
             else {
                 includes[json.shortId] = json
-                services.push(json)
+                verboseLog(`custom service: ${json.shortName}`)
+                lcfg.addServices.push(json)
             }
         }
     }
-    return { errors, services }
+}
+
+async function compileBoards(
+    tsdir: string,
+    lcfg: LocalBuildConfig,
+    errors: DevsDiagnostic[]
+) {
+    const dir = join(tsdir, "boards")
+    lcfg.addBoards = []
+    const baseCfg = resolveBuildConfig()
+
+    if (existsSync(dir)) {
+        const boards = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
+            fn.endsWith(".board.json")
+        )
+        for (const boardFn of boards) {
+            const fullName = join(dir, boardFn)
+            try {
+                const board: DeviceConfig = JSON.parse(
+                    await readFile(fullName, "utf-8")
+                )
+                const bid = basename(boardFn, ".board.json")
+                board.id = bid
+                const arch = baseCfg.archs[board.archId]
+                if (!arch)
+                    throw new Error(`board.archId ${board.archId} is invalid`)
+                if (baseCfg.boards[bid])
+                    throw new Error(`board ${bid} already defined`)
+                if ((+board.productId & 0xf000_0000) != 0x3000_0000)
+                    throw new Error(`invalid productId ${board.productId}`)
+                verboseLog(`custom board: ${board.id}`)
+                lcfg.addBoards.push(board)
+            } catch (e) {
+                errors.push(
+                    toDevsDiag({
+                        file: fullName,
+                        line: 1,
+                        message: e.message,
+                    })
+                )
+            }
+        }
+    }
 }
 
 export class CompilationError extends Error {
@@ -183,17 +236,21 @@ export class CompilationError extends Error {
 export async function compileFile(fn: string, options: BuildOptions = {}) {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
-    const { errors, services } = compileServiceSpecs(
-        join(dirname(resolve(fn)), "services")
-    )
+
+    const lcfg: LocalBuildConfig = {}
+    const errors: DevsDiagnostic[] = []
+    const dir = dirname(resolve(fn))
+    compileServiceSpecs(dir, lcfg, errors)
+    await compileBoards(dir, lcfg, errors)
+
     if (!options.quiet)
         for (const e of errors)
             console.error(`${e.filename}(${e.line}): ${e.messageText}`)
+
     const source = readFileSync(fn)
-    const res = await compileBuf(source, {
+    const res = await compileBuf(source, resolveBuildConfig(lcfg), {
         ...options,
         mainFileName: fn,
-        services,
     })
     if (errors.length) {
         res.diagnostics.unshift(...errors)
@@ -202,9 +259,12 @@ export async function compileFile(fn: string, options: BuildOptions = {}) {
     return res
 }
 
-export async function saveLibFiles(options: BuildOptions) {
+export async function saveLibFiles(
+    buildConfig: ResolvedBuildConfig,
+    options: BuildOptions
+) {
     // pass the user-provided services so they are included in devicescript-specs.d.ts
-    const prelude = preludeFiles(options.services)
+    const prelude = preludeFiles(buildConfig)
 
     const pref = resolve(options.cwd ?? ".")
     await mkdirp(join(pref, LIBDIR))
@@ -218,14 +278,18 @@ export async function saveLibFiles(options: BuildOptions) {
     }
 }
 
-export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
-    const host = await getHost(options)
+export async function compileBuf(
+    buf: Buffer,
+    buildConfig: ResolvedBuildConfig,
+    options: BuildOptions
+) {
+    const host = await getHost(buildConfig, options)
     const flags = (options.flag ?? {}) as CompileFlags
     const res = compile(buf.toString("utf8"), {
         host,
         flags,
     })
-    await saveLibFiles(options)
+    await saveLibFiles(buildConfig, options)
     setDevsDmesg() // set again after we have re-created -dbg.json file
     return res
 }
@@ -240,13 +304,10 @@ export interface BuildOptions {
 
     // internal option
     mainFileName?: string
-    // custom service specifications
-    services?: jdspec.ServiceSpec[]
 }
 
 export async function build(file: string, options: BuildOptions & CmdOptions) {
     file = file || "main.ts"
-    options = options || {}
     options.outDir = options.outDir || BINDIR
     options.mainFileName = file
 

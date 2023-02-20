@@ -1,4 +1,8 @@
-import { DeviceConfig } from "./archconfig"
+import {
+    DeviceConfig,
+    LocalBuildConfig,
+    ResolvedBuildConfig,
+} from "./archconfig"
 import {
     SRV_BOOTLOADER,
     SRV_BRIDGE,
@@ -27,6 +31,21 @@ const REGISTER_BOOL = "RegisterBool"
 const REGISTER_STRING = "RegisterString"
 const REGISTER_BUFFER = "RegisterBuffer"
 const REGISTER_ARRAY = "RegisterArray"
+
+export function resolveBuildConfig(
+    local?: LocalBuildConfig
+): ResolvedBuildConfig {
+    const r: ResolvedBuildConfig = {
+        boards: Object.assign({}, boardSpecifications.boards),
+        archs: Object.assign({}, boardSpecifications.archs),
+        services: jacdacDefaultSpecifications.concat(local?.addServices ?? []),
+    }
+
+    for (const arch of local?.addArchs ?? []) r.archs[arch.id] = arch
+    for (const board of local?.addBoards ?? []) r.boards[board.id] = board
+
+    return r
+}
 
 function isRegister(k: jdspec.PacketKind) {
     return k == "ro" || k == "rw" || k == "const"
@@ -186,14 +205,15 @@ function boardFile(binfo: DeviceConfig) {
     return r
 }
 
-export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
-    if (!specs) specs = jacdacDefaultSpecifications
+// called from build.js with config===undefined
+export function preludeFiles(config: ResolvedBuildConfig) {
+    if (!config) config = resolveBuildConfig()
     const pref = ".devicescript/lib/"
     const r: Record<string, string> = {}
     for (const k of Object.keys(prelude)) {
         r[pref + k] = prelude[k]
     }
-    const thespecs = specs
+    const thespecs = config.services
         .map(specToDeviceScript)
         .filter(n => !!n)
         .join("\n")
@@ -207,9 +227,9 @@ ${thespecs}
 `
     r[pref + "devicescript-spec.d.ts"] = withmodule
 
-    for (const board of Object.values(boardSpecifications.boards)) {
-        r[pref + `devicescript-board-${board.id}.d.ts`] = boardFile(board)
-    }
+    r[pref + `devicescript-boards.d.ts`] = Object.values(config.boards)
+        .map(boardFile)
+        .join("\n")
 
     return r
 }
@@ -456,13 +476,12 @@ ${varname}.${pname}.subscribe(() => {
     }
 }
 
-export function clientsMarkdownFiles(specs?: jdspec.ServiceSpec[]) {
-    if (!specs) specs = jacdacDefaultSpecifications
+export function clientsMarkdownFiles() {
+    const { services } = resolveBuildConfig()
     const r: Record<string, string> = {}
-    specs.forEach(spec => {
+    services.forEach(spec => {
         const md = serviceSpecificationToMarkdown(spec)
         if (md) r[`${spec.shortId}.md`] = md
     })
     return r
 }
-

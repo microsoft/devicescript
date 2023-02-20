@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="../../jacdac-ts/jacdac-spec/spectool/jdspec.d.ts" />
 /// <reference path="../../runtime/jacdac-c/dcfg/srvcfg.d.ts" />
 
 import {
@@ -46,6 +48,18 @@ export interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
      * Services to mount.
      */
     _?: ServiceConfig[]
+}
+
+export interface LocalBuildConfig {
+    addBoards?: DeviceConfig[]
+    addArchs?: ArchConfig[]
+    addServices?: jdspec.ServiceSpec[]
+}
+
+export interface ResolvedBuildConfig {
+    boards: { [id: string]: DeviceConfig }
+    archs: { [id: string]: ArchConfig }
+    services: jdspec.ServiceSpec[]
 }
 
 export interface RepoInfo {

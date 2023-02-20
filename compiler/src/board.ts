@@ -2,7 +2,7 @@ import { DeviceConfig, ArchConfig, RepoInfo } from "./archconfig"
 import { DeviceCatalog, deviceCatalogImage } from "jacdac-ts"
 import { arch } from "os"
 import { parseAnyInt } from "./dcfg"
-import { boardSpecifications } from "./embedspecs"
+import { resolveBuildConfig } from "./specgen"
 
 export function boardInfos(info: RepoInfo) {
     return Object.values(info.boards).map(b =>
@@ -138,7 +138,7 @@ select **DeviceScript: Flash Firmware...** from the command palette.
 }
 
 export function boardMarkdownFiles() {
-    const { boards } = boardSpecifications
+    const { boards } = resolveBuildConfig()
     const catalog = new DeviceCatalog()
     //const catalog = new DeviceCatalog()
     const r: Record<string, string> = {}

@@ -47,13 +47,11 @@ export async function addBoard(options: AddBoardOptions) {
     if (!options.force && existsSync(boardJsonPath)) fatal(`file ${boardJsonPath} already exists; use --force to overwrite`)
 
     const arch = boardSpecifications.archs[baseBoard.archId]
-    console.log(arch)
 
     const board = clone(baseBoard)
     board.devName = options.name
     board.productId = "0x" + (randomUInt(0xfff_ffff) | 0x3000_0000).toString(16)
     delete board.id
-    delete board.archId
     delete board.$fwUrl
 
     writeFile(boardJsonPath, JSON.stringify(board, null, 4))
