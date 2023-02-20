@@ -20,11 +20,14 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import {
+    SideConnectReq,
     SideStartVmReq,
     SideStopVmReq,
     SideTransportEvent,
     TransportStatus,
 } from "../../cli/src/sideprotocol"
+import { openDocUri } from "./commands"
+import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
 import { sideRequest, subSideEvent } from "./jacdac"
@@ -137,15 +140,18 @@ export class DeviceScriptExtensionState extends JDEventSource {
             )
         if (!board) {
             const res = await vscode.window.showQuickPick(
-                boards.map(
-                    board =>
-                        <TaggedQuickPickItem<DeviceConfig>>{
-                            data: board,
-                            label: board.devName,
-                            description: board.id,
-                            detail: board.$description,
-                        }
-                ),
+                <TaggedQuickPickItem<{ board?: DeviceConfig }>[]>[
+                    {
+                        label: "Help me choose...",
+                        detail: "Identify your board or find where to get one.",
+                    },
+                    ...boards.map(board => ({
+                        data: { board },
+                        label: board.devName,
+                        description: board.id,
+                        detail: board.$description,
+                    })),
+                ],
                 {
                     title: "What kind of device are you flashing?",
                     canPickMany: false,
@@ -153,8 +159,14 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     matchOnDescription: true,
                 }
             )
-            if (!res) return
-            board = res.data
+            if (!res) return // user escaped
+
+            if (!res.data?.board) {
+                openDocUri("devices")
+                return
+            }
+
+            board = res.data.board
         }
 
         const confirm = await vscode.window.showQuickPick(["yes", "no"], {
@@ -172,6 +184,67 @@ export class DeviceScriptExtensionState extends JDEventSource {
             diagnostics: false,
         })
         t.show()
+    }
+
+    async connect() {
+        const { extensionKind } = this.context.extension
+        const isWorkspace = extensionKind === vscode.ExtensionKind.Workspace
+        if (isWorkspace) {
+            this.telemetry.showErrorMessage(
+                "connection.remote",
+                "DeviceScript - Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
+            )
+            return
+        }
+
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+
+        const { transports } = this.transport
+        const serial = transports.find(t => t.type === "serial")
+        const usb = transports.find(t => t.type === "usb")
+        const items: (vscode.QuickPickItem & { transport?: string })[] = [
+            {
+                transport: "serial",
+                label: "Serial",
+                detail: "ESP32, RP2040, ...",
+                description: serial
+                    ? `${serial.description}(${serial.connectionState})`
+                    : "",
+            },
+            {
+                transport: "usb",
+                label: "USB",
+                detail: "micro:bit",
+                description: usb
+                    ? `${usb.description}(${usb.connectionState})`
+                    : "",
+            },
+            {
+                label: "",
+                kind: vscode.QuickPickItemKind.Separator,
+            },
+            {
+                label: "Flash Firmware...",
+                transport: "flash",
+                detail: "Flash the DeviceScript runtime on new devices.",
+            },
+        ]
+        const res = await vscode.window.showQuickPick(items, {
+            title: "Choose the communication channel",
+        })
+        if (res === undefined || !res.transport) return
+
+        if (res.transport === "flash") await this.flashFirmware()
+        else
+            await sideRequest<SideConnectReq>({
+                req: "connect",
+                data: {
+                    transport: res.transport,
+                    background: false,
+                    resourceGroupId: CONNECTION_RESOURCE_GROUP,
+                },
+            })
     }
 
     async startSimulator() {

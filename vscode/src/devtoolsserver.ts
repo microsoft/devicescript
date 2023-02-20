@@ -21,20 +21,13 @@ import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
-import { MESSAGE_PREFIX } from "./commands"
+import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 
-const HELP_URI = vscode.Uri.parse(
-    "https://microsoft.github.io/devicescript/getting-started/vscode#setting-up-the-project"
-)
 function showTerminalError(message: string) {
-    const help = "Open Help"
-    vscode.window
-        .showInformationMessage("DeviceScript: " + message, help)
-        .then(res => {
-            if (res === help) {
-                vscode.env.openExternal(HELP_URI)
-            }
-        })
+    showInformationMessageWithHelp(
+        message,
+        "getting-started/vscode#setting-up-the-project"
+    )
 }
 
 export class DeveloperToolsManager extends JDEventSource {

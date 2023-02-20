@@ -5,40 +5,30 @@
 import {
     Flags,
     FRAME_PROCESS,
-    JDDevice,
     JDFrameBuffer,
     serializeToTrace,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import type {
-    SideConnectReq,
-    SideOutputEvent,
-} from "../../cli/src/sideprotocol"
+import type { SideOutputEvent } from "../../cli/src/sideprotocol"
 import { initBuild } from "./build"
 import { CloudExtensionState } from "./CloudExtensionState"
 import { registerCloudStatusBar } from "./CloudStatusBar"
 import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
-import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import { activateDebugger } from "./debugger"
-import {
-    sideRequest,
-    startJacdacBus,
-    stopJacdacBus,
-    subSideEvent,
-} from "./jacdac"
+import { startJacdacBus, stopJacdacBus, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem, activateTreeViews } from "./JDomTreeDataProvider"
 import { activateMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState } from "./state"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, extensionMode, extension } = context
-    const { extensionKind } = extension
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
     const jacdacConfig = vscode.workspace.getConfiguration(
         "devicescript.jacdac"
     )
+    registerOutputChannel(extensionMode)
 
     // setup bus
     const bus = startJacdacBus()
@@ -79,68 +69,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.connect",
-            async () => {
-                const isWorkspace =
-                    extensionKind === vscode.ExtensionKind.Workspace
-                if (isWorkspace) {
-                    extensionState.telemetry.showErrorMessage(
-                        "connection.remote",
-                        "DeviceScript - Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
-                    )
-                    return
-                }
-
-                await extensionState.devtools.start()
-                if (!extensionState.devtools.connected) return
-
-                const { transports } = extensionState.transport
-                const serial = transports.find(t => t.type === "serial")
-                const usb = transports.find(t => t.type === "usb")
-                const items: (vscode.QuickPickItem & { transport?: string })[] =
-                    [
-                        {
-                            transport: "serial",
-                            label: "Serial",
-                            detail: "ESP32, RP2040, ...",
-                            description: serial
-                                ? `${serial.description}(${serial.connectionState})`
-                                : "",
-                        },
-                        {
-                            transport: "usb",
-                            label: "USB",
-                            detail: "micro:bit",
-                            description: usb
-                                ? `${usb.description}(${usb.connectionState})`
-                                : "",
-                        },
-                        {
-                            label: "",
-                            kind: vscode.QuickPickItemKind.Separator,
-                        },
-                        {
-                            label: "Flash Firmware...",
-                            transport: "flash",
-                            detail: "Flash the DeviceScript runtime on new devices.",
-                        },
-                    ]
-                const res = await vscode.window.showQuickPick(items, {
-                    title: "Choose the communication channel",
-                })
-                if (res === undefined || !res.transport) return
-
-                if (res.transport === "flash")
-                    await extensionState.flashFirmware()
-                else
-                    await sideRequest<SideConnectReq>({
-                        req: "connect",
-                        data: {
-                            transport: res.transport,
-                            background: false,
-                            resourceGroupId: CONNECTION_RESOURCE_GROUP,
-                        },
-                    })
-            }
+            async () => extensionState.connect()
         )
     )
 
@@ -152,26 +81,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     )
 
     activateDebugger(extensionState)
-
-    const output = vscode.window.createOutputChannel("DeviceScript", {
-        log: true,
-    })
-    subSideEvent<SideOutputEvent>("output", msg => {
-        const tag = msg.data.from
-        let fn = output.info
-        if (tag.endsWith("err")) fn = output.error
-        for (const l of msg.data.lines) fn(tag + ":", l)
-    })
-    const redirectConsoleOutput =
-        extensionMode == vscode.ExtensionMode.Production
-    if (redirectConsoleOutput) {
-        // note that this is local to this extension - see inject.js
-        console.debug = output.debug
-        console.log = output.info
-        console.warn = output.warn
-        console.error = output.error
-        console.info = console.log
-    }
 
     const cloudState = new CloudExtensionState(context, extensionState)
     registerCloudTreeDataProvider(cloudState)
@@ -240,6 +149,27 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     if (devToolsConfig.get("autoStart")) extensionState.devtools.start()
 }
 
+function registerOutputChannel(extensionMode: vscode.ExtensionMode) {
+    const output = vscode.window.createOutputChannel("DeviceScript", {
+        log: true,
+    })
+    subSideEvent<SideOutputEvent>("output", msg => {
+        const tag = msg.data.from
+        let fn = output.info
+        if (tag.endsWith("err")) fn = output.error
+        for (const l of msg.data.lines) fn(tag + ":", l)
+    })
+    const redirectConsoleOutput =
+        extensionMode == vscode.ExtensionMode.Production
+    if (redirectConsoleOutput) {
+        // note that this is local to this extension - see inject.js
+        console.debug = output.debug
+        console.log = output.info
+        console.warn = output.warn
+        console.error = output.error
+        console.info = console.log
+    }
+}
 /*
 class InlineDebugAdapterFactory implements vscode.DebugAdapterDescriptorFactory {
 	createDebugAdapterDescriptor(_session: vscode.DebugSession): ProviderResult<vscode.DebugAdapterDescriptor> {
