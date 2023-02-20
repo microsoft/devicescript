@@ -1,11 +1,31 @@
 ---
-description: Adafruit QT Py ESP32-C3 WiFi Dev Board DeviceScript
+description: Adafruit QT Py ESP32-C3 WiFi
 ---
-# Adafruit QT Py ESP32-C3 WiFi Dev Board DeviceScript
+# Adafruit QT Py ESP32-C3 WiFi
 
 A tiny ESP32-C3 board.
 
-![Adafruit QT Py ESP32-C3 WiFi Dev Board DeviceScript picture](https://microsoft.github.io/jacdac-docs/images/devices/adafruit/qtpyesp32c3wifidevboardv10.catalog.jpg)
 
+- Jacdac on pin 3 using Header connector
+- I2C on SDA/SCL: 5/6 using Qwiic connector
+- WS2812B RGB LED on 2
 - [Store](https://www.adafruit.com/product/5405)
+
+
+
+![Adafruit QT Py ESP32-C3 WiFi picture](https://microsoft.github.io/jacdac-docs/images/devices/adafruit/qtpyesp32c3wifidevboardv10.catalog.jpg)
+
+
+## Firmware update
+
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash esp32 --board adafruit_qt_py_c3
+```
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+
+
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin)

@@ -1,4 +1,4 @@
-import type { CompilationResult } from "@devicescript/compiler"
+import type { CompilationResult, ResolvedBuildConfig } from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
 import type { BuildOptions } from "./build"
 
@@ -37,8 +37,7 @@ export interface SideBuildReq extends SideReq<"build"> {
 export interface SideBuildResp extends SideResp<"build"> {
     data: BuildStatus
 }
-export interface SideKillReq extends SideReq<"kill"> {
-}
+export interface SideKillReq extends SideReq<"kill"> {}
 export interface SideKillResp extends SideResp<"kill"> {
     data: void
 }
@@ -59,17 +58,19 @@ export interface SideConnectReq extends SideReq<"connect"> {
 }
 
 export interface SideSpecsReq extends SideReq<"specs"> {
-    data: {}
-}
-export interface SideSpecsResp extends SideResp<"specs"> {
     data: {
-        specs: jdspec.ServiceSpec[]
-        version: string
-        runtimeVersion: string
-        nodeVersion: string
+        dir?: string // if dir===undefined, only global specs will be returned
     }
 }
-
+export interface SideSpecsData {
+    buildConfig: ResolvedBuildConfig
+    version: string
+    runtimeVersion: string
+    nodeVersion: string
+}
+export interface SideSpecsResp extends SideResp<"specs"> {
+    data: SideSpecsData
+}
 export interface SideStartVmReq extends SideReq<"startVM"> {
     data: VmReqArgs
 }

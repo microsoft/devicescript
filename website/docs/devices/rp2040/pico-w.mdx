@@ -1,9 +1,29 @@
 ---
-description: DeviceScript Raspberry Pi Pico W
+description: Raspberry Pi Pico W
 ---
-# DeviceScript Raspberry Pi Pico W
+# Raspberry Pi Pico W
 
 
 
+
+- Jacdac on pin 9 using Header connector
+- I2C on SDA/SCL: 4/5 using Header connector
+- serial logging on 0 at 115200 8N1
 - [Store](https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html)
+
+
+
+
+## Firmware update
+
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash rp2040 --board pico_w
+```
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+
+
 - [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2)

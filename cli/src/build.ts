@@ -1,5 +1,5 @@
-import { join, resolve } from "node:path"
-import { readFileSync, writeFileSync, existsSync } from "node:fs"
+import { basename, dirname, join, resolve } from "node:path"
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
 import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
 import {
     compile,
@@ -13,6 +13,11 @@ import {
     SrcMapResolver,
     preludeFiles,
     Host,
+    LocalBuildConfig,
+    ResolvedBuildConfig,
+    resolveBuildConfig,
+    DeviceConfig,
+    RepoInfo,
 } from "@devicescript/compiler"
 import {
     BINDIR,
@@ -29,6 +34,7 @@ import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
+import { parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -89,11 +95,13 @@ export async function devsStartWithNetwork(options: {
     return inst
 }
 
-export async function getHost(options: BuildOptions & CmdOptions) {
+export async function getHost(
+    buildConfig: ResolvedBuildConfig,
+    options: BuildOptions & CmdOptions
+) {
     const inst = options.noVerify ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
-
     const devsHost: Host = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
@@ -109,10 +117,11 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         log: verboseLog,
         isBasicOutput: () => !consoleColors,
         error: (err: DevsDiagnostic) => {
-            if (!options.quiet) console.error(formatDiagnostics([err], !consoleColors))
+            if (!options.quiet)
+                console.error(formatDiagnostics([err], !consoleColors))
         },
         mainFileName: () => options.mainFileName || "main.ts",
-        getSpecs: () => jacdacDefaultSpecifications,
+        getConfig: () => buildConfig,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
             const res = inst.devsVerify(buf)
@@ -120,6 +129,108 @@ export async function getHost(options: BuildOptions & CmdOptions) {
         },
     }
     return devsHost
+}
+function toDevsDiag(d: jdspec.Diagnostic): DevsDiagnostic {
+    return {
+        category: 1,
+        code: 9998,
+        file: undefined,
+        filename: d.file,
+        start: 0,
+        length: 1,
+        messageText: d.message,
+        line: d.line,
+        column: 1,
+        endLine: d.line,
+        endColumn: 100,
+        formatted: "",
+    }
+}
+
+function compileServiceSpecs(
+    tsdir: string,
+    lcfg: LocalBuildConfig,
+    errors: DevsDiagnostic[]
+) {
+    const dir = join(tsdir, "services")
+    lcfg.addServices = []
+
+    if (existsSync(dir)) {
+        const includes: Record<string, jdspec.ServiceSpec> = {}
+        jacdacDefaultSpecifications.forEach(
+            spec => (includes[spec.shortId] = spec)
+        )
+        const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
+            /\.md$/i.test(fn)
+        )
+        for (const mdf of markdowns) {
+            const fn = join(dir, mdf)
+            const content = readFileSync(fn, { encoding: "utf-8" })
+            const json = parseServiceSpecificationMarkdownToJSON(
+                content,
+                includes,
+                fn
+            )
+            json.catalog = false
+            if (json?.errors?.length)
+                errors.push(...json.errors.map(toDevsDiag))
+            else {
+                includes[json.shortId] = json
+                verboseLog(`custom service: ${json.shortName}`)
+                lcfg.addServices.push(json)
+            }
+        }
+    }
+}
+
+export function validateBoard(board: DeviceConfig, baseCfg: RepoInfo) {
+    const bid = board.id
+    if (!/^\w+$/.test(bid)) throw new Error(`invalid identifier: ${bid}`)
+    board.id = bid
+    const arch = baseCfg.archs[board.archId]
+    if (!arch) throw new Error(`board.archId ${board.archId} is invalid`)
+    if (baseCfg.boards[bid]) throw new Error(`board ${bid} already defined`)
+    if ((+board.productId & 0xf000_0000) != 0x3000_0000)
+        throw new Error(`invalid productId ${board.productId}`)
+}
+
+function compileBoards(
+    tsdir: string,
+    lcfg: LocalBuildConfig,
+    errors: DevsDiagnostic[]
+) {
+    const dir = join(tsdir, "boards")
+    lcfg.addBoards = []
+    const baseCfg = resolveBuildConfig()
+
+    if (existsSync(dir)) {
+        const boards = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
+            fn.endsWith(".board.json")
+        )
+        for (const boardFn of boards) {
+            const fullName = join(dir, boardFn)
+            try {
+                const board: DeviceConfig = JSON.parse(
+                    readFileSync(fullName, "utf-8")
+                )
+                const bid = basename(boardFn, ".board.json")
+                if (board.id && board.id != bid)
+                    throw new Error("ignoring id: field in favor of filename")
+                board.id = bid
+                validateBoard(board, baseCfg)
+                verboseLog(`custom board: ${board.id}`)
+                lcfg.addBoards.push(board)
+            } catch (e) {
+                errors.push(
+                    toDevsDiag({
+                        file: fullName,
+                        line: 1,
+                        message: e.message,
+                    })
+                )
+            }
+        }
+    }
 }
 
 export class CompilationError extends Error {
@@ -130,15 +241,49 @@ export class CompilationError extends Error {
     }
 }
 
+export function buildConfigFromDir(dir: string, options: BuildOptions = {}) {
+    const lcfg: LocalBuildConfig = {}
+    const errors: DevsDiagnostic[] = []
+
+    if (dir) {
+        compileServiceSpecs(dir, lcfg, errors)
+        compileBoards(dir, lcfg, errors)
+        if (!options.quiet)
+            for (const e of errors)
+                console.error(`${e.filename}(${e.line}): ${e.messageText}`)
+    }
+
+    return {
+        buildConfig: resolveBuildConfig(lcfg),
+        errors,
+    }
+}
+
 export async function compileFile(fn: string, options: BuildOptions = {}) {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
+
+    const { errors, buildConfig } = buildConfigFromDir(dirname(resolve(fn)))
+
     const source = readFileSync(fn)
-    return compileBuf(source, { ...options, mainFileName: fn })
+    const res = await compileBuf(source, buildConfig, {
+        ...options,
+        mainFileName: fn,
+    })
+    if (errors.length) {
+        res.diagnostics.unshift(...errors)
+        res.success = false
+    }
+    return res
 }
 
-export async function saveLibFiles(options: BuildOptions) {
-    const prelude = preludeFiles()
+export async function saveLibFiles(
+    buildConfig: ResolvedBuildConfig,
+    options: BuildOptions
+) {
+    // pass the user-provided services so they are included in devicescript-specs.d.ts
+    const prelude = preludeFiles(buildConfig)
+
     const pref = resolve(options.cwd ?? ".")
     await mkdirp(join(pref, LIBDIR))
     for (const fn of Object.keys(prelude)) {
@@ -151,14 +296,18 @@ export async function saveLibFiles(options: BuildOptions) {
     }
 }
 
-export async function compileBuf(buf: Buffer, options: BuildOptions = {}) {
-    const host = await getHost(options)
+export async function compileBuf(
+    buf: Buffer,
+    buildConfig: ResolvedBuildConfig,
+    options: BuildOptions
+) {
+    const host = await getHost(buildConfig, options)
     const flags = (options.flag ?? {}) as CompileFlags
     const res = compile(buf.toString("utf8"), {
         host,
         flags,
     })
-    await saveLibFiles(options)
+    await saveLibFiles(buildConfig, options)
     setDevsDmesg() // set again after we have re-created -dbg.json file
     return res
 }
@@ -177,7 +326,6 @@ export interface BuildOptions {
 
 export async function build(file: string, options: BuildOptions & CmdOptions) {
     file = file || "main.ts"
-    options = options || {}
     options.outDir = options.outDir || BINDIR
     options.mainFileName = file
 

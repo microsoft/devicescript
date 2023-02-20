@@ -10,14 +10,11 @@ export * from "./util"
 export * from "./debug"
 export * from "./dcfg"
 export * from "./uf2"
+export * from "./board"
+export * from "./archconfig"
 export { prettySize } from "./jdutil"
 
-export type {
-    ArchConfig,
-    DeviceConfig,
-    JsonComment,
-    ServiceConfig,
-} from "@devicescript/srvcfg"
+export type { JsonComment, ServiceConfig } from "@devicescript/srvcfg"
 
 import { compile } from "./compiler"
 

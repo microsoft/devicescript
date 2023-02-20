@@ -11,8 +11,10 @@ import {
     DCFG_MAGIC1,
     expandDcfgJSON,
     jsonToDcfg,
+    boardInfos,
+    RepoInfo,
 } from "@devicescript/compiler"
-import { HexInt, RepoInfo } from "@devicescript/srvcfg"
+import { HexInt } from "@devicescript/srvcfg"
 import { readFile, writeFile } from "fs/promises"
 import { JSONTryParse, read32, toHex } from "jacdac-ts"
 import { basename, dirname, join, resolve } from "path"
@@ -49,7 +51,7 @@ async function patchUF2File(
     devcfg: DcfgSettings
 ) {
     const off = parseAnyInt(arch.dcfgOffset)
-    const buf = serializeDcfg(devcfg)
+    let buf = serializeDcfg(devcfg)
 
     if (!UF2File.isUF2(uf2)) throw new Error("not a UF2 file")
 
@@ -71,11 +73,24 @@ async function patchUF2File(
         }
     }
 
+    const tmp = f.readBytes(off, 12)
+    if (isDCFG(tmp)) {
+        log(`patching existing config`)
+        buf = padCfg(buf, read32(tmp, 8))
+    }
+
     //const aligned = new Uint8Array((buf.length + amask) & ~amask)
     //aligned.set(buf)
 
     f.writeBytes(off, buf)
     return f.serialize()
+}
+
+function padCfg(cfg: Uint8Array, minsz: number) {
+    if (minsz > 1024 * 1024) throw new Error("too large config!")
+    const res = new Uint8Array(Math.max(cfg.length, minsz))
+    res.set(cfg)
+    return res
 }
 
 async function patchBinFile(
@@ -86,13 +101,15 @@ async function patchBinFile(
     const off0 = parseAnyInt(arch.dcfgOffset)
     const shift = parseAnyInt(arch.binFlashOffset) ?? 0
     const off = off0 - shift
-    const buf = serializeDcfg(devcfg)
+    let buf = serializeDcfg(devcfg)
 
     if (UF2File.isUF2(binFile)) throw new Error("expecting BIN, not UF2 file")
     if (off > 16 * 1024 * 1024) throw new Error("offset too large for BIN")
     if (binFile.length > off) {
-        if (isDCFG(binFile, off)) verboseLog("patching existing")
-        else if (
+        if (isDCFG(binFile, off)) {
+            verboseLog("patching existing")
+            buf = padCfg(buf, read32(binFile, off + 8))
+        } else if (
             toHex(binFile.slice(off, off + 8)) == "0000000000000000" ||
             toHex(binFile.slice(off, off + 8)) == "ffffffffffffffff"
         )
@@ -155,6 +172,20 @@ async function patchEspFile(
     // return bufferConcat(binFile.slice(0, imgoffset), res)
 }
 
+function compileBoard(json: DeviceConfig) {
+    const dcfg = jsonToDcfg(json, true)
+    if (!dcfg["devName"]) throw new Error(`no devName`)
+    if (!dcfg["productId"]) throw new Error(`no productId`)
+    if (isVerbose) {
+        verboseLog(JSON.stringify(dcfg, null, 4))
+        const ser = serializeDcfg(dcfg)
+        const dec = decodeDcfg(ser)
+        verboseLog(dec.errors.join("\n"))
+        verboseLog(JSON.stringify(decompileDcfg(dec.settings), null, 4))
+    }
+    return dcfg
+}
+
 export async function compileDcfgFile(fn: string) {
     if (!fn.endsWith(".board.json"))
         throw new Error("board file has to match *.board.json")
@@ -170,36 +201,49 @@ export async function compileDcfgFile(fn: string) {
     json.id = basename(fn, ".board.json")
     json.archId = arch.id
     try {
-        const dcfg = jsonToDcfg(json, true)
-        if (!dcfg["devName"]) throw new Error(`no devName`)
-        if (!dcfg["devClass"]) throw new Error(`no devClass`)
-        if (isVerbose) {
-            verboseLog(JSON.stringify(dcfg, null, 4))
-            const ser = serializeDcfg(dcfg)
-            const dec = decodeDcfg(ser)
-            verboseLog(dec.errors.join("\n"))
-            verboseLog(JSON.stringify(decompileDcfg(dec.settings), null, 4))
-        }
+        const dcfg = compileBoard(json)
         return { json, dcfg, arch }
     } catch (e) {
         throw new Error(`${fn}: ${e.message}`)
     }
 }
 
-export async function binPatch(files: string[], options: BinPatchOptions) {
-    const patch: Record<
-        keyof FileTypes,
-        (
-            binFile: Uint8Array,
-            arch: ArchConfig,
-            devcfg: DcfgSettings
-        ) => Promise<Uint8Array>
-    > = {
-        bin: patchBinFile,
-        uf2: patchUF2File,
-        esp: patchEspFile,
-    }
+const patch: Record<
+    keyof FileTypes,
+    (
+        binFile: Uint8Array,
+        arch: ArchConfig,
+        devcfg: DcfgSettings
+    ) => Promise<Uint8Array>
+> = {
+    bin: patchBinFile,
+    uf2: patchUF2File,
+    esp: patchEspFile,
+}
 
+export async function patchCustomBoard(
+    fn: string,
+    board: DeviceConfig,
+    arch: ArchConfig
+) {
+    const dcfg = compileBoard(board)
+    const ext = fn.replace(/.*\./, "") as keyof FileTypes
+    if (!patch[ext]) throw new Error(`unknown file format: ${ext}`)
+    const buf = await readFile(fn)
+    return await patchFile(ext, buf, arch, dcfg)
+}
+
+async function patchFile(
+    type: keyof FileTypes,
+    binFile: Uint8Array,
+    arch: ArchConfig,
+    devcfg: DcfgSettings
+) {
+    const f = patch[type]
+    return f(binFile, arch, devcfg)
+}
+
+export async function binPatch(files: string[], options: BinPatchOptions) {
     let binFn = ""
     let ft: keyof FileTypes = undefined
     for (const k of Object.keys(patch) as (keyof FileTypes)[]) {
@@ -213,7 +257,6 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
     if (!ft) fatal("no file type provided")
 
     const binFileBuf = await readFile(binFn)
-    const patchFile = patch[ft]
     const outpath = options.outdir || "dist"
     const outext = options.uf2 ? ".uf2" : ".bin"
     const binext = (off: HexInt) => {
@@ -245,7 +288,7 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
             const suff = binext(arch.binFlashOffset)
             const outname = (devid: string, ext = suff) =>
                 join(outpath, `devicescript-${arch.id}-${devid}${ext}`)
-            const patched = await patchFile(binFileBuf, arch, dcfg)
+            const patched = await patchFile(ft, binFileBuf, arch, dcfg)
             const outp = outname(json.id)
             if (info.repoUrl)
                 json.$fwUrl =
@@ -281,87 +324,4 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
             .map(b => b.markdown)
             .join("\n\n")
     )
-}
-
-export function boardInfos(info: RepoInfo) {
-    return Object.values(info.boards).map(b =>
-        boardInfo(b, info.archs[b.archId])
-    )
-}
-
-export interface BoardInfo {
-    name: string
-    arch: string
-    description: string
-    urls: { info: string; firmware: string } & Record<string, string>
-    features: string[]
-    services: string[]
-    markdown: string
-}
-
-export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
-    const features: string[] = []
-
-    const conn = (c: { $connector?: string }) =>
-        c?.$connector ? ` using ${c.$connector} connector` : ``
-
-    if (cfg.jacdac?.pin !== undefined)
-        features.push(`Jacdac on ${cfg.jacdac.pin}${conn(cfg.jacdac)}`)
-
-    if (cfg.i2c?.pinSDA !== undefined) {
-        features.push(
-            `I2C on SDA/SCL: ${cfg.i2c.pinSDA}/${cfg.i2c.pinSCL}${conn(
-                cfg.i2c
-            )}`
-        )
-    }
-
-    if (cfg.led) {
-        if (cfg.led.type === 1)
-            features.push(`WS2812B RGB LED on ${cfg.led.pin}`)
-        else if (cfg.led.rgb?.length == 3)
-            features.push(
-                `RGB LED on pins ${cfg.led.rgb.map(l => l.pin).join(", ")}`
-            )
-        else if (cfg.led.pin !== undefined)
-            features.push(`LED on pin ${cfg.led.pin}`)
-    }
-
-    if (cfg.log?.pinTX !== undefined)
-        features.push(
-            `serial logging on ${cfg.log.pinTX} at ${
-                cfg.log.baud || 115200
-            } 8N1`
-        )
-
-    const services = (cfg._ ?? []).map(s => {
-        let r = s.name
-        if (s.service != s.name) r += ` (${s.service})`
-        return r
-    })
-
-    const b: BoardInfo = {
-        name: cfg.devName.replace(/\s*DeviceScript\s*/i, " ").trim(),
-        arch: arch?.name,
-        description: cfg.$description,
-        urls: {
-            info: cfg.url,
-            firmware: cfg.$fwUrl,
-        },
-        features,
-        services,
-        markdown: "",
-    }
-
-    const lines = [`## ${b.name}`, b.description]
-    const urlkeys = Object.keys(b.urls || {}).filter(k => !!b.urls[k])
-    if (urlkeys.length)
-        lines.push(
-            "Links: " + urlkeys.map(k => `[${k}](${b.urls[k]})`).join(" ")
-        )
-    lines.push(...b.features.map(f => `* ${f}`))
-    lines.push(...b.services.map(f => `* Service: ${f}`))
-    b.markdown = lines.filter(l => !!l).join("\n")
-
-    return b
 }

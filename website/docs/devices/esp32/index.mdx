@@ -2,15 +2,26 @@
 
 The following devices use the firmware from https://github.com/microsoft/jacdac-esp32.
 
--   [Adafruit QTPY ESP32 C3 WiFi Dev Board](/devices/esp32/adafruit-qt-py-esp32-c3-wifi-dev-board/)
+{@import ./boards.mdp}
 
-The ESP32 boards can be flashed using `devicescript esp32` command.
-You will need to install `esptool.py` first - you can do that using `pip install esptool`.
-Once installed, connect your ESP32 board and run `devicescript esp32`, you should see something
-like this:
+## Requirements
 
-```console
-$ devicescript esp32
+You will need to install `esptool.py` first - you can do that using [pip](https://pip.pypa.io/en/stable/).
+
+```bash
+pip install esptool
+```
+
+## Usage
+
+Connect your ESP32 board and run `devicescript flash esp32` to flash DeviceScript runtime on it.
+
+```bash
+devicescript flash esp32
+```
+
+```console title="Output"
+$ devicescript flash esp32
 using serial port /dev/cu.usbmodem01 at 1500000
 esptool: /usr/local/bin/esptool.py
 Identify arch
@@ -38,13 +49,34 @@ Please select board, available options:
 $
 ```
 
-You can also run `devicescript esp32 --board list` to get a full list of ESP32 boards
-without attempting any auto-detect.
+### Listing boards
 
-Let's say your board is `adafruit_qt_py_c3`. To flush run `devicescript esp32 --board adafruit_qt_py_c3`:
+You can also get a full list of ESP32 boards without attempting any auto-detect.
 
-```console
-$ devicescript esp32 --board adafruit_qt_py_c3
+```bash
+devicescript flash esp32 --board list
+```
+
+```console title="Output"
+$ devicescript flash esp32 --board list
+Please select board, available options:
+    --board msr207_v42                 JM Brain S2-mini 207 v4.2
+    --board msr207_v43                 JM Brain S2-mini 207 v4.3
+    --board msr48                      JacdacIoT 48 v0.2
+    --board adafruit_qt_py_c3          Adafruit QT Py ESP32-C3 WiFi Dev Board
+    --board esp32_devkit_c             Espressif ESP32-DevKitC
+```
+
+### Targeting a specific board
+
+Let's say your board is `adafruit_qt_py_c3`. To target this board, use the `--board [boardid]` flag.
+
+```bash
+devicescript flash esp32 --board adafruit_qt_py_c3
+```
+
+```console title="Output"
+$ devicescript flash esp32 --board adafruit_qt_py_c3
 using serial port /dev/cu.usbmodem14211401 at 1500000
 esptool: /usr/local/bin/esptool.py
 fetch https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin
@@ -78,5 +110,11 @@ Hard resetting via RTS pin...
 $
 ```
 
-If the esptool complains about not being able to connect, try plugging your board in
-while holding `IO0`/`BOOT` button.
+After flashing, your board has the DeviceScript runtime and you can program it using DeviceScript.
+
+## Troubleshooting
+
+### esptool cannot connect
+
+If the ` esptool`` complains about not being able to connect, try plugging your board in
+while holding  `IO0`/`BOOT` button.

@@ -1,4 +1,8 @@
-import { DeviceConfig } from "@devicescript/srvcfg"
+import {
+    DeviceConfig,
+    LocalBuildConfig,
+    ResolvedBuildConfig,
+} from "./archconfig"
 import {
     SRV_BOOTLOADER,
     SRV_BRIDGE,
@@ -13,8 +17,6 @@ import {
     SRV_ROLE_MANAGER,
     SRV_SETTINGS,
     SRV_UNIQUE_BRAIN,
-    deviceCatalogImage,
-    DeviceCatalog,
     cStorage,
     addComment,
     wrapComment,
@@ -29,6 +31,21 @@ const REGISTER_BOOL = "RegisterBool"
 const REGISTER_STRING = "RegisterString"
 const REGISTER_BUFFER = "RegisterBuffer"
 const REGISTER_ARRAY = "RegisterArray"
+
+export function resolveBuildConfig(
+    local?: LocalBuildConfig
+): ResolvedBuildConfig {
+    const r: ResolvedBuildConfig = {
+        boards: Object.assign({}, boardSpecifications.boards),
+        archs: Object.assign({}, boardSpecifications.archs),
+        services: jacdacDefaultSpecifications.concat(local?.addServices ?? []),
+    }
+
+    for (const arch of local?.addArchs ?? []) r.archs[arch.id] = arch
+    for (const board of local?.addBoards ?? []) r.boards[board.id] = board
+
+    return r
+}
 
 function isRegister(k: jdspec.PacketKind) {
     return k == "ro" || k == "rw" || k == "const"
@@ -61,7 +78,7 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
     )
 }
 
-function specToDeviceScript(info: jdspec.ServiceSpec): string {
+export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     if (ignoreSpec(info)) return undefined
 
     let r = ""
@@ -78,7 +95,10 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
     const clname = upperCamel(info.camelName)
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
 
-    const docUrl = `https://microsoft.github.io/devicescript/api/clients/${info.shortId}/`
+    const docUrl =
+        info.catalog !== false
+            ? `https://microsoft.github.io/devicescript/api/clients/${info.shortId}/`
+            : undefined
     // emit stats as attributes
     {
         let cmt = (info.notes["short"] || info.name) + "\n\n"
@@ -88,7 +108,7 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
         if (info.tags?.length) cmt += `@category ${info.tags.join(", ")}\n`
-        cmt += `@see {@link ${docUrl} Documentation}`
+        if (docUrl) cmt += `@see {@link ${docUrl} Documentation}`
         r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class
@@ -151,7 +171,8 @@ function specToDeviceScript(info: jdspec.ServiceSpec): string {
         }
 
         if (tp) {
-            cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
+            if (docUrl)
+                cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
             r += wrapComment("devs", cmt.comment)
             r += `    ${kw}${camelize(pkt.name)}: ${tp}\n`
         }
@@ -184,14 +205,15 @@ function boardFile(binfo: DeviceConfig) {
     return r
 }
 
-export function preludeFiles(specs?: jdspec.ServiceSpec[]) {
-    if (!specs) specs = jacdacDefaultSpecifications
+// called from build.js with config===undefined
+export function preludeFiles(config: ResolvedBuildConfig) {
+    if (!config) config = resolveBuildConfig()
     const pref = ".devicescript/lib/"
     const r: Record<string, string> = {}
     for (const k of Object.keys(prelude)) {
         r[pref + k] = prelude[k]
     }
-    const thespecs = specs
+    const thespecs = config.services
         .map(specToDeviceScript)
         .filter(n => !!n)
         .join("\n")
@@ -205,9 +227,9 @@ ${thespecs}
 `
     r[pref + "devicescript-spec.d.ts"] = withmodule
 
-    for (const board of Object.values(boardSpecifications.boards)) {
-        r[pref + `devicescript-board-${board.id}.d.ts`] = boardFile(board)
-    }
+    r[pref + `devicescript-boards.d.ts`] = Object.values(config.boards)
+        .map(boardFile)
+        .join("\n")
 
     return r
 }
@@ -454,60 +476,12 @@ ${varname}.${pname}.subscribe(() => {
     }
 }
 
-export function clientsMarkdownFiles(specs?: jdspec.ServiceSpec[]) {
-    if (!specs) specs = jacdacDefaultSpecifications
+export function clientsMarkdownFiles() {
+    const { services } = resolveBuildConfig()
     const r: Record<string, string> = {}
-    specs.forEach(spec => {
+    services.forEach(spec => {
         const md = serviceSpecificationToMarkdown(spec)
-        if (md) r[spec.shortId] = md
-    })
-    return r
-}
-
-function deviceConfigToMarkdown(
-    board: DeviceConfig,
-    spec: jdspec.DeviceSpec
-): string {
-    const { devName, $description, url, $fwUrl } = board
-    const { id } = spec || {}
-    const r: string[] = [
-        `---
-description: ${devName}
----
-# ${devName}
-
-${$description || spec?.description || ""}
-
-`,
-        id
-            ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
-            : undefined,
-        url ? `- [Store](${url})` : undefined,
-        $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
-    ]
-    return r.filter(s => s !== undefined).join("\n")
-}
-
-const arches: Record<string, string> = {
-    esp32s2: "esp32",
-    esp32c3: "esp32",
-    rp2040w: "rp2040",
-}
-export function boardMarkdownFiles() {
-    const { boards } = boardSpecifications
-    const catalog = new DeviceCatalog()
-    //const catalog = new DeviceCatalog()
-    const r: Record<string, string> = {}
-    Object.keys(boards).forEach(boardid => {
-        const board = boards[boardid]
-        const { archId, devClass } = board
-        if (!archId || archId === "wasm") return
-        const spec: jdspec.DeviceSpec =
-            catalog.specificationFromProductIdentifier(
-                typeof devClass === "string" ? parseInt(devClass, 16) : devClass
-            )
-        r[`${arches[archId] || archId}/${boardid.replace(/_/g, "-")}`] =
-            deviceConfigToMarkdown(board, spec)
+        if (md) r[`${spec.shortId}.md`] = md
     })
     return r
 }

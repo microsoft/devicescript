@@ -17,6 +17,11 @@ export function error(...args: any[]) {
     console.error(...wrapArgs(91, args))
 }
 
+export function fatal(msg: string): never {
+    error("fatal error: " + msg)
+    process.exit(1)
+}
+
 export let consoleColors = true
 
 export function setConsoleColors(enabled: boolean) {

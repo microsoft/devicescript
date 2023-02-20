@@ -13,22 +13,22 @@ The CLI also also usable within containers (Docker, GitHub Codespaces, CodeSandb
 -   install the CLI
 
 ```bash npm2yarn
-npm install @devicescript/cli --save-dev
+npm install @devicescript/cli@latest --save-dev
 ```
 
 The command tool is named `devicescript` or `devsc` for short.
 The full list of options for each command is available through the CLI by running `devsc help <command>`.
 
-## devsc init
+## devsc init \[dir\]
 
 The `init` commands creates or updates the necessary files to get syntax completion
-and checking in DeviceScript project (typically from Visual Studio Code). The command expects to be in the project folder.
+and checking in DeviceScript project (typically from Visual Studio Code).
 
 ```bash
-devsc init
+devsc init myproject
 ```
 
-A device script project will look as follows:
+The command will create the files under `myproject`. A device script project will look as follows:
 
 ```
 .devicescript     reserved folder for devicescript generated
@@ -73,6 +73,11 @@ or, for short,
 ```bash
 devsc build
 ```
+
+### custom services
+
+The command line will automatically compile markdown files under the `services` folder (`./services/*.md`)
+into TypeScript client definition in `.devicescript/lib/services.d.ts`.
 
 ### --stats
 
@@ -125,3 +130,11 @@ To access the developer tools outside localhost, add `--internet`
 ```bash
 devsc devtools --internet
 ```
+
+## devsc flash
+
+Command to flash the DeviceScript firmware onto a physical device. There are dedicated documentation
+pages to support various MCU architectures.
+
+-   [ESP32](/devices/esp32/)
+-   [RP2040](/devices/rp2040/)

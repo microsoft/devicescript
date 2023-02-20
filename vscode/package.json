@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "publisher": "Microsoft",
     "description": "DeviceScript extension for Visual Studio Code.",
     "author": {
@@ -166,7 +166,7 @@
         "viewsWelcome": [
             {
                 "view": "extension.devicescript.jdom",
-                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://aka.ms/devicescript)."
+                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://microsoft.github.io/devicescript/intro) or browse the list of [devices](https://microsoft.github.io/devicescript/devices/)."
             },
             {
                 "view": "extension.devicescript.watch",
@@ -266,7 +266,11 @@
                 },
                 {
                     "command": "extension.devicescript.device.identify",
-                    "when": "view == extension.devicescript.jdom && viewItem == device"
+                    "when": "view == extension.devicescript.jdom && viewItem == /device/"
+                },
+                {
+                    "command": "extension.devicescript.device.flash",
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /flash/"
                 },
                 {
                     "command": "extension.devicescript.register.edit",
@@ -361,6 +365,9 @@
                     "command": "extension.devicescript.connect"
                 },
                 {
+                    "command": "extension.devicescript.device.flash"
+                },
+                {
                     "command": "extension.devicescript.simulator.start"
                 },
                 {
@@ -407,6 +414,11 @@
                 "title": "Connect",
                 "category": "DeviceScript",
                 "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.device.flash",
+                "title": "Flash firmware...",
+                "category": "DeviceScript"
             },
             {
                 "command": "extension.devicescript.pickDeviceScriptManager",

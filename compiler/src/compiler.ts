@@ -1,7 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../jacdac-ts/jacdac-spec/spectool/jdspec.d.ts" />
-/// <reference path="../../runtime/jacdac-c/dcfg/srvcfg.d.ts" />
-
 import * as ts from "typescript"
 import { SyntaxKind as SK } from "typescript"
 
@@ -62,8 +58,7 @@ import {
     CachedValue,
 } from "./opwriter"
 import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
-import { preludeFiles } from "./specgen"
-import { jacdacDefaultSpecifications } from "./embedspecs"
+import { preludeFiles, resolveBuildConfig } from "./specgen"
 import {
     VarDebugInfo,
     RoleDebugInfo,
@@ -77,6 +72,7 @@ import {
 import { computeSizes } from "./debug"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
+import { LocalBuildConfig } from "./archconfig"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -582,8 +578,8 @@ class Program implements TopOpWriter {
 
     constructor(public host: Host, public _source: string) {
         this.serviceSpecs = {}
-        const specs = host.getSpecs()
-        for (const sp of specs) {
+        const cfg = host.getConfig()
+        for (const sp of cfg.services) {
             this.serviceSpecs[sp.camelName] = sp
             for (const en of Object.keys(sp.enums)) {
                 const n = upperCamel(sp.camelName) + upperCamel(en)
@@ -591,7 +587,7 @@ class Program implements TopOpWriter {
             }
         }
         this.sysSpec = this.serviceSpecs["system"]
-        this.prelude = preludeFiles(specs)
+        this.prelude = preludeFiles(cfg)
     }
 
     get hasErrors() {
@@ -3711,7 +3707,7 @@ export function compile(
         log?: (msg: string) => void
         files?: Record<string, string | Uint8Array>
         errors?: DevsDiagnostic[]
-        specs?: jdspec.ServiceSpec[]
+        config?: LocalBuildConfig
         verifyBytecode?: (buf: Uint8Array) => void
         flags?: CompileFlags
     } = {}
@@ -3719,11 +3715,12 @@ export function compile(
     const {
         files = {},
         mainFileName = "",
-        specs = jacdacDefaultSpecifications,
         log = (msg: string) => console.debug(msg),
         verifyBytecode = () => {},
+        config,
         errors = [],
     } = opts
+    const cfg = opts.host ? undefined : resolveBuildConfig(config)
     const {
         host = <Host>{
             mainFileName: () => mainFileName,
@@ -3732,7 +3729,7 @@ export function compile(
             },
             log,
             error: err => errors.push(err),
-            getSpecs: () => specs,
+            getConfig: () => cfg,
             verifyBytecode,
         },
     } = opts
@@ -3754,7 +3751,7 @@ export function testCompiler(host: Host, code: string) {
         {
             write: () => {},
             log: () => {},
-            getSpecs: host.getSpecs,
+            getConfig: host.getConfig,
             verifyBytecode: host.verifyBytecode,
             mainFileName: host.mainFileName,
             error: err => {

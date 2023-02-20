@@ -1,11 +1,9 @@
 import {
     Op,
-    OpCall,
     NumFmt,
     BytecodeFlag,
     BinFmt,
     OP_PROPS,
-    OP_PRINT_FMTS,
     ObjectType,
     OP_TYPES,
     NumFmtSpecial,
@@ -16,6 +14,7 @@ import { DebugInfo } from "./info"
 export * from "./bytecode"
 
 import type ts from "typescript"
+import { ResolvedBuildConfig } from "./archconfig"
 
 export interface SMap<T> {
     [k: string]: T
@@ -89,7 +88,7 @@ export interface Host {
     log(msg: string): void
     mainFileName?(): string
     error?(err: DevsDiagnostic): void
-    getSpecs(): jdspec.ServiceSpec[]
+    getConfig(): ResolvedBuildConfig
     verifyBytecode?(buf: Uint8Array, dbgInfo?: DebugInfo): void
     isBasicOutput?(): boolean
 }

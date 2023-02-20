@@ -9,13 +9,20 @@ import { disasm } from "./disasm"
 import { init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
-import { compileFlagHelp, runtimeVersion } from "@devicescript/compiler"
+import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
 import { setConsoleColors, setVerbose } from "./command"
 import { binPatch } from "./binpatch"
-import { flashESP32, flashRP2040 } from "./flash"
+import {
+    boardNames,
+    flashAuto,
+    flashESP32,
+    flashRP2040,
+    setupFlashBoards,
+} from "./flash"
+import { addBoard } from "./addboard"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -68,13 +75,14 @@ export async function mainCli() {
 
     program
         .command("init")
-        .description("configures the current directory for devicescript")
+        .description("creates or configures a devicescript project")
         .option("-f, --force", "force overwrite existing files")
         .option("--spaces <number>", "number of spaces when generating JSON")
         .option(
             "--install",
             "Run npm install or yarn install after creating files"
         )
+        .argument("[dir]", "path to create the project", "./")
         .action(init)
 
     program
@@ -109,6 +117,7 @@ export async function mainCli() {
         .description("access to internal compilation tools")
         .option("--empty", "generate empty program embed")
         .option("-t, --test", "run compiler tests")
+        .option("--fetch-boards <boards.json>", "re-create boards.json file")
         .action(ctool)
 
     program
@@ -202,11 +211,27 @@ export async function mainCli() {
         .arguments("<file.json|file.bin>")
         .action(dcfg)
 
-    program
-        .command("esp32")
-        .description(
-            "flash DeviceScript runtime (interpreter/VM) to an ESP32-based board"
+    const flash = program.command("flash")
+
+    function addFlashCmd(arch: string) {
+        const r = arch ? flash.command(arch) : flash
+        r.description(
+            arch
+                ? `flash with ${arch.toUpperCase()}-specific parameters`
+                : `flash DeviceScript runtime (interpreter/VM)`
         )
+        r.option("-b, --board <board-id>", "specify board to flash")
+        r.option("--once", "do not wait for the board to be connected")
+        r.addHelpText("after", () => {
+            setupFlashBoards()
+            return `\nAvailable boards:\n` + boardNames(arch)
+        })
+        return r
+    }
+
+    addFlashCmd("").action(flashAuto)
+
+    addFlashCmd("esp32")
         .option("--all-serial", "do not filter serial ports by vendor")
         .option(
             "--baud <rate>",
@@ -214,16 +239,21 @@ export async function mainCli() {
         )
         .option("--port <path>", "specify port")
         .option("--esptool <path>", "explicitly specify path to esptool.py")
-        .option("-b, --board <board-id>", "specify board to flash")
         .action(flashESP32)
 
+    addFlashCmd("rp2040").action(flashRP2040)
+
     program
-        .command("rp2040")
-        .description(
-            "flash DeviceScript runtime (interpreter/VM) to a RP2040-based board"
+        .command("addboard")
+        .description("fork a board configuration for a new board")
+        .option("-B, --base <board-id>", "ID of a board to fork (required)")
+        .option("-n, --name <board-name>", "new board name (required)")
+        .option(
+            "-b, --board <board-id>",
+            "new board ID (auto-generated from name)"
         )
-        .option("-b, --board <board-id>", "specify board to flash")
-        .action(flashRP2040)
+        .option("--force", "overwrite JSON config file")
+        .action(addBoard)
 
     program
         .command("binpatch", { hidden: true })

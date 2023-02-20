@@ -53,6 +53,7 @@ import {
     RESET,
     DISCONNECT,
     JDCancellationToken,
+    SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -256,12 +257,18 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
 
         if (device.deviceId === this.props.state.simulatorScriptManagerId)
             this.contextValue = "simulator"
+        else if (device.hasService(SRV_DEVICE_SCRIPT_MANAGER))
+            this.contextValue += "_flash"
     }
 
     static ICON = "circuit-board"
 
     get device() {
         return this.node as JDDevice
+    }
+
+    async flash() {
+        await this.props.state.flashFirmware(this.device)
     }
 
     protected update(): boolean {

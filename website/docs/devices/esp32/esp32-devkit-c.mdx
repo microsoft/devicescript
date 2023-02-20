@@ -1,11 +1,30 @@
 ---
-description: Espressif ESP32-DevKitC DeviceScript
+description: Espressif ESP32-DevKitC
 ---
-# Espressif ESP32-DevKitC DeviceScript
+# Espressif ESP32-DevKitC
 
 ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exposed and is easy to connect and use.
 
-![Espressif ESP32-DevKitC DeviceScript picture](https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32devkitcdevicescriptv40.catalog.jpg)
 
+- Jacdac on pin 17 using Header connector
+- LED on pin 2
 - [Store](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html)
+
+
+
+![Espressif ESP32-DevKitC picture](https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32devkitcdevicescriptv40.catalog.jpg)
+
+
+## Firmware update
+
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash esp32 --board esp32_devkit_c
+```
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+
+
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin)

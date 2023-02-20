@@ -1,8 +1,28 @@
 ---
-description: RP2040 DeviceScript 124 v0.1
+description: MSR RP2040 Brain 124 v0.1
 ---
-# RP2040 DeviceScript 124 v0.1
+# MSR RP2040 Brain 124 v0.1
 
+
+
+
+- Jacdac on pin 9 using Jacdac connector
+- RGB LED on pins 16, 14, 15
+- Service: power
+
+
+
+
+## Firmware update
+
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash rp2040 --board msr124
+```
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
 
 
 - [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr124.uf2)

@@ -20,22 +20,22 @@ export async function readRuntimeVersion(srv: JDService) {
     return `v${v[2]}.${v[1]}.${v[0]}`
 }
 
-const infoCommand = "Update Firmware"
 export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     if (shouldIgnoreRuntimeVersion()) return true
 
+    const flashCommand = "Upgrade Firmware..."
     const version = await readRuntimeVersion(srv)
     console.debug(`deploy: version min ${minVersion}, device ${version}`)
     if (version === undefined) {
         vscode.window
             .showErrorMessage(
-                `Deploy cancelled. Your device firmware does not have a runtime version. Update your firmware.`,
-                infoCommand
+                `Deploy cancelled. Your device firmware does not have a runtime version.`,
+                flashCommand
             )
             .then(cmd => {
-                if (cmd)
+                if (cmd === flashCommand)
                     vscode.commands.executeCommand(
-                        "extension.devicescript.device.showFirmwareInformation",
+                        "extension.devicescript.device.flash",
                         srv.device
                     )
             })
@@ -51,13 +51,13 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     ) {
         vscode.window
             .showErrorMessage(
-                `Deploy cancelled. Your device firmware (${version}) is outdated (min ${minVersion}). Update your firmware.`,
-                infoCommand
+                `Deploy cancelled. Your device firmware (${version}) is outdated (min ${minVersion}).`,
+                flashCommand
             )
             .then(cmd => {
-                if (cmd)
+                if (cmd === flashCommand)
                     vscode.commands.executeCommand(
-                        "extension.devicescript.device.showFirmwareInformation",
+                        "extension.devicescript.device.flash",
                         srv.device
                     )
             })

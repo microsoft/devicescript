@@ -1,5 +1,5 @@
 import { CmdOptions, debug, GENDIR, LIBDIR, log } from "./command"
-import { dirname } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import {
     pathExistsSync,
     writeFileSync,
@@ -10,6 +10,7 @@ import {
 } from "fs-extra"
 import { saveLibFiles } from "./build"
 import { spawnSync } from "node:child_process"
+import { resolveBuildConfig } from "@devicescript/compiler"
 
 const MAIN = "main.ts"
 const GITIGNORE = ".gitignore"
@@ -113,13 +114,21 @@ export interface InitOptions {
     install?: boolean
 }
 
-export async function init(options: InitOptions & CmdOptions) {
+export async function init(
+    dir: string | undefined,
+    options: InitOptions & CmdOptions
+) {
     const { force, spaces = 4, install } = options
-    log(`Initializing files for DeviceScript project`)
-    Object.keys(optionalFiles).forEach(fn => {
+
+    const cwd = resolve(dir || "./")
+    log(`Configuring DeviceScript project`)
+
+    ensureDirSync(cwd)
+
+    Object.entries(optionalFiles).forEach(([fnr, data]) => {
         // tsconfig.json
+        const fn = join(cwd, fnr)
         if (!pathExistsSync(fn) || force) {
-            const data = optionalFiles[fn]
             debug(`write ${fn}`)
             const dn = dirname(fn)
             if (dn) ensureDirSync(dn)
@@ -132,17 +141,23 @@ export async function init(options: InitOptions & CmdOptions) {
     })
 
     // typescript definitions
-    emptyDirSync(LIBDIR)
-    debug(`write ${LIBDIR}/*`)
-    await saveLibFiles({})
+    const libdirn = join(cwd, LIBDIR)
+    emptyDirSync(libdirn)
+    debug(`write ${libdirn}/*`)
+    await saveLibFiles(resolveBuildConfig(), {
+        cwd,
+    })
 
     // .gitignore
     const gids = ["node_modules", GENDIR]
-    if (!pathExistsSync(GITIGNORE)) {
-        debug(`write ${GITIGNORE}`)
-        writeFileSync(GITIGNORE, gids.join("\n"), { encoding: "utf8" })
+    const gitignoren = join(cwd, GITIGNORE)
+    if (!pathExistsSync(gitignoren)) {
+        debug(`write ${gitignoren}`)
+        writeFileSync(gitignoren, gids.join("\n"), {
+            encoding: "utf8",
+        })
     } else {
-        let gitignore = readFileSync(GITIGNORE, { encoding: "utf8" })
+        let gitignore = readFileSync(gitignoren, { encoding: "utf8" })
         let needsWrite = false
         gids.forEach(gid => {
             if (gitignore.indexOf(gid) < 0) {
@@ -152,17 +167,18 @@ export async function init(options: InitOptions & CmdOptions) {
         })
         if (needsWrite) {
             debug(`update ${GITIGNORE}`)
-            writeFileSync(GITIGNORE, gitignore, {
+            writeFileSync(gitignoren, gitignore, {
                 encoding: "utf8",
             })
         }
     }
 
     // main.ts
-    if (!pathExistsSync(MAIN)) {
-        debug(`write ${MAIN}`)
+    const mainn = join(cwd, MAIN)
+    if (!pathExistsSync(mainn)) {
+        debug(`write ${mainn}`)
         writeFileSync(
-            MAIN,
+            mainn,
             `${IMPORT_PREFIX}\n\nds.everyMs(1000, () => {\n    console.log(":)")\n})\n`,
             {
                 encoding: "utf8",
@@ -171,12 +187,13 @@ export async function init(options: InitOptions & CmdOptions) {
     }
 
     if (install) {
-        const npm = pathExistsSync("package-lock.json")
+        const npm = pathExistsSync(join(cwd, "package-lock.json"))
         const cmd = npm ? "npm" : "yarn"
         log(`install dependencies...`)
         spawnSync(cmd, ["install"], {
             shell: true,
             stdio: "inherit",
+            cwd,
         })
     }
 

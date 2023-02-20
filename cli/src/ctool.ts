@@ -1,13 +1,19 @@
 import { readdirSync, readFileSync } from "node:fs"
-import { compileBuf, getHost } from "./build"
-import { CmdOptions } from "./command"
+import { compileBuf, getHost, validateBoard } from "./build"
+import { CmdOptions, log } from "./command"
 import * as path from "node:path"
-import { testCompiler } from "@devicescript/compiler"
+import {
+    testCompiler,
+    RepoInfo,
+    resolveBuildConfig,
+} from "@devicescript/compiler"
 import { runTest } from "./run"
+import { writeFile } from "node:fs/promises"
 
 export interface CToolOptions {
     empty?: boolean
     test?: boolean
+    fetchBoards?: string
 }
 
 function readdir(folder: string) {
@@ -19,8 +25,16 @@ const samples = "devs/samples"
 const rtest = "devs/run-tests"
 
 export async function ctool(options: CToolOptions & CmdOptions) {
+    if (options.fetchBoards) {
+        const ginfo = await fetchBoards()
+        await writeFile(options.fetchBoards, JSON.stringify(ginfo, null, 2))
+        process.exit(0)
+    }
+
     if (options.empty) {
-        const res = await compileBuf(Buffer.from(""), { noVerify: true })
+        const res = await compileBuf(Buffer.from(""), resolveBuildConfig(), {
+            noVerify: true,
+        })
         const buf = res.binary
         let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[${buf.length}] = {`
         for (let i = 0; i < buf.length; ++i) {
@@ -37,7 +51,7 @@ export async function ctool(options: CToolOptions & CmdOptions) {
             .filter(f => /\.ts$/.test(f))
         for (const fn of files) {
             console.log(`*** test ${fn}`)
-            const host = await getHost({
+            const host = await getHost(resolveBuildConfig(), {
                 mainFileName: fn,
             })
             testCompiler(host, readFileSync(fn, "utf8"))
@@ -50,4 +64,60 @@ export async function ctool(options: CToolOptions & CmdOptions) {
 
         process.exit(0)
     }
+}
+
+const boardRepos = [
+    "https://github.com/microsoft/jacdac-esp32",
+    "https://github.com/microsoft/jacdac-pico",
+]
+
+function resolveSchema(sch: string, repo: string) {
+    if (/^https?:/.test(sch)) return sch
+    // https:///microsoft/jacdac-pico/main/boards/rp2040archconfig.schema.json
+    const boards =
+        repo.replace("github.com", "raw.githubusercontent.com") +
+        "/main/boards/"
+    if (sch.startsWith("../")) return boards + sch.slice(3)
+    return sch
+}
+
+async function fetchBoards() {
+    const ginfo: RepoInfo = { boards: {}, archs: {} }
+    for (const repo of boardRepos) {
+        const url = repo + "/releases/latest/download/info.json"
+        log(`fetch from ${url}`)
+        const resp = await fetch(url)
+        const info: RepoInfo = await resp.json()
+        for (const archId of Object.keys(info.archs)) {
+            const arch = ginfo.archs[archId]
+            log(`  ARCH ${archId}: ${arch.name}`)
+            if (arch.id != archId) throw new Error(`arch.id wrong in ${archId}`)
+            const ex = ginfo.archs[arch.id]
+            if (ex && ex !== arch)
+                throw new Error(`arch ${arch.id} already defined`)
+            arch.$schema = resolveSchema(arch.$schema, repo)
+            arch.repoUrl = repo
+            ginfo.archs[arch.id] = arch
+        }
+        for (const bid of Object.keys(info.boards)) {
+            const board = info.boards[bid]
+            log(`  ${bid}: ${board.devName}`)
+            board.$schema = resolveSchema(board.$schema, repo)
+            if (board.id != bid) throw new Error("board.id wrong")
+            validateBoard(board, ginfo)
+            ginfo.boards[bid] = board
+        }
+    }
+    for (const arch of Object.values(ginfo.archs)) {
+        const boards = Object.values(ginfo.boards).filter(
+            b => b.archId == arch.id
+        )
+        const fwBoards = boards.filter(b => !!b.$fwUrl)
+        if (!arch.bareUrl) {
+            const bareBoard =
+                fwBoards.find(b => /bare/.test(b.id)) ?? fwBoards[0]
+            arch.bareUrl = bareBoard?.$fwUrl
+        }
+    }
+    return ginfo
 }

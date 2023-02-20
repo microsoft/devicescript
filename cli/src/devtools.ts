@@ -5,7 +5,7 @@ import url from "url"
 import net from "net"
 import { CmdOptions, error, log } from "./command"
 import { watch } from "fs-extra"
-import { jacdacDefaultSpecifications, SrcFile } from "@devicescript/compiler"
+import { resolveBuildConfig, SrcFile } from "@devicescript/compiler"
 import {
     bufferConcat,
     debounce,
@@ -70,7 +70,7 @@ export async function devtools(
 
     log(cliVersion())
 
-    loadServiceSpecifications(jacdacDefaultSpecifications)
+    loadServiceSpecifications(resolveBuildConfig().services)
 
     const traceFd = options.trace ? await open(options.trace, "w") : null
 

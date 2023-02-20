@@ -1,10 +1,31 @@
 ---
-description: JacdacIoT 48 v0.2 DeviceScript
+description: MSR JacdacIoT 48 v0.2
 ---
-# JacdacIoT 48 v0.2 DeviceScript
+# MSR JacdacIoT 48 v0.2
 
 
 
-![JacdacIoT 48 v0.2 DeviceScript picture](https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/jmbrainesp3248v03.catalog.jpg)
+
+- Jacdac on pin 17 using Jacdac connector
+- I2C on SDA/SCL: 9/10 using Qwiic connector
+- RGB LED on pins 8, 7, 6
+- Service: power
+
+
+
+![MSR JacdacIoT 48 v0.2 picture](https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/jmbrainesp3248v03.catalog.jpg)
+
+
+## Firmware update
+
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash esp32 --board msr48
+```
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin)
