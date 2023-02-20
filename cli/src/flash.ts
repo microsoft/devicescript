@@ -7,10 +7,11 @@ import {
     DeviceConfig,
     boardInfo,
     ResolvedBuildConfig,
+    architectureFamily,
 } from "@devicescript/compiler"
 import { readdir, stat, writeFile } from "fs/promises"
 import { mkdirp } from "fs-extra"
-import { delay } from "jacdac-ts"
+import { delay, groupBy } from "jacdac-ts"
 import { buildConfigFromDir } from "./build"
 import { patchCustomBoard } from "./binpatch"
 
@@ -40,9 +41,14 @@ export interface FlashRP2040Options extends FlashOptions {
 
 export function showBoards(boards: DeviceConfig[], opt = "--board") {
     log("Please select board, available options:")
-    for (const b of boards) {
-        const info = boardInfo(b, buildConfig.archs[b.archId])
-        log(`    ${opt} ${b.id.padEnd(25)}  ${info.name}`)
+    const byArch = groupBy(boards, b => b.archId)
+    for (const archId of Object.keys(byArch)) {
+        const arch = buildConfig.archs[archId]
+        log(`  ${arch?.name ?? archId}:`)
+        for (const b of byArch[archId]) {
+            const info = boardInfo(b, buildConfig.archs[b.archId])
+            log(`    ${opt} ${b.id.padEnd(25)}  ${info.name}`)
+        }
     }
 }
 
@@ -437,4 +443,14 @@ export async function flashRP2040(options: FlashRP2040Options) {
     log(`cp ${fn} ${options.drive}`)
     await writeFile(join(options.drive, "fw.uf2"), buf)
     log("OK")
+}
+
+export async function flashAuto(options: FlashOptions) {
+    const board = await checkBoard("", options)
+    const arch = architectureFamily(board.archId)
+    if (arch == "esp32") return flashESP32(options)
+    else if (arch == "rp2040") return flashRP2040(options)
+    else {
+        fatal(`unknown arch family: ${arch}`)
+    }
 }

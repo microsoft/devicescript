@@ -15,7 +15,7 @@ import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
 import { setConsoleColors, setVerbose } from "./command"
 import { binPatch } from "./binpatch"
-import { flashESP32, flashRP2040 } from "./flash"
+import { flashAuto, flashESP32, flashRP2040 } from "./flash"
 import { addBoard } from "./addboard"
 
 export async function mainCli() {
@@ -206,11 +206,19 @@ export async function mainCli() {
         .action(dcfg)
 
     const flash = program.command("flash")
-    flash
-        .command("esp32")
-        .description(
-            "flash DeviceScript runtime (interpreter/VM) to an ESP32-based board"
-        )
+
+    function addFlashCmd(cmd: string) {
+        const r = cmd ? flash.command(cmd) : flash
+        const toBoard = cmd ? ` to an ${cmd.toUpperCase()}-based board` : ``
+        r.description(`flash DeviceScript runtime (interpreter/VM)${toBoard}`)
+        r.option("-b, --board <board-id>", "specify board to flash")
+        r.option("--once", "do not wait for the board to be connected")
+        return r
+    }
+
+    addFlashCmd("").action(flashAuto)
+
+    addFlashCmd("esp32")
         .option("--all-serial", "do not filter serial ports by vendor")
         .option(
             "--baud <rate>",
@@ -218,16 +226,9 @@ export async function mainCli() {
         )
         .option("--port <path>", "specify port")
         .option("--esptool <path>", "explicitly specify path to esptool.py")
-        .option("-b, --board <board-id>", "specify board to flash")
         .action(flashESP32)
 
-    flash
-        .command("rp2040")
-        .description(
-            "flash DeviceScript runtime (interpreter/VM) to a RP2040-based board"
-        )
-        .option("-b, --board <board-id>", "specify board to flash")
-        .action(flashRP2040)
+    addFlashCmd("rp2040").action(flashRP2040)
 
     program
         .command("addboard")
