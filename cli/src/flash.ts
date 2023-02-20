@@ -2,7 +2,7 @@ import { SerialPort } from "serialport"
 import { delimiter, join, resolve } from "path"
 import { existsSync, readFileSync, Stats, writeFileSync } from "fs"
 import { spawn } from "child_process"
-import { log, verboseLog, error } from "./command"
+import { log, verboseLog, error, fatal } from "./command"
 import { boardSpecifications, boardInfo } from "@devicescript/compiler"
 import { DeviceConfig } from "@devicescript/srvcfg"
 import { readdir, stat, writeFile } from "fs/promises"
@@ -25,24 +25,20 @@ export interface FlashRP2040Options extends FlashOptions {
     drive?: string
 }
 
-function fatal(msg: string): never {
-    error("fatal: " + msg)
-    process.exit(1)
-}
-
-function showBoards(boards: DeviceConfig[]) {
+export function showBoards(boards: DeviceConfig[], opt = "--board") {
     log("Please select board, available options:")
     for (const b of boards) {
         const info = boardInfo(b, boardSpecifications.archs[b.archId])
-        log(`    --board ${b.id.padEnd(25)}  ${info.name}`)
+        log(`    ${opt} ${b.id.padEnd(25)}  ${info.name}`)
     }
 }
 
-function showAllBoards(arch: string) {
+export function showAllBoards(arch: string, opt = "--board") {
     showBoards(
         Object.values(boardSpecifications.boards).filter(b =>
             b.archId.includes(arch)
-        )
+        ),
+        opt
     )
 }
 

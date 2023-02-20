@@ -16,6 +16,7 @@ import { dcfg } from "./dcfg"
 import { setConsoleColors, setVerbose } from "./command"
 import { binPatch } from "./binpatch"
 import { flashESP32, flashRP2040 } from "./flash"
+import { addBoard } from "./addboard"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
@@ -110,6 +111,7 @@ export async function mainCli() {
         .description("access to internal compilation tools")
         .option("--empty", "generate empty program embed")
         .option("-t, --test", "run compiler tests")
+        .option("--fetch-boards <boards.json>", "re-create boards.json file")
         .action(ctool)
 
     program
@@ -226,6 +228,18 @@ export async function mainCli() {
         )
         .option("-b, --board <board-id>", "specify board to flash")
         .action(flashRP2040)
+
+    program
+        .command("addboard")
+        .description("fork a board configuration for a new board")
+        .option("-B, --base <board-id>", "ID of a board to fork (required)")
+        .option("-n, --name <board-name>", "new board name (required)")
+        .option(
+            "-b, --board <board-id>",
+            "new board ID (auto-generated from name)"
+        )
+        .option("--force", "overwrite JSON config file")
+        .action(addBoard)
 
     program
         .command("binpatch", { hidden: true })
