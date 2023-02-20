@@ -3,18 +3,17 @@
     "esp32s2_bare": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
       "devName": "Espressif ESP32-S2 (bare)",
-      "devClass": "0x3f140dcc",
       "$description": "A bare ESP32-S2 board without any pin functions.",
       "url": "https://www.espressif.com/en/products/socs/esp32-s2",
       "pins": {},
       "id": "esp32s2_bare",
       "archId": "esp32s2",
-      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin"
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin",
+      "productId": "0x3f140dcc"
     },
     "msr207_v42": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
       "devName": "MSR JM Brain S2-mini 207 v4.2",
-      "devClass": "0x322e0e64",
       "jacdac": {
         "$connector": "Jacdac",
         "pin": 17
@@ -53,7 +52,8 @@
       ],
       "id": "msr207_v42",
       "archId": "esp32s2",
-      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr207_v42-0x1000.bin"
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr207_v42-0x1000.bin",
+      "productId": "0x322e0e64"
     },
     "msr207_v43": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
@@ -68,7 +68,6 @@
           "faultIgnoreMs": 100
         }
       ],
-      "devClass": "0x322e0e64",
       "jacdac": {
         "$connector": "Jacdac",
         "pin": 17
@@ -97,12 +96,12 @@
       },
       "id": "msr207_v43",
       "archId": "esp32s2",
-      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr207_v43-0x1000.bin"
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr207_v43-0x1000.bin",
+      "productId": "0x322e0e64"
     },
     "msr48": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
       "devName": "MSR JacdacIoT 48 v0.2",
-      "devClass": "0x3de1398b",
       "jacdac": {
         "$connector": "Jacdac",
         "pin": 17
@@ -140,12 +139,12 @@
       ],
       "id": "msr48",
       "archId": "esp32s2",
-      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin"
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin",
+      "productId": "0x3de1398b"
     },
     "adafruit_qt_py_c3": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
       "devName": "Adafruit QT Py ESP32-C3 WiFi",
-      "devClass": "0x3693d40b",
       "$description": "A tiny ESP32-C3 board.",
       "url": "https://www.adafruit.com/product/5405",
       "jacdac": {
@@ -175,23 +174,23 @@
       },
       "id": "adafruit_qt_py_c3",
       "archId": "esp32c3",
-      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin"
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin",
+      "productId": "0x3693d40b"
     },
     "esp32c3_bare": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
       "devName": "Espressif ESP32-C3 (bare)",
-      "devClass": "0x3a1d89be",
       "$description": "A bare ESP32-C3 board without any pin functions.",
       "url": "https://www.espressif.com/en/products/socs/esp32-c3",
       "pins": {},
       "id": "esp32c3_bare",
       "archId": "esp32c3",
-      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_bare-0x0.bin"
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_bare-0x0.bin",
+      "productId": "0x3a1d89be"
     },
     "esp32_bare": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
       "devName": "Espressif ESP32 (bare)",
-      "devClass": "0x3ff6ffeb",
       "$description": "Bare ESP32 without any default functions for pins.",
       "url": "https://www.espressif.com/en/products/socs/esp32",
       "pins": {
@@ -203,12 +202,12 @@
       },
       "id": "esp32_bare",
       "archId": "esp32",
-      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin"
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin",
+      "productId": "0x3ff6ffeb"
     },
     "esp32_devkit_c": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
       "devName": "Espressif ESP32-DevKitC",
-      "devClass": "0x3c507a05",
       "$description": "ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exposed and is easy to connect and use.",
       "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html",
       "jacdac": {
@@ -239,12 +238,12 @@
       },
       "id": "esp32_devkit_c",
       "archId": "esp32",
-      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin"
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin",
+      "productId": "0x3c507a05"
     },
     "msr124": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
       "devName": "MSR RP2040 Brain 124 v0.1",
-      "devClass": "0x3875e80d",
       "pinPwrNILimHi": 18,
       "jacdac": {
         "$connector": "Jacdac",
@@ -281,12 +280,12 @@
       ],
       "id": "msr124",
       "archId": "rp2040",
-      "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr124.uf2"
+      "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr124.uf2",
+      "productId": "0x3875e80d"
     },
     "msr59": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
       "devName": "MSR Brain RP2040 59 v0.1",
-      "devClass": "0x35a678a3",
       "jacdac": {
         "$connector": "Jacdac",
         "pin": 9
@@ -319,13 +318,13 @@
       ],
       "id": "msr59",
       "archId": "rp2040",
-      "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr59.uf2"
+      "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr59.uf2",
+      "productId": "0x35a678a3"
     },
     "pico_w": {
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
       "devName": "Raspberry Pi Pico W",
       "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
-      "devClass": "0x3a513204",
       "i2c": {
         "$connector": "Header",
         "pinSDA": 4,
@@ -341,7 +340,8 @@
       },
       "id": "pico_w",
       "archId": "rp2040w",
-      "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2"
+      "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2",
+      "productId": "0x3a513204"
     }
   },
   "archs": {

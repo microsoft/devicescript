@@ -84,6 +84,10 @@ async function fetchBoards() {
         const info: RepoInfo = await resp.json()
         for (const bid of Object.keys(info.boards)) {
             const board = info.boards[bid]
+            if (!board.productId && (board as any).devClass) {
+                board.productId = (board as any).devClass
+                delete (board as any).devClass
+            }
             board.$schema = resolveSchema(board.$schema, repo)
             log(`  ${bid}: ${board.devName}`)
             if (board.id != bid) throw new Error("board.id wrong")
