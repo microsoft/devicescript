@@ -214,7 +214,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     case EXIT_CODE_EADDRINUSE:
                         // try to send a kill command
                         console.debug(
-                            `trying to shutdown other developement server`
+                            `trying to shutdown other development server`
                         )
                         const killed = await this.sendKillRequest()
                         if (killed) {
