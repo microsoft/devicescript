@@ -12,6 +12,7 @@ import { readdir, stat, writeFile } from "fs/promises"
 import { mkdirp } from "fs-extra"
 import { delay } from "jacdac-ts"
 import { buildConfigFromDir } from "./build"
+import { patchCustomBoard } from "./binpatch"
 
 let buildConfig: ResolvedBuildConfig
 
@@ -47,9 +48,7 @@ export function showBoards(boards: DeviceConfig[], opt = "--board") {
 
 export function showAllBoards(arch: string, opt = "--board") {
     showBoards(
-        Object.values(buildConfig.boards).filter(b =>
-            b.archId.includes(arch)
-        ),
+        Object.values(buildConfig.boards).filter(b => b.archId.includes(arch)),
         opt
     )
 }
@@ -166,7 +165,7 @@ export async function flashESP32(options: FlashESP32Options) {
 
     const cachePath = await fetchFW(board)
 
-    const moff = /-(0x[a-f0-9]+)\.bin$/.exec(board.$fwUrl)
+    const moff = /-(0x[a-f0-9]+)\.bin$/.exec(cachePath)
     if (!moff)
         fatal("invalid $fwUrl format, should end in -0x1000.bin or similar")
 
@@ -263,16 +262,29 @@ export async function flashESP32(options: FlashESP32Options) {
 }
 
 async function fetchFW(board: DeviceConfig) {
-    if (!board.$fwUrl) fatal("no $fwUrl for this board, sorry...")
-    const bn = board.$fwUrl.replace(/.*\//, "")
+    let dlUrl = board.$fwUrl
+    let needsPatch = false
+    if (!dlUrl) {
+        const arch = buildConfig.archs[board.archId]
+        if (arch?.bareUrl) {
+            dlUrl = arch?.bareUrl
+            needsPatch = true
+        } else {
+            fatal(
+                "no $fwUrl for this board and no .bareUrl in arch file, sorry..."
+            )
+        }
+    }
+
+    const bn = dlUrl.replace(/.*\//, "")
     const cachedFolder = ".devicescript/cache/"
     const cachePath = cachedFolder + bn
     const st = await stat(cachePath, { bigint: false }).catch<Stats>(_ => null)
     if (st && Date.now() - st.mtime.getTime() < 24 * 3600 * 1000) {
         log(`using cached ${cachePath}`)
     } else {
-        log(`fetch ${board.$fwUrl}`)
-        const resp = await fetch(board.$fwUrl)
+        log(`fetch ${dlUrl}`)
+        const resp = await fetch(dlUrl)
         if (resp.status != 200)
             fatal(`can't fetch: ${resp.status} ${resp.statusText}`)
         const buf = Buffer.from(await resp.arrayBuffer())
@@ -281,7 +293,18 @@ async function fetchFW(board: DeviceConfig) {
         log(`saved ${cachePath} ${buf.length} bytes`)
     }
 
-    return cachePath
+    if (!needsPatch) return cachePath
+
+    const bn2 = bn.replace(/(.*-)([a-z]\w+)/i, (_, p, s) => p + board.id)
+    log(`patching ${bn} -> ${bn2}...`)
+    const cachePath2 = cachedFolder + bn2
+
+    const arch = buildConfig.archs[board.archId]
+    const buf = await patchCustomBoard(cachePath, board, arch)
+    writeFileSync(cachePath2, buf)
+    log(`saved ${cachePath2} ${buf.length} bytes`)
+
+    return cachePath2
 }
 
 function runTool(prog: string, ...allargs: string[]) {

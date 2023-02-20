@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from "node:fs"
-import { compileBuf, getHost } from "./build"
+import { compileBuf, getHost, validateBoard } from "./build"
 import { CmdOptions, log } from "./command"
 import * as path from "node:path"
 import {
@@ -88,27 +88,24 @@ async function fetchBoards() {
         log(`fetch from ${url}`)
         const resp = await fetch(url)
         const info: RepoInfo = await resp.json()
-        for (const bid of Object.keys(info.boards)) {
-            const board = info.boards[bid]
-            if (!board.productId && (board as any).devClass) {
-                board.productId = (board as any).devClass
-                delete (board as any).devClass
-            }
-            board.$schema = resolveSchema(board.$schema, repo)
-            log(`  ${bid}: ${board.devName}`)
-            if (board.id != bid) throw new Error("board.id wrong")
-            const arch = info.archs[board.archId]
-            if (!arch) throw new Error("board.archId wrong")
-            if (arch.id != board.archId) throw new Error("arch.id wrong")
-            if (ginfo.boards[bid])
-                throw new Error(`board ${bid} already defined`)
-            ginfo.boards[bid] = board
+        for (const archId of Object.keys(info.archs)) {
+            const arch = ginfo.archs[archId]
+            log(`  ARCH ${archId}: ${arch.name}`)
+            if (arch.id != archId) throw new Error(`arch.id wrong in ${archId}`)
             const ex = ginfo.archs[arch.id]
             if (ex && ex !== arch)
                 throw new Error(`arch ${arch.id} already defined`)
             arch.$schema = resolveSchema(arch.$schema, repo)
             arch.repoUrl = repo
             ginfo.archs[arch.id] = arch
+        }
+        for (const bid of Object.keys(info.boards)) {
+            const board = info.boards[bid]
+            log(`  ${bid}: ${board.devName}`)
+            board.$schema = resolveSchema(board.$schema, repo)
+            if (board.id != bid) throw new Error("board.id wrong")
+            validateBoard(board, ginfo)
+            ginfo.boards[bid] = board
         }
     }
     for (const arch of Object.values(ginfo.archs)) {

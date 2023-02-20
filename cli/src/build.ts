@@ -17,6 +17,7 @@ import {
     ResolvedBuildConfig,
     resolveBuildConfig,
     DeviceConfig,
+    RepoInfo,
 } from "@devicescript/compiler"
 import {
     BINDIR,
@@ -182,6 +183,17 @@ function compileServiceSpecs(
     }
 }
 
+export function validateBoard(board: DeviceConfig, baseCfg: RepoInfo) {
+    const bid = board.id
+    if (!/^\w+$/.test(bid)) throw new Error(`invalid identifier: ${bid}`)
+    board.id = bid
+    const arch = baseCfg.archs[board.archId]
+    if (!arch) throw new Error(`board.archId ${board.archId} is invalid`)
+    if (baseCfg.boards[bid]) throw new Error(`board ${bid} already defined`)
+    if ((+board.productId & 0xf000_0000) != 0x3000_0000)
+        throw new Error(`invalid productId ${board.productId}`)
+}
+
 async function compileBoards(
     tsdir: string,
     lcfg: LocalBuildConfig,
@@ -202,14 +214,10 @@ async function compileBoards(
                     await readFile(fullName, "utf-8")
                 )
                 const bid = basename(boardFn, ".board.json")
+                if (board.id && board.id != bid)
+                    throw new Error("ignoring id: field in favor of filename")
                 board.id = bid
-                const arch = baseCfg.archs[board.archId]
-                if (!arch)
-                    throw new Error(`board.archId ${board.archId} is invalid`)
-                if (baseCfg.boards[bid])
-                    throw new Error(`board ${bid} already defined`)
-                if ((+board.productId & 0xf000_0000) != 0x3000_0000)
-                    throw new Error(`invalid productId ${board.productId}`)
+                validateBoard(board, baseCfg)
                 verboseLog(`custom board: ${board.id}`)
                 lcfg.addBoards.push(board)
             } catch (e) {
