@@ -17,8 +17,8 @@ import { patchCustomBoard } from "./binpatch"
 
 let buildConfig: ResolvedBuildConfig
 
-export async function setupFlashBoards(dir = ".") {
-    const r = await buildConfigFromDir(dir)
+export function setupFlashBoards(dir = ".") {
+    const r = buildConfigFromDir(dir)
     buildConfig = r.buildConfig
     return buildConfig
 }
@@ -39,17 +39,30 @@ export interface FlashRP2040Options extends FlashOptions {
     drive?: string
 }
 
-export function showBoards(boards: DeviceConfig[], opt = "--board") {
-    log("Please select board, available options:")
+function boardsToString(boards: DeviceConfig[], opt = "--board") {
     const byArch = groupBy(boards, b => b.archId)
+    let r = ""
     for (const archId of Object.keys(byArch)) {
         const arch = buildConfig.archs[archId]
-        log(`  ${arch?.name ?? archId}:`)
+        r += `  ${arch?.name ?? archId}:\n`
         for (const b of byArch[archId]) {
             const info = boardInfo(b, buildConfig.archs[b.archId])
-            log(`    ${opt} ${b.id.padEnd(25)}  ${info.name}`)
+            r += `    ${opt} ${b.id.padEnd(25)}  ${info.name}\n`
         }
     }
+    return r
+}
+
+export function showBoards(boards: DeviceConfig[], opt = "--board") {
+    log("Please select board, available options:")
+    log(boardsToString(boards, opt))
+}
+
+export function boardNames(arch = "", opt = "--board") {
+    return boardsToString(
+        Object.values(buildConfig.boards).filter(b => b.archId.includes(arch)),
+        opt
+    )
 }
 
 export function showAllBoards(arch: string, opt = "--board") {

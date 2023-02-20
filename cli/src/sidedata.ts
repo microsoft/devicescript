@@ -82,7 +82,7 @@ export function initSideProto(devtools_: DevToolsIface) {
         return devtoolsIface.connect(msg.data)
     })
     addReqHandler<SideSpecsReq, SideSpecsResp>("specs", async msg => {
-        const { buildConfig } = await buildConfigFromDir(msg.data.dir)
+        const { buildConfig } = buildConfigFromDir(msg.data.dir)
         return {
             buildConfig,
             version: packageVersion(),

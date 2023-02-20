@@ -194,7 +194,7 @@ export function validateBoard(board: DeviceConfig, baseCfg: RepoInfo) {
         throw new Error(`invalid productId ${board.productId}`)
 }
 
-async function compileBoards(
+function compileBoards(
     tsdir: string,
     lcfg: LocalBuildConfig,
     errors: DevsDiagnostic[]
@@ -211,7 +211,7 @@ async function compileBoards(
             const fullName = join(dir, boardFn)
             try {
                 const board: DeviceConfig = JSON.parse(
-                    await readFile(fullName, "utf-8")
+                    readFileSync(fullName, "utf-8")
                 )
                 const bid = basename(boardFn, ".board.json")
                 if (board.id && board.id != bid)
@@ -241,16 +241,13 @@ export class CompilationError extends Error {
     }
 }
 
-export async function buildConfigFromDir(
-    dir: string,
-    options: BuildOptions = {}
-) {
+export function buildConfigFromDir(dir: string, options: BuildOptions = {}) {
     const lcfg: LocalBuildConfig = {}
     const errors: DevsDiagnostic[] = []
 
     if (dir) {
         compileServiceSpecs(dir, lcfg, errors)
-        await compileBoards(dir, lcfg, errors)
+        compileBoards(dir, lcfg, errors)
         if (!options.quiet)
             for (const e of errors)
                 console.error(`${e.filename}(${e.line}): ${e.messageText}`)
@@ -266,9 +263,7 @@ export async function compileFile(fn: string, options: BuildOptions = {}) {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
 
-    const { errors, buildConfig } = await buildConfigFromDir(
-        dirname(resolve(fn))
-    )
+    const { errors, buildConfig } = buildConfigFromDir(dirname(resolve(fn)))
 
     const source = readFileSync(fn)
     const res = await compileBuf(source, buildConfig, {

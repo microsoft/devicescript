@@ -9,13 +9,19 @@ import { disasm } from "./disasm"
 import { init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
-import { compileFlagHelp, runtimeVersion } from "@devicescript/compiler"
+import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
 import { setConsoleColors, setVerbose } from "./command"
 import { binPatch } from "./binpatch"
-import { flashAuto, flashESP32, flashRP2040 } from "./flash"
+import {
+    boardNames,
+    flashAuto,
+    flashESP32,
+    flashRP2040,
+    setupFlashBoards,
+} from "./flash"
 import { addBoard } from "./addboard"
 
 export async function mainCli() {
@@ -207,12 +213,19 @@ export async function mainCli() {
 
     const flash = program.command("flash")
 
-    function addFlashCmd(cmd: string) {
-        const r = cmd ? flash.command(cmd) : flash
-        const toBoard = cmd ? ` to an ${cmd.toUpperCase()}-based board` : ``
-        r.description(`flash DeviceScript runtime (interpreter/VM)${toBoard}`)
+    function addFlashCmd(arch: string) {
+        const r = arch ? flash.command(arch) : flash
+        r.description(
+            arch
+                ? `flash with ${arch.toUpperCase()}-specific parameters`
+                : `flash DeviceScript runtime (interpreter/VM)`
+        )
         r.option("-b, --board <board-id>", "specify board to flash")
         r.option("--once", "do not wait for the board to be connected")
+        r.addHelpText("after", () => {
+            setupFlashBoards()
+            return `\nAvailable boards:\n` + boardNames(arch)
+        })
         return r
     }
 
