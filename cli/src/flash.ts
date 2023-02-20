@@ -5,12 +5,21 @@ import { spawn } from "child_process"
 import { log, verboseLog, error, fatal } from "./command"
 import {
     DeviceConfig,
-    boardSpecifications,
     boardInfo,
+    ResolvedBuildConfig,
 } from "@devicescript/compiler"
 import { readdir, stat, writeFile } from "fs/promises"
 import { mkdirp } from "fs-extra"
 import { delay } from "jacdac-ts"
+import { buildConfigFromDir } from "./build"
+
+let buildConfig: ResolvedBuildConfig
+
+export async function setupFlashBoards(dir = ".") {
+    const r = await buildConfigFromDir(dir)
+    buildConfig = r.buildConfig
+    return buildConfig
+}
 
 export interface FlashOptions {
     board?: string
@@ -31,22 +40,23 @@ export interface FlashRP2040Options extends FlashOptions {
 export function showBoards(boards: DeviceConfig[], opt = "--board") {
     log("Please select board, available options:")
     for (const b of boards) {
-        const info = boardInfo(b, boardSpecifications.archs[b.archId])
+        const info = boardInfo(b, buildConfig.archs[b.archId])
         log(`    ${opt} ${b.id.padEnd(25)}  ${info.name}`)
     }
 }
 
 export function showAllBoards(arch: string, opt = "--board") {
     showBoards(
-        Object.values(boardSpecifications.boards).filter(b =>
+        Object.values(buildConfig.boards).filter(b =>
             b.archId.includes(arch)
         ),
         opt
     )
 }
 
-function checkBoard(arch: string, options: FlashOptions) {
-    const b = boardSpecifications.boards[options.board]
+async function checkBoard(arch: string, options: FlashOptions) {
+    await setupFlashBoards()
+    const b = buildConfig.boards[options.board]
     if (!b) {
         showAllBoards(arch)
         if (!options.board) fatal("missing --board")
@@ -62,7 +72,7 @@ export async function flashESP32(options: FlashESP32Options) {
         0x1a86, // CH340 etc
     ]
 
-    const board = checkBoard("esp32", options)
+    const board = await checkBoard("esp32", options)
 
     const listPorts = async () => {
         const ports = await SerialPort.list()
@@ -210,8 +220,8 @@ export async function flashESP32(options: FlashESP32Options) {
                     .replace(/-D0.*/, "")
                     .replace(/-/g, "")
                     .toLowerCase()
-                if (boardSpecifications.archs[chipId]) {
-                    boards = Object.values(boardSpecifications.boards).filter(
+                if (buildConfig.archs[chipId]) {
+                    boards = Object.values(buildConfig.boards).filter(
                         b => b.archId == chipId
                     )
                 }
@@ -382,7 +392,7 @@ async function rescan<T>(
 }
 
 export async function flashRP2040(options: FlashRP2040Options) {
-    const board = checkBoard("rp2040", options)
+    const board = await checkBoard("rp2040", options)
     if (!options.drive) {
         const drives = await rescan(
             options,

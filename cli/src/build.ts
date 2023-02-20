@@ -233,22 +233,37 @@ export class CompilationError extends Error {
     }
 }
 
+export async function buildConfigFromDir(
+    dir: string,
+    options: BuildOptions = {}
+) {
+    const lcfg: LocalBuildConfig = {}
+    const errors: DevsDiagnostic[] = []
+
+    if (dir) {
+        compileServiceSpecs(dir, lcfg, errors)
+        await compileBoards(dir, lcfg, errors)
+        if (!options.quiet)
+            for (const e of errors)
+                console.error(`${e.filename}(${e.line}): ${e.messageText}`)
+    }
+
+    return {
+        buildConfig: resolveBuildConfig(lcfg),
+        errors,
+    }
+}
+
 export async function compileFile(fn: string, options: BuildOptions = {}) {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
 
-    const lcfg: LocalBuildConfig = {}
-    const errors: DevsDiagnostic[] = []
-    const dir = dirname(resolve(fn))
-    compileServiceSpecs(dir, lcfg, errors)
-    await compileBoards(dir, lcfg, errors)
-
-    if (!options.quiet)
-        for (const e of errors)
-            console.error(`${e.filename}(${e.line}): ${e.messageText}`)
+    const { errors, buildConfig } = await buildConfigFromDir(
+        dirname(resolve(fn))
+    )
 
     const source = readFileSync(fn)
-    const res = await compileBuf(source, resolveBuildConfig(lcfg), {
+    const res = await compileBuf(source, buildConfig, {
         ...options,
         mainFileName: fn,
     })

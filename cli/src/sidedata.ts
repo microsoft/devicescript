@@ -21,8 +21,9 @@ import {
     SideWatchReq,
     SideWatchResp,
 } from "./sideprotocol"
-import { runtimeVersion, boardSpecifications } from "@devicescript/compiler"
+import { runtimeVersion } from "@devicescript/compiler"
 import { packageVersion } from "./version"
+import { buildConfigFromDir } from "./build"
 
 export interface DevToolsIface {
     bus: JDBus
@@ -80,10 +81,10 @@ export function initSideProto(devtools_: DevToolsIface) {
     addReqHandler<SideConnectReq>("connect", msg => {
         return devtoolsIface.connect(msg.data)
     })
-    addReqHandler<SideSpecsReq, SideSpecsResp>("specs", async () => {
+    addReqHandler<SideSpecsReq, SideSpecsResp>("specs", async msg => {
+        const { buildConfig } = await buildConfigFromDir(msg.data.dir)
         return {
-            specs: serviceSpecifications(),
-            boards: Object.values(boardSpecifications.boards),
+            buildConfig,
             version: packageVersion(),
             runtimeVersion: runtimeVersion(),
             nodeVersion: process.version,

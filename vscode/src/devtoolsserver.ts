@@ -59,11 +59,12 @@ export class DeveloperToolsManager extends JDEventSource {
         const oldSpecs = this._specs
         const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
             req: "specs",
-            data: {},
+            data: {
+                dir: ".", // TODO
+            },
         })
         this._specs = res.data
-        const { specs } = this._specs
-        loadServiceSpecifications(specs)
+        loadServiceSpecifications(this._specs.buildConfig.services)
         console.log(
             `devicescript devtools ${this.version}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
         )
@@ -96,7 +97,7 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     get boards() {
-        return this._specs?.boards
+        return Object.values(this._specs?.buildConfig.boards)
     }
 
     get projectFolder() {

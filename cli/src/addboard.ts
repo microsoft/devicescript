@@ -1,11 +1,10 @@
-import { boardSpecifications } from "@devicescript/compiler"
 import { existsSync } from "fs"
 import { mkdirp } from "fs-extra"
 import { writeFile } from "fs/promises"
 import { clone, randomUInt } from "jacdac-ts"
 import { join } from "path"
 import { fatal, log } from "./command"
-import { showAllBoards } from "./flash"
+import { setupFlashBoards, showAllBoards } from "./flash"
 
 export interface AddBoardOptions {
     base?: string
@@ -17,7 +16,8 @@ export interface AddBoardOptions {
 const boardsPath = "boards"
 
 export async function addBoard(options: AddBoardOptions) {
-    const baseBoard = boardSpecifications.boards[options.base]
+    const cfg = await setupFlashBoards()
+    const baseBoard = cfg.boards[options.base]
     if (!baseBoard) {
         showAllBoards("", "--base")
         fatal(
@@ -38,7 +38,7 @@ export async function addBoard(options: AddBoardOptions) {
         log(`using --board ${options.board}`)
     }
 
-    if (boardSpecifications.boards[options.board])
+    if (cfg.boards[options.board])
         fatal(`board '${options.board}' already exists`)
 
     await mkdirp(boardsPath)
@@ -46,7 +46,7 @@ export async function addBoard(options: AddBoardOptions) {
     const boardJsonPath = join(boardsPath, options.board + ".board.json")
     if (!options.force && existsSync(boardJsonPath)) fatal(`file ${boardJsonPath} already exists; use --force to overwrite`)
 
-    const arch = boardSpecifications.archs[baseBoard.archId]
+    // const arch = cfg.archs[baseBoard.archId]
 
     const board = clone(baseBoard)
     board.devName = options.name

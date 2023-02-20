@@ -1,4 +1,4 @@
-import type { CompilationResult, DeviceConfig } from "@devicescript/compiler"
+import type { CompilationResult, ResolvedBuildConfig } from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
 import type { BuildOptions } from "./build"
 
@@ -58,11 +58,12 @@ export interface SideConnectReq extends SideReq<"connect"> {
 }
 
 export interface SideSpecsReq extends SideReq<"specs"> {
-    data: {}
+    data: {
+        dir?: string // if dir===undefined, only global specs will be returned
+    }
 }
 export interface SideSpecsData {
-    specs: jdspec.ServiceSpec[]
-    boards: DeviceConfig[]
+    buildConfig: ResolvedBuildConfig
     version: string
     runtimeVersion: string
     nodeVersion: string
