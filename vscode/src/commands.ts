@@ -69,3 +69,24 @@ export async function withProgress(
 
     showError(error)
 }
+
+export async function openDocUri(path: string) {
+    const helpUri = vscode.Uri.parse(
+        `https://microsoft.github.io/devicescript/${path}`
+    )
+    const success = await vscode.env.openExternal(helpUri)
+    return success
+}
+
+export async function showInformationMessageWithHelp(
+    message: string,
+    path: string
+): Promise<boolean | undefined> {
+    const help = "Open Help"
+    const res = await vscode.window.showInformationMessage(
+        MESSAGE_PREFIX + message,
+        help
+    )
+    if (res === help) return await openDocUri(path)
+    return undefined
+}
