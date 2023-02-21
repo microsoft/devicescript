@@ -10,6 +10,22 @@ description: MSR JM Brain S2-mini 207 v4.2
 - RGB LED on pins 8, 7, 6
 - Service: power
 
+## Pins
+
+```
+P33: GPIO33, io
+P34: GPIO34, io
+jacdac.pin: GPIO17, analogOut, io
+led.rgb[0].pin: GPIO8, analogIn, io
+led.rgb[1].pin: GPIO7, analogIn, io
+led.rgb[2].pin: GPIO6, analogIn, io
+sd.pinCS: GPIO38, io
+sd.pinMISO: GPIO37, io
+sd.pinMOSI: GPIO35, io
+sd.pinSCK: GPIO36, io
+services.power[0].pinEn: GPIO2, analogIn, io
+services.power[0].pinFault: GPIO13, io
+```
 
 
 
@@ -43,18 +59,22 @@ devicescript flash esp32 --board msr207_v42
     "led": {
         "rgb": [
             {
-                "pin": 8,
-                "mult": 250
+                "mult": 250,
+                "pin": 8
             },
             {
-                "pin": 7,
-                "mult": 60
+                "mult": 60,
+                "pin": 7
             },
             {
-                "pin": 6,
-                "mult": 150
+                "mult": 150,
+                "pin": 6
             }
         ]
+    },
+    "pins": {
+        "P33": 33,
+        "P34": 34
     },
     "sd": {
         "pinCS": 38,
@@ -62,14 +82,14 @@ devicescript flash esp32 --board msr207_v42
         "pinMOSI": 35,
         "pinSCK": 36
     },
-    "_": [
+    "services": [
         {
-            "service": "power",
-            "name": "power",
+            "faultIgnoreMs": 100,
             "mode": 0,
+            "name": "power",
             "pinEn": 2,
             "pinFault": 13,
-            "faultIgnoreMs": 100
+            "service": "power"
         }
     ]
 }

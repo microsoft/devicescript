@@ -1,11 +1,12 @@
 ---
-description: Raspberry Pi Pico W
+description: Raspberry Pi Pico
 ---
-# Raspberry Pi Pico W
+# Raspberry Pi Pico
 
 
 
 
+- LED on pin 25
 - serial logging on 0 at 115200 8N1
 - [Store](https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html)
 
@@ -37,6 +38,7 @@ P6: GPIO6, io
 P7: GPIO7, io
 P8: GPIO8, io
 P9: GPIO9, io
+led.pin: GPIO25, io
 log.pinTX: GPIO0, io
 ```
 
@@ -50,22 +52,25 @@ select **DeviceScript: Flash Firmware...** from the command palette.
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
-devicescript flash rp2040 --board pico_w
+devicescript flash rp2040 --board pico
 ```
 
 
-- [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2)
+- [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-pico.uf2)
 
 ## Configuration
 
-```json title="pico_w.json"
+```json title="pico.json"
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
-    "id": "pico_w",
-    "devName": "Raspberry Pi Pico W",
-    "productId": "0x3a513204",
-    "archId": "rp2040w",
+    "id": "pico",
+    "devName": "Raspberry Pi Pico",
+    "productId": "0x3f6e1f0c",
+    "archId": "rp2040",
     "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
+    "led": {
+        "pin": 25
+    },
     "log": {
         "baud": 115200,
         "pinTX": 0

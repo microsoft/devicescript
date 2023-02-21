@@ -11,6 +11,24 @@ description: MSR JacdacIoT 48 v0.2
 - RGB LED on pins 8, 7, 6
 - Service: power
 
+## Pins
+
+```
+P33: GPIO33, io
+P34: GPIO34, io
+P35: GPIO35, io
+P36: GPIO36, io
+RX: GPIO38, io
+TX: GPIO37, io
+i2c.pinSCL: GPIO10, analogIn, io
+i2c.pinSDA: GPIO9, analogIn, io
+jacdac.pin: GPIO17, analogOut, io
+led.rgb[0].pin: GPIO8, analogIn, io
+led.rgb[1].pin: GPIO7, analogIn, io
+led.rgb[2].pin: GPIO6, analogIn, io
+services.power[0].pinEn: GPIO2, analogIn, io
+services.power[0].pinFault: GPIO13, io
+```
 
 
 ![MSR JacdacIoT 48 v0.2 picture](https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/jmbrainesp3248v03.catalog.jpg)
@@ -39,6 +57,11 @@ devicescript flash esp32 --board msr48
     "devName": "MSR JacdacIoT 48 v0.2",
     "productId": "0x3de1398b",
     "archId": "esp32s2",
+    "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 10,
+        "pinSDA": 9
+    },
     "jacdac": {
         "$connector": "Jacdac",
         "pin": 17
@@ -46,32 +69,35 @@ devicescript flash esp32 --board msr48
     "led": {
         "rgb": [
             {
-                "pin": 8,
-                "mult": 250
+                "mult": 250,
+                "pin": 8
             },
             {
-                "pin": 7,
-                "mult": 60
+                "mult": 60,
+                "pin": 7
             },
             {
-                "pin": 6,
-                "mult": 150
+                "mult": 150,
+                "pin": 6
             }
         ]
     },
-    "i2c": {
-        "$connector": "Qwiic",
-        "pinSCL": 10,
-        "pinSDA": 9
+    "pins": {
+        "P33": 33,
+        "P34": 34,
+        "P35": 35,
+        "P36": 36,
+        "RX": 38,
+        "TX": 37
     },
-    "_": [
+    "services": [
         {
-            "service": "power",
-            "name": "power",
+            "faultIgnoreMs": 100,
             "mode": 0,
+            "name": "power",
             "pinEn": 2,
             "pinFault": 13,
-            "faultIgnoreMs": 100
+            "service": "power"
         }
     ]
 }

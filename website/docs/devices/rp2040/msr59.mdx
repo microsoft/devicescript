@@ -8,8 +8,26 @@ RP2040 brain running DeviceScript and related services
 
 - Jacdac on pin 9 using Jacdac connector
 - RGB LED on pins 11, 13, 15
+- serial logging on 2 at 115200 8N1
 - Service: power
 
+## Pins
+
+```
+P26: GPIO26, analogIn, io
+P27: GPIO27, analogIn, io
+P3: GPIO3, io
+P4: GPIO4, io
+P5: GPIO5, io
+P6: GPIO6, io
+jacdac.pin: GPIO9, io
+led.rgb[0].pin: GPIO11, io
+led.rgb[1].pin: GPIO13, io
+led.rgb[2].pin: GPIO15, io
+log.pinTX: GPIO2, io
+services.power[0].pinEn: GPIO19, io
+services.power[0].pinFault: GPIO25, io
+```
 
 
 ![MSR Brain RP2040 59 v0.1 picture](https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/rp2040devicescript59v01.catalog.jpg)
@@ -45,27 +63,39 @@ devicescript flash rp2040 --board msr59
     "led": {
         "rgb": [
             {
-                "pin": 11,
-                "mult": 250
+                "mult": 250,
+                "pin": 11
             },
             {
-                "pin": 13,
-                "mult": 60
+                "mult": 60,
+                "pin": 13
             },
             {
-                "pin": 15,
-                "mult": 150
+                "mult": 150,
+                "pin": 15
             }
         ]
     },
-    "_": [
+    "log": {
+        "baud": 115200,
+        "pinTX": 2
+    },
+    "pins": {
+        "P26": 26,
+        "P27": 27,
+        "P3": 3,
+        "P4": 4,
+        "P5": 5,
+        "P6": 6
+    },
+    "services": [
         {
-            "service": "power",
+            "faultIgnoreMs": 100,
+            "mode": 2,
             "name": "power",
             "pinEn": 19,
             "pinFault": 25,
-            "mode": 2,
-            "faultIgnoreMs": 100
+            "service": "power"
         }
     ]
 }
