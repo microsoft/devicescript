@@ -4,8 +4,6 @@ import {
     BuildStatus,
     ConnectReqArgs,
     OutputFrom,
-    SideAddBoardReq,
-    SideAddBoardResp,
     SideBcastReq,
     SideBuildReq,
     SideBuildResp,
@@ -95,9 +93,6 @@ export function initSideProto(devtools_: DevToolsIface) {
     addReqHandler<SideKillReq, SideKillResp>("kill", async () => {
         // allow send answer
         setTimeout(() => process.exit(0), 500)
-    })
-    addReqHandler<SideAddBoardReq, SideAddBoardResp>("addboard", async () => {
-        
     })
 }
 
