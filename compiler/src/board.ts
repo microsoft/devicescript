@@ -96,7 +96,7 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
     lines.push(...b.services.map(f => `* Service: ${f}`))
     b.markdown = lines.filter(l => !!l).join("\n")
     if (b.pinInfoText?.trim())
-        b.markdown += "\n\n```text\n" + b.pinInfoText + "\n```\n"
+        b.markdown += "\n\n```\n" + b.pinInfoText + "\n```\n"
 
     return b
 }
@@ -112,13 +112,13 @@ export function architectureFamily(id: string) {
 
 function deviceConfigToMarkdown(
     board: DeviceConfig,
+    arch: ArchConfig,
     spec: jdspec.DeviceSpec
 ): string {
     const { devName, $description, url, $fwUrl, id: devId, archId } = board
     const { id } = spec || {}
     const boardJson = normalizeDeviceConfig(board, { ignoreFirmwareUrl: true })
-    const info = boardInfo(board)
-    info.markdown
+    const info = boardInfo(board, arch)
     const r: string[] = [
         `---
 description: ${devName}
@@ -132,7 +132,7 @@ ${$description || spec?.description || ""}
         ...info.services.map(f => `- Service: ${f}`),
         url ? `- [Store](${url})` : undefined,
         `\n## Pins\n`,
-        "```text\n" + info.pinInfoText + "\n```\n\n",
+        "```\n" + info.pinInfoText + "\n```\n\n",
         id
             ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
             : undefined,
@@ -160,19 +160,23 @@ ${JSON.stringify(boardJson, null, 4)}
 }
 
 export function boardMarkdownFiles() {
-    const { boards } = resolveBuildConfig()
+    const { boards, archs } = resolveBuildConfig()
     const catalog = new DeviceCatalog()
     //const catalog = new DeviceCatalog()
     const r: Record<string, string> = {}
     Object.keys(boards).forEach(boardid => {
         const board = boards[boardid]
         const { archId, productId, devName } = board
-        if (!archId || archId === "wasm") return
+        if (!archId || archId === "wasm" || archId == "native") return
         const spec: jdspec.DeviceSpec =
             catalog.specificationFromProductIdentifier(parseAnyInt(productId))
         const aid = architectureFamily(archId)
         const pa = `${aid}/${boardid.replace(/_/g, "-")}`
-        r[`${pa}.mdx`] = deviceConfigToMarkdown(board, spec)
+        r[`${pa}.mdx`] = deviceConfigToMarkdown(
+            board,
+            archs[board.archId],
+            spec
+        )
 
         const aidmd = `${aid}/boards.mdp`
         const img = deviceCatalogImage(spec, "avatar")
@@ -243,7 +247,10 @@ export function expandPinFunctionInfo(info: PinFunctionInfo): PinFunction[][] {
         set(p, "output")
     }
 
-    ;(info as any)["#pinInfo"] = res
+    Object.defineProperty(info, "#pinInfo", {
+        value: res,
+        enumerable: false,
+    })
 
     return res
 }
