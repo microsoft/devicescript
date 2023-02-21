@@ -56,6 +56,20 @@ export interface DevToolsOptions {
 let devtoolsSelf: DevToolsIface
 let watcher: FSWatcher
 
+function loadProjectServiceSpecifications() {
+    const { added, errors } = loadServiceSpecifications(
+        resolveBuildConfig().services
+    )
+    if (added?.length)
+        console.debug(`services: added ${added.map(a => a.shortId).join(", ")}`)
+    if (errors?.length)
+        errors.forEach(err =>
+            console.error(
+                `services: error adding ${err.spec.shortId}, ${err.message}`
+            )
+        )
+}
+
 export async function devtools(
     fn: string | undefined,
     options: DevToolsOptions & CmdOptions & TransportsOptions = {}
@@ -70,7 +84,7 @@ export async function devtools(
 
     log(cliVersion())
 
-    loadServiceSpecifications(resolveBuildConfig().services)
+    loadProjectServiceSpecifications()
 
     const traceFd = options.trace ? await open(options.trace, "w") : null
 

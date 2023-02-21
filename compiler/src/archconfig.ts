@@ -59,6 +59,39 @@ export interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
     services?: ServiceConfig[]
 }
 
+export function normalizeDeviceConfig(
+    board: DeviceConfig,
+    options?: { ignoreFirmwareUrl?: boolean; ignoreId?: boolean }
+) {
+    const { ignoreFirmwareUrl, ignoreId } = options || {}
+    const {
+        $schema,
+        id,
+        devName,
+        productId,
+        $description,
+        archId,
+        url,
+        $fwUrl,
+        ...rest
+    } = board
+
+    const res = {
+        $schema,
+        id,
+        devName,
+        productId,
+        $description,
+        archId,
+        url,
+        $fwUrl,
+        ...rest,
+    }
+    if (ignoreId) delete res.id
+    if (ignoreFirmwareUrl) delete res.$fwUrl
+    return res
+}
+
 export interface LocalBuildConfig {
     addBoards?: DeviceConfig[]
     addArchs?: ArchConfig[]

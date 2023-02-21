@@ -18,14 +18,61 @@ description: MSR JacdacIoT 48 v0.2
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash esp32 --board msr48
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin)
+
+## Configuration
+
+```json title="msr48.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "msr48",
+    "devName": "MSR JacdacIoT 48 v0.2",
+    "productId": "0x3de1398b",
+    "archId": "esp32s2",
+    "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 17
+    },
+    "led": {
+        "rgb": [
+            {
+                "pin": 8,
+                "mult": 250
+            },
+            {
+                "pin": 7,
+                "mult": 60
+            },
+            {
+                "pin": 6,
+                "mult": 150
+            }
+        ]
+    },
+    "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 10,
+        "pinSDA": 9
+    },
+    "_": [
+        {
+            "service": "power",
+            "name": "power",
+            "mode": 0,
+            "pinEn": 2,
+            "pinFault": 13,
+            "faultIgnoreMs": 100
+        }
+    ]
+}
+```

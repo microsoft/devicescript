@@ -28,20 +28,7 @@ import {
     CONNECTION_RESOURCE_GROUP,
 } from "./constants"
 import { TaggedQuickPickItem } from "./pickers"
-
-async function createFile(
-    fileName: string,
-    fileContent: string
-): Promise<void> {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0]
-    const file = vscode.Uri.joinPath(workspaceFolder.uri, fileName)
-    await vscode.workspace.fs.writeFile(
-        file,
-        new TextEncoder().encode(fileContent)
-    )
-    const document = await vscode.workspace.openTextDocument(file)
-    await vscode.window.showTextDocument(document)
-}
+import { writeFile } from "./fs"
 
 class CloudCollection extends JDNode {
     constructor(
@@ -204,7 +191,8 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                     const body = await script.refreshBody()
                     if (!body) return
                     const text = body.text
-                    await createFile(
+                    await writeFile(
+                        vscode.workspace.workspaceFolders[0].uri,
                         `./${name}${name.endsWith(".ts") ? "" : ".ts"}`,
                         text
                     )

@@ -4,6 +4,7 @@ import {
     RepoInfo,
     PinFunctionInfo,
     PinFunction,
+    normalizeDeviceConfig,
 } from "./archconfig"
 import { DeviceCatalog, deviceCatalogImage } from "jacdac-ts"
 import { parseAnyInt } from "./dcfg"
@@ -113,6 +114,7 @@ function deviceConfigToMarkdown(
 ): string {
     const { devName, $description, url, $fwUrl, id: devId, archId } = board
     const { id } = spec || {}
+    const boardJson = normalizeDeviceConfig(board, { ignoreFirmwareUrl: true })
     const info = boardInfo(board)
     info.markdown
     const r: string[] = [
@@ -134,17 +136,23 @@ ${$description || spec?.description || ""}
             : undefined,
         `\n## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 \`\`\`bash
 devicescript flash ${architectureFamily(archId)} --board ${devId}
 \`\`\`
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 `,
-        $fwUrl ? `- [Firmware](${$fwUrl})` : undefined,
+        $fwUrl ? `- [Firmware](${$fwUrl})\n` : undefined,
+        `## Configuration
+
+\`\`\`json title="${devId}.json"
+${JSON.stringify(boardJson, null, 4)}
+\`\`\`
+`,
     ]
     return r.filter(s => s !== undefined).join("\n")
 }

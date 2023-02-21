@@ -15,14 +15,60 @@ description: MSR RP2040 Brain 124 v0.1
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash rp2040 --board msr124
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr124.uf2)
+
+## Configuration
+
+```json title="msr124.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "id": "msr124",
+    "devName": "MSR RP2040 Brain 124 v0.1",
+    "productId": "0x3875e80d",
+    "archId": "rp2040",
+    "pinPwrNILimHi": 18,
+    "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 9
+    },
+    "led": {
+        "rgb": [
+            {
+                "pin": 16,
+                "mult": 250
+            },
+            {
+                "pin": 14,
+                "mult": 60
+            },
+            {
+                "pin": 15,
+                "mult": 150
+            }
+        ]
+    },
+    "_": [
+        {
+            "service": "power",
+            "name": "power",
+            "pinEn": 22,
+            "pinFault": 12,
+            "pinPulse": 8,
+            "mode": 3,
+            "faultIgnoreMs": 1000,
+            "pinLedPulse": 13,
+            "pinUsbDetect": 11
+        }
+    ]
+}
+```

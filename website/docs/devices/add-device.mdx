@@ -1,0 +1,52 @@
+---
+description: How to create a new device configuration for your device
+position: 3
+---
+
+# Add Device
+
+If your device is already using a supported chipset architecture,
+you can configure a DeviceScript firmware using a configuration file in your project.
+
+## How to create a new configuration
+
+### Create the new `board.json` file
+
+You will need three pieces of information to start a new board configuration: (1) the existing configuration
+you will fork, (2) a name and (3) an identifier.
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Add Device Configuratin...** from the command palette.
+
+Using the [Command Line](/getting-started/cli), use the `addboard` command and follow the instructions.
+
+```bash
+devicescript addboard
+```
+
+After this process, you wil have a new JSON under `/boards/`. The command line and
+Visual Studio Code will automatically integrate any configuration files in the `/boards` folder.
+
+### Editing the generated Device configuration (.json) file
+
+The new configuration file is a schematized JSON file. In Visual Studio Code, you will get tooltip, completion,
+syntax errors and auto-completion.
+
+-   [ ] Update the pin map
+-   [ ] Update the board description
+-   [ ] If available, prodive a URL where the board can be purchased
+
+### Flash the new configuration
+
+The command line and Visual Studio will automatically integrate any configuration file in the `/boards` folder.
+The first should be to flash the firmware again using the new configuration.
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+Using the [command line](/getting-started/cli), use the `flash` command.
+
+## Contributing
+
+If you have successfully crafted a configuration for your Device and you would like to share it with other users,
+you can open a GitHub Isse at https://github.com/microsoft/devicescript and attach the .JSON file. The file will
+be reviewed and integrate into the built-in list.

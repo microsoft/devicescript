@@ -17,14 +17,56 @@ RP2040 brain running DeviceScript and related services
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash rp2040 --board msr59
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr59.uf2)
+
+## Configuration
+
+```json title="msr59.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "id": "msr59",
+    "devName": "MSR Brain RP2040 59 v0.1",
+    "productId": "0x35a678a3",
+    "archId": "rp2040",
+    "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 9
+    },
+    "led": {
+        "rgb": [
+            {
+                "pin": 11,
+                "mult": 250
+            },
+            {
+                "pin": 13,
+                "mult": 60
+            },
+            {
+                "pin": 15,
+                "mult": 150
+            }
+        ]
+    },
+    "_": [
+        {
+            "service": "power",
+            "name": "power",
+            "pinEn": 19,
+            "pinFault": 25,
+            "mode": 2,
+            "faultIgnoreMs": 100
+        }
+    ]
+}
+```

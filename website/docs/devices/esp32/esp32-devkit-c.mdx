@@ -17,14 +17,54 @@ ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exp
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash esp32 --board esp32_devkit_c
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin)
+
+## Configuration
+
+```json title="esp32_devkit_c.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "esp32_devkit_c",
+    "devName": "Espressif ESP32-DevKitC",
+    "productId": "0x3c507a05",
+    "$description": "ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exposed and is easy to connect and use.",
+    "archId": "esp32",
+    "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html",
+    "jacdac": {
+        "$connector": "Header",
+        "pin": 17
+    },
+    "led": {
+        "pin": 2
+    },
+    "#i2c": {
+        "$connector": "Header",
+        "pinSCL": 22,
+        "pinSDA": 21
+    },
+    "pins": {
+        "VP": 36,
+        "VN": 39,
+        "P34": 34,
+        "P35": 35,
+        "BOOT": 0,
+        "TX0": 1,
+        "RX0": 3,
+        "LED": 2,
+        "P5": 5,
+        "P12": 12,
+        "P14": 14,
+        "P15": 15
+    }
+}
+```
