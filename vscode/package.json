@@ -377,6 +377,9 @@
                     "command": "extension.devicescript.terminal.show"
                 },
                 {
+                    "command": "extension.devicescript.boards.add"
+                },
+                {
                     "command": "extension.devicescript.cloud.configure"
                 },
                 {
@@ -417,7 +420,12 @@
             },
             {
                 "command": "extension.devicescript.device.flash",
-                "title": "Flash firmware...",
+                "title": "Flash Firmware...",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.boards.add",
+                "title": "Add Board...",
                 "category": "DeviceScript"
             },
             {
