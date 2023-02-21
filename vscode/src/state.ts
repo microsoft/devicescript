@@ -1,6 +1,7 @@
 import {
     architectureFamily,
     DeviceConfig,
+    normalizeDeviceConfig,
     parseAnyInt,
 } from "@devicescript/compiler"
 import {
@@ -17,8 +18,6 @@ import {
     CONNECTION_STATE,
     ConnectionState,
     JDDevice,
-    clone,
-    randomUInt,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import {
@@ -197,13 +196,12 @@ export class DeviceScriptExtensionState extends JDEventSource {
         })
         if (board === undefined) return
 
-        // ready to generate file
-        const newBoard = clone(base.data)
+        const newBoard = normalizeDeviceConfig(base.data, {
+            ignoreFirmwareUrl: true,
+            ignoreId: true,
+        })
         newBoard.devName = name
-        newBoard.productId =
-            "0x" + (randomUInt(0xfff_ffff) | 0x3000_0000).toString(16)
-        delete newBoard.id
-        delete newBoard.$fwUrl
+        newBoard.productId = this.bus.deviceCatalog.uniqueFirmwareId()
 
         const content = JSON.stringify(newBoard, null, 4)
         await writeFile(

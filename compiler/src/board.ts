@@ -1,4 +1,9 @@
-import { DeviceConfig, ArchConfig, RepoInfo } from "./archconfig"
+import {
+    DeviceConfig,
+    ArchConfig,
+    RepoInfo,
+    normalizeDeviceConfig,
+} from "./archconfig"
 import { DeviceCatalog, deviceCatalogImage } from "jacdac-ts"
 import { parseAnyInt } from "./dcfg"
 import { resolveBuildConfig } from "./specgen"
@@ -99,30 +104,9 @@ function deviceConfigToMarkdown(
     board: DeviceConfig,
     spec: jdspec.DeviceSpec
 ): string {
-    const {
-        devName,
-        $description,
-        url,
-        $fwUrl,
-        id: devId,
-        archId,
-        $schema,
-        productId,
-        ...rest
-    } = board
+    const { devName, $description, url, $fwUrl, id: devId, archId } = board
     const { id } = spec || {}
-    // drop $fwurl
-    const boardJson = {
-        $schema,
-        id: devId,
-        devName,
-        $description,
-        archId,
-        productId,
-        url,
-        ...rest,
-    }
-
+    const boardJson = normalizeDeviceConfig(board, { ignoreFirmwareUrl: true })
     const info = boardInfo(board)
     info.markdown
     const r: string[] = [
