@@ -14,6 +14,7 @@ export interface CToolOptions {
     empty?: boolean
     test?: boolean
     fetchBoards?: string
+    localBoards?: string
 }
 
 function readdir(folder: string) {
@@ -26,7 +27,7 @@ const rtest = "devs/run-tests"
 
 export async function ctool(options: CToolOptions & CmdOptions) {
     if (options.fetchBoards) {
-        const ginfo = await fetchBoards()
+        const ginfo = await fetchBoards(options)
         await writeFile(options.fetchBoards, JSON.stringify(ginfo, null, 2))
         process.exit(0)
     }
@@ -81,15 +82,29 @@ function resolveSchema(sch: string, repo: string) {
     return sch
 }
 
-async function fetchBoards() {
+async function fetchBoards(options: CToolOptions) {
     const ginfo: RepoInfo = { boards: {}, archs: {} }
     for (const repo of boardRepos) {
-        const url = repo + "/releases/latest/download/info.json"
-        log(`fetch from ${url}`)
-        const resp = await fetch(url)
-        const info: RepoInfo = await resp.json()
+        let info: RepoInfo
+
+        if (options.localBoards) {
+            const p = path.join(
+                options.localBoards,
+                repo.replace(/.*\//, ""),
+                "dist",
+                "info.json"
+            )
+            log(`fetch from ${p}`)
+            info = JSON.parse(readFileSync(p, "utf8"))
+        } else {
+            const url = repo + "/releases/latest/download/info.json"
+            log(`fetch from ${url}`)
+            const resp = await fetch(url)
+            info = await resp.json()
+        }
+
         for (const archId of Object.keys(info.archs)) {
-            const arch = ginfo.archs[archId]
+            const arch = info.archs[archId]
             log(`  ARCH ${archId}: ${arch.name}`)
             if (arch.id != archId) throw new Error(`arch.id wrong in ${archId}`)
             const ex = ginfo.archs[arch.id]
