@@ -17,6 +17,7 @@ export interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
      * This is auto-populated from file name.
      *
      * @examples ["adafruit_qt_py_c3", "esp32_devkit_c"]
+     * @TJS-ignore
      */
     id?: string
 
@@ -29,8 +30,9 @@ export interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
     archId?: string
 
     /**
-     * Where to download BIN/UF2 file.
-     * Auto-populated.
+     * Where to download BIN/UF2 file from.
+     * 
+     * @TJS-ignore
      */
     $fwUrl?: string
 
@@ -45,9 +47,16 @@ export interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
     url?: string
 
     /**
-     * Services to mount.
+     * Is it a user-defined board.
+     * 
+     * @TJS-ignore
      */
-    _?: ServiceConfig[]
+    $custom?: boolean
+
+    /**
+     * Services to mount. Each starts with { "service": "..." }
+     */
+    services?: ServiceConfig[]
 }
 
 export interface LocalBuildConfig {
@@ -71,6 +80,72 @@ export interface RepoInfo {
      */
     repoUrl?: string
 }
+
+export interface PinFunctionInfo {
+    /**
+     * Pins with both input and output capability.
+     */
+    io: string
+
+    /**
+     * Pins capable of general purpose input.
+     * `io` pins are automatically added here.
+     */
+    input?: string
+
+    /**
+     * Pins capable of general purpose output.
+     * `io` pins are automatically added here.
+     */
+    output?: string
+
+    /**
+     * Pins capable of analog input (ADC).
+     */
+    analogIn?: string
+
+    /**
+     * Pins used in boot process.
+     */
+    boot?: string
+
+    /**
+     * Pins used by hardware UART during boot.
+     */
+    bootUart?: string
+
+    /**
+     * Pins used by JTAG or SWD debugger interface.
+     */
+    debug?: string
+
+    /**
+     * Pins capable of true analog output (DAC, not PWM).
+     */
+    analogOut?: string
+
+    /**
+     * Pins capable of touch input.
+     */
+    touch?: string
+
+    /**
+     * Pins used by the SPI flash interface.
+     */
+    flash?: string
+
+    /**
+     * Pins used by PSRAM interface.
+     */
+    psram?: string
+
+    /**
+     * Pins used by USB interface.
+     */
+    usb?: string
+}
+
+export type PinFunction = keyof PinFunctionInfo
 
 export interface ArchConfig extends JsonComment {
     $schema?: string
@@ -126,4 +201,9 @@ export interface ArchConfig extends JsonComment {
      * If specified, this shows where the generic part of BIN file starts.
      */
     binGenericFlashOffset?: HexInt
+
+    /**
+     * Defines a mapping from a pin function
+     */
+    pins?: PinFunctionInfo & JsonComment
 }

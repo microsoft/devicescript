@@ -18,6 +18,7 @@ import {
     resolveBuildConfig,
     DeviceConfig,
     RepoInfo,
+    pinsInfo,
 } from "@devicescript/compiler"
 import {
     BINDIR,
@@ -192,6 +193,9 @@ export function validateBoard(board: DeviceConfig, baseCfg: RepoInfo) {
     if (baseCfg.boards[bid]) throw new Error(`board ${bid} already defined`)
     if ((+board.productId & 0xf000_0000) != 0x3000_0000)
         throw new Error(`invalid productId ${board.productId}`)
+    const { desc, errors } = pinsInfo(arch, board)
+    verboseLog(desc)
+    if (errors.length) throw new Error(errors.join("\n"))
 }
 
 function compileBoards(

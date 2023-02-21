@@ -13,6 +13,7 @@ import {
     jsonToDcfg,
     boardInfos,
     RepoInfo,
+    pinsInfo,
 } from "@devicescript/compiler"
 import { HexInt } from "@devicescript/srvcfg"
 import { readFile, writeFile } from "fs/promises"
@@ -172,16 +173,21 @@ async function patchEspFile(
     // return bufferConcat(binFile.slice(0, imgoffset), res)
 }
 
-function compileBoard(json: DeviceConfig) {
-    const dcfg = jsonToDcfg(json, true)
+function compileBoard(arch: ArchConfig, devcfg: DeviceConfig) {
+    const dcfg = jsonToDcfg(devcfg, true)
     if (!dcfg["devName"]) throw new Error(`no devName`)
     if (!dcfg["productId"]) throw new Error(`no productId`)
+    const { desc, errors } = pinsInfo(arch, devcfg)
+    if (errors.length) throw new Error(errors.join("\n"))
     if (isVerbose) {
+        verboseLog(desc)
         verboseLog(JSON.stringify(dcfg, null, 4))
         const ser = serializeDcfg(dcfg)
         const dec = decodeDcfg(ser)
         verboseLog(dec.errors.join("\n"))
         verboseLog(JSON.stringify(decompileDcfg(dec.settings), null, 4))
+    } else if (devcfg.$custom) {
+        log(desc)
     }
     return dcfg
 }
@@ -195,13 +201,13 @@ export async function compileDcfgFile(fn: string) {
     if (arch?.dcfgOffset === undefined || arch?.id === undefined)
         throw new Error(`no dcfgOffset or id in arch.json`)
     const json: DeviceConfig = await expandDcfgJSON(basename(fn), readF)
-    for (const s of json._ || []) {
+    for (const s of json.services ?? []) {
         if (!s.name) s.name = s.service
     }
     json.id = basename(fn, ".board.json")
     json.archId = arch.id
     try {
-        const dcfg = compileBoard(json)
+        const dcfg = compileBoard(arch, json)
         return { json, dcfg, arch }
     } catch (e) {
         throw new Error(`${fn}: ${e.message}`)
@@ -226,7 +232,8 @@ export async function patchCustomBoard(
     board: DeviceConfig,
     arch: ArchConfig
 ) {
-    const dcfg = compileBoard(board)
+    board.$custom = true
+    const dcfg = compileBoard(arch, board)
     const ext = fn.replace(/.*\./, "") as keyof FileTypes
     if (!patch[ext]) throw new Error(`unknown file format: ${ext}`)
     const buf = await readFile(fn)

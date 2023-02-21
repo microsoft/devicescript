@@ -1,6 +1,11 @@
-import { DeviceConfig, ArchConfig, RepoInfo } from "./archconfig"
+import {
+    DeviceConfig,
+    ArchConfig,
+    RepoInfo,
+    PinFunctionInfo,
+    PinFunction,
+} from "./archconfig"
 import { DeviceCatalog, deviceCatalogImage } from "jacdac-ts"
-import { arch } from "os"
 import { parseAnyInt } from "./dcfg"
 import { resolveBuildConfig } from "./specgen"
 
@@ -17,6 +22,8 @@ export interface BoardInfo {
     urls: { info: string; firmware: string } & Record<string, string>
     features: string[]
     services: string[]
+    pinInfo: PinInfo[]
+    pinInfoText: string
     markdown: string
 }
 
@@ -55,11 +62,13 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
             } 8N1`
         )
 
-    const services = (cfg._ ?? []).map(s => {
+    const services = (cfg.services ?? []).map(s => {
         let r = s.name
         if (s.service != s.name) r += ` (${s.service})`
         return r
     })
+
+    const pi = pinsInfo(arch, cfg)
 
     const b: BoardInfo = {
         name: cfg.devName,
@@ -71,6 +80,8 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
         },
         features,
         services,
+        pinInfo: pi.infos,
+        pinInfoText: pi.desc,
         markdown: "",
     }
 
@@ -116,7 +127,8 @@ ${$description || spec?.description || ""}
         ...info.features.map(f => `- ${f}`),
         ...info.services.map(f => `- Service: ${f}`),
         url ? `- [Store](${url})` : undefined,
-        "\n\n",
+        `\n## Pins\n`,
+        "```text\n" + info.pinInfoText + "\n```\n\n",
         id
             ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
             : undefined,
@@ -161,4 +173,154 @@ export function boardMarkdownFiles() {
 - [![photograph of ${devName}](${img}) ${devName}](/devices/${pa})`
     })
     return r
+}
+
+export function expandPinFunctionInfo(info: PinFunctionInfo): PinFunction[][] {
+    if (!info) return []
+
+    const cached = (info as any)["#pinInfo"]
+    if (cached) return cached
+
+    const expanded: Record<string, number[]> = {}
+    const ainfo = info as unknown as Record<string, string>
+    function expand(fun: string) {
+        if (expanded[fun]) return expanded[fun]
+        expanded[fun] = []
+
+        for (let e of (ainfo[fun] ?? "").split(",")) {
+            e = e.trim()
+            if (!e) continue
+            const m = /^(\d+)-(\d+)$/.exec(e)
+            if (m) {
+                let p = parseInt(m[1])
+                let endp = parseInt(m[2])
+                if (p <= endp) {
+                    while (p <= endp) {
+                        expanded[fun].push(p)
+                        p++
+                    }
+                    continue
+                }
+            }
+            if (/^\d+$/.test(e)) {
+                expanded[fun].push(parseInt(e))
+                continue
+            }
+            if (ainfo[e] !== undefined) {
+                expanded[fun].push(...expand(e))
+                continue
+            }
+            throw new Error(`invalid pin range: ${fun}: ...${e}...`)
+        }
+
+        return expanded[fun]
+    }
+
+    const res: PinFunction[][] = []
+
+    function set(p: number, fn: PinFunction) {
+        if (res[p] === undefined) res[p] = []
+        if (!res[p].includes(fn)) res[p].push(fn)
+    }
+
+    for (const k of Object.keys(info)) {
+        if (k[0] == "#") continue
+        for (const p of expand(k)) set(p, k as PinFunction)
+    }
+
+    for (const p of expand("io")) {
+        set(p, "input")
+        set(p, "output")
+    }
+
+    ;(info as any)["#pinInfo"] = res
+
+    return res
+}
+
+export function pinFunctions(info: PinFunctionInfo, p: number) {
+    return expandPinFunctionInfo(info)[p] ?? []
+}
+
+export function pinHasFunction(
+    info: PinFunctionInfo,
+    p: number,
+    fn: PinFunction
+) {
+    return pinFunctions(info, p).includes(fn)
+}
+
+export interface PinInfo {
+    label: string
+    gpio: number
+    functions: PinFunction[]
+}
+
+export function pinsInfo(arch: ArchConfig, devcfg: DeviceConfig) {
+    const infos: PinInfo[] = []
+    const errors: string[] = []
+
+    function addPin(label: string, gpio: number): unknown {
+        const name = `${label}=${gpio}`
+        if (typeof gpio != "number") return errors.push(`invalid pin: ${name}`)
+
+        let functions = pinFunctions(arch?.pins, gpio)
+        if (functions.includes("io"))
+            functions = functions.filter(f => f != "input" && f != "output")
+
+        if (functions.length == 0)
+            return errors.push(`invalid pin: ${name} has no functions`)
+
+        const ex = infos.find(p => p.gpio == gpio)
+
+        if (ex)
+            return errors.push(
+                `GPIO${gpio} marked as both ${ex.label} and ${label}`
+            )
+
+        for (const fn of ["flash", "psram", "usb"] as PinFunction[]) {
+            if (functions.includes(fn))
+                errors.push(`${name} has '${fn}' function`)
+        }
+
+        infos.push({
+            label,
+            gpio,
+            functions,
+        })
+    }
+
+    for (const lbl of Object.keys(devcfg?.pins ?? {})) {
+        if (lbl.startsWith("#")) continue
+        const gpio = (devcfg.pins as any)[lbl]
+        addPin(lbl, gpio)
+    }
+
+    function validateConfig(obj: any, path0: string) {
+        if (Array.isArray(obj)) {
+            obj.forEach((e, i) => {
+                const p = e.service
+                    ? `${path0}.${e.name ?? e.service}[${i}]`
+                    : `${path0}[${i}]`
+                validateConfig(e, p)
+            })
+        } else if (obj && typeof obj == "object")
+            for (const k of Object.keys(obj)) {
+                if (k.startsWith("#")) continue
+                const path = (path0 ? path0 + "." : "") + k
+                if (k != "pins" && k.startsWith("pin")) {
+                    addPin(path, obj[k])
+                } else {
+                    validateConfig(obj[k], path)
+                }
+            }
+    }
+
+    validateConfig(devcfg, "")
+
+    const desc = infos
+        .map(p => `${p.label}: GPIO${p.gpio}, ${p.functions.join(", ")}`)
+        .join("\n")
+
+    return { desc, infos, errors }
 }

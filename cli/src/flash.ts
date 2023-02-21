@@ -88,6 +88,7 @@ export async function flashESP32(options: FlashESP32Options) {
         0x10c4, // SiLabs CP2102
         0x303a, // Espressif (C3, S2, ...)
         0x1a86, // CH340 etc
+        0x0403, // M5stick
     ]
 
     const board = await checkBoard("esp32", options)
