@@ -425,7 +425,7 @@
             },
             {
                 "command": "extension.devicescript.boards.add",
-                "title": "Add Board...",
+                "title": "Add Device Configuration...",
                 "category": "DeviceScript"
             },
             {
