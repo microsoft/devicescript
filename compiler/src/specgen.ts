@@ -194,7 +194,7 @@ function boardFile(binfo: DeviceConfig) {
     let r = `declare module "@devicescript/board-${binfo.id}" {\n`
     r += `    import * as ds from "@devicescript/core"\n`
     r += `    interface Board {\n`
-    for (const service of binfo._ ?? []) {
+    for (const service of binfo.services ?? []) {
         const n = service.service.replace(/.*:/, "")
         const nu = n[0].toUpperCase() + n.slice(1)
         r += `        ${service.name ?? n}: ds.${nu}\n`

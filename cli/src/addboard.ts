@@ -16,7 +16,7 @@ export interface AddBoardOptions {
 const boardsPath = "boards"
 
 export async function addBoard(options: AddBoardOptions) {
-    const cfg = await setupFlashBoards()
+    const cfg = setupFlashBoards()
     const baseBoard = cfg.boards[options.base]
     if (!baseBoard) {
         showAllBoards("", "--base")
