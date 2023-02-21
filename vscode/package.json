@@ -420,12 +420,12 @@
             },
             {
                 "command": "extension.devicescript.device.flash",
-                "title": "Flash firmware...",
+                "title": "Flash Firmware...",
                 "category": "DeviceScript"
             },
             {
                 "command": "extension.devicescript.boards.add",
-                "title": "Add new board definition file",
+                "title": "Add Board...",
                 "category": "DeviceScript"
             },
             {

@@ -22,6 +22,7 @@ import { Utils } from "vscode-uri"
 import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
+import { checkFileExists } from "./fs"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -366,18 +367,5 @@ export class DeveloperToolsManager extends JDEventSource {
                 return t
             }
         )
-    }
-}
-
-async function checkFileExists(
-    cwd: vscode.Uri,
-    filePath: string
-): Promise<boolean> {
-    try {
-        const file = vscode.Uri.joinPath(cwd, filePath)
-        await vscode.workspace.fs.stat(file)
-        return true
-    } catch (error) {
-        return false
     }
 }

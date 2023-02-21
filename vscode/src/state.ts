@@ -17,6 +17,8 @@ import {
     CONNECTION_STATE,
     ConnectionState,
     JDDevice,
+    clone,
+    randomUInt,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import {
@@ -30,6 +32,7 @@ import { openDocUri } from "./commands"
 import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
+import { checkFileExists, writeFile } from "./fs"
 import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 import { TaggedQuickPickItem } from "./pickers"
@@ -132,18 +135,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { boards } = this.devtools
         if (!boards?.length) return
 
-        const name = await vscode.window.showInputBox({
-            placeHolder: "Pick a name for the new board.",
-            validateInput: value => {
-                if (value.length < 4)
-                    return "Name must be at least 4 characters long."
-                if (value.length > 64)
-                    return "Name must be at most 64 characters long."
-                return undefined
-            },
-        })
-        if (name === undefined) return
-
         const base = await vscode.window.showQuickPick<
             TaggedQuickPickItem<DeviceConfig>
         >(
@@ -159,6 +150,21 @@ export class DeviceScriptExtensionState extends JDEventSource {
         )
         if (base === undefined) return
 
+        const name = await vscode.window.showInputBox({
+            placeHolder: "Pick a name for the new board.",
+            value: base.data.devName,
+            validateInput: value => {
+                if (value.length < 4)
+                    return "Name must be at least 4 characters long."
+                if (value.length > 64)
+                    return "Name must be at most 64 characters long."
+                if (boards.find(b => b.devName === value))
+                    return "Board name already exists."
+                return undefined
+            },
+        })
+        if (name === undefined) return
+
         const normalize = (v: string) =>
             v
                 .toLowerCase()
@@ -170,7 +176,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             placeHolder: "Pick a board identifier.",
             value: base.data.id,
             prompt: `Alphanumeric characters or _ allowed. Base is ${base.data.id}.`,
-            validateInput: value => {
+            validateInput: async value => {
                 const nvalue = normalize(value)
                 if (nvalue.length < 4)
                     return `Identifier (${nvalue}) must be at least 4 characters long.`
@@ -178,12 +184,33 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     return `Identifier (${nvalue}) must be at most 64 characters long.`
                 if (boards.find(b => b.id === nvalue))
                     return `Identifier (${nvalue}) already used.`
+
+                const fp = `./boards/${nvalue}.json`
+                const exists = await checkFileExists(
+                    this.devtools.projectFolder,
+                    fp
+                )
+                if (exists) return `Board file ${fp} already exists.`
+
                 return undefined
             },
         })
         if (board === undefined) return
 
-        // call cli
+        // ready to generate file
+        const newBoard = clone(base.data)
+        newBoard.devName = name
+        newBoard.productId =
+            "0x" + (randomUInt(0xfff_ffff) | 0x3000_0000).toString(16)
+        delete newBoard.id
+        delete newBoard.$fwUrl
+
+        const content = JSON.stringify(newBoard, null, 4)
+        await writeFile(
+            this.devtools.projectFolder,
+            `./boards/${normalize(board)}.json`,
+            content
+        )
     }
 
     async flashFirmware(device?: JDDevice) {
