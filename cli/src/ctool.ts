@@ -9,6 +9,7 @@ import {
 } from "@devicescript/compiler"
 import { runTest } from "./run"
 import { writeFile } from "node:fs/promises"
+import { strcmp } from "jacdac-ts"
 
 export interface CToolOptions {
     empty?: boolean
@@ -82,6 +83,21 @@ function resolveSchema(sch: string, repo: string) {
     return sch
 }
 
+export function sortJSON(obj: any): any {
+    if (Array.isArray(obj)) return obj.map(sortJSON)
+    else if (obj && typeof obj == "object") {
+        const keys = Object.keys(obj)
+        keys.sort(strcmp)
+        const r: any = {}
+        for (const k of keys) {
+            r[k] = sortJSON(obj[k])
+        }
+        return r
+    } else {
+        return obj
+    }
+}
+
 async function fetchBoards(options: CToolOptions) {
     const ginfo: RepoInfo = { boards: {}, archs: {} }
     for (const repo of boardRepos) {
@@ -101,6 +117,11 @@ async function fetchBoards(options: CToolOptions) {
             log(`fetch from ${url}`)
             const resp = await fetch(url)
             info = await resp.json()
+        }
+
+        // just in case
+        for (const a of Object.values(info?.archs ?? {})) {
+            if (a.pins) delete (a.pins as any)["#pinInfo"]
         }
 
         for (const archId of Object.keys(info.archs)) {
@@ -134,5 +155,6 @@ async function fetchBoards(options: CToolOptions) {
             arch.bareUrl = bareBoard?.$fwUrl
         }
     }
-    return ginfo
+
+    return sortJSON(ginfo)
 }
