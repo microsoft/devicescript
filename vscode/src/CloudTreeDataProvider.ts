@@ -192,7 +192,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                     if (!body) return
                     const text = body.text
                     await writeFile(
-                        vscode.workspace.workspaceFolders?.[0],
+                        vscode.workspace.workspaceFolders[0].uri,
                         `./${name}${name.endsWith(".ts") ? "" : ".ts"}`,
                         text
                     )
