@@ -13,14 +13,35 @@ Bare ESP32 without any default functions for pins.
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash esp32 --board esp32_bare
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin)
+
+## Configuration
+
+```json title="esp32_bare.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "esp32_bare",
+    "devName": "Espressif ESP32 (bare)",
+    "$description": "Bare ESP32 without any default functions for pins.",
+    "archId": "esp32",
+    "productId": "0x3ff6ffeb",
+    "url": "https://www.espressif.com/en/products/socs/esp32",
+    "pins": {
+        "VP": 36,
+        "VN": 39,
+        "BOOT": 0,
+        "TX0": 1,
+        "RX0": 3
+    }
+}
+```

@@ -13,14 +13,29 @@ A bare ESP32-S2 board without any pin functions.
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash esp32 --board esp32s2_bare
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin)
+
+## Configuration
+
+```json title="esp32s2_bare.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "esp32s2_bare",
+    "devName": "Espressif ESP32-S2 (bare)",
+    "$description": "A bare ESP32-S2 board without any pin functions.",
+    "archId": "esp32s2",
+    "productId": "0x3f140dcc",
+    "url": "https://www.espressif.com/en/products/socs/esp32-s2",
+    "pins": {}
+}
+```

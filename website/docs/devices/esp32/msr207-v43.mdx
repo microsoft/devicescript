@@ -15,14 +15,62 @@ description: MSR JM Brain S2-mini 207 v4.3
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash esp32 --board msr207_v43
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr207_v43-0x1000.bin)
+
+## Configuration
+
+```json title="msr207_v43.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "msr207_v43",
+    "devName": "MSR JM Brain S2-mini 207 v4.3",
+    "archId": "esp32s2",
+    "productId": "0x322e0e64",
+    "_": [
+        {
+            "service": "power",
+            "name": "power",
+            "mode": 1,
+            "pinEn": 2,
+            "pinFault": 13,
+            "faultIgnoreMs": 100
+        }
+    ],
+    "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 17
+    },
+    "led": {
+        "rgb": [
+            {
+                "pin": 8,
+                "mult": 250
+            },
+            {
+                "pin": 7,
+                "mult": 60
+            },
+            {
+                "pin": 6,
+                "mult": 150
+            }
+        ]
+    },
+    "sd": {
+        "pinCS": 38,
+        "pinMISO": 37,
+        "pinMOSI": 35,
+        "pinSCK": 36
+    }
+}
+```

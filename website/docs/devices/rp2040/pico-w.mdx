@@ -16,14 +16,40 @@ description: Raspberry Pi Pico W
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash rp2040 --board pico_w
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2)
+
+## Configuration
+
+```json title="pico_w.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "id": "pico_w",
+    "devName": "Raspberry Pi Pico W",
+    "archId": "rp2040w",
+    "productId": "0x3a513204",
+    "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
+    "i2c": {
+        "$connector": "Header",
+        "pinSDA": 4,
+        "pinSCL": 5
+    },
+    "jacdac": {
+        "$connector": "Header",
+        "pin": 9
+    },
+    "log": {
+        "pinTX": 0,
+        "baud": 115200
+    }
+}
+```
