@@ -96,8 +96,12 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._specs?.nodeVersion
     }
 
+    get buildConfig() {
+        return this._specs?.buildConfig
+    }
+
     get boards() {
-        return Object.values(this._specs?.buildConfig.boards)
+        return Object.values(this.buildConfig?.boards)
     }
 
     get projectFolder() {

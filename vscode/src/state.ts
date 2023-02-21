@@ -125,6 +125,67 @@ export class DeviceScriptExtensionState extends JDEventSource {
         return this.deviceScriptManager || this.pickDeviceScriptManager()
     }
 
+    async addBoard() {
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+        await this.devtools.refreshSpecs()
+        const { boards } = this.devtools
+        if (!boards?.length) return
+
+        const name = await vscode.window.showInputBox({
+            placeHolder: "Pick a name for the new board.",
+            validateInput: value => {
+                if (value.length < 4)
+                    return "Name must be at least 4 characters long."
+                if (value.length > 64)
+                    return "Name must be at most 64 characters long."
+                return undefined
+            },
+        })
+        if (name === undefined) return
+
+        const base = await vscode.window.showQuickPick<
+            TaggedQuickPickItem<DeviceConfig>
+        >(
+            boards.map(board => ({
+                data: board,
+                label: board.devName,
+                description: board.archId,
+                detail: board.id,
+            })),
+            {
+                title: "Pick a board base.",
+            }
+        )
+        if (base === undefined) return
+
+        const normalize = (v: string) =>
+            v
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, " ")
+                .trim()
+                .replace(/\s+/g, "_")
+
+        const board = await vscode.window.showInputBox({
+            placeHolder: "Pick a board identifier.",
+            value: base.data.id,
+            prompt: `Alphanumeric characters or _ allowed. Base is ${base.data.id}.`,
+            validateInput: value => {
+                const nvalue = normalize(value)
+                if (nvalue.length < 4)
+                    return `Identifier (${nvalue}) must be at least 4 characters long.`
+                if (nvalue.length > 64)
+                    return `Identifier (${nvalue}) must be at most 64 characters long.`
+                if (boards.find(b => b.id === nvalue))
+                    return `Identifier (${nvalue}) already used.`
+                return undefined
+            },
+        })
+        if (board === undefined) return
+
+        // call cli
+    }
+
     async flashFirmware(device?: JDDevice) {
         await this.devtools.start()
         if (!this.devtools.connected) return

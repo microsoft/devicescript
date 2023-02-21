@@ -1,4 +1,7 @@
-import type { CompilationResult, ResolvedBuildConfig } from "@devicescript/compiler"
+import type {
+    CompilationResult,
+    ResolvedBuildConfig,
+} from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
 import type { BuildOptions } from "./build"
 
@@ -131,4 +134,18 @@ export interface VmReqArgs {
     nativePath?: string
     deviceId?: string
     gcStress?: boolean
+}
+
+export interface SideAddBoardReq extends SideReq<"addboard"> {
+    data: {
+        name: string
+        base: string
+        board: string
+    }
+}
+
+export interface SideAddBoardResp extends SideResp<"addboard"> {
+    data: {
+        file: string
+    }
 }
