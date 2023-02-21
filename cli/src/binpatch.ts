@@ -75,7 +75,7 @@ async function patchUF2File(
     }
 
     const tmp = f.readBytes(off, 12)
-    if (isDCFG(tmp)) {
+    if (tmp && isDCFG(tmp)) {
         log(`patching existing config`)
         buf = padCfg(buf, read32(tmp, 8))
     }

@@ -95,6 +95,8 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
     lines.push(...b.features.map(f => `* ${f}`))
     lines.push(...b.services.map(f => `* Service: ${f}`))
     b.markdown = lines.filter(l => !!l).join("\n")
+    if (b.pinInfoText?.trim())
+        b.markdown += "\n\n```text\n" + b.pinInfoText + "\n```\n"
 
     return b
 }
