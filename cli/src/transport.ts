@@ -5,7 +5,7 @@ import {
     createNodeUSBOptions,
     createNodeWebSerialTransport,
     createUSBTransport,
-    createWebSocketTransport,
+    createNodeWebSocketTransport,
     JDBus,
     Transport,
 } from "jacdac-ts"
@@ -48,14 +48,6 @@ function createSerial() {
     return createNodeWebSerialTransport(SerialPort)
 }
 
-export function createNodeWebSocketTransport(url: string, protocol: string) {
-    require("websocket-polyfill")
-    return createWebSocketTransport(url, {
-        protocols: protocol,
-        WebSocket: WebSocket,
-    })
-}
-
 export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {
     const { transport: type, background, resourceGroupId } = req
     // no type, reconnect all
@@ -79,7 +71,9 @@ export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {
     switch (type) {
         case "websocket": {
             const { url, protocol } = req as WebSocketConnectReqArgs
-            newTransport = createNodeWebSocketTransport(url, protocol)
+            newTransport = createNodeWebSocketTransport(url, {
+                protocols: protocol,
+            })
             break
         }
         case "spi": {

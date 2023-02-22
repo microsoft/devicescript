@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, test, afterEach } from "@jest/globals"
 import {
+    createNodeWebSocketTransport,
     createWebSocketTransport,
     delay,
     DEVICE_ANNOUNCE,
@@ -8,14 +9,6 @@ import {
     SRV_BUTTON,
     startServiceProviderFromServiceClass,
 } from "jacdac-ts"
-import "websocket-polyfill";
-
-function createNodeWebSocketTransport(url: string, protocol: string) {
-    return createWebSocketTransport(url, {
-        protocols: protocol,
-        WebSocket: WebSocket,
-    })
-}
 
 let bus: JDBus
 let subscriptions: (() => void)[]
@@ -23,7 +16,9 @@ let subscriptions: (() => void)[]
 const mount = (unsub: () => void) => subscriptions.push(unsub)
 
 beforeAll(async () => {
-    const ws = createNodeWebSocketTransport("127.0.0.1:8081", "ws")
+    const ws = createNodeWebSocketTransport("127.0.0.1:8081", {
+        protocols: "ws",
+    })
     bus = new JDBus([ws], { client: false, disableRoleManager: true })
     bus.on(ERROR, err => {
         console.log("Bus error", err)
