@@ -1,6 +1,4 @@
 {
-  "extends": "@tsconfig/node18/tsconfig.json",
-  "display": "Node 18",
   "type": "module",
   "compilerOptions": {
     "lib": [
@@ -15,5 +13,9 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "resolveJsonModule": true
-  }
+  },
+  "include": [
+    "./*.ts",
+    "../node_modules/*"
+  ]
 }

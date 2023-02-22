@@ -1,27 +1,18 @@
 import { beforeAll, beforeEach, describe, test, afterEach } from "@jest/globals"
 import {
-    createWebSocketBus,
-    createWebSocketTransport,
     delay,
     DEVICE_ANNOUNCE,
     ERROR,
-    JDBus,
     SRV_BUTTON,
     startServiceProviderFromServiceClass,
 } from "jacdac-ts"
-import "websocket-polyfill"
-import { Blob } from "buffer"
-globalThis.Blob = Blob as any
-import customServices from "../.devicescript/services.json"
+import { bus } from "./runtime"
 
-let bus: JDBus
 let subscriptions: (() => void)[]
 
 const mount = (unsub: () => void) => subscriptions.push(unsub)
 
 beforeAll(async () => {
-    bus = createWebSocketBus()
-    bus.setCustomServiceSpecifications(customServices as jdspec.ServiceSpec[])
     bus.on(ERROR, err => {
         console.log("Bus error", err)
     })

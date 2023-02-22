@@ -5,20 +5,19 @@
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*",
-        "@tsconfig/node18": "^1.0.1",
         "@types/jest": "^29.4.0",
         "assert": "^2.0.0",
         "jacdac-ts": "*",
         "jest": "^29.4.3",
         "serialport": "^10.5.0",
         "ts-jest": "^29.0.5",
-        "ts-node": "^10.9.1",
-        "websocket-polyfill": "^0.0.3"
+        "ts-node": "^10.9.1"
     },
     "scripts": {
         "setup": "devicescript init",
         "build": "devicescript build",
         "watch": "devicescript devtools main.ts",
+        "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
         "start": "yarn watch",
         "test": "jest"
     }

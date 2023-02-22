@@ -6,7 +6,7 @@ import {
     SELF_ANNOUNCE,
 } from "jacdac-ts"
 import { SRV_PSYCHOMAGNOTHERIC_ENERGY } from "../.devicescript/ts/constants"
-import { bus } from "./bus"
+import { bus } from "./runtime"
 
 // simulator a customer service
 const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {

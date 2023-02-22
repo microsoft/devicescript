@@ -62,6 +62,41 @@ const optionalFiles: Record<string, Object | string> = {
             start: "yarn watch",
         },
     },
+    "sim/runtime.ts": `
+import "websocket-polyfill"
+import { Blob } from "buffer"
+globalThis.Blob = Blob as any
+import customServices from "../.devicescript/services.json"
+import { createWebSocketBus } from "jacdac-ts"
+
+/**
+ * A Jacdac bus that will connect to the devicescript local server.
+ * 
+ * \`\`\`example
+ * import { bus } from "./runtime"
+ * \`\`\`
+ */
+export const bus = createWebSocketBus({
+    busOptions: {
+        services: customServices as jdspec.ServiceSpec[],
+    },
+})
+`,
+    "sim/tsconfig.json": {
+        type: "module",
+        compilerOptions: {
+            lib: ["es2022", "dom"],
+            module: "commonjs",
+            target: "es2022",
+            strict: true,
+            esModuleInterop: true,
+            skipLibCheck: true,
+            forceConsistentCasingInFileNames: true,
+            moduleResolution: "node",
+            resolveJsonModule: true,
+        },
+        include: ["./*.ts", "../node_modules/*"],
+    },
     "README.md": `# - project name -
 
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
