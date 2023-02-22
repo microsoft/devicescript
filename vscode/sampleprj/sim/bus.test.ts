@@ -1,6 +1,6 @@
-import { describe, test } from "@jest/globals"
+import { beforeAll, beforeEach, describe, test, afterEach } from "@jest/globals"
 import {
-    createWebSocketTransport,
+    createNodeWebSocketTransport,
     DEVICE_ANNOUNCE,
     ERROR,
     JDBus,
@@ -14,10 +14,10 @@ let subscriptions: (() => void)[]
 const mount = (unsub: () => void) => subscriptions.push(unsub)
 
 beforeAll(async () => {
-    const ws = createWebSocketTransport("ws://127.0.0.1:8081/")
+    const ws = createNodeWebSocketTransport("ws://127.0.0.1:8081/")
     bus = new JDBus([ws], { client: false, disableRoleManager: true })
     bus.on(ERROR, err => {
-        console.error("Bus error", err)
+        console.log("Bus error", err)
     })
     await bus.connect(false)
 })

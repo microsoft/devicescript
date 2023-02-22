@@ -48,7 +48,7 @@ function createSerial() {
     return createNodeWebSerialTransport(SerialPort)
 }
 
-function createWebSocket(url: string, protocol: string) {
+export function createNodeWebSocketTransport(url: string, protocol: string) {
     require("websocket-polyfill")
     return createWebSocketTransport(url, {
         protocols: protocol,
@@ -79,7 +79,7 @@ export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {
     switch (type) {
         case "websocket": {
             const { url, protocol } = req as WebSocketConnectReqArgs
-            newTransport = createWebSocket(url, protocol)
+            newTransport = createNodeWebSocketTransport(url, protocol)
             break
         }
         case "spi": {

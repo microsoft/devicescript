@@ -11,7 +11,8 @@
         "jacdac-ts": "*",
         "jest": "^29.4.3",
         "serialport": "^10.5.0",
-        "ts-jest": "^29.0.5"
+        "ts-jest": "^29.0.5",
+        "websocket-polyfill": "^0.0.3"
     },
     "scripts": {
         "setup": "devicescript init",
