@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/node18/tsconfig.json",
   "display": "Node 18",
+  "type": "module",
   "compilerOptions": {
     "lib": [
       "es2022",
