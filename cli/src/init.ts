@@ -57,15 +57,16 @@ const optionalFiles: Record<string, Object | string> = {
             "ts-node-dev": "^2.0.0",
         },
         scripts: {
-            setup: "devicescript init",
-            "build:devicescript": "devicescript build",
-            "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
-            build: "yarn build:devicescript && yarn build:sim",
-            "watch:devicescript": "devicescript devtools main.ts",
-            "watch:sim":
-                "cd sim && ts-node-dev --respawn --transpile-only app.ts",
-            watch: "yarn watch:devicescript & yarn watch:sim",
-            start: "yarn watch",
+            scripts: {
+                setup: "devicescript init",
+                "build:devicescript": "devicescript build",
+                "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
+                build: "yarn build:devicescript && yarn build:sim",
+                "watch:devicescript": "devicescript devtools main.ts",
+                "watch:sim": "cd sim && ts-node-dev --respawn app.ts",
+                watch: "yarn watch:devicescript & yarn watch:sim",
+                start: "yarn watch",
+            },
         },
     },
     "sim/runtime.ts": `

@@ -17,8 +17,8 @@
         "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
         "build": "yarn build:devicescript && yarn build:sim",
         "watch:devicescript": "devicescript devtools main.ts",
-        "watch:sim": "cd sim && ts-node-dev --respawn --transpile-only app.ts",
+        "watch:sim": "cd sim && ts-node-dev --respawn app.ts",
         "watch": "yarn watch:devicescript & yarn watch:sim",
-        "start": "yarn watch:devicescript"
+        "start": "yarn watch"
     }
 }
