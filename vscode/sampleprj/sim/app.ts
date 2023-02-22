@@ -1,4 +1,5 @@
 import {
+    addServiceProvider,
     AnalogSensorServer,
     CONNECTION_STATE,
     createWebSocketBus,
@@ -9,13 +10,20 @@ import { SRV_PSYCHOMAGNOTHERIC_ENERGY } from "../.devicescript/ts/constants"
 import "websocket-polyfill"
 import { Blob } from "buffer"
 globalThis.Blob = Blob as any
+import customServices from "../.devicescript/services.json"
 
 const bus = createWebSocketBus()
+bus.setCustomServiceSpecifications(customServices as jdspec.ServiceSpec[])
 
 // simulator a customer service
 const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
     readingValues: [0.5],
     readingError: [0.1],
+})
+addServiceProvider(bus, {
+    name: "psycho_energy",
+    serviceClasses: [SRV_PSYCHOMAGNOTHERIC_ENERGY],
+    services: () => [server],
 })
 bus.on(SELF_ANNOUNCE, () => {
     server.reading.setValues([

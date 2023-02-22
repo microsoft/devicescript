@@ -304,21 +304,33 @@ export async function saveLibFiles(
     const customServices = buildConfig.services.filter(
         srv => srv.catalog !== undefined
     )
-    if (customServices.length)
+    if (customServices.length) {
+        // generate source files
         for (const lang of ["ts", "c"]) {
             const converter = converters()[lang]
             let constants = ""
             for (const srv of customServices) {
                 constants += converter(srv) + "\n"
             }
-            if (constants) {
-                const dir = join(pref, GENDIR, lang)
-                await mkdirp(dir)
-                await writeFile(join(dir, `constants.${lang}`), constants, {
-                    encoding: "utf-8",
-                })
-            }
+            const dir = join(pref, GENDIR, lang)
+            await mkdirp(dir)
+            await writeFile(join(dir, `constants.${lang}`), constants, {
+                encoding: "utf-8",
+            })
         }
+        // json specs
+        {
+            const dir = join(pref, GENDIR)
+            await mkdirp(dir)
+            await writeFile(
+                join(dir, `services.json`),
+                JSON.stringify(customServices, null, 2),
+                {
+                    encoding: "utf-8",
+                }
+            )
+        }
+    }
 }
 
 export async function compileBuf(
