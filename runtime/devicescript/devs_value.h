@@ -203,8 +203,12 @@ __attribute__((format(printf, 2, 3))) value_t devs_string_sprintf(devs_ctx_t *ct
                                                                   const char *format, ...);
 value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len);
 value_t devs_builtin_string(unsigned idx);
+value_t devs_string_slice(devs_ctx_t *ctx, value_t str, int start, int endp);
 
 void devs_value_pin(devs_ctx_t *ctx, value_t v);
 void devs_value_unpin(devs_ctx_t *ctx, value_t v);
+bool devs_value_is_pinned(devs_ctx_t *ctx, value_t v);
 
 value_t devs_json_parse(devs_ctx_t *ctx, const char *str, unsigned sz, bool do_throw);
+int devs_json_stringify_to(devs_ctx_t *ctx, value_t v, char *dst, int indent);
+value_t devs_json_stringify(devs_ctx_t *ctx, value_t v, int indent, bool do_throw);

@@ -1,8 +1,11 @@
 #include "devs_internal.h"
 #include <stdlib.h>
 
-static int devs_json_escape_core(const char *str, unsigned sz, char *dst) {
-    int len = 1;
+#define LOG_TAG "JSON"
+#include "devs_logging.h"
+
+static unsigned devs_json_escape_core(const char *str, unsigned sz, char *dst) {
+    unsigned len = 1;
 
     if (dst)
         *dst++ = '"';
@@ -97,11 +100,15 @@ static int get_non_ws(parser_t *state) {
     }
 }
 
-static void unget(parser_t *state) {
-    if (!state->error) {
-        state->ptr--;
-        state->size++;
-    }
+static bool shift_next(parser_t *state, char exp) {
+    int c = get_non_ws(state);
+    if (c == -1)
+        return false;
+    if (c == exp)
+        return true;
+    state->ptr--;
+    state->size++;
+    return false;
 }
 
 static value_t error(parser_t *state) {
@@ -198,10 +205,8 @@ static value_t parse_array(parser_t *state) {
         return devs_undefined;
     value_t ret = devs_value_from_gc_obj(ctx, arr);
 
-    if (get_non_ws(state) == ']')
+    if (shift_next(state, ']'))
         return ret;
-    else
-        unget(state);
 
     devs_value_pin(ctx, ret);
 
@@ -233,10 +238,8 @@ static value_t parse_object(parser_t *state) {
         return devs_undefined;
     value_t ret = devs_value_from_gc_obj(ctx, arr);
 
-    if (get_non_ws(state) == '}')
+    if (shift_next(state, '}'))
         return ret;
-    else
-        unget(state);
 
     devs_value_pin(ctx, ret);
 
@@ -345,4 +348,156 @@ value_t devs_json_parse(devs_ctx_t *ctx, const char *str, unsigned sz, bool do_t
     } else {
         return r;
     }
+}
+
+typedef struct {
+    devs_ctx_t *ctx;
+    int indent_step;
+    int curr_indent;
+    unsigned off;
+    char *dst;
+    int error;
+} stringify_t;
+
+static void add_ch(stringify_t *state, char c, unsigned rep) {
+    if (state->dst)
+        for (unsigned i = 0; i < rep; ++i)
+            state->dst[state->off + i] = c;
+    state->off += rep;
+}
+
+static void add_indent(stringify_t *state) {
+    if (state->curr_indent) {
+        add_ch(state, '\n', 1);
+        add_ch(state, ' ', state->curr_indent - 1);
+    }
+}
+
+static void stringify_obj(stringify_t *state, value_t v);
+
+static void stringify_field(devs_ctx_t *ctx, void *state_, value_t k, value_t v) {
+    stringify_t *state = state_;
+    if (!devs_is_string(ctx, k))
+        return;
+    add_indent(state);
+    stringify_obj(state, k);
+    add_ch(state, ':', 1);
+    if (state->curr_indent)
+        add_ch(state, ' ', 1);
+    stringify_obj(state, v);
+    add_ch(state, ',', 1);
+}
+
+static void stringify_obj(stringify_t *state, value_t v) {
+    devs_ctx_t *ctx = state->ctx;
+
+    // LOG_VAL("str", v);
+    LOGV("off=%d", state->off);
+
+    if (devs_value_is_pinned(ctx, v)) {
+        state->error = 1;
+        return;
+    }
+    if (state->error)
+        return;
+
+    char *dst = state->dst ? state->dst + state->off : NULL;
+    unsigned sz;
+    const char *data;
+
+    switch (devs_value_typeof(ctx, v)) {
+    case DEVS_OBJECT_TYPE_NUMBER:
+        if (devs_handle_type(v) == DEVS_HANDLE_TYPE_SPECIAL)
+            switch (devs_handle_value(v)) {
+            case DEVS_SPECIAL_INF:
+            case DEVS_SPECIAL_MINF:
+            case DEVS_SPECIAL_NAN:
+                v = devs_null; // these do not stringify
+                break;
+            }
+        /* fall-through */
+    case DEVS_OBJECT_TYPE_BOOL:
+    case DEVS_OBJECT_TYPE_NULL:
+        v = devs_value_to_string(ctx, v);
+        data = devs_string_get_utf8(ctx, v, &sz);
+        if (dst)
+            memcpy(dst, data, sz);
+        state->off += sz;
+        return;
+
+    case DEVS_OBJECT_TYPE_STRING:
+        data = devs_string_get_utf8(ctx, v, &sz);
+        state->off += devs_json_escape_core(data, sz, dst) - 1;
+        return;
+    }
+
+    devs_value_pin(ctx, v);
+
+    if (devs_is_array(ctx, v)) {
+        devs_array_t *arr = devs_value_to_gc_obj(ctx, v);
+        add_ch(state, '[', 1);
+        state->curr_indent += state->indent_step;
+        for (unsigned i = 0; i < arr->length; ++i) {
+            add_indent(state);
+            stringify_obj(state, arr->data[i]);
+            if (state->error)
+                break;
+            if (i != arr->length - 1)
+                add_ch(state, ',', 1);
+        }
+        state->curr_indent -= state->indent_step;
+        if (arr->length)
+            add_indent(state);
+        add_ch(state, ']', 1);
+    } else {
+        devs_maplike_t *map = devs_object_get_attached_enum(ctx, v);
+        add_ch(state, '{', 1);
+        if (map != NULL) {
+            unsigned off0 = state->off;
+            state->curr_indent += state->indent_step;
+            devs_maplike_iter(ctx, map, state, stringify_field);
+            state->curr_indent -= state->indent_step;
+            if (off0 != state->off) {
+                state->off--; // eat final comma
+                add_indent(state);
+            }
+        }
+        add_ch(state, '}', 1);
+    }
+
+    devs_value_unpin(ctx, v);
+}
+
+int devs_json_stringify_to(devs_ctx_t *ctx, value_t v, char *dst, int indent) {
+    stringify_t state = {
+        .ctx = ctx,
+        .indent_step = indent,
+        .curr_indent = indent ? 1 : 0,
+        .dst = dst,
+    };
+    stringify_obj(&state, v);
+    LOGV("after off=%d", state.off);
+    if (state.error)
+        return -1;
+    return state.off + 1;
+}
+
+value_t devs_json_stringify(devs_ctx_t *ctx, value_t v, int indent, bool do_throw) {
+    int sz = devs_json_stringify_to(ctx, v, NULL, indent);
+    if (sz == -1) {
+        if (do_throw)
+            devs_throw_type_error(ctx, "Converting circular structure to JSON");
+        return devs_undefined;
+    }
+    sz--; // ignore trailing '\0'
+
+    devs_string_t *s = devs_string_try_alloc(ctx, sz);
+    value_t r = devs_value_from_gc_obj(ctx, s);
+    devs_value_pin(ctx, r);
+    if (s != NULL) {
+        sz = devs_json_stringify_to(ctx, v, s->data, indent);
+        JD_ASSERT(sz - 1 == s->length);
+    }
+    devs_value_unpin(ctx, r);
+    return r;
 }
