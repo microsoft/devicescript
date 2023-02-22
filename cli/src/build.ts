@@ -26,6 +26,7 @@ import {
     consoleColors,
     debug,
     error,
+    GENDIR,
     LIBDIR,
     log,
     verboseLog,
@@ -35,7 +36,7 @@ import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
-import { parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
+import { converters, parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -298,6 +299,26 @@ export async function saveLibFiles(
         )
         if (prelude[fn] != ex) await writeFile(fnpath, prelude[fn])
     }
+
+    // generate constants for non-catalog services
+    const customServices = buildConfig.services.filter(
+        srv => srv.catalog !== undefined
+    )
+    if (customServices.length)
+        for (const lang of ["ts", "c"]) {
+            const converter = converters()[lang]
+            let constants = ""
+            for (const srv of customServices) {
+                constants += converter(srv) + "\n"
+            }
+            if (constants) {
+                const dir = join(pref, GENDIR, lang)
+                await mkdirp(dir)
+                await writeFile(join(dir, `constants.${lang}`), constants, {
+                    encoding: "utf-8",
+                })
+            }
+        }
 }
 
 export async function compileBuf(
