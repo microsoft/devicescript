@@ -1,5 +1,5 @@
 #include "jd_network.h"
-#include "devs_json.h"
+#include "devicescript.h"
 
 typedef struct {
     uint32_t magic;

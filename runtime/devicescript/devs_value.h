@@ -206,3 +206,5 @@ value_t devs_builtin_string(unsigned idx);
 
 void devs_value_pin(devs_ctx_t *ctx, value_t v);
 void devs_value_unpin(devs_ctx_t *ctx, value_t v);
+
+value_t devs_json_parse(devs_ctx_t *ctx, const char *str, unsigned sz, bool do_throw);

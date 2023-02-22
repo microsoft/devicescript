@@ -373,7 +373,7 @@ interface Error {
      * Logs the exception message and stack.
      */
     print(): void
-    
+
     // stack not impl. yet
     // stack?: string
 
@@ -388,25 +388,47 @@ interface ErrorConstructor {
     (message?: string): Error
     readonly prototype: Error
 }
-
 declare var Error: ErrorConstructor
 
 interface RangeError extends Error {}
-
 interface RangeErrorConstructor extends ErrorConstructor {
     new (message?: string): RangeError
     (message?: string): RangeError
     readonly prototype: RangeError
 }
-
 declare var RangeError: RangeErrorConstructor
 
 interface TypeError extends Error {}
-
 interface TypeErrorConstructor extends ErrorConstructor {
     new (message?: string): TypeError
     (message?: string): TypeError
     readonly prototype: TypeError
 }
-
 declare var TypeError: TypeErrorConstructor
+
+interface SyntaxError extends Error {}
+interface SyntaxErrorConstructor extends ErrorConstructor {
+    new (message?: string): SyntaxError
+    (message?: string): SyntaxError
+    readonly prototype: SyntaxError
+}
+declare var SyntaxError: SyntaxErrorConstructor
+
+interface JSON {
+    /**
+     * Converts a JavaScript Object Notation (JSON) string into an object.
+     * @param text A valid JSON string.
+     */
+    parse(text: string): any
+    /**
+     * Converts a JavaScript value to a JavaScript Object Notation (JSON) string.
+     * @param value A JavaScript value, usually an object or array, to be converted.
+     * @param replacer Replacer is not supported.
+     * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
+     */
+    stringify(value: any, replacer?: null, space?: string | number): string
+}
+/**
+ * An intrinsic object that provides functions to convert JavaScript values to and from the JavaScript Object Notation (JSON) format.
+ */
+declare var JSON: JSON

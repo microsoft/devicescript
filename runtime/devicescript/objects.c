@@ -933,6 +933,12 @@ void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v)
     }
 }
 
+void devs_array_pin_push(devs_ctx_t *ctx, devs_array_t *arr, value_t v) {
+    devs_value_pin(ctx, v);
+    devs_array_set(ctx, arr, arr->length, v);
+    devs_value_unpin(ctx, v);
+}
+
 void devs_seq_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v) {
     // DMESG("set arr=%s idx=%u", devs_show_value(ctx, seq), idx);
     if (idx > DEVS_MAX_ALLOC) {

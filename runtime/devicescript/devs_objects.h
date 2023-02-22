@@ -119,6 +119,7 @@ value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx);
 void devs_array_set(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, value_t v);
 void devs_seq_set(devs_ctx_t *ctx, value_t seq, unsigned idx, value_t v);
 int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int count);
+void devs_array_pin_push(devs_ctx_t *ctx, devs_array_t *arr, value_t v);
 
 value_t devs_object_get(devs_ctx_t *ctx, value_t obj, value_t key);
 value_t devs_object_get_built_in_field(devs_ctx_t *ctx, value_t obj, unsigned idx);

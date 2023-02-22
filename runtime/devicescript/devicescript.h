@@ -5,7 +5,6 @@
 #include "network/jd_network.h"
 #include "jacdac/dist/c/devicescriptmanager.h"
 #include "jacdac/dist/c/timeseriesaggregator.h"
-#include "devs_json.h"
 
 #define DEVS_PANIC_REBOOT 60000
 #define DEVS_PANIC_TIMEOUT 60001
@@ -38,6 +37,9 @@ void devs_deploy_handler(int exitcode);
 void devs_set_global_flags(uint32_t global_flags);
 void devs_reset_global_flags(uint32_t global_flags);
 uint32_t devs_get_global_flags(void);
+
+// General utils
+char *devs_json_escape(const char *str, unsigned sz);
 
 // DeviceScript manager service
 typedef struct {
