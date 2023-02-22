@@ -5,7 +5,7 @@ import {
     createNodeUSBOptions,
     createNodeWebSerialTransport,
     createUSBTransport,
-    createNodeWebSocketTransport,
+    createWebSocketTransport,
     JDBus,
     Transport,
 } from "jacdac-ts"
@@ -71,7 +71,7 @@ export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {
     switch (type) {
         case "websocket": {
             const { url, protocol } = req as WebSocketConnectReqArgs
-            newTransport = createNodeWebSocketTransport(url, {
+            newTransport = createWebSocketTransport(url, {
                 protocols: protocol,
             })
             break
