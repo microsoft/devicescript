@@ -1,5 +1,5 @@
 import {
-    addServiceProvider,
+    addServer,
     AnalogSensorServer,
     CONNECTION_STATE,
     DEVICE_CHANGE,
@@ -12,16 +12,13 @@ import { bus } from "./bus"
 const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
     readingValues: [0.5],
     readingError: [0.1],
+    streamingInterval: 100,
 })
-addServiceProvider(bus, {
-    name: "psycho_energy",
-    serviceClasses: [SRV_PSYCHOMAGNOTHERIC_ENERGY],
-    services: () => [server],
-})
+addServer(bus, "psycho_energy", server)
 bus.on(SELF_ANNOUNCE, () => {
-    server.reading.setValues([
-        server.reading.values()[0] + (0.5 - Math.random()),
-    ])
+    const newValue = server.reading.values()[0] + (0.5 - Math.random()) / 10
+    server.reading.setValues([newValue])
+    console.debug(`psycho: ${newValue}`)
 })
 
 bus.on([CONNECTION_STATE, DEVICE_CHANGE], () => {
