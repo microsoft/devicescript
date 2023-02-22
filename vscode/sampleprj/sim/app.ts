@@ -12,7 +12,7 @@ import { bus } from "./runtime"
 const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
     readingValues: [0.5],
     readingError: [0.1],
-    streamingInterval: 100,
+    streamingInterval: 500,
 })
 addServer(bus, "psycho_energy", server)
 bus.on(SELF_ANNOUNCE, () => {

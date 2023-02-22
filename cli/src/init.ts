@@ -54,19 +54,19 @@ const optionalFiles: Record<string, Object | string> = {
         dependencies: {},
         devDependencies: {
             "@devicescript/cli": "*",
-            "ts-node-dev": "^2.0.0",
+            nodemon: "^2.0.20",
+            "ts-node": "^10.9.1",
         },
         scripts: {
-            scripts: {
-                setup: "devicescript init",
-                "build:devicescript": "devicescript build",
-                "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
-                build: "yarn build:devicescript && yarn build:sim",
-                "watch:devicescript": "devicescript devtools main.ts",
-                "watch:sim": "cd sim && ts-node-dev --respawn app.ts",
-                watch: "yarn watch:devicescript & yarn watch:sim",
-                start: "yarn watch",
-            },
+            setup: "devicescript init",
+            "build:devicescript": "devicescript build",
+            "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
+            build: "yarn build:devicescript && yarn build:sim",
+            "watch:devicescript": "devicescript devtools main.ts",
+            "watch:sim":
+                "cd sim && nodemon --watch './**' --ext 'ts,json' --exec 'ts-node ./app.ts --project ./tsconfig.json'",
+            watch: "yarn watch:devicescript & yarn watch:sim",
+            start: "yarn watch",
         },
     },
     "sim/runtime.ts": `
