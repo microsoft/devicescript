@@ -158,10 +158,12 @@ export async function startVmWorker(
 
     let auxOutput: string[] = []
 
+    const worker0 = worker
+
     worker.on("exit", (code, signal) => {
         const msg = `Exit code: ${code} ${signal ?? ""}`
-        sendLines("vm-err", [msg])
-        if (!worker.isSelfKill && (code || signal)) {
+        sendLines(worker0.isSelfKill ? "vm" : "vm-err", [msg])
+        if (!worker0.isSelfKill) {
             auxOutput.push(msg)
             for (const m of auxOutput) console.log("VMERR> " + wrapColor(91, m))
         }
