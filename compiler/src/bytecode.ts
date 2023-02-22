@@ -100,9 +100,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 6,
-    IMG_VERSION_MINOR = 0,
+    IMG_VERSION_MINOR = 1,
     IMG_VERSION_PATCH = 0,
-    IMG_VERSION = 0x6000000,
+    IMG_VERSION = 0x6010000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 10,
@@ -229,7 +229,7 @@ export enum ObjectType {
 }
 
 export enum BuiltInObject {
-    __MAX = 32,
+    __MAX = 35,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -263,10 +263,13 @@ export enum BuiltInObject {
     TYPEERROR_PROTOTYPE = 30,
     RANGEERROR = 31,
     RANGEERROR_PROTOTYPE = 32,
+    SYNTAXERROR = 33,
+    SYNTAXERROR_PROTOTYPE = 34,
+    JSON = 35,
 }
 
 export enum BuiltInString {
-    __MAX = 131,
+    __MAX = 135,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -399,6 +402,10 @@ export enum BuiltInString {
     SETTIMEOUT = 129,
     CLEARINTERVAL = 130,
     CLEARTIMEOUT = 131,
+    SYNTAXERROR = 132,
+    JSON = 133,
+    PARSE = 134,
+    STRINGIFY = 135,
 }
 
 export const OP_PRINT_FMTS = [
@@ -641,6 +648,10 @@ export const BUILTIN_STRING__VAL = [
     "setTimeout",
     "clearInterval",
     "clearTimeout",
+    "SyntaxError",
+    "JSON",
+    "parse",
+    "stringify",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
@@ -676,4 +687,7 @@ export const BUILTIN_OBJECT__VAL = [
     "TypeError_prototype",
     "RangeError",
     "RangeError_prototype",
+    "SyntaxError",
+    "SyntaxError_prototype",
+    "JSON",
 ]

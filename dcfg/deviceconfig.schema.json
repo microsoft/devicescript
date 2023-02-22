@@ -203,7 +203,11 @@
                     "type": "boolean"
                 },
                 "pin": {
-                    "description": "If a single mono LED.",
+                    "description": "If a single mono LED, or programmable RGB LED.",
+                    "type": "integer"
+                },
+                "pinCLK": {
+                    "description": "Clock pin, if any.",
                     "type": "integer"
                 },
                 "rgb": {
@@ -217,7 +221,7 @@
                 },
                 "type": {
                     "default": 0,
-                    "description": "0 - use `pin` or `rgb` as regular pins\n1 - use `pin` as WS2812B (supported only on some boards)\nOther options (in range 100+) are also possible on some boards.",
+                    "description": "0 - use `pin` or `rgb` as regular pins\n1 - use `pin` as WS2812B (supported only on some boards)\n2 - use `pin` as APA102 DATA, and `pinCLK` as CLOCK\n3 - use `pin` as SK9822 DATA, and `pinCLK` as CLOCK\nOther options (in range 100+) are also possible on some boards.",
                     "type": "integer"
                 }
             },
@@ -386,6 +390,10 @@
                     "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 },
+                "BOOT": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
                 "CS": {
                     "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
@@ -455,6 +463,22 @@
                     "type": "integer"
                 },
                 "LED": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "LED0": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "LED1": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "LED2": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "LED3": {
                     "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 },
@@ -739,6 +763,14 @@
                     "type": "integer"
                 },
                 "TX": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "VN": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                },
+                "VP": {
                     "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 }
@@ -1103,6 +1135,22 @@
                 }
             ]
         },
+        "SetupPin": {
+            "additionalProperties": false,
+            "properties": {
+                "out": {
+                    "type": "integer"
+                },
+                "pin": {
+                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "pin"
+            ],
+            "type": "object"
+        },
         "SoilMoistureConfig": {
             "additionalProperties": false,
             "properties": {
@@ -1323,19 +1371,8 @@
             "description": "Short description of the board.",
             "type": "string"
         },
-        "$fwUrl": {
-            "description": "Where to download BIN/UF2 file.\nAuto-populated.",
-            "type": "string"
-        },
         "$schema": {
             "type": "string"
-        },
-        "_": {
-            "description": "Services to mount.",
-            "items": {
-                "$ref": "#/definitions/ServiceConfig"
-            },
-            "type": "array"
         },
         "archId": {
             "description": "Architecture for the board.\nThis is auto-populated from arch.json file.",
@@ -1355,14 +1392,6 @@
         "i2c": {
             "$ref": "#/definitions/I2CConfig"
         },
-        "id": {
-            "description": "A short ID of the board.\nThis is auto-populated from file name.",
-            "examples": [
-                "adafruit_qt_py_c3",
-                "esp32_devkit_c"
-            ],
-            "type": "string"
-        },
         "jacdac": {
             "$ref": "#/definitions/JacdacConfig"
         },
@@ -1381,6 +1410,19 @@
             "examples": [
                 "0x379ea214"
             ]
+        },
+        "services": {
+            "description": "Services to mount. Each starts with { \"service\": \"...\" }",
+            "items": {
+                "$ref": "#/definitions/ServiceConfig"
+            },
+            "type": "array"
+        },
+        "setupPins": {
+            "items": {
+                "$ref": "#/definitions/SetupPin"
+            },
+            "type": "array"
         },
         "url": {
             "description": "Where to buy/read more.",

@@ -28,6 +28,11 @@ void meth1_TypeError___ctor__(devs_ctx_t *ctx) {
     meth1_error_ctor(ctx, DEVS_BUILTIN_OBJECT_TYPEERROR_PROTOTYPE, DEVS_BUILTIN_STRING_TYPEERROR);
 }
 
+void meth1_SyntaxError___ctor__(devs_ctx_t *ctx) {
+    meth1_error_ctor(ctx, DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE,
+                     DEVS_BUILTIN_STRING_SYNTAXERROR);
+}
+
 value_t prop_Error_name(devs_ctx_t *ctx, value_t self) {
     value_t ctor = devs_object_get_built_in_field(ctx, self, DEVS_BUILTIN_STRING_CONSTRUCTOR);
     if (devs_is_null(ctor))
