@@ -1,11 +1,10 @@
-import { CONNECTION_STATE, createNodeWebSocketTransport, createWebSocketTransport, DEVICE_CHANGE, JDBus, SELF_ANNOUNCE } from "jacdac-ts"
+import { CONNECTION_STATE, createWebSocketBus, DEVICE_CHANGE, SELF_ANNOUNCE, SRV_BUTTON, startServiceProviderFromServiceClass } from "jacdac-ts"
+
 import "websocket-polyfill"
 import { Blob } from "buffer"
 globalThis.Blob = Blob
 
-const ws = createWebSocketTransport("ws://127.0.0.1:8081/")
-const bus = new JDBus([ws], { disableRoleManager: true, client: false })
-bus.autoConnect = true
+const bus = createWebSocketBus()
 bus.on([CONNECTION_STATE, DEVICE_CHANGE], () => {
     console.log(bus.describe())
 })
