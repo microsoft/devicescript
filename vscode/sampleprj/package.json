@@ -7,19 +7,18 @@
         "@devicescript/cli": "*",
         "@types/jest": "^29.4.0",
         "assert": "^2.0.0",
-        "jacdac-ts": "*",
         "jest": "^29.4.3",
-        "serialport": "^10.5.0",
         "ts-jest": "^29.0.5",
-        "ts-node": "^10.9.1"
+        "ts-node-dev": "^2.0.0"
     },
     "scripts": {
         "setup": "devicescript init",
         "build:devicescript": "devicescript build",
         "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
         "build": "yarn build:devicescript && yarn build:sim",
-        "watch": "devicescript devtools main.ts",
-        "start": "yarn watch",
-        "test": "jest"
+        "watch:devicescript": "devicescript devtools main.ts",
+        "watch:sim": "cd sim && ts-node-dev --respawn --transpile-only app.ts",
+        "watch": "yarn watch:devicescript & yarn watch:sim",
+        "start": "yarn watch:devicescript"
     }
 }

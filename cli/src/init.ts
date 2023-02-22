@@ -54,11 +54,17 @@ const optionalFiles: Record<string, Object | string> = {
         dependencies: {},
         devDependencies: {
             "@devicescript/cli": "*",
+            "ts-node-dev": "^2.0.0",
         },
         scripts: {
             setup: "devicescript init",
-            build: "devicescript build",
-            watch: "devicescript devtools main.ts",
+            "build:devicescript": "devicescript build",
+            "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
+            build: "yarn build:devicescript && yarn build:sim",
+            "watch:devicescript": "devicescript devtools main.ts",
+            "watch:sim":
+                "cd sim && ts-node-dev --respawn --transpile-only app.ts",
+            watch: "yarn watch:devicescript & yarn watch:sim",
             start: "yarn watch",
         },
     },
@@ -81,6 +87,9 @@ export const bus = createWebSocketBus({
         services: customServices as jdspec.ServiceSpec[],
     },
 })
+`,
+    "sim/app.ts": `import { bus } from "./runtime"
+
 `,
     "sim/tsconfig.json": {
         type: "module",
