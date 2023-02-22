@@ -15,9 +15,10 @@
     },
     "scripts": {
         "setup": "devicescript init",
-        "build": "devicescript build",
-        "watch": "devicescript devtools main.ts",
+        "build:devicescript": "devicescript build",
         "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
+        "build": "yarn build:devicescript && yarn build:sim",
+        "watch": "devicescript devtools main.ts",
         "start": "yarn watch",
         "test": "jest"
     }
