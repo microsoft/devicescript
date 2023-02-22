@@ -1,4 +1,5 @@
 #include "jd_network.h"
+#include "devs_json.h"
 
 typedef struct {
     uint32_t magic;
@@ -185,14 +186,14 @@ int jd_wssk_send_message(const void *data, unsigned size) {
 void jd_websock_on_event(unsigned event, const void *data, unsigned size) {
     if (target_in_irq())
         JD_PANIC();
-    LOGV("%s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
+    LOGV("%s %-s", jd_websock_event_name(event), devs_json_escape(data, size));
 
     jd_wssk_t *es = &_encsock;
     switch (event) {
     case JD_CONN_EV_OPEN:
         break;
     case JD_CONN_EV_MESSAGE:
-        // DMESG("msg '%-s'", jd_json_escape(data, size));
+        // DMESG("msg '%-s'", devs_json_escape(data, size));
         on_message(es, data, size);
         break;
     case JD_CONN_EV_CLOSE:
@@ -217,7 +218,7 @@ void jd_wssk_close(void) {
 }
 
 __attribute__((weak)) void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
-    DMESG("CONN: %s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
+    DMESG("CONN: %s %-s", jd_websock_event_name(event), devs_json_escape(data, size));
 
     if (event == JD_CONN_EV_OPEN)
         jd_wssk_send_message("lalala", 6);
