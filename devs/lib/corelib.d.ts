@@ -109,6 +109,14 @@ interface String {
      */
     charCodeAt(index: number): number
 
+    /**
+     * Returns a section of a string.
+     * @param start The index to the beginning of the specified portion of stringObj.
+     * @param end The index to the end of the specified portion of stringObj. The substring includes the characters up to, but not including, the character indicated by end.
+     * If this value is not specified, the substring continues to the end of stringObj.
+     */
+    slice(start?: number, end?: number): string
+
     /** Returns the length of a String object. */
     readonly length: number
 
@@ -426,7 +434,7 @@ interface JSON {
      * @param replacer Replacer is not supported.
      * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
      */
-    stringify(value: any, replacer?: null, space?: string | number): string
+    stringify(value: any, replacer?: null, space?: number): string
 }
 /**
  * An intrinsic object that provides functions to convert JavaScript values to and from the JavaScript Object Notation (JSON) format.
