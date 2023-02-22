@@ -1,6 +1,7 @@
 # Psychomagnotheric Energy
 
     identifier: 0x1f1dc7d5
+    extends: _sensor
 
 Measures the presence of ghosts in Ghostbusters.
 

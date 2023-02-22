@@ -2,21 +2,11 @@ import {
     addServiceProvider,
     AnalogSensorServer,
     CONNECTION_STATE,
-    createWebSocketBus,
     DEVICE_CHANGE,
     SELF_ANNOUNCE,
 } from "jacdac-ts"
 import { SRV_PSYCHOMAGNOTHERIC_ENERGY } from "../.devicescript/ts/constants"
-import "websocket-polyfill"
-import { Blob } from "buffer"
-globalThis.Blob = Blob as any
-import customServices from "../.devicescript/services.json"
-
-const bus = createWebSocketBus({
-    busOptions: {
-        services: customServices as jdspec.ServiceSpec[],
-    },
-})
+import { bus } from "./bus"
 
 // simulator a customer service
 const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
