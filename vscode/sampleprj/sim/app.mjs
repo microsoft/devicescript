@@ -1,6 +1,8 @@
 import * as os from "os"
 import { CONNECTION_STATE, createNodeWebSocketTransport, createWebSocketTransport, DEVICE_CHANGE, JDBus, SELF_ANNOUNCE } from "jacdac-ts"
 import "websocket-polyfill"
+import { Blob } from "buffer"
+global.Blob = Blob
 
 console.log(os.platform())
 
