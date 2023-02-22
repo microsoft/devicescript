@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, test, afterEach } from "@jest/globals"
 import {
+    createWebSocketBus,
     createWebSocketTransport,
     delay,
     DEVICE_ANNOUNCE,
@@ -8,6 +9,10 @@ import {
     SRV_BUTTON,
     startServiceProviderFromServiceClass,
 } from "jacdac-ts"
+import "websocket-polyfill"
+import { Blob } from "buffer"
+globalThis.Blob = Blob as any
+import customServices from "../.devicescript/services.json"
 
 let bus: JDBus
 let subscriptions: (() => void)[]
@@ -15,10 +20,8 @@ let subscriptions: (() => void)[]
 const mount = (unsub: () => void) => subscriptions.push(unsub)
 
 beforeAll(async () => {
-    const ws = createWebSocketTransport("127.0.0.1:8081", {
-        protocols: "ws",
-    })
-    bus = new JDBus([ws], { client: false, disableRoleManager: true })
+    bus = createWebSocketBus()
+    bus.setCustomServiceSpecifications(customServices as jdspec.ServiceSpec[])
     bus.on(ERROR, err => {
         console.log("Bus error", err)
     })

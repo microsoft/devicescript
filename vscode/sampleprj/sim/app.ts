@@ -12,8 +12,11 @@ import { Blob } from "buffer"
 globalThis.Blob = Blob as any
 import customServices from "../.devicescript/services.json"
 
-const bus = createWebSocketBus()
-bus.setCustomServiceSpecifications(customServices as jdspec.ServiceSpec[])
+const bus = createWebSocketBus({
+    busOptions: {
+        services: customServices as jdspec.ServiceSpec[],
+    },
+})
 
 // simulator a customer service
 const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
