@@ -3665,7 +3665,7 @@ export interface CompilationResult {
     binary: Uint8Array
     dbg: DebugInfo
     diagnostics: DevsDiagnostic[]
-    config: ResolvedBuildConfig
+    config?: ResolvedBuildConfig
 }
 
 export function sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {
