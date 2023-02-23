@@ -3,29 +3,35 @@ description: Espressif ESP32-C3 (bare)
 ---
 # Espressif ESP32-C3 (bare)
 
+
 A bare ESP32-C3 board without any pin functions.
 
 
-- Service: buttonBOOT (button)
-- [Store](https://www.espressif.com/en/products/socs/esp32-c3)
+## Features
+
+-  Service: buttonBOOT (button)
+
+## Stores
+
+-  [https://www.espressif.com/en/products/socs/esp32-c3](https://www.espressif.com/en/products/socs/esp32-c3)
 
 ## Pins
 
-```
-P0: GPIO0, analogIn, io
-P1: GPIO1, analogIn, io
-P10: GPIO10, io
-P2: GPIO2, analogIn, boot, io
-P20: GPIO20, bootUart, io
-P21: GPIO21, bootUart, io
-P3: GPIO3, analogIn, io
-P4: GPIO4, analogIn, debug, io
-P5: GPIO5, debug, io
-P6: GPIO6, debug, io
-P7: GPIO7, debug, io
-P8: GPIO8, boot, io
-services.buttonBOOT[0].pin: GPIO9, boot, io
-```
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **P0** |  GPIO0 |  analogIn,  io |
+| **P1** |  GPIO1 |  analogIn,  io |
+| **P10** |  GPIO10 |  io |
+| **P2** |  GPIO2 |  analogIn,  boot,  io |
+| **P20** |  GPIO20 |  bootUart,  io |
+| **P21** |  GPIO21 |  bootUart,  io |
+| **P3** |  GPIO3 |  analogIn,  io |
+| **P4** |  GPIO4 |  analogIn,  debug,  io |
+| **P5** |  GPIO5 |  debug,  io |
+| **P6** |  GPIO6 |  debug,  io |
+| **P7** |  GPIO7 |  debug,  io |
+| **P8** |  GPIO8 |  boot,  io |
+| **services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 
 
 

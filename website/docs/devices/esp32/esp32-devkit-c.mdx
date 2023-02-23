@@ -3,39 +3,46 @@ description: Espressif ESP32-DevKitC
 ---
 # Espressif ESP32-DevKitC
 
+
 ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exposed and is easy to connect and use.
 
 
-- LED on pin 2
-- Service: buttonIO0 (button)
-- [Store](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html)
+![Espressif ESP32-DevKitC picture](https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32devkitcdevicescriptv40.catalog.jpg)
+
+## Features
+
+-  LED on pin 2
+-  Service: buttonIO0 (button)
+
+## Stores
+
+-  [https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html)
+-  [https://www.espressif.com/en/products/devkits/esp32-devkitc](https://www.espressif.com/en/products/devkits/esp32-devkitc)
 
 ## Pins
 
-```
-P13: GPIO13, debug, io, touch
-P14: GPIO14, debug, io, touch
-P18: GPIO18, io
-P19: GPIO19, io
-P21: GPIO21, io
-P22: GPIO22, io
-P23: GPIO23, io
-P25: GPIO25, analogOut, io
-P26: GPIO26, analogOut, io
-P27: GPIO27, io, touch
-P32: GPIO32, analogIn, io, touch
-P33: GPIO33, analogIn, io, touch
-P34: GPIO34, analogIn, input
-P35: GPIO35, analogIn, input
-P4: GPIO4, io, touch
-VN: GPIO39, analogIn, input
-VP: GPIO36, analogIn, input
-led.pin: GPIO2, boot, io, touch
-services.buttonIO0[0].pin: GPIO0, boot, io, touch
-```
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **P13** |  GPIO13 |  debug,  io,  touch |
+| **P14** |  GPIO14 |  debug,  io,  touch |
+| **P18** |  GPIO18 |  io |
+| **P19** |  GPIO19 |  io |
+| **P21** |  GPIO21 |  io |
+| **P22** |  GPIO22 |  io |
+| **P23** |  GPIO23 |  io |
+| **P25** |  GPIO25 |  analogOut,  io |
+| **P26** |  GPIO26 |  analogOut,  io |
+| **P27** |  GPIO27 |  io,  touch |
+| **P32** |  GPIO32 |  analogIn,  io,  touch |
+| **P33** |  GPIO33 |  analogIn,  io,  touch |
+| **P34** |  GPIO34 |  analogIn,  input |
+| **P35** |  GPIO35 |  analogIn,  input |
+| **P4** |  GPIO4 |  io,  touch |
+| **VN** |  GPIO39 |  analogIn,  input |
+| **VP** |  GPIO36 |  analogIn,  input |
+| **led.pin** |  GPIO2 |  boot,  io,  touch |
+| **services.buttonIO0[0].pin** |  GPIO0 |  boot,  io,  touch |
 
-
-![Espressif ESP32-DevKitC picture](https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32devkitcdevicescriptv40.catalog.jpg)
 
 
 ## Firmware update

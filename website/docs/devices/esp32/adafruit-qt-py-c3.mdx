@@ -3,34 +3,40 @@ description: Adafruit QT Py ESP32-C3 WiFi
 ---
 # Adafruit QT Py ESP32-C3 WiFi
 
+
 A tiny ESP32-C3 board.
 
 
-- I2C on SDA/SCL: 5/6 using Qwiic connector
-- WS2812B RGB LED on 2
-- Service: buttonBOOT (button)
-- [Store](https://www.adafruit.com/product/5405)
+![Adafruit QT Py ESP32-C3 WiFi picture](https://microsoft.github.io/jacdac-docs/images/devices/adafruit/qtpyesp32c3wifidevboardv10.catalog.jpg)
+
+## Features
+
+-  I2C on SDA/SCL: 5/6 using Qwiic connector
+-  WS2812B RGB LED on 2
+-  Service: buttonBOOT (button)
+
+## Stores
+
+-  [https://www.adafruit.com/product/5405](https://www.adafruit.com/product/5405)
 
 ## Pins
 
-```
-A0: GPIO4, analogIn, debug, io
-A1: GPIO3, analogIn, io
-A2: GPIO1, analogIn, io
-A3: GPIO0, analogIn, io
-MISO: GPIO8, boot, io
-MOSI: GPIO7, debug, io
-RX: GPIO20, bootUart, io
-SCK: GPIO10, io
-TX: GPIO21, bootUart, io
-i2c.pinSCL: GPIO6, debug, io
-i2c.pinSDA: GPIO5, debug, io
-led.pin: GPIO2, analogIn, boot, io
-services.buttonBOOT[0].pin: GPIO9, boot, io
-```
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **A0** |  GPIO4 |  analogIn,  debug,  io |
+| **A1** |  GPIO3 |  analogIn,  io |
+| **A2** |  GPIO1 |  analogIn,  io |
+| **A3** |  GPIO0 |  analogIn,  io |
+| **MISO** |  GPIO8 |  boot,  io |
+| **MOSI** |  GPIO7 |  debug,  io |
+| **RX** |  GPIO20 |  bootUart,  io |
+| **SCK** |  GPIO10 |  io |
+| **TX** |  GPIO21 |  bootUart,  io |
+| **i2c.pinSCL** |  GPIO6 |  debug,  io |
+| **i2c.pinSDA** |  GPIO5 |  debug,  io |
+| **led.pin** |  GPIO2 |  analogIn,  boot,  io |
+| **services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 
-
-![Adafruit QT Py ESP32-C3 WiFi picture](https://microsoft.github.io/jacdac-docs/images/devices/adafruit/qtpyesp32c3wifidevboardv10.catalog.jpg)
 
 
 ## Firmware update
