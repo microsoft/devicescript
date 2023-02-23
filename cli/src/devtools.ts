@@ -355,6 +355,9 @@ async function watchCmd(
         ].filter(f => !!f),
         {
             cwd: resolve("."),
+            useFsEvents: false,
+            interval: 5000,
+            binaryInterval: 5000,
             ignored: [
                 "nodes_modules/**",
                 ".devicescript/**",
