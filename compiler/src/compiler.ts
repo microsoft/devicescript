@@ -72,7 +72,7 @@ import {
 import { computeSizes } from "./debug"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
-import { LocalBuildConfig } from "./archconfig"
+import { LocalBuildConfig, ResolvedBuildConfig } from "./archconfig"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -3655,6 +3655,7 @@ class Program implements TopOpWriter {
             binary: binary,
             dbg: dbg,
             diagnostics: this.diagnostics,
+            config: this.host.getConfig(),
         }
     }
 }
@@ -3664,6 +3665,7 @@ export interface CompilationResult {
     binary: Uint8Array
     dbg: DebugInfo
     diagnostics: DevsDiagnostic[]
+    config: ResolvedBuildConfig
 }
 
 export function sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {

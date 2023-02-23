@@ -31,7 +31,7 @@ export interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
 
     /**
      * Where to download BIN/UF2 file from.
-     * 
+     *
      * @TJS-ignore
      */
     $fwUrl?: string
@@ -48,7 +48,7 @@ export interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
 
     /**
      * Is it a user-defined board.
-     * 
+     *
      * @TJS-ignore
      */
     $custom?: boolean
@@ -99,8 +99,8 @@ export interface LocalBuildConfig {
 }
 
 export interface ResolvedBuildConfig {
-    boards: { [id: string]: DeviceConfig }
-    archs: { [id: string]: ArchConfig }
+    boards: Record<string, DeviceConfig>
+    archs: Record<string, ArchConfig>
     services: jdspec.ServiceSpec[]
 }
 

@@ -5,15 +5,20 @@ import {
     ERROR_TRANSPORT_CLOSED,
     isCodeError,
     JDEventSource,
+    JDService,
     loadServiceSpecifications,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type {
+    BuildStatus,
+    SideBuildReq,
+    SideBuildResp,
     SideKillReq,
     SideKillResp,
-    SideSpecsData,
     SideSpecsReq,
     SideSpecsResp,
+    SideWatchReq,
+    VersionInfo,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { sideRequest } from "./jacdac"
@@ -23,6 +28,8 @@ import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
+import { ResolvedBuildConfig } from "@devicescript/compiler"
+import { showBuildResults } from "./build"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -35,7 +42,8 @@ export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
 
-    private _specs: SideSpecsData
+    private _versions: VersionInfo
+    private _buildConfig: ResolvedBuildConfig
     private _terminalPromise: Promise<vscode.Terminal>
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
@@ -57,21 +65,60 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     async refreshSpecs() {
-        const oldSpecs = this._specs
         const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
             req: "specs",
             data: {
                 dir: ".", // TODO
             },
         })
-        this._specs = res.data
-        loadServiceSpecifications(this._specs.buildConfig.services)
-        console.log(
+        const { versions, buildConfig } = res.data
+        this._versions = versions
+        console.debug(
             `devicescript devtools ${this.version}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
         )
-        if (JSON.stringify(oldSpecs) !== JSON.stringify(this._specs)) {
-            this.extensionState.bus.emit(CHANGE)
-            this.emit(CHANGE)
+        this.updateBuildConfig(buildConfig)
+    }
+
+    updateBuildConfig(data: ResolvedBuildConfig) {
+        if (JSON.stringify(this._buildConfig) === JSON.stringify(data)) return
+
+        this._buildConfig = data
+        loadServiceSpecifications(this._buildConfig?.services || [])
+        this.extensionState.bus.emit(CHANGE)
+        this.emit(CHANGE)
+    }
+
+    async build(
+        filename: string,
+        options?: {
+            service?: JDService
+            watch?: boolean
+        }
+    ): Promise<BuildStatus> {
+        const { service, watch } = options || {}
+        const deviceId = service?.device?.deviceId
+        try {
+            const res = await sideRequest<SideBuildReq, SideBuildResp>({
+                req: "build",
+                data: {
+                    filename,
+                    deployTo: deviceId,
+                },
+            })
+            this.updateBuildConfig(res.data.config)
+            showBuildResults(res.data)
+            // also start watch
+            if (watch)
+                await sideRequest<SideWatchReq>({
+                    req: "watch",
+                    data: {
+                        filename,
+                    },
+                })
+            return res.data
+        } catch (err) {
+            console.error(err) // TODO
+            return undefined
         }
     }
 
@@ -86,19 +133,19 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     get version() {
-        return this._specs?.version
+        return this._versions?.version
     }
 
     get runtimeVersion() {
-        return this._specs?.runtimeVersion
+        return this._versions?.runtimeVersion
     }
 
     get nodeVersion() {
-        return this._specs?.nodeVersion
+        return this._versions?.nodeVersion
     }
 
     get buildConfig() {
-        return this._specs?.buildConfig
+        return this._buildConfig
     }
 
     get boards() {
@@ -260,7 +307,8 @@ export class DeveloperToolsManager extends JDEventSource {
     private clear() {
         this._terminalPromise = undefined
         this._projectFolder = undefined
-        this._specs = undefined
+        this._versions = undefined
+        this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
     }
 

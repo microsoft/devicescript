@@ -1,13 +1,7 @@
-import type {
-    BuildStatus,
-    SideBuildReq,
-    SideBuildResp,
-    SideWatchEvent,
-    SideWatchReq,
-} from "../../cli/src/sideprotocol"
-import { sideRequest, subSideEvent } from "./jacdac"
+import type { BuildStatus, SideWatchEvent } from "../../cli/src/sideprotocol"
+import { subSideEvent } from "./jacdac"
 import * as vscode from "vscode"
-import { groupBy, JDService } from "jacdac-ts"
+import { groupBy } from "jacdac-ts"
 
 // let outputCh: vscode.OutputChannel
 let diagColl: vscode.DiagnosticCollection
@@ -53,38 +47,5 @@ export function showBuildResults(st: BuildStatus) {
             return vd
         })
         diagColl.set(vscode.Uri.file(fn), diags)
-    }
-}
-
-export async function build(
-    filename: string,
-    options?: {
-        service?: JDService
-        watch?: boolean
-    }
-): Promise<BuildStatus> {
-    const { service, watch } = options || {}
-    const deviceId = service?.device?.deviceId
-    try {
-        const res = await sideRequest<SideBuildReq, SideBuildResp>({
-            req: "build",
-            data: {
-                filename,
-                deployTo: deviceId,
-            },
-        })
-        showBuildResults(res.data)
-        // also start watch
-        if (watch)
-            await sideRequest<SideWatchReq>({
-                req: "watch",
-                data: {
-                    filename,
-                },
-            })
-        return res.data
-    } catch (err) {
-        console.error(err) // TODO
-        return undefined
     }
 }

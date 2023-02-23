@@ -85,9 +85,11 @@ export function initSideProto(devtools_: DevToolsIface) {
         const { buildConfig } = buildConfigFromDir(msg.data.dir)
         return {
             buildConfig,
-            version: packageVersion(),
-            runtimeVersion: runtimeVersion(),
-            nodeVersion: process.version,
+            versions: {
+                version: packageVersion(),
+                runtimeVersion: runtimeVersion(),
+                nodeVersion: process.version,
+            },
         }
     })
     addReqHandler<SideKillReq, SideKillResp>("kill", async () => {

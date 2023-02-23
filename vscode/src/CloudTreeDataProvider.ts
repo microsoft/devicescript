@@ -14,7 +14,6 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { toMarkdownString } from "./catalog"
-import { build } from "./build"
 import { Utils } from "vscode-uri"
 import { CloudExtensionState } from "./CloudExtensionState"
 import { sideRequest } from "./jacdac"
@@ -220,8 +219,12 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                     const text = new TextDecoder().decode(
                         await vscode.workspace.fs.readFile(file)
                     )
-                    // try to build
-                    const status = await build(file.fsPath)
+
+                    // TODOtry to build
+                    const status =
+                        await this.state.deviceScriptState.devtools.build(
+                            file.fsPath
+                        )
                     if (!status?.success) {
                         vscode.window.showErrorMessage(
                             "DeviceScript Cloud: file have build errors."
