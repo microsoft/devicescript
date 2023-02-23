@@ -339,8 +339,26 @@ static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
     pkt->_size = (pkt->service_size + 4 + 3) & ~3;
     pkt->flags = 0;
 
-    if (print)
-        DMESG("> %s", str);
+    if (print) {
+        if (strchr(str, '\n')) {
+            char *tmp = jd_strdup(str);
+            char *sp = tmp, *ep = tmp;
+            while (*ep) {
+                if (*ep == '\n') {
+                    *ep++ = 0;
+                    DMESG("> %s", sp);
+                    sp = ep;
+                } else {
+                    ep++;
+                }
+            }
+            if (*sp)
+                DMESG("> %s", sp);
+            jd_free(tmp);
+        } else {
+            DMESG("> %s", str);
+        }
+    }
 
     if (!(ctx->flags & DEVS_CTX_LOGGING_ENABLED))
         return RESUME_USER_CODE;

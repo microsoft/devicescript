@@ -70,7 +70,7 @@ function consStringTest() {
 }
 
 function testStringOps(): void {
-    assert("foo" + ("bar") == "foobar", "concat")
+    assert("foo" + "bar" == "foobar", "concat")
     assert("xAb".charCodeAt(1) == 65, "code at")
     assert("B".charCodeAt(0) == 66, "tcc")
     assert(parseInt("-123") == -123, "tonum")
@@ -79,8 +79,38 @@ function testStringOps(): void {
     assert(!"fo".charCodeAt(17), "nan")
 }
 
+function isEq(x: any, y: any): void {
+    if (x != y) {
+        console.log(ds.format("fail: {0} != {1}", x, y))
+        // throw { message: "failed eq" }
+        throw new Error("failed EQ")
+    }
+}
+
+function testSlice() {
+    const s = "012"
+    isEq(s.slice(0), "012")
+    isEq(s.slice(1), "12")
+    isEq(s.slice(2), "2")
+    isEq(s.slice(3), "")
+    isEq(s.slice(4), "")
+    isEq(s.slice(4000), "")
+    isEq(s.slice(-1), "2")
+    isEq(s.slice(-2), "12")
+    isEq(s.slice(-3), "012")
+    isEq(s.slice(-4), "012")
+    isEq(s.slice(-400), "012")
+
+    const q = "012345"
+    isEq(q.slice(0), q)
+    isEq(q.slice(1, 3), "12")
+    isEq(q.slice(1, -2), "123")
+}
+
 testStrings()
 testStringOps()
 consStringTest()
+
+testSlice()
 
 ds.reboot()

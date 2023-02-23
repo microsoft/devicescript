@@ -15,7 +15,7 @@ import {
     SideStopVmResp,
 } from "./sideprotocol"
 
-let worker: ChildProcess
+let worker: ChildProcess & { isSelfKill?: boolean }
 
 export function waitForEvent<T>(
     ms: number,
@@ -66,6 +66,7 @@ export async function stopVmWorker() {
     if (w) {
         verboseLog(`vmworker: stopping`)
         try {
+            w.isSelfKill = true
             if (w.exitCode === null && w.signalCode === null) {
                 w.kill()
                 await waitForEvent(500, f => w.on("exit", f))
@@ -119,8 +120,12 @@ export function printDmesg(dbg: DebugInfo, pref: string, line: string) {
         else if (marker == ">") text = wrapColor(95, text)
         else text = wrapColor(33, text)
         console.log(pref + "> " + text)
+        return true
     } else if (isVerbose) {
         console.log(wrapColor(90, "V> " + line.trim()))
+        return true
+    } else {
+        return false
     }
 }
 
@@ -151,17 +156,36 @@ export async function startVmWorker(
     worker.stdout.setEncoding("utf-8")
     worker.stderr.setEncoding("utf-8")
 
+    let auxOutput: string[] = []
+
+    const worker0 = worker
+
     worker.on("exit", (code, signal) => {
-        sendLines("vm-err", [`Exit code: ${code} ${signal ?? ""}`])
+        const msg = `Exit code: ${code} ${signal ?? ""}`
+        sendLines(worker0.isSelfKill ? "vm" : "vm-err", [msg])
+        if (!worker0.isSelfKill) {
+            auxOutput.push(msg)
+            for (const m of auxOutput) console.log("VMERR> " + wrapColor(91, m))
+        }
     })
 
     function sendLines(kind: OutputFrom, lines: string[]) {
         sendOutput(sender, kind, lines)
         for (const l of lines) {
+            let printed = false
             if (l.startsWith("    "))
-                printDmesg(devtoolsIface.lastOKBuild?.dbg, "VM", l.slice(4))
+                printed = printDmesg(
+                    devtoolsIface.lastOKBuild?.dbg,
+                    "VM",
+                    l.slice(4)
+                )
             else if (kind == "vm-err") {
                 console.log("VMERR> " + wrapColor(91, l))
+                printed = true
+            }
+            if (!printed) {
+                auxOutput.push(l)
+                if (auxOutput.length > 100) auxOutput = auxOutput.slice(50)
             }
         }
     }

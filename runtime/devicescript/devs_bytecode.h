@@ -104,9 +104,9 @@
     "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06"
 
 #define DEVS_IMG_VERSION_MAJOR 6
-#define DEVS_IMG_VERSION_MINOR 0
+#define DEVS_IMG_VERSION_MINOR 1
 #define DEVS_IMG_VERSION_PATCH 0
-#define DEVS_IMG_VERSION 0x6000000
+#define DEVS_IMG_VERSION 0x6010000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 10
@@ -209,7 +209,7 @@
 #define DEVS_OBJECT_TYPE_ANY 11
 #define DEVS_OBJECT_TYPE_VOID 12
 
-#define DEVS_BUILTIN_OBJECT___MAX 32
+#define DEVS_BUILTIN_OBJECT___MAX 35
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
@@ -243,8 +243,11 @@
 #define DEVS_BUILTIN_OBJECT_TYPEERROR_PROTOTYPE 30
 #define DEVS_BUILTIN_OBJECT_RANGEERROR 31
 #define DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE 32
+#define DEVS_BUILTIN_OBJECT_SYNTAXERROR 33
+#define DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE 34
+#define DEVS_BUILTIN_OBJECT_JSON 35
 
-#define DEVS_BUILTIN_STRING___MAX 131
+#define DEVS_BUILTIN_STRING___MAX 135
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -377,6 +380,10 @@
 #define DEVS_BUILTIN_STRING_SETTIMEOUT 129
 #define DEVS_BUILTIN_STRING_CLEARINTERVAL 130
 #define DEVS_BUILTIN_STRING_CLEARTIMEOUT 131
+#define DEVS_BUILTIN_STRING_SYNTAXERROR 132
+#define DEVS_BUILTIN_STRING_JSON 133
+#define DEVS_BUILTIN_STRING_PARSE 134
+#define DEVS_BUILTIN_STRING_STRINGIFY 135
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -414,7 +421,7 @@
         "sendCommand", "__stack__", "Error", "TypeError", "RangeError", "stack", "message",        \
         "cause", "__new__", "setPrototypeOf", "getPrototypeOf", "constructor", "__proto__",        \
         "_logRepr", "print", "everyMs", "setInterval", "setTimeout", "clearInterval",              \
-        "clearTimeout"
+        "clearTimeout", "SyntaxError", "JSON", "parse", "stringify"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \
@@ -422,4 +429,5 @@
         "Boolean", "Boolean_prototype", "Packet", "Packet_prototype", "DeviceScript",              \
         "DsPacketInfo_prototype", "DsRegister_prototype", "DsCommand_prototype",                   \
         "DsEvent_prototype", "DsReport_prototype", "Error", "Error_prototype", "TypeError",        \
-        "TypeError_prototype", "RangeError", "RangeError_prototype"
+        "TypeError_prototype", "RangeError", "RangeError_prototype", "SyntaxError",                \
+        "SyntaxError_prototype", "JSON"

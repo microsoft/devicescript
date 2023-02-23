@@ -109,6 +109,14 @@ interface String {
      */
     charCodeAt(index: number): number
 
+    /**
+     * Returns a section of a string.
+     * @param start The index to the beginning of the specified portion of stringObj.
+     * @param end The index to the end of the specified portion of stringObj. The substring includes the characters up to, but not including, the character indicated by end.
+     * If this value is not specified, the substring continues to the end of stringObj.
+     */
+    slice(start?: number, end?: number): string
+
     /** Returns the length of a String object. */
     readonly length: number
 
@@ -373,7 +381,7 @@ interface Error {
      * Logs the exception message and stack.
      */
     print(): void
-    
+
     // stack not impl. yet
     // stack?: string
 
@@ -388,25 +396,47 @@ interface ErrorConstructor {
     (message?: string): Error
     readonly prototype: Error
 }
-
 declare var Error: ErrorConstructor
 
 interface RangeError extends Error {}
-
 interface RangeErrorConstructor extends ErrorConstructor {
     new (message?: string): RangeError
     (message?: string): RangeError
     readonly prototype: RangeError
 }
-
 declare var RangeError: RangeErrorConstructor
 
 interface TypeError extends Error {}
-
 interface TypeErrorConstructor extends ErrorConstructor {
     new (message?: string): TypeError
     (message?: string): TypeError
     readonly prototype: TypeError
 }
-
 declare var TypeError: TypeErrorConstructor
+
+interface SyntaxError extends Error {}
+interface SyntaxErrorConstructor extends ErrorConstructor {
+    new (message?: string): SyntaxError
+    (message?: string): SyntaxError
+    readonly prototype: SyntaxError
+}
+declare var SyntaxError: SyntaxErrorConstructor
+
+interface JSON {
+    /**
+     * Converts a JavaScript Object Notation (JSON) string into an object.
+     * @param text A valid JSON string.
+     */
+    parse(text: string): any
+    /**
+     * Converts a JavaScript value to a JavaScript Object Notation (JSON) string.
+     * @param value A JavaScript value, usually an object or array, to be converted.
+     * @param replacer Replacer is not supported.
+     * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
+     */
+    stringify(value: any, replacer?: null, space?: number): string
+}
+/**
+ * An intrinsic object that provides functions to convert JavaScript values to and from the JavaScript Object Notation (JSON) format.
+ */
+declare var JSON: JSON

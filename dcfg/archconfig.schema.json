@@ -54,6 +54,68 @@
             ],
             "type": "string"
         },
+        "pins": {
+            "additionalProperties": false,
+            "description": "Defines a mapping from a pin function",
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "analogIn": {
+                    "description": "Pins capable of analog input (ADC).",
+                    "type": "string"
+                },
+                "analogOut": {
+                    "description": "Pins capable of true analog output (DAC, not PWM).",
+                    "type": "string"
+                },
+                "boot": {
+                    "description": "Pins used in boot process.",
+                    "type": "string"
+                },
+                "bootUart": {
+                    "description": "Pins used by hardware UART during boot.",
+                    "type": "string"
+                },
+                "debug": {
+                    "description": "Pins used by JTAG or SWD debugger interface.",
+                    "type": "string"
+                },
+                "flash": {
+                    "description": "Pins used by the SPI flash interface.",
+                    "type": "string"
+                },
+                "input": {
+                    "description": "Pins capable of general purpose input.\n`io` pins are automatically added here.",
+                    "type": "string"
+                },
+                "io": {
+                    "description": "Pins with both input and output capability.",
+                    "type": "string"
+                },
+                "output": {
+                    "description": "Pins capable of general purpose output.\n`io` pins are automatically added here.",
+                    "type": "string"
+                },
+                "psram": {
+                    "description": "Pins used by PSRAM interface.",
+                    "type": "string"
+                },
+                "touch": {
+                    "description": "Pins capable of touch input.",
+                    "type": "string"
+                },
+                "usb": {
+                    "description": "Pins used by USB interface.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "io"
+            ],
+            "type": "object"
+        },
         "repoUrl": {
             "description": "Source repo, boards are assumed to sit in `boards/<arch-id>/<board-id>.board.json`\nAuto-populated.",
             "type": "string"

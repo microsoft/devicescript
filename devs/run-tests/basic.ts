@@ -523,6 +523,63 @@ function testFunName() {
     function qq() {}
 }
 
+
+function expectErr(js: string) {
+    try {
+        JSON.parse(js)
+    } catch {
+        return
+    }
+    throw new Error(`expecting error on: ${js}`)
+}
+function jsonTest(js: string, indent?: number) {
+    const o = JSON.parse(js)
+    const str = JSON.stringify(o, null, indent)
+    if (js != str) {
+        console.log(`orig:${js}`)
+        console.log(`stri:${str}`)
+        console.log(`stri2:${JSON.stringify(str)}`)
+        throw new Error("failed JSON")
+    }
+
+    const o2 = JSON.parse(" " + js + " ")
+    ds.assert(JSON.stringify(o2) == JSON.stringify(o))
+    expectErr(js + "x")
+    expectErr(js + "t")
+
+    if (typeof o != "number") {
+        expectErr(js.slice(0, -1))
+        expectErr(js.slice(0, -2))
+        expectErr(js.slice(1))
+    }
+}
+
+function testJSON() {
+    console.log("testJSON")
+    jsonTest("null")
+    jsonTest("true")
+    jsonTest("false")
+    jsonTest("12")
+    jsonTest("-12")
+    jsonTest("-12.5")
+    jsonTest("{}")
+    jsonTest("[]")
+    jsonTest("[1]")
+    jsonTest('{"x":1}')
+    jsonTest('{"x":1,"y":[1,2,3]}')
+    jsonTest('{"x":1,"y":[]}')
+    jsonTest("[{}]")
+    jsonTest("[{},{}]")
+    jsonTest("[null,{}]")
+    jsonTest('[{"foo":1,"a":[]}]')
+    jsonTest("[]", 2)
+    jsonTest("[\n  1\n]", 2)
+    jsonTest("[\n  1,\n  3\n]", 2)
+    jsonTest("{}", 2)
+    jsonTest('{\n  "x": 1\n}', 2)
+    jsonTest('{\n  "x": 1,\n  "y": [\n    1,\n    2,\n    3\n  ]\n}', 2)
+}
+
 testFlow()
 if (x != 42) _panic(10)
 testMath()
@@ -545,6 +602,7 @@ testForOf()
 testInstanceOf()
 testClass()
 testFunName()
+testJSON()
 
 console.log("all OK")
 ds.reboot()

@@ -310,7 +310,7 @@ void jd_tcpsock_on_event(unsigned event, const void *data, unsigned size) {
         start_conn(ws);
         break;
     case JD_CONN_EV_MESSAGE:
-        // DMESG("msg '%-s'", jd_json_escape(data, size));
+        // DMESG("msg '%-s'", devs_json_escape(data, size));
         on_data(ws, data, size);
         break;
     case JD_CONN_EV_CLOSE:

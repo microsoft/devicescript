@@ -5,7 +5,7 @@ import { writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createInterface } from "node:readline"
 import { BuildOptions, readDebugInfo } from "./build"
-import { BINDIR, CmdOptions, log } from "./command"
+import { BINDIR, CmdOptions, error, log } from "./command"
 import { readCompiled } from "./run"
 import { printDmesg } from "./vmworker"
 
@@ -38,17 +38,27 @@ export async function crunScript(
     log(`run: ${executable} ${args.join(" ")}`)
 
     const child = spawn(executable, args, {
-        stdio: ["inherit", "pipe", "inherit"],
+        stdio: ["inherit", "pipe", "pipe"],
     })
 
-    const rl = createInterface({ input: child.stdout })
+    let recentLines: string[] = []
     const dbg = readDebugInfo()
-    rl.on("line", line => {
-        printDmesg(dbg, "C", line)
+    createInterface({ input: child.stdout }).on("line", line => {
+        if (!printDmesg(dbg, "C", line)) {
+            recentLines.push(line)
+            if (recentLines.length > 100) recentLines = recentLines.slice(50)
+        }
+    })
+    createInterface({ input: child.stderr }).on("line", line => {
+        printDmesg(dbg, "C", "! " + line)
     })
 
     child.on("exit", (code, err) => {
         if (!code && err) code = 2
-        process.exit(code)
+        if (code) {
+            log(recentLines.join("\n"))
+            error(`exit code: ${code} ${err ?? ""}`)
+        }
+        setTimeout(() => process.exit(code), 200)
     })
 }

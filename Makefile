@@ -37,7 +37,7 @@ check:
 	$(MAKE) all
 	$(MAKE) test
 
-regen:
+bc:
 	cd bytecode && ./run.sh
 	node runtime/scripts/ds-builtin-proto.js \
 		runtime/devicescript/devs_bytecode.h \
@@ -47,7 +47,9 @@ regen:
 	clang-format -i runtime/posix/native_cfg.c
 	$(CLI) dcfg runtime/boards/wasm/wasm.board.json --update runtime/posix/wasm_cfg.c
 	clang-format -i runtime/posix/wasm_cfg.c
-	cd runtime/jacdac-c/dcfg && ./regen.sh
+
+regen: bc
+	cd ./dcfg && ./regen.sh
 	yarn boards
 
 specs spec:

@@ -240,3 +240,34 @@ value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
 
     return r;
 }
+
+static int sanitize_idx(int sz, int start) {
+    if (start < 0) {
+        start += sz;
+        if (start < 0)
+            start = 0;
+    }
+    if (start > sz)
+        start = sz;
+    return start;
+}
+
+value_t devs_string_slice(devs_ctx_t *ctx, value_t str, int start, int endp) {
+    unsigned sz;
+    const char *data = devs_string_get_utf8(ctx, str, &sz);
+    if (!data)
+        return devs_undefined;
+
+    start = sanitize_idx(sz, start);
+    endp = sanitize_idx(sz, endp);
+
+    int len = endp - start;
+    if (len <= 0)
+        return devs_builtin_string(DEVS_BUILTIN_STRING__EMPTY);
+
+    if (start == 0 && len == (int)sz)
+        return str;
+
+    devs_string_t *r = devs_string_try_alloc_init(ctx, (const uint8_t *)data + start, len);
+    return devs_value_from_gc_obj(ctx, r);
+}
