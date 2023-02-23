@@ -1,10 +1,4 @@
-import {
-    addServer,
-    AnalogSensorServer,
-    CONNECTION_STATE,
-    DEVICE_CHANGE,
-    SELF_ANNOUNCE,
-} from "jacdac-ts"
+import { addServer, AnalogSensorServer } from "jacdac-ts"
 import { SRV_PSYCHOMAGNOTHERIC_ENERGY } from "../.devicescript/ts/constants"
 import { bus } from "./runtime"
 
@@ -14,14 +8,14 @@ const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
     readingError: [0.1],
     streamingInterval: 500,
 })
-addServer(bus, "psycho_energy", server)
-bus.on(SELF_ANNOUNCE, () => {
-    const newValue = server.reading.values()[0] + (0.5 - Math.random()) / 10
+// randomly change the reading value
+setInterval(() => {
+    const value = server.reading.values()[0]
+    const newValue = value + (0.5 - Math.random()) / 10
     server.reading.setValues([newValue])
-    console.debug(`psycho: ${newValue}`)
-})
+    console.debug(`psycho value: ${newValue}`)
+}, 100)
 
-bus.on([CONNECTION_STATE, DEVICE_CHANGE], () => {
-    console.log(bus.describe())
-})
-bus.connect(true)
+// mount server on bus to make it visible
+// to DeviceScript
+addServer(bus, "aurascope", server)
