@@ -109,12 +109,11 @@ export class DeveloperToolsManager extends JDEventSource {
         if (JSON.stringify(this._buildConfig) === JSON.stringify(data)) return
 
         this._buildConfig = data
-        loadServiceSpecifications(this._buildConfig?.services || [])
-
-        console.debug(`devtools: update build config`)
-
-        this.emit(CHANGE)
-        this.extensionState.bus.emit(CHANGE)
+        const { changed } =
+            this.extensionState.bus.setCustomServiceSpecifications(
+                this._buildConfig?.services || []
+            )
+        if (changed) this.emit(CHANGE)
     }
 
     private showBuildResults(st: BuildStatus) {
