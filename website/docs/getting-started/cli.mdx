@@ -22,14 +22,18 @@ npx --yes @devicescript/cli@latest init --install
 You will have the following files created.
 
 ```
-.devicescript     reserved folder for devicescript generated
-    /lib          supporting runtime types and libraries
-    /bin          compilation file output
-.gitignore        if you are using git, make sure to ignore .devicescript
-main.ts           usual name for your entry point application
-package.json      projet configuration
-tsconfig.json     configure the TypeScript compiler to compile DeviceScript syntax
-devsconfig.json   configure the DeviceScript compiler with additional flags. Also used by VSCode extension to activate.
+.devicescript      reserved folder for devicescript generated
+    /lib           supporting runtime types and libraries
+    /bin           compilation file output
+.gitignore         if you are using git, make sure to ignore .devicescript
+main.ts            usual name for your entry point application
+package.json       projet configuration
+tsconfig.json      configure the TypeScript compiler to compile DeviceScript syntax
+devsconfig.json    configure the DeviceScript compiler with additional flags. Also used by VSCode extension to activate.
+/sim/              Node.JS simulation project folder.
+/sim/app.ts        Default simulator entry point
+/sim/runtime.ts    Scafolding to mount a Jacdac bus connected to the devtools server
+/sim/tsconfig.json Node.JS TypeScript configuration file
 ...
 ```
 

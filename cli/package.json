@@ -30,13 +30,14 @@
         "debounce-promise": "^3.1.2",
         "faye-websocket": "^0.11.4",
         "fs-extra": "^10.1.0",
-        "websocket-polyfill": "^0.0.3",
         "@devicescript/dap": "*",
-        "@devicescript/vm": "*",
-        "jacdac-ts": "*"
+        "@devicescript/vm": "*"
     },
     "dependencies": {
-        "@devicescript/compiler": "*"
+        "@devicescript/compiler": "*",
+        "buffer": "^6.0.3",
+        "websocket-polyfill": "^0.0.3",
+        "jacdac-ts": "*"
     },
     "optionalDependencies": {
         "serialport": "^10.5.0"

@@ -1,0 +1,104 @@
+---
+sidebar_position: 10
+hide_table_of_contents: true
+---
+
+# Simulation
+
+DeviceScript supports simulation through a Node.JS project running in parralel on the developer machine.
+The Node.JS project uses the [Jacdac TypeScript client library](https://microsoft.github.io/jacdac-docs/clients/javascript/) and,
+any other Node package (like your favorite test project).
+
+The Node.JS simulator project is, by default, located under `/sim/` with `/sim/app.ts` as the entry point.
+
+## Project structure
+
+In a DeviceScript project,
+
+-   all `.ts` files, expect for the `./sim/` folder, are compiled into DeviceScript bytecode
+-   all file under `./sim/` are compiled as a Node.JS application
+
+```
+.devicescript/*  libraries and supporting files
+main.ts          DeviceScript entry point
+...
+sim/app.ts       Node entry point for the simulator
+sim/...
+```
+
+## Running using package scripts
+
+The scripts in `package.json` are configured support both DeviceScript and sim `build` and `watch`.
+
+### build
+
+```bash
+# build DeviceScript and node.js sim
+yarn build
+
+# build device script only
+yarn build:devicescript
+
+# build node.js sim only
+yarn build:sim
+```
+
+### watch
+
+```bash
+# watch DeviceScript and node.js sim
+yarn watch
+
+# watch device script only
+yarn watch:devicescript
+
+# watch node.js sim only
+yarn watch:sim
+```
+
+## Debugging DeviceScript and Node
+
+Visual Studio Code supports multiple debugging sessions simultaneously so it is possible to debug your DeviceScript
+code and the simulator in the same session.
+
+```mermaid
+stateDiagram-v2
+    code: VS Code
+    node: app.ts (node.js)
+    devicescript: main.ts (devicescript)
+    devtools: Developer Tools
+    device: Simulator or Hardware device
+    code --> devicescript: DeviceScript debugger
+    code --> node: Node.JS debugger
+    devicescript --> devtools
+    node --> devtools: web socket connection
+    devtools --> device
+```
+
+## `aurascope` example
+
+This simulator sample starts a simulated `psychomagnotheric energy sensor` (custom service) using `jacdac-ts`.
+
+```ts title="./sim/app.ts"
+// Jacdac bus that will connect to the devtools server
+import { bus } from "./runtime"
+// Jacdac helper to simulate services
+import { addServer, AnalogSensorServer } from "jacdac-ts"
+// custom service
+import { SRV_PSYCHOMAGNOTHERIC_ENERGY } from "../.devicescript/ts/constants"
+
+// server for the custom service
+const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
+    readingValues: [0.5],
+    readingError: [0.1],
+    streamingInterval: 500,
+})
+// change level randomly
+setInterval(() => {
+    // randomly change the
+    const newValue = server.reading.values()[0] + (0.5 - Math.random()) / 10
+    server.reading.setValues([newValue])
+    console.debug(`psycho value: ${newValue}`)
+}, 100)
+addServer(bus, "aurascope", server)
+```

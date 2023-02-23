@@ -22,6 +22,7 @@
         ".devicescript/lib/*.ts"
     ],
     "exclude": [
-        "**/node_modules/*"
+        "**/node_modules/*",
+        "**/sim/**"
     ],
 }
