@@ -100,6 +100,14 @@ const optionalFiles: Record<string, Object | string> = {
             start: "yarn watch",
         },
     },
+    "boards/README.md": `# Boards
+
+This folder contains custom board definition files 
+to configure the DeviceScript firmware to your microcontroller
+pin and peripherical configuration.
+
+-  [Read documentation](https://microsoft.github.io/devices/add-board)
+`,
     "sim/runtime.ts": `
 import "websocket-polyfill"
 import { Blob } from "buffer"
@@ -120,6 +128,17 @@ export const bus = createWebSocketBus({
     },
 })
 `,
+    "sim/README.md": `# Simulators (node.js)
+
+This folder contains a Node.JS/TypeScript application that will be executed side-by-side with
+the DeviceScript debugger and simulators. The application uses the [Jacdac TypeScript package](https://microsoft.github.io/jacdac-docs/clients/javascript/)
+to communicate with DeviceScript.
+
+The default entry point file is \`app.ts\`, which uses the Jacdac bus from \`runtime.ts\` to communicate
+with the rest of the DeviceScript execution.
+
+Feel free to modify to your needs and taste.
+`,
     "sim/app.ts": `import { bus } from "./runtime"
 
 `,
@@ -138,9 +157,28 @@ export const bus = createWebSocketBus({
         },
         include: ["./*.ts", "../node_modules/*"],
     },
+    "services/README.md": `# Services
+
+Add custom service definition in this folder.
+
+-   [Read documentation](http://microsoft.github.io/devicescript/developer/custom-services)
+`,
     "README.md": `# - project name -
 
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
+
+## Project structures
+
+\`\`\`
+.devicescript      reserved folder for devicescript generated files
+main.ts            default DeviceScript entry point
+...
+/sim/app.ts        default node simulation entry point
+/sim/...
+/services/...      custom service definitions
+/boards/...        custom board definitions
+\`\`\`
+
 
 ## Local/container development
 
