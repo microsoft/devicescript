@@ -1,4 +1,7 @@
-import type { CompilationResult, ResolvedBuildConfig } from "@devicescript/compiler"
+import type {
+    CompilationResult,
+    ResolvedBuildConfig,
+} from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
 import type { BuildOptions } from "./build"
 

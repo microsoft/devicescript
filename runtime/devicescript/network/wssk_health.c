@@ -129,7 +129,7 @@ too_short:
 void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
     srv_t *state = _wsskhealth_state;
 
-    LOGV("%s %-s", jd_websock_event_name(event), jd_json_escape(data, size));
+    LOGV("%s %-s", jd_websock_event_name(event), devs_json_escape(data, size));
 
     switch (event) {
     case JD_CONN_EV_OPEN:
@@ -145,7 +145,7 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
         set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED);
         break;
     case JD_CONN_EV_ERROR:
-        LOG("encsock error: %-s", jd_json_escape(data, size));
+        LOG("encsock error: %-s", devs_json_escape(data, size));
         set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED);
         break;
     }

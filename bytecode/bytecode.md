@@ -255,7 +255,7 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 ## Format Constants
 
     img_version_major = 6
-    img_version_minor = 0
+    img_version_minor = 1
     img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
@@ -449,6 +449,9 @@ Only `true` and `false` values.
     TypeError_prototype = 30
     RangeError = 31
     RangeError_prototype = 32
+    SyntaxError = 33
+    SyntaxError_prototype = 34
+    JSON = 35
 
 ## Enum: BuiltIn_String
 
@@ -585,3 +588,7 @@ Only `true` and `false` values.
     setTimeout = 129
     clearInterval = 130
     clearTimeout = 131
+    SyntaxError = 132
+    JSON = 133
+    parse = 134
+    stringify = 135

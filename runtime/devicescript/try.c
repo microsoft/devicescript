@@ -248,20 +248,28 @@ void devs_process_throw(devs_ctx_t *ctx) {
         devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_STEP);
 }
 
+value_t devs_alloc_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format, va_list arg) {
+    devs_map_t *exn = devs_map_try_alloc(ctx, devs_get_builtin_object(ctx, proto_idx));
+    if (exn == NULL)
+        return devs_undefined;
+
+    value_t exnval = devs_value_from_gc_obj(ctx, exn);
+    devs_value_pin(ctx, exnval);
+
+    value_t msg = devs_string_vsprintf(ctx, format, arg);
+
+    devs_map_set_string_field(ctx, exn, DEVS_BUILTIN_STRING_MESSAGE, msg);
+
+    devs_value_unpin(ctx, exnval);
+
+    return exnval;
+}
+
 static value_t devs_throw_internal_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format,
                                          va_list arg) {
-    devs_map_t *exn = devs_map_try_alloc(ctx, devs_get_builtin_object(ctx, proto_idx));
-    if (exn) {
-        value_t eval = devs_value_from_gc_obj(ctx, exn);
-        devs_value_pin(ctx, eval);
-
-        value_t msg = devs_string_vsprintf(ctx, format, arg);
-
-        devs_map_set_string_field(ctx, exn, DEVS_BUILTIN_STRING_MESSAGE, msg);
-
-        devs_value_unpin(ctx, eval);
-        devs_throw(ctx, eval, DEVS_THROW_INTERNAL);
-    }
+    value_t exnval = devs_alloc_error(ctx, proto_idx, format, arg);
+    if (!devs_is_null(exnval))
+        devs_throw(ctx, exnval, DEVS_THROW_INTERNAL);
     return devs_undefined;
 }
 
@@ -297,4 +305,13 @@ value_t devs_throw_expecting_error_ext(devs_ctx_t *ctx, const char *what, value_
 
 value_t devs_throw_too_big_error(devs_ctx_t *ctx, unsigned builtinstr) {
     return devs_throw_range_error(ctx, "%s too big", devs_builtin_string_by_idx(builtinstr));
+}
+
+value_t devs_throw_syntax_error(devs_ctx_t *ctx, const char *format, ...) {
+    va_list arg;
+    va_start(arg, format);
+    value_t exn =
+        devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE, format, arg);
+    va_end(arg);
+    return exn;
 }

@@ -8,19 +8,107 @@ A bare ESP32-S2 board without any pin functions.
 
 - [Store](https://www.espressif.com/en/products/socs/esp32-s2)
 
+## Pins
+
+```
+P0: GPIO0, boot, io
+P1: GPIO1, analogIn, io
+P10: GPIO10, analogIn, io
+P11: GPIO11, io
+P12: GPIO12, io
+P13: GPIO13, io
+P14: GPIO14, io
+P15: GPIO15, io
+P16: GPIO16, io
+P17: GPIO17, analogOut, io
+P18: GPIO18, analogOut, io
+P2: GPIO2, analogIn, io
+P21: GPIO21, io
+P3: GPIO3, analogIn, io
+P33: GPIO33, io
+P34: GPIO34, io
+P35: GPIO35, io
+P36: GPIO36, io
+P37: GPIO37, io
+P38: GPIO38, io
+P39: GPIO39, debug, io
+P4: GPIO4, analogIn, io
+P40: GPIO40, debug, io
+P41: GPIO41, debug, io
+P42: GPIO42, debug, io
+P43: GPIO43, io
+P44: GPIO44, io
+P45: GPIO45, boot, io
+P46: GPIO46, boot, input
+P5: GPIO5, analogIn, io
+P6: GPIO6, analogIn, io
+P7: GPIO7, analogIn, io
+P8: GPIO8, analogIn, io
+P9: GPIO9, analogIn, io
+```
 
 
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash esp32 --board esp32s2_bare
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin)
+
+## Configuration
+
+```json title="esp32s2_bare.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "esp32s2_bare",
+    "devName": "Espressif ESP32-S2 (bare)",
+    "productId": "0x3f140dcc",
+    "$description": "A bare ESP32-S2 board without any pin functions.",
+    "archId": "esp32s2",
+    "url": "https://www.espressif.com/en/products/socs/esp32-s2",
+    "pins": {
+        "P0": 0,
+        "P1": 1,
+        "P10": 10,
+        "P11": 11,
+        "P12": 12,
+        "P13": 13,
+        "P14": 14,
+        "P15": 15,
+        "P16": 16,
+        "P17": 17,
+        "P18": 18,
+        "P2": 2,
+        "P21": 21,
+        "P3": 3,
+        "P33": 33,
+        "P34": 34,
+        "P35": 35,
+        "P36": 36,
+        "P37": 37,
+        "P38": 38,
+        "P39": 39,
+        "P4": 4,
+        "P40": 40,
+        "P41": 41,
+        "P42": 42,
+        "P43": 43,
+        "P44": 44,
+        "P45": 45,
+        "P46": 46,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7,
+        "P8": 8,
+        "P9": 9
+    }
+}
+```

@@ -6,10 +6,33 @@ description: Espressif ESP32-DevKitC
 ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exposed and is easy to connect and use.
 
 
-- Jacdac on pin 17 using Header connector
 - LED on pin 2
+- Service: buttonIO0 (button)
 - [Store](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html)
 
+## Pins
+
+```
+P13: GPIO13, debug, io, touch
+P14: GPIO14, debug, io, touch
+P18: GPIO18, io
+P19: GPIO19, io
+P21: GPIO21, io
+P22: GPIO22, io
+P23: GPIO23, io
+P25: GPIO25, analogOut, io
+P26: GPIO26, analogOut, io
+P27: GPIO27, io, touch
+P32: GPIO32, analogIn, io, touch
+P33: GPIO33, analogIn, io, touch
+P34: GPIO34, analogIn, input
+P35: GPIO35, analogIn, input
+P4: GPIO4, io, touch
+VN: GPIO39, analogIn, input
+VP: GPIO36, analogIn, input
+led.pin: GPIO2, boot, io, touch
+services.buttonIO0[0].pin: GPIO0, boot, io, touch
+```
 
 
 ![Espressif ESP32-DevKitC picture](https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32devkitcdevicescriptv40.catalog.jpg)
@@ -17,14 +40,57 @@ ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exp
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash esp32 --board esp32_devkit_c
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin)
+
+## Configuration
+
+```json title="esp32_devkit_c.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "esp32_devkit_c",
+    "devName": "Espressif ESP32-DevKitC",
+    "productId": "0x3c507a05",
+    "$description": "ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exposed and is easy to connect and use.",
+    "archId": "esp32",
+    "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html",
+    "led": {
+        "pin": 2
+    },
+    "pins": {
+        "P13": 13,
+        "P14": 14,
+        "P18": 18,
+        "P19": 19,
+        "P21": 21,
+        "P22": 22,
+        "P23": 23,
+        "P25": 25,
+        "P26": 26,
+        "P27": 27,
+        "P32": 32,
+        "P33": 33,
+        "P34": 34,
+        "P35": 35,
+        "P4": 4,
+        "VN": 39,
+        "VP": 36
+    },
+    "services": [
+        {
+            "name": "buttonIO0",
+            "pin": 0,
+            "service": "button"
+        }
+    ]
+}
+```

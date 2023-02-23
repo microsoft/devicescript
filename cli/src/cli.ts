@@ -118,6 +118,7 @@ export async function mainCli() {
         .option("--empty", "generate empty program embed")
         .option("-t, --test", "run compiler tests")
         .option("--fetch-boards <boards.json>", "re-create boards.json file")
+        .option("--local-boards <repos-path>", "use local, not remote info.json files")
         .action(ctool)
 
     program

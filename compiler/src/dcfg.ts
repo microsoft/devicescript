@@ -388,7 +388,7 @@ export function decompileDcfg(settings: DcfgSettings) {
             if (isArrayElt || isObjSep) {
                 let pref = key.slice(prevI, i)
                 prevI = i + 1
-                if (pref == "") pref = "_"
+                if (pref == "") pref = "services"
 
                 if (obj[pref] === undefined) obj[pref] = isArrayElt ? [] : {}
                 obj = obj[pref]
@@ -415,6 +415,7 @@ export function decompileDcfg(settings: DcfgSettings) {
 export function jsonToDcfg(obj: any, interpretStrings = false) {
     const res: DcfgSettings = {}
     const flattenObj = (val: any, key: string) => {
+        if (typeof val == "boolean") val = val ? 1 : 0
         if (typeof val == "string") {
             if (interpretStrings) {
                 const tmp = parseAnyInt(val)
@@ -437,7 +438,7 @@ export function jsonToDcfg(obj: any, interpretStrings = false) {
             for (const subkey of Object.keys(val)) {
                 if (subkey.startsWith("$")) continue
                 if (subkey.startsWith("#")) continue
-                let suff = subkey == "_" ? "" : subkey
+                let suff = !key && subkey == "services" ? "" : subkey
                 if (
                     suff.length &&
                     key.length &&
@@ -465,19 +466,22 @@ export async function expandDcfgJSON(
         if (mainJson["$include"]) {
             const prev = await expand(mainJson["$include"])
             delete mainJson["$include"]
-            if (Array.isArray(mainJson["_"]) && Array.isArray(prev["_"])) {
-                for (const p of prev["_"]) {
-                    const ex = mainJson["_"].findIndex(
+            if (
+                Array.isArray(mainJson["services"]) &&
+                Array.isArray(prev["services"])
+            ) {
+                for (const p of prev["services"]) {
+                    const ex = mainJson["services"].findIndex(
                         e => e.service == p.service
                     )
                     if (ex >= 0) {
-                        Object.assign(p, mainJson["_"][ex])
-                        mainJson["_"][ex] = p
+                        Object.assign(p, mainJson["services"][ex])
+                        mainJson["services"][ex] = p
                     } else {
-                        mainJson["_"].push(p)
+                        mainJson["services"].push(p)
                     }
                 }
-                delete prev["_"]
+                delete prev["services"]
             }
             for (const k of Object.keys(prev)) {
                 if (mainJson[k] === undefined) mainJson[k] = prev[k]

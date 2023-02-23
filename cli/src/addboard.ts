@@ -1,7 +1,8 @@
+import { normalizeDeviceConfig } from "@devicescript/compiler"
 import { existsSync } from "fs"
 import { mkdirp } from "fs-extra"
 import { writeFile } from "fs/promises"
-import { clone, randomUInt } from "jacdac-ts"
+import { randomUInt } from "jacdac-ts"
 import { join } from "path"
 import { fatal, log } from "./command"
 import { setupFlashBoards, showAllBoards } from "./flash"
@@ -16,7 +17,7 @@ export interface AddBoardOptions {
 const boardsPath = "boards"
 
 export async function addBoard(options: AddBoardOptions) {
-    const cfg = await setupFlashBoards()
+    const cfg = setupFlashBoards()
     const baseBoard = cfg.boards[options.base]
     if (!baseBoard) {
         showAllBoards("", "--base")
@@ -44,15 +45,15 @@ export async function addBoard(options: AddBoardOptions) {
     await mkdirp(boardsPath)
 
     const boardJsonPath = join(boardsPath, options.board + ".board.json")
-    if (!options.force && existsSync(boardJsonPath)) fatal(`file ${boardJsonPath} already exists; use --force to overwrite`)
+    if (!options.force && existsSync(boardJsonPath))
+        fatal(`file ${boardJsonPath} already exists; use --force to overwrite`)
 
-    // const arch = cfg.archs[baseBoard.archId]
-
-    const board = clone(baseBoard)
+    const board = normalizeDeviceConfig(baseBoard, {
+        ignoreFirmwareUrl: true,
+        ignoreId: true,
+    })
     board.devName = options.name
     board.productId = "0x" + (randomUInt(0xfff_ffff) | 0x3000_0000).toString(16)
-    delete board.id
-    delete board.$fwUrl
 
     writeFile(boardJsonPath, JSON.stringify(board, null, 4))
     log(`created ${boardJsonPath}`)

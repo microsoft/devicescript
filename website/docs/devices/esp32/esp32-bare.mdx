@@ -8,19 +8,73 @@ Bare ESP32 without any default functions for pins.
 
 - [Store](https://www.espressif.com/en/products/socs/esp32)
 
+## Pins
+
+```
+P13: GPIO13, debug, io, touch
+P14: GPIO14, debug, io, touch
+P18: GPIO18, io
+P19: GPIO19, io
+P21: GPIO21, io
+P22: GPIO22, io
+P23: GPIO23, io
+P25: GPIO25, analogOut, io
+P26: GPIO26, analogOut, io
+P27: GPIO27, io, touch
+P32: GPIO32, analogIn, io, touch
+P33: GPIO33, analogIn, io, touch
+P34: GPIO34, analogIn, input
+P35: GPIO35, analogIn, input
+P36: GPIO36, analogIn, input
+P39: GPIO39, analogIn, input
+P4: GPIO4, io, touch
+```
 
 
 
 ## Firmware update
 
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
 devicescript flash esp32 --board esp32_bare
 ```
 
-In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Flash Firmware...** from the command palette.
-
 
 - [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin)
+
+## Configuration
+
+```json title="esp32_bare.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "esp32_bare",
+    "devName": "Espressif ESP32 (bare)",
+    "productId": "0x3ff6ffeb",
+    "$description": "Bare ESP32 without any default functions for pins.",
+    "archId": "esp32",
+    "url": "https://www.espressif.com/en/products/socs/esp32",
+    "pins": {
+        "P13": 13,
+        "P14": 14,
+        "P18": 18,
+        "P19": 19,
+        "P21": 21,
+        "P22": 22,
+        "P23": 23,
+        "P25": 25,
+        "P26": 26,
+        "P27": 27,
+        "P32": 32,
+        "P33": 33,
+        "P34": 34,
+        "P35": 35,
+        "P36": 36,
+        "P39": 39,
+        "P4": 4
+    }
+}
+```

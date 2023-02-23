@@ -5,6 +5,6 @@ import jacdacDefaultSpecificationsData from "../../runtime/jacdac-c/jacdac/dist/
 import boardsJson from "./boards.json"
 
 export const jacdacDefaultSpecifications =
-    jacdacDefaultSpecificationsData as jdspec.ServiceSpec[]
+    jacdacDefaultSpecificationsData as any as jdspec.ServiceSpec[]
 
-export const boardSpecifications = boardsJson as RepoInfo
+export const boardSpecifications = boardsJson as any as RepoInfo

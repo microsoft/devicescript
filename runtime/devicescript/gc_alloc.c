@@ -434,6 +434,15 @@ void jd_gc_free(devs_gc_t *gc, void *ptr) {
     unpin(gc, ptr, DEVS_GC_TAG_FREE);
 }
 
+bool devs_value_is_pinned(devs_ctx_t *ctx, value_t v) {
+    if (!devs_handle_is_ptr(v))
+        return false;
+    block_t *b = (block_t *)((uintptr_t *)devs_handle_ptr_value(ctx, v));
+    unsigned tag = GET_TAG(b->header);
+    JD_ASSERT((tag & DEVS_GC_TAG_MASK) >= DEVS_GC_TAG_BYTES);
+    return (tag & DEVS_GC_TAG_MASK_PINNED) != 0;
+}
+
 void devs_value_pin(devs_ctx_t *ctx, value_t v) {
     if (!devs_handle_is_ptr(v))
         return;
