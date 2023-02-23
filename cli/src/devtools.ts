@@ -366,23 +366,21 @@ async function watchCmd(
             ],
         }
     )
-    watcher.on("change", ev => {
-        console.log(`watch: ${ev}`)
-        debounce(async () => {
-            let res: BuildStatus
-            try {
-                res = await rebuild(args)
-            } catch (err) {
-                res = {
-                    success: false,
-                    dbg: null,
-                    binary: null,
-                    diagnostics: [],
-                    deployStatus: err.message || "" + err,
-                }
+    watcher.on("change", async ev => {
+        console.log(`watch: change ${ev}`)
+        let res: BuildStatus
+        try {
+            res = await rebuild(args)
+        } catch (err) {
+            res = {
+                success: false,
+                dbg: null,
+                binary: null,
+                diagnostics: [],
+                deployStatus: err.message || "" + err,
             }
-            watchCb(res)
-        }, 500)
+        }
+        watchCb(res)
     })
 }
 
