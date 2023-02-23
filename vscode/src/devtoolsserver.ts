@@ -7,7 +7,6 @@ import {
     isCodeError,
     JDEventSource,
     JDService,
-    loadServiceSpecifications,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type {
@@ -76,7 +75,7 @@ export class DeveloperToolsManager extends JDEventSource {
 
         subscriptions.push({
             dispose: subSideEvent<SideWatchEvent>("watch", msg => {
-                this.showBuildResults(msg.data)
+            this.showBuildResults(msg.data)
             }),
         })
 
@@ -286,11 +285,27 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async start(): Promise<void> {
+    start(): Promise<void> {
         return (
             this._terminalPromise ||
             (this._terminalPromise = this.createTerminal())
-        ).then(() => {})
+        )
+            .then(() => this.findProjects())
+            .then(projects => {
+                const project = projects?.[0]
+                if (!project) return undefined
+
+                const fileName = "main.ts"
+                return checkFileExists(project, fileName).then(exists =>
+                    exists
+                        ? this.build(
+                              vscode.Uri.joinPath(project, fileName).fsPath,
+                              { watch: true }
+                          )
+                        : undefined
+                )
+            })
+            .then(() => {})
     }
 
     dispose() {
