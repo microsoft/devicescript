@@ -162,8 +162,8 @@ function compileServiceSpecs(
         jacdacDefaultSpecifications.forEach(
             spec => (includes[spec.shortId] = spec)
         )
-        const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
-            /\.md$/i.test(fn)
+        const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(
+            fn => /\.md$/i.test(fn) && !/README\.md$/i.test(fn)
         )
         for (const mdf of markdowns) {
             const fn = join(dir, mdf)
