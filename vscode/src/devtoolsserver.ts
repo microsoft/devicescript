@@ -75,7 +75,7 @@ export class DeveloperToolsManager extends JDEventSource {
 
         subscriptions.push({
             dispose: subSideEvent<SideWatchEvent>("watch", msg => {
-            this.showBuildResults(msg.data)
+                this.showBuildResults(msg.data)
             }),
         })
 
@@ -157,6 +157,7 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     ): Promise<BuildStatus> {
         const { service, watch } = options || {}
+        console.debug(`build ${filename}`)
         const deviceId = service?.device?.deviceId
         try {
             const res = await sideRequest<SideBuildReq, SideBuildResp>({
@@ -168,18 +169,21 @@ export class DeveloperToolsManager extends JDEventSource {
             })
             this.showBuildResults(res.data)
             // also start watch
-            if (watch)
-                await sideRequest<SideWatchReq>({
-                    req: "watch",
-                    data: {
-                        filename,
-                    },
-                })
+            if (watch) await this.watch(filename)
             return res.data
         } catch (err) {
             console.error(err) // TODO
             return undefined
         }
+    }
+
+    private async watch(filename: string) {
+        await sideRequest<SideWatchReq>({
+            req: "watch",
+            data: {
+                filename,
+            },
+        })
     }
 
     private async init() {
@@ -289,23 +293,23 @@ export class DeveloperToolsManager extends JDEventSource {
         return (
             this._terminalPromise ||
             (this._terminalPromise = this.createTerminal())
-        )
-            .then(() => this.findProjects())
-            .then(projects => {
-                const project = projects?.[0]
-                if (!project) return undefined
+        ).then(() => this.startBuild())
+    }
 
-                const fileName = "main.ts"
-                return checkFileExists(project, fileName).then(exists =>
-                    exists
-                        ? this.build(
-                              vscode.Uri.joinPath(project, fileName).fsPath,
-                              { watch: true }
-                          )
-                        : undefined
-                )
-            })
-            .then(() => {})
+    private async startBuild() {
+        const files = await vscode.workspace.fs.readDirectory(
+            this.projectFolder
+        )
+        const file =
+            files.find(
+                ([name, type]) =>
+                    type == vscode.FileType.File && name === "main.ts"
+            ) ||
+            files.find(
+                ([name, type]) =>
+                    type == vscode.FileType.File && /\.ts$/i.test(name)
+            )
+        if (file) await this.build(file[0])
     }
 
     dispose() {
