@@ -442,7 +442,7 @@ static void stringify_obj(stringify_t *state, value_t v) {
             stringify_obj(state, arr->data[i]);
             if (state->error)
                 break;
-            if (i != arr->length - 1)
+            if ((int)i != arr->length - 1)
                 add_ch(state, ',', 1);
         }
         state->curr_indent -= state->indent_step;
