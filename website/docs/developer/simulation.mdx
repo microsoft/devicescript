@@ -1,21 +1,19 @@
 ---
 sidebar_position: 10
-hide_table_of_contents: true
 ---
 
 # Simulation
 
 DeviceScript supports simulation through a web dashboard and a Node.JS project running in parralel on the developer machine.
-The Node.JS project uses the [Jacdac TypeScript client library](https://microsoft.github.io/jacdac-docs/clients/javascript/) and,
-any other Node package (like your favorite test project).
-
-The Node.JS simulator project is, by default, located under `/sim/` with `/sim/app.ts` as the entry point.
 
 ## Dashboard
 
 The simulators dashboard is the most convinient way to start simulating services and testing out your code.
 
-## Project structure
+## Node.JS simulation
+
+The Node.JS project uses the [Jacdac TypeScript client library](https://microsoft.github.io/jacdac-docs/clients/javascript/) and,
+any other Node package (like your favorite test project).
 
 In a DeviceScript project,
 
@@ -30,11 +28,11 @@ sim/app.ts       Node entry point for the simulator
 sim/...
 ```
 
-## Running using package scripts
+### Running using package scripts
 
 The scripts in `package.json` are configured support both DeviceScript and sim `build` and `watch`.
 
-### build
+#### build
 
 ```bash
 # build DeviceScript and node.js sim
@@ -47,7 +45,7 @@ yarn build:devicescript
 yarn build:sim
 ```
 
-### watch
+#### watch
 
 ```bash
 # watch DeviceScript and node.js sim
@@ -60,7 +58,7 @@ yarn watch:devicescript
 yarn watch:sim
 ```
 
-## Debugging DeviceScript and Node
+### Debugging DeviceScript and Node
 
 Visual Studio Code supports [multiple debugging sessions simultaneously](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations) so it is possible to debug your DeviceScript
 code and the simulator in the same session.
@@ -79,7 +77,7 @@ stateDiagram-v2
     devtools --> device
 ```
 
-## `aurascope` example
+### `aurascope` example
 
 This simulator sample starts a simulated `psychomagnotheric energy sensor` (custom service) using `jacdac-ts`.
 
