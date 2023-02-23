@@ -310,7 +310,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 ([name, type]) =>
                     type === vscode.FileType.File && /\.ts$/.test(name)
             )
-        if (file) this.watch(file[0])
+        if (file) await this.watch(file[0])
     }
 
     dispose() {
