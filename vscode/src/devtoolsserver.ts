@@ -3,6 +3,7 @@ import {
     ConnectionState,
     delay,
     ERROR_TRANSPORT_CLOSED,
+    groupBy,
     isCodeError,
     JDEventSource,
     JDService,
@@ -17,11 +18,12 @@ import type {
     SideKillResp,
     SideSpecsReq,
     SideSpecsResp,
+    SideWatchEvent,
     SideWatchReq,
     VersionInfo,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
-import { sideRequest } from "./jacdac"
+import { sideRequest, subSideEvent } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { TaggedQuickPickItem } from "./pickers"
@@ -29,7 +31,6 @@ import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
 import { ResolvedBuildConfig } from "@devicescript/compiler"
-import { showBuildResults } from "./build"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -45,6 +46,7 @@ export class DeveloperToolsManager extends JDEventSource {
     private _versions: VersionInfo
     private _buildConfig: ResolvedBuildConfig
     private _terminalPromise: Promise<vscode.Terminal>
+    private _diagColl: vscode.DiagnosticCollection
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
         super()
@@ -62,6 +64,30 @@ export class DeveloperToolsManager extends JDEventSource {
             subscriptions
         )
         subscriptions.push(this)
+        subscriptions.push(
+            vscode.commands.registerCommand(
+                "extension.devicescript.terminal.show",
+                () => this.show()
+            )
+        )
+        // outputCh = vscode.window.createOutputChannel("DevS Build")
+        this._diagColl =
+            vscode.languages.createDiagnosticCollection("DeviceScript")
+
+        subscriptions.push({
+            dispose: subSideEvent<SideWatchEvent>("watch", msg => {
+                this.showBuildResults(msg.data)
+            }),
+        })
+
+        // clear errors when file edited
+        vscode.workspace.onDidChangeTextDocument(
+            ev => {
+                this._diagColl.set(ev.document.uri, [])
+            },
+            undefined,
+            subscriptions
+        )
     }
 
     async refreshSpecs() {
@@ -84,8 +110,45 @@ export class DeveloperToolsManager extends JDEventSource {
 
         this._buildConfig = data
         loadServiceSpecifications(this._buildConfig?.services || [])
-        this.extensionState.bus.emit(CHANGE)
+
+        console.debug(`devtools: update build config`)
+
         this.emit(CHANGE)
+        this.extensionState.bus.emit(CHANGE)
+    }
+
+    private showBuildResults(st: BuildStatus) {
+        this._diagColl.clear()
+        const severities = [
+            vscode.DiagnosticSeverity.Warning,
+            vscode.DiagnosticSeverity.Error,
+            vscode.DiagnosticSeverity.Hint,
+            vscode.DiagnosticSeverity.Information,
+        ]
+
+        const byFile = groupBy(st.diagnostics, s => s.filename)
+        for (const fn of Object.keys(byFile)) {
+            const diags = byFile[fn].map(d => {
+                const p0 = new vscode.Position(d.line - 1, d.column - 1)
+                const p1 = new vscode.Position(d.endLine - 1, d.endColumn - 1)
+                const msg =
+                    typeof d.messageText == "string"
+                        ? d.messageText
+                        : d.messageText.messageText
+                const sev =
+                    severities[d.category] ?? vscode.DiagnosticSeverity.Error
+                const vd = new vscode.Diagnostic(
+                    new vscode.Range(p0, p1),
+                    msg,
+                    sev
+                )
+                vd.source = "DeviceScript"
+                vd.code = d.code
+                return vd
+            })
+            this._diagColl.set(vscode.Uri.file(fn), diags)
+        }
+        this.updateBuildConfig(st.config)
     }
 
     async build(
@@ -105,8 +168,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     deployTo: deviceId,
                 },
             })
-            this.updateBuildConfig(res.data.config)
-            showBuildResults(res.data)
+            this.showBuildResults(res.data)
             // also start watch
             if (watch)
                 await sideRequest<SideWatchReq>({

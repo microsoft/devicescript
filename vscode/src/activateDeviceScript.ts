@@ -10,7 +10,6 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type { SideOutputEvent } from "../../cli/src/sideprotocol"
-import { initBuild } from "./build"
 import { CloudExtensionState } from "./CloudExtensionState"
 import { registerCloudStatusBar } from "./CloudStatusBar"
 import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
@@ -38,12 +37,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     const extensionState = new DeviceScriptExtensionState(context, bus)
 
     // build
-    initBuild()
     subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.terminal.show",
-            () => extensionState.devtools.show()
-        ),
         vscode.commands.registerCommand(
             "extension.devicescript.device.identify",
             async (item: JDomDeviceTreeItem) => {
