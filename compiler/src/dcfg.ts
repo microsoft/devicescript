@@ -415,6 +415,7 @@ export function decompileDcfg(settings: DcfgSettings) {
 export function jsonToDcfg(obj: any, interpretStrings = false) {
     const res: DcfgSettings = {}
     const flattenObj = (val: any, key: string) => {
+        if (typeof val == "boolean") val = val ? 1 : 0
         if (typeof val == "string") {
             if (interpretStrings) {
                 const tmp = parseAnyInt(val)
