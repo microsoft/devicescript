@@ -1,5 +1,4 @@
 import * as vscode from "vscode"
-import { build } from "./build"
 import {
     checkDeviceScriptManagerRuntimeVersion,
     prepareForDeploy,
@@ -254,17 +253,19 @@ export class DeviceScriptConfigurationProvider
         await prepareForDeploy(this.extensionState, service)
 
         // build and deploy
-        const buildResult = await build(config.program, {
-            service,
-            watch: true,
-        })
+        const buildResult = await this.extensionState.devtools.build(
+            config.program,
+            {
+                service,
+                watch: true,
+            }
+        )
         if (!buildResult?.success) {
             vscode.window.showErrorMessage(
                 `Debug cancelled. Program has build errors.`
             )
             return undefined
         }
-
         // save as currently debugged project
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId

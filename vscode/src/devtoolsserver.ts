@@ -3,26 +3,33 @@ import {
     ConnectionState,
     delay,
     ERROR_TRANSPORT_CLOSED,
+    groupBy,
     isCodeError,
     JDEventSource,
-    loadServiceSpecifications,
+    JDService,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type {
+    BuildStatus,
+    SideBuildReq,
+    SideBuildResp,
     SideKillReq,
     SideKillResp,
-    SideSpecsData,
     SideSpecsReq,
     SideSpecsResp,
+    SideWatchEvent,
+    SideWatchReq,
+    VersionInfo,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
-import { sideRequest } from "./jacdac"
+import { sideRequest, subSideEvent } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
+import { ResolvedBuildConfig } from "@devicescript/compiler"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -35,8 +42,10 @@ export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
 
-    private _specs: SideSpecsData
+    private _versions: VersionInfo
+    private _buildConfig: ResolvedBuildConfig
     private _terminalPromise: Promise<vscode.Terminal>
+    private _diagColl: vscode.DiagnosticCollection
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
         super()
@@ -54,24 +63,122 @@ export class DeveloperToolsManager extends JDEventSource {
             subscriptions
         )
         subscriptions.push(this)
+        subscriptions.push(
+            vscode.commands.registerCommand(
+                "extension.devicescript.terminal.show",
+                () => this.show()
+            )
+        )
+        // outputCh = vscode.window.createOutputChannel("DevS Build")
+        this._diagColl =
+            vscode.languages.createDiagnosticCollection("DeviceScript")
+
+        subscriptions.push({
+            dispose: subSideEvent<SideWatchEvent>("watch", msg => {
+            this.showBuildResults(msg.data)
+            }),
+        })
+
+        // clear errors when file edited
+        vscode.workspace.onDidChangeTextDocument(
+            ev => {
+                this._diagColl.set(ev.document.uri, [])
+            },
+            undefined,
+            subscriptions
+        )
     }
 
     async refreshSpecs() {
-        const oldSpecs = this._specs
         const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
             req: "specs",
             data: {
                 dir: ".", // TODO
             },
         })
-        this._specs = res.data
-        loadServiceSpecifications(this._specs.buildConfig.services)
-        console.log(
+        const { versions, buildConfig } = res.data
+        this._versions = versions
+        console.debug(
             `devicescript devtools ${this.version}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
         )
-        if (JSON.stringify(oldSpecs) !== JSON.stringify(this._specs)) {
-            this.extensionState.bus.emit(CHANGE)
-            this.emit(CHANGE)
+        this.updateBuildConfig(buildConfig)
+    }
+
+    updateBuildConfig(data: ResolvedBuildConfig) {
+        if (JSON.stringify(this._buildConfig) === JSON.stringify(data)) return
+
+        this._buildConfig = data
+        const { changed } =
+            this.extensionState.bus.setCustomServiceSpecifications(
+                this._buildConfig?.services || []
+            )
+        if (changed) this.emit(CHANGE)
+    }
+
+    private showBuildResults(st: BuildStatus) {
+        this._diagColl.clear()
+        const severities = [
+            vscode.DiagnosticSeverity.Warning,
+            vscode.DiagnosticSeverity.Error,
+            vscode.DiagnosticSeverity.Hint,
+            vscode.DiagnosticSeverity.Information,
+        ]
+
+        const byFile = groupBy(st.diagnostics, s => s.filename)
+        for (const fn of Object.keys(byFile)) {
+            const diags = byFile[fn].map(d => {
+                const p0 = new vscode.Position(d.line - 1, d.column - 1)
+                const p1 = new vscode.Position(d.endLine - 1, d.endColumn - 1)
+                const msg =
+                    typeof d.messageText == "string"
+                        ? d.messageText
+                        : d.messageText.messageText
+                const sev =
+                    severities[d.category] ?? vscode.DiagnosticSeverity.Error
+                const vd = new vscode.Diagnostic(
+                    new vscode.Range(p0, p1),
+                    msg,
+                    sev
+                )
+                vd.source = "DeviceScript"
+                vd.code = d.code
+                return vd
+            })
+            this._diagColl.set(vscode.Uri.file(fn), diags)
+        }
+        this.updateBuildConfig(st.config)
+    }
+
+    async build(
+        filename: string,
+        options?: {
+            service?: JDService
+            watch?: boolean
+        }
+    ): Promise<BuildStatus> {
+        const { service, watch } = options || {}
+        const deviceId = service?.device?.deviceId
+        try {
+            const res = await sideRequest<SideBuildReq, SideBuildResp>({
+                req: "build",
+                data: {
+                    filename,
+                    deployTo: deviceId,
+                },
+            })
+            this.showBuildResults(res.data)
+            // also start watch
+            if (watch)
+                await sideRequest<SideWatchReq>({
+                    req: "watch",
+                    data: {
+                        filename,
+                    },
+                })
+            return res.data
+        } catch (err) {
+            console.error(err) // TODO
+            return undefined
         }
     }
 
@@ -86,19 +193,19 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     get version() {
-        return this._specs?.version
+        return this._versions?.version
     }
 
     get runtimeVersion() {
-        return this._specs?.runtimeVersion
+        return this._versions?.runtimeVersion
     }
 
     get nodeVersion() {
-        return this._specs?.nodeVersion
+        return this._versions?.nodeVersion
     }
 
     get buildConfig() {
-        return this._specs?.buildConfig
+        return this._buildConfig
     }
 
     get boards() {
@@ -178,11 +285,27 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async start(): Promise<void> {
+    start(): Promise<void> {
         return (
             this._terminalPromise ||
             (this._terminalPromise = this.createTerminal())
-        ).then(() => {})
+        )
+            .then(() => this.findProjects())
+            .then(projects => {
+                const project = projects?.[0]
+                if (!project) return undefined
+
+                const fileName = "main.ts"
+                return checkFileExists(project, fileName).then(exists =>
+                    exists
+                        ? this.build(
+                              vscode.Uri.joinPath(project, fileName).fsPath,
+                              { watch: true }
+                          )
+                        : undefined
+                )
+            })
+            .then(() => {})
     }
 
     dispose() {
@@ -260,7 +383,8 @@ export class DeveloperToolsManager extends JDEventSource {
     private clear() {
         this._terminalPromise = undefined
         this._projectFolder = undefined
-        this._specs = undefined
+        this._versions = undefined
+        this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
     }
 

@@ -65,11 +65,14 @@ export interface SideSpecsReq extends SideReq<"specs"> {
         dir?: string // if dir===undefined, only global specs will be returned
     }
 }
-export interface SideSpecsData {
-    buildConfig: ResolvedBuildConfig
+export interface VersionInfo {
     version: string
     runtimeVersion: string
     nodeVersion: string
+}
+export interface SideSpecsData {
+    buildConfig: ResolvedBuildConfig
+    versions: VersionInfo
 }
 export interface SideSpecsResp extends SideResp<"specs"> {
     data: SideSpecsData
