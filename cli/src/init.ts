@@ -47,6 +47,37 @@ const optionalFiles: Record<string, Object | string> = {
     ".vscode/extensions.json": {
         recommendations: ["esbenp.prettier-vscode"],
     },
+    ".vscode/launch.json": {
+        version: "0.2.0",
+        configurations: [
+            {
+                name: "DeviceScript",
+                type: "devicescript",
+                request: "launch",
+                program: "${workspaceFolder}/main.ts",
+                deviceId: "${command:deviceScriptSimulator}",
+                stopOnEntry: false,
+            },
+            {
+                name: "Sim",
+                request: "launch",
+                runtimeArgs: ["-r", "ts-node/register"],
+                args: ["${workspaceFolder}/sim/app.ts"],
+                skipFiles: ["<node_internals>/**"],
+                type: "node",
+                env: {
+                    TS_NODE_PROJECT: "${workspaceFolder}/sim/tsconfig.json",
+                },
+            },
+        ],
+        compounds: [
+            {
+                name: "DeviceScript+Sim",
+                configurations: ["DeviceScript", "Sim"],
+                stopAll: true,
+            },
+        ],
+    },
     "devsconfig.json": {},
     "package.json": {
         version: "0.0.0",
