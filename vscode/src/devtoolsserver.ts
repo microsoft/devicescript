@@ -41,6 +41,7 @@ function showTerminalError(message: string) {
 export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
+    private _sourceFile: string
 
     private _versions: VersionInfo
     private _buildConfig: ResolvedBuildConfig
@@ -75,7 +76,7 @@ export class DeveloperToolsManager extends JDEventSource {
 
         subscriptions.push({
             dispose: subSideEvent<SideWatchEvent>("watch", msg => {
-            this.showBuildResults(msg.data)
+                this.showBuildResults(msg.data)
             }),
         })
 
@@ -153,33 +154,33 @@ export class DeveloperToolsManager extends JDEventSource {
         filename: string,
         options?: {
             service?: JDService
-            watch?: boolean
         }
     ): Promise<BuildStatus> {
-        const { service, watch } = options || {}
+        const { service } = options || {}
         const deviceId = service?.device?.deviceId
-        try {
-            const res = await sideRequest<SideBuildReq, SideBuildResp>({
-                req: "build",
-                data: {
-                    filename,
-                    deployTo: deviceId,
-                },
-            })
-            this.showBuildResults(res.data)
-            // also start watch
-            if (watch)
-                await sideRequest<SideWatchReq>({
-                    req: "watch",
-                    data: {
-                        filename,
-                    },
-                })
-            return res.data
-        } catch (err) {
-            console.error(err) // TODO
-            return undefined
-        }
+        const res = await sideRequest<SideBuildReq, SideBuildResp>({
+            req: "build",
+            data: {
+                filename,
+                deployTo: deviceId,
+            },
+        })
+        this.showBuildResults(res.data)
+        return res.data
+    }
+
+    async watch(filename: string) {
+        if (this._sourceFile === filename) return
+
+        console.debug(`watching ${filename}`)
+        this._sourceFile = filename
+        await sideRequest<SideWatchReq>({
+            req: "watch",
+            data: {
+                filename,
+            },
+        })
+        this.emit(CHANGE)
     }
 
     private async init() {
@@ -285,27 +286,31 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
+    get sourceFile() {
+        return this._sourceFile
+    }
+
     start(): Promise<void> {
         return (
             this._terminalPromise ||
             (this._terminalPromise = this.createTerminal())
-        )
-            .then(() => this.findProjects())
-            .then(projects => {
-                const project = projects?.[0]
-                if (!project) return undefined
+        ).then(() => this.startWatch())
+    }
 
-                const fileName = "main.ts"
-                return checkFileExists(project, fileName).then(exists =>
-                    exists
-                        ? this.build(
-                              vscode.Uri.joinPath(project, fileName).fsPath,
-                              { watch: true }
-                          )
-                        : undefined
-                )
-            })
-            .then(() => {})
+    private async startWatch() {
+        const files = await vscode.workspace.fs.readDirectory(
+            this.projectFolder
+        )
+        const file =
+            files.find(
+                ([name, type]) =>
+                    type === vscode.FileType.File && /^main.ts$/.test(name)
+            ) ||
+            files.find(
+                ([name, type]) =>
+                    type === vscode.FileType.File && /\.ts$/.test(name)
+            )
+        if (file) this.watch(file[0])
     }
 
     dispose() {
@@ -384,6 +389,7 @@ export class DeveloperToolsManager extends JDEventSource {
         this._terminalPromise = undefined
         this._projectFolder = undefined
         this._versions = undefined
+        this._sourceFile = undefined
         this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
     }

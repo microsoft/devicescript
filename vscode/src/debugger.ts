@@ -257,7 +257,6 @@ export class DeviceScriptConfigurationProvider
             config.program,
             {
                 service,
-                watch: true,
             }
         )
         if (!buildResult?.success) {
@@ -266,6 +265,7 @@ export class DeviceScriptConfigurationProvider
             )
             return undefined
         }
+        await this.extensionState.devtools.watch(config.program)
         // save as currently debugged project
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId

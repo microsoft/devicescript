@@ -3,8 +3,7 @@ const WebSocket = require("faye-websocket")
 import http from "http"
 import url from "url"
 import net from "net"
-import { CmdOptions, error, log } from "./command"
-import { watch } from "fs-extra"
+import { CmdOptions, debug, error, log } from "./command"
 import { resolveBuildConfig, SrcFile } from "@devicescript/compiler"
 import {
     bufferConcat,
@@ -35,7 +34,7 @@ import {
     initSideProto,
     processSideMessage,
 } from "./sidedata"
-import { FSWatcher } from "fs"
+import { FSWatcher, watch } from "chokidar"
 import { compileFile } from "./build"
 import { dirname, resolve } from "path"
 import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
@@ -343,9 +342,29 @@ async function watchCmd(
     watchCb?: (st: BuildStatus) => void
 ) {
     args = { ...args }
-    watcher?.close()
+    await watcher?.close()
+    if (!args.filename) return
+
+    debug(`watching ${args.filename}`)
     watcher = watch(
-        args.filename,
+        [
+            args.filename,
+            "tsconfig.json",
+            "services/*.md",
+            "boards/*.json",
+        ].filter(f => !!f),
+        {
+            cwd: resolve("."),
+            ignored: [
+                "nodes_modules/**",
+                ".devicescript/**",
+                "sim/**",
+                "**/README.md",
+            ],
+        }
+    )
+    watcher.on("change", ev => {
+        console.log(`watch: ${ev}`)
         debounce(async () => {
             let res: BuildStatus
             try {
@@ -361,7 +380,7 @@ async function watchCmd(
             }
             watchCb(res)
         }, 500)
-    )
+    })
 }
 
 async function rebuild(args: BuildReqArgs) {

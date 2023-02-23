@@ -195,6 +195,7 @@ async function main() {
                 platform,
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",
+                loader: { ".node": "file" },
             })
             if (watch) await ctx.watch()
             else {
