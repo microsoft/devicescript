@@ -26,6 +26,7 @@ import {
     consoleColors,
     debug,
     error,
+    GENDIR,
     LIBDIR,
     log,
     verboseLog,
@@ -35,7 +36,7 @@ import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
-import { parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
+import { converters, parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -161,8 +162,8 @@ function compileServiceSpecs(
         jacdacDefaultSpecifications.forEach(
             spec => (includes[spec.shortId] = spec)
         )
-        const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(fn =>
-            /\.md$/i.test(fn)
+        const markdowns = readdirSync(dir, { encoding: "utf-8" }).filter(
+            fn => /\.md$/i.test(fn) && !/README\.md$/i.test(fn)
         )
         for (const mdf of markdowns) {
             const fn = join(dir, mdf)
@@ -297,6 +298,35 @@ export async function saveLibFiles(
             _ => null
         )
         if (prelude[fn] != ex) await writeFile(fnpath, prelude[fn])
+    }
+
+    // generate constants for non-catalog services
+    const customServices =
+        buildConfig.services.filter(srv => srv.catalog !== undefined) || []
+    // generate source files
+    for (const lang of ["ts", "c"]) {
+        const converter = converters()[lang]
+        let constants = ""
+        for (const srv of customServices) {
+            constants += converter(srv) + "\n"
+        }
+        const dir = join(pref, GENDIR, lang)
+        await mkdirp(dir)
+        await writeFile(join(dir, `constants.${lang}`), constants, {
+            encoding: "utf-8",
+        })
+    }
+    // json specs
+    {
+        const dir = join(pref, GENDIR)
+        await mkdirp(dir)
+        await writeFile(
+            join(dir, `services.json`),
+            JSON.stringify(customServices, null, 2),
+            {
+                encoding: "utf-8",
+            }
+        )
     }
 }
 

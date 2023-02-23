@@ -1,0 +1,123 @@
+---
+sidebar_position: 20
+hide_table_of_contents: true
+---
+
+# Custom Services
+
+Custom service definition files can be added to the `./services/` folder as markdown file.
+[Read about the service specification markdown](https://microsoft.github.io/jacdac-docs/reference/service-specification/).
+
+The service specifications are compiled by the DeviceScript compiler as part of the build.
+
+```markdown title="./services/psychomagnothericenergy.md"
+# Psychomagnotheric Energy
+
+    identifier: 0x1f1dc7d5
+    extends: _sensor
+
+Measures the presence of ghosts in Ghostbusters.
+...
+```
+
+### DeviceScript support
+
+The generated DeviceClient client are automatically added to the `@devicescript/core` module,
+in `./.devicescript/lib/devicescript-spec.d.ts`.
+
+```ts title="./main.ts" skip
+// highlight-next-line
+import { PsychomagnothericEnergy } from "@devicescript/core"
+
+const gigameter = new PsychomagnothericEnergy()
+...
+```
+
+### Node sim support
+
+The `./sim/runtime.ts` scafolding will automaticlly pick up
+the generated files to support node.js.
+
+-   The generated TypeScript constants are generated at `./.devicescript/ts/constants.ts`.
+-   The generated JSON are at `./.devicescript/services.json`.
+
+```ts title="./sim/app.ts" skip
+// highlight-next-line
+import { SRV_PSYCHOMAGNOTHERIC_ENERGY } from "../.devicescript/ts/constants"
+
+const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
+    ...
+})
+...
+```
+
+### Dashboard support
+
+The DeviceScript simulators dashboard has a limited support for rendering custom services.
+For sensors, it will be able to render sliders as long as `min`, `max` values are provided for the `reading` register.
+
+## Example
+
+The `aurascope` is some kind of ghost detector in the Ghost Busters movie. Let's create a service for it.
+
+### Service specification
+
+```markdown title="./services/psychomagnothericenergy.md"
+# Psychomagnotheric Energy
+
+    identifier: 0x1f1dc7d5
+    extends: _sensor
+
+Measures the presence of ghosts in Ghostbusters.
+
+## Registers
+
+    ro energy_level: u0.16 / @ reading
+
+A measure of the presence of ghosts.
+
+    ro energy_level_error: u0.16 / @ reading_error
+
+Error on the measure.
+```
+
+### DeviceScript program
+
+This DeviceScript program creates a client for the aurascope and prints the currently energly level to the console.
+
+```ts title="./main.ts" skip
+import { PsychomagnothericEnergy } from "@devicescript/core"
+
+const gigameter = new PsychomagnothericEnergy()
+gigameter.energyLevel.onChange(0.1, () => {
+    console.log(gigameter.energyLevel.read())
+})
+```
+
+### Node simulator
+
+The node.js simulator script mounts a aurascope simulator, with an interval that randomly changes the energy level value.
+
+```ts title="./sim/app.ts" skip
+import { addServer, AnalogSensorServer } from "jacdac-ts"
+import { bus } from "./runtime"
+import { SRV_PSYCHOMAGNOTHERIC_ENERGY } from "../.devicescript/ts/constants"
+
+// simulator a customer service
+const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
+    readingValues: [0.5],
+    readingError: [0.1],
+    streamingInterval: 500,
+})
+// randomly change the reading value
+setInterval(() => {
+    const value = server.reading.values()[0]
+    const newValue = value + (0.5 - Math.random()) / 10
+    server.reading.setValues([newValue])
+    console.debug(`psycho value: ${newValue}`)
+}, 100)
+
+// mount server on bus to make it visible
+// to DeviceScript
+addServer(bus, "aurascope", server)
+```

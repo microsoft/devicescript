@@ -3,20 +3,22 @@ description: How to create a new device configuration for your device
 position: 3
 ---
 
-# Add Device
+# Add Board
+
+In DeviceScript, we commonly refere a Device Configuration as a `board`.
 
 If your device is already using a supported chipset architecture,
-you can configure a DeviceScript firmware using a configuration file in your project.
+you can create a new `board` configuration in your project to support it in DeviceScript.
 
-## How to create a new configuration
+## How to create a new board
 
 ### Create the new `board.json` file
 
-You will need three pieces of information to start a new board configuration: (1) the existing configuration
+You will need three pieces of information to start a new board: (1) the existing configuration
 you will fork, (2) a name and (3) an identifier.
 
 In [Visual Studio Code](/getting-started/vscode),
-select **DeviceScript: Add Device Configuratin...** from the command palette.
+select **DeviceScript: Add Board...** from the command palette.
 
 Using the [Command Line](/getting-started/cli), use the `addboard` command and follow the instructions.
 
