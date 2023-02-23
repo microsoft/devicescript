@@ -11,13 +11,17 @@ any other Node package (like your favorite test project).
 
 The Node.JS simulator project is, by default, located under `/sim/` with `/sim/app.ts` as the entry point.
 
+## `aurascope` example
+
+This simulator sample starts a simulated `psychomagnotheric energy sensor` (custom service) using `jacdac-ts`.
+
 ```ts title="./sim/app.ts"
+// Jacdac bus that will connect to the devtools server
+import { bus } from "./runtime"
+// Jacdac helper to simulate services
 import { addServer, AnalogSensorServer } from "jacdac-ts"
 // custom service
 import { SRV_PSYCHOMAGNOTHERIC_ENERGY } from "../.devicescript/ts/constants"
-
-// Jacdac bus that will connect to the devtools server
-import { bus } from "./runtime"
 
 // server for the custom service
 const server = new AnalogSensorServer(SRV_PSYCHOMAGNOTHERIC_ENERGY, {
