@@ -41,6 +41,9 @@ export class DeveloperToolsManager extends JDEventSource {
     private _projectFolder: vscode.Uri
     private _watcher: vscode.FileSystemWatcher
 
+    private _currentFilename: string
+    private _currentDeviceScriptManager: JDService
+
     private _versions: VersionInfo
     private _buildConfig: ResolvedBuildConfig
     private _terminalPromise: Promise<vscode.Terminal>
@@ -142,7 +145,40 @@ export class DeveloperToolsManager extends JDEventSource {
         this.updateBuildConfig(st.config)
     }
 
+    get currentFilename() {
+        return this._currentFilename
+    }
+
+    get currentDeviceScriptManager() {
+        return this._currentDeviceScriptManager
+    }
+
     async build(filename: string, service?: JDService): Promise<BuildStatus> {
+        if (
+            this._currentFilename === filename &&
+            this._currentDeviceScriptManager === service
+        )
+            return
+
+        this._currentFilename = filename
+        this._currentDeviceScriptManager = service
+        this._watcher?.dispose()
+        this._watcher = undefined
+
+        const res = await this.buildOnce()
+        if (res) await this.startWatch()
+
+        this.emit(CHANGE)
+
+        return res
+    }
+
+    private async buildOnce(): Promise<BuildStatus> {
+        const filename = this._currentFilename
+        const service = this._currentDeviceScriptManager
+
+        if (!this._currentFilename) return undefined
+
         console.debug(`build ${filename}`)
         const deployTo = service?.device?.deviceId
         try {
@@ -161,9 +197,9 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async watch(filename: string, service?: JDService) {
-        this._watcher?.dispose()
-        if (!filename) return
+    private async startWatch() {
+        const filename = this._currentFilename
+        const service = this._currentDeviceScriptManager
 
         console.debug(`fs.watch: ${filename}`)
         const sid = service?.id
@@ -302,10 +338,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 ([name, type]) =>
                     type == vscode.FileType.File && /\.ts$/i.test(name)
             )
-        if (file) {
-            await this.build(file[0])
-            await this.watch(file[0])
-        }
+        if (file) await this.build(file[0])
     }
 
     dispose() {
@@ -386,8 +419,11 @@ export class DeveloperToolsManager extends JDEventSource {
         this._versions = undefined
         this._watcher?.dispose()
         this._watcher = undefined
+        this._currentFilename = undefined
+        this._currentDeviceScriptManager = undefined
         this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
+        this.emit(CHANGE)
     }
 
     async findProjects() {

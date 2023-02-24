@@ -264,8 +264,6 @@ export class DeviceScriptConfigurationProvider
             )
             return undefined
         }
-        // update watch
-        await this.extensionState.devtools.watch(program, service)
         // save as currently debugged project
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId
