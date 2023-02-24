@@ -219,10 +219,9 @@ export class DeveloperToolsManager extends JDEventSource {
 
     private async startWatch() {
         const filename = this._currentFilename
-        const service = this._currentDeviceScriptManager
+        const sid = this._currentDeviceScriptManager
 
         console.debug(`fs.watch: ${filename}`)
-        const sid = service?.id
         const handleChange = async (uri: vscode.Uri) => {
             console.debug(`fs changed: ${uri.fsPath}`)
             const service = this.extensionState.bus.node(sid) as JDService
