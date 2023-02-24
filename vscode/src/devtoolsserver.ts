@@ -39,10 +39,11 @@ function showTerminalError(message: string) {
 export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
-    private _watcher: vscode.FileSystemWatcher
 
+    // watch is tied to currentFilename and devicescript manager
+    private _watcher: vscode.FileSystemWatcher
     private _currentFilename: string
-    private _currentDeviceScriptManager: JDService
+    private _currentDeviceScriptManager: string
 
     private _versions: VersionInfo
     private _buildConfig: ResolvedBuildConfig
@@ -56,6 +57,16 @@ export class DeveloperToolsManager extends JDEventSource {
 
         vscode.workspace.onDidChangeWorkspaceFolders(
             this.handleWorkspaceFoldersChange,
+            this,
+            subscriptions
+        )
+        vscode.workspace.onDidDeleteFiles(
+            this.handleDidDeleteFiles,
+            this,
+            subscriptions
+        )
+        vscode.workspace.onDidRenameFiles(
+            this.handleDidRenameFiles,
             this,
             subscriptions
         )
@@ -149,6 +160,13 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._currentFilename
     }
 
+    get currentFile(): vscode.Uri {
+        const { projectFolder, currentFilename } = this
+        return projectFolder && currentFilename
+            ? Utils.joinPath(projectFolder, currentFilename)
+            : undefined
+    }
+
     get currentDeviceScriptManager() {
         return this._currentDeviceScriptManager
     }
@@ -156,12 +174,12 @@ export class DeveloperToolsManager extends JDEventSource {
     async build(filename: string, service?: JDService): Promise<BuildStatus> {
         if (
             this._currentFilename === filename &&
-            this._currentDeviceScriptManager === service
+            this._currentDeviceScriptManager === service?.id
         )
             return
 
         this._currentFilename = filename
-        this._currentDeviceScriptManager = service
+        this._currentDeviceScriptManager = service?.id
         this._watcher?.dispose()
         this._watcher = undefined
 
@@ -175,11 +193,13 @@ export class DeveloperToolsManager extends JDEventSource {
 
     private async buildOnce(): Promise<BuildStatus> {
         const filename = this._currentFilename
-        const service = this._currentDeviceScriptManager
 
         if (!this._currentFilename) return undefined
 
         console.debug(`build ${filename}`)
+        const service = this.extensionState.bus.node(
+            this._currentDeviceScriptManager
+        ) as JDService
         const deployTo = service?.device?.deviceId
         try {
             const res = await sideRequest<SideBuildReq, SideBuildResp>({
@@ -382,6 +402,22 @@ export class DeveloperToolsManager extends JDEventSource {
             if (!projects.includes(this._projectFolder?.toString()))
                 this.projectFolder = undefined
         }
+    }
+
+    private async handleDidDeleteFiles(ev: vscode.FileDeleteEvent) {
+        const cf = this.currentFile
+        if (!cf) return
+        const pp = cf.path
+        if (ev.files.find(f => f.path === pp)) await this.build(undefined)
+    }
+
+    private async handleDidRenameFiles(ev: vscode.FileRenameEvent) {
+        const cf = this.currentFile
+        if (!cf) return
+        const pp = cf.path
+        // TODO better than just stop everyhing
+        if (ev.files.find(f => f.oldUri.path === pp))
+            await this.build(undefined)
     }
 
     private async handleCloseTerminal(t: vscode.Terminal) {
