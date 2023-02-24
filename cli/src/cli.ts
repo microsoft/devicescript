@@ -24,6 +24,21 @@ import {
 } from "./flash"
 import { addBoard } from "./addboard"
 
+export function create() {
+    program
+        .command("init", { isDefault: true })
+        .description("creates or configures a devicescript project")
+        .option("-f, --force", "force overwrite existing files")
+        .option("--spaces <number>", "number of spaces when generating JSON")
+        .option(
+            "--install",
+            "Run npm install or yarn install after creating files"
+        )
+        .argument("[dir]", "path to create the project", "./")
+        .action(init)
+    program.parse(process.argv)
+}
+
 export async function mainCli() {
     Error.stackTraceLimit = 30
 
@@ -118,7 +133,10 @@ export async function mainCli() {
         .option("--empty", "generate empty program embed")
         .option("-t, --test", "run compiler tests")
         .option("--fetch-boards <boards.json>", "re-create boards.json file")
-        .option("--local-boards <repos-path>", "use local, not remote info.json files")
+        .option(
+            "--local-boards <repos-path>",
+            "use local, not remote info.json files"
+        )
         .action(ctool)
 
     program

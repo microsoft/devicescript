@@ -10,9 +10,11 @@
         "embedded"
     ],
     "author": "Microsoft",
-    "bin": "bin.js",
+    "bin": {
+        "create": "create.cjs"
+    },
     "files": [
-        "bin.js",
+        "create.cjs",
         "README.md"
     ],
     "license": "MIT",

@@ -15,6 +15,7 @@
         "devicescript-cli": "./devicescript",
         "devsc": "./devicescript"
     },
+    "main": "./built/devicescript-cli.cjs",
     "files": [
         "./devicescript",
         "./built/devicescript-cli.cjs",
