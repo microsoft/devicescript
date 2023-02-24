@@ -17,12 +17,10 @@ import type {
     SideKillResp,
     SideSpecsReq,
     SideSpecsResp,
-    SideWatchEvent,
-    SideWatchReq,
     VersionInfo,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
-import { sideRequest, subSideEvent } from "./jacdac"
+import { sideRequest } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { TaggedQuickPickItem } from "./pickers"
@@ -42,6 +40,11 @@ export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
 
+    // watch is tied to currentFilename and devicescript manager
+    private _watcher: vscode.FileSystemWatcher
+    private _currentFilename: string
+    private _currentDeviceScriptManager: string
+
     private _versions: VersionInfo
     private _buildConfig: ResolvedBuildConfig
     private _terminalPromise: Promise<vscode.Terminal>
@@ -54,6 +57,16 @@ export class DeveloperToolsManager extends JDEventSource {
 
         vscode.workspace.onDidChangeWorkspaceFolders(
             this.handleWorkspaceFoldersChange,
+            this,
+            subscriptions
+        )
+        vscode.workspace.onDidDeleteFiles(
+            this.handleDidDeleteFiles,
+            this,
+            subscriptions
+        )
+        vscode.workspace.onDidRenameFiles(
+            this.handleDidRenameFiles,
             this,
             subscriptions
         )
@@ -72,12 +85,6 @@ export class DeveloperToolsManager extends JDEventSource {
         // outputCh = vscode.window.createOutputChannel("DevS Build")
         this._diagColl =
             vscode.languages.createDiagnosticCollection("DeviceScript")
-
-        subscriptions.push({
-            dispose: subSideEvent<SideWatchEvent>("watch", msg => {
-                this.showBuildResults(msg.data)
-            }),
-        })
 
         // clear errors when file edited
         vscode.workspace.onDidChangeTextDocument(
@@ -149,27 +156,60 @@ export class DeveloperToolsManager extends JDEventSource {
         this.updateBuildConfig(st.config)
     }
 
-    async build(
-        filename: string,
-        options?: {
-            service?: JDService
-            watch?: boolean
-        }
-    ): Promise<BuildStatus> {
-        const { service, watch } = options || {}
+    get currentFilename() {
+        return this._currentFilename
+    }
+
+    get currentFile(): vscode.Uri {
+        const { projectFolder, currentFilename } = this
+        return projectFolder && currentFilename
+            ? Utils.joinPath(projectFolder, currentFilename)
+            : undefined
+    }
+
+    get currentDeviceScriptManager() {
+        return this._currentDeviceScriptManager
+    }
+
+    async build(filename: string, service?: JDService): Promise<BuildStatus> {
+        if (
+            this._currentFilename === filename &&
+            this._currentDeviceScriptManager === service?.id
+        )
+            return
+
+        this._currentFilename = filename
+        this._currentDeviceScriptManager = service?.id
+        this._watcher?.dispose()
+        this._watcher = undefined
+
+        const res = await this.buildOnce()
+        if (res) await this.startWatch()
+
+        this.emit(CHANGE)
+
+        return res
+    }
+
+    private async buildOnce(): Promise<BuildStatus> {
+        const filename = this._currentFilename
+
+        if (!this._currentFilename) return undefined
+
         console.debug(`build ${filename}`)
-        const deviceId = service?.device?.deviceId
+        const service = this.extensionState.bus.node(
+            this._currentDeviceScriptManager
+        ) as JDService
+        const deployTo = service?.device?.deviceId
         try {
             const res = await sideRequest<SideBuildReq, SideBuildResp>({
                 req: "build",
                 data: {
                     filename,
-                    deployTo: deviceId,
+                    deployTo,
                 },
             })
             this.showBuildResults(res.data)
-            // also start watch
-            if (watch) await this.watch(filename)
             return res.data
         } catch (err) {
             console.error(err) // TODO
@@ -177,13 +217,21 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    private async watch(filename: string) {
-        await sideRequest<SideWatchReq>({
-            req: "watch",
-            data: {
-                filename,
-            },
-        })
+    private async startWatch() {
+        const filename = this._currentFilename
+        const sid = this._currentDeviceScriptManager
+
+        console.debug(`fs.watch: ${filename}`)
+        const handleChange = async (uri: vscode.Uri) => {
+            console.debug(`fs changed: ${uri.fsPath}`)
+            const service = this.extensionState.bus.node(sid) as JDService
+            await this.build(filename, service)
+        }
+        const glob = new vscode.RelativePattern(this.projectFolder, filename)
+        this._watcher = vscode.workspace.createFileSystemWatcher(glob)
+        this._watcher.onDidChange(handleChange)
+        this._watcher.onDidCreate(handleChange)
+        this._watcher.onDidDelete(handleChange)
     }
 
     private async init() {
@@ -355,6 +403,22 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
+    private async handleDidDeleteFiles(ev: vscode.FileDeleteEvent) {
+        const cf = this.currentFile
+        if (!cf) return
+        const pp = cf.path
+        if (ev.files.find(f => f.path === pp)) await this.build(undefined)
+    }
+
+    private async handleDidRenameFiles(ev: vscode.FileRenameEvent) {
+        const cf = this.currentFile
+        if (!cf) return
+        const pp = cf.path
+        // TODO better than just stop everyhing
+        if (ev.files.find(f => f.oldUri.path === pp))
+            await this.build(undefined)
+    }
+
     private async handleCloseTerminal(t: vscode.Terminal) {
         if (this._terminalPromise && t === (await this._terminalPromise)) {
             this.clear()
@@ -388,8 +452,13 @@ export class DeveloperToolsManager extends JDEventSource {
         this._terminalPromise = undefined
         this._projectFolder = undefined
         this._versions = undefined
+        this._watcher?.dispose()
+        this._watcher = undefined
+        this._currentFilename = undefined
+        this._currentDeviceScriptManager = undefined
         this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
+        this.emit(CHANGE)
     }
 
     async findProjects() {

@@ -74,7 +74,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         this.bus.on([DEVICE_CHANGE, CONNECTION_STATE], () => {
             this.emit(CHANGE)
         })
-
+        this.devtools.on(CHANGE, () => this.emit(CHANGE))
         subSideEvent<SideTransportEvent>("transport", msg => {
             const _transport = msg.data
             if (
