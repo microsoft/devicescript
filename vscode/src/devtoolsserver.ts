@@ -17,12 +17,10 @@ import type {
     SideKillResp,
     SideSpecsReq,
     SideSpecsResp,
-    SideWatchEvent,
-    SideWatchReq,
     VersionInfo,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
-import { sideRequest, subSideEvent } from "./jacdac"
+import { sideRequest } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { TaggedQuickPickItem } from "./pickers"
@@ -41,6 +39,7 @@ function showTerminalError(message: string) {
 export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
+    private _watcher: vscode.FileSystemWatcher
 
     private _versions: VersionInfo
     private _buildConfig: ResolvedBuildConfig
@@ -72,12 +71,6 @@ export class DeveloperToolsManager extends JDEventSource {
         // outputCh = vscode.window.createOutputChannel("DevS Build")
         this._diagColl =
             vscode.languages.createDiagnosticCollection("DeviceScript")
-
-        subscriptions.push({
-            dispose: subSideEvent<SideWatchEvent>("watch", msg => {
-                this.showBuildResults(msg.data)
-            }),
-        })
 
         // clear errors when file edited
         vscode.workspace.onDidChangeTextDocument(
@@ -149,27 +142,18 @@ export class DeveloperToolsManager extends JDEventSource {
         this.updateBuildConfig(st.config)
     }
 
-    async build(
-        filename: string,
-        options?: {
-            service?: JDService
-            watch?: boolean
-        }
-    ): Promise<BuildStatus> {
-        const { service, watch } = options || {}
+    async build(filename: string, service?: JDService): Promise<BuildStatus> {
         console.debug(`build ${filename}`)
-        const deviceId = service?.device?.deviceId
+        const deployTo = service?.device?.deviceId
         try {
             const res = await sideRequest<SideBuildReq, SideBuildResp>({
                 req: "build",
                 data: {
                     filename,
-                    deployTo: deviceId,
+                    deployTo,
                 },
             })
             this.showBuildResults(res.data)
-            // also start watch
-            if (watch) await this.watch(filename)
             return res.data
         } catch (err) {
             console.error(err) // TODO
@@ -177,13 +161,22 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    private async watch(filename: string) {
-        await sideRequest<SideWatchReq>({
-            req: "watch",
-            data: {
-                filename,
-            },
-        })
+    async watch(filename: string, service?: JDService) {
+        this._watcher?.dispose()
+        if (!filename) return
+
+        console.debug(`fs.watch: ${filename}`)
+        const sid = service?.id
+        const handleChange = async (uri: vscode.Uri) => {
+            console.debug(`fs changed: ${uri.fsPath}`)
+            const service = this.extensionState.bus.node(sid) as JDService
+            await this.build(filename, service)
+        }
+        const glob = new vscode.RelativePattern(this.projectFolder, filename)
+        this._watcher = vscode.workspace.createFileSystemWatcher(glob)
+        this._watcher.onDidChange(handleChange)
+        this._watcher.onDidCreate(handleChange)
+        this._watcher.onDidDelete(handleChange)
     }
 
     private async init() {
@@ -309,7 +302,10 @@ export class DeveloperToolsManager extends JDEventSource {
                 ([name, type]) =>
                     type == vscode.FileType.File && /\.ts$/i.test(name)
             )
-        if (file) await this.build(file[0])
+        if (file) {
+            await this.build(file[0])
+            await this.watch(file[0])
+        }
     }
 
     dispose() {
@@ -388,6 +384,8 @@ export class DeveloperToolsManager extends JDEventSource {
         this._terminalPromise = undefined
         this._projectFolder = undefined
         this._versions = undefined
+        this._watcher?.dispose()
+        this._watcher = undefined
         this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
     }

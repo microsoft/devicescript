@@ -174,8 +174,9 @@ export class DeviceScriptConfigurationProvider
     ) {
         const sessionConfig = config as vscode.DebugSessionOptions
         const dsConfig = config as StartArgs
+        const { program } = config
 
-        if (!config.program) {
+        if (!program) {
             vscode.window.showErrorMessage(
                 "DeviceScript: Debug cancelled. Cannot find a program to debug."
             )
@@ -254,11 +255,8 @@ export class DeviceScriptConfigurationProvider
 
         // build and deploy
         const buildResult = await this.extensionState.devtools.build(
-            config.program,
-            {
-                service,
-                watch: true,
-            }
+            program,
+            service
         )
         if (!buildResult?.success) {
             vscode.window.showErrorMessage(
@@ -266,6 +264,8 @@ export class DeviceScriptConfigurationProvider
             )
             return undefined
         }
+        // update watch
+        await this.extensionState.devtools.watch(program, service)
         // save as currently debugged project
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId
