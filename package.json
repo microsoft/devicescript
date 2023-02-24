@@ -18,6 +18,7 @@
     "workspaces": [
         "compiler",
         "cli",
+        "create",
         "runtime/devicescript-vm",
         "runtime/jacdac-c/jacdac",
         "jacdac-ts",

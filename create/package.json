@@ -1,0 +1,25 @@
+{
+    "name": "@devicescript/create",
+    "private": false,
+    "version": "1.0.0",
+    "description": "DeviceScript create template tool",
+    "keywords": [
+        "devicescript",
+        "jacdac",
+        "iot",
+        "embedded"
+    ],
+    "author": "Microsoft",
+    "bin": "bin.js",
+    "files": [
+        "bin.js",
+        "README.md"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "@devicescript/cli": "*"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}
