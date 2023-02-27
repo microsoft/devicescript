@@ -1515,7 +1515,7 @@ class Program implements TopOpWriter {
                 this.withLocation(paramdef, wr => {
                     const v = this.getVarAtLocation(paramdef)
                     wr.emitIfAndPop(
-                        wr.emitExpr(Op.EXPR1_IS_NULL, v.emit(wr)),
+                        wr.emitExpr(Op.EXPR1_IS_UNDEFINED, v.emit(wr)),
                         () => {
                             this.emitStore(
                                 v,

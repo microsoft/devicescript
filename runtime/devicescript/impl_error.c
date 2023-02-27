@@ -10,7 +10,7 @@ static void meth1_error_ctor(devs_ctx_t *ctx, unsigned blt, unsigned str) {
     if (m->proto == NULL)
         m->proto = devs_get_builtin_object(ctx, blt);
     value_t msg = devs_arg(ctx, 0);
-    if (devs_is_null(msg))
+    if (devs_is_undefined(msg))
         msg = devs_builtin_string(str);
     devs_map_set_string_field(ctx, m, DEVS_BUILTIN_STRING_MESSAGE, msg);
     devs_ret_gc_ptr(ctx, m);
@@ -35,7 +35,7 @@ void meth1_SyntaxError___ctor__(devs_ctx_t *ctx) {
 
 value_t prop_Error_name(devs_ctx_t *ctx, value_t self) {
     value_t ctor = devs_object_get_built_in_field(ctx, self, DEVS_BUILTIN_STRING_CONSTRUCTOR);
-    if (devs_is_null(ctor))
+    if (devs_is_undefined(ctor))
         return devs_undefined;
     return devs_object_get_built_in_field(ctx, ctor, DEVS_BUILTIN_STRING_NAME);
 }

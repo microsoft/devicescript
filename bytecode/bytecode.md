@@ -167,13 +167,17 @@ Returns `Object_Type` enum.
 
 Returns JS-compatible string.
 
-    fun null(): null = 46       // null
+    fun undefined(): null = 46  // undefined
+
+Returns `undefined` value.
+
+    fun null(): null = 90        // null
 
 Returns `null` value.
 
-    fun is_null(x): bool = 47
+    fun is_undefined(x): bool = 47
 
-Check if object is exactly `null`.
+Check if object is exactly `undefined`.
 
     fun instance_of(obj, cls): bool = 89
 
@@ -378,9 +382,9 @@ Format is `["u", "i", "f", "reserved"](fmt >> 2)`
 
 ## Enum: Object_Type
 
-    null = 0
+    undefined = 0
 
-Only the `null` value.
+Only the `undefined` value.
 
     number = 1
 
@@ -407,6 +411,8 @@ Only `true` and `false` values.
     packet = 10
 
     exotic = 11
+
+    null = 12
 
 ### Object_Types only used in static type info
 

@@ -43,7 +43,7 @@ value_t devs_packet_decode(devs_ctx_t *ctx, const devs_packet_spec_t *pkt, uint8
                 break;
             uint8_t *dp0 = dp;
             value_t tmp = devs_buffer_decode(ctx, fld->numfmt, &dp, sz);
-            if (devs_is_null(tmp))
+            if (devs_is_undefined(tmp))
                 break;
             devs_array_pin_push(ctx, arr, tmp);
             if (dp == dp0)

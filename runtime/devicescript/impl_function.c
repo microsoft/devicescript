@@ -29,11 +29,11 @@ value_t prop_Function_prototype(devs_ctx_t *ctx, value_t self) {
         !(devs_img_get_function(ctx->img, fn)->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
         return devs_throw_expecting_error_ext(ctx, "ctor function", self);
     value_t r = devs_short_map_get(ctx, ctx->fn_protos, fn);
-    if (devs_is_null(r)) {
+    if (devs_is_undefined(r)) {
         r = devs_value_from_gc_obj(
             ctx, devs_map_try_alloc(
                      ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE)));
-        if (!devs_is_null(r)) {
+        if (!devs_is_undefined(r)) {
             devs_value_pin(ctx, r);
             devs_any_set(ctx, r, devs_builtin_string(DEVS_BUILTIN_STRING_CONSTRUCTOR),
                          devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, fn));

@@ -36,12 +36,12 @@ value_t devs_vm_pop_arg_buffer(devs_ctx_t *ctx, int flags) {
             // OK
         } else {
             devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_BUFFER, tmp);
-            return devs_null;
+            return devs_undefined;
         }
     }
     if ((flags & DEVS_BUFFER_RW) && !devs_buffer_is_writable(ctx, tmp)) {
         devs_throw_expecting_error_ext(ctx, "mutable Buffer", tmp);
-        return devs_null;
+        return devs_undefined;
     }
     return tmp;
 }

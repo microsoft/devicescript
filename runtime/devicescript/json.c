@@ -418,6 +418,7 @@ static void stringify_obj(stringify_t *state, value_t v) {
         /* fall-through */
     case DEVS_OBJECT_TYPE_BOOL:
     case DEVS_OBJECT_TYPE_NULL:
+    case DEVS_OBJECT_TYPE_UNDEFINED:
         v = devs_value_to_string(ctx, v);
         data = devs_string_get_utf8(ctx, v, &sz);
         if (dst)

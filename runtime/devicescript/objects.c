@@ -520,10 +520,10 @@ static int devs_get_fnidx_core(devs_ctx_t *ctx, value_t src, value_t *this_val,
         }
     }
     default: {
-        if (devs_is_null(src))
+        if (devs_is_nullish(src))
             return -1;
         value_t f = devs_object_get_built_in_field(ctx, src, DEVS_BUILTIN_STRING___FUNC__);
-        if (devs_is_null(f))
+        if (devs_is_undefined(f))
             return -1;
         else {
             int r = devs_get_fnidx_core(ctx, f, this_val, closure, depth + 1);
@@ -546,7 +546,7 @@ static void throw_field_error_str(devs_ctx_t *ctx, unsigned attach_flags, const 
     const char *op = attach_flags & ATTACH_RW ? "setting" : "getting";
     char *objd = jd_strdup(objdesc);
 
-    if (devs_is_null(ctx->diag_field))
+    if (devs_is_undefined(ctx->diag_field))
         devs_throw_type_error(ctx, "%s fields of %s", op, objd);
     else
         devs_throw_type_error(ctx, "%s field '%s' of %s", op, devs_show_value(ctx, ctx->diag_field),
@@ -615,7 +615,7 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
         [DEVS_OBJECT_TYPE_EXOTIC] = DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE,
     };
 
-    if (devs_is_null(v)) {
+    if (devs_is_null_or_undefined(v)) {
         throw_field_error(ctx, attach_flags, v);
         return NULL;
     }
@@ -764,7 +764,7 @@ devs_maplike_t *devs_maplike_get_proto(devs_ctx_t *ctx, devs_maplike_t *obj) {
 
 devs_maplike_t *devs_get_prototype_field(devs_ctx_t *ctx, value_t cls) {
     value_t cls_proto_val = devs_object_get_built_in_field(ctx, cls, DEVS_BUILTIN_STRING_PROTOTYPE);
-    if (devs_is_null(cls_proto_val)) {
+    if (devs_is_undefined(cls_proto_val)) {
         if (!ctx->in_throw)
             devs_throw_type_error(ctx, "no .prototype");
         return NULL;
@@ -777,7 +777,7 @@ devs_maplike_t *devs_get_prototype_field(devs_ctx_t *ctx, value_t cls) {
 }
 
 bool devs_instance_of(devs_ctx_t *ctx, value_t obj, devs_maplike_t *cls_proto) {
-    if (cls_proto == NULL || devs_is_null(obj))
+    if (cls_proto == NULL || devs_is_nullish(obj))
         return false;
 
     devs_maplike_t *proto = devs_object_get_attached_ro(ctx, obj);
@@ -807,7 +807,7 @@ value_t devs_maplike_get_no_bind(devs_ctx_t *ctx, devs_maplike_t *proto, value_t
             break;
         } else if (devs_is_service_spec(ctx, proto)) {
             ptmp = devs_spec_lookup(ctx, (const devs_service_spec_t *)proto, key);
-            if (!devs_is_null(ptmp)) {
+            if (!devs_is_undefined(ptmp)) {
                 tmp = &ptmp;
                 break;
             } else {
@@ -1079,7 +1079,7 @@ value_t devs_maplike_to_value(devs_ctx_t *ctx, devs_maplike_t *obj) {
                                          (const devs_builtin_proto_t *)obj - devs_builtin_protos);
     } else if (devs_is_service_spec(ctx, obj)) {
         // this shouldn't happen
-        return devs_null;
+        return devs_undefined;
     } else {
         JD_ASSERT(devs_is_map(obj));
         devs_map_t *map = (devs_map_t *)obj;

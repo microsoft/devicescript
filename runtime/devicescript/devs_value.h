@@ -47,9 +47,10 @@ typedef union {
 #define DEVS_HANDLE_TYPE_CLOSURE 0x9
 #define DEVS_HANDLE_TYPE_BOUND_FUNCTION 0xA
 
-#define DEVS_SPECIAL_NULL 0 // has to be zero! NULL is represented as all zero
+#define DEVS_SPECIAL_UNDEFINED 0 // has to be zero! UNDEFINED is represented as all zero
 #define DEVS_SPECIAL_FALSE 1
 #define DEVS_SPECIAL_NAN 2
+#define DEVS_SPECIAL_NULL 3
 #define DEVS_SPECIAL_TRUE 0x40
 #define DEVS_SPECIAL_INF 0x42
 #define DEVS_SPECIAL_MINF 0x43
@@ -125,7 +126,7 @@ static inline value_t devs_value_from_handle(int type, uint32_t value) {
     return r;
 }
 
-static inline bool devs_is_null(value_t t) {
+static inline bool devs_is_undefined(value_t t) {
     return t.u64 == 0;
 }
 
@@ -141,6 +142,7 @@ static inline bool devs_is_nan(value_t t) {
     return devs_is_special(t) && devs_handle_value(t) == DEVS_SPECIAL_NAN;
 }
 
+bool devs_is_null_or_undefined(value_t t);
 bool devs_is_nullish(value_t t);
 // this excludes NaN and Inf
 bool devs_is_number(value_t t);
@@ -174,16 +176,16 @@ extern const value_t devs_int_min;
 extern const value_t devs_max_int_1;
 extern const value_t devs_true;
 extern const value_t devs_false;
+extern const value_t devs_null;
 
-static inline value_t devs_null_(void) {
+static inline value_t devs_undefined_(void) {
     value_t v = {.u64 = 0};
     return v;
 }
-#define devs_null (devs_null_())
+#define devs_undefined (devs_undefined_())
 
-#define devs_void devs_null
-#define devs_undefined devs_null
-#define devs_error devs_null
+#define devs_void devs_undefined
+#define devs_error devs_undefined
 
 bool devs_is_buffer(devs_ctx_t *ctx, value_t v);
 bool devs_buffer_is_writable(devs_ctx_t *ctx, value_t v);

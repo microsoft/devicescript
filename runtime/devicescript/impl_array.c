@@ -71,7 +71,7 @@ void methX_Array_slice(devs_ctx_t *ctx) {
     if (start < 0)
         start = 0;
 
-    int32_t end = numargs > 1 && !devs_is_null(devs_arg(ctx, 1)) ? devs_arg_int(ctx, 1) : len;
+    int32_t end = numargs > 1 && !devs_is_undefined(devs_arg(ctx, 1)) ? devs_arg_int(ctx, 1) : len;
 
     if (end < 0)
         end = len + end;

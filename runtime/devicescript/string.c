@@ -104,6 +104,8 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
         switch ((hv = devs_handle_value(v))) {
         case DEVS_SPECIAL_NULL:
             return devs_builtin_string(DEVS_BUILTIN_STRING_NULL);
+        case DEVS_SPECIAL_UNDEFINED:
+            return devs_builtin_string(DEVS_BUILTIN_STRING_UNDEFINED);
         case DEVS_SPECIAL_FALSE:
             return devs_builtin_string(DEVS_BUILTIN_STRING_FALSE);
         case DEVS_SPECIAL_TRUE:
