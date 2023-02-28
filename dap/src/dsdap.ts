@@ -730,6 +730,8 @@ export class DsDapSession extends DebugSession {
                 switch (v.v0) {
                     case DevsDbgValueSpecial.Null:
                         return "null"
+                    case DevsDbgValueSpecial.Undefined:
+                        return "undefined"
                     case DevsDbgValueSpecial.False:
                         return "false"
                     case DevsDbgValueSpecial.True:

@@ -128,6 +128,7 @@ export class DevsValue {
                     case DevsDbgValueSpecial.False:
                     case DevsDbgValueSpecial.True:
                     case DevsDbgValueSpecial.Null:
+                    case DevsDbgValueSpecial.Undefined:
                         return true
                     default:
                         return false
@@ -235,7 +236,7 @@ export class DevsDbgClient extends JDServiceClient {
         }
         this.values = []
         this.valueMap = {}
-        this.getValue(DevsDbgValueTag.Special, DevsDbgValueSpecial.Null)
+        this.getValue(DevsDbgValueTag.Special, DevsDbgValueSpecial.Undefined)
     }
 
     async resume() {
