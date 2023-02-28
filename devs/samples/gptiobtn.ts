@@ -1,7 +1,8 @@
+import { gpio } from "@devicescript/core"
 import { startButton } from "@devicescript/servers"
 
 const gpbtn = startButton({
-    pin: 2,
+    pin: gpio(2),
 })
 
 gpbtn.down.subscribe(() => {

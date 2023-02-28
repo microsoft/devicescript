@@ -11,14 +11,14 @@ function isClose(x: number, y: number): void {
 
 function isEq(x: any, y: any): void {
     // console.log(x, " == ", y, "?")
-    if (x != y) {
+    if (x !== y) {
         console.log(ds.format("fail: {0} != {1}", x, y))
         _panic(109)
     }
 }
 
 function strEq(a: string, b: string) {
-    if (a != b) {
+    if (a !== b) {
         console.log(`fail: '${a}' != '${b}'`)
         _panic(110)
     }
@@ -237,14 +237,14 @@ function testArray() {
     arr.push(10)
     isEq(arr.length, 1)
     isEq(arr[0], 10)
-    isEq(arr[1], null)
+    isEq(arr[1], undefined)
     isEq(arr.push(20), 2)
     isEq(arr[1], 20)
 
     const [a, b, c, ...rest] = arr
     isEq(a, 10)
     isEq(b, 20)
-    isEq(c, null)
+    isEq(c, undefined)
     isEq(rest.length, 0)
     const [aa, ...bb] = arr
     isEq(aa, 10)
@@ -303,7 +303,7 @@ function testSpread() {
     isEq(delete qq.bar, false)
     isEq(Object.keys(qq).length, 1)
     isEq(qq.foo, 5)
-    isEq(qq.bar, null)
+    isEq(qq.bar, undefined)
 
     const o2 = { a: 1, b: 2, c: 3 }
     {
@@ -554,6 +554,13 @@ function jsonTest(js: string, indent?: number) {
     }
 }
 
+
+function testDeflUndefinedForNumber(f:number, g?:number) {
+    isEq(f, 3)
+    ds.assert(g == null, "n3")
+    ds.assert(g === undefined, "n3")
+}
+
 function testJSON() {
     console.log("testJSON")
     jsonTest("null")
@@ -580,6 +587,22 @@ function testJSON() {
     jsonTest('{\n  "x": 1,\n  "y": [\n    1,\n    2,\n    3\n  ]\n}', 2)
     isEq(JSON.stringify({ x: 1, y: undefined }), '{"x":1}')
     isEq(JSON.stringify({ x: 1, y: () => {} }), '{"x":1}')
+
+    testDeflUndefinedForNumber(3)
+
+    let strings = ["foo", "foo\n", "\"", "\b\t\r\n", ""]
+    for (let s of strings) {
+        ds.assert(JSON.parse(JSON.stringify(s)) === s, s)
+    }
+    
+    ds.assert(JSON.parse("\"\\u000A\\u0058\\u004C\\u004d\"") == "\nXLM", "uni")
+
+    let ss = "12" + "34"
+    ds.assert(ss.slice(1) == "234", "sl0")
+    ds.assert(ss.slice(1, 2) == "2", "sl1")
+    ds.assert(ss.slice(-2) == "34", "sl2")
+    ds.assert(ss.slice(1, 0) == "", "sl3")
+    ds.assert(ss.slice(1, -1) == "23", "sl4")
 }
 
 function testAnySwitch() {

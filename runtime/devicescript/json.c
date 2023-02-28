@@ -129,7 +129,7 @@ static int parse_hex(parser_t *state) {
     }
     buf[4] = 0;
     int r = jd_from_hex(dst, buf);
-    if (r != 4)
+    if (r != 2)
         return -1;
     return (dst[0] << 8) | dst[1];
 }
