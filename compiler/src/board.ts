@@ -166,7 +166,8 @@ ${JSON.stringify(boardJson, null, 4)}
             `| pin name | hardware id | features |`,
             `|:---------|:------------|---------:|`,
             ...pins.map(
-                pin => `| **${pin[0]}** | ${pin[1]} | ${pin.slice(2).join(", ")} |`
+                pin =>
+                    `| **${pin[0]}** | ${pin[1]} | ${pin.slice(2).join(", ")} |`
             ),
         ].join("\n")
     }
@@ -268,8 +269,17 @@ export function expandPinFunctionInfo(info: PinFunctionInfo): PinFunction[][] {
     return res
 }
 
-export function pinFunctions(info: PinFunctionInfo, p: number) {
-    return expandPinFunctionInfo(info)[p] ?? []
+export function pinFunctions(
+    info: PinFunctionInfo,
+    p: number,
+    keepInputOutput = false
+) {
+    const res = expandPinFunctionInfo(info)[p] ?? []
+    if (!keepInputOutput) {
+        if (res.includes("io"))
+            return res.filter(r => r != "input" && r != "output")
+    }
+    return res
 }
 
 export function pinHasFunction(
@@ -277,7 +287,7 @@ export function pinHasFunction(
     p: number,
     fn: PinFunction
 ) {
-    return pinFunctions(info, p).includes(fn)
+    return pinFunctions(info, p, true).includes(fn)
 }
 
 export interface PinInfo {
@@ -294,10 +304,7 @@ export function pinsInfo(arch: ArchConfig, devcfg: DeviceConfig) {
         const name = `${label}=${gpio}`
         if (typeof gpio != "number") return errors.push(`invalid pin: ${name}`)
 
-        let functions = pinFunctions(arch?.pins, gpio)
-        if (functions.includes("io"))
-            functions = functions.filter(f => f != "input" && f != "output")
-
+        const functions = pinFunctions(arch?.pins, gpio)
         if (functions.length == 0)
             return errors.push(`invalid pin: ${name} has no functions`)
 

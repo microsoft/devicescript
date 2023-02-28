@@ -287,4 +287,53 @@ declare module "@devicescript/core" {
          */
         function parseFloat(string: string): number
     }
+
+    //
+    // Pins
+    //
+
+    /**
+     * Represents pin capable of digital output.
+     */
+    export interface InputPin {
+        _inputPinBrand: unknown
+    }
+
+    /**
+     * Represents pin capable of digital input.
+     */
+    export interface OutputPin {
+        _outputPinBrand: unknown
+    }
+
+    /**
+     * Represents pin capable of digital input and output.
+     */
+    export type IOPin = InputPin & OutputPin
+
+    /**
+     * Represents pin capable of analog input (ADC).
+     */
+    export interface AnalogInPin {
+        _analogInPinBranch: unknown
+    }
+
+    /**
+     * Represents pin capable of analog output (DAC, not PWM).
+     */
+    export interface AnalogOutPin {
+        _analogOutPinBranch: unknown
+    }
+
+    /**
+     * Unspecified type of pin.
+     */
+    export type Pin = InputPin | OutputPin | AnalogInPin | AnalogOutPin
+
+    /**
+     * Direct access to pin by hardware id. Best to use `pins.name` instead.
+     * 
+     * @param hwPinIndex hardware pin number
+     */
+    export function gpio(hwPinIndex: number): IOPin & AnalogInPin & AnalogOutPin
 }

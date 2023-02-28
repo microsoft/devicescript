@@ -1,11 +1,12 @@
+import { gpio } from "@devicescript/core"
 import * as servers from "@devicescript/servers"
 
 const button = servers.startButton({
-    pin: 12,
+    pin: gpio(12),
 })
 const relay = servers.startRelay({
-    pin: 13,
-    pinLed: 14,
+    pin: gpio(13),
+    pinLed: gpio(14),
 })
 
 let active = false

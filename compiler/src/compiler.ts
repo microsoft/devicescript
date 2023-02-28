@@ -758,6 +758,20 @@ class Program implements TopOpWriter {
         return r
     }
 
+    private getSymTags(sym: ts.Symbol) {
+        const tags: Record<string, string> = {}
+        for (const tag of sym?.getJsDocTags() ?? []) {
+            if (tag.name.startsWith("ds-")) {
+                const v = tag.text
+                    ?.map(t => t.text)
+                    .filter(s => !!s?.trim())
+                    .join(" ")
+                tags[tag.name] = v ?? ""
+            }
+        }
+        return tags
+    }
+
     private toLiteralJSON(node: ts.Expression): any {
         if (this.isStringLiteral(node)) return node.text
         if (ts.isNumericLiteral(node)) return parseFloat(node.text)
@@ -785,6 +799,15 @@ class Program implements TopOpWriter {
             }
             return json
         }
+
+        if (ts.isCallExpression(node)) {
+            const nam = this.nodeName(node.expression)
+            if (nam == "#ds.gpio") return this.toLiteralJSON(node.arguments[0])
+        }
+
+        const tags = this.getSymTags(this.getSymAtLocation(node))
+        const gpio = parseInt(tags["ds-gpio"])
+        if (!isNaN(gpio)) return gpio
 
         throwError(node, `expecting JSON literal here`)
     }
@@ -3271,7 +3294,7 @@ class Program implements TopOpWriter {
 
     private serializeStartServices() {
         const cfg = jsonToDcfg({
-            _: new Array(0x40).concat(this.startServices),
+            services: new Array(0x40).concat(this.startServices),
         })
         const bin = serializeDcfg(cfg)
         const writer = new SectionWriter()
