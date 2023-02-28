@@ -1344,6 +1344,10 @@ class Program implements TopOpWriter {
         wr.emitLabel(loop.breakLbl)
     }
 
+    private emitEnumDeclaration(stmt: ts.EnumDeclaration) {
+        // nothing to do
+    }
+
     private finishRetVal() {
         const wr = this.writer
         if (this.proc.returnValueLabel) {
@@ -2231,7 +2235,10 @@ class Program implements TopOpWriter {
         for (const arg of args) {
             if (fmt && !/[=:]$/.test(fmt)) fmt += " "
             const flat = this.flattenPlus(arg)
-            if (flat.some(f => this.stringLiteral(f) != null)) {
+            if (
+                ts.isTemplateExpression(arg) ||
+                flat.some(f => this.stringLiteral(f) != null)
+            ) {
                 flat.forEach(pushArg)
             } else {
                 pushArg(arg)
@@ -2545,6 +2552,13 @@ class Program implements TopOpWriter {
         const r = this.emitBuiltInConst(expr)
         if (r) return r
 
+        const sym = this.getSymAtLocation(expr)
+        const decl = sym?.valueDeclaration
+        if (decl && ts.isEnumMember(decl)) {
+            const val = this.checker.getConstantValue(decl)
+            return this.emitLiteral(val, expr)
+        }
+
         const nsName = this.nodeName(expr.expression)
         if (nsName == "#Math") {
             const id = idName(expr.name)
@@ -2608,13 +2622,13 @@ class Program implements TopOpWriter {
     private emitLiteralExpression(node: ts.LiteralExpression): Value {
         const wr = this.writer
 
-        if (node.kind == SK.NumericLiteral) {
+        if (ts.isNumericLiteral(node)) {
             const parsed = parseFloat(node.text)
             return this.emitLiteral(parsed)
         } else if (this.isStringLiteral(node)) {
             return wr.emitString(node.text)
         } else {
-            throwError(node, "whoops")
+            throwError(node, "expecting literal here")
         }
     }
 
@@ -3282,6 +3296,8 @@ class Program implements TopOpWriter {
                     )
                 case SK.DebuggerStatement:
                     return this.writer.emitStmt(Op.STMT0_DEBUGGER)
+                case SK.EnumDeclaration:
+                    return this.emitEnumDeclaration(stmt as ts.EnumDeclaration)
                 case SK.TypeAliasDeclaration:
                 case SK.ExportDeclaration:
                 case SK.InterfaceDeclaration:

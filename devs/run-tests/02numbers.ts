@@ -226,7 +226,6 @@ function testUnaryPlus() {
     // assert(isNaN(+qq))
 }
 
-/* TODO (enums not supported)
 function getABoolean() {
     return !!true
 }
@@ -242,12 +241,11 @@ function testEnumToString() {
     assert(`${enumTest}` === "1", "enum tostring in template")
     assert(enumTest + "" === "1", "enum tostring in concatenation")
 }
-testEnumToString()
-*/
 
 testComma()
 testNums()
 testNaN()
 testUnaryPlus()
+testEnumToString()
 
 ds.reboot()
