@@ -675,7 +675,7 @@ export class OpWriter {
             if ((q | 0) == q) {
                 const qq =
                     q + BinFmt.DIRECT_CONST_OFFSET + BinFmt.DIRECT_CONST_OP
-                if (BinFmt.DIRECT_CONST_OFFSET <= qq && qq <= 0xff)
+                if (BinFmt.DIRECT_CONST_OP <= qq && qq <= 0xff)
                     this.writeByte(qq)
                 else {
                     this.writeByte(Op.EXPRx_LITERAL)
