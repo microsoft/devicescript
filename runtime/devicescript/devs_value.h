@@ -159,8 +159,12 @@ int32_t devs_value_to_int(devs_ctx_t *ctx, value_t v);
 double devs_value_to_double(devs_ctx_t *ctx, value_t v);
 bool devs_value_to_bool(devs_ctx_t *ctx, value_t v);
 
+// === in JS (including NaN !== NaN)
 bool devs_value_ieee_eq(devs_ctx_t *ctx, value_t a, value_t b);
+// === in JS but eq(NaN, NaN) == true
 bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b);
+// == in JS
+bool devs_value_approx_eq(devs_ctx_t *ctx, value_t a, value_t b);
 
 // returns one of DEVS_OBJECT_TYPE_*
 unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v);

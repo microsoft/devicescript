@@ -84,30 +84,34 @@
 #define DEVS_EXPR2_SHIFT_LEFT 65           // x << y
 #define DEVS_EXPR2_SHIFT_RIGHT 66          // x >> y
 #define DEVS_EXPR2_SHIFT_RIGHT_UNSIGNED 67 // x >>> y
-#define DEVS_EXPR2_EQ 68                   // x == y
+#define DEVS_EXPR2_EQ 68                   // x === y
 #define DEVS_EXPR2_LE 69                   // x <= y
 #define DEVS_EXPR2_LT 70                   // x < y
-#define DEVS_EXPR2_NE 71                   // x != y
+#define DEVS_EXPR2_NE 71                   // x !== y
+#define DEVS_EXPR2_APPROX_EQ 91            // x == y
+#define DEVS_EXPR2_APPROX_NE 92            // x != y
 #define DEVS_STMT1_TERMINATE_FIBER 72      // fiber_handle
 #define DEVS_EXPR0_NOW_MS 77
 #define DEVS_EXPR1_GET_FIBER_HANDLE 78 // func
-#define DEVS_OP_PAST_LAST 91
+#define DEVS_OP_PAST_LAST 93
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20" \
     "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
-    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40"
+    "\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42" \
+    "\x42"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b" \
     "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01" \
     "\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c"
+    "\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06" \
+    "\x06"
 
 #define DEVS_IMG_VERSION_MAJOR 6
-#define DEVS_IMG_VERSION_MINOR 1
+#define DEVS_IMG_VERSION_MINOR 2
 #define DEVS_IMG_VERSION_PATCH 0
-#define DEVS_IMG_VERSION 0x6010000
+#define DEVS_IMG_VERSION 0x6020000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 10
@@ -405,7 +409,7 @@
         exprx_make_closure, expr1_typeof_str, expr0_now_ms, expr1_get_fiber_handle,                \
         stmt2_call_array, stmtx_try, stmtx_end_try, stmt0_catch, stmt0_finally, stmt1_throw,       \
         stmt1_re_throw, stmtx1_throw_jmp, stmt0_debugger, expr1_new, expr2_instance_of,            \
-        expr0_null, expr_invalid
+        expr0_null, expr2_approx_eq, expr2_approx_ne, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \

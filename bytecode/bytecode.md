@@ -233,13 +233,17 @@ Same as `x | 0`.
 
     fun shift_right_unsigned(x, y): number = 67      // x >>> y
 
-    fun eq(x, y): bool = 68      // x == y
+    fun eq(x, y): bool = 68      // x === y
 
     fun le(x, y): bool = 69      // x <= y
 
     fun lt(x, y): bool = 70      // x < y
 
-    fun ne(x, y): bool = 71      // x != y
+    fun ne(x, y): bool = 71      // x !== y
+
+    fun approx_eq(x, y): bool = 91  // x == y
+
+    fun approx_ne(x, y): bool = 92  // x != y
 
 ### To be removed (mostly)
 
@@ -259,7 +263,7 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 ## Format Constants
 
     img_version_major = 6
-    img_version_minor = 1
+    img_version_minor = 2
     img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"

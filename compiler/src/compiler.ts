@@ -993,7 +993,7 @@ class Program implements TopOpWriter {
             let init: Value = null
 
             if (decl.initializer) init = this.emitExpr(decl.initializer)
-            else if (this.isInLoop(decl)) init = literal(null)
+            else if (this.isInLoop(decl)) init = literal(undefined)
 
             if (!init) continue
 
@@ -1288,7 +1288,7 @@ class Program implements TopOpWriter {
         }
         if (this.proc.returnNoValueLabel) {
             wr.emitLabel(this.proc.returnNoValueLabel)
-            wr.emitStmt(Op.STMT1_RETURN, literal(null))
+            wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
         }
     }
 
@@ -1316,7 +1316,7 @@ class Program implements TopOpWriter {
                         this.proc.returnNoValueLabel = wr.mkLabel("retNoVal")
                     wr.emitThrowJmp(this.proc.returnNoValueLabel, numTry)
                 } else {
-                    wr.emitStmt(Op.STMT1_RETURN, literal(null))
+                    wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
                 }
             }
         }
@@ -1402,7 +1402,7 @@ class Program implements TopOpWriter {
                         assert(params.length == 0)
                     }
                     this.emitCtorAssignments(cls)
-                    wr.emitStmt(Op.STMT1_RETURN, literal(null))
+                    wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
                     this.finishRetVal()
                     this.finalizeProc(proc)
                 })
@@ -1461,7 +1461,7 @@ class Program implements TopOpWriter {
         if (ts.isBlock(stmt.body)) {
             this.emitStmt(stmt.body)
             if (!this.writer.justHadReturn())
-                this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
+                this.writer.emitStmt(Op.STMT1_RETURN, literal(undefined))
         } else {
             this.writer.emitStmt(Op.STMT1_RETURN, this.emitExpr(stmt.body))
         }
@@ -1731,7 +1731,7 @@ class Program implements TopOpWriter {
                 }
             }
 
-            this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
+            this.writer.emitStmt(Op.STMT1_RETURN, literal(undefined))
             this.finalizeProc(this.protoProc)
         })
 
@@ -1935,7 +1935,7 @@ class Program implements TopOpWriter {
             wr.emitLabel(wr.ret)
             if (options.every) wr.emitJump(wr.top)
             else {
-                wr.emitStmt(Op.STMT1_RETURN, literal(null))
+                wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
             }
             this.finalizeProc(proc)
         })
@@ -2699,9 +2699,9 @@ class Program implements TopOpWriter {
             [SK.GreaterThanGreaterThanGreaterThanToken]:
                 Op.EXPR2_SHIFT_RIGHT_UNSIGNED,
             [SK.LessThanEqualsToken]: Op.EXPR2_LE,
-            [SK.EqualsEqualsToken]: Op.EXPR2_EQ,
+            [SK.EqualsEqualsToken]: Op.EXPR2_APPROX_EQ,
             [SK.EqualsEqualsEqualsToken]: Op.EXPR2_EQ,
-            [SK.ExclamationEqualsToken]: Op.EXPR2_NE,
+            [SK.ExclamationEqualsToken]: Op.EXPR2_APPROX_NE,
             [SK.ExclamationEqualsEqualsToken]: Op.EXPR2_NE,
             [SK.InstanceOfKeyword]: Op.EXPR2_INSTANCE_OF,
         }

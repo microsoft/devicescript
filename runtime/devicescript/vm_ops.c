@@ -745,6 +745,18 @@ static value_t expr2_ne(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_bool(!devs_value_ieee_eq(ctx, ctx->binop[0], ctx->binop[1]));
 }
 
+static value_t expr2_approx_eq(devs_activation_t *frame, devs_ctx_t *ctx) {
+    if (exec2_and_check_int(frame, ctx))
+        return devs_value_from_bool(aa == bb);
+    return devs_value_from_bool(devs_value_approx_eq(ctx, ctx->binop[0], ctx->binop[1]));
+}
+
+static value_t expr2_approx_ne(devs_activation_t *frame, devs_ctx_t *ctx) {
+    if (exec2_and_check_int(frame, ctx))
+        return devs_value_from_bool(aa != bb);
+    return devs_value_from_bool(!devs_value_approx_eq(ctx, ctx->binop[0], ctx->binop[1]));
+}
+
 static value_t expr2_le(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (exec2_and_check_int_or_force_double(frame, ctx))
         return devs_value_from_bool(aa <= bb);

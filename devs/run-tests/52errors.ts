@@ -54,7 +54,7 @@ function testExn(): any {
     expectExn(() => {
         b[10] = 1
     }, RangeError)
-    ds.assert(b[10] === null)
+    ds.assert(b[10] === undefined)
 
     const b2 = hex`001122`
     expectExn(() => {

@@ -330,6 +330,14 @@ bool devs_is_null_or_undefined(value_t t) {
     return false;
 }
 
+// This is meant to approximate == in JS; we currently it's only different
+// from === in that null==undefined (whereas null!==undefined)
+bool devs_value_approx_eq(devs_ctx_t *ctx, value_t a, value_t b) {
+    if (devs_is_null_or_undefined(a) && devs_is_null_or_undefined(b))
+        return true;
+    return devs_value_ieee_eq(ctx, a, b);
+}
+
 bool devs_value_ieee_eq(devs_ctx_t *ctx, value_t a, value_t b) {
     if (devs_is_nan(a) && devs_is_nan(b))
         return false;

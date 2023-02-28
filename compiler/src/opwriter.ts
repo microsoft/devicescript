@@ -169,7 +169,7 @@ class UnCachedValue extends CachedValue {
 export function literal(v: number | boolean) {
     const r = new Value()
     if (v == null) {
-        r.op = Op.EXPR0_NULL
+        r.op = v === null ? Op.EXPR0_NULL : Op.EXPR0_UNDEFINED
         r.args = []
         r.flags = 0
     } else if (typeof v == "boolean") {
