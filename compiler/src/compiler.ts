@@ -73,6 +73,7 @@ import { computeSizes } from "./debug"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
 import { LocalBuildConfig, ResolvedBuildConfig } from "./archconfig"
+import { constantFold, Folded } from "./constantfold"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -680,10 +681,14 @@ class Program implements TopOpWriter {
         else console.error(jdiag.formatted)
     }
 
-    reportError(node: ts.Node, msg: string): Value {
+    reportError(
+        node: ts.Node,
+        messageText: string,
+        category = ts.DiagnosticCategory.Error
+    ): Value {
         const diag: ts.Diagnostic = {
-            category: ts.DiagnosticCategory.Error,
-            messageText: msg,
+            category,
+            messageText,
             code: 9999,
             file: node.getSourceFile(),
             start: node.getStart(),
@@ -716,6 +721,16 @@ class Program implements TopOpWriter {
             case "F":
                 return this.procs[idx]?.name
         }
+    }
+
+    constantFold(e: Expr) {
+        return constantFold((e): Folded => {
+            const sym = this.getSymAtLocation(e)
+            const decl = sym?.valueDeclaration
+            if (decl && ts.isEnumMember(decl))
+                return { val: this.checker.getConstantValue(decl) }
+            return null
+        }, e as ts.Expression)
     }
 
     private emitSleep(ms: number) {
@@ -3119,6 +3134,17 @@ class Program implements TopOpWriter {
     }
 
     private emitExpr(expr: Expr): Value {
+        const folded = this.constantFold(expr)
+        if (folded) {
+            if (false && ts.isBinaryExpression(expr))
+                this.reportError(
+                    expr,
+                    `folded -> ${folded.val}`,
+                    ts.DiagnosticCategory.Warning
+                )
+            return literal(folded.val)
+        }
+
         switch (expr.kind) {
             case SK.AsExpression:
                 return this.emitExpr((expr as ts.AsExpression).expression)

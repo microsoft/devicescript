@@ -738,15 +738,19 @@ export class Image {
 
         r += "\n"
 
-        const settings = decodeDcfg(this.dcfgData)
-        r += settings.errors.map(e => `; DCFG-error: ${e}\n`).join("\n")
-        const json: DeviceConfig = decompileDcfg(settings.settings)
-        if (
-            Array.isArray(json.services) &&
-            json.services.slice(0, 0x40).every(s => s == null)
-        )
-            json.services = json.services.slice(0x40)
-        r += "\nDCFG: " + JSON.stringify(json, null, 4) + "\n\n"
+        if (this.dcfgData.length == 0) {
+            r += "\nDCFG: None\n\n"
+        } else {
+            const settings = decodeDcfg(this.dcfgData)
+            r += settings.errors.map(e => `; DCFG-error: ${e}\n`).join("\n")
+            const json: DeviceConfig = decompileDcfg(settings.settings)
+            if (
+                Array.isArray(json.services) &&
+                json.services.slice(0, 0x40).every(s => s == null)
+            )
+                json.services = json.services.slice(0x40)
+            r += "\nDCFG: " + JSON.stringify(json, null, 4) + "\n\n"
+        }
 
         const specData = this.specData
 
