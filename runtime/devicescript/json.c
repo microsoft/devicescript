@@ -377,8 +377,21 @@ static void stringify_obj(stringify_t *state, value_t v);
 
 static void stringify_field(devs_ctx_t *ctx, void *state_, value_t k, value_t v) {
     stringify_t *state = state_;
+
     if (!devs_is_string(ctx, k))
+        // shouldn't happen
         return;
+
+    // don't stringify undefined and functions
+    switch (devs_value_typeof(ctx, v)) {
+    case DEVS_OBJECT_TYPE_FUNCTION:
+    case DEVS_OBJECT_TYPE_UNDEFINED:
+    case DEVS_OBJECT_TYPE_EXOTIC:
+        return;
+    default:
+        break;
+    }
+
     add_indent(state);
     stringify_obj(state, k);
     add_ch(state, ':', 1);

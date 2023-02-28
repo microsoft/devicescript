@@ -523,7 +523,6 @@ function testFunName() {
     function qq() {}
 }
 
-
 function expectErr(js: string) {
     try {
         JSON.parse(js)
@@ -578,6 +577,8 @@ function testJSON() {
     jsonTest("{}", 2)
     jsonTest('{\n  "x": 1\n}', 2)
     jsonTest('{\n  "x": 1,\n  "y": [\n    1,\n    2,\n    3\n  ]\n}', 2)
+    isEq(JSON.stringify({ x: 1, y: undefined }), '{"x":1}')
+    isEq(JSON.stringify({ x: 1, y: () => {} }), '{"x":1}')
 }
 
 testFlow()
