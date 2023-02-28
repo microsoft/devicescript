@@ -68,6 +68,7 @@ import {
     DebugVarType,
     SrcFile,
     srcMapEntrySize,
+    ConstValue,
 } from "./info"
 import { computeSizes } from "./debug"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
@@ -362,6 +363,7 @@ class Procedure {
     returnValueLabel: Label
     returnNoValueLabel: Label
     maxTryBlocks = 0
+    constVars: Record<string, ConstValue> = {}
     mapVarOffset: (n: number) => number
 
     constructor(
@@ -430,6 +432,7 @@ class Procedure {
             size: this.writer.size,
             users: this.users.map(u => this.parent.getSrcLocation(u)),
             slots,
+            constVars: this.constVars,
         }
     }
 
@@ -539,6 +542,10 @@ export const compileFlagHelp: Record<string, string> = {
         "compile-in all `object.method = function ...` assignments, used or not",
     traceBuiltin: "trace unresolved built-in functions",
     traceProto: "trace tree-shaking of prototypes",
+}
+
+interface PossiblyConstDeclaration extends ts.Declaration {
+    __ds_const_val?: Folded
 }
 
 class Program implements TopOpWriter {
@@ -725,10 +732,28 @@ class Program implements TopOpWriter {
 
     constantFold(e: Expr) {
         return constantFold((e): Folded => {
-            const sym = this.getSymAtLocation(e)
-            const decl = sym?.valueDeclaration
-            if (decl && ts.isEnumMember(decl))
-                return { val: this.checker.getConstantValue(decl) }
+            const sym = this.getSymAtLocation(e, true)
+            if (!sym) return null
+            const decl = sym.valueDeclaration as PossiblyConstDeclaration
+            if (decl) {
+                if (decl.__ds_const_val) return decl.__ds_const_val
+                if (ts.isEnumMember(decl))
+                    return ((decl as PossiblyConstDeclaration).__ds_const_val =
+                        {
+                            val: this.checker.getConstantValue(decl),
+                        })
+            }
+
+            const nodeName = this.symName(sym)
+            switch (nodeName) {
+                case "#NaN":
+                    return { val: NaN }
+                case "#Infinity":
+                    return { val: Infinity }
+                case "undefined":
+                    return { val: undefined }
+            }
+
             return null
         }, e as ts.Expression)
     }
@@ -885,6 +910,7 @@ class Program implements TopOpWriter {
             const cell = this.getCellAtLocation(decl)
             return !(cell instanceof Variable)
         }
+        if ((decl as PossiblyConstDeclaration).__ds_const_val) return true
         return false
     }
 
@@ -1926,6 +1952,38 @@ class Program implements TopOpWriter {
         const doAssign = (decl: ts.VariableDeclaration | ts.BindingElement) => {
             if (ts.isIdentifier(decl.name)) {
                 if (this.getCellAtLocation(decl)) return
+
+                const d0 = decl as PossiblyConstDeclaration
+                if (d0.__ds_const_val) return
+                if (
+                    ts.isVariableDeclaration(decl) &&
+                    decl.initializer &&
+                    ts.getCombinedNodeFlags(decl) & ts.NodeFlags.Const
+                ) {
+                    const folded = this.constantFold(decl.initializer)
+                    if (folded) {
+                        d0.__ds_const_val = folded
+                        let val = folded.val
+
+                        if (val === null) {
+                            // OK
+                        } else if (
+                            JSON.stringify(val) != "null" &&
+                            (typeof val == "string" ||
+                                typeof val == "boolean" ||
+                                typeof val == "number")
+                        ) {
+                            // OK
+                        } else {
+                            // handle 'undefined', 'Infinity', 'NaN', etc
+                            val = { special: "" + val }
+                        }
+                        const proc = this.proc ?? this.mainProc
+                        proc.constVars[idName(decl.name)] = val
+                        return
+                    }
+                }
+
                 this.assignCell(
                     decl,
                     new Variable(
@@ -2444,7 +2502,10 @@ class Program implements TopOpWriter {
         return this.emitGenericCall(call.arguments, fn)
     }
 
-    private getSymAtLocation(node: ts.Node) {
+    private getSymAtLocation(node: ts.Node, shorthand = false) {
+        if (shorthand && node?.parent?.kind == SK.ShorthandPropertyAssignment)
+            return this.checker.getShorthandAssignmentValueSymbol(node.parent)
+
         let sym = this.checker.getSymbolAtLocation(node)
         if (!sym) {
             const decl = node as ts.NamedDeclaration
@@ -2454,11 +2515,7 @@ class Program implements TopOpWriter {
     }
 
     private getCellAtLocation(node: ts.Node) {
-        let sym: ts.Symbol
-        if (node?.parent?.kind == SK.ShorthandPropertyAssignment)
-            sym = this.checker.getShorthandAssignmentValueSymbol(node.parent)
-        else sym = this.getSymAtLocation(node)
-        return symCell(sym)
+        return symCell(this.getSymAtLocation(node, true))
     }
 
     private getVarAtLocation(node: ts.Node) {
@@ -2530,12 +2587,6 @@ class Program implements TopOpWriter {
         const nodeName = this.nodeName(expr)
         if (!nodeName) return null
         switch (nodeName) {
-            case "#NaN":
-                return literal(NaN)
-            case "#Infinity":
-                return literal(Infinity)
-            case "undefined":
-                return literal(undefined)
             case "#ds_impl":
                 return this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT)
             default:

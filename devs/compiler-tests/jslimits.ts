@@ -8,7 +8,7 @@ function foo() {
         function blah() {
             console.log(q) //! references to loop variables
         }
-        const copy = 123
+        const copy = 123 + q
         function blah2() {
             console.log(copy) //! references to loop variables
         }

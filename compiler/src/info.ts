@@ -17,6 +17,8 @@ export const srcMapEntrySize = 3
 // pos is Dpos + previous pos
 export type SrcMap = number[]
 
+export type ConstValue = number | boolean | string | null | { special: string }
+
 export interface FunctionDebugInfo {
     name: string
     startpc: number
@@ -26,6 +28,7 @@ export interface FunctionDebugInfo {
     // where the function is called from; may include `location` eg. for inline handlers
     users: SrcLocation[]
     slots: VarDebugInfo[]
+    constVars: Record<string, ConstValue>
 }
 
 export type DebugVarType = "loc" | "glb" | "arg" | "tmp"
