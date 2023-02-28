@@ -25,6 +25,7 @@ function strEq(a: string, b: string) {
 }
 
 let x = 0
+let glb1 = 0
 
 function testFlow() {
     x = 1
@@ -581,6 +582,116 @@ function testJSON() {
     isEq(JSON.stringify({ x: 1, y: () => {} }), '{"x":1}')
 }
 
+function testAnySwitch() {
+    function bar(x: number) {
+        glb1 += x
+        return x
+    }
+    function testIt(v: number) {
+        glb1 = 0
+        switch (v) {
+            case bar(0):
+                return 1
+            default:
+                return 7
+            case bar(1):
+                return 2
+            case bar(2):
+                return 3
+        }
+    }
+    function ss() {
+        return "f7" + "4n"
+    }
+    function testStr(s: string) {
+        switch (s) {
+            case "foo":
+                return 0
+            case ss():
+                return 2
+            case "bar":
+                return 1
+            default:
+                return 7
+        }
+    }
+    function testQuick(v: number) {
+        switch (v) {
+            default:
+                return 7
+            case 0:
+                return 1
+            case 1:
+                return 2
+            case bar(2):
+                return 3
+            case 3:
+                return 4
+            case 4:
+                return 5
+            case 5:
+                return 6
+        }
+    }
+    function testFallThrough(x: number) {
+        let r = ""
+        switch (x) {
+            // @ts-ignore
+            default:
+                r += "q"
+            // fallthrough
+            case 6:
+            // @ts-ignore
+            case 7:
+                r += "x"
+            // fallthrough
+            case 8:
+                r += "y"
+                break
+            case 10:
+                r += "z"
+                break
+        }
+        return r
+    }
+    function switchLoop() {
+        let r = ""
+        for (let i = 0; i < 5; ++i) {
+            switch (i) {
+                case 0:
+                case 1:
+                    r += "x"
+                    break
+                case 2:
+                    continue
+            }
+            r += i
+        }
+        isEq(r, "x0x134")
+    }
+
+    let v = testIt(2)
+    isEq(v, 3)
+    isEq(glb1, 3)
+    v = testIt(0)
+    isEq(v, 1)
+    isEq(glb1, 0)
+
+    isEq(testStr("foo"), 0)
+    isEq(testStr("bar"), 1)
+    isEq(testStr(ss()), 2)
+
+    for (let i = 0; i <= 6; ++i) isEq(testQuick(i), i + 1)
+
+    isEq(testFallThrough(100), "qxy")
+    isEq(testFallThrough(6), "xy")
+    isEq(testFallThrough(7), "xy")
+    isEq(testFallThrough(8), "y")
+    isEq(testFallThrough(10), "z")
+
+    switchLoop()
+}
+
 testFlow()
 if (x != 42) _panic(10)
 testMath()
@@ -604,6 +715,7 @@ testInstanceOf()
 testClass()
 testFunName()
 testJSON()
+testAnySwitch()
 
 console.log("all OK")
 ds.reboot()

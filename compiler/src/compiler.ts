@@ -1183,6 +1183,46 @@ class Program implements TopOpWriter {
         wr.emitStmt(Op.STMT1_THROW, this.emitExpr(stmt.expression))
     }
 
+    private emitSwitchStatement(stmt: ts.SwitchStatement) {
+        const wr = this.writer
+        const expr = wr.cacheValue(this.emitExpr(stmt.expression), true)
+
+        let deflLbl: Label
+        const labels = stmt.caseBlock.clauses.map(cl => {
+            const lbl = wr.mkLabel("sw")
+            if (ts.isDefaultClause(cl)) {
+                deflLbl = lbl
+            } else {
+                const clexpr = this.emitExpr(cl.expression)
+                wr.emitJumpIfFalse(
+                    lbl,
+                    wr.emitExpr(Op.EXPR2_NE, expr.emit(), clexpr)
+                )
+            }
+            return lbl
+        })
+        expr.free()
+
+        const loop: LoopLabels = {
+            breakLbl: wr.mkLabel("swBrk"),
+        }
+
+        if (deflLbl) wr.emitJump(deflLbl)
+        else wr.emitJump(loop.breakLbl)
+
+        try {
+            this.proc.loopStack.push(loop)
+            stmt.caseBlock.clauses.forEach((cl, idx) => {
+                wr.emitLabel(labels[idx])
+                for (const s of cl.statements) this.emitStmt(s)
+            })
+        } finally {
+            this.proc.loopStack.pop()
+        }
+
+        wr.emitLabel(loop.breakLbl)
+    }
+
     private emitBlock(stmt: ts.Block) {
         let hadFun = false
         let stmts = stmt.statements.slice()
@@ -1214,6 +1254,7 @@ class Program implements TopOpWriter {
                 stmt.kind == SK.ContinueStatement
                     ? loop.continueLbl
                     : loop.breakLbl
+            if (!lbl) continue
             if (numTry) wr.emitThrowJmp(lbl, numTry)
             else wr.emitJump(lbl)
             return
@@ -3221,6 +3262,8 @@ class Program implements TopOpWriter {
                     return this.emitBreakContStatement(
                         stmt as ts.BreakOrContinueStatement
                     )
+                case SK.SwitchStatement:
+                    return this.emitSwitchStatement(stmt as ts.SwitchStatement)
                 case SK.Block:
                     return this.emitBlock(stmt as ts.Block)
                 case SK.TryStatement:
