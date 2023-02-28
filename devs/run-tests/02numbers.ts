@@ -176,7 +176,7 @@ function testComma() {
     assert(glb1 == 2, "g")
     // make sure there are no leaks
     //@ts-ignore
-    let y = ("aaa" + "zz", "x" + "yyy")
+    let y = (ds._id("aaa") + "zz", ds._id("x") + "yyy")
     assert(y.length == 4, "y")
 }
 

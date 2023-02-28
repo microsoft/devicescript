@@ -34,7 +34,7 @@ function run() {
     let z3 = 0.3
     testNot(1.5 + z3)
     testNot("ell")
-    testNot("ell" + "world")
+    testNot(ds._id("ell") + "world")
     testNot({})
 
     new Foo().bar()
@@ -44,4 +44,3 @@ function run() {
 run()
 
 ds.reboot()
-

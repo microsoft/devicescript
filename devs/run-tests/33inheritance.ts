@@ -13,7 +13,7 @@ class A {
     foo() {
         glb1++
         this.v = 9
-        this.s = "xx" + "z42z"
+        this.s = ds._id("xx") + "z42z"
     }
     bar(v: number, i: string) {
         glb1 += v + this.v
@@ -25,7 +25,7 @@ class B extends A {
     override foo() {
         glb1 += 2
         this.v = 10
-        this.s2 = "xy" + "z42z"
+        this.s2 = ds._id("xy") + "z42z"
     }
     override bar(v: number, i: string) {
         glb1 += v + parseInt(i) + this.v
@@ -62,7 +62,7 @@ function testACall(a: A, v0: number, v1: number) {
     a.foo()
     //console.log("foo is " + glb1)
     assert(glb1 == v0, "v0")
-    a.bar(32, "6" + "4")
+    a.bar(32, ds._id("6") + "4")
     //console.log("bar is " + glb1)
     assert(glb1 == v1, "v1")
 }
@@ -134,7 +134,7 @@ interface IFoo {
 
 class A3 {
     constructor() {
-        this.baz = "Q" + "A"
+        this.baz = ds._id("Q") + "A"
     }
     foo() {
         return 12

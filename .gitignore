@@ -18,4 +18,3 @@ devs/lib/devicescript-boards.d.ts
 .vscode/settings.json
 vscode/sampleprj/.vscode
 __pycache__
-devs/run-tests/scratch.ts

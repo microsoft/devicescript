@@ -2379,6 +2379,9 @@ class Program implements TopOpWriter {
                     this.emitExpr(expr.arguments[0])
                 )
             }
+            case "ds._id":
+                this.requireArgs(expr, 1)
+                return this.emitExpr(expr.arguments[0])
             case "ds.everyMs": {
                 this.requireTopLevel(expr.position)
                 this.requireArgs(expr, 2)

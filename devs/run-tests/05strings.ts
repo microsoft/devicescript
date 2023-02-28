@@ -48,11 +48,14 @@ function testStrings(): void {
     x = 21
     s = "foo"
     s = `a${x * 2}X${s}X${s}Z`
-    assert(s == "a42XfooXfoo" + "Z", "`")
+    assert(s == ds._id("a42XfooXfoo") + "Z", "`")
 
     msg("X" + true)
 
-    assert("X" + true == "Xt" + "rue", "boolStr")
+    assert(
+        ds._id("X") + true == ds._id("Xt") + "rue",
+        "boolStr"
+    )
     msg("testStrings DONE")
 }
 
@@ -70,7 +73,7 @@ function consStringTest() {
 }
 
 function testStringOps(): void {
-    assert("foo" + "bar" == "foobar", "concat")
+    assert(ds._id("foo") + "bar" == "foobar", "concat")
     assert("xAb".charCodeAt(1) == 65, "code at")
     assert("B".charCodeAt(0) == 66, "tcc")
     assert(parseInt("-123") == -123, "tonum")

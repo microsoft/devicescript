@@ -91,7 +91,7 @@ function testBoolCasts() {
     function boolDie() {
         assert(false, "bool casts")
     }
-    let x = "Xy" + "Z"
+    let x = ds._id("Xy") + "Z"
 
     if (x) {
     } else {

@@ -10,7 +10,7 @@ interface Testrec {
 
 function testRec0(): Testrec {
     let testrec: Testrec = {} as any
-    testrec.str2 = "Hello" + " world"
+    testrec.str2 = ds._id("Hello") + " world"
     testrec.str = testrec.str2
     testrec.num = 42
     assert(testrec.str == "Hello world", "recstr")

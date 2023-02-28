@@ -61,7 +61,7 @@ function byRefParam_2(pxx: number): void {
 
 function testByRefParams(): void {
     msg("testByRefParams")
-    refparamWrite("a" + "b")
+    refparamWrite(ds._id("a") + "b")
     refparamWrite2(newTestrec())
     sleepMs(10)
     refparamWrite3(newTestrec())
@@ -134,21 +134,21 @@ function testMemoryFree(): void {
 
 function testLazyRef() {
     msg("testLazyRef")
-    let x = "x" + "Y" || "foo"
-    let y = "" || "bXr" + "2"
+    let x = ds._id("x") + "Y" || "foo"
+    let y = "" || ds._id("bXr") + "2"
     assert(x.length == 2, "two")
     assert(y.length == 4, "emp")
-    y = null || "foo"
+    y = null || ds._id("foo")
     assert(y == "foo", "ln")
 
-    x = "x" + "12x" && "7" + "xx"
+    x = ds._id("x") + "12x" && ds._id("7") + "xx"
     assert(x.length == 3, "and")
 
-    x = "" && "blah"
+    x = ds._id("") && "blah"
     assert(x == "", "andemp")
-    x = "foo" && "x" + "Y"
+    x = "foo" && ds._id("x") + "Y"
     assert(x.length == 2, "twoand")
-    x = "x" + "Y" && "bar"
+    x = ds._id("x") + "Y" && "bar"
     assert(x.length == 3, "threeand")
 
     let tw = 12

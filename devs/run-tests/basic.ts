@@ -346,8 +346,8 @@ function testSpread() {
 
 function testConsole() {
     // note that we don't really test the output ...
-    const n = 8
-    const q = 12
+    let n = 8
+    let q = 12
     console.log("text" + n)
     console.log("text" + n + q)
     console.log("text" + n + "blah" + q)
@@ -358,14 +358,16 @@ function testConsole() {
 }
 
 function testString() {
-    strEq("a" + "b", "ab")
-    strEq("a" + 1, "a1")
-    strEq(1 + "a", "1a")
-    strEq(":" + true, ":true")
-    strEq(":" + false, ":false")
-    strEq(":" + null, ":null")
-    strEq(":" + 1.4, ":1.4")
-    strEq(":" + NaN, ":NaN")
+    let a = "a"
+    let colon = ":"
+    strEq(a + "b", "ab")
+    strEq(a + 1, "a1")
+    strEq(1 + a, "1a")
+    strEq(colon + true, ":true")
+    strEq(colon + false, ":false")
+    strEq(colon + null, ":null")
+    strEq(colon + 1.4, ":1.4")
+    strEq(colon + NaN, ":NaN")
 
     const b = Buffer.alloc(3)
     b[0] = 0x42
@@ -570,8 +572,7 @@ function jsonTest(js: string, indent?: number) {
     }
 }
 
-
-function testDeflUndefinedForNumber(f:number, g?:number) {
+function testDeflUndefinedForNumber(f: number, g?: number) {
     isEq(f, 3)
     ds.assert(g == null, "n3")
     ds.assert(g === undefined, "n3")
@@ -606,14 +607,14 @@ function testJSON() {
 
     testDeflUndefinedForNumber(3)
 
-    let strings = ["foo", "foo\n", "\"", "\b\t\r\n", ""]
+    let strings = ["foo", "foo\n", '"', "\b\t\r\n", ""]
     for (let s of strings) {
         ds.assert(JSON.parse(JSON.stringify(s)) === s, s)
     }
-    
-    ds.assert(JSON.parse("\"\\u000A\\u0058\\u004C\\u004d\"") == "\nXLM", "uni")
 
-    let ss = "12" + "34"
+    ds.assert(JSON.parse('"\\u000A\\u0058\\u004C\\u004d"') == "\nXLM", "uni")
+
+    let ss = ds._id("12") + "34"
     ds.assert(ss.slice(1) == "234", "sl0")
     ds.assert(ss.slice(1, 2) == "2", "sl1")
     ds.assert(ss.slice(-2) == "34", "sl2")
@@ -640,7 +641,7 @@ function testAnySwitch() {
         }
     }
     function ss() {
-        return "f7" + "4n"
+        return ds._id("f7") + "4n"
     }
     function testStr(s: string) {
         switch (s) {

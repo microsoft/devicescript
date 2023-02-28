@@ -10,10 +10,10 @@ function eqOp() {
     x /= 2
     assert(x == 11, "Y2")
 
-    let s = "fo" + 1
-    let t = "ba" + 2
+    let s = ds._id("fo") + 1
+    let t = ds._id("ba") + 2
     s += t
-    assert(s == "fo1b" + "a2", "fb")
+    assert(s == ds._id("fo1b") + "a2", "fb")
 }
 
 function eqOpString() {

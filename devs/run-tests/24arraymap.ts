@@ -20,7 +20,7 @@ function testArrayMap() {
     let sum = [1, 2, 3].reduce((s, v) => s + v, 0)
     assert(sum == 6, "red")
 
-    let x = ["A" + "12", "B" + "3"]
+    let x = [ds._id("A") + "12", ds._id("B") + "3"]
         .map((k, i) => k.length + i)
         .reduce((c, n) => c * n, 1)
     assert(x == 9, "9")
@@ -97,7 +97,6 @@ function testGenerics() {
         assert(inArray[i] == expectedArray[i])
     }
 }
-
 
 testArraySome()
 testArrayEvery()

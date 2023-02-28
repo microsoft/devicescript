@@ -51,7 +51,7 @@ function computedPropNames() {
     msg("computedPropNames")
     const f = 10
     let p1 = 1
-    const o = { f, ["c" + "x"]: 12, 1: "x", [p1 + 2]: "b123" }
+    const o = { f, [ ds._id("c") + "x"]: 12, 1: "x", [p1 + 2]: "b123" }
     check(o, "f:10,cx:12,1:x,3:b123")
 }
 
@@ -102,7 +102,7 @@ function runObjLit() {
     glb1 = 0
     foo({
         width: 12,
-        msg: "h" + "w",
+        msg: ds._id("h") + "w",
     })
     assert(glb1 == 14, "g14")
     foo({
@@ -113,7 +113,7 @@ function runObjLit() {
 
     let op: Opts = {}
     op.width = 10
-    op.msg = "X" + "Z123"
+    op.msg = ds._id("X") + "Z123"
     foo(op)
     assert(glb1 == 17 + 15, "g+")
 

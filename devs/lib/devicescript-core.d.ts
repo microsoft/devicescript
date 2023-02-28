@@ -241,6 +241,11 @@ declare module "@devicescript/core" {
      */
     export function _logRepr(v: any, label?: string): void
 
+    /**
+     * Identity function, used to prevent constant folding.
+     */
+    export function _id<T>(a: T): T
+
     export { Buffer }
 
     global {

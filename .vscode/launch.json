@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/cli/devicescript",
             "args": [
                 "crun",
-                "devs/run-tests/scratch.ts"
+                "devs/tmp/scratch.ts"
             ],
             "outFiles": [
                 "${workspaceFolder}/compiler/built/**"

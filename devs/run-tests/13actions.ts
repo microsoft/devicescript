@@ -67,7 +67,7 @@ function testIter() {
 
 function testAction(p: number): void {
     msg("testActionStart")
-    let s = "hello" + "1"
+    let s = ds._id("hello") + "1"
     let coll = [] as number[]
     let p2 = p * 2
     x = 42
@@ -115,7 +115,7 @@ function saveAction(fn: Action): void {
 }
 
 function saveGlobalAction(): void {
-    let s = "foo" + "42"
+    let s = ds._id("foo") + "42"
     tot = ""
     saveAction(() => {
         tot = tot + s
@@ -243,7 +243,7 @@ function testLambdaDecrCapture() {
     function b(s: string) {
         assert(s.length == x, "dc")
     }
-    b("fo0" + "bAr")
+    b(ds._id("fo0") + "bAr")
 }
 
 function testNested() {
@@ -337,7 +337,7 @@ function testUndef() {
 }
 
 class FooArc {
-    public handlerxx: () => void;
+    public handlerxx: () => void
     run() {
         this.handlerxx()
     }
@@ -349,9 +349,9 @@ function endFn(win?: boolean) {
 
 function testLambdasWithMoreParams() {
     function a(f: (x: number, v: string, y: number) => void) {
-        f(1, "a" + "X12b", 7)
+        f(1, ds._id("a") + "X12b", 7)
     }
-    a(() => { })
+    a(() => {})
 
     const f = new FooArc()
     f.handlerxx = endFn

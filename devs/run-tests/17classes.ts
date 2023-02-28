@@ -73,7 +73,7 @@ class FooInit {
 }
 
 function classInit() {
-    let f = new FooInit(13, "blah" + "baz")
+    let f = new FooInit(13, ds._id("blah") + "baz")
     assert(f.foo == 13, "i0")
     assert(f.bar == "blahbaz", "i1")
     assert(f.baz == 14, "i2")
@@ -82,15 +82,14 @@ function classInit() {
 
 classInit()
 
-
 class Node<T> {
-    v: T;
-    k: string;
-    next: Node<T>;
+    v: T
+    k: string
+    next: Node<T>
 }
 
 class Map<T> {
-    head: Node<T>;
+    head: Node<T>
 
     getElt(k: string): T {
         return mapGet(this, k)
@@ -124,7 +123,6 @@ function mapGet<T>(m: Map<T>, k: string): T {
     return null
 }
 
-
 function search_array<T>(a: T[], item: T): number {
     for (let i = 0; i < a.length; i++) {
         if (a[i] == item) {
@@ -135,7 +133,6 @@ function search_array<T>(a: T[], item: T): number {
 }
 
 class MyMap<K, V> {
-
     keys: K[]
     values: V[]
 
@@ -181,25 +178,22 @@ class MyMap<K, V> {
     has_value(value: V): boolean {
         return search_array(this.values, value) != -1
     }
-
 }
 
-
 function testMaps() {
-    let m = new Map<number>();
-    let q = new Map<string>();
+    let m = new Map<number>()
+    let q = new Map<string>()
     let r = new MyMap<number, string>()
 
-    mapSet(q, "one", "foo" + "bar")
+    mapSet(q, "one", ds._id("foo") + "bar")
     assert(mapGet(q, "one").length == 6, "m0")
 
-    mapSet(q, "one", "foo2" + "bar")
+    mapSet(q, "one", ds._id("foo2") + "bar")
     assert(mapGet(q, "one").length == 7, "m1")
-    q.setElt("two", "x" + "y")
+    q.setElt("two", ds._id("x") + "y")
     assert(q.getElt("two").length == 2, "m2")
-    q.setElt("two", "x" + "yz")
+    q.setElt("two", ds._id("x") + "yz")
     assert(q.getElt("two").length == 3, "thr")
-
 
     mapSet(m, "one", 1)
     assert(mapGet(m, "one") == 1, "1")
@@ -211,11 +205,12 @@ function testMaps() {
 
 testMaps()
 
-
 class Foo {
-    a: number;
-    private b: number;
-    bar() { return this.b; }
+    a: number
+    private b: number
+    bar() {
+        return this.b
+    }
     constructor(inp: number) {
         this.a = inp
         this.b = inp + 1
@@ -233,16 +228,15 @@ function testAnon() {
     let bar = new Foo(42)
     let baz: { a: number } = bar
     assert(nested.a.b.c == 3)
-    assert(x.a == 2);
-    assert(x.b == "bar");
+    assert(x.a == 2)
+    assert(x.b == "bar")
     assert(foo(x) == 3)
-    assert(foo(bar) == 43);
+    assert(foo(bar) == 43)
     assert(bar.bar() == 43)
     assert(foo(baz) == 43)
     // HUH bar(40) - new (expects any)
 }
 
 testAnon()
-
 
 ds.reboot()
