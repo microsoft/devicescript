@@ -73,7 +73,7 @@ import { computeSizes } from "./debug"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
 import { LocalBuildConfig, ResolvedBuildConfig } from "./archconfig"
-import { constantFold, Folded } from "./constantfold"
+import { constantFold, Folded, isTemplateOrStringLiteral } from "./constantfold"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -783,9 +783,8 @@ class Program implements TopOpWriter {
     }
 
     private toLiteralJSON(node: ts.Expression): any {
-        if (this.isStringLiteral(node)) return node.text
-        if (ts.isNumericLiteral(node)) return parseFloat(node.text)
-        if (node.kind == SK.NullKeyword) return null
+        const folded = this.constantFold(node)
+        if (folded && folded.val !== undefined) return folded.val
 
         if (ts.isArrayLiteralExpression(node))
             return node.elements.map(e => this.toLiteralJSON(e))
@@ -2128,7 +2127,7 @@ class Program implements TopOpWriter {
     }
 
     private stringLiteral(expr: Expr) {
-        if (this.isStringLiteral(expr)) return expr.text
+        if (isTemplateOrStringLiteral(expr)) return expr.text
         return undefined
     }
 
@@ -2532,11 +2531,11 @@ class Program implements TopOpWriter {
         if (!nodeName) return null
         switch (nodeName) {
             case "#NaN":
-                return this.emitLiteral(NaN)
+                return literal(NaN)
             case "#Infinity":
-                return this.emitLiteral(Infinity)
+                return literal(Infinity)
             case "undefined":
-                return this.emitLiteral(undefined)
+                return literal(undefined)
             case "#ds_impl":
                 return this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT)
             default:
@@ -2561,13 +2560,6 @@ class Program implements TopOpWriter {
     ): Value {
         const r = this.emitBuiltInConst(expr)
         if (r) return r
-
-        const sym = this.getSymAtLocation(expr)
-        const decl = sym?.valueDeclaration
-        if (decl && ts.isEnumMember(decl)) {
-            const val = this.checker.getConstantValue(decl)
-            return this.emitLiteral(val, expr)
-        }
 
         const nsName = this.nodeName(expr.expression)
         if (nsName == "#Math") {
@@ -2595,46 +2587,6 @@ class Program implements TopOpWriter {
 
         const { obj, idx } = this.tryEmitIndex(expr)
         return this.writer.emitIndex(obj, idx)
-    }
-
-    private isStringLiteral(node: ts.Node): node is ts.LiteralExpression {
-        switch (node.kind) {
-            case SK.TemplateHead:
-            case SK.TemplateMiddle:
-            case SK.TemplateTail:
-            case SK.StringLiteral:
-            case SK.NoSubstitutionTemplateLiteral:
-                return true
-            default:
-                return false
-        }
-    }
-
-    private emitLiteral(v: any, node?: ts.Node) {
-        if (
-            v === null ||
-            v === undefined ||
-            typeof v == "number" ||
-            typeof v == "boolean"
-        )
-            return literal(v)
-
-        if (typeof v == "string") return this.writer.emitString(v)
-
-        throwError(node, "unhandled literal: " + v)
-    }
-
-    private emitLiteralExpression(node: ts.LiteralExpression): Value {
-        const wr = this.writer
-
-        if (ts.isNumericLiteral(node)) {
-            const parsed = parseFloat(node.text)
-            return this.emitLiteral(parsed)
-        } else if (this.isStringLiteral(node)) {
-            return wr.emitString(node.text)
-        } else {
-            throwError(node, "expecting literal here")
-        }
     }
 
     private emitTemplateExpression(node: ts.TemplateExpression): Value {
@@ -3142,7 +3094,9 @@ class Program implements TopOpWriter {
                     `folded -> ${folded.val}`,
                     ts.DiagnosticCategory.Warning
                 )
-            return literal(folded.val)
+            if (typeof folded.val == "string")
+                return this.writer.emitString(folded.val)
+            else return literal(folded.val)
         }
 
         switch (expr.kind) {
@@ -3152,14 +3106,6 @@ class Program implements TopOpWriter {
                 return this.emitExpr((expr as ts.TypeAssertion).expression)
             case SK.CallExpression:
                 return this.emitCallExpression(expr as ts.CallExpression)
-            case SK.FalseKeyword:
-                return this.emitLiteral(false)
-            case SK.TrueKeyword:
-                return this.emitLiteral(true)
-            case SK.NullKeyword:
-                return this.emitLiteral(null)
-            case SK.UndefinedKeyword:
-                return this.emitLiteral(undefined)
             case SK.Identifier:
                 return this.emitIdentifier(expr as ts.Identifier)
             case SK.ThisKeyword:
@@ -3172,15 +3118,6 @@ class Program implements TopOpWriter {
                 return this.emitPropertyAccessExpression(
                     expr as ts.PropertyAccessExpression
                 )
-
-            case SK.TemplateHead:
-            case SK.TemplateMiddle:
-            case SK.TemplateTail:
-            case SK.NumericLiteral:
-            case SK.StringLiteral:
-            case SK.NoSubstitutionTemplateLiteral:
-                //case SyntaxKind.RegularExpressionLiteral:
-                return this.emitLiteralExpression(expr as ts.LiteralExpression)
 
             case SK.TemplateExpression:
                 return this.emitTemplateExpression(
@@ -3236,11 +3173,6 @@ class Program implements TopOpWriter {
         }
     }
 
-    private sourceFrag(node: ts.Node) {
-        const text = node.getFullText().trim()
-        return text.slice(0, 60).replace(/\n[^]*/, "...")
-    }
-
     private handleException(stmt: ts.Node, e: any) {
         if (e.terminateEmit) throw e
 
@@ -3260,7 +3192,6 @@ class Program implements TopOpWriter {
     }
 
     private emitStmt(stmt: ts.Statement) {
-        const src = this.sourceFrag(stmt)
         const wr = this.writer
 
         this.lastNode = stmt

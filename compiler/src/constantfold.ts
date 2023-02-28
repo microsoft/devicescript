@@ -78,16 +78,16 @@ function binaryOpConst(tok: SK, aa: Folded, bb: Folded): Folded {
 
 export function constantFold(
     fallback: (e: ts.Expression) => Folded,
-    e: ts.Expression
+    e0: ts.Expression
 ): Folded {
-    return constantFoldMem(e)
+    return constantFoldMem(e0)
 
-    function constantFoldMem(e: ts.Expression): Folded {
-        if (!e) return null
-        const ee = e as ts.Expression & { __ds_folded: Folded }
+    function constantFoldMem(expr: ts.Expression): Folded {
+        if (!expr) return null
+        const ee = expr as ts.Expression & { __ds_folded: Folded }
         if (ee.__ds_folded === undefined) {
             ee.__ds_folded = null // make sure we don't come back here recursively
-            const res = constantFoldCore(e)
+            const res = constantFoldCore(expr)
             ee.__ds_folded = res
         }
         return ee.__ds_folded
@@ -95,7 +95,9 @@ export function constantFold(
 
     function constantFoldCore(expr: ts.Expression): Folded {
         if (!expr) return null
-        if (ts.isPrefixUnaryExpression(expr)) {
+        if (isTemplateOrStringLiteral(expr)) {
+            return { val: expr.text }
+        } else if (ts.isPrefixUnaryExpression(expr)) {
             const inner = constantFoldMem(expr.operand)
             return unaryOpConst(expr.operator, inner)
         } else if (ts.isBinaryExpression(expr)) {
@@ -121,7 +123,22 @@ export function constantFold(
             case SK.UndefinedKeyword:
                 return { val: undefined }
             default:
-                return fallback(e)
+                return fallback(expr)
         }
+    }
+}
+
+export function isTemplateOrStringLiteral(
+    node: ts.Node
+): node is ts.LiteralExpression {
+    switch (node.kind) {
+        case SK.TemplateHead:
+        case SK.TemplateMiddle:
+        case SK.TemplateTail:
+        case SK.StringLiteral:
+        case SK.NoSubstitutionTemplateLiteral:
+            return true
+        default:
+            return false
     }
 }

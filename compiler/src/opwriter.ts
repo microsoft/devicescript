@@ -176,10 +176,12 @@ export function literal(v: number | boolean) {
         r.op = v ? Op.EXPR0_TRUE : Op.EXPR0_FALSE
         r.args = []
         r.flags = 0
-    } else {
+    } else if (typeof v == "number") {
         r.numValue = v
         r.op = Op.EXPRx_LITERAL
         r.flags = VF_IS_LITERAL
+    } else {
+        oops(`invalid literal: ${v}`)
     }
     return r
 }
