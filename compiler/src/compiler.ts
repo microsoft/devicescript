@@ -1805,6 +1805,8 @@ class Program implements TopOpWriter {
             this.onStart.finalizeRaw()
             this.writer.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
+            if (this.roles.length > 1 || this.cloudRole.used)
+                this.markMethodUsed("#ds.Role.onPacket")
             this.emitProtoAssigns()
         })
 
@@ -2321,7 +2323,7 @@ class Program implements TopOpWriter {
                 return unit()
             }
 
-            case "ds._use": {
+            case "ds.keep": {
                 this.requireArgs(expr, 1)
                 this.ignore(this.emitExpr(expr.arguments[0]))
                 return unit()

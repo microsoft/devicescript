@@ -14,9 +14,11 @@
 * `Object.keys(spec_object)` ?
 * validate UTF8 on input
 * fix charAt() etc to decode UTF8
-* add `JSON.parse/stringify()`
 * limit call stack depth
 * drop code alignment requirement
+* add LED service
+* add switch service (simple GPIO out)
+* implement matching of instance name to role name
 
 ## Big ticket
 * Jacdac packet queue overflow when printing a lot
@@ -31,6 +33,7 @@
 * multi-program
 * hash-consing of strings? (esp. for JSON parsing)
 * compacting GC
+* have separate files for boards and make them real modules, no .d.ts - limit stuff to parse
 
 ## Older stuff?
 
@@ -60,10 +63,3 @@
 
 * specific uploads: `hum.autoUpload(5, 1) // 5s, 1%`
 * auto-upload of everything
-
-## Debugger interface
-
-* fiber list, locals, globals
-* setting breakpoints - breakpoint instruction? (based on source code location)
-* more "debug" info in compiled program - role names, etc for error messages?
-

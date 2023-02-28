@@ -94,14 +94,12 @@ ds.Role.prototype.onConnected = function onConnected(
     this: ds.Role,
     h: ds.Handler
 ) {
-    ds._use(this.onPacket)
     this._connHandlers = addElement(this._connHandlers, h)
 }
 ds.Role.prototype.onDisconnected = function onConnected(
     this: ds.Role,
     h: ds.Handler
 ) {
-    ds._use(this.onPacket)
     this._disconHandlers = addElement(this._disconHandlers, h)
 }
 
@@ -118,7 +116,6 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     const role = this.role
     if (!role._changeHandlers) {
         role._changeHandlers = {}
-        ds._use(role.onPacket)
     }
     const key = this.code + ""
     let lst: ChangeHandler[] = role._changeHandlers[key]
@@ -161,7 +158,6 @@ ds.Event.prototype.subscribe = function (handler) {
     if (!m) {
         m = {}
         this.role._eventHandlers = m
-        ds._use(this.role.onPacket)
     }
     const k = this.code + ""
     if (!m[k]) m[k] = []

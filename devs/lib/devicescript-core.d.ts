@@ -229,7 +229,7 @@ declare module "@devicescript/core" {
     /**
      * Mark method as used but do not call it.
      */
-    export function _use(method: any): void
+    export function keep(method: any): void
 
     /**
      * Moved by the compiler to the beginning of execution.
