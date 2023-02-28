@@ -559,7 +559,6 @@ class Program implements TopOpWriter {
     accountingProc: Procedure
     sysSpec: jdspec.ServiceSpec
     serviceSpecs: Record<string, jdspec.ServiceSpec>
-    enums: Record<string, jdspec.EnumInfo> = {}
     protoDefinitions: ProtoDefinition[] = []
     usedMethods: Record<string, boolean> = {}
     resolverParams: number[]
@@ -581,10 +580,6 @@ class Program implements TopOpWriter {
         const cfg = host.getConfig()
         for (const sp of cfg.services) {
             this.serviceSpecs[sp.camelName] = sp
-            for (const en of Object.keys(sp.enums)) {
-                const n = upperCamel(sp.camelName) + upperCamel(en)
-                this.enums["#" + n] = sp.enums[en]
-            }
         }
         this.sysSpec = this.serviceSpecs["system"]
         this.prelude = preludeFiles(cfg)
@@ -2563,11 +2558,6 @@ class Program implements TopOpWriter {
         if (nsName == "#Math") {
             const id = idName(expr.name)
             if (mathConst.hasOwnProperty(id)) return literal(mathConst[id])
-        } else if (this.enums.hasOwnProperty(nsName)) {
-            const e = this.enums[nsName]
-            const prop = idName(expr.name)
-            if (e.members.hasOwnProperty(prop)) return literal(e.members[prop])
-            else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
 
         if (idName(expr.name) == "prototype") {

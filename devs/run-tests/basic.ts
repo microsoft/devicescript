@@ -57,6 +57,8 @@ function testFlow() {
     if (x < 0 || x > 1 || isNaN(x)) _panic(5)
     x = 42
     console.log("rand=", Math.random())
+
+    isEq(ds.SystemStatusCodes.CalibrationNeeded, 100)
 }
 
 function testMath() {
