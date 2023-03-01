@@ -1,4 +1,4 @@
-import { sleepMs, assert, reboot } from "@devicescript/core"
+import { sleepMs, assert, reboot, AsyncVoid } from "@devicescript/core"
 
 let glb1 = 0
 let x = 0
@@ -82,14 +82,14 @@ async function nested() {
     }
 }
 
-function test3(fn: (k: number) => void) {
+async function test3(fn: (k: number) => AsyncVoid) {
     glb1 = 0
     x = 0
-    fn(1)
+    await fn(1)
     assert(glb1 == 10 && x == 10)
-    fn(0)
+    await fn(0)
     assert(glb1 == 11 && x == 21)
-    fn(3)
+    await fn(3)
     assert(glb1 == 21 && x == 42)
 }
 
@@ -155,10 +155,10 @@ async function run() {
     await callingThrowVal(3)
     assert(glb1 == 21 && x == 42)
 
-    test3(callingThrowVal)
-    test3(immediate)
-    test3(higherorder)
-    test3(lambda)
+    await test3(callingThrowVal)
+    await test3(immediate)
+    await test3(higherorder)
+    await test3(lambda)
 
     glb1 = 0
     x = 0

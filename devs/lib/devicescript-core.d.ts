@@ -235,7 +235,7 @@ declare module "@devicescript/core" {
     /**
      * Moved by the compiler to the beginning of execution.
      */
-    export function _onStart(handler: () => void): void
+    export function _onStart(handler: Callback): void
 
     /**
      * Print out internal representation of a given value, possibly prefixed by label.

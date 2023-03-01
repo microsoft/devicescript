@@ -515,7 +515,7 @@ interface ProtoDefinition {
 }
 
 interface CallLike {
-    position: ts.Node
+    position: ts.CallLikeExpression
     compiledCallExpr?: Value
     callexpr: Expr
     arguments: Expr[]
@@ -2461,7 +2461,38 @@ class Program implements TopOpWriter {
         })
     }
 
+    private checkAsyncFun(formal: ts.Type, arg: Expr) {
+        const actual = this.checker.getTypeAtLocation(arg)
+
+        const formalSigs = formal.getCallSignatures()
+        const actualSigs = actual.getCallSignatures()
+
+        if (
+            actualSigs[0] &&
+            this.isPromise(actualSigs[0].getReturnType()) &&
+            formalSigs[0] &&
+            !this.isPromise(formalSigs[0].getReturnType())
+        ) {
+            const actstr = this.checker.typeToString(actual)
+            const formstr = this.checker.typeToString(formal)
+            this.reportError(
+                arg,
+                `async function of type '${actstr}' not allowed here; need '${formstr}'`
+            )
+        }
+    }
+
     private emitCallLike(call: CallLike): Value {
+        const sig = this.checker.getResolvedSignature(call.position)
+        for (let i = 0; i < call.arguments.length; ++i) {
+            if (!sig.parameters[i]) continue
+            const formal = this.checker.getTypeOfSymbolAtLocation(
+                sig.parameters[i],
+                call.position
+            )
+            this.checkAsyncFun(formal, call.arguments[i])
+        }
+
         const callName = this.nodeName(call.callexpr)
         const builtInName =
             callName && callName.startsWith("#") ? callName.slice(1) : null
@@ -3144,11 +3175,20 @@ class Program implements TopOpWriter {
     }
 
     private isPromise(tp: ts.Type): boolean {
+        if (!tp) return false
         if (tp.flags & ts.TypeFlags.Object)
             return this.symName(tp.symbol) == "#Promise"
         if (tp.isUnionOrIntersection())
             return tp.types.some(t => this.isPromise(t))
         return false
+    }
+
+    private emitTypeConversion(expr: ts.AsExpression | ts.TypeAssertion) {
+        this.checkAsyncFun(
+            this.checker.getTypeAtLocation(expr),
+            expr.expression
+        )
+        return this.emitExpr(expr.expression)
     }
 
     private emitExpr(expr: Expr): Value {
@@ -3166,16 +3206,15 @@ class Program implements TopOpWriter {
         }
 
         const tp = this.checker.getTypeAtLocation(expr)
-        if (this.isPromise(tp) && !ts.isAwaitExpression(expr.parent) )
+        if (this.isPromise(tp) && !ts.isAwaitExpression(expr.parent))
             this.reportError(expr, "'await' missing")
 
         switch (expr.kind) {
             case SK.AwaitExpression:
                 return this.emitExpr((expr as ts.AwaitExpression).expression)
             case SK.AsExpression:
-                return this.emitExpr((expr as ts.AsExpression).expression)
             case SK.TypeAssertionExpression:
-                return this.emitExpr((expr as ts.TypeAssertion).expression)
+                return this.emitTypeConversion(expr as any)
             case SK.CallExpression:
                 return this.emitCallExpression(expr as ts.CallExpression)
             case SK.Identifier:

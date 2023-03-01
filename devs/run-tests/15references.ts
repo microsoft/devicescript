@@ -9,7 +9,7 @@ interface Testrec {
 }
 
 let sum = 0
-type Action = () => void
+type Action = ds.Callback
 
 function newTestrec() {
     return {} as Testrec
@@ -106,24 +106,24 @@ function allocImage(): void {
     let tmp = createObj()
 }
 
-function runOnce(fn: Action): void {
-    fn()
+async function runOnce(fn: Action) {
+    await fn()
 }
 
 function createObj() {
     return newTestrec()
 }
 
-function testMemoryFreeHOF(): void {
+async function testMemoryFreeHOF() {
     msg("testMemoryFreeHOF")
     for (let i = 0; i < 1000; i++) {
-        runOnce(() => {
+        await runOnce(() => {
             let tmp = createObj()
         })
     }
 }
 
-testMemoryFreeHOF()
+await testMemoryFreeHOF()
 
 function testMemoryFree(): void {
     msg("testMemoryFree")

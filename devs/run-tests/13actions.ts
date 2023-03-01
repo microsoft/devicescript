@@ -14,7 +14,7 @@ let x = 0
 let tot = ""
 let action: Action
 
-type Action = () => void
+type Action = ds.Callback
 
 function msg(m: string) {
     console.log(m)
@@ -43,11 +43,11 @@ async function inBg() {
     glb1 = 0
 }
 
-function runTwice(fn: Action): void {
+async function runTwice(fn: Action) {
     msg("r2 start")
-    fn()
+    await fn()
     msg("r2 mid")
-    fn()
+    await fn()
     msg("r2 stop")
 }
 
@@ -66,13 +66,13 @@ function testIter() {
     x = 0
 }
 
-function testAction(p: number): void {
+async function testAction(p: number) {
     msg("testActionStart")
     let s = ds._id("hello") + "1"
     let coll = [] as number[]
     let p2 = p * 2
     x = 42
-    runTwice(() => {
+    await runTwice(() => {
         x = x + p + p2
         coll.push(x)
         msg(s + x)
@@ -87,7 +87,7 @@ function add7() {
     sum = sum + 7
 }
 
-function testFunDecl() {
+async function testFunDecl() {
     msg("testFunDecl")
     let x = 12
     sum = 0
@@ -97,13 +97,13 @@ function testFunDecl() {
     function add10() {
         sum = sum + 10
     }
-    runTwice(addX)
+    await runTwice(addX)
     assert(sum == 24, "cap")
     msg("testAdd10")
-    runTwice(add10)
+    await runTwice(add10)
     msg("end-testAdd10")
     assert(sum == 44, "nocap")
-    runTwice(add7)
+    await runTwice(add7)
     assert(sum == 44 + 14, "glb")
     addX()
     add10()
@@ -123,10 +123,10 @@ function saveGlobalAction(): void {
     })
 }
 
-function testActionSave(): void {
+async function testActionSave() {
     saveGlobalAction()
     msg("saveAct")
-    runTwice(action)
+    await runTwice(action)
     msg("saveActDONE")
     msg(tot)
     assert(tot == "foo42foo42", "")
@@ -363,11 +363,11 @@ testComplexCallExpr()
 testInline()
 
 await inBg()
-testAction(1)
-testAction(7)
+await testAction(1)
+await testAction(7)
 testIter()
-testActionSave()
-testFunDecl()
+await testActionSave()
+await testFunDecl()
 testLoopScope()
 testInnerLambdaCapture()
 testLambdas()

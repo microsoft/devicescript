@@ -22,6 +22,15 @@ function expectExn(f: () => void, ex: Function) {
     }
 }
 
+async function expectExnAsync(f:  ds.Callback, ex: Function) {
+    try {
+        await f()
+        ds.assert(false, "missing exn")
+    } catch (e: any) {
+        ds.assert(e instanceof ex, "wrong exn")
+    }
+}
+
 const airp = new ds.AirPressure()
 
 function testTooLarge(tooLarge: number) {
@@ -41,7 +50,7 @@ function instOf(a: any, b: any) {
     return a instanceof b
 }
 
-function testExn(): any {
+async function testExn() {
     getFoo("foo")
     getFoo(true)
     expectExn(() => getFoo(null), TypeError)
@@ -71,10 +80,10 @@ function testExn(): any {
     testTooLarge(1000000)
     testTooLarge(2000000000)
 
-    expectExn(async () => {
+    await expectExnAsync(async () => {
         await airp.sendCommand(100000)
     }, RangeError)
-    expectExn(async () => {
+    await expectExnAsync(async () => {
         await airp.sendCommand(0x80, Buffer.alloc(300))
     }, RangeError)
 
@@ -116,6 +125,6 @@ function testExn(): any {
     expectExn(() => callNew(Math.pow), TypeError)
 }
 
-testExn()
+await testExn()
 
 
