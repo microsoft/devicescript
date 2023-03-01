@@ -86,7 +86,6 @@ export const DEVS_FILE_PREFIX = "bytecode"
 export const DEVS_BYTECODE_FILE = `${DEVS_FILE_PREFIX}.devs`
 
 export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
-export const DEVS_BODY_FILE = `${DEVS_FILE_PREFIX}-body.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
 export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
@@ -583,7 +582,9 @@ class Program implements TopOpWriter {
     diagnostics: DevsDiagnostic[] = []
     startServices: BaseServiceConfig[] = []
 
-    constructor(public host: Host, public _source: string) {
+    constructor(public mainFileName: string, public host: Host) {
+        this.flags = host.getFlags?.() ?? {}
+        this.isLibrary = this.flags.library || false
         this.serviceSpecs = {}
         const cfg = host.getConfig()
         for (const sp of cfg.services) {
@@ -595,11 +596,6 @@ class Program implements TopOpWriter {
 
     get hasErrors() {
         return this.numErrors > 0
-    }
-
-    getSource(fn: string) {
-        if (!fn || fn == this.host.mainFileName?.()) return this._source
-        return this.prelude[fn] || ""
     }
 
     addString(str: string) {
@@ -664,7 +660,7 @@ class Program implements TopOpWriter {
 
         const jdiag: DevsDiagnostic = {
             ...diag,
-            filename: this.host?.mainFileName() || "main.ts",
+            filename: this.mainFileName,
             line: 1,
             column: 1,
             endLine: 1,
@@ -3688,7 +3684,7 @@ class Program implements TopOpWriter {
     emit(): CompilationResult {
         assert(!this.tree)
 
-        this.tree = buildAST(this.host, this._source, this.prelude)
+        this.tree = buildAST(this.mainFileName, this.host, this.prelude)
         this.checker = this.tree.getTypeChecker()
 
         getProgramDiagnostics(this.tree).forEach(d => this.printDiag(d))
@@ -3713,12 +3709,6 @@ class Program implements TopOpWriter {
         }
 
         const { binary, dbg } = this.serialize()
-        const progJson = {
-            text: this._source,
-            blocks: "",
-            compiled: toHex(binary),
-        }
-        this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
         this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg))
         this.host.write(DEVS_SIZES_FILE, computeSizes(dbg))
 
@@ -3789,7 +3779,6 @@ export function sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {
 export function compile(
     code: string,
     opts: {
-        host?: Host
         mainFileName?: string
         log?: (msg: string) => void
         files?: Record<string, string | Uint8Array>
@@ -3801,32 +3790,41 @@ export function compile(
 ): CompilationResult {
     const {
         files = {},
-        mainFileName = "",
+        mainFileName = "main.ts",
         log = (msg: string) => console.debug(msg),
         verifyBytecode = () => {},
         config,
         errors = [],
     } = opts
-    const cfg = opts.host ? undefined : resolveBuildConfig(config)
-    const {
-        host = <Host>{
-            mainFileName: () => mainFileName,
-            write: (filename: string, contents: string | Uint8Array) => {
-                files[filename] = contents
-            },
-            log,
-            error: err => errors.push(err),
-            getConfig: () => cfg,
-            verifyBytecode,
+    const cfg = resolveBuildConfig(config)
+    const host = <Host>{
+        write: (filename: string, contents: string | Uint8Array) => {
+            files[filename] = contents
         },
-    } = opts
-    const p = new Program(host, code)
-    p.flags = opts.flags ?? {}
-    p.isLibrary = p.flags.library || false
+        read: (filename: string) => {
+            if (filename == mainFileName) return code
+            return files[filename]
+        },
+        log,
+        error: err => errors.push(err),
+        getConfig: () => cfg,
+        verifyBytecode,
+        getFlags: () => opts.flags ?? {},
+    }
+    const p = new Program(mainFileName, host)
     return p.emit()
 }
 
-export function testCompiler(host: Host, code: string) {
+export function compileWithHost(
+    mainFileName: string,
+    host: Host
+): CompilationResult {
+    const p = new Program(mainFileName, host)
+    return p.emit()
+}
+
+export function testCompiler(mainFileName: string, host: Host) {
+    const code = host.read(mainFileName)
     const lines = code.split(/\r?\n/).map(s => {
         const m = /\/\/\s*!\s*(.*)/.exec(s)
         if (m) return m[1]
@@ -3834,46 +3832,36 @@ export function testCompiler(host: Host, code: string) {
     })
     const numerr = lines.filter(s => !!s).length
     let numExtra = 0
-    const p = new Program(
-        {
-            write: () => {},
-            log: () => {},
-            getConfig: host.getConfig,
-            verifyBytecode: host.verifyBytecode,
-            mainFileName: host.mainFileName,
-            error: err => {
-                let isOK = false
-                if (err.file) {
-                    const { line } = ts.getLineAndCharacterOfPosition(
-                        err.file,
-                        err.start
-                    )
-                    const exp = lines[line]
-                    const text = ts.flattenDiagnosticMessageText(
-                        err.messageText,
-                        "\n"
-                    )
-                    if (exp != null && text.indexOf(exp) >= 0) {
-                        lines[line] = "" // allow more errors on the same line
-                        isOK = true
-                    }
-                }
+    const myhost = Object.assign({}, host)
+    myhost.write = () => {}
+    myhost.log = () => {}
+    myhost.error = err => {
+        let isOK = false
+        if (err.file) {
+            const { line } = ts.getLineAndCharacterOfPosition(
+                err.file,
+                err.start
+            )
+            const exp = lines[line]
+            const text = ts.flattenDiagnosticMessageText(err.messageText, "\n")
+            if (exp != null && text.indexOf(exp) >= 0) {
+                lines[line] = "" // allow more errors on the same line
+                isOK = true
+            }
+        }
 
-                if (!isOK) {
-                    numExtra++
-                    console.error(formatDiagnostics([err]))
-                }
-            },
-        },
-        code
-    )
+        if (!isOK) {
+            numExtra++
+            console.error(formatDiagnostics([err]))
+        }
+    }
+    const p = new Program(mainFileName, myhost)
     const r = p.emit()
     let missingErrs = 0
     for (let i = 0; i < lines.length; ++i) {
         if (lines[i]) {
             const msg = "missing error: " + lines[i]
-            const fn = host.mainFileName?.() || ""
-            console.error(`${fn}(${i + 1},${1}): ${msg}`)
+            console.error(`${mainFileName}(${i + 1},${1}): ${msg}`)
             missingErrs++
         }
     }

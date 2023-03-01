@@ -1,8 +1,8 @@
 import * as ts from "typescript"
 import { Host } from "./format"
 
-class MyHost implements ts.CompilerHost {
-    constructor(public fileText: Record<string, string>) {}
+class TsHost implements ts.CompilerHost {
+    constructor(public host: Host, public prelude: Record<string, string>) {}
 
     getSourceFile(
         fileName: string,
@@ -10,12 +10,7 @@ class MyHost implements ts.CompilerHost {
         onError?: (message: string) => void,
         shouldCreateNewSourceFile?: boolean
     ): ts.SourceFile {
-        let text = ""
-        if (this.fileText.hasOwnProperty(fileName)) {
-            text = this.fileText[fileName]
-        } else {
-            if (onError) onError("File not found: " + fileName)
-        }
+        let text = this.readFile(fileName)
         if (text == null) {
             onError("File not found: " + fileName)
             text = ""
@@ -29,7 +24,14 @@ class MyHost implements ts.CompilerHost {
         )
     }
 
-    writeFile: ts.WriteFileCallback
+    writeFile(
+        fileName: string,
+        text: string,
+        writeByteOrderMark: boolean,
+        onError?: (message: string) => void
+    ) {
+        this.host.write(fileName, text)
+    }
 
     getDefaultLibFileName(options: ts.CompilerOptions): string {
         return "corelib.d.ts"
@@ -50,11 +52,21 @@ class MyHost implements ts.CompilerHost {
         return "\n"
     }
     fileExists(fileName: string): boolean {
-        return this.fileText.hasOwnProperty(fileName)
+        return this.readFile(fileName) != undefined
     }
     readFile(fileName: string): string {
-        if (!this.fileExists(fileName)) return undefined
-        return this.fileText[fileName]
+        let text = ""
+        if (this.prelude.hasOwnProperty(fileName)) {
+            text = this.prelude[fileName]
+        } else {
+            try {
+                text = this.host.read(fileName)
+            } catch (e) {
+                text = undefined
+            }
+        }
+        if (text == null) return undefined
+        return text
     }
     trace?(s: string): void {
         console.log(s)
@@ -76,15 +88,11 @@ export function getProgramDiagnostics(program: ts.Program): ts.Diagnostic[] {
 }
 
 export function buildAST(
+    mainFn: string,
     host: Host,
-    source: string,
     prelude: Record<string, string>
 ) {
-    const mainFn = host?.mainFileName() || "main.ts"
-    const tsHost = new MyHost({
-        [mainFn]: source,
-        ...prelude,
-    })
+    const tsHost = new TsHost(host, prelude)
     tsHost.writeFile = (fileName, data, writeBOM, onError) => {
         host.write(fileName, data)
     }

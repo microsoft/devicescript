@@ -2,7 +2,7 @@ import { basename, dirname, join, resolve } from "node:path"
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
 import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
 import {
-    compile,
+    compileWithHost,
     jacdacDefaultSpecifications,
     DevsDiagnostic,
     formatDiagnostics,
@@ -19,6 +19,7 @@ import {
     DeviceConfig,
     RepoInfo,
     pinsInfo,
+    CompilationResult,
 } from "@devicescript/compiler"
 import {
     BINDIR,
@@ -99,11 +100,13 @@ export async function devsStartWithNetwork(options: {
 
 export async function getHost(
     buildConfig: ResolvedBuildConfig,
-    options: BuildOptions & CmdOptions
+    options: BuildOptions & CmdOptions,
+    folder: string
 ) {
     const inst = options.noVerify ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
+    const flags = (options.flag ?? {}) as CompileFlags
     const devsHost: Host = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
@@ -116,13 +119,16 @@ export async function getHost(
             )
                 throw new Error("bad disassembly")
         },
+        read: (fn: string) => {
+            return readFileSync(resolve(folder, fn), "utf-8")
+        },
         log: verboseLog,
         isBasicOutput: () => !consoleColors,
         error: (err: DevsDiagnostic) => {
             if (!options.quiet)
                 console.error(formatDiagnostics([err], !consoleColors))
         },
-        mainFileName: () => options.mainFileName || "main.ts",
+        getFlags: () => flags,
         getConfig: () => buildConfig,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
@@ -264,21 +270,27 @@ export function buildConfigFromDir(dir: string, options: BuildOptions = {}) {
     }
 }
 
-export async function compileFile(fn: string, options: BuildOptions = {}) {
+export async function compileFile(
+    fn: string,
+    options: BuildOptions = {}
+): Promise<CompilationResult> {
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
 
-    const { errors, buildConfig } = buildConfigFromDir(dirname(resolve(fn)))
+    const folder = dirname(resolve(fn))
+    const { errors, buildConfig } = buildConfigFromDir(folder)
+    const host = await getHost(buildConfig, options, folder)
 
-    const source = readFileSync(fn)
-    const res = await compileBuf(source, buildConfig, {
-        ...options,
-        mainFileName: fn,
-    })
+    const res = compileWithHost(basename(fn), host)
+
+    await saveLibFiles(buildConfig, options)
+    setDevsDmesg() // set again after we have re-created -dbg.json file
+
     if (errors.length) {
         res.diagnostics.unshift(...errors)
         res.success = false
     }
+
     return res
 }
 
@@ -330,22 +342,6 @@ export async function saveLibFiles(
     }
 }
 
-export async function compileBuf(
-    buf: Buffer,
-    buildConfig: ResolvedBuildConfig,
-    options: BuildOptions
-) {
-    const host = await getHost(buildConfig, options)
-    const flags = (options.flag ?? {}) as CompileFlags
-    const res = compile(buf.toString("utf8"), {
-        host,
-        flags,
-    })
-    await saveLibFiles(buildConfig, options)
-    setDevsDmesg() // set again after we have re-created -dbg.json file
-    return res
-}
-
 export interface BuildOptions {
     noVerify?: boolean
     outDir?: string
@@ -353,15 +349,11 @@ export interface BuildOptions {
     flag?: Record<string, boolean>
     cwd?: string
     quiet?: boolean
-
-    // internal option
-    mainFileName?: string
 }
 
 export async function build(file: string, options: BuildOptions & CmdOptions) {
     file = file || "main.ts"
     options.outDir = options.outDir || BINDIR
-    options.mainFileName = file
 
     if (!existsSync(file)) {
         // otherwise we throw
