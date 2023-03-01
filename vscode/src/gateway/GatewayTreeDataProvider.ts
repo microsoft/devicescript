@@ -13,21 +13,21 @@ import {
     toHex,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { toMarkdownString } from "./catalog"
+import { toMarkdownString } from "../catalog"
 import { Utils } from "vscode-uri"
-import { CloudExtensionState } from "./CloudExtensionState"
-import { sideRequest } from "./jacdac"
+import { GatewayExtensionState } from "./GatewayExtensionState"
+import { sideRequest } from "../jacdac"
 import type {
     SideConnectReq,
     WebSocketConnectReqArgs,
-} from "../../cli/src/sideprotocol"
+} from "../../../cli/src/sideprotocol"
 import {
     CLOUD_DEVICES_NODE,
     CLOUD_SCRIPTS_NODE,
     CONNECTION_RESOURCE_GROUP,
-} from "./constants"
-import { TaggedQuickPickItem } from "./pickers"
-import { writeFile } from "./fs"
+} from "../constants"
+import { TaggedQuickPickItem } from "../pickers"
+import { writeFile } from "../fs"
 
 class CloudCollection extends JDNode {
     constructor(
@@ -84,8 +84,10 @@ function cloudScriptVersionToQuickPickItem(v: CloudScript) {
     }
 }
 
-export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
-    constructor(readonly state: CloudExtensionState) {
+export class GatewayTreeDataProvider
+    implements vscode.TreeDataProvider<JDNode>
+{
+    constructor(readonly state: GatewayExtensionState) {
         const { context } = this.state
         const { subscriptions } = context
 
@@ -93,7 +95,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
 
         subscriptions.push(
             vscode.commands.registerCommand(
-                "extension.devicescript.cloud.device.connect",
+                "extension.devicescript.gateway.device.connect",
                 async (device: CloudDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
@@ -102,7 +104,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                         (await device.createConnection()) || {}
                     if (!url) {
                         vscode.window.showErrorMessage(
-                            "DeviceScript Cloud: Unable to open connection."
+                            "DeviceScript Gateway: Unable to open connection."
                         )
                         return
                     }
@@ -120,7 +122,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.cloud.device.updateScript",
+                "extension.devicescript.gateway.device.updateScript",
                 async (device: CloudDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
@@ -184,7 +186,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.cloud.device.downloadScriptSource",
+                "extension.devicescript.gateway.device.downloadScriptSource",
                 async (script: CloudScript) => {
                     const name = script.name
                     const body = await script.refreshBody()
@@ -198,7 +200,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.cloud.device.uploadScriptSource",
+                "extension.devicescript.gateway.device.uploadScriptSource",
                 async () => {
                     const manager = this.state.manager
                     if (!manager) return
@@ -209,7 +211,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                         editor.document.languageId !== "typescript"
                     ) {
                         vscode.window.showErrorMessage(
-                            "DeviceScript Cloud: no DeviceScript file open."
+                            "DeviceScript Gateway: no DeviceScript file open."
                         )
                         return
                     }
@@ -227,7 +229,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                         )
                     if (!status?.success) {
                         vscode.window.showErrorMessage(
-                            "DeviceScript Cloud: file have build errors."
+                            "DeviceScript Gateway: file have build errors."
                         )
                         return
                     }
@@ -261,7 +263,7 @@ export class CloudTreeDataProvider implements vscode.TreeDataProvider<JDNode> {
                         this.refresh(script)
 
                         vscode.window.showInformationMessage(
-                            "DeviceScript Cloud: Script updated"
+                            "DeviceScript Gateway: Script updated"
                         )
                     })
                 }
@@ -402,10 +404,10 @@ ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
     }
 }
 
-export function registerCloudTreeDataProvider(cloudState: CloudExtensionState) {
-    const cloudTreeDataProvider = new CloudTreeDataProvider(cloudState)
+export function registerCloudTreeDataProvider(cloudState: GatewayExtensionState) {
+    const treeDataProvider = new GatewayTreeDataProvider(cloudState)
     vscode.window.registerTreeDataProvider(
-        "extension.devicescript.cloud-explorer",
-        cloudTreeDataProvider
+        "extension.devicescript.gateway",
+        treeDataProvider
     )
 }

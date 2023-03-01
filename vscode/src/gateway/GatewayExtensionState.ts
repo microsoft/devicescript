@@ -7,10 +7,10 @@ import {
     SRV_CLOUD_ADAPTER,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { DeviceScriptExtensionState } from "./state"
+import { DeviceScriptExtensionState } from "../state"
 import "isomorphic-fetch"
 
-export class CloudExtensionState extends JDEventSource {
+export class GatewayExtensionState extends JDEventSource {
     private _manager: CloudManager
 
     constructor(
@@ -45,7 +45,7 @@ export class CloudExtensionState extends JDEventSource {
 
         subscriptions.push(
             vscode.commands.registerCommand(
-                "extension.devicescript.cloud.refresh",
+                "extension.devicescript.gateway.refresh",
                 async () => {
                     const apiRoot = this.apiRoot
                     const token = await this.token
@@ -54,7 +54,7 @@ export class CloudExtensionState extends JDEventSource {
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.cloud.registerDevice",
+                "extension.devicescript.gateway.registerDevice",
                 async () => {
                     const manager = this.manager
                     if (!manager) return
@@ -73,7 +73,7 @@ export class CloudExtensionState extends JDEventSource {
 
                     if (!unregisteredDevices.length) {
                         vscode.window.showInformationMessage(
-                            "DeviceScript Cloud: no cloud adapter device found to register."
+                            "DeviceScript Gateway: no cloud adapter device found to register."
                         )
                         return
                     }
@@ -153,23 +153,25 @@ export class CloudExtensionState extends JDEventSource {
     }
 
     get apiRoot(): string {
-        return vscode.workspace
-            .getConfiguration("devicescript.cloud")
-            .get("apiRoot")
+        return (
+            vscode.workspace
+                .getConfiguration("devicescript.gateway")
+                .get("apiRoot") as string
+        )?.replace(/\/\s*$/, "")
     }
 
     async setApiRoot(apiRoot: string) {
         await vscode.workspace
-            .getConfiguration("devicescript.cloud")
-            .update("apiRoot", apiRoot)
+            .getConfiguration("devicescript.gateway")
+            .update("apiRoot", apiRoot?.replace(/\/\s*$/, ""))
     }
 
     async configure() {
         let changed = false
         const apiRoot = this.apiRoot
         const newApiRoot = await vscode.window.showInputBox({
-            placeHolder: "Enter Cloud Web API Root",
-            value: apiRoot || "https://jacdac-portal2.azurewebsites.net",
+            placeHolder: "Enter Gateway web application root",
+            value: apiRoot || "https://.azurewebsites.net",
         })
         if (newApiRoot !== undefined && newApiRoot !== apiRoot) {
             await this.setApiRoot(newApiRoot)
@@ -187,16 +189,11 @@ export class CloudExtensionState extends JDEventSource {
     }
 
     get token() {
-        return this.context.secrets.get(
-            "devicescript.cloud.token"
-        )
+        return this.context.secrets.get("devicescript.gateway.token")
     }
 
     async setToken(token: string) {
-        await this.context.secrets.store(
-            "devicescript.cloud.token",
-            token
-        )
+        await this.context.secrets.store("devicescript.gateway.token", token)
     }
 
     withProgress(title: string, transaction: () => Promise<void>) {
@@ -211,7 +208,7 @@ export class CloudExtensionState extends JDEventSource {
                 } catch (e) {
                     console.error(e)
                     vscode.window.showErrorMessage(
-                        "DeviceScript Cloud: Updated failed."
+                        "DeviceScript Gateway: Updated failed."
                     )
                     // async
                     this.manager.refresh()
