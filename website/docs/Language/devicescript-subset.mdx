@@ -3,31 +3,71 @@ sidebar_position: 1
 hide_table_of_contents: true
 ---
 
-# JavaScript subset
+# TypeScript subset
 
-Global and local variables are supported (only `const` or `let`, no `var`).
+DeviceScript is a subset of [TypeScript](https://www.typescriptlang.org).
+TypeScript itself follows semantics of ECMAScript also known as JavaScript (JS).
+DeviceScript (DS) generally also follows JS semantics, and the DeviceScript compiler
+will give you an error if you're using an unsupported feature.
 
-All variables are numbers (64-bit IEEE floating point).
-Numeric binary and unary expressions are supported.
-Comparisons return `0.0` or `1.0` (in particular comparing anything to `NaN` returns `0.0`).
-`0.0` and `NaN` are considered falsy.
-TODO should compare with NaN return NaN?
+## Supported language features
 
-```ts
-const pot = new ds.Potentiometer()
-let x, y
-x = pot.position.read()
-if (x < 0.3) {
-    y = x * 3
-} else {
-    y = -x / 7
-}
-```
+* variable declarations with `let`, `const`
+* functions with lexical scoping and recursion
+* top-level code in the file; hello world really is `console.log("Hello world")`
+* `if ... else if ... else` statements
+* `while` and `do ... while` loops
+* `for(;;)` loops
+* `for ... of` statements (see below about `for ... in`)
+* `break/continue`; also with labeled loops
+* `switch` statement (on numbers, strings, and arbitrary types - the last one isn't very useful)
+* `debugger` statement for breakpoints
+* conditional operator `? :`; lazy boolean operators
+* all arithmetic operators (including bitwise operators)
+* strings (with a few common methods)
+* [string templates](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) (`` `x is ${x}` ``)
+* arrow functions `() => ...`; passing functions as values
+* classes with inheritance, instance fields, methods and constructors; `new` keyword
+* `public`/`private` annotations on constructor arguments (syntactic sugar to make them into fields); initializers for class fields
+* enumerations (`enum`)
+* generic classes, methods, and functions
+* `typeof` expression
+* binding with arrays or objects: `let [a, b] = ...; let { x, y } = ...`
+* exceptions (`throw`, `try ... catch`, `try ... finally`)
+* `union` or `intersection` types
+* `delete` statement
+* array literals `[1, 2, 3]`
+* object literals `{ foo: 1, bar: "two" }`
+* shorthand properties (`{a, b: 1}` parsed as `{a: a, b: 1}`)
+* computed property names (`{[foo()]: 1, bar: 2}`)
+* spread and rest operators (in certain places)
+* file-based modules (`import * from ...`, `import { foo } from ...` etc)
 
-Some builtin functions only take literal arguments (especially strings, and time values).
+## Unsupported language features
 
-The only jump statement supported is currently `return`.
-Only `while` loop is supported.
+Things you may miss and we may implement:
+
+* support of `enums` as run-time arrays
+* static fields and methods in classes
+* method-like properties (get/set accessors)
+* array/object destructuring in parameters and assignments (they are supported in definitions)
+* tagged templates ``tag `text ${expression} more text` `` are limited to special compiler features
+  like buffer literals; regular templates are supported
+
+Things that we are not very likely to implement due to the scope of the project
+or other constraints (note that if you don't know what a given feature is, you're
+unlikely to miss it):
+
+* `yield` expression and ``function*``
+* `await` expression and `async function`
+* `with` statement
+* `eval`
+* `for ... in` statements (`for ... of` is supported)
+* `arguments` keyword; `.apply` method
+* JSX (HTML fragments as part of JavaScript)
+* namespaces (we do support ES modules)
+
+
 
 ## Logging and format strings
 
