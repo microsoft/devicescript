@@ -10,6 +10,16 @@ TypeScript itself follows semantics of ECMAScript also known as JavaScript (JS).
 DeviceScript (DS) generally also follows JS semantics, and the DeviceScript compiler
 will give you an error if you're using an unsupported feature.
 
+The main difference in semantics between DS and JS is that DS programs run in multiple fibers (threads).
+In practice, this behaves like JS with `async`/`await` but without an ability to manipulate promises directly
+(that is fibers can only interleave at `await` points and at most one fiber runs at any given time).
+The compiler enforces usage of `await` where needed.
+
+Please check [semantic differences between DS and JS](/language/ds-vs-js) for differences
+that the compiler can't warn you about.
+
+Below we list supported and unsupported langauge features.
+
 ## Supported language features
 
 * variable declarations with `let`, `const`
@@ -53,21 +63,20 @@ Things you may miss and we may implement:
 * array/object destructuring in parameters and assignments (they are supported in definitions)
 * tagged templates ``tag `text ${expression} more text` `` are limited to special compiler features
   like buffer literals; regular templates are supported
+* assignment operators can't be chained (`x = y = 0`; use `x = 0; y = 0`)
 
 Things that we are not very likely to implement due to the scope of the project
 or other constraints (note that if you don't know what a given feature is, you're
 unlikely to miss it):
 
 * `yield` expression and ``function*``
-* `await` expression and `async function`
 * `with` statement
 * `eval`
 * `for ... in` statements (`for ... of` is supported)
-* `arguments` keyword; `.apply` method
 * JSX (HTML fragments as part of JavaScript)
 * namespaces (we do support ES modules)
-
-
+* `arguments` keyword; `.apply` method (modern spread operator is supported)
+* marking properties as non-enumerable etc
 
 ## Logging and format strings
 
