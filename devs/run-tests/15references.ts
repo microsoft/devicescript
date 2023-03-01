@@ -39,7 +39,7 @@ function testRefLocals(): void {
         })
     }
     sleepMs(200)
-    assert(s == "111213", "reflocals")
+    assert(s === "111213", "reflocals")
     */
 }
 
@@ -75,14 +75,14 @@ async function testByRefParams() {
     byRefParam_0(4)
     byRefParam_2(10)
     await sleepMs(30)
-    assert(sum == 18, "by ref")
+    assert(sum === 18, "by ref")
     sum = 0
     msg("byref done")
 }
 
 function refparamWrite(s: string): void {
     s = s + "c"
-    assert(s == "abc", "abc")
+    assert(s === "abc", "abc")
 }
 
 function refparamWrite2(testrec: Testrec): void {
@@ -93,13 +93,13 @@ function refparamWrite2(testrec: Testrec): void {
 async function refparamWrite3(testrecX: Testrec) {
     runInBackground(async () => {
         await sleepMs(1)
-        assert(testrecX.str == "foo", "ff")
+        assert(testrecX.str === "foo", "ff")
         testrecX.str = testrecX.str + "x"
     })
     testrecX = newTestrec()
     testrecX.str = "foo"
     await sleepMs(30)
-    assert(testrecX.str == "foox", "ff2")
+    assert(testrecX.str === "foox", "ff2")
 }
 
 function allocImage(): void {
@@ -136,35 +136,35 @@ function testLazyRef() {
     msg("testLazyRef")
     let x = ds._id("x") + "Y" || "foo"
     let y = "" || ds._id("bXr") + "2"
-    assert(x.length == 2, "two")
-    assert(y.length == 4, "emp")
+    assert(x.length === 2, "two")
+    assert(y.length === 4, "emp")
     y = null || ds._id("foo")
-    assert(y == "foo", "ln")
+    assert(y === "foo", "ln")
 
     x = ds._id("x") + "12x" && ds._id("7") + "xx"
-    assert(x.length == 3, "and")
+    assert(x.length === 3, "and")
 
     x = ds._id("") && "blah"
-    assert(x == "", "andemp")
+    assert(x === "", "andemp")
     x = "foo" && ds._id("x") + "Y"
-    assert(x.length == 2, "twoand")
+    assert(x.length === 2, "twoand")
     x = ds._id("x") + "Y" && "bar"
-    assert(x.length == 3, "threeand")
+    assert(x.length === 3, "threeand")
 
     let tw = 12
     let z = 0 || tw
-    assert(z == 12, "12")
+    assert(z === 12, "12")
     z = tw || 13
-    assert(z == 12, "12.2")
+    assert(z === 12, "12.2")
     z = tw && 13
-    assert(z == 13, "13")
+    assert(z === 13, "13")
 
     let q = newTestrec()
     let r: Testrec = null
     let qq = q && r
-    assert(qq == null, "&n")
+    assert(qq === null, "&n")
     qq = r && q
-    assert(qq == null, "&r")
+    assert(qq === null, "&r")
 }
 
 function initUndef() {
@@ -215,21 +215,21 @@ function updIP(v: any, foo: string, bar: string) {
 }
 
 function allChecks(v: V) {
-    assert(check(v) == "2/foo", ".v")
+    assert(check(v) === "2/foo", ".v")
 
     msg(checkA(v))
     msg(check(v))
 
-    assert(checkA(v) == check(v), ".z2")
+    assert(checkA(v) === check(v), ".z2")
     upd(v)
-    assert(check(v) == "3/fooa", ".v2")
+    assert(check(v) === "3/fooa", ".v2")
     updA(v)
-    assert(check(v) == "4/fooaa", ".v3")
+    assert(check(v) === "4/fooaa", ".v3")
     updI(v)
-    assert(check(v) == "5/fooaaa", ".v4")
+    assert(check(v) === "5/fooaaa", ".v4")
     updIP(v, "foo", "bar")
-    assert(check(v) == "6/fooaaaa", ".v6")
-    assert(checkA(v) == check(v), ".z3")
+    assert(check(v) === "6/fooaaaa", ".v6")
+    assert(checkA(v) === check(v), ".z3")
 }
 
 function testDynamicMaps() {
@@ -244,7 +244,7 @@ function testDynamicMaps() {
     z.foo = 12
     z.bar = "blah"
 
-    assert(check(z) == "13/blah", ".z")
+    assert(check(z) === "13/blah", ".z")
 
     z.foo = 1
     z.bar = "foo"

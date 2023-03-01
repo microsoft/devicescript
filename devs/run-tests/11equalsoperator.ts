@@ -5,23 +5,23 @@ function eqOp() {
     console.log("eqOp")
     let x = 12
     x += 10
-    // assert(() == 22, "Y0")
-    assert(x == 22, "Y1")
+    // assert(() === 22, "Y0")
+    assert(x === 22, "Y1")
     x /= 2
-    assert(x == 11, "Y2")
+    assert(x === 11, "Y2")
 
     let s = ds._id("fo") + 1
     let t = ds._id("ba") + 2
     s += t
-    assert(s == ds._id("fo1b") + "a2", "fb")
+    assert(s === ds._id("fo1b") + "a2", "fb")
 }
 
 function eqOpString() {
     console.log("eqOpStr")
     let x = "fo"
     x += "ba"
-    // assert((x += "ba") == "foba", "SY0")
-    assert(x == "foba", "SY1")
+    // assert((x += "ba") === "foba", "SY0")
+    assert(x === "foba", "SY1")
 }
 
 eqOp()

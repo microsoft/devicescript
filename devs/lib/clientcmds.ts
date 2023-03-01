@@ -36,10 +36,10 @@ async function callHandlers(hh: ds.Callback[]) {
 }
 
 ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
-    if (!pkt || pkt.serviceCommand == 0) {
+    if (!pkt || pkt.serviceCommand === 0) {
         const conn = this.isConnected
         if (this._connHandlers || this._disconHandlers) {
-            if (conn != this._wasConnected) {
+            if (conn !== this._wasConnected) {
                 this._wasConnected = conn
                 if (conn) await callHandlers(this._connHandlers)
                 else await callHandlers(this._disconHandlers)
@@ -49,7 +49,7 @@ ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
             const regs = Object.keys(this._changeHandlers)
             for (let i = 0; i < regs.length; ++i) {
                 const rg = parseInt(regs[i])
-                if (rg == 0x0101) {
+                if (rg === 0x0101) {
                     const b = Buffer.alloc(1)
                     b[0] = 199
                     await this.sendCommand(0x2003, b)
@@ -65,12 +65,12 @@ ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
         if (handlers) {
             const val = pkt.decode()
             for (const h of handlers) {
-                if (typeof val == "number" && h.threshold != null) {
+                if (typeof val === "number" && h.threshold != null) {
                     if (h.prev != null && Math.abs(val - h.prev) < h.threshold)
                         continue
                     h.prev = val
                 }
-                if (typeof val == "boolean") {
+                if (typeof val === "boolean") {
                     if (val === h.prev) continue
                     h.prev = val
                 }
@@ -108,7 +108,7 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     threshold: number,
     handler: (v: any) => void
 ) {
-    if (!handler && typeof threshold == "function") {
+    if (!handler && typeof threshold === "function") {
         handler = threshold
         threshold = undefined
     }
@@ -167,7 +167,7 @@ ds.Event.prototype.subscribe = function (handler) {
 ds.Event.prototype.wait = async function () {
     while (true) {
         const pkt = await this.role.wait()
-        if (pkt && pkt.eventCode == this.code) return
+        if (pkt && pkt.eventCode === this.code) return
     }
 }
 

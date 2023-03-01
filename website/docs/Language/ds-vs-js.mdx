@@ -42,7 +42,9 @@ Properties can be attached to roles, dynamic buffers, and of course regular map 
 
 The `==` operator behaves just as `===` except that `null == undefined`
 (same of course applies to `!=`).
-That is, no conversions to strings or primitives are performed, so in particular `"1" != 1".
+That is, no conversions to strings or primitives are performed, so in particular `"1" != 1"`.
+For this reason, the compiler will disallow usage of `==` and `!=` except when comparing
+to literal `null` or `undefined`.
 
 The comparisons with `NaN` behave as in JS (and IEEE standard), in particular `NaN !== NaN`.
 

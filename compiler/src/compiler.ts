@@ -2810,6 +2810,12 @@ class Program implements TopOpWriter {
             )
     }
 
+    private isNullOrUndefined(expr: Expr) {
+        const v = this.constantFold(expr)
+        if (v && v.val == null) return true
+        return false
+    }
+
     private emitBinaryExpression(expr: ts.BinaryExpression): Value {
         const simpleOps: SMap<Op> = {
             [SK.PlusToken]: Op.EXPR2_ADD,
@@ -2866,6 +2872,14 @@ class Program implements TopOpWriter {
         let op = expr.operatorToken.kind
 
         if (op == SK.EqualsToken) return this.emitAssignmentExpression(expr)
+
+        if (
+            (op == SK.EqualsEqualsToken || op == SK.ExclamationEqualsToken) &&
+            !this.isNullOrUndefined(expr.left) &&
+            !this.isNullOrUndefined(expr.right)
+        ) {
+            this.reportError(expr, `please use ${op == SK.EqualsEqualsToken ? "===" : "!=="}`)
+        }
 
         if (op == SK.CommaToken) {
             this.ignore(this.emitExpr(expr.left))

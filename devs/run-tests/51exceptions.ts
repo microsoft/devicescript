@@ -10,7 +10,7 @@ async function immediate(k: number) {
         await sleepMs(1)
         glb1++
     } catch (e) {
-        assert(e == "hl" + k)
+        assert(e === "hl" + k)
         glb1 += 10
         if (k >= 10) throw e
     } finally {
@@ -29,7 +29,7 @@ function higherorder(k: number) {
         ;[1].map(async () => await throwVal(k))
         glb1++
     } catch (e) {
-        assert(e == "hel" + k)
+        assert(e === "hel" + k)
         glb1 += 10
         if (k >= 10) throw e
     } finally {
@@ -43,7 +43,7 @@ async function lambda(k: number) {
             await throwVal(k)
             glb1++
         } catch (e) {
-            assert(e == "hel" + k)
+            assert(e === "hel" + k)
             glb1 += 10
             if (k >= 10) throw e
         } finally {
@@ -60,7 +60,7 @@ async function callingThrowVal(k: number) {
         await sleepMs(1)
         glb1++
     } catch (e) {
-        assert(e == "hel" + k)
+        assert(e === "hel" + k)
         glb1 += 10
         if (k >= 10) throw e
     } finally {
@@ -73,12 +73,12 @@ async function nested() {
         try {
             await callingThrowVal(10)
         } catch (e) {
-            assert(glb1 == 10 && x == 10)
+            assert(glb1 === 10 && x === 10)
             glb1++
             throw e
         }
     } catch (ee) {
-        assert(glb1 == 11)
+        assert(glb1 === 11)
     }
 }
 
@@ -86,11 +86,11 @@ async function test3(fn: (k: number) => AsyncVoid) {
     glb1 = 0
     x = 0
     await fn(1)
-    assert(glb1 == 10 && x == 10)
+    assert(glb1 === 10 && x === 10)
     await fn(0)
-    assert(glb1 == 11 && x == 21)
+    assert(glb1 === 11 && x === 21)
     await fn(3)
-    assert(glb1 == 21 && x == 42)
+    assert(glb1 === 21 && x === 42)
 }
 
 function test4(fn: () => void) {
@@ -110,7 +110,7 @@ function test5() {
         try {
             n++
             try {
-                if (k == 1) break
+                if (k === 1) break
             } catch {
                 n += 1000
             }
@@ -118,7 +118,7 @@ function test5() {
             n += 100
         }
     }
-    assert(n == 2)
+    assert(n === 2)
 }
 
 function test6() {
@@ -128,7 +128,7 @@ function test6() {
         try {
             n++
             try {
-                if (k == 1) break
+                if (k === 1) break
             } catch {
                 n += 1000
             } finally {
@@ -140,8 +140,8 @@ function test6() {
             kk += 100
         }
     }
-    assert(n == 2)
-    assert(kk == 202)
+    assert(n === 2)
+    assert(kk === 202)
 }
 
 async function run() {
@@ -149,11 +149,11 @@ async function run() {
     glb1 = 0
     x = 0
     await callingThrowVal(1)
-    assert(glb1 == 10 && x == 10)
+    assert(glb1 === 10 && x === 10)
     await callingThrowVal(0)
-    assert(glb1 == 11 && x == 21)
+    assert(glb1 === 11 && x === 21)
     await callingThrowVal(3)
-    assert(glb1 == 21 && x == 42)
+    assert(glb1 === 21 && x === 42)
 
     await test3(callingThrowVal)
     await test3(immediate)
@@ -163,15 +163,15 @@ async function run() {
     glb1 = 0
     x = 0
     await nested()
-    assert(glb1 == 11)
+    assert(glb1 === 11)
 
-    assert(test4(() => {}) == 10)
+    assert(test4(() => {}) === 10)
     assert(
         test4(() => {
             throw "foo"
-        }) == 20
+        }) === 20
     )
-    assert(glb1 == 13)
+    assert(glb1 === 13)
 
     test5()
     test6()

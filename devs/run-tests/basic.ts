@@ -5,21 +5,21 @@ function isClose(x: number, y: number): void {
     if (isNaN(x) && isNaN(y)) return
     const d = Math.abs(x - y)
     if (d < 0.00000001 || d / Math.abs(x + y) < 0.00001) return
-    console.log(x, " != ", y, "!")
+    console.log(x, " !== ", y, "!")
     _panic(108)
 }
 
 function isEq(x: any, y: any): void {
-    // console.log(x, " == ", y, "?")
+    // console.log(x, " === ", y, "?")
     if (x !== y) {
-        console.log(ds.format("fail: {0} != {1}", x, y))
+        console.log(ds.format("fail: {0} !== {1}", x, y))
         _panic(109)
     }
 }
 
 function strEq(a: string, b: string) {
     if (a !== b) {
-        console.log(`fail: '${a}' != '${b}'`)
+        console.log(`fail: '${a}' !== '${b}'`)
         _panic(110)
     }
 }
@@ -29,11 +29,11 @@ let glb1 = 0
 
 function testFlow() {
     x = 1
-    if (x != 1) _panic(1)
     if (x !== 1) _panic(1)
-    if (x == 1) {
+    if (x !== 1) _panic(1)
+    if (x === 1) {
         x = 2
-        if (x != 2) _panic(3)
+        if (x !== 2) _panic(3)
     } else {
         _panic(2)
     }
@@ -52,7 +52,7 @@ function testFlow() {
     } else _panic(1)
     if (x < 0 || x > 10) _panic(1)
     x = -1
-    if (Math.abs(x) != 1) _panic(4)
+    if (Math.abs(x) !== 1) _panic(4)
     x = Math.random()
     if (x < 0 || x > 1 || isNaN(x)) _panic(5)
     x = 42
@@ -161,8 +161,8 @@ function lazyX(v: number) {
 }
 
 function checkX(v: number) {
-    if (x != v) {
-        console.log(ds.format("{0} != {1} !!", x, v))
+    if (x !== v) {
+        console.log(ds.format("{0} !== {1} !!", x, v))
         _panic(11)
     }
     x = 0
@@ -291,7 +291,7 @@ function testObj() {
 }
 
 function objEq(a: any, b: any) {
-    if (a == b) return
+    if (a === b) return
     const ka = Object.keys(a)
     const kb = Object.keys(b)
     isEq(ka.length, kb.length)
@@ -455,7 +455,7 @@ function testForOf() {
     let tmp = coll2
     let sum = 0
     for (const e of coll2) {
-        if (coll2 != null) coll2.push(17)
+        if (coll2 !== null) coll2.push(17)
         coll2 = null
         sum += e
     }
@@ -553,7 +553,7 @@ function expectErr(js: string) {
 function jsonTest(js: string, indent?: number) {
     const o = JSON.parse(js)
     const str = JSON.stringify(o, null, indent)
-    if (js != str) {
+    if (js !== str) {
         console.log(`orig:${js}`)
         console.log(`stri:${str}`)
         console.log(`stri2:${JSON.stringify(str)}`)
@@ -561,11 +561,11 @@ function jsonTest(js: string, indent?: number) {
     }
 
     const o2 = JSON.parse(" " + js + " ")
-    ds.assert(JSON.stringify(o2) == JSON.stringify(o))
+    ds.assert(JSON.stringify(o2) === JSON.stringify(o))
     expectErr(js + "x")
     expectErr(js + "t")
 
-    if (typeof o != "number") {
+    if (typeof o !== "number") {
         expectErr(js.slice(0, -1))
         expectErr(js.slice(0, -2))
         expectErr(js.slice(1))
@@ -574,7 +574,7 @@ function jsonTest(js: string, indent?: number) {
 
 function testDeflUndefinedForNumber(f: number, g?: number) {
     isEq(f, 3)
-    ds.assert(g == null, "n3")
+    ds.assert(g==null, "n3")
     ds.assert(g === undefined, "n3")
 }
 
@@ -612,14 +612,14 @@ function testJSON() {
         ds.assert(JSON.parse(JSON.stringify(s)) === s, s)
     }
 
-    ds.assert(JSON.parse('"\\u000A\\u0058\\u004C\\u004d"') == "\nXLM", "uni")
+    ds.assert(JSON.parse('"\\u000A\\u0058\\u004C\\u004d"') === "\nXLM", "uni")
 
     let ss = ds._id("12") + "34"
-    ds.assert(ss.slice(1) == "234", "sl0")
-    ds.assert(ss.slice(1, 2) == "2", "sl1")
-    ds.assert(ss.slice(-2) == "34", "sl2")
-    ds.assert(ss.slice(1, 0) == "", "sl3")
-    ds.assert(ss.slice(1, -1) == "23", "sl4")
+    ds.assert(ss.slice(1) === "234", "sl0")
+    ds.assert(ss.slice(1, 2) === "2", "sl1")
+    ds.assert(ss.slice(-2) === "34", "sl2")
+    ds.assert(ss.slice(1, 0) === "", "sl3")
+    ds.assert(ss.slice(1, -1) === "23", "sl4")
 }
 
 function testAnySwitch() {
@@ -733,7 +733,7 @@ function testAnySwitch() {
 }
 
 testFlow()
-if (x != 42) _panic(10)
+if (x !== 42) _panic(10)
 testMath()
 testLazy()
 testBuffer()

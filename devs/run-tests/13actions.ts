@@ -38,8 +38,8 @@ async function inBg() {
         glb1 = glb1 + 1
     })
     await sleepMs(10)
-    assert(glb1 == 18, "inbg0")
-    assert(rec.str == "foo", "inbg1")
+    assert(glb1 === 18, "inbg0")
+    assert(rec.str === "foo", "inbg1")
     glb1 = 0
 }
 
@@ -62,7 +62,7 @@ function testIter() {
     iter(10, v => {
         x = x + (v + 1)
     })
-    assert(x == 55, "55")
+    assert(x === 55, "55")
     x = 0
 }
 
@@ -77,8 +77,8 @@ async function testAction(p: number) {
         coll.push(x)
         msg(s + x)
     })
-    assert(x == 42 + p * 6, "run2")
-    assert(coll.length == 2, "run2")
+    assert(x === 42 + p * 6, "run2")
+    assert(coll.length === 2, "run2")
     x = 0
     msg("testActionDone")
 }
@@ -98,16 +98,16 @@ async function testFunDecl() {
         sum = sum + 10
     }
     await runTwice(addX)
-    assert(sum == 24, "cap")
+    assert(sum === 24, "cap")
     msg("testAdd10")
     await runTwice(add10)
     msg("end-testAdd10")
-    assert(sum == 44, "nocap")
+    assert(sum === 44, "nocap")
     await runTwice(add7)
-    assert(sum == 44 + 14, "glb")
+    assert(sum === 44 + 14, "glb")
     addX()
     add10()
-    assert(sum == 44 + 14 + x + 10, "direct")
+    assert(sum === 44 + 14 + x + 10, "direct")
     sum = 0
 }
 
@@ -129,7 +129,7 @@ async function testActionSave() {
     await runTwice(action)
     msg("saveActDONE")
     msg(tot)
-    assert(tot == "foo42foo42", "")
+    assert(tot === "foo42foo42", "")
     tot = ""
     action = null
 }
@@ -153,7 +153,7 @@ function testInnerLambdaCapture() {
         h()
     }
     g()
-    assert(glb1 == 7, "7")
+    assert(glb1 === 7, "7")
 }
 
 interface NestedFun {
@@ -168,8 +168,8 @@ function testComplexCallExpr() {
         return () => 17
     }
 
-    assert(a.f() == 12, "af")
-    assert(bar()() == 17, "ff")
+    assert(a.f() === 12, "af")
+    assert(bar()() === 17, "ff")
 }
 
 function inl0(a: number, b: number) {
@@ -189,24 +189,24 @@ function testInline() {
     msg("testInline")
     let pos = 0
     const arg0 = () => {
-        assert(pos == 0)
+        assert(pos === 0)
         pos = 1
         return 1
     }
     const arg1 = () => {
-        assert(pos == 1)
+        assert(pos === 1)
         pos = 2
         return 2
     }
 
     pos = 0
-    assert(inl0(arg0(), arg1()) == -1)
+    assert(inl0(arg0(), arg1()) === -1)
     pos = 0
-    assert(inl1(arg0(), arg1()) == 1)
+    assert(inl1(arg0(), arg1()) === 1)
     pos = 0
-    assert(inl2(arg0(), arg1()) == 1)
+    assert(inl2(arg0(), arg1()) === 1)
     pos = 0
-    assert(inl3(arg0(), arg1()) == 2)
+    assert(inl3(arg0(), arg1()) === 2)
 }
 
 function doubleIt(f: (x: number) => number) {
@@ -221,18 +221,18 @@ function checkLen(f: (x: string) => string, k: number) {
     // make sure strings are GCed
     f("baz")
     let s = f("foo")
-    assert(s.length == k, "len")
+    assert(s.length === k, "len")
 }
 
 function testLambdas() {
     let x = doubleIt(k => {
         return k * 108
     })
-    assert(x == -108, "l0")
+    assert(x === -108, "l0")
     x = triple((x, y, z) => {
         return x * y + z
     })
-    assert(x == 108, "l1")
+    assert(x === 108, "l1")
     checkLen(s => {
         return s + "XY1"
     }, 6)
@@ -242,7 +242,7 @@ function testLambdas() {
 function testLambdaDecrCapture() {
     let x = 6
     function b(s: string) {
-        assert(s.length == x, "dc")
+        assert(s.length === x, "dc")
     }
     b(ds._id("fo0") + "bAr")
 }
@@ -256,7 +256,7 @@ function testNested() {
     y++
     bar(2)
     bar2()
-    assert(glb1 == 12)
+    assert(glb1 === 12)
 
     /* TODO nested closures
     glb1 = 0
@@ -267,7 +267,7 @@ function testNested() {
             glb1 += k
         }
     }
-    assert(glb1 == 321)
+    assert(glb1 === 321)
 
     const fns: any[] = []
     for (let k of arr) {
@@ -279,11 +279,11 @@ function testNested() {
     }
     glb1 = 0
     for (let f of fns) f()
-    assert(glb1 == 321)
+    assert(glb1 === 321)
     */
 
     function bar(v: number) {
-        assert(x == 7 && y == v)
+        assert(x === 7 && y === v)
         glb1++
     }
     function bar2() {
@@ -298,7 +298,7 @@ function incr() {
 function runInl() {
     glb1 = 0
     ignore(incr())
-    assert(glb1 == 1)
+    assert(glb1 === 1)
 }
 
 function bar() {

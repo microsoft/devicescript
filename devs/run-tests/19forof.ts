@@ -13,14 +13,14 @@ function testForOf() {
         msg("FO:" + e)
         sum += (e - 1)
     }
-    assert(sum == 13, "fo1")
+    assert(sum === 13, "fo1")
     msg("loop1 done")
 
     // make sure we incr reference count of the array during the loop execution
     for (let q of [3, 4, 12]) {
         sum += (q - 2)
     }
-    assert(sum == 26, "fo2")
+    assert(sum === 26, "fo2")
 
     // iteration over a string
     let s = "hello, world!"
@@ -28,7 +28,7 @@ function testForOf() {
     for (let c of s) {
         s2 += c
     }
-    assert(s == s2, "fo3")
+    assert(s === s2, "fo3")
 
     // mutation of array during iteration
     let fibs = [0, 1]
@@ -37,7 +37,7 @@ function testForOf() {
             fibs.push(fibs[fibs.length - 2] + fibs[fibs.length - 1])
         }
     }
-    assert(fibs.length == 10, "fo4")
+    assert(fibs.length === 10, "fo4")
 
     // mutation of array during iteration
     let xs = [10, 9, 8]
@@ -55,13 +55,13 @@ function testForOf() {
             concat.push(y)
         }
     }
-    assert(concat.length == 10, "fo6")
+    assert(concat.length === 10, "fo6")
 
     sum = 0
     for (let y of concat) {
         sum += y
     }
-    assert(sum == 55, "fo7")
+    assert(sum === 55, "fo7")
 
 
     /* TODO nested closures
@@ -74,7 +74,7 @@ function testForOf() {
     }
     f[0]()
     f[1]()
-    assert(glb1 == 13, "foc")
+    assert(glb1 === 13, "foc")
     */
 
     msg("for of done")
