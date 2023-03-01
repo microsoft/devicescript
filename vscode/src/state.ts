@@ -27,6 +27,7 @@ import {
     SideTransportEvent,
     TransportStatus,
 } from "../../cli/src/sideprotocol"
+import { deviceCatalogTooltip } from "./catalog"
 import { openDocUri } from "./commands"
 import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
@@ -394,6 +395,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
                         detail: await detail(srv),
                         data: srv.device.deviceId,
                         picked: srv.device.deviceId === cid,
+                        // proposed api
+                        tooltip: await deviceCatalogTooltip(srv.device),
                     }
             )
         )

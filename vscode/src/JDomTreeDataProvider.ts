@@ -56,7 +56,11 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
-import { deviceIconUri, toMarkdownString } from "./catalog"
+import {
+    deviceCatalogTooltip,
+    deviceIconUri,
+    toMarkdownString,
+} from "./catalog"
 import { MESSAGE_PREFIX, sendCmd, withProgress } from "./commands"
 import {
     ICON_LOADING,
@@ -318,36 +322,11 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
         )
     }
 
-    resolveTreeItem(token: vscode.CancellationToken): Promise<vscode.TreeItem> {
-        if (!this.tooltip) {
-            const { device } = this
-            const { bus } = device
-            if (bus) {
-                const productIdentifier = device.productIdentifier
-                const spec =
-                    bus.deviceCatalog.specificationFromProductIdentifier(
-                        productIdentifier
-                    )
-                if (spec) {
-                    this.tooltip = toMarkdownString(
-                        `#### ${spec.name} ${spec.version || ""} by ${
-                            spec.company
-                        }
-
-![Device image](${deviceCatalogImage(spec, "list")}) 
-
-${spec.description}`,
-                        `jacdac:devices/${identifierToUrlPath(spec.id)}`
-                    )
-                } else {
-                    const control = device.service(SRV_CONTROL)
-                    const description = control?.register(
-                        ControlReg.DeviceDescription
-                    )
-                    this.tooltip = description?.stringValue
-                }
-            }
-        }
+    async resolveTreeItem(
+        token: vscode.CancellationToken
+    ): Promise<vscode.TreeItem> {
+        if (!this.tooltip)
+            this.tooltip = await deviceCatalogTooltip(this.device)
         return Promise.resolve(this)
     }
 
