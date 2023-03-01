@@ -74,7 +74,7 @@ function testByRefParams(): void {
     x = 2
     byRefParam_0(4)
     byRefParam_2(10)
-    sleepMs(330)
+    sleepMs(30)
     assert(sum == 18, "by ref")
     sum = 0
     msg("byref done")

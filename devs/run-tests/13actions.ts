@@ -29,6 +29,7 @@ function inBg() {
     let q = 14
     let rec: Testrec = {} as any
     glb1 = 0
+    sleepMs(1) // TODO there's some problem with fiber ordering when this is removed and all.ts is run
     runInBackground(() => {
         glb1 = glb1 + 10 + (q - k)
         rec.str = "foo"
@@ -36,7 +37,7 @@ function inBg() {
     runInBackground(() => {
         glb1 = glb1 + 1
     })
-    sleepMs(500)
+    sleepMs(10)
     assert(glb1 == 18, "inbg0")
     assert(rec.str == "foo", "inbg1")
     glb1 = 0

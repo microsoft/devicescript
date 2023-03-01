@@ -18,6 +18,7 @@
 * add LED service
 * add switch service (simple GPIO out)
 * implement matching of instance name to role name
+* TODO in `13actions.ts` - fiber ordering
 
 ## Big ticket
 * Jacdac packet queue overflow when printing a lot
