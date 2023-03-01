@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 
-async function bar() { } //! modifier not supported
+async function bar() { }
 function* baz() { } //! modifier not supported
 
 function foo() {

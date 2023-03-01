@@ -1669,6 +1669,7 @@ class Program implements TopOpWriter {
 
         function modifierOK(mod: ts.Modifier) {
             switch (mod.kind) {
+                case SK.AsyncKeyword:
                 case SK.ExportKeyword:
                     return true
                 default:
@@ -3142,6 +3143,14 @@ class Program implements TopOpWriter {
         return arr.finalEmit()
     }
 
+    private isPromise(tp: ts.Type): boolean {
+        if (tp.flags & ts.TypeFlags.Object)
+            return this.symName(tp.symbol) == "#Promise"
+        if (tp.isUnionOrIntersection())
+            return tp.types.some(t => this.isPromise(t))
+        return false
+    }
+
     private emitExpr(expr: Expr): Value {
         const folded = this.constantFold(expr)
         if (folded) {
@@ -3156,7 +3165,13 @@ class Program implements TopOpWriter {
             else return literal(folded.val)
         }
 
+        const tp = this.checker.getTypeAtLocation(expr)
+        if (this.isPromise(tp) && !ts.isAwaitExpression(expr.parent) )
+            this.reportError(expr, "'await' missing")
+
         switch (expr.kind) {
+            case SK.AwaitExpression:
+                return this.emitExpr((expr as ts.AwaitExpression).expression)
             case SK.AsExpression:
                 return this.emitExpr((expr as ts.AsExpression).expression)
             case SK.TypeAssertionExpression:

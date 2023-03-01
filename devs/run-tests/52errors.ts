@@ -71,11 +71,11 @@ function testExn(): any {
     testTooLarge(1000000)
     testTooLarge(2000000000)
 
-    expectExn(() => {
-        airp.sendCommand(100000)
+    expectExn(async () => {
+        await airp.sendCommand(100000)
     }, RangeError)
-    expectExn(() => {
-        airp.sendCommand(0x80, Buffer.alloc(300))
+    expectExn(async () => {
+        await airp.sendCommand(0x80, Buffer.alloc(300))
     }, RangeError)
 
     callIt(() => {})

@@ -1,8 +1,9 @@
 /// <reference path="devicescript-spec.d.ts" />
 
 declare module "@devicescript/core" {
-    export type Handler = () => void
-    export type PktHandler = (pkt: Packet) => void
+    export type AsyncVoid = void | Promise<void>
+    export type Callback = () => AsyncVoid
+    export type PktHandler = (pkt: Packet) => AsyncVoid
 
     export type SMap<T> = {
         [idx: string]: T
@@ -15,19 +16,19 @@ declare module "@devicescript/core" {
     export class Role {
         isConnected: boolean
         // TODO: is there a way to unregister an event?
-        onConnected(handler: () => void): void
-        onDisconnected(handler: () => void): void
+        onConnected(handler: Callback): void
+        onDisconnected(handler: Callback): void
 
         /**
          * Wait for the next packet to arrive from the device.
          * When device has just disconnected this returns null.
          */
-        wait(): Packet | null
+        wait(): Promise<Packet | null>
 
         /**
          * @internal
          */
-        sendCommand(serviceCommand: number, payload?: Buffer): void
+        sendCommand(serviceCommand: number, payload?: Buffer): Promise<void>
 
         /**
          * @internal
@@ -37,8 +38,8 @@ declare module "@devicescript/core" {
         _changeHandlers: any
 
         _wasConnected: boolean
-        _connHandlers: Handler[]
-        _disconHandlers: Handler[]
+        _connHandlers: Callback[]
+        _disconHandlers: Callback[]
 
         _eventHandlers: SMap<PktHandler[]>
     }
@@ -87,14 +88,14 @@ declare module "@devicescript/core" {
          * Gets the current value of the register as a number.
          * TODO: missing value behavior (optional regs)
          */
-        read(): number
+        read(): Promise<number>
 
         /**
          * Sets the current value of the register.
          * @param value value to assign to the register
          * TODO: is it guaranteed, does it throw when it fails?
          */
-        write(value: number): void
+        write(value: number): Promise<void>
 
         /**
          * Registers a callback to execute when the register value changes by the given threshold
@@ -102,7 +103,7 @@ declare module "@devicescript/core" {
          * @param handler callback to execute
          * TODO: can we unregister?
          */
-        onChange(threshold: number, handler: (curr: number) => void): void
+        onChange(threshold: number, handler: (curr: number) => AsyncVoid): void
     }
 
     /**
@@ -112,7 +113,7 @@ declare module "@devicescript/core" {
         /**
          * Gets the current value of the register.
          */
-        read(): Buffer
+        read(): Promise<Buffer>
 
         /**
          * Sets the current value of the register.
@@ -120,13 +121,13 @@ declare module "@devicescript/core" {
          * TODO: is the buffer copied or owned?
          * TODO: is Buffer = null same as buffer[0]
          */
-        write(value: Buffer): void
+        write(value: Buffer): Promise<void>
 
         /**
          * Registers a callback to execute when the register value changes
          * @param handler callback to execute
          */
-        onChange(handler: (curr: number) => void): void
+        onChange(handler: (curr: Buffer) => AsyncVoid): void
     }
 
     /**
@@ -137,45 +138,45 @@ declare module "@devicescript/core" {
          * Gets the current value of the register as a number.
          * TODO: missing value behavior (optional regs)
          */
-        read(): boolean
+        read(): Promise<boolean>
         /**
          * Sets the current value of the register as a number.
          * TODO: missing value behavior (optional regs)
          */
-        write(value: boolean): void
-        onChange(handler: (curr: number) => void): void
+        write(value: boolean): Promise<void>
+        onChange(handler: (curr: boolean) => AsyncVoid): void
     }
 
     /**
      * A client for a register that holds a string value.
      */
     export class RegisterString extends Register {
-        read(): string
-        write(value: string): void
+        read(): Promise<string>
+        write(value: string): Promise<void>
     }
 
     export class RegisterArray extends Register {
-        read(): any[]
-        write(value: any[]): void
+        read(): Promise<any[]>
+        write(value: any[]): Promise<void>
     }
 
     export class Event extends PacketInfo {
         /**
          * Blocks the current thread under the event is received.
          */
-        wait(): void
+        wait(): Promise<void>
         /**
          * Register a callback that will be raised when the event is raised.
          * @handler callback to execute
          */
         // TODO: consider something like "onReceived" to match other events
-        subscribe(handler: (pkt: Packet) => void): void
+        subscribe(handler: (pkt: Packet) => AsyncVoid): void
     }
 
     // TODO: maybe a better name, is this some kind of internal data structure?
     export class Condition {
         signal(): void
-        wait(): void
+        wait(): Promise<void>
     }
 
     export interface CloudAdapter {
@@ -190,7 +191,7 @@ declare module "@devicescript/core" {
                 v5: number,
                 v6: number,
                 v7: number
-            ) => void
+            ) => AsyncVoid
         ): void
         _cloudHandlers: any
     }
@@ -204,12 +205,12 @@ declare module "@devicescript/core" {
     /**
      * Run a callback every given number of milliseconds.
      */
-    export function everyMs(milliseconds: number, callback: () => void): void
+    export function everyMs(milliseconds: number, callback: Callback): void
 
     /**
      * Wait for specified number of milliseconds.
      */
-    export function sleepMs(milliseconds: number): void
+    export function sleepMs(milliseconds: number): Promise<void>
 
     /**
      * Restart current script.
@@ -337,7 +338,7 @@ declare module "@devicescript/core" {
 
     /**
      * Direct access to pin by hardware id. Best to use `pins.name` instead.
-     * 
+     *
      * @param hwPinIndex hardware pin number
      */
     export function gpio(hwPinIndex: number): IOPin & AnalogInPin & AnalogOutPin

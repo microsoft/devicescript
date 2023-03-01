@@ -21,7 +21,7 @@ const optionalFiles: Record<string, Object | string> = {
         compilerOptions: {
             moduleResolution: "node",
             target: "es2022",
-            module: "es2015",
+            module: "es2022",
             lib: [],
             strict: true,
             strictNullChecks: false,

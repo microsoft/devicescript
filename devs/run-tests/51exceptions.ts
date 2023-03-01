@@ -3,11 +3,11 @@ import { sleepMs, assert, reboot } from "@devicescript/core"
 let glb1 = 0
 let x = 0
 
-function immediate(k: number) {
+async function immediate(k: number) {
     try {
-        sleepMs(1)
+        await sleepMs(1)
         if (k > 0) throw "hl" + k
-        sleepMs(1)
+        await sleepMs(1)
         glb1++
     } catch (e) {
         assert(e == "hl" + k)
@@ -18,15 +18,15 @@ function immediate(k: number) {
     }
 }
 
-function throwVal(n: number) {
-    sleepMs(1)
+async function throwVal(n: number) {
+    await sleepMs(1)
     if (n > 0) throw "hel" + n
-    sleepMs(1)
+    await sleepMs(1)
 }
 
 function higherorder(k: number) {
     try {
-        ;[1].map(() => throwVal(k))
+        ;[1].map(async () => await throwVal(k))
         glb1++
     } catch (e) {
         assert(e == "hel" + k)
@@ -37,10 +37,10 @@ function higherorder(k: number) {
     }
 }
 
-function lambda(k: number) {
-    function inner() {
+async function lambda(k: number) {
+    async function inner() {
         try {
-            throwVal(k)
+            await throwVal(k)
             glb1++
         } catch (e) {
             assert(e == "hel" + k)
@@ -50,14 +50,14 @@ function lambda(k: number) {
             x += glb1
         }
     }
-    inner()
+    await inner()
 }
 
-function callingThrowVal(k: number) {
+async function callingThrowVal(k: number) {
     try {
-        sleepMs(1)
-        throwVal(k)
-        sleepMs(1)
+        await sleepMs(1)
+        await throwVal(k)
+        await sleepMs(1)
         glb1++
     } catch (e) {
         assert(e == "hel" + k)
@@ -68,10 +68,10 @@ function callingThrowVal(k: number) {
     }
 }
 
-function nested() {
+async function nested() {
     try {
         try {
-            callingThrowVal(10)
+            await callingThrowVal(10)
         } catch (e) {
             assert(glb1 == 10 && x == 10)
             glb1++
@@ -144,15 +144,15 @@ function test6() {
     assert(kk == 202)
 }
 
-function run() {
+async function run() {
     console.log("test exn")
     glb1 = 0
     x = 0
-    callingThrowVal(1)
+    await callingThrowVal(1)
     assert(glb1 == 10 && x == 10)
-    callingThrowVal(0)
+    await callingThrowVal(0)
     assert(glb1 == 11 && x == 21)
-    callingThrowVal(3)
+    await callingThrowVal(3)
     assert(glb1 == 21 && x == 42)
 
     test3(callingThrowVal)
@@ -162,7 +162,7 @@ function run() {
 
     glb1 = 0
     x = 0
-    nested()
+    await nested()
     assert(glb1 == 11)
 
     assert(test4(() => {}) == 10)
@@ -179,6 +179,6 @@ function run() {
     console.log("test exn done")
 }
 
-run()
+await run()
 
 reboot()

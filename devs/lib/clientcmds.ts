@@ -12,8 +12,8 @@ declare module "@devicescript/core" {
     }
 }
 
-ds.Led.prototype.setAll = function (r, g, b) {
-    const buflen = this.numPixels.read() * 3
+ds.Led.prototype.setAll = async function (r, g, b) {
+    const buflen = (await this.numPixels.read()) * 3
     const buf = Buffer.alloc(buflen)
     let idx = 0
     while (idx < buflen) {
@@ -22,7 +22,7 @@ ds.Led.prototype.setAll = function (r, g, b) {
         buf.setAt(idx + 2, "u0.8", b)
         idx = idx + 3
     }
-    this.pixels.write(buf)
+    await this.pixels.write(buf)
 }
 
 interface ChangeHandler {
@@ -31,18 +31,18 @@ interface ChangeHandler {
     prev?: any
 }
 
-function callHandlers(hh: ds.Handler[]) {
-    if (hh) for (const h of hh) h()
+async function callHandlers(hh: ds.Callback[]) {
+    if (hh) for (const h of hh) await h()
 }
 
-ds.Role.prototype.onPacket = function (pkt: ds.Packet) {
+ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
     if (!pkt || pkt.serviceCommand == 0) {
         const conn = this.isConnected
         if (this._connHandlers || this._disconHandlers) {
             if (conn != this._wasConnected) {
                 this._wasConnected = conn
-                if (conn) callHandlers(this._connHandlers)
-                else callHandlers(this._disconHandlers)
+                if (conn) await callHandlers(this._connHandlers)
+                else await callHandlers(this._disconHandlers)
             }
         }
         if (conn && this._changeHandlers) {
@@ -52,9 +52,9 @@ ds.Role.prototype.onPacket = function (pkt: ds.Packet) {
                 if (rg == 0x0101) {
                     const b = Buffer.alloc(1)
                     b[0] = 199
-                    this.sendCommand(0x2003, b)
+                    await this.sendCommand(0x2003, b)
                 } else {
-                    this.sendCommand(0x1000 | rg)
+                    await this.sendCommand(0x1000 | rg)
                 }
             }
         }
@@ -80,7 +80,7 @@ ds.Role.prototype.onPacket = function (pkt: ds.Packet) {
     }
     if (pkt.isEvent && this._eventHandlers) {
         const hh = this._eventHandlers[pkt.eventCode + ""]
-        if (hh) for (const h of hh) h(pkt)
+        if (hh) for (const h of hh) await h(pkt)
     }
 }
 
@@ -92,13 +92,13 @@ function addElement<T>(arr: T[], e: T) {
 
 ds.Role.prototype.onConnected = function onConnected(
     this: ds.Role,
-    h: ds.Handler
+    h: ds.Callback
 ) {
     this._connHandlers = addElement(this._connHandlers, h)
 }
 ds.Role.prototype.onDisconnected = function onConnected(
     this: ds.Role,
-    h: ds.Handler
+    h: ds.Callback
 ) {
     this._disconHandlers = addElement(this._disconHandlers, h)
 }
@@ -164,9 +164,9 @@ ds.Event.prototype.subscribe = function (handler) {
     m[k].push(handler)
 }
 
-ds.Event.prototype.wait = function () {
+ds.Event.prototype.wait = async function () {
     while (true) {
-        const pkt = this.role.wait()
+        const pkt = await this.role.wait()
         if (pkt && pkt.eventCode == this.code) return
     }
 }

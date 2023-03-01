@@ -44,8 +44,8 @@ function testRefLocals(): void {
 }
 
 function byRefParam_0(p: number): void {
-    runInBackground(() => {
-        sleepMs(1)
+    runInBackground(async () => {
+        await sleepMs(1)
         sum = sum + p
     })
     p = p + 1
@@ -53,28 +53,28 @@ function byRefParam_0(p: number): void {
 
 function byRefParam_2(pxx: number): void {
     pxx = pxx + 1
-    runInBackground(() => {
-        sleepMs(1)
+    runInBackground(async () => {
+        await sleepMs(1)
         sum = sum + pxx
     })
 }
 
-function testByRefParams(): void {
+async function testByRefParams() {
     msg("testByRefParams")
     refparamWrite(ds._id("a") + "b")
     refparamWrite2(newTestrec())
-    sleepMs(10)
-    refparamWrite3(newTestrec())
+    await sleepMs(10)
+    await refparamWrite3(newTestrec())
     sum = 0
     let x = 1
-    runInBackground(() => {
-        sleepMs(1)
+    runInBackground(async () => {
+        await sleepMs(1)
         sum = sum + x
     })
     x = 2
     byRefParam_0(4)
     byRefParam_2(10)
-    sleepMs(30)
+    await sleepMs(30)
     assert(sum == 18, "by ref")
     sum = 0
     msg("byref done")
@@ -90,15 +90,15 @@ function refparamWrite2(testrec: Testrec): void {
     assert(testrec.bool === undefined, "rw2f")
 }
 
-function refparamWrite3(testrecX: Testrec): void {
-    runInBackground(() => {
-        sleepMs(1)
+async function refparamWrite3(testrecX: Testrec) {
+    runInBackground(async () => {
+        await sleepMs(1)
         assert(testrecX.str == "foo", "ff")
         testrecX.str = testrecX.str + "x"
     })
     testrecX = newTestrec()
     testrecX.str = "foo"
-    sleepMs(30)
+    await sleepMs(30)
     assert(testrecX.str == "foox", "ff2")
 }
 
@@ -258,8 +258,6 @@ testDynamicMaps()
 
 testLazyRef()
 testRefLocals()
-testByRefParams()
+await testByRefParams()
 testMemoryFree()
 initUndef()
-
-

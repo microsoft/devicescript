@@ -15,7 +15,7 @@ enum En2 {
     D2 = 1,
 }
 
-function testEnums() {
+async function testEnums() {
     console.log("enums")
 
     let k = En.C as number
@@ -45,7 +45,7 @@ function testEnums() {
     assert(switchB(En.D) == 13, "x4")
     assert(switchB(En.E) == 14, "x5")
 
-    sleepMs(3)
+    await sleepMs(3)
 
     let kk = 1
     if (kk & En2.D2) {
@@ -99,4 +99,4 @@ enum Foo {
     B = 1 << 1,
 }
 
-testEnums()
+await testEnums()

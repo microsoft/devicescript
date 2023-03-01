@@ -14,22 +14,22 @@ btn.down.subscribe(() => {
     )
 })
 
-function press(k: number) {
-    kbd.key(k, ds.HidKeyboardModifiers.None, ds.HidKeyboardAction.Down)
-    ds.sleepMs(20)
-    kbd.key(k, ds.HidKeyboardModifiers.None, ds.HidKeyboardAction.Up)
-    ds.sleepMs(20)
+async function press(k: number) {
+    await kbd.key(k, ds.HidKeyboardModifiers.None, ds.HidKeyboardAction.Down)
+    await ds.sleepMs(20)
+    await kbd.key(k, ds.HidKeyboardModifiers.None, ds.HidKeyboardAction.Up)
+    await ds.sleepMs(20)
 }
 
-let prevV = rot.position.read()
-rot.position.onChange(1, () => {
-    const v = rot.position.read()
+let prevV = await rot.position.read()
+rot.position.onChange(1, async () => {
+    const v = await rot.position.read()
     while (prevV < v) {
         prevV = prevV + 1
-        press(ds.HidKeyboardSelector.RightArrow)
+        await press(ds.HidKeyboardSelector.RightArrow)
     }
     while (prevV > v) {
         prevV = prevV - 1
-        press(ds.HidKeyboardSelector.LeftArrow)
+        await press(ds.HidKeyboardSelector.LeftArrow)
     }
 })

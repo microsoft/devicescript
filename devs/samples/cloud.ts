@@ -10,17 +10,17 @@ let q = 0
         q = q + 1
     })
 
-cloud.onMethod("foo", (a, b) => {
+cloud.onMethod("foo", async (a, b) => {
     console.log("foo a=", a, "b=", b)
     return [a + 1, b * 2]
 })
 
-cloud.onMethod("bar", (a) => {
+cloud.onMethod("bar", async (a) => {
     console.log("bar a=", a)
-    ds.sleepMs(5000)
+    await ds.sleepMs(5000)
     return [108]
 })
 
-cloud.onMethod("bar2", () => {
+cloud.onMethod("bar2", async () => {
     return [108]
 })
