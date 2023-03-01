@@ -36,7 +36,7 @@ function inBg() {
     runInBackground(() => {
         glb1 = glb1 + 1
     })
-    sleepMs(50)
+    sleepMs(500)
     assert(glb1 == 18, "inbg0")
     assert(rec.str == "foo", "inbg1")
     glb1 = 0
@@ -377,4 +377,4 @@ runInl()
 testUndef()
 testLambdasWithMoreParams()
 
-ds.reboot()
+

@@ -35,4 +35,4 @@ function testUnionIndexer(): void {
 testStringCollection()
 testUnionIndexer()
 
-ds.reboot()
+

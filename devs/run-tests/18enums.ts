@@ -100,4 +100,3 @@ enum Foo {
 }
 
 testEnums()
-ds.reboot()

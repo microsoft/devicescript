@@ -49,4 +49,3 @@ function testNumCollection(): void {
 testNumCollection()
 testArrIncr()
 
-ds.reboot()

@@ -106,7 +106,6 @@ export async function getHost(
     const inst = options.noVerify ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
-    const flags = (options.flag ?? {}) as CompileFlags
     const devsHost: Host = {
         write: (fn: string, cont: string) => {
             const p = join(outdir, fn)
@@ -128,7 +127,7 @@ export async function getHost(
             if (!options.quiet)
                 console.error(formatDiagnostics([err], !consoleColors))
         },
-        getFlags: () => flags,
+        getFlags: () => options.flag ?? {},
         getConfig: () => buildConfig,
         verifyBytecode: (buf: Uint8Array) => {
             if (!inst) return
@@ -346,7 +345,7 @@ export interface BuildOptions {
     noVerify?: boolean
     outDir?: string
     stats?: boolean
-    flag?: Record<string, boolean>
+    flag?: CompileFlags
     cwd?: string
     quiet?: boolean
 }

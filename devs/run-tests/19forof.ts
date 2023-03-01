@@ -81,4 +81,3 @@ function testForOf() {
 }
 
 testForOf()
-ds.reboot()

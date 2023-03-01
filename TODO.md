@@ -7,7 +7,6 @@
 * run handlers in background - some sort of object to keep track if it's running?
 
 ## Random stuff
-* support `import` for user code (also for side-effects work)
 * add "Internal exception" break category (ones with .internal property; normally we would not break on these if caught)
 * have event_breakpoints 32 bit flags enum register - unhandled exns, handled exns, debugger stmts, internal exns, ...
 * change `ALLOC_*` opcodes to expressions
@@ -27,7 +26,6 @@
 * tree strings?
 * introduce Fiber class (also Fiber.suspend() and Fiber.resume())
 * drop `length` field from fun-descriptor
-* automatically add `ds.reboot()` in tests
 
 ## Later
 * multi-program

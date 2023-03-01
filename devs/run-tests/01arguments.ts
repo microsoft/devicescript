@@ -46,4 +46,4 @@ function optstring2(x: number, s: string = null) {
 
 testDefaultArgs()
 
-ds.reboot()
+

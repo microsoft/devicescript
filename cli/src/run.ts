@@ -42,6 +42,9 @@ export async function runTest(
     fn: string,
     options: RunOptions & BuildOptions = {}
 ) {
+    if (!options.flag) options.flag = {}
+    options.flag.testHarness = true
+
     const prog = await readCompiled(fn, options)
     const inst = await devsFactory()
 

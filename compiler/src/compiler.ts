@@ -527,6 +527,7 @@ export interface CompileFlags {
     allPrototypes?: boolean
     traceBuiltin?: boolean
     traceProto?: boolean
+    testHarness?: boolean
 }
 
 function trace(...args: any) {
@@ -541,6 +542,7 @@ export const compileFlagHelp: Record<string, string> = {
         "compile-in all `object.method = function ...` assignments, used or not",
     traceBuiltin: "trace unresolved built-in functions",
     traceProto: "trace tree-shaking of prototypes",
+    testHarness: "add an implicit ds.reboot() at the end",
 }
 
 interface PossiblyConstDeclaration extends ts.Declaration {
@@ -1879,7 +1881,9 @@ class Program implements TopOpWriter {
             this.protoProc.callMe(wr, [])
             for (const s of stmts) this.emitStmt(s)
             this.onStart.finalizeRaw()
-            this.writer.emitStmt(Op.STMT1_RETURN, literal(0))
+            if (this.flags.testHarness)
+                wr.emitCall(wr.dsMember(BuiltInString.REBOOT))
+            wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
             if (this.roles.length > 1 || this.cloudRole.used)
                 this.markMethodUsed("#ds.Role.onPacket")

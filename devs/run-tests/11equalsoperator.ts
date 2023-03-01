@@ -43,4 +43,4 @@ function eqG() {
 
 eqG()
 
-ds.reboot()
+

@@ -758,4 +758,4 @@ testJSON()
 testAnySwitch()
 
 console.log("all OK")
-ds.reboot()
+
