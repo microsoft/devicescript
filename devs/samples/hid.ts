@@ -4,10 +4,10 @@ const btn = new ds.Button()
 const rot = new ds.RotaryEncoder()
 const kbd = new ds.HidKeyboard()
 
-btn.down.subscribe(() => {
+btn.down.subscribe(async () => {
     // kbd.key(HidKeyboardSelector.UpArrow, HidKeyboardModifiers.None, HidKeyboardAction.Press)
     // kbd.key(HidKeyboardSelector.VolumeUp, HidKeyboardModifiers.None, HidKeyboardAction.Press)
-    kbd.key(
+    await kbd.key(
         ds.HidKeyboardSelector.V,
         ds.HidKeyboardModifiers.LeftGUI,
         ds.HidKeyboardAction.Press

@@ -169,7 +169,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
                         .map(f => `@param ${f.name} - ${f.unit}`)
                         .join("\n")
             )
-            r += `    ${camelize(pkt.name)}(${fields}): void\n`
+            r += `    ${camelize(pkt.name)}(${fields}): Promise<void>\n`
         }
 
         if (tp) {

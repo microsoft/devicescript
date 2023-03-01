@@ -12,7 +12,7 @@ btnA.down.subscribe(async () => {
     let [r, g, b] = await color.color.read()
     r = r + await led.brightness.read()
     tint = (r + g + 2.3 * b) / (r + 2 * g + b)
-    ds.cloud.upload("color", r, g, b, tint)
+    await ds.cloud.upload("color", r, g, b, tint)
     // display.message.write(format("t={0} {1}", tint, r))
     await led.brightness.write(0)
 })

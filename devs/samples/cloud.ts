@@ -4,9 +4,9 @@ import { cloud } from "@devicescript/core"
 let q = 0
         
 // if (false)
-    ds.everyMs(5000, () => {
+    ds.everyMs(5000, async () => {
         console.log("upl", q)
-        cloud.upload("hello", q, 2 * q, q + 10000)
+        await cloud.upload("hello", q, 2 * q, q + 10000)
         q = q + 1
     })
 

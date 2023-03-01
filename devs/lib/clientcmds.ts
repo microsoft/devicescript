@@ -1,9 +1,9 @@
 import * as ds from "@devicescript/core"
 
-ds.Buzzer.prototype.playNote = function (frequency, volume, duration) {
+ds.Buzzer.prototype.playNote = async function (frequency, volume, duration) {
     const p = 1000000 / frequency
     volume = Math.clamp(0, volume, 1)
-    this.playTone(p, p * volume * 0.5, duration)
+    await this.playTone(p, p * volume * 0.5, duration)
 }
 
 declare module "@devicescript/core" {
@@ -128,16 +128,16 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     lst[lst.length] = obj
 }
 
-function handleCloudCommand(pkt: ds.Packet) {
+async function handleCloudCommand(pkt: ds.Packet) {
     const [seqNo, cmd, ...vals] = pkt.decode()
     const cloud = pkt.role as ds.CloudAdapter
     const h = cloud._cloudHandlers[cmd]
     if (h) {
-        const r = h(...vals)
-        cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.OK, ...r)
+        const r = await h(...vals)
+        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.OK, ...r)
     } else {
         // TODO Busy? store fiber ref and possibly kill?
-        cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.NotFound)
+        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.NotFound)
     }
 }
 
