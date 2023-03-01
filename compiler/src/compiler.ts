@@ -2506,6 +2506,9 @@ class Program implements TopOpWriter {
             return this.checker.getShorthandAssignmentValueSymbol(node.parent)
 
         let sym = this.checker.getSymbolAtLocation(node)
+        if (sym?.flags & ts.SymbolFlags.Alias)
+            sym = this.checker.getAliasedSymbol(sym)
+
         if (!sym) {
             const decl = node as ts.NamedDeclaration
             if (decl.name) sym = this.checker.getSymbolAtLocation(decl.name)
