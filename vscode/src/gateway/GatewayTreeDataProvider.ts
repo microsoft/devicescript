@@ -76,9 +76,11 @@ function cloudScriptToQuickPickItem(
     }
 }
 
-function cloudScriptVersionToQuickPickItem(v: CloudScript) {
+function cloudScriptVersionToQuickPickItem(
+    v: CloudScript
+): TaggedQuickPickItem<CloudScript> {
     return <CloudScriptPickItem>{
-        version: v.version,
+        data: v,
         label: `v${v.version}`,
         description: v.creationTime.toLocaleString(),
     }
@@ -316,9 +318,7 @@ export class GatewayTreeDataProvider
                     )
 
                 label = `${shortDeviceId(d.deviceId)}, ${d.name}`
-                description = script
-                    ? `${script.displayName} v${d.scriptVersion}`
-                    : "no script"
+                description = script ? script.displayName : "no script"
                 const iconName = connected
                     ? "circle-large-filled"
                     : "circle-slash"

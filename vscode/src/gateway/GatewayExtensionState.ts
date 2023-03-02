@@ -181,20 +181,40 @@ export class GatewayExtensionState extends JDEventSource {
 
     async configure() {
         let changed = false
-        const apiRoot = this.apiRoot
-        const newApiRoot = await vscode.window.showInputBox({
-            placeHolder: "Enter Gateway web application root",
-            value: apiRoot || "https://.azurewebsites.net",
+        const newConnectionString = await vscode.window.showInputBox({
+            placeHolder: "Enter DevelopmentGateway connection string",
         })
-        if (newApiRoot !== undefined && newApiRoot !== apiRoot) {
-            await this.setApiRoot(newApiRoot)
+        if (newConnectionString === undefined) return
+        if (newConnectionString === "") {
+            await this.setApiRoot(undefined)
             changed = true
-        }
-        const token = await vscode.window.showInputBox({
-            placeHolder: "Enter Cloud Authentication Token",
-            value: "",
-        })
-        if (token !== undefined) {
+        } else {
+            const parts = newConnectionString
+                .trim()
+                .split(";")
+                .map(chunk => chunk.split("=", 2))
+            const webAppName = parts.find(
+                ([name]) => name === "WebAppName"
+            )?.[1]
+            const accountName = parts.find(
+                ([name]) => name === "AccountName"
+            )?.[1]
+            const accountKey = parts.find(
+                ([name]) => name === "AccountKey"
+            )?.[1]
+            const endPointSuffix = parts.find(
+                ([name]) => name === "EndPointSuffix"
+            )?.[1]
+
+            if (!webAppName || !accountName || !accountKey || !endPointSuffix) {
+                vscode.window.showErrorMessage(
+                    "DeviceScript Gateway: invalid connection string"
+                )
+                return
+            }
+            const apiRoot = `https://${webAppName}.${endPointSuffix}`
+            const token = `${accountName}:${accountKey}`
+            await this.setApiRoot(apiRoot)
             await this.setToken(token)
             changed = true
         }
