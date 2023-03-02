@@ -13,7 +13,7 @@
     "bin": {
         "devicescript": "./devicescript",
         "devicescript-cli": "./devicescript",
-        "devsc": "./devicescript"
+        "devs": "./devicescript"
     },
     "files": [
         "./devicescript",
@@ -23,21 +23,21 @@
     ],
     "license": "MIT",
     "devDependencies": {
+        "@devicescript/dap": "*",
+        "@devicescript/vm": "*",
         "@types/debounce-promise": "^3.1.5",
         "@types/fs-extra": "^9.0.13",
         "@types/node": "^18.11.9",
         "commander": "^9.4.1",
         "debounce-promise": "^3.1.2",
         "faye-websocket": "^0.11.4",
-        "fs-extra": "^10.1.0",
-        "@devicescript/dap": "*",
-        "@devicescript/vm": "*"
+        "fs-extra": "^10.1.0"
     },
     "dependencies": {
         "@devicescript/compiler": "*",
         "buffer": "^6.0.3",
-        "websocket-polyfill": "^0.0.3",
-        "jacdac-ts": "*"
+        "jacdac-ts": "*",
+        "websocket-polyfill": "^0.0.3"
     },
     "optionalDependencies": {
         "serialport": "^10.5.0"

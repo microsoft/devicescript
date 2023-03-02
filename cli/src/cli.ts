@@ -13,7 +13,7 @@ import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
-import { setConsoleColors, setVerbose } from "./command"
+import { setConsoleColors, setVerbose, verboseLog } from "./command"
 import { binPatch } from "./binpatch"
 import {
     boardNames,
@@ -118,7 +118,10 @@ export async function mainCli() {
         .option("--empty", "generate empty program embed")
         .option("-t, --test", "run compiler tests")
         .option("--fetch-boards <boards.json>", "re-create boards.json file")
-        .option("--local-boards <repos-path>", "use local, not remote info.json files")
+        .option(
+            "--local-boards <repos-path>",
+            "use local, not remote info.json files"
+        )
         .action(ctool)
 
     program
@@ -278,7 +281,10 @@ export async function mainCli() {
         .arguments("<file.board.json...>")
         .action(binPatch)
 
-    program.on("option:verbose", () => setVerbose(true))
+    program.on("option:verbose", () => {
+        setVerbose(true)
+        verboseLog(`using CLI from ${__dirname}`)
+    })
     program.on("option:no-colors", () => setConsoleColors(false))
 
     program.parse(process.argv)

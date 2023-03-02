@@ -1,2 +1,18 @@
 #!/usr/bin/env node
-require('./built/devicescript-cli.cjs').mainCli()
+const path = require("path")
+const fs = require("fs")
+function findCLI() {
+    let folder = path.resolve(".")
+    while (true) {
+        const fn = path.join(
+            folder,
+            "node_modules/@devicescript/cli/built/devicescript-cli.cjs"
+        )
+        if (fs.existsSync(fn)) return fn
+        let newFolder = path.resolve(folder, "..")
+        if (newFolder == folder) break
+        folder = newFolder
+    }
+    return "./built/devicescript-cli.cjs"
+}
+require(findCLI()).mainCli()
