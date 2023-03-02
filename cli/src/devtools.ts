@@ -388,6 +388,9 @@ async function rebuild(args: BuildReqArgs) {
     }
 
     delete res.binary
+    res.diagnostics.forEach(d => {
+        d.filename = resolve(d.filename)
+    })
     const r: BuildStatus = {
         ...res,
         deployStatus,
