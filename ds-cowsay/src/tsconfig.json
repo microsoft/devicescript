@@ -18,11 +18,7 @@
         "types": []
     },
     "include": [
-        "**/*.ts",
-        ".devicescript/lib/*.ts"
-    ],
-    "exclude": [
-        "**/node_modules/*",
-        "**/sim/*"
+        "*.ts",
+        "../.devicescript/lib/*.ts"
     ]
 }

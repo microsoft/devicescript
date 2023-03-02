@@ -1,7 +1,7 @@
 {
     "name": "ds-cowsay",
     "version": "0.0.0",
-    "main": "./all.ts",
+    "main": "./src/all.ts",
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*",
