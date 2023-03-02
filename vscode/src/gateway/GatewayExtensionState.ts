@@ -2,6 +2,7 @@ import {
     CHANGE,
     CloudManager,
     ERROR,
+    FETCH_ERROR,
     JDDevice,
     JDEventSource,
     SRV_CLOUD_ADAPTER,
@@ -20,6 +21,7 @@ export class GatewayExtensionState extends JDEventSource {
         super()
         this.handleChange = this.handleChange.bind(this)
         this.handleError = this.handleError.bind(this)
+        this.handleFetchError = this.handleFetchError.bind(this)
         const { subscriptions, secrets } = this.context
 
         // track config changes
@@ -119,6 +121,10 @@ export class GatewayExtensionState extends JDEventSource {
         console.error(err)
     }
 
+    private handleFetchError(err: Response) {
+        console.error(err)
+    }
+
     private async handleRefreshConnection() {
         if (this._manager) {
             this._manager.off(CHANGE, this.handleChange)
@@ -135,6 +141,7 @@ export class GatewayExtensionState extends JDEventSource {
             this._manager = new CloudManager(this.bus, apiRoot, token)
             this._manager.on(CHANGE, this.handleChange)
             this._manager.on(ERROR, this.handleError)
+            this._manager.on(FETCH_ERROR, this.handleFetchError)
             forceRefresh = true
         }
         if (this._manager && forceRefresh) await this._manager.refresh()

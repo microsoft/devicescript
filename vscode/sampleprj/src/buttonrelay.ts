@@ -11,8 +11,8 @@ const relay = servers.startRelay({
 
 let active = false
 
-button.down.subscribe(() => {
+button.down.subscribe(async () => {
     active = !active
     console.log(`active ${active}`)
-    relay.active.write(active)
+    await relay.active.write(active)
 })
