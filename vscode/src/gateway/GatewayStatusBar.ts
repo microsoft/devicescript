@@ -11,7 +11,7 @@ export async function registerGatewayStatusBar(state: GatewayExtensionState) {
         vscode.StatusBarAlignment.Right,
         119.9
     )
-    statusBarItem.command = "extension.devicescript.gateway.configure"
+    statusBarItem.command = "extension.devicescript.gateway.connect"
     const updateStatusBar = async () => {
         const { manager, apiRoot } = state
         if (manager) {

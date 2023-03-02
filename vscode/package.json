@@ -166,11 +166,15 @@
         "viewsWelcome": [
             {
                 "view": "extension.devicescript.jdom",
-                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://microsoft.github.io/devicescript/intro) or browse the list of [devices](https://microsoft.github.io/devicescript/devices/)."
+                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read the docs](https://microsoft.github.io/devicescript/intro) or browse the list of [devices](https://microsoft.github.io/devicescript/devices/)."
             },
             {
                 "view": "extension.devicescript.watch",
                 "contents": "Select Registers or Events to watch."
+            },
+            {
+                "view": "extension.devicescript.gateway",
+                "contents": "Deploy scripts remotely, track telemetry.\n[Connect](command:extension.devicescript.gateway.connect)\n[Create Gateway](https://microsoft.github.io/devicescript/developer/gateway)\n\nTo learn more about DeviceScript Gateway, [read the docs](https://microsoft.github.io/devicescript/developer/gateway)."
             }
         ],
         "walkthroughs": [
@@ -244,7 +248,7 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "extension.devicescript.gateway.configure",
+                    "command": "extension.devicescript.gateway.connect",
                     "when": "view == extension.devicescript.gateway",
                     "group": "navigation"
                 },
@@ -380,7 +384,7 @@
                     "command": "extension.devicescript.boards.add"
                 },
                 {
-                    "command": "extension.devicescript.gateway.configure"
+                    "command": "extension.devicescript.gateway.connect"
                 },
                 {
                     "command": "extension.devicescript.gateway.refresh"
@@ -530,8 +534,8 @@
                 "category": "DeviceScript"
             },
             {
-                "command": "extension.devicescript.gateway.configure",
-                "title": "Configure Connection",
+                "command": "extension.devicescript.gateway.connect",
+                "title": "Connect...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(plug)"
             },

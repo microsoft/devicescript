@@ -14,7 +14,7 @@ export function activateGateway(
 
     //cloud
     vscode.commands.registerCommand(
-        "extension.devicescript.gateway.configure",
+        "extension.devicescript.gateway.connect",
         async () => cloudState.configure()
     )
 }
