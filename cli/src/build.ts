@@ -119,8 +119,10 @@ export async function getHost(
                 throw new Error("bad disassembly")
         },
         read: (fn: string) => {
+            // verboseLog(`read ${fn} ${resolve(folder, fn)}`)
             return readFileSync(resolve(folder, fn), "utf-8")
         },
+        resolvePath: fn => resolve(fn),
         log: verboseLog,
         isBasicOutput: () => !consoleColors,
         error: (err: DevsDiagnostic) => {

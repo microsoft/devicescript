@@ -2878,7 +2878,10 @@ class Program implements TopOpWriter {
             !this.isNullOrUndefined(expr.left) &&
             !this.isNullOrUndefined(expr.right)
         ) {
-            this.reportError(expr, `please use ${op == SK.EqualsEqualsToken ? "===" : "!=="}`)
+            this.reportError(
+                expr,
+                `please use ${op == SK.EqualsEqualsToken ? "===" : "!=="}`
+            )
         }
 
         if (op == SK.CommaToken) {
@@ -3880,6 +3883,7 @@ export function compile(
             if (filename == mainFileName) return code
             return files[filename]
         },
+        resolvePath: path => path,
         log,
         error: err => errors.push(err),
         getConfig: () => cfg,

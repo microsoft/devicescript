@@ -33,6 +33,10 @@ class TsHost implements ts.CompilerHost {
         this.host.write(fileName, text)
     }
 
+    realpath(path: string): string {
+        return this.host.resolvePath(path)
+    }
+
     getDefaultLibFileName(options: ts.CompilerOptions): string {
         return "corelib.d.ts"
     }
@@ -40,7 +44,7 @@ class TsHost implements ts.CompilerHost {
         return "."
     }
     getCurrentDirectory(): string {
-        return "."
+        return this.host.resolvePath(".")
     }
     getCanonicalFileName(fileName: string): string {
         return fileName
@@ -68,7 +72,7 @@ class TsHost implements ts.CompilerHost {
         if (text == null) return undefined
         return text
     }
-    trace?(s: string): void {
+    trace(s: string): void {
         console.log(s)
     }
 }
@@ -108,6 +112,7 @@ export function buildAST(
         forceConsistentCasingInFileNames: true,
         // lib: string[];
         module: ts.ModuleKind.ES2022,
+        moduleResolution: ts.ModuleResolutionKind.NodeJs,
         newLine: ts.NewLineKind.LineFeed,
         noEmit: true,
         noFallthroughCasesInSwitch: true,

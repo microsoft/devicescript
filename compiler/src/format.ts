@@ -87,6 +87,7 @@ export interface DevsDiagnostic extends ts.Diagnostic {
 export interface Host {
     write(filename: string, contents: Uint8Array | string): void
     read(filename: string): string
+    resolvePath(filename: string): string
     log(msg: string): void
     error?(err: DevsDiagnostic): void
     getConfig(): ResolvedBuildConfig
