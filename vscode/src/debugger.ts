@@ -7,7 +7,6 @@ import { DeviceScriptExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { CHANGE, SRV_DEVICE_SCRIPT_MANAGER, SRV_ROLE_MANAGER } from "jacdac-ts"
 import type { StartArgs } from "@devicescript/dap"
-import { pickDeviceScriptFile } from "./pickers"
 
 export function activateDebugger(extensionState: DeviceScriptExtensionState) {
     const { context } = extensionState
@@ -287,13 +286,13 @@ export class DeviceScriptConfigurationProvider
         config: DebugConfiguration,
         token?: CancellationToken
     ) {
-        this.extensionState.devtools.projectFolder = folder.uri
+        this.extensionState.projectFolder = folder.uri
         if (
             !config.program &&
             ((config.request === "launch" && config.type === "devicescript") ||
                 (!config.request && !config.type))
         ) {
-            const file = await pickDeviceScriptFile(folder, {
+            const file = await this.extensionState.pickDeviceScriptFile({
                 title: "Pick a file to debug.",
             })
             if (!file) return undefined

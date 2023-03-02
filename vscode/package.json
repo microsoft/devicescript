@@ -349,13 +349,9 @@
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.gateway.device.uploadScriptSource",
+                    "command": "extension.devicescript.gateway.device.uploadScript",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudScripts",
                     "group": "inline"
-                },
-                {
-                    "command": "extension.devicescript.gateway.device.downloadScriptSource",
-                    "when": "view == extension.devicescript.gateway && viewItem == cloudScript"
                 }
             ],
             "commandPalette": [
@@ -564,13 +560,7 @@
                 "icon": "$(plug)"
             },
             {
-                "command": "extension.devicescript.gateway.device.downloadScriptSource",
-                "title": "Download Latest Version",
-                "category": "DeviceScript Gateway",
-                "icon": "$(cloud-download)"
-            },
-            {
-                "command": "extension.devicescript.gateway.device.uploadScriptSource",
+                "command": "extension.devicescript.gateway.device.uploadScript",
                 "title": "Upload Version",
                 "category": "DeviceScript Gateway",
                 "icon": "$(cloud-upload)"
