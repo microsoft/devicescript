@@ -121,8 +121,18 @@ export class GatewayExtensionState extends JDEventSource {
         console.error(err)
     }
 
-    private handleFetchError(err: Response) {
-        console.error(err)
+    private async handleFetchError(resp: Response) {
+        switch (resp.status) {
+            case 401: {
+                // unauthorized
+                await this.setToken(undefined)
+                break
+            }
+        }
+
+        await vscode.window.showErrorMessage(
+            `DeviceScript Gateway: ${resp.statusText} (${resp.status})`
+        )
     }
 
     private async handleRefreshConnection() {
