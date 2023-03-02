@@ -15,6 +15,7 @@ import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
 import { setConsoleColors, setVerbose, verboseLog } from "./command"
 import { binPatch } from "./binpatch"
+import { logToConsole } from "./command"
 import {
     boardNames,
     flashAuto,
@@ -23,9 +24,15 @@ import {
     setupFlashBoards,
 } from "./flash"
 import { addBoard } from "./addboard"
+import { LoggerPriority } from "jacdac-ts"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
+
+    logToConsole(
+        LoggerPriority.Debug,
+        `using ${cliVersion()} from ${__dirname}`
+    )
 
     function buildCommand(nameAndArgs: string, opts?: CommandOptions) {
         return program
@@ -281,10 +288,7 @@ export async function mainCli() {
         .arguments("<file.board.json...>")
         .action(binPatch)
 
-    program.on("option:verbose", () => {
-        setVerbose(true)
-        verboseLog(`using CLI from ${__dirname}`)
-    })
+    program.on("option:verbose", () => setVerbose(true))
     program.on("option:no-colors", () => setConsoleColors(false))
 
     program.parse(process.argv)
