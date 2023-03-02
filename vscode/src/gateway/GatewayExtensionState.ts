@@ -59,13 +59,9 @@ export class GatewayExtensionState extends JDEventSource {
                     const manager = this.manager
                     if (!manager) return
 
-                    const simId =
-                        this.deviceScriptState.simulatorScriptManagerId
-                    const devices = this.bus
-                        .devices({
-                            serviceClass: SRV_CLOUD_ADAPTER,
-                        })
-                        .filter(d => d.deviceId !== simId)
+                    const devices = this.bus.devices({
+                        serviceClass: SRV_CLOUD_ADAPTER,
+                    })
                     const cloudDevices = manager.devices()
                     const unregisteredDevices = devices.filter(
                         dev => !cloudDevices.find(cd => cd.deviceId === dev.id)
@@ -98,7 +94,7 @@ export class GatewayExtensionState extends JDEventSource {
                     if (res === undefined) return
                     const device = res.device
                     const name = await vscode.window.showInputBox({
-                        title: "Enter a name for your device",
+                        title: `Enter a friendly name for ${device.shortId}`,
                         placeHolder: "my device",
                     })
 
