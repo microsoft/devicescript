@@ -64,7 +64,7 @@ export async function mainCli() {
 
     buildCommand("build", { isDefault: true })
         .description("build a DeviceScript file")
-        .arguments("[file.ts]")
+        .arguments("[src/mainXYZ.ts]")
         .action(build)
 
     program

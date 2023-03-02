@@ -156,6 +156,7 @@ export class DeveloperToolsManager extends JDEventSource {
         this.updateBuildConfig(st.config)
     }
 
+    // relative to projectFolder, but most likely undef srcFolder
     get currentFilename() {
         return this._currentFilename
     }
@@ -213,6 +214,8 @@ export class DeveloperToolsManager extends JDEventSource {
             return res.data
         } catch (err) {
             console.error(err) // TODO
+            // this is rather unusual, show it to the user
+            vscode.window.showErrorMessage(err.message)
             return undefined
         }
     }
@@ -262,6 +265,12 @@ export class DeveloperToolsManager extends JDEventSource {
 
     get boards() {
         return Object.values(this.buildConfig?.boards)
+    }
+
+    get srcFolder() {
+        return this.projectFolder
+            ? vscode.Uri.joinPath(this.projectFolder, "src")
+            : undefined
     }
 
     get projectFolder() {
@@ -344,20 +353,22 @@ export class DeveloperToolsManager extends JDEventSource {
         ).then(() => this.startBuild())
     }
 
-    private async startBuild() {
-        const files = await vscode.workspace.fs.readDirectory(
-            this.projectFolder
-        )
-        const file =
-            files.find(
+    async entryPoints() {
+        const files = await vscode.workspace.fs.readDirectory(this.srcFolder)
+        return files
+            .filter(
                 ([name, type]) =>
-                    type == vscode.FileType.File && name === "main.ts"
-            ) ||
-            files.find(
-                ([name, type]) =>
-                    type == vscode.FileType.File && /\.ts$/i.test(name)
+                    type == vscode.FileType.File &&
+                    name.startsWith("main") &&
+                    name.endsWith(".ts")
             )
-        if (file) await this.build(file[0])
+            .map(r => "src/" + r[0])
+    }
+
+    private async startBuild() {
+        const files = await this.entryPoints()
+        const file = files[0]
+        if (file) await this.build(file)
     }
 
     dispose() {

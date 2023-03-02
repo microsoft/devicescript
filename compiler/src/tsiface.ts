@@ -102,11 +102,11 @@ export function buildAST(
     }
 
     const tsOptions: ts.CompilerOptions = {
-        allowJs: true,
+        allowJs: false,
         allowUnreachableCode: true,
         allowUnusedLabels: true,
         alwaysStrict: false,
-        checkJs: true,
+        checkJs: false,
         declaration: false,
         experimentalDecorators: true,
         forceConsistentCasingInFileNames: true,
@@ -135,6 +135,8 @@ export function buildAST(
         // suppressImplicitAnyIndexErrors: true,
         target: ts.ScriptTarget.ES2022,
         useUnknownInCatchVariables: true,
+        typeRoots: [],
+        types: [],
         // types?: string[];
     }
     const program = ts.createProgram({

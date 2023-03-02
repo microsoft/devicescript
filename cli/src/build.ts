@@ -278,11 +278,17 @@ export async function compileFile(
     const exists = existsSync(fn)
     if (!exists) throw new Error(`source file "${fn}" not found`)
 
-    const folder = dirname(resolve(fn))
+    if (
+        !existsSync("./devsconfig.json") &&
+        !existsSync("./devs/run-tests/basic.ts") // hack for in-tree testing
+    )
+        throw new Error("./devsconfig.json file not found")
+
+    const folder = resolve(".")
     const { errors, buildConfig } = buildConfigFromDir(folder)
     const host = await getHost(buildConfig, options, folder)
 
-    const res = compileWithHost(basename(fn), host)
+    const res = compileWithHost(fn, host)
 
     await saveLibFiles(buildConfig, options)
     setDevsDmesg() // set again after we have re-created -dbg.json file
@@ -353,7 +359,7 @@ export interface BuildOptions {
 }
 
 export async function build(file: string, options: BuildOptions & CmdOptions) {
-    file = file || "main.ts"
+    file = file || "src/main.ts"
     options.outDir = options.outDir || BINDIR
 
     if (!existsSync(file)) {

@@ -17,7 +17,7 @@ const GITIGNORE = ".gitignore"
 const IMPORT_PREFIX = `import * as ds from "@devicescript/core"`
 
 const optionalFiles: Record<string, Object | string> = {
-    "tsconfig.json": {
+    "src/tsconfig.json": {
         compilerOptions: {
             moduleResolution: "node",
             target: "es2022",
@@ -36,8 +36,7 @@ const optionalFiles: Record<string, Object | string> = {
             moduleDetection: "force",
             types: [],
         },
-        include: ["**/*.ts", `${LIBDIR}/*.ts`],
-        exclude: ["**/node_modules/*", "**/sim/*"],
+        include: ["*.ts", `../${LIBDIR}/*.ts`],
     },
     ".prettierrc": {
         arrowParens: "avoid",
@@ -239,6 +238,9 @@ export async function init(
 
     ensureDirSync(cwd)
 
+    const srcfolder = join(cwd, "src")
+    ensureDirSync(srcfolder)
+
     Object.entries(optionalFiles).forEach(([fnr, data]) => {
         // tsconfig.json
         const fn = join(cwd, fnr)
@@ -288,7 +290,7 @@ export async function init(
     }
 
     // main.ts
-    const mainn = join(cwd, MAIN)
+    const mainn = join(srcfolder, MAIN)
     if (!pathExistsSync(mainn)) {
         debug(`write ${mainn}`)
         writeFileSync(

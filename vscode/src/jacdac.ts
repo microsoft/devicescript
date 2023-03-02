@@ -32,9 +32,14 @@ export async function sideRequest<
             if (resp.resp == req.req) resolve(resp as Resp)
             else
                 reject(
-                    new Error(
-                        `invalid response type: ${resp.resp}, ${resp.data?.message}`
-                    )
+                    resp.resp == "error"
+                        ? new Error(
+                              resp.data?.message ??
+                                  `Error response to ${req.req}`
+                          )
+                        : new Error(
+                              `invalid response type: ${resp.resp}, ${resp.data?.message}`
+                          )
                 )
         }
     })

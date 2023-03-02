@@ -41,7 +41,7 @@ export async function ctool(options: CToolOptions & CmdOptions) {
             "."
         )
         host.read = () => ""
-        const res = compileWithHost("main.ts", host)
+        const res = compileWithHost("src/main.ts", host)
         const buf = res.binary
         let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[${buf.length}] = {`
         for (let i = 0; i < buf.length; ++i) {

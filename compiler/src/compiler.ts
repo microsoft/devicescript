@@ -3868,7 +3868,7 @@ export function compile(
 ): CompilationResult {
     const {
         files = {},
-        mainFileName = "main.ts",
+        mainFileName = "src/main.ts",
         log = (msg: string) => console.debug(msg),
         verifyBytecode = () => {},
         config,
