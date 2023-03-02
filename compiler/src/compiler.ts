@@ -632,17 +632,22 @@ class Program implements TopOpWriter {
         return addUnique(this.floatLiterals, f)
     }
 
+    relativePath(p: string) {
+        return this.host.relativePath?.(p) ?? p
+    }
+
     getSrcLocation(node: ts.Node): SrcLocation {
         const sf = node.getSourceFile() as ts.SourceFile & {
             __ds_srcidx: number
             __ds_srcoffset: number
         }
         if (sf.__ds_srcidx === undefined) {
-            let idx = this.srcFiles.findIndex(s => s.path == sf.fileName)
+            const path = this.relativePath(sf.fileName)
+            let idx = this.srcFiles.findIndex(s => s.path == path)
             if (idx < 0) {
                 idx = this.srcFiles.length
                 this.srcFiles.push({
-                    path: sf.fileName,
+                    path,
                     length: sf.text.length,
                     text: sf.text,
                 })
@@ -657,33 +662,71 @@ class Program implements TopOpWriter {
         return [pos + sf.__ds_srcoffset, endp - pos]
     }
 
+    private sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {
+        const related = (
+            d: ts.DiagnosticRelatedInformation
+        ): ts.DiagnosticRelatedInformation & { filename: string } => ({
+            category: d.category,
+            code: d.code,
+            file: undefined,
+            filename: this.relativePath(d.file?.fileName),
+            start: d.start,
+            length: d.length,
+            messageText: d.messageText,
+        })
+
+        return {
+            ...related(d),
+            filename: d.filename,
+            line: d.line,
+            column: d.column,
+            endLine: d.endLine,
+            endColumn: d.endColumn,
+            formatted: d.formatted,
+            relatedInformation: d.relatedInformation?.map(related),
+        }
+    }
+
     printDiag(diag: ts.Diagnostic) {
         if (diag.category == ts.DiagnosticCategory.Error) this.numErrors++
 
-        const jdiag: DevsDiagnostic = {
-            ...diag,
-            filename: this.mainFileName,
-            line: 1,
-            column: 1,
-            endLine: 1,
-            endColumn: 1,
-            formatted: formatDiagnostics([diag], this.host.isBasicOutput?.()),
+        let origFn: string
+        if (diag.file) {
+            origFn = diag.file.fileName
+            diag.file.fileName = this.relativePath(diag.file.fileName)
         }
 
-        if (diag.file) {
-            const st = diag.file.getLineAndCharacterOfPosition(diag.start)
-            const en = diag.file.getLineAndCharacterOfPosition(
-                diag.start + diag.length
-            )
-            jdiag.line = st.line + 1
-            jdiag.column = st.character + 1
-            jdiag.endLine = en.line + 1
-            jdiag.endColumn = en.character + 1
-            jdiag.filename = diag.file.fileName
+        try {
+            const jdiag: DevsDiagnostic = {
+                ...diag,
+                filename: this.mainFileName,
+                line: 1,
+                column: 1,
+                endLine: 1,
+                endColumn: 1,
+                formatted: formatDiagnostics(
+                    [diag],
+                    this.host.isBasicOutput?.()
+                ),
+            }
+
+            if (diag.file) {
+                const st = diag.file.getLineAndCharacterOfPosition(diag.start)
+                const en = diag.file.getLineAndCharacterOfPosition(
+                    diag.start + diag.length
+                )
+                jdiag.line = st.line + 1
+                jdiag.column = st.character + 1
+                jdiag.endLine = en.line + 1
+                jdiag.endColumn = en.character + 1
+                jdiag.filename = this.relativePath(diag.file.fileName)
+            }
+            this.diagnostics.push(this.sanitizeDiagnostic(jdiag))
+            if (this.host.error) this.host.error(jdiag)
+            else console.error(jdiag.formatted)
+        } finally {
+            if (diag.file) diag.file.fileName = origFn
         }
-        this.diagnostics.push(sanitizeDiagnostic(jdiag))
-        if (this.host.error) this.host.error(jdiag)
-        else console.error(jdiag.formatted)
     }
 
     reportError(
@@ -3819,33 +3862,6 @@ export interface CompilationResult {
     dbg: DebugInfo
     diagnostics: DevsDiagnostic[]
     config?: ResolvedBuildConfig
-}
-
-export function sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {
-    return {
-        ...related(d),
-        filename: d.filename,
-        line: d.line,
-        column: d.column,
-        endLine: d.endLine,
-        endColumn: d.endColumn,
-        formatted: d.formatted,
-        relatedInformation: d.relatedInformation?.map(related),
-    }
-
-    function related(
-        d: ts.DiagnosticRelatedInformation
-    ): ts.DiagnosticRelatedInformation & { filename: string } {
-        return {
-            category: d.category,
-            code: d.code,
-            file: undefined,
-            filename: d.file?.fileName,
-            start: d.start,
-            length: d.length,
-            messageText: d.messageText,
-        }
-    }
 }
 
 /**

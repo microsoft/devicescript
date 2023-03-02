@@ -1,4 +1,4 @@
-import { basename, dirname, join, resolve } from "node:path"
+import { basename, join, relative, resolve } from "node:path"
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
 import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
 import {
@@ -123,6 +123,7 @@ export async function getHost(
             return readFileSync(resolve(folder, fn), "utf-8")
         },
         resolvePath: fn => resolve(fn),
+        relativePath: fn => relative(resolve("."), fn),
         log: verboseLog,
         isBasicOutput: () => !consoleColors,
         error: (err: DevsDiagnostic) => {

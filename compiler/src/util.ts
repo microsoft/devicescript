@@ -108,3 +108,18 @@ export function numSetBits(n: number) {
 export function TODO(msg = ""): never {
     throw new Error("TODO: " + msg)
 }
+
+if (typeof global != "undefined") {
+    // debugger support
+    ;(global as any).watchProp = function watch(obj: any, prop: string) {
+        const key = "__" + prop + "__"
+        obj[key] = obj[prop]
+        Object.defineProperty(obj, prop, {
+            get: () => obj[key],
+            set: v => {
+                debugger
+                obj[key] = v
+            },
+        })
+    }
+}
