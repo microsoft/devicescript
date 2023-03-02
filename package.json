@@ -22,6 +22,7 @@
         "runtime/jacdac-c/jacdac",
         "jacdac-ts",
         "dap",
+        "ds-cowsay",
         "vscode",
         "vscode/sampleprj",
         "website"

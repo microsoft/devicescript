@@ -1,4 +1,5 @@
 import * as ds from "@devicescript/core"
+import { cowsay } from "ds-cowsay"
 
 function foo() {
     let x = 1.5
@@ -34,21 +35,22 @@ function bar() {
     foo()
 }
 
-function every1() {
+async function every1() {
     let x = 1
     console.log(x)
-    ds.sleepMs(1000)
+    await ds.sleepMs(1000)
     console.log("ex")
 }
 
-function every2() {
-    every1()
+async function every2() {
+    await every1()
 }
 
-ds.everyMs(20, () => {
-    every2()
+ds.everyMs(20, async () => {
+    await every2()
 })
-ds.sleepMs(100)
+cowsay("Hello cow!")
+await ds.sleepMs(100)
 bar()
 console.log("Test1")
 console.log("Test2")
