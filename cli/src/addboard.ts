@@ -8,8 +8,8 @@ import { fatal, log } from "./command"
 import { setupFlashBoards, showAllBoards } from "./flash"
 
 export interface AddBoardOptions {
-    base?: string
-    name?: string
+    base: string
+    name: string
     board?: string
     force?: boolean
 }

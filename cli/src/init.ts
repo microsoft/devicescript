@@ -11,6 +11,16 @@ import {
 import { build } from "./build"
 import { spawnSync } from "node:child_process"
 import { assert, randomUInt } from "jacdac-ts"
+import { addReqHandler } from "./sidedata"
+import type {
+    SideAddBoardReq,
+    SideAddBoardResp,
+    SideAddServiceReq,
+    SideAddServiceResp,
+    SideAddSimReq,
+    SideAddSimResp,
+} from "./sideprotocol"
+import { addBoard } from "./addboard"
 
 const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
@@ -358,7 +368,9 @@ export async function init(
     log(``)
 }
 
-export async function addSim(options: InitOptions & CmdOptions) {
+export interface AddSimOptions extends InitOptions {}
+
+export async function addSim(options: AddSimOptions) {
     log(`Adding simulator support`)
 
     const cwd = writeFiles(".", options, simFiles)
@@ -412,4 +424,14 @@ A measure of ${name}.
     log(``)
     log(`Service added ${id}.`)
     log(``)
+}
+
+export function initAddCmds() {
+    addReqHandler<SideAddBoardReq, SideAddBoardResp>("addBoard", d =>
+        addBoard(d.data)
+    )
+    addReqHandler<SideAddServiceReq, SideAddServiceResp>("addService", d =>
+        addService(d.data)
+    )
+    addReqHandler<SideAddSimReq, SideAddSimResp>("addSim", d => addSim(d.data))
 }

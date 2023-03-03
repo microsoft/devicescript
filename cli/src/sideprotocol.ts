@@ -3,7 +3,9 @@ import type {
     ResolvedBuildConfig,
 } from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
+import type { AddBoardOptions } from "./addboard"
 import type { BuildOptions } from "./build"
+import type { AddServiceOptions, AddSimOptions } from "./init"
 
 export interface SideReq<T extends string = string> {
     req: T
@@ -90,6 +92,28 @@ export interface SideStopVmReq extends SideReq<"stopVM"> {
 export interface SideStopVmResp extends SideResp<"stopVM"> {
     data: void
 }
+
+export interface SideAddServiceReq extends SideReq<"addService"> {
+    data: AddServiceOptions
+}
+export interface SideAddServiceResp extends SideResp<"addService"> {
+    data: void
+}
+
+export interface SideAddSimReq extends SideReq<"addSim"> {
+    data: AddSimOptions
+}
+export interface SideAddSimResp extends SideResp<"addSim"> {
+    data: void
+}
+
+export interface SideAddBoardReq extends SideReq<"addBoard"> {
+    data: AddBoardOptions
+}
+export interface SideAddBoardResp extends SideResp<"addBoard"> {
+    data: void
+}
+
 
 export interface SideTransportEvent extends SideEvent<"transport"> {
     data: TransportStatus

@@ -36,7 +36,7 @@ import {
     processSideMessage,
 } from "./sidedata"
 import { FSWatcher } from "fs"
-import { compileFile } from "./build"
+import { BuildOptions, compileFile } from "./build"
 import { dirname, resolve } from "path"
 import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
 import { DsDapSession } from "@devicescript/dap"
@@ -44,6 +44,7 @@ import { initVMCmds, overrideConsoleDebug, stopVmWorker } from "./vmworker"
 import { enableLogging } from "./logging"
 import { cliVersion } from "./version"
 import { EXIT_CODE_EADDRINUSE } from "./exitcodes"
+import { initAddCmds } from "./init"
 
 export interface DevToolsOptions {
     internet?: boolean
@@ -72,7 +73,7 @@ function loadProjectServiceSpecifications() {
 
 export async function devtools(
     fn: string | undefined,
-    options: DevToolsOptions & CmdOptions & TransportsOptions = {}
+    options: DevToolsOptions & BuildOptions & CmdOptions & TransportsOptions = {}
 ) {
     const port = 8081
     const tcpPort = 8082
@@ -108,6 +109,7 @@ export async function devtools(
     initSideProto(devtoolsSelf)
     initVMCmds()
     initTransportCmds(devtoolsSelf, bus)
+    initAddCmds()
 
     bus.passive = false
     bus.on(ERROR, e => error(e))
