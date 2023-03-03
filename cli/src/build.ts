@@ -286,7 +286,7 @@ export async function compileFile(
         throw new Error("./devsconfig.json file not found")
 
     const folder = resolve(".")
-    const { errors, buildConfig } = buildConfigFromDir(folder)
+    const { errors, buildConfig } = buildConfigFromDir(folder, options)
     const host = await getHost(buildConfig, options, folder)
 
     const res = compileWithHost(fn, host)

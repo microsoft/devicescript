@@ -1,8 +1,18 @@
 import * as ts from "typescript"
 import { Host } from "./format"
 
+export function trace(...args: any) {
+    console.debug("\u001b[32mTRACE:", ...args, "\u001b[0m")
+}
+
 class TsHost implements ts.CompilerHost {
-    constructor(public host: Host, public prelude: Record<string, string>) {}
+    private fileCache: Record<string, string> = {}
+
+    constructor(
+        public host: Host,
+        public prelude: Record<string, string>,
+        public checkModule: (path: string) => boolean
+    ) {}
 
     getSourceFile(
         fileName: string,
@@ -60,14 +70,31 @@ class TsHost implements ts.CompilerHost {
     }
     readFile(fileName: string): string {
         let text = ""
-        if (this.prelude.hasOwnProperty(fileName)) {
-            text = this.prelude[fileName]
+        if (fileName.endsWith(".tsx")) return undefined
+        if (this.fileCache.hasOwnProperty(fileName)) {
+            text = this.fileCache[fileName]
         } else {
-            try {
-                text = this.host.read(fileName)
-            } catch (e) {
-                text = undefined
+            if (this.prelude.hasOwnProperty(fileName)) {
+                text = this.prelude[fileName]
+            } else {
+                try {
+                    text = this.host.read(fileName)
+                    if (this.host.getFlags?.()?.traceFiles)
+                        trace(`read file: ${fileName} (size: ${text.length})`)
+                    if (fileName.replace(/.*[\/\\]/, "") == "package.json") {
+                        if (!this.checkModule(fileName.slice(0, -12))) {
+                            if (this.host.getFlags?.()?.traceFiles)
+                                trace(`invalid module at ${fileName}`)
+                            text = null
+                        }
+                    }
+                } catch (e) {
+                    if (this.host.getFlags?.()?.traceAllFiles)
+                        trace("file missing: " + fileName)
+                    text = null
+                }
             }
+            this.fileCache[fileName] = text
         }
         if (text == null) return undefined
         return text
@@ -94,12 +121,10 @@ export function getProgramDiagnostics(program: ts.Program): ts.Diagnostic[] {
 export function buildAST(
     mainFn: string,
     host: Host,
-    prelude: Record<string, string>
+    prelude: Record<string, string>,
+    checkModule: (path: string) => boolean
 ) {
-    const tsHost = new TsHost(host, prelude)
-    tsHost.writeFile = (fileName, data, writeBOM, onError) => {
-        host.write(fileName, data)
-    }
+    const tsHost = new TsHost(host, prelude, checkModule)
 
     const tsOptions: ts.CompilerOptions = {
         allowJs: false,
@@ -137,6 +162,7 @@ export function buildAST(
         useUnknownInCatchVariables: true,
         typeRoots: [],
         types: [],
+        noDtsResolution: true,
         // types?: string[];
     }
     const program = ts.createProgram({
@@ -151,6 +177,24 @@ const diagHost: ts.FormatDiagnosticsHost = {
     getCurrentDirectory: () => ".",
     getCanonicalFileName: fn => fn,
     getNewLine: () => "\n",
+}
+
+export function mkDiag(
+    filename: string,
+    messageText: string,
+    category = ts.DiagnosticCategory.Error
+): ts.Diagnostic {
+    return {
+        category,
+        code: 9997,
+        file: {
+            text: "",
+            fileName: filename,
+        } as ts.SourceFile,
+        start: 1,
+        length: 100,
+        messageText,
+    }
 }
 
 export function formatDiagnostics(

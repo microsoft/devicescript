@@ -57,7 +57,13 @@ import {
     packVarIndex,
     CachedValue,
 } from "./opwriter"
-import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
+import {
+    buildAST,
+    formatDiagnostics,
+    getProgramDiagnostics,
+    mkDiag,
+    trace,
+} from "./tsiface"
 import { preludeFiles, resolveBuildConfig } from "./specgen"
 import {
     VarDebugInfo,
@@ -528,10 +534,8 @@ export interface CompileFlags {
     traceBuiltin?: boolean
     traceProto?: boolean
     testHarness?: boolean
-}
-
-function trace(...args: any) {
-    console.debug("\u001b[32mTRACE:", ...args, "\u001b[0m")
+    traceAllFiles?: boolean
+    traceFiles?: boolean
 }
 
 export const compileFlagHelp: Record<string, string> = {
@@ -542,6 +546,8 @@ export const compileFlagHelp: Record<string, string> = {
         "compile-in all `object.method = function ...` assignments, used or not",
     traceBuiltin: "trace unresolved built-in functions",
     traceProto: "trace tree-shaking of prototypes",
+    traceFiles: "trace successful file accesses",
+    traceAllFiles: "trace all file accesses",
     testHarness: "add an implicit ds.reboot() at the end",
 }
 
@@ -710,7 +716,7 @@ class Program implements TopOpWriter {
                 ),
             }
 
-            if (diag.file) {
+            if (diag.file && diag.file.getLineAndCharacterOfPosition) {
                 const st = diag.file.getLineAndCharacterOfPosition(diag.start)
                 const en = diag.file.getLineAndCharacterOfPosition(
                     diag.start + diag.length
@@ -3805,7 +3811,29 @@ class Program implements TopOpWriter {
     emit(): CompilationResult {
         assert(!this.tree)
 
-        this.tree = buildAST(this.mainFileName, this.host, this.prelude)
+        this.tree = buildAST(
+            this.mainFileName,
+            this.host,
+            this.prelude,
+            modulePath => {
+                let text: string
+                let devsconfig: any
+                const fn = modulePath + "devsconfig.json"
+                try {
+                    text = this.host.read(fn)
+                    devsconfig = JSON.parse(text)
+                    return true
+                } catch {
+                    this.printDiag(
+                        mkDiag(
+                            fn,
+                            text === undefined ? "file missing" : "invalid JSON"
+                        )
+                    )
+                    return false
+                }
+            }
+        )
         this.checker = this.tree.getTypeChecker()
 
         getProgramDiagnostics(this.tree).forEach(d => this.printDiag(d))
