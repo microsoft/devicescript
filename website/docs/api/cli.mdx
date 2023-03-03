@@ -31,15 +31,14 @@ devs init myproject
 The command will create the files under `myproject`. A device script project will look as follows:
 
 ```
-.devicescript     reserved folder for devicescript generated
-    /lib          supporting runtime types and libraries, this folder is overerwritten on every build
-    /bin          compilation file output
-.gitignore        if you are using git, make sure to ignore .devicescript
-main.ts           usual name for your entry point application
-package.json      projet configuration
-tsconfig.json     configure the TypeScript compiler to compile DeviceScript syntax
-devsconfig.json   configure the DeviceScript compiler with additional flags. Also used by VSCode extension to activate.
-...               A few additional files supporting the coding experience in VS Code
+.devicescript/     reserved folder for devicescript generated files
+package.json       projet configuration
+devsconfig.json    configure the DeviceScript compiler with additional flags,
+                   also used by VSCode extension to activate.
+src/               directory for DeviceScript sources
+src/main.ts        usual name for your entry point application
+src/tsconfig.json  configure the TypeScript compiler to compile DeviceScript syntax
+...
 ```
 
 ::: note

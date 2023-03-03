@@ -438,15 +438,15 @@ ${varname}.${pname}(${fields}): void
 \`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
-const value = ${varname}.${pname}.read()
-${varname}.${pname}.write(value)
+const value = await ${varname}.${pname}.read()
+await ${varname}.${pname}.write(value)
 \`\`\`
 `
                 : `-  read only
 \`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
-const value = ${varname}.${pname}.read()
+const value = await ${varname}.${pname}.read()
 \`\`\`
 `,
             isConst
@@ -456,8 +456,8 @@ const value = ${varname}.${pname}.read()
 \`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
-${varname}.${pname}.onChange(0, () => {
-    const value = ${varname}.${pname}.read()
+${varname}.${pname}.onChange(0, async () => {
+    const value = await ${varname}.${pname}.read()
 })
 \`\`\`
 `
@@ -466,8 +466,8 @@ ${varname}.${pname}.onChange(0, () => {
 \`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
-${varname}.${pname}.onChange(() => {
-    const value = ${varname}.${pname}.read()
+${varname}.${pname}.onChange(async () => {
+    const value = await ${varname}.${pname}.read()
 })
 \`\`\`
 `

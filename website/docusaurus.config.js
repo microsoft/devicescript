@@ -100,6 +100,10 @@ const config = configure(
                             title: "Community",
                             items: [
                                 {
+                                    label: "GitHub",
+                                    href: "https://github.com/microsoft/devicescript/",
+                                },
+                                {
                                     label: "Discussions",
                                     href: "https://github.com/microsoft/devicescript/discussions",
                                 },

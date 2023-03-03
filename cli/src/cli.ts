@@ -29,10 +29,11 @@ import { LoggerPriority } from "jacdac-ts"
 export async function mainCli() {
     Error.stackTraceLimit = 30
 
-    logToConsole(
-        LoggerPriority.Debug,
-        `using ${cliVersion()} from ${__dirname}`
-    )
+    // needs to happen after no-colors, verbose is applied
+    //logToConsole(
+    //    LoggerPriority.Debug,
+    //    `using ${cliVersion()} from ${__dirname}`
+    //)
 
     function buildCommand(nameAndArgs: string, opts?: CommandOptions) {
         return program
