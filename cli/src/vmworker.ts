@@ -137,8 +137,9 @@ export async function startVmWorker(
     await stopVmWorker()
 
     if (args.nativePath) {
-        const vargs = ["-n", "-w", "8082"]
+        const vargs = ["-w", "8082"]
         if (args.gcStress) vargs.push("-X")
+        if (args.stateless) vargs.push("-n")
         if (args.deviceId) vargs.push("-d:" + args.deviceId)
         console.debug("starting", args.nativePath, vargs.join(" "))
         worker = spawn(args.nativePath, vargs, {
@@ -148,6 +149,7 @@ export async function startVmWorker(
         const vargs = ["vm", "--devtools"]
         if (args.deviceId) vargs.push("--device-id", args.deviceId)
         if (args.gcStress) vargs.push("--gc-stress")
+        if (args.stateless) vargs.push("--stateless")
         console.debug("starting", __filename, vargs.join(" "))
         worker = fork(__filename, vargs, { silent: true })
     }

@@ -5,6 +5,7 @@ export interface VmOptions {
     deviceId?: string
     gcStress?: boolean
     devtools?: boolean
+    stateless?: boolean
 }
 
 export async function startVm(options: VmOptions) {

@@ -163,6 +163,7 @@ export async function mainCli() {
         .option("--gc-stress", "stress-test the GC")
         .option("--device-id <string>", "set device ID")
         .option("--devtools", "set when spawned from devtools")
+        .option("--stateless", "disable 'flash'")
         .action(startVm)
 
     buildCommand("crun", { hidden: true })

@@ -169,4 +169,5 @@ export interface VmReqArgs {
     nativePath?: string
     deviceId?: string
     gcStress?: boolean
+    stateless?: boolean // disable "flash"
 }

@@ -16,8 +16,9 @@ static uint8_t *flash_base;
 
 int settings_in_files = 1;
 
-#define FLASH_DIR "tmp"
-#define FLASH_FILE "flash.bin"
+#define UPPER_FLASH_DIR ".devicescript"
+#define FLASH_DIR UPPER_FLASH_DIR "/flash"
+#define FLASH_FILE "native.bin"
 #define FLASH_PATH FLASH_DIR "/" FLASH_FILE
 
 uintptr_t flash_base_addr(void) {
@@ -82,6 +83,7 @@ void flash_init(void) {
 
 void flash_sync() {
     if (settings_in_files) {
+        mkdir(UPPER_FLASH_DIR, 0777);
         mkdir(FLASH_DIR, 0777);
         FILE *f = fopen(FLASH_PATH, "w");
         if (f) {
