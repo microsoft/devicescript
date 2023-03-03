@@ -13,18 +13,13 @@
     "author": "Microsoft",
     "dependencies": {},
     "devDependencies": {
-        "@devicescript/cli": "*",
-        "nodemon": "^2.0.20",
-        "ts-node": "^10.9.1"
+        "@devicescript/cli": "*"
     },
     "scripts": {
         "setup": "devicescript init",
-        "build:devicescript": "devicescript build",
-        "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
-        "build": "yarn build:devicescript && yarn build:sim",
-        "watch:devicescript": "devicescript devtools main.ts",
-        "watch:sim": "cd sim && nodemon --watch './**' --ext 'ts,json' --exec 'ts-node ./app.ts --project ./tsconfig.json'",
-        "watch": "yarn watch:devicescript & yarn watch:sim",
+        "build": "devicescript build",
+        "watch": "devicescript devtools src/main-test.ts",
+        "test": "devicescript run -t src/main-test.ts",
         "start": "yarn watch"
     }
 }
