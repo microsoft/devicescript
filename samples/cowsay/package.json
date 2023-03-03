@@ -17,6 +17,13 @@
         "url": "https://github.com/microsoft/devicescript.git",
         "directory": "samples/cowsay"
     },
+    "devicescript": {
+        "library": true
+    },
+    "files": [
+        "src/*.ts",
+        "devsconfig.json"
+    ],
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*"
@@ -30,12 +37,5 @@
     },
     "publishConfig": {
         "access": "public"
-    },
-    "devicescript": {
-        "library": true
-    },
-    "files": [
-        "src/*.ts",
-        "devsconfig.json"
-    ]
+    }
 }
