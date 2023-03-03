@@ -26,6 +26,8 @@ import {
     consoleColors,
     debug,
     error,
+    FLASHDIR,
+    FLASHFILE,
     GENDIR,
     LIBDIR,
     log,
@@ -71,7 +73,7 @@ export function devsFactory() {
     return (d() as Promise<DevsModule>).then(m => {
         devsInst = m
         setDevsDmesg()
-        m.devsInit()
+        // m.devsInit() - don't init here, we may still want to do more setup
         return m
     })
 }
@@ -81,16 +83,36 @@ export async function devsStartWithNetwork(options: {
     test?: boolean
     deviceId?: string
     gcStress?: boolean
+    stateless?: boolean
 }) {
     const inst = await devsFactory()
-
-    if (options.deviceId) inst.devsSetDeviceId(options.deviceId)
 
     inst.devsGcStress(!!options.gcStress)
 
     if (options.tcp)
         await inst.setupNodeTcpSocketTransport(require, "127.0.0.1", 8082)
     else await inst.setupWebsocketTransport("ws://127.0.0.1:8081")
+
+    if (options.stateless) {
+        inst.flashLoad = null
+        inst.flashSave = null
+    } else {
+        ensureDirSync(FLASHDIR)
+        const fn = join(FLASHDIR, FLASHFILE)
+        verboseLog(`set up flash in ${fn}`)
+        inst.flashLoad = () => {
+            try {
+                return new Uint8Array(readFileSync(fn))
+            } catch {
+                return new Uint8Array(0)
+            }
+        }
+        inst.flashSave = buf => {
+            writeFileSync(fn, buf)
+        }
+    }
+
+    if (options.deviceId) inst.devsSetDeviceId(options.deviceId)
 
     inst.devsStart()
 

@@ -44,8 +44,43 @@ void flash_erase(void *page_addr) {
     memset(page_addr, 0xff, JD_FLASH_PAGE_SIZE);
 }
 
+#define FILL_PATTERN 0x37
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+
+EM_JS(void, em_flash_save, (void *start, unsigned size), {
+    if (Module.flashSave)
+        Module.flashSave(HEAPU8.slice(start, start + size));
+});
+EM_JS(void, em_flash_load, (void *start, unsigned size), {
+    if (Module.flashLoad) {
+        const data = Module.flashLoad();
+        if (Module.dmesg)
+            Module.dmesg("flash load, size=" + data.length);
+        HEAPU8.set(data.slice(0, size), start);
+    }
+});
+
 void flash_sync() {
-#ifndef __EMSCRIPTEN__
+    DMESG("flash sync");
+    for (int i = FLASH_SIZE - 1; i >= 0; i--) {
+        if (flash_base[i] != FILL_PATTERN) {
+            em_flash_save(flash_base, i);
+            break;
+        }
+    }
+}
+
+void flash_init(void) {
+    flash_base = malloc(FLASH_SIZE);
+    memset(flash_base, FILL_PATTERN, FLASH_SIZE);
+    em_flash_load(flash_base, FLASH_SIZE);
+}
+
+#else
+
+void flash_sync() {
     if (settings_in_files) {
         mkdir(FLASH_DIR, 0777);
         FILE *f = fopen(FLASH_PATH, "w");
@@ -56,13 +91,11 @@ void flash_sync() {
             DMESG("can't write to %s", FLASH_PATH);
         }
     }
-#endif
 }
 
 void flash_init(void) {
     flash_base = malloc(FLASH_SIZE);
-    memset(flash_base, 0x37, FLASH_SIZE);
-#ifndef __EMSCRIPTEN__
+    memset(flash_base, FILL_PATTERN, FLASH_SIZE);
     if (settings_in_files) {
         FILE *f = fopen(FLASH_PATH, "r");
         if (f) {
@@ -70,5 +103,6 @@ void flash_init(void) {
             fclose(f);
         }
     }
-#endif
 }
+
+#endif

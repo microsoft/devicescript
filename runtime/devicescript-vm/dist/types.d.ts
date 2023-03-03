@@ -23,6 +23,15 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
      * @param exitCode the panic code
      */
     panicHandler(exitCode: int32): void;
+    /**
+     * Overridable. Read contents of flash.
+     */
+    flashLoad(): Uint8Array;
+    /**
+     * Overridable. Write contents of flash.
+     * Currently, we save up to 128k.
+     */
+    flashSave(data: Uint8Array): void;
 };
 export declare module Exts {
     /**
