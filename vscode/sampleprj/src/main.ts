@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { cowsay } from "ds-cowsay"
+import { cowsay } from "@devicescript/cowsay"
 
 function foo() {
     let x = 1.5

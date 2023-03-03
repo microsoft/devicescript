@@ -1,7 +1,16 @@
 {
-    "name": "ds-cowsay",
+    "name": "@devicescript/cowsay",
     "version": "0.0.0",
     "main": "./src/all.ts",
+    "description": "DeviceScript package sample implementing the famous cow say rendering engine.",
+    "license": "MIT",
+    "keywords": [
+        "devicescript",
+        "jacdac",
+        "iot",
+        "embedded"
+    ],
+    "author": "Microsoft",
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*",
