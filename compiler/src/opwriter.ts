@@ -169,17 +169,19 @@ class UnCachedValue extends CachedValue {
 export function literal(v: number | boolean) {
     const r = new Value()
     if (v == null) {
-        r.op = Op.EXPR0_NULL
+        r.op = v === null ? Op.EXPR0_NULL : Op.EXPR0_UNDEFINED
         r.args = []
         r.flags = 0
     } else if (typeof v == "boolean") {
         r.op = v ? Op.EXPR0_TRUE : Op.EXPR0_FALSE
         r.args = []
         r.flags = 0
-    } else {
+    } else if (typeof v == "number") {
         r.numValue = v
         r.op = Op.EXPRx_LITERAL
         r.flags = VF_IS_LITERAL
+    } else {
+        oops(`invalid literal: ${v}`)
     }
     return r
 }
@@ -675,7 +677,7 @@ export class OpWriter {
             if ((q | 0) == q) {
                 const qq =
                     q + BinFmt.DIRECT_CONST_OFFSET + BinFmt.DIRECT_CONST_OP
-                if (BinFmt.DIRECT_CONST_OFFSET <= qq && qq <= 0xff)
+                if (BinFmt.DIRECT_CONST_OP <= qq && qq <= 0xff)
                     this.writeByte(qq)
                 else {
                     this.writeByte(Op.EXPRx_LITERAL)

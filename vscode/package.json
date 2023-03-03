@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "1.4.0",
+    "version": "1.4.4",
     "publisher": "Microsoft",
     "description": "DeviceScript extension for Visual Studio Code.",
     "author": {
@@ -131,7 +131,7 @@
                     "default": false,
                     "description": "Ignore incompatible runtime versions when deploying."
                 },
-                "devicescript.cloud.apiRoot": {
+                "devicescript.gateway.apiRoot": {
                     "type": "string",
                     "default": "",
                     "description": "Web API root url for device management"
@@ -158,19 +158,23 @@
                     "name": "Watch"
                 },
                 {
-                    "id": "extension.devicescript.cloud-explorer",
-                    "name": "Cloud"
+                    "id": "extension.devicescript.gateway",
+                    "name": "Development Gateway"
                 }
             ]
         },
         "viewsWelcome": [
             {
                 "view": "extension.devicescript.jdom",
-                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read our docs](https://microsoft.github.io/devicescript/intro) or browse the list of [devices](https://microsoft.github.io/devicescript/devices/)."
+                "contents": "Start a simulator or connect to a device.\n[Start Simulator](command:extension.devicescript.simulator.start)\n[Connect Device](command:extension.devicescript.connect)\n\nTo learn more about DeviceScript, [read the docs](https://microsoft.github.io/devicescript/intro) or browse the list of [devices](https://microsoft.github.io/devicescript/devices/)."
             },
             {
                 "view": "extension.devicescript.watch",
                 "contents": "Select Registers or Events to watch."
+            },
+            {
+                "view": "extension.devicescript.gateway",
+                "contents": "Deploy scripts remotely, track telemetry.\n[Connect](command:extension.devicescript.gateway.connect)\n[Create Gateway](https://microsoft.github.io/devicescript/developer/gateway)\n\nTo learn more about DeviceScript Gateway, [read the docs](https://microsoft.github.io/devicescript/developer/gateway)."
             }
         ],
         "walkthroughs": [
@@ -244,13 +248,13 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "extension.devicescript.cloud.configure",
-                    "when": "view == extension.devicescript.cloud-explorer",
+                    "command": "extension.devicescript.gateway.connect",
+                    "when": "view == extension.devicescript.gateway",
                     "group": "navigation"
                 },
                 {
-                    "command": "extension.devicescript.cloud.refresh",
-                    "when": "view == extension.devicescript.cloud-explorer",
+                    "command": "extension.devicescript.gateway.refresh",
+                    "when": "view == extension.devicescript.gateway",
                     "group": "navigation"
                 }
             ],
@@ -286,12 +290,12 @@
                     "when": "view == extension.devicescript.jdom && viewItem =~ /^register/"
                 },
                 {
-                    "command": "extension.devicescript.jdom.cloud.connect",
+                    "command": "extension.devicescript.jdom.gateway.connect",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_cloud_configuration",
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.jdom.cloud.edit",
+                    "command": "extension.devicescript.jdom.gateway.edit",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_cloud_configuration",
                     "group": "inline"
                 },
@@ -330,28 +334,37 @@
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.cloud.device.updateScript",
-                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
+                    "command": "extension.devicescript.gateway.script.upload",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudScript",
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.cloud.device.connect",
-                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevice",
+                    "command": "extension.devicescript.gateway.script.delete",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudScript"
+                },
+                {
+                    "command": "extension.devicescript.gateway.device.updateScript",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.cloud.registerDevice",
-                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudDevices",
+                    "command": "extension.devicescript.gateway.device.connect",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.cloud.device.uploadScriptSource",
-                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScripts",
+                    "command": "extension.devicescript.gateway.device.refreshToken",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
+                },
+                {
+                    "command": "extension.devicescript.gateway.registerDevice",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevices",
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.cloud.device.downloadScriptSource",
-                    "when": "view == extension.devicescript.cloud-explorer && viewItem == cloudScript"
+                    "command": "extension.devicescript.gateway.device.uploadScript",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudScripts",
+                    "group": "inline"
                 }
             ],
             "commandPalette": [
@@ -380,10 +393,10 @@
                     "command": "extension.devicescript.boards.add"
                 },
                 {
-                    "command": "extension.devicescript.cloud.configure"
+                    "command": "extension.devicescript.gateway.connect"
                 },
                 {
-                    "command": "extension.devicescript.cloud.refresh"
+                    "command": "extension.devicescript.gateway.refresh"
                 }
             ],
             "debug/variables/context": [
@@ -451,13 +464,13 @@
                 "icon": "$(edit)"
             },
             {
-                "command": "extension.devicescript.jdom.cloud.connect",
+                "command": "extension.devicescript.jdom.gateway.connect",
                 "title": "Connect",
                 "category": "DeviceScript",
                 "icon": "$(plug)"
             },
             {
-                "command": "extension.devicescript.jdom.cloud.edit",
+                "command": "extension.devicescript.jdom.gateway.edit",
                 "title": "Edit Connection...",
                 "category": "DeviceScript",
                 "icon": "$(edit)"
@@ -530,46 +543,56 @@
                 "category": "DeviceScript"
             },
             {
-                "command": "extension.devicescript.cloud.configure",
-                "title": "Configure Connection",
-                "category": "DeviceScript Cloud",
+                "command": "extension.devicescript.gateway.connect",
+                "title": "Connect...",
+                "category": "DeviceScript Gateway",
                 "icon": "$(plug)"
             },
             {
-                "command": "extension.devicescript.cloud.refresh",
+                "command": "extension.devicescript.gateway.refresh",
                 "title": "Refresh",
-                "category": "DeviceScript Cloud",
+                "category": "DeviceScript Gateway",
                 "icon": "$(refresh)"
             },
             {
-                "command": "extension.devicescript.cloud.registerDevice",
+                "command": "extension.devicescript.gateway.registerDevice",
                 "title": "Register Device",
-                "category": "DeviceScript Cloud",
+                "category": "DeviceScript Gateway",
                 "icon": "$(add)"
             },
             {
-                "command": "extension.devicescript.cloud.device.updateScript",
+                "command": "extension.devicescript.gateway.script.upload",
+                "title": "Upload Script",
+                "category": "DeviceScript Gateway",
+                "icon": "$(cloud-upload)"
+            },
+            {
+                "command": "extension.devicescript.gateway.script.delete",
+                "title": "Delete Script",
+                "category": "DeviceScript Gateway"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.updateScript",
                 "title": "Upgrade Script",
-                "category": "DeviceScript Cloud",
+                "category": "DeviceScript Gateway",
                 "icon": "$(file-code)"
             },
             {
-                "command": "extension.devicescript.cloud.device.connect",
+                "command": "extension.devicescript.gateway.device.refreshToken",
+                "title": "Refresh token",
+                "category": "DeviceScript Gateway"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.connect",
                 "title": "Connect",
-                "category": "DeviceScript Cloud",
+                "category": "DeviceScript Gateway",
                 "icon": "$(plug)"
             },
             {
-                "command": "extension.devicescript.cloud.device.downloadScriptSource",
-                "title": "Download Latest Version",
-                "category": "DeviceScript Cloud",
-                "icon": "$(cloud-download)"
-            },
-            {
-                "command": "extension.devicescript.cloud.device.uploadScriptSource",
+                "command": "extension.devicescript.gateway.device.uploadScript",
                 "title": "Upload Version",
-                "category": "DeviceScript Cloud",
-                "icon": "$(cloud-upload)"
+                "category": "DeviceScript Gateway",
+                "icon": "$(add)"
             }
         ],
         "breakpoints": [

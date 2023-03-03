@@ -1,3 +1,5 @@
+import { DeviceConfig } from "./archconfig"
+import { decodeDcfg, decompileDcfg } from "./dcfg"
 import { SrcMapResolver } from "./debug"
 import {
     BinFmt,
@@ -476,6 +478,7 @@ export class Image {
     srcmap: SrcMapResolver
 
     private specData: Uint8Array
+    private dcfgData: Uint8Array
 
     constructor(input: Uint8Array | string | DebugInfo) {
         if (typeof input == "string") {
@@ -569,6 +572,7 @@ export class Image {
             bufferDesc,
             strData,
             specData,
+            dcfgData,
         ] = range(BinFmt.NUM_IMG_SECTIONS).map(i =>
             decodeSection(
                 img,
@@ -577,6 +581,7 @@ export class Image {
         )
 
         this.specData = specData
+        this.dcfgData = dcfgData
 
         const floatArr = new Float64Array(floatData.buffer).slice()
         const intFloatArr = new Int32Array(floatData.buffer)
@@ -732,6 +737,20 @@ export class Image {
         }
 
         r += "\n"
+
+        if (this.dcfgData.length == 0) {
+            r += "\nDCFG: None\n\n"
+        } else {
+            const settings = decodeDcfg(this.dcfgData)
+            r += settings.errors.map(e => `; DCFG-error: ${e}\n`).join("\n")
+            const json: DeviceConfig = decompileDcfg(settings.settings)
+            if (
+                Array.isArray(json.services) &&
+                json.services.slice(0, 0x40).every(s => s == null)
+            )
+                json.services = json.services.slice(0x40)
+            r += "\nDCFG: " + JSON.stringify(json, null, 4) + "\n\n"
+        }
 
         const specData = this.specData
 

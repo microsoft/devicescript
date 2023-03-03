@@ -5,34 +5,35 @@ function isClose(x: number, y: number): void {
     if (isNaN(x) && isNaN(y)) return
     const d = Math.abs(x - y)
     if (d < 0.00000001 || d / Math.abs(x + y) < 0.00001) return
-    console.log(x, " != ", y, "!")
+    console.log(x, " !== ", y, "!")
     _panic(108)
 }
 
 function isEq(x: any, y: any): void {
-    // console.log(x, " == ", y, "?")
-    if (x != y) {
-        console.log(ds.format("fail: {0} != {1}", x, y))
+    // console.log(x, " === ", y, "?")
+    if (x !== y) {
+        console.log(ds.format("fail: {0} !== {1}", x, y))
         _panic(109)
     }
 }
 
 function strEq(a: string, b: string) {
-    if (a != b) {
-        console.log(`fail: '${a}' != '${b}'`)
+    if (a !== b) {
+        console.log(`fail: '${a}' !== '${b}'`)
         _panic(110)
     }
 }
 
 let x = 0
+let glb1 = 0
 
 function testFlow() {
     x = 1
-    if (x != 1) _panic(1)
     if (x !== 1) _panic(1)
-    if (x == 1) {
+    if (x !== 1) _panic(1)
+    if (x === 1) {
         x = 2
-        if (x != 2) _panic(3)
+        if (x !== 2) _panic(3)
     } else {
         _panic(2)
     }
@@ -51,32 +52,45 @@ function testFlow() {
     } else _panic(1)
     if (x < 0 || x > 10) _panic(1)
     x = -1
-    if (Math.abs(x) != 1) _panic(4)
+    if (Math.abs(x) !== 1) _panic(4)
     x = Math.random()
     if (x < 0 || x > 1 || isNaN(x)) _panic(5)
     x = 42
     console.log("rand=", Math.random())
+
+    isEq(ds.SystemStatusCodes.CalibrationNeeded, 100)
 }
 
 function testMath() {
-    isEq(2 + 2, 4)
-    isEq(2 - 1, 1)
-    isClose(3 * 4 + 3, 15.00001)
-    isEq(Math.abs(10), 10)
-    isEq(Math.abs(-10), 10)
-    isEq(Math.abs(0), 0)
+    // these are here to avoid constant folding
+    let v0 = 0
+    let v1 = 1
+    let v2 = 2
+    let v3 = 3
+    let v7 = 7
+    let v10 = 10
+    let v100 = 100
+    let vffff = 0xffff
+
+    // TODO use let ... to avoid constant folding
+    isEq(v2 + 2, 4)
+    isEq(v2 - 1, 1)
+    isClose(v3 * 4 + 3, 15.00001)
+    isEq(Math.abs(v10), 10)
+    isEq(Math.abs(-v10), 10)
+    isEq(Math.abs(v0), 0)
     isClose(Math.log(Math.E), 1)
     isClose(Math.log(1.23456), 0.21071463)
-    isClose(Math.log(-1), NaN)
-    isClose(0 / 0, NaN)
+    isClose(Math.log(-v1), NaN)
+    isClose(v0 / 0, NaN)
     isClose(Math.log2(Math.PI), 1.651496129)
     isClose(Math.log10(Math.PI), 0.49714987269)
-    isClose(Math.pow(2, 0.5), Math.SQRT2)
-    isClose(2 ** 0.5, Math.SQRT2)
-    isClose(Math.sqrt(1 / 2), Math.SQRT1_2)
+    isClose(Math.pow(v2, 0.5), Math.SQRT2)
+    isClose(v2 ** 0.5, Math.SQRT2)
+    isClose(Math.sqrt(v1 / 2), Math.SQRT1_2)
     isClose(Math.cbrt(27), 3)
-    isClose(Math.exp(1), Math.E)
-    isClose(Math.exp(10), 22026.4657948)
+    isClose(Math.exp(v1), Math.E)
+    isClose(Math.exp(v10), 22026.4657948)
     isEq(Math.ceil(0.1), 1)
     isEq(Math.ceil(0.9), 1)
     isEq(Math.floor(1.1), 1)
@@ -93,49 +107,52 @@ function testMath() {
     isEq(fib(8), 21)
     isEq(fibx(8), 21)
 
-    isEq(1 & 3, 1)
-    isEq(1 & 0, 0)
-    isEq(1 & 2, 0)
-    isEq(1 | 3, 3)
-    isEq(1 | 0, 1)
-    isEq(1 | 2, 3)
-    isEq(1 ^ 3, 2)
-    isEq(1 ^ 0, 1)
-    isEq(1 ^ 2, 3)
-    isEq(~-3, 2)
-    isEq(~100, -101)
+    isEq(v1 & 3, 1)
+    isEq(v1 & 0, 0)
+    isEq(v1 & 2, 0)
+    isEq(v1 | 3, 3)
+    isEq(v1 | 0, 1)
+    isEq(v1 | 2, 3)
+    isEq(v1 ^ 3, 2)
+    isEq(v1 ^ 0, 1)
+    isEq(v1 ^ 2, 3)
+    isEq(~-v3, 2)
+    isEq(~v100, -101)
 
-    isEq(1 << 2, 4)
-    isEq(16 >> 3, 2)
-    isEq(16 >>> 3, 2)
-    isEq(-16 >> 3, -2)
-    isEq(-16 >>> 3, 536870910)
-    isEq(10 << -1, 0)
-    isEq(10 << 0, 10)
-    isEq(10 << 0.5, 10)
-    isEq(10 << 1.7, 20)
-    isEq(10 << 2.1, 40)
-    isEq(10 << 100, 160)
-    isEq(10 << 20, 10485760)
-    isEq(10 << 30, -2147483648)
-    isEq(10 << 31, 0)
-    isEq(10 << 32, 10)
-    isEq(10 << 33, 20)
-    isEq(10 << 34, 40)
-    isEq(1 << -1, -2147483648)
+    isEq(v1 << 2, 4)
+    isEq(16 >> v3, 2)
+    isEq(16 >>> v3, 2)
+    isEq(-16 >> v3, -2)
+    isEq(-16 >>> v3, 536870910)
+    isEq(v10 << -1, 0)
+    isEq(v10 << 0, 10)
+    isEq(v10 << 0.5, 10)
+    isEq(v10 << 1.7, 20)
+    isEq(v10 << 2.1, 40)
+    isEq(v10 << 100, 160)
+    isEq(v10 << 20, 10485760)
+    isEq(v10 << 30, -2147483648)
+    isEq(v10 << 31, 0)
+    isEq(v10 << 32, 10)
+    isEq(v10 << 33, 20)
+    isEq(v10 << 34, 40)
+    isEq(v1 << -1, -2147483648)
 
-    isEq(Math.imul(10, 30), 300)
-    isEq(Math.imul(0xffff, 0xffff), -131071)
-    isEq(Math.imul(0xffff, 0xffff1), -2031601)
-    isEq(Math.imul(0xffff, 0xffff11), -32440081)
-    isEq(Math.imul(0xffff, 0xffff111), -518975761)
-    isEq(Math.imul(0xffff, 0x7fff1111), -1861095697)
-    isEq(Math.imul(0x7ffff, 0x7fff1111), 143191791)
-    isEq(Math.idiv(100, 10), 10)
-    isEq(Math.idiv(102, 10), 10)
-    isEq(Math.idiv(-102, 10), -10)
-    isEq(Math.idiv(102, 7), 14)
-    isEq(Math.idiv(-102, 7), -14)
+    let v102 = 102
+    let v7ffff = 0x7ffff
+
+    isEq(Math.imul(v10, 30), 300)
+    isEq(Math.imul(vffff, 0xffff), -131071)
+    isEq(Math.imul(vffff, 0xffff1), -2031601)
+    isEq(Math.imul(vffff, 0xffff11), -32440081)
+    isEq(Math.imul(vffff, 0xffff111), -518975761)
+    isEq(Math.imul(vffff, 0x7fff1111), -1861095697)
+    isEq(Math.imul(v7ffff, 0x7fff1111), 143191791)
+    isEq(Math.idiv(100, v10), 10)
+    isEq(Math.idiv(102, v10), 10)
+    isEq(Math.idiv(-102, v10), -10)
+    isEq(Math.idiv(v102, 7), 14)
+    isEq(Math.idiv(-v102, 7), -14)
 }
 
 function lazyX(v: number) {
@@ -144,8 +161,8 @@ function lazyX(v: number) {
 }
 
 function checkX(v: number) {
-    if (x != v) {
-        console.log(ds.format("{0} != {1} !!", x, v))
+    if (x !== v) {
+        console.log(ds.format("{0} !== {1} !!", x, v))
         _panic(11)
     }
     x = 0
@@ -236,14 +253,14 @@ function testArray() {
     arr.push(10)
     isEq(arr.length, 1)
     isEq(arr[0], 10)
-    isEq(arr[1], null)
+    isEq(arr[1], undefined)
     isEq(arr.push(20), 2)
     isEq(arr[1], 20)
 
     const [a, b, c, ...rest] = arr
     isEq(a, 10)
     isEq(b, 20)
-    isEq(c, null)
+    isEq(c, undefined)
     isEq(rest.length, 0)
     const [aa, ...bb] = arr
     isEq(aa, 10)
@@ -274,7 +291,7 @@ function testObj() {
 }
 
 function objEq(a: any, b: any) {
-    if (a == b) return
+    if (a === b) return
     const ka = Object.keys(a)
     const kb = Object.keys(b)
     isEq(ka.length, kb.length)
@@ -302,7 +319,7 @@ function testSpread() {
     isEq(delete qq.bar, false)
     isEq(Object.keys(qq).length, 1)
     isEq(qq.foo, 5)
-    isEq(qq.bar, null)
+    isEq(qq.bar, undefined)
 
     const o2 = { a: 1, b: 2, c: 3 }
     {
@@ -329,8 +346,8 @@ function testSpread() {
 
 function testConsole() {
     // note that we don't really test the output ...
-    const n = 8
-    const q = 12
+    let n = 8
+    let q = 12
     console.log("text" + n)
     console.log("text" + n + q)
     console.log("text" + n + "blah" + q)
@@ -341,14 +358,16 @@ function testConsole() {
 }
 
 function testString() {
-    strEq("a" + "b", "ab")
-    strEq("a" + 1, "a1")
-    strEq(1 + "a", "1a")
-    strEq(":" + true, ":true")
-    strEq(":" + false, ":false")
-    strEq(":" + null, ":null")
-    strEq(":" + 1.4, ":1.4")
-    strEq(":" + NaN, ":NaN")
+    let a = "a"
+    let colon = ":"
+    strEq(a + "b", "ab")
+    strEq(a + 1, "a1")
+    strEq(1 + a, "1a")
+    strEq(colon + true, ":true")
+    strEq(colon + false, ":false")
+    strEq(colon + null, ":null")
+    strEq(colon + 1.4, ":1.4")
+    strEq(colon + NaN, ":NaN")
 
     const b = Buffer.alloc(3)
     b[0] = 0x42
@@ -436,7 +455,7 @@ function testForOf() {
     let tmp = coll2
     let sum = 0
     for (const e of coll2) {
-        if (coll2 != null) coll2.push(17)
+        if (coll2 !== null) coll2.push(17)
         coll2 = null
         sum += e
     }
@@ -523,7 +542,6 @@ function testFunName() {
     function qq() {}
 }
 
-
 function expectErr(js: string) {
     try {
         JSON.parse(js)
@@ -535,7 +553,7 @@ function expectErr(js: string) {
 function jsonTest(js: string, indent?: number) {
     const o = JSON.parse(js)
     const str = JSON.stringify(o, null, indent)
-    if (js != str) {
+    if (js !== str) {
         console.log(`orig:${js}`)
         console.log(`stri:${str}`)
         console.log(`stri2:${JSON.stringify(str)}`)
@@ -543,15 +561,21 @@ function jsonTest(js: string, indent?: number) {
     }
 
     const o2 = JSON.parse(" " + js + " ")
-    ds.assert(JSON.stringify(o2) == JSON.stringify(o))
+    ds.assert(JSON.stringify(o2) === JSON.stringify(o))
     expectErr(js + "x")
     expectErr(js + "t")
 
-    if (typeof o != "number") {
+    if (typeof o !== "number") {
         expectErr(js.slice(0, -1))
         expectErr(js.slice(0, -2))
         expectErr(js.slice(1))
     }
+}
+
+function testDeflUndefinedForNumber(f: number, g?: number) {
+    isEq(f, 3)
+    ds.assert(g==null, "n3")
+    ds.assert(g === undefined, "n3")
 }
 
 function testJSON() {
@@ -578,10 +602,138 @@ function testJSON() {
     jsonTest("{}", 2)
     jsonTest('{\n  "x": 1\n}', 2)
     jsonTest('{\n  "x": 1,\n  "y": [\n    1,\n    2,\n    3\n  ]\n}', 2)
+    isEq(JSON.stringify({ x: 1, y: undefined }), '{"x":1}')
+    isEq(JSON.stringify({ x: 1, y: () => {} }), '{"x":1}')
+
+    testDeflUndefinedForNumber(3)
+
+    let strings = ["foo", "foo\n", '"', "\b\t\r\n", ""]
+    for (let s of strings) {
+        ds.assert(JSON.parse(JSON.stringify(s)) === s, s)
+    }
+
+    ds.assert(JSON.parse('"\\u000A\\u0058\\u004C\\u004d"') === "\nXLM", "uni")
+
+    let ss = ds._id("12") + "34"
+    ds.assert(ss.slice(1) === "234", "sl0")
+    ds.assert(ss.slice(1, 2) === "2", "sl1")
+    ds.assert(ss.slice(-2) === "34", "sl2")
+    ds.assert(ss.slice(1, 0) === "", "sl3")
+    ds.assert(ss.slice(1, -1) === "23", "sl4")
+}
+
+function testAnySwitch() {
+    function bar(x: number) {
+        glb1 += x
+        return x
+    }
+    function testIt(v: number) {
+        glb1 = 0
+        switch (v) {
+            case bar(0):
+                return 1
+            default:
+                return 7
+            case bar(1):
+                return 2
+            case bar(2):
+                return 3
+        }
+    }
+    function ss() {
+        return ds._id("f7") + "4n"
+    }
+    function testStr(s: string) {
+        switch (s) {
+            case "foo":
+                return 0
+            case ss():
+                return 2
+            case "bar":
+                return 1
+            default:
+                return 7
+        }
+    }
+    function testQuick(v: number) {
+        switch (v) {
+            default:
+                return 7
+            case 0:
+                return 1
+            case 1:
+                return 2
+            case bar(2):
+                return 3
+            case 3:
+                return 4
+            case 4:
+                return 5
+            case 5:
+                return 6
+        }
+    }
+    function testFallThrough(x: number) {
+        let r = ""
+        switch (x) {
+            // @ts-ignore
+            default:
+                r += "q"
+            // fallthrough
+            case 6:
+            // @ts-ignore
+            case 7:
+                r += "x"
+            // fallthrough
+            case 8:
+                r += "y"
+                break
+            case 10:
+                r += "z"
+                break
+        }
+        return r
+    }
+    function switchLoop() {
+        let r = ""
+        for (let i = 0; i < 5; ++i) {
+            switch (i) {
+                case 0:
+                case 1:
+                    r += "x"
+                    break
+                case 2:
+                    continue
+            }
+            r += i
+        }
+        isEq(r, "x0x134")
+    }
+
+    let v = testIt(2)
+    isEq(v, 3)
+    isEq(glb1, 3)
+    v = testIt(0)
+    isEq(v, 1)
+    isEq(glb1, 0)
+
+    isEq(testStr("foo"), 0)
+    isEq(testStr("bar"), 1)
+    isEq(testStr(ss()), 2)
+
+    for (let i = 0; i <= 6; ++i) isEq(testQuick(i), i + 1)
+
+    isEq(testFallThrough(100), "qxy")
+    isEq(testFallThrough(6), "xy")
+    isEq(testFallThrough(7), "xy")
+    isEq(testFallThrough(8), "y")
+    isEq(testFallThrough(10), "z")
+
+    switchLoop()
 }
 
 testFlow()
-if (x != 42) _panic(10)
+if (x !== 42) _panic(10)
 testMath()
 testLazy()
 testBuffer()
@@ -603,6 +755,7 @@ testInstanceOf()
 testClass()
 testFunName()
 testJSON()
+testAnySwitch()
 
 console.log("all OK")
-ds.reboot()
+

@@ -13,35 +13,35 @@ function testLazyOps(): void {
     if (incrLazyAcc(10, false) && incrLazyAcc(1, true)) {
         assert(false, "")
     } else {
-        assert(lazyAcc == 10, "lazy1")
+        assert(lazyAcc === 10, "lazy1")
     }
-    assert(lazyAcc == 10, "lazy2")
+    assert(lazyAcc === 10, "lazy2")
     if (incrLazyAcc(100, true) && incrLazyAcc(1, false)) {
         assert(false, "")
     } else {
-        assert(lazyAcc == 111, "lazy4")
+        assert(lazyAcc === 111, "lazy4")
     }
     lazyAcc = 0
     if (incrLazyAcc(100, true) && incrLazyAcc(8, true)) {
-        assert(lazyAcc == 108, "lazy5")
+        assert(lazyAcc === 108, "lazy5")
     } else {
         assert(false, "")
     }
     lazyAcc = 0
     if (incrLazyAcc(10, true) || incrLazyAcc(1, true)) {
-        assert(lazyAcc == 10, "lazy1b")
+        assert(lazyAcc === 10, "lazy1b")
     } else {
         assert(false, "")
     }
-    assert(lazyAcc == 10, "lazy2xx")
+    assert(lazyAcc === 10, "lazy2xx")
     if (incrLazyAcc(100, false) || incrLazyAcc(1, false)) {
         assert(false, "")
     } else {
-        assert(lazyAcc == 111, "lazy4x")
+        assert(lazyAcc === 111, "lazy4x")
     }
     lazyAcc = 0
     if (incrLazyAcc(100, false) || incrLazyAcc(8, true)) {
-        assert(lazyAcc == 108, "lazy5")
+        assert(lazyAcc === 108, "lazy5")
     } else {
         assert(false, "")
     }
@@ -53,24 +53,24 @@ function testLazyOps(): void {
     ) {
         assert(false, "")
     } else {
-        assert(lazyAcc == 111, "lazy10")
+        assert(lazyAcc === 111, "lazy10")
     }
     lazyAcc = 0
     if (
         (incrLazyAcc(10, true) && incrLazyAcc(1, true)) ||
         incrLazyAcc(100, false)
     ) {
-        assert(lazyAcc == 11, "lazy101")
+        assert(lazyAcc === 11, "lazy101")
     } else {
         assert(false, "")
     }
 
     lazyAcc = 0
     let cond = true
-    assert((cond ? incrLazyNum(1, 42) : incrLazyNum(10, 36)) == 42, "?:")
-    assert(lazyAcc == 1, "?:0")
-    assert((!cond ? incrLazyNum(1, 42) : incrLazyNum(10, 36)) == 36, "?:1")
-    assert(lazyAcc == 11, "?:2")
+    assert((cond ? incrLazyNum(1, 42) : incrLazyNum(10, 36)) === 42, "?:")
+    assert(lazyAcc === 1, "?:0")
+    assert((!cond ? incrLazyNum(1, 42) : incrLazyNum(10, 36)) === 36, "?:1")
+    assert(lazyAcc === 11, "?:2")
     lazyAcc = 0
 
     msg("testing lazy done")
@@ -91,7 +91,7 @@ function testBoolCasts() {
     function boolDie() {
         assert(false, "bool casts")
     }
-    let x = "Xy" + "Z"
+    let x = ds._id("Xy") + "Z"
 
     if (x) {
     } else {
@@ -123,4 +123,4 @@ function testBoolCasts() {
 testLazyOps()
 testBoolCasts()
 
-ds.reboot()
+

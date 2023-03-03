@@ -3,17 +3,21 @@ import {
     ConnectionState,
     delay,
     ERROR_TRANSPORT_CLOSED,
+    groupBy,
     isCodeError,
     JDEventSource,
-    loadServiceSpecifications,
+    JDService,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type {
+    BuildStatus,
+    SideBuildReq,
+    SideBuildResp,
     SideKillReq,
     SideKillResp,
-    SideSpecsData,
     SideSpecsReq,
     SideSpecsResp,
+    VersionInfo,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { sideRequest } from "./jacdac"
@@ -23,6 +27,7 @@ import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
+import { ResolvedBuildConfig } from "@devicescript/compiler"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -35,8 +40,15 @@ export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
 
-    private _specs: SideSpecsData
+    // watch is tied to currentFilename and devicescript manager
+    private _watcher: vscode.FileSystemWatcher
+    private _currentFilename: string
+    private _currentDeviceScriptManager: string
+
+    private _versions: VersionInfo
+    private _buildConfig: ResolvedBuildConfig
     private _terminalPromise: Promise<vscode.Terminal>
+    private _diagColl: vscode.DiagnosticCollection
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
         super()
@@ -48,31 +60,181 @@ export class DeveloperToolsManager extends JDEventSource {
             this,
             subscriptions
         )
+        vscode.workspace.onDidDeleteFiles(
+            this.handleDidDeleteFiles,
+            this,
+            subscriptions
+        )
+        vscode.workspace.onDidRenameFiles(
+            this.handleDidRenameFiles,
+            this,
+            subscriptions
+        )
         vscode.window.onDidCloseTerminal(
             this.handleCloseTerminal,
             this,
             subscriptions
         )
         subscriptions.push(this)
+        subscriptions.push(
+            vscode.commands.registerCommand(
+                "extension.devicescript.terminal.show",
+                () => this.show()
+            )
+        )
+        // outputCh = vscode.window.createOutputChannel("DevS Build")
+        this._diagColl =
+            vscode.languages.createDiagnosticCollection("DeviceScript")
+
+        // clear errors when file edited
+        vscode.workspace.onDidChangeTextDocument(
+            ev => {
+                this._diagColl.set(ev.document.uri, [])
+            },
+            undefined,
+            subscriptions
+        )
     }
 
     async refreshSpecs() {
-        const oldSpecs = this._specs
         const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
             req: "specs",
             data: {
                 dir: ".", // TODO
             },
         })
-        this._specs = res.data
-        loadServiceSpecifications(this._specs.buildConfig.services)
-        console.log(
+        const { versions, buildConfig } = res.data
+        this._versions = versions
+        console.debug(
             `devicescript devtools ${this.version}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
         )
-        if (JSON.stringify(oldSpecs) !== JSON.stringify(this._specs)) {
-            this.extensionState.bus.emit(CHANGE)
-            this.emit(CHANGE)
+        this.updateBuildConfig(buildConfig)
+    }
+
+    updateBuildConfig(data: ResolvedBuildConfig) {
+        if (JSON.stringify(this._buildConfig) === JSON.stringify(data)) return
+
+        this._buildConfig = data
+        const { changed } =
+            this.extensionState.bus.setCustomServiceSpecifications(
+                this._buildConfig?.services || []
+            )
+        if (changed) this.emit(CHANGE)
+    }
+
+    private showBuildResults(st: BuildStatus) {
+        this._diagColl.clear()
+        const severities = [
+            vscode.DiagnosticSeverity.Warning,
+            vscode.DiagnosticSeverity.Error,
+            vscode.DiagnosticSeverity.Hint,
+            vscode.DiagnosticSeverity.Information,
+        ]
+
+        const byFile = groupBy(st.diagnostics, s => s.filename)
+        for (const fn of Object.keys(byFile)) {
+            const diags = byFile[fn].map(d => {
+                const p0 = new vscode.Position(d.line - 1, d.column - 1)
+                const p1 = new vscode.Position(d.endLine - 1, d.endColumn - 1)
+                const msg =
+                    typeof d.messageText == "string"
+                        ? d.messageText
+                        : d.messageText.messageText
+                const sev =
+                    severities[d.category] ?? vscode.DiagnosticSeverity.Error
+                const vd = new vscode.Diagnostic(
+                    new vscode.Range(p0, p1),
+                    msg,
+                    sev
+                )
+                vd.source = "DeviceScript"
+                vd.code = d.code
+                return vd
+            })
+            this._diagColl.set(vscode.Uri.file(fn), diags)
         }
+        this.updateBuildConfig(st.config)
+    }
+
+    // relative to projectFolder, but most likely undef srcFolder
+    get currentFilename() {
+        return this._currentFilename
+    }
+
+    get currentFile(): vscode.Uri {
+        const { projectFolder, currentFilename } = this
+        return projectFolder && currentFilename
+            ? Utils.joinPath(projectFolder, currentFilename)
+            : undefined
+    }
+
+    get currentDeviceScriptManager() {
+        return this._currentDeviceScriptManager
+    }
+
+    async build(filename: string, service?: JDService): Promise<BuildStatus> {
+        if (
+            this._currentFilename === filename &&
+            this._currentDeviceScriptManager === service?.id
+        )
+            return
+
+        this._currentFilename = filename
+        this._currentDeviceScriptManager = service?.id
+        this._watcher?.dispose()
+        this._watcher = undefined
+
+        const res = await this.buildOnce()
+        if (res) await this.startWatch()
+
+        this.emit(CHANGE)
+
+        return res
+    }
+
+    private async buildOnce(): Promise<BuildStatus> {
+        const filename = this._currentFilename
+
+        if (!this._currentFilename) return undefined
+
+        console.debug(`build ${filename}`)
+        const service = this.extensionState.bus.node(
+            this._currentDeviceScriptManager
+        ) as JDService
+        const deployTo = service?.device?.deviceId
+        try {
+            const res = await sideRequest<SideBuildReq, SideBuildResp>({
+                req: "build",
+                data: {
+                    filename,
+                    deployTo,
+                },
+            })
+            this.showBuildResults(res.data)
+            return res.data
+        } catch (err) {
+            console.error(err) // TODO
+            // this is rather unusual, show it to the user
+            vscode.window.showErrorMessage(err.message)
+            return undefined
+        }
+    }
+
+    private async startWatch() {
+        const filename = this._currentFilename
+        const sid = this._currentDeviceScriptManager
+
+        console.debug(`fs.watch: ${filename}`)
+        const handleChange = async (uri: vscode.Uri) => {
+            console.debug(`fs changed: ${uri.fsPath}`)
+            const service = this.extensionState.bus.node(sid) as JDService
+            await this.build(filename, service)
+        }
+        const glob = new vscode.RelativePattern(this.projectFolder, filename)
+        this._watcher = vscode.workspace.createFileSystemWatcher(glob)
+        this._watcher.onDidChange(handleChange)
+        this._watcher.onDidCreate(handleChange)
+        this._watcher.onDidDelete(handleChange)
     }
 
     private async init() {
@@ -86,23 +248,29 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     get version() {
-        return this._specs?.version
+        return this._versions?.version
     }
 
     get runtimeVersion() {
-        return this._specs?.runtimeVersion
+        return this._versions?.runtimeVersion
     }
 
     get nodeVersion() {
-        return this._specs?.nodeVersion
+        return this._versions?.nodeVersion
     }
 
     get buildConfig() {
-        return this._specs?.buildConfig
+        return this._buildConfig
     }
 
     get boards() {
         return Object.values(this.buildConfig?.boards)
+    }
+
+    get srcFolder() {
+        return this.projectFolder
+            ? vscode.Uri.joinPath(this.projectFolder, "src")
+            : undefined
     }
 
     get projectFolder() {
@@ -178,11 +346,29 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async start(): Promise<void> {
+    start(): Promise<void> {
         return (
             this._terminalPromise ||
             (this._terminalPromise = this.createTerminal())
-        ).then(() => {})
+        ).then(() => this.startBuild())
+    }
+
+    async entryPoints() {
+        const files = await vscode.workspace.fs.readDirectory(this.srcFolder)
+        return files
+            .filter(
+                ([name, type]) =>
+                    type == vscode.FileType.File &&
+                    name.startsWith("main") &&
+                    name.endsWith(".ts")
+            )
+            .map(r => "src/" + r[0])
+    }
+
+    private async startBuild() {
+        const files = await this.entryPoints()
+        const file = files[0]
+        if (file) await this.build(file)
     }
 
     dispose() {
@@ -228,6 +414,22 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
+    private async handleDidDeleteFiles(ev: vscode.FileDeleteEvent) {
+        const cf = this.currentFile
+        if (!cf) return
+        const pp = cf.path
+        if (ev.files.find(f => f.path === pp)) await this.build(undefined)
+    }
+
+    private async handleDidRenameFiles(ev: vscode.FileRenameEvent) {
+        const cf = this.currentFile
+        if (!cf) return
+        const pp = cf.path
+        // TODO better than just stop everyhing
+        if (ev.files.find(f => f.oldUri.path === pp))
+            await this.build(undefined)
+    }
+
     private async handleCloseTerminal(t: vscode.Terminal) {
         if (this._terminalPromise && t === (await this._terminalPromise)) {
             this.clear()
@@ -260,8 +462,14 @@ export class DeveloperToolsManager extends JDEventSource {
     private clear() {
         this._terminalPromise = undefined
         this._projectFolder = undefined
-        this._specs = undefined
+        this._versions = undefined
+        this._watcher?.dispose()
+        this._watcher = undefined
+        this._currentFilename = undefined
+        this._currentDeviceScriptManager = undefined
+        this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
+        this.emit(CHANGE)
     }
 
     async findProjects() {

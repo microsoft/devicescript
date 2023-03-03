@@ -5,30 +5,30 @@ const ledD = new ds.Led()
 const btn = new ds.Button()
 let p
 
-pot.position.onChange(0.01, () => {
-    p = pot.position.read()
+pot.position.onChange(0.01, async () => {
+    p = await pot.position.read()
     console.log("tick", p)
-    ledD.brightness.write(p * 0.3)
+    await ledD.brightness.write(p * 0.3)
 })
 
 declare module "@devicescript/core" {
     interface Led {
-        setAllColors(r: number, g: number, b: number): void
+        setAllColors(r: number, g: number, b: number): Promise<void>
     }
 }
 
-ds.Led.prototype.setAllColors = function (r, g, b) {
-    this.setAll(r, g, b)
+ds.Led.prototype.setAllColors = async function (r, g, b) {
+    await this.setAll(r, g, b)
 }
 
-ledD.onConnected(() => {
-    ledD.setAllColors(0.9, 1, 0)
+ledD.onConnected(async () => {
+    await ledD.setAllColors(0.9, 1, 0)
 })
 
-btn.down.subscribe(() => {
-    ledD.setAll(1, 0, 1)
+btn.down.subscribe(async () => {
+    await ledD.setAll(1, 0, 1)
 })
 
-btn.up.subscribe(() => {
-    ledD.setAll(0, 0, 1)
+btn.up.subscribe(async () => {
+    await ledD.setAll(0, 0, 1)
 })

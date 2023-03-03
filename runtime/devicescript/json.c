@@ -129,7 +129,7 @@ static int parse_hex(parser_t *state) {
     }
     buf[4] = 0;
     int r = jd_from_hex(dst, buf);
-    if (r != 4)
+    if (r != 2)
         return -1;
     return (dst[0] << 8) | dst[1];
 }
@@ -377,8 +377,21 @@ static void stringify_obj(stringify_t *state, value_t v);
 
 static void stringify_field(devs_ctx_t *ctx, void *state_, value_t k, value_t v) {
     stringify_t *state = state_;
+
     if (!devs_is_string(ctx, k))
+        // shouldn't happen
         return;
+
+    // don't stringify undefined and functions
+    switch (devs_value_typeof(ctx, v)) {
+    case DEVS_OBJECT_TYPE_FUNCTION:
+    case DEVS_OBJECT_TYPE_UNDEFINED:
+    case DEVS_OBJECT_TYPE_EXOTIC:
+        return;
+    default:
+        break;
+    }
+
     add_indent(state);
     stringify_obj(state, k);
     add_ch(state, ':', 1);
@@ -418,6 +431,7 @@ static void stringify_obj(stringify_t *state, value_t v) {
         /* fall-through */
     case DEVS_OBJECT_TYPE_BOOL:
     case DEVS_OBJECT_TYPE_NULL:
+    case DEVS_OBJECT_TYPE_UNDEFINED:
         v = devs_value_to_string(ctx, v);
         data = devs_string_get_utf8(ctx, v, &sz);
         if (dst)

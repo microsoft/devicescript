@@ -1,11 +1,12 @@
 import { readdirSync, readFileSync } from "node:fs"
-import { compileBuf, getHost, validateBoard } from "./build"
+import { getHost, validateBoard } from "./build"
 import { CmdOptions, log } from "./command"
 import * as path from "node:path"
 import {
     testCompiler,
     RepoInfo,
     resolveBuildConfig,
+    compileWithHost,
 } from "@devicescript/compiler"
 import { runTest } from "./run"
 import { writeFile } from "node:fs/promises"
@@ -34,9 +35,13 @@ export async function ctool(options: CToolOptions & CmdOptions) {
     }
 
     if (options.empty) {
-        const res = await compileBuf(Buffer.from(""), resolveBuildConfig(), {
-            noVerify: true,
-        })
+        const host = await getHost(
+            resolveBuildConfig(),
+            { noVerify: true },
+            "."
+        )
+        host.read = () => ""
+        const res = compileWithHost("src/main.ts", host)
         const buf = res.binary
         let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[${buf.length}] = {`
         for (let i = 0; i < buf.length; ++i) {
@@ -53,10 +58,8 @@ export async function ctool(options: CToolOptions & CmdOptions) {
             .filter(f => /\.ts$/.test(f))
         for (const fn of files) {
             console.log(`*** test ${fn}`)
-            const host = await getHost(resolveBuildConfig(), {
-                mainFileName: fn,
-            })
-            testCompiler(host, readFileSync(fn, "utf8"))
+            const host = await getHost(resolveBuildConfig(), {}, ".")
+            testCompiler(fn, host)
         }
 
         for (const fn of readdir(rtest)) {

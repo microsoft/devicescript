@@ -10,15 +10,15 @@ interface Testrec {
 
 function testRec0(): Testrec {
     let testrec: Testrec = {} as any
-    testrec.str2 = "Hello" + " world"
+    testrec.str2 = ds._id("Hello") + " world"
     testrec.str = testrec.str2
     testrec.num = 42
-    assert(testrec.str == "Hello world", "recstr")
-    assert(testrec.num == 42, "recnum")
+    assert(testrec.str === "Hello world", "recstr")
+    assert(testrec.num === 42, "recnum")
     let testrec2 = <Testrec>null
-    assert(testrec2 == null, "isinv")
-    assert(testrec == testrec, "eq")
-    assert(testrec != null, "non inv")
+    assert(testrec2 === null, "isinv")
+    assert(testrec === testrec, "eq")
+    assert(testrec !== null, "non inv")
     return testrec
 }
 
@@ -29,4 +29,4 @@ function testReccoll(): void {
 }
 
 testReccoll()
-ds.reboot()
+

@@ -4,28 +4,31 @@ description: MSR JM Brain S2-mini 207 v4.3
 # MSR JM Brain S2-mini 207 v4.3
 
 
+## Features
 
+-  Jacdac on pin 17 using Jacdac connector
+-  RGB LED on pins 8, 7, 6
+-  Service: power
 
-- Jacdac on pin 17 using Jacdac connector
-- RGB LED on pins 8, 7, 6
-- Service: power
+## Stores
+
 
 ## Pins
 
-```
-P33: GPIO33, io
-P34: GPIO34, io
-jacdac.pin: GPIO17, analogOut, io
-led.rgb[0].pin: GPIO8, analogIn, io
-led.rgb[1].pin: GPIO7, analogIn, io
-led.rgb[2].pin: GPIO6, analogIn, io
-sd.pinCS: GPIO38, io
-sd.pinMISO: GPIO37, io
-sd.pinMOSI: GPIO35, io
-sd.pinSCK: GPIO36, io
-services.power[0].pinEn: GPIO2, analogIn, io
-services.power[0].pinFault: GPIO13, io
-```
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **P33** |  GPIO33 |  io |
+| **P34** |  GPIO34 |  io |
+| **jacdac.pin** |  GPIO17 |  analogOut,  io |
+| **led.rgb[0].pin** |  GPIO8 |  analogIn,  io |
+| **led.rgb[1].pin** |  GPIO7 |  analogIn,  io |
+| **led.rgb[2].pin** |  GPIO6 |  analogIn,  io |
+| **sd.pinCS** |  GPIO38 |  io |
+| **sd.pinMISO** |  GPIO37 |  io |
+| **sd.pinMOSI** |  GPIO35 |  io |
+| **sd.pinSCK** |  GPIO36 |  io |
+| **services.power[0].pinEn** |  GPIO2 |  analogIn,  io |
+| **services.power[0].pinFault** |  GPIO13 |  io |
 
 
 

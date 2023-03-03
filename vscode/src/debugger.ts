@@ -1,5 +1,4 @@
 import * as vscode from "vscode"
-import { build } from "./build"
 import {
     checkDeviceScriptManagerRuntimeVersion,
     prepareForDeploy,
@@ -8,7 +7,6 @@ import { DeviceScriptExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { CHANGE, SRV_DEVICE_SCRIPT_MANAGER, SRV_ROLE_MANAGER } from "jacdac-ts"
 import type { StartArgs } from "@devicescript/dap"
-import { pickDeviceScriptFile } from "./pickers"
 
 export function activateDebugger(extensionState: DeviceScriptExtensionState) {
     const { context } = extensionState
@@ -175,8 +173,9 @@ export class DeviceScriptConfigurationProvider
     ) {
         const sessionConfig = config as vscode.DebugSessionOptions
         const dsConfig = config as StartArgs
+        const { program } = config
 
-        if (!config.program) {
+        if (!program) {
             vscode.window.showErrorMessage(
                 "DeviceScript: Debug cancelled. Cannot find a program to debug."
             )
@@ -254,17 +253,16 @@ export class DeviceScriptConfigurationProvider
         await prepareForDeploy(this.extensionState, service)
 
         // build and deploy
-        const buildResult = await build(config.program, {
-            service,
-            watch: true,
-        })
+        const buildResult = await this.extensionState.devtools.build(
+            program,
+            service
+        )
         if (!buildResult?.success) {
             vscode.window.showErrorMessage(
                 `Debug cancelled. Program has build errors.`
             )
             return undefined
         }
-
         // save as currently debugged project
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId
@@ -288,13 +286,13 @@ export class DeviceScriptConfigurationProvider
         config: DebugConfiguration,
         token?: CancellationToken
     ) {
-        this.extensionState.devtools.projectFolder = folder.uri
+        this.extensionState.projectFolder = folder.uri
         if (
             !config.program &&
             ((config.request === "launch" && config.type === "devicescript") ||
                 (!config.request && !config.type))
         ) {
-            const file = await pickDeviceScriptFile(folder, {
+            const file = await this.extensionState.pickDeviceScriptFile({
                 title: "Pick a file to debug.",
             })
             if (!file) return undefined

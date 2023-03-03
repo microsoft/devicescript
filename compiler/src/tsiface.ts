@@ -1,8 +1,18 @@
 import * as ts from "typescript"
 import { Host } from "./format"
 
-class MyHost implements ts.CompilerHost {
-    constructor(public fileText: Record<string, string>) {}
+export function trace(...args: any) {
+    console.debug("\u001b[32mTRACE:", ...args, "\u001b[0m")
+}
+
+class TsHost implements ts.CompilerHost {
+    private fileCache: Record<string, string> = {}
+
+    constructor(
+        public host: Host,
+        public prelude: Record<string, string>,
+        public checkModule: (path: string) => boolean
+    ) {}
 
     getSourceFile(
         fileName: string,
@@ -10,12 +20,7 @@ class MyHost implements ts.CompilerHost {
         onError?: (message: string) => void,
         shouldCreateNewSourceFile?: boolean
     ): ts.SourceFile {
-        let text = ""
-        if (this.fileText.hasOwnProperty(fileName)) {
-            text = this.fileText[fileName]
-        } else {
-            if (onError) onError("File not found: " + fileName)
-        }
+        let text = this.readFile(fileName)
         if (text == null) {
             onError("File not found: " + fileName)
             text = ""
@@ -29,7 +34,18 @@ class MyHost implements ts.CompilerHost {
         )
     }
 
-    writeFile: ts.WriteFileCallback
+    writeFile(
+        fileName: string,
+        text: string,
+        writeByteOrderMark: boolean,
+        onError?: (message: string) => void
+    ) {
+        this.host.write(fileName, text)
+    }
+
+    realpath(path: string): string {
+        return this.host.resolvePath(path)
+    }
 
     getDefaultLibFileName(options: ts.CompilerOptions): string {
         return "corelib.d.ts"
@@ -38,7 +54,7 @@ class MyHost implements ts.CompilerHost {
         return "."
     }
     getCurrentDirectory(): string {
-        return "."
+        return this.host.resolvePath(".")
     }
     getCanonicalFileName(fileName: string): string {
         return fileName
@@ -50,13 +66,40 @@ class MyHost implements ts.CompilerHost {
         return "\n"
     }
     fileExists(fileName: string): boolean {
-        return this.fileText.hasOwnProperty(fileName)
+        return this.readFile(fileName) != undefined
     }
     readFile(fileName: string): string {
-        if (!this.fileExists(fileName)) return undefined
-        return this.fileText[fileName]
+        let text = ""
+        if (fileName.endsWith(".tsx")) return undefined
+        if (this.fileCache.hasOwnProperty(fileName)) {
+            text = this.fileCache[fileName]
+        } else {
+            if (this.prelude.hasOwnProperty(fileName)) {
+                text = this.prelude[fileName]
+            } else {
+                try {
+                    text = this.host.read(fileName)
+                    if (this.host.getFlags?.()?.traceFiles)
+                        trace(`read file: ${fileName} (size: ${text.length})`)
+                    if (fileName.replace(/.*[\/\\]/, "") == "package.json") {
+                        if (!this.checkModule(fileName.slice(0, -12))) {
+                            if (this.host.getFlags?.()?.traceFiles)
+                                trace(`invalid module at ${fileName}`)
+                            text = null
+                        }
+                    }
+                } catch (e) {
+                    if (this.host.getFlags?.()?.traceAllFiles)
+                        trace("file missing: " + fileName)
+                    text = null
+                }
+            }
+            this.fileCache[fileName] = text
+        }
+        if (text == null) return undefined
+        return text
     }
-    trace?(s: string): void {
+    trace(s: string): void {
         console.log(s)
     }
 }
@@ -76,30 +119,25 @@ export function getProgramDiagnostics(program: ts.Program): ts.Diagnostic[] {
 }
 
 export function buildAST(
+    mainFn: string,
     host: Host,
-    source: string,
-    prelude: Record<string, string>
+    prelude: Record<string, string>,
+    checkModule: (path: string) => boolean
 ) {
-    const mainFn = host?.mainFileName() || "main.ts"
-    const tsHost = new MyHost({
-        [mainFn]: source,
-        ...prelude,
-    })
-    tsHost.writeFile = (fileName, data, writeBOM, onError) => {
-        host.write(fileName, data)
-    }
+    const tsHost = new TsHost(host, prelude, checkModule)
 
     const tsOptions: ts.CompilerOptions = {
-        allowJs: true,
+        allowJs: false,
         allowUnreachableCode: true,
         allowUnusedLabels: true,
         alwaysStrict: false,
-        checkJs: true,
+        checkJs: false,
         declaration: false,
         experimentalDecorators: true,
         forceConsistentCasingInFileNames: true,
         // lib: string[];
         module: ts.ModuleKind.ES2022,
+        moduleResolution: ts.ModuleResolutionKind.NodeJs,
         newLine: ts.NewLineKind.LineFeed,
         noEmit: true,
         noFallthroughCasesInSwitch: true,
@@ -122,6 +160,9 @@ export function buildAST(
         // suppressImplicitAnyIndexErrors: true,
         target: ts.ScriptTarget.ES2022,
         useUnknownInCatchVariables: true,
+        typeRoots: [],
+        types: [],
+        noDtsResolution: true,
         // types?: string[];
     }
     const program = ts.createProgram({
@@ -136,6 +177,24 @@ const diagHost: ts.FormatDiagnosticsHost = {
     getCurrentDirectory: () => ".",
     getCanonicalFileName: fn => fn,
     getNewLine: () => "\n",
+}
+
+export function mkDiag(
+    filename: string,
+    messageText: string,
+    category = ts.DiagnosticCategory.Error
+): ts.Diagnostic {
+    return {
+        category,
+        code: 9997,
+        file: {
+            text: "",
+            fileName: filename,
+        } as ts.SourceFile,
+        start: 1,
+        length: 100,
+        messageText,
+    }
 }
 
 export function formatDiagnostics(

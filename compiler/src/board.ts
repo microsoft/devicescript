@@ -6,7 +6,7 @@ import {
     PinFunction,
     normalizeDeviceConfig,
 } from "./archconfig"
-import { DeviceCatalog, deviceCatalogImage } from "jacdac-ts"
+import { DeviceCatalog, deviceCatalogImage, unique } from "jacdac-ts"
 import { parseAnyInt } from "./dcfg"
 import { resolveBuildConfig } from "./specgen"
 
@@ -58,7 +58,7 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
 
     if (cfg.log?.pinTX !== undefined)
         features.push(
-            `serial logging on ${cfg.log.pinTX} at ${
+            `Serial logging on pin ${cfg.log.pinTX} at ${
                 cfg.log.baud || 115200
             } 8N1`
         )
@@ -119,23 +119,25 @@ function deviceConfigToMarkdown(
     const { id } = spec || {}
     const boardJson = normalizeDeviceConfig(board, { ignoreFirmwareUrl: true })
     const info = boardInfo(board, arch)
+    const description = $description || spec?.description
+    const stores = unique([url, ...(spec?.storeLink || [])].filter(u => !!u))
     const r: string[] = [
         `---
 description: ${devName}
 ---
 # ${devName}
-
-${$description || spec?.description || ""}
-
 `,
-        ...info.features.map(f => `- ${f}`),
-        ...info.services.map(f => `- Service: ${f}`),
-        url ? `- [Store](${url})` : undefined,
-        `\n## Pins\n`,
-        "```\n" + info.pinInfoText + "\n```\n\n",
+        description ? `\n${description}\n` : undefined,
         id
-            ? `![${devName} picture](${deviceCatalogImage(spec, "catalog")})\n`
+            ? `\n![${devName} picture](${deviceCatalogImage(spec, "catalog")})`
             : undefined,
+        `\n## Features\n`,
+        ...info.features.map(f => `-  ${f}`),
+        ...info.services.map(f => `-  Service: ${f}`),
+        `\n## Stores\n`,
+        ...stores.map(url => `-  [${url}](${url})`),
+        `\n## Pins\n`,
+        `${renderPinout(info.pinInfoText)}\n\n`,
         `\n## Firmware update
 
 In [Visual Studio Code](/getting-started/vscode),
@@ -157,6 +159,18 @@ ${JSON.stringify(boardJson, null, 4)}
 `,
     ]
     return r.filter(s => s !== undefined).join("\n")
+
+    function renderPinout(pinout: string) {
+        const pins = pinout.split(/\n/g).map(line => line.split(/[:,]/g))
+        return [
+            `| pin name | hardware id | features |`,
+            `|:---------|:------------|---------:|`,
+            ...pins.map(
+                pin =>
+                    `| **${pin[0]}** | ${pin[1]} | ${pin.slice(2).join(", ")} |`
+            ),
+        ].join("\n")
+    }
 }
 
 export function boardMarkdownFiles() {
@@ -255,8 +269,17 @@ export function expandPinFunctionInfo(info: PinFunctionInfo): PinFunction[][] {
     return res
 }
 
-export function pinFunctions(info: PinFunctionInfo, p: number) {
-    return expandPinFunctionInfo(info)[p] ?? []
+export function pinFunctions(
+    info: PinFunctionInfo,
+    p: number,
+    keepInputOutput = false
+) {
+    const res = expandPinFunctionInfo(info)[p] ?? []
+    if (!keepInputOutput) {
+        if (res.includes("io"))
+            return res.filter(r => r != "input" && r != "output")
+    }
+    return res
 }
 
 export function pinHasFunction(
@@ -264,7 +287,7 @@ export function pinHasFunction(
     p: number,
     fn: PinFunction
 ) {
-    return pinFunctions(info, p).includes(fn)
+    return pinFunctions(info, p, true).includes(fn)
 }
 
 export interface PinInfo {
@@ -281,10 +304,7 @@ export function pinsInfo(arch: ArchConfig, devcfg: DeviceConfig) {
         const name = `${label}=${gpio}`
         if (typeof gpio != "number") return errors.push(`invalid pin: ${name}`)
 
-        let functions = pinFunctions(arch?.pins, gpio)
-        if (functions.includes("io"))
-            functions = functions.filter(f => f != "input" && f != "output")
-
+        const functions = pinFunctions(arch?.pins, gpio)
         if (functions.length == 0)
             return errors.push(`invalid pin: ${name} has no functions`)
 

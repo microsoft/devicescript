@@ -1543,11 +1543,11 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
 
     subscriptions.push(
         vscode.commands.registerCommand(
-            "extension.devicescript.jdom.cloud.edit",
+            "extension.devicescript.jdom.gateway.edit",
             (item: JDomCloudConfigurationTreeItem) => item?.configure()
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.jdom.cloud.connect",
+            "extension.devicescript.jdom.gateway.connect",
             (item: JDomCloudConfigurationTreeItem) => item?.connect()
         ),
         vscode.commands.registerCommand(

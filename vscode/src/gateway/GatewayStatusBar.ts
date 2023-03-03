@@ -1,9 +1,9 @@
 import * as vscode from "vscode"
 import { CHANGE } from "jacdac-ts"
-import { toMarkdownString } from "./catalog"
-import { CloudExtensionState } from "./CloudExtensionState"
+import { toMarkdownString } from "../catalog"
+import { GatewayExtensionState } from "./GatewayExtensionState"
 
-export async function registerCloudStatusBar(state: CloudExtensionState) {
+export async function registerGatewayStatusBar(state: GatewayExtensionState) {
     const { context } = state
     const { subscriptions } = context
 
@@ -11,13 +11,13 @@ export async function registerCloudStatusBar(state: CloudExtensionState) {
         vscode.StatusBarAlignment.Right,
         119.9
     )
-    statusBarItem.command = "extension.devicescript.cloud.configure"
+    statusBarItem.command = "extension.devicescript.gateway.connect"
     const updateStatusBar = async () => {
         const { manager, apiRoot } = state
         if (manager) {
             statusBarItem.text = `$(cloud)`
             statusBarItem.tooltip = toMarkdownString(`
-DeviceScript Cloud connected.
+DeviceScript Gateway connected.
 
 - swagger: [${apiRoot}](${apiRoot}/swagger/)
         `)

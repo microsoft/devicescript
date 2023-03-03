@@ -10,11 +10,8 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type { SideOutputEvent } from "../../cli/src/sideprotocol"
-import { initBuild } from "./build"
-import { CloudExtensionState } from "./CloudExtensionState"
-import { registerCloudStatusBar } from "./CloudStatusBar"
-import { registerCloudTreeDataProvider } from "./CloudTreeDataProvider"
 import { activateDebugger } from "./debugger"
+import { activateGateway } from "./gateway/activateGateway"
 import { startJacdacBus, stopJacdacBus, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem, activateTreeViews } from "./JDomTreeDataProvider"
 import { activateMainStatusBar } from "./mainstatusbar"
@@ -38,12 +35,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     const extensionState = new DeviceScriptExtensionState(context, bus)
 
     // build
-    initBuild()
     subscriptions.push(
-        vscode.commands.registerCommand(
-            "extension.devicescript.terminal.show",
-            () => extensionState.devtools.show()
-        ),
         vscode.commands.registerCommand(
             "extension.devicescript.device.identify",
             async (item: JDomDeviceTreeItem) => {
@@ -85,10 +77,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     )
 
     activateDebugger(extensionState)
-
-    const cloudState = new CloudExtensionState(context, extensionState)
-    registerCloudTreeDataProvider(cloudState)
-    registerCloudStatusBar(cloudState)
+    activateGateway(context, extensionState)
 
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -140,13 +129,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         undefined,
         context.subscriptions
     )
-
-    //cloud
-    vscode.commands.registerCommand(
-        "extension.devicescript.cloud.configure",
-        async () => cloudState.configure()
-    )
-
     configure()
 
     // launch devtools in background

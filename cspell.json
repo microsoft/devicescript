@@ -1,0 +1,21 @@
+{
+    "version": "0.2",
+    "enabled": true,
+    "ignorePaths": [],
+    "dictionaryDefinitions": [
+        {
+            "name": "custom-dictionary",
+            "path": "./.cspell/custom-dictionary.txt",
+            "addWords": true
+        }
+    ],
+    "dictionaries": [
+        "en-US",
+        "softwareTerms",
+        "typescript",
+        "custom-dictionary"
+    ],
+    "words": [],
+    "ignoreWords": [],
+    "import": []
+}

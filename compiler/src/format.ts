@@ -15,6 +15,7 @@ export * from "./bytecode"
 
 import type ts from "typescript"
 import { ResolvedBuildConfig } from "./archconfig"
+import { CompileFlags } from "./compiler"
 
 export interface SMap<T> {
     [k: string]: T
@@ -85,12 +86,15 @@ export interface DevsDiagnostic extends ts.Diagnostic {
 
 export interface Host {
     write(filename: string, contents: Uint8Array | string): void
+    read(filename: string): string
+    resolvePath(filename: string): string
+    relativePath?(filename: string): string
     log(msg: string): void
-    mainFileName?(): string
     error?(err: DevsDiagnostic): void
     getConfig(): ResolvedBuildConfig
     verifyBytecode?(buf: Uint8Array, dbgInfo?: DebugInfo): void
     isBasicOutput?(): boolean
+    getFlags?(): CompileFlags
 }
 
 export function parseImgVersion(v: number) {

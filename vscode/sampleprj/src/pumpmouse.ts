@@ -4,9 +4,9 @@ console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
 // listen for pressure changes
-sensor.pressure.onChange(10, () => {
+sensor.pressure.onChange(10, async () => {
     // read sensor reading
-    const pressure = sensor.pressure.read()
+    const pressure = await sensor.pressure.read()
     console.log(pressure)
     // user blows in straw
     if (pressure > 1400) {

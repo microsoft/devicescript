@@ -11,19 +11,19 @@ function testArrayMap() {
     for (let s of strs) {
         r += s
     }
-    assert(r == "AX1X2X3", "map")
+    assert(r === "AX1X2X3", "map")
 
-    let flt = [17, 8, 2, 3, 100].filter((x, i) => x == i)
-    assert(flt.length == 2, "flt")
-    assert(flt[1] == 3, "flt")
+    let flt = [17, 8, 2, 3, 100].filter((x, i) => x === i)
+    assert(flt.length === 2, "flt")
+    assert(flt[1] === 3, "flt")
 
     let sum = [1, 2, 3].reduce((s, v) => s + v, 0)
-    assert(sum == 6, "red")
+    assert(sum === 6, "red")
 
-    let x = ["A" + "12", "B" + "3"]
+    let x = [ds._id("A") + "12", ds._id("B") + "3"]
         .map((k, i) => k.length + i)
         .reduce((c, n) => c * n, 1)
-    assert(x == 9, "9")
+    assert(x === 9, "9")
 }
 
 function testArrayForEach() {
@@ -34,12 +34,12 @@ function testArrayForEach() {
     for (let s of strs) {
         r += s
     }
-    assert(r == "AX1X2X3", "forEach")
+    assert(r === "AX1X2X3", "forEach")
 }
 
 function testArrayEvery() {
     let str = [1, 2, 3]
-    assert(!str.every(x => x == 2), "everyfalse")
+    assert(!str.every(x => x === 2), "everyfalse")
     assert(
         str.every(x => x > 0),
         "everytrue"
@@ -48,7 +48,7 @@ function testArrayEvery() {
 function testArraySome() {
     let str = [1, 2, 3]
     assert(
-        str.some(x => x == 2),
+        str.some(x => x === 2),
         "sometrue"
     )
     assert(!str.some(x => x < 0), "somefalse")
@@ -94,10 +94,9 @@ function testGenerics() {
     })
     let expectedArray = [-1, 3, 4, 23, 43, 4593]
     for (let i = 0; i < expectedArray.length; i++) {
-        assert(inArray[i] == expectedArray[i])
+        assert(inArray[i] === expectedArray[i])
     }
 }
-
 
 testArraySome()
 testArrayEvery()
@@ -105,4 +104,4 @@ testArrayForEach()
 testArrayMap()
 testGenerics()
 
-ds.reboot()
+

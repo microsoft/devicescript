@@ -38,16 +38,16 @@ class XFoo {
 
 function testClass() {
     let f = new XFoo(272, 100)
-    assert(f.getPin() == 172, "ctor")
+    assert(f.getPin() === 172, "ctor")
     f.setPin(42)
-    assert(f.getPin() == 42, "getpin")
+    assert(f.getPin() === 42, "getpin")
 }
 
 function testToString() {
     msg("testToString")
     let f = new XFoo(44, 2)
     let s = "" + f.toString()
-    assert(s == "Foo42", "ts")
+    assert(s === "Foo42", "ts")
 }
 
 testToString()
@@ -73,24 +73,23 @@ class FooInit {
 }
 
 function classInit() {
-    let f = new FooInit(13, "blah" + "baz")
-    assert(f.foo == 13, "i0")
-    assert(f.bar == "blahbaz", "i1")
-    assert(f.baz == 14, "i2")
-    assert(f.qux == 7, "i3")
+    let f = new FooInit(13, ds._id("blah") + "baz")
+    assert(f.foo === 13, "i0")
+    assert(f.bar === "blahbaz", "i1")
+    assert(f.baz === 14, "i2")
+    assert(f.qux === 7, "i3")
 }
 
 classInit()
 
-
 class Node<T> {
-    v: T;
-    k: string;
-    next: Node<T>;
+    v: T
+    k: string
+    next: Node<T>
 }
 
 class Map<T> {
-    head: Node<T>;
+    head: Node<T>
 
     getElt(k: string): T {
         return mapGet(this, k)
@@ -103,7 +102,7 @@ class Map<T> {
 
 function mapSet<T>(m: Map<T>, k: string, v: T) {
     for (let p = m.head; p != null; p = p.next) {
-        if (p.k == k) {
+        if (p.k === k) {
             p.v = v
             return
         }
@@ -117,17 +116,16 @@ function mapSet<T>(m: Map<T>, k: string, v: T) {
 
 function mapGet<T>(m: Map<T>, k: string): T {
     for (let p = m.head; p != null; p = p.next) {
-        if (p.k == k) {
+        if (p.k === k) {
             return p.v
         }
     }
     return null
 }
 
-
 function search_array<T>(a: T[], item: T): number {
     for (let i = 0; i < a.length; i++) {
-        if (a[i] == item) {
+        if (a[i] === item) {
             return i
         }
     }
@@ -135,7 +133,6 @@ function search_array<T>(a: T[], item: T): number {
 }
 
 class MyMap<K, V> {
-
     keys: K[]
     values: V[]
 
@@ -151,7 +148,7 @@ class MyMap<K, V> {
 
     value_for(key: K): V {
         let i = search_array(this.keys, key)
-        if (i == -1) {
+        if (i === -1) {
             return null
         }
         return this.values[i]
@@ -159,14 +156,14 @@ class MyMap<K, V> {
 
     key_for(value: V): K {
         let i = search_array(this.values, value)
-        if (i == -1) {
+        if (i === -1) {
             return null
         }
         return this.keys[i]
     }
     set(key: K, value: V): void {
         let i = search_array(this.keys, key)
-        if (i == -1) {
+        if (i === -1) {
             this.keys.push(key)
             this.values.push(value)
         } else {
@@ -175,47 +172,44 @@ class MyMap<K, V> {
     }
 
     has_key(key: K): boolean {
-        return search_array(this.keys, key) != -1
+        return search_array(this.keys, key) !== -1
     }
 
     has_value(value: V): boolean {
-        return search_array(this.values, value) != -1
+        return search_array(this.values, value) !== -1
     }
-
 }
 
-
 function testMaps() {
-    let m = new Map<number>();
-    let q = new Map<string>();
+    let m = new Map<number>()
+    let q = new Map<string>()
     let r = new MyMap<number, string>()
 
-    mapSet(q, "one", "foo" + "bar")
-    assert(mapGet(q, "one").length == 6, "m0")
+    mapSet(q, "one", ds._id("foo") + "bar")
+    assert(mapGet(q, "one").length === 6, "m0")
 
-    mapSet(q, "one", "foo2" + "bar")
-    assert(mapGet(q, "one").length == 7, "m1")
-    q.setElt("two", "x" + "y")
-    assert(q.getElt("two").length == 2, "m2")
-    q.setElt("two", "x" + "yz")
-    assert(q.getElt("two").length == 3, "thr")
-
+    mapSet(q, "one", ds._id("foo2") + "bar")
+    assert(mapGet(q, "one").length === 7, "m1")
+    q.setElt("two", ds._id("x") + "y")
+    assert(q.getElt("two").length === 2, "m2")
+    q.setElt("two", ds._id("x") + "yz")
+    assert(q.getElt("two").length === 3, "thr")
 
     mapSet(m, "one", 1)
-    assert(mapGet(m, "one") == 1, "1")
+    assert(mapGet(m, "one") === 1, "1")
 
     mapSet(m, "two", 2)
-    assert(m.getElt("two") == 2, "2")
-    //control.assert(mapGet(m, "zzzz") == null, "0")
+    assert(m.getElt("two") === 2, "2")
 }
 
 testMaps()
 
-
 class Foo {
-    a: number;
-    private b: number;
-    bar() { return this.b; }
+    a: number
+    private b: number
+    bar() {
+        return this.b
+    }
     constructor(inp: number) {
         this.a = inp
         this.b = inp + 1
@@ -232,17 +226,16 @@ function testAnon() {
 
     let bar = new Foo(42)
     let baz: { a: number } = bar
-    assert(nested.a.b.c == 3)
-    assert(x.a == 2);
-    assert(x.b == "bar");
-    assert(foo(x) == 3)
-    assert(foo(bar) == 43);
-    assert(bar.bar() == 43)
-    assert(foo(baz) == 43)
+    assert(nested.a.b.c === 3)
+    assert(x.a === 2)
+    assert(x.b === "bar")
+    assert(foo(x) === 3)
+    assert(foo(bar) === 43)
+    assert(bar.bar() === 43)
+    assert(foo(baz) === 43)
     // HUH bar(40) - new (expects any)
 }
 
 testAnon()
 
 
-ds.reboot()

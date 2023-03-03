@@ -20,5 +20,5 @@ function testBuffer() {
 testBuffer()
 
 const dotmatrix = new ds.DotMatrix()
-dotmatrix.dots.write(hex`00 ab 12 2f 00`)
-const tmp = dotmatrix.dots.read() // read buffer
+await dotmatrix.dots.write(hex`00 ab 12 2f 00`)
+const tmp = await dotmatrix.dots.read() // read buffer

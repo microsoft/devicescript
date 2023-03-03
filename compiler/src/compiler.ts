@@ -57,7 +57,13 @@ import {
     packVarIndex,
     CachedValue,
 } from "./opwriter"
-import { buildAST, formatDiagnostics, getProgramDiagnostics } from "./tsiface"
+import {
+    buildAST,
+    formatDiagnostics,
+    getProgramDiagnostics,
+    mkDiag,
+    trace,
+} from "./tsiface"
 import { preludeFiles, resolveBuildConfig } from "./specgen"
 import {
     VarDebugInfo,
@@ -68,11 +74,13 @@ import {
     DebugVarType,
     SrcFile,
     srcMapEntrySize,
+    ConstValue,
 } from "./info"
 import { computeSizes } from "./debug"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
-import { LocalBuildConfig } from "./archconfig"
+import { LocalBuildConfig, ResolvedBuildConfig } from "./archconfig"
+import { constantFold, Folded, isTemplateOrStringLiteral } from "./constantfold"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -84,7 +92,6 @@ export const DEVS_FILE_PREFIX = "bytecode"
 export const DEVS_BYTECODE_FILE = `${DEVS_FILE_PREFIX}.devs`
 
 export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
-export const DEVS_BODY_FILE = `${DEVS_FILE_PREFIX}-body.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
 export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
@@ -361,6 +368,7 @@ class Procedure {
     returnValueLabel: Label
     returnNoValueLabel: Label
     maxTryBlocks = 0
+    constVars: Record<string, ConstValue> = {}
     mapVarOffset: (n: number) => number
 
     constructor(
@@ -429,6 +437,7 @@ class Procedure {
             size: this.writer.size,
             users: this.users.map(u => this.parent.getSrcLocation(u)),
             slots,
+            constVars: this.constVars,
         }
     }
 
@@ -512,7 +521,7 @@ interface ProtoDefinition {
 }
 
 interface CallLike {
-    position: ts.Node
+    position: ts.CallLikeExpression
     compiledCallExpr?: Value
     callexpr: Expr
     arguments: Expr[]
@@ -524,10 +533,9 @@ export interface CompileFlags {
     allPrototypes?: boolean
     traceBuiltin?: boolean
     traceProto?: boolean
-}
-
-function trace(...args: any) {
-    console.debug("\u001b[32mTRACE:", ...args, "\u001b[0m")
+    testHarness?: boolean
+    traceAllFiles?: boolean
+    traceFiles?: boolean
 }
 
 export const compileFlagHelp: Record<string, string> = {
@@ -538,6 +546,13 @@ export const compileFlagHelp: Record<string, string> = {
         "compile-in all `object.method = function ...` assignments, used or not",
     traceBuiltin: "trace unresolved built-in functions",
     traceProto: "trace tree-shaking of prototypes",
+    traceFiles: "trace successful file accesses",
+    traceAllFiles: "trace all file accesses",
+    testHarness: "add an implicit ds.reboot() at the end",
+}
+
+interface PossiblyConstDeclaration extends ts.Declaration {
+    __ds_const_val?: Folded
 }
 
 class Program implements TopOpWriter {
@@ -559,7 +574,6 @@ class Program implements TopOpWriter {
     accountingProc: Procedure
     sysSpec: jdspec.ServiceSpec
     serviceSpecs: Record<string, jdspec.ServiceSpec>
-    enums: Record<string, jdspec.EnumInfo> = {}
     protoDefinitions: ProtoDefinition[] = []
     usedMethods: Record<string, boolean> = {}
     resolverParams: number[]
@@ -576,15 +590,13 @@ class Program implements TopOpWriter {
     diagnostics: DevsDiagnostic[] = []
     startServices: BaseServiceConfig[] = []
 
-    constructor(public host: Host, public _source: string) {
+    constructor(public mainFileName: string, public host: Host) {
+        this.flags = host.getFlags?.() ?? {}
+        this.isLibrary = this.flags.library || false
         this.serviceSpecs = {}
         const cfg = host.getConfig()
         for (const sp of cfg.services) {
             this.serviceSpecs[sp.camelName] = sp
-            for (const en of Object.keys(sp.enums)) {
-                const n = upperCamel(sp.camelName) + upperCamel(en)
-                this.enums["#" + n] = sp.enums[en]
-            }
         }
         this.sysSpec = this.serviceSpecs["system"]
         this.prelude = preludeFiles(cfg)
@@ -592,11 +604,6 @@ class Program implements TopOpWriter {
 
     get hasErrors() {
         return this.numErrors > 0
-    }
-
-    getSource(fn: string) {
-        if (!fn || fn == this.host.mainFileName?.()) return this._source
-        return this.prelude[fn] || ""
     }
 
     addString(str: string) {
@@ -631,17 +638,22 @@ class Program implements TopOpWriter {
         return addUnique(this.floatLiterals, f)
     }
 
+    relativePath(p: string) {
+        return this.host.relativePath?.(p) ?? p
+    }
+
     getSrcLocation(node: ts.Node): SrcLocation {
         const sf = node.getSourceFile() as ts.SourceFile & {
             __ds_srcidx: number
             __ds_srcoffset: number
         }
         if (sf.__ds_srcidx === undefined) {
-            let idx = this.srcFiles.findIndex(s => s.path == sf.fileName)
+            const path = this.relativePath(sf.fileName)
+            let idx = this.srcFiles.findIndex(s => s.path == path)
             if (idx < 0) {
                 idx = this.srcFiles.length
                 this.srcFiles.push({
-                    path: sf.fileName,
+                    path,
                     length: sf.text.length,
                     text: sf.text,
                 })
@@ -656,39 +668,81 @@ class Program implements TopOpWriter {
         return [pos + sf.__ds_srcoffset, endp - pos]
     }
 
+    private sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {
+        const related = (
+            d: ts.DiagnosticRelatedInformation
+        ): ts.DiagnosticRelatedInformation & { filename: string } => ({
+            category: d.category,
+            code: d.code,
+            file: undefined,
+            filename: this.relativePath(d.file?.fileName),
+            start: d.start,
+            length: d.length,
+            messageText: d.messageText,
+        })
+
+        return {
+            ...related(d),
+            filename: d.filename,
+            line: d.line,
+            column: d.column,
+            endLine: d.endLine,
+            endColumn: d.endColumn,
+            formatted: d.formatted,
+            relatedInformation: d.relatedInformation?.map(related),
+        }
+    }
+
     printDiag(diag: ts.Diagnostic) {
         if (diag.category == ts.DiagnosticCategory.Error) this.numErrors++
 
-        const jdiag: DevsDiagnostic = {
-            ...diag,
-            filename: this.host?.mainFileName() || "main.ts",
-            line: 1,
-            column: 1,
-            endLine: 1,
-            endColumn: 1,
-            formatted: formatDiagnostics([diag], this.host.isBasicOutput?.()),
+        let origFn: string
+        if (diag.file) {
+            origFn = diag.file.fileName
+            diag.file.fileName = this.relativePath(diag.file.fileName)
         }
 
-        if (diag.file) {
-            const st = diag.file.getLineAndCharacterOfPosition(diag.start)
-            const en = diag.file.getLineAndCharacterOfPosition(
-                diag.start + diag.length
-            )
-            jdiag.line = st.line + 1
-            jdiag.column = st.character + 1
-            jdiag.endLine = en.line + 1
-            jdiag.endColumn = en.character + 1
-            jdiag.filename = diag.file.fileName
+        try {
+            const jdiag: DevsDiagnostic = {
+                ...diag,
+                filename: this.mainFileName,
+                line: 1,
+                column: 1,
+                endLine: 1,
+                endColumn: 1,
+                formatted: formatDiagnostics(
+                    [diag],
+                    this.host.isBasicOutput?.()
+                ),
+            }
+
+            if (diag.file && diag.file.getLineAndCharacterOfPosition) {
+                const st = diag.file.getLineAndCharacterOfPosition(diag.start)
+                const en = diag.file.getLineAndCharacterOfPosition(
+                    diag.start + diag.length
+                )
+                jdiag.line = st.line + 1
+                jdiag.column = st.character + 1
+                jdiag.endLine = en.line + 1
+                jdiag.endColumn = en.character + 1
+                jdiag.filename = this.relativePath(diag.file.fileName)
+            }
+            this.diagnostics.push(this.sanitizeDiagnostic(jdiag))
+            if (this.host.error) this.host.error(jdiag)
+            else console.error(jdiag.formatted)
+        } finally {
+            if (diag.file) diag.file.fileName = origFn
         }
-        this.diagnostics.push(sanitizeDiagnostic(jdiag))
-        if (this.host.error) this.host.error(jdiag)
-        else console.error(jdiag.formatted)
     }
 
-    reportError(node: ts.Node, msg: string): Value {
+    reportError(
+        node: ts.Node,
+        messageText: string,
+        category = ts.DiagnosticCategory.Error
+    ): Value {
         const diag: ts.Diagnostic = {
-            category: ts.DiagnosticCategory.Error,
-            messageText: msg,
+            category,
+            messageText,
             code: 9999,
             file: node.getSourceFile(),
             start: node.getStart(),
@@ -721,6 +775,34 @@ class Program implements TopOpWriter {
             case "F":
                 return this.procs[idx]?.name
         }
+    }
+
+    constantFold(e: Expr) {
+        return constantFold((e): Folded => {
+            const sym = this.getSymAtLocation(e, true)
+            if (!sym) return null
+            const decl = sym.valueDeclaration as PossiblyConstDeclaration
+            if (decl) {
+                if (decl.__ds_const_val) return decl.__ds_const_val
+                if (ts.isEnumMember(decl))
+                    return ((decl as PossiblyConstDeclaration).__ds_const_val =
+                        {
+                            val: this.checker.getConstantValue(decl),
+                        })
+            }
+
+            const nodeName = this.symName(sym)
+            switch (nodeName) {
+                case "#NaN":
+                    return { val: NaN }
+                case "#Infinity":
+                    return { val: Infinity }
+                case "undefined":
+                    return { val: undefined }
+            }
+
+            return null
+        }, e as ts.Expression)
     }
 
     private emitSleep(ms: number) {
@@ -758,10 +840,23 @@ class Program implements TopOpWriter {
         return r
     }
 
+    private getSymTags(sym: ts.Symbol) {
+        const tags: Record<string, string> = {}
+        for (const tag of sym?.getJsDocTags() ?? []) {
+            if (tag.name.startsWith("ds-")) {
+                const v = tag.text
+                    ?.map(t => t.text)
+                    .filter(s => !!s?.trim())
+                    .join(" ")
+                tags[tag.name] = v ?? ""
+            }
+        }
+        return tags
+    }
+
     private toLiteralJSON(node: ts.Expression): any {
-        if (this.isStringLiteral(node)) return node.text
-        if (ts.isNumericLiteral(node)) return parseFloat(node.text)
-        if (node.kind == SK.NullKeyword) return null
+        const folded = this.constantFold(node)
+        if (folded && folded.val !== undefined) return folded.val
 
         if (ts.isArrayLiteralExpression(node))
             return node.elements.map(e => this.toLiteralJSON(e))
@@ -785,6 +880,15 @@ class Program implements TopOpWriter {
             }
             return json
         }
+
+        if (ts.isCallExpression(node)) {
+            const nam = this.nodeName(node.expression)
+            if (nam == "#ds.gpio") return this.toLiteralJSON(node.arguments[0])
+        }
+
+        const tags = this.getSymTags(this.getSymAtLocation(node))
+        const gpio = parseInt(tags["ds-gpio"])
+        if (!isNaN(gpio)) return gpio
 
         throwError(node, `expecting JSON literal here`)
     }
@@ -853,6 +957,7 @@ class Program implements TopOpWriter {
             const cell = this.getCellAtLocation(decl)
             return !(cell instanceof Variable)
         }
+        if ((decl as PossiblyConstDeclaration).__ds_const_val) return true
         return false
     }
 
@@ -993,7 +1098,7 @@ class Program implements TopOpWriter {
             let init: Value = null
 
             if (decl.initializer) init = this.emitExpr(decl.initializer)
-            else if (this.isInLoop(decl)) init = literal(null)
+            else if (this.isInLoop(decl)) init = literal(undefined)
 
             if (!init) continue
 
@@ -1160,6 +1265,46 @@ class Program implements TopOpWriter {
         wr.emitStmt(Op.STMT1_THROW, this.emitExpr(stmt.expression))
     }
 
+    private emitSwitchStatement(stmt: ts.SwitchStatement) {
+        const wr = this.writer
+        const expr = wr.cacheValue(this.emitExpr(stmt.expression), true)
+
+        let deflLbl: Label
+        const labels = stmt.caseBlock.clauses.map(cl => {
+            const lbl = wr.mkLabel("sw")
+            if (ts.isDefaultClause(cl)) {
+                deflLbl = lbl
+            } else {
+                const clexpr = this.emitExpr(cl.expression)
+                wr.emitJumpIfFalse(
+                    lbl,
+                    wr.emitExpr(Op.EXPR2_NE, expr.emit(), clexpr)
+                )
+            }
+            return lbl
+        })
+        expr.free()
+
+        const loop: LoopLabels = {
+            breakLbl: wr.mkLabel("swBrk"),
+        }
+
+        if (deflLbl) wr.emitJump(deflLbl)
+        else wr.emitJump(loop.breakLbl)
+
+        try {
+            this.proc.loopStack.push(loop)
+            stmt.caseBlock.clauses.forEach((cl, idx) => {
+                wr.emitLabel(labels[idx])
+                for (const s of cl.statements) this.emitStmt(s)
+            })
+        } finally {
+            this.proc.loopStack.pop()
+        }
+
+        wr.emitLabel(loop.breakLbl)
+    }
+
     private emitBlock(stmt: ts.Block) {
         let hadFun = false
         let stmts = stmt.statements.slice()
@@ -1191,6 +1336,7 @@ class Program implements TopOpWriter {
                 stmt.kind == SK.ContinueStatement
                     ? loop.continueLbl
                     : loop.breakLbl
+            if (!lbl) continue
             if (numTry) wr.emitThrowJmp(lbl, numTry)
             else wr.emitJump(lbl)
             return
@@ -1280,6 +1426,10 @@ class Program implements TopOpWriter {
         wr.emitLabel(loop.breakLbl)
     }
 
+    private emitEnumDeclaration(stmt: ts.EnumDeclaration) {
+        // nothing to do
+    }
+
     private finishRetVal() {
         const wr = this.writer
         if (this.proc.returnValueLabel) {
@@ -1288,7 +1438,7 @@ class Program implements TopOpWriter {
         }
         if (this.proc.returnNoValueLabel) {
             wr.emitLabel(this.proc.returnNoValueLabel)
-            wr.emitStmt(Op.STMT1_RETURN, literal(null))
+            wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
         }
     }
 
@@ -1316,7 +1466,7 @@ class Program implements TopOpWriter {
                         this.proc.returnNoValueLabel = wr.mkLabel("retNoVal")
                     wr.emitThrowJmp(this.proc.returnNoValueLabel, numTry)
                 } else {
-                    wr.emitStmt(Op.STMT1_RETURN, literal(null))
+                    wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
                 }
             }
         }
@@ -1402,7 +1552,7 @@ class Program implements TopOpWriter {
                         assert(params.length == 0)
                     }
                     this.emitCtorAssignments(cls)
-                    wr.emitStmt(Op.STMT1_RETURN, literal(null))
+                    wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
                     this.finishRetVal()
                     this.finalizeProc(proc)
                 })
@@ -1461,7 +1611,7 @@ class Program implements TopOpWriter {
         if (ts.isBlock(stmt.body)) {
             this.emitStmt(stmt.body)
             if (!this.writer.justHadReturn())
-                this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
+                this.writer.emitStmt(Op.STMT1_RETURN, literal(undefined))
         } else {
             this.writer.emitStmt(Op.STMT1_RETURN, this.emitExpr(stmt.body))
         }
@@ -1515,7 +1665,7 @@ class Program implements TopOpWriter {
                 this.withLocation(paramdef, wr => {
                     const v = this.getVarAtLocation(paramdef)
                     wr.emitIfAndPop(
-                        wr.emitExpr(Op.EXPR1_IS_NULL, v.emit(wr)),
+                        wr.emitExpr(Op.EXPR1_IS_UNDEFINED, v.emit(wr)),
                         () => {
                             this.emitStore(
                                 v,
@@ -1568,6 +1718,7 @@ class Program implements TopOpWriter {
 
         function modifierOK(mod: ts.Modifier) {
             switch (mod.kind) {
+                case SK.AsyncKeyword:
                 case SK.ExportKeyword:
                     return true
                 default:
@@ -1731,7 +1882,7 @@ class Program implements TopOpWriter {
                 }
             }
 
-            this.writer.emitStmt(Op.STMT1_RETURN, literal(null))
+            this.writer.emitStmt(Op.STMT1_RETURN, literal(undefined))
             this.finalizeProc(this.protoProc)
         })
 
@@ -1780,8 +1931,12 @@ class Program implements TopOpWriter {
             this.protoProc.callMe(wr, [])
             for (const s of stmts) this.emitStmt(s)
             this.onStart.finalizeRaw()
-            this.writer.emitStmt(Op.STMT1_RETURN, literal(0))
+            if (this.flags.testHarness)
+                wr.emitCall(wr.dsMember(BuiltInString.REBOOT))
+            wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
+            if (this.roles.length > 1 || this.cloudRole.used)
+                this.markMethodUsed("#ds.Role.onPacket")
             this.emitProtoAssigns()
         })
 
@@ -1847,6 +2002,38 @@ class Program implements TopOpWriter {
         const doAssign = (decl: ts.VariableDeclaration | ts.BindingElement) => {
             if (ts.isIdentifier(decl.name)) {
                 if (this.getCellAtLocation(decl)) return
+
+                const d0 = decl as PossiblyConstDeclaration
+                if (d0.__ds_const_val) return
+                if (
+                    ts.isVariableDeclaration(decl) &&
+                    decl.initializer &&
+                    ts.getCombinedNodeFlags(decl) & ts.NodeFlags.Const
+                ) {
+                    const folded = this.constantFold(decl.initializer)
+                    if (folded) {
+                        d0.__ds_const_val = folded
+                        let val = folded.val
+
+                        if (val === null) {
+                            // OK
+                        } else if (
+                            JSON.stringify(val) != "null" &&
+                            (typeof val == "string" ||
+                                typeof val == "boolean" ||
+                                typeof val == "number")
+                        ) {
+                            // OK
+                        } else {
+                            // handle 'undefined', 'Infinity', 'NaN', etc
+                            val = { special: "" + val }
+                        }
+                        const proc = this.proc ?? this.mainProc
+                        proc.constVars[idName(decl.name)] = val
+                        return
+                    }
+                }
+
                 this.assignCell(
                     decl,
                     new Variable(
@@ -1935,7 +2122,7 @@ class Program implements TopOpWriter {
             wr.emitLabel(wr.ret)
             if (options.every) wr.emitJump(wr.top)
             else {
-                wr.emitStmt(Op.STMT1_RETURN, literal(null))
+                wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
             }
             this.finalizeProc(proc)
         })
@@ -2048,7 +2235,7 @@ class Program implements TopOpWriter {
     }
 
     private stringLiteral(expr: Expr) {
-        if (this.isStringLiteral(expr)) return expr.text
+        if (isTemplateOrStringLiteral(expr)) return expr.text
         return undefined
     }
 
@@ -2165,7 +2352,10 @@ class Program implements TopOpWriter {
         for (const arg of args) {
             if (fmt && !/[=:]$/.test(fmt)) fmt += " "
             const flat = this.flattenPlus(arg)
-            if (flat.some(f => this.stringLiteral(f) != null)) {
+            if (
+                ts.isTemplateExpression(arg) ||
+                flat.some(f => this.stringLiteral(f) != null)
+            ) {
                 flat.forEach(pushArg)
             } else {
                 pushArg(arg)
@@ -2239,6 +2429,9 @@ class Program implements TopOpWriter {
                     this.emitExpr(expr.arguments[0])
                 )
             }
+            case "ds._id":
+                this.requireArgs(expr, 1)
+                return this.emitExpr(expr.arguments[0])
             case "ds.everyMs": {
                 this.requireTopLevel(expr.position)
                 this.requireArgs(expr, 2)
@@ -2298,7 +2491,7 @@ class Program implements TopOpWriter {
                 return unit()
             }
 
-            case "ds._use": {
+            case "ds.keep": {
                 this.requireArgs(expr, 1)
                 this.ignore(this.emitExpr(expr.arguments[0]))
                 return unit()
@@ -2317,7 +2510,38 @@ class Program implements TopOpWriter {
         })
     }
 
+    private checkAsyncFun(formal: ts.Type, arg: Expr) {
+        const actual = this.checker.getTypeAtLocation(arg)
+
+        const formalSigs = formal.getCallSignatures()
+        const actualSigs = actual.getCallSignatures()
+
+        if (
+            actualSigs[0] &&
+            this.isPromise(actualSigs[0].getReturnType()) &&
+            formalSigs[0] &&
+            !this.isPromise(formalSigs[0].getReturnType())
+        ) {
+            const actstr = this.checker.typeToString(actual)
+            const formstr = this.checker.typeToString(formal)
+            this.reportError(
+                arg,
+                `async function of type '${actstr}' not allowed here; need '${formstr}'`
+            )
+        }
+    }
+
     private emitCallLike(call: CallLike): Value {
+        const sig = this.checker.getResolvedSignature(call.position)
+        for (let i = 0; i < call.arguments.length; ++i) {
+            if (!sig.parameters[i]) continue
+            const formal = this.checker.getTypeOfSymbolAtLocation(
+                sig.parameters[i],
+                call.position
+            )
+            this.checkAsyncFun(formal, call.arguments[i])
+        }
+
         const callName = this.nodeName(call.callexpr)
         const builtInName =
             callName && callName.startsWith("#") ? callName.slice(1) : null
@@ -2362,8 +2586,14 @@ class Program implements TopOpWriter {
         return this.emitGenericCall(call.arguments, fn)
     }
 
-    private getSymAtLocation(node: ts.Node) {
+    private getSymAtLocation(node: ts.Node, shorthand = false) {
+        if (shorthand && node?.parent?.kind == SK.ShorthandPropertyAssignment)
+            return this.checker.getShorthandAssignmentValueSymbol(node.parent)
+
         let sym = this.checker.getSymbolAtLocation(node)
+        if (sym?.flags & ts.SymbolFlags.Alias)
+            sym = this.checker.getAliasedSymbol(sym)
+
         if (!sym) {
             const decl = node as ts.NamedDeclaration
             if (decl.name) sym = this.checker.getSymbolAtLocation(decl.name)
@@ -2372,11 +2602,7 @@ class Program implements TopOpWriter {
     }
 
     private getCellAtLocation(node: ts.Node) {
-        let sym: ts.Symbol
-        if (node?.parent?.kind == SK.ShorthandPropertyAssignment)
-            sym = this.checker.getShorthandAssignmentValueSymbol(node.parent)
-        else sym = this.getSymAtLocation(node)
-        return symCell(sym)
+        return symCell(this.getSymAtLocation(node, true))
     }
 
     private getVarAtLocation(node: ts.Node) {
@@ -2448,12 +2674,6 @@ class Program implements TopOpWriter {
         const nodeName = this.nodeName(expr)
         if (!nodeName) return null
         switch (nodeName) {
-            case "#NaN":
-                return this.emitLiteral(NaN)
-            case "#Infinity":
-                return this.emitLiteral(Infinity)
-            case "undefined":
-                return this.emitLiteral(undefined)
             case "#ds_impl":
                 return this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT)
             default:
@@ -2483,11 +2703,6 @@ class Program implements TopOpWriter {
         if (nsName == "#Math") {
             const id = idName(expr.name)
             if (mathConst.hasOwnProperty(id)) return literal(mathConst[id])
-        } else if (this.enums.hasOwnProperty(nsName)) {
-            const e = this.enums[nsName]
-            const prop = idName(expr.name)
-            if (e.members.hasOwnProperty(prop)) return literal(e.members[prop])
-            else throwError(expr, `enum ${nsName} has no member ${prop}`)
         }
 
         if (idName(expr.name) == "prototype") {
@@ -2510,46 +2725,6 @@ class Program implements TopOpWriter {
 
         const { obj, idx } = this.tryEmitIndex(expr)
         return this.writer.emitIndex(obj, idx)
-    }
-
-    private isStringLiteral(node: ts.Node): node is ts.LiteralExpression {
-        switch (node.kind) {
-            case SK.TemplateHead:
-            case SK.TemplateMiddle:
-            case SK.TemplateTail:
-            case SK.StringLiteral:
-            case SK.NoSubstitutionTemplateLiteral:
-                return true
-            default:
-                return false
-        }
-    }
-
-    private emitLiteral(v: any, node?: ts.Node) {
-        if (
-            v === null ||
-            v === undefined ||
-            typeof v == "number" ||
-            typeof v == "boolean"
-        )
-            return literal(v)
-
-        if (typeof v == "string") return this.writer.emitString(v)
-
-        throwError(node, "unhandled literal: " + v)
-    }
-
-    private emitLiteralExpression(node: ts.LiteralExpression): Value {
-        const wr = this.writer
-
-        if (node.kind == SK.NumericLiteral) {
-            const parsed = parseFloat(node.text)
-            return this.emitLiteral(parsed)
-        } else if (this.isStringLiteral(node)) {
-            return wr.emitString(node.text)
-        } else {
-            throwError(node, "whoops")
-        }
     }
 
     private emitTemplateExpression(node: ts.TemplateExpression): Value {
@@ -2684,6 +2859,12 @@ class Program implements TopOpWriter {
             )
     }
 
+    private isNullOrUndefined(expr: Expr) {
+        const v = this.constantFold(expr)
+        if (v && v.val == null) return true
+        return false
+    }
+
     private emitBinaryExpression(expr: ts.BinaryExpression): Value {
         const simpleOps: SMap<Op> = {
             [SK.PlusToken]: Op.EXPR2_ADD,
@@ -2699,9 +2880,9 @@ class Program implements TopOpWriter {
             [SK.GreaterThanGreaterThanGreaterThanToken]:
                 Op.EXPR2_SHIFT_RIGHT_UNSIGNED,
             [SK.LessThanEqualsToken]: Op.EXPR2_LE,
-            [SK.EqualsEqualsToken]: Op.EXPR2_EQ,
+            [SK.EqualsEqualsToken]: Op.EXPR2_APPROX_EQ,
             [SK.EqualsEqualsEqualsToken]: Op.EXPR2_EQ,
-            [SK.ExclamationEqualsToken]: Op.EXPR2_NE,
+            [SK.ExclamationEqualsToken]: Op.EXPR2_APPROX_NE,
             [SK.ExclamationEqualsEqualsToken]: Op.EXPR2_NE,
             [SK.InstanceOfKeyword]: Op.EXPR2_INSTANCE_OF,
         }
@@ -2740,6 +2921,17 @@ class Program implements TopOpWriter {
         let op = expr.operatorToken.kind
 
         if (op == SK.EqualsToken) return this.emitAssignmentExpression(expr)
+
+        if (
+            (op == SK.EqualsEqualsToken || op == SK.ExclamationEqualsToken) &&
+            !this.isNullOrUndefined(expr.left) &&
+            !this.isNullOrUndefined(expr.right)
+        ) {
+            this.reportError(
+                expr,
+                `please use ${op == SK.EqualsEqualsToken ? "===" : "!=="}`
+            )
+        }
 
         if (op == SK.CommaToken) {
             this.ignore(this.emitExpr(expr.left))
@@ -3048,22 +3240,49 @@ class Program implements TopOpWriter {
         return arr.finalEmit()
     }
 
+    private isPromise(tp: ts.Type): boolean {
+        if (!tp) return false
+        if (tp.flags & ts.TypeFlags.Object)
+            return this.symName(tp.symbol) == "#Promise"
+        if (tp.isUnionOrIntersection())
+            return tp.types.some(t => this.isPromise(t))
+        return false
+    }
+
+    private emitTypeConversion(expr: ts.AsExpression | ts.TypeAssertion) {
+        this.checkAsyncFun(
+            this.checker.getTypeAtLocation(expr),
+            expr.expression
+        )
+        return this.emitExpr(expr.expression)
+    }
+
     private emitExpr(expr: Expr): Value {
+        const folded = this.constantFold(expr)
+        if (folded) {
+            if (false && ts.isBinaryExpression(expr))
+                this.reportError(
+                    expr,
+                    `folded -> ${folded.val}`,
+                    ts.DiagnosticCategory.Warning
+                )
+            if (typeof folded.val == "string")
+                return this.writer.emitString(folded.val)
+            else return literal(folded.val)
+        }
+
+        const tp = this.checker.getTypeAtLocation(expr)
+        if (this.isPromise(tp) && !ts.isAwaitExpression(expr.parent))
+            this.reportError(expr, "'await' missing")
+
         switch (expr.kind) {
+            case SK.AwaitExpression:
+                return this.emitExpr((expr as ts.AwaitExpression).expression)
             case SK.AsExpression:
-                return this.emitExpr((expr as ts.AsExpression).expression)
             case SK.TypeAssertionExpression:
-                return this.emitExpr((expr as ts.TypeAssertion).expression)
+                return this.emitTypeConversion(expr as any)
             case SK.CallExpression:
                 return this.emitCallExpression(expr as ts.CallExpression)
-            case SK.FalseKeyword:
-                return this.emitLiteral(false)
-            case SK.TrueKeyword:
-                return this.emitLiteral(true)
-            case SK.NullKeyword:
-                return this.emitLiteral(null)
-            case SK.UndefinedKeyword:
-                return this.emitLiteral(undefined)
             case SK.Identifier:
                 return this.emitIdentifier(expr as ts.Identifier)
             case SK.ThisKeyword:
@@ -3076,15 +3295,6 @@ class Program implements TopOpWriter {
                 return this.emitPropertyAccessExpression(
                     expr as ts.PropertyAccessExpression
                 )
-
-            case SK.TemplateHead:
-            case SK.TemplateMiddle:
-            case SK.TemplateTail:
-            case SK.NumericLiteral:
-            case SK.StringLiteral:
-            case SK.NoSubstitutionTemplateLiteral:
-                //case SyntaxKind.RegularExpressionLiteral:
-                return this.emitLiteralExpression(expr as ts.LiteralExpression)
 
             case SK.TemplateExpression:
                 return this.emitTemplateExpression(
@@ -3140,11 +3350,6 @@ class Program implements TopOpWriter {
         }
     }
 
-    private sourceFrag(node: ts.Node) {
-        const text = node.getFullText().trim()
-        return text.slice(0, 60).replace(/\n[^]*/, "...")
-    }
-
     private handleException(stmt: ts.Node, e: any) {
         if (e.terminateEmit) throw e
 
@@ -3164,7 +3369,6 @@ class Program implements TopOpWriter {
     }
 
     private emitStmt(stmt: ts.Statement) {
-        const src = this.sourceFrag(stmt)
         const wr = this.writer
 
         this.lastNode = stmt
@@ -3196,6 +3400,8 @@ class Program implements TopOpWriter {
                     return this.emitBreakContStatement(
                         stmt as ts.BreakOrContinueStatement
                     )
+                case SK.SwitchStatement:
+                    return this.emitSwitchStatement(stmt as ts.SwitchStatement)
                 case SK.Block:
                     return this.emitBlock(stmt as ts.Block)
                 case SK.TryStatement:
@@ -3214,6 +3420,8 @@ class Program implements TopOpWriter {
                     )
                 case SK.DebuggerStatement:
                     return this.writer.emitStmt(Op.STMT0_DEBUGGER)
+                case SK.EnumDeclaration:
+                    return this.emitEnumDeclaration(stmt as ts.EnumDeclaration)
                 case SK.TypeAliasDeclaration:
                 case SK.ExportDeclaration:
                 case SK.InterfaceDeclaration:
@@ -3271,7 +3479,7 @@ class Program implements TopOpWriter {
 
     private serializeStartServices() {
         const cfg = jsonToDcfg({
-            _: new Array(0x40).concat(this.startServices),
+            services: new Array(0x40).concat(this.startServices),
         })
         const bin = serializeDcfg(cfg)
         const writer = new SectionWriter()
@@ -3603,7 +3811,29 @@ class Program implements TopOpWriter {
     emit(): CompilationResult {
         assert(!this.tree)
 
-        this.tree = buildAST(this.host, this._source, this.prelude)
+        this.tree = buildAST(
+            this.mainFileName,
+            this.host,
+            this.prelude,
+            modulePath => {
+                let text: string
+                let devsconfig: any
+                const fn = modulePath + "devsconfig.json"
+                try {
+                    text = this.host.read(fn)
+                    devsconfig = JSON.parse(text)
+                    return true
+                } catch {
+                    this.printDiag(
+                        mkDiag(
+                            fn,
+                            text === undefined ? "file missing" : "invalid JSON"
+                        )
+                    )
+                    return false
+                }
+            }
+        )
         this.checker = this.tree.getTypeChecker()
 
         getProgramDiagnostics(this.tree).forEach(d => this.printDiag(d))
@@ -3628,12 +3858,6 @@ class Program implements TopOpWriter {
         }
 
         const { binary, dbg } = this.serialize()
-        const progJson = {
-            text: this._source,
-            blocks: "",
-            compiled: toHex(binary),
-        }
-        this.host.write(DEVS_BODY_FILE, JSON.stringify(progJson, null, 4))
         this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg))
         this.host.write(DEVS_SIZES_FILE, computeSizes(dbg))
 
@@ -3655,6 +3879,7 @@ class Program implements TopOpWriter {
             binary: binary,
             dbg: dbg,
             diagnostics: this.diagnostics,
+            config: this.host.getConfig(),
         }
     }
 }
@@ -3664,33 +3889,7 @@ export interface CompilationResult {
     binary: Uint8Array
     dbg: DebugInfo
     diagnostics: DevsDiagnostic[]
-}
-
-export function sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {
-    return {
-        ...related(d),
-        filename: d.filename,
-        line: d.line,
-        column: d.column,
-        endLine: d.endLine,
-        endColumn: d.endColumn,
-        formatted: d.formatted,
-        relatedInformation: d.relatedInformation?.map(related),
-    }
-
-    function related(
-        d: ts.DiagnosticRelatedInformation
-    ): ts.DiagnosticRelatedInformation & { filename: string } {
-        return {
-            category: d.category,
-            code: d.code,
-            file: undefined,
-            filename: d.file?.fileName,
-            start: d.start,
-            length: d.length,
-            messageText: d.messageText,
-        }
-    }
+    config?: ResolvedBuildConfig
 }
 
 /**
@@ -3702,7 +3901,6 @@ export function sanitizeDiagnostic(d: DevsDiagnostic): DevsDiagnostic {
 export function compile(
     code: string,
     opts: {
-        host?: Host
         mainFileName?: string
         log?: (msg: string) => void
         files?: Record<string, string | Uint8Array>
@@ -3714,32 +3912,42 @@ export function compile(
 ): CompilationResult {
     const {
         files = {},
-        mainFileName = "",
+        mainFileName = "src/main.ts",
         log = (msg: string) => console.debug(msg),
         verifyBytecode = () => {},
         config,
         errors = [],
     } = opts
-    const cfg = opts.host ? undefined : resolveBuildConfig(config)
-    const {
-        host = <Host>{
-            mainFileName: () => mainFileName,
-            write: (filename: string, contents: string | Uint8Array) => {
-                files[filename] = contents
-            },
-            log,
-            error: err => errors.push(err),
-            getConfig: () => cfg,
-            verifyBytecode,
+    const cfg = resolveBuildConfig(config)
+    const host = <Host>{
+        write: (filename: string, contents: string | Uint8Array) => {
+            files[filename] = contents
         },
-    } = opts
-    const p = new Program(host, code)
-    p.flags = opts.flags ?? {}
-    p.isLibrary = p.flags.library || false
+        read: (filename: string) => {
+            if (filename == mainFileName) return code
+            return files[filename]
+        },
+        resolvePath: path => path,
+        log,
+        error: err => errors.push(err),
+        getConfig: () => cfg,
+        verifyBytecode,
+        getFlags: () => opts.flags ?? {},
+    }
+    const p = new Program(mainFileName, host)
     return p.emit()
 }
 
-export function testCompiler(host: Host, code: string) {
+export function compileWithHost(
+    mainFileName: string,
+    host: Host
+): CompilationResult {
+    const p = new Program(mainFileName, host)
+    return p.emit()
+}
+
+export function testCompiler(mainFileName: string, host: Host) {
+    const code = host.read(mainFileName)
     const lines = code.split(/\r?\n/).map(s => {
         const m = /\/\/\s*!\s*(.*)/.exec(s)
         if (m) return m[1]
@@ -3747,46 +3955,36 @@ export function testCompiler(host: Host, code: string) {
     })
     const numerr = lines.filter(s => !!s).length
     let numExtra = 0
-    const p = new Program(
-        {
-            write: () => {},
-            log: () => {},
-            getConfig: host.getConfig,
-            verifyBytecode: host.verifyBytecode,
-            mainFileName: host.mainFileName,
-            error: err => {
-                let isOK = false
-                if (err.file) {
-                    const { line } = ts.getLineAndCharacterOfPosition(
-                        err.file,
-                        err.start
-                    )
-                    const exp = lines[line]
-                    const text = ts.flattenDiagnosticMessageText(
-                        err.messageText,
-                        "\n"
-                    )
-                    if (exp != null && text.indexOf(exp) >= 0) {
-                        lines[line] = "" // allow more errors on the same line
-                        isOK = true
-                    }
-                }
+    const myhost = Object.assign({}, host)
+    myhost.write = () => {}
+    myhost.log = () => {}
+    myhost.error = err => {
+        let isOK = false
+        if (err.file) {
+            const { line } = ts.getLineAndCharacterOfPosition(
+                err.file,
+                err.start
+            )
+            const exp = lines[line]
+            const text = ts.flattenDiagnosticMessageText(err.messageText, "\n")
+            if (exp != null && text.indexOf(exp) >= 0) {
+                lines[line] = "" // allow more errors on the same line
+                isOK = true
+            }
+        }
 
-                if (!isOK) {
-                    numExtra++
-                    console.error(formatDiagnostics([err]))
-                }
-            },
-        },
-        code
-    )
+        if (!isOK) {
+            numExtra++
+            console.error(formatDiagnostics([err]))
+        }
+    }
+    const p = new Program(mainFileName, myhost)
     const r = p.emit()
     let missingErrs = 0
     for (let i = 0; i < lines.length; ++i) {
         if (lines[i]) {
             const msg = "missing error: " + lines[i]
-            const fn = host.mainFileName?.() || ""
-            console.error(`${fn}(${i + 1},${1}): ${msg}`)
+            console.error(`${mainFileName}(${i + 1},${1}): ${msg}`)
             missingErrs++
         }
     }

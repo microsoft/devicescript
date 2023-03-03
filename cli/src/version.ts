@@ -6,7 +6,7 @@ export function packageVersion() {
 }
 
 export function cliVersion() {
-    return `devsc: ${packageVersion()}, runtime: ${runtimeVersion()}, node: ${
+    return `devs: ${packageVersion()}, runtime: ${runtimeVersion()}, node: ${
         process.version
     }`
 }

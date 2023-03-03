@@ -168,8 +168,8 @@ static void stmt0_finally(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static void stmt1_throw(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t exn = devs_vm_pop_arg(ctx);
-    if (devs_is_null(exn)) {
-        devs_throw_type_error(ctx, "throwing null");
+    if (devs_is_null_or_undefined(exn)) {
+        devs_throw_type_error(ctx, "throwing null/undefined");
     } else {
         devs_throw(ctx, exn, 0);
     }
@@ -190,7 +190,7 @@ static void stmtx1_throw_jmp(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static void stmt1_re_throw(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t exn = devs_vm_pop_arg(ctx);
-    if (devs_is_null(exn)) {
+    if (devs_is_undefined(exn)) {
         // no-op
     } else {
         devs_throw(ctx, exn, DEVS_THROW_NO_STACK);
@@ -247,7 +247,7 @@ static void stmt4_store_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
     value_t buffer = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_RW);
-    if (!devs_is_null(buffer))
+    if (!devs_is_undefined(buffer))
         devs_buffer_op(ctx, fmt0, offset, buffer, &val);
 }
 
@@ -281,8 +281,7 @@ static value_t exprx_load_local(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t exprx1_load_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t *src = lookup_clo_val(frame, ctx);
     if (src == NULL) {
-        devs_invalid_program(ctx, 60116);
-        return devs_undefined;
+        return devs_invalid_program(ctx, 60116);
     } else {
         return *src;
     }
@@ -291,8 +290,7 @@ static value_t exprx1_load_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t exprx_make_closure(devs_activation_t *frame, devs_ctx_t *ctx) {
     unsigned fidx = ctx->literal_int;
     if (fidx >= devs_img_num_functions(ctx->img)) {
-        devs_invalid_program(ctx, 60117);
-        return devs_undefined;
+        return devs_invalid_program(ctx, 60117);
     } else {
         return devs_make_closure(ctx, frame, fidx);
     }
@@ -309,7 +307,7 @@ static value_t expr3_load_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     uint32_t offset = devs_vm_pop_arg_u32(ctx);
     uint32_t fmt0 = devs_vm_pop_arg_u32(ctx);
     value_t buf = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_STRING_OK);
-    if (devs_is_null(buf))
+    if (devs_is_undefined(buf))
         return devs_undefined;
     return devs_buffer_op(ctx, fmt0, offset, buf, NULL);
 }
@@ -384,8 +382,7 @@ static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) 
     unsigned fidx = ctx->literal_int;
 
     if (fidx >= devs_img_num_functions(ctx->img)) {
-        devs_invalid_program(ctx, 60120);
-        return devs_undefined;
+        return devs_invalid_program(ctx, 60120);
     } else {
         return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, fidx);
     }
@@ -421,14 +418,14 @@ value_t devs_value_bufferish(devs_ctx_t *ctx, unsigned tp, uint32_t lit) {
 
 static value_t static_something(devs_ctx_t *ctx, unsigned tp) {
     value_t r = devs_value_bufferish(ctx, tp, ctx->literal_int);
-    if (devs_is_null(r))
+    if (devs_is_undefined(r))
         devs_invalid_program(ctx, 60122);
     return r;
 }
 
 static inline value_t get_field_ex(devs_ctx_t *ctx, unsigned tp, value_t obj) {
     value_t fld = static_something(ctx, tp);
-    if (devs_is_null(fld))
+    if (devs_is_undefined(fld))
         return devs_undefined;
     else
         return devs_object_get(ctx, obj, fld);
@@ -499,8 +496,8 @@ static value_t expr1_typeof(devs_activation_t *frame, devs_ctx_t *ctx) {
 }
 
 static const uint8_t typeof_map[] = {
-    // typeof null is not JS-compliant, but makes much more sense
-    [DEVS_OBJECT_TYPE_NULL] = DEVS_BUILTIN_STRING_NULL,
+    [DEVS_OBJECT_TYPE_UNDEFINED] = DEVS_BUILTIN_STRING_UNDEFINED,
+    [DEVS_OBJECT_TYPE_NULL] = DEVS_BUILTIN_STRING_OBJECT,
     [DEVS_OBJECT_TYPE_NUMBER] = DEVS_BUILTIN_STRING_NUMBER,
     [DEVS_OBJECT_TYPE_MAP] = DEVS_BUILTIN_STRING_OBJECT,
     [DEVS_OBJECT_TYPE_ARRAY] = DEVS_BUILTIN_STRING_OBJECT,
@@ -533,9 +530,13 @@ static value_t expr0_null(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_null;
 }
 
-static value_t expr1_is_null(devs_activation_t *frame, devs_ctx_t *ctx) {
+static value_t expr0_undefined(devs_activation_t *frame, devs_ctx_t *ctx) {
+    return devs_undefined;
+}
+
+static value_t expr1_is_undefined(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t obj = devs_vm_pop_arg(ctx);
-    if (devs_is_null(obj))
+    if (devs_is_undefined(obj))
         return devs_true;
     else
         return devs_false;
@@ -742,6 +743,18 @@ static value_t expr2_ne(devs_activation_t *frame, devs_ctx_t *ctx) {
     if (exec2_and_check_int(frame, ctx))
         return devs_value_from_bool(aa != bb);
     return devs_value_from_bool(!devs_value_ieee_eq(ctx, ctx->binop[0], ctx->binop[1]));
+}
+
+static value_t expr2_approx_eq(devs_activation_t *frame, devs_ctx_t *ctx) {
+    if (exec2_and_check_int(frame, ctx))
+        return devs_value_from_bool(aa == bb);
+    return devs_value_from_bool(devs_value_approx_eq(ctx, ctx->binop[0], ctx->binop[1]));
+}
+
+static value_t expr2_approx_ne(devs_activation_t *frame, devs_ctx_t *ctx) {
+    if (exec2_and_check_int(frame, ctx))
+        return devs_value_from_bool(aa != bb);
+    return devs_value_from_bool(!devs_value_approx_eq(ctx, ctx->binop[0], ctx->binop[1]));
 }
 
 static value_t expr2_le(devs_activation_t *frame, devs_ctx_t *ctx) {

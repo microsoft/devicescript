@@ -2,15 +2,16 @@ import {
     CHANGE,
     CloudManager,
     ERROR,
+    FETCH_ERROR,
     JDDevice,
     JDEventSource,
     SRV_CLOUD_ADAPTER,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-import { DeviceScriptExtensionState } from "./state"
+import { DeviceScriptExtensionState } from "../state"
 import "isomorphic-fetch"
 
-export class CloudExtensionState extends JDEventSource {
+export class GatewayExtensionState extends JDEventSource {
     private _manager: CloudManager
 
     constructor(
@@ -20,6 +21,7 @@ export class CloudExtensionState extends JDEventSource {
         super()
         this.handleChange = this.handleChange.bind(this)
         this.handleError = this.handleError.bind(this)
+        this.handleFetchError = this.handleFetchError.bind(this)
         const { subscriptions, secrets } = this.context
 
         // track config changes
@@ -45,7 +47,7 @@ export class CloudExtensionState extends JDEventSource {
 
         subscriptions.push(
             vscode.commands.registerCommand(
-                "extension.devicescript.cloud.refresh",
+                "extension.devicescript.gateway.refresh",
                 async () => {
                     const apiRoot = this.apiRoot
                     const token = await this.token
@@ -54,18 +56,14 @@ export class CloudExtensionState extends JDEventSource {
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.cloud.registerDevice",
+                "extension.devicescript.gateway.registerDevice",
                 async () => {
                     const manager = this.manager
                     if (!manager) return
 
-                    const simId =
-                        this.deviceScriptState.simulatorScriptManagerId
-                    const devices = this.bus
-                        .devices({
-                            serviceClass: SRV_CLOUD_ADAPTER,
-                        })
-                        .filter(d => d.deviceId !== simId)
+                    const devices = this.bus.devices({
+                        serviceClass: SRV_CLOUD_ADAPTER,
+                    })
                     const cloudDevices = manager.devices()
                     const unregisteredDevices = devices.filter(
                         dev => !cloudDevices.find(cd => cd.deviceId === dev.id)
@@ -73,7 +71,7 @@ export class CloudExtensionState extends JDEventSource {
 
                     if (!unregisteredDevices.length) {
                         vscode.window.showInformationMessage(
-                            "DeviceScript Cloud: no cloud adapter device found to register."
+                            "DeviceScript Gateway: no cloud adapter device found to register."
                         )
                         return
                     }
@@ -98,7 +96,7 @@ export class CloudExtensionState extends JDEventSource {
                     if (res === undefined) return
                     const device = res.device
                     const name = await vscode.window.showInputBox({
-                        title: "Enter a name for your device",
+                        title: `Enter a friendly name for ${device.shortId}`,
                         placeHolder: "my device",
                     })
 
@@ -123,6 +121,20 @@ export class CloudExtensionState extends JDEventSource {
         console.error(err)
     }
 
+    private async handleFetchError(resp: Response) {
+        switch (resp.status) {
+            case 401: {
+                // unauthorized
+                await this.setToken(undefined)
+                break
+            }
+        }
+
+        await vscode.window.showErrorMessage(
+            `DeviceScript Gateway: ${resp.statusText} (${resp.status})`
+        )
+    }
+
     private async handleRefreshConnection() {
         if (this._manager) {
             this._manager.off(CHANGE, this.handleChange)
@@ -139,6 +151,7 @@ export class CloudExtensionState extends JDEventSource {
             this._manager = new CloudManager(this.bus, apiRoot, token)
             this._manager.on(CHANGE, this.handleChange)
             this._manager.on(ERROR, this.handleError)
+            this._manager.on(FETCH_ERROR, this.handleFetchError)
             forceRefresh = true
         }
         if (this._manager && forceRefresh) await this._manager.refresh()
@@ -153,33 +166,55 @@ export class CloudExtensionState extends JDEventSource {
     }
 
     get apiRoot(): string {
-        return vscode.workspace
-            .getConfiguration("devicescript.cloud")
-            .get("apiRoot")
+        return (
+            vscode.workspace
+                .getConfiguration("devicescript.gateway")
+                .get("apiRoot") as string
+        )?.replace(/\/\s*$/, "")
     }
 
     async setApiRoot(apiRoot: string) {
         await vscode.workspace
-            .getConfiguration("devicescript.cloud")
-            .update("apiRoot", apiRoot)
+            .getConfiguration("devicescript.gateway")
+            .update("apiRoot", apiRoot?.replace(/\/\s*$/, ""))
     }
 
     async configure() {
         let changed = false
-        const apiRoot = this.apiRoot
-        const newApiRoot = await vscode.window.showInputBox({
-            placeHolder: "Enter Cloud Web API Root",
-            value: apiRoot || "https://jacdac-portal2.azurewebsites.net",
+        const newConnectionString = await vscode.window.showInputBox({
+            placeHolder: "Enter DevelopmentGateway connection string",
         })
-        if (newApiRoot !== undefined && newApiRoot !== apiRoot) {
-            await this.setApiRoot(newApiRoot)
+        if (newConnectionString === undefined) return
+        if (newConnectionString === "") {
+            await this.setApiRoot(undefined)
             changed = true
-        }
-        const token = await vscode.window.showInputBox({
-            placeHolder: "Enter Cloud Authentication Token",
-            value: "",
-        })
-        if (token !== undefined) {
+        } else {
+            const parts = newConnectionString
+                .trim()
+                .split(";")
+                .map(chunk => chunk.split("=", 2))
+            const webAppName = parts.find(
+                ([name]) => name === "WebAppName"
+            )?.[1]
+            const accountName = parts.find(
+                ([name]) => name === "AccountName"
+            )?.[1]
+            const accountKey = parts.find(
+                ([name]) => name === "AccountKey"
+            )?.[1]
+            const endPointSuffix = parts.find(
+                ([name]) => name === "EndPointSuffix"
+            )?.[1]
+
+            if (!webAppName || !accountName || !accountKey || !endPointSuffix) {
+                vscode.window.showErrorMessage(
+                    "DeviceScript Gateway: invalid connection string"
+                )
+                return
+            }
+            const apiRoot = `https://${webAppName}.${endPointSuffix}`
+            const token = `${accountName}:${accountKey}`
+            await this.setApiRoot(apiRoot)
             await this.setToken(token)
             changed = true
         }
@@ -187,16 +222,11 @@ export class CloudExtensionState extends JDEventSource {
     }
 
     get token() {
-        return this.context.secrets.get(
-            "devicescript.cloud.token"
-        )
+        return this.context.secrets.get("devicescript.gateway.token")
     }
 
     async setToken(token: string) {
-        await this.context.secrets.store(
-            "devicescript.cloud.token",
-            token
-        )
+        await this.context.secrets.store("devicescript.gateway.token", token)
     }
 
     withProgress(title: string, transaction: () => Promise<void>) {
@@ -211,7 +241,7 @@ export class CloudExtensionState extends JDEventSource {
                 } catch (e) {
                     console.error(e)
                     vscode.window.showErrorMessage(
-                        "DeviceScript Cloud: Updated failed."
+                        "DeviceScript Gateway: Updated failed."
                     )
                     // async
                     this.manager.refresh()

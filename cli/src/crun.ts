@@ -21,15 +21,18 @@ export async function crunScript(
     options: CRunOptions & CmdOptions & BuildOptions
 ) {
     options.noVerify = true
-    const prog = await readCompiled(fn, options)
-    const compfn = BINDIR + "/crun.devs"
-    await ensureDir(BINDIR)
-    writeFileSync(compfn, prog.binary)
+    if (!options.flag) options.flag = {}
 
+    const compfn = BINDIR + "/crun.devs"
     const args = [compfn]
 
     if (options.serial) args.unshift(options.serial)
     else if (options.net) args.unshift("8082", "-w")
+    else options.flag.testHarness = true
+
+    const prog = await readCompiled(fn, options)
+    await ensureDir(BINDIR)
+    writeFileSync(compfn, prog.binary)
 
     if (!options.lazyGc) args.unshift("-X")
     if (!options.settings) args.unshift("-n")

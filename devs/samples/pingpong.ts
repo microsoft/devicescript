@@ -4,22 +4,22 @@ const condA = new ds.Condition()
 const condB = new ds.Condition()
 const btnA = new ds.Button()
 
-ds.everyMs(50, () => {
+ds.everyMs(50, async () => {
     console.log("X2")
-    condB.wait()
+    await condB.wait()
     console.log("sig 2")
 })
 
-ds.everyMs(50, () => {
+ds.everyMs(50, async () => {
     console.log("X1")
-    condA.wait()
+    await condA.wait()
     console.log("sig 1")
-    ds.sleepMs(1000)
+    await ds.sleepMs(1000)
     condB.signal()
-    ds.sleepMs(1000)
+    await ds.sleepMs(1000)
 })
 
-btnA.down.subscribe(() => {
+btnA.down.subscribe(async () => {
     console.log("down")
-    condA.signal()
+    await condA.signal()
 })

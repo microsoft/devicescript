@@ -77,16 +77,16 @@ void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
     int hadinfo = 0;
     if (devs_can_attach(ctx, exn)) {
         value_t ctor = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_NAME);
-        if (!devs_is_null(ctor)) {
+        if (!devs_is_undefined(ctor)) {
             devs_log_value(ctx, "* Exception", ctor);
             hadinfo++;
         }
 
         value_t msg = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_MESSAGE);
-        if (!devs_is_null(msg)) {
+        if (!devs_is_undefined(msg)) {
             devs_log_value(ctx, "*  message", msg);
             value_t stack = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING___STACK__);
-            if (!devs_is_null(stack))
+            if (!devs_is_undefined(stack))
                 devs_dump_stack(ctx, stack);
             hadinfo++;
         }
@@ -268,7 +268,7 @@ value_t devs_alloc_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format
 static value_t devs_throw_internal_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format,
                                          va_list arg) {
     value_t exnval = devs_alloc_error(ctx, proto_idx, format, arg);
-    if (!devs_is_null(exnval))
+    if (!devs_is_undefined(exnval))
         devs_throw(ctx, exnval, DEVS_THROW_INTERNAL);
     return devs_undefined;
 }
@@ -276,19 +276,17 @@ static value_t devs_throw_internal_error(devs_ctx_t *ctx, unsigned proto_idx, co
 value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...) {
     va_list arg;
     va_start(arg, format);
-    value_t exn =
-        devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_TYPEERROR_PROTOTYPE, format, arg);
+    devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_TYPEERROR_PROTOTYPE, format, arg);
     va_end(arg);
-    return exn;
+    return devs_undefined;
 }
 
 value_t devs_throw_range_error(devs_ctx_t *ctx, const char *format, ...) {
     va_list arg;
     va_start(arg, format);
-    value_t exn =
-        devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE, format, arg);
+    devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE, format, arg);
     va_end(arg);
-    return exn;
+    return devs_undefined;
 }
 
 value_t devs_throw_not_supported_error(devs_ctx_t *ctx, const char *what) {

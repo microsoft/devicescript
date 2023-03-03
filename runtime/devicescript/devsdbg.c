@@ -143,7 +143,7 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
     memset(trg, 0, sizeof(*trg));
     int fnidx = devs_get_fnidx(ctx, v, &this_val, &clo);
     if (fnidx >= 0) {
-        if (clo && !devs_is_null(this_val)) {
+        if (clo && !devs_is_undefined(this_val)) {
             JD_ASSERT(devs_handle_is_ptr(v));
             trg->tag = JD_DEVS_DBG_VALUE_TAG_OBJ_BOUND_FUNCTION;
             trg->v0 = devs_handle_value(v);
@@ -195,6 +195,11 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
     case DEVS_OBJECT_TYPE_NULL:
         trg->tag = JD_DEVS_DBG_VALUE_TAG_SPECIAL;
         trg->v0 = JD_DEVS_DBG_VALUE_SPECIAL_NULL;
+        break;
+
+    case DEVS_OBJECT_TYPE_UNDEFINED:
+        trg->tag = JD_DEVS_DBG_VALUE_TAG_SPECIAL;
+        trg->v0 = JD_DEVS_DBG_VALUE_SPECIAL_UNDEFINED;
         break;
 
     case DEVS_OBJECT_TYPE_EXOTIC:
@@ -317,7 +322,7 @@ static void kv_add(devs_ctx_t *ctx, void *userdata, value_t k, value_t v) {
 }
 
 static unsigned obj_get_props(devs_ctx_t *ctx, value_t v, jd_devs_dbg_key_value_t *trg) {
-    if (devs_is_null(v))
+    if (devs_is_nullish(v))
         return 0;
 
     devs_maplike_t *proto;
@@ -455,12 +460,14 @@ static value_t value_from_tag_v0(devs_ctx_t *ctx, uint8_t tag, uint32_t v0) {
         switch (v0) {
         case JD_DEVS_DBG_VALUE_SPECIAL_NULL:
             return devs_null;
+        case JD_DEVS_DBG_VALUE_SPECIAL_UNDEFINED:
+            return devs_undefined;
         case JD_DEVS_DBG_VALUE_SPECIAL_TRUE:
             return devs_true;
         case JD_DEVS_DBG_VALUE_SPECIAL_FALSE:
             return devs_false;
         case JD_DEVS_DBG_VALUE_SPECIAL_CURRENT_EXCEPTION:
-            if (devs_is_null(ctx->exn_val) && ctx->curr_fiber)
+            if (devs_is_undefined(ctx->exn_val) && ctx->curr_fiber)
                 return ctx->curr_fiber->ret_val;
             else
                 return ctx->exn_val;

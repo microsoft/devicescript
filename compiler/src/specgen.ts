@@ -1,4 +1,5 @@
 import {
+    ArchConfig,
     DeviceConfig,
     LocalBuildConfig,
     ResolvedBuildConfig,
@@ -25,6 +26,7 @@ import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
+import { pinFunctions } from "./board"
 
 const REGISTER_NUMBER = "RegisterNumber"
 const REGISTER_BOOL = "RegisterBool"
@@ -167,7 +169,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
                         .map(f => `@param ${f.name} - ${f.unit}`)
                         .join("\n")
             )
-            r += `    ${camelize(pkt.name)}(${fields}): void\n`
+            r += `    ${camelize(pkt.name)}(${fields}): Promise<void>\n`
         }
 
         if (tp) {
@@ -190,8 +192,16 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     }
 }
 
-function boardFile(binfo: DeviceConfig) {
-    let r = `declare module "@devicescript/board-${binfo.id}" {\n`
+const pinFunToType: Record<string, string> = {
+    io: "IOPin",
+    input: "InputPin",
+    output: "OutputPin",
+    analogIn: "AnalogInPin",
+    analogOut: "AnalogOutPin",
+}
+
+function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
+    let r = `declare module "@dsboard/${binfo.id}" {\n`
     r += `    import * as ds from "@devicescript/core"\n`
     r += `    interface Board {\n`
     for (const service of binfo.services ?? []) {
@@ -201,6 +211,31 @@ function boardFile(binfo: DeviceConfig) {
     }
     r += `    }\n`
     r += `    const board: Board\n`
+    r += `    interface BoardPins {\n`
+    const pinMap = (binfo.pins ?? {}) as Record<string, number>
+    for (const pinName of Object.keys(pinMap)) {
+        if (pinName.startsWith("#")) continue
+        const gpio = pinMap[pinName]
+        const funs = pinFunctions(arch.pins, gpio)
+        const types = funs
+            .map(s => pinFunToType[s])
+            .filter(s => !!s)
+            .map(s => "ds." + s)
+        if (types.length == 0) r += `        // ${pinName} seems invalid\n`
+        else {
+            r += [
+                `/**`,
+                ` * Pin ${pinName} (GPIO${gpio}, ${funs.join(", ")})`,
+                ` *`,
+                ` * @ds-gpio ${gpio}`,
+                ` */`,
+                // `//% gpio=${gpio}`,
+                `${pinName}: ${types.join(" & ")}`,
+            ].map(l => "        " + l + "\n").join("")
+        }
+    }
+    r += `    }\n`
+    r += `    const pins: BoardPins\n`
     r += `}\n`
     return r
 }
@@ -228,7 +263,7 @@ ${thespecs}
     r[pref + "devicescript-spec.d.ts"] = withmodule
 
     r[pref + `devicescript-boards.d.ts`] = Object.values(config.boards)
-        .map(boardFile)
+        .map(b => boardFile(b, config.archs[b.archId]))
         .join("\n")
 
     return r

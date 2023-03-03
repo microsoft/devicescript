@@ -14,41 +14,41 @@ function testIf(): void {
     } else {
         assert(false, "b0")
     }
-    assert(glb1 == 7, "glb3")
+    assert(glb1 === 7, "glb3")
     if (b) {
         assert(false, "b1")
     } else {
         glb1 = 8
     }
-    assert(glb1 == 8, "glb3")
+    assert(glb1 === 8, "glb3")
 }
 
 function testRight(a: number, b: number, c: number) {
-    assert(a >> b == c, "f>>0")
-    assert(a >> (b + 32) == c, "f>>")
-    assert(a >> (b - 32) == c, "f>>")
-    assert(a >> (b + 0x80000000) == c, "f>>")
+    assert(a >> b === c, "f>>0")
+    assert(a >> (b + 32) === c, "f>>")
+    assert(a >> (b - 32) === c, "f>>")
+    assert(a >> (b + 0x80000000) === c, "f>>")
 }
 function testLeft(a: number, b: number, c: number) {
-    assert(a << b == c, "f<<0")
-    assert(a << (b + 32) == c, "f<<")
-    assert(a << (b - 32) == c, "f<<")
-    assert(a << (b + 0x80000000) == c, "f<<")
+    assert(a << b === c, "f<<0")
+    assert(a << (b + 32) === c, "f<<")
+    assert(a << (b - 32) === c, "f<<")
+    assert(a << (b + 0x80000000) === c, "f<<")
 }
 function testZ(a: number) {
-    assert(a >> 0 == a, "z>>")
-    assert(a << 0 == a, "z<<")
-    assert(a >> 32 == a, "z>>")
-    assert(a >> 0x80000000 == a, "z>>")
-    assert(a >> -32 == a, "z>>")
-    assert(a << 32 == a, "z<<")
-    assert(a << -32 == a, "z<<")
+    assert(a >> 0 === a, "z>>")
+    assert(a << 0 === a, "z<<")
+    assert(a >> 32 === a, "z>>")
+    assert(a >> 0x80000000 === a, "z>>")
+    assert(a >> -32 === a, "z>>")
+    assert(a << 32 === a, "z<<")
+    assert(a << -32 === a, "z<<")
 }
 function testRightU(a: number, b: number, c: number) {
-    assert(a >>> b == c, "f>>>0")
-    assert(a >>> (b + 32) == c, "f>>>")
-    assert(a >>> (b - 32) == c, "f>>>")
-    assert(a >>> (b + 0x80000000) == c, "f>>>")
+    assert(a >>> b === c, "f>>>0")
+    assert(a >>> (b + 32) === c, "f>>>")
+    assert(a >>> (b - 32) === c, "f>>>")
+    assert(a >>> (b + 0x80000000) === c, "f>>>")
 }
 
 function testNums(): void {
@@ -57,39 +57,39 @@ function testNums(): void {
     msg("ZZ" + z)
     let tt = 2
     let x = 40 + tt
-    assert(x == 42, "add")
+    assert(x === 42, "add")
     x = 40 / tt
-    assert(x == 20, "div")
+    assert(x === 20, "div")
     let x3 = doStuff(x, 2)
     msg("nums#0")
-    assert(x3 == 10, "call order")
+    assert(x3 === 10, "call order")
     glb1 = 5
     incrBy_2()
-    assert(glb1 == 7, "glb1")
+    assert(glb1 === 7, "glb1")
     incrBy_2()
     msg("nums#1")
-    assert(glb1 == 9, "glb2")
-    assert(Math.abs(-42) == 42, "abs")
-    assert(Math.abs(42) == 42, "abs")
-    // assert(Math.sign(42) == 1, "abs")
+    assert(glb1 === 9, "glb2")
+    assert(Math.abs(-42) === 42, "abs")
+    assert(Math.abs(42) === 42, "abs")
+    // assert(Math.sign(42) === 1, "abs")
     msg("nums#3")
     testIf()
 
     tt = 3
 
-    assert((tt & 6) == 2, "&")
-    assert((tt | 6) == 7, "|")
-    assert((tt ^ 6) == 5, "^")
-    assert(~1 == -2, "~")
+    assert((tt & 6) === 2, "&")
+    assert((tt | 6) === 7, "|")
+    assert((tt ^ 6) === 5, "^")
+    assert(~1 === -2, "~")
     let k1 = 1
-    assert(~k1 == -2, "~")
+    assert(~k1 === -2, "~")
     tt = 10
-    assert(-tt >> 2 == -3, ">>")
-    assert(-tt >>> 20 == 4095, ">>>")
-    assert(-tt << 2 == -40, "<<")
-    assert(tt << 2 == 40, "<<+")
-    assert(tt >> 2 == 2, ">>+")
-    assert(tt >>> 2 == 2, ">>>+")
+    assert(-tt >> 2 === -3, ">>")
+    assert(-tt >>> 20 === 4095, ">>>")
+    assert(-tt << 2 === -40, "<<")
+    assert(tt << 2 === 40, "<<+")
+    assert(tt >> 2 === 2, ">>+")
+    assert(tt >>> 2 === 2, ">>>+")
 
     testZ(0)
     testZ(30)
@@ -120,18 +120,18 @@ function testNums(): void {
     testLeft(1, 32, 1)
 
     tt = 2
-    assert(-tt * -3 == 6, "-2*-3")
-    assert(-tt * 3 == -6, "-2*3")
-    assert(tt * 3 == 6, "2*3")
-    assert(tt * -3 == -6, "2*-3")
+    assert(-tt * -3 === 6, "-2*-3")
+    assert(-tt * 3 === -6, "-2*3")
+    assert(tt * 3 === 6, "2*3")
+    assert(tt * -3 === -6, "2*-3")
     msg("nums#4")
 
     tt = 100
-    assert(105 % tt == 5, "perc")
+    assert(105 % tt === 5, "perc")
 
-    assert(2 ** 3 == 8, "**")
+    assert(2 ** 3 === 8, "**")
     let ke = 3
-    assert(ke ** 3 == ke * ke * ke, "**")
+    assert(ke ** 3 === ke * ke * ke, "**")
 
     // test number->bool conversion, #1057
     // x==20 here
@@ -142,7 +142,7 @@ function testNums(): void {
     let r = fib(15)
     msg("FB")
     msg("FIB" + r)
-    assert(r == 987, "fib")
+    assert(r === 987, "fib")
 
     msg("nums#5")
 
@@ -172,16 +172,16 @@ function incrBy_2(): void {
 function testComma() {
     glb1 = 0
     let x = (incrBy_2(), 77)
-    assert(x == 77, "x")
-    assert(glb1 == 2, "g")
+    assert(x === 77, "x")
+    assert(glb1 === 2, "g")
     // make sure there are no leaks
     //@ts-ignore
-    let y = ("aaa" + "zz", "x" + "yyy")
-    assert(y.length == 4, "y")
+    let y = (ds._id("aaa") + "zz", ds._id("x") + "yyy")
+    assert(y.length === 4, "y")
 }
 
 function isnan(x: number) {
-    return typeof x == "number" && x !== x
+    return typeof x === "number" && x !== x
 }
 
 function mydiv(x: number, y: number) {
@@ -196,20 +196,20 @@ function testNaN() {
     assert(!isnan(0))
     assert(!isnan(Infinity))
     let inf = Infinity
-    assert(1 / Infinity == 0)
-    assert(1 / inf == 0)
+    assert(1 / Infinity === 0)
+    assert(1 / inf === 0)
 }
 
 function testUnaryPlus() {
     function testOne(v: any) {
-        assert(+v + 1 == 2, "t1")
+        assert(+v + 1 === 2, "t1")
     }
     function testZero(v: any) {
         msg("v:" + v)
-        assert(+v + 1 == 1, "t0")
+        assert(+v + 1 === 1, "t0")
     }
     function test35(v: any) {
-        assert(+v + 1 == 4.5, "t35")
+        assert(+v + 1 === 4.5, "t35")
     }
     testOne(1)
     testOne("1")
@@ -226,7 +226,6 @@ function testUnaryPlus() {
     // assert(isNaN(+qq))
 }
 
-/* TODO (enums not supported)
 function getABoolean() {
     return !!true
 }
@@ -242,12 +241,11 @@ function testEnumToString() {
     assert(`${enumTest}` === "1", "enum tostring in template")
     assert(enumTest + "" === "1", "enum tostring in concatenation")
 }
-testEnumToString()
-*/
 
 testComma()
 testNums()
 testNaN()
 testUnaryPlus()
+testEnumToString()
 
-ds.reboot()
+

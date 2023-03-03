@@ -38,7 +38,7 @@ function distCopy(from, to) {
         console.debug(`cp ${from} ${to}`)
         try {
             fs.mkdirSync(path.dirname(to))
-        } catch { }
+        } catch {}
         fs.copyFileSync(from, to)
         fs.utimesSync(to, new Date(), new Date(fromT))
     }
@@ -100,13 +100,14 @@ const files = {
     "vscode/built/devicescript-vscode-web.js": "vscode/src/web-extension.ts",
 }
 
-const specname = "devicescript-spec.d.ts"
+const genspecs = ["devicescript-spec.d.ts", "devicescript-boards.d.ts"]
 const serversname = "devicescript-servers.d.ts"
 function buildPrelude(folder, outp) {
     let srvcfg = fs.readFileSync("runtime/jacdac-c/dcfg/srvcfg.d.ts", "utf-8")
     // no reason to encode hex number as strings in full TS syntax
     srvcfg = srvcfg
         .replace("type HexInt = integer | string", "type HexInt = integer")
+        .replace(/type \w*Pin = .*/g, "")
         .replace("/srvcfg", "/servers")
         .replace(
             /(interface BaseServiceConfig[^}]* name)(: string)/,
@@ -114,7 +115,8 @@ function buildPrelude(folder, outp) {
         )
         .replace(/service: /g, `service?: `)
     const m = /^\s*type ServiceConfig([^{]+)/m.exec(srvcfg)
-    let startServ = `\n    import * as ds from "@devicescript/core"\n\n`
+    let startServ = `\n    import * as ds from "@devicescript/core"\n`
+    startServ += `    import { Pin, InputPin, OutputPin, IOPin, AnalogInPin, AnalogOutPin } from "@devicescript/core"\n\n`
     m[1].replace(/\| (\w+)Config/g, (_, s) => {
         const url = `https://microsoft.github.io/devicescript/api/clients/${s.toLowerCase()}`
         startServ += `    /**\n`
@@ -135,7 +137,7 @@ function buildPrelude(folder, outp) {
 
     const filecont = {}
     for (const fn of files) {
-        if (fn == specname) continue
+        if (genspecs.includes(fn)) continue
         filecont[fn] = fs.readFileSync(folder + "/" + fn, "utf-8")
     }
 
@@ -153,7 +155,7 @@ function buildPrelude(folder, outp) {
     let curr = ""
     try {
         curr = fs.readFileSync(outp, "utf-8")
-    } catch { }
+    } catch {}
     if (curr != r) {
         console.log("updating " + outp)
         fs.writeFileSync(outp, r)
@@ -205,7 +207,7 @@ async function main() {
             try {
                 const st = fs.statSync(outfile)
                 size = st.size
-            } catch { }
+            } catch {}
             const sizeStr = (size / 1024).toFixed(1)
             console.log(`build ${outfile}: ${sizeStr}kB ${Date.now() - t0}ms`)
         }
@@ -224,10 +226,11 @@ async function main() {
         }
         const ds = require(rootdir +
             "/compiler/built/devicescript-compiler.node.cjs")
-        fs.writeFileSync(
-            "devs/lib/" + specname,
-            ds.preludeFiles()[".devicescript/lib/" + specname]
-        )
+        for (const specname of genspecs)
+            fs.writeFileSync(
+                "devs/lib/" + specname,
+                ds.preludeFiles()[".devicescript/lib/" + specname]
+            )
         {
             // clients
             const mds = ds.clientsMarkdownFiles()

@@ -1,4 +1,4 @@
-import { CHANGE, ConnectionState } from "jacdac-ts"
+import { CHANGE, ConnectionState, JDService } from "jacdac-ts"
 import * as vscode from "vscode"
 import { toMarkdownString } from "./catalog"
 import { Utils } from "vscode-uri"
@@ -24,7 +24,12 @@ export function activateMainStatusBar(
             nodeVersion,
             version,
             projectFolder,
+            currentFilename,
+            currentDeviceScriptManager,
         } = extensionState.devtools
+        const deviceScriptManager = bus.node(
+            currentDeviceScriptManager
+        ) as JDService
         const connected = connectionState === ConnectionState.Connected
         const devices = bus.devices({
             ignoreInfrastructure: true,
@@ -55,15 +60,23 @@ ${nodeVersion?.slice(1) || "?"} - node version<br/>
 
 ---
 
-project: ${
-                  projectFolder
-                      ? `[${Utils.basename(projectFolder)}](${Utils.joinPath(
-                            projectFolder,
-                            "devsconfig.json"
-                        )})`
-                      : ""
-              }
-
+${
+    projectFolder
+        ? `[${Utils.basename(projectFolder)}](${Utils.joinPath(
+              projectFolder,
+              "devsconfig.json"
+          )})`
+        : ""
+} - project<br/>
+${
+    projectFolder && currentFilename
+        ? `[${currentFilename}](${Utils.joinPath(
+              projectFolder,
+              currentFilename
+          )})`
+        : ""
+} - entry point file<br/>
+${deviceScriptManager?.qualifiedName || "..."} - deploy to device</br>
 `)
         statusBarItem.text = [
             connectionState === ConnectionState.Connected

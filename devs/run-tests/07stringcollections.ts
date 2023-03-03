@@ -4,13 +4,13 @@ import { assert } from "@devicescript/core"
 function testStringCollection(): void {
     let coll = <string[]>[]
     coll.push("foobar")
-    coll.push(12 + "")
+    coll.push(ds._id("") + 12)
     coll.push(coll[0] + "xx")
-    assert(coll.indexOf("12") == 1, "idx")
-    coll = ["a" + "b", coll[2]]
-    assert(coll[0] == "ab", "")
-    assert(coll[1] == "foob" + "arxx", "")
-    assert(coll.length == 2, "")
+    assert(coll.indexOf("12") === 1, "idx")
+    coll = [ds._id("a") + "b", coll[2]]
+    assert(coll[0] === "ab", "")
+    assert(coll[1] === ds._id("foob") + "arxx", "")
+    assert(coll.length === 2, "")
 }
 
 function testUnionIndexer(): void {
@@ -35,4 +35,4 @@ function testUnionIndexer(): void {
 testStringCollection()
 testUnionIndexer()
 
-ds.reboot()
+

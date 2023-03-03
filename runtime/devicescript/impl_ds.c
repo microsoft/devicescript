@@ -60,7 +60,7 @@ void fun1_DeviceScript_parseInt(devs_ctx_t *ctx) {
 void fun2_DeviceScript__logRepr(devs_ctx_t *ctx) {
     value_t v = devs_arg(ctx, 0);
     value_t lbl = devs_arg(ctx, 1);
-    if (devs_is_null(lbl)) {
+    if (devs_is_nullish(lbl)) {
         DMESG("> %s", devs_show_value(ctx, v));
     } else {
         lbl = devs_value_to_string(ctx, lbl);

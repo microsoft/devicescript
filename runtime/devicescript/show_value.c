@@ -42,6 +42,8 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
         switch ((hv = devs_handle_value(v))) {
         case DEVS_SPECIAL_NULL:
             return "null";
+        case DEVS_SPECIAL_UNDEFINED:
+            return "undefined";
         case DEVS_SPECIAL_FALSE:
             return "false";
         case DEVS_SPECIAL_TRUE:
@@ -163,7 +165,7 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     devs_activation_t *closure;
     int fnidx = devs_get_fnidx(ctx, v, &this_val, &closure);
     unsigned off = 0;
-    if (!devs_is_null(this_val)) {
+    if (!devs_is_undefined(this_val)) {
         const char *tmp = devs_show_value0(ctx, this_val);
         if (tmp != buf)
             jd_sprintf(buf, sizeof(buf), "%s", tmp);

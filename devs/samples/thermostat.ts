@@ -11,11 +11,11 @@ heater.onDisconnected(() => {
     console.log("heater lost")
 })
 
-thermometer.temperature.onChange(5, () => {
-    const t = thermometer.temperature.read()
+thermometer.temperature.onChange(5, async () => {
+    const t = await thermometer.temperature.read()
     if (t < 21) {
-        heater.active.write(true)
+        await heater.active.write(true)
     } else {
-        heater.active.write(false)
+        await heater.active.write(false)
     }
 })

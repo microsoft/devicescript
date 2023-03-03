@@ -97,7 +97,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         fiber->activation = callee;
     }
 
-    if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_null(callee->slots[0])) {
+    if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_undefined(callee->slots[0])) {
         devs_map_t *m = devs_map_try_alloc(ctx, devs_get_prototype_field(ctx, fn));
         callee->slots[0] = devs_value_from_gc_obj(ctx, m);
     }
@@ -141,7 +141,7 @@ static void log_fiber_op(devs_fiber_t *fiber, const char *op) {
 void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
     devs_ctx_t *ctx = fiber->ctx;
     if (act->caller) {
-        if (devs_is_null(fiber->ret_val) && (act->func->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
+        if (devs_is_undefined(fiber->ret_val) && (act->func->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
             fiber->ret_val = act->slots[0];
         devs_fiber_activate(fiber, act->caller);
         act->maxpc = 0; // protect against re-activation

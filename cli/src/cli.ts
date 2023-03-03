@@ -13,8 +13,9 @@ import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
-import { setConsoleColors, setVerbose } from "./command"
+import { setConsoleColors, setVerbose, verboseLog } from "./command"
 import { binPatch } from "./binpatch"
+import { logToConsole } from "./command"
 import {
     boardNames,
     flashAuto,
@@ -23,9 +24,15 @@ import {
     setupFlashBoards,
 } from "./flash"
 import { addBoard } from "./addboard"
+import { LoggerPriority } from "jacdac-ts"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
+
+    logToConsole(
+        LoggerPriority.Debug,
+        `using ${cliVersion()} from ${__dirname}`
+    )
 
     function buildCommand(nameAndArgs: string, opts?: CommandOptions) {
         return program
@@ -57,7 +64,7 @@ export async function mainCli() {
 
     buildCommand("build", { isDefault: true })
         .description("build a DeviceScript file")
-        .arguments("[file.ts]")
+        .arguments("[src/mainXYZ.ts]")
         .action(build)
 
     program
@@ -118,7 +125,10 @@ export async function mainCli() {
         .option("--empty", "generate empty program embed")
         .option("-t, --test", "run compiler tests")
         .option("--fetch-boards <boards.json>", "re-create boards.json file")
-        .option("--local-boards <repos-path>", "use local, not remote info.json files")
+        .option(
+            "--local-boards <repos-path>",
+            "use local, not remote info.json files"
+        )
         .action(ctool)
 
     program

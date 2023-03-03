@@ -344,24 +344,26 @@ async function watchCmd(
 ) {
     args = { ...args }
     watcher?.close()
-    watcher = watch(
-        args.filename,
-        debounce(async () => {
-            let res: BuildStatus
-            try {
-                res = await rebuild(args)
-            } catch (err) {
-                res = {
-                    success: false,
-                    dbg: null,
-                    binary: null,
-                    diagnostics: [],
-                    deployStatus: err.message || "" + err,
+    if (!args.filename) watcher = undefined
+    else
+        watcher = watch(
+            args.filename,
+            debounce(async () => {
+                let res: BuildStatus
+                try {
+                    res = await rebuild(args)
+                } catch (err) {
+                    res = {
+                        success: false,
+                        dbg: null,
+                        binary: null,
+                        diagnostics: [],
+                        deployStatus: err.message || "" + err,
+                    }
                 }
-            }
-            watchCb(res)
-        }, 500)
-    )
+                watchCb(res)
+            }, 500)
+        )
 }
 
 async function rebuild(args: BuildReqArgs) {
@@ -386,6 +388,9 @@ async function rebuild(args: BuildReqArgs) {
     }
 
     delete res.binary
+    res.diagnostics.forEach(d => {
+        d.filename = resolve(d.filename)
+    })
     const r: BuildStatus = {
         ...res,
         deployStatus,

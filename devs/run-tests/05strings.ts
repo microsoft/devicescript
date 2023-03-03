@@ -8,20 +8,20 @@ function msg(s: string): void {
 let s2 = ""
 function testStrings(): void {
     msg("testStrings")
-    // assert((42).toString() == "42", "42") TODO?
+    // assert((42).toString() === "42", "42") TODO?
 
     msg("ts0x")
     let s = "live"
-    assert(s == "live", "hello eq")
+    assert(s === "live", "hello eq")
     msg("ts0y")
 
     s = s + "4OK"
     s2 = s
     msg("ts0")
-    assert(s.charCodeAt(4) == 52, "hello eq2")
-    assert(s.charAt(4) == "4", "hello eq2X")
-    assert(s[4] == "4", "hello eq2X")
-    assert(s.length == 7, "len7")
+    assert(s.charCodeAt(4) === 52, "hello eq2")
+    assert(s.charAt(4) === "4", "hello eq2X")
+    assert(s[4] === "4", "hello eq2X")
+    assert(s.length === 7, "len7")
     msg("ts0")
     s = ""
 
@@ -30,7 +30,7 @@ function testStrings(): void {
         s = s + i
         msg(s)
     }
-    assert(s == "0123456789", "for")
+    assert(s === "0123456789", "for")
     let x = 10
     s = ""
     while (x >= 0) {
@@ -38,7 +38,7 @@ function testStrings(): void {
         s = s + x
         x = x - 1
     }
-    assert(s == "109876543210", "while")
+    assert(s === "109876543210", "while")
     msg(s)
     msg(s2)
 
@@ -48,11 +48,14 @@ function testStrings(): void {
     x = 21
     s = "foo"
     s = `a${x * 2}X${s}X${s}Z`
-    assert(s == "a42XfooXfoo" + "Z", "`")
+    assert(s === ds._id("a42XfooXfoo") + "Z", "`")
 
     msg("X" + true)
 
-    assert("X" + true == "Xt" + "rue", "boolStr")
+    assert(
+        ds._id("X") + true === ds._id("Xt") + "rue",
+        "boolStr"
+    )
     msg("testStrings DONE")
 }
 
@@ -65,23 +68,23 @@ function consStringTest() {
         s0 = s0 + s[i & 0xf]
         s1 = s[(99 - i) & 0xf] + s1
     }
-    assert(s0 == s1, "c0")
-    assert(s0.length == 100, "c1")
+    assert(s0 === s1, "c0")
+    assert(s0.length === 100, "c1")
 }
 
 function testStringOps(): void {
-    assert("foo" + "bar" == "foobar", "concat")
-    assert("xAb".charCodeAt(1) == 65, "code at")
-    assert("B".charCodeAt(0) == 66, "tcc")
-    assert(parseInt("-123") == -123, "tonum")
-    assert("fo"[1] == "o", "at")
-    assert("fo".length == 2, "count")
+    assert(ds._id("foo") + "bar" === "foobar", "concat")
+    assert("xAb".charCodeAt(1) === 65, "code at")
+    assert("B".charCodeAt(0) === 66, "tcc")
+    assert(parseInt("-123") === -123, "tonum")
+    assert("fo"[1] === "o", "at")
+    assert("fo".length === 2, "count")
     assert(!"fo".charCodeAt(17), "nan")
 }
 
 function isEq(x: any, y: any): void {
-    if (x != y) {
-        console.log(ds.format("fail: {0} != {1}", x, y))
+    if (x !== y) {
+        console.log(ds.format("fail: {0} !== {1}", x, y))
         // throw { message: "failed eq" }
         throw new Error("failed EQ")
     }
@@ -113,4 +116,4 @@ consStringTest()
 
 testSlice()
 
-ds.reboot()
+

@@ -17,6 +17,7 @@ const value_t devs_false = SPECIAL(DEVS_SPECIAL_FALSE);
 const value_t devs_nan = SPECIAL(DEVS_SPECIAL_NAN);
 const value_t devs_inf = SPECIAL(DEVS_SPECIAL_INF);
 const value_t devs_minf = SPECIAL(DEVS_SPECIAL_MINF);
+const value_t devs_null = SPECIAL(DEVS_SPECIAL_NULL);
 
 value_t devs_value_from_double(double v) {
     switch (fpclassify(v)) {
@@ -85,7 +86,7 @@ value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr) {
     uint32_t v;
 
     if (ptr == NULL)
-        return devs_null;
+        return devs_undefined;
 
     JD_ASSERT(devs_handle_type_is_ptr(type));
     JD_ASSERT(devs_gc_obj_valid(ctx, ptr));
@@ -128,6 +129,7 @@ double devs_value_to_double(devs_ctx_t *ctx, value_t v) {
             return INFINITY;
         case DEVS_SPECIAL_MINF:
             return -INFINITY;
+        case DEVS_SPECIAL_UNDEFINED:
         default:
             return NAN;
         }
@@ -244,6 +246,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         switch ((hv = devs_handle_value(v))) {
         case DEVS_SPECIAL_NULL:
             return DEVS_OBJECT_TYPE_NULL;
+        case DEVS_SPECIAL_UNDEFINED:
+            return DEVS_OBJECT_TYPE_UNDEFINED;
         case DEVS_SPECIAL_FALSE:
         case DEVS_SPECIAL_TRUE:
             return DEVS_OBJECT_TYPE_BOOL;
@@ -306,12 +310,32 @@ bool devs_is_nullish(value_t t) {
     if (devs_is_special(t))
         switch (devs_handle_value(t)) {
         case DEVS_SPECIAL_FALSE:
+        case DEVS_SPECIAL_UNDEFINED:
         case DEVS_SPECIAL_NULL:
         case DEVS_SPECIAL_NAN:
             return true;
         }
 
     return false;
+}
+
+bool devs_is_null_or_undefined(value_t t) {
+    if (devs_is_special(t))
+        switch (devs_handle_value(t)) {
+        case DEVS_SPECIAL_UNDEFINED:
+        case DEVS_SPECIAL_NULL:
+            return true;
+        }
+
+    return false;
+}
+
+// This is meant to approximate == in JS; we currently it's only different
+// from === in that null==undefined (whereas null!==undefined)
+bool devs_value_approx_eq(devs_ctx_t *ctx, value_t a, value_t b) {
+    if (devs_is_null_or_undefined(a) && devs_is_null_or_undefined(b))
+        return true;
+    return devs_value_ieee_eq(ctx, a, b);
 }
 
 bool devs_value_ieee_eq(devs_ctx_t *ctx, value_t a, value_t b) {

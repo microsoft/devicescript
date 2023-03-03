@@ -167,13 +167,17 @@ Returns `Object_Type` enum.
 
 Returns JS-compatible string.
 
-    fun null(): null = 46       // null
+    fun undefined(): null = 46  // undefined
+
+Returns `undefined` value.
+
+    fun null(): null = 90        // null
 
 Returns `null` value.
 
-    fun is_null(x): bool = 47
+    fun is_undefined(x): bool = 47
 
-Check if object is exactly `null`.
+Check if object is exactly `undefined`.
 
     fun instance_of(obj, cls): bool = 89
 
@@ -229,13 +233,17 @@ Same as `x | 0`.
 
     fun shift_right_unsigned(x, y): number = 67      // x >>> y
 
-    fun eq(x, y): bool = 68      // x == y
+    fun eq(x, y): bool = 68      // x === y
 
     fun le(x, y): bool = 69      // x <= y
 
     fun lt(x, y): bool = 70      // x < y
 
-    fun ne(x, y): bool = 71      // x != y
+    fun ne(x, y): bool = 71      // x !== y
+
+    fun approx_eq(x, y): bool = 91  // x == y
+
+    fun approx_ne(x, y): bool = 92  // x != y
 
 ### To be removed (mostly)
 
@@ -255,7 +263,7 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 ## Format Constants
 
     img_version_major = 6
-    img_version_minor = 1
+    img_version_minor = 2
     img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
@@ -378,9 +386,9 @@ Format is `["u", "i", "f", "reserved"](fmt >> 2)`
 
 ## Enum: Object_Type
 
-    null = 0
+    undefined = 0
 
-Only the `null` value.
+Only the `undefined` value.
 
     number = 1
 
@@ -407,6 +415,8 @@ Only `true` and `false` values.
     packet = 10
 
     exotic = 11
+
+    null = 12
 
 ### Object_Types only used in static type info
 

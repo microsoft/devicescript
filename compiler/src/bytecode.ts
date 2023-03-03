@@ -58,8 +58,9 @@ export enum Op {
     EXPR0_RET_VAL = 44,
     EXPR1_TYPEOF = 45, // object
     EXPR1_TYPEOF_STR = 76, // object
-    EXPR0_NULL = 46, // null
-    EXPR1_IS_NULL = 47,
+    EXPR0_UNDEFINED = 46, // undefined
+    EXPR0_NULL = 90, // null
+    EXPR1_IS_UNDEFINED = 47,
     EXPR2_INSTANCE_OF = 89, // obj, cls
     EXPR0_TRUE = 48,
     EXPR0_FALSE = 49,
@@ -83,26 +84,28 @@ export enum Op {
     EXPR2_SHIFT_LEFT = 65, // x << y
     EXPR2_SHIFT_RIGHT = 66, // x >> y
     EXPR2_SHIFT_RIGHT_UNSIGNED = 67, // x >>> y
-    EXPR2_EQ = 68, // x == y
+    EXPR2_EQ = 68, // x === y
     EXPR2_LE = 69, // x <= y
     EXPR2_LT = 70, // x < y
-    EXPR2_NE = 71, // x != y
+    EXPR2_NE = 71, // x !== y
+    EXPR2_APPROX_EQ = 91, // x == y
+    EXPR2_APPROX_NE = 92, // x != y
     STMT1_TERMINATE_FIBER = 72, // fiber_handle
     EXPR0_NOW_MS = 77,
     EXPR1_GET_FIBER_HANDLE = 78, // func
-    OP_PAST_LAST = 90,
+    OP_PAST_LAST = 93,
 }
 
 export const OP_PROPS =
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42"
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42\x42"
 export const OP_TYPES =
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x00\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06"
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06\x06"
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 6,
-    IMG_VERSION_MINOR = 1,
+    IMG_VERSION_MINOR = 2,
     IMG_VERSION_PATCH = 0,
-    IMG_VERSION = 0x6010000,
+    IMG_VERSION = 0x6020000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 10,
@@ -212,7 +215,7 @@ export enum FieldSpecFlag {
 
 export enum ObjectType {
     __MAX = 12,
-    NULL = 0,
+    UNDEFINED = 0,
     NUMBER = 1,
     MAP = 2,
     ARRAY = 3,
@@ -224,6 +227,7 @@ export enum ObjectType {
     STRING = 9,
     PACKET = 10,
     EXOTIC = 11,
+    NULL = 12,
     ANY = 11,
     VOID = 12,
 }
@@ -455,8 +459,8 @@ export const OP_PRINT_FMTS = [
     "load_buffer(%e, %n, offset=%e)",
     "ret_val()",
     "typeof(%e)",
-    "null",
-    "is_null(%e)",
+    "undefined",
+    "is_undefined(%e)",
     "true()",
     "false()",
     "!!%e",
@@ -477,10 +481,10 @@ export const OP_PRINT_FMTS = [
     "(%e << %e)",
     "(%e >> %e)",
     "(%e >>> %e)",
-    "(%e == %e)",
+    "(%e === %e)",
     "(%e <= %e)",
     "(%e < %e)",
-    "(%e != %e)",
+    "(%e !== %e)",
     "TERMINATE_FIBER fiber_handle=%e",
     "STORE_CLOSURE local_clo_idx=%e levels=%e %e",
     "load_closure(local_clo_idx=%e, levels=%e)",
@@ -499,9 +503,12 @@ export const OP_PRINT_FMTS = [
     "DEBUGGER ",
     "(new %e)",
     "instance_of(obj=%e, cls=%e)",
+    "null",
+    "(%e == %e)",
+    "(%e != %e)",
 ]
 export const OBJECT_TYPE = [
-    "null",
+    "undefined",
     "number",
     "map",
     "array",

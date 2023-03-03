@@ -1,9 +1,9 @@
 import * as ds from "@devicescript/core"
 
-ds.Buzzer.prototype.playNote = function (frequency, volume, duration) {
+ds.Buzzer.prototype.playNote = async function (frequency, volume, duration) {
     const p = 1000000 / frequency
     volume = Math.clamp(0, volume, 1)
-    this.playTone(p, p * volume * 0.5, duration)
+    await this.playTone(p, p * volume * 0.5, duration)
 }
 
 declare module "@devicescript/core" {
@@ -12,8 +12,8 @@ declare module "@devicescript/core" {
     }
 }
 
-ds.Led.prototype.setAll = function (r, g, b) {
-    const buflen = this.numPixels.read() * 3
+ds.Led.prototype.setAll = async function (r, g, b) {
+    const buflen = (await this.numPixels.read()) * 3
     const buf = Buffer.alloc(buflen)
     let idx = 0
     while (idx < buflen) {
@@ -22,7 +22,7 @@ ds.Led.prototype.setAll = function (r, g, b) {
         buf.setAt(idx + 2, "u0.8", b)
         idx = idx + 3
     }
-    this.pixels.write(buf)
+    await this.pixels.write(buf)
 }
 
 interface ChangeHandler {
@@ -31,30 +31,30 @@ interface ChangeHandler {
     prev?: any
 }
 
-function callHandlers(hh: ds.Handler[]) {
-    if (hh) for (const h of hh) h()
+async function callHandlers(hh: ds.Callback[]) {
+    if (hh) for (const h of hh) await h()
 }
 
-ds.Role.prototype.onPacket = function (pkt: ds.Packet) {
-    if (!pkt || pkt.serviceCommand == 0) {
+ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
+    if (!pkt || pkt.serviceCommand === 0) {
         const conn = this.isConnected
         if (this._connHandlers || this._disconHandlers) {
-            if (conn != this._wasConnected) {
+            if (conn !== this._wasConnected) {
                 this._wasConnected = conn
-                if (conn) callHandlers(this._connHandlers)
-                else callHandlers(this._disconHandlers)
+                if (conn) await callHandlers(this._connHandlers)
+                else await callHandlers(this._disconHandlers)
             }
         }
         if (conn && this._changeHandlers) {
             const regs = Object.keys(this._changeHandlers)
             for (let i = 0; i < regs.length; ++i) {
                 const rg = parseInt(regs[i])
-                if (rg == 0x0101) {
+                if (rg === 0x0101) {
                     const b = Buffer.alloc(1)
                     b[0] = 199
-                    this.sendCommand(0x2003, b)
+                    await this.sendCommand(0x2003, b)
                 } else {
-                    this.sendCommand(0x1000 | rg)
+                    await this.sendCommand(0x1000 | rg)
                 }
             }
         }
@@ -65,12 +65,12 @@ ds.Role.prototype.onPacket = function (pkt: ds.Packet) {
         if (handlers) {
             const val = pkt.decode()
             for (const h of handlers) {
-                if (typeof val == "number" && h.threshold != null) {
+                if (typeof val === "number" && h.threshold != null) {
                     if (h.prev != null && Math.abs(val - h.prev) < h.threshold)
                         continue
                     h.prev = val
                 }
-                if (typeof val == "boolean") {
+                if (typeof val === "boolean") {
                     if (val === h.prev) continue
                     h.prev = val
                 }
@@ -80,7 +80,7 @@ ds.Role.prototype.onPacket = function (pkt: ds.Packet) {
     }
     if (pkt.isEvent && this._eventHandlers) {
         const hh = this._eventHandlers[pkt.eventCode + ""]
-        if (hh) for (const h of hh) h(pkt)
+        if (hh) for (const h of hh) await h(pkt)
     }
 }
 
@@ -92,16 +92,14 @@ function addElement<T>(arr: T[], e: T) {
 
 ds.Role.prototype.onConnected = function onConnected(
     this: ds.Role,
-    h: ds.Handler
+    h: ds.Callback
 ) {
-    ds._use(this.onPacket)
     this._connHandlers = addElement(this._connHandlers, h)
 }
 ds.Role.prototype.onDisconnected = function onConnected(
     this: ds.Role,
-    h: ds.Handler
+    h: ds.Callback
 ) {
-    ds._use(this.onPacket)
     this._disconHandlers = addElement(this._disconHandlers, h)
 }
 
@@ -110,7 +108,7 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     threshold: number,
     handler: (v: any) => void
 ) {
-    if (!handler && typeof threshold == "function") {
+    if (!handler && typeof threshold === "function") {
         handler = threshold
         threshold = undefined
     }
@@ -118,7 +116,6 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     const role = this.role
     if (!role._changeHandlers) {
         role._changeHandlers = {}
-        ds._use(role.onPacket)
     }
     const key = this.code + ""
     let lst: ChangeHandler[] = role._changeHandlers[key]
@@ -131,16 +128,16 @@ ds.RegisterNumber.prototype.onChange = function onChange(
     lst[lst.length] = obj
 }
 
-function handleCloudCommand(pkt: ds.Packet) {
+async function handleCloudCommand(pkt: ds.Packet) {
     const [seqNo, cmd, ...vals] = pkt.decode()
     const cloud = pkt.role as ds.CloudAdapter
     const h = cloud._cloudHandlers[cmd]
     if (h) {
-        const r = h(...vals)
-        cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.OK, ...r)
+        const r = await h(...vals)
+        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.OK, ...r)
     } else {
         // TODO Busy? store fiber ref and possibly kill?
-        cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.NotFound)
+        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.NotFound)
     }
 }
 
@@ -161,17 +158,16 @@ ds.Event.prototype.subscribe = function (handler) {
     if (!m) {
         m = {}
         this.role._eventHandlers = m
-        ds._use(this.role.onPacket)
     }
     const k = this.code + ""
     if (!m[k]) m[k] = []
     m[k].push(handler)
 }
 
-ds.Event.prototype.wait = function () {
+ds.Event.prototype.wait = async function () {
     while (true) {
-        const pkt = this.role.wait()
-        if (pkt && pkt.eventCode == this.code) return
+        const pkt = await this.role.wait()
+        if (pkt && pkt.eventCode === this.code) return
     }
 }
 

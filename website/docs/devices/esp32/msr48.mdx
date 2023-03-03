@@ -4,34 +4,37 @@ description: MSR JacdacIoT 48 v0.2
 # MSR JacdacIoT 48 v0.2
 
 
+![MSR JacdacIoT 48 v0.2 picture](https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/jmbrainesp3248v03.catalog.jpg)
 
+## Features
 
-- Jacdac on pin 17 using Jacdac connector
-- I2C on SDA/SCL: 9/10 using Qwiic connector
-- RGB LED on pins 8, 7, 6
-- Service: power
+-  Jacdac on pin 17 using Jacdac connector
+-  I2C on SDA/SCL: 9/10 using Qwiic connector
+-  RGB LED on pins 8, 7, 6
+-  Service: power
+
+## Stores
+
 
 ## Pins
 
-```
-P33: GPIO33, io
-P34: GPIO34, io
-P35: GPIO35, io
-P36: GPIO36, io
-RX: GPIO38, io
-TX: GPIO37, io
-i2c.pinSCL: GPIO10, analogIn, io
-i2c.pinSDA: GPIO9, analogIn, io
-jacdac.pin: GPIO17, analogOut, io
-led.rgb[0].pin: GPIO8, analogIn, io
-led.rgb[1].pin: GPIO7, analogIn, io
-led.rgb[2].pin: GPIO6, analogIn, io
-services.power[0].pinEn: GPIO2, analogIn, io
-services.power[0].pinFault: GPIO13, io
-```
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **P33** |  GPIO33 |  io |
+| **P34** |  GPIO34 |  io |
+| **P35** |  GPIO35 |  io |
+| **P36** |  GPIO36 |  io |
+| **RX** |  GPIO38 |  io |
+| **TX** |  GPIO37 |  io |
+| **i2c.pinSCL** |  GPIO10 |  analogIn,  io |
+| **i2c.pinSDA** |  GPIO9 |  analogIn,  io |
+| **jacdac.pin** |  GPIO17 |  analogOut,  io |
+| **led.rgb[0].pin** |  GPIO8 |  analogIn,  io |
+| **led.rgb[1].pin** |  GPIO7 |  analogIn,  io |
+| **led.rgb[2].pin** |  GPIO6 |  analogIn,  io |
+| **services.power[0].pinEn** |  GPIO2 |  analogIn,  io |
+| **services.power[0].pinFault** |  GPIO13 |  io |
 
-
-![MSR JacdacIoT 48 v0.2 picture](https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/jmbrainesp3248v03.catalog.jpg)
 
 
 ## Firmware update

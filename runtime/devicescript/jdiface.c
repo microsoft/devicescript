@@ -57,7 +57,7 @@ void devs_jd_clear_pkt_kind(devs_fiber_t *fib) {
     default:
         break;
     }
-    fib->pkt_data.v = devs_null;
+    fib->pkt_data.v = devs_undefined;
     fib->pkt_kind = DEVS_PKT_KIND_NONE;
 }
 
@@ -164,11 +164,11 @@ void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
     value_t role = devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, role_idx);
     value_t fn = devs_function_bind(
         ctx, role, devs_object_get_built_in_field(ctx, role, DEVS_BUILTIN_STRING_ONPACKET));
-    if (!devs_is_null(fn)) {
+    if (!devs_is_undefined(fn)) {
         ctx->stack_top_for_gc = 2;
         ctx->the_stack[0] = fn;
         // null it out first, in case devs_jd_pkt_capture() triggers GC
-        ctx->the_stack[1] = devs_null;
+        ctx->the_stack[1] = devs_undefined;
         ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role_idx);
         devs_fiber_t *fiber = devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
         if (fiber)

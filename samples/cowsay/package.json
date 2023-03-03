@@ -1,0 +1,30 @@
+{
+    "name": "@devicescript/cowsay",
+    "version": "1.0.0",
+    "main": "./src/all.ts",
+    "description": "DeviceScript package sample implementing the famous cow say rendering engine.",
+    "license": "MIT",
+    "keywords": [
+        "devicescript",
+        "jacdac",
+        "iot",
+        "embedded"
+    ],
+    "author": "Microsoft",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "samples/cowsay"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@devicescript/cli": "*"
+    },
+    "scripts": {
+        "setup": "devicescript init",
+        "build": "devicescript build",
+        "watch": "devicescript devtools src/main-test.ts",
+        "test": "devicescript run -t src/main-test.ts",
+        "start": "yarn watch"
+    }
+}

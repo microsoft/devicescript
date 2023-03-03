@@ -13,7 +13,7 @@ class A {
     foo() {
         glb1++
         this.v = 9
-        this.s = "xx" + "z42z"
+        this.s = ds._id("xx") + "z42z"
     }
     bar(v: number, i: string) {
         glb1 += v + this.v
@@ -25,7 +25,7 @@ class B extends A {
     override foo() {
         glb1 += 2
         this.v = 10
-        this.s2 = "xy" + "z42z"
+        this.s2 = ds._id("xy") + "z42z"
     }
     override bar(v: number, i: string) {
         glb1 += v + parseInt(i) + this.v
@@ -61,10 +61,10 @@ function testACall(a: A, v0: number, v1: number) {
     glb1 = 0
     a.foo()
     //console.log("foo is " + glb1)
-    assert(glb1 == v0, "v0")
-    a.bar(32, "6" + "4")
+    assert(glb1 === v0, "v0")
+    a.bar(32, ds._id("6") + "4")
     //console.log("bar is " + glb1)
-    assert(glb1 == v1, "v1")
+    assert(glb1 === v1, "v1")
 }
 
 function run() {
@@ -99,19 +99,19 @@ class D1 extends A1 {}
 function run1() {
     msg("Ctors.run")
     let a = new A1()
-    assert(a.v == 12, "A12")
+    assert(a.v === 12, "A12")
     a = new B1()
-    assert(a.v == 12, "B12")
+    assert(a.v === 12, "B12")
     // downcasts outlawed for now
-    //assert((a as B).q == 17, "B17")
+    //assert((a as B).q === 17, "B17")
     a = new C1()
-    assert(a.v == 12, "C12")
+    assert(a.v === 12, "C12")
     // downcasts outlawed for now
-    //assert((a as B).q == 17, "C17")
+    //assert((a as B).q === 17, "C17")
     let d = new D1(33)
-    assert(d.v == 33, "D33")
+    assert(d.v === 33, "D33")
     d = new D1()
-    assert(d.v == 12, "D12")
+    assert(d.v === 12, "D12")
 }
 
 class A2 {
@@ -134,7 +134,7 @@ interface IFoo {
 
 class A3 {
     constructor() {
-        this.baz = "Q" + "A"
+        this.baz = ds._id("Q") + "A"
     }
     foo() {
         return 12
@@ -160,13 +160,13 @@ function foo(f: IFoo) {
 function run3() {
     msg("Ifaces.run")
     let a = new A3()
-    assert(foo(a) + "X" == "12QA42X")
-    assert((a as IFoo).twoArg(1, 2) == 1, "t")
+    assert(foo(a) + "X" === "12QA42X")
+    assert((a as IFoo).twoArg(1, 2) === 1, "t")
     a = new B3()
-    assert(foo(a) + "X" == "13QA42X", "b")
+    assert(foo(a) + "X" === "13QA42X", "b")
     let q = a as IFoo
     q.baz = "Z"
-    assert(foo(q) + "X" == "13Z42X", "x")
+    assert(foo(q) + "X" === "13Z42X", "x")
     msg("Ifaces.runDONE")
 }
 
@@ -175,4 +175,4 @@ run1()
 run2()
 run3()
 
-ds.reboot()
+

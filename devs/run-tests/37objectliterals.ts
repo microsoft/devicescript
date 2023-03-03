@@ -42,7 +42,7 @@ function str(o: any) {
 }
 
 function check(o: any, exp: string) {
-    if (str(o) != exp) {
+    if (str(o) !== exp) {
         assert(false, `exp: '${exp}' got: '${str(o)}'`)
     }
 }
@@ -50,7 +50,8 @@ function check(o: any, exp: string) {
 function computedPropNames() {
     msg("computedPropNames")
     const f = 10
-    const o = { f, ["c" + "x"]: 12, 1: "x", [1 + 2]: "b123" }
+    let p1 = 1
+    const o = { f, [ ds._id("c") + "x"]: 12, 1: "x", [p1 + 2]: "b123" }
     check(o, "f:10,cx:12,1:x,3:b123")
 }
 
@@ -61,7 +62,7 @@ function shorthandTest() {
     const o = { x, y, z: 33 }
     check(o, "x:12,y:foo,z:33")
     const o2 = { x }
-    assert(str(o2) == "x:12")
+    assert(str(o2) === "x:12")
 }
 
 function deleteTest() {
@@ -101,27 +102,27 @@ function runObjLit() {
     glb1 = 0
     foo({
         width: 12,
-        msg: "h" + "w",
+        msg: ds._id("h") + "w",
     })
-    assert(glb1 == 14, "g14")
+    assert(glb1 === 14, "g14")
     foo({
         width: 12,
         height: 13,
     })
-    assert(glb1 == 17, "g17")
+    assert(glb1 === 17, "g17")
 
     let op: Opts = {}
     op.width = 10
-    op.msg = "X" + "Z123"
+    op.msg = ds._id("X") + "Z123"
     foo(op)
-    assert(glb1 == 17 + 15, "g+")
+    assert(glb1 === 17 + 15, "g+")
 
     /* TODO accessors
     glb1 = 0
     let v = new OptImpl()
     v.width = 34
     foo(v)
-    assert(glb1 == 9)
+    assert(glb1 === 9)
     */
 
     deleteTest()
@@ -152,12 +153,12 @@ x.bar = () => {
 }
 
 function testLam() {
-    assert(x.bar() == 3)
-    assert(x.baz(42) == 43)
+    assert(x.bar() === 3)
+    assert(x.baz(42) === 43)
     x = null // release memory
 }
 
 runObjLit()
 testLam()
 
-ds.reboot()
+

@@ -23,9 +23,8 @@ value_t devs_buffer_op(devs_ctx_t *ctx, uint32_t fmt0, uint32_t offset, value_t 
     if (offset + sz > bufsz) {
         // DMESG("gv NAN at pc=%d sz=%d %x", frame->pc, pkt->service_size, pkt->service_command);
         if (setv)
-            return devs_throw_range_error(ctx, "buffer store out of range");
-        else
-            return devs_undefined;
+            devs_throw_range_error(ctx, "buffer store out of range");
+        return devs_undefined;
     }
 
     data += offset;

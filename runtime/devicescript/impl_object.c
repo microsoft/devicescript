@@ -4,7 +4,7 @@ void fun2_Object_assign(devs_ctx_t *ctx) {
     value_t dst0 = devs_arg(ctx, 0);
     value_t src0 = devs_arg(ctx, 1);
 
-    if (!devs_is_null(src0)) {
+    if (!devs_is_nullish(src0)) {
         devs_map_t *dst = devs_object_get_attached_rw(ctx, dst0);
         devs_maplike_t *src = devs_object_get_attached_enum(ctx, src0);
         if (src && dst)

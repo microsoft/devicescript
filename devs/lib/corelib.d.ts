@@ -440,3 +440,23 @@ interface JSON {
  * An intrinsic object that provides functions to convert JavaScript values to and from the JavaScript Object Notation (JSON) format.
  */
 declare var JSON: JSON
+
+/**
+ * Value returned from async functions, needs to be awaited.
+ */
+interface Promise<T> {
+    _useAwaitPlease(): void
+}
+
+interface PromiseLike<T> {
+    _useAwaitPlease(): void
+}
+
+interface PromiseConstructor {
+    /**
+     * Do not use.
+     */
+    new <T>(): Promise<T>;
+}
+
+declare var Promise: PromiseConstructor;

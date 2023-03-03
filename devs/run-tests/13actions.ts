@@ -14,7 +14,7 @@ let x = 0
 let tot = ""
 let action: Action
 
-type Action = () => void
+type Action = ds.Callback
 
 function msg(m: string) {
     console.log(m)
@@ -24,11 +24,12 @@ function runInBackground(f: Action) {
     f.start(1)
 }
 
-function inBg() {
+async function inBg() {
     let k = 7
     let q = 14
     let rec: Testrec = {} as any
     glb1 = 0
+    await sleepMs(1) // TODO there's some problem with fiber ordering when this is removed and all.ts is run
     runInBackground(() => {
         glb1 = glb1 + 10 + (q - k)
         rec.str = "foo"
@@ -36,17 +37,17 @@ function inBg() {
     runInBackground(() => {
         glb1 = glb1 + 1
     })
-    sleepMs(50)
-    assert(glb1 == 18, "inbg0")
-    assert(rec.str == "foo", "inbg1")
+    await sleepMs(10)
+    assert(glb1 === 18, "inbg0")
+    assert(rec.str === "foo", "inbg1")
     glb1 = 0
 }
 
-function runTwice(fn: Action): void {
+async function runTwice(fn: Action) {
     msg("r2 start")
-    fn()
+    await fn()
     msg("r2 mid")
-    fn()
+    await fn()
     msg("r2 stop")
 }
 
@@ -61,23 +62,23 @@ function testIter() {
     iter(10, v => {
         x = x + (v + 1)
     })
-    assert(x == 55, "55")
+    assert(x === 55, "55")
     x = 0
 }
 
-function testAction(p: number): void {
+async function testAction(p: number) {
     msg("testActionStart")
-    let s = "hello" + "1"
+    let s = ds._id("hello") + "1"
     let coll = [] as number[]
     let p2 = p * 2
     x = 42
-    runTwice(() => {
+    await runTwice(() => {
         x = x + p + p2
         coll.push(x)
         msg(s + x)
     })
-    assert(x == 42 + p * 6, "run2")
-    assert(coll.length == 2, "run2")
+    assert(x === 42 + p * 6, "run2")
+    assert(coll.length === 2, "run2")
     x = 0
     msg("testActionDone")
 }
@@ -86,7 +87,7 @@ function add7() {
     sum = sum + 7
 }
 
-function testFunDecl() {
+async function testFunDecl() {
     msg("testFunDecl")
     let x = 12
     sum = 0
@@ -96,17 +97,17 @@ function testFunDecl() {
     function add10() {
         sum = sum + 10
     }
-    runTwice(addX)
-    assert(sum == 24, "cap")
+    await runTwice(addX)
+    assert(sum === 24, "cap")
     msg("testAdd10")
-    runTwice(add10)
+    await runTwice(add10)
     msg("end-testAdd10")
-    assert(sum == 44, "nocap")
-    runTwice(add7)
-    assert(sum == 44 + 14, "glb")
+    assert(sum === 44, "nocap")
+    await runTwice(add7)
+    assert(sum === 44 + 14, "glb")
     addX()
     add10()
-    assert(sum == 44 + 14 + x + 10, "direct")
+    assert(sum === 44 + 14 + x + 10, "direct")
     sum = 0
 }
 
@@ -115,20 +116,20 @@ function saveAction(fn: Action): void {
 }
 
 function saveGlobalAction(): void {
-    let s = "foo" + "42"
+    let s = ds._id("foo") + "42"
     tot = ""
     saveAction(() => {
         tot = tot + s
     })
 }
 
-function testActionSave(): void {
+async function testActionSave() {
     saveGlobalAction()
     msg("saveAct")
-    runTwice(action)
+    await runTwice(action)
     msg("saveActDONE")
     msg(tot)
-    assert(tot == "foo42foo42", "")
+    assert(tot === "foo42foo42", "")
     tot = ""
     action = null
 }
@@ -152,7 +153,7 @@ function testInnerLambdaCapture() {
         h()
     }
     g()
-    assert(glb1 == 7, "7")
+    assert(glb1 === 7, "7")
 }
 
 interface NestedFun {
@@ -167,8 +168,8 @@ function testComplexCallExpr() {
         return () => 17
     }
 
-    assert(a.f() == 12, "af")
-    assert(bar()() == 17, "ff")
+    assert(a.f() === 12, "af")
+    assert(bar()() === 17, "ff")
 }
 
 function inl0(a: number, b: number) {
@@ -188,24 +189,24 @@ function testInline() {
     msg("testInline")
     let pos = 0
     const arg0 = () => {
-        assert(pos == 0)
+        assert(pos === 0)
         pos = 1
         return 1
     }
     const arg1 = () => {
-        assert(pos == 1)
+        assert(pos === 1)
         pos = 2
         return 2
     }
 
     pos = 0
-    assert(inl0(arg0(), arg1()) == -1)
+    assert(inl0(arg0(), arg1()) === -1)
     pos = 0
-    assert(inl1(arg0(), arg1()) == 1)
+    assert(inl1(arg0(), arg1()) === 1)
     pos = 0
-    assert(inl2(arg0(), arg1()) == 1)
+    assert(inl2(arg0(), arg1()) === 1)
     pos = 0
-    assert(inl3(arg0(), arg1()) == 2)
+    assert(inl3(arg0(), arg1()) === 2)
 }
 
 function doubleIt(f: (x: number) => number) {
@@ -220,18 +221,18 @@ function checkLen(f: (x: string) => string, k: number) {
     // make sure strings are GCed
     f("baz")
     let s = f("foo")
-    assert(s.length == k, "len")
+    assert(s.length === k, "len")
 }
 
 function testLambdas() {
     let x = doubleIt(k => {
         return k * 108
     })
-    assert(x == -108, "l0")
+    assert(x === -108, "l0")
     x = triple((x, y, z) => {
         return x * y + z
     })
-    assert(x == 108, "l1")
+    assert(x === 108, "l1")
     checkLen(s => {
         return s + "XY1"
     }, 6)
@@ -241,9 +242,9 @@ function testLambdas() {
 function testLambdaDecrCapture() {
     let x = 6
     function b(s: string) {
-        assert(s.length == x, "dc")
+        assert(s.length === x, "dc")
     }
-    b("fo0" + "bAr")
+    b(ds._id("fo0") + "bAr")
 }
 
 function testNested() {
@@ -255,7 +256,7 @@ function testNested() {
     y++
     bar(2)
     bar2()
-    assert(glb1 == 12)
+    assert(glb1 === 12)
 
     /* TODO nested closures
     glb1 = 0
@@ -266,7 +267,7 @@ function testNested() {
             glb1 += k
         }
     }
-    assert(glb1 == 321)
+    assert(glb1 === 321)
 
     const fns: any[] = []
     for (let k of arr) {
@@ -278,11 +279,11 @@ function testNested() {
     }
     glb1 = 0
     for (let f of fns) f()
-    assert(glb1 == 321)
+    assert(glb1 === 321)
     */
 
     function bar(v: number) {
-        assert(x == 7 && y == v)
+        assert(x === 7 && y === v)
         glb1++
     }
     function bar2() {
@@ -297,7 +298,7 @@ function incr() {
 function runInl() {
     glb1 = 0
     ignore(incr())
-    assert(glb1 == 1)
+    assert(glb1 === 1)
 }
 
 function bar() {
@@ -337,7 +338,7 @@ function testUndef() {
 }
 
 class FooArc {
-    public handlerxx: () => void;
+    public handlerxx: () => void
     run() {
         this.handlerxx()
     }
@@ -349,9 +350,9 @@ function endFn(win?: boolean) {
 
 function testLambdasWithMoreParams() {
     function a(f: (x: number, v: string, y: number) => void) {
-        f(1, "a" + "X12b", 7)
+        f(1, ds._id("a") + "X12b", 7)
     }
-    a(() => { })
+    a(() => {})
 
     const f = new FooArc()
     f.handlerxx = endFn
@@ -361,12 +362,12 @@ function testLambdasWithMoreParams() {
 testComplexCallExpr()
 testInline()
 
-inBg()
-testAction(1)
-testAction(7)
+await inBg()
+await testAction(1)
+await testAction(7)
 testIter()
-testActionSave()
-testFunDecl()
+await testActionSave()
+await testFunDecl()
 testLoopScope()
 testInnerLambdaCapture()
 testLambdas()
@@ -377,4 +378,4 @@ runInl()
 testUndef()
 testLambdasWithMoreParams()
 
-ds.reboot()
+
