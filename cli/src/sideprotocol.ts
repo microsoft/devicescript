@@ -93,25 +93,28 @@ export interface SideStopVmResp extends SideResp<"stopVM"> {
     data: void
 }
 
+export interface AddResponse {
+    files: string[]
+}
+
 export interface SideAddServiceReq extends SideReq<"addService"> {
     data: AddServiceOptions
 }
 export interface SideAddServiceResp extends SideResp<"addService"> {
-    data: void
+    data: AddResponse
 }
-
 export interface SideAddSimReq extends SideReq<"addSim"> {
     data: AddSimOptions
 }
 export interface SideAddSimResp extends SideResp<"addSim"> {
-    data: void
+    data: AddResponse
 }
 
 export interface SideAddBoardReq extends SideReq<"addBoard"> {
     data: AddBoardOptions
 }
 export interface SideAddBoardResp extends SideResp<"addBoard"> {
-    data: void
+    data: AddResponse
 }
 
 

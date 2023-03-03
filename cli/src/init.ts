@@ -302,7 +302,7 @@ function writeFiles(dir: string, options: InitOptions, files: FileSet) {
     return cwd
 }
 
-async function finishInit(cwd: string, options: InitOptions) {
+async function runInstall(cwd: string, options: InitOptions) {
     if (options.install) {
         const npm = pathExistsSync(join(cwd, "package-lock.json"))
         const cmd = npm ? "npm" : "yarn"
@@ -313,9 +313,19 @@ async function finishInit(cwd: string, options: InitOptions) {
             cwd,
         })
     }
+}
 
-    // build to get .devicescript/lib/* files etc
-    await build(MAIN, {})
+function finishAdd(message: string, files: string[] = []) {
+    log(``)
+    log(message)
+    if (files.length) {
+        const filesmsg = (files.length > 1 ? "one of " : "") + files.join(", ")
+        log(`Start by editing ${filesmsg}`)
+    }
+    log(``)
+    return {
+        files,
+    }
 }
 
 export async function init(dir: string | undefined, options: InitOptions) {
@@ -348,17 +358,16 @@ export async function init(dir: string | undefined, options: InitOptions) {
         }
     }
 
-    await finishInit(cwd, options)
+    await runInstall(cwd, options)
 
-    // help message
-    log(``)
-    log(
-        `Your DeviceScript project is initialized. Try 'devs add' to see what can be added.`
+    // build to get .devicescript/lib/* files etc
+    await build(MAIN, {})
+
+    return finishAdd(
+        `Your DeviceScript project is initialized. Try 'devs add' to see what can be added.\n` +
+            `To get more help, https://microsoft.github.io/devicescript/getting-started/`,
+        ["package.json", MAIN]
     )
-    log(
-        `To get more help, https://microsoft.github.io/devicescript/getting-started/ .`
-    )
-    log(``)
 }
 
 export interface AddSimOptions extends InitOptions {}
@@ -368,12 +377,9 @@ export async function addSim(options: AddSimOptions) {
 
     const cwd = writeFiles(".", options, simFiles)
 
-    await finishInit(cwd, options)
+    await runInstall(cwd, options)
 
-    // help message
-    log(``)
-    log(`Simulator support added.`)
-    log(``)
+    return finishAdd(`Simulator support added.`, ["sim/app.ts"])
 }
 
 export interface AddServiceOptions extends InitOptions {
@@ -390,9 +396,11 @@ export async function addService(options: AddServiceOptions) {
 
     const num = randomUInt(0xfff_ffff) | 0x1000_0000
 
+    const serviceFile = "services/" + id + ".md"
+
     const files = Object.assign(
         {
-            ["services/" + id + ".md"]: `# ${name}
+            [serviceFile]: `# ${name}
 
     identifier: 0x${num.toString(16)}
     extends: _sensor
@@ -411,12 +419,9 @@ A measure of ${name}.
 
     const cwd = writeFiles(".", options, files)
 
-    await finishInit(cwd, options)
+    await runInstall(cwd, options)
 
-    // help message
-    log(``)
-    log(`Service added ${id}.`)
-    log(``)
+    return finishAdd(`Added service ${name}`, [serviceFile])
 }
 
 export function initAddCmds() {

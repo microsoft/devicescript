@@ -57,4 +57,5 @@ export async function addBoard(options: AddBoardOptions) {
 
     writeFile(boardJsonPath, JSON.stringify(board, null, 4))
     log(`created ${boardJsonPath}`)
+    return { files: [boardJsonPath] }
 }
