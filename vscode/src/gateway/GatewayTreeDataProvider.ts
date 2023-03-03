@@ -124,6 +124,24 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.refreshToken",
+                async (device: CloudDevice) => {
+                    const manager = this.state.manager
+                    if (!manager || !device) return
+                    const dev = manager.bus.device(device.deviceId, true)
+                    if (dev) await manager.registerDevice(dev, device.name)
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.script.delete",
+                async (script: CloudScript) => {
+                    await this.state.withProgress(
+                        "Updating Script",
+                        async () => await script?.delete()
+                    )
+                }
+            ),
+            vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.updateScript",
                 async (device: CloudDevice) => {
                     const manager = this.state.manager
@@ -185,6 +203,36 @@ export class GatewayTreeDataProvider
                             this.refresh(device)
                         }
                     )
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.script.upload",
+                async (script: CloudScript) => {
+                    const manager = this.state.manager
+                    if (!manager) return
+                    const file =
+                        await this.state.deviceScriptState.pickDeviceScriptFile(
+                            { title: "Pick an entry point file." }
+                        )
+                    const status =
+                        await this.state.deviceScriptState.devtools.build(
+                            file.fsPath
+                        )
+                    if (!status?.success) {
+                        vscode.window.showErrorMessage(
+                            `DeviceScript Gateway: ${file.fsPath} has build errors.`
+                        )
+                        return
+                    }
+                    const program = status.dbg
+                    this.state.withProgress("Uploading script", async () => {
+                        await script.uploadBody({ program })
+                        this.refresh(script)
+
+                        vscode.window.showInformationMessage(
+                            "DeviceScript Gateway: Script updated"
+                        )
+                    })
                 }
             ),
             vscode.commands.registerCommand(

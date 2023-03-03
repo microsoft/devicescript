@@ -334,6 +334,15 @@
                     "group": "inline"
                 },
                 {
+                    "command": "extension.devicescript.gateway.script.upload",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudScript",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.gateway.script.delete",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudScript"
+                },
+                {
                     "command": "extension.devicescript.gateway.device.updateScript",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
                     "group": "inline"
@@ -342,6 +351,10 @@
                     "command": "extension.devicescript.gateway.device.connect",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
                     "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.gateway.device.refreshToken",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
                 },
                 {
                     "command": "extension.devicescript.gateway.registerDevice",
@@ -548,10 +561,26 @@
                 "icon": "$(add)"
             },
             {
+                "command": "extension.devicescript.gateway.script.upload",
+                "title": "Upload Script",
+                "category": "DeviceScript Gateway",
+                "icon": "$(cloud-upload)"
+            },
+            {
+                "command": "extension.devicescript.gateway.script.delete",
+                "title": "Delete Script",
+                "category": "DeviceScript Gateway"
+            },
+            {
                 "command": "extension.devicescript.gateway.device.updateScript",
                 "title": "Upgrade Script",
                 "category": "DeviceScript Gateway",
                 "icon": "$(file-code)"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.refreshToken",
+                "title": "Refresh token",
+                "category": "DeviceScript Gateway"
             },
             {
                 "command": "extension.devicescript.gateway.device.connect",
@@ -563,7 +592,7 @@
                 "command": "extension.devicescript.gateway.device.uploadScript",
                 "title": "Upload Version",
                 "category": "DeviceScript Gateway",
-                "icon": "$(cloud-upload)"
+                "icon": "$(add)"
             }
         ],
         "breakpoints": [
