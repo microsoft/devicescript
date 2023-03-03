@@ -37,7 +37,7 @@ export async function ctool(options: CToolOptions & CmdOptions) {
     if (options.empty) {
         const host = await getHost(
             resolveBuildConfig(),
-            { noVerify: true },
+            { verify: false },
             "."
         )
         host.read = () => ""

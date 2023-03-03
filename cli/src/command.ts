@@ -1,7 +1,6 @@
 import { LoggerPriority } from "jacdac-ts"
 
 export interface CmdOptions {
-    noVerify?: boolean
 }
 export const GENDIR = ".devicescript"
 export const LIBDIR = `${GENDIR}/lib`
