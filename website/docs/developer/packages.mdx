@@ -1,0 +1,29 @@
+---
+sidebar_position: 6
+hide_table_of_contents: true
+---
+
+# Packages
+
+DeviceScript uses [npm](https://www.npmjs.com/) package manager.
+Currently, only TypeScript code can be published - in future we may add [services](custom-services).
+
+To create a DeviceScript library from your project, run `devs add npm`
+(or use **DeviceScript: Add npm...** from the command palette in Visual Studio Code).
+This will:
+- remove the `"private"` field from `package.json`
+- add `"devicescript": { "library": true }` (this is required)
+- set `"main": "src/index.ts"` (`src/index.ts` is created if missing)
+- set `"files"` field
+- add `"license"`
+- add `"keywords": ["devicescript"]` - keep this so npm search works better!
+- add `"author"` and `"repository"` if they can be inferred
+
+All of these can be of course edited in `package.json` afterwards.
+In particular it's recommended to name your package `devicescript-something`.
+
+Note that regular DeviceScript applications typically use `src/main.ts` (or `src/mainSomething.ts`)
+as the application entry point.
+This is typically, **not** the right choice for **library** entry point.
+You can keep your `src/main.ts` file as an example or test for the library,
+but best to stick to `"main": "src/index.ts"` in `package.json`.
