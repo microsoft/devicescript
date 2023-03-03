@@ -40,17 +40,17 @@ console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
 // listen for pressure changes
-sensor.pressure.onChange(10, () => {
+sensor.pressure.onChange(10, async () => {
     // read sensor reading
-    const pressure = sensor.pressure.read()
+    const pressure = await sensor.pressure.read()
     console.log(pressure)
     // user blows in straw
     if (pressure > 1400) {
         // click!
         console.log(`click!`)
-        mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
+        await mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
         // debouncing
-        ds.sleepMs(50)
+        await ds.sleepMs(50)
     }
 })
 ```
@@ -80,7 +80,7 @@ to a developer tools page similar to the one hosted in the docs.
 
 From here, your developer inner loop will be very similar to building/debugging a web site with hot reload.
 
--   make an edit in your source file, say `main.ts`
+-   make an edit in your source file, say `src/main.ts`
 -   after a couple seconds, the compiler picks up the changes, produces a new bytecode and sends it to the developer tools
 -   the developer tools automatically deploy thew bytecode to the select device (by default the simulator)
 -   switch from VS Code to the browser and debug your new code
@@ -91,7 +91,7 @@ Navigate to the [Developer section](/developer) to learn the basics of the langu
 
 ## How tools work
 
-Communicating with hardware device typically involves a native connection using serial (UARL), USB or Bluetooth.
+Communicating with hardware device typically involves a native connection using serial (UART), USB or Bluetooth.
 This kind of communication is typically platform specific and creates a lot of complexity to support cross-platform tools.
 Native communication connection typically do not work when working from a container/virtual machine.
 
