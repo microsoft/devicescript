@@ -64,6 +64,14 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async () => extensionState.connect()
         ),
         vscode.commands.registerCommand(
+            "extension.devicescript.sims.add",
+            async () => extensionState.addSim()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.services.add",
+            async () => extensionState.addService()
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.boards.add",
             async () => extensionState.addBoard()
         )

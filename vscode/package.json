@@ -390,6 +390,12 @@
                     "command": "extension.devicescript.terminal.show"
                 },
                 {
+                    "command": "extension.devicescript.sims.add"
+                },
+                {
+                    "command": "extension.devicescript.services.add"
+                },
+                {
                     "command": "extension.devicescript.boards.add"
                 },
                 {
@@ -434,6 +440,16 @@
             {
                 "command": "extension.devicescript.device.flash",
                 "title": "Flash Firmware...",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.sims.add",
+                "title": "Add Sim...",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.services.add",
+                "title": "Add Service...",
                 "category": "DeviceScript"
             },
             {

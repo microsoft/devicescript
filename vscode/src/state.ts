@@ -22,6 +22,10 @@ import {
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 import {
+    SideAddServiceReq,
+    SideAddServiceResp,
+    SideAddSimReq,
+    SideAddSimResp,
     SideConnectReq,
     SideStartVmReq,
     SideStopVmReq,
@@ -134,6 +138,25 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
     async resolveDeviceScriptManager(): Promise<JDService> {
         return this.deviceScriptManager || this.pickDeviceScriptManager()
+    }
+
+    async addSim() {
+        await sideRequest<SideAddSimReq, SideAddSimResp>({
+            req: "addSim",
+            data: {},
+        })
+    }
+
+    async addService() {
+        const name = await vscode.window.showInputBox({
+            title: "Pick a service name",
+        })
+        if (!name) return
+
+        const resp = await sideRequest<SideAddServiceReq, SideAddServiceResp>({
+            req: "addService",
+            data: { name },
+        })
     }
 
     async addBoard() {

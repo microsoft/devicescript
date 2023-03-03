@@ -354,7 +354,9 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     async entryPoints() {
-        const files = await vscode.workspace.fs.readDirectory(this.srcFolder)
+        const { srcFolder } = this
+        if (!srcFolder) return []
+        const files = await vscode.workspace.fs.readDirectory(srcFolder)
         return files
             .filter(
                 ([name, type]) =>
