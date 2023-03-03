@@ -14,6 +14,11 @@
   "files": [
     "./built/**"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/devicescript.git",
+    "directory": "dap"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^18.11.9",
