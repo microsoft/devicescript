@@ -357,6 +357,10 @@
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
                 },
                 {
+                    "command": "extension.devicescript.gateway.device.unregister",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
+                },
+                {
                     "command": "extension.devicescript.gateway.registerDevice",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevices",
                     "group": "inline"
@@ -584,7 +588,7 @@
             },
             {
                 "command": "extension.devicescript.gateway.script.delete",
-                "title": "Delete Script",
+                "title": "Delete Script...",
                 "category": "DeviceScript Gateway"
             },
             {
@@ -596,6 +600,11 @@
             {
                 "command": "extension.devicescript.gateway.device.refreshToken",
                 "title": "Refresh token",
+                "category": "DeviceScript Gateway"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.unregister",
+                "title": "Unregister Device...",
                 "category": "DeviceScript Gateway"
             },
             {

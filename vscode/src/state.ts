@@ -39,7 +39,7 @@ import { DeveloperToolsManager } from "./devtoolsserver"
 import { checkFileExists, writeFile } from "./fs"
 import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
-import { TaggedQuickPickItem } from "./pickers"
+import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
 import { activeTelemetry, Telemetry } from "./telemetry"
 
@@ -287,10 +287,12 @@ export class DeviceScriptExtensionState extends JDEventSource {
             board = res.data.board
         }
 
-        const confirm = await vscode.window.showQuickPick(["yes", "no"], {
-            title: "The DeviceScript runtime will be flashed on your device. There is no undo. Confirm?",
-        })
-        if (confirm !== "yes") return
+        if (
+            !(await showConfirmBox(
+                "The DeviceScript runtime will be flashed on your device. There is no undo. Confirm?"
+            ))
+        )
+            return
 
         const { archId, id } = board
         const arch = architectureFamily(archId)

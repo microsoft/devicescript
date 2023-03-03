@@ -26,7 +26,7 @@ import {
     CLOUD_SCRIPTS_NODE,
     CONNECTION_RESOURCE_GROUP,
 } from "../constants"
-import { TaggedQuickPickItem } from "../pickers"
+import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
 import { readFileJSON } from "../fs"
 
 class CloudCollection extends JDNode {
@@ -124,6 +124,16 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.unregister",
+                async (device: CloudDevice) => {
+                    if (await showConfirmBox("Unregister device?"))
+                        await this.state.withProgress(
+                            "Unregistering device...",
+                            async () => await device?.delete()
+                        )
+                }
+            ),
+            vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.refreshToken",
                 async (device: CloudDevice) => {
                     const manager = this.state.manager
@@ -135,10 +145,15 @@ export class GatewayTreeDataProvider
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.script.delete",
                 async (script: CloudScript) => {
-                    await this.state.withProgress(
-                        "Updating Script",
-                        async () => await script?.delete()
+                    if (
+                        await showConfirmBox(
+                            "Delete script and all its versions?"
+                        )
                     )
+                        await this.state.withProgress(
+                            "Updating Script",
+                            async () => await script?.delete()
+                        )
                 }
             ),
             vscode.commands.registerCommand(
