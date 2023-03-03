@@ -6,7 +6,7 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import { addService, addSim, init } from "./init"
+import { addNpm, addService, addSim, init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
@@ -256,10 +256,14 @@ export async function mainCli() {
             )
     }
 
+    function dropReturn(f: (...args: any[]) => Promise<any>) {
+        return (...args: any[]) => f(...args).then(() => {})
+    }
+
     addCommand("init", program)
         .argument("[dir]", "path to create or update project", "./")
         .description("creates or configures a devicescript project")
-        .action(init)
+        .action(dropReturn(init))
 
     addcmd
         .command("board")
@@ -273,11 +277,11 @@ export async function mainCli() {
             "new board ID (auto-generated from name)"
         )
         .option("--force", "overwrite JSON config file")
-        .action(addBoard)
+        .action(dropReturn(addBoard))
 
     addCommand("sim")
         .description("add simulator support (using node.js and jacdac-ts)")
-        .action(addSim)
+        .action(dropReturn(addSim))
 
     addCommand("service")
         .option(
@@ -285,7 +289,12 @@ export async function mainCli() {
             "name of new service (required, example 'Light Level')"
         )
         .description("add a custom Jacdac service")
-        .action(addService)
+        .action(dropReturn(addService))
+
+    addCommand("npm")
+        .option("--license <string>", "set the license", "MIT")
+        .description("make current project into an NPM library")
+        .action(dropReturn(addNpm))
 
     program
         .command("binpatch", { hidden: true })

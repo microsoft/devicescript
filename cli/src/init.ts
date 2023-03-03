@@ -7,14 +7,17 @@ import {
     readFileSync,
     ensureDirSync,
     readJSONSync,
+    readdir,
 } from "fs-extra"
 import { build } from "./build"
-import { spawnSync } from "node:child_process"
-import { assert, randomUInt } from "jacdac-ts"
+import { spawnSync, execSync } from "node:child_process"
+import { assert, clone, JSONTryParse, randomUInt } from "jacdac-ts"
 import { addReqHandler } from "./sidedata"
 import type {
     SideAddBoardReq,
     SideAddBoardResp,
+    SideAddNpmReq,
+    SideAddNpmResp,
     SideAddServiceReq,
     SideAddServiceResp,
     SideAddSimReq,
@@ -36,6 +39,21 @@ const serviceFiles: FileSet = {
     
     -   [Read documentation](http://microsoft.github.io/devicescript/developer/custom-services)
     `,
+}
+
+const npmFiles: FileSet = {
+    "package.json": {
+        [IS_PATCH]: true,
+        private: undefined,
+        main: "./src/index.ts",
+        license: "MIT",
+        devicescript: {
+            library: true,
+        },
+        files: ["src/*.ts", "devsconfig.json"],
+        keywords: ["devicescript"],
+    },
+    "src/index.ts": `${IMPORT_PREFIX}\n\n`,
 }
 
 const simFiles: FileSet = {
@@ -171,7 +189,7 @@ const optionalFiles: FileSet = {
     "devsconfig.json": {},
     "package.json": {
         version: "0.0.0",
-        private: true,
+        private: "Please use 'devs add npm' to make this a publishable package",
         dependencies: {},
         devDependencies: {
             "@devicescript/cli": "*",
@@ -424,6 +442,54 @@ A measure of ${name}.
     return finishAdd(`Added service ${name}`, [serviceFile])
 }
 
+export interface AddNpmOptions extends InitOptions {
+    license?: string
+}
+
+function execCmd(cmd: string) {
+    try {
+        return execSync(cmd, { encoding: "utf-8" }).trim()
+    } catch {
+        return ""
+    }
+}
+
+export async function addNpm(options: AddNpmOptions) {
+    const files = clone(npmFiles)
+    const pkg = files["package.json"] as any
+    pkg.license = options.license ?? "MIT"
+    let uname = execCmd("git config --get user.name")
+    if (uname) {
+        uname += " <" + execCmd("git config --get user.email") + ">"
+        pkg.author = uname
+    }
+
+    if (pathExistsSync(".git")) {
+        const url = execCmd("git remote get-url origin")
+        if (url)
+            pkg.repository = {
+                type: "git",
+                url: url,
+            }
+    }
+
+    let lst = await readdir("src")
+    lst = lst.filter(f => !f.startsWith("main") && f.endsWith(".ts"))
+    for (const fn of lst) {
+        files["src/index.ts"] += `export * from "./${fn.slice(0, -3)}"\n`
+    }
+
+    const cwd = writeFiles(".", options, files)
+    await runInstall(cwd, options)
+
+    const newpkg = JSON.parse(readFileSync("package.json", "utf-8"))
+
+    return finishAdd(
+        `Added npm support; author: ${newpkg.author}, license: ${newpkg.license}`,
+        ["package.json", "src/index.ts"]
+    )
+}
+
 export function initAddCmds() {
     addReqHandler<SideAddBoardReq, SideAddBoardResp>("addBoard", d =>
         addBoard(d.data)
@@ -432,4 +498,5 @@ export function initAddCmds() {
         addService(d.data)
     )
     addReqHandler<SideAddSimReq, SideAddSimResp>("addSim", d => addSim(d.data))
+    addReqHandler<SideAddNpmReq, SideAddNpmResp>("addNpm", d => addNpm(d.data))
 }
