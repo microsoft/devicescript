@@ -20,7 +20,7 @@ export async function crunScript(
     fn: string,
     options: CRunOptions & CmdOptions & BuildOptions
 ) {
-    options.noVerify = true
+    options.verify = false
     if (!options.flag) options.flag = {}
 
     const compfn = BINDIR + "/crun.devs"

@@ -369,7 +369,7 @@ async function watchCmd(
 async function rebuild(args: BuildReqArgs) {
     const opts = { ...args.buildOptions }
     if (!opts.cwd) opts.cwd = dirname(args.filename)
-    opts.noVerify = true
+    opts.verify = false
     opts.quiet = true
 
     const res = await compileFile(args.filename, opts)

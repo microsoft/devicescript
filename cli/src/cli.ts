@@ -6,7 +6,7 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import { init } from "./init"
+import { addService, addSim, init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
@@ -64,7 +64,7 @@ export async function mainCli() {
 
     buildCommand("build", { isDefault: true })
         .description("build a DeviceScript file")
-        .arguments("[src/mainXYZ.ts]")
+        .argument("[src/mainXYZ.ts]", "entry point", "src/main.ts")
         .action(build)
 
     program
@@ -79,18 +79,6 @@ export async function mainCli() {
                 console.log(`    -F ${pad(k, 20)} ${compileFlagHelp[k]}`)
             }
         })
-
-    program
-        .command("init")
-        .description("creates or configures a devicescript project")
-        .option("-f, --force", "force overwrite existing files")
-        .option("--spaces <number>", "number of spaces when generating JSON")
-        .option(
-            "--install",
-            "Run npm install or yarn install after creating files"
-        )
-        .argument("[dir]", "path to create the project", "./")
-        .action(init)
 
     program
         .command("devtools")
@@ -254,9 +242,34 @@ export async function mainCli() {
 
     addFlashCmd("rp2040").action(flashRP2040)
 
-    program
-        .command("addboard")
-        .description("fork a board configuration for a new board")
+    const addcmd = program
+        .command("add")
+        .description("add a feature to the project")
+
+    function addCommand(name: string, base = addcmd) {
+        return base
+            .command(name)
+            .option("-f, --force", "force overwrite existing files")
+            .option(
+                "--spaces <number>",
+                "number of spaces when generating JSON"
+            )
+            .option(
+                "-I, --no-install",
+                "Do not run npm install or yarn install after creating files"
+            )
+    }
+
+    addCommand("init", program)
+        .argument("[dir]", "path to create or update project", "./")
+        .description("creates or configures a devicescript project")
+        .action(init)
+
+    addcmd
+        .command("board")
+        .description(
+            "fork a board configuration for a custom microcontroller board"
+        )
         .option("-B, --base <board-id>", "ID of a board to fork (required)")
         .option("-n, --name <board-name>", "new board name (required)")
         .option(
@@ -265,6 +278,18 @@ export async function mainCli() {
         )
         .option("--force", "overwrite JSON config file")
         .action(addBoard)
+
+    addCommand("sim")
+        .description("add simulator support (using node.js and jacdac-ts)")
+        .action(addSim)
+
+    addCommand("service")
+        .option(
+            "-n, --name <service-name>",
+            "name of new service (required, example 'Light Level')"
+        )
+        .description("add a custom Jacdac service")
+        .action(addService)
 
     program
         .command("binpatch", { hidden: true })

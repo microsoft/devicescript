@@ -103,7 +103,7 @@ export async function getHost(
     options: BuildOptions & CmdOptions,
     folder: string
 ) {
-    const inst = options.noVerify ? undefined : await devsFactory()
+    const inst = options.verify === false ? undefined : await devsFactory()
     const outdir = resolve(options.cwd ?? ".", options.outDir || BINDIR)
     ensureDirSync(outdir)
     const devsHost: Host = {
@@ -351,7 +351,7 @@ export async function saveLibFiles(
 }
 
 export interface BuildOptions {
-    noVerify?: boolean
+    verify?: boolean
     outDir?: string
     stats?: boolean
     flag?: CompileFlags
