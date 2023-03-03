@@ -3815,21 +3815,20 @@ class Program implements TopOpWriter {
             this.mainFileName,
             this.host,
             this.prelude,
-            modulePath => {
-                let text: string
-                let devsconfig: any
-                const fn = modulePath + "devsconfig.json"
+            (modulePath, pkgJSON) => {
+                const fn = modulePath + "package.json"
                 try {
-                    text = this.host.read(fn)
-                    devsconfig = JSON.parse(text)
-                    return true
-                } catch {
+                    const pkg = JSON.parse(pkgJSON)
+                    if (pkg?.devicescript?.library) return true
                     this.printDiag(
                         mkDiag(
                             fn,
-                            text === undefined ? "file missing" : "invalid JSON"
+                            `missing "devicescript" section; please use 'devs add npm' on your package`
                         )
                     )
+                    return false
+                } catch {
+                    this.printDiag(mkDiag(fn, "invalid package.json"))
                     return false
                 }
             }

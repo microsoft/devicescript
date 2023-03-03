@@ -29,6 +29,7 @@ const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
 const IMPORT_PREFIX = `import * as ds from "@devicescript/core"`
 const IS_PATCH = "__isPatch__"
+const FORCE = "__force__"
 
 type FileSet = Record<string, Object | string>
 
@@ -88,6 +89,7 @@ const simFiles: FileSet = {
             "ts-node": "^10.9.1",
         },
         scripts: {
+            [FORCE]: true,
             "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
             build: "yarn build:devicescript && yarn build:sim",
             "watch:sim":
@@ -207,7 +209,7 @@ const optionalFiles: FileSet = {
 
 ds.everyMs(1000, () => {
     console.log(":)")
-})`,
+})\n`,
     "README.md": `# - project name -
 
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
@@ -273,18 +275,23 @@ export interface InitOptions {
 function patchJSON(fn: string, data: any) {
     debug(`patch ${fn}`)
     const existing = readJSONSync(fn)
+    const isObj = (o: any) => o && typeof o == "object" && !Array.isArray(o)
     const doPatch = (trg: any, src: any) => {
+        const force = !!src[FORCE]
         for (const k of Object.keys(src)) {
-            if (k == IS_PATCH) continue
-            if (trg[k] === undefined || typeof src[k] != "object")
-                trg[k] = src[k]
-            else if (Array.isArray(src[k]) && Array.isArray(trg[k])) {
+            if (k == IS_PATCH || k == FORCE) continue
+            if (trg[k] === undefined || force) trg[k] = src[k]
+            else if (
+                Array.isArray(src[k]) &&
+                Array.isArray(trg[k]) &&
+                src[k][0]?.name
+            ) {
                 for (const elt of src[k]) {
                     assert(!!elt.name)
                     if (!trg[k].find((e: any) => e.name == elt.name))
                         trg[k].push(elt)
                 }
-            } else {
+            } else if (isObj(trg[k]) && isObj(src[k])) {
                 doPatch(trg[k], src[k])
             }
         }

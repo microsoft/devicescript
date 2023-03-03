@@ -1,7 +1,7 @@
 {
     "name": "@devicescript/cowsay",
     "version": "1.0.1",
-    "main": "./src/all.ts",
+    "main": "./src/index.ts",
     "private": false,
     "description": "DeviceScript package sample implementing the famous cow say rendering engine.",
     "license": "MIT",
@@ -30,5 +30,12 @@
     },
     "publishConfig": {
         "access": "public"
-    }
+    },
+    "devicescript": {
+        "library": true
+    },
+    "files": [
+        "src/*.ts",
+        "devsconfig.json"
+    ]
 }

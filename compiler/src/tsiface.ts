@@ -11,7 +11,7 @@ class TsHost implements ts.CompilerHost {
     constructor(
         public host: Host,
         public prelude: Record<string, string>,
-        public checkModule: (path: string) => boolean
+        public checkModule: (path: string, pkgJSON: string) => boolean
     ) {}
 
     getSourceFile(
@@ -82,7 +82,7 @@ class TsHost implements ts.CompilerHost {
                     if (this.host.getFlags?.()?.traceFiles)
                         trace(`read file: ${fileName} (size: ${text.length})`)
                     if (fileName.replace(/.*[\/\\]/, "") == "package.json") {
-                        if (!this.checkModule(fileName.slice(0, -12))) {
+                        if (!this.checkModule(fileName.slice(0, -12), text)) {
                             if (this.host.getFlags?.()?.traceFiles)
                                 trace(`invalid module at ${fileName}`)
                             text = null
@@ -122,7 +122,7 @@ export function buildAST(
     mainFn: string,
     host: Host,
     prelude: Record<string, string>,
-    checkModule: (path: string) => boolean
+    checkModule: (path: string, pkgJSON: string) => boolean
 ) {
     const tsHost = new TsHost(host, prelude, checkModule)
 
