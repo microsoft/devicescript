@@ -11,6 +11,11 @@
         "embedded"
     ],
     "author": "Microsoft",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "samples/cowsay"
+    },
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*"
