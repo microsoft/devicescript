@@ -9,6 +9,19 @@ Custom service definition files can be added to the `./services/` folder as mark
 
 The service specifications are compiled by the DeviceScript compiler as part of the build.
 
+### Getting started
+
+Let's define a custom service for a `psychomagnothericenergy` sensor (Ghostbuster ghost detector).
+Start by configuring your project for simulation by running
+
+```bash
+devs add service psychomagnothericenergy
+```
+
+or in Visual Studio Code, using the **DeviceScript: Add Service...** in the command palette.
+
+Then update `./services/psychomagnothericenergy.md` with a basic sensor definition.
+
 ```markdown title="./services/psychomagnothericenergy.md"
 # Psychomagnotheric Energy
 
@@ -35,7 +48,7 @@ const gigameter = new PsychomagnothericEnergy()
 ### Node sim support
 
 The `./sim/runtime.ts` scafolding will automaticlly pick up
-the generated files to support node.js.
+the generated files to support node.js. See [simulation](/developer/simulation) to configure your project for simulation.
 
 -   The generated TypeScript constants are generated at `./.devicescript/ts/constants.ts`.
 -   The generated JSON are at `./.devicescript/services.json`.

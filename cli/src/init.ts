@@ -200,16 +200,12 @@ This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
 .devicescript      reserved folder for devicescript generated files
 src/main.ts        default DeviceScript entry point
 ...
-/sim/app.ts        default node simulation entry point
-/sim/...
-/services/...      custom service definitions
-/boards/...        custom board definitions
 \`\`\`
 
 
 ## Local/container development
 
--  install node.js 16+
+-  install node.js 18+
 
 \`\`\`bash
 nvm install 18
@@ -322,10 +318,7 @@ async function finishInit(cwd: string, options: InitOptions) {
     await build(MAIN, {})
 }
 
-export async function init(
-    dir: string | undefined,
-    options: InitOptions
-) {
+export async function init(dir: string | undefined, options: InitOptions) {
     log(`Configuring DeviceScript project`)
 
     const cwd = writeFiles(dir, options, optionalFiles)

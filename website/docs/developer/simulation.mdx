@@ -15,7 +15,13 @@ The simulators dashboard is the most convinient way to start simulating services
 The Node.JS project uses the [Jacdac TypeScript client library](https://microsoft.github.io/jacdac-docs/clients/javascript/) and,
 any other Node package (like your favorite test project).
 
-In a DeviceScript project,
+Start by configuring your project for simulation by running
+
+```bash
+devs add sim
+```
+
+or in Visual Studio Code, using the **DeviceScript: Add Sim...** in the command palette.
 
 -   all `.ts` files, expect for the `./sim/` folder, are compiled into DeviceScript bytecode
 -   all file under `./sim/` are compiled as a Node.JS application

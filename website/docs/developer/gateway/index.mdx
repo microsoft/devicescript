@@ -37,6 +37,10 @@ The Development Gateway is built on top of a few Azure resources:
 -   [Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/), to store secrets needed by the Web Application
 -   [Storage](https://learn.microsoft.com/en-us/azure/storage/), blobs and tables to manage devices, scripts and telemetry
 -   [App Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview), to collect telemetry about the health of devices
+-   [Event Hub](https://learn.microsoft.com/en-us/azure/event-hubs/) to forward telemetry messages from the devices to the next cloud service
+
+For development,
+
 -   [GitHub Actions](https://docs.github.com/en/actions), deploy the web application on each successful build
 
 The Development Gateway requires an Azure and a GitHub account.
