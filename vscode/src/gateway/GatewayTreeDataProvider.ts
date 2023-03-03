@@ -1,10 +1,5 @@
 import {
     CHANGE,
-    CloudDevice,
-    CloudManager,
-    CloudScript,
-    CLOUD_DEVICE_NODE,
-    CLOUD_SCRIPT_NODE,
     deviceCatalogImage,
     ellipse,
     identifierToUrlPath,
@@ -28,6 +23,13 @@ import {
 } from "../constants"
 import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
 import { readFileJSON } from "../fs"
+import {
+    CloudManager,
+    CloudScript,
+    CloudDevice,
+    CLOUD_SCRIPT_NODE,
+    CLOUD_DEVICE_NODE,
+} from "./clouddom"
 
 class CloudCollection extends JDNode {
     constructor(

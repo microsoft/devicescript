@@ -1,8 +1,6 @@
 import {
     CHANGE,
-    CloudManager,
     ERROR,
-    FETCH_ERROR,
     JDDevice,
     JDEventSource,
     SRV_CLOUD_ADAPTER,
@@ -10,6 +8,7 @@ import {
 import * as vscode from "vscode"
 import { DeviceScriptExtensionState } from "../state"
 import "isomorphic-fetch"
+import { CloudManager, FETCH_ERROR } from "./clouddom"
 
 export class GatewayExtensionState extends JDEventSource {
     private _manager: CloudManager
