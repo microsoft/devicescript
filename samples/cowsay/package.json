@@ -2,6 +2,7 @@
     "name": "@devicescript/cowsay",
     "version": "1.0.0",
     "main": "./src/all.ts",
+    "private": false,
     "description": "DeviceScript package sample implementing the famous cow say rendering engine.",
     "license": "MIT",
     "keywords": [
@@ -26,5 +27,8 @@
         "watch": "devicescript devtools src/main-test.ts",
         "test": "devicescript run -t src/main-test.ts",
         "start": "yarn watch"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }
