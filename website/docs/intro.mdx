@@ -1,6 +1,5 @@
 ---
 sidebar_position: 1
-hide_table_of_contents: true
 ---
 
 # DeviceScript
@@ -9,22 +8,30 @@ DeviceScript brings a professional TypeScript developer experience to low-resour
 DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
 environments (VM itself compiles to 10kB of code, with the floating point library and Jacdac SDK adding further 30kB).
 
-## Design goals for DeviceScript VM
+#### TypeScript
 
-* secure - can predictably execute untrusted code (random bytes)
-* easy to analyze - should be possible to statically determine the set of APIs used
-* small memory (RAM) footprint
-* small code (flash) footprint
-* leave space for extensions in future
+The familiar syntax and tooling, all at your fingertips.
 
-## Try DeviceScript
+#### Portable Virtual Machine
 
-You do not need hardware or install any tools to try out DeviceScript.
+Small footprint DeviceScript bytecode interpreter.
 
-```ts edit codesandbox
-ds.everyMs(1000, () => {
-    console.log(`hello`)
-})
-```
+#### Hardware as Services
 
-You can edit it directly and press `Edit` to load it in the DeviceScript simulator in the documentation.
+Write reusable application/firmware on top of abstract hardware services.
+
+#### Small
+
+Designed for low power, low flash, low memory embedded projects.
+
+#### Simulation & Tracing
+
+Develop and test your firmware using simulated or real sensors.
+
+#### Debugging
+
+Full debugging experience in Visual Studio Code, for hardware or simulated devices.
+
+#### Package Ecosystem
+
+Leverage npm, yarn or pnpm to distribute and consume DeviceScript packages.
