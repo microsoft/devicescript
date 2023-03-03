@@ -7,7 +7,7 @@ export const BINDIR = `${GENDIR}/bin`
 export const log = console.log
 
 export function debug(...args: any[]) {
-    console.debug(...wrapArgs(34, args))
+    if (!isQuiet) console.debug(...wrapArgs(34, args))
 }
 
 export function error(...args: any[]) {
@@ -48,7 +48,7 @@ function wrapArgs(color: number, args: any[]) {
 export function logToConsole(priority: LoggerPriority, message: string) {
     switch (priority) {
         case LoggerPriority.Debug:
-            console.debug(wrapColor(34, message))
+            if (!isQuiet) console.debug(wrapColor(34, message))
             break
         case LoggerPriority.Log:
             console.log(wrapColor(96, message))
@@ -63,9 +63,14 @@ export function logToConsole(priority: LoggerPriority, message: string) {
 }
 
 export let isVerbose = false
+export let isQuiet = false
 
 export function setVerbose(v: boolean) {
     isVerbose = v
+}
+
+export function setQuiet(v: boolean) {
+    isQuiet = v
 }
 
 export function verboseLog(msg: string) {

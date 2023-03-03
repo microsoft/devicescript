@@ -13,7 +13,7 @@ import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
-import { setConsoleColors, setVerbose, verboseLog } from "./command"
+import { setConsoleColors, setQuiet, setVerbose } from "./command"
 import { binPatch } from "./binpatch"
 import { logToConsole } from "./command"
 import {
@@ -28,12 +28,6 @@ import { LoggerPriority } from "jacdac-ts"
 
 export async function mainCli() {
     Error.stackTraceLimit = 30
-
-    // needs to happen after no-colors, verbose is applied
-    //logToConsole(
-    //    LoggerPriority.Debug,
-    //    `using ${cliVersion()} from ${__dirname}`
-    //)
 
     function buildCommand(nameAndArgs: string, opts?: CommandOptions) {
         return program
@@ -61,6 +55,7 @@ export async function mainCli() {
         )
         .version(cliVersion())
         .option("-v, --verbose", "more logging")
+        .option("--quiet", "less logging")
         .option("--no-colors", "disable color output")
 
     buildCommand("build", { isDefault: true })
@@ -314,8 +309,17 @@ export async function mainCli() {
         .arguments("<file.board.json...>")
         .action(binPatch)
 
+    program.on("option:quiet", () => setQuiet(true))
     program.on("option:verbose", () => setVerbose(true))
     program.on("option:no-colors", () => setConsoleColors(false))
+
+    program.hook("preAction", () => {
+        // --quiet disables it
+        logToConsole(
+            LoggerPriority.Debug,
+            `using ${cliVersion()} from ${__dirname}`
+        )
+    })
 
     program.parse(process.argv)
 }
