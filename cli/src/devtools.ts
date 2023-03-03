@@ -3,7 +3,7 @@ const WebSocket = require("faye-websocket")
 import http from "http"
 import url from "url"
 import net from "net"
-import { CmdOptions, error, log } from "./command"
+import { error, log } from "./command"
 import { watch } from "fs-extra"
 import { resolveBuildConfig, SrcFile } from "@devicescript/compiler"
 import {
@@ -73,7 +73,7 @@ function loadProjectServiceSpecifications() {
 
 export async function devtools(
     fn: string | undefined,
-    options: DevToolsOptions & BuildOptions & CmdOptions & TransportsOptions = {}
+    options: DevToolsOptions & BuildOptions & TransportsOptions = {}
 ) {
     const port = 8081
     const tcpPort = 8082

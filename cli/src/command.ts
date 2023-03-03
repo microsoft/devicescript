@@ -1,7 +1,5 @@
 import { LoggerPriority } from "jacdac-ts"
 
-export interface CmdOptions {
-}
 export const GENDIR = ".devicescript"
 export const LIBDIR = `${GENDIR}/lib`
 export const BINDIR = `${GENDIR}/bin`

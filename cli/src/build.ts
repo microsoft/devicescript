@@ -23,7 +23,6 @@ import {
 } from "@devicescript/compiler"
 import {
     BINDIR,
-    CmdOptions,
     consoleColors,
     debug,
     error,
@@ -100,7 +99,7 @@ export async function devsStartWithNetwork(options: {
 
 export async function getHost(
     buildConfig: ResolvedBuildConfig,
-    options: BuildOptions & CmdOptions,
+    options: BuildOptions,
     folder: string
 ) {
     const inst = options.verify === false ? undefined : await devsFactory()
@@ -359,7 +358,7 @@ export interface BuildOptions {
     quiet?: boolean
 }
 
-export async function build(file: string, options: BuildOptions & CmdOptions) {
+export async function build(file: string, options: BuildOptions) {
     file = file || "src/main.ts"
     options.outDir = options.outDir || BINDIR
 
@@ -379,7 +378,7 @@ export async function build(file: string, options: BuildOptions & CmdOptions) {
     }
 }
 
-async function buildOnce(file: string, options: BuildOptions & CmdOptions) {
+async function buildOnce(file: string, options: BuildOptions) {
     const { stats } = options
     const { success, binary, dbg } = await compileFile(file, options)
     if (!success) throw new CompilationError("compilation failed")

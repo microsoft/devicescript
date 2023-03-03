@@ -11,7 +11,7 @@ import {
     toHex,
 } from "jacdac-ts"
 import { BuildOptions, devsStartWithNetwork } from "./build"
-import { CmdOptions, error } from "./command"
+import { error } from "./command"
 import { readCompiled } from "./run"
 
 export interface RunOptions {
@@ -20,7 +20,7 @@ export interface RunOptions {
 
 export async function deployScript(
     fn: string,
-    options: RunOptions & CmdOptions & BuildOptions
+    options: RunOptions & BuildOptions
 ) {
     const inst = await devsStartWithNetwork(options)
     inst.deployHandler = code => {

@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs"
 import { getHost, validateBoard } from "./build"
-import { CmdOptions, log } from "./command"
+import { log } from "./command"
 import * as path from "node:path"
 import {
     testCompiler,
@@ -27,7 +27,7 @@ const ctest = "devs/compiler-tests"
 const samples = "devs/samples"
 const rtest = "devs/run-tests"
 
-export async function ctool(options: CToolOptions & CmdOptions) {
+export async function ctool(options: CToolOptions) {
     if (options.fetchBoards) {
         const ginfo = await fetchBoards(options)
         await writeFile(options.fetchBoards, JSON.stringify(ginfo, null, 2))

@@ -1,4 +1,3 @@
-import { CmdOptions } from "./command"
 import * as fsp from "node:fs/promises"
 import { parseLog } from "@devicescript/compiler"
 
@@ -7,10 +6,7 @@ export interface LogParseOptions {
     generation?: string
 }
 
-export async function logParse(
-    fn: string,
-    options: LogParseOptions & CmdOptions
-) {
+export async function logParse(fn: string, options: LogParseOptions) {
     const h = await fsp.open(fn, "r")
     const r = await parseLog((off, size) => {
         const r = Buffer.alloc(size)

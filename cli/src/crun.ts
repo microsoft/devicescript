@@ -5,7 +5,7 @@ import { writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createInterface } from "node:readline"
 import { BuildOptions, readDebugInfo } from "./build"
-import { BINDIR, CmdOptions, error, log } from "./command"
+import { BINDIR, error, log } from "./command"
 import { readCompiled } from "./run"
 import { printDmesg } from "./vmworker"
 
@@ -18,7 +18,7 @@ export interface CRunOptions {
 
 export async function crunScript(
     fn: string,
-    options: CRunOptions & CmdOptions & BuildOptions
+    options: CRunOptions & BuildOptions
 ) {
     options.verify = false
     if (!options.flag) options.flag = {}

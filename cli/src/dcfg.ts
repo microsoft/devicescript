@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs"
-import { CmdOptions, error, log, verboseLog } from "./command"
+import { error, log, verboseLog } from "./command"
 import {
     decodeDcfg,
     serializeDcfg,
@@ -14,7 +14,7 @@ export interface DcfgOptions {
     output?: string
 }
 
-export async function dcfg(fn: string, options: DcfgOptions & CmdOptions) {
+export async function dcfg(fn: string, options: DcfgOptions) {
     const buf = readFileSync(fn)
 
     if (fn.endsWith(".json")) {

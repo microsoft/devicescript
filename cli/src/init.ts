@@ -1,4 +1,4 @@
-import { CmdOptions, debug, fatal, GENDIR, LIBDIR, log } from "./command"
+import { debug, fatal, GENDIR, LIBDIR, log } from "./command"
 import { dirname, join, resolve } from "node:path"
 import {
     pathExistsSync,
@@ -306,7 +306,7 @@ function writeFiles(dir: string, options: InitOptions, files: FileSet) {
     return cwd
 }
 
-async function finishInit(cwd: string, options: InitOptions & CmdOptions) {
+async function finishInit(cwd: string, options: InitOptions) {
     if (options.install) {
         const npm = pathExistsSync(join(cwd, "package-lock.json"))
         const cmd = npm ? "npm" : "yarn"
@@ -324,7 +324,7 @@ async function finishInit(cwd: string, options: InitOptions & CmdOptions) {
 
 export async function init(
     dir: string | undefined,
-    options: InitOptions & CmdOptions
+    options: InitOptions
 ) {
     log(`Configuring DeviceScript project`)
 

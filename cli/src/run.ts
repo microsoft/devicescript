@@ -6,7 +6,7 @@ import {
     devsFactory,
     devsStartWithNetwork,
 } from "./build"
-import { CmdOptions, error } from "./command"
+import { error } from "./command"
 
 export interface RunOptions {
     test?: boolean
@@ -92,7 +92,7 @@ function err(msg: string) {
 
 export async function runScript(
     fn: string,
-    options: RunOptions & BuildOptions & CmdOptions
+    options: RunOptions & BuildOptions
 ) {
     if (options.test && options.wait)
         err("can't use --test and --wait together")
