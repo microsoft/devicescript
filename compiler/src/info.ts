@@ -61,6 +61,12 @@ export interface DebugInfo {
     _resolverCache?: any
 }
 
+export interface VersionInfo {
+    devsVersion: string
+    runtimeVersion: string
+    nodeVersion: string
+}
+
 export function emptyDebugInfo(): DebugInfo {
     return {
         sizes: {

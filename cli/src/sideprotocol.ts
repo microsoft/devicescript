@@ -1,6 +1,7 @@
 import type {
     CompilationResult,
     ResolvedBuildConfig,
+    VersionInfo,
 } from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
 import type { AddBoardOptions } from "./addboard"
@@ -67,11 +68,6 @@ export interface SideSpecsReq extends SideReq<"specs"> {
         dir?: string // if dir===undefined, only global specs will be returned
     }
 }
-export interface VersionInfo {
-    devsVersion: string
-    runtimeVersion: string
-    nodeVersion: string
-}
 export interface SideSpecsData {
     buildConfig: ResolvedBuildConfig
     versions: VersionInfo
@@ -121,7 +117,6 @@ export interface SideAddBoardReq extends SideReq<"addBoard"> {
 export interface SideAddBoardResp extends SideResp<"addBoard"> {
     data: AddResponse
 }
-
 
 export interface SideTransportEvent extends SideEvent<"transport"> {
     data: TransportStatus

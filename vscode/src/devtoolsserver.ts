@@ -17,7 +17,6 @@ import type {
     SideKillResp,
     SideSpecsReq,
     SideSpecsResp,
-    VersionInfo,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
 import { sideRequest } from "./jacdac"
@@ -27,7 +26,7 @@ import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
-import { ResolvedBuildConfig } from "@devicescript/compiler"
+import { ResolvedBuildConfig, VersionInfo } from "@devicescript/compiler"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(

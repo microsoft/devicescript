@@ -1,4 +1,4 @@
-import { DebugInfo } from "@devicescript/compiler"
+import { DebugInfo, VersionInfo } from "@devicescript/compiler"
 import {
     CHANGE,
     CloudConfigurationCmd,
@@ -11,7 +11,6 @@ import {
     SRV_CLOUD_CONFIGURATION,
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
-import { VersionInfo } from "../../../cli/src/sideprotocol"
 
 export const CLOUD_NODE = "cloud"
 export const CLOUD_DEVICE_NODE = "cloudDevice"
