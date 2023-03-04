@@ -305,6 +305,11 @@
                     "group": "inline"
                 },
                 {
+                    "command": "extension.devicescript.jdom.devicescript.toggle",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_devicescript",
+                    "group": "inline"
+                },
+                {
                     "command": "extension.devicescript.jdom.wifi.ap.add",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_unknown",
                     "group": "inline"
@@ -498,6 +503,12 @@
             {
                 "command": "extension.devicescript.jdom.wifi.reconnect",
                 "title": "Reconnect",
+                "category": "DeviceScript",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "extension.devicescript.jdom.devicescript.toggle",
+                "title": "Start/Stop",
                 "category": "DeviceScript",
                 "icon": "$(refresh)"
             },

@@ -54,6 +54,9 @@ import {
     DISCONNECT,
     JDCancellationToken,
     SRV_DEVICE_SCRIPT_MANAGER,
+    DeviceScriptManagerReg,
+    toHex,
+    prettySize,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -382,6 +385,9 @@ ${spec.description}`,
         const cloudAdapters = device.services({
             serviceClass: SRV_CLOUD_ADAPTER,
         })
+        const deviceScriptManagers = device.services({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })
 
         return <JDomTreeItem[]>(
             [
@@ -389,6 +395,9 @@ ${spec.description}`,
                 ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
                 ...cloudAdapters.map(
                     srv => new JDomCloudAdapterTreeItem(this, srv, props)
+                ),
+                ...deviceScriptManagers.map(
+                    srv => new JDomDeviceManagerTreeItem(this, srv, props)
                 ),
                 new JDomServicesTreeItem(this),
             ].filter(e => !!e)
@@ -1245,6 +1254,97 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
     }
 }
 
+class JDomDeviceManagerTreeItem extends JDomTreeItem {
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "devs_",
+            contextValue: props.idPrefix + "devicescript",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            iconPath: "play",
+        })
+    }
+
+    get service() {
+        return this.node as JDService
+    }
+
+    override mount(): void {
+        const { service } = this
+        ;[
+            DeviceScriptManagerReg.ProgramSize,
+            DeviceScriptManagerReg.RuntimeVersion,
+            DeviceScriptManagerReg.Running,
+            DeviceScriptManagerReg.ProgramHash,
+        ]
+            .map(code => service.register(code))
+            .forEach(register =>
+                this.subscribe(register, REPORT_UPDATE, this.handleChange)
+            )
+    }
+
+    async stop() {
+        await this.setRunning(false)
+    }
+
+    async start() {
+        await this.setRunning(true)
+    }
+
+    async toggle() {
+        const running = this.service.register(DeviceScriptManagerReg.Running)
+        await running.refresh()
+        this.setRunning(!running.boolValue)
+    }
+
+    private async setRunning(value: boolean) {
+        const running = this.service.register(DeviceScriptManagerReg.Running)
+        let retry = 3
+        do {
+            await running.sendSetBoolAsync(value, true)
+            await running.refresh()
+        } while (running.boolValue && retry-- > 0)
+    }
+
+    update() {
+        const { service } = this
+        const oldLabel = this.label
+        const oldDescription = this.description
+
+        const programHash =
+            toHex(
+                service.register(DeviceScriptManagerReg.ProgramSha256).data
+            ) || ""
+        const programSize = service.register(
+            DeviceScriptManagerReg.ProgramSize
+        ).uintValue
+        const runtimeVersion =
+            service.register(DeviceScriptManagerReg.RuntimeVersion)
+                .stringValue || ""
+        const running = service.register(
+            DeviceScriptManagerReg.Running
+        ).boolValue
+
+        this.label = "devicescript"
+        this.description = running ? "running" : "stopped"
+
+        this.tooltip = toMarkdownString(
+            `## [DeviceScript](https://microsoft.github.io/devicescript)
+
+- runtime version: ${runtimeVersion}
+- program hash: ${programHash}
+- program size: ${prettySize(programSize)}
+`
+        )
+
+        return oldLabel !== this.label || oldDescription !== this.description
+    }
+}
+
 abstract class JDomTreeDataProvider
     extends JDEventSource
     implements vscode.TreeDataProvider<JDomTreeItem>
@@ -1565,6 +1665,10 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.wifi.reconnect",
             (item: JDomWifiTreeItem) => item?.reconnect()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.devicescript.toggle",
+            (item: JDomDeviceManagerTreeItem) => item?.toggle()
         )
     )
 }
