@@ -1,3 +1,4 @@
+import { DebugInfo } from "@devicescript/compiler"
 import {
     CHANGE,
     CloudConfigurationCmd,
@@ -10,6 +11,7 @@ import {
     SRV_CLOUD_CONFIGURATION,
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
+import { VersionInfo } from "../../../cli/src/sideprotocol"
 
 export const CLOUD_NODE = "cloud"
 export const CLOUD_DEVICE_NODE = "cloudDevice"
@@ -78,9 +80,7 @@ export class CloudManager extends JDNode {
         const body = {
             name,
             meta: {},
-            body: {
-                program: {},
-            },
+            body: {},
         }
         const resp = await this.fetchJSON<CloudScriptData>("scripts", {
             method: "POST",
@@ -433,7 +433,8 @@ export interface CloudScriptData extends CloudData {
 }
 
 export interface CloudScriptBody {
-    program: any
+    versions?: VersionInfo
+    program?: DebugInfo
 }
 
 export class CloudScript extends CloudNode<CloudScriptData> {

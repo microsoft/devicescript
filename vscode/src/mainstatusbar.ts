@@ -22,7 +22,7 @@ export function activateMainStatusBar(
             connectionState,
             runtimeVersion,
             nodeVersion,
-            version,
+            devsVersion,
             projectFolder,
             currentFilename,
             currentDeviceScriptManager,
@@ -55,7 +55,7 @@ ${type} - ${connectionState} ${description || ""}
 ---
 
 ${runtimeVersion?.slice(1) || "?"} - runtime version<br/>
-${version?.slice(1) || "?"} - tools version<br/>
+${devsVersion?.slice(1) || "?"} - tools version<br/>
 ${nodeVersion?.slice(1) || "?"} - node version<br/>
 
 ---

@@ -68,7 +68,7 @@ export interface SideSpecsReq extends SideReq<"specs"> {
     }
 }
 export interface VersionInfo {
-    version: string
+    devsVersion: string
     runtimeVersion: string
     nodeVersion: string
 }

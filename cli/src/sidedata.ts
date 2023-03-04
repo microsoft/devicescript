@@ -86,7 +86,7 @@ export function initSideProto(devtools_: DevToolsIface) {
         return {
             buildConfig,
             versions: {
-                version: packageVersion(),
+                devsVersion: packageVersion(),
                 runtimeVersion: runtimeVersion(),
                 nodeVersion: process.version,
             },

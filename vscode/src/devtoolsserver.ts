@@ -106,7 +106,7 @@ export class DeveloperToolsManager extends JDEventSource {
         const { versions, buildConfig } = res.data
         this._versions = versions
         console.debug(
-            `devicescript devtools ${this.version}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
+            `devicescript devtools ${this.devsVersion}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
         )
         this.updateBuildConfig(buildConfig)
     }
@@ -247,8 +247,12 @@ export class DeveloperToolsManager extends JDEventSource {
         return true
     }
 
-    get version() {
-        return this._versions?.version
+    versions() {
+        return this._versions
+    }
+
+    get devsVersion() {
+        return this._versions?.devsVersion
     }
 
     get runtimeVersion() {

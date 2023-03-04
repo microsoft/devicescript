@@ -30,6 +30,7 @@ import {
     CLOUD_SCRIPT_NODE,
     CLOUD_DEVICE_NODE,
 } from "./clouddom"
+import { DebugInfo } from "@devicescript/compiler"
 
 class CloudCollection extends JDNode {
     constructor(
@@ -312,17 +313,20 @@ export class GatewayTreeDataProvider
                     }
 
                     // upload
-                    this.state.withProgress("Uploading script", async () => {
-                        await script.uploadBody({ program })
-                        this.refresh(script)
-
-                        vscode.window.showInformationMessage(
-                            "DeviceScript Gateway: Script updated"
-                        )
-                    })
+                    await this.uploadScriptProgram(script, program)
                 }
             )
         )
+    }
+
+    private async uploadScriptProgram(script: CloudScript, program: DebugInfo) {
+        await this.state.withProgress("Uploading script...", async () => {
+            await script.uploadBody({
+                versions: this.state.deviceScriptState.devtools.versions(),
+                program,
+            })
+            this.refresh(script)
+        })
     }
 
     async resolveTreeItem(
