@@ -92,9 +92,13 @@ int jd_websock_new(const char *hostname, int port, const char *path, const char 
 
     CHK(ctx->sockfd == 0);
 
-    const char *scheme = strcmp(hostname, "localhost") == 0 ? "ws" : "wss";
-
-    char *hostbuf = jd_sprintf_a("%s://%s:%d%s", scheme, hostname, port, path);
+    char *hostbuf;
+    if (strcmp(hostname, "localhost") == 0) {
+        hostbuf = jd_sprintf_a("ws://%s:%d%s", hostname, port, path);
+    } else {
+        // drop port, since we did ws: -> wss:
+        hostbuf = jd_sprintf_a("wss://%s%s", hostname, path);
+    }
 
     EmscriptenWebSocketCreateAttributes ws_attrs = {
         .url = hostbuf,

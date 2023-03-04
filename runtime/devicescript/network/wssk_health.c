@@ -133,6 +133,7 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
 
     switch (event) {
     case JD_CONN_EV_OPEN:
+        DMESG("* connected to %s", state->hub_name);
         feed_reconnect_watchdog(state);
         set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED);
         break;
@@ -141,11 +142,12 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
         on_msg(state, (void *)data, size);
         break;
     case JD_CONN_EV_CLOSE:
+        DMESG("* connection to %s closed", state->hub_name);
         state->fwd_en = 0;
         set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED);
         break;
     case JD_CONN_EV_ERROR:
-        LOG("encsock error: %-s", devs_json_escape(data, size));
+        DMESG("* connection error: %-s", devs_json_escape(data, size));
         set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED);
         break;
     }
