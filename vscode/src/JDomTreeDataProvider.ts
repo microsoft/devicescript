@@ -1173,7 +1173,7 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
 
     async connect() {
         const { service } = this
-        withProgress("Connecting...", async () => {
+        await withProgress("Connecting...", async () => {
             await sendCmd(service, CloudConfigurationCmd.Connect)
         })
     }
