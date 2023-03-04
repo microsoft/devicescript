@@ -340,6 +340,10 @@ void wsskhealth_handle_packet(srv_t *state, jd_packet_t *pkt) {
         jd_respond_string(pkt, state->hub_name);
         return;
 
+    case JD_GET(JD_CLOUD_CONFIGURATION_REG_CLOUD_TYPE):
+        jd_respond_string(pkt, "WSSK");
+        return;
+
     case JD_GET(JD_CLOUD_CONFIGURATION_REG_CLOUD_DEVICE_ID): {
         const char *id = state->device_id;
         if (id && memcmp(id, "/wssk/", 6) == 0)
@@ -533,6 +537,17 @@ int jd_net_send_frame(void *frame) {
     return jd_queue_push(state->fwdqueue, f);
 }
 
+static int wssk_service_query(jd_packet_t *pkt) {
+    srv_t *state = _wsskhealth_state;
+    if (pkt->service_command == JD_GET(JD_CLOUD_ADAPTER_REG_CONNECTION_NAME)) {
+        char *st = jd_sprintf_a("%s (WSSK)", state->hub_name);
+        jd_respond_string(pkt, st);
+        jd_free(st);
+        return 1;
+    }
+    return 0;
+}
+
 const devscloud_api_t wssk_cloud = {
     .upload = wssk_publish_values,
     .agg_upload = aggbuffer_upload,
@@ -540,6 +555,7 @@ const devscloud_api_t wssk_cloud = {
     .is_connected = wssk_is_connected,
     .max_bin_upload_size = 1024, // just a guess
     .respond_method = wssk_respond_method,
+    .service_query = wssk_service_query,
 };
 
 __attribute__((weak)) bool jd_tcpsock_is_available(void) {

@@ -1,4 +1,3 @@
-import { parseStackFrame } from "@devicescript/compiler"
 import { ensureDir } from "fs-extra"
 import { spawn } from "node:child_process"
 import { writeFileSync } from "node:fs"

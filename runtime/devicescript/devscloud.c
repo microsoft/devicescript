@@ -53,6 +53,8 @@ void devscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
         return;
 
     default:
+        if (state->api->service_query && state->api->service_query(pkt) > 0)
+            return;
         jd_send_not_implemented(pkt);
         return;
     }
