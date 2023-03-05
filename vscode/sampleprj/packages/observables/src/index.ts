@@ -1,26 +1,25 @@
 import * as ds from "@devicescript/core"
 import { AsyncVoid } from "@devicescript/core"
 
-const btn = new ds.Button()
-const temp = new ds.Temperature()
-
 // https://steveholgado.com/understanding-observables/#assumptions
-type AsyncBool = boolean | Promise<boolean>
-type Subscription = {
+// + some rxjs
+
+export type AsyncBool = boolean | Promise<boolean>
+export type Subscription = {
     unsubscribe: () => AsyncVoid
 }
-type SubscriptionVoid = Subscription | Promise<Subscription>
-type Observer<T> = UnaryFunction<T, AsyncVoid>
-type UnaryFunction<T, R> = (source: T) => R
-type OperatorFunction<T, R> = UnaryFunction<Observable<T>, Observable<R>>
-class Observable<T> {
+export type SubscriptionVoid = Subscription | Promise<Subscription>
+export type Observer<T> = UnaryFunction<T, AsyncVoid>
+export type UnaryFunction<T, R> = (source: T) => R
+export type OperatorFunction<T, R> = UnaryFunction<Observable<T>, Observable<R>>
+export class Observable<T> {
     constructor(
-        private readonly _producer: (
+        private readonly next: (
             observer: Observer<T>
         ) => AsyncVoid | SubscriptionVoid
     ) {}
     async subscribe(observer: Observer<T>): Promise<Subscription> {
-        return (await this._producer(observer)) || undefined
+        return (await this.next(observer)) || undefined
     }
 
     pipe<A>(op1: OperatorFunction<T, A>): Observable<A>
@@ -98,31 +97,17 @@ class Observable<T> {
     ): Observable<unknown>
 
     pipe(...operations: OperatorFunction<any, any>[]): Observable<any> {
-        return operations.length ? pipeFromArray(operations)(this) : this
+        return operations?.length ? pipeFromArray(operations)(this) : this
     }
 }
 
-async function testObservable() {
-    // simple example
-    const obs$ = new Observable<string>(observer => {
-        observer("HELLO")
-        observer("WORLD")
-    })
-    await obs$.subscribe(v => console.log(v))
-}
-
-function fromArray<T>(values: T[]) {
+export function fromArray<T>(values: T[]) {
     return new Observable<T>(async observer => {
-        for (const value of values) await observer(value)
+        if (values) for (const value of values) await observer(value)
     })
 }
 
-async function testObservables() {
-    const obs$ = fromArray([1, 2, 3, 4, 5])
-    await obs$.subscribe(v => console.log(v))
-}
-
-function fromEvent<TEvent extends ds.Event>(event: TEvent) {
+export function fromEvent<TEvent extends ds.Event>(event: TEvent) {
     return new Observable<TEvent>(observer => {
         event.subscribe(pkt => observer(event))
         return {
@@ -133,15 +118,10 @@ function fromEvent<TEvent extends ds.Event>(event: TEvent) {
     })
 }
 
-{
-    // turn events into observables
-    const obs$ = fromEvent(btn.down)
-    const unsub = await obs$.subscribe(ev => console.log(ev.code)) // todo: value
-
-    await unsub?.unsubscribe()
-}
-
-function fromRegisterNumber(register: ds.RegisterNumber, threshold: number) {
+export function fromRegisterNumber(
+    register: ds.RegisterNumber,
+    threshold: number
+) {
     return new Observable<ds.RegisterNumber>(observer => {
         register.onChange(threshold, () => observer(register))
         return {
@@ -152,18 +132,13 @@ function fromRegisterNumber(register: ds.RegisterNumber, threshold: number) {
     })
 }
 
-function testRegisterNumber() {
-    const obs$ = fromRegisterNumber(temp.temperature, 1)
-    obs$.subscribe(async reg => console.log(await reg.read()))
-}
-
-function identity<T>(x: T): T {
+export function identity<T>(x: T): T {
     return x
 }
 function pipeFromArray<T, R>(
     fns: Array<UnaryFunction<T, R>>
 ): UnaryFunction<T, R> {
-    if (fns.length === 0) {
+    if (!fns?.length) {
         return identity as UnaryFunction<any, any>
     }
     if (fns.length === 1) {
@@ -177,7 +152,7 @@ function pipeFromArray<T, R>(
     }
 }
 
-function map<T, R>(converter: (value: T) => R | Promise<R>) {
+export function map<T, R>(converter: (value: T) => R | Promise<R>) {
     return function operator(source: Observable<T>) {
         return new Observable<R>(observer => {
             const subscription = source.subscribe(async v => {
@@ -189,12 +164,7 @@ function map<T, R>(converter: (value: T) => R | Promise<R>) {
     }
 }
 
-async function testMap() {
-    const obs$ = fromRegisterNumber(temp.temperature, 1)
-    await obs$.pipe(map(async reg => await reg.read())).subscribe(t => console.log(t))
-}
-
-function filter<T>(condition: (value: T) => AsyncBool) {
+export function filter<T>(condition: (value: T) => AsyncBool) {
     return function operator(source: Observable<T>) {
         return new Observable<T>(observer => {
             const subscription = source.subscribe(async v => {
@@ -208,17 +178,9 @@ function filter<T>(condition: (value: T) => AsyncBool) {
     }
 }
 
-async function testFilter() {
-    const obs = fromRegisterNumber(temp.temperature, 1)
-    await obs.pipe(
-        map(async reg => await reg.read()),
-        filter(t => t > 30)
-    ).subscribe(t => console.log("too hot!"))
-}
-
 function setTimeout(fn: () => void, timeout: number): void {}
 
-function delay<T>(duration: number) {
+export function delay<T>(duration: number) {
     return function operator(source: Observable<T>) {
         return new Observable<T>(observer => {
             const subscription = source.subscribe(async v => {
@@ -230,19 +192,3 @@ function delay<T>(duration: number) {
         })
     }
 }
-
-async function testDelay() {
-    const obs = fromRegisterNumber(temp.temperature, 1)
-    await obs.pipe(
-        map(async reg => await reg.read()),
-        delay(100),
-        filter(t => t > 30)
-    ).subscribe(t => console.log("too hot!"))
-}
-
-await testObservable()
-await testObservables()
-await testRegisterNumber()
-await testMap()
-await testFilter()
-await testDelay()

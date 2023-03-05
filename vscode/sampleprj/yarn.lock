@@ -1210,11 +1210,6 @@ detect-newline@^3.0.0:
   resolved "https://registry.yarnpkg.com/detect-newline/-/detect-newline-3.1.0.tgz#576f5dfc63ae1a192ff192d8ad3af6308991b651"
   integrity sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==
 
-devicescript-cowsay@*:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/devicescript-cowsay/-/devicescript-cowsay-1.0.0.tgz#e0a208ec028366637352fe31e226f959b33a22ee"
-  integrity sha512-lfVKBnGcR2I9vDzA0iBouJax10lQaNY1+RokEZPDyNDDrpeTogxFUO/qbMHjWvNSZxmrOFk2jZ8FWqqtOsediA==
-
 diff-sequences@^29.4.3:
   version "29.4.3"
   resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-29.4.3.tgz#9314bc1fabe09267ffeca9cbafc457d8499a13f2"
