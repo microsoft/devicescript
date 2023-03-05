@@ -10,5 +10,3 @@ RUN cd /opt && \
     cd /opt/emsdk && \
     sudo ./emsdk install latest && \
     sudo ./emsdk activate latest
-
-RUN sudo -u node npm install -g jacdac-cli
