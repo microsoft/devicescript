@@ -5,7 +5,7 @@
             "name": "DeviceScript",
             "type": "devicescript",
             "request": "launch",
-            "program": "${workspaceFolder}/main.ts",
+            "program": "${workspaceFolder}/src/main.test.ts",
             "deviceId": "${command:deviceScriptSimulator}",
             "stopOnEntry": false
         },
