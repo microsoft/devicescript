@@ -214,3 +214,27 @@ function filter<T>(condition: (value: T) => AsyncBool) {
         filter(t => t > 30)
     ).subscribe(t => console.log("too hot!"))
 }
+
+function setTimeout(fn: () => void, timeout: number): void {}
+
+function delay<T>(duration: number) {
+    return function operator(source: Observable<T>) {
+        return new Observable<T>(observer => {
+            const subscription = source.subscribe(async v => {
+                setTimeout(() => {
+                    observer(v)
+                }, duration)
+            })
+            return subscription
+        })
+    }
+}
+
+{
+    const obs = fromRegisterNumber(temp.temperature, 1)
+    obs.pipe(
+        map(async reg => await reg.read()),
+        delay(100),
+        filter(t => t > 30)
+    ).subscribe(t => console.log("too hot!"))
+}
