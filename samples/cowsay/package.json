@@ -1,5 +1,5 @@
 {
-    "name": "@devicescript/cowsay",
+    "name": "devicescript-cowsay",
     "version": "1.0.2",
     "main": "./src/index.ts",
     "private": false,
@@ -34,8 +34,5 @@
         "watch": "devicescript devtools src/main-test.ts",
         "test": "devicescript run -t src/main-test.ts",
         "start": "yarn watch"
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }
