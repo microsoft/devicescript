@@ -102,7 +102,7 @@ class Observable<T> {
     }
 }
 
-{
+async function testObservable() {
     // simple example
     const obs$ = new Observable<string>(observer => {
         observer("HELLO")
@@ -117,9 +117,9 @@ function fromArray<T>(values: T[]) {
     })
 }
 
-{
+async function testObservables() {
     const obs$ = fromArray([1, 2, 3, 4, 5])
-    obs$.subscribe(v => console.log(v))
+    await obs$.subscribe(v => console.log(v))
 }
 
 function fromEvent<TEvent extends ds.Event>(event: TEvent) {
@@ -152,7 +152,7 @@ function fromRegisterNumber(register: ds.RegisterNumber, threshold: number) {
     })
 }
 
-{
+function testRegisterNumber() {
     const obs$ = fromRegisterNumber(temp.temperature, 1)
     obs$.subscribe(async reg => console.log(await reg.read()))
 }
@@ -189,9 +189,9 @@ function map<T, R>(converter: (value: T) => R | Promise<R>) {
     }
 }
 
-{
+async function testMap() {
     const obs$ = fromRegisterNumber(temp.temperature, 1)
-    obs$.pipe(map(async reg => await reg.read())).subscribe(t => console.log(t))
+    await obs$.pipe(map(async reg => await reg.read())).subscribe(t => console.log(t))
 }
 
 function filter<T>(condition: (value: T) => AsyncBool) {
@@ -207,9 +207,10 @@ function filter<T>(condition: (value: T) => AsyncBool) {
         })
     }
 }
-{
+
+async function testFilter() {
     const obs = fromRegisterNumber(temp.temperature, 1)
-    obs.pipe(
+    await obs.pipe(
         map(async reg => await reg.read()),
         filter(t => t > 30)
     ).subscribe(t => console.log("too hot!"))
@@ -230,11 +231,18 @@ function delay<T>(duration: number) {
     }
 }
 
-{
+async function testDelay() {
     const obs = fromRegisterNumber(temp.temperature, 1)
-    obs.pipe(
+    await obs.pipe(
         map(async reg => await reg.read()),
         delay(100),
         filter(t => t > 30)
     ).subscribe(t => console.log("too hot!"))
 }
+
+await testObservable()
+await testObservables()
+await testRegisterNumber()
+await testMap()
+await testFilter()
+await testDelay()
