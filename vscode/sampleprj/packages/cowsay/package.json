@@ -31,8 +31,8 @@
     "scripts": {
         "setup": "devicescript init",
         "build": "devicescript build src/index.ts",
-        "watch": "devicescript devtools src/main.test.ts",
-        "test": "devicescript run -t src/main.test.ts",
+        "watch": "devicescript devtools src/main-test.ts",
+        "test": "devicescript run -t src/main-test.ts",
         "start": "yarn watch"
     }
 }
