@@ -1,0 +1,30 @@
+{
+    "name": "@devicescrippt/test",
+    "version": "0.0.0",
+    "private": false,
+    "dependencies": {},
+    "devDependencies": {
+        "@devicescript/cli": "*"
+    },
+    "scripts": {
+        "setup": "devicescript build",
+        "build:devicescript": "devicescript build",
+        "build": "yarn build:devicescript",
+        "watch:devicescript": "devicescript devtools src/main.ts",
+        "watch": "yarn watch:devicescript",
+        "start": "yarn watch"
+    },
+    "main": "./src/index.ts",
+    "license": "MIT",
+    "devicescript": {
+        "library": true
+    },
+    "files": [
+        "src/*.ts",
+        "devsconfig.json"
+    ],
+    "keywords": [
+        "devicescript"
+    ],
+    "author": "Microsoft"
+}

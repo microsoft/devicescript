@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "DeviceScript",
+            "type": "devicescript",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.ts",
+            "deviceId": "${command:deviceScriptSimulator}",
+            "stopOnEntry": false
+        }
+    ]
+}
