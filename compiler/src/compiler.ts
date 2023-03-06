@@ -3361,8 +3361,15 @@ class Program implements TopOpWriter {
             // console.log(e.stack)
         } else {
             debugger
-            this.reportError(stmt, "Internal error: " + e.message)
-            console.error(e.stack)
+            if (this.numErrors > 0) {
+                this.reportError(
+                    stmt,
+                    `confused by previous errors, bailing out (${e.message})`
+                )
+            } else {
+                this.reportError(stmt, "Internal error: " + e.message)
+                console.error(e.stack)
+            }
             e.terminateEmit = true
             throw e
         }
@@ -3840,30 +3847,39 @@ class Program implements TopOpWriter {
         const files = this.tree.getSourceFiles()
         this.mainFile = files[files.length - 1]
 
-        this.emitProgram(this.tree)
-
-        for (const p of this.procs) {
-            // all procs should be finalized by here
-            if (!p.mapVarOffset) oops(`proc ${p.name} not finalized`)
+        try {
+            this.emitProgram(this.tree)
+        } catch (e) {
+            // errors with terminateEmit set were already reported, swallow them
+            if (!e.terminateEmit) throw e
         }
 
-        const staticProcs: Record<string, boolean> = {}
-        for (const p of this.procs) {
-            if (!p.usesClosure) staticProcs[p.index + ""] = true
-        }
-        const funIsStatic = (idx: number) => staticProcs[idx + ""] == true
-        for (const p of this.procs) {
-            p.writer.makeFunctionsStatic(funIsStatic)
-        }
-
-        const { binary, dbg } = this.serialize()
-        this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg))
-        this.host.write(DEVS_SIZES_FILE, computeSizes(dbg))
-
-        // this file is tracked by --watch and should be written last
-        this.host.write(DEVS_BYTECODE_FILE, binary)
+        let binary: Uint8Array
+        let dbg: DebugInfo
 
         if (this.numErrors == 0) {
+            for (const p of this.procs) {
+                // all procs should be finalized by here
+                if (!p.mapVarOffset) oops(`proc ${p.name} not finalized`)
+            }
+
+            const staticProcs: Record<string, boolean> = {}
+            for (const p of this.procs) {
+                if (!p.usesClosure) staticProcs[p.index + ""] = true
+            }
+            const funIsStatic = (idx: number) => staticProcs[idx + ""] == true
+            for (const p of this.procs) {
+                p.writer.makeFunctionsStatic(funIsStatic)
+            }
+
+            ;({ binary, dbg } = this.serialize())
+
+            this.host.write(DEVS_DBG_FILE, JSON.stringify(dbg))
+            this.host.write(DEVS_SIZES_FILE, computeSizes(dbg))
+
+            // this file is tracked by --watch and should be written last
+            this.host.write(DEVS_BYTECODE_FILE, binary)
+
             try {
                 this.host?.verifyBytecode(binary, dbg)
             } catch (e) {
@@ -3875,8 +3891,8 @@ class Program implements TopOpWriter {
 
         return {
             success: this.numErrors == 0,
-            binary: binary,
-            dbg: dbg,
+            binary,
+            dbg,
             diagnostics: this.diagnostics,
             config: this.host.getConfig(),
         }
