@@ -10,7 +10,7 @@
         "setup": "devicescript build",
         "build:devicescript": "devicescript build",
         "build": "yarn build:devicescript",
-        "watch:devicescript": "devicescript devtools src/main.ts",
+        "watch:devicescript": "devicescript devtools",
         "watch": "yarn watch:devicescript",
         "start": "yarn watch"
     },

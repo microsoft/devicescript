@@ -375,10 +375,10 @@ async function rebuild(args: BuildReqArgs) {
     opts.quiet = true
 
     const res = await compileFile(args.filename, opts)
-    const binary = res.binary
 
     let deployStatus = ""
     if (args.deployTo && res.success) {
+        const binary = res.binary
         try {
             const service = deployService(args)
             await deployToService(service, binary)
