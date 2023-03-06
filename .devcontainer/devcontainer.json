@@ -1,29 +1,29 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.195.0/containers/cpp
 {
-	"name": "Node.js + C++",
-	"build": {
-		"dockerfile": "Dockerfile",
-		// Node v18
-		"args": { "VARIANT": "18" }
-	},
-	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
+    "name": "Node.js + C++",
+    "build": {
+        "dockerfile": "Dockerfile",
+        // Node v18
+        "args": { "VARIANT": "18" }
+    },
+    "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
 
-	// Set *default* container specific settings.json values on container create.
-	"settings": {},
+    // Set *default* container specific settings.json values on container create.
+    // "settings": {},
 
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"esbenp.prettier-vscode",
-		"ms-vscode.cpptools"
-	],
+    // Add the IDs of extensions you want installed when the container is created.
+    "customizations": {
+        "vscode": {
+            "extensions": ["esbenp.prettier-vscode", "ms-vscode.cpptools"]
+        }
+    },
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "gcc -v",
+    // Use 'postCreateCommand' to run commands after the container is created.
+    "postCreateCommand": "yarn setup",
 
-	// Comment out this line to run as root instead.
-	"remoteUser": "node"
-
+    // Comment out this line to run as root instead.
+    "remoteUser": "node"
 }

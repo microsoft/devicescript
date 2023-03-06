@@ -306,6 +306,8 @@ export async function compileFile(
     )
         throw new Error("./devsconfig.json file not found")
 
+    ensureDirSync(options.outDir || BINDIR)
+
     const folder = resolve(".")
     const { errors, buildConfig } = buildConfigFromDir(folder, options)
     const host = await getHost(buildConfig, options, folder)
@@ -384,19 +386,14 @@ export async function build(file: string, options: BuildOptions) {
     file = file || "src/main.ts"
     options.outDir = options.outDir || BINDIR
 
-    if (!existsSync(file)) {
-        // otherwise we throw
-        error(`${file} does not exist`)
-        return
-    }
-
-    // log(`building ${file}`)
-    ensureDirSync(options.outDir)
     try {
         await buildOnce(file, options)
     } catch (e) {
-        if (e.name === CompilationError.NAME)
-            process.exit(EXIT_CODE_COMPILATION_ERROR)
+        if (e.name !== CompilationError.NAME) {
+            error("exception: " + e.message)
+            verboseLog(e.stack)
+        }
+        process.exit(EXIT_CODE_COMPILATION_ERROR)
     }
 }
 

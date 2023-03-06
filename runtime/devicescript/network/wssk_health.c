@@ -491,7 +491,7 @@ static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
             state->fwdqueue = jd_queue_alloc(JD_USB_QUEUE_SIZE);
         }
         state->fwd_en = payload[0];
-        state->fwd_timer = (16 << 20) + now;
+        state->fwd_timer = (16 << 20) + now; // auto-disable in 16s
         LOG("fwd_en: %d", payload[0]);
     } else if (cmd == 0x91) {
         send_empty(0x91);
