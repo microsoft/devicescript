@@ -10,7 +10,7 @@
   ],
   "author": "Microsoft",
   "main": "./built/devicescript-dap.cjs",
-  "types": "./built/types/dap/src/dsdap.d.ts",
+  "types": "./built/types/dsdap.d.ts",
   "files": [
     "./built/**"
   ],

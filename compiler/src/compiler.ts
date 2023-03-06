@@ -2,11 +2,6 @@ import * as ts from "typescript"
 import { SyntaxKind as SK } from "typescript"
 
 import {
-    SystemReg,
-    SRV_DEVICE_SCRIPT_CONDITION,
-} from "../../runtime/jacdac-c/jacdac/dist/specconstants"
-
-import {
     stringToUint8Array,
     toHex,
     toUTF8,
@@ -78,6 +73,8 @@ import {
     computeSizes,
     LocalBuildConfig,
     ResolvedBuildConfig,
+    SystemReg,
+    SRV_DEVICE_SCRIPT_CONDITION,
 } from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"

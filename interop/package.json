@@ -12,7 +12,7 @@
   "author": "Microsoft",
   "main": "./built/devicescript-interop.node.cjs",
   "module": "./built/devicescript-interop.mjs",
-  "types": "./built/types/interop.d.ts",
+  "types": "./built/types/interop/src/interop.d.ts",
   "scripts": {
     "dist": "yarn install && yarn build",
     "build": "node ../build.js"
