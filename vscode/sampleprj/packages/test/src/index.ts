@@ -7,6 +7,7 @@ export enum TestState {
     Running,
     Passed,
     Error,
+    Ignored,
 }
 export class AssertionError extends Error {
     constructor(matcher: string, message: string) {
@@ -39,6 +40,27 @@ export class SuiteNode {
         for (const test of this.tests) {
             await test.run()
         }
+    }
+
+    private testsByState(testState: TestState): number {
+        return (
+            this.tests.filter(({ state }) => state === testState).length +
+            this.children.reduce<number>(
+                (prev, curr) => prev + curr.testsByState(testState),
+                0
+            )
+        )
+    }
+
+    async summary() {
+        const tests = this.testCount()
+        const passed = this.testsByState(TestState.Passed)
+        const error = this.testsByState(TestState.Error)
+        const ignored = this.testsByState(TestState.Ignored)
+
+        console.log(
+            `tests: ${tests}, passed: ${passed}, error: ${error}, ignore: ${ignored}`
+        )
     }
 }
 export class TestNode {
@@ -125,5 +147,6 @@ export class Expect<T> {
 async function runTests() {
     console.log(`running ${root.testCount()} tests`)
     await root.run()
+    await root.summary()
 }
 runTests()
