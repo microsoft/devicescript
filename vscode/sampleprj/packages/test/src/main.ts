@@ -9,7 +9,7 @@ describe("this is a test suite", function () {
         console.log(`hi (async)`)
     })
 
-    test("expect.toBe", async () => {
+    test("expect.toBe", () => {
         expect(() => {
             throw new Error("boom")
         }).toThrow()

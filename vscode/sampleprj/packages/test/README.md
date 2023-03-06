@@ -1,6 +1,6 @@
 # @devicescript/test
 
-This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
+Test Framework for [DeviceScript](https://microsoft.github.io/devicescript/).
 
 ## Project structures
 
