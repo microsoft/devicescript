@@ -9,12 +9,12 @@ import {
     NumFmtSpecial,
 } from "./bytecode"
 import { toHex } from "./jdutil"
-import { DebugInfo } from "./info"
+import { DebugInfo } from "@devicescript/interop"
 
 export * from "./bytecode"
 
 import type ts from "typescript"
-import { ResolvedBuildConfig } from "./archconfig"
+import { ResolvedBuildConfig } from "@devicescript/interop"
 import { CompileFlags } from "./compiler"
 
 export interface SMap<T> {

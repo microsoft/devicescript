@@ -91,11 +91,17 @@ function runTSC(args) {
 }
 
 const files = {
+    "interop/built/devicescript-interop.mjs": "interop/src/interop.ts",
+    "interop/built/devicescript-interop.node.cjs": "interop/src/interop.ts",
+
     "compiler/built/devicescript-compiler.js": "compiler/src/devicescript.ts",
     "compiler/built/devicescript-compiler.node.cjs":
         "compiler/src/devicescript.ts",
+
     "dap/built/devicescript-dap.cjs": "dap/src/dsdap.ts",
+
     "cli/built/devicescript-cli.cjs": "cli/src/cli.ts",
+
     "vscode/built/devicescript-vscode.js": "vscode/src/extension.ts",
     "vscode/built/devicescript-vscode-web.js": "vscode/src/web-extension.ts",
 }
@@ -217,6 +223,7 @@ async function main() {
             const t0 = Date.now()
             await runTSC([
                 "-b",
+                "interop/src",
                 "compiler/src",
                 "dap/src",
                 "cli/src",

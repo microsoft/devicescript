@@ -1,6 +1,4 @@
-import { DeviceConfig } from "./archconfig"
 import { decodeDcfg, decompileDcfg } from "./dcfg"
-import { SrcMapResolver } from "./debug"
 import {
     BinFmt,
     BUILTIN_OBJECT__VAL,
@@ -21,7 +19,13 @@ import {
     stmtIsFinal,
     StrIdx,
 } from "./format"
-import { DebugInfo, FunctionDebugInfo, RoleDebugInfo } from "./info"
+import {
+    DeviceConfig,
+    SrcMapResolver,
+    DebugInfo,
+    FunctionDebugInfo,
+    RoleDebugInfo,
+} from "@devicescript/interop"
 import {
     range,
     read32,

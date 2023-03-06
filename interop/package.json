@@ -1,8 +1,8 @@
 {
-  "name": "@devicescript/compiler",
+  "name": "@devicescript/interop",
   "private": false,
   "version": "1.2.3",
-  "description": "DeviceScript Compiler",
+  "description": "Interfaces for interaction with DeviceScript files",
   "keywords": [
     "devicescript",
     "jacdac",
@@ -10,9 +10,9 @@
     "embedded"
   ],
   "author": "Microsoft",
-  "main": "./built/devicescript-compiler.node.cjs",
-  "module": "./built/devicescript-compiler.js",
-  "types": "./built/types/compiler/src/devicescript.d.ts",
+  "main": "./built/devicescript-interop.node.cjs",
+  "module": "./built/devicescript-interop.mjs",
+  "types": "./built/types/interop.d.ts",
   "scripts": {
     "dist": "yarn install && yarn build",
     "build": "node ../build.js"
@@ -22,12 +22,8 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@types/fs-extra": "^9.0.13",
-    "@types/node": "^18.11.9",
-    "@devicescript/interop": "*",
     "esbuild": "^0.14.11",
-    "typescript": "^4.5.4",
-    "jacdac-ts": "*"
+    "typescript": "^4.5.4"
   },
   "dependencies": {},
   "publishConfig": {

@@ -75,11 +75,12 @@ import {
     SrcFile,
     srcMapEntrySize,
     ConstValue,
-} from "./info"
-import { computeSizes } from "./debug"
+    computeSizes,
+    LocalBuildConfig,
+    ResolvedBuildConfig,
+} from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
-import { LocalBuildConfig, ResolvedBuildConfig } from "./archconfig"
 import { constantFold, Folded, isTemplateOrStringLiteral } from "./constantfold"
 
 export const JD_SERIAL_HEADER_SIZE = 16

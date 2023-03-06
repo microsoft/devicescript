@@ -4,10 +4,15 @@ import {
     SrcLocation,
     srcMapEntrySize,
 } from "./info"
-import { assert, strcmp } from "./jdutil"
 
 function warn(msg: string) {
     return `\u001b[36m${msg}\u001b[0m`
+}
+
+function strcmp(a: string, b: string) {
+    if (a == b) return 0
+    if (a < b) return -1
+    else return 1
 }
 
 export interface StackFrame {
@@ -147,7 +152,7 @@ export class SrcMapResolver {
             let pos = srcmap[i]
             const len = srcmap[i + 1]
             let pc = srcmap[i + 2]
-            assert(pc >= 0 && len >= 0)
+            if (pc < 0 || len < 0) throw new Error("invalid srcmap entry")
 
             pc += prevPc
             pos += prevPos
