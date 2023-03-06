@@ -1,7 +1,7 @@
 {
     "name": "@devicescrippt/test",
     "version": "0.0.0",
-    "private": false,
+    "private": true,
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*"

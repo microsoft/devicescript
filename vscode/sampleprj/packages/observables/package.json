@@ -2,7 +2,7 @@
     "name": "@devicescript/observables",
     "version": "1.0.0",
     "main": "./src/index.ts",
-    "private": false,
+    "private": true,
     "description": "DeviceScript package sample implementing the famous cow say rendering engine.",
     "license": "MIT",
     "keywords": [
