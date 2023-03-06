@@ -201,6 +201,29 @@ export function delay<T>(duration: number): OperatorFunction<T, T> {
     }
 }
 
+export function span<V, A>(
+    accumulator: (acc: A, value: V, index: number) => A | Promise<A>,
+    seed: A
+): OperatorFunction<V, A> {
+    return function operator(source: Observable<V>) {
+        return new Observable<A>(observer => {
+            let last: A = undefined
+            let index = 0
+            const subscription = source.subscribe(async v => {
+                if (last === undefined) {
+                    last = seed
+                    index++
+                    observer(last)
+                } else {
+                    last = await accumulator(last, v, index++)
+                    observer(last)
+                }
+            })
+            return subscription
+        })
+    }
+}
+
 export function threshold(value: number): OperatorFunction<number, number> {
     return function operator(source: Observable<number>) {
         return new Observable<number>(observer => {
