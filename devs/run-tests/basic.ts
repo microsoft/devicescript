@@ -574,7 +574,7 @@ function jsonTest(js: string, indent?: number) {
 
 function testDeflUndefinedForNumber(f: number, g?: number) {
     isEq(f, 3)
-    ds.assert(g==null, "n3")
+    ds.assert(g == null, "n3")
     ds.assert(g === undefined, "n3")
 }
 
@@ -732,6 +732,22 @@ function testAnySwitch() {
     switchLoop()
 }
 
+class AssertionError extends RangeError {
+    constructor(matcher: string, message: string) {
+        super()
+        this.name = "AssertionError"
+        this.message = `${matcher}: ${message}`
+    }
+}
+
+function testBuiltinExtends() {
+    const a = new AssertionError("a", "b")
+    ds.assert(a instanceof Error)
+    ds.assert(a instanceof RangeError)
+    ds.assert(a instanceof AssertionError)
+    ds.assert(a.name === "AssertionError")
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -756,6 +772,6 @@ testClass()
 testFunName()
 testJSON()
 testAnySwitch()
+testBuiltinExtends()
 
 console.log("all OK")
-

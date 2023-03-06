@@ -112,6 +112,7 @@ type TsFunctionDecl =
     | ts.FunctionDeclaration
     | ts.MethodDeclaration
     | ts.ClassDeclaration
+    | ts.VariableDeclaration
 
 class Cell {
     _index: number
@@ -323,12 +324,22 @@ class FunctionDecl extends Cell {
 
     numCtorArgs: number
     baseCtor: FunctionDecl
+    builtinName: string
 
     constructor(definition: TsFunctionDecl, scope: FunctionDecl[]) {
         super(definition, scope)
     }
     emit(wr: OpWriter): Value {
         const prog = wr.prog as Program
+        if (this.builtinName) {
+            const res = prog.emitBuiltInConstByName(this.builtinName)
+            if (!res)
+                throwError(
+                    this.definition,
+                    `can't emit builtin ${this.builtinName}`
+                )
+            return res
+        }
         return prog.getFunctionProc(this).reference(wr)
     }
     toString() {
@@ -347,10 +358,6 @@ function unit() {
 
 interface DsSymbol extends ts.Symbol {
     __ds_cell: Cell
-}
-
-function symCell(sym: ts.Symbol) {
-    return (sym as DsSymbol)?.__ds_cell
 }
 
 class Procedure {
@@ -1684,6 +1691,8 @@ class Program implements TopOpWriter {
         fundecl.proc = new Procedure(this, fundecl.getName(), stmt)
         if (ts.isClassDeclaration(stmt))
             return this.emitCtor(stmt, fundecl.proc)
+        else if (ts.isVariableDeclaration(stmt))
+            oops(`function is builtin ${fundecl.builtinName}`)
         else return this.emitFunction(stmt, fundecl.proc)
     }
 
@@ -1784,7 +1793,7 @@ class Program implements TopOpWriter {
                         .map(e => this.checker.getTypeAtLocation(e))
                     if (tps.length != 1)
                         throwError(cls, "only single extends supported")
-                    baseDecl = symCell(tps[0].symbol) as FunctionDecl
+                    baseDecl = this.symCell(tps[0].symbol) as FunctionDecl
                     if (!(baseDecl instanceof FunctionDecl))
                         throwError(cls, "invalid extends")
                 }
@@ -1871,14 +1880,17 @@ class Program implements TopOpWriter {
 
             for (const fdecl of this.functions) {
                 if (fdecl.baseCtor && fdecl.proc) {
-                    assert(!!fdecl.baseCtor.proc)
-                    this.withLocation(fdecl.definition, wr =>
+                    this.withLocation(fdecl.definition, wr => {
                         wr.emitCall(
                             wr.objectMember(BuiltInString.SETPROTOTYPEOF),
                             fdecl.proc.dotPrototype(wr),
-                            fdecl.baseCtor.proc.dotPrototype(wr)
+                            fdecl.baseCtor.builtinName
+                                ? this.emitBuiltInConstByName(
+                                      fdecl.baseCtor.builtinName + ".prototype"
+                                  )
+                                : fdecl.baseCtor.proc.dotPrototype(wr)
                         )
-                    )
+                    })
                 }
             }
 
@@ -2565,7 +2577,7 @@ class Program implements TopOpWriter {
         if (call.callexpr.kind == SK.SuperKeyword) {
             const wr = this.writer
             const baseCls = this.getSymAtLocation(call.callexpr)
-            const baseDecl = symCell(baseCls) as FunctionDecl
+            const baseDecl = this.symCell(baseCls) as FunctionDecl
             assert(baseDecl instanceof FunctionDecl)
             const bound = wr.emitExpr(
                 Op.EXPR2_BIND,
@@ -2601,8 +2613,47 @@ class Program implements TopOpWriter {
         return sym
     }
 
+    private symCell(sym: ts.Symbol) {
+        const cell = (sym as DsSymbol)?.__ds_cell
+        if (!cell && sym?.valueDeclaration) {
+            const name = this.symName(sym)
+            const decl = sym.valueDeclaration
+            if (
+                name[0] == "#" &&
+                ts.isVariableDeclaration(decl) &&
+                builtInObjByName.hasOwnProperty(name)
+            ) {
+                const tp = this.checker.getTypeOfSymbolAtLocation(sym, decl)
+                const sigs = tp.getCallSignatures()
+                if (sigs.length > 0) {
+                    const fn = new FunctionDecl(
+                        sym.valueDeclaration as TsFunctionDecl,
+                        []
+                    )
+                    fn.builtinName = name
+                    fn.numCtorArgs = sigs[0].getParameters().length
+                    this.symSetCell(sym, fn)
+                    if (this.symName(tp.symbol) == name + "Constructor") {
+                        this.symSetCell(tp.symbol, fn)
+                        if (this.flags.traceBuiltin)
+                            trace(
+                                "traceBuiltin: ctor ",
+                                name,
+                                this.symName(tp.symbol)
+                            )
+                    } else {
+                        if (this.flags.traceBuiltin)
+                            trace("traceBuiltin: ctor ", name)
+                    }
+                    return fn
+                }
+            }
+        }
+        return cell
+    }
+
     private getCellAtLocation(node: ts.Node) {
-        return symCell(this.getSymAtLocation(node, true))
+        return this.symCell(this.getSymAtLocation(node, true))
     }
 
     private getVarAtLocation(node: ts.Node) {
@@ -2671,7 +2722,10 @@ class Program implements TopOpWriter {
     }
 
     private emitBuiltInConst(expr: ts.Expression) {
-        const nodeName = this.nodeName(expr)
+        return this.emitBuiltInConstByName(this.nodeName(expr))
+    }
+
+    emitBuiltInConstByName(nodeName: string) {
         if (!nodeName) return null
         switch (nodeName) {
             case "#ds_impl":
