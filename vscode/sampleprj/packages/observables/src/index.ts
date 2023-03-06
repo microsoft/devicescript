@@ -178,6 +178,7 @@ export function filter<T>(condition: (value: T) => AsyncBool) {
     }
 }
 
+// TODO: michal
 function setTimeout(fn: () => void, timeout: number): void {}
 
 export function delay<T>(duration: number) {
