@@ -27,6 +27,13 @@ function dateFromTimeKey(t: string) {
     return new Date((1e10 - parseInt(t.slice(0, 10))) * 1000)
 }
 
+function urlQuery(url: string, args?: Record<string, string | number>) {
+    const query = Object.keys(args || {})
+        .filter(k => args[k] !== undefined)
+        .map(k => `${k}=${encodeURIComponent(args[k])}`)
+    return query?.length ? `${url}?${query.join("&")}` : url
+}
+
 export class CloudManager extends JDNode {
     private _devices: CloudDevice[]
     private _scripts: CloudScript[]
@@ -202,11 +209,12 @@ export class CloudManager extends JDNode {
         opts?: {
             method: "GET" | "POST" | "PATCH" | "DELETE" | "PUT"
             body?: any
+            query?: Record<string, string | number>
         }
     ) {
         if (!this.token) return undefined
 
-        const { body } = opts || {}
+        const { query, body } = opts || {}
         const options: RequestInit = {
             method: opts?.method || "GET",
             headers: {
@@ -217,7 +225,7 @@ export class CloudManager extends JDNode {
         if (body)
             (options.headers as any)["Content-Type"] =
                 "application/json; charset=utf-8"
-        const route = `${this.apiRoot}/api/${path}`
+        const route = urlQuery(`${this.apiRoot}/api/${path}`, query)
         const resp = await fetch(route, options)
         if (!resp.ok) {
             console.debug(`${options.method} ${route} -> ${resp.statusText}`, {
@@ -334,6 +342,19 @@ export interface CloudDeviceConnectionInfo {
     expires: number
 }
 
+export interface CloudTelemetry {
+    brainId: string
+    sensorId: string
+    srv: string
+    srvIdx: number
+    ms: number
+    avg: number
+    min: number
+    max: number
+    nsampl: number
+    dur: number
+}
+
 export class CloudDevice extends CloudNode<CloudDeviceData> {
     constructor(manager: CloudManager, data: CloudDeviceData) {
         super(manager, "devices", data)
@@ -420,6 +441,24 @@ export class CloudDevice extends CloudNode<CloudDeviceData> {
         return await this.manager.fetchJSON(`devices/${this.data.id}/fwd`, {
             method: "GET",
         })
+    }
+
+    async telemetry(
+        start?: number,
+        stop?: number,
+        first?: number
+    ): Promise<CloudTelemetry[]> {
+        return await this.manager.fetchJSON(
+            `devices/${this.data.id}/telemetry`,
+            {
+                query: {
+                    start,
+                    stop,
+                    first,
+                },
+                method: "GET",
+            }
+        )
     }
 }
 
