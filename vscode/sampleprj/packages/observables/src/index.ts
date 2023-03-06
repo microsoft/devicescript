@@ -4,7 +4,6 @@ import { AsyncVoid } from "@devicescript/core"
 // https://steveholgado.com/understanding-observables/#assumptions
 // + some rxjs
 
-export type AsyncBool = boolean | Promise<boolean>
 export type Subscription = {
     unsubscribe: () => AsyncVoid
 }
@@ -152,7 +151,14 @@ function pipeFromArray<T, R>(
     }
 }
 
-export function map<T, R>(converter: (value: T) => R | Promise<R>) {
+/**
+ * An observable operator that contains streamed values.
+ * @param converter function to converts the observed value into a new value
+ * @returns observable operator to be used in pipe
+ */
+export function map<T, R>(
+    converter: (value: T) => R | Promise<R>
+): OperatorFunction<T, R> {
     return function operator(source: Observable<T>) {
         return new Observable<R>(observer => {
             const subscription = source.subscribe(async v => {
@@ -163,12 +169,13 @@ export function map<T, R>(converter: (value: T) => R | Promise<R>) {
         })
     }
 }
-
-export function filter<T>(condition: (value: T) => AsyncBool) {
+export function filter<T>(
+    condition: (value: T) => boolean
+): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(observer => {
             const subscription = source.subscribe(async v => {
-                const test = await condition(v)
+                const test = condition(v)
                 if (test) {
                     await observer(v)
                 }
@@ -181,13 +188,31 @@ export function filter<T>(condition: (value: T) => AsyncBool) {
 // TODO: michal
 function setTimeout(fn: () => void, timeout: number): void {}
 
-export function delay<T>(duration: number) {
+export function delay<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(observer => {
-            const subscription = source.subscribe(async v => {
-                setTimeout(() => {
-                    observer(v)
+            const subscription = source.subscribe(v => {
+                setTimeout(async () => {
+                    await observer(v)
                 }, duration)
+            })
+            return subscription
+        })
+    }
+}
+
+export function threshold(value: number): OperatorFunction<number, number> {
+    return function operator(source: Observable<number>) {
+        return new Observable<number>(observer => {
+            let lastv: number = undefined
+            const subscription = source.subscribe(v => {
+                if (lastv === undefined) {
+                    v = lastv
+                    observer(v)
+                } else if (Math.abs(v - lastv) >= value) {
+                    v = lastv
+                    observer(v)
+                }
             })
             return subscription
         })
