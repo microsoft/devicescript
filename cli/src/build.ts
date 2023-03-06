@@ -306,7 +306,7 @@ export async function compileFile(
     )
         throw new Error("./devsconfig.json file not found")
 
-    ensureDirSync(options.outDir)
+    ensureDirSync(options.outDir || BINDIR)
 
     const folder = resolve(".")
     const { errors, buildConfig } = buildConfigFromDir(folder, options)
