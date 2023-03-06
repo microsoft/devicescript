@@ -1,5 +1,5 @@
 import { debug, fatal, GENDIR, LIBDIR, log } from "./command"
-import { dirname, join, resolve } from "node:path"
+import { basename, dirname, join, resolve } from "node:path"
 import {
     pathExistsSync,
     writeFileSync,
@@ -11,7 +11,7 @@ import {
 } from "fs-extra"
 import { build } from "./build"
 import { spawnSync, execSync } from "node:child_process"
-import { assert, clone, JSONTryParse, randomUInt } from "jacdac-ts"
+import { assert, clone, randomUInt } from "jacdac-ts"
 import { addReqHandler } from "./sidedata"
 import type {
     SideAddBoardReq,
@@ -465,13 +465,15 @@ export async function addNpm(options: AddNpmOptions) {
     const files = clone(npmFiles)
     const pkg = files["package.json"] as any
     pkg.license = options.license ?? "MIT"
-    let uname = execCmd("git config --get user.name")
-    if (uname) {
-        uname += " <" + execCmd("git config --get user.email") + ">"
-        pkg.author = uname
+    if (!pkg.author) {
+        let uname = execCmd("git config --get user.name")
+        if (uname) {
+            uname += " <" + execCmd("git config --get user.email") + ">"
+            pkg.author = uname
+        }
     }
 
-    if (pathExistsSync(".git")) {
+    if (!pkg.repository && pathExistsSync(".git")) {
         const url = execCmd("git remote get-url origin")
         if (url)
             pkg.repository = {
@@ -479,7 +481,9 @@ export async function addNpm(options: AddNpmOptions) {
                 url: url,
             }
     }
-
+    if (!pkg.version) pkg.version = "0.0.0"
+    if (!pkg.name) pkg.name = `devicescript-${basename(__dirname)}`
+    delete pkg.private
     let lst = await readdir("src")
     lst = lst.filter(f => !f.startsWith("main") && f.endsWith(".ts"))
     for (const fn of lst) {
@@ -491,10 +495,10 @@ export async function addNpm(options: AddNpmOptions) {
 
     const newpkg = JSON.parse(readFileSync("package.json", "utf-8"))
 
-    return finishAdd(
-        `Added npm support; author: ${newpkg.author}, license: ${newpkg.license}`,
-        ["package.json", "src/index.ts"]
-    )
+    return finishAdd(`Prepared package.json for publishing, please review.`, [
+        "package.json",
+        "src/index.ts",
+    ])
 }
 
 export function initAddCmds() {
