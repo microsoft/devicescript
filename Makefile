@@ -23,7 +23,7 @@ vscode-pkg:
 	cd vscode && yarn package
 
 clean:
-	rm -rf built compiler/built compiler/src/prelude.ts cli/built dap/built vscode/built
+	rm -rf built interop/built compiler/built compiler/src/prelude.ts cli/built dap/built vscode/built
 	$(MAKE) -C runtime clean
 
 full-clean: clean

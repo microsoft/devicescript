@@ -5,7 +5,7 @@ import {
     PinFunctionInfo,
     PinFunction,
     normalizeDeviceConfig,
-} from "./archconfig"
+} from "@devicescript/interop"
 import { DeviceCatalog, deviceCatalogImage, unique } from "jacdac-ts"
 import { parseAnyInt } from "./dcfg"
 import { resolveBuildConfig } from "./specgen"

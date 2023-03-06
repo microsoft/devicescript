@@ -1,6 +1,6 @@
 // This is in separate file to speed-up intellisense (TS Server gets confused about the type of the JSON file)
 
-import { RepoInfo } from "./archconfig"
+import { RepoInfo } from "@devicescript/interop"
 import jacdacDefaultSpecificationsData from "../../runtime/jacdac-c/jacdac/dist/services.json"
 import boardsJson from "./boards.json"
 

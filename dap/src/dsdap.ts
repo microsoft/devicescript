@@ -20,15 +20,13 @@ import {
     Image,
     SrcFile,
     SrcMapEntry,
-} from "@devicescript/compiler"
-import {
     DevsDbgFunIdx,
     DevsDbgReg,
     DevsDbgStepFlags,
     DevsDbgSuspensionType,
     DevsDbgValueSpecial,
     DevsDbgValueTag,
-} from "../../runtime/jacdac-c/jacdac/dist/specconstants"
+} from "@devicescript/compiler"
 import {
     assert,
     delay,

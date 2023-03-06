@@ -29,7 +29,7 @@ import {
     DevsDbgString,
     DevsDbgValueSpecial,
     DevsDbgStepFlags,
-} from "../../runtime/jacdac-c/jacdac/dist/specconstants"
+} from "@devicescript/compiler"
 
 export interface DevsKeyValue {
     key: DevsValue | string

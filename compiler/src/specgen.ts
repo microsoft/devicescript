@@ -3,7 +3,7 @@ import {
     DeviceConfig,
     LocalBuildConfig,
     ResolvedBuildConfig,
-} from "./archconfig"
+} from "@devicescript/interop"
 import {
     SRV_BOOTLOADER,
     SRV_BRIDGE,

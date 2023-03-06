@@ -16,6 +16,7 @@
         "localboards1": "node ./cli/devicescript ctool --local-boards .. --fetch-boards compiler/src/boards.json"
     },
     "workspaces": [
+        "interop",
         "compiler",
         "cli",
         "runtime/devicescript-vm",

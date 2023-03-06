@@ -14,7 +14,7 @@ import {
     BuiltInObject,
     FunctionFlag,
 } from "./format"
-import { SrcLocation, srcMapEntrySize } from "./info"
+import { SrcLocation, srcMapEntrySize } from "@devicescript/interop"
 import { assert, write32, write16, read32, read16 } from "./jdutil"
 import { assertRange, oops } from "./util"
 
