@@ -61,7 +61,6 @@ function toHex(n: number): string {
 
 function ignoreSpec(info: jdspec.ServiceSpec) {
     return (
-        info.shortId === "_system" ||
         info.status === "deprecated" ||
         [
             SRV_CONTROL,
@@ -82,8 +81,6 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
 }
 
 export function specToDeviceScript(info: jdspec.ServiceSpec): string {
-    if (ignoreSpec(info)) return undefined
-
     let r = ""
 
     for (const en of Object.values(info.enums)) {
@@ -94,6 +91,8 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         }
         r += "}\n\n"
     }
+
+    if (ignoreSpec(info)) return r
 
     const clname = upperCamel(info.camelName)
     const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"

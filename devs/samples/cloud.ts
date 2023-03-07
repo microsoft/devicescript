@@ -1,3 +1,4 @@
+/*
 import * as ds from "@devicescript/core"
 import { cloud } from "@devicescript/core"
 
@@ -24,3 +25,4 @@ cloud.onMethod("bar", async (a) => {
 cloud.onMethod("bar2", async () => {
     return [108]
 })
+*/

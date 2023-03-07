@@ -9,12 +9,12 @@ const nm = await dc.measurementName.read() // read string
 
 const sw = new ds.Switch()
 const curr = await sw.active.read() // active matches something in _system
-sw.active.onChange(() => {})
+sw.active.subscribe(() => {})
 
 const wifi = new ds.Wifi()
 const theip = await wifi.ipAddress.read()
 const themac = await wifi.eui48.read()
-wifi.eui48.onChange(() => {})
+wifi.eui48.subscribe(() => {})
 
 const dig = new ds.SevenSegmentDisplay()
 await dig.digits.write(hex`00 11`)

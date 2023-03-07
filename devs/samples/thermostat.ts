@@ -11,8 +11,7 @@ heater.onDisconnected(() => {
     console.log("heater lost")
 })
 
-thermometer.temperature.onChange(5, async () => {
-    const t = await thermometer.temperature.read()
+thermometer.temperature.subscribe(async t => {
     if (t < 21) {
         await heater.active.write(true)
     } else {

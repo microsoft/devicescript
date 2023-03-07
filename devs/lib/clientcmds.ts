@@ -95,17 +95,19 @@ ds.Register.prototype.subscribe = function subscribe<T>(
     handler: (v: T, reg: ds.Register<T>) => void
 ) {
     const role = this.role
-    if (!role._changeHandlers) {
-        role._changeHandlers = {}
-    }
+    if (!role._changeHandlers) role._changeHandlers = {}
     const key = this.code + ""
-    const lst = role._changeHandlers[key] || (role._changeHandlers[key] = [])
-    lst.push(handler)
+    let handlers = role._changeHandlers[key]
+    if (!handlers) {
+        handlers = []
+        role._changeHandlers[key] = handlers
+    }
+    handlers.push(handler)
     return () => {
-        const idx = lst.indexOf(handler)
+        const idx = handlers.indexOf(handler)
         if (idx >= 0) {
-            lst.insert(idx, -1)
-            if (lst.length == 0) delete role._changeHandlers[key]
+            handlers.insert(idx, -1)
+            if (!handlers.length) delete role._changeHandlers[key]
         }
     }
 }
@@ -147,16 +149,23 @@ ds.Event.prototype.subscribe = function subscribe<T>(
     this: ds.Event<T>,
     handler: (v: T, reg: ds.Event<T>) => void
 ) {
-    const eventHandlers =
-        this.role._eventHandlers || (this.role._eventHandlers = {})
+    let eventHandlers = this.role._eventHandlers
+    if (!eventHandlers) {
+        eventHandlers = {}
+        this.role._eventHandlers = eventHandlers
+    }
     const k = this.code + ""
-    const handlers = eventHandlers[k] || (eventHandlers[k] = [])
+    let handlers = eventHandlers[k]
+    if (!handlers) {
+        handlers = []
+        eventHandlers[k] = handlers
+    }
     handlers.push(handler)
     return () => {
         const idx = handlers.indexOf(handler)
         if (idx >= 0) {
             handlers.insert(idx, -1)
-            if (handlers.length == 0) delete eventHandlers[k]
+            if (!handlers.length) delete eventHandlers[k]
         }
     }
 }

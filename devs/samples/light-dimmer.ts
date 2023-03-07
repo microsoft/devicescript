@@ -5,14 +5,13 @@ const led = new ds.LightBulb()
 const relay = new ds.Relay()
 let p
 
-pot.position.onChange(0.02, async () => {
-    p = await pot.position.read()
+pot.position.subscribe(async p => {
     console.log("tick", p)
     await led.brightness.write(p)
 })
 
-led.brightness.onChange(0.1, async () => {
-    await relay.active.write(!(await relay.active.read()))
+led.brightness.subscribe(async b => {
+    await relay.active.write(b < 0.2)
 })
 
 ds.everyMs(200, async () => {
