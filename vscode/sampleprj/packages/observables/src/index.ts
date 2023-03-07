@@ -512,27 +512,6 @@ export function span<V, A>(
     }
 }
 
-export function threshold(value: number): OperatorFunction<number, number> {
-    return function operator(source: Observable<number>) {
-        return new Observable<number>(async ({ error, complete, next }) => {
-            let lastv: number = undefined
-            return await source.subscribe({
-                error,
-                complete,
-                next: async v => {
-                    if (lastv === undefined) {
-                        v = lastv
-                        await next(v)
-                    } else if (Math.abs(v - lastv) >= value) {
-                        v = lastv
-                        await next(v)
-                    }
-                },
-            })
-        })
-    }
-}
-
 export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(({ error, next, complete }) => {
@@ -551,19 +530,24 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
     }
 }
 
-export default function skipRepeats<T>(
+function equality<T>(l: T, r: T) {
+    return l === r
+}
+
+export function skipRepeats<T>(
     equals?: (left: T, right: T) => boolean
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(async ({ error, next, complete }) => {
-            let lastValue: any = {}
-            const eq: (left: T, right: T) => boolean =
-                equals || ((l: T, r: T) => l === r)
+            let lastValue: any
+            let hasValue = false
+            const eq = equals || equality
             return await source.subscribe({
                 error,
                 complete,
                 next: async value => {
-                    if (!eq(lastValue, value)) {
+                    if (!hasValue || !eq(lastValue, value)) {
+                        hasValue = true
                         lastValue = value
                         await next((lastValue = value))
                     }
@@ -571,4 +555,8 @@ export default function skipRepeats<T>(
             })
         })
     }
+}
+
+export function threshold(value: number): OperatorFunction<number, number> {
+    return skipRepeats((l, r) => Math.abs(l - r) < value)
 }
