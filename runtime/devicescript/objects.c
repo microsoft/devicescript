@@ -991,9 +991,9 @@ int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int coun
 
     if (count < 0) {
         count = -count;
-        memmove(arr->data + idx, arr->data + idx + count, trailing - count);
+        memmove(arr->data + idx, arr->data + idx + count, sizeof(value_t) * (trailing - count));
     } else {
-        memmove(arr->data + idx + count, arr->data + idx, trailing);
+        memmove(arr->data + idx + count, arr->data + idx, sizeof(value_t) * trailing);
         memset(arr->data + idx, 0, count * sizeof(value_t));
     }
     arr->length = newlen;

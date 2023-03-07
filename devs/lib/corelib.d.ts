@@ -247,6 +247,18 @@ interface Array<T> {
         ) => U,
         initialValue: U
     ): U
+
+    /**
+     * Removes the first element from an array and returns it.
+     * If the array is empty, undefined is returned and the array is not modified.
+     */
+    shift(): T | undefined
+
+    /**
+     * Inserts new elements at the start of an array, and returns the new length of the array.
+     * @param items Elements to insert at the start of the array.
+     */
+    unshift(...items: T[]): number
 }
 
 interface ArrayConstructor {
@@ -257,10 +269,6 @@ declare var Array: ArrayConstructor
 
 declare namespace console {
     function log(...args: any[]): void
-}
-
-declare namespace Date {
-    function now(): number
 }
 
 interface Math {
@@ -456,18 +464,18 @@ interface PromiseConstructor {
     /**
      * Do not use.
      */
-    new <T>(): Promise<T>;
+    new <T>(): Promise<T>
 }
 
-declare var Promise: PromiseConstructor;
+declare var Promise: PromiseConstructor
 
 /**
  * Recursively unwraps the "awaited type" of a type. Non-promise "thenables" should resolve to `never`. This emulates the behavior of `await`.
  */
-type Awaited<T> =
-    T extends null | undefined ? T : // special case for `null | undefined` when not in `--strictNullChecks` mode
-        T extends object & { then(onfulfilled: infer F, ...args: infer _): any } ? // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped
-            F extends ((value: infer V, ...args: infer _) => any) ? // if the argument to `then` is callable, extracts the first argument
-                Awaited<V> : // recursively unwrap the value
-                never : // the argument to `then` was not callable
-        T; // non-object or non-thenable
+type Awaited<T> = T extends null | undefined
+    ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
+    : T extends object & { then(onfulfilled: infer F, ...args: infer _): any } // `await` only unwraps object types with a callable `then`. Non-object types are not unwrapped
+    ? F extends (value: infer V, ...args: infer _) => any // if the argument to `then` is callable, extracts the first argument
+        ? Awaited<V> // recursively unwrap the value
+        : never // the argument to `then` was not callable
+    : T // non-object or non-thenable

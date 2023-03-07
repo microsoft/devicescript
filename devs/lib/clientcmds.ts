@@ -134,10 +134,17 @@ async function handleCloudCommand(pkt: ds.Packet) {
     const h = cloud._cloudHandlers[cmd]
     if (h) {
         const r = await h(...vals)
-        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.OK, ...r)
+        await cloud.ackCloudCommand(
+            seqNo,
+            ds.CloudAdapterCommandStatus.OK,
+            ...r
+        )
     } else {
         // TODO Busy? store fiber ref and possibly kill?
-        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.NotFound)
+        await cloud.ackCloudCommand(
+            seqNo,
+            ds.CloudAdapterCommandStatus.NotFound
+        )
     }
 }
 
@@ -218,6 +225,19 @@ Array.prototype.pop = function () {
     const r = this[length]
     this.insert(length, -1)
     return r
+}
+
+Array.prototype.shift = function () {
+    if (this.length === 0) return undefined
+    const r = this[0]
+    this.insert(0, -1)
+    return r
+}
+
+Array.prototype.unshift = function (...elts: any[]) {
+    this.insert(0, elts.length)
+    for (let i = 0; i < elts.length; ++i) this[i] = elts[i]
+    return this.length
 }
 
 Array.prototype.indexOf = function (elt, from) {

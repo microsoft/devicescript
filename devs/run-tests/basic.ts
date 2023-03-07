@@ -748,7 +748,6 @@ function testBuiltinExtends() {
     ds.assert(a.name === "AssertionError")
 }
 
-
 interface XYZ {
     x: number
     y: string
@@ -773,7 +772,47 @@ function testDestructArg() {
     foo({ x: 1, y: "foo" })
 }
 
+async function testSetTimeout() {
+    let q = 1
+    let id = 0
 
+    await ds.sleepMs(1)
+
+    setTimeout(() => {
+        ds.assert(q === 1)
+        console.log(`clear ${id}`)
+        clearTimeout(id)
+        q = 2
+    }, 10)
+
+    setTimeout(() => {
+        ds.assert(q === 2)
+        q = 3
+    }, 31)
+
+    id = setTimeout(() => {
+        q = 17
+    }, 32)
+
+    await ds.sleepMs(60)
+    ds.assert(q === 3)
+
+    id = setInterval(() => {
+        q = q + 1
+        if (q === 5)
+            clearInterval(id)
+    }, 5)
+
+    await ds.sleepMs(60)
+    ds.assert(q === 5)
+}
+
+function testShift() {
+    const arr = ["baz", ds._id("foo") + "bar"]
+    ds.assert(arr.shift() === "baz")
+    ds.assert(arr.shift() === "foobar")
+    ds.assert(arr.shift() === undefined)
+}
 
 testFlow()
 if (x !== 42) _panic(10)
@@ -801,5 +840,7 @@ testJSON()
 testAnySwitch()
 testBuiltinExtends()
 testDestructArg()
+testShift()
+await testSetTimeout()
 
 console.log("all OK")

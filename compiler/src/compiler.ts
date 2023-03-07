@@ -2437,7 +2437,16 @@ class Program implements TopOpWriter {
                     (ts.isVariableDeclarationList(d.parent) &&
                         ts.isSourceFile(d.parent.parent.parent))
                 ) {
-                    if (["parseInt", "parseFloat"].indexOf(r) >= 0)
+                    if (
+                        [
+                            "parseInt",
+                            "parseFloat",
+                            "setTimeout",
+                            "clearTimeout",
+                            "setInterval",
+                            "clearInterval",
+                        ].indexOf(r) >= 0
+                    )
                         return "#ds." + r
                     return "#" + r
                 }
@@ -2503,7 +2512,7 @@ class Program implements TopOpWriter {
                     this.compileFormat(expr.arguments)
                 )
                 return unit()
-            case "Date.now":
+            case "ds.millis":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)
 
             case "Buffer.getAt": {
