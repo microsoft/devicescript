@@ -1,12 +1,12 @@
 import { debug, fatal, GENDIR, LIBDIR, log } from "./command"
 import { basename, dirname, join, resolve } from "node:path"
+import { parse } from "jsonc-parser"
 import {
     pathExistsSync,
     writeFileSync,
     writeJSONSync,
     readFileSync,
     ensureDirSync,
-    readJSONSync,
     readdir,
 } from "fs-extra"
 import { build } from "./build"
@@ -271,6 +271,12 @@ export interface InitOptions {
     force?: boolean
     spaces?: number
     install?: boolean
+}
+
+function readJSONSync(fn: string) {
+    const text = readFileSync(fn, { encoding: "utf-8" })
+    const res = parse(text)
+    return res
 }
 
 function patchJSON(fn: string, data: any) {
