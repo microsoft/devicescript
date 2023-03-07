@@ -1,7 +1,6 @@
 {
     "name": "@devicescript/test",
     "version": "0.0.0",
-    "private": true,
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*"
@@ -20,6 +19,11 @@
     "license": "MIT",
     "devicescript": {
         "library": true
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "vscode/sampleprj/packages/test"
     },
     "files": [
         "src/*.ts",
