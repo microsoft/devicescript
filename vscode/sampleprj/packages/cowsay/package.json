@@ -30,9 +30,12 @@
     },
     "scripts": {
         "setup": "devicescript init",
-        "build": "devicescript build src/main.ts",
-        "watch": "devicescript devtools src/main.ts",
-        "test": "devicescript run -t src/main.ts",
+        "build:devicescript": "devicescript build src/main.ts",
+        "build": "yarn build:devicescript",
+        "watch:devicescript": "devicescript devtools",
+        "watch": "yarn watch:devicescript",
+        "test:devicescript": "devicescript run src/main.ts --test",
+        "test": "yarn test:devicescript",
         "start": "yarn watch"
     }
 }
