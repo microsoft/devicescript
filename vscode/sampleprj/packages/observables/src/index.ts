@@ -453,14 +453,14 @@ function pipeFromArray<T, R>(
  * @returns observable operator to be used in pipe
  */
 export function map<T, R>(
-    converter: (value: T, index: number) => R | Promise<R>
+    converter: (value: T, index: number) => R
 ): OperatorFunction<T, R> {
     return function operator(source: Observable<T>) {
         return new Observable<R>(async observer => {
             const { next } = observer
             let index = 0
             return await source.subscribe(async v => {
-                const r = await converter(v, index++)
+                const r = converter(v, index++)
                 await next(r)
             })
         })
@@ -563,7 +563,7 @@ export function skipRepeats<T>(
                     if (!hasValue || !eq(lastValue, value)) {
                         hasValue = true
                         lastValue = value
-                        await next((lastValue = value))
+                        await next(value)
                     }
                 },
             })

@@ -45,7 +45,7 @@ async function testRegisterNumber() {
 }
 
 async function testMap() {
-    of([1, 2, 3])
+    await of([1, 2, 3])
         .pipe(map(x => x * x))
         .subscribe(t => console.log(t))
 }
