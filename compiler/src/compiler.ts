@@ -98,7 +98,6 @@ const coreModule = "@devicescript/core"
 const builtInObjByName: Record<string, BuiltInObject> = {
     "#ds.": BuiltInObject.DEVICESCRIPT,
     "#ArrayConstructor.prototype": BuiltInObject.ARRAY_PROTOTYPE,
-    "#ds.RegisterNumber.prototype": BuiltInObject.DSREGISTER_PROTOTYPE,
 }
 BUILTIN_OBJECT__VAL.forEach((n, i) => {
     n = n.replace(/_prototype$/, ".prototype")
@@ -1776,13 +1775,6 @@ class Program implements TopOpWriter {
     private methodNames(sym: ts.Symbol) {
         const name = this.symName(sym)
         const names = [name]
-
-        //TODO: michal?
-        if (name == "#ds.RegisterNumber.onChange")
-            names.push(
-                "#ds.RegisterBuffer.onChange",
-                "#ds.RegisterBool.onChange"
-            )
 
         for (const baseSym of this.getBaseSyms(sym)) {
             names.push(this.symName(baseSym))

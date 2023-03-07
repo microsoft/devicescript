@@ -119,26 +119,6 @@ declare module "@devicescript/core" {
         wait(): Promise<void>
     }
 
-    /* TODO
-    export interface CloudAdapter {
-        onMethod(
-            name: string,
-            handler: (
-                v0: number,
-                v1: number,
-                v2: number,
-                v3: number,
-                v4: number,
-                v5: number,
-                v6: number,
-                v7: number
-            ) => AsyncVoid
-        ): void
-        _cloudHandlers: any
-    }
-    export const cloud: CloudAdapter
-    */
-
     /**
      * Format string. Best use backtick templates instead.
      */

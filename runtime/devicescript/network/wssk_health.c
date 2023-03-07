@@ -1,6 +1,7 @@
 #include "jd_network.h"
 #include "jacdac/dist/c/cloudconfiguration.h"
 #include "jacdac/dist/c/cloudadapter.h"
+#include "jacdac/dist/c/wssk.h"
 #include "devicescript.h"
 
 #include "interfaces/jd_usb.h"            // jd_net_disable_fwd() proto
@@ -53,7 +54,7 @@ REG_DEFINITION(                                               //
     REG_U32(JD_CLOUD_CONFIGURATION_REG_PUSH_WATCHDOG_PERIOD), //
 )
 
-#define CHD_SIZE 4
+#define CHD_SIZE 1
 
 static int send_ping(void);
 int wssk_publish(const void *msg, unsigned len);
@@ -101,30 +102,7 @@ static void clear_conn_string(srv_t *state) {
     state->device_id = NULL;
 }
 
-static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size);
-static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
-    if (size < CHD_SIZE)
-        goto too_short;
-
-    if (data[2] == 0) {
-        on_cmd_msg(state, data, size);
-    } else {
-        // forwarded frame
-        jd_frame_t *frame = (void *)data;
-        unsigned fsz = JD_FRAME_SIZE(frame);
-        if (fsz > size)
-            goto too_short;
-        frame = jd_memdup(data, fsz); // why do we copy here?
-        jd_send_frame_raw(frame);
-        // jd_rx_frame_received_loopback(frame);
-        jd_free(frame);
-    }
-    return;
-
-too_short:
-    LOG("too short frame: %d", size);
-    return;
-}
+static void on_msg(srv_t *state, uint8_t *data, unsigned size);
 
 void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
     srv_t *state = _wsskhealth_state;
@@ -320,7 +298,7 @@ void wsskhealth_process(srv_t *state) {
     }
 
     if (jd_should_sample_ms(&state->flush_timer, state->push_period_ms)) {
-        aggbuffer_flush();
+        // aggbuffer_flush();
     }
 }
 
@@ -376,8 +354,6 @@ SRV_DEF(wsskhealth, JD_SERVICE_CLASS_CLOUD_CONFIGURATION);
 void wsskhealth_init(void) {
     SRV_ALLOC(wsskhealth);
 
-    aggbuffer_init(&wssk_cloud);
-
     state->conn_status = JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED;
     state->push_period_ms = 5000;
 
@@ -391,9 +367,9 @@ void wsskhealth_init(void) {
 }
 
 static uint8_t *prep_msg(uint16_t cmd, unsigned payload_size) {
-    uint8_t *r = jd_alloc(4 + payload_size);
-    r[0] = cmd & 0xff;
-    r[1] = cmd >> 8;
+    uint8_t *r = jd_alloc(CHD_SIZE + payload_size);
+    JD_ASSERT(cmd <= 0xff);
+    r[0] = cmd;
     return r;
 }
 
@@ -425,40 +401,16 @@ static int publish_and_free(void *msg, unsigned payload_size) {
     return r;
 }
 
-int wssk_publish_values(const char *label, int numvals, double *vals) {
-    unsigned llen = strlen(label);
-    unsigned payload_size = llen + 1 + sizeof(double) * numvals;
-
-    uint8_t *msg = prep_msg(JD_CLOUD_ADAPTER_CMD_UPLOAD, payload_size);
-    memcpy(msg + CHD_SIZE, label, llen);
-    memcpy(msg + CHD_SIZE + llen + 1, vals, numvals * sizeof(double));
-
-    return publish_and_free(msg, payload_size);
-}
-
-int wssk_publish_bin(const void *data, unsigned datasize) {
-    uint8_t *msg = prep_msg(JD_CLOUD_ADAPTER_CMD_UPLOAD_BIN, datasize);
-    memcpy(msg + CHD_SIZE, data, datasize);
-    return publish_and_free(msg, datasize);
+int wssk_send_message(int data_type, const void *data, unsigned datasize) {
+    uint8_t *msg = prep_msg(JD_WSSK_CMD_D2C, datasize + 1);
+    msg[CHD_SIZE] = data_type;
+    memcpy(msg + CHD_SIZE + 1, data, datasize);
+    return publish_and_free(msg, datasize + 1);
 }
 
 int wssk_is_connected(void) {
     srv_t *state = _wsskhealth_state;
     return state->conn_status == JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED;
-}
-
-int wssk_respond_method(uint32_t method_id, uint32_t status, int numvals, double *vals) {
-    srv_t *state = _wsskhealth_state;
-    if (state->conn_status != JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED)
-        return -1;
-
-    unsigned payload_size = 8 + sizeof(double) * numvals;
-    uint8_t *msg = prep_msg(JD_CLOUD_ADAPTER_CMD_ACK_CLOUD_COMMAND, payload_size);
-    jd_cloud_adapter_ack_cloud_command_t *resp = (void *)(msg + CHD_SIZE);
-    resp->seq_no = method_id;
-    resp->status = status;
-    memcpy(resp->result, vals, numvals * sizeof(double));
-    return publish_and_free(msg, payload_size);
 }
 
 static int send_empty(uint16_t cmd) {
@@ -467,60 +419,94 @@ static int send_empty(uint16_t cmd) {
 }
 
 static int send_ping(void) {
-    return send_empty(0x92);
+    return send_empty(JD_WSSK_CMD_PING_CLOUD);
 }
 
-static void on_cmd_msg(srv_t *state, uint8_t *data, unsigned size) {
-    // compressed packet
-    uint16_t cmd = data[0] | (data[1] << 8);
+static void resp_status(int cmd, int op) {
+    if (op == 0)
+        send_empty(cmd);
+    else {
+        LOG("error on cmd=%x", cmd);
+        send_empty(JD_WSSK_CMD_ERROR);
+    }
+}
+
+static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
+    if (size < CHD_SIZE)
+        goto too_short;
+
     uint8_t *payload = data + CHD_SIZE;
-    data[size] = 0; // force NUL-terminate
     unsigned payload_size = size - CHD_SIZE;
-    if (cmd == JD_CLOUD_ADAPTER_CMD_ACK_CLOUD_COMMAND) {
-        uint32_t ridval;
-        memcpy(&ridval, payload, sizeof(ridval));
-        uint8_t *label = payload + 4;
-        uint8_t *dblptr = label + strlen((char *)label) + 1;
-        unsigned numdbl = (size - (dblptr - data)) / sizeof(double);
-        LOG("method: '%s' rid=%u numvals=%u", label, (unsigned)ridval, numdbl);
-        double *vals = jd_memdup(dblptr, numdbl * sizeof(double));
-        devscloud_on_method((char *)label, ridval, numdbl, vals);
-        jd_free(vals);
-    } else if (cmd == 0x90) {
+    int cmd = data[0];
+
+    switch (cmd) {
+    case JD_WSSK_CMD_JACDAC_PACKET: {
+        // forwarded frame
+        jd_frame_t *frame = (void *)payload;
+        unsigned fsz = JD_FRAME_SIZE(frame);
+        if (fsz > payload_size)
+            goto too_short;
+        frame = jd_memdup(frame, fsz); // copy to ensure alignment
+        jd_send_frame_raw(frame);
+        jd_free(frame);
+        break;
+    }
+
+    case JD_WSSK_CMD_C2D:
+        if (payload_size < 1)
+            goto too_short;
+        devscloud_on_message(payload[0], payload + 1, payload_size - 1);
+        break;
+
+    case JD_WSSK_CMD_SET_FORWARDING:
         if (payload[0] && !state->fwdqueue) {
             state->fwdqueue = jd_queue_alloc(JD_USB_QUEUE_SIZE);
         }
         state->fwd_en = payload[0];
         state->fwd_timer = (16 << 20) + now; // auto-disable in 16s
         LOG("fwd_en: %d", payload[0]);
-    } else if (cmd == 0x91) {
-        send_empty(0x91);
-    } else if (cmd == 0x92) {
+        break;
+
+    case JD_WSSK_CMD_PING_DEVICE:
+        send_empty(cmd);
+        break;
+
+    case JD_WSSK_CMD_PING_CLOUD:
         // the only effect of PONG we need is feeding the reconnect watchdog which was already
         // done
         LOGV("pong");
-    } else if (cmd == 0x93) {
-        uint8_t *msg = prep_msg(0x93, JD_SHA256_HASH_BYTES);
+        break;
+
+    case JD_WSSK_CMD_GET_HASH: {
+        uint8_t *msg = prep_msg(cmd, JD_SHA256_HASH_BYTES);
         devsmgr_get_hash(msg + CHD_SIZE);
         publish_and_free(msg, JD_SHA256_HASH_BYTES);
-    } else if (cmd == 0x94) {
-        if (devsmgr_deploy_start(*(uint32_t *)payload) == 0)
-            send_empty(0x94);
-        else
-            send_empty(0xff);
-    } else if (cmd == 0x95) {
-        if (devsmgr_deploy_write(payload, payload_size) == 0)
-            send_empty(0x95);
-        else
-            send_empty(0xff);
-    } else if (cmd == 0x96) {
-        if (devsmgr_deploy_write(NULL, 0) == 0)
-            send_empty(0x96);
-        else
-            send_empty(0xff);
-    } else {
-        LOG("unknown cmd %x", cmd);
+        break;
     }
+
+    case JD_WSSK_CMD_DEPLOY_START:
+        resp_status(cmd, devsmgr_deploy_start(*(uint32_t *)payload));
+        break;
+
+    case JD_WSSK_CMD_DEPLOY_WRITE:
+        resp_status(cmd, devsmgr_deploy_write(payload, payload_size));
+        break;
+
+    case JD_WSSK_CMD_DEPLOY_FINISH:
+        resp_status(cmd, devsmgr_deploy_write(NULL, 0));
+        break;
+
+    default:
+        LOG("unknown cmd %x", cmd);
+        send_empty(JD_WSSK_CMD_ERROR);
+    }
+
+    return;
+
+too_short:
+    LOG("too short frame: %d", size);
+    send_empty(JD_WSSK_CMD_ERROR);
+    return;
 }
 
 void jd_net_disable_fwd() {
@@ -551,12 +537,9 @@ static int wssk_service_query(jd_packet_t *pkt) {
 }
 
 const devscloud_api_t wssk_cloud = {
-    .upload = wssk_publish_values,
-    .agg_upload = aggbuffer_upload,
-    .bin_upload = wssk_publish_bin,
+    .send_message = wssk_send_message,
     .is_connected = wssk_is_connected,
     .max_bin_upload_size = 1024, // just a guess
-    .respond_method = wssk_respond_method,
     .service_query = wssk_service_query,
 };
 
