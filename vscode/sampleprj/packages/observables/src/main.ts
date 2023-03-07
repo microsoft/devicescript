@@ -14,6 +14,20 @@ import { describe, test, expect, runTests } from "@devicescript/test"
 const btn = new ds.Button()
 const temp = new ds.Temperature()
 
+async function emits<T>(o: Observable<T>, sequence: T[]) {
+    const values: T[] = []
+    const s = await o.subscribe(v => {
+        values.push(v)
+    })
+
+    expect(values.length).toBe(sequence.length)
+    for (let i = 0; i < values.length; ++i) {
+        expect(values[i]).toBe(sequence[i])
+    }
+
+    s.unsubscribe()
+}
+
 describe("basics", () => {
     test("create observable", async () => {
         // simple example
@@ -23,6 +37,7 @@ describe("basics", () => {
             await observer.complete?.()
         })
         await obs.subscribe(v => console.log(v))
+        await emits(obs, ["HELLO", "WORLD"])
     })
 })
 
