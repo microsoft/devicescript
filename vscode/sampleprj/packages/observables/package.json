@@ -2,7 +2,6 @@
     "name": "@devicescript/observables",
     "version": "1.0.0",
     "main": "./src/index.ts",
-    "private": true,
     "description": "DeviceScript package sample implementing the famous cow say rendering engine.",
     "license": "MIT",
     "keywords": [
@@ -12,7 +11,11 @@
         "embedded"
     ],
     "author": "Microsoft",
-    "repository": "https://github.com/microsoft/devicescript.git",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "vscode/sampleprj/packages/observables"
+    },
     "devicescript": {
         "library": true
     },
