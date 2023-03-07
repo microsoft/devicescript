@@ -34,7 +34,7 @@ describe("basics", () => {
         const obs = new Observable<string>(async observer => {
             await observer.next("HELLO")
             await observer.next("WORLD")
-            await observer.complete?.()
+            if (observer.complete) await observer.complete()
         })
         await obs.subscribe(v => console.log(v))
         await emits(obs, ["HELLO", "WORLD"])

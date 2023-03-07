@@ -1808,7 +1808,7 @@ class Program implements TopOpWriter {
                     throwError(mem, "unsupported class member")
             }
 
-            if (ts.isMethodDeclaration(mem)) {
+            if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
                 this.protoDefinitions.push({
                     className: this.nodeName(stmt),
@@ -2553,6 +2553,8 @@ class Program implements TopOpWriter {
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
+        if (expr.questionDotToken)
+            throwError(expr, "?. on calls not supported yet")
         return this.emitCallLike({
             position: expr,
             callexpr: expr.expression,

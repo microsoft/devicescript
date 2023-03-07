@@ -66,7 +66,7 @@ export class Observable<T> {
             }
         let unsubscribeSync = wrapClosedSync(() => {
             closed = true
-            cleanup?.()
+            if (cleanup) cleanup()
         })
         let wrapUnsubscribeSync =
             (fn: (value: any) => void): (() => void) =>
