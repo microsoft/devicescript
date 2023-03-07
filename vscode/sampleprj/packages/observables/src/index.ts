@@ -18,7 +18,8 @@ export class Observable<T> {
         ) => AsyncVoid | AsyncSubscription
     ) {}
     async subscribe(observer: Observer<T>): Promise<Subscription> {
-        return (await this.next(observer)) || undefined
+        const res = await this.next(observer)
+        return res || undefined
     }
 
     pipe<A>(op1: OperatorFunction<T, A>): Observable<A>
