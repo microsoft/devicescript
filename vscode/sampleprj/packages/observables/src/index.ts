@@ -459,8 +459,8 @@ export function map<T, R>(
         return new Observable<R>(async observer => {
             const { next } = observer
             let index = 0
-            return await source.subscribe(async v => {
-                const r = converter(v, index++)
+            return await source.subscribe(async value => {
+                const r = converter(value, index++)
                 await next(r)
             })
         })

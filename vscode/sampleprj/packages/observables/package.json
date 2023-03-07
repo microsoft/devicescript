@@ -22,7 +22,8 @@
     ],
     "dependencies": {},
     "devDependencies": {
-        "@devicescript/cli": "*"
+        "@devicescript/cli": "*",
+        "@devicescript/test": "*"
     },
     "scripts": {
         "setup": "devicescript init",
