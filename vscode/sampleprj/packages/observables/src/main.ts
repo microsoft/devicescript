@@ -36,8 +36,7 @@ async function testThreshold() {
 async function testFromEvent() {
     // turn events into observables
     const obs = fromEvent(btn.down)
-    const unsub = await obs.subscribe(ev => console.log(ev.code)) // todo: value
-
+    const unsub = await obs.subscribe(ev => console.log("down"))
     await unsub?.unsubscribe()
 }
 

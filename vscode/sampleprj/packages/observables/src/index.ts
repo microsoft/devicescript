@@ -292,7 +292,10 @@ declare module "@devicescript/core" {
 ds.Register.prototype.pipe = function pipe<T>(
     ...operations: OperatorFunction<any, any>[]
 ): Observable<any> {
-    const obs = fromRegister(this)
+    const obs = new Observable<T>(async observer => {
+        const { next } = observer
+        await this.subscribe(async v => await next(v))
+    })
     return operations?.length ? pipeFromArray(operations)(obs) : obs
 }
 
@@ -378,7 +381,10 @@ declare module "@devicescript/core" {
 ds.Event.prototype.pipe = function pipe<T>(
     ...operations: OperatorFunction<any, any>[]
 ): Observable<any> {
-    const obs = fromEvent(this)
+    const obs = new Observable<T>(async observer => {
+        const { next } = observer
+        await this.subscribe(async v => await next(v))
+    })
     return operations?.length ? pipeFromArray(operations)(obs) : obs
 }
 
@@ -404,17 +410,21 @@ export function fromPromise<T>(promise: Promise<T>): Observable<T> {
 }
 
 export function fromEvent<T>(event: ds.Event<T>) {
-    return new Observable<T>(async observer => {
+    return new Observable<{ value: T; event: ds.Event<T> }>(async observer => {
         const { next } = observer
-        await event.subscribe(async v => await next(v))
+        await event.subscribe(async value => await next({ value, event }))
     })
 }
 
 export function fromRegister<T>(register: ds.Register<T>) {
-    return new Observable<T>(async observer => {
-        const { next } = observer
-        await register.subscribe(async v => await next(v))
-    })
+    return new Observable<{ value: T; register: ds.Register<T> }>(
+        async observer => {
+            const { next } = observer
+            await register.subscribe(
+                async value => await next({ value, register })
+            )
+        }
+    )
 }
 
 export function identity<T>(x: T): T {
