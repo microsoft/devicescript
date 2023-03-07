@@ -8,8 +8,10 @@
     },
     "scripts": {
         "setup": "devicescript build",
-        "build:devicescript": "devicescript build",
+        "build:devicescript": "devicescript build src/main.ts",
         "build": "yarn build:devicescript",
+        "test:devicescript": "devicescript run src/main.ts",
+        "test": "yarn test:devicescript",
         "watch:devicescript": "devicescript devtools",
         "watch": "yarn watch:devicescript",
         "start": "yarn watch"
