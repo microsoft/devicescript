@@ -93,14 +93,19 @@ class TsHost implements ts.CompilerHost {
                         trace("file missing: " + fileName)
                     text = null
                 }
+                this.fileCache[fileName] = text
             }
-            this.fileCache[fileName] = text
         }
         if (text == null) return undefined
         return text
     }
     trace(s: string): void {
         console.log(s)
+    }
+    usedFiles() {
+        return Object.entries(this.fileCache)
+            .map(([fn, text]) => (text == null ? null : fn))
+            .filter(Boolean)
     }
 }
 
@@ -170,7 +175,7 @@ export function buildAST(
         options: tsOptions,
         host: tsHost,
     })
-    return program
+    return { program, usedFiles: () => tsHost.usedFiles() }
 }
 
 const diagHost: ts.FormatDiagnosticsHost = {

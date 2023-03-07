@@ -360,6 +360,7 @@ async function watchCmd(
                         dbg: null,
                         binary: null,
                         diagnostics: [],
+                        usedFiles: [args.filename],
                         deployStatus: err.message || "" + err,
                     }
                 }

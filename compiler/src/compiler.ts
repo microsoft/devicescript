@@ -3939,7 +3939,7 @@ class Program implements TopOpWriter {
     emit(): CompilationResult {
         assert(!this.tree)
 
-        this.tree = buildAST(
+        const ast = buildAST(
             this.mainFileName,
             this.host,
             this.prelude,
@@ -3961,6 +3961,7 @@ class Program implements TopOpWriter {
                 }
             }
         )
+        this.tree = ast.program
         this.checker = this.tree.getTypeChecker()
 
         getProgramDiagnostics(this.tree).forEach(d => this.printDiag(d))
@@ -4014,6 +4015,7 @@ class Program implements TopOpWriter {
             success: this.numErrors == 0,
             binary,
             dbg,
+            usedFiles: ast.usedFiles(),
             diagnostics: this.diagnostics,
             config: this.host.getConfig(),
         }
@@ -4024,6 +4026,7 @@ export interface CompilationResult {
     success: boolean
     binary: Uint8Array
     dbg: DebugInfo
+    usedFiles: string[]
     diagnostics: DevsDiagnostic[]
     config?: ResolvedBuildConfig
 }
