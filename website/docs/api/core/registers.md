@@ -35,27 +35,13 @@ const led = new ds.Led()
 led.brightness.write(0.5)
 ```
 
-## onChange (number)
+## subscribe
 
-The `onChange` method on `RegisterNumber` registers a callback to run when the register value changes more than a given `threshold`.
+The `subscribe` method registers a callback that gets raised whenever a value update arrives.
 
 ```ts
 const sensor = new ds.Temperature()
-sensor.temperature.onChange(2 /* deg celcius */, () => {
-    const t = sensor.temperature.read()
+sensor.temperature.subscribe(t => {
     console.log(t)
-})
-```
-
-## onChange (others)
-
-The `onChange` method on all register classes, expect `number`, registers a callback to run when the register value changes.
-
-```ts
-const relay = new ds.Relay()
-// ...
-relay.active.onChange(() => {
-    const value = relay.active.read()
-    console.log(value)
 })
 ```
