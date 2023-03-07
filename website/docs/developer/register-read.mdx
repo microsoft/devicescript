@@ -8,20 +8,43 @@ hide_table_of_contents: true
 You can retreive the current value of a register by calling `read`.
 Internally, the client will handle all the necessary syncronization and communication with the sensor.
 
+## read
+
 ```ts skip no-run
-const pressure = sensor.pressure.read()
+const pressure = await sensor.pressure.read()
 ```
 
 Let's modify the snippet by `reading` the `pressure` reading
 and logging it to the console.
 
+## subscribe
+
 ```ts edit
 console.log("starting...")
 const sensor = new ds.AirPressure()
-// listen for pressure changes
-sensor.pressure.onChange(10, () => {
-    // read sensor reading
-    const pressure = sensor.pressure.read()
+// listen for every pressure reading
+sensor.pressure.subscribe(pressure => {
     console.log(pressure)
 })
+```
+
+## observables
+
+DeviceScript provides an (optional) micro-observable implementation which allows to create filtering pipelines for streamed sensor data. Each registers is an observable of sensor data.
+The observables are bundled in the `@devicescript/observables` package.
+
+In the example below, we pipe the register data through a `threshold` operator to only stream data entries once a significant change is detected.
+
+```ts skip
+import { threshold } from "@devicescript/observables"
+console.log("starting...")
+const sensor = new ds.AirPressure()
+// listen for every pressure reading
+await sensor.pressure
+    .pipe(
+        threshold(1) // at least 10 hPa change to trigger callback
+    )
+    .subscribe(pressure => {
+        console.log(pressure)
+    })
 ```

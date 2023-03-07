@@ -1,6 +1,5 @@
 ---
 sidebar_position: 1
-hide_table_of_contents: true
 ---
 
 # Registers
@@ -20,7 +19,7 @@ The `read` method gets the current reported value stored in the register.
 ```ts
 const sensor = new ds.Temperature()
 ds.everyMs(1000, () => {
-    const t = sensor.temperature.read()
+    const t = await sensor.temperature.read()
     console.log(t)
 })
 ```
@@ -32,7 +31,7 @@ The `write` method sets the current value of the register and only applies to `r
 ```ts
 const led = new ds.Led()
 
-led.brightness.write(0.5)
+await led.brightness.write(0.5)
 ```
 
 ## subscribe
@@ -41,7 +40,19 @@ The `subscribe` method registers a callback that gets raised whenever a value up
 
 ```ts
 const sensor = new ds.Temperature()
-sensor.temperature.subscribe(t => {
-    console.log(t)
+sensor.temperature.subscribe(value => {
+    console.log(value)
 })
+```
+
+The `subscribe` method returns an **unsubscribe** function that allows to remove the callback.
+
+```ts
+const sensor = new ds.Temperature()
+const unsubscribe = sensor.temperature.subscribe(value => {
+    console.log(value)
+})
+
+// later on
+unsubscribe()
 ```
