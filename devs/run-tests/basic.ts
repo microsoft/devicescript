@@ -748,6 +748,10 @@ function testBuiltinExtends() {
     ds.assert(a.name === "AssertionError")
 }
 
+function testUndef() {
+    ds.assert(console.log("foo") === undefined)
+}
+
 interface XYZ {
     x: number
     y: string
@@ -770,6 +774,16 @@ function testDestructArg() {
         ds.assert(y === 2)
     })
     foo({ x: 1, y: "foo" })
+}
+
+function testClosurePP() {
+    let idx = 1
+    function foo() {
+        idx++
+    }
+    foo()
+    foo()
+    ds.assert(idx === 3)
 }
 
 async function testSetTimeout() {
@@ -799,7 +813,8 @@ async function testSetTimeout() {
 
     id = setInterval(() => {
         q = q + 1
-        if (q === 5) clearInterval(id)
+        if (q === 5)
+            clearInterval(id)
     }, 5)
 
     await ds.sleepMs(60)
@@ -838,7 +853,9 @@ testFunName()
 testJSON()
 testAnySwitch()
 testBuiltinExtends()
+testUndef()
 testDestructArg()
+testClosurePP()
 testShift()
 await testSetTimeout()
 

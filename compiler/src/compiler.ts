@@ -2510,7 +2510,8 @@ class Program implements TopOpWriter {
                     wr.dsMember(BuiltInString.LOG),
                     this.compileFormat(expr.arguments)
                 )
-                return unit()
+                return undef()
+
             case "ds.millis":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)
 
