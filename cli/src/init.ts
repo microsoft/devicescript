@@ -208,9 +208,9 @@ const optionalFiles: FileSet = {
     },
     [MAIN]: `${IMPORT_PREFIX}
 
-ds.everyMs(1000, () => {
+setInterval(() => {
     console.log(":)")
-})\n`,
+}, 1000)\n`,
     "README.md": `# - project name -
 
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/).

@@ -2482,23 +2482,6 @@ class Program implements TopOpWriter {
             case "ds._id":
                 this.requireArgs(expr, 1)
                 return this.emitExpr(expr.arguments[0])
-            case "ds.everyMs": {
-                this.requireTopLevel(expr.position)
-                this.requireArgs(expr, 2)
-                const time = Math.round(
-                    this.forceNumberLiteral(expr.arguments[0])
-                )
-                if (time < 20)
-                    throwError(
-                        expr.position,
-                        "minimum everyMs() period is 20ms"
-                    )
-                const proc = this.emitHandler("every", expr.arguments[1], {
-                    every: time,
-                })
-                proc.callMe(wr, [], OpCall.BG)
-                return unit()
-            }
             case "ds._onStart": {
                 this.requireTopLevel(expr.position)
                 this.requireArgs(expr, 1)

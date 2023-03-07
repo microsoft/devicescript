@@ -203,11 +203,6 @@ declare module "@devicescript/core" {
     export function format(fmt: string, ...args: number[]): string
 
     /**
-     * Run a callback every given number of milliseconds.
-     */
-    export function everyMs(milliseconds: number, callback: Callback): void
-
-    /**
      * Wait for specified number of milliseconds.
      */
     export function sleepMs(milliseconds: number): Promise<void>

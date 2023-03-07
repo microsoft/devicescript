@@ -15,6 +15,6 @@ led.brightness.onChange(0.1, async () => {
     await relay.active.write(!(await relay.active.read()))
 })
 
-ds.everyMs(200, async () => {
+setInterval(async () => {
     console.log("lb", await led.brightness.read())
-})
+}, 200)
