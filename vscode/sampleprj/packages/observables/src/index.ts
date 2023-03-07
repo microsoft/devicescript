@@ -560,3 +560,39 @@ export function skipRepeats<T>(
 export function threshold(value: number): OperatorFunction<number, number> {
     return skipRepeats((l, r) => Math.abs(l - r) < value)
 }
+
+export function mergeAll<T>(): OperatorFunction<Observable<T>, T> {
+    return function operator(source: Observable<Observable<T>>) {
+        return new Observable<T>(async ({ error, next, complete }) => {
+            let sourceCompleted = false
+            let remaining = 0
+            const subscriptions: Subscription[] = []
+            subscriptions.push(
+                await source.subscribe({
+                    error,
+                    complete: () => {
+                        sourceCompleted = true
+                        if (!remaining) complete()
+                    },
+                    next: async (o: Observable<T>) => {
+                        remaining++
+                        subscriptions.push(
+                            await o.subscribe({
+                                error,
+                                complete: () => {
+                                    remaining--
+                                    if (sourceCompleted && !remaining)
+                                        complete()
+                                },
+                                next,
+                            })
+                        )
+                    },
+                })
+            )
+            return () => {
+                for (const { unsubscribe } of subscriptions) unsubscribe()
+            }
+        })
+    }
+}
