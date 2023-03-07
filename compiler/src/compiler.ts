@@ -354,6 +354,10 @@ function unit() {
     return nonEmittable()
 }
 
+function undef() {
+    return literal(undefined)
+}
+
 interface DsSymbol extends ts.Symbol {
     __ds_cell: Cell
 }
@@ -2458,21 +2462,21 @@ class Program implements TopOpWriter {
                     every: time,
                 })
                 proc.callMe(wr, [], OpCall.BG)
-                return unit()
+                return undef()
             }
             case "ds._onStart": {
                 this.requireTopLevel(expr.position)
                 this.requireArgs(expr, 1)
                 const proc = this.emitHandler("onStart", expr.arguments[0])
                 this.onStart.emit(wr => proc.callMe(wr, []))
-                return unit()
+                return undef()
             }
             case "console.log":
                 wr.emitCall(
                     wr.dsMember(BuiltInString.LOG),
                     this.compileFormat(expr.arguments)
                 )
-                return unit()
+                return undef()
             case "Date.now":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)
 
@@ -2499,13 +2503,13 @@ class Program implements TopOpWriter {
                     off,
                     val
                 )
-                return unit()
+                return undef()
             }
 
             case "ds.keep": {
                 this.requireArgs(expr, 1)
                 this.ignore(this.emitExpr(expr.arguments[0]))
-                return unit()
+                return undef()
             }
 
             default:

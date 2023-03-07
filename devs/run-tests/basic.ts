@@ -748,6 +748,10 @@ function testBuiltinExtends() {
     ds.assert(a.name === "AssertionError")
 }
 
+function testUndef() {
+    ds.assert(console.log("foo") === undefined)
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -773,5 +777,6 @@ testFunName()
 testJSON()
 testAnySwitch()
 testBuiltinExtends()
+testUndef()
 
 console.log("all OK")
