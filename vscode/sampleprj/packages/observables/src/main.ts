@@ -16,8 +16,9 @@ const temp = new ds.Temperature()
 async function testObservable() {
     // simple example
     const obs = new Observable<string>(async observer => {
-        await observer("HELLO")
-        await observer("WORLD")
+        await observer.next("HELLO")
+        await observer.next("WORLD")
+        await observer.complete?.()
     })
     await obs.subscribe(v => console.log(v))
 }

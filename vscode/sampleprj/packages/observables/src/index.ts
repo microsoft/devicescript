@@ -8,16 +8,25 @@ export type Subscription = {
     unsubscribe: () => void
 }
 export type AsyncSubscription = Subscription | Promise<Subscription>
-export type Observer<T> = UnaryFunction<T, AsyncVoid>
+export type Observer<T> = {
+    next: UnaryFunction<T, AsyncVoid>
+    error?: UnaryFunction<unknown, void>
+    complete?: UnaryFunction<void, void>
+}
+export type ObserverFunction<T> = UnaryFunction<T, AsyncVoid>
 export type UnaryFunction<T, R> = (source: T) => R
 export type OperatorFunction<T, R> = UnaryFunction<Observable<T>, Observable<R>>
+
 export class Observable<T> {
     constructor(
         private readonly next: (
             observer: Observer<T>
         ) => AsyncVoid | AsyncSubscription
     ) {}
-    async subscribe(observer: Observer<T>): Promise<Subscription> {
+    async subscribe(
+        observer: Observer<T> | ObserverFunction<T>
+    ): Promise<Subscription> {
+        if (typeof observer === "function") observer = { next: observer }
         const res = await this.next(observer)
         return res || undefined
     }
@@ -189,13 +198,16 @@ ds.Register.prototype.pipe = function pipe<T>(
 
 export function of<T>(values: T[]) {
     return new Observable<T>(async observer => {
-        if (values) for (const value of values) await observer(value)
+        const { next, complete } = observer
+        if (values?.length) for (const value of values) await next(value)
+        complete?.()
     })
 }
 
 export function fromEvent<TEvent extends ds.Event>(event: TEvent) {
     return new Observable<TEvent>(observer => {
-        event.subscribe(pkt => observer(event))
+        const { next } = observer
+        event.subscribe(pkt => next(event))
         return {
             unsubscribe() {
                 console.log(`todo: event.unsubscribe`)
@@ -206,7 +218,8 @@ export function fromEvent<TEvent extends ds.Event>(event: TEvent) {
 
 export function fromRegister<T>(register: ds.Register<T>) {
     return new Observable<T>(observer => {
-        const unsubscribe = register.subscribe(v => observer(v))
+        const { next } = observer
+        const unsubscribe = register.subscribe(v => next(v))
         return { unsubscribe }
     })
 }
@@ -237,27 +250,40 @@ function pipeFromArray<T, R>(
  * @returns observable operator to be used in pipe
  */
 export function map<T, R>(
-    converter: (value: T) => R | Promise<R>
+    converter: (value: T, index: number) => R | Promise<R>
 ): OperatorFunction<T, R> {
     return function operator(source: Observable<T>) {
         return new Observable<R>(observer => {
+            let index = 0
             const subscription = source.subscribe(async v => {
-                const r = await converter(v)
-                observer(r)
+                const { next, error, complete } = observer
+                try {
+                    const r = await converter(v, index++)
+                    await next(r)
+                } catch (e) {
+                    await error?.(e)
+                } finally {
+                    await complete?.()
+                }
             })
             return subscription
         })
     }
 }
 export function filter<T>(
-    condition: (value: T) => boolean
+    condition: (value: T, index: number) => boolean
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(observer => {
+            let index = 0
             const subscription = source.subscribe(async v => {
-                const test = condition(v)
-                if (test) {
-                    await observer(v)
+                const { next, error, complete } = observer
+                try {
+                    if (condition(v, index++)) await next(v)
+                } catch (e) {
+                    await error?.(e)
+                } finally {
+                    await complete?.()
                 }
             })
             return subscription
@@ -272,8 +298,9 @@ export function delay<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(observer => {
             const subscription = source.subscribe(v => {
+                const { next } = observer
                 setTimeout(async () => {
-                    await observer(v)
+                    await next(v)
                 }, duration)
             })
             return subscription
@@ -287,16 +314,23 @@ export function span<V, A>(
 ): OperatorFunction<V, A> {
     return function operator(source: Observable<V>) {
         return new Observable<A>(observer => {
+            const { next, error, complete } = observer
             let last: A = undefined
             let index = 0
             const subscription = source.subscribe(async v => {
                 if (last === undefined) {
                     last = seed
                     index++
-                    observer(last)
+                    next(last)
                 } else {
-                    last = await accumulator(last, v, index++)
-                    observer(last)
+                    try {
+                        last = await accumulator(last, v, index++)
+                    } catch (e) {
+                        error(e)
+                        complete()
+                        return
+                    }
+                    next(last)
                 }
             })
             return subscription
@@ -307,14 +341,15 @@ export function span<V, A>(
 export function threshold(value: number): OperatorFunction<number, number> {
     return function operator(source: Observable<number>) {
         return new Observable<number>(observer => {
+            const { next } = observer
             let lastv: number = undefined
             const subscription = source.subscribe(v => {
                 if (lastv === undefined) {
                     v = lastv
-                    observer(v)
+                    next(v)
                 } else if (Math.abs(v - lastv) >= value) {
                     v = lastv
-                    observer(v)
+                    next(v)
                 }
             })
             return subscription
