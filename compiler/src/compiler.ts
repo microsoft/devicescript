@@ -961,6 +961,17 @@ class Program implements TopOpWriter {
         trg.store(this.writer, src, this.getClosureLevel(trg))
     }
 
+    private emitLoad(node: ts.Node, cell: Variable) {
+        assert(cell instanceof Variable)
+        const lev = this.getClosureLevel(cell)
+        if (lev && this.isInLoop(cell.definition))
+            throwError(
+                node,
+                "closure references to loop variables are currently broken"
+            )
+        return cell.emitViaClosure(this.writer, lev)
+    }
+
     private skipInit(decl: ts.VariableDeclaration) {
         if (this.isTopLevel(decl) && idName(decl.name)) {
             const cell = this.getCellAtLocation(decl)
@@ -2716,15 +2727,7 @@ class Program implements TopOpWriter {
         if (r) return r
         const cell = this.getCellAtLocation(expr)
         if (!cell) throwError(expr, "unknown name: " + idName(expr))
-        if (cell instanceof Variable) {
-            const lev = this.getClosureLevel(cell)
-            if (lev && this.isInLoop(cell.definition))
-                throwError(
-                    expr,
-                    "closure references to loop variables are currently broken"
-                )
-            return cell.emitViaClosure(this.writer, lev)
-        }
+        if (cell instanceof Variable) return this.emitLoad(expr, cell)
         return cell.emit(this.writer)
     }
 
@@ -2899,7 +2902,7 @@ class Program implements TopOpWriter {
         if (ts.isIdentifier(trg)) {
             const variable = this.getVarAtLocation(trg)
             return {
-                read: () => variable.emit(wr),
+                read: () => this.emitLoad(trg, variable),
                 write: (src: Value) => this.emitStore(variable, src),
                 free: () => {},
             }

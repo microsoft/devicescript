@@ -777,6 +777,16 @@ function testDestructArg() {
     foo({ x: 1, y: "foo" })
 }
 
+function testClosurePP() {
+    let idx = 1
+    function foo() {
+        idx++
+    }
+    foo()
+    foo()
+    ds.assert(idx === 3)
+}
+
 
 
 testFlow()
@@ -806,5 +816,6 @@ testAnySwitch()
 testBuiltinExtends()
 testUndef()
 testDestructArg()
+testClosurePP()
 
 console.log("all OK")
