@@ -1110,20 +1110,7 @@ class Program implements TopOpWriter {
             if (ts.isIdentifier(decl.name)) {
                 this.assignToId(decl.name, init)
             } else {
-                const obj = this.writer.cacheValue(init)
-                if (ts.isObjectBindingPattern(decl.name)) {
-                    const used: string[] = []
-                    for (const elt of decl.name.elements)
-                        this.assignToBindingElement(elt, obj, used)
-                } else if (ts.isArrayBindingPattern(decl.name)) {
-                    let idx = 0
-                    for (const elt of decl.name.elements) {
-                        this.assignToArrayBindingElement(elt, obj, idx++)
-                    }
-                } else {
-                    throwError(decl, "unsupported destructuring")
-                }
-                obj.free()
+                this.destructDefinition(decl, init)
             }
         }
     }
@@ -1656,14 +1643,23 @@ class Program implements TopOpWriter {
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
         if (proc.isMethod && idName(stmt.parameters[0]?.name) != "this")
             this.addParameter(proc, "this")
+        const destructParams: {
+            paramdef: ts.ParameterDeclaration
+            paramVar: Variable
+        }[] = []
         for (const paramdef of stmt.parameters) {
             if (paramdef.kind != SK.Parameter)
                 throwError(
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
-            this.forceName(paramdef.name)
-            this.addParameter(proc, paramdef)
+            if (ts.isObjectBindingPattern(paramdef.name)) {
+                const paramVar = this.addParameter(proc, "obj")
+                destructParams.push({ paramdef, paramVar })
+            } else {
+                this.forceName(paramdef.name)
+                this.addParameter(proc, paramdef)
+            }
         }
         for (const paramdef of stmt.parameters) {
             if (paramdef.initializer) {
@@ -1681,6 +1677,34 @@ class Program implements TopOpWriter {
                 })
             }
         }
+        for (const { paramdef, paramVar } of destructParams) {
+            this.withLocation(paramdef, wr => {
+                this.assignVariableCells(paramdef)
+                const val = paramVar.emit(wr)
+                val.assumeStateless()
+                this.destructDefinition(paramdef, val)
+            })
+        }
+    }
+
+    private destructDefinition(
+        decl: ts.VariableDeclaration | ts.ParameterDeclaration,
+        init: Value
+    ) {
+        const obj = this.writer.cacheValue(init)
+        if (ts.isObjectBindingPattern(decl.name)) {
+            const used: string[] = []
+            for (const elt of decl.name.elements)
+                this.assignToBindingElement(elt, obj, used)
+        } else if (ts.isArrayBindingPattern(decl.name)) {
+            let idx = 0
+            for (const elt of decl.name.elements) {
+                this.assignToArrayBindingElement(elt, obj, idx++)
+            }
+        } else {
+            throwError(decl, "unsupported destructuring")
+        }
+        obj.free()
     }
 
     getFunctionProc(fundecl: FunctionDecl) {
@@ -2003,13 +2027,20 @@ class Program implements TopOpWriter {
         }
     }
 
-    private assignVariableCells(decl: ts.VariableDeclaration) {
+    private assignVariableCells(
+        decl: ts.VariableDeclaration | ts.ParameterDeclaration
+    ) {
         const topLevel = this.isTopLevel(decl)
-        if (idName(decl.name) && topLevel) {
+        if (ts.isVariableDeclaration(decl) && idName(decl.name) && topLevel) {
             if (this.parseRole(decl)) return
         }
 
-        const doAssign = (decl: ts.VariableDeclaration | ts.BindingElement) => {
+        const doAssign = (
+            decl:
+                | ts.VariableDeclaration
+                | ts.ParameterDeclaration
+                | ts.BindingElement
+        ) => {
             if (ts.isIdentifier(decl.name)) {
                 if (this.getCellAtLocation(decl)) return
 
