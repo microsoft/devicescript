@@ -64,11 +64,8 @@ async function testSpan() {
 }
 
 async function testDelay() {
-    temp.temperature
-        .pipe(
-            delay(100),
-            filter(t => t > 30)
-        )
+    of([1, 2, 3])
+        .pipe(delay(100))
         .subscribe(t => console.log(t))
 }
 
