@@ -97,7 +97,7 @@ ds_impl.setTimeout = function (cb, ms) {
     return addTimeout(cb, ms).id
 }
 
-ds_impl.clearTimeout = function (id) {
+function _clearTimeout(id: number) {
     if (!timeouts || !id) return
     for (let i = 0; i < timeouts.length; ++i) {
         if (timeouts[i].id === id) {
@@ -107,4 +107,5 @@ ds_impl.clearTimeout = function (id) {
     }
 }
 
-ds_impl.clearInterval = ds.clearTimeout
+ds_impl.clearTimeout = _clearTimeout
+ds_impl.clearInterval = _clearTimeout

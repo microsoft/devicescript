@@ -2854,11 +2854,30 @@ class Program implements TopOpWriter {
         return res
     }
 
+    private isAllPropertyAccess(expr: ts.Expression): boolean {
+        return (
+            ts.isIdentifier(expr) ||
+            (ts.isPropertyAccessExpression(expr) &&
+                this.isAllPropertyAccess(expr.expression))
+        )
+    }
+
+    private isFunctionValue(expr: ts.Expression) {
+        if (ts.isFunctionExpression(expr) || ts.isArrowFunction(expr))
+            return true
+        if (
+            ts.isIdentifier(expr) &&
+            this.checker.getTypeAtLocation(expr).getCallSignatures().length > 0
+        )
+            return true
+        return false
+    }
+
     private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
         const left = expr.left
 
         if (!ts.isPropertyAccessExpression(left)) return null
-        if (!ts.isFunctionExpression(expr.right)) return null
+        if (!this.isFunctionValue(expr.right)) return null
         if (!this.isTopLevel(expr.parent)) return null
 
         const sym = this.getSymAtLocation(left)
