@@ -644,7 +644,7 @@ class Program implements TopOpWriter {
     }
 
     relativePath(p: string) {
-        return this.host.relativePath?.(p) ?? p
+        return p ? this.host.relativePath?.(p) ?? p : p
     }
 
     getSrcLocation(node: ts.Node): SrcLocation {
