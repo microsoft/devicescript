@@ -182,7 +182,8 @@ declare module "@devicescript/core" {
 ds.Register.prototype.pipe = function pipe<T>(
     ...operations: OperatorFunction<any, any>[]
 ): Observable<any> {
-    return operations?.length ? pipeFromArray(operations)(this) : this
+    const obs = fromRegister(this)
+    return operations?.length ? pipeFromArray(operations)(obs) : obs
 }
 
 export function of<T>(values: T[]) {
@@ -203,13 +204,9 @@ export function fromEvent<TEvent extends ds.Event>(event: TEvent) {
 }
 
 export function fromRegister<T>(register: ds.Register<T>) {
-    return new Observable<ds.RegisterNumber>(observer => {
-        return register.subscribe((v, this) => observer(register))
-        return {
-            unsubscribe() {
-                console.log(`todo: reg.unsubscribe`)
-            },
-        }
+    return new Observable<T>(observer => {
+        const unsubscribe = register.subscribe(v => observer(v))
+        return { unsubscribe }
     })
 }
 
