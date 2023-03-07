@@ -318,19 +318,18 @@ export function span<V, A>(
             let last: A = undefined
             let index = 0
             const subscription = source.subscribe(async v => {
-                if (last === undefined) {
-                    last = seed
-                    index++
-                    next(last)
-                } else {
-                    try {
+                try {
+                    if (last === undefined) {
+                        last = seed
+                        index++
+                        await next(last)
+                    } else {
                         last = await accumulator(last, v, index++)
-                    } catch (e) {
-                        error(e)
-                        complete()
-                        return
+                        await next(last)
                     }
-                    next(last)
+                } catch (e) {
+                    await error?.(e)
+                    await complete?.()
                 }
             })
             return subscription
@@ -343,13 +342,13 @@ export function threshold(value: number): OperatorFunction<number, number> {
         return new Observable<number>(observer => {
             const { next } = observer
             let lastv: number = undefined
-            const subscription = source.subscribe(v => {
+            const subscription = source.subscribe(async v => {
                 if (lastv === undefined) {
                     v = lastv
-                    next(v)
+                    await next(v)
                 } else if (Math.abs(v - lastv) >= value) {
                     v = lastv
-                    next(v)
+                    await next(v)
                 }
             })
             return subscription
