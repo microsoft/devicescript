@@ -322,8 +322,6 @@ export async function compileFile(
         res.success = false
     }
 
-    console.log(res.usedFiles)
-
     return res
 }
 

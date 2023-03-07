@@ -1667,6 +1667,8 @@ class Program implements TopOpWriter {
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
+            if (paramdef.dotDotDotToken)
+                throwError(paramdef, "... not yet supported in argument list")
             if (ts.isObjectBindingPattern(paramdef.name)) {
                 const paramVar = this.addParameter(proc, "obj")
                 destructParams.push({ paramdef, paramVar })
@@ -2779,6 +2781,8 @@ class Program implements TopOpWriter {
     private emitPropertyAccessExpression(
         expr: ts.PropertyAccessExpression
     ): Value {
+        if (expr.questionDotToken) throwError(expr, "?. not yet supported")
+
         const r = this.emitBuiltInConst(expr)
         if (r) return r
 
