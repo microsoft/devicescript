@@ -5,9 +5,9 @@ import { AsyncVoid } from "@devicescript/core"
 // + some rxjs
 
 export type Subscription = {
-    unsubscribe: () => AsyncVoid
+    unsubscribe: () => void
 }
-export type SubscriptionVoid = Subscription | Promise<Subscription>
+export type AsyncSubscription = Subscription | Promise<Subscription>
 export type Observer<T> = UnaryFunction<T, AsyncVoid>
 export type UnaryFunction<T, R> = (source: T) => R
 export type OperatorFunction<T, R> = UnaryFunction<Observable<T>, Observable<R>>
@@ -15,7 +15,7 @@ export class Observable<T> {
     constructor(
         private readonly next: (
             observer: Observer<T>
-        ) => AsyncVoid | SubscriptionVoid
+        ) => AsyncVoid | AsyncSubscription
     ) {}
     async subscribe(observer: Observer<T>): Promise<Subscription> {
         return (await this.next(observer)) || undefined

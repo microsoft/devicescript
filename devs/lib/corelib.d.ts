@@ -143,7 +143,7 @@ interface Array<T> {
     [Symbol.iterator](): IterableIterator<T>
 
     /**
-     * Insert `count` `null` elements at `index`.
+     * Insert `count` `undefined` elements at `index`.
      * If `count` is negative, remove elements.
      */
     insert(index: number, count: number): void

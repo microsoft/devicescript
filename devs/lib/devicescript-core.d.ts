@@ -5,6 +5,8 @@ declare module "@devicescript/core" {
     export type Callback = () => AsyncVoid
     export type PktHandler = (pkt: Packet) => AsyncVoid
 
+    export type Unsubscribe = () => void
+
     export type SMap<T> = {
         [idx: string]: T
     }
@@ -78,24 +80,19 @@ declare module "@devicescript/core" {
      * A base class for register clients.
      */
     // TODO: support for "isImplemented?"
-    export class Register extends PacketInfo {}
-
-    /**
-     * A client for a register that holds a numerical value.
-     */
-    export class RegisterNumber extends Register {
+    export class Register<T> extends PacketInfo {
         /**
          * Gets the current value of the register as a number.
          * TODO: missing value behavior (optional regs)
          */
-        read(): Promise<number>
+        read(): Promise<T>
 
         /**
          * Sets the current value of the register.
          * @param value value to assign to the register
          * TODO: is it guaranteed, does it throw when it fails?
          */
-        write(value: number): Promise<void>
+        write(value: T): Promise<void>
 
         /**
          * Registers a callback to execute when the register value changes by the given threshold
@@ -103,8 +100,10 @@ declare module "@devicescript/core" {
          * @param handler callback to execute
          * TODO: can we unregister?
          */
-        onChange(threshold: number, handler: (curr: number) => AsyncVoid): void
+        subscribe(handler: (curr: T, reg: this) => AsyncVoid): Unsubscribe
     }
+
+    export type RegisterNumber = Register<number>
 
     /**
      * A client for a register that holds a Buffer (byte[]).

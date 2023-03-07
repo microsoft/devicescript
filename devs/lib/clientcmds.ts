@@ -25,11 +25,7 @@ ds.Led.prototype.setAll = async function (r, g, b) {
     await this.pixels.write(buf)
 }
 
-interface ChangeHandler {
-    handler: (v: any) => void
-    threshold?: number
-    prev?: any
-}
+type ChangeHandler = (v: any, reg: ds.Register<any>) => ds.AsyncVoid
 
 async function callHandlers(hh: ds.Callback[]) {
     if (hh) for (const h of hh) await h()
@@ -65,16 +61,8 @@ ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
         if (handlers) {
             const val = pkt.decode()
             for (const h of handlers) {
-                if (typeof val === "number" && h.threshold != null) {
-                    if (h.prev != null && Math.abs(val - h.prev) < h.threshold)
-                        continue
-                    h.prev = val
-                }
-                if (typeof val === "boolean") {
-                    if (val === h.prev) continue
-                    h.prev = val
-                }
-                h.handler(val)
+                // TODO pass register
+                await h(val, null)
             }
         }
     }
@@ -103,16 +91,10 @@ ds.Role.prototype.onDisconnected = function onConnected(
     this._disconHandlers = addElement(this._disconHandlers, h)
 }
 
-ds.RegisterNumber.prototype.onChange = function onChange(
-    this: ds.Register,
-    threshold: number,
-    handler: (v: any) => void
+ds.Register.prototype.subscribe = function subscribe<T>(
+    this: ds.Register<T>,
+    handler: (v: T, reg: ds.Register<T>) => void
 ) {
-    if (!handler && typeof threshold === "function") {
-        handler = threshold
-        threshold = undefined
-    }
-
     const role = this.role
     if (!role._changeHandlers) {
         role._changeHandlers = {}
@@ -123,9 +105,15 @@ ds.RegisterNumber.prototype.onChange = function onChange(
         lst = []
         role._changeHandlers[key] = lst
     }
-    const obj: ChangeHandler = { handler }
-    if (threshold != null) obj.threshold = threshold
-    lst[lst.length] = obj
+    lst[lst.length] = handler
+    return () => {
+        const idx = lst.indexOf(handler)
+        if (idx >= 0) {
+            lst.insert(idx, -1)
+            if (lst.length == 0)
+                delete role._changeHandlers[key]
+        }
+    }
 }
 
 async function handleCloudCommand(pkt: ds.Packet) {
@@ -134,10 +122,17 @@ async function handleCloudCommand(pkt: ds.Packet) {
     const h = cloud._cloudHandlers[cmd]
     if (h) {
         const r = await h(...vals)
-        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.OK, ...r)
+        await cloud.ackCloudCommand(
+            seqNo,
+            ds.CloudAdapterCommandStatus.OK,
+            ...r
+        )
     } else {
         // TODO Busy? store fiber ref and possibly kill?
-        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.NotFound)
+        await cloud.ackCloudCommand(
+            seqNo,
+            ds.CloudAdapterCommandStatus.NotFound
+        )
     }
 }
 
