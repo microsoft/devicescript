@@ -500,20 +500,14 @@ export function span<T, A>(
     return function operator(source: Observable<T>) {
         return new Observable<A>(async observer => {
             const { error, next, complete } = observer
-            let last: A = undefined
+            let prev: A = seed
             let index = 0
             return await source.subscribe({
                 error,
                 complete,
-                next: async v => {
-                    if (index === 0) {
-                        last = seed
-                        index++
-                        await next(last)
-                    } else {
-                        last = await accumulator(last, v, index++)
-                        await next(last)
-                    }
+                next: async curr => {
+                    prev = await accumulator(prev, curr, index++)
+                    await next(prev)
                 },
             })
         })
