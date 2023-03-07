@@ -296,6 +296,92 @@ ds.Register.prototype.pipe = function pipe<T>(
     return operations?.length ? pipeFromArray(operations)(obs) : obs
 }
 
+declare module "@devicescript/core" {
+    interface Event<T = void> {
+        pipe<A>(op1: OperatorFunction<T, A>): Observable<A>
+        pipe<A, B>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>
+        ): Observable<B>
+        pipe<A, B, C>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>,
+            op3: OperatorFunction<B, C>
+        ): Observable<C>
+        pipe<A, B, C, D>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>,
+            op3: OperatorFunction<B, C>,
+            op4: OperatorFunction<C, D>
+        ): Observable<D>
+        pipe<A, B, C, D, E>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>,
+            op3: OperatorFunction<B, C>,
+            op4: OperatorFunction<C, D>,
+            op5: OperatorFunction<D, E>
+        ): Observable<E>
+        pipe<A, B, C, D, E, F>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>,
+            op3: OperatorFunction<B, C>,
+            op4: OperatorFunction<C, D>,
+            op5: OperatorFunction<D, E>,
+            op6: OperatorFunction<E, F>
+        ): Observable<F>
+        pipe<A, B, C, D, E, F, G>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>,
+            op3: OperatorFunction<B, C>,
+            op4: OperatorFunction<C, D>,
+            op5: OperatorFunction<D, E>,
+            op6: OperatorFunction<E, F>,
+            op7: OperatorFunction<F, G>
+        ): Observable<G>
+        pipe<A, B, C, D, E, F, G, H>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>,
+            op3: OperatorFunction<B, C>,
+            op4: OperatorFunction<C, D>,
+            op5: OperatorFunction<D, E>,
+            op6: OperatorFunction<E, F>,
+            op7: OperatorFunction<F, G>,
+            op8: OperatorFunction<G, H>
+        ): Observable<H>
+        pipe<A, B, C, D, E, F, G, H, I>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>,
+            op3: OperatorFunction<B, C>,
+            op4: OperatorFunction<C, D>,
+            op5: OperatorFunction<D, E>,
+            op6: OperatorFunction<E, F>,
+            op7: OperatorFunction<F, G>,
+            op8: OperatorFunction<G, H>,
+            op9: OperatorFunction<H, I>
+        ): Observable<I>
+        pipe<A, B, C, D, E, F, G, H, I>(
+            op1: OperatorFunction<T, A>,
+            op2: OperatorFunction<A, B>,
+            op3: OperatorFunction<B, C>,
+            op4: OperatorFunction<C, D>,
+            op5: OperatorFunction<D, E>,
+            op6: OperatorFunction<E, F>,
+            op7: OperatorFunction<F, G>,
+            op8: OperatorFunction<G, H>,
+            op9: OperatorFunction<H, I>,
+            ...operations: OperatorFunction<any, any>[]
+        ): Observable<unknown>
+        pipe(...operations: OperatorFunction<any, any>[]): Observable<any>
+    }
+}
+
+ds.Event.prototype.pipe = function pipe<T>(
+    ...operations: OperatorFunction<any, any>[]
+): Observable<any> {
+    const obs = fromEvent(this)
+    return operations?.length ? pipeFromArray(operations)(obs) : obs
+}
+
 export function of<T>(values: T[]) {
     return new Observable<T>(async ({ next, complete }) => {
         for (const value of values) await next(value)
@@ -379,7 +465,10 @@ export function filter<T>(
 }
 
 // TODO: michal
-function setTimeout(fn: () => void, timeout: number): void {}
+function setTimeout(fn: () => void, timeout: number): number {
+    return 0
+}
+function clearTimeout(timeout: number): void {}
 
 export function delay<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
@@ -428,6 +517,24 @@ export function threshold(value: number): OperatorFunction<number, number> {
                     v = lastv
                     await next(v)
                 }
+            })
+        })
+    }
+}
+
+export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
+    return function operator(source: Observable<T>) {
+        return new Observable<T>(({ error, next, complete }) => {
+            let timer: number
+            source.subscribe({
+                error,
+                complete: () => setTimeout(complete, duration),
+                next: value => {
+                    clearTimeout(timer)
+                    timer = setTimeout(async () => {
+                        await next(value)
+                    }, duration)
+                },
             })
         })
     }
