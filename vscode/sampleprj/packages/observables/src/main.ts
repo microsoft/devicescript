@@ -2,11 +2,11 @@ import * as ds from "@devicescript/core"
 import {
     delay,
     filter,
-    fromArray,
     fromEvent,
-    fromRegisterNumber,
     map,
     Observable,
+    of,
+    threshold,
 } from "./index"
 
 const btn = new ds.Button()
@@ -14,16 +14,21 @@ const temp = new ds.Temperature()
 
 async function testObservable() {
     // simple example
-    const obs = new Observable<string>(observer => {
-        observer("HELLO")
-        observer("WORLD")
+    const obs = new Observable<string>(async observer => {
+        await observer("HELLO")
+        await observer("WORLD")
     })
     await obs.subscribe(v => console.log(v))
 }
 
-async function testObservables() {
-    const obs = fromArray([1, 2, 3, 4, 5])
+async function testOf() {
+    const obs = of([1, 2, 3, 4, 5])
     await obs.subscribe(v => console.log(v))
+}
+
+async function testThreshold() {
+    const obs = of([1, 1.2, 1.3, 1.4, 1.5])
+    await obs.pipe(threshold(0.2)).subscribe(v => console.log(v))
 }
 
 async function testFromEvent() {
@@ -35,42 +40,35 @@ async function testFromEvent() {
 }
 
 async function testRegisterNumber() {
-    const obs = fromRegisterNumber(temp.temperature, 1)
-    await obs.subscribe(async reg => console.log(await reg.read()))
+    await temp.temperature.subscribe(v => console.log(v))
 }
 
 async function testMap() {
-    const obs = fromRegisterNumber(temp.temperature, 1)
-    await obs
-        .pipe(map(async reg => await reg.read()))
+    of([1, 2, 3])
+        .pipe(map(x => x * x))
         .subscribe(t => console.log(t))
 }
 
 async function testFilter() {
-    const obs = fromRegisterNumber(temp.temperature, 1)
-    await obs
-        .pipe(
-            map(async reg => await reg.read()),
-            filter(t => t > 30)
-        )
-        .subscribe(t => console.log("too hot!"))
+    of([1, 2, 3])
+        .pipe(filter(t => t > 2))
+        .subscribe(t => console.log(t))
 }
 
 async function testDelay() {
-    const obs = fromRegisterNumber(temp.temperature, 1)
-    await obs
+    temp.temperature
         .pipe(
-            map(async reg => await reg.read()),
             delay(100),
             filter(t => t > 30)
         )
-        .subscribe(t => console.log("too hot!"))
+        .subscribe(t => console.log(t))
 }
 
 await testObservable()
-await testObservables()
+await testOf()
 await testFromEvent()
 await testRegisterNumber()
+await testThreshold()
 await testMap()
 await testFilter()
 await testDelay()

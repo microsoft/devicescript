@@ -61,7 +61,7 @@ function toHex(n: number): string {
 
 function ignoreSpec(info: jdspec.ServiceSpec) {
     return (
-        info.shortId[0] === "_" ||
+        info.shortId === "_system" ||
         info.status === "deprecated" ||
         [
             SRV_CONTROL,
