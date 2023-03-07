@@ -354,6 +354,10 @@ function unit() {
     return nonEmittable()
 }
 
+function undef() {
+    return literal(undefined)
+}
+
 interface DsSymbol extends ts.Symbol {
     __ds_cell: Cell
 }
@@ -957,6 +961,17 @@ class Program implements TopOpWriter {
         trg.store(this.writer, src, this.getClosureLevel(trg))
     }
 
+    private emitLoad(node: ts.Node, cell: Variable) {
+        assert(cell instanceof Variable)
+        const lev = this.getClosureLevel(cell)
+        if (lev && this.isInLoop(cell.definition))
+            throwError(
+                node,
+                "closure references to loop variables are currently broken"
+            )
+        return cell.emitViaClosure(this.writer, lev)
+    }
+
     private skipInit(decl: ts.VariableDeclaration) {
         if (this.isTopLevel(decl) && idName(decl.name)) {
             const cell = this.getCellAtLocation(decl)
@@ -1110,20 +1125,7 @@ class Program implements TopOpWriter {
             if (ts.isIdentifier(decl.name)) {
                 this.assignToId(decl.name, init)
             } else {
-                const obj = this.writer.cacheValue(init)
-                if (ts.isObjectBindingPattern(decl.name)) {
-                    const used: string[] = []
-                    for (const elt of decl.name.elements)
-                        this.assignToBindingElement(elt, obj, used)
-                } else if (ts.isArrayBindingPattern(decl.name)) {
-                    let idx = 0
-                    for (const elt of decl.name.elements) {
-                        this.assignToArrayBindingElement(elt, obj, idx++)
-                    }
-                } else {
-                    throwError(decl, "unsupported destructuring")
-                }
-                obj.free()
+                this.destructDefinition(decl, init)
             }
         }
     }
@@ -1656,14 +1658,23 @@ class Program implements TopOpWriter {
     private emitParameters(stmt: FunctionLike, proc: Procedure) {
         if (proc.isMethod && idName(stmt.parameters[0]?.name) != "this")
             this.addParameter(proc, "this")
+        const destructParams: {
+            paramdef: ts.ParameterDeclaration
+            paramVar: Variable
+        }[] = []
         for (const paramdef of stmt.parameters) {
             if (paramdef.kind != SK.Parameter)
                 throwError(
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
-            this.forceName(paramdef.name)
-            this.addParameter(proc, paramdef)
+            if (ts.isObjectBindingPattern(paramdef.name)) {
+                const paramVar = this.addParameter(proc, "obj")
+                destructParams.push({ paramdef, paramVar })
+            } else {
+                this.forceName(paramdef.name)
+                this.addParameter(proc, paramdef)
+            }
         }
         for (const paramdef of stmt.parameters) {
             if (paramdef.initializer) {
@@ -1681,6 +1692,34 @@ class Program implements TopOpWriter {
                 })
             }
         }
+        for (const { paramdef, paramVar } of destructParams) {
+            this.withLocation(paramdef, wr => {
+                this.assignVariableCells(paramdef)
+                const val = paramVar.emit(wr)
+                val.assumeStateless()
+                this.destructDefinition(paramdef, val)
+            })
+        }
+    }
+
+    private destructDefinition(
+        decl: ts.VariableDeclaration | ts.ParameterDeclaration,
+        init: Value
+    ) {
+        const obj = this.writer.cacheValue(init)
+        if (ts.isObjectBindingPattern(decl.name)) {
+            const used: string[] = []
+            for (const elt of decl.name.elements)
+                this.assignToBindingElement(elt, obj, used)
+        } else if (ts.isArrayBindingPattern(decl.name)) {
+            let idx = 0
+            for (const elt of decl.name.elements) {
+                this.assignToArrayBindingElement(elt, obj, idx++)
+            }
+        } else {
+            throwError(decl, "unsupported destructuring")
+        }
+        obj.free()
     }
 
     getFunctionProc(fundecl: FunctionDecl) {
@@ -1738,6 +1777,7 @@ class Program implements TopOpWriter {
         const name = this.symName(sym)
         const names = [name]
 
+        //TODO: michal?
         if (name == "#ds.RegisterNumber.onChange")
             names.push(
                 "#ds.RegisterBuffer.onChange",
@@ -1768,7 +1808,7 @@ class Program implements TopOpWriter {
                     throwError(mem, "unsupported class member")
             }
 
-            if (ts.isMethodDeclaration(mem)) {
+            if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
                 this.protoDefinitions.push({
                     className: this.nodeName(stmt),
@@ -2003,13 +2043,20 @@ class Program implements TopOpWriter {
         }
     }
 
-    private assignVariableCells(decl: ts.VariableDeclaration) {
+    private assignVariableCells(
+        decl: ts.VariableDeclaration | ts.ParameterDeclaration
+    ) {
         const topLevel = this.isTopLevel(decl)
-        if (idName(decl.name) && topLevel) {
+        if (ts.isVariableDeclaration(decl) && idName(decl.name) && topLevel) {
             if (this.parseRole(decl)) return
         }
 
-        const doAssign = (decl: ts.VariableDeclaration | ts.BindingElement) => {
+        const doAssign = (
+            decl:
+                | ts.VariableDeclaration
+                | ts.ParameterDeclaration
+                | ts.BindingElement
+        ) => {
             if (ts.isIdentifier(decl.name)) {
                 if (this.getCellAtLocation(decl)) return
 
@@ -2406,7 +2453,16 @@ class Program implements TopOpWriter {
                     (ts.isVariableDeclarationList(d.parent) &&
                         ts.isSourceFile(d.parent.parent.parent))
                 ) {
-                    if (["parseInt", "parseFloat"].indexOf(r) >= 0)
+                    if (
+                        [
+                            "parseInt",
+                            "parseFloat",
+                            "setTimeout",
+                            "clearTimeout",
+                            "setInterval",
+                            "clearInterval",
+                        ].indexOf(r) >= 0
+                    )
                         return "#ds." + r
                     return "#" + r
                 }
@@ -2442,37 +2498,21 @@ class Program implements TopOpWriter {
             case "ds._id":
                 this.requireArgs(expr, 1)
                 return this.emitExpr(expr.arguments[0])
-            case "ds.everyMs": {
-                this.requireTopLevel(expr.position)
-                this.requireArgs(expr, 2)
-                const time = Math.round(
-                    this.forceNumberLiteral(expr.arguments[0])
-                )
-                if (time < 20)
-                    throwError(
-                        expr.position,
-                        "minimum everyMs() period is 20ms"
-                    )
-                const proc = this.emitHandler("every", expr.arguments[1], {
-                    every: time,
-                })
-                proc.callMe(wr, [], OpCall.BG)
-                return unit()
-            }
             case "ds._onStart": {
                 this.requireTopLevel(expr.position)
                 this.requireArgs(expr, 1)
                 const proc = this.emitHandler("onStart", expr.arguments[0])
                 this.onStart.emit(wr => proc.callMe(wr, []))
-                return unit()
+                return undef()
             }
             case "console.log":
                 wr.emitCall(
                     wr.dsMember(BuiltInString.LOG),
                     this.compileFormat(expr.arguments)
                 )
-                return unit()
-            case "Date.now":
+                return undef()
+
+            case "ds.millis":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)
 
             case "Buffer.getAt": {
@@ -2498,13 +2538,13 @@ class Program implements TopOpWriter {
                     off,
                     val
                 )
-                return unit()
+                return undef()
             }
 
             case "ds.keep": {
                 this.requireArgs(expr, 1)
                 this.ignore(this.emitExpr(expr.arguments[0]))
-                return unit()
+                return undef()
             }
 
             default:
@@ -2513,6 +2553,8 @@ class Program implements TopOpWriter {
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
+        if (expr.questionDotToken)
+            throwError(expr, "?. on calls not supported yet")
         return this.emitCallLike({
             position: expr,
             callexpr: expr.expression,
@@ -2680,15 +2722,7 @@ class Program implements TopOpWriter {
         if (r) return r
         const cell = this.getCellAtLocation(expr)
         if (!cell) throwError(expr, "unknown name: " + idName(expr))
-        if (cell instanceof Variable) {
-            const lev = this.getClosureLevel(cell)
-            if (lev && this.isInLoop(cell.definition))
-                throwError(
-                    expr,
-                    "closure references to loop variables are currently broken"
-                )
-            return cell.emitViaClosure(this.writer, lev)
-        }
+        if (cell instanceof Variable) return this.emitLoad(expr, cell)
         return cell.emit(this.writer)
     }
 
@@ -2721,6 +2755,11 @@ class Program implements TopOpWriter {
 
     private emitBuiltInConst(expr: ts.Expression) {
         return this.emitBuiltInConstByName(this.nodeName(expr))
+    }
+
+    private isBuiltInObj(nodeName: string) {
+        if (nodeName == "#ds_impl") return true
+        return builtInObjByName.hasOwnProperty(nodeName)
     }
 
     emitBuiltInConstByName(nodeName: string) {
@@ -2814,19 +2853,49 @@ class Program implements TopOpWriter {
         return res
     }
 
-    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
-        const left = expr.left
+    private isAllPropertyAccess(expr: ts.Expression): boolean {
+        return (
+            ts.isIdentifier(expr) ||
+            (ts.isPropertyAccessExpression(expr) &&
+                this.isAllPropertyAccess(expr.expression))
+        )
+    }
 
-        if (!ts.isPropertyAccessExpression(left)) return null
-        if (!ts.isFunctionExpression(expr.right)) return null
+    private isFunctionValue(expr: ts.Expression) {
+        if (ts.isFunctionExpression(expr) || ts.isArrowFunction(expr))
+            return true
+        if (
+            ts.isIdentifier(expr) &&
+            this.checker.getTypeAtLocation(expr).getCallSignatures().length > 0
+        )
+            return true
+        return false
+    }
+
+    private isPrototypeLike(
+        expr: ts.Expression
+    ): expr is ts.PropertyAccessExpression {
+        if (!ts.isPropertyAccessExpression(expr)) return false
+        if (
+            ts.isPropertyAccessExpression(expr.expression) &&
+            idName(expr.expression.name) == "prototype"
+        )
+            return true
+        if (this.isBuiltInObj(this.nodeName(expr.expression))) return true
+        return false
+    }
+
+    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
+        if (!this.isPrototypeLike(expr.left)) return null
+        if (!this.isFunctionValue(expr.right)) return null
         if (!this.isTopLevel(expr.parent)) return null
 
-        const sym = this.getSymAtLocation(left)
+        const sym = this.getSymAtLocation(expr.left)
         const decl = sym?.valueDeclaration
 
         if (decl) {
             this.protoDefinitions.push({
-                methodName: idName(left.name),
+                methodName: idName(expr.left.name),
                 className: this.nodeName(decl.parent),
                 names: this.methodNames(sym),
                 protoUpdate: expr,
@@ -2863,7 +2932,7 @@ class Program implements TopOpWriter {
         if (ts.isIdentifier(trg)) {
             const variable = this.getVarAtLocation(trg)
             return {
-                read: () => variable.emit(wr),
+                read: () => this.emitLoad(trg, variable),
                 write: (src: Value) => this.emitStore(variable, src),
                 free: () => {},
             }

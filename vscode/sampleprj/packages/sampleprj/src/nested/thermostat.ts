@@ -1,12 +1,12 @@
 import * as ds from "@devicescript/core"
 
-console.log('starting')
+console.log("starting")
 
 const temp = new ds.Temperature()
 const relay = new ds.Relay()
 let target = 21 // deg C
 
-ds.everyMs(5000, () => {
+setInterval(() => {
     const t = temp.temperature.read()
     console.log(`t: ${t}, s: ${target}`)
     if (t > target + 1) {
@@ -20,4 +20,4 @@ ds.everyMs(5000, () => {
     } else {
         // do nothing
     }
-})
+}, 5000)

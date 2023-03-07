@@ -4,7 +4,7 @@ import TelemetryReporter from "@vscode/extension-telemetry"
 // the application insights key (also known as instrumentation key)
 const key = "06283122-cd76-493c-9641-fbceeeefd9c6"
 
-export interface Telemetry {
+export interface AppTelemetry {
     reportException: (error: Error, properties?: Record<string, string>) => void
     reportEvent: (
         eventName: string,
@@ -17,7 +17,7 @@ export interface Telemetry {
     ) => Thenable<string>
 }
 
-export function activeTelemetry(context: vscode.ExtensionContext): Telemetry {
+export function activateTelemetry(context: vscode.ExtensionContext): AppTelemetry {
     const reporter = new TelemetryReporter(key)
     context.subscriptions.push(reporter)
 

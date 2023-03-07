@@ -1,4 +1,5 @@
 import { gpio } from "@devicescript/core"
+import { debounceTime } from "@devicescript/observables"
 import * as servers from "@devicescript/servers"
 
 const button = servers.startButton({
@@ -11,7 +12,7 @@ const relay = servers.startRelay({
 
 let active = false
 
-button.down.subscribe(async () => {
+button.down.pipe(debounceTime(500)).subscribe(async () => {
     active = !active
     console.log(`active ${active}`)
     await relay.active.write(active)

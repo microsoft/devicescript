@@ -748,6 +748,86 @@ function testBuiltinExtends() {
     ds.assert(a.name === "AssertionError")
 }
 
+function testUndef() {
+    ds.assert(console.log("foo") === undefined)
+}
+
+interface XYZ {
+    x: number
+    y: string
+    z?: number
+}
+
+function testDestructArg() {
+    function foo({ x, y, z }: XYZ) {
+        ds.assert(x === 1)
+        ds.assert(y === "foo")
+        ds.assert(z === undefined)
+    }
+
+    function apply<T>(v: T, f: (v: T) => void) {
+        f(v)
+    }
+
+    apply({ x: 1, y: 2 }, ({ x, y }) => {
+        ds.assert(x === 1)
+        ds.assert(y === 2)
+    })
+    foo({ x: 1, y: "foo" })
+}
+
+function testClosurePP() {
+    let idx = 1
+    function foo() {
+        idx++
+    }
+    foo()
+    foo()
+    ds.assert(idx === 3)
+}
+
+async function testSetTimeout() {
+    let q = 1
+    let id = 0
+
+    await ds.sleepMs(1)
+
+    setTimeout(() => {
+        ds.assert(q === 1)
+        console.log(`clear ${id}`)
+        clearTimeout(id)
+        q = 2
+    }, 10)
+
+    setTimeout(() => {
+        ds.assert(q === 2)
+        q = 3
+    }, 31)
+
+    id = setTimeout(() => {
+        q = 17
+    }, 32)
+
+    await ds.sleepMs(60)
+    ds.assert(q === 3)
+
+    id = setInterval(() => {
+        q = q + 1
+        if (q === 5)
+            clearInterval(id)
+    }, 5)
+
+    await ds.sleepMs(60)
+    ds.assert(q === 5)
+}
+
+function testShift() {
+    const arr = ["baz", ds._id("foo") + "bar"]
+    ds.assert(arr.shift() === "baz")
+    ds.assert(arr.shift() === "foobar")
+    ds.assert(arr.shift() === undefined)
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -773,5 +853,10 @@ testFunName()
 testJSON()
 testAnySwitch()
 testBuiltinExtends()
+testUndef()
+testDestructArg()
+testClosurePP()
+testShift()
+await testSetTimeout()
 
 console.log("all OK")

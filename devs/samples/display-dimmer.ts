@@ -5,8 +5,7 @@ const ledD = new ds.Led()
 const btn = new ds.Button()
 let p
 
-pot.position.onChange(0.01, async () => {
-    p = await pot.position.read()
+pot.position.subscribe(async (p) => {
     console.log("tick", p)
     await ledD.brightness.write(p * 0.3)
 })

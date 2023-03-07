@@ -1,0 +1,35 @@
+---
+sidebar_position: 11
+---
+
+# Testing
+
+DeviceScript provides a unit test framework that runs on the device. It has a syntax similar to Jest/Mocha/Chai.
+
+## Setup
+
+Configure your project for testing using this command
+
+```bash
+devs add test
+```
+
+## Defining tests
+
+The test framework provides the popular BDD test contructs: `describe`, `test` (`it`), `expect`.
+
+```ts
+import { describe, test, expect, runTests } from "@devicescript/test"
+
+describe("this is a test suite", () => {
+    test("this is a test", () => {
+        expect(1).toBe(1)
+    })
+})
+
+await runTests()
+```
+
+## Package
+
+The test framework is implemented in the [@devicescript/test](https://www.npmjs.com/package/@devicescript/test) package.

@@ -165,6 +165,7 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
         case DEVS_GC_TAG_BUILTIN_PROTO:
             break;
         default:
+            DMESG("invalid tag: %x at %p", (unsigned)header, block);
             JD_PANIC();
             break;
         }

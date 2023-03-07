@@ -13,9 +13,9 @@ DeviceScript uses the TypeScript syntax and the developer tooling does not requi
 You can try out DeviceScript directly from this documentation site, use the [Visual Studio Code extension](/getting-started/vscode) or [command line tool](/getting-started/cli).
 
 ```ts edit codesandbox
-ds.everyMs(1000, () => {
+setInterval(() => {
     console.log(`hello`)
-})
+}, 1000)
 ```
 
 -   Click `Edit` to load the snippet in the developer tools

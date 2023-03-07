@@ -3,14 +3,14 @@ import * as ds from "@devicescript/core"
 const g = 0
 const r = new ds.Button()
 
-function foo() {
+async function foo() {
     function bar() { }
 
-    r.down.subscribe(() => {
+    await r.down.subscribe(() => {
     })
     r.onConnected(() => {
     })
-    r.pressure.onChange(0.1, () => {})
+    await r.pressure.subscribe(() => {})
 }
 
 if (g > 0) {
@@ -25,5 +25,5 @@ function baz() {
     q = 1 //! Cannot find
 }
 
-foo()
+await foo()
 baz()

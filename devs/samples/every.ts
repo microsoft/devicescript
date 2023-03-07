@@ -10,6 +10,6 @@ button1.up.subscribe(async () => {
     console.log("up")
     await lightBulb1.brightness.write(0)
 })
-ds.everyMs(5000, () => {
-    console.log("5 second", Date.now())
-})
+setInterval(() => {
+    console.log("5 second", ds.millis())
+}, 5000)

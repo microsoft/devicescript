@@ -85,7 +85,6 @@ function objectAssignment() {
 }
 
 function runObjDestruct() {
-    /* TODO destructors in params
     glb1 = 0
 
     testFunction(({}) => {
@@ -124,7 +123,6 @@ function runObjDestruct() {
     })
 
     assert(glb1 === 5)
-    */
 
     arrayAssignment()
     objectAssignment()

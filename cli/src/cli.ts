@@ -6,7 +6,7 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import { addNpm, addService, addSim, init } from "./init"
+import { addNpm, addService, addSim, addTest, init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
@@ -296,6 +296,10 @@ export async function mainCli() {
         .option("--license <string>", "set the license", "MIT")
         .description("make current project into an NPM library")
         .action(dropReturn(addNpm))
+
+    addCommand("test")
+        .description("add tests to current project")
+        .action(dropReturn(addTest))
 
     program
         .command("binpatch", { hidden: true })

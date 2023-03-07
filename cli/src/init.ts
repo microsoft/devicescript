@@ -8,6 +8,8 @@ import {
     ensureDirSync,
     readJSONSync,
     readdir,
+    readFile,
+    existsSync,
 } from "fs-extra"
 import { build } from "./build"
 import { spawnSync, execSync } from "node:child_process"
@@ -22,6 +24,8 @@ import type {
     SideAddServiceResp,
     SideAddSimReq,
     SideAddSimResp,
+    SideAddTestReq,
+    SideAddTestResp,
 } from "./sideprotocol"
 import { addBoard } from "./addboard"
 
@@ -42,10 +46,18 @@ const serviceFiles: FileSet = {
     `,
 }
 
+const testFiles: FileSet = {
+    "package.json": {
+        [IS_PATCH]: true,
+        dependencies: {
+            "@devicescript/test": "*",
+        },
+    },
+}
+
 const npmFiles: FileSet = {
     "package.json": {
         [IS_PATCH]: true,
-        private: undefined,
         main: "./src/index.ts",
         license: "MIT",
         devicescript: {
@@ -199,18 +211,20 @@ const optionalFiles: FileSet = {
         scripts: {
             setup: "devicescript build", // generates .devicescript/lib/* files
             postinstall: "devicescript build",
-            "build:devicescript": "devicescript build",
+            "build:devicescript": "devicescript build src/main.ts",
             build: "yarn build:devicescript",
             "watch:devicescript": `devicescript devtools ${MAIN}`,
             watch: "yarn watch:devicescript",
+            "test:devicescript": "devicescript run src/main.ts --test",
+            test: "yarn test:devicescript",
             start: "yarn watch",
         },
     },
     [MAIN]: `${IMPORT_PREFIX}
 
-ds.everyMs(1000, () => {
+setInterval(() => {
     console.log(":)")
-})\n`,
+}, 1000)\n`,
     "README.md": `# - project name -
 
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
@@ -502,6 +516,32 @@ export async function addNpm(options: AddNpmOptions) {
     ])
 }
 
+export async function addTest(options: AddTestOptions) {
+    const files = clone(testFiles)
+    if (existsSync("./src/main.ts")) {
+        let main = await readFile("./src/main.ts", { encoding: "uf8" })
+        if (!main.includes("@devicescript/test"))
+            main =
+                `import { describe, test, expect, runTests } from "@devicescript/test";\n` +
+                main +
+                "\nawait runTests()"
+        files["src/main.ts"] = main
+    }
+    const pkg = files["package.json"] as any
+    if (!pkg.dependencies["@devicescript.test"])
+        pkg.dependencies["@devicescript.test"] = "*"
+
+    const cwd = writeFiles(".", options, files)
+    await runInstall(cwd, options)
+
+    return finishAdd(
+        `Add test package to package.json, added "runTest" to main.ts, please review.`,
+        ["package.json", "src/main.ts"]
+    )
+}
+
+export interface AddTestOptions extends InitOptions {}
+
 export function initAddCmds() {
     addReqHandler<SideAddBoardReq, SideAddBoardResp>("addBoard", d =>
         addBoard(d.data)
@@ -511,4 +551,7 @@ export function initAddCmds() {
     )
     addReqHandler<SideAddSimReq, SideAddSimResp>("addSim", d => addSim(d.data))
     addReqHandler<SideAddNpmReq, SideAddNpmResp>("addNpm", d => addNpm(d.data))
+    addReqHandler<SideAddTestReq, SideAddTestResp>("addTest", d =>
+        addTest(d.data)
+    )
 }

@@ -11,7 +11,7 @@ btn.down.subscribe(async () => {
 })
 
 let prevV = await rot.position.read()
-rot.position.onChange(1, async () => {
+rot.position.subscribe(async () => {
     const v = await rot.position.read()
     await mouse.move(scale * (v - prevV), 0, 100)
     prevV = v

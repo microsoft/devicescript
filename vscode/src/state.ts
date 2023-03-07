@@ -22,6 +22,7 @@ import {
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 import {
+    AddResponse,
     SideAddServiceReq,
     SideAddServiceResp,
     SideAddSimReq,
@@ -36,12 +37,12 @@ import { openDocUri } from "./commands"
 import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
-import { checkFileExists, writeFile } from "./fs"
+import { checkFileExists, openFileEditor, writeFile } from "./fs"
 import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
-import { activeTelemetry, Telemetry } from "./telemetry"
+import { activateTelemetry, AppTelemetry } from "./telemetry"
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
@@ -58,7 +59,7 @@ export interface NodeWatch {
 export class DeviceScriptExtensionState extends JDEventSource {
     readonly devtools: DeveloperToolsManager
     readonly simulators: SimulatorsWebView
-    readonly telemetry: Telemetry
+    readonly telemetry: AppTelemetry
 
     private _transport: TransportStatus = {
         transports: [],
@@ -69,7 +70,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         readonly bus: JDBus
     ) {
         super()
-        this.telemetry = activeTelemetry(this.context)
+        this.telemetry = activateTelemetry(this.context)
         this.devtools = new DeveloperToolsManager(this)
         this.simulators = new SimulatorsWebView(this)
 
@@ -141,10 +142,19 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async addSim() {
-        await sideRequest<SideAddSimReq, SideAddSimResp>({
+        const resp = await sideRequest<SideAddSimReq, SideAddSimResp>({
             req: "addSim",
             data: {},
         })
+        await this.handleAddResponse(resp.data)
+    }
+
+    private async handleAddResponse(data: AddResponse) {
+        const dir = this.devtools.projectFolder
+        const { files = [] } = data || {}
+        for (const file of files) {
+            await openFileEditor(dir, file)
+        }
     }
 
     async addService() {
@@ -157,6 +167,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             req: "addService",
             data: { name },
         })
+        await this.handleAddResponse(resp.data)
     }
 
     async addBoard() {

@@ -25,12 +25,6 @@ ds.Led.prototype.setAll = async function (r, g, b) {
     await this.pixels.write(buf)
 }
 
-interface ChangeHandler {
-    handler: (v: any) => void
-    threshold?: number
-    prev?: any
-}
-
 async function callHandlers(hh: ds.Callback[]) {
     if (hh) for (const h of hh) await h()
 }
@@ -61,26 +55,19 @@ ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
     }
     if (!pkt) return
     if (pkt.isReport && pkt.isRegGet && this._changeHandlers) {
-        const handlers: ChangeHandler[] = this._changeHandlers[pkt.regCode + ""]
+        const handlers = this._changeHandlers[pkt.regCode + ""]
         if (handlers) {
             const val = pkt.decode()
             for (const h of handlers) {
-                if (typeof val === "number" && h.threshold != null) {
-                    if (h.prev != null && Math.abs(val - h.prev) < h.threshold)
-                        continue
-                    h.prev = val
-                }
-                if (typeof val === "boolean") {
-                    if (val === h.prev) continue
-                    h.prev = val
-                }
-                h.handler(val)
+                // TODO pass register
+                await h(val, null)
             }
         }
     }
     if (pkt.isEvent && this._eventHandlers) {
         const hh = this._eventHandlers[pkt.eventCode + ""]
-        if (hh) for (const h of hh) await h(pkt)
+        // TODO pass event
+        if (hh) for (const h of hh) await h(pkt.decode(), null)
     }
 }
 
@@ -103,41 +90,46 @@ ds.Role.prototype.onDisconnected = function onConnected(
     this._disconHandlers = addElement(this._disconHandlers, h)
 }
 
-ds.RegisterNumber.prototype.onChange = function onChange(
-    this: ds.Register,
-    threshold: number,
-    handler: (v: any) => void
+ds.Register.prototype.subscribe = function subscribe<T>(
+    this: ds.Register<T>,
+    handler: (v: T, reg: ds.Register<T>) => void
 ) {
-    if (!handler && typeof threshold === "function") {
-        handler = threshold
-        threshold = undefined
-    }
-
     const role = this.role
-    if (!role._changeHandlers) {
-        role._changeHandlers = {}
-    }
+    if (!role._changeHandlers) role._changeHandlers = {}
     const key = this.code + ""
-    let lst: ChangeHandler[] = role._changeHandlers[key]
-    if (!lst) {
-        lst = []
-        role._changeHandlers[key] = lst
+    let handlers = role._changeHandlers[key]
+    if (!handlers) {
+        handlers = []
+        role._changeHandlers[key] = handlers
     }
-    const obj: ChangeHandler = { handler }
-    if (threshold != null) obj.threshold = threshold
-    lst[lst.length] = obj
+    handlers.push(handler)
+    return () => {
+        const idx = handlers.indexOf(handler)
+        if (idx >= 0) {
+            handlers.insert(idx, -1)
+            if (!handlers.length) delete role._changeHandlers[key]
+        }
+    }
 }
 
+/* TODO: redo cloud
 async function handleCloudCommand(pkt: ds.Packet) {
     const [seqNo, cmd, ...vals] = pkt.decode()
     const cloud = pkt.role as ds.CloudAdapter
     const h = cloud._cloudHandlers[cmd]
     if (h) {
         const r = await h(...vals)
-        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.OK, ...r)
+        await cloud.ackCloudCommand(
+            seqNo,
+            ds.CloudAdapterCommandStatus.OK,
+            ...r
+        )
     } else {
         // TODO Busy? store fiber ref and possibly kill?
-        await cloud.ackCloudCommand(seqNo, ds.CloudAdapterCommandStatus.NotFound)
+        await cloud.ackCloudCommand(
+            seqNo,
+            ds.CloudAdapterCommandStatus.NotFound
+        )
     }
 }
 
@@ -152,16 +144,30 @@ ds.CloudAdapter.prototype.onMethod = function onMethod(
     }
     this._cloudHandlers[name] = handler
 }
-
-ds.Event.prototype.subscribe = function (handler) {
-    let m = this.role._eventHandlers
-    if (!m) {
-        m = {}
-        this.role._eventHandlers = m
+*/
+ds.Event.prototype.subscribe = function subscribe<T>(
+    this: ds.Event<T>,
+    handler: (v: T, reg: ds.Event<T>) => void
+) {
+    let eventHandlers = this.role._eventHandlers
+    if (!eventHandlers) {
+        eventHandlers = {}
+        this.role._eventHandlers = eventHandlers
     }
     const k = this.code + ""
-    if (!m[k]) m[k] = []
-    m[k].push(handler)
+    let handlers = eventHandlers[k]
+    if (!handlers) {
+        handlers = []
+        eventHandlers[k] = handlers
+    }
+    handlers.push(handler)
+    return () => {
+        const idx = handlers.indexOf(handler)
+        if (idx >= 0) {
+            handlers.insert(idx, -1)
+            if (!handlers.length) delete eventHandlers[k]
+        }
+    }
 }
 
 ds.Event.prototype.wait = async function () {
@@ -218,6 +224,19 @@ Array.prototype.pop = function () {
     const r = this[length]
     this.insert(length, -1)
     return r
+}
+
+Array.prototype.shift = function () {
+    if (this.length === 0) return undefined
+    const r = this[0]
+    this.insert(0, -1)
+    return r
+}
+
+Array.prototype.unshift = function (...elts: any[]) {
+    this.insert(0, elts.length)
+    for (let i = 0; i < elts.length; ++i) this[i] = elts[i]
+    return this.length
 }
 
 Array.prototype.indexOf = function (elt, from) {

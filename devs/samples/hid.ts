@@ -22,7 +22,7 @@ async function press(k: number) {
 }
 
 let prevV = await rot.position.read()
-rot.position.onChange(1, async () => {
+rot.position.subscribe(async () => {
     const v = await rot.position.read()
     while (prevV < v) {
         prevV = prevV + 1

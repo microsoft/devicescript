@@ -140,10 +140,15 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
     ctx->exn_val = exn;
 
     if (devs_can_attach(ctx, exn) && !(flags & DEVS_THROW_NO_STACK)) {
-        value_t stack = devs_capture_stack(ctx);
-        devs_value_pin(ctx, stack);
-        devs_any_set(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING___STACK__), stack);
-        devs_value_unpin(ctx, stack);
+        value_t curr_stack =
+            devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING___STACK__);
+        if (devs_is_undefined(curr_stack)) {
+            // keep the original stack when we re-throw
+            value_t stack = devs_capture_stack(ctx);
+            devs_value_pin(ctx, stack);
+            devs_any_set(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING___STACK__), stack);
+            devs_value_unpin(ctx, stack);
+        }
     }
 }
 
