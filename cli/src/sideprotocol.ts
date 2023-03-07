@@ -6,7 +6,12 @@ import type {
 import { ConnectionState } from "jacdac-ts"
 import type { AddBoardOptions } from "./addboard"
 import type { BuildOptions } from "./build"
-import type { AddServiceOptions, AddSimOptions, AddNpmOptions } from "./init"
+import type {
+    AddServiceOptions,
+    AddSimOptions,
+    AddNpmOptions,
+    AddTestOptions,
+} from "./init"
 
 export interface SideReq<T extends string = string> {
     req: T
@@ -109,6 +114,12 @@ export interface SideAddNpmReq extends SideReq<"addNpm"> {
     data: AddNpmOptions
 }
 export interface SideAddNpmResp extends SideResp<"addNpm"> {
+    data: AddResponse
+}
+export interface SideAddTestReq extends SideReq<"addTest"> {
+    data: AddTestOptions
+}
+export interface SideAddTestResp extends SideResp<"addTest"> {
     data: AddResponse
 }
 export interface SideAddBoardReq extends SideReq<"addBoard"> {
