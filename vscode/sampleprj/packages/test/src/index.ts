@@ -16,51 +16,61 @@ export class AssertionError extends Error {
         this.message = `${matcher}: ${message}`
     }
 }
+export interface TestQuery {
+    testFilter?: (test: TestNode) => boolean
+    suiteFilter?: (suite: SuiteNode) => boolean
+}
+export type RunOptions = TestQuery
 export class SuiteNode {
     readonly children: SuiteNode[] = []
     readonly tests: TestNode[] = []
 
     constructor(public name: string) {}
 
-    testCount(): number {
+    testCount(query?: TestQuery): number {
+        const { testFilter, suiteFilter } = query || {}
         return (
-            this.tests.length +
-            this.children.reduce<number>(
-                (prev, curr) => prev + curr.testCount(),
-                0
-            )
+            this.tests.filter(test => !testFilter || testFilter(test)).length +
+            this.children
+                .filter(child => !suiteFilter || suiteFilter(child))
+                .reduce<number>((prev, curr) => prev + curr.testCount(query), 0)
         )
     }
 
-    async run() {
+    async run(options: RunOptions) {
         console.log(` ${this.name}`)
-        for (const child of this.children) {
-            await child.run()
+        const { suiteFilter, testFilter } = options
+
+        const result = {
+            total: 0,
+            pass: 0,
+            error: 0,
         }
-        for (const test of this.tests) {
-            await test.run()
+
+        for (const child of this.children.filter(
+            child => !suiteFilter || suiteFilter(child)
+        )) {
+            const r = await child.run(options)
+            result.total += r.total
+            result.pass += r.pass
+            result.error += r.error
         }
-    }
+        for (const test of this.tests.filter(
+            test => !testFilter || testFilter(test)
+        )) {
+            await test.run(options)
+            result.total++
+            switch (test.state) {
+                case TestState.Passed:
+                    result.pass++
+                    break
+                case TestState.Error:
+                    result.error++
+                    break
+            }
+        }
 
-    private testsByState(testState: TestState): number {
-        return (
-            this.tests.filter(({ state }) => state === testState).length +
-            this.children.reduce<number>(
-                (prev, curr) => prev + curr.testsByState(testState),
-                0
-            )
-        )
-    }
-
-    async summary() {
-        const tests = this.testCount()
-        const passed = this.testsByState(TestState.Passed)
-        const error = this.testsByState(TestState.Error)
-        const ignored = this.testsByState(TestState.Ignored)
-
-        console.log(
-            `tests: ${tests}, passed: ${passed}, error: ${error}, ignore: ${ignored}`
-        )
+        return result
     }
 }
 export class TestNode {
@@ -69,7 +79,7 @@ export class TestNode {
 
     constructor(public name: string, public body: TestFunction) {}
 
-    async run() {
+    async run(options: RunOptions) {
         console.log(`  ${this.name}`)
         try {
             this.state = TestState.Running
@@ -144,9 +154,13 @@ export class Expect<T> {
     }
 }
 
-async function runTests() {
+export async function runTests(
+    options: {
+        testFilter?: (test: TestNode) => boolean
+        suiteFilter?: (suite: SuiteNode) => boolean
+    } = {}
+) {
     console.log(`running ${root.testCount()} tests`)
-    await root.run()
-    await root.summary()
+    const { total, pass, error } = await root.run(options)
+    console.log(`tests: ${total}, pass: ${pass}, error: ${error}`)
 }
-runTests()
