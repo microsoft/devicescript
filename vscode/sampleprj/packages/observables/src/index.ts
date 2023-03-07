@@ -472,14 +472,17 @@ function clearTimeout(timeout: number): void {}
 
 export function delay<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(
-            async ({ next }) =>
-                await source.subscribe(v => {
+        return new Observable<T>(async ({ next, error, complete }) => {
+            return await source.subscribe({
+                error,
+                complete,
+                next: v => {
                     setTimeout(async () => {
                         await next(v)
                     }, duration)
-                })
-        )
+                },
+            })
+        })
     }
 }
 
@@ -488,18 +491,22 @@ export function span<V, A>(
     seed: A
 ): OperatorFunction<V, A> {
     return function operator(source: Observable<V>) {
-        return new Observable<A>(async ({ next }) => {
+        return new Observable<A>(async ({ next, error, complete }) => {
             let last: A = undefined
             let index = 0
-            return await source.subscribe(async v => {
-                if (last === undefined) {
-                    last = seed
-                    index++
-                    await next(last)
-                } else {
-                    last = await accumulator(last, v, index++)
-                    await next(last)
-                }
+            return await source.subscribe({
+                error,
+                complete,
+                next: async v => {
+                    if (last === undefined) {
+                        last = seed
+                        index++
+                        await next(last)
+                    } else {
+                        last = await accumulator(last, v, index++)
+                        await next(last)
+                    }
+                },
             })
         })
     }
@@ -507,16 +514,20 @@ export function span<V, A>(
 
 export function threshold(value: number): OperatorFunction<number, number> {
     return function operator(source: Observable<number>) {
-        return new Observable<number>(async ({ next }) => {
+        return new Observable<number>(async ({ error, complete, next }) => {
             let lastv: number = undefined
-            return await source.subscribe(async v => {
-                if (lastv === undefined) {
-                    v = lastv
-                    await next(v)
-                } else if (Math.abs(v - lastv) >= value) {
-                    v = lastv
-                    await next(v)
-                }
+            return await source.subscribe({
+                error,
+                complete,
+                next: async v => {
+                    if (lastv === undefined) {
+                        v = lastv
+                        await next(v)
+                    } else if (Math.abs(v - lastv) >= value) {
+                        v = lastv
+                        await next(v)
+                    }
+                },
             })
         })
     }
@@ -534,6 +545,28 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
                     timer = setTimeout(async () => {
                         await next(value)
                     }, duration)
+                },
+            })
+        })
+    }
+}
+
+export default function skipRepeats<T>(
+    equals?: (left: T, right: T) => boolean
+): OperatorFunction<T, T> {
+    return function operator(source: Observable<T>) {
+        return new Observable<T>(async ({ error, next, complete }) => {
+            let lastValue: any = {}
+            const eq: (left: T, right: T) => boolean =
+                equals || ((l: T, r: T) => l === r)
+            return await source.subscribe({
+                error,
+                complete,
+                next: async value => {
+                    if (!eq(lastValue, value)) {
+                        lastValue = value
+                        await next((lastValue = value))
+                    }
                 },
             })
         })
