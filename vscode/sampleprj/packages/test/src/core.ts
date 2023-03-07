@@ -92,25 +92,29 @@ export class TestNode {
 
     async run(runOptions: RunOptions) {
         const { log } = runOptions
-        const { expectedError } = this.options || {}
+        let { expectedError } = this.options || {}
         log(`  ${this.name}`)
         try {
             this.state = TestState.Running
             this.error = undefined
 
             await this.body()
-            if (expectedError)
+            if (expectedError) {
+                // the throw below should be logged as error, not as expectedError
+                expectedError = false 
                 throw new AssertionError(
                     "expectedError",
                     "expected an error from test"
                 )
+            }
             this.state = TestState.Passed
-        } catch (error: unknown) {
+        } catch (error: any) {
             if (expectedError) {
                 this.state = TestState.Passed
             } else {
                 this.state = TestState.Error
                 this.error = error
+                if (error.print) error.print()
             }
         }
     }
