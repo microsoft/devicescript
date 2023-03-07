@@ -81,8 +81,9 @@ describe("transform operators", () => {
 
 describe("filter operators", () => {
     test("threshold", async () => {
-        const obs = of([1, 1.2, 1.3, 1.4, 1.5])
-        await obs.pipe(threshold(0.2)).subscribe(v => console.log(v))
+        const obs = of([1, 1.2, 1.3, 1.4, 1.5, 1.6, 2, 1])
+        await obs.pipe(threshold(0.25)).subscribe(v => console.log(v))
+        await emits(obs, [1, 1.3, 1.6, 2, 1])
     })
 
     test("filter", async () => {
