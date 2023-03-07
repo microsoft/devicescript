@@ -20,7 +20,9 @@ export interface TestQuery {
     testFilter?: (test: TestNode) => boolean
     suiteFilter?: (suite: SuiteNode) => boolean
 }
-export type RunOptions = TestQuery
+export type RunOptions = TestQuery & {
+    log: (...args: any[]) => void
+}
 export class SuiteNode {
     readonly children: SuiteNode[] = []
     readonly tests: TestNode[] = []
@@ -38,7 +40,9 @@ export class SuiteNode {
     }
 
     async run(options: RunOptions) {
-        console.log(` ${this.name}`)
+        const { log } = options
+
+        if (this.name) log(this.name)
         const { suiteFilter, testFilter } = options
 
         const result = {
@@ -80,7 +84,8 @@ export class TestNode {
     constructor(public name: string, public body: TestFunction) {}
 
     async run(options: RunOptions) {
-        console.log(`  ${this.name}`)
+        const { log } = options
+        log(`  ${this.name}`)
         try {
             this.state = TestState.Running
             this.error = undefined
@@ -154,13 +159,13 @@ export class Expect<T> {
     }
 }
 
-export async function runTests(
-    options: {
-        testFilter?: (test: TestNode) => boolean
-        suiteFilter?: (suite: SuiteNode) => boolean
-    } = {}
-) {
-    console.log(`running ${root.testCount()} tests`)
-    const { total, pass, error } = await root.run(options)
-    console.log(`tests: ${total}, pass: ${pass}, error: ${error}`)
+export async function runTests(options: TestQuery = {}) {
+    const log = (...args: any[]) => console.log(args)
+    const testOptions = {
+        ...options,
+        log,
+    }
+    log(`running ${root.testCount()} tests`)
+    const { total, pass, error } = await root.run(testOptions)
+    log(`tests: ${total}, pass: ${pass}, error: ${error}`)
 }
