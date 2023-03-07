@@ -72,6 +72,11 @@ export class Value {
         this.flags |= VF_HAS_PARENT
     }
 
+    assumeStateless() {
+        assert(this.usesState)
+        this.flags &= ~VF_USES_STATE
+    }
+
     _set(src: Value) {
         if (!this._userdata) this._userdata = src._userdata
         this.op = src.op
