@@ -46,9 +46,9 @@ async function every2() {
     await every1()
 }
 
-ds.everyMs(20, async () => {
+setInterval(async () => {
     await every2()
-})
+}, 20)
 cowsay("Hello cow!")
 await ds.sleepMs(100)
 bar()

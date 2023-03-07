@@ -14,6 +14,6 @@ led.brightness.subscribe(async b => {
     await relay.active.write(b < 0.2)
 })
 
-ds.everyMs(200, async () => {
+setInterval(async () => {
     console.log("lb", await led.brightness.read())
-})
+}, 200)

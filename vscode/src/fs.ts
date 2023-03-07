@@ -23,6 +23,11 @@ export async function writeFile(
         file,
         new TextEncoder().encode(fileContent)
     )
+    await openFileEditor(folder, fileName)
+}
+
+export async function openFileEditor(folder: vscode.Uri, fileName: string) {
+    const file = vscode.Uri.joinPath(folder, fileName)
     const document = await vscode.workspace.openTextDocument(file)
     await vscode.window.showTextDocument(document)
 }

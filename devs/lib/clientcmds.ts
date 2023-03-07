@@ -226,6 +226,19 @@ Array.prototype.pop = function () {
     return r
 }
 
+Array.prototype.shift = function () {
+    if (this.length === 0) return undefined
+    const r = this[0]
+    this.insert(0, -1)
+    return r
+}
+
+Array.prototype.unshift = function (...elts: any[]) {
+    this.insert(0, elts.length)
+    for (let i = 0; i < elts.length; ++i) this[i] = elts[i]
+    return this.length
+}
+
 Array.prototype.indexOf = function (elt, from) {
     const length = this.length
     if (from == undefined) from = 0

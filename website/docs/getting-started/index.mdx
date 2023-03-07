@@ -9,9 +9,9 @@ hide_table_of_contents: true
 You do not need hardware or install any tools to try out DeviceScript. Try running this snippet!
 
 ```ts edit
-ds.everyMs(1000, () => {
+setInterval(() => {
     console.log(`hello`)
-})
+}, 1000)
 ```
 
 You can edit it directly and press `Edit` to load it in the DeviceScript simulator in the documentation.

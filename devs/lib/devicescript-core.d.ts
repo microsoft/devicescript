@@ -145,11 +145,6 @@ declare module "@devicescript/core" {
     export function format(fmt: string, ...args: number[]): string
 
     /**
-     * Run a callback every given number of milliseconds.
-     */
-    export function everyMs(milliseconds: number, callback: Callback): void
-
-    /**
      * Wait for specified number of milliseconds.
      */
     export function sleepMs(milliseconds: number): Promise<void>
@@ -188,6 +183,12 @@ declare module "@devicescript/core" {
      * Identity function, used to prevent constant folding.
      */
     export function _id<T>(a: T): T
+
+    /**
+     * Return number of milliseconds since device boot or program start.
+     * Note that it only changes upon `await`.
+     */
+    export function millis(): number
 
     export { Buffer }
 
@@ -234,6 +235,41 @@ declare module "@devicescript/core" {
          * @param string A string that contains a floating-point number.
          */
         function parseFloat(string: string): number
+    }
+
+    //
+    // Timeouts
+    //
+
+    export { setTimeout, setInterval, clearTimeout, clearInterval }
+    global {
+        /**
+         * Schedule a function to be called after specified number of milliseconds.
+         */
+        function setTimeout(
+            callback: () => void | Promise<void>,
+            ms?: number
+        ): number
+
+        /**
+         * Cancel previously scheduled function.
+         * @param id value returned from setTimeout()
+         */
+        function clearTimeout(id: number): void
+
+        /**
+         * Schedule a function to be called periodically, every `ms` milliseconds.
+         */
+        function setInterval(
+            callback: () => void | Promise<void>,
+            ms?: number
+        ): number
+
+        /**
+         * Cancel previously scheduled periodic callback.
+         * @param id value returned from setInterval()
+         */
+        function clearInterval(id: number): void
     }
 
     //

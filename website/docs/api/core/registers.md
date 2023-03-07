@@ -18,10 +18,10 @@ The `read` method gets the current reported value stored in the register.
 
 ```ts
 const sensor = new ds.Temperature()
-ds.everyMs(1000, () => {
+setInterval(async () => {
     const t = await sensor.temperature.read()
     console.log(t)
-})
+}, 1000)
 ```
 
 ## write

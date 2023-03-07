@@ -2453,7 +2453,16 @@ class Program implements TopOpWriter {
                     (ts.isVariableDeclarationList(d.parent) &&
                         ts.isSourceFile(d.parent.parent.parent))
                 ) {
-                    if (["parseInt", "parseFloat"].indexOf(r) >= 0)
+                    if (
+                        [
+                            "parseInt",
+                            "parseFloat",
+                            "setTimeout",
+                            "clearTimeout",
+                            "setInterval",
+                            "clearInterval",
+                        ].indexOf(r) >= 0
+                    )
                         return "#ds." + r
                     return "#" + r
                 }
@@ -2489,23 +2498,6 @@ class Program implements TopOpWriter {
             case "ds._id":
                 this.requireArgs(expr, 1)
                 return this.emitExpr(expr.arguments[0])
-            case "ds.everyMs": {
-                this.requireTopLevel(expr.position)
-                this.requireArgs(expr, 2)
-                const time = Math.round(
-                    this.forceNumberLiteral(expr.arguments[0])
-                )
-                if (time < 20)
-                    throwError(
-                        expr.position,
-                        "minimum everyMs() period is 20ms"
-                    )
-                const proc = this.emitHandler("every", expr.arguments[1], {
-                    every: time,
-                })
-                proc.callMe(wr, [], OpCall.BG)
-                return undef()
-            }
             case "ds._onStart": {
                 this.requireTopLevel(expr.position)
                 this.requireArgs(expr, 1)
@@ -2518,8 +2510,8 @@ class Program implements TopOpWriter {
                     wr.dsMember(BuiltInString.LOG),
                     this.compileFormat(expr.arguments)
                 )
-                return undef()
-            case "Date.now":
+                return unit()
+            case "ds.millis":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)
 
             case "Buffer.getAt": {
@@ -2762,6 +2754,11 @@ class Program implements TopOpWriter {
         return this.emitBuiltInConstByName(this.nodeName(expr))
     }
 
+    private isBuiltInObj(nodeName: string) {
+        if (nodeName == "#ds_impl") return true
+        return builtInObjByName.hasOwnProperty(nodeName)
+    }
+
     emitBuiltInConstByName(nodeName: string) {
         if (!nodeName) return null
         switch (nodeName) {
@@ -2853,19 +2850,49 @@ class Program implements TopOpWriter {
         return res
     }
 
-    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
-        const left = expr.left
+    private isAllPropertyAccess(expr: ts.Expression): boolean {
+        return (
+            ts.isIdentifier(expr) ||
+            (ts.isPropertyAccessExpression(expr) &&
+                this.isAllPropertyAccess(expr.expression))
+        )
+    }
 
-        if (!ts.isPropertyAccessExpression(left)) return null
-        if (!ts.isFunctionExpression(expr.right)) return null
+    private isFunctionValue(expr: ts.Expression) {
+        if (ts.isFunctionExpression(expr) || ts.isArrowFunction(expr))
+            return true
+        if (
+            ts.isIdentifier(expr) &&
+            this.checker.getTypeAtLocation(expr).getCallSignatures().length > 0
+        )
+            return true
+        return false
+    }
+
+    private isPrototypeLike(
+        expr: ts.Expression
+    ): expr is ts.PropertyAccessExpression {
+        if (!ts.isPropertyAccessExpression(expr)) return false
+        if (
+            ts.isPropertyAccessExpression(expr.expression) &&
+            idName(expr.expression.name) == "prototype"
+        )
+            return true
+        if (this.isBuiltInObj(this.nodeName(expr.expression))) return true
+        return false
+    }
+
+    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
+        if (!this.isPrototypeLike(expr.left)) return null
+        if (!this.isFunctionValue(expr.right)) return null
         if (!this.isTopLevel(expr.parent)) return null
 
-        const sym = this.getSymAtLocation(left)
+        const sym = this.getSymAtLocation(expr.left)
         const decl = sym?.valueDeclaration
 
         if (decl) {
             this.protoDefinitions.push({
-                methodName: idName(left.name),
+                methodName: idName(expr.left.name),
                 className: this.nodeName(decl.parent),
                 names: this.methodNames(sym),
                 protoUpdate: expr,
