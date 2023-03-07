@@ -159,13 +159,18 @@ export class Expect<T> {
     }
 }
 
-export async function runTests(options: TestQuery = {}) {
+export async function runTests(
+    options: TestQuery & { ignoreErrors?: boolean } = {}
+) {
+    const { ignoreErrors, ...query } = options
     const log = (...args: any[]) => console.log(args)
     const testOptions = {
-        ...options,
+        ...query,
         log,
     }
     log(`running ${root.testCount()} tests`)
     const { total, pass, error } = await root.run(testOptions)
     log(`tests: ${total}, pass: ${pass}, error: ${error}`)
+
+    if (error && !ignoreErrors) throw new Error("test errors")
 }
