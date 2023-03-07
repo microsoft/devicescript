@@ -6,6 +6,7 @@ import {
     map,
     Observable,
     of,
+    span,
     threshold,
 } from "./index"
 
@@ -55,6 +56,12 @@ async function testFilter() {
         .subscribe(t => console.log(t))
 }
 
+async function testSpan() {
+    of([1, 2, 3])
+        .pipe(span(t => t + 1, 0))
+        .subscribe(t => console.log(t))
+}
+
 async function testDelay() {
     temp.temperature
         .pipe(
@@ -72,3 +79,4 @@ await testThreshold()
 await testMap()
 await testFilter()
 await testDelay()
+await testSpan()
