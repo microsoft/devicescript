@@ -1738,6 +1738,7 @@ class Program implements TopOpWriter {
         const name = this.symName(sym)
         const names = [name]
 
+        //TODO: michal?
         if (name == "#ds.RegisterNumber.onChange")
             names.push(
                 "#ds.RegisterBuffer.onChange",

@@ -103,62 +103,6 @@ declare module "@devicescript/core" {
         subscribe(handler: (curr: T, reg: this) => AsyncVoid): Unsubscribe
     }
 
-    export type RegisterNumber = Register<number>
-
-    /**
-     * A client for a register that holds a Buffer (byte[]).
-     */
-    export class RegisterBuffer extends Register {
-        /**
-         * Gets the current value of the register.
-         */
-        read(): Promise<Buffer>
-
-        /**
-         * Sets the current value of the register.
-         * @param value value to assign to the register
-         * TODO: is the buffer copied or owned?
-         * TODO: is Buffer = null same as buffer[0]
-         */
-        write(value: Buffer): Promise<void>
-
-        /**
-         * Registers a callback to execute when the register value changes
-         * @param handler callback to execute
-         */
-        onChange(handler: (curr: Buffer) => AsyncVoid): void
-    }
-
-    /**
-     * A client for a register that holds a numerical value.
-     */
-    export class RegisterBool extends Register {
-        /**
-         * Gets the current value of the register as a number.
-         * TODO: missing value behavior (optional regs)
-         */
-        read(): Promise<boolean>
-        /**
-         * Sets the current value of the register as a number.
-         * TODO: missing value behavior (optional regs)
-         */
-        write(value: boolean): Promise<void>
-        onChange(handler: (curr: boolean) => AsyncVoid): void
-    }
-
-    /**
-     * A client for a register that holds a string value.
-     */
-    export class RegisterString extends Register {
-        read(): Promise<string>
-        write(value: string): Promise<void>
-    }
-
-    export class RegisterArray extends Register {
-        read(): Promise<any[]>
-        write(value: any[]): Promise<void>
-    }
-
     export class Event extends PacketInfo {
         /**
          * Blocks the current thread under the event is received.

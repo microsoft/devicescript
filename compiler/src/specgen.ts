@@ -28,11 +28,11 @@ import { prelude } from "./prelude"
 import { camelize, upperCamel } from "./util"
 import { pinFunctions } from "./board"
 
-const REGISTER_NUMBER = "RegisterNumber"
-const REGISTER_BOOL = "RegisterBool"
-const REGISTER_STRING = "RegisterString"
-const REGISTER_BUFFER = "RegisterBuffer"
-const REGISTER_ARRAY = "RegisterArray"
+const REGISTER_NUMBER = "Register<number>"
+const REGISTER_BOOL = "Register<boolean>"
+const REGISTER_STRING = "Register<string>"
+const REGISTER_BUFFER = "Register<Buffer>"
+const REGISTER_ARRAY = "Register<any[]>"
 
 export function resolveBuildConfig(
     local?: LocalBuildConfig
@@ -61,6 +61,7 @@ function toHex(n: number): string {
 
 function ignoreSpec(info: jdspec.ServiceSpec) {
     return (
+        info.shortId[0] === "_" ||
         info.status === "deprecated" ||
         [
             SRV_CONTROL,
@@ -231,7 +232,9 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
                 ` */`,
                 // `//% gpio=${gpio}`,
                 `${pinName}: ${types.join(" & ")}`,
-            ].map(l => "        " + l + "\n").join("")
+            ]
+                .map(l => "        " + l + "\n")
+                .join("")
         }
     }
     r += `    }\n`
@@ -451,27 +454,15 @@ const value = await ${varname}.${pname}.read()
 `,
             isConst
                 ? undefined
-                : isNumber
-                ? `-  track value changes
+                : `-  track incoming values
 \`\`\`ts ${nobuild}
 const ${varname} = new ds.${clname}()
 // ...
-${varname}.${pname}.onChange(0, async () => {
-    const value = await ${varname}.${pname}.read()
+${varname}.${pname}.subscribe(async (value) => {
+    ...
 })
 \`\`\`
 `
-                : isBoolean || isString
-                ? `-  track value changes
-\`\`\`ts ${nobuild}
-const ${varname} = new ds.${clname}()
-// ...
-${varname}.${pname}.onChange(async () => {
-    const value = await ${varname}.${pname}.read()
-})
-\`\`\`
-`
-                : undefined
         )
     })
 
