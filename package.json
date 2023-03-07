@@ -9,7 +9,7 @@
         "docs": "cd website && yarn start",
         "dev": "yarn watch & yarn docs",
         "devtools": "yarn build && node ./cli/devicescript devtools",
-        "test": "node ./cli/devicescript ctool --test",
+        "test": "node ./cli/devicescript ctool --test && cd vscode/sampleprj/packages/test && yarn test",
         "presemantic": "node ./scripts/presemantic.mjs",
         "boards": "node ./cli/devicescript ctool --fetch-boards compiler/src/boards.json",
         "localboards2": "node ./cli/devicescript ctool --local-boards ../.. --fetch-boards compiler/src/boards.json",
