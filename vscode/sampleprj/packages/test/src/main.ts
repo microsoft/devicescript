@@ -10,21 +10,33 @@ describe("pass", function () {
 })
 
 describe("error", function () {
-    test("throw", () => {
-        throw new Error("expected fail")
-    })
-    test("undefined", () => {
-        const s: { f: () => void } = undefined
-        s.f()
-    })
+    test(
+        "throw",
+        () => {
+            throw new Error("expected fail")
+        },
+        { expectedError: true }
+    )
+    test(
+        "undefined",
+        () => {
+            const s: { f: () => void } = undefined
+            s.f()
+        },
+        { expectedError: true }
+    )
 })
 describe("expect", function () {
     test("toBe.pass", () => {
         expect(1).toBe(1)
     })
-    test("toBe.error", () => {
-        expect(1).toBe(0)
-    })
+    test(
+        "toBe.error",
+        () => {
+            expect(1).toBe(0)
+        },
+        { expectedError: true }
+    )
     test("toThrow", () => {
         expect(() => {
             throw new Error("boom")
@@ -32,4 +44,4 @@ describe("expect", function () {
     })
 })
 
-await runTests({ ignoreErrors: true })
+await runTests()

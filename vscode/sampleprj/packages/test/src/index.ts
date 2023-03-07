@@ -9,6 +9,9 @@ export enum TestState {
     Error,
     Ignored,
 }
+export interface TestOptions {
+    expectedError?: boolean
+}
 export class AssertionError extends Error {
     constructor(matcher: string, message: string) {
         super()
@@ -81,21 +84,34 @@ export class TestNode {
     state: TestState = TestState.NotRun
     error: unknown
 
-    constructor(public name: string, public body: TestFunction) {}
+    constructor(
+        public readonly name: string,
+        public readonly body: TestFunction,
+        public readonly options: TestOptions
+    ) {}
 
-    async run(options: RunOptions) {
-        const { log } = options
+    async run(runOptions: RunOptions) {
+        const { log } = runOptions
+        const { expectedError } = this.options || {}
         log(`  ${this.name}`)
         try {
             this.state = TestState.Running
             this.error = undefined
 
             await this.body()
-
+            if (expectedError)
+                throw new AssertionError(
+                    "expectedError",
+                    "expected an error from test"
+                )
             this.state = TestState.Passed
         } catch (error: unknown) {
-            this.state = TestState.Error
-            this.error = error
+            if (expectedError) {
+                this.state = TestState.Passed
+            } else {
+                this.state = TestState.Error
+                this.error = error
+            }
         }
     }
 }
@@ -122,9 +138,9 @@ export function describe(name: string, body: SuiteFunction) {
     }
 }
 
-export function test(name: string, body: TestFunction) {
+export function test(name: string, body: TestFunction, options?: TestOptions) {
     const parent = currentSuite()
-    parent.tests.push(new TestNode(name, body))
+    parent.tests.push(new TestNode(name, body, options))
 }
 
 export const it = test
@@ -159,10 +175,8 @@ export class Expect<T> {
     }
 }
 
-export async function runTests(
-    options: TestQuery & { ignoreErrors?: boolean } = {}
-) {
-    const { ignoreErrors, ...query } = options
+export async function runTests(options: TestQuery = {}) {
+    const { ...query } = options
     const log = (...args: any[]) => console.log(args)
     const testOptions = {
         ...query,
@@ -172,5 +186,5 @@ export async function runTests(
     const { total, pass, error } = await root.run(testOptions)
     log(`tests: ${total}, pass: ${pass}, error: ${error}`)
 
-    if (error && !ignoreErrors) throw new Error("test errors")
+    if (error) throw new Error("test errors")
 }
