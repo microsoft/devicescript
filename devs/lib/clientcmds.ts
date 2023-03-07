@@ -25,8 +25,6 @@ ds.Led.prototype.setAll = async function (r, g, b) {
     await this.pixels.write(buf)
 }
 
-type ChangeHandler = (v: any, reg: ds.Register<any>) => ds.AsyncVoid
-
 async function callHandlers(hh: ds.Callback[]) {
     if (hh) for (const h of hh) await h()
 }
@@ -57,7 +55,7 @@ ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
     }
     if (!pkt) return
     if (pkt.isReport && pkt.isRegGet && this._changeHandlers) {
-        const handlers: ChangeHandler[] = this._changeHandlers[pkt.regCode + ""]
+        const handlers = this._changeHandlers[pkt.regCode + ""]
         if (handlers) {
             const val = pkt.decode()
             for (const h of handlers) {
@@ -68,7 +66,8 @@ ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
     }
     if (pkt.isEvent && this._eventHandlers) {
         const hh = this._eventHandlers[pkt.eventCode + ""]
-        if (hh) for (const h of hh) await h(pkt)
+        // TODO pass event
+        if (hh) for (const h of hh) await h(pkt.decode(), null)
     }
 }
 
@@ -100,22 +99,18 @@ ds.Register.prototype.subscribe = function subscribe<T>(
         role._changeHandlers = {}
     }
     const key = this.code + ""
-    let lst: ChangeHandler[] = role._changeHandlers[key]
-    if (!lst) {
-        lst = []
-        role._changeHandlers[key] = lst
-    }
-    lst[lst.length] = handler
+    const lst = role._changeHandlers[key] || (role._changeHandlers[key] = [])
+    lst.push(handler)
     return () => {
         const idx = lst.indexOf(handler)
         if (idx >= 0) {
             lst.insert(idx, -1)
-            if (lst.length == 0)
-                delete role._changeHandlers[key]
+            if (lst.length == 0) delete role._changeHandlers[key]
         }
     }
 }
 
+/* TODO: redo cloud
 async function handleCloudCommand(pkt: ds.Packet) {
     const [seqNo, cmd, ...vals] = pkt.decode()
     const cloud = pkt.role as ds.CloudAdapter
@@ -147,16 +142,23 @@ ds.CloudAdapter.prototype.onMethod = function onMethod(
     }
     this._cloudHandlers[name] = handler
 }
-
-ds.Event.prototype.subscribe = function (handler) {
-    let m = this.role._eventHandlers
-    if (!m) {
-        m = {}
-        this.role._eventHandlers = m
-    }
+*/
+ds.Event.prototype.subscribe = function subscribe<T>(
+    this: ds.Event<T>,
+    handler: (v: T, reg: ds.Event<T>) => void
+) {
+    const eventHandlers =
+        this.role._eventHandlers || (this.role._eventHandlers = {})
     const k = this.code + ""
-    if (!m[k]) m[k] = []
-    m[k].push(handler)
+    const handlers = eventHandlers[k] || (eventHandlers[k] = [])
+    handlers.push(handler)
+    return () => {
+        const idx = handlers.indexOf(handler)
+        if (idx >= 0) {
+            handlers.insert(idx, -1)
+            if (handlers.length == 0) delete eventHandlers[k]
+        }
+    }
 }
 
 ds.Event.prototype.wait = async function () {

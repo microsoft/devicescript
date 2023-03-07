@@ -4,12 +4,12 @@ declare module "@devicescript/core" {
     export type AsyncVoid = void | Promise<void>
     export type Callback = () => AsyncVoid
     export type PktHandler = (pkt: Packet) => AsyncVoid
-
     export type Unsubscribe = () => void
-
-    export type SMap<T> = {
-        [idx: string]: T
-    }
+    export type RegisterChangeHandler = (
+        v: any,
+        reg: Register<any>
+    ) => AsyncVoid
+    export type EventChangeHandler = (v: any, reg: Event<any>) => AsyncVoid
 
     /**
      * A base class for service clients
@@ -37,13 +37,13 @@ declare module "@devicescript/core" {
          */
         onPacket: PktHandler
 
-        _changeHandlers: any
+        _changeHandlers: Record<string, RegisterChangeHandler[]>
 
         _wasConnected: boolean
         _connHandlers: Callback[]
         _disconHandlers: Callback[]
 
-        _eventHandlers: SMap<PktHandler[]>
+        _eventHandlers: Record<string, EventChangeHandler[]>
     }
 
     export class Packet {
@@ -95,25 +95,22 @@ declare module "@devicescript/core" {
         write(value: T): Promise<void>
 
         /**
-         * Registers a callback to execute when the register value changes by the given threshold
-         * @param threshold minimum value change required to trigger the handler
+         * Registers a callback to execute when a register value is received
          * @param handler callback to execute
-         * TODO: can we unregister?
          */
         subscribe(handler: (curr: T, reg: this) => AsyncVoid): Unsubscribe
     }
 
-    export class Event extends PacketInfo {
+    export class Event<T = void> extends PacketInfo {
         /**
          * Blocks the current thread under the event is received.
          */
         wait(): Promise<void>
         /**
-         * Register a callback that will be raised when the event is raised.
-         * @handler callback to execute
+         * Registers a callback to execute when an event is received
+         * @param handler callback to execute
          */
-        // TODO: consider something like "onReceived" to match other events
-        subscribe(handler: (pkt: Packet) => AsyncVoid): void
+        subscribe(handler: (curr: T, reg: this) => AsyncVoid): Unsubscribe
     }
 
     // TODO: maybe a better name, is this some kind of internal data structure?
@@ -122,6 +119,7 @@ declare module "@devicescript/core" {
         wait(): Promise<void>
     }
 
+    /* TODO
     export interface CloudAdapter {
         onMethod(
             name: string,
@@ -139,6 +137,7 @@ declare module "@devicescript/core" {
         _cloudHandlers: any
     }
     export const cloud: CloudAdapter
+    */
 
     /**
      * Format string. Best use backtick templates instead.
