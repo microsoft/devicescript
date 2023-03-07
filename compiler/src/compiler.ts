@@ -2746,6 +2746,11 @@ class Program implements TopOpWriter {
         return this.emitBuiltInConstByName(this.nodeName(expr))
     }
 
+    private isBuiltInObj(nodeName: string) {
+        if (nodeName == "#ds_impl") return true
+        return builtInObjByName.hasOwnProperty(nodeName)
+    }
+
     emitBuiltInConstByName(nodeName: string) {
         if (!nodeName) return null
         switch (nodeName) {
@@ -2856,19 +2861,30 @@ class Program implements TopOpWriter {
         return false
     }
 
-    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
-        const left = expr.left
+    private isPrototypeLike(
+        expr: ts.Expression
+    ): expr is ts.PropertyAccessExpression {
+        if (!ts.isPropertyAccessExpression(expr)) return false
+        if (
+            ts.isPropertyAccessExpression(expr.expression) &&
+            idName(expr.expression.name) == "prototype"
+        )
+            return true
+        if (this.isBuiltInObj(this.nodeName(expr.expression))) return true
+        return false
+    }
 
-        if (!ts.isPropertyAccessExpression(left)) return null
+    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
+        if (!this.isPrototypeLike(expr.left)) return null
         if (!this.isFunctionValue(expr.right)) return null
         if (!this.isTopLevel(expr.parent)) return null
 
-        const sym = this.getSymAtLocation(left)
+        const sym = this.getSymAtLocation(expr.left)
         const decl = sym?.valueDeclaration
 
         if (decl) {
             this.protoDefinitions.push({
-                methodName: idName(left.name),
+                methodName: idName(expr.left.name),
                 className: this.nodeName(decl.parent),
                 names: this.methodNames(sym),
                 protoUpdate: expr,
