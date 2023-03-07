@@ -207,6 +207,7 @@ export class Observable<T> {
     ): Observable<unknown>
 
     pipe(...operations: OperatorFunction<any, any>[]): Observable<any> {
+        console.log(`pipe ${operations.length}`)
         return operations?.length ? pipeFromArray(operations)(this) : this
     }
 }
@@ -460,7 +461,9 @@ function pipeFromArray<T, R>(
 export function map<T, R>(
     converter: (value: T, index: number) => R
 ): OperatorFunction<T, R> {
+    console.log(`create map operator`)
     return function operator(source: Observable<T>) {
+        console.log(`call map operator`)
         return new Observable<R>(async observer => {
             const { next } = observer
             let index = 0

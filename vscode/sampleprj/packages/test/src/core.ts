@@ -101,7 +101,7 @@ export class TestNode {
             await this.body()
             if (expectedError) {
                 // the throw below should be logged as error, not as expectedError
-                expectedError = false 
+                expectedError = false
                 throw new AssertionError(
                     "expectedError",
                     "expected an error from test"
@@ -128,6 +128,11 @@ function currentSuite() {
     return parent
 }
 
+/**
+ * Organizes tests or nested test suites into a test suite
+ * @param name name of the test suite
+ * @param body function generating the tests
+ */
 export function describe(name: string, body: SuiteFunction) {
     const node = new SuiteNode(name)
 
@@ -142,11 +147,25 @@ export function describe(name: string, body: SuiteFunction) {
     }
 }
 
+/**
+ * Alias for describe
+ */
+export const suite = describe
+
+/**
+ * Declares a test
+ * @param name name of the test
+ * @param body function to execute
+ * @param options extra options
+ */
 export function test(name: string, body: TestFunction, options?: TestOptions) {
     const parent = currentSuite()
     parent.tests.push(new TestNode(name, body, options))
 }
 
+/**
+ * Alias for test
+ */
 export const it = test
 
 export async function runTests(options: TestQuery = {}) {

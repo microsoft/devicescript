@@ -43,8 +43,10 @@ describe("basics", () => {
 
 describe("creation operators", () => {
     test("of", async () => {
-        const obs = of([1, 2, 3, 4, 5])
+        const a = [1, 2, 3, 4, 5]
+        const obs = of(a)
         await obs.subscribe(v => console.log(v))
+        await emits(obs, a.slice(0))
     })
     test("fromEvent", async () => {
         const obs = fromEvent(btn.down)
@@ -59,14 +61,21 @@ describe("creation operators", () => {
 
 describe("transform operators", () => {
     test("map", async () => {
-        await of([1, 2, 3])
-            .pipe(map(x => x * x))
-            .subscribe(t => console.log(t))
+        const obs = of([1, 2, 3]).pipe(
+            map(x => {
+                const r = x * x
+                console.log(`${x}->${r}`)
+                return r
+            })
+        )
+        await obs.subscribe(t => console.log(t))
+        await emits(obs, [1, 4, 9])
     })
-    test("map", async () => {
-        await of([1, 2, 3])
-            .pipe(span(t => t + 1, 0))
-            .subscribe(t => console.log(t))
+    test("span", async () => {
+        const a = [11, 12, 31]
+        const obs = of(a).pipe(span(t => t + 1, 0))
+        await obs.subscribe(t => console.log(t))
+        await emits(obs, [1, 2, 3])
     })
 })
 
@@ -76,10 +85,10 @@ describe("filter operators", () => {
         await obs.pipe(threshold(0.2)).subscribe(v => console.log(v))
     })
 
-    test("threshold", async () => {
-        await of([1, 2, 3])
-            .pipe(filter(t => t > 2))
-            .subscribe(t => console.log(t))
+    test("filter", async () => {
+        const obs = of([1, 2, 3]).pipe(filter(t => t > 2))
+        await obs.subscribe(t => console.log(t))
+        await emits(obs, [3])
     })
 })
 
