@@ -79,26 +79,16 @@ void devscloud_init(const devscloud_api_t *cloud_api) {
     _devscloud_state = state;
 }
 
-static int upload(const char *label, int numvals, double *vals) {
+static int send_message(int data_type, const void *data, unsigned datasize) {
     return 0;
 }
 
-static int bin_upload(const void *data, unsigned datasize) {
-    return 0;
-}
-static int agg_upload(const char *label, jd_device_service_t *service,
-                      jd_timeseries_aggregator_stored_report_t *data) {
-    return 0;
-}
 static int is_connected(void) {
     return 1;
 }
-size_t max_bin_upload_size;
 
 const devscloud_api_t noop_cloud = {
-    .upload = upload,
-    .bin_upload = bin_upload,
-    .agg_upload = agg_upload,
+    .send_message = send_message,
     .is_connected = is_connected,
     .max_bin_upload_size = 1024,
 };
