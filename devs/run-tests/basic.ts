@@ -752,6 +752,33 @@ function testUndef() {
     ds.assert(console.log("foo") === undefined)
 }
 
+
+interface XYZ {
+    x: number
+    y: string
+    z?: number
+}
+
+function testDestructArg() {
+    function foo({ x, y, z }: XYZ) {
+        ds.assert(x === 1)
+        ds.assert(y === "foo")
+        ds.assert(z === undefined)
+    }
+
+    function apply<T>(v: T, f: (v: T) => void) {
+        f(v)
+    }
+
+    apply({ x: 1, y: 2 }, ({ x, y }) => {
+        ds.assert(x === 1)
+        ds.assert(y === 2)
+    })
+    foo({ x: 1, y: "foo" })
+}
+
+
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -778,5 +805,6 @@ testJSON()
 testAnySwitch()
 testBuiltinExtends()
 testUndef()
+testDestructArg()
 
 console.log("all OK")
