@@ -43,6 +43,7 @@ export class Observable<T> {
     constructor(readonly subscriber: SubscriberFunction<T>) {}
 
     async subscribe(observer: SloppyObserver<T>): Promise<Subscription> {
+        const { subscriber } = this
         let start: ObserverStart
         let next: ObserverNext<T>
         let error: ObserverError
@@ -60,11 +61,12 @@ export class Observable<T> {
         let closed = false
         let wrapClosedSync =
             (fn: (value: any) => void): (() => void) =>
-            (v?: any) =>
-                closed || (fn && fn(v))
+            (v?: any) => {
+                if (!closed && fn) fn(v)
+            }
         let unsubscribeSync = wrapClosedSync(() => {
             closed = true
-            cleanup && cleanup()
+            cleanup?.()
         })
         let wrapUnsubscribeSync =
             (fn: (value: any) => void): (() => void) =>
@@ -87,8 +89,9 @@ export class Observable<T> {
         // next, async
         let wrapClosedAsync =
             (fn: (value: any) => Promise<void>): (() => Promise<void>) =>
-            async (v?: any) =>
-                closed || (fn && (await fn(v)))
+            async (v?: any) => {
+                if (!closed && fn) await fn(v)
+            }
         let wrapTryAsync =
             (fn: (value: T) => AsyncVoid): (() => Promise<void>) =>
             async (v?: T) => {
@@ -106,15 +109,15 @@ export class Observable<T> {
         }
         if (start) start(subscription)
         if (closed) return subscription
-        await wrapTryAsync(async () => {
-            let observer: SubscriptionObserver<T> = {
+        const sub = async () => {
+            const wrappedObserver: SubscriptionObserver<T> = {
                 closed,
                 error,
                 complete,
                 next,
             }
             // might unwrap an async function
-            const c = await this.subscriber(observer)
+            const c = await subscriber(wrappedObserver)
             if (c && typeof c === "function") cleanup = c
             else if (
                 c &&
@@ -123,7 +126,9 @@ export class Observable<T> {
             ) {
                 cleanup = c.unsubscribe
             }
-        })()
+        }
+        const wrappedSub = await wrapTryAsync(sub)
+        await wrappedSub()
         return subscription
     }
 
