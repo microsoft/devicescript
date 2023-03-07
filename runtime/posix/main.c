@@ -49,7 +49,6 @@ void app_init_services() {
     devsdbg_init();
     wsskhealth_init();
     devscloud_init(&wssk_cloud);
-    tsagg_init(&wssk_cloud);
 }
 
 struct {

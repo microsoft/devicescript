@@ -112,39 +112,6 @@ ds.Register.prototype.subscribe = function subscribe<T>(
     }
 }
 
-/* TODO: redo cloud
-async function handleCloudCommand(pkt: ds.Packet) {
-    const [seqNo, cmd, ...vals] = pkt.decode()
-    const cloud = pkt.role as ds.CloudAdapter
-    const h = cloud._cloudHandlers[cmd]
-    if (h) {
-        const r = await h(...vals)
-        await cloud.ackCloudCommand(
-            seqNo,
-            ds.CloudAdapterCommandStatus.OK,
-            ...r
-        )
-    } else {
-        // TODO Busy? store fiber ref and possibly kill?
-        await cloud.ackCloudCommand(
-            seqNo,
-            ds.CloudAdapterCommandStatus.NotFound
-        )
-    }
-}
-
-ds.CloudAdapter.prototype.onMethod = function onMethod(
-    this: ds.CloudAdapter,
-    name,
-    handler
-) {
-    if (!this._cloudHandlers) {
-        this.cloudCommand.subscribe(handleCloudCommand)
-        this._cloudHandlers = {}
-    }
-    this._cloudHandlers[name] = handler
-}
-*/
 ds.Event.prototype.subscribe = function subscribe<T>(
     this: ds.Event<T>,
     handler: (v: T, reg: ds.Event<T>) => void
