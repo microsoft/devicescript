@@ -199,10 +199,12 @@ const optionalFiles: FileSet = {
         scripts: {
             setup: "devicescript build", // generates .devicescript/lib/* files
             postinstall: "devicescript build",
-            "build:devicescript": "devicescript build",
+            "build:devicescript": "devicescript build src/main.ts",
             build: "yarn build:devicescript",
             "watch:devicescript": `devicescript devtools ${MAIN}`,
             watch: "yarn watch:devicescript",
+            "test:devicescript": "devicescript run src/main.ts --test",
+            test: "yarn test:devicescript",
             start: "yarn watch",
         },
     },

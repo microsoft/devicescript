@@ -1,4 +1,4 @@
-import { describe, expect, test } from "."
+import { describe, expect, runTests, test } from "."
 
 describe("this is a test suite", function () {
     test("should do something", () => {
@@ -15,3 +15,5 @@ describe("this is a test suite", function () {
         }).toThrow()
     })
 })
+
+await runTests()
