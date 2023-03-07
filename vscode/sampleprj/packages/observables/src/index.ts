@@ -383,7 +383,8 @@ ds.Event.prototype.pipe = function pipe<T>(
 }
 
 export function of<T>(values: T[]) {
-    return new Observable<T>(async ({ next, complete }) => {
+    return new Observable<T>(async observer => {
+        const { next, complete } = observer
         for (const value of values) await next(value)
         complete()
     })
@@ -402,16 +403,18 @@ export function fromPromise<T>(promise: Promise<T>): Observable<T> {
     })
 }
 
-export function fromEvent<TEvent extends ds.Event>(event: TEvent) {
-    return new Observable<TEvent>(
-        async ({ next }) => await event.subscribe(async v => await next(event))
-    )
+export function fromEvent<T>(event: ds.Event<T>) {
+    return new Observable<T>(async observer => {
+        const { next } = observer
+        await event.subscribe(async v => await next(v))
+    })
 }
 
 export function fromRegister<T>(register: ds.Register<T>) {
-    return new Observable<T>(
-        async ({ next }) => await register.subscribe(async v => await next(v))
-    )
+    return new Observable<T>(async observer => {
+        const { next } = observer
+        await register.subscribe(async v => await next(v))
+    })
 }
 
 export function identity<T>(x: T): T {
@@ -443,11 +446,13 @@ export function map<T, R>(
     converter: (value: T, index: number) => R | Promise<R>
 ): OperatorFunction<T, R> {
     return function operator(source: Observable<T>) {
-        return new Observable<R>(async ({ next }) => {
+        return new Observable<R>(async observer => {
+            const { next } = observer
             let index = 0
-            return await source.subscribe(
-                async v => await converter(v, index++)
-            )
+            return await source.subscribe(async v => {
+                const r = await converter(v, index++)
+                await next(r)
+            })
         })
     }
 }
@@ -455,7 +460,8 @@ export function filter<T>(
     condition: (value: T, index: number) => boolean
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(async ({ next }) => {
+        return new Observable<T>(async observer => {
+            const { next } = observer
             let index = 0
             return await source.subscribe(async v => {
                 if (condition(v, index++)) await next(v)
@@ -472,7 +478,8 @@ function clearTimeout(timeout: number): void {}
 
 export function delay<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(async ({ next, error, complete }) => {
+        return new Observable<T>(async observer => {
+            const { error, next, complete } = observer
             return await source.subscribe({
                 error,
                 complete,
@@ -486,19 +493,20 @@ export function delay<T>(duration: number): OperatorFunction<T, T> {
     }
 }
 
-export function span<V, A>(
-    accumulator: (acc: A, value: V, index: number) => A | Promise<A>,
+export function span<T, A>(
+    accumulator: (acc: A, value: T, index: number) => A | Promise<A>,
     seed: A
-): OperatorFunction<V, A> {
-    return function operator(source: Observable<V>) {
-        return new Observable<A>(async ({ next, error, complete }) => {
+): OperatorFunction<T, A> {
+    return function operator(source: Observable<T>) {
+        return new Observable<A>(async observer => {
+            const { error, next, complete } = observer
             let last: A = undefined
             let index = 0
             return await source.subscribe({
                 error,
                 complete,
                 next: async v => {
-                    if (last === undefined) {
+                    if (index === 0) {
                         last = seed
                         index++
                         await next(last)
@@ -514,7 +522,8 @@ export function span<V, A>(
 
 export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(({ error, next, complete }) => {
+        return new Observable<T>(async observer => {
+            const { error, next, complete } = observer
             let timer: number
             source.subscribe({
                 error,
@@ -538,7 +547,8 @@ export function skipRepeats<T>(
     equals?: (left: T, right: T) => boolean
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(async ({ error, next, complete }) => {
+        return new Observable<T>(async observer => {
+            const { error, next, complete } = observer
             let lastValue: any
             let hasValue = false
             const eq = equals || equality
@@ -563,7 +573,8 @@ export function threshold(value: number): OperatorFunction<number, number> {
 
 export function mergeAll<T>(): OperatorFunction<Observable<T>, T> {
     return function operator(source: Observable<Observable<T>>) {
-        return new Observable<T>(async ({ error, next, complete }) => {
+        return new Observable<T>(async observer => {
+            const { error, next, complete } = observer
             let sourceCompleted = false
             let remaining = 0
             const subscriptions: Subscription[] = []
@@ -591,7 +602,8 @@ export function mergeAll<T>(): OperatorFunction<Observable<T>, T> {
                 })
             )
             return () => {
-                for (const { unsubscribe } of subscriptions) unsubscribe()
+                for (const subscription of subscriptions)
+                    subscription.unsubscribe()
             }
         })
     }
