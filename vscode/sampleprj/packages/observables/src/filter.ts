@@ -23,6 +23,10 @@ export function filter<T>(
     }
 }
 
+/**
+ * Emits a notification from the source Observable
+ * only after a particular time span has passed without another source emission.
+ */
 export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(async observer => {
@@ -32,13 +36,50 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
                 error,
                 complete,
                 next: value => {
+                    // reset timer again
                     clearTimeout(timer)
                     timer = setTimeout(async () => {
+                        // done waiting, pass it on
+                        timer = undefined
                         await next(value)
                     }, duration)
                 },
             })
 
+            return () => {
+                unsubscribe()
+                clearTimeout(timer)
+            }
+        })
+    }
+}
+
+/**
+ * Emits a value from the source Observable,
+ * then ignores subsequent source values for duration milliseconds, then repeats this process.
+ */
+export function throttleTime<T>(duration: number): OperatorFunction<T, T> {
+    return function operator(source: Observable<T>) {
+        return new Observable<T>(async observer => {
+            const { error, next, complete } = observer
+            let timer: number
+            const { unsubscribe } = await source.subscribe({
+                error,
+                complete,
+                next: async value => {
+                    // ignore while timer active
+                    if (timer !== undefined) return
+                    // start debounce timer
+                    timer = setTimeout(async () => {
+                        clearTimeout(timer)
+                        timer = undefined
+                    }, duration)
+                    // pass value
+                    await next(value)
+                },
+            })
+
+            // clean up: stop timer
             return () => {
                 unsubscribe()
                 clearTimeout(timer)
