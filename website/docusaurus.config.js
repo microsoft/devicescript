@@ -172,6 +172,18 @@ const config = configure(
                     excludedFiles: ["**/api/clients/*.md"],
                     prefix: 'import * as ds from "@devicescript/core"',
                 },
+                {
+                    lang: "rx",
+                    nodeBin: "swirly",
+                    npmPackage: "swirly",
+                    extension: "txt",
+                    inputLang: null,
+                    outputLang: null,
+                    outputFiles: [{
+                        "name": "output.svg"
+                    }],
+                    args: ["input.txt", "output.svg"]
+                }
             ],
         },
     }

@@ -19,13 +19,22 @@ and logging it to the console.
 
 ## subscribe
 
-```ts edit
-console.log("starting...")
-const sensor = new ds.AirPressure()
-// listen for every pressure reading
+```ts const sensor = new ds.AirPressure()
+// highlight-next-line
 sensor.pressure.subscribe(pressure => {
     console.log(pressure)
 })
+```
+
+## unsubscribe
+
+```ts edit
+const sensor = new ds.AirPressure()
+// highlight-next-line
+const unsubscribe = sensor.pressure.subscribe(...)
+
+// highlight-next-line
+unsubscribe()
 ```
 
 ## observables
@@ -36,15 +45,23 @@ The observables are bundled in the `@devicescript/observables` package.
 In the example below, we pipe the register data through a `threshold` operator to only stream data entries once a significant change is detected.
 
 ```ts skip
+// highlight-next-line
 import { threshold } from "@devicescript/observables"
-console.log("starting...")
 const sensor = new ds.AirPressure()
-// listen for every pressure reading
 await sensor.pressure
-    .pipe(
-        threshold(1) // at least 10 hPa change to trigger callback
-    )
+    // highlight-next-line
+    .pipe(threshold(1))
     .subscribe(pressure => {
         console.log(pressure)
     })
+```
+
+Observables are usually visualized using marble diagrams.
+
+```rx
+-1--2-4--5-|
+
+> threshold(3)
+
+-1----4----|
 ```
