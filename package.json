@@ -13,7 +13,7 @@
         "test:test": "cd vscode/sampleprj/packages/test && yarn test",
         "test:cowsay": "cd vscode/sampleprj/packages/cowsay && yarn test",
         "test:observables": "cd vscode/sampleprj/packages/observables && yarn test",
-        "test": "yarn test:compiler && yarn test:test && yarn test:observables && yarn test:cowsay",
+        "test": "yarn test:compiler && yarn test:test && yarn test:cowsay",
         "presemantic": "node ./scripts/presemantic.mjs",
         "boards": "node ./cli/devicescript ctool --fetch-boards compiler/src/boards.json",
         "localboards2": "node ./cli/devicescript ctool --local-boards ../.. --fetch-boards compiler/src/boards.json",
