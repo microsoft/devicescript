@@ -1,5 +1,5 @@
 ---
-sidebar_position: 11
+sidebar_position: 9.5
 ---
 
 # Testing
@@ -19,15 +19,13 @@ devs add test
 The test framework provides the popular BDD test contructs: `describe`, `test` (`it`), `expect`.
 
 ```ts skip
-import { describe, test, expect, runTests } from "@devicescript/test"
+import { describe, test, expect } from "@devicescript/test"
 
 describe("this is a test suite", () => {
     test("this is a test", () => {
         expect(1).toBe(1)
     })
 })
-
-await runTests()
 ```
 
 ## See also

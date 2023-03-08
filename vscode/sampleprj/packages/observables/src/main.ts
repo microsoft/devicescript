@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { describe, test, expect, runTests } from "@devicescript/test"
+import { describe, test, expect } from "@devicescript/test"
 import { reduce } from "./aggregate"
 import { from, fromEvent, fromRegister, interval } from "./creation"
 import { threshold, filter, distinctUntilChanged } from "./filter"
@@ -109,5 +109,3 @@ describe("aggregate", () => {
         await emits(obs, [6])
     })
 })
-
-await runTests()

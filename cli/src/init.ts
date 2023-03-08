@@ -522,9 +522,8 @@ export async function addTest(options: AddTestOptions) {
         let main = await readFile("./src/main.ts", { encoding: "uf8" })
         if (!main.includes("@devicescript/test"))
             main =
-                `import { describe, test, expect, runTests } from "@devicescript/test";\n` +
-                main +
-                "\nawait runTests()"
+                `import { describe, test, expect } from "@devicescript/test";\n` +
+                main
         files["src/main.ts"] = main
     }
     const pkg = files["package.json"] as any

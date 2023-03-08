@@ -120,6 +120,9 @@ export class TestNode {
 }
 
 export const root = new SuiteNode("")
+export let autoRun = true
+let autoRunTestTimer: number
+const AUTORUN_TEST_DELAY = 10
 const stack: SuiteNode[] = [root]
 
 function currentSuite() {
@@ -128,6 +131,9 @@ function currentSuite() {
 }
 
 export function describe(name: string, body: SuiteFunction) {
+    // debounce autorun
+    clearTimeout(autoRunTestTimer)
+
     const node = new SuiteNode(name)
 
     const parent = currentSuite()
@@ -138,6 +144,14 @@ export function describe(name: string, body: SuiteFunction) {
         body()
     } finally {
         stack.pop()
+    }
+
+    // autorun
+    if (autoRun) {
+        autoRunTestTimer = setTimeout(
+            async () => await runTests(),
+            AUTORUN_TEST_DELAY
+        )
     }
 }
 

@@ -1,4 +1,4 @@
-import { describe, expect, runTests, test } from "."
+import { describe, expect, test } from "."
 
 describe("pass", function () {
     test("console.log", () => {
@@ -43,5 +43,3 @@ describe("expect", function () {
         }).toThrow()
     })
 })
-
-await runTests()
