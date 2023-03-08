@@ -1,4 +1,5 @@
 import { DebugInfo } from "@devicescript/compiler"
+import { delay } from "jacdac-ts"
 import { readFileSync } from "node:fs"
 import {
     BuildOptions,
@@ -13,6 +14,7 @@ export interface RunOptions {
     wait?: boolean
     tcp?: boolean
     testTimeout?: string
+    testSelfExit?: boolean
 }
 
 export async function readCompiled(
@@ -99,13 +101,18 @@ export async function runScript(
     if (options.test && !fn) err("--test require file name")
     if (!options.wait && !fn) err("need either --wait or file name")
 
-    if (options.test)
-        return await runTest(fn, options).then(
-            () => process.exit(0),
-            e => {
-                err(e?.message)
+    if (options.test) {
+        try {
+            await runTest(fn, options)
+            if (!options.testSelfExit) process.exit(0)
+            else {
+                await delay((parseInt(options.testTimeout) || 2000) * 2) // let it timeout
+                err(`test did not exit execution`)
             }
-        )
+        } catch (e) {
+            err(e?.message)
+        }
+    }
 
     const inst = await devsStartWithNetwork(options)
 
