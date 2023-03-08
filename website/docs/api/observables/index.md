@@ -5,7 +5,7 @@ We highly recommend reviewing the RxJS documentation for deeper discussions abou
 
 ## Setup
 
-Add the `@devicescript/observables` to your project,
+Add the `@devicescript/observables` package to your project,
 
 ```bash npm2yarn
 npm install @devicescript/test
