@@ -337,7 +337,7 @@ export class DeveloperToolsManager extends JDEventSource {
     private async createTerminal(): Promise<vscode.Terminal> {
         if (!this._projectFolder) this._projectFolder = await this.pickProject()
         if (!this._projectFolder) {
-            showTerminalError("No DeviceScript project in workspace.")
+            this.clear()
             return undefined
         }
         try {
@@ -383,7 +383,7 @@ export class DeveloperToolsManager extends JDEventSource {
 
     private async startBuild() {
         const files = await this.entryPoints()
-        const file = files[0]
+        const file = files?.[0]
         if (file) await this.build(file)
     }
 
