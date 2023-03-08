@@ -174,31 +174,6 @@ const config = configure(
                 },
             ],
         },
-        sideEditor: {
-            languages: {
-                ts: "devicescript",
-            },
-            editors: [
-                {
-                    id: "devicescript",
-                    type: "iframe",
-                    lightUrl:
-                        "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&light=1",
-                    darkUrl:
-                        "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&dark=1",
-                    message: {
-                        channel: "devicescript",
-                        type: "source",
-                        force: true,
-                        startMissingSimulators: true,
-                    },
-                    messageTextFieldName: "source",
-                    readyMessage: {
-                        channel: "jacdac",
-                    },
-                },
-            ],
-        },
     }
 )
 
