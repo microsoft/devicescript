@@ -23,9 +23,7 @@ export interface TestQuery {
     testFilter?: (test: TestNode) => boolean
     suiteFilter?: (suite: SuiteNode) => boolean
 }
-export type RunOptions = TestQuery & {
-    log: (...args: any[]) => void
-}
+export type RunOptions = TestQuery & {}
 export class SuiteNode {
     readonly children: SuiteNode[] = []
     readonly tests: TestNode[] = []
@@ -43,9 +41,7 @@ export class SuiteNode {
     }
 
     async run(options: RunOptions) {
-        const { log } = options
-
-        if (this.name) log(this.name)
+        if (this.name) console.log(this.name)
         const { suiteFilter, testFilter } = options
 
         const result = {
@@ -91,9 +87,8 @@ export class TestNode {
     ) {}
 
     async run(runOptions: RunOptions) {
-        const { log } = runOptions
         let { expectedError } = this.options || {}
-        log(`  ${this.name}`)
+        console.log(`  ${this.name}`)
         try {
             this.state = TestState.Running
             this.error = undefined
@@ -101,7 +96,7 @@ export class TestNode {
             await this.body()
             if (expectedError) {
                 // the throw below should be logged as error, not as expectedError
-                expectedError = false 
+                expectedError = false
                 throw new AssertionError(
                     "expectedError",
                     "expected an error from test"
@@ -151,14 +146,12 @@ export const it = test
 
 export async function runTests(options: TestQuery = {}) {
     const { ...query } = options
-    const log = (...args: any[]) => console.log(args)
     const testOptions = {
         ...query,
-        log,
     }
-    log(`running ${root.testCount()} tests`)
+    console.log(`running ${root.testCount()} tests`)
     const { total, pass, error } = await root.run(testOptions)
-    log(`tests: ${total}, pass: ${pass}, error: ${error}`)
+    console.log(`tests: ${total}, pass: ${pass}, error: ${error}`)
 
     if (error) throw new Error("test errors")
 }

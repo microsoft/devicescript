@@ -49,7 +49,7 @@ describe("creation operators", () => {
     test("fromEvent", async () => {
         const obs = fromEvent(btn.down)
         const unsub = await obs.subscribe(ev => console.log("down"))
-        await unsub?.unsubscribe()
+        if (unsub) await unsub.unsubscribe()
     })
     test("fromRegister", async () => {
         const obs = fromRegister(temp.temperature)
