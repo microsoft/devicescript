@@ -1,4 +1,4 @@
-import { Observable, OperatorFunction } from "./observable"
+import { identity, Observable, OperatorFunction } from "./observable"
 
 /**
  * An operator that filters values
@@ -51,22 +51,28 @@ function equality<T>(l: T, r: T) {
     return l === r
 }
 
-export function skipRepeats<T>(
-    equals?: (left: T, right: T) => boolean
+/**
+ * Returns a result Observable that emits all values pushed by the source observable
+ * if they are distinct in comparison to the last value the result observable emitted.
+ */
+export function distinctUntilChanged<T, K = T>(
+    comparator?: (left: K, right: K) => boolean,
+    keySelector: (value: T) => K = identity as (value: T) => K
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(async observer => {
             const { error, next, complete } = observer
-            let lastValue: any
-            let hasValue = false
-            const eq = equals || equality
+            let lastKey: K
+            let hasFirst = false
+            const eq = comparator || equality
             return await source.subscribe({
                 error,
                 complete,
                 next: async value => {
-                    if (!hasValue || !eq(lastValue, value)) {
-                        hasValue = true
-                        lastValue = value
+                    const key = keySelector(value)
+                    if (!hasFirst || !eq(lastKey, key)) {
+                        hasFirst = true
+                        lastKey = key
                         await next(value)
                     }
                 },
@@ -75,6 +81,17 @@ export function skipRepeats<T>(
     }
 }
 
-export function threshold(value: number): OperatorFunction<number, number> {
-    return skipRepeats((l, r) => Math.abs(l - r) < value)
+/**
+ * Filters numerical data stream within change threshold
+ * @param value
+ * @returns
+ */
+export function threshold<T = number>(
+    value: number,
+    keySelector: (value: T) => number = identity as (value: T) => number
+): OperatorFunction<T, T> {
+    return distinctUntilChanged<T, number>(
+        (l, r) => Math.abs(l - r) < value,
+        keySelector
+    )
 }

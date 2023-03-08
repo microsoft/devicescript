@@ -2,7 +2,7 @@ import * as ds from "@devicescript/core"
 import { describe, test, expect, runTests } from "@devicescript/test"
 import { reduce } from "./aggregate"
 import { from, fromEvent, fromRegister, interval } from "./creation"
-import { threshold, filter } from "./filter"
+import { threshold, filter, distinctUntilChanged } from "./filter"
 import { Observable, Subscription } from "./observable"
 import { map, scan } from "./transform"
 import { tap } from "./utility"
@@ -71,6 +71,12 @@ describe("filter", () => {
         obs = filter<number>(x => x > 2)(obs)
         obs = tap<number>(v => console.log(v))(obs)
         await emits(obs, [3])
+    })
+    test("distinctUntilChanged", async () => {
+        let obs = from([1, 2, 2, 3, 3, 3, 3])
+        obs = distinctUntilChanged<number>((x, y) => x === y)(obs)
+        obs = tap<number>(v => console.log(v))(obs)
+        await emits(obs, [1, 2, 3])
     })
     test("threshold", async () => {
         let obs = from([1, 2, 3, 6, 5, 0])
