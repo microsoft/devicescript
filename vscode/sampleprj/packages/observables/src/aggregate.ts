@@ -7,7 +7,7 @@ import { Observable, OperatorFunction } from "./observable"
  */
 export function reduce<T, A>(
     accumulator: (acc: A, value: T, index: number) => A,
-    seed: A
+    seed?: A
 ): OperatorFunction<T, A> {
     return function operator(source: Observable<T>) {
         return new Observable<A>(async observer => {

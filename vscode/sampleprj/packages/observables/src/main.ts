@@ -1,5 +1,6 @@
 import * as ds from "@devicescript/core"
 import { describe, test, expect, runTests } from "@devicescript/test"
+import { reduce } from "./aggregate"
 import { from, fromEvent, fromRegister, interval } from "./creation"
 import { threshold, filter } from "./filter"
 import { Observable, Subscription } from "./observable"
@@ -66,25 +67,40 @@ describe("creation", () => {
 
 describe("filter", () => {
     test("filter", async () => {
-        let obs = await from([1, 2, 3])
+        let obs = from([1, 2, 3])
         obs = filter<number>(x => x > 2)(obs)
         obs = tap<number>(v => console.log(v))(obs)
         await emits(obs, [3])
+    })
+    test("threshold", async () => {
+        let obs = from([1, 2, 3, 6, 5, 0])
+        obs = threshold(2)(obs)
+        obs = tap<number>(v => console.log(v))(obs)
+        await emits(obs, [1, 3, 6, 0])
     })
 })
 
 describe("transform", () => {
     test("map", async () => {
-        let obs = await from([1, 2, 3])
+        let obs = from([1, 2, 3])
         obs = map<number, number>(x => x * x)(obs)
         obs = tap<number>(v => console.log(v))(obs)
         await emits(obs, [1, 4, 9])
     })
     test("map", async () => {
-        let obs = await from([1, 2, 3])
+        let obs = from([1, 2, 3])
         obs = scan<number, number>((x, v) => x + v, 0)(obs)
         obs = tap<number>(v => console.log(v))(obs)
         await emits(obs, [1, 3, 6])
+    })
+})
+
+describe("aggregate", () => {
+    test("reduce", async () => {
+        let obs = from([1, 2, 3])
+        obs = reduce<number, number>((p, x) => p + x, 0)(obs)
+        obs = tap<number>(v => console.log(v))(obs)
+        await emits(obs, [6])
     })
 })
 
