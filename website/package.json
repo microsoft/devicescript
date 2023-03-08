@@ -22,7 +22,7 @@
         "@mdx-js/react": "^1.6.22",
         "@rise4fun/docusaurus-plugin-rise4fun": "^1.10.0",
         "@rise4fun/docusaurus-remark-plugin-code-tabs": "^1.1.6",
-        "@rise4fun/docusaurus-remark-plugin-compile-code": "^1.5.6",
+        "@rise4fun/docusaurus-remark-plugin-compile-code": "^1.6.0",
         "@rise4fun/docusaurus-remark-plugin-import-file": "^1.0.2",
         "@rise4fun/docusaurus-remark-plugin-side-editor": "^1.0.2",
         "@rise4fun/docusaurus-theme-codesandbox-button": "^1.2.0",

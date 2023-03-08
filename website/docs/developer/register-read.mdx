@@ -19,7 +19,7 @@ and logging it to the console.
 
 ## subscribe
 
-```ts const sensor = new ds.AirPressure()
+```ts skip
 // highlight-next-line
 sensor.pressure.subscribe(pressure => {
     console.log(pressure)
@@ -31,7 +31,7 @@ sensor.pressure.subscribe(pressure => {
 ```ts edit
 const sensor = new ds.AirPressure()
 // highlight-next-line
-const unsubscribe = sensor.pressure.subscribe(...)
+const unsubscribe = sensor.pressure.subscribe(t => console.log(t))
 
 // highlight-next-line
 unsubscribe()
@@ -51,12 +51,10 @@ const sensor = new ds.AirPressure()
 await sensor.pressure
     // highlight-next-line
     .pipe(threshold(1))
-    .subscribe(pressure => {
-        console.log(pressure)
-    })
+    .subscribe(pressure => console.log(pressure))
 ```
 
-Observables are usually visualized using marble diagrams.
+Observables are usually visualized using [marble diagrams](https://swirly.dev/) which visualize the incoming and resulting stream of data.
 
 ```rx
 -1--2-4--5-|
