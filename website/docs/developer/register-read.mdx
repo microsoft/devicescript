@@ -59,19 +59,9 @@ await sensor.pressure
 Observables are usually visualized using marble diagrams.
 
 ```rx
-[styles]
-event_radius = 45
-frame_width = 85
+-1--2-4--5-|
 
--a--bc---|
-a := 1015.1
-b := 1015.4
-c := 1016.5
+> threshold(3)
 
-> threshold(1)
-
--a---c---|
-a := 1015.1
-b := 1015.4
-c := 1016.5
+-1----4----|
 ```

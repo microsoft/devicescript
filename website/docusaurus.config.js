@@ -177,6 +177,7 @@ const config = configure(
                     nodeBin: "swirly",
                     npmPackage: "swirly",
                     extension: "txt",
+                    inputLang: null,
                     outputLang: null,
                     outputFiles: [{
                         "name": "output.svg"
