@@ -211,6 +211,18 @@ export class Observable<T> {
     }
 }
 
+/**
+ * Wraps an existing subscriptions into a single subscription
+ * @param subscription
+ * @param cleanup
+ */
+export function wrapSubscriptions(subscriptions: Subscription[]): Subscription {
+    return {
+        unsubscribe: () =>
+            subscriptions.filter(s => !s.closed).forEach(s => s.unsubscribe()),
+    }
+}
+
 export type OperatorFunction<T, R> = (
     observable: Observable<T>
 ) => Observable<R>
@@ -393,10 +405,15 @@ ds.Event.prototype.pipe = function pipe<T>(
     return operations?.length ? pipeFromArray(operations)(obs) : obs
 }
 
-export function of<T>(values: T[]) {
+/**
+ * Converts an array into a sequence of values
+ * @param values
+ * @returns
+ */
+export function from<T>(values: T[]) {
     return new Observable<T>(async observer => {
         const { next, complete } = observer
-        for (const value of values) await next(value)
+        if (values) for (const value of values) await next(value)
         complete()
     })
 }
@@ -410,6 +427,40 @@ export function fromPromise<T>(promise: Promise<T>): Observable<T> {
             error(e as Error)
         } finally {
             complete()
+        }
+    })
+}
+
+/**
+ * Creates an Observable that emits sequential numbers every specified interval of time.
+ * @param millis milliseconds
+ */
+export function interval(millis: number): Observable<number> {
+    return new Observable<number>(async observer => {
+        const { next } = observer
+        let count = 0
+        const timer = setInterval(async () => {
+            await next(count++)
+        }, millis)
+        return () => {
+            clearInterval(timer)
+        }
+    })
+}
+
+/**
+ * Creates an observable that will wait for a specified time period before emitting the number 0.
+ * @param millis milliseconds
+ */
+export function timer(millis: number): Observable<0> {
+    return new Observable<0>(async observer => {
+        const { next, complete } = observer
+        const timer = setTimeout(async () => {
+            await next(0)
+            await complete()
+        }, millis)
+        return () => {
+            clearTimeout(timer)
         }
     })
 }
@@ -578,6 +629,72 @@ export function skipRepeats<T>(
 
 export function threshold(value: number): OperatorFunction<number, number> {
     return skipRepeats((l, r) => Math.abs(l - r) < value)
+}
+
+/**
+ * An observable operator that collects samples in an array of a given size.
+ * @param length
+ * @returns
+ */
+export function buffer<T>(
+    closingObservable: Observable<any>
+): OperatorFunction<T, T[]> {
+    return function operator(source: Observable<T>) {
+        return new Observable<T[]>(async observer => {
+            const { next, error, complete } = observer
+            let buffer: T[] = []
+
+            const closingUnsub = await closingObservable.subscribe(async () => {
+                const res = buffer
+                buffer = []
+                await next(res)
+            })
+            const srcUnsub = await source.subscribe({
+                error,
+                complete,
+                next: (value: T) => {
+                    buffer.push(value)
+                },
+            })
+
+            return wrapSubscriptions([closingUnsub, srcUnsub])
+        })
+    }
+}
+
+/**
+ * An observable operator that collects samples during a given duration
+ * @param length
+ * @returns
+ */
+export function bufferTime<T>(duration: number): OperatorFunction<T, T[]> {
+    return buffer(interval(duration))
+}
+
+/**
+ * An observable operator that collects samples in an array of a given size.
+ * @param length
+ * @returns
+ */
+export function bufferCount<T>(length: number): OperatorFunction<T, T[]> {
+    return function operator(source: Observable<T>) {
+        return new Observable<T[]>(async observer => {
+            const { next, error, complete } = observer
+            let buffer: T[]
+            return await source.subscribe({
+                error,
+                complete,
+                next: async (value: T) => {
+                    buffer.push(value)
+                    if (buffer.length === length) {
+                        const res = buffer
+                        buffer = []
+                        await next(buffer)
+                    }
+                },
+            })
+        })
+    }
 }
 
 export function mergeAll<T>(): OperatorFunction<Observable<T>, T> {

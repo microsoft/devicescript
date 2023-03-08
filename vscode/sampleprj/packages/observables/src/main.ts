@@ -6,7 +6,7 @@ import {
     fromRegister,
     map,
     Observable,
-    of,
+    from,
     span,
     threshold,
 } from "./index"
@@ -43,7 +43,7 @@ describe("basics", () => {
 
 describe("creation operators", () => {
     test("of", async () => {
-        const obs = of([1, 2, 3, 4, 5])
+        const obs = from([1, 2, 3, 4, 5])
         await obs.subscribe(v => console.log(v))
     })
     test("fromEvent", async () => {
@@ -59,12 +59,12 @@ describe("creation operators", () => {
 
 describe("transform operators", () => {
     test("map", async () => {
-        await of([1, 2, 3])
+        await from([1, 2, 3])
             .pipe(map(x => x * x))
             .subscribe(t => console.log(t))
     })
     test("map", async () => {
-        await of([1, 2, 3])
+        await from([1, 2, 3])
             .pipe(span(t => t + 1, 0))
             .subscribe(t => console.log(t))
     })
@@ -72,12 +72,12 @@ describe("transform operators", () => {
 
 describe("filter operators", () => {
     test("threshold", async () => {
-        const obs = of([1, 1.2, 1.3, 1.4, 1.5])
+        const obs = from([1, 1.2, 1.3, 1.4, 1.5])
         await obs.pipe(threshold(0.2)).subscribe(v => console.log(v))
     })
 
     test("threshold", async () => {
-        await of([1, 2, 3])
+        await from([1, 2, 3])
             .pipe(filter(t => t > 2))
             .subscribe(t => console.log(t))
     })
