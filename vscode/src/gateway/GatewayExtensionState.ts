@@ -46,14 +46,14 @@ export class GatewayExtensionState extends JDEventSource {
         )
 
         subscriptions.push(
+            //cloud
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.configure",
+                async () => await this.configure()
+            ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.refresh",
-                async () => {
-                    const apiRoot = this.apiRoot
-                    const token = await this.token
-                    if (!apiRoot || !token) await this.configure()
-                    else await this.connect(true)
-                }
+                async () => await this.refresh()
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.registerDevice",
@@ -111,6 +111,13 @@ export class GatewayExtensionState extends JDEventSource {
 
         // first connection - async
         this.handleRefreshConnection()
+    }
+
+    async refresh() {
+        const apiRoot = this.apiRoot
+        const token = await this.token
+        if (!apiRoot || !token) await this.configure()
+        else await this.connect(true)
     }
 
     private handleChange() {
@@ -174,20 +181,22 @@ export class GatewayExtensionState extends JDEventSource {
     }
 
     async setApiRoot(apiRoot: string) {
-        await vscode.workspace
-            .getConfiguration("devicescript.gateway")
-            .update("apiRoot", apiRoot?.replace(/\/\s*$/, ""))
+        if (apiRoot !== this.apiRoot) {
+            await vscode.workspace
+                .getConfiguration("devicescript.gateway")
+                .update("apiRoot", apiRoot?.replace(/\/\s*$/, ""))
+            this.handleRefreshConnection()
+        }
     }
 
     async configure() {
-        let changed = false
         const newConnectionString = await vscode.window.showInputBox({
             placeHolder: "Enter DevelopmentGateway connection string",
         })
         if (newConnectionString === undefined) return
+
         if (newConnectionString === "") {
             await this.setApiRoot(undefined)
-            changed = true
         } else {
             let {
                 WebAppName,
@@ -216,9 +225,8 @@ export class GatewayExtensionState extends JDEventSource {
             const token = `${AccountName}:${AccountKey}`
             await this.setApiRoot(ApiRoot)
             await this.setToken(token)
-            changed = true
         }
-        if (changed) this.handleRefreshConnection()
+        if (this.apiRoot && this.token) await this.connect(true)
     }
 
     get token() {
@@ -226,7 +234,14 @@ export class GatewayExtensionState extends JDEventSource {
     }
 
     async setToken(token: string) {
-        await this.context.secrets.store("devicescript.gateway.token", token)
+        const t = await this.token
+        if (token !== t) {
+            await this.context.secrets.store(
+                "devicescript.gateway.token",
+                token
+            )
+            this.handleRefreshConnection()
+        }
     }
 
     withProgress(title: string, transaction: () => Promise<void>) {

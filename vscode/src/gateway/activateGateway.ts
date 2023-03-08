@@ -11,10 +11,4 @@ export function activateGateway(
     const cloudState = new GatewayExtensionState(context, extensionState)
     registerCloudTreeDataProvider(cloudState)
     registerGatewayStatusBar(cloudState)
-
-    //cloud
-    vscode.commands.registerCommand(
-        "extension.devicescript.gateway.connect",
-        async () => cloudState.configure()
-    )
 }
