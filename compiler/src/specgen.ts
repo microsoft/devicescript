@@ -25,8 +25,9 @@ import {
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { runtimeVersion } from "./format"
 import { prelude } from "./prelude"
-import { camelize, upperCamel } from "./util"
+import { camelize, oops, upperCamel } from "./util"
 import { pinFunctions } from "./board"
+import { assert } from "./jdutil"
 
 const REGISTER_NUMBER = "Register<number>"
 const REGISTER_BOOL = "Register<boolean>"
@@ -121,6 +122,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         const cmt = addComment(pkt)
         let kw = ""
         let tp = ""
+        let argtp = packetType(pkt)
 
         // if there's a startRepeats before last field, we don't put ... before it
         const earlyRepeats = pkt.fields
@@ -129,12 +131,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
 
         const fields = pkt.fields
             .map(f => {
-                const tp =
-                    f.type == "string" || f.type == "string0"
-                        ? "string"
-                        : info.enums[f.type]
-                        ? enumName(f.type)
-                        : "number"
+                const tp = memType(f)
                 if (f.startRepeats && !earlyRepeats)
                     return `...${f.name}: ${tp}[]`
                 else return `${f.name}: ${tp}`
@@ -143,20 +140,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
 
         if (isRegister(pkt.kind)) {
             kw = "readonly "
-            if (cmt.needsStruct) {
-                tp = REGISTER_ARRAY
-                if (pkt.fields.length > 1) tp += ` & { ${fields} }`
-            } else {
-                if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
-                    tp = REGISTER_STRING
-                else if (
-                    pkt.fields.length == 1 &&
-                    pkt.fields[0].type == "bytes"
-                )
-                    tp = REGISTER_BUFFER
-                else if (pkt.fields[0].type == "bool") tp = REGISTER_BOOL
-                else tp = REGISTER_NUMBER
-            }
+            tp = "Register"
         } else if (pkt.kind == "event") {
             kw = "readonly "
             tp = "Event"
@@ -176,7 +160,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             if (docUrl)
                 cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
             r += wrapComment("devs", cmt.comment)
-            r += `    ${kw}${camelize(pkt.name)}: ${tp}\n`
+            r += `    ${kw}${camelize(pkt.name)}: ${tp}<${argtp}>\n`
         }
     })
 
@@ -189,6 +173,45 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     }
     function patchLinks(n: string) {
         return n?.replace(/\]\(\/services\//g, "](/api/clients/")
+    }
+
+    function packetType(pkt: jdspec.PacketInfo) {
+        const cmt = addComment(pkt)
+        if (cmt.needsStruct) return "any[]"
+        if (pkt.fields.length == 0) return "void"
+        assert(pkt.fields.length == 1)
+        return memType(pkt.fields[0])
+    }
+
+    function memType(f: jdspec.PacketMember) {
+        switch (f.type) {
+            case "string":
+            case "string0":
+                return "string"
+
+            case "bytes":
+                return "Buffer"
+
+            case "bool":
+                return "boolean"
+
+            case "f32":
+            case "f64":
+                return "number"
+
+            case "devid":
+                return "Buffer"
+
+            case "pipe_port":
+            case "pipe":
+                return "unknown"
+
+            default:
+                if (/^[iu]\d+(\.\d+)?$/.test(f.type)) return "number"
+                if (/^u8\[\d+\]$/.test(f.type)) return "Buffer"
+                if (info.enums[f.type]) return enumName(f.type)
+                oops(`unknown type ${f.type} in spec: ${info.name}`)
+        }
     }
 }
 
