@@ -4,6 +4,7 @@ import {
     JDDevice,
     JDEventSource,
     SRV_CLOUD_ADAPTER,
+    toMap,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { DeviceScriptExtensionState } from "../state"
@@ -188,32 +189,32 @@ export class GatewayExtensionState extends JDEventSource {
             await this.setApiRoot(undefined)
             changed = true
         } else {
-            const parts = newConnectionString
-                .trim()
-                .split(";")
-                .map(chunk => chunk.split("=", 2))
-            const webAppName = parts.find(
-                ([name]) => name === "WebAppName"
-            )?.[1]
-            const accountName = parts.find(
-                ([name]) => name === "AccountName"
-            )?.[1]
-            const accountKey = parts.find(
-                ([name]) => name === "AccountKey"
-            )?.[1]
-            const endPointSuffix = parts.find(
-                ([name]) => name === "EndPointSuffix"
-            )?.[1]
+            let {
+                WebAppName,
+                AccountName,
+                AccountKey,
+                EndPointSuffix,
+                ApiRoot,
+            } = toMap(
+                newConnectionString
+                    .trim()
+                    .split(";")
+                    .map(chunk => chunk.split("=", 2)),
+                ([name, _]) => name,
+                ([_, val]) => val
+            )
 
-            if (!webAppName || !accountName || !accountKey || !endPointSuffix) {
+            if (!ApiRoot && WebAppName && EndPointSuffix)
+                ApiRoot = `https://${WebAppName}.${EndPointSuffix}`
+
+            if (!ApiRoot || !AccountName || !AccountKey) {
                 vscode.window.showErrorMessage(
                     "DeviceScript Gateway: invalid connection string"
                 )
                 return
             }
-            const apiRoot = `https://${webAppName}.${endPointSuffix}`
-            const token = `${accountName}:${accountKey}`
-            await this.setApiRoot(apiRoot)
+            const token = `${AccountName}:${AccountKey}`
+            await this.setApiRoot(ApiRoot)
             await this.setToken(token)
             changed = true
         }
