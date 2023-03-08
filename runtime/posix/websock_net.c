@@ -12,6 +12,7 @@
 #include <emscripten/websocket.h>
 
 #define LOG_TAG "WSn"
+#define VLOGGING 0
 #include "devs_logging.h"
 
 #define CHK(cond)                                                                                  \
@@ -93,7 +94,7 @@ int jd_websock_new(const char *hostname, int port, const char *path, const char 
     CHK(ctx->sockfd == 0);
 
     char *hostbuf;
-    if (strcmp(hostname, "localhost") == 0) {
+    if (strcmp(hostname, "localhost") == 0 || strcmp(hostname, "127.0.0.1") == 0) {
         hostbuf = jd_sprintf_a("ws://%s:%d%s", hostname, port, path);
     } else {
         // drop port, since we did ws: -> wss:
@@ -127,7 +128,8 @@ void jd_websock_close(void) {
     if (!ctx || !ctx->sockfd)
         return;
 
-    emscripten_websocket_close(ctx->sockfd, 1000, "");
+    if (ctx->isopen)
+        emscripten_websocket_close(ctx->sockfd, 1000, NULL);
     // emscripten_websocket_delete(ctx->sockfd); - memleak
     ctx->sockfd = 0;
     ctx->isopen = false;

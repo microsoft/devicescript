@@ -40,6 +40,31 @@ import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
 import { converters, parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
 
+// TODO should we move this to jacdac-ts and call automatically for transports?
+export function setupWebsocket() {
+    if (typeof WebSocket !== "undefined") return
+
+    try {
+        require("websocket-polyfill")
+        // @ts-ignore
+        global.Blob = require("buffer").Blob
+        global.WebSocket.prototype.send = function (this: any, data: any) {
+            if (typeof data.valueOf() === "string")
+                this.connection_.sendUTF(data)
+            else {
+                this.connection_.sendBytes(Buffer.from(data))
+            }
+        }
+        global.WebSocket.prototype.close = function (this: any, code, reason) {
+            this.state_ = WebSocket.CLOSING
+            if (code === undefined) this.connection_.sendCloseFrame()
+            else this.connection_.sendCloseFrame(code, reason)
+        }
+    } catch {
+        log("can't load websocket-polyfill")
+    }
+}
+
 export function readDebugInfo() {
     let dbg: DebugInfo
     try {
@@ -62,13 +87,8 @@ export function devsFactory() {
     // emscripten doesn't like multiple instances
     if (devsInst) return Promise.resolve(devsInst)
     const d = require("@devicescript/vm")
-    try {
-        require("websocket-polyfill")
-        // @ts-ignore
-        global.Blob = require("buffer").Blob
-    } catch {
-        log("can't load websocket-polyfill")
-    }
+
+    setupWebsocket()
 
     return (d() as Promise<DevsModule>).then(m => {
         devsInst = m

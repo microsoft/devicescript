@@ -378,19 +378,16 @@ int wssk_publish(const void *msg, unsigned len) {
     if (state->conn_status != JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED)
         return -1;
 
+    const uint8_t *data = msg;
+    if (data[0] == JD_WSSK_CMD_JACDAC_PACKET)
+        LOGV("fwd; CRC=%x", data[1] | (data[2] << 8));
+    else
+        LOG("send cmd=%x", data[0]);
+
     if (jd_wssk_send_message(msg, len) != 0)
         return -2;
 
     feed_watchdog(state);
-
-    const uint8_t *data = msg;
-    unsigned cmd = data[0] | (data[1] << 8);
-    if (data[2] == 0) {
-        LOG("send compressed: cmd=%x", cmd);
-        jd_blink(JD_BLINK_CLOUD_UPLOADED);
-    } else {
-        LOGV("fwd; CRC=%x", cmd);
-    }
 
     return 0;
 }

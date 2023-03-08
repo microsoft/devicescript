@@ -143,7 +143,7 @@ void websock_free(websock_t ctx) {
     if (!ctx->sockfd)
         return;
 
-    emscripten_websocket_close(ctx->sockfd, 0, "");
+    emscripten_websocket_close(ctx->sockfd, 1000, NULL);
     ctx->sockfd = 0;
 }
 

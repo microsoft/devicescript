@@ -16,6 +16,7 @@ import {
     TransportStatus,
     WebSocketConnectReqArgs,
 } from "./sideprotocol"
+import { setupWebsocket } from "./build"
 
 export interface TransportsOptions {
     usb?: boolean
@@ -49,7 +50,7 @@ function createSerial() {
 }
 
 function createWebSocket(url: string, protocol: string) {
-    require("websocket-polyfill")
+    setupWebsocket()
     return createWebSocketTransport(url, {
         protocols: protocol,
         WebSocket: WebSocket,

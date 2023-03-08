@@ -133,7 +133,7 @@ export module Exts {
             Module["sendPacket"] = send
 
             sock = net.createConnection(port, host, () => {
-                Module.log(`connected to ${port}:${host}`)
+                Module.log(`connected to ${host}:${port}`)
                 const f = resolve
                 if (f) {
                     resolve = null
