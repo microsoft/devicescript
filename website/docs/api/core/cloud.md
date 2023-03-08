@@ -1,6 +1,5 @@
 ---
 sidebar_position: 10
-hide_table_of_contents: true
 ---
 
 # Cloud

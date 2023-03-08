@@ -1,6 +1,5 @@
 ---
 sidebar_position: 4
-hide_table_of_contents: true
 ---
 
 # Register read
@@ -35,31 +34,4 @@ const unsubscribe = sensor.pressure.subscribe(t => console.log(t))
 
 // highlight-next-line
 unsubscribe()
-```
-
-## observables
-
-DeviceScript provides an (optional) micro-observable implementation which allows to create filtering pipelines for streamed sensor data. Each registers is an observable of sensor data.
-The observables are bundled in the `@devicescript/observables` package.
-
-In the example below, we pipe the register data through a `threshold` operator to only stream data entries once a significant change is detected.
-
-```ts skip
-// highlight-next-line
-import { threshold } from "@devicescript/observables"
-const sensor = new ds.AirPressure()
-await sensor.pressure
-    // highlight-next-line
-    .pipe(threshold(1))
-    .subscribe(pressure => console.log(pressure))
-```
-
-Observables are usually visualized using [marble diagrams](https://swirly.dev/) which visualize the incoming and resulting stream of data.
-
-```rx
--1--2-4--5-|
-
-> threshold(3)
-
--1----4----|
 ```
