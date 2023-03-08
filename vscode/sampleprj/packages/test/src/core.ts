@@ -1,7 +1,9 @@
 import * as ds from "@devicescript/core"
 
 export type SuiteFunction = () => void
-export type TestFunction = () => ds.AsyncVoid
+export type Subscription = () => void
+export type SubscriptionAsync = Subscription | Promise<Subscription>
+export type TestFunction = () => ds.AsyncVoid | SubscriptionAsync
 export enum TestState {
     NotRun,
     Running,
@@ -93,7 +95,9 @@ export class TestNode {
             this.state = TestState.Running
             this.error = undefined
 
-            await this.body()
+            const unsubscribe = await this.body()
+            if (unsubscribe) await unsubscribe()
+
             if (expectedError) {
                 // the throw below should be logged as error, not as expectedError
                 expectedError = false
