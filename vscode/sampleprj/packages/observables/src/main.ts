@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 import { describe, test, expect, runTests } from "@devicescript/test"
-import { from, fromEvent, fromRegister } from "./creation"
+import { from, fromEvent, fromRegister, interval } from "./creation"
 import { threshold, filter } from "./filter"
 import { Observable, Subscription } from "./observable"
 import { map, scan } from "./transform"
@@ -24,7 +24,7 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
     }
 }
 
-describe("basics", () => {
+describe("observable", () => {
     test("create observable", async () => {
         // simple example
         let obs = new Observable<string>(async observer => {
@@ -37,7 +37,7 @@ describe("basics", () => {
     })
 })
 
-describe("creation operators", () => {
+describe("creation", () => {
     test("of", async () => {
         const obs = from([1, 2, 3, 4, 5])
         await obs.subscribe(v => console.log(v))
@@ -51,9 +51,29 @@ describe("creation operators", () => {
         const obs = fromRegister(temp.temperature)
         await obs.subscribe(v => console.log(v))
     })
+    test("interval", async () => {
+        let obs = interval(1000)
+        obs = tap<number>(v => console.log(`interval ${v}`))(obs)
+        // start
+        let count = 0
+        const unsub = await obs.subscribe(() => {
+            console.log(`next ${count}`)
+            if (count++ === 2) unsub.unsubscribe()
+        })
+        // wait till done?
+    })
 })
 
-describe("transform operators", () => {
+describe("filter", () => {
+    test("filter", async () => {
+        let obs = await from([1, 2, 3])
+        obs = filter<number>(x => x > 2)(obs)
+        obs = tap<number>(v => console.log(v))(obs)
+        await emits(obs, [3])
+    })
+})
+
+describe("transform", () => {
     test("map", async () => {
         let obs = await from([1, 2, 3])
         obs = map<number, number>(x => x * x)(obs)
