@@ -7,6 +7,7 @@ import {
     isCodeError,
     JDEventSource,
     JDService,
+    unique,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type {
@@ -33,6 +34,14 @@ function showTerminalError(message: string) {
         message,
         "getting-started/vscode#setting-up-the-project"
     )
+}
+
+function normalizeUsedFiles(dir: vscode.Uri, usedFiles: string[]) {
+    const dirPath = Utils.resolvePath(dir).fsPath + "/"
+    const fs = usedFiles
+    const rel = fs.filter(f => f.startsWith(dirPath))
+    const cor = rel.map(f => f.slice(dirPath.length))
+    return unique(cor)
 }
 
 export class DeveloperToolsManager extends JDEventSource {
@@ -184,7 +193,7 @@ export class DeveloperToolsManager extends JDEventSource {
         this._watcher = undefined
 
         const res = await this.buildOnce()
-        if (res) await this.startWatch()
+        if (res) await this.startWatch(res.usedFiles)
 
         this.emit(CHANGE)
 
@@ -219,7 +228,8 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    private async startWatch() {
+    private async startWatch(usedFiles: string[]) {
+        usedFiles = normalizeUsedFiles(this.projectFolder, usedFiles)
         const filename = this._currentFilename
         const sid = this._currentDeviceScriptManager
 
@@ -229,7 +239,8 @@ export class DeveloperToolsManager extends JDEventSource {
             const service = this.extensionState.bus.node(sid) as JDService
             await this.build(filename, service)
         }
-        const glob = new vscode.RelativePattern(this.projectFolder, filename)
+        const pattern = `{${usedFiles.join(",")}}`
+        const glob = new vscode.RelativePattern(this.projectFolder, pattern)
         this._watcher = vscode.workspace.createFileSystemWatcher(glob)
         this._watcher.onDidChange(handleChange)
         this._watcher.onDidCreate(handleChange)
