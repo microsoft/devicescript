@@ -45,11 +45,11 @@ The observables are bundled in the `@devicescript/observables` package.
 In the example below, we pipe the register data through a `threshold` operator to only stream data entries once a significant change is detected.
 
 ```ts skip
-// hightlight-next-line
+// highlight-next-line
 import { threshold } from "@devicescript/observables"
 const sensor = new ds.AirPressure()
 await sensor.pressure
-    // hightlight-next-line
+    // highlight-next-line
     .pipe(threshold(1))
     .subscribe(pressure => {
         console.log(pressure)
