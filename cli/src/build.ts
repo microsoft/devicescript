@@ -301,6 +301,7 @@ export async function compileFile(
     if (!exists) throw new Error(`source file "${fn}" not found`)
 
     if (
+        !options.ignoreMissingConfig &&
         !existsSync("./devsconfig.json") &&
         !existsSync("./devs/run-tests/basic.ts") // hack for in-tree testing
     )
@@ -380,6 +381,7 @@ export interface BuildOptions {
     flag?: CompileFlags
     cwd?: string
     quiet?: boolean
+    ignoreMissingConfig?: boolean
 }
 
 export async function build(file: string, options: BuildOptions) {

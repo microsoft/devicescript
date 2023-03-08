@@ -36,6 +36,10 @@ export async function mainCli() {
             .option("-o, --out-dir", "output directory, default is 'built'")
             .option("--no-verify", "don't verify resulting bytecode")
             .option(
+                "--ignore-missing-config",
+                "don't check for ./devicescript.config"
+            )
+            .option(
                 "-F, --flag <compiler-flag>",
                 "set compiler flag",
                 (val, prev: Record<string, boolean>) => {
