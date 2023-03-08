@@ -1,13 +1,12 @@
 import * as ds from "@devicescript/core"
 import {
-    delay,
     filter,
     fromEvent,
     fromRegister,
     map,
     Observable,
     from,
-    span,
+    scan,
     threshold,
 } from "./index"
 import { describe, test, expect, runTests } from "@devicescript/test"
@@ -65,7 +64,7 @@ describe("transform operators", () => {
     })
     test("map", async () => {
         await from([1, 2, 3])
-            .pipe(span(t => t + 1, 0))
+            .pipe(scan(t => t + 1, 0))
             .subscribe(t => console.log(t))
     })
 })
@@ -82,12 +81,5 @@ describe("filter operators", () => {
             .subscribe(t => console.log(t))
     })
 })
-
-/*
-async function testDelay() {
-    of([1, 2, 3])
-        .pipe(delay(100))
-        .subscribe(t => console.log(t))
-}*/
 
 await runTests()

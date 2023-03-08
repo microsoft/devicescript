@@ -17,7 +17,7 @@ export type ObserverStart = (subscription: Subscription) => void
  */
 export type ObserverNext<T> = (value: T) => AsyncVoid
 export type ObserverError = (error: Error) => void
-export type ObserverComplete = () => void
+export type ObserverComplete = () => AsyncVoid
 
 export interface SubscriptionObserver<T> {
     closed: boolean
@@ -59,40 +59,36 @@ export class Observable<T> {
         }
         let cleanup: () => void
         let closed = false
-        let wrapClosedSync =
+        const wrapClosedSync =
             (fn: (value: any) => void): (() => void) =>
             (v?: any) => {
                 if (!closed && fn) fn(v)
             }
-        let unsubscribeSync = wrapClosedSync(() => {
+        const unsubscribeSync = wrapClosedSync(() => {
             closed = true
             if (cleanup) cleanup()
         })
-        let wrapUnsubscribeSync =
+        const wrapUnsubscribeSync =
             (fn: (value: any) => void): (() => void) =>
             (v?: any) => {
                 unsubscribeSync()
                 fn(v)
             }
         error = wrapClosedSync(wrapUnsubscribeSync(error))
-        let wrapTrySync =
-            (fn: (value: T) => void): (() => void) =>
-            (v?: T) => {
-                try {
-                    fn(v)
-                } catch (e) {
-                    error(e as Error)
-                }
-            }
-        complete = wrapClosedSync(wrapTrySync(wrapUnsubscribeSync(complete)))
 
-        // next, async
-        let wrapClosedAsync =
+        // next, complete async
+        const wrapClosedAsync =
             (fn: (value: any) => Promise<void>): (() => Promise<void>) =>
             async (v?: any) => {
                 if (!closed && fn) await fn(v)
             }
-        let wrapTryAsync =
+        const wrapUnsubscribeAsync =
+            (fn: (value: any) => AsyncVoid): (() => void) =>
+            async (v?: any) => {
+                unsubscribeSync()
+                await fn(v)
+            }
+        const wrapTryAsync =
             (fn: (value: T) => AsyncVoid): (() => Promise<void>) =>
             async (v?: T) => {
                 try {
@@ -101,6 +97,7 @@ export class Observable<T> {
                     error(e as Error)
                 }
             }
+        complete = wrapClosedAsync(wrapTryAsync(wrapUnsubscribeAsync(complete)))
         next = wrapClosedAsync(wrapTryAsync(next))
 
         let subscription: Subscription = {
@@ -414,7 +411,7 @@ export function from<T>(values: T[]) {
     return new Observable<T>(async observer => {
         const { next, complete } = observer
         if (values) for (const value of values) await next(value)
-        complete()
+        await complete()
     })
 }
 
@@ -513,54 +510,76 @@ export function map<T, R>(
 ): OperatorFunction<T, R> {
     return function operator(source: Observable<T>) {
         return new Observable<R>(async observer => {
-            const { next } = observer
+            const { next, error, complete } = observer
             let index = 0
-            return await source.subscribe(async value => {
-                const r = converter(value, index++)
-                await next(r)
-            })
-        })
-    }
-}
-export function filter<T>(
-    condition: (value: T, index: number) => boolean
-): OperatorFunction<T, T> {
-    return function operator(source: Observable<T>) {
-        return new Observable<T>(async observer => {
-            const { next } = observer
-            let index = 0
-            return await source.subscribe(async v => {
-                if (condition(v, index++)) await next(v)
-            })
-        })
-    }
-}
-
-// TODO: michal
-function setTimeout(fn: () => void, timeout: number): number {
-    return 0
-}
-function clearTimeout(timeout: number): void {}
-
-export function delay<T>(duration: number): OperatorFunction<T, T> {
-    return function operator(source: Observable<T>) {
-        return new Observable<T>(async observer => {
-            const { error, next, complete } = observer
             return await source.subscribe({
                 error,
                 complete,
-                next: v => {
-                    setTimeout(async () => {
-                        await next(v)
-                    }, duration)
+                next: async value => {
+                    const r = converter(value, index++)
+                    await next(r)
                 },
             })
         })
     }
 }
 
-export function span<T, A>(
-    accumulator: (acc: A, value: T, index: number) => A | Promise<A>,
+/**
+ * An operator that filters values
+ * @param condition
+ * @returns
+ */
+export function filter<T>(
+    condition: (value: T, index: number) => boolean
+): OperatorFunction<T, T> {
+    return function operator(source: Observable<T>) {
+        return new Observable<T>(async observer => {
+            const { next, error, complete } = observer
+            let index = 0
+            return await source.subscribe({
+                error,
+                complete,
+                next: async v => {
+                    if (condition(v, index++)) await next(v)
+                },
+            })
+        })
+    }
+}
+
+/**
+ * Applies an accumulator function over the source Observable,
+ * and returns the accumulated result when the source completes,
+ * given an optional seed value.
+ */
+export function reduce<T, A>(
+    accumulator: (acc: A, value: T, index: number) => A,
+    seed: A
+): OperatorFunction<T, A> {
+    return function operator(source: Observable<T>) {
+        return new Observable<A>(async observer => {
+            const { error, next, complete } = observer
+            let prev: A = seed
+            let index = 0
+            return await source.subscribe({
+                error,
+                complete: async () => {
+                    await next(prev)
+                    await complete()
+                },
+                next: async curr => {
+                    prev = accumulator(prev, curr, index++)
+                },
+            })
+        })
+    }
+}
+
+/**
+ * Applies an accumulator (or "reducer function") to each value from the source after an initial state is established.
+ */
+export function scan<T, A>(
+    accumulator: (acc: A, value: T, index: number) => A,
     seed: A
 ): OperatorFunction<T, A> {
     return function operator(source: Observable<T>) {
@@ -572,7 +591,7 @@ export function span<T, A>(
                 error,
                 complete,
                 next: async curr => {
-                    prev = await accumulator(prev, curr, index++)
+                    prev = accumulator(prev, curr, index++)
                     await next(prev)
                 },
             })
@@ -585,9 +604,9 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
         return new Observable<T>(async observer => {
             const { error, next, complete } = observer
             let timer: number
-            source.subscribe({
+            const { unsubscribe } = await source.subscribe({
                 error,
-                complete: () => setTimeout(complete, duration),
+                complete,
                 next: value => {
                     clearTimeout(timer)
                     timer = setTimeout(async () => {
@@ -595,6 +614,11 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
                     }, duration)
                 },
             })
+
+            return () => {
+                unsubscribe()
+                clearTimeout(timer)
+            }
         })
     }
 }
@@ -707,19 +731,19 @@ export function mergeAll<T>(): OperatorFunction<Observable<T>, T> {
             subscriptions.push(
                 await source.subscribe({
                     error,
-                    complete: () => {
+                    complete: async () => {
                         sourceCompleted = true
-                        if (!remaining) complete()
+                        if (!remaining) await complete()
                     },
                     next: async (o: Observable<T>) => {
                         remaining++
                         subscriptions.push(
                             await o.subscribe({
                                 error,
-                                complete: () => {
+                                complete: async () => {
                                     remaining--
                                     if (sourceCompleted && !remaining)
-                                        complete()
+                                        await complete()
                                 },
                                 next,
                             })
@@ -727,10 +751,7 @@ export function mergeAll<T>(): OperatorFunction<Observable<T>, T> {
                     },
                 })
             )
-            return () => {
-                for (const subscription of subscriptions)
-                    subscription.unsubscribe()
-            }
+            return wrapSubscriptions(subscriptions)
         })
     }
 }
