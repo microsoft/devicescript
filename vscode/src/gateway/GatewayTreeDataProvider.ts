@@ -300,18 +300,10 @@ export class GatewayTreeDataProvider
                         }
                     )
                     if (sres === undefined) return
-                    const script =
-                        sres.data || (await manager.createScript(base))
 
-                    if (!script) {
-                        vscode.window.showErrorMessage(
-                            "DeviceScript Gateway: failed to create new script."
-                        )
-                        return
-                    }
-
-                    // upload
-                    await this.uploadScriptProgram(script, program)
+                    const script = sres.data
+                    if (script) await this.uploadScriptProgram(script, program)
+                    else await this.createScript(manager, base, program)
                 }
             )
         )
@@ -320,6 +312,20 @@ export class GatewayTreeDataProvider
     private async uploadScriptProgram(script: CloudScript, program: DebugInfo) {
         await this.state.withProgress("Uploading script...", async () => {
             await script.uploadBody({
+                versions: this.state.deviceScriptState.devtools.versions(),
+                program,
+            })
+            this.refresh(script)
+        })
+    }
+
+    private async createScript(
+        manager: CloudManager,
+        name: string,
+        program: DebugInfo
+    ) {
+        await this.state.withProgress("Uploading script...", async () => {
+            const script = await manager.createScript(name, {
                 versions: this.state.deviceScriptState.devtools.versions(),
                 program,
             })

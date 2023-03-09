@@ -82,11 +82,14 @@ export class CloudManager extends JDNode {
         return this._scripts?.find(d => d.data.id === scriptId)
     }
 
-    async createScript(name: string): Promise<CloudScript> {
+    async createScript(
+        name: string,
+        scriptBody: CloudScriptBody
+    ): Promise<CloudScript> {
         const body = {
             name,
             meta: {},
-            body: {},
+            body: scriptBody,
         }
         const resp = await this.fetchJSON<CloudScriptData>("scripts", {
             method: "POST",
