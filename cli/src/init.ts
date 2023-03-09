@@ -519,7 +519,7 @@ export async function addNpm(options: AddNpmOptions) {
 export async function addTest(options: AddTestOptions) {
     const files = clone(testFiles)
     if (existsSync("./src/main.ts")) {
-        let main = await readFile("./src/main.ts", { encoding: "uf8" })
+        let main = await readFile("./src/main.ts", { encoding: "utf8" })
         if (!main.includes("@devicescript/test"))
             main =
                 `import { describe, test, expect } from "@devicescript/test";\n` +
@@ -527,8 +527,8 @@ export async function addTest(options: AddTestOptions) {
         files["src/main.ts"] = main
     }
     const pkg = files["package.json"] as any
-    if (!pkg.dependencies["@devicescript.test"])
-        pkg.dependencies["@devicescript.test"] = "*"
+    if (!pkg.devDependencies["@devicescript/test"])
+        pkg.devDependencies["@devicescript/test"] = "*"
 
     const cwd = writeFiles(".", options, files)
     await runInstall(cwd, options)
