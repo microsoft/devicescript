@@ -45,7 +45,7 @@ export async function runTest(
     options: RunOptions & BuildOptions = {}
 ) {
     if (!options.flag) options.flag = {}
-    options.flag.testHarness = true
+    if (!options.testSelfExit) options.flag.testHarness = true
 
     const prog = await readCompiled(fn, options)
     const inst = await devsFactory()
@@ -104,11 +104,7 @@ export async function runScript(
     if (options.test) {
         try {
             await runTest(fn, options)
-            if (!options.testSelfExit) process.exit(0)
-            else {
-                await delay((parseInt(options.testTimeout) || 2000) * 2) // let it timeout
-                err(`test did not exit execution`)
-            }
+            process.exit(0)
         } catch (e) {
             err(e?.message)
         }
