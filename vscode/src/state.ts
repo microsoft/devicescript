@@ -332,6 +332,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async connect() {
+        const { simulatorScriptManagerId } = this
         const { extensionKind } = this.context.extension
         const isWorkspace = extensionKind === vscode.ExtensionKind.Workspace
         if (isWorkspace) {
@@ -348,6 +349,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { transports } = this.transport
         const serial = transports.find(t => t.type === "serial")
         const usb = transports.find(t => t.type === "usb")
+        const sim = !!this.bus.device(this.simulatorScriptManagerId, true)
         const items: (vscode.QuickPickItem & { transport?: string })[] = [
             {
                 transport: "serial",
@@ -365,6 +367,16 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     ? `${usb.description}(${usb.connectionState})`
                     : "",
             },
+            !sim && {
+                label: "",
+                kind: vscode.QuickPickItemKind.Separator,
+            },
+            !sim && {
+                label: shortDeviceId(simulatorScriptManagerId),
+                description: `Simulator`,
+                detail: `A virtual DeviceScript interpreter running in a separate process.`,
+                transport: simulatorScriptManagerId,
+            },
             {
                 label: "",
                 kind: vscode.QuickPickItemKind.Separator,
@@ -374,13 +386,15 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 transport: "flash",
                 detail: "Flash the DeviceScript runtime on new devices.",
             },
-        ]
+        ].filter(m => !!m)
         const res = await vscode.window.showQuickPick(items, {
-            title: "Choose the communication channel",
+            title: "Pick a DeviceScript connection",
         })
         if (res === undefined || !res.transport) return
 
         if (res.transport === "flash") await this.flashFirmware()
+        else if (res.transport === simulatorScriptManagerId)
+            await this.startSimulator()
         else
             await sideRequest<SideConnectReq>({
                 req: "connect",
