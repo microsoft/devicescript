@@ -1,11 +1,9 @@
 import {
     CHANGE,
     deviceCatalogImage,
-    ellipse,
     identifierToUrlPath,
     JDNode,
     shortDeviceId,
-    toHex,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { toMarkdownString } from "../catalog"
@@ -31,8 +29,6 @@ import {
     CLOUD_DEVICE_NODE,
 } from "./clouddom"
 import { DebugInfo } from "@devicescript/compiler"
-import { withProgress } from "../commands"
-import { unparse } from "papaparse"
 
 class CloudCollection extends JDNode {
     constructor(
@@ -221,41 +217,6 @@ export class GatewayTreeDataProvider
                             )
                             await device.refresh()
                             this.refresh(device)
-                        }
-                    )
-                }
-            ),
-            vscode.commands.registerCommand(
-                "extension.devicescript.gateway.device.telemetry.download",
-                async (device: CloudDevice) => {
-                    await withProgress(
-                        "DeviceScript Gateway: downloading telemetry...",
-                        async () => {
-                            const telemetry = await device.telemetry()
-                            if (!telemetry?.length) return
-                            const csv = unparse(telemetry)
-                            const folder =
-                                state.deviceScriptState.devtools.projectFolder
-                            if (!folder) {
-                                await vscode.workspace.openTextDocument({
-                                    language: "csv",
-                                    content: csv,
-                                })
-                            } else {
-                                const dir = Utils.joinPath(folder, "telemetry")
-                                const f = Utils.joinPath(
-                                    dir,
-                                    `${device.name}.latest.csv`
-                                )
-                                await vscode.workspace.fs.createDirectory(dir)
-                                await vscode.workspace.fs.writeFile(
-                                    f,
-                                    new TextEncoder().encode(csv)
-                                )
-                                const doc =
-                                    await vscode.workspace.openTextDocument(f)
-                                await vscode.window.showTextDocument(doc)
-                            }
                         }
                     )
                 }

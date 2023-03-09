@@ -50,7 +50,6 @@
     },
     "devDependencies": {
         "@types/isomorphic-fetch": "^0.0.36",
-        "@types/papaparse": "^5.3.7",
         "@types/vscode": "^1.75.0",
         "@vscode/debugadapter": "^1.59.0",
         "@vscode/debugadapter-testsupport": "^1.59.0",
@@ -63,7 +62,6 @@
     "dependencies": {
         "@vscode/extension-telemetry": "^0.7.5",
         "jacdac-ts": "*",
-        "papaparse": "^5.4.0",
         "websocket-polyfill": "^0.0.3"
     },
     "main": "./built/devicescript-vscode.js",
@@ -373,10 +371,6 @@
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.gateway.device.telemetry.download",
-                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
-                },
-                {
                     "command": "extension.devicescript.gateway.device.uploadScript",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudScripts",
                     "group": "inline"
@@ -635,12 +629,6 @@
                 "title": "Upload Version",
                 "category": "DeviceScript Gateway",
                 "icon": "$(add)"
-            },
-            {
-                "command": "extension.devicescript.gateway.device.telemetry.download",
-                "title": "Dowload telemetry",
-                "category": "DeviceScript Gateway",
-                "icon": "$(arrow-down)"
             }
         ],
         "breakpoints": [
