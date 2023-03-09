@@ -813,8 +813,7 @@ async function testSetTimeout() {
 
     id = setInterval(() => {
         q = q + 1
-        if (q === 5)
-            clearInterval(id)
+        if (q === 5) clearInterval(id)
     }, 5)
 
     await ds.sleepMs(60)
@@ -826,6 +825,34 @@ function testShift() {
     ds.assert(arr.shift() === "baz")
     ds.assert(arr.shift() === "foobar")
     ds.assert(arr.shift() === undefined)
+}
+
+let numRestArgs = 0
+function s0(...args: number[]) {
+    isEq(args.length, numRestArgs)
+    for (let i = 0; i < args.length; ++i) isEq(args[i], i + 1)
+}
+
+function s1(a0: number, ...args: number[]) {
+    args.unshift(a0)
+    isEq(args.length, numRestArgs)
+    for (let i = 0; i < args.length; ++i) isEq(args[i], i + 1)
+}
+
+function testRest() {
+    numRestArgs = 0
+    s0()
+    s0(...[])
+    numRestArgs = 1
+    s0(1)
+    s0(...[1])
+    s1(1)
+    ;(s1 as any)(...[1])
+    numRestArgs = 2
+    s0(1, 2)
+    s0(...[1, 2])
+    s1(1, 2)
+    s1(1, ...[2])
 }
 
 testFlow()
@@ -858,5 +885,6 @@ testDestructArg()
 testClosurePP()
 testShift()
 await testSetTimeout()
+testRest()
 
 console.log("all OK")

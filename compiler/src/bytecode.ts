@@ -103,9 +103,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 6,
-    IMG_VERSION_MINOR = 2,
+    IMG_VERSION_MINOR = 3,
     IMG_VERSION_PATCH = 0,
-    IMG_VERSION = 0x6020000,
+    IMG_VERSION = 0x6030000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 10,
@@ -154,9 +154,9 @@ export enum BytecodeFlag {
 }
 
 export enum FunctionFlag {
-    __MAX = 2,
     NEEDS_THIS = 0x01,
     IS_CTOR = 0x02,
+    HAS_REST_ARG = 0x04,
 }
 
 export enum NumFmt {

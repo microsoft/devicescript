@@ -236,7 +236,9 @@ void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_termiante(devs_fiber_t *fiber);
 void devs_fiber_yield(devs_ctx_t *ctx);
-int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams);
+// if `args` is passed, `numparams==0`
+// otherwise, `numparams` arguments are sought on the_stack
+int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array_t *args);
 void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act);
 devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op);
 devs_fiber_t *devs_fiber_by_tag(devs_ctx_t *ctx, unsigned tag);

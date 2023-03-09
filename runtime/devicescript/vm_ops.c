@@ -80,7 +80,7 @@ static void stmt_callN(devs_activation_t *frame, devs_ctx_t *ctx, unsigned N) {
     devs_log_value(ctx, "fn", ctx->the_stack[0]);
     devs_log_value(ctx, "a0", ctx->the_stack[1]);
 #endif
-    devs_fiber_call_function(ctx->curr_fiber, N);
+    devs_fiber_call_function(ctx->curr_fiber, N, NULL);
 }
 
 #define STMT_CALL(n, k)                                                                            \
@@ -99,19 +99,13 @@ STMT_CALL(stmt9_call8, 8)
 static void stmt2_call_array(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t args = devs_vm_pop_arg(ctx);
     value_t fn = devs_vm_pop_arg(ctx);
+    (void)fn;
     if (!devs_is_array(ctx, args))
         devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_ARRAY, args);
     else {
-        devs_array_t *arr = devs_value_to_gc_obj(ctx, args);
-        unsigned N = arr->length;
-        if (N > DEVS_MAX_STACK_DEPTH - 1) {
-            devs_throw_not_supported_error(ctx, "large parameters array");
-        } else {
-            ctx->stack_top_for_gc = N + 1;
-            ctx->the_stack[0] = fn;
-            memcpy(ctx->the_stack + 1, arr->data, N * sizeof(value_t));
-            devs_fiber_call_function(ctx->curr_fiber, N);
-        }
+        JD_ASSERT(ctx->stack_top == 0); // fn needs to be at stack top
+        ctx->stack_top_for_gc = 1;
+        devs_fiber_call_function(ctx->curr_fiber, 0, devs_value_to_gc_obj(ctx, args));
     }
 }
 static int get_pc(devs_activation_t *frame, devs_ctx_t *ctx) {
