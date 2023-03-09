@@ -7,6 +7,8 @@ import { DeviceScriptExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { CHANGE, SRV_DEVICE_SCRIPT_MANAGER, SRV_ROLE_MANAGER } from "jacdac-ts"
 import type { StartArgs } from "@devicescript/dap"
+import { Utils } from "vscode-uri"
+import { checkFileExists } from "./fs"
 
 export function activateDebugger(extensionState: DeviceScriptExtensionState) {
     const { context } = extensionState
@@ -47,6 +49,7 @@ export function activateDebugger(extensionState: DeviceScriptExtensionState) {
                             name: "Devicescript: Launch",
                             request: "launch",
                             type: "devicescript",
+                            stopOnEntry: true
                         },
                     ]
                 },
@@ -173,13 +176,26 @@ export class DeviceScriptConfigurationProvider
     ) {
         const sessionConfig = config as vscode.DebugSessionOptions
         const dsConfig = config as StartArgs
-        const { program } = config
+        let program: string = config.program
 
         if (!program) {
             vscode.window.showErrorMessage(
                 "DeviceScript: Debug cancelled. Cannot find a program to debug."
             )
             return undefined
+        }
+
+        // TODO make sure we're running devtools in the correct folder
+        let dir = Utils.dirname(Utils.joinPath(folder.uri, program))
+        while (dir !== folder.uri) {
+            if (await checkFileExists(dir, `devsconfig.json`)) {
+                this.extensionState.devtools.projectFolder = dir
+                program = Utils.joinPath(folder.uri, program).fsPath.slice(
+                    dir.fsPath.length + 1
+                )
+                break
+            }
+            dir = Utils.dirname(dir)
         }
 
         await this.extensionState.devtools.start()
@@ -286,7 +302,7 @@ export class DeviceScriptConfigurationProvider
         config: DebugConfiguration,
         token?: CancellationToken
     ) {
-        this.extensionState.projectFolder = folder.uri
+        // folder.uri is the root namespace for the auto-generate launch commandß
         if (
             !config.program &&
             ((config.request === "launch" && config.type === "devicescript") ||

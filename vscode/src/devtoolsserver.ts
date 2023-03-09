@@ -180,6 +180,9 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._currentDeviceScriptManager
     }
 
+    /**
+     * Builds a file relative to the current project folder
+     */
     async build(filename: string, service?: JDService): Promise<BuildStatus> {
         this._watcher?.dispose()
         this._watcher = undefined
@@ -318,7 +321,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 project =>
                     <TaggedQuickPickItem<vscode.Uri>>{
                         data: project,
-                        description: Utils.dirname(project).fsPath,
+                        description: project.fsPath,
                         label: Utils.basename(project),
                     }
             )
