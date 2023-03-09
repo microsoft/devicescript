@@ -140,7 +140,11 @@ export class GatewayTreeDataProvider
                     const manager = this.state.manager
                     if (!manager || !device) return
                     const dev = manager.bus.device(device.deviceId, true)
-                    if (dev) await manager.registerDevice(dev, device.name)
+                    if (!dev) {
+                        vscode.window.showErrorMessage("DeviceScript Gateway: device not connected.")
+                        return
+                    }
+                    await manager.registerDevice(dev, device.name)
                 }
             ),
             vscode.commands.registerCommand(

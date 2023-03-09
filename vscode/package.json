@@ -604,7 +604,7 @@
             },
             {
                 "command": "extension.devicescript.gateway.device.updateScript",
-                "title": "Upgrade Script",
+                "title": "Upgrade Script...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(file-code)"
             },
@@ -619,14 +619,8 @@
                 "category": "DeviceScript Gateway"
             },
             {
-                "command": "extension.devicescript.gateway.device.connect",
-                "title": "Connect",
-                "category": "DeviceScript Gateway",
-                "icon": "$(plug)"
-            },
-            {
                 "command": "extension.devicescript.gateway.device.uploadScript",
-                "title": "Upload Version",
+                "title": "Upload Version...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(add)"
             }
