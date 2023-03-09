@@ -353,11 +353,6 @@
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.gateway.device.connect",
-                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
-                    "group": "inline"
-                },
-                {
                     "command": "extension.devicescript.gateway.device.refreshToken",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
                 },
