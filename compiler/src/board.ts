@@ -146,7 +146,7 @@ select **DeviceScript: Flash Firmware...** from the command palette.
 Run this [command line](/api/cli) command and follow the instructions.
 
 \`\`\`bash
-devicescript flash ${architectureFamily(archId)} --board ${devId}
+devicescript flash --board ${devId}
 \`\`\`
 
 `,

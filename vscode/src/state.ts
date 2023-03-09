@@ -305,13 +305,22 @@ export class DeviceScriptExtensionState extends JDEventSource {
         )
             return
 
-        const { archId, id } = board
-        const arch = architectureFamily(archId)
+        // force disconnect
+        await sideRequest<SideConnectReq>({
+            req: "connect",
+            data: {
+                transport: "none",
+                background: true,
+                resourceGroupId: CONNECTION_RESOURCE_GROUP,
+            },
+        })
+
+        const { id } = board
         const t = await this.devtools.createCliTerminal({
             title: "DeviceScript Flasher",
             progress: "Starting flashing tools...",
             useShell: true,
-            args: ["flash", arch, "--board", id],
+            args: ["flash", "--board", id],
             diagnostics: false,
         })
         t.show()
