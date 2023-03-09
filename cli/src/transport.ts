@@ -95,6 +95,10 @@ export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {
             newTransport = createUSB()
             break
         }
+        case "none": {
+            // disconnect
+            break
+        }
     }
 
     if (newTransport) {

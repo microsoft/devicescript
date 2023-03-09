@@ -306,14 +306,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             return
 
         // force disconnect
-        await sideRequest<SideConnectReq>({
-            req: "connect",
-            data: {
-                transport: "none",
-                background: true,
-                resourceGroupId: CONNECTION_RESOURCE_GROUP,
-            },
-        })
+        await this.disconnect()
 
         const { id } = board
         const t = await this.devtools.createCliTerminal({
@@ -324,6 +317,18 @@ export class DeviceScriptExtensionState extends JDEventSource {
             diagnostics: false,
         })
         t.show()
+    }
+
+    private async disconnect() {
+        if (!this.devtools.connected) return
+        await sideRequest<SideConnectReq>({
+            req: "connect",
+            data: {
+                transport: "none",
+                background: true,
+                resourceGroupId: CONNECTION_RESOURCE_GROUP,
+            },
+        })
     }
 
     async connect() {
