@@ -18,7 +18,7 @@ import { activateMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState } from "./state"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
-    const { subscriptions, extensionMode, extension } = context
+    const { subscriptions, extensionMode } = context
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
@@ -140,7 +140,9 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     configure()
 
     // launch devtools in background
-    if (devToolsConfig.get("autoStart")) extensionState.devtools.start()
+    if (devToolsConfig.get("autoStart")) {
+        extensionState.devtools.start()
+    }
 }
 
 function registerOutputChannel(extensionMode: vscode.ExtensionMode) {

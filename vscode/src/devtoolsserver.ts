@@ -44,6 +44,8 @@ function normalizeUsedFiles(dir: vscode.Uri, usedFiles: string[]) {
     return unique(cor)
 }
 
+const PROJECT_FOLDER_KEY = "devicescript.devtools.projectFolder"
+
 export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
     private _projectFolder: vscode.Uri
@@ -289,7 +291,7 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._projectFolder
     }
 
-    set projectFolder(folder: vscode.Uri) {
+    async setProjectFolder(folder: vscode.Uri) {
         if (folder?.toString() !== this._projectFolder?.toString()) {
             if (this._projectFolder) this.kill()
             this._projectFolder = folder
@@ -312,7 +314,34 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async pickProject() {
+    async pickProject(): Promise<vscode.Uri> {
+        // try sorted
+        const dir = this.extensionState.state.get<string>(PROJECT_FOLDER_KEY)
+        if (dir) {
+            try {
+                const folder = vscode.Uri.file(dir)
+                const exists = await checkFileExists(
+                    folder,
+                    "./devsconfig.json"
+                )
+                if (exists) return folder
+
+                // clear outdated key
+                await this.extensionState.state.update(
+                    PROJECT_FOLDER_KEY,
+                    undefined
+                )
+            } catch {
+                // clear outdated key
+                await this.extensionState.state.update(
+                    PROJECT_FOLDER_KEY,
+                    undefined
+                )
+            } finally {
+            }
+        }
+
+        //
         const projects = await this.findProjects()
         if (projects.length == 0) return undefined
         else if (projects.length == 1) return projects[0]
@@ -338,6 +367,13 @@ export class DeveloperToolsManager extends JDEventSource {
             this.clear()
             return undefined
         }
+
+        // store current folder
+        await this.extensionState.state.update(
+            PROJECT_FOLDER_KEY,
+            this._projectFolder.fsPath
+        )
+
         try {
             this.connectionState = ConnectionState.Connecting
             const t = await this.createCliTerminal({
@@ -424,7 +460,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 uri.toString()
             )
             if (!projects.includes(this._projectFolder?.toString()))
-                this.projectFolder = undefined
+                await this.setProjectFolder(undefined)
         }
     }
 

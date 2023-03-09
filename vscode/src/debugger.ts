@@ -49,7 +49,7 @@ export function activateDebugger(extensionState: DeviceScriptExtensionState) {
                             name: "Devicescript: Launch",
                             request: "launch",
                             type: "devicescript",
-                            stopOnEntry: true
+                            stopOnEntry: true,
                         },
                     ]
                 },
@@ -189,9 +189,9 @@ export class DeviceScriptConfigurationProvider
         let dir = Utils.dirname(Utils.joinPath(folder.uri, program))
         while (dir !== folder.uri) {
             if (await checkFileExists(dir, `devsconfig.json`)) {
-                this.extensionState.devtools.projectFolder = dir
+                await this.extensionState.devtools.setProjectFolder(dir)
                 program = Utils.joinPath(folder.uri, program).fsPath.slice(
-                    dir.fsPath.length + 1
+                    this.extensionState.devtools.projectFolder.fsPath.length + 1
                 )
                 break
             }

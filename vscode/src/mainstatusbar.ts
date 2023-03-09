@@ -84,7 +84,7 @@ ${deviceScriptManager?.qualifiedName || "..."} - deploy to device</br>
                 : connectionState === ConnectionState.Disconnected
                 ? "$(plug)"
                 : "$(loading~spin)",
-            "DeviceScript",
+            projectFolder ? Utils.basename(projectFolder) : "DeviceScript",
             ...transport.transports.map(
                 tr =>
                     `$(${

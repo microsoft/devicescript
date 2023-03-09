@@ -37,7 +37,7 @@ export async function mainCli() {
             .option("--no-verify", "don't verify resulting bytecode")
             .option(
                 "--ignore-missing-config",
-                "don't check for ./devicescript.config"
+                "don't check for ./devsconfig.json"
             )
             .option(
                 "-F, --flag <compiler-flag>",

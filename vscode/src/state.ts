@@ -124,8 +124,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
         return this.devtools.projectFolder
     }
 
-    set projectFolder(folder: vscode.Uri) {
-        this.devtools.projectFolder = folder
+    async setProjectFolder(folder: vscode.Uri) {
+        await this.devtools.setProjectFolder(folder)
     }
 
     public async updateCurrentDeviceScriptManagerId(id: string) {
