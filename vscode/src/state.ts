@@ -444,7 +444,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     .map(async cfg => {
                         const d = Utils.dirname(cfg).fsPath
                         const res = await vscode.workspace.findFiles(
-                            new vscode.RelativePattern(d, "src/**.ts")
+                            new vscode.RelativePattern(d, "src/main*.ts")
                         )
                         return res
                     })
@@ -461,6 +461,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
             )
             return undefined
         }
+
+        // only 1 file
+        if (files.length === 1) return files[0]
 
         // ask user
         const res = await vscode.window.showQuickPick(
