@@ -371,6 +371,7 @@ class Procedure {
     parentProc: Procedure
     nestedProcs: Procedure[] = []
     usesClosure = false
+    hasRest = false
     loopStack: LoopLabels[] = []
     returnValue: CachedValue
     returnValueLabel: Label
@@ -408,6 +409,7 @@ class Procedure {
     finalize() {
         if (this.mapVarOffset) return false
         if (this.usesThis) this.writer.funFlags |= FunctionFlag.NEEDS_THIS
+        if (this.hasRest) this.writer.funFlags |= FunctionFlag.HAS_REST_ARG
         this.mapVarOffset = this.writer.patchLabels(
             this.locals.length,
             this.numargs,
@@ -1660,13 +1662,14 @@ class Program implements TopOpWriter {
             paramVar: Variable
         }[] = []
         for (const paramdef of stmt.parameters) {
+            assert(!proc.hasRest) // ...rest has to be last
             if (paramdef.kind != SK.Parameter)
                 throwError(
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
             if (paramdef.dotDotDotToken)
-                throwError(paramdef, "... not yet supported in argument list")
+                proc.hasRest = true
             if (ts.isObjectBindingPattern(paramdef.name)) {
                 const paramVar = this.addParameter(proc, "obj")
                 destructParams.push({ paramdef, paramVar })
@@ -1968,8 +1971,7 @@ class Program implements TopOpWriter {
                 wr.emitCall(wr.dsMember(BuiltInString.REBOOT))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
-            if (this.roles.length > 0)
-                this.markMethodUsed("#ds.Role.onPacket")
+            if (this.roles.length > 0) this.markMethodUsed("#ds.Role.onPacket")
             this.emitProtoAssigns()
         })
 

@@ -22,7 +22,7 @@ static void devs_fiber_activate(devs_fiber_t *fiber, devs_activation_t *act) {
     }
 }
 
-int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
+int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array_t *rest) {
     devs_ctx_t *ctx = fiber->ctx;
 
     value_t *argp = ctx->the_stack;
@@ -42,6 +42,16 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     if (bltin >= 0) {
         JD_ASSERT(bltin < devs_num_builtin_functions);
         const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
+        if (rest) {
+            numparams = rest->length;
+            if (numparams > DEVS_MAX_STACK_DEPTH - 1) {
+                devs_throw_not_supported_error(ctx, "large parameters array");
+                return -3;
+            } else {
+                ctx->stack_top_for_gc = numparams + 1;
+                memcpy(ctx->the_stack + 1, rest->data, numparams * sizeof(value_t));
+            }
+        }
         if (numparams < h->num_args) {
             unsigned num = h->num_args - numparams;
             memset(argp + 1 + numparams, 0, num * sizeof(value_t));
@@ -71,17 +81,6 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         return -2;
 
     // note that callee is not pinned - do not allocate until connected to fiber
-    unsigned num_formals = func->num_args;
-    value_t *params;
-    if (func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS) {
-        params = argp;
-        numparams++; // count the this/fn parameter
-    } else
-        params = argp + 1;
-    if (num_formals > numparams)
-        num_formals = numparams;
-    memcpy(callee->slots, params, num_formals * sizeof(value_t));
-
     callee->pc = func->start;
     callee->closure = closure;
     callee->maxpc = func->start + func->length;
@@ -95,6 +94,46 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         devs_fiber_activate(fiber, callee);
     } else {
         fiber->activation = callee;
+    }
+
+    unsigned num_formals = func->num_args;
+
+    // argp==ctx->the_stack
+    // *argp == this (if any)
+
+    value_t *params;
+    value_t *slots = callee->slots;
+
+    if (func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS) {
+        *slots++ = *argp;
+        num_formals--;
+    }
+
+    if (rest) {
+        params = rest->data;
+        numparams = rest->length;
+    } else {
+        params = argp + 1;
+    }
+
+    if (func->flags & DEVS_FUNCTIONFLAG_HAS_REST_ARG) {
+        unsigned num_regular = num_formals - 1;
+        if (num_regular > numparams)
+            num_regular = numparams;
+        memcpy(slots, params, num_regular * sizeof(value_t));
+        if (rest) {
+            devs_array_insert(ctx, rest, 0, -num_regular);
+        } else {
+            unsigned arrsz = numparams - num_regular;
+            rest = devs_array_try_alloc(ctx, arrsz);
+            if (rest)
+                memcpy(rest->data, params + num_regular, arrsz * sizeof(value_t));
+        }
+        slots[num_formals - 1] = devs_value_from_gc_obj(ctx, rest);
+    } else {
+        if (num_formals > numparams)
+            num_formals = numparams;
+        memcpy(slots, params, num_formals * sizeof(value_t));
     }
 
     if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_undefined(callee->slots[0])) {
@@ -258,7 +297,7 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op) {
         ctx->fibers = fiber;
     }
 
-    devs_fiber_call_function(fiber, numargs);
+    devs_fiber_call_function(fiber, numargs, NULL);
 
     devs_fiber_set_wake_time(fiber, devs_now(ctx));
 

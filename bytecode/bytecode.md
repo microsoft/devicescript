@@ -263,7 +263,7 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 ## Format Constants
 
     img_version_major = 6
-    img_version_minor = 2
+    img_version_minor = 3
     img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
@@ -330,6 +330,7 @@ Start new fiber. If it's already running, replace it.
 
     needs_this = 0x01
     is_ctor = 0x02
+    has_rest_arg = 0x04
 
 ## Enum: NumFmt
 
