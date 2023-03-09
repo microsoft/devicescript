@@ -236,7 +236,7 @@ export class GatewayTreeDataProvider
                         )
                     if (!status?.success) {
                         vscode.window.showErrorMessage(
-                            `DeviceScript Gateway: ${file.fsPath} has build errors.`
+                            `DeviceScript Gateway: project has build errors.`
                         )
                         return
                     }
@@ -269,7 +269,7 @@ export class GatewayTreeDataProvider
                         )
                     if (!status?.success) {
                         vscode.window.showErrorMessage(
-                            `DeviceScript Gateway: ${file.fsPath} has build errors.`
+                            `DeviceScript Gateway: project has build errors.`
                         )
                         return
                     }

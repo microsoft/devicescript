@@ -181,16 +181,11 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     async build(filename: string, service?: JDService): Promise<BuildStatus> {
-        if (
-            this._currentFilename === filename &&
-            this._currentDeviceScriptManager === service?.id
-        )
-            return
+        this._watcher?.dispose()
+        this._watcher = undefined
 
         this._currentFilename = filename
         this._currentDeviceScriptManager = service?.id
-        this._watcher?.dispose()
-        this._watcher = undefined
 
         const res = await this.buildOnce()
         if (res) await this.startWatch(res.usedFiles)

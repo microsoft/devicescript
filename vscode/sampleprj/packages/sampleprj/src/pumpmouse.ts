@@ -4,7 +4,7 @@ console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
 // listen for pressure changes
-sensor.pressure.onChange(10, async () => {
+sensor.pressure.subscribe(async () => {
     // read sensor reading
     const pressure = await sensor.pressure.read()
     console.log(pressure)
