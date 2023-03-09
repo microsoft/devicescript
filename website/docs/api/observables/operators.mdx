@@ -1,0 +1,105 @@
+---
+title: Operators
+---
+
+# Operators
+
+Observable operators apply transformation between observable data stream. They can be combined using the `pipe`
+method to create complex data processing pipeliens.
+
+```ts skip
+import { Temperature } from "@devicescript/core"
+import { threshold, debounceTime } from "@devicescript/observables"
+
+const temp = new Temperature()
+await temp
+    .pipe(
+        // highlight-next-line
+        threshold(0.1), // at least 0.1deg change
+        // highlight-next-line
+        debounceTime(10000) // at most one update per 10s
+    )
+    .subscribe(t => console.log(t))
+```
+
+## Creation Operators
+
+### `from`
+
+Converts an array into a sequence of values.
+
+```rx
+> from([a,b, c, d])
+
+-a-b-c-d-|-
+```
+
+```ts
+import { from } from "@devicescript/observables"
+
+// highlight-next-line
+const obs = from([0, 1, 2, 3, 4])
+
+await obs.subscribe(v => console.log(v))
+```
+
+### `interval`
+
+Emits a value at a time interval. The value is the number of callbacks.
+This observable runs forever.
+
+```rx
+> interval(1000)
+
+-0--1--2--3-
+```
+
+```ts
+import { interval } from "@devicescript/observables"
+
+// highlight-next-sline
+const obs = interval(1000)
+
+await obs.subscribe(v => console.log(v))
+```
+
+### `timer`
+
+Emits a single value, `0` after a time interval, then completes.
+
+```rx
+> timer(1000)
+
+---0-|-
+```
+
+```ts
+import { timer } from "@devicescript/observables"
+
+// highlight-next-sline
+const obs = timer(1000)
+
+await obs.subscribe(v => console.log(v))
+```
+
+## Filter Operators
+
+### `filter`
+
+Filter items emitted by the source Observable by only emitting those that satisfy a specified predicate.
+
+```rx
+-0-1-2-3-1-|-
+
+> filter(v => v > 1)
+
+-----2-3---|-
+```
+
+```ts
+import { from, filter } from "@devicescript/observables"
+
+const obs = from([0, 1, 2, 3, 1])
+
+await obs.pipe(filter(v => v > 1)).subscribe(v => console.log(v))
+```

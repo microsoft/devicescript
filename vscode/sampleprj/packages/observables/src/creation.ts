@@ -14,6 +14,9 @@ export function from<T>(values: T[]) {
     })
 }
 
+/**
+ * Wraps a promise into an observable
+ */
 export function fromPromise<T>(promise: Promise<T>): Observable<T> {
     return new Observable(async ({ next, error, complete }) => {
         try {
