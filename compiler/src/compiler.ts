@@ -589,8 +589,6 @@ class Program implements TopOpWriter {
     numErrors = 0
     mainProc: Procedure
     protoProc: Procedure
-    cloudRole: Role
-    cloudMethod429: Label
     onStart: DelayedCodeSection
     flags: CompileFlags = {}
     isLibrary: boolean
@@ -1962,15 +1960,6 @@ class Program implements TopOpWriter {
             r._index = i
         })
 
-        // make sure the cloud role is last
-        this.cloudRole = new Role(
-            this,
-            null,
-            this.roles,
-            this.serviceSpecs["cloudAdapter"],
-            "cloud"
-        )
-
         this.withProcedure(this.mainProc, wr => {
             this.protoProc.callMe(wr, [])
             for (const s of stmts) this.emitStmt(s)
@@ -1979,15 +1968,10 @@ class Program implements TopOpWriter {
                 wr.emitCall(wr.dsMember(BuiltInString.REBOOT))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
-            if (this.roles.length > 1 || this.cloudRole.used)
+            if (this.roles.length > 0)
                 this.markMethodUsed("#ds.Role.onPacket")
             this.emitProtoAssigns()
         })
-
-        if (!this.cloudRole.used) {
-            const cl = this.roles.pop()
-            assert(cl == this.cloudRole)
-        }
 
         function markTopLevel(node: ts.Node) {
             ;(node as any)._devsIsTopLevel = true

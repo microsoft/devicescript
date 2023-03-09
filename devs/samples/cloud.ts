@@ -1,27 +1,15 @@
-/*
 import * as ds from "@devicescript/core"
-import { cloud } from "@devicescript/core"
 
-let q = 0
+const cloud = new ds.CloudAdapter()
+console.log(await cloud.connectionName.read())
 
-setInterval(async () => {
-    console.log("upl", q)
-    await cloud.upload("hello", q, 2 * q, q + 10000)
-    q = q + 1
-}, 5000)
+await ds.sleepMs(500)
+await cloud.uploadJson(JSON.stringify({ foo: 1, bar: { baz: "foo" } }))
+await cloud.uploadBinary(hex`00 11 22 33`)
 
-cloud.onMethod("foo", async (a, b) => {
-    console.log("foo a=", a, "b=", b)
-    return [a + 1, b * 2]
+cloud.onJson.subscribe(val => {
+    console.log("got JSON", val)
 })
-
-cloud.onMethod("bar", async a => {
-    console.log("bar a=", a)
-    await ds.sleepMs(5000)
-    return [108]
+cloud.onBinary.subscribe(val => {
+    console.log("got bin", val)
 })
-
-cloud.onMethod("bar2", async () => {
-    return [108]
-})
-*/
