@@ -42,3 +42,9 @@ into an [Azure Event Hub](https://azure.microsoft.com/en-us/products/event-hubs/
 const cloud = new ds.CloudAdapter()
 cloud.uploadObject({ msg: "hello" })
 ```
+
+:::tip
+
+Keep those field names very short as the payload needs to be small (<236 bytes).
+
+:::
