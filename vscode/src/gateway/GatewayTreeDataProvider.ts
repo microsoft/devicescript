@@ -97,6 +97,7 @@ export class GatewayTreeDataProvider
         state.on(CHANGE, () => this.refresh(undefined))
 
         subscriptions.push(
+            /*
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.connect",
                 async (device: CloudDevice) => {
@@ -124,6 +125,7 @@ export class GatewayTreeDataProvider
                     })
                 }
             ),
+            */
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.unregister",
                 async (device: CloudDevice) => {
@@ -141,7 +143,9 @@ export class GatewayTreeDataProvider
                     if (!manager || !device) return
                     const dev = manager.bus.device(device.deviceId, true)
                     if (!dev) {
-                        vscode.window.showErrorMessage("DeviceScript Gateway: device not connected.")
+                        vscode.window.showErrorMessage(
+                            "DeviceScript Gateway: device not connected."
+                        )
                         return
                     }
                     await manager.registerDevice(dev, device.name)
