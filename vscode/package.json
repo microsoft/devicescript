@@ -376,6 +376,9 @@
                     "command": "extension.devicescript.openSimulators"
                 },
                 {
+                    "command": "extension.devicescript.configure"
+                },
+                {
                     "command": "extension.devicescript.pickDeviceScriptManager"
                 },
                 {
@@ -460,6 +463,12 @@
                 "command": "extension.devicescript.boards.add",
                 "title": "Add Board...",
                 "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.configure",
+                "title": "Configure...",
+                "category": "DeviceScript",
+                "icon": "$(settings-gear)"
             },
             {
                 "command": "extension.devicescript.pickDeviceScriptManager",

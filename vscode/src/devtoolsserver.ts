@@ -296,6 +296,7 @@ export class DeveloperToolsManager extends JDEventSource {
             if (this._projectFolder) this.kill()
             this._projectFolder = folder
             this.emit(CHANGE)
+            await this.saveProjectFolder()
         }
     }
 
@@ -314,7 +315,7 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async pickProject(): Promise<vscode.Uri> {
+    private async pickProject(): Promise<vscode.Uri> {
         // try sorted
         const dir = this.extensionState.state.get<string>(PROJECT_FOLDER_KEY)
         if (dir) {
@@ -355,7 +356,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     }
             )
             const res = await vscode.window.showQuickPick(items, {
-                title: "Choose a project",
+                title: "Pick a DeviceScript project",
             })
             return res?.data
         }
@@ -369,10 +370,7 @@ export class DeveloperToolsManager extends JDEventSource {
         }
 
         // store current folder
-        await this.extensionState.state.update(
-            PROJECT_FOLDER_KEY,
-            this._projectFolder.fsPath
-        )
+        await this.saveProjectFolder()
 
         try {
             this.connectionState = ConnectionState.Connecting
@@ -392,6 +390,13 @@ export class DeveloperToolsManager extends JDEventSource {
             this.clear()
             return undefined
         }
+    }
+
+    private async saveProjectFolder() {
+        await this.extensionState.state.update(
+            PROJECT_FOLDER_KEY,
+            this._projectFolder?.fsPath
+        )
     }
 
     start(): Promise<void> {

@@ -483,6 +483,11 @@ export class DeviceScriptExtensionState extends JDEventSource {
         return res?.data
     }
 
+    async configure() {
+        await this.devtools.setProjectFolder(undefined)
+        await this.devtools.start()
+    }
+
     async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {
         const { simulatorScriptManagerId } = this
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string

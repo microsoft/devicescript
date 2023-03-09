@@ -1,4 +1,4 @@
-import { CloudAdapter, Register, Temperature } from "@devicescript/core"
+import { CloudAdapter, Temperature } from "@devicescript/core"
 
 const cloud = new CloudAdapter()
 const thermo = new Temperature()

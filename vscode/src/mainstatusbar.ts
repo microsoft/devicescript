@@ -13,7 +13,7 @@ export function activateMainStatusBar(
         vscode.StatusBarAlignment.Right,
         120
     )
-    statusBarItem.command = "extension.devicescript.pickDeviceScriptManager"
+    statusBarItem.command = "extension.devicescript.configure"
     const updateStatusBar = () => {
         const service = extensionState.deviceScriptManager
         const mgr = service?.device
@@ -41,7 +41,7 @@ export function activateMainStatusBar(
 ${
     mgr
         ? `Deploy and Debug on device ${mgr.shortId}`
-        : `Click to pick a DeviceScript device`
+        : `Click to pick a DeviceScript project`
 }
 
 ---

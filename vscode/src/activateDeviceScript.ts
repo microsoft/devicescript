@@ -37,6 +37,10 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     // build
     subscriptions.push(
         vscode.commands.registerCommand(
+            "extension.devicescript.configure",
+            async () => await extensionState.configure()
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.device.identify",
             async (item: JDomDeviceTreeItem) => {
                 const device =
