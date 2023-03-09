@@ -1,6 +1,5 @@
 export * from "./observable"
-// ... not supported
-//export * from "./pipe"
+export * from "./pipe"
 export * from "./creation"
 export * from "./transform"
 export * from "./filter"

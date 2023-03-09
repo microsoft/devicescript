@@ -109,3 +109,22 @@ describe("aggregate", () => {
         await emits(obs, [6])
     })
 })
+
+describe("pipe", () => {
+    test("of filter", async () => {
+        const obs = from([1, 2, 3]).pipe(
+            filter<number>(x => x > 2),
+            tap<number>(v => console.log(v))
+        )
+        await emits(obs, [3])
+    })
+    test("of filter filter", async () => {
+        const obs = from([1, 2, 3, 4, 5]).pipe(
+            filter<number>(x => x > 2),
+            tap<number>(v => console.log(v)),
+            filter<number>(x => x < 4),
+            tap<number>(v => console.log(v))
+        )
+        await emits(obs, [3])
+    })
+})
