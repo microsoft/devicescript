@@ -38,11 +38,15 @@ ds.Led.prototype.setAll = async function (r, g, b) {
     await this.pixels.write(buf)
 }
 
-export class ClientRegister<T> implements ds.ClientRegister<T> {
-    value: T
+class ClientRegister<T> implements ds.ClientRegister<T> {
+    private value: T
 
     constructor(value: T) {
         this.value = value
+    }
+
+    async read() {
+        return this.value
     }
 
     subscribe(next: ds.ClientRegisterChangeHandler<T>): ds.Unsubscribe {
@@ -163,6 +167,29 @@ ds.Event.prototype.wait = async function () {
         const pkt = await this.role.wait()
         if (pkt && pkt.eventCode === this.code) return
     }
+}
+
+ds.Button.prototype.pressed = function pressed() {
+    let reg: ClientRegister<boolean> = (this as any).__pressed
+    if (!reg) {
+        reg = new ClientRegister<boolean>(false)
+        ;(this as any).__pressed = reg
+        this.down.subscribe(async () => await reg.emit(true))
+        this.hold.subscribe(async () => await reg.emit(true))
+        this.up.subscribe(async () => await reg.emit(false))
+    }
+    return reg
+}
+
+ds.MagneticFieldLevel.prototype.detected = function pressed() {
+    let reg: ClientRegister<boolean> = (this as any).__detected
+    if (!reg) {
+        reg = new ClientRegister<boolean>(false)
+        ;(this as any).__detected = reg
+        this.active.subscribe(async () => await reg.emit(true))
+        this.inactive.subscribe(async () => await reg.emit(false))
+    }
+    return reg
 }
 
 Array.prototype.map = function (f) {

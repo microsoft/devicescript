@@ -122,7 +122,9 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         const cmt = addComment(pkt)
         let kw = ""
         let tp = ""
+        let sx = ""
         let argtp = packetType(pkt)
+        const client = !!pkt.client
 
         // if there's a startRepeats before last field, we don't put ... before it
         const earlyRepeats = pkt.fields
@@ -139,8 +141,9 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             .join(", ")
 
         if (isRegister(pkt.kind)) {
-            kw = "readonly "
-            tp = "Register"
+            kw = client ? "" : "readonly "
+            tp = client ? "ClientRegister" : "Register"
+            sx = client ? "()" : ""
         } else if (pkt.kind == "event") {
             kw = "readonly "
             tp = "Event"
@@ -160,7 +163,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             if (docUrl)
                 cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
             r += wrapComment("devs", cmt.comment)
-            r += `    ${kw}${camelize(pkt.name)}: ${tp}<${argtp}>\n`
+            r += `    ${kw}${camelize(pkt.name)}${sx}: ${tp}<${argtp}>\n`
         }
     })
 

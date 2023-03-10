@@ -19,14 +19,17 @@ declare module "@devicescript/core" {
      * A register like structure
      */
     export interface ClientRegister<T> {
-        value: T
+        /**
+         * Reads the current value
+         */
+        read(): Promise<T>
 
         /**
          * Subscribe a change handler to value changes
          * @param next
          * @return unsubscribe
          */
-        subscribe(next: Callback): Unsubscribe
+        subscribe(next: ClientRegisterChangeHandler<T>): Unsubscribe
 
         /**
          * Sends the new value to subscriptions
