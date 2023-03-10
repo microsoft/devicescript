@@ -14,6 +14,8 @@ export const REPORT_TEST_RESULT = "reportTestResult"
  * Implements a test manager server in TS. To be used by vscode to interface with hardware.
  */
 export class TestManagerServer extends JDServiceServer {
+    static SERVICE_CLASS = SRV_TEST_MANAGER
+
     constructor() {
         super(SRV_TEST_MANAGER)
 
@@ -58,17 +60,19 @@ export class TestManagerServer extends JDServiceServer {
      * Registers a handler for test discovery
      * @param handler
      */
-    onDiscoverTest(handler: (info: { name: string; path: string }) => void) {
-        return this.on(DISCOVER_TEST, handler)
+    subscribeDiscoverTest(
+        handler: (info: { name: string; path: string }) => void
+    ) {
+        return this.subscribe(DISCOVER_TEST, handler)
     }
 
     /**
      * Registers a handler for test discovery
      * @param handler
      */
-    onReportTestResult(
+    subscribeReportTestResult(
         handler: (info: { path: string; error: string }) => void
     ) {
-        return this.on(REPORT_TEST_RESULT, handler)
+        return this.subscribe(REPORT_TEST_RESULT, handler)
     }
 }

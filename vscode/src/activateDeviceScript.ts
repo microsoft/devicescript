@@ -16,6 +16,7 @@ import { startJacdacBus, stopJacdacBus, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem, activateTreeViews } from "./JDomTreeDataProvider"
 import { activateMainStatusBar } from "./mainstatusbar"
 import { DeviceScriptExtensionState } from "./state"
+import { activateTestController } from "./testcontroller"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, extensionMode } = context
@@ -112,6 +113,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     activateTreeViews(extensionState)
     activateMainStatusBar(extensionState)
+    activateTestController(extensionState)
 
     // packet trace
     let jacdacPacketsOutputChannel: vscode.OutputChannel = undefined
