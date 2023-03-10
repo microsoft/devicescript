@@ -5,7 +5,7 @@
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*",
-        "@devicescript.test": "*"
+        "@devicescript/test": "*"
     },
     "scripts": {
         "setup": "devicescript build",
@@ -14,7 +14,7 @@
         "build": "yarn build:devicescript",
         "watch:devicescript": "devicescript devtools src/main.ts",
         "watch": "yarn watch:devicescript",
-        "test:devicescript": "devicescript run src/main.ts --test",
+        "test:devicescript": "devicescript run src/main.ts --test --test-self-exit",
         "test": "yarn test:devicescript",
         "start": "yarn watch"
     },
