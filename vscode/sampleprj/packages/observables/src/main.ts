@@ -3,6 +3,7 @@ import { describe, test, expect } from "@devicescript/test"
 import { reduce } from "./aggregate"
 import { from, fromEvent, fromRegister, interval } from "./creation"
 import { threshold, filter, distinctUntilChanged } from "./filter"
+import { collect, collectTime } from "./join"
 import { Observable, Subscription } from "./observable"
 import { map, scan } from "./transform"
 import { tap } from "./utility"
@@ -111,6 +112,37 @@ describe("aggregate", () => {
         obs = reduce<number, number>((p, x) => p + x, 0)(obs)
         obs = tap<number>(v => console.log(v))(obs)
         await emits(obs, [6])
+    })
+})
+
+describe("join", () => {
+    test("collect", async () => {
+        let obs = collect(
+            {
+                a: from([0, 1, 2]),
+                b: from([4, 5, 6]),
+            },
+            interval(50)
+        )
+        const unsub = await obs.subscribe(({ a, b }) =>
+            console.log(`a: ${a}, b: ${b}`)
+        )
+        await ds.sleepMs(100)
+        return unsub
+    })
+    test("collectTime", async () => {
+        let obs = collectTime(
+            {
+                a: from([0, 1, 2]),
+                b: from([4, 5, 6]),
+            },
+            50
+        )
+        const unsub = await obs.subscribe(({ a, b }) =>
+            console.log(`a: ${a}, b: ${b}`)
+        )
+        await ds.sleepMs(100)
+        return unsub
     })
 })
 

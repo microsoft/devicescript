@@ -1,44 +1,74 @@
-import * as ds from "@devicescript/core"
-import { AsyncVoid } from "@devicescript/core"
 import { interval } from "./creation"
-import {
-    Observable,
-    OperatorFunction,
-    Subscription,
-    wrapSubscriptions,
-} from "./observable"
+import { Observable, Subscription, wrapSubscriptions } from "./observable"
 
-export function mergeAll<T>(): OperatorFunction<Observable<T>, T> {
-    return function operator(source: Observable<Observable<T>>) {
-        return new Observable<T>(async observer => {
-            const { error, next, complete } = observer
-            let sourceCompleted = false
-            let remaining = 0
-            const subscriptions: Subscription[] = []
-            subscriptions.push(
-                await source.subscribe({
+/**
+ * Collects the latest values of observables when the closing observable emits.
+ * @param observables
+ * @param closingObservable
+ * @returns
+ */
+export function collect<
+    TObservables extends Record<string, Observable<unknown>>
+>(
+    observables: TObservables,
+    closingObservable: Observable<unknown>,
+    options?: {
+        /**
+         * Clears the accumulated values after emitting
+         */
+        clearValuesOnEmit?: boolean
+    }
+): Observable<Partial<Record<keyof TObservables, unknown>>> {
+    const { clearValuesOnEmit } = options || {}
+    return new Observable<Partial<Record<keyof TObservables, unknown>>>(
+        async observer => {
+            const { next, error, complete } = observer
+
+            let values: Partial<Record<keyof TObservables, unknown>> = {}
+            const assign = (name: string) => (v: unknown) => {
+                values[name as keyof TObservables] = v
+            }
+            const unsubs: Subscription[] = []
+            for (const name of Object.keys(observables)) {
+                const unsub = await observables[name].subscribe({
                     error,
-                    complete: async () => {
-                        sourceCompleted = true
-                        if (!remaining) await complete()
-                    },
-                    next: async (o: Observable<T>) => {
-                        remaining++
-                        subscriptions.push(
-                            await o.subscribe({
-                                error,
-                                complete: async () => {
-                                    remaining--
-                                    if (sourceCompleted && !remaining)
-                                        await complete()
-                                },
-                                next,
-                            })
-                        )
+                    next: assign(name),
+                })
+                unsubs.push(unsub)
+            }
+            unsubs.push(
+                await closingObservable.subscribe({
+                    error,
+                    complete,
+                    next: async () => {
+                        const res = values
+                        if (clearValuesOnEmit) values = {}
+                        await next(res)
                     },
                 })
             )
-            return wrapSubscriptions(subscriptions)
-        })
+            return wrapSubscriptions(unsubs)
+        }
+    )
+}
+
+/**
+ * Collects the latest values of observables when the closing observable emits.
+ * @param observables
+ * @param closingObservable
+ * @returns
+ */
+export function collectTime<
+    TObservables extends Record<string, Observable<unknown>>
+>(
+    observables: TObservables,
+    duration: number,
+    options?: {
+        /**
+         * Clears the accumulated values after emitting
+         */
+        clearValuesOnEmit?: boolean
     }
+): Observable<Partial<Record<keyof TObservables, unknown>>> {
+    return collect<TObservables>(observables, interval(duration), options)
 }
