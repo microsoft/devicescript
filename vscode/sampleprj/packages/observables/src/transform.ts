@@ -7,7 +7,7 @@ import { Observable, OperatorFunction, wrapSubscriptions } from "./observable"
  * @returns observable operator to be used in pipe
  */
 export function map<T, R>(
-    converter: (value: T, index: number) => R
+    converter: (value: T, index: number) => R | Promise<R>
 ): OperatorFunction<T, R> {
     return function operator(source: Observable<T>) {
         return new Observable<R>(async observer => {
@@ -17,7 +17,7 @@ export function map<T, R>(
                 error,
                 complete,
                 next: async value => {
-                    const r = converter(value, index++)
+                    const r = await converter(value, index++)
                     await next(r)
                 },
             })
@@ -29,7 +29,7 @@ export function map<T, R>(
  * Applies an accumulator (or "reducer function") to each value from the source after an initial state is established.
  */
 export function scan<T, A>(
-    accumulator: (acc: A, value: T, index: number) => A,
+    accumulator: (acc: A, value: T, index: number) => A | Promise<A>,
     seed: A
 ): OperatorFunction<T, A> {
     return function operator(source: Observable<T>) {
@@ -41,7 +41,7 @@ export function scan<T, A>(
                 error,
                 complete,
                 next: async curr => {
-                    prev = accumulator(prev, curr, index++)
+                    prev = await accumulator(prev, curr, index++)
                     await next(prev)
                 },
             })
@@ -74,7 +74,6 @@ export function buffer<T>(
                     buffer.push(value)
                 },
             })
-
             return wrapSubscriptions([closingUnsub, srcUnsub])
         })
     }
@@ -87,30 +86,4 @@ export function buffer<T>(
  */
 export function bufferTime<T>(duration: number): OperatorFunction<T, T[]> {
     return buffer(interval(duration))
-}
-
-/**
- * An observable operator that collects samples in an array of a given size.
- * @param length
- * @returns
- */
-export function bufferCount<T>(length: number): OperatorFunction<T, T[]> {
-    return function operator(source: Observable<T>) {
-        return new Observable<T[]>(async observer => {
-            const { next, error, complete } = observer
-            let buffer: T[]
-            return await source.subscribe({
-                error,
-                complete,
-                next: async (value: T) => {
-                    buffer.push(value)
-                    if (buffer.length === length) {
-                        const res = buffer
-                        buffer = []
-                        await next(buffer)
-                    }
-                },
-            })
-        })
-    }
 }
