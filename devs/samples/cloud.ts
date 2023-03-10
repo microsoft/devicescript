@@ -4,8 +4,8 @@ const cloud = new ds.CloudAdapter()
 console.log(await cloud.connectionName.read())
 
 await ds.sleepMs(500)
-await cloud.uploadJson(JSON.stringify({ foo: 1, bar: { baz: "foo" } }))
-await cloud.uploadBinary(hex`00 11 22 33`)
+await cloud.uploadJson("topic1", JSON.stringify({ foo: 1, bar: { baz: "foo" } }))
+await cloud.uploadBinary("topic2", hex`00 11 22 33`)
 
 cloud.onJson.subscribe(val => {
     console.log("got JSON", val)

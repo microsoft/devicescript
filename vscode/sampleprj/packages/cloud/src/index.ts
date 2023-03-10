@@ -17,25 +17,19 @@ export async function trackEvent(
     name: string,
     options?: TrackMessageOptions
 ): Promise<void> {
-    const { properties: p, measurements: m } = options || {}
-    const msg: any = {
-        ["_"]: "tev",
+    const { properties, measurements } = options || {}
+    await uploadMessage("tev", {
         n: name,
-    }
-    if (p) msg.p = p
-    if (m) msg.m = m
-    await cloud.uploadJson(msg)
+        p: properties || undefined,
+        m: measurements || undefined,
+    })
 }
 
 /**
  * Uploads a message to the cloud
  */
 export async function uploadMessage(topicName: string, payload: any) {
-    const json = JSON.stringify({
-        _: topicName,
-        d: payload,
-    })
-    await cloud.uploadJson(json)
+    await cloud.uploadJson(topicName, JSON.stringify(payload))
 }
 
 /**
@@ -44,10 +38,14 @@ export async function uploadMessage(topicName: string, payload: any) {
  * @returns unsubscribe handler
  */
 export function subscribeMessages<TMessage = any>(
+    topicName: "*" | string,
     next: (curr: TMessage) => ds.AsyncVoid
 ) {
-    return cloud.onJson.subscribe(async (json: string) => {
-        const payload = JSON.parse(json) as TMessage
-        await next(payload)
+    return cloud.onJson.subscribe(async (arg: string[]) => {
+        const [topic, json] = arg
+        if (topicName === "*" || topic === topicName) {
+            const payload = JSON.parse(json) as TMessage
+            await next(payload)
+        }
     })
 }
