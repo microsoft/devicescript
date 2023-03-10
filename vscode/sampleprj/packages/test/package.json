@@ -3,17 +3,22 @@
     "version": "1.0.0",
     "dependencies": {},
     "devDependencies": {
-        "@devicescript/cli": "*"
+        "@devicescript/cli": "*",
+        "nodemon": "^2.0.20",
+        "typescript": "^4.9.5",
+        "ts-node": "^10.9.1"
     },
     "scripts": {
         "setup": "devicescript build",
         "build:devicescript": "devicescript build src/main.ts",
-        "build": "yarn build:devicescript",
+        "build": "yarn build:devicescript && yarn build:sim",
         "test:devicescript": "devicescript run src/main.ts --test --test-self-exit",
         "test": "yarn test:devicescript",
         "watch:devicescript": "devicescript devtools",
-        "watch": "yarn watch:devicescript",
-        "start": "yarn watch"
+        "watch": "yarn watch:devicescript & yarn watch:sim",
+        "start": "yarn watch",
+        "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
+        "watch:sim": "cd sim && nodemon --watch './**' --ext 'ts,json' --exec 'ts-node ./app.ts --project ./tsconfig.json'"
     },
     "main": "./src/index.ts",
     "license": "MIT",

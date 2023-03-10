@@ -1,0 +1,21 @@
+{
+    "type": "module",
+    "compilerOptions": {
+        "lib": [
+            "es2022",
+            "dom"
+        ],
+        "module": "commonjs",
+        "target": "es2022",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true
+    },
+    "include": [
+        "./*.ts",
+        "../node_modules/*"
+    ]
+}

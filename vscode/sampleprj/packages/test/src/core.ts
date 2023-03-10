@@ -1,9 +1,9 @@
-import * as ds from "@devicescript/core"
+import { AsyncVoid, reboot, TestManager } from "@devicescript/core"
 
 export type SuiteFunction = () => void
 export type Subscription = () => void
 export type SubscriptionAsync = Subscription | Promise<Subscription>
-export type TestFunction = () => ds.AsyncVoid | SubscriptionAsync
+export type TestFunction = () => AsyncVoid | SubscriptionAsync
 export enum TestState {
     NotRun,
     Running,
@@ -11,7 +11,16 @@ export enum TestState {
     Error,
     Ignored,
 }
-export interface TestOptions {
+export interface NodeOptions {
+    /**
+     * Short id used for reporting
+     */
+    id?: string
+}
+export interface TestOptions extends NodeOptions {
+    /**
+     * Test should fail
+     */
     expectedError?: boolean
 }
 export class AssertionError extends Error {
@@ -25,12 +34,35 @@ export interface TestQuery {
     testFilter?: (test: TestNode) => boolean
     suiteFilter?: (suite: SuiteNode) => boolean
 }
-export type RunOptions = TestQuery & {}
-export class SuiteNode {
+
+// communicate with IDE if any
+const testManager = new TestManager()
+
+export type RunOptions = TestQuery & {
+    reportTestManager?: boolean
+}
+export class Node {
+    constructor(
+        readonly parent: SuiteNode | undefined,
+        readonly name: string,
+        readonly options: NodeOptions | undefined
+    ) {}
+
+    id() {
+        return this.options?.id || this.name
+    }
+    path(): string {
+        return this.parent ? `${this.parent.path()}/${this.id}` : this.id()
+    }
+}
+export interface SuiteOptions extends NodeOptions {}
+export class SuiteNode extends Node {
     readonly children: SuiteNode[] = []
     readonly tests: TestNode[] = []
 
-    constructor(public name: string) {}
+    constructor(parent: SuiteNode, name: string, options: SuiteOptions) {
+        super(parent, name, options)
+    }
 
     testCount(query?: TestQuery): number {
         const { testFilter, suiteFilter } = query || {}
@@ -40,6 +72,23 @@ export class SuiteNode {
                 .filter(child => !suiteFilter || suiteFilter(child))
                 .reduce<number>((prev, curr) => prev + curr.testCount(query), 0)
         )
+    }
+
+    resolveTest(path: string) {
+        if (this.path().slice(0, path.length) !== path) return undefined
+
+        for (const test of this.tests) {
+            if (test.path() === path) return test
+        }
+
+        return undefined
+    }
+
+    async register() {
+        console.log(`registering tests...`)
+        for (const test of this.tests) {
+            await test.register()
+        }
     }
 
     async run(options: RunOptions) {
@@ -78,18 +127,27 @@ export class SuiteNode {
         return result
     }
 }
-export class TestNode {
+export class TestNode extends Node {
     state: TestState = TestState.NotRun
-    error: unknown
+    error: string
 
     constructor(
-        public readonly name: string,
-        public readonly body: TestFunction,
-        public readonly options: TestOptions
-    ) {}
+        parent: SuiteNode,
+        name: string,
+        options: TestOptions,
+        public readonly body: TestFunction
+    ) {
+        super(parent, name, options)
+    }
+
+    async register() {
+        await testManager.registerTest(this.path(), this.name)
+    }
 
     async run(runOptions: RunOptions) {
-        let { expectedError } = this.options || {}
+        let { expectedError } = (this.options as TestOptions) || {}
+        const { reportTestManager } = runOptions
+
         console.log(`  ${this.name}`)
         try {
             this.state = TestState.Running
@@ -112,14 +170,20 @@ export class TestNode {
                 this.state = TestState.Passed
             } else {
                 this.state = TestState.Error
-                this.error = error
+                this.error = "" + error
                 if (error.print) error.print()
             }
         }
+
+        if (reportTestManager)
+            testManager.reportTestResult(
+                this.path(),
+                this.error ? this.error.slice(0, 64) : ""
+            )
     }
 }
 
-export const root = new SuiteNode("")
+export const root = new SuiteNode(undefined, "", {})
 export let autoRun = true
 let autoRunTestTimer: number
 const AUTORUN_TEST_DELAY = 10
@@ -130,13 +194,16 @@ function currentSuite() {
     return parent
 }
 
-export function describe(name: string, body: SuiteFunction) {
+export function describe(
+    name: string,
+    body: SuiteFunction,
+    options?: SuiteOptions
+) {
     // debounce autorun
     clearTimeout(autoRunTestTimer)
 
-    const node = new SuiteNode(name)
-
     const parent = currentSuite()
+    const node = new SuiteNode(parent, name, options || {})
     parent.children.push(node)
 
     try {
@@ -148,22 +215,60 @@ export function describe(name: string, body: SuiteFunction) {
 
     // autorun
     if (autoRun) {
-        if (!autoRunTestTimer) console.log(`preparing to run tests...`)
         autoRunTestTimer = setTimeout(async () => {
-            await runTests()
-            ds.reboot()
+            // don't auto run if test manager
+            const bound = testManager.binding().read()
+            if (bound) {
+                await activateTestManager()
+            } else {
+                await runTests()
+                reboot()
+            }
         }, AUTORUN_TEST_DELAY)
     }
 }
 
-export function test(name: string, body: TestFunction, options?: TestOptions) {
-    const parent = currentSuite()
-    parent.tests.push(new TestNode(name, body, options))
+async function activateTestManager() {
+    await testManager.discoverTests.subscribe(async () => {
+        await root.register()
+    })
+    await testManager.runAllTests.subscribe(async () => {
+        await runTests({ reportTestManager: true })
+    })
+    await testManager.runTest.subscribe(async path => {
+        // find test
+        const test = root.resolveTest(path)
+        if (test) await test.run({ reportTestManager: true })
+    })
+    await root.register()
 }
 
+/**
+ * Registers a test function
+ * @param name name and identifier of the test
+ * @param body test function to execute
+ * @param options
+ * @alias it
+ */
+export function test(name: string, body: TestFunction, options?: TestOptions) {
+    const parent = currentSuite()
+    parent.tests.push(new TestNode(parent, name, options, body))
+}
+
+/**
+ * Registers a test function
+ * @param name name and identifier of the test
+ * @param body test function to execute
+ * @param options
+ * @alias test
+ */
 export const it = test
 
-export async function runTests(options: TestQuery = {}) {
+/**
+ * Executes all tests, with an optional filter
+ * @param options
+ */
+export async function runTests(options: RunOptions = {}) {
     const { ...query } = options
     const testOptions = {
         ...query,
