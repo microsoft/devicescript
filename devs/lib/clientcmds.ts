@@ -12,9 +12,6 @@ function removeElement<T>(arr: T[], e: T) {
     if (!arr.length) return undefined
     else return arr
 }
-async function callHandlers(hh: ds.Callback[]) {
-    if (hh) for (const h of hh) await h()
-}
 
 ds.Buzzer.prototype.playNote = async function (frequency, volume, duration) {
     const p = 1000000 / frequency
@@ -41,29 +38,40 @@ ds.Led.prototype.setAll = async function (r, g, b) {
     await this.pixels.write(buf)
 }
 
-ds.ClientRegister.prototype.subscribe = function subscribe<T>(
-    next: ds.Callback
-): ds.Unsubscribe {
-    if (!next) return () => {}
+export class ClientRegister<T> implements ds.ClientRegister<T> {
+    value: T
 
-    const _this = this
-    _this._subscriptions = addElement(_this._subscriptions, next)
-    return () => {
-        _this._subscriptions = removeElement(_this._subscriptions, next)
+    constructor(value: T) {
+        this.value = value
     }
-}
 
-ds.ClientRegister.prototype.emit = async function emit<T>(
-    newValue: T
-): Promise<void> {
-    if (this.value !== newValue) {
-        this.value = newValue
-        await callHandlers(this._subscriptions)
+    subscribe(next: ds.ClientRegisterChangeHandler<T>): ds.Unsubscribe {
+        if (!next) return () => {}
+
+        this._subscriptions = addElement(this._subscriptions, next)
+        return () => {
+            this._subscriptions = removeElement(this._subscriptions, next)
+        }
     }
+
+    async emit(newValue: T): Promise<void> {
+        if (this.value !== newValue) {
+            this.value = newValue
+            if (this._subscriptions) {
+                for (const next of this._subscriptions) {
+                    await next(this.value, this)
+                }
+            }
+        }
+    }
+
+    private _subscriptions: ds.ClientRegisterChangeHandler<T>[]
 }
 
 ds.Role.prototype.binding = function binding() {
-    if (!this._binding) this._binding = new ds.ClientRegister<boolean>()
+    if (!this._binding) {
+        this._binding = new ClientRegister<boolean>(false)
+    }
     return this._binding
 }
 

@@ -10,11 +10,15 @@ declare module "@devicescript/core" {
         reg: Register<any>
     ) => AsyncVoid
     export type EventChangeHandler = (v: any, reg: Event<any>) => AsyncVoid
+    export type ClientRegisterChangeHandler<T> = (
+        v: T,
+        reg: ClientRegister<T>
+    ) => AsyncVoid
 
     /**
      * A register like structure
      */
-    export class ClientRegister<T> {
+    export interface ClientRegister<T> {
         value: T
 
         /**
@@ -29,12 +33,6 @@ declare module "@devicescript/core" {
          * @param newValue
          */
         emit(newValue: T): Promise<void>
-
-        /**
-         * @internal
-         * @deprecated internal field for runtime support
-         */
-        _subscriptions: Callback[]
     }
 
     /**
