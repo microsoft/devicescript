@@ -211,6 +211,14 @@ void flush_dmesg(void) {
         app_print_dmesg(linebuf);
 }
 
+void app_dmesg(const char *format, ...) {
+    va_list arg;
+    va_start(arg, format);
+    jd_vdmesg(format, arg);
+    va_end(arg);
+    flush_dmesg();
+}
+
 void jd_tcpsock_process(void);
 void app_process(void) {
     tx_process();
