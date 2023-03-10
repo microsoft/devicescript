@@ -25,7 +25,7 @@ export class Expect<T> {
         if (this.check(other !== this.value))
             throw new AssertionError(
                 "toBe",
-                `Expected ${this.value}, got ${other}`
+                `Expected ${other}, got ${this.value}`
             )
     }
 }

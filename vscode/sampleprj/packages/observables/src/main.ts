@@ -53,15 +53,19 @@ describe("creation", () => {
         await obs.subscribe(v => console.log(v))
     })
     test("interval", async () => {
-        let obs = interval(1000)
+        let obs = interval(100)
         obs = tap<number>(v => console.log(`interval ${v}`))(obs)
         // start
         let count = 0
+        let res: number[] = []
         const unsub = await obs.subscribe(() => {
             console.log(`next ${count}`)
+            res.push(count)
             if (count++ === 2) unsub.unsubscribe()
         })
         // wait till done?
+        await ds.sleepMs(1000)
+        expect(res.length).toBe(3)
     })
 })
 
