@@ -1668,8 +1668,7 @@ class Program implements TopOpWriter {
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
-            if (paramdef.dotDotDotToken)
-                proc.hasRest = true
+            if (paramdef.dotDotDotToken) proc.hasRest = true
             if (ts.isObjectBindingPattern(paramdef.name)) {
                 const paramVar = this.addParameter(proc, "obj")
                 destructParams.push({ paramdef, paramVar })
@@ -2485,12 +2484,25 @@ class Program implements TopOpWriter {
                 this.onStart.emit(wr => proc.callMe(wr, []))
                 return undef()
             }
-            case "console.log":
+            case "console.info":
+            case "console.debug":
+            case "console.warn":
+            case "console.error":
+            case "console.log": {
+                const levels: Record<string, string> = {
+                    log: ">",
+                    info: ">",
+                    error: "!",
+                    warn: "*",
+                    debug: "?",
+                }
                 wr.emitCall(
-                    wr.dsMember(BuiltInString.LOG),
+                    wr.dsMember(BuiltInString.PRINT),
+                    literal(levels[funName.slice(8)].charCodeAt(0)),
                     this.compileFormat(expr.arguments)
                 )
                 return undef()
+            }
 
             case "ds.millis":
                 return wr.emitExpr(Op.EXPR0_NOW_MS)

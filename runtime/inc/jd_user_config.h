@@ -6,13 +6,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define DMESG_PRINTF_ATTR __attribute__((format(printf, 1, 2)))
 
-void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
-
-#define DMESG(fmt, ...) dmesg(fmt, ##__VA_ARGS__)
-
-#define JD_LOG DMESG
+#define JD_DMESG_LINE_BUFFER 300
 
 #define JD_CONFIG_STATUS 0
 #define JD_CONFIG_CONTROL_FLOOD 0

@@ -220,6 +220,12 @@ declare module "@devicescript/core" {
      */
     export function millis(): number
 
+    /*
+     * Print out message. Used by console.log, etc.
+     */
+    // don't expose for now as we may want to change it
+    // export function print(prefixCharCode: number, msg: string): void
+
     export { Buffer }
 
     global {

@@ -174,7 +174,7 @@ void target_wait_us(uint32_t us) {
     }
 }
 
-EM_JS(void, em_console_debug, (const char *ptr), {
+EM_JS(void, em_print_dmesg, (const char *ptr), {
     const s = UTF8ToString(ptr, 1024);
     if (Module.dmesg)
         Module.dmesg(s);
@@ -182,21 +182,8 @@ EM_JS(void, em_console_debug, (const char *ptr), {
         console.debug(s);
 });
 
-void dmesgv(const char *format, va_list arg) {
-    char tmp[200];
-    jd_vsprintf(tmp, sizeof(tmp) - 1, format, arg);
-    em_console_debug(tmp);
-}
-
-void dmesg(const char *format, ...) {
-    if (!strchr(format, '%'))
-        em_console_debug(format);
-    else {
-        va_list arg;
-        va_start(arg, format);
-        dmesgv(format, arg);
-        va_end(arg);
-    }
+void app_print_dmesg(const char *ptr) {
+    em_print_dmesg(ptr);
 }
 
 void jd_tcpsock_process(void) {}

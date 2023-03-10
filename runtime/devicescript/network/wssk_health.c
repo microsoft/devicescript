@@ -24,8 +24,10 @@ struct srv_state {
     uint32_t push_watchdog_period_ms;
 
     // non-regs
-    bool fwd_en;
-    uint32_t fwd_timer;
+    uint16_t streaming_en;
+    uint32_t streaming_timer;
+    uint32_t dmesg_ptr;
+    char *dmesg_buf;
 
     uint32_t glow_timer;
     uint32_t reconnect_timer;
@@ -57,7 +59,7 @@ REG_DEFINITION(                                               //
 #define CHD_SIZE 1
 
 static int send_ping(void);
-int wssk_publish(const void *msg, unsigned len);
+static int send_cmd_message(uint8_t cmd, const void *data1, unsigned size1);
 
 static const char *status_name(int st) {
     switch (st) {
@@ -104,6 +106,10 @@ static void clear_conn_string(srv_t *state) {
 
 static void on_msg(srv_t *state, uint8_t *data, unsigned size);
 
+static void stop_streaming(srv_t *state) {
+    state->streaming_en &= JD_WSSK_STREAMING_TYPE_PERMAMENT_MASK;
+}
+
 void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
     srv_t *state = _wsskhealth_state;
 
@@ -112,6 +118,7 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
     switch (event) {
     case JD_CONN_EV_OPEN:
         DMESG("* connected to %s", state->hub_name);
+        state->streaming_en = JD_WSSK_STREAMING_TYPE_DEFAULT_MASK;
         feed_reconnect_watchdog(state);
         set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED);
         break;
@@ -121,7 +128,7 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
         break;
     case JD_CONN_EV_CLOSE:
         DMESG("* connection to %s closed", state->hub_name);
-        state->fwd_en = 0;
+        stop_streaming(state);
         set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED);
         break;
     case JD_CONN_EV_ERROR:
@@ -254,17 +261,33 @@ static const uint32_t glows[] = {
 };
 #endif
 
+#define DMESG_BUF_SIZE 256
+static void alloc_dmesg_buf(srv_t *state) {
+    if (!state->dmesg_buf)
+        state->dmesg_buf = jd_alloc(DMESG_BUF_SIZE);
+}
+
 void wsskhealth_process(srv_t *state) {
     if (state->push_watchdog_period_ms && in_past_ms(state->watchdog_timer_ms)) {
         DMESG("cloud watchdog reset");
         target_reset();
     }
 
-    if (jd_should_sample(&state->fwd_timer, 16 << 20)) {
-        // fwd_en expires after around 16s
-        if (state->fwd_en) {
-            LOG("fwd expired");
-            state->fwd_en = 0;
+    if (jd_should_sample(&state->streaming_timer, 16 << 20)) {
+        // streaming expires after around 16s
+        if (state->streaming_en) {
+            LOG("streaming expired");
+            stop_streaming(state);
+        }
+    }
+
+    if (state->streaming_en & JD_WSSK_STREAMING_TYPE_DMESG) {
+        uint32_t ptr = state->dmesg_ptr;
+        alloc_dmesg_buf(state);
+        unsigned size = jd_dmesg_read(state->dmesg_buf, DMESG_BUF_SIZE, &ptr);
+        if (size > 0) {
+            if (send_cmd_message(JD_WSSK_CMD_DMESG, state->dmesg_buf, size) == 0)
+                state->dmesg_ptr = ptr;
         }
     }
 
@@ -273,8 +296,8 @@ void wsskhealth_process(srv_t *state) {
             jd_frame_t *f = jd_queue_front(state->fwdqueue);
             if (!f)
                 break;
-            if (state->fwd_en) {
-                if (wssk_publish(f, JD_FRAME_SIZE(f)) != 0)
+            if (state->streaming_en & JD_WSSK_STREAMING_TYPE_JACDAC) {
+                if (send_cmd_message(JD_WSSK_CMD_JACDAC_PACKET, f, JD_FRAME_SIZE(f)) != 0)
                     break; // wait for next round
             }
             jd_queue_shift(state->fwdqueue);
@@ -366,43 +389,40 @@ void wsskhealth_init(void) {
     _wsskhealth_state = state;
 }
 
-static uint8_t *prep_msg(uint16_t cmd, unsigned payload_size) {
-    uint8_t *r = jd_alloc(CHD_SIZE + payload_size);
-    JD_ASSERT(cmd <= 0xff);
-    r[0] = cmd;
-    return r;
-}
-
-int wssk_publish(const void *msg, unsigned len) {
+static int send_message(const void *data0, unsigned size0, const void *data1, unsigned size1) {
     srv_t *state = _wsskhealth_state;
     if (state->conn_status != JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED)
-        return -1;
+        return -100;
 
-    const uint8_t *data = msg;
-    if (data[0] == JD_WSSK_CMD_JACDAC_PACKET)
-        LOGV("fwd; CRC=%x", data[1] | (data[2] << 8));
+    uint8_t cmd = *((uint8_t *)data0);
+
+    if (cmd != JD_WSSK_CMD_JACDAC_PACKET && cmd != JD_WSSK_CMD_DMESG)
+        LOG("send cmd=%x", cmd);
     else
-        LOG("send cmd=%x", data[0]);
+        LOGV("vsend cmd=%x", cmd);
 
-    if (jd_wssk_send_message(msg, len) != 0)
-        return -2;
+    int r = jd_wssk_send_message(data0, size0, data1, size1);
+    if (r)
+        return r;
 
     feed_watchdog(state);
-
     return 0;
 }
 
-static int publish_and_free(void *msg, unsigned payload_size) {
-    int r = wssk_publish(msg, CHD_SIZE + payload_size);
-    jd_free(msg);
-    return r;
+static int send_cmd_message(uint8_t cmd, const void *data1, unsigned size1) {
+    return send_message(&cmd, 1, data1, size1);
 }
 
-int wssk_send_message(int data_type, const void *data, unsigned datasize) {
-    uint8_t *msg = prep_msg(JD_WSSK_CMD_D2C, datasize + 1);
-    msg[CHD_SIZE] = data_type;
-    memcpy(msg + CHD_SIZE + 1, data, datasize);
-    return publish_and_free(msg, datasize + 1);
+int wssk_send_message(int data_type, const char *topic, const void *data, unsigned datasize) {
+    unsigned tlen = strlen(topic);
+    unsigned hdlen = 2 + tlen + 1;
+    uint8_t *hd = jd_alloc(hdlen);
+    hd[0] = JD_WSSK_CMD_D2C;
+    hd[1] = data_type;
+    memcpy(hd + 2, topic, tlen);
+    int r = send_message(hd, hdlen, data, datasize);
+    jd_free(hd);
+    return r;
 }
 
 int wssk_is_connected(void) {
@@ -410,9 +430,8 @@ int wssk_is_connected(void) {
     return state->conn_status == JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED;
 }
 
-static int send_empty(uint16_t cmd) {
-    uint8_t *msg = prep_msg(cmd, 0);
-    return publish_and_free(msg, 0);
+static int send_empty(uint8_t cmd) {
+    return send_cmd_message(cmd, NULL, 0);
 }
 
 static int send_ping(void) {
@@ -434,7 +453,7 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
 
     uint8_t *payload = data + CHD_SIZE;
     unsigned payload_size = size - CHD_SIZE;
-    int cmd = data[0];
+    uint8_t cmd = data[0];
 
     switch (cmd) {
     case JD_WSSK_CMD_JACDAC_PACKET: {
@@ -455,14 +474,20 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
         devscloud_on_message(payload[0], payload + 1, payload_size - 1);
         break;
 
-    case JD_WSSK_CMD_SET_FORWARDING:
-        if (payload[0] && !state->fwdqueue) {
+    case JD_WSSK_CMD_SET_STREAMING: {
+        uint16_t prev_streaming = state->streaming_en;
+        state->streaming_en = payload[0] | (payload[1] << 8);
+        if ((state->streaming_en & JD_WSSK_STREAMING_TYPE_JACDAC) && !state->fwdqueue) {
             state->fwdqueue = jd_queue_alloc(JD_USB_QUEUE_SIZE);
         }
-        state->fwd_en = payload[0];
-        state->fwd_timer = (16 << 20) + now; // auto-disable in 16s
-        LOG("fwd_en: %d", payload[0]);
+        if ((state->streaming_en & JD_WSSK_STREAMING_TYPE_DMESG) &&
+            !(prev_streaming & JD_WSSK_STREAMING_TYPE_DMESG)) {
+            state->dmesg_ptr = jd_dmesg_startptr();
+        }
+        state->streaming_timer = (16 << 20) + now; // auto-disable in 16s
+        LOG("streaming: %x", state->streaming_en);
         break;
+    }
 
     case JD_WSSK_CMD_PING_DEVICE:
         send_empty(cmd);
@@ -475,18 +500,20 @@ static void on_msg(srv_t *state, uint8_t *data, unsigned size) {
         break;
 
     case JD_WSSK_CMD_GET_HASH: {
-        uint8_t *msg = prep_msg(cmd, JD_SHA256_HASH_BYTES);
-        devsmgr_get_hash(msg + CHD_SIZE);
-        publish_and_free(msg, JD_SHA256_HASH_BYTES);
+        uint8_t hash[JD_SHA256_HASH_BYTES];
+        devsmgr_get_hash(hash);
+        send_message(&cmd, 1, hash, JD_SHA256_HASH_BYTES);
         break;
     }
 
     case JD_WSSK_CMD_DEPLOY_START:
-        resp_status(cmd, devsmgr_deploy_start(*(uint32_t *)payload));
+        memmove(data, payload, payload_size); // alignment
+        resp_status(cmd, devsmgr_deploy_start(*(uint32_t *)data));
         break;
 
     case JD_WSSK_CMD_DEPLOY_WRITE:
-        resp_status(cmd, devsmgr_deploy_write(payload, payload_size));
+        memmove(data, payload, payload_size); // alignment
+        resp_status(cmd, devsmgr_deploy_write(data, payload_size));
         break;
 
     case JD_WSSK_CMD_DEPLOY_FINISH:
@@ -509,12 +536,12 @@ too_short:
 void jd_net_disable_fwd() {
     srv_t *state = _wsskhealth_state;
     if (state)
-        state->fwd_en = 0;
+        state->streaming_en &= ~JD_WSSK_STREAMING_TYPE_JACDAC;
 }
 
 int jd_net_send_frame(void *frame) {
     srv_t *state = _wsskhealth_state;
-    if (!state || !state->fwd_en)
+    if (!state || !(state->streaming_en & JD_WSSK_STREAMING_TYPE_JACDAC))
         return 0;
     jd_frame_t *f = frame;
     if (f->size == 0)
@@ -542,4 +569,21 @@ const devscloud_api_t wssk_cloud = {
 
 __attribute__((weak)) bool jd_tcpsock_is_available(void) {
     return 1;
+}
+
+void devs_track_exception(devs_ctx_t *ctx) {
+    srv_t *state = _wsskhealth_state;
+    if (!state || !(state->streaming_en & JD_WSSK_STREAMING_TYPE_EXCEPTIONS) ||
+        state->conn_status != JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED)
+        return;
+    uint32_t ptr = jd_dmesg_startptr();
+    alloc_dmesg_buf(state);
+    for (;;) {
+        unsigned size = jd_dmesg_read(state->dmesg_buf, DMESG_BUF_SIZE, &ptr);
+        if (size == 0)
+            break;
+        if (send_cmd_message(JD_WSSK_CMD_EXCEPTION_REPORT, state->dmesg_buf, size) != 0)
+            break;
+    }
+    LOG("exception uploaded");
 }

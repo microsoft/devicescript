@@ -65,7 +65,7 @@ void devsdbg_init(void);
 void devsdbg_suspend_cb(devs_ctx_t *ctx);
 
 typedef struct {
-    int (*send_message)(int data_type, const void *data, unsigned datasize);
+    int (*send_message)(int data_type, const char *topic, const void *data, unsigned datasize);
     int (*is_connected)(void);
     size_t max_bin_upload_size;
     int (*service_query)(jd_packet_t *pkt);

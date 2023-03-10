@@ -15,7 +15,16 @@ static srv_t *_devscloud_state;
 void devscloud_process(srv_t *state) {}
 
 static void devscloud_upload(srv_t *state, int type, jd_packet_t *pkt) {
-    int r = state->api->send_message(type, pkt->data, pkt->service_size);
+    int ep = 0;
+    while (ep < pkt->service_size && pkt->data[ep])
+        ep++;
+    ep++;
+    if (ep > pkt->service_size) {
+        LOG("invalid cloud upload format");
+        return;
+    }
+    int r =
+        state->api->send_message(type, (char *)pkt->data, pkt->data + ep, pkt->service_size - ep);
     if (r)
         LOG("failed upload");
 }
@@ -56,7 +65,7 @@ void devscloud_init(const devscloud_api_t *cloud_api) {
     _devscloud_state = state;
 }
 
-static int send_message(int data_type, const void *data, unsigned datasize) {
+static int send_message(int data_type, const char *topic, const void *data, unsigned datasize) {
     return 0;
 }
 

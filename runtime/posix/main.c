@@ -196,10 +196,23 @@ int load_image(const char *name) {
     return 0;
 }
 
+void app_print_dmesg(const char *ptr);
+
+#ifndef __EMSCRIPTEN__
+void app_print_dmesg(const char *ptr) {
+    printf("    %s\n", ptr);
+}
+#endif
+
 void jd_tcpsock_process(void);
 void app_process(void) {
     tx_process();
     jd_tcpsock_process();
+
+    static uint32_t dmesg_ptr;
+    static char linebuf[JD_DMESG_LINE_BUFFER + 20];
+    while (jd_dmesg_read_line(linebuf, sizeof(linebuf), &dmesg_ptr) != 0)
+        app_print_dmesg(linebuf);
 
 #if 0
     static uint32_t uptime_cnt;

@@ -268,7 +268,30 @@ interface ArrayConstructor {
 declare var Array: ArrayConstructor
 
 declare namespace console {
+    /**
+     * Same as `console.log`.
+     */
+    function info(...args: any[]): void
+
+    /**
+     * Print out message at INFO logging level (prefix: `> `).
+     */
     function log(...args: any[]): void
+
+    /**
+     * Print out message at DEBUG logging level (prefix: `? `).
+     */
+    function debug(...args: any[]): void
+
+    /**
+     * Print out message at WARNING logging level (prefix: `* `).
+     */
+    function warn(...args: any[]): void
+
+    /**
+     * Print out message at ERROR logging level (prefix: `! `).
+     */
+    function error(...args: any[]): void
 }
 
 interface Math {

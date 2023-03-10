@@ -26,7 +26,7 @@ void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx);
 void fun1_DeviceScript__panic(devs_ctx_t *ctx);
 void fun0_DeviceScript_reboot(devs_ctx_t *ctx);
 void funX_DeviceScript_format(devs_ctx_t *ctx);
-void fun1_DeviceScript_log(devs_ctx_t *ctx);
+void fun2_DeviceScript_print(devs_ctx_t *ctx);
 void fun1_DeviceScript_parseFloat(devs_ctx_t *ctx);
 void fun1_DeviceScript_parseInt(devs_ctx_t *ctx);
 void fun2_DeviceScript__logRepr(devs_ctx_t *ctx);
@@ -126,7 +126,7 @@ static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
     {N(_PANIC), 50012},                                            //
     {N(REBOOT), 50013},                                            //
     {N(FORMAT), 50014},                                            //
-    {N(LOG), 50015},                                               //
+    {N(PRINT), 50015},                                             //
     {N(PARSEFLOAT), 50016},                                        //
     {N(PARSEINT), 50017},                                          //
     {N(_LOGREPR), 50018},                                          //
@@ -360,7 +360,7 @@ const devs_builtin_function_t devs_builtin_functions[75] = {
     {N(_PANIC), 1, NO_SELF, {.meth = fun1_DeviceScript__panic}},
     {N(REBOOT), 0, NO_SELF, {.meth = fun0_DeviceScript_reboot}},
     {N(FORMAT), 0, NO_SELF, {.meth = funX_DeviceScript_format}},
-    {N(LOG), 1, NO_SELF, {.meth = fun1_DeviceScript_log}},
+    {N(PRINT), 2, NO_SELF, {.meth = fun2_DeviceScript_print}},
     {N(PARSEFLOAT), 1, NO_SELF, {.meth = fun1_DeviceScript_parseFloat}},
     {N(PARSEINT), 1, NO_SELF, {.meth = fun1_DeviceScript_parseInt}},
     {N(_LOGREPR), 2, NO_SELF, {.meth = fun2_DeviceScript__logRepr}},

@@ -6,8 +6,6 @@
 #define RESUME_USER_CODE 1
 #define KEEP_WAITING 0
 
-static bool handle_logmsg(devs_fiber_t *fiber, bool print);
-
 void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg) {
     if (ctx->error_code)
@@ -96,22 +94,31 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     devs_fiber_sleep(fib, 0);
 }
 
-void devs_jd_send_logmsg(devs_ctx_t *ctx, value_t str) {
+void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str) {
     if (ctx->error_code)
         return;
 
-    devs_fiber_t *fib = ctx->curr_fiber;
-    JD_ASSERT(fib != NULL);
+    unsigned sz;
+    const char *ptr = devs_string_get_utf8(ctx, str, &sz);
 
-    fib->role_idx = DEVS_NO_ROLE;
-
-    fib->pkt_kind = DEVS_PKT_KIND_LOGMSG;
-    fib->service_command = ctx->log_counter & 0xffff;
-    ctx->log_counter++;
-    fib->pkt_data.v = str;
-
-    if (handle_logmsg(fib, true) == RESUME_USER_CODE)
-        devs_jd_clear_pkt_kind(fib);
+    if (strchr(ptr, '\n')) {
+        char *tmp = jd_strdup(ptr);
+        char *sp = tmp, *ep = tmp;
+        while (*ep) {
+            if (*ep == '\n') {
+                *ep++ = 0;
+                DMESG("%c %s", lev, sp);
+                sp = ep;
+            } else {
+                ep++;
+            }
+        }
+        if (*sp)
+            DMESG("%c %s", lev, sp);
+        jd_free(tmp);
+    } else {
+        DMESG("%c %s", lev, ptr);
+    }
 }
 
 static void devs_jd_set_packet(devs_ctx_t *ctx, unsigned role_idx, unsigned service_command,
@@ -316,67 +323,6 @@ static bool handle_send_pkt(devs_fiber_t *fiber) {
     }
 }
 
-static bool handle_logmsg(devs_fiber_t *fiber, bool print) {
-    devs_ctx_t *ctx = fiber->ctx;
-
-    uint16_t low_log_counter = fiber->service_command;
-    bool send_now = low_log_counter == (ctx->log_counter_to_send & 0xffff);
-    if (!send_now && !print)
-        return retry_soon(fiber);
-
-    jd_packet_t *pkt = &ctx->packet;
-    unsigned sz;
-    const char *str = devs_string_get_utf8(ctx, fiber->pkt_data.v, &sz);
-    pkt->data[0] = low_log_counter & 0xff; // log-counter
-    pkt->data[1] = 0;                      // flags
-    if (sz > JD_SERIAL_PAYLOAD_SIZE - 2)
-        sz = JD_SERIAL_PAYLOAD_SIZE - 2;
-    memcpy(pkt->data + 2, str, sz);
-    pkt->service_size = sz + 2;
-    pkt->service_command = JD_DEVICE_SCRIPT_MANAGER_CMD_LOG_MESSAGE;
-    pkt->service_index = ctx->cfg.mgr_service_idx;
-    pkt->device_identifier = jd_device_id();
-    pkt->_size = (pkt->service_size + 4 + 3) & ~3;
-    pkt->flags = 0;
-
-    if (print) {
-        if (strchr(str, '\n')) {
-            char *tmp = jd_strdup(str);
-            char *sp = tmp, *ep = tmp;
-            while (*ep) {
-                if (*ep == '\n') {
-                    *ep++ = 0;
-                    DMESG("> %s", sp);
-                    sp = ep;
-                } else {
-                    ep++;
-                }
-            }
-            if (*sp)
-                DMESG("> %s", sp);
-            jd_free(tmp);
-        } else {
-            DMESG("> %s", str);
-        }
-    }
-
-    if (!(ctx->flags & DEVS_CTX_LOGGING_ENABLED))
-        return RESUME_USER_CODE;
-
-    if (send_now) {
-        if (jd_send_pkt(&ctx->packet) == 0) {
-            // LOGV("log sent");
-            ctx->log_counter_to_send++;
-            return RESUME_USER_CODE;
-        } else {
-            LOGV("send log FAILED");
-            return retry_soon(fiber);
-        }
-    } else {
-        return retry_soon(fiber);
-    }
-}
-
 bool devs_jd_should_run(devs_fiber_t *fiber) {
     if (fiber->pkt_kind == DEVS_PKT_KIND_NONE)
         return RESUME_USER_CODE;
@@ -391,9 +337,6 @@ bool devs_jd_should_run(devs_fiber_t *fiber) {
 
     case DEVS_PKT_KIND_SEND_PKT:
         return handle_send_pkt(fiber);
-
-    case DEVS_PKT_KIND_LOGMSG:
-        return handle_logmsg(fiber, false);
 
     default:
         JD_PANIC();

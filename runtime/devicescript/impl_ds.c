@@ -43,10 +43,13 @@ void funX_DeviceScript_format(devs_ctx_t *ctx) {
     devs_ret_gc_ptr(ctx, str);
 }
 
-void fun1_DeviceScript_log(devs_ctx_t *ctx) {
-    value_t s = devs_arg(ctx, 0);
+void fun2_DeviceScript_print(devs_ctx_t *ctx) {
+    int lev = devs_arg_int(ctx, 0);
+    if (lev <= 0 || lev > 0x80)
+        lev = '>';
+    value_t s = devs_arg(ctx, 1);
     s = devs_value_to_string(ctx, s);
-    devs_jd_send_logmsg(ctx, s);
+    devs_jd_send_logmsg(ctx, lev, s);
 }
 
 void fun1_DeviceScript_parseFloat(devs_ctx_t *ctx) {

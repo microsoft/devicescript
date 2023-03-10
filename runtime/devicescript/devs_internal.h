@@ -31,8 +31,7 @@ typedef struct devs_activation devs_activation_t;
 #define DEVS_PKT_KIND_NONE 0
 #define DEVS_PKT_KIND_REG_GET 1
 #define DEVS_PKT_KIND_SEND_PKT 2
-#define DEVS_PKT_KIND_LOGMSG 3
-#define DEVS_PKT_KIND_ROLE_WAIT 4
+#define DEVS_PKT_KIND_ROLE_WAIT 3
 
 typedef void (*devs_resume_cb_t)(devs_ctx_t *ctx, void *userdata);
 
@@ -77,7 +76,8 @@ typedef struct devs_fiber {
 
 static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
     // TODO use 'ret_val' instead?
-    return fib->pkt_kind == DEVS_PKT_KIND_LOGMSG;
+    // return fib->pkt_kind == DEVS_PKT_KIND_LOGMSG;
+    return false;
 }
 
 #define DEVS_CTX_FLAG_BUSY 0x01
@@ -229,7 +229,7 @@ void devs_jd_init_roles(devs_ctx_t *ctx);
 void devs_jd_free_roles(devs_ctx_t *ctx);
 void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role);
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib);
-void devs_jd_send_logmsg(devs_ctx_t *ctx, value_t str);
+void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str);
 
 // fibers.c
 void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);
@@ -334,3 +334,4 @@ value_t devs_alloc_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format
 const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack);
 void devs_dump_exception(devs_ctx_t *ctx, value_t exn);
+void devs_track_exception(devs_ctx_t *ctx);

@@ -94,7 +94,7 @@ static void on_hello(jd_wssk_t *es, const uint8_t *msg, unsigned size) {
 
     es->state = ST_GOT_KEY;
 
-    if (jd_wssk_send_message(NULL, JD_WSSK_AUTH_SIZE) != 0) {
+    if (jd_wssk_send_message(NULL, JD_WSSK_AUTH_SIZE, NULL, 0) != 0) {
         raise_error(es, "can't send auth");
         return;
     }
@@ -160,18 +160,22 @@ static void on_message(jd_wssk_t *es, const uint8_t *msg, unsigned size) {
     }
 }
 
-int jd_wssk_send_message(const void *data, unsigned size) {
+int jd_wssk_send_message(const void *data0, unsigned size0, const void *data1, unsigned size1) {
     jd_wssk_t *es = &_encsock;
 
     if (target_in_irq())
         JD_PANIC();
 
-    if (!((es->state == ST_GOT_KEY && data == NULL) || (es->state == ST_GOT_AUTH && data != NULL)))
+    if ((data0 == NULL && data1 != NULL) || (es->state == ST_GOT_KEY && data0 != NULL) ||
+        (es->state == ST_GOT_AUTH && data0 == NULL))
         return -1;
 
+    unsigned size = size0 + size1;
     uint8_t *sendbuf = jd_alloc(size + JD_AES_CCM_TAG_BYTES);
-    if (data)
-        memcpy(sendbuf, data, size);
+    if (data0)
+        memcpy(sendbuf, data0, size0);
+    if (data1)
+        memcpy(sendbuf + size0, data1, size1);
     jd_aes_ccm_encrypt(es->key, es->client_nonce, sendbuf + size, sendbuf, size);
     int r = jd_websock_send_message(sendbuf, size + JD_AES_CCM_TAG_BYTES);
     jd_free(sendbuf);
@@ -221,5 +225,5 @@ __attribute__((weak)) void jd_wssk_on_event(unsigned event, const void *data, un
     DMESG("CONN: %s %-s", jd_websock_event_name(event), devs_json_escape(data, size));
 
     if (event == JD_CONN_EV_OPEN)
-        jd_wssk_send_message("lalala", 6);
+        jd_wssk_send_message("lalala", 6, NULL, 0);
 }
