@@ -3,12 +3,9 @@ import * as ds from "@devicescript/core"
 const thermometer = new ds.Temperature()
 const heater = new ds.Relay()
 
-heater.onConnected(() => {
-    console.log("heater detected")
-})
-
-heater.onDisconnected(() => {
-    console.log("heater lost")
+heater.binding().subscribe(() => {
+    if (heater.binding().value) console.log("heater detected")
+    else console.log("heater lost")
 })
 
 thermometer.temperature.subscribe(async t => {

@@ -1,5 +1,21 @@
 import * as ds from "@devicescript/core"
 
+function addElement<T>(arr: T[], e: T) {
+    if (!arr) return [e]
+    arr.push(e)
+    return arr
+}
+function removeElement<T>(arr: T[], e: T) {
+    if (!arr) return arr
+    const i = arr.indexOf(e)
+    if (i >= 0) arr.insert(i, -1)
+    if (!arr.length) return undefined
+    else return arr
+}
+async function callHandlers(hh: ds.Callback[]) {
+    if (hh) for (const h of hh) await h()
+}
+
 ds.Buzzer.prototype.playNote = async function (frequency, volume, duration) {
     const p = 1000000 / frequency
     volume = Math.clamp(0, volume, 1)
@@ -25,20 +41,36 @@ ds.Led.prototype.setAll = async function (r, g, b) {
     await this.pixels.write(buf)
 }
 
-async function callHandlers(hh: ds.Callback[]) {
-    if (hh) for (const h of hh) await h()
+ds.ClientRegister.prototype.subscribe = function subscribe<T>(
+    next: ds.Callback
+): ds.Unsubscribe {
+    if (!next) return () => {}
+
+    const _this = this
+    _this._subscriptions = addElement(_this._subscriptions, next)
+    return () => {
+        _this._subscriptions = removeElement(_this._subscriptions, next)
+    }
+}
+
+ds.ClientRegister.prototype.emit = async function emit<T>(
+    newValue: T
+): Promise<void> {
+    if (this.value !== newValue) {
+        this.value = newValue
+        await callHandlers(this._subscriptions)
+    }
+}
+
+ds.Role.prototype.binding = function binding() {
+    if (!this._binding) this._binding = new ds.ClientRegister<boolean>()
+    return this._binding
 }
 
 ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
     if (!pkt || pkt.serviceCommand === 0) {
         const conn = this.isConnected
-        if (this._connHandlers || this._disconHandlers) {
-            if (conn !== this._wasConnected) {
-                this._wasConnected = conn
-                if (conn) await callHandlers(this._connHandlers)
-                else await callHandlers(this._disconHandlers)
-            }
-        }
+        await this.binding().emit(conn)
         if (conn && this._changeHandlers) {
             const regs = Object.keys(this._changeHandlers)
             for (let i = 0; i < regs.length; ++i) {
@@ -69,25 +101,6 @@ ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
         // TODO pass event
         if (hh) for (const h of hh) await h(pkt.decode(), null)
     }
-}
-
-function addElement<T>(arr: T[], e: T) {
-    if (!arr) return [e]
-    arr.push(e)
-    return arr
-}
-
-ds.Role.prototype.onConnected = function onConnected(
-    this: ds.Role,
-    h: ds.Callback
-) {
-    this._connHandlers = addElement(this._connHandlers, h)
-}
-ds.Role.prototype.onDisconnected = function onConnected(
-    this: ds.Role,
-    h: ds.Callback
-) {
-    this._disconHandlers = addElement(this._disconHandlers, h)
 }
 
 ds.Register.prototype.subscribe = function subscribe<T>(
