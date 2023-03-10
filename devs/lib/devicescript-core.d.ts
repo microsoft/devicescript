@@ -194,13 +194,6 @@ declare module "@devicescript/core" {
     export function keep(method: any): void
 
     /**
-     * Moved by the compiler to the beginning of execution.
-     * @internal
-     * @deprecated internal field for runtime support
-     */
-    export function _onStart(handler: Callback): void
-
-    /**
      * Print out internal representation of a given value, possibly prefixed by label.
      * @internal
      * @deprecated internal field for runtime support

@@ -3,8 +3,8 @@
 
 #include "devs_internal.h"
 
-// #define LOG_TAG "gc"
-// #define VLOGGING 1
+//#define LOG_TAG "gc"
+//#define VLOGGING 1
 #include "devs_logging.h"
 
 #define ROOT_SCAN_DEPTH 10
@@ -103,13 +103,14 @@ static void scan_array(devs_ctx_t *ctx, value_t *vals, unsigned length, int dept
 static void mark_ptr(devs_ctx_t *ctx, void *ptr) {
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
-    JD_ASSERT((GET_TAG(b->header) & DEVS_GC_TAG_MASK_SCANNED) == 0);
+    JD_ASSERT((GET_TAG(b->header) & (DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_MASK_SCANNED)) == 0);
     JD_ASSERT(BASIC_TAG(b->header) == DEVS_GC_TAG_BYTES);
     b->header |= (uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS;
 }
 
 static void scan_array_and_mark(devs_ctx_t *ctx, value_t *vals, unsigned length, int depth) {
     if (vals) {
+        LOGV("arr %p %u", vals, length);
         mark_ptr(ctx, vals);
         scan_array(ctx, vals, length, depth);
     }
@@ -490,6 +491,9 @@ devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size) {
         if (arr->data == NULL) {
             arr->gc.header ^= (uintptr_t)DEVS_GC_TAG_MASK_PINNED << DEVS_GC_TAG_POS;
             return NULL;
+        } else {
+            // data now rooted in array
+            jd_gc_unpin(ctx->gc, arr->data);
         }
         arr->length = arr->capacity = size;
     }

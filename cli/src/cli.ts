@@ -186,6 +186,7 @@ export async function mainCli() {
             "-s, --serial <serial-port>",
             "connect to serial port, not 127.0.0.1:8082"
         )
+        .option("--test-self-exit", "let the test code exit the process")
         .arguments("<file.ts|file.devs>")
         .action(crunScript)
 
