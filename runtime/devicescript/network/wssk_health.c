@@ -27,6 +27,7 @@ struct srv_state {
     uint16_t streaming_en;
     uint32_t streaming_timer;
     uint32_t dmesg_ptr;
+    uint32_t dmesg_cache;
     char *dmesg_buf;
 
     uint32_t glow_timer;
@@ -281,13 +282,20 @@ void wsskhealth_process(srv_t *state) {
         }
     }
 
-    if (state->streaming_en & JD_WSSK_STREAMING_TYPE_DMESG) {
+    if ((state->streaming_en & JD_WSSK_STREAMING_TYPE_DMESG) &&
+        jd_dmesg_currptr() != state->dmesg_cache) {
         uint32_t ptr = state->dmesg_ptr;
         alloc_dmesg_buf(state);
         unsigned size = jd_dmesg_read(state->dmesg_buf, DMESG_BUF_SIZE, &ptr);
+        bool up_to_date = jd_dmesg_currptr() == ptr;
         if (size > 0) {
-            if (send_cmd_message(JD_WSSK_CMD_DMESG, state->dmesg_buf, size) == 0)
+            if (send_cmd_message(JD_WSSK_CMD_DMESG, state->dmesg_buf, size) == 0) {
                 state->dmesg_ptr = ptr;
+                // save jd_dmesg_currptr() after send_cmd_message() so we ignore (for now)
+                // any logs it may generate until more logs appear
+                if (up_to_date)
+                    state->dmesg_cache = jd_dmesg_currptr();
+            }
         }
     }
 
@@ -580,9 +588,12 @@ void devs_track_exception(devs_ctx_t *ctx) {
     alloc_dmesg_buf(state);
     for (;;) {
         unsigned size = jd_dmesg_read(state->dmesg_buf, DMESG_BUF_SIZE, &ptr);
+        bool done = jd_dmesg_currptr() == ptr;
         if (size == 0)
             break;
         if (send_cmd_message(JD_WSSK_CMD_EXCEPTION_REPORT, state->dmesg_buf, size) != 0)
+            break;
+        if (done)
             break;
     }
     LOG("exception uploaded");
