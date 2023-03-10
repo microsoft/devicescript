@@ -144,48 +144,6 @@ ds.Event.prototype.wait = async function () {
     }
 }
 
-declare module "@devicescript/core" {
-    interface TrackEventOptions {
-        properties?: Record<string, string>
-        measurements?: Record<string, number>
-    }
-
-    interface CloudAdapter {
-        /**
-         * Uploads an object as a JSON string payload. Use extremely short field names, space is very limited.
-         * @param payload object to upload
-         */
-        uploadObject(payload: any): Promise<void>
-
-        /**
-         * Uploads a telemetry event to the cloud monitoring service.
-         * All event name coming from the device are prepended with 'dev.from.'
-         * @param name
-         * @param options
-         */
-        trackEvent(name: string, options?: TrackEventOptions): Promise<void>
-    }
-}
-
-ds.CloudAdapter.prototype.uploadObject = async function (payload: any) {
-    const json = JSON.stringify(payload)
-    await this.uploadJson(json)
-}
-
-ds.CloudAdapter.prototype.trackEvent = async function (
-    name: string,
-    options?: ds.TrackEventOptions
-) {
-    const { properties: p, measurements: m } = options || {}
-    const msg: any = {
-        ["_"]: "tev",
-        n: name,
-    }
-    if (p) msg.p = p
-    if (m) msg.m = m
-    await this.uploadJson(msg)
-}
-
 Array.prototype.map = function (f) {
     const res: any[] = []
     const length = this.length

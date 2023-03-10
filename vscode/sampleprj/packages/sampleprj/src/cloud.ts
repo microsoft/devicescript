@@ -1,15 +1,15 @@
-import { CloudAdapter, Temperature } from "@devicescript/core"
+import { Temperature } from "@devicescript/core"
+import { trackEvent, uploadMessage } from "@devicescript/cloud"
 
-const cloud = new CloudAdapter()
 const thermo = new Temperature()
 
-await cloud.trackEvent("start")
+await trackEvent("start")
 
 let h = 0
 thermo.temperature.subscribe(t => {
     h = t
 })
 setInterval(async () => {
-    await cloud.trackEvent("data", { measurements: { humi: h } })
-    await cloud.uploadObject({ humi: h })
+    await trackEvent("data", { measurements: { humi: h } })
+    await uploadMessage("samples/cloud", { humi: h })
 }, 15000)

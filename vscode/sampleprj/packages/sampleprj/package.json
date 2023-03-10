@@ -4,7 +4,8 @@
     "private": true,
     "dependencies": {
         "devicescript-cowsay": "*",
-        "@devicescript/observables": "*"
+        "@devicescript/observables": "*",
+        "@devicescript/cloud": "*"
     },
     "devDependencies": {
         "@devicescript/cli": "*",

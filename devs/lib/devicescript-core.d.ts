@@ -108,9 +108,9 @@ declare module "@devicescript/core" {
         wait(): Promise<void>
         /**
          * Registers a callback to execute when an event is received
-         * @param handler callback to execute
+         * @param next callback to execute
          */
-        subscribe(handler: (curr: T, reg: this) => AsyncVoid): Unsubscribe
+        subscribe(next: (curr: T, reg: this) => AsyncVoid): Unsubscribe
     }
 
     // TODO: maybe a better name, is this some kind of internal data structure?

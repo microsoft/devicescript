@@ -4,19 +4,18 @@ sidebar_position: 15
 
 # Cloud
 
-DeviceScript provides a cloud agnostic device to cloud API
+The `@devicescript/cloud` package provides a cloud agnostic device to cloud API
 that allows to send and receive small JSON messages to an online gateway.
 The gateway can route the messages into any further cloud service.
 
 As a proof of concept, DeviceScript can be connected to the [Development Gateway](/developer/gateway).
 
-## CloudAdapter client
+## Installation
 
-The **cloud adapter** service is the abstraction layer to interact with an online gateway. We start by instantiating a client role
-to bind to the server.
+Add `@devicescript/cloud` in your project.
 
-```ts
-const cloud = new ds.CloudAdapter()
+```bash npm2yarn
+npm install @devicescript/cloud
 ```
 
 ## Monitoring
@@ -24,8 +23,9 @@ const cloud = new ds.CloudAdapter()
 You can collect usage telemetry of your DeviceScript using `trackEvent`.
 
 ```ts
-const cloud = new ds.CloudAdapter()
-cloud.trackEvent("started")
+import { trackEvent } from "@devicescript/cloud"
+
+await trackEvent("started")
 ```
 
 When connected to the gateway, the device is modelled as a user and the connection as a session.
@@ -33,14 +33,15 @@ The data is injected directly
 in [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
 and can be analyzed through the Azure portal.
 
-## Upload JSON
+## Upload Message
 
 DeviceScript will stringify and upload your object as a JSON payload. The gateway add this messages
 into an [Azure Event Hub](https://azure.microsoft.com/en-us/products/event-hubs/), additonal sinks can be configured online.
 
 ```ts
-const cloud = new ds.CloudAdapter()
-cloud.uploadObject({ msg: "hello" })
+import { uploadMessage } from "@devicescript/cloud"
+
+await uploadMessage("topic", { msg: "hello" })
 ```
 
 :::tip
