@@ -445,24 +445,6 @@ export class CloudDevice extends CloudNode<CloudDeviceData> {
             method: "GET",
         })
     }
-
-    async telemetry(
-        start?: number,
-        stop?: number,
-        first?: number
-    ): Promise<CloudTelemetry[]> {
-        return await this.manager.fetchJSON(
-            `devices/${this.data.id}/telemetry`,
-            {
-                query: {
-                    start,
-                    stop,
-                    first,
-                },
-                method: "GET",
-            }
-        )
-    }
 }
 
 export interface CloudScriptData extends CloudData {
