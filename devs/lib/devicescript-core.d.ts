@@ -10,16 +10,46 @@ declare module "@devicescript/core" {
         reg: Register<any>
     ) => AsyncVoid
     export type EventChangeHandler = (v: any, reg: Event<any>) => AsyncVoid
+    export type ClientRegisterChangeHandler<T> = (
+        v: T,
+        reg: ClientRegister<T>
+    ) => AsyncVoid
+
+    /**
+     * A register like structure
+     */
+    export interface ClientRegister<T> {
+        value: T
+
+        /**
+         * Subscribe a change handler to value changes
+         * @param next
+         * @return unsubscribe
+         */
+        subscribe(next: Callback): Unsubscribe
+
+        /**
+         * Sends the new value to subscriptions
+         * @param newValue
+         */
+        emit(newValue: T): Promise<void>
+    }
 
     /**
      * A base class for service clients
      */
     // TODO: rename to serviceclient?
     export class Role {
+        /**
+         * @internal
+         * @deprecated internal field for runtime support
+         */
         isConnected: boolean
-        // TODO: is there a way to unregister an event?
-        onConnected(handler: Callback): void
-        onDisconnected(handler: Callback): void
+
+        /**
+         * Gets the state of the binding with a jacdac server
+         */
+        binding(): ClientRegister<boolean>
 
         /**
          * Wait for the next packet to arrive from the device.
@@ -34,15 +64,24 @@ declare module "@devicescript/core" {
 
         /**
          * @internal
+         * @deprecated internal field for runtime support
          */
         onPacket: PktHandler
 
+        /**
+         * @internal
+         * @deprecated internal field for runtime support
+         */
+        _binding: ClientRegister<boolean>
+        /**
+         * @internal
+         * @deprecated internal field for runtime support
+         */
         _changeHandlers: Record<string, RegisterChangeHandler[]>
-
-        _wasConnected: boolean
-        _connHandlers: Callback[]
-        _disconHandlers: Callback[]
-
+        /**
+         * @internal
+         * @deprecated internal field for runtime support
+         */
         _eventHandlers: Record<string, EventChangeHandler[]>
     }
 
@@ -141,6 +180,8 @@ declare module "@devicescript/core" {
 
     /**
      * Best use `throw new Error(...)` instead.
+     * @internal
+     * @deprecated internal field for runtime support
      */
     export function _panic(code: number): never
 
@@ -151,16 +192,22 @@ declare module "@devicescript/core" {
 
     /**
      * Moved by the compiler to the beginning of execution.
+     * @internal
+     * @deprecated internal field for runtime support
      */
     export function _onStart(handler: Callback): void
 
     /**
      * Print out internal representation of a given value, possibly prefixed by label.
+     * @internal
+     * @deprecated internal field for runtime support
      */
     export function _logRepr(v: any, label?: string): void
 
     /**
      * Identity function, used to prevent constant folding.
+     * @internal
+     * @deprecated internal field for runtime support
      */
     export function _id<T>(a: T): T
 

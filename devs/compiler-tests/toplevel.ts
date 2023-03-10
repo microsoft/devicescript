@@ -4,21 +4,18 @@ const g = 0
 const r = new ds.Button()
 
 async function foo() {
-    function bar() { }
+    function bar() {}
 
-    await r.down.subscribe(() => {
-    })
-    r.onConnected(() => {
-    })
+    await r.down.subscribe(() => {})
+    r.binding().subscribe(() => {})
     await r.pressure.subscribe(() => {})
 }
 
 if (g > 0) {
     const q = 0
-    function bazz() { }
+    function bazz() {}
 
-    r.down.subscribe(() => {
-    })
+    r.down.subscribe(() => {})
 }
 
 function baz() {

@@ -5,7 +5,7 @@ const ledD = new ds.Led()
 const btn = new ds.Button()
 let p
 
-pot.position.subscribe(async (p) => {
+pot.position.subscribe(async p => {
     console.log("tick", p)
     await ledD.brightness.write(p * 0.3)
 })
@@ -20,7 +20,7 @@ ds.Led.prototype.setAllColors = async function (r, g, b) {
     await this.setAll(r, g, b)
 }
 
-ledD.onConnected(async () => {
+ledD.binding().subscribe(async () => {
     await ledD.setAllColors(0.9, 1, 0)
 })
 

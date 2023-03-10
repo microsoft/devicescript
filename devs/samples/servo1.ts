@@ -4,7 +4,7 @@ let x: number
 const servo1 = new ds.Servo()
 const button1 = new ds.Button()
 const airPressure1 = new ds.AirPressure()
-servo1.onConnected(async () => {
+servo1.binding().subscribe(async () => {
     await servo1.enabled.write(true)
 })
 button1.down.subscribe(async () => {

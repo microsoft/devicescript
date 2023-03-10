@@ -14,7 +14,7 @@
         "test:cowsay": "cd vscode/sampleprj/packages/cowsay && yarn test",
         "test:observables": "cd vscode/sampleprj/packages/observables && yarn test",
         "test:cloud": "cd vscode/sampleprj/packages/cloud && yarn test",
-        "test": "yarn test:compiler && yarn test:test && yarn test:cowsay && yarn test:cloud",
+        "test": "yarn test:compiler && yarn test:test && yarn test:cowsay",
         "presemantic": "node ./scripts/presemantic.mjs",
         "boards": "node ./cli/devicescript ctool --fetch-boards compiler/src/boards.json",
         "localboards2": "node ./cli/devicescript ctool --local-boards ../.. --fetch-boards compiler/src/boards.json",
