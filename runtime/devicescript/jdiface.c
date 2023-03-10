@@ -436,15 +436,6 @@ void devs_jd_free_roles(devs_ctx_t *ctx) {
     ctx->flags &= ~DEVS_CTX_FREEING_ROLES;
 }
 
-void devs_set_logging(devs_ctx_t *ctx, uint8_t logging) {
-    if (logging)
-        ctx->flags |= DEVS_CTX_LOGGING_ENABLED;
-    else {
-        ctx->flags &= ~DEVS_CTX_LOGGING_ENABLED;
-        ctx->log_counter_to_send = ctx->log_counter;
-    }
-}
-
 uint32_t devs_global_flags;
 void devs_set_global_flags(uint32_t global_flags) {
     devs_global_flags |= global_flags;

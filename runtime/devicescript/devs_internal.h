@@ -158,9 +158,6 @@ struct devs_ctx {
     uint64_t _now_long;
     uint32_t _logged_now;
 
-    uint32_t log_counter;
-    uint32_t log_counter_to_send;
-
     uint32_t fiber_handle_tag;
 
     devs_gc_t *gc;

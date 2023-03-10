@@ -36,7 +36,6 @@ struct srv_state {
     SRV_COMMON;
     uint8_t running;
     uint8_t autostart;
-    uint8_t logging;
 
     uint8_t force_start : 1;
 
@@ -60,7 +59,6 @@ REG_DEFINITION(                                     //
     REG_SRV_COMMON,                                 //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING),   //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART), //
-    REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING),   //
 )
 
 __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[160] = {
@@ -107,7 +105,6 @@ static void run_img(srv_t *state, const void *img, unsigned size) {
     devs_cfg_t cfg = {.mgr_service_idx = state->service_index};
     state->ctx = devs_create_ctx(img, size, &cfg);
     if (state->ctx) {
-        devs_set_logging(state->ctx, state->logging);
         if (img != devs_empty_program)
             devsdbg_restarted(state->ctx);
     }
@@ -391,10 +388,6 @@ void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
                 state->next_restart = now; // make it more responsive
             }
             break;
-        case JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING:
-            if (state->ctx)
-                devs_set_logging(state->ctx, state->logging);
-            break;
         }
         break;
     }
@@ -438,14 +431,6 @@ static void devsmgr_client_ev(void *state0, int event_id, void *arg0, void *arg1
         devs_client_event_handler(state->ctx, event_id, arg0, arg1);
 }
 
-void devsmgr_set_logging(bool logging) {
-    srv_t *state = _state;
-    state->logging = logging;
-    if (state->ctx) {
-        devs_set_logging(state->ctx, state->logging);
-    }
-}
-
 void devsmgr_init(const devsmgr_cfg_t *cfg) {
     SRV_ALLOC(devsmgr);
     state->cfg = cfg;
@@ -456,7 +441,6 @@ void devsmgr_init(const devsmgr_cfg_t *cfg) {
 #endif
     state->read_program_ptr = -1;
     state->autostart = 1;
-    state->logging = 0;
     // first start 1.5s after brain boot up - allow devices to enumerate
     state->next_restart = now + SECONDS(1.5);
 

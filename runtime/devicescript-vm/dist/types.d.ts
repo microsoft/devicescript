@@ -11,7 +11,6 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
     _jd_em_devs_verify(img: ptr, size: int32): int32;
     _jd_em_devs_client_deploy(img: ptr, size: int32): int32;
     _jd_em_devs_enable_gc_stress(en: int32): void;
-    _jd_em_devs_enable_logging(en: int32): void;
     sendPacket(pkt: Uint8Array): void;
     /**
      * Overrideable metod called when deployment is done.
@@ -106,10 +105,6 @@ export declare module Exts {
      * Enables/disables GC stress testing.
      */
     function devsGcStress(en: boolean): void;
-    /**
-     * Enables/disables logging via Jacdac (devsmgr logging register).
-     */
-    function devsSetLogging(en: boolean): void;
     /**
      * Initializes and start the virtual machine (calls init).
      */

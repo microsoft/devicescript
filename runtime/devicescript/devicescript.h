@@ -27,7 +27,6 @@ void devs_restart(devs_ctx_t *ctx);
 unsigned devs_error_code(devs_ctx_t *ctx, unsigned *pc);
 void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *arg1);
 void devs_free_ctx(devs_ctx_t *ctx);
-void devs_set_logging(devs_ctx_t *ctx, uint8_t logging);
 
 void devs_panic_handler(int exitcode);
 void devs_deploy_handler(int exitcode);
@@ -50,7 +49,6 @@ typedef struct {
 } devsmgr_cfg_t;
 
 void devsmgr_init(const devsmgr_cfg_t *cfg);
-void devsmgr_set_logging(bool logging);
 
 devs_ctx_t *devsmgr_get_ctx(void);
 int devsmgr_deploy(const void *img, unsigned imgsize);
