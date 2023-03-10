@@ -2833,15 +2833,48 @@ class Program implements TopOpWriter {
         const decl = sym?.valueDeclaration
         if (!decl) return res
 
-        const cls = this.getSymAtLocation(decl.parent)
-        if (!cls) return []
-        const clsTp = this.checker.getDeclaredTypeOfSymbol(cls)
+        const addSym = (baseSym: ts.Symbol) => {
+            if (baseSym && !res.includes(baseSym))
+                res.push(baseSym, ...this.getBaseSyms(baseSym))
+        }
+
+        const clsSym = this.getSymAtLocation(decl.parent)
+        if (!clsSym) return []
+        const clsTp = this.checker.getDeclaredTypeOfSymbol(clsSym)
         for (const baseTp of this.getBaseTypes(clsTp)) {
             const baseSym = this.checker.getPropertyOfType(
                 baseTp,
                 sym.getName()
             )
-            if (baseSym) res.push(baseSym, ...this.getBaseSyms(baseSym))
+            addSym(baseSym)
+        }
+
+        const cls = clsSym.valueDeclaration
+
+        if (cls && (ts.isClassLike(cls) || ts.isInterfaceDeclaration(cls))) {
+            if (cls.heritageClauses) {
+                for (const h of cls.heritageClauses) {
+                    if (h.token == SK.ImplementsKeyword) {
+                        for (const tpExpr of h.types) {
+                            const tp = this.checker.getTypeAtLocation(tpExpr)
+                            const baseSym = this.checker.getPropertyOfType(
+                                tp,
+                                sym.getName()
+                            )
+                            addSym(baseSym)
+                        }
+                    }
+                }
+            }
+        }
+
+        if (this.flags.traceProto && res.length > 0) {
+            trace(
+                "BASE: " +
+                    this.symName(sym) +
+                    " => " +
+                    res.map(s => this.symName(s)).join(", ")
+            )
         }
 
         return res
