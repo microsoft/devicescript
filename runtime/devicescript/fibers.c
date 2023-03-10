@@ -370,7 +370,8 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
 
         devs_panic_handler(orig_code);
 
-        devs_track_exception(ctx);
+        if (code != DEVS_PANIC_REBOOT)
+            devs_track_exception(ctx);
     }
     devs_fiber_yield(ctx);
 }

@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdint.h>
 
+__attribute__((format(printf, 1, 2))) void app_dmesg(const char *format, ...);
+#define DMESG app_dmesg
 
 #define JD_DMESG_LINE_BUFFER 300
 

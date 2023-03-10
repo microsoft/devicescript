@@ -26,6 +26,7 @@ EM_JS(void, _devs_panic_handler, (int exitcode), {
 
 // the syntax above doesn't work with weak symbols
 void devs_panic_handler(int exitcode) {
+    flush_dmesg();
     _devs_panic_handler(exitcode);
 }
 
