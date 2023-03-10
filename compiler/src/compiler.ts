@@ -591,7 +591,6 @@ class Program implements TopOpWriter {
     numErrors = 0
     mainProc: Procedure
     protoProc: Procedure
-    onStart: DelayedCodeSection
     flags: CompileFlags = {}
     isLibrary: boolean
     srcFiles: SrcFile[] = []
@@ -1942,8 +1941,6 @@ class Program implements TopOpWriter {
         this.mainProc = new Procedure(this, "main", this.mainFile)
         this.protoProc = new Procedure(this, "prototype", this.mainFile)
 
-        this.onStart = new DelayedCodeSection("onStart", this.mainProc.writer)
-
         const stmts = ([] as ts.Statement[]).concat(
             ...prog
                 .getSourceFiles()
@@ -1965,7 +1962,6 @@ class Program implements TopOpWriter {
         this.withProcedure(this.mainProc, wr => {
             this.protoProc.callMe(wr, [])
             for (const s of stmts) this.emitStmt(s)
-            this.onStart.finalizeRaw()
             if (this.flags.testHarness)
                 wr.emitCall(wr.dsMember(BuiltInString.REBOOT))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
@@ -2477,13 +2473,6 @@ class Program implements TopOpWriter {
             case "ds._id":
                 this.requireArgs(expr, 1)
                 return this.emitExpr(expr.arguments[0])
-            case "ds._onStart": {
-                this.requireTopLevel(expr.position)
-                this.requireArgs(expr, 1)
-                const proc = this.emitHandler("onStart", expr.arguments[0])
-                this.onStart.emit(wr => proc.callMe(wr, []))
-                return undef()
-            }
             case "console.info":
             case "console.debug":
             case "console.warn":
