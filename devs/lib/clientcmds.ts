@@ -53,8 +53,9 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
         if (!next) return () => {}
 
         this._subscriptions = addElement(this._subscriptions, next)
+        const that = this
         return () => {
-            this._subscriptions = removeElement(this._subscriptions, next)
+            that._subscriptions = removeElement(that._subscriptions, next)
         }
     }
 

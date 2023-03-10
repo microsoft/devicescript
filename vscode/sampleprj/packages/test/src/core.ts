@@ -96,7 +96,7 @@ export class TestNode {
             this.error = undefined
 
             const unsubscribe = await this.body()
-            if (unsubscribe) await unsubscribe()
+            if (typeof unsubscribe === "function") await unsubscribe()
 
             if (expectedError) {
                 // the throw below should be logged as error, not as expectedError
