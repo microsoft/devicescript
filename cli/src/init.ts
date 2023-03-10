@@ -215,7 +215,8 @@ const optionalFiles: FileSet = {
             build: "yarn build:devicescript",
             "watch:devicescript": `devicescript devtools ${MAIN}`,
             watch: "yarn watch:devicescript",
-            "test:devicescript": "devicescript run src/main.ts --test",
+            "test:devicescript":
+                "devicescript run src/main.ts --test --test-self-exit",
             test: "yarn test:devicescript",
             start: "yarn watch",
         },
