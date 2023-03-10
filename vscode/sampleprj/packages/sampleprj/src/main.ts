@@ -1,6 +1,10 @@
 import * as ds from "@devicescript/core"
 import { cowsay } from "devicescript-cowsay"
 
+setInterval(() => {
+    console.log('interval')
+}, 1000)
+
 function foo() {
     let x = 1.5
     let qq = "blah blah" + x
