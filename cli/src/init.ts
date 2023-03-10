@@ -40,9 +40,10 @@ type FileSet = Record<string, Object | string>
 const serviceFiles: FileSet = {
     "services/README.md": `# Services
 
-    Add custom service definition in this folder.
+    Add custom service definition in this folder. Run the build (\`yarn build\`) to generate the type definitions.
     
     -   [Read documentation](http://microsoft.github.io/devicescript/developer/custom-services)
+    -   [Jacdac Service Specification](https://microsoft.github.io/jacdac-docs/reference/service-specification/)
     `,
 }
 
