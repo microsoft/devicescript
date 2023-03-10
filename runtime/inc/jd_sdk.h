@@ -28,3 +28,5 @@ int devs_client_deploy(const void *img, unsigned imgsize);
 
 uint64_t jd_device_id_from_string(const char *str);
 void flash_init(void);
+void flush_dmesg(void);
+void app_print_dmesg(const char *ptr);

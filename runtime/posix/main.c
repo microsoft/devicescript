@@ -63,6 +63,7 @@ struct {
 
 #ifndef __EMSCRIPTEN__
 void devs_deploy_handler(int exitcode) {
+    flush_dmesg();
     exit(0);
 }
 #endif
@@ -91,6 +92,7 @@ static void process_deploy(void) {
 #ifndef __EMSCRIPTEN__
 void devs_panic_handler(int exitcode) {
     if (test_mode && exitcode) {
+        flush_dmesg();
         fprintf(stderr, "test failed\n");
         exit(10);
     }
@@ -196,23 +198,25 @@ int load_image(const char *name) {
     return 0;
 }
 
-void app_print_dmesg(const char *ptr);
-
 #ifndef __EMSCRIPTEN__
 void app_print_dmesg(const char *ptr) {
     printf("    %s\n", ptr);
 }
 #endif
 
+void flush_dmesg(void) {
+    static uint32_t dmesg_ptr;
+    static char linebuf[JD_DMESG_LINE_BUFFER + 20];
+    while (jd_dmesg_read_line(linebuf, sizeof(linebuf), &dmesg_ptr) != 0)
+        app_print_dmesg(linebuf);
+}
+
 void jd_tcpsock_process(void);
 void app_process(void) {
     tx_process();
     jd_tcpsock_process();
 
-    static uint32_t dmesg_ptr;
-    static char linebuf[JD_DMESG_LINE_BUFFER + 20];
-    while (jd_dmesg_read_line(linebuf, sizeof(linebuf), &dmesg_ptr) != 0)
-        app_print_dmesg(linebuf);
+    flush_dmesg();
 
 #if 0
     static uint32_t uptime_cnt;
@@ -237,6 +241,7 @@ static void run_sample(const char *name, int keepgoing) {
     for (uint64_t iter = 0; iter < the_end; iter++) {
         if (iter == 10) { // give it some time to get announce etc
             if (load_image(name)) {
+                flush_dmesg();
                 exit(9);
             }
         }
