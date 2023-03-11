@@ -1,10 +1,12 @@
 import { Temperature } from "@devicescript/core"
 import { createMetric, trackEvent, uploadMessage } from "@devicescript/cloud"
 
+console.log("starting...")
 const thermo = new Temperature()
 const temp = createMetric("temp")
 await trackEvent("start")
 
+console.log("running...")
 let h = 0
 thermo.temperature.subscribe(async t => {
     h = t
