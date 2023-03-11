@@ -169,6 +169,8 @@ struct devs_ctx {
     uint16_t brk_count;
     uint8_t brk_jump_tbl[DEVS_BRK_HASH_SIZE];
 
+    uint8_t program_hash[JD_SHA256_HASH_BYTES];
+
     union {
         jd_frame_t frame;
         jd_packet_t packet;
