@@ -109,9 +109,4 @@ export async function prepareForDeploy(
     await service
         .register(DeviceScriptManagerReg.Autostart)
         .sendSetAsync(new Uint8Array([0]))
-    // for VM we started, disable logging - logging will go through DMESG
-    if (extensionState.simulatorScriptManagerId === service.device.deviceId)
-        await service
-            .register(DeviceScriptManagerReg.Logging)
-            .sendSetAsync(new Uint8Array([0]))
 }
