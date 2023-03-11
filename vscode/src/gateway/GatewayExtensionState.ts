@@ -256,7 +256,7 @@ export class GatewayExtensionState extends JDEventSource {
                 } catch (e) {
                     console.error(e)
                     vscode.window.showErrorMessage(
-                        "DeviceScript Gateway: Updated failed."
+                        `DeviceScript Gateway: ${e.message}.`
                     )
                     // async
                     this.manager.refresh()

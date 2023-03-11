@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { trackEvent, trackMetric, uploadMessage } from "."
+import { createMetric, trackEvent, trackMetric, uploadMessage } from "."
 import { describe, test } from "@devicescript/test"
 
 console.log("start test")
@@ -18,20 +18,36 @@ describe("trackEvent", () => {
     })
 })
 describe("trackMetric", () => {
+    test("ctor", async () => {
+        const m = createMetric("test.metric", 1)
+        await m.upload()
+    })
+    test("value", async () => {
+        const m = createMetric("test.metric")
+        m.add(1)
+        await m.upload()
+    })
+    test("array", async () => {
+        const m = createMetric("test.metric.array")
+        m.add([1, 2, 3])
+        await m.upload()
+    })
+})
+describe("trackMetric", () => {
     test("value", async () => {
         await trackMetric("test.metric", { value: 1 })
     })
     test("min", async () => {
-        await trackMetric("test.min", { min: 2 })
+        await trackMetric("test.min", { value: 1, min: 2 })
     })
     test("max", async () => {
-        await trackMetric("test.max", { max: 3 })
+        await trackMetric("test.max", { value: 1, max: 3 })
     })
     test("stddev", async () => {
-        await trackMetric("test.stddev", { stdDev: 4 })
+        await trackMetric("test.stddev", { value: 1, stdDev: 4 })
     })
     test("count", async () => {
-        await trackMetric("test.count", { count: 5 })
+        await trackMetric("test.count", { value: 1, count: 5 })
     })
 })
 describe("upload message", () => {

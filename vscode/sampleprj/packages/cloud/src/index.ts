@@ -11,7 +11,7 @@ export interface TrackEventOptions {
 }
 
 export interface TrackMetricOptions {
-    value?: number
+    value: number
     min?: number
     max?: number
     stdDev?: number
@@ -35,7 +35,68 @@ export async function trackEvent(
 }
 
 /**
- * Tracks a metric in the application analytics
+ * A metric accumulator
+ */
+export class Metric {
+    private sum = 0
+    private count = 0
+    private min: number = undefined
+    private max: number = undefined
+
+    /**
+     * Creates a new named metric
+     * @param name
+     */
+    constructor(readonly name: string, value?: number | number[]) {
+        this.add(value)
+    }
+
+    /**
+     * Aggregate values in metric. Timestamp are not maintained
+     * @param value
+     */
+    add(value: number | number[]) {
+        if (typeof value === "number") this.addOne(value)
+        else if (Array.isArray(value)) for (const v of value) this.addOne(v)
+    }
+
+    private addOne(v: number) {
+        if (isNaN(v)) return
+        this.sum += v
+        this.count++
+        this.min = this.min === undefined ? v : Math.min(this.min, v)
+        this.min = this.max === undefined ? v : Math.max(this.min, v)
+    }
+
+    /**
+     * Upload current aggregated values and reset
+     */
+    async upload() {
+        const value = this.count === 0 ? 0 : this.sum / this.count
+        await trackMetric(this.name, {
+            value,
+            count: this.count,
+            min: this.min,
+            max: this.max,
+        })
+        this.sum = 0
+        this.count = 0
+        this.min = undefined
+        this.max = undefined
+    }
+}
+
+/**
+ * Creates a new metric accumulator
+ * @param name name of the metric
+ * @param value optional value or array of value
+ */
+export function createMetric(name: string, value?: number | number[]) {
+    return new Metric(name, value)
+}
+
+/**
+ * Uploads a metric in the application analytics. It is recommended to use `createMetric` to accumulate data.
  * @param name
  * @param options
  */

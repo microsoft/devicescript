@@ -22,19 +22,39 @@ npm install @devicescript/cloud
 
 You can collect usage telemetry of your DeviceScript using `trackEvent` or `trackMetric`
 
-```ts
-import { Temperature } from "@devicescript/core"
-import { trackEvent, trackMetric } from "@devicescript/cloud"
-
-const thermo = new Temperature()
-thermo.subscribe(async t => await trackMetric("temp", { value: t }))
-await trackEvent("started")
-```
-
 When connected to the gateway, the device is modelled as a user and the connection as a session.
 The data is injected directly
 in [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
 and can be analyzed through the Azure portal.
+
+### Events
+
+The `trackEvent` method creates custom events in application insights. The event may be buffered or sampled
+to reduce the network load.
+
+```ts
+import { trackEvent } from "@devicescript/cloud"
+
+// highlight-next-line
+await trackEvent("started")
+```
+
+### Metrics
+
+The metric aggregates a numberical value and upload the aggregate when requested.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { createMetric } from "@devicescript/cloud"
+
+const thermo = new Temperature()
+// highlight-next-line
+const temp = createMetric("temp")
+// highlight-next-line
+thermo.subscribe(async t => temp.add(t))
+// highlight-next-line
+setInterval(async () => await temp.upload(), 30000}
+```
 
 ## Upload Message
 
