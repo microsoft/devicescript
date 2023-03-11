@@ -10,7 +10,9 @@ import * as vscode from "vscode"
 import { DeviceScriptExtensionState } from "../state"
 import "isomorphic-fetch"
 import { CloudManager, FETCH_ERROR } from "./clouddom"
+import { showError } from "../commands"
 
+const MESSAGE_PREFIX = "DeviceScript Gateway - "
 export class GatewayExtensionState extends JDEventSource {
     private _manager: CloudManager
 
@@ -138,7 +140,7 @@ export class GatewayExtensionState extends JDEventSource {
         }
 
         await vscode.window.showErrorMessage(
-            `DeviceScript Gateway: ${resp.statusText} (${resp.status})`
+            `${MESSAGE_PREFIX} ${resp.statusText} (${resp.status})`
         )
     }
 
@@ -161,7 +163,15 @@ export class GatewayExtensionState extends JDEventSource {
             this._manager.on(FETCH_ERROR, this.handleFetchError)
             forceRefresh = true
         }
-        if (this._manager && forceRefresh) await this._manager.refresh()
+        if (this._manager && forceRefresh) await this.backgroundRefresh()
+    }
+
+    private async backgroundRefresh() {
+        try {
+            await this._manager?.refresh()
+        } catch (e) {
+            showError(e, { messagePrefix: MESSAGE_PREFIX })
+        }
     }
 
     get manager() {
@@ -218,7 +228,7 @@ export class GatewayExtensionState extends JDEventSource {
 
             if (!ApiRoot || !AccountName || !AccountKey) {
                 vscode.window.showErrorMessage(
-                    "DeviceScript Gateway: invalid connection string"
+                    `${MESSAGE_PREFIX} invalid connection string`
                 )
                 return
             }
@@ -254,12 +264,9 @@ export class GatewayExtensionState extends JDEventSource {
                 try {
                     await transaction()
                 } catch (e) {
-                    console.error(e)
-                    vscode.window.showErrorMessage(
-                        `DeviceScript Gateway: ${e.message}.`
-                    )
+                    showError(e, { messagePrefix: MESSAGE_PREFIX })
                     // async
-                    this.manager.refresh()
+                    this.backgroundRefresh()
                 }
             }
         )

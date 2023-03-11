@@ -9,20 +9,21 @@ import * as vscode from "vscode"
 
 export const MESSAGE_PREFIX = "DeviceScript - "
 
-export function showError(error: Error) {
+export function showError(error: Error, options?: { messagePrefix?: string }) {
     if (!error || isCancelError(error)) return
 
     console.error(error)
 
+    const { messagePrefix = MESSAGE_PREFIX } = options || {}
     if (isTimeoutError(error))
         vscode.window.showErrorMessage(
-            MESSAGE_PREFIX + "the operation timed out."
+            messagePrefix + "the operation timed out."
         )
     else if (isAckError(error))
         vscode.window.showErrorMessage(
-            MESSAGE_PREFIX + "the device did not respond to this command."
+            messagePrefix + "the device did not respond to this command."
         )
-    else vscode.window.showErrorMessage(MESSAGE_PREFIX + error?.message)
+    else vscode.window.showErrorMessage(messagePrefix + error?.message)
 }
 
 export async function sendCmd(
