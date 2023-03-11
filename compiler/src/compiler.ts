@@ -1108,6 +1108,11 @@ class Program implements TopOpWriter {
     }
 
     private emitVariableDeclarationList(decls: ts.VariableDeclarationList) {
+        if (
+            (decls.flags & ts.NodeFlags.BlockScoped) == 0 &&
+            !decls.parent.modifiers?.some(m => m.kind == SK.DeclareKeyword)
+        )
+            throwError(decls, `'var' not allowed`)
         for (const decl of decls.declarations) {
             this.assignVariableCells(decl) // just in case
 
