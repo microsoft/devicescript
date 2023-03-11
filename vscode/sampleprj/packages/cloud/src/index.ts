@@ -66,6 +66,11 @@ export async function trackMetric(
  * Uploads a message to the cloud
  */
 export async function uploadMessage(topicName: string, payload: any) {
+    // reduce payload size
+    if (typeof payload === "object")
+        Object.keys(payload)
+            .filter(k => payload[k] === undefined)
+            .forEach(k => delete payload[k])
     await cloud.uploadJson(topicName, JSON.stringify(payload))
 }
 

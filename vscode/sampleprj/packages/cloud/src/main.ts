@@ -17,7 +17,23 @@ describe("trackEvent", () => {
         await trackEvent("test.mes", { measurements: { a: 1 } })
     })
 })
-
+describe("trackMetric", () => {
+    test("value", async () => {
+        await trackMetric("test.metric", { value: 1 })
+    })
+    test("min", async () => {
+        await trackMetric("test.min", { min: 2 })
+    })
+    test("max", async () => {
+        await trackMetric("test.max", { max: 3 })
+    })
+    test("stddev", async () => {
+        await trackMetric("test.stddev", { stdDev: 4 })
+    })
+    test("count", async () => {
+        await trackMetric("test.count", { count: 5 })
+    })
+})
 describe("upload message", () => {
     test("upload", async () => {
         await uploadMessage("cloud/tests", {
