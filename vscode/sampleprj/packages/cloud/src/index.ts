@@ -65,7 +65,7 @@ export class Metric {
         this.sum += v
         this.count++
         this.min = this.min === undefined ? v : Math.min(this.min, v)
-        this.min = this.max === undefined ? v : Math.max(this.min, v)
+        this.max = this.max === undefined ? v : Math.max(this.max, v)
     }
 
     /**
