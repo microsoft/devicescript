@@ -348,7 +348,12 @@
                     "when": "view == extension.devicescript.gateway && viewItem == cloudScript"
                 },
                 {
-                    "command": "extension.devicescript.gateway.device.updateScript",
+                    "command": "extension.devicescript.gateway.device.script.configure",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.gateway.device.script.update.latest",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
                     "group": "inline"
                 },
@@ -607,10 +612,16 @@
                 "category": "DeviceScript Gateway"
             },
             {
-                "command": "extension.devicescript.gateway.device.updateScript",
-                "title": "Upgrade Script...",
+                "command": "extension.devicescript.gateway.device.script.configure",
+                "title": "Configure Script...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(file-code)"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.script.update.latest",
+                "title": "Update Script to Latest",
+                "category": "DeviceScript Gateway",
+                "icon": "$(refresh)"
             },
             {
                 "command": "extension.devicescript.gateway.device.refreshToken",

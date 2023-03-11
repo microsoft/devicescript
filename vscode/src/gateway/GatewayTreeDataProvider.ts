@@ -166,7 +166,7 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.gateway.device.updateScript",
+                "extension.devicescript.gateway.device.script.configure",
                 async (device: CloudDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
@@ -218,6 +218,41 @@ export class GatewayTreeDataProvider
 
                     await this.state.withProgress(
                         "Updating Script",
+                        async () => {
+                            await device.updateScript(
+                                script.scriptId,
+                                v.data.version
+                            )
+                            await device.refresh()
+                            this.refresh(device)
+                        }
+                    )
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.script.update.latest",
+                async (device: CloudDevice) => {
+                    const manager = this.state.manager
+                    if (!manager || !device) return
+                    const script = manager.script(device.scriptId)
+                    if (!script) return
+                    // get version and such
+                    await script.refreshVersions()
+                    const versions = script.versions()
+                    const v = versions?.sort(
+                        (l, r) => -l.version + r.version
+                    )?.[0]
+                    if (!v) return
+
+                    if (v.version === script.version) {
+                        vscode.window.showInformationMessage(
+                            "DeviceScript Gateway: script already at latest"
+                        )
+                        return
+                    }
+
+                    await this.state.withProgress(
+                        `Updating Script to ${v.version}`,
                         async () => {
                             await device.updateScript(
                                 script.scriptId,
