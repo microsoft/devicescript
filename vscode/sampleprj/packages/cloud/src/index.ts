@@ -47,6 +47,11 @@ export class Metric {
     private M2 = 0
 
     /**
+     * Don't upload when count is 0
+     */
+    skipEmpty = true
+
+    /**
      * Creates a new named metric
      * @param name
      */
@@ -83,6 +88,8 @@ export class Metric {
      * Upload current aggregated values and reset
      */
     async upload() {
+        if (this.skipEmpty && this.count === 0) return
+
         const value = this.mean
         const variance = this.variance()
         await trackMetric(this.name, {
