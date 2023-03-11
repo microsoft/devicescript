@@ -855,6 +855,16 @@ function testRest() {
     s1(1, ...[2])
 }
 
+class Node {
+    constructor() {}
+}
+class SuiteNode extends Node {
+    children: string[] = []
+    constructor() {
+        super()
+    }
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -886,5 +896,6 @@ testClosurePP()
 testShift()
 await testSetTimeout()
 testRest()
+const s = new SuiteNode()
 
 console.log("all OK")

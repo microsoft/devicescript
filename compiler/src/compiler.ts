@@ -2610,11 +2610,11 @@ class Program implements TopOpWriter {
                 baseDecl.emit(wr),
                 this.emitThisExpression(call.callexpr)
             )
-            const r = this.emitGenericCall(call.arguments, bound)
+            this.ignore(this.emitGenericCall(call.arguments, bound))
             for (let node: ts.Node = call.callexpr; node; node = node.parent) {
                 if (ts.isConstructorDeclaration(node)) {
                     this.emitCtorAssignments(node.parent, node)
-                    return r
+                    return unit()
                 }
             }
             assert(false)
@@ -2714,8 +2714,11 @@ class Program implements TopOpWriter {
 
     private emitThisExpression(expr: ts.Node): Value {
         const p0 = this.proc.params[0] as Variable
-        if (p0 && p0.vkind == VariableKind.ThisParam)
-            return p0.emit(this.writer)
+        if (p0 && p0.vkind == VariableKind.ThisParam) {
+            const r = p0.emit(this.writer)
+            r.assumeStateless()
+            return r
+        }
         throwError(expr, "'this' cannot be used here: " + this.proc.name)
     }
 
