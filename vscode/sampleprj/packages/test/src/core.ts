@@ -177,7 +177,7 @@ export class TestNode extends Node {
         }
 
         if (reportTestManager)
-            testManager.reportTestResult(
+            await testManager.reportTestResult(
                 this.path(),
                 this.error ? this.error.slice(0, 64) : ""
             )
@@ -218,7 +218,7 @@ export function describe(
     if (autoRun) {
         autoRunTestTimer = setTimeout(async () => {
             // don't auto run if test manager
-            const bound = testManager.binding().read()
+            const bound = await testManager.binding().read()
             if (bound) {
                 await activateTestManager()
             } else {

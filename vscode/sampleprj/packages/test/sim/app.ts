@@ -6,10 +6,10 @@ import { TestManagerServer } from "./testmanagerserver"
 // start test manager server
 const run = async () => {
     const testManager = new TestManagerServer()
-    testManager.onDiscoverTest(({ name, path }) =>
+    testManager.subscribeDiscoverTest(({ name, path }) =>
         console.log(`test: ${name}, ${path}`)
     )
-    testManager.onReportTestResult(({ path, error }) =>
+    testManager.subscribeReportTestResult(({ path, error }) =>
         console.log(`test result: ${name}, ${error || "pass"}`)
     )
 

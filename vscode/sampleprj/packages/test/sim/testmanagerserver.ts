@@ -10,6 +10,16 @@ import {
 export const DISCOVER_TEST = "discoverTest"
 export const REPORT_TEST_RESULT = "reportTestResult"
 
+export interface TestInfo {
+    name: string
+    path: string
+}
+
+export interface TestResult {
+    path: string
+    error: string
+}
+
 /**
  * Implements a test manager server in TS. To be used by vscode to interface with hardware.
  */
@@ -60,9 +70,7 @@ export class TestManagerServer extends JDServiceServer {
      * Registers a handler for test discovery
      * @param handler
      */
-    subscribeDiscoverTest(
-        handler: (info: { name: string; path: string }) => void
-    ) {
+    subscribeDiscoverTest(handler: (info: TestInfo) => void) {
         return this.subscribe(DISCOVER_TEST, handler)
     }
 
@@ -70,9 +78,7 @@ export class TestManagerServer extends JDServiceServer {
      * Registers a handler for test discovery
      * @param handler
      */
-    subscribeReportTestResult(
-        handler: (info: { path: string; error: string }) => void
-    ) {
+    subscribeReportTestResult(handler: (result: TestResult) => void) {
         return this.subscribe(REPORT_TEST_RESULT, handler)
     }
 }
