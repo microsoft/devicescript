@@ -22,7 +22,6 @@ You can test if the service is bound to a server.
 ```ts
 import { Temperature } from "@devicescript/core"
 
-// highlight-next-line
 const thermometer = new Temperature()
 
 setInterval(async () => {
