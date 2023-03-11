@@ -20,11 +20,14 @@ npm install @devicescript/cloud
 
 ## Monitoring
 
-You can collect usage telemetry of your DeviceScript using `trackEvent`.
+You can collect usage telemetry of your DeviceScript using `trackEvent` or `trackMetric`
 
 ```ts
-import { trackEvent } from "@devicescript/cloud"
+import { Temperature } from "@devicescript/core"
+import { trackEvent, trackMetric } from "@devicescript/cloud"
 
+const thermo = new Temperature()
+thermo.subscribe(async t => await trackMetric("temp", { value: t }))
 await trackEvent("started")
 ```
 
