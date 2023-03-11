@@ -1,9 +1,10 @@
 import * as ds from "@devicescript/core"
-import { trackEvent, uploadMessage } from "."
+import { trackEvent, trackMetric, uploadMessage } from "."
 import { describe, test } from "@devicescript/test"
 
 console.log("start test")
 await trackEvent("cloud.test.start")
+await trackMetric("start", { value: ds.millis() })
 
 describe("trackEvent", () => {
     test("call", async () => {
@@ -32,3 +33,5 @@ describe("upload message", () => {
         })
     })
 })
+
+await trackMetric("end", { value: ds.millis() })

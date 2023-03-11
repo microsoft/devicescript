@@ -5,23 +5,60 @@ import * as ds from "@devicescript/core"
  */
 const cloud = new ds.CloudAdapter()
 
-export interface TrackMessageOptions {
+export interface TrackEventOptions {
     properties?: Record<string, string>
     measurements?: Record<string, number>
 }
 
+export interface TrackMetricOptions {
+    value?: number
+    min?: number
+    max?: number
+    stdDev?: number
+    count?: number
+    properties?: Record<string, string>
+}
+
 /**
- * Uploads a application telemetry event to the cloud
+ * Tracks an event in the application analytics
  */
 export async function trackEvent(
     name: string,
-    options?: TrackMessageOptions
+    options?: TrackEventOptions
 ): Promise<void> {
-    const { properties, measurements } = options || {}
+    const { properties: p, measurements: m } = options || {}
     await uploadMessage("tev", {
         n: name,
-        p: properties || undefined,
-        m: measurements || undefined,
+        p,
+        m,
+    })
+}
+
+/**
+ * Tracks a metric in the application analytics
+ * @param name
+ * @param options
+ */
+export async function trackMetric(
+    name: string,
+    options: TrackMetricOptions
+): Promise<void> {
+    const {
+        value: v,
+        min: mi,
+        max: ma,
+        count: c,
+        stdDev: d,
+        properties: p,
+    } = options || {}
+    await uploadMessage("tme", {
+        n: name,
+        v,
+        mi,
+        ma,
+        c,
+        d,
+        p,
     })
 }
 
