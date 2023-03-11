@@ -14,7 +14,7 @@ export interface TrackMetricOptions {
     value: number
     min?: number
     max?: number
-    stdDev?: number
+    variance?: number
     count?: number
     properties?: Record<string, string>
 }
@@ -43,6 +43,9 @@ export class Metric {
     private min: number = undefined
     private max: number = undefined
 
+    private mean = 0
+    private M2 = 0
+
     /**
      * Creates a new named metric
      * @param name
@@ -66,23 +69,35 @@ export class Metric {
         this.count++
         this.min = this.min === undefined ? v : Math.min(this.min, v)
         this.max = this.max === undefined ? v : Math.max(this.max, v)
+
+        const delta = v - this.mean
+        this.mean += delta / this.count
+        this.M2 += delta * (v - this.mean)
+    }
+
+    variance(): number {
+        return this.M2 / (this.count - 1)
     }
 
     /**
      * Upload current aggregated values and reset
      */
     async upload() {
-        const value = this.count === 0 ? 0 : this.sum / this.count
+        const value = this.mean
+        const variance = this.variance()
         await trackMetric(this.name, {
             value,
             count: this.count,
             min: this.min,
             max: this.max,
+            variance,
         })
         this.sum = 0
         this.count = 0
         this.min = undefined
         this.max = undefined
+        this.mean = 0
+        this.M2 = 0
     }
 }
 
@@ -109,7 +124,7 @@ export async function trackMetric(
         min: mi,
         max: ma,
         count: c,
-        stdDev: d,
+        variance: a,
         properties: p,
     } = options || {}
     await uploadMessage("tme", {
@@ -118,7 +133,7 @@ export async function trackMetric(
         mi,
         ma,
         c,
-        d,
+        a,
         p,
     })
 }
