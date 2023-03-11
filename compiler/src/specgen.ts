@@ -534,5 +534,13 @@ export function clientsMarkdownFiles() {
         const md = serviceSpecificationToMarkdown(spec)
         if (md) r[`${spec.shortId}.md`] = md
     })
+    r["index.mdx"] = `---
+title: Clients
+---
+
+# Clients
+
+{@import optional ../clients-custom/index.mdp}
+`
     return r
 }
