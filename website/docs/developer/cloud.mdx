@@ -53,7 +53,7 @@ const temp = createMetric("temp")
 // highlight-next-line
 thermo.subscribe(async t => temp.add(t))
 // highlight-next-line
-setInterval(async () => await temp.upload(), 30000}
+setInterval(async () => await temp.upload(), 30000)
 ```
 
 ## Upload Message

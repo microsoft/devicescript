@@ -44,7 +44,7 @@ describe("trackMetric", () => {
         await trackMetric("test.max", { value: 1, max: 3 })
     })
     test("stddev", async () => {
-        await trackMetric("test.stddev", { value: 1, stdDev: 4 })
+        await trackMetric("test.stddev", { value: 1, variance: 4 })
     })
     test("count", async () => {
         await trackMetric("test.count", { value: 1, count: 5 })
