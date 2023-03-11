@@ -49,7 +49,8 @@ export class Node {
     ) {}
 
     id() {
-        return this.options?.id || this.name
+        const { id } = this.options || {}
+        return id || this.name
     }
     path(): string {
         return this.parent ? `${this.parent.path()}/${this.id}` : this.id()
