@@ -75,6 +75,9 @@ void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
 
 void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
     int hadinfo = 0;
+
+    DMESG("DevS-SHA256: %-s", jd_to_hex_a(ctx->program_hash, JD_SHA256_HASH_BYTES));
+
     if (devs_can_attach(ctx, exn)) {
         value_t ctor = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_NAME);
         if (!devs_is_undefined(ctor)) {
