@@ -46,6 +46,8 @@ src/tsconfig.json  configure the TypeScript compiler to compile DeviceScript syn
 Make sure to keep the `devsconfig.json` file even if it is empty.
 It is used as a marker to activate the [Visual Studio Code extension](/getting-started/vscode).
 
+:::
+
 ### --force
 
 By default, `init` will not override existing `tsconfig.json`. Using this flag, you can override this setting
@@ -58,6 +60,51 @@ devs init --force
 ### --no-install
 
 Do not run `npm` or `yarn ` install after dropping the files.
+
+## devs add ...
+
+The generated project by `init` is barebone by design. The `add` command can be used to
+update the project with extra features. Each add command may require additional arguments.
+
+### add test
+
+Configures the project to add DeviceScript unit tests.
+
+```bash
+devs add test
+```
+
+### add board
+
+Configures the project to add a custom device configuration (`board`).
+
+```bash
+devs add board
+```
+
+### add service
+
+Configures the project to add custom services.
+
+```bash
+devs add service
+```
+
+### add sim
+
+Configures the project to add a Node.JS subproject that runs simulated devices.
+
+```bash
+devs add sim
+```
+
+### add npm
+
+Prepre the project to be published to [npm.js](https://npmjs.com/) as a library.
+
+```bash
+devs add npm
+```
 
 ## devs build
 
