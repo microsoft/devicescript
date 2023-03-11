@@ -260,7 +260,7 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.gateway.device.uploadScript",
+                "extension.devicescript.gateway.scripts.upload",
                 async () => {
                     const manager = this.state.manager
                     if (!manager) return

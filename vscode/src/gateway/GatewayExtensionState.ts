@@ -56,7 +56,7 @@ export class GatewayExtensionState extends JDEventSource {
                 async () => await this.refresh()
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.gateway.registerDevice",
+                "extension.devicescript.gateway.devices.register",
                 async () => {
                     const manager = this.manager
                     if (!manager) return

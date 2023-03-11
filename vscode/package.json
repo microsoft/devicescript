@@ -361,12 +361,12 @@
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
                 },
                 {
-                    "command": "extension.devicescript.gateway.registerDevice",
+                    "command": "extension.devicescript.gateway.devices.register",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevices",
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.gateway.device.uploadScript",
+                    "command": "extension.devicescript.gateway.scripts.upload",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudScripts",
                     "group": "inline"
                 }
@@ -590,8 +590,8 @@
                 "icon": "$(refresh)"
             },
             {
-                "command": "extension.devicescript.gateway.registerDevice",
-                "title": "Register Device",
+                "command": "extension.devicescript.gateway.devices.register",
+                "title": "Register Device...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(add)"
             },
@@ -623,8 +623,8 @@
                 "category": "DeviceScript Gateway"
             },
             {
-                "command": "extension.devicescript.gateway.device.uploadScript",
-                "title": "Upload Version...",
+                "command": "extension.devicescript.gateway.scripts.upload",
+                "title": "Upload Script...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(add)"
             }
