@@ -57,6 +57,9 @@ import {
     DeviceScriptManagerReg,
     toHex,
     prettySize,
+    PowerReg,
+    SRV_POWER,
+    PowerPowerStatus,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -381,6 +384,7 @@ ${spec.description}`,
                     })
             )
 
+        const powers = device.services({ serviceClass: SRV_POWER })
         const wifis = device.services({ serviceClass: SRV_WIFI })
         const cloudAdapters = device.services({
             serviceClass: SRV_CLOUD_ADAPTER,
@@ -392,6 +396,7 @@ ${spec.description}`,
         return <JDomTreeItem[]>(
             [
                 ...registers,
+                ...powers.map(srv => new JDomPowerTreeItem(this, srv, props)),
                 ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
                 ...cloudAdapters.map(
                     srv => new JDomCloudAdapterTreeItem(this, srv, props)
@@ -784,13 +789,89 @@ class JDMissingTreeItem extends JDomTreeItem {
     }
 }
 
+class JDomCustomTreeItem extends JDomTreeItem {
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, props)
+    }
+
+    get service() {
+        return this.node as JDService
+    }
+
+    get device() {
+        return this.service.device
+    }
+
+    subscribeRegisters(...codes: number[]) {
+        const { service } = this
+        codes
+            .map(code => service.register(code))
+            .forEach(register =>
+                this.subscribe(register, REPORT_UPDATE, this.handleChange)
+            )
+    }
+}
+
+class JDomPowerTreeItem extends JDomCustomTreeItem {
+    constructor(
+        parent: JDomDeviceTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "power_",
+            contextValue: props.idPrefix + "power",
+            iconPath: "pulse",
+        })
+    }
+
+    mount() {
+        super.mount()
+
+        this.subscribeRegisters(
+            PowerReg.PowerStatus,
+            PowerReg.BatteryCharge,
+            PowerReg.CurrentDraw
+        )
+    }
+
+    update() {
+        const oldLabel = this.label
+        const oldDescription = this.description
+
+        const { service } = this
+
+        const [status] = (service.register(PowerReg.PowerStatus)
+            .unpackedValue || []) as [PowerPowerStatus]
+        const [charge] =
+            service.register(PowerReg.BatteryCharge).unpackedValue || []
+        const [currentDraw] =
+            service.register(PowerReg.CurrentDraw).unpackedValue || []
+
+        this.label = status?.toString().toLowerCase() || "power"
+        this.description = [
+            charge !== undefined ? `${(charge * 100) | 0}%` : "",
+            currentDraw !== undefined ? `${currentDraw}mWA` : "",
+        ]
+            .filter(s => !!s)
+            .join(",")
+
+        return oldLabel !== this.label || oldDescription !== this.description
+    }
+}
+
 // flags, reserved, rssi, channel, bssid, ssid
 type ScanResult = [WifiAPFlags, number, number, number, Uint8Array, string]
 
 // priority, flags, ssid
 type NetworkResult = [number, number, string]
 
-class JDomWifiTreeItem extends JDomTreeItem {
+class JDomWifiTreeItem extends JDomCustomTreeItem {
     private scans: ScanResult[] = []
     private infos: NetworkResult[] = []
 
@@ -848,15 +929,13 @@ class JDomWifiTreeItem extends JDomTreeItem {
                 )
             }
         )
-        ;[WifiReg.Enabled, WifiReg.IpAddress, WifiReg.Ssid, WifiReg.Eui48]
-            .map(code => service.register(code))
-            .forEach(register =>
-                this.subscribe(register, REPORT_UPDATE, this.handleChange)
-            )
-    }
 
-    get service() {
-        return this.node as JDService
+        this.subscribeRegisters(
+            WifiReg.Enabled,
+            WifiReg.IpAddress,
+            WifiReg.Ssid,
+            WifiReg.Eui48
+        )
     }
 
     private async syncScans() {
@@ -999,7 +1078,7 @@ type WifiApTreeProps = TreeItemProps & {
     info?: NetworkResult
 }
 
-class JDomWifiAPTreeItem extends JDomTreeItem {
+class JDomWifiAPTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomWifiTreeItem,
         service: JDService,
@@ -1022,10 +1101,6 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
 
     get info() {
         return (this.props as WifiApTreeProps).info
-    }
-
-    get service() {
-        return this.node as JDService
     }
 
     get ssid() {
@@ -1094,7 +1169,7 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
     }
 }
 
-class JDomCloudAdapterTreeItem extends JDomTreeItem {
+class JDomCloudAdapterTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomDeviceTreeItem,
         service: JDService,
@@ -1110,12 +1185,10 @@ class JDomCloudAdapterTreeItem extends JDomTreeItem {
 
     mount(): void {
         super.mount()
-        const { service } = this
-        ;[CloudAdapterReg.Connected, CloudAdapterReg.ConnectionName]
-            .map(code => service.register(code))
-            .forEach(register =>
-                this.subscribe(register, REPORT_UPDATE, this.handleChange)
-            )
+        this.subscribeRegisters(
+            CloudAdapterReg.Connected,
+            CloudAdapterReg.ConnectionName
+        )
     }
 
     update() {
@@ -1134,14 +1207,6 @@ class JDomCloudAdapterTreeItem extends JDomTreeItem {
         return oldlabel !== this.label || oldDescription !== this.description
     }
 
-    get service() {
-        return this.node as JDService
-    }
-
-    get device() {
-        return this.service.device
-    }
-
     protected createChildrenTreeItems(): JDomTreeItem[] {
         const { device } = this
         const props = this.props
@@ -1152,7 +1217,7 @@ class JDomCloudAdapterTreeItem extends JDomTreeItem {
     }
 }
 
-class JDomCloudConfigurationTreeItem extends JDomTreeItem {
+class JDomCloudConfigurationTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomTreeItem,
         service: JDService,
@@ -1165,10 +1230,6 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             iconPath: "settings-gear",
         })
-    }
-
-    get service() {
-        return this.node as JDService
     }
 
     async connect() {
@@ -1254,7 +1315,7 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
     }
 }
 
-class JDomDeviceManagerTreeItem extends JDomTreeItem {
+class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomTreeItem,
         service: JDService,
@@ -1269,22 +1330,14 @@ class JDomDeviceManagerTreeItem extends JDomTreeItem {
         })
     }
 
-    get service() {
-        return this.node as JDService
-    }
-
     override mount(): void {
-        const { service } = this
-        ;[
+        super.mount()
+        this.subscribeRegisters(
             DeviceScriptManagerReg.ProgramSize,
             DeviceScriptManagerReg.RuntimeVersion,
             DeviceScriptManagerReg.Running,
-            DeviceScriptManagerReg.ProgramHash,
-        ]
-            .map(code => service.register(code))
-            .forEach(register =>
-                this.subscribe(register, REPORT_UPDATE, this.handleChange)
-            )
+            DeviceScriptManagerReg.ProgramHash
+        )
     }
 
     async stop() {
