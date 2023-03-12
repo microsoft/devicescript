@@ -84,27 +84,41 @@ export class Metric {
         return this.M2 / (this.count - 1)
     }
 
+    toString() {
+        return "" + this.mean
+    }
+
     /**
      * Upload current aggregated values and reset
      */
     async upload() {
+        // no data
         if (this.skipEmpty && this.count === 0) return
 
+        // not bound
+        if (!cloud.isConnected) return
+
+        // not connected to cloud, don't send
+        const connected = await cloud.connected.read()
+        if (!connected) return
+
+        // ready to send
         const value = this.mean
         const variance = this.variance()
-        await trackMetric(this.name, {
+        const payload = {
             value,
             count: this.count,
             min: this.min,
             max: this.max,
             variance,
-        })
+        }
         this.sum = 0
         this.count = 0
         this.min = undefined
         this.max = undefined
         this.mean = 0
         this.M2 = 0
+        await trackMetric(this.name, payload)
     }
 }
 
