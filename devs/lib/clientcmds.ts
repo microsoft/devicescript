@@ -242,6 +242,15 @@ Array.prototype.some = function (f) {
     return false
 }
 
+Array.prototype.includes = function (el, fromIndex) {
+    const length = this.length
+    const start = fromIndex || 0
+    for (let i = start; i < length; ++i) {
+        if (el === this[i]) return true
+    }
+    return false
+}
+
 Array.prototype.pop = function () {
     const length = this.length - 1
     if (length < 0) return undefined

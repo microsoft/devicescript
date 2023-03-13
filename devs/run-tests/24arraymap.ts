@@ -58,6 +58,11 @@ function testArraySome() {
     )
     assert(!str.some(x => x < 0), "somefalse")
 }
+function testArrayIncludes() {
+    let str = [1, 2, 3]
+    assert(str.includes(2), "includestrue")
+    assert(!str.includes(7), "includesfalse")
+}
 function testArrayFind() {
     let str = [0, 1, 2, 3]
     assert(str.find(x => x === 2) === 2, "sometrue")
@@ -114,3 +119,4 @@ testArrayForEach()
 testArrayMap()
 testArrayFind()
 testGenerics()
+testArrayIncludes()

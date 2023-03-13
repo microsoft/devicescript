@@ -178,7 +178,7 @@ interface Array<T> {
      * @param searchElement The value to locate in the array.
      * @param fromIndex The array index at which to begin searching backward. If fromIndex is omitted, the search starts at the last index in the array.
      */
-    lastIndexOf(searchElement: T, fromIndex?: number): number;
+    lastIndexOf(searchElement: T, fromIndex?: number): number
 
     /**
      * Returns a copy of a section of an array.
@@ -206,6 +206,13 @@ interface Array<T> {
      * which is coercible to the Boolean value true, or until the end of the array.
      */
     some(predicate: (value: T, index: number, array: T[]) => unknown): boolean
+
+    /**
+     * Determines whether an array includes a certain element, returning true or false as appropriate.
+     * @param searchElement The element to search for.
+     * @param fromIndex The position in this array at which to begin searching for searchElement.
+     */
+    includes(searchElement: T, fromIndex?: number): boolean
 
     /**
      * Performs the specified action for each element in an array.
