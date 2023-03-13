@@ -101,8 +101,8 @@ This DeviceScript program creates a client for the aurascope and prints the curr
 import { PsychomagnothericEnergy } from "@devicescript/core"
 
 const gigameter = new PsychomagnothericEnergy()
-gigameter.energyLevel.onChange(0.1, () => {
-    console.log(gigameter.energyLevel.read())
+gigameter.energyLevel.subscribe(async (energyLevel) => {
+    console.log(energyLevel)
 })
 ```
 
