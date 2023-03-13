@@ -263,7 +263,7 @@ Otherwise, returns a handle or `null` if fiber with given function at the bottom
 ## Format Constants
 
     img_version_major = 6
-    img_version_minor = 3
+    img_version_minor = 4
     img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
@@ -603,3 +603,5 @@ Only `true` and `false` values.
     JSON = 133
     parse = 134
     stringify = 135
+    _dcfgString = 136
+    isSimulator = 137

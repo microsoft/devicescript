@@ -109,3 +109,8 @@ function _clearTimeout(id: number) {
 
 ds_impl.clearTimeout = _clearTimeout
 ds_impl.clearInterval = _clearTimeout
+
+ds_impl.isSimulator = function () {
+    const a = ds._dcfgString("archId")
+    return a === "wasm" || a === "native"
+}

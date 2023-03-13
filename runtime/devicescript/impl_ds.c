@@ -73,3 +73,16 @@ void fun2_DeviceScript__logRepr(devs_ctx_t *ctx) {
         devs_value_unpin(ctx, lbl);
     }
 }
+
+void fun1_DeviceScript__dcfgString(devs_ctx_t *ctx) {
+    value_t lbl = devs_arg(ctx, 0);
+    lbl = devs_value_to_string(ctx, lbl);
+    const char *key = devs_string_get_utf8(ctx, lbl, NULL);
+    if (key) {
+        unsigned sz;
+        const char *v = dcfg_get_string(key, &sz);
+        if (v)
+            devs_ret(ctx, devs_value_from_gc_obj(
+                              ctx, devs_string_try_alloc_init(ctx, (const uint8_t *)v, sz)));
+    }
+}

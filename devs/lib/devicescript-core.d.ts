@@ -213,6 +213,18 @@ declare module "@devicescript/core" {
      */
     export function millis(): number
 
+    /**
+     * Get value of a device configuration setting (typically from .board.json file).
+     */
+    export function _dcfgString(
+        id: "archId" | "url" | "devName" | "progName" | "progVersion"
+    ): string
+
+    /**
+     * Check if running inside a simulator.
+     */
+    export function isSimulator(): boolean
+
     /*
      * Print out message. Used by console.log, etc.
      */
