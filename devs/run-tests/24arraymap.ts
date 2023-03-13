@@ -53,7 +53,14 @@ function testArraySome() {
     )
     assert(!str.some(x => x < 0), "somefalse")
 }
-
+function testArrayFind() {
+    let str = [0, 1, 2, 3]
+    assert(
+        str.find(x => x === 2) === 2,
+        "sometrue"
+    )
+    assert(str.find(x => x < 0) === undefined, "somefalse")
+}
 function swap<T>(arr: T[], i: number, j: number): void {
     let temp: T = arr[i]
     arr[i] = arr[j]
@@ -102,6 +109,5 @@ testArraySome()
 testArrayEvery()
 testArrayForEach()
 testArrayMap()
+testArrayFind()
 testGenerics()
-
-

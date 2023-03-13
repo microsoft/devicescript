@@ -209,6 +209,14 @@ Array.prototype.forEach = function (f) {
     }
 }
 
+Array.prototype.find = function (f) {
+    const length = this.length
+    for (let i = 0; i < length; ++i) {
+        if (f(this[i], i, this)) return this[i]
+    }
+    return undefined
+}
+
 Array.prototype.filter = function (f) {
     const res: any[] = []
     const length = this.length
