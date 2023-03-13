@@ -50,6 +50,19 @@ describe("trackMetric", () => {
         await trackMetric("test.count", { value: 1, count: 5 })
     })
 })
+describe("metric", () => {
+    test("upload.array", async () => {
+        const m = createMetric("test.metric")
+        m.add([0, 1, 2])
+        await m.upload()
+    })
+    test("upload.array", async () => {
+        const m = createMetric("test.metric.array")
+        m.add(1)
+        m.add(2)
+        await m.upload()
+    })
+})
 describe("upload message", () => {
     test("upload", async () => {
         await uploadMessage("cloud/tests", {
