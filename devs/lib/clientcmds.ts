@@ -273,6 +273,15 @@ Array.prototype.indexOf = function (elt, from) {
     return -1
 }
 
+Array.prototype.lastIndexOf = function (elt, from) {
+    if (from == undefined) from = this.length - 1
+    while (from >= 0) {
+        if (this[from] === elt) return from
+        from--
+    }
+    return -1
+}
+
 Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
     const len = this.length
     for (let i = 0; i < len; ++i) {

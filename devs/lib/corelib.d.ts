@@ -174,6 +174,13 @@ interface Array<T> {
     indexOf(searchElement: T, fromIndex?: number): number
 
     /**
+     * Returns the index of the last occurrence of a specified value in an array, or -1 if it is not present.
+     * @param searchElement The value to locate in the array.
+     * @param fromIndex The array index at which to begin searching backward. If fromIndex is omitted, the search starts at the last index in the array.
+     */
+    lastIndexOf(searchElement: T, fromIndex?: number): number;
+
+    /**
      * Returns a copy of a section of an array.
      * For both start and end, a negative index can be used to indicate an offset from the end of the array.
      * For example, -2 refers to the second to last element of the array.

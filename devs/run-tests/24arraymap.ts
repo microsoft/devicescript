@@ -45,6 +45,11 @@ function testArrayEvery() {
         "everytrue"
     )
 }
+function testArrayIndexOf() {
+    let str = [1, 2, 2, 3]
+    assert(str.indexOf(2) === 1, "indexOf")
+    assert(str.lastIndexOf(2) === 2, "lastIndexOf")
+}
 function testArraySome() {
     let str = [1, 2, 3]
     assert(
@@ -55,10 +60,7 @@ function testArraySome() {
 }
 function testArrayFind() {
     let str = [0, 1, 2, 3]
-    assert(
-        str.find(x => x === 2) === 2,
-        "sometrue"
-    )
+    assert(str.find(x => x === 2) === 2, "sometrue")
     assert(str.find(x => x < 0) === undefined, "somefalse")
 }
 function swap<T>(arr: T[], i: number, j: number): void {
@@ -107,6 +109,7 @@ function testGenerics() {
 
 testArraySome()
 testArrayEvery()
+testArrayIndexOf()
 testArrayForEach()
 testArrayMap()
 testArrayFind()
