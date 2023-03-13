@@ -790,7 +790,7 @@ async function testSetTimeout() {
     let q = 1
     let id = 0
 
-    await ds.sleepMs(1)
+    await ds.sleep(1)
 
     setTimeout(() => {
         ds.assert(q === 1)
@@ -808,7 +808,7 @@ async function testSetTimeout() {
         q = 17
     }, 32)
 
-    await ds.sleepMs(60)
+    await ds.sleep(60)
     ds.assert(q === 3)
 
     id = setInterval(() => {
@@ -816,7 +816,7 @@ async function testSetTimeout() {
         if (q === 5) clearInterval(id)
     }, 5)
 
-    await ds.sleepMs(60)
+    await ds.sleep(60)
     ds.assert(q === 5)
 }
 

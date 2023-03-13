@@ -45,7 +45,7 @@ let timeoutId: number
 async function timeoutWorker() {
     while (true) {
         // TODO we need to have computed amount of sleep here, interruptible when new timeout is added
-        await ds.sleepMs(10)
+        await ds.sleep(10)
         const n = ds.millis()
         while (timeouts.length > 0 && timeouts[0].when <= n) {
             const t = timeouts.shift()

@@ -12,11 +12,11 @@ setInterval(() => {
     if (t > target + 1) {
         relay.active.write(false)
         // wait 10000
-        ds.sleepMs(10000)
+        ds.sleep(10000)
     } else if (t < target - 1) {
         relay.active.write(true)
         // wait 10000
-        ds.sleepMs(10000)
+        ds.sleep(10000)
     } else {
         // do nothing
     }

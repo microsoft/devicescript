@@ -42,7 +42,7 @@ function bar() {
 async function every1() {
     let x = 1
     console.log(x)
-    await ds.sleepMs(1000)
+    await ds.sleep(1000)
     console.log("ex")
 }
 
@@ -54,7 +54,7 @@ setInterval(async () => {
     await every2()
 }, 20)
 cowsay("Hello cow!")
-await ds.sleepMs(100)
+await ds.sleep(100)
 bar()
 console.log("Test1")
 console.log("Test2")

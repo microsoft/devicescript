@@ -819,7 +819,7 @@ class Program implements TopOpWriter {
 
     private emitSleep(ms: number) {
         const wr = this.writer
-        wr.emitCall(wr.dsMember(BuiltInString.SLEEPMS), literal(ms))
+        wr.emitCall(wr.dsMember(BuiltInString.SLEEP), literal(ms))
     }
 
     private withProcedure(proc: Procedure, f: (wr: OpWriter) => void) {

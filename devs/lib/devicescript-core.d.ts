@@ -169,7 +169,7 @@ declare module "@devicescript/core" {
     /**
      * Wait for specified number of milliseconds.
      */
-    export function sleepMs(milliseconds: number): Promise<void>
+    export function sleep(milliseconds: number): Promise<void>
 
     /**
      * Restart current script.

@@ -15,5 +15,5 @@ rot.position.subscribe(async () => {
     const v = await rot.position.read()
     await mouse.move(scale * (v - prevV), 0, 100)
     prevV = v
-    await ds.sleepMs(100)
+    await ds.sleep(100)
 })

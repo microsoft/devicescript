@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { assert, sleepMs } from "@devicescript/core"
+import { assert, sleep } from "@devicescript/core"
 
 enum En {
     A,
@@ -45,7 +45,7 @@ async function testEnums() {
     assert(switchB(En.D) === 13, "x4")
     assert(switchB(En.E) === 14, "x5")
 
-    await sleepMs(3)
+    await sleep(3)
 
     let kk = 1
     if (kk & En2.D2) {

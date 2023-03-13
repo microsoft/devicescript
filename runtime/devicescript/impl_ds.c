@@ -1,7 +1,7 @@
 #include "devs_internal.h"
 #include <math.h>
 
-void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx) {
+void fun1_DeviceScript_sleep(devs_ctx_t *ctx) {
     int time = devs_arg_int(ctx, 0);
     if (time >= 0)
         devs_fiber_sleep(ctx->curr_fiber, time);

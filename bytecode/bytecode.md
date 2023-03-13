@@ -541,7 +541,7 @@ Only `true` and `false` values.
     wait = 72
     write = 73
 
-    sleepMs = 74
+    sleep = 74
     imod = 75
     format = 76
     insert = 77

@@ -65,7 +65,7 @@ describe("creation", () => {
             if (count++ === 2) unsub.unsubscribe()
         })
         // wait till done?
-        await ds.sleepMs(1000)
+        await ds.sleep(1000)
         expect(res.length).toBe(3)
     })
 })
@@ -127,7 +127,7 @@ describe("join", () => {
         const unsub = await obs.subscribe(({ a, b }) =>
             console.log(`a: ${a}, b: ${b}`)
         )
-        await ds.sleepMs(100)
+        await ds.sleep(100)
         return unsub
     })
     test("collectTime", async () => {
@@ -141,7 +141,7 @@ describe("join", () => {
         const unsub = await obs.subscribe(({ a, b }) =>
             console.log(`a: ${a}, b: ${b}`)
         )
-        await ds.sleepMs(100)
+        await ds.sleep(100)
         return unsub
     })
 })

@@ -1,13 +1,13 @@
-import { sleepMs, assert, reboot, AsyncVoid } from "@devicescript/core"
+import { sleep, assert, reboot, AsyncVoid } from "@devicescript/core"
 
 let glb1 = 0
 let x = 0
 
 async function immediate(k: number) {
     try {
-        await sleepMs(1)
+        await sleep(1)
         if (k > 0) throw "hl" + k
-        await sleepMs(1)
+        await sleep(1)
         glb1++
     } catch (e) {
         assert(e === "hl" + k)
@@ -19,9 +19,9 @@ async function immediate(k: number) {
 }
 
 async function throwVal(n: number) {
-    await sleepMs(1)
+    await sleep(1)
     if (n > 0) throw "hel" + n
-    await sleepMs(1)
+    await sleep(1)
 }
 
 function higherorder(k: number) {
@@ -55,9 +55,9 @@ async function lambda(k: number) {
 
 async function callingThrowVal(k: number) {
     try {
-        await sleepMs(1)
+        await sleep(1)
         await throwVal(k)
-        await sleepMs(1)
+        await sleep(1)
         glb1++
     } catch (e) {
         assert(e === "hel" + k)

@@ -328,7 +328,7 @@
 #define DEVS_BUILTIN_STRING_UNSHIFT 71
 #define DEVS_BUILTIN_STRING_WAIT 72
 #define DEVS_BUILTIN_STRING_WRITE 73
-#define DEVS_BUILTIN_STRING_SLEEPMS 74
+#define DEVS_BUILTIN_STRING_SLEEP 74
 #define DEVS_BUILTIN_STRING_IMOD 75
 #define DEVS_BUILTIN_STRING_FORMAT 76
 #define DEVS_BUILTIN_STRING_INSERT 77
@@ -422,7 +422,7 @@
         "packet", "_panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",      \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
-        "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
+        "write", "sleep", "imod", "format", "insert", "start", "cloud", "main", "charAt",          \
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
         "deviceIdentifier", "shortId", "serviceIndex", "serviceCommand", "payload", "decode",      \
         "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \

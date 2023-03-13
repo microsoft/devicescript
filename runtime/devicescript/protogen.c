@@ -22,7 +22,7 @@ void meth0_Buffer_toString(devs_ctx_t *ctx);
 void meth3_Buffer_fillAt(devs_ctx_t *ctx);
 void meth4_Buffer_blitAt(devs_ctx_t *ctx);
 // impl_ds.c
-void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx);
+void fun1_DeviceScript_sleep(devs_ctx_t *ctx);
 void fun1_DeviceScript__panic(devs_ctx_t *ctx);
 void fun0_DeviceScript_reboot(devs_ctx_t *ctx);
 void funX_DeviceScript_format(devs_ctx_t *ctx);
@@ -123,7 +123,7 @@ static const devs_builtin_proto_entry_t Buffer_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
-    {N(SLEEPMS), 50011},                                           //
+    {N(SLEEP), 50011},                                             //
     {N(_PANIC), 50012},                                            //
     {N(REBOOT), 50013},                                            //
     {N(FORMAT), 50014},                                            //
@@ -358,7 +358,7 @@ const devs_builtin_function_t devs_builtin_functions[76] = {
     {N(TOSTRING), 0, 0, {.meth = meth0_Buffer_toString}},
     {N(FILLAT), 3, 0, {.meth = meth3_Buffer_fillAt}},
     {N(BLITAT), 4, 0, {.meth = meth4_Buffer_blitAt}},
-    {N(SLEEPMS), 1, NO_SELF, {.meth = fun1_DeviceScript_sleepMs}},
+    {N(SLEEP), 1, NO_SELF, {.meth = fun1_DeviceScript_sleep}},
     {N(_PANIC), 1, NO_SELF, {.meth = fun1_DeviceScript__panic}},
     {N(REBOOT), 0, NO_SELF, {.meth = fun0_DeviceScript_reboot}},
     {N(FORMAT), 0, NO_SELF, {.meth = funX_DeviceScript_format}},
