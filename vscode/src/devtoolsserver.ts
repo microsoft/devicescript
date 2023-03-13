@@ -594,7 +594,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 if (isWindows) {
                     cli = "node_modules\\.bin\\devicescript.cmd"
                 } else args.unshift("./node_modules/.bin/devicescript")
-                if (diagnostics) args.push("--diagnostics")
+                if (diagnostics) args.push("--diagnostics", "--verbose")
                 console.debug(
                     `create terminal: ${useShell ? "shell:" : ""}${
                         cwd.fsPath

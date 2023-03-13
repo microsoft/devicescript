@@ -9,7 +9,24 @@ import {
     ServiceConfig,
 } from "@devicescript/srvcfg"
 
-export interface DeviceConfig extends DeviceHardwareInfo, JsonComment {
+export interface DeviceProps {
+    /**
+     * Name of the program, derived from package.json. Exposed as `program_name` register.
+     */
+    progName?: string
+
+    /**
+     * Version number of the program, derived from package.json and git. Exposed as `program_version` register.
+     */
+    progVersion?: string
+}
+
+export type ProgramConfig = Partial<DeviceProps> & Partial<DeviceHardwareInfo>
+
+export interface DeviceConfig
+    extends DeviceProps,
+        DeviceHardwareInfo,
+        JsonComment {
     $schema?: string
 
     /**
@@ -92,13 +109,19 @@ export function normalizeDeviceConfig(
     return res
 }
 
+export interface ProgramBuildConfig {
+    name?: string
+    version?: string
+}
+
 export interface LocalBuildConfig {
+    hwInfo: ProgramConfig
     addBoards?: DeviceConfig[]
     addArchs?: ArchConfig[]
     addServices?: jdspec.ServiceSpec[]
 }
 
-export interface ResolvedBuildConfig {
+export interface ResolvedBuildConfig extends LocalBuildConfig {
     boards: Record<string, DeviceConfig>
     archs: Record<string, ArchConfig>
     services: jdspec.ServiceSpec[]

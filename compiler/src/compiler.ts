@@ -59,7 +59,11 @@ import {
     mkDiag,
     trace,
 } from "./tsiface"
-import { preludeFiles, resolveBuildConfig } from "./specgen"
+import {
+    preludeFiles,
+    resolveBuildConfig,
+    unresolveBuildConfig,
+} from "./specgen"
 import {
     VarDebugInfo,
     RoleDebugInfo,
@@ -75,6 +79,7 @@ import {
     ResolvedBuildConfig,
     SystemReg,
     SRV_DEVICE_SCRIPT_CONDITION,
+    ProgramConfig,
 } from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
@@ -3630,12 +3635,15 @@ class Program implements TopOpWriter {
     }
 
     private serializeStartServices() {
+        const bcfg = this.host.getConfig()
+        const jcfg: ProgramConfig = bcfg?.hwInfo ?? {}
         const cfg = jsonToDcfg({
+            ...jcfg,
             services: new Array(0x40).concat(this.startServices),
         })
         const bin = serializeDcfg(cfg)
         const writer = new SectionWriter()
-        if (this.startServices.length) {
+        if (this.startServices.length || Object.keys(jcfg).length) {
             writer.append(bin)
             writer.align()
         }
@@ -3914,6 +3922,7 @@ class Program implements TopOpWriter {
                 roles: roleData.size,
                 align: left,
             },
+            localConfig: unresolveBuildConfig(this.host.getConfig()),
             roles: this.roles.map(r => r.debugInfo()),
             functions: this.procs.map(p => p.debugInfo()),
             globals: this.globals.map(r => r.debugInfo()),

@@ -317,13 +317,7 @@ export class GatewayTreeDataProvider
                         return
                     }
                     const program = status.dbg
-                    const pkg = await readFileJSON<{ name: string }>(
-                        this.state.deviceScriptState.projectFolder,
-                        "package.json"
-                    )
-                    const base = `${pkg?.name || "no-package"}/${Utils.basename(
-                        file
-                    ).replace(/\.ts$/i, "")}`
+                    const base = program?.localConfig.hwInfo.progName
 
                     // find script to override
                     await manager.refreshScripts()

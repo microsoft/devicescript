@@ -343,6 +343,17 @@ static void hash_program(srv_t *state, jd_packet_t *pkt) {
     jd_send(pkt->service_index, pkt->service_command, hash, JD_SHA256_HASH_BYTES);
 }
 
+static bool respond_dcfg(jd_packet_t *pkt, unsigned reg, const char *setting) {
+    if (pkt->service_command == JD_GET(reg)) {
+        const char *res = dcfg_get_string(setting, NULL);
+        if (!res)
+            res = "";
+        jd_respond_string(pkt, res);
+        return true;
+    }
+    return false;
+}
+
 void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE:
@@ -374,6 +385,10 @@ void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     default:
+        if (respond_dcfg(pkt, JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_VERSION, "progVersion") ||
+            respond_dcfg(pkt, JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_NAME, "progName"))
+            break;
+
         switch (service_handle_register_final(state, pkt, devsmgr_regs)) {
         case JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING:
             if (state->running && !state->ctx) {

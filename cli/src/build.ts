@@ -38,7 +38,12 @@ import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
-import { converters, parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
+import {
+    converters,
+    parseServiceSpecificationMarkdownToJSON,
+    versionTryParse,
+} from "jacdac-ts"
+import { execSync } from "node:child_process"
 
 // TODO should we move this to jacdac-ts and call automatically for transports?
 export function setupWebsocket() {
@@ -198,6 +203,68 @@ function toDevsDiag(d: jdspec.Diagnostic): DevsDiagnostic {
     }
 }
 
+function execCmd(cmd: string) {
+    try {
+        return execSync(cmd, { encoding: "utf-8" }).trim()
+    } catch {
+        return ""
+    }
+}
+
+function compilePackageJson(
+    tsdir: string,
+    entryPoint: string,
+    lcfg: LocalBuildConfig,
+    errors: DevsDiagnostic[]
+) {
+    const pkgJsonPath = join(tsdir, "package.json")
+    if (existsSync(pkgJsonPath)) {
+        const pkgJSON = JSON.parse(readFileSync(pkgJsonPath, "utf-8"))
+        lcfg.hwInfo.progName = pkgJSON.name ?? "(no name)"
+        lcfg.hwInfo.progVersion = pkgJSON.version ?? "(no version)"
+        const head = execCmd("git describe --tags --match 'v[0-9]*' --always")
+        let dirty = execCmd(
+            "git status --porcelain --untracked-file=no --ignore-submodules=untracked"
+        )
+        if (!head) dirty = "yes"
+        const exact = !dirty && head[0] == "v" && !head.includes("-")
+        if (exact) {
+            lcfg.hwInfo.progVersion = head
+        } else {
+            let v = versionTryParse(lcfg.hwInfo.progVersion)
+            if (head[0] == "v") v = versionTryParse(head) || v
+            let verStr = ""
+            if (v) verStr = `v${v.major}.${v.minor}.${v.patch + 1}-`
+            verStr += head.replace(/.*-/, "")
+            if (dirty) {
+                const now = new Date()
+                    .toISOString()
+                    .replace(/T/, ".")
+                    .replace(/:/, ".")
+                    .replace(/:.*/, "")
+                    .replace(/-/g, ".")
+                if (verStr) verStr += "-"
+                verStr += now
+            }
+            lcfg.hwInfo.progVersion = verStr
+        }
+    }
+
+    if (entryPoint) {
+        entryPoint = entryPoint.replace(/^src[\/\\]/, "")
+        entryPoint = entryPoint.replace(/^main/, "")
+        entryPoint = entryPoint.replace(/.ts$/, "")
+        if (entryPoint) {
+            if (lcfg.hwInfo.progName) lcfg.hwInfo.progName += " " + entryPoint
+            else lcfg.hwInfo.progName += entryPoint
+        }
+    }
+
+    verboseLog(
+        `compile: ${lcfg.hwInfo.progName} ${lcfg.hwInfo.progVersion ?? ""}`
+    )
+}
+
 function compileServiceSpecs(
     tsdir: string,
     lcfg: LocalBuildConfig,
@@ -295,11 +362,19 @@ export class CompilationError extends Error {
     }
 }
 
-export function buildConfigFromDir(dir: string, options: BuildOptions = {}) {
-    const lcfg: LocalBuildConfig = {}
+export function buildConfigFromDir(
+    dir: string,
+    entryPoint: string = "",
+    options: BuildOptions = {}
+) {
+    const lcfg: LocalBuildConfig = {
+        hwInfo: {},
+    }
     const errors: DevsDiagnostic[] = []
 
     if (dir) {
+        verboseLog(`build config from: ${dir}`)
+        compilePackageJson(dir, entryPoint, lcfg, errors)
         compileServiceSpecs(dir, lcfg, errors)
         compileBoards(dir, lcfg, errors)
         if (!options.quiet)
@@ -330,7 +405,12 @@ export async function compileFile(
     ensureDirSync(options.outDir || BINDIR)
 
     const folder = resolve(".")
-    const { errors, buildConfig } = buildConfigFromDir(folder, options)
+    const entryPoint = relative(folder, fn)
+    const { errors, buildConfig } = buildConfigFromDir(
+        folder,
+        entryPoint,
+        options
+    )
     const host = await getHost(buildConfig, options, folder)
 
     const res = compileWithHost(fn, host)
