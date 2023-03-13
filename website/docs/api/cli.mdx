@@ -108,19 +108,14 @@ devs add npm
 
 ## devs build
 
-The `build` command compiles a DeviceScript file (default is `main.ts`), using the resolution rules in `tsconfig.json`. It is the default command.
-
-```bash
-devs build main.ts
-```
-
-or, for short,
+The `build` command compiles the entry point file from the current project
+using the resolution rules in `tsconfig.json`. It is the default command.
 
 ```bash
 devs build
 ```
 
-### custom services
+### custom services and boards
 
 The command line will automatically compile markdown files under the `services` folder (`./services/*.md`)
 into TypeScript client definition in `.devicescript/lib/services.d.ts`.
