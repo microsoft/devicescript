@@ -276,7 +276,7 @@ void wsskhealth_process(srv_t *state) {
 
     if (jd_should_sample(&state->streaming_timer, 16 << 20)) {
         // streaming expires after around 16s
-        if (state->streaming_en) {
+        if (state->streaming_en & JD_WSSK_STREAMING_TYPE_TEMPORARY_MASK) {
             LOG("streaming expired");
             stop_streaming(state);
         }

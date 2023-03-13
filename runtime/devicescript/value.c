@@ -89,7 +89,7 @@ value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr) {
         return devs_undefined;
 
     JD_ASSERT(devs_handle_type_is_ptr(type));
-    JD_ASSERT(devs_gc_obj_valid(ctx, ptr));
+    devs_gc_obj_check(ctx, ptr);
 
 #if JD_64
     v = (uintptr_t)ptr - (uintptr_t)devs_gc_base_addr(ctx->gc);
