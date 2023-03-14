@@ -76,6 +76,22 @@ export interface DeviceConfig
     services?: ServiceConfig[]
 }
 
+export function parseAnyInt(s: string | number) {
+    if (s === null || s === undefined) return undefined
+    if (typeof s == "number") return s
+    s = s.replace(/_/g, "")
+    let m = 1
+    if (s[0] == "-") {
+        s = s.slice(1)
+        m = -1
+    } else if (s[0] == "+") s = s.slice(1)
+
+    if (/^0o[0-7]+$/i.test(s)) return m * parseInt(s.slice(2), 8)
+    if (/^0x[0-9a-f]+$/i.test(s)) return m * parseInt(s.slice(2), 16)
+    if (/^[0-9]+$/i.test(s)) return m * parseInt(s.slice(2), 16)
+    return undefined
+}
+
 export function normalizeDeviceConfig(
     board: DeviceConfig,
     options?: { ignoreFirmwareUrl?: boolean; ignoreId?: boolean }

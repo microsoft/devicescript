@@ -28,7 +28,7 @@ import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
-import type { ResolvedBuildConfig, VersionInfo } from "@devicescript/compiler"
+import type { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(

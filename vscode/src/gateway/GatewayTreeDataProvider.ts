@@ -17,7 +17,7 @@ import {
     CLOUD_SCRIPT_NODE,
     CLOUD_DEVICE_NODE,
 } from "./clouddom"
-import type { DebugInfo } from "@devicescript/compiler"
+import type { DebugInfo } from "@devicescript/interop"
 
 class CloudCollection extends JDNode {
     constructor(

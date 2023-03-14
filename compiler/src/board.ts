@@ -5,9 +5,9 @@ import {
     PinFunctionInfo,
     PinFunction,
     normalizeDeviceConfig,
+    parseAnyInt,
 } from "@devicescript/interop"
 import { DeviceCatalog, deviceCatalogImage, unique } from "jacdac-ts"
-import { parseAnyInt } from "./dcfg"
 import { resolveBuildConfig } from "./specgen"
 
 export function boardInfos(info: RepoInfo) {

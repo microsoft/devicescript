@@ -58,7 +58,7 @@
         "typescript": "^4.9.5",
         "vscode-uri": "^3.0.7",
         "webfont": "^11.2.26",
-        "@devicescript/compiler": "*"
+        "@devicescript/interop": "*"
     },
     "dependencies": {
         "@vscode/extension-telemetry": "^0.7.5",

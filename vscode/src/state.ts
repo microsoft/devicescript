@@ -1,8 +1,5 @@
-import {
-    DeviceConfig,
-    normalizeDeviceConfig,
-    parseAnyInt,
-} from "@devicescript/compiler"
+import type { DeviceConfig } from "@devicescript/interop"
+import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
 import {
     CHANGE,
     ControlReg,
