@@ -17,6 +17,7 @@ export interface SideReq<T extends string = string> {
     req: T
     seq?: number
     data: any
+    timeout?: number
 }
 
 export interface SideResp<T extends string = string> {

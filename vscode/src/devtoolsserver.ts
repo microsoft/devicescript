@@ -2,6 +2,7 @@ import {
     CHANGE,
     ConnectionState,
     delay,
+    ERROR_TIMEOUT,
     ERROR_TRANSPORT_CLOSED,
     groupBy,
     isCodeError,
@@ -112,6 +113,7 @@ export class DeveloperToolsManager extends JDEventSource {
             data: {
                 dir: ".", // TODO
             },
+            timeout: 1000,
         })
         const { versions, buildConfig } = res.data
         this._versions = versions
@@ -251,7 +253,11 @@ export class DeveloperToolsManager extends JDEventSource {
         try {
             await this.refreshSpecs()
         } catch (e) {
-            if (isCodeError(e, ERROR_TRANSPORT_CLOSED)) return false
+            if (
+                isCodeError(e, ERROR_TRANSPORT_CLOSED) ||
+                isCodeError(e, ERROR_TIMEOUT)
+            )
+                return false
             else throw e
         }
         return true

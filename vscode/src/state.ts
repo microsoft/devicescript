@@ -498,7 +498,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async configure() {
-        await this.devtools.setProjectFolder(undefined)
+        const project = await this.devtools.showQuickPickProjects()
+        if (project === undefined) return
+
+        await this.devtools.setProjectFolder(project)
         await this.devtools.start()
     }
 

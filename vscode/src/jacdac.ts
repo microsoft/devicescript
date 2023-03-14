@@ -1,7 +1,9 @@
 import {
     createWebSocketTransport,
     ERROR,
+    ERROR_TIMEOUT,
     JDBus,
+    JDError,
     JDEventSource,
     SIDE_DATA,
     WebSocketTransport,
@@ -28,7 +30,13 @@ export async function sideRequest<
     req.seq = seq
     await ws.sendSideData(req)
     return new Promise<Resp>((resolve, reject) => {
-        awaiters["" + seq] = resp => {
+        const k = "" + seq
+        const timeout = setTimeout(() => {
+            delete awaiters[k]
+            reject(new JDError("timeout", { code: ERROR_TIMEOUT }))
+        }, req.timeout || 60000)
+        awaiters[k] = resp => {
+            clearTimeout(timeout)
             if (resp.resp == req.req) resolve(resp as Resp)
             else
                 reject(
