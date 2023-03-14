@@ -1,7 +1,7 @@
 {
   "name": "@devicescript/compiler",
   "private": false,
-  "version": "1.2.4",
+  "version": "1.12.0",
   "description": "DeviceScript Compiler",
   "keywords": [
     "devicescript",
@@ -16,6 +16,11 @@
   "scripts": {
     "dist": "yarn install && yarn build",
     "build": "node ../build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microsoft/devicescript.git",
+    "directory": "compiler"
   },
   "files": [
     "./built/**"
