@@ -293,10 +293,10 @@ export class DeveloperToolsManager extends JDEventSource {
 
     async setProjectFolder(folder: vscode.Uri) {
         if (folder?.toString() !== this._projectFolder?.toString()) {
-            if (this._projectFolder) this.kill()
+            if (this._projectFolder) await this.kill()
             this._projectFolder = folder
-            this.emit(CHANGE)
             await this.saveProjectFolder()
+            this.emit(CHANGE)
         }
     }
 
@@ -338,11 +338,13 @@ export class DeveloperToolsManager extends JDEventSource {
                     PROJECT_FOLDER_KEY,
                     undefined
                 )
-            } finally {
             }
         }
 
-        //
+        return await this.showQuickPickProjects()
+    }
+
+    async showQuickPickProjects(): Promise<vscode.Uri> {
         const projects = await this.findProjects()
         if (projects.length == 0) return undefined
         else if (projects.length == 1) return projects[0]

@@ -1336,7 +1336,9 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
             DeviceScriptManagerReg.ProgramSize,
             DeviceScriptManagerReg.RuntimeVersion,
             DeviceScriptManagerReg.Running,
-            DeviceScriptManagerReg.ProgramHash
+            DeviceScriptManagerReg.ProgramHash,
+            DeviceScriptManagerReg.ProgramName,
+            DeviceScriptManagerReg.ProgramVersion
         )
     }
 
@@ -1375,6 +1377,12 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
         const programSize = service.register(
             DeviceScriptManagerReg.ProgramSize
         ).uintValue
+        const programName = service.register(
+            DeviceScriptManagerReg.ProgramName
+        ).stringValue
+        const programVersion = service.register(
+            DeviceScriptManagerReg.ProgramVersion
+        ).stringValue
         const runtimeVersion =
             service.register(DeviceScriptManagerReg.RuntimeVersion)
                 .stringValue || ""
@@ -1382,15 +1390,17 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
             DeviceScriptManagerReg.Running
         ).boolValue
 
-        this.label = "devicescript"
+        this.label = programName || programHash || "no script"
         this.description = running ? "running" : "stopped"
 
         this.tooltip = toMarkdownString(
-            `## [DeviceScript](https://microsoft.github.io/devicescript)
+            `### [DeviceScript](https://microsoft.github.io/devicescript)
 
-- runtime version: ${runtimeVersion}
+- program name: ${programName || ""}
+- program version: ${programVersion || ""}
 - program hash: ${programHash}
 - program size: ${prettySize(programSize)}
+- runtime version: ${runtimeVersion}
 `
         )
 
