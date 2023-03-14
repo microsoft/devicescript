@@ -22,7 +22,7 @@ over a pin and returns the [client](/api/clients/button) for it.
 import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
-    pin: 2,
+    pin: ds.gpio(2),
 })
 ```
 
@@ -33,7 +33,7 @@ The variable name is automatically used as the **role** and **instance** name.
 import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
-    pin: 2,
+    pin: ds.gpio(2),
 })
 buttonA.up.subscribe(() => {
     console.log("up!")
@@ -41,6 +41,27 @@ buttonA.up.subscribe(() => {
 ```
 
 -   Learn more about the [builtin servers](/api/servers)
+
+## Specifying pins
+
+You can either use hardware GPIO numbers using `ds.gpio()` function, or you can import 
+a board definition file and use the labels present on the board:
+
+```ts no-run
+import { startButton } from "@devicescript/servers"
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+
+const buttonA2 = startButton({
+    pin: pins.A2,
+})
+```
+
+The doc-string for `pins.A2` will tell you GPIO number (`1` in this case).
+Using named pins is also less error-prone since pins used for internal
+functions are not exposed through the `pins` object and the pins that are
+exposed are annotated with type (input, output, analog, etc.) which is then
+required by the `startSomething()` functions.
+The `ds.gpio()` function does not check for pin functions or usage.
 
 ## Jacdac modules
 
