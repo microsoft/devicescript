@@ -141,10 +141,17 @@ const config = configure(
                                     "@devicescript/cli": "*",
                                 },
                                 scripts: {
-                                    "setup": "devicescript init",
-                                    "build": "devicescript build",
-                                    "watch": "devicescript devtools main.ts",
-                                    "start": "yarn watch",
+                                    setup: "devicescript build", // generates .devicescript/lib/* files
+                                    postinstall: "devicescript build",
+                                    "build:devicescript": "devicescript build",
+                                    build: "yarn build:devicescript",
+                                    "watch:devicescript": `devicescript devtools`,
+                                    watch: "yarn watch:devicescript",
+                                    "test:devicescript":
+                                        "devicescript run src/main.ts --test --test-self-exit",
+                                    test: "yarn test:devicescript",
+                                    start: "yarn watch",
+
                                 },
                             },
                         },
@@ -153,7 +160,7 @@ const config = configure(
                                 template: "node",
                                 view: "terminal",
                                 container: {
-                                    node: "16",
+                                    node: "18",
                                 },
                                 startScript: "setup",
                             },
