@@ -1,5 +1,4 @@
 import {
-    architectureFamily,
     DeviceConfig,
     normalizeDeviceConfig,
     parseAnyInt,

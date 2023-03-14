@@ -7,20 +7,9 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { toMarkdownString } from "../catalog"
-import { Utils } from "vscode-uri"
 import { GatewayExtensionState } from "./GatewayExtensionState"
-import { sideRequest } from "../jacdac"
-import type {
-    SideConnectReq,
-    WebSocketConnectReqArgs,
-} from "../../../cli/src/sideprotocol"
-import {
-    CLOUD_DEVICES_NODE,
-    CLOUD_SCRIPTS_NODE,
-    CONNECTION_RESOURCE_GROUP,
-} from "../constants"
+import { CLOUD_DEVICES_NODE, CLOUD_SCRIPTS_NODE } from "../constants"
 import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
-import { readFileJSON } from "../fs"
 import {
     CloudManager,
     CloudScript,
@@ -28,7 +17,7 @@ import {
     CLOUD_SCRIPT_NODE,
     CLOUD_DEVICE_NODE,
 } from "./clouddom"
-import { DebugInfo } from "@devicescript/compiler"
+import type { DebugInfo } from "@devicescript/compiler"
 
 class CloudCollection extends JDNode {
     constructor(
