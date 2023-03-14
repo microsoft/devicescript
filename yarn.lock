@@ -3376,7 +3376,7 @@
   resolved "https://registry.yarnpkg.com/@types/unist/-/unist-2.0.6.tgz#250a7b16c3b91f672a24552ec64678eeb1d3a08d"
   integrity sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==
 
-"@types/vscode@^1.75.0":
+"@types/vscode@^1.76.0":
   version "1.76.0"
   resolved "https://registry.yarnpkg.com/@types/vscode/-/vscode-1.76.0.tgz#967c0fbe09921818bbf201f1cbcb81b981c6249c"
   integrity sha512-CQcY3+Fe5hNewHnOEAVYj4dd1do/QHliXaknAEYSXx2KEHUzFibDZSKptCon+HPgK55xx20pR+PBJjf0MomnBA==
@@ -3535,7 +3535,7 @@
     "@microsoft/applicationinsights-web-basic" "^2.8.9"
     applicationinsights "2.4.1"
 
-"@vscode/vsce@^2.17.0":
+"@vscode/vsce@^2.18.0":
   version "2.18.0"
   resolved "https://registry.yarnpkg.com/@vscode/vsce/-/vsce-2.18.0.tgz#9f40bf8e7df084a36844b9dadf5c277265c9fbd6"
   integrity sha512-tUA3XoKx5xjoi3EDcngk0VUYMhvfXLhS4s7CntpLPh1qtLYtgSCexTIMUHkCy6MqyozRW98bdW3a2yHPEADRnQ==
