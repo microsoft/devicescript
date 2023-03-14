@@ -13,6 +13,6 @@ sensor.pressure.subscribe(async pressure => {
             ds.HidMouseButtonEvent.Click
         )
         // debouncing
-        await ds.sleepMs(50)
+        await ds.sleep(50)
     }
 })

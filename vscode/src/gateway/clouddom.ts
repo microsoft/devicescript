@@ -1,4 +1,4 @@
-import { DebugInfo, VersionInfo } from "@devicescript/compiler"
+import type { DebugInfo, VersionInfo } from "@devicescript/interop"
 import {
     CHANGE,
     CloudConfigurationCmd,

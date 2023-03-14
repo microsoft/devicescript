@@ -14,9 +14,9 @@ setInterval(async () => {
     console.log("X1")
     await condA.wait()
     console.log("sig 1")
-    await ds.sleepMs(1000)
+    await ds.sleep(1000)
     condB.signal()
-    await ds.sleepMs(1000)
+    await ds.sleep(1000)
 }, 50)
 
 btnA.down.subscribe(async () => {

@@ -109,9 +109,9 @@
     "\x06"
 
 #define DEVS_IMG_VERSION_MAJOR 6
-#define DEVS_IMG_VERSION_MINOR 3
+#define DEVS_IMG_VERSION_MINOR 4
 #define DEVS_IMG_VERSION_PATCH 0
-#define DEVS_IMG_VERSION 0x6030000
+#define DEVS_IMG_VERSION 0x6040000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0x9a6a7e0a
 #define DEVS_NUM_IMG_SECTIONS 10
@@ -253,7 +253,7 @@
 #define DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE 34
 #define DEVS_BUILTIN_OBJECT_JSON 35
 
-#define DEVS_BUILTIN_STRING___MAX 135
+#define DEVS_BUILTIN_STRING___MAX 137
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -328,7 +328,7 @@
 #define DEVS_BUILTIN_STRING_UNSHIFT 71
 #define DEVS_BUILTIN_STRING_WAIT 72
 #define DEVS_BUILTIN_STRING_WRITE 73
-#define DEVS_BUILTIN_STRING_SLEEPMS 74
+#define DEVS_BUILTIN_STRING_SLEEP 74
 #define DEVS_BUILTIN_STRING_IMOD 75
 #define DEVS_BUILTIN_STRING_FORMAT 76
 #define DEVS_BUILTIN_STRING_INSERT 77
@@ -390,6 +390,8 @@
 #define DEVS_BUILTIN_STRING_JSON 133
 #define DEVS_BUILTIN_STRING_PARSE 134
 #define DEVS_BUILTIN_STRING_STRINGIFY 135
+#define DEVS_BUILTIN_STRING__DCFGSTRING 136
+#define DEVS_BUILTIN_STRING_ISSIMULATOR 137
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -420,7 +422,7 @@
         "packet", "_panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",      \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
-        "write", "sleepMs", "imod", "format", "insert", "start", "cloud", "main", "charAt",        \
+        "write", "sleep", "imod", "format", "insert", "start", "cloud", "main", "charAt",          \
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
         "deviceIdentifier", "shortId", "serviceIndex", "serviceCommand", "payload", "decode",      \
         "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
@@ -428,7 +430,7 @@
         "sendCommand", "__stack__", "Error", "TypeError", "RangeError", "stack", "message",        \
         "cause", "__new__", "setPrototypeOf", "getPrototypeOf", "constructor", "__proto__",        \
         "_logRepr", "print", "everyMs", "setInterval", "setTimeout", "clearInterval",              \
-        "clearTimeout", "SyntaxError", "JSON", "parse", "stringify"
+        "clearTimeout", "SyntaxError", "JSON", "parse", "stringify", "_dcfgString", "isSimulator"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

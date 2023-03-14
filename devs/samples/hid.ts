@@ -16,9 +16,9 @@ btn.down.subscribe(async () => {
 
 async function press(k: number) {
     await kbd.key(k, ds.HidKeyboardModifiers.None, ds.HidKeyboardAction.Down)
-    await ds.sleepMs(20)
+    await ds.sleep(20)
     await kbd.key(k, ds.HidKeyboardModifiers.None, ds.HidKeyboardAction.Up)
-    await ds.sleepMs(20)
+    await ds.sleep(20)
 }
 
 let prevV = await rot.position.read()

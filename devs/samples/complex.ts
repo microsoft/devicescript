@@ -8,7 +8,7 @@ let tint
 
 btnA.down.subscribe(async () => {
     await led.brightness.write(1)
-    await ds.sleepMs(100)
+    await ds.sleep(100)
     let [r, g, b] = await color.color.read()
     r = r + (await led.brightness.read())
     tint = (r + g + 2.3 * b) / (r + 2 * g + b)

@@ -39,6 +39,14 @@
                 "${workspaceFolder}/**",
                 "!**/node_modules/**"
             ]
+        },
+        {
+            "name": "VSCode (no extension)",
+            "type": "extensionHost",
+            "request": "launch",
+            "outFiles": [
+                "${workspaceFolder}/vscode/built/**"
+            ]
         }
     ]
 }

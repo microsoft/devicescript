@@ -2,6 +2,7 @@ import {
     CHANGE,
     ConnectionState,
     delay,
+    ERROR_TIMEOUT,
     ERROR_TRANSPORT_CLOSED,
     groupBy,
     isCodeError,
@@ -27,7 +28,7 @@ import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
-import { ResolvedBuildConfig, VersionInfo } from "@devicescript/compiler"
+import type { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -112,6 +113,7 @@ export class DeveloperToolsManager extends JDEventSource {
             data: {
                 dir: ".", // TODO
             },
+            timeout: 1000,
         })
         const { versions, buildConfig } = res.data
         this._versions = versions
@@ -251,7 +253,11 @@ export class DeveloperToolsManager extends JDEventSource {
         try {
             await this.refreshSpecs()
         } catch (e) {
-            if (isCodeError(e, ERROR_TRANSPORT_CLOSED)) return false
+            if (
+                isCodeError(e, ERROR_TRANSPORT_CLOSED) ||
+                isCodeError(e, ERROR_TIMEOUT)
+            )
+                return false
             else throw e
         }
         return true
@@ -293,10 +299,10 @@ export class DeveloperToolsManager extends JDEventSource {
 
     async setProjectFolder(folder: vscode.Uri) {
         if (folder?.toString() !== this._projectFolder?.toString()) {
-            if (this._projectFolder) this.kill()
+            if (this._projectFolder) await this.kill()
             this._projectFolder = folder
-            this.emit(CHANGE)
             await this.saveProjectFolder()
+            this.emit(CHANGE)
         }
     }
 
@@ -338,11 +344,13 @@ export class DeveloperToolsManager extends JDEventSource {
                     PROJECT_FOLDER_KEY,
                     undefined
                 )
-            } finally {
             }
         }
 
-        //
+        return await this.showQuickPickProjects()
+    }
+
+    async showQuickPickProjects(): Promise<vscode.Uri> {
         const projects = await this.findProjects()
         if (projects.length == 0) return undefined
         else if (projects.length == 1) return projects[0]
@@ -594,7 +602,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 if (isWindows) {
                     cli = "node_modules\\.bin\\devicescript.cmd"
                 } else args.unshift("./node_modules/.bin/devicescript")
-                if (diagnostics) args.push("--diagnostics")
+                if (diagnostics) args.push("--diagnostics", "--verbose")
                 console.debug(
                     `create terminal: ${useShell ? "shell:" : ""}${
                         cwd.fsPath

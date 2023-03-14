@@ -35,10 +35,27 @@ const REGISTER_STRING = "Register<string>"
 const REGISTER_BUFFER = "Register<Buffer>"
 const REGISTER_ARRAY = "Register<any[]>"
 
+export function unresolveBuildConfig(
+    cfg: ResolvedBuildConfig
+): LocalBuildConfig {
+    if (!cfg) cfg = {} as any
+    const r: LocalBuildConfig = {
+        hwInfo: cfg.hwInfo,
+        addArchs: cfg.addArchs,
+        addBoards: cfg.addBoards,
+        addServices: cfg.addServices,
+    }
+    return JSON.parse(JSON.stringify(r))
+}
+
 export function resolveBuildConfig(
     local?: LocalBuildConfig
 ): ResolvedBuildConfig {
     const r: ResolvedBuildConfig = {
+        hwInfo: Object.assign({}, local?.hwInfo ?? {}),
+        addArchs: local?.addArchs,
+        addBoards: local?.addBoards,
+        addServices: local?.addServices,
         boards: Object.assign({}, boardSpecifications.boards),
         archs: Object.assign({}, boardSpecifications.archs),
         services: jacdacDefaultSpecifications.concat(local?.addServices ?? []),

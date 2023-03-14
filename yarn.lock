@@ -2589,10 +2589,23 @@
     typescript "^4.9.4"
     unist-util-visit "^2.0.3"
 
-"@rise4fun/docusaurus-remark-plugin-compile-code@*", "@rise4fun/docusaurus-remark-plugin-compile-code@^1.6.0":
+"@rise4fun/docusaurus-remark-plugin-compile-code@*":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-compile-code/-/docusaurus-remark-plugin-compile-code-1.6.0.tgz#d0a489b5308d67279a1a998f18f592846a3cac32"
   integrity sha512-GeRwsGA1XMZeBypVS8ARYEepBK/oQf0J2e+yE7+1DQewAjhAtuJiLRLBpnsNX2DG8G5dlEja9CsMeHrTc+C6mw==
+  dependencies:
+    fs-extra "^11.1.0"
+    minimatch "^6.1.6"
+    p-all "^4.0.0"
+    puppeteer "^19.6.3"
+    tslib "^2.4.0"
+    typescript "^4.9.4"
+    unist-util-visit "^2.0.3"
+
+"@rise4fun/docusaurus-remark-plugin-compile-code@^1.6.1":
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-compile-code/-/docusaurus-remark-plugin-compile-code-1.6.1.tgz#5c533af367b3e183bb2f96c8761d1e86121f886f"
+  integrity sha512-kit3kC1UXrUBLw8TOj7CGuxNUa/bugWMoFHr9OBE4wNc34UF3yZm5RsZGkGy8RcMRE6kMJ9PyfEXWfQWM8RGyw==
   dependencies:
     fs-extra "^11.1.0"
     minimatch "^6.1.6"
@@ -2990,10 +3003,10 @@
   resolved "https://registry.yarnpkg.com/@trysound/sax/-/sax-0.2.0.tgz#cccaab758af56761eb7bf37af6f03f326dd798ad"
   integrity sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==
 
-"@tsconfig/docusaurus@^1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@tsconfig/docusaurus/-/docusaurus-1.0.6.tgz#7305a7fa590decc0d5968500234e95fd68788978"
-  integrity sha512-1QxDaP54hpzM6bq9E+yFEo4F9WbWHhsDe4vktZXF/iDlc9FqGr9qlg+3X/nuKQXx8QxHV7ue8NXFazzajsxFBA==
+"@tsconfig/docusaurus@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@tsconfig/docusaurus/-/docusaurus-1.0.7.tgz#a3ee3c8109b3fec091e3d61a61834e563aeee3c3"
+  integrity sha512-ffTXxGIP/IRMCjuzHd6M4/HdIrw1bMfC7Bv8hMkTadnePkpe0lG0oDSdbRpSDZb2rQMAgpbWiR10BvxvNYwYrg==
 
 "@tsconfig/node10@^1.0.7":
   version "1.0.9"
@@ -3376,7 +3389,7 @@
   resolved "https://registry.yarnpkg.com/@types/unist/-/unist-2.0.6.tgz#250a7b16c3b91f672a24552ec64678eeb1d3a08d"
   integrity sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==
 
-"@types/vscode@^1.75.0":
+"@types/vscode@^1.76.0":
   version "1.76.0"
   resolved "https://registry.yarnpkg.com/@types/vscode/-/vscode-1.76.0.tgz#967c0fbe09921818bbf201f1cbcb81b981c6249c"
   integrity sha512-CQcY3+Fe5hNewHnOEAVYj4dd1do/QHliXaknAEYSXx2KEHUzFibDZSKptCon+HPgK55xx20pR+PBJjf0MomnBA==
@@ -3535,7 +3548,7 @@
     "@microsoft/applicationinsights-web-basic" "^2.8.9"
     applicationinsights "2.4.1"
 
-"@vscode/vsce@^2.17.0":
+"@vscode/vsce@^2.18.0":
   version "2.18.0"
   resolved "https://registry.yarnpkg.com/@vscode/vsce/-/vsce-2.18.0.tgz#9f40bf8e7df084a36844b9dadf5c277265c9fbd6"
   integrity sha512-tUA3XoKx5xjoi3EDcngk0VUYMhvfXLhS4s7CntpLPh1qtLYtgSCexTIMUHkCy6MqyozRW98bdW3a2yHPEADRnQ==

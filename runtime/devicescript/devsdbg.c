@@ -122,7 +122,7 @@ static value_t gcref_to_value(devs_ctx_t *ctx, uint32_t ref) {
     if (ref == 0)
         return devs_undefined;
     value_t v = devs_value_from_handle(DEVS_HANDLE_TYPE_GC_OBJECT, ref);
-    JD_ASSERT(devs_gc_obj_valid(ctx, devs_handle_ptr_value(ctx, v)));
+    devs_gc_obj_check(ctx, devs_handle_ptr_value(ctx, v));
     return v;
 }
 
@@ -130,7 +130,7 @@ static void *to_gc_obj(devs_ctx_t *ctx, uint32_t ref) {
     if (ref == 0)
         return NULL;
     void *r = devs_handle_ptr_value(ctx, devs_value_from_handle(DEVS_HANDLE_TYPE_GC_OBJECT, ref));
-    JD_ASSERT(devs_gc_obj_valid(ctx, r));
+    devs_gc_obj_check(ctx, r);
     return r;
 }
 

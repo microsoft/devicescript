@@ -169,7 +169,7 @@ declare module "@devicescript/core" {
     /**
      * Wait for specified number of milliseconds.
      */
-    export function sleepMs(milliseconds: number): Promise<void>
+    export function sleep(milliseconds: number): Promise<void>
 
     /**
      * Restart current script.
@@ -212,6 +212,18 @@ declare module "@devicescript/core" {
      * Note that it only changes upon `await`.
      */
     export function millis(): number
+
+    /**
+     * Get value of a device configuration setting (typically from .board.json file).
+     */
+    export function _dcfgString(
+        id: "archId" | "url" | "devName" | "progName" | "progVersion"
+    ): string
+
+    /**
+     * Check if running inside a simulator.
+     */
+    export function isSimulator(): boolean
 
     /*
      * Print out message. Used by console.log, etc.

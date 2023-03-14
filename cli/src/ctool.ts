@@ -36,11 +36,20 @@ export async function ctool(options: CToolOptions) {
 
     if (options.empty) {
         const host = await getHost(
-            resolveBuildConfig(),
+            resolveBuildConfig({
+                hwInfo: {
+                    // This doesn't work anyway, since settings are not fetched from the empty program
+                    // progName: "(empty)",
+                    // progVersion: `v${BinFmt.IMG_VERSION_MAJOR}.${BinFmt.IMG_VERSION_MINOR}.${BinFmt.IMG_VERSION_PATCH}`,
+                },
+            }),
             { verify: false },
             "."
         )
-        host.read = () => ""
+        host.read = fn => {
+            if (fn.includes("package.json")) throw new Error("read empty")
+            return ""
+        }
         const res = compileWithHost("src/main.ts", host)
         const buf = res.binary
         let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[${buf.length}] = {`

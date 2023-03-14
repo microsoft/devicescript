@@ -3,9 +3,11 @@
 
 #include "devs_internal.h"
 
-//#define LOG_TAG "gc"
-//#define VLOGGING 1
+// #define LOG_TAG "gc"
+// #define VLOGGING 1
 #include "devs_logging.h"
+
+void devs_gc_obj_check_core(devs_gc_t *gc, const void *ptr);
 
 #define ROOT_SCAN_DEPTH 10
 
@@ -61,13 +63,14 @@ struct _devs_gc_t {
     devs_ctx_t *ctx;
 };
 
-static inline void mark_block(block_t *block, unsigned tag, unsigned size) {
+static inline void mark_block(devs_gc_t *gc, block_t *block, unsigned tag, unsigned size) {
     JD_ASSERT(tag <= 0xff);
     block->header = DEVS_GC_MK_TAG_WORDS(tag, size);
     if (tag == DEVS_GC_TAG_FREE) {
         JD_ASSERT(size >= 2);
         memset(block->free.data, FREE_FILL, (size - 2) * sizeof(uintptr_t));
     }
+    devs_gc_obj_check_core(gc, block);
 }
 
 static inline uintptr_t *block_ptr(block_t *block) {
@@ -79,10 +82,10 @@ void devs_gc_add_chunk(devs_gc_t *gc, void *start, unsigned size) {
     chunk_t *ch = start;
     ch->end =
         (block_t *)(((uintptr_t)((uint8_t *)start + size) & ~(JD_PTRSIZE - 1)) - sizeof(uintptr_t));
-    mark_block(ch->end, DEVS_GC_TAG_FINAL, 1);
-    mark_block(ch->start, DEVS_GC_TAG_FREE, block_ptr(ch->end) - block_ptr(ch->start));
     ch->next = gc->first_chunk;
     gc->first_chunk = ch;
+    ch->end->header = DEVS_GC_MK_TAG_WORDS(DEVS_GC_TAG_FINAL, 1);
+    mark_block(gc, ch->start, DEVS_GC_TAG_FREE, block_ptr(ch->end) - block_ptr(ch->start));
 }
 
 static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth);
@@ -277,7 +280,7 @@ static void sweep(devs_gc_t *gc) {
                     }
                     if (p != block) {
                         unsigned new_size = block_ptr(p) - block_ptr(block);
-                        mark_block(block, DEVS_GC_TAG_FREE, new_size);
+                        mark_block(gc, block, DEVS_GC_TAG_FREE, new_size);
                         if (prev == NULL) {
                             gc->first_free = block;
                         } else {
@@ -341,13 +344,13 @@ static block_t *find_free_block(devs_gc_t *gc, unsigned tag, uint32_t words) {
         block_t *next;
         if (left > 2) {
             // split block
-            mark_block(b, tag, words + 1);
+            mark_block(gc, b, tag, words + 1);
             next = next_block(b);
             // mark_block() below can overwrite b->free.next when words==0, so do this first
             next->free.next = b->free.next;
-            mark_block(next, DEVS_GC_TAG_FREE, left - 1);
+            mark_block(gc, next, DEVS_GC_TAG_FREE, left - 1);
         } else {
-            mark_block(b, tag, block_size(b));
+            mark_block(gc, b, tag, block_size(b));
             next = b->free.next;
         }
 
@@ -367,7 +370,7 @@ static block_t *alloc_block(devs_gc_t *gc, unsigned tag, uint32_t size) {
     unsigned words = (size + JD_PTRSIZE - 1) / JD_PTRSIZE;
 
     if (words == 0)
-        words = 1; // min. alloc size:60
+        words = 1; // min. alloc size
 
     JD_ASSERT(tag <= 0xff);
 
@@ -421,7 +424,7 @@ static void unpin(devs_gc_t *gc, void *ptr, uint8_t tag) {
     JD_ASSERT(((uintptr_t)ptr & (JD_PTRSIZE - 1)) == 0);
     block_t *b = (block_t *)((uintptr_t *)ptr - 1);
     JD_ASSERT(GET_TAG(b->header) == (DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES));
-    mark_block(b, tag, block_size(b));
+    mark_block(gc, b, tag, block_size(b));
 }
 
 void jd_gc_unpin(devs_gc_t *gc, void *ptr) {
@@ -600,28 +603,31 @@ void *devs_gc_base_addr(devs_gc_t *gc) {
 }
 #endif
 
-bool devs_gc_obj_valid(devs_ctx_t *ctx, const void *ptr) {
-    if (ptr == NULL || ((uintptr_t)ptr & (JD_PTRSIZE - 1)))
-        return false;
+static void fail_ptr(const char *msg, const void *ptr) {
+    DMESG("! GC-ptr validation error: %s ptr=%p", msg, ptr);
+    JD_PANIC();
+}
 
-    for (chunk_t *ch = ctx->gc->first_chunk; ch; ch = ch->next) {
+void devs_gc_obj_check_core(devs_gc_t *gc, const void *ptr) {
+    if (ptr == NULL || ((uintptr_t)ptr & (JD_PTRSIZE - 1)))
+        fail_ptr("value", ptr);
+
+    for (chunk_t *ch = gc->first_chunk; ch; ch = ch->next) {
         if ((void *)ch->start <= ptr && ptr < (void *)ch->end) {
             block_t *b = (void *)ptr;
-            unsigned sz = block_size(b);
-            if ((void **)b->data + sz > (void **)ch->end)
-                return false;
-            if (BASIC_TAG(b->header) == 0 || (b->header & ZERO_MASK))
-                return false;
-            return true;
+            if (next_block(b) > ch->end)
+                fail_ptr("size", ptr);
+            if (BASIC_TAG(b->header) == 0 || (b->header & ZERO_MASK)) {
+                DMESG("! hd: %p", (void *)b->header);
+                fail_ptr("header", ptr);
+            }
+            return;
         }
     }
 
-    return false;
+    fail_ptr("chunk", ptr);
 }
 
 void devs_gc_obj_check(devs_ctx_t *ctx, const void *ptr) {
-    if (!devs_gc_obj_valid(ctx, ptr)) {
-        DMESG("! invalid GC obj: %p", ptr);
-        JD_PANIC();
-    }
+    devs_gc_obj_check_core(ctx->gc, ptr);
 }

@@ -1,7 +1,7 @@
 #include "devs_internal.h"
 #include <math.h>
 
-void fun1_DeviceScript_sleepMs(devs_ctx_t *ctx) {
+void fun1_DeviceScript_sleep(devs_ctx_t *ctx) {
     int time = devs_arg_int(ctx, 0);
     if (time >= 0)
         devs_fiber_sleep(ctx->curr_fiber, time);
@@ -71,5 +71,18 @@ void fun2_DeviceScript__logRepr(devs_ctx_t *ctx) {
         const char *p = devs_string_get_utf8(ctx, lbl, NULL);
         DMESG("> %s: %s", p, devs_show_value(ctx, v));
         devs_value_unpin(ctx, lbl);
+    }
+}
+
+void fun1_DeviceScript__dcfgString(devs_ctx_t *ctx) {
+    value_t lbl = devs_arg(ctx, 0);
+    lbl = devs_value_to_string(ctx, lbl);
+    const char *key = devs_string_get_utf8(ctx, lbl, NULL);
+    if (key) {
+        unsigned sz;
+        const char *v = dcfg_get_string(key, &sz);
+        if (v)
+            devs_ret(ctx, devs_value_from_gc_obj(
+                              ctx, devs_string_try_alloc_init(ctx, (const uint8_t *)v, sz)));
     }
 }

@@ -1,9 +1,5 @@
-import {
-    architectureFamily,
-    DeviceConfig,
-    normalizeDeviceConfig,
-    parseAnyInt,
-} from "@devicescript/compiler"
+import type { DeviceConfig } from "@devicescript/interop"
+import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
 import {
     CHANGE,
     ControlReg,
@@ -498,7 +494,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async configure() {
-        await this.devtools.setProjectFolder(undefined)
+        const project = await this.devtools.showQuickPickProjects()
+        if (project === undefined) return
+
+        await this.devtools.setProjectFolder(project)
         await this.devtools.start()
     }
 

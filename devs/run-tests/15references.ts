@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { assert, sleepMs } from "@devicescript/core"
+import { assert, sleep } from "@devicescript/core"
 
 interface Testrec {
     str: string
@@ -30,22 +30,22 @@ function testRefLocals(): void {
     for (let i of [3, 2, 1]) {
         let copy = i
         runInBackground(() => {
-            sleepMs(10 * i)
+            sleep(10 * i)
             copy = copy + 10
         })
         runInBackground(() => {
-            sleepMs(20 * i)
+            sleep(20 * i)
             s = s + copy
         })
     }
-    sleepMs(200)
+    sleep(200)
     assert(s === "111213", "reflocals")
     */
 }
 
 function byRefParam_0(p: number): void {
     runInBackground(async () => {
-        await sleepMs(1)
+        await sleep(1)
         sum = sum + p
     })
     p = p + 1
@@ -54,7 +54,7 @@ function byRefParam_0(p: number): void {
 function byRefParam_2(pxx: number): void {
     pxx = pxx + 1
     runInBackground(async () => {
-        await sleepMs(1)
+        await sleep(1)
         sum = sum + pxx
     })
 }
@@ -63,18 +63,18 @@ async function testByRefParams() {
     msg("testByRefParams")
     refparamWrite(ds._id("a") + "b")
     refparamWrite2(newTestrec())
-    await sleepMs(10)
+    await sleep(10)
     await refparamWrite3(newTestrec())
     sum = 0
     let x = 1
     runInBackground(async () => {
-        await sleepMs(1)
+        await sleep(1)
         sum = sum + x
     })
     x = 2
     byRefParam_0(4)
     byRefParam_2(10)
-    await sleepMs(30)
+    await sleep(30)
     assert(sum === 18, "by ref")
     sum = 0
     msg("byref done")
@@ -92,13 +92,13 @@ function refparamWrite2(testrec: Testrec): void {
 
 async function refparamWrite3(testrecX: Testrec) {
     runInBackground(async () => {
-        await sleepMs(1)
+        await sleep(1)
         assert(testrecX.str === "foo", "ff")
         testrecX.str = testrecX.str + "x"
     })
     testrecX = newTestrec()
     testrecX.str = "foo"
-    await sleepMs(30)
+    await sleep(30)
     assert(testrecX.str === "foox", "ff2")
 }
 

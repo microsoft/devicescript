@@ -15,10 +15,12 @@ To track pressure changes, we register a callback that triggers when the pressur
 console.log("starting...")
 const sensor = new ds.AirPressure()
 // listen for pressure changes
-sensor.pressure.onChange(10, () => {
-    console.log("pressure changed")
+sensor.pressure.subscribe(async pressure => {
+    console.log("pressure reading :", pressure)
 })
 ```
+
+To apply filtering or thresholding on the changes, see [observables](/developer/observables).
 
 :::note
 If you run this code in the developer tools and modify
