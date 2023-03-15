@@ -1,15 +1,13 @@
 import {
-    DEVICE_ANNOUNCE,
     Flags,
     FRAME_PROCESS,
     I2CCmd,
     I2CCmdPack,
     I2CStatus,
-    JDDevice,
     JDFrameBuffer,
-    JDService,
     Packet,
-    REPORT_RECEIVE,
+    PACKET_RECEIVE,
+    PACKET_REPORT,
     serializeToTrace,
     SRV_I2C,
     toHex,
@@ -89,24 +87,36 @@ export function activateDeviceScriptI2COutputChannel(
         [I2CStatus.NAckData]: "nack data",
     }
 
-    bus.subscribe(DEVICE_ANNOUNCE, (dev: JDDevice) => {
-        const i2cs = dev.services({ serviceClass: SRV_I2C })
-        i2cs?.forEach((srv: JDService) => {
-            const sn = srv.friendlyName
+    bus.subscribe([PACKET_RECEIVE, PACKET_REPORT], (pkt: Packet) => {
+        if (
+            pkt.serviceClass === SRV_I2C &&
+            (pkt.isCommand || pkt.isReport) &&
+            pkt.serviceCommand === I2CCmd.Transaction
+        ) {
             if (!channel) {
                 channel =
                     vscode.window.createOutputChannel("DeviceScript - I2C")
             }
-            srv.subscribe(REPORT_RECEIVE, (pkt: Packet) => {
-                if (pkt.isReport && pkt.serviceCommand === I2CCmd.Transaction) {
-                    const [status, data] = pkt.jdunpack(
-                        I2CCmdPack.TransactionReport
-                    ) as [I2CStatus, Uint8Array]
-                    channel.appendLine(
-                        `> ${toHex(data)} # ${statuses[status]} from ${sn}`
-                    )
-                }
-            })
-        })
+
+            if (pkt.isReport) {
+                const [status, data] = pkt.jdunpack(
+                    I2CCmdPack.TransactionReport
+                ) as [I2CStatus, Uint8Array]
+                channel.appendLine(
+                    `> ${toHex(data)} # ${statuses[status]} from ${
+                        pkt.friendlyServiceName
+                    }`
+                )
+            } else if (pkt.isCommand) {
+                const [address, numRead, writeBuf] = pkt.jdunpack(
+                    I2CCmdPack.Transaction
+                ) as [number, number, Uint8Array]
+                channel.appendLine(
+                    `< ${toHex([address])} ${numRead} ${toHex(writeBuf)} # to ${
+                        pkt.friendlyServiceName
+                    }`
+                )
+            }
+        }
     })
 }
