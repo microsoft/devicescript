@@ -103,9 +103,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 6,
-    IMG_VERSION_MINOR = 4,
+    IMG_VERSION_MINOR = 5,
     IMG_VERSION_PATCH = 0,
-    IMG_VERSION = 0x6040000,
+    IMG_VERSION = 0x6050000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0x9a6a7e0a,
     NUM_IMG_SECTIONS = 10,
@@ -273,7 +273,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 137,
+    __MAX = 145,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -412,6 +412,14 @@ export enum BuiltInString {
     STRINGIFY = 135,
     _DCFGSTRING = 136,
     ISSIMULATOR = 137,
+    _ROLE = 138, // Role
+    FIBER = 139,
+    SUSPEND = 140,
+    RESUME = 141,
+    TERMINATE = 142,
+    SELF = 143,
+    CURRENT = 144,
+    ID = 145,
 }
 
 export const OP_PRINT_FMTS = [
@@ -663,6 +671,14 @@ export const BUILTIN_STRING__VAL = [
     "stringify",
     "_dcfgString",
     "isSimulator",
+    "Role",
+    "Fiber",
+    "suspend",
+    "resume",
+    "terminate",
+    "self",
+    "current",
+    "id",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

@@ -865,6 +865,41 @@ class SuiteNode extends Node {
     }
 }
 
+
+async function testFibers() {
+    let i = 0
+
+    async function logloop() {
+        while (true) {
+            i++
+            await ds.sleep(5)
+        }
+    }
+
+    async function resumeMe(f: ds.Fiber) {
+        await ds.sleep(10)
+        f.resume(20)
+    }
+
+    await ds.sleep(10)
+    const f0 = ds.Fiber.self()
+    const f1 = logloop.start(1)
+    ds.assert(f0 !== f1)
+    await ds.sleep(50)
+    f1.terminate()
+    ds.assert(4 <= i && i <= 6)
+    const i0 = i
+    await ds.sleep(50)
+    ds.assert(i === i0)
+    resumeMe.start(1, f0)
+    const r = await ds.suspend<number>(30)
+    ds.assert(r === 20)
+
+    console.log("fibers OK!")
+}
+
+
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -897,5 +932,6 @@ testShift()
 await testSetTimeout()
 testRest()
 const s = new SuiteNode()
+await testFibers()
 
 console.log("all OK")

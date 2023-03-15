@@ -109,6 +109,37 @@ declare module "@devicescript/core" {
         regCode: number
     }
 
+    export class Fiber {
+        /**
+         * Unique number identifying the fiber.
+         */
+        id: number
+
+        /**
+         * If the fiber is currently suspended, mark it for resumption, passing the specified value.
+         */
+        resume(v: any): void
+
+        /**
+         * Stop given fiber (which can be current fiber).
+         */
+        terminate(): void
+
+        /**
+         * Get reference to the current fiber.
+         */
+        static self(): Fiber
+    }
+
+    global {
+        interface Function {
+            /**
+             * Start function in background passing given arguments.
+             */
+            start(flag: number, ...args: any[]): Fiber
+        }
+    }
+
     /**
      * A base class for registers, events.
      */
@@ -170,6 +201,12 @@ declare module "@devicescript/core" {
      * Wait for specified number of milliseconds.
      */
     export function sleep(milliseconds: number): Promise<void>
+
+    /**
+     * Wait for resumption from other fiber. If the timeout expires, `undefined` is returned,
+     * otherwise the value passed from the resuming fiber.
+     */
+    export function suspend<T>(milliseconds: number): Promise<T | undefined>
 
     /**
      * Restart current script.

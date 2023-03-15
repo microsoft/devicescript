@@ -201,6 +201,7 @@ int load_image(const char *name) {
 #ifndef __EMSCRIPTEN__
 void app_print_dmesg(const char *ptr) {
     printf("    %s\n", ptr);
+    fflush(stdout);
 }
 #endif
 

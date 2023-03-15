@@ -32,6 +32,7 @@ typedef struct devs_activation devs_activation_t;
 #define DEVS_PKT_KIND_REG_GET 1
 #define DEVS_PKT_KIND_SEND_PKT 2
 #define DEVS_PKT_KIND_ROLE_WAIT 3
+#define DEVS_PKT_KIND_SUSPENDED 4
 
 typedef void (*devs_resume_cb_t)(devs_ctx_t *ctx, void *userdata);
 

@@ -324,7 +324,7 @@ static bool handle_send_pkt(devs_fiber_t *fiber) {
 }
 
 bool devs_jd_should_run(devs_fiber_t *fiber) {
-    if (fiber->pkt_kind == DEVS_PKT_KIND_NONE)
+    if (fiber->pkt_kind == DEVS_PKT_KIND_NONE || fiber->pkt_kind == DEVS_PKT_KIND_SUSPENDED)
         return RESUME_USER_CODE;
 
     switch (fiber->pkt_kind) {

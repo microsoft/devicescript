@@ -78,11 +78,6 @@ declare var Object: ObjectConstructor
 
 interface Function {
     /**
-     * Start function in background passing given arguments.
-     */
-    start(flag: number, ...args: any[]): void
-
-    /**
      * Returns the name of the function. Function names are read-only and can not be changed.
      */
     readonly name: string
