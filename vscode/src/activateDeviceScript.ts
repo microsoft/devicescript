@@ -7,6 +7,7 @@ import { activateMainStatusBar } from "./mainstatusbar"
 import {
     activateJacdacOutputChannel,
     activateDeviceScriptOutputChannel,
+    activateDeviceScriptI2COutputChannel,
 } from "./output"
 import { DeviceScriptExtensionState } from "./state"
 
@@ -96,6 +97,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     activateTreeViews(extensionState)
     activateMainStatusBar(extensionState)
     activateJacdacOutputChannel(extensionState)
+    activateDeviceScriptI2COutputChannel(extensionState)
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) {
