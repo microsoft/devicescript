@@ -160,6 +160,14 @@ export async function trackMetric(
 }
 
 /**
+ * Track error in the cloud
+ * @param error
+ */
+export function traceException(error: Error) {
+    error?.print()
+}
+
+/**
  * Uploads a message to the cloud
  */
 export async function uploadMessage(topicName: string, payload: any) {
