@@ -298,3 +298,31 @@ Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
     }
     return initialValue
 }
+
+declare module "@devicescript/core" {
+    interface I2C {
+        writeReg(devAddr: number, regAddr: number, byte: number): Promise<void>
+        readReg(devAddr: number, regAddr: number): Promise<number>
+    }
+}
+
+export class I2CError extends Error {}
+
+ds.I2C.prototype.writeReg = async function (devAddr, regAddr, byte) {
+    const b = Buffer.alloc(2)
+    b[0] = regAddr
+    b[1] = byte
+    const [status, buffer] = await this.transaction(devAddr, 0, b)
+    if (status !== ds.I2CStatus.OK)
+        throw new I2CError(`error writing dev=${devAddr} at reg=${regAddr}`)
+}
+
+ds.I2C.prototype.readReg = async function (devAddr, regAddr) {
+    const b = Buffer.alloc(1)
+    b[0] = regAddr
+    await this.transaction(devAddr, 1, b)
+    const [status, buffer] = await this.transaction(devAddr, 0, b)
+    if (status !== ds.I2CStatus.OK)
+        throw new I2CError(`error reading dev=${devAddr} at reg=${regAddr}`)
+    return buffer[0]
+}

@@ -102,7 +102,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     let r = ""
 
     for (const en of Object.values(info.enums)) {
-        const enPref = enumName(en.name)
+        const enPref = enumName(info, en.name)
         r += `enum ${enPref} { // ${cStorage(en.storage)}\n`
         for (const k of Object.keys(en.members)) {
             r += "    " + k + " = " + toHex(en.members[k]) + ",\n"
@@ -140,22 +140,8 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         let kw = ""
         let tp = ""
         let sx = ""
-        let argtp = packetType(pkt)
+        let argtp = packetType(info, pkt)
         const client = !!pkt.client
-
-        // if there's a startRepeats before last field, we don't put ... before it
-        const earlyRepeats = pkt.fields
-            .slice(0, pkt.fields.length - 1)
-            .some(f => f.startRepeats)
-
-        const fields = pkt.fields
-            .map(f => {
-                const tp = memType(f)
-                if (f.startRepeats && !earlyRepeats)
-                    return `...${f.name}: ${tp}[]`
-                else return `${f.name}: ${tp}`
-            })
-            .join(", ")
 
         if (isRegister(pkt.kind)) {
             kw = client ? "" : "readonly "
@@ -173,7 +159,8 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
                         .map(f => `@param ${f.name} - ${f.unit}`)
                         .join("\n")
             )
-            r += `    ${camelize(pkt.name)}(${fields}): Promise<void>\n`
+            const { sig } = commandSig(info, pkt)
+            r += `    ${sig}\n`
         }
 
         if (tp) {
@@ -187,52 +174,6 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     r += "}\n"
 
     return r.replace(/ *$/gm, "")
-
-    function enumName(n: string) {
-        return upperCamel(info.camelName) + upperCamel(n)
-    }
-    function patchLinks(n: string) {
-        return n?.replace(/\]\(\/services\//g, "](/api/clients/")
-    }
-
-    function packetType(pkt: jdspec.PacketInfo) {
-        const cmt = addComment(pkt)
-        if (cmt.needsStruct) return "any[]"
-        if (pkt.fields.length == 0) return "void"
-        assert(pkt.fields.length == 1)
-        return memType(pkt.fields[0])
-    }
-
-    function memType(f: jdspec.PacketMember) {
-        switch (f.type) {
-            case "string":
-            case "string0":
-                return "string"
-
-            case "bytes":
-                return "Buffer"
-
-            case "bool":
-                return "boolean"
-
-            case "f32":
-            case "f64":
-                return "number"
-
-            case "devid":
-                return "Buffer"
-
-            case "pipe_port":
-            case "pipe":
-                return "unknown"
-
-            default:
-                if (/^[iu]\d+(\.\d+)?$/.test(f.type)) return "number"
-                if (/^u8\[\d+\]$/.test(f.type)) return "Buffer"
-                if (info.enums[f.type]) return enumName(f.type)
-                oops(`unknown type ${f.type} in spec: ${info.name}`)
-        }
-    }
 }
 
 const pinFunToType: Record<string, string> = {
@@ -390,33 +331,16 @@ const ${varname} = new ds.${clname}()
     )
     if (cmds.length) r.push("## Commands", "")
     cmds.forEach(pkt => {
-        // if there's a startRepeats before last field, we don't put ... before it
-        const earlyRepeats = pkt.fields
-            .slice(0, pkt.fields.length - 1)
-            .some(f => f.startRepeats)
-        const fields = pkt.fields
-            .map(f => {
-                const tp =
-                    f.type == "string" || f.type == "string0"
-                        ? "string"
-                        : info.enums[f.type]
-                        ? enumName(f.type)
-                        : "number"
-                if (f.startRepeats && !earlyRepeats)
-                    return `...${f.name}: ${tp}[]`
-                else return `${f.name}: ${tp}`
-            })
-            .join(", ")
-        const pname = camelize(pkt.name)
+        const { sig, name } = commandSig(info, pkt)
 
         r.push(
-            `### ${pname}`,
+            `### ${name}`,
             "",
             pkt.description,
             `
 \`\`\`ts skip no-run
-${varname}.${pname}(${fields}): void
-\`\`\`            
+${varname}.${sig}
+\`\`\`
 `
         )
     })
@@ -428,30 +352,11 @@ ${varname}.${pname}(${fields}): void
     regs.forEach(pkt => {
         const cmt = addComment(pkt)
         const nobuild = status === "stable" && !pkt.client ? "" : "skip"
-        // if there's a startRepeats before last field, we don't put ... before it
-        const earlyRepeats = pkt.fields
-            .slice(0, pkt.fields.length - 1)
-            .some(f => f.startRepeats)
-
-        const fields = pkt.fields
-            .map(f => {
-                const tp =
-                    f.type == "string" || f.type == "string0"
-                        ? "string"
-                        : info.enums[f.type]
-                        ? enumName(f.type)
-                        : "number"
-                if (f.startRepeats && !earlyRepeats)
-                    return `...${f.name}: ${tp}[]`
-                else return `${f.name}: ${tp}`
-            })
-            .join(", ")
         const pname = camelize(pkt.name)
         const isConst = pkt.kind === "const"
         let tp: string = undefined
         if (cmt.needsStruct) {
             tp = REGISTER_ARRAY
-            if (pkt.fields.length > 1) tp += ` & { ${fields} }`
         } else {
             if (pkt.fields.length == 1 && pkt.fields[0].type == "string")
                 tp = REGISTER_STRING
@@ -536,11 +441,82 @@ ${varname}.${pname}.subscribe(() => {
     r.push(`\n{@import optional ../clients-custom/${info.shortId}.mdp}\n`)
 
     return r.filter(s => s !== undefined).join("\n")
-    function enumName(n: string) {
-        return upperCamel(info.camelName) + upperCamel(n)
+}
+
+function enumName(info: jdspec.ServiceSpec, n: string) {
+    return upperCamel(info.camelName) + upperCamel(n)
+}
+
+function patchLinks(n: string) {
+    return n?.replace(/\]\(\/services\//g, "](/api/clients/")
+}
+
+function packetType(info: jdspec.ServiceSpec, pkt: jdspec.PacketInfo) {
+    const cmt = addComment(pkt)
+    if (cmt.needsStruct) {
+        const types = pkt.fields.map(f => memType(info, f))
+        const allSame = types.every(t => t == types[0])
+        if (pkt.fields.some(p => p.startRepeats))
+            return allSame ? types[0] + "[]" : "any[]"
+        return `[${types.join(", ")}]`
     }
-    function patchLinks(n: string) {
-        return n?.replace(/\]\(\/services\//g, "](/api/clients/")
+    if (pkt.fields.length == 0) return "void"
+    assert(pkt.fields.length == 1)
+    return memType(info, pkt.fields[0])
+}
+
+function commandSig(info: jdspec.ServiceSpec, pkt: jdspec.PacketInfo) {
+    // if there's a startRepeats before last field, we don't put ... before it
+    const earlyRepeats = pkt.fields
+        .slice(0, pkt.fields.length - 1)
+        .some(f => f.startRepeats)
+    const fields = pkt.fields
+        .map(f => {
+            const tp = memType(info, f)
+            if (f.startRepeats && !earlyRepeats) return `...${f.name}: ${tp}[]`
+            else return `${f.name}: ${tp}`
+        })
+        .join(", ")
+    const name = camelize(pkt.name)
+    const report = info.packets.find(
+        p => p.kind == "report" && p.identifier == pkt.identifier
+    )
+    const retType = !report ? "void" : packetType(info, report)
+    const sig = `${name}(${fields}): Promise<${retType}>`
+    return {
+        sig,
+        name,
+    }
+}
+
+function memType(info: jdspec.ServiceSpec, f: jdspec.PacketMember) {
+    switch (f.type) {
+        case "string":
+        case "string0":
+            return "string"
+
+        case "bytes":
+            return "Buffer"
+
+        case "bool":
+            return "boolean"
+
+        case "f32":
+        case "f64":
+            return "number"
+
+        case "devid":
+            return "Buffer"
+
+        case "pipe_port":
+        case "pipe":
+            return "unknown"
+
+        default:
+            if (/^[iu]\d+(\.\d+)?$/.test(f.type)) return "number"
+            if (/^u8\[\d+\]$/.test(f.type)) return "Buffer"
+            if (info.enums[f.type]) return enumName(info, f.type)
+            oops(`unknown type ${f.type} in spec: ${info.name}`)
     }
 }
 

@@ -930,7 +930,7 @@ class Program implements TopOpWriter {
             const obj: BaseServiceConfig = this.toLiteralJSON(arg)
             if (!obj || typeof obj != "object")
                 throwError(arg, `expecting { ... }`)
-            const specName = this.lowerFirst(
+            const specName = this.serviceNameFromClassName(
                 this.nodeName(expr.expression).slice(startPref.length)
             )
             obj.service = specName
@@ -1487,8 +1487,9 @@ class Program implements TopOpWriter {
         }
     }
 
-    private lowerFirst(r: string) {
-        return r[0].toLowerCase() + r.slice(1)
+    private serviceNameFromClassName(r: string) {
+        if (/[a-z]/.test(r)) return r[0].toLowerCase() + r.slice(1)
+        else return r
     }
 
     private specFromTypeName(
@@ -1498,7 +1499,7 @@ class Program implements TopOpWriter {
     ): jdspec.ServiceSpec {
         if (!nm) nm = this.nodeName(expr)
         if (nm && nm.startsWith("#ds.")) {
-            let r = this.lowerFirst(nm.slice(4))
+            let r = this.serviceNameFromClassName(nm.slice(4))
             if (r == "condition") r = "deviceScriptCondition"
             return this.lookupRoleSpec(expr, r)
         } else {
