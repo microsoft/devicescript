@@ -310,24 +310,7 @@ export class GatewayTreeDataProvider
 
                     // find script to override
                     await manager.refreshScripts()
-                    const sres = await vscode.window.showQuickPick(
-                        <CloudScriptPickItem[]>[
-                            ...manager.scripts().map(script =>
-                                cloudScriptToQuickPickItem(script, {
-                                    picked: script.name === base,
-                                })
-                            ),
-                            {
-                                label: "Create new cloud script",
-                            },
-                        ],
-                        {
-                            title: `Select cloud script to override with '${base}'`,
-                        }
-                    )
-                    if (sres === undefined) return
-
-                    const script = sres.data
+                    const script = manager.scripts().find(s => s.name === base)
                     if (script) await this.uploadScriptProgram(script, program)
                     else await this.createScript(manager, base, program)
                 }
