@@ -8,11 +8,13 @@ import {
 import * as vscode from "vscode"
 import type { SideOutputEvent } from "../../cli/src/sideprotocol"
 import { subSideEvent } from "./jacdac"
+import { DeviceScriptExtensionState } from "./state"
 
-export function activateOutputChannels(
-    bus: JDBus,
-    jacdacConfig: vscode.WorkspaceConfiguration
-) {
+export function activateJacdacOutputChannel(state: DeviceScriptExtensionState) {
+    const { context, bus } = state
+    const jacdacConfig = vscode.workspace.getConfiguration(
+        "devicescript.jacdac"
+    )
     let jacdacPacketsOutputChannel: vscode.OutputChannel = undefined
     const logFrame = (frame: JDFrameBuffer) => {
         const output = jacdacPacketsOutputChannel
@@ -33,10 +35,18 @@ export function activateOutputChannels(
             bus.off(FRAME_PROCESS, logFrame)
         }
     }
-    return configure
+
+    vscode.workspace.onDidChangeConfiguration(
+        configure,
+        undefined,
+        context.subscriptions
+    )
+    configure()
 }
 
-export function registerOutputChannel(extensionMode: vscode.ExtensionMode) {
+export function activateDeviceScriptOutputChannel(
+    extensionMode: vscode.ExtensionMode
+) {
     const output = vscode.window.createOutputChannel("DeviceScript", {
         log: true,
     })

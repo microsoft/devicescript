@@ -4,7 +4,10 @@ import { activateGateway } from "./gateway/activateGateway"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import { JDomDeviceTreeItem, activateTreeViews } from "./JDomTreeDataProvider"
 import { activateMainStatusBar } from "./mainstatusbar"
-import { activateOutputChannels, registerOutputChannel } from "./output"
+import {
+    activateJacdacOutputChannel,
+    activateDeviceScriptOutputChannel,
+} from "./output"
 import { DeviceScriptExtensionState } from "./state"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
@@ -12,10 +15,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
-    const jacdacConfig = vscode.workspace.getConfiguration(
-        "devicescript.jacdac"
-    )
-    registerOutputChannel(extensionMode)
+    activateDeviceScriptOutputChannel(extensionMode)
 
     // setup bus
     const bus = startJacdacBus()
@@ -95,17 +95,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     activateGateway(context, extensionState)
     activateTreeViews(extensionState)
     activateMainStatusBar(extensionState)
-
-    // packet trace
-    const configure = activateOutputChannels(bus, jacdacConfig)
-
-    // hook up to configurations
-    vscode.workspace.onDidChangeConfiguration(
-        configure,
-        undefined,
-        context.subscriptions
-    )
-    configure()
+    activateJacdacOutputChannel(extensionState)
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) {
