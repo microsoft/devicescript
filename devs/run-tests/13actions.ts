@@ -21,7 +21,7 @@ function msg(m: string) {
 }
 
 function runInBackground(f: Action) {
-    f.start(1)
+    f.start()
 }
 
 async function inBg() {

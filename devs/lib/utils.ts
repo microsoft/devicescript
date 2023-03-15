@@ -49,7 +49,7 @@ async function timeoutWorker() {
         const n = ds.millis()
         while (timeouts.length > 0 && timeouts[0].when <= n) {
             const t = timeouts.shift()
-            t.callback.start(1)
+            t.callback.start()
             if (t.period !== undefined) {
                 t.when = Math.max(n + 1, t.when + t.period)
                 for (let i = 0; i < timeouts.length + 1; ++i) {
@@ -68,7 +68,7 @@ function addTimeout(cb: ds.Callback, ms: number): Timeout {
     if (!timeouts) {
         timeouts = []
         timeoutId = 1
-        timeoutWorker.start(1)
+        timeoutWorker.start()
     }
     if (!ms || ms < 1) ms = 1
     const when = ds.millis() + ms

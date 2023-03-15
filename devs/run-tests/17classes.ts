@@ -7,10 +7,6 @@ function msg(m: string) {
     console.log(m)
 }
 
-function runInBackground(f: Action) {
-    f.start(1)
-}
-
 class XFoo {
     pin: number
     buf: number[]

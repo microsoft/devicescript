@@ -20,7 +20,7 @@ function msg(m: string) {
 }
 
 function runInBackground(f: Action) {
-    f.start(1)
+    f.start()
 }
 
 function testRefLocals(): void {

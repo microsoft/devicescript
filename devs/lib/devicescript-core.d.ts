@@ -136,7 +136,7 @@ declare module "@devicescript/core" {
             /**
              * Start function in background passing given arguments.
              */
-            start(flag: number, ...args: any[]): Fiber
+            start(...args: any[]): Fiber
         }
     }
 
