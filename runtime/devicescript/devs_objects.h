@@ -106,7 +106,8 @@ void devs_map_set_string_field(devs_ctx_t *ctx, devs_map_t *m, unsigned builtin_
 typedef void (*devs_map_iter_cb_t)(devs_ctx_t *ctx, void *userdata, value_t k, value_t v);
 unsigned devs_maplike_iter(devs_ctx_t *ctx, devs_maplike_t *src, void *userdata,
                            devs_map_iter_cb_t cb);
-void devs_maplike_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr, bool keys);
+void devs_maplike_keys_or_values(devs_ctx_t *ctx, devs_maplike_t *src, devs_array_t *arr,
+                                 bool keys);
 bool devs_maplike_is_map(devs_ctx_t *ctx, devs_maplike_t *src);
 
 value_t devs_short_map_get(devs_ctx_t *ctx, devs_short_map_t *map, uint16_t key);
@@ -142,6 +143,9 @@ bool devs_is_service_spec(devs_ctx_t *ctx, const void *ptr);
 const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx);
 const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t service_class);
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx);
+const devs_packet_spec_t *devs_pkt_spec_by_code(devs_ctx_t *ctx, const devs_service_spec_t *spec,
+                                                uint16_t code);
+uint16_t devs_get_spec_code(uint8_t frame_flags, uint16_t service_command);
 
 value_t devs_builtin_object_value(devs_ctx_t *ctx, unsigned idx);
 
