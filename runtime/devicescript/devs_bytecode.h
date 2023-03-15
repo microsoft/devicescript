@@ -286,7 +286,7 @@
 #define DEVS_BUILTIN_STRING_GETAT 29
 #define DEVS_BUILTIN_STRING_IDIV 30
 #define DEVS_BUILTIN_STRING_IMUL 31
-#define DEVS_BUILTIN_STRING_ISCONNECTED 32
+#define DEVS_BUILTIN_STRING_ISBOUND 32
 #define DEVS_BUILTIN_STRING_JOIN 33
 #define DEVS_BUILTIN_STRING_LENGTH 34
 #define DEVS_BUILTIN_STRING_LOG 35
@@ -417,7 +417,7 @@
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \
         "PI", "SQRT1_2", "SQRT2", "abs", "alloc", "array", "blitAt", "boolean", "buffer", "cbrt",  \
         "ceil", "charCodeAt", "clamp", "exp", "false", "fillAt", "floor", "forEach", "function",   \
-        "getAt", "idiv", "imul", "isConnected", "join", "length", "log", "log10", "log2", "map",   \
+        "getAt", "idiv", "imul", "isBound", "join", "length", "log", "log10", "log2", "map",       \
         "max", "min", "next", "null", "number", "onChange", "onConnected", "onDisconnected",       \
         "packet", "_panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",      \
         "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \

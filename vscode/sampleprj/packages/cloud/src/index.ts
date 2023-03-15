@@ -96,7 +96,7 @@ export class Metric {
         if (this.skipEmpty && this.count === 0) return
 
         // not bound
-        if (!cloud.isConnected) return
+        if (!cloud.isBound) return
 
         // not connected to cloud, don't send
         const connected = await cloud.connected.read()

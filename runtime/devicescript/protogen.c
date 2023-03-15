@@ -88,7 +88,7 @@ value_t prop_DsPacketInfo_name(devs_ctx_t *ctx, value_t self);
 value_t prop_DsPacketInfo_code(devs_ctx_t *ctx, value_t self);
 void methX_DsCommand___func__(devs_ctx_t *ctx);
 // impl_role.c
-value_t prop_DsRole_isConnected(devs_ctx_t *ctx, value_t self);
+value_t prop_DsRole_isBound(devs_ctx_t *ctx, value_t self);
 void meth2_DsRole_sendCommand(devs_ctx_t *ctx);
 void meth0_DsRole_wait(devs_ctx_t *ctx);
 // impl_string.c
@@ -244,7 +244,7 @@ static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRole_prototype_entries[] = { //
-    {N(ISCONNECTED), 50069},                                           //
+    {N(ISBOUND), 50069},                                               //
     {N(SENDCOMMAND), 50070},                                           //
     {N(WAIT), 50071},                                                  //
     {0, 0}};
@@ -416,7 +416,7 @@ const devs_builtin_function_t devs_builtin_functions[76] = {
     {N(NAME), 0, PROP, {.prop = prop_DsPacketInfo_name}},
     {N(CODE), 0, PROP, {.prop = prop_DsPacketInfo_code}},
     {N(__FUNC__), 0, 0, {.meth = methX_DsCommand___func__}},
-    {N(ISCONNECTED), 0, PROP, {.prop = prop_DsRole_isConnected}},
+    {N(ISBOUND), 0, PROP, {.prop = prop_DsRole_isBound}},
     {N(SENDCOMMAND), 2, 0, {.meth = meth2_DsRole_sendCommand}},
     {N(WAIT), 0, 0, {.meth = meth0_DsRole_wait}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},

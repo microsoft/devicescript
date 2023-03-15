@@ -1,6 +1,6 @@
 #include "devs_internal.h"
 
-value_t prop_DsRole_isConnected(devs_ctx_t *ctx, value_t self) {
+value_t prop_DsRole_isBound(devs_ctx_t *ctx, value_t self) {
     if (devs_handle_type(self) != DEVS_HANDLE_TYPE_ROLE)
         return devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_ROLE, self);
 

@@ -47,7 +47,7 @@ declare module "@devicescript/core" {
          * @internal
          * @deprecated internal field for runtime support
          */
-        isConnected: boolean
+        isBound: boolean
 
         /**
          * Gets the state of the binding with a jacdac server

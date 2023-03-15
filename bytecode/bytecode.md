@@ -2,6 +2,33 @@
 
 Expressions do not modify the state. They may throw exceptions though.
 
+## Format Constants
+
+    img_version_major = 6
+    img_version_minor = 4
+    img_version_patch = 0
+    img_version = $version
+    magic0 = 0x53766544 // "DevS"
+    magic1 = 0x9a6a7e0a
+    num_img_sections = 10
+    fix_header_size = 32
+    section_header_size = 8
+    function_header_size = 16
+    role_header_size = 8
+    ascii_header_size = 2
+    binary_size_align = 32
+    max_stack_depth = 10
+    direct_const_op = 0x80
+    direct_const_offset = 16
+    first_multibyte_int = 0xf8
+    first_non_opcode = 0x10000
+    first_builtin_function = 50000
+    max_args_short_call = 8
+    service_spec_header_size = 16
+    service_spec_packet_size = 8
+    service_spec_field_size = 4
+    role_bits = 15
+
 ## Ops
 
 ### Control flow
@@ -260,33 +287,6 @@ Time since device restart in ms; time only advances when sleeping.
 If `func == null` returns self-handle.
 Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
 
-## Format Constants
-
-    img_version_major = 6
-    img_version_minor = 4
-    img_version_patch = 0
-    img_version = $version
-    magic0 = 0x53766544 // "DevS"
-    magic1 = 0x9a6a7e0a
-    num_img_sections = 10
-    fix_header_size = 32
-    section_header_size = 8
-    function_header_size = 16
-    role_header_size = 8
-    ascii_header_size = 2
-    binary_size_align = 32
-    max_stack_depth = 10
-    direct_const_op = 0x80
-    direct_const_offset = 16
-    first_multibyte_int = 0xf8
-    first_non_opcode = 0x10000
-    first_builtin_function = 50000
-    max_args_short_call = 8
-    service_spec_header_size = 16
-    service_spec_packet_size = 8
-    service_spec_field_size = 4
-    role_bits = 15
-
 ## Enum: StrIdx
 
     buffer = 0
@@ -498,7 +498,7 @@ Only `true` and `false` values.
     getAt = 29
     idiv = 30
     imul = 31
-    isConnected = 32
+    isBound = 32
     join = 33
     length = 34
     log = 35

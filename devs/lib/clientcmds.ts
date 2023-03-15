@@ -82,7 +82,7 @@ ds.Role.prototype.binding = function binding() {
 
 ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
     if (!pkt || pkt.serviceCommand === 0) {
-        const conn = this.isConnected
+        const conn = this.isBound
         await this.binding().emit(conn)
         if (conn && this._changeHandlers) {
             const regs = Object.keys(this._changeHandlers)
