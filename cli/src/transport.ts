@@ -7,6 +7,7 @@ import {
     createUSBTransport,
     createWebSocketTransport,
     JDBus,
+    shortDeviceId,
     SIDE_DATA,
     Transport,
 } from "jacdac-ts"
@@ -21,7 +22,10 @@ import { setupWebsocket } from "./build"
 import type {
     SideDeviceMessage,
     SideLogsFromDevice,
+    SideUploadBinFromDevice,
+    SideUploadJsonFromDevice,
 } from "@devicescript/interop"
+import { printDmesg } from "./vmworker"
 
 export interface TransportsOptions {
     usb?: boolean
@@ -62,12 +66,21 @@ function createWebSocket(url: string, protocol: string) {
     })
     transport.on(SIDE_DATA, (msg: SideDeviceMessage) => {
         const { type } = msg
+        const pref = shortDeviceId(msg.deviceId) || "G"
         switch (type) {
+            case "uploadJson": {
+                const m = msg as SideUploadJsonFromDevice
+                console.log(`${pref}> ${m.topic}`, m.value)
+                break
+            }
+            case "uploadBin": {
+                const m = msg as SideUploadBinFromDevice
+                console.log(`${pref}> ${m.topic}`, m.payload64)
+                break
+            }
             case "logs": {
                 const m = msg as SideLogsFromDevice
-                m.logs?.forEach(line => {
-                    console.log(line)
-                })
+                m.logs?.forEach(line => printDmesg(undefined, pref, line))
             }
             default: {
                 console.debug(JSON.stringify(msg, null, 2))
