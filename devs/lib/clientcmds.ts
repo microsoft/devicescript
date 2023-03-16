@@ -129,8 +129,7 @@ ds.Role.prototype._commandResponse = async function (
     // note that cmdpkt has messed up deviceIdentifier etc; only role, serviceCommand and payload are reliable
     sendCommand.start(cmdpkt) // start it background, so we don't get a race with ds.suspend() below
     const res = await ds.suspend<ds.Packet>(500)
-    if (res === undefined)
-        throw new Error(`command ${cmdpkt} timeout`)
+    if (res === undefined) throw new Error(`command ${cmdpkt} timeout`)
     return res.decode()
 }
 
@@ -372,6 +371,9 @@ declare module "@devicescript/core" {
     interface I2C {
         writeReg(devAddr: number, regAddr: number, byte: number): Promise<void>
         readReg(devAddr: number, regAddr: number): Promise<number>
+
+        readBuf(devAddr: number, size: number): Promise<Buffer>
+        writeBuf(devAddr: number, b: Buffer): Promise<void>
     }
 }
 
@@ -389,9 +391,25 @@ ds.I2C.prototype.writeReg = async function (devAddr, regAddr, byte) {
 ds.I2C.prototype.readReg = async function (devAddr, regAddr) {
     const b = Buffer.alloc(1)
     b[0] = regAddr
-    await this.transaction(devAddr, 1, b)
-    const [status, buffer] = await this.transaction(devAddr, 0, b)
+    const [status, buffer] = await this.transaction(devAddr, 1, b)
     if (status !== ds.I2CStatus.OK)
         throw new I2CError(`error reading dev=${devAddr} at reg=${regAddr}`)
     return buffer[0]
+}
+
+ds.I2C.prototype.readBuf = async function (devAddr, size) {
+    const [status, buffer] = await this.transaction(
+        devAddr,
+        size,
+        Buffer.alloc(0)
+    )
+    if (status !== ds.I2CStatus.OK)
+        throw new I2CError(`error reading buffer dev=${devAddr}`)
+    return buffer
+}
+
+ds.I2C.prototype.writeBuf = async function (devAddr, b) {
+    const [status, buffer] = await this.transaction(devAddr, 0, b)
+    if (status !== ds.I2CStatus.OK)
+        throw new I2CError(`error writing buffer ${b} to dev=${devAddr}`)
 }
