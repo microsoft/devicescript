@@ -1,5 +1,10 @@
 import { Temperature } from "@devicescript/core"
-import { createMetric, trackEvent, uploadMessage } from "@devicescript/cloud"
+import {
+    createMetric,
+    trackException,
+    trackEvent,
+    uploadMessage,
+} from "@devicescript/cloud"
 
 console.log("starting...")
 const thermo = new Temperature()
@@ -17,4 +22,9 @@ setInterval(async () => {
     await temp.upload()
     await trackEvent("data", { measurements: { humi: h } })
     await uploadMessage("samples/cloud", { humi: h })
+    try {
+        throw new Error("noes!")
+    } catch (e) {
+        trackException(e as Error)
+    }
 }, 15000)
