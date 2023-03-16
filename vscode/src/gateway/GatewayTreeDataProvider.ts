@@ -231,9 +231,9 @@ export class GatewayTreeDataProvider
                     const v = versions?.[0]
                     if (!v) return
 
-                    if (v.version === script.version) {
+                    if (v.version === device.scriptVersion) {
                         vscode.window.showInformationMessage(
-                            "DeviceScript Gateway: script already at latest"
+                            "DeviceScript Gateway: script version already at latest"
                         )
                         return
                     }
@@ -242,8 +242,8 @@ export class GatewayTreeDataProvider
                         `Updating Script to ${v.version}`,
                         async () => {
                             await device.updateScript(
-                                script.scriptId,
-                                v.data.version
+                                device.scriptId,
+                                v.version
                             )
                             await device.refresh()
                             this.refresh(device)
@@ -389,16 +389,17 @@ export class GatewayTreeDataProvider
             }
             case CLOUD_DEVICE_NODE: {
                 const d = node as CloudDevice
-                const meta = d.meta
-                const connected = d.connected
-                const script = this.state.manager?.script(d.scriptId)
+                const { meta, connected, scriptId, scriptVersion } = d
+                const script = this.state.manager?.script(scriptId)
                 const spec =
                     this.state.bus.deviceCatalog.specificationFromProductIdentifier(
                         meta.productId
                     )
 
                 label = `${shortDeviceId(d.deviceId)}, ${d.name}`
-                description = script ? script.displayName : "no script"
+                description = script
+                    ? `${script.friendlyName} v${scriptVersion}`
+                    : "no script"
                 const iconName = connected
                     ? "circle-large-filled"
                     : "circle-slash"
