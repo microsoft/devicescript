@@ -5,15 +5,6 @@ declare module "@devicescript/core" {
     export type Callback = () => AsyncVoid
     export type PktHandler = (pkt: Packet) => AsyncVoid
     export type Unsubscribe = () => void
-    export type RegisterChangeHandler = (
-        v: any,
-        reg: Register<any>
-    ) => AsyncVoid
-    export type EventChangeHandler = (v: any, reg: Event<any>) => AsyncVoid
-    export type ClientRegisterChangeHandler<T> = (
-        v: T,
-        reg: ClientRegister<T>
-    ) => AsyncVoid
 
     /**
      * A register like structure
@@ -29,7 +20,7 @@ declare module "@devicescript/core" {
          * @param next
          * @return unsubscribe
          */
-        subscribe(next: ClientRegisterChangeHandler<T>): Unsubscribe
+        subscribe(next: (v: T, reg: this) => AsyncVoid): Unsubscribe
 
         /**
          * Sends the new value to subscriptions
@@ -69,44 +60,78 @@ declare module "@devicescript/core" {
          * @internal
          * @deprecated internal field for runtime support
          */
-        onPacket: PktHandler
+        _onPacket(pkt: Packet): Promise<void>
 
         /**
          * @internal
          * @deprecated internal field for runtime support
          */
-        _binding: ClientRegister<boolean>
-        /**
-         * @internal
-         * @deprecated internal field for runtime support
-         */
-        _changeHandlers: Record<string, RegisterChangeHandler[]>
-        /**
-         * @internal
-         * @deprecated internal field for runtime support
-         */
-        _eventHandlers: Record<string, EventChangeHandler[]>
+        _commandResponse(cmdpkt: Packet, fiber: Fiber): Promise<any>
     }
 
     export class Packet {
         role: Role
+
+        /**
+         * 16 character lowercase hex-encoding of 8 byte device identifier.
+         */
         deviceIdentifier: string
+
+        /**
+         * 4 character hash of `deviceIdentifier`
+         */
         shortId: string
+
         serviceIndex: number
         serviceCommand: number
         payload: Buffer
+
         decode(): any
 
+        /**
+         * Frame flags.
+         */
         flags: number
+
+        /**
+         * Check whether is `command` flag on frame is cleared
+         */
         isReport: boolean
+
+        /**
+         * Check whether is `command` flag on frame is set
+         */
         isCommand: boolean
 
+        /**
+         * Check if report and it is an event
+         */
         isEvent: boolean
+
+        /**
+         * `undefined` if not `isEvent`
+         */
         eventCode: number
 
+        /**
+         * Is it register set command.
+         */
         isRegSet: boolean
+
+        /**
+         * Is it register get command or report.
+         */
         isRegGet: boolean
+
+        /**
+         * `undefined` is neither `isRegSet` nor `isRegGet`
+         */
         regCode: number
+
+        /**
+         * True for plain `command`/`report` (not register and not event)
+         */
+        isAction: boolean
     }
 
     export class Fiber {

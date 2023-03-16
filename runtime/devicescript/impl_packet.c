@@ -98,6 +98,11 @@ value_t prop_Packet_regCode(devs_ctx_t *ctx, value_t self) {
     return devs_value_from_int(JD_REG_CODE(pkt->service_command));
 }
 
+value_t prop_Packet_isAction(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_bool((pkt->service_command & 0xf000) == 0);
+}
+
 const devs_packet_spec_t *devs_pkt_spec_by_code(devs_ctx_t *ctx, const devs_service_spec_t *spec,
                                                 uint16_t code) {
     if (code == 0xffff)

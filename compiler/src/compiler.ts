@@ -1977,7 +1977,10 @@ class Program implements TopOpWriter {
                 wr.emitCall(wr.dsMember(BuiltInString.REBOOT))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
-            if (this.roles.length > 0) this.markMethodUsed("#ds.Role.onPacket")
+            if (this.roles.length > 0) {
+                this.markMethodUsed("#ds.Role._onPacket")
+                this.markMethodUsed("#ds.Role._commandResponse")
+            }
             this.emitProtoAssigns()
         })
 

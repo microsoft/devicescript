@@ -564,7 +564,7 @@ Only `true` and `false` values.
     payload = 94
     decode = 95
     encode = 96
-    onPacket = 97
+    _onPacket = 97
     code = 98
     name = 99
     isEvent = 100
@@ -613,3 +613,5 @@ Only `true` and `false` values.
     self = 143
     current = 144
     id = 145
+    _commandResponse = 146
+    isAction = 147

@@ -253,7 +253,7 @@
 #define DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE 34
 #define DEVS_BUILTIN_OBJECT_JSON 35
 
-#define DEVS_BUILTIN_STRING___MAX 145
+#define DEVS_BUILTIN_STRING___MAX 147
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -351,7 +351,7 @@
 #define DEVS_BUILTIN_STRING_PAYLOAD 94
 #define DEVS_BUILTIN_STRING_DECODE 95
 #define DEVS_BUILTIN_STRING_ENCODE 96
-#define DEVS_BUILTIN_STRING_ONPACKET 97
+#define DEVS_BUILTIN_STRING__ONPACKET 97
 #define DEVS_BUILTIN_STRING_CODE 98
 #define DEVS_BUILTIN_STRING_NAME 99
 #define DEVS_BUILTIN_STRING_ISEVENT 100
@@ -400,6 +400,8 @@
 #define DEVS_BUILTIN_STRING_SELF 143
 #define DEVS_BUILTIN_STRING_CURRENT 144
 #define DEVS_BUILTIN_STRING_ID 145
+#define DEVS_BUILTIN_STRING__COMMANDRESPONSE 146
+#define DEVS_BUILTIN_STRING_ISACTION 147
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -433,13 +435,14 @@
         "write", "sleep", "imod", "format", "insert", "start", "cloud", "main", "charAt",          \
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
         "deviceIdentifier", "shortId", "serviceIndex", "serviceCommand", "payload", "decode",      \
-        "encode", "onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",      \
+        "encode", "_onPacket", "code", "name", "isEvent", "eventCode", "isRegSet", "isRegGet",     \
         "regCode", "flags", "isReport", "isCommand", "isArray", "inline", "assert", "pushRange",   \
         "sendCommand", "__stack__", "Error", "TypeError", "RangeError", "stack", "message",        \
         "cause", "__new__", "setPrototypeOf", "getPrototypeOf", "constructor", "__proto__",        \
         "_logRepr", "print", "everyMs", "setInterval", "setTimeout", "clearInterval",              \
         "clearTimeout", "SyntaxError", "JSON", "parse", "stringify", "_dcfgString", "isSimulator", \
-        "Role", "Fiber", "suspend", "resume", "terminate", "self", "current", "id"
+        "Role", "Fiber", "suspend", "resume", "terminate", "self", "current", "id",                \
+        "_commandResponse", "isAction"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

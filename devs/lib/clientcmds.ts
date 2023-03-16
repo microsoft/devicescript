@@ -49,8 +49,8 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
         return this.value
     }
 
-    subscribe(next: ds.ClientRegisterChangeHandler<T>): ds.Unsubscribe {
-        if (!next) return () => {}
+    subscribe(next_: (v: T, reg: this) => ds.AsyncVoid): ds.Unsubscribe {
+        const next = (next_ || (() => {})) as ClientRegisterChangeHandler<T>
 
         this._subscriptions = addElement(this._subscriptions, next)
         const that = this
@@ -70,22 +70,77 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
         }
     }
 
-    private _subscriptions: ds.ClientRegisterChangeHandler<T>[]
+    private _subscriptions: ClientRegisterChangeHandler<T>[]
 }
 
-ds.Role.prototype.binding = function binding() {
+ds.Role.prototype.binding = function binding(this: RoleData) {
     if (!this._binding) {
         this._binding = new ClientRegister<boolean>(false)
     }
     return this._binding
 }
 
-ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
+type RegisterChangeHandler = (v: any, reg: ds.Register<any>) => ds.AsyncVoid
+
+type EventChangeHandler = (v: any, reg: ds.Event<any>) => ds.AsyncVoid
+
+type ClientRegisterChangeHandler<T> = (
+    v: T,
+    reg: ClientRegister<T>
+) => ds.AsyncVoid
+
+interface RoleData extends ds.Role {
+    /**
+     * @internal
+     * @deprecated internal field for runtime support
+     */
+    _binding: ClientRegister<boolean>
+
+    /**
+     * @internal
+     * @deprecated internal field for runtime support
+     */
+    _changeHandlers: Record<string, RegisterChangeHandler[]>
+
+    /**
+     * @internal
+     * @deprecated internal field for runtime support
+     */
+    _eventHandlers: Record<string, EventChangeHandler[]>
+
+    /**
+     * @internal
+     * @deprecated internal field for runtime support
+     */
+    _reportHandlers: Record<string, ds.Fiber>
+}
+
+async function sendCommand(cmdpkt: ds.Packet) {
+    await cmdpkt.role.sendCommand(cmdpkt.serviceCommand, cmdpkt.payload)
+}
+
+ds.Role.prototype._commandResponse = async function (
+    this: RoleData,
+    cmdpkt,
+    fiber
+) {
+    if (!this._reportHandlers) this._reportHandlers = {}
+    this._reportHandlers[cmdpkt.serviceCommand + ""] = fiber
+    // note that cmdpkt has messed up deviceIdentifier etc; only role, serviceCommand and payload are reliable
+    sendCommand.start(cmdpkt) // start it background, so we don't get a race with ds.suspend() below
+    const res = await ds.suspend<ds.Packet>(500)
+    if (res === undefined)
+        throw new Error(`command ${cmdpkt} timeout`)
+    return res.decode()
+}
+
+ds.Role.prototype._onPacket = async function (this: RoleData, pkt: ds.Packet) {
+    const changeHandlers = this._changeHandlers
     if (!pkt || pkt.serviceCommand === 0) {
         const conn = this.isBound
         await this.binding().emit(conn)
-        if (conn && this._changeHandlers) {
-            const regs = Object.keys(this._changeHandlers)
+        if (conn && changeHandlers) {
+            const regs = Object.keys(changeHandlers)
             for (let i = 0; i < regs.length; ++i) {
                 const rg = parseInt(regs[i])
                 if (rg === 0x0101) {
@@ -99,20 +154,33 @@ ds.Role.prototype.onPacket = async function (pkt: ds.Packet) {
         }
     }
     if (!pkt) return
-    if (pkt.isReport && pkt.isRegGet && this._changeHandlers) {
-        const handlers = this._changeHandlers[pkt.regCode + ""]
-        if (handlers) {
-            const val = pkt.decode()
-            for (const h of handlers) {
-                // TODO pass register
-                await h(val, null)
+
+    if (pkt.isReport) {
+        if (pkt.isRegGet && changeHandlers) {
+            const handlers = changeHandlers[pkt.regCode + ""]
+            if (handlers) {
+                const val = pkt.decode()
+                for (const h of handlers) {
+                    // TODO pass register
+                    await h(val, null)
+                }
             }
         }
-    }
-    if (pkt.isEvent && this._eventHandlers) {
-        const hh = this._eventHandlers[pkt.eventCode + ""]
-        // TODO pass event
-        if (hh) for (const h of hh) await h(pkt.decode(), null)
+
+        if (pkt.isAction && this._reportHandlers) {
+            const key = pkt.serviceCommand + ""
+            const fib = this._reportHandlers[key]
+            if (fib) {
+                delete this._reportHandlers[key]
+                fib.resume(pkt)
+            }
+        }
+
+        if (pkt.isEvent && this._eventHandlers) {
+            const hh = this._eventHandlers[pkt.eventCode + ""]
+            // TODO pass event
+            if (hh) for (const h of hh) await h(pkt.decode(), null)
+        }
     }
 }
 
@@ -120,7 +188,7 @@ ds.Register.prototype.subscribe = function subscribe<T>(
     this: ds.Register<T>,
     handler: (v: T, reg: ds.Register<T>) => void
 ) {
-    const role = this.role
+    const role = this.role as RoleData
     if (!role._changeHandlers) role._changeHandlers = {}
     const key = this.code + ""
     let handlers = role._changeHandlers[key]
@@ -142,10 +210,11 @@ ds.Event.prototype.subscribe = function subscribe<T>(
     this: ds.Event<T>,
     handler: (v: T, reg: ds.Event<T>) => void
 ) {
-    let eventHandlers = this.role._eventHandlers
+    const role = this.role as RoleData
+    let eventHandlers = role._eventHandlers
     if (!eventHandlers) {
         eventHandlers = {}
-        this.role._eventHandlers = eventHandlers
+        role._eventHandlers = eventHandlers
     }
     const k = this.code + ""
     let handlers = eventHandlers[k]

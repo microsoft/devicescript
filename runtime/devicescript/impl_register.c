@@ -176,5 +176,31 @@ void methX_DsCommand___func__(devs_ctx_t *ctx) {
         return;
 
     devs_packet_encode(ctx, pkt);
-    devs_jd_send_cmd(ctx, role, pkt->code);
+
+    const devs_service_spec_t *spec = devs_role_spec(ctx, role);
+    uint16_t report_code = devs_get_spec_code(0, pkt->code);
+    const devs_packet_spec_t *rep_spec = devs_pkt_spec_by_code(ctx, spec, report_code);
+    if (rep_spec) {
+        // if there is a report, we need to wait for it - tail call to Role._commandResponse()
+        ctx->stack_top_for_gc = 3;
+        ctx->the_stack[2] =
+            devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, ctx->curr_fiber->handle_tag);
+        ctx->the_stack[0] = devs_undefined;
+        ctx->the_stack[1] = devs_undefined;
+        value_t roleval = devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, role);
+        // the next line may allocate so we have to have our stack in order (thus the undefined
+        // assignments above)
+        ctx->the_stack[0] = devs_function_bind(
+            ctx, roleval,
+            devs_object_get_built_in_field(ctx, roleval, DEVS_BUILTIN_STRING__COMMANDRESPONSE));
+        // service_index is not used, except it cannot be 0xff - we only care about the payload and role anyways
+        ctx->packet.service_index = 1;
+        ctx->packet.service_command = pkt->code;
+        ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role);
+        // call the _commandResponse() which will send the packet and wait for response
+        devs_fiber_call_function(ctx->curr_fiber, 2, NULL);
+    } else {
+        // no report - just send the packet
+        devs_jd_send_cmd(ctx, role, pkt->code);
+    }
 }

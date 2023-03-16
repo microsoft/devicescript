@@ -273,7 +273,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 145,
+    __MAX = 147,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -371,7 +371,7 @@ export enum BuiltInString {
     PAYLOAD = 94,
     DECODE = 95,
     ENCODE = 96,
-    ONPACKET = 97,
+    _ONPACKET = 97,
     CODE = 98,
     NAME = 99,
     ISEVENT = 100,
@@ -420,6 +420,8 @@ export enum BuiltInString {
     SELF = 143,
     CURRENT = 144,
     ID = 145,
+    _COMMANDRESPONSE = 146,
+    ISACTION = 147,
 }
 
 export const OP_PRINT_FMTS = [
@@ -630,7 +632,7 @@ export const BUILTIN_STRING__VAL = [
     "payload",
     "decode",
     "encode",
-    "onPacket",
+    "_onPacket",
     "code",
     "name",
     "isEvent",
@@ -679,6 +681,8 @@ export const BUILTIN_STRING__VAL = [
     "self",
     "current",
     "id",
+    "_commandResponse",
+    "isAction",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
