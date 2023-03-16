@@ -126,6 +126,12 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.ping",
+                async (device: CloudDevice) => {
+                    await device.ping()
+                }
+            ),
+            vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.unregister",
                 async (device: CloudDevice) => {
                     if (await showConfirmBox("Unregister device?"))
@@ -376,6 +382,7 @@ export class GatewayTreeDataProvider
         let label = node.name
         let description = ""
         let tooltip: vscode.MarkdownString = undefined
+        let command: vscode.Command
         const contextValue = node.nodeKind
         let iconPath: vscode.ThemeIcon | vscode.Uri = new vscode.ThemeIcon(
             {
@@ -407,6 +414,11 @@ export class GatewayTreeDataProvider
                     )
 
                 label = `${shortDeviceId(d.deviceId)}, ${d.name}`
+                command = {
+                    title: "Ping device",
+                    command: "extension.devicescript.gateway.device.ping",
+                    arguments: [d],
+                }
                 description = script
                     ? `${script.friendlyName} v${scriptVersion}`
                     : "no script"
@@ -443,6 +455,7 @@ ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
             tooltip,
             description,
             collapsibleState,
+            command,
         }
     }
 

@@ -449,6 +449,14 @@ export class CloudDevice extends CloudNode<CloudDeviceData> {
         }
     }
 
+    async ping() {
+        const res = await this.manager.fetchJSON<{ duration: number }>(
+            `devices/${this.data.id}/ping`,
+            { method: "POST" }
+        )
+        return res?.duration
+    }
+
     async createConnection(
         route: "fwd" | "logs"
     ): Promise<CloudDeviceConnectionInfo> {

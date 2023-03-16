@@ -624,6 +624,11 @@
                 "icon": "$(plug)"
             },
             {
+                "command": "extension.devicescript.gateway.device.ping",
+                "title": "Ping",
+                "category": "DeviceScript Gateway"
+            },
+            {
                 "command": "extension.devicescript.gateway.device.script.configure",
                 "title": "Configure Script...",
                 "category": "DeviceScript Gateway",
