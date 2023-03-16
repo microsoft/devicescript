@@ -60,6 +60,7 @@ export interface DebugInfo {
     globals: VarDebugInfo[]
     srcmap: SrcMap
     sources: SrcFile[]
+    binarySHA256?: string // hex-encoded
     binary: { hex: string }
 
     _resolverCache?: any

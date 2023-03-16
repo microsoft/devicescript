@@ -41,6 +41,8 @@ import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
 import {
     converters,
     parseServiceSpecificationMarkdownToJSON,
+    sha256,
+    toHex,
     versionTryParse,
 } from "jacdac-ts"
 import { execSync } from "node:child_process"
@@ -414,6 +416,15 @@ export async function compileFile(
     const host = await getHost(buildConfig, options, folder)
 
     const res = compileWithHost(fn, host)
+
+    if (res.binary) {
+        res.dbg.binarySHA256 = toHex(await sha256([res.binary]))
+        verboseLog(`sha: ${res.dbg.binarySHA256}`)
+        writeFileSync(
+            join(folder, BINDIR, DEVS_DBG_FILE),
+            JSON.stringify(res.dbg)
+        )
+    }
 
     await saveLibFiles(buildConfig, options)
     setDevsDmesg() // set again after we have re-created -dbg.json file
