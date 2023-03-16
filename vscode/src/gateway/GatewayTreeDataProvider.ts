@@ -11,7 +11,7 @@ import { GatewayExtensionState } from "./GatewayExtensionState"
 import {
     CLOUD_DEVICES_NODE,
     CLOUD_SCRIPTS_NODE,
-    CONNECTION_RESOURCE_GROUP,
+    CONNECTION_GATEWAY_RESOURCE_GROUP,
 } from "../constants"
 import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
 import {
@@ -115,7 +115,7 @@ export class GatewayTreeDataProvider
                         data: <WebSocketConnectReqArgs>{
                             transport: "websocket",
                             background: false,
-                            resourceGroupId: CONNECTION_RESOURCE_GROUP,
+                            resourceGroupId: CONNECTION_GATEWAY_RESOURCE_GROUP,
                             url,
                             protocol,
                         },
