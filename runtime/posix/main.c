@@ -43,12 +43,7 @@ bool starts_with(const char *str, const char *pref) {
 
 void app_init_services() {
     flash_init();
-
-    jd_role_manager_init();
-    devsmgr_init(NULL);
-    devsdbg_init();
-    wsskhealth_init();
-    devscloud_init(&wssk_cloud);
+    devs_service_full_init(NULL);
 }
 
 struct {

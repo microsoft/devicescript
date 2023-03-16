@@ -473,3 +473,18 @@ void devsmgr_init(const devsmgr_cfg_t *cfg) {
     }
 #endif
 }
+
+void devs_service_full_init(const devsmgr_cfg_t *cfg) {
+    jd_role_manager_init();
+    devsmgr_init(cfg);
+    devsdbg_init();
+    settings_init();
+
+#if JD_WIFI
+    wifi_init();
+#endif
+#if JD_NETWORK
+    wsskhealth_init();
+    devscloud_init(&wssk_cloud);
+#endif
+}

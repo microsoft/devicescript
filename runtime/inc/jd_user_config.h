@@ -42,4 +42,6 @@ extern uintptr_t flash_base_addr(void);
 extern const uint8_t jd_dcfg_array[];
 #define JD_DCFG_BASE_ADDR ((uintptr_t)jd_dcfg_array)
 
+#define JD_NETWORK 1
+
 #endif

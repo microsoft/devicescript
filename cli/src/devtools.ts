@@ -37,7 +37,7 @@ import {
 } from "./sidedata"
 import { FSWatcher } from "fs"
 import { BuildOptions, compileFile } from "./build"
-import { dirname, resolve } from "path"
+import { resolve } from "path"
 import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
 import { DsDapSession } from "@devicescript/dap"
 import { initVMCmds, overrideConsoleDebug, stopVmWorker } from "./vmworker"
@@ -83,7 +83,7 @@ export async function devtools(
 
     overrideConsoleDebug()
 
-    log(cliVersion())
+    log(`${cliVersion()} running in ${process.cwd()}`)
 
     loadProjectServiceSpecifications()
 
@@ -371,7 +371,7 @@ async function watchCmd(
 
 async function rebuild(args: BuildReqArgs) {
     const opts = { ...args.buildOptions }
-    if (!opts.cwd) opts.cwd = dirname(args.filename)
+    if (!opts.cwd) opts.cwd = process.cwd()
     opts.verify = false
     opts.quiet = true
 

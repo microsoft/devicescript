@@ -477,6 +477,7 @@ export class DevsDbgClient extends JDServiceClient {
                 pkt.getNumber(NumberFormat.UInt32LE, 0)
             )
             const value = this.unpackValue(pkt.data.slice(4))
+            // console.log(`${v.genericText}: ${key.genericText} => ${value.genericText}`)
             return { key, value }
         })
     }

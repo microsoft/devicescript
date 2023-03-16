@@ -35,7 +35,7 @@ export function activateJacdacOutputChannel(state: DeviceScriptExtensionState) {
         const tracePackets = !!jacdacConfig.get("tracePackets")
         if (tracePackets) {
             if (!channel)
-                channel = vscode.window.createOutputChannel("Jacdac Packets")
+                channel = vscode.window.createOutputChannel("DeviceScript - Packets")
             bus.on(FRAME_PROCESS, logFrame)
         } else if (!tracePackets && channel) {
             bus.off(FRAME_PROCESS, logFrame)

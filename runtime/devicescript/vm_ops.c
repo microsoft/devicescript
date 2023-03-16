@@ -369,6 +369,13 @@ static value_t expr1_new(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr2_bind(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t obj = devs_vm_pop_arg(ctx);
     value_t func = devs_vm_pop_arg(ctx);
+
+    // special case for built-in constructors
+    if (devs_handle_type(func) == DEVS_HANDLE_TYPE_SPECIAL &&
+        devs_handle_is_builtin(devs_handle_value(func))) {
+        func = devs_object_get_built_in_field(ctx, func, DEVS_BUILTIN_STRING___FUNC__);
+    }
+
     return devs_function_bind(ctx, obj, func);
 }
 

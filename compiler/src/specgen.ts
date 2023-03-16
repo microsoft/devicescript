@@ -84,7 +84,7 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
             SRV_CONTROL,
             SRV_ROLE_MANAGER,
             SRV_LOGGER,
-            SRV_SETTINGS,
+            // SRV_SETTINGS,
             SRV_BOOTLOADER,
             SRV_PROTO_TEST,
             SRV_INFRASTRUCTURE,

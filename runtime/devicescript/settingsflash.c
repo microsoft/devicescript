@@ -45,11 +45,11 @@ void flash_erase(void *page_addr) {
     }
 }
 
-void devsmgr_init_mem(unsigned size) {
+const devsmgr_cfg_t *devsmgr_init_mem(unsigned size) {
     cfg.max_program_size = size;
     cfg.program_base = jd_alloc(cfg.max_program_size);
-    devsmgr_init(&cfg);
     jd_settings_get_bin(KEY, cfg.program_base, cfg.max_program_size);
+    return &cfg;
 }
 
 void flash_sync(void) {
@@ -61,18 +61,28 @@ void flash_sync(void) {
 
 #endif
 
-__attribute__((weak)) char *jd_settings_get(const char *key) {
+uint8_t *jd_settings_get_bin_a(const char *key, unsigned *sizep) {
     uint8_t tmp[32];
     int size = jd_settings_get_bin(key, tmp, sizeof(tmp));
-    if (size < 0)
+    if (size < 0) {
+        if (sizep)
+            *sizep = 0;
         return NULL;
-    char *r = jd_alloc(size + 1);
+    }
+
+    uint8_t *r = jd_alloc(size + 1);
     if (size <= (int)sizeof(tmp)) {
         memcpy(r, tmp, size);
     } else {
         jd_settings_get_bin(key, r, size);
     }
+    if (sizep)
+        *sizep = size;
     return r;
+}
+
+__attribute__((weak)) char *jd_settings_get(const char *key) {
+    return (char *)jd_settings_get_bin_a(key, NULL);
 }
 
 __attribute__((weak)) int jd_settings_set(const char *key, const char *val) {
