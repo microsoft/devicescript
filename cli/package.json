@@ -33,6 +33,7 @@
     "devDependencies": {
         "@devicescript/dap": "*",
         "@devicescript/vm": "*",
+        "@devicescript/interop": "*",
         "@types/debounce-promise": "^3.1.6",
         "@types/fs-extra": "^11.0.1",
         "@types/node": "^18.15.3",

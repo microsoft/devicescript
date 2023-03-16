@@ -7,6 +7,7 @@ import {
     createUSBTransport,
     createWebSocketTransport,
     JDBus,
+    SIDE_DATA,
     Transport,
 } from "jacdac-ts"
 import { DevToolsIface, sendEvent } from "./sidedata"
@@ -17,6 +18,10 @@ import {
     WebSocketConnectReqArgs,
 } from "./sideprotocol"
 import { setupWebsocket } from "./build"
+import type {
+    SideDeviceMessage,
+    SideLogsFromDevice,
+} from "@devicescript/interop"
 
 export interface TransportsOptions {
     usb?: boolean
@@ -51,10 +56,25 @@ function createSerial() {
 
 function createWebSocket(url: string, protocol: string) {
     setupWebsocket()
-    return createWebSocketTransport(url, {
+    const transport = createWebSocketTransport(url, {
         protocols: protocol,
         WebSocket: WebSocket,
     })
+    transport.on(SIDE_DATA, (msg: SideDeviceMessage) => {
+        const { type } = msg
+        switch (type) {
+            case "logs": {
+                const m = msg as SideLogsFromDevice
+                m.logs?.forEach(line => {
+                    console.log(line)
+                })
+            }
+            default: {
+                console.debug(JSON.stringify(msg, null, 2))
+            }
+        }
+    })
+    return transport
 }
 
 export async function connectTransport(bus: JDBus, req: ConnectReqArgs) {

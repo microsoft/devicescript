@@ -8,7 +8,11 @@ import {
 import * as vscode from "vscode"
 import { toMarkdownString } from "../catalog"
 import { GatewayExtensionState } from "./GatewayExtensionState"
-import { CLOUD_DEVICES_NODE, CLOUD_SCRIPTS_NODE, CONNECTION_RESOURCE_GROUP } from "../constants"
+import {
+    CLOUD_DEVICES_NODE,
+    CLOUD_SCRIPTS_NODE,
+    CONNECTION_RESOURCE_GROUP,
+} from "../constants"
 import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
 import {
     CloudManager,
@@ -18,7 +22,10 @@ import {
     CLOUD_DEVICE_NODE,
 } from "./clouddom"
 import type { DebugInfo } from "@devicescript/interop"
-import { SideConnectReq, WebSocketConnectReqArgs } from "../../../cli/src/sideprotocol"
+import {
+    SideConnectReq,
+    WebSocketConnectReqArgs,
+} from "../../../cli/src/sideprotocol"
 import { sideRequest } from "../jacdac"
 
 class CloudCollection extends JDNode {
@@ -113,6 +120,9 @@ export class GatewayTreeDataProvider
                             protocol,
                         },
                     })
+                    vscode.commands.executeCommand(
+                        "extension.devicescript.terminal.show"
+                    )
                 }
             ),
             vscode.commands.registerCommand(
