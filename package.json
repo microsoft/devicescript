@@ -35,6 +35,6 @@
         "website"
     ],
     "devDependencies": {
-        "esbuild": "^0.17.8"
+        "esbuild": "^0.17.11"
     }
 }

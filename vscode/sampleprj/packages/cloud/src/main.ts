@@ -1,5 +1,11 @@
 import * as ds from "@devicescript/core"
-import { createMetric, trackEvent, trackMetric, uploadMessage } from "."
+import {
+    createMetric,
+    trackEvent,
+    trackException,
+    trackMetric,
+    uploadMessage,
+} from "."
 import { describe, test } from "@devicescript/test"
 
 console.log("start test")
@@ -31,6 +37,15 @@ describe("trackMetric", () => {
         const m = createMetric("test.metric.array")
         m.add([1, 2, 3])
         await m.upload()
+    })
+})
+describe("trackException", () => {
+    test("throw", () => {
+        try {
+            throw new Error("ouch")
+        } catch (e) {
+            trackException(e as Error)
+        }
     })
 })
 describe("trackMetric", () => {

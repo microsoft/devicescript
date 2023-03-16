@@ -61,7 +61,7 @@
         "@devicescript/interop": "*"
     },
     "dependencies": {
-        "@vscode/extension-telemetry": "^0.7.5",
+        "@vscode/extension-telemetry": "^0.7.7",
         "jacdac-ts": "*",
         "websocket-polyfill": "^0.0.3"
     },
@@ -605,7 +605,7 @@
                 "command": "extension.devicescript.gateway.script.upload",
                 "title": "Upload Script",
                 "category": "DeviceScript Gateway",
-                "icon": "$(cloud-upload)"
+                "icon": "$(arrow-up)"
             },
             {
                 "command": "extension.devicescript.gateway.script.delete",
@@ -622,7 +622,7 @@
                 "command": "extension.devicescript.gateway.device.script.update.latest",
                 "title": "Update Script to Latest",
                 "category": "DeviceScript Gateway",
-                "icon": "$(refresh)"
+                "icon": "$(arrow-down)"
             },
             {
                 "command": "extension.devicescript.gateway.device.refreshToken",

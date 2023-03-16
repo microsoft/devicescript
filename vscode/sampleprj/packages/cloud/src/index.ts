@@ -163,8 +163,9 @@ export async function trackMetric(
  * Track error in the cloud
  * @param error
  */
-export function traceException(error: Error) {
-    error?.print()
+export function trackException(error: Error) {
+    if (error)
+        error.print()
 }
 
 /**

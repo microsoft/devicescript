@@ -228,9 +228,7 @@ export class GatewayTreeDataProvider
                     // get version and such
                     await script.refreshVersions()
                     const versions = script.versions()
-                    const v = versions?.sort(
-                        (l, r) => -l.version + r.version
-                    )?.[0]
+                    const v = versions?.[0]
                     if (!v) return
 
                     if (v.version === script.version) {

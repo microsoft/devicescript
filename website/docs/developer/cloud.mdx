@@ -27,6 +27,21 @@ The data is injected directly
 in [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
 and can be analyzed through the Azure portal.
 
+### Exceptions
+
+The `trackException` method uploads an exception to Application Insights. The stacktrace information is expanded in the gateway.
+
+```ts
+import { trackException } from "@devicescript/cloud"
+
+// highlight-next-line
+try {
+    throw new Error("noes!")
+} catch (e) {
+    await trackException(e as Error)
+}
+```
+
 ### Events
 
 The `trackEvent` method creates custom events in application insights. The event may be buffered or sampled
