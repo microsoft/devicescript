@@ -418,6 +418,7 @@ export class GatewayTreeDataProvider
                     `
 $(${iconName}) ${connected ? `connected` : `disconnected`}
 
+- device id: ${d.deviceId}
 - last activity: ${d.lastActivity}
 - product: ${spec?.name || meta.productId?.toString(16) || ""}
 - firmware version: ${meta.fwVersion || ""}
