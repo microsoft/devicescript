@@ -32,6 +32,7 @@ SRC = $(wildcard posix/*.c) \
 	$(wildcard devicescript/network/*.c) \
 	$(wildcard jacdac-c/client/*.c) \
 	jacdac-c/jacdac/dist/c/jd_spec_pack.c \
+	jacdac-c/services/settings.c \
 	$(wildcard $(JDS)/*.c) \
 	$(wildcard $(JDS)/interfaces/*.c) \
 	jacdac-c/storage/crc32.c \
