@@ -897,6 +897,16 @@ async function testFibers() {
     console.log("fibers OK!")
 }
 
+class FooError extends Error {}
+
+function testCtorError() {
+    try {
+        throw new FooError("blah")
+    } catch (e: any) {
+        ds.assert(e.message === "blah")
+    }
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -930,5 +940,6 @@ await testSetTimeout()
 testRest()
 const s = new SuiteNode()
 await testFibers()
+testCtorError()
 
 console.log("all OK")

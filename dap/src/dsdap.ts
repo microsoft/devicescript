@@ -616,7 +616,7 @@ export class DsDapSession extends DebugSession {
                         ? "always"
                         : "unhandled",
                 exceptionId: "Error", // TODO
-                description: msgStr ?? exn.genericText,
+                description: msgStr ?? "",
             }
         })
     }
@@ -734,6 +734,10 @@ export class DsDapSession extends DebugSession {
                         return "false"
                     case DevsDbgValueSpecial.True:
                         return "true"
+                    case DevsDbgValueSpecial.Globals:
+                        return "(globals)"
+                    case DevsDbgValueSpecial.CurrentException:
+                        return "(exception)"
                 }
                 break
 

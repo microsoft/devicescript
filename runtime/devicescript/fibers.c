@@ -37,6 +37,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array
     }
 
     // devs_log_value(ctx, "fn", fn);
+    // devs_log_value(ctx, "self", *argp);
 
     int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
     if (bltin >= 0) {
@@ -65,6 +66,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array
                 // __proto__ to be set by the built-in function
                 devs_map_t *m = devs_map_try_alloc(ctx, NULL);
                 *argp = devs_value_from_gc_obj(ctx, m);
+                // devs_log_value(ctx, "do attach", *argp);
             }
         }
         h->handler.meth(ctx);
@@ -139,6 +141,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array
     if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_undefined(callee->slots[0])) {
         devs_map_t *m = devs_map_try_alloc(ctx, devs_get_prototype_field(ctx, fn));
         callee->slots[0] = devs_value_from_gc_obj(ctx, m);
+        // devs_log_value(ctx, "ctor", callee->slots[0]);
     }
 
     if (ctx->dbg_en && ctx->step_fn == caller && (ctx->step_flags & DEVS_CTX_STEP_IN)) {

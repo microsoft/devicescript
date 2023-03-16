@@ -56,7 +56,7 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
             return "NaN";
         default:
             if (devs_handle_is_builtin(hv)) {
-                jd_sprintf(buf, sizeof(buf), "builtin:%d",
+                jd_sprintf(buf, sizeof(buf), "builtin_obj:%d",
                            (int)hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST);
                 return buf;
             } else if (devs_handle_is_throw_jmp(hv)) {
