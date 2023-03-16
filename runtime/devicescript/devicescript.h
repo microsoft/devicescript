@@ -49,6 +49,8 @@ typedef struct {
 } devsmgr_cfg_t;
 
 void devsmgr_init(const devsmgr_cfg_t *cfg);
+// start all related services, including network and debugging
+void devs_service_full_init(const devsmgr_cfg_t *cfg);
 
 devs_ctx_t *devsmgr_get_ctx(void);
 int devsmgr_deploy(const void *img, unsigned imgsize);
@@ -57,7 +59,7 @@ int devsmgr_deploy_start(uint32_t sz);
 int devsmgr_deploy_write(const void *buf, unsigned size);
 void devsmgr_restart(void);
 
-void devsmgr_init_mem(unsigned size);
+const devsmgr_cfg_t *devsmgr_init_mem(unsigned size);
 
 void devsdbg_init(void);
 void devsdbg_suspend_cb(devs_ctx_t *ctx);
