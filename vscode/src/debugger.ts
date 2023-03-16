@@ -109,9 +109,9 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
                     setTimeout(async () => {
                         if (mgr.allRolesBound()) return
 
-                        const start = "Start Simulators"
+                        const start = "Show Simulators"
                         const res = await vscode.window.showWarningMessage(
-                            "DeviceScript: Would you like to start missing simulators?",
+                            "DeviceScript: Would you like to open the simulators view?",
                             start
                         )
                         if (res === start) {
