@@ -2105,7 +2105,7 @@ class Program implements TopOpWriter {
     }
 
     private ignore(val: Value) {
-        val.adopt()
+        val.ignore()
     }
 
     private isForIgnored(expr: Expr) {

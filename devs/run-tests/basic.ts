@@ -907,6 +907,16 @@ function testCtorError() {
     }
 }
 
+function testIgnoredAnd() {
+    let q = 0
+    function foo() {
+        q++
+    }
+    foo && foo()
+    ds.assert(q === 1)
+}
+
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -941,5 +951,6 @@ testRest()
 const s = new SuiteNode()
 await testFibers()
 testCtorError()
+testIgnoredAnd()
 
 console.log("all OK")

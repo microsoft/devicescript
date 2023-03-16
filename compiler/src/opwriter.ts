@@ -71,6 +71,10 @@ export class Value {
         assert(!(this.flags & VF_HAS_PARENT))
         this.flags |= VF_HAS_PARENT
     }
+    ignore() {
+        this.adopt()
+        this._cachedValue?._decr()
+    }
 
     assumeStateless() {
         assert(this.usesState)
