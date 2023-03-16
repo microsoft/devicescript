@@ -434,7 +434,9 @@ export async function saveLibFiles(
     const prelude = preludeFiles(buildConfig)
 
     const pref = resolve(options.cwd ?? ".")
-    await mkdirp(join(pref, LIBDIR))
+    const libpath = join(pref, LIBDIR)
+    await mkdirp(libpath)
+    verboseLog(`saving lib files in ${libpath}`)
     for (const fn of Object.keys(prelude)) {
         const fnpath = join(pref, fn)
         const ex = await readFile(fnpath, "utf-8").then(
