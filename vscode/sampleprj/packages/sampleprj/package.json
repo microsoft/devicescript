@@ -1,6 +1,6 @@
 {
     "name": "sampleprj",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "private": true,
     "dependencies": {
         "devicescript-cowsay": "*",
