@@ -2333,7 +2333,7 @@
   resolved "https://registry.yarnpkg.com/@mdx-js/util/-/util-1.6.22.tgz#219dfd89ae5b97a8801f015323ffa4b62f45718b"
   integrity sha512-H1rQc1ZOHANWBvPcW+JpGwr+juXSxM8Q8YCkm3GhZd8REu1fHR3z99CErO1p9pkcfcxZnMdIZdIsXkOHY0NilA==
 
-"@microsoft/1ds-core-js@3.2.9", "@microsoft/1ds-core-js@^3.2.8":
+"@microsoft/1ds-core-js@3.2.9", "@microsoft/1ds-core-js@^3.2.9":
   version "3.2.9"
   resolved "https://registry.yarnpkg.com/@microsoft/1ds-core-js/-/1ds-core-js-3.2.9.tgz#8a26935966e4871d1f1e40d992828bdd52bba84e"
   integrity sha512-3pCfM2TzHn3gU9pxHztduKcVRdb/nzruvPFfHPZD0IM0mb0h6TGo2isELF3CTMahTx50RAC51ojNIw2/7VRkOg==
@@ -2342,7 +2342,7 @@
     "@microsoft/applicationinsights-shims" "^2.0.2"
     "@microsoft/dynamicproto-js" "^1.1.7"
 
-"@microsoft/1ds-post-js@^3.2.8":
+"@microsoft/1ds-post-js@^3.2.9":
   version "3.2.9"
   resolved "https://registry.yarnpkg.com/@microsoft/1ds-post-js/-/1ds-post-js-3.2.9.tgz#07030f7455cb4ac8993e9b0bfa6c78ebfe25b499"
   integrity sha512-D/RtqkQ2Nr4cuoGqmhi5QTmi3cBlxehIThJ1u3BaH9H/YkLNTKEcHZRWTXy14bXheCefNHciLuadg37G2Kekcg==
@@ -2421,7 +2421,7 @@
   resolved "https://registry.yarnpkg.com/@microsoft/applicationinsights-shims/-/applicationinsights-shims-2.0.2.tgz#92b36a09375e2d9cb2b4203383b05772be837085"
   integrity sha512-PoHEgsnmcqruLNHZ/amACqdJ6YYQpED0KSRe6J7gIJTtpZC1FfFU9b1fmDKDKtFoUSrPzEh1qzO3kmRZP0betg==
 
-"@microsoft/applicationinsights-web-basic@^2.8.9":
+"@microsoft/applicationinsights-web-basic@^2.8.11":
   version "2.8.11"
   resolved "https://registry.yarnpkg.com/@microsoft/applicationinsights-web-basic/-/applicationinsights-web-basic-2.8.11.tgz#30327852c07a5be2f63d25996f61b9ba03619cfc"
   integrity sha512-11T7bbP4ifIBg95E9mYZv1g/vcWvw/KaWKRcGMREP3+vBTLBwMB8r2e9Zd583bOVx+9/gRvfIg+Z/lInQqAfbA==
@@ -3091,7 +3091,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/debounce-promise@^3.1.5":
+"@types/debounce-promise@^3.1.6":
   version "3.1.6"
   resolved "https://registry.yarnpkg.com/@types/debounce-promise/-/debounce-promise-3.1.6.tgz#873e838574011095ed0debf73eed3538e1261d75"
   integrity sha512-DowqK95aku+OxMCeG2EQSeXeGeE8OCwLpMsUfIbP7hMF8Otj8eQXnzpwdtIKV+UqQBtkMcF6vbi4Otbh8P/wmg==
@@ -3153,11 +3153,12 @@
     "@types/qs" "*"
     "@types/serve-static" "*"
 
-"@types/fs-extra@^9.0.13":
-  version "9.0.13"
-  resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-9.0.13.tgz#7594fbae04fe7f1918ce8b3d213f74ff44ac1f45"
-  integrity sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==
+"@types/fs-extra@^11.0.1":
+  version "11.0.1"
+  resolved "https://registry.yarnpkg.com/@types/fs-extra/-/fs-extra-11.0.1.tgz#f542ec47810532a8a252127e6e105f487e0a6ea5"
+  integrity sha512-MxObHvNl4A69ofaTRU8DFqvgzzv8s9yRtaPPm5gud9HDNvpB3GPQFvNuTWAI59B9huVGV5jXYJwbCsmBsOGYWA==
   dependencies:
+    "@types/jsonfile" "*"
     "@types/node" "*"
 
 "@types/graceful-fs@^4.1.3":
@@ -3228,6 +3229,13 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.11.tgz#d421b6c527a3037f7c84433fd2c4229e016863d3"
   integrity sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==
 
+"@types/jsonfile@*":
+  version "6.1.1"
+  resolved "https://registry.yarnpkg.com/@types/jsonfile/-/jsonfile-6.1.1.tgz#ac84e9aefa74a2425a0fb3012bdea44f58970f1b"
+  integrity sha512-GSgiRCVeapDN+3pqA35IkQwasaCh/0YFH5dEF6S88iDvEn901DjOeH3/QPY+XYP1DFzDZPvIvfeEgk+7br5png==
+  dependencies:
+    "@types/node" "*"
+
 "@types/katex@^0.11.0":
   version "0.11.1"
   resolved "https://registry.yarnpkg.com/@types/katex/-/katex-0.11.1.tgz#34de04477dcf79e2ef6c8d23b41a3d81f9ebeaf5"
@@ -3264,6 +3272,11 @@
   version "17.0.45"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.45.tgz#2c0fafd78705e7a18b7906b5201a522719dc5190"
   integrity sha512-w+tIMs3rq2afQdsPJlODhoUEKzFP1ayaoyl1CcnwtIlsVe7K7bA1NGm4s3PraqTLlXnbIN84zuBlxBWo1u9BLw==
+
+"@types/node@^18.15.3":
+  version "18.15.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.15.3.tgz#f0b991c32cfc6a4e7f3399d6cb4b8cf9a0315014"
+  integrity sha512-p6ua9zBxz5otCmbpb5D3U4B5Nanw6Pk3PPyX05xnxbB/fRv71N7CPmORg7uAD5P70T0xmx1pzAx/FUfa5X+3cw==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
@@ -3538,15 +3551,15 @@
   resolved "https://registry.yarnpkg.com/@vscode/debugprotocol/-/debugprotocol-1.59.0.tgz#f173ff725f60e4ff1002f089105634900c88bd77"
   integrity sha512-Ks8NiZrCvybf9ebGLP8OUZQbEMIJYC8X0Ds54Q/szpT/SYEDjTksPvZlcWGTo7B9t5abjvbd0jkNH3blYaSuVw==
 
-"@vscode/extension-telemetry@^0.7.5":
-  version "0.7.5"
-  resolved "https://registry.yarnpkg.com/@vscode/extension-telemetry/-/extension-telemetry-0.7.5.tgz#bf965731816e08c3f146f96d901ec67954fc913b"
-  integrity sha512-fJ5y3TcpqqkFYHneabYaoB4XAhDdVflVm+TDKshw9VOs77jkgNS4UA7LNXrWeO0eDne3Sh3JgURf+xzc1rk69w==
+"@vscode/extension-telemetry@^0.7.7":
+  version "0.7.7"
+  resolved "https://registry.yarnpkg.com/@vscode/extension-telemetry/-/extension-telemetry-0.7.7.tgz#8213bfbdb1afa216befb146d6563ec5d200d7608"
+  integrity sha512-uW508BPjkWDBOKvvvSym3ZmGb7kHIiWaAfB/1PHzLz2x9TrC33CfjmFEI+CywIL/jBv4bqZxxjN4tfefB61F+g==
   dependencies:
-    "@microsoft/1ds-core-js" "^3.2.8"
-    "@microsoft/1ds-post-js" "^3.2.8"
-    "@microsoft/applicationinsights-web-basic" "^2.8.9"
-    applicationinsights "2.4.1"
+    "@microsoft/1ds-core-js" "^3.2.9"
+    "@microsoft/1ds-post-js" "^3.2.9"
+    "@microsoft/applicationinsights-web-basic" "^2.8.11"
+    applicationinsights "2.5.0"
 
 "@vscode/vsce@^2.18.0":
   version "2.18.0"
@@ -3937,10 +3950,10 @@ anymatch@^3.0.3, anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-applicationinsights@2.4.1:
-  version "2.4.1"
-  resolved "https://registry.yarnpkg.com/applicationinsights/-/applicationinsights-2.4.1.tgz#4de4c4dd3c7c4a44445cfbf3d15808fc0dcc423d"
-  integrity sha512-0n0Ikd0gzSm460xm+M0UTWIwXrhrH/0bqfZatcJjYObWyefxfAxapGEyNnSGd1Tg90neHz+Yhf+Ff/zgvPiQYA==
+applicationinsights@2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/applicationinsights/-/applicationinsights-2.5.0.tgz#f008580b2f68267a5d233cce4e1f50b587bdf3c4"
+  integrity sha512-6kIFmpANRok+6FhCOmO7ZZ/mh7fdNKn17BaT13cg/RV5roLPJlA6q8srWexayHd3MPcwMb9072e8Zp0P47s/pw==
   dependencies:
     "@azure/core-auth" "^1.4.0"
     "@azure/core-rest-pipeline" "^1.10.0"
@@ -4794,6 +4807,11 @@ commander@7, commander@^7.2.0:
   resolved "https://registry.yarnpkg.com/commander/-/commander-7.2.0.tgz#a36cb57d0b501ce108e4d20559a150a391d97ab7"
   integrity sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==
 
+commander@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-10.0.0.tgz#71797971162cd3cf65f0b9d24eb28f8d303acdf1"
+  integrity sha512-zS5PnTI22FIRM6ylNW8G4Ap0IEOyk62fhLSD0+uHRT9McRCLGpkVNvao4bjimpK/GShynyQkFFxHhwMcETmduA==
+
 commander@^2.20.0:
   version "2.20.3"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.20.3.tgz#fd485e84c03eb4881c20722ba48035e8531aeb33"
@@ -4813,11 +4831,6 @@ commander@^8.0.0, commander@^8.3.0:
   version "8.3.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-8.3.0.tgz#4837ea1b2da67b9c616a67afbb0fafee567bca66"
   integrity sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==
-
-commander@^9.4.1:
-  version "9.5.0"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-9.5.0.tgz#bc08d1eb5cedf7ccb797a96199d41c7bc3e60d30"
-  integrity sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==
 
 commondir@^1.0.1:
   version "1.0.1"
@@ -6134,7 +6147,7 @@ esbuild@^0.16.14:
     "@esbuild/win32-ia32" "0.16.17"
     "@esbuild/win32-x64" "0.16.17"
 
-esbuild@^0.17.8:
+esbuild@^0.17.11:
   version "0.17.11"
   resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.17.11.tgz#9f3122643b21d7e7731e42f18576c10bfa28152b"
   integrity sha512-pAMImyokbWDtnA/ufPxjQg0fYo2DDuzAlqwnDvbXqHLphe+m80eF++perYKVm8LeTuj2zUuFXC+xgSVxyoHUdg==
