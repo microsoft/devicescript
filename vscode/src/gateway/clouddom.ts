@@ -385,6 +385,13 @@ export class CloudDevice extends CloudNode<CloudDeviceData> {
         const { data } = this
         return data.conn
     }
+
+    private set connected(value: boolean) {
+        if (this.connected !== value) {
+            this.data.conn = value
+            this.emit(CHANGE)
+        }
+    }
     get lastActivity(): string {
         const { data } = this
         return data.lastAct
@@ -454,7 +461,8 @@ export class CloudDevice extends CloudNode<CloudDeviceData> {
             `devices/${this.data.id}/ping`,
             { method: "POST" }
         )
-        return res?.duration
+        const duration = res?.duration
+        this.connected = duration > 0
     }
 
     async createConnection(
