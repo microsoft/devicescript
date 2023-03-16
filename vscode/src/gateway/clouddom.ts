@@ -78,8 +78,17 @@ export class CloudManager extends JDNode {
         return this._devices?.find(d => d.deviceId === deviceId)
     }
 
-    script(scriptId: string): CloudScript {
+    script(scriptId: string, scriptVersion?: number): CloudScript {
         return this._scripts?.find(d => d.data.id === scriptId)
+    }
+
+    async scriptVersion(
+        scriptId: string,
+        scriptVersion: number
+    ): Promise<CloudScript> {
+        const script = this.script(scriptId)
+        await script?.refreshVersions()
+        return script?.versions()?.find(v => v.version === scriptVersion)
     }
 
     async createScript(
@@ -440,10 +449,15 @@ export class CloudDevice extends CloudNode<CloudDeviceData> {
         }
     }
 
-    async createConnection(): Promise<CloudDeviceConnectionInfo> {
-        return await this.manager.fetchJSON(`devices/${this.data.id}/fwd`, {
-            method: "GET",
-        })
+    async createConnection(
+        route: "fwd" | "logs"
+    ): Promise<CloudDeviceConnectionInfo> {
+        return await this.manager.fetchJSON(
+            `devices/${this.data.id}/${route}`,
+            {
+                method: "GET",
+            }
+        )
     }
 }
 

@@ -349,6 +349,11 @@
                     "when": "view == extension.devicescript.gateway && viewItem == cloudScript"
                 },
                 {
+                    "command": "extension.devicescript.gateway.device.connect",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
+                    "group": "inline"
+                },
+                {
                     "command": "extension.devicescript.gateway.device.script.configure",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
                     "group": "inline"
@@ -611,6 +616,12 @@
                 "command": "extension.devicescript.gateway.script.delete",
                 "title": "Delete Script...",
                 "category": "DeviceScript Gateway"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.connect",
+                "title": "Connect...",
+                "category": "DeviceScript Gateway",
+                "icon": "$(plug)"
             },
             {
                 "command": "extension.devicescript.gateway.device.script.configure",

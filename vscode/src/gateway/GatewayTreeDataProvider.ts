@@ -8,7 +8,7 @@ import {
 import * as vscode from "vscode"
 import { toMarkdownString } from "../catalog"
 import { GatewayExtensionState } from "./GatewayExtensionState"
-import { CLOUD_DEVICES_NODE, CLOUD_SCRIPTS_NODE } from "../constants"
+import { CLOUD_DEVICES_NODE, CLOUD_SCRIPTS_NODE, CONNECTION_RESOURCE_GROUP } from "../constants"
 import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
 import {
     CloudManager,
@@ -18,6 +18,8 @@ import {
     CLOUD_DEVICE_NODE,
 } from "./clouddom"
 import type { DebugInfo } from "@devicescript/interop"
+import { SideConnectReq, WebSocketConnectReqArgs } from "../../../cli/src/sideprotocol"
+import { sideRequest } from "../jacdac"
 
 class CloudCollection extends JDNode {
     constructor(
@@ -86,7 +88,6 @@ export class GatewayTreeDataProvider
         state.on(CHANGE, () => this.refresh(undefined))
 
         subscriptions.push(
-            /*
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.connect",
                 async (device: CloudDevice) => {
@@ -94,10 +95,10 @@ export class GatewayTreeDataProvider
                     if (!manager || !device) return
 
                     const { url, protocol } =
-                        (await device.createConnection()) || {}
+                        (await device.createConnection("logs")) || {}
                     if (!url) {
                         vscode.window.showErrorMessage(
-                            "DeviceScript Gateway: Unable to open connection."
+                            "DeviceScript Gateway - Unable to open connection."
                         )
                         return
                     }
@@ -114,7 +115,6 @@ export class GatewayTreeDataProvider
                     })
                 }
             ),
-            */
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.unregister",
                 async (device: CloudDevice) => {

@@ -209,11 +209,11 @@ export class GatewayExtensionState extends JDEventSource {
             await this.setApiRoot(undefined)
         } else {
             let {
-                WebAppName,
                 AccountName,
                 AccountKey,
-                EndPointSuffix,
                 ApiRoot,
+                Subscription,
+                ResourceGroup,
             } = toMap(
                 newConnectionString
                     .trim()
@@ -222,9 +222,6 @@ export class GatewayExtensionState extends JDEventSource {
                 ([name, _]) => name,
                 ([_, val]) => val
             )
-
-            if (!ApiRoot && WebAppName && EndPointSuffix)
-                ApiRoot = `https://${WebAppName}.${EndPointSuffix}`
 
             if (!ApiRoot || !AccountName || !AccountKey) {
                 vscode.window.showErrorMessage(
