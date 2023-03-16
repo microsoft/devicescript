@@ -94,3 +94,13 @@ The project `README.md` file contains details for local development.
 ## Cleanup
 
 Use the Azure CLI to delete the resource group and all its associated resources.
+
+```bash
+npm run unprovision
+```
+
+## Dashboards
+
+Out of the box, the gateway will push [telemetry metrics](/developer/cloud) in an Application Insights instance and in an Event Hub.
+
+-   [ ] You can build a dashboard of metrics in an [Azure Hosted Grafana](https://azure.microsoft.com/en-us/products/managed-grafana/) instance.
