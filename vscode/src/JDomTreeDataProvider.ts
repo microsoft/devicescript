@@ -327,7 +327,7 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
     resolveTreeItem(token: vscode.CancellationToken): Promise<vscode.TreeItem> {
         if (!this.tooltip) {
             const { device } = this
-            const { bus } = device
+            const { bus, deviceId } = device
             if (bus) {
                 const productIdentifier = device.productIdentifier
                 const spec =
@@ -339,6 +339,7 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
                         `#### ${spec.name} ${spec.version || ""} by ${
                             spec.company
                         }
+- device id: ${deviceId}
 
 ![Device image](${deviceCatalogImage(spec, "list")}) 
 

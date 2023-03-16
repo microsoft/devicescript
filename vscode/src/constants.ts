@@ -1,4 +1,5 @@
 export const CONNECTION_RESOURCE_GROUP = "vscode"
+export const CONNECTION_GATEWAY_RESOURCE_GROUP = "gateway"
 
 export const CLOUD_SCRIPTS_NODE = "cloudScripts"
 export const CLOUD_DEVICES_NODE = "cloudDevices"
