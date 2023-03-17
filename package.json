@@ -29,6 +29,7 @@
         "runtime/jacdac-c/jacdac",
         "jacdac-ts",
         "dap",
+        "plugin",
 
         "vscode",
         "vscode/sampleprj/packages/*",

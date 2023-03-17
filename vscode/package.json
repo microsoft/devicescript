@@ -63,6 +63,7 @@
     "dependencies": {
         "@vscode/extension-telemetry": "^0.7.7",
         "jacdac-ts": "*",
+        "@devicescript/plugin": "*",
         "websocket-polyfill": "^0.0.3"
     },
     "main": "./built/devicescript-vscode.js",
@@ -139,6 +140,11 @@
                 }
             }
         },
+        "typescriptServerPlugins": [
+            {
+                "name": "@devicescript/plugin"
+            }
+        ],
         "viewsContainers": {
             "activitybar": [
                 {

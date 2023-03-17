@@ -98,6 +98,8 @@ const files = {
     "compiler/built/devicescript-compiler.node.cjs":
         "compiler/src/devicescript.ts",
 
+    "plugin/built/devicescript-plugin.cjs": "plugin/src/plugin.ts",
+
     "dap/built/devicescript-dap.cjs": "dap/src/dsdap.ts",
 
     "cli/built/devicescript-cli.cjs": "cli/src/cli.ts",
@@ -227,6 +229,7 @@ async function main() {
                 "compiler/src",
                 "dap/src",
                 "cli/src",
+                "plugin/src",
                 "vscode/src",
             ])
             if (!watch) console.log(`   -> ${Date.now() - t0}ms`)

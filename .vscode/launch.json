@@ -27,6 +27,10 @@
             "name": "VSCode Extension",
             "type": "extensionHost",
             "request": "launch",
+            "env": {
+                "DISABLED_TSS_DEBUG": "5667",
+                "DISABLED_TSS_LOG": "-logToFile true -file ${workspaceFolder}/tmp/tss-log.txt -level verbose"
+            },
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}/vscode",
                 "${workspaceFolder}/vscode/sampleprj"
@@ -44,8 +48,19 @@
             "name": "VSCode (no extension)",
             "type": "extensionHost",
             "request": "launch",
+            "args": [],
             "outFiles": [
                 "${workspaceFolder}/vscode/built/**"
+            ]
+        },
+        {
+            // See: https://github.com/microsoft/TypeScript/wiki/Debugging-Language-Service-in-VS-Code
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to VS Code TS Server via Port",
+            "port": 5667,
+            "outFiles": [
+                "${workspaceFolder}/plugin/built/**"
             ]
         }
     ]
