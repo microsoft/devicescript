@@ -24,7 +24,7 @@ await temp
 
 ## Creation Operators
 
-### `from`
+### from
 
 Converts an array into a sequence of values.
 
@@ -43,7 +43,7 @@ const obs = from([0, 1, 2, 3, 4])
 await obs.subscribe(v => console.log(v))
 ```
 
-### `interval`
+### interval
 
 Emits a value at a time interval. The value is the number of callbacks.
 This observable runs forever.
@@ -63,7 +63,7 @@ const obs = interval(1000)
 await obs.subscribe(v => console.log(v))
 ```
 
-### `timer`
+### timer
 
 Emits a single value, `0` after a time interval, then completes.
 
@@ -84,7 +84,7 @@ await obs.subscribe(v => console.log(v))
 
 ## Filter Operators
 
-### `filter`
+### filter
 
 Filter items emitted by the source Observable by only emitting those that satisfy a specified predicate.
 
@@ -102,4 +102,61 @@ import { from, filter } from "@devicescript/observables"
 const obs = from([0, 1, 2, 3, 1])
 
 await obs.pipe(filter(v => v > 1)).subscribe(v => console.log(v))
+```
+
+### debounceTime
+
+Emits a notification from the source Observable
+only after a particular time span has passed without another source emission.
+
+```rx
+-0-1----3----
+
+> debounceTime(2)
+
+-----0----3-
+```
+
+
+The example below debounce a button down event to one every 5 seconds.
+
+```ts
+import { Button } from "@devicescript/core"
+import { debounceTime } from "@devicescript/observables"
+
+const button  = new Button()
+
+await button.down
+// highlight-next-line
+    .pipe(debounceTime(5000))
+    .subscribe(() => console.log('click'))
+```
+
+
+### throttleTile
+
+Emits a value from the source Observable,
+then ignores subsequent source values for duration milliseconds, then repeats this process.
+
+```rx
+-0-1-2-3-4-
+
+> throttleTime(2)
+
+-0---2---4-
+```
+
+
+The example below debounce a button down event to one every 5 seconds.
+
+```ts
+import { Button } from "@devicescript/core"
+import { throttleTile } from "@devicescript/observables"
+
+const button  = new Button()
+
+await button.down
+// highlight-next-line
+    .pipe(throttleTile(1000))
+    .subscribe(() => console.log('click'))
 ```
