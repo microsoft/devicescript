@@ -705,19 +705,19 @@
                         "request": "launch",
                         "name": "DeviceScript: Launch",
                         "program": "${workspaceFolder}/main.ts",
-                        "stopOnEntry": true
+                        "stopOnEntry": false
                     }
                 ],
                 "configurationSnippets": [
                     {
                         "label": "DeviceScript: Launch",
-                        "description": "A new configuration for 'debugging' a user selected typescript file.",
+                        "description": "A new configuration for 'debugging' the project entry point, `src/main.ts`.",
                         "body": {
                             "type": "devicescript",
                             "request": "launch",
                             "name": "DeviceScript: Launch",
                             "program": "^\"\\${workspaceFolder}/main.ts",
-                            "stopOnEntry": true
+                            "stopOnEntry": false
                         }
                     }
                 ],

@@ -49,7 +49,7 @@ export function activateDebugger(extensionState: DeviceScriptExtensionState) {
                             name: "Devicescript: Launch",
                             request: "launch",
                             type: "devicescript",
-                            stopOnEntry: true,
+                            stopOnEntry: false,
                         },
                     ]
                 },
