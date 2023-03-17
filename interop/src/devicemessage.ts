@@ -22,9 +22,10 @@ export interface SideWarningFromDevice extends SideDeviceMessage {
 
 export interface SideExceptionFromDevice extends SideDeviceMessage {
     type: "exception"
+    name: string
     message: string
-    name?: string
-    stack?: string[]
+    stack?: string
+    logs?: string
 }
 
 export interface SideLogsFromDevice extends SideDeviceMessage {
