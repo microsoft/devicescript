@@ -117,23 +117,21 @@ only after a particular time span has passed without another source emission.
 -----0----3-
 ```
 
-
 The example below debounce a button down event to one every 5 seconds.
 
 ```ts
 import { Button } from "@devicescript/core"
 import { debounceTime } from "@devicescript/observables"
 
-const button  = new Button()
+const button = new Button()
 
 await button.down
-// highlight-next-line
+    // highlight-next-line
     .pipe(debounceTime(5000))
-    .subscribe(() => console.log('click'))
+    .subscribe(() => console.log("click"))
 ```
 
-
-### throttleTile
+### throttleTime
 
 Emits a value from the source Observable,
 then ignores subsequent source values for duration milliseconds, then repeats this process.
@@ -146,17 +144,16 @@ then ignores subsequent source values for duration milliseconds, then repeats th
 -0---2---4-
 ```
 
-
 The example below debounce a button down event to one every 5 seconds.
 
 ```ts
 import { Button } from "@devicescript/core"
-import { throttleTile } from "@devicescript/observables"
+import { throttleTime } from "@devicescript/observables"
 
-const button  = new Button()
+const button = new Button()
 
 await button.down
-// highlight-next-line
-    .pipe(throttleTile(1000))
-    .subscribe(() => console.log('click'))
+    // highlight-next-line
+    .pipe(throttleTime(1000))
+    .subscribe(() => console.log("click"))
 ```
