@@ -1,13 +1,8 @@
 import { DebugInfo } from "@devicescript/compiler"
-import { delay } from "jacdac-ts"
 import { readFileSync } from "node:fs"
-import {
-    BuildOptions,
-    compileFile,
-    devsFactory,
-    devsStartWithNetwork,
-} from "./build"
+import { compileFile, devsFactory, devsStartWithNetwork } from "./build"
 import { error } from "./command"
+import { BuildOptions } from "./sideprotocol"
 
 export interface RunOptions {
     test?: boolean

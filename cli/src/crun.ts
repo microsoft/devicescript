@@ -3,9 +3,10 @@ import { spawn } from "node:child_process"
 import { writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createInterface } from "node:readline"
-import { BuildOptions, readDebugInfo } from "./build"
+import { readDebugInfo } from "./build"
 import { BINDIR, error, log } from "./command"
 import { readCompiled } from "./run"
+import { BuildOptions } from "./sideprotocol"
 import { printDmesg } from "./vmworker"
 
 export interface CRunOptions {

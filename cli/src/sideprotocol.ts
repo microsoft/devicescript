@@ -1,11 +1,11 @@
 import type {
     CompilationResult,
+    CompileFlags,
     ResolvedBuildConfig,
     VersionInfo,
 } from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
 import type { AddBoardOptions } from "./addboard"
-import type { BuildOptions } from "./build"
 import type {
     AddServiceOptions,
     AddSimOptions,
@@ -154,12 +154,21 @@ export interface SideOutputEvent extends SideEvent<"output"> {
         lines: string[]
     }
 }
-
+export interface BuildOptions {
+    verify?: boolean
+    outDir?: string
+    stats?: boolean
+    flag?: CompileFlags
+    cwd?: string
+    quiet?: boolean
+    ignoreMissingConfig?: boolean
+}
 export type BuildStatus = CompilationResult & { deployStatus: string }
 export interface BuildReqArgs {
     filename: string
     buildOptions?: BuildOptions
     deployTo?: string // deviceId
+    verbose?: boolean
 }
 export interface ConnectReqArgs {
     transport?: "serial" | "usb" | "spi" | "websocket" | string

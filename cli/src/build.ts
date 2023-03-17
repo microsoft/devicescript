@@ -9,7 +9,6 @@ import {
     DEVS_DBG_FILE,
     prettySize,
     DebugInfo,
-    CompileFlags,
     SrcMapResolver,
     preludeFiles,
     Host,
@@ -46,6 +45,7 @@ import {
     versionTryParse,
 } from "jacdac-ts"
 import { execSync } from "node:child_process"
+import { BuildOptions } from "./sideprotocol"
 
 // TODO should we move this to jacdac-ts and call automatically for transports?
 export function setupWebsocket() {
@@ -485,16 +485,6 @@ export async function saveLibFiles(
             }
         )
     }
-}
-
-export interface BuildOptions {
-    verify?: boolean
-    outDir?: string
-    stats?: boolean
-    flag?: CompileFlags
-    cwd?: string
-    quiet?: boolean
-    ignoreMissingConfig?: boolean
 }
 
 export async function build(file: string, options: BuildOptions) {

@@ -13,6 +13,7 @@ import {
 import * as vscode from "vscode"
 import type {
     BuildStatus,
+    BuildOptions,
     SideBuildReq,
     SideBuildResp,
     SideKillReq,
@@ -218,7 +219,8 @@ export class DeveloperToolsManager extends JDEventSource {
      */
     async build(
         relativeFileName: string,
-        service?: JDService
+        service?: JDService,
+        buildOptions?: BuildOptions
     ): Promise<BuildStatus> {
         this._watcher?.dispose()
         this._watcher = undefined
@@ -226,7 +228,7 @@ export class DeveloperToolsManager extends JDEventSource {
         this._currentFilename = relativeFileName
         this._currentDeviceScriptManager = service?.id
 
-        const res = await this.buildOnce()
+        const res = await this.buildOnce(buildOptions)
         if (res) await this.startWatch(res.usedFiles)
 
         this.emit(CHANGE)
@@ -234,7 +236,7 @@ export class DeveloperToolsManager extends JDEventSource {
         return res
     }
 
-    private async buildOnce(): Promise<BuildStatus> {
+    private async buildOnce(buildOptions?: BuildOptions): Promise<BuildStatus> {
         const filename = this._currentFilename
 
         if (!this._currentFilename) return undefined
@@ -249,6 +251,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 req: "build",
                 data: {
                     filename,
+                    buildOptions,
                     deployTo,
                 },
             })

@@ -10,9 +10,10 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
     toHex,
 } from "jacdac-ts"
-import { BuildOptions, devsStartWithNetwork } from "./build"
+import { devsStartWithNetwork } from "./build"
 import { error } from "./command"
 import { readCompiled } from "./run"
+import { BuildOptions } from "./sideprotocol"
 
 export interface RunOptions {
     tcp?: boolean

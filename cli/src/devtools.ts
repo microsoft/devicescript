@@ -36,9 +36,14 @@ import {
     processSideMessage,
 } from "./sidedata"
 import { FSWatcher } from "fs"
-import { BuildOptions, compileFile } from "./build"
+import { compileFile } from "./build"
 import { resolve } from "path"
-import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
+import {
+    BuildStatus,
+    BuildReqArgs,
+    ConnectReqArgs,
+    BuildOptions,
+} from "./sideprotocol"
 import { DsDapSession } from "@devicescript/dap"
 import { initVMCmds, overrideConsoleDebug, stopVmWorker } from "./vmworker"
 import { enableLogging } from "./logging"
