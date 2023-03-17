@@ -9,12 +9,12 @@ import {
 import * as vscode from "vscode"
 import { DeviceScriptExtensionState } from "../state"
 import "isomorphic-fetch"
-import { CloudManager, FETCH_ERROR } from "./clouddom"
+import { GatewayManager, FETCH_ERROR } from "./gatewaydom"
 import { showError } from "../commands"
 
 const MESSAGE_PREFIX = "DeviceScript Gateway - "
 export class GatewayExtensionState extends JDEventSource {
-    private _manager: CloudManager
+    private _manager: GatewayManager
 
     constructor(
         readonly context: vscode.ExtensionContext,
@@ -130,18 +130,25 @@ export class GatewayExtensionState extends JDEventSource {
         console.error(err)
     }
 
-    private async handleFetchError(resp: Response) {
-        switch (resp.status) {
-            case 401: {
-                // unauthorized
-                await this.setToken(undefined)
-                break
+    private async handleFetchError(error: Response | Error) {
+        if (error instanceof Response) {
+            const resp = error as Response
+            switch (resp.status) {
+                case 401: {
+                    // unauthorized
+                    await this.setToken(undefined)
+                    break
+                }
             }
+            await vscode.window.showErrorMessage(
+                `${MESSAGE_PREFIX} ${resp.statusText} (${resp.status})`
+            )
+        } else {
+            const e = error as Error
+            await vscode.window.showErrorMessage(
+                `${MESSAGE_PREFIX} ${e.message}`
+            )
         }
-
-        await vscode.window.showErrorMessage(
-            `${MESSAGE_PREFIX} ${resp.statusText} (${resp.status})`
-        )
     }
 
     private async handleRefreshConnection() {
@@ -157,7 +164,7 @@ export class GatewayExtensionState extends JDEventSource {
         const token = await this.token
         const apiRoot = this.apiRoot
         if (token && apiRoot && !this._manager) {
-            this._manager = new CloudManager(this.bus, apiRoot, token)
+            this._manager = new GatewayManager(this.bus, apiRoot, token)
             this._manager.on(CHANGE, this.handleChange)
             this._manager.on(ERROR, this.handleError)
             this._manager.on(FETCH_ERROR, this.handleFetchError)

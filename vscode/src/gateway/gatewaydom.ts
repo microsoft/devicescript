@@ -12,10 +12,15 @@ import {
     SRV_DEVICE_SCRIPT_MANAGER,
 } from "jacdac-ts"
 
-export const CLOUD_NODE = "cloud"
-export const CLOUD_DEVICE_NODE = "cloudDevice"
-export const CLOUD_SCRIPT_NODE = "cloudScript"
+export const GATEWAY_NODE = "cloud"
+export const GATEWAY_DEVICE_NODE = "cloudDevice"
+export const GATEWAY_SCRIPT_NODE = "cloudScript"
+export const GATEWAY_SCRIPTS_NODE = "cloudScripts"
+export const GATEWAY_DEVICES_NODE = "cloudDevices"
+export const GATEWAY_DATA_CHANGE = "gatewayDataChange"
 export const FETCH_ERROR = "fetchError"
+
+export const GATEWAY_LAST_FETCH_STATUS_OK = "ok"
 
 /*function timeKey(t?: number) {
     if (!t) t = Date.now()
@@ -34,9 +39,10 @@ function urlQuery(url: string, args?: Record<string, string | number>) {
     return query?.length ? `${url}?${query.join("&")}` : url
 }
 
-export class CloudManager extends JDNode {
-    private _devices: CloudDevice[]
-    private _scripts: CloudScript[]
+export class GatewayManager extends JDNode {
+    private _devices: GatewayDevice[]
+    private _scripts: GatewayScript[]
+    private _lastFetchStatus: string
 
     constructor(
         public readonly bus: JDBus,
@@ -47,13 +53,13 @@ export class CloudManager extends JDNode {
     }
 
     get id(): string {
-        return "brain"
+        return "gateway"
     }
     get nodeKind(): string {
-        throw CLOUD_NODE
+        return GATEWAY_NODE
     }
     get name(): string {
-        return "brains"
+        return this.apiRoot || "gateway"
     }
     get qualifiedName(): string {
         return this.name
@@ -62,11 +68,22 @@ export class CloudManager extends JDNode {
         return undefined
     }
 
-    scripts(): CloudScript[] {
+    get lastFetchStatus(): string {
+        return this._lastFetchStatus
+    }
+
+    private set lastFetchStatus(status: string) {
+        if (this._lastFetchStatus !== status) {
+            this._lastFetchStatus = status
+            this.emit(CHANGE)
+        }
+    }
+
+    scripts(): GatewayScript[] {
         return this._scripts?.slice(0) || []
     }
 
-    devices(): CloudDevice[] {
+    devices(): GatewayDevice[] {
         return this._devices?.slice(0) || []
     }
 
@@ -74,18 +91,18 @@ export class CloudManager extends JDNode {
         return [...(this._devices || []), ...(this._scripts || [])] as JDNode[]
     }
 
-    device(deviceId: string): CloudDevice {
+    device(deviceId: string): GatewayDevice {
         return this._devices?.find(d => d.deviceId === deviceId)
     }
 
-    script(scriptId: string, scriptVersion?: number): CloudScript {
+    script(scriptId: string, scriptVersion?: number): GatewayScript {
         return this._scripts?.find(d => d.data.id === scriptId)
     }
 
     async scriptVersion(
         scriptId: string,
         scriptVersion: number
-    ): Promise<CloudScript> {
+    ): Promise<GatewayScript> {
         const script = this.script(scriptId)
         await script?.refreshVersions()
         return script?.versions()?.find(v => v.version === scriptVersion)
@@ -93,20 +110,20 @@ export class CloudManager extends JDNode {
 
     async createScript(
         name: string,
-        scriptBody: CloudScriptBody
-    ): Promise<CloudScript> {
+        scriptBody: GatewayScriptBody
+    ): Promise<GatewayScript> {
         const body = {
             name,
             meta: {},
             body: scriptBody,
         }
-        const resp = await this.fetchJSON<CloudScriptData>("scripts", {
+        const resp = await this.fetchJSON<GatewayScriptData>("scripts", {
             method: "POST",
             body,
         })
         if (!resp) return undefined
 
-        const script = new CloudScript(this, resp, body.body)
+        const script = new GatewayScript(this, resp, body.body)
         this._scripts.push(script)
         this.emit(CHANGE)
         return script
@@ -173,11 +190,13 @@ export class CloudManager extends JDNode {
     }
 
     async refresh() {
-        await Promise.all([this.refreshDevices(), this.refreshScripts()])
+        await this.refreshDevices()
+        if (this.lastFetchStatus !== GATEWAY_LAST_FETCH_STATUS_OK) return
+        await this.refreshScripts()
     }
 
     async refreshDevices() {
-        const datas = (await this.fetchJSON("devices")) as CloudDeviceData[]
+        const datas = (await this.fetchJSON("devices")) as GatewayDeviceData[]
         if (!datas) return // query failed
 
         // merge cloud datas with local devices
@@ -190,7 +209,7 @@ export class CloudManager extends JDNode {
             if (device) {
                 device.data = data
             } else {
-                this._devices.push(new CloudDevice(this, data))
+                this._devices.push(new GatewayDevice(this, data))
             }
         })
         this.emit(CHANGE)
@@ -198,7 +217,7 @@ export class CloudManager extends JDNode {
 
     async refreshScripts() {
         const datas = (await this.fetchJSON("scripts")) as {
-            headers: CloudScriptData[]
+            headers: GatewayScriptData[]
         }
         if (!datas) return // query failed
 
@@ -211,7 +230,7 @@ export class CloudManager extends JDNode {
         headers.forEach(data => {
             const script = this._scripts.find(d => d.data.id === data.id)
             if (script) script.data = data
-            else this._scripts.push(new CloudScript(this, data))
+            else this._scripts.push(new GatewayScript(this, data))
         })
         this.emit(CHANGE)
     }
@@ -224,7 +243,10 @@ export class CloudManager extends JDNode {
             query?: Record<string, string | number>
         }
     ) {
-        if (!this.token) return undefined
+        if (!this.token) {
+            this.lastFetchStatus = undefined
+            return undefined
+        }
 
         const { query, body } = opts || {}
         const options: RequestInit = {
@@ -238,34 +260,45 @@ export class CloudManager extends JDNode {
             (options.headers as any)["Content-Type"] =
                 "application/json; charset=utf-8"
         const route = urlQuery(`${this.apiRoot}/api/${path}`, query)
-        const resp = await fetch(route, options)
-        if (!resp.ok) {
-            console.debug(`${options.method} ${route} -> ${resp.statusText}`, {
-                options,
-                resp,
-            })
-            this.emit(FETCH_ERROR, resp)
-            this.emit(ERROR, resp.statusText)
+
+        try {
+            const resp = await fetch(route, options)
+            if (!resp.ok) {
+                console.debug(
+                    `${options.method} ${route} -> ${resp.statusText}`,
+                    {
+                        options,
+                        resp,
+                    }
+                )
+                this.lastFetchStatus = resp.statusText
+                this.emit(FETCH_ERROR, resp)
+                this.emit(ERROR, resp.statusText)
+                return undefined
+            }
+            const json = (await resp.json()) as T
+            this.lastFetchStatus = GATEWAY_LAST_FETCH_STATUS_OK
+            return json
+        } catch (e) {
+            this.lastFetchStatus = e.message
+            this.emit(FETCH_ERROR, e)
+            this.emit(ERROR, e)
             return undefined
         }
-        const json = (await resp.json()) as T
-        return json
     }
 }
 
-export interface CloudData {
+export interface GatewayData {
     id: string
 }
 
-export const CLOUD_DATA_CHANGE = "cloud-data-change"
-
-export abstract class CloudNode<
-    TData extends CloudData = CloudData
+export abstract class GatewayNode<
+    TData extends GatewayData = GatewayData
 > extends JDNode {
     private _lastFetch = Date.now()
 
     constructor(
-        readonly manager: CloudManager,
+        readonly manager: GatewayManager,
         readonly path: string,
         private _data: TData
     ) {
@@ -273,7 +306,7 @@ export abstract class CloudNode<
     }
 
     get id(): string {
-        return `brains:${this.path}:${this._data.id}`
+        return `gateway:${this.path}:${this._data.id}`
     }
     get parent(): JDNode {
         return this.manager
@@ -293,7 +326,7 @@ export abstract class CloudNode<
         this._lastFetch = Date.now()
         if (!!data && JSON.stringify(data) !== JSON.stringify(this._data)) {
             this._data = data
-            this.emit(CLOUD_DATA_CHANGE)
+            this.emit(GATEWAY_DATA_CHANGE)
             this.emit(CHANGE)
         }
     }
@@ -332,12 +365,12 @@ export abstract class CloudNode<
     }
 }
 
-export type CloudDeviceMeta = {
+export type GatewayDeviceMeta = {
     productId?: number
     fwVersion?: string
 } & Record<string, string | number | boolean>
 
-export interface CloudDeviceData extends CloudData {
+export interface GatewayDeviceData extends GatewayData {
     displayName: string
     name: string
     conn: boolean
@@ -345,7 +378,7 @@ export interface CloudDeviceData extends CloudData {
     scriptId?: string
     scriptVersion?: number
     deployedHash?: string
-    meta?: CloudDeviceMeta
+    meta?: GatewayDeviceMeta
 }
 
 export interface CloudDeviceConnectionInfo {
@@ -354,28 +387,15 @@ export interface CloudDeviceConnectionInfo {
     expires: number
 }
 
-export interface CloudTelemetry {
-    brainId: string
-    sensorId: string
-    srv: string
-    srvIdx: number
-    ms: number
-    avg: number
-    min: number
-    max: number
-    nsampl: number
-    dur: number
-}
-
-export class CloudDevice extends CloudNode<CloudDeviceData> {
-    constructor(manager: CloudManager, data: CloudDeviceData) {
+export class GatewayDevice extends GatewayNode<GatewayDeviceData> {
+    constructor(manager: GatewayManager, data: GatewayDeviceData) {
         super(manager, "devices", data)
 
         this.on(CHANGE, this.refreshMeta.bind(this))
         this.refreshMeta()
     }
     get nodeKind(): string {
-        return CLOUD_DEVICE_NODE
+        return GATEWAY_DEVICE_NODE
     }
     get name(): string {
         const { data } = this
@@ -399,7 +419,7 @@ export class CloudDevice extends CloudNode<CloudDeviceData> {
     get qualifiedName(): string {
         return this.name
     }
-    get meta(): CloudDeviceMeta {
+    get meta(): GatewayDeviceMeta {
         const { data } = this
         return data.meta || {}
     }
@@ -477,7 +497,7 @@ export class CloudDevice extends CloudNode<CloudDeviceData> {
     }
 }
 
-export interface CloudScriptData extends CloudData {
+export interface GatewayScriptData extends GatewayData {
     name?: string
     meta?: Record<string, string | number | boolean>
     id: string
@@ -485,28 +505,28 @@ export interface CloudScriptData extends CloudData {
     updated?: number
 }
 
-export interface CloudScriptBody {
+export interface GatewayScriptBody {
     versions?: VersionInfo
     program?: DebugInfo
 }
 
-export class CloudScript extends CloudNode<CloudScriptData> {
-    private _body: CloudScriptBody
-    private _versions: CloudScript[]
+export class GatewayScript extends GatewayNode<GatewayScriptData> {
+    private _body: GatewayScriptBody
+    private _versions: GatewayScript[]
 
     constructor(
-        manager: CloudManager,
-        data: CloudScriptData,
-        body?: CloudScriptBody
+        manager: GatewayManager,
+        data: GatewayScriptData,
+        body?: GatewayScriptBody
     ) {
         super(manager, "scripts", data)
         this._body = body
-        this.on(CLOUD_DATA_CHANGE, () => {
+        this.on(GATEWAY_DATA_CHANGE, () => {
             this._body = undefined
         })
     }
     get nodeKind(): string {
-        return CLOUD_SCRIPT_NODE
+        return GATEWAY_SCRIPT_NODE
     }
     get version(): number {
         const { data } = this
@@ -529,7 +549,7 @@ export class CloudScript extends CloudNode<CloudScriptData> {
     async updateName(name: string) {
         if (!name || name === this.data.name) return
 
-        const resp: CloudScriptData = await this.manager.fetchJSON(
+        const resp: GatewayScriptData = await this.manager.fetchJSON(
             this.apiPath,
             { method: "PATCH", body: { name } }
         )
@@ -542,11 +562,11 @@ export class CloudScript extends CloudNode<CloudScriptData> {
         }`
     }
 
-    get body(): CloudScriptBody {
+    get body(): GatewayScriptBody {
         return this._body
     }
 
-    versions(): CloudScript[] {
+    versions(): GatewayScript[] {
         return this._versions?.slice(0) || []
     }
 
@@ -556,7 +576,7 @@ export class CloudScript extends CloudNode<CloudScriptData> {
 
     async refreshVersions(): Promise<void> {
         const { headers: versions } =
-            (await this.manager.fetchJSON<{ headers: CloudScriptData[] }>(
+            (await this.manager.fetchJSON<{ headers: GatewayScriptData[] }>(
                 `${this.apiPath}/versions`
             )) || {}
         if (
@@ -564,13 +584,13 @@ export class CloudScript extends CloudNode<CloudScriptData> {
             JSON.stringify(versions)
         ) {
             this._versions = versions?.map(
-                v => new CloudScript(this.manager, v)
+                v => new GatewayScript(this.manager, v)
             )
             this.emit(CHANGE)
         }
     }
-    async refreshBody(): Promise<CloudScriptBody> {
-        const newBody = await this.manager.fetchJSON<CloudScriptBody>(
+    async refreshBody(): Promise<GatewayScriptBody> {
+        const newBody = await this.manager.fetchJSON<GatewayScriptBody>(
             `${this.apiPath}/versions/${this.version}/body`
         )
         if (JSON.stringify(this._body) !== JSON.stringify(newBody)) {
@@ -580,8 +600,8 @@ export class CloudScript extends CloudNode<CloudScriptData> {
         return this._body
     }
 
-    async uploadBody(body: CloudScriptBody) {
-        const resp: CloudScriptData = await this.manager.fetchJSON(
+    async uploadBody(body: GatewayScriptBody) {
+        const resp: GatewayScriptData = await this.manager.fetchJSON(
             `${this.apiPath}/body`,
             {
                 method: "PUT",
@@ -589,5 +609,36 @@ export class CloudScript extends CloudNode<CloudScriptData> {
             }
         )
         if (resp) this.data = resp
+    }
+}
+
+export class GatewayCollection extends JDNode {
+    constructor(
+        readonly manager: GatewayManager,
+        private readonly _nodeKind: string,
+        private readonly _name: string,
+        private readonly _children: (manager: GatewayManager) => JDNode[]
+    ) {
+        super()
+    }
+    get id(): string {
+        return `${this.manager.id}.${this.nodeKind}`
+    }
+    get nodeKind(): string {
+        return this._nodeKind
+    }
+    get name(): string {
+        return this._name
+    }
+    get qualifiedName(): string {
+        return `${this.parent.qualifiedName}.${this.name}`
+    }
+    get parent(): JDNode {
+        return this.manager
+    }
+    get children(): JDNode[] {
+        return this._children(this.manager).sort((l, r) =>
+            l.name.localeCompare(r.name)
+        )
     }
 }

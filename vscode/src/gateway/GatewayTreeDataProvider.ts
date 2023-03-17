@@ -8,19 +8,19 @@ import {
 import * as vscode from "vscode"
 import { toMarkdownString } from "../catalog"
 import { GatewayExtensionState } from "./GatewayExtensionState"
-import {
-    CLOUD_DEVICES_NODE,
-    CLOUD_SCRIPTS_NODE,
-    CONNECTION_GATEWAY_RESOURCE_GROUP,
-} from "../constants"
+import { CONNECTION_GATEWAY_RESOURCE_GROUP } from "../constants"
 import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
 import {
-    CloudManager,
-    CloudScript,
-    CloudDevice,
-    CLOUD_SCRIPT_NODE,
-    CLOUD_DEVICE_NODE,
-} from "./clouddom"
+    GatewayManager,
+    GatewayScript,
+    GatewayDevice,
+    GATEWAY_SCRIPT_NODE,
+    GATEWAY_DEVICE_NODE,
+    GatewayCollection,
+    GATEWAY_DEVICES_NODE,
+    GATEWAY_SCRIPTS_NODE,
+    GATEWAY_NODE,
+} from "./gatewaydom"
 import type { DebugInfo } from "@devicescript/interop"
 import {
     SideConnectReq,
@@ -28,44 +28,13 @@ import {
 } from "../../../cli/src/sideprotocol"
 import { sideRequest } from "../jacdac"
 
-class CloudCollection extends JDNode {
-    constructor(
-        readonly manager: CloudManager,
-        private readonly _nodeKind: string,
-        private readonly _name: string,
-        private readonly _children: (manager: CloudManager) => JDNode[]
-    ) {
-        super()
-    }
-    get id(): string {
-        return `${this.manager.id}.${this.nodeKind}`
-    }
-    get nodeKind(): string {
-        return this._nodeKind
-    }
-    get name(): string {
-        return this._name
-    }
-    get qualifiedName(): string {
-        return `${this.parent.qualifiedName}.${this.name}`
-    }
-    get parent(): JDNode {
-        return this.manager
-    }
-    get children(): JDNode[] {
-        return this._children(this.manager).sort((l, r) =>
-            l.name.localeCompare(r.name)
-        )
-    }
-}
+type GatewayScriptPickItem = TaggedQuickPickItem<GatewayScript>
 
-type CloudScriptPickItem = TaggedQuickPickItem<CloudScript>
-
-function cloudScriptToQuickPickItem(
-    script: CloudScript,
+function gatewayScriptToQuickPickItem(
+    script: GatewayScript,
     options?: { picked?: boolean }
 ) {
-    return <CloudScriptPickItem>{
+    return <GatewayScriptPickItem>{
         data: script,
         label: script.name,
         description:
@@ -75,10 +44,10 @@ function cloudScriptToQuickPickItem(
     }
 }
 
-function cloudScriptVersionToQuickPickItem(
-    v: CloudScript
-): TaggedQuickPickItem<CloudScript> {
-    return <CloudScriptPickItem>{
+function gatewayScriptVersionToQuickPickItem(
+    v: GatewayScript
+): TaggedQuickPickItem<GatewayScript> {
+    return <GatewayScriptPickItem>{
         data: v,
         label: `v${v.version}`,
         description: v.creationTime.toLocaleString(),
@@ -97,7 +66,7 @@ export class GatewayTreeDataProvider
         subscriptions.push(
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.connect",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
 
@@ -127,13 +96,13 @@ export class GatewayTreeDataProvider
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.ping",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     await device.ping()
                 }
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.unregister",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     if (await showConfirmBox("Unregister device?"))
                         await this.state.withProgress(
                             "Unregistering device...",
@@ -143,7 +112,7 @@ export class GatewayTreeDataProvider
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.refreshToken",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
                     const dev = manager.bus.device(device.deviceId, true)
@@ -158,7 +127,7 @@ export class GatewayTreeDataProvider
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.script.delete",
-                async (script: CloudScript) => {
+                async (script: GatewayScript) => {
                     if (
                         await showConfirmBox(
                             "Delete script and all its versions?"
@@ -172,7 +141,7 @@ export class GatewayTreeDataProvider
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.script.configure",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
                     const current = manager?.script(device.scriptId)
@@ -181,7 +150,7 @@ export class GatewayTreeDataProvider
                     const res = await vscode.window.showQuickPick(
                         [
                             ...scripts.map(script =>
-                                cloudScriptToQuickPickItem(script, {
+                                gatewayScriptToQuickPickItem(script, {
                                     picked: script === current,
                                 })
                             ),
@@ -214,7 +183,9 @@ export class GatewayTreeDataProvider
                     await script.refreshVersions()
                     const versions = script.versions()
                     const v = await vscode.window.showQuickPick(
-                        versions.map(v => cloudScriptVersionToQuickPickItem(v)),
+                        versions.map(v =>
+                            gatewayScriptVersionToQuickPickItem(v)
+                        ),
                         {
                             title: "Select a version",
                         }
@@ -236,7 +207,7 @@ export class GatewayTreeDataProvider
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.script.update.latest",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
                     const script = manager.script(device.scriptId)
@@ -269,7 +240,7 @@ export class GatewayTreeDataProvider
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.script.upload",
-                async (script: CloudScript) => {
+                async (script: GatewayScript) => {
                     const manager = this.state.manager
                     if (!manager) return
                     const file =
@@ -332,7 +303,10 @@ export class GatewayTreeDataProvider
         )
     }
 
-    private async uploadScriptProgram(script: CloudScript, program: DebugInfo) {
+    private async uploadScriptProgram(
+        script: GatewayScript,
+        program: DebugInfo
+    ) {
         await this.state.withProgress("Uploading script...", async () => {
             await script.uploadBody({
                 versions: this.state.deviceScriptState.devtools.versions(),
@@ -343,7 +317,7 @@ export class GatewayTreeDataProvider
     }
 
     private async createScript(
-        manager: CloudManager,
+        manager: GatewayManager,
         name: string,
         program: DebugInfo
     ) {
@@ -363,8 +337,8 @@ export class GatewayTreeDataProvider
     ) {
         const { nodeKind } = node
         switch (nodeKind) {
-            case CLOUD_SCRIPT_NODE: {
-                const script = node as CloudScript
+            case GATEWAY_SCRIPT_NODE: {
+                const script = node as GatewayScript
                 const body = await script.refreshBody()
                 if (body)
                     item.tooltip =
@@ -386,26 +360,36 @@ export class GatewayTreeDataProvider
         const contextValue = node.nodeKind
         let iconPath: vscode.ThemeIcon | vscode.Uri = new vscode.ThemeIcon(
             {
-                [CLOUD_DEVICE_NODE]: "circuit-board",
-                [CLOUD_SCRIPT_NODE]: "file-code",
-                [CLOUD_DEVICES_NODE]: "circuit-board",
-                [CLOUD_SCRIPTS_NODE]: "file-code",
+                [GATEWAY_NODE]: "cloud",
+                [GATEWAY_DEVICE_NODE]: "circuit-board",
+                [GATEWAY_SCRIPT_NODE]: "file-code",
+                [GATEWAY_DEVICES_NODE]: "circuit-board",
+                [GATEWAY_SCRIPTS_NODE]: "file-code",
             }[contextValue] || "question"
         )
 
         switch (node.nodeKind) {
-            case CLOUD_DEVICES_NODE:
-            case CLOUD_SCRIPTS_NODE: {
+            case GATEWAY_NODE: {
+                const mgr = node as GatewayManager
+                description = mgr.lastFetchStatus || ""
+                tooltip = toMarkdownString(`
+-   API root: [${mgr.apiRoot}](${mgr.apiRoot}/swagger/)
+-   Last fetch: ${mgr.lastFetchStatus}
+                `)
+                break
+            }
+            case GATEWAY_DEVICES_NODE:
+            case GATEWAY_SCRIPTS_NODE: {
                 collapsibleState = vscode.TreeItemCollapsibleState.Expanded
                 break
             }
-            case CLOUD_SCRIPT_NODE: {
-                const script = node as CloudScript
+            case GATEWAY_SCRIPT_NODE: {
+                const script = node as GatewayScript
                 description = `v${script.version}`
                 break
             }
-            case CLOUD_DEVICE_NODE: {
-                const d = node as CloudDevice
+            case GATEWAY_DEVICE_NODE: {
+                const d = node as GatewayDevice
                 const { meta, connected, scriptId, scriptVersion } = d
                 const script = this.state.manager?.script(scriptId)
                 const spec =
@@ -466,15 +450,26 @@ ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
             if (!manager) return undefined
 
             const items = [
-                new CloudCollection(manager, CLOUD_SCRIPTS_NODE, "scripts", _ =>
-                    _.scripts()
+                manager,
+                new GatewayCollection(
+                    manager,
+                    GATEWAY_SCRIPTS_NODE,
+                    "scripts",
+                    _ => _.scripts()
                 ),
-                new CloudCollection(manager, CLOUD_DEVICES_NODE, "devices", _ =>
-                    _.devices()
+                new GatewayCollection(
+                    manager,
+                    GATEWAY_DEVICES_NODE,
+                    "devices",
+                    _ => _.devices()
                 ),
             ]
             return items
-        } else return element?.children as JDNode[]
+        } else if (element === this.state.manager) {
+            return []
+        } else {
+            return element?.children as JDNode[]
+        }
     }
 
     private _onDidChangeTreeData: vscode.EventEmitter<
