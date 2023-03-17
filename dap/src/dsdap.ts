@@ -51,6 +51,7 @@ function exnToString(err: unknown) {
 export interface StartArgs {
     deviceId?: string
     serviceInstance?: number
+    stopOnEntry?: boolean
 }
 
 const maxStrLen = 1024
@@ -72,6 +73,7 @@ export class DsDapSession extends DebugSession {
     private brkBySrc: number[][] = []
     public client: DevsDbgClient
     img: Image
+    private resumeOnSuspend = false
 
     constructor(
         public bus: JDBus,
@@ -163,6 +165,7 @@ export class DsDapSession extends DebugSession {
         response.body.supportsBreakpointLocationsRequest = false
         response.body.supportsInstructionBreakpoints = false
 
+        response.body.supportsConfigurationDoneRequest = true
         response.body.supportsSteppingGranularity = true
         response.body.supportsLoadedSourcesRequest = true
         response.body.supportsExceptionInfoRequest = true
@@ -211,6 +214,7 @@ export class DsDapSession extends DebugSession {
     }
 
     private handleSuspendedEvent() {
+        if (this.resumeOnSuspend) return
         const type = this.client.suspensionReason
         switch (type) {
             case DevsDbgSuspensionType.Panic:
@@ -238,6 +242,9 @@ export class DsDapSession extends DebugSession {
         args: StartArgs,
         isLaunch: boolean
     ) {
+        if (args.stopOnEntry === false) this.resumeOnSuspend = true
+        else this.resumeOnSuspend = false
+
         await this.startClient(args)
 
         this.client.service.device.on(DISCONNECT, () => {
@@ -249,6 +256,19 @@ export class DsDapSession extends DebugSession {
         await this.client.waitSuspended()
         await this.client.clearAllBreakpoints()
         this.sendEvent(new InitializedEvent())
+    }
+
+    protected override configurationDoneRequest(
+        response: DebugProtocol.ConfigurationDoneResponse,
+        args: DebugProtocol.ConfigurationDoneArguments,
+        request?: DebugProtocol.Request
+    ): void {
+        this.asyncReq(response, async () => {
+            if (this.resumeOnSuspend) {
+                this.resumeOnSuspend = false
+                await this.client.resume()
+            }
+        })
     }
 
     protected override threadsRequest(
