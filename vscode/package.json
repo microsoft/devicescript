@@ -175,7 +175,7 @@
             },
             {
                 "view": "extension.devicescript.gateway",
-                "contents": "Deploy scripts remotely, track telemetry.\n[Configure...](command:extension.devicescript.gateway.configure)\n[Create Gateway](https://microsoft.github.io/devicescript/developer/gateway)\n\nTo learn more about DeviceScript Gateway, [read the docs](https://microsoft.github.io/devicescript/developer/gateway)."
+                "contents": "Deploy scripts remotely, track telemetry.\n[Configure...](command:extension.devicescript.gateway.configure)\n[Create Gateway](https://microsoft.github.io/devicescript/developer/cloud/gateway)\n\nTo learn more about DeviceScript Gateway, [read the docs](https://microsoft.github.io/devicescript/developer/cloud/gateway)."
             }
         ],
         "walkthroughs": [

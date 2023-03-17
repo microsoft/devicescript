@@ -11,8 +11,6 @@ to abstract the communication between the device and a cloud provider.
 In order to facilite rapid prototyping, it is possible to provision a **Development Gateway** to
 support a few devices in your Azure subscription.
 
-** The gateway is still under heavy development **
-
 -   Full sources at https://github.com/microsoft/devicescript-gateway
 
 ### Features
@@ -20,13 +18,16 @@ support a few devices in your Azure subscription.
 -   Device provisioning, management: register, unregister, list, ...
 -   Script management: create, update (versioned)
 -   Script deployment: assign a script to a device and the gateway will deploy it
--   Telemetry and cloud methods
+-   Analytics through Azure Monitor
+-   JSON messages from and to devices
 -   Swagger API front end for non-embedded clients
+-   Visual Studio Code extension
 
-### Limitations
+:::caution
 
--   The Development Gateway is not meant for production deployment.
--   The Development Gateway is meant to handle a few devices, say less than 100.
+The Development Gateway is a sample and not meant for production deployment.
+
+:::
 
 ## Architecture
 
@@ -36,7 +37,7 @@ The Development Gateway is built on top of a few Azure resources:
 -   [Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/), to store secrets needed by the Web Application
 -   [Storage](https://learn.microsoft.com/en-us/azure/storage/), blobs and tables to manage devices, scripts and telemetry
 -   [App Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview), to collect telemetry about the health of devices
--   [Event Hub](https://learn.microsoft.com/en-us/azure/event-hubs/) to forward telemetry messages from the devices to the next cloud service
+-   [Event Hub](https://learn.microsoft.com/en-us/azure/event-hubs/) to forward JSON messages from the device
 
 For development,
 
@@ -103,4 +104,4 @@ npm run unprovision
 
 Out of the box, the gateway will push [telemetry metrics](/developer/cloud) in an Application Insights instance and in an Event Hub.
 
--   [ ] You can build a dashboard of metrics in an [Azure Hosted Grafana](https://azure.microsoft.com/en-us/products/managed-grafana/) instance.
+-   You can build a dashboard of metrics in an [Azure Hosted Grafana](https://azure.microsoft.com/en-us/products/managed-grafana/) instance.
