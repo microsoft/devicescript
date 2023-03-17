@@ -89,6 +89,14 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.pickDeviceScriptManager",
             () => extensionState.pickDeviceScriptManager()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.editor.build",
+            async () => {
+                const editor = vscode.window.activeTextEditor
+                const file = editor?.document?.uri
+                if (file) await extensionState.build(file)
+            }
         )
     )
 

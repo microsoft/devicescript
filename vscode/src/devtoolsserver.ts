@@ -184,14 +184,46 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._currentDeviceScriptManager
     }
 
+    async buildFile(file: vscode.Uri): Promise<BuildStatus> {
+        // find project folder and relative path
+        const root = vscode.workspace.getWorkspaceFolder(file)
+        let dir = Utils.dirname(Utils.resolvePath(file))
+        let rel = Utils.basename(file)
+        let n = 0
+        while (!(await checkFileExists(dir, `devsconfig.json`))) {
+            if (dir.fsPath === root.uri.fsPath) {
+                vscode.window.showErrorMessage(
+                    "DeviceScript - Build cancelled.\ndevicescript.json file not found."
+                )
+                return undefined
+            }
+            if (n++ > 30) {
+                vscode.window.showErrorMessage(
+                    "DeviceScript - Build cancelled.\nFolder problem."
+                )
+                return undefined
+            }
+
+            rel = `${Utils.basename(dir)}/${rel}`
+            dir = Utils.dirname(dir)
+        }
+
+        await this.setProjectFolder(dir)
+        const status = await this.build(rel)
+        return status
+    }
+
     /**
      * Builds a file relative to the current project folder
      */
-    async build(filename: string, service?: JDService): Promise<BuildStatus> {
+    async build(
+        relativeFileName: string,
+        service?: JDService
+    ): Promise<BuildStatus> {
         this._watcher?.dispose()
         this._watcher = undefined
 
-        this._currentFilename = filename
+        this._currentFilename = relativeFileName
         this._currentDeviceScriptManager = service?.id
 
         const res = await this.buildOnce()

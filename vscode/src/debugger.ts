@@ -46,10 +46,17 @@ export function activateDebugger(extensionState: DeviceScriptExtensionState) {
                 ): vscode.ProviderResult<DebugConfiguration[]> {
                     return [
                         {
-                            name: "Devicescript: Launch",
+                            name: "DeviceScript: Debug",
+                            request: "launch",
+                            type: "devicescript",
+                            stopOnEntry: true,
+                        },
+                        {
+                            name: "DeviceScript: Run",
                             request: "launch",
                             type: "devicescript",
                             stopOnEntry: false,
+                            noDebug: true,
                         },
                     ]
                 },
@@ -180,7 +187,7 @@ export class DeviceScriptConfigurationProvider
 
         if (!program) {
             vscode.window.showErrorMessage(
-                "DeviceScript: Debug cancelled. Cannot find a program to debug."
+                "DeviceScript - Debug cancelled. Cannot find a program to debug."
             )
             return undefined
         }

@@ -227,6 +227,13 @@
             }
         },
         "menus": {
+            "editor/title": [
+                {
+                    "command": "extension.devicescript.editor.build",
+                    "when": "resourceLangId == typescript && resourceDirname =~ /\/src$/ && resourceFilename =~ /main*.\\.ts/",
+                    "group": "navigation"
+                }
+            ],
             "view/title": [
                 {
                     "command": "extension.devicescript.connect",
@@ -431,6 +438,12 @@
             ]
         },
         "commands": [
+            {
+                "command": "extension.devicescript.editor.build",
+                "title": "DeviceScript: Build",
+                "category": "DeviceScript",
+                "icon": "$(package)"
+            },
             {
                 "command": "extension.devicescript.terminal.show",
                 "title": "Show Development Server Terminal",
