@@ -186,16 +186,23 @@ export class DeviceScriptConfigurationProvider
         }
 
         // TODO make sure we're running devtools in the correct folder
-        let dir = Utils.dirname(Utils.joinPath(folder.uri, program))
+        let dir = Utils.dirname(Utils.resolvePath(folder.uri, program))
+        let n = 0
         while (dir !== folder.uri) {
             if (await checkFileExists(dir, `devsconfig.json`)) {
                 await this.extensionState.devtools.setProjectFolder(dir)
-                program = Utils.joinPath(folder.uri, program).fsPath.slice(
+                program = Utils.resolvePath(folder.uri, program).fsPath.slice(
                     this.extensionState.devtools.projectFolder.fsPath.length + 1
                 )
                 break
             }
             dir = Utils.dirname(dir)
+            if (n++ > 30) {
+                vscode.window.showErrorMessage(
+                    "DeviceScript: Debug cancelled - folder problem."
+                )
+                return undefined
+            }
         }
 
         await this.extensionState.devtools.start()
