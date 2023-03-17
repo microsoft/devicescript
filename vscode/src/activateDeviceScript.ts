@@ -91,6 +91,24 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             () => extensionState.pickDeviceScriptManager()
         ),
         vscode.commands.registerCommand(
+            "extension.devicescript.editor.run",
+            async () => {
+                const editor = vscode.window.activeTextEditor
+                const file = editor?.document?.uri
+                if (file) {
+                    const folder = vscode.workspace.getWorkspaceFolder(file)
+                    await vscode.debug.startDebugging(folder, {
+                        type: "devicescript",
+                        request: "launch",
+                        name: "DeviceScript: Run File",
+                        stopOnEntry: false,
+                        noDebug: true,
+                        program: file.fsPath,
+                    } as vscode.DebugConfiguration)
+                }
+            }
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.editor.build",
             async () => {
                 const editor = vscode.window.activeTextEditor

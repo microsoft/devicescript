@@ -229,6 +229,11 @@
         "menus": {
             "editor/title": [
                 {
+                    "command": "extension.devicescript.editor.run",
+                    "when": "resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
+                    "group": "navigation"
+                },
+                {
                     "command": "extension.devicescript.editor.build",
                     "when": "resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
                     "group": "navigation"
@@ -438,6 +443,12 @@
             ]
         },
         "commands": [
+            {
+                "command": "extension.devicescript.editor.run",
+                "title": "DeviceScript: Run",
+                "category": "DeviceScript",
+                "icon": "$(debug-run)"
+            },
             {
                 "command": "extension.devicescript.editor.build",
                 "title": "DeviceScript: Build",
