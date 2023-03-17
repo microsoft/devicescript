@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "1.5.13",
+    "version": "1.5.14",
     "publisher": "Microsoft",
     "description": "DeviceScript extension for Visual Studio Code.",
     "author": {
@@ -230,7 +230,7 @@
             "editor/title": [
                 {
                     "command": "extension.devicescript.editor.build",
-                    "when": "resourceLangId == typescript && resourceDirname =~ /\/src$/ && resourceFilename =~ /main*.\\.ts/",
+                    "when": "resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
                     "group": "navigation"
                 }
             ],
