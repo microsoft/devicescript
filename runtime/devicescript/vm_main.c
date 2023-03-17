@@ -38,8 +38,8 @@ static inline void devs_vm_push(devs_ctx_t *ctx, value_t v) {
 
 void devs_dump_stackframe(devs_ctx_t *ctx, devs_activation_t *fn) {
     int idx = fn->func - devs_img_get_function(ctx->img, 0);
-    DMESG("pc=%d @ %s_F%d st=%d", (int)(fn->pc - fn->func->start), devs_img_fun_name(ctx->img, idx),
-          idx, ctx->stack_top);
+    DMESG("at %s_F%d (pc:%d) st=%d", devs_img_fun_name(ctx->img, idx), idx,
+          (int)(fn->pc - fn->func->start), ctx->stack_top);
 }
 
 int devs_vm_resume(devs_ctx_t *ctx) {

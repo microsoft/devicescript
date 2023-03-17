@@ -65,10 +65,10 @@ void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
         const devs_function_desc_t *desc = devs_function_by_pc(ctx, data[i]);
         if (desc) {
             int fn = desc - devs_img_get_function(ctx->img, 0);
-            DMESG("*  pc=%d @ %s_F%d", (int)(pc - desc->start), devs_img_fun_name(ctx->img, fn),
-                  fn);
+            DMESG("*  at %s_F%d (pc:%d)", devs_img_fun_name(ctx->img, fn), fn,
+                  (int)(pc - desc->start));
         } else {
-            DMESG("*  pc=%d @ ???", pc);
+            DMESG("*  at unknown (gpc:%d)", pc); // shouldn't happen
         }
     }
 }
@@ -207,7 +207,7 @@ void devs_process_throw(devs_ctx_t *ctx) {
         }
 
         int pc = devs_pop_tryframe(frame, ctx);
-        LOG("pc=%d", pc);
+        LOG("(gpc:%d)", pc);
         if (pc == 0) {
             if (jump_pc != 0) {
                 devs_invalid_program(ctx, 60124);
