@@ -1327,7 +1327,7 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
             idPrefix: props.idPrefix + "devs_",
             contextValue: props.idPrefix + "devicescript",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            iconPath: "play",
+            iconPath: "debug-start",
         })
     }
 
@@ -1335,9 +1335,9 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
         super.mount()
         this.subscribeRegisters(
             DeviceScriptManagerReg.ProgramSize,
-            DeviceScriptManagerReg.RuntimeVersion,
             DeviceScriptManagerReg.Running,
             DeviceScriptManagerReg.ProgramHash,
+            DeviceScriptManagerReg.ProgramSha256,
             DeviceScriptManagerReg.ProgramName,
             DeviceScriptManagerReg.ProgramVersion
         )
@@ -1370,8 +1370,12 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
         const { service } = this
         const oldLabel = this.label
         const oldDescription = this.description
+        const oldTooltip = this.tooltip
 
-        const programHash =
+        const programHash = service
+            .register(DeviceScriptManagerReg.ProgramHash)
+            .uintValue?.toString(16)
+        const programSha256 =
             toHex(
                 service.register(DeviceScriptManagerReg.ProgramSha256).data
             ) || ""
@@ -1384,28 +1388,41 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
         const programVersion = service.register(
             DeviceScriptManagerReg.ProgramVersion
         ).stringValue
-        const runtimeVersion =
-            service.register(DeviceScriptManagerReg.RuntimeVersion)
-                .stringValue || ""
         const running = service.register(
             DeviceScriptManagerReg.Running
         ).boolValue
 
         this.label = programName || programHash || "no script"
-        this.description = running ? "running" : "stopped"
+        this.description = programVersion || ""
+        this.iconPath = new vscode.ThemeIcon(
+            running ? "debug-stop" : "debug-start",
+            new vscode.ThemeColor(
+                running
+                    ? "debugIcon.stopForeground"
+                    : "debugIcon.startForeground"
+            )
+        )
 
         this.tooltip = toMarkdownString(
-            `### [DeviceScript](https://microsoft.github.io/devicescript)
+            `
+#### ${running ? "running" : "stopped"}            
 
 - program name: ${programName || ""}
 - program version: ${programVersion || ""}
-- program hash: ${programHash}
 - program size: ${prettySize(programSize)}
-- runtime version: ${runtimeVersion}
+- program sha: 
+
+\`\`\`
+${programSha256}
+\`\`\`
 `
         )
 
-        return oldLabel !== this.label || oldDescription !== this.description
+        return (
+            oldLabel !== this.label ||
+            oldDescription !== this.description ||
+            this.tooltip !== oldTooltip
+        )
     }
 }
 
