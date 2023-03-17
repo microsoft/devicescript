@@ -107,6 +107,7 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
             if (!srv) return
 
             extensionState.bus.setRoleManagerService(srv)
+
             const mgr = extensionState.bus.roleManager
             unmount = mgr.subscribe(CHANGE, () => {
                 if (!mgr.allRolesBound()) {
@@ -116,7 +117,8 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
                     setTimeout(async () => {
                         if (mgr.allRolesBound()) return
 
-                        const start = "Show Simulators"
+                        /*
+                        const start = "Start Simulators"
                         const res = await vscode.window.showWarningMessage(
                             "DeviceScript: Would you like to open the simulators view?",
                             start
@@ -126,6 +128,7 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
                                 "extension.devicescript.openSimulators"
                             )
                         }
+                        */
                     }, SETTLE_DELAY)
                 }
             })

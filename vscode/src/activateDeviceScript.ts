@@ -25,6 +25,26 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     })
     const extensionState = new DeviceScriptExtensionState(context, bus)
 
+    const debugFile = async (noDebug: boolean) => {
+        const editor = vscode.window.activeTextEditor
+        const file = editor?.document?.uri
+        if (file) {
+            const folder = vscode.workspace.getWorkspaceFolder(file)
+            await vscode.debug.startDebugging(folder, {
+                type: "devicescript",
+                request: "launch",
+                name: "DeviceScript: Run File",
+                stopOnEntry: false,
+                noDebug,
+                program: file.fsPath,
+            } as vscode.DebugConfiguration)
+            if (noDebug)
+                vscode.commands.executeCommand(
+                    "extension.devicescript.jdom.focus"
+                )
+        }
+    }
+
     // build
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -92,21 +112,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.run",
-            async () => {
-                const editor = vscode.window.activeTextEditor
-                const file = editor?.document?.uri
-                if (file) {
-                    const folder = vscode.workspace.getWorkspaceFolder(file)
-                    await vscode.debug.startDebugging(folder, {
-                        type: "devicescript",
-                        request: "launch",
-                        name: "DeviceScript: Run File",
-                        stopOnEntry: false,
-                        noDebug: true,
-                        program: file.fsPath,
-                    } as vscode.DebugConfiguration)
-                }
-            }
+            async () => debugFile(true)
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.editor.debug",
+            async () => debugFile(false)
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.build",
