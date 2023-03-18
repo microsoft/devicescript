@@ -503,11 +503,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
     async build(file: vscode.Uri) {
         const status = await this.devtools.buildFile(file)
-        if (status?.success)
-            vscode.commands.executeCommand(
-                "extension.devicescript.terminal.show"
-            )
-        else vscode.commands.executeCommand("workbench.action.problems.focus")
+        if (!status?.success)
+            vscode.commands.executeCommand("workbench.action.problems.focus")
     }
 
     async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {

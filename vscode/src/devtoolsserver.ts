@@ -8,6 +8,7 @@ import {
     isCodeError,
     JDEventSource,
     JDService,
+    prettySize,
     unique,
 } from "jacdac-ts"
 import * as vscode from "vscode"
@@ -29,7 +30,7 @@ import { TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
-import type { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
+import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -61,6 +62,7 @@ export class DeveloperToolsManager extends JDEventSource {
     private _buildConfig: ResolvedBuildConfig
     private _terminalPromise: Promise<vscode.Terminal>
     private _diagColl: vscode.DiagnosticCollection
+    private _buildOutputChannel: vscode.OutputChannel
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
         super()
@@ -94,9 +96,16 @@ export class DeveloperToolsManager extends JDEventSource {
                 () => this.show()
             )
         )
-        // outputCh = vscode.window.createOutputChannel("DevS Build")
+
+        this._buildOutputChannel = vscode.window.createOutputChannel(
+            "DeviceScript Compiler",
+            "devicescript"
+        )
+        subscriptions.push(this._buildOutputChannel)
+
         this._diagColl =
             vscode.languages.createDiagnosticCollection("DeviceScript")
+        subscriptions.push(this._diagColl)
 
         // clear errors when file edited
         vscode.workspace.onDidChangeTextDocument(
@@ -185,6 +194,10 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._currentDeviceScriptManager
     }
 
+    showOutput() {
+        this._buildOutputChannel.show()
+    }
+
     async buildFile(file: vscode.Uri): Promise<BuildStatus> {
         // find project folder and relative path
         const root = vscode.workspace.getWorkspaceFolder(file)
@@ -209,8 +222,23 @@ export class DeveloperToolsManager extends JDEventSource {
             dir = Utils.dirname(dir)
         }
 
+        const log = (msg: string) => this._buildOutputChannel.appendLine(msg)
+
+        log(`building ${rel}`)
         await this.setProjectFolder(dir)
         const status = await this.build(rel)
+        if (!status.success) log(`build failed`)
+        else {
+            const { dbg } = status
+            const { sizes } = dbg
+            log("build success")
+            log(
+                Object.keys(sizes)
+                    .map(name => `${name}: ${prettySize(sizes[name])}`)
+                    .join(", ")
+            )
+            this._buildOutputChannel.show()
+        }
         return status
     }
 
