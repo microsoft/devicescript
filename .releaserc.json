@@ -63,9 +63,7 @@
         ],
         [
             "semantic-release-workspace-dependency",
-            {
-                "prefix": "^"
-            }
+            {}
         ]
     ]
 }
