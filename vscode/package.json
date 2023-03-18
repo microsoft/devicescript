@@ -446,6 +446,9 @@
                 },
                 {
                     "command": "extension.devicescript.gateway.refresh"
+                },
+                {
+                    "command": "extension.devicescript.project.new"
                 }
             ],
             "debug/variables/context": [
@@ -456,6 +459,11 @@
             ]
         },
         "commands": [
+            {
+                "command": "extension.devicescript.project.new",
+                "title": "Create New Project...",
+                "category": "DeviceScript"
+            },
             {
                 "command": "extension.devicescript.editor.debug",
                 "title": "DeviceScript: Debug",

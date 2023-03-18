@@ -1,4 +1,5 @@
 import * as vscode from "vscode"
+import { Utils } from "vscode-uri"
 import { activateDebugger } from "./debugger"
 import { activateGateway } from "./gateway/activateGateway"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
@@ -47,6 +48,26 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     // build
     subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.project.new",
+            async () => {
+                const folder = await vscode.window.showWorkspaceFolderPick()
+                if (folder === undefined) return
+                const projectName = await vscode.window.showInputBox({
+                    title: "Pick workspace",
+                    prompt: "It will be used as a root for the new project",
+                })
+                if (!projectName) return
+                const cwd = Utils.joinPath(folder.uri, projectName)
+                await vscode.workspace.fs.createDirectory(cwd)
+                const terminal = vscode.window.createTerminal({
+                    isTransient: true,
+                    cwd,
+                })
+                terminal.sendText("npx --yes @devicescript/cli@latest init")
+                terminal.show()
+            }
+        ),
         vscode.commands.registerCommand(
             "extension.devicescript.configure",
             async () => await extensionState.configure()
