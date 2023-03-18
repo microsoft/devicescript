@@ -917,6 +917,48 @@ function testIgnoredAnd() {
 }
 
 
+
+function expectTypeError(f: () => void) {
+    let ok = false
+    try {
+        f()
+    } catch (e) {
+        ds.assert(e instanceof TypeError)
+        ok = true
+    }
+    ds.assert(ok)
+}
+
+function testQDot() {
+    let q: any = null
+    let i = 0
+    ds.assert(q?.foo === undefined)
+    ds.assert(q?.foo[i++] === undefined)
+    ds.assert(i === 0)
+
+    ds.assert(q?.foo.bar === undefined)
+    expectTypeError(() => {
+        const tmp = (q?.foo).bar
+    })
+
+    q = {}
+    ds.assert(q?.foo?.bar === undefined)
+
+    expectTypeError(() => {
+        const tmp = q?.foo.bar
+    })
+
+    q = () => {
+        i = 7
+    }
+    q?.()
+    ds.assert(i === 7)
+    q = undefined
+    i = 3
+    q?.()[i++]
+    ds.assert(i === 3)
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -952,5 +994,6 @@ const s = new SuiteNode()
 await testFibers()
 testCtorError()
 testIgnoredAnd()
+testQDot()
 
 console.log("all OK")

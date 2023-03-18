@@ -5,7 +5,7 @@ Expressions do not modify the state. They may throw exceptions though.
 ## Format Constants
 
     img_version_major = 6
-    img_version_minor = 5
+    img_version_minor = 6
     img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
@@ -51,11 +51,15 @@ Passes arguments to a function as an array. The array can be at most `max_stack_
 
     final return(value) = 12
 
-    final jmp(*jmpoffset) = 13               // JMP jmpoffset
+    final jmp(*jmpoffset) = 13                // JMP jmpoffset
 
-    jmp_z(*jmpoffset, x) = 14          // JMP jmpoffset IF NOT x
+    jmp_z(*jmpoffset, x) = 14                 // JMP jmpoffset IF NOT x
 
 Jump if condition is false.
+
+    jmp_ret_val_z(*jmpoffset) = 78            // JMP jmpoffset IF ret_val is nullish
+
+Used in compilation of `?.`.
 
     try(*jmpoffset) = 80                // TRY jmpoffset
 
@@ -111,6 +115,8 @@ Trigger breakpoint when debugger connected. No-op otherwise.
     load_closure(*local_clo_idx, levels): any = 74
 
     make_closure(*func_idx): function = 75    // CLOSURE(func_idx)
+
+    store_ret_val(x) = 93                     // ret_val := x
 
 ### Field access
 
@@ -210,6 +216,10 @@ Check if object is exactly `undefined`.
 
 Check if `obj` has `cls.prototype` in its prototype chain.
 
+    fun is_nullish(x): bool = 72
+
+Check if value is precisely `null` or `undefined`.
+
 ### Booleans
 
     fun true(): bool = 48
@@ -272,20 +282,11 @@ Same as `x | 0`.
 
     fun approx_ne(x, y): bool = 92  // x != y
 
-### To be removed (mostly)
-
-    terminate_fiber(fiber_handle) = 72
-
-Returns nan (fiber doesn't exists) or 0 (terminated).
+### To be removed (soon)
 
     now_ms: number = 77
 
 Time since device restart in ms; time only advances when sleeping.
-
-    get_fiber_handle(func): fiber = 78
-
-If `func == null` returns self-handle.
-Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
 
 ## Enum: StrIdx
 
@@ -615,3 +616,4 @@ Only `true` and `false` values.
     id = 145
     _commandResponse = 146
     isAction = 147
+    millis = 148

@@ -116,6 +116,8 @@ type TsFunctionDecl =
     | ts.ClassDeclaration
     | ts.VariableDeclaration
 
+type PropChain = ts.PropertyAccessChain | ts.ElementAccessChain | ts.CallChain
+
 class Cell {
     _index: number
 
@@ -601,6 +603,9 @@ class Program implements TopOpWriter {
     srcFiles: SrcFile[] = []
     diagnostics: DevsDiagnostic[] = []
     startServices: BaseServiceConfig[] = []
+    private currChain: ts.Expression[] = []
+    private retValExpr: ts.Expression
+    private retValRefs = 0
 
     constructor(public mainFileName: string, public host: Host) {
         this.flags = host.getFlags?.() ?? {}
@@ -2251,6 +2256,10 @@ class Program implements TopOpWriter {
         return r | (shift << 4)
     }
 
+    onCall(): void {
+        if (this.retValRefs != 0) this.retValError(this.retValExpr)
+    }
+
     private emitGenericCall(args: Expr[], fn: Value) {
         const wr = this.writer
         if (args.some(ts.isSpreadElement)) {
@@ -2268,6 +2277,7 @@ class Program implements TopOpWriter {
                 wr.emitCall(wr.emitIndex(arr.emit(), wr.emitString(meth)), expr)
             }
             wr.emitStmt(Op.STMT2_CALL_ARRAY, fn, arr.finalEmit())
+            this.onCall()
         } else {
             wr.emitCall(fn, ...this.emitArgs(args))
         }
@@ -2507,9 +2517,6 @@ class Program implements TopOpWriter {
                 return undef()
             }
 
-            case "ds.millis":
-                return wr.emitExpr(Op.EXPR0_NOW_MS)
-
             case "Buffer.getAt": {
                 this.requireArgs(expr, 2)
                 const fmt = this.parseFormat(expr.arguments[1])
@@ -2548,8 +2555,6 @@ class Program implements TopOpWriter {
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
-        if (expr.questionDotToken)
-            throwError(expr, "?. on calls not supported yet")
         return this.emitCallLike({
             position: expr,
             callexpr: expr.expression,
@@ -2782,11 +2787,22 @@ class Program implements TopOpWriter {
         }
     }
 
+    private banOptional(expr: ts.Expression) {
+        if (ts.isOptionalChain(expr)) throwError(expr, "?. not supported here")
+    }
+
+    private flattenChain(chain: PropChain) {
+        const links: PropChain[] = [chain]
+        while (!chain.questionDotToken) {
+            chain = chain.expression as PropChain
+            links.unshift(chain)
+        }
+        return { expression: chain.expression, chain: links }
+    }
+
     private emitPropertyAccessExpression(
         expr: ts.PropertyAccessExpression
     ): Value {
-        if (expr.questionDotToken) throwError(expr, "?. not yet supported")
-
         const r = this.emitBuiltInConst(expr)
         if (r) return r
 
@@ -2797,6 +2813,7 @@ class Program implements TopOpWriter {
         }
 
         if (idName(expr.name) == "prototype") {
+            this.banOptional(expr)
             const sym = this.checker.getSymbolAtLocation(expr.expression)
             if (this.isRoleClass(sym)) {
                 const spec = this.specFromTypeName(expr.expression)
@@ -3411,7 +3428,43 @@ class Program implements TopOpWriter {
         return this.emitExpr(expr.expression)
     }
 
+    private retValError(expr: ts.Expression): never {
+        throwError(expr, `invalid ?. expression nesting`)
+    }
+
+    private emitChain(expr: PropChain) {
+        const tmp = this.flattenChain(expr)
+        const wr = this.writer
+        const chainLen = this.currChain.length
+        this.currChain.push(...tmp.chain, tmp.expression)
+        const obj = this.emitExpr(tmp.expression)
+        if (this.retValRefs != 0) this.retValError(expr)
+        this.retValExpr = tmp.expression
+        this.retValRefs = 1
+        wr.emitStmt(Op.STMT1_STORE_RET_VAL, obj)
+        const lbl = wr.mkLabel("opt")
+        wr.emitJumpIfRetValNullish(lbl)
+        wr.emitStmt(Op.STMT1_STORE_RET_VAL, this.emitExpr(expr))
+        if (this.retValRefs != 0) this.retValError(expr)
+        wr.emitLabel(lbl)
+        this.currChain = this.currChain.slice(0, chainLen)
+        return this.retVal()
+    }
+
     private emitExpr(expr: Expr): Value {
+        if (
+            ts.isOptionalChain(expr) &&
+            expr.kind != SK.NonNullExpression &&
+            !this.currChain.includes(expr)
+        )
+            return this.emitChain(expr as PropChain)
+
+        if (expr === this.retValExpr) {
+            if (this.retValRefs != 1) this.retValError(expr)
+            this.retValRefs = 0
+            return this.retVal()
+        }
+
         const folded = this.constantFold(expr)
         if (folded) {
             if (false && ts.isBinaryExpression(expr))

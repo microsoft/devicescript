@@ -132,6 +132,14 @@ static void stmtx1_jmp_z(devs_activation_t *frame, devs_ctx_t *ctx) {
         frame->pc = pc;
 }
 
+static void stmtx_jmp_ret_val_z(devs_activation_t *frame, devs_ctx_t *ctx) {
+    int pc = get_pc(frame, ctx);
+    if (pc && devs_is_null_or_undefined(ctx->curr_fiber->ret_val)) {
+        ctx->curr_fiber->ret_val = devs_undefined; // null => undefined
+        frame->pc = pc;
+    }
+}
+
 static void stmtx_try(devs_activation_t *frame, devs_ctx_t *ctx) {
     int pc = get_pc(frame, ctx);
     devs_push_tryframe(frame, ctx, pc);
@@ -201,6 +209,11 @@ static void stmtx1_store_local(devs_activation_t *frame, devs_ctx_t *ctx) {
         frame->slots[off] = v;
 }
 
+static void stmt1_store_ret_val(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t v = devs_vm_pop_arg(ctx);
+    ctx->curr_fiber->ret_val = v;
+}
+
 static value_t *lookup_clo_val(devs_activation_t *frame, devs_ctx_t *ctx) {
     int level = devs_vm_pop_arg_i32(ctx);
     unsigned off = ctx->literal_int;
@@ -243,22 +256,6 @@ static void stmt4_store_buffer(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t buffer = devs_vm_pop_arg_buffer(ctx, DEVS_BUFFER_RW);
     if (!devs_is_undefined(buffer))
         devs_buffer_op(ctx, fmt0, offset, buffer, &val);
-}
-
-static void stmt1_terminate_fiber(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t h = devs_vm_pop_arg(ctx);
-    ctx->curr_fiber->ret_val = devs_undefined;
-    if (devs_is_nullish(h))
-        return;
-    if (devs_handle_type(h) != DEVS_HANDLE_TYPE_FIBER)
-        devs_throw_expecting_error_ext(ctx, "fiber", h);
-    else {
-        devs_fiber_t *fib = devs_fiber_by_tag(ctx, devs_handle_value(h));
-        if (fib == NULL)
-            return;
-        ctx->curr_fiber->ret_val = devs_zero;
-        devs_fiber_termiante(fib);
-    }
 }
 
 static value_t expr_invalid(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -324,20 +321,6 @@ static value_t expr0_ret_val(devs_activation_t *frame, devs_ctx_t *ctx) {
 
 static value_t expr0_now_ms(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_double((double)ctx->_now_long);
-}
-
-static value_t expr1_get_fiber_handle(devs_activation_t *frame, devs_ctx_t *ctx) {
-    value_t func = devs_vm_pop_arg(ctx);
-    devs_fiber_t *fiber = NULL;
-
-    if (devs_is_nullish(func))
-        fiber = ctx->curr_fiber;
-    else if (devs_handle_type(func) == DEVS_HANDLE_TYPE_STATIC_FUNCTION)
-        fiber = devs_fiber_by_fidx(ctx, devs_handle_value(func));
-
-    if (fiber == NULL)
-        return devs_undefined;
-    return devs_value_from_handle(DEVS_HANDLE_TYPE_FIBER, fiber->handle_tag);
 }
 
 static value_t expr1_new(devs_activation_t *frame, devs_ctx_t *ctx) {
@@ -538,6 +521,14 @@ static value_t expr0_undefined(devs_activation_t *frame, devs_ctx_t *ctx) {
 static value_t expr1_is_undefined(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t obj = devs_vm_pop_arg(ctx);
     if (devs_is_undefined(obj))
+        return devs_true;
+    else
+        return devs_false;
+}
+
+static value_t expr1_is_nullish(devs_activation_t *frame, devs_ctx_t *ctx) {
+    value_t obj = devs_vm_pop_arg(ctx);
+    if (devs_is_null_or_undefined(obj))
         return devs_true;
     else
         return devs_false;

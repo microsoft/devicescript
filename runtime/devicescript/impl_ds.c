@@ -86,3 +86,7 @@ void fun1_DeviceScript__dcfgString(devs_ctx_t *ctx) {
                               ctx, devs_string_try_alloc_init(ctx, (const uint8_t *)v, sz)));
     }
 }
+
+void fun0_DeviceScript_millis(devs_ctx_t *ctx) {
+    devs_ret(ctx, devs_value_from_double((double)ctx->_now_long));
+}

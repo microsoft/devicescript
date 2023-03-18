@@ -57,3 +57,7 @@ docker:
 	$(MAKE) clean
 	docker run -v `pwd`:/src -w /src  library/gcc make native
 	$(MAKE) clean
+
+empty:
+	$(MAKE) bc comp-fast
+	devs ctool --empty
