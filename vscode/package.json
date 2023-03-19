@@ -409,37 +409,48 @@
             ],
             "commandPalette": [
                 {
-                    "command": "extension.devicescript.openSimulators"
+                    "command": "extension.devicescript.openSimulators",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.configure"
+                    "command": "extension.devicescript.configure",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.pickDeviceScriptManager"
+                    "command": "extension.devicescript.pickDeviceScriptManager",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.connect"
+                    "command": "extension.devicescript.connect",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.device.flash"
+                    "command": "extension.devicescript.device.flash",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.simulator.start"
+                    "command": "extension.devicescript.simulator.start",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.simulator.stop"
+                    "command": "extension.devicescript.simulator.stop",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.terminal.show"
+                    "command": "extension.devicescript.terminal.show",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.sims.add"
+                    "command": "extension.devicescript.sims.add",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.services.add"
+                    "command": "extension.devicescript.services.add",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.boards.add"
+                    "command": "extension.devicescript.boards.add",
+                    "when": "workbenchState != empty"
                 },
                 {
                     "command": "extension.devicescript.gateway.configure"
@@ -448,7 +459,8 @@
                     "command": "extension.devicescript.gateway.refresh"
                 },
                 {
-                    "command": "extension.devicescript.project.new"
+                    "command": "extension.devicescript.project.new",
+                    "when": "workbenchState != empty"
                 }
             ],
             "debug/variables/context": [
@@ -597,7 +609,7 @@
             },
             {
                 "command": "extension.devicescript.watch.clear",
-                "title": "Watch",
+                "title": "Clear watches",
                 "category": "DeviceScript",
                 "icon": "$(close-all)"
             },

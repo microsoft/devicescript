@@ -54,7 +54,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const folder = await vscode.window.showWorkspaceFolderPick()
                 if (folder === undefined) return
                 const projectName = await vscode.window.showInputBox({
-                    title: "Pick workspace",
+                    title: "Pick project folder",
                     prompt: "It will be used as a root for the new project",
                 })
                 if (!projectName) return
@@ -64,7 +64,9 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     isTransient: true,
                     cwd,
                 })
-                terminal.sendText("npx --yes @devicescript/cli@latest init")
+                terminal.sendText(
+                    "npx --yes @devicescript/cli@latest init --quiet"
+                )
                 terminal.show()
             }
         ),

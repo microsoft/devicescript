@@ -34,25 +34,11 @@ or the **Extensions: Install from VSIX** command in the Command Palette, point t
 
 ## Setting up the project
 
-The extension activates lazily when it detects a DeviceScript project,
-so let's use a terminal to create the initial project structure.
-
 -   install [Node.JS 18+](https://nodejs.org/en/download/)
--   Open a terminal (`` Ctrl + ` ``)
--   Create a new folder if needed
+-   open a folder in Visual Studio Code
+-   From the Command palette, type **DeviceScript: Create New Project...** and follow the prompts.
 
-```bash
-mkdir mydevice
-cd mydevice
-```
-
--   Use the `init` command to setup a new project
-
-```bash
-npx --yes @devicescript/cli@latest init
-```
-
-The extension should now be loaded. Go to the debug section and start debugging!
+The new project should be ready to go.
 
 ## DeviceScript basics
 
@@ -86,7 +72,7 @@ Make sure `@devicescript/cli` has been
 added as a developer dependency to your project, and that dependencies have been installed.
 
 ```bash
-yarn add -D @devicescript/cli
+yarn add -D @devicescript/cli@latest
 yarn install
 ```
 
