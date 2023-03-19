@@ -209,7 +209,7 @@ const optionalFiles: FileSet = {
             "@devicescript/cli": "*",
         },
         scripts: {
-            setup: "devicescript build", // generates .devicescript/lib/* files
+            setup: "devicescript build --quiet", // generates .devicescript/lib/* files
             postinstall: "devicescript build",
             "build:devicescript": "devicescript build src/main.ts",
             build: "yarn build:devicescript",
