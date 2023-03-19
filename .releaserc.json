@@ -60,6 +60,10 @@
                     "package.json"
                 ]
             }
+        ],
+        [
+            "semantic-release-workspace-dependency",
+            {}
         ]
     ]
 }
