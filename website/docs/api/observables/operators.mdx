@@ -157,3 +157,48 @@ await button.down
     .pipe(throttleTime(1000))
     .subscribe(() => console.log("click"))
 ```
+
+### threshold
+
+Filters numerical data stream within change threshold.
+
+```rx
+-0-1-2-1-0-
+
+> threshold(2)
+
+-0---2---0-
+```
+
+The example tracks the temperature returned
+
+```ts
+import { Thermometer } from "@devicescript/core"
+import { threshold } from "@devicescript/observables"
+
+const thermometer = new Thermometer()
+
+await thermometer.temperature
+    // highlight-next-line
+    .pipe(threshold(2))
+    .subscribe(t => console.log(t))
+```
+
+### distinctUntilChanged
+
+Returns a result Observable that emits all values pushed by the source observable
+if they are distinct in comparison to the last value the result observable emitted.
+
+This function can be used to create user-friendly transformer. For example, thershold is as follows:
+
+```ts
+export function threshold<T = number>(
+    value: number,
+    keySelector: (value: T) => number = identity as (value: T) => number
+): OperatorFunction<T, T> {
+    return distinctUntilChanged<T, number>(
+        (l, r) => Math.abs(l - r) < value,
+        keySelector
+    )
+}
+```
