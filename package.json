@@ -18,6 +18,7 @@
         "test": "yarn test:compiler && yarn test:test && yarn test:observables && yarn test:cloud && yarn test:cowsay",
         "presemantic": "node ./scripts/presemantic.mjs",
         "boards": "node ./cli/devicescript ctool --fetch-boards compiler/src/boards.json",
+        "bump": "node scripts/bump.mjs",
         "localboards2": "node ./cli/devicescript ctool --local-boards ../.. --fetch-boards compiler/src/boards.json",
         "localboards1": "node ./cli/devicescript ctool --local-boards .. --fetch-boards compiler/src/boards.json"
     },
@@ -35,6 +36,8 @@
         "website"
     ],
     "devDependencies": {
-        "esbuild": "^0.17.11"
+        "esbuild": "^0.17.11",
+        "semver": "^7.3.8",
+        "zx": "^7.2.1"
     }
 }

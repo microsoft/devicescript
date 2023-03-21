@@ -4,12 +4,12 @@ Expressions do not modify the state. They may throw exceptions though.
 
 ## Format Constants
 
-    img_version_major = 6
-    img_version_minor = 6
-    img_version_patch = 0
+    img_version_major = 2
+    img_version_minor = 0
+    img_version_patch = 1
     img_version = $version
     magic0 = 0x53766544 // "DevS"
-    magic1 = 0x9a6a7e0a
+    magic1 = 0xf1296e0a
     num_img_sections = 10
     fix_header_size = 32
     section_header_size = 8
@@ -284,9 +284,7 @@ Same as `x | 0`.
 
 ### To be removed (soon)
 
-    now_ms: number = 77
-
-Time since device restart in ms; time only advances when sleeping.
+    removed_77() = 77
 
 ## Enum: StrIdx
 
