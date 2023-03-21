@@ -1,4 +1,4 @@
-import { describe, expect, test } from "."
+import { afterEach, beforeEach, describe, expect, test } from "."
 
 describe("pass", function () {
     test("console.log", () => {
@@ -41,5 +41,31 @@ describe("expect", function () {
         expect(() => {
             throw new Error("boom")
         }).toThrow()
+    })
+})
+
+let beforeCounter = 0
+describe("beforeEach", function () {
+    beforeEach(() => {
+        beforeCounter++
+    })
+    test("increment", () => {
+        expect(beforeCounter).toBe(1)
+    })
+    test("increment2", () => {
+        expect(beforeCounter).toBe(2)
+    })
+})
+
+let afterCounter = 0
+describe("afterEach", function () {
+    afterEach(() => {
+        afterCounter++
+    })
+    test("increment", () => {
+        expect(afterCounter).toBe(0)
+    })
+    test("increment2", () => {
+        expect(afterCounter).toBe(1)
     })
 })

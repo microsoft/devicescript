@@ -26,8 +26,17 @@ export interface TestQuery {
     suiteFilter?: (suite: SuiteNode) => boolean
 }
 export type RunOptions = TestQuery & {}
+export class SetupTeardownNode {
+    constructor(readonly callback: TestFunction) {}
+
+    async run(runOptions: RunOptions) {
+        return await this.callback()
+    }
+}
 export class SuiteNode {
     readonly children: SuiteNode[] = []
+    readonly befores: SetupTeardownNode[] = []
+    readonly afters: SetupTeardownNode[] = []
     readonly tests: TestNode[] = []
 
     constructor(public name: string) {}
@@ -63,7 +72,28 @@ export class SuiteNode {
         for (const test of this.tests.filter(
             test => !testFilter || testFilter(test)
         )) {
-            await test.run(options)
+            const cleanups = []
+            try {
+                // before tests
+                for (const before of this.befores) {
+                    const cleanup = await before.run(options)
+                    if (cleanup) cleanups.push(cleanup)
+                }
+
+                // actually run test
+                await test.run(options)
+
+                // run afters
+                for (const after of this.afters) {
+                    const cleanup = await after.run(options)
+                    if (cleanup) cleanups.push(cleanup)
+                }
+            } finally {
+                // final cleanup
+                for (const cleanup of cleanups) {
+                    await cleanup()
+                }
+            }
             result.total++
             switch (test.state) {
                 case TestState.Passed:
@@ -130,6 +160,13 @@ function currentSuite() {
     return parent
 }
 
+/**
+ * Starts a new test suite.
+ *
+ * A suite lets you organize your tests and benchmarks so reports are more clear.
+ * @param name test suite name
+ * @param body function that registers tests or more suites
+ */
 export function describe(name: string, body: SuiteFunction) {
     // debounce autorun
     clearTimeout(autoRunTestTimer)
@@ -156,12 +193,37 @@ export function describe(name: string, body: SuiteFunction) {
     }
 }
 
+/**
+ * Defines a set of related expectations. It receives the test name and a function that holds the expectations to test.
+ * @alias it
+ */
 export function test(name: string, body: TestFunction, options?: TestOptions) {
     const parent = currentSuite()
     parent.tests.push(new TestNode(name, body, options))
 }
 
+/**
+ * Alias for the test method
+ */
 export const it = test
+
+/**
+ * Register a callback to be called before each of the tests in the current context runs.
+ * If the function returns a promise, waits until the promise resolve before running the test.
+ */
+export function beforeEach(body: TestFunction) {
+    const parent = currentSuite()
+    parent.befores.push(new SetupTeardownNode(body))
+}
+
+/**
+ * Register a callback to be called after each of the tests in the current context runs.
+ * If the function returns a promise, waits until the promise resolve before running the test.
+ */
+export function afterEach(body: TestFunction) {
+    const parent = currentSuite()
+    parent.afters.push(new SetupTeardownNode(body))
+}
 
 export async function runTests(options: TestQuery = {}) {
     const { ...query } = options
