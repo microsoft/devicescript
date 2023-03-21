@@ -106,6 +106,10 @@ export declare module Exts {
      */
     function devsGcStress(en: boolean): void;
     /**
+     * Clear settings.
+     */
+    function clearFlash(): void;
+    /**
      * Initializes and start the virtual machine (calls init).
      */
     function devsStart(): void;

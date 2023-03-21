@@ -301,6 +301,13 @@ export module Exts {
     }
 
     /**
+     * Clear settings.
+     */
+    export function clearFlash() {
+        if (Module.flashSave) Module.flashSave(new Uint8Array([0, 0, 0, 0]))
+    }
+
+    /**
      * Initializes and start the virtual machine (calls init).
      */
     export function devsStart(): void {
