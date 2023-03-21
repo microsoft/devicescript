@@ -31,7 +31,6 @@ A tiny ESP32-C3 board.
 | **MOSI** |  GPIO7 |  debug,  io |
 | **RX** |  GPIO20 |  bootUart,  io |
 | **SCK** |  GPIO10 |  io |
-| **TX** |  GPIO21 |  bootUart,  io |
 | **i2c.pinSCL** |  GPIO6 |  debug,  io |
 | **i2c.pinSDA** |  GPIO5 |  debug,  io |
 | **led.pin** |  GPIO2 |  analogIn,  boot,  io |
@@ -74,6 +73,7 @@ devicescript flash --board adafruit_qt_py_c3
         "type": 1
     },
     "pins": {
+        "#TX": 21,
         "A0": 4,
         "A1": 3,
         "A2": 1,
@@ -81,8 +81,7 @@ devicescript flash --board adafruit_qt_py_c3
         "MISO": 8,
         "MOSI": 7,
         "RX": 20,
-        "SCK": 10,
-        "TX": 21
+        "SCK": 10
     },
     "services": [
         {
@@ -90,6 +89,7 @@ devicescript flash --board adafruit_qt_py_c3
             "pin": 9,
             "service": "button"
         }
-    ]
+    ],
+    "uartLog": true
 }
 ```

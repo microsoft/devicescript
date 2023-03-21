@@ -24,7 +24,6 @@ A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originall
 | **P0** |  GPIO0 |  analogIn,  io |
 | **P1** |  GPIO1 |  analogIn,  io |
 | **P20** |  GPIO20 |  bootUart,  io |
-| **P21** |  GPIO21 |  bootUart,  io |
 | **P3** |  GPIO3 |  analogIn,  io |
 | **P4** |  GPIO4 |  analogIn,  debug,  io |
 | **P5** |  GPIO5 |  debug,  io |
@@ -72,10 +71,10 @@ devicescript flash --board esp32c3_rust_devkit
     },
     "pins": {
         "#LED": 7,
+        "#P21": 21,
         "P0": 0,
         "P1": 1,
         "P20": 20,
-        "P21": 21,
         "P3": 3,
         "P4": 4,
         "P5": 5,
@@ -87,6 +86,7 @@ devicescript flash --board esp32c3_rust_devkit
             "pin": 9,
             "service": "button"
         }
-    ]
+    ],
+    "uartLog": true
 }
 ```

@@ -1,0 +1,129 @@
+---
+description: Unexpected Maker FeatherS2 ESP32-S2
+---
+# Unexpected Maker FeatherS2 ESP32-S2
+
+
+ESP32-S2 based development board in a Feather format.
+
+
+## Features
+
+-  I2C on SDA/SCL: 8/9 using Qwiic connector
+-  LED on pin 40
+-  Service: buttonBOOT (button)
+-  Service: ambientLight (analog:lightLevel)
+
+## Stores
+
+-  [https://unexpectedmaker.com/shop/feathers2-esp32-s2](https://unexpectedmaker.com/shop/feathers2-esp32-s2)
+
+## Pins
+
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **LED0** |  GPIO13 |  io |
+| **MISO** |  GPIO37 |  io |
+| **MOSI** |  GPIO35 |  io |
+| **P1** |  GPIO1 |  analogIn,  io |
+| **P10** |  GPIO10 |  analogIn,  io |
+| **P11** |  GPIO11 |  io |
+| **P12** |  GPIO12 |  io |
+| **P14** |  GPIO14 |  io |
+| **P17** |  GPIO17 |  analogOut,  io |
+| **P18** |  GPIO18 |  analogOut,  io |
+| **P3** |  GPIO3 |  analogIn,  io |
+| **P33** |  GPIO33 |  io |
+| **P38** |  GPIO38 |  io |
+| **P5** |  GPIO5 |  analogIn,  io |
+| **P6** |  GPIO6 |  analogIn,  io |
+| **P7** |  GPIO7 |  analogIn,  io |
+| **RX** |  GPIO44 |  io |
+| **SCK** |  GPIO36 |  io |
+| **i2c.pinSCL** |  GPIO9 |  analogIn,  io |
+| **i2c.pinSDA** |  GPIO8 |  analogIn,  io |
+| **led.pin** |  GPIO40 |  debug,  io |
+| **led.pinCLK** |  GPIO45 |  boot,  io |
+| **services.buttonBOOT[0].pin** |  GPIO0 |  boot,  io |
+| **services.ambientLight[1].pin** |  GPIO4 |  analogIn,  io |
+| **setupPins[0].pin** |  GPIO21 |  io |
+
+
+
+## Firmware update
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash --board feather_s2
+```
+
+
+- [Firmware](https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-feather_s2-0x1000.bin)
+
+## Configuration
+
+```json title="feather_s2.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "feather_s2",
+    "devName": "Unexpected Maker FeatherS2 ESP32-S2",
+    "productId": "0x3126f707",
+    "$description": "ESP32-S2 based development board in a Feather format.",
+    "archId": "esp32s2",
+    "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2",
+    "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 9,
+        "pinSDA": 8
+    },
+    "led": {
+        "pin": 40,
+        "pinCLK": 45,
+        "type": 2
+    },
+    "pins": {
+        "#TX": 43,
+        "LED0": 13,
+        "MISO": 37,
+        "MOSI": 35,
+        "P1": 1,
+        "P10": 10,
+        "P11": 11,
+        "P12": 12,
+        "P14": 14,
+        "P17": 17,
+        "P18": 18,
+        "P3": 3,
+        "P33": 33,
+        "P38": 38,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7,
+        "RX": 44,
+        "SCK": 36
+    },
+    "services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 0,
+            "service": "button"
+        },
+        {
+            "name": "ambientLight",
+            "pin": 4,
+            "service": "analog:lightLevel"
+        }
+    ],
+    "setupPins": [
+        {
+            "out": 1,
+            "pin": 21
+        }
+    ],
+    "uartLog": true
+}
+```
