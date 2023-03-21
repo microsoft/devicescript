@@ -35,6 +35,8 @@
         "website"
     ],
     "devDependencies": {
-        "esbuild": "^0.17.11"
+        "esbuild": "^0.17.11",
+        "semver": "^7.3.8",
+        "zx": "^7.2.1"
     }
 }
