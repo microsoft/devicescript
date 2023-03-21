@@ -44,7 +44,7 @@ async function userBump() {
     if (semver.cmp(deflVer, ">", v.version)) fail("can't go back")
 
     const currTag = await $`git tag -l v${v.version}`
-    if (currTag.stdout.trim()) fail(`tag v${currTag} already exists`)
+    if (currTag.stdout.trim()) fail(`tag ${currTag} already exists`)
 
     await fs.writeFile(
         bytecodePath,
@@ -90,16 +90,19 @@ async function cloudPublish() {
         process.exit(0)
     }
 
+    const currTag = await $`git tag -l v${currByteCodeVer}`
+    if (currTag.stdout.trim()) fail(`tag ${currTag} already exists`)
+
     for (const fn of allPkgPath) {
         const json = await fs.readJSON(fn)
-        json.version = v.version
+        json.version = currByteCodeVer
         await fs.writeJSON(fn, json, { spaces: 4 })
         echo(`bump ${fn}`)
     }
 
     await $`git add .`
-    await $`git commit -m ${"[skip ci] release v" + v.version}`
-    await $`git tag ${"v" + v.version}`
+    await $`git commit -m ${"[skip ci] release v" + currByteCodeVer}`
+    await $`git tag ${"v" + currByteCodeVer}`
     await $`git push`
     await $`git push --tags`
 
