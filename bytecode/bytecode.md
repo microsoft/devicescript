@@ -284,7 +284,7 @@ Same as `x | 0`.
 
 ### To be removed (soon)
 
-    unused_77() = 77
+    removed_77() = 77
 
 ## Enum: StrIdx
 

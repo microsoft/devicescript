@@ -93,7 +93,7 @@ export enum Op {
     EXPR2_NE = 71, // x !== y
     EXPR2_APPROX_EQ = 91, // x == y
     EXPR2_APPROX_NE = 92, // x != y
-    STMT0_UNUSED_77 = 77,
+    STMT0_REMOVED_77 = 77,
     OP_PAST_LAST = 94,
 }
 
@@ -504,7 +504,7 @@ export const OP_PRINT_FMTS = [
     "load_closure(local_clo_idx=%e, levels=%e)",
     "CLOSURE(%F)",
     "typeof_str(%e)",
-    "UNUSED_77 ",
+    "REMOVED_77 ",
     "JMP %j IF ret_val is nullish",
     "CALL %e(...%e)",
     "TRY %j",

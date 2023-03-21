@@ -61,8 +61,19 @@ async function userBump() {
 }
 
 async function cloudPublish() {
+    if (process.env["GITHUB_WORKFLOW"]) {
+        await $`git config user.email "<>"`
+        await $`git config user.name "GitHub Bot"`
+    }
+
+    const vmFile = "website/static/dist/devicescript-vm.js"
+    await $`make -C runtime ../${vmFile}`
+    await $`git add ${vmFile} runtime/devicescript-vm/dist/types.d.ts`
+
     if (currByteCodeVer == mainPkgJson.version) {
         echo(`version match, ${currByteCodeVer}`)
+        const r = await $`git commit -m ${"[skip ci] rebuild VM"}`.nothrow()
+        if (r.exitCode == 0) await $`git push`
         process.exit(0)
     }
 
@@ -74,7 +85,7 @@ async function cloudPublish() {
     }
 
     await $`git add .`
-    await $`git commit -m ${"Bump to v" + v.version}`
+    await $`git commit -m ${"[skip ci] release v" + v.version}`
     await $`git tag ${"v" + v.version}`
     await $`git push`
     await $`git push --tags`

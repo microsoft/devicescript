@@ -43,9 +43,6 @@ jobs:
             - run: make
             - run: make test
             - run: make vscode-pkg
-            - name: update pre-compiled WASM
-              run: make update-dist
-              if: github.ref == 'refs/heads/main'
             - run: make release
               if: github.ref == 'refs/heads/main'
               env:

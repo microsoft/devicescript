@@ -101,10 +101,5 @@ $(VM_FILE): $(VM_TMP_FILE)
 
 em: $(VM_TMP_FILE)
 
-update-dist: $(VM_FILE)
-	git add $(VM_FILE) devicescript-vm/dist/types.d.ts
-	if [ "X$$GITHUB_WORKFLOW" != "X" ] ; then git config user.email "<>" && git config user.name "GitHub Bot" ; fi
-	if git commit -m "[skip ci] rebuild $(VM_FILE)" ; then git push ; fi
-
 test test-c test-em:
 	$(MAKE) -C .. $@

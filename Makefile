@@ -8,7 +8,7 @@ comp:
 comp-fast:
 	yarn build-fast
 
-native native1 em update-dist:
+native native1 em:
 	$(MAKE) -C runtime $@
 
 test-c: native comp-fast

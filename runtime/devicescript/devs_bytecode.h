@@ -93,7 +93,7 @@
 #define DEVS_EXPR2_NE 71                   // x !== y
 #define DEVS_EXPR2_APPROX_EQ 91            // x == y
 #define DEVS_EXPR2_APPROX_NE 92            // x != y
-#define DEVS_STMT0_UNUSED_77 77
+#define DEVS_STMT0_REMOVED_77 77
 #define DEVS_OP_PAST_LAST 94
 
 #define DEVS_OP_PROPS                                                                              \
@@ -420,10 +420,10 @@
         expr2_sub, expr2_mul, expr2_div, expr2_bit_and, expr2_bit_or, expr2_bit_xor,               \
         expr2_shift_left, expr2_shift_right, expr2_shift_right_unsigned, expr2_eq, expr2_le,       \
         expr2_lt, expr2_ne, expr1_is_nullish, stmtx2_store_closure, exprx1_load_closure,           \
-        exprx_make_closure, expr1_typeof_str, stmt0_unused_77, stmtx_jmp_ret_val_z,                \
-        stmt2_call_array, stmtx_try, stmtx_end_try, stmt0_catch, stmt0_finally, stmt1_throw,       \
-        stmt1_re_throw, stmtx1_throw_jmp, stmt0_debugger, expr1_new, expr2_instance_of,            \
-        expr0_null, expr2_approx_eq, expr2_approx_ne, stmt1_store_ret_val, expr_invalid
+        exprx_make_closure, expr1_typeof_str, expr_invalid, stmtx_jmp_ret_val_z, stmt2_call_array, \
+        stmtx_try, stmtx_end_try, stmt0_catch, stmt0_finally, stmt1_throw, stmt1_re_throw,         \
+        stmtx1_throw_jmp, stmt0_debugger, expr1_new, expr2_instance_of, expr0_null,                \
+        expr2_approx_eq, expr2_approx_ne, stmt1_store_ret_val, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \
