@@ -1,3 +1,6 @@
 # @devicescript/cloud
 
-This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
+A [DeviceScript](https://microsoft.github.io/devicescript/) library
+to communicate with a cloud gateway.
+
+- [Read documentation](https://microsoft.github.io/devicescript/developer/cloud)
