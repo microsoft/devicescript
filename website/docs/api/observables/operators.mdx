@@ -173,10 +173,10 @@ Filters numerical data stream within change threshold.
 The example tracks the temperature returned
 
 ```ts
-import { Thermometer } from "@devicescript/core"
+import { Temperature } from "@devicescript/core"
 import { threshold } from "@devicescript/observables"
 
-const thermometer = new Thermometer()
+const thermometer = new Temperature()
 
 await thermometer.temperature
     // highlight-next-line
@@ -191,10 +191,10 @@ if they are distinct in comparison to the last value the result observable emitt
 
 This function can be used to create user-friendly transformer. For example, thershold is as follows:
 
-```ts
+```ts skip
 export function threshold<T = number>(
     value: number,
-    keySelector: (value: T) => number = identity as (value: T) => number
+    ...
 ): OperatorFunction<T, T> {
     return distinctUntilChanged<T, number>(
         (l, r) => Math.abs(l - r) < value,

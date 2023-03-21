@@ -12,8 +12,8 @@ sensor.pressure.subscribe(async () => {
     if (pressure > 1400) {
         // click!
         console.log(`click!`)
-        mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
+        await mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
         // debouncing
-        ds.sleep(50)
+        await ds.sleep(50)
     }
 })
