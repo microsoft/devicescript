@@ -46,12 +46,12 @@ bc:
 		runtime/devicescript/devs_bytecode.h \
 		runtime/devicescript/impl_*.c
 	clang-format -i runtime/devicescript/protogen.c
+
+regen: bc
 	$(CLI) dcfg runtime/boards/native/native.board.json --update runtime/posix/native_cfg.c
 	clang-format -i runtime/posix/native_cfg.c
 	$(CLI) dcfg runtime/boards/wasm/wasm.board.json --update runtime/posix/wasm_cfg.c
 	clang-format -i runtime/posix/wasm_cfg.c
-
-regen: bc
 	cd ./dcfg && ./regen.sh
 	yarn boards
 
