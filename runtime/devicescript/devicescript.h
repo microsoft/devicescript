@@ -69,6 +69,7 @@ typedef struct {
     int (*is_connected)(void);
     size_t max_bin_upload_size;
     int (*service_query)(jd_packet_t *pkt);
+    void (*track_exception)(devs_ctx_t *ctx);
 } devscloud_api_t;
 extern const devscloud_api_t noop_cloud;
 extern const devscloud_api_t wssk_cloud;

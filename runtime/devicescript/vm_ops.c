@@ -319,10 +319,6 @@ static value_t expr0_ret_val(devs_activation_t *frame, devs_ctx_t *ctx) {
     return ctx->curr_fiber->ret_val;
 }
 
-static value_t expr0_now_ms(devs_activation_t *frame, devs_ctx_t *ctx) {
-    return devs_value_from_double((double)ctx->_now_long);
-}
-
 static value_t expr1_new(devs_activation_t *frame, devs_ctx_t *ctx) {
     value_t func = devs_vm_pop_arg(ctx);
     value_t th;

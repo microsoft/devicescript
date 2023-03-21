@@ -78,3 +78,8 @@ const devscloud_api_t noop_cloud = {
     .is_connected = is_connected,
     .max_bin_upload_size = 1024,
 };
+
+void devs_track_exception(devs_ctx_t *ctx) {
+    if (_devscloud_state && _devscloud_state->api && _devscloud_state->api->track_exception)
+        _devscloud_state->api->track_exception(ctx);
+}

@@ -438,6 +438,26 @@ int wssk_is_connected(void) {
     return state->conn_status == JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED;
 }
 
+void wssk_track_exception(devs_ctx_t *ctx) {
+    srv_t *state = _wsskhealth_state;
+    if (!state || !(state->streaming_en & JD_WSSK_STREAMING_TYPE_EXCEPTIONS) ||
+        state->conn_status != JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED)
+        return;
+    uint32_t ptr = jd_dmesg_startptr();
+    alloc_dmesg_buf(state);
+    for (;;) {
+        unsigned size = jd_dmesg_read(state->dmesg_buf, DMESG_BUF_SIZE, &ptr);
+        bool done = jd_dmesg_currptr() == ptr;
+        if (size == 0)
+            break;
+        if (send_cmd_message(JD_WSSK_CMD_EXCEPTION_REPORT, state->dmesg_buf, size) != 0)
+            break;
+        if (done)
+            break;
+    }
+    LOG("exception uploaded");
+}
+
 static int send_empty(uint8_t cmd) {
     return send_cmd_message(cmd, NULL, 0);
 }
@@ -573,28 +593,9 @@ const devscloud_api_t wssk_cloud = {
     .is_connected = wssk_is_connected,
     .max_bin_upload_size = 1024, // just a guess
     .service_query = wssk_service_query,
+    .track_exception = wssk_track_exception,
 };
 
 __attribute__((weak)) bool jd_tcpsock_is_available(void) {
     return 1;
-}
-
-void devs_track_exception(devs_ctx_t *ctx) {
-    srv_t *state = _wsskhealth_state;
-    if (!state || !(state->streaming_en & JD_WSSK_STREAMING_TYPE_EXCEPTIONS) ||
-        state->conn_status != JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_CONNECTED)
-        return;
-    uint32_t ptr = jd_dmesg_startptr();
-    alloc_dmesg_buf(state);
-    for (;;) {
-        unsigned size = jd_dmesg_read(state->dmesg_buf, DMESG_BUF_SIZE, &ptr);
-        bool done = jd_dmesg_currptr() == ptr;
-        if (size == 0)
-            break;
-        if (send_cmd_message(JD_WSSK_CMD_EXCEPTION_REPORT, state->dmesg_buf, size) != 0)
-            break;
-        if (done)
-            break;
-    }
-    LOG("exception uploaded");
 }
