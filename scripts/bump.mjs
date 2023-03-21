@@ -55,7 +55,7 @@ async function userBump() {
     )
 
     // only re-gen the bytecode stuff if it seems someone is running emscripten here
-    if (fs.existsSync("runtime/devicescript-vm/built/wasmpre.js"))
+    if (fs.existsSync("runtime/built/jdcli"))
         await $`cd bytecode && sh run.sh`.catch(_ =>
             fail("bytecode gen failed")
         )
