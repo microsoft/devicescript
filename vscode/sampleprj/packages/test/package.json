@@ -32,5 +32,8 @@
     "keywords": [
         "devicescript"
     ],
-    "author": "Microsoft"
+    "author": "Microsoft",
+    "publishConfig": {
+        "access": "public"
+    }
 }
