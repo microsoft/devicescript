@@ -1,35 +1,35 @@
 {
-  "name": "@devicescript/dap",
-  "private": false,
-  "version": "1.0.0",
-  "description": "DeviceScript Compiler",
-  "keywords": [
-    "devicescript",
-    "vscode",
-    "debugger"
-  ],
-  "author": "Microsoft",
-  "main": "./built/devicescript-dap.cjs",
-  "types": "./built/types/dsdap.d.ts",
-  "files": [
-    "./built/**"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/microsoft/devicescript.git",
-    "directory": "dap"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "@types/node": "^18.11.9",
-    "async-mutex": "^0.4.0",
-    "@devicescript/compiler": "*",
-    "@devicescript/vm": "*",
-    "@vscode/debugadapter": "^1.58.0",
-    "jacdac-ts": "*"
-  },
-  "dependencies": {},
-  "publishConfig": {
-    "access": "public"
-  }
+    "name": "@devicescript/dap",
+    "private": false,
+    "version": "2.0.1",
+    "description": "DeviceScript Compiler",
+    "keywords": [
+        "devicescript",
+        "vscode",
+        "debugger"
+    ],
+    "author": "Microsoft",
+    "main": "./built/devicescript-dap.cjs",
+    "types": "./built/types/dsdap.d.ts",
+    "files": [
+        "./built/**"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "dap"
+    },
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^18.11.9",
+        "async-mutex": "^0.4.0",
+        "@devicescript/compiler": "*",
+        "@devicescript/vm": "*",
+        "@vscode/debugadapter": "^1.58.0",
+        "jacdac-ts": "*"
+    },
+    "dependencies": {},
+    "publishConfig": {
+        "access": "public"
+    }
 }
