@@ -15,7 +15,7 @@ const v0 = semver.parse(mainPkgJson.version)
 
 const currVer = (
     await $`git describe --dirty --tags --match 'v[0-9]*' --always`
-).stdout.trim()
+).stdout.trim().replace(/-.*/, "")
 const v1 = semver.parse(currVer)
 
 let nextVer = `${v0.major}.${v0.minor}.${v0.patch * 100}`
