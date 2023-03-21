@@ -35,7 +35,7 @@ check:
 	$(MAKE) all
 	$(MAKE) test
 
-bc-ci: bc
+bytecode-gen-ci: bc
 	git add bytecode/bytecode.md
 	git add compiler/src/bytecode.ts
 	git add runtime/devicescript/devs_bytecode.h
@@ -66,3 +66,9 @@ docker:
 empty:
 	$(MAKE) bc comp-fast
 	devs ctool --empty
+
+bump:
+	node scripts/bump.mjs
+
+release:
+	node scripts/bump.mjs --cloud
