@@ -20,7 +20,7 @@ const v1 = semver.parse(currVer)
 
 let nextVer = `${v0.major}.${v0.minor}.${v0.patch * 100}`
 
-if (v1 && semver.compare(nextVer, "<=", v1)) {
+if (v1 && semver.cmp(nextVer, "<=", v1)) {
     if (v1.major != v0.major || v1.minor != v0.minor)
         fail(`current version ${currVer} is too new`)
     nextVer = `${v1.major}.${v1.minor}.${v1.patch + 1}`
@@ -28,7 +28,7 @@ if (v1 && semver.compare(nextVer, "<=", v1)) {
 
 echo(`bumping ${currVer} -> ${nextVer}`)
 
-if ((await $`git status --porcelain --untracked-files=no`).stdout.trim())
+if (!argv.force && (await $`git status --porcelain --untracked-files=no`).stdout.trim())
     fail("you have modified files")
 
 await question(`Enter to continue: `)
