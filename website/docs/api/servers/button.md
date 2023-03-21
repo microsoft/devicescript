@@ -11,10 +11,11 @@ The `startButton` function starts a [button](https://microsoft.github.io/jacdac-
 and returns a [client](/api/clients/button).
 
 ```ts no-run
+import { gpio } from "@devicescript/core"
 import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
-    pin: 2,
+    pin: gpio(2),
 })
 ```
 
@@ -31,11 +32,12 @@ The pin hardware identifier on which to mount the button.
 This pin is set high when the button is pressed. Useful for buttons with a builtin LED.
 
 ```ts no-run no-output
+import { gpio } from "@devicescript/core"
 import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
-    pin: 2,
-    pinBackLight: 4,
+    pin: gpio(2),
+    pinBackLight: gpio(4),
 })
 ```
 
@@ -45,10 +47,11 @@ Button is normally active-low and pulled high.
 This makes it active-high and pulled low.
 
 ```ts no-run no-output
+import { gpio } from "@devicescript/core"
 import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
-    pin: 2,
+    pin: gpio(2),
     activeHigh: true,
 })
 ```
