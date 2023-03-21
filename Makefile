@@ -35,6 +35,11 @@ check:
 	$(MAKE) all
 	$(MAKE) test
 
+bc-ci: bc
+	git add bytecode/bytecode.md
+	git add compiler/src/bytecode.ts
+	git add runtime/devicescript/devs_bytecode.h
+
 bc:
 	cd bytecode && ./run.sh
 	node runtime/scripts/ds-builtin-proto.js \

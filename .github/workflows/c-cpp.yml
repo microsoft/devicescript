@@ -38,20 +38,16 @@ jobs:
                   node-version: "18"
                   cache: yarn
             - run: yarn install --frozen-lockfile
+            - name: regenerate bytecode files (if needed)
+              run: make bc-ci
             - run: make
             - run: make test
             - run: make vscode-pkg
             - name: update pre-compiled WASM
               run: make update-dist
               if: github.ref == 'refs/heads/main'
-            - name: prep jacdac-ts for release
-              run: yarn presemantic
-              if: github.ref == 'refs/heads/main'
-            - name: semantic release prep
-              run: yarn add -D -W semantic-release semantic-release-monorepo @semantic-release/git semantic-release-workspace-dependency
-              if: github.ref == 'refs/heads/main'
-            - name: semantic release
-              run: yarn workspaces run semantic-release -e semantic-release-monorepo 
+            - name: release (if needed)
+              run: node scripts/bump.mjs --cloud
               if: github.ref == 'refs/heads/main'
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
