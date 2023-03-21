@@ -69,7 +69,6 @@
                     "type": "string"
                 },
                 "pin": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 },
                 "pinBacklight": {
@@ -100,6 +99,102 @@
                 "integer"
             ]
         },
+        "HidJoystickConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "service": {
+                    "enum": [
+                        "hidJoystick"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
+        "HidKeyboardConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "service": {
+                    "enum": [
+                        "hidKeyboard"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
+        "HidMouseConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "service": {
+                    "enum": [
+                        "hidMouse"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "service"
+            ],
+            "type": "object"
+        },
         "I2CConfig": {
             "additionalProperties": false,
             "properties": {
@@ -126,11 +221,9 @@
                     "type": "integer"
                 },
                 "pinSCL": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 },
                 "pinSDA": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 }
             },
@@ -155,7 +248,6 @@
                     "type": "string"
                 },
                 "pin": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 }
             },
@@ -178,7 +270,6 @@
                     "type": "integer"
                 },
                 "pin": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 }
             },
@@ -872,7 +963,6 @@
                     "type": "string"
                 },
                 "pinEn": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 },
                 "pinFault": {
@@ -989,6 +1079,10 @@
                     "description": "All fields starting with '#' arg ignored",
                     "type": "string"
                 },
+                "activeLow": {
+                    "description": "When set, the relay is considered 'active' when `pin` is low.",
+                    "type": "boolean"
+                },
                 "initalActive": {
                     "description": "Whether to activate the relay upon boot.",
                     "type": "boolean"
@@ -1012,10 +1106,6 @@
                 "pin": {
                     "description": "The driving pin.",
                     "type": "integer"
-                },
-                "pinActiveLow": {
-                    "description": "When set, the relay is considered 'active' when `pin` is low.",
-                    "type": "boolean"
                 },
                 "pinFeedback": {
                     "description": "Active-high pin that indicates the actual state of the relay.",
@@ -1072,11 +1162,9 @@
                     "type": "string"
                 },
                 "pin0": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 },
                 "pin1": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 },
                 "service": {
@@ -1132,6 +1220,15 @@
                 },
                 {
                     "$ref": "#/definitions/AccelerometerConfig"
+                },
+                {
+                    "$ref": "#/definitions/HidJoystickConfig"
+                },
+                {
+                    "$ref": "#/definitions/HidKeyboardConfig"
+                },
+                {
+                    "$ref": "#/definitions/HidMouseConfig"
                 }
             ]
         },
@@ -1142,7 +1239,6 @@
                     "type": "integer"
                 },
                 "pin": {
-                    "description": "Hardware pin number. In future we may allow labels.\nNaming convention - fields with `Pin` type start with `pin*`",
                     "type": "integer"
                 }
             },
@@ -1410,6 +1506,14 @@
             "examples": [
                 "0x379ea214"
             ]
+        },
+        "progName": {
+            "description": "Name of the program, derived from package.json. Exposed as `program_name` register.",
+            "type": "string"
+        },
+        "progVersion": {
+            "description": "Version number of the program, derived from package.json and git. Exposed as `program_version` register.",
+            "type": "string"
         },
         "services": {
             "description": "Services to mount. Each starts with { \"service\": \"...\" }",
