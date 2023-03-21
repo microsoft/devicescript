@@ -30,10 +30,11 @@ const { img_version_major, img_version_minor, img_version_patch } =
 
 const currByteCodeVer = `${img_version_major}.${img_version_minor}.${img_version_patch}`
 
-// if ((await $`git status --porcelain --untracked-files=no`).stdout.trim())
-//    fail("you have modified files")
-
 async function userBump() {
+    const hadChanges = (
+        await $`git status --porcelain --untracked-files=no`
+    ).stdout.trim()
+
     const deflVer = `${img_version_major}.${img_version_minor}.${
         img_version_patch + 1
     }`
@@ -58,6 +59,18 @@ async function userBump() {
         await $`cd bytecode && sh run.sh`.catch(_ =>
             fail("bytecode gen failed")
         )
+
+    echo(`\nbumped to ${v.version}\n`)
+
+    if (hadChanges)
+        fail("bumped, but you had local changes; please check in manually")
+
+    await $`git status`
+    await question(`press Enter to commit and push: `)
+
+    await $`git add -u .`
+    await $`git commit -m ${"bump bytecode to v" + v.version}`
+    await $`git push`
 }
 
 async function cloudPublish() {
