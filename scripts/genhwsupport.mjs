@@ -9,8 +9,8 @@ function fail(msg) {
 
 const drivers = `runtime/jacdac-c/drivers/`
 const driversURL = `https://github.com/microsoft/jacdac-c/blob/main/drivers`
-const servicesURL = `https://microsoft.github.io/devicescript/api/clients`
-const serversURL = `https://microsoft.github.io/devicescript/api/servers`
+const servicesURL = `/api/clients`
+const serversURL = `/api/servers`
 
 function strcmp(a, b) {
     if (a == b) return 0
