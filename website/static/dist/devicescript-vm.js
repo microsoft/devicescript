@@ -282,11 +282,11 @@ var Exts;
     /**
      * Clear settings.
      */
-    function clearFlash() {
+    function devsClearFlash() {
         if (Module.flashSave)
             Module.flashSave(new Uint8Array([0, 0, 0, 0]));
     }
-    Exts.clearFlash = clearFlash;
+    Exts.devsClearFlash = devsClearFlash;
     /**
      * Initializes and start the virtual machine (calls init).
      */
