@@ -334,7 +334,7 @@
                     "type": "string"
                 },
                 "offset": {
-                    "default": 1024,
+                    "default": 0,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -361,7 +361,7 @@
                     "type": "integer"
                 },
                 "scale": {
-                    "default": 0,
+                    "default": 1024,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -884,7 +884,7 @@
                     "type": "string"
                 },
                 "offset": {
-                    "default": 1024,
+                    "default": 0,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -911,7 +911,7 @@
                     "type": "integer"
                 },
                 "scale": {
-                    "default": 0,
+                    "default": 1024,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -1018,7 +1018,7 @@
                     "type": "string"
                 },
                 "offset": {
-                    "default": 1024,
+                    "default": 0,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -1045,7 +1045,7 @@
                     "type": "integer"
                 },
                 "scale": {
-                    "default": 0,
+                    "default": 1024,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -1263,7 +1263,7 @@
                     "type": "string"
                 },
                 "offset": {
-                    "default": 1024,
+                    "default": 0,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -1290,7 +1290,7 @@
                     "type": "integer"
                 },
                 "scale": {
-                    "default": 0,
+                    "default": 1024,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -1333,7 +1333,7 @@
                     "type": "string"
                 },
                 "offset": {
-                    "default": 1024,
+                    "default": 0,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -1360,7 +1360,7 @@
                     "type": "integer"
                 },
                 "scale": {
-                    "default": 0,
+                    "default": 1024,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -1403,7 +1403,7 @@
                     "type": "string"
                 },
                 "offset": {
-                    "default": 1024,
+                    "default": 0,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
@@ -1430,7 +1430,7 @@
                     "type": "integer"
                 },
                 "scale": {
-                    "default": 0,
+                    "default": 1024,
                     "description": "Reading is `offset + (raw_reading * scale) / 1024`",
                     "type": "integer"
                 },
