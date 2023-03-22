@@ -128,7 +128,10 @@ export async function devsStartWithNetwork(options: {
         ensureDirSync(FLASHDIR)
         const fn = join(FLASHDIR, FLASHFILE)
         // clear flash if needed
-        if (options.clearFlash && existsSync(fn)) removeSync(fn)
+        if (options.clearFlash && existsSync(fn)) {
+            verboseLog(`clearing flash ${fn}`)
+            removeSync(fn)
+        }
         verboseLog(`set up flash in ${fn}`)
         inst.flashLoad = () => {
             try {
