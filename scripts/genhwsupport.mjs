@@ -98,15 +98,8 @@ const sections = {
     I2C: collectI2C(),
 }
 
-const dst = `website/docs/devices/hw.mdx`
-fs.writeFileSync(
-    dst,
+Object.keys(sections).map(id => {
+    const fn = `website/docs/devices/${id.toLowerCase()}.mdp`
     fs
-        .readFileSync(dst, "utf-8")
-        .replace(
-            /(<!--\s*(\w+)-START\s*-->)[^]*?(<!--\s*(\w+)-END\s*-->)/gm,
-            (_, beg, id, end, id2) => {
-                return beg + "\n" + (sections[id]?.trim() ?? "") + "\n" + end
-            }
-        )
-)
+        .writeFileSync(fn, sections[id]?.trim(), "utf-8")
+})

@@ -1,0 +1,5 @@
+* [RotaryEncoder](https://microsoft.github.io/devicescript/api/servers/rotaryencoder)
+* [Button](https://microsoft.github.io/devicescript/api/servers/button)
+* [Relay](https://microsoft.github.io/devicescript/api/servers/relay)
+* [Power](https://microsoft.github.io/devicescript/api/servers/power)
+* [Accelerometer](https://microsoft.github.io/devicescript/api/servers/accelerometer)
