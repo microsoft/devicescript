@@ -102,6 +102,9 @@ async function cloudPublish() {
         echo(`bump ${fn}`)
     }
 
+    // some files bundle package.json - make sure they get the latest version
+    await $`yarn build-fast`
+
     await $`git add .`
     await $`git commit -m ${"[skip ci] release v" + currByteCodeVer}`
     await $`git tag ${"v" + currByteCodeVer}`
