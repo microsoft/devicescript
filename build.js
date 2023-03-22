@@ -203,12 +203,18 @@ async function main() {
                     "crypto",
                 ],
                 platform,
+                metafile: true,
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",
             })
             if (watch) await ctx.watch()
             else {
-                await ctx.rebuild()
+                const res = await ctx.rebuild()
+                if (res.metafile)
+                    fs.writeFileSync(
+                        outfile + "-meta.json",
+                        JSON.stringify(res.metafile)
+                    )
                 await ctx.dispose()
             }
             let size = 0
