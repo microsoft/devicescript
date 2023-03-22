@@ -1,4 +1,4 @@
-import { program, CommandOptions } from "commander"
+import { program, CommandOptions, Command } from "commander"
 import { annotate } from "./annotate"
 import { build } from "./build"
 import { crunScript } from "./crun"
@@ -216,6 +216,20 @@ export async function mainCli() {
 
     const flash = program.command("flash")
 
+    // inherit parent command options in the subcommand
+    function inheritOpts(fn: (...args: any[]) => any) {
+        return (...args: any[]) => {
+            for (let i = 1; i < args.length; ++i) {
+                const a = args[i] as Command
+                if (typeof a?.parent?.opts == "function") {
+                    args[i - 1] = { ...a.parent.opts(), ...args[i - 1] }
+                    break
+                }
+            }
+            return fn(...args)
+        }
+    }
+
     function addFlashCmd(arch: string) {
         const r = arch ? flash.command(arch) : flash
         r.description(
@@ -223,8 +237,10 @@ export async function mainCli() {
                 ? `flash with ${arch.toUpperCase()}-specific parameters`
                 : `flash DeviceScript runtime (interpreter/VM)`
         )
-        r.option("-b, --board <board-id>", "specify board to flash")
-        r.option("--once", "do not wait for the board to be connected")
+        if (!arch) {
+            r.option("-b, --board <board-id>", "specify board to flash")
+            r.option("--once", "do not wait for the board to be connected")
+        }
         r.addHelpText("after", () => {
             setupFlashBoards()
             return `\nAvailable boards:\n` + boardNames(arch)
@@ -242,9 +258,9 @@ export async function mainCli() {
         )
         .option("--port <path>", "specify port")
         .option("--esptool <path>", "explicitly specify path to esptool.py")
-        .action(flashESP32)
+        .action(inheritOpts(flashESP32))
 
-    addFlashCmd("rp2040").action(flashRP2040)
+    addFlashCmd("rp2040").action(inheritOpts(flashRP2040))
 
     const addcmd = program
         .command("add")
