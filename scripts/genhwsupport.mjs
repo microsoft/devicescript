@@ -9,6 +9,8 @@ function fail(msg) {
 
 const drivers = `runtime/jacdac-c/drivers/`
 const driversURL = `https://github.com/microsoft/jacdac-c/blob/main/drivers`
+const servicesURL = `https://microsoft.github.io/devicescript/api/clients`
+const serversURL = `https://microsoft.github.io/devicescript/api/servers`
 
 function strcmp(a, b) {
     if (a == b) return 0
@@ -61,7 +63,38 @@ function collectI2C() {
     return r
 }
 
+function collectAnalog() {
+    const fn = `runtime/jacdac-c/dcfg/srvcfg.d.ts`
+    let analog = ""
+    let servers = ""
+    let hid = ""
+    for (let line of fs.readFileSync(fn, "utf-8").split(/\n/)) {
+        let m = /interface (\w+)Config extends AnalogConfig/.exec(line)
+        if (m) {
+            const serv = m[1]
+            analog += `* [${serv}](${servicesURL}/${serv.toLowerCase()})\n`
+        }
+
+        m = /interface (\w+)Config extends BaseServiceConfig/.exec(line)
+        if (m) {
+            const serv = m[1]
+            if (serv.startsWith("Hid")) {
+                hid += `* HID ${serv.slice(3)}\n`
+            } else if (serv != "Analog") {
+                servers += `* [${serv}](${serversURL}/${serv.toLowerCase()})\n`
+            }
+        }
+    }
+
+    return {
+        HID: hid,
+        SERVERS: servers,
+        ANALOG: analog,
+    }
+}
+
 const sections = {
+    ...collectAnalog(),
     I2C: collectI2C(),
 }
 
@@ -71,9 +104,9 @@ fs.writeFileSync(
     fs
         .readFileSync(dst, "utf-8")
         .replace(
-            /(<!--\s*(\w+)-START\s*-->)[^]*(<!--\s*(\w+)-END\s*-->)/gm,
+            /(<!--\s*(\w+)-START\s*-->)[^]*?(<!--\s*(\w+)-END\s*-->)/gm,
             (_, beg, id, end, id2) => {
-                return beg + (sections[id] ?? "") + end
+                return beg + "\n" + (sections[id]?.trim() ?? "") + "\n" + end
             }
         )
 )

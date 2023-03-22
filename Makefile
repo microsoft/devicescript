@@ -54,6 +54,7 @@ regen: bc
 	clang-format -i runtime/posix/wasm_cfg.c
 	cd ./dcfg && ./regen.sh
 	yarn boards
+	yarn hwdocs
 
 specs spec:
 	$(MAKE) -C runtime/jacdac-c/jacdac
