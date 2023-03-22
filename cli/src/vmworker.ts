@@ -140,9 +140,9 @@ export async function startVmWorker(
     if (args.nativePath) {
         const vargs = ["-w", "8082"]
         if (args.gcStress) vargs.push("-X")
-        if (args.stateless) vargs.push("-n")
         if (args.deviceId) vargs.push("-d:" + args.deviceId)
-        // native?
+        if (args.clearFlash) vargs.push("-N")
+        if (args.stateless) vargs.push("-n")
         console.debug("starting", args.nativePath, vargs.join(" "))
         worker = spawn(args.nativePath, vargs, {
             shell: false,

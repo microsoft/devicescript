@@ -331,6 +331,8 @@ int main(int argc, const char **argv) {
             websock = 1;
         } else if (strcmp(arg, "-n") == 0) {
             settings_in_files = 0;
+        } else if (strcmp(arg, "-N") == 0) {
+            settings_in_files = 2;
         } else if (strcmp(arg, "-T") == 0) {
             test_settings = 1;
         } else if (strncmp(arg, "-d:", 3) == 0) {
