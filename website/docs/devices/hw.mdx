@@ -1,0 +1,32 @@
+---
+description: Which I2C and GPIO devices are supported
+position: 2
+---
+
+# Supported Peripherals
+
+## Simple analog services
+
+## Other services
+
+## I2C sensors
+
+The following I2C devices are supported.
+
+<!-- I2C-START -->
+| ID | Sensor | Services | Source |
+|:---|:-------|:---------|:-------|
+| **dps310** | Infineon DPS310 | temperature, pressure | [dps310.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/dps310.c) |
+| **kx023** | Kionix KX023-1025 | accelerometers | [kx023.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/kx023.c) |
+| **kxtj3** | Kionix KXTJ3-1057 | accelerometers | [kxtj3.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/kxtj3.c) |
+| **ltr390uv** | LITE-ON LTR-390UV-01 | illuminance, uvindex | [ltr390uv.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/ltr390uv.c) |
+| **cap1298** | Microchip CAP1298 | captouch | [cap1298.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/cap1298.c) |
+| **mpl3115a2** | NXP MPL3115A2 | temperature, pressure | [mpl3115a2.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/mpl3115a2.c) |
+| **lps33hwtr** | STMicro LPS33HW | temperature, pressure | [lps33hwtr.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/lps33hwtr.c) |
+| **lsm6ds** | STMicro LSM6DSxx | accelerometers, gyro | [lsm6ds.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/lsm6ds.c) |
+| **th02** | Seeed (?) TH02 | temperature, humidity | [th02.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/th02.c) |
+| **scd40** | Sensirion SCD40 | temperature, humidity, co2 | [scd40.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/scd40.c) |
+| **sgp30** | Sensirion SGP30 (eCO2) | co2, tvoc | [sgp30.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/sgp30.c) |
+| **sht30** | Sensirion SHT30 | temperature, humidity | [sht30.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/sht30.c) |
+| **shtc3** | Sensirion SHTC3 | temperature, humidity | [shtc3.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/shtc3.c) |
+<!-- I2C-END -->
