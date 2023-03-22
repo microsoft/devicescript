@@ -1,0 +1,83 @@
+---
+description: Mounts an analog sensor
+title: Analog
+---
+
+# Analog
+
+There is a number of functions that start a simple analog sensor server.
+We'll use `startPotentiometer()` as an example, but you can use any of the following,
+as they all use the same configuration.
+
+{@import ../../devices/analog.mdp}
+
+In the simplest case, you just pass the pin to `startPotentiometer()`.
+The voltage on the pin (typically between 0V (GND) and 3.3V (VCC)) will be translated to a number between 0 and 1.
+
+```ts
+import { startPotentiometer } from "@devicescript/servers"
+
+const slider = startPotentiometer({
+    pin: ds.gpio(3),
+})
+const v = await slider.position.read()
+console.log(`val: ${v * 100}%`)
+```
+
+## Scaling
+
+There are two settings, `offset` and `scale` that let you modify the value read from the sensor.
+The actual reported reading is `(offset + (raw_reading * scale) / 1024) / 0xffff`
+clamped to `0 ... 1` range.
+The range of `raw_reading` is `0 ... 0xffff`.
+The defaults are `{ offset: 0, scale: 1024 }` so the `raw_reading` is just reported back.
+
+For example, if you find you can never quite reach the `0` and `1` values, you can try the following:
+
+```ts
+import { startPotentiometer } from "@devicescript/servers"
+
+const slider = startPotentiometer({
+    pin: ds.gpio(3),
+    offset: 0x1000,
+    scale: 900,
+})
+```
+
+## Limiting power consumption
+
+A potentiometer typically has 3 terminals, let's call them L, M, R.
+You connect L to GND, R to VCC and M (middle) to the sensing pin.
+The M terminal will then get a voltage proportional to the position of the knob.
+
+However, the current (0.3mA with typical 10kOhm potentiometer) will always flow from L to R,
+regardless if you measure it or not.
+To improve power consumption, you may connect say R to a GPIO and configure the service like this:
+
+```ts
+import { startPotentiometer } from "@devicescript/servers"
+
+const slider = startPotentiometer({
+    pin: ds.gpio(3),
+    pinHigh: ds.gpio(7),
+})
+```
+
+This tells the driver to set GPIO7 (`pinHigh`) to 1 (3.3V) before taking the measurement
+from GPIO3 (`pin`).
+After taking the measurement, `pinHigh` will be left floating, so no current will flow through the potentiometer.
+
+You can also set `pinLow` (which is set to 0 before taking measurement) or both `pinHigh` and `pinLow`,
+but typically one is enough.
+
+## Timings
+
+The `samplingItv` settings defaults to 9 milliseconds and specifies how often to sample the sensor.
+
+The `streamingItv` setting defaults to 100 milliseconds and specifies how often to stream values
+on the Jacdac bus.
+The client can override this through `streaming_interval` Jacdac register.
+
+Additionally, you can set `samplingDelay` to a number of milliseconds to wait after setting `pinHigh`/`pinLow`
+before taking the measurement
+(default is 0, so effectively a few microseconds (not milliseconds)).
