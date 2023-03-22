@@ -12,6 +12,14 @@ const driversURL = `https://github.com/microsoft/jacdac-c/blob/main/drivers`
 const servicesURL = `/api/clients`
 const serversURL = `/api/servers`
 
+const srvNames = {
+    "accelerometers": "accelerometer",
+    "pressure": "airpressure",
+    "gyro": "gyroscope",
+    "co2": "eco2",
+    "captouch": "capacitivebutton"
+}
+
 function strcmp(a, b) {
     if (a == b) return 0
     if (a < b) return -1
@@ -56,7 +64,7 @@ function collectI2C() {
 `
     for (const id of ids) {
         const s = sensors[id]
-        const serv = s.services.join(", ")
+        const serv = s.services.map(srv => srvNames[srv] || srv).map(srv => `[${srv}](/api/clients/${srv})`).join(", ")
         r += `| **${id}** | ${s.name} | ${serv} | [${id}.c](${driversURL}/${id}.c) |\n`
     }
 

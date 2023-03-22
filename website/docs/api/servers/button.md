@@ -1,6 +1,4 @@
 ---
-pagination_prev: null
-pagination_next: null
 description: Mounts a button server
 title: Button
 ---
@@ -10,7 +8,7 @@ title: Button
 The `startButton` function starts a [button](https://microsoft.github.io/jacdac-docs/services/button) server on the device
 and returns a [client](/api/clients/button).
 
-```ts no-run
+```ts
 import { gpio } from "@devicescript/core"
 import { startButton } from "@devicescript/servers"
 
