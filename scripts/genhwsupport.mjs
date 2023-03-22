@@ -87,7 +87,7 @@ function collectAnalog() {
         if (m) {
             const serv = m[1]
             if (serv.startsWith("Hid")) {
-                hid += `* HID ${serv.slice(3)}\n`
+                hid += `* [HID ${serv.slice(3)}](/api/clients/${serv.toLowerCase()})\n`
             } else if (serv != "Analog") {
                 servers += `* [${serv}](${serversURL}/${serv.toLowerCase()})\n`
             }
