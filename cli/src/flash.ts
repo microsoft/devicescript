@@ -173,6 +173,20 @@ export async function flashESP32(options: FlashESP32Options) {
     }
 
     if (!options.esptool) {
+        for (const tool of [
+            "python -m esptool",
+            "python3 -m esptool",
+            "/usr/local/bin/python -m esptool",
+        ]) {
+            const { stdout } = await runTool({ cmd: tool, quiet: true })
+            if (oldEsptool(stdout) === "") {
+                options.esptool = tool
+                break
+            }
+        }
+    }
+
+    if (!options.esptool) {
         error(
             "esptool.py not found; please install it by running:\n" +
                 "    pip install esptool\n" +
@@ -211,6 +225,17 @@ export async function flashESP32(options: FlashESP32Options) {
         console.log("")
     }
 
+    function oldEsptool(stdout: string) {
+        let m = /esptool\.py v(\d+)\.(\d+)/.exec(stdout)
+        if (m) {
+            const v = +m[1] * 1000 + +m[2]
+            if (v < 4005) return `v${m[1]}.${m[2]}`
+            else return ""
+        } else {
+            return undefined
+        }
+    }
+
     async function runEsptool(...args: string[]) {
         const allargs = [
             "--port",
@@ -218,20 +243,17 @@ export async function flashESP32(options: FlashESP32Options) {
             "--baud",
             "" + baudrate,
         ].concat(args)
-        const res = await runTool(options.esptool, ...allargs)
+        const res = await runTool({ cmd: options.esptool, args: allargs })
         if (res.code !== 0) {
-            let m = /esptool\.py v(\d+)\.(\d+)/.exec(res.stdout)
-            if (m) {
-                const v = +m[1] * 1000 + +m[2]
-                if (v < 4005) {
-                    error(
-                        `detected esptool.py v${m[1]}.${m[2]}; please update your esptool to v4.5+ by running:\n` +
-                            `  pip install esptool`
-                    )
-                }
+            const ver = oldEsptool(res.stdout)
+            if (ver) {
+                error(
+                    `detected esptool.py ${ver}; please update your esptool to v4.5+ by running:\n` +
+                        `  pip install esptool`
+                )
             }
 
-            m = /Chip is (ESP32[A-Z0-9-]+)/.exec(res.stdout)
+            let m = /Chip is (ESP32[A-Z0-9-]+)/.exec(res.stdout)
             let chipId = "unknown"
             let boards: DeviceConfig[] = []
             if (m) {
@@ -327,10 +349,16 @@ async function fetchFW(board: DeviceConfig) {
     return cachePath2
 }
 
-function runTool(prog: string, ...allargs: string[]) {
+function runTool(opts: { cmd: string; args?: string[]; quiet?: boolean }) {
     return new Promise<ProcResult>((resolve, reject) => {
-        log(`run: ${prog} ${allargs.join(" ")}`)
-        const proc = spawn(prog, allargs, {
+        let { cmd, args = [] } = opts
+        if (cmd.includes(" ")) {
+            const w = cmd.split(/\s+/)
+            cmd = w[0]
+            args.unshift(...w.slice(1))
+        }
+        log(`run: ${cmd} ${args.join(" ")}`)
+        const proc = spawn(cmd, args, {
             stdio: "pipe",
         })
         let stdout = ""
@@ -341,16 +369,18 @@ function runTool(prog: string, ...allargs: string[]) {
         proc.stderr.setEncoding("utf-8")
         proc.stdout.on("data", (s: string) => {
             stdout += s
-            process.stdout.write(s)
+            if (!opts.quiet) process.stdout.write(s)
         })
         proc.stderr.on("data", (s: string) => {
             stderr += s
-            process.stdout.write(s)
+            if (!opts.quiet) process.stdout.write(s)
         })
         proc.on("error", err => {
             if (!done) {
                 done = true
-                reject(err)
+                if (opts.quiet)
+                    resolve({ code: 127, signal: "error", stdout, stderr })
+                else reject(err)
             }
         })
         proc.on("exit", (code, signal) => {
@@ -372,16 +402,18 @@ interface ProcResult {
 async function getDrives(deployDrivesRx: string): Promise<string[]> {
     if (process.platform == "win32") {
         const rx = new RegExp("^([A-Z]:)\\s+(\\d+).* " + deployDrivesRx)
-        const { stdout } = await runTool(
-            "wmic",
-            "PATH",
-            "Win32_LogicalDisk",
-            "get",
-            "DeviceID,",
-            "VolumeName,",
-            "FileSystem,",
-            "DriveType"
-        )
+        const { stdout } = await runTool({
+            cmd: "wmic",
+            args: [
+                "PATH",
+                "Win32_LogicalDisk",
+                "get",
+                "DeviceID,",
+                "VolumeName,",
+                "FileSystem,",
+                "DriveType",
+            ],
+        })
         let res: string[] = []
         stdout.split(/\n/).forEach(ln => {
             let m = rx.exec(ln)
