@@ -29,45 +29,4 @@ The pin hardware identifier on which to mount the relay.
 
 ### options
 
-Other configuration options are available.
-
-```ts
-interface RelayConfig extends BaseServiceConfig {
-    service?: "relay"
-
-    /**
-     * The driving pin.
-     */
-    pin: OutputPin
-
-    /**
-     * When set, the relay is considered 'active' when `pin` is low.
-     */
-    activeLow?: boolean
-
-    /**
-     * Active-high pin that indicates the actual state of the relay.
-     */
-    pinFeedback?: InputPin
-
-    /**
-     * This pin will be driven when relay is active.
-     */
-    pinLed?: OutputPin
-
-    /**
-     * Which way to drive the `pinLed`
-     */
-    ledActiveLow?: boolean
-
-    /**
-     * Whether to activate the relay upon boot.
-     */
-    initalActive?: boolean
-
-    /**
-     * Maximum switching current in mA.
-     */
-    maxCurrent?: integer
-}
-```
+Other configuration options are available in the options parameter.
