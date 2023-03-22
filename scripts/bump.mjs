@@ -31,6 +31,8 @@ const { img_version_major, img_version_minor, img_version_patch } =
 const currByteCodeVer = `${img_version_major}.${img_version_minor}.${img_version_patch}`
 
 async function userBump() {
+    await $`git pull`
+
     const hadChanges = (
         await $`git status --porcelain --untracked-files=no`
     ).stdout.trim()
