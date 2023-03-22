@@ -8,7 +8,7 @@ const config = configure(
     {
         title: "DeviceScript",
         tagline:
-            "TypeScript-like Language and Runtime for Small Embedded Devices.",
+            "TypeScript-like Language and Runtime for Tiny Embedded Devices.",
         url: "https://microsoft.github.io/",
         baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
