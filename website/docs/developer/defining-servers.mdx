@@ -13,7 +13,7 @@ low level hardware components to program them using DeviceScript.
 
 DeviceScript provides helper functions to mount of variety of servers out of the box
 in the `@devicescript/servers` module. Basically, you have access to all the drivers available in the [C server SDK](https://github.com/microsoft/jacdac-c/tree/main/drivers),
-including **GPIO**, **analog** and **I2C**.
+including **GPIO**, **analog** and **I2C**. See [supported list](/devices/hw).
 
 For example, the [startButton](/api/servers/button) function allows to mount a [button server](https://microsoft.github.io/jacdac-docs/services/button)
 over a pin and returns the [client](/api/clients/button) for it.
@@ -44,7 +44,7 @@ buttonA.up.subscribe(() => {
 
 ## Specifying pins
 
-You can either use hardware GPIO numbers using `ds.gpio()` function, or you can import 
+You can either use hardware GPIO numbers using `ds.gpio()` function, or you can import
 a board definition file and use the labels present on the board:
 
 ```ts no-run
