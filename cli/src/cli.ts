@@ -169,6 +169,7 @@ export async function mainCli() {
         .option("--device-id <string>", "set device ID")
         .option("--devtools", "set when spawned from devtools")
         .option("--stateless", "disable 'flash'")
+        .option("--clear-flash", "clear flash before starting")
         .action(startVm)
 
     buildCommand("crun", { hidden: true })

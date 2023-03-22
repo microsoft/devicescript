@@ -6,6 +6,7 @@ export interface VmOptions {
     gcStress?: boolean
     devtools?: boolean
     stateless?: boolean
+    clearFlash?: boolean
 }
 
 export async function startVm(options: VmOptions) {

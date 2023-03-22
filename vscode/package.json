@@ -291,6 +291,10 @@
                     "group": "inline"
                 },
                 {
+                    "command": "extension.devicescript.simulator.clear",
+                    "when": "view == extension.devicescript.jdom && viewItem == simulator"
+                },
+                {
                     "command": "extension.devicescript.device.reset",
                     "when": "view == extension.devicescript.jdom && viewItem =~ /(device|simulator)/"
                 },
@@ -645,6 +649,12 @@
                 "title": "Stop Simulator",
                 "category": "DeviceScript",
                 "icon": "$(close)"
+            },
+            {
+                "command": "extension.devicescript.simulator.clear",
+                "title": "Clear Flash",
+                "category": "DeviceScript",
+                "icon": "$(clear-all)"
             },
             {
                 "command": "extension.devicescript.device.showFirmwareInformation",

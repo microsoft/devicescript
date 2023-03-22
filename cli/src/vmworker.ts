@@ -142,6 +142,7 @@ export async function startVmWorker(
         if (args.gcStress) vargs.push("-X")
         if (args.stateless) vargs.push("-n")
         if (args.deviceId) vargs.push("-d:" + args.deviceId)
+        // native?
         console.debug("starting", args.nativePath, vargs.join(" "))
         worker = spawn(args.nativePath, vargs, {
             shell: false,
@@ -151,6 +152,7 @@ export async function startVmWorker(
         if (args.deviceId) vargs.push("--device-id", args.deviceId)
         if (args.gcStress) vargs.push("--gc-stress")
         if (args.stateless) vargs.push("--stateless")
+        if (args.clearFlash) vargs.push("--clear-flash")
         console.debug("starting", __filename, vargs.join(" "))
         worker = fork(__filename, vargs, { silent: true })
     }
