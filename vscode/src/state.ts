@@ -402,7 +402,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             })
     }
 
-    async startSimulator() {
+    async startSimulator(clearFlash?: boolean) {
         const did = this.simulatorScriptManagerId
 
         await this.devtools.start()
@@ -420,6 +420,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             data: {
                 nativePath,
                 deviceId: did,
+                clearFlash: !!clearFlash,
             },
         })
         // wait for it to enumerate
@@ -433,6 +434,11 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 req: "stopVM",
                 data: {},
             })
+    }
+
+    async clearSimulatorFlash() {
+        await this.stopSimulator()
+        await this.startSimulator(true)
     }
 
     async pickDeviceScriptFile(

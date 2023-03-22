@@ -124,6 +124,12 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             }
         ),
         vscode.commands.registerCommand(
+            "extension.devicescript.simulator.clear",
+            async () => {
+                await extensionState.clearSimulatorFlash()
+            }
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.simulator.start",
             async () => {
                 await extensionState.startSimulator()

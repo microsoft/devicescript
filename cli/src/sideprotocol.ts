@@ -186,4 +186,5 @@ export interface VmReqArgs {
     deviceId?: string
     gcStress?: boolean
     stateless?: boolean // disable "flash"
+    clearFlash?: boolean
 }

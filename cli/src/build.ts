@@ -1,6 +1,6 @@
 import { basename, join, relative, resolve } from "node:path"
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
-import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
+import { ensureDirSync, readJSONSync, mkdirp, removeSync } from "fs-extra"
 import {
     compileWithHost,
     jacdacDefaultSpecifications,
@@ -111,6 +111,7 @@ export async function devsStartWithNetwork(options: {
     deviceId?: string
     gcStress?: boolean
     stateless?: boolean
+    clearFlash?: boolean
 }) {
     const inst = await devsFactory()
 
@@ -126,6 +127,11 @@ export async function devsStartWithNetwork(options: {
     } else {
         ensureDirSync(FLASHDIR)
         const fn = join(FLASHDIR, FLASHFILE)
+        // clear flash if needed
+        if (options.clearFlash && existsSync(fn)) {
+            verboseLog(`clearing flash ${fn}`)
+            removeSync(fn)
+        }
         verboseLog(`set up flash in ${fn}`)
         inst.flashLoad = () => {
             try {
