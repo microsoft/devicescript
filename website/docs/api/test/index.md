@@ -16,7 +16,9 @@ You can also add the package manually.
 npm install @devicescript/test
 ```
 
-## `test`
+## Usage
+
+### `test`
 
 Defines a test with a name and a callback. There can be many tests and the callback can be `async`. Tests should not be nested.
 
@@ -29,7 +31,7 @@ describe("this is a test suite", () => {
 })
 ```
 
-## `describe`
+### `describe`
 
 Declares and encapsulates a test suite. `describe` calls can be nested.
 
@@ -40,7 +42,7 @@ import { describe } from "@devicescript/test"
 describe("this is a test suite", () => {})
 ```
 
-## `expect`
+### `expect`
 
 BDD style assertion API.
 
@@ -54,8 +56,6 @@ describe("this is a test suite", () => {
     })
 })
 ```
-
-## Setup and teardown functions
 
 ### `beforeEach`
 
