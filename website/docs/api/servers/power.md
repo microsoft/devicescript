@@ -5,15 +5,9 @@ title: Power
 
 # Power
 
-The `startPower` function starts a [power](https://microsoft.github.io/jacdac-docs/services/power) server on the device
-and returns a [client](/api/clients/power).
+This will generally be configured in the [board.json](/devices/add-board) file,
+so the `startPower()` function should not be used.
 
-```ts
-import { gpio } from "@devicescript/core"
-import { startPower } from "@devicescript/servers"
+The power service is used to control a current limiter delivering power to the Jacdac bus.
 
-const power = startPower({
-    pinFault: gpio(2),
-    pinEn: gpio(3),
-})
-```
+See also [power service spec](https://microsoft.github.io/jacdac-docs/services/power).
