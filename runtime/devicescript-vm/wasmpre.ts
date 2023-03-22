@@ -303,7 +303,7 @@ export module Exts {
     /**
      * Clear settings.
      */
-    export function clearFlash() {
+    export function devsClearFlash() {
         if (Module.flashSave) Module.flashSave(new Uint8Array([0, 0, 0, 0]))
     }
 
