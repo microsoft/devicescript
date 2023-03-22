@@ -291,13 +291,12 @@
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.device.reset",
-                    "when": "view == extension.devicescript.jdom && viewItem =~ /(device|simulator)/"
+                    "command": "extension.devicescript.simulator.clear",
+                    "when": "view == extension.devicescript.jdom && viewItem == simulator"
                 },
                 {
-                    "command": "extension.devicescript.simulator.clear",
-                    "when": "view == extension.devicescript.jdom && viewItem == simulator",
-                    "group": "inline"
+                    "command": "extension.devicescript.device.reset",
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /(device|simulator)/"
                 },
                 {
                     "command": "extension.devicescript.device.identify",
