@@ -108,7 +108,7 @@ export declare module Exts {
     /**
      * Clear settings.
      */
-    function clearFlash(): void;
+    function devsClearFlash(): void;
     /**
      * Initializes and start the virtual machine (calls init).
      */
