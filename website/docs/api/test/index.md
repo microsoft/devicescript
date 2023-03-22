@@ -1,6 +1,6 @@
 # Test
 
-The `@devicescript/test` module provides a lightweight unit test framework, with a subset of familiar APIs to Jest/Mocha/Chai users (`describe`, `test`, `expect`).
+The `@devicescript/test` module provides a lightweight unit test framework, with a subset of familiar APIs to Jest/Vitest/Mocha/Chai users (`describe`, `test`, `expect`).
 
 ## Setup
 
