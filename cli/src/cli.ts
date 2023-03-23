@@ -13,7 +13,7 @@ import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
-import { setConsoleColors, setQuiet, setVerbose } from "./command"
+import { incVerbose, setConsoleColors, setQuiet } from "./command"
 import { binPatch } from "./binpatch"
 import { logToConsole } from "./command"
 import {
@@ -58,7 +58,7 @@ export async function mainCli() {
             "build and run DeviceScript program https://aka.ms/devicescript"
         )
         .version(cliVersion())
-        .option("-v, --verbose", "more logging")
+        .option("-v, --verbose", "more logging (can be repeated)")
         .option("--quiet", "less logging")
         .option("--no-colors", "disable color output")
 
@@ -351,7 +351,7 @@ export async function mainCli() {
         .action(binPatch)
 
     program.on("option:quiet", () => setQuiet(true))
-    program.on("option:verbose", () => setVerbose(true))
+    program.on("option:verbose", incVerbose)
     program.on("option:no-colors", () => setConsoleColors(false))
 
     program.hook("preAction", () => {
