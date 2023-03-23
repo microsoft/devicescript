@@ -4,15 +4,29 @@ import { readSetting, writeSetting } from "./api"
 const ENV_KEY = "env"
 
 let _env: ds.ClientRegister<any>
-/**
- * Reads the environment variables from the settings
- */
-export async function env() {
+async function init() {
     if (!_env) {
         const current = (await readSetting(ENV_KEY)) || {}
         _env = ds.clientRegisterFrom(current)
     }
     return _env
+}
+
+/**
+ * Reads the environment variables from the settings
+ */
+export async function env() {
+    const env = await init()
+    return await env.read()
+}
+
+/**
+ * Subscribes to an environment cha ge
+ * @param next
+ */
+export async function subscribeEnv(next: (newValue: any) => ds.AsyncVoid) {
+    const env = await init()
+    return await env.subscribe(next)
 }
 
 /**

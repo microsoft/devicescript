@@ -25,8 +25,7 @@ describe("env", () => {
     test("write,read", async () => {
         const obj = { [Math.random() + ""]: Math.random() }
         await writeEnv(obj)
-        const e = await env()
-        const r = await e.read()
+        const r = await env()
 
         expect(JSON.stringify(r)).toBe(JSON.stringify(obj))
     })
