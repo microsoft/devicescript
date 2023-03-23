@@ -17,7 +17,7 @@ async function init() {
  */
 export async function env() {
     const env = await init()
-    return await env.read()
+    return (await env.read()) || {}
 }
 
 /**

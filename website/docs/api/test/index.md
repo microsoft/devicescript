@@ -7,7 +7,7 @@ The `@devicescript/test` module provides a lightweight unit test framework, with
 Add test support using the `devicescript` command line.
 
 ```bash
-deviescript add test
+devicescript add test
 ```
 
 You can also add the package manually.

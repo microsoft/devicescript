@@ -7,6 +7,12 @@ Settings values are serialized in flash and available accross device reset. Firm
 
 Add test support using the `devicescript` command line.
 
+```bash
+devicescript add settings
+```
+
+You can also add the package manually.
+
 ```bash npm2yarn
 npm install @devicescript/settings
 ```
