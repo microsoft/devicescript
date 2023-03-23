@@ -1,11 +1,10 @@
 {
-    "name": "@devicescript/cloud",
-    "version": "2.1.0",
+    "name": "@devicescript/settings",
+    "version": "2.0.8",
     "private": false,
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*",
-        "@devicescript/settings": "*",
         "@devicescript/test": "*"
     },
     "scripts": {
