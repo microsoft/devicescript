@@ -26,11 +26,11 @@ export function map<T, R>(
 }
 
 /**
- * Applies an accumulator (or "reducer function") to each value from the source after an initial state is established.
+ * Applies an accumulator (or "reducer function") to each value from the source.
  */
 export function scan<T, A>(
     accumulator: (acc: A, value: T, index: number) => A | Promise<A>,
-    seed: A
+    seed?: A
 ): OperatorFunction<T, A> {
     return function operator(source: Observable<T>) {
         return new Observable<A>(async observer => {
@@ -50,7 +50,7 @@ export function scan<T, A>(
 }
 
 /**
- * An observable operator that collects samples in an array of a given size.
+ * An observable operator that collects samples in an array.
  * @param length
  * @returns
  */
