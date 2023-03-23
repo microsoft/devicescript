@@ -104,9 +104,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
-    IMG_VERSION_MINOR = 0,
-    IMG_VERSION_PATCH = 9,
-    IMG_VERSION = 0x2000009,
+    IMG_VERSION_MINOR = 1,
+    IMG_VERSION_PATCH = 0,
+    IMG_VERSION = 0x2010000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
@@ -274,7 +274,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 148,
+    __MAX = 152,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -424,6 +424,10 @@ export enum BuiltInString {
     _COMMANDRESPONSE = 146,
     ISACTION = 147,
     MILLIS = 148,
+    FROM = 149,
+    HEX = 150,
+    UTF8 = 151,
+    _UTF8 = 152, // utf-8
 }
 
 export const OP_PRINT_FMTS = [
@@ -687,6 +691,10 @@ export const BUILTIN_STRING__VAL = [
     "_commandResponse",
     "isAction",
     "millis",
+    "from",
+    "hex",
+    "utf8",
+    "utf-8",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

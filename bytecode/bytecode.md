@@ -5,8 +5,8 @@ Expressions do not modify the state. They may throw exceptions though.
 ## Format Constants
 
     img_version_major = 2
-    img_version_minor = 0
-    img_version_patch = 9
+    img_version_minor = 1
+    img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a
@@ -615,3 +615,7 @@ Only `true` and `false` values.
     _commandResponse = 146
     isAction = 147
     millis = 148
+    from = 149
+    hex = 150
+    utf8 = 151
+    _utf8 = 152 // utf-8
