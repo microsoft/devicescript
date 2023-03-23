@@ -1,12 +1,7 @@
 import { subscribeMessages, uploadMessage } from "./messages"
-import { env, writeEnv } from "@devicescript/settings"
-import { AsyncVoid, ClientRegister } from "@devicescript/core"
+import { writeEnv } from "@devicescript/settings"
 import { cloud } from "./client"
-import {
-    fromCallback,
-    Observable,
-    wrapSubscriptions,
-} from "@devicescript/observables"
+import { Unsubscribe } from "@devicescript/core"
 
 const ENV_TOPIC = "env"
 
@@ -14,25 +9,34 @@ function pollEnv() {
     uploadMessage(ENV_TOPIC, {})
 }
 
-function notifyEnvChange() {
+let _unsub: Unsubscribe
+/**
+ * Starts synching the environment values from the cloud
+ * @returns
+ */
+export async function startSyncEnv() {
+    if (_unsub) return _unsub
 
-}
-
-export const envChange: ClientRegister<void> = new Cli
-
-export async function syncEnv() {
     // query env when cloud restarts
-    cloud.connected.subscribe(curr => {
+    const unsubConnected = cloud.connected.subscribe(curr => {
         if (curr) pollEnv()
     })
     if (await cloud.connected.read()) pollEnv()
 
     // receive env messages
-    await subscribeMessages(ENV_TOPIC, async (newValue: any) => {
-        const current = env()
-        if (JSON.stringify(current) !== JSON.stringify(newValue)) {
-            writeEnv(newValue)
-            envChange.e
+    const unsubMessages = await subscribeMessages(
+        ENV_TOPIC,
+        async (newValue: any) => {
+            console.debug(`cloud: received env`)
+            await writeEnv(newValue)
         }
-    })
+    )
+
+    // cleanup
+    _unsub = async () => {
+        _unsub = undefined
+        await unsubConnected()
+        await unsubMessages()
+    }
+    return _unsub
 }

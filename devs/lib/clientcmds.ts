@@ -1,5 +1,7 @@
 import * as ds from "@devicescript/core"
 
+declare var ds_impl: typeof ds
+
 function addElement<T>(arr: T[], e: T) {
     if (!arr) return [e]
     arr.push(e)
@@ -73,12 +75,9 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
     private _subscriptions: ClientRegisterChangeHandler<T>[]
 }
 
-/**
- * Instantiates a client register for a given value
- * @param value
- * @returns
- */
-export function clientRegisterFrom<T>(value: T): ds.ClientRegister<T> {
+ds_impl.clientRegisterFrom = function clientRegisterFrom<T>(
+    value: T
+): ds.ClientRegister<T> {
     return new ClientRegister(value)
 }
 
