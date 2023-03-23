@@ -843,9 +843,14 @@ export class DsDapSession extends DebugSession {
     }
 
     private findSource(src: DebugProtocol.Source) {
+        function normPath(p: string) {
+            return p.replace(/\\/g, "/")
+        }
         if (src.sourceReference) return src.sourceReference - 1
         const srcIdx = this.img.dbg.sources.findIndex(
-            s => s.path == src.path || this.resolvePath(s) == src.path
+            s =>
+                normPath(s.path) == normPath(src.path) ||
+                normPath(this.resolvePath(s)) == normPath(src.path)
         )
         return srcIdx
     }
