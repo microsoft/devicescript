@@ -28,7 +28,7 @@ bytecodeMd.replace(/^    (\w+)\s+=\s+(0x[\da-f]+|\d+)/gim, (_, k, v) => {
 const { img_version_major, img_version_minor, img_version_patch } =
     bytecodeConst
 
-const currByteCodeVer = `${img_version_major}.${img_version_minor}.${img_version_patch}`
+const currVer = `${img_version_major}.${img_version_minor}.${img_version_patch}`
 
 async function userBump() {
     await $`git pull`
@@ -85,19 +85,20 @@ async function cloudPublish() {
     await $`make -C runtime ../${vmFile}`
     await $`git add ${vmFile} runtime/devicescript-vm/dist/types.d.ts`
 
-    if (currByteCodeVer == mainPkgJson.version) {
-        echo(`version match, ${currByteCodeVer}`)
+    if (currVer == mainPkgJson.version) {
+        echo(`version match, ${currVer}`)
         const r = await $`git commit -m ${"[skip ci] rebuild VM"}`.nothrow()
         if (r.exitCode == 0) await $`git push`
         process.exit(0)
     }
 
-    const currTag = await $`git tag -l v${currByteCodeVer}`
+    const vCurrVer = "v" + currVer
+    const currTag = await $`git tag -l ${vCurrVer}`
     if (currTag.stdout.trim()) fail(`tag ${currTag} already exists`)
 
     for (const fn of allPkgPath) {
         const json = await fs.readJSON(fn)
-        json.version = currByteCodeVer
+        json.version = currVer
         await fs.writeJSON(fn, json, { spaces: 4 })
         echo(`bump ${fn}`)
     }
@@ -106,16 +107,29 @@ async function cloudPublish() {
     await $`yarn build-fast`
 
     await $`git add .`
-    await $`git commit -m ${"[skip ci] release v" + currByteCodeVer}`
-    await $`git tag ${"v" + currByteCodeVer}`
+    await $`git commit -m ${"[skip ci] release " + vCurrVer}`
+    await $`git tag ${vCurrVer}`
     await $`git push`
     await $`git push --tags`
+
+    const versions = {
+        "jacdac-ts": fs.readJSONSync("jacdac-ts/package.json").version,
+        "@devicescript/compiler": currVer,
+        "@devicescript/plugin": currVer,
+    }
 
     for (const fn of allPkgPath) {
         const json = await fs.readJSON(fn)
         if (json.private) continue
+        for (const dep of Object.keys(versions)) {
+            if (json.dependencies?.[dep] == "*")
+                json.dependencies[dep] = versions[dep]
+        }
+        await fs.writeJSON(fn, json)
         await $`cd ${dirname(fn)} && npm publish`
     }
+
+    await $`gh release create ${vCurrVer} 'vscode/devicescript.vsix#DeviceScript VSCode Extension package'`
 }
 
 if (argv.cloud) {

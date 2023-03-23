@@ -43,9 +43,9 @@
         "fs-extra": "^11.1.0"
     },
     "dependencies": {
-        "@devicescript/compiler": "latest",
+        "@devicescript/compiler": "*",
         "buffer": "^6.0.3",
-        "jacdac-ts": "latest",
+        "jacdac-ts": "*",
         "websocket-polyfill": "^0.0.3"
     },
     "optionalDependencies": {

@@ -62,8 +62,8 @@
     },
     "dependencies": {
         "@vscode/extension-telemetry": "^0.7.7",
-        "jacdac-ts": "latest",
-        "@devicescript/plugin": "latest",
+        "jacdac-ts": "*",
+        "@devicescript/plugin": "*",
         "websocket-polyfill": "^0.0.3"
     },
     "main": "./built/devicescript-vscode.js",
