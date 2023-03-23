@@ -284,12 +284,20 @@ export class DsDapSession extends DebugSession {
         this.asyncReq(response, async () => {
             const fibs = await this.client.readFibers()
             response.body = {
-                threads: fibs.map(f => ({
-                    id: f.fiberId,
-                    name: `${this.functionName(
-                        f.currFn
-                    )} ... ${this.functionName(f.initialFn)}`,
-                })),
+                threads:
+                    fibs.length == 0
+                        ? [
+                              {
+                                  id: 1, // if no threads are returned, the "Pause" button will do nothing
+                                  name: "fake-thread", // so we add a fake thread
+                              },
+                          ]
+                        : fibs.map(f => ({
+                              id: f.fiberId,
+                              name: `${this.functionName(
+                                  f.currFn
+                              )} ... ${this.functionName(f.initialFn)}`,
+                          })),
             }
         })
     }
@@ -540,6 +548,15 @@ export class DsDapSession extends DebugSession {
     ): void {
         this.asyncReq(response, async () => {
             await this.client.resume()
+        })
+    }
+
+    protected override pauseRequest(
+        response: DebugProtocol.PauseResponse,
+        args: DebugProtocol.PauseArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            await this.client.halt()
         })
     }
 
