@@ -186,7 +186,7 @@ const optionalFiles: FileSet = {
             moduleDetection: "force",
             types: [],
         },
-        include: ["*.ts", `../${LIBDIR}/*.ts`],
+        include: ["**/*.ts", `../${LIBDIR}/*.ts`],
     },
     ".prettierrc": {
         arrowParens: "avoid",
