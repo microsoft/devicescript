@@ -562,8 +562,10 @@ static void read_bytes(cmd_t *cmd) {
 
 static void resume_cmd(cmd_t *cmd) {
     cmd->state->suspended = 0;
-    if (cmd->ctx)
+    if (cmd->ctx) {
+        LOG("resume");
         devs_vm_resume(cmd->ctx);
+    }
 }
 
 static void step_cmd(cmd_t *cmd) {
