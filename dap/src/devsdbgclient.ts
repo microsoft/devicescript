@@ -239,6 +239,13 @@ export class DevsDbgClient extends JDServiceClient {
         this.getValue(DevsDbgValueTag.Special, DevsDbgValueSpecial.Undefined)
     }
 
+    async disable() {
+        try {
+            if (this.suspended) await this.resume()
+        } catch {}
+        await this.regEn.sendSetAsync(new Uint8Array([0]))
+    }
+
     async resume() {
         await this.lock.runExclusive(async () => {
             this.clearValues()

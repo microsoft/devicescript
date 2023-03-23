@@ -98,6 +98,13 @@ export class DsDapSession extends DebugSession {
         this.client = null
     }
 
+    async finish() {
+        if (!this.client) return
+        try {
+            await this.client?.disable()
+        } catch {}
+    }
+
     private async createClient(cfg: StartArgs, timeout = 2000) {
         const did = cfg?.deviceId
         const t0 = Date.now()
