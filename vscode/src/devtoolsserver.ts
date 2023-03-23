@@ -9,6 +9,8 @@ import {
     JDEventSource,
     JDService,
     prettySize,
+    semverCmp,
+    throwError,
     unique,
 } from "jacdac-ts"
 import * as vscode from "vscode"
@@ -26,11 +28,12 @@ import { logo } from "./assets"
 import { sideRequest } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
-import { TaggedQuickPickItem } from "./pickers"
+import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
 import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
+import { extensionVersion } from "./version"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -126,10 +129,30 @@ export class DeveloperToolsManager extends JDEventSource {
             timeout: 1000,
         })
         const { versions, buildConfig } = res.data
-        this._versions = versions
-        console.debug(
-            `devicescript devtools ${this.devsVersion}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
-        )
+        if (JSON.stringify(this._versions) !== JSON.stringify(versions)) {
+            this._versions = versions
+            const extv = extensionVersion()
+            console.debug(
+                `devicescript : vscode ${extv}, devtools ${this.devsVersion}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
+            )
+            if (semverCmp(this.devsVersion, extv) < 0) {
+                // installed devs tool are outdated for the vscode addon
+                const { projectFolder } = this
+                this.clear()
+                const yes = await showConfirmBox(
+                    `DeviceScript - @devicescript/cli dependency is outdated, upgrade?`
+                )
+                if (yes) {
+                    const t = vscode.window.createTerminal({
+                        name: "@devicescript/cli upgrade",
+                        cwd: projectFolder,
+                    })
+                    t.sendText("yarn upgrade @devicescript/cli@latest")
+                    t.show()
+                }
+                throwError("Dependencies outdated", { cancel: true })
+            }
+        }
         this.updateBuildConfig(buildConfig)
     }
 
