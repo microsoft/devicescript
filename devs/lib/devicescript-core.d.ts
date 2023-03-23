@@ -147,7 +147,13 @@ declare module "@devicescript/core" {
         id: number
 
         /**
+         * Check if fiber is currently suspended.
+         */
+        suspended: boolean
+
+        /**
          * If the fiber is currently suspended, mark it for resumption, passing the specified value.
+         * Otherwise, throw a `RangeError`.
          */
         resume(v: any): void
 

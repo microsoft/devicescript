@@ -110,9 +110,9 @@
     "\x06\x0c"
 
 #define DEVS_IMG_VERSION_MAJOR 2
-#define DEVS_IMG_VERSION_MINOR 1
+#define DEVS_IMG_VERSION_MINOR 2
 #define DEVS_IMG_VERSION_PATCH 0
-#define DEVS_IMG_VERSION 0x2010000
+#define DEVS_IMG_VERSION 0x2020000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0xf1296e0a
 #define DEVS_NUM_IMG_SECTIONS 10
@@ -254,7 +254,7 @@
 #define DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE 34
 #define DEVS_BUILTIN_OBJECT_JSON 35
 
-#define DEVS_BUILTIN_STRING___MAX 152
+#define DEVS_BUILTIN_STRING___MAX 153
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -408,6 +408,7 @@
 #define DEVS_BUILTIN_STRING_HEX 150
 #define DEVS_BUILTIN_STRING_UTF8 151
 #define DEVS_BUILTIN_STRING__UTF8 152 // utf-8
+#define DEVS_BUILTIN_STRING_SUSPENDED 153
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -448,7 +449,7 @@
         "_logRepr", "print", "everyMs", "setInterval", "setTimeout", "clearInterval",              \
         "clearTimeout", "SyntaxError", "JSON", "parse", "stringify", "_dcfgString", "isSimulator", \
         "Role", "Fiber", "suspend", "resume", "terminate", "self", "current", "id",                \
-        "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8"
+        "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

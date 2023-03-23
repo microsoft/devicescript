@@ -41,12 +41,17 @@ interface Timeout {
 
 let timeouts: Timeout[]
 let timeoutId: number
+let timeoutWorkerId: ds.Fiber
 
 async function timeoutWorker() {
     while (true) {
-        // TODO we need to have computed amount of sleep here, interruptible when new timeout is added
-        await ds.sleep(10)
-        const n = ds.millis()
+        let n = ds.millis()
+        let d = 10000
+        if (timeouts[0]) d = timeouts[0].when - n
+        if (d > 0) {
+            await ds.suspend(d)
+            n = ds.millis()
+        }
         while (timeouts.length > 0 && timeouts[0].when <= n) {
             const t = timeouts.shift()
             t.callback.start()
@@ -68,7 +73,7 @@ function addTimeout(cb: ds.Callback, ms: number): Timeout {
     if (!timeouts) {
         timeouts = []
         timeoutId = 1
-        timeoutWorker.start()
+        timeoutWorkerId = timeoutWorker.start()
     }
     if (!ms || ms < 1) ms = 1
     const when = ds.millis() + ms
@@ -81,6 +86,9 @@ function addTimeout(cb: ds.Callback, ms: number): Timeout {
         if (i === timeouts.length || timeouts[i].when > when) {
             timeouts.insert(i, 1)
             timeouts[i] = r
+            // if we're inserting at the head, wake the worker
+            if (i === 0 && timeoutWorkerId.suspended)
+                timeoutWorkerId.resume(null)
             return r
         }
     }

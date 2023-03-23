@@ -104,9 +104,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
-    IMG_VERSION_MINOR = 1,
+    IMG_VERSION_MINOR = 2,
     IMG_VERSION_PATCH = 0,
-    IMG_VERSION = 0x2010000,
+    IMG_VERSION = 0x2020000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
@@ -274,7 +274,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 152,
+    __MAX = 153,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -428,6 +428,7 @@ export enum BuiltInString {
     HEX = 150,
     UTF8 = 151,
     _UTF8 = 152, // utf-8
+    SUSPENDED = 153,
 }
 
 export const OP_PRINT_FMTS = [
@@ -695,6 +696,7 @@ export const BUILTIN_STRING__VAL = [
     "hex",
     "utf8",
     "utf-8",
+    "suspended",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
