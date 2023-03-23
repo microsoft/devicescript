@@ -236,19 +236,19 @@
             "editor/title": [
                 {
                     "command": "extension.devicescript.editor.build",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /main*.\\.ts/",
                     "group": "navigation"
                 }
             ],
             "editor/title/run": [
                 {
                     "command": "extension.devicescript.editor.debug",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /main*.\\.ts/",
                     "group": "navigation"
                 },
                 {
                     "command": "extension.devicescript.editor.run",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /main*.\\.ts/",
                     "group": "navigation"
                 }
             ],

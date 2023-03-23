@@ -46,6 +46,15 @@ const serviceFiles: FileSet = {
     `,
 }
 
+const settingsFiles: FileSet = {
+    "package.json": {
+        [IS_PATCH]: true,
+        dependencies: {
+            "@devicescript/settings": "latest",
+        },
+    },
+}
+
 const testFiles: FileSet = {
     "package.json": {
         [IS_PATCH]: true,
@@ -517,6 +526,15 @@ export async function addNpm(options: AddNpmOptions) {
     ])
 }
 
+export async function addSettings(options: AddTestOptions) {
+    const files = clone(testFiles)
+    const cwd = writeFiles(".", options, files)
+    await runInstall(cwd, options)
+    return finishAdd(`Added settings package to package.json, please review.`, [
+        "package.json",
+    ])
+}
+
 export async function addTest(options: AddTestOptions) {
     const files = clone(testFiles)
     if (existsSync("./src/main.ts")) {
@@ -527,15 +545,11 @@ export async function addTest(options: AddTestOptions) {
                 main
         files["src/main.ts"] = main
     }
-    const pkg = files["package.json"] as any
-    if (!pkg.devDependencies["@devicescript/test"])
-        pkg.devDependencies["@devicescript/test"] = "*"
-
     const cwd = writeFiles(".", options, files)
     await runInstall(cwd, options)
 
     return finishAdd(
-        `Add test package to package.json, added "runTest" to main.ts, please review.`,
+        `Added test package to package.json, added "runTest" to main.ts, please review.`,
         ["package.json", "src/main.ts"]
     )
 }
