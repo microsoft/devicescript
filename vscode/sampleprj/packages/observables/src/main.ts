@@ -2,7 +2,7 @@ import * as ds from "@devicescript/core"
 import { describe, test, expect } from "@devicescript/test"
 import { reduce } from "./aggregate"
 import { from, fromEvent, fromRegister, interval } from "./creation"
-import { ewma } from "./dsp"
+import { ewma, fir, rollingAverage } from "./dsp"
 import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
 import { Observable, Subscription } from "./observable"
@@ -171,5 +171,15 @@ describe("dsp", () => {
         const a = [1, 2]
         const obs = from(a).pipe(ewma())
         await emits(obs, [1, 1 * 0.8 + 2 * 0.2])
+    })
+    test("fir", async () => {
+        const a = [1, 2]
+        const obs = from(a).pipe(fir([1, 1]))
+        await emits(obs, [1, 1 / 2 + 2 / 2])
+    })
+    test("ravg", async () => {
+        const a = [1, 2]
+        const obs = from(a).pipe(rollingAverage(2))
+        await emits(obs, [1, 1 / 2 + 2 / 2])
     })
 })

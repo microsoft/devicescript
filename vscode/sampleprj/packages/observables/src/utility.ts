@@ -1,10 +1,6 @@
 import {
     identity,
     Observable,
-    ObserverComplete,
-    ObserverError,
-    ObserverNext,
-    ObserverStart,
     OperatorFunction,
     OptionalObserver,
     SloppyObserver,

@@ -266,12 +266,63 @@ The closer gain to 1 and the more closely the EWMA tracks the original time seri
 
 ```ts
 import { Temperature } from "@devicescript/core"
-import { emwa } from "@devicescript/observables"
+import { ewma } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
 await thermometer.temperature
     // highlight-next-line
-    .pipe(emwa(0.5))
+    .pipe(ewma(0.5))
     .subscribe(t => console.log(t))
+```
+
+### rollingAverage
+
+A windowed rolling average filter.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { rollingAverage } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+await thermometer.temperature
+    // highlight-next-line
+    .pipe(rollingAverage(10))
+    .subscribe(t => console.log(t))
+```
+
+### fir
+
+A general purpose Finite Response Filter filter. Coefficients are typically computed in a seperate process.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { fir } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+await thermometer.temperature
+    // highlight-next-line
+    .pipe(fir([0.1, 0.2, 1]))
+    .subscribe(t => console.log(t))
+```
+
+## Utilities
+
+### tap
+
+Allows to attach a side-effect function to a pipeline, tap passes the stream through. Typically used to add logging.
+
+```ts
+import { from, map, tap } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+await obs
+    .pipe(
+        // highlight-next-line
+        tap(v => console.log(v)),
+        map(v => v * v)
+    ).subscribe(v => console.log(v))
 ```
