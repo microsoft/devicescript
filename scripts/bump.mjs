@@ -125,7 +125,7 @@ async function cloudPublish() {
             if (json.dependencies?.[dep] == "*")
                 json.dependencies[dep] = versions[dep]
         }
-        await fs.writeJSON(fn, json)
+        await fs.writeJSON(fn, json, { spaces: 4 })
         await $`cd ${dirname(fn)} && npm publish`
     }
 
