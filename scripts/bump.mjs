@@ -129,7 +129,7 @@ async function cloudPublish() {
         await $`cd ${dirname(fn)} && npm publish`
     }
 
-    await $`gh release create ${vCurrVer} 'vscode/devicescript.vsix#DeviceScript VSCode Extension package'`
+    await $`gh release create ${vCurrVer} vscode/devicescript.vsix`
 }
 
 if (argv.cloud) {
