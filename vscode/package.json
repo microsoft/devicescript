@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "2.0.8",
+    "version": "2.0.9",
     "publisher": "Microsoft",
     "description": "DeviceScript extension for Visual Studio Code.",
     "author": {
@@ -62,8 +62,8 @@
     },
     "dependencies": {
         "@vscode/extension-telemetry": "^0.7.7",
-        "jacdac-ts": "latest",
-        "@devicescript/plugin": "latest",
+        "jacdac-ts": "*",
+        "@devicescript/plugin": "*",
         "websocket-polyfill": "^0.0.3"
     },
     "main": "./built/devicescript-vscode.js",

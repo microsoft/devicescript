@@ -1,6 +1,6 @@
 {
     "name": "website",
-    "version": "2.0.8",
+    "version": "2.0.9",
     "private": true,
     "scripts": {
         "docusaurus": "docusaurus",
@@ -15,7 +15,7 @@
         "typecheck": "tsc"
     },
     "dependencies": {
-        "@devicescript/cli": "latest",
+        "@devicescript/cli": "*",
         "@docusaurus/core": "2.3.1",
         "@docusaurus/preset-classic": "2.3.1",
         "@docusaurus/theme-mermaid": "2.3.1",

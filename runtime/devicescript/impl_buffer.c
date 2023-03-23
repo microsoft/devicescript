@@ -21,6 +21,31 @@ void fun1_Buffer_alloc(devs_ctx_t *ctx) {
     devs_ret_gc_ptr(ctx, devs_buffer_try_alloc(ctx, sz));
 }
 
+void fun1_Buffer_from(devs_ctx_t *ctx) {
+    value_t v = devs_arg(ctx, 0);
+    unsigned sz;
+    const uint8_t *d = devs_bufferish_data(ctx, v, &sz);
+    devs_buffer_t *buf = NULL;
+
+    if (d) {
+        buf = devs_buffer_try_alloc(ctx, sz);
+        if (buf)
+            memcpy(buf->data, d, sz);
+    } else {
+        if (devs_is_array(ctx, v)) {
+            devs_array_t *arr = devs_value_to_gc_obj(ctx, v);
+            buf = devs_buffer_try_alloc(ctx, arr->length);
+            if (buf)
+                for (unsigned i = 0; i < arr->length; ++i)
+                    buf->data[i] = devs_value_to_int(ctx, arr->data[i]);
+        } else {
+            devs_throw_type_error(ctx, "Expecting string, buffer or array");
+        }
+    }
+
+    devs_ret_gc_ptr(ctx, buf);
+}
+
 value_t prop_Buffer_length(devs_ctx_t *ctx, value_t self) {
     unsigned sz;
     if (buffer_data(ctx, self, &sz))
@@ -29,11 +54,25 @@ value_t prop_Buffer_length(devs_ctx_t *ctx, value_t self) {
         return devs_undefined;
 }
 
-void meth0_Buffer_toString(devs_ctx_t *ctx) {
+void meth1_Buffer_toString(devs_ctx_t *ctx) {
     unsigned sz;
+    value_t enc = devs_arg(ctx, 0);
     const uint8_t *data = buffer_data(ctx, devs_arg_self(ctx), &sz);
-    if (data)
-        devs_ret(ctx, devs_string_from_utf8(ctx, data, sz));
+
+    if (data) {
+        if (devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING_HEX))) {
+            devs_string_t *s = devs_string_try_alloc(ctx, sz * 2);
+            if (s)
+                jd_to_hex(s->data, data, sz);
+            devs_ret_gc_ptr(ctx, s);
+        } else if (devs_is_null_or_undefined(enc) ||
+                   devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING_UTF8)) ||
+                   devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING__UTF8))) {
+            devs_ret(ctx, devs_string_from_utf8(ctx, data, sz));
+        } else {
+            devs_throw_type_error(ctx, "Unknown encoding: %s", devs_show_value(ctx, enc));
+        }
+    }
 }
 
 void meth3_Buffer_fillAt(devs_ctx_t *ctx) {

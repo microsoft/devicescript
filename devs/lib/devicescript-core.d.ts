@@ -307,6 +307,7 @@ declare module "@devicescript/core" {
             private constructor()
 
             static alloc(size: number): Buffer
+            static from(data: string | Buffer | number[]): Buffer
 
             /**
              * Gets the length in bytes of the buffer
@@ -324,7 +325,7 @@ declare module "@devicescript/core" {
             fillAt(offset: number, length: number, value: number): void
             [idx: number]: number
 
-            toString(): string
+            toString(encoding?: "hex" | "utf-8" | "utf8"): string
         }
 
         /**

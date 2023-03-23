@@ -916,8 +916,6 @@ function testIgnoredAnd() {
     ds.assert(q === 1)
 }
 
-
-
 function expectTypeError(f: () => void) {
     let ok = false
     try {
@@ -959,6 +957,15 @@ function testQDot() {
     ds.assert(i === 3)
 }
 
+function testHex() {
+    ds.assert(Buffer.from("żółw").toString("hex") === "c5bcc3b3c58277")
+    ds.assert(Buffer.from([1, 2]).toString("hex") === "0102")
+    ds.assert(Buffer.from("aa").toString("hex") === "6161")
+    expectTypeError(() => {
+        console.log(Buffer.from("aa").toString("foobar" as any))
+    })
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -995,5 +1002,6 @@ await testFibers()
 testCtorError()
 testIgnoredAnd()
 testQDot()
+testHex()
 
 console.log("all OK")

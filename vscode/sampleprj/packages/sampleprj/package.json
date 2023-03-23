@@ -1,11 +1,11 @@
 {
     "name": "sampleprj",
-    "version": "2.0.8",
+    "version": "2.0.9",
     "private": true,
     "dependencies": {
-        "devicescript-cowsay": "latest",
-        "@devicescript/observables": "latest",
-        "@devicescript/cloud": "latest"
+        "devicescript-cowsay": "*",
+        "@devicescript/observables": "*",
+        "@devicescript/cloud": "*"
     },
     "devDependencies": {
         "@devicescript/cli": "*",
