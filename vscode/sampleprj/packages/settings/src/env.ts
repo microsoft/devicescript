@@ -1,16 +1,16 @@
-import { ClientRegister, clientRegisterFrom } from "@devicescript/core"
+import * as ds from "@devicescript/core"
 import { readSetting, writeSetting } from "./api"
 
 const ENV_KEY = "env"
 
-let _env: ClientRegister<any>
+let _env: ds.ClientRegister<any>
 /**
  * Reads the environment variables from the settings
  */
 export async function env() {
     if (!_env) {
         const current = (await readSetting(ENV_KEY)) || {}
-        _env = clientRegisterFrom(current)
+        _env = ds.clientRegisterFrom(current)
     }
     return _env
 }
@@ -20,7 +20,7 @@ export async function env() {
  * @param value
  */
 export async function writeEnv(value: any) {
-    const current = (await readSetting(ENV_KEY)) || {}
+    const current = await readSetting(ENV_KEY)
     if (JSON.stringify(current) !== JSON.stringify(value)) {
         await writeSetting(ENV_KEY, value)
         if (_env) {
