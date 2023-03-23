@@ -1,5 +1,5 @@
 import { ClientRegister, clientRegisterFrom } from "@devicescript/core"
-import { readSettingJSON, writeSettingJSON } from "./api"
+import { readSetting, writeSetting } from "./api"
 
 const ENV_KEY = "env"
 
@@ -9,7 +9,7 @@ let _env: ClientRegister<any>
  */
 export async function env() {
     if (!_env) {
-        const current = (await readSettingJSON(ENV_KEY)) || {}
+        const current = (await readSetting(ENV_KEY)) || {}
         _env = clientRegisterFrom(current)
     }
     return _env
@@ -20,11 +20,11 @@ export async function env() {
  * @param value
  */
 export async function writeEnv(value: any) {
-    const current = (await readSettingJSON(ENV_KEY)) || {}
+    const current = (await readSetting(ENV_KEY)) || {}
     if (JSON.stringify(current) !== JSON.stringify(value)) {
-        await writeSettingJSON(ENV_KEY, value)
+        await writeSetting(ENV_KEY, value)
         if (_env) {
-            _env.emit(value)
+            await _env.emit(value)
         }
     }
 }
