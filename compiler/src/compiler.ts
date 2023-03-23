@@ -931,14 +931,25 @@ class Program implements TopOpWriter {
             this.nodeName(expr.expression)?.startsWith(startPref)
         ) {
             this.requireArgs(expr, 1)
+            const specName = this.serviceNameFromClassName(
+                this.nodeName(expr.expression).slice(startPref.length)
+            )
+            let startName = specName
+
+            const sig = this.checker.getResolvedSignature(expr)
+            const serv = this.checker
+                .getTypeOfSymbolAtLocation(sig.parameters[0], expr)
+                .getProperty("service")
+            if (serv) {
+                const tp2 = this.checker.getTypeOfSymbolAtLocation(serv, expr)
+                if (tp2.isStringLiteral()) startName = tp2.value
+            }
+
             const arg = expr.arguments[0]
             const obj: BaseServiceConfig = this.toLiteralJSON(arg)
             if (!obj || typeof obj != "object")
                 throwError(arg, `expecting { ... }`)
-            const specName = this.serviceNameFromClassName(
-                this.nodeName(expr.expression).slice(startPref.length)
-            )
-            obj.service = specName
+            obj.service = startName
             const spec = this.lookupRoleSpec(arg, specName)
             if (!obj.name) obj.name = this.forceName(decl.name)
             this.startServices.push(obj)
