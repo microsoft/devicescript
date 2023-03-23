@@ -1,7 +1,7 @@
 import { settings } from "./client"
 
 /**
- * Serializes a JSON objec to a setting
+ * Serializes a JSON object to a setting
  * @param key name of the setting
  * @param value object to serialize
  */
@@ -13,12 +13,11 @@ export async function writeSetting(key: string, value: any): Promise<void> {
 }
 
 /**
- * Deserializes a JSON objec to a setting
+ * Deserializes a JSON object from a setting
  * @param key name of the setting
  * @param value object to serialize
  */
 export async function readSetting(key: string): Promise<any> {
-    // TODO buffer -> json
     const [k, b] = await settings.get(key)
     if (k !== key || !b) return undefined
 
