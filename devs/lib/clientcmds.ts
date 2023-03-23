@@ -73,6 +73,15 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
     private _subscriptions: ClientRegisterChangeHandler<T>[]
 }
 
+/**
+ * Instantiates a client register for a given value
+ * @param value
+ * @returns
+ */
+export function clientRegisterFrom<T>(value: T): ds.ClientRegister<T> {
+    return new ClientRegister(value)
+}
+
 ds.Role.prototype.binding = function binding(this: RoleData) {
     if (!this._binding) {
         this._binding = new ClientRegister<boolean>(false)

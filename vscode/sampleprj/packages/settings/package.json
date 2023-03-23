@@ -1,12 +1,10 @@
 {
-    "name": "@devicescript/cloud",
+    "name": "@devicescript/settings",
     "version": "2.0.8",
     "private": false,
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*",
-        "@devicescript/observables": "*",
-        "@devicescript/settings": "*",
         "@devicescript/test": "*"
     },
     "scripts": {
