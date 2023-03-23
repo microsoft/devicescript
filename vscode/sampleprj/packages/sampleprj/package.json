@@ -3,9 +3,9 @@
     "version": "2.0.8",
     "private": true,
     "dependencies": {
-        "devicescript-cowsay": "*",
-        "@devicescript/observables": "*",
-        "@devicescript/cloud": "*"
+        "devicescript-cowsay": "latest",
+        "@devicescript/observables": "latest",
+        "@devicescript/cloud": "latest"
     },
     "devDependencies": {
         "@devicescript/cli": "*",

@@ -50,7 +50,7 @@ const testFiles: FileSet = {
     "package.json": {
         [IS_PATCH]: true,
         dependencies: {
-            "@devicescript/test": "*",
+            "@devicescript/test": "latest",
         },
     },
 }
@@ -206,7 +206,7 @@ const optionalFiles: FileSet = {
         private: "Please use 'devs add npm' to make this a publishable package",
         dependencies: {},
         devDependencies: {
-            "@devicescript/cli": "*",
+            "@devicescript/cli": "latest",
         },
         scripts: {
             setup: "devicescript build --quiet", // generates .devicescript/lib/* files
