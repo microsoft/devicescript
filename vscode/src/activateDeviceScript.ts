@@ -54,11 +54,13 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const folder = await vscode.window.showWorkspaceFolderPick()
                 if (folder === undefined) return
                 const projectName = await vscode.window.showInputBox({
-                    title: "Pick project folder",
+                    title: "Pick project subfolder (optional)",
                     prompt: "It will be used as a root for the new project",
                 })
-                if (!projectName) return
-                const cwd = Utils.joinPath(folder.uri, projectName)
+                if (projectName === undefined) return
+                const cwd = projectName
+                    ? Utils.joinPath(folder.uri, projectName)
+                    : folder.uri
                 await vscode.workspace.fs.createDirectory(cwd)
                 const terminal = vscode.window.createTerminal({
                     isTransient: true,
