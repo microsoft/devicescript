@@ -47,7 +47,7 @@ interface Reading {
 }
 
 // reading observer
-const readings = ds.clientRegisterFrom<Partial<Reading>>({})
+const readings = ds.register<Partial<Reading>>({})
 
 // reading samples and injecting into readings
 interval(FLOOR_SAMPLE_PERIOD).pipe(

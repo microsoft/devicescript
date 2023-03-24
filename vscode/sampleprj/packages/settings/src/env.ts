@@ -7,7 +7,7 @@ let _env: ds.ClientRegister<any>
 async function init() {
     if (!_env) {
         const current = (await readSetting(ENV_KEY)) || {}
-        _env = ds.clientRegisterFrom(current)
+        _env = ds.register(current)
     }
     return _env
 }

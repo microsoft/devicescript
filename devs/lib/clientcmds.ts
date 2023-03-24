@@ -75,9 +75,7 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
     private _subscriptions: ClientRegisterChangeHandler<T>[]
 }
 
-ds_impl.clientRegisterFrom = function clientRegisterFrom<T>(
-    value: T
-): ds.ClientRegister<T> {
+ds_impl.register = function register<T>(value: T): ds.ClientRegister<T> {
     return new ClientRegister(value)
 }
 
