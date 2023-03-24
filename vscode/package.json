@@ -238,6 +238,11 @@
                     "command": "extension.devicescript.editor.build",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /main*.\\.ts/",
                     "group": "navigation"
+                },
+                {
+                    "command": "extension.devicescript.editor.configure",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /main*.\\.ts/",
+                    "group": "navigation"
                 }
             ],
             "editor/title/run": [
@@ -497,6 +502,12 @@
                 "title": "DeviceScript: Build",
                 "category": "DeviceScript",
                 "icon": "$(package)"
+            },
+            {
+                "command": "extension.devicescript.editor.configure",
+                "title": "DeviceScript: Configure...",
+                "category": "DeviceScript",
+                "icon": "$(settings-gear)"
             },
             {
                 "command": "extension.devicescript.terminal.show",
