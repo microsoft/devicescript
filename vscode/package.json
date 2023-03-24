@@ -42,7 +42,7 @@
     "scripts": {
         "buildicons": "node ./scripts/updateFonts.js",
         "buildts": "node ../build.js --fast",
-        "package": "vsce package --out devicescript.vsix --npm",
+        "package": "vsce package --out devicescript.vsix",
         "publish": "vsce publish",
         "publish-pre-release": "vsce publish --pre-release",
         "build": "npm run buildicons && npm run buildts",
