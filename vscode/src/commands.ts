@@ -67,7 +67,7 @@ export async function showInformationMessageWithHelp(
 ): Promise<boolean | undefined> {
     const help = "Open Help"
     const res = await vscode.window.showInformationMessage(
-        MESSAGE_PREFIX + message,
+        "DeviceScript - " + message,
         help
     )
     if (res === help) return await openDocUri(path)
