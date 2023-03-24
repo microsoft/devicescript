@@ -30,10 +30,12 @@ import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
-import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
+import { showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
 import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
 import { extensionVersion } from "./version"
+import { showError, showErrorMessage } from "./telemetry"
+import { MESSAGE_PREFIX } from "./constants"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -229,14 +231,16 @@ export class DeveloperToolsManager extends JDEventSource {
         let n = 0
         while (!(await checkFileExists(dir, `devsconfig.json`))) {
             if (dir.fsPath === root.uri.fsPath) {
-                vscode.window.showErrorMessage(
-                    "DeviceScript - Build cancelled.\ndevicescript.json file not found."
+                showErrorMessage(
+                    "build.devscriptnotfound",
+                    "Build cancelled.\ndevicescript.json file not found."
                 )
                 return undefined
             }
             if (n++ > 30) {
-                vscode.window.showErrorMessage(
-                    "DeviceScript - Build cancelled.\nFolder problem."
+                showErrorMessage(
+                    "build.folderprogram",
+                    "Build cancelled.\nFolder problem."
                 )
                 return undefined
             }
@@ -309,9 +313,7 @@ export class DeveloperToolsManager extends JDEventSource {
             this.showBuildResults(res.data)
             return res.data
         } catch (err) {
-            console.error(err) // TODO
-            // this is rather unusual, show it to the user
-            vscode.window.showErrorMessage(err.message)
+            showError(err)
             return undefined
         }
     }

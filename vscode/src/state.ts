@@ -38,7 +38,7 @@ import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
-import { activateTelemetry, AppTelemetry } from "./telemetry"
+import { activateTelemetry, AppTelemetry, showErrorMessage } from "./telemetry"
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
@@ -55,7 +55,6 @@ export interface NodeWatch {
 export class DeviceScriptExtensionState extends JDEventSource {
     readonly devtools: DeveloperToolsManager
     readonly simulators: SimulatorsWebView
-    readonly telemetry: AppTelemetry
 
     private _transport: TransportStatus = {
         transports: [],
@@ -66,7 +65,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
         readonly bus: JDBus
     ) {
         super()
-        this.telemetry = activateTelemetry(this.context)
         this.devtools = new DeveloperToolsManager(this)
         this.simulators = new SimulatorsWebView(this)
 
@@ -332,9 +330,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { extensionKind } = this.context.extension
         const isWorkspace = extensionKind === vscode.ExtensionKind.Workspace
         if (isWorkspace) {
-            this.telemetry.showErrorMessage(
+            showErrorMessage(
                 "connection.remote",
-                "DeviceScript - Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
+                "Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
             )
             return
         }
@@ -472,9 +470,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         files = [...new Set(files)]
 
         if (!files.length) {
-            vscode.window.showErrorMessage(
-                "DeviceScript: could not find any file."
-            )
+            showErrorMessage("pickfile.notfound", "Could not find any file.")
             return undefined
         }
 

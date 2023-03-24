@@ -17,6 +17,10 @@ environments (VM itself compiles to 10kB of code, with the floating point librar
 -   Device, services, register Explorer view
 -   Register and Event watch
 
+## Telemetry
+
+This extension collects telemetry data to help us build a better experience working remotely from VS Code. We only collect data on which commands are executed. We do not collect any information about image names, paths, etc. The extension respects the `telemetry.enableTelemetry` setting which you can learn more about in the [Visual Studio Code FAQ](https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting).
+
 ## Contributing
 
 Contributions are welcome! See [contributing page](../CONTRIBUTING.md).

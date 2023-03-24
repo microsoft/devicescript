@@ -9,6 +9,7 @@ import { CHANGE, SRV_DEVICE_SCRIPT_MANAGER, SRV_ROLE_MANAGER } from "jacdac-ts"
 import type { StartArgs } from "@devicescript/dap"
 import { Utils } from "vscode-uri"
 import { checkFileExists } from "./fs"
+import { showErrorMessage } from "./telemetry"
 
 export function activateDebugger(extensionState: DeviceScriptExtensionState) {
     const { context } = extensionState
@@ -189,8 +190,9 @@ export class DeviceScriptConfigurationProvider
         let program: string = config.program
 
         if (!program) {
-            vscode.window.showErrorMessage(
-                "DeviceScript - Debug cancelled. Cannot find a program to debug."
+            showErrorMessage(
+                "debug.programnotfound",
+                "Debug cancelled. Cannot find a program to debug."
             )
             return undefined
         }
@@ -208,8 +210,10 @@ export class DeviceScriptConfigurationProvider
             }
             dir = Utils.dirname(dir)
             if (n++ > 30) {
-                vscode.window.showErrorMessage(
-                    "DeviceScript: Debug cancelled - folder problem."
+                console.log("devsconfig not found", { dir, folder })
+                showErrorMessage(
+                    "debug.notrootfolder",
+                    "Debug cancelled: could not find root folder (contains 'devsconfig.json')."
                 )
                 return undefined
             }
@@ -217,8 +221,9 @@ export class DeviceScriptConfigurationProvider
 
         await this.extensionState.devtools.start()
         if (!this.extensionState.devtools.connected) {
-            vscode.window.showErrorMessage(
-                "DeviceScript: Debug cancelled. Cannot start development server."
+            showErrorMessage(
+                "debug.startfailed",
+                "Debug cancelled: cannot start development server."
             )
             return undefined
         }
@@ -239,7 +244,8 @@ export class DeviceScriptConfigurationProvider
         if (token?.isCancellationRequested) return undefined
 
         if (!dsConfig.deviceId) {
-            vscode.window.showErrorMessage(
+            showErrorMessage(
+                "debug.notdevice",
                 `Debug cancelled. No device selected.`
             )
             return undefined
@@ -262,8 +268,9 @@ export class DeviceScriptConfigurationProvider
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })?.[dsConfig.serviceInstance || 0]
         if (!service) {
-            vscode.window.showErrorMessage(
-                `Debug cancelled. Could not find device ${dsConfig.deviceId}.`
+            showErrorMessage(
+                "debug.nodevicebyid",
+                `Debug cancelled: Could not find device ${dsConfig.deviceId}.`
             )
             return undefined
         }
@@ -291,8 +298,9 @@ export class DeviceScriptConfigurationProvider
             service
         )
         if (!buildResult?.success) {
-            vscode.window.showErrorMessage(
-                `Debug cancelled. Program has build errors.`
+            showErrorMessage(
+                "debug.builderrors",
+                `Debug cancelled: Program has build errors.`
             )
             return undefined
         }

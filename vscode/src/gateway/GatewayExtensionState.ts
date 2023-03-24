@@ -10,9 +10,8 @@ import * as vscode from "vscode"
 import { DeviceScriptExtensionState } from "../state"
 import "isomorphic-fetch"
 import { GatewayManager, FETCH_ERROR } from "./gatewaydom"
-import { showError } from "../commands"
+import { showError, showErrorMessage } from "../telemetry"
 
-const MESSAGE_PREFIX = "DeviceScript Gateway - "
 export class GatewayExtensionState extends JDEventSource {
     private _manager: GatewayManager
 
@@ -140,14 +139,13 @@ export class GatewayExtensionState extends JDEventSource {
                     break
                 }
             }
-            await vscode.window.showErrorMessage(
-                `${MESSAGE_PREFIX} ${resp.statusText} (${resp.status})`
+            await showErrorMessage(
+                "gateway.fetch",
+                `${resp.statusText} (${resp.status})`
             )
         } else {
             const e = error as Error
-            await vscode.window.showErrorMessage(
-                `${MESSAGE_PREFIX} ${e.message}`
-            )
+            await showError(e)
         }
     }
 
@@ -177,7 +175,7 @@ export class GatewayExtensionState extends JDEventSource {
         try {
             await this._manager?.refresh()
         } catch (e) {
-            showError(e, { messagePrefix: MESSAGE_PREFIX })
+            showError(e)
         }
     }
 
@@ -231,8 +229,9 @@ export class GatewayExtensionState extends JDEventSource {
             )
 
             if (!ApiRoot || !AccountName || !AccountKey) {
-                vscode.window.showErrorMessage(
-                    `${MESSAGE_PREFIX} invalid connection string`
+                showErrorMessage(
+                    "gateway.invalidconnstring",
+                    `invalid connection string`
                 )
                 return
             }
@@ -268,7 +267,7 @@ export class GatewayExtensionState extends JDEventSource {
                 try {
                     await transaction()
                 } catch (e) {
-                    showError(e, { messagePrefix: MESSAGE_PREFIX })
+                    showError(e)
                     // async
                     this.backgroundRefresh()
                 }
