@@ -6,6 +6,7 @@ import {
     PackedValues,
 } from "jacdac-ts"
 import * as vscode from "vscode"
+import { MESSAGE_PREFIX } from "./constants"
 import { showError } from "./telemetry"
 
 export async function sendCmd(
@@ -38,7 +39,7 @@ export async function withProgress(
     let error: Error
     await vscode.window.withProgress(
         {
-            title: "DeviceScript - " + title,
+            title: MESSAGE_PREFIX + title,
             location: vscode.ProgressLocation.Notification,
         },
         async progress => {
@@ -67,7 +68,7 @@ export async function showInformationMessageWithHelp(
 ): Promise<boolean | undefined> {
     const help = "Open Help"
     const res = await vscode.window.showInformationMessage(
-        "DeviceScript - " + message,
+        MESSAGE_PREFIX + message,
         help
     )
     if (res === help) return await openDocUri(path)

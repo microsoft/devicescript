@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import TelemetryReporter from "@vscode/extension-telemetry"
 import { isAckError, isCancelError, isTimeoutError } from "jacdac-ts"
+import { MESSAGE_PREFIX } from "./constants"
 
 // the application insights key (also known as instrumentation key)
 const key = "06283122-cd76-493c-9641-fbceeeefd9c6"
@@ -57,13 +58,11 @@ export function showErrorMessage(
     message: string,
     ...items: string[]
 ): Thenable<string> {
-    if (message.indexOf("-") < 0) message = "DeviceScript - " + message
+    if (message.indexOf("-") < 0) message = MESSAGE_PREFIX + message
     return telemetry
         ? telemetry.showErrorMessage("error." + eventName, message, ...items)
         : vscode.window.showErrorMessage(message, ...items)
 }
-
-export const MESSAGE_PREFIX = "DeviceScript - "
 
 export function showError(error: Error) {
     if (!error || isCancelError(error)) return
@@ -71,7 +70,7 @@ export function showError(error: Error) {
     console.error(error)
     telemetry?.reportException(error)
 
-    const messagePrefix = "DeviceScript - "
+    const messagePrefix = MESSAGE_PREFIX
     if (isTimeoutError(error))
         vscode.window.showErrorMessage(
             messagePrefix + "the operation timed out."
