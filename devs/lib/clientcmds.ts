@@ -374,7 +374,11 @@ declare module "@devicescript/core" {
         writeReg(devAddr: number, regAddr: number, byte: number): Promise<void>
         readReg(devAddr: number, regAddr: number): Promise<number>
         writeRegBuf(devAddr: number, regAddr: number, b: Buffer): Promise<void>
-        readRegBuf(devAddr: number, regAddr: number): Promise<Buffer>
+        readRegBuf(
+            devAddr: number,
+            regAddr: number,
+            size: number
+        ): Promise<Buffer>
 
         readBuf(devAddr: number, size: number): Promise<Buffer>
         writeBuf(devAddr: number, b: Buffer): Promise<void>
@@ -410,10 +414,10 @@ ds.I2C.prototype.writeRegBuf = async function (devAddr, regAddr, b) {
         throw new I2CError(`error writing dev=${devAddr} at reg=${regAddr}`)
 }
 
-ds.I2C.prototype.readRegBuf = async function (devAddr, regAddr) {
+ds.I2C.prototype.readRegBuf = async function (devAddr, regAddr, size) {
     const b = Buffer.alloc(1)
     b[0] = regAddr
-    const [status, buffer] = await this.transaction(devAddr, 1, b)
+    const [status, buffer] = await this.transaction(devAddr, size, b)
     if (status !== ds.I2CStatus.OK)
         throw new I2CError(`error reading dev=${devAddr} at reg=${regAddr}`)
     return buffer
