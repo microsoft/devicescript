@@ -6,7 +6,8 @@
         "devicescript-cowsay": "*",
         "@devicescript/observables": "*",
         "@devicescript/cloud": "*",
-        "@devicescript/settings": "*"
+        "@devicescript/settings": "*",
+        "@devicescript/i2c": "*"
     },
     "devDependencies": {
         "@devicescript/cli": "*",

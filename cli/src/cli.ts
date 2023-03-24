@@ -6,7 +6,7 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import { addNpm, addService, addSim, addTest, addSettings, init } from "./init"
+import { addNpm, addService, addSim, addTest, addSettings, addI2C, init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
@@ -327,6 +327,10 @@ export async function mainCli() {
     addCommand("settings")
         .description("add settings to current project")
         .action(dropReturn(addSettings))
+
+    addCommand("i2c")
+        .description("add I2C to current project")
+        .action(dropReturn(addI2C))
 
     program
         .command("binpatch", { hidden: true })
