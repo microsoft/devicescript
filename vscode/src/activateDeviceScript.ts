@@ -11,9 +11,11 @@ import {
     activateDeviceScriptI2COutputChannel,
 } from "./output"
 import { DeviceScriptExtensionState } from "./state"
+import { activateTelemetry } from "./telemetry"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, extensionMode } = context
+    activateTelemetry(context)
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )

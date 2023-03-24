@@ -69,6 +69,7 @@ import {
     WIFI_PIPE_TIMEOUT,
     WIFI_RECONNECT_TIMEOUT,
 } from "./constants"
+import { showErrorMessage } from "./telemetry"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -925,8 +926,9 @@ class JDomWifiTreeItem extends JDomCustomTreeItem {
             service.event(WifiEvent.ConnectionFailed),
             EVENT,
             async (ssid: string) => {
-                await vscode.window.showErrorMessage(
-                    `DeviceScript: connection to ${ssid} failed.`
+                showErrorMessage(
+                    "jdom.wifi.connect",
+                    `connection to ${ssid} failed.`
                 )
             }
         )
@@ -1013,7 +1015,7 @@ class JDomWifiTreeItem extends JDomCustomTreeItem {
                 token.unmount()
             }
         })
-        if (message) vscode.window.showErrorMessage(MESSAGE_PREFIX + message)
+        if (message) showErrorMessage("jdom.wifi", message)
     }
 
     update() {
