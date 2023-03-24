@@ -312,7 +312,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
         // first identify the board
         const { boardimport } =
-            /from "@dsboard\/(?<board>[^"]+)/.exec(document.getText())
+            /from "@dsboard\/(?<boardimport>[^"]+)/.exec(document.getText())
                 ?.groups || {}
         let board = boards.find(b => b.id === boardimport)
         if (!board) {
@@ -326,7 +326,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             await editor.edit(editBuilder => {
                 editBuilder.insert(
                     document.positionAt(0),
-                    `import { pins } from "@dsboard/${board.id}:\n`
+                    `import { pins } from "@dsboard/${board.id}"\n`
                 )
             })
             await document.save()
