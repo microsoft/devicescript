@@ -27,9 +27,6 @@ const env = await environment<{
     baselineFloor: number
     floorHeight: number
 }>()
-env.subscribe(v => {
-    console.log(`env updated`)
-})
 
 interface Reading {
     time: number
@@ -46,7 +43,6 @@ const readings = register<Partial<Reading>>({})
 
 // reading samples and injecting into readings
 interval(FLOOR_SAMPLE_PERIOD).pipe(
-    filter(() => !!env),
     map(async _ => {
         const humidity = await bmp.humidity.read()
         const temp = await tmp.temperature.read()
