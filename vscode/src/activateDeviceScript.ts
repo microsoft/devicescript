@@ -165,10 +165,9 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             "extension.devicescript.editor.configure",
             async () => {
                 const editor = vscode.window.activeTextEditor
-                const document = editor?.document
-                if (!document) return
+                if (!editor) return
 
-                await extensionState.configureHardware(document)
+                await extensionState.configureHardware(editor)
             }
         )
     )

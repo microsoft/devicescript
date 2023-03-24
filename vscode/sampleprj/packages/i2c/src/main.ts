@@ -1,4 +1,3 @@
 import { describe, expect, test } from "@devicescript/test"
 
-describe("i2c", () => {
-})
+describe("i2c", () => {})
