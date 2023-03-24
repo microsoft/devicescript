@@ -30,11 +30,12 @@ import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
-import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
+import { showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
 import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
 import { extensionVersion } from "./version"
 import { showError, showErrorMessage } from "./telemetry"
+import { MESSAGE_PREFIX } from "./constants"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(

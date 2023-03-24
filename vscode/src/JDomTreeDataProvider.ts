@@ -63,7 +63,7 @@ import {
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
-import { MESSAGE_PREFIX, sendCmd, withProgress } from "./commands"
+import { sendCmd, withProgress } from "./commands"
 import {
     ICON_LOADING,
     WIFI_PIPE_TIMEOUT,
