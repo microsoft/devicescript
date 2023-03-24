@@ -10,7 +10,7 @@ let _env: ObservableValue<any>
  * Gets an observable environment register that may get updated by the cloud.
  * @returns environment
  */
-export async function env<T = any>(): Promise<ObservableValue<T>> {
+export async function environment<T = any>(): Promise<ObservableValue<T>> {
     if (_env) return _env
 
     const old = await readSetting(ENV_TOPIC, {})
