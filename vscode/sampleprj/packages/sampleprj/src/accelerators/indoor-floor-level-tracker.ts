@@ -1,15 +1,7 @@
 import * as ds from "@devicescript/core"
 import { cloud, startSyncEnv, uploadMessage } from "@devicescript/cloud"
-import { subscribeEnv } from "@devicescript/settings"
-import {
-    collectTime,
-    debounceTime,
-    filter,
-    interval,
-    map,
-    rollingAverage,
-    throttleTime,
-} from "@devicescript/observables"
+import { env, subscribeEnv } from "@devicescript/settings"
+import { filter, interval, map } from "@devicescript/observables"
 
 /**
  * A partial port of
@@ -22,6 +14,11 @@ const FLOOR_FILTER_ORDER = 10
 const FLOOR_OFFSET = 0.3
 const LIVE_UPDATE_PERIOD = 1000 * 60
 
+interface Environment {
+    baselineFloor: number
+    floorHeight: number
+}
+
 // devices:
 // humidity sensor
 const tmp = new ds.Temperature()
@@ -33,6 +30,11 @@ const display = new ds.CharacterScreen()
 
 // sync env with cloud
 await startSyncEnv()
+let _env = await env()
+await subscribeEnv(v => {
+    _env = v
+    console.log(`env updated`)
+})
 
 interface Reading {
     time: number
@@ -49,13 +51,15 @@ const readings = ds.clientRegisterFrom<Partial<Reading>>({})
 
 // reading samples and injecting into readings
 interval(FLOOR_SAMPLE_PERIOD).pipe(
+    filter(() => !!_env),
     map(async _ => {
         const humidity = await bmp.humidity.read()
         const temp = await tmp.temperature.read()
         const pressure = (await pre.pressure.read()) / 100
         const altitude = 100 // todo
-        const floor = 10 // TODO
-        const currentFloor = Math.round(floor + FLOOR_OFFSET) // todo filter.
+        const { floorHeight, baselineFloor } = _env
+        const floor = 10 // TODO filter
+        const currentFloor = Math.round(floor + FLOOR_OFFSET)
 
         readings.emit({
             time: ds.millis(),
@@ -64,15 +68,18 @@ interval(FLOOR_SAMPLE_PERIOD).pipe(
             pressure,
             altitude,
             floor,
-            currentFloor,
         })
     })
 )
 
 // periodic upload
-interval(LIVE_UPDATE_PERIOD)
-    .pipe(filter(async () => await cloud.connected().read()))
-    .subscribe(async () => {
-        const reading = await readings.read()
-        uploadMessage("readings", reading)
-    })
+await interval(LIVE_UPDATE_PERIOD)
+    .pipe(filter(async () => await cloud.connected.read()))
+    .subscribe(
+        async () => await uploadMessage("readings", await readings.read())
+    )
+
+// update display
+readings.subscribe(async () => {
+    await display.message.write("...")
+})

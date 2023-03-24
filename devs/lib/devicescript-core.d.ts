@@ -1,7 +1,9 @@
 /// <reference path="devicescript-spec.d.ts" />
 
 declare module "@devicescript/core" {
-    export type AsyncVoid = void | Promise<void>
+    export type AsyncValue<T> = T | Promise<T>
+    export type AsyncVoid = AsyncValue<void>
+    export type AsyncBoolean = AsyncValue<boolean>
     export type Callback = () => AsyncVoid
     export type PktHandler = (pkt: Packet) => AsyncVoid
     export type Unsubscribe = () => void

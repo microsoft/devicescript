@@ -5,7 +5,8 @@
     "dependencies": {
         "devicescript-cowsay": "*",
         "@devicescript/observables": "*",
-        "@devicescript/cloud": "*"
+        "@devicescript/cloud": "*",
+        "@devicescript/settings": "*"
     },
     "devDependencies": {
         "@devicescript/cli": "*",

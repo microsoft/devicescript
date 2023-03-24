@@ -5,23 +5,23 @@ import { Unsubscribe } from "@devicescript/core"
 
 const ENV_TOPIC = "env"
 
-function pollEnv() {
-    uploadMessage(ENV_TOPIC, {})
+async function pollEnv() {
+    await uploadMessage(ENV_TOPIC, {})
 }
 
 let _unsub: Unsubscribe
 /**
- * Starts synching the environment values from the cloud
- * @returns
+ * Starts synching the environment values from the cloud.
+ * @returns unsubscribe function
  */
 export async function startSyncEnv() {
     if (_unsub) return _unsub
 
     // query env when cloud restarts
-    const unsubConnected = cloud.connected.subscribe(curr => {
-        if (curr) pollEnv()
+    const unsubConnected = cloud.connected.subscribe(async curr => {
+        if (curr) await pollEnv()
     })
-    if (await cloud.connected.read()) pollEnv()
+    if (await cloud.connected.read()) await pollEnv()
 
     // receive env messages
     const unsubMessages = await subscribeMessages(

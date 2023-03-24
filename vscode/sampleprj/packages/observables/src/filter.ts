@@ -1,3 +1,4 @@
+import * as ds from "@devicescript/core"
 import { identity, Observable, OperatorFunction } from "./observable"
 
 /**
@@ -6,7 +7,7 @@ import { identity, Observable, OperatorFunction } from "./observable"
  * @returns
  */
 export function filter<T>(
-    condition: (value: T, index: number) => boolean
+    condition: (value: T, index: number) => ds.AsyncBoolean
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(async observer => {
@@ -16,7 +17,8 @@ export function filter<T>(
                 error,
                 complete,
                 next: async v => {
-                    if (condition(v, index++)) await next(v)
+                    const c = await condition(v, index++)
+                    if (c) await next(v)
                 },
             })
         })
