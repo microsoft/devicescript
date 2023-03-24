@@ -38,7 +38,7 @@ jobs:
                   node-version: "18"
                   cache: npm
                   registry-url: 'https://registry.npmjs.org'
-            - run: npm run install --frozen-lockfile
+            - run: npm ci
             - name: regenerate bytecode files (if needed)
               run: make bytecode-gen-ci
             - run: make

@@ -18,7 +18,7 @@ jobs:
               with:
                   node-version: "18"
                   cache: npm
-            - run: npm run install
+            - run: npm ci
             - name: Build tools
               run: npm run build
             - name: Build website
