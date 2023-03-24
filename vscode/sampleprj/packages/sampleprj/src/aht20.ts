@@ -1,6 +1,6 @@
 import * as devs from "@devicescript/core"
+import { i2c } from "@devicescript/i2c"
 
-const i2c = new devs.I2C()
 const addr = 0x38
 console.log("start")
 
