@@ -32,12 +32,6 @@ declare module "@devicescript/core" {
     }
 
     /**
-     * Instantiates a client register
-     * @param value
-     */
-    export function clientRegisterFrom<T>(value: T): ClientRegister<T>
-
-    /**
      * A base class for service clients
      */
     // TODO: rename to serviceclient?

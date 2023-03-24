@@ -8,6 +8,7 @@ import { collect, collectTime } from "./join"
 import { Observable, Subscription } from "./observable"
 import { map, scan } from "./transform"
 import { tap } from "./utility"
+import { register } from "./value"
 const btn = new ds.Button()
 const temp = new ds.Temperature()
 
@@ -181,5 +182,22 @@ describe("dsp", () => {
         const a = [1, 2]
         const obs = from(a).pipe(rollingAverage(2))
         await emits(obs, [1, 1 / 2 + 2 / 2])
+    })
+})
+
+describe("value", () => {
+    test("emit", async () => {
+        const obs = register<number>(0)
+        const res: number[] = []
+        await obs.subscribe(v => {
+            res.push(v)
+        })
+        await obs.emit(1)
+        await obs.emit(2)
+        await obs.emit(3)
+        expect(res.length).toBe(3)
+        expect(res[0]).toBe(1)
+        expect(res[1]).toBe(2)
+        expect(res[2]).toBe(3)
     })
 })

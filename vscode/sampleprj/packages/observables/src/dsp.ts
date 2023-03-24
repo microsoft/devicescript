@@ -22,38 +22,58 @@ export function ewma(gain: number = 0.2, seed: number = undefined) {
  * @param coefficients array of filter coefficient
  * @param gain optional gain, otherwise computed from the coefficients
  */
-export function fir(coefficients: number[], gain?: number) {
-    const n = coefficients.length
-    if (gain === undefined) {
-        gain = 0
-        for (let i = 0; i < n; ++i) gain += coefficients[i]
+export class FIR {
+    private readonly values: number[] = []
+    private k: number = 0
+
+    constructor(
+        private readonly coefficients: number[],
+        private readonly gain: number
+    ) {
+        if (this.gain === undefined) {
+            this.gain = 0
+            const n = this.coefficients.length
+            for (let i = 0; i < n; ++i) this.gain += this.coefficients[i]
+        }
     }
 
+    /**
+     * Applies the value in the filter
+     * @param value new value
+     * @returns filtered value
+     */
+    process(value: number) {
+        // initial with first value
+        const n = this.coefficients.length
+        if (this.values.length === 0)
+            for (let i = 0; i < n; ++i) this.values.push(value)
+        // update new value
+        let output = 0
+        this.values[this.k] = value
+        for (let i = 0; i < n; ++i) {
+            const vi = (i + this.k) % n
+            output += this.coefficients[i] * this.values[vi]
+        }
+        this.k = (this.k + 1) % n
+        output = output / this.gain
+        return output
+    }
+}
+
+/**
+ * Finite impulse response filter
+ * @param coefficients array of filter coefficient
+ * @param gain optional gain, otherwise computed from the coefficients
+ */
+export function fir(coefficients: number[], gain?: number) {
     return function operator(source: Observable<number>) {
         return new Observable<number>(async observer => {
             const { error, next, complete } = observer
-
-            const values: number[] = []
-            let k = 0
-
+            const filter = new FIR(coefficients, gain)
             return await source.subscribe({
                 error,
                 complete,
-                next: async value => {
-                    // initial with first value
-                    if (values.length === 0)
-                        for (let i = 0; i < n; ++i) values.push(value)
-                    // update new value
-                    let output = 0
-                    values[k] = value
-                    for (let i = 0; i < n; ++i) {
-                        const vi = (i + k) % n
-                        output += coefficients[i] * values[vi]
-                    }
-                    k = (k + 1) % n
-                    output = output / gain
-                    await next(output)
-                },
+                next: async value => await next(filter.process(value)),
             })
         })
     }

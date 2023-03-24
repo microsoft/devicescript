@@ -41,30 +41,6 @@ import { readSetting } from "@devicescript/settings"
 const world = await readSetting("hello")
 ```
 
-### `env`
-
-A special setting `env` to hold environment values
-
-```ts
-import { env } from "@devicescript/settings"
-
-// highlight-next-line
-const e = await env()
-```
-
-### `subscribeEnv`
-
-Register a handle to be called when `env` changes.
-
-```ts
-import { subscribeEnv } from "@devicescript/settings"
-
-// highlight-next-line
-await subscribeEnv(value => {
-    console.log(`env updated!`)
-})
-```
-
 ## Package
 
 The test framework is implemented in the [@devicescript/settings](https://www.npmjs.com/package/@devicescript/settings) package.

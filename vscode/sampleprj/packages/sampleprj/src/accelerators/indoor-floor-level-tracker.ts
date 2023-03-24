@@ -1,7 +1,6 @@
 import * as ds from "@devicescript/core"
-import { cloud, startSyncEnv, uploadMessage } from "@devicescript/cloud"
-import { env, subscribeEnv } from "@devicescript/settings"
-import { filter, interval, map } from "@devicescript/observables"
+import { cloud, environment, uploadMessage } from "@devicescript/cloud"
+import { filter, interval, map, register } from "@devicescript/observables"
 
 /**
  * A partial port of
@@ -14,11 +13,6 @@ const FLOOR_FILTER_ORDER = 10
 const FLOOR_OFFSET = 0.3
 const LIVE_UPDATE_PERIOD = 1000 * 60
 
-interface Environment {
-    baselineFloor: number
-    floorHeight: number
-}
-
 // devices:
 // humidity sensor
 const tmp = new ds.Temperature()
@@ -29,12 +23,10 @@ const pre = new ds.AirPressure()
 const display = new ds.CharacterScreen()
 
 // sync env with cloud
-await startSyncEnv()
-let _env = await env()
-await subscribeEnv(v => {
-    _env = v
-    console.log(`env updated`)
-})
+const env = await environment<{
+    baselineFloor: number
+    floorHeight: number
+}>()
 
 interface Reading {
     time: number
@@ -47,17 +39,16 @@ interface Reading {
 }
 
 // reading observer
-const readings = ds.clientRegisterFrom<Partial<Reading>>({})
+const readings = register<Partial<Reading>>({})
 
 // reading samples and injecting into readings
 interval(FLOOR_SAMPLE_PERIOD).pipe(
-    filter(() => !!_env),
     map(async _ => {
         const humidity = await bmp.humidity.read()
         const temp = await tmp.temperature.read()
         const pressure = (await pre.pressure.read()) / 100
         const altitude = 100 // todo
-        const { floorHeight, baselineFloor } = _env
+        const { floorHeight, baselineFloor } = await env.read()
         const floor = 10 // TODO filter
         const currentFloor = Math.round(floor + FLOOR_OFFSET)
 
