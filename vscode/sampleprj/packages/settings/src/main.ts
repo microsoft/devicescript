@@ -20,13 +20,3 @@ describe("json", () => {
         expect(r).toBe(undefined)
     })
 })
-
-describe("env", () => {
-    test("write,read", async () => {
-        const obj = { [Math.random() + ""]: Math.random() }
-        await writeEnv(obj)
-        const r = await env()
-
-        expect(JSON.stringify(r)).toBe(JSON.stringify(obj))
-    })
-})

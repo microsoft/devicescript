@@ -1,4 +1,5 @@
 export * from "./observable"
+export * from "./value"
 export * from "./pipe"
 export * from "./creation"
 export * from "./transform"
