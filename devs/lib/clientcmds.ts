@@ -376,6 +376,7 @@ declare module "@devicescript/core" {
          * @param devAddr is a 7 bit i2c address
          * @param regAddr is an 8 bit register address
          * @param byte the value to write
+         * @throws I2CError
          */
         writeReg(devAddr: number, regAddr: number, byte: number): Promise<void>
         /**
@@ -383,6 +384,7 @@ declare module "@devicescript/core" {
          * @param devAddr is a 7 bit i2c address
          * @param regAddr is an 8 bit register address
          * @returns a byte
+         * @throws I2CError
          */
         readReg(devAddr: number, regAddr: number): Promise<number>
         /**
@@ -390,6 +392,7 @@ declare module "@devicescript/core" {
          * @param devAddr is a 7 bit i2c address
          * @param regAddr is an 8 bit register address
          * @param b is a byte buffer
+         * @throws I2CError
          */
         writeRegBuf(devAddr: number, regAddr: number, b: Buffer): Promise<void>
         /**
@@ -398,6 +401,7 @@ declare module "@devicescript/core" {
          * @param regAddr is an 8 bit register address
          * @param size is the number of bytes to request
          * @returns a byte buffer
+         * @throws I2CError
          */
         readRegBuf(
             devAddr: number,
@@ -409,12 +413,14 @@ declare module "@devicescript/core" {
          * @param devAddr is a 7 bit i2c address
          * @param size is the number of bytes to request
          * @returns a byte buffer
+         * @throws I2CError
          */
         readBuf(devAddr: number, size: number): Promise<Buffer>
         /**
          * 
          * @param devAddr is a 7 bit i2c address
          * @param b is a byte buffer
+         * @throws I2CError
          */
         writeBuf(devAddr: number, b: Buffer): Promise<void>
     }
