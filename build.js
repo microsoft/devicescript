@@ -267,7 +267,9 @@ async function main() {
             const mdo = "website/docs/devices"
             Object.keys(mds).forEach(fn => {
                 fs.ensureDirSync(join(mdo, dirname(fn)))
-                fs.writeFileSync(path.join(mdo, fn), mds[fn])
+                fs.writeFileSync(path.join(mdo, fn), mds[fn], {
+                    encoding: "utf-8",
+                })
             })
         }
     } catch (e) {
