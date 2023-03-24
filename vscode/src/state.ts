@@ -38,7 +38,7 @@ import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
-import { activateTelemetry, AppTelemetry, showErrorMessage } from "./telemetry"
+import { showErrorMessage } from "./telemetry"
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
@@ -248,6 +248,93 @@ export class DeviceScriptExtensionState extends JDEventSource {
         )
     }
 
+    async showQuickPickBoard(title: string) {
+        const { boards } = this.devtools
+
+        // find device on the board
+        const devices = this.bus.devices({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })
+        const deviceItems = devices
+            .map(device => ({
+                device,
+                board: boards.find(
+                    b => parseAnyInt(b.productId) === device.productIdentifier
+                ),
+            }))
+            .filter(({ board }) => !!board)
+            .map(({ device, board }) => ({
+                data: { board },
+                description: board.devName,
+                label: device.shortId,
+                detail: "connected",
+            }))
+        const res = await vscode.window.showQuickPick(
+            <TaggedQuickPickItem<{ board?: DeviceConfig }>[]>[
+                ...deviceItems,
+                deviceItems && {
+                    kind: vscode.QuickPickItemKind.Separator,
+                },
+                {
+                    label: "Help me choose...",
+                    detail: "Identify your board or find where to get one.",
+                },
+                ...boards.map(board => ({
+                    data: { board },
+                    label: board.devName,
+                    description: board.id,
+                    detail: board.$description,
+                })),
+            ].filter(i => !!i),
+            {
+                title,
+                canPickMany: false,
+                matchOnDetail: true,
+                matchOnDescription: true,
+            }
+        )
+        if (!res) return // user escaped
+
+        if (!res.data?.board) {
+            openDocUri("devices")
+            return undefined
+        }
+
+        return res.data.board
+    }
+
+    async configureHardware(editor: vscode.TextEditor) {
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+        const { boards } = this.devtools
+
+        const document = editor.document
+
+        // first identify the board
+        const { boardimport } =
+            /from "@dsboard\/(?<boardimport>[^"]+)/.exec(document.getText())
+                ?.groups || {}
+        let board = boards.find(b => b.id === boardimport)
+        if (!board) {
+            await this.devtools.refreshSpecs()
+            board = await this.showQuickPickBoard(
+                "What kind of device are you programming?"
+            )
+            if (!board) return
+
+            // insert missing import
+            await editor.edit(editBuilder => {
+                editBuilder.insert(
+                    document.positionAt(0),
+                    `import { pins, board } from "@dsboard/${board.id}"\n`
+                )
+            })
+            await document.save()
+        }
+
+        // ask for other
+    }
+
     async flashFirmware(device?: JDDevice) {
         await this.devtools.start()
         if (!this.devtools.connected) return
@@ -262,34 +349,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 board => parseAnyInt(board.productId) === productIdentifier
             )
         if (!board) {
-            const res = await vscode.window.showQuickPick(
-                <TaggedQuickPickItem<{ board?: DeviceConfig }>[]>[
-                    {
-                        label: "Help me choose...",
-                        detail: "Identify your board or find where to get one.",
-                    },
-                    ...boards.map(board => ({
-                        data: { board },
-                        label: board.devName,
-                        description: board.id,
-                        detail: board.$description,
-                    })),
-                ],
-                {
-                    title: "What kind of device are you flashing?",
-                    canPickMany: false,
-                    matchOnDetail: true,
-                    matchOnDescription: true,
-                }
+            board = await this.showQuickPickBoard(
+                "What kind of device are you flashing?"
             )
-            if (!res) return // user escaped
-
-            if (!res.data?.board) {
-                openDocUri("devices")
-                return
-            }
-
-            board = res.data.board
+            if (!board) return
         }
 
         if (
