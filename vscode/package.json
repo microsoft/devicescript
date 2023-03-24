@@ -42,11 +42,11 @@
     "scripts": {
         "buildicons": "node ./scripts/updateFonts.js",
         "buildts": "node ../build.js --fast",
-        "package": "vsce package --out devicescript.vsix --yarn",
+        "package": "vsce package --out devicescript.vsix --npm",
         "publish": "vsce publish",
         "publish-pre-release": "vsce publish --pre-release",
-        "build": "yarn buildicons && yarn buildts",
-        "vscode:prepublish": "yarn build"
+        "build": "npm run buildicons && npm run buildts",
+        "vscode:prepublish": "npm run build"
     },
     "devDependencies": {
         "@types/isomorphic-fetch": "^0.0.36",

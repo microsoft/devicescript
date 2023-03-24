@@ -144,13 +144,13 @@ const config = configure(
                                     setup: "devicescript build", // generates .devicescript/lib/* files
                                     postinstall: "devicescript build",
                                     "build:devicescript": "devicescript build",
-                                    build: "yarn build:devicescript",
+                                    build: "npm run build:devicescript",
                                     "watch:devicescript": `devicescript devtools`,
-                                    watch: "yarn watch:devicescript",
+                                    watch: "npm run watch:devicescript",
                                     "test:devicescript":
                                         "devicescript run src/main.ts --test --test-self-exit",
-                                    test: "yarn test:devicescript",
-                                    start: "yarn watch",
+                                    test: "npm run test:devicescript",
+                                    start: "npm run watch",
 
                                 },
                             },

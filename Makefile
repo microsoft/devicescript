@@ -3,10 +3,10 @@ CLI = ./cli/devicescript
 all: em comp
 
 comp:
-	yarn build
+	npm run build
 
 comp-fast:
-	yarn build-fast
+	npm run build-fast
 
 native native1 em:
 	$(MAKE) -C runtime $@
@@ -15,12 +15,12 @@ test-c: native comp-fast
 	$(CLI) crun devs/run-tests/all.ts
 
 test-em: em comp-fast
-	yarn test
+	npm run test
 
 test: test-c test-em
 
 vscode-pkg:
-	cd vscode && yarn package
+	cd vscode && npm run package
 
 clean:
 	rm -rf built interop/built compiler/built compiler/src/prelude.ts cli/built dap/built vscode/built
@@ -53,8 +53,8 @@ regen: bc
 	$(CLI) dcfg runtime/boards/wasm/wasm.board.json --update runtime/posix/wasm_cfg.c
 	clang-format -i runtime/posix/wasm_cfg.c
 	cd ./dcfg && ./regen.sh
-	yarn boards
-	yarn hwdocs
+	npm run boards
+	npm run hwdocs
 
 specs spec:
 	$(MAKE) -C runtime/jacdac-c/jacdac

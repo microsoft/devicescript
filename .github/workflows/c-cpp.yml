@@ -36,9 +36,9 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version: "18"
-                  cache: yarn
+                  cache: npm
                   registry-url: 'https://registry.npmjs.org'
-            - run: yarn install --frozen-lockfile
+            - run: npm run install --frozen-lockfile
             - name: regenerate bytecode files (if needed)
               run: make bytecode-gen-ci
             - run: make

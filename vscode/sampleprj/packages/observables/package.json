@@ -31,12 +31,12 @@
     "scripts": {
         "setup": "devicescript init",
         "build:devicescript": "devicescript build src/main.ts",
-        "build": "yarn build:devicescript",
+        "build": "npm run build:devicescript",
         "watch:devicescript": "devicescript devtools src/main.ts",
-        "watch": "yarn watch:devicescript",
+        "watch": "npm run watch:devicescript",
         "test:devicescript": "devicescript run src/main.ts --test --test-self-exit",
-        "test": "yarn test:devicescript",
-        "start": "yarn watch"
+        "test": "npm run test:devicescript",
+        "start": "npm run watch"
     },
     "publishConfig": {
         "access": "public"

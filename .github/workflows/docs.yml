@@ -17,13 +17,13 @@ jobs:
             - uses: actions/setup-node@v3
               with:
                   node-version: "18"
-                  cache: yarn
-            - run: yarn install --frozen-lockfile
+                  cache: npm
+            - run: npm run install
             - name: Build tools
-              run: yarn build
+              run: npm run build
             - name: Build website
               working-directory: website
-              run: yarn build
+              run: npm run build
             - name: Deploy to GitHub Pages
               uses: peaceiris/actions-gh-pages@v3
               if: ${{ github.ref == 'refs/heads/main' }}

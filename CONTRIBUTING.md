@@ -29,21 +29,21 @@ You can just use the devcontainer to build.
 If you want to build locally you need to install node.js. After cloning, the repo run
 
 ```bash
-yarn setup
+npm run setup
 ```
 
 To run a watch build and the docs, run
 
 ```
 nvm use 18
-yarn dev
+npm run dev
 ```
 
 -   start `jacdac devtools` (the npm version) and let is running
 -   open this folder in VSCode; use "Reopen in Container" if needed
 -   start Terminal in VSCode
--   run `yarn install`
--   run `yarn build`
+-   run `npm run install`
+-   run `npm run build`
 -   run `devs run devs/samples/something.ts` - this will execute given DeviceScript program using the WASM binary
 
 If you want to develop the runtime (as opposed to compiler or website), you will also need

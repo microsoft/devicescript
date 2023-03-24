@@ -14,7 +14,7 @@
     "module": "./built/devicescript-compiler.js",
     "types": "./built/types/compiler/src/devicescript.d.ts",
     "scripts": {
-        "dist": "yarn install && yarn build",
+        "dist": "npm run install && npm run build",
         "build": "node ../build.js"
     },
     "repository": {

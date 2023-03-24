@@ -8,7 +8,7 @@ environments (VM itself compiles to 10kB of code, with the floating point librar
 
 ## Release process
 
-Run `yarn bump` (or `make bump`). Alteratively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
+Run `npm run bump` (or `make bump`). Alteratively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
 
 The cloud build will rebuild and check-in the VM, update version numbers in all `package.json` files, and publish them.
 

@@ -147,7 +147,7 @@ export class DeveloperToolsManager extends JDEventSource {
                         name: "@devicescript/cli upgrade",
                         cwd: projectFolder,
                     })
-                    t.sendText("yarn upgrade @devicescript/cli@latest")
+                    t.sendText("npm update @devicescript/cli@latest")
                     t.show()
                 }
                 throwError("Dependencies outdated", { cancel: true })

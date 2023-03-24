@@ -14,15 +14,13 @@ nvm use 18
 -   install packages
 
 ```
-$ yarn install --frozen-lockfile
+$ npm install
 ```
-
-To refresh packages, run `yarn install` and commit `yarn.lock`.
 
 ### Local Development
 
 ```
-$ yarn start
+$ npm run start
 ```
 
 This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
@@ -33,9 +31,8 @@ The documentation files (markdown or mdx) should be placed under the `docs` fold
 
 Deployment is done through actions.
 
-
 ```
-$ yarn build
+$ npm run build
 ```
 
 This command generates static content into the `build` directory and can be served using any static contents hosting service.

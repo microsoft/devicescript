@@ -22,7 +22,7 @@
     // "forwardPorts": [],
 
     // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "yarn setup",
+    "postCreateCommand": "npm run setup",
 
     // Comment out this line to run as root instead.
     "remoteUser": "node"

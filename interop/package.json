@@ -14,7 +14,7 @@
     "module": "./built/devicescript-interop.mjs",
     "types": "./built/types/interop/src/interop.d.ts",
     "scripts": {
-        "dist": "yarn install && yarn build",
+        "dist": "npm run install && npm run build",
         "build": "node ../build.js"
     },
     "files": [

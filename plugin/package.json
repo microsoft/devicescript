@@ -10,7 +10,7 @@
     "main": "./built/devicescript-plugin.cjs",
     "types": "./built/types/plugin.d.ts",
     "scripts": {
-        "dist": "yarn install && yarn build",
+        "dist": "npm run install && npm run build",
         "build": "node ../build.js"
     },
     "repository": {

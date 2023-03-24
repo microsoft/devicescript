@@ -85,7 +85,7 @@ EMCC_OPTS += \
 endif
 
 devicescript-vm/built/wasmpre.js: devicescript-vm/wasmpre.ts Makefile
-	cd devicescript-vm && yarn build
+	cd devicescript-vm && npm run build
 	cat devicescript-vm/built/wasmpre.d.ts > devicescript-vm/dist/types.d.ts
 
 VM_TMP_FILE = devicescript-vm/built/devicescript-vm.js
