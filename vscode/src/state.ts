@@ -326,7 +326,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             await editor.edit(editBuilder => {
                 editBuilder.insert(
                     document.positionAt(0),
-                    `import { pins } from "@dsboard/${board.id}"\n`
+                    `import { pins, board } from "@dsboard/${board.id}"\n`
                 )
             })
             await document.save()
