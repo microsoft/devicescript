@@ -188,42 +188,47 @@ export class DeviceScriptConfigurationProvider
         const sessionConfig = config as vscode.DebugSessionOptions
         const dsConfig = config as StartArgs
         let program: string = config.program
+        // program can be absolute or relative...
 
         if (!program) {
             showErrorMessage(
                 "debug.programnotfound",
-                "Debug cancelled. Cannot find a program to debug."
+                "Debug cancelled\nCannot find a program to debug."
             )
             return undefined
         }
 
         // TODO make sure we're running devtools in the correct folder
-        let dir = Utils.dirname(Utils.resolvePath(folder.uri, program))
+        // program is a file system path, potentially full path on windows
+        let programUri = vscode.Uri.file(program)
+        if (!/^(\/|\w+:\\)/i.test(programUri.fsPath))
+            programUri = Utils.resolvePath(folder.uri, program)
+        let dir = programUri
         let n = 0
-        while (dir !== folder.uri) {
+        do {
+            dir = Utils.dirname(dir)
             if (await checkFileExists(dir, `devsconfig.json`)) {
                 await this.extensionState.devtools.setProjectFolder(dir)
-                program = Utils.resolvePath(folder.uri, program).fsPath.slice(
+                program = programUri.fsPath.slice(
                     this.extensionState.devtools.projectFolder.fsPath.length + 1
                 )
                 break
             }
-            dir = Utils.dirname(dir)
             if (n++ > 30) {
                 console.log("devsconfig not found", { dir, folder })
                 showErrorMessage(
                     "debug.notrootfolder",
-                    "Debug cancelled: could not find root folder (contains 'devsconfig.json')."
+                    "Debug cancelled\nCould not find root folder (contains 'devsconfig.json')."
                 )
                 return undefined
             }
-        }
+        } while (dir !== folder.uri)
 
         await this.extensionState.devtools.start()
         if (!this.extensionState.devtools.connected) {
             showErrorMessage(
                 "debug.startfailed",
-                "Debug cancelled: cannot start development server."
+                "Debug cancelled\nCannot start development server."
             )
             return undefined
         }
@@ -246,7 +251,7 @@ export class DeviceScriptConfigurationProvider
         if (!dsConfig.deviceId) {
             showErrorMessage(
                 "debug.notdevice",
-                `Debug cancelled. No device selected.`
+                `Debug cancelled\nNo device selected.`
             )
             return undefined
         }
@@ -270,7 +275,7 @@ export class DeviceScriptConfigurationProvider
         if (!service) {
             showErrorMessage(
                 "debug.nodevicebyid",
-                `Debug cancelled: Could not find device ${dsConfig.deviceId}.`
+                `Debug cancelled\nCould not find device ${dsConfig.deviceId}.`
             )
             return undefined
         }
@@ -300,7 +305,7 @@ export class DeviceScriptConfigurationProvider
         if (!buildResult?.success) {
             showErrorMessage(
                 "debug.builderrors",
-                `Debug cancelled: Program has build errors.`
+                `Debug cancelled\nProgram has build errors.`
             )
             return undefined
         }
