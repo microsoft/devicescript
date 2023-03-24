@@ -1,6 +1,5 @@
 import { describe, expect, test } from "@devicescript/test"
 import { deleteSetting, readSetting, writeSetting } from "./api"
-import { env, writeEnv } from "./env"
 
 describe("json", () => {
     const key = "test"

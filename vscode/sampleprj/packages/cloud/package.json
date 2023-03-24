@@ -6,7 +6,8 @@
     "devDependencies": {
         "@devicescript/cli": "*",
         "@devicescript/settings": "*",
-        "@devicescript/test": "*"
+        "@devicescript/test": "*",
+        "@devicescript/observables": "*"
     },
     "scripts": {
         "setup": "devicescript build",

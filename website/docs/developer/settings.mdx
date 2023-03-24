@@ -39,19 +39,6 @@ import { readSetting } from "@devicescript/settings"
 const world = await readSetting("hello")
 ```
 
-### `env`
-
-A setting that contains an environment variable object.
-
-```ts
-import { env } from "@devicescript/settings"
-
-// highlight-next-line
-const { doSomething } = await env()
-```
-
-You can also subscribe to environment changes by using `subscribeEnv`.
-
 ## See also
 
 -   [API reference](/api/settings/)

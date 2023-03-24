@@ -15,18 +15,22 @@ export async function writeSetting(key: string, value: any): Promise<void> {
 /**
  * Deserializes a JSON object from a setting
  * @param key name of the setting
+ * @param missingValue default value if missing
  * @param value object to serialize
  */
-export async function readSetting(key: string): Promise<any> {
+export async function readSetting<T = any>(
+    key: string,
+    missingValue?: T
+): Promise<T> {
     const [k, b] = await settings.get(key)
-    if (k !== key || !b) return undefined
+    if (k !== key || !b) return missingValue
 
     try {
         const s = b.toString()
         const o = JSON.parse(s)
         return o
     } catch (e) {
-        return undefined
+        return missingValue
     }
 }
 

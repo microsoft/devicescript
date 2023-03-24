@@ -190,7 +190,7 @@ describe("value", () => {
         const obs = register<number>(0)
         const res: number[] = []
         await obs.subscribe(v => {
-            res.push(0)
+            res.push(v)
         })
         await obs.emit(1)
         await obs.emit(2)

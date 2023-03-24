@@ -1,22 +1,27 @@
 import * as ds from "@devicescript/core"
-import { Observable } from "./observable"
+import {
+    Observable,
+    SubscriberFunction,
+    SubscriptionObserver,
+} from "./observable"
 
 /**
  * An observable client-side register
  */
 export class ObservableValue<T> extends Observable<T> {
     private _value: T
-    private _subscriptions: ((value: T) => ds.AsyncVoid)[] = []
+    private _subscriptions: ((value: T) => ds.AsyncVoid)[]
 
-    constructor(value: T) {
-        super(async observer => {
-            const { next } = observer
-            this._subscriptions.push(next)
-            return () => {
-                const i = this._subscriptions.indexOf(next)
-                if (i > -1) this._subscriptions.insert(i, 1)
-            }
-        })
+    /**
+     * @deprecated
+     */
+    constructor(
+        subscriber: SubscriberFunction<T>,
+        subscriptions: ((value: T) => ds.AsyncVoid)[],
+        value: T
+    ) {
+        super(subscriber)
+        this._subscriptions = subscriptions
         this._value = value
     }
 
@@ -46,5 +51,14 @@ export class ObservableValue<T> extends Observable<T> {
  * @returns
  */
 export function register<T>(value?: T) {
-    return new ObservableValue<T>(value)
+    const subscriptions: ((value: T) => ds.AsyncVoid)[] = []
+    const subscriber = async (observer: SubscriptionObserver<T>) => {
+        const { next } = observer
+        subscriptions.push(next)
+        return () => {
+            const i = subscriptions.indexOf(next)
+            if (i > -1) subscriptions.insert(i, 1)
+        }
+    }
+    return new ObservableValue<T>(subscriber, subscriptions, value)
 }
