@@ -371,15 +371,51 @@ Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
 
 declare module "@devicescript/core" {
     interface I2C {
+        /**
+         * 
+         * @param devAddr is a 7 bit i2c address
+         * @param regAddr is an 8 bit register address
+         * @param byte the value to write
+         */
         writeReg(devAddr: number, regAddr: number, byte: number): Promise<void>
+        /**
+         * 
+         * @param devAddr is a 7 bit i2c address
+         * @param regAddr is an 8 bit register address
+         * @returns a byte
+         */
         readReg(devAddr: number, regAddr: number): Promise<number>
+        /**
+         * 
+         * @param devAddr is a 7 bit i2c address
+         * @param regAddr is an 8 bit register address
+         * @param b is a byte buffer
+         */
         writeRegBuf(devAddr: number, regAddr: number, b: Buffer): Promise<void>
+        /**
+         * 
+         * @param devAddr is a 7 bit i2c address
+         * @param regAddr is an 8 bit register address
+         * @param size is the number of bytes to request
+         * @returns a byte buffer
+         */
         readRegBuf(
             devAddr: number,
             regAddr: number,
             size: number
         ): Promise<Buffer>
+        /**
+         * 
+         * @param devAddr is a 7 bit i2c address
+         * @param size is the number of bytes to request
+         * @returns a byte buffer
+         */
         readBuf(devAddr: number, size: number): Promise<Buffer>
+        /**
+         * 
+         * @param devAddr is a 7 bit i2c address
+         * @param b is a byte buffer
+         */
         writeBuf(devAddr: number, b: Buffer): Promise<void>
     }
 }
