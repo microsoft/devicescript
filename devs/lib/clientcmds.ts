@@ -379,7 +379,6 @@ declare module "@devicescript/core" {
             regAddr: number,
             size: number
         ): Promise<Buffer>
-
         readBuf(devAddr: number, size: number): Promise<Buffer>
         writeBuf(devAddr: number, b: Buffer): Promise<void>
     }
