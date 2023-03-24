@@ -208,8 +208,9 @@ export class DeviceScriptConfigurationProvider
             }
             dir = Utils.dirname(dir)
             if (n++ > 30) {
+                console.log("devsconfig not found", { dir, folder })
                 vscode.window.showErrorMessage(
-                    "DeviceScript: Debug cancelled - folder problem."
+                    "DeviceScript: Debug cancelled - could not find root folder (contains 'devsconfig.json')."
                 )
                 return undefined
             }
