@@ -2,7 +2,7 @@ built/
 build/
 node_modules/
 tmp
-package-lock.json
+yarn.lock
 Makefile.user
 runtime/devicescript-vm/dist/wasmpre.d.ts.map
 *.jdl
