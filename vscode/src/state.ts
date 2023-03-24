@@ -29,7 +29,6 @@ import {
     SideTransportEvent,
     TransportStatus,
 } from "../../cli/src/sideprotocol"
-import { openDocUri } from "./commands"
 import { CONNECTION_RESOURCE_GROUP } from "./constants"
 import { prepareForDeploy, readRuntimeVersion } from "./deploy"
 import { DeveloperToolsManager } from "./devtoolsserver"
@@ -42,7 +41,7 @@ import {
     TaggedQuickPickItem,
 } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
-import { activateTelemetry, AppTelemetry, showErrorMessage } from "./telemetry"
+import { showErrorMessage } from "./telemetry"
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
