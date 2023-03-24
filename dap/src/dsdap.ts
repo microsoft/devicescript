@@ -844,7 +844,7 @@ export class DsDapSession extends DebugSession {
 
     private findSource(src: DebugProtocol.Source) {
         function normPath(p: string) {
-            return p.replace(/\\/g, "/")
+            return p.replace(/\\/g, "/").toLowerCase()
         }
         if (src.sourceReference) return src.sourceReference - 1
         const srcIdx = this.img.dbg.sources.findIndex(
