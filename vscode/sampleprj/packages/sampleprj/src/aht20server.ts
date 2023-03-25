@@ -34,11 +34,14 @@ async function read() {
 }
 await init()
 
-// observables
+// observable streams
 const readings = interval(500).pipe(map(async () => await read()))
 const humidity = readings.pipe(map(({ humidity }) => humidity))
 const temperature = readings.pipe(map(({ temperature }) => temperature))
 
+// consume streams
 readings.subscribe(({ humidity, temperature }) => {
     console.log({ humidity, temperature })
 })
+humidity.subscribe(h => console.log({ h }))
+temperature.subscribe(t => console.log({ t }))
