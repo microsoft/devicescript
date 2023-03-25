@@ -1,6 +1,4 @@
 ---
-pagination_prev: null
-pagination_next: null
 description: Mounts a light bulb server
 title: Light bulb
 ---
