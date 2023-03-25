@@ -413,7 +413,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 label: "Serial",
                 detail: "ESP32, RP2040, ...",
                 description: serial
-                    ? `${serial.description}(${serial.connectionState})`
+                    ? `${serial.description || ""}(${serial.connectionState})`
                     : "",
             },
             {
@@ -421,7 +421,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 label: "USB",
                 detail: "micro:bit",
                 description: usb
-                    ? `${usb.description}(${usb.connectionState})`
+                    ? `${usb.description || ""}(${usb.connectionState})`
                     : "",
             },
             !sim && {
