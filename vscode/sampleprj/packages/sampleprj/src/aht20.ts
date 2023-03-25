@@ -38,6 +38,6 @@ await init()
 const readings = interval(500).pipe(map(read))
 
 // consume reading streams
-readings.subscribe(({ humidity, temperature }) => {
+await readings.subscribe(({ humidity, temperature }) => {
     console.log(`${temperature}C ${humidity}%`)
 })
