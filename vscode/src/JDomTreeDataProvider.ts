@@ -1695,7 +1695,7 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
     const updateBadge = () => {
         const devices = treeDataProvider.devices
         explorer.badge = {
-            tooltip: `DeviceScript: ${devices.length} devices`,
+            tooltip: `${devices.length} devices`,
             value: devices.length,
         }
     }
