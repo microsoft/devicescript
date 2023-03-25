@@ -230,6 +230,13 @@
                     "fontPath": "./built/devicescript.woff",
                     "fontCharacter": "\\E000"
                 }
+            },
+            "jacdac-logo": {
+                "description": "Jacdac logo",
+                "default": {
+                    "fontPath": "./built/devicescript.woff",
+                    "fontCharacter": "\\E001"
+                }
             }
         },
         "menus": {
