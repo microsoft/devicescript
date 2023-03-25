@@ -2,6 +2,7 @@ import * as ds from "@devicescript/core"
 import {
     Observable,
     SubscriberFunction,
+    Subscription,
     SubscriptionObserver,
 } from "./observable"
 
@@ -9,7 +10,7 @@ import {
  * An observable client-side register
  */
 export class ObservableValue<T> extends Observable<T> {
-    private _value: T
+    private _valueReader: () => ds.AsyncValue<T>
     private _subscriptions: ((value: T) => ds.AsyncVoid)[]
 
     /**
@@ -18,26 +19,26 @@ export class ObservableValue<T> extends Observable<T> {
     constructor(
         subscriber: SubscriberFunction<T>,
         subscriptions: ((value: T) => ds.AsyncVoid)[],
-        value: T
+        valueReader: () => ds.AsyncValue<T>
     ) {
         super(subscriber)
         this._subscriptions = subscriptions
-        this._value = value
+        this._valueReader = valueReader
     }
 
     /**
      * reads the current register value
      **/
     async read() {
-        return this._value
+        return await this._valueReader()
     }
 
     /**
      * Emit a value and notify subscriptions
      * @param newValue updated value
      */
-    async emit(newValue: T): Promise<void> {
-        this._value = newValue
+    async emit(): Promise<void> {
+        const newValue = await this.read()
         for (let i = 0; i < this._subscriptions.length; ++i) {
             const next = this._subscriptions[i]
             await next(newValue)
@@ -50,15 +51,26 @@ export class ObservableValue<T> extends Observable<T> {
  * @param value
  * @returns
  */
-export function register<T>(value?: T) {
+export function register<T>(
+    valueReader: () => ds.AsyncValue<T>,
+    emitObservable?: Observable<any>
+) {
+    let unsub: Subscription
     const subscriptions: ((value: T) => ds.AsyncVoid)[] = []
     const subscriber = async (observer: SubscriptionObserver<T>) => {
         const { next } = observer
         subscriptions.push(next)
+        if (subscriptions.length === 1 && emitObservable)
+            unsub = await emitObservable.subscribe(async () => await obs.emit())
         return () => {
             const i = subscriptions.indexOf(next)
             if (i > -1) subscriptions.insert(i, 1)
+            if (subscriptions.length === 0 && unsub) {
+                unsub.unsubscribe()
+                unsub = undefined
+            }
         }
     }
-    return new ObservableValue<T>(subscriber, subscriptions, value)
+    const obs = new ObservableValue<T>(subscriber, subscriptions, valueReader)
+    return obs
 }

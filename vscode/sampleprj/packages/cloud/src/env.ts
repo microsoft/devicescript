@@ -13,8 +13,7 @@ let _env: ObservableValue<any>
 export async function environment<T = any>(): Promise<ObservableValue<T>> {
     if (_env) return _env
 
-    const old = await readSetting(ENV_TOPIC, {})
-    _env = register(old || {})
+    _env = register(async () => await readSetting(ENV_TOPIC, {}))
 
     // query env when cloud restarts
     cloud.connected.subscribe(async curr => {
@@ -25,7 +24,7 @@ export async function environment<T = any>(): Promise<ObservableValue<T>> {
     await subscribeMessages(ENV_TOPIC, async (newValue: any) => {
         console.debug(`cloud: received env`)
         await writeSetting(ENV_TOPIC, newValue)
-        _env.emit(newValue)
+        await _env.emit()
     })
 
     return _env

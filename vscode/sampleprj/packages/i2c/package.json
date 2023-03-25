@@ -5,6 +5,7 @@
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*",
+        "@devicescript/observables": "*",
         "@devicescript/test": "*"
     },
     "scripts": {
