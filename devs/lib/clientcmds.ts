@@ -136,6 +136,10 @@ ds.Role.prototype._commandResponse = async function (
 }
 
 ds.Role.prototype._onPacket = async function (this: RoleData, pkt: ds.Packet) {
+    //
+    // If you halted the program and ended up here, it may be difficult to step in.
+    // Best to set breakpoints elsewhere.
+    //
     const changeHandlers = this._changeHandlers
     if (!pkt || pkt.serviceCommand === 0) {
         const conn = this.isBound

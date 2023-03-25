@@ -700,8 +700,10 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_DEVS_DBG_CMD_HALT:
         dbg_en(state);
-        if (ctx)
-            devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_HALT);
+        if (ctx) {
+            LOG("halt");
+            devs_vm_halt(ctx);
+        }
         break;
 
     case JD_DEVS_DBG_CMD_RESUME:

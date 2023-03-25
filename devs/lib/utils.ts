@@ -50,6 +50,10 @@ async function timeoutWorker() {
         if (timeouts[0]) d = timeouts[0].when - n
         if (d > 0) {
             await ds.suspend(d)
+            //
+            // If you halted the program and ended up here, it may be difficult to step in.
+            // Best to set breakpoints elsewhere.
+            //
             n = ds.millis()
         }
         while (timeouts.length > 0 && timeouts[0].when <= n) {

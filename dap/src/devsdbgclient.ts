@@ -390,6 +390,9 @@ export class DevsDbgClient extends JDServiceClient {
                 idx == 0 &&
                 (this.suspensionReason == DevsDbgSuspensionType.Breakpoint ||
                     this.suspensionReason == DevsDbgSuspensionType.Step)
+            // HALT also acts as break (it breaks on the first instruction)
+            if (this.suspensionReason == DevsDbgSuspensionType.Halt)
+                isBrk = true
             if (pc > 0 && !isBrk) userPc--
             st.stackFrame = {
                 pc,

@@ -91,6 +91,7 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
 #define DEVS_CTX_STEP_BRK 0x02
 #define DEVS_CTX_STEP_IN 0x04
 #define DEVS_CTX_STEP_OUT 0x08
+#define DEVS_CTX_STEP_HALT 0x80
 
 typedef struct {
     jd_role_t *role;
@@ -257,6 +258,7 @@ int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc, unsigned flags);
 bool devs_vm_clear_breakpoint(devs_ctx_t *ctx, unsigned pc);
 void devs_vm_clear_breakpoints(devs_ctx_t *ctx);
 void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause);
+void devs_vm_halt(devs_ctx_t *ctx);
 int devs_vm_resume(devs_ctx_t *ctx);
 void devs_vm_set_debug(devs_ctx_t *ctx, bool en);
 

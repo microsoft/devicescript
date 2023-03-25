@@ -105,6 +105,13 @@ static void clear_breakpoints_with_flag(devs_ctx_t *ctx, unsigned flag) {
     recompute_brk_jump_tbl(ctx);
 }
 
+void devs_vm_halt(devs_ctx_t *ctx) {
+    if (ctx->curr_fn)
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_HALT);
+    else
+        ctx->step_flags |= DEVS_CTX_STEP_HALT;
+}
+
 void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause) {
     if (!ctx->dbg_en)
         return;
@@ -239,6 +246,10 @@ static void devs_vm_exec_opcode(devs_ctx_t *ctx, devs_activation_t *frame) {
 
 void devs_vm_exec_opcodes(devs_ctx_t *ctx) {
     unsigned maxsteps = DEVS_MAX_STEPS;
+
+    // halt applies on first instruction if nothing was running
+    if (ctx->step_flags & DEVS_CTX_STEP_HALT)
+        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_HALT);
 
     while (ctx->curr_fn && --maxsteps && !ctx->suspension)
         devs_vm_exec_opcode(ctx, ctx->curr_fn);
