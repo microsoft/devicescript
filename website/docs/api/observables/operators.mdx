@@ -7,19 +7,17 @@ title: Operators
 Observable operators apply transformation between observable data stream. They can be combined using the `pipe`
 method to create complex data processing pipeline.
 
-```ts skip
+```ts
 import { Temperature } from "@devicescript/core"
 import { threshold, debounceTime } from "@devicescript/observables"
 
-const temp = new Temperature()
-await temp
-    .pipe(
-        // highlight-next-line
-        threshold(0.1), // at least 0.1deg change
-        // highlight-next-line
-        debounceTime(10000) // at most one update per 10s
-    )
-    .subscribe(t => console.log(t))
+const thermometer = new Temperature()
+// create a stream of temperature readings
+const temperature = thermometer.temperature.pipe(
+    threshold(0.1), // at least 0.1deg change
+    debounceTime(10000) // at most one update per 10s
+)
+await temperature.subscribe(t => console.log(t))
 ```
 
 ## Creation Operators
