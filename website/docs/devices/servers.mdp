@@ -1,5 +1,7 @@
 * [RotaryEncoder](/api/servers/rotaryencoder)
 * [Button](/api/servers/button)
 * [Relay](/api/servers/relay)
+* [LightBulb](/api/servers/lightbulb)
+* [Buzzer](/api/servers/buzzer)
 * [Power](/api/servers/power)
 * [Accelerometer](/api/servers/accelerometer)

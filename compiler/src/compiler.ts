@@ -872,6 +872,8 @@ class Program implements TopOpWriter {
     }
 
     private toLiteralJSON(node: ts.Expression): any {
+        while (ts.isAsExpression(node) || ts.isTypeAssertionExpression(node))
+            node = node.expression
         const folded = this.constantFold(node)
         if (folded && folded.val !== undefined) return folded.val
 
