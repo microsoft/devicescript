@@ -146,6 +146,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 )
                 if (yes) {
                     const t = vscode.window.createTerminal({
+                        isTransient: true,
                         name: "@devicescript/cli upgrade",
                         cwd: projectFolder,
                     })
@@ -703,7 +704,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     isTransient: true,
                     shellPath: useShell ? undefined : cli,
                     shellArgs: useShell ? undefined : args,
-                    iconPath: logo(this.extensionState.context),
+                    iconPath: new vscode.ThemeIcon("devicescript-logo"),
                     cwd: cwd.fsPath,
                 }
                 const t = vscode.window.createTerminal(terminalOptions)
