@@ -35,7 +35,7 @@ async function read() {
 await init()
 
 // { humidity, temperature } stream
-const readings = interval(500).pipe(map(async () => await read()))
+const readings = interval(500).pipe(map(read))
 
 // consume reading streams
 readings.subscribe(({ humidity, temperature }) => {
