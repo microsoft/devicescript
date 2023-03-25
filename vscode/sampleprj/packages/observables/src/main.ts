@@ -201,3 +201,36 @@ describe("value", () => {
         expect(res[2]).toBe(3)
     })
 })
+
+describe("error", () => {
+    test("subscribe", async () => {
+        const obs = new Observable(observer => {
+            throw Error("error")
+        })
+        let error = 0
+        await obs.subscribe({ error: () => error++ })
+        expect(error).toBe(1)
+    })
+    test("map", async () => {
+        const obs = from([0, 1, 2]).pipe(
+            map(v => {
+                throw new Error()
+            })
+        )
+        let error = 0
+        await obs.subscribe({ error: () => error++ })
+        expect(error).toBe(1)
+    })
+    test("map,tap,filter", async () => {
+        const obs = from([0, 1, 2]).pipe(
+            filter(v => v > 1),
+            tap(v => console.log(v)),
+            map(v => {
+                throw new Error()
+            })
+        )
+        let error = 0
+        await obs.subscribe({ error: () => error++ })
+        expect(error).toBe(1)
+    })
+})

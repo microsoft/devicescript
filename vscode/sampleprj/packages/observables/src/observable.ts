@@ -72,7 +72,7 @@ export class Observable<T> {
             (fn: (value: any) => void): (() => void) =>
             (v?: any) => {
                 unsubscribeSync()
-                fn(v)
+                if (fn) fn(v)
             }
         error = wrapClosedSync(wrapUnsubscribeSync(error))
 
@@ -86,7 +86,7 @@ export class Observable<T> {
             (fn: (value: any) => AsyncVoid): (() => void) =>
             async (v?: any) => {
                 unsubscribeSync()
-                await fn(v)
+                if (fn) await fn(v)
             }
         const wrapTryAsync =
             (fn: (value: T) => AsyncVoid): (() => Promise<void>) =>
