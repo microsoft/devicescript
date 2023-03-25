@@ -269,6 +269,7 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
     }
 
     static ICON = "circuit-board"
+    static ICON_PATH = new vscode.ThemeIcon(JDomDeviceTreeItem.ICON)
 
     get device() {
         return this.node as JDDevice
@@ -305,17 +306,15 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
             this.description = serviceNames
         }
 
-        if (!this.iconPath) {
-            const productIdentifier = device.productIdentifier
-            const spec =
-                bus.deviceCatalog.specificationFromProductIdentifier(
-                    productIdentifier
-                )
-            if (spec) {
-                this.iconPath = deviceIconUri(spec)
-            } else {
-                this.iconPath = new vscode.ThemeIcon(JDomDeviceTreeItem.ICON)
-            }
+        const productIdentifier = device.productIdentifier
+        const spec =
+            bus.deviceCatalog.specificationFromProductIdentifier(
+                productIdentifier
+            )
+        if (spec) {
+            this.iconPath = deviceIconUri(spec)
+        } else {
+            this.iconPath = JDomDeviceTreeItem.ICON_PATH
         }
 
         return (
