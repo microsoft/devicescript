@@ -3,11 +3,12 @@ import { describe, test, expect } from "@devicescript/test"
 import { reduce } from "./aggregate"
 import { from, fromEvent, fromRegister, interval } from "./creation"
 import { ewma, fir, rollingAverage } from "./dsp"
+import { catchError, throwError } from "./error"
 import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
 import { Observable, Subscription } from "./observable"
 import { map, scan } from "./transform"
-import { tap, throwError } from "./utility"
+import { tap } from "./utility"
 import { register } from "./value"
 const btn = new ds.Button()
 const temp = new ds.Temperature()
@@ -239,4 +240,18 @@ describe("error", () => {
         await obs.subscribe({ error: () => error++ })
         expect(error).toBe(1)
     })
+    test(
+        "catchError",
+        async () => {
+            const obs = from([0, 1, 2]).pipe(
+                throwError(() => new Error()),
+                catchError(e => {
+                    console.log(`catch error ` + e)
+                    return from([5])
+                })
+            )
+            await emits(obs, [5])
+        },
+        { skip: true }
+    )
 })

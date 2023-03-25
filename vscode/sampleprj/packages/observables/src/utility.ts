@@ -1,4 +1,3 @@
-import { AsyncValue } from "@devicescript/core"
 import {
     identity,
     Observable,
@@ -43,28 +42,6 @@ export function tap<T>(tapper: SloppyObserver<T>): OperatorFunction<T, T> {
                     await complete()
                 },
             } as OptionalObserver<T>)
-        })
-    }
-}
-
-/**
- * Just errors and does nothing else
- * @param errorFactory a function to creates a new error instance
- * @returns
- */
-export function throwError<T>(
-    errorFactory: () => AsyncValue<any>
-): OperatorFunction<T, never> {
-    return function operator(source: Observable<T>) {
-        return new Observable<never>(async observer => {
-            const { error } = observer
-            const e = await errorFactory()
-            // populate stack
-            try {
-                throw e
-            } catch {}
-            // send upstream
-            error(e)
         })
     }
 }
