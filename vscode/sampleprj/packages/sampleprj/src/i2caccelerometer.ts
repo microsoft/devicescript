@@ -1,8 +1,8 @@
 // See https://www.nxp.com/docs/en/data-sheet/MMA8452Q.pdf for details
 
 import * as devs from "@devicescript/core"
+import { i2c } from "@devicescript/i2c"
 
-const i2c = new devs.I2C()
 console.log("start")
 
 const addr = 0x1d
@@ -21,7 +21,7 @@ async function init() {
 
 // get the X, Y, Z accelerometer values in a single call
 async function read() {
-    const data = await i2c.readRegBuf(addr, 1, 6) 
+    const data = await i2c.readRegBuf(addr, 1, 6)
     const x = convert(data[0], data[1])
     const y = convert(data[2], data[3])
     const z = convert(data[4], data[5])
