@@ -230,6 +230,13 @@
                     "fontPath": "./built/devicescript.woff",
                     "fontCharacter": "\\E000"
                 }
+            },
+            "jacdac-logo": {
+                "description": "Jacdac logo",
+                "default": {
+                    "fontPath": "./built/devicescript.woff",
+                    "fontCharacter": "\\E001"
+                }
             }
         },
         "menus": {
@@ -237,22 +244,22 @@
                 {
                     "command": "extension.devicescript.editor.build",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /^main*.\\.ts/",
-                    "group": "navigation"
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "extension.devicescript.editor.run",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /^main*.\\.ts/",
+                    "group": "navigation@2"
                 },
                 {
                     "command": "extension.devicescript.editor.configure",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /^main*.\\.ts/",
-                    "group": "navigation"
+                    "group": "navigation@3"
                 }
             ],
             "editor/title/run": [
                 {
                     "command": "extension.devicescript.editor.debug",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /^main*.\\.ts/",
-                    "group": "navigation"
-                },
-                {
-                    "command": "extension.devicescript.editor.run",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ /src$/ && resourceFilename =~ /^main*.\\.ts/",
                     "group": "navigation"
                 }
@@ -493,15 +500,15 @@
             },
             {
                 "command": "extension.devicescript.editor.run",
-                "title": "DeviceScript: Run",
+                "title": "DeviceScript: Upload",
                 "category": "DeviceScript",
-                "icon": "$(debug-run)"
+                "icon": "$(arrow-right)"
             },
             {
                 "command": "extension.devicescript.editor.build",
                 "title": "DeviceScript: Build",
                 "category": "DeviceScript",
-                "icon": "$(package)"
+                "icon": "$(check)"
             },
             {
                 "command": "extension.devicescript.editor.configure",

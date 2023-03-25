@@ -227,6 +227,13 @@ export class DeveloperToolsManager extends JDEventSource {
     async buildFile(file: vscode.Uri): Promise<BuildStatus> {
         // find project folder and relative path
         const root = vscode.workspace.getWorkspaceFolder(file)
+        if (!root) {
+            showErrorMessage(
+                "build.workspacenotfound",
+                "Build cancelled.\nCould not resolve workspace."
+            )
+            return undefined
+        }
         let dir = Utils.dirname(Utils.resolvePath(file))
         let rel = Utils.basename(file)
         let n = 0
@@ -254,8 +261,9 @@ export class DeveloperToolsManager extends JDEventSource {
 
         log(`building ${rel}`)
         await this.setProjectFolder(dir)
+        await this.start()
         const status = await this.build(rel)
-        if (!status.success) log(`build failed`)
+        if (!status?.success) log(`build failed`)
         else {
             const { dbg } = status
             const { sizes } = dbg

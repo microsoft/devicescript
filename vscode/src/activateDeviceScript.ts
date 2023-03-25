@@ -28,24 +28,20 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     })
     const extensionState = new DeviceScriptExtensionState(context, bus)
 
-    const debugFile = async (noDebug: boolean) => {
-        const editor = vscode.window.activeTextEditor
-        const file = editor?.document?.uri
-        if (file) {
-            const folder = vscode.workspace.getWorkspaceFolder(file)
-            await vscode.debug.startDebugging(folder, {
-                type: "devicescript",
-                request: "launch",
-                name: "DeviceScript: Run File",
-                stopOnEntry: false,
-                noDebug,
-                program: file.fsPath,
-            } as vscode.DebugConfiguration)
-            if (noDebug)
-                vscode.commands.executeCommand(
-                    "extension.devicescript.jdom.focus"
-                )
-        }
+    const debugFile = async (file: vscode.Uri, noDebug: boolean) => {
+        if (!file) return
+        const folder = vscode.workspace.getWorkspaceFolder(file)
+        if (!folder) return
+        await vscode.debug.startDebugging(folder, {
+            type: "devicescript",
+            request: "launch",
+            name: "DeviceScript: Run File",
+            stopOnEntry: false,
+            noDebug,
+            program: file.fsPath,
+        } as vscode.DebugConfiguration)
+        if (noDebug)
+            vscode.commands.executeCommand("extension.devicescript.jdom.focus")
     }
 
     // build
@@ -145,17 +141,15 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.run",
-            async () => debugFile(true)
+            async (file: vscode.Uri) => debugFile(file, true)
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.debug",
-            async () => debugFile(false)
+            async (file: vscode.Uri) => debugFile(file, false)
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.build",
-            async () => {
-                const editor = vscode.window.activeTextEditor
-                const file = editor?.document?.uri
+            async (file: vscode.Uri) => {
                 if (!file) return
 
                 await extensionState.build(file)
@@ -163,10 +157,9 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.configure",
-            async () => {
-                const editor = vscode.window.activeTextEditor
+            async (file: vscode.Uri) => {
+                const editor = await vscode.window.showTextDocument(file)
                 if (!editor) return
-
                 await extensionState.configureHardware(editor)
             }
         )

@@ -2,7 +2,7 @@ const webfont = require("webfont")
 const fs = require("fs-extra")
 const path = require("path")
 
-const svgs = ["./images/devs.light.svg"]
+const svgs = ["./images/devs.light.svg", "./images/jacdac.light.svg"]
 
 async function generateFont() {
     try {
