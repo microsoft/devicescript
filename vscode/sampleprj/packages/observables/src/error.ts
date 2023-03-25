@@ -18,7 +18,7 @@ export function throwError<T>(
                 throw e
             } catch {}
             // send upstream
-            error(e)
+            await error(e)
         })
     }
 }
@@ -32,13 +32,12 @@ export function catchError<T, R>(
 ): OperatorFunction<T, T | R> {
     return function operator(source: Observable<T>) {
         return new Observable<T | R>(async observer => {
-            const { next, error, complete } = observer
+            const { next, complete } = observer
 
             let unsub = await source.subscribe({
                 next,
                 error: async e => {
-                    // error occured: unsubscribe from source observable
-                    unsub.unsubscribe()
+                    if (unsub) unsub.unsubscribe()
 
                     // get follow-up observable
                     const errorSource = selector(e, source)
@@ -50,7 +49,7 @@ export function catchError<T, R>(
             })
 
             return () => {
-                unsub.unsubscribe()
+                if (unsub) unsub.unsubscribe()
             }
         })
     }

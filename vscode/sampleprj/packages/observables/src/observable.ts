@@ -16,7 +16,7 @@ export type ObserverStart = (subscription: Subscription) => void
  * therefore we need to be able to avoid next
  */
 export type ObserverNext<T> = (value: T) => AsyncVoid
-export type ObserverError = (error: Error) => void
+export type ObserverError = (error: Error) => AsyncVoid
 export type ObserverComplete = () => AsyncVoid
 
 export interface SubscriptionObserver<T> {
@@ -68,22 +68,15 @@ export class Observable<T> {
             closed = true
             if (cleanup) cleanup()
         })
-        const wrapUnsubscribeSync =
-            (fn: (value: any) => void): (() => void) =>
-            (v?: any) => {
-                unsubscribeSync()
-                if (fn) fn(v)
-            }
-        error = wrapClosedSync(wrapUnsubscribeSync(error))
 
         // next, complete async
         const wrapClosedAsync =
-            (fn: (value: any) => Promise<void>): (() => Promise<void>) =>
+            (fn: (value: any) => AsyncVoid): (() => Promise<void>) =>
             async (v?: any) => {
                 if (!closed && fn) await fn(v)
             }
         const wrapUnsubscribeAsync =
-            (fn: (value: any) => AsyncVoid): (() => void) =>
+            (fn: (value: any) => AsyncVoid): (() => Promise<void>) =>
             async (v?: any) => {
                 unsubscribeSync()
                 if (fn) await fn(v)
@@ -94,9 +87,10 @@ export class Observable<T> {
                 try {
                     await fn(v)
                 } catch (e) {
-                    error(e as Error)
+                    await error(e as Error)
                 }
             }
+        error = wrapClosedAsync(wrapUnsubscribeAsync(error))
         complete = wrapClosedAsync(wrapTryAsync(wrapUnsubscribeAsync(complete)))
         next = wrapClosedAsync(wrapTryAsync(next))
 

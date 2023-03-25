@@ -33,9 +33,9 @@ export function tap<T>(tapper: SloppyObserver<T>): OperatorFunction<T, T> {
                     if (tapNext) await tapNext(value)
                     await next(value)
                 },
-                error: e => {
-                    if (tapError) tapError(e)
-                    error(e)
+                error: async e => {
+                    if (tapError) await tapError(e)
+                    await error(e)
                 },
                 complete: async () => {
                     if (tapComplete) await tapComplete()

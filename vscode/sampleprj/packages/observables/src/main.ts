@@ -209,7 +209,11 @@ describe("error", () => {
             throw Error("error")
         })
         let error = 0
-        await obs.subscribe({ error: () => error++ })
+        await obs.subscribe({
+            error: () => {
+                error++
+            },
+        })
         expect(error).toBe(1)
     })
     test("map", async () => {
@@ -219,7 +223,11 @@ describe("error", () => {
             })
         )
         let error = 0
-        await obs.subscribe({ error: () => error++ })
+        await obs.subscribe({
+            error: () => {
+                error++
+            },
+        })
         expect(error).toBe(1)
     })
     test("map,tap,filter", async () => {
@@ -231,27 +239,53 @@ describe("error", () => {
             })
         )
         let error = 0
-        await obs.subscribe({ error: () => error++ })
+        await obs.subscribe({
+            error: () => {
+                error++
+            },
+        })
         expect(error).toBe(1)
     })
     test("throwError", async () => {
         const obs = from([0, 1, 2]).pipe(throwError(() => new Error("hi")))
         let error = 0
-        await obs.subscribe({ error: () => error++ })
+        await obs.subscribe({
+            error: () => {
+                error++
+            },
+        })
         expect(error).toBe(1)
     })
-    test(
-        "catchError",
-        async () => {
-            const obs = from([0, 1, 2]).pipe(
-                throwError(() => new Error()),
-                catchError(e => {
-                    console.log(`catch error ` + e)
-                    return from([5])
-                })
-            )
-            await emits(obs, [5])
-        },
-        { skip: true }
-    )
+    test("throwErrorasync", async () => {
+        const obs = from([0, 1, 2]).pipe(throwError(() => new Error("hi")))
+        let error = 0
+        await obs.subscribe({
+            error: async () => {
+                error++
+            },
+        })
+        expect(error).toBe(1)
+    })
+    test("catchError,map", async () => {
+        const obs = from([0, 1, 2]).pipe(
+            map(() => {
+                throw new Error()
+            }),
+            catchError(e => {
+                console.log(`catch error ` + e)
+                return from([5])
+            })
+        )
+        await emits(obs, [5])
+    })
+    test("catchError", async () => {
+        const obs = from([0, 1, 2]).pipe(
+            throwError(() => new Error()),
+            catchError(e => {
+                console.log(`catch error ` + e)
+                return from([5])
+            })
+        )
+        await emits(obs, [5])
+    })
 })
