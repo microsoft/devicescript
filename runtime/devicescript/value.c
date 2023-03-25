@@ -286,6 +286,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
             return DEVS_OBJECT_TYPE_BUFFER;
         case DEVS_GC_TAG_BOUND_FUNCTION:
             return DEVS_OBJECT_TYPE_FUNCTION;
+        case DEVS_GC_TAG_ACTIVATION:
+            return DEVS_OBJECT_TYPE_EXOTIC;
         case DEVS_GC_TAG_BUILTIN_PROTO:
         default:
             JD_PANIC();

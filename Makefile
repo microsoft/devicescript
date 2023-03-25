@@ -73,3 +73,9 @@ bump:
 
 release:
 	node scripts/bump.mjs --cloud
+
+gdb gdb-dap:
+	lldb runtime/built/jdcli -- -n -X 8082
+
+gdb-run:
+	lldb runtime/built/jdcli -- -n -X .devicescript/bin/crun.devs
