@@ -22,7 +22,7 @@
     "engines": {
         "vscode": "^1.76.0"
     },
-    "icon": "images/jacdac-logo.png",
+    "icon": "images/devs-logo.png",
     "galleryBanner": {
         "color": "#C80000",
         "theme": "dark"
@@ -150,7 +150,7 @@
                 {
                     "id": "devicescript",
                     "title": "DeviceScript",
-                    "icon": "./images/jacdac.dark.svg"
+                    "icon": "./images/devs.dark.svg"
                 }
             ]
         },
