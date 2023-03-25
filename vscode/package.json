@@ -501,7 +501,7 @@
                 "command": "extension.devicescript.editor.build",
                 "title": "DeviceScript: Build",
                 "category": "DeviceScript",
-                "icon": "$(package)"
+                "icon": "$(check)"
             },
             {
                 "command": "extension.devicescript.editor.configure",

@@ -254,8 +254,9 @@ export class DeveloperToolsManager extends JDEventSource {
 
         log(`building ${rel}`)
         await this.setProjectFolder(dir)
+        await this.start()
         const status = await this.build(rel)
-        if (!status.success) log(`build failed`)
+        if (!status?.success) log(`build failed`)
         else {
             const { dbg } = status
             const { sizes } = dbg
