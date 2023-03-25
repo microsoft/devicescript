@@ -308,6 +308,32 @@ await thermometer.temperature
     .subscribe(t => console.log(t))
 ```
 
+## Error Handling
+
+### throwError
+
+Just errors and does nothing else.
+
+```rx
+> throw
+
+-#--------------
+```
+
+```ts
+import { from, map, throwError } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+await obs
+    .pipe(
+        // highlight-next-line
+        throwError(() => new Error("no!"))
+    )
+    .subscribe(v => console.log(v))
+```
+
+
 ## Utilities
 
 ### tap
@@ -324,5 +350,6 @@ await obs
         // highlight-next-line
         tap(v => console.log(v)),
         map(v => v * v)
-    ).subscribe(v => console.log(v))
+    )
+    .subscribe(v => console.log(v))
 ```

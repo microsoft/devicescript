@@ -7,7 +7,7 @@ import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
 import { Observable, Subscription } from "./observable"
 import { map, scan } from "./transform"
-import { tap } from "./utility"
+import { tap, throwError } from "./utility"
 import { register } from "./value"
 const btn = new ds.Button()
 const temp = new ds.Temperature()
@@ -229,6 +229,12 @@ describe("error", () => {
                 throw new Error()
             })
         )
+        let error = 0
+        await obs.subscribe({ error: () => error++ })
+        expect(error).toBe(1)
+    })
+    test("throwError", async () => {
+        const obs = from([0, 1, 2]).pipe(throwError(() => new Error("hi")))
         let error = 0
         await obs.subscribe({ error: () => error++ })
         expect(error).toBe(1)
