@@ -135,8 +135,11 @@ export class DeviceScriptExtensionState extends JDEventSource {
         }
     }
 
-    async resolveDeviceScriptManager(): Promise<JDService> {
-        return this.deviceScriptManager || this.pickDeviceScriptManager()
+    async resolveDeviceScriptManager(options?: {
+        autoStartSimulator?: boolean
+        skipUpdate?: boolean
+    }): Promise<JDService> {
+        return this.deviceScriptManager || this.pickDeviceScriptManager(options)
     }
 
     async addSim() {
@@ -655,55 +658,67 @@ export class DeviceScriptExtensionState extends JDEventSource {
             vscode.commands.executeCommand("workbench.action.problems.focus")
     }
 
-    async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {
+    async pickDeviceScriptManager(options?: {
+        autoStartSimulator?: boolean
+        skipUpdate?: boolean
+    }): Promise<JDService> {
         const { simulatorScriptManagerId } = this
+        const { skipUpdate, autoStartSimulator } = options || {}
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
 
         await this.devtools.start()
         if (!this.devtools.connected) return
 
+        let startVM = false
+        let did: string
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })
-        const detail = async (srv: JDService) => {
-            const runtimeVersion = await readRuntimeVersion(srv)
-            const description = srv.device
-                .service(0)
-                .register(ControlReg.DeviceDescription)
-            await description.refresh(true)
-
-            return `${description.stringValue || ""} (${runtimeVersion || "?"})`
-        }
-        const items: DeviceQuickItem[] = await Promise.all(
-            services.map(
-                async srv =>
-                    <DeviceQuickItem>{
-                        label: `$(${JDomDeviceTreeItem.ICON}) ${srv.device.friendlyName}`,
-                        description: srv.device.deviceId,
-                        detail: await detail(srv),
-                        data: srv.device.deviceId,
-                        picked: srv.device.deviceId === cid,
-                    }
-            )
-        )
-        let startVM = false
-        if (!items.find(({ data }) => data === simulatorScriptManagerId)) {
+        if (!services.length && autoStartSimulator) {
+            did = simulatorScriptManagerId
             startVM = true
-            items.push(<DeviceQuickItem>{
-                label: shortDeviceId(simulatorScriptManagerId),
-                description: `Simulator`,
-                detail: `A virtual DeviceScript interpreter running in a separate process.`,
-                data: simulatorScriptManagerId,
+        } else {
+            const detail = async (srv: JDService) => {
+                const runtimeVersion = await readRuntimeVersion(srv)
+                const description = srv.device
+                    .service(0)
+                    .register(ControlReg.DeviceDescription)
+                await description.refresh(true)
+
+                return `${description.stringValue || ""} (${
+                    runtimeVersion || "?"
+                })`
+            }
+            const items: DeviceQuickItem[] = await Promise.all(
+                services.map(
+                    async srv =>
+                        <DeviceQuickItem>{
+                            label: `$(${JDomDeviceTreeItem.ICON}) ${srv.device.friendlyName}`,
+                            description: srv.device.deviceId,
+                            detail: await detail(srv),
+                            data: srv.device.deviceId,
+                            picked: srv.device.deviceId === cid,
+                        }
+                )
+            )
+            if (!items.find(({ data }) => data === simulatorScriptManagerId)) {
+                startVM = true
+                items.push(<DeviceQuickItem>{
+                    label: shortDeviceId(simulatorScriptManagerId),
+                    description: `Simulator`,
+                    detail: `A virtual DeviceScript interpreter running in a separate process.`,
+                    data: simulatorScriptManagerId,
+                })
+            }
+            const res = await vscode.window.showQuickPick(items, {
+                title: `Pick a DeviceScript device`,
+                matchOnDescription: true,
+                matchOnDetail: true,
+                canPickMany: false,
             })
+            const did = res?.data
+            if (!did) return undefined
         }
-        const res = await vscode.window.showQuickPick(items, {
-            title: `Pick a DeviceScript device`,
-            matchOnDescription: true,
-            matchOnDetail: true,
-            canPickMany: false,
-        })
-        const did = res?.data
-        if (!did) return undefined
 
         if (startVM && did == simulatorScriptManagerId) {
             await this.startSimulator()

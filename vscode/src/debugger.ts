@@ -236,7 +236,9 @@ export class DeviceScriptConfigurationProvider
         // find device
         if (!dsConfig.deviceId) {
             const service =
-                await this.extensionState.resolveDeviceScriptManager()
+                await this.extensionState.resolveDeviceScriptManager({
+                    autoStartSimulator: true,
+                })
             if (service) {
                 const idx = service.device
                     .services({ serviceClass: service.serviceClass })

@@ -79,7 +79,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async (item: JDomDeviceTreeItem) => {
                 const device =
                     item?.device ||
-                    (await extensionState.pickDeviceScriptManager(true))?.device
+                    (
+                        await extensionState.pickDeviceScriptManager({
+                            skipUpdate: true,
+                        })
+                    )?.device
                 await device?.identify()
             }
         ),
@@ -88,7 +92,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async (item: JDomDeviceTreeItem) => {
                 const device =
                     item?.device ||
-                    (await extensionState.pickDeviceScriptManager(true))?.device
+                    (
+                        await extensionState.pickDeviceScriptManager({
+                            skipUpdate: true,
+                        })
+                    )?.device
                 await device.reset() // async
             }
         ),
