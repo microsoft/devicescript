@@ -1,0 +1,124 @@
+{
+    "servers": [
+        {
+            "startName": "startRotaryEncoder",
+            "classIdentifier": 284830153,
+            "imports": {
+                "startRotaryEncoder": "@devicescript/servers"
+            },
+            "snippet": "const rotaryEncoder = startRotaryEncoder({\n    pin0: pins.${1},\n    pin1: pins.${2},\n})\n"
+        },
+        {
+            "startName": "startButton",
+            "classIdentifier": 343122531,
+            "imports": {
+                "startButton": "@devicescript/servers"
+            },
+            "snippet": "const button = startButton({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startRelay",
+            "classIdentifier": 406840918,
+            "imports": {
+                "startRelay": "@devicescript/servers"
+            },
+            "snippet": "const relay = startRelay({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startLightBulb",
+            "classIdentifier": 480970060,
+            "imports": {
+                "startLightBulb": "@devicescript/servers"
+            },
+            "snippet": "const lightBulb = startLightBulb({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startBuzzer",
+            "classIdentifier": 458731991,
+            "imports": {
+                "startBuzzer": "@devicescript/servers"
+            },
+            "snippet": "const buzzer = startBuzzer({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startLightLevel",
+            "classIdentifier": 400333340,
+            "imports": {
+                "startLightLevel": "@devicescript/servers"
+            },
+            "snippet": "const lightLevel = startLightLevel({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startReflectedLight",
+            "classIdentifier": 309087410,
+            "imports": {
+                "startReflectedLight": "@devicescript/servers"
+            },
+            "snippet": "const reflectedLight = startReflectedLight({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startWaterLevel",
+            "classIdentifier": 343630573,
+            "imports": {
+                "startWaterLevel": "@devicescript/servers"
+            },
+            "snippet": "const waterLevel = startWaterLevel({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startSoundLevel",
+            "classIdentifier": 346888797,
+            "imports": {
+                "startSoundLevel": "@devicescript/servers"
+            },
+            "snippet": "const soundLevel = startSoundLevel({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startSoilMoisture",
+            "classIdentifier": 491430835,
+            "imports": {
+                "startSoilMoisture": "@devicescript/servers"
+            },
+            "snippet": "const soilMoisture = startSoilMoisture({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startPotentiometer",
+            "classIdentifier": 522667846,
+            "imports": {
+                "startPotentiometer": "@devicescript/servers"
+            },
+            "snippet": "const potentiometer = startPotentiometer({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "startName": "startAccelerometer",
+            "classIdentifier": 521405449,
+            "imports": {
+                "startAccelerometer": "@devicescript/servers"
+            },
+            "snippet": "const accelerometer = startAccelerometer({\n})\n"
+        },
+        {
+            "startName": "startHidJoystick",
+            "classIdentifier": 437330261,
+            "imports": {
+                "startHidJoystick": "@devicescript/servers"
+            },
+            "snippet": "const hidJoystick = startHidJoystick({\n})\n"
+        },
+        {
+            "startName": "startHidKeyboard",
+            "classIdentifier": 414210922,
+            "imports": {
+                "startHidKeyboard": "@devicescript/servers"
+            },
+            "snippet": "const hidKeyboard = startHidKeyboard({\n})\n"
+        },
+        {
+            "startName": "startHidMouse",
+            "classIdentifier": 411425820,
+            "imports": {
+                "startHidMouse": "@devicescript/servers"
+            },
+            "snippet": "const hidMouse = startHidMouse({\n})\n"
+        }
+    ]
+}

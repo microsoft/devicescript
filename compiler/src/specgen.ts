@@ -16,7 +16,6 @@ import {
     SRV_PROTO_TEST,
     SRV_PROXY,
     SRV_ROLE_MANAGER,
-    SRV_SETTINGS,
     SRV_UNIQUE_BRAIN,
     cStorage,
     addComment,

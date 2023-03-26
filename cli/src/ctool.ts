@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs"
+import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { getHost, validateBoard } from "./build"
 import { log } from "./command"
 import * as path from "node:path"
@@ -7,6 +7,7 @@ import {
     RepoInfo,
     resolveBuildConfig,
     compileWithHost,
+    serverInfo,
 } from "@devicescript/compiler"
 import { runTest } from "./run"
 import { writeFile } from "node:fs/promises"
@@ -17,6 +18,7 @@ export interface CToolOptions {
     test?: boolean
     fetchBoards?: string
     localBoards?: string
+    serverInfo?: boolean
 }
 
 function readdir(folder: string) {
@@ -59,6 +61,21 @@ export async function ctool(options: CToolOptions) {
         }
         r += "\n};"
         console.log(r)
+        process.exit(0)
+    }
+
+    if (options.serverInfo) {
+        const host = await getHost(resolveBuildConfig(), { verify: false }, ".")
+        const read = host.read
+        host.read = fn => {
+            if (fn == "src/main.ts") return " "
+            else return read(fn)
+        }
+        const info = serverInfo(host)
+        const path = "vscode/src/server-info.json"
+        writeFileSync(path, JSON.stringify(info, null, 4))
+        log(`wrote ${path}`)
+        process.exit(0)
     }
 
     if (options.test) {

@@ -10,6 +10,7 @@ export * from "./util"
 export * from "./dcfg"
 export * from "./uf2"
 export * from "./board"
+export * from "./serverinfo"
 export { prettySize } from "./jdutil"
 
 export type { JsonComment, ServiceConfig } from "@devicescript/srvcfg"

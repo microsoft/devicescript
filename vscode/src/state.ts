@@ -1,4 +1,4 @@
-import type { DeviceConfig } from "@devicescript/interop"
+import type { DeviceConfig, ServerInfoFile } from "@devicescript/interop"
 import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
 import {
     CHANGE,
@@ -14,6 +14,7 @@ import {
     CONNECTION_STATE,
     ConnectionState,
     JDDevice,
+    serviceSpecificationFromClassIdentifier,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
@@ -39,6 +40,9 @@ import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
 import { showErrorMessage } from "./telemetry"
+import _serverInfo from "./server-info.json"
+
+const serverInfo = _serverInfo as ServerInfoFile
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
@@ -309,6 +313,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { boards } = this.devtools
 
         const document = editor.document
+        await this.devtools.refreshSpecs()
 
         // first identify the board
         const { boardimport } =
@@ -316,7 +321,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 ?.groups || {}
         let board = boards.find(b => b.id === boardimport)
         if (!board) {
-            await this.devtools.refreshSpecs()
             board = await this.showQuickPickBoard(
                 "What kind of device are you programming?"
             )
@@ -329,10 +333,89 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     `import { pins, board } from "@dsboard/${board.id}"\n`
                 )
             })
-            await document.save()
         }
 
-        // ask for other
+        const server = await vscode.window.showQuickPick(
+            serverInfo.servers.map(e => {
+                const spec = serviceSpecificationFromClassIdentifier(
+                    e.classIdentifier
+                )
+                return {
+                    label: spec.name,
+                    description: e.startName,
+                    detail: (spec.notes["short"] ?? "").replace(/\n[^]*/, ""),
+                    entry: e,
+                }
+            }),
+            {
+                title: `Pick a server to start`,
+                matchOnDescription: true,
+                matchOnDetail: true,
+                canPickMany: false,
+            }
+        )
+
+        if (server) {
+            for (const [symName, modName] of Object.entries(
+                server.entry.imports
+            )) {
+                await this.addImport(editor, symName, modName)
+            }
+            await editor.insertSnippet(
+                new vscode.SnippetString(server.entry.snippet)
+            )
+        }
+    }
+
+    async addImport(
+        editor: vscode.TextEditor,
+        symName: string,
+        modName: string
+    ) {
+        let idx = -1
+        let lastImport = 0
+        let add = ""
+
+        const text = editor.document.getText()
+
+        text.replace(
+            /^(\s*import\s*\{)([^\}]*)(\}\s*from\s*"([^"]+)")/gm,
+            (
+                full: string,
+                pref: string,
+                imports: string,
+                suff: string,
+                mod: string
+            ) => {
+                if (idx == -1 && mod == modName) {
+                    if (
+                        imports
+                            .split(/,/)
+                            .map(e => e.trim())
+                            .includes(symName)
+                    ) {
+                        idx = 0
+                        add = ""
+                    } else {
+                        imports = imports.replace(/\s*$/, "")
+                        idx = text.indexOf(full) + pref.length + imports.length
+                        if (!imports.endsWith(",")) add += ","
+                        add += " " + symName + " "
+                    }
+                }
+                lastImport = text.indexOf(full) + full.length
+                return full
+            }
+        )
+
+        if (idx == -1) {
+            idx = lastImport
+            add = `\nimport { ${symName} } from "${modName}"`
+        }
+
+        await editor.edit(editBuilder => {
+            editBuilder.insert(editor.document.positionAt(idx), add)
+        })
     }
 
     async flashFirmware(device?: JDDevice) {
