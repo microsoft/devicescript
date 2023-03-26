@@ -36,10 +36,14 @@ void funX_DeviceScript_format(devs_ctx_t *ctx) {
     devs_string_t *str = devs_string_try_alloc(ctx, sz - 1);
     if (str == NULL)
         return;
-    if (sz > sizeof(tmp))
+    if (sz > sizeof(tmp)) {
+        value_t v = devs_value_from_gc_obj(ctx, str);
+        devs_value_pin(ctx, v);
         devs_strformat(ctx, fmt, len, str->data, sz, argp, numargs, 0);
-    else
+        devs_value_unpin(ctx, v);
+    } else {
         memcpy(str->data, tmp, sz - 1);
+    }
     devs_ret_gc_ptr(ctx, str);
 }
 
