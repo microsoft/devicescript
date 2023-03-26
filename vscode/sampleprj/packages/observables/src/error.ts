@@ -1,5 +1,5 @@
 import { AsyncValue } from "@devicescript/core"
-import { Observable, OperatorFunction } from "./observable"
+import { Observable, OperatorFunction, unusbscribe } from "./observable"
 
 /**
  * Just errors and does nothing else
@@ -37,7 +37,7 @@ export function catchError<T, R>(
             let unsub = await source.subscribe({
                 next,
                 error: async e => {
-                    if (unsub) unsub.unsubscribe()
+                    unsub = unusbscribe(unsub)
 
                     // get follow-up observable
                     const errorSource = selector(e, source)
@@ -49,7 +49,7 @@ export function catchError<T, R>(
             })
 
             return () => {
-                if (unsub) unsub.unsubscribe()
+                unusbscribe(unsub)
             }
         })
     }

@@ -1,12 +1,12 @@
 import * as ds from "@devicescript/core"
 import { describe, test, expect } from "@devicescript/test"
 import { reduce } from "./aggregate"
-import { from, fromEvent, fromRegister, iif, interval } from "./creation"
+import { from, iif, interval } from "./creation"
 import { ewma, fir, rollingAverage } from "./dsp"
 import { catchError, throwError } from "./error"
 import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
-import { Observable, Subscription } from "./observable"
+import { Observable, Subscription, unusbscribe } from "./observable"
 import { map, scan } from "./transform"
 import { tap } from "./utility"
 import { register } from "./value"
@@ -25,7 +25,7 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
             expect(values[i]).toBe(sequence[i])
         }
     } finally {
-        if (s) s.unsubscribe()
+        unusbscribe(s)
     }
 }
 
@@ -56,7 +56,7 @@ describe("creation", () => {
         const unsub = await obs.subscribe(() => {
             console.log(`next ${count}`)
             res.push(count)
-            if (count++ === 2) unsub.unsubscribe()
+            if (count++ === 2) unusbscribe(unsub)
         })
         // wait till done?
         await ds.sleep(1000)

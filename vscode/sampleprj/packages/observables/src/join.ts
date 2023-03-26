@@ -1,5 +1,10 @@
 import { interval } from "./creation"
-import { Observable, Subscription, wrapSubscriptions } from "./observable"
+import {
+    Observable,
+    Subscription,
+    unusbscribe,
+    wrapSubscriptions,
+} from "./observable"
 
 /**
  * Collects the latest values of observables when the closing observable emits.
@@ -93,7 +98,7 @@ export function race<T>(...sources: Observable<T>[]) {
                         let j = 0
                         while (j < unsubs.length) {
                             if (unsubs[j] !== unsub) {
-                                unsubs[j].unsubscribe()
+                                unusbscribe(unsubs[j])
                                 unsubs.insert(j, -1)
                             } else j++
                         }

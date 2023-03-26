@@ -1,5 +1,10 @@
 import * as ds from "@devicescript/core"
-import { identity, Observable, OperatorFunction } from "./observable"
+import {
+    identity,
+    Observable,
+    OperatorFunction,
+    unusbscribe,
+} from "./observable"
 
 /**
  * An operator that filters values
@@ -34,7 +39,7 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
         return new Observable<T>(async observer => {
             const { error, next, complete } = observer
             let timer: number
-            const { unsubscribe } = await source.subscribe({
+            const unsub = await source.subscribe({
                 error,
                 complete,
                 next: value => {
@@ -49,7 +54,7 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
             })
 
             return () => {
-                unsubscribe()
+                unusbscribe(unsub)
                 clearTimeout(timer)
             }
         })
@@ -65,7 +70,7 @@ export function throttleTime<T>(duration: number): OperatorFunction<T, T> {
         return new Observable<T>(async observer => {
             const { error, next, complete } = observer
             let timer: number
-            const { unsubscribe } = await source.subscribe({
+            const unsub = await source.subscribe({
                 error,
                 complete,
                 next: async value => {
@@ -83,7 +88,7 @@ export function throttleTime<T>(duration: number): OperatorFunction<T, T> {
 
             // clean up: stop timer
             return () => {
-                unsubscribe()
+                unusbscribe(unsub)
                 clearTimeout(timer)
             }
         })

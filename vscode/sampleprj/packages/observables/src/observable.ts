@@ -207,10 +207,26 @@ export class Observable<T> {
  * @param cleanup
  */
 export function wrapSubscriptions(subscriptions: Subscription[]): Subscription {
-    return {
-        unsubscribe: () =>
-            subscriptions.filter(s => !s.closed).forEach(s => s.unsubscribe()),
+    const r = {
+        closed: false,
+        unsubscribe: () => {
+            r.closed = true
+            subscriptions.forEach(s => unusbscribe(s))
+        },
     }
+    return r
+}
+
+/**
+ * Safe wrapper to unsubscribe a subscription
+ * @param subscription
+ * @returns undefined value
+ */
+export function unusbscribe(subscription: Subscription): Subscription {
+    if (subscription && !subscription.closed && subscription.unsubscribe) {
+        subscription.unsubscribe()
+    }
+    return undefined
 }
 
 export type OperatorFunction<T, R> = (
