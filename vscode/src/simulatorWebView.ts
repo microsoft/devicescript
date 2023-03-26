@@ -117,7 +117,7 @@ export class SimulatorsWebView extends JDEventSource {
 
     private async handleOpen() {
         if (this.simulatorsWebviewPanel) {
-            this.simulatorsWebviewPanel.reveal(vscode.ViewColumn.Nine)
+            this.simulatorsWebviewPanel.reveal(undefined, true)
             // make sure the tools are running
             await this.extensionState.devtools.start()
             return
