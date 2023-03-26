@@ -6,7 +6,15 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import { addNpm, addService, addSim, addTest, addSettings, addI2C, init } from "./init"
+import {
+    addNpm,
+    addService,
+    addSim,
+    addTest,
+    addSettings,
+    addI2C,
+    init,
+} from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
@@ -117,6 +125,7 @@ export async function mainCli() {
             "--local-boards <repos-path>",
             "use local, not remote info.json files"
         )
+        .option("--server-info", "generate server-info.json file")
         .action(ctool)
 
     program

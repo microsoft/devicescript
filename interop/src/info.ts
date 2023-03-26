@@ -92,3 +92,14 @@ export function emptyDebugInfo(): DebugInfo {
         binary: { hex: "" },
     }
 }
+
+export interface ServerInfo {
+    startName: string
+    classIdentifier: number
+    imports: Record<string, string>
+    snippet: string
+}
+
+export interface ServerInfoFile {
+    servers: ServerInfo[]
+}
