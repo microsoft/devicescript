@@ -80,6 +80,20 @@ const obs = timer(1000)
 await obs.subscribe(v => console.log(v))
 ```
 
+### iif
+
+Checks a boolean at subscription time, and chooses between one of two observable sources.
+
+```ts
+import { iif } from "@devicescript/observables"
+
+let connected: boolean
+// highlight-next-line
+const obs = iif(() => connected, from(["connected"]), from(["not connected"]))
+
+await obs.subscribe(v => console.log(v))
+```
+
 ## Filter Operators
 
 ### filter
@@ -346,7 +360,6 @@ The error may also be rethrown, or a new error can be thrown to emit an error fr
 
 -a-b----1-2-3-|-
 ```
-
 
 ```ts
 import { from, map, throwError, catchError } from "@devicescript/observables"

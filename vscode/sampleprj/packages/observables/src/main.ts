@@ -1,7 +1,7 @@
 import * as ds from "@devicescript/core"
 import { describe, test, expect } from "@devicescript/test"
 import { reduce } from "./aggregate"
-import { from, fromEvent, fromRegister, interval } from "./creation"
+import { from, fromEvent, fromRegister, iif, interval } from "./creation"
 import { ewma, fir, rollingAverage } from "./dsp"
 import { catchError, throwError } from "./error"
 import { threshold, filter, distinctUntilChanged } from "./filter"
@@ -47,15 +47,6 @@ describe("creation", () => {
         const obs = from([1, 2, 3, 4, 5])
         await obs.subscribe(v => console.log(v))
     })
-    test("fromEvent", async () => {
-        const obs = fromEvent(btn.down)
-        const unsub = await obs.subscribe(ev => console.log("down"))
-        if (unsub) await unsub.unsubscribe()
-    })
-    test("fromRegister", async () => {
-        const obs = fromRegister(temp.temperature)
-        await obs.subscribe(v => console.log(v))
-    })
     test("interval", async () => {
         let obs = interval(100)
         obs = tap<number>(v => console.log(`interval ${v}`))(obs)
@@ -70,6 +61,14 @@ describe("creation", () => {
         // wait till done?
         await ds.sleep(1000)
         expect(res.length).toBe(3)
+    })
+    test("iif,true", async () => {
+        const obs = iif(() => true, from([0, 1, 2]), from([-1, 2]))
+        await emits(obs, [0, 1, 2])
+    })
+    test("iif,false", async () => {
+        const obs = iif(() => false, from([0, 1, 2]), from([-1, 2]))
+        await emits(obs, [-1, 2])
     })
 })
 

@@ -1,4 +1,4 @@
-import { Register, Event } from "@devicescript/core"
+import { AsyncBoolean } from "@devicescript/core"
 import { Observable } from "./observable"
 
 /**
@@ -12,40 +12,6 @@ export function from<T>(values: T[]) {
         if (values) for (const value of values) await next(value)
         await complete()
     })
-}
-
-/**
- * Wraps a promise into an observable
- */
-export function fromPromise<T>(promise: Promise<T>): Observable<T> {
-    return new Observable(async ({ next, error, complete }) => {
-        try {
-            const v = await promise
-            next(v)
-        } catch (e) {
-            error(e as Error)
-        } finally {
-            complete()
-        }
-    })
-}
-
-export function fromEvent<T>(event: Event<T>) {
-    return new Observable<{ value: T; event: Event<T> }>(async observer => {
-        const { next } = observer
-        await event.subscribe(async value => await next({ value, event }))
-    })
-}
-
-export function fromRegister<T>(register: Register<T>) {
-    return new Observable<{ value: T; register: Register<T> }>(
-        async observer => {
-            const { next } = observer
-            await register.subscribe(
-                async value => await next({ value, register })
-            )
-        }
-    )
 }
 
 /**
@@ -79,5 +45,20 @@ export function timer(millis: number): Observable<0> {
         return () => {
             clearTimeout(timer)
         }
+    })
+}
+
+/**
+ * Checks a boolean at subscription time, and chooses between one of two observable sources
+ */
+export function iif<T, F>(
+    condition: () => AsyncBoolean,
+    trueResult: Observable<T>,
+    falseResult: Observable<F>
+): Observable<T | F> {
+    return new Observable<T | F>(async observer => {
+        const c = await condition()
+        const obs = c ? trueResult : falseResult
+        return await obs.subscribe(observer)
     })
 }
