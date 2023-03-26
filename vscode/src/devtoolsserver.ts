@@ -123,6 +123,7 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     async refreshSpecs() {
+        await this.findProjects()
         const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
             req: "specs",
             data: {
@@ -566,9 +567,8 @@ export class DeveloperToolsManager extends JDEventSource {
         e: vscode.WorkspaceFoldersChangeEvent
     ) {
         if (e.removed && this._projectFolder) {
-            const projects = (await this.findProjects()).map(uri =>
-                uri.toString()
-            )
+            const projectUris = await this.findProjects()
+            const projects = projectUris.map(uri => uri.toString())
             if (!projects.includes(this._projectFolder?.toString()))
                 await this.setProjectFolder(undefined)
         }
@@ -638,9 +638,17 @@ export class DeveloperToolsManager extends JDEventSource {
             "**/devsconfig.json",
             "**​/node_modules/**"
         )
-        return configs
+        const projectUris = configs
             .map(cfg => Utils.dirname(cfg))
             .filter(d => !/\/node_modules\//.test(d.fsPath))
+
+        vscode.commands.executeCommand(
+            "setContext",
+            "devicescript.supportedFolders",
+            projectUris.map(p => Utils.joinPath(p, "src").path)
+        )
+
+        return projectUris
     }
 
     async show() {
