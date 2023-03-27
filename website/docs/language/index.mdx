@@ -9,13 +9,15 @@ TypeScript itself follows semantics of ECMAScript also known as JavaScript (JS).
 DeviceScript (DS) generally also follows JavaScript semantics, and the DeviceScript compiler
 will give you an error if you're using an unsupported feature.
 
-The main difference in semantics between DeviceScript and JavaScript is that DeviceScript programs run in multiple fibers (threads).
-In practice, this behaves like JS with `async`/`await` but without an ability to manipulate promises directly
-(that is fibers can only interleave at `await` points and at most one fiber runs at any given time).
-The compiler enforces usage of `await` where needed.
+Otherwise, there are some semantic differences stemming from the limited
+resources available to the DeviceScript runtime:
 
-Please check [semantic differences between DeviceScript and JavaScript](/language/devicescript-vs-javascript) for differences
-that the compiler can't warn you about.
+-   [programs run in multiple fibers](/language/async); `async`/`await` are supported general `Promise` is not
+-   user-defined [.toString() method](/language/tostring) is limited
+-   [strings are Unicode](/language/strings), not UTF-16, and some features are missing
+-   some objects, including functions, [are static or otherwise special](special), and cannot have random properties attached
+-   [tree shaking](/language/tree-shaking) is quite aggressive
+-   [other differences](/language/devicescript-vs-javascript) include lack of subnormals
 
 Below we list supported and unsupported langauge features.
 
@@ -77,3 +79,4 @@ unlikely to miss it):
 -   namespaces (we do support ES modules)
 -   `arguments` keyword; `.apply` method (modern spread operator is supported)
 -   marking properties as non-enumerable etc
+-   `==` and `!=` operators (other than `== null`/`undefined`); please use `===` and `!===`

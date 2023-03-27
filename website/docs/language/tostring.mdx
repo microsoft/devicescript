@@ -1,0 +1,32 @@
+---
+sidebar_position: 2
+---
+
+# toString() method
+
+ECMAScript spec requires converting values to string, deep in the internals of the runtime
+(in particular, in `a + b`, `a[b]`, `a == b`, etc.).
+It also mandates that these conversions use the `.toString()` method if provided on the object
+by the user.
+
+These are complex to implement in very limited stack space available on embedded devices.
+Consider the following: `.toString()` triggers code execution with
+say property indexing, which triggers another `.toString()`, etc.
+See [issue](https://github.com/microsoft/devicescript/issues/41).
+
+To alleviate this problem, the built-in string conversion for objects in DeviceScript
+is similar to `util.inspect()` in node.js - it will show a limited number of object fields.
+For example:
+
+```ts
+const o = { x: 1, y: ["foo", 2] }
+console.log("o=", o)
+console.log("o=" + o)
+console.log(`o=${o}`)
+```
+
+```console title="Output"
+o={x:1,y:["foo",2]}
+o={x:1,y:["foo",2]}
+o={x:1,y:["foo",2]}
+```

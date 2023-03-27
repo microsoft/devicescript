@@ -1,0 +1,20 @@
+---
+sidebar_position: 4
+---
+
+# Special objects
+
+To save RAM certain objects are treated specially by the runtime,
+and as a consequence you cannot attach arbitrary properties to them, manipulate their prototypes freely, etc.
+
+-   functions (built-in, top-level, nested (closures))
+-   static buffers created with the `hex` template literals (eg., `` hex `00 11 22` ``)
+-   strings and numbers (`"".myProp === undefined` as expected,
+    but `"".myProp = val` throws instead of being ignored as in JS)
+-   `ds.Fiber`
+-   `ds.Register`, `ds.Event` - members of `ds.Role`
+
+It **is OK** to add properties to arrays (`[].myProp = 1`), dynamically allocated buffers,
+and of course regular objects and class instances.
+
+The prototype manipulation is limited also for arrays and buffers.

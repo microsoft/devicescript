@@ -1,0 +1,17 @@
+---
+sidebar_position: 1
+---
+
+# Async/await and promises
+
+The main difference in semantics between DeviceScript and JavaScript is that DeviceScript programs run in multiple fibers (threads).
+In practice, this behaves like JS with `async`/`await` but without an ability to manipulate promises directly
+(that is fibers can only interleave at `await` points and at most one fiber runs at any given time).
+The compiler enforces usage of `await` where needed.
+
+Technically, the `await` keyword is currently a no-op at runtime.
+You can inspect the different currently running fibers in the debugger.
+Also stack traces are not cut at `await` points.
+
+You can use `Function.start(...args: any[])` to start a function in a new fiber.
+
