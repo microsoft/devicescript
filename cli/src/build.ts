@@ -1,6 +1,6 @@
 import { basename, join, relative, resolve } from "node:path"
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
-import { ensureDirSync, readJSONSync, mkdirp, removeSync } from "fs-extra"
+import { ensureDirSync, mkdirp, removeSync } from "fs-extra"
 import {
     compileWithHost,
     jacdacDefaultSpecifications,
@@ -46,6 +46,7 @@ import {
 } from "jacdac-ts"
 import { execSync } from "node:child_process"
 import { BuildOptions } from "./sideprotocol"
+import { readJSONSync } from "./jsonc"
 
 // TODO should we move this to jacdac-ts and call automatically for transports?
 export function setupWebsocket() {
@@ -236,7 +237,10 @@ function compilePackageJson(
 ) {
     const pkgJsonPath = join(tsdir, "package.json")
     if (existsSync(pkgJsonPath)) {
-        const pkgJSON = JSON.parse(readFileSync(pkgJsonPath, "utf-8"))
+        const pkgJSON = readJSONSync(pkgJsonPath) as {
+            name?: string
+            version?: string
+        }
         lcfg.hwInfo.progName = pkgJSON.name ?? "(no name)"
         lcfg.hwInfo.progVersion = pkgJSON.version ?? "(no version)"
         if (isGit()) {

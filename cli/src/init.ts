@@ -28,6 +28,7 @@ import type {
     SideAddTestResp,
 } from "./sideprotocol"
 import { addBoard } from "./addboard"
+import { readJSONSync } from "./jsonc"
 
 const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
@@ -306,12 +307,6 @@ export interface InitOptions {
     install?: boolean
 }
 
-function readJSONSync(fn: string) {
-    const text = readFileSync(fn, { encoding: "utf-8" })
-    const res = parse(text)
-    return res
-}
-
 function patchJSON(fn: string, data: any) {
     debug(`patch ${fn}`)
     const existing = readJSONSync(fn)
@@ -532,8 +527,6 @@ export async function addNpm(options: AddNpmOptions) {
 
     const cwd = writeFiles(".", options, files)
     await runInstall(cwd, options)
-
-    const newpkg = JSON.parse(readFileSync("package.json", "utf-8"))
 
     return finishAdd(`Prepared package.json for publishing, please review.`, [
         "package.json",
