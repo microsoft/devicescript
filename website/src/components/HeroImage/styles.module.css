@@ -1,0 +1,31 @@
+.grid {
+    display: grid;
+    grid-template-columns: 4fr 1fr 2fr;
+    gap: 0px;
+    margin-top: 3rem;
+}
+
+.mid-grid {
+    display: grid;
+    text-align: center;
+    font-size: 5vw;
+    align-items: center;
+}
+
+.vertical-grid {
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0px;
+}
+
+.vertical-grid img {
+    padding: 0px;
+    margin: 0px;
+    gap: 0px;
+    text-align: center;
+}
+
+.hero {
+    width: 100%;
+}
