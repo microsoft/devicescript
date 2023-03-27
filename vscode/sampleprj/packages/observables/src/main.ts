@@ -2,7 +2,7 @@ import * as ds from "@devicescript/core"
 import { describe, test, expect } from "@devicescript/test"
 import { reduce } from "./aggregate"
 import { from, iif, interval } from "./creation"
-import { ewma, fir, rollingAverage } from "./dsp"
+import { ewma, fir, levelDetector, rollingAverage } from "./dsp"
 import { catchError, throwError } from "./error"
 import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
@@ -182,6 +182,11 @@ describe("dsp", () => {
         const a = [1, 2]
         const obs = from(a).pipe(rollingAverage(2))
         await emits(obs, [1, 1 / 2 + 2 / 2])
+    })
+    test("levelDetector", async () => {
+        const a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1]
+        const obs = from(a).pipe(levelDetector(2,5))
+        await emits(obs, [-1, 0, 1, -1])
     })
 })
 

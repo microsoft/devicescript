@@ -320,6 +320,24 @@ await thermometer.temperature
     .subscribe(t => console.log(t))
 ```
 
+### levelDetector
+
+Measures and thresholds data into low/mid/high levels.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { fir } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+await thermometer.temperature
+    // highlight-next-line
+    .pipe(levelDetector(20 /* low threshold */, 30 /*high threshold */))
+    .subscribe(level =>
+        console.log(level < 0 ? "cold" : level > 0 ? "hot" : "mild")
+    )
+```
+
 ## Error Handling
 
 ### throwError
