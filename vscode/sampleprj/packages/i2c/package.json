@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/i2c",
-    "version": "2.2.4",
+    "version": "2.2.5",
     "private": false,
     "dependencies": {},
     "devDependencies": {
