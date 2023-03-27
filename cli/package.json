@@ -41,14 +41,14 @@
         "commander": "^10.0.0",
         "debounce-promise": "^3.1.2",
         "faye-websocket": "^0.11.4",
-        "fs-extra": "^11.1.0",
-        "update-notifier": "^6.0.2"
+        "fs-extra": "^11.1.0"
     },
     "dependencies": {
         "@devicescript/compiler": "*",
         "buffer": "^6.0.3",
         "jacdac-ts": "*",
-        "websocket-polyfill": "^0.0.3"
+        "websocket-polyfill": "^0.0.3",
+        "update-notifier": "^6.0.2"
     },
     "optionalDependencies": {
         "serialport": "^10.5.0"
