@@ -672,7 +672,7 @@ export class DeveloperToolsManager extends JDEventSource {
         )
         const projectUris = configs
             .map(cfg => Utils.dirname(cfg))
-            .filter(d => !/\/node_modules\//.test(d.fsPath))
+            .filter(d => !/(^|\/)node_modules\//.test(d.fsPath))
 
         vscode.commands.executeCommand(
             "setContext",
