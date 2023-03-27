@@ -35,7 +35,7 @@ export default function HomepageFeatures(): JSX.Element {
         },
         {
             title: "Small Runtime",
-            description: "Bytecode interpreter for low power / flash / memory.",
+            description: "Bytecode interpreter for low power/flash/memory.",
             link: "/devicescript/devices",
         },
         {
