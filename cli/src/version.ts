@@ -1,6 +1,5 @@
 import pkg from "../package.json"
 import { runtimeVersion } from "@devicescript/compiler"
-import updateNotifier from "update-notifier"
 
 export function packageVersion() {
     return `v${pkg.version}`
@@ -12,6 +11,12 @@ export function cliVersion() {
     }`
 }
 
-export function notifyUpdates() {
-    updateNotifier({ pkg }).notify()
+export async function notifyUpdates() {
+    try {
+        const updateNotifier = await (await import("update-notifier")).default
+        const notifier = updateNotifier({ pkg })
+        if (notifier?.update) notifier.notify()
+    } catch (e) {
+        console.debug(e)
+    }
 }
