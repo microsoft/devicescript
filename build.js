@@ -201,6 +201,7 @@ async function main() {
                     "serialport",
                     "vscode",
                     "crypto",
+                    "jsonc-parser"
                 ],
                 platform,
                 metafile: true,
