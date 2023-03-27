@@ -225,6 +225,7 @@ function startProxyServers(
         client.__devsSender = sender
         client.send = (pkt0: Buffer | string) => {
             if (typeof pkt0 == "string") return
+            if (socket.readyState !== "open") return
             const pkt = new Uint8Array(pkt0)
             const b = new Uint8Array(1 + pkt.length)
             b[0] = pkt.length
