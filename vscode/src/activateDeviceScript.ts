@@ -93,14 +93,8 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.device.reset",
             async (item: JDomDeviceTreeItem) => {
-                const device =
-                    item?.device ||
-                    (
-                        await extensionState.pickDeviceScriptManager({
-                            skipUpdate: true,
-                        })
-                    )?.device
-                await device.reset() // async
+                const device = item?.device
+                await device?.reset()
             }
         ),
         vscode.commands.registerCommand(

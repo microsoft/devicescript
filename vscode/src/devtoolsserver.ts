@@ -677,7 +677,7 @@ export class DeveloperToolsManager extends JDEventSource {
         vscode.commands.executeCommand(
             "setContext",
             "devicescript.supportedFolders",
-            projectUris.map(p => Utils.joinPath(p, "src").path)
+            projectUris.map(p => Utils.joinPath(p, "src").fsPath)
         )
 
         return projectUris
