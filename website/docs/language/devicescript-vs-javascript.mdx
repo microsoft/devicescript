@@ -9,7 +9,7 @@ This document lists differences in semantics between DeviceScript and EcmaScript
 
 ## Subnormals
 
-DeviceScript doesn't support subnormals, that is numbers is range around -5e−324 to 5e-324 are rounded to zero
-(this includes negative zero).
+DeviceScript doesn't support subnormals, that is numbers is range around `-5e-324` to `5e-324` are rounded to zero
+(it follows that negative zero is not supported).
 Subnormals are [not required by the JS specs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MIN_VALUE).
 
