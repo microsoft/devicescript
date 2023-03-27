@@ -7,8 +7,7 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula")
 const config = configure(
     {
         title: "DeviceScript",
-        tagline:
-            "TypeScript-like Language and Runtime for Tiny Embedded Devices.",
+        tagline: "TypeScript for Tiny IoT Devices",
         url: "https://microsoft.github.io/",
         baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
@@ -151,7 +150,6 @@ const config = configure(
                                         "devicescript run src/main.ts --test --test-self-exit",
                                     test: "yarn test:devicescript",
                                     start: "yarn watch",
-
                                 },
                             },
                         },
@@ -174,7 +172,12 @@ const config = configure(
                 {
                     lang: "ts",
                     nodeBin: "devicescript",
-                    args: ["--no-colors", "--quiet", "--ignore-missing-config", "input.ts"],
+                    args: [
+                        "--no-colors",
+                        "--quiet",
+                        "--ignore-missing-config",
+                        "input.ts",
+                    ],
                     npmPackage: "@devicescript/cli",
                     excludedFiles: ["**/api/clients/*.md"],
                     prefix: 'import * as ds from "@devicescript/core"',
@@ -186,11 +189,13 @@ const config = configure(
                     extension: "txt",
                     inputLang: null,
                     outputLang: null,
-                    outputFiles: [{
-                        "name": "output.svg"
-                    }],
-                    args: ["input.txt", "output.svg"]
-                }
+                    outputFiles: [
+                        {
+                            name: "output.svg",
+                        },
+                    ],
+                    args: ["input.txt", "output.svg"],
+                },
             ],
         },
     }

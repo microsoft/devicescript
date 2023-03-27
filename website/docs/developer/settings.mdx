@@ -1,0 +1,44 @@
+---
+title: Settings
+sidebar_position: 9
+---
+
+# Settings
+
+Settings provide a friendly layer to read/write objects from the device flash. **Keep it small, there's not a lot of space!**
+
+## Setup
+
+Configure your project for testing using this command
+
+```bash
+devs add settings
+```
+
+## Usage
+
+### `writeSetting`
+
+Serializes an object into a setting at a given key. The key name should be less than 16 characters.
+
+```ts
+import { writeSetting } from "@devicescript/settings"
+
+// highlight-next-line
+await writeSetting("hello", { world: true })
+```
+
+### `readSetting`
+
+Deserializes an object from a setting at a given key. If the key is missing or invalid format, returns undefined.
+
+```ts
+import { readSetting } from "@devicescript/settings"
+
+// highlight-next-line
+const world = await readSetting("hello")
+```
+
+## See also
+
+-   [API reference](/api/settings/)

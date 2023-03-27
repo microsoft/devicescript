@@ -12,6 +12,7 @@ export enum TestState {
     Ignored,
 }
 export interface TestOptions {
+    skip?: boolean
     expectedError?: boolean
 }
 export class AssertionError extends Error {
@@ -119,11 +120,16 @@ export class TestNode {
     ) {}
 
     async run(runOptions: RunOptions) {
-        let { expectedError } = this.options || {}
+        let { expectedError, skip } = this.options || {}
         console.log(`  ${this.name}`)
         try {
             this.state = TestState.Running
             this.error = undefined
+
+            if (skip) {
+                this.state = TestState.Ignored
+                return
+            }
 
             const unsubscribe = await this.body()
             if (typeof unsubscribe === "function") await unsubscribe()

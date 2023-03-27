@@ -98,6 +98,13 @@ export class DsDapSession extends DebugSession {
         this.client = null
     }
 
+    async finish() {
+        if (!this.client) return
+        try {
+            await this.client?.disable()
+        } catch {}
+    }
+
     private async createClient(cfg: StartArgs, timeout = 2000) {
         const did = cfg?.deviceId
         const t0 = Date.now()
@@ -277,12 +284,20 @@ export class DsDapSession extends DebugSession {
         this.asyncReq(response, async () => {
             const fibs = await this.client.readFibers()
             response.body = {
-                threads: fibs.map(f => ({
-                    id: f.fiberId,
-                    name: `${this.functionName(
-                        f.currFn
-                    )} ... ${this.functionName(f.initialFn)}`,
-                })),
+                threads:
+                    fibs.length == 0
+                        ? [
+                              {
+                                  id: 1, // if no threads are returned, the "Pause" button will do nothing
+                                  name: "fake-thread", // so we add a fake thread
+                              },
+                          ]
+                        : fibs.map(f => ({
+                              id: f.fiberId,
+                              name: `${this.functionName(
+                                  f.currFn
+                              )} ... ${this.functionName(f.initialFn)}`,
+                          })),
             }
         })
     }
@@ -533,6 +548,15 @@ export class DsDapSession extends DebugSession {
     ): void {
         this.asyncReq(response, async () => {
             await this.client.resume()
+        })
+    }
+
+    protected override pauseRequest(
+        response: DebugProtocol.PauseResponse,
+        args: DebugProtocol.PauseArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            await this.client.halt()
         })
     }
 
@@ -819,9 +843,14 @@ export class DsDapSession extends DebugSession {
     }
 
     private findSource(src: DebugProtocol.Source) {
+        function normPath(p: string) {
+            return p.replace(/\\/g, "/").toLowerCase()
+        }
         if (src.sourceReference) return src.sourceReference - 1
         const srcIdx = this.img.dbg.sources.findIndex(
-            s => s.path == src.path || this.resolvePath(s) == src.path
+            s =>
+                normPath(s.path) == normPath(src.path) ||
+                normPath(this.resolvePath(s)) == normPath(src.path)
         )
         return srcIdx
     }

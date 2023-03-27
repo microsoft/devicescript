@@ -93,6 +93,47 @@
             ],
             "type": "object"
         },
+        "BuzzerConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeLow": {
+                    "description": "When set, the `pin` will be set to `1` when no sound is playing\n(because power flows through speaker when `pin` is set to `0`).\nWhen unset, the `pin` will be set to `0` when no sound is playing.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "description": "The driving pin.",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "buzzer"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
         "HexInt": {
             "type": [
                 "string",
@@ -316,6 +357,51 @@
                     "type": "integer"
                 }
             },
+            "type": "object"
+        },
+        "LightBulbConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeLow": {
+                    "description": "When set, the relay is considered 'active' when `pin` is low.",
+                    "type": "boolean"
+                },
+                "dimmable": {
+                    "description": "When set, the pin will be operated with PWM at a few kHz.",
+                    "type": "boolean"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "description": "The driving pin.",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "lightBulb"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
             "type": "object"
         },
         "LightLevelConfig": {
@@ -1199,6 +1285,12 @@
                 },
                 {
                     "$ref": "#/definitions/PowerConfig"
+                },
+                {
+                    "$ref": "#/definitions/LightBulbConfig"
+                },
+                {
+                    "$ref": "#/definitions/BuzzerConfig"
                 },
                 {
                     "$ref": "#/definitions/LightLevelConfig"

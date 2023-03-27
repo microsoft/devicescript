@@ -64,11 +64,12 @@ export function logToConsole(priority: LoggerPriority, message: string) {
     }
 }
 
-export let isVerbose = false
+export let isVerbose = 0
 export let isQuiet = false
 
-export function setVerbose(v: boolean) {
-    isVerbose = v
+export function incVerbose() {
+    isVerbose++
+    verboseLog(`verbose level: ${isVerbose}`)
 }
 
 export function setQuiet(v: boolean) {

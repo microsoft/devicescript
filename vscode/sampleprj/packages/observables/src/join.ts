@@ -1,5 +1,10 @@
 import { interval } from "./creation"
-import { Observable, Subscription, wrapSubscriptions } from "./observable"
+import {
+    Observable,
+    Subscription,
+    unusbscribe,
+    wrapSubscriptions,
+} from "./observable"
 
 /**
  * Collects the latest values of observables when the closing observable emits.
@@ -71,4 +76,39 @@ export function collectTime<
     }
 ): Observable<Partial<Record<keyof TObservables, unknown>>> {
     return collect<TObservables>(observables, interval(duration), options)
+}
+
+/**
+ * Returns an observable that mirrors the first source observable to emit an item.
+ */
+export function race<T>(...sources: Observable<T>[]) {
+    if (sources?.length === 1) return sources[0]
+
+    return new Observable<T>(async observer => {
+        const { next, error, complete } = observer
+
+        const unsubs: Subscription[] = []
+        for (let i = 0; i < sources.length; ++i) {
+            const unsub = await sources[i].subscribe({
+                error: e => error(e),
+                complete: () => complete(),
+                next: async value => {
+                    // cancel all other sources
+                    if (unsubs.length > 1) {
+                        let j = 0
+                        while (j < unsubs.length) {
+                            if (unsubs[j] !== unsub) {
+                                unusbscribe(unsubs[j])
+                                unsubs.insert(j, -1)
+                            } else j++
+                        }
+                    }
+                    // send next value
+                    await next(value)
+                },
+            })
+            unsubs.push(unsub)
+        }
+        return wrapSubscriptions(unsubs)
+    })
 }

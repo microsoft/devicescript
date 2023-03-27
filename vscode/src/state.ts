@@ -1,4 +1,4 @@
-import type { DeviceConfig } from "@devicescript/interop"
+import type { DeviceConfig, ServerInfoFile } from "@devicescript/interop"
 import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
 import {
     CHANGE,
@@ -14,6 +14,7 @@ import {
     CONNECTION_STATE,
     ConnectionState,
     JDDevice,
+    serviceSpecificationFromClassIdentifier,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
@@ -38,7 +39,10 @@ import { sideRequest, subSideEvent } from "./jacdac"
 import { JDomDeviceTreeItem } from "./JDomTreeDataProvider"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
-import { activateTelemetry, AppTelemetry } from "./telemetry"
+import { showErrorMessage } from "./telemetry"
+import _serverInfo from "./server-info.json"
+
+const serverInfo = _serverInfo as ServerInfoFile
 
 const STATE_WATCHES_KEY = "views.watches.3"
 const STATE_CURRENT_DEVICE = "devices.current"
@@ -55,7 +59,6 @@ export interface NodeWatch {
 export class DeviceScriptExtensionState extends JDEventSource {
     readonly devtools: DeveloperToolsManager
     readonly simulators: SimulatorsWebView
-    readonly telemetry: AppTelemetry
 
     private _transport: TransportStatus = {
         transports: [],
@@ -66,7 +69,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
         readonly bus: JDBus
     ) {
         super()
-        this.telemetry = activateTelemetry(this.context)
         this.devtools = new DeveloperToolsManager(this)
         this.simulators = new SimulatorsWebView(this)
 
@@ -133,8 +135,11 @@ export class DeviceScriptExtensionState extends JDEventSource {
         }
     }
 
-    async resolveDeviceScriptManager(): Promise<JDService> {
-        return this.deviceScriptManager || this.pickDeviceScriptManager()
+    async resolveDeviceScriptManager(options?: {
+        autoStartSimulator?: boolean
+        skipUpdate?: boolean
+    }): Promise<JDService> {
+        return this.deviceScriptManager || this.pickDeviceScriptManager(options)
     }
 
     async addSim() {
@@ -250,6 +255,172 @@ export class DeviceScriptExtensionState extends JDEventSource {
         )
     }
 
+    async showQuickPickBoard(title: string) {
+        const { boards } = this.devtools
+
+        // find device on the board
+        const devices = this.bus.devices({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })
+        const deviceItems = devices
+            .map(device => ({
+                device,
+                board: boards.find(
+                    b => parseAnyInt(b.productId) === device.productIdentifier
+                ),
+            }))
+            .filter(({ board }) => !!board)
+            .map(({ device, board }) => ({
+                data: { board },
+                description: board.devName,
+                label: device.shortId,
+                detail: "connected",
+            }))
+        const res = await vscode.window.showQuickPick(
+            <TaggedQuickPickItem<{ board?: DeviceConfig }>[]>[
+                ...deviceItems,
+                deviceItems && {
+                    kind: vscode.QuickPickItemKind.Separator,
+                },
+                {
+                    label: "Help me choose...",
+                    detail: "Identify your board or find where to get one.",
+                },
+                ...boards.map(board => ({
+                    data: { board },
+                    label: board.devName,
+                    description: board.id,
+                    detail: board.$description,
+                })),
+            ].filter(i => !!i),
+            {
+                title,
+                canPickMany: false,
+                matchOnDetail: true,
+                matchOnDescription: true,
+            }
+        )
+        if (!res) return // user escaped
+
+        if (!res.data?.board) {
+            openDocUri("devices")
+            return undefined
+        }
+
+        return res.data.board
+    }
+
+    async configureHardware(editor: vscode.TextEditor) {
+        await this.devtools.start()
+        if (!this.devtools.connected) return
+        const { boards } = this.devtools
+
+        const document = editor.document
+        await this.devtools.refreshSpecs()
+
+        // first identify the board
+        const { boardimport } =
+            /from "@dsboard\/(?<boardimport>[^"]+)/.exec(document.getText())
+                ?.groups || {}
+        let board = boards.find(b => b.id === boardimport)
+        if (!board) {
+            board = await this.showQuickPickBoard(
+                "What kind of device are you programming?"
+            )
+            if (!board) return
+
+            // insert missing import
+            await editor.edit(editBuilder => {
+                editBuilder.insert(
+                    document.positionAt(0),
+                    `import { pins, board } from "@dsboard/${board.id}"\n`
+                )
+            })
+        }
+
+        const server = await vscode.window.showQuickPick(
+            serverInfo.servers.map(e => {
+                const spec = serviceSpecificationFromClassIdentifier(
+                    e.classIdentifier
+                )
+                return {
+                    label: spec.name,
+                    description: e.startName,
+                    detail: (spec.notes["short"] ?? "").replace(/\n[^]*/, ""),
+                    entry: e,
+                }
+            }),
+            {
+                title: `Pick a server to start`,
+                matchOnDescription: true,
+                matchOnDetail: true,
+                canPickMany: false,
+            }
+        )
+
+        if (server) {
+            for (const [symName, modName] of Object.entries(
+                server.entry.imports
+            )) {
+                await this.addImport(editor, symName, modName)
+            }
+            await editor.insertSnippet(
+                new vscode.SnippetString(server.entry.snippet)
+            )
+        }
+    }
+
+    async addImport(
+        editor: vscode.TextEditor,
+        symName: string,
+        modName: string
+    ) {
+        let idx = -1
+        let lastImport = 0
+        let add = ""
+
+        const text = editor.document.getText()
+
+        text.replace(
+            /^(\s*import\s*\{)([^\}]*)(\}\s*from\s*"([^"]+)")/gm,
+            (
+                full: string,
+                pref: string,
+                imports: string,
+                suff: string,
+                mod: string
+            ) => {
+                if (idx == -1 && mod == modName) {
+                    if (
+                        imports
+                            .split(/,/)
+                            .map(e => e.trim())
+                            .includes(symName)
+                    ) {
+                        idx = 0
+                        add = ""
+                    } else {
+                        imports = imports.replace(/\s*$/, "")
+                        idx = text.indexOf(full) + pref.length + imports.length
+                        if (!imports.endsWith(",")) add += ","
+                        add += " " + symName + " "
+                    }
+                }
+                lastImport = text.indexOf(full) + full.length
+                return full
+            }
+        )
+
+        if (idx == -1) {
+            idx = lastImport
+            add = `\nimport { ${symName} } from "${modName}"`
+        }
+
+        await editor.edit(editBuilder => {
+            editBuilder.insert(editor.document.positionAt(idx), add)
+        })
+    }
+
     async flashFirmware(device?: JDDevice) {
         await this.devtools.start()
         if (!this.devtools.connected) return
@@ -264,34 +435,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 board => parseAnyInt(board.productId) === productIdentifier
             )
         if (!board) {
-            const res = await vscode.window.showQuickPick(
-                <TaggedQuickPickItem<{ board?: DeviceConfig }>[]>[
-                    {
-                        label: "Help me choose...",
-                        detail: "Identify your board or find where to get one.",
-                    },
-                    ...boards.map(board => ({
-                        data: { board },
-                        label: board.devName,
-                        description: board.id,
-                        detail: board.$description,
-                    })),
-                ],
-                {
-                    title: "What kind of device are you flashing?",
-                    canPickMany: false,
-                    matchOnDetail: true,
-                    matchOnDescription: true,
-                }
+            board = await this.showQuickPickBoard(
+                "What kind of device are you flashing?"
             )
-            if (!res) return // user escaped
-
-            if (!res.data?.board) {
-                openDocUri("devices")
-                return
-            }
-
-            board = res.data.board
+            if (!board) return
         }
 
         if (
@@ -332,9 +479,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const { extensionKind } = this.context.extension
         const isWorkspace = extensionKind === vscode.ExtensionKind.Workspace
         if (isWorkspace) {
-            this.telemetry.showErrorMessage(
+            showErrorMessage(
                 "connection.remote",
-                "DeviceScript - Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
+                "Connection to a hardware device (serial, usb, ...) is not supported in remote workspaces."
             )
             return
         }
@@ -352,7 +499,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 label: "Serial",
                 detail: "ESP32, RP2040, ...",
                 description: serial
-                    ? `${serial.description}(${serial.connectionState})`
+                    ? `${serial.description || ""}(${serial.connectionState})`
                     : "",
             },
             {
@@ -360,7 +507,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 label: "USB",
                 detail: "micro:bit",
                 description: usb
-                    ? `${usb.description}(${usb.connectionState})`
+                    ? `${usb.description || ""}(${usb.connectionState})`
                     : "",
             },
             !sim && {
@@ -472,9 +619,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         files = [...new Set(files)]
 
         if (!files.length) {
-            vscode.window.showErrorMessage(
-                "DeviceScript: could not find any file."
-            )
+            showErrorMessage("pickfile.notfound", "Could not find any file.")
             return undefined
         }
 
@@ -513,55 +658,67 @@ export class DeviceScriptExtensionState extends JDEventSource {
             vscode.commands.executeCommand("workbench.action.problems.focus")
     }
 
-    async pickDeviceScriptManager(skipUpdate?: boolean): Promise<JDService> {
+    async pickDeviceScriptManager(options?: {
+        autoStartSimulator?: boolean
+        skipUpdate?: boolean
+    }): Promise<JDService> {
         const { simulatorScriptManagerId } = this
+        const { skipUpdate, autoStartSimulator } = options || {}
         const cid = this.state.get(STATE_CURRENT_DEVICE) as string
 
         await this.devtools.start()
         if (!this.devtools.connected) return
 
+        let startVM = false
+        let did: string
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })
-        const detail = async (srv: JDService) => {
-            const runtimeVersion = await readRuntimeVersion(srv)
-            const description = srv.device
-                .service(0)
-                .register(ControlReg.DeviceDescription)
-            await description.refresh(true)
-
-            return `${description.stringValue || ""} (${runtimeVersion || "?"})`
-        }
-        const items: DeviceQuickItem[] = await Promise.all(
-            services.map(
-                async srv =>
-                    <DeviceQuickItem>{
-                        label: `$(${JDomDeviceTreeItem.ICON}) ${srv.device.friendlyName}`,
-                        description: srv.device.deviceId,
-                        detail: await detail(srv),
-                        data: srv.device.deviceId,
-                        picked: srv.device.deviceId === cid,
-                    }
-            )
-        )
-        let startVM = false
-        if (!items.find(({ data }) => data === simulatorScriptManagerId)) {
+        if (!services.length && autoStartSimulator) {
+            did = simulatorScriptManagerId
             startVM = true
-            items.push(<DeviceQuickItem>{
-                label: shortDeviceId(simulatorScriptManagerId),
-                description: `Simulator`,
-                detail: `A virtual DeviceScript interpreter running in a separate process.`,
-                data: simulatorScriptManagerId,
+        } else {
+            const detail = async (srv: JDService) => {
+                const runtimeVersion = await readRuntimeVersion(srv)
+                const description = srv.device
+                    .service(0)
+                    .register(ControlReg.DeviceDescription)
+                await description.refresh(true)
+
+                return `${description.stringValue || ""} (${
+                    runtimeVersion || "?"
+                })`
+            }
+            const items: DeviceQuickItem[] = await Promise.all(
+                services.map(
+                    async srv =>
+                        <DeviceQuickItem>{
+                            label: `$(${JDomDeviceTreeItem.ICON}) ${srv.device.friendlyName}`,
+                            description: srv.device.deviceId,
+                            detail: await detail(srv),
+                            data: srv.device.deviceId,
+                            picked: srv.device.deviceId === cid,
+                        }
+                )
+            )
+            if (!items.find(({ data }) => data === simulatorScriptManagerId)) {
+                startVM = true
+                items.push(<DeviceQuickItem>{
+                    label: shortDeviceId(simulatorScriptManagerId),
+                    description: `Simulator`,
+                    detail: `A virtual DeviceScript interpreter running in a separate process.`,
+                    data: simulatorScriptManagerId,
+                })
+            }
+            const res = await vscode.window.showQuickPick(items, {
+                title: `Pick a DeviceScript device`,
+                matchOnDescription: true,
+                matchOnDetail: true,
+                canPickMany: false,
             })
+            const did = res?.data
+            if (!did) return undefined
         }
-        const res = await vscode.window.showQuickPick(items, {
-            title: `Pick a DeviceScript device`,
-            matchOnDescription: true,
-            matchOnDetail: true,
-            canPickMany: false,
-        })
-        const did = res?.data
-        if (!did) return undefined
 
         if (startVM && did == simulatorScriptManagerId) {
             await this.startSimulator()

@@ -1,4 +1,6 @@
-# DeviceScript
+# DeviceScript [<img src="./website/static/img/logo.svg" style="width: 24px;" />](https://microsoft.github.io/devicescript)
+
+**TypeScript for Tiny IoT Devices.**
 
 DeviceScript brings a professional TypeScript developer experience to low-resource microcontroller-based devices.
 DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
@@ -6,11 +8,7 @@ environments (VM itself compiles to 10kB of code, with the floating point librar
 
 -   [Read the documentation](https://microsoft.github.io/devicescript)
 
-## Release process
-
-Run `yarn bump` (or `make bump`). Alteratively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
-
-The cloud build will rebuild and check-in the VM, update version numbers in all `package.json` files, and publish them.
+![Visual Studio Code screenshot](./vscode/screenshot.png)
 
 ## Contributing
 

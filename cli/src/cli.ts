@@ -6,14 +6,22 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import { addNpm, addService, addSim, addTest, init } from "./init"
+import {
+    addNpm,
+    addService,
+    addSim,
+    addTest,
+    addSettings,
+    addI2C,
+    init,
+} from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion, notifyUpdates } from "./version"
 import { dcfg } from "./dcfg"
-import { setConsoleColors, setQuiet, setVerbose } from "./command"
+import { incVerbose, setConsoleColors, setQuiet } from "./command"
 import { binPatch } from "./binpatch"
 import { logToConsole } from "./command"
 import {
@@ -60,7 +68,7 @@ export async function mainCli() {
             "build and run DeviceScript program https://aka.ms/devicescript"
         )
         .version(cliVersion())
-        .option("-v, --verbose", "more logging")
+        .option("-v, --verbose", "more logging (can be repeated)")
         .option("--quiet", "less logging")
         .option("--no-colors", "disable color output")
 
@@ -119,6 +127,7 @@ export async function mainCli() {
             "--local-boards <repos-path>",
             "use local, not remote info.json files"
         )
+        .option("--server-info", "generate server-info.json file")
         .action(ctool)
 
     program
@@ -326,6 +335,14 @@ export async function mainCli() {
         .description("add tests to current project")
         .action(dropReturn(addTest))
 
+    addCommand("settings")
+        .description("add settings to current project")
+        .action(dropReturn(addSettings))
+
+    addCommand("i2c")
+        .description("add I2C to current project")
+        .action(dropReturn(addI2C))
+
     program
         .command("binpatch", { hidden: true })
         .description("patch an interpreter binary with board configuration")
@@ -349,7 +366,7 @@ export async function mainCli() {
         .action(binPatch)
 
     program.on("option:quiet", () => setQuiet(true))
-    program.on("option:verbose", () => setVerbose(true))
+    program.on("option:verbose", incVerbose)
     program.on("option:no-colors", () => setConsoleColors(false))
 
     program.hook("preAction", () => {

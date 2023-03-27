@@ -35,7 +35,9 @@ export function activateJacdacOutputChannel(state: DeviceScriptExtensionState) {
         const tracePackets = !!jacdacConfig.get("tracePackets")
         if (tracePackets) {
             if (!channel)
-                channel = vscode.window.createOutputChannel("DeviceScript - Packets")
+                channel = vscode.window.createOutputChannel(
+                    "DeviceScript - Packets"
+                )
             bus.on(FRAME_PROCESS, logFrame)
         } else if (!tracePackets && channel) {
             bus.off(FRAME_PROCESS, logFrame)
@@ -87,7 +89,7 @@ export function activateDeviceScriptI2COutputChannel(
         [I2CStatus.NAckData]: "nack data",
     }
 
-    bus.subscribe([PACKET_RECEIVE, PACKET_REPORT], (pkt: Packet) => {
+    bus.subscribe(PACKET_RECEIVE, (pkt: Packet) => {
         if (
             pkt.serviceClass === SRV_I2C &&
             (pkt.isCommand || pkt.isReport) &&
@@ -102,19 +104,13 @@ export function activateDeviceScriptI2COutputChannel(
                 const [status, data] = pkt.jdunpack(
                     I2CCmdPack.TransactionReport
                 ) as [I2CStatus, Uint8Array]
-                channel.appendLine(
-                    `> ${toHex(data)} # ${statuses[status]} from ${
-                        pkt.friendlyServiceName
-                    }`
-                )
+                channel.appendLine(`${toHex(data)}\t--> ${statuses[status]}`)
             } else if (pkt.isCommand) {
                 const [address, numRead, writeBuf] = pkt.jdunpack(
                     I2CCmdPack.Transaction
                 ) as [number, number, Uint8Array]
                 channel.appendLine(
-                    `< ${toHex([address])} ${numRead} ${toHex(writeBuf)} # to ${
-                        pkt.friendlyServiceName
-                    }`
+                    `${toHex([address])} ${numRead} ${toHex(writeBuf)}\t<--`
                 )
             }
         }

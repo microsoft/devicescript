@@ -1,5 +1,7 @@
 import * as ds from "@devicescript/core"
 
+declare var ds_impl: typeof ds
+
 function addElement<T>(arr: T[], e: T) {
     if (!arr) return [e]
     arr.push(e)
@@ -134,6 +136,10 @@ ds.Role.prototype._commandResponse = async function (
 }
 
 ds.Role.prototype._onPacket = async function (this: RoleData, pkt: ds.Packet) {
+    //
+    // If you halted the program and ended up here, it may be difficult to step in.
+    // Best to set breakpoints elsewhere.
+    //
     const changeHandlers = this._changeHandlers
     if (!pkt || pkt.serviceCommand === 0) {
         const conn = this.isBound
@@ -369,15 +375,69 @@ Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
 
 declare module "@devicescript/core" {
     interface I2C {
+        /**
+         * Write a byte to a register
+         * @param devAddr a 7 bit i2c address
+         * @param regAddr an 8 bit register address
+         * @param byte the value to write
+         * @throws I2CError
+         */
         writeReg(devAddr: number, regAddr: number, byte: number): Promise<void>
+        /**
+         * read a byte from a register
+         * @param devAddr a 7 bit i2c address
+         * @param regAddr an 8 bit register address
+         * @returns a byte
+         * @throws I2CError
+         */
         readReg(devAddr: number, regAddr: number): Promise<number>
-
+        /**
+         * write a buffer to a register
+         * @param devAddr a 7 bit i2c address
+         * @param regAddr an 8 bit register address
+         * @param b a byte buffer
+         * @throws I2CError
+         */
+        writeRegBuf(devAddr: number, regAddr: number, b: Buffer): Promise<void>
+        /**
+         * read a buffer from a register
+         * @param devAddr a 7 bit i2c address
+         * @param regAddr an 8 bit register address
+         * @param size the number of bytes to request
+         * @returns a byte buffer
+         * @throws I2CError
+         */
+        readRegBuf(
+            devAddr: number,
+            regAddr: number,
+            size: number
+        ): Promise<Buffer>
+        /**
+         * read a raw buffer
+         * @param devAddr a 7 bit i2c address
+         * @param size the number of bytes to request
+         * @returns a byte buffer
+         * @throws I2CError
+         */
         readBuf(devAddr: number, size: number): Promise<Buffer>
+        /**
+         * write a raw buffer
+         * @param devAddr a 7 bit i2c address
+         * @param b a byte buffer
+         * @throws I2CError
+         */
         writeBuf(devAddr: number, b: Buffer): Promise<void>
     }
 }
 
-export class I2CError extends Error {}
+export class I2CError extends Error {
+    readonly status: ds.I2CStatus
+    constructor(message: string, status: ds.I2CStatus) {
+        super(message)
+        this.name = "I2CError"
+        this.status = status
+    }
+}
 
 ds.I2C.prototype.writeReg = async function (devAddr, regAddr, byte) {
     const b = Buffer.alloc(2)
@@ -385,7 +445,10 @@ ds.I2C.prototype.writeReg = async function (devAddr, regAddr, byte) {
     b[1] = byte
     const [status, buffer] = await this.transaction(devAddr, 0, b)
     if (status !== ds.I2CStatus.OK)
-        throw new I2CError(`error writing dev=${devAddr} at reg=${regAddr}`)
+        throw new I2CError(
+            `error writing dev=${devAddr} at reg=${regAddr}`,
+            status
+        )
 }
 
 ds.I2C.prototype.readReg = async function (devAddr, regAddr) {
@@ -393,8 +456,35 @@ ds.I2C.prototype.readReg = async function (devAddr, regAddr) {
     b[0] = regAddr
     const [status, buffer] = await this.transaction(devAddr, 1, b)
     if (status !== ds.I2CStatus.OK)
-        throw new I2CError(`error reading dev=${devAddr} at reg=${regAddr}`)
+        throw new I2CError(
+            `error reading dev=${devAddr} at reg=${regAddr}`,
+            status
+        )
     return buffer[0]
+}
+
+ds.I2C.prototype.writeRegBuf = async function (devAddr, regAddr, b) {
+    const nb = Buffer.alloc(1 + b.length)
+    nb[0] = regAddr
+    nb.blitAt(1, b, 0, b.length)
+    const [status, buffer] = await this.transaction(devAddr, 0, nb)
+    if (status !== ds.I2CStatus.OK)
+        throw new I2CError(
+            `error writing dev=${devAddr} at reg=${regAddr}`,
+            status
+        )
+}
+
+ds.I2C.prototype.readRegBuf = async function (devAddr, regAddr, size) {
+    const b = Buffer.alloc(1)
+    b[0] = regAddr
+    const [status, buffer] = await this.transaction(devAddr, size, b)
+    if (status !== ds.I2CStatus.OK)
+        throw new I2CError(
+            `error reading dev=${devAddr} at reg=${regAddr}`,
+            status
+        )
+    return buffer
 }
 
 ds.I2C.prototype.readBuf = async function (devAddr, size) {
@@ -404,12 +494,15 @@ ds.I2C.prototype.readBuf = async function (devAddr, size) {
         Buffer.alloc(0)
     )
     if (status !== ds.I2CStatus.OK)
-        throw new I2CError(`error reading buffer dev=${devAddr}`)
+        throw new I2CError(`error reading buffer dev=${devAddr}`, status)
     return buffer
 }
 
 ds.I2C.prototype.writeBuf = async function (devAddr, b) {
     const [status, buffer] = await this.transaction(devAddr, 0, b)
     if (status !== ds.I2CStatus.OK)
-        throw new I2CError(`error writing buffer ${b} to dev=${devAddr}`)
+        throw new I2CError(
+            `error writing buffer ${b} to dev=${devAddr}`,
+            status
+        )
 }

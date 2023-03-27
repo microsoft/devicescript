@@ -219,6 +219,15 @@ function execCmd(cmd: string) {
     }
 }
 
+function isGit() {
+    let pref = ""
+    for (let i = 0; i < 10; ++i) {
+        if (existsSync(pref + ".git")) return true
+        pref = pref + "../"
+    }
+    return false
+}
+
 function compilePackageJson(
     tsdir: string,
     entryPoint: string,
@@ -230,31 +239,35 @@ function compilePackageJson(
         const pkgJSON = JSON.parse(readFileSync(pkgJsonPath, "utf-8"))
         lcfg.hwInfo.progName = pkgJSON.name ?? "(no name)"
         lcfg.hwInfo.progVersion = pkgJSON.version ?? "(no version)"
-        const head = execCmd("git describe --tags --match 'v[0-9]*' --always")
-        let dirty = execCmd(
-            "git status --porcelain --untracked-file=no --ignore-submodules=untracked"
-        )
-        if (!head) dirty = "yes"
-        const exact = !dirty && head[0] == "v" && !head.includes("-")
-        if (exact) {
-            lcfg.hwInfo.progVersion = head
-        } else {
-            let v = versionTryParse(lcfg.hwInfo.progVersion)
-            if (head[0] == "v") v = versionTryParse(head) || v
-            let verStr = ""
-            if (v) verStr = `v${v.major}.${v.minor}.${v.patch + 1}-`
-            verStr += head.replace(/.*-/, "")
-            if (dirty) {
-                const now = new Date()
-                    .toISOString()
-                    .replace(/T/, ".")
-                    .replace(/:/, ".")
-                    .replace(/:.*/, "")
-                    .replace(/-/g, ".")
-                if (verStr) verStr += "-"
-                verStr += now
+        if (isGit()) {
+            const head = execCmd(
+                "git describe --tags --match 'v[0-9]*' --always"
+            )
+            let dirty = execCmd(
+                "git status --porcelain --untracked-file=no --ignore-submodules=untracked"
+            )
+            if (!head) dirty = "yes"
+            const exact = !dirty && head[0] == "v" && !head.includes("-")
+            if (exact) {
+                lcfg.hwInfo.progVersion = head
+            } else {
+                let v = versionTryParse(lcfg.hwInfo.progVersion)
+                if (head[0] == "v") v = versionTryParse(head) || v
+                let verStr = ""
+                if (v) verStr = `v${v.major}.${v.minor}.${v.patch + 1}-`
+                verStr += head.replace(/.*-/, "")
+                if (dirty) {
+                    const now = new Date()
+                        .toISOString()
+                        .replace(/T/, ".")
+                        .replace(/:/, ".")
+                        .replace(/:.*/, "")
+                        .replace(/-/g, ".")
+                    if (verStr) verStr += "-"
+                    verStr += now
+                }
+                lcfg.hwInfo.progVersion = verStr
             }
-            lcfg.hwInfo.progVersion = verStr
         }
     }
 

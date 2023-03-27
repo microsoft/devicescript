@@ -11,9 +11,11 @@ import {
     activateDeviceScriptI2COutputChannel,
 } from "./output"
 import { DeviceScriptExtensionState } from "./state"
+import { activateTelemetry } from "./telemetry"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions, extensionMode } = context
+    activateTelemetry(context)
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
@@ -26,24 +28,20 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     })
     const extensionState = new DeviceScriptExtensionState(context, bus)
 
-    const debugFile = async (noDebug: boolean) => {
-        const editor = vscode.window.activeTextEditor
-        const file = editor?.document?.uri
-        if (file) {
-            const folder = vscode.workspace.getWorkspaceFolder(file)
-            await vscode.debug.startDebugging(folder, {
-                type: "devicescript",
-                request: "launch",
-                name: "DeviceScript: Run File",
-                stopOnEntry: false,
-                noDebug,
-                program: file.fsPath,
-            } as vscode.DebugConfiguration)
-            if (noDebug)
-                vscode.commands.executeCommand(
-                    "extension.devicescript.jdom.focus"
-                )
-        }
+    const debugFile = async (file: vscode.Uri, noDebug: boolean) => {
+        if (!file) return
+        const folder = vscode.workspace.getWorkspaceFolder(file)
+        if (!folder) return
+        await vscode.debug.startDebugging(folder, {
+            type: "devicescript",
+            request: "launch",
+            name: "DeviceScript: Run File",
+            stopOnEntry: false,
+            noDebug,
+            program: file.fsPath,
+        } as vscode.DebugConfiguration)
+        if (noDebug)
+            vscode.commands.executeCommand("extension.devicescript.jdom.focus")
     }
 
     // build
@@ -54,11 +52,13 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const folder = await vscode.window.showWorkspaceFolderPick()
                 if (folder === undefined) return
                 const projectName = await vscode.window.showInputBox({
-                    title: "Pick project folder",
+                    title: "Pick project subfolder (optional)",
                     prompt: "It will be used as a root for the new project",
                 })
-                if (!projectName) return
-                const cwd = Utils.joinPath(folder.uri, projectName)
+                if (projectName === undefined) return
+                const cwd = projectName
+                    ? Utils.joinPath(folder.uri, projectName)
+                    : folder.uri
                 await vscode.workspace.fs.createDirectory(cwd)
                 const terminal = vscode.window.createTerminal({
                     isTransient: true,
@@ -79,7 +79,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async (item: JDomDeviceTreeItem) => {
                 const device =
                     item?.device ||
-                    (await extensionState.pickDeviceScriptManager(true))?.device
+                    (
+                        await extensionState.pickDeviceScriptManager({
+                            skipUpdate: true,
+                        })
+                    )?.device
                 await device?.identify()
             }
         ),
@@ -88,7 +92,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async (item: JDomDeviceTreeItem) => {
                 const device =
                     item?.device ||
-                    (await extensionState.pickDeviceScriptManager(true))?.device
+                    (
+                        await extensionState.pickDeviceScriptManager({
+                            skipUpdate: true,
+                        })
+                    )?.device
                 await device.reset() // async
             }
         ),
@@ -141,18 +149,26 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.run",
-            async () => debugFile(true)
+            async (file: vscode.Uri) => debugFile(file, true)
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.debug",
-            async () => debugFile(false)
+            async (file: vscode.Uri) => debugFile(file, false)
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.build",
-            async () => {
-                const editor = vscode.window.activeTextEditor
-                const file = editor?.document?.uri
-                if (file) await extensionState.build(file)
+            async (file: vscode.Uri) => {
+                if (!file) return
+
+                await extensionState.build(file)
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.editor.configure",
+            async (file: vscode.Uri) => {
+                const editor = await vscode.window.showTextDocument(file)
+                if (!editor) return
+                await extensionState.configureHardware(editor)
             }
         )
     )
@@ -166,6 +182,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) {
-        extensionState.devtools.start()
+        extensionState.devtools.start({ build: true})
     }
 }

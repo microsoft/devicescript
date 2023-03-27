@@ -123,7 +123,9 @@ export function printDmesg(dbg: DebugInfo, pref: string, line: string) {
         console.log(pref + "> " + text)
         return true
     } else if (isVerbose) {
-        console.log(wrapColor(90, "V> " + line.trim()))
+        line = line.trim()
+        if (isVerbose <= 1 && /^(wifi:|free memory)/.test(line)) return false
+        console.log(wrapColor(90, "V> " + line))
         return true
     } else {
         return false

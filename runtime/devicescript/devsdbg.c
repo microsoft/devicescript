@@ -562,8 +562,10 @@ static void read_bytes(cmd_t *cmd) {
 
 static void resume_cmd(cmd_t *cmd) {
     cmd->state->suspended = 0;
-    if (cmd->ctx)
+    if (cmd->ctx) {
+        LOG("resume");
         devs_vm_resume(cmd->ctx);
+    }
 }
 
 static void step_cmd(cmd_t *cmd) {
@@ -698,8 +700,10 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_DEVS_DBG_CMD_HALT:
         dbg_en(state);
-        if (ctx)
-            devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_HALT);
+        if (ctx) {
+            LOG("halt");
+            devs_vm_halt(ctx);
+        }
         break;
 
     case JD_DEVS_DBG_CMD_RESUME:

@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "2.0.8",
+    "version": "2.2.5",
     "publisher": "Microsoft",
     "description": "DeviceScript extension for Visual Studio Code.",
     "author": {
@@ -22,7 +22,7 @@
     "engines": {
         "vscode": "^1.76.0"
     },
-    "icon": "images/jacdac-logo.png",
+    "icon": "images/devs-logo.png",
     "galleryBanner": {
         "color": "#C80000",
         "theme": "dark"
@@ -150,7 +150,7 @@
                 {
                     "id": "devicescript",
                     "title": "DeviceScript",
-                    "icon": "./images/jacdac.dark.svg"
+                    "icon": "./images/devs.dark.svg"
                 }
             ]
         },
@@ -230,25 +230,37 @@
                     "fontPath": "./built/devicescript.woff",
                     "fontCharacter": "\\E000"
                 }
+            },
+            "jacdac-logo": {
+                "description": "Jacdac logo",
+                "default": {
+                    "fontPath": "./built/devicescript.woff",
+                    "fontCharacter": "\\E001"
+                }
             }
         },
         "menus": {
             "editor/title": [
                 {
                     "command": "extension.devicescript.editor.build",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
-                    "group": "navigation"
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "extension.devicescript.editor.run",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "extension.devicescript.editor.configure",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "group": "navigation@3"
                 }
             ],
             "editor/title/run": [
                 {
                     "command": "extension.devicescript.editor.debug",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
-                    "group": "navigation"
-                },
-                {
-                    "command": "extension.devicescript.editor.run",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname =~ //src$/ && resourceFilename =~ /main*.\\.ts/",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
                     "group": "navigation"
                 }
             ],
@@ -488,15 +500,21 @@
             },
             {
                 "command": "extension.devicescript.editor.run",
-                "title": "DeviceScript: Run",
+                "title": "DeviceScript: Upload",
                 "category": "DeviceScript",
-                "icon": "$(debug-run)"
+                "icon": "$(arrow-right)"
             },
             {
                 "command": "extension.devicescript.editor.build",
                 "title": "DeviceScript: Build",
                 "category": "DeviceScript",
-                "icon": "$(package)"
+                "icon": "$(check)"
+            },
+            {
+                "command": "extension.devicescript.editor.configure",
+                "title": "DeviceScript: Configure...",
+                "category": "DeviceScript",
+                "icon": "$(settings-gear)"
             },
             {
                 "command": "extension.devicescript.terminal.show",

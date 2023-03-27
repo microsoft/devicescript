@@ -55,9 +55,8 @@ Once you have it all:
 -   run `./runtime/built/jdcli 8082` - this will run the POSIX/native DeviceScript server, which can be accessed from the devtools dashboard
 -   run `make em` to compile using emscripten
 
-## Design goals for DeviceScript VM
+## Release process
 
--   secure - can predictably execute untrusted code (random bytes)
--   small memory (RAM) footprint
--   small code (flash) footprint
--   leave space for extensions in future
+Run `yarn bump` (or `make bump`). Alteratively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
+
+The cloud build will rebuild and check-in the VM, update version numbers in all `package.json` files, and publish them.

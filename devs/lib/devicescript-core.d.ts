@@ -1,7 +1,9 @@
 /// <reference path="devicescript-spec.d.ts" />
 
 declare module "@devicescript/core" {
-    export type AsyncVoid = void | Promise<void>
+    export type AsyncValue<T> = T | Promise<T>
+    export type AsyncVoid = AsyncValue<void>
+    export type AsyncBoolean = AsyncValue<boolean>
     export type Callback = () => AsyncVoid
     export type PktHandler = (pkt: Packet) => AsyncVoid
     export type Unsubscribe = () => void
@@ -141,7 +143,13 @@ declare module "@devicescript/core" {
         id: number
 
         /**
+         * Check if fiber is currently suspended.
+         */
+        suspended: boolean
+
+        /**
          * If the fiber is currently suspended, mark it for resumption, passing the specified value.
+         * Otherwise, throw a `RangeError`.
          */
         resume(v: any): void
 
@@ -307,6 +315,7 @@ declare module "@devicescript/core" {
             private constructor()
 
             static alloc(size: number): Buffer
+            static from(data: string | Buffer | number[]): Buffer
 
             /**
              * Gets the length in bytes of the buffer
@@ -324,7 +333,7 @@ declare module "@devicescript/core" {
             fillAt(offset: number, length: number, value: number): void
             [idx: number]: number
 
-            toString(): string
+            toString(encoding?: "hex" | "utf-8" | "utf8"): string
         }
 
         /**

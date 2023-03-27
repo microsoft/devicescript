@@ -63,12 +63,13 @@ import {
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
-import { MESSAGE_PREFIX, sendCmd, withProgress } from "./commands"
+import { sendCmd, withProgress } from "./commands"
 import {
     ICON_LOADING,
     WIFI_PIPE_TIMEOUT,
     WIFI_RECONNECT_TIMEOUT,
 } from "./constants"
+import { showErrorMessage } from "./telemetry"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -268,6 +269,7 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
     }
 
     static ICON = "circuit-board"
+    static ICON_PATH = new vscode.ThemeIcon(JDomDeviceTreeItem.ICON)
 
     get device() {
         return this.node as JDDevice
@@ -304,17 +306,15 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
             this.description = serviceNames
         }
 
-        if (!this.iconPath) {
-            const productIdentifier = device.productIdentifier
-            const spec =
-                bus.deviceCatalog.specificationFromProductIdentifier(
-                    productIdentifier
-                )
-            if (spec) {
-                this.iconPath = deviceIconUri(spec)
-            } else {
-                this.iconPath = new vscode.ThemeIcon(JDomDeviceTreeItem.ICON)
-            }
+        const productIdentifier = device.productIdentifier
+        const spec =
+            bus.deviceCatalog.specificationFromProductIdentifier(
+                productIdentifier
+            )
+        if (spec) {
+            this.iconPath = deviceIconUri(spec)
+        } else {
+            this.iconPath = JDomDeviceTreeItem.ICON_PATH
         }
 
         return (
@@ -925,8 +925,9 @@ class JDomWifiTreeItem extends JDomCustomTreeItem {
             service.event(WifiEvent.ConnectionFailed),
             EVENT,
             async (ssid: string) => {
-                await vscode.window.showErrorMessage(
-                    `DeviceScript: connection to ${ssid} failed.`
+                showErrorMessage(
+                    "jdom.wifi.connect",
+                    `connection to ${ssid} failed.`
                 )
             }
         )
@@ -1013,7 +1014,7 @@ class JDomWifiTreeItem extends JDomCustomTreeItem {
                 token.unmount()
             }
         })
-        if (message) vscode.window.showErrorMessage(MESSAGE_PREFIX + message)
+        if (message) showErrorMessage("jdom.wifi", message)
     }
 
     update() {
@@ -1694,7 +1695,7 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
     const updateBadge = () => {
         const devices = treeDataProvider.devices
         explorer.badge = {
-            tooltip: `DeviceScript: ${devices.length} devices`,
+            tooltip: `${devices.length} devices`,
             value: devices.length,
         }
     }

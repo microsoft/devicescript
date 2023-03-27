@@ -48,6 +48,7 @@ bc:
 	clang-format -i runtime/devicescript/protogen.c
 
 regen: bc
+	$(CLI) ctool --server-info
 	$(CLI) dcfg runtime/boards/native/native.board.json --update runtime/posix/native_cfg.c
 	clang-format -i runtime/posix/native_cfg.c
 	$(CLI) dcfg runtime/boards/wasm/wasm.board.json --update runtime/posix/wasm_cfg.c
@@ -73,3 +74,9 @@ bump:
 
 release:
 	node scripts/bump.mjs --cloud
+
+gdb gdb-dap:
+	lldb runtime/built/jdcli -- -n -X 8082
+
+gdb-run:
+	lldb runtime/built/jdcli -- -n -X .devicescript/bin/crun.devs

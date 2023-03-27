@@ -1,1 +1,3 @@
-import "./pumpmouse"
+setInterval(() => {
+    console.log(":)")
+}, 1000)

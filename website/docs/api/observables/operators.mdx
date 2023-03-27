@@ -7,19 +7,17 @@ title: Operators
 Observable operators apply transformation between observable data stream. They can be combined using the `pipe`
 method to create complex data processing pipeline.
 
-```ts skip
+```ts
 import { Temperature } from "@devicescript/core"
 import { threshold, debounceTime } from "@devicescript/observables"
 
-const temp = new Temperature()
-await temp
-    .pipe(
-        // highlight-next-line
-        threshold(0.1), // at least 0.1deg change
-        // highlight-next-line
-        debounceTime(10000) // at most one update per 10s
-    )
-    .subscribe(t => console.log(t))
+const thermometer = new Temperature()
+// create a stream of temperature readings
+const temperature = thermometer.temperature.pipe(
+    threshold(0.1), // at least 0.1deg change
+    debounceTime(10000) // at most one update per 10s
+)
+await temperature.subscribe(t => console.log(t))
 ```
 
 ## Creation Operators
@@ -57,7 +55,7 @@ This observable runs forever.
 ```ts
 import { interval } from "@devicescript/observables"
 
-// highlight-next-sline
+// highlight-next-line
 const obs = interval(1000)
 
 await obs.subscribe(v => console.log(v))
@@ -76,8 +74,22 @@ Emits a single value, `0` after a time interval, then completes.
 ```ts
 import { timer } from "@devicescript/observables"
 
-// highlight-next-sline
+// highlight-next-line
 const obs = timer(1000)
+
+await obs.subscribe(v => console.log(v))
+```
+
+### iif
+
+Checks a boolean at subscription time, and chooses between one of two observable sources.
+
+```ts
+import { iif } from "@devicescript/observables"
+
+let connected: boolean
+// highlight-next-line
+const obs = iif(() => connected, from(["connected"]), from(["not connected"]))
 
 await obs.subscribe(v => console.log(v))
 ```
@@ -101,7 +113,10 @@ import { from, filter } from "@devicescript/observables"
 
 const obs = from([0, 1, 2, 3, 1])
 
-await obs.pipe(filter(v => v > 1)).subscribe(v => console.log(v))
+await obs
+    // highlight-next-line
+    .pipe(filter(v => v > 1))
+    .subscribe(v => console.log(v))
 ```
 
 ### debounceTime
@@ -201,4 +216,181 @@ export function threshold<T = number>(
         keySelector
     )
 }
+```
+
+## Transform operators
+
+### map
+
+Applies a converter function to converts the observed value into a new value.
+
+```rx
+-1--2--3-
+
+> map(x => x * x)
+
+-1--4--9-
+```
+
+```ts
+import { from, map } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+await obs
+    // highlight-next-line
+    .pipe(map(v => v * v))
+    .subscribe(v => console.log(v))
+```
+
+### scan
+
+Applies an accumulator (or "reducer function") to each value from the source.
+
+```rx
+-1---2---3-
+
+> scan((p, c) => p + c, 0)
+
+-1---3---6-
+```
+
+```ts
+import { from, scan } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+await obs
+    .pipe(
+        // highlight-next-line
+        scan((p, c) => p + c, 0)
+    )
+    .subscribe(v => console.log(v))
+```
+
+## Signal processing
+
+### ewma
+
+Exponentially weighted moving average is a simple PIR filter
+with a gain parameter.
+The closer gain to 1 and the more closely the EWMA tracks the original time series.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { ewma } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+await thermometer.temperature
+    // highlight-next-line
+    .pipe(ewma(0.5))
+    .subscribe(t => console.log(t))
+```
+
+### rollingAverage
+
+A windowed rolling average filter.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { rollingAverage } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+await thermometer.temperature
+    // highlight-next-line
+    .pipe(rollingAverage(10))
+    .subscribe(t => console.log(t))
+```
+
+### fir
+
+A general purpose Finite Response Filter filter. Coefficients are typically computed in a seperate process.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { fir } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+await thermometer.temperature
+    // highlight-next-line
+    .pipe(fir([0.1, 0.2, 1]))
+    .subscribe(t => console.log(t))
+```
+
+## Error Handling
+
+### throwError
+
+Just errors and does nothing else.
+
+```rx
+> throw
+
+-#--------------
+```
+
+```ts
+import { from, map, throwError } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+await obs
+    .pipe(
+        // highlight-next-line
+        throwError(() => new Error("no!"))
+    )
+    .subscribe(v => console.log(v))
+```
+
+### catchError
+
+It only listens to the error channel and ignores notifications.
+Handles errors from the source observable, and maps them to a new observable.
+The error may also be rethrown, or a new error can be thrown to emit an error from the result.
+
+```rx
+-a-b--#-------|-
+
+       -1-2-3-|-
+
+> catch
+
+-a-b----1-2-3-|-
+```
+
+```ts
+import { from, map, throwError, catchError } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+await obs
+    .pipe(
+        throwError(() => new Error("no!")),
+        // highlight-next-line
+        catchError(e => from([4]))
+    )
+    .subscribe(v => console.log(v))
+```
+
+## Utilities
+
+### tap
+
+Allows to attach a side-effect function to a pipeline, tap passes the stream through. Typically used to add logging.
+
+```ts
+import { from, map, tap } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+await obs
+    .pipe(
+        // highlight-next-line
+        tap(v => console.log(v)),
+        map(v => v * v)
+    )
+    .subscribe(v => console.log(v))
 ```

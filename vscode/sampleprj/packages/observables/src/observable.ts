@@ -16,7 +16,7 @@ export type ObserverStart = (subscription: Subscription) => void
  * therefore we need to be able to avoid next
  */
 export type ObserverNext<T> = (value: T) => AsyncVoid
-export type ObserverError = (error: Error) => void
+export type ObserverError = (error: Error) => AsyncVoid
 export type ObserverComplete = () => AsyncVoid
 
 export interface SubscriptionObserver<T> {
@@ -68,25 +68,18 @@ export class Observable<T> {
             closed = true
             if (cleanup) cleanup()
         })
-        const wrapUnsubscribeSync =
-            (fn: (value: any) => void): (() => void) =>
-            (v?: any) => {
-                unsubscribeSync()
-                fn(v)
-            }
-        error = wrapClosedSync(wrapUnsubscribeSync(error))
 
         // next, complete async
         const wrapClosedAsync =
-            (fn: (value: any) => Promise<void>): (() => Promise<void>) =>
+            (fn: (value: any) => AsyncVoid): (() => Promise<void>) =>
             async (v?: any) => {
                 if (!closed && fn) await fn(v)
             }
         const wrapUnsubscribeAsync =
-            (fn: (value: any) => AsyncVoid): (() => void) =>
+            (fn: (value: any) => AsyncVoid): (() => Promise<void>) =>
             async (v?: any) => {
                 unsubscribeSync()
-                await fn(v)
+                if (fn) await fn(v)
             }
         const wrapTryAsync =
             (fn: (value: T) => AsyncVoid): (() => Promise<void>) =>
@@ -94,9 +87,10 @@ export class Observable<T> {
                 try {
                     await fn(v)
                 } catch (e) {
-                    error(e as Error)
+                    await error(e as Error)
                 }
             }
+        error = wrapClosedAsync(wrapUnsubscribeAsync(error))
         complete = wrapClosedAsync(wrapTryAsync(wrapUnsubscribeAsync(complete)))
         next = wrapClosedAsync(wrapTryAsync(next))
 
@@ -213,10 +207,26 @@ export class Observable<T> {
  * @param cleanup
  */
 export function wrapSubscriptions(subscriptions: Subscription[]): Subscription {
-    return {
-        unsubscribe: () =>
-            subscriptions.filter(s => !s.closed).forEach(s => s.unsubscribe()),
+    const r = {
+        closed: false,
+        unsubscribe: () => {
+            r.closed = true
+            subscriptions.forEach(s => unusbscribe(s))
+        },
     }
+    return r
+}
+
+/**
+ * Safe wrapper to unsubscribe a subscription
+ * @param subscription
+ * @returns undefined value
+ */
+export function unusbscribe(subscription: Subscription): Subscription {
+    if (subscription && !subscription.closed && subscription.unsubscribe) {
+        subscription.unsubscribe()
+    }
+    return undefined
 }
 
 export type OperatorFunction<T, R> = (

@@ -1,4 +1,10 @@
-import { identity, Observable, OperatorFunction } from "./observable"
+import * as ds from "@devicescript/core"
+import {
+    identity,
+    Observable,
+    OperatorFunction,
+    unusbscribe,
+} from "./observable"
 
 /**
  * An operator that filters values
@@ -6,7 +12,7 @@ import { identity, Observable, OperatorFunction } from "./observable"
  * @returns
  */
 export function filter<T>(
-    condition: (value: T, index: number) => boolean
+    condition: (value: T, index: number) => ds.AsyncBoolean
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
         return new Observable<T>(async observer => {
@@ -16,7 +22,8 @@ export function filter<T>(
                 error,
                 complete,
                 next: async v => {
-                    if (condition(v, index++)) await next(v)
+                    const c = await condition(v, index++)
+                    if (c) await next(v)
                 },
             })
         })
@@ -32,7 +39,7 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
         return new Observable<T>(async observer => {
             const { error, next, complete } = observer
             let timer: number
-            const { unsubscribe } = await source.subscribe({
+            const unsub = await source.subscribe({
                 error,
                 complete,
                 next: value => {
@@ -47,7 +54,7 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
             })
 
             return () => {
-                unsubscribe()
+                unusbscribe(unsub)
                 clearTimeout(timer)
             }
         })
@@ -63,7 +70,7 @@ export function throttleTime<T>(duration: number): OperatorFunction<T, T> {
         return new Observable<T>(async observer => {
             const { error, next, complete } = observer
             let timer: number
-            const { unsubscribe } = await source.subscribe({
+            const unsub = await source.subscribe({
                 error,
                 complete,
                 next: async value => {
@@ -81,7 +88,7 @@ export function throttleTime<T>(duration: number): OperatorFunction<T, T> {
 
             // clean up: stop timer
             return () => {
-                unsubscribe()
+                unusbscribe(unsub)
                 clearTimeout(timer)
             }
         })
