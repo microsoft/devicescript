@@ -19,7 +19,7 @@ import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
-import { cliVersion } from "./version"
+import { cliVersion, notifyUpdates } from "./version"
 import { dcfg } from "./dcfg"
 import { incVerbose, setConsoleColors, setQuiet } from "./command"
 import { binPatch } from "./binpatch"
@@ -35,6 +35,11 @@ import { addBoard } from "./addboard"
 import { LoggerPriority } from "jacdac-ts"
 
 export async function mainCli() {
+    await notifyUpdates({
+        defer: false,
+        isGlobal: false,
+    })
+
     Error.stackTraceLimit = 30
 
     function buildCommand(nameAndArgs: string, opts?: CommandOptions) {

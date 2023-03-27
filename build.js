@@ -201,6 +201,7 @@ async function main() {
                     "serialport",
                     "vscode",
                     "crypto",
+                    "update-notifier",
                 ],
                 platform,
                 metafile: true,
