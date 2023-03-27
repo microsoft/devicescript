@@ -49,7 +49,10 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.project.new",
             async () => {
-                const folder = await vscode.window.showWorkspaceFolderPick()
+                const folder =
+                    vscode.workspace.workspaceFolders?.length === 1
+                        ? vscode.workspace.workspaceFolders[0]
+                        : await vscode.window.showWorkspaceFolderPick()
                 if (folder === undefined) return
                 const projectName = await vscode.window.showInputBox({
                     title: "Pick project subfolder (optional)",
@@ -182,6 +185,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) {
-        extensionState.devtools.start({ build: true})
+        extensionState.devtools.start({ build: true })
     }
 }
