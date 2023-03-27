@@ -27,33 +27,32 @@ function Feature({ title, Svg, description }: FeatureItem) {
 export default function HomepageFeatures(): JSX.Element {
     const features: FeatureItem[] = [
         {
-            title: "TypeScript",
+            title: "TypeScript for IoT",
             description:
                 "The familiar syntax and tooling, all at your fingertips.",
         },
         {
-            title: "Portable VM",
-            description: "Small footprint DeviceScript bytecode interpreter.",
+            title: "Small Runtime",
+            description: "Bytecode interpreter for low power / flash / memory.",
         },
         {
             title: "Hardware as Services",
-            description: "Write reusable application/firmware on top of abstract hardware services.",
-        },
-        {
-            title: "Small",
-            description:
-                "Designed for low power, low flash, low memory embedded projects.",
-        },
-        {
-            title: "Simulation & Tracing",
-            description:
-                "Develop and test your firmware using simulated or real sensors.",
+            description: "Client/server architecture for sensors and actuators.",
         },
         {
             title: "Debugging",
             description:
-                "Full debugging experience in Visual Studio Code, for hardware or simulated devices.",
+                "In Visual Studio Code, for embedded hardware or simulated devices.",
         },
+        {
+            title: "Simulation and Testing",
+            description:
+                "Develop and test your firmware using hardware/mock sensors. CI friendly.",
+        },
+        {
+            title: "Development Gateway",
+            description: "Prototype cloud service with device management, firmware deployment and message queues."
+        }
     ]
 
     return (
