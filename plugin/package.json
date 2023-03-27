@@ -1,0 +1,33 @@
+{
+    "name": "@devicescript/plugin",
+    "private": false,
+    "version": "2.2.6",
+    "description": "DeviceScript Language Server Plugin",
+    "keywords": [
+        "devicescript"
+    ],
+    "author": "Microsoft",
+    "main": "./built/devicescript-plugin.cjs",
+    "types": "./built/types/plugin.d.ts",
+    "scripts": {
+        "dist": "yarn install && yarn build",
+        "build": "node ../build.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "plugin"
+    },
+    "files": [
+        "./built/**"
+    ],
+    "license": "MIT",
+    "devDependencies": {
+        "esbuild": "^0.17.11",
+        "typescript": "^4.9.5"
+    },
+    "dependencies": {},
+    "publishConfig": {
+        "access": "public"
+    }
+}

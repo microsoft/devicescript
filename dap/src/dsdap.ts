@@ -51,6 +51,7 @@ function exnToString(err: unknown) {
 export interface StartArgs {
     deviceId?: string
     serviceInstance?: number
+    stopOnEntry?: boolean
 }
 
 const maxStrLen = 1024
@@ -72,6 +73,7 @@ export class DsDapSession extends DebugSession {
     private brkBySrc: number[][] = []
     public client: DevsDbgClient
     img: Image
+    private resumeOnSuspend = false
 
     constructor(
         public bus: JDBus,
@@ -94,6 +96,13 @@ export class DsDapSession extends DebugSession {
         super.dispose()
         this.client?.unmount()
         this.client = null
+    }
+
+    async finish() {
+        if (!this.client) return
+        try {
+            await this.client?.disable()
+        } catch {}
     }
 
     private async createClient(cfg: StartArgs, timeout = 2000) {
@@ -163,6 +172,7 @@ export class DsDapSession extends DebugSession {
         response.body.supportsBreakpointLocationsRequest = false
         response.body.supportsInstructionBreakpoints = false
 
+        response.body.supportsConfigurationDoneRequest = true
         response.body.supportsSteppingGranularity = true
         response.body.supportsLoadedSourcesRequest = true
         response.body.supportsExceptionInfoRequest = true
@@ -211,6 +221,7 @@ export class DsDapSession extends DebugSession {
     }
 
     private handleSuspendedEvent() {
+        if (this.resumeOnSuspend) return
         const type = this.client.suspensionReason
         switch (type) {
             case DevsDbgSuspensionType.Panic:
@@ -238,6 +249,9 @@ export class DsDapSession extends DebugSession {
         args: StartArgs,
         isLaunch: boolean
     ) {
+        if (args.stopOnEntry === false) this.resumeOnSuspend = true
+        else this.resumeOnSuspend = false
+
         await this.startClient(args)
 
         this.client.service.device.on(DISCONNECT, () => {
@@ -251,18 +265,39 @@ export class DsDapSession extends DebugSession {
         this.sendEvent(new InitializedEvent())
     }
 
+    protected override configurationDoneRequest(
+        response: DebugProtocol.ConfigurationDoneResponse,
+        args: DebugProtocol.ConfigurationDoneArguments,
+        request?: DebugProtocol.Request
+    ): void {
+        this.asyncReq(response, async () => {
+            if (this.resumeOnSuspend) {
+                this.resumeOnSuspend = false
+                await this.client.resume()
+            }
+        })
+    }
+
     protected override threadsRequest(
         response: DebugProtocol.ThreadsResponse
     ): void {
         this.asyncReq(response, async () => {
             const fibs = await this.client.readFibers()
             response.body = {
-                threads: fibs.map(f => ({
-                    id: f.fiberId,
-                    name: `${this.functionName(
-                        f.currFn
-                    )} ... ${this.functionName(f.initialFn)}`,
-                })),
+                threads:
+                    fibs.length == 0
+                        ? [
+                              {
+                                  id: 1, // if no threads are returned, the "Pause" button will do nothing
+                                  name: "fake-thread", // so we add a fake thread
+                              },
+                          ]
+                        : fibs.map(f => ({
+                              id: f.fiberId,
+                              name: `${this.functionName(
+                                  f.currFn
+                              )} ... ${this.functionName(f.initialFn)}`,
+                          })),
             }
         })
     }
@@ -516,6 +551,15 @@ export class DsDapSession extends DebugSession {
         })
     }
 
+    protected override pauseRequest(
+        response: DebugProtocol.PauseResponse,
+        args: DebugProtocol.PauseArguments
+    ): void {
+        this.asyncReq(response, async () => {
+            await this.client.halt()
+        })
+    }
+
     protected override nextRequest(
         response: DebugProtocol.NextResponse,
         args: DebugProtocol.NextArguments
@@ -616,7 +660,7 @@ export class DsDapSession extends DebugSession {
                         ? "always"
                         : "unhandled",
                 exceptionId: "Error", // TODO
-                description: msgStr ?? exn.genericText,
+                description: msgStr ?? "",
             }
         })
     }
@@ -734,6 +778,10 @@ export class DsDapSession extends DebugSession {
                         return "false"
                     case DevsDbgValueSpecial.True:
                         return "true"
+                    case DevsDbgValueSpecial.Globals:
+                        return "(globals)"
+                    case DevsDbgValueSpecial.CurrentException:
+                        return "(exception)"
                 }
                 break
 
@@ -795,9 +843,14 @@ export class DsDapSession extends DebugSession {
     }
 
     private findSource(src: DebugProtocol.Source) {
+        function normPath(p: string) {
+            return p.replace(/\\/g, "/").toLowerCase()
+        }
         if (src.sourceReference) return src.sourceReference - 1
         const srcIdx = this.img.dbg.sources.findIndex(
-            s => s.path == src.path || this.resolvePath(s) == src.path
+            s =>
+                normPath(s.path) == normPath(src.path) ||
+                normPath(this.resolvePath(s)) == normPath(src.path)
         )
         return srcIdx
     }

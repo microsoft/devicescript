@@ -1,0 +1,42 @@
+---
+sidebar_position: 5
+---
+
+# Troubleshooting {#troubleshooting}
+
+## DeviceScript CLI not installed
+
+The development server runs the DeviceScript command line (`@devicescript/cli`) installed
+locally in your project.
+Make sure `@devicescript/cli` has been
+added as a developer dependency to your project, and that dependencies have been installed.
+
+```bash
+yarn add -D @devicescript/cli@latest
+yarn install
+```
+
+## Node.JS won't start
+
+The DeviceScript extension spawns a Node.JS process to
+run the debugger adapter, connect to hardware device and build sources.
+Depending on your machine configuration, you may have to specify where the Node.JS binaries
+are located.
+
+-   Open the **Settings**
+-   Search for **DeviceScript node** and update the Node.JS binary path
+-   Reload Visual Studio Code
+
+## Port 8081 is used
+
+It may happen that a previous session left the development server dangling, run this command to kill processes hanging on port `8081`.
+
+```bash
+npx kill-port 8081
+```
+
+## Serial connection won't connect
+
+-   serial connection used by another application
+-   make sure the [serialport](https://www.npmjs.com/package/serialport) package is installed
+-   running in remote workspace

@@ -26,6 +26,7 @@ EM_JS(void, _devs_panic_handler, (int exitcode), {
 
 // the syntax above doesn't work with weak symbols
 void devs_panic_handler(int exitcode) {
+    flush_dmesg();
     _devs_panic_handler(exitcode);
 }
 
@@ -131,11 +132,6 @@ void jd_em_devs_enable_gc_stress(int en) {
         devs_reset_global_flags(DEVS_FLAG_GC_STRESS);
 }
 
-EMSCRIPTEN_KEEPALIVE
-void jd_em_devs_enable_logging(int en) {
-    devsmgr_set_logging(en);
-}
-
 #if 0
 void run_emscripten_loop(void) {
     emscripten_set_interval(em_process, 10, NULL);
@@ -174,7 +170,7 @@ void target_wait_us(uint32_t us) {
     }
 }
 
-EM_JS(void, em_console_debug, (const char *ptr), {
+EM_JS(void, em_print_dmesg, (const char *ptr), {
     const s = UTF8ToString(ptr, 1024);
     if (Module.dmesg)
         Module.dmesg(s);
@@ -182,21 +178,8 @@ EM_JS(void, em_console_debug, (const char *ptr), {
         console.debug(s);
 });
 
-void dmesgv(const char *format, va_list arg) {
-    char tmp[200];
-    jd_vsprintf(tmp, sizeof(tmp) - 1, format, arg);
-    em_console_debug(tmp);
-}
-
-void dmesg(const char *format, ...) {
-    if (!strchr(format, '%'))
-        em_console_debug(format);
-    else {
-        va_list arg;
-        va_start(arg, format);
-        dmesgv(format, arg);
-        va_end(arg);
-    }
+void app_print_dmesg(const char *ptr) {
+    em_print_dmesg(ptr);
 }
 
 void jd_tcpsock_process(void) {}

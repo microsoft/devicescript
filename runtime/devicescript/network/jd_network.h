@@ -69,7 +69,7 @@ void jd_websock_close(void);
 // and this will try to re-connect.
 int jd_wssk_new(const char *hostname, int port, const char *path, const uint8_t master_key[JD_AES_KEY_BYTES]);
 void jd_wssk_on_event(unsigned event, const void *data, unsigned size);
-int jd_wssk_send_message(const void *data, unsigned size);
+int jd_wssk_send_message(const void *data0, unsigned size0, const void *data1, unsigned size1);
 void jd_wssk_close(void);
 
 const char *jd_websock_event_name(unsigned event);

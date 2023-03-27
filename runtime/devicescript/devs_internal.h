@@ -31,8 +31,8 @@ typedef struct devs_activation devs_activation_t;
 #define DEVS_PKT_KIND_NONE 0
 #define DEVS_PKT_KIND_REG_GET 1
 #define DEVS_PKT_KIND_SEND_PKT 2
-#define DEVS_PKT_KIND_LOGMSG 3
-#define DEVS_PKT_KIND_ROLE_WAIT 4
+#define DEVS_PKT_KIND_ROLE_WAIT 3
+#define DEVS_PKT_KIND_SUSPENDED 4
 
 typedef void (*devs_resume_cb_t)(devs_ctx_t *ctx, void *userdata);
 
@@ -77,7 +77,8 @@ typedef struct devs_fiber {
 
 static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
     // TODO use 'ret_val' instead?
-    return fib->pkt_kind == DEVS_PKT_KIND_LOGMSG;
+    // return fib->pkt_kind == DEVS_PKT_KIND_LOGMSG;
+    return false;
 }
 
 #define DEVS_CTX_FLAG_BUSY 0x01
@@ -90,6 +91,7 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
 #define DEVS_CTX_STEP_BRK 0x02
 #define DEVS_CTX_STEP_IN 0x04
 #define DEVS_CTX_STEP_OUT 0x08
+#define DEVS_CTX_STEP_HALT 0x80
 
 typedef struct {
     jd_role_t *role;
@@ -158,9 +160,6 @@ struct devs_ctx {
     uint64_t _now_long;
     uint32_t _logged_now;
 
-    uint32_t log_counter;
-    uint32_t log_counter_to_send;
-
     uint32_t fiber_handle_tag;
 
     devs_gc_t *gc;
@@ -171,6 +170,8 @@ struct devs_ctx {
     devs_brk_t *brk_list;
     uint16_t brk_count;
     uint8_t brk_jump_tbl[DEVS_BRK_HASH_SIZE];
+
+    uint8_t program_hash[JD_SHA256_HASH_BYTES];
 
     union {
         jd_frame_t frame;
@@ -219,6 +220,7 @@ size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst
 
 // jdiface.c
 bool devs_jd_should_run(devs_fiber_t *fiber);
+value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx);
 void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx);
 void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code);
 void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
@@ -229,14 +231,16 @@ void devs_jd_init_roles(devs_ctx_t *ctx);
 void devs_jd_free_roles(devs_ctx_t *ctx);
 void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role);
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib);
-void devs_jd_send_logmsg(devs_ctx_t *ctx, value_t str);
+void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str);
 
 // fibers.c
 void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_termiante(devs_fiber_t *fiber);
 void devs_fiber_yield(devs_ctx_t *ctx);
-int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams);
+// if `args` is passed, `numparams==0`
+// otherwise, `numparams` arguments are sought on the_stack
+int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array_t *args);
 void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act);
 devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op);
 devs_fiber_t *devs_fiber_by_tag(devs_ctx_t *ctx, unsigned tag);
@@ -254,6 +258,7 @@ int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc, unsigned flags);
 bool devs_vm_clear_breakpoint(devs_ctx_t *ctx, unsigned pc);
 void devs_vm_clear_breakpoints(devs_ctx_t *ctx);
 void devs_vm_suspend(devs_ctx_t *ctx, unsigned cause);
+void devs_vm_halt(devs_ctx_t *ctx);
 int devs_vm_resume(devs_ctx_t *ctx);
 void devs_vm_set_debug(devs_ctx_t *ctx, bool en);
 
@@ -332,3 +337,4 @@ value_t devs_alloc_error(devs_ctx_t *ctx, unsigned proto_idx, const char *format
 const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack);
 void devs_dump_exception(devs_ctx_t *ctx, value_t exn);
+void devs_track_exception(devs_ctx_t *ctx);

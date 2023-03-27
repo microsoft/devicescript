@@ -59,6 +59,10 @@ devs_ctx_t *devs_create_ctx(const uint8_t *img, uint32_t size, const devs_cfg_t 
         devs_trace(ctx, DEVS_TRACE_EV_INIT, &ev, sizeof(ev));
     }
 
+    jd_sha256_setup();
+    jd_sha256_update(img, size);
+    jd_sha256_finish(ctx->program_hash);
+
     setup_ctx(ctx, img);
 
     return ctx;

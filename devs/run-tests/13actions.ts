@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { assert, sleepMs } from "@devicescript/core"
+import { assert, sleep } from "@devicescript/core"
 
 interface Testrec {
     str: string
@@ -21,7 +21,7 @@ function msg(m: string) {
 }
 
 function runInBackground(f: Action) {
-    f.start(1)
+    f.start()
 }
 
 async function inBg() {
@@ -29,7 +29,7 @@ async function inBg() {
     let q = 14
     let rec: Testrec = {} as any
     glb1 = 0
-    await sleepMs(1) // TODO there's some problem with fiber ordering when this is removed and all.ts is run
+    await sleep(1) // TODO there's some problem with fiber ordering when this is removed and all.ts is run
     runInBackground(() => {
         glb1 = glb1 + 10 + (q - k)
         rec.str = "foo"
@@ -37,7 +37,7 @@ async function inBg() {
     runInBackground(() => {
         glb1 = glb1 + 1
     })
-    await sleepMs(10)
+    await sleep(10)
     assert(glb1 === 18, "inbg0")
     assert(rec.str === "foo", "inbg1")
     glb1 = 0
@@ -377,5 +377,3 @@ runInl()
 
 testUndef()
 testLambdasWithMoreParams()
-
-

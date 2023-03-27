@@ -148,7 +148,7 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
             return buffer_to_string(ctx, v);
         case DEVS_GC_TAG_PACKET: {
             devs_packet_t *pkt = devs_handle_ptr_value(ctx, v);
-            return devs_string_sprintf(ctx, "[Packet: %s cmd=0x%x sz=%d]",
+            return devs_string_sprintf(ctx, "[Packet: %s cmd=%x sz=%d]",
                                        devs_img_role_name(ctx->img, pkt->roleidx),
                                        pkt->service_command, pkt->payload->length);
         }

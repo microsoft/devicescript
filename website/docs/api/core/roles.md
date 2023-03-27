@@ -1,6 +1,5 @@
 ---
 sidebar_position: 0.5
-hide_table_of_contents: true
 ---
 # Roles
 
@@ -19,7 +18,7 @@ You can check if role is currently assigned, and react to it being assigned or u
 
 ```js
 const heater = new ds.Relay()
-if (heater.isConnected)
+if (heater.isBound)
     heater.active.write(true)
 heater.onConnected(() => {
     // ...

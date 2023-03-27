@@ -14,6 +14,7 @@ export enum Op {
     STMT1_RETURN = 12, // value
     STMTx_JMP = 13, // JMP jmpoffset
     STMTx1_JMP_Z = 14, // JMP jmpoffset IF NOT x
+    STMTx_JMP_RET_VAL_Z = 78, // JMP jmpoffset IF ret_val is nullish
     STMTx_TRY = 80, // TRY jmpoffset
     STMTx_END_TRY = 81, // *jmpoffset
     STMT0_CATCH = 82,
@@ -30,6 +31,7 @@ export enum Op {
     STMTx2_STORE_CLOSURE = 73, // *local_clo_idx, levels, value
     EXPRx1_LOAD_CLOSURE = 74, // *local_clo_idx, levels
     EXPRx_MAKE_CLOSURE = 75, // CLOSURE(func_idx)
+    STMT1_STORE_RET_VAL = 93, // ret_val := x
     EXPR2_INDEX = 24, // object[idx]
     STMT3_INDEX_SET = 25, // object[index] := value
     STMT2_INDEX_DELETE = 11, // delete object[index]
@@ -62,6 +64,7 @@ export enum Op {
     EXPR0_NULL = 90, // null
     EXPR1_IS_UNDEFINED = 47,
     EXPR2_INSTANCE_OF = 89, // obj, cls
+    EXPR1_IS_NULLISH = 72,
     EXPR0_TRUE = 48,
     EXPR0_FALSE = 49,
     EXPR1_TO_BOOL = 50, // !!x
@@ -90,24 +93,22 @@ export enum Op {
     EXPR2_NE = 71, // x !== y
     EXPR2_APPROX_EQ = 91, // x == y
     EXPR2_APPROX_NE = 92, // x != y
-    STMT1_TERMINATE_FIBER = 72, // fiber_handle
-    EXPR0_NOW_MS = 77,
-    EXPR1_GET_FIBER_HANDLE = 78, // func
-    OP_PAST_LAST = 93,
+    STMT0_REMOVED_77 = 77,
+    OP_PAST_LAST = 94,
 }
 
 export const OP_PROPS =
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x11\x32\x21\x20\x41\x00\x01\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42\x42"
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42\x42\x11"
 export const OP_TYPES =
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x0c\x0c\x0b\x08\x01\x01\x07\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06\x06"
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06\x06\x0c"
 
 export enum BinFmt {
-    IMG_VERSION_MAJOR = 6,
+    IMG_VERSION_MAJOR = 2,
     IMG_VERSION_MINOR = 2,
-    IMG_VERSION_PATCH = 0,
-    IMG_VERSION = 0x6020000,
+    IMG_VERSION_PATCH = 6,
+    IMG_VERSION = 0x2020006,
     MAGIC0 = 0x53766544, // "DevS"
-    MAGIC1 = 0x9a6a7e0a,
+    MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
     FIX_HEADER_SIZE = 32,
     SECTION_HEADER_SIZE = 8,
@@ -154,9 +155,9 @@ export enum BytecodeFlag {
 }
 
 export enum FunctionFlag {
-    __MAX = 2,
     NEEDS_THIS = 0x01,
     IS_CTOR = 0x02,
+    HAS_REST_ARG = 0x04,
 }
 
 export enum NumFmt {
@@ -273,7 +274,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 135,
+    __MAX = 153,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -306,7 +307,7 @@ export enum BuiltInString {
     GETAT = 29,
     IDIV = 30,
     IMUL = 31,
-    ISCONNECTED = 32,
+    ISBOUND = 32,
     JOIN = 33,
     LENGTH = 34,
     LOG = 35,
@@ -348,7 +349,7 @@ export enum BuiltInString {
     UNSHIFT = 71,
     WAIT = 72,
     WRITE = 73,
-    SLEEPMS = 74,
+    SLEEP = 74,
     IMOD = 75,
     FORMAT = 76,
     INSERT = 77,
@@ -371,7 +372,7 @@ export enum BuiltInString {
     PAYLOAD = 94,
     DECODE = 95,
     ENCODE = 96,
-    ONPACKET = 97,
+    _ONPACKET = 97,
     CODE = 98,
     NAME = 99,
     ISEVENT = 100,
@@ -410,6 +411,24 @@ export enum BuiltInString {
     JSON = 133,
     PARSE = 134,
     STRINGIFY = 135,
+    _DCFGSTRING = 136,
+    ISSIMULATOR = 137,
+    _ROLE = 138, // Role
+    FIBER = 139,
+    SUSPEND = 140,
+    RESUME = 141,
+    TERMINATE = 142,
+    SELF = 143,
+    CURRENT = 144,
+    ID = 145,
+    _COMMANDRESPONSE = 146,
+    ISACTION = 147,
+    MILLIS = 148,
+    FROM = 149,
+    HEX = 150,
+    UTF8 = 151,
+    _UTF8 = 152, // utf-8
+    SUSPENDED = 153,
 }
 
 export const OP_PRINT_FMTS = [
@@ -485,13 +504,13 @@ export const OP_PRINT_FMTS = [
     "(%e <= %e)",
     "(%e < %e)",
     "(%e !== %e)",
-    "TERMINATE_FIBER fiber_handle=%e",
+    "is_nullish(%e)",
     "STORE_CLOSURE local_clo_idx=%e levels=%e %e",
     "load_closure(local_clo_idx=%e, levels=%e)",
     "CLOSURE(%F)",
     "typeof_str(%e)",
-    "now_ms()",
-    "get_fiber_handle(func=%e)",
+    "REMOVED_77 ",
+    "JMP %j IF ret_val is nullish",
     "CALL %e(...%e)",
     "TRY %j",
     "END_TRY %j",
@@ -506,6 +525,7 @@ export const OP_PRINT_FMTS = [
     "null",
     "(%e == %e)",
     "(%e != %e)",
+    "ret_val := %e",
 ]
 export const OBJECT_TYPE = [
     "undefined",
@@ -555,7 +575,7 @@ export const BUILTIN_STRING__VAL = [
     "getAt",
     "idiv",
     "imul",
-    "isConnected",
+    "isBound",
     "join",
     "length",
     "log",
@@ -597,7 +617,7 @@ export const BUILTIN_STRING__VAL = [
     "unshift",
     "wait",
     "write",
-    "sleepMs",
+    "sleep",
     "imod",
     "format",
     "insert",
@@ -620,7 +640,7 @@ export const BUILTIN_STRING__VAL = [
     "payload",
     "decode",
     "encode",
-    "onPacket",
+    "_onPacket",
     "code",
     "name",
     "isEvent",
@@ -659,6 +679,24 @@ export const BUILTIN_STRING__VAL = [
     "JSON",
     "parse",
     "stringify",
+    "_dcfgString",
+    "isSimulator",
+    "Role",
+    "Fiber",
+    "suspend",
+    "resume",
+    "terminate",
+    "self",
+    "current",
+    "id",
+    "_commandResponse",
+    "isAction",
+    "millis",
+    "from",
+    "hex",
+    "utf8",
+    "utf-8",
+    "suspended",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

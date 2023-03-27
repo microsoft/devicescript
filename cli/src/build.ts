@@ -1,6 +1,6 @@
 import { basename, join, relative, resolve } from "node:path"
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
-import { ensureDirSync, readJSONSync, mkdirp } from "fs-extra"
+import { ensureDirSync, readJSONSync, mkdirp, removeSync } from "fs-extra"
 import {
     compileWithHost,
     jacdacDefaultSpecifications,
@@ -9,7 +9,6 @@ import {
     DEVS_DBG_FILE,
     prettySize,
     DebugInfo,
-    CompileFlags,
     SrcMapResolver,
     preludeFiles,
     Host,
@@ -38,7 +37,40 @@ import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
 import { printDmesg } from "./vmworker"
 import { EXIT_CODE_COMPILATION_ERROR } from "./exitcodes"
-import { converters, parseServiceSpecificationMarkdownToJSON } from "jacdac-ts"
+import {
+    converters,
+    parseServiceSpecificationMarkdownToJSON,
+    sha256,
+    toHex,
+    versionTryParse,
+} from "jacdac-ts"
+import { execSync } from "node:child_process"
+import { BuildOptions } from "./sideprotocol"
+
+// TODO should we move this to jacdac-ts and call automatically for transports?
+export function setupWebsocket() {
+    if (typeof WebSocket !== "undefined") return
+
+    try {
+        require("websocket-polyfill")
+        // @ts-ignore
+        global.Blob = require("buffer").Blob
+        global.WebSocket.prototype.send = function (this: any, data: any) {
+            if (typeof data.valueOf() === "string")
+                this.connection_.sendUTF(data)
+            else {
+                this.connection_.sendBytes(Buffer.from(data))
+            }
+        }
+        global.WebSocket.prototype.close = function (this: any, code, reason) {
+            this.state_ = WebSocket.CLOSING
+            if (code === undefined) this.connection_.sendCloseFrame()
+            else this.connection_.sendCloseFrame(code, reason)
+        }
+    } catch {
+        log("can't load websocket-polyfill")
+    }
+}
 
 export function readDebugInfo() {
     let dbg: DebugInfo
@@ -62,13 +94,8 @@ export function devsFactory() {
     // emscripten doesn't like multiple instances
     if (devsInst) return Promise.resolve(devsInst)
     const d = require("@devicescript/vm")
-    try {
-        require("websocket-polyfill")
-        // @ts-ignore
-        global.Blob = require("buffer").Blob
-    } catch {
-        log("can't load websocket-polyfill")
-    }
+
+    setupWebsocket()
 
     return (d() as Promise<DevsModule>).then(m => {
         devsInst = m
@@ -84,6 +111,7 @@ export async function devsStartWithNetwork(options: {
     deviceId?: string
     gcStress?: boolean
     stateless?: boolean
+    clearFlash?: boolean
 }) {
     const inst = await devsFactory()
 
@@ -99,6 +127,11 @@ export async function devsStartWithNetwork(options: {
     } else {
         ensureDirSync(FLASHDIR)
         const fn = join(FLASHDIR, FLASHFILE)
+        // clear flash if needed
+        if (options.clearFlash && existsSync(fn)) {
+            verboseLog(`clearing flash ${fn}`)
+            removeSync(fn)
+        }
         verboseLog(`set up flash in ${fn}`)
         inst.flashLoad = () => {
             try {
@@ -176,6 +209,81 @@ function toDevsDiag(d: jdspec.Diagnostic): DevsDiagnostic {
         endColumn: 100,
         formatted: "",
     }
+}
+
+function execCmd(cmd: string) {
+    try {
+        return execSync(cmd, { encoding: "utf-8" }).trim()
+    } catch {
+        return ""
+    }
+}
+
+function isGit() {
+    let pref = ""
+    for (let i = 0; i < 10; ++i) {
+        if (existsSync(pref + ".git")) return true
+        pref = pref + "../"
+    }
+    return false
+}
+
+function compilePackageJson(
+    tsdir: string,
+    entryPoint: string,
+    lcfg: LocalBuildConfig,
+    errors: DevsDiagnostic[]
+) {
+    const pkgJsonPath = join(tsdir, "package.json")
+    if (existsSync(pkgJsonPath)) {
+        const pkgJSON = JSON.parse(readFileSync(pkgJsonPath, "utf-8"))
+        lcfg.hwInfo.progName = pkgJSON.name ?? "(no name)"
+        lcfg.hwInfo.progVersion = pkgJSON.version ?? "(no version)"
+        if (isGit()) {
+            const head = execCmd(
+                "git describe --tags --match 'v[0-9]*' --always"
+            )
+            let dirty = execCmd(
+                "git status --porcelain --untracked-file=no --ignore-submodules=untracked"
+            )
+            if (!head) dirty = "yes"
+            const exact = !dirty && head[0] == "v" && !head.includes("-")
+            if (exact) {
+                lcfg.hwInfo.progVersion = head
+            } else {
+                let v = versionTryParse(lcfg.hwInfo.progVersion)
+                if (head[0] == "v") v = versionTryParse(head) || v
+                let verStr = ""
+                if (v) verStr = `v${v.major}.${v.minor}.${v.patch + 1}-`
+                verStr += head.replace(/.*-/, "")
+                if (dirty) {
+                    const now = new Date()
+                        .toISOString()
+                        .replace(/T/, ".")
+                        .replace(/:/, ".")
+                        .replace(/:.*/, "")
+                        .replace(/-/g, ".")
+                    if (verStr) verStr += "-"
+                    verStr += now
+                }
+                lcfg.hwInfo.progVersion = verStr
+            }
+        }
+    }
+
+    if (entryPoint) {
+        entryPoint = entryPoint.replace(/^src[\/\\]/, "")
+        entryPoint = entryPoint.replace(/^main/, "")
+        entryPoint = entryPoint.replace(/.ts$/, "")
+        if (entryPoint) {
+            if (lcfg.hwInfo.progName) lcfg.hwInfo.progName += " " + entryPoint
+            else lcfg.hwInfo.progName += entryPoint
+        }
+    }
+
+    verboseLog(
+        `compile: ${lcfg.hwInfo.progName} ${lcfg.hwInfo.progVersion ?? ""}`
+    )
 }
 
 function compileServiceSpecs(
@@ -275,11 +383,19 @@ export class CompilationError extends Error {
     }
 }
 
-export function buildConfigFromDir(dir: string, options: BuildOptions = {}) {
-    const lcfg: LocalBuildConfig = {}
+export function buildConfigFromDir(
+    dir: string,
+    entryPoint: string = "",
+    options: BuildOptions = {}
+) {
+    const lcfg: LocalBuildConfig = {
+        hwInfo: {},
+    }
     const errors: DevsDiagnostic[] = []
 
     if (dir) {
+        verboseLog(`build config from: ${dir}`)
+        compilePackageJson(dir, entryPoint, lcfg, errors)
         compileServiceSpecs(dir, lcfg, errors)
         compileBoards(dir, lcfg, errors)
         if (!options.quiet)
@@ -301,6 +417,7 @@ export async function compileFile(
     if (!exists) throw new Error(`source file "${fn}" not found`)
 
     if (
+        !options.ignoreMissingConfig &&
         !existsSync("./devsconfig.json") &&
         !existsSync("./devs/run-tests/basic.ts") // hack for in-tree testing
     )
@@ -309,10 +426,24 @@ export async function compileFile(
     ensureDirSync(options.outDir || BINDIR)
 
     const folder = resolve(".")
-    const { errors, buildConfig } = buildConfigFromDir(folder, options)
+    const entryPoint = relative(folder, fn)
+    const { errors, buildConfig } = buildConfigFromDir(
+        folder,
+        entryPoint,
+        options
+    )
     const host = await getHost(buildConfig, options, folder)
 
     const res = compileWithHost(fn, host)
+
+    if (res.binary) {
+        res.dbg.binarySHA256 = toHex(await sha256([res.binary]))
+        verboseLog(`sha: ${res.dbg.binarySHA256}`)
+        writeFileSync(
+            join(folder, BINDIR, DEVS_DBG_FILE),
+            JSON.stringify(res.dbg)
+        )
+    }
 
     await saveLibFiles(buildConfig, options)
     setDevsDmesg() // set again after we have re-created -dbg.json file
@@ -333,7 +464,9 @@ export async function saveLibFiles(
     const prelude = preludeFiles(buildConfig)
 
     const pref = resolve(options.cwd ?? ".")
-    await mkdirp(join(pref, LIBDIR))
+    const libpath = join(pref, LIBDIR)
+    await mkdirp(libpath)
+    verboseLog(`saving lib files in ${libpath}`)
     for (const fn of Object.keys(prelude)) {
         const fnpath = join(pref, fn)
         const ex = await readFile(fnpath, "utf-8").then(
@@ -371,15 +504,6 @@ export async function saveLibFiles(
             }
         )
     }
-}
-
-export interface BuildOptions {
-    verify?: boolean
-    outDir?: string
-    stats?: boolean
-    flag?: CompileFlags
-    cwd?: string
-    quiet?: boolean
 }
 
 export async function build(file: string, options: BuildOptions) {

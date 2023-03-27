@@ -1,18 +1,15 @@
 import { DebugInfo } from "@devicescript/compiler"
 import { readFileSync } from "node:fs"
-import {
-    BuildOptions,
-    compileFile,
-    devsFactory,
-    devsStartWithNetwork,
-} from "./build"
+import { compileFile, devsFactory, devsStartWithNetwork } from "./build"
 import { error } from "./command"
+import { BuildOptions } from "./sideprotocol"
 
 export interface RunOptions {
     test?: boolean
     wait?: boolean
     tcp?: boolean
     testTimeout?: string
+    testSelfExit?: boolean
 }
 
 export async function readCompiled(
@@ -43,7 +40,7 @@ export async function runTest(
     options: RunOptions & BuildOptions = {}
 ) {
     if (!options.flag) options.flag = {}
-    options.flag.testHarness = true
+    if (!options.testSelfExit) options.flag.testHarness = true
 
     const prog = await readCompiled(fn, options)
     const inst = await devsFactory()
@@ -67,7 +64,6 @@ export async function runTest(
         }
         inst.devsStop()
         inst.devsGcStress(true)
-        inst.devsSetLogging(false)
         inst.devsSetDeviceId(devid)
         inst.devsStart()
         inst.devsDeploy(prog.binary)
@@ -99,13 +95,14 @@ export async function runScript(
     if (options.test && !fn) err("--test require file name")
     if (!options.wait && !fn) err("need either --wait or file name")
 
-    if (options.test)
-        return await runTest(fn, options).then(
-            () => process.exit(0),
-            e => {
-                err(e?.message)
-            }
-        )
+    if (options.test) {
+        try {
+            await runTest(fn, options)
+            process.exit(0)
+        } catch (e) {
+            err(e?.message)
+        }
+    }
 
     const inst = await devsStartWithNetwork(options)
 

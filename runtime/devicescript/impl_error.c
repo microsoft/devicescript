@@ -43,4 +43,5 @@ value_t prop_Error_name(devs_ctx_t *ctx, value_t self) {
 void meth0_Error_print(devs_ctx_t *ctx) {
     value_t exn = devs_arg_self(ctx);
     devs_dump_exception(ctx, exn);
+    devs_track_exception(ctx);
 }

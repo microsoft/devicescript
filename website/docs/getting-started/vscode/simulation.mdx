@@ -1,0 +1,39 @@
+---
+sidebar_position: 2
+---
+
+# Simulation
+
+DeviceScript provides a rich support for simulating devices and periphericals.
+The Visual Studio Code extension makes it easy to start and stop simulators.
+
+## DeviceScript simulator
+
+The first simulator you use is a DeviceScript Manager device, a device capable of running the DeviceScript bytecode.
+It runs the DeviceScript C firmware compiled into WebAssembly.
+This WASM simulator will be launched by the debugger or by clicking on the `plug` icon in the DeviceScript pane.
+
+![Connect button in DeviceScript pane](./connect-button.png)
+
+Once started the simulator will appear in the device tree and you can explore its services and status.
+
+![simulator tree](./simulator-tree.png)
+
+## Periphericals dashboard
+
+The `dashboard` icon starts a peripherical dashboard view (the Jacdac dashboard).
+It allows to visualize any connected device and also launch simulator periphericals.
+The simulator peripherical are typically interactive and allow to change the values using UI controls.
+
+![Dashboard](./start-simulator-dashboard.png)
+
+:::note
+
+The dashboard loads the Jacdac simulator from https://microsoft.github.io/jacdac-docs and requires internet access.
+
+:::
+
+## Custom servers
+
+It is also possible to create peripherical simulators in "node.js TypeScript" (running in a node.js process).
+This technique is documented in the [developer documentation](/developer/simulation).

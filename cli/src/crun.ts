@@ -3,9 +3,10 @@ import { spawn } from "node:child_process"
 import { writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { createInterface } from "node:readline"
-import { BuildOptions, readDebugInfo } from "./build"
+import { readDebugInfo } from "./build"
 import { BINDIR, error, log } from "./command"
 import { readCompiled } from "./run"
+import { BuildOptions } from "./sideprotocol"
 import { printDmesg } from "./vmworker"
 
 export interface CRunOptions {
@@ -13,6 +14,7 @@ export interface CRunOptions {
     serial?: string
     lazyGc?: boolean
     settings?: boolean
+    testSelfExit?: boolean
 }
 
 export async function crunScript(
@@ -27,7 +29,7 @@ export async function crunScript(
 
     if (options.serial) args.unshift(options.serial)
     else if (options.net) args.unshift("8082", "-w")
-    else options.flag.testHarness = true
+    else if (!options.testSelfExit) options.flag.testHarness = true
 
     const prog = await readCompiled(fn, options)
     await ensureDir(BINDIR)

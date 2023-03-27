@@ -98,6 +98,8 @@ const files = {
     "compiler/built/devicescript-compiler.node.cjs":
         "compiler/src/devicescript.ts",
 
+    "plugin/built/devicescript-plugin.cjs": "plugin/src/plugin.ts",
+
     "dap/built/devicescript-dap.cjs": "dap/src/dsdap.ts",
 
     "cli/built/devicescript-cli.cjs": "cli/src/cli.ts",
@@ -201,12 +203,18 @@ async function main() {
                     "crypto",
                 ],
                 platform,
+                metafile: true,
                 target: "es2019",
                 format: mjs ? "esm" : cjs ? "cjs" : "iife",
             })
             if (watch) await ctx.watch()
             else {
-                await ctx.rebuild()
+                const res = await ctx.rebuild()
+                if (res.metafile)
+                    fs.writeFileSync(
+                        outfile + "-meta.json",
+                        JSON.stringify(res.metafile)
+                    )
                 await ctx.dispose()
             }
             let size = 0
@@ -227,6 +235,7 @@ async function main() {
                 "compiler/src",
                 "dap/src",
                 "cli/src",
+                "plugin/src",
                 "vscode/src",
             ])
             if (!watch) console.log(`   -> ${Date.now() - t0}ms`)
@@ -258,7 +267,9 @@ async function main() {
             const mdo = "website/docs/devices"
             Object.keys(mds).forEach(fn => {
                 fs.ensureDirSync(join(mdo, dirname(fn)))
-                fs.writeFileSync(path.join(mdo, fn), mds[fn])
+                fs.writeFileSync(path.join(mdo, fn), mds[fn], {
+                    encoding: "utf-8",
+                })
             })
         }
     } catch (e) {

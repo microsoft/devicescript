@@ -1,6 +1,8 @@
 # DeviceScript
 
-[DeviceScript](https://aka.ms/devicescript) is a TypeScript-like language and runtime for embedded devices.
+[DeviceScript](https://aka.ms/devicescript) brings a professional TypeScript developer experience to low-resource microcontroller-based devices.
+DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
+environments (VM itself compiles to 10kB of code, with the floating point library and Jacdac SDK adding further 30kB).
 
 ![Screenshot of the extension](https://github.com/microsoft/devicescript/blob/main/vscode/screenshot.png?raw=true "Annotated screenshot of DeviceScript in Visual Studio Code")
 
@@ -14,6 +16,10 @@
 -   Connection to native DeviceScript device
 -   Device, services, register Explorer view
 -   Register and Event watch
+
+## Telemetry
+
+This extension collects telemetry data to help us build a better experience working remotely from VS Code. We only collect data on which commands are executed. We do not collect any information about image names, paths, etc. The extension respects the `telemetry.enableTelemetry` setting which you can learn more about in the [Visual Studio Code FAQ](https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting).
 
 ## Contributing
 

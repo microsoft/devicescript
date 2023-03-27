@@ -59,7 +59,11 @@ import {
     mkDiag,
     trace,
 } from "./tsiface"
-import { preludeFiles, resolveBuildConfig } from "./specgen"
+import {
+    preludeFiles,
+    resolveBuildConfig,
+    unresolveBuildConfig,
+} from "./specgen"
 import {
     VarDebugInfo,
     RoleDebugInfo,
@@ -75,6 +79,7 @@ import {
     ResolvedBuildConfig,
     SystemReg,
     SRV_DEVICE_SCRIPT_CONDITION,
+    ProgramConfig,
 } from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
@@ -98,7 +103,6 @@ const coreModule = "@devicescript/core"
 const builtInObjByName: Record<string, BuiltInObject> = {
     "#ds.": BuiltInObject.DEVICESCRIPT,
     "#ArrayConstructor.prototype": BuiltInObject.ARRAY_PROTOTYPE,
-    "#ds.RegisterNumber.prototype": BuiltInObject.DSREGISTER_PROTOTYPE,
 }
 BUILTIN_OBJECT__VAL.forEach((n, i) => {
     n = n.replace(/_prototype$/, ".prototype")
@@ -111,6 +115,8 @@ type TsFunctionDecl =
     | ts.MethodDeclaration
     | ts.ClassDeclaration
     | ts.VariableDeclaration
+
+type PropChain = ts.PropertyAccessChain | ts.ElementAccessChain | ts.CallChain
 
 class Cell {
     _index: number
@@ -354,6 +360,10 @@ function unit() {
     return nonEmittable()
 }
 
+function undef() {
+    return literal(undefined)
+}
+
 interface DsSymbol extends ts.Symbol {
     __ds_cell: Cell
 }
@@ -368,6 +378,7 @@ class Procedure {
     parentProc: Procedure
     nestedProcs: Procedure[] = []
     usesClosure = false
+    hasRest = false
     loopStack: LoopLabels[] = []
     returnValue: CachedValue
     returnValueLabel: Label
@@ -405,6 +416,7 @@ class Procedure {
     finalize() {
         if (this.mapVarOffset) return false
         if (this.usesThis) this.writer.funFlags |= FunctionFlag.NEEDS_THIS
+        if (this.hasRest) this.writer.funFlags |= FunctionFlag.HAS_REST_ARG
         this.mapVarOffset = this.writer.patchLabels(
             this.locals.length,
             this.numargs,
@@ -586,14 +598,14 @@ class Program implements TopOpWriter {
     numErrors = 0
     mainProc: Procedure
     protoProc: Procedure
-    cloudRole: Role
-    cloudMethod429: Label
-    onStart: DelayedCodeSection
     flags: CompileFlags = {}
     isLibrary: boolean
     srcFiles: SrcFile[] = []
     diagnostics: DevsDiagnostic[] = []
     startServices: BaseServiceConfig[] = []
+    private currChain: ts.Expression[] = []
+    private retValExpr: ts.Expression
+    private retValRefs = 0
 
     constructor(public mainFileName: string, public host: Host) {
         this.flags = host.getFlags?.() ?? {}
@@ -812,7 +824,7 @@ class Program implements TopOpWriter {
 
     private emitSleep(ms: number) {
         const wr = this.writer
-        wr.emitCall(wr.dsMember(BuiltInString.SLEEPMS), literal(ms))
+        wr.emitCall(wr.dsMember(BuiltInString.SLEEP), literal(ms))
     }
 
     private withProcedure(proc: Procedure, f: (wr: OpWriter) => void) {
@@ -860,6 +872,8 @@ class Program implements TopOpWriter {
     }
 
     private toLiteralJSON(node: ts.Expression): any {
+        while (ts.isAsExpression(node) || ts.isTypeAssertionExpression(node))
+            node = node.expression
         const folded = this.constantFold(node)
         if (folded && folded.val !== undefined) return folded.val
 
@@ -919,14 +933,25 @@ class Program implements TopOpWriter {
             this.nodeName(expr.expression)?.startsWith(startPref)
         ) {
             this.requireArgs(expr, 1)
+            const specName = this.serviceNameFromClassName(
+                this.nodeName(expr.expression).slice(startPref.length)
+            )
+            let startName = specName
+
+            const sig = this.checker.getResolvedSignature(expr)
+            const serv = this.checker
+                .getTypeOfSymbolAtLocation(sig.parameters[0], expr)
+                .getProperty("service")
+            if (serv) {
+                const tp2 = this.checker.getTypeOfSymbolAtLocation(serv, expr)
+                if (tp2.isStringLiteral()) startName = tp2.value
+            }
+
             const arg = expr.arguments[0]
             const obj: BaseServiceConfig = this.toLiteralJSON(arg)
             if (!obj || typeof obj != "object")
                 throwError(arg, `expecting { ... }`)
-            const specName = this.lowerFirst(
-                this.nodeName(expr.expression).slice(startPref.length)
-            )
-            obj.service = specName
+            obj.service = startName
             const spec = this.lookupRoleSpec(arg, specName)
             if (!obj.name) obj.name = this.forceName(decl.name)
             this.startServices.push(obj)
@@ -955,6 +980,17 @@ class Program implements TopOpWriter {
     private emitStore(trg: Variable, src: Value) {
         assert(trg instanceof Variable)
         trg.store(this.writer, src, this.getClosureLevel(trg))
+    }
+
+    private emitLoad(node: ts.Node, cell: Variable) {
+        assert(cell instanceof Variable)
+        const lev = this.getClosureLevel(cell)
+        if (lev && this.isInLoop(cell.definition))
+            throwError(
+                node,
+                "closure references to loop variables are currently broken"
+            )
+        return cell.emitViaClosure(this.writer, lev)
     }
 
     private skipInit(decl: ts.VariableDeclaration) {
@@ -1095,6 +1131,11 @@ class Program implements TopOpWriter {
     }
 
     private emitVariableDeclarationList(decls: ts.VariableDeclarationList) {
+        if (
+            (decls.flags & ts.NodeFlags.BlockScoped) == 0 &&
+            !decls.parent.modifiers?.some(m => m.kind == SK.DeclareKeyword)
+        )
+            throwError(decls, `'var' not allowed`)
         for (const decl of decls.declarations) {
             this.assignVariableCells(decl) // just in case
 
@@ -1464,8 +1505,9 @@ class Program implements TopOpWriter {
         }
     }
 
-    private lowerFirst(r: string) {
-        return r[0].toLowerCase() + r.slice(1)
+    private serviceNameFromClassName(r: string) {
+        if (/[a-z]/.test(r)) return r[0].toLowerCase() + r.slice(1)
+        else return r
     }
 
     private specFromTypeName(
@@ -1475,7 +1517,7 @@ class Program implements TopOpWriter {
     ): jdspec.ServiceSpec {
         if (!nm) nm = this.nodeName(expr)
         if (nm && nm.startsWith("#ds.")) {
-            let r = this.lowerFirst(nm.slice(4))
+            let r = this.serviceNameFromClassName(nm.slice(4))
             if (r == "condition") r = "deviceScriptCondition"
             return this.lookupRoleSpec(expr, r)
         } else {
@@ -1648,11 +1690,13 @@ class Program implements TopOpWriter {
             paramVar: Variable
         }[] = []
         for (const paramdef of stmt.parameters) {
+            assert(!proc.hasRest) // ...rest has to be last
             if (paramdef.kind != SK.Parameter)
                 throwError(
                     paramdef,
                     "only simple identifiers supported as parameters"
                 )
+            if (paramdef.dotDotDotToken) proc.hasRest = true
             if (ts.isObjectBindingPattern(paramdef.name)) {
                 const paramVar = this.addParameter(proc, "obj")
                 destructParams.push({ paramdef, paramVar })
@@ -1762,12 +1806,6 @@ class Program implements TopOpWriter {
         const name = this.symName(sym)
         const names = [name]
 
-        if (name == "#ds.RegisterNumber.onChange")
-            names.push(
-                "#ds.RegisterBuffer.onChange",
-                "#ds.RegisterBool.onChange"
-            )
-
         for (const baseSym of this.getBaseSyms(sym)) {
             names.push(this.symName(baseSym))
         }
@@ -1792,7 +1830,7 @@ class Program implements TopOpWriter {
                     throwError(mem, "unsupported class member")
             }
 
-            if (ts.isMethodDeclaration(mem)) {
+            if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
                 this.protoDefinitions.push({
                     className: this.nodeName(stmt),
@@ -1932,8 +1970,6 @@ class Program implements TopOpWriter {
         this.mainProc = new Procedure(this, "main", this.mainFile)
         this.protoProc = new Procedure(this, "prototype", this.mainFile)
 
-        this.onStart = new DelayedCodeSection("onStart", this.mainProc.writer)
-
         const stmts = ([] as ts.Statement[]).concat(
             ...prog
                 .getSourceFiles()
@@ -1952,32 +1988,19 @@ class Program implements TopOpWriter {
             r._index = i
         })
 
-        // make sure the cloud role is last
-        this.cloudRole = new Role(
-            this,
-            null,
-            this.roles,
-            this.serviceSpecs["cloudAdapter"],
-            "cloud"
-        )
-
         this.withProcedure(this.mainProc, wr => {
             this.protoProc.callMe(wr, [])
             for (const s of stmts) this.emitStmt(s)
-            this.onStart.finalizeRaw()
             if (this.flags.testHarness)
                 wr.emitCall(wr.dsMember(BuiltInString.REBOOT))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
-            if (this.roles.length > 1 || this.cloudRole.used)
-                this.markMethodUsed("#ds.Role.onPacket")
+            if (this.roles.length > 0) {
+                this.markMethodUsed("#ds.Role._onPacket")
+                this.markMethodUsed("#ds.Role._commandResponse")
+            }
             this.emitProtoAssigns()
         })
-
-        if (!this.cloudRole.used) {
-            const cl = this.roles.pop()
-            assert(cl == this.cloudRole)
-        }
 
         function markTopLevel(node: ts.Node) {
             ;(node as any)._devsIsTopLevel = true
@@ -2100,7 +2123,7 @@ class Program implements TopOpWriter {
     }
 
     private ignore(val: Value) {
-        val.adopt()
+        val.ignore()
     }
 
     private isForIgnored(expr: Expr) {
@@ -2246,6 +2269,10 @@ class Program implements TopOpWriter {
         return r | (shift << 4)
     }
 
+    onCall(): void {
+        if (this.retValRefs != 0) this.retValError(this.retValExpr)
+    }
+
     private emitGenericCall(args: Expr[], fn: Value) {
         const wr = this.writer
         if (args.some(ts.isSpreadElement)) {
@@ -2263,6 +2290,7 @@ class Program implements TopOpWriter {
                 wr.emitCall(wr.emitIndex(arr.emit(), wr.emitString(meth)), expr)
             }
             wr.emitStmt(Op.STMT2_CALL_ARRAY, fn, arr.finalEmit())
+            this.onCall()
         } else {
             wr.emitCall(fn, ...this.emitArgs(args))
         }
@@ -2482,38 +2510,25 @@ class Program implements TopOpWriter {
             case "ds._id":
                 this.requireArgs(expr, 1)
                 return this.emitExpr(expr.arguments[0])
-            case "ds.everyMs": {
-                this.requireTopLevel(expr.position)
-                this.requireArgs(expr, 2)
-                const time = Math.round(
-                    this.forceNumberLiteral(expr.arguments[0])
-                )
-                if (time < 20)
-                    throwError(
-                        expr.position,
-                        "minimum everyMs() period is 20ms"
-                    )
-                const proc = this.emitHandler("every", expr.arguments[1], {
-                    every: time,
-                })
-                proc.callMe(wr, [], OpCall.BG)
-                return unit()
-            }
-            case "ds._onStart": {
-                this.requireTopLevel(expr.position)
-                this.requireArgs(expr, 1)
-                const proc = this.emitHandler("onStart", expr.arguments[0])
-                this.onStart.emit(wr => proc.callMe(wr, []))
-                return unit()
-            }
-            case "console.log":
+            case "console.info":
+            case "console.debug":
+            case "console.warn":
+            case "console.error":
+            case "console.log": {
+                const levels: Record<string, string> = {
+                    log: ">",
+                    info: ">",
+                    error: "!",
+                    warn: "*",
+                    debug: "?",
+                }
                 wr.emitCall(
-                    wr.dsMember(BuiltInString.LOG),
+                    wr.dsMember(BuiltInString.PRINT),
+                    literal(levels[funName.slice(8)].charCodeAt(0)),
                     this.compileFormat(expr.arguments)
                 )
-                return unit()
-            case "ds.millis":
-                return wr.emitExpr(Op.EXPR0_NOW_MS)
+                return undef()
+            }
 
             case "Buffer.getAt": {
                 this.requireArgs(expr, 2)
@@ -2538,13 +2553,13 @@ class Program implements TopOpWriter {
                     off,
                     val
                 )
-                return unit()
+                return undef()
             }
 
             case "ds.keep": {
                 this.requireArgs(expr, 1)
                 this.ignore(this.emitExpr(expr.arguments[0]))
-                return unit()
+                return undef()
             }
 
             default:
@@ -2622,11 +2637,11 @@ class Program implements TopOpWriter {
                 baseDecl.emit(wr),
                 this.emitThisExpression(call.callexpr)
             )
-            const r = this.emitGenericCall(call.arguments, bound)
+            this.ignore(this.emitGenericCall(call.arguments, bound))
             for (let node: ts.Node = call.callexpr; node; node = node.parent) {
                 if (ts.isConstructorDeclaration(node)) {
                     this.emitCtorAssignments(node.parent, node)
-                    return r
+                    return unit()
                 }
             }
             assert(false)
@@ -2720,22 +2735,17 @@ class Program implements TopOpWriter {
         if (r) return r
         const cell = this.getCellAtLocation(expr)
         if (!cell) throwError(expr, "unknown name: " + idName(expr))
-        if (cell instanceof Variable) {
-            const lev = this.getClosureLevel(cell)
-            if (lev && this.isInLoop(cell.definition))
-                throwError(
-                    expr,
-                    "closure references to loop variables are currently broken"
-                )
-            return cell.emitViaClosure(this.writer, lev)
-        }
+        if (cell instanceof Variable) return this.emitLoad(expr, cell)
         return cell.emit(this.writer)
     }
 
     private emitThisExpression(expr: ts.Node): Value {
         const p0 = this.proc.params[0] as Variable
-        if (p0 && p0.vkind == VariableKind.ThisParam)
-            return p0.emit(this.writer)
+        if (p0 && p0.vkind == VariableKind.ThisParam) {
+            const r = p0.emit(this.writer)
+            r.assumeStateless()
+            return r
+        }
         throwError(expr, "'this' cannot be used here: " + this.proc.name)
     }
 
@@ -2763,6 +2773,11 @@ class Program implements TopOpWriter {
         return this.emitBuiltInConstByName(this.nodeName(expr))
     }
 
+    private isBuiltInObj(nodeName: string) {
+        if (nodeName == "#ds_impl") return true
+        return builtInObjByName.hasOwnProperty(nodeName)
+    }
+
     emitBuiltInConstByName(nodeName: string) {
         if (!nodeName) return null
         switch (nodeName) {
@@ -2785,6 +2800,19 @@ class Program implements TopOpWriter {
         }
     }
 
+    private banOptional(expr: ts.Expression) {
+        if (ts.isOptionalChain(expr)) throwError(expr, "?. not supported here")
+    }
+
+    private flattenChain(chain: PropChain) {
+        const links: PropChain[] = [chain]
+        while (!chain.questionDotToken) {
+            chain = chain.expression as PropChain
+            links.unshift(chain)
+        }
+        return { expression: chain.expression, chain: links }
+    }
+
     private emitPropertyAccessExpression(
         expr: ts.PropertyAccessExpression
     ): Value {
@@ -2798,6 +2826,7 @@ class Program implements TopOpWriter {
         }
 
         if (idName(expr.name) == "prototype") {
+            this.banOptional(expr)
             const sym = this.checker.getSymbolAtLocation(expr.expression)
             if (this.isRoleClass(sym)) {
                 const spec = this.specFromTypeName(expr.expression)
@@ -2840,15 +2869,48 @@ class Program implements TopOpWriter {
         const decl = sym?.valueDeclaration
         if (!decl) return res
 
-        const cls = this.getSymAtLocation(decl.parent)
-        if (!cls) return []
-        const clsTp = this.checker.getDeclaredTypeOfSymbol(cls)
+        const addSym = (baseSym: ts.Symbol) => {
+            if (baseSym && !res.includes(baseSym))
+                res.push(baseSym, ...this.getBaseSyms(baseSym))
+        }
+
+        const clsSym = this.getSymAtLocation(decl.parent)
+        if (!clsSym) return []
+        const clsTp = this.checker.getDeclaredTypeOfSymbol(clsSym)
         for (const baseTp of this.getBaseTypes(clsTp)) {
             const baseSym = this.checker.getPropertyOfType(
                 baseTp,
                 sym.getName()
             )
-            if (baseSym) res.push(baseSym, ...this.getBaseSyms(baseSym))
+            addSym(baseSym)
+        }
+
+        const cls = clsSym.valueDeclaration
+
+        if (cls && (ts.isClassLike(cls) || ts.isInterfaceDeclaration(cls))) {
+            if (cls.heritageClauses) {
+                for (const h of cls.heritageClauses) {
+                    if (h.token == SK.ImplementsKeyword) {
+                        for (const tpExpr of h.types) {
+                            const tp = this.checker.getTypeAtLocation(tpExpr)
+                            const baseSym = this.checker.getPropertyOfType(
+                                tp,
+                                sym.getName()
+                            )
+                            addSym(baseSym)
+                        }
+                    }
+                }
+            }
+        }
+
+        if (this.flags.traceProto && res.length > 0) {
+            trace(
+                "BASE: " +
+                    this.symName(sym) +
+                    " => " +
+                    res.map(s => this.symName(s)).join(", ")
+            )
         }
 
         return res
@@ -2873,19 +2935,30 @@ class Program implements TopOpWriter {
         return false
     }
 
-    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
-        const left = expr.left
+    private isPrototypeLike(
+        expr: ts.Expression
+    ): expr is ts.PropertyAccessExpression {
+        if (!ts.isPropertyAccessExpression(expr)) return false
+        if (
+            ts.isPropertyAccessExpression(expr.expression) &&
+            idName(expr.expression.name) == "prototype"
+        )
+            return true
+        if (this.isBuiltInObj(this.nodeName(expr.expression))) return true
+        return false
+    }
 
-        if (!ts.isPropertyAccessExpression(left)) return null
+    private emitPrototypeUpdate(expr: ts.BinaryExpression): Value {
+        if (!this.isPrototypeLike(expr.left)) return null
         if (!this.isFunctionValue(expr.right)) return null
         if (!this.isTopLevel(expr.parent)) return null
 
-        const sym = this.getSymAtLocation(left)
+        const sym = this.getSymAtLocation(expr.left)
         const decl = sym?.valueDeclaration
 
         if (decl) {
             this.protoDefinitions.push({
-                methodName: idName(left.name),
+                methodName: idName(expr.left.name),
                 className: this.nodeName(decl.parent),
                 names: this.methodNames(sym),
                 protoUpdate: expr,
@@ -2922,7 +2995,7 @@ class Program implements TopOpWriter {
         if (ts.isIdentifier(trg)) {
             const variable = this.getVarAtLocation(trg)
             return {
-                read: () => variable.emit(wr),
+                read: () => this.emitLoad(trg, variable),
                 write: (src: Value) => this.emitStore(variable, src),
                 free: () => {},
             }
@@ -3368,7 +3441,43 @@ class Program implements TopOpWriter {
         return this.emitExpr(expr.expression)
     }
 
+    private retValError(expr: ts.Expression): never {
+        throwError(expr, `invalid ?. expression nesting`)
+    }
+
+    private emitChain(expr: PropChain) {
+        const tmp = this.flattenChain(expr)
+        const wr = this.writer
+        const chainLen = this.currChain.length
+        this.currChain.push(...tmp.chain, tmp.expression)
+        const obj = this.emitExpr(tmp.expression)
+        if (this.retValRefs != 0) this.retValError(expr)
+        this.retValExpr = tmp.expression
+        this.retValRefs = 1
+        wr.emitStmt(Op.STMT1_STORE_RET_VAL, obj)
+        const lbl = wr.mkLabel("opt")
+        wr.emitJumpIfRetValNullish(lbl)
+        wr.emitStmt(Op.STMT1_STORE_RET_VAL, this.emitExpr(expr))
+        if (this.retValRefs != 0) this.retValError(expr)
+        wr.emitLabel(lbl)
+        this.currChain = this.currChain.slice(0, chainLen)
+        return this.retVal()
+    }
+
     private emitExpr(expr: Expr): Value {
+        if (
+            ts.isOptionalChain(expr) &&
+            expr.kind != SK.NonNullExpression &&
+            !this.currChain.includes(expr)
+        )
+            return this.emitChain(expr as PropChain)
+
+        if (expr === this.retValExpr) {
+            if (this.retValRefs != 1) this.retValError(expr)
+            this.retValRefs = 0
+            return this.retVal()
+        }
+
         const folded = this.constantFold(expr)
         if (folded) {
             if (false && ts.isBinaryExpression(expr))
@@ -3596,12 +3705,15 @@ class Program implements TopOpWriter {
     }
 
     private serializeStartServices() {
+        const bcfg = this.host.getConfig()
+        const jcfg: ProgramConfig = bcfg?.hwInfo ?? {}
         const cfg = jsonToDcfg({
+            ...jcfg,
             services: new Array(0x40).concat(this.startServices),
         })
         const bin = serializeDcfg(cfg)
         const writer = new SectionWriter()
-        if (this.startServices.length) {
+        if (this.startServices.length || Object.keys(jcfg).length) {
             writer.append(bin)
             writer.align()
         }
@@ -3880,6 +3992,7 @@ class Program implements TopOpWriter {
                 roles: roleData.size,
                 align: left,
             },
+            localConfig: unresolveBuildConfig(this.host.getConfig()),
             roles: this.roles.map(r => r.debugInfo()),
             functions: this.procs.map(p => p.debugInfo()),
             globals: this.globals.map(r => r.debugInfo()),
@@ -3929,7 +4042,7 @@ class Program implements TopOpWriter {
     emit(): CompilationResult {
         assert(!this.tree)
 
-        this.tree = buildAST(
+        const ast = buildAST(
             this.mainFileName,
             this.host,
             this.prelude,
@@ -3951,6 +4064,7 @@ class Program implements TopOpWriter {
                 }
             }
         )
+        this.tree = ast.program
         this.checker = this.tree.getTypeChecker()
 
         getProgramDiagnostics(this.tree).forEach(d => this.printDiag(d))
@@ -4004,6 +4118,7 @@ class Program implements TopOpWriter {
             success: this.numErrors == 0,
             binary,
             dbg,
+            usedFiles: ast.usedFiles(),
             diagnostics: this.diagnostics,
             config: this.host.getConfig(),
         }
@@ -4014,6 +4129,7 @@ export interface CompilationResult {
     success: boolean
     binary: Uint8Array
     dbg: DebugInfo
+    usedFiles: string[]
     diagnostics: DevsDiagnostic[]
     config?: ResolvedBuildConfig
 }

@@ -1,22 +1,26 @@
 ---
 sidebar_position: 2
-hide_table_of_contents: true
 ---
 
 # Defining Roles
 
-In DeviceScript, all access to sensors, actuators or other hardware components are abstracted through [Jacdac](https://aka.ms/jacdac) services. Sensors act as **servers** and your scripts connects **clients** to interact with them.
+In DeviceScript, all access to sensors, actuators or other hardware components
+are abstracted through [Jacdac](https://aka.ms/jacdac) services.
+Sensors act as **servers** and your scripts connects **clients** to interact with them.
 
-To interact with Jacdac services, you define **roles** for each service you need.
+To interact with servers, you start clients, known as **roles**, for each service you need.
 
-In this scenario, we will need to measure air pressure and send HID mouse commands. Therefore, we declare a `airPressure` role and a `hidMouse` role.
+Let's illustrate these concept with a controller for a home heating system.
+The heating system has a relay to turn on/off the furnace, a temperature sensor and
+rotary encoder to change the desired temperature.
+Therefore, we declare 3 roles.
 
-```ts edit
+```ts
 import * as ds from "@devicescript/core"
 
-console.log(`starting...`)
-const sensor = new ds.AirPressure()
-const mouse = new ds.HidMouse()
+const thermometer = new ds.Temperature()
+const encoder = new ds.RotaryEncoder()
+const relay = new ds.Relay()
 ```
 
 :::note

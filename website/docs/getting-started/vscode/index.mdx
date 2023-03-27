@@ -1,0 +1,46 @@
+---
+sidebar_position: 19
+---
+
+# Visual Studio Code Extension
+
+The [Visual Studio Code](https://code.visualstudio.com/) extension provides the best developer experience for DeviceScript.
+
+![screenshot](../../../../vscode/screenshot.png)
+
+## Features
+
+-   Build and watch using DeviceScript compiler, deploy to simulator or hardware
+-   [Debugger](./vscode/debugging) with breakpoints, stack traces, exceptions, stepping
+-   [Simulator](./vscode/simulation) for DeviceScript and sensors/actuators
+-   Connection to native DeviceScript device
+-   Device, services, register [Explorer view](./vscode/user-interface)
+-   Register and Event watch
+
+## Installation
+
+:::note
+
+The extension is not yet available from the marketplace and needs to be installed manually from the GitHub releases page.
+
+:::
+
+-   find the latest `devicescript-vscode-*` release at [https://github.com/microsoft/devicescript/releases](https://github.com/microsoft/devicescript/releases?q=devicescript-vscode&expanded=true)
+-   download `devicescript.vsix` from **Assets**
+-   install the .vsix file in code
+
+Using the **Install from VSIX** command in the Extensions view command dropdown,
+or the **Extensions: Install from VSIX** command in the Command Palette, point to the .vsix file
+(see [full instructions](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix)).
+
+## Creating a new project
+
+-   install [Node.JS 18+](https://nodejs.org/en/download/)
+-   open a folder in Visual Studio Code
+-   From the Command palette, type **DeviceScript: Create New Project...** and follow the prompts.
+
+The new project should be ready to go.
+
+## DeviceScript basics
+
+Navigate to the [Developer section](/developer) to learn the basics of the language.

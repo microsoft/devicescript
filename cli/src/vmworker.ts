@@ -112,17 +112,20 @@ export function overrideConsoleDebug() {
 }
 
 export function printDmesg(dbg: DebugInfo, pref: string, line: string) {
-    const m = /^\s*([\*\!>]) (.*)/.exec(line)
+    const m = /^\s*([\*\!\?>]) (.*)/.exec(line)
     if (m) {
         let [_full, marker, text] = m
         if (dbg) text = parseStackFrame(dbg, text).markedLine
         if (marker == "!") text = wrapColor(91, text)
         else if (marker == ">") text = wrapColor(95, text)
+        else if (marker == "?") text = wrapColor(34, text)
         else text = wrapColor(33, text)
         console.log(pref + "> " + text)
         return true
     } else if (isVerbose) {
-        console.log(wrapColor(90, "V> " + line.trim()))
+        line = line.trim()
+        if (isVerbose <= 1 && /^(wifi:|free memory)/.test(line)) return false
+        console.log(wrapColor(90, "V> " + line))
         return true
     } else {
         return false
@@ -139,8 +142,9 @@ export async function startVmWorker(
     if (args.nativePath) {
         const vargs = ["-w", "8082"]
         if (args.gcStress) vargs.push("-X")
-        if (args.stateless) vargs.push("-n")
         if (args.deviceId) vargs.push("-d:" + args.deviceId)
+        if (args.clearFlash) vargs.push("-N")
+        if (args.stateless) vargs.push("-n")
         console.debug("starting", args.nativePath, vargs.join(" "))
         worker = spawn(args.nativePath, vargs, {
             shell: false,
@@ -150,6 +154,7 @@ export async function startVmWorker(
         if (args.deviceId) vargs.push("--device-id", args.deviceId)
         if (args.gcStress) vargs.push("--gc-stress")
         if (args.stateless) vargs.push("--stateless")
+        if (args.clearFlash) vargs.push("--clear-flash")
         console.debug("starting", __filename, vargs.join(" "))
         worker = fork(__filename, vargs, { silent: true })
     }

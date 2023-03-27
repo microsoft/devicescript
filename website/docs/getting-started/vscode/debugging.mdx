@@ -1,0 +1,44 @@
+---
+title: Debugging
+sidebar_position: 3
+---
+
+# Debugging
+
+DeviceScript programs can be debugged using the usual Visual Studio Code debugger interface.
+
+The Jacdac communication layer continues to process packets while the DeviceScript program is paused.
+
+## Configuration
+
+DeviceScript project come with default debugging configurations, in `launch.json`, that can be extended or reconfigured.
+
+```json title="launch.json"
+{
+    "version": "0.2.0",
+    "configurations": [
+        ...
+        // highlight-start
+        {
+            "name": "DeviceScript",
+            "type": "devicescript",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/main.ts",
+            "deviceId": "${command:deviceScriptSimulator}",
+            "stopOnEntry": false
+        },
+        // highlight-end
+```
+
+### `program`
+
+Let's you choose a different entry point file for debugging.
+
+### `stopOnEntry`
+
+Notifies the debugger to break on the first user-code statement, or not.
+
+### `deviceId`
+
+Specifies the device that the debugger should bind to. It can be a device identifier (short or long)
+or the `${command:deviceScriptSimulator}` command that launches the simulator.

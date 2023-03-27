@@ -37,12 +37,12 @@ description: MSR RP2040 Brain 124 v0.1
 | **led.rgb[1].pin** |  GPIO14 |  io |
 | **led.rgb[2].pin** |  GPIO15 |  io |
 | **log.pinTX** |  GPIO0 |  io |
-| **pinPwrNILimHi** |  GPIO18 |  io |
 | **services.power[0].pinEn** |  GPIO22 |  io |
 | **services.power[0].pinFault** |  GPIO12 |  io |
 | **services.power[0].pinLedPulse** |  GPIO13 |  io |
 | **services.power[0].pinPulse** |  GPIO8 |  io |
 | **services.power[0].pinUsbDetect** |  GPIO11 |  io |
+| **setupPins[0].pin** |  GPIO18 |  io |
 
 
 
@@ -54,7 +54,7 @@ select **DeviceScript: Flash Firmware...** from the command palette.
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
-devicescript flash rp2040 --board msr124
+devicescript flash --board msr124
 ```
 
 
@@ -93,7 +93,6 @@ devicescript flash rp2040 --board msr124
         "baud": 115200,
         "pinTX": 0
     },
-    "pinPwrNILimHi": 18,
     "pins": {
         "P1": 1,
         "P10": 10,
@@ -121,6 +120,13 @@ devicescript flash rp2040 --board msr124
             "pinPulse": 8,
             "pinUsbDetect": 11,
             "service": "power"
+        }
+    ],
+    "setupPins": [
+        {
+            "#": "Enable hi-power limiter mode",
+            "out": 0,
+            "pin": 18
         }
     ]
 }

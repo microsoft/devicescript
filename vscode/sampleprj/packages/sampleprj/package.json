@@ -1,0 +1,31 @@
+{
+    "name": "sampleprj",
+    "version": "2.2.6",
+    "private": true,
+    "dependencies": {
+        "devicescript-cowsay": "*",
+        "@devicescript/observables": "*",
+        "@devicescript/cloud": "*",
+        "@devicescript/settings": "*",
+        "@devicescript/i2c": "*"
+    },
+    "devDependencies": {
+        "@devicescript/cli": "*",
+        "@types/jest": "^29.4.0",
+        "assert": "^2.0.0",
+        "jest": "^29.4.3",
+        "ts-jest": "^29.0.5",
+        "nodemon": "^2.0.20",
+        "ts-node": "^10.9.1"
+    },
+    "scripts": {
+        "setup": "devicescript init",
+        "build:devicescript": "devicescript build",
+        "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
+        "build": "yarn build:devicescript && yarn build:sim",
+        "watch:devicescript": "devicescript devtools main.ts",
+        "watch:sim": "cd sim && nodemon --watch './**' --ext 'ts,json' --exec 'ts-node ./app.ts --project ./tsconfig.json'",
+        "watch": "yarn watch:devicescript & yarn watch:sim",
+        "start": "yarn watch"
+    }
+}

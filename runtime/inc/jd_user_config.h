@@ -6,13 +6,10 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#define DMESG_PRINTF_ATTR __attribute__((format(printf, 1, 2)))
+__attribute__((format(printf, 1, 2))) void app_dmesg(const char *format, ...);
+#define DMESG app_dmesg
 
-void dmesg(const char *format, ...) DMESG_PRINTF_ATTR;
-
-#define DMESG(fmt, ...) dmesg(fmt, ##__VA_ARGS__)
-
-#define JD_LOG DMESG
+#define JD_DMESG_LINE_BUFFER 300
 
 #define JD_CONFIG_STATUS 0
 #define JD_CONFIG_CONTROL_FLOOD 0
@@ -44,5 +41,7 @@ extern uintptr_t flash_base_addr(void);
 
 extern const uint8_t jd_dcfg_array[];
 #define JD_DCFG_BASE_ADDR ((uintptr_t)jd_dcfg_array)
+
+#define JD_NETWORK 1
 
 #endif

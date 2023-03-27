@@ -98,6 +98,10 @@ void flash_sync() {
 void flash_init(void) {
     flash_base = malloc(FLASH_SIZE);
     memset(flash_base, FILL_PATTERN, FLASH_SIZE);
+    if (settings_in_files == 2) {
+        settings_in_files = 1;
+        flash_sync(); // overwrite with empty
+    }
     if (settings_in_files) {
         FILE *f = fopen(FLASH_PATH, "r");
         if (f) {

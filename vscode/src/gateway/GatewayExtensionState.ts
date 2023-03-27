@@ -4,14 +4,16 @@ import {
     JDDevice,
     JDEventSource,
     SRV_CLOUD_ADAPTER,
+    toMap,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { DeviceScriptExtensionState } from "../state"
 import "isomorphic-fetch"
-import { CloudManager, FETCH_ERROR } from "./clouddom"
+import { GatewayManager, FETCH_ERROR } from "./gatewaydom"
+import { showError, showErrorMessage } from "../telemetry"
 
 export class GatewayExtensionState extends JDEventSource {
-    private _manager: CloudManager
+    private _manager: GatewayManager
 
     constructor(
         readonly context: vscode.ExtensionContext,
@@ -45,17 +47,17 @@ export class GatewayExtensionState extends JDEventSource {
         )
 
         subscriptions.push(
+            //cloud
             vscode.commands.registerCommand(
-                "extension.devicescript.gateway.refresh",
-                async () => {
-                    const apiRoot = this.apiRoot
-                    const token = await this.token
-                    if (!apiRoot || !token) await this.configure()
-                    else await this.connect(true)
-                }
+                "extension.devicescript.gateway.configure",
+                async () => await this.configure()
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.gateway.registerDevice",
+                "extension.devicescript.gateway.refresh",
+                async () => await this.refresh()
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.devices.register",
                 async () => {
                     const manager = this.manager
                     if (!manager) return
@@ -112,6 +114,13 @@ export class GatewayExtensionState extends JDEventSource {
         this.handleRefreshConnection()
     }
 
+    async refresh() {
+        const apiRoot = this.apiRoot
+        const token = await this.token
+        if (!apiRoot || !token) await this.configure()
+        else await this.connect(true)
+    }
+
     private handleChange() {
         this.emit(CHANGE)
     }
@@ -120,18 +129,24 @@ export class GatewayExtensionState extends JDEventSource {
         console.error(err)
     }
 
-    private async handleFetchError(resp: Response) {
-        switch (resp.status) {
-            case 401: {
-                // unauthorized
-                await this.setToken(undefined)
-                break
+    private async handleFetchError(error: Response | Error) {
+        if (error instanceof Response) {
+            const resp = error as Response
+            switch (resp.status) {
+                case 401: {
+                    // unauthorized
+                    await this.setToken(undefined)
+                    break
+                }
             }
+            await showErrorMessage(
+                "gateway.fetch",
+                `${resp.statusText} (${resp.status})`
+            )
+        } else {
+            const e = error as Error
+            await showError(e)
         }
-
-        await vscode.window.showErrorMessage(
-            `DeviceScript Gateway: ${resp.statusText} (${resp.status})`
-        )
     }
 
     private async handleRefreshConnection() {
@@ -147,13 +162,21 @@ export class GatewayExtensionState extends JDEventSource {
         const token = await this.token
         const apiRoot = this.apiRoot
         if (token && apiRoot && !this._manager) {
-            this._manager = new CloudManager(this.bus, apiRoot, token)
+            this._manager = new GatewayManager(this.bus, apiRoot, token)
             this._manager.on(CHANGE, this.handleChange)
             this._manager.on(ERROR, this.handleError)
             this._manager.on(FETCH_ERROR, this.handleFetchError)
             forceRefresh = true
         }
-        if (this._manager && forceRefresh) await this._manager.refresh()
+        if (this._manager && forceRefresh) await this.backgroundRefresh()
+    }
+
+    private async backgroundRefresh() {
+        try {
+            await this._manager?.refresh()
+        } catch (e) {
+            showError(e)
+        }
     }
 
     get manager() {
@@ -173,51 +196,50 @@ export class GatewayExtensionState extends JDEventSource {
     }
 
     async setApiRoot(apiRoot: string) {
-        await vscode.workspace
-            .getConfiguration("devicescript.gateway")
-            .update("apiRoot", apiRoot?.replace(/\/\s*$/, ""))
+        if (apiRoot !== this.apiRoot) {
+            await vscode.workspace
+                .getConfiguration("devicescript.gateway")
+                .update("apiRoot", apiRoot?.replace(/\/\s*$/, ""))
+            this.handleRefreshConnection()
+        }
     }
 
     async configure() {
-        let changed = false
         const newConnectionString = await vscode.window.showInputBox({
             placeHolder: "Enter DevelopmentGateway connection string",
         })
         if (newConnectionString === undefined) return
+
         if (newConnectionString === "") {
             await this.setApiRoot(undefined)
-            changed = true
         } else {
-            const parts = newConnectionString
-                .trim()
-                .split(";")
-                .map(chunk => chunk.split("=", 2))
-            const webAppName = parts.find(
-                ([name]) => name === "WebAppName"
-            )?.[1]
-            const accountName = parts.find(
-                ([name]) => name === "AccountName"
-            )?.[1]
-            const accountKey = parts.find(
-                ([name]) => name === "AccountKey"
-            )?.[1]
-            const endPointSuffix = parts.find(
-                ([name]) => name === "EndPointSuffix"
-            )?.[1]
+            let {
+                AccountName,
+                AccountKey,
+                ApiRoot,
+                Subscription,
+                ResourceGroup,
+            } = toMap(
+                newConnectionString
+                    .trim()
+                    .split(";")
+                    .map(chunk => chunk.split("=", 2)),
+                ([name, _]) => name,
+                ([_, val]) => val
+            )
 
-            if (!webAppName || !accountName || !accountKey || !endPointSuffix) {
-                vscode.window.showErrorMessage(
-                    "DeviceScript Gateway: invalid connection string"
+            if (!ApiRoot || !AccountName || !AccountKey) {
+                showErrorMessage(
+                    "gateway.invalidconnstring",
+                    `invalid connection string`
                 )
                 return
             }
-            const apiRoot = `https://${webAppName}.${endPointSuffix}`
-            const token = `${accountName}:${accountKey}`
-            await this.setApiRoot(apiRoot)
+            const token = `${AccountName}:${AccountKey}`
+            await this.setApiRoot(ApiRoot)
             await this.setToken(token)
-            changed = true
         }
-        if (changed) this.handleRefreshConnection()
+        if (this.apiRoot && this.token) await this.connect(true)
     }
 
     get token() {
@@ -225,7 +247,14 @@ export class GatewayExtensionState extends JDEventSource {
     }
 
     async setToken(token: string) {
-        await this.context.secrets.store("devicescript.gateway.token", token)
+        const t = await this.token
+        if (token !== t) {
+            await this.context.secrets.store(
+                "devicescript.gateway.token",
+                token
+            )
+            this.handleRefreshConnection()
+        }
     }
 
     withProgress(title: string, transaction: () => Promise<void>) {
@@ -238,12 +267,9 @@ export class GatewayExtensionState extends JDEventSource {
                 try {
                     await transaction()
                 } catch (e) {
-                    console.error(e)
-                    vscode.window.showErrorMessage(
-                        "DeviceScript Gateway: Updated failed."
-                    )
+                    showError(e)
                     // async
-                    this.manager.refresh()
+                    this.backgroundRefresh()
                 }
             }
         )

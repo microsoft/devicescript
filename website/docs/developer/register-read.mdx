@@ -1,6 +1,5 @@
 ---
 sidebar_position: 4
-hide_table_of_contents: true
 ---
 
 # Register read
@@ -8,20 +7,33 @@ hide_table_of_contents: true
 You can retreive the current value of a register by calling `read`.
 Internally, the client will handle all the necessary syncronization and communication with the sensor.
 
+## read
+
 ```ts skip no-run
-const pressure = sensor.pressure.read()
+const pressure = await sensor.pressure.read()
 ```
 
 Let's modify the snippet by `reading` the `pressure` reading
 and logging it to the console.
 
-```ts edit
-console.log("starting...")
-const sensor = new ds.AirPressure()
-// listen for pressure changes
-sensor.pressure.onChange(10, () => {
-    // read sensor reading
-    const pressure = sensor.pressure.read()
+## subscribe
+
+```ts skip
+// highlight-next-line
+sensor.pressure.subscribe(async pressure => {
     console.log(pressure)
 })
+```
+
+## unsubscribe
+
+The `subscribe` method returns an `unsubscribe` callback.
+
+```ts edit
+const sensor = new ds.AirPressure()
+// highlight-next-line
+const unsubscribe = sensor.pressure.subscribe(async t => console.log(t))
+
+// highlight-next-line
+unsubscribe()
 ```

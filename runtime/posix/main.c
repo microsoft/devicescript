@@ -43,13 +43,7 @@ bool starts_with(const char *str, const char *pref) {
 
 void app_init_services() {
     flash_init();
-
-    jd_role_manager_init();
-    devsmgr_init(NULL);
-    devsdbg_init();
-    wsskhealth_init();
-    devscloud_init(&wssk_cloud);
-    tsagg_init(&wssk_cloud);
+    devs_service_full_init(NULL);
 }
 
 struct {
@@ -64,6 +58,7 @@ struct {
 
 #ifndef __EMSCRIPTEN__
 void devs_deploy_handler(int exitcode) {
+    flush_dmesg();
     exit(0);
 }
 #endif
@@ -92,6 +87,7 @@ static void process_deploy(void) {
 #ifndef __EMSCRIPTEN__
 void devs_panic_handler(int exitcode) {
     if (test_mode && exitcode) {
+        flush_dmesg();
         fprintf(stderr, "test failed\n");
         exit(10);
     }
@@ -197,10 +193,34 @@ int load_image(const char *name) {
     return 0;
 }
 
+#ifndef __EMSCRIPTEN__
+void app_print_dmesg(const char *ptr) {
+    printf("    %s\n", ptr);
+    fflush(stdout);
+}
+#endif
+
+void flush_dmesg(void) {
+    static uint32_t dmesg_ptr;
+    static char linebuf[JD_DMESG_LINE_BUFFER + 20];
+    while (jd_dmesg_read_line(linebuf, sizeof(linebuf), &dmesg_ptr) != 0)
+        app_print_dmesg(linebuf);
+}
+
+void app_dmesg(const char *format, ...) {
+    va_list arg;
+    va_start(arg, format);
+    jd_vdmesg(format, arg);
+    va_end(arg);
+    flush_dmesg();
+}
+
 void jd_tcpsock_process(void);
 void app_process(void) {
     tx_process();
     jd_tcpsock_process();
+
+    flush_dmesg();
 
 #if 0
     static uint32_t uptime_cnt;
@@ -225,6 +245,7 @@ static void run_sample(const char *name, int keepgoing) {
     for (uint64_t iter = 0; iter < the_end; iter++) {
         if (iter == 10) { // give it some time to get announce etc
             if (load_image(name)) {
+                flush_dmesg();
                 exit(9);
             }
         }
@@ -289,7 +310,6 @@ int main(int argc, const char **argv) {
 #endif
     int enable_lstore = 0;
     int websock = 0;
-    int enable_logging = 0;
     int test_settings = 0;
 
     for (int i = 1; i < argc; ++i) {
@@ -305,14 +325,14 @@ int main(int argc, const char **argv) {
             devs_img = arg;
         } else if (strcmp(arg, "-l") == 0) {
             enable_lstore = 1;
-        } else if (strcmp(arg, "-L") == 0) {
-            enable_logging = 1;
         } else if (strcmp(arg, "-X") == 0) {
             devs_set_global_flags(DEVS_FLAG_GC_STRESS);
         } else if (strcmp(arg, "-w") == 0) {
             websock = 1;
         } else if (strcmp(arg, "-n") == 0) {
             settings_in_files = 0;
+        } else if (strcmp(arg, "-N") == 0) {
+            settings_in_files = 2;
         } else if (strcmp(arg, "-T") == 0) {
             test_settings = 1;
         } else if (strncmp(arg, "-d:", 3) == 0) {
@@ -347,9 +367,6 @@ int main(int argc, const char **argv) {
     if (enable_lstore)
         jd_lstore_init();
     jd_services_init();
-
-    if (enable_logging)
-        devsmgr_set_logging(1);
 
     {
         uint64_t devid = jd_device_id();

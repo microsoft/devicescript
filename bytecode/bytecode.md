@@ -2,6 +2,33 @@
 
 Expressions do not modify the state. They may throw exceptions though.
 
+## Format Constants
+
+    img_version_major = 2
+    img_version_minor = 2
+    img_version_patch = 6
+    img_version = $version
+    magic0 = 0x53766544 // "DevS"
+    magic1 = 0xf1296e0a
+    num_img_sections = 10
+    fix_header_size = 32
+    section_header_size = 8
+    function_header_size = 16
+    role_header_size = 8
+    ascii_header_size = 2
+    binary_size_align = 32
+    max_stack_depth = 10
+    direct_const_op = 0x80
+    direct_const_offset = 16
+    first_multibyte_int = 0xf8
+    first_non_opcode = 0x10000
+    first_builtin_function = 50000
+    max_args_short_call = 8
+    service_spec_header_size = 16
+    service_spec_packet_size = 8
+    service_spec_field_size = 4
+    role_bits = 15
+
 ## Ops
 
 ### Control flow
@@ -24,11 +51,15 @@ Passes arguments to a function as an array. The array can be at most `max_stack_
 
     final return(value) = 12
 
-    final jmp(*jmpoffset) = 13               // JMP jmpoffset
+    final jmp(*jmpoffset) = 13                // JMP jmpoffset
 
-    jmp_z(*jmpoffset, x) = 14          // JMP jmpoffset IF NOT x
+    jmp_z(*jmpoffset, x) = 14                 // JMP jmpoffset IF NOT x
 
 Jump if condition is false.
+
+    jmp_ret_val_z(*jmpoffset) = 78            // JMP jmpoffset IF ret_val is nullish
+
+Used in compilation of `?.`.
 
     try(*jmpoffset) = 80                // TRY jmpoffset
 
@@ -84,6 +115,8 @@ Trigger breakpoint when debugger connected. No-op otherwise.
     load_closure(*local_clo_idx, levels): any = 74
 
     make_closure(*func_idx): function = 75    // CLOSURE(func_idx)
+
+    store_ret_val(x) = 93                     // ret_val := x
 
 ### Field access
 
@@ -183,6 +216,10 @@ Check if object is exactly `undefined`.
 
 Check if `obj` has `cls.prototype` in its prototype chain.
 
+    fun is_nullish(x): bool = 72
+
+Check if value is precisely `null` or `undefined`.
+
 ### Booleans
 
     fun true(): bool = 48
@@ -245,47 +282,9 @@ Same as `x | 0`.
 
     fun approx_ne(x, y): bool = 92  // x != y
 
-### To be removed (mostly)
+### To be removed (soon)
 
-    terminate_fiber(fiber_handle) = 72
-
-Returns nan (fiber doesn't exists) or 0 (terminated).
-
-    now_ms: number = 77
-
-Time since device restart in ms; time only advances when sleeping.
-
-    get_fiber_handle(func): fiber = 78
-
-If `func == null` returns self-handle.
-Otherwise, returns a handle or `null` if fiber with given function at the bottom is not currently running.
-
-## Format Constants
-
-    img_version_major = 6
-    img_version_minor = 2
-    img_version_patch = 0
-    img_version = $version
-    magic0 = 0x53766544 // "DevS"
-    magic1 = 0x9a6a7e0a
-    num_img_sections = 10
-    fix_header_size = 32
-    section_header_size = 8
-    function_header_size = 16
-    role_header_size = 8
-    ascii_header_size = 2
-    binary_size_align = 32
-    max_stack_depth = 10
-    direct_const_op = 0x80
-    direct_const_offset = 16
-    first_multibyte_int = 0xf8
-    first_non_opcode = 0x10000
-    first_builtin_function = 50000
-    max_args_short_call = 8
-    service_spec_header_size = 16
-    service_spec_packet_size = 8
-    service_spec_field_size = 4
-    role_bits = 15
+    removed_77() = 77
 
 ## Enum: StrIdx
 
@@ -330,6 +329,7 @@ Start new fiber. If it's already running, replace it.
 
     needs_this = 0x01
     is_ctor = 0x02
+    has_rest_arg = 0x04
 
 ## Enum: NumFmt
 
@@ -497,7 +497,7 @@ Only `true` and `false` values.
     getAt = 29
     idiv = 30
     imul = 31
-    isConnected = 32
+    isBound = 32
     join = 33
     length = 34
     log = 35
@@ -540,7 +540,7 @@ Only `true` and `false` values.
     wait = 72
     write = 73
 
-    sleepMs = 74
+    sleep = 74
     imod = 75
     format = 76
     insert = 77
@@ -563,7 +563,7 @@ Only `true` and `false` values.
     payload = 94
     decode = 95
     encode = 96
-    onPacket = 97
+    _onPacket = 97
     code = 98
     name = 99
     isEvent = 100
@@ -602,3 +602,21 @@ Only `true` and `false` values.
     JSON = 133
     parse = 134
     stringify = 135
+    _dcfgString = 136
+    isSimulator = 137
+    _Role = 138 // Role
+    Fiber = 139
+    suspend = 140
+    resume = 141
+    terminate = 142
+    self = 143
+    current = 144
+    id = 145
+    _commandResponse = 146
+    isAction = 147
+    millis = 148
+    from = 149
+    hex = 150
+    utf8 = 151
+    _utf8 = 152 // utf-8
+    suspended = 153

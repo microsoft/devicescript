@@ -23,9 +23,9 @@ set -e
 cp build/bytecode.ts ../compiler/src/
 cp build/devs_bytecode.h ../runtime/devicescript/devs_bytecode.h
 clang-format -i ../runtime/devicescript/devs_bytecode.h
-prettier -w ../compiler/src/bytecode.ts
+../node_modules/.bin/prettier -w ../compiler/src/bytecode.ts
 MC=../../../microcode
 if test -d $MC ; then
   cp build/devs_bytecode.ts $MC
-  prettier -w $MC/devs_bytecode.ts
+  ../node_modules/.bin/prettier -w $MC/devs_bytecode.ts
 fi

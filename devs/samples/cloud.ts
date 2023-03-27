@@ -1,26 +1,17 @@
 import * as ds from "@devicescript/core"
-import { cloud } from "@devicescript/core"
 
-let q = 0
-        
-// if (false)
-    ds.everyMs(5000, async () => {
-        console.log("upl", q)
-        await cloud.upload("hello", q, 2 * q, q + 10000)
-        q = q + 1
-    })
+const cloud = new ds.CloudAdapter()
+console.log(await cloud.connectionName.read())
 
-cloud.onMethod("foo", async (a, b) => {
-    console.log("foo a=", a, "b=", b)
-    return [a + 1, b * 2]
+await ds.sleep(500)
+await cloud.uploadJson("topic1", JSON.stringify({ foo: 1, bar: { baz: "foo" } }))
+await cloud.uploadBinary("topic2", hex`00 11 22 33`)
+
+cloud.onJson.subscribe(val => {
+    console.log("got JSON", val[0], val[1])
+})
+cloud.onBinary.subscribe(val => {
+    console.log("got bin", val[0], val[1])
 })
 
-cloud.onMethod("bar", async (a) => {
-    console.log("bar a=", a)
-    await ds.sleepMs(5000)
-    return [108]
-})
-
-cloud.onMethod("bar2", async () => {
-    return [108]
-})
+await ds.sleep(500)

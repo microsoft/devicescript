@@ -65,16 +65,19 @@ void devs_dump_stack(devs_ctx_t *ctx, value_t stack) {
         const devs_function_desc_t *desc = devs_function_by_pc(ctx, data[i]);
         if (desc) {
             int fn = desc - devs_img_get_function(ctx->img, 0);
-            DMESG("*  pc=%d @ %s_F%d", (int)(pc - desc->start), devs_img_fun_name(ctx->img, fn),
-                  fn);
+            DMESG("*  at %s_F%d (pc:%d)", devs_img_fun_name(ctx->img, fn), fn,
+                  (int)(pc - desc->start));
         } else {
-            DMESG("*  pc=%d @ ???", pc);
+            DMESG("*  at unknown (gpc:%d)", pc); // shouldn't happen
         }
     }
 }
 
 void devs_dump_exception(devs_ctx_t *ctx, value_t exn) {
     int hadinfo = 0;
+
+    DMESG("DevS-SHA256: %-s", jd_to_hex_a(ctx->program_hash, JD_SHA256_HASH_BYTES));
+
     if (devs_can_attach(ctx, exn)) {
         value_t ctor = devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING_NAME);
         if (!devs_is_undefined(ctor)) {
@@ -140,10 +143,15 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags) {
     ctx->exn_val = exn;
 
     if (devs_can_attach(ctx, exn) && !(flags & DEVS_THROW_NO_STACK)) {
-        value_t stack = devs_capture_stack(ctx);
-        devs_value_pin(ctx, stack);
-        devs_any_set(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING___STACK__), stack);
-        devs_value_unpin(ctx, stack);
+        value_t curr_stack =
+            devs_object_get_built_in_field(ctx, exn, DEVS_BUILTIN_STRING___STACK__);
+        if (devs_is_undefined(curr_stack)) {
+            // keep the original stack when we re-throw
+            value_t stack = devs_capture_stack(ctx);
+            devs_value_pin(ctx, stack);
+            devs_any_set(ctx, exn, devs_builtin_string(DEVS_BUILTIN_STRING___STACK__), stack);
+            devs_value_unpin(ctx, stack);
+        }
     }
 }
 
@@ -199,7 +207,7 @@ void devs_process_throw(devs_ctx_t *ctx) {
         }
 
         int pc = devs_pop_tryframe(frame, ctx);
-        LOG("pc=%d", pc);
+        LOG("(gpc:%d)", pc);
         if (pc == 0) {
             if (jump_pc != 0) {
                 devs_invalid_program(ctx, 60124);

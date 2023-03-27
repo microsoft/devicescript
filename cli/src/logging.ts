@@ -19,15 +19,6 @@ export function enableLogging(bus: JDBus, logFn = logToConsole) {
     bus.minLoggerPriority = LoggerPriority.Debug
     bus.subscribe(PACKET_REPORT, (pkt: Packet) => {
         if (
-            pkt.serviceClass === SRV_DEVICE_SCRIPT_MANAGER &&
-            pkt.serviceCommand === DeviceScriptManagerCmd.LogMessage
-        ) {
-            const [counter, flags, content] =
-                pkt.jdunpack<[number, number, string]>("u8 u8 s")
-            logFn(LoggerPriority.Log, prefixMsg(pkt.device.shortId, content))
-        }
-
-        if (
             pkt.serviceClass === SRV_LOGGER &&
             LoggerCmd.Debug <= pkt.serviceCommand &&
             pkt.serviceCommand <= LoggerCmd.Error

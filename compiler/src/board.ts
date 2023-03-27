@@ -5,9 +5,9 @@ import {
     PinFunctionInfo,
     PinFunction,
     normalizeDeviceConfig,
+    parseAnyInt,
 } from "@devicescript/interop"
 import { DeviceCatalog, deviceCatalogImage, unique } from "jacdac-ts"
-import { parseAnyInt } from "./dcfg"
 import { resolveBuildConfig } from "./specgen"
 
 export function boardInfos(info: RepoInfo) {
@@ -146,7 +146,7 @@ select **DeviceScript: Flash Firmware...** from the command palette.
 Run this [command line](/api/cli) command and follow the instructions.
 
 \`\`\`bash
-devicescript flash ${architectureFamily(archId)} --board ${devId}
+devicescript flash --board ${devId}
 \`\`\`
 
 `,

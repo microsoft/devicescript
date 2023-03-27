@@ -1,7 +1,7 @@
 {
     "name": "@devicescript/cli",
     "private": false,
-    "version": "1.10.2",
+    "version": "2.2.6",
     "description": "DeviceScript command line tool",
     "keywords": [
         "devicescript",
@@ -26,17 +26,21 @@
         "url": "https://github.com/microsoft/devicescript.git",
         "directory": "cli"
     },
+    "engines": {
+        "node": "18"
+    },
     "license": "MIT",
     "devDependencies": {
         "@devicescript/dap": "*",
         "@devicescript/vm": "*",
-        "@types/debounce-promise": "^3.1.5",
-        "@types/fs-extra": "^9.0.13",
-        "@types/node": "^18.11.9",
-        "commander": "^9.4.1",
+        "@devicescript/interop": "*",
+        "@types/debounce-promise": "^3.1.6",
+        "@types/fs-extra": "^11.0.1",
+        "@types/node": "^18.15.3",
+        "commander": "^10.0.0",
         "debounce-promise": "^3.1.2",
         "faye-websocket": "^0.11.4",
-        "fs-extra": "^10.1.0"
+        "fs-extra": "^11.1.0"
     },
     "dependencies": {
         "@devicescript/compiler": "*",

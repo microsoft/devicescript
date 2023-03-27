@@ -21,31 +21,39 @@ export interface StackFrame {
 }
 
 export function parseStackFrame(dbgInfo: DebugInfo, line: string) {
-    const resolver = SrcMapResolver.from(dbgInfo)
+    const resolver = dbgInfo ? SrcMapResolver.from(dbgInfo) : undefined
     const frames: StackFrame[] = []
-    const markedLine = line.replace(
-        /\bpc=(\d+) \@ (\w*)_F(\d+)/g,
-        (full, pcStr, fnName, fnIdxStr) => {
-            let pc = parseInt(pcStr)
-            if (pc) pc-- // the pc is always one-past
-            const fnidx = parseInt(fnIdxStr)
-            const fn = dbgInfo.functions[fnidx]
-            if (!fn) return full
-            pc += fn.startpc
-            let info = ""
-            if (fnName && fnName != fn.name)
-                info = ` fn mismatch ${fnName} vs ${fn.name}`
 
-            const srcpos = resolver.resolvePc(pc)
-            const posstr = resolver.posToString(srcpos[0])
-
-            frames.push({
-                srcpos,
-                fn,
-            })
-            return `\u001b[36m${posstr}${info}\u001b[0m ${full}`
+    function expand(pcStr: string, fnName: string, fnIdxStr: string) {
+        let pc = parseInt(pcStr)
+        if (pc) pc-- // the pc is always one-past
+        const fnidx = parseInt(fnIdxStr)
+        const fn = dbgInfo?.functions[fnidx]
+        let pcInfo = `as F${fnIdxStr}_pc${pcStr}`
+        if (!fn) {
+            if (fnName == "inline") fnName = `inline_F${fnIdxStr}`
+            return `at ${fnName} [${pcInfo}] (<anonymous>)`
         }
-    )
+        pc += fn.startpc
+        if (fnName && fnName != fn.name) pcInfo += "_mismatch_" + fn.name
+
+        const srcpos = resolver.resolvePc(pc)
+        const posstr = resolver.posToString(srcpos[0])
+
+        frames.push({
+            srcpos,
+            fn,
+        })
+        return `at ${fnName} [${pcInfo}] \u001b[36m(${posstr})\u001b[0m`
+    }
+
+    const markedLine = line
+        .replace(/\bpc=(\d+) \@ (\w*)_F(\d+)/g, (_, pc, fnName, fnIdx) =>
+            expand(pc, fnName, fnIdx)
+        )
+        .replace(/at\s+(\w*)_F(\d+)\s+\(pc:(\d+)\)/g, (_, fnName, fnIdx, pc) =>
+            expand(pc, fnName, fnIdx)
+        )
     return { markedLine, frames }
 }
 
@@ -134,7 +142,7 @@ export class SrcMapResolver {
 
     posToString(pos: number) {
         const t = this.resolvePos(pos)
-        if (t) return `${t.src.path}(${t.line},${t.col})`
+        if (t) return `${t.src.path}:${t.line}:${t.col}`
         return `(pos=${pos})`
     }
 

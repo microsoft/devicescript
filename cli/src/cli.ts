@@ -1,4 +1,4 @@
-import { program, CommandOptions } from "commander"
+import { program, CommandOptions, Command } from "commander"
 import { annotate } from "./annotate"
 import { build } from "./build"
 import { crunScript } from "./crun"
@@ -6,14 +6,22 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import { addNpm, addService, addSim, init } from "./init"
+import {
+    addNpm,
+    addService,
+    addSim,
+    addTest,
+    addSettings,
+    addI2C,
+    init,
+} from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion } from "./version"
 import { dcfg } from "./dcfg"
-import { setConsoleColors, setQuiet, setVerbose } from "./command"
+import { incVerbose, setConsoleColors, setQuiet } from "./command"
 import { binPatch } from "./binpatch"
 import { logToConsole } from "./command"
 import {
@@ -36,6 +44,10 @@ export async function mainCli() {
             .option("-o, --out-dir", "output directory, default is 'built'")
             .option("--no-verify", "don't verify resulting bytecode")
             .option(
+                "--ignore-missing-config",
+                "don't check for ./devsconfig.json"
+            )
+            .option(
                 "-F, --flag <compiler-flag>",
                 "set compiler flag",
                 (val, prev: Record<string, boolean>) => {
@@ -54,7 +66,7 @@ export async function mainCli() {
             "build and run DeviceScript program https://aka.ms/devicescript"
         )
         .version(cliVersion())
-        .option("-v, --verbose", "more logging")
+        .option("-v, --verbose", "more logging (can be repeated)")
         .option("--quiet", "less logging")
         .option("--no-colors", "disable color output")
 
@@ -113,6 +125,7 @@ export async function mainCli() {
             "--local-boards <repos-path>",
             "use local, not remote info.json files"
         )
+        .option("--server-info", "generate server-info.json file")
         .action(ctool)
 
     program
@@ -133,6 +146,7 @@ export async function mainCli() {
             "use tcp jacdac proxy on 127.0.0.1:8082 (otherwise ws://127.0.0.1:8081)"
         )
         .option("-t, --test", "run in test mode (no sockets, no restarts)")
+        .option("--test-self-exit", "let the test code exit the process")
         .option(
             "-T, --test-timeout <milliseconds>",
             "set timeout for --test mode (default: 2000ms)"
@@ -164,6 +178,7 @@ export async function mainCli() {
         .option("--device-id <string>", "set device ID")
         .option("--devtools", "set when spawned from devtools")
         .option("--stateless", "disable 'flash'")
+        .option("--clear-flash", "clear flash before starting")
         .action(startVm)
 
     buildCommand("crun", { hidden: true })
@@ -181,6 +196,7 @@ export async function mainCli() {
             "-s, --serial <serial-port>",
             "connect to serial port, not 127.0.0.1:8082"
         )
+        .option("--test-self-exit", "let the test code exit the process")
         .arguments("<file.ts|file.devs>")
         .action(crunScript)
 
@@ -209,6 +225,20 @@ export async function mainCli() {
 
     const flash = program.command("flash")
 
+    // inherit parent command options in the subcommand
+    function inheritOpts(fn: (...args: any[]) => any) {
+        return (...args: any[]) => {
+            for (let i = 1; i < args.length; ++i) {
+                const a = args[i] as Command
+                if (typeof a?.parent?.opts == "function") {
+                    args[i - 1] = { ...a.parent.opts(), ...args[i - 1] }
+                    break
+                }
+            }
+            return fn(...args)
+        }
+    }
+
     function addFlashCmd(arch: string) {
         const r = arch ? flash.command(arch) : flash
         r.description(
@@ -216,8 +246,10 @@ export async function mainCli() {
                 ? `flash with ${arch.toUpperCase()}-specific parameters`
                 : `flash DeviceScript runtime (interpreter/VM)`
         )
-        r.option("-b, --board <board-id>", "specify board to flash")
-        r.option("--once", "do not wait for the board to be connected")
+        if (!arch) {
+            r.option("-b, --board <board-id>", "specify board to flash")
+            r.option("--once", "do not wait for the board to be connected")
+        }
         r.addHelpText("after", () => {
             setupFlashBoards()
             return `\nAvailable boards:\n` + boardNames(arch)
@@ -235,9 +267,9 @@ export async function mainCli() {
         )
         .option("--port <path>", "specify port")
         .option("--esptool <path>", "explicitly specify path to esptool.py")
-        .action(flashESP32)
+        .action(inheritOpts(flashESP32))
 
-    addFlashCmd("rp2040").action(flashRP2040)
+    addFlashCmd("rp2040").action(inheritOpts(flashRP2040))
 
     const addcmd = program
         .command("add")
@@ -297,6 +329,18 @@ export async function mainCli() {
         .description("make current project into an NPM library")
         .action(dropReturn(addNpm))
 
+    addCommand("test")
+        .description("add tests to current project")
+        .action(dropReturn(addTest))
+
+    addCommand("settings")
+        .description("add settings to current project")
+        .action(dropReturn(addSettings))
+
+    addCommand("i2c")
+        .description("add I2C to current project")
+        .action(dropReturn(addI2C))
+
     program
         .command("binpatch", { hidden: true })
         .description("patch an interpreter binary with board configuration")
@@ -320,7 +364,7 @@ export async function mainCli() {
         .action(binPatch)
 
     program.on("option:quiet", () => setQuiet(true))
-    program.on("option:verbose", () => setVerbose(true))
+    program.on("option:verbose", incVerbose)
     program.on("option:no-colors", () => setConsoleColors(false))
 
     program.hook("preAction", () => {

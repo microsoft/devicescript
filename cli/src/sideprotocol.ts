@@ -1,17 +1,23 @@
 import type {
     CompilationResult,
+    CompileFlags,
     ResolvedBuildConfig,
     VersionInfo,
 } from "@devicescript/compiler"
 import { ConnectionState } from "jacdac-ts"
 import type { AddBoardOptions } from "./addboard"
-import type { BuildOptions } from "./build"
-import type { AddServiceOptions, AddSimOptions, AddNpmOptions } from "./init"
+import type {
+    AddServiceOptions,
+    AddSimOptions,
+    AddNpmOptions,
+    AddTestOptions,
+} from "./init"
 
 export interface SideReq<T extends string = string> {
     req: T
     seq?: number
     data: any
+    timeout?: number
 }
 
 export interface SideResp<T extends string = string> {
@@ -111,6 +117,12 @@ export interface SideAddNpmReq extends SideReq<"addNpm"> {
 export interface SideAddNpmResp extends SideResp<"addNpm"> {
     data: AddResponse
 }
+export interface SideAddTestReq extends SideReq<"addTest"> {
+    data: AddTestOptions
+}
+export interface SideAddTestResp extends SideResp<"addTest"> {
+    data: AddResponse
+}
 export interface SideAddBoardReq extends SideReq<"addBoard"> {
     data: AddBoardOptions
 }
@@ -142,12 +154,21 @@ export interface SideOutputEvent extends SideEvent<"output"> {
         lines: string[]
     }
 }
-
+export interface BuildOptions {
+    verify?: boolean
+    outDir?: string
+    stats?: boolean
+    flag?: CompileFlags
+    cwd?: string
+    quiet?: boolean
+    ignoreMissingConfig?: boolean
+}
 export type BuildStatus = CompilationResult & { deployStatus: string }
 export interface BuildReqArgs {
     filename: string
     buildOptions?: BuildOptions
     deployTo?: string // deviceId
+    verbose?: boolean
 }
 export interface ConnectReqArgs {
     transport?: "serial" | "usb" | "spi" | "websocket" | string
@@ -165,4 +186,5 @@ export interface VmReqArgs {
     deviceId?: string
     gcStress?: boolean
     stateless?: boolean // disable "flash"
+    clearFlash?: boolean
 }

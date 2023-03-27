@@ -1,12 +1,34 @@
 /// <reference path="devicescript-spec.d.ts" />
 
 declare module "@devicescript/core" {
-    export type AsyncVoid = void | Promise<void>
+    export type AsyncValue<T> = T | Promise<T>
+    export type AsyncVoid = AsyncValue<void>
+    export type AsyncBoolean = AsyncValue<boolean>
     export type Callback = () => AsyncVoid
     export type PktHandler = (pkt: Packet) => AsyncVoid
+    export type Unsubscribe = () => void
 
-    export type SMap<T> = {
-        [idx: string]: T
+    /**
+     * A register like structure
+     */
+    export interface ClientRegister<T> {
+        /**
+         * Reads the current value
+         */
+        read(): Promise<T>
+
+        /**
+         * Subscribe a change handler to value changes
+         * @param next
+         * @return unsubscribe
+         */
+        subscribe(next: (v: T, reg: this) => AsyncVoid): Unsubscribe
+
+        /**
+         * Sends the new value to subscriptions
+         * @param newValue
+         */
+        emit(newValue: T): Promise<void>
     }
 
     /**
@@ -14,10 +36,16 @@ declare module "@devicescript/core" {
      */
     // TODO: rename to serviceclient?
     export class Role {
-        isConnected: boolean
-        // TODO: is there a way to unregister an event?
-        onConnected(handler: Callback): void
-        onDisconnected(handler: Callback): void
+        /**
+         * @internal
+         * @deprecated internal field for runtime support
+         */
+        isBound: boolean
+
+        /**
+         * Gets the state of the binding with a jacdac server
+         */
+        binding(): ClientRegister<boolean>
 
         /**
          * Wait for the next packet to arrive from the device.
@@ -32,37 +60,117 @@ declare module "@devicescript/core" {
 
         /**
          * @internal
+         * @deprecated internal field for runtime support
          */
-        onPacket: PktHandler
+        _onPacket(pkt: Packet): Promise<void>
 
-        _changeHandlers: any
-
-        _wasConnected: boolean
-        _connHandlers: Callback[]
-        _disconHandlers: Callback[]
-
-        _eventHandlers: SMap<PktHandler[]>
+        /**
+         * @internal
+         * @deprecated internal field for runtime support
+         */
+        _commandResponse(cmdpkt: Packet, fiber: Fiber): Promise<any>
     }
 
     export class Packet {
         role: Role
+
+        /**
+         * 16 character lowercase hex-encoding of 8 byte device identifier.
+         */
         deviceIdentifier: string
+
+        /**
+         * 4 character hash of `deviceIdentifier`
+         */
         shortId: string
+
         serviceIndex: number
         serviceCommand: number
         payload: Buffer
+
         decode(): any
 
+        /**
+         * Frame flags.
+         */
         flags: number
+
+        /**
+         * Check whether is `command` flag on frame is cleared
+         */
         isReport: boolean
+
+        /**
+         * Check whether is `command` flag on frame is set
+         */
         isCommand: boolean
 
+        /**
+         * Check if report and it is an event
+         */
         isEvent: boolean
+
+        /**
+         * `undefined` if not `isEvent`
+         */
         eventCode: number
 
+        /**
+         * Is it register set command.
+         */
         isRegSet: boolean
+
+        /**
+         * Is it register get command or report.
+         */
         isRegGet: boolean
+
+        /**
+         * `undefined` is neither `isRegSet` nor `isRegGet`
+         */
         regCode: number
+
+        /**
+         * True for plain `command`/`report` (not register and not event)
+         */
+        isAction: boolean
+    }
+
+    export class Fiber {
+        /**
+         * Unique number identifying the fiber.
+         */
+        id: number
+
+        /**
+         * Check if fiber is currently suspended.
+         */
+        suspended: boolean
+
+        /**
+         * If the fiber is currently suspended, mark it for resumption, passing the specified value.
+         * Otherwise, throw a `RangeError`.
+         */
+        resume(v: any): void
+
+        /**
+         * Stop given fiber (which can be current fiber).
+         */
+        terminate(): void
+
+        /**
+         * Get reference to the current fiber.
+         */
+        static self(): Fiber
+    }
+
+    global {
+        interface Function {
+            /**
+             * Start function in background passing given arguments.
+             */
+            start(...args: any[]): Fiber
+        }
     }
 
     /**
@@ -78,99 +186,37 @@ declare module "@devicescript/core" {
      * A base class for register clients.
      */
     // TODO: support for "isImplemented?"
-    export class Register extends PacketInfo {}
-
-    /**
-     * A client for a register that holds a numerical value.
-     */
-    export class RegisterNumber extends Register {
+    export class Register<T> extends PacketInfo {
         /**
          * Gets the current value of the register as a number.
          * TODO: missing value behavior (optional regs)
          */
-        read(): Promise<number>
+        read(): Promise<T>
 
         /**
          * Sets the current value of the register.
          * @param value value to assign to the register
          * TODO: is it guaranteed, does it throw when it fails?
          */
-        write(value: number): Promise<void>
+        write(value: T): Promise<void>
 
         /**
-         * Registers a callback to execute when the register value changes by the given threshold
-         * @param threshold minimum value change required to trigger the handler
-         * @param handler callback to execute
-         * TODO: can we unregister?
-         */
-        onChange(threshold: number, handler: (curr: number) => AsyncVoid): void
-    }
-
-    /**
-     * A client for a register that holds a Buffer (byte[]).
-     */
-    export class RegisterBuffer extends Register {
-        /**
-         * Gets the current value of the register.
-         */
-        read(): Promise<Buffer>
-
-        /**
-         * Sets the current value of the register.
-         * @param value value to assign to the register
-         * TODO: is the buffer copied or owned?
-         * TODO: is Buffer = null same as buffer[0]
-         */
-        write(value: Buffer): Promise<void>
-
-        /**
-         * Registers a callback to execute when the register value changes
+         * Registers a callback to execute when a register value is received
          * @param handler callback to execute
          */
-        onChange(handler: (curr: Buffer) => AsyncVoid): void
+        subscribe(handler: (curr: T, reg: this) => AsyncVoid): Unsubscribe
     }
 
-    /**
-     * A client for a register that holds a numerical value.
-     */
-    export class RegisterBool extends Register {
-        /**
-         * Gets the current value of the register as a number.
-         * TODO: missing value behavior (optional regs)
-         */
-        read(): Promise<boolean>
-        /**
-         * Sets the current value of the register as a number.
-         * TODO: missing value behavior (optional regs)
-         */
-        write(value: boolean): Promise<void>
-        onChange(handler: (curr: boolean) => AsyncVoid): void
-    }
-
-    /**
-     * A client for a register that holds a string value.
-     */
-    export class RegisterString extends Register {
-        read(): Promise<string>
-        write(value: string): Promise<void>
-    }
-
-    export class RegisterArray extends Register {
-        read(): Promise<any[]>
-        write(value: any[]): Promise<void>
-    }
-
-    export class Event extends PacketInfo {
+    export class Event<T = void> extends PacketInfo {
         /**
          * Blocks the current thread under the event is received.
          */
         wait(): Promise<void>
         /**
-         * Register a callback that will be raised when the event is raised.
-         * @handler callback to execute
+         * Registers a callback to execute when an event is received
+         * @param next callback to execute
          */
-        // TODO: consider something like "onReceived" to match other events
-        subscribe(handler: (pkt: Packet) => AsyncVoid): void
+        subscribe(next: (curr: T, reg: this) => AsyncVoid): Unsubscribe
     }
 
     // TODO: maybe a better name, is this some kind of internal data structure?
@@ -179,38 +225,21 @@ declare module "@devicescript/core" {
         wait(): Promise<void>
     }
 
-    export interface CloudAdapter {
-        onMethod(
-            name: string,
-            handler: (
-                v0: number,
-                v1: number,
-                v2: number,
-                v3: number,
-                v4: number,
-                v5: number,
-                v6: number,
-                v7: number
-            ) => AsyncVoid
-        ): void
-        _cloudHandlers: any
-    }
-    export const cloud: CloudAdapter
-
     /**
      * Format string. Best use backtick templates instead.
      */
     export function format(fmt: string, ...args: number[]): string
 
     /**
-     * Run a callback every given number of milliseconds.
-     */
-    export function everyMs(milliseconds: number, callback: Callback): void
-
-    /**
      * Wait for specified number of milliseconds.
      */
-    export function sleepMs(milliseconds: number): Promise<void>
+    export function sleep(milliseconds: number): Promise<void>
+
+    /**
+     * Wait for resumption from other fiber. If the timeout expires, `undefined` is returned,
+     * otherwise the value passed from the resuming fiber.
+     */
+    export function suspend<T>(milliseconds: number): Promise<T | undefined>
 
     /**
      * Restart current script.
@@ -224,6 +253,8 @@ declare module "@devicescript/core" {
 
     /**
      * Best use `throw new Error(...)` instead.
+     * @internal
+     * @deprecated internal field for runtime support
      */
     export function _panic(code: number): never
 
@@ -233,17 +264,16 @@ declare module "@devicescript/core" {
     export function keep(method: any): void
 
     /**
-     * Moved by the compiler to the beginning of execution.
-     */
-    export function _onStart(handler: Callback): void
-
-    /**
      * Print out internal representation of a given value, possibly prefixed by label.
+     * @internal
+     * @deprecated internal field for runtime support
      */
     export function _logRepr(v: any, label?: string): void
 
     /**
      * Identity function, used to prevent constant folding.
+     * @internal
+     * @deprecated internal field for runtime support
      */
     export function _id<T>(a: T): T
 
@@ -252,6 +282,24 @@ declare module "@devicescript/core" {
      * Note that it only changes upon `await`.
      */
     export function millis(): number
+
+    /**
+     * Get value of a device configuration setting (typically from .board.json file).
+     */
+    export function _dcfgString(
+        id: "archId" | "url" | "devName" | "progName" | "progVersion"
+    ): string
+
+    /**
+     * Check if running inside a simulator.
+     */
+    export function isSimulator(): boolean
+
+    /*
+     * Print out message. Used by console.log, etc.
+     */
+    // don't expose for now as we may want to change it
+    // export function print(prefixCharCode: number, msg: string): void
 
     export { Buffer }
 
@@ -267,6 +315,7 @@ declare module "@devicescript/core" {
             private constructor()
 
             static alloc(size: number): Buffer
+            static from(data: string | Buffer | number[]): Buffer
 
             /**
              * Gets the length in bytes of the buffer
@@ -284,7 +333,7 @@ declare module "@devicescript/core" {
             fillAt(offset: number, length: number, value: number): void
             [idx: number]: number
 
-            toString(): string
+            toString(encoding?: "hex" | "utf-8" | "utf8"): string
         }
 
         /**

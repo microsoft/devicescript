@@ -1,17 +1,31 @@
 {
-    "version": "0.0.0",
+    "name": "DeviceScript-workspace",
+    "version": "2.2.6",
     "private": true,
     "scripts": {
         "setup": "git submodule update --init --recursive && git pull && yarn install --frozen-lockfile && npm install -g -u jacdac-cli",
-        "build": "(cd jacdac-ts && yarn build) && (cd vscode && yarn buildicons) && node ./build.js",
-        "build-fast": "(cd jacdac-ts && node ./build.js --fast) && node ./build.js --fast",
+        "build:jacdac-ts": "cd jacdac-ts && yarn build",
+        "build:vscodeicons": "cd vscode && yarn buildicons",
+        "build:slow": "node ./build.js",
+        "build": "yarn build:jacdac-ts && yarn build:vscodeicons && yarn build:slow",
+        "build:jacdac-ts-fast": "cd jacdac-ts && node ./build.js --fast",
+        "build-fast": "yarn build:jacdac-ts-fast && node ./build.js --fast",
         "watch": "node ./build.js --watch",
         "docs": "cd website && yarn start",
         "dev": "yarn watch & yarn docs",
         "devtools": "yarn build && node ./cli/devicescript devtools",
-        "test": "node ./cli/devicescript ctool --test",
+        "test:compiler": "node ./cli/devicescript ctool --test",
+        "test:test": "cd vscode/sampleprj/packages/test && yarn test",
+        "test:cowsay": "cd vscode/sampleprj/packages/cowsay && yarn test",
+        "test:observables": "cd vscode/sampleprj/packages/observables && yarn test",
+        "test:cloud": "cd vscode/sampleprj/packages/cloud && yarn test",
+        "test:settings": "cd vscode/sampleprj/packages/settings && yarn test",
+        "test:i2c": "cd vscode/sampleprj/packages/i2c && yarn test",
+        "test": "yarn test:compiler && yarn test:test && yarn test:settings && yarn test:i2c && yarn test:observables && yarn test:cloud && yarn test:cowsay",
         "presemantic": "node ./scripts/presemantic.mjs",
         "boards": "node ./cli/devicescript ctool --fetch-boards compiler/src/boards.json",
+        "bump": "node scripts/bump.mjs",
+        "hwdocs": "node scripts/genhwsupport.mjs",
         "localboards2": "node ./cli/devicescript ctool --local-boards ../.. --fetch-boards compiler/src/boards.json",
         "localboards1": "node ./cli/devicescript ctool --local-boards .. --fetch-boards compiler/src/boards.json"
     },
@@ -23,12 +37,14 @@
         "runtime/jacdac-c/jacdac",
         "jacdac-ts",
         "dap",
-        "samples/*",
+        "plugin",
         "vscode",
-        "vscode/sampleprj",
+        "vscode/sampleprj/packages/*",
         "website"
     ],
     "devDependencies": {
-        "esbuild": "^0.17.8"
+        "esbuild": "^0.17.11",
+        "semver": "^7.3.8",
+        "zx": "^7.2.1"
     }
 }

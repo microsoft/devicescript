@@ -1,6 +1,5 @@
 ---
 sidebar_position: 6
-hide_table_of_contents: true
 ---
 
 # Commands
@@ -26,27 +25,20 @@ console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
 // listen for pressure changes
-sensor.pressure.onChange(10, async () => {
-    // read sensor reading
-    const pressure = await sensor.pressure.read()
+sensor.pressure.subscribe(async pressure => {
     console.log(pressure)
     // user blows in straw
     if (pressure > 1400) {
         // click!
         console.log(`click!`)
-        await mouse.setButton(ds.HidMouseButton.Left, ds.HidMouseButtonEvent.Click)
+        await mouse.setButton(
+            ds.HidMouseButton.Left,
+            ds.HidMouseButtonEvent.Click
+        )
         // debouncing
-        await ds.sleepMs(50)
+        await ds.sleep(50)
     }
 })
 ```
 
-We could do a much better job with debouncing but this
-is not really the point of this sample.
-
-:::note
-
-Click `Edit` and try sliding the air pressure simulator left
-and right to trigger clicks in the mouse simulator.
-
-:::
+To get better debouncing, see [observables](/developer/observables).

@@ -7,6 +7,9 @@ import { DeviceScriptExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
 import { CHANGE, SRV_DEVICE_SCRIPT_MANAGER, SRV_ROLE_MANAGER } from "jacdac-ts"
 import type { StartArgs } from "@devicescript/dap"
+import { Utils } from "vscode-uri"
+import { checkFileExists } from "./fs"
+import { showErrorMessage } from "./telemetry"
 
 export function activateDebugger(extensionState: DeviceScriptExtensionState) {
     const { context } = extensionState
@@ -44,9 +47,17 @@ export function activateDebugger(extensionState: DeviceScriptExtensionState) {
                 ): vscode.ProviderResult<DebugConfiguration[]> {
                     return [
                         {
-                            name: "Devicescript: Launch",
+                            name: "DeviceScript: Debug",
                             request: "launch",
                             type: "devicescript",
+                            stopOnEntry: true,
+                        },
+                        {
+                            name: "DeviceScript: Run",
+                            request: "launch",
+                            type: "devicescript",
+                            stopOnEntry: false,
+                            noDebug: true,
                         },
                     ]
                 },
@@ -97,6 +108,7 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
             if (!srv) return
 
             extensionState.bus.setRoleManagerService(srv)
+
             const mgr = extensionState.bus.roleManager
             unmount = mgr.subscribe(CHANGE, () => {
                 if (!mgr.allRolesBound()) {
@@ -106,9 +118,10 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
                     setTimeout(async () => {
                         if (mgr.allRolesBound()) return
 
+                        /*
                         const start = "Start Simulators"
                         const res = await vscode.window.showWarningMessage(
-                            "DeviceScript: Would you like to start missing simulators?",
+                            "DeviceScript: Would you like to open the simulators view?",
                             start
                         )
                         if (res === start) {
@@ -116,6 +129,7 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
                                 "extension.devicescript.openSimulators"
                             )
                         }
+                        */
                     }, SETTLE_DELAY)
                 }
             })
@@ -173,19 +187,48 @@ export class DeviceScriptConfigurationProvider
     ) {
         const sessionConfig = config as vscode.DebugSessionOptions
         const dsConfig = config as StartArgs
-        const { program } = config
+        let program: string = config.program
+        // program can be absolute or relative...
 
         if (!program) {
-            vscode.window.showErrorMessage(
-                "DeviceScript: Debug cancelled. Cannot find a program to debug."
+            showErrorMessage(
+                "debug.programnotfound",
+                "Debug cancelled\nCannot find a program to debug."
             )
             return undefined
         }
 
+        // TODO make sure we're running devtools in the correct folder
+        // program is a file system path, potentially full path on windows
+        let programUri = vscode.Uri.file(program)
+        if (!/^(\/|\w+:\\)/i.test(programUri.fsPath))
+            programUri = Utils.resolvePath(folder.uri, program)
+        let dir = programUri
+        let n = 0
+        do {
+            dir = Utils.dirname(dir)
+            if (await checkFileExists(dir, `devsconfig.json`)) {
+                await this.extensionState.devtools.setProjectFolder(dir)
+                program = programUri.fsPath.slice(
+                    this.extensionState.devtools.projectFolder.fsPath.length + 1
+                )
+                break
+            }
+            if (n++ > 30) {
+                console.log("devsconfig not found", { dir, folder })
+                showErrorMessage(
+                    "debug.notrootfolder",
+                    "Debug cancelled\nCould not find root folder (contains 'devsconfig.json')."
+                )
+                return undefined
+            }
+        } while (dir !== folder.uri)
+
         await this.extensionState.devtools.start()
         if (!this.extensionState.devtools.connected) {
-            vscode.window.showErrorMessage(
-                "DeviceScript: Debug cancelled. Cannot start development server."
+            showErrorMessage(
+                "debug.startfailed",
+                "Debug cancelled\nCannot start development server."
             )
             return undefined
         }
@@ -193,7 +236,9 @@ export class DeviceScriptConfigurationProvider
         // find device
         if (!dsConfig.deviceId) {
             const service =
-                await this.extensionState.resolveDeviceScriptManager()
+                await this.extensionState.resolveDeviceScriptManager({
+                    autoStartSimulator: true,
+                })
             if (service) {
                 const idx = service.device
                     .services({ serviceClass: service.serviceClass })
@@ -206,8 +251,9 @@ export class DeviceScriptConfigurationProvider
         if (token?.isCancellationRequested) return undefined
 
         if (!dsConfig.deviceId) {
-            vscode.window.showErrorMessage(
-                `Debug cancelled. No device selected.`
+            showErrorMessage(
+                "debug.notdevice",
+                `Debug cancelled\nNo device selected.`
             )
             return undefined
         }
@@ -229,8 +275,9 @@ export class DeviceScriptConfigurationProvider
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })?.[dsConfig.serviceInstance || 0]
         if (!service) {
-            vscode.window.showErrorMessage(
-                `Debug cancelled. Could not find device ${dsConfig.deviceId}.`
+            showErrorMessage(
+                "debug.nodevicebyid",
+                `Debug cancelled\nCould not find device ${dsConfig.deviceId}.`
             )
             return undefined
         }
@@ -258,8 +305,9 @@ export class DeviceScriptConfigurationProvider
             service
         )
         if (!buildResult?.success) {
-            vscode.window.showErrorMessage(
-                `Debug cancelled. Program has build errors.`
+            showErrorMessage(
+                "debug.builderrors",
+                `Debug cancelled\nProgram has build errors.`
             )
             return undefined
         }
@@ -286,7 +334,7 @@ export class DeviceScriptConfigurationProvider
         config: DebugConfiguration,
         token?: CancellationToken
     ) {
-        this.extensionState.projectFolder = folder.uri
+        // folder.uri is the root namespace for the auto-generate launch commandß
         if (
             !config.program &&
             ((config.request === "launch" && config.type === "devicescript") ||

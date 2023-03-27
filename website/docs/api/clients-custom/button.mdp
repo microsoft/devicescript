@@ -1,9 +1,12 @@
 ## Server
 
-- [startButton](/api/servers/button) starts a button server on the current device.
+-   [startButton](/api/servers/button) starts a button server on the current device.
 
 ```ts skip
-const button = startButton({
-    pin: 2,
+import { gpio } from "@devicescript/core"
+import { startButton } from "@devicescript/servers"
+
+const gpbtn = startButton({
+    pin: gpio(2),
 })
 ```

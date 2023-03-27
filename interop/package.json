@@ -1,32 +1,32 @@
 {
-  "name": "@devicescript/interop",
-  "private": false,
-  "version": "1.2.3",
-  "description": "Interfaces for interaction with DeviceScript files",
-  "keywords": [
-    "devicescript",
-    "jacdac",
-    "iot",
-    "embedded"
-  ],
-  "author": "Microsoft",
-  "main": "./built/devicescript-interop.node.cjs",
-  "module": "./built/devicescript-interop.mjs",
-  "types": "./built/types/interop/src/interop.d.ts",
-  "scripts": {
-    "dist": "yarn install && yarn build",
-    "build": "node ../build.js"
-  },
-  "files": [
-    "./built/**"
-  ],
-  "license": "MIT",
-  "devDependencies": {
-    "esbuild": "^0.14.11",
-    "typescript": "^4.5.4"
-  },
-  "dependencies": {},
-  "publishConfig": {
-    "access": "public"
-  }
+    "name": "@devicescript/interop",
+    "private": false,
+    "version": "2.2.6",
+    "description": "Interfaces for interaction with DeviceScript files",
+    "keywords": [
+        "devicescript",
+        "jacdac",
+        "iot",
+        "embedded"
+    ],
+    "author": "Microsoft",
+    "main": "./built/devicescript-interop.node.cjs",
+    "module": "./built/devicescript-interop.mjs",
+    "types": "./built/types/interop/src/interop.d.ts",
+    "scripts": {
+        "dist": "yarn install && yarn build",
+        "build": "node ../build.js"
+    },
+    "files": [
+        "./built/**"
+    ],
+    "license": "MIT",
+    "devDependencies": {
+        "esbuild": "^0.14.11",
+        "typescript": "^4.5.4"
+    },
+    "dependencies": {},
+    "publishConfig": {
+        "access": "public"
+    }
 }

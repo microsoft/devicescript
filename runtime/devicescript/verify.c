@@ -126,8 +126,12 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
         CHECK(1052, devs_img_stridx_ok(_img, fptr->name_idx));
         if (fptr->flags & DEVS_FUNCTIONFLAG_IS_CTOR)
             CHECK(1075, fptr->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS);
+        int numargs = fptr->num_args;
         if (fptr->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS)
-            CHECK(1076, fptr->num_args >= 1);
+            numargs--;
+        if (fptr->flags & DEVS_FUNCTIONFLAG_HAS_REST_ARG)
+            numargs--;
+        CHECK(1076, numargs >= 0);
     }
 
     uint8_t *str_data = FIRST_DESC(string_data);

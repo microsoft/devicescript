@@ -1,4 +1,7 @@
 // location is offset into concatenation of all SrcFile's plus length
+
+import { LocalBuildConfig } from "./archconfig"
+
 // both are in 16-bit JS codepoints
 export type SrcLocation = [number, number]
 export interface SrcFile {
@@ -51,11 +54,13 @@ export interface DebugInfo {
         roles: number
         align: number
     }
+    localConfig: LocalBuildConfig
     functions: FunctionDebugInfo[]
     roles: RoleDebugInfo[]
     globals: VarDebugInfo[]
     srcmap: SrcMap
     sources: SrcFile[]
+    binarySHA256?: string // hex-encoded
     binary: { hex: string }
 
     _resolverCache?: any
@@ -76,6 +81,9 @@ export function emptyDebugInfo(): DebugInfo {
             roles: 0,
             align: 0,
         },
+        localConfig: {
+            hwInfo: {},
+        },
         functions: [],
         globals: [],
         roles: [],
@@ -83,4 +91,15 @@ export function emptyDebugInfo(): DebugInfo {
         sources: [],
         binary: { hex: "" },
     }
+}
+
+export interface ServerInfo {
+    startName: string
+    classIdentifier: number
+    imports: Record<string, string>
+    snippet: string
+}
+
+export interface ServerInfoFile {
+    servers: ServerInfo[]
 }

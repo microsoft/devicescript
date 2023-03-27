@@ -107,6 +107,7 @@
         "type": 1
       },
       "pins": {
+        "#TX": 21,
         "A0": 4,
         "A1": 3,
         "A2": 1,
@@ -114,8 +115,7 @@
         "MISO": 8,
         "MOSI": 7,
         "RX": 20,
-        "SCK": 10,
-        "TX": 21
+        "SCK": 10
       },
       "productId": "0x3693d40b",
       "services": [
@@ -125,6 +125,7 @@
           "service": "button"
         }
       ],
+      "uartLog": true,
       "url": "https://www.adafruit.com/product/5405"
     },
     "esp32_bare": {
@@ -157,7 +158,7 @@
       "url": "https://www.espressif.com/en/products/socs/esp32"
     },
     "esp32_devkit_c": {
-      "$description": "ESP32-DevKitC is an entry-level development board. It has all the ESP32 pins exposed and is easy to connect and use.",
+      "$description": "ESP32-DevKitC development board. This will also work with DOIT DevkitV1, NodeMCU ESP32, ... (search for 'esp32 devkit'). Some of these boards do not have the LED.",
       "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin",
       "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
       "archId": "esp32",
@@ -203,12 +204,12 @@
       "devName": "Espressif ESP32-C3 (bare)",
       "id": "esp32c3_bare",
       "pins": {
+        "#P21": 21,
         "P0": 0,
         "P1": 1,
         "P10": 10,
         "P2": 2,
         "P20": 20,
-        "P21": 21,
         "P3": 3,
         "P4": 4,
         "P5": 5,
@@ -224,6 +225,7 @@
           "service": "button"
         }
       ],
+      "uartLog": true,
       "url": "https://www.espressif.com/en/products/socs/esp32-c3"
     },
     "esp32c3_rust_devkit": {
@@ -244,10 +246,10 @@
       },
       "pins": {
         "#LED": 7,
+        "#P21": 21,
         "P0": 0,
         "P1": 1,
         "P20": 20,
-        "P21": 21,
         "P3": 3,
         "P4": 4,
         "P5": 5,
@@ -261,6 +263,7 @@
           "service": "button"
         }
       ],
+      "uartLog": true,
       "url": "https://github.com/esp-rs/esp-rust-board"
     },
     "esp32s2_bare": {
@@ -271,6 +274,7 @@
       "devName": "Espressif ESP32-S2 (bare)",
       "id": "esp32s2_bare",
       "pins": {
+        "#P43": 43,
         "P0": 0,
         "P1": 1,
         "P10": 10,
@@ -296,7 +300,6 @@
         "P40": 40,
         "P41": 41,
         "P42": 42,
-        "P43": 43,
         "P44": 44,
         "P45": 45,
         "P46": 46,
@@ -307,7 +310,68 @@
         "P9": 9
       },
       "productId": "0x3f140dcc",
+      "uartLog": true,
       "url": "https://www.espressif.com/en/products/socs/esp32-s2"
+    },
+    "feather_s2": {
+      "$description": "ESP32-S2 based development board in a Feather format.",
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-feather_s2-0x1000.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32s2",
+      "devName": "Unexpected Maker FeatherS2 ESP32-S2",
+      "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 9,
+        "pinSDA": 8
+      },
+      "id": "feather_s2",
+      "led": {
+        "pin": 40,
+        "pinCLK": 45,
+        "type": 2
+      },
+      "pins": {
+        "#TX": 43,
+        "LED0": 13,
+        "MISO": 37,
+        "MOSI": 35,
+        "P1": 1,
+        "P10": 10,
+        "P11": 11,
+        "P12": 12,
+        "P14": 14,
+        "P17": 17,
+        "P18": 18,
+        "P3": 3,
+        "P33": 33,
+        "P38": 38,
+        "P5": 5,
+        "P6": 6,
+        "P7": 7,
+        "RX": 44,
+        "SCK": 36
+      },
+      "productId": "0x3126f707",
+      "services": [
+        {
+          "name": "buttonBOOT",
+          "pin": 0,
+          "service": "button"
+        },
+        {
+          "name": "ambientLight",
+          "pin": 4,
+          "service": "analog:lightLevel"
+        }
+      ],
+      "setupPins": [
+        {
+          "out": 1,
+          "pin": 21
+        }
+      ],
+      "uartLog": true,
+      "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2"
     },
     "msr124": {
       "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr124.uf2",
@@ -339,7 +403,6 @@
         "baud": 115200,
         "pinTX": 0
       },
-      "pinPwrNILimHi": 18,
       "pins": {
         "P1": 1,
         "P10": 10,
@@ -368,6 +431,13 @@
           "pinPulse": 8,
           "pinUsbDetect": 11,
           "service": "power"
+        }
+      ],
+      "setupPins": [
+        {
+          "#": "Enable hi-power limiter mode",
+          "out": 0,
+          "pin": 18
         }
       ]
     },
@@ -417,7 +487,8 @@
           "pinFault": 13,
           "service": "power"
         }
-      ]
+      ],
+      "uartLog": true
     },
     "msr207_v43": {
       "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr207_v43-0x1000.bin",
@@ -465,7 +536,8 @@
           "pinFault": 13,
           "service": "power"
         }
-      ]
+      ],
+      "uartLog": true
     },
     "msr48": {
       "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin",
@@ -516,7 +588,8 @@
           "pinFault": 13,
           "service": "power"
         }
-      ]
+      ],
+      "uartLog": true
     },
     "msr59": {
       "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr59.uf2",

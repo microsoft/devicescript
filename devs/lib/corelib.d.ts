@@ -78,11 +78,6 @@ declare var Object: ObjectConstructor
 
 interface Function {
     /**
-     * Start function in background passing given arguments.
-     */
-    start(flag: number, ...args: any[]): void
-
-    /**
      * Returns the name of the function. Function names are read-only and can not be changed.
      */
     readonly name: string
@@ -143,7 +138,7 @@ interface Array<T> {
     [Symbol.iterator](): IterableIterator<T>
 
     /**
-     * Insert `count` `null` elements at `index`.
+     * Insert `count` `undefined` elements at `index`.
      * If `count` is negative, remove elements.
      */
     insert(index: number, count: number): void
@@ -174,6 +169,13 @@ interface Array<T> {
     indexOf(searchElement: T, fromIndex?: number): number
 
     /**
+     * Returns the index of the last occurrence of a specified value in an array, or -1 if it is not present.
+     * @param searchElement The value to locate in the array.
+     * @param fromIndex The array index at which to begin searching backward. If fromIndex is omitted, the search starts at the last index in the array.
+     */
+    lastIndexOf(searchElement: T, fromIndex?: number): number
+
+    /**
      * Returns a copy of a section of an array.
      * For both start and end, a negative index can be used to indicate an offset from the end of the array.
      * For example, -2 refers to the second to last element of the array.
@@ -201,6 +203,13 @@ interface Array<T> {
     some(predicate: (value: T, index: number, array: T[]) => unknown): boolean
 
     /**
+     * Determines whether an array includes a certain element, returning true or false as appropriate.
+     * @param searchElement The element to search for.
+     * @param fromIndex The position in this array at which to begin searching for searchElement.
+     */
+    includes(searchElement: T, fromIndex?: number): boolean
+
+    /**
      * Performs the specified action for each element in an array.
      * @param callbackfn  A function that accepts up to three arguments. forEach calls the callbackfn function one time for each element in the array.
      */
@@ -217,6 +226,15 @@ interface Array<T> {
      * @param predicate A function that accepts up to three arguments. The filter method calls the predicate function one time for each element in the array.
      */
     filter(predicate: (value: T, index: number, array: T[]) => unknown): T[]
+
+    /**
+     * Returns the value of the first element in the array where predicate is true, and undefined
+     * otherwise.
+     * @param predicate find calls predicate once for each element of the array, in ascending
+     * order, until it finds one where predicate returns true. If such an element is found, find
+     * immediately returns that element value. Otherwise, find returns undefined.
+     */
+    find(predicate: (value: T, index: number, array: T[]) => unknown): T
 
     /**
      * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
@@ -268,7 +286,30 @@ interface ArrayConstructor {
 declare var Array: ArrayConstructor
 
 declare namespace console {
+    /**
+     * Same as `console.log`.
+     */
+    function info(...args: any[]): void
+
+    /**
+     * Print out message at INFO logging level (prefix: `> `).
+     */
     function log(...args: any[]): void
+
+    /**
+     * Print out message at DEBUG logging level (prefix: `? `).
+     */
+    function debug(...args: any[]): void
+
+    /**
+     * Print out message at WARNING logging level (prefix: `* `).
+     */
+    function warn(...args: any[]): void
+
+    /**
+     * Print out message at ERROR logging level (prefix: `! `).
+     */
+    function error(...args: any[]): void
 }
 
 interface Math {
@@ -479,3 +520,110 @@ type Awaited<T> = T extends null | undefined
         ? Awaited<V> // recursively unwrap the value
         : never // the argument to `then` was not callable
     : T // non-object or non-thenable
+
+// utility types
+
+/**
+ * Make all properties in T optional
+ */
+type Partial<T> = {
+    [P in keyof T]?: T[P]
+}
+
+/**
+ * Make all properties in T required
+ */
+type Required<T> = {
+    [P in keyof T]-?: T[P]
+}
+
+/**
+ * Make all properties in T readonly
+ */
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P]
+}
+
+/**
+ * From T, pick a set of properties whose keys are in the union K
+ */
+type Pick<T, K extends keyof T> = {
+    [P in K]: T[P]
+}
+
+/**
+ * Construct a type with a set of properties K of type T
+ */
+type Record<K extends keyof any, T> = {
+    [P in K]: T
+}
+
+/**
+ * Exclude from T those types that are assignable to U
+ */
+type Exclude<T, U> = T extends U ? never : T
+
+/**
+ * Extract from T those types that are assignable to U
+ */
+type Extract<T, U> = T extends U ? T : never
+
+/**
+ * Construct a type with the properties of T except for those in type K.
+ */
+type Omit<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
+
+/**
+ * Exclude null and undefined from T
+ */
+type NonNullable<T> = T & {}
+
+/**
+ * Obtain the parameters of a function type in a tuple
+ */
+type Parameters<T extends (...args: any) => any> = T extends (
+    ...args: infer P
+) => any
+    ? P
+    : never
+
+/**
+ * Obtain the parameters of a constructor function type in a tuple
+ */
+type ConstructorParameters<T extends abstract new (...args: any) => any> =
+    T extends abstract new (...args: infer P) => any ? P : never
+
+/**
+ * Obtain the return type of a function type
+ */
+type ReturnType<T extends (...args: any) => any> = T extends (
+    ...args: any
+) => infer R
+    ? R
+    : any
+
+/**
+ * Obtain the return type of a constructor function type
+ */
+type InstanceType<T extends abstract new (...args: any) => any> =
+    T extends abstract new (...args: any) => infer R ? R : any
+
+/**
+ * Convert string literal type to uppercase
+ */
+type Uppercase<S extends string> = intrinsic
+
+/**
+ * Convert string literal type to lowercase
+ */
+type Lowercase<S extends string> = intrinsic
+
+/**
+ * Convert first character of string literal type to uppercase
+ */
+type Capitalize<S extends string> = intrinsic
+
+/**
+ * Convert first character of string literal type to lowercase
+ */
+type Uncapitalize<S extends string> = intrinsic

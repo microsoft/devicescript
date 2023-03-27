@@ -1,0 +1,41 @@
+---
+sidebar_position: 9.5
+---
+
+# Testing
+
+DeviceScript provides a unit test framework that runs on the device. It has a syntax similar to Jest/Mocha/Chai.
+
+## Setup
+
+Configure your project for testing using this command
+
+```bash
+devs add test
+```
+
+## Defining tests
+
+The test framework provides the popular BDD test contructs: `describe`, `test` (`it`), `expect`.
+
+```ts skip
+import { describe, test, expect } from "@devicescript/test"
+
+describe("this is a test suite", () => {
+    test("this is a test", () => {
+        expect(1).toBe(1)
+    })
+})
+```
+
+## Running tests
+
+From a terminal, run the `test` DeviceScript
+
+```bash npm2yarn
+npm run test
+```
+
+## See also
+
+-   [API reference](/api/test/)

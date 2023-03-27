@@ -2,5 +2,6 @@
 src/**/*
 **/*.js.map
 node_modules
+sampleprj
 ..
 **/*.vsix

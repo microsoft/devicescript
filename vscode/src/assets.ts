@@ -5,12 +5,12 @@ export function logo(context: vscode.ExtensionContext) {
         light: vscode.Uri.joinPath(
             vscode.Uri.file(context.extensionPath),
             "images",
-            "jacdac.light.svg"
+            "devs.light.svg"
         ),
         dark: vscode.Uri.joinPath(
             vscode.Uri.file(context.extensionPath),
             "images",
-            "jacdac.dark.svg"
+            "devs.dark.svg"
         ),
     }
 }

@@ -22,7 +22,7 @@ static void devs_fiber_activate(devs_fiber_t *fiber, devs_activation_t *act) {
     }
 }
 
-int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
+int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array_t *rest) {
     devs_ctx_t *ctx = fiber->ctx;
 
     value_t *argp = ctx->the_stack;
@@ -37,11 +37,22 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
     }
 
     // devs_log_value(ctx, "fn", fn);
+    // devs_log_value(ctx, "self", *argp);
 
     int bltin = fidx - DEVS_FIRST_BUILTIN_FUNCTION;
     if (bltin >= 0) {
         JD_ASSERT(bltin < devs_num_builtin_functions);
         const devs_builtin_function_t *h = &devs_builtin_functions[bltin];
+        if (rest) {
+            numparams = rest->length;
+            if (numparams > DEVS_MAX_STACK_DEPTH - 1) {
+                devs_throw_not_supported_error(ctx, "large parameters array");
+                return -3;
+            } else {
+                ctx->stack_top_for_gc = numparams + 1;
+                memcpy(ctx->the_stack + 1, rest->data, numparams * sizeof(value_t));
+            }
+        }
         if (numparams < h->num_args) {
             unsigned num = h->num_args - numparams;
             memset(argp + 1 + numparams, 0, num * sizeof(value_t));
@@ -55,6 +66,7 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
                 // __proto__ to be set by the built-in function
                 devs_map_t *m = devs_map_try_alloc(ctx, NULL);
                 *argp = devs_value_from_gc_obj(ctx, m);
+                // devs_log_value(ctx, "do attach", *argp);
             }
         }
         h->handler.meth(ctx);
@@ -71,17 +83,6 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         return -2;
 
     // note that callee is not pinned - do not allocate until connected to fiber
-    unsigned num_formals = func->num_args;
-    value_t *params;
-    if (func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS) {
-        params = argp;
-        numparams++; // count the this/fn parameter
-    } else
-        params = argp + 1;
-    if (num_formals > numparams)
-        num_formals = numparams;
-    memcpy(callee->slots, params, num_formals * sizeof(value_t));
-
     callee->pc = func->start;
     callee->closure = closure;
     callee->maxpc = func->start + func->length;
@@ -97,9 +98,50 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams) {
         fiber->activation = callee;
     }
 
+    unsigned num_formals = func->num_args;
+
+    // argp==ctx->the_stack
+    // *argp == this (if any)
+
+    value_t *params;
+    value_t *slots = callee->slots;
+
+    if (func->flags & DEVS_FUNCTIONFLAG_NEEDS_THIS) {
+        *slots++ = *argp;
+        num_formals--;
+    }
+
+    if (rest) {
+        params = rest->data;
+        numparams = rest->length;
+    } else {
+        params = argp + 1;
+    }
+
+    if (func->flags & DEVS_FUNCTIONFLAG_HAS_REST_ARG) {
+        unsigned num_regular = num_formals - 1;
+        if (num_regular > numparams)
+            num_regular = numparams;
+        memcpy(slots, params, num_regular * sizeof(value_t));
+        if (rest) {
+            devs_array_insert(ctx, rest, 0, -num_regular);
+        } else {
+            unsigned arrsz = numparams - num_regular;
+            rest = devs_array_try_alloc(ctx, arrsz);
+            if (rest)
+                memcpy(rest->data, params + num_regular, arrsz * sizeof(value_t));
+        }
+        slots[num_formals - 1] = devs_value_from_gc_obj(ctx, rest);
+    } else {
+        if (num_formals > numparams)
+            num_formals = numparams;
+        memcpy(slots, params, num_formals * sizeof(value_t));
+    }
+
     if ((func->flags & DEVS_FUNCTIONFLAG_IS_CTOR) && devs_is_undefined(callee->slots[0])) {
         devs_map_t *m = devs_map_try_alloc(ctx, devs_get_prototype_field(ctx, fn));
         callee->slots[0] = devs_value_from_gc_obj(ctx, m);
+        // devs_log_value(ctx, "ctor", callee->slots[0]);
     }
 
     if (ctx->dbg_en && ctx->step_fn == caller && (ctx->step_flags & DEVS_CTX_STEP_IN)) {
@@ -258,7 +300,7 @@ devs_fiber_t *devs_fiber_start(devs_ctx_t *ctx, unsigned numargs, unsigned op) {
         ctx->fibers = fiber;
     }
 
-    devs_fiber_call_function(fiber, numargs);
+    devs_fiber_call_function(fiber, numargs, NULL);
 
     devs_fiber_set_wake_time(fiber, devs_now(ctx));
 
@@ -314,22 +356,31 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
         // using DMESG here since this logging should never be disabled
         if (code == DEVS_PANIC_REBOOT) {
             DMESG("* RESTART requested");
+        } else if (code == DEVS_PANIC_TIMEOUT) {
+            DMESG("! Exception: InfiniteLoop");
+        } else if (code == DEVS_PANIC_OOM) {
+            DMESG("! Exception: OutOfMemory");
+        } else if (code == DEVS_PANIC_UNHANDLED_EXCEPTION) {
+            DMESG("! Unhandled exception");
         } else {
-            DMESG("! PANIC %d at pc=%d", code, ctx->error_pc);
+            DMESG("! Exception: Panic_%d at (gpc:%d)", code, ctx->error_pc);
         }
         ctx->error_code = code;
 
-        if (code != DEVS_PANIC_REBOOT)
+        if (code != DEVS_PANIC_REBOOT && code != DEVS_PANIC_UNHANDLED_EXCEPTION)
             for (devs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
                 int idx = fn->func - devs_img_get_function(ctx->img, 0);
-                DMESG("!  pc=%d @ %s_F%d", (int)(fn->pc - fn->func->start),
-                      devs_img_fun_name(ctx->img, idx), idx);
+                DMESG("!  at %s_F%d (pc:%d)", devs_img_fun_name(ctx->img, idx), idx,
+                      (int)(fn->pc - fn->func->start));
             }
 
         // TODO for OOM we probably want to free up some memory first...
         devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_PANIC);
 
         devs_panic_handler(orig_code);
+
+        if (code != DEVS_PANIC_REBOOT)
+            devs_track_exception(ctx);
     }
     devs_fiber_yield(ctx);
 }

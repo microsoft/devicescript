@@ -57,15 +57,19 @@ import {
     DeviceScriptManagerReg,
     toHex,
     prettySize,
+    PowerReg,
+    SRV_POWER,
+    PowerPowerStatus,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
-import { MESSAGE_PREFIX, sendCmd, withProgress } from "./commands"
+import { sendCmd, withProgress } from "./commands"
 import {
     ICON_LOADING,
     WIFI_PIPE_TIMEOUT,
     WIFI_RECONNECT_TIMEOUT,
 } from "./constants"
+import { showErrorMessage } from "./telemetry"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -265,6 +269,7 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
     }
 
     static ICON = "circuit-board"
+    static ICON_PATH = new vscode.ThemeIcon(JDomDeviceTreeItem.ICON)
 
     get device() {
         return this.node as JDDevice
@@ -301,17 +306,15 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
             this.description = serviceNames
         }
 
-        if (!this.iconPath) {
-            const productIdentifier = device.productIdentifier
-            const spec =
-                bus.deviceCatalog.specificationFromProductIdentifier(
-                    productIdentifier
-                )
-            if (spec) {
-                this.iconPath = deviceIconUri(spec)
-            } else {
-                this.iconPath = new vscode.ThemeIcon(JDomDeviceTreeItem.ICON)
-            }
+        const productIdentifier = device.productIdentifier
+        const spec =
+            bus.deviceCatalog.specificationFromProductIdentifier(
+                productIdentifier
+            )
+        if (spec) {
+            this.iconPath = deviceIconUri(spec)
+        } else {
+            this.iconPath = JDomDeviceTreeItem.ICON_PATH
         }
 
         return (
@@ -324,7 +327,7 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
     resolveTreeItem(token: vscode.CancellationToken): Promise<vscode.TreeItem> {
         if (!this.tooltip) {
             const { device } = this
-            const { bus } = device
+            const { bus, deviceId } = device
             if (bus) {
                 const productIdentifier = device.productIdentifier
                 const spec =
@@ -336,6 +339,7 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
                         `#### ${spec.name} ${spec.version || ""} by ${
                             spec.company
                         }
+- device id: ${deviceId}
 
 ![Device image](${deviceCatalogImage(spec, "list")}) 
 
@@ -381,6 +385,7 @@ ${spec.description}`,
                     })
             )
 
+        const powers = device.services({ serviceClass: SRV_POWER })
         const wifis = device.services({ serviceClass: SRV_WIFI })
         const cloudAdapters = device.services({
             serviceClass: SRV_CLOUD_ADAPTER,
@@ -392,6 +397,7 @@ ${spec.description}`,
         return <JDomTreeItem[]>(
             [
                 ...registers,
+                ...powers.map(srv => new JDomPowerTreeItem(this, srv, props)),
                 ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
                 ...cloudAdapters.map(
                     srv => new JDomCloudAdapterTreeItem(this, srv, props)
@@ -784,13 +790,89 @@ class JDMissingTreeItem extends JDomTreeItem {
     }
 }
 
+class JDomCustomTreeItem extends JDomTreeItem {
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, props)
+    }
+
+    get service() {
+        return this.node as JDService
+    }
+
+    get device() {
+        return this.service.device
+    }
+
+    subscribeRegisters(...codes: number[]) {
+        const { service } = this
+        codes
+            .map(code => service.register(code))
+            .forEach(register =>
+                this.subscribe(register, REPORT_UPDATE, this.handleChange)
+            )
+    }
+}
+
+class JDomPowerTreeItem extends JDomCustomTreeItem {
+    constructor(
+        parent: JDomDeviceTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "power_",
+            contextValue: props.idPrefix + "power",
+            iconPath: "pulse",
+        })
+    }
+
+    mount() {
+        super.mount()
+
+        this.subscribeRegisters(
+            PowerReg.PowerStatus,
+            PowerReg.BatteryCharge,
+            PowerReg.CurrentDraw
+        )
+    }
+
+    update() {
+        const oldLabel = this.label
+        const oldDescription = this.description
+
+        const { service } = this
+
+        const [status] = (service.register(PowerReg.PowerStatus)
+            .unpackedValue || []) as [PowerPowerStatus]
+        const [charge] =
+            service.register(PowerReg.BatteryCharge).unpackedValue || []
+        const [currentDraw] =
+            service.register(PowerReg.CurrentDraw).unpackedValue || []
+
+        this.label = status?.toString().toLowerCase() || "power"
+        this.description = [
+            charge !== undefined ? `${(charge * 100) | 0}%` : "",
+            currentDraw !== undefined ? `${currentDraw}mWA` : "",
+        ]
+            .filter(s => !!s)
+            .join(",")
+
+        return oldLabel !== this.label || oldDescription !== this.description
+    }
+}
+
 // flags, reserved, rssi, channel, bssid, ssid
 type ScanResult = [WifiAPFlags, number, number, number, Uint8Array, string]
 
 // priority, flags, ssid
 type NetworkResult = [number, number, string]
 
-class JDomWifiTreeItem extends JDomTreeItem {
+class JDomWifiTreeItem extends JDomCustomTreeItem {
     private scans: ScanResult[] = []
     private infos: NetworkResult[] = []
 
@@ -843,20 +925,19 @@ class JDomWifiTreeItem extends JDomTreeItem {
             service.event(WifiEvent.ConnectionFailed),
             EVENT,
             async (ssid: string) => {
-                await vscode.window.showErrorMessage(
-                    `DeviceScript: connection to ${ssid} failed.`
+                showErrorMessage(
+                    "jdom.wifi.connect",
+                    `connection to ${ssid} failed.`
                 )
             }
         )
-        ;[WifiReg.Enabled, WifiReg.IpAddress, WifiReg.Ssid, WifiReg.Eui48]
-            .map(code => service.register(code))
-            .forEach(register =>
-                this.subscribe(register, REPORT_UPDATE, this.handleChange)
-            )
-    }
 
-    get service() {
-        return this.node as JDService
+        this.subscribeRegisters(
+            WifiReg.Enabled,
+            WifiReg.IpAddress,
+            WifiReg.Ssid,
+            WifiReg.Eui48
+        )
     }
 
     private async syncScans() {
@@ -933,7 +1014,7 @@ class JDomWifiTreeItem extends JDomTreeItem {
                 token.unmount()
             }
         })
-        if (message) vscode.window.showErrorMessage(MESSAGE_PREFIX + message)
+        if (message) showErrorMessage("jdom.wifi", message)
     }
 
     update() {
@@ -999,7 +1080,7 @@ type WifiApTreeProps = TreeItemProps & {
     info?: NetworkResult
 }
 
-class JDomWifiAPTreeItem extends JDomTreeItem {
+class JDomWifiAPTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomWifiTreeItem,
         service: JDService,
@@ -1022,10 +1103,6 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
 
     get info() {
         return (this.props as WifiApTreeProps).info
-    }
-
-    get service() {
-        return this.node as JDService
     }
 
     get ssid() {
@@ -1094,7 +1171,7 @@ class JDomWifiAPTreeItem extends JDomTreeItem {
     }
 }
 
-class JDomCloudAdapterTreeItem extends JDomTreeItem {
+class JDomCloudAdapterTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomDeviceTreeItem,
         service: JDService,
@@ -1110,12 +1187,10 @@ class JDomCloudAdapterTreeItem extends JDomTreeItem {
 
     mount(): void {
         super.mount()
-        const { service } = this
-        ;[CloudAdapterReg.Connected, CloudAdapterReg.ConnectionName]
-            .map(code => service.register(code))
-            .forEach(register =>
-                this.subscribe(register, REPORT_UPDATE, this.handleChange)
-            )
+        this.subscribeRegisters(
+            CloudAdapterReg.Connected,
+            CloudAdapterReg.ConnectionName
+        )
     }
 
     update() {
@@ -1134,14 +1209,6 @@ class JDomCloudAdapterTreeItem extends JDomTreeItem {
         return oldlabel !== this.label || oldDescription !== this.description
     }
 
-    get service() {
-        return this.node as JDService
-    }
-
-    get device() {
-        return this.service.device
-    }
-
     protected createChildrenTreeItems(): JDomTreeItem[] {
         const { device } = this
         const props = this.props
@@ -1152,7 +1219,7 @@ class JDomCloudAdapterTreeItem extends JDomTreeItem {
     }
 }
 
-class JDomCloudConfigurationTreeItem extends JDomTreeItem {
+class JDomCloudConfigurationTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomTreeItem,
         service: JDService,
@@ -1165,10 +1232,6 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
             collapsibleState: vscode.TreeItemCollapsibleState.None,
             iconPath: "settings-gear",
         })
-    }
-
-    get service() {
-        return this.node as JDService
     }
 
     async connect() {
@@ -1254,7 +1317,7 @@ class JDomCloudConfigurationTreeItem extends JDomTreeItem {
     }
 }
 
-class JDomDeviceManagerTreeItem extends JDomTreeItem {
+class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomTreeItem,
         service: JDService,
@@ -1265,26 +1328,20 @@ class JDomDeviceManagerTreeItem extends JDomTreeItem {
             idPrefix: props.idPrefix + "devs_",
             contextValue: props.idPrefix + "devicescript",
             collapsibleState: vscode.TreeItemCollapsibleState.None,
-            iconPath: "play",
+            iconPath: "debug-start",
         })
     }
 
-    get service() {
-        return this.node as JDService
-    }
-
     override mount(): void {
-        const { service } = this
-        ;[
+        super.mount()
+        this.subscribeRegisters(
             DeviceScriptManagerReg.ProgramSize,
-            DeviceScriptManagerReg.RuntimeVersion,
             DeviceScriptManagerReg.Running,
             DeviceScriptManagerReg.ProgramHash,
-        ]
-            .map(code => service.register(code))
-            .forEach(register =>
-                this.subscribe(register, REPORT_UPDATE, this.handleChange)
-            )
+            DeviceScriptManagerReg.ProgramSha256,
+            DeviceScriptManagerReg.ProgramName,
+            DeviceScriptManagerReg.ProgramVersion
+        )
     }
 
     async stop() {
@@ -1314,34 +1371,59 @@ class JDomDeviceManagerTreeItem extends JDomTreeItem {
         const { service } = this
         const oldLabel = this.label
         const oldDescription = this.description
+        const oldTooltip = this.tooltip
 
-        const programHash =
+        const programHash = service
+            .register(DeviceScriptManagerReg.ProgramHash)
+            .uintValue?.toString(16)
+        const programSha256 =
             toHex(
                 service.register(DeviceScriptManagerReg.ProgramSha256).data
             ) || ""
         const programSize = service.register(
             DeviceScriptManagerReg.ProgramSize
         ).uintValue
-        const runtimeVersion =
-            service.register(DeviceScriptManagerReg.RuntimeVersion)
-                .stringValue || ""
+        const programName = service.register(
+            DeviceScriptManagerReg.ProgramName
+        ).stringValue
+        const programVersion = service.register(
+            DeviceScriptManagerReg.ProgramVersion
+        ).stringValue
         const running = service.register(
             DeviceScriptManagerReg.Running
         ).boolValue
 
-        this.label = "devicescript"
-        this.description = running ? "running" : "stopped"
+        this.label = programName || programHash || "no script"
+        this.description = programVersion || ""
+        this.iconPath = new vscode.ThemeIcon(
+            running ? "debug-stop" : "debug-start",
+            new vscode.ThemeColor(
+                running
+                    ? "debugIcon.stopForeground"
+                    : "debugIcon.startForeground"
+            )
+        )
 
         this.tooltip = toMarkdownString(
-            `## [DeviceScript](https://microsoft.github.io/devicescript)
+            `
+#### ${running ? "running" : "stopped"}            
 
-- runtime version: ${runtimeVersion}
-- program hash: ${programHash}
+- program name: ${programName || ""}
+- program version: ${programVersion || ""}
 - program size: ${prettySize(programSize)}
+- program sha: 
+
+\`\`\`
+${programSha256}
+\`\`\`
 `
         )
 
-        return oldLabel !== this.label || oldDescription !== this.description
+        return (
+            oldLabel !== this.label ||
+            oldDescription !== this.description ||
+            this.tooltip !== oldTooltip
+        )
     }
 }
 
@@ -1613,7 +1695,7 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
     const updateBadge = () => {
         const devices = treeDataProvider.devices
         explorer.badge = {
-            tooltip: `DeviceScript: ${devices.length} devices`,
+            tooltip: `${devices.length} devices`,
             value: devices.length,
         }
     }

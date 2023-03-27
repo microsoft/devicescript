@@ -6,6 +6,7 @@ import Layout from "@theme/Layout"
 import HomepageFeatures from "@site/src/components/HomepageFeatures"
 
 import styles from "./index.module.css"
+import hero from "./hero.png"
 
 function HomepageHeader() {
     const { siteConfig } = useDocusaurusContext()
@@ -27,6 +28,14 @@ function HomepageHeader() {
                             Getting Started - 5min ⏱️
                         </Link>
                     </div>
+                </div>
+                <div>
+                    <img
+                        className={styles.hero}
+                        loading="lazy"
+                        src={hero}
+                        alt="screenshot of the visual studio integration"
+                    />
                 </div>
             </div>
         </header>

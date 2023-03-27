@@ -1,0 +1,15 @@
+| ID | Sensor | Services | Source |
+|:---|:-------|:---------|:-------|
+| **dps310** | Infineon DPS310 | [temperature](/api/clients/temperature), [airpressure](/api/clients/airpressure) | [dps310.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/dps310.c) |
+| **kx023** | Kionix KX023-1025 | [accelerometer](/api/clients/accelerometer) | [kx023.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/kx023.c) |
+| **kxtj3** | Kionix KXTJ3-1057 | [accelerometer](/api/clients/accelerometer) | [kxtj3.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/kxtj3.c) |
+| **ltr390uv** | LITE-ON LTR-390UV-01 | [illuminance](/api/clients/illuminance), [uvindex](/api/clients/uvindex) | [ltr390uv.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/ltr390uv.c) |
+| **cap1298** | Microchip CAP1298 | [capacitivebutton](/api/clients/capacitivebutton) | [cap1298.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/cap1298.c) |
+| **mpl3115a2** | NXP MPL3115A2 | [temperature](/api/clients/temperature), [airpressure](/api/clients/airpressure) | [mpl3115a2.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/mpl3115a2.c) |
+| **lps33hwtr** | STMicro LPS33HW | [temperature](/api/clients/temperature), [airpressure](/api/clients/airpressure) | [lps33hwtr.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/lps33hwtr.c) |
+| **lsm6ds** | STMicro LSM6DSxx | [accelerometer](/api/clients/accelerometer), [gyroscope](/api/clients/gyroscope) | [lsm6ds.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/lsm6ds.c) |
+| **th02** | Seeed (?) TH02 | [temperature](/api/clients/temperature), [humidity](/api/clients/humidity) | [th02.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/th02.c) |
+| **scd40** | Sensirion SCD40 | [temperature](/api/clients/temperature), [humidity](/api/clients/humidity), [eco2](/api/clients/eco2) | [scd40.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/scd40.c) |
+| **sgp30** | Sensirion SGP30 (eCO2) | [eco2](/api/clients/eco2), [tvoc](/api/clients/tvoc) | [sgp30.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/sgp30.c) |
+| **sht30** | Sensirion SHT30 | [temperature](/api/clients/temperature), [humidity](/api/clients/humidity) | [sht30.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/sht30.c) |
+| **shtc3** | Sensirion SHTC3 | [temperature](/api/clients/temperature), [humidity](/api/clients/humidity) | [shtc3.c](https://github.com/microsoft/jacdac-c/blob/main/drivers/shtc3.c) |

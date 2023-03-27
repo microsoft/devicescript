@@ -36,9 +36,14 @@ import {
     processSideMessage,
 } from "./sidedata"
 import { FSWatcher } from "fs"
-import { BuildOptions, compileFile } from "./build"
-import { dirname, resolve } from "path"
-import { BuildStatus, BuildReqArgs, ConnectReqArgs } from "./sideprotocol"
+import { compileFile } from "./build"
+import { resolve } from "path"
+import {
+    BuildStatus,
+    BuildReqArgs,
+    ConnectReqArgs,
+    BuildOptions,
+} from "./sideprotocol"
 import { DsDapSession } from "@devicescript/dap"
 import { initVMCmds, overrideConsoleDebug, stopVmWorker } from "./vmworker"
 import { enableLogging } from "./logging"
@@ -83,7 +88,7 @@ export async function devtools(
 
     overrideConsoleDebug()
 
-    log(cliVersion())
+    log(`${cliVersion()} running in ${process.cwd()}`)
 
     loadProjectServiceSpecifications()
 
@@ -220,6 +225,7 @@ function startProxyServers(
         client.__devsSender = sender
         client.send = (pkt0: Buffer | string) => {
             if (typeof pkt0 == "string") return
+            if (socket.readyState !== "open") return
             const pkt = new Uint8Array(pkt0)
             const b = new Uint8Array(1 + pkt.length)
             b[0] = pkt.length
@@ -313,8 +319,10 @@ function startDbgServer(port: number, options: DevToolsOptions) {
     console.log(`   dbgserver: tcp://${domain}:${port}`)
     net.createServer(async socket => {
         console.log("dbgserver: connection")
+        let session: DsDapSession
         socket.on("end", async () => {
             console.log("dbgserver: connection closed")
+            await session?.finish()
             await stopVmWorker()
         })
         const dbg = devtoolsSelf.lastOKBuild?.dbg
@@ -325,7 +333,7 @@ function startDbgServer(port: number, options: DevToolsOptions) {
             return
         }
         await checkFiles()
-        const session = new DsDapSession(devtoolsSelf.bus, dbg, resolvePath)
+        session = new DsDapSession(devtoolsSelf.bus, dbg, resolvePath)
         session.setRunAsServer(true)
         session.start(socket, socket)
     }).listen(port, listenHost)
@@ -360,6 +368,7 @@ async function watchCmd(
                         dbg: null,
                         binary: null,
                         diagnostics: [],
+                        usedFiles: [args.filename],
                         deployStatus: err.message || "" + err,
                     }
                 }
@@ -370,7 +379,7 @@ async function watchCmd(
 
 async function rebuild(args: BuildReqArgs) {
     const opts = { ...args.buildOptions }
-    if (!opts.cwd) opts.cwd = dirname(args.filename)
+    if (!opts.cwd) opts.cwd = process.cwd()
     opts.verify = false
     opts.quiet = true
 

@@ -9,7 +9,7 @@ The CLI also also usable within containers (Docker, GitHub Codespaces, CodeSandb
 
 ## Setup
 
--   install [Node.js](https://nodejs.org/en/download/) 18+
+-   install [Node.JS 18+](https://nodejs.org/en/download/)
 -   install the CLI
 
 ```bash npm2yarn
@@ -41,10 +41,12 @@ src/tsconfig.json  configure the TypeScript compiler to compile DeviceScript syn
 ...
 ```
 
-::: note
+:::note
 
 Make sure to keep the `devsconfig.json` file even if it is empty.
 It is used as a marker to activate the [Visual Studio Code extension](/getting-started/vscode).
+
+:::
 
 ### --force
 
@@ -59,21 +61,61 @@ devs init --force
 
 Do not run `npm` or `yarn ` install after dropping the files.
 
-## devs build
+## devs add ...
 
-The `build` command compiles a DeviceScript file (default is `main.ts`), using the resolution rules in `tsconfig.json`. It is the default command.
+The generated project by `init` is barebone by design. The `add` command can be used to
+update the project with extra features. Each add command may require additional arguments.
+
+### add test
+
+Configures the project to add DeviceScript unit tests.
 
 ```bash
-devs build main.ts
+devs add test
 ```
 
-or, for short,
+### add board
+
+Configures the project to add a custom device configuration (`board`).
+
+```bash
+devs add board
+```
+
+### add service
+
+Configures the project to add custom services.
+
+```bash
+devs add service
+```
+
+### add sim
+
+Configures the project to add a Node.JS subproject that runs simulated devices.
+
+```bash
+devs add sim
+```
+
+### add npm
+
+Prepre the project to be published to [npm.js](https://npmjs.com/) as a library.
+
+```bash
+devs add npm
+```
+
+## devs build
+
+The `build` command compiles the entry point file from the current project
+using the resolution rules in `tsconfig.json`. It is the default command.
 
 ```bash
 devs build
 ```
 
-### custom services
+### custom services and boards
 
 The command line will automatically compile markdown files under the `services` folder (`./services/*.md`)
 into TypeScript client definition in `.devicescript/lib/services.d.ts`.

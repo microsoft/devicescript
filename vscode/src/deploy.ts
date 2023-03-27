@@ -6,6 +6,7 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { DeviceScriptExtensionState } from "./state"
+import { showErrorMessage } from "./telemetry"
 
 export async function readRuntimeVersion(srv: JDService) {
     const runtimeVersion = srv.register(DeviceScriptManagerReg.RuntimeVersion)
@@ -27,18 +28,17 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     const version = await readRuntimeVersion(srv)
     console.debug(`deploy: version min ${minVersion}, device ${version}`)
     if (version === undefined) {
-        vscode.window
-            .showErrorMessage(
-                `Deploy cancelled. Your device firmware does not have a runtime version.`,
-                flashCommand
-            )
-            .then(cmd => {
-                if (cmd === flashCommand)
-                    vscode.commands.executeCommand(
-                        "extension.devicescript.device.flash",
-                        srv.device
-                    )
-            })
+        showErrorMessage(
+            "build.firmware.noversion",
+            `Deploy cancelled. Your device firmware does not have a runtime version.`,
+            flashCommand
+        ).then(cmd => {
+            if (cmd === flashCommand)
+                vscode.commands.executeCommand(
+                    "extension.devicescript.device.flash",
+                    srv.device
+                )
+        })
         return false
     }
 
@@ -49,21 +49,21 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
         vcurr.major < vmin.major ||
         (vcurr.major == vmin.major && vcurr.minor < vmin.minor)
     ) {
-        vscode.window
-            .showErrorMessage(
-                `Deploy cancelled. Your device firmware (${version}) is outdated (min ${minVersion}).`,
-                flashCommand
-            )
-            .then(cmd => {
-                if (cmd === flashCommand)
-                    vscode.commands.executeCommand(
-                        "extension.devicescript.device.flash",
-                        srv.device
-                    )
-            })
+        showErrorMessage(
+            "deploy.firmware.outdated",
+            `Deploy cancelled. Your device firmware (${version}) is outdated (min ${minVersion}).`,
+            flashCommand
+        ).then(cmd => {
+            if (cmd === flashCommand)
+                vscode.commands.executeCommand(
+                    "extension.devicescript.device.flash",
+                    srv.device
+                )
+        })
         return false
     } else if (vcurr.major > vmin.major) {
-        vscode.window.showErrorMessage(
+        showErrorMessage(
+            "deploy.firmware.ahead",
             `Deploy cancelled. Your device firmware (${version}) is ahead of the device script tools (${minVersion}). Update your dependencies.`
         )
         return false
@@ -87,13 +87,15 @@ export async function checkDeviceScriptManagerRuntimeVersion(
     service: JDService
 ) {
     if (!runtimeVersion) {
-        vscode.window.showErrorMessage(
+        showErrorMessage(
+            "deploy.toolsnotstarted",
             "Deploy cancelled. Developer tools not started."
         )
         return false
     }
     if (!service) {
-        vscode.window.showErrorMessage(
+        showErrorMessage(
+            "deploy.devicenotfound",
             "Deploy cancelled. No DeviceScript device found."
         )
         return false
@@ -109,9 +111,4 @@ export async function prepareForDeploy(
     await service
         .register(DeviceScriptManagerReg.Autostart)
         .sendSetAsync(new Uint8Array([0]))
-    // for VM we started, disable logging - logging will go through DMESG
-    if (extensionState.simulatorScriptManagerId === service.device.deviceId)
-        await service
-            .register(DeviceScriptManagerReg.Logging)
-            .sendSetAsync(new Uint8Array([0]))
 }

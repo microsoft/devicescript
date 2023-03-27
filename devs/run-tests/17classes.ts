@@ -1,14 +1,10 @@
 import * as ds from "@devicescript/core"
-import { assert, sleepMs } from "@devicescript/core"
+import { assert, sleep } from "@devicescript/core"
 
 type Action = () => void
 
 function msg(m: string) {
     console.log(m)
-}
-
-function runInBackground(f: Action) {
-    f.start(1)
 }
 
 class XFoo {

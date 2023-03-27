@@ -6,24 +6,8 @@ import {
     PackedValues,
 } from "jacdac-ts"
 import * as vscode from "vscode"
-
-export const MESSAGE_PREFIX = "DeviceScript - "
-
-export function showError(error: Error) {
-    if (!error || isCancelError(error)) return
-
-    console.error(error)
-
-    if (isTimeoutError(error))
-        vscode.window.showErrorMessage(
-            MESSAGE_PREFIX + "the operation timed out."
-        )
-    else if (isAckError(error))
-        vscode.window.showErrorMessage(
-            MESSAGE_PREFIX + "the device did not respond to this command."
-        )
-    else vscode.window.showErrorMessage(MESSAGE_PREFIX + error?.message)
-}
+import { MESSAGE_PREFIX } from "./constants"
+import { showError } from "./telemetry"
 
 export async function sendCmd(
     service: JDService,

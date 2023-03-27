@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "1.4.8",
+    "version": "2.2.6",
     "publisher": "Microsoft",
     "description": "DeviceScript extension for Visual Studio Code.",
     "author": {
@@ -20,9 +20,9 @@
         "Embdded"
     ],
     "engines": {
-        "vscode": "^1.75.0"
+        "vscode": "^1.76.0"
     },
-    "icon": "images/jacdac-logo.png",
+    "icon": "images/devs-logo.png",
     "galleryBanner": {
         "color": "#C80000",
         "theme": "dark"
@@ -50,18 +50,20 @@
     },
     "devDependencies": {
         "@types/isomorphic-fetch": "^0.0.36",
-        "@types/vscode": "^1.75.0",
+        "@types/vscode": "^1.76.0",
         "@vscode/debugadapter": "^1.59.0",
         "@vscode/debugadapter-testsupport": "^1.59.0",
-        "@vscode/vsce": "^2.17.0",
+        "@vscode/vsce": "^2.18.0",
         "isomorphic-fetch": "^3.0.0",
         "typescript": "^4.9.5",
         "vscode-uri": "^3.0.7",
-        "webfont": "^11.2.26"
+        "webfont": "^11.2.26",
+        "@devicescript/interop": "*"
     },
     "dependencies": {
-        "@vscode/extension-telemetry": "^0.7.5",
+        "@vscode/extension-telemetry": "^0.7.7",
         "jacdac-ts": "*",
+        "@devicescript/plugin": "*",
         "websocket-polyfill": "^0.0.3"
     },
     "main": "./built/devicescript-vscode.js",
@@ -104,7 +106,7 @@
                 "devicescript.jacdac.tracePackets": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Trace Jacdac packets to 'Jacdac Packets' Output pane."
+                    "description": "Trace Jacdac packets to 'DeviceScript - Packets' Output pane."
                 },
                 "devicescript.debugger.showTerminalOnStart": {
                     "type": "boolean",
@@ -138,12 +140,17 @@
                 }
             }
         },
+        "typescriptServerPlugins": [
+            {
+                "name": "@devicescript/plugin"
+            }
+        ],
         "viewsContainers": {
             "activitybar": [
                 {
                     "id": "devicescript",
                     "title": "DeviceScript",
-                    "icon": "./images/jacdac.dark.svg"
+                    "icon": "./images/devs.dark.svg"
                 }
             ]
         },
@@ -174,7 +181,7 @@
             },
             {
                 "view": "extension.devicescript.gateway",
-                "contents": "Deploy scripts remotely, track telemetry.\n[Connect](command:extension.devicescript.gateway.connect)\n[Create Gateway](https://microsoft.github.io/devicescript/developer/gateway)\n\nTo learn more about DeviceScript Gateway, [read the docs](https://microsoft.github.io/devicescript/developer/gateway)."
+                "contents": "Deploy scripts remotely, track telemetry.\n[Configure...](command:extension.devicescript.gateway.configure)\n[Create Gateway](https://microsoft.github.io/devicescript/developer/cloud/gateway)\n\nTo learn more about DeviceScript Gateway, [read the docs](https://microsoft.github.io/devicescript/developer/cloud/gateway)."
             }
         ],
         "walkthroughs": [
@@ -223,9 +230,40 @@
                     "fontPath": "./built/devicescript.woff",
                     "fontCharacter": "\\E000"
                 }
+            },
+            "jacdac-logo": {
+                "description": "Jacdac logo",
+                "default": {
+                    "fontPath": "./built/devicescript.woff",
+                    "fontCharacter": "\\E001"
+                }
             }
         },
         "menus": {
+            "editor/title": [
+                {
+                    "command": "extension.devicescript.editor.build",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "extension.devicescript.editor.run",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "extension.devicescript.editor.configure",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "group": "navigation@3"
+                }
+            ],
+            "editor/title/run": [
+                {
+                    "command": "extension.devicescript.editor.debug",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "group": "navigation"
+                }
+            ],
             "view/title": [
                 {
                     "command": "extension.devicescript.connect",
@@ -248,7 +286,7 @@
                     "group": "navigation"
                 },
                 {
-                    "command": "extension.devicescript.gateway.connect",
+                    "command": "extension.devicescript.gateway.configure",
                     "when": "view == extension.devicescript.gateway",
                     "group": "navigation"
                 },
@@ -263,6 +301,10 @@
                     "command": "extension.devicescript.simulator.stop",
                     "when": "view == extension.devicescript.jdom && viewItem == simulator",
                     "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.simulator.clear",
+                    "when": "view == extension.devicescript.jdom && viewItem == simulator"
                 },
                 {
                     "command": "extension.devicescript.device.reset",
@@ -348,12 +390,17 @@
                     "when": "view == extension.devicescript.gateway && viewItem == cloudScript"
                 },
                 {
-                    "command": "extension.devicescript.gateway.device.updateScript",
+                    "command": "extension.devicescript.gateway.device.connect",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.gateway.device.connect",
+                    "command": "extension.devicescript.gateway.device.script.configure",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.gateway.device.script.update.latest",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice",
                     "group": "inline"
                 },
@@ -366,52 +413,70 @@
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
                 },
                 {
-                    "command": "extension.devicescript.gateway.registerDevice",
+                    "command": "extension.devicescript.gateway.devices.register",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevices",
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.gateway.device.uploadScript",
+                    "command": "extension.devicescript.gateway.scripts.upload",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudScripts",
                     "group": "inline"
                 }
             ],
             "commandPalette": [
                 {
-                    "command": "extension.devicescript.openSimulators"
+                    "command": "extension.devicescript.openSimulators",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.pickDeviceScriptManager"
+                    "command": "extension.devicescript.configure",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.connect"
+                    "command": "extension.devicescript.pickDeviceScriptManager",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.device.flash"
+                    "command": "extension.devicescript.connect",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.simulator.start"
+                    "command": "extension.devicescript.device.flash",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.simulator.stop"
+                    "command": "extension.devicescript.simulator.start",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.terminal.show"
+                    "command": "extension.devicescript.simulator.stop",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.sims.add"
+                    "command": "extension.devicescript.terminal.show",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.services.add"
+                    "command": "extension.devicescript.sims.add",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.boards.add"
+                    "command": "extension.devicescript.services.add",
+                    "when": "workbenchState != empty"
                 },
                 {
-                    "command": "extension.devicescript.gateway.connect"
+                    "command": "extension.devicescript.boards.add",
+                    "when": "workbenchState != empty"
+                },
+                {
+                    "command": "extension.devicescript.gateway.configure"
                 },
                 {
                     "command": "extension.devicescript.gateway.refresh"
+                },
+                {
+                    "command": "extension.devicescript.project.new",
+                    "when": "workbenchState != empty"
                 }
             ],
             "debug/variables/context": [
@@ -422,6 +487,35 @@
             ]
         },
         "commands": [
+            {
+                "command": "extension.devicescript.project.new",
+                "title": "Create New Project...",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.editor.debug",
+                "title": "DeviceScript: Debug",
+                "category": "DeviceScript",
+                "icon": "$(debug-alt)"
+            },
+            {
+                "command": "extension.devicescript.editor.run",
+                "title": "DeviceScript: Upload",
+                "category": "DeviceScript",
+                "icon": "$(arrow-right)"
+            },
+            {
+                "command": "extension.devicescript.editor.build",
+                "title": "DeviceScript: Build",
+                "category": "DeviceScript",
+                "icon": "$(check)"
+            },
+            {
+                "command": "extension.devicescript.editor.configure",
+                "title": "DeviceScript: Configure...",
+                "category": "DeviceScript",
+                "icon": "$(settings-gear)"
+            },
             {
                 "command": "extension.devicescript.terminal.show",
                 "title": "Show Development Server Terminal",
@@ -465,6 +559,12 @@
                 "command": "extension.devicescript.boards.add",
                 "title": "Add Board...",
                 "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.configure",
+                "title": "Configure...",
+                "category": "DeviceScript",
+                "icon": "$(settings-gear)"
             },
             {
                 "command": "extension.devicescript.pickDeviceScriptManager",
@@ -531,7 +631,7 @@
             },
             {
                 "command": "extension.devicescript.watch.clear",
-                "title": "Watch",
+                "title": "Clear watches",
                 "category": "DeviceScript",
                 "icon": "$(close-all)"
             },
@@ -569,15 +669,21 @@
                 "icon": "$(close)"
             },
             {
+                "command": "extension.devicescript.simulator.clear",
+                "title": "Clear Flash",
+                "category": "DeviceScript",
+                "icon": "$(clear-all)"
+            },
+            {
                 "command": "extension.devicescript.device.showFirmwareInformation",
                 "title": "Update Firmware",
                 "category": "DeviceScript"
             },
             {
-                "command": "extension.devicescript.gateway.connect",
-                "title": "Connect...",
+                "command": "extension.devicescript.gateway.configure",
+                "title": "Configure connection...",
                 "category": "DeviceScript Gateway",
-                "icon": "$(plug)"
+                "icon": "$(settings-gear)"
             },
             {
                 "command": "extension.devicescript.gateway.refresh",
@@ -586,8 +692,8 @@
                 "icon": "$(refresh)"
             },
             {
-                "command": "extension.devicescript.gateway.registerDevice",
-                "title": "Register Device",
+                "command": "extension.devicescript.gateway.devices.register",
+                "title": "Register Device...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(add)"
             },
@@ -595,7 +701,7 @@
                 "command": "extension.devicescript.gateway.script.upload",
                 "title": "Upload Script",
                 "category": "DeviceScript Gateway",
-                "icon": "$(cloud-upload)"
+                "icon": "$(arrow-up)"
             },
             {
                 "command": "extension.devicescript.gateway.script.delete",
@@ -603,10 +709,27 @@
                 "category": "DeviceScript Gateway"
             },
             {
-                "command": "extension.devicescript.gateway.device.updateScript",
-                "title": "Upgrade Script",
+                "command": "extension.devicescript.gateway.device.connect",
+                "title": "Connect...",
+                "category": "DeviceScript Gateway",
+                "icon": "$(plug)"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.ping",
+                "title": "Ping",
+                "category": "DeviceScript Gateway"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.script.configure",
+                "title": "Configure Script...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(file-code)"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.script.update.latest",
+                "title": "Update Script to Latest",
+                "category": "DeviceScript Gateway",
+                "icon": "$(arrow-down)"
             },
             {
                 "command": "extension.devicescript.gateway.device.refreshToken",
@@ -619,14 +742,8 @@
                 "category": "DeviceScript Gateway"
             },
             {
-                "command": "extension.devicescript.gateway.device.connect",
-                "title": "Connect",
-                "category": "DeviceScript Gateway",
-                "icon": "$(plug)"
-            },
-            {
-                "command": "extension.devicescript.gateway.device.uploadScript",
-                "title": "Upload Version",
+                "command": "extension.devicescript.gateway.scripts.upload",
+                "title": "Upload Script...",
                 "category": "DeviceScript Gateway",
                 "icon": "$(add)"
             }
@@ -679,19 +796,19 @@
                         "request": "launch",
                         "name": "DeviceScript: Launch",
                         "program": "${workspaceFolder}/main.ts",
-                        "stopOnEntry": true
+                        "stopOnEntry": false
                     }
                 ],
                 "configurationSnippets": [
                     {
                         "label": "DeviceScript: Launch",
-                        "description": "A new configuration for 'debugging' a user selected typescript file.",
+                        "description": "A new configuration for 'debugging' the project entry point, `src/main.ts`.",
                         "body": {
                             "type": "devicescript",
                             "request": "launch",
                             "name": "DeviceScript: Launch",
                             "program": "^\"\\${workspaceFolder}/main.ts",
-                            "stopOnEntry": true
+                            "stopOnEntry": false
                         }
                     }
                 ],

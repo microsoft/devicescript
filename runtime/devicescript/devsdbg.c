@@ -122,7 +122,7 @@ static value_t gcref_to_value(devs_ctx_t *ctx, uint32_t ref) {
     if (ref == 0)
         return devs_undefined;
     value_t v = devs_value_from_handle(DEVS_HANDLE_TYPE_GC_OBJECT, ref);
-    JD_ASSERT(devs_gc_obj_valid(ctx, devs_handle_ptr_value(ctx, v)));
+    devs_gc_obj_check(ctx, devs_handle_ptr_value(ctx, v));
     return v;
 }
 
@@ -130,7 +130,7 @@ static void *to_gc_obj(devs_ctx_t *ctx, uint32_t ref) {
     if (ref == 0)
         return NULL;
     void *r = devs_handle_ptr_value(ctx, devs_value_from_handle(DEVS_HANDLE_TYPE_GC_OBJECT, ref));
-    JD_ASSERT(devs_gc_obj_valid(ctx, r));
+    devs_gc_obj_check(ctx, r);
     return r;
 }
 
@@ -562,8 +562,10 @@ static void read_bytes(cmd_t *cmd) {
 
 static void resume_cmd(cmd_t *cmd) {
     cmd->state->suspended = 0;
-    if (cmd->ctx)
+    if (cmd->ctx) {
+        LOG("resume");
         devs_vm_resume(cmd->ctx);
+    }
 }
 
 static void step_cmd(cmd_t *cmd) {
@@ -698,8 +700,10 @@ void devsdbg_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_DEVS_DBG_CMD_HALT:
         dbg_en(state);
-        if (ctx)
-            devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_HALT);
+        if (ctx) {
+            LOG("halt");
+            devs_vm_halt(ctx);
+        }
         break;
 
     case JD_DEVS_DBG_CMD_RESUME:

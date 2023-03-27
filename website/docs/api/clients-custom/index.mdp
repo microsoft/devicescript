@@ -1,0 +1,33 @@
+In DeviceScript, hardware periphericals (and generally anything outside the VM) are modelled
+as [Jacdac services](https://microsoft.github.io/jacdac-docs/services/).
+
+The periphericals are **servers** and the your client application creates **clients** to interact with them.
+
+## Declaring roles
+
+Client instances, **roles**, should be allocated at the top level of your program.
+The variable name is automatically assigned as the role name.
+
+```ts
+import { Temperature } from "@devicescript/core"
+
+// highlight-next-line
+const thermometer = new Temperature()
+```
+
+## Role binding state
+
+You can test if the service is bound to a server.
+
+```ts
+import { Temperature } from "@devicescript/core"
+
+const thermometer = new Temperature()
+
+setInterval(async () => {
+    // highlight-next-line
+    if (await thermometer.binding().read()) {
+        console.log("connected!")
+    }
+}, 1000)
+```

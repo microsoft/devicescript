@@ -98,14 +98,49 @@ value_t prop_Packet_regCode(devs_ctx_t *ctx, value_t self) {
     return devs_value_from_int(JD_REG_CODE(pkt->service_command));
 }
 
-static bool devs_pkt_matches_cmd(const devs_packet_spec_t *p, uint16_t service_command) {
-    if (p->code == service_command)
-        return true;
-    if ((p->code & DEVS_PACKETSPEC_CODE_MASK) == DEVS_PACKETSPEC_CODE_EVENT &&
-        (service_command & JD_CMD_EVENT_MASK) &&
-        (p->code & JD_CMD_EVENT_CODE_MASK) == (service_command & JD_CMD_EVENT_CODE_MASK))
-        return true;
-    return false;
+value_t prop_Packet_isAction(devs_ctx_t *ctx, value_t self) {
+    SELF();
+    return devs_value_from_bool((pkt->service_command & 0xf000) == 0);
+}
+
+const devs_packet_spec_t *devs_pkt_spec_by_code(devs_ctx_t *ctx, const devs_service_spec_t *spec,
+                                                uint16_t code) {
+    if (code == 0xffff)
+        return NULL;
+    const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
+    unsigned num_packets = spec->num_packets;
+    for (unsigned i = 0; i < num_packets; ++i) {
+        if (pkts[i].code == code)
+            return &pkts[i];
+    }
+
+    return NULL;
+}
+
+uint16_t devs_get_spec_code(uint8_t frame_flags, uint16_t service_command) {
+    uint16_t top = service_command & 0xf000;
+
+    if (frame_flags & JD_FRAME_FLAG_COMMAND) {
+        if (top == JD_CMD_SET_REGISTER)
+            return (service_command & 0x0fff) | DEVS_PACKETSPEC_CODE_REGISTER;
+        if (top == 0)
+            return service_command;
+    } else {
+        if (service_command & JD_CMD_EVENT_MASK)
+            return (service_command & JD_CMD_EVENT_CODE_MASK) | DEVS_PACKETSPEC_CODE_EVENT;
+
+        if (top == JD_CMD_GET_REGISTER)
+            return (service_command & 0x0fff) | DEVS_PACKETSPEC_CODE_REGISTER;
+
+        if (top == 0)
+            return service_command | DEVS_PACKETSPEC_CODE_REPORT;
+    }
+
+    return 0xffff;
+}
+
+static uint16_t devs_pkt_get_spec_code(devs_packet_t *pkt) {
+    return devs_get_spec_code(pkt->flags, pkt->service_command);
 }
 
 static const devs_packet_spec_t *devs_pkt_get_spec(devs_ctx_t *ctx, devs_packet_t *pkt) {
@@ -116,15 +151,7 @@ static const devs_packet_spec_t *devs_pkt_get_spec(devs_ctx_t *ctx, devs_packet_
     if (spec == NULL)
         return NULL;
 
-    const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
-    unsigned num_packets = spec->num_packets;
-    for (unsigned i = 0; i < num_packets; ++i) {
-        if (devs_pkt_matches_cmd(&pkts[i], pkt->service_command)) {
-            return &pkts[i];
-        }
-    }
-
-    return NULL;
+    return devs_pkt_spec_by_code(ctx, spec, devs_pkt_get_spec_code(pkt));
 }
 
 void meth0_Packet_decode(devs_ctx_t *ctx) {

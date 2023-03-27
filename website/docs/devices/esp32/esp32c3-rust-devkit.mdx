@@ -7,6 +7,8 @@ description: Espressif ESP32-C3-RUST-DevKit
 A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originally for ESP32 Rust port.
 
 
+![Espressif ESP32-C3-RUST-DevKit picture](https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32c3rustdevkitv12a.catalog.jpg)
+
 ## Features
 
 -  I2C on SDA/SCL: 10/8 using Header connector
@@ -24,7 +26,6 @@ A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originall
 | **P0** |  GPIO0 |  analogIn,  io |
 | **P1** |  GPIO1 |  analogIn,  io |
 | **P20** |  GPIO20 |  bootUart,  io |
-| **P21** |  GPIO21 |  bootUart,  io |
 | **P3** |  GPIO3 |  analogIn,  io |
 | **P4** |  GPIO4 |  analogIn,  debug,  io |
 | **P5** |  GPIO5 |  debug,  io |
@@ -44,7 +45,7 @@ select **DeviceScript: Flash Firmware...** from the command palette.
 Run this [command line](/api/cli) command and follow the instructions.
 
 ```bash
-devicescript flash esp32 --board esp32c3_rust_devkit
+devicescript flash --board esp32c3_rust_devkit
 ```
 
 
@@ -72,10 +73,10 @@ devicescript flash esp32 --board esp32c3_rust_devkit
     },
     "pins": {
         "#LED": 7,
+        "#P21": 21,
         "P0": 0,
         "P1": 1,
         "P20": 20,
-        "P21": 21,
         "P3": 3,
         "P4": 4,
         "P5": 5,
@@ -87,6 +88,7 @@ devicescript flash esp32 --board esp32c3_rust_devkit
             "pin": 9,
             "service": "button"
         }
-    ]
+    ],
+    "uartLog": true
 }
 ```

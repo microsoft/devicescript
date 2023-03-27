@@ -25,6 +25,7 @@ export interface TopOpWriter extends InstrArgResolver {
     writer: OpWriter
     hasErrors: boolean
     isLibrary: boolean
+    onCall(): void
 }
 
 export class Label {
@@ -70,6 +71,10 @@ export class Value {
     adopt() {
         assert(!(this.flags & VF_HAS_PARENT))
         this.flags |= VF_HAS_PARENT
+    }
+    ignore() {
+        this.adopt()
+        this._cachedValue?._decr()
     }
 
     assumeStateless() {
@@ -457,6 +462,10 @@ export class OpWriter {
         return this._emitJump(label)
     }
 
+    emitJumpIfRetValNullish(label: Label) {
+        return this._emitJump(label, undefined, Op.STMTx_JMP_RET_VAL_Z)
+    }
+
     emitTry(label: Label) {
         return this._emitJump(label, undefined, Op.STMTx_TRY)
     }
@@ -745,6 +754,7 @@ export class OpWriter {
     emitCall(fn: Value, ...args: Value[]) {
         assert(args.length <= BinFmt.MAX_ARGS_SHORT_CALL)
         this.emitStmt(Op.STMT1_CALL0 + args.length, fn, ...args)
+        this.prog.onCall()
     }
 
     emitBuiltInObject(obj: BuiltInObject) {

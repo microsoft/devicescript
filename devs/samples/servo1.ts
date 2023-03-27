@@ -4,14 +4,14 @@ let x: number
 const servo1 = new ds.Servo()
 const button1 = new ds.Button()
 const airPressure1 = new ds.AirPressure()
-servo1.onConnected(async () => {
+servo1.binding().subscribe(async () => {
     await servo1.enabled.write(true)
 })
 button1.down.subscribe(async () => {
     x = x + 1
     await servo1.angle.write(50)
 })
-airPressure1.pressure.onChange(1, async () => {
+airPressure1.pressure.subscribe(async () => {
     x = 0
     await servo1.angle.write(-35)
 })

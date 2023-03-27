@@ -8,11 +8,11 @@ let tint
 
 btnA.down.subscribe(async () => {
     await led.brightness.write(1)
-    await ds.sleepMs(100)
+    await ds.sleep(100)
     let [r, g, b] = await color.color.read()
-    r = r + await led.brightness.read()
+    r = r + (await led.brightness.read())
     tint = (r + g + 2.3 * b) / (r + 2 * g + b)
-    await ds.cloud.upload("color", r, g, b, tint)
-    // display.message.write(format("t={0} {1}", tint, r))
+    //await ds.cloud.upload("color", r, g, b, tint)
+    console.log(`t=${tint} ${r}`)
     await led.brightness.write(0)
 })

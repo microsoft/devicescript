@@ -18,7 +18,6 @@
 * TODO in `13actions.ts` - fiber ordering
 * Jacdac packet queue overflow when printing a lot
 * tree strings?
-* introduce Fiber class (also Fiber.suspend() and Fiber.resume())
 * drop `length` field from fun-descriptor
 
 ## Later

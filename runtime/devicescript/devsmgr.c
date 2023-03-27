@@ -36,7 +36,6 @@ struct srv_state {
     SRV_COMMON;
     uint8_t running;
     uint8_t autostart;
-    uint8_t logging;
 
     uint8_t force_start : 1;
 
@@ -60,11 +59,10 @@ REG_DEFINITION(                                     //
     REG_SRV_COMMON,                                 //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING),   //
     REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_AUTOSTART), //
-    REG_U8(JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING),   //
 )
 
 __attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[160] = {
-    0x44, 0x65, 0x76, 0x53, 0x0a, 0x7e, 0x6a, 0x9a, 0x00, 0x00, 0x00, 0x06, 0x01, 0x00, 0x00, 0x00,
+    0x44, 0x65, 0x76, 0x53, 0x0a, 0x6e, 0x29, 0xf1, 0x00, 0x00, 0x00, 0x02, 0x03, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x70, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x90, 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x00,
     0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -107,7 +105,6 @@ static void run_img(srv_t *state, const void *img, unsigned size) {
     devs_cfg_t cfg = {.mgr_service_idx = state->service_index};
     state->ctx = devs_create_ctx(img, size, &cfg);
     if (state->ctx) {
-        devs_set_logging(state->ctx, state->logging);
         if (img != devs_empty_program)
             devsdbg_restarted(state->ctx);
     }
@@ -346,6 +343,17 @@ static void hash_program(srv_t *state, jd_packet_t *pkt) {
     jd_send(pkt->service_index, pkt->service_command, hash, JD_SHA256_HASH_BYTES);
 }
 
+static bool respond_dcfg(jd_packet_t *pkt, unsigned reg, const char *setting) {
+    if (pkt->service_command == JD_GET(reg)) {
+        const char *res = dcfg_get_string(setting, NULL);
+        if (!res)
+            res = "";
+        jd_respond_string(pkt, res);
+        return true;
+    }
+    return false;
+}
+
 void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
     switch (pkt->service_command) {
     case JD_DEVICE_SCRIPT_MANAGER_CMD_DEPLOY_BYTECODE:
@@ -377,6 +385,10 @@ void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     default:
+        if (respond_dcfg(pkt, JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_VERSION, "progVersion") ||
+            respond_dcfg(pkt, JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_NAME, "progName"))
+            break;
+
         switch (service_handle_register_final(state, pkt, devsmgr_regs)) {
         case JD_DEVICE_SCRIPT_MANAGER_REG_RUNNING:
             if (state->running && !state->ctx) {
@@ -390,10 +402,6 @@ void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
             if (state->autostart) {
                 state->next_restart = now; // make it more responsive
             }
-            break;
-        case JD_DEVICE_SCRIPT_MANAGER_REG_LOGGING:
-            if (state->ctx)
-                devs_set_logging(state->ctx, state->logging);
             break;
         }
         break;
@@ -438,14 +446,6 @@ static void devsmgr_client_ev(void *state0, int event_id, void *arg0, void *arg1
         devs_client_event_handler(state->ctx, event_id, arg0, arg1);
 }
 
-void devsmgr_set_logging(bool logging) {
-    srv_t *state = _state;
-    state->logging = logging;
-    if (state->ctx) {
-        devs_set_logging(state->ctx, state->logging);
-    }
-}
-
 void devsmgr_init(const devsmgr_cfg_t *cfg) {
     SRV_ALLOC(devsmgr);
     state->cfg = cfg;
@@ -456,7 +456,6 @@ void devsmgr_init(const devsmgr_cfg_t *cfg) {
 #endif
     state->read_program_ptr = -1;
     state->autostart = 1;
-    state->logging = 0;
     // first start 1.5s after brain boot up - allow devices to enumerate
     state->next_restart = now + SECONDS(1.5);
 
@@ -472,5 +471,20 @@ void devsmgr_init(const devsmgr_cfg_t *cfg) {
         if (hd->dcfg.length)
             dcfg_set_user_config((const void *)(mgr_hd->image + hd->dcfg.start));
     }
+#endif
+}
+
+void devs_service_full_init(const devsmgr_cfg_t *cfg) {
+    jd_role_manager_init();
+    devsmgr_init(cfg);
+    devsdbg_init();
+    settings_init();
+
+#if JD_WIFI
+    wifi_init();
+#endif
+#if JD_NETWORK
+    wsskhealth_init();
+    devscloud_init(&wssk_cloud);
 #endif
 }

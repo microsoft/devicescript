@@ -218,3 +218,6 @@ bool devs_value_is_pinned(devs_ctx_t *ctx, value_t v);
 value_t devs_json_parse(devs_ctx_t *ctx, const char *str, unsigned sz, bool do_throw);
 int devs_json_stringify_to(devs_ctx_t *ctx, value_t v, char *dst, int indent);
 value_t devs_json_stringify(devs_ctx_t *ctx, value_t v, int indent, bool do_throw);
+
+int devs_inspect_to(devs_ctx_t *ctx, value_t v, char *dst, unsigned size);
+value_t devs_inspect(devs_ctx_t *ctx, value_t v, unsigned size);

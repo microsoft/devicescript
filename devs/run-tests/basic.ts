@@ -748,6 +748,10 @@ function testBuiltinExtends() {
     ds.assert(a.name === "AssertionError")
 }
 
+function testUndef() {
+    ds.assert(console.log("foo") === undefined)
+}
+
 interface XYZ {
     x: number
     y: string
@@ -772,11 +776,21 @@ function testDestructArg() {
     foo({ x: 1, y: "foo" })
 }
 
+function testClosurePP() {
+    let idx = 1
+    function foo() {
+        idx++
+    }
+    foo()
+    foo()
+    ds.assert(idx === 3)
+}
+
 async function testSetTimeout() {
     let q = 1
     let id = 0
 
-    await ds.sleepMs(1)
+    await ds.sleep(1)
 
     setTimeout(() => {
         ds.assert(q === 1)
@@ -794,16 +808,15 @@ async function testSetTimeout() {
         q = 17
     }, 32)
 
-    await ds.sleepMs(60)
+    await ds.sleep(60)
     ds.assert(q === 3)
 
     id = setInterval(() => {
         q = q + 1
-        if (q === 5)
-            clearInterval(id)
+        if (q === 5) clearInterval(id)
     }, 5)
 
-    await ds.sleepMs(60)
+    await ds.sleep(60)
     ds.assert(q === 5)
 }
 
@@ -812,6 +825,145 @@ function testShift() {
     ds.assert(arr.shift() === "baz")
     ds.assert(arr.shift() === "foobar")
     ds.assert(arr.shift() === undefined)
+}
+
+let numRestArgs = 0
+function s0(...args: number[]) {
+    isEq(args.length, numRestArgs)
+    for (let i = 0; i < args.length; ++i) isEq(args[i], i + 1)
+}
+
+function s1(a0: number, ...args: number[]) {
+    args.unshift(a0)
+    isEq(args.length, numRestArgs)
+    for (let i = 0; i < args.length; ++i) isEq(args[i], i + 1)
+}
+
+function testRest() {
+    numRestArgs = 0
+    s0()
+    s0(...[])
+    numRestArgs = 1
+    s0(1)
+    s0(...[1])
+    s1(1)
+    ;(s1 as any)(...[1])
+    numRestArgs = 2
+    s0(1, 2)
+    s0(...[1, 2])
+    s1(1, 2)
+    s1(1, ...[2])
+}
+
+class Node {
+    constructor() {}
+}
+class SuiteNode extends Node {
+    children: string[] = []
+    constructor() {
+        super()
+    }
+}
+
+async function testFibers() {
+    let i = 0
+
+    async function logloop() {
+        while (true) {
+            i++
+            await ds.sleep(5)
+        }
+    }
+
+    async function resumeMe(f: ds.Fiber) {
+        await ds.sleep(10)
+        f.resume(20)
+    }
+
+    await ds.sleep(10)
+    const f0 = ds.Fiber.self()
+    const f1 = logloop.start()
+    ds.assert(f0 !== f1)
+    await ds.sleep(50)
+    f1.terminate()
+    ds.assert(4 <= i && i <= 6)
+    const i0 = i
+    await ds.sleep(50)
+    ds.assert(i === i0)
+    resumeMe.start(f0)
+    const r = await ds.suspend<number>(30)
+    ds.assert(r === 20)
+
+    console.log("fibers OK!")
+}
+
+class FooError extends Error {}
+
+function testCtorError() {
+    try {
+        throw new FooError("blah")
+    } catch (e: any) {
+        ds.assert(e.message === "blah")
+    }
+}
+
+function testIgnoredAnd() {
+    let q = 0
+    function foo() {
+        q++
+    }
+    foo && foo()
+    ds.assert(q === 1)
+}
+
+function expectTypeError(f: () => void) {
+    let ok = false
+    try {
+        f()
+    } catch (e) {
+        ds.assert(e instanceof TypeError)
+        ok = true
+    }
+    ds.assert(ok)
+}
+
+function testQDot() {
+    let q: any = null
+    let i = 0
+    ds.assert(q?.foo === undefined)
+    ds.assert(q?.foo[i++] === undefined)
+    ds.assert(i === 0)
+
+    ds.assert(q?.foo.bar === undefined)
+    expectTypeError(() => {
+        const tmp = (q?.foo).bar
+    })
+
+    q = {}
+    ds.assert(q?.foo?.bar === undefined)
+
+    expectTypeError(() => {
+        const tmp = q?.foo.bar
+    })
+
+    q = () => {
+        i = 7
+    }
+    q?.()
+    ds.assert(i === 7)
+    q = undefined
+    i = 3
+    q?.()[i++]
+    ds.assert(i === 3)
+}
+
+function testHex() {
+    ds.assert(Buffer.from("żółw").toString("hex") === "c5bcc3b3c58277")
+    ds.assert(Buffer.from([1, 2]).toString("hex") === "0102")
+    ds.assert(Buffer.from("aa").toString("hex") === "6161")
+    expectTypeError(() => {
+        console.log(Buffer.from("aa").toString("foobar" as any))
+    })
 }
 
 testFlow()
@@ -839,8 +991,17 @@ testFunName()
 testJSON()
 testAnySwitch()
 testBuiltinExtends()
+testUndef()
 testDestructArg()
+testClosurePP()
 testShift()
 await testSetTimeout()
+testRest()
+const s = new SuiteNode()
+await testFibers()
+testCtorError()
+testIgnoredAnd()
+testQDot()
+testHex()
 
 console.log("all OK")

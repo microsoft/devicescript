@@ -7,8 +7,7 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula")
 const config = configure(
     {
         title: "DeviceScript",
-        tagline:
-            "TypeScript-like Language and Runtime for Small Embedded Devices.",
+        tagline: "TypeScript for Tiny IoT Devices",
         url: "https://microsoft.github.io/",
         baseUrl: "/devicescript/",
         onBrokenLinks: "throw",
@@ -141,10 +140,16 @@ const config = configure(
                                     "@devicescript/cli": "*",
                                 },
                                 scripts: {
-                                    "setup": "devicescript init",
-                                    "build": "devicescript build",
-                                    "watch": "devicescript devtools main.ts",
-                                    "start": "yarn watch",
+                                    setup: "devicescript build", // generates .devicescript/lib/* files
+                                    postinstall: "devicescript build",
+                                    "build:devicescript": "devicescript build",
+                                    build: "yarn build:devicescript",
+                                    "watch:devicescript": `devicescript devtools`,
+                                    watch: "yarn watch:devicescript",
+                                    "test:devicescript":
+                                        "devicescript run src/main.ts --test --test-self-exit",
+                                    test: "yarn test:devicescript",
+                                    start: "yarn watch",
                                 },
                             },
                         },
@@ -153,7 +158,7 @@ const config = configure(
                                 template: "node",
                                 view: "terminal",
                                 container: {
-                                    node: "16",
+                                    node: "18",
                                 },
                                 startScript: "setup",
                             },
@@ -167,35 +172,29 @@ const config = configure(
                 {
                     lang: "ts",
                     nodeBin: "devicescript",
-                    args: ["--no-colors", "--quiet"],
+                    args: [
+                        "--no-colors",
+                        "--quiet",
+                        "--ignore-missing-config",
+                        "input.ts",
+                    ],
                     npmPackage: "@devicescript/cli",
                     excludedFiles: ["**/api/clients/*.md"],
                     prefix: 'import * as ds from "@devicescript/core"',
                 },
-            ],
-        },
-        sideEditor: {
-            languages: {
-                ts: "devicescript",
-            },
-            editors: [
                 {
-                    id: "devicescript",
-                    type: "iframe",
-                    lightUrl:
-                        "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&light=1",
-                    darkUrl:
-                        "https://microsoft.github.io/jacdac-docs/editors/devicescript/?devicescriptvm=1&embed=1&footer=0&dark=1",
-                    message: {
-                        channel: "devicescript",
-                        type: "source",
-                        force: true,
-                        startMissingSimulators: true,
-                    },
-                    messageTextFieldName: "source",
-                    readyMessage: {
-                        channel: "jacdac",
-                    },
+                    lang: "rx",
+                    nodeBin: "swirly",
+                    npmPackage: "swirly",
+                    extension: "txt",
+                    inputLang: null,
+                    outputLang: null,
+                    outputFiles: [
+                        {
+                            name: "output.svg",
+                        },
+                    ],
+                    args: ["input.txt", "output.svg"],
                 },
             ],
         },

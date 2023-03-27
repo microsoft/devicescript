@@ -8,6 +8,8 @@ import {
     readFileSync,
     ensureDirSync,
     readdir,
+    readFile,
+    existsSync,
 } from "fs-extra"
 import { build } from "./build"
 import { spawnSync, execSync } from "node:child_process"
@@ -22,6 +24,8 @@ import type {
     SideAddServiceResp,
     SideAddSimReq,
     SideAddSimResp,
+    SideAddTestReq,
+    SideAddTestResp,
 } from "./sideprotocol"
 import { addBoard } from "./addboard"
 
@@ -42,10 +46,36 @@ const serviceFiles: FileSet = {
     `,
 }
 
+const settingsFiles: FileSet = {
+    "package.json": {
+        [IS_PATCH]: true,
+        dependencies: {
+            "@devicescript/settings": "latest",
+        },
+    },
+}
+
+const i2cFiles: FileSet = {
+    "package.json": {
+        [IS_PATCH]: true,
+        dependencies: {
+            "@devicescript/i2c": "latest",
+        },
+    },
+}
+
+const testFiles: FileSet = {
+    "package.json": {
+        [IS_PATCH]: true,
+        dependencies: {
+            "@devicescript/test": "latest",
+        },
+    },
+}
+
 const npmFiles: FileSet = {
     "package.json": {
         [IS_PATCH]: true,
-        private: undefined,
         main: "./src/index.ts",
         license: "MIT",
         devicescript: {
@@ -165,7 +195,7 @@ const optionalFiles: FileSet = {
             moduleDetection: "force",
             types: [],
         },
-        include: ["*.ts", `../${LIBDIR}/*.ts`],
+        include: ["**/*.ts", `../${LIBDIR}/*.ts`],
     },
     ".prettierrc": {
         arrowParens: "avoid",
@@ -194,23 +224,26 @@ const optionalFiles: FileSet = {
         private: "Please use 'devs add npm' to make this a publishable package",
         dependencies: {},
         devDependencies: {
-            "@devicescript/cli": "*",
+            "@devicescript/cli": "latest",
         },
         scripts: {
-            setup: "devicescript build", // generates .devicescript/lib/* files
+            setup: "devicescript build --quiet", // generates .devicescript/lib/* files
             postinstall: "devicescript build",
-            "build:devicescript": "devicescript build",
+            "build:devicescript": "devicescript build src/main.ts",
             build: "yarn build:devicescript",
             "watch:devicescript": `devicescript devtools ${MAIN}`,
             watch: "yarn watch:devicescript",
+            "test:devicescript":
+                "devicescript run src/main.ts --test --test-self-exit",
+            test: "yarn test:devicescript",
             start: "yarn watch",
         },
     },
     [MAIN]: `${IMPORT_PREFIX}
 
-ds.everyMs(1000, () => {
+setInterval(() => {
     console.log(":)")
-})\n`,
+}, 1000)\n`,
     "README.md": `# - project name -
 
 This project uses [DeviceScript](https://microsoft.github.io/devicescript/).
@@ -508,6 +541,45 @@ export async function addNpm(options: AddNpmOptions) {
     ])
 }
 
+export async function addSettings(options: AddTestOptions) {
+    const files = clone(settingsFiles)
+    const cwd = writeFiles(".", options, files)
+    await runInstall(cwd, options)
+    return finishAdd(`Added settings package to package.json, please review.`, [
+        "package.json",
+    ])
+}
+
+export async function addI2C(options: AddTestOptions) {
+    const files = clone(i2cFiles)
+    const cwd = writeFiles(".", options, files)
+    await runInstall(cwd, options)
+    return finishAdd(`Added i2c package to package.json, please review.`, [
+        "package.json",
+    ])
+}
+
+export async function addTest(options: AddTestOptions) {
+    const files = clone(testFiles)
+    if (existsSync("./src/main.ts")) {
+        let main = await readFile("./src/main.ts", { encoding: "utf8" })
+        if (!main.includes("@devicescript/test"))
+            main =
+                `import { describe, test, expect } from "@devicescript/test";\n` +
+                main
+        files["src/main.ts"] = main
+    }
+    const cwd = writeFiles(".", options, files)
+    await runInstall(cwd, options)
+
+    return finishAdd(
+        `Added test package to package.json, added "runTest" to main.ts, please review.`,
+        ["package.json", "src/main.ts"]
+    )
+}
+
+export interface AddTestOptions extends InitOptions {}
+
 export function initAddCmds() {
     addReqHandler<SideAddBoardReq, SideAddBoardResp>("addBoard", d =>
         addBoard(d.data)
@@ -517,4 +589,7 @@ export function initAddCmds() {
     )
     addReqHandler<SideAddSimReq, SideAddSimResp>("addSim", d => addSim(d.data))
     addReqHandler<SideAddNpmReq, SideAddNpmResp>("addNpm", d => addNpm(d.data))
+    addReqHandler<SideAddTestReq, SideAddTestResp>("addTest", d =>
+        addTest(d.data)
+    )
 }

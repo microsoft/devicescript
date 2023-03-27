@@ -102,7 +102,7 @@ async function testExn() {
     expectExn(() => callIt([]), TypeError)
     expectExn(() => callIt(Array.prototype), TypeError)
 
-    expectExn(() => Math.pow.start(1), TypeError) // fiber started with builtin
+    expectExn(() => Math.pow.start(), TypeError) // fiber started with builtin
 
     expectExn(() => Object.keys(null), TypeError)
     expectExn(() => Object.values(null), TypeError)

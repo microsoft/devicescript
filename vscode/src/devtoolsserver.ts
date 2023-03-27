@@ -2,15 +2,21 @@ import {
     CHANGE,
     ConnectionState,
     delay,
+    ERROR_TIMEOUT,
     ERROR_TRANSPORT_CLOSED,
     groupBy,
     isCodeError,
     JDEventSource,
     JDService,
+    prettySize,
+    semverCmp,
+    throwError,
+    unique,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type {
     BuildStatus,
+    BuildOptions,
     SideBuildReq,
     SideBuildResp,
     SideKillReq,
@@ -22,11 +28,14 @@ import { logo } from "./assets"
 import { sideRequest } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
-import { TaggedQuickPickItem } from "./pickers"
+import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
-import { MESSAGE_PREFIX, showInformationMessageWithHelp } from "./commands"
+import { showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
-import { ResolvedBuildConfig, VersionInfo } from "@devicescript/compiler"
+import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
+import { extensionVersion } from "./version"
+import { showError, showErrorMessage } from "./telemetry"
+import { MESSAGE_PREFIX } from "./constants"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -34,6 +43,16 @@ function showTerminalError(message: string) {
         "getting-started/vscode#setting-up-the-project"
     )
 }
+
+function normalizeUsedFiles(dir: vscode.Uri, usedFiles: string[]) {
+    const dirPath = Utils.resolvePath(dir).fsPath + "/"
+    const fs = usedFiles
+    const rel = fs.filter(f => f.startsWith(dirPath))
+    const cor = rel.map(f => f.slice(dirPath.length))
+    return unique(cor)
+}
+
+const PROJECT_FOLDER_KEY = "devicescript.devtools.projectFolder"
 
 export class DeveloperToolsManager extends JDEventSource {
     private _connectionState: ConnectionState = ConnectionState.Disconnected
@@ -48,6 +67,7 @@ export class DeveloperToolsManager extends JDEventSource {
     private _buildConfig: ResolvedBuildConfig
     private _terminalPromise: Promise<vscode.Terminal>
     private _diagColl: vscode.DiagnosticCollection
+    private _buildOutputChannel: vscode.OutputChannel
 
     constructor(readonly extensionState: DeviceScriptExtensionState) {
         super()
@@ -81,9 +101,16 @@ export class DeveloperToolsManager extends JDEventSource {
                 () => this.show()
             )
         )
-        // outputCh = vscode.window.createOutputChannel("DevS Build")
+
+        this._buildOutputChannel = vscode.window.createOutputChannel(
+            "DeviceScript Compiler",
+            "devicescript"
+        )
+        subscriptions.push(this._buildOutputChannel)
+
         this._diagColl =
             vscode.languages.createDiagnosticCollection("DeviceScript")
+        subscriptions.push(this._diagColl)
 
         // clear errors when file edited
         vscode.workspace.onDidChangeTextDocument(
@@ -96,17 +123,40 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     async refreshSpecs() {
+        await this.findProjects()
         const res = await sideRequest<SideSpecsReq, SideSpecsResp>({
             req: "specs",
             data: {
                 dir: ".", // TODO
             },
+            timeout: 1000,
         })
         const { versions, buildConfig } = res.data
-        this._versions = versions
-        console.debug(
-            `devicescript devtools ${this.devsVersion}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
-        )
+        if (JSON.stringify(this._versions) !== JSON.stringify(versions)) {
+            this._versions = versions
+            const extv = extensionVersion()
+            console.debug(
+                `devicescript : vscode ${extv}, devtools ${this.devsVersion}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
+            )
+            if (semverCmp(this.devsVersion, extv) < 0) {
+                // installed devs tool are outdated for the vscode addon
+                const { projectFolder } = this
+                this.clear()
+                const yes = await showConfirmBox(
+                    `DeviceScript - @devicescript/cli dependency is outdated, upgrade?`
+                )
+                if (yes) {
+                    const t = vscode.window.createTerminal({
+                        isTransient: true,
+                        name: "@devicescript/cli upgrade",
+                        cwd: projectFolder,
+                    })
+                    t.sendText("yarn upgrade @devicescript/cli@latest")
+                    t.show()
+                }
+                throwError("Dependencies outdated", { cancel: true })
+            }
+        }
         this.updateBuildConfig(buildConfig)
     }
 
@@ -160,6 +210,13 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._currentFilename
     }
 
+    private set currentFileName(value: string) {
+        if (this._currentFilename !== value) {
+            this._currentFilename = value
+            this.emit(CHANGE)
+        }
+    }
+
     get currentFile(): vscode.Uri {
         const { projectFolder, currentFilename } = this
         return projectFolder && currentFilename
@@ -171,27 +228,109 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._currentDeviceScriptManager
     }
 
-    async build(filename: string, service?: JDService): Promise<BuildStatus> {
-        if (
-            this._currentFilename === filename &&
-            this._currentDeviceScriptManager === service?.id
-        )
-            return
+    showOutput() {
+        this._buildOutputChannel.show()
+    }
 
-        this._currentFilename = filename
-        this._currentDeviceScriptManager = service?.id
+    async buildFile(file: vscode.Uri): Promise<BuildStatus> {
+        // find project folder and relative path
+        const root = vscode.workspace.getWorkspaceFolder(file)
+        if (!root) {
+            showErrorMessage(
+                "build.workspacenotfound",
+                "Build cancelled.\nCould not resolve workspace."
+            )
+            return undefined
+        }
+        let dir = Utils.dirname(Utils.resolvePath(file))
+        let rel = Utils.basename(file)
+        let n = 0
+        while (!(await checkFileExists(dir, `devsconfig.json`))) {
+            if (dir.fsPath === root.uri.fsPath) {
+                showErrorMessage(
+                    "build.devscriptnotfound",
+                    "Build cancelled.\ndevicescript.json file not found."
+                )
+                return undefined
+            }
+            if (n++ > 30) {
+                showErrorMessage(
+                    "build.folderprogram",
+                    "Build cancelled.\nFolder problem."
+                )
+                return undefined
+            }
+
+            rel = `${Utils.basename(dir)}/${rel}`
+            dir = Utils.dirname(dir)
+        }
+
+        const log = (msg: string) => this._buildOutputChannel.appendLine(msg)
+
+        log(`building ${rel}`)
+        await this.setProjectFolder(dir)
+        await this.start()
+        const status = await this.build(rel)
+        if (!status?.success) log(`build failed`)
+        else {
+            const { dbg } = status
+            const { sizes } = dbg
+            log("build success")
+            log(
+                Object.keys(sizes)
+                    .map(name => `${name}: ${prettySize(sizes[name])}`)
+                    .join(", ")
+            )
+            this._buildOutputChannel.show()
+        }
+        return status
+    }
+
+    /**
+     * Builds a file relative to the current project folder
+     */
+    async build(
+        relativeFileName: string,
+        service?: JDService,
+        buildOptions?: BuildOptions
+    ): Promise<BuildStatus> {
         this._watcher?.dispose()
         this._watcher = undefined
 
-        const res = await this.buildOnce()
-        if (res) await this.startWatch()
+        // make sure this file is an entry foind
+        const entrypoints = await this.entryPoints()
+        if (entrypoints.includes(relativeFileName)) {
+            this.currentFileName = relativeFileName
+        } else if (entrypoints.length === 1) {
+            this.currentFileName = entrypoints[0]
+        } else if (!this.currentFileName) {
+            const res = await vscode.window.showQuickPick(
+                entrypoints.map(
+                    file =>
+                        ({
+                            label: file,
+                            description: this.projectFolder.fsPath,
+                            data: file,
+                        } as TaggedQuickPickItem<string>)
+                ),
+                {
+                    title: "Pick an entry point file (main*.ts)",
+                }
+            )
+            if (!res) return
+            this.currentFileName = res.data
+        }
+
+        this._currentDeviceScriptManager = service?.id
+        const res = await this.buildOnce(buildOptions)
+        if (res) await this.startWatch(res.usedFiles)
 
         this.emit(CHANGE)
 
         return res
     }
 
-    private async buildOnce(): Promise<BuildStatus> {
+    private async buildOnce(buildOptions?: BuildOptions): Promise<BuildStatus> {
         const filename = this._currentFilename
 
         if (!this._currentFilename) return undefined
@@ -206,20 +345,20 @@ export class DeveloperToolsManager extends JDEventSource {
                 req: "build",
                 data: {
                     filename,
+                    buildOptions,
                     deployTo,
                 },
             })
             this.showBuildResults(res.data)
             return res.data
         } catch (err) {
-            console.error(err) // TODO
-            // this is rather unusual, show it to the user
-            vscode.window.showErrorMessage(err.message)
+            showError(err)
             return undefined
         }
     }
 
-    private async startWatch() {
+    private async startWatch(usedFiles: string[]) {
+        usedFiles = normalizeUsedFiles(this.projectFolder, usedFiles)
         const filename = this._currentFilename
         const sid = this._currentDeviceScriptManager
 
@@ -229,7 +368,8 @@ export class DeveloperToolsManager extends JDEventSource {
             const service = this.extensionState.bus.node(sid) as JDService
             await this.build(filename, service)
         }
-        const glob = new vscode.RelativePattern(this.projectFolder, filename)
+        const pattern = `{${usedFiles.join(",")}}`
+        const glob = new vscode.RelativePattern(this.projectFolder, pattern)
         this._watcher = vscode.workspace.createFileSystemWatcher(glob)
         this._watcher.onDidChange(handleChange)
         this._watcher.onDidCreate(handleChange)
@@ -240,7 +380,11 @@ export class DeveloperToolsManager extends JDEventSource {
         try {
             await this.refreshSpecs()
         } catch (e) {
-            if (isCodeError(e, ERROR_TRANSPORT_CLOSED)) return false
+            if (
+                isCodeError(e, ERROR_TRANSPORT_CLOSED) ||
+                isCodeError(e, ERROR_TIMEOUT)
+            )
+                return false
             else throw e
         }
         return true
@@ -280,10 +424,11 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._projectFolder
     }
 
-    set projectFolder(folder: vscode.Uri) {
+    async setProjectFolder(folder: vscode.Uri) {
         if (folder?.toString() !== this._projectFolder?.toString()) {
-            if (this._projectFolder) this.kill()
+            if (this._projectFolder) await this.kill()
             this._projectFolder = folder
+            await this.saveProjectFolder()
             this.emit(CHANGE)
         }
     }
@@ -303,7 +448,36 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    async pickProject() {
+    private async pickProject(): Promise<vscode.Uri> {
+        // try sorted
+        const dir = this.extensionState.state.get<string>(PROJECT_FOLDER_KEY)
+        if (dir) {
+            try {
+                const folder = vscode.Uri.file(dir)
+                const exists = await checkFileExists(
+                    folder,
+                    "./devsconfig.json"
+                )
+                if (exists) return folder
+
+                // clear outdated key
+                await this.extensionState.state.update(
+                    PROJECT_FOLDER_KEY,
+                    undefined
+                )
+            } catch {
+                // clear outdated key
+                await this.extensionState.state.update(
+                    PROJECT_FOLDER_KEY,
+                    undefined
+                )
+            }
+        }
+
+        return await this.showQuickPickProjects()
+    }
+
+    async showQuickPickProjects(): Promise<vscode.Uri> {
         const projects = await this.findProjects()
         if (projects.length == 0) return undefined
         else if (projects.length == 1) return projects[0]
@@ -312,12 +486,12 @@ export class DeveloperToolsManager extends JDEventSource {
                 project =>
                     <TaggedQuickPickItem<vscode.Uri>>{
                         data: project,
-                        description: Utils.dirname(project).fsPath,
+                        description: project.fsPath,
                         label: Utils.basename(project),
                     }
             )
             const res = await vscode.window.showQuickPick(items, {
-                title: "Choose a project",
+                title: "Pick a DeviceScript project",
             })
             return res?.data
         }
@@ -326,9 +500,13 @@ export class DeveloperToolsManager extends JDEventSource {
     private async createTerminal(): Promise<vscode.Terminal> {
         if (!this._projectFolder) this._projectFolder = await this.pickProject()
         if (!this._projectFolder) {
-            showTerminalError("No DeviceScript project in workspace.")
+            this.clear()
             return undefined
         }
+
+        // store current folder
+        await this.saveProjectFolder()
+
         try {
             this.connectionState = ConnectionState.Connecting
             const t = await this.createCliTerminal({
@@ -349,11 +527,21 @@ export class DeveloperToolsManager extends JDEventSource {
         }
     }
 
-    start(): Promise<void> {
+    private async saveProjectFolder() {
+        await this.extensionState.state.update(
+            PROJECT_FOLDER_KEY,
+            this._projectFolder?.fsPath
+        )
+    }
+
+    start(options?: { build?: boolean }): Promise<void> {
         return (
             this._terminalPromise ||
             (this._terminalPromise = this.createTerminal())
-        ).then(() => this.startBuild())
+        ).then(() => {
+            if (options?.build) return this.startBuild()
+            return undefined
+        })
     }
 
     async entryPoints() {
@@ -372,7 +560,7 @@ export class DeveloperToolsManager extends JDEventSource {
 
     private async startBuild() {
         const files = await this.entryPoints()
-        const file = files[0]
+        const file = files?.[0]
         if (file) await this.build(file)
     }
 
@@ -411,11 +599,10 @@ export class DeveloperToolsManager extends JDEventSource {
         e: vscode.WorkspaceFoldersChangeEvent
     ) {
         if (e.removed && this._projectFolder) {
-            const projects = (await this.findProjects()).map(uri =>
-                uri.toString()
-            )
+            const projectUris = await this.findProjects()
+            const projects = projectUris.map(uri => uri.toString())
             if (!projects.includes(this._projectFolder?.toString()))
-                this.projectFolder = undefined
+                await this.setProjectFolder(undefined)
         }
     }
 
@@ -483,9 +670,17 @@ export class DeveloperToolsManager extends JDEventSource {
             "**/devsconfig.json",
             "**​/node_modules/**"
         )
-        return configs
+        const projectUris = configs
             .map(cfg => Utils.dirname(cfg))
-            .filter(d => !/\/node_modules\//.test(d.fsPath))
+            .filter(d => !/(^|\/)node_modules\//.test(d.fsPath))
+
+        vscode.commands.executeCommand(
+            "setContext",
+            "devicescript.supportedFolders",
+            projectUris.map(p => Utils.joinPath(p, "src").path)
+        )
+
+        return projectUris
     }
 
     async show() {
@@ -544,7 +739,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 if (isWindows) {
                     cli = "node_modules\\.bin\\devicescript.cmd"
                 } else args.unshift("./node_modules/.bin/devicescript")
-                if (diagnostics) args.push("--diagnostics")
+                if (diagnostics) args.push("--diagnostics", "--verbose")
                 console.debug(
                     `create terminal: ${useShell ? "shell:" : ""}${
                         cwd.fsPath
@@ -557,7 +752,7 @@ export class DeveloperToolsManager extends JDEventSource {
                     isTransient: true,
                     shellPath: useShell ? undefined : cli,
                     shellArgs: useShell ? undefined : args,
-                    iconPath: logo(this.extensionState.context),
+                    iconPath: new vscode.ThemeIcon("devicescript-logo"),
                     cwd: cwd.fsPath,
                 }
                 const t = vscode.window.createTerminal(terminalOptions)

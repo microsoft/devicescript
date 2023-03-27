@@ -89,7 +89,7 @@ value_t devs_value_from_pointer(devs_ctx_t *ctx, int type, void *ptr) {
         return devs_undefined;
 
     JD_ASSERT(devs_handle_type_is_ptr(type));
-    JD_ASSERT(devs_gc_obj_valid(ctx, ptr));
+    devs_gc_obj_check(ctx, ptr);
 
 #if JD_64
     v = (uintptr_t)ptr - (uintptr_t)devs_gc_base_addr(ctx->gc);
@@ -286,6 +286,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
             return DEVS_OBJECT_TYPE_BUFFER;
         case DEVS_GC_TAG_BOUND_FUNCTION:
             return DEVS_OBJECT_TYPE_FUNCTION;
+        case DEVS_GC_TAG_ACTIVATION:
+            return DEVS_OBJECT_TYPE_EXOTIC;
         case DEVS_GC_TAG_BUILTIN_PROTO:
         default:
             JD_PANIC();

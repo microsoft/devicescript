@@ -1,75 +1,40 @@
 import {
     CHANGE,
     deviceCatalogImage,
-    ellipse,
     identifierToUrlPath,
     JDNode,
     shortDeviceId,
-    toHex,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { toMarkdownString } from "../catalog"
-import { Utils } from "vscode-uri"
 import { GatewayExtensionState } from "./GatewayExtensionState"
-import { sideRequest } from "../jacdac"
-import type {
+import { CONNECTION_GATEWAY_RESOURCE_GROUP } from "../constants"
+import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
+import {
+    GatewayManager,
+    GatewayScript,
+    GatewayDevice,
+    GATEWAY_SCRIPT_NODE,
+    GATEWAY_DEVICE_NODE,
+    GatewayCollection,
+    GATEWAY_DEVICES_NODE,
+    GATEWAY_SCRIPTS_NODE,
+    GATEWAY_NODE,
+} from "./gatewaydom"
+import type { DebugInfo } from "@devicescript/interop"
+import {
     SideConnectReq,
     WebSocketConnectReqArgs,
 } from "../../../cli/src/sideprotocol"
-import {
-    CLOUD_DEVICES_NODE,
-    CLOUD_SCRIPTS_NODE,
-    CONNECTION_RESOURCE_GROUP,
-} from "../constants"
-import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
-import { readFileJSON } from "../fs"
-import {
-    CloudManager,
-    CloudScript,
-    CloudDevice,
-    CLOUD_SCRIPT_NODE,
-    CLOUD_DEVICE_NODE,
-} from "./clouddom"
-import { DebugInfo } from "@devicescript/compiler"
+import { sideRequest } from "../jacdac"
 
-class CloudCollection extends JDNode {
-    constructor(
-        readonly manager: CloudManager,
-        private readonly _nodeKind: string,
-        private readonly _name: string,
-        private readonly _children: (manager: CloudManager) => JDNode[]
-    ) {
-        super()
-    }
-    get id(): string {
-        return `${this.manager.id}.${this.nodeKind}`
-    }
-    get nodeKind(): string {
-        return this._nodeKind
-    }
-    get name(): string {
-        return this._name
-    }
-    get qualifiedName(): string {
-        return `${this.parent.qualifiedName}.${this.name}`
-    }
-    get parent(): JDNode {
-        return this.manager
-    }
-    get children(): JDNode[] {
-        return this._children(this.manager).sort((l, r) =>
-            l.name.localeCompare(r.name)
-        )
-    }
-}
+type GatewayScriptPickItem = TaggedQuickPickItem<GatewayScript>
 
-type CloudScriptPickItem = TaggedQuickPickItem<CloudScript>
-
-function cloudScriptToQuickPickItem(
-    script: CloudScript,
+function gatewayScriptToQuickPickItem(
+    script: GatewayScript,
     options?: { picked?: boolean }
 ) {
-    return <CloudScriptPickItem>{
+    return <GatewayScriptPickItem>{
         data: script,
         label: script.name,
         description:
@@ -79,10 +44,10 @@ function cloudScriptToQuickPickItem(
     }
 }
 
-function cloudScriptVersionToQuickPickItem(
-    v: CloudScript
-): TaggedQuickPickItem<CloudScript> {
-    return <CloudScriptPickItem>{
+function gatewayScriptVersionToQuickPickItem(
+    v: GatewayScript
+): TaggedQuickPickItem<GatewayScript> {
+    return <GatewayScriptPickItem>{
         data: v,
         label: `v${v.version}`,
         description: v.creationTime.toLocaleString(),
@@ -101,15 +66,15 @@ export class GatewayTreeDataProvider
         subscriptions.push(
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.connect",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
 
                     const { url, protocol } =
-                        (await device.createConnection()) || {}
+                        (await device.createConnection("logs")) || {}
                     if (!url) {
                         vscode.window.showErrorMessage(
-                            "DeviceScript Gateway: Unable to open connection."
+                            "DeviceScript Gateway - Unable to open connection."
                         )
                         return
                     }
@@ -119,16 +84,25 @@ export class GatewayTreeDataProvider
                         data: <WebSocketConnectReqArgs>{
                             transport: "websocket",
                             background: false,
-                            resourceGroupId: CONNECTION_RESOURCE_GROUP,
+                            resourceGroupId: CONNECTION_GATEWAY_RESOURCE_GROUP,
                             url,
                             protocol,
                         },
                     })
+                    vscode.commands.executeCommand(
+                        "extension.devicescript.terminal.show"
+                    )
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.ping",
+                async (device: GatewayDevice) => {
+                    await device.ping()
                 }
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.unregister",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     if (await showConfirmBox("Unregister device?"))
                         await this.state.withProgress(
                             "Unregistering device...",
@@ -138,16 +112,22 @@ export class GatewayTreeDataProvider
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.refreshToken",
-                async (device: CloudDevice) => {
+                async (device: GatewayDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
                     const dev = manager.bus.device(device.deviceId, true)
-                    if (dev) await manager.registerDevice(dev, device.name)
+                    if (!dev) {
+                        vscode.window.showErrorMessage(
+                            "DeviceScript Gateway: device not connected."
+                        )
+                        return
+                    }
+                    await manager.registerDevice(dev, device.name)
                 }
             ),
             vscode.commands.registerCommand(
                 "extension.devicescript.gateway.script.delete",
-                async (script: CloudScript) => {
+                async (script: GatewayScript) => {
                     if (
                         await showConfirmBox(
                             "Delete script and all its versions?"
@@ -160,8 +140,8 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.gateway.device.updateScript",
-                async (device: CloudDevice) => {
+                "extension.devicescript.gateway.device.script.configure",
+                async (device: GatewayDevice) => {
                     const manager = this.state.manager
                     if (!manager || !device) return
                     const current = manager?.script(device.scriptId)
@@ -170,7 +150,7 @@ export class GatewayTreeDataProvider
                     const res = await vscode.window.showQuickPick(
                         [
                             ...scripts.map(script =>
-                                cloudScriptToQuickPickItem(script, {
+                                gatewayScriptToQuickPickItem(script, {
                                     picked: script === current,
                                 })
                             ),
@@ -203,7 +183,9 @@ export class GatewayTreeDataProvider
                     await script.refreshVersions()
                     const versions = script.versions()
                     const v = await vscode.window.showQuickPick(
-                        versions.map(v => cloudScriptVersionToQuickPickItem(v)),
+                        versions.map(v =>
+                            gatewayScriptVersionToQuickPickItem(v)
+                        ),
                         {
                             title: "Select a version",
                         }
@@ -224,8 +206,41 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.script.update.latest",
+                async (device: GatewayDevice) => {
+                    const manager = this.state.manager
+                    if (!manager || !device) return
+                    const script = manager.script(device.scriptId)
+                    if (!script) return
+                    // get version and such
+                    await script.refreshVersions()
+                    const versions = script.versions()
+                    const v = versions?.[0]
+                    if (!v) return
+
+                    if (v.version === device.scriptVersion) {
+                        vscode.window.showInformationMessage(
+                            "DeviceScript Gateway: script version already at latest"
+                        )
+                        return
+                    }
+
+                    await this.state.withProgress(
+                        `Updating Script to ${v.version}`,
+                        async () => {
+                            await device.updateScript(
+                                device.scriptId,
+                                v.version
+                            )
+                            await device.refresh()
+                            this.refresh(device)
+                        }
+                    )
+                }
+            ),
+            vscode.commands.registerCommand(
                 "extension.devicescript.gateway.script.upload",
-                async (script: CloudScript) => {
+                async (script: GatewayScript) => {
                     const manager = this.state.manager
                     if (!manager) return
                     const file =
@@ -238,7 +253,7 @@ export class GatewayTreeDataProvider
                         )
                     if (!status?.success) {
                         vscode.window.showErrorMessage(
-                            `DeviceScript Gateway: ${file.fsPath} has build errors.`
+                            `DeviceScript Gateway: project has build errors.`
                         )
                         return
                     }
@@ -254,7 +269,7 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
-                "extension.devicescript.gateway.device.uploadScript",
+                "extension.devicescript.gateway.scripts.upload",
                 async () => {
                     const manager = this.state.manager
                     if (!manager) return
@@ -271,57 +286,43 @@ export class GatewayTreeDataProvider
                         )
                     if (!status?.success) {
                         vscode.window.showErrorMessage(
-                            `DeviceScript Gateway: ${file.fsPath} has build errors.`
+                            `DeviceScript Gateway: project has build errors.`
                         )
                         return
                     }
                     const program = status.dbg
-                    const pkg = await readFileJSON<{ name: string }>(
-                        this.state.deviceScriptState.projectFolder,
-                        "package.json"
-                    )
-                    const base = `${pkg?.name || "no-package"}/${Utils.basename(
-                        file
-                    ).replace(/\.ts$/i, "")}`
+                    const base = program?.localConfig.hwInfo.progName
 
                     // find script to override
                     await manager.refreshScripts()
-                    const sres = await vscode.window.showQuickPick(
-                        <CloudScriptPickItem[]>[
-                            ...manager.scripts().map(script =>
-                                cloudScriptToQuickPickItem(script, {
-                                    picked: script.name === base,
-                                })
-                            ),
-                            {
-                                label: "Create new cloud script",
-                            },
-                        ],
-                        {
-                            title: `Select cloud script to override with '${base}'`,
-                        }
-                    )
-                    if (sres === undefined) return
-                    const script =
-                        sres.data || (await manager.createScript(base))
-
-                    if (!script) {
-                        vscode.window.showErrorMessage(
-                            "DeviceScript Gateway: failed to create new script."
-                        )
-                        return
-                    }
-
-                    // upload
-                    await this.uploadScriptProgram(script, program)
+                    const script = manager.scripts().find(s => s.name === base)
+                    if (script) await this.uploadScriptProgram(script, program)
+                    else await this.createScript(manager, base, program)
                 }
             )
         )
     }
 
-    private async uploadScriptProgram(script: CloudScript, program: DebugInfo) {
+    private async uploadScriptProgram(
+        script: GatewayScript,
+        program: DebugInfo
+    ) {
         await this.state.withProgress("Uploading script...", async () => {
             await script.uploadBody({
+                versions: this.state.deviceScriptState.devtools.versions(),
+                program,
+            })
+            this.refresh(script)
+        })
+    }
+
+    private async createScript(
+        manager: GatewayManager,
+        name: string,
+        program: DebugInfo
+    ) {
+        await this.state.withProgress("Uploading script...", async () => {
+            const script = await manager.createScript(name, {
                 versions: this.state.deviceScriptState.devtools.versions(),
                 program,
             })
@@ -336,8 +337,8 @@ export class GatewayTreeDataProvider
     ) {
         const { nodeKind } = node
         switch (nodeKind) {
-            case CLOUD_SCRIPT_NODE: {
-                const script = node as CloudScript
+            case GATEWAY_SCRIPT_NODE: {
+                const script = node as GatewayScript
                 const body = await script.refreshBody()
                 if (body)
                     item.tooltip =
@@ -355,39 +356,56 @@ export class GatewayTreeDataProvider
         let label = node.name
         let description = ""
         let tooltip: vscode.MarkdownString = undefined
+        let command: vscode.Command
         const contextValue = node.nodeKind
         let iconPath: vscode.ThemeIcon | vscode.Uri = new vscode.ThemeIcon(
             {
-                [CLOUD_DEVICE_NODE]: "circuit-board",
-                [CLOUD_SCRIPT_NODE]: "file-code",
-                [CLOUD_DEVICES_NODE]: "circuit-board",
-                [CLOUD_SCRIPTS_NODE]: "file-code",
+                [GATEWAY_NODE]: "cloud",
+                [GATEWAY_DEVICE_NODE]: "circuit-board",
+                [GATEWAY_SCRIPT_NODE]: "file-code",
+                [GATEWAY_DEVICES_NODE]: "circuit-board",
+                [GATEWAY_SCRIPTS_NODE]: "file-code",
             }[contextValue] || "question"
         )
 
         switch (node.nodeKind) {
-            case CLOUD_DEVICES_NODE:
-            case CLOUD_SCRIPTS_NODE: {
+            case GATEWAY_NODE: {
+                const mgr = node as GatewayManager
+                description = mgr.lastFetchStatus || ""
+                tooltip = toMarkdownString(`
+-   API root: [${mgr.apiRoot}](${mgr.apiRoot}/swagger/)
+-   Last fetch: ${mgr.lastFetchStatus}
+                `)
+                break
+            }
+            case GATEWAY_DEVICES_NODE:
+            case GATEWAY_SCRIPTS_NODE: {
                 collapsibleState = vscode.TreeItemCollapsibleState.Expanded
                 break
             }
-            case CLOUD_SCRIPT_NODE: {
-                const script = node as CloudScript
+            case GATEWAY_SCRIPT_NODE: {
+                const script = node as GatewayScript
                 description = `v${script.version}`
                 break
             }
-            case CLOUD_DEVICE_NODE: {
-                const d = node as CloudDevice
-                const meta = d.meta
-                const connected = d.connected
-                const script = this.state.manager?.script(d.scriptId)
+            case GATEWAY_DEVICE_NODE: {
+                const d = node as GatewayDevice
+                const { meta, connected, scriptId, scriptVersion } = d
+                const script = this.state.manager?.script(scriptId)
                 const spec =
                     this.state.bus.deviceCatalog.specificationFromProductIdentifier(
                         meta.productId
                     )
 
                 label = `${shortDeviceId(d.deviceId)}, ${d.name}`
-                description = script ? script.displayName : "no script"
+                command = {
+                    title: "Ping device",
+                    command: "extension.devicescript.gateway.device.ping",
+                    arguments: [d],
+                }
+                description = script
+                    ? `${script.friendlyName} v${scriptVersion}`
+                    : "no script"
                 const iconName = connected
                     ? "circle-large-filled"
                     : "circle-slash"
@@ -396,6 +414,7 @@ export class GatewayTreeDataProvider
                     `
 $(${iconName}) ${connected ? `connected` : `disconnected`}
 
+- device id: ${d.deviceId}
 - last activity: ${d.lastActivity}
 - product: ${spec?.name || meta.productId?.toString(16) || ""}
 - firmware version: ${meta.fwVersion || ""}
@@ -420,6 +439,7 @@ ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
             tooltip,
             description,
             collapsibleState,
+            command,
         }
     }
 
@@ -430,15 +450,26 @@ ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
             if (!manager) return undefined
 
             const items = [
-                new CloudCollection(manager, CLOUD_SCRIPTS_NODE, "scripts", _ =>
-                    _.scripts()
+                manager,
+                new GatewayCollection(
+                    manager,
+                    GATEWAY_SCRIPTS_NODE,
+                    "scripts",
+                    _ => _.scripts()
                 ),
-                new CloudCollection(manager, CLOUD_DEVICES_NODE, "devices", _ =>
-                    _.devices()
+                new GatewayCollection(
+                    manager,
+                    GATEWAY_DEVICES_NODE,
+                    "devices",
+                    _ => _.devices()
                 ),
             ]
             return items
-        } else return element?.children as JDNode[]
+        } else if (element === this.state.manager) {
+            return []
+        } else {
+            return element?.children as JDNode[]
+        }
     }
 
     private _onDidChangeTreeData: vscode.EventEmitter<

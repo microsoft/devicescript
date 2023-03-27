@@ -8,7 +8,7 @@ comp:
 comp-fast:
 	yarn build-fast
 
-native native1 em update-dist:
+native native1 em:
 	$(MAKE) -C runtime $@
 
 test-c: native comp-fast
@@ -35,20 +35,27 @@ check:
 	$(MAKE) all
 	$(MAKE) test
 
+bytecode-gen-ci: bc
+	git add bytecode/bytecode.md
+	git add compiler/src/bytecode.ts
+	git add runtime/devicescript/devs_bytecode.h
+
 bc:
 	cd bytecode && ./run.sh
 	node runtime/scripts/ds-builtin-proto.js \
 		runtime/devicescript/devs_bytecode.h \
 		runtime/devicescript/impl_*.c
 	clang-format -i runtime/devicescript/protogen.c
+
+regen: bc
+	$(CLI) ctool --server-info
 	$(CLI) dcfg runtime/boards/native/native.board.json --update runtime/posix/native_cfg.c
 	clang-format -i runtime/posix/native_cfg.c
 	$(CLI) dcfg runtime/boards/wasm/wasm.board.json --update runtime/posix/wasm_cfg.c
 	clang-format -i runtime/posix/wasm_cfg.c
-
-regen: bc
 	cd ./dcfg && ./regen.sh
 	yarn boards
+	yarn hwdocs
 
 specs spec:
 	$(MAKE) -C runtime/jacdac-c/jacdac
@@ -57,3 +64,19 @@ docker:
 	$(MAKE) clean
 	docker run -v `pwd`:/src -w /src  library/gcc make native
 	$(MAKE) clean
+
+empty:
+	$(MAKE) bc comp-fast
+	devs ctool --empty
+
+bump:
+	node scripts/bump.mjs
+
+release:
+	node scripts/bump.mjs --cloud
+
+gdb gdb-dap:
+	lldb runtime/built/jdcli -- -n -X 8082
+
+gdb-run:
+	lldb runtime/built/jdcli -- -n -X .devicescript/bin/crun.devs

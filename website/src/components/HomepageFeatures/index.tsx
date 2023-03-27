@@ -6,9 +6,10 @@ type FeatureItem = {
     title: string
     Svg?: React.ComponentType<React.ComponentProps<"svg">>
     description: string
+    link?: string
 }
 
-function Feature({ title, Svg, description }: FeatureItem) {
+function Feature({ title, Svg, description, link }: FeatureItem) {
     return (
         <div className={clsx("col col--4")}>
             {Svg && (
@@ -17,7 +18,7 @@ function Feature({ title, Svg, description }: FeatureItem) {
                 </div>
             )}
             <div className="text--center padding-horiz--md">
-                <h3>{title}</h3>
+                <h3>{link ? <a href={link}>{title}</a> : title}</h3>
                 <p>{description}</p>
             </div>
         </div>
@@ -27,32 +28,39 @@ function Feature({ title, Svg, description }: FeatureItem) {
 export default function HomepageFeatures(): JSX.Element {
     const features: FeatureItem[] = [
         {
-            title: "TypeScript",
+            title: "TypeScript for IoT",
             description:
                 "The familiar syntax and tooling, all at your fingertips.",
+            link: "/devicescript/language",
         },
         {
-            title: "Portable VM",
-            description: "Small footprint DeviceScript bytecode interpreter.",
+            title: "Small Runtime",
+            description: "Bytecode interpreter for low power / flash / memory.",
+            link: "/devicescript/devices",
         },
         {
             title: "Hardware as Services",
-            description: "Write reusable application/firmware on top of abstract hardware services.",
-        },
-        {
-            title: "Small",
             description:
-                "Designed for low power, low flash, low memory embedded projects.",
-        },
-        {
-            title: "Simulation & Tracing",
-            description:
-                "Develop and test your firmware using simulated or real sensors.",
+                "Client/server architecture for sensors and actuators.",
+            link: "/developer/defining-roles",
         },
         {
             title: "Debugging",
             description:
-                "Full debugging experience in Visual Studio Code, for hardware or simulated devices.",
+                "In Visual Studio Code, for embedded hardware or simulated devices.",
+            link: "/devicescript/getting-started/vscode/debugging",
+        },
+        {
+            title: "Simulation and Testing",
+            description:
+                "Develop and test your firmware using hardware/mock sensors. CI friendly.",
+            link: "/devicescript/developer/simulation",
+        },
+        {
+            title: "Development Gateway",
+            description:
+                "Prototype cloud service with device management, firmware deployment and message queues.",
+            link: "/devicescript/developer/cloud",
         },
     ]
 
