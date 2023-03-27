@@ -25,7 +25,7 @@ import type {
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
 import { logo } from "./assets"
-import { sideRequest } from "./jacdac"
+import { sideRequest, tryConnectDevtools } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
 import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
@@ -763,6 +763,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 let retry = 0
                 let inited = false
                 while (retry++ < 20) {
+                    await tryConnectDevtools()
                     inited = await this.init()
                     if (inited) break
                     await delay(500)
