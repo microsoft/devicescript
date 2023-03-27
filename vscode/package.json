@@ -243,24 +243,24 @@
             "editor/title": [
                 {
                     "command": "extension.devicescript.editor.build",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders && resourceFilename =~ /^main*.\\.ts/",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
                     "group": "navigation@1"
                 },
                 {
                     "command": "extension.devicescript.editor.run",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders && resourceFilename =~ /^main*.\\.ts/",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
                     "group": "navigation@2"
                 },
                 {
                     "command": "extension.devicescript.editor.configure",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders && resourceFilename =~ /^main*.\\.ts/",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
                     "group": "navigation@3"
                 }
             ],
             "editor/title/run": [
                 {
                     "command": "extension.devicescript.editor.debug",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders && resourceFilename =~ /^main*.\\.ts/",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
                     "group": "navigation"
                 }
             ],

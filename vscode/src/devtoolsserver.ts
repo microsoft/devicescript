@@ -210,6 +210,13 @@ export class DeveloperToolsManager extends JDEventSource {
         return this._currentFilename
     }
 
+    private set currentFileName(value: string) {
+        if (this._currentFilename !== value) {
+            this._currentFilename = value
+            this.emit(CHANGE)
+        }
+    }
+
     get currentFile(): vscode.Uri {
         const { projectFolder, currentFilename } = this
         return projectFolder && currentFilename
@@ -290,9 +297,31 @@ export class DeveloperToolsManager extends JDEventSource {
         this._watcher?.dispose()
         this._watcher = undefined
 
-        this._currentFilename = relativeFileName
-        this._currentDeviceScriptManager = service?.id
+        // make sure this file is an entry foind
+        const entrypoints = await this.entryPoints()
+        if (entrypoints.includes(relativeFileName)) {
+            this.currentFileName = relativeFileName
+        } else if (entrypoints.length === 1) {
+            this.currentFileName = entrypoints[0]
+        } else if (!this.currentFileName) {
+            const res = await vscode.window.showQuickPick(
+                entrypoints.map(
+                    file =>
+                        ({
+                            label: file,
+                            description: this.projectFolder.fsPath,
+                            data: file,
+                        } as TaggedQuickPickItem<string>)
+                ),
+                {
+                    title: "Pick an entry point file (main*.ts)",
+                }
+            )
+            if (!res) return
+            this.currentFileName = res.data
+        }
 
+        this._currentDeviceScriptManager = service?.id
         const res = await this.buildOnce(buildOptions)
         if (res) await this.startWatch(res.usedFiles)
 
@@ -505,11 +534,14 @@ export class DeveloperToolsManager extends JDEventSource {
         )
     }
 
-    start(): Promise<void> {
+    start(options?: { build?: boolean }): Promise<void> {
         return (
             this._terminalPromise ||
             (this._terminalPromise = this.createTerminal())
-        ).then(() => this.startBuild())
+        ).then(() => {
+            if (options?.build) return this.startBuild()
+            return undefined
+        })
     }
 
     async entryPoints() {

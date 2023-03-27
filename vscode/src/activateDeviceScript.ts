@@ -182,6 +182,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) {
-        extensionState.devtools.start()
+        extensionState.devtools.start({ build: true})
     }
 }
