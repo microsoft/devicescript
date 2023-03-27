@@ -1,4 +1,4 @@
-# DeviceScript <img src="./website/static/img/logo.svg" style="width: 24px;" />
+# DeviceScript [<img src="./website/static/img/logo.svg" style="width: 24px;" />](https://microsoft.github.io/devicescript)
 
 DeviceScript brings a professional TypeScript developer experience to low-resource microcontroller-based devices.
 DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
