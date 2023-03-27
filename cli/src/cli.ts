@@ -35,7 +35,10 @@ import { addBoard } from "./addboard"
 import { LoggerPriority } from "jacdac-ts"
 
 export async function mainCli() {
-    notifyUpdates()
+    await notifyUpdates({
+        defer: false,
+        isGlobal: false,
+    })
 
     Error.stackTraceLimit = 30
 
