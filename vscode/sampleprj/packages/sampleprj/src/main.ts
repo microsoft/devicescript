@@ -1,3 +1,3 @@
 setInterval(() => {
-    console.log(":)")
+    console.log({ msg: ":)" })
 }, 1000)

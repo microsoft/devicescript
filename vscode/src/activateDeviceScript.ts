@@ -10,17 +10,19 @@ import {
     activateJacdacOutputChannel,
     activateDeviceScriptOutputChannel,
     activateDeviceScriptI2COutputChannel,
+    activateDeviceScriptDataChannel,
 } from "./output"
 import { DeviceScriptExtensionState } from "./state"
 import { activateTelemetry } from "./telemetry"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
-    const { subscriptions, extensionMode } = context
+    const { subscriptions } = context
     activateTelemetry(context)
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
-    activateDeviceScriptOutputChannel(extensionMode)
+    activateDeviceScriptOutputChannel(context)
+    activateDeviceScriptDataChannel(context)
 
     // setup bus
     const bus = startJacdacBus()
