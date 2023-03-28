@@ -1,7 +1,7 @@
 {
     "name": "@devicescript/plugin",
     "private": false,
-    "version": "2.2.10",
+    "version": "2.2.11",
     "description": "DeviceScript Language Server Plugin",
     "keywords": [
         "devicescript"
