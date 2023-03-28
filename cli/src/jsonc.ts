@@ -1,7 +1,7 @@
-import { parseJSON } from "@devicescript/compiler"
+import { parseJSON5 } from "@devicescript/compiler"
 import { readFileSync } from "fs"
 
-export function readJSONSync<T = unknown>(fn: string): T {
+export function readJSON5Sync<T = unknown>(fn: string): T {
     const text = readFileSync(fn, { encoding: "utf-8" })
-    return parseJSON<T>(text)
+    return parseJSON5<T>(text)
 }

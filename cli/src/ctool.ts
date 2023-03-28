@@ -12,7 +12,7 @@ import {
 import { runTest } from "./run"
 import { writeFile } from "node:fs/promises"
 import { strcmp } from "jacdac-ts"
-import { readJSONSync } from "./jsonc"
+import { readJSON5Sync } from "./jsonc"
 
 export interface CToolOptions {
     empty?: boolean
@@ -141,7 +141,7 @@ async function fetchBoards(options: CToolOptions) {
                 "info.json"
             )
             log(`fetch from ${p}`)
-            info = readJSONSync(p)
+            info = readJSON5Sync(p)
         } else {
             const url = repo + "/releases/latest/download/info.json"
             log(`fetch from ${url}`)

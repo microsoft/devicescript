@@ -1,3 +1,4 @@
+import { JSON5TryParse, parseJSON5 } from "@devicescript/compiler"
 import {
     Flags,
     FRAME_PROCESS,
@@ -5,7 +6,6 @@ import {
     I2CCmdPack,
     I2CStatus,
     JDFrameBuffer,
-    JSONTryParse,
     Packet,
     PACKET_RECEIVE,
     serializeToTrace,
@@ -99,7 +99,7 @@ export function activateDeviceScriptDataChannel(
     context: vscode.ExtensionContext
 ) {
     const { subscriptions, extensionMode } = context
-    const channel = vscode.window.createOutputChannel("DeviceScript - Data", {        
+    const channel = vscode.window.createOutputChannel("DeviceScript - Data", {
         log: true,
     })
 
@@ -112,22 +112,11 @@ export function activateDeviceScriptDataChannel(
     const parseLine = (line: string) => {
         // json entry
         const { source, entries } =
-            /^(.*>)?\s*(?<source>\{\s*(?<entries>[^}]+)\})\s*$/.exec(line)
-                ?.groups || {}
+            /^(.*>)?\s*(?<source>\{.+\})\s*$/.exec(line)?.groups || {}
         if (!source) return
 
         // proper formatted json
-        let json: any = JSONTryParse(source)
-        if (json === undefined && entries) {
-            json = {}
-            entries
-                .split(/\s*,\s*/g)
-                .map(splitPair)
-                .forEach(([key, value]) => {
-                    json[key] = JSONTryParse(value) ?? value
-                })
-        }
-
+        const json = JSON5TryParse<any>(source)
         // serialize
         if (json !== undefined) {
             json["_t"] = Date.now()

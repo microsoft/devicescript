@@ -46,7 +46,7 @@ import {
 } from "jacdac-ts"
 import { execSync } from "node:child_process"
 import { BuildOptions } from "./sideprotocol"
-import { readJSONSync } from "./jsonc"
+import { readJSON5Sync } from "./jsonc"
 
 // TODO should we move this to jacdac-ts and call automatically for transports?
 export function setupWebsocket() {
@@ -76,7 +76,7 @@ export function setupWebsocket() {
 export function readDebugInfo() {
     let dbg: DebugInfo
     try {
-        dbg = readJSONSync(join(BINDIR, DEVS_DBG_FILE))
+        dbg = readJSON5Sync(join(BINDIR, DEVS_DBG_FILE))
     } catch {}
     return dbg
 }
@@ -237,7 +237,7 @@ function compilePackageJson(
 ) {
     const pkgJsonPath = join(tsdir, "package.json")
     if (existsSync(pkgJsonPath)) {
-        const pkgJSON = readJSONSync(pkgJsonPath) as {
+        const pkgJSON = readJSON5Sync(pkgJsonPath) as {
             name?: string
             version?: string
         }

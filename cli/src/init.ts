@@ -27,7 +27,7 @@ import type {
     SideAddTestResp,
 } from "./sideprotocol"
 import { addBoard } from "./addboard"
-import { readJSONSync } from "./jsonc"
+import { readJSON5Sync } from "./jsonc"
 
 const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
@@ -308,7 +308,7 @@ export interface InitOptions {
 
 function patchJSON(fn: string, data: any) {
     debug(`patch ${fn}`)
-    const existing = readJSONSync(fn)
+    const existing = readJSON5Sync(fn)
     const isObj = (o: any) => o && typeof o == "object" && !Array.isArray(o)
     const doPatch = (trg: any, src: any) => {
         const force = !!src[FORCE]
