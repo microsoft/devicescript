@@ -116,7 +116,6 @@ export function activateDeviceScriptDataChannel(
     const { context } = state
     const { subscriptions } = context
     const channel = vscode.window.createOutputChannel("DeviceScript - Data")
-
     let offsetMillis: number = 0
     let lastMillis: number = undefined
     let entries: { line: string }[] = undefined
@@ -163,16 +162,14 @@ export function activateDeviceScriptDataChannel(
             })
     })
 
-    vscode.debug.onDidStartDebugSession(
-        () => {
-            channel.clear()
-            entries = undefined
-            lastMillis = undefined
-            offsetMillis = 0
-        },
-        undefined,
-        subscriptions
-    )
+    const clear = () => {
+        channel.clear()
+        entries = undefined
+        lastMillis = undefined
+        offsetMillis = 0
+    }
+
+    vscode.debug.onDidStartDebugSession(clear, undefined, subscriptions)
 
     function padZero(n: number): string {
         return n < 10 ? "0" + n : n.toString()
@@ -193,6 +190,7 @@ export function activateDeviceScriptDataChannel(
             "extension.devicescript.data.download",
             async () => {
                 const content = JSONtoCSV(entries)
+                clear()
                 const { projectFolder } = state.devtools
                 if (!projectFolder)
                     await vscode.workspace.openTextDocument({
