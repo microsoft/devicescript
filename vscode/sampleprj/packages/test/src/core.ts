@@ -194,7 +194,7 @@ export function describe(name: string, body: SuiteFunction) {
         if (!autoRunTestTimer) console.log(`preparing to run tests...`)
         autoRunTestTimer = setTimeout(async () => {
             await runTests()
-            ds.reboot()
+            ds.restart()
         }, AUTORUN_TEST_DELAY)
     }
 }

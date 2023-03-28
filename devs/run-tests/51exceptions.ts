@@ -1,4 +1,4 @@
-import { sleep, assert, reboot, AsyncVoid } from "@devicescript/core"
+import { sleep, assert, AsyncVoid } from "@devicescript/core"
 
 let glb1 = 0
 let x = 0
@@ -180,5 +180,3 @@ async function run() {
 }
 
 await run()
-
-reboot()

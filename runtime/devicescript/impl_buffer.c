@@ -67,7 +67,7 @@ void meth1_Buffer_toString(devs_ctx_t *ctx) {
             devs_ret_gc_ptr(ctx, s);
         } else if (devs_is_null_or_undefined(enc) ||
                    devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING_UTF8)) ||
-                   devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING__UTF8))) {
+                   devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING_UTF_8))) {
             devs_ret(ctx, devs_string_from_utf8(ctx, data, sz));
         } else {
             devs_throw_type_error(ctx, "Unknown encoding: %s", devs_show_value(ctx, enc));

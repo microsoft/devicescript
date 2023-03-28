@@ -274,7 +274,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 153,
+    __MAX = 154,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -332,7 +332,7 @@ export enum BuiltInString {
     RANDOM = 54,
     RANDOMINT = 55,
     READ = 56,
-    REBOOT = 57,
+    RESTART = 57,
     ROUND = 58,
     SETAT = 59,
     SETLENGTH = 60,
@@ -427,8 +427,9 @@ export enum BuiltInString {
     FROM = 149,
     HEX = 150,
     UTF8 = 151,
-    _UTF8 = 152, // utf-8
+    UTF_8 = 152, // utf-8
     SUSPENDED = 153,
+    REBOOT = 154,
 }
 
 export const OP_PRINT_FMTS = [
@@ -600,7 +601,7 @@ export const BUILTIN_STRING__VAL = [
     "random",
     "randomInt",
     "read",
-    "reboot",
+    "restart",
     "round",
     "setAt",
     "setLength",
@@ -697,6 +698,7 @@ export const BUILTIN_STRING__VAL = [
     "utf8",
     "utf-8",
     "suspended",
+    "reboot",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

@@ -15,6 +15,10 @@ void fun1_DeviceScript__panic(devs_ctx_t *ctx) {
 }
 
 void fun0_DeviceScript_reboot(devs_ctx_t *ctx) {
+    target_reset();
+}
+
+void fun0_DeviceScript_restart(devs_ctx_t *ctx) {
     devs_panic(ctx, 0);
 }
 
