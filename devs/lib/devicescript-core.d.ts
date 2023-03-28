@@ -244,6 +244,11 @@ declare module "@devicescript/core" {
     /**
      * Restart current script.
      */
+    export function restart(): never
+
+    /**
+     * Reboot the device.
+     */
     export function reboot(): never
 
     /**

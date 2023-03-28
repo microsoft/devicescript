@@ -564,7 +564,7 @@ export const compileFlagHelp: Record<string, string> = {
     traceProto: "trace tree-shaking of prototypes",
     traceFiles: "trace successful file accesses",
     traceAllFiles: "trace all file accesses",
-    testHarness: "add an implicit ds.reboot() at the end",
+    testHarness: "add an implicit ds.restart() at the end",
 }
 
 interface PossiblyConstDeclaration extends ts.Declaration {
@@ -1991,7 +1991,7 @@ class Program implements TopOpWriter {
             this.protoProc.callMe(wr, [])
             for (const s of stmts) this.emitStmt(s)
             if (this.flags.testHarness)
-                wr.emitCall(wr.dsMember(BuiltInString.REBOOT))
+                wr.emitCall(wr.dsMember(BuiltInString.RESTART))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
             if (this.roles.length > 0) {
@@ -2509,6 +2509,7 @@ class Program implements TopOpWriter {
             case "ds._id":
                 this.requireArgs(expr, 1)
                 return this.emitExpr(expr.arguments[0])
+            case "console.data":
             case "console.info":
             case "console.debug":
             case "console.warn":
@@ -2520,6 +2521,7 @@ class Program implements TopOpWriter {
                     error: "!",
                     warn: "*",
                     debug: "?",
+                    data: "#",
                 }
                 wr.emitCall(
                     wr.dsMember(BuiltInString.PRINT),

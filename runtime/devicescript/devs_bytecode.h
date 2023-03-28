@@ -254,7 +254,7 @@
 #define DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE 34
 #define DEVS_BUILTIN_OBJECT_JSON 35
 
-#define DEVS_BUILTIN_STRING___MAX 153
+#define DEVS_BUILTIN_STRING___MAX 154
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -312,7 +312,7 @@
 #define DEVS_BUILTIN_STRING_RANDOM 54
 #define DEVS_BUILTIN_STRING_RANDOMINT 55
 #define DEVS_BUILTIN_STRING_READ 56
-#define DEVS_BUILTIN_STRING_REBOOT 57
+#define DEVS_BUILTIN_STRING_RESTART 57
 #define DEVS_BUILTIN_STRING_ROUND 58
 #define DEVS_BUILTIN_STRING_SETAT 59
 #define DEVS_BUILTIN_STRING_SETLENGTH 60
@@ -407,8 +407,9 @@
 #define DEVS_BUILTIN_STRING_FROM 149
 #define DEVS_BUILTIN_STRING_HEX 150
 #define DEVS_BUILTIN_STRING_UTF8 151
-#define DEVS_BUILTIN_STRING__UTF8 152 // utf-8
+#define DEVS_BUILTIN_STRING_UTF_8 152 // utf-8
 #define DEVS_BUILTIN_STRING_SUSPENDED 153
+#define DEVS_BUILTIN_STRING_REBOOT 154
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -437,7 +438,7 @@
         "getAt", "idiv", "imul", "isBound", "join", "length", "log", "log10", "log2", "map",       \
         "max", "min", "next", "null", "number", "onChange", "onConnected", "onDisconnected",       \
         "packet", "_panic", "pop", "pow", "prev", "prototype", "push", "random", "randomInt",      \
-        "read", "reboot", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",     \
+        "read", "restart", "round", "setAt", "setLength", "shift", "signal", "slice", "splice",    \
         "sqrt", "string", "subscribe", "toString", "true", "undefined", "unshift", "wait",         \
         "write", "sleep", "imod", "format", "insert", "start", "cloud", "main", "charAt",          \
         "object", "parseInt", "parseFloat", "assign", "keys", "values", "__func__", "role",        \
@@ -449,7 +450,8 @@
         "_logRepr", "print", "everyMs", "setInterval", "setTimeout", "clearInterval",              \
         "clearTimeout", "SyntaxError", "JSON", "parse", "stringify", "_dcfgString", "isSimulator", \
         "Role", "Fiber", "suspend", "resume", "terminate", "self", "current", "id",                \
-        "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended"
+        "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended",     \
+        "reboot"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

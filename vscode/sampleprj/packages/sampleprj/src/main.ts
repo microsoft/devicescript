@@ -1,5 +1,5 @@
 import { millis } from "@devicescript/core"
 
 setInterval(() => {
-    console.log({ msg: millis() })
+    console.data({ msg: millis() })
 }, 1000)

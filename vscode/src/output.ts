@@ -68,12 +68,23 @@ export function activateDeviceScriptOutputChannel(
         log: true,
     })
     subSideEvent<SideOutputEvent>("output", msg => {
-        const tag = msg.data.from
-        let fn = channel.info
-        if (tag.endsWith("err")) fn = channel.error
-        for (const l of msg.data.lines) {
-            fn(tag + ":", l)
-        }
+        const { from, lines } = msg.data
+        if (from === "verbose") return
+
+        lines
+            .map(l => l.trimStart())
+            .forEach(l => {
+                const fn =
+                    (/err/.test(from) && channel.error) ||
+                    {
+                        ">": channel.info,
+                        "!": channel.error,
+                        "*": channel.warn,
+                        "?": channel.debug,
+                        "#": channel.debug,
+                    }[l[0]]
+                if (fn) fn(from + ":", l.substring(1))
+            })
     })
     const redirectConsoleOutput =
         extensionMode == vscode.ExtensionMode.Production
@@ -99,39 +110,21 @@ export function activateDeviceScriptDataChannel(
     context: vscode.ExtensionContext
 ) {
     const { subscriptions, extensionMode } = context
-    const channel = vscode.window.createOutputChannel("DeviceScript - Data", {
-        log: true,
+    const channel = vscode.window.createOutputChannel("DeviceScript - Data")
+    subSideEvent<SideOutputEvent>("output", msg => {
+        const { from, lines } = msg.data
+        lines
+            .map(l => l.trimStart())
+            .filter(l => l[0] === "#")
+            .map(l => l.substring(1))
+            .forEach(line => {
+                channel.appendLine(`${from}: ${line}`)
+            })
     })
-
-    const splitPair = (kv: string): [string, string] => {
-        const i = kv.indexOf(":")
-        if (i < 0) return [kv, ""]
-        else return [kv.slice(0, i), kv.slice(i + 1)]
-    }
-
-    const parseLine = (line: string) => {
-        // json entry
-        const { source, entries } =
-            /^(.*>)?\s*(?<source>\{.+\})\s*$/.exec(line)?.groups || {}
-        if (!source) return
-
-        // proper formatted json
-        const json = JSON5TryParse<any>(source)
-        // serialize
-        if (json !== undefined) {
-            json["_t"] = Date.now()
-            channel.appendLine(JSON.stringify(json) + ",")
-        }
-    }
-
-    subSideEvent<SideOutputEvent>("output", msg =>
-        msg.data.lines.forEach(parseLine)
-    )
 
     vscode.debug.onDidStartDebugSession(
         () => {
             channel.clear()
-            channel.appendLine("[")
         },
         undefined,
         subscriptions

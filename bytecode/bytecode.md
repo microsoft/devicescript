@@ -522,7 +522,7 @@ Only `true` and `false` values.
     random = 54
     randomInt = 55
     read = 56
-    reboot = 57
+    restart = 57
     round = 58
     setAt = 59
     setLength = 60
@@ -618,5 +618,6 @@ Only `true` and `false` values.
     from = 149
     hex = 150
     utf8 = 151
-    _utf8 = 152 // utf-8
+    utf_8 = 152 // utf-8
     suspended = 153
+    reboot = 154

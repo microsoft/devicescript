@@ -310,6 +310,11 @@ declare namespace console {
      * Print out message at ERROR logging level (prefix: `! `).
      */
     function error(...args: any[]): void
+
+    /**
+     * Print out an object with timestamp for data analysis (prefix: `# ${ms} `).
+     */
+    function data(object: {}): void
 }
 
 interface Math {
