@@ -1,7 +1,6 @@
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 import { activateDebugger } from "./debugger"
-import { checkFileExists } from "./fs"
 import { activateGateway } from "./gateway/activateGateway"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import { JDomDeviceTreeItem, activateTreeViews } from "./JDomTreeDataProvider"
@@ -18,12 +17,6 @@ import { activateTelemetry } from "./telemetry"
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions } = context
     activateTelemetry(context)
-    const devToolsConfig = vscode.workspace.getConfiguration(
-        "devicescript.devtools"
-    )
-    activateDeviceScriptOutputChannel(context)
-    activateDeviceScriptDataChannel(context)
-
     // setup bus
     const bus = startJacdacBus()
     context.subscriptions.push({
@@ -189,8 +182,13 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     activateMainStatusBar(extensionState)
     activateJacdacOutputChannel(extensionState)
     activateDeviceScriptI2COutputChannel(extensionState)
+    activateDeviceScriptOutputChannel(extensionState)
+    activateDeviceScriptDataChannel(extensionState)
 
     // launch devtools in background
+    const devToolsConfig = vscode.workspace.getConfiguration(
+        "devicescript.devtools"
+    )
     if (devToolsConfig.get("autoStart")) {
         extensionState.devtools.start({ build: true })
     }
