@@ -185,7 +185,7 @@ describe("dsp", () => {
     })
     test("levelDetector", async () => {
         const a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1]
-        const obs = from(a).pipe(levelDetector(2,5))
+        const obs = from(a).pipe(levelDetector(2, 5))
         await emits(obs, [-1, 0, 1, -1])
     })
 })

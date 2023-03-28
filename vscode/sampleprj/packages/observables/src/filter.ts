@@ -95,6 +95,44 @@ export function throttleTime<T>(duration: number): OperatorFunction<T, T> {
     }
 }
 
+/**
+ * Ignores source values for duration milliseconds,
+ * then emits the most recent value from the source Observable, then repeats this process
+ */
+export function auditTime<T>(duration: number): OperatorFunction<T, T> {
+    return function operator(source: Observable<T>) {
+        return new Observable<T>(async observer => {
+            const { error, next, complete } = observer
+            let timer: number
+            let lastValue: T = undefined
+            const unsub = await source.subscribe({
+                error,
+                complete,
+                next: async value => {
+                    lastValue = value
+                    // ignore while timer active
+                    if (timer !== undefined) return
+                    // start debounce timer
+                    timer = setTimeout(async () => {
+                        clearTimeout(timer)
+                        timer = undefined
+                        const lv = lastValue
+                        lastValue = undefined
+                        // pass last value
+                        await next(lv)
+                    }, duration)
+                },
+            })
+
+            // clean up: stop timer
+            return () => {
+                unusbscribe(unsub)
+                clearTimeout(timer)
+            }
+        })
+    }
+}
+
 function equality<T>(l: T, r: T) {
     return l === r
 }

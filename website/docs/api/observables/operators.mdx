@@ -7,6 +7,8 @@ title: Operators
 Observable operators apply transformation between observable data stream. They can be combined using the `pipe`
 method to create complex data processing pipeline.
 
+Many (most) operators are adapted from [Rxjs](https://rxjs.dev/guide/operators).
+
 ```ts
 import { Temperature } from "@devicescript/core"
 import { threshold, debounceTime } from "@devicescript/observables"
@@ -173,6 +175,35 @@ await button.down
     .subscribe(() => console.log("click"))
 ```
 
+### auditTime
+
+Ignores source values for duration milliseconds,
+then emits the most recent value from the source Observable, then repeats this process
+
+`auditTime` is similar to `throttleTime`, but emits the last value from the silenced time window, instead of the first value.
+
+```rx
+-0-1-2-3-4-
+
+> auditTime(2)
+
+-----2--4-
+```
+
+The example below debounce a button down event to one every 5 seconds.
+
+```ts
+import { Button } from "@devicescript/core"
+import { auditTime } from "@devicescript/observables"
+
+const button = new Button()
+
+await button.down
+    // highlight-next-line
+    .pipe(auditTime(1000))
+    .subscribe(() => console.log("click"))
+```
+
 ### threshold
 
 Filters numerical data stream within change threshold.
@@ -326,7 +357,7 @@ Measures and thresholds data into low/mid/high levels.
 
 ```ts
 import { Temperature } from "@devicescript/core"
-import { fir } from "@devicescript/observables"
+import { levelDetector } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
