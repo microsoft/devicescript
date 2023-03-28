@@ -123,11 +123,16 @@ export function serializeDcfg(
             if (k.startsWith("@")) return
             tmp[k] = v
         })
-        const filtered = serializeDcfg(tmp, true, true)
-
-        // compute some hash; sha256 would be better
-        write32(hd, 16, fnv1a(filtered))
-        write32(hd, 20, fnv1a(filtered.slice(4)))
+        if (Object.keys(tmp).length == 0) {
+            // special value - no config
+            write32(hd, 16, 1)
+            write32(hd, 20, 0)
+        } else {
+            const filtered = serializeDcfg(tmp, true, true)
+            // compute some hash; sha256 would be better
+            write32(hd, 16, fnv1a(filtered))
+            write32(hd, 20, fnv1a(filtered.slice(4)))
+        }
     }
 
     const res = bufferConcatMany([hd, ...binEntries, ...dataEntries])

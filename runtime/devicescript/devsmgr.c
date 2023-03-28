@@ -123,16 +123,16 @@ static void devsmgr_sync_dcfg(srv_t *state) {
                 if (dhd->restart_hash && state->dcfg_hash &&
                     state->dcfg_hash != dhd->restart_hash) {
 #if JD_HOSTED
-                    target_reset();
-#else
                     LOG("would restart due to DCFG");
+#else
+                    target_reset();
 #endif
                 }
                 state->dcfg_hash = dhd->restart_hash;
             }
         }
     }
-    // if we didn't find dcfg_hash, set it to a dummy value
+    // if we didn't find dcfg_hash, set it to a dummy value (representing empty config)
     // dcfg hash is only 0 when this is first run (and thus the config will be applied)
     if (!state->dcfg_hash)
         state->dcfg_hash = 1;
