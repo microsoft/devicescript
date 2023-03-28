@@ -753,7 +753,7 @@ export class Image {
                 json.services.slice(0, 0x40).every(s => s == null)
             )
                 json.services = json.services.slice(0x40)
-            r += "\nDCFG: " + JSON.stringify(json, null, 4) + "\n\n"
+            r += `\nDCFG: h=${settings.hash} sz=${this.dcfgData.length} ` + JSON.stringify(json, null, 4) + "\n\n"
         }
 
         const specData = this.specData

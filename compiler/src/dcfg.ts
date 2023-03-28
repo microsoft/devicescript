@@ -1,4 +1,5 @@
 import { parseAnyInt } from "@devicescript/interop"
+import { toHex } from "jacdac-ts"
 import {
     stringToBuffer,
     fnv1a,
@@ -86,17 +87,17 @@ function keyhash(key: string | Uint8Array) {
     return (h >>> 16) ^ (h & 0xffff)
 }
 
-export function serializeDcfg(entries: DcfgSettings, noVerify = false) {
+export function serializeDcfg(
+    entries: DcfgSettings,
+    noVerify = false,
+    noHash = false
+) {
     const numEntries = Object.keys(entries).length
     if (numEntries > 0xf000) throw new Error("dcfg: too many entries")
     let dataOff = DCFG_HEADER_SIZE + (numEntries + 1) * DCFG_ENTRY_SIZE
     let dataEntries: Uint8Array[] = []
     const binEntries = Object.keys(entries).map(mkEntry)
     binEntries.sort((a, b) => entryHash(a) - entryHash(b))
-    for (const e of binEntries) {
-        const h = entryHash(e)
-        // console.log(h, h >> DCFG_HASH_SHIFT, uint8ArrayToString(e.slice(0, 16)))
-    }
     const hd = new Uint8Array(DCFG_HEADER_SIZE)
     write32(hd, 0, DCFG_MAGIC0)
     write32(hd, 4, DCFG_MAGIC1)
@@ -114,6 +115,19 @@ export function serializeDcfg(entries: DcfgSettings, noVerify = false) {
         )
         // console.log(`${i} => ${idx}`)
         write16(hd, DCFG_HEADER_HASH_JUMP_OFFSET + 2 * i, idx)
+    }
+
+    if (!noHash) {
+        const tmp: DcfgSettings = {}
+        Object.entries(entries).forEach(([k, v]) => {
+            if (k.startsWith("@")) return
+            tmp[k] = v
+        })
+        const filtered = serializeDcfg(tmp, true, true)
+
+        // compute some hash; sha256 would be better
+        write32(hd, 16, fnv1a(filtered))
+        write32(hd, 20, fnv1a(filtered.slice(4)))
     }
 
     const res = bufferConcatMany([hd, ...binEntries, ...dataEntries])
@@ -237,6 +251,7 @@ function getEntry(buf: Uint8Array, key: string) {
 export function decodeDcfg(buf: Uint8Array) {
     const res = {
         errors: [] as string[],
+        hash: toHex(buf.slice(16, 24)),
         settings: {} as DcfgSettings,
     }
 

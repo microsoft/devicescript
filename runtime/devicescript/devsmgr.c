@@ -41,6 +41,8 @@ struct srv_state {
 
     uint32_t next_restart;
 
+    uint64_t dcfg_hash;
+
     const void *program_base;
 
     const devsmgr_cfg_t *cfg;
@@ -110,9 +112,37 @@ static void run_img(srv_t *state, const void *img, unsigned size) {
     }
 }
 
+static void devsmgr_sync_dcfg(srv_t *state) {
+#if JD_DCFG
+    const devsmgr_program_header_t *mgr_hd = devs_header(state);
+    if (mgr_hd) {
+        const devs_img_header_t *hd = (void *)mgr_hd->image;
+        if (hd->dcfg.length) {
+            const dcfg_header_t *dhd = (const void *)(mgr_hd->image + hd->dcfg.start);
+            if (dcfg_set_user_config(dhd) == 0) {
+                if (dhd->restart_hash && state->dcfg_hash &&
+                    state->dcfg_hash != dhd->restart_hash) {
+#if JD_HOSTED
+                    target_reset();
+#else
+                    LOG("would restart due to DCFG");
+#endif
+                }
+                state->dcfg_hash = dhd->restart_hash;
+            }
+        }
+    }
+    // if we didn't find dcfg_hash, set it to a dummy value
+    // dcfg hash is only 0 when this is first run (and thus the config will be applied)
+    if (!state->dcfg_hash)
+        state->dcfg_hash = 1;
+#endif
+}
+
 static void try_run(srv_t *state) {
     const devsmgr_program_header_t *hd = devs_header(state);
     if (hd && hd->size != 0 && devs_verify(hd->image, hd->size) == 0) {
+        devsmgr_sync_dcfg(state);
         run_img(state, hd->image, hd->size);
     } else {
         run_img(state, devs_empty_program, sizeof(devs_empty_program));
@@ -385,8 +415,8 @@ void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
         break;
 
     default:
-        if (respond_dcfg(pkt, JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_VERSION, "progVersion") ||
-            respond_dcfg(pkt, JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_NAME, "progName"))
+        if (respond_dcfg(pkt, JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_VERSION, "@version") ||
+            respond_dcfg(pkt, JD_DEVICE_SCRIPT_MANAGER_REG_PROGRAM_NAME, "@name"))
             break;
 
         switch (service_handle_register_final(state, pkt, devsmgr_regs)) {
@@ -464,14 +494,7 @@ void devsmgr_init(const devsmgr_cfg_t *cfg) {
     jd_client_subscribe(devsmgr_client_ev, state);
     _state = state;
 
-#if JD_DCFG
-    const devsmgr_program_header_t *mgr_hd = devs_header(state);
-    if (mgr_hd) {
-        const devs_img_header_t *hd = (void *)mgr_hd->image;
-        if (hd->dcfg.length)
-            dcfg_set_user_config((const void *)(mgr_hd->image + hd->dcfg.start));
-    }
-#endif
+    devsmgr_sync_dcfg(state);
 }
 
 void devs_service_full_init(const devsmgr_cfg_t *cfg) {
