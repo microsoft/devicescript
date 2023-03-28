@@ -241,8 +241,8 @@ function compilePackageJson(
             name?: string
             version?: string
         }
-        lcfg.hwInfo.progName = pkgJSON.name ?? "(no name)"
-        lcfg.hwInfo.progVersion = pkgJSON.version ?? "(no version)"
+        lcfg.hwInfo["@name"] = pkgJSON.name ?? "(no name)"
+        let version = pkgJSON.version ?? "(no version)"
         if (isGit()) {
             const head = execCmd(
                 "git describe --tags --match 'v[0-9]*' --always"
@@ -253,9 +253,9 @@ function compilePackageJson(
             if (!head) dirty = "yes"
             const exact = !dirty && head[0] == "v" && !head.includes("-")
             if (exact) {
-                lcfg.hwInfo.progVersion = head
+                version = head
             } else {
-                let v = versionTryParse(lcfg.hwInfo.progVersion)
+                let v = versionTryParse(version)
                 if (head[0] == "v") v = versionTryParse(head) || v
                 let verStr = ""
                 if (v) verStr = `v${v.major}.${v.minor}.${v.patch + 1}-`
@@ -270,8 +270,9 @@ function compilePackageJson(
                     if (verStr) verStr += "-"
                     verStr += now
                 }
-                lcfg.hwInfo.progVersion = verStr
+                version = verStr
             }
+            lcfg.hwInfo["@version"] = version
         }
     }
 
@@ -280,13 +281,13 @@ function compilePackageJson(
         entryPoint = entryPoint.replace(/^main/, "")
         entryPoint = entryPoint.replace(/.ts$/, "")
         if (entryPoint) {
-            if (lcfg.hwInfo.progName) lcfg.hwInfo.progName += " " + entryPoint
-            else lcfg.hwInfo.progName += entryPoint
+            if (lcfg.hwInfo["@name"]) lcfg.hwInfo["@name"] += " " + entryPoint
+            else lcfg.hwInfo["@name"] = entryPoint
         }
     }
 
     verboseLog(
-        `compile: ${lcfg.hwInfo.progName} ${lcfg.hwInfo.progVersion ?? ""}`
+        `compile: ${lcfg.hwInfo["@name"]} ${lcfg.hwInfo["@version"] ?? ""}`
     )
 }
 

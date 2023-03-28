@@ -42,8 +42,8 @@ export async function ctool(options: CToolOptions) {
             resolveBuildConfig({
                 hwInfo: {
                     // This doesn't work anyway, since settings are not fetched from the empty program
-                    // progName: "(empty)",
-                    // progVersion: `v${BinFmt.IMG_VERSION_MAJOR}.${BinFmt.IMG_VERSION_MINOR}.${BinFmt.IMG_VERSION_PATCH}`,
+                    // "@name": "(empty)",
+                    // "@version": `v${BinFmt.IMG_VERSION_MAJOR}.${BinFmt.IMG_VERSION_MINOR}.${BinFmt.IMG_VERSION_PATCH}`,
                 },
             }),
             { verify: false },

@@ -291,7 +291,7 @@ export class GatewayTreeDataProvider
                         return
                     }
                     const program = status.dbg
-                    const base = program?.localConfig.hwInfo.progName
+                    const base = program?.localConfig.hwInfo["@name"]
 
                     // find script to override
                     await manager.refreshScripts()

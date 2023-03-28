@@ -292,7 +292,7 @@ declare module "@devicescript/core" {
      * Get value of a device configuration setting (typically from .board.json file).
      */
     export function _dcfgString(
-        id: "archId" | "url" | "devName" | "progName" | "progVersion"
+        id: "archId" | "url" | "devName" | "@name" | "@version"
     ): string
 
     /**

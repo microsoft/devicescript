@@ -13,12 +13,12 @@ export interface DeviceProps {
     /**
      * Name of the program, derived from package.json. Exposed as `program_name` register.
      */
-    progName?: string
+    "@name"?: string
 
     /**
      * Version number of the program, derived from package.json and git. Exposed as `program_version` register.
      */
-    progVersion?: string
+    "@version"?: string
 }
 
 export type ProgramConfig = Partial<DeviceProps> & Partial<DeviceHardwareInfo>

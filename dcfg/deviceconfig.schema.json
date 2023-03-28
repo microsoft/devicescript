@@ -1562,6 +1562,14 @@
         "$schema": {
             "type": "string"
         },
+        "@name": {
+            "description": "Name of the program, derived from package.json. Exposed as `program_name` register.",
+            "type": "string"
+        },
+        "@version": {
+            "description": "Version number of the program, derived from package.json and git. Exposed as `program_version` register.",
+            "type": "string"
+        },
         "archId": {
             "description": "Architecture for the board.\nThis is auto-populated from arch.json file.",
             "examples": [
@@ -1598,14 +1606,6 @@
             "examples": [
                 "0x379ea214"
             ]
-        },
-        "progName": {
-            "description": "Name of the program, derived from package.json. Exposed as `program_name` register.",
-            "type": "string"
-        },
-        "progVersion": {
-            "description": "Version number of the program, derived from package.json and git. Exposed as `program_version` register.",
-            "type": "string"
         },
         "services": {
             "description": "Services to mount. Each starts with { \"service\": \"...\" }",
