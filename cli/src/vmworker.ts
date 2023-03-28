@@ -112,14 +112,17 @@ export function overrideConsoleDebug() {
 }
 
 export function printDmesg(dbg: DebugInfo, pref: string, line: string) {
-    const m = /^\s*([\*\!\?>]) (.*)/.exec(line)
+    const m = /^\s*([\*\!\?>#]) (.*)/.exec(line)
     if (m) {
         let [_full, marker, text] = m
         if (dbg) text = parseStackFrame(dbg, text).markedLine
         if (marker == "!") text = wrapColor(91, text)
         else if (marker == ">") text = wrapColor(95, text)
         else if (marker == "?") text = wrapColor(34, text)
-        else text = wrapColor(33, text)
+        else if (marker == "#") {
+            const [tm, obj] = text.split(" ", 2)
+            text = tm + "ms " + wrapColor(92, obj)
+        } else text = wrapColor(33, text)
         console.log(pref + "> " + text)
         return true
     } else if (isVerbose) {

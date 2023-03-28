@@ -117,7 +117,10 @@ void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str) {
             DMESG("%c %s", lev, sp);
         jd_free(tmp);
     } else {
-        DMESG("%c %s", lev, ptr);
+        if (lev == '#')
+            DMESG("# %u %s", (unsigned)ctx->_now_long, ptr);
+        else
+            DMESG("%c %s", lev, ptr);
     }
 }
 

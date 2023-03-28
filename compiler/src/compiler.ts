@@ -2510,6 +2510,7 @@ class Program implements TopOpWriter {
             case "ds._id":
                 this.requireArgs(expr, 1)
                 return this.emitExpr(expr.arguments[0])
+            case "console.data":
             case "console.info":
             case "console.debug":
             case "console.warn":
@@ -2521,6 +2522,7 @@ class Program implements TopOpWriter {
                     error: "!",
                     warn: "*",
                     debug: "?",
+                    data: "#",
                 }
                 wr.emitCall(
                     wr.dsMember(BuiltInString.PRINT),
