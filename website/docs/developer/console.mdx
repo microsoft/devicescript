@@ -6,7 +6,7 @@ sidebar_position: 1
 
 DeviceScript supports basic `console` functionality which allows you to add logging to your script.
 
-```ts edit
+```ts
 console.debug("debug")
 console.log("log")
 console.warn("warn")
@@ -14,6 +14,19 @@ console.error("error")
 ```
 
 The console output will be visible in the DeviceScript terminal window.
+
+## Console data
+
+`console.data` is a special purpose function to log sensor data. A timestamp (`ds.millis()`) is automatically added by the runtime.
+
+```ts
+const temp = 20
+const humi = 60
+
+console.data({ temp, humi })
+```
+
+In Visual Studio Code, you will find the data in the **DeviceScript - Data** output pane or you can download it from the view menu.
 
 ## Format strings
 
