@@ -174,10 +174,11 @@ ${JSON.stringify(boardJson, null, 4)}
 }
 
 export function boardMarkdownFiles() {
-    const { boards, archs } = resolveBuildConfig()
+    const buildConfig = resolveBuildConfig()
+    const { boards, archs } = buildConfig
     const catalog = new DeviceCatalog()
-    //const catalog = new DeviceCatalog()
     const r: Record<string, string> = {}
+    const boardsjson: any = {}
     Object.keys(boards).forEach(boardid => {
         const board = boards[boardid]
         const { archId, productId, devName } = board
@@ -192,14 +193,20 @@ export function boardMarkdownFiles() {
             spec
         )
 
+        const boardjson: any = board
+        boardsjson[boardid] = boardjson
         const aidmd = `${aid}/boards.mdp`
         const img = deviceCatalogImage(spec, "avatar")
-        if (img)
+        if (img) {
             r[aidmd] =
                 (r[aidmd] || "") +
                 `
 - [![photograph of ${devName}](${img}) ${devName}](/devices/${pa})`
+            boardjson.img = deviceCatalogImage(spec, "catalog")
+        }
     })
+
+    r[`boards.json`] = JSON.stringify(boardsjson, null, 2)
     return r
 }
 

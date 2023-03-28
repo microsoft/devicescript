@@ -2,53 +2,14 @@
 sidebar_position: 100
 ---
 
-# Differences with JavaScript
+# Other differences with JavaScript
 
 This document lists differences in semantics between DeviceScript and EcmaScript/JavaScript/TypeScript
 (referred to as JS in this document).
 
-## Strings
+## Subnormals
 
-The method `String.charCodeAt()` returns a Unicode code point (up to 21 bits), not UTF-16 character.
-See [discussion](https://github.com/microsoft/devicescript/discussions/34).
-
-String encoding is currently UTF-8 which make [indexing linear](https://github.com/microsoft/devicescript/issues/40),
-and [construction by concatnation quadratic](https://github.com/microsoft/devicescript/issues/39).
-This may be fixed in future, see linked issues.
-
-## Prototypes
-
-Care needs to be taken when using index operator (`obj[some_expression]`) as some properties might
-be tree-shaken away.
-You can use `ds.keep()` function to make sure methods are included.
-See [discussion](https://github.com/microsoft/devicescript/discussions/36).
-
-In JavaScript assigning properties on strings is a no-op. It is an error in DeviceScript.
-In both reading these properties returns `undefined`.
-
-## Numbers
-
-DeviceScript doesn't support subnormals, that is numbers is range around -5e−324 to 5e-324 are rounded to zero
-(this includes negative zero).
+DeviceScript doesn't support subnormals, that is numbers is range around `-5e-324` to `5e-324` are rounded to zero
+(it follows that negative zero is not supported).
 Subnormals are [not required by the JS specs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MIN_VALUE).
 
-## "Attached" properties
-
-JS lets you attach properties to arrays, buffers, functions, etc. in addition to regular map objects.
-In DeviceScript properties cannot be attached to functions and statically allocated buffers.
-Properties can be attached to roles, dynamic buffers, and of course regular map objects.
-
-## Comparisons
-
-The `==` operator behaves just as `===` except that `null == undefined`
-(same of course applies to `!=`).
-That is, no conversions to strings or primitives are performed, so in particular `"1" != 1"`.
-For this reason, the compiler will disallow usage of `==` and `!=` except when comparing
-to literal `null` or `undefined`.
-
-The comparisons with `NaN` behave as in JS (and IEEE standard), in particular `NaN !== NaN`.
-
-## toString conversions
-
-The string `+` operator, templates etc do not implicitly call user-defined `.toString()` methods.
-You have to call them explicitly, so use `"x:" + obj.toString()` not `"x:" + obj`.

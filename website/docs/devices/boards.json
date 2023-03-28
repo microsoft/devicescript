@@ -1,0 +1,644 @@
+{
+  "adafruit_qt_py_c3": {
+    "$description": "A tiny ESP32-C3 board.",
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32c3",
+    "devName": "Adafruit QT Py ESP32-C3 WiFi",
+    "i2c": {
+      "$connector": "Qwiic",
+      "pinSCL": 6,
+      "pinSDA": 5
+    },
+    "id": "adafruit_qt_py_c3",
+    "led": {
+      "pin": 2,
+      "type": 1
+    },
+    "pins": {
+      "#TX": 21,
+      "A0": 4,
+      "A1": 3,
+      "A2": 1,
+      "A3": 0,
+      "MISO": 8,
+      "MOSI": 7,
+      "RX": 20,
+      "SCK": 10
+    },
+    "productId": "0x3693d40b",
+    "services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 9,
+        "service": "button"
+      }
+    ],
+    "uartLog": true,
+    "url": "https://www.adafruit.com/product/5405",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/adafruit/qtpyesp32c3wifidevboardv10.catalog.jpg"
+  },
+  "esp32_bare": {
+    "$description": "Bare ESP32 without any default functions for pins.",
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_bare-0x1000.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32",
+    "devName": "Espressif ESP32 (bare)",
+    "id": "esp32_bare",
+    "pins": {
+      "P13": 13,
+      "P14": 14,
+      "P18": 18,
+      "P19": 19,
+      "P21": 21,
+      "P22": 22,
+      "P23": 23,
+      "P25": 25,
+      "P26": 26,
+      "P27": 27,
+      "P32": 32,
+      "P33": 33,
+      "P34": 34,
+      "P35": 35,
+      "P36": 36,
+      "P39": 39,
+      "P4": 4
+    },
+    "productId": "0x3ff6ffeb",
+    "url": "https://www.espressif.com/en/products/socs/esp32"
+  },
+  "esp32_devkit_c": {
+    "$description": "ESP32-DevKitC development board. This will also work with DOIT DevkitV1, NodeMCU ESP32, ... (search for 'esp32 devkit'). Some of these boards do not have the LED.",
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32",
+    "devName": "Espressif ESP32-DevKitC",
+    "id": "esp32_devkit_c",
+    "led": {
+      "pin": 2
+    },
+    "pins": {
+      "P13": 13,
+      "P14": 14,
+      "P18": 18,
+      "P19": 19,
+      "P21": 21,
+      "P22": 22,
+      "P23": 23,
+      "P25": 25,
+      "P26": 26,
+      "P27": 27,
+      "P32": 32,
+      "P33": 33,
+      "P34": 34,
+      "P35": 35,
+      "P4": 4,
+      "VN": 39,
+      "VP": 36
+    },
+    "productId": "0x3c507a05",
+    "services": [
+      {
+        "name": "buttonIO0",
+        "pin": 0,
+        "service": "button"
+      }
+    ],
+    "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32devkitcdevicescriptv40.catalog.jpg"
+  },
+  "esp32c3_bare": {
+    "$description": "A bare ESP32-C3 board without any pin functions.",
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_bare-0x0.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32c3",
+    "devName": "Espressif ESP32-C3 (bare)",
+    "id": "esp32c3_bare",
+    "pins": {
+      "#P21": 21,
+      "P0": 0,
+      "P1": 1,
+      "P10": 10,
+      "P2": 2,
+      "P20": 20,
+      "P3": 3,
+      "P4": 4,
+      "P5": 5,
+      "P6": 6,
+      "P7": 7,
+      "P8": 8
+    },
+    "productId": "0x3a1d89be",
+    "services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 9,
+        "service": "button"
+      }
+    ],
+    "uartLog": true,
+    "url": "https://www.espressif.com/en/products/socs/esp32-c3"
+  },
+  "esp32c3_rust_devkit": {
+    "$description": "A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originally for ESP32 Rust port.",
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_rust_devkit-0x0.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32c3",
+    "devName": "Espressif ESP32-C3-RUST-DevKit",
+    "i2c": {
+      "$connector": "Header",
+      "pinSCL": 8,
+      "pinSDA": 10
+    },
+    "id": "esp32c3_rust_devkit",
+    "led": {
+      "pin": 2,
+      "type": 1
+    },
+    "pins": {
+      "#LED": 7,
+      "#P21": 21,
+      "P0": 0,
+      "P1": 1,
+      "P20": 20,
+      "P3": 3,
+      "P4": 4,
+      "P5": 5,
+      "P6": 6
+    },
+    "productId": "0x33f29c59",
+    "services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 9,
+        "service": "button"
+      }
+    ],
+    "uartLog": true,
+    "url": "https://github.com/esp-rs/esp-rust-board",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32c3rustdevkitv12a.catalog.jpg"
+  },
+  "esp32s2_bare": {
+    "$description": "A bare ESP32-S2 board without any pin functions.",
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-esp32s2_bare-0x1000.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32s2",
+    "devName": "Espressif ESP32-S2 (bare)",
+    "id": "esp32s2_bare",
+    "pins": {
+      "#P43": 43,
+      "P0": 0,
+      "P1": 1,
+      "P10": 10,
+      "P11": 11,
+      "P12": 12,
+      "P13": 13,
+      "P14": 14,
+      "P15": 15,
+      "P16": 16,
+      "P17": 17,
+      "P18": 18,
+      "P2": 2,
+      "P21": 21,
+      "P3": 3,
+      "P33": 33,
+      "P34": 34,
+      "P35": 35,
+      "P36": 36,
+      "P37": 37,
+      "P38": 38,
+      "P39": 39,
+      "P4": 4,
+      "P40": 40,
+      "P41": 41,
+      "P42": 42,
+      "P44": 44,
+      "P45": 45,
+      "P46": 46,
+      "P5": 5,
+      "P6": 6,
+      "P7": 7,
+      "P8": 8,
+      "P9": 9
+    },
+    "productId": "0x3f140dcc",
+    "uartLog": true,
+    "url": "https://www.espressif.com/en/products/socs/esp32-s2"
+  },
+  "feather_s2": {
+    "$description": "ESP32-S2 based development board in a Feather format.",
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-feather_s2-0x1000.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32s2",
+    "devName": "Unexpected Maker FeatherS2 ESP32-S2",
+    "i2c": {
+      "$connector": "Qwiic",
+      "pinSCL": 9,
+      "pinSDA": 8
+    },
+    "id": "feather_s2",
+    "led": {
+      "pin": 40,
+      "pinCLK": 45,
+      "type": 2
+    },
+    "pins": {
+      "#TX": 43,
+      "LED0": 13,
+      "MISO": 37,
+      "MOSI": 35,
+      "P1": 1,
+      "P10": 10,
+      "P11": 11,
+      "P12": 12,
+      "P14": 14,
+      "P17": 17,
+      "P18": 18,
+      "P3": 3,
+      "P33": 33,
+      "P38": 38,
+      "P5": 5,
+      "P6": 6,
+      "P7": 7,
+      "RX": 44,
+      "SCK": 36
+    },
+    "productId": "0x3126f707",
+    "services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 0,
+        "service": "button"
+      },
+      {
+        "name": "ambientLight",
+        "pin": 4,
+        "service": "analog:lightLevel"
+      }
+    ],
+    "setupPins": [
+      {
+        "out": 1,
+        "pin": 21
+      }
+    ],
+    "uartLog": true,
+    "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/unexpected-maker/feathers2esp32s2v20.catalog.jpg"
+  },
+  "msr124": {
+    "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr124.uf2",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "archId": "rp2040",
+    "devName": "MSR RP2040 Brain 124 v0.1",
+    "id": "msr124",
+    "jacdac": {
+      "$connector": "Jacdac",
+      "pin": 9
+    },
+    "led": {
+      "rgb": [
+        {
+          "mult": 250,
+          "pin": 16
+        },
+        {
+          "mult": 60,
+          "pin": 14
+        },
+        {
+          "mult": 150,
+          "pin": 15
+        }
+      ]
+    },
+    "log": {
+      "baud": 115200,
+      "pinTX": 0
+    },
+    "pins": {
+      "P1": 1,
+      "P10": 10,
+      "P2": 2,
+      "P24": 24,
+      "P25": 25,
+      "P26": 26,
+      "P27": 27,
+      "P28": 28,
+      "P29": 29,
+      "P3": 3,
+      "P4": 4,
+      "P5": 5,
+      "P6": 6,
+      "P7": 7
+    },
+    "productId": "0x3875e80d",
+    "services": [
+      {
+        "faultIgnoreMs": 1000,
+        "mode": 3,
+        "name": "power",
+        "pinEn": 22,
+        "pinFault": 12,
+        "pinLedPulse": 13,
+        "pinPulse": 8,
+        "pinUsbDetect": 11,
+        "service": "power"
+      }
+    ],
+    "setupPins": [
+      {
+        "#": "Enable hi-power limiter mode",
+        "out": 0,
+        "pin": 18
+      }
+    ]
+  },
+  "msr207_v42": {
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr207_v42-0x1000.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32s2",
+    "devName": "MSR JM Brain S2-mini 207 v4.2",
+    "id": "msr207_v42",
+    "jacdac": {
+      "$connector": "Jacdac",
+      "pin": 17
+    },
+    "led": {
+      "rgb": [
+        {
+          "mult": 250,
+          "pin": 8
+        },
+        {
+          "mult": 60,
+          "pin": 7
+        },
+        {
+          "mult": 150,
+          "pin": 6
+        }
+      ]
+    },
+    "pins": {
+      "P33": 33,
+      "P34": 34
+    },
+    "productId": "0x322e0e64",
+    "sd": {
+      "pinCS": 38,
+      "pinMISO": 37,
+      "pinMOSI": 35,
+      "pinSCK": 36
+    },
+    "services": [
+      {
+        "faultIgnoreMs": 100,
+        "mode": 0,
+        "name": "power",
+        "pinEn": 2,
+        "pinFault": 13,
+        "service": "power"
+      }
+    ],
+    "uartLog": true
+  },
+  "msr207_v43": {
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr207_v43-0x1000.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32s2",
+    "devName": "MSR JM Brain S2-mini 207 v4.3",
+    "id": "msr207_v43",
+    "jacdac": {
+      "$connector": "Jacdac",
+      "pin": 17
+    },
+    "led": {
+      "rgb": [
+        {
+          "mult": 250,
+          "pin": 8
+        },
+        {
+          "mult": 60,
+          "pin": 7
+        },
+        {
+          "mult": 150,
+          "pin": 6
+        }
+      ]
+    },
+    "pins": {
+      "P33": 33,
+      "P34": 34
+    },
+    "productId": "0x322e0e64",
+    "sd": {
+      "pinCS": 38,
+      "pinMISO": 37,
+      "pinMOSI": 35,
+      "pinSCK": 36
+    },
+    "services": [
+      {
+        "faultIgnoreMs": 100,
+        "mode": 1,
+        "name": "power",
+        "pinEn": 2,
+        "pinFault": 13,
+        "service": "power"
+      }
+    ],
+    "uartLog": true
+  },
+  "msr48": {
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-msr48-0x1000.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32s2",
+    "devName": "MSR JacdacIoT 48 v0.2",
+    "i2c": {
+      "$connector": "Qwiic",
+      "pinSCL": 10,
+      "pinSDA": 9
+    },
+    "id": "msr48",
+    "jacdac": {
+      "$connector": "Jacdac",
+      "pin": 17
+    },
+    "led": {
+      "rgb": [
+        {
+          "mult": 250,
+          "pin": 8
+        },
+        {
+          "mult": 60,
+          "pin": 7
+        },
+        {
+          "mult": 150,
+          "pin": 6
+        }
+      ]
+    },
+    "pins": {
+      "P33": 33,
+      "P34": 34,
+      "P35": 35,
+      "P36": 36,
+      "RX": 38,
+      "TX": 37
+    },
+    "productId": "0x3de1398b",
+    "services": [
+      {
+        "faultIgnoreMs": 100,
+        "mode": 0,
+        "name": "power",
+        "pinEn": 2,
+        "pinFault": 13,
+        "service": "power"
+      }
+    ],
+    "uartLog": true,
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/jmbrainesp3248v03.catalog.jpg"
+  },
+  "msr59": {
+    "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr59.uf2",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "archId": "rp2040",
+    "devName": "MSR Brain RP2040 59 v0.1",
+    "id": "msr59",
+    "jacdac": {
+      "$connector": "Jacdac",
+      "pin": 9
+    },
+    "led": {
+      "rgb": [
+        {
+          "mult": 250,
+          "pin": 11
+        },
+        {
+          "mult": 60,
+          "pin": 13
+        },
+        {
+          "mult": 150,
+          "pin": 15
+        }
+      ]
+    },
+    "log": {
+      "baud": 115200,
+      "pinTX": 2
+    },
+    "pins": {
+      "P26": 26,
+      "P27": 27,
+      "P3": 3,
+      "P4": 4,
+      "P5": 5,
+      "P6": 6
+    },
+    "productId": "0x35a678a3",
+    "services": [
+      {
+        "faultIgnoreMs": 100,
+        "mode": 2,
+        "name": "power",
+        "pinEn": 19,
+        "pinFault": 25,
+        "service": "power"
+      }
+    ],
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/rp2040devicescript59v01.catalog.jpg"
+  },
+  "pico": {
+    "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-pico.uf2",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "archId": "rp2040",
+    "devName": "Raspberry Pi Pico",
+    "id": "pico",
+    "led": {
+      "pin": 25
+    },
+    "log": {
+      "baud": 115200,
+      "pinTX": 0
+    },
+    "pins": {
+      "P1": 1,
+      "P10": 10,
+      "P11": 11,
+      "P12": 12,
+      "P13": 13,
+      "P14": 14,
+      "P15": 15,
+      "P16": 16,
+      "P17": 17,
+      "P18": 18,
+      "P19": 19,
+      "P2": 2,
+      "P20": 20,
+      "P21": 21,
+      "P22": 22,
+      "P26": 26,
+      "P27": 27,
+      "P28": 28,
+      "P3": 3,
+      "P4": 4,
+      "P5": 5,
+      "P6": 6,
+      "P7": 7,
+      "P8": 8,
+      "P9": 9
+    },
+    "productId": "0x3f6e1f0c",
+    "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picov00.catalog.jpg"
+  },
+  "pico_w": {
+    "$fwUrl": "https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "archId": "rp2040w",
+    "devName": "Raspberry Pi Pico W",
+    "id": "pico_w",
+    "log": {
+      "baud": 115200,
+      "pinTX": 0
+    },
+    "pins": {
+      "P1": 1,
+      "P10": 10,
+      "P11": 11,
+      "P12": 12,
+      "P13": 13,
+      "P14": 14,
+      "P15": 15,
+      "P16": 16,
+      "P17": 17,
+      "P18": 18,
+      "P19": 19,
+      "P2": 2,
+      "P20": 20,
+      "P21": 21,
+      "P22": 22,
+      "P26": 26,
+      "P27": 27,
+      "P28": 28,
+      "P3": 3,
+      "P4": 4,
+      "P5": 5,
+      "P6": 6,
+      "P7": 7,
+      "P8": 8,
+      "P9": 9
+    },
+    "productId": "0x3a513204",
+    "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picowv00.catalog.jpg"
+  }
+}

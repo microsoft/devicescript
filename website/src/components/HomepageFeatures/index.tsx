@@ -35,14 +35,14 @@ export default function HomepageFeatures(): JSX.Element {
         },
         {
             title: "Small Runtime",
-            description: "Bytecode interpreter for low power / flash / memory.",
+            description: "Bytecode interpreter for low power/flash/memory.",
             link: "/devicescript/devices",
         },
         {
             title: "Hardware as Services",
             description:
                 "Client/server architecture for sensors and actuators.",
-            link: "/developer/defining-roles",
+            link: "/devicescript/developer/defining-roles",
         },
         {
             title: "Debugging",
@@ -60,7 +60,7 @@ export default function HomepageFeatures(): JSX.Element {
             title: "Development Gateway",
             description:
                 "Prototype cloud service with device management, firmware deployment and message queues.",
-            link: "/devicescript/developer/cloud",
+            link: "/devicescript/developer/cloud/gateway",
         },
     ]
 

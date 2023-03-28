@@ -1,0 +1,25 @@
+---
+sidebar_position: 3
+---
+
+# Strings and Unicode
+
+ECMAScript spec requires `String.charCodeAt()` to return a 16-bit value.
+Unicode code points outside of 16-bit (mostly emoticons, but also some historical alphabets, 
+and rare Chinese/Japanese/Korean ideograms) are represented as surrogate pairs of two 16-bit code units.
+The `String.length` returns the number of UTF-16 code units in the string.
+
+If ES was designed today they would probably return up to 21-bit values from `charCodeAt()`, 
+or possibly use yet another abstraction since even with full 21-bit Unicode, 
+several code points can still combine into a single glyph (character displayed on the screen). 
+
+In DeviceScript,
+the plan is for the method `String.charCodeAt()` to return a Unicode code point (up to 21 bits), not UTF-16 character.
+Similarly, `String.length` will return the number of 21-bit code points.
+
+However, currently, they both assume strings is ASCII, [see issue](https://github.com/microsoft/devicescript/issues/40).
+
+Also string [construction by concatnation quadratic](https://github.com/microsoft/devicescript/issues/39).
+
+See also [discussion](https://github.com/microsoft/devicescript/discussions/34).
+

@@ -21,6 +21,10 @@ export function startJacdacBus() {
     return __bus || (__bus = uncachedStartJacdacBus())
 }
 
+export async function tryConnectDevtools() {
+    if (ws && !ws.connected) await ws.connect(false)
+}
+
 export async function sideRequest<
     Req extends SideReq,
     Resp extends SideResp<Req["req"]> = SideResp<Req["req"]>

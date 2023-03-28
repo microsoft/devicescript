@@ -200,7 +200,8 @@ async function main() {
                     "@devicescript/compiler",
                     "serialport",
                     "vscode",
-                    "crypto"
+                    "crypto",
+                    "update-notifier",
                 ],
                 platform,
                 metafile: true,

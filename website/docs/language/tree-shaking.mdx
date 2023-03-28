@@ -1,0 +1,27 @@
+---
+sidebar_position: 5
+---
+
+# Tree-shaking
+
+Care needs to be taken when using index operator (`obj[some_expression]`)
+or accessing properties through `any` type
+as some properties might be tree-shaken away.
+You can use `ds.keep()` function to make sure methods are included.
+
+```ts
+class Foo {
+    bar() {}
+}
+function callBar(v: any) {
+    v["bar"]()
+}
+callBar(new Foo())
+
+// can be called anywhere from the reachable code
+ds.keep(Foo.prototype.bar)
+```
+
+We may improve compiler warnings about such cases in future.
+
+See [discussion](https://github.com/microsoft/devicescript/discussions/36).

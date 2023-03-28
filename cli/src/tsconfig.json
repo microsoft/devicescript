@@ -1,6 +1,7 @@
 {
     "extends": "../../tsconfig-base.json",
     "compilerOptions": {
+        "module": "node16",
         "declarationDir": "../built/types",
         "outDir": "../built",
         "types": ["node"]

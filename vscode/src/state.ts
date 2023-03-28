@@ -716,7 +716,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 matchOnDetail: true,
                 canPickMany: false,
             })
-            const did = res?.data
+            did = res?.data
             if (!did) return undefined
         }
 

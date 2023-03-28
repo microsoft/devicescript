@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 import { activateDebugger } from "./debugger"
+import { checkFileExists } from "./fs"
 import { activateGateway } from "./gateway/activateGateway"
 import { startJacdacBus, stopJacdacBus } from "./jacdac"
 import { JDomDeviceTreeItem, activateTreeViews } from "./JDomTreeDataProvider"
@@ -9,17 +10,19 @@ import {
     activateJacdacOutputChannel,
     activateDeviceScriptOutputChannel,
     activateDeviceScriptI2COutputChannel,
+    activateDeviceScriptDataChannel,
 } from "./output"
 import { DeviceScriptExtensionState } from "./state"
 import { activateTelemetry } from "./telemetry"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
-    const { subscriptions, extensionMode } = context
+    const { subscriptions } = context
     activateTelemetry(context)
     const devToolsConfig = vscode.workspace.getConfiguration(
         "devicescript.devtools"
     )
-    activateDeviceScriptOutputChannel(extensionMode)
+    activateDeviceScriptOutputChannel(context)
+    activateDeviceScriptDataChannel(context)
 
     // setup bus
     const bus = startJacdacBus()
@@ -49,13 +52,26 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.project.new",
             async () => {
-                const folder = await vscode.window.showWorkspaceFolderPick()
+                const folder =
+                    vscode.workspace.workspaceFolders?.length === 1
+                        ? vscode.workspace.workspaceFolders[0]
+                        : await vscode.window.showWorkspaceFolderPick()
                 if (folder === undefined) return
-                const projectName = await vscode.window.showInputBox({
-                    title: "Pick project subfolder (optional)",
-                    prompt: "It will be used as a root for the new project",
-                })
-                if (projectName === undefined) return
+
+                // is this project empty?
+                let projectName: string
+                const projetFiles = await vscode.workspace.findFiles(
+                    new vscode.RelativePattern(folder, "**/*"),
+                    "**/node_modules/*",
+                    1
+                )
+                if (projetFiles.length) {
+                    projectName = await vscode.window.showInputBox({
+                        title: "Pick project subfolder",
+                        prompt: "It will be used as a root for the new DeviceScript project",
+                    })
+                    if (!projectName) return
+                }
                 const cwd = projectName
                     ? Utils.joinPath(folder.uri, projectName)
                     : folder.uri
@@ -90,14 +106,8 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.device.reset",
             async (item: JDomDeviceTreeItem) => {
-                const device =
-                    item?.device ||
-                    (
-                        await extensionState.pickDeviceScriptManager({
-                            skipUpdate: true,
-                        })
-                    )?.device
-                await device.reset() // async
+                const device = item?.device
+                await device?.reset()
             }
         ),
         vscode.commands.registerCommand(
@@ -182,6 +192,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
 
     // launch devtools in background
     if (devToolsConfig.get("autoStart")) {
-        extensionState.devtools.start({ build: true})
+        extensionState.devtools.start({ build: true })
     }
 }

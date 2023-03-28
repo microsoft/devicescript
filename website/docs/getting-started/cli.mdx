@@ -31,30 +31,33 @@ src/tsconfig.json  configure the TypeScript compiler to compile DeviceScript syn
 ...
 ```
 
+-   add the `@devicescript/observables` package
+
+```bash npm2yarn
+npm install @devicescript/observables
+```
+
 -   open `src/main.ts` and copy the following code
 
 ```ts title="src/main.ts"
 import * as ds from "@devicescript/core"
+import { pipe, debounceTime } from "@devices/observables"
 
-console.log("starting...")
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
 // listen for pressure changes
-sensor.pressure.subscribe(async pressure => {
-    // read sensor reading
-    console.log(pressure)
-    // user blows in straw
-    if (pressure > 1400) {
-        // click!
+sensor.pressure
+    .pipe(
+        filter(pressure => pressure > 1400),
+        debounceTime(500)
+    )
+    .subscribe(async () => {
         console.log(`click!`)
         await mouse.setButton(
             ds.HidMouseButton.Left,
             ds.HidMouseButtonEvent.Click
         )
-        // debouncing
-        await ds.sleep(50)
-    }
-})
+    })
 ```
 
 ## Launch the build watch
@@ -86,57 +89,3 @@ From here, your developer inner loop will be very similar to building/debugging 
 -   after a couple seconds, the compiler picks up the changes, produces a new bytecode and sends it to the developer tools
 -   the developer tools automatically deploy thew bytecode to the select device (by default the simulator)
 -   switch from VS Code to the browser and debug your new code
-
-## DeviceScript basics
-
-Navigate to the [Developer section](/developer) to learn the basics of the language.
-
-## How tools work
-
-Communicating with hardware device typically involves a native connection using serial (UART), USB or Bluetooth.
-This kind of communication is typically platform specific and creates a lot of complexity to support cross-platform tools.
-Native communication connection typically do not work when working from a container/virtual machine.
-
-On the other hand, modern browsers have been supporting communication with hardware devices, with WebSerial, WebUSB and WebBluetooth. Therefore, this is the preferred solution used by DeviceScript to communicate with hardware.
-
-### Deployment
-
-When developing a DeviceScript program, the command line will start a web server that acts as a bridge between
-a developer tools web page and the compilation results.
-
-```mermaid
-stateDiagram-v2
-    direction LR
-    code: Your Editor
-    cli: cli (DeviceScript compiler/server)
-    browser: DeviceScript DevTools (browser)
-    device: Hardware device
-    simulator: Virtual device (browser)
-    code --> cli
-    cli --> browser
-    browser --> simulator: DeviceScript bytecode
-    browser --> device: DeviceScript bytecode over serial, usb
-```
-
-### Simulation
-
-The DeviceScript developer tool page also acts as a bridge routing the Jacdac packets to all players. This means
-that you can test and debug your scripts in a virtual or hardware device, using virtual or hardware sensors.
-
-```mermaid
-stateDiagram-v2
-    direction LR
-    browser: DeviceScript DevTools (browser)
-    device: Hardware device
-    simulator: Virtual device
-    hwsensor: Hardware sensor
-    vsensor: Virtual sensor
-    browser --> simulator
-    simulator --> browser
-    browser --> device: serial, USB, web sockets
-    device --> browser
-    device --> hwsensor: I2C, SPI, GPIO, Jacdac, ...
-    hwsensor --> device
-    browser --> vsensor
-    vsensor --> browser
-```

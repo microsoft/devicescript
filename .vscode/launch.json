@@ -1,7 +1,7 @@
 {
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [        
         {
             "name": "Attach by Process ID",
             "processId": "${command:PickProcess}",
@@ -71,6 +71,16 @@
             "outFiles": [
                 "${workspaceFolder}/plugin/built/**"
             ]
-        }
+        },
+        {
+            "name": "CLI",
+            "program": "${workspaceFolder}/cli/built/devicescript-cli.cjs",
+            "cwd": "${workspaceFolder}/vscode/sampleprj/packages/sampleprj",
+            "request": "launch",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
     ]
 }

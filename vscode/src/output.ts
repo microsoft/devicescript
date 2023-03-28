@@ -5,9 +5,9 @@ import {
     I2CCmdPack,
     I2CStatus,
     JDFrameBuffer,
+    JSONTryParse,
     Packet,
     PACKET_RECEIVE,
-    PACKET_REPORT,
     serializeToTrace,
     SRV_I2C,
     toHex,
@@ -19,6 +19,7 @@ import { DeviceScriptExtensionState } from "./state"
 
 export function activateJacdacOutputChannel(state: DeviceScriptExtensionState) {
     const { context, bus } = state
+    const { subscriptions } = context
     const jacdacConfig = vscode.workspace.getConfiguration(
         "devicescript.jacdac"
     )
@@ -47,22 +48,32 @@ export function activateJacdacOutputChannel(state: DeviceScriptExtensionState) {
     vscode.workspace.onDidChangeConfiguration(
         configure,
         undefined,
-        context.subscriptions
+        subscriptions
     )
     configure()
+    vscode.debug.onDidStartDebugSession(
+        () => {
+            channel?.clear()
+        },
+        undefined,
+        subscriptions
+    )
 }
 
 export function activateDeviceScriptOutputChannel(
-    extensionMode: vscode.ExtensionMode
+    context: vscode.ExtensionContext
 ) {
-    const channel = vscode.window.createOutputChannel("DeviceScript", {
+    const { subscriptions, extensionMode } = context
+    const channel = vscode.window.createOutputChannel("DeviceScript - Output", {
         log: true,
     })
     subSideEvent<SideOutputEvent>("output", msg => {
         const tag = msg.data.from
         let fn = channel.info
         if (tag.endsWith("err")) fn = channel.error
-        for (const l of msg.data.lines) fn(tag + ":", l)
+        for (const l of msg.data.lines) {
+            fn(tag + ":", l)
+        }
     })
     const redirectConsoleOutput =
         extensionMode == vscode.ExtensionMode.Production
@@ -74,6 +85,68 @@ export function activateDeviceScriptOutputChannel(
         console.error = channel.error
         console.info = console.log
     }
+
+    vscode.debug.onDidStartDebugSession(
+        () => {
+            channel.clear()
+        },
+        undefined,
+        subscriptions
+    )
+}
+
+export function activateDeviceScriptDataChannel(
+    context: vscode.ExtensionContext
+) {
+    const { subscriptions, extensionMode } = context
+    const channel = vscode.window.createOutputChannel("DeviceScript - Data", {        
+        log: true,
+    })
+
+    const splitPair = (kv: string): [string, string] => {
+        const i = kv.indexOf(":")
+        if (i < 0) return [kv, ""]
+        else return [kv.slice(0, i), kv.slice(i + 1)]
+    }
+
+    const parseLine = (line: string) => {
+        // json entry
+        const { source, entries } =
+            /^(.*>)?\s*(?<source>\{\s*(?<entries>[^}]+)\})\s*$/.exec(line)
+                ?.groups || {}
+        if (!source) return
+
+        // proper formatted json
+        let json: any = JSONTryParse(source)
+        if (json === undefined && entries) {
+            json = {}
+            entries
+                .split(/\s*,\s*/g)
+                .map(splitPair)
+                .forEach(([key, value]) => {
+                    json[key] = JSONTryParse(value) ?? value
+                })
+        }
+
+        // serialize
+        if (json !== undefined) {
+            json["_t"] = Date.now()
+            channel.appendLine(JSON.stringify(json) + ",")
+        }
+    }
+
+    subSideEvent<SideOutputEvent>("output", msg =>
+        msg.data.lines.forEach(parseLine)
+    )
+
+    vscode.debug.onDidStartDebugSession(
+        () => {
+            channel.clear()
+            channel.appendLine("[")
+        },
+        undefined,
+        subscriptions
+    )
 }
 
 export function activateDeviceScriptI2COutputChannel(

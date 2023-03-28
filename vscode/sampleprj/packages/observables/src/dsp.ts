@@ -1,4 +1,4 @@
-import { Observable } from "./observable"
+import { Observable, OperatorFunction } from "./observable"
 import { scan } from "./transform"
 
 /**
@@ -7,7 +7,10 @@ import { scan } from "./transform"
  * @param seed starting value if any
  * @returns
  */
-export function ewma(gain: number = 0.2, seed: number = undefined) {
+export function ewma(
+    gain: number = 0.2,
+    seed: number = undefined
+): OperatorFunction<number, number> {
     gain = Math.max(0, Math.min(1, gain))
     const onegain = 1 - gain
     return scan<number, number>(
@@ -65,7 +68,10 @@ export class FIR {
  * @param coefficients array of filter coefficient
  * @param gain optional gain, otherwise computed from the coefficients
  */
-export function fir(coefficients: number[], gain?: number) {
+export function fir(
+    coefficients: number[],
+    gain?: number
+): OperatorFunction<number, number> {
     return function operator(source: Observable<number>) {
         return new Observable<number>(async observer => {
             const { error, next, complete } = observer
@@ -84,8 +90,62 @@ export function fir(coefficients: number[], gain?: number) {
  * @param windowLength number of samples
  * @returns
  */
-export function rollingAverage(windowLength: number) {
+export function rollingAverage(
+    windowLength: number
+): OperatorFunction<number, number> {
     const coefficients = []
     for (let i = 0; i < windowLength; ++i) coefficients[i] = 1
     return fir(coefficients)
+}
+
+/**
+ * Measures and thresholds stream into low/mid/high threshold levels.
+ * @param lowThreshold lower threshold
+ * @param highThreshold higher threshold
+ * @returns -1 if low, 0 if mid, 1 if high
+ */
+export function levelDetector(
+    lowThreshold: number,
+    highThreshold: number,
+    options?: {
+        // number of samples to make up a level detection window
+        windowSize?: number
+    }
+): OperatorFunction<number, number> {
+    const windowSize = Math.max(1, options?.windowSize || 1)
+    return function operator(source: Observable<number>) {
+        return new Observable<number>(async observer => {
+            const { error, next, complete } = observer
+
+            let oldLevel: number = undefined
+            let windowPosition = 0
+            let sigma = 0
+
+            return await source.subscribe({
+                error,
+                complete,
+                next: async value => {
+                    sigma += value
+                    windowPosition++
+
+                    if (windowPosition >= windowSize) {
+                        const levelValue = sigma / windowSize
+                        sigma = 0
+                        windowPosition = 0
+
+                        const level =
+                            levelValue < lowThreshold
+                                ? -1
+                                : levelValue > highThreshold
+                                ? 1
+                                : 0
+                        if (level !== oldLevel) {
+                            oldLevel = level
+                            await next(level)
+                        }
+                    }
+                },
+            })
+        })
+    }
 }
