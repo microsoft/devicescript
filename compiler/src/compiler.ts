@@ -40,7 +40,6 @@ import {
 import { addUnique, assert, camelize, oops, strlen, upperCamel } from "./util"
 import {
     bufferFmt,
-    DelayedCodeSection,
     literal,
     Label,
     nonEmittable,

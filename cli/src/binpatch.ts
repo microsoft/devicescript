@@ -14,10 +14,11 @@ import {
     boardInfos,
     RepoInfo,
     pinsInfo,
+    JSON5TryParse,
 } from "@devicescript/compiler"
 import { HexInt } from "@devicescript/srvcfg"
 import { readFile, writeFile } from "fs/promises"
-import { JSONTryParse, read32, toHex } from "jacdac-ts"
+import { read32, toHex } from "jacdac-ts"
 import { basename, dirname, join, resolve } from "path"
 import { error, isVerbose, log, verboseLog } from "./command"
 import { EspImage } from "./esp"
@@ -197,7 +198,7 @@ export async function compileDcfgFile(fn: string) {
         throw new Error("board file has to match *.board.json")
     const folder = dirname(fn)
     const readF = (f: string) => readFile(resolve(folder, f), "utf-8")
-    const arch: ArchConfig = JSONTryParse(await readF("arch.json"))
+    const arch: ArchConfig = JSON5TryParse(await readF("arch.json"))
     if (arch?.dcfgOffset === undefined || arch?.id === undefined)
         throw new Error(`no dcfgOffset or id in arch.json`)
     const json: DeviceConfig = await expandDcfgJSON(basename(fn), readF)
@@ -280,7 +281,7 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
 
     if (options.slug) info.repoUrl = "https://github.com/" + options.slug
 
-    const ex: RepoInfo = JSONTryParse(
+    const ex: RepoInfo = JSON5TryParse(
         await readFile(infoPath, "utf-8").then(
             r => r,
             _ => ""

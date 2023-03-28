@@ -6,7 +6,6 @@ import {
     writeJSONSync,
     readFileSync,
     ensureDirSync,
-    readJSONSync,
     readdir,
     readFile,
     existsSync,
@@ -28,6 +27,7 @@ import type {
     SideAddTestResp,
 } from "./sideprotocol"
 import { addBoard } from "./addboard"
+import { readJSON5Sync } from "./jsonc"
 
 const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
@@ -308,7 +308,7 @@ export interface InitOptions {
 
 function patchJSON(fn: string, data: any) {
     debug(`patch ${fn}`)
-    const existing = readJSONSync(fn)
+    const existing = readJSON5Sync(fn)
     const isObj = (o: any) => o && typeof o == "object" && !Array.isArray(o)
     const doPatch = (trg: any, src: any) => {
         const force = !!src[FORCE]
@@ -526,8 +526,6 @@ export async function addNpm(options: AddNpmOptions) {
 
     const cwd = writeFiles(".", options, files)
     await runInstall(cwd, options)
-
-    const newpkg = JSON.parse(readFileSync("package.json", "utf-8"))
 
     return finishAdd(`Prepared package.json for publishing, please review.`, [
         "package.json",

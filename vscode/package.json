@@ -49,21 +49,23 @@
         "vscode:prepublish": "yarn build"
     },
     "devDependencies": {
+        "@devicescript/interop": "*",
         "@types/isomorphic-fetch": "^0.0.36",
+        "@types/papaparse": "^5.3.7",
         "@types/vscode": "^1.76.0",
         "@vscode/debugadapter": "^1.59.0",
         "@vscode/debugadapter-testsupport": "^1.59.0",
         "@vscode/vsce": "^2.18.0",
         "isomorphic-fetch": "^3.0.0",
+        "papaparse": "^5.4.1",
         "typescript": "^4.9.5",
         "vscode-uri": "^3.0.7",
-        "webfont": "^11.2.26",
-        "@devicescript/interop": "*"
+        "webfont": "^11.2.26"
     },
     "dependencies": {
+        "@devicescript/plugin": "*",
         "@vscode/extension-telemetry": "^0.7.7",
         "jacdac-ts": "*",
-        "@devicescript/plugin": "*",
         "websocket-polyfill": "^0.0.3"
     },
     "main": "./built/devicescript-vscode.js",
@@ -281,6 +283,11 @@
                     "group": "navigation"
                 },
                 {
+                    "command": "extension.devicescript.data.download",
+                    "when": "view == extension.devicescript.jdom",
+                    "group": "navigation"
+                },
+                {
                     "command": "extension.devicescript.watch.clear",
                     "when": "view == extension.devicescript.watch",
                     "group": "navigation"
@@ -457,6 +464,10 @@
                     "when": "workbenchState != empty"
                 },
                 {
+                    "command": "extension.devicescript.data.download",
+                    "when": "workbenchState != empty"
+                },
+                {
                     "command": "extension.devicescript.sims.add",
                     "when": "workbenchState != empty"
                 },
@@ -521,6 +532,12 @@
                 "title": "Show Development Server Terminal",
                 "category": "DeviceScript",
                 "icon": "$(output)"
+            },
+            {
+                "command": "extension.devicescript.data.download",
+                "title": "Download console.data to JSON",
+                "category": "DeviceScript",
+                "icon": "$(graph-line)"
             },
             {
                 "command": "extension.devicescript.openSimulators",

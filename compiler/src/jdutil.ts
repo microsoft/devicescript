@@ -529,20 +529,6 @@ export function debounceAsync(
     }
 }
 
-export function JSONTryParse<T = unknown>(
-    src: string,
-    defaultValue?: T
-): T | undefined | null {
-    if (src === undefined) return undefined
-    if (src === null) return null
-
-    try {
-        return JSON.parse(src) as T
-    } catch (e) {
-        return defaultValue
-    }
-}
-
 export function roundWithPrecision(
     x: number,
     digits: number,

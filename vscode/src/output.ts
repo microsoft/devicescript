@@ -1,3 +1,4 @@
+import { JSON5TryParse, parseJSON5 } from "@devicescript/compiler"
 import {
     Flags,
     FRAME_PROCESS,
@@ -5,7 +6,6 @@ import {
     I2CCmdPack,
     I2CStatus,
     JDFrameBuffer,
-    JSONTryParse,
     Packet,
     PACKET_RECEIVE,
     serializeToTrace,
@@ -14,6 +14,8 @@ import {
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import type { SideOutputEvent } from "../../cli/src/sideprotocol"
+import { JSONtoCSV } from "./csv"
+import { writeFile } from "./fs"
 import { subSideEvent } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 
@@ -61,8 +63,9 @@ export function activateJacdacOutputChannel(state: DeviceScriptExtensionState) {
 }
 
 export function activateDeviceScriptOutputChannel(
-    context: vscode.ExtensionContext
+    state: DeviceScriptExtensionState
 ) {
+    const { context } = state
     const { subscriptions, extensionMode } = context
     const channel = vscode.window.createOutputChannel("DeviceScript - Output", {
         log: true,
@@ -107,12 +110,26 @@ export function activateDeviceScriptOutputChannel(
 }
 
 export function activateDeviceScriptDataChannel(
-    context: vscode.ExtensionContext
+    state: DeviceScriptExtensionState
 ) {
-    const { subscriptions, extensionMode } = context
-    const channel = vscode.window.createOutputChannel("DeviceScript - Data", {
-        log: true,
-    })
+    const { context } = state
+    const { subscriptions } = context
+    const channel = vscode.window.createOutputChannel("DeviceScript - Data")
+
+    let startMillis: number = undefined
+    let startNow: number = undefined
+    let entries: { line: string }[] = undefined
+
+    const parseLine = (line: string): { millis: number; json: any } => {
+        const { millis, json } =
+            /\s*(?<millis>\d+)\s+(?<json>.*)\s*$/.exec(line)?.groups || {}
+        const r = {
+            millis: parseInt(millis),
+            json: JSON5TryParse(json),
+        }
+        return r
+    }
+
     subSideEvent<SideOutputEvent>("output", msg => {
         const { from, lines } = msg.data
         lines
@@ -120,16 +137,78 @@ export function activateDeviceScriptDataChannel(
             .filter(l => l[0] === "#")
             .map(l => l.substring(1))
             .forEach(line => {
-                channel.appendLine(line)
+                let { millis, json } = parseLine(line)
+                channel.appendLine(`${from}: ${line}`)
+                if (isNaN(millis) || json === undefined) {
+                    channel.appendLine("  --> invalid format")
+                    return
+                }
+
+                // no entries yet
+                if (!entries) entries = []
+                // device reset
+                if (isNaN(startMillis) || millis < startMillis) {
+                    startNow = Date.now()
+                    startMillis = millis
+                }
+
+                if (!Array.isArray(json)) json = [json]
+                json.forEach((entry: any) => {
+                    const tnow = millis - startMillis + startNow
+                    entries.push({
+                        tiso: new Date(tnow).toISOString(),
+                        tdev: millis,
+                        ...entry,
+                    })
+                })
             })
     })
 
     vscode.debug.onDidStartDebugSession(
         () => {
             channel.clear()
+            entries = undefined
+            startMillis = undefined
+            startNow = undefined
         },
         undefined,
         subscriptions
+    )
+
+    function padZero(n: number): string {
+        return n < 10 ? "0" + n : n.toString()
+    }
+
+    function formatSortableHumanReadableDate(date: Date): string {
+        const year = date.getFullYear()
+        const month = padZero(date.getMonth() + 1) // Months are zero-based
+        const day = padZero(date.getDate())
+        const hours = padZero(date.getHours())
+        const minutes = padZero(date.getMinutes())
+
+        return `${year}-${month}-${day}-${hours}-${minutes}`
+    }
+
+    subscriptions.push(
+        vscode.commands.registerCommand(
+            "extension.devicescript.data.download",
+            async () => {
+                const content = JSONtoCSV(entries)
+                const { projectFolder, currentFilename } = state.devtools
+                if (!projectFolder || !currentFilename)
+                    await vscode.workspace.openTextDocument({
+                        content,
+                        language: "json",
+                    })
+                else {
+                    const fileName = `${currentFilename.replace(
+                        /\.ts$/i,
+                        ""
+                    )}-${formatSortableHumanReadableDate(new Date())}.csv`
+                    await writeFile(projectFolder, fileName, content)
+                }
+            }
+        )
     )
 }
 

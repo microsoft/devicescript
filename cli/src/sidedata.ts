@@ -1,4 +1,4 @@
-import { assert, JDBus, JSONTryParse, serviceSpecifications } from "jacdac-ts"
+import { assert, JDBus } from "jacdac-ts"
 import {
     BuildReqArgs,
     BuildStatus,
@@ -21,7 +21,7 @@ import {
     SideWatchReq,
     SideWatchResp,
 } from "./sideprotocol"
-import { runtimeVersion } from "@devicescript/compiler"
+import { JSON5TryParse, runtimeVersion } from "@devicescript/compiler"
 import { packageVersion } from "./version"
 import { buildConfigFromDir } from "./build"
 
@@ -139,7 +139,7 @@ export async function processSideMessage(
     message: string,
     client: DevToolsClient
 ) {
-    const msg: SideReq = JSONTryParse(message)
+    const msg: SideReq = JSON5TryParse(message)
     if (!msg) return
 
     assert(devtoolsIface === devtools_)
