@@ -200,8 +200,7 @@ async function main() {
                     "@devicescript/compiler",
                     "serialport",
                     "vscode",
-                    "crypto",
-                    "jsonc-parser"
+                    "crypto"
                 ],
                 platform,
                 metafile: true,

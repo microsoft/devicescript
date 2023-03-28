@@ -30,14 +30,14 @@
     },
     "license": "MIT",
     "devDependencies": {
+        "@devicescript/interop": "*",
         "@types/fs-extra": "^11.0.1",
         "@types/node": "^18.15.3",
-        "@devicescript/interop": "*",
         "esbuild": "^0.17.11",
+        "jacdac-ts": "*",
         "typescript": "^4.9.5",
-        "jacdac-ts": "*"
+        "json5": "^2.2.3"
     },
-    "dependencies": {},
     "publishConfig": {
         "access": "public"
     }

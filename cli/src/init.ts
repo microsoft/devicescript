@@ -1,6 +1,5 @@
 import { debug, fatal, GENDIR, LIBDIR, log } from "./command"
 import { basename, dirname, join, resolve } from "node:path"
-import { parse } from "jsonc-parser"
 import {
     pathExistsSync,
     writeFileSync,

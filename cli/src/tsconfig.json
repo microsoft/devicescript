@@ -1,13 +1,9 @@
 {
-  "extends": "../../tsconfig-base.json",
-  "compilerOptions": {
-    "declarationDir": "../built/types",
-    "outDir": "../built",
-    "types": [
-      "node"
-    ]
-  },
-  "include": [
-    "."
-  ]
+    "extends": "../../tsconfig-base.json",
+    "compilerOptions": {
+        "declarationDir": "../built/types",
+        "outDir": "../built",
+        "types": ["node"]
+    },
+    "include": ["."]
 }

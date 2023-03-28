@@ -32,8 +32,8 @@
     "license": "MIT",
     "devDependencies": {
         "@devicescript/dap": "*",
-        "@devicescript/vm": "*",
         "@devicescript/interop": "*",
+        "@devicescript/vm": "*",
         "@types/debounce-promise": "^3.1.6",
         "@types/fs-extra": "^11.0.1",
         "@types/node": "^18.15.3",
@@ -46,8 +46,7 @@
         "@devicescript/compiler": "*",
         "buffer": "^6.0.3",
         "jacdac-ts": "*",
-        "websocket-polyfill": "^0.0.3",
-        "jsonc-parser": "^3.2.0"
+        "websocket-polyfill": "^0.0.3"
     },
     "optionalDependencies": {
         "serialport": "^10.5.0"
