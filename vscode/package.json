@@ -249,11 +249,6 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "extension.devicescript.editor.run",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
-                    "group": "navigation@2"
-                },
-                {
                     "command": "extension.devicescript.editor.configure",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
                     "group": "navigation@3"
@@ -264,6 +259,11 @@
                     "command": "extension.devicescript.editor.debug",
                     "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
                     "group": "navigation"
+                },
+                {
+                    "command": "extension.devicescript.editor.run",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "group": "navigation@2"
                 }
             ],
             "view/title": [
@@ -511,9 +511,9 @@
             },
             {
                 "command": "extension.devicescript.editor.run",
-                "title": "DeviceScript: Upload",
+                "title": "DeviceScript: Run",
                 "category": "DeviceScript",
-                "icon": "$(arrow-right)"
+                "icon": "$(play)"
             },
             {
                 "command": "extension.devicescript.editor.build",
