@@ -99,7 +99,9 @@ export function activateDeviceScriptDataChannel(
     context: vscode.ExtensionContext
 ) {
     const { subscriptions, extensionMode } = context
-    const channel = vscode.window.createOutputChannel("DeviceScript - Data")
+    const channel = vscode.window.createOutputChannel("DeviceScript - Data", {        
+        log: true,
+    })
 
     const splitPair = (kv: string): [string, string] => {
         const i = kv.indexOf(":")
