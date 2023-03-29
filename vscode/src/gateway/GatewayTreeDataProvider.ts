@@ -375,7 +375,7 @@ export class GatewayTreeDataProvider
                 const ok = mgr.lastFetchStatus === GATEWAY_LAST_FETCH_STATUS_OK
                 description = ok ? "connected" : "error"
                 tooltip = toMarkdownString(`
--   API root: [${mgr.apiRoot}](${mgr.apiRoot}/swagger/)
+-   OpenAPI: [${mgr.apiRoot}](${mgr.apiRoot}/swagger/)
 -   Last fetch: ${mgr.lastFetchStatus}
                 `)
                 break

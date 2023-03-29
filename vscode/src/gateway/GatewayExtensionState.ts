@@ -168,8 +168,7 @@ export class GatewayExtensionState extends JDEventSource {
             this._manager.on(FETCH_ERROR, this.handleFetchError)
             forceRefresh = true
         }
-        if (this._manager && forceRefresh) 
-            this.backgroundRefresh() // don't await
+        if (this._manager && forceRefresh) this.backgroundRefresh() // don't await
     }
 
     private async backgroundRefresh() {
@@ -213,6 +212,7 @@ export class GatewayExtensionState extends JDEventSource {
 
         if (newConnectionString === "") {
             await this.setApiRoot(undefined)
+            await this.setToken(undefined)
         } else {
             let {
                 AccountName,
