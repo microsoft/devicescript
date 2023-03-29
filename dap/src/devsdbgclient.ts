@@ -246,21 +246,28 @@ export class DevsDbgClient extends JDServiceClient {
         await this.regEn.sendSetAsync(new Uint8Array([0]))
     }
 
+    private runExclusive<T>(f: () => Promise<T>) {
+        return this.lock.runExclusive(() => {
+            assert(!this.service.disposed)
+            return f()
+        })
+    }
+
     async resume() {
-        await this.lock.runExclusive(async () => {
+        await this.runExclusive(async () => {
             this.clearValues()
             await this.service.sendCmdAsync(DevsDbgCmd.Resume)
         })
     }
 
     async setBoolReg(reg: DevsDbgReg, v: boolean) {
-        await this.lock.runExclusive(async () => {
+        await this.runExclusive(async () => {
             this.service.register(reg).sendSetAsync(new Uint8Array([v ? 1 : 0]))
         })
     }
 
     private async haltCmd(cmd: DevsDbgCmd) {
-        await this.lock.runExclusive(async () => {
+        await this.runExclusive(async () => {
             await this.regEn.sendSetAsync(new Uint8Array([1]))
             await this.service.sendCmdAsync(cmd)
         })
@@ -275,7 +282,7 @@ export class DevsDbgClient extends JDServiceClient {
     }
 
     async step(frame: DevsValue, flags: DevsDbgStepFlags, brkPCs: number[]) {
-        await this.lock.runExclusive(async () => {
+        await this.runExclusive(async () => {
             assert(!!frame.stackFrame)
             this.clearValues()
             await this.service.sendCmdAsync(
@@ -287,7 +294,7 @@ export class DevsDbgClient extends JDServiceClient {
 
     private runSuspCmd(cmd: DevsDbgCmd, args?: Uint8Array) {
         assert(this.suspended)
-        return this.lock.runExclusive(async () => {
+        return this.runExclusive(async () => {
             assert(this.suspended)
             await this.service.sendCmdAsync(cmd, args, true)
         })
@@ -494,7 +501,7 @@ export class DevsDbgClient extends JDServiceClient {
 
     private async pipeGet(cmd: number, suff?: Uint8Array) {
         assert(cmd == DevsDbgCmd.ReadFibers || this.suspended)
-        return this.lock.runExclusive(async () => {
+        return this.runExclusive(async () => {
             assert(cmd == DevsDbgCmd.ReadFibers || this.suspended)
             const inp = new InPipeReader(this.device.bus)
             const openPkt = inp.openCommand(cmd)

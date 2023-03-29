@@ -105,10 +105,11 @@ export class DsDapSession extends DebugSession {
         } catch {}
     }
 
-    private async createClient(cfg: StartArgs, timeout = 2000) {
+    private async createClient(cfg: StartArgs, timeout = 4000) {
         const did = cfg?.deviceId
         const t0 = Date.now()
         while (Date.now() - t0 < timeout) {
+            await delay(100)
             let s: JDService
             if (did) {
                 const dev = this.bus.device(did, true)
@@ -120,8 +121,10 @@ export class DsDapSession extends DebugSession {
                     serviceClass: SRV_DEVS_DBG,
                 })[0]
             }
-            if (s) return new DevsDbgClient(s, this.img)
-            await delay(100)
+            if (s && !s.disposed) {
+                if ((await s.device.ping()) && !s.disposed)
+                    return new DevsDbgClient(s, this.img)
+            }
         }
         throw new Error(`no debugger on the bus; timeout=${timeout}ms`)
     }
