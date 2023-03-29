@@ -2,12 +2,13 @@
     "name": "@devicescript/cloud",
     "version": "2.2.16",
     "private": false,
-    "dependencies": {},
+    "dependencies": {
+        "@devicescript/settings": "*",
+        "@devicescript/observables": "*"
+    },
     "devDependencies": {
         "@devicescript/cli": "*",
-        "@devicescript/settings": "*",
-        "@devicescript/test": "*",
-        "@devicescript/observables": "*"
+        "@devicescript/test": "*"
     },
     "scripts": {
         "setup": "devicescript build",
