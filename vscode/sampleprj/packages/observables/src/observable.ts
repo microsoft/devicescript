@@ -117,8 +117,11 @@ export class Observable<T> {
                 cleanup = c.unsubscribe
             }
         }
-        // todo try catch
-        sub()
+        try {
+            sub()
+        } catch (e) {
+            error.start(e)
+        }
         return subscription
     }
 

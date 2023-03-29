@@ -206,6 +206,7 @@ describe("error", () => {
                 error++
             },
         })
+        await ds.sleep(10)
         expect(error).toBe(1)
     })
     test("map", async () => {
@@ -220,6 +221,7 @@ describe("error", () => {
                 error++
             },
         })
+        await ds.sleep(10)
         expect(error).toBe(1)
     })
     test("map,tap,filter", async () => {
@@ -236,6 +238,7 @@ describe("error", () => {
                 error++
             },
         })
+        await ds.sleep(10)
         expect(error).toBe(1)
     })
     test("catchError,map", async () => {
@@ -248,6 +251,7 @@ describe("error", () => {
                 return from([5])
             })
         )
+        await ds.sleep(10)
         await emits(obs, [5])
     })
     test("catchError", async () => {
@@ -260,6 +264,7 @@ describe("error", () => {
                 return from([5])
             })
         )
+        await ds.sleep(10)
         await emits(obs, [5])
     })
 })
