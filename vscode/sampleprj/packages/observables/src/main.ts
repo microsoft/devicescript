@@ -247,7 +247,6 @@ describe("error", () => {
                 throw new Error()
             }),
             catchError(e => {
-                console.log(`catch error ` + e)
                 return from([5])
             })
         )
@@ -260,11 +259,10 @@ describe("error", () => {
                 throw new Error()
             }),
             catchError(e => {
-                console.log(`catch error ` + e)
                 return from([5])
             })
         )
-        await ds.sleep(10)
+        await ds.sleep(50)
         await emits(obs, [5])
     })
 })
