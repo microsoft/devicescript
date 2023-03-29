@@ -335,10 +335,6 @@
                     "when": "view == extension.devicescript.jdom && viewItem =~ /^register/"
                 },
                 {
-                    "command": "extension.devicescript.node.copy",
-                    "when": "view == extension.devicescript.jdom && viewItem =~ /^register/"
-                },
-                {
                     "command": "extension.devicescript.jdom.gateway.connect",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_cloud_configuration",
                     "group": "inline"
