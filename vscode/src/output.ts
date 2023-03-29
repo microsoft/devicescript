@@ -15,6 +15,7 @@ import {
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 import type { SideOutputEvent } from "../../cli/src/sideprotocol"
+import { CONSOLE_DATA_MAX_ROWS } from "./constants"
 import { JSONtoCSV } from "./csv"
 import { writeFile } from "./fs"
 import { subSideEvent } from "./jacdac"
@@ -158,6 +159,7 @@ export function activateDeviceScriptDataChannel(
                         time: (millis + offsetMillis) / 1000.0,
                         ...entry,
                     })
+                    if (entries.length > CONSOLE_DATA_MAX_ROWS) entries.shift()
                 })
             })
     })
