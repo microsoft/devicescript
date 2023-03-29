@@ -27,8 +27,9 @@ If you write code in DeviceScript to listen for this data, it will look like thi
 import { Temperature } from "@devicescript/clients"
 
 const thermometer = new Temperature()
+const { temperature } = thermometer
 // highlight-next-line
-thermometer.subscribe(temp => console.log(temp))
+temperature.subscribe(temp => console.log(temp))
 ```
 
 In particular, the handler passed to `subscribe` will be called whenever a new temperature reading is received (even if it did not change).
@@ -69,7 +70,8 @@ import { Temperature } from "@devicescript/clients"
 import { threshold } from "@devicescript/observables"
 
 const thermometer = new Temperature()
-await thermometer
+const { temperature } = thermometer
+await temperature
     // highlight-next-line
     .pipe(threshold(1))
     .subscribe(temp => console.log(temp))
