@@ -4,7 +4,7 @@
 
 DeviceScript brings a professional TypeScript developer experience to low-resource microcontroller-based devices.
 DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
-environments (VM itself compiles to 10kB of code, with the floating point library and Jacdac SDK adding further 30kB).
+environments.
 
 -   [Read the documentation](https://microsoft.github.io/devicescript)
 

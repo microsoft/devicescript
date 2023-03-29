@@ -408,6 +408,13 @@ ${varname}.${pname}.subscribe(async (value) => {
     ...
 })
 \`\`\`
+`,
+            `
+:::note
+
+\`write\` and \`read\` will block until a server is bound to the client.
+
+:::
 `
         )
     })

@@ -189,14 +189,14 @@ declare module "@devicescript/core" {
     export class Register<T> extends PacketInfo {
         /**
          * Gets the current value of the register as a number.
-         * TODO: missing value behavior (optional regs)
+         * @returns a promise that returns the value (blocks until the read is complete).
          */
         read(): Promise<T>
 
         /**
          * Sets the current value of the register.
          * @param value value to assign to the register
-         * TODO: is it guaranteed, does it throw when it fails?
+         * @returns a promise until the write is complete (blocks until a server is bound).
          */
         write(value: T): Promise<void>
 
