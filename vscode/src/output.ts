@@ -1,4 +1,4 @@
-import { JSON5TryParse, parseJSON5 } from "@devicescript/compiler"
+import { JSON5TryParse, parseJSON5 } from "@devicescript/interop"
 import {
     Flags,
     FRAME_PROCESS,

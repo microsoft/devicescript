@@ -21,9 +21,10 @@ import {
     SideWatchReq,
     SideWatchResp,
 } from "./sideprotocol"
-import { JSON5TryParse, runtimeVersion } from "@devicescript/compiler"
+import { runtimeVersion } from "@devicescript/compiler"
 import { packageVersion } from "./version"
 import { buildConfigFromDir } from "./build"
+import { JSON5TryParse } from "@devicescript/interop"
 
 export interface DevToolsIface {
     bus: JDBus

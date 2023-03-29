@@ -1,5 +1,3 @@
-import { millis } from "@devicescript/core"
-
 setInterval(() => {
     console.data({
         temp: 20 + Math.random() / 10,

@@ -14,8 +14,8 @@ import {
     boardInfos,
     RepoInfo,
     pinsInfo,
-    JSON5TryParse,
 } from "@devicescript/compiler"
+import { JSON5TryParse } from "@devicescript/interop"
 import { HexInt } from "@devicescript/srvcfg"
 import { readFile, writeFile } from "fs/promises"
 import { read32, toHex } from "jacdac-ts"
