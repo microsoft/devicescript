@@ -64,7 +64,7 @@ interval(FLOOR_SAMPLE_PERIOD).pipe(
 )
 
 // periodic upload
-await interval(LIVE_UPDATE_PERIOD)
+interval(LIVE_UPDATE_PERIOD)
     .pipe(filter(async () => await cloud.connected.read()))
     .subscribe(
         async () => await uploadMessage("readings", await readings.read())
