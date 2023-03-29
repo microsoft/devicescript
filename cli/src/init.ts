@@ -67,7 +67,7 @@ const i2cFiles: FileSet = {
 const testFiles: FileSet = {
     "package.json": {
         [IS_PATCH]: true,
-        dependencies: {
+        devDependencies: {
             "@devicescript/test": "latest",
         },
     },
