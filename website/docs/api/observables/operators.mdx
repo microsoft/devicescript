@@ -19,7 +19,7 @@ const temperature = thermometer.temperature.pipe(
     threshold(0.1), // at least 0.1deg change
     debounceTime(10000) // at most one update per 10s
 )
-await temperature.subscribe(t => console.log(t))
+temperature.subscribe(t => console.log(t))
 ```
 
 ## Creation Operators
@@ -40,7 +40,7 @@ import { from } from "@devicescript/observables"
 // highlight-next-line
 const obs = from([0, 1, 2, 3, 4])
 
-await obs.subscribe(v => console.log(v))
+obs.subscribe(v => console.log(v))
 ```
 
 ### interval
@@ -60,7 +60,7 @@ import { interval } from "@devicescript/observables"
 // highlight-next-line
 const obs = interval(1000)
 
-await obs.subscribe(v => console.log(v))
+obs.subscribe(v => console.log(v))
 ```
 
 ### timer
@@ -79,7 +79,7 @@ import { timer } from "@devicescript/observables"
 // highlight-next-line
 const obs = timer(1000)
 
-await obs.subscribe(v => console.log(v))
+obs.subscribe(v => console.log(v))
 ```
 
 ### iif
@@ -93,7 +93,7 @@ let connected: boolean
 // highlight-next-line
 const obs = iif(() => connected, from(["connected"]), from(["not connected"]))
 
-await obs.subscribe(v => console.log(v))
+obs.subscribe(v => console.log(v))
 ```
 
 ## Filter Operators
@@ -115,7 +115,7 @@ import { from, filter } from "@devicescript/observables"
 
 const obs = from([0, 1, 2, 3, 1])
 
-await obs
+obs
     // highlight-next-line
     .pipe(filter(v => v > 1))
     .subscribe(v => console.log(v))
@@ -142,7 +142,7 @@ import { debounceTime } from "@devicescript/observables"
 
 const button = new Button()
 
-await button.down
+button.down
     // highlight-next-line
     .pipe(debounceTime(5000))
     .subscribe(() => console.log("click"))
@@ -169,7 +169,7 @@ import { throttleTime } from "@devicescript/observables"
 
 const button = new Button()
 
-await button.down
+button.down
     // highlight-next-line
     .pipe(throttleTime(1000))
     .subscribe(() => console.log("click"))
@@ -198,7 +198,7 @@ import { auditTime } from "@devicescript/observables"
 
 const button = new Button()
 
-await button.down
+button.down
     // highlight-next-line
     .pipe(auditTime(1000))
     .subscribe(() => console.log("click"))
@@ -224,7 +224,7 @@ import { threshold } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-await thermometer.temperature
+thermometer.temperature
     // highlight-next-line
     .pipe(threshold(2))
     .subscribe(t => console.log(t))
@@ -268,7 +268,7 @@ import { from, map } from "@devicescript/observables"
 
 const obs = from([1, 2, 3])
 
-await obs
+obs
     // highlight-next-line
     .pipe(map(v => v * v))
     .subscribe(v => console.log(v))
@@ -291,12 +291,10 @@ import { from, scan } from "@devicescript/observables"
 
 const obs = from([1, 2, 3])
 
-await obs
-    .pipe(
-        // highlight-next-line
-        scan((p, c) => p + c, 0)
-    )
-    .subscribe(v => console.log(v))
+obs.pipe(
+    // highlight-next-line
+    scan((p, c) => p + c, 0)
+).subscribe(v => console.log(v))
 ```
 
 ## Signal processing
@@ -313,7 +311,7 @@ import { ewma } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-await thermometer.temperature
+thermometer.temperature
     // highlight-next-line
     .pipe(ewma(0.5))
     .subscribe(t => console.log(t))
@@ -329,7 +327,7 @@ import { rollingAverage } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-await thermometer.temperature
+thermometer.temperature
     // highlight-next-line
     .pipe(rollingAverage(10))
     .subscribe(t => console.log(t))
@@ -345,7 +343,7 @@ import { fir } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-await thermometer.temperature
+thermometer.temperature
     // highlight-next-line
     .pipe(fir([0.1, 0.2, 1]))
     .subscribe(t => console.log(t))
@@ -361,7 +359,7 @@ import { levelDetector } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-await thermometer.temperature
+thermometer.temperature
     // highlight-next-line
     .pipe(levelDetector(20 /* low threshold */, 30 /*high threshold */))
     .subscribe(level =>
@@ -386,12 +384,10 @@ import { from, map, throwError } from "@devicescript/observables"
 
 const obs = from([1, 2, 3])
 
-await obs
-    .pipe(
-        // highlight-next-line
-        throwError(() => new Error("no!"))
-    )
-    .subscribe(v => console.log(v))
+obs.pipe(
+    // highlight-next-line
+    throwError(() => new Error("no!"))
+).subscribe(v => console.log(v))
 ```
 
 ### catchError
@@ -415,13 +411,11 @@ import { from, map, throwError, catchError } from "@devicescript/observables"
 
 const obs = from([1, 2, 3])
 
-await obs
-    .pipe(
-        throwError(() => new Error("no!")),
-        // highlight-next-line
-        catchError(e => from([4]))
-    )
-    .subscribe(v => console.log(v))
+obs.pipe(
+    throwError(() => new Error("no!")),
+    // highlight-next-line
+    catchError(e => from([4]))
+).subscribe(v => console.log(v))
 ```
 
 ## Utilities
@@ -435,11 +429,9 @@ import { from, map, tap } from "@devicescript/observables"
 
 const obs = from([1, 2, 3])
 
-await obs
-    .pipe(
-        // highlight-next-line
-        tap(v => console.log(v)),
-        map(v => v * v)
-    )
-    .subscribe(v => console.log(v))
+obs.pipe(
+    // highlight-next-line
+    tap(v => console.log(v)),
+    map(v => v * v)
+).subscribe(v => console.log(v))
 ```
