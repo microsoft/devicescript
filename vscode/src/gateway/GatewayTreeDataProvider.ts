@@ -373,7 +373,12 @@ export class GatewayTreeDataProvider
             case GATEWAY_NODE: {
                 const mgr = node as GatewayManager
                 const ok = mgr.lastFetchStatus === GATEWAY_LAST_FETCH_STATUS_OK
-                description = ok ? "connected" : "error"
+                const connecting = mgr.lastFetchStatus === undefined
+                description = ok
+                    ? "connected"
+                    : connecting
+                    ? "connecting"
+                    : "error"
                 tooltip = toMarkdownString(`
 -   OpenAPI: [${mgr.apiRoot}](${mgr.apiRoot}/swagger/)
 -   Last fetch: ${mgr.lastFetchStatus}
