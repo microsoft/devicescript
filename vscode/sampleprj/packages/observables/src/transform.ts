@@ -10,10 +10,10 @@ export function map<T, R>(
     converter: (value: T, index: number) => R | Promise<R>
 ): OperatorFunction<T, R> {
     return function operator(source: Observable<T>) {
-        return new Observable<R>(async observer => {
+        return new Observable<R>(observer => {
             const { next, error, complete } = observer
             let index = 0
-            return await source.subscribe({
+            return source.subscribe({
                 error,
                 complete,
                 next: async value => {
@@ -33,11 +33,11 @@ export function scan<T, A>(
     seed?: A
 ): OperatorFunction<T, A> {
     return function operator(source: Observable<T>) {
-        return new Observable<A>(async observer => {
+        return new Observable<A>(observer => {
             const { error, next, complete } = observer
             let prev: A = seed
             let index = 0
-            return await source.subscribe({
+            return source.subscribe({
                 error,
                 complete,
                 next: async curr => {
@@ -58,16 +58,16 @@ export function buffer<T>(
     closingObservable: Observable<any>
 ): OperatorFunction<T, T[]> {
     return function operator(source: Observable<T>) {
-        return new Observable<T[]>(async observer => {
+        return new Observable<T[]>(observer => {
             const { next, error, complete } = observer
             let buffer: T[] = []
 
-            const closingUnsub = await closingObservable.subscribe(async () => {
+            const closingUnsub = closingObservable.subscribe(async () => {
                 const res = buffer
                 buffer = []
                 await next(res)
             })
-            const srcUnsub = await source.subscribe({
+            const srcUnsub = source.subscribe({
                 error,
                 complete,
                 next: (value: T) => {

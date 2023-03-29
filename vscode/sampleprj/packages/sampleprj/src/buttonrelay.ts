@@ -12,7 +12,7 @@ const relay = servers.startRelay({
 
 let active = false
 
-await button.down.pipe(debounceTime(500)).subscribe(async () => {
+button.down.pipe(debounceTime(500)).subscribe(async () => {
     active = !active
     console.log(`active ${active}`)
     await relay.active.write(active)

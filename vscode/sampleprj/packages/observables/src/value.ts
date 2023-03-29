@@ -52,7 +52,7 @@ export class ObservableValue<T> extends Observable<T> {
  */
 export function register<T>(value?: T) {
     const subscriptions: ((value: T) => ds.AsyncVoid)[] = []
-    const subscriber = async (observer: SubscriptionObserver<T>) => {
+    const subscriber = (observer: SubscriptionObserver<T>) => {
         const { next } = observer
         subscriptions.push(next)
         return () => {

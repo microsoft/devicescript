@@ -34,7 +34,7 @@ const temperature = thermometer.temperature.pipe(
     threshold(0.1), // at least 0.1deg change
     throttleTime(10000) // at most one update per 10s
 )
-await temperature.subscribe(t => console.log(t))
+temperature.subscribe(t => console.log(t))
 ```
 
 ## Package

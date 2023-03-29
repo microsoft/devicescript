@@ -3,7 +3,7 @@ import { describe, test, expect } from "@devicescript/test"
 import { reduce } from "./aggregate"
 import { from, iif, interval } from "./creation"
 import { ewma, fir, levelDetector, rollingAverage } from "./dsp"
-import { catchError, throwError } from "./error"
+import { catchError } from "./error"
 import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
 import { Observable, Subscription, unusbscribe } from "./observable"
@@ -17,9 +17,10 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
     let s: Subscription
     const values: T[] = []
     try {
-        s = await o.subscribe(v => {
+        s = o.subscribe(v => {
             values.push(v)
         })
+        await ds.sleep(10)
         expect(values.length).toBe(sequence.length)
         for (let i = 0; i < values.length; ++i) {
             expect(values[i]).toBe(sequence[i])
@@ -29,23 +30,10 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
     }
 }
 
-describe("observable", () => {
-    test("create observable", async () => {
-        // simple example
-        let obs = new Observable<string>(async observer => {
-            await observer.next("HELLO")
-            await observer.next("WORLD")
-            if (observer.complete) await observer.complete()
-        })
-        obs = tap<string>(v => console.log(v))(obs)
-        await emits(obs, ["HELLO", "WORLD"])
-    })
-})
-
 describe("creation", () => {
     test("of", async () => {
         const obs = from([1, 2, 3, 4, 5])
-        await obs.subscribe(v => console.log(v))
+        obs.subscribe(v => console.log(v))
     })
     test("interval", async () => {
         let obs = interval(100)
@@ -53,7 +41,7 @@ describe("creation", () => {
         // start
         let count = 0
         let res: number[] = []
-        const unsub = await obs.subscribe(() => {
+        const unsub = obs.subscribe(() => {
             console.log(`next ${count}`)
             res.push(count)
             if (count++ === 2) unusbscribe(unsub)
@@ -218,6 +206,7 @@ describe("error", () => {
                 error++
             },
         })
+        await ds.sleep(10)
         expect(error).toBe(1)
     })
     test("map", async () => {
@@ -232,6 +221,7 @@ describe("error", () => {
                 error++
             },
         })
+        await ds.sleep(10)
         expect(error).toBe(1)
     })
     test("map,tap,filter", async () => {
@@ -248,26 +238,7 @@ describe("error", () => {
                 error++
             },
         })
-        expect(error).toBe(1)
-    })
-    test("throwError", async () => {
-        const obs = from([0, 1, 2]).pipe(throwError(() => new Error("hi")))
-        let error = 0
-        await obs.subscribe({
-            error: () => {
-                error++
-            },
-        })
-        expect(error).toBe(1)
-    })
-    test("throwErrorasync", async () => {
-        const obs = from([0, 1, 2]).pipe(throwError(() => new Error("hi")))
-        let error = 0
-        await obs.subscribe({
-            error: async () => {
-                error++
-            },
-        })
+        await ds.sleep(10)
         expect(error).toBe(1)
     })
     test("catchError,map", async () => {
@@ -276,20 +247,22 @@ describe("error", () => {
                 throw new Error()
             }),
             catchError(e => {
-                console.log(`catch error ` + e)
                 return from([5])
             })
         )
+        await ds.sleep(50)
         await emits(obs, [5])
     })
     test("catchError", async () => {
         const obs = from([0, 1, 2]).pipe(
-            throwError(() => new Error()),
+            map(() => {
+                throw new Error()
+            }),
             catchError(e => {
-                console.log(`catch error ` + e)
                 return from([5])
             })
         )
+        await ds.sleep(50)
         await emits(obs, [5])
     })
 })

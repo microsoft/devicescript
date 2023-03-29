@@ -26,7 +26,7 @@ export function collect<
 ): Observable<Partial<Record<keyof TObservables, unknown>>> {
     const { clearValuesOnEmit } = options || {}
     return new Observable<Partial<Record<keyof TObservables, unknown>>>(
-        async observer => {
+        observer => {
             const { next, error, complete } = observer
 
             let values: Partial<Record<keyof TObservables, unknown>> = {}
@@ -35,14 +35,14 @@ export function collect<
             }
             const unsubs: Subscription[] = []
             for (const name of Object.keys(observables)) {
-                const unsub = await observables[name].subscribe({
+                const unsub = observables[name].subscribe({
                     error,
                     next: assign(name),
                 })
                 unsubs.push(unsub)
             }
             unsubs.push(
-                await closingObservable.subscribe({
+                closingObservable.subscribe({
                     error,
                     complete,
                     next: async () => {
@@ -84,12 +84,12 @@ export function collectTime<
 export function race<T>(...sources: Observable<T>[]) {
     if (sources?.length === 1) return sources[0]
 
-    return new Observable<T>(async observer => {
+    return new Observable<T>(observer => {
         const { next, error, complete } = observer
 
         const unsubs: Subscription[] = []
         for (let i = 0; i < sources.length; ++i) {
-            const unsub = await sources[i].subscribe({
+            const unsub = sources[i].subscribe({
                 error: e => error(e),
                 complete: () => complete(),
                 next: async value => {

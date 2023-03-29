@@ -71,7 +71,7 @@ import { threshold } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 const { temperature } = thermometer
-await temperature
+temperature
     // highlight-next-line
     .pipe(threshold(1))
     .subscribe(temp => console.log(temp))

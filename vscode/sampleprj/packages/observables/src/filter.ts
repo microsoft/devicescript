@@ -15,10 +15,10 @@ export function filter<T>(
     condition: (value: T, index: number) => ds.AsyncBoolean
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(async observer => {
+        return new Observable<T>(observer => {
             const { next, error, complete } = observer
             let index = 0
-            return await source.subscribe({
+            return source.subscribe({
                 error,
                 complete,
                 next: async v => {
@@ -36,10 +36,10 @@ export function filter<T>(
  */
 export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(async observer => {
+        return new Observable<T>(observer => {
             const { error, next, complete } = observer
             let timer: number
-            const unsub = await source.subscribe({
+            const unsub = source.subscribe({
                 error,
                 complete,
                 next: value => {
@@ -67,10 +67,10 @@ export function debounceTime<T>(duration: number): OperatorFunction<T, T> {
  */
 export function throttleTime<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(async observer => {
+        return new Observable<T>(observer => {
             const { error, next, complete } = observer
             let timer: number
-            const unsub = await source.subscribe({
+            const unsub = source.subscribe({
                 error,
                 complete,
                 next: async value => {
@@ -101,11 +101,11 @@ export function throttleTime<T>(duration: number): OperatorFunction<T, T> {
  */
 export function auditTime<T>(duration: number): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(async observer => {
+        return new Observable<T>(observer => {
             const { error, next, complete } = observer
             let timer: number
             let lastValue: T = undefined
-            const unsub = await source.subscribe({
+            const unsub = source.subscribe({
                 error,
                 complete,
                 next: async value => {
@@ -146,12 +146,12 @@ export function distinctUntilChanged<T, K = T>(
     keySelector: (value: T) => K = identity as (value: T) => K
 ): OperatorFunction<T, T> {
     return function operator(source: Observable<T>) {
-        return new Observable<T>(async observer => {
+        return new Observable<T>(observer => {
             const { error, next, complete } = observer
             let lastKey: K
             let hasFirst = false
             const eq = comparator || equality
-            return await source.subscribe({
+            return source.subscribe({
                 error,
                 complete,
                 next: async value => {
