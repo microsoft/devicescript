@@ -251,7 +251,7 @@ describe("error", () => {
                 return from([5])
             })
         )
-        await ds.sleep(10)
+        await ds.sleep(50)
         await emits(obs, [5])
     })
     test("catchError", async () => {
