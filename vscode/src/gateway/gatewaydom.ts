@@ -43,6 +43,7 @@ export class GatewayManager extends JDNode {
     private _devices: GatewayDevice[]
     private _scripts: GatewayScript[]
     private _lastFetchStatus: string
+    private _tokenValidated: boolean = undefined
 
     constructor(
         public readonly bus: JDBus,
@@ -75,6 +76,17 @@ export class GatewayManager extends JDNode {
     private set lastFetchStatus(status: string) {
         if (this._lastFetchStatus !== status) {
             this._lastFetchStatus = status
+            this.emit(CHANGE)
+        }
+    }
+
+    get tokenValidated(): boolean {
+        return this._tokenValidated
+    }
+
+    private set tokenValidated(status: boolean) {
+        if (this._tokenValidated !== status) {
+            this._tokenValidated = status
             this.emit(CHANGE)
         }
     }
@@ -278,9 +290,11 @@ export class GatewayManager extends JDNode {
             }
             const json = (await resp.json()) as T
             this.lastFetchStatus = GATEWAY_LAST_FETCH_STATUS_OK
+            this.tokenValidated = true
             return json
         } catch (e) {
             this.lastFetchStatus = e.message
+            if (e.statusCode === 401) this.tokenValidated = false
             this.emit(FETCH_ERROR, e)
             this.emit(ERROR, e)
             return undefined

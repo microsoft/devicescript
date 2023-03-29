@@ -20,6 +20,7 @@ import {
     GATEWAY_DEVICES_NODE,
     GATEWAY_SCRIPTS_NODE,
     GATEWAY_NODE,
+    GATEWAY_LAST_FETCH_STATUS_OK,
 } from "./gatewaydom"
 import type { DebugInfo } from "@devicescript/interop"
 import {
@@ -371,7 +372,8 @@ export class GatewayTreeDataProvider
         switch (node.nodeKind) {
             case GATEWAY_NODE: {
                 const mgr = node as GatewayManager
-                description = mgr.lastFetchStatus || ""
+                const ok = mgr.lastFetchStatus === GATEWAY_LAST_FETCH_STATUS_OK
+                description = ok ? "connected" : "error"
                 tooltip = toMarkdownString(`
 -   API root: [${mgr.apiRoot}](${mgr.apiRoot}/swagger/)
 -   Last fetch: ${mgr.lastFetchStatus}
@@ -449,21 +451,24 @@ ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
             const manager = this.state.manager
             if (!manager) return undefined
 
+            const { tokenValidated } = manager
             const items = [
                 manager,
-                new GatewayCollection(
-                    manager,
-                    GATEWAY_SCRIPTS_NODE,
-                    "scripts",
-                    _ => _.scripts()
-                ),
-                new GatewayCollection(
-                    manager,
-                    GATEWAY_DEVICES_NODE,
-                    "devices",
-                    _ => _.devices()
-                ),
-            ]
+                tokenValidated &&
+                    new GatewayCollection(
+                        manager,
+                        GATEWAY_SCRIPTS_NODE,
+                        "scripts",
+                        _ => _.scripts()
+                    ),
+                tokenValidated &&
+                    new GatewayCollection(
+                        manager,
+                        GATEWAY_DEVICES_NODE,
+                        "devices",
+                        _ => _.devices()
+                    ),
+            ].filter(item => !!item)
             return items
         } else if (element === this.state.manager) {
             return []

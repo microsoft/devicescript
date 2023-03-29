@@ -168,7 +168,8 @@ export class GatewayExtensionState extends JDEventSource {
             this._manager.on(FETCH_ERROR, this.handleFetchError)
             forceRefresh = true
         }
-        if (this._manager && forceRefresh) await this.backgroundRefresh()
+        if (this._manager && forceRefresh) 
+            this.backgroundRefresh() // don't await
     }
 
     private async backgroundRefresh() {

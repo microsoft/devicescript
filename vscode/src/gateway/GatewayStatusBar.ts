@@ -20,6 +20,7 @@ export async function registerGatewayStatusBar(state: GatewayExtensionState) {
 DeviceScript Gateway connected.
 
 - swagger: [${apiRoot}](${apiRoot}/swagger/)
+- last fetch: ${manager.lastFetchStatus}
         `)
             statusBarItem.show()
         } else {

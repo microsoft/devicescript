@@ -64,7 +64,7 @@ export function showErrorMessage(
         : vscode.window.showErrorMessage(message, ...items)
 }
 
-export function showError(error: Error) {
+export async function showError(error: Error) {
     if (!error || isCancelError(error)) return
 
     console.error(error)
@@ -72,12 +72,12 @@ export function showError(error: Error) {
 
     const messagePrefix = MESSAGE_PREFIX
     if (isTimeoutError(error))
-        vscode.window.showErrorMessage(
+        await vscode.window.showErrorMessage(
             messagePrefix + "the operation timed out."
         )
     else if (isAckError(error))
-        vscode.window.showErrorMessage(
+        await vscode.window.showErrorMessage(
             messagePrefix + "the device did not respond to this command."
         )
-    else vscode.window.showErrorMessage(messagePrefix + error?.message)
+    else await vscode.window.showErrorMessage(messagePrefix + error?.message)
 }
