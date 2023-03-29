@@ -8,7 +8,6 @@ export interface Subscription {
     closed?: boolean
     unsubscribe: () => void
 }
-export type AsyncSubscription = Subscription | Promise<Subscription>
 export type UnaryFunction<T, R> = (source: T) => R
 export type ObserverStart = (subscription: Subscription) => void
 /**
@@ -37,12 +36,12 @@ export type SloppyObserver<T> = OptionalObserver<T> | ObserverNext<T>
 
 export type SubscriberFunction<T> = (
     observer: SubscriptionObserver<T>
-) => AsyncSubscription | ds.Unsubscribe | Promise<ds.Unsubscribe> | AsyncVoid
+) => Subscription | ds.Unsubscribe | void
 
 export class Observable<T> {
     constructor(readonly subscriber: SubscriberFunction<T>) {}
 
-    async subscribe(observer: SloppyObserver<T>): Promise<Subscription> {
+    subscribe(observer: SloppyObserver<T>): Subscription {
         const { subscriber } = this
         let start: ObserverStart
         let next: ObserverNext<T>
@@ -100,7 +99,7 @@ export class Observable<T> {
         }
         if (start) start(subscription)
         if (closed) return subscription
-        const sub = async () => {
+        const sub = () => {
             const wrappedObserver: SubscriptionObserver<T> = {
                 closed,
                 error,
@@ -108,7 +107,7 @@ export class Observable<T> {
                 next,
             }
             // might unwrap an async function
-            const c = await subscriber(wrappedObserver)
+            const c = subscriber(wrappedObserver)
             if (c && typeof c === "function") cleanup = c
             else if (
                 c &&
@@ -118,8 +117,8 @@ export class Observable<T> {
                 cleanup = c.unsubscribe
             }
         }
-        const wrappedSub = await wrapTryAsync(sub)
-        await wrappedSub()
+        // todo try catch
+        sub()
         return subscription
     }
 

@@ -10,11 +10,11 @@ export function reduce<T, A>(
     seed?: A
 ): OperatorFunction<T, A> {
     return function operator(source: Observable<T>) {
-        return new Observable<A>(async observer => {
+        return new Observable<A>(observer => {
             const { error, next, complete } = observer
             let prev: A = seed
             let index = 0
-            return await source.subscribe({
+            return source.subscribe({
                 error,
                 complete: async () => {
                     await next(prev)

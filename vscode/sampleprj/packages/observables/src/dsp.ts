@@ -73,10 +73,10 @@ export function fir(
     gain?: number
 ): OperatorFunction<number, number> {
     return function operator(source: Observable<number>) {
-        return new Observable<number>(async observer => {
+        return new Observable<number>(observer => {
             const { error, next, complete } = observer
             const filter = new FIR(coefficients, gain)
-            return await source.subscribe({
+            return source.subscribe({
                 error,
                 complete,
                 next: async value => await next(filter.process(value)),
@@ -114,14 +114,14 @@ export function levelDetector(
 ): OperatorFunction<number, number> {
     const windowSize = Math.max(1, options?.windowSize || 1)
     return function operator(source: Observable<number>) {
-        return new Observable<number>(async observer => {
+        return new Observable<number>(observer => {
             const { error, next, complete } = observer
 
             let oldLevel: number = undefined
             let windowPosition = 0
             let sigma = 0
 
-            return await source.subscribe({
+            return source.subscribe({
                 error,
                 complete,
                 next: async value => {

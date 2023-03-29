@@ -84,9 +84,9 @@ ds.Register.prototype.pipe = function pipe<T>(
     ...operations: OperatorFunction<any, any>[]
 ): Observable<any> {
     const _this = this
-    const obs = new Observable<T>(async observer => {
+    const obs = new Observable<T>(observer => {
         const { next } = observer
-        return await _this.subscribe(async v => await next(v))
+        return _this.subscribe(async v => await next(v))
     })
     return operations.length ? pipeFromArray(operations)(obs) : obs
 }
@@ -174,9 +174,9 @@ ds.Event.prototype.pipe = function pipe<T>(
     ...operations: OperatorFunction<any, any>[]
 ): Observable<any> {
     const _this = this
-    const obs = new Observable<T>(async observer => {
+    const obs = new Observable<T>(observer => {
         const { next } = observer
-        return await _this.subscribe(async v => await next(v))
+        return _this.subscribe(async v => await next(v))
     })
     return operations.length ? pipeFromArray(operations)(obs) : obs
 }
