@@ -15,13 +15,13 @@ In the simplest case, you just pass the pin to `startPotentiometer()`.
 The voltage on the pin (typically between 0V (GND) and 3.3V (VCC)) will be translated to a number between 0 and 1.
 
 ```ts
+import { gpio } from "@devicescript/core"
 import { startPotentiometer } from "@devicescript/servers"
 
 const slider = startPotentiometer({
     pin: ds.gpio(3),
 })
-const v = await slider.position.read()
-console.log(`val: ${v * 100}%`)
+slider.subscribe(v => console.data({ value: 100 * v}))
 ```
 
 ## Scaling
@@ -35,6 +35,7 @@ The defaults are `{ offset: 0, scale: 1024 }` so the `raw_reading` is just repor
 For example, if you find you can never quite reach the `0` and `1` values, you can try the following:
 
 ```ts
+import { gpio } from "@devicescript/core"
 import { startPotentiometer } from "@devicescript/servers"
 
 const slider = startPotentiometer({
@@ -55,6 +56,7 @@ regardless if you measure it or not.
 To improve power consumption, you may connect say R to a GPIO and configure the service like this:
 
 ```ts
+import { gpio } from "@devicescript/core"
 import { startPotentiometer } from "@devicescript/servers"
 
 const slider = startPotentiometer({
