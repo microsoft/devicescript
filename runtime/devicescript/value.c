@@ -371,6 +371,10 @@ bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b) {
 #endif
 }
 
+bool devs_value_eq_builtin_string(devs_ctx_t *ctx, value_t a, unsigned idx) {
+    return devs_value_eq(ctx, a, devs_builtin_string(idx));
+}
+
 value_t devs_value_encode_throw_jmp_pc(int pc, unsigned lev) {
     JD_ASSERT(lev <= DEVS_SPECIAL_THROW_JMP_LEVEL_MAX);
     JD_ASSERT(pc && pc <= DEVS_SPECIAL_THROW_JMP_PC_MAX);
