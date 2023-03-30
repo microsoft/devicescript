@@ -203,9 +203,9 @@
                         "completionEvents": []
                     },
                     {
-                        "id": "devicescript.initproject",
-                        "title": "Create New DeviceScript Project",
-                        "description": "Use the command line to create a new DeviceScript project in a new folder.\n    ``npx --yes @devicescript/cli@latest init``",
+                        "id": "devicescript.openfolder",
+                        "title": "Open Folder",
+                        "description": "Open a workspace where you want to generate a new project.\n[Open Folder...](command:vscode.openFolder)",
                         "media": {
                             "image": "media/newproject.png",
                             "altText": "Project structure after the init command."
@@ -213,9 +213,21 @@
                         "completionEvents": []
                     },
                     {
+                        "id": "devicescript.initproject",
+                        "title": "Create New DeviceScript Project",
+                        "description": "This step will run a command to create a new project.\n[Create New Project...](command:extension.devicescript.project.new)",
+                        "media": {
+                            "image": "media/newproject.png",
+                            "altText": "Project structure after the init command."
+                        },
+                        "completionEvents": [
+                            "onCommand:extension.devicescript.project.new"
+                        ]
+                    },
+                    {
                         "id": "devicescript.deployanddebug",
                         "title": "Deploy and Debug your DeviceScript",
-                        "description": "Once you've installed the command line, you can build and deploy DeviceScript programs at a terminal by entering ``devicescript your-file-name.ts``.\nAnother easy way to run DeviceScript programs is by using VS Code's debugger which lets you run the code, pause at different points, and help you what's going on step-by-step.\n[Start Debugging](command:workbench.action.debug.start)",
+                        "description": "Open `src/main.ts`, put a breakpoint near `console.log` and start debugging!\n[Start Debugging](command:workbench.action.debug.start)",
                         "media": {
                             "image": "media/debugger.png",
                             "altText": "Program paused on the debugger with simulators"
