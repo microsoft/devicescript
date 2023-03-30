@@ -36,7 +36,7 @@ Deserializes an object from a setting at a given key. If the key is missing or i
 import { readSetting } from "@devicescript/settings"
 
 // highlight-next-line
-const world = await readSetting("hello")
+const { world } = await readSetting("hello", {})
 ```
 
 ## See also
