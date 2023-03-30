@@ -694,6 +694,7 @@ export class DeveloperToolsManager extends JDEventSource {
         progress: string
         useShell?: boolean
         diagnostics?: boolean
+        developerMode?: boolean
         message?: string
         args: string[]
     }): Promise<vscode.Terminal> {
@@ -735,11 +736,14 @@ export class DeveloperToolsManager extends JDEventSource {
                 const nodePath = devToolsConfig.get("node") as string
                 const diagnostics =
                     options.diagnostics ?? jacdacConfig.get("diagnostics")
+                const developerMode =
+                    options.developerMode ?? devToolsConfig.get("developerMode")
                 let cli = nodePath || "node"
                 if (isWindows) {
                     cli = "node_modules\\.bin\\devicescript.cmd"
                 } else args.unshift("./node_modules/.bin/devicescript")
                 if (diagnostics) args.push("--diagnostics", "--verbose")
+                if (developerMode) args.push("--dev")
                 console.debug(
                     `create terminal: ${useShell ? "shell:" : ""}${
                         cwd.fsPath
