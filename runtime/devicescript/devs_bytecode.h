@@ -254,7 +254,7 @@
 #define DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE 34
 #define DEVS_BUILTIN_OBJECT_JSON 35
 
-#define DEVS_BUILTIN_STRING___MAX 154
+#define DEVS_BUILTIN_STRING___MAX 155
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -410,6 +410,7 @@
 #define DEVS_BUILTIN_STRING_UTF_8 152 // utf-8
 #define DEVS_BUILTIN_STRING_SUSPENDED 153
 #define DEVS_BUILTIN_STRING_REBOOT 154
+#define DEVS_BUILTIN_STRING_SERVER 155
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -451,7 +452,7 @@
         "clearTimeout", "SyntaxError", "JSON", "parse", "stringify", "_dcfgString", "isSimulator", \
         "Role", "Fiber", "suspend", "resume", "terminate", "self", "current", "id",                \
         "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended",     \
-        "reboot"
+        "reboot", "server"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

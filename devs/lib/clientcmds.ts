@@ -237,11 +237,13 @@ ds.Event.prototype.subscribe = function subscribe<T>(
     }
 }
 
-ds.Event.prototype.wait = async function () {
-    while (true) {
-        const pkt = await this.role.wait()
-        if (pkt && pkt.eventCode === this.code) return
-    }
+ds.Event.prototype.wait = async function (timeout) {
+    const fib = ds.Fiber.self()
+    const unsub = this.subscribe(v => {
+        unsub()
+        fib.resume(v)
+    })
+    return await ds.suspend(timeout)
 }
 
 ds.Button.prototype.pressed = function pressed() {

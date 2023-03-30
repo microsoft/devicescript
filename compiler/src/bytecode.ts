@@ -274,7 +274,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 154,
+    __MAX = 155,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -430,6 +430,7 @@ export enum BuiltInString {
     UTF_8 = 152, // utf-8
     SUSPENDED = 153,
     REBOOT = 154,
+    SERVER = 155,
 }
 
 export const OP_PRINT_FMTS = [
@@ -699,6 +700,7 @@ export const BUILTIN_STRING__VAL = [
     "utf-8",
     "suspended",
     "reboot",
+    "server",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

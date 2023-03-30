@@ -73,14 +73,6 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     devs_fiber_t *fib = ctx->curr_fiber;
     JD_ASSERT(fib != NULL);
 
-    if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION) {
-        devs_fiber_sleep(fib, 0);
-        LOGV("wake condition");
-        devs_jd_reset_packet(ctx);
-        devs_jd_wake_role(ctx, role_idx);
-        return;
-    }
-
     fib->role_idx = role_idx;
     fib->service_command = code;
 
@@ -427,8 +419,6 @@ void devs_jd_init_roles(devs_ctx_t *ctx) {
         const devs_role_desc_t *role = devs_img_get_role(ctx->img, idx);
         ctx->roles[idx].role =
             jd_role_alloc(devs_img_role_name(ctx->img, idx), role->service_class);
-        if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION)
-            devs_role(ctx, idx)->hidden = 1;
     }
     jd_role_force_autobind();
 }
@@ -448,4 +438,8 @@ void devs_reset_global_flags(uint32_t global_flags) {
 }
 uint32_t devs_get_global_flags(void) {
     return devs_global_flags;
+}
+
+uint64_t devs_jd_server_device_id(void) {
+    return jd_device_id() ^ 0xdb2249a7751b53f8;
 }

@@ -232,6 +232,7 @@ void devs_jd_free_roles(devs_ctx_t *ctx);
 void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role);
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib);
 void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str);
+uint64_t devs_jd_server_device_id(void);
 
 // fibers.c
 void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);

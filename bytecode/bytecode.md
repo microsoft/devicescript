@@ -621,3 +621,4 @@ Only `true` and `false` values.
     utf_8 = 152 // utf-8
     suspended = 153
     reboot = 154
+    server = 155

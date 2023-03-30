@@ -156,7 +156,14 @@ void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time) {
 }
 
 void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time) {
-    devs_fiber_set_wake_time(fiber, devs_now(fiber->ctx) + time);
+    unsigned wake = 0;
+    if (time != 0xffffffff) {
+        unsigned now = devs_now(fiber->ctx);
+        wake = now + time;
+        if (wake < now) // avoid overflow
+            wake = 0xffffffff;
+    }
+    devs_fiber_set_wake_time(fiber, wake);
     devs_fiber_yield(fiber->ctx);
 }
 

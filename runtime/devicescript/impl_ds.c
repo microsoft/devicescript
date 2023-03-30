@@ -1,10 +1,25 @@
 #include "devs_internal.h"
 #include <math.h>
 
+uint32_t devs_compute_timeout(devs_ctx_t *ctx, value_t t) {
+    uint32_t max = 0xffffffff;
+    if (devs_is_null_or_undefined(t))
+        return max;
+    if (devs_is_tagged_int(t))
+        return t.val_int32 < 0 ? 0 : t.val_int32;
+    if (devs_is_special(t) && devs_handle_value(t) == DEVS_SPECIAL_INF)
+        return max;
+    double v = devs_value_to_double(ctx, t);
+    if (v > max)
+        return max;
+    if (v < 0)
+        return 0;
+    return (uint32_t)v;
+}
+
 void fun1_DeviceScript_sleep(devs_ctx_t *ctx) {
-    int time = devs_arg_int(ctx, 0);
-    if (time >= 0)
-        devs_fiber_sleep(ctx->curr_fiber, time);
+    unsigned time = devs_compute_timeout(ctx, devs_arg(ctx, 0));
+    devs_fiber_sleep(ctx->curr_fiber, time);
 }
 
 void fun1_DeviceScript__panic(devs_ctx_t *ctx) {
@@ -97,4 +112,17 @@ void fun1_DeviceScript__dcfgString(devs_ctx_t *ctx) {
 
 void fun0_DeviceScript_millis(devs_ctx_t *ctx) {
     devs_ret(ctx, devs_value_from_double((double)ctx->_now_long));
+}
+
+void fun1_DeviceScript_deviceIdentifier(devs_ctx_t *ctx) {
+    value_t tp = devs_arg(ctx, 0);
+    uint64_t id;
+    if (devs_value_eq_builtin_string(ctx, tp, DEVS_BUILTIN_STRING_SELF))
+        id = jd_device_id();
+    else if (devs_value_eq_builtin_string(ctx, tp, DEVS_BUILTIN_STRING_SERVER))
+        id = devs_jd_server_device_id();
+    else
+        return;
+
+    devs_ret(ctx, devs_string_sprintf(ctx, "%-s", jd_to_hex_a(&id, 8)));
 }

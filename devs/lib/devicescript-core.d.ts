@@ -48,12 +48,6 @@ declare module "@devicescript/core" {
         binding(): ClientRegister<boolean>
 
         /**
-         * Wait for the next packet to arrive from the device.
-         * When device has just disconnected this returns null.
-         */
-        wait(): Promise<Packet | null>
-
-        /**
          * @internal
          */
         sendCommand(serviceCommand: number, payload?: Buffer): Promise<void>
@@ -211,7 +205,7 @@ declare module "@devicescript/core" {
         /**
          * Blocks the current thread under the event is received.
          */
-        wait(): Promise<void>
+        wait(timeout?: number): Promise<void>
         /**
          * Registers a callback to execute when an event is received
          * @param next callback to execute
@@ -232,8 +226,9 @@ declare module "@devicescript/core" {
     /**
      * Wait for resumption from other fiber. If the timeout expires, `undefined` is returned,
      * otherwise the value passed from the resuming fiber.
+     * Timeout defaults to infinity.
      */
-    export function suspend<T>(milliseconds: number): Promise<T | undefined>
+    export function suspend<T>(milliseconds?: number): Promise<T | undefined>
 
     /**
      * Restart current script.
@@ -293,6 +288,11 @@ declare module "@devicescript/core" {
      * Check if running inside a simulator.
      */
     export function isSimulator(): boolean
+
+    /**
+     * Return hex-encoded device 64 bit device identifier of the current device or its server counterpart
+     */
+    export function deviceIdentifier(which: "self" | "server"): string
 
     /*
      * Print out message. Used by console.log, etc.
