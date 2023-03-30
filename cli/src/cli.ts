@@ -26,6 +26,7 @@ import {
     setConsoleColors,
     setDeveloperMode,
     setQuiet,
+    verboseLog,
 } from "./command"
 import { binPatch } from "./binpatch"
 import { logToConsole } from "./command"
@@ -377,7 +378,10 @@ export async function mainCli() {
     program.on("option:quiet", () => setQuiet(true))
     program.on("option:verbose", incVerbose)
     program.on("option:no-colors", () => setConsoleColors(false))
-    program.on("option:dev", () => setDeveloperMode(true))
+    program.on("option:dev", () => {
+        setDeveloperMode(true)
+        verboseLog(`developer mode enabled`)
+    })
 
     program.hook("preAction", () => {
         // --quiet disables it
