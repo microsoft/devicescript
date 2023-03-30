@@ -21,7 +21,12 @@ import { compileFlagHelp } from "@devicescript/compiler"
 import { startVm } from "./vm"
 import { cliVersion, notifyUpdates } from "./version"
 import { dcfg } from "./dcfg"
-import { incVerbose, setConsoleColors, setQuiet } from "./command"
+import {
+    incVerbose,
+    setConsoleColors,
+    setDeveloperMode,
+    setQuiet,
+} from "./command"
 import { binPatch } from "./binpatch"
 import { logToConsole } from "./command"
 import {
@@ -74,6 +79,7 @@ export async function mainCli() {
         .option("-v, --verbose", "more logging (can be repeated)")
         .option("--quiet", "less logging")
         .option("--no-colors", "disable color output")
+        .option("--dev", "developer mode")
 
     buildCommand("build", { isDefault: true })
         .description("build a DeviceScript file")
@@ -371,6 +377,7 @@ export async function mainCli() {
     program.on("option:quiet", () => setQuiet(true))
     program.on("option:verbose", incVerbose)
     program.on("option:no-colors", () => setConsoleColors(false))
+    program.on("option:dev", () => setDeveloperMode(true))
 
     program.hook("preAction", () => {
         // --quiet disables it

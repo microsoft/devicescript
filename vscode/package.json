@@ -100,6 +100,12 @@
                     "description": "Start DeviceScript Server in the default shell rather than as a direct process.",
                     "scope": "machine-overridable"
                 },
+                "devicescript.devtools.developerMode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables additional logging or allows to connect to device outside the catalog.",
+                    "scope": "machine-overridable"
+                },
                 "devicescript.jacdac.diagnostics": {
                     "type": "boolean",
                     "default": false,
