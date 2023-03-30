@@ -1,11 +1,12 @@
 ---
 title: I2C
-sidebar_position: 2.6
+sidebar_position: 1
 ---
 
 # I2C
 
-The I2C class provides basic functions to work with I2C registers and perform raw communication over the I2C bus.
+The I2C class provides basic functions to work with I2C registers and perform raw communication over the I2C bus using DeviceScript.
+It is also possible to add I2C driver in the [C firmware SDK](https://github.com/microsoft/jacdac-c/tree/main/drivers).
 
 ## Setup
 
@@ -51,7 +52,7 @@ async function read() {
 await init()
 while (true) {
     const r = await read()
-    console.log(`${r.x} ${r.y} ${r.z}`)
+    console.data(r)
     await devs.sleep(500)
 }
 ```
