@@ -219,12 +219,6 @@ declare module "@devicescript/core" {
         subscribe(next: (curr: T, reg: this) => AsyncVoid): Unsubscribe
     }
 
-    // TODO: maybe a better name, is this some kind of internal data structure?
-    export class Condition {
-        signal(): void
-        wait(): Promise<void>
-    }
-
     /**
      * Format string. Best use backtick templates instead.
      */

@@ -77,7 +77,6 @@ import {
     LocalBuildConfig,
     ResolvedBuildConfig,
     SystemReg,
-    SRV_DEVICE_SCRIPT_CONDITION,
     ProgramConfig,
 } from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
@@ -182,9 +181,6 @@ class Role extends Cell {
         return this.spec.packets.some(
             p => p.identifier == SystemReg.StreamingSamples
         )
-    }
-    isCondition() {
-        return this.spec.classIdentifier == SRV_DEVICE_SCRIPT_CONDITION
     }
     debugInfo(): RoleDebugInfo {
         return {
@@ -1517,7 +1513,6 @@ class Program implements TopOpWriter {
         if (!nm) nm = this.nodeName(expr)
         if (nm && nm.startsWith("#ds.")) {
             let r = this.serviceNameFromClassName(nm.slice(4))
-            if (r == "condition") r = "deviceScriptCondition"
             return this.lookupRoleSpec(expr, r)
         } else {
             if (optional) return null
