@@ -115,10 +115,10 @@ describe("join", () => {
             interval(50)
         )
         const unsub = await obs.subscribe(({ a, b }) =>
-            console.log(`a: ${a}, b: ${b}`)
+            console.log(`collect: a: ${a}, b: ${b}`)
         )
         await ds.sleep(100)
-        return unsub
+        unsub.unsubscribe()
     })
     test("collectTime", async () => {
         let obs = collectTime(
@@ -129,10 +129,10 @@ describe("join", () => {
             50
         )
         const unsub = await obs.subscribe(({ a, b }) =>
-            console.log(`a: ${a}, b: ${b}`)
+            console.log(`collecttime: a: ${a}, b: ${b}`)
         )
         await ds.sleep(100)
-        return unsub
+        unsub.unsubscribe()
     })
 })
 
@@ -262,7 +262,7 @@ describe("error", () => {
                 return from([5])
             })
         )
-        await ds.sleep(50)
+        await ds.sleep(100)
         await emits(obs, [5])
     })
 })
