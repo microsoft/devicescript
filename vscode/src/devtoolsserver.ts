@@ -4,6 +4,7 @@ import {
     delay,
     ERROR_TIMEOUT,
     ERROR_TRANSPORT_CLOSED,
+    Flags,
     groupBy,
     isCodeError,
     JDEventSource,
@@ -24,7 +25,6 @@ import type {
     SideSpecsReq,
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
-import { logo } from "./assets"
 import { sideRequest, tryConnectDevtools } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
@@ -411,7 +411,13 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     get boards() {
-        return Object.values(this.buildConfig?.boards)
+        let boards = Object.values(this.buildConfig?.boards || {})
+        if (!Flags.developerMode) boards = boards.filter(b => !!b.url)
+        return boards.sort((l, r) => {
+            let c = -(l.url ? 1 : 0) + (r.url ? 1 : 0)
+            if (c) return c
+            return l.devName.localeCompare(r.devName)
+        })
     }
 
     get srcFolder() {
