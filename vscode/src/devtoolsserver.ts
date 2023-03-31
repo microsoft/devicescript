@@ -108,7 +108,7 @@ export class DeveloperToolsManager extends JDEventSource {
         )
 
         this._buildOutputChannel = vscode.window.createOutputChannel(
-            "DeviceScript Compiler",
+            "DeviceScript - Compiler",
             "devicescript"
         )
         subscriptions.push(this._buildOutputChannel)
