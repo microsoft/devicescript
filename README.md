@@ -10,6 +10,11 @@ environments.
 
 ![Visual Studio Code screenshot](./vscode/screenshot.png)
 
+
+https://user-images.githubusercontent.com/4175913/228995546-df89dd80-2dce-48b7-8d38-a01a0825bac2.mp4
+
+https://microsoft.github.io/devicescript/videos/blinky.mp4
+
 ## Contributing
 
 Contributions are welcome! See [contributing page](./CONTRIBUTING.md).
