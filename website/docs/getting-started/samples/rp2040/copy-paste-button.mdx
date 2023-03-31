@@ -1,0 +1,40 @@
+---
+hide_table_of_contents: true
+---
+
+# Copy Paste Button
+
+```ts
+import { pins } from "@dsboard/pico"
+import {
+    startButton,
+    startHidKeyboard,
+    startLightBulb,
+} from "@devicescript/servers"
+import {
+    HidKeyboardAction,
+    HidKeyboardModifiers,
+    HidKeyboardSelector,
+} from "@devicescript/core"
+
+const button = startButton({
+    pin: pins.P14,
+})
+const led = startLightBulb({
+    pin: pins.P1,
+})
+const keyboard = startHidKeyboard({})
+let copy = true
+button.down.subscribe(async () => {
+    const selector = copy ? HidKeyboardSelector.C : HidKeyboardSelector.V
+    const brightness = copy ? 1 : 0
+    console.log(copy ? 'ctrl+c' : 'ctrl+v')
+    await keyboard.key(
+        selector,
+        HidKeyboardModifiers.LeftControl,
+        HidKeyboardAction.Press
+    )
+    await led.brightness.write(brightness)
+    copy = !copy
+})
+```
