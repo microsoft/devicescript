@@ -94,6 +94,11 @@ export class DeveloperToolsManager extends JDEventSource {
             this,
             subscriptions
         )
+        vscode.workspace.onDidOpenTextDocument(
+            this.handleOpenTextDocument,
+            this,
+            subscriptions
+        )
         subscriptions.push(this)
         subscriptions.push(
             vscode.commands.registerCommand(
@@ -626,6 +631,22 @@ export class DeveloperToolsManager extends JDEventSource {
         // TODO better than just stop everyhing
         if (ev.files.find(f => f.oldUri.path === pp))
             await this.build(undefined)
+    }
+
+    private async handleOpenTextDocument(e: vscode.TextDocument) {
+        if (
+            this.projectFolder ||
+            this._terminalPromise ||
+            e.languageId !== "typescript" ||
+            !/src\/main.*\.ts$/i.test(e.fileName) ||
+            !(await checkFileExists(
+                Utils.dirname(Utils.dirname(e.uri)),
+                "devsconfig.json"
+            ))
+        )
+            return
+
+        await this.start({ build: true })
     }
 
     private async handleCloseTerminal(t: vscode.Terminal) {
