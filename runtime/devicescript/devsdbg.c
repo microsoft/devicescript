@@ -505,7 +505,7 @@ static value_t value_from_tag_v0(devs_ctx_t *ctx, uint8_t tag, uint32_t v0) {
         return gcref_to_value(ctx, v0);
     }
 
-    LOG("unhandled: %x/%x", tag, v0);
+    LOG("unhandled: %x/%x", tag, (unsigned)v0);
     return devs_undefined;
 }
 
@@ -577,7 +577,7 @@ static void step_cmd(cmd_t *cmd) {
         devs_activation_t *frame = devs_value_to_gc_obj(ctx, stv);
 
         if (devs_gc_tag(frame) != DEVS_GC_TAG_ACTIVATION) {
-            DMESG("! step frame %x", args->stackframe);
+            DMESG("! step frame %x", (unsigned)args->stackframe);
             return;
         }
 

@@ -121,13 +121,13 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
                 return devs_string_sprintf(ctx, "[Static Obj: %d]",
                                            (int)hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST);
             else if (devs_handle_is_throw_jmp(hv)) {
-                return devs_string_sprintf(ctx, "[Throw: %x]", devs_handle_value(v));
+                return devs_string_sprintf(ctx, "[Throw: %x]", (unsigned)devs_handle_value(v));
             } else
                 JD_PANIC();
         }
         }
     case DEVS_HANDLE_TYPE_FIBER:
-        return devs_string_sprintf(ctx, "[Fiber: %x]", devs_handle_value(v));
+        return devs_string_sprintf(ctx, "[Fiber: %x]", (unsigned)devs_handle_value(v));
     case DEVS_HANDLE_TYPE_STATIC_FUNCTION:
         return devs_string_sprintf(ctx, "[Function: %s]",
                                    devs_img_fun_name(ctx->img, devs_handle_value(v)));
