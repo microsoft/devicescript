@@ -105,7 +105,6 @@ async function cloudPublish() {
 
     // some files bundle package.json - make sure they get the latest version
     await $`yarn build-fast`
-    await $`make vscode-pkg`
 
     await $`git add .`
     await $`git commit -m ${"[skip ci] release " + vCurrVer}`
@@ -121,15 +120,16 @@ async function cloudPublish() {
 
     for (const fn of allPkgPath) {
         const json = await fs.readJSON(fn)
-        if (json.private) continue
         for (const dep of Object.keys(versions)) {
             if (json.dependencies?.[dep] == "*")
                 json.dependencies[dep] = versions[dep]
         }
         await fs.writeJSON(fn, json, { spaces: 4 })
+        if (json.private) continue
         await $`cd ${dirname(fn)} && npm publish`
     }
 
+    await $`make vscode-pkg`
     await $`gh release create ${vCurrVer} vscode/devicescript.vsix`
 }
 
