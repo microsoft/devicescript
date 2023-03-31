@@ -1,11 +1,19 @@
 {
-    "name": "@devicescript/settings",
+    "name": "@devicescript/cloud",
     "version": "2.2.27",
     "private": false,
-    "dependencies": {},
+    "dependencies": {
+        "@devicescript/settings": "*",
+        "@devicescript/observables": "*"
+    },
     "devDependencies": {
         "@devicescript/cli": "*",
         "@devicescript/test": "*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "packages/cloud"
     },
     "scripts": {
         "setup": "devicescript build",
