@@ -30,10 +30,29 @@ function HomepageHeader() {
                     </div>
                 </div>
                 <div>
-                    <HeroImage />
+                    <video
+                        style={{
+                            borderRadius: "0.5rem",
+                            marginTop: "2rem",
+                            maxHeight: "70vh",
+                            maxWidth: "70vw",
+                        }}
+                        poster="/devicescript/videos/blinky.jpg"
+                        playsInline
+                        controls
+                        preload="metadata"
+                    >
+                        <source
+                            src="/devicescript/videos/blinky.webm"
+                            type="video/webm"
+                        />
+                        <source
+                            src="/devicescript/videos/blinky.mp4"
+                            type="video/mp4"
+                        />
+                    </video>
                 </div>
-                <div>
-                </div>
+                <div></div>
             </div>
         </header>
     )

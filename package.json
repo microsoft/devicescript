@@ -28,7 +28,8 @@
         "hwdocs": "node scripts/genhwsupport.mjs",
         "localboards2": "node ./cli/devicescript ctool --local-boards ../.. --fetch-boards compiler/src/boards.json",
         "localboards1": "node ./cli/devicescript ctool --local-boards .. --fetch-boards compiler/src/boards.json",
-        "package:vscode": "cd vscode && yarn package"
+        "package:vscode": "cd vscode && yarn package",
+        "processvideos": "node scripts/processvideos.mjs"
     },
     "workspaces": {
         "packages": [
