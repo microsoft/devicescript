@@ -8,7 +8,7 @@ environments.
 
 -   [Read the documentation](https://microsoft.github.io/devicescript)
 
-https://user-images.githubusercontent.com/4175913/228995546-df89dd80-2dce-48b7-8d38-a01a0825bac2.mp4
+https://user-images.githubusercontent.com/4175913/228997575-122d6ad0-f37e-4d4e-ab79-3d8f680ed99d.mp4
 
 ## Contributing
 
@@ -21,3 +21,6 @@ trademarks or logos is subject to and must follow
 [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
 Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
 Any use of third-party trademarks or logos are subject to those third-party's policies.
+
+
+
