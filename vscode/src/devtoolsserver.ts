@@ -739,7 +739,21 @@ export class DeveloperToolsManager extends JDEventSource {
         const cliBin = "./node_modules/.bin/devicescript"
         const cliInstalled = await checkFileExists(cwd, cliBin)
         if (!cliInstalled) {
-            showTerminalError("Install Node.JS dependencies to enable tools.")
+            showErrorMessage(
+                "terminal.notinstalled",
+                "Install Node.JS dependencies to enable tools.",
+                "Install"
+            ).then((res: string) => {
+                if (res === "Install") {
+                    const t = vscode.window.createTerminal({
+                        name: "Install Node.JS dependencies",
+                        cwd: cwd.fsPath,
+                        isTransient: true,
+                    })
+                    t.sendText("yarn install")
+                    t.show()
+                }
+            })
             return undefined
         }
 
