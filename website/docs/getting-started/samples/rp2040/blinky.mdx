@@ -1,6 +1,8 @@
 # Blinky
 
-The classic LED blinking program on a Raspberry Pi Pico. The LED is connected to the Pico's pin GP1 (2 on the silk)
+The classic LED blinking program on a [Raspberry Pi Pico](/devices/rp2040). The LED is connected to the Pico's pin GP1 (2 on the silk)
+
+-   **[4 minute blinky demo](/devicescript/videos/blinky.mp4)**
 
 ```ts
 import { pins } from "@dsboard/pico"
@@ -15,10 +17,10 @@ const led = startLightBulb({
 // start interval timer every 1000ms
 setInterval(async () => {
     // read current brightness
-    const brightness = await led.brigthness.read()
+    const brightness = await led.brightness.read()
     // toggle on/off
     const newbrightness = brightness > 0 ? 0 : 1
     // apply new brightness
-    await led.brigthness.write(newbrightness)
+    await led.brightness.write(newbrightness)
 }, 1000)
 ```

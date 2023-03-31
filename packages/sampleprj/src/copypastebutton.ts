@@ -1,22 +1,3 @@
----
-hide_table_of_contents: true
----
-
-# Copy Paste Button
-
-In this example, we use a single button to create a `copy-paste` micro-keyboard.
-
--   The button is connected to the Pico's GP14 pin. When the button is pressed, the Pico will send a `ctrl+c` or `ctrl+v` keystroke to the computer using a [HID keyboard](/api/servers/hidkeyboard) server.
-    The `ctrl+c` keystroke will copy the selected text, and the `ctrl+v` keystroke will paste the copied text.
--   The status of the clipboard is indicated by a status LED connected to the Pico's GP1 pin. When the LED is on, the clipboard is full, and when the LED is off, the clipboard is empty.
-
-:::note
-
-On MacOS, we use `LeftGUI`. To update for Windows, replace `LeftGuid` with `LeftControl`.
-
-:::
-
-```ts
 import { pins, board } from "@dsboard/pico"
 import {
     startButton,
@@ -44,8 +25,6 @@ const keyboard = startHidKeyboard({})
 let copy = true
 // use leftgui on mac or leftcontrol on windows
 let modifier = HidKeyboardModifiers.LeftGUI
-// uncomment for windows
-// let modifier = HidKeyboardModifiers.LeftControl
 
 // copy and paste on button click
 button.down.subscribe(async () => {
@@ -61,4 +40,3 @@ button.down.subscribe(async () => {
     // toggle for next round
     copy = !copy
 })
-```
