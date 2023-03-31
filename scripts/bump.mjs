@@ -126,7 +126,7 @@ async function cloudPublish() {
         }
         await fs.writeJSON(fn, json, { spaces: 4 })
         if (json.private) continue
-        await $`cd ${dirname(fn)} && npm publish`
+        await $`cd ${dirname(fn)} && yarn publish`
     }
 
     await $`make vscode-pkg`
