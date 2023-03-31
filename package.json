@@ -31,24 +31,19 @@
         "package:vscode": "cd vscode && yarn package",
         "processvideos": "node scripts/processvideos.mjs"
     },
-    "workspaces": {
-        "packages": [
-            "interop",
-            "compiler",
-            "cli",
-            "runtime/devicescript-vm",
-            "runtime/jacdac-c/jacdac",
-            "jacdac-ts",
-            "dap",
-            "plugin",
-            "vscode",
-            "vscode/sampleprj/packages/*",
-            "website"
-        ],
-        "nohoist": [
-            "@devicescript/plugin"
-        ]
-    },
+    "workspaces": [
+        "interop",
+        "compiler",
+        "cli",
+        "runtime/devicescript-vm",
+        "runtime/jacdac-c/jacdac",
+        "jacdac-ts",
+        "dap",
+        "plugin",
+        "vscode",
+        "vscode/sampleprj/packages/*",
+        "website"
+    ],
     "devDependencies": {
         "esbuild": "^0.17.11",
         "semver": "^7.3.8",

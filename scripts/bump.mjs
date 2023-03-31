@@ -10,7 +10,7 @@ function fail(msg) {
 }
 
 const mainPkgJson = await fs.readJSON("package.json")
-const workspaceGlob = mainPkgJson.workspaces.packages.filter(p => {
+const workspaceGlob = mainPkgJson.workspaces.filter(p => {
     const bn = p.replace(/.*\//, "")
     return bn != "jacdac-ts" && bn != "jacdac"
 })
@@ -126,7 +126,7 @@ async function cloudPublish() {
         }
         await fs.writeJSON(fn, json, { spaces: 4 })
         if (json.private) continue
-        await $`cd ${dirname(fn)} && yarn publish`
+        await $`cd ${dirname(fn)} && npm publish`
     }
 
     await $`make vscode-pkg`
