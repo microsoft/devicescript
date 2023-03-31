@@ -1,8 +1,8 @@
 .vscode/**/*
 src/**/*
 **/*.js.map
-node_modules
 sampleprj
 ..
 **/*.vsix
 webview-ui
+scripts

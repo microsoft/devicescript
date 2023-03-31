@@ -27,21 +27,27 @@
         "bump": "node scripts/bump.mjs",
         "hwdocs": "node scripts/genhwsupport.mjs",
         "localboards2": "node ./cli/devicescript ctool --local-boards ../.. --fetch-boards compiler/src/boards.json",
-        "localboards1": "node ./cli/devicescript ctool --local-boards .. --fetch-boards compiler/src/boards.json"
+        "localboards1": "node ./cli/devicescript ctool --local-boards .. --fetch-boards compiler/src/boards.json",
+        "package:vscode": "cd vscode && yarn package"
     },
-    "workspaces": [
-        "interop",
-        "compiler",
-        "cli",
-        "runtime/devicescript-vm",
-        "runtime/jacdac-c/jacdac",
-        "jacdac-ts",
-        "dap",
-        "plugin",
-        "vscode",
-        "vscode/sampleprj/packages/*",
-        "website"
-    ],
+    "workspaces": {
+        "packages": [
+            "interop",
+            "compiler",
+            "cli",
+            "runtime/devicescript-vm",
+            "runtime/jacdac-c/jacdac",
+            "jacdac-ts",
+            "dap",
+            "plugin",
+            "vscode",
+            "vscode/sampleprj/packages/*",
+            "website"
+        ],
+        "nohoist": [
+            "@devicescript/plugin"
+        ]
+    },
     "devDependencies": {
         "esbuild": "^0.17.11",
         "semver": "^7.3.8",
