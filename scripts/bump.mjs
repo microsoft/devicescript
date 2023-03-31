@@ -10,7 +10,7 @@ function fail(msg) {
 }
 
 const mainPkgJson = await fs.readJSON("package.json")
-const workspaceGlob = mainPkgJson.workspaces.filter(p => {
+const workspaceGlob = mainPkgJson.workspaces.packages.filter(p => {
     const bn = p.replace(/.*\//, "")
     return bn != "jacdac-ts" && bn != "jacdac"
 })
