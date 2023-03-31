@@ -20,6 +20,6 @@ The [service instance name](https://microsoft.github.io/jacdac-docs/services/_ba
 
 :::note
 
-This feature is only available on [specific boards](/devices/hw).
+This feature is only available on [specific boards](/devices/periphericals/hid).
 
 :::
