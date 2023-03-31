@@ -150,7 +150,8 @@
         },
         "typescriptServerPlugins": [
             {
-                "name": "@devicescript/plugin"
+                "name": "@devicescript/plugin",
+                "enableForWorkspaceTypeScriptVersions": true
             }
         ],
         "viewsContainers": {
