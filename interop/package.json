@@ -1,7 +1,7 @@
 {
     "name": "@devicescript/interop",
     "private": false,
-    "version": "2.2.22",
+    "version": "2.2.24",
     "description": "Interfaces for interaction with DeviceScript files",
     "keywords": [
         "devicescript",
