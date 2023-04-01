@@ -258,7 +258,11 @@ export class DeviceScriptExtensionState extends JDEventSource {
         )
     }
 
-    async showQuickPickBoard(title: string) {
+    async showQuickPickBoard(
+        title: string,
+        options?: { useUniqueDevice?: boolean }
+    ): Promise<DeviceConfig> {
+        const { useUniqueDevice } = options || {}
         const { boards } = this.devtools
 
         // find device on the board
@@ -280,6 +284,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 label: device.shortId,
                 detail: "connected",
             }))
+
+        if (deviceItems.length === 1 && useUniqueDevice)
+            return deviceItems[0].data.board
+
         const res = await vscode.window.showQuickPick(
             <TaggedQuickPickItem<{ board?: DeviceConfig }>[]>[
                 ...deviceItems,
@@ -329,7 +337,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
         let board = boards.find(b => b.id === boardimport)
         if (!board) {
             board = await this.showQuickPickBoard(
-                "What kind of device are you programming?"
+                "What kind of device are you programming?",
+                { useUniqueDevice: true }
             )
             if (!board) return
 
@@ -440,14 +449,15 @@ export class DeviceScriptExtensionState extends JDEventSource {
             )
         if (!board) {
             board = await this.showQuickPickBoard(
-                "What kind of device are you flashing?"
+                "What kind of device are you flashing?",
+                { useUniqueDevice: true }
             )
             if (!board) return
         }
 
         if (
             !(await showConfirmBox(
-                "The DeviceScript runtime will be flashed on your device. There is no undo. Confirm?"
+                `DeviceScript runtime will be flashed on your ${board.devName}. There is NO undo. Confirm?`
             ))
         )
             return
