@@ -8,15 +8,15 @@ import HeroImage from "@site/src/components/HeroImage"
 
 import styles from "./index.module.css"
 import StaticVideo from "../components/StaticVideo"
+const videoStyle: CSSProperties = {
+    borderRadius: "0.5rem",
+    marginTop: "2rem",
+    maxHeight: "60vh",
+    maxWidth: "60vw",
+}
 
 function HomepageHeader() {
     const { siteConfig } = useDocusaurusContext()
-    const videoStyle: CSSProperties = {
-        borderRadius: "0.5rem",
-        marginTop: "2rem",
-        maxHeight: "70vh",
-        maxWidth: "70vw",
-    }
     return (
         <header className={clsx("hero hero--primary", styles.heroBanner)}>
             <div className="container">
@@ -37,7 +37,7 @@ function HomepageHeader() {
                     </div>
                 </div>
                 <div>
-                    <StaticVideo name="blinky" style={videoStyle}/>
+                    <StaticVideo name="blinky" style={videoStyle} />
                 </div>
             </div>
         </header>
@@ -51,6 +51,22 @@ export default function Home(): JSX.Element {
             <HomepageHeader />
             <main>
                 <HomepageFeatures />
+                <header
+                    className={clsx("hero hero--primary", styles.heroBanner)}
+                >
+                    <div className="container">
+                        <h2 className="hero__title">Build Devices Fast</h2>
+                        <p className="hero__subtitle">
+                            Code, Debug, Upload, Inspect from Visual Studio Code.
+                        </p>
+                        <div>
+                            <StaticVideo
+                                name="copy-paste-button"
+                                style={videoStyle}
+                            />
+                        </div>
+                    </div>
+                </header>
             </main>
         </Layout>
     )
