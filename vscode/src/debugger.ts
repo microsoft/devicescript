@@ -261,7 +261,10 @@ export class DeviceScriptConfigurationProvider
         // expand device short name
         if (/^[A-Z][A-Z][0-9][0-9]$/i.test(dsConfig.deviceId)) {
             const shortIdDevice = this.bus
-                .devices({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER })
+                .devices({
+                    serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+                    lost: false,
+                })
                 .find(d => d.shortId === dsConfig.deviceId)
             if (shortIdDevice) dsConfig.deviceId = shortIdDevice.deviceId
         }

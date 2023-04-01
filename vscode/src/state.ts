@@ -115,7 +115,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
     get deviceScriptManager() {
         const id = this.state.get(STATE_CURRENT_DEVICE) as string
         const current = this.bus.device(id, true)
-        return current?.services({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER })[0]
+        const srv = current?.services({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })[0]
+        return srv?.disposed ? undefined : srv
     }
 
     get projectFolder() {
@@ -261,6 +264,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         // find device on the board
         const devices = this.bus.devices({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+            lost: false,
         })
         const deviceItems = devices
             .map(device => ({
@@ -673,6 +677,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         let did: string
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+            lost: false,
         })
         if (!services.length && autoStartSimulator) {
             did = simulatorScriptManagerId
