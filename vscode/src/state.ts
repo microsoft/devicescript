@@ -1,4 +1,8 @@
-import type { DeviceConfig, ServerInfoFile } from "@devicescript/interop"
+import type {
+    DeviceConfig,
+    ServerInfo,
+    ServerInfoFile,
+} from "@devicescript/interop"
 import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
 import {
     CHANGE,
@@ -377,10 +381,37 @@ export class DeviceScriptExtensionState extends JDEventSource {
             )) {
                 await this.addImport(editor, symName, modName)
             }
-            await editor.insertSnippet(
-                new vscode.SnippetString(server.entry.snippet)
-            )
+
+            await this.addStartServer(editor, server)
         }
+    }
+
+    // find first line that is not an import, comment or empty
+    private async addStartServer(
+        editor: vscode.TextEditor,
+        server: {
+            label: string
+            description: string
+            detail: string
+            entry: ServerInfo
+        }
+    ) {
+        const document = editor.document
+        let line: vscode.TextLine
+        let i = 0
+        for (let i = 0; i < document.lineCount; ++i) {
+            line = document.lineAt(i)
+            if (
+                !line.isEmptyOrWhitespace &&
+                !/^\s*(\/\/|import\s+)/m.test(line.text)
+            )
+                break
+        }
+        const position = line?.rangeIncludingLineBreak?.start
+        await editor.insertSnippet(
+            new vscode.SnippetString(server.entry.snippet),
+            position
+        )
     }
 
     async addImport(
