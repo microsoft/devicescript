@@ -1,10 +1,13 @@
 ---
 hide_table_of_contents: true
 ---
+import StaticVideo from "@site/src/components/StaticVideo"
 
 # Copy Paste Button
 
 In this example, we use a single button to create a `copy-paste` micro-keyboard.
+
+<StaticVideo name="copy-paste-button" />
 
 -   The button is connected to the Pico's GP14 pin. When the button is pressed, the Pico will send a `ctrl+c` or `ctrl+v` keystroke to the computer using a [HID keyboard](/api/servers/hidkeyboard) server.
     The `ctrl+c` keystroke will copy the selected text, and the `ctrl+v` keystroke will paste the copied text.
@@ -15,8 +18,6 @@ In this example, we use a single button to create a `copy-paste` micro-keyboard.
 On MacOS, we use `LeftGUI`. To update for Windows, replace `LeftGuid` with `LeftControl`.
 
 :::
-
-- **[step-by-step video](https://user-images.githubusercontent.com/4175913/229256072-e78bb4c7-d33d-4851-9568-af352a3bf778.mp4)**
 
 ```ts
 import { pins, board } from "@dsboard/pico"

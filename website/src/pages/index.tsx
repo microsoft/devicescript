@@ -1,4 +1,4 @@
-import React from "react"
+import React, { CSSProperties } from "react"
 import clsx from "clsx"
 import Link from "@docusaurus/Link"
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
@@ -7,9 +7,16 @@ import HomepageFeatures from "@site/src/components/HomepageFeatures"
 import HeroImage from "@site/src/components/HeroImage"
 
 import styles from "./index.module.css"
+import StaticVideo from "../components/StaticVideo"
 
 function HomepageHeader() {
     const { siteConfig } = useDocusaurusContext()
+    const videoStyle: CSSProperties = {
+        borderRadius: "0.5rem",
+        marginTop: "2rem",
+        maxHeight: "70vh",
+        maxWidth: "70vw",
+    }
     return (
         <header className={clsx("hero hero--primary", styles.heroBanner)}>
             <div className="container">
@@ -30,29 +37,8 @@ function HomepageHeader() {
                     </div>
                 </div>
                 <div>
-                    <video
-                        style={{
-                            borderRadius: "0.5rem",
-                            marginTop: "2rem",
-                            maxHeight: "70vh",
-                            maxWidth: "70vw",
-                        }}
-                        poster="/devicescript/videos/blinky.jpg"
-                        playsInline
-                        controls
-                        preload="metadata"
-                    >
-                        <source
-                            src="/devicescript/videos/blinky.webm"
-                            type="video/webm"
-                        />
-                        <source
-                            src="/devicescript/videos/blinky.mp4"
-                            type="video/mp4"
-                        />
-                    </video>
+                    <StaticVideo name="blinky" style={videoStyle}/>
                 </div>
-                <div></div>
             </div>
         </header>
     )
