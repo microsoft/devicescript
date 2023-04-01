@@ -264,8 +264,10 @@ export class JDomDeviceTreeItem extends JDomTreeItem {
 
         if (device.deviceId === this.props.state.simulatorScriptManagerId)
             this.contextValue = "simulator"
-        else if (device.hasService(SRV_DEVICE_SCRIPT_MANAGER))
+        else if (device.hasService(SRV_DEVICE_SCRIPT_MANAGER)) {
             this.contextValue += "_flash"
+            this.collapsibleState = vscode.TreeItemCollapsibleState.Expanded
+        }
     }
 
     static ICON = "circuit-board"
