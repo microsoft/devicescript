@@ -68,6 +68,7 @@ static inline void mark_block(devs_gc_t *gc, block_t *block, unsigned tag, unsig
     block->header = DEVS_GC_MK_TAG_WORDS(tag, size);
     if (tag == DEVS_GC_TAG_FREE) {
         JD_ASSERT(size >= 2);
+        LOG("fill %p %u", block->free.data, (size - 2) * sizeof(uintptr_t));
         memset(block->free.data, FREE_FILL, (size - 2) * sizeof(uintptr_t));
     }
     devs_gc_obj_check_core(gc, block);
@@ -402,7 +403,7 @@ void *jd_gc_any_try_alloc(devs_gc_t *gc, unsigned tag, uint32_t size) {
     if (!b)
         return NULL;
     memset(b->data, 0x00, size);
-    LOG("alloc: tag=%s sz=%d -> %p", devs_gc_tag_name(tag), size, b);
+    LOG("alloc: tag=%s sz=%d -> %p", devs_gc_tag_name(tag), (int)size, b);
     return b;
 }
 
@@ -436,6 +437,7 @@ void jd_gc_unpin(devs_gc_t *gc, void *ptr) {
 void jd_gc_free(devs_gc_t *gc, void *ptr) {
     if (ptr == NULL)
         return;
+    LOG("jd_gc_free %p", (uintptr_t *)ptr - 1);
     unpin(gc, ptr, DEVS_GC_TAG_FREE);
 }
 
