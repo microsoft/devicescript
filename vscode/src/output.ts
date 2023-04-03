@@ -1,10 +1,12 @@
 import { JSON5TryParse, parseJSON5 } from "@devicescript/interop"
 import {
+    CHANGE,
     Flags,
     FRAME_PROCESS,
     I2CCmd,
     I2CCmdPack,
     I2CStatus,
+    JDEventSource,
     JDFrameBuffer,
     Packet,
     PACKET_RECEIVE,
@@ -20,6 +22,7 @@ import { JSONtoCSV } from "./csv"
 import { writeFile } from "./fs"
 import { subSideEvent } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
+import { DataRecorder } from "./datarecorder"
 
 export function activateJacdacOutputChannel(state: DeviceScriptExtensionState) {
     const { context, bus } = state
@@ -117,9 +120,7 @@ export function activateDeviceScriptDataChannel(
     const { context } = state
     const { subscriptions } = context
     const channel = vscode.window.createOutputChannel("DeviceScript - Data")
-    let offsetMillis: number = 0
-    let lastMillis: number = undefined
-    let entries: { line: string }[] = undefined
+    const recorder = new DataRecorder()
 
     const parseLine = (line: string): { millis: number; json: any } => {
         const { millis, json } =
@@ -140,35 +141,16 @@ export function activateDeviceScriptDataChannel(
             .forEach(line => {
                 let { millis, json } = parseLine(line)
                 channel.appendLine(`${from}: ${line}`)
-                if (isNaN(millis) || json === undefined) {
+                if (!recorder.addEntry(millis, json)) {
                     channel.appendLine("  --> invalid format")
                     return
                 }
-
-                // no entries yet
-                if (!entries) entries = []
-                // device reset
-                if (millis < lastMillis) {
-                    offsetMillis += lastMillis
-                    lastMillis = millis
-                }
-
-                if (!Array.isArray(json)) json = [json]
-                json.forEach((entry: any) => {
-                    entries.push({
-                        time: (millis + offsetMillis) / 1000.0,
-                        ...entry,
-                    })
-                    if (entries.length > CONSOLE_DATA_MAX_ROWS) entries.shift()
-                })
             })
     })
 
     const clear = () => {
         channel.clear()
-        entries = undefined
-        lastMillis = undefined
-        offsetMillis = 0
+        recorder.clear()
     }
 
     vscode.debug.onDidStartDebugSession(clear, undefined, subscriptions)
@@ -191,7 +173,7 @@ export function activateDeviceScriptDataChannel(
         vscode.commands.registerCommand(
             "extension.devicescript.data.download",
             async () => {
-                const content = JSONtoCSV(entries)
+                const content = recorder.toCSV()
                 clear()
                 const { projectFolder } = state.devtools
                 if (!projectFolder)
