@@ -277,7 +277,7 @@ export class DeviceScriptConfigurationProvider
         const service = this.bus.device(dsConfig.deviceId, true)?.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })?.[dsConfig.serviceInstance || 0]
-        if (!service) {
+        if (!service || service.disposed) {
             showErrorMessage(
                 "debug.nodevicebyid",
                 `Debug cancelled\nCould not find device ${dsConfig.deviceId}.`

@@ -723,6 +723,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
         if (!services.length && autoStartSimulator) {
             did = simulatorScriptManagerId
             startVM = true
+        } else if (services.length === 1) {
+            did = services[0].device.deviceId
         } else {
             const detail = async (srv: JDService) => {
                 const runtimeVersion = await readRuntimeVersion(srv)
