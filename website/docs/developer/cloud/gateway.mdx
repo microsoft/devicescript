@@ -1,6 +1,6 @@
 ---
 title: Development Gateway
-sidebar_position: 15
+sidebar_position: 4
 ---
 
 # Development Gateway
@@ -38,6 +38,29 @@ The Development Gateway is built on top of a few Azure resources:
 -   [Storage](https://learn.microsoft.com/en-us/azure/storage/), blobs and tables to manage devices, scripts and telemetry
 -   [App Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview), to collect telemetry about the health of devices
 -   [Event Hub](https://learn.microsoft.com/en-us/azure/event-hubs/) to forward JSON messages from the device
+
+```mermaid
+stateDiagram-v2
+    dev: Device
+    ai: Azure Application Insights
+    hub: Azure Event Hub
+    kv: Azure Key Vault
+    wssk: Web Socket
+    openapi: Open API
+    web: Azure App Service
+    vscode: VS Code
+    storage: Azure Storage
+
+    dev --> wssk
+    web --> ai
+    web --> kv
+    wssk --> web
+    openapi --> web
+    web --> storage
+    web --> hub
+    vscode --> openapi
+
+```
 
 For development,
 

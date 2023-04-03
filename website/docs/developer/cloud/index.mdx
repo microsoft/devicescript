@@ -19,72 +19,13 @@ Add `@devicescript/cloud` in your project.
 npm install @devicescript/cloud
 ```
 
-## Monitoring
+## Usage
 
-You can collect usage telemetry of your DeviceScript using `trackEvent` or `trackMetric`
+-   [Application Telemetry](telemetry), track application usage and errors
+-   [Message queues](messages), upload and subscribe to message queues
 
-When connected to the gateway, the device is modelled as a user and the connection as a session.
-The data is injected directly
-in [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
-and can be analyzed through the Azure portal.
+## Development Gateway
 
-### Exceptions
+This package relies on a prototype Development Gateway that needs to be deployed prior to using it.
 
-The `trackException` method uploads an exception to Application Insights. The stacktrace information is expanded in the gateway.
-
-```ts
-import { trackException } from "@devicescript/cloud"
-
-// highlight-next-line
-try {
-    throw new Error("noes!")
-} catch (e) {
-    await trackException(e as Error)
-}
-```
-
-### Events
-
-The `trackEvent` method creates custom events in application insights. The event may be buffered or sampled
-to reduce the network load.
-
-```ts
-import { trackEvent } from "@devicescript/cloud"
-
-// highlight-next-line
-await trackEvent("started")
-```
-
-### Metrics
-
-The metric aggregates a numberical value and upload the aggregate when requested.
-
-```ts
-import { Temperature } from "@devicescript/core"
-import { createMetric } from "@devicescript/cloud"
-
-const thermo = new Temperature()
-// highlight-next-line
-const temp = createMetric("temp")
-// highlight-next-line
-thermo.temperature.subscribe(async t => temp.add(t))
-// highlight-next-line
-setInterval(async () => await temp.upload(), 30000)
-```
-
-## Upload Message
-
-DeviceScript will stringify and upload your object as a JSON payload. The gateway add this messages
-into an [Azure Event Hub](https://azure.microsoft.com/en-us/products/event-hubs/), additonal sinks can be configured online.
-
-```ts
-import { uploadMessage } from "@devicescript/cloud"
-
-await uploadMessage("topic", { msg: "hello" })
-```
-
-:::tip
-
-Keep those field names very short as the payload needs to be small (<236 bytes).
-
-:::
+-   [Development Gateway](gateway)

@@ -1,0 +1,59 @@
+---
+title: Telemetry
+sidebar_position: 2
+---
+
+# Application Telemetry
+
+You can collect usage telemetry of your DeviceScript using `trackEvent` or `trackMetric`
+
+When connected to the gateway, the device is modelled as a user and the connection as a session.
+The data is injected directly
+in [Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
+and can be analyzed through the Azure portal.
+
+### Exceptions
+
+The `trackException` method uploads an exception to Application Insights. The stacktrace information is expanded in the gateway.
+
+```ts
+import { trackException } from "@devicescript/cloud"
+
+try {
+    throw new Error("noes!")
+} catch (e) {
+    // highlight-next-line
+    await trackException(e as Error)
+}
+```
+
+### Events
+
+The `trackEvent` method creates custom events in application insights. The event may be buffered or sampled
+to reduce the network load.
+
+```ts
+import { trackEvent } from "@devicescript/cloud"
+
+// highlight-next-line
+await trackEvent("started")
+```
+
+### Metrics
+
+The metric aggregates a numberical value and upload the aggregate when requested.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { createMetric } from "@devicescript/cloud"
+
+const thermo = new Temperature()
+// highlight-next-line
+const temp = createMetric("temp")
+// highlight-next-line
+thermo.temperature.subscribe(async t => temp.add(t))
+setInterval(async () => {
+    // highlight-next-line
+    await temp.upload()
+}, 30000)
+```
