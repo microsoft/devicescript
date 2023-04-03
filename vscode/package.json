@@ -339,11 +339,11 @@
                 },
                 {
                     "command": "extension.devicescript.device.reset",
-                    "when": "view == extension.devicescript.jdom && viewItem =~ /(device|simulator)/"
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^(device|simulator)/"
                 },
                 {
                     "command": "extension.devicescript.device.identify",
-                    "when": "view == extension.devicescript.jdom && viewItem == /device/"
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^device/"
                 },
                 {
                     "command": "extension.devicescript.device.flash",
