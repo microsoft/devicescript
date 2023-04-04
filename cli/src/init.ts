@@ -203,7 +203,13 @@ const optionalFiles: FileSet = {
         tabWidth: 4,
     },
     ".vscode/extensions.json": {
-        recommendations: ["esbenp.prettier-vscode"],
+        recommendations: [
+            "esbenp.prettier-vscode",
+            "ms-toolsai.jupyter",
+            "ms-python.python",
+            "ms-python.vscode-pylance",
+            "mechatroner.rainbow-csv",
+        ],
     },
     ".vscode/launch.json": {
         version: "0.2.0",
