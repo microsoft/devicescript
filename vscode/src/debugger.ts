@@ -11,6 +11,14 @@ import { Utils } from "vscode-uri"
 import { checkFileExists } from "./fs"
 import { showErrorMessage } from "./telemetry"
 
+function startSimulatorsOnStart() {
+    const settings = vscode.workspace.getConfiguration("devicescript.debugger")
+    if (settings.get("showTerminalOnStart"))
+        vscode.commands.executeCommand("extension.devicescript.terminal.show")
+    if (settings.get("showSimulatorsOnStart"))
+        vscode.commands.executeCommand("extension.devicescript.openSimulators")
+}
+
 export function activateDebugger(extensionState: DeviceScriptExtensionState) {
     const { context } = extensionState
     const { subscriptions } = context
@@ -86,18 +94,6 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
     vscode.debug.onDidStartDebugSession(
         session => {
             if (session.type !== "devicescript") return
-
-            const settings = vscode.workspace.getConfiguration(
-                "devicescript.debugger"
-            )
-            if (settings.get("showTerminalOnStart"))
-                vscode.commands.executeCommand(
-                    "extension.devicescript.terminal.show"
-                )
-            if (settings.get("showSimulatorsOnStart"))
-                vscode.commands.executeCommand(
-                    "extension.devicescript.openSimulators"
-                )
 
             const config = session.configuration
             const dsConfig = config as StartArgs
@@ -318,6 +314,10 @@ export class DeviceScriptConfigurationProvider
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId
         )
+
+
+        // show UI
+        startSimulatorsOnStart()
 
         // run, no debug
         if (sessionConfig?.noDebug) {
