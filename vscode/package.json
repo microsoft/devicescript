@@ -169,6 +169,13 @@
             ]
         },
         "views": {
+            "debug": [
+                {
+                    "id": "extension.devicescript.dbgwatch",
+                    "name": "DeviceScript Watch",
+                    "when": "extension.devicescript.projectAvailable"
+                }
+            ],
             "devicescript": [
                 {
                     "id": "extension.devicescript.jdom",
@@ -191,6 +198,10 @@
             },
             {
                 "view": "extension.devicescript.watch",
+                "contents": "Select Registers or Events to watch."
+            },
+            {
+                "view": "extension.devicescript.dbgwatch",
                 "contents": "Select Registers or Events to watch."
             },
             {
@@ -269,24 +280,24 @@
             "editor/title": [
                 {
                     "command": "extension.devicescript.editor.build",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@1"
                 },
                 {
                     "command": "extension.devicescript.editor.configure",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@3"
                 }
             ],
             "editor/title/run": [
                 {
                     "command": "extension.devicescript.editor.debug",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation"
                 },
                 {
                     "command": "extension.devicescript.editor.run",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@2"
                 }
             ],
@@ -313,7 +324,7 @@
                 },
                 {
                     "command": "extension.devicescript.watch.clear",
-                    "when": "view == extension.devicescript.watch",
+                    "when": "view =~ /extension\\.devicescript\\.(dbg)?watch/",
                     "group": "navigation"
                 },
                 {

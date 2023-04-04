@@ -1541,8 +1541,12 @@ class JDomDeviceTreeDataProvider extends JDomTreeDataProvider {
 }
 
 class JDomWatchTreeDataProvider extends JDomTreeDataProvider {
-    constructor(state: DeviceScriptExtensionState, command: vscode.Command) {
-        super(state, command, "watch_")
+    constructor(
+        state: DeviceScriptExtensionState,
+        command: vscode.Command,
+        prefix: string
+    ) {
+        super(state, command, prefix)
         const unsub = this.state.subscribe(CHANGE, this.refresh.bind(this))
         this.on(DISPOSE, unsub)
     }
@@ -1603,22 +1607,48 @@ function activateTreeView(
 function activateWatchTreeView(extensionState: DeviceScriptExtensionState) {
     const { context, bus } = extensionState
     const { subscriptions } = context
-    const treeDataProvider = new JDomWatchTreeDataProvider(extensionState, {
-        title: "select node",
-        command: "extension.devicescript.node.select",
-    })
-    subscriptions.push(treeDataProvider)
+
+    const watchesTreeDataProvider = new JDomWatchTreeDataProvider(
+        extensionState,
+        {
+            title: "select node",
+            command: "extension.devicescript.node.select",
+        },
+        "watch_"
+    )
+    subscriptions.push(watchesTreeDataProvider)
     activateTreeView(
         extensionState,
         "extension.devicescript.watch",
-        treeDataProvider
+        watchesTreeDataProvider
     )
+
+    const debugWatchesTreeDataProvider = new JDomWatchTreeDataProvider(
+        extensionState,
+        {
+            title: "select node",
+            command: "extension.devicescript.node.select",
+        },
+        "dbgwatch_"
+    )
+    subscriptions.push(debugWatchesTreeDataProvider)
+    activateTreeView(
+        extensionState,
+        "extension.devicescript.dbgwatch",
+        debugWatchesTreeDataProvider
+    )
+
+    const refresh = () => {
+        watchesTreeDataProvider.refresh()
+        debugWatchesTreeDataProvider.refresh()
+    }
+
     subscriptions.push(
         vscode.commands.registerCommand(
             "extension.devicescript.watch.clear",
             async () => {
                 await extensionState.updateWatches([])
-                treeDataProvider.refresh()
+                refresh()
             }
         ),
         vscode.commands.registerCommand(
@@ -1635,7 +1665,7 @@ function activateWatchTreeView(extensionState: DeviceScriptExtensionState) {
                         <NodeWatch>{ id, label, icon },
                     ])
                     item.refresh()
-                    treeDataProvider.refresh()
+                    refresh()
                 }
             }
         ),
@@ -1650,7 +1680,7 @@ function activateWatchTreeView(extensionState: DeviceScriptExtensionState) {
                         watches.filter(w => w.id !== id)
                     )
                     item.refresh()
-                    treeDataProvider.refresh()
+                    refresh()
                 }
             }
         )

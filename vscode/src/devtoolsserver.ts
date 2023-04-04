@@ -125,6 +125,11 @@ export class DeveloperToolsManager extends JDEventSource {
             undefined,
             subscriptions
         )
+
+        // clean context
+        subscriptions.push({
+            dispose: () => this.clearContext(),
+        })
     }
 
     async refreshSpecs() {
@@ -440,6 +445,11 @@ export class DeveloperToolsManager extends JDEventSource {
             if (this._projectFolder) await this.kill()
             this._projectFolder = folder
             await this.saveProjectFolder()
+            vscode.commands.executeCommand(
+                "setContext",
+                "extension.devicescript.projectAvailable",
+                !!folder
+            )
             this.emit(CHANGE)
         }
     }
@@ -509,7 +519,8 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     private async createTerminal(): Promise<vscode.Terminal> {
-        if (!this._projectFolder) this._projectFolder = await this.pickProject()
+        if (!this._projectFolder)
+            await this.setProjectFolder(await this.pickProject())
         if (!this._projectFolder) {
             this.clear()
             return undefined
@@ -681,6 +692,7 @@ export class DeveloperToolsManager extends JDEventSource {
     private clear() {
         this._terminalPromise = undefined
         this._projectFolder = undefined
+        this.clearProjectContext()
         this._versions = undefined
         this._watcher?.dispose()
         this._watcher = undefined
@@ -689,6 +701,23 @@ export class DeveloperToolsManager extends JDEventSource {
         this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
         this.emit(CHANGE)
+    }
+
+    private clearContext() {
+        vscode.commands.executeCommand(
+            "setContext",
+            "extension.devicescript.supportedFolders",
+            undefined
+        )
+        this.clearProjectContext()
+    }
+
+    private clearProjectContext() {
+        vscode.commands.executeCommand(
+            "setContext",
+            "extension.devicescript.projectAvailable",
+            undefined
+        )
     }
 
     async findProjects() {
@@ -703,7 +732,7 @@ export class DeveloperToolsManager extends JDEventSource {
 
         vscode.commands.executeCommand(
             "setContext",
-            "devicescript.supportedFolders",
+            "extension.devicescript.supportedFolders",
             projectUris.map(p => Utils.joinPath(p, "src").fsPath)
         )
 
