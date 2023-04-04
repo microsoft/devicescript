@@ -1,12 +1,10 @@
-import { JSON5TryParse, parseJSON5 } from "@devicescript/interop"
+import { JSON5TryParse } from "@devicescript/interop"
 import {
-    CHANGE,
     Flags,
     FRAME_PROCESS,
     I2CCmd,
     I2CCmdPack,
     I2CStatus,
-    JDEventSource,
     JDFrameBuffer,
     Packet,
     PACKET_RECEIVE,
@@ -17,9 +15,7 @@ import {
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 import type { SideOutputEvent } from "../../cli/src/sideprotocol"
-import { CONSOLE_DATA_MAX_ROWS } from "./constants"
-import { JSONtoCSV } from "./csv"
-import { writeFile } from "./fs"
+import { readFileText, writeFile } from "./fs"
 import { subSideEvent } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { DataRecorder } from "./datarecorder"
@@ -118,7 +114,7 @@ export function activateDeviceScriptDataChannel(
     state: DeviceScriptExtensionState
 ) {
     const { context } = state
-    const { subscriptions } = context
+    const { subscriptions, extensionUri } = context
     const channel = vscode.window.createOutputChannel("DeviceScript - Data")
     const recorder = new DataRecorder()
 
@@ -182,13 +178,31 @@ export function activateDeviceScriptDataChannel(
                         language: "json",
                     })
                 else {
+                    const folder = "data"
                     await vscode.workspace.fs.createDirectory(
-                        Utils.joinPath(projectFolder, "data")
+                        Utils.joinPath(projectFolder, folder)
                     )
-                    const fileName = `data/${formatSortableHumanReadableDate(
+                    const fileName = `${formatSortableHumanReadableDate(
                         new Date()
-                    )}.csv`
-                    await writeFile(projectFolder, fileName, content)
+                    )}`
+                    await writeFile(
+                        projectFolder,
+                        `${folder}/${fileName}.csv`,
+                        content
+                    )
+                    const notebook = (
+                        await readFileText(extensionUri, "notebooks/data.ipynb")
+                    ).replace("$FILENAME_CSV$", fileName)
+                    const notebookFile = await writeFile(
+                        projectFolder,
+                        `${folder}/${fileName}.ipynb`,
+                        notebook
+                    )
+                    await vscode.commands.executeCommand(
+                        "vscode.openWith",
+                        notebookFile,
+                        "jupyter-notebook"
+                    )
                 }
             }
         )

@@ -16,14 +16,16 @@ export async function checkFileExists(
 export async function writeFile(
     folder: vscode.Uri,
     fileName: string,
-    fileContent: string
-): Promise<void> {
+    fileContent: string,
+    options?: { open?: boolean }
+): Promise<vscode.Uri> {
     const file = vscode.Uri.joinPath(folder, fileName)
     await vscode.workspace.fs.writeFile(
         file,
         new TextEncoder().encode(fileContent)
     )
-    await openFileEditor(folder, fileName)
+    if (options?.open) await openFileEditor(folder, fileName)
+    return file
 }
 
 export async function openFileEditor(folder: vscode.Uri, fileName: string) {

@@ -555,7 +555,7 @@
             },
             {
                 "command": "extension.devicescript.data.download",
-                "title": "Download console.data to JSON",
+                "title": "Download console.data to CSV/Notebook",
                 "category": "DeviceScript",
                 "icon": "$(graph-line)"
             },

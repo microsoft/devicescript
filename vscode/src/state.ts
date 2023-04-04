@@ -258,7 +258,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
         await writeFile(
             this.devtools.projectFolder,
             `./boards/${normalize(board)}.json`,
-            content
+            content,
+            { open: true }
         )
     }
 
