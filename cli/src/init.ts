@@ -206,6 +206,7 @@ const optionalFiles: FileSet = {
         recommendations: [
             "esbenp.prettier-vscode",
             "ms-toolsai.jupyter",
+            "ms-toolsai.jupyter-renderers",
             "ms-python.python",
             "ms-python.vscode-pylance",
             "mechatroner.rainbow-csv",
