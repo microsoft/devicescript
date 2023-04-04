@@ -20,7 +20,9 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
         s = o.subscribe(v => {
             values.push(v)
         })
-        await ds.sleep(10)
+        let retry = 0
+        while(values.length !== sequence.length && retry++ < 10)
+            await ds.sleep(10)
         expect(values.length).toBe(sequence.length)
         for (let i = 0; i < values.length; ++i) {
             expect(values[i]).toBe(sequence[i])
