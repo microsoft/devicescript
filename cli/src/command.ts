@@ -1,4 +1,4 @@
-import { LoggerPriority } from "jacdac-ts"
+import { Flags, LoggerPriority } from "jacdac-ts"
 
 export const GENDIR = ".devicescript"
 export const LIBDIR = `${GENDIR}/lib`
@@ -25,6 +25,10 @@ export let consoleColors = true
 
 export function setConsoleColors(enabled: boolean) {
     consoleColors = !!enabled
+}
+
+export function setDeveloperMode(enabled: boolean) {
+    Flags.developerMode = !!enabled
 }
 
 // https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit

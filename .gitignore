@@ -16,5 +16,5 @@ devs/lib/devicescript-boards.d.ts
 .devicescript
 **/*.vsix
 .vscode/settings.json
-vscode/sampleprj/.vscode
+packages/.vscode
 __pycache__

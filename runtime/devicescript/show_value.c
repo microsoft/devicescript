@@ -179,7 +179,7 @@ const char *devs_show_value(devs_ctx_t *ctx, value_t v) {
     }
     if (closure != NULL) {
         uint32_t clo = devs_handle_value(devs_value_from_gc_obj(ctx, closure));
-        jd_sprintf(buf + off, sizeof(buf) - off, "%x", clo);
+        jd_sprintf(buf + off, sizeof(buf) - off, "%x", (unsigned)clo);
         off = strlen(buf);
         buf[off++] = '@';
     }

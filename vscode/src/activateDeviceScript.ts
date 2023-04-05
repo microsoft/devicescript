@@ -13,6 +13,7 @@ import {
 } from "./output"
 import { DeviceScriptExtensionState } from "./state"
 import { activateTelemetry } from "./telemetry"
+import { JDDevice } from "jacdac-ts"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions } = context
@@ -105,8 +106,10 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.device.flash",
-            (device?: JDomDeviceTreeItem) =>
-                device ? device.flash() : extensionState.flashFirmware()
+            (device?: JDomDeviceTreeItem | JDDevice) =>
+                device instanceof JDomDeviceTreeItem
+                    ? device.flash()
+                    : extensionState.flashFirmware(device)
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.connect",

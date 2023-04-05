@@ -1,0 +1,67 @@
+---
+hide_table_of_contents: true
+---
+import StaticVideo from "@site/src/components/StaticVideo"
+
+# Copy Paste Button
+
+In this example, we use a single button to create a `copy-paste` micro-keyboard.
+
+<StaticVideo name="copy-paste-button" />
+
+-   The button is connected to the Pico's GP14 pin. When the button is pressed, the Pico will send a `ctrl+c` or `ctrl+v` keystroke to the computer using a [HID keyboard](/api/servers/hidkeyboard) server.
+    The `ctrl+c` keystroke will copy the selected text, and the `ctrl+v` keystroke will paste the copied text.
+-   The status of the clipboard is indicated by a status LED connected to the Pico's GP1 pin. When the LED is on, the clipboard is full, and when the LED is off, the clipboard is empty.
+
+:::note
+
+On MacOS, we use `LeftGUI`. To update for Windows, replace `LeftGuid` with `LeftControl`.
+
+:::
+
+```ts
+import { pins, board } from "@dsboard/pico"
+import {
+    startButton,
+    startHidKeyboard,
+    startLightBulb,
+} from "@devicescript/servers"
+import {
+    HidKeyboardAction,
+    HidKeyboardModifiers,
+    HidKeyboardSelector,
+} from "@devicescript/core"
+
+// the keyboard button mounted on GP14
+const button = startButton({
+    pin: pins.P14,
+})
+// a status indicator led mounted on GP1
+const led = startLightBulb({
+    pin: pins.P1,
+})
+// the HID keyboard driver that will send keystrokes
+const keyboard = startHidKeyboard({})
+
+// true: ctrl+c, false: ctrl+v
+let copy = true
+// use leftgui on mac or leftcontrol on windows
+let modifier = HidKeyboardModifiers.LeftGUI
+// uncomment for windows
+// let modifier = HidKeyboardModifiers.LeftControl
+
+// copy and paste on button click
+button.down.subscribe(async () => {
+    // when copy is true, send ctrl+c
+    const selector = copy ? HidKeyboardSelector.C : HidKeyboardSelector.V
+    // when copy is true, turn on the led to represent a "full clipboard"
+    const brightness = copy ? 1 : 0
+
+    // a bit of logging
+    console.log(copy ? "ctrl+c" : "ctrl+v")
+    await keyboard.key(selector, modifier, HidKeyboardAction.Press)
+    await led.brightness.write(brightness)
+    // toggle for next round
+    copy = !copy
+})
+```

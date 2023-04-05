@@ -11,6 +11,14 @@ import { Utils } from "vscode-uri"
 import { checkFileExists } from "./fs"
 import { showErrorMessage } from "./telemetry"
 
+function startSimulatorsOnStart() {
+    const settings = vscode.workspace.getConfiguration("devicescript.debugger")
+    if (settings.get("showTerminalOnStart"))
+        vscode.commands.executeCommand("extension.devicescript.terminal.show")
+    if (settings.get("showSimulatorsOnStart"))
+        vscode.commands.executeCommand("extension.devicescript.openSimulators")
+}
+
 export function activateDebugger(extensionState: DeviceScriptExtensionState) {
     const { context } = extensionState
     const { subscriptions } = context
@@ -86,18 +94,6 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
     vscode.debug.onDidStartDebugSession(
         session => {
             if (session.type !== "devicescript") return
-
-            const settings = vscode.workspace.getConfiguration(
-                "devicescript.debugger"
-            )
-            if (settings.get("showTerminalOnStart"))
-                vscode.commands.executeCommand(
-                    "extension.devicescript.terminal.show"
-                )
-            if (settings.get("showSimulatorsOnStart"))
-                vscode.commands.executeCommand(
-                    "extension.devicescript.openSimulators"
-                )
 
             const config = session.configuration
             const dsConfig = config as StartArgs
@@ -261,7 +257,10 @@ export class DeviceScriptConfigurationProvider
         // expand device short name
         if (/^[A-Z][A-Z][0-9][0-9]$/i.test(dsConfig.deviceId)) {
             const shortIdDevice = this.bus
-                .devices({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER })
+                .devices({
+                    serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+                    lost: false,
+                })
                 .find(d => d.shortId === dsConfig.deviceId)
             if (shortIdDevice) dsConfig.deviceId = shortIdDevice.deviceId
         }
@@ -274,7 +273,7 @@ export class DeviceScriptConfigurationProvider
         const service = this.bus.device(dsConfig.deviceId, true)?.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })?.[dsConfig.serviceInstance || 0]
-        if (!service) {
+        if (!service || service.disposed) {
             showErrorMessage(
                 "debug.nodevicebyid",
                 `Debug cancelled\nCould not find device ${dsConfig.deviceId}.`
@@ -315,6 +314,10 @@ export class DeviceScriptConfigurationProvider
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId
         )
+
+
+        // show UI
+        startSimulatorsOnStart()
 
         // run, no debug
         if (sessionConfig?.noDebug) {

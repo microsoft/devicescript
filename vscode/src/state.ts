@@ -1,4 +1,8 @@
-import type { DeviceConfig, ServerInfoFile } from "@devicescript/interop"
+import type {
+    DeviceConfig,
+    ServerInfo,
+    ServerInfoFile,
+} from "@devicescript/interop"
 import { normalizeDeviceConfig, parseAnyInt } from "@devicescript/interop"
 import {
     CHANGE,
@@ -115,7 +119,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
     get deviceScriptManager() {
         const id = this.state.get(STATE_CURRENT_DEVICE) as string
         const current = this.bus.device(id, true)
-        return current?.services({ serviceClass: SRV_DEVICE_SCRIPT_MANAGER })[0]
+        const srv = current?.services({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })[0]
+        return srv?.disposed ? undefined : srv
     }
 
     get projectFolder() {
@@ -251,16 +258,22 @@ export class DeviceScriptExtensionState extends JDEventSource {
         await writeFile(
             this.devtools.projectFolder,
             `./boards/${normalize(board)}.json`,
-            content
+            content,
+            { open: true }
         )
     }
 
-    async showQuickPickBoard(title: string) {
+    async showQuickPickBoard(
+        title: string,
+        options?: { useUniqueDevice?: boolean }
+    ): Promise<DeviceConfig> {
+        const { useUniqueDevice } = options || {}
         const { boards } = this.devtools
 
         // find device on the board
         const devices = this.bus.devices({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+            lost: false,
         })
         const deviceItems = devices
             .map(device => ({
@@ -276,6 +289,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 label: device.shortId,
                 detail: "connected",
             }))
+
+        if (deviceItems.length === 1 && useUniqueDevice)
+            return deviceItems[0].data.board
+
         const res = await vscode.window.showQuickPick(
             <TaggedQuickPickItem<{ board?: DeviceConfig }>[]>[
                 ...deviceItems,
@@ -325,7 +342,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
         let board = boards.find(b => b.id === boardimport)
         if (!board) {
             board = await this.showQuickPickBoard(
-                "What kind of device are you programming?"
+                "What kind of device are you programming?",
+                { useUniqueDevice: true }
             )
             if (!board) return
 
@@ -364,10 +382,37 @@ export class DeviceScriptExtensionState extends JDEventSource {
             )) {
                 await this.addImport(editor, symName, modName)
             }
-            await editor.insertSnippet(
-                new vscode.SnippetString(server.entry.snippet)
-            )
+
+            await this.addStartServer(editor, server)
         }
+    }
+
+    // find first line that is not an import, comment or empty
+    private async addStartServer(
+        editor: vscode.TextEditor,
+        server: {
+            label: string
+            description: string
+            detail: string
+            entry: ServerInfo
+        }
+    ) {
+        const document = editor.document
+        let line: vscode.TextLine
+        let i = 0
+        for (let i = 0; i < document.lineCount; ++i) {
+            line = document.lineAt(i)
+            if (
+                !line.isEmptyOrWhitespace &&
+                !/^\s*(\/\/|import\s+)/m.test(line.text)
+            )
+                break
+        }
+        const position = line?.rangeIncludingLineBreak?.start
+        await editor.insertSnippet(
+            new vscode.SnippetString(server.entry.snippet),
+            position
+        )
     }
 
     async addImport(
@@ -436,14 +481,15 @@ export class DeviceScriptExtensionState extends JDEventSource {
             )
         if (!board) {
             board = await this.showQuickPickBoard(
-                "What kind of device are you flashing?"
+                "What kind of device are you flashing?",
+                { useUniqueDevice: true }
             )
             if (!board) return
         }
 
         if (
             !(await showConfirmBox(
-                "The DeviceScript runtime will be flashed on your device. There is no undo. Confirm?"
+                `DeviceScript runtime will be flashed on your ${board.devName}. There is NO undo. Confirm?`
             ))
         )
             return
@@ -673,10 +719,13 @@ export class DeviceScriptExtensionState extends JDEventSource {
         let did: string
         const services = this.bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+            lost: false,
         })
         if (!services.length && autoStartSimulator) {
             did = simulatorScriptManagerId
             startVM = true
+        } else if (services.length === 1) {
+            did = services[0].device.deviceId
         } else {
             const detail = async (srv: JDService) => {
                 const runtimeVersion = await readRuntimeVersion(srv)

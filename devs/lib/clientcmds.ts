@@ -2,6 +2,16 @@ import * as ds from "@devicescript/core"
 
 declare var ds_impl: typeof ds
 
+declare module "@devicescript/core" {
+    /**
+     * Wait for specified number of milliseconds.
+     * @alias sleep
+     */
+    function delay(ms: number): Promise<void>
+}
+
+ds_impl.delay = ds.sleep
+
 function addElement<T>(arr: T[], e: T) {
     if (!arr) return [e]
     arr.push(e)
@@ -38,6 +48,22 @@ ds.Led.prototype.setAll = async function (r, g, b) {
         idx = idx + 3
     }
     await this.pixels.write(buf)
+}
+
+declare module "@devicescript/core" {
+    interface LightBulb {
+        /**
+         * Toggle light between off and full brightness
+         * @param lowerThreshold if specified, the light will be turned off if the current brightness is above this threshold
+         */
+        toggle(lowerThreshold?: number): Promise<void>
+    }
+}
+
+ds.LightBulb.prototype.toggle = async function (lowerThreshold?: number) {
+    const value = await this.brightness.read()
+    const on = value > (lowerThreshold || 0)
+    await this.brightness.write(on ? 0 : 1)
 }
 
 class ClientRegister<T> implements ds.ClientRegister<T> {

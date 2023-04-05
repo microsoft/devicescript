@@ -1,29 +1,25 @@
 ---
-sidebar_position: 4
+sidebar_position: 3
 ---
 
 # Register read
 
-You can retreive the current value of a register by calling `read`.
-Internally, the client will handle all the necessary syncronization and communication with the sensor.
-
-## read
-
-```ts skip no-run
-const pressure = await sensor.pressure.read()
-```
-
-Let's modify the snippet by `reading` the `pressure` reading
-and logging it to the console.
+The `sensor` client exposes `pressure` register object.
+We can read the register value to retreive the air pressure
+sensor last reading. As mentionned in the Jacdac docs,
+the reading is in `hPa` and should be around 1000.
 
 ## subscribe
 
-```ts skip
+```ts edit
+const sensor = new ds.AirPressure()
 // highlight-next-line
 sensor.pressure.subscribe(async pressure => {
-    console.log(pressure)
+    console.data({ pressure })
 })
 ```
+
+To apply filtering or thresholding on the changes, see [observables](/developer/observables).
 
 ## unsubscribe
 
@@ -31,9 +27,21 @@ The `subscribe` method returns an `unsubscribe` callback.
 
 ```ts edit
 const sensor = new ds.AirPressure()
-// highlight-next-line
-const unsubscribe = sensor.pressure.subscribe(async t => console.log(t))
+const unsubscribe = sensor.pressure
+    .subscribe(async pressure => console.data({ pressure }))
 
+// cleanup
 // highlight-next-line
 unsubscribe()
+```
+
+## read
+
+You can also read the sensor data using the `read` function.
+
+```ts
+const sensor = new ds.AirPressure()
+
+// highlight-next-line
+const pressure = await sensor.pressure.read()
 ```

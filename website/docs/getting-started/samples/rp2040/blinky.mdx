@@ -1,0 +1,29 @@
+import StaticVideo from "@site/src/components/StaticVideo"
+
+# Blinky
+
+The classic LED blinking program on a [Raspberry Pi Pico](/devices/rp2040). The LED is connected to the Pico's pin GP1 (2 on the silk)
+
+<StaticVideo name="blinky" />
+
+
+```ts
+import { pins } from "@dsboard/pico"
+import { startLightBulb } from "@devicescript/servers"
+
+// start a lightbulb server on pin GP1
+// and store client in `led` variable
+const led = startLightBulb({
+    pin: pins.P1,
+})
+
+// start interval timer every 1000ms
+setInterval(async () => {
+    // read current brightness
+    const brightness = await led.brightness.read()
+    // toggle on/off
+    const newbrightness = brightness > 0 ? 0 : 1
+    // apply new brightness
+    await led.brightness.write(newbrightness)
+}, 1000)
+```

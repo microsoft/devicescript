@@ -757,4 +757,4 @@ static value_t expr2_lt(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_bool(af < bf);
 }
 
-const void *devs_vm_op_handlers[DEVS_OP_PAST_LAST + 1] = {DEVS_OP_HANDLERS};
+const void * const devs_vm_op_handlers[DEVS_OP_PAST_LAST + 1] = {DEVS_OP_HANDLERS};

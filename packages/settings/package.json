@@ -1,0 +1,41 @@
+{
+    "name": "@devicescript/settings",
+    "version": "2.3.4",
+    "private": false,
+    "dependencies": {},
+    "devDependencies": {
+        "@devicescript/cli": "*",
+        "@devicescript/test": "*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "packages/settings"
+    },
+    "scripts": {
+        "setup": "devicescript build",
+        "build:devicescript": "devicescript build src/main.ts",
+        "build": "yarn build:devicescript",
+        "watch:devicescript": "devicescript devtools src/main.ts",
+        "watch": "yarn watch:devicescript",
+        "test:devicescript": "devicescript run src/main.ts --test --test-self-exit",
+        "test": "yarn test:devicescript",
+        "start": "yarn watch"
+    },
+    "main": "./src/index.ts",
+    "license": "MIT",
+    "devicescript": {
+        "library": true
+    },
+    "files": [
+        "src/*.ts",
+        "devsconfig.json"
+    ],
+    "keywords": [
+        "devicescript"
+    ],
+    "author": "Microsoft",
+    "publishConfig": {
+        "access": "public"
+    }
+}

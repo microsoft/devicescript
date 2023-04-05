@@ -4,6 +4,7 @@ import {
     delay,
     ERROR_TIMEOUT,
     ERROR_TRANSPORT_CLOSED,
+    Flags,
     groupBy,
     isCodeError,
     JDEventSource,
@@ -24,7 +25,6 @@ import type {
     SideSpecsReq,
     SideSpecsResp,
 } from "../../cli/src/sideprotocol"
-import { logo } from "./assets"
 import { sideRequest, tryConnectDevtools } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { Utils } from "vscode-uri"
@@ -94,6 +94,11 @@ export class DeveloperToolsManager extends JDEventSource {
             this,
             subscriptions
         )
+        vscode.workspace.onDidOpenTextDocument(
+            this.handleOpenTextDocument,
+            this,
+            subscriptions
+        )
         subscriptions.push(this)
         subscriptions.push(
             vscode.commands.registerCommand(
@@ -103,7 +108,7 @@ export class DeveloperToolsManager extends JDEventSource {
         )
 
         this._buildOutputChannel = vscode.window.createOutputChannel(
-            "DeviceScript Compiler",
+            "DeviceScript - Compiler",
             "devicescript"
         )
         subscriptions.push(this._buildOutputChannel)
@@ -120,6 +125,11 @@ export class DeveloperToolsManager extends JDEventSource {
             undefined,
             subscriptions
         )
+
+        // clean context
+        subscriptions.push({
+            dispose: () => this.clearContext(),
+        })
     }
 
     async refreshSpecs() {
@@ -411,7 +421,13 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     get boards() {
-        return Object.values(this.buildConfig?.boards)
+        let boards = Object.values(this.buildConfig?.boards || {})
+        if (!Flags.developerMode) boards = boards.filter(b => !!b.url)
+        return boards.sort((l, r) => {
+            let c = -(l.url ? 1 : 0) + (r.url ? 1 : 0)
+            if (c) return c
+            return l.devName.localeCompare(r.devName)
+        })
     }
 
     get srcFolder() {
@@ -429,6 +445,11 @@ export class DeveloperToolsManager extends JDEventSource {
             if (this._projectFolder) await this.kill()
             this._projectFolder = folder
             await this.saveProjectFolder()
+            vscode.commands.executeCommand(
+                "setContext",
+                "extension.devicescript.projectAvailable",
+                !!folder
+            )
             this.emit(CHANGE)
         }
     }
@@ -498,7 +519,8 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     private async createTerminal(): Promise<vscode.Terminal> {
-        if (!this._projectFolder) this._projectFolder = await this.pickProject()
+        if (!this._projectFolder)
+            await this.setProjectFolder(await this.pickProject())
         if (!this._projectFolder) {
             this.clear()
             return undefined
@@ -622,6 +644,22 @@ export class DeveloperToolsManager extends JDEventSource {
             await this.build(undefined)
     }
 
+    private async handleOpenTextDocument(e: vscode.TextDocument) {
+        if (
+            this.projectFolder ||
+            this._terminalPromise ||
+            e.languageId !== "typescript" ||
+            !/src\/main.*\.ts$/i.test(e.fileName) ||
+            !(await checkFileExists(
+                Utils.dirname(Utils.dirname(e.uri)),
+                "devsconfig.json"
+            ))
+        )
+            return
+
+        await this.start({ build: true })
+    }
+
     private async handleCloseTerminal(t: vscode.Terminal) {
         if (this._terminalPromise && t === (await this._terminalPromise)) {
             this.clear()
@@ -654,6 +692,7 @@ export class DeveloperToolsManager extends JDEventSource {
     private clear() {
         this._terminalPromise = undefined
         this._projectFolder = undefined
+        this.clearProjectContext()
         this._versions = undefined
         this._watcher?.dispose()
         this._watcher = undefined
@@ -662,6 +701,23 @@ export class DeveloperToolsManager extends JDEventSource {
         this.updateBuildConfig(undefined) // TODOD
         this.connectionState = ConnectionState.Disconnected
         this.emit(CHANGE)
+    }
+
+    private clearContext() {
+        vscode.commands.executeCommand(
+            "setContext",
+            "extension.devicescript.supportedFolders",
+            undefined
+        )
+        this.clearProjectContext()
+    }
+
+    private clearProjectContext() {
+        vscode.commands.executeCommand(
+            "setContext",
+            "extension.devicescript.projectAvailable",
+            undefined
+        )
     }
 
     async findProjects() {
@@ -676,7 +732,7 @@ export class DeveloperToolsManager extends JDEventSource {
 
         vscode.commands.executeCommand(
             "setContext",
-            "devicescript.supportedFolders",
+            "extension.devicescript.supportedFolders",
             projectUris.map(p => Utils.joinPath(p, "src").fsPath)
         )
 
@@ -694,6 +750,7 @@ export class DeveloperToolsManager extends JDEventSource {
         progress: string
         useShell?: boolean
         diagnostics?: boolean
+        developerMode?: boolean
         message?: string
         args: string[]
     }): Promise<vscode.Terminal> {
@@ -711,7 +768,21 @@ export class DeveloperToolsManager extends JDEventSource {
         const cliBin = "./node_modules/.bin/devicescript"
         const cliInstalled = await checkFileExists(cwd, cliBin)
         if (!cliInstalled) {
-            showTerminalError("Install Node.JS dependencies to enable tools.")
+            showErrorMessage(
+                "terminal.notinstalled",
+                "Install Node.JS dependencies to enable tools.",
+                "Install"
+            ).then((res: string) => {
+                if (res === "Install") {
+                    const t = vscode.window.createTerminal({
+                        name: "Install Node.JS dependencies",
+                        cwd: cwd.fsPath,
+                        isTransient: true,
+                    })
+                    t.sendText("yarn install")
+                    t.show()
+                }
+            })
             return undefined
         }
 
@@ -735,11 +806,14 @@ export class DeveloperToolsManager extends JDEventSource {
                 const nodePath = devToolsConfig.get("node") as string
                 const diagnostics =
                     options.diagnostics ?? jacdacConfig.get("diagnostics")
+                const developerMode =
+                    options.developerMode ?? devToolsConfig.get("developerMode")
                 let cli = nodePath || "node"
                 if (isWindows) {
                     cli = "node_modules\\.bin\\devicescript.cmd"
                 } else args.unshift("./node_modules/.bin/devicescript")
                 if (diagnostics) args.push("--diagnostics", "--verbose")
+                if (developerMode) args.push("--dev")
                 console.debug(
                     `create terminal: ${useShell ? "shell:" : ""}${
                         cwd.fsPath

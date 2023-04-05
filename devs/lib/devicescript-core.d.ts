@@ -220,6 +220,7 @@ declare module "@devicescript/core" {
 
     /**
      * Wait for specified number of milliseconds.
+     * @alias delay
      */
     export function sleep(milliseconds: number): Promise<void>
 

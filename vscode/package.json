@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "2.2.19",
+    "version": "2.3.4",
     "publisher": "Microsoft",
     "description": "DeviceScript extension for Visual Studio Code.",
     "author": {
@@ -42,7 +42,7 @@
     "scripts": {
         "buildicons": "node ./scripts/updateFonts.js",
         "buildts": "node ../build.js --fast",
-        "package": "vsce package --out devicescript.vsix --yarn",
+        "package": "vsce package --dependencies --out devicescript.vsix --yarn",
         "publish": "vsce publish",
         "publish-pre-release": "vsce publish --pre-release",
         "build": "yarn buildicons && yarn buildts",
@@ -56,17 +56,22 @@
         "@vscode/debugadapter": "^1.59.0",
         "@vscode/debugadapter-testsupport": "^1.59.0",
         "@vscode/vsce": "^2.18.0",
+        "@vscode/extension-telemetry": "^0.7.7",
+        "jacdac-ts": "*",
         "isomorphic-fetch": "^3.0.0",
         "papaparse": "^5.4.1",
         "typescript": "^4.9.5",
         "vscode-uri": "^3.0.7",
-        "webfont": "^11.2.26"
+        "webfont": "^11.2.26",
+        "websocket-polyfill": "^0.0.3"
     },
     "dependencies": {
-        "@devicescript/plugin": "*",
-        "@vscode/extension-telemetry": "^0.7.7",
-        "jacdac-ts": "*",
-        "websocket-polyfill": "^0.0.3"
+        "@devicescript/plugin": "*"
+    },
+    "workspaces": {
+        "nohoist": [
+            "@devicescript/plugin"
+        ]
     },
     "main": "./built/devicescript-vscode.js",
     "browser": "./built/devicescript-vscode-web.js",
@@ -98,6 +103,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Start DeviceScript Server in the default shell rather than as a direct process.",
+                    "scope": "machine-overridable"
+                },
+                "devicescript.devtools.developerMode": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables additional logging or allows to connect to device outside the catalog.",
                     "scope": "machine-overridable"
                 },
                 "devicescript.jacdac.diagnostics": {
@@ -144,7 +155,8 @@
         },
         "typescriptServerPlugins": [
             {
-                "name": "@devicescript/plugin"
+                "name": "@devicescript/plugin",
+                "enableForWorkspaceTypeScriptVersions": true
             }
         ],
         "viewsContainers": {
@@ -157,6 +169,13 @@
             ]
         },
         "views": {
+            "debug": [
+                {
+                    "id": "extension.devicescript.dbgwatch",
+                    "name": "DeviceScript Watch",
+                    "when": "extension.devicescript.projectAvailable"
+                }
+            ],
             "devicescript": [
                 {
                     "id": "extension.devicescript.jdom",
@@ -182,6 +201,10 @@
                 "contents": "Select Registers or Events to watch."
             },
             {
+                "view": "extension.devicescript.dbgwatch",
+                "contents": "Select Registers or Events to watch."
+            },
+            {
                 "view": "extension.devicescript.gateway",
                 "contents": "Deploy scripts remotely, track telemetry.\n[Configure...](command:extension.devicescript.gateway.configure)\n[Create Gateway](https://microsoft.github.io/devicescript/developer/cloud/gateway)\n\nTo learn more about DeviceScript Gateway, [read the docs](https://microsoft.github.io/devicescript/developer/cloud/gateway)."
             }
@@ -203,9 +226,9 @@
                         "completionEvents": []
                     },
                     {
-                        "id": "devicescript.initproject",
-                        "title": "Create New DeviceScript Project",
-                        "description": "Use the command line to create a new DeviceScript project in a new folder.\n    ``npx --yes @devicescript/cli@latest init``",
+                        "id": "devicescript.openfolder",
+                        "title": "Open Folder",
+                        "description": "Open a workspace where you want to generate a new project.\n[Open Folder...](command:vscode.openFolder)",
                         "media": {
                             "image": "media/newproject.png",
                             "altText": "Project structure after the init command."
@@ -213,9 +236,21 @@
                         "completionEvents": []
                     },
                     {
+                        "id": "devicescript.initproject",
+                        "title": "Create New DeviceScript Project",
+                        "description": "This step will run a command to create a new project.\n[Create New Project...](command:extension.devicescript.project.new)",
+                        "media": {
+                            "image": "media/newproject.png",
+                            "altText": "Project structure after the init command."
+                        },
+                        "completionEvents": [
+                            "onCommand:extension.devicescript.project.new"
+                        ]
+                    },
+                    {
                         "id": "devicescript.deployanddebug",
                         "title": "Deploy and Debug your DeviceScript",
-                        "description": "Once you've installed the command line, you can build and deploy DeviceScript programs at a terminal by entering ``devicescript your-file-name.ts``.\nAnother easy way to run DeviceScript programs is by using VS Code's debugger which lets you run the code, pause at different points, and help you what's going on step-by-step.\n[Start Debugging](command:workbench.action.debug.start)",
+                        "description": "Open `src/main.ts`, put a breakpoint near `console.log` and start debugging!\n[Start Debugging](command:workbench.action.debug.start)",
                         "media": {
                             "image": "media/debugger.png",
                             "altText": "Program paused on the debugger with simulators"
@@ -245,24 +280,24 @@
             "editor/title": [
                 {
                     "command": "extension.devicescript.editor.build",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@1"
                 },
                 {
                     "command": "extension.devicescript.editor.configure",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@3"
                 }
             ],
             "editor/title/run": [
                 {
                     "command": "extension.devicescript.editor.debug",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation"
                 },
                 {
                     "command": "extension.devicescript.editor.run",
-                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in devicescript.supportedFolders",
+                    "when": "!inDebugMode && resourceLangId == typescript && resourceDirname in extension.devicescript.supportedFolders",
                     "group": "navigation@2"
                 }
             ],
@@ -289,7 +324,7 @@
                 },
                 {
                     "command": "extension.devicescript.watch.clear",
-                    "when": "view == extension.devicescript.watch",
+                    "when": "view =~ /extension\\.devicescript\\.(dbg)?watch/",
                     "group": "navigation"
                 },
                 {
@@ -315,11 +350,11 @@
                 },
                 {
                     "command": "extension.devicescript.device.reset",
-                    "when": "view == extension.devicescript.jdom && viewItem =~ /(device|simulator)/"
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^(device|simulator)/"
                 },
                 {
                     "command": "extension.devicescript.device.identify",
-                    "when": "view == extension.devicescript.jdom && viewItem == /device/"
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^device/"
                 },
                 {
                     "command": "extension.devicescript.device.flash",
@@ -521,7 +556,7 @@
                 "command": "extension.devicescript.editor.configure",
                 "title": "DeviceScript: Configure...",
                 "category": "DeviceScript",
-                "icon": "$(settings-gear)"
+                "icon": "$(wand)"
             },
             {
                 "command": "extension.devicescript.terminal.show",
@@ -531,7 +566,7 @@
             },
             {
                 "command": "extension.devicescript.data.download",
-                "title": "Download console.data to JSON",
+                "title": "Download console.data to CSV/Notebook",
                 "category": "DeviceScript",
                 "icon": "$(graph-line)"
             },

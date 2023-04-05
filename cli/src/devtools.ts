@@ -415,6 +415,7 @@ function deployService(args: BuildReqArgs) {
     if (args.deployTo == "*") {
         const services = bus.services({
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+            lost: false,
         })
         if (services.length > 1)
             throw new Error(`Multiple DeviceScript Managers found.`)

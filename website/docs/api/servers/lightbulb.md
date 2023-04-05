@@ -32,4 +32,3 @@ When set to `true` you can set the intensity of the light (it will use a [PWM](h
 
 Indicates that the light is on when the pin `0`.
 By default, the light is on when the pin is `1`.
-

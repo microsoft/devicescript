@@ -42,7 +42,7 @@
             },
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}/vscode",
-                "${workspaceFolder}/vscode/sampleprj"
+                "${workspaceFolder}/packages"
             ],
             "outFiles": [
                 "${workspaceFolder}/vscode/built/**"
@@ -75,7 +75,7 @@
         {
             "name": "CLI",
             "program": "${workspaceFolder}/cli/built/devicescript-cli.cjs",
-            "cwd": "${workspaceFolder}/vscode/sampleprj/packages/sampleprj",
+            "cwd": "${workspaceFolder}/packages/sampleprj",
             "request": "launch",
             "skipFiles": [
                 "<node_internals>/**"

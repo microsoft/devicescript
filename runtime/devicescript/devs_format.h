@@ -2,9 +2,9 @@
 #include <stdint.h>
 #include "devs_bytecode.h"
 
-#define DEVS_VERSION_MAJOR(n) (((n) >> 24) & 0xff)
-#define DEVS_VERSION_MINOR(n) (((n) >> 16) & 0xff)
-#define DEVS_VERSION_PATCH(n) ((n)&0xffff)
+#define DEVS_VERSION_MAJOR(n) (unsigned)(((n) >> 24) & 0xff)
+#define DEVS_VERSION_MINOR(n) (unsigned)(((n) >> 16) & 0xff)
+#define DEVS_VERSION_PATCH(n) (unsigned)((n)&0xffff)
 
 typedef uint16_t devs_pc_t;
 

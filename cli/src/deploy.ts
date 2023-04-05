@@ -66,6 +66,7 @@ export async function deployToBus(bus: JDBus, bytecode: Uint8Array) {
     let num = 0
     for (const service of bus.services({
         serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        lost: false,
     })) {
         await deployToService(service, bytecode)
         num++

@@ -60,3 +60,13 @@ Once you have it all:
 Run `yarn bump` (or `make bump`). Alteratively, edit `img_version_patch` in `bytecode/bytecode.md` and push.
 
 The cloud build will rebuild and check-in the VM, update version numbers in all `package.json` files, and publish them.
+
+If you bump minor, you need to also bump the firmware repos:
+
+- go to each firmware repo (https://github.com/microsoft/jacdac-esp32, https://github.com/microsoft/jacdac-pico, https://github.com/microsoft/devicescript-stm32)
+- update the `devicescript` submodule
+- run
+
+```bash
+make bump
+```
