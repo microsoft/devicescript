@@ -263,13 +263,19 @@ ds.Event.prototype.subscribe = function subscribe<T>(
     }
 }
 
+function noop() {}
+
 ds.Event.prototype.wait = async function (timeout) {
     const fib = ds.Fiber.self()
-    const unsub = this.subscribe(v => {
+    let unsub = this.subscribe(v => {
         unsub()
-        fib.resume(v)
+        unsub = noop
+        if (fib.suspended) fib.resume(v)
     })
-    return await ds.suspend(timeout)
+    const r = await ds.suspend(timeout)
+    unsub()
+    unsub = noop
+    return r
 }
 
 ds.Button.prototype.pressed = function pressed() {

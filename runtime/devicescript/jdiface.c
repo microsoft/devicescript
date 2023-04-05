@@ -440,6 +440,6 @@ uint32_t devs_get_global_flags(void) {
     return devs_global_flags;
 }
 
-uint64_t devs_jd_server_device_id(void) {
+__attribute__((weak)) uint64_t devs_jd_server_device_id(void) {
     return jd_device_id() ^ 0xdb2249a7751b53f8;
 }
