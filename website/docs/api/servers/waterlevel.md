@@ -3,19 +3,17 @@ description: Mounts a water level sensor
 title: Water Level
 ---
 
-# Water
+# Water Level
 
-The `startWaterLevel` starts a simple analog sensor server that models a water level sensor
-and returns a [client](/api/clients/waterlevel) bound to the server.
+The [WaterLevel](/api/clients/waterlevel) constructor takes a configuration to start a [water level server](https://microsoft.github.io/jacdac-docs/services/waterlevel) on the device.
 
 -   Please refer to the **[analog documentation](./analog)** for details.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startWaterLevel } from "@devicescript/servers"
+import { gpio, WaterLevel } from "@devicescript/core"
 
-const sensor = startWaterLevel({
-    pin: ds.gpio(3),
+const sensor = new WaterLevel({
+    pin: gpio(3),
 })
 sensor.level.subscribe(level => console.data({ level }))
 ```

@@ -5,17 +5,15 @@ title: Reflected Light
 
 # Reflected Light
 
-The `startReflectedLight` starts a simple analog sensor server that models a reflected light sensor
-and returns a [client](/api/clients/reflectedlight) bound to the server.
+The [ReflectedLight](/api/clients/reflectedlight) constructor takes a configuration to start a [reflected light server](https://microsoft.github.io/jacdac-docs/services/reflectedlight) on the device.
 
-- Please refer to the **[analog documentation](./analog)** for details.
+-   Please refer to the **[analog documentation](./analog)** for details.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startReflectedLight } from "@devicescript/servers"
+import { gpio, ReflectedLight } from "@devicescript/core"
 
-const sensor = startReflectedLight({
-    pin: ds.gpio(3),
+const sensor = new ReflectedLight({
+    pin: gpio(3),
 })
 sensor.brightness.subscribe(brightness => console.data({ brightness }))
 ```

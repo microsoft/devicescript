@@ -5,14 +5,12 @@ title: Relay
 
 # Relay
 
-The `startRelay` function starts a [relay](https://microsoft.github.io/jacdac-docs/services/relay) server on the device
-and returns a [client](/api/clients/relay).
+The [Relay](/api/clients/relay) constructor takes a configuration to start a [relay server](https://microsoft.github.io/jacdac-docs/services/relay) on the device.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startRelay } from "@devicescript/servers"
+import { gpio, Relay } from "@devicescript/core"
 
-const relay = startRelay({
+const relay = new Relay({
     pin: gpio(2),
 })
 ```

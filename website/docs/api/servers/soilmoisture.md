@@ -5,17 +5,15 @@ title: Soil Moisture
 
 # Soil Moisture
 
-The `startSoilMoisture` starts a simple analog sensor server that models a soil moisture sensor
-and returns a [client](/api/clients/soilmoisture) bound to the server.
+The [SoilMoisture](/api/clients/soilmoisture) constructor takes a configuration to start a [soil moisture server](https://microsoft.github.io/jacdac-docs/services/soilmoisture) on the device.
 
-- Please refer to the **[analog documentation](./analog)** for details.
+-   Please refer to the **[analog documentation](./analog)** for details.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startSoilMoisture } from "@devicescript/servers"
+import { gpio, SoilMoisture } from "@devicescript/core"
 
-const sensor = startSoilMoisture({
-    pin: ds.gpio(3),
+const sensor = new SoilMoisture({
+    pin: gpio(3),
 })
 sensor.moisture.subscribe(moisture => console.data({ moisture }))
 ```
