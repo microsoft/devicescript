@@ -1,6 +1,7 @@
 ---
 hide_table_of_contents: true
 ---
+
 import StaticVideo from "@site/src/components/StaticVideo"
 
 # Copy Paste Button
@@ -23,26 +24,24 @@ On MacOS, we use `LeftGUI`. To update for Windows, replace `LeftGuid` with `Left
 ```ts
 import { pins, board } from "@dsboard/pico"
 import {
-    startButton,
-    startHidKeyboard,
-    startLightBulb,
-} from "@devicescript/servers"
-import {
+    Button,
+    LigthBulb,
+    HidKeyboard,
     HidKeyboardAction,
     HidKeyboardModifiers,
     HidKeyboardSelector,
 } from "@devicescript/core"
 
 // the keyboard button mounted on GP14
-const button = startButton({
+const button = new Button({
     pin: pins.P14,
 })
 // a status indicator led mounted on GP1
-const led = startLightBulb({
+const led = new LightBulb({
     pin: pins.P1,
 })
 // the HID keyboard driver that will send keystrokes
-const keyboard = startHidKeyboard({})
+const keyboard = new HidKeyboard({})
 
 // true: ctrl+c, false: ctrl+v
 let copy = true

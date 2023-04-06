@@ -5,14 +5,13 @@ title: Rotary Encoder
 
 # Rotary Encoder
 
-The `startRotaryEncoder` function starts a [Rotary Encoder](https://microsoft.github.io/jacdac-docs/services/rotaryencoder) server on the device
+The `RotaryEncoder` client constructor takes a configuration to start a [Rotary Encoder](https://microsoft.github.io/jacdac-docs/services/rotaryencoder) server on the device
 and returns a [client](/api/clients/rotaryencoder).
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startRotaryEncoder } from "@devicescript/servers"
+import { gpio, RotaryEncoder } from "@devicescript/core"
 
-const dialA = startRotaryEncoder({
+const dialA = new RotaryEncoder({
     pin0: gpio(2),
     pin1: gpio(3),
 })
@@ -31,10 +30,9 @@ The pin hardware identifiers on which to mount the Rotary Encoder.
 Number of reported clicks per full rotation. Default is 12.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startRotaryEncoder } from "@devicescript/servers"
+import { gpio, RotaryEncoder } from "@devicescript/core"
 
-const dialA = startRotaryEncoder({
+const dialA = new RotaryEncoder({
     pin0: gpio(2),
     pin1: gpio(3),
     // highlight-next-line
@@ -47,10 +45,9 @@ const dialA = startRotaryEncoder({
 Encoder supports "half-clicks". Default is false.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startRotaryEncoder } from "@devicescript/servers"
+import { gpio, RotaryEncoder } from "@devicescript/core"
 
-const dialA = startRotaryEncoder({
+const dialA = new RotaryEncoder({
     pin0: gpio(2),
     pin1: gpio(3),
     // highlight-next-line
@@ -63,10 +60,9 @@ const dialA = startRotaryEncoder({
 Invert direction. Default is false.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startRotaryEncoder } from "@devicescript/servers"
+import { gpio, RotaryEncoder } from "@devicescript/core"
 
-const dialA = startRotaryEncoder({
+const dialA = new RotaryEncoder({
     pin0: gpio(2),
     pin1: gpio(3),
     // highlight-next-line

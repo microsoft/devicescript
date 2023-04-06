@@ -11,7 +11,7 @@ and logging each sensor reading to the console (using `console.data`).
 ```ts
 import { Temperature } from "@devicescript/core"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 const { temperature } = thermometer
 
 temperature.subscribe(t => {
@@ -52,7 +52,7 @@ import { Temperature } from "@devicescript/core"
 // highlight-next-line
 import { ewma } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 const { temperature } = thermometer
 
 temperature
@@ -68,7 +68,7 @@ import { Temperature } from "@devicescript/core"
 // highlight-next-line
 import { ewma, tap } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 const { temperature } = thermometer
 
 temperature
@@ -116,7 +116,7 @@ import { Temperature } from "@devicescript/core"
 // highlight-next-line
 import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 const { temperature } = thermometer
 // highlight-next-line
 const t_ref = 68 // degree F
@@ -143,11 +143,11 @@ temperature
 import { Temperature, Relay } from "@devicescript/core"
 import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 const { temperature } = thermometer
 const t_ref = 68 // degree F
 // highlight-next-line
-const relay = new ds.Relay()
+const relay = new Relay()
 
 temperature
     .pipe(
@@ -175,16 +175,14 @@ finalize this example.
 
 ```ts
 import { pins } from "@dsboard/adafruit_qt_py_c3"
-import { Temperature } from "@devicescript/core"
+import { Temperature, Relay } from "@devicescript/core"
 import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
-// highlight-next-line
-import { startRelay } from "@devicescript/servers"
 
 const thermometer = new ds.Temperature()
 const { temperature } = thermometer
 const t_ref = 68 // degree F
 // highlight-start
-const relay = startRelay({
+const relay = new Relay({
     pin: pins.A0,
 })
 // highlight-end

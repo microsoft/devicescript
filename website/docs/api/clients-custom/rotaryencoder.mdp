@@ -1,10 +1,12 @@
 ## Server
 
-- [startRotaryEncoder](/api/servers/rotaryencoder) starts a rotary encoder server on the current device.
+Use options to specify pins and mount a [rotary encoder server](/api/servers/button) as well.
 
-```ts skip
-const button = startRotaryEncoder({
-    pin0: 2
-    pin1: 3
+```ts
+import { gpio, Button } from "@devicescript/core"
+
+const button = new RotaryEncoder({
+    pin0: gpio(2),
+    pin1: gpio(3),
 })
 ```

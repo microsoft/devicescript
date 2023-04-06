@@ -9,11 +9,11 @@ The classic LED blinking program on a [Raspberry Pi Pico](/devices/rp2040). The 
 
 ```ts
 import { pins } from "@dsboard/pico"
-import { startLightBulb } from "@devicescript/servers"
+import { LightBulb } from "@devicescript/core"
 
 // start a lightbulb server on pin GP1
 // and store client in `led` variable
-const led = startLightBulb({
+const led = new LightBulb({
     pin: pins.P1,
 })
 
@@ -35,13 +35,13 @@ is similar. The LED is connected to the pin `A0`.
 
 ```ts
 import { pins } from "@dsboard/adafruit_qt_py_c3"
-import { startLightBulb } from "@devicescript/servers"
+import { LightBulb } from "@devicescript/core"
 
-const lightBulb = startLightBulb({
+const led = new LightBulb({
     pin: pins.A0,
 })
 
 setInterval(async () => {
-    await lightBulb.toggle()
+    await led.toggle()
 }, 500)
 ```

@@ -1,12 +1,11 @@
 ## Server
 
--   [startButton](/api/servers/button) starts a button server on the current device.
+Use options to specify pins and mount a [button server](/api/servers/button) as well.
 
 ```ts skip
-import { gpio } from "@devicescript/core"
-import { startButton } from "@devicescript/servers"
+import { gpio, Button } from "@devicescript/core"
 
-const gpbtn = startButton({
+const gpbtn = new Button({
     pin: gpio(2),
 })
 ```
