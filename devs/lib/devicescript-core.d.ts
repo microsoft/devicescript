@@ -40,7 +40,7 @@ declare module "@devicescript/core" {
          * @internal
          * @deprecated internal field for runtime support
          */
-        isBound: boolean
+        readonly isBound: boolean
 
         /**
          * Gets the state of the binding with a jacdac server
@@ -66,70 +66,70 @@ declare module "@devicescript/core" {
     }
 
     export class Packet {
-        role: Role
+        readonly role: Role
 
-        spec: PacketSpec
+        readonly spec: PacketSpec
 
         /**
          * 16 character lowercase hex-encoding of 8 byte device identifier.
          */
-        deviceIdentifier: string
+        readonly deviceIdentifier: string
 
         /**
          * 4 character hash of `deviceIdentifier`
          */
-        shortId: string
+        readonly shortId: string
 
-        serviceIndex: number
-        serviceCommand: number
-        payload: Buffer
+        readonly serviceIndex: number
+        readonly serviceCommand: number
+        readonly payload: Buffer
 
         decode(): any
 
         /**
          * Frame flags.
          */
-        flags: number
+        readonly flags: number
 
         /**
          * Check whether is `command` flag on frame is cleared
          */
-        isReport: boolean
+        readonly isReport: boolean
 
         /**
          * Check whether is `command` flag on frame is set
          */
-        isCommand: boolean
+        readonly isCommand: boolean
 
         /**
          * Check if report and it is an event
          */
-        isEvent: boolean
+        readonly isEvent: boolean
 
         /**
          * `undefined` if not `isEvent`
          */
-        eventCode: number
+        readonly eventCode: number
 
         /**
          * Is it register set command.
          */
-        isRegSet: boolean
+        readonly isRegSet: boolean
 
         /**
          * Is it register get command or report.
          */
-        isRegGet: boolean
+        readonly isRegGet: boolean
 
         /**
          * `undefined` is neither `isRegSet` nor `isRegGet`
          */
-        regCode: number
+        readonly regCode: number
 
         /**
          * True for plain `command`/`report` (not register and not event)
          */
-        isAction: boolean
+        readonly isAction: boolean
 
         notImplemented(): Packet
     }
@@ -138,12 +138,12 @@ declare module "@devicescript/core" {
         /**
          * Unique number identifying the fiber.
          */
-        id: number
+        readonly id: number
 
         /**
          * Check if fiber is currently suspended.
          */
-        suspended: boolean
+        readonly suspended: boolean
 
         /**
          * If the fiber is currently suspended, mark it for resumption, passing the specified value.
@@ -172,32 +172,32 @@ declare module "@devicescript/core" {
     }
 
     export class ServiceSpec {
-        name: string
-        classIdentifier: number
+        readonly name: string
+        readonly classIdentifier: number
         assign(packet: Packet): void
         lookup(name: string): PacketSpec
     }
 
     export class PacketSpec<T = any> {
-        parent: ServiceSpec
-        name: string
-        code: number
-        response?: PacketSpec
+        readonly parent: ServiceSpec
+        readonly name: string
+        readonly code: number
+        readonly response?: PacketSpec
         encode(v: T): Packet
     }
 
     export interface ServerInterface {
-        serviceIndex: number
-        spec: ServiceSpec
+        readonly serviceIndex: number
+        readonly spec: ServiceSpec
     }
 
     /**
      * A base class for registers, events.
      */
     export class PacketInfo {
-        name: string
-        code: number
-        role: Role
+        readonly name: string
+        readonly code: number
+        readonly role: Role
     }
 
     /**
@@ -344,7 +344,7 @@ declare module "@devicescript/core" {
             /**
              * Gets the length in bytes of the buffer
              */
-            length: number
+            readonly length: number
             setLength(len: number): void
             getAt(offset: number, format: string): number
             setAt(offset: number, format: string, value: number): void

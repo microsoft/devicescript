@@ -2837,9 +2837,9 @@ class Program implements TopOpWriter {
 
         const propName = idName(expr.name)
         if (propName == "prototype" || propName == "spec") {
-            this.banOptional(expr)
             const sym = this.checker.getSymbolAtLocation(expr.expression)
             if (this.isRoleClass(sym)) {
+                this.banOptional(expr)
                 const spec = this.specFromTypeName(expr.expression)
                 if (propName == "spec") {
                     const idx = this.useSpec(spec)
