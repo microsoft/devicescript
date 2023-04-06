@@ -657,12 +657,12 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
     if (htp == DEVS_HANDLE_TYPE_ROLE_MEMBER) {
         unsigned roleidx;
         int pt;
-        uint16_t code = devs_decode_role_packet(ctx, v, &roleidx)->code;
+        const devs_packet_spec_t *spec = devs_decode_role_packet(ctx, v, &roleidx);
         if (roleidx == DEVS_ROLE_INVALID)
             pt = devs_value_to_service_spec(ctx, v) ? DEVS_BUILTIN_OBJECT_DSSERVICESPEC_PROTOTYPE
                                                     : DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE;
         else
-            switch (code & DEVS_PACKETSPEC_CODE_MASK) {
+            switch (spec->code & DEVS_PACKETSPEC_CODE_MASK) {
             case DEVS_PACKETSPEC_CODE_REGISTER:
                 pt = DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE;
                 break;

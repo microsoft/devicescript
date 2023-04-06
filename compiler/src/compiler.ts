@@ -155,13 +155,13 @@ class Role extends Cell {
     constructor(
         prog: Program,
         definition: ts.VariableDeclaration | ts.Identifier,
-        scope: Role[],
         public spec: jdspec.ServiceSpec,
         _name?: string
     ) {
-        super(definition, scope, _name)
+        super(definition, prog.roles, _name)
         assert(!!spec, "no spec " + this._name)
         this.stringIndex = prog.addString(this.getName())
+        prog.useSpec(spec)
     }
     emit(wr: OpWriter): Value {
         const r = wr.emitExpr(Op.EXPRx_STATIC_ROLE, literal(this._index))
@@ -570,6 +570,7 @@ interface PossiblyConstDeclaration extends ts.Declaration {
 class Program implements TopOpWriter {
     bufferLits: BufferLit[] = []
     roles: Role[] = []
+    usedSpecs: jdspec.ServiceSpec[] = []
     functions: FunctionDecl[] = []
     globals: Variable[] = []
     tree: ts.Program
@@ -635,6 +636,22 @@ class Program implements TopOpWriter {
                 addUnique(this.utf8Literals, str) |
                 (StrIdx.UTF8 << StrIdx._SHIFT)
             )
+    }
+
+    useSpec(spec: jdspec.ServiceSpec) {
+        let idx = this.usedSpecs.findIndex(
+            s => s.classIdentifier == spec.classIdentifier
+        )
+        if (idx >= 0) return idx
+        if (this.usedSpecs.length == 0) {
+            this.usedSpecs.push(
+                this.serviceSpecs["base"],
+                this.serviceSpecs["sensor"]
+            )
+        }
+        idx = this.usedSpecs.length
+        this.usedSpecs.push(spec)
+        return idx
     }
 
     addBuffer(buf: Uint8Array) {
@@ -950,7 +967,7 @@ class Program implements TopOpWriter {
             const spec = this.lookupRoleSpec(arg, specName)
             if (!obj.name) obj.name = this.forceName(decl.name)
             this.startServices.push(obj)
-            const role = new Role(this, decl, this.roles, spec, obj.name)
+            const role = new Role(this, decl, spec, obj.name)
             return this.assignCell(decl, role)
         }
 
@@ -962,10 +979,7 @@ class Program implements TopOpWriter {
             )
             if (spec) {
                 this.requireArgs(expr, 0)
-                return this.assignCell(
-                    decl,
-                    new Role(this, decl, this.roles, spec)
-                )
+                return this.assignCell(decl, new Role(this, decl, spec))
             }
         }
 
@@ -2821,11 +2835,19 @@ class Program implements TopOpWriter {
             if (mathConst.hasOwnProperty(id)) return literal(mathConst[id])
         }
 
-        if (idName(expr.name) == "prototype") {
+        const propName = idName(expr.name)
+        if (propName == "prototype" || propName == "spec") {
             this.banOptional(expr)
             const sym = this.checker.getSymbolAtLocation(expr.expression)
             if (this.isRoleClass(sym)) {
                 const spec = this.specFromTypeName(expr.expression)
+                if (propName == "spec") {
+                    const idx = this.useSpec(spec)
+                    return this.writer.emitExpr(
+                        Op.EXPRx_STATIC_SPEC,
+                        literal(idx)
+                    )
+                }
                 const r = this.roles.find(r => r.spec == spec)
                 if (r) {
                     r.used = true
@@ -3717,19 +3739,7 @@ class Program implements TopOpWriter {
     }
 
     private serializeSpecs() {
-        let usedSpecs = uniqueMap(
-            this.roles,
-            r => r.spec.classIdentifier + "",
-            r => r.spec
-        )
-        if (false)
-            usedSpecs = Object.values(this.serviceSpecs).filter(
-                s => s.shortId[0] != "_"
-            )
-        if (usedSpecs.length) {
-            usedSpecs.unshift(this.serviceSpecs["sensor"])
-            usedSpecs.unshift(this.serviceSpecs["base"])
-        }
+        const usedSpecs = this.usedSpecs.slice()
         const numSpecs = usedSpecs.length
         const specWriter = new SectionWriter()
 
