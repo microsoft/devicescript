@@ -27,6 +27,7 @@ import { prelude } from "./prelude"
 import { camelize, oops, upperCamel } from "./util"
 import { pinFunctions } from "./board"
 import { assert } from "./jdutil"
+import serverServices from "../../devs/lib/srvcfg.json"
 
 const REGISTER_NUMBER = "Register<number>"
 const REGISTER_BOOL = "Register<boolean>"
@@ -79,6 +80,8 @@ function toHex(n: number): string {
 function ignoreSpec(info: jdspec.ServiceSpec) {
     return (
         info.status === "deprecated" ||
+        info.shortId === "_base" ||
+        info.shortId === "_system" ||
         [
             SRV_CONTROL,
             SRV_ROLE_MANAGER,
@@ -132,6 +135,17 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     }
     // emit class
     r += `class ${clname} extends ${baseclass} {\n`
+
+    if (serverServices.analog.indexOf(clname) > -1) {
+        r += `
+    /**
+     * Constructs a client instance. If options is provided, also starts a server.
+     * @param options server instantiation options
+     **/
+    constructor(options?: ${clname}Config);
+
+`
+    }
 
     info.packets.forEach(pkt => {
         if (pkt.derived || pkt.internal) return // ???
