@@ -5,14 +5,12 @@ title: Buzzer
 
 # Buzzer
 
-The `startBuzzer` function starts a [buzzer](https://microsoft.github.io/jacdac-docs/services/buzzer) server on the device
-and returns a [client](/api/clients/buzzer).
+The [Buzzer](/api/clients/buzzer) constructor takes a configuration to start a [buzzer server](https://microsoft.github.io/jacdac-docs/services/buzzer) on the device.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startBuzzer } from "@devicescript/servers"
+import { gpio, Buzzer } from "@devicescript/core"
 
-const speaker = startBuzzer({
+const speaker = new Buzzer({
     pin: gpio(20)
 })
 ```

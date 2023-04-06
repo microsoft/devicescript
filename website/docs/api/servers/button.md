@@ -8,8 +8,7 @@ title: Button
 The [Button](/api/clients/button) constructor takes a configuration to start a [button server](https://microsoft.github.io/jacdac-docs/services/button) on the device.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { Button } from "@devicescript/servers"
+import { gpio, Button } from "@devicescript/core"
 
 const buttonA = new Button({
     pin: gpio(2),
@@ -29,8 +28,7 @@ The pin hardware identifier on which to mount the button.
 This pin is set high when the button is pressed. Useful for buttons with a builtin LED.
 
 ```ts no-run no-output
-import { gpio } from "@devicescript/core"
-import { Button } from "@devicescript/servers"
+import { gpio, Button } from "@devicescript/core"
 
 const buttonA = new Button({
     pin: gpio(2),
@@ -44,8 +42,7 @@ Button is normally active-low and pulled high.
 This makes it active-high and pulled low.
 
 ```ts no-run no-output
-import { gpio } from "@devicescript/core"
-import { Button } from "@devicescript/servers"
+import { gpio, Button } from "@devicescript/core"
 
 const buttonA = new Button({
     pin: gpio(2),

@@ -5,15 +5,14 @@ title: HID Keyboard
 
 # HID Keyboard
 
-The `startHidKeyboard` function starts a [relay](https://microsoft.github.io/jacdac-docs/services/hidkeyboard) server on the device
-and returns a [client](/api/clients/hidkeyboard).
+The [HIDKeyboard](/api/clients/hidkeyboard) constructor takes a configuration to start a [HID keyboard server](https://microsoft.github.io/jacdac-docs/services/hidkeyboard) on the device.
 
 The server emulates a keyboard and can be used to send keystrokes to a computer.
 
 ```ts
-import { startHidKeyboard } from "@devicescript/servers"
+import { HidKeyboard } from "@devicescript/core"
 
-const keyboard = startHidKeyboard({})
+const keyboard = new HidKeyboard({})
 ```
 
 The [service instance name](https://microsoft.github.io/jacdac-docs/services/_base/) is automatically set to the variable name. In this example, it is set to `keyboard`.

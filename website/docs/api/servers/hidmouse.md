@@ -5,15 +5,14 @@ title: HID Mouse
 
 # HID Mouse
 
-The `startHidMouse` function starts a [relay](https://microsoft.github.io/jacdac-docs/services/hidmouse) server on the device
-and returns a [client](/api/clients/hidmouse).
+The [HIDMouse](/api/clients/hidmouse) constructor takes a configuration to start a [HID mouse server](https://microsoft.github.io/jacdac-docs/services/hidmouse) on the device.
 
 The server emulates a mouse and can be used to send mouse movement, wheel or clicksF to a computer.
 
 ```ts
-import { startHidMouse } from "@devicescript/servers"
+import { HidMouse } from "@devicescript/core"
 
-const mouse = startHidMouse({})
+const mouse = new HidMouse({})
 ```
 
 The [service instance name](https://microsoft.github.io/jacdac-docs/services/_base/) is automatically set to the variable name. In this example, it is set to `mouse`.

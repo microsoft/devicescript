@@ -5,14 +5,12 @@ title: Light bulb
 
 # Light bulb
 
-The `startLightBulb` function starts a [light bulb](https://microsoft.github.io/jacdac-docs/services/lightbulb) server on the device
-and returns a [client](/api/clients/lightbulb).
+The [LightBulb](/api/clients/lightbulb) constructor takes a configuration to start a [lightbulb server](https://microsoft.github.io/jacdac-docs/services/lightbulb) on the device.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startLightBulb } from "@devicescript/servers"
+import { gpio, LightBulb } from "@devicescript/core"
 
-const bulb = startLightBulb({
+const bulb = new LightBulb({
     pin: gpio(20),
     dimmable: true,
 })

@@ -15,7 +15,7 @@ import { gpio } from "@devicescript/core"
 import { startPotentiometer } from "@devicescript/servers"
 
 const sensor = startPotentiometer({
-    pin: ds.gpio(3),
+    pin: gpio(3),
 })
 sensor.position.subscribe(v => console.data({ value: 100 * v }))
 ```

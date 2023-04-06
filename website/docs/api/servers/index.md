@@ -1,15 +1,14 @@
 # Servers
 
-The `@devicescript/servers` module provides helper functions to mount service servers on your low level hardware components. Basically, you have access to all the drivers available in the C server SDK.
+Some of the clients in `@devicescript/core` support an optional constructor argument to
+start a server on the device.
 
 ```ts
-import { gpio } from "@devicescript/core"
-import { startButton } from "@devicescript/servers"
+import { gpio, Button } from "@devicescript/core"
 
-const buttonA = startButton({
+const buttonA = new Button({
     pin: gpio(2),
 })
 ```
 
-The `start...` function starts a server and returns the client instance.
 The [service instance name](https://microsoft.github.io/jacdac-docs/services/_base/) is automatically set to the variable name. In this example, it is set to `buttonA`.

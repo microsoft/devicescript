@@ -19,10 +19,10 @@ For example, the [Button](/api/servers/button) constructor allows to mount a [bu
 over a pin.
 
 ```ts
-import { Button } from "@devicescript/core"
+import { gpio, Button } from "@devicescript/core"
 
 const buttonA = new Button({
-    pin: ds.gpio(2),
+    pin: gpio(2),
 })
 ```
 
@@ -30,10 +30,10 @@ Once you've add this code to your script, you can interact with pin `2` (hardwar
 The variable name is automatically used as the **role** and **instance** name.
 
 ```ts
-import { Button } from "@devicescript/core"
+import { gpio, Button } from "@devicescript/core"
 
 const buttonA = new Button({
-    pin: ds.gpio(2),
+    pin: gpio(2),
 })
 buttonA.up.subscribe(() => {
     console.log("up!")

@@ -5,13 +5,12 @@ title: HID Joystick
 
 # HID Joystick
 
-The `startHidJoystick` function starts a [relay](https://microsoft.github.io/jacdac-docs/services/hidjoystick) server on the device
-and returns a [client](/api/clients/hidjoystick).
+The [HIDJoystick](/api/clients/hidjoystick) constructor takes a configuration to start a [HID joystick server](https://microsoft.github.io/jacdac-docs/services/hidjoystick) on the device.
 
 ```ts
-import { startHidJoystick } from "@devicescript/servers"
+import { HidJoystick } from "@devicescript/core"
 
-const joystick = startHidJoystick({})
+const joystick = new HidJoystick({})
 ```
 
 The [service instance name](https://microsoft.github.io/jacdac-docs/services/_base/) is automatically set to the variable name. In this example, it is set to `joystick`.
