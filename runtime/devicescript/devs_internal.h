@@ -208,7 +208,7 @@ value_t _devs_invalid_program(devs_ctx_t *ctx, unsigned code);
 /**
  * Indicates an invalid bytecode program.
  * The compiler should never generate code that triggers this.
- * Next free error: 60128
+ * Next free error: 60129
  */
 static inline value_t devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
     return _devs_invalid_program(ctx, code - 60000);

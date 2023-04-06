@@ -296,6 +296,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_IMG_BUFFERISH:
         return devs_bufferish_is_buffer(v) ? DEVS_OBJECT_TYPE_BUFFER : DEVS_OBJECT_TYPE_STRING;
     case DEVS_HANDLE_TYPE_ROLE_MEMBER:
+        if (devs_value_to_service_spec(ctx, v))
+            return DEVS_OBJECT_TYPE_MAP;
         return (devs_decode_role_packet(ctx, v, NULL)->code & DEVS_PACKETSPEC_CODE_MASK) ==
                        DEVS_PACKETSPEC_CODE_COMMAND
                    ? DEVS_OBJECT_TYPE_FUNCTION

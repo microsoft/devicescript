@@ -52,6 +52,7 @@
 #define DEVS_EXPRx_STATIC_ASCII_STRING 37   // *ascii_idx
 #define DEVS_EXPRx_STATIC_UTF8_STRING 38    // *utf8_idx
 #define DEVS_EXPRx_STATIC_FUNCTION 39       // *func_idx
+#define DEVS_EXPRx_STATIC_SPEC 94           // *spec_idx
 #define DEVS_EXPRx_LITERAL 40               // *value
 #define DEVS_EXPRx_LITERAL_F64 41           // *f64_idx
 #define DEVS_EXPRx_BUILTIN_OBJECT 1         // *builtin_object
@@ -94,20 +95,20 @@
 #define DEVS_EXPR2_APPROX_EQ 91            // x == y
 #define DEVS_EXPR2_APPROX_NE 92            // x != y
 #define DEVS_STMT0_REMOVED_77 77
-#define DEVS_OP_PAST_LAST 94
+#define DEVS_OP_PAST_LAST 95
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20" \
     "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
     "\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42" \
-    "\x42\x11"
+    "\x42\x11\x60"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b" \
     "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01" \
     "\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
     "\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06" \
-    "\x06\x0c"
+    "\x06\x0c\x0b"
 
 #define DEVS_IMG_VERSION_MAJOR 2
 #define DEVS_IMG_VERSION_MINOR 3
@@ -216,7 +217,7 @@
 #define DEVS_OBJECT_TYPE_ANY 11
 #define DEVS_OBJECT_TYPE_VOID 12
 
-#define DEVS_BUILTIN_OBJECT___MAX 35
+#define DEVS_BUILTIN_OBJECT___MAX 39
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
@@ -236,8 +237,8 @@
 #define DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE 16
 #define DEVS_BUILTIN_OBJECT_BOOLEAN 17
 #define DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE 18
-#define DEVS_BUILTIN_OBJECT_PACKET 19
-#define DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE 20
+#define DEVS_BUILTIN_OBJECT_DSPACKET 19
+#define DEVS_BUILTIN_OBJECT_DSPACKET_PROTOTYPE 20
 #define DEVS_BUILTIN_OBJECT_DEVICESCRIPT 21
 #define DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE 22
 #define DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE 23
@@ -253,8 +254,12 @@
 #define DEVS_BUILTIN_OBJECT_SYNTAXERROR 33
 #define DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE 34
 #define DEVS_BUILTIN_OBJECT_JSON 35
+#define DEVS_BUILTIN_OBJECT_DSSERVICESPEC 36
+#define DEVS_BUILTIN_OBJECT_DSSERVICESPEC_PROTOTYPE 37
+#define DEVS_BUILTIN_OBJECT_DSPACKETSPEC 38
+#define DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE 39
 
-#define DEVS_BUILTIN_STRING___MAX 155
+#define DEVS_BUILTIN_STRING___MAX 163
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -411,6 +416,14 @@
 #define DEVS_BUILTIN_STRING_SUSPENDED 153
 #define DEVS_BUILTIN_STRING_REBOOT 154
 #define DEVS_BUILTIN_STRING_SERVER 155
+#define DEVS_BUILTIN_STRING_SPEC 156
+#define DEVS_BUILTIN_STRING_SERVICESPEC 157
+#define DEVS_BUILTIN_STRING_CLASSIDENTIFIER 158
+#define DEVS_BUILTIN_STRING_LOOKUP 159
+#define DEVS_BUILTIN_STRING_PACKETSPEC 160
+#define DEVS_BUILTIN_STRING_PARENT 161
+#define DEVS_BUILTIN_STRING_RESPONSE 162
+#define DEVS_BUILTIN_STRING_SERVERINTERFACE 163
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -430,7 +443,7 @@
         exprx_make_closure, expr1_typeof_str, expr_invalid, stmtx_jmp_ret_val_z, stmt2_call_array, \
         stmtx_try, stmtx_end_try, stmt0_catch, stmt0_finally, stmt1_throw, stmt1_re_throw,         \
         stmtx1_throw_jmp, stmt0_debugger, expr1_new, expr2_instance_of, expr0_null,                \
-        expr2_approx_eq, expr2_approx_ne, stmt1_store_ret_val, expr_invalid
+        expr2_approx_eq, expr2_approx_ne, stmt1_store_ret_val, exprx_static_spec, expr_invalid
 
 #define DEVS_BUILTIN_STRING__VAL                                                                   \
     "", "-Infinity", "DeviceScript", "E", "Infinity", "LN10", "LN2", "LOG10E", "LOG2E", "NaN",     \
@@ -452,13 +465,15 @@
         "clearTimeout", "SyntaxError", "JSON", "parse", "stringify", "_dcfgString", "isSimulator", \
         "Role", "Fiber", "suspend", "resume", "terminate", "self", "current", "id",                \
         "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended",     \
-        "reboot", "server"
+        "reboot", "server", "spec", "ServiceSpec", "classIdentifier", "lookup", "PacketSpec",      \
+        "parent", "response", "ServerInterface"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \
         "DsFiber_prototype", "DsRole", "DsRole_prototype", "Function", "Function_prototype",       \
-        "Boolean", "Boolean_prototype", "Packet", "Packet_prototype", "DeviceScript",              \
+        "Boolean", "Boolean_prototype", "DsPacket", "DsPacket_prototype", "DeviceScript",          \
         "DsPacketInfo_prototype", "DsRegister_prototype", "DsCommand_prototype",                   \
         "DsEvent_prototype", "DsReport_prototype", "Error", "Error_prototype", "TypeError",        \
         "TypeError_prototype", "RangeError", "RangeError_prototype", "SyntaxError",                \
-        "SyntaxError_prototype", "JSON"
+        "SyntaxError_prototype", "JSON", "DsServiceSpec", "DsServiceSpec_prototype",               \
+        "DsPacketSpec", "DsPacketSpec_prototype"

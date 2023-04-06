@@ -76,22 +76,28 @@ void fun1_Object_keys(devs_ctx_t *ctx);
 void fun1_Object_values(devs_ctx_t *ctx);
 void fun2_Object_setPrototypeOf(devs_ctx_t *ctx);
 // impl_packet.c
-value_t prop_Packet_role(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_deviceIdentifier(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_shortId(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_serviceIndex(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_serviceCommand(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_flags(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_isCommand(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_isReport(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_payload(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_isEvent(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_eventCode(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_isRegSet(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_isRegGet(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_regCode(devs_ctx_t *ctx, value_t self);
-value_t prop_Packet_isAction(devs_ctx_t *ctx, value_t self);
-void meth0_Packet_decode(devs_ctx_t *ctx);
+value_t prop_DsPacket_role(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_deviceIdentifier(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_shortId(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_serviceIndex(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_serviceCommand(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_flags(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_isCommand(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_isReport(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_payload(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_isEvent(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_eventCode(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_isRegSet(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_isRegGet(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_regCode(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_isAction(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacket_spec(devs_ctx_t *ctx, value_t self);
+void meth0_DsPacket_decode(devs_ctx_t *ctx);
+// impl_packetspec.c
+value_t prop_DsPacketSpec_parent(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacketSpec_name(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacketSpec_code(devs_ctx_t *ctx, value_t self);
+value_t prop_DsPacketSpec_response(devs_ctx_t *ctx, value_t self);
 // impl_register.c
 void meth0_DsRegister_read(devs_ctx_t *ctx);
 void methX_DsRegister_write(devs_ctx_t *ctx);
@@ -102,6 +108,11 @@ void methX_DsCommand___func__(devs_ctx_t *ctx);
 // impl_role.c
 value_t prop_DsRole_isBound(devs_ctx_t *ctx, value_t self);
 void meth2_DsRole_sendCommand(devs_ctx_t *ctx);
+// impl_servicespec.c
+value_t prop_DsServiceSpec_classIdentifier(devs_ctx_t *ctx, value_t self);
+value_t prop_DsServiceSpec_name(devs_ctx_t *ctx, value_t self);
+void meth1_DsServiceSpec_lookup(devs_ctx_t *ctx);
+void meth1_DsServiceSpec_assign(devs_ctx_t *ctx);
 // impl_string.c
 value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
@@ -235,53 +246,68 @@ static const devs_builtin_proto_entry_t Object_entries[] = { //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE},    //
     {0, 0}};
 
-static const devs_builtin_proto_entry_t Packet_prototype_entries[] = { //
-    {N(ROLE), 50058},                                                  //
-    {N(DEVICEIDENTIFIER), 50059},                                      //
-    {N(SHORTID), 50060},                                               //
-    {N(SERVICEINDEX), 50061},                                          //
-    {N(SERVICECOMMAND), 50062},                                        //
-    {N(FLAGS), 50063},                                                 //
-    {N(ISCOMMAND), 50064},                                             //
-    {N(ISREPORT), 50065},                                              //
-    {N(PAYLOAD), 50066},                                               //
-    {N(ISEVENT), 50067},                                               //
-    {N(EVENTCODE), 50068},                                             //
-    {N(ISREGSET), 50069},                                              //
-    {N(ISREGGET), 50070},                                              //
-    {N(REGCODE), 50071},                                               //
-    {N(ISACTION), 50072},                                              //
-    {N(DECODE), 50073},                                                //
+static const devs_builtin_proto_entry_t DsPacket_prototype_entries[] = { //
+    {N(ROLE), 50058},                                                    //
+    {N(DEVICEIDENTIFIER), 50059},                                        //
+    {N(SHORTID), 50060},                                                 //
+    {N(SERVICEINDEX), 50061},                                            //
+    {N(SERVICECOMMAND), 50062},                                          //
+    {N(FLAGS), 50063},                                                   //
+    {N(ISCOMMAND), 50064},                                               //
+    {N(ISREPORT), 50065},                                                //
+    {N(PAYLOAD), 50066},                                                 //
+    {N(ISEVENT), 50067},                                                 //
+    {N(EVENTCODE), 50068},                                               //
+    {N(ISREGSET), 50069},                                                //
+    {N(ISREGGET), 50070},                                                //
+    {N(REGCODE), 50071},                                                 //
+    {N(ISACTION), 50072},                                                //
+    {N(SPEC), 50073},                                                    //
+    {N(DECODE), 50074},                                                  //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t DsPacketSpec_prototype_entries[] = { //
+    {N(PARENT), 50075},                                                      //
+    {N(NAME), 50076},                                                        //
+    {N(CODE), 50077},                                                        //
+    {N(RESPONSE), 50078},                                                    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50074},                                                      //
-    {N(WRITE), 50075},                                                     //
+    {N(READ), 50079},                                                      //
+    {N(WRITE), 50080},                                                     //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsCommand_prototype_entries[] = { //
-    {N(__FUNC__), 50079},                                                 //
+    {N(__FUNC__), 50084},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsEvent_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
-    {N(ROLE), 50076},                                                        //
-    {N(NAME), 50077},                                                        //
-    {N(CODE), 50078},                                                        //
+    {N(ROLE), 50081},                                                        //
+    {N(NAME), 50082},                                                        //
+    {N(CODE), 50083},                                                        //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRole_prototype_entries[] = { //
-    {N(ISBOUND), 50080},                                               //
-    {N(SENDCOMMAND), 50081},                                           //
+    {N(ISBOUND), 50085},                                               //
+    {N(SENDCOMMAND), 50086},                                           //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t DsServiceSpec_prototype_entries[] = { //
+    {N(CLASSIDENTIFIER), 50087},                                              //
+    {N(NAME), 50088},                                                         //
+    {N(LOOKUP), 50089},                                                       //
+    {N(ASSIGN), 50090},                                                       //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50082},                                                //
-    {N(CHARCODEAT), 50083},                                            //
-    {N(CHARAT), 50084},                                                //
-    {N(SLICE), 50085},                                                 //
+    {N(LENGTH), 50091},                                                //
+    {N(CHARCODEAT), 50092},                                            //
+    {N(CHARAT), 50093},                                                //
+    {N(SLICE), 50094},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t empty_entries[] = { //
@@ -307,8 +333,16 @@ static const devs_builtin_proto_entry_t boolean_entries[] = { //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE},    //
     {0, 0}};
 
-static const devs_builtin_proto_entry_t packet_entries[] = { //
-    {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE},    //
+static const devs_builtin_proto_entry_t dspacket_entries[] = { //
+    {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_DSPACKET_PROTOTYPE},    //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t dsservicespec_entries[] = { //
+    {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_DSSERVICESPEC_PROTOTYPE},    //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t dspacketspec_entries[] = { //
+    {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE},    //
     {0, 0}};
 
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
@@ -341,8 +375,10 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_JSON] = {DEVS_BUILTIN_PROTO_INIT, NULL, JSON_entries},
     [DEVS_BUILTIN_OBJECT_MATH] = {DEVS_BUILTIN_PROTO_INIT, NULL, Math_entries},
     [DEVS_BUILTIN_OBJECT_OBJECT] = {DEVS_BUILTIN_PROTO_INIT, NULL, Object_entries},
-    [DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
-                                              Packet_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_DSPACKET_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                                DsPacket_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                                    DsPacketSpec_prototype_entries},
     [DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE] =
         {DEVS_BUILTIN_PROTO_INIT, &devs_builtin_protos[DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE],
          DsRegister_prototype_entries},
@@ -356,6 +392,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
                                                     DsPacketInfo_prototype_entries},
     [DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
                                               DsRole_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_DSSERVICESPEC_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
+                                                     DsServiceSpec_prototype_entries},
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
                                               String_prototype_entries},
     [DEVS_BUILTIN_OBJECT_STRING] = {DEVS_BUILTIN_PROTO_INIT, NULL, string_entries},
@@ -363,15 +401,17 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSROLE] = {DEVS_BUILTIN_PROTO_INIT, NULL, dsrole_entries},
     [DEVS_BUILTIN_OBJECT_FUNCTION] = {DEVS_BUILTIN_PROTO_INIT, NULL, function_entries},
     [DEVS_BUILTIN_OBJECT_BOOLEAN] = {DEVS_BUILTIN_PROTO_INIT, NULL, boolean_entries},
-    [DEVS_BUILTIN_OBJECT_PACKET] = {DEVS_BUILTIN_PROTO_INIT, NULL, packet_entries},
+    [DEVS_BUILTIN_OBJECT_DSPACKET] = {DEVS_BUILTIN_PROTO_INIT, NULL, dspacket_entries},
+    [DEVS_BUILTIN_OBJECT_DSSERVICESPEC] = {DEVS_BUILTIN_PROTO_INIT, NULL, dsservicespec_entries},
+    [DEVS_BUILTIN_OBJECT_DSPACKETSPEC] = {DEVS_BUILTIN_PROTO_INIT, NULL, dspacketspec_entries},
     [DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
     [DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
     [DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 86;
-const devs_builtin_function_t devs_builtin_functions[86] = {
+uint16_t devs_num_builtin_functions = 95;
+const devs_builtin_function_t devs_builtin_functions[95] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -430,22 +470,27 @@ const devs_builtin_function_t devs_builtin_functions[86] = {
     {N(KEYS), 1, NO_SELF, {.meth = fun1_Object_keys}},
     {N(VALUES), 1, NO_SELF, {.meth = fun1_Object_values}},
     {N(SETPROTOTYPEOF), 2, NO_SELF, {.meth = fun2_Object_setPrototypeOf}},
-    {N(ROLE), 0, PROP, {.prop = prop_Packet_role}},
-    {N(DEVICEIDENTIFIER), 0, PROP, {.prop = prop_Packet_deviceIdentifier}},
-    {N(SHORTID), 0, PROP, {.prop = prop_Packet_shortId}},
-    {N(SERVICEINDEX), 0, PROP, {.prop = prop_Packet_serviceIndex}},
-    {N(SERVICECOMMAND), 0, PROP, {.prop = prop_Packet_serviceCommand}},
-    {N(FLAGS), 0, PROP, {.prop = prop_Packet_flags}},
-    {N(ISCOMMAND), 0, PROP, {.prop = prop_Packet_isCommand}},
-    {N(ISREPORT), 0, PROP, {.prop = prop_Packet_isReport}},
-    {N(PAYLOAD), 0, PROP, {.prop = prop_Packet_payload}},
-    {N(ISEVENT), 0, PROP, {.prop = prop_Packet_isEvent}},
-    {N(EVENTCODE), 0, PROP, {.prop = prop_Packet_eventCode}},
-    {N(ISREGSET), 0, PROP, {.prop = prop_Packet_isRegSet}},
-    {N(ISREGGET), 0, PROP, {.prop = prop_Packet_isRegGet}},
-    {N(REGCODE), 0, PROP, {.prop = prop_Packet_regCode}},
-    {N(ISACTION), 0, PROP, {.prop = prop_Packet_isAction}},
-    {N(DECODE), 0, 0, {.meth = meth0_Packet_decode}},
+    {N(ROLE), 0, PROP, {.prop = prop_DsPacket_role}},
+    {N(DEVICEIDENTIFIER), 0, PROP, {.prop = prop_DsPacket_deviceIdentifier}},
+    {N(SHORTID), 0, PROP, {.prop = prop_DsPacket_shortId}},
+    {N(SERVICEINDEX), 0, PROP, {.prop = prop_DsPacket_serviceIndex}},
+    {N(SERVICECOMMAND), 0, PROP, {.prop = prop_DsPacket_serviceCommand}},
+    {N(FLAGS), 0, PROP, {.prop = prop_DsPacket_flags}},
+    {N(ISCOMMAND), 0, PROP, {.prop = prop_DsPacket_isCommand}},
+    {N(ISREPORT), 0, PROP, {.prop = prop_DsPacket_isReport}},
+    {N(PAYLOAD), 0, PROP, {.prop = prop_DsPacket_payload}},
+    {N(ISEVENT), 0, PROP, {.prop = prop_DsPacket_isEvent}},
+    {N(EVENTCODE), 0, PROP, {.prop = prop_DsPacket_eventCode}},
+    {N(ISREGSET), 0, PROP, {.prop = prop_DsPacket_isRegSet}},
+    {N(ISREGGET), 0, PROP, {.prop = prop_DsPacket_isRegGet}},
+    {N(REGCODE), 0, PROP, {.prop = prop_DsPacket_regCode}},
+    {N(ISACTION), 0, PROP, {.prop = prop_DsPacket_isAction}},
+    {N(SPEC), 0, PROP, {.prop = prop_DsPacket_spec}},
+    {N(DECODE), 0, 0, {.meth = meth0_DsPacket_decode}},
+    {N(PARENT), 0, PROP, {.prop = prop_DsPacketSpec_parent}},
+    {N(NAME), 0, PROP, {.prop = prop_DsPacketSpec_name}},
+    {N(CODE), 0, PROP, {.prop = prop_DsPacketSpec_code}},
+    {N(RESPONSE), 0, PROP, {.prop = prop_DsPacketSpec_response}},
     {N(READ), 0, 0, {.meth = meth0_DsRegister_read}},
     {N(WRITE), 0, 0, {.meth = methX_DsRegister_write}},
     {N(ROLE), 0, PROP, {.prop = prop_DsPacketInfo_role}},
@@ -454,6 +499,10 @@ const devs_builtin_function_t devs_builtin_functions[86] = {
     {N(__FUNC__), 0, 0, {.meth = methX_DsCommand___func__}},
     {N(ISBOUND), 0, PROP, {.prop = prop_DsRole_isBound}},
     {N(SENDCOMMAND), 2, 0, {.meth = meth2_DsRole_sendCommand}},
+    {N(CLASSIDENTIFIER), 0, PROP, {.prop = prop_DsServiceSpec_classIdentifier}},
+    {N(NAME), 0, PROP, {.prop = prop_DsServiceSpec_name}},
+    {N(LOOKUP), 1, 0, {.meth = meth1_DsServiceSpec_lookup}},
+    {N(ASSIGN), 1, 0, {.meth = meth1_DsServiceSpec_assign}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},
     {N(CHARAT), 1, 0, {.meth = meth1_String_charAt}},

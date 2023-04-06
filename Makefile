@@ -5,7 +5,7 @@ all: em comp
 comp:
 	yarn build
 
-comp-fast:
+comp-fast cf:
 	yarn build-fast
 
 native native1 em:

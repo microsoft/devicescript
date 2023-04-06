@@ -72,6 +72,6 @@ typedef struct {
 
 typedef struct {
     uint16_t name_idx; // "x"
-    uint8_t numfmt;    // DEVS_FIELDSPEC_FLAG_*
-    uint8_t flags;
+    uint8_t numfmt;
+    uint8_t flags; // DEVS_FIELDSPEC_FLAG_*
 } devs_field_spec_t;

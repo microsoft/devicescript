@@ -69,7 +69,6 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
             devs_regcache_free(&ctx->regcache, cached);
     }
 
-    const devs_role_desc_t *role = devs_img_get_role(ctx->img, role_idx);
     devs_fiber_t *fib = ctx->curr_fiber;
     JD_ASSERT(fib != NULL);
 

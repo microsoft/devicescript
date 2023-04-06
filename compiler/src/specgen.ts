@@ -76,14 +76,16 @@ function toHex(n: number): string {
     return "0x" + n.toString(16)
 }
 
+function noCtorSpec(info: jdspec.ServiceSpec) {
+    return [SRV_CONTROL].indexOf(info.classIdentifier) > -1
+}
+
 function ignoreSpec(info: jdspec.ServiceSpec) {
     return (
         info.status === "deprecated" ||
         [
-            SRV_CONTROL,
             SRV_ROLE_MANAGER,
             SRV_LOGGER,
-            // SRV_SETTINGS,
             SRV_BOOTLOADER,
             SRV_PROTO_TEST,
             SRV_INFRASTRUCTURE,
@@ -99,6 +101,7 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
 
 export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     let r = ""
+    let srv = ""
 
     for (const en of Object.values(info.enums)) {
         const enPref = enumName(info, en.name)
@@ -132,6 +135,16 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     }
     // emit class
     r += `class ${clname} extends ${baseclass} {\n`
+    srv += `interface I${clname}Server extends ServerInterface {\n`
+
+    if (noCtorSpec(info))
+        r +=
+            wrapComment("devs", "This service cannot be accessed via role.") +
+            "    private constructor()\n"
+
+    r +=
+        wrapComment("devs", `Static specification for ${info.name}`) +
+        "    static spec: ServiceSpec\n"
 
     info.packets.forEach(pkt => {
         if (pkt.derived || pkt.internal) return // ???
@@ -141,14 +154,26 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         let sx = ""
         let argtp = packetType(info, pkt)
         const client = !!pkt.client
+        const pktName = camelize(pkt.name)
+        const opt = pkt.optional ? "?" : ""
 
         if (isRegister(pkt.kind)) {
-            kw = client ? "" : "readonly "
-            tp = client ? "ClientRegister" : "Register"
-            sx = client ? "()" : ""
+            if (client) {
+                tp = "ClientRegister"
+                sx = "()"
+            } else {
+                kw = "readonly "
+                tp = "Register"
+                srv += `    ${pktName}${opt}(): AsyncValue<${argtp}>\n`
+                if (pkt.kind == "rw") {
+                    const args = pktFields(info, pkt)
+                    srv += `    set_${pktName}${opt}(${args}): AsyncValue<void>\n`
+                }
+            }
         } else if (pkt.kind == "event") {
             kw = "readonly "
             tp = "Event"
+            // skip events for srv for now
         } else if (pkt.kind == "command") {
             r += wrapComment(
                 "devs",
@@ -158,19 +183,22 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
                         .map(f => `@param ${f.name} - ${f.unit}`)
                         .join("\n")
             )
-            const { sig } = commandSig(info, pkt)
-            r += `    ${sig}\n`
+            r += `    ${commandSig(info, pkt).sig}\n`
+            srv += `    ${commandSig(info, pkt, true).sig}\n`
         }
 
         if (tp) {
             if (docUrl)
                 cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
             r += wrapComment("devs", cmt.comment)
-            r += `    ${kw}${camelize(pkt.name)}${sx}: ${tp}<${argtp}>\n`
+            r += `    ${kw}${pktName}${sx}: ${tp}<${argtp}>\n`
         }
     })
 
-    r += "}\n"
+    r += "}\n\n"
+    srv += "}\n"
+
+    r += srv
 
     return r.replace(/ *$/gm, "")
 }
@@ -276,7 +304,7 @@ The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${in
 `
     }
 
-    if (ignoreSpec(info)) {
+    if (ignoreSpec(info) || noCtorSpec(info)) {
         return `---
 pagination_prev: null
 pagination_next: null
@@ -471,7 +499,7 @@ function packetType(info: jdspec.ServiceSpec, pkt: jdspec.PacketInfo) {
     return memType(info, pkt.fields[0])
 }
 
-function commandSig(info: jdspec.ServiceSpec, pkt: jdspec.PacketInfo) {
+function pktFields(info: jdspec.ServiceSpec, pkt: jdspec.PacketInfo) {
     // if there's a startRepeats before last field, we don't put ... before it
     const earlyRepeats = pkt.fields
         .slice(0, pkt.fields.length - 1)
@@ -480,15 +508,26 @@ function commandSig(info: jdspec.ServiceSpec, pkt: jdspec.PacketInfo) {
         .map(f => {
             const tp = memType(info, f)
             if (f.startRepeats && !earlyRepeats) return `...${f.name}: ${tp}[]`
-            else return `${f.name}: ${tp}`
+            else return `${f.name == "_" ? "value" : f.name}: ${tp}`
         })
         .join(", ")
-    const name = camelize(pkt.name)
+    return fields
+}
+
+function commandSig(
+    info: jdspec.ServiceSpec,
+    pkt: jdspec.PacketInfo,
+    srv = false
+) {
+    const fields = pktFields(info, pkt)
+    let name = camelize(pkt.name)
     const report = info.packets.find(
         p => p.kind == "report" && p.identifier == pkt.identifier
     )
     const retType = !report ? "void" : packetType(info, report)
-    const sig = `${name}(${fields}): Promise<${retType}>`
+    if (srv && pkt.optional) name += "?"
+    const retWrap = srv ? "AsyncValue" : "Promise"
+    const sig = `${name}(${fields}): ${retWrap}<${retType}>`
     return {
         sig,
         name,

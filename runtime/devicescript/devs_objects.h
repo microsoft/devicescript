@@ -141,13 +141,20 @@ devs_maplike_t *devs_get_builtin_object(devs_ctx_t *ctx, unsigned idx);
 value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t v);
 bool devs_is_service_spec(devs_ctx_t *ctx, const void *ptr);
 const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx);
+const devs_service_spec_t *devs_value_to_service_spec(devs_ctx_t *ctx, value_t v);
 const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t service_class);
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx);
+int devs_packet_spec_parent(devs_ctx_t *ctx, const devs_packet_spec_t *pspec);
+value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key);
 const devs_packet_spec_t *devs_pkt_spec_by_code(devs_ctx_t *ctx, const devs_service_spec_t *spec,
                                                 uint16_t code);
 uint16_t devs_get_spec_code(uint8_t frame_flags, uint16_t service_command);
 
 value_t devs_builtin_object_value(devs_ctx_t *ctx, unsigned idx);
+value_t devs_value_from_packet_spec(devs_ctx_t *ctx, const devs_packet_spec_t *pkt);
+value_t devs_value_from_service_spec_idx(devs_ctx_t *ctx, unsigned idx);
+
+devs_packet_t *devs_value_to_packet_or_throw(devs_ctx_t *ctx, value_t self);
 
 // GC
 

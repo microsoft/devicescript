@@ -59,6 +59,7 @@ function processSpec(filecontent: string): Spec {
         buffer_idx: "B",
         builtin_idx: "I",
         builtin_object: "O",
+        spec_idx: "S",
 
         local_idx: "L",
         func_idx: "F",

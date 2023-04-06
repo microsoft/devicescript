@@ -68,6 +68,8 @@ declare module "@devicescript/core" {
     export class Packet {
         role: Role
 
+        spec: PacketSpec
+
         /**
          * 16 character lowercase hex-encoding of 8 byte device identifier.
          */
@@ -128,6 +130,8 @@ declare module "@devicescript/core" {
          * True for plain `command`/`report` (not register and not event)
          */
         isAction: boolean
+
+        notImplemented(): Packet
     }
 
     export class Fiber {
@@ -165,6 +169,26 @@ declare module "@devicescript/core" {
              */
             start(...args: any[]): Fiber
         }
+    }
+
+    export class ServiceSpec {
+        name: string
+        classIdentifier: number
+        assign(packet: Packet): void
+        lookup(name: string): PacketSpec
+    }
+
+    export class PacketSpec<T = any> {
+        parent: ServiceSpec
+        name: string
+        code: number
+        response?: PacketSpec
+        encode(v: T): Packet
+    }
+
+    export interface ServerInterface {
+        serviceIndex: number
+        spec: ServiceSpec
     }
 
     /**

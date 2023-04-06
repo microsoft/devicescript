@@ -368,6 +368,15 @@ static value_t exprx_static_function(devs_activation_t *frame, devs_ctx_t *ctx) 
     }
 }
 
+static value_t exprx_static_spec(devs_activation_t *frame, devs_ctx_t *ctx) {
+    unsigned fidx = ctx->literal_int;
+    if (fidx >= ctx->img.header->num_service_specs) {
+        return devs_invalid_program(ctx, 60128);
+    } else {
+        return devs_value_from_service_spec_idx(ctx, fidx);
+    }
+}
+
 bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a) {
     if (a < devs_img_num_roles(ctx->img))
         return true;
@@ -757,4 +766,4 @@ static value_t expr2_lt(devs_activation_t *frame, devs_ctx_t *ctx) {
     return devs_value_from_bool(af < bf);
 }
 
-const void * const devs_vm_op_handlers[DEVS_OP_PAST_LAST + 1] = {DEVS_OP_HANDLERS};
+const void *const devs_vm_op_handlers[DEVS_OP_PAST_LAST + 1] = {DEVS_OP_HANDLERS};
