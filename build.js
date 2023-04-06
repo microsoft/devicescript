@@ -116,15 +116,13 @@ function buildPrelude(folder, outp) {
     srvcfg = srvcfg
         .replace("type HexInt = integer | string", "type HexInt = integer")
         .replace(/type \w*Pin = .*/g, "")
-        .replace("/srvcfg", "/servers")
+        .replace("/srvcfg", "/core")
         .replace(
             /(interface BaseServiceConfig[^}]* name)(: string)/,
             (_, a, b) => a + "?" + b
         )
         .replace(/service: /g, `service?: `)
-    let startServ = `\n    import * as ds from "@devicescript/core"\n`
-    startServ += `    import { Pin, InputPin, OutputPin, IOPin, AnalogInPin, AnalogOutPin } from "@devicescript/core"\n\n`
-    srvcfg = "// auto-generated! do not edit here\n" + startServ + srvcfg
+    srvcfg = "// auto-generated! do not edit here\n" + srvcfg
 
     fs.writeFileSync(join(folder, serversname), srvcfg)
 
