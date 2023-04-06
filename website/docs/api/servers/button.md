@@ -5,14 +5,13 @@ title: Button
 
 # Button
 
-The `startButton` function starts a [button](https://microsoft.github.io/jacdac-docs/services/button) server on the device
-and returns a [client](/api/clients/button).
+The [Button](/api/clients/button) constructor takes a configuration to start a [button server](https://microsoft.github.io/jacdac-docs/services/button) on the device.
 
 ```ts
 import { gpio } from "@devicescript/core"
-import { startButton } from "@devicescript/servers"
+import { Button } from "@devicescript/servers"
 
-const buttonA = startButton({
+const buttonA = new Button({
     pin: gpio(2),
 })
 ```
@@ -31,9 +30,9 @@ This pin is set high when the button is pressed. Useful for buttons with a built
 
 ```ts no-run no-output
 import { gpio } from "@devicescript/core"
-import { startButton } from "@devicescript/servers"
+import { Button } from "@devicescript/servers"
 
-const buttonA = startButton({
+const buttonA = new Button({
     pin: gpio(2),
     pinBackLight: gpio(4),
 })
@@ -46,9 +45,9 @@ This makes it active-high and pulled low.
 
 ```ts no-run no-output
 import { gpio } from "@devicescript/core"
-import { startButton } from "@devicescript/servers"
+import { Button } from "@devicescript/servers"
 
-const buttonA = startButton({
+const buttonA = new Button({
     pin: gpio(2),
     activeHigh: true,
 })

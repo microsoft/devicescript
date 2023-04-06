@@ -5,8 +5,7 @@ title: Rotary Encoder
 
 # Rotary Encoder
 
-The `RotaryEncoder` client constructor takes a configuration to start a [Rotary Encoder](https://microsoft.github.io/jacdac-docs/services/rotaryencoder) server on the device
-and returns a [client](/api/clients/rotaryencoder).
+The [Rotary Encoder](/api/clients/rotaryencoder) constructor takes a configuration to start a [rotary encoder server](https://microsoft.github.io/jacdac-docs/services/rotaryencoder) on the device.
 
 ```ts
 import { gpio, RotaryEncoder } from "@devicescript/core"

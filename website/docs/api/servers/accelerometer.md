@@ -5,14 +5,13 @@ title: Accelerometer
 
 # Accelerometer
 
-The `startAccelerometer` function starts a [accelerometer](https://microsoft.github.io/jacdac-docs/services/accelerometer) server on the device
-and returns a [client](/api/clients/accelerometer).
+The [Accelerometer](/api/clients/accelerometer) constructor takes a configuration to start a [accelerometer server](https://microsoft.github.io/jacdac-docs/services/accelerometer) on the device.
 
 The accelerometer IMU chip will be auto-detected if it is supported.
 
 ```ts
-import { startAccelerometer } from "@devicescript/servers"
-const acc = startAccelerometer({})
+import { Accelerometer } from "@devicescript/core"
+const acc = new Accelerometer({})
 ```
 
 ## Coordinate transforms
@@ -29,8 +28,8 @@ The following would work for accelerometer mounted upside down and rotated,
 it transforms `(x1, y2, z3)` into `(y2, -x1, -z3)`.
 
 ```ts
-import { startAccelerometer } from "@devicescript/servers"
-const acc = startAccelerometer({
+import { Accelerometer } from "@devicescript/core"
+const acc = new Accelerometer({
     trX: 2,
     trY: -1,
     trZ: -3,

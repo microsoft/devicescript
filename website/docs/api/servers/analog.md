@@ -5,21 +5,21 @@ title: Analog
 
 # Analog
 
-There is a number of functions that start a simple analog sensor server.
-We'll use `startPotentiometer()` as an example, but you can use any of the following,
+There is a number of clients that start a simple analog sensor server.
+We'll use `Potentiometer` as an example, but you can use any of the following,
 as they all use the same configuration.
 
 {@import ../../devices/analog.mdp}
 
-In the simplest case, you just pass the pin to `startPotentiometer()`.
+In the simplest case, you just pass the pin to the constructor of `Potentiometer`.
 The voltage on the pin (typically between 0V (GND) and 3.3V (VCC)) will be translated to a number between 0 and 1.
 
 ```ts
 import { gpio } from "@devicescript/core"
-import { startPotentiometer } from "@devicescript/servers"
+import { Potentiometer } from "@devicescript/core"
 
-const slider = startPotentiometer({
-    pin: ds.gpio(3),
+const slider = new Potentiometer({
+    pin: gpio(3),
 })
 slider.subscribe(v => console.data({ value: 100 * v}))
 ```
@@ -36,10 +36,10 @@ For example, if you find you can never quite reach the `0` and `1` values, you c
 
 ```ts
 import { gpio } from "@devicescript/core"
-import { startPotentiometer } from "@devicescript/servers"
+import { Potentiometer } from "@devicescript/core"
 
-const slider = startPotentiometer({
-    pin: ds.gpio(3),
+const slider = new Potentiometer({
+    pin: gpio(3),
     offset: 0x1000,
     scale: 900,
 })
@@ -57,11 +57,11 @@ To improve power consumption, you may connect say R to a GPIO and configure the 
 
 ```ts
 import { gpio } from "@devicescript/core"
-import { startPotentiometer } from "@devicescript/servers"
+import { Potentiometer } from "@devicescript/core"
 
-const slider = startPotentiometer({
-    pin: ds.gpio(3),
-    pinHigh: ds.gpio(7),
+const slider = new Potentiometer({
+    pin: gpio(3),
+    pinHigh: gpio(7),
 })
 ```
 
