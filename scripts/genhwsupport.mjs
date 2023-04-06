@@ -13,11 +13,11 @@ const servicesURL = `/api/clients`
 const serversURL = `/api/servers`
 
 const srvNames = {
-    "accelerometers": "accelerometer",
-    "pressure": "airpressure",
-    "gyro": "gyroscope",
-    "co2": "eco2",
-    "captouch": "capacitivebutton"
+    accelerometers: "accelerometer",
+    pressure: "airpressure",
+    gyro: "gyroscope",
+    co2: "eco2",
+    captouch: "capacitivebutton",
 }
 
 function strcmp(a, b) {
@@ -64,14 +64,18 @@ function collectI2C() {
 `
     for (const id of ids) {
         const s = sensors[id]
-        const serv = s.services.map(srv => srvNames[srv] || srv).map(srv => `[${srv}](/api/clients/${srv})`).join(", ")
+        const serv = s.services
+            .map(srv => srvNames[srv] || srv)
+            .map(srv => `[${srv}](/api/clients/${srv})`)
+            .join(", ")
         r += `| **${id}** | ${s.name} | ${serv} | [${id}.c](${driversURL}/${id}.c) |\n`
     }
 
-    return r
+    return { services: [], md: r }
 }
 
 function collectAnalog() {
+    const services = []
     const fn = `runtime/jacdac-c/dcfg/srvcfg.d.ts`
     let analog = ""
     let servers = ""
@@ -81,13 +85,17 @@ function collectAnalog() {
         if (m) {
             const serv = m[1]
             analog += `* [${serv}](${servicesURL}/${serv.toLowerCase()})\n`
+            services.push(serv)
         }
 
         m = /interface (\w+)Config extends BaseServiceConfig/.exec(line)
         if (m) {
             const serv = m[1]
+            services.push(serv)
             if (serv.startsWith("Hid")) {
-                hid += `* [HID ${serv.slice(3)}](/api/servers/${serv.toLowerCase()})\n`
+                hid += `* [HID ${serv.slice(
+                    3
+                )}](/api/servers/${serv.toLowerCase()})\n`
             } else if (serv != "Analog") {
                 servers += `* [${serv}](${serversURL}/${serv.toLowerCase()})\n`
             }
@@ -95,19 +103,30 @@ function collectAnalog() {
     }
 
     return {
-        HID: hid,
-        SERVERS: servers,
-        ANALOG: analog,
+        services,
+        md: {
+            HID: hid,
+            SERVERS: servers,
+            ANALOG: analog,
+        },
     }
 }
 
+const analog = collectAnalog()
+const i2c = collectI2C()
 const sections = {
-    ...collectAnalog(),
-    I2C: collectI2C(),
+    ...analog.md,
+    I2C: i2c.md,
 }
 
+fs.writeFileSync(
+    "devs/lib/srvcfg.json",
+    JSON.stringify({ analog: [...analog.services] }, null, 2),
+    {
+        encoding: "utf8",
+    }
+)
 Object.keys(sections).map(id => {
     const fn = `website/docs/devices/${id.toLowerCase()}.mdp`
-    fs
-        .writeFileSync(fn, sections[id]?.trim(), "utf-8")
+    fs.writeFileSync(fn, sections[id]?.trim(), "utf-8")
 })

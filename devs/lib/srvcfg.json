@@ -1,0 +1,23 @@
+{
+  "analog": [
+    "RotaryEncoder",
+    "Button",
+    "Switch",
+    "Flex",
+    "Relay",
+    "LightBulb",
+    "Buzzer",
+    "Power",
+    "Accelerometer",
+    "Analog",
+    "LightLevel",
+    "ReflectedLight",
+    "WaterLevel",
+    "SoundLevel",
+    "SoilMoisture",
+    "Potentiometer",
+    "HidMouse",
+    "HidKeyboard",
+    "HidJoystick"
+  ]
+}
