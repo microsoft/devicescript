@@ -122,21 +122,9 @@ function buildPrelude(folder, outp) {
             (_, a, b) => a + "?" + b
         )
         .replace(/service: /g, `service?: `)
-    const m = /^\s*type ServiceConfig([^{]+)/m.exec(srvcfg)
     let startServ = `\n    import * as ds from "@devicescript/core"\n`
     startServ += `    import { Pin, InputPin, OutputPin, IOPin, AnalogInPin, AnalogOutPin } from "@devicescript/core"\n\n`
-    m[1].replace(/\| (\w+)Config/g, (_, s) => {
-        const url = `https://microsoft.github.io/devicescript/api/clients/${s.toLowerCase()}`
-        startServ += `    /**\n`
-        startServ += `     * Start on-board server for ${s}, and returns the client for it.\n`
-        startServ += `     * @returns client for the on-board server\n`
-        startServ += `     * @see {@link ${url} Documentation}\n`
-        startServ += `     */\n`
-        startServ += `    function start${s}(cfg: ${s}Config): ds.${s}\n\n`
-        return ""
-    })
-    srvcfg = srvcfg.replace(m[0], startServ + m[0])
-    srvcfg = "// auto-generated! do not edit here\n" + srvcfg
+    srvcfg = "// auto-generated! do not edit here\n" + startServ + srvcfg
 
     fs.writeFileSync(join(folder, serversname), srvcfg)
 
