@@ -1840,12 +1840,15 @@ class Program implements TopOpWriter {
 
             if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
-                this.protoDefinitions.push({
+                const info: ProtoDefinition = {
                     className: this.nodeName(stmt),
                     methodName: this.forceName(mem.name),
                     names: this.methodNames(sym),
                     methodDecl: mem,
-                })
+                }
+                this.protoDefinitions.push(info)
+                // TODO make this conditional, see https://github.com/microsoft/devicescript/issues/332
+                this.markMethodUsed(info.names[0])
             } else if (ts.isConstructorDeclaration(mem)) {
                 numCtorArgs = mem.parameters.length
             }
