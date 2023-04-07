@@ -174,6 +174,7 @@ value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx) {
     pkt->service_command = ctx->packet.service_command;
     pkt->flags = ctx->packet.flags;
     pkt->roleidx = role_idx;
+    pkt->crc = ctx->packet.crc;
 
     devs_value_unpin(ctx, r);
     return r;
@@ -348,9 +349,10 @@ static bool handle_send_pkt(devs_fiber_t *fiber) {
 }
 
 static bool handle_send_raw_pkt(devs_fiber_t *fiber) {
-    if (jd_send_pkt((void *)fiber->pkt_data.send_pkt.data) == 0) {
+    jd_packet_t *pkt = (void *)fiber->pkt_data.send_pkt.data;
+    if (jd_send_pkt(pkt) == 0) {
         LOGV("send raw pkt cmd=%x", fiber->service_command);
-        // jd_log_packet(&ctx->packet);
+        // jd_log_packet(pkt);
         return RESUME_USER_CODE;
     } else {
         LOGV("send raw pkt FAILED cmd=%x", fiber->service_command);

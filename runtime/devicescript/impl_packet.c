@@ -121,7 +121,7 @@ uint16_t devs_get_spec_code(uint8_t frame_flags, uint16_t service_command) {
     uint16_t top = service_command & 0xf000;
 
     if (frame_flags & JD_FRAME_FLAG_COMMAND) {
-        if (top == JD_CMD_SET_REGISTER)
+        if (top == JD_CMD_SET_REGISTER || top == JD_CMD_GET_REGISTER)
             return (service_command & 0x0fff) | DEVS_PACKETSPEC_CODE_REGISTER;
         if (top == 0)
             return service_command;
@@ -165,4 +165,16 @@ void meth0_DsPacket_decode(devs_ctx_t *ctx) {
     const devs_packet_spec_t *pspec = devs_pkt_get_spec(ctx, pkt);
     if (pspec)
         devs_ret(ctx, devs_packet_decode(ctx, pspec, pkt->payload->data, pkt->payload->length));
+}
+
+void meth0_DsPacket_notImplemented(devs_ctx_t *ctx) {
+    devs_packet_t *pkt = devs_value_to_packet_or_throw(ctx, devs_arg_self(ctx));
+    memset(&ctx->frame, 0, sizeof(ctx->frame));
+    ctx->packet.service_command = JD_CMD_COMMAND_NOT_IMPLEMENTED;
+    ctx->packet.device_identifier = pkt->device_id;
+    ctx->packet.service_size = sizeof(jd_base_command_not_implemented_report_t);
+    jd_base_command_not_implemented_report_t *d = (void *)ctx->packet.data;
+    d->service_command = pkt->service_command;
+    d->packet_crc = pkt->crc;
+    devs_ret(ctx, devs_jd_pkt_capture(ctx, pkt->roleidx));
 }

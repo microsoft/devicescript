@@ -94,6 +94,7 @@ value_t prop_DsPacket_regCode(devs_ctx_t *ctx, value_t self);
 value_t prop_DsPacket_isAction(devs_ctx_t *ctx, value_t self);
 value_t prop_DsPacket_spec(devs_ctx_t *ctx, value_t self);
 void meth0_DsPacket_decode(devs_ctx_t *ctx);
+void meth0_DsPacket_notImplemented(devs_ctx_t *ctx);
 // impl_packetspec.c
 value_t prop_DsPacketSpec_parent(devs_ctx_t *ctx, value_t self);
 value_t prop_DsPacketSpec_name(devs_ctx_t *ctx, value_t self);
@@ -267,51 +268,52 @@ static const devs_builtin_proto_entry_t DsPacket_prototype_entries[] = { //
     {N(ISACTION), 50073},                                                //
     {N(SPEC), 50074},                                                    //
     {N(DECODE), 50075},                                                  //
+    {N(NOTIMPLEMENTED), 50076},                                          //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketSpec_prototype_entries[] = { //
-    {N(PARENT), 50076},                                                      //
-    {N(NAME), 50077},                                                        //
-    {N(CODE), 50078},                                                        //
-    {N(RESPONSE), 50079},                                                    //
-    {N(ENCODE), 50080},                                                      //
+    {N(PARENT), 50077},                                                      //
+    {N(NAME), 50078},                                                        //
+    {N(CODE), 50079},                                                        //
+    {N(RESPONSE), 50080},                                                    //
+    {N(ENCODE), 50081},                                                      //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50081},                                                      //
-    {N(WRITE), 50082},                                                     //
+    {N(READ), 50082},                                                      //
+    {N(WRITE), 50083},                                                     //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsCommand_prototype_entries[] = { //
-    {N(__FUNC__), 50086},                                                 //
+    {N(__FUNC__), 50087},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsEvent_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
-    {N(ROLE), 50083},                                                        //
-    {N(NAME), 50084},                                                        //
-    {N(CODE), 50085},                                                        //
+    {N(ROLE), 50084},                                                        //
+    {N(NAME), 50085},                                                        //
+    {N(CODE), 50086},                                                        //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRole_prototype_entries[] = { //
-    {N(ISBOUND), 50087},                                               //
-    {N(SENDCOMMAND), 50088},                                           //
+    {N(ISBOUND), 50088},                                               //
+    {N(SENDCOMMAND), 50089},                                           //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsServiceSpec_prototype_entries[] = { //
-    {N(CLASSIDENTIFIER), 50089},                                              //
-    {N(NAME), 50090},                                                         //
-    {N(LOOKUP), 50091},                                                       //
-    {N(ASSIGN), 50092},                                                       //
+    {N(CLASSIDENTIFIER), 50090},                                              //
+    {N(NAME), 50091},                                                         //
+    {N(LOOKUP), 50092},                                                       //
+    {N(ASSIGN), 50093},                                                       //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50093},                                                //
-    {N(CHARCODEAT), 50094},                                            //
-    {N(CHARAT), 50095},                                                //
-    {N(SLICE), 50096},                                                 //
+    {N(LENGTH), 50094},                                                //
+    {N(CHARCODEAT), 50095},                                            //
+    {N(CHARAT), 50096},                                                //
+    {N(SLICE), 50097},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t empty_entries[] = { //
@@ -414,8 +416,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 97;
-const devs_builtin_function_t devs_builtin_functions[97] = {
+uint16_t devs_num_builtin_functions = 98;
+const devs_builtin_function_t devs_builtin_functions[98] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -492,6 +494,7 @@ const devs_builtin_function_t devs_builtin_functions[97] = {
     {N(ISACTION), 0, PROP, {.prop = prop_DsPacket_isAction}},
     {N(SPEC), 0, PROP, {.prop = prop_DsPacket_spec}},
     {N(DECODE), 0, 0, {.meth = meth0_DsPacket_decode}},
+    {N(NOTIMPLEMENTED), 0, 0, {.meth = meth0_DsPacket_notImplemented}},
     {N(PARENT), 0, PROP, {.prop = prop_DsPacketSpec_parent}},
     {N(NAME), 0, PROP, {.prop = prop_DsPacketSpec_name}},
     {N(CODE), 0, PROP, {.prop = prop_DsPacketSpec_code}},

@@ -92,6 +92,7 @@ typedef struct {
     uint16_t roleidx;
     uint8_t flags;
     uint8_t service_index;
+    uint16_t crc;
     devs_map_t *attached;
     devs_buffer_t *payload;
 } devs_packet_t;

@@ -77,32 +77,34 @@ async function _onServerPacket(pkt: ds.Packet) {
     if (!server) return
 
     server.spec.assign(pkt)
-    // console.log("SRV", pkt, pkt.spec)
+    // console.log("SRV", pkt, server.spec, pkt.spec)
     const methods = server as unknown as Record<
         string,
         (v?: any) => Promise<any>
     >
 
-    if (pkt.isRegSet) {
-        const m = methods["set_" + pkt.spec.name]
-        if (m) {
-            await m(pkt.decode())
-            return
-        }
-    } else {
-        const m = methods[pkt.spec.name]
-        if (m) {
-            if (pkt.isRegGet) {
-                const resp = pkt.spec.encode(await m())
-                await server._send(resp)
+    if (pkt.spec) {
+        if (pkt.isRegSet) {
+            const m = methods["set_" + pkt.spec.name]
+            if (m) {
+                await m(pkt.decode())
                 return
-            } else if (pkt.isAction) {
-                const v = await m(pkt.decode())
-                if (pkt.spec.response)
-                    await server._send(pkt.spec.response.encode(v))
-                return
-            } else {
-                // what's this?
+            }
+        } else {
+            const m = methods[pkt.spec.name]
+            if (m) {
+                if (pkt.isRegGet) {
+                    const resp = pkt.spec.encode(await m())
+                    await server._send(resp)
+                    return
+                } else if (pkt.isAction) {
+                    const v = await m(pkt.decode())
+                    if (pkt.spec.response)
+                        await server._send(pkt.spec.response.encode(v))
+                    return
+                } else {
+                    // what's this?
+                }
             }
         }
     }

@@ -638,3 +638,4 @@ Only `true` and `false` values.
     ServerInterface = 163
     _onServerPacket = 164
     _serverSend = 165
+    notImplemented = 166
