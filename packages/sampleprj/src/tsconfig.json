@@ -19,6 +19,6 @@
     },
     "include": [
         "**/*.ts",
-        "../node_modules/@devicescript/core/src/*.ts"
+        "../../core/src/*.ts"
     ]
 }

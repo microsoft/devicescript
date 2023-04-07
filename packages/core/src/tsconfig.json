@@ -18,7 +18,6 @@
         "types": []
     },
     "include": [
-        "*.ts",
-        "../node_modules/@devicescript/core/src/*.ts"
+        "*.ts"
     ]
 }

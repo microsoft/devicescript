@@ -16,5 +16,9 @@
         "noImplicitAny": true,
         "moduleDetection": "force",
         "types": []
-    }
+    },
+    "include": [
+        "**/*.ts",
+        "../packages/core/src/*.ts"
+    ]
 }
