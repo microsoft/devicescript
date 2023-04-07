@@ -125,13 +125,13 @@ export function getProgramDiagnostics(program: ts.Program): ts.Diagnostic[] {
 
 export function buildAST(
     mainFn: string,
-    host: Host,
+    dsHost: Host,
     prelude: Record<string, string>,
     checkModule: (path: string, pkgJSON: string) => boolean
 ) {
-    const tsHost = new TsHost(host, prelude, checkModule)
+    const host = new TsHost(dsHost, prelude, checkModule)
 
-    const tsOptions: ts.CompilerOptions = {
+    const options: ts.CompilerOptions = {
         allowJs: false,
         allowUnreachableCode: true,
         allowUnusedLabels: true,
@@ -170,12 +170,16 @@ export function buildAST(
         noDtsResolution: true,
         // types?: string[];
     }
+    const rootNames = Object.keys(prelude).filter(
+        fn => fn.includes("@devicescript/core/src/") && fn.endsWith(".d.ts")
+    )
+    rootNames.push(mainFn)
     const program = ts.createProgram({
-        rootNames: Object.keys(prelude).concat([mainFn]),
-        options: tsOptions,
-        host: tsHost,
+        rootNames,
+        options,
+        host,
     })
-    return { program, usedFiles: () => tsHost.usedFiles() }
+    return { program, usedFiles: () => host.usedFiles() }
 }
 
 const diagHost: ts.FormatDiagnosticsHost = {

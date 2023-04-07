@@ -256,7 +256,7 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
 // called from build.js with config===undefined
 export function preludeFiles(config: ResolvedBuildConfig) {
     if (!config) config = resolveBuildConfig()
-    const pref = "node_modules/@devicescript/core/src/"
+    const pref = "node_modules/@devicescript/"
     const r: Record<string, string> = {}
     for (const k of Object.keys(prelude)) {
         r[pref + k] = prelude[k]
@@ -273,9 +273,9 @@ export function preludeFiles(config: ResolvedBuildConfig) {
 ${thespecs}
 }
 `
-    r[pref + "devicescript-spec.d.ts"] = withmodule
+    r[pref + "core/src/devicescript-spec.d.ts"] = withmodule
 
-    r[pref + `devicescript-boards.d.ts`] = Object.values(config.boards)
+    r[pref + `core/src/devicescript-boards.d.ts`] = Object.values(config.boards)
         .map(b => boardFile(b, config.archs[b.archId]))
         .join("\n")
 

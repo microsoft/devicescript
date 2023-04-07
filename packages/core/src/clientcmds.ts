@@ -1,17 +1,5 @@
 import * as ds from "@devicescript/core"
 
-declare var ds_impl: typeof ds
-
-declare module "@devicescript/core" {
-    /**
-     * Wait for specified number of milliseconds.
-     * @alias sleep
-     */
-    function delay(ms: number): Promise<void>
-}
-
-ds_impl.delay = ds.sleep
-
 function addElement<T>(arr: T[], e: T) {
     if (!arr) return [e]
     arr.push(e)

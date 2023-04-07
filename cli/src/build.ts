@@ -437,6 +437,9 @@ export async function compileFile(
         entryPoint,
         options
     )
+
+    await saveLibFiles(buildConfig, options)
+
     const host = await getHost(buildConfig, options, folder)
 
     const res = compileWithHost(fn, host)
@@ -450,7 +453,6 @@ export async function compileFile(
         )
     }
 
-    await saveLibFiles(buildConfig, options)
     setDevsDmesg() // set again after we have re-created -dbg.json file
 
     if (errors.length) {

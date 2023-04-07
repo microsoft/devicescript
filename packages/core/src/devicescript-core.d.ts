@@ -250,6 +250,12 @@ declare module "@devicescript/core" {
     export function sleep(milliseconds: number): Promise<void>
 
     /**
+     * Wait for specified number of milliseconds.
+     * @alias sleep
+     */
+    export function delay(ms: number): Promise<void>
+
+    /**
      * Wait for resumption from other fiber. If the timeout expires, `undefined` is returned,
      * otherwise the value passed from the resuming fiber.
      * Timeout defaults to infinity.
@@ -265,11 +271,6 @@ declare module "@devicescript/core" {
      * Reboot the device.
      */
     export function reboot(): never
-
-    /**
-     * Throw an exception if the condition is not met.
-     */
-    export function assert(cond: boolean, msg?: string): void
 
     /**
      * Best use `throw new Error(...)` instead.
@@ -311,11 +312,6 @@ declare module "@devicescript/core" {
     ): string
 
     /**
-     * Check if running inside a simulator.
-     */
-    export function isSimulator(): boolean
-
-    /**
      * Return hex-encoded device 64 bit device identifier of the current device or its server counterpart
      */
     export function deviceIdentifier(which: "self" | "server"): string
@@ -330,7 +326,10 @@ declare module "@devicescript/core" {
      * Internal, used in server impl.
      * @deprecated
      */
-    export function _serverSend(serviceIndex: number, pkt: Packet): Promise<void>
+    export function _serverSend(
+        serviceIndex: number,
+        pkt: Packet
+    ): Promise<void>
 
     /*
      * Print out message. Used by console.log, etc.
