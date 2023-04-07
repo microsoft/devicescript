@@ -259,7 +259,7 @@
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC 38
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE 39
 
-#define DEVS_BUILTIN_STRING___MAX 163
+#define DEVS_BUILTIN_STRING___MAX 165
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -424,6 +424,8 @@
 #define DEVS_BUILTIN_STRING_PARENT 161
 #define DEVS_BUILTIN_STRING_RESPONSE 162
 #define DEVS_BUILTIN_STRING_SERVERINTERFACE 163
+#define DEVS_BUILTIN_STRING__ONSERVERPACKET 164
+#define DEVS_BUILTIN_STRING__SERVERSEND 165
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -466,7 +468,7 @@
         "Role", "Fiber", "suspend", "resume", "terminate", "self", "current", "id",                \
         "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended",     \
         "reboot", "server", "spec", "ServiceSpec", "classIdentifier", "lookup", "PacketSpec",      \
-        "parent", "response", "ServerInterface"
+        "parent", "response", "ServerInterface", "_onServerPacket", "_serverSend"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

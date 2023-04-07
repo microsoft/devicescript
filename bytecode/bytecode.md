@@ -636,3 +636,5 @@ Only `true` and `false` values.
     parent = 161
     response = 162
     ServerInterface = 163
+    _onServerPacket = 164
+    _serverSend = 165

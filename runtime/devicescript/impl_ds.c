@@ -126,3 +126,32 @@ void fun1_DeviceScript_deviceIdentifier(devs_ctx_t *ctx) {
 
     devs_ret(ctx, devs_string_sprintf(ctx, "%-s", jd_to_hex_a(&id, 8)));
 }
+
+void fun1_DeviceScript__serverSend(devs_ctx_t *ctx) {
+    unsigned service_idx = devs_arg_int(ctx, 0);
+    devs_packet_t *pkt = devs_value_to_packet_or_throw(ctx, devs_arg(ctx, 1));
+    if (pkt == NULL)
+        return;
+
+    if (service_idx > 0x30) {
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_SERVICEINDEX);
+        return;
+    }
+
+    unsigned sz = pkt->payload->length;
+
+    if (sz > JD_SERIAL_PAYLOAD_SIZE) {
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_PACKET);
+        return;
+    }
+
+    ctx->packet.service_index = pkt->service_index;
+    ctx->packet.service_command = pkt->service_command;
+    ctx->packet.device_identifier = pkt->device_id;
+    ctx->packet.flags = pkt->flags;
+
+    ctx->packet.service_size = sz;
+    memcpy(ctx->packet.data, pkt->payload->data, sz);
+
+    devs_jd_send_raw(ctx);
+}

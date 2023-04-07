@@ -309,13 +309,20 @@ value_t devs_value_from_packet_spec(devs_ctx_t *ctx, const devs_packet_spec_t *p
                                   DEVS_ROLE_INVALID | (off << DEVS_ROLE_BITS));
 }
 
-const devs_service_spec_t *devs_value_to_service_spec(devs_ctx_t *ctx, value_t v) {
+int devs_value_to_service_spec_idx(devs_ctx_t *ctx, value_t v) {
     if (devs_handle_type(v) != DEVS_HANDLE_TYPE_ROLE_MEMBER)
-        return NULL;
+        return -1;
     unsigned off = devs_handle_value(v) >> DEVS_ROLE_BITS;
     if (off < ctx->img.header->num_service_specs)
-        return devs_img_get_service_spec(ctx->img, off);
-    return NULL;
+        return off;
+    return -1;
+}
+
+const devs_service_spec_t *devs_value_to_service_spec(devs_ctx_t *ctx, value_t v) {
+    int off = devs_value_to_service_spec_idx(ctx, v);
+    if (off < 0)
+        return NULL;
+    return devs_img_get_service_spec(ctx->img, off);
 }
 
 const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx) {
@@ -353,8 +360,16 @@ int devs_packet_spec_parent(devs_ctx_t *ctx, const devs_packet_spec_t *pspec) {
 }
 
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx) {
+    if (roleidx >= DEVS_ROLE_FIRST_SPEC) {
+        unsigned specidx = roleidx - DEVS_ROLE_FIRST_SPEC;
+        if (specidx >= ctx->img.header->num_service_specs)
+            return NULL;
+        return devs_img_get_service_spec(ctx->img, specidx);
+    }
+
     if (roleidx >= devs_img_num_roles(ctx->img))
         return NULL;
+
     return devs_role_spec_for_class(ctx, devs_img_get_role(ctx->img, roleidx)->service_class);
 }
 

@@ -187,8 +187,9 @@ declare module "@devicescript/core" {
     }
 
     export interface ServerInterface {
-        readonly serviceIndex: number
+        serviceIndex: number
         readonly spec: ServiceSpec
+        _send(pkt: Packet): Promise<void>
     }
 
     /**
@@ -318,6 +319,18 @@ declare module "@devicescript/core" {
      * Return hex-encoded device 64 bit device identifier of the current device or its server counterpart
      */
     export function deviceIdentifier(which: "self" | "server"): string
+
+    /**
+     * Internal, used in server impl.
+     * @deprecated
+     */
+    export function _onServerPacket(pkt: Packet): Promise<void>
+
+    /**
+     * Internal, used in server impl.
+     * @deprecated
+     */
+    export function _serverSend(serviceIndex: number, pkt: Packet): Promise<void>
 
     /*
      * Print out message. Used by console.log, etc.

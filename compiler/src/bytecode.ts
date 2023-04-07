@@ -279,7 +279,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 163,
+    __MAX = 165,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -444,6 +444,8 @@ export enum BuiltInString {
     PARENT = 161,
     RESPONSE = 162,
     SERVERINTERFACE = 163,
+    _ONSERVERPACKET = 164,
+    _SERVERSEND = 165,
 }
 
 export const OP_PRINT_FMTS = [
@@ -723,6 +725,8 @@ export const BUILTIN_STRING__VAL = [
     "parent",
     "response",
     "ServerInterface",
+    "_onServerPacket",
+    "_serverSend",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

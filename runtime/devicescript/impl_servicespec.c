@@ -37,5 +37,7 @@ void meth1_DsServiceSpec_assign(devs_ctx_t *ctx) {
     if (!pkt)
         return;
 
-    devs_throw_not_supported_error(ctx, "TODO()");
+    int idx = devs_value_to_service_spec_idx(ctx, devs_arg_self(ctx));
+    JD_ASSERT(idx >= 0);
+    pkt->roleidx = DEVS_ROLE_FIRST_SPEC + idx;
 }
