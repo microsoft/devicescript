@@ -1,7 +1,7 @@
 import { Flags, LoggerPriority } from "jacdac-ts"
 
 export const GENDIR = ".devicescript"
-export const LIBDIR = `${GENDIR}/lib`
+export const LIBDIR = `node_modules/@devicescript`
 export const BINDIR = `${GENDIR}/bin`
 export const FLASHDIR = `${GENDIR}/flash`
 export const FLASHFILE = `sim.bin`

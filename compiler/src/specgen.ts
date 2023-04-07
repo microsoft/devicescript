@@ -256,7 +256,7 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
 // called from build.js with config===undefined
 export function preludeFiles(config: ResolvedBuildConfig) {
     if (!config) config = resolveBuildConfig()
-    const pref = ".devicescript/lib/"
+    const pref = "node_modules/@devicescript/core/src/"
     const r: Record<string, string> = {}
     for (const k of Object.keys(prelude)) {
         r[pref + k] = prelude[k]

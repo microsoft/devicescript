@@ -195,7 +195,7 @@ const optionalFiles: FileSet = {
             moduleDetection: "force",
             types: [],
         },
-        include: ["**/*.ts", `../${LIBDIR}/*.ts`],
+        include: ["**/*.ts", `../${LIBDIR}/core/src/*.ts`],
     },
     ".prettierrc": {
         arrowParens: "avoid",
@@ -234,7 +234,7 @@ const optionalFiles: FileSet = {
             "@devicescript/cli": "latest",
         },
         scripts: {
-            setup: "devicescript build --quiet", // generates .devicescript/lib/* files
+            setup: "devicescript build --quiet", // generates node_modules/@devicescript/* files
             postinstall: "devicescript build",
             "build:devicescript": "devicescript build src/main.ts",
             build: "yarn build:devicescript",
@@ -426,7 +426,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
 
     await runInstall(cwd, options)
 
-    // build to get .devicescript/lib/* files etc
+    // build to get node_modules/@devicescript/* files etc
     await build(MAIN, {})
 
     return finishAdd(

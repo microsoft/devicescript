@@ -10,9 +10,9 @@ compiler/src/prelude.ts
 website/solutions
 website/static/dist/devicescript-compiler.js
 temp/
-devs/lib/devicescript-spec.d.ts
-devs/lib/devicescript-servers.d.ts
-devs/lib/devicescript-boards.d.ts
+packages/core/src/devicescript-spec.d.ts
+packages/core/src/devicescript-servers.d.ts
+packages/core/src/devicescript-boards.d.ts
 .devicescript
 **/*.vsix
 .vscode/settings.json

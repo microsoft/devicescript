@@ -470,15 +470,19 @@ export async function saveLibFiles(
 
     const pref = resolve(options.cwd ?? ".")
     const libpath = join(pref, LIBDIR)
-    await mkdirp(libpath)
-    verboseLog(`saving lib files in ${libpath}`)
-    for (const fn of Object.keys(prelude)) {
-        const fnpath = join(pref, fn)
-        const ex = await readFile(fnpath, "utf-8").then(
-            r => r,
-            _ => null
-        )
-        if (prelude[fn] != ex) await writeFile(fnpath, prelude[fn])
+    if (existsSync(join(libpath, "core/CORE_SOURCES.md"))) {
+        verboseLog(`not saving files in ${libpath} (source build)`)
+    } else {
+        await mkdirp(libpath)
+        verboseLog(`saving lib files in ${libpath}`)
+        for (const fn of Object.keys(prelude)) {
+            const fnpath = join(pref, fn)
+            const ex = await readFile(fnpath, "utf-8").then(
+                r => r,
+                _ => null
+            )
+            if (prelude[fn] != ex) await writeFile(fnpath, prelude[fn])
+        }
     }
 
     // generate constants for non-catalog services
