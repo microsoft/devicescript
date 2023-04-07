@@ -228,7 +228,7 @@ int devsmgr_deploy_start(uint32_t sz) {
 
     LOGV("flash erase");
 #if JD_SETTINGS_LARGE
-    state->program_base = jd_settings_prep_large("*prog", sz);
+    state->program_base = jd_settings_prep_large("*prog", sizeof(hd) + sz);
     if (state->program_base == NULL)
         return -2;
 #else
