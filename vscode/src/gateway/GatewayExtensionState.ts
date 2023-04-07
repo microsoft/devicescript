@@ -214,13 +214,7 @@ export class GatewayExtensionState extends JDEventSource {
             await this.setApiRoot(undefined)
             await this.setToken(undefined)
         } else {
-            let {
-                AccountName,
-                AccountKey,
-                ApiRoot,
-                Subscription,
-                ResourceGroup,
-            } = toMap(
+            let { AccountName, AccountKey, ApiRoot } = toMap(
                 newConnectionString
                     .trim()
                     .split(";")
