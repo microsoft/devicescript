@@ -1,7 +1,5 @@
 import * as ds from "@devicescript/core"
 
-declare var ds_impl: typeof ds
-
 export class Server implements ds.ServerInterface {
     serviceIndex: number
     constructor(public spec: ds.ServiceSpec) {}
@@ -13,7 +11,7 @@ export class Server implements ds.ServerInterface {
 let servers: ds.ServerInterface[]
 let restartCnt = 1
 
-class ControlServer extends Server implements ds.IControlServer {
+export class ControlServer extends Server implements ds.IControlServer {
     constructor() {
         super(ds.Control.spec)
     }
@@ -114,7 +112,7 @@ async function _onServerPacket(pkt: ds.Packet) {
 export function startServer(s: ds.ServerInterface) {
     if (!servers) {
         servers = [new ControlServer()]
-        ds_impl._onServerPacket = _onServerPacket
+        ;(ds as typeof ds)._onServerPacket = _onServerPacket
         setInterval(async () => {
             const iserv = servers[0] as ds.IControlServer
             const spec = ds.Control.spec.lookup("services")
