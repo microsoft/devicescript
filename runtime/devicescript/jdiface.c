@@ -1,6 +1,7 @@
 #include "devs_internal.h"
 
 #define LOG_TAG "jdif"
+// #define VLOGGING 1
 #include "devs_logging.h"
 
 #define RESUME_USER_CODE 1
@@ -405,10 +406,14 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     if (devs_is_suspended(ctx))
         return;
 
+    // serv can be NULL
+
     memcpy(&ctx->packet, pkt, pkt->service_size + 16);
     pkt = &ctx->packet;
 
     unsigned numroles = devs_img_num_roles(ctx->img);
+
+    // jd_log_packet(pkt);
 
     if (jd_is_command(pkt) && pkt->device_identifier == devs_jd_server_device_id()) {
         value_t fn = devs_maplike_get_no_bind(
@@ -418,7 +423,6 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     }
 
     // DMESG("pkt %d %x / %d", pkt->service_index, pkt->service_command, pkt->service_size);
-    // jd_log_packet(&ctx->packet);
 
     for (unsigned idx = 0; idx < numroles; ++idx) {
         if (devs_jd_pkt_matches_role(ctx, idx)) {

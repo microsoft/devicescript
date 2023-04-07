@@ -25,9 +25,9 @@ export class ControlServer extends Server implements ds.IControlServer {
 
         const r = servers.map(s => s.spec.classIdentifier)
         r.shift() // drop the ctrl service
-        r.unshift(flags)
-        const pktCount = 0 // not yet supported
-        r.unshift(pktCount)
+        const reserved = 0,
+            pktCount = 0 // not yet supported
+        r.unshift(flags, pktCount, reserved)
         return r
     }
     noop() {}
@@ -77,6 +77,7 @@ async function _onServerPacket(pkt: ds.Packet) {
     if (!server) return
 
     server.spec.assign(pkt)
+    // console.log("SRV", pkt, pkt.spec)
     const methods = server as unknown as Record<
         string,
         (v?: any) => Promise<any>

@@ -675,7 +675,7 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
         const devs_packet_spec_t *spec = devs_decode_role_packet(ctx, v, &roleidx);
         if (roleidx == DEVS_ROLE_INVALID)
             pt = devs_value_to_service_spec(ctx, v) ? DEVS_BUILTIN_OBJECT_DSSERVICESPEC_PROTOTYPE
-                                                    : DEVS_BUILTIN_OBJECT_DSPACKETINFO_PROTOTYPE;
+                                                    : DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE;
         else
             switch (spec->code & DEVS_PACKETSPEC_CODE_MASK) {
             case DEVS_PACKETSPEC_CODE_REGISTER:

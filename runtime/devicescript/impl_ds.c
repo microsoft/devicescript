@@ -127,7 +127,7 @@ void fun1_DeviceScript_deviceIdentifier(devs_ctx_t *ctx) {
     devs_ret(ctx, devs_string_sprintf(ctx, "%-s", jd_to_hex_a(&id, 8)));
 }
 
-void fun1_DeviceScript__serverSend(devs_ctx_t *ctx) {
+void fun2_DeviceScript__serverSend(devs_ctx_t *ctx) {
     unsigned service_idx = devs_arg_int(ctx, 0);
     devs_packet_t *pkt = devs_value_to_packet_or_throw(ctx, devs_arg(ctx, 1));
     if (pkt == NULL)
