@@ -331,6 +331,16 @@ declare module "@devicescript/core" {
         pkt: Packet
     ): Promise<void>
 
+    /**
+     * Throw an exception if the condition is not met.
+     */
+    export function assert(cond: boolean, msg?: string): void
+
+    /**
+     * Check if running inside a simulator.
+     */
+    export function isSimulator(): boolean
+
     /*
      * Print out message. Used by console.log, etc.
      */

@@ -25,20 +25,11 @@ Math.log10 = function log10(x) {
 Math.log2 = function log2(x) {
     return Math.log(x) * 1.4426950408889634
 }
-
-/**
- * Throw an exception if the condition is not met.
- */
-export function assert(cond: boolean, msg?: string): void {
+;(ds as typeof ds).assert = function assert(cond: boolean, msg?: string): void {
     if (!cond) throw new Error("Assertion failed: " + msg)
 }
-
-/**
- * Check if running inside a simulator.
- */
-export function isSimulator(): boolean {
+;(ds as typeof ds).isSimulator = function isSimulator(): boolean {
     const a = ds._dcfgString("archId")
     return a === "wasm" || a === "native"
 }
-
 ;(ds as typeof ds).delay = ds.sleep
