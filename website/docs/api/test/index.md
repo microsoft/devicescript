@@ -1,20 +1,6 @@
 # Test
 
-The `@devicescript/test` module provides a lightweight unit test framework, with a subset of familiar APIs to Jest/Vitest/Mocha/Chai users (`describe`, `test`, `expect`).
-
-## Setup
-
-Add test support using the `devicescript` command line.
-
-```bash
-devicescript add test
-```
-
-You can also add the package manually.
-
-```bash npm2yarn
-npm install @devicescript/test
-```
+The `@devicescript/test` [builtin](/developer/builtin-packages) module provides a lightweight unit test framework, with a subset of familiar APIs to Jest/Vitest/Mocha/Chai users (`describe`, `test`, `expect`).
 
 ## Usage
 
@@ -88,7 +74,3 @@ describe("this is a test suite", () => {
     test("this is a test", () => {})
 })
 ```
-
-## Package
-
-The test framework is implemented in the [@devicescript/test](https://www.npmjs.com/package/@devicescript/test) package.

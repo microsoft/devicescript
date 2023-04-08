@@ -11,8 +11,6 @@ import {
     addService,
     addSim,
     addTest,
-    addSettings,
-    addI2C,
     init,
 } from "./init"
 import { logParse } from "./logparse"
@@ -344,14 +342,6 @@ export async function mainCli() {
     addCommand("test")
         .description("add tests to current project")
         .action(dropReturn(addTest))
-
-    addCommand("settings")
-        .description("add settings to current project")
-        .action(dropReturn(addSettings))
-
-    addCommand("i2c")
-        .description("add I2C to current project")
-        .action(dropReturn(addI2C))
 
     program
         .command("binpatch", { hidden: true })

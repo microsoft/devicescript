@@ -2,13 +2,9 @@
     "name": "@devicescript/cloud",
     "version": "2.3.4",
     "private": true,
-    "dependencies": {
-        "@devicescript/settings": "*",
-        "@devicescript/observables": "*"
-    },
+    "dependencies": {},
     "devDependencies": {
-        "@devicescript/cli": "*",
-        "@devicescript/test": "*"
+        "@devicescript/cli": "*"
     },
     "repository": {
         "type": "git",

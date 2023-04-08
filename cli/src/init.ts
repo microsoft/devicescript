@@ -46,24 +46,6 @@ const serviceFiles: FileSet = {
     `,
 }
 
-const settingsFiles: FileSet = {
-    "package.json": {
-        [IS_PATCH]: true,
-        dependencies: {
-            "@devicescript/settings": "latest",
-        },
-    },
-}
-
-const i2cFiles: FileSet = {
-    "package.json": {
-        [IS_PATCH]: true,
-        dependencies: {
-            "@devicescript/i2c": "latest",
-        },
-    },
-}
-
 const testFiles: FileSet = {
     "package.json": {
         [IS_PATCH]: true,
@@ -537,24 +519,6 @@ export async function addNpm(options: AddNpmOptions) {
     return finishAdd(`Prepared package.json for publishing, please review.`, [
         "package.json",
         "src/index.ts",
-    ])
-}
-
-export async function addSettings(options: AddTestOptions) {
-    const files = clone(settingsFiles)
-    const cwd = writeFiles(".", options, files)
-    await runInstall(cwd, options)
-    return finishAdd(`Added settings package to package.json, please review.`, [
-        "package.json",
-    ])
-}
-
-export async function addI2C(options: AddTestOptions) {
-    const files = clone(i2cFiles)
-    const cwd = writeFiles(".", options, files)
-    await runInstall(cwd, options)
-    return finishAdd(`Added i2c package to package.json, please review.`, [
-        "package.json",
     ])
 }
 

@@ -1,21 +1,7 @@
 # Settings
 
-The `@devicescript/settings` module provides a lightweight flash storage for small setting values.
+The `@devicescript/settings` [builtin](/developer/builtin-packages) module provides a lightweight flash storage for small setting values.
 Settings values are serialized in flash and available accross device reset. Firmware updates might erase the settings.
-
-## Setup
-
-Add test support using the `devicescript` command line.
-
-```bash
-devicescript add settings
-```
-
-You can also add the package manually.
-
-```bash npm2yarn
-npm install @devicescript/settings
-```
 
 ## Usage
 
@@ -40,7 +26,3 @@ import { readSetting } from "@devicescript/settings"
 // highlight-next-line
 const world = await readSetting("hello")
 ```
-
-## Package
-
-The test framework is implemented in the [@devicescript/settings](https://www.npmjs.com/package/@devicescript/settings) package.

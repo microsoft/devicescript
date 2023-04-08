@@ -4,8 +4,7 @@
     "private": true,
     "dependencies": {},
     "devDependencies": {
-        "@devicescript/cli": "*",
-        "@devicescript/test": "*"
+        "@devicescript/cli": "*"
     },
     "repository": {
         "type": "git",
