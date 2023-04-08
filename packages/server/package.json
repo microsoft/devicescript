@@ -25,6 +25,7 @@
     "main": "./src/index.ts",
     "license": "MIT",
     "devicescript": {
+        "bundle": true,
         "library": true
     },
     "files": [

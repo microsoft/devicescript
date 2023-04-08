@@ -78,6 +78,7 @@ import {
     ResolvedBuildConfig,
     SystemReg,
     ProgramConfig,
+    PkgJson,
 } from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
@@ -2787,30 +2788,22 @@ class Program implements TopOpWriter {
     }
 
     private isBuiltInObj(nodeName: string) {
-        if (nodeName == "#ds_impl") return true
         return builtInObjByName.hasOwnProperty(nodeName)
     }
 
     emitBuiltInConstByName(nodeName: string) {
         if (!nodeName) return null
-        switch (nodeName) {
-            case "#ds_impl":
-                return this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT)
-            default:
-                if (builtInObjByName.hasOwnProperty(nodeName))
-                    return this.writer.emitBuiltInObject(
-                        builtInObjByName[nodeName]
-                    )
-                if (this.flags.traceBuiltin) trace("traceBuiltin:", nodeName)
-                if (nodeName.startsWith("#ds.")) {
-                    const idx = BUILTIN_STRING__VAL.indexOf(nodeName.slice(4))
-                    if (idx >= 0) {
-                        this.markMethodUsed(nodeName)
-                        return this.writer.dsMember(idx)
-                    }
-                }
-                return null
+        if (builtInObjByName.hasOwnProperty(nodeName))
+            return this.writer.emitBuiltInObject(builtInObjByName[nodeName])
+        if (this.flags.traceBuiltin) trace("traceBuiltin:", nodeName)
+        if (nodeName.startsWith("#ds.")) {
+            const idx = BUILTIN_STRING__VAL.indexOf(nodeName.slice(4))
+            if (idx >= 0) {
+                this.markMethodUsed(nodeName)
+                return this.writer.dsMember(idx)
+            }
         }
+        return null
     }
 
     private banOptional(expr: ts.Expression) {
@@ -4058,7 +4051,7 @@ class Program implements TopOpWriter {
             (modulePath, pkgJSON) => {
                 const fn = modulePath + "package.json"
                 try {
-                    const pkg = JSON.parse(pkgJSON)
+                    const pkg = JSON.parse(pkgJSON) as PkgJson
                     if (pkg?.devicescript?.library) return true
                     this.printDiag(
                         mkDiag(

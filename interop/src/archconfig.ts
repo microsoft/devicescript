@@ -130,8 +130,18 @@ export interface ProgramBuildConfig {
     version?: string
 }
 
+export interface PkgJson {
+    name?: string
+    version?: string
+    devicescript?: {
+        library?: boolean
+        bundle?: boolean
+    }
+}
+
 export interface LocalBuildConfig {
     hwInfo: ProgramConfig
+    pkgJson?: PkgJson
     addBoards?: DeviceConfig[]
     addArchs?: ArchConfig[]
     addServices?: jdspec.ServiceSpec[]

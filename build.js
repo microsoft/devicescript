@@ -156,8 +156,11 @@ function buildPrelude(folder, outp) {
         if (fs.existsSync(pkgJsonPath)) {
             const pkgStr = fs.readFileSync(pkgJsonPath, "utf-8")
             const pkg = JSON.parse(pkgStr)
-            if (pkg.private) {
-                console.log("add ", pkgJsonPath)
+            if (pkg.devicescript?.bundle) {
+                if (!pkg.private)
+                    throw new Error(
+                        `bundled packages have to private: ${pkgJsonPath}`
+                    )
                 filecont[pkgFolder + "/package.json"] = pkgStr
                 const src = join(folder, pkgFolder, "src")
                 for (const ts of filesInDir(src)) {
@@ -270,7 +273,9 @@ async function main() {
         for (const specname of genspecs)
             fs.writeFileSync(
                 "packages/core/src/" + specname,
-                ds.preludeFiles()["node_modules/@devicescript/core/src/" + specname]
+                ds.preludeFiles()[
+                    "node_modules/@devicescript/core/src/" + specname
+                ]
             )
         {
             // clients

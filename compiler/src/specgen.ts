@@ -52,6 +52,7 @@ export function resolveBuildConfig(
 ): ResolvedBuildConfig {
     const r: ResolvedBuildConfig = {
         hwInfo: Object.assign({}, local?.hwInfo ?? {}),
+        pkgJson: Object.assign({}, local?.pkgJson ?? {}),
         addArchs: local?.addArchs,
         addBoards: local?.addBoards,
         addServices: local?.addServices,

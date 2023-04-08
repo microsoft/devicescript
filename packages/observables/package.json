@@ -16,7 +16,9 @@
         "url": "https://github.com/microsoft/devicescript.git",
         "directory": "packages/observables"
     },
+    "private": true,
     "devicescript": {
+        "bundle": true,
         "library": true
     },
     "files": [
