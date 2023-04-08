@@ -8,13 +8,13 @@ sidebar_position: 4
 DeviceScript defines a [cloud layer](/developer/cloud/)
 to abstract the communication between the device and a cloud provider.
 
-In order to facilite rapid prototyping, it is possible to provision a **Development Gateway** to
-support a few devices in your Azure subscription.
+In order to facilite rapid prototyping, it is possible to run a **Development Gateway** locally or deploy it to Azure on top of Azure services.
 
 -   Full sources at https://github.com/microsoft/devicescript-gateway
 
-### Features
+## Features
 
+-   Local or Azure deployement
 -   Device provisioning, management: register, unregister, list, ...
 -   Script management: create, update (versioned)
 -   Script deployment: assign a script to a device and the gateway will deploy it
@@ -29,9 +29,67 @@ The Development Gateway is a sample and not meant for production deployment.
 
 :::
 
-## Architecture
+## Prerequisites
 
-The Development Gateway is built on top of a few Azure resources:
+Follow these steps to get started with using the gateway.
+
+-   install [Node.JS 18+](https://nodejs.org/en/download/)
+    and the [Azure CLI](https://learn.microsoft.com/en-us/dotnet/azure/install-azure-cli).
+-   fork https://github.com/microsoft/devicescript-gateway/
+
+The full sources of the Gateway is available in that repository.
+
+-   install the dependencies and pull the submodules
+
+```bash npm2yarn
+npm run setup
+```
+
+## Local developement
+
+The Development Gateway can be run locally without any cloud resources. This is great for tinkering.
+
+-   [Node.JS + Fastify](https://www.fastify.io/) is a popular web server framework
+
+```mermaid
+stateDiagram-v2
+    web: Fastify server
+    web: (localhost)
+    dev: Device
+    wssk: Web Socket
+    openapi: Open API
+    vscode: VS Code
+    storage: Azure Storage
+    storage: (Azurite)
+
+    dev --> wssk
+    wssk --> web
+    openapi --> web
+    web --> storage
+    vscode --> openapi
+
+```
+
+To get started,
+
+-   launch Azurite, a local Azure storage emulator. Keep this terminal open.
+
+```bash npm2yarn
+npm run azurite
+```
+
+-   launch the local development server
+
+```bash npm2yarn
+npm run dev
+```
+
+-   open the swagger page, `http://localhost:7071/swagger/` and make sure it loads
+-   in Visual Studio Code, use the configuration string printed in the console
+
+## Azure deployment (optional)
+
+The Development Gateway can be deployed to Azure on top of Azure services:
 
 -   [App Service](https://learn.microsoft.com/en-us/azure/app-service/), runs a Node.JS web service with a swagger frontend
 -   [Key Vault](https://learn.microsoft.com/en-us/azure/key-vault/), to store secrets needed by the Web Application
@@ -41,13 +99,14 @@ The Development Gateway is built on top of a few Azure resources:
 
 ```mermaid
 stateDiagram-v2
+    web: Fastify server
     dev: Device
     ai: Azure Application Insights
     hub: Azure Event Hub
     kv: Azure Key Vault
     wssk: Web Socket
     openapi: Open API
-    web: Azure App Service
+    web: (Azure App Service)
     vscode: VS Code
     storage: Azure Storage
 
@@ -68,19 +127,12 @@ For development,
 
 The Development Gateway requires an Azure and a GitHub account.
 
-## Provisioning
+### Provisioning
 
--   install [Node.JS 18+](https://nodejs.org/en/download/)
-    and the [Azure CLI](https://learn.microsoft.com/en-us/dotnet/azure/install-azure-cli).
--   fork https://github.com/microsoft/devicescript-gateway/
-
-The full sources of the Gateway is available in that repository.
-
--   install the dependencies and pull the submodules
-
-```bash npm2yarn
-npm run setup
-```
+> NOTE:
+>
+> -   The `npm run provision` script will create Azure resources that will incur costs to your Azure subscription. You can clean up those resources manually via the Azure portal or with the `npm run unprovision` command.
+> -   You can call `npm run provision` as many times as you like, it will delete the previous resources and create new ones.
 
 -   open a terminal with the Azure CLI logged in and the default subscription configured
 
@@ -88,14 +140,14 @@ npm run setup
 az login
 ```
 
+-   You will need to generate a [Github personal access token](https://github.com/settings/personal-access-tokens/new)
+    for the forked repository, with `actions`, `secrets` scope as `read+write`.
+
 -   launch the provisioning script
 
 ```bash npm2yarn
 npm run provision
 ```
-
--   You will need to generate a [Github personal access token](https://github.com/settings/personal-access-tokens/new)
-    for the forked repository, with `actions`, `secrets` scope as `read+write`.
 
 After the script is done executing,
 it will take a couple minutes for the Github Actions to build the site and start it.
@@ -107,7 +159,7 @@ You will be able to continue the configuration of the gateway through the [VS Co
 
 ![Empty view](./empty-view.png)
 
-## Deployment
+### Deployment
 
 The repository is configured to
 deploy the site on every build on the `main` brain,
@@ -115,7 +167,7 @@ using the `build.yml` workflow.
 
 The project `README.md` file contains details for local development.
 
-## Cleanup
+### Cleanup
 
 Use the Azure CLI to delete the resource group and all its associated resources.
 
@@ -123,7 +175,7 @@ Use the Azure CLI to delete the resource group and all its associated resources.
 npm run unprovision
 ```
 
-## Dashboards
+### Dashboards
 
 Out of the box, the gateway will push [telemetry metrics](/developer/cloud) in an Application Insights instance and in an Event Hub.
 

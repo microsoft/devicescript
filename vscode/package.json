@@ -28,7 +28,8 @@
         "theme": "dark"
     },
     "categories": [
-        "Debuggers"
+        "Debuggers",
+        "Other"
     ],
     "private": true,
     "repository": {

@@ -1,0 +1,207 @@
+# Thermostat
+
+A rudimentary thermostat controller that uses a
+temperature sensor to decide when to turn on or off a furnace controlled by a relay.
+
+## Logging sensor data
+
+Let's start by mounting a `temperature` service client
+and logging each sensor reading to the console (using `console.data`).
+
+```ts
+import { Temperature } from "@devicescript/core"
+
+const thermometer = new ds.Temperature()
+const { temperature } = thermometer
+
+temperature.subscribe(t => {
+    console.data({ t })
+})
+```
+
+In Visual Studio Code, you can run this program with a simulated device and sensor and collect virtual data.
+Click on the `Download Data` icon in the DeviceScript view, you can analyze the data in a notebook.
+
+This approach works for a basic scenario but we lack the control over when data arrives, how it is filtered
+and at which rate.
+This is where [observables](/api/observables) come into play.
+
+## Add observables
+
+Add `@devicescript/observables` in your project.
+
+```bash npm2yarn
+npm install @devicescript/observables
+```
+
+and add this import to your `main.ts` file.
+
+```ts skip
+import "@devicescript/observables"
+```
+
+## Filtering
+
+Observables provide a way to add operators over streams of data. A register like `temperature` is like
+a stream of readings and we'll use [operators](/api/observables/operators) to manipulate them.
+
+We start with the `ewma` operator, which applies a exponentially weighted moving average filter to the data.
+
+```ts
+import { Temperature } from "@devicescript/core"
+// highlight-next-line
+import { ewma } from "@devicescript/observables"
+
+const thermometer = new ds.Temperature()
+const { temperature } = thermometer
+
+temperature
+    // highlight-next-line
+    .pipe(ewma(0.9))
+    .subscribe(t => console.data({ t }))
+```
+
+## Tapping
+
+```ts
+import { Temperature } from "@devicescript/core"
+// highlight-next-line
+import { ewma, tap } from "@devicescript/observables"
+
+const thermometer = new ds.Temperature()
+const { temperature } = thermometer
+
+temperature
+    .pipe(
+        // highlight-next-line
+        tap(t_raw => console.data({ t_raw })),
+        ewma(0.9)
+    )
+    .subscribe(t => console.data({ t }))
+```
+
+## Throttling
+
+Although the sensor may produce a high frequency of data locally, we probably want to
+throttle the output to a slower pace when deciding to control the relay.
+This can be done through `throttleTime` (stream first value and wait) or `auditTime` (wait then stream last value).
+
+```ts
+import { Temperature } from "@devicescript/core"
+// highlight-next-line
+import { ewma, tap, auditTime } from "@devicescript/observables"
+
+const thermometer = new ds.Temperature()
+const { temperature } = thermometer
+
+temperature
+    .pipe(
+        tap(t_raw => console.data({ t_raw })),
+        ewma(0.9),
+        tap(t_ewma => console.data({ t_ewma })),
+        // highlight-next-line
+        auditTime(5000) // once every 5 seconds
+    )
+    .subscribe(t => console.data({ t }))
+```
+
+## Level detector
+
+The next step is to categorize the current temperature in 3 zones, or levels: low, mid, high.
+In the low zone, the relay should be turn on to heat the room. In the high zone, the relay should be turned off.
+In the `mid` zone, the relay should not be actuated to avoid switching at the boundary of the levels.
+
+```ts
+import { Temperature } from "@devicescript/core"
+// highlight-next-line
+import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
+
+const thermometer = new ds.Temperature()
+const { temperature } = thermometer
+// highlight-next-line
+const t_ref = 68 // degree F
+
+temperature
+    .pipe(
+        tap(t_raw => console.data({ t_raw })),
+        ewma(0.9),
+        tap(t_ewma => console.data({ t_ewma })),
+        auditTime(5000), // once every 5 seconds
+        tap(t_audit => console.data({ t_audit })),
+        // highlight-next-line
+        levelDetector(t_ref - 1, t_ref + 1), // -1 = low, 0 = mid, 1 = high
+        // highlight-next-line
+        tap(level => console.data({ level }))
+    )
+    // highlight-next-line
+    .subscribe(level => console.data({ level }))
+```
+
+## Relay
+
+```ts
+import { Temperature, Relay } from "@devicescript/core"
+import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
+
+const thermometer = new ds.Temperature()
+const { temperature } = thermometer
+const t_ref = 68 // degree F
+// highlight-next-line
+const relay = new ds.Relay()
+
+temperature
+    .pipe(
+        tap(t_raw => console.data({ t_raw })),
+        ewma(0.9),
+        tap(t_ewma => console.data({ t_ewma })),
+        auditTime(5000),
+        tap(t_audit => console.data({ t_audit })),
+        levelDetector(t_ref - 1, t_ref + 1),
+        tap(level => console.data({ level }))
+    )
+    .subscribe(async level => {
+        // highlight-start
+        if (level < 0) await relay.active.write(true)
+        else if (level > 0) await relay.active.write(false)
+        console.data({ relay: await relay.active.read() })
+        // highlight-end
+    })
+```
+
+## Relay on ESP32
+
+Using a ESP32 board and a relay on pin `A0`, we can
+finalize this example.
+
+```ts
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { Temperature } from "@devicescript/core"
+import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
+// highlight-next-line
+import { startRelay } from "@devicescript/servers"
+
+const thermometer = new ds.Temperature()
+const { temperature } = thermometer
+const t_ref = 68 // degree F
+// highlight-start
+const relay = startRelay({
+    pin: pins.A0,
+})
+// highlight-end
+
+temperature
+    .pipe(
+        tap(t_raw => console.data({ t_raw })),
+        ewma(0.9),
+        tap(t_ewma => console.data({ t_ewma })),
+        auditTime(5000),
+        tap(t_audit => console.data({ t_audit })),
+        levelDetector(t_ref - 1, t_ref + 1),
+        tap(level => console.data({ level }))
+    )
+    .subscribe(async level => {
+        if (level < 0) await relay.active.write(true)
+        else if (level > 0) await relay.active.write(false)
+        console.data({ relay: await relay.active.read() })
+    })
+```

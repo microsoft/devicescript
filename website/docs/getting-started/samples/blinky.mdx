@@ -27,3 +27,21 @@ setInterval(async () => {
     await led.brightness.write(newbrightness)
 }, 1000)
 ```
+
+## ESP32
+
+The classic LED blinking program on a [ESP32](/devices/esp32)
+is similar. The LED is connected to the pin `A0`.
+
+```ts
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { startLightBulb } from "@devicescript/servers"
+
+const lightBulb = startLightBulb({
+    pin: pins.A0,
+})
+
+setInterval(async () => {
+    await lightBulb.toggle()
+}, 500)
+```
