@@ -22,6 +22,10 @@ void fun1_DeviceScript_sleep(devs_ctx_t *ctx) {
     devs_fiber_sleep(ctx->curr_fiber, time);
 }
 
+void fun1_DeviceScript_delay(devs_ctx_t *ctx) {
+    fun1_DeviceScript_sleep(ctx);
+}
+
 void fun1_DeviceScript__panic(devs_ctx_t *ctx) {
     unsigned code = devs_arg_int(ctx, 0);
     if (code == 0 || code >= 60000)

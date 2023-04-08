@@ -32,4 +32,3 @@ Math.log2 = function log2(x) {
     const a = ds._dcfgString("archId")
     return a === "wasm" || a === "native"
 }
-;(ds as typeof ds).delay = ds.sleep

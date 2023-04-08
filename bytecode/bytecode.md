@@ -639,3 +639,4 @@ Only `true` and `false` values.
     _onServerPacket = 164
     _serverSend = 165
     notImplemented = 166
+    delay = 167
