@@ -105,9 +105,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
-    IMG_VERSION_MINOR = 3,
-    IMG_VERSION_PATCH = 4,
-    IMG_VERSION = 0x2030004,
+    IMG_VERSION_MINOR = 4,
+    IMG_VERSION_PATCH = 0,
+    IMG_VERSION = 0x2040000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
