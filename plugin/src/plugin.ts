@@ -11,6 +11,46 @@ function init(modules: {
     function create(info: ts.server.PluginCreateInfo) {
         const service = info.languageService
 
+        // console.log("create DSPLUGIN")
+
+        if (!(info.serverHost as any).devsReadFilePatched) {
+            ;(info.serverHost as any).devsReadFilePatched = true
+            const doReadFile = info.serverHost.readFile.bind(info.serverHost)
+            info.serverHost.readFile = (path, enc) => {
+                let r = doReadFile(path, enc)
+                const bn = path.replace(/.*[\\\/]/, "")
+                if (bn == "package.json") {
+                    try {
+                        const json = JSON.parse(r)
+                        // does it look like a DevS project?
+                        if (
+                            json.devicescript ||
+                            json.devDependencies?.["@devicescript/cli"] ||
+                            json.dependencies?.["@devicescript/cli"]
+                        ) {
+                            // add peerDependencies for built-in packages, so that auto-imports work
+                            if (!json.peerDependencies)
+                                json.peerDependencies = {}
+                            for (const n of [
+                                "@devicescript/core",
+                                "@devicescript/server",
+                                "@devicescript/test",
+                                "@devicescript/observables",
+                                "@devicescript/cloud",
+                                "@devicescript/i2c",
+                                "@devicescript/settings",
+                            ]) {
+                                json.peerDependencies[n] = "*"
+                            }
+                            r = JSON.stringify(json, null, 4)
+                            // console.log(`patched: ${path}`)
+                        }
+                    } catch {}
+                }
+                return r
+            }
+        }
+
         const proxy: ts.LanguageService = Object.create(null)
         for (let k of Object.keys(service) as Array<keyof ts.LanguageService>) {
             const origMember = service[k]
@@ -48,7 +88,7 @@ function init(modules: {
     function isDeviceScript(prog: ts.Program) {
         return prog
             ?.getRootFileNames()
-            ?.some(fn => fn.includes(".devicescript"))
+            ?.some(fn => fn.replace(/\\/g, "/").includes("@devicescript/core"))
     }
 
     function checkNode(node: ts.Node) {
