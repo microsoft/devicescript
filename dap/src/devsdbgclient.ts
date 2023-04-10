@@ -355,6 +355,13 @@ export class DevsDbgClient extends JDServiceClient {
         )
     }
 
+    glbValue() {
+        return this.getValue(
+            DevsDbgValueTag.Special,
+            DevsDbgValueSpecial.Globals
+        )
+    }
+
     private getValue(
         tag: DevsDbgValueTag,
         v0: number,

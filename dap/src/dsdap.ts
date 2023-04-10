@@ -373,10 +373,11 @@ export class DsDapSession extends DebugSession {
                 presentationHint: "arguments" | "locals" | "registers",
                 name: string
             ) => {
-                const namedVariables = fn.dbg.slots.filter(
-                    s => s.type == tp
-                ).length
-                if (namedVariables == 0) return
+                const numVariables =
+                    tp == "glb"
+                        ? this.img.dbg.globals.length
+                        : fn.dbg.slots.filter(s => s.type == tp).length
+                if (numVariables == 0) return
                 const v = this.client.mkSynthValue(
                     DevsDbgValueTag.User1,
                     varTypeStrToNum[tp],
@@ -385,7 +386,7 @@ export class DsDapSession extends DebugSession {
                 response.body.scopes.push({
                     name,
                     variablesReference: v.index,
-                    namedVariables,
+                    namedVariables: numVariables,
                     presentationHint,
                     expensive: false,
                 })
@@ -395,6 +396,7 @@ export class DsDapSession extends DebugSession {
                 mkScope("arg", "arguments", "Arguments")
                 mkScope("loc", "locals", "Local variables")
                 mkScope("tmp", "registers", "Temporaries")
+                mkScope("glb", "locals", "Global variables")
             }
         })
     }
@@ -413,15 +415,28 @@ export class DsDapSession extends DebugSession {
             if (v.tag == DevsDbgValueTag.User1) {
                 if (wantNamed) {
                     const tp = varTypeNumToStr[v.v0]
-                    const fn = this.getFunctionByIdx(v.arg.stackFrame.fnIdx)
-                    const vals = await v.arg.readIndexed()
-                    for (let idx = 0; idx < fn.dbg.slots.length; ++idx) {
-                        const s = fn.dbg.slots[idx]
-                        if (s.type == tp && vals[idx]) {
-                            lst.push({
-                                key: s.name,
-                                value: vals[idx],
-                            })
+                    if (tp == "glb") {
+                        const vals = await this.client.glbValue().readIndexed()
+                        const glb = this.img.dbg.globals
+                        for (let idx = 0; idx < glb.length; ++idx) {
+                            if (vals[idx]) {
+                                lst.push({
+                                    key: glb[idx].name,
+                                    value: vals[idx],
+                                })
+                            }
+                        }
+                    } else {
+                        const fn = this.getFunctionByIdx(v.arg.stackFrame.fnIdx)
+                        const vals = await v.arg.readIndexed()
+                        for (let idx = 0; idx < fn.dbg.slots.length; ++idx) {
+                            const s = fn.dbg.slots[idx]
+                            if (s.type == tp && vals[idx]) {
+                                lst.push({
+                                    key: s.name,
+                                    value: vals[idx],
+                                })
+                            }
                         }
                     }
                 }
@@ -567,7 +582,7 @@ export class DsDapSession extends DebugSession {
         response: DebugProtocol.NextResponse,
         args: DebugProtocol.NextArguments
     ): void {
-        this.stepRequest(response, args, 0)
+        this.stepRequest(response, args, 0 as DevsDbgStepFlags)
     }
 
     protected override stepOutRequest(
