@@ -108,8 +108,18 @@ const files = {
     "vscode/built/devicescript-vscode-web.js": "vscode/src/web-extension.ts",
 }
 
+function strcmp(a, b) {
+    return a < b ? -1 : a > b ? 1 : 0
+}
+
+function filesInDir(fn) {
+    const r = fs.readdirSync(fn)
+    r.sort(strcmp)
+    return r
+}
+
 const genspecs = ["devicescript-spec.d.ts", "devicescript-boards.d.ts"]
-const serversname = "devicescript-servers.d.ts"
+const serversname = "core/src/devicescript-servers.d.ts"
 function buildPrelude(folder, outp) {
     let srvcfg = fs.readFileSync("runtime/jacdac-c/dcfg/srvcfg.d.ts", "utf-8")
     // no reason to encode hex number as strings in full TS syntax
@@ -140,13 +150,30 @@ function buildPrelude(folder, outp) {
 
     fs.writeFileSync(join(folder, serversname), srvcfg)
 
-    const files = fs.readdirSync(folder)
-    files.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-
     const filecont = {}
-    for (const fn of files) {
-        if (genspecs.includes(fn)) continue
-        filecont[fn] = fs.readFileSync(folder + "/" + fn, "utf-8")
+    for (const pkgFolder of filesInDir(folder)) {
+        const pkgJsonPath = join(folder, pkgFolder, "package.json")
+        if (fs.existsSync(pkgJsonPath)) {
+            const pkgStr = fs.readFileSync(pkgJsonPath, "utf-8")
+            const pkg = JSON.parse(pkgStr)
+            if (pkg.devicescript?.bundle) {
+                if (!pkg.private)
+                    throw new Error(
+                        `bundled packages have to private: ${pkgJsonPath}`
+                    )
+                filecont[pkgFolder + "/package.json"] = pkgStr
+                const src = join(folder, pkgFolder, "src")
+                for (const ts of filesInDir(src)) {
+                    if (genspecs.includes(ts)) continue
+                    if (ts.endsWith(".ts")) {
+                        filecont[pkgFolder + "/src/" + ts] = fs.readFileSync(
+                            join(src, ts),
+                            "utf-8"
+                        )
+                    }
+                }
+            }
+        }
     }
 
     let r = "export const prelude: Record<string, string> = {\n"
@@ -175,7 +202,7 @@ async function main() {
     try {
         process.chdir(rootdir)
         copyVM()
-        buildPrelude("devs/lib", "compiler/src/prelude.ts")
+        buildPrelude("packages", "compiler/src/prelude.ts")
         for (const outfile of Object.keys(files)) {
             const src = files[outfile]
             const folder = resolve(rootdir, dirname(src))
@@ -245,8 +272,10 @@ async function main() {
             "/compiler/built/devicescript-compiler.node.cjs")
         for (const specname of genspecs)
             fs.writeFileSync(
-                "devs/lib/" + specname,
-                ds.preludeFiles()[".devicescript/lib/" + specname]
+                "packages/core/src/" + specname,
+                ds.preludeFiles()[
+                    "node_modules/@devicescript/core/src/" + specname
+                ]
             )
         {
             // clients

@@ -1,11 +1,10 @@
 {
     "name": "@devicescript/i2c",
     "version": "2.3.4",
-    "private": false,
+    "private": true,
     "dependencies": {},
     "devDependencies": {
-        "@devicescript/cli": "*",
-        "@devicescript/test": "*"
+        "@devicescript/cli": "*"
     },
     "repository": {
         "type": "git",
@@ -25,6 +24,7 @@
     "main": "./src/index.ts",
     "license": "MIT",
     "devicescript": {
+        "bundle": true,
         "library": true
     },
     "files": [

@@ -60,14 +60,14 @@ void meth1_Buffer_toString(devs_ctx_t *ctx) {
     const uint8_t *data = buffer_data(ctx, devs_arg_self(ctx), &sz);
 
     if (data) {
-        if (devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING_HEX))) {
+        if (devs_value_eq_builtin_string(ctx, enc, DEVS_BUILTIN_STRING_HEX)) {
             devs_string_t *s = devs_string_try_alloc(ctx, sz * 2);
             if (s)
                 jd_to_hex(s->data, data, sz);
             devs_ret_gc_ptr(ctx, s);
         } else if (devs_is_null_or_undefined(enc) ||
-                   devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING_UTF8)) ||
-                   devs_value_eq(ctx, enc, devs_builtin_string(DEVS_BUILTIN_STRING_UTF_8))) {
+                   devs_value_eq_builtin_string(ctx, enc, DEVS_BUILTIN_STRING_UTF8) ||
+                   devs_value_eq_builtin_string(ctx, enc, DEVS_BUILTIN_STRING_UTF_8)) {
             devs_ret(ctx, devs_string_from_utf8(ctx, data, sz));
         } else {
             devs_throw_type_error(ctx, "Unknown encoding: %s", devs_show_value(ctx, enc));

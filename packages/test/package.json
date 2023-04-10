@@ -17,7 +17,9 @@
     },
     "main": "./src/index.ts",
     "license": "MIT",
+    "private": true,
     "devicescript": {
+        "bundle": true,
         "library": true
     },
     "repository": {

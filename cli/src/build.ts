@@ -1,4 +1,4 @@
-import { basename, join, relative, resolve } from "node:path"
+import { basename, dirname, join, relative, resolve } from "node:path"
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs"
 import { ensureDirSync, mkdirp, removeSync } from "fs-extra"
 import {
@@ -19,6 +19,7 @@ import {
     RepoInfo,
     pinsInfo,
     CompilationResult,
+    PkgJson,
 } from "@devicescript/compiler"
 import {
     BINDIR,
@@ -237,10 +238,8 @@ function compilePackageJson(
 ) {
     const pkgJsonPath = join(tsdir, "package.json")
     if (existsSync(pkgJsonPath)) {
-        const pkgJSON = readJSON5Sync(pkgJsonPath) as {
-            name?: string
-            version?: string
-        }
+        const pkgJSON = readJSON5Sync(pkgJsonPath) as PkgJson
+        lcfg.pkgJson = pkgJSON
         lcfg.hwInfo["@name"] = pkgJSON.name ?? "(no name)"
         let version = pkgJSON.version ?? "(no version)"
         if (isGit()) {
@@ -437,6 +436,9 @@ export async function compileFile(
         entryPoint,
         options
     )
+
+    await saveLibFiles(buildConfig, options)
+
     const host = await getHost(buildConfig, options, folder)
 
     const res = compileWithHost(fn, host)
@@ -450,7 +452,6 @@ export async function compileFile(
         )
     }
 
-    await saveLibFiles(buildConfig, options)
     setDevsDmesg() // set again after we have re-created -dbg.json file
 
     if (errors.length) {
@@ -470,15 +471,23 @@ export async function saveLibFiles(
 
     const pref = resolve(options.cwd ?? ".")
     const libpath = join(pref, LIBDIR)
-    await mkdirp(libpath)
-    verboseLog(`saving lib files in ${libpath}`)
-    for (const fn of Object.keys(prelude)) {
-        const fnpath = join(pref, fn)
-        const ex = await readFile(fnpath, "utf-8").then(
-            r => r,
-            _ => null
-        )
-        if (prelude[fn] != ex) await writeFile(fnpath, prelude[fn])
+    if (
+        existsSync(join(libpath, "core/CORE_SOURCES.md")) ||
+        buildConfig.pkgJson?.devicescript?.bundle
+    ) {
+        verboseLog(`not saving files in ${libpath} (source build)`)
+    } else {
+        await mkdirp(libpath)
+        verboseLog(`saving lib files in ${libpath}`)
+        for (const fn of Object.keys(prelude)) {
+            const fnpath = join(pref, fn)
+            await mkdirp(dirname(fnpath))
+            const ex = await readFile(fnpath, "utf-8").then(
+                r => r,
+                _ => null
+            )
+            if (prelude[fn] != ex) await writeFile(fnpath, prelude[fn])
+        }
     }
 
     // generate constants for non-catalog services

@@ -37,14 +37,3 @@ void meth2_DsRole_sendCommand(devs_ctx_t *ctx) {
         devs_jd_send_cmd(ctx, role, cmd);
     }
 }
-
-void meth0_DsRole_wait(devs_ctx_t *ctx) {
-    unsigned role = devs_arg_self_role(ctx);
-    if (role == DEVS_ROLE_INVALID)
-        return;
-
-    ctx->curr_fiber->pkt_kind = DEVS_PKT_KIND_ROLE_WAIT;
-    ctx->curr_fiber->role_idx = role;
-    devs_fiber_set_wake_time(ctx->curr_fiber, 0);
-    devs_fiber_yield(ctx);
-}

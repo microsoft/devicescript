@@ -36,6 +36,8 @@ typedef struct {
 #define DEVS_ROLE_MASK ((1U << DEVS_ROLE_BITS) - 1)
 #define DEVS_ROLE_INVALID DEVS_ROLE_MASK
 
+#define DEVS_ROLE_FIRST_SPEC (1U << DEVS_ROLE_BITS)
+
 typedef struct {
     // position of function (must be within code section)
     uint32_t start;  // in bytes, in whole image
@@ -72,6 +74,6 @@ typedef struct {
 
 typedef struct {
     uint16_t name_idx; // "x"
-    uint8_t numfmt;    // DEVS_FIELDSPEC_FLAG_*
-    uint8_t flags;
+    uint8_t numfmt;
+    uint8_t flags; // DEVS_FIELDSPEC_FLAG_*
 } devs_field_spec_t;

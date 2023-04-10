@@ -1,14 +1,10 @@
 {
     "name": "@devicescript/cloud",
     "version": "2.3.4",
-    "private": false,
-    "dependencies": {
-        "@devicescript/settings": "*",
-        "@devicescript/observables": "*"
-    },
+    "private": true,
+    "dependencies": {},
     "devDependencies": {
-        "@devicescript/cli": "*",
-        "@devicescript/test": "*"
+        "@devicescript/cli": "*"
     },
     "repository": {
         "type": "git",
@@ -28,6 +24,7 @@
     "main": "./src/index.ts",
     "license": "MIT",
     "devicescript": {
+        "bundle": true,
         "library": true
     },
     "files": [

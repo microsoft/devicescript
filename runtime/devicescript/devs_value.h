@@ -165,6 +165,7 @@ bool devs_value_ieee_eq(devs_ctx_t *ctx, value_t a, value_t b);
 bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b);
 // == in JS
 bool devs_value_approx_eq(devs_ctx_t *ctx, value_t a, value_t b);
+bool devs_value_eq_builtin_string(devs_ctx_t *ctx, value_t a, unsigned idx);
 
 // returns one of DEVS_OBJECT_TYPE_*
 unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v);
@@ -221,3 +222,5 @@ value_t devs_json_stringify(devs_ctx_t *ctx, value_t v, int indent, bool do_thro
 
 int devs_inspect_to(devs_ctx_t *ctx, value_t v, char *dst, unsigned size);
 value_t devs_inspect(devs_ctx_t *ctx, value_t v, unsigned size);
+
+uint32_t devs_compute_timeout(devs_ctx_t *ctx, value_t t);

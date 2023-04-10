@@ -3,11 +3,7 @@
     "version": "2.3.4",
     "private": true,
     "dependencies": {
-        "devicescript-cowsay": "*",
-        "@devicescript/observables": "*",
-        "@devicescript/cloud": "*",
-        "@devicescript/settings": "*",
-        "@devicescript/i2c": "*"
+        "devicescript-cowsay": "*"
     },
     "devDependencies": {
         "@devicescript/cli": "*",

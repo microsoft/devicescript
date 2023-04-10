@@ -17,5 +17,5 @@
         "moduleDetection": "force",
         "types": []
     },
-    "include": ["**/*.ts", "../.devicescript/lib/*.ts"]
+    "include": ["**/*.ts", "../../core/src/*.ts"]
 }

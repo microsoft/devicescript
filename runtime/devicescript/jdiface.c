@@ -1,6 +1,7 @@
 #include "devs_internal.h"
 
 #define LOG_TAG "jdif"
+// #define VLOGGING 1
 #include "devs_logging.h"
 
 #define RESUME_USER_CODE 1
@@ -50,6 +51,7 @@ void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib) {
     switch (fib->pkt_kind) {
     case DEVS_PKT_KIND_SEND_PKT:
+    case DEVS_PKT_KIND_SEND_RAW_PKT:
         devs_free(fib->ctx, fib->pkt_data.send_pkt.data);
         break;
     default:
@@ -69,17 +71,8 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
             devs_regcache_free(&ctx->regcache, cached);
     }
 
-    const devs_role_desc_t *role = devs_img_get_role(ctx->img, role_idx);
     devs_fiber_t *fib = ctx->curr_fiber;
     JD_ASSERT(fib != NULL);
-
-    if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION) {
-        devs_fiber_sleep(fib, 0);
-        LOGV("wake condition");
-        devs_jd_reset_packet(ctx);
-        devs_jd_wake_role(ctx, role_idx);
-        return;
-    }
 
     fib->role_idx = role_idx;
     fib->service_command = code;
@@ -90,6 +83,28 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     if (fib->pkt_data.send_pkt.data != NULL) {
         fib->pkt_data.send_pkt.size = sz;
         memcpy(fib->pkt_data.send_pkt.data, ctx->packet.data, sz);
+    }
+    devs_fiber_sleep(fib, 0);
+}
+
+void devs_jd_send_raw(devs_ctx_t *ctx) {
+    if (ctx->error_code)
+        return;
+
+    devs_fiber_t *fib = ctx->curr_fiber;
+    JD_ASSERT(fib != NULL);
+
+    jd_packet_t *pkt = &ctx->packet;
+
+    fib->role_idx = DEVS_ROLE_INVALID;
+    fib->service_command = pkt->service_command;
+
+    unsigned sz = pkt->service_size + JD_SERIAL_FULL_HEADER_SIZE;
+    fib->pkt_kind = DEVS_PKT_KIND_SEND_RAW_PKT;
+    fib->pkt_data.send_pkt.data = devs_try_alloc(ctx, sz);
+    if (fib->pkt_data.send_pkt.data != NULL) {
+        fib->pkt_data.send_pkt.size = sz;
+        memcpy(fib->pkt_data.send_pkt.data, pkt, sz);
     }
     devs_fiber_sleep(fib, 0);
 }
@@ -159,9 +174,24 @@ value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx) {
     pkt->service_command = ctx->packet.service_command;
     pkt->flags = ctx->packet.flags;
     pkt->roleidx = role_idx;
+    pkt->crc = ctx->packet.crc;
 
     devs_value_unpin(ctx, r);
     return r;
+}
+
+static void start_pkt_handler(devs_ctx_t *ctx, value_t fn, unsigned role_idx) {
+    if (devs_is_undefined(fn))
+        return;
+
+    ctx->stack_top_for_gc = 2;
+    ctx->the_stack[0] = fn;
+    // null it out first, in case devs_jd_pkt_capture() triggers GC
+    ctx->the_stack[1] = devs_undefined;
+    ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role_idx);
+    devs_fiber_t *fiber = devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
+    if (fiber)
+        fiber->role_wkp = 1;
 }
 
 void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
@@ -174,16 +204,8 @@ void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
     value_t role = devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, role_idx);
     value_t fn = devs_function_bind(
         ctx, role, devs_object_get_built_in_field(ctx, role, DEVS_BUILTIN_STRING__ONPACKET));
-    if (!devs_is_undefined(fn)) {
-        ctx->stack_top_for_gc = 2;
-        ctx->the_stack[0] = fn;
-        // null it out first, in case devs_jd_pkt_capture() triggers GC
-        ctx->the_stack[1] = devs_undefined;
-        ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role_idx);
-        devs_fiber_t *fiber = devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
-        if (fiber)
-            fiber->role_wkp = 1;
-    }
+
+    start_pkt_handler(ctx, fn, role_idx);
 
     int runsome = 1;
     while (runsome) {
@@ -326,6 +348,18 @@ static bool handle_send_pkt(devs_fiber_t *fiber) {
     }
 }
 
+static bool handle_send_raw_pkt(devs_fiber_t *fiber) {
+    jd_packet_t *pkt = (void *)fiber->pkt_data.send_pkt.data;
+    if (jd_send_pkt(pkt) == 0) {
+        LOGV("send raw pkt cmd=%x", fiber->service_command);
+        // jd_log_packet(pkt);
+        return RESUME_USER_CODE;
+    } else {
+        LOGV("send raw pkt FAILED cmd=%x", fiber->service_command);
+        return retry_soon(fiber);
+    }
+}
+
 bool devs_jd_should_run(devs_fiber_t *fiber) {
     if (fiber->pkt_kind == DEVS_PKT_KIND_NONE || fiber->pkt_kind == DEVS_PKT_KIND_SUSPENDED)
         return RESUME_USER_CODE;
@@ -340,6 +374,9 @@ bool devs_jd_should_run(devs_fiber_t *fiber) {
 
     case DEVS_PKT_KIND_SEND_PKT:
         return handle_send_pkt(fiber);
+
+    case DEVS_PKT_KIND_SEND_RAW_PKT:
+        return handle_send_raw_pkt(fiber);
 
     default:
         JD_PANIC();
@@ -371,13 +408,23 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     if (devs_is_suspended(ctx))
         return;
 
+    // serv can be NULL
+
     memcpy(&ctx->packet, pkt, pkt->service_size + 16);
     pkt = &ctx->packet;
 
     unsigned numroles = devs_img_num_roles(ctx->img);
 
+    // jd_log_packet(pkt);
+
+    if (jd_is_command(pkt) && pkt->device_identifier == devs_jd_server_device_id()) {
+        value_t fn = devs_maplike_get_no_bind(
+            ctx, devs_get_builtin_object(ctx, DEVS_BUILTIN_OBJECT_DEVICESCRIPT),
+            devs_builtin_string(DEVS_BUILTIN_STRING__ONSERVERPACKET));
+        start_pkt_handler(ctx, fn, DEVS_ROLE_INVALID);
+    }
+
     // DMESG("pkt %d %x / %d", pkt->service_index, pkt->service_command, pkt->service_size);
-    // jd_log_packet(&ctx->packet);
 
     for (unsigned idx = 0; idx < numroles; ++idx) {
         if (devs_jd_pkt_matches_role(ctx, idx)) {
@@ -427,8 +474,6 @@ void devs_jd_init_roles(devs_ctx_t *ctx) {
         const devs_role_desc_t *role = devs_img_get_role(ctx->img, idx);
         ctx->roles[idx].role =
             jd_role_alloc(devs_img_role_name(ctx->img, idx), role->service_class);
-        if (role->service_class == JD_SERVICE_CLASS_DEVICE_SCRIPT_CONDITION)
-            devs_role(ctx, idx)->hidden = 1;
     }
     jd_role_force_autobind();
 }
@@ -448,4 +493,8 @@ void devs_reset_global_flags(uint32_t global_flags) {
 }
 uint32_t devs_get_global_flags(void) {
     return devs_global_flags;
+}
+
+__attribute__((weak)) uint64_t devs_jd_server_device_id(void) {
+    return jd_device_id() ^ 0xdb2249a7751b53f8;
 }

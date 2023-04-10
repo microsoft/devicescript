@@ -294,7 +294,14 @@ bool devs_static_streq(devs_ctx_t *ctx, unsigned stridx, const char *other, unsi
 
 #define MAX_OFF_BITS (DEVS_PACK_SHIFT - DEVS_ROLE_BITS)
 
-static value_t packet_spec(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
+value_t devs_value_from_service_spec_idx(devs_ctx_t *ctx, unsigned idx) {
+    return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE_MEMBER,
+                                  DEVS_ROLE_INVALID | (idx << DEVS_ROLE_BITS));
+}
+
+value_t devs_value_from_packet_spec(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
+    if (pkt == NULL)
+        return devs_undefined;
     const uint32_t *baseoff = (const void *)devs_img_get_service_spec(ctx->img, 0);
     uintptr_t off = (const uint32_t *)pkt - baseoff;
     JD_ASSERT(off < (1 << MAX_OFF_BITS));
@@ -302,10 +309,28 @@ static value_t packet_spec(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
                                   DEVS_ROLE_INVALID | (off << DEVS_ROLE_BITS));
 }
 
+int devs_value_to_service_spec_idx(devs_ctx_t *ctx, value_t v) {
+    if (devs_handle_type(v) != DEVS_HANDLE_TYPE_ROLE_MEMBER)
+        return -1;
+    unsigned off = devs_handle_value(v) >> DEVS_ROLE_BITS;
+    if (off < ctx->img.header->num_service_specs)
+        return off;
+    return -1;
+}
+
+const devs_service_spec_t *devs_value_to_service_spec(devs_ctx_t *ctx, value_t v) {
+    int off = devs_value_to_service_spec_idx(ctx, v);
+    if (off < 0)
+        return NULL;
+    return devs_img_get_service_spec(ctx->img, off);
+}
+
 const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx) {
     if (roleidx)
         *roleidx = DEVS_ROLE_INVALID;
     if (devs_handle_type(v) != DEVS_HANDLE_TYPE_ROLE_MEMBER)
+        return NULL;
+    if (devs_value_to_service_spec(ctx, v))
         return NULL;
     uint32_t h = devs_handle_value(v);
     if (roleidx)
@@ -322,9 +347,29 @@ const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t cl
     return NULL;
 }
 
+int devs_packet_spec_parent(devs_ctx_t *ctx, const devs_packet_spec_t *pspec) {
+    int off = (uint8_t *)pspec - ctx->img.data - ctx->img.header->service_specs.start;
+    for (unsigned i = 0; i < ctx->img.header->num_service_specs; ++i) {
+        const devs_service_spec_t *spec = devs_img_get_service_spec(ctx->img, i);
+        int idx = off - 4 * spec->packets_offset;
+        if (0 <= idx && idx < (int)(spec->num_packets * sizeof(devs_packet_spec_t)))
+            return i;
+    }
+    JD_PANIC();
+    return -1;
+}
+
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx) {
+    if (roleidx >= DEVS_ROLE_FIRST_SPEC) {
+        unsigned specidx = roleidx - DEVS_ROLE_FIRST_SPEC;
+        if (specidx >= ctx->img.header->num_service_specs)
+            return NULL;
+        return devs_img_get_service_spec(ctx->img, specidx);
+    }
+
     if (roleidx >= devs_img_num_roles(ctx->img))
         return NULL;
+
     return devs_role_spec_for_class(ctx, devs_img_get_role(ctx->img, roleidx)->service_class);
 }
 
@@ -336,7 +381,7 @@ const devs_service_spec_t *devs_get_base_spec(devs_ctx_t *ctx, const devs_servic
     return devs_img_get_service_spec(ctx->img, idx);
 }
 
-static value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key) {
+value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key) {
     while (spec) {
         JD_ASSERT(devs_is_service_spec(ctx, spec));
         const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
@@ -346,7 +391,7 @@ static value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec
             unsigned kidx = devs_handle_value(key);
             for (unsigned i = 0; i < num_packets; ++i) {
                 if (pkts[i].name_idx == kidx)
-                    return packet_spec(ctx, &pkts[i]);
+                    return devs_value_from_packet_spec(ctx, &pkts[i]);
             }
         }
 
@@ -357,7 +402,7 @@ static value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec
 
         for (unsigned i = 0; i < num_packets; ++i) {
             if (devs_static_streq(ctx, pkts[i].name_idx, kptr, ksz))
-                return packet_spec(ctx, &pkts[i]);
+                return devs_value_from_packet_spec(ctx, &pkts[i]);
         }
 
         spec = devs_get_base_spec(ctx, spec);
@@ -437,7 +482,8 @@ static const devs_builtin_function_t *devs_get_property_desc(devs_ctx_t *ctx, va
 value_t devs_function_bind(devs_ctx_t *ctx, value_t obj, value_t fn) {
     int htp = devs_handle_type(fn);
 
-    if (htp == DEVS_HANDLE_TYPE_ROLE_MEMBER && devs_handle_type(obj) == DEVS_HANDLE_TYPE_ROLE) {
+    if (htp == DEVS_HANDLE_TYPE_ROLE_MEMBER && devs_handle_type(obj) == DEVS_HANDLE_TYPE_ROLE &&
+        !devs_value_to_service_spec(ctx, fn)) {
         uint32_t role = devs_handle_value(obj);
         JD_ASSERT((role & DEVS_ROLE_MASK) == role);
         role |= devs_handle_value(fn) & ~DEVS_ROLE_MASK;
@@ -626,23 +672,27 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
     if (htp == DEVS_HANDLE_TYPE_ROLE_MEMBER) {
         unsigned roleidx;
         int pt;
-        uint16_t code = devs_decode_role_packet(ctx, v, &roleidx)->code;
-        switch (code & DEVS_PACKETSPEC_CODE_MASK) {
-        case DEVS_PACKETSPEC_CODE_REGISTER:
-            pt = DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE;
-            break;
-        case DEVS_PACKETSPEC_CODE_EVENT:
-            pt = DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE;
-            break;
-        case DEVS_PACKETSPEC_CODE_COMMAND:
-            pt = DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE;
-            break;
-        case DEVS_PACKETSPEC_CODE_REPORT:
-            pt = DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE;
-            break;
-        default:
-            JD_PANIC();
-        }
+        const devs_packet_spec_t *spec = devs_decode_role_packet(ctx, v, &roleidx);
+        if (roleidx == DEVS_ROLE_INVALID)
+            pt = devs_value_to_service_spec(ctx, v) ? DEVS_BUILTIN_OBJECT_DSSERVICESPEC_PROTOTYPE
+                                                    : DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE;
+        else
+            switch (spec->code & DEVS_PACKETSPEC_CODE_MASK) {
+            case DEVS_PACKETSPEC_CODE_REGISTER:
+                pt = DEVS_BUILTIN_OBJECT_DSREGISTER_PROTOTYPE;
+                break;
+            case DEVS_PACKETSPEC_CODE_EVENT:
+                pt = DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE;
+                break;
+            case DEVS_PACKETSPEC_CODE_COMMAND:
+                pt = DEVS_BUILTIN_OBJECT_DSCOMMAND_PROTOTYPE;
+                break;
+            case DEVS_PACKETSPEC_CODE_REPORT:
+                pt = DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE;
+                break;
+            default:
+                JD_PANIC();
+            }
         return devs_get_static_proto(ctx, pt, attach_flags);
     }
 
@@ -694,7 +744,7 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
         break;
     case DEVS_GC_TAG_PACKET:
         attached = &((devs_packet_t *)obj)->attached;
-        builtin = DEVS_BUILTIN_OBJECT_PACKET_PROTOTYPE;
+        builtin = DEVS_BUILTIN_OBJECT_DSPACKET_PROTOTYPE;
         break;
     case DEVS_GC_TAG_HALF_STATIC_MAP:
     case DEVS_GC_TAG_MAP:

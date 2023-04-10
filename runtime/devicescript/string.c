@@ -169,9 +169,19 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
                                    devs_img_role_name(ctx->img, devs_handle_value(v)));
     case DEVS_HANDLE_TYPE_ROLE_MEMBER: {
         unsigned roleidx;
+        const devs_service_spec_t *spec = devs_value_to_service_spec(ctx, v);
+        if (spec)
+            return devs_string_sprintf(ctx, "[ServiceSpec: %s]",
+                                       devs_img_get_utf8(ctx->img, spec->name_idx, NULL));
         const devs_packet_spec_t *pkt = devs_decode_role_packet(ctx, v, &roleidx);
-        return devs_string_sprintf(ctx, "[Role: %s.%s]", devs_img_role_name(ctx->img, roleidx),
-                                   devs_img_get_utf8(ctx->img, pkt->name_idx, NULL));
+        if (roleidx == DEVS_ROLE_INVALID) {
+            spec = devs_img_get_service_spec(ctx->img, devs_packet_spec_parent(ctx, pkt));
+            return devs_string_sprintf(ctx, "[PacketSpec: %s.%s]",
+                                       devs_img_get_utf8(ctx->img, spec->name_idx, NULL),
+                                       devs_img_get_utf8(ctx->img, pkt->name_idx, NULL));
+        } else
+            return devs_string_sprintf(ctx, "[Role: %s.%s]", devs_img_role_name(ctx->img, roleidx),
+                                       devs_img_get_utf8(ctx->img, pkt->name_idx, NULL));
     }
     default:
         JD_PANIC();

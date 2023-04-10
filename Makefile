@@ -5,7 +5,7 @@ all: em comp
 comp:
 	yarn build
 
-comp-fast:
+comp-fast cf:
 	yarn build-fast
 
 native native1 em:
@@ -75,8 +75,8 @@ bump:
 release:
 	node scripts/bump.mjs --cloud
 
-gdb gdb-dap:
+gdb gdb-dap gd:
 	lldb runtime/built/jdcli -- -n -X 8082
 
-gdb-run:
+gdb-run gr:
 	lldb runtime/built/jdcli -- -n -X .devicescript/bin/crun.devs

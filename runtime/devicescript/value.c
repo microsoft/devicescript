@@ -296,6 +296,8 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
     case DEVS_HANDLE_TYPE_IMG_BUFFERISH:
         return devs_bufferish_is_buffer(v) ? DEVS_OBJECT_TYPE_BUFFER : DEVS_OBJECT_TYPE_STRING;
     case DEVS_HANDLE_TYPE_ROLE_MEMBER:
+        if (devs_value_to_service_spec(ctx, v))
+            return DEVS_OBJECT_TYPE_MAP;
         return (devs_decode_role_packet(ctx, v, NULL)->code & DEVS_PACKETSPEC_CODE_MASK) ==
                        DEVS_PACKETSPEC_CODE_COMMAND
                    ? DEVS_OBJECT_TYPE_FUNCTION
@@ -369,6 +371,10 @@ bool devs_value_eq(devs_ctx_t *ctx, value_t a, value_t b) {
     if (ta != tb)
         return false;
 #endif
+}
+
+bool devs_value_eq_builtin_string(devs_ctx_t *ctx, value_t a, unsigned idx) {
+    return devs_value_eq(ctx, a, devs_builtin_string(idx));
 }
 
 value_t devs_value_encode_throw_jmp_pc(int pc, unsigned lev) {

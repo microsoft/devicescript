@@ -129,6 +129,7 @@ void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *
         break;
     case JD_CLIENT_EV_NON_SERVICE_PACKET:
         devs_trace(ctx, DEVS_TRACE_EV_NON_SERVICE_PACKET, pkt, pkt->service_size + 16);
+        devs_jd_process_pkt(ctx, NULL, pkt);
         break;
     case JD_CLIENT_EV_ROLE_CHANGED:
         devs_jd_role_changed(ctx, role);

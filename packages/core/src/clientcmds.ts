@@ -1,17 +1,5 @@
 import * as ds from "@devicescript/core"
 
-declare var ds_impl: typeof ds
-
-declare module "@devicescript/core" {
-    /**
-     * Wait for specified number of milliseconds.
-     * @alias sleep
-     */
-    function delay(ms: number): Promise<void>
-}
-
-ds_impl.delay = ds.sleep
-
 function addElement<T>(arr: T[], e: T) {
     if (!arr) return [e]
     arr.push(e)
@@ -263,11 +251,19 @@ ds.Event.prototype.subscribe = function subscribe<T>(
     }
 }
 
-ds.Event.prototype.wait = async function () {
-    while (true) {
-        const pkt = await this.role.wait()
-        if (pkt && pkt.eventCode === this.code) return
-    }
+function noop() {}
+
+ds.Event.prototype.wait = async function (timeout) {
+    const fib = ds.Fiber.self()
+    let unsub = this.subscribe(v => {
+        unsub()
+        unsub = noop
+        if (fib.suspended) fib.resume(v)
+    })
+    const r = await ds.suspend(timeout)
+    unsub()
+    unsub = noop
+    return r
 }
 
 ds.Button.prototype.pressed = function pressed() {

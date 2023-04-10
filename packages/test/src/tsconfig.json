@@ -19,6 +19,6 @@
     },
     "include": [
         "*.ts",
-        "../.devicescript/lib/*.ts"
+        "../../core/src/*.ts"
     ]
 }

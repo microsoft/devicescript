@@ -176,6 +176,8 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     fun static_function(*func_idx): function = 39
 
+    fun static_spec(*spec_idx): any = 94
+
     fun literal(*value): number = 40
 
     fun literal_f64(*f64_idx): number = 41
@@ -445,8 +447,8 @@ Only `true` and `false` values.
     Function_prototype = 16
     Boolean = 17
     Boolean_prototype = 18
-    Packet = 19
-    Packet_prototype = 20
+    DsPacket = 19
+    DsPacket_prototype = 20
     DeviceScript = 21
     DsPacketInfo_prototype = 22
     DsRegister_prototype = 23
@@ -462,6 +464,10 @@ Only `true` and `false` values.
     SyntaxError = 33
     SyntaxError_prototype = 34
     JSON = 35
+    DsServiceSpec = 36
+    DsServiceSpec_prototype = 37
+    DsPacketSpec = 38
+    DsPacketSpec_prototype = 39
 
 ## Enum: BuiltIn_String
 
@@ -621,3 +627,16 @@ Only `true` and `false` values.
     utf_8 = 152 // utf-8
     suspended = 153
     reboot = 154
+    server = 155
+    spec = 156
+    ServiceSpec = 157
+    classIdentifier = 158
+    lookup = 159
+    PacketSpec = 160
+    parent = 161
+    response = 162
+    ServerInterface = 163
+    _onServerPacket = 164
+    _serverSend = 165
+    notImplemented = 166
+    delay = 167

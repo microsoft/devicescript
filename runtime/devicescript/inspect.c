@@ -102,7 +102,7 @@ static void inspect_obj(inspect_t *state, value_t v) {
         return;
     }
 
-    if (!is_complex(type_of)) {
+    if (!is_complex(type_of) || devs_handle_type(v) == DEVS_HANDLE_TYPE_ROLE_MEMBER) {
         v = devs_value_to_string(ctx, v);
         data = devs_string_get_utf8(ctx, v, &sz);
         add_str(state, data);

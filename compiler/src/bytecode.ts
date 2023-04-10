@@ -52,6 +52,7 @@ export enum Op {
     EXPRx_STATIC_ASCII_STRING = 37, // *ascii_idx
     EXPRx_STATIC_UTF8_STRING = 38, // *utf8_idx
     EXPRx_STATIC_FUNCTION = 39, // *func_idx
+    EXPRx_STATIC_SPEC = 94, // *spec_idx
     EXPRx_LITERAL = 40, // *value
     EXPRx_LITERAL_F64 = 41, // *f64_idx
     EXPRx_BUILTIN_OBJECT = 1, // *builtin_object
@@ -94,13 +95,13 @@ export enum Op {
     EXPR2_APPROX_EQ = 91, // x == y
     EXPR2_APPROX_NE = 92, // x != y
     STMT0_REMOVED_77 = 77,
-    OP_PAST_LAST = 94,
+    OP_PAST_LAST = 95,
 }
 
 export const OP_PROPS =
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42\x42\x11"
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42\x42\x11\x60"
 export const OP_TYPES =
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06\x06\x0c"
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06\x06\x0c\x0b"
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
@@ -234,7 +235,7 @@ export enum ObjectType {
 }
 
 export enum BuiltInObject {
-    __MAX = 35,
+    __MAX = 39,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -254,8 +255,8 @@ export enum BuiltInObject {
     FUNCTION_PROTOTYPE = 16,
     BOOLEAN = 17,
     BOOLEAN_PROTOTYPE = 18,
-    PACKET = 19,
-    PACKET_PROTOTYPE = 20,
+    DSPACKET = 19,
+    DSPACKET_PROTOTYPE = 20,
     DEVICESCRIPT = 21,
     DSPACKETINFO_PROTOTYPE = 22,
     DSREGISTER_PROTOTYPE = 23,
@@ -271,10 +272,14 @@ export enum BuiltInObject {
     SYNTAXERROR = 33,
     SYNTAXERROR_PROTOTYPE = 34,
     JSON = 35,
+    DSSERVICESPEC = 36,
+    DSSERVICESPEC_PROTOTYPE = 37,
+    DSPACKETSPEC = 38,
+    DSPACKETSPEC_PROTOTYPE = 39,
 }
 
 export enum BuiltInString {
-    __MAX = 154,
+    __MAX = 167,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -430,6 +435,19 @@ export enum BuiltInString {
     UTF_8 = 152, // utf-8
     SUSPENDED = 153,
     REBOOT = 154,
+    SERVER = 155,
+    SPEC = 156,
+    SERVICESPEC = 157,
+    CLASSIDENTIFIER = 158,
+    LOOKUP = 159,
+    PACKETSPEC = 160,
+    PARENT = 161,
+    RESPONSE = 162,
+    SERVERINTERFACE = 163,
+    _ONSERVERPACKET = 164,
+    _SERVERSEND = 165,
+    NOTIMPLEMENTED = 166,
+    DELAY = 167,
 }
 
 export const OP_PRINT_FMTS = [
@@ -527,6 +545,7 @@ export const OP_PRINT_FMTS = [
     "(%e == %e)",
     "(%e != %e)",
     "ret_val := %e",
+    "%S",
 ]
 export const OBJECT_TYPE = [
     "undefined",
@@ -699,6 +718,19 @@ export const BUILTIN_STRING__VAL = [
     "utf-8",
     "suspended",
     "reboot",
+    "server",
+    "spec",
+    "ServiceSpec",
+    "classIdentifier",
+    "lookup",
+    "PacketSpec",
+    "parent",
+    "response",
+    "ServerInterface",
+    "_onServerPacket",
+    "_serverSend",
+    "notImplemented",
+    "delay",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
@@ -720,8 +752,8 @@ export const BUILTIN_OBJECT__VAL = [
     "Function_prototype",
     "Boolean",
     "Boolean_prototype",
-    "Packet",
-    "Packet_prototype",
+    "DsPacket",
+    "DsPacket_prototype",
     "DeviceScript",
     "DsPacketInfo_prototype",
     "DsRegister_prototype",
@@ -737,4 +769,8 @@ export const BUILTIN_OBJECT__VAL = [
     "SyntaxError",
     "SyntaxError_prototype",
     "JSON",
+    "DsServiceSpec",
+    "DsServiceSpec_prototype",
+    "DsPacketSpec",
+    "DsPacketSpec_prototype",
 ]

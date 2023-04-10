@@ -47,12 +47,10 @@ void meth0_DsFiber_terminate(devs_ctx_t *ctx) {
 }
 
 void fun1_DeviceScript_suspend(devs_ctx_t *ctx) {
-    int time = devs_arg_int(ctx, 0);
-    if (time >= 0) {
-        devs_fiber_t *fib = ctx->curr_fiber;
-        devs_fiber_sleep(ctx->curr_fiber, time);
-        fib->pkt_kind = DEVS_PKT_KIND_SUSPENDED;
-    }
+    devs_fiber_t *fib = ctx->curr_fiber;
+    unsigned sleep = devs_compute_timeout(ctx, devs_arg(ctx, 0));
+    devs_fiber_sleep(ctx->curr_fiber, sleep);
+    fib->pkt_kind = DEVS_PKT_KIND_SUSPENDED;
 }
 
 void fun0_DsFiber_self(devs_ctx_t *ctx) {

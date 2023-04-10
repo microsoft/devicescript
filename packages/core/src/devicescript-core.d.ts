@@ -40,18 +40,12 @@ declare module "@devicescript/core" {
          * @internal
          * @deprecated internal field for runtime support
          */
-        isBound: boolean
+        readonly isBound: boolean
 
         /**
          * Gets the state of the binding with a jacdac server
          */
         binding(): ClientRegister<boolean>
-
-        /**
-         * Wait for the next packet to arrive from the device.
-         * When device has just disconnected this returns null.
-         */
-        wait(): Promise<Packet | null>
 
         /**
          * @internal
@@ -72,80 +66,84 @@ declare module "@devicescript/core" {
     }
 
     export class Packet {
-        role: Role
+        readonly role: Role
+
+        readonly spec: PacketSpec
 
         /**
          * 16 character lowercase hex-encoding of 8 byte device identifier.
          */
-        deviceIdentifier: string
+        readonly deviceIdentifier: string
 
         /**
          * 4 character hash of `deviceIdentifier`
          */
-        shortId: string
+        readonly shortId: string
 
-        serviceIndex: number
-        serviceCommand: number
-        payload: Buffer
+        readonly serviceIndex: number
+        readonly serviceCommand: number
+        readonly payload: Buffer
 
         decode(): any
 
         /**
          * Frame flags.
          */
-        flags: number
+        readonly flags: number
 
         /**
          * Check whether is `command` flag on frame is cleared
          */
-        isReport: boolean
+        readonly isReport: boolean
 
         /**
          * Check whether is `command` flag on frame is set
          */
-        isCommand: boolean
+        readonly isCommand: boolean
 
         /**
          * Check if report and it is an event
          */
-        isEvent: boolean
+        readonly isEvent: boolean
 
         /**
          * `undefined` if not `isEvent`
          */
-        eventCode: number
+        readonly eventCode: number
 
         /**
          * Is it register set command.
          */
-        isRegSet: boolean
+        readonly isRegSet: boolean
 
         /**
          * Is it register get command or report.
          */
-        isRegGet: boolean
+        readonly isRegGet: boolean
 
         /**
          * `undefined` is neither `isRegSet` nor `isRegGet`
          */
-        regCode: number
+        readonly regCode: number
 
         /**
          * True for plain `command`/`report` (not register and not event)
          */
-        isAction: boolean
+        readonly isAction: boolean
+
+        notImplemented(): Packet
     }
 
     export class Fiber {
         /**
          * Unique number identifying the fiber.
          */
-        id: number
+        readonly id: number
 
         /**
          * Check if fiber is currently suspended.
          */
-        suspended: boolean
+        readonly suspended: boolean
 
         /**
          * If the fiber is currently suspended, mark it for resumption, passing the specified value.
@@ -173,13 +171,34 @@ declare module "@devicescript/core" {
         }
     }
 
+    export class ServiceSpec {
+        readonly name: string
+        readonly classIdentifier: number
+        assign(packet: Packet): void
+        lookup(name: string): PacketSpec
+    }
+
+    export class PacketSpec<T = any> {
+        readonly parent: ServiceSpec
+        readonly name: string
+        readonly code: number
+        readonly response?: PacketSpec
+        encode(v: T): Packet
+    }
+
+    export interface ServerInterface {
+        serviceIndex: number
+        readonly spec: ServiceSpec
+        _send(pkt: Packet): Promise<void>
+    }
+
     /**
      * A base class for registers, events.
      */
     export class PacketInfo {
-        name: string
-        code: number
-        role: Role
+        readonly name: string
+        readonly code: number
+        readonly role: Role
     }
 
     /**
@@ -211,7 +230,7 @@ declare module "@devicescript/core" {
         /**
          * Blocks the current thread under the event is received.
          */
-        wait(): Promise<void>
+        wait(timeout?: number): Promise<void>
         /**
          * Registers a callback to execute when an event is received
          * @param next callback to execute
@@ -231,10 +250,17 @@ declare module "@devicescript/core" {
     export function sleep(milliseconds: number): Promise<void>
 
     /**
+     * Wait for specified number of milliseconds.
+     * @alias sleep
+     */
+    export function delay(ms: number): Promise<void>
+
+    /**
      * Wait for resumption from other fiber. If the timeout expires, `undefined` is returned,
      * otherwise the value passed from the resuming fiber.
+     * Timeout defaults to infinity.
      */
-    export function suspend<T>(milliseconds: number): Promise<T | undefined>
+    export function suspend<T>(milliseconds?: number): Promise<T | undefined>
 
     /**
      * Restart current script.
@@ -245,11 +271,6 @@ declare module "@devicescript/core" {
      * Reboot the device.
      */
     export function reboot(): never
-
-    /**
-     * Throw an exception if the condition is not met.
-     */
-    export function assert(cond: boolean, msg?: string): void
 
     /**
      * Best use `throw new Error(...)` instead.
@@ -291,6 +312,31 @@ declare module "@devicescript/core" {
     ): string
 
     /**
+     * Return hex-encoded device 64 bit device identifier of the current device or its server counterpart
+     */
+    export function deviceIdentifier(which: "self" | "server"): string
+
+    /**
+     * Internal, used in server impl.
+     * @deprecated
+     */
+    export function _onServerPacket(pkt: Packet): Promise<void>
+
+    /**
+     * Internal, used in server impl.
+     * @deprecated
+     */
+    export function _serverSend(
+        serviceIndex: number,
+        pkt: Packet
+    ): Promise<void>
+
+    /**
+     * Throw an exception if the condition is not met.
+     */
+    export function assert(cond: boolean, msg?: string): void
+
+    /**
      * Check if running inside a simulator.
      */
     export function isSimulator(): boolean
@@ -320,7 +366,7 @@ declare module "@devicescript/core" {
             /**
              * Gets the length in bytes of the buffer
              */
-            length: number
+            readonly length: number
             setLength(len: number): void
             getAt(offset: number, format: string): number
             setAt(offset: number, format: string, value: number): void

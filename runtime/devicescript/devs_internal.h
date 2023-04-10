@@ -33,6 +33,7 @@ typedef struct devs_activation devs_activation_t;
 #define DEVS_PKT_KIND_SEND_PKT 2
 #define DEVS_PKT_KIND_ROLE_WAIT 3
 #define DEVS_PKT_KIND_SUSPENDED 4
+#define DEVS_PKT_KIND_SEND_RAW_PKT 5
 
 typedef void (*devs_resume_cb_t)(devs_ctx_t *ctx, void *userdata);
 
@@ -76,8 +77,7 @@ typedef struct devs_fiber {
 } devs_fiber_t;
 
 static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
-    // TODO use 'ret_val' instead?
-    // return fib->pkt_kind == DEVS_PKT_KIND_LOGMSG;
+    // return fib->pkt_kind == DEVS_PKT_KIND_SEND_RAW_PKT;
     return false;
 }
 
@@ -208,7 +208,7 @@ value_t _devs_invalid_program(devs_ctx_t *ctx, unsigned code);
 /**
  * Indicates an invalid bytecode program.
  * The compiler should never generate code that triggers this.
- * Next free error: 60128
+ * Next free error: 60129
  */
 static inline value_t devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
     return _devs_invalid_program(ctx, code - 60000);
@@ -223,6 +223,7 @@ bool devs_jd_should_run(devs_fiber_t *fiber);
 value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx);
 void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx);
 void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code);
+void devs_jd_send_raw(devs_ctx_t *ctx);
 void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg);
 void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t *pkt);
@@ -232,6 +233,7 @@ void devs_jd_free_roles(devs_ctx_t *ctx);
 void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role);
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib);
 void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str);
+uint64_t devs_jd_server_device_id(void);
 
 // fibers.c
 void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);

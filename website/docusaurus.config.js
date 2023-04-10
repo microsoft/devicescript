@@ -148,7 +148,7 @@ const config = configure(
                                     "@devicescript/cli": "*",
                                 },
                                 scripts: {
-                                    setup: "devicescript build", // generates .devicescript/lib/* files
+                                    setup: "devicescript build", // generates node_modules/@devicescript/* files
                                     postinstall: "devicescript build",
                                     "build:devicescript": "devicescript build",
                                     build: "yarn build:devicescript",
