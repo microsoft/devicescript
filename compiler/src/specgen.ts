@@ -116,7 +116,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     if (ignoreSpec(info)) return r
 
     const clname = upperCamel(info.camelName)
-    const baseclass = info.extends.indexOf("_sensor") >= 0 ? "Sensor" : "Role"
+    const isSensor = info.extends.includes("_sensor")
 
     const docUrl =
         info.catalog !== false
@@ -135,8 +135,14 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class
-    r += `class ${clname} extends ${baseclass} {\n`
-    srv += `interface I${clname}Server extends ServerInterface {\n`
+    r += `class ${clname} extends ${isSensor ? "Sensor" : "Role"} {\n`
+    const ibase =
+        info.shortId == "_base"
+            ? "ServerInterface"
+            : isSensor
+            ? "ISensorServer"
+            : "IBaseServer"
+    srv += `interface I${clname}Server extends ${ibase} {\n`
 
     if (noCtorSpec(info))
         r +=
@@ -148,7 +154,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         "    static spec: ServiceSpec\n"
 
     info.packets.forEach(pkt => {
-        if (pkt.derived || pkt.internal) return // ???
+        if (pkt.derived) return
         const cmt = addComment(pkt)
         let kw = ""
         let tp = ""

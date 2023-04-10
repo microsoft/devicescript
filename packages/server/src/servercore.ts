@@ -2,8 +2,10 @@ import * as ds from "@devicescript/core"
 
 export class Server implements ds.ServerInterface {
     serviceIndex: number
+    debug: boolean
     constructor(public spec: ds.ServiceSpec) {}
     async _send(pkt: ds.Packet) {
+        if (this.debug) console.debug("Out SRV", pkt, pkt.spec)
         await ds._serverSend(this.serviceIndex, pkt)
     }
 }
@@ -77,7 +79,7 @@ async function _onServerPacket(pkt: ds.Packet) {
     if (!server) return
 
     server.spec.assign(pkt)
-    // console.log("SRV", pkt, server.spec, pkt.spec)
+    if (server.debug) console.debug("In SRV", pkt, server.spec, pkt.spec)
     const methods = server as unknown as Record<
         string,
         (v?: any) => Promise<any>

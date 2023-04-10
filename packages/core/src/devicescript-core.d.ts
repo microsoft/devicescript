@@ -188,6 +188,7 @@ declare module "@devicescript/core" {
 
     export interface ServerInterface {
         serviceIndex: number
+        debug?: boolean
         readonly spec: ServiceSpec
         _send(pkt: Packet): Promise<void>
     }

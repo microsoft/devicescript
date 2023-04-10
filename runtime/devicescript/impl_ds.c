@@ -142,6 +142,8 @@ void fun2_DeviceScript__serverSend(devs_ctx_t *ctx) {
         return;
     }
 
+    pkt->service_index = service_idx;
+
     unsigned sz = pkt->payload->length;
 
     if (sz > JD_SERIAL_PAYLOAD_SIZE) {

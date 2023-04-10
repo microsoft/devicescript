@@ -146,6 +146,7 @@ const devs_service_spec_t *devs_value_to_service_spec(devs_ctx_t *ctx, value_t v
 int devs_value_to_service_spec_idx(devs_ctx_t *ctx, value_t v);
 const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t service_class);
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx);
+const devs_service_spec_t *devs_get_base_spec(devs_ctx_t *ctx, const devs_service_spec_t *spec);
 int devs_packet_spec_parent(devs_ctx_t *ctx, const devs_packet_spec_t *pspec);
 value_t devs_spec_lookup(devs_ctx_t *ctx, const devs_service_spec_t *spec, value_t key);
 const devs_packet_spec_t *devs_pkt_spec_by_code(devs_ctx_t *ctx, const devs_service_spec_t *spec,

@@ -107,11 +107,15 @@ const devs_packet_spec_t *devs_pkt_spec_by_code(devs_ctx_t *ctx, const devs_serv
                                                 uint16_t code) {
     if (code == 0xffff)
         return NULL;
-    const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
-    unsigned num_packets = spec->num_packets;
-    for (unsigned i = 0; i < num_packets; ++i) {
-        if (pkts[i].code == code)
-            return &pkts[i];
+
+    while (spec) {
+        const devs_packet_spec_t *pkts = devs_img_get_packet_spec(ctx->img, spec->packets_offset);
+        unsigned num_packets = spec->num_packets;
+        for (unsigned i = 0; i < num_packets; ++i) {
+            if (pkts[i].code == code)
+                return &pkts[i];
+        }
+        spec = devs_get_base_spec(ctx, spec);
     }
 
     return NULL;
