@@ -91,6 +91,7 @@ function refparamWrite2(testrec: Testrec): void {
 }
 
 async function refparamWrite3(testrecX: Testrec) {
+    await sleep(1)
     runInBackground(async () => {
         await sleep(1)
         assert(testrecX.str === "foo", "ff")
