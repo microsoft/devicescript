@@ -884,9 +884,18 @@ class Program implements TopOpWriter {
         return tags
     }
 
-    private toLiteralJSON(node: ts.Expression): any {
-        while (ts.isAsExpression(node) || ts.isTypeAssertionExpression(node))
+    private stripTypeCast(node: ts.Node): ts.Node {
+        while (
+            ts.isParenthesizedExpression(node) ||
+            ts.isAsExpression(node) ||
+            ts.isTypeAssertionExpression(node)
+        )
             node = node.expression
+        return node
+    }
+
+    private toLiteralJSON(node: ts.Expression): any {
+        node = this.stripTypeCast(node) as ts.Expression
         const folded = this.constantFold(node)
         if (folded && folded.val !== undefined) return folded.val
 
@@ -2498,7 +2507,8 @@ class Program implements TopOpWriter {
         return r
     }
 
-    private nodeName(node: ts.Node) {
+    private nodeName(node: ts.Node): string {
+        node = this.stripTypeCast(node)
         switch (node.kind) {
             case SK.NumberKeyword:
                 return "#number"
