@@ -248,7 +248,7 @@ export class OpWriter {
     pendingStatefulValues: Value[] = []
     localOffsets: number[] = []
     cachedValues: CachedValue[] = []
-    funFlags: FunctionFlag = 0
+    funFlags: FunctionFlag = 0 as FunctionFlag
     top: Label
     ret: Label
     desc = new Uint8Array(BinFmt.FUNCTION_HEADER_SIZE)

@@ -99,6 +99,16 @@ export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
 const coreModule = "@devicescript/core"
 
+const globalFunctions = [
+    "parseInt",
+    "parseFloat",
+    "setTimeout",
+    "clearTimeout",
+    "setInterval",
+    "clearInterval",
+    "updateInterval",
+]
+
 const builtInObjByName: Record<string, BuiltInObject> = {
     "#ds.": BuiltInObject.DEVICESCRIPT,
     "#ArrayConstructor.prototype": BuiltInObject.ARRAY_PROTOTYPE,
@@ -2486,17 +2496,7 @@ class Program implements TopOpWriter {
                     (ts.isVariableDeclarationList(d.parent) &&
                         ts.isSourceFile(d.parent.parent.parent))
                 ) {
-                    if (
-                        [
-                            "parseInt",
-                            "parseFloat",
-                            "setTimeout",
-                            "clearTimeout",
-                            "setInterval",
-                            "clearInterval",
-                        ].indexOf(r) >= 0
-                    )
-                        return "#ds." + r
+                    if (globalFunctions.includes(r)) return "#ds." + r
                     return "#" + r
                 }
                 if (this.flags.traceBuiltin)
@@ -2807,10 +2807,18 @@ class Program implements TopOpWriter {
             return this.writer.emitBuiltInObject(builtInObjByName[nodeName])
         if (this.flags.traceBuiltin) trace("traceBuiltin:", nodeName)
         if (nodeName.startsWith("#ds.")) {
-            const idx = BUILTIN_STRING__VAL.indexOf(nodeName.slice(4))
+            const bn = nodeName.slice(4)
+            const idx = BUILTIN_STRING__VAL.indexOf(bn)
+            const wr = this.writer
             if (idx >= 0) {
                 this.markMethodUsed(nodeName)
-                return this.writer.dsMember(idx)
+                return wr.dsMember(idx)
+            } else if (globalFunctions.includes(bn)) {
+                this.markMethodUsed(nodeName)
+                return wr.emitIndex(
+                    this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT),
+                    wr.emitString(bn)
+                )
             }
         }
         return null

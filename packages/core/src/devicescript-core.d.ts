@@ -400,14 +400,14 @@ declare module "@devicescript/core" {
     // Timeouts
     //
 
-    export { setTimeout, setInterval, clearTimeout, clearInterval }
+    export { setTimeout, setInterval, clearTimeout, clearInterval, updateInterval }
     global {
         /**
          * Schedule a function to be called after specified number of milliseconds.
          */
         function setTimeout(
             callback: () => void | Promise<void>,
-            ms?: number
+            ms: number
         ): number
 
         /**
@@ -421,7 +421,7 @@ declare module "@devicescript/core" {
          */
         function setInterval(
             callback: () => void | Promise<void>,
-            ms?: number
+            ms: number
         ): number
 
         /**
@@ -429,6 +429,13 @@ declare module "@devicescript/core" {
          * @param id value returned from setInterval()
          */
         function clearInterval(id: number): void
+
+        /**
+         * Update period on an existing interval.
+         * @param id value returned from setInterval()
+         * @param ms new period
+         */
+        function updateInterval(id: number, ms: number): void
     }
 
     //
