@@ -723,6 +723,36 @@
       },
       "productId": "0x3a513204",
       "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html"
+    },
+    "seeed_xiao_esp32c3": {
+      "$description": "A tiny ESP32-C3 board.",
+      "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32c3",
+      "devName": "Seeed Studio XIAO ESP32C3",
+      "id": "seeed_xiao_esp32c3",
+      "pins": {
+        "#D9": 9,
+        "D0": 2,
+        "D1": 3,
+        "D10": 10,
+        "D2": 4,
+        "D3": 5,
+        "D4": 6,
+        "D5": 7,
+        "D7": 20,
+        "D8": 8
+      },
+      "productId": "0x3eff6b51",
+      "services": [
+        {
+          "name": "buttonBOOT",
+          "pin": 9,
+          "service": "button"
+        }
+      ],
+      "uartLog": true,
+      "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
     }
   }
 }
