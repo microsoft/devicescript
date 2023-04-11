@@ -1017,7 +1017,7 @@ class Program implements TopOpWriter {
         if (lev && this.isInLoop(cell.definition))
             throwError(
                 node,
-                "closure references to loop variables are currently broken"
+                "closure references to loop variables are currently broken; please use .forEach() or similar"
             )
         return cell.emitViaClosure(this.writer, lev)
     }
