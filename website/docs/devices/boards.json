@@ -1,4 +1,54 @@
 {
+  "adafruit_feather_esp32_s2": {
+    "$description": "A S2 Feather from Adafruit. (untested)",
+    "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32s2-adafruit_feather_esp32_s2-0x1000.bin",
+    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-esp32/main/boards/esp32deviceconfig.schema.json",
+    "archId": "esp32s2",
+    "devName": "Adafruit Feather ESP32-S2",
+    "i2c": {
+      "$connector": "Qwiic",
+      "pinSCL": 4,
+      "pinSDA": 3
+    },
+    "id": "adafruit_feather_esp32_s2",
+    "led": {
+      "pin": 33,
+      "type": 1
+    },
+    "pins": {
+      "A0": 18,
+      "A1": 17,
+      "A2": 16,
+      "A3": 15,
+      "A4": 14,
+      "A5": 8,
+      "D10": 10,
+      "D11": 11,
+      "D12": 12,
+      "D13": 13,
+      "D5": 5,
+      "D6": 6,
+      "D9": 9,
+      "MISO": 37,
+      "MOSI": 35,
+      "RX": 38,
+      "SCK": 36,
+      "TX": 39
+    },
+    "productId": "0x3c2ed99e",
+    "setupPins": [
+      {
+        "out": 1,
+        "pin": 21
+      },
+      {
+        "out": 1,
+        "pin": 7
+      }
+    ],
+    "uartLog": true,
+    "url": "https://www.adafruit.com/product/5000"
+  },
   "adafruit_qt_py_c3": {
     "$description": "A tiny ESP32-C3 board.",
     "$fwUrl": "https://github.com/microsoft/jacdac-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin",
