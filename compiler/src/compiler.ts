@@ -2168,11 +2168,21 @@ class Program implements TopOpWriter {
         return false
     }
 
-    private isIgnored(expr: Expr) {
-        return (
-            expr.parent &&
-            (ts.isExpressionStatement(expr.parent) || this.isForIgnored(expr))
+    private realParent(expr: Expr): ts.Node {
+        if (!expr?.parent) return undefined
+
+        if (
+            ts.isParenthesizedExpression(expr.parent) ||
+            ts.isAsExpression(expr.parent) ||
+            ts.isTypeAssertionExpression(expr.parent)
         )
+            return this.realParent(expr.parent)
+        return expr.parent
+    }
+
+    private isIgnored(expr: Expr) {
+        const p = this.realParent(expr)
+        return p && (ts.isExpressionStatement(p) || this.isForIgnored(expr))
     }
 
     private emitIgnoredExpression(expr: Expr) {
@@ -3039,8 +3049,6 @@ class Program implements TopOpWriter {
         expr: ts.BinaryExpression,
         noProto = false
     ): Value {
-        this.forceAssignmentIgnored(expr)
-
         const res = noProto ? null : this.emitPrototypeUpdate(expr)
         if (res) return res
 
@@ -3048,37 +3056,32 @@ class Program implements TopOpWriter {
         let left = expr.left
 
         const r = this.tryEmitIndex(left)
+        const src = this.emitExpr(expr.right) // compute src after left.property
+
         if (r) {
-            const src = this.emitExpr(expr.right) // compute src after left.property
             if (noProto && r.obj.op == Op.EXPRx_STATIC_SPEC) {
                 assert(this.flags.allPrototypes)
                 this.ignore(r.obj)
                 this.ignore(r.idx)
                 this.ignore(src)
+                return unit()
             } else {
-                wr.emitStmt(Op.STMT3_INDEX_SET, r.obj, r.idx, src)
+                return this.emitAssignResult(expr, src, src => {
+                    wr.emitStmt(Op.STMT3_INDEX_SET, r.obj, r.idx, src)
+                })
             }
-            return unit()
         }
 
-        const src = this.emitExpr(expr.right)
         if (ts.isArrayLiteralExpression(left)) {
             throwError(expr, "todo array assignment")
         } else if (ts.isIdentifier(left)) {
-            const v = this.getVarAtLocation(left)
-            this.emitStore(v, src)
-            return unit()
+            return this.emitAssignResult(expr, src, src => {
+                const v = this.getVarAtLocation(left)
+                this.emitStore(v, src)
+            })
         }
 
         throwError(expr, "unhandled assignment")
-    }
-
-    private forceAssignmentIgnored(expr: Expr) {
-        if (!this.isIgnored(expr))
-            throwError(
-                expr,
-                "the value of assignment expression has to be ignored"
-            )
     }
 
     private isNullOrUndefined(expr: Expr) {
@@ -3206,11 +3209,11 @@ class Program implements TopOpWriter {
             op = stripEquals(op)
             const t = this.emitAssignmentTarget(expr.left)
             const other = this.emitExpr(expr.right)
-            this.forceAssignmentIgnored(expr)
-            const r = emitBin(op, t.read(), other)
-            t.write(r)
-            t.free()
-            return unit()
+            let r = emitBin(op, t.read(), other)
+            return this.emitAssignResult(expr, r, r => {
+                t.write(r)
+                t.free()
+            })
         }
 
         let a = this.emitExpr(expr.left)
@@ -3340,22 +3343,31 @@ class Program implements TopOpWriter {
         return this.emitCallLike(desc)
     }
 
+    private emitAssignResult(
+        expr: ts.Expression,
+        src: Value,
+        f: (src: Value) => void
+    ) {
+        if (this.isIgnored(expr)) {
+            f(src)
+            return unit()
+        } else {
+            const wr = this.writer
+            const cached = wr.cacheValue(src)
+            f(cached.emit())
+            return cached.finalEmit()
+        }
+    }
+
     private emitPostfixUnaryExpression(expr: ts.PostfixUnaryExpression): Value {
         const wr = this.writer
         const t = this.emitAssignmentTarget(expr.operand)
         const op = this.mapPostfixOp(expr.operator)
         assert(op != null)
-        if (this.isIgnored(expr)) {
-            t.write(wr.emitExpr(op, t.read(), literal(1)))
+        return this.emitAssignResult(expr, t.read(), src => {
+            t.write(wr.emitExpr(op, src, literal(1)))
             t.free()
-            return unit()
-        } else {
-            const cached = wr.cacheValue(t.read())
-            assert(cached.isCached)
-            t.write(wr.emitExpr(op, cached.emit(), literal(1)))
-            t.free()
-            return cached.finalEmit()
-        }
+        })
     }
 
     private emitConditionalExpression(expr: ts.ConditionalExpression): Value {

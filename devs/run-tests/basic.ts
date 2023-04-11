@@ -966,6 +966,35 @@ function testHex() {
     })
 }
 
+function testAssignmentChaining() {
+    let x = 0,
+        y = 0
+    const o = { x: 17 }
+    glb1 = x = y = 1
+    ds.assert(x === 1)
+    ds.assert(y === 1)
+    ds.assert(glb1 === 1)
+    x = obj().x = 3
+    ds.assert(x === 3)
+    ds.assert(o.x === 3)
+    ds.assert(glb1 === 2)
+
+    x = obj().x = obj().x + 1
+    ds.assert(x === 4)
+    ds.assert(o.x === 4)
+    ds.assert(glb1 === 4)
+
+    x = obj().x += 3
+    ds.assert(x === 7)
+    ds.assert(o.x === 7)
+    ds.assert(glb1 === 5)
+
+    function obj() {
+        glb1++
+        return o
+    }
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -1003,5 +1032,6 @@ testCtorError()
 testIgnoredAnd()
 testQDot()
 testHex()
+testAssignmentChaining()
 
 console.log("all OK")
