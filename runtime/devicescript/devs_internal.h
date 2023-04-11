@@ -58,6 +58,8 @@ typedef struct devs_fiber {
     uint8_t role_wkp : 1;
     uint8_t reserved_flag : 2;
 
+    uint8_t stack_depth;
+
     uint16_t role_idx;
     uint16_t service_command;
 

@@ -12,6 +12,7 @@
 #define DEVS_PANIC_RUNTIME_FAILURE 60003 // not used
 #define DEVS_PANIC_OOM 60004
 #define DEVS_PANIC_UNHANDLED_EXCEPTION 60005
+#define DEVS_PANIC_STACK_OVERFLOW 60006
 
 typedef struct devs_ctx devs_ctx_t;
 

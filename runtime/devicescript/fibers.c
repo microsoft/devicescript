@@ -22,6 +22,8 @@ static void devs_fiber_activate(devs_fiber_t *fiber, devs_activation_t *act) {
     }
 }
 
+STATIC_ASSERT(DEVS_MAX_CALL_DEPTH + 10 < 1ULL << (sizeof(((devs_fiber_t *)NULL)->stack_depth) * 8));
+
 int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array_t *rest) {
     devs_ctx_t *ctx = fiber->ctx;
 
@@ -72,6 +74,12 @@ int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array
         h->handler.meth(ctx);
         return 0;
     }
+
+    if (fiber->stack_depth > DEVS_MAX_CALL_DEPTH) {
+        devs_panic(ctx, DEVS_PANIC_STACK_OVERFLOW);
+        return -3;
+    }
+    fiber->stack_depth++;
 
     const devs_function_desc_t *func = devs_img_get_function(ctx->img, fidx);
     devs_activation_t *callee =
@@ -193,6 +201,7 @@ void devs_fiber_return_from_call(devs_fiber_t *fiber, devs_activation_t *act) {
         if (devs_is_undefined(fiber->ret_val) && (act->func->flags & DEVS_FUNCTIONFLAG_IS_CTOR))
             fiber->ret_val = act->slots[0];
         devs_fiber_activate(fiber, act->caller);
+        fiber->stack_depth--;
         act->maxpc = 0; // protect against re-activation
         // act may survive as a closure past the caller intended lifetime
         act->caller = NULL;
@@ -367,6 +376,8 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
             DMESG("! Exception: InfiniteLoop");
         } else if (code == DEVS_PANIC_OOM) {
             DMESG("! Exception: OutOfMemory");
+        } else if (code == DEVS_PANIC_STACK_OVERFLOW) {
+            DMESG("! Exception: StackOverflow");
         } else if (code == DEVS_PANIC_UNHANDLED_EXCEPTION) {
             DMESG("! Unhandled exception");
         } else {
@@ -374,12 +385,18 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
         }
         ctx->error_code = code;
 
-        if (code != DEVS_PANIC_REBOOT && code != DEVS_PANIC_UNHANDLED_EXCEPTION)
+        if (code != DEVS_PANIC_REBOOT && code != DEVS_PANIC_UNHANDLED_EXCEPTION) {
+            int limit = 30;
             for (devs_activation_t *fn = ctx->curr_fn; fn; fn = fn->caller) {
                 int idx = fn->func - devs_img_get_function(ctx->img, 0);
                 DMESG("!  at %s_F%d (pc:%d)", devs_img_fun_name(ctx->img, idx), idx,
                       (int)(fn->pc - fn->func->start));
+                if (limit-- < 0) {
+                    DMESG("!  ...");
+                    break;
+                }
             }
+        }
 
         // TODO for OOM we probably want to free up some memory first...
         devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_PANIC);

@@ -18,6 +18,7 @@ Expressions do not modify the state. They may throw exceptions though.
     ascii_header_size = 2
     binary_size_align = 32
     max_stack_depth = 10
+    max_call_depth = 100
     direct_const_op = 0x80
     direct_const_offset = 16
     first_multibyte_int = 0xf8
