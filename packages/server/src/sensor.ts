@@ -11,6 +11,7 @@ export class SensorServer<T extends ds.ISensorServer>
     _preferredInterval: number
     _streamingInterval: number
     _streamingSamples = 0
+    _interval: number
 
     constructor(
         spec: ds.ServiceSpec,
@@ -22,24 +23,32 @@ export class SensorServer<T extends ds.ISensorServer>
         this._preferredInterval = this._streamingInterval
     }
 
+    private syncSamples() {
+        if (this._streamingSamples <= 0) {
+            this._streamingSamples = 0
+            clearInterval(this._interval)
+            this._interval = 0
+        }
+    }
     private async sendSample() {
         const v = await (this as any)[this.readingName]()
         const p = this.spec.lookup(this.readingName).encode(v)
         await this._send(p)
-        if (this._streamingSamples > 0) {
-            this._streamingSamples--
-            setTimeout(this.sendSample, this._streamingInterval)
-        }
-    }
-    private scheduleSample() {
-        setTimeout(this.sendSample, this._streamingInterval)
+        this._streamingSamples--
+        this.syncSamples()
     }
     streamingSamples() {
         return this._streamingSamples
     }
     set_streamingSamples(value: number) {
-        if (value > 0 && this._streamingSamples === 0) this.scheduleSample()
         this._streamingSamples = value
+
+        if (this._streamingSamples > 0 && !this._interval)
+            this._interval = setInterval(
+                this.sendSample,
+                this._streamingInterval
+            )
+        else this.syncSamples()
     }
     streamingPreferredInterval() {
         return this._preferredInterval
