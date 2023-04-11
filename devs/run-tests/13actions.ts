@@ -29,7 +29,6 @@ async function inBg() {
     let q = 14
     let rec: Testrec = {} as any
     glb1 = 0
-    await sleep(1) // TODO there's some problem with fiber ordering when this is removed and all.ts is run
     runInBackground(() => {
         glb1 = glb1 + 10 + (q - k)
         rec.str = "foo"
@@ -37,7 +36,7 @@ async function inBg() {
     runInBackground(() => {
         glb1 = glb1 + 1
     })
-    await sleep(10)
+    await sleep(1) // any non-0 sleep should let the two bg fibers finish
     assert(glb1 === 18, "inbg0")
     assert(rec.str === "foo", "inbg1")
     glb1 = 0

@@ -425,15 +425,23 @@ static int devs_fiber_wake_some(devs_ctx_t *ctx) {
     if (devs_is_suspended(ctx))
         return 0;
     uint32_t now_ = devs_now(ctx);
+    devs_fiber_t *fibmin = NULL;
+
     for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
         if (fiber->wake_time && fiber->wake_time <= now_) {
-            devs_jd_reset_packet(ctx);
-            devs_fiber_run(fiber);
-            // we can't continue with the fiber loop - the fiber might be gone by now
-            return 1;
+            if (fibmin == NULL || fibmin->wake_time > fiber->wake_time)
+                fibmin = fiber;
         }
     }
-    return 0;
+
+    if (!fibmin)
+        return 0;
+
+    devs_jd_reset_packet(ctx);
+    devs_fiber_run(fibmin);
+
+    // we can't continue with the fiber loop - the fiber might be gone by now
+    return 1;
 }
 
 void devs_fiber_poke(devs_ctx_t *ctx) {
