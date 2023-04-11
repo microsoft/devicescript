@@ -88,10 +88,10 @@ export function race<T>(...sources: Observable<T>[]) {
         const { next, error, complete } = observer
 
         const unsubs: Subscription[] = []
-        for (let i = 0; i < sources.length; ++i) {
-            const unsub = sources[i].subscribe({
-                error: e => error(e),
-                complete: () => complete(),
+        sources.forEach(src => {
+            const unsub = src.subscribe({
+                error,
+                complete,
                 next: async value => {
                     // cancel all other sources
                     if (unsubs.length > 1) {
@@ -108,7 +108,7 @@ export function race<T>(...sources: Observable<T>[]) {
                 },
             })
             unsubs.push(unsub)
-        }
+        })
         return wrapSubscriptions(unsubs)
     })
 }

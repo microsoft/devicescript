@@ -2837,6 +2837,11 @@ class Program implements TopOpWriter {
         return { expression: chain.expression, chain: links }
     }
 
+    private specRef(spec: jdspec.ServiceSpec) {
+        const idx = this.useSpec(spec)
+        return this.writer.emitExpr(Op.EXPRx_STATIC_SPEC, literal(idx))
+    }
+
     private emitPropertyAccessExpression(
         expr: ts.PropertyAccessExpression
     ): Value {
@@ -2855,13 +2860,7 @@ class Program implements TopOpWriter {
             if (this.isRoleClass(sym)) {
                 this.banOptional(expr)
                 const spec = this.specFromTypeName(expr.expression)
-                if (propName == "spec") {
-                    const idx = this.useSpec(spec)
-                    return this.writer.emitExpr(
-                        Op.EXPRx_STATIC_SPEC,
-                        literal(idx)
-                    )
-                }
+                if (propName == "spec") return this.specRef(spec)
                 const r = this.roles.find(r => r.spec == spec)
                 if (r) {
                     r.used = true
@@ -2870,8 +2869,8 @@ class Program implements TopOpWriter {
                         literal(r._index)
                     )
                 } else {
-                    if (!this.flags.allPrototypes)
-                        throwError(expr, "role not used")
+                    if (this.flags.allPrototypes) return this.specRef(spec)
+                    else throwError(expr, "role not used")
                 }
             }
         }
@@ -3051,7 +3050,14 @@ class Program implements TopOpWriter {
         const r = this.tryEmitIndex(left)
         if (r) {
             const src = this.emitExpr(expr.right) // compute src after left.property
-            wr.emitStmt(Op.STMT3_INDEX_SET, r.obj, r.idx, src)
+            if (noProto && r.obj.op == Op.EXPRx_STATIC_SPEC) {
+                assert(this.flags.allPrototypes)
+                this.ignore(r.obj)
+                this.ignore(r.idx)
+                this.ignore(src)
+            } else {
+                wr.emitStmt(Op.STMT3_INDEX_SET, r.obj, r.idx, src)
+            }
             return unit()
         }
 

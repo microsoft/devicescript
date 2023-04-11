@@ -94,6 +94,10 @@ export async function ctool(options: CToolOptions) {
             await runTest(fn)
         }
 
+        await runTest(path.join(rtest, "allcompile.ts"), {
+            flag: { allFunctions: true, allPrototypes: true },
+        })
+
         process.exit(0)
     }
 }

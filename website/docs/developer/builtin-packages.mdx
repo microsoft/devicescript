@@ -14,3 +14,14 @@ They do not need to be `npm install`ed.
 -   `@devicescript/cloud` - [cloud connectivity](/developer/cloud)
 -   `@devicescript/i2c` - interacting with [I2C peripherals](/developer/cloud)
 -   `@devicescript/settings` - reading/writing [settings in flash memory](/developer/cloud)
+
+## Adding Builtin Packages
+
+This is only relevant for developers of DeviceScript compiler and runtime.
+
+Generally, search for `@devicescript/settings` within the workspace.
+The main places that need updating is:
+
+-   this file, `website/docs/developer/builtin-packages.mdx`
+-   list in `plugin/src/plugin.ts`
+-   list in `devs/run-test/allcompile.ts`

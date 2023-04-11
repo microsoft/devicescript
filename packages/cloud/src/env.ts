@@ -22,10 +22,10 @@ export async function environment<T = any>(): Promise<ObservableValue<T>> {
     })
     if (await cloud.connected.read()) await uploadMessage(ENV_TOPIC, {})
     // receive env messages
-    await subscribeMessages(ENV_TOPIC, async (newValue: any) => {
+    subscribeMessages(ENV_TOPIC, async (newValue: any) => {
         console.debug(`cloud: received env`)
         await writeSetting(ENV_TOPIC, newValue)
-        _env.emit(newValue)
+        await _env.emit(newValue)
     })
 
     return _env
