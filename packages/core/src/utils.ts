@@ -1,5 +1,12 @@
 import * as ds from "@devicescript/core"
 
+Math.sign = function sign(v) {
+    if (v > 0) return 1
+    if (v < 0) return -1
+    if (v === 0) return 0
+    return NaN
+}
+
 Math.clamp = function clamp(low, v, hi) {
     if (v < low) return low
     if (v > hi) return hi
