@@ -4,7 +4,7 @@ description: Raspberry Pi Pico W
 # Raspberry Pi Pico W
 
 
-Raspberry Pi Pico is a low-cost, high-performance microcontroller board with flexible digital interfaces. Raspberry Pi Pico W adds on-board single-band 2.4GHz wireless interfaces (802.11n) using the Infineon CYW43439 while retaining the Pico form factor. 
+RP2040 board from Raspberry Pi with a WiFi chip.
 
 
 ![Raspberry Pi Pico W picture](https://microsoft.github.io/jacdac-docs/images/devices/raspberry-pi/picowv00.catalog.jpg)
@@ -63,16 +63,17 @@ devicescript flash --board pico_w
 ```
 
 
-- [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2)
+- [Firmware](https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040w-pico_w.uf2)
 
 ## Configuration
 
 ```json title="pico_w.json"
 {
-    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
     "id": "pico_w",
     "devName": "Raspberry Pi Pico W",
     "productId": "0x3a513204",
+    "$description": "RP2040 board from Raspberry Pi with a WiFi chip.",
     "archId": "rp2040w",
     "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
     "log": {

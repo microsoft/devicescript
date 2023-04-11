@@ -4,7 +4,7 @@ description: MSR Brain RP2040 59 v0.1
 # MSR Brain RP2040 59 v0.1
 
 
-RP2040 brain running DeviceScript and related services
+Prototype board
 
 
 ![MSR Brain RP2040 59 v0.1 picture](https://microsoft.github.io/jacdac-docs/images/devices/microsoft-research/rp2040devicescript59v01.catalog.jpg)
@@ -51,16 +51,17 @@ devicescript flash --board msr59
 ```
 
 
-- [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr59.uf2)
+- [Firmware](https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-msr59.uf2)
 
 ## Configuration
 
 ```json title="msr59.json"
 {
-    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
     "id": "msr59",
     "devName": "MSR Brain RP2040 59 v0.1",
     "productId": "0x35a678a3",
+    "$description": "Prototype board",
     "archId": "rp2040",
     "jacdac": {
         "$connector": "Jacdac",

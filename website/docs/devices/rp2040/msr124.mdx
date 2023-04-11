@@ -4,6 +4,9 @@ description: MSR RP2040 Brain 124 v0.1
 # MSR RP2040 Brain 124 v0.1
 
 
+Prototype board
+
+
 ## Features
 
 -  Jacdac on pin 9 using Jacdac connector
@@ -58,16 +61,17 @@ devicescript flash --board msr124
 ```
 
 
-- [Firmware](https://github.com/microsoft/jacdac-pico/releases/latest/download/devicescript-rp2040-msr124.uf2)
+- [Firmware](https://github.com/microsoft/devicescript-pico/releases/latest/download/devicescript-rp2040-msr124.uf2)
 
 ## Configuration
 
 ```json title="msr124.json"
 {
-    "$schema": "https://raw.githubusercontent.com/microsoft/jacdac-pico/main/boards/rp2040deviceconfig.schema.json",
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
     "id": "msr124",
     "devName": "MSR RP2040 Brain 124 v0.1",
     "productId": "0x3875e80d",
+    "$description": "Prototype board",
     "archId": "rp2040",
     "jacdac": {
         "$connector": "Jacdac",
