@@ -14,6 +14,7 @@ if (argv.update) {
     await $`git submodule update --remote devicescript`
     cd("devicescript")
     await $`git checkout main`
+    await $`git pull`
     const vo = await $`git describe --tags`
     cd("..")
     const msg = "update devicescript to " + vo.stdout.trim()
