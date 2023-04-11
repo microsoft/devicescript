@@ -68,7 +68,7 @@ static inline void mark_block(devs_gc_t *gc, block_t *block, unsigned tag, unsig
     block->header = DEVS_GC_MK_TAG_WORDS(tag, size);
     if (tag == DEVS_GC_TAG_FREE) {
         JD_ASSERT(size >= 2);
-        LOG("fill %p %u", block->free.data, (size - 2) * sizeof(uintptr_t));
+        LOG("fill %p %u", block->free.data, (unsigned)((size - 2) * sizeof(uintptr_t)));
         memset(block->free.data, FREE_FILL, (size - 2) * sizeof(uintptr_t));
     }
     devs_gc_obj_check_core(gc, block);
@@ -339,17 +339,17 @@ static block_t *find_free_block(devs_gc_t *gc, unsigned tag, uint32_t words) {
     for (block_t *b = gc->first_free; b; prev = b, b = b->free.next) {
         unsigned bsz = block_size(b);
         int left = bsz - words;
-        if (left <= 0)
+        if (left < 0)
             continue;
 
         block_t *next;
         if (left > 2) {
             // split block
-            mark_block(gc, b, tag, words + 1);
+            mark_block(gc, b, tag, words);
             next = next_block(b);
             // mark_block() below can overwrite b->free.next when words==0, so do this first
             next->free.next = b->free.next;
-            mark_block(gc, next, DEVS_GC_TAG_FREE, left - 1);
+            mark_block(gc, next, DEVS_GC_TAG_FREE, left);
         } else {
             mark_block(gc, b, tag, block_size(b));
             next = b->free.next;
@@ -367,11 +367,13 @@ static block_t *find_free_block(devs_gc_t *gc, unsigned tag, uint32_t words) {
     return NULL;
 }
 
-static block_t *alloc_block(devs_gc_t *gc, unsigned tag, uint32_t size) {
+static block_t *alloc_block(devs_gc_t *gc, unsigned tag, unsigned size) {
+    JD_ASSERT(!target_in_irq());
+
     unsigned words = (size + JD_PTRSIZE - 1) / JD_PTRSIZE;
 
-    if (words == 0)
-        words = 1; // min. alloc size
+    if (words <= 1)
+        words = 2; // min. alloc size
 
     JD_ASSERT(tag <= 0xff);
 
@@ -402,7 +404,7 @@ void *jd_gc_any_try_alloc(devs_gc_t *gc, unsigned tag, uint32_t size) {
     block_t *b = alloc_block(gc, tag, size);
     if (!b)
         return NULL;
-    memset(b->data, 0x00, size);
+    memset(b->data, 0x00, size - JD_PTRSIZE);
     LOG("alloc: tag=%s sz=%d -> %p", devs_gc_tag_name(tag), (int)size, b);
     return b;
 }
@@ -415,7 +417,8 @@ void *devs_any_try_alloc(devs_ctx_t *ctx, unsigned tag, unsigned size) {
 }
 
 void *devs_try_alloc(devs_ctx_t *ctx, uint32_t size) {
-    uintptr_t *r = devs_any_try_alloc(ctx, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size);
+    uintptr_t *r =
+        devs_any_try_alloc(ctx, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size + JD_PTRSIZE);
     if (r)
         return r + 1;
     return NULL;
@@ -478,7 +481,7 @@ devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, devs_maplike_t *proto) {
 }
 
 devs_short_map_t *devs_short_map_try_alloc(devs_ctx_t *ctx) {
-    return devs_any_try_alloc(ctx, DEVS_GC_TAG_SHORT_MAP, sizeof(devs_map_t));
+    return devs_any_try_alloc(ctx, DEVS_GC_TAG_SHORT_MAP, sizeof(devs_short_map_t));
 }
 
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size) {
@@ -564,10 +567,11 @@ void jd_alloc_add_chunk(void *start, unsigned size) {
 #endif
 
 void *jd_alloc(uint32_t size) {
-    void *r = jd_gc_any_try_alloc(&_static_gc, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES, size);
+    uint8_t *r = jd_gc_any_try_alloc(&_static_gc, DEVS_GC_TAG_MASK_PINNED | DEVS_GC_TAG_BYTES,
+                                     size + JD_PTRSIZE);
     if (!r)
         JD_PANIC();
-    return r;
+    return r + JD_PTRSIZE;
 }
 
 void jd_free(void *ptr) {
