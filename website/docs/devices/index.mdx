@@ -13,6 +13,16 @@ The regular ESP32 (without -C3 or -S2) currently have issues with the USB connec
 
 The RP2040 should generally work.
 
+## Board recommendations
+
+* [ESP32-C3-RUST](/devices/esp32/esp32c3-rust-devkit) has a builtin temperature/humidity and light sensors, and RGB LED
+* [Adafruit QT Py C3](/devices/esp32/adafruit-qt-py-c3) and [FeatherS2](/devices/esp32/feather-s2) have 
+  [Qwiic](https://www.sparkfun.com/qwiic) aka [STEMMA QT](https://learn.adafruit.com/introducing-adafruit-stemma-qt/what-is-stemma-qt)
+  connectors that make it easy to connect [I2C](/devices/periphericals/i2c) sensors;
+  there's also [Adafruit Feather ESP32-S2](/devices/esp32/adafruit-feather-esp32-s2) in the same
+  category but it's untested
+* [RPi Pico W](/devices/rp2040/pico-w) is also an option if you can do little soldering or have a breakout
+
 :::tip
 
 Please contact us for support of other MCU archictures.
