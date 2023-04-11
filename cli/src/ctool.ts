@@ -99,13 +99,13 @@ export async function ctool(options: CToolOptions) {
 }
 
 const boardRepos = [
-    "https://github.com/microsoft/jacdac-esp32",
-    "https://github.com/microsoft/jacdac-pico",
+    "https://github.com/microsoft/devicescript-esp32",
+    "https://github.com/microsoft/devicescript-pico",
 ]
 
 function resolveSchema(sch: string, repo: string) {
     if (/^https?:/.test(sch)) return sch
-    // https:///microsoft/jacdac-pico/main/boards/rp2040archconfig.schema.json
+    // https:///microsoft/devicescript-pico/main/boards/rp2040archconfig.schema.json
     const boards =
         repo.replace("github.com", "raw.githubusercontent.com") +
         "/main/boards/"
