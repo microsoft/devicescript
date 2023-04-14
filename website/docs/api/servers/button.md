@@ -25,7 +25,7 @@ The [service instance name](https://microsoft.github.io/jacdac-docs/services/_ba
 
 The pin hardware identifier on which to mount the button.
 
-### pinBackLight
+### pinBacklight
 
 This pin is set high when the button is pressed. Useful for buttons with a builtin LED.
 
@@ -35,7 +35,8 @@ import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
     pin: gpio(2),
-    pinBackLight: gpio(4),
+    // highlight-next-line
+    pinBacklight: gpio(4),
 })
 ```
 
@@ -50,6 +51,7 @@ import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
     pin: gpio(2),
+    // highlight-next-line
     activeHigh: true,
 })
 ```
