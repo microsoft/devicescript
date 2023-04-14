@@ -83,6 +83,7 @@ import {
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
 import { constantFold, Folded, isTemplateOrStringLiteral } from "./constantfold"
+import { DcfgSettings } from "./dcfg"
 
 export const JD_SERIAL_HEADER_SIZE = 16
 export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
@@ -610,6 +611,7 @@ class Program implements TopOpWriter {
     srcFiles: SrcFile[] = []
     diagnostics: DevsDiagnostic[] = []
     startServices: BaseServiceConfig[] = []
+    hwCfg: DcfgSettings = {}
     private currChain: ts.Expression[] = []
     private retValExpr: ts.Expression
     private retValRefs = 0
@@ -904,6 +906,13 @@ class Program implements TopOpWriter {
         return node
     }
 
+    private toLiteralJSONObj(node: ts.Expression): any {
+        const obj = this.toLiteralJSON(node)
+        if (!obj || typeof obj != "object")
+            throwError(node, `expecting { ... }`)
+        return obj
+    }
+
     private toLiteralJSON(node: ts.Expression): any {
         node = this.stripTypeCast(node) as ts.Expression
         const folded = this.constantFold(node)
@@ -944,6 +953,45 @@ class Program implements TopOpWriter {
         throwError(node, `expecting JSON literal here`)
     }
 
+    private checkHwConfig(expr: ts.Expression) {
+        const serversPref = '#"@devicescript/servers".'
+        const startServerPref = serversPref + "start"
+
+        if (!expr || !ts.isCallExpression(expr)) return undefined
+        const nn = this.nodeName(expr.expression)
+        if (nn.startsWith(startServerPref)) {
+            this.requireArgs(expr, 1)
+            const specName = this.serviceNameFromClassName(
+                nn.slice(startServerPref.length)
+            )
+            let startName = specName
+
+            const sig = this.checker.getResolvedSignature(expr)
+            const serv = this.checker
+                .getTypeOfSymbolAtLocation(sig.parameters[0], expr)
+                .getProperty("service")
+            if (serv) {
+                const tp2 = this.checker.getTypeOfSymbolAtLocation(serv, expr)
+                if (tp2.isStringLiteral()) startName = tp2.value
+            }
+
+            const arg = expr.arguments[0]
+            const obj: BaseServiceConfig = this.toLiteralJSONObj(arg)
+            obj.service = startName
+            const spec = this.lookupRoleSpec(arg, specName)
+            this.startServices.push(obj)
+            return { obj, spec }
+        } else if (nn == serversPref + "hardwareConfig") {
+            this.requireArgs(expr, 1)
+            const arg = expr.arguments[0]
+            const obj = this.toLiteralJSONObj(arg)
+            Object.assign(this.hwCfg, jsonToDcfg(obj))
+            return {}
+        }
+
+        return undefined
+    }
+
     private parseRole(decl: ts.VariableDeclaration): Cell {
         if (this.getCellAtLocation(decl)) return
 
@@ -958,36 +1006,10 @@ class Program implements TopOpWriter {
 
         if (!expr) return null
 
-        const startPref = '#"@devicescript/servers".start'
-
-        if (
-            ts.isCallExpression(expr) &&
-            this.nodeName(expr.expression)?.startsWith(startPref)
-        ) {
-            this.requireArgs(expr, 1)
-            const specName = this.serviceNameFromClassName(
-                this.nodeName(expr.expression).slice(startPref.length)
-            )
-            let startName = specName
-
-            const sig = this.checker.getResolvedSignature(expr)
-            const serv = this.checker
-                .getTypeOfSymbolAtLocation(sig.parameters[0], expr)
-                .getProperty("service")
-            if (serv) {
-                const tp2 = this.checker.getTypeOfSymbolAtLocation(serv, expr)
-                if (tp2.isStringLiteral()) startName = tp2.value
-            }
-
-            const arg = expr.arguments[0]
-            const obj: BaseServiceConfig = this.toLiteralJSON(arg)
-            if (!obj || typeof obj != "object")
-                throwError(arg, `expecting { ... }`)
-            obj.service = startName
-            const spec = this.lookupRoleSpec(arg, specName)
-            if (!obj.name) obj.name = this.forceName(decl.name)
-            this.startServices.push(obj)
-            const role = new Role(this, decl, spec, obj.name)
+        const r = this.checkHwConfig(expr)
+        if (r?.obj) {
+            if (!r.obj.name) r.obj.name = this.forceName(decl.name)
+            const role = new Role(this, decl, r.spec, r.obj.name)
             return this.assignCell(decl, role)
         }
 
@@ -2602,6 +2624,7 @@ class Program implements TopOpWriter {
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
+        if (this.checkHwConfig(expr)) return unit()
         return this.emitCallLike({
             position: expr,
             callexpr: expr.expression,
@@ -3757,10 +3780,14 @@ class Program implements TopOpWriter {
     private serializeStartServices() {
         const bcfg = this.host.getConfig()
         const jcfg: ProgramConfig = bcfg?.hwInfo ?? {}
+        for (const s of this.startServices) {
+            if (!s.name) s.name = s.service
+        }
         const cfg = jsonToDcfg({
             ...jcfg,
             services: new Array(0x40).concat(this.startServices),
         })
+        Object.assign(cfg, this.hwCfg)
         const bin = serializeDcfg(cfg)
         const writer = new SectionWriter()
         if (this.startServices.length || Object.keys(jcfg).length) {

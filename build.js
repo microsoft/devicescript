@@ -145,6 +145,14 @@ function buildPrelude(folder, outp) {
         startServ += `    function start${s}(cfg: ${s}Config): ds.${s}\n\n`
         return ""
     })
+    startServ += `
+    type UserHardwareInfo = Pick<DeviceHardwareInfo, "noScanI2C">
+
+    /**
+     * Configure C runtime.
+     */
+    export function hardwareConfig(cfg: UserHardwareInfo): void
+`
     srvcfg = srvcfg.replace(m[0], startServ + m[0])
     srvcfg = "// auto-generated! do not edit here\n" + srvcfg
 
