@@ -23,7 +23,7 @@ function bcVer() {
 await $`git pull`
 
 if (argv.update) {
-    await $`git submodule update --remote devicescript`
+    await $`git submodule update --recursive --remote devicescript`
     cd("devicescript")
     await $`git checkout main`
     await $`git pull`
