@@ -3957,6 +3957,7 @@ class Program implements TopOpWriter {
                 let desc = new Uint8Array(BinFmt.SECTION_HEADER_SIZE)
                 const size =
                     typeof str == "string" ? buf.length - 1 : buf.length
+                if (dst != asciiDesc) strData.align()
                 write32(desc, 0, strData.currSize)
                 write32(desc, 4, size)
 
@@ -3969,7 +3970,7 @@ class Program implements TopOpWriter {
                     }
                     const mask = (1 << BinFmt.UTF8_TABLE_SHIFT) - 1
                     const jmps: number[] = [size, 0]
-                    for (let i = 0; i < buf.length; ++i) {
+                    for (let i = 0; i < size; ++i) {
                         len++
                         while (isCont(buf[i + 1])) i++
                         if (len && ((len - 1) & mask) == mask) jmps.push(i + 1)

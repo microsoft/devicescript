@@ -52,7 +52,7 @@ bool devs_img_stridx_ok(devs_img_t img, uint32_t nameidx) {
         JD_ASSERT(DEVS_ASCII_HEADER_SIZE == sizeof(uint16_t));
         return (idx < img.header->ascii_strings.length / DEVS_ASCII_HEADER_SIZE);
     case DEVS_STRIDX_UTF8:
-        return (idx < img.header->utf8_strings.length / sizeof(devs_img_section_t));
+        return (idx < img.header->utf8_strings.length / DEVS_UTF8_HEADER_SIZE);
     default:
         JD_PANIC();
     }

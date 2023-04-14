@@ -106,7 +106,7 @@ int devs_string_jmp_init(devs_ctx_t *ctx, devs_string_jmp_t *dst) {
                            DEVS_UTF8_INIT_SET_JMP | DEVS_UTF8_INIT_CHK_DATA);
     if (r < 0)
         devs_invalid_program(ctx, 60129); // shouldn't happen
-    return -1;
+    return r;
 }
 
 int devs_utf8_init(const char *data, unsigned size, unsigned *out_len_p,

@@ -475,6 +475,7 @@ export class Image {
     bultinTable: string[]
     asciiTable: string[]
     utf8Table: string[]
+    utf8TableInfo: string[]
     bufferTable: Uint8Array[]
 
     functions: ImgFunction[]
@@ -525,11 +526,16 @@ export class Image {
         return undefined
     }
 
-    describeString(tp: StrIdx, idx: number): string {
+    describeString(tp: StrIdx, idx: number, detail = false): string {
         const v = this.getString(tp, idx)
         if (v === undefined) return undefined
-        if (v instanceof Uint8Array) return toHex(v)
-        else return JSON.stringify(v)
+        let r = ""
+        if (v instanceof Uint8Array) r = toHex(v)
+        else r = JSON.stringify(v)
+        if (detail && tp == StrIdx.UTF8) {
+            r = `${r} (${this.utf8TableInfo[idx]})`
+        }
+        return r
     }
 
     getString(tp: StrIdx, idx: number) {
@@ -601,9 +607,15 @@ export class Image {
             asciiDesc.length / BinFmt.ASCII_HEADER_SIZE
         ).map(idx => getString(StrIdx.ASCII, idx))
 
-        this.utf8Table = range(
-            utf8Desc.length / BinFmt.SECTION_HEADER_SIZE
-        ).map(idx => getString(StrIdx.UTF8, idx))
+        this.utf8Table = range(utf8Desc.length / BinFmt.UTF8_HEADER_SIZE).map(
+            idx => getString(StrIdx.UTF8, idx)
+        )
+        this.utf8TableInfo = range(
+            utf8Desc.length / BinFmt.UTF8_HEADER_SIZE
+        ).map(idx => {
+            const r = utf8Info(idx)
+            return `${r.size} bytes ${r.len} codepoints`
+        })
 
         this.bufferTable = range(
             bufferDesc.length / BinFmt.SECTION_HEADER_SIZE
@@ -657,6 +669,34 @@ export class Image {
             else return fromUTF8(uint8ArrayToString(buf))
         }
 
+        function utf8Info(idx: number) {
+            idx *= BinFmt.UTF8_HEADER_SIZE
+            assert(BinFmt.UTF8_HEADER_SIZE == 4)
+            const none = {
+                size: 0,
+                len: 0,
+                buf: new Uint8Array(0),
+            }
+            if (idx + 4 > utf8Desc.length) {
+                error("utf8 index out of range")
+                return none
+            }
+            const start = read32(utf8Desc, idx)
+            if (start >= strData.length) {
+                error("utf8 start out of range")
+                return none
+            }
+            const size = read16(strData, start)
+            const len = read16(strData, start + 2)
+            const jmpent = len >> BinFmt.UTF8_TABLE_SHIFT
+            const datastart = start + (2 + jmpent) * 2
+            return {
+                size,
+                len,
+                buf: strData.slice(datastart, datastart + size),
+            }
+        }
+
         function getStringBuf(tp: StrIdx, idx: number) {
             if (tp == StrIdx.BUILTIN) {
                 return stringToUint8Array(BUILTIN_STRING__VAL[idx])
@@ -677,11 +717,7 @@ export class Image {
                 error("missing NUL")
                 return new Uint8Array(0)
             } else if (tp == StrIdx.UTF8) {
-                return decodeSection(
-                    utf8Desc,
-                    idx * BinFmt.SECTION_HEADER_SIZE,
-                    strData
-                )
+                return utf8Info(idx).buf
             } else if (tp == StrIdx.BUFFER) {
                 return decodeSection(
                     bufferDesc,
@@ -817,7 +853,7 @@ export class Image {
                 r +=
                     ("     " + i).slice(-4) +
                     ": " +
-                    img.describeString(tp, i) +
+                    img.describeString(tp, i, true) +
                     "\n"
             }
         }

@@ -85,7 +85,7 @@ value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap) {
     value_t r;
     char *d = devs_string_prep(ctx, &r, sz, len);
     if (d) {
-        sz = jd_vsprintf_ext(d, len, format, &len, ap2);
+        sz = jd_vsprintf_ext(d, sz + 1, format, &len, ap2);
         len--;
         sz--;
         devs_string_finish(ctx, &r, sz, len);
