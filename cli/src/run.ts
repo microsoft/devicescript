@@ -77,7 +77,7 @@ export async function runTest(
                 console.log("timeout")
                 reject(new Error("timeout"))
             }
-        }, parseInt(options.testTimeout) || 2000)
+        }, parseInt(options.testTimeout) || 5000)
     })
 }
 
