@@ -8,6 +8,18 @@ function fail(msg) {
     process.exit(1)
 }
 
+function bcVer(folder = "devicescript") {
+    const bytecodePath = folder + "/bytecode/bytecode.md"
+    const bytecodeConst = {}
+    const bytecodeMd = fs.readFileSync(bytecodePath, "utf-8")
+    bytecodeMd.replace(/^    (\w+)\s+=\s+(0x[\da-f]+|\d+)/gim, (_, k, v) => {
+        bytecodeConst[k] = +v
+    })
+    const { img_version_major, img_version_minor, img_version_patch } =
+        bytecodeConst
+    return `${img_version_major}.${img_version_minor}.${img_version_patch}`
+}
+
 await $`git pull`
 
 if (argv.update) {
@@ -17,7 +29,7 @@ if (argv.update) {
     await $`git pull`
     const vo = await $`git describe --tags`
     cd("..")
-    const msg = "update devicescript to " + vo.stdout.trim()
+    const msg = "update devicescript to " + vo.stdout.trim() + " (bc: " + bcVer(".") + ")"
     await $`git add devicescript`
     const cmt = await $`git commit -m ${msg}`.nothrow()
     // sync the tree
@@ -25,8 +37,7 @@ if (argv.update) {
     process.exit(0)
 }
 
-const mainPkgJson = await fs.readJSON("devicescript/package.json")
-const v0 = semver.parse(mainPkgJson.version)
+const v0 = semver.parse(bcVer())
 
 const currVer = (
     await $`git describe --dirty --tags --match 'v[0-9]*' --always`
