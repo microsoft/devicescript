@@ -118,6 +118,20 @@ interface String {
     [Symbol.iterator](): IterableIterator<string>
     readonly [index: number]: string
 }
+
+interface StringConstructor {
+    readonly prototype: String
+    /**
+     * Construct a new string from given 21-bit Unicode code-points.
+     */
+    fromCharCode(...codes: number[]): string
+}
+
+/**
+ * Allows manipulation and formatting of text strings and determination and location of substrings within strings.
+ */
+declare var String: StringConstructor
+
 interface Boolean {}
 interface Number {}
 

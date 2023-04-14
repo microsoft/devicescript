@@ -27,3 +27,31 @@ void meth2_String_slice(devs_ctx_t *ctx) {
     int endp = devs_is_undefined(endval) ? 0x7fffffff : devs_value_to_int(ctx, endval);
     devs_ret(ctx, devs_string_slice(ctx, devs_arg_self(ctx), start, endp));
 }
+
+void funX_String_fromCharCode(devs_ctx_t *ctx) {
+    unsigned size = 0;
+    char buf[4];
+    int len = ctx->stack_top_for_gc - 1;
+
+    if (len == 0) {
+        devs_ret(ctx, devs_builtin_string(DEVS_BUILTIN_STRING__EMPTY));
+        return;
+    }
+
+    for (int i = 0; i < len; ++i) {
+        int ch = devs_arg_int(ctx, i);
+        size += devs_utf8_from_code_point(ch, buf);
+    }
+
+    value_t r;
+    char *d = devs_string_prep(ctx, &r, size, len);
+    if (d) {
+        unsigned off = 0;
+        for (int i = 0; i < len; ++i) {
+            int ch = devs_arg_int(ctx, i);
+            off += devs_utf8_from_code_point(ch, d + off);
+        }
+        devs_string_finish(ctx, &r, size, len);
+    }
+    devs_ret(ctx, r);
+}

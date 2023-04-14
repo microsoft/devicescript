@@ -643,3 +643,4 @@ Only `true` and `false` values.
     _serverSend = 165
     notImplemented = 166
     delay = 167
+    fromCharCode = 168

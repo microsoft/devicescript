@@ -1,6 +1,6 @@
-import { assert } from "@devicescript/core"
+import { assert, sleep } from "@devicescript/core"
 
-function testUnicode() {
+async function testUnicode() {
     let shortASCII = "hello world!"
     let shortUTF = "hęłłó world!"
     let longASCII = `
@@ -8,9 +8,6 @@ function testUnicode() {
 Take one down
 Pass it around
 98 Bottles of beer on the wall!
-Take one down
-Pass it around
-97 Bottles of beer on the wall
 Take one down
 Pass it around
 `
@@ -30,14 +27,17 @@ Pasś it around
     testAllStr(shortUTF)
     testAllStr(longASCII)
     testAllStr(longUTF)
+    await sleep(1)
     testAllStr(longUTF + longASCII)
+    await sleep(1)
     testAllStr(longUTF + shortUTF)
+    await sleep(1)
 }
 
 function testAllStr(s: string) {
     console.log("utf8-t: " + s.length)
     testOneCh(s)
-    // testFromCh(s) // TODO String.fromCharCode
+    testFromCh(s)
     testSliceR(s)
 }
 
@@ -48,13 +48,11 @@ function testOneCh(s: string) {
     assert(s === r, "1ch")
 }
 
-/*
 function testFromCh(s: string) {
     let r = ""
     for (let i = 0; i < s.length; ++i) r += String.fromCharCode(s.charCodeAt(i))
-    assert(s == r, "1fch")
+    assert(s === r, "1fch")
 }
-*/
 
 function testSliceR(s: string) {
     for (let rep = 0; rep < 20; ++rep) {
@@ -90,4 +88,4 @@ function testAllCodes() {
 }
 
 testAllCodes()
-testUnicode()
+await testUnicode()

@@ -122,6 +122,7 @@ value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
 void meth1_String_charAt(devs_ctx_t *ctx);
 void meth2_String_slice(devs_ctx_t *ctx);
+void funX_String_fromCharCode(devs_ctx_t *ctx);
 
 static const devs_builtin_proto_entry_t Array_prototype_entries[] = { //
     {N(LENGTH), 50000},                                               //
@@ -318,11 +319,12 @@ static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
     {N(SLICE), 50098},                                                 //
     {0, 0}};
 
-static const devs_builtin_proto_entry_t empty_entries[] = { //
+static const devs_builtin_proto_entry_t String_entries[] = { //
+    {N(FROMCHARCODE), 50099},                                //
+    {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE},    //
     {0, 0}};
 
-static const devs_builtin_proto_entry_t string_entries[] = { //
-    {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE},    //
+static const devs_builtin_proto_entry_t empty_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t number_entries[] = { //
@@ -404,7 +406,7 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
                                                      DsServiceSpec_prototype_entries},
     [DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
                                               String_prototype_entries},
-    [DEVS_BUILTIN_OBJECT_STRING] = {DEVS_BUILTIN_PROTO_INIT, NULL, string_entries},
+    [DEVS_BUILTIN_OBJECT_STRING] = {DEVS_BUILTIN_PROTO_INIT, NULL, String_entries},
     [DEVS_BUILTIN_OBJECT_NUMBER] = {DEVS_BUILTIN_PROTO_INIT, NULL, number_entries},
     [DEVS_BUILTIN_OBJECT_DSROLE] = {DEVS_BUILTIN_PROTO_INIT, NULL, dsrole_entries},
     [DEVS_BUILTIN_OBJECT_FUNCTION] = {DEVS_BUILTIN_PROTO_INIT, NULL, function_entries},
@@ -418,8 +420,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 99;
-const devs_builtin_function_t devs_builtin_functions[99] = {
+uint16_t devs_num_builtin_functions = 100;
+const devs_builtin_function_t devs_builtin_functions[100] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -518,7 +520,8 @@ const devs_builtin_function_t devs_builtin_functions[99] = {
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},
     {N(CHARAT), 1, 0, {.meth = meth1_String_charAt}},
-    {N(SLICE), 2, 0, {.meth = meth2_String_slice}}};
+    {N(SLICE), 2, 0, {.meth = meth2_String_slice}},
+    {N(FROMCHARCODE), 0, NO_SELF, {.meth = funX_String_fromCharCode}}};
 
 STATIC_ASSERT(4 <= DEVS_BUILTIN_MAX_ARGS);
 STATIC_ASSERT(50000 == DEVS_FIRST_BUILTIN_FUNCTION);
