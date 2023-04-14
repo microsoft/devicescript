@@ -97,6 +97,21 @@ function testAllCodes() {
     codes("自由", [33258, 30001])
     codes("🗽", [0x1f5fd])
     codes("\uD83D\uDDFD", [0x1f5fd])
+
+    const repl = 0xfffd
+    codes(hex`7f`.toString(), [0x7f])
+    codes(hex`80`.toString(), [repl])
+    codes(hex`8080`.toString(), [repl, repl])
+    codes(hex`8020`.toString(), [repl, 0x20])
+
+    codes(hex`C0`.toString(), [repl])
+    codes(hex`C0C0`.toString(), [repl, repl])
+    codes(hex`C020`.toString(), [repl, 0x20])
+
+    codes(hex`208081`.toString(), [0x20, repl, repl])
+    codes(hex`20E0`.toString(), [0x20, repl])
+    codes(hex`20E080`.toString(), [0x20, repl])
+    codes(hex`20E08020`.toString(), [0x20, repl, 0x20])
 }
 
 function testJoin() {
