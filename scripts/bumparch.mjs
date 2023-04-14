@@ -8,8 +8,8 @@ function fail(msg) {
     process.exit(1)
 }
 
-function bcVer(folder = "devicescript") {
-    const bytecodePath = folder + "/bytecode/bytecode.md"
+function bcVer() {
+    const bytecodePath = "devicescript/bytecode/bytecode.md"
     const bytecodeConst = {}
     const bytecodeMd = fs.readFileSync(bytecodePath, "utf-8")
     bytecodeMd.replace(/^    (\w+)\s+=\s+(0x[\da-f]+|\d+)/gim, (_, k, v) => {
@@ -29,7 +29,7 @@ if (argv.update) {
     await $`git pull`
     const vo = await $`git describe --tags`
     cd("..")
-    const msg = "update devicescript to " + vo.stdout.trim() + " (bc: " + bcVer(".") + ")"
+    const msg = "update devicescript to " + vo.stdout.trim() + " (bc: " + bcVer() + ")"
     await $`git add devicescript`
     const cmt = await $`git commit -m ${msg}`.nothrow()
     // sync the tree
