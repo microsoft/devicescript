@@ -71,7 +71,7 @@ size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst
             s = buf;
             sz = strlen(buf);
         } else {
-            value_t tmp = devs_inspect(ctx, v, 100);
+            value_t tmp = devs_inspect(ctx, v, 0);
             // note that tmp is not pinned, it may go away at next allocation, but we only use it
             // down below
             s = devs_string_get_utf8(ctx, tmp, &sz);

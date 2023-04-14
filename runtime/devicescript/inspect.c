@@ -185,6 +185,8 @@ static int devs_inspect_to(devs_ctx_t *ctx, value_t v, char *dst, unsigned size,
 }
 
 value_t devs_inspect(devs_ctx_t *ctx, value_t v, unsigned size) {
+    if (size == 0)
+        size = 100;
     unsigned type_of = devs_value_typeof(ctx, v);
     if (!is_complex(type_of))
         return devs_value_to_string(ctx, v);

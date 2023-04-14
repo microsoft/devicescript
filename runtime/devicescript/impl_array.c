@@ -87,3 +87,69 @@ void methX_Array_slice(devs_ctx_t *ctx) {
 
     devs_ret_gc_ptr(ctx, res);
 }
+
+void meth1_Array_join(devs_ctx_t *ctx) {
+    devs_array_t *self = devs_arg_self_array(ctx);
+    if (!self)
+        return;
+
+    value_t sep = devs_arg(ctx, 0);
+    unsigned sepsz;
+    unsigned seplen;
+    const char *sepch;
+    if (devs_is_undefined(sep)) {
+        seplen = sepsz = 1;
+        sepch = ",";
+    } else {
+        sep = devs_value_to_string(ctx, sep);
+        sepch = devs_string_get_utf8(ctx, sep, &sepsz);
+        if (sepch == NULL)
+            return;
+        seplen = devs_string_length(ctx, sep);
+        devs_value_pin(ctx, sep);
+    }
+
+    unsigned sz = 0, len = 0;
+
+    for (unsigned i = 0; i < self->length; ++i) {
+        value_t v = devs_value_to_string(ctx, self->data[i]);
+        if (i > 0) {
+            len += seplen;
+            sz += sepsz;
+        }
+
+        unsigned tsz;
+        if (devs_string_get_utf8(ctx, v, &tsz) == NULL)
+            goto error;
+        sz += tsz;
+        len += devs_string_length(ctx, v);
+    }
+
+    value_t r;
+    char *d = devs_string_prep(ctx, &r, sz, len);
+    if (!d)
+        goto error;
+
+    unsigned off = 0;
+    for (unsigned i = 0; i < self->length; ++i) {
+        value_t v = devs_value_to_string(ctx, self->data[i]);
+        if (i > 0) {
+            memcpy(d + off, sepch, sepsz);
+            off += sepsz;
+        }
+
+        unsigned tsz;
+        const char *ss = devs_string_get_utf8(ctx, v, &tsz);
+        if (ss == NULL)
+            goto error;
+
+        memcpy(d + off, ss, tsz);
+        off += tsz;
+    }
+
+    devs_string_finish(ctx, &r, off, len);
+    devs_ret(ctx, r);
+
+error:
+    devs_value_unpin(ctx, sep);
+}

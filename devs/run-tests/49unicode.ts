@@ -1,4 +1,4 @@
-import { assert, sleep } from "@devicescript/core"
+import { _id, assert, sleep } from "@devicescript/core"
 
 async function testUnicode() {
     let shortASCII = "hello world!"
@@ -43,9 +43,17 @@ function testAllStr(s: string) {
 
 function testOneCh(s: string) {
     let r = ""
-    for (let i = 0; i < s.length; ++i) r += s[i]
+    const arr: string[] = []
+    for (let i = 0; i < s.length; ++i) {
+        r += s[i]
+        arr.push(s[i])
+    }
     assert(s.length === r.length, "1chL")
     assert(s === r, "1ch")
+
+    r = arr.join("")
+    assert(s.length === r.length, "1chLj")
+    assert(s === r, "1chj")
 }
 
 function testFromCh(s: string) {
@@ -57,12 +65,16 @@ function testFromCh(s: string) {
 function testSliceR(s: string) {
     for (let rep = 0; rep < 20; ++rep) {
         let r = ""
+        const arr: string[] = []
         for (let i = 0; i < s.length; ) {
             let len = Math.randomInt(10)
-            r += s.slice(i, i + len)
+            const ss = s.slice(i, i + len)
+            r += ss
             i += len
+            arr.push(ss)
         }
         assert(s === r, "1sl")
+        assert(s === arr.join(""), "1slj")
     }
 }
 
@@ -87,5 +99,17 @@ function testAllCodes() {
     codes("\uD83D\uDDFD", [0x1f5fd])
 }
 
+function testJoin() {
+    assert(["a", "b"].join() === "a,b")
+    assert(["a", 1].join() === "a,1")
+    assert(["a", "b"].join("") === "ab")
+    assert(["a"].join("") === "a")
+    assert([].join("") === "")
+    assert([].join(",") === "")
+    assert(["A"].join(",") === "A")
+    assert(["A", "B"].join(_id("x") + 1) === "Ax1B")
+}
+
 testAllCodes()
+testJoin()
 await testUnicode()
