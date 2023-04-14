@@ -272,6 +272,7 @@ unsigned devs_value_typeof(devs_ctx_t *ctx, value_t v) {
         return DEVS_OBJECT_TYPE_FUNCTION;
     case DEVS_HANDLE_TYPE_GC_OBJECT:
         switch (devs_gc_tag(devs_handle_ptr_value(ctx, v))) {
+        case DEVS_GC_TAG_STRING_JMP:
         case DEVS_GC_TAG_STRING:
             return DEVS_OBJECT_TYPE_STRING;
         case DEVS_GC_TAG_PACKET:

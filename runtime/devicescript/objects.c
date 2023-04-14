@@ -749,6 +749,7 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
     case DEVS_GC_TAG_HALF_STATIC_MAP:
     case DEVS_GC_TAG_MAP:
         return (devs_maplike_t *)obj;
+    case DEVS_GC_TAG_STRING_JMP:
     case DEVS_GC_TAG_STRING:
         return devs_get_static_proto(ctx, DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE, attach_flags);
     case DEVS_GC_TAG_BOUND_FUNCTION:
@@ -904,8 +905,15 @@ value_t devs_seq_get(devs_ctx_t *ctx, value_t seq, unsigned idx) {
     unsigned len;
     const uint8_t *p = devs_bufferish_data(ctx, seq, &len);
     if (p && idx < len) {
-        if (devs_is_string(ctx, seq))
-            return devs_value_from_gc_obj(ctx, devs_string_try_alloc_init(ctx, p + idx, 1));
+        if (devs_is_string(ctx, seq)) {
+            int off = devs_string_index(ctx, seq, idx);
+            if (off < 0)
+                return devs_undefined;
+            p += off;
+            unsigned len = devs_utf8_code_point_length((const char *)p);
+            return devs_value_from_gc_obj(ctx,
+                                          devs_string_try_alloc_init(ctx, (const char *)p, len));
+        }
         return devs_value_from_int(p[idx]);
     }
 

@@ -28,6 +28,9 @@ typedef union {
 #define DEVS_INT_TAG (0U - 1U)
 #define DEVS_HANDLE_TAG 0x00000000
 
+// optimization parameter
+#define DEVS_MAX_ASCII_STRING 50
+
 // closure: ptr to env + static fn
 // bound fn: ptr to gc_obj + static fn
 
@@ -204,6 +207,7 @@ bool devs_is_array(devs_ctx_t *ctx, value_t v);
 bool devs_is_string(devs_ctx_t *ctx, value_t v);
 value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b);
 const char *devs_string_get_utf8(devs_ctx_t *ctx, value_t s, unsigned *size);
+const devs_utf8_string_t *devs_string_get_utf8_struct(devs_ctx_t *ctx, value_t v);
 value_t devs_value_to_string(devs_ctx_t *ctx, value_t v);
 value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap);
 __attribute__((format(printf, 2, 3))) value_t devs_string_sprintf(devs_ctx_t *ctx,
@@ -216,11 +220,10 @@ void devs_value_pin(devs_ctx_t *ctx, value_t v);
 void devs_value_unpin(devs_ctx_t *ctx, value_t v);
 bool devs_value_is_pinned(devs_ctx_t *ctx, value_t v);
 
+// assumes string is valid utf8; don't run on buffers
 value_t devs_json_parse(devs_ctx_t *ctx, const char *str, unsigned sz, bool do_throw);
-int devs_json_stringify_to(devs_ctx_t *ctx, value_t v, char *dst, int indent);
-value_t devs_json_stringify(devs_ctx_t *ctx, value_t v, int indent, bool do_throw);
 
-int devs_inspect_to(devs_ctx_t *ctx, value_t v, char *dst, unsigned size);
+value_t devs_json_stringify(devs_ctx_t *ctx, value_t v, int indent, bool do_throw);
 value_t devs_inspect(devs_ctx_t *ctx, value_t v, unsigned size);
 
 uint32_t devs_compute_timeout(devs_ctx_t *ctx, value_t t);

@@ -13,7 +13,7 @@ static int fail(int code, uint32_t offset) {
     return -code;
 }
 
-// next error 1078
+// next error 1087
 #define CHECK(code, cond)                                                                          \
     if (!(cond))                                                                                   \
     return fail(code, offset)
@@ -66,6 +66,8 @@ void devs_dump_versions(const void *imgdata) {
           DEVS_VERSION_MINOR(v), DEVS_VERSION_PATCH(v));
 }
 
+STATIC_ASSERT(sizeof(devs_utf8_string_t) == offsetof(devs_utf8_string_t, jmp_table));
+
 int devs_verify(const uint8_t *imgdata, uint32_t size) {
     JD_ASSERT(((uintptr_t)imgdata & 3) == 0);
     JD_ASSERT(size > sizeof(devs_img_header_t));
@@ -80,7 +82,9 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     // bytecode minor should only load if no newer than current runtime,
     // ignore patch
     if (DEVS_VERSION_MAJOR(header->version) == DEVS_VERSION_MAJOR(DEVS_IMG_VERSION) &&
-        DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION)) {
+        DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION) &&
+        // 2.5.0 is first version with UTF8 layout; remove when we reach v3
+        DEVS_VERSION_MINOR(header->version) >= 5) {
         // OK
     } else {
         DMESG("! version mismatch");
@@ -134,12 +138,25 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
         CHECK(1076, numargs >= 0);
     }
 
-    uint8_t *str_data = FIRST_DESC(string_data);
+    const uint8_t *str_data = FIRST_DESC(string_data);
     CHECK(1059, str_data[header->string_data.length - 1] == 0);
-    for (sptr = FIRST_DESC(utf8_strings); (void *)sptr < LAST_DESC(utf8_strings); sptr++) {
-        CHECK(1060, sptr->start < header->string_data.length);
-        CHECK(1053, sptr->start + sptr->length < header->string_data.length);
-        CHECK(1054, str_data[sptr->start + sptr->length] == 0);
+
+    for (uint32_t *off = FIRST_DESC(utf8_strings); (void *)off < LAST_DESC(utf8_strings); off++) {
+        CHECK(1078, (*off & 1) == 0);
+        CHECK(1079, *off < header->string_data.length);
+        CHECK(1080, *off + sizeof(devs_utf8_string_t) + 1 < header->string_data.length);
+        const devs_utf8_string_t *str = (const void *)(str_data + *off);
+        unsigned num_ent = devs_utf8_string_jmp_entries(str->length);
+        unsigned data_size = num_ent * sizeof(uint16_t) + str->size + 1;
+        CHECK(1081, *off + sizeof(devs_utf8_string_t) + data_size < header->string_data.length);
+        int r = devs_utf8_init(devs_utf8_string_data(str), str->size, NULL, str,
+                               DEVS_UTF8_INIT_CHK_DATA | DEVS_UTF8_INIT_CHK_JMP);
+        // map error codes
+        CHECK(1082, r != DEVS_UTF8_INIT_ERR_JMP_TBL);
+        CHECK(1083, r != DEVS_UTF8_INIT_ERR_DATA);
+        CHECK(1084, r != DEVS_UTF8_INIT_ERR_SIZES);
+        CHECK(1085, r != DEVS_UTF8_INIT_ERR_NUL_TERM);
+        CHECK(1086, r >= 0); // fallback
     }
     for (sptr = FIRST_DESC(buffers); (void *)sptr < LAST_DESC(buffers); sptr++) {
         CHECK(1055, sptr->start < header->string_data.length);

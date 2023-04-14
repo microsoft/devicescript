@@ -3,7 +3,7 @@
 
 #include "devs_proto.h"
 
-#define DEVS_MAX_ALLOC 0xf000
+#define DEVS_MAX_ALLOC 0xe000
 
 #if JD_64
 #define DEVS_GC_TAG_POS (24 + 32)
@@ -65,11 +65,21 @@ typedef struct {
     uint8_t data[0];
 } devs_buffer_t;
 
+// ASCII string, length==size
 typedef struct {
-    devs_gc_object_t gc;
+    devs_gc_object_t gc; // DEVS_GC_TAG_STRING
     devs_small_size_t length;
     char data[0];
 } devs_string_t;
+
+typedef struct {
+    devs_gc_object_t gc; // DEVS_GC_TAG_STRING_JMP
+    devs_utf8_string_t inner;
+} devs_string_jmp_t;
+
+typedef struct {
+    devs_gc_object_t gc;
+} devs_any_string_t;
 
 typedef struct {
     devs_gc_object_t gc;
@@ -169,7 +179,34 @@ devs_short_map_t *devs_short_map_try_alloc(devs_ctx_t *ctx);
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size);
-devs_string_t *devs_string_try_alloc_init(devs_ctx_t *ctx, const uint8_t *str, unsigned size);
+devs_string_jmp_t *devs_string_jmp_try_alloc(devs_ctx_t *ctx, unsigned size, unsigned length);
+devs_any_string_t *devs_string_try_alloc_init(devs_ctx_t *ctx, const char *str, unsigned size);
+char *devs_string_prep(devs_ctx_t *ctx, value_t *v, unsigned sz, unsigned len);
+void devs_string_finish(devs_ctx_t *ctx, value_t *v, unsigned sz, unsigned len);
+
+int devs_string_length(devs_ctx_t *ctx, value_t s);
+int devs_string_index(devs_ctx_t *ctx, value_t s, unsigned idx);
+int devs_string_jmp_index(const devs_utf8_string_t *dst, unsigned idx);
+// assumes valid UTF8 input
+unsigned devs_utf8_code_point_length(const char *data);
+// assumes valid UTF8 input
+unsigned devs_utf8_code_point(const char *data);
+int devs_string_jmp_init(devs_ctx_t *ctx, devs_string_jmp_t *dst);
+unsigned devs_utf8_from_code_point(unsigned ch, char buf[4]);
+static inline bool devs_utf8_is_cont(int c) {
+    return (c & 0xc0) == 0x80;
+}
+
+#define DEVS_UTF8_INIT_SET_DATA 0x01
+#define DEVS_UTF8_INIT_SET_JMP 0x02
+#define DEVS_UTF8_INIT_CHK_DATA 0x04
+#define DEVS_UTF8_INIT_CHK_JMP 0x08
+#define DEVS_UTF8_INIT_ERR_JMP_TBL -1
+#define DEVS_UTF8_INIT_ERR_DATA -2
+#define DEVS_UTF8_INIT_ERR_SIZES -3
+#define DEVS_UTF8_INIT_ERR_NUL_TERM -4
+int devs_utf8_init(const char *data, unsigned size, unsigned *out_len_p,
+                   const devs_utf8_string_t *dst, unsigned flags);
 
 // result has to be casted to one of devs_gc_object_t objects
 void *devs_any_try_alloc(devs_ctx_t *ctx, unsigned tag, unsigned size);
@@ -190,7 +227,7 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_MASK_PENDING 0x80
 #define DEVS_GC_TAG_MASK_SCANNED 0x20
 #define DEVS_GC_TAG_MASK_PINNED 0x40
-#define DEVS_GC_TAG_MASK 0xf
+#define DEVS_GC_TAG_MASK 0xf // 0x1f should be possible
 
 // update devs_gc_tag_name() when adding/reordering
 #define DEVS_GC_TAG_NULL 0x0
@@ -203,10 +240,11 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_BOUND_FUNCTION 0x7
 #define DEVS_GC_TAG_ACTIVATION 0x8
 #define DEVS_GC_TAG_HALF_STATIC_MAP 0x9
-#define DEVS_GC_TAG_PACKET 0xA
-#define DEVS_GC_TAG_SHORT_MAP 0xB
-#define DEVS_GC_TAG_BUILTIN_PROTO 0xf // these are not in GC heap!
-#define DEVS_GC_TAG_FINAL (0xf | DEVS_GC_TAG_MASK_PINNED)
+#define DEVS_GC_TAG_SHORT_MAP 0xA
+#define DEVS_GC_TAG_PACKET 0xB
+#define DEVS_GC_TAG_STRING_JMP 0xC
+#define DEVS_GC_TAG_BUILTIN_PROTO DEVS_GC_TAG_MASK // these are not in GC heap!
+#define DEVS_GC_TAG_FINAL (DEVS_GC_TAG_MASK | DEVS_GC_TAG_MASK_PINNED)
 
 static inline int devs_gc_tag(const void *ptr) {
     return ptr == NULL ? DEVS_GC_TAG_NULL

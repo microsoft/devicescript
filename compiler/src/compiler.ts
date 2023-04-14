@@ -3955,12 +3955,33 @@ class Program implements TopOpWriter {
                         : str
 
                 let desc = new Uint8Array(BinFmt.SECTION_HEADER_SIZE)
-                write32(desc, 0, strData.currSize)
-                write32(
-                    desc,
-                    4,
+                const size =
                     typeof str == "string" ? buf.length - 1 : buf.length
-                )
+                write32(desc, 0, strData.currSize)
+                write32(desc, 4, size)
+
+                assert(size <= 0xf000)
+
+                if (dst == utf8Desc) {
+                    let len = 0
+                    function isCont(c: number) {
+                        return (c & 0xc0) == 0x80
+                    }
+                    const mask = (1 << BinFmt.UTF8_TABLE_SHIFT) - 1
+                    const jmps: number[] = [size, 0]
+                    for (let i = 0; i < buf.length; ++i) {
+                        len++
+                        while (isCont(buf[i + 1])) i++
+                        if (len && ((len - 1) & mask) == mask) jmps.push(i + 1)
+                    }
+                    assert((len >> BinFmt.UTF8_TABLE_SHIFT) + 2 == jmps.length)
+                    jmps[1] = len
+                    const tmp = new Uint8Array(jmps.length * 2)
+                    jmps.forEach((v, i) => write16(tmp, i * 2, v))
+                    strData.append(tmp)
+                    desc = desc.slice(0, BinFmt.UTF8_HEADER_SIZE)
+                }
+
                 strData.append(buf)
                 if (dst == asciiDesc) {
                     assert(desc[2] == 0)

@@ -210,7 +210,7 @@ value_t _devs_invalid_program(devs_ctx_t *ctx, unsigned code);
 /**
  * Indicates an invalid bytecode program.
  * The compiler should never generate code that triggers this.
- * Next free error: 60129
+ * Next free error: 60130
  */
 static inline value_t devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
     return _devs_invalid_program(ctx, code - 60000);
@@ -218,7 +218,7 @@ static inline value_t devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
 
 // strformat.c
 size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst, size_t dstlen,
-                      value_t *args, size_t numargs, size_t numskip);
+                      value_t *args, size_t numargs, size_t *ulen);
 
 // jdiface.c
 bool devs_jd_should_run(devs_fiber_t *fiber);

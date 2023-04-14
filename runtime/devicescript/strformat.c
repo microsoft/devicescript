@@ -12,21 +12,18 @@ static int numvalue(char c) {
 #define WR(c)                                                                                      \
     do {                                                                                           \
         char tmp = (c);                                                                            \
-        if (numskip == 0) {                                                                        \
-            if (dp < dstlen)                                                                       \
-                dst[dp] = tmp;                                                                     \
-            dp++;                                                                                  \
-        } else                                                                                     \
-            numskip--;                                                                             \
+        if (dp < dstlen)                                                                           \
+            dst[dp] = tmp;                                                                         \
+        dp++;                                                                                      \
+        if ((tmp & 0xC0) != 0x80)                                                                  \
+            len++;                                                                                 \
     } while (0)
 
 size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst, size_t dstlen,
-                      value_t *args, size_t numargs, size_t numskip) {
+                      value_t *args, size_t numargs, size_t *length) {
     size_t fp = 0;
     size_t dp = 0;
-
-    if (dstlen)
-        dst[0] = 0; // in case numskip prevents us from writing anything
+    size_t len = 0;
 
     while (fp <= fmtlen) {
         char c = fp == fmtlen ? (fp++, 0) : fmt[fp++];
@@ -90,6 +87,8 @@ size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst
 
     if (dstlen)
         dst[dstlen - 1] = 0; // in case we overflow
+    if (length)
+        *length = len;
 
     return dp;
 }

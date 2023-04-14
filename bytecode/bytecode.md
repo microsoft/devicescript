@@ -5,8 +5,8 @@ Expressions do not modify the state. They may throw exceptions though.
 ## Format Constants
 
     img_version_major = 2
-    img_version_minor = 4
-    img_version_patch = 4
+    img_version_minor = 5
+    img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a
@@ -16,6 +16,8 @@ Expressions do not modify the state. They may throw exceptions though.
     function_header_size = 16
     role_header_size = 8
     ascii_header_size = 2
+    utf8_header_size = 4
+    utf8_table_shift = 4
     binary_size_align = 32
     max_stack_depth = 10
     max_call_depth = 100

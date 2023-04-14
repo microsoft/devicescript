@@ -4,37 +4,35 @@
 #define LOG_TAG "JSON"
 #include "devs_logging.h"
 
-static unsigned devs_json_escape_core(const char *str, unsigned sz, char *dst) {
+static unsigned devs_json_escape_core(const char *str, unsigned sz, char *dst, unsigned *ulen) {
     unsigned len = 1;
+    unsigned skip = 0;
 
     if (dst)
         *dst++ = '"';
 
     for (unsigned i = 0; i < sz; ++i) {
         char c = str[i];
-        int q = 0;
         switch (c) {
         case '"':
         case '\\':
-            q = 1;
             break;
         case '\n':
             c = 'n';
-            q = 1;
             break;
         case '\r':
             c = 'r';
-            q = 1;
             break;
         case '\t':
             c = 't';
-            q = 1;
             break;
         default:
             if (c >= 32) {
                 len++;
                 if (dst)
                     *dst++ = c;
+                if (devs_utf8_is_cont(c))
+                    skip++;
             } else {
                 len += 6;
                 if (dst) {
@@ -46,14 +44,13 @@ static unsigned devs_json_escape_core(const char *str, unsigned sz, char *dst) {
                     dst += 2;
                 }
             }
-            break;
+            continue;
         }
-        if (q == 1) {
-            len += 2;
-            if (dst) {
-                *dst++ = '\\';
-                *dst++ = c;
-            }
+
+        len += 2;
+        if (dst) {
+            *dst++ = '\\';
+            *dst++ = c;
         }
     }
 
@@ -63,13 +60,16 @@ static unsigned devs_json_escape_core(const char *str, unsigned sz, char *dst) {
         *dst++ = '\0';
     }
 
+    if (ulen)
+        *ulen = len - skip;
+
     return len;
 }
 
 char *devs_json_escape(const char *str, unsigned sz) {
-    int len = devs_json_escape_core(str, sz, NULL);
+    int len = devs_json_escape_core(str, sz, NULL, NULL);
     char *r = jd_alloc(len);
-    devs_json_escape_core(str, sz, r);
+    devs_json_escape_core(str, sz, r, NULL);
     return r;
 }
 
@@ -78,6 +78,7 @@ typedef struct {
     const char *ptr0;
     const char *ptr;
     unsigned size;
+    unsigned ulen;
     int16_t ch;
     bool error;
 } parser_t;
@@ -136,13 +137,14 @@ static int parse_hex(parser_t *state) {
 
 static int parse_string_core(parser_t *state, char *dst) {
     int p = 0;
+    int surr = 0;
     for (;;) {
         int c = get_ch(state);
         if (c == -1)
             return -1;
         if (c == '"')
             break;
-        if (c == '\\') {
+        else if (c == '\\') {
             c = get_ch(state);
             switch (c) {
             case 'n':
@@ -165,26 +167,54 @@ static int parse_string_core(parser_t *state, char *dst) {
             case '\\':
                 // c = c;
                 break;
-            case 'u':
+            case 'u': {
                 c = parse_hex(state);
                 if (c == -1)
                     return -1;
-                break;
+                if (0xD800 <= c && c <= 0xDBFF) {
+                    if (surr)
+                        return -1;
+                    surr = c;
+                    continue;
+                }
+                if (0xDC00 <= c && c <= 0xDFFF) {
+                    if (!surr)
+                        return -1;
+                    c = 0x10000 + ((surr - 0xD800) * 0x400) + (c - 0xDC00);
+                    surr = 0;
+                }
+                char buf[4];
+                unsigned len = devs_utf8_from_code_point(c, buf);
+                p += len;
+                state->ulen++;
+                if (dst) {
+                    memcpy(dst, buf, len);
+                    dst += len;
+                }
+                continue;
+            }
             default:
                 return -1;
             }
         }
+        if (surr)
+            return -1;
         if (dst)
             *dst++ = c;
+        if (!devs_utf8_is_cont(c))
+            state->ulen++;
         p++;
     }
 
+    if (surr)
+        return -1;
     return p;
 }
 
 static value_t parse_string(parser_t *state) {
     const char *p = state->ptr;
     unsigned sz = state->size;
+    state->ulen = 0;
     int slen = parse_string_core(state, NULL);
     if (slen == -1)
         return error(state);
@@ -192,10 +222,17 @@ static value_t parse_string(parser_t *state) {
         return devs_builtin_string(DEVS_BUILTIN_STRING__EMPTY);
     state->ptr = p;
     state->size = sz;
-    devs_string_t *s = devs_string_try_alloc(state->ctx, slen);
-    if (s != NULL)
-        parse_string_core(state, s->data);
-    return devs_value_from_gc_obj(state->ctx, s);
+
+    devs_ctx_t *ctx = state->ctx;
+    value_t r;
+    char *d = devs_string_prep(ctx, &r, slen, state->ulen);
+    if (d) {
+        state->ulen = 0;
+        slen = parse_string_core(state, d);
+        devs_string_finish(ctx, &r, slen, state->ulen);
+    }
+
+    return r;
 }
 
 static value_t parse_array(parser_t *state) {
@@ -357,6 +394,7 @@ typedef struct {
     unsigned off;
     char *dst;
     int error;
+    unsigned ulen;
 } stringify_t;
 
 static void add_ch(stringify_t *state, char c, unsigned rep) {
@@ -364,6 +402,8 @@ static void add_ch(stringify_t *state, char c, unsigned rep) {
         for (unsigned i = 0; i < rep; ++i)
             state->dst[state->off + i] = c;
     state->off += rep;
+    if (!devs_utf8_is_cont(c))
+        state->ulen += rep;
 }
 
 static void add_indent(stringify_t *state) {
@@ -437,12 +477,16 @@ static void stringify_obj(stringify_t *state, value_t v) {
         if (dst)
             memcpy(dst, data, sz);
         state->off += sz;
+        state->ulen += sz; // ASCII-only
         return;
 
-    case DEVS_OBJECT_TYPE_STRING:
+    case DEVS_OBJECT_TYPE_STRING: {
+        unsigned ulen;
         data = devs_string_get_utf8(ctx, v, &sz);
-        state->off += devs_json_escape_core(data, sz, dst) - 1;
+        state->off += devs_json_escape_core(data, sz, dst, &ulen) - 1;
+        state->ulen += ulen - 1;
         return;
+    }
     }
 
     devs_value_pin(ctx, v);
@@ -473,6 +517,7 @@ static void stringify_obj(stringify_t *state, value_t v) {
             state->curr_indent -= state->indent_step;
             if (off0 != state->off) {
                 state->off--; // eat final comma
+                state->ulen--;
                 add_indent(state);
             }
         }
@@ -482,36 +527,39 @@ static void stringify_obj(stringify_t *state, value_t v) {
     devs_value_unpin(ctx, v);
 }
 
-int devs_json_stringify_to(devs_ctx_t *ctx, value_t v, char *dst, int indent) {
+static int devs_json_stringify_to(devs_ctx_t *ctx, value_t v, char *dst, unsigned *len,
+                                  int indent) {
     stringify_t state = {
         .ctx = ctx,
         .indent_step = indent,
         .curr_indent = indent ? 1 : 0,
         .dst = dst,
+        .ulen = 0,
     };
     stringify_obj(&state, v);
     LOGV("after off=%d", state.off);
+    *len = state.ulen;
     if (state.error)
         return -1;
-    return state.off + 1;
+    return state.off;
 }
 
 value_t devs_json_stringify(devs_ctx_t *ctx, value_t v, int indent, bool do_throw) {
-    int sz = devs_json_stringify_to(ctx, v, NULL, indent);
+    unsigned len;
+    int sz = devs_json_stringify_to(ctx, v, NULL, &len, indent);
     if (sz == -1) {
         if (do_throw)
             devs_throw_type_error(ctx, "Converting circular structure to JSON");
         return devs_undefined;
     }
-    sz--; // ignore trailing '\0'
 
-    devs_string_t *s = devs_string_try_alloc(ctx, sz);
-    value_t r = devs_value_from_gc_obj(ctx, s);
-    devs_value_pin(ctx, r);
-    if (s != NULL) {
-        sz = devs_json_stringify_to(ctx, v, s->data, indent);
-        JD_ASSERT(sz - 1 == s->length);
+    value_t r;
+
+    char *d = devs_string_prep(ctx, &r, sz, len);
+    if (d) {
+        sz = devs_json_stringify_to(ctx, v, d, &len, indent);
+        devs_string_finish(ctx, &r, sz, len);
     }
-    devs_value_unpin(ctx, r);
+
     return r;
 }

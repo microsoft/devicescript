@@ -112,11 +112,12 @@ value_t devs_buffer_decode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t **buf, unsign
         *buf += p;
         if (p < len)
             *buf += 1; // final '\0'
-        return devs_value_from_gc_obj(ctx, devs_string_try_alloc_init(ctx, data, p));
+        return devs_value_from_gc_obj(ctx, devs_string_try_alloc_init(ctx, (const char *)data, p));
 
     case DEVS_NUMFMT_SPECIAL_STRING:
         *buf += len;
-        return devs_value_from_gc_obj(ctx, devs_string_try_alloc_init(ctx, data, len));
+        return devs_value_from_gc_obj(ctx,
+                                      devs_string_try_alloc_init(ctx, (const char *)data, len));
 
     case DEVS_NUMFMT_SPECIAL_PIPE:
     case DEVS_NUMFMT_SPECIAL_PIPE_PORT:

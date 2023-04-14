@@ -241,7 +241,7 @@ static void expand_value(devs_ctx_t *ctx, jd_devs_dbg_value_t *trg, value_t v) {
     }
 
     case DEVS_OBJECT_TYPE_STRING:
-        JD_ASSERT(devs_gc_tag(devs_handle_ptr_value(ctx, v)) == DEVS_GC_TAG_STRING);
+        JD_ASSERT(devs_handle_type(v) == DEVS_HANDLE_TYPE_GC_OBJECT && devs_is_string(ctx, v));
         trg->tag = JD_DEVS_DBG_VALUE_TAG_OBJ_STRING;
         trg->v0 = hv;
         break;

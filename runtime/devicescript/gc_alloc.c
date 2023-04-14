@@ -165,6 +165,7 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
             scan_gc_obj(ctx, (void *)block->act.closure, depth);
             scan_array(ctx, block->act.slots, block->act.func->num_slots, depth);
             break;
+        case DEVS_GC_TAG_STRING_JMP:
         case DEVS_GC_TAG_STRING:
         case DEVS_GC_TAG_BYTES:
         case DEVS_GC_TAG_BUILTIN_PROTO:
@@ -532,11 +533,74 @@ devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size) {
     return buf;
 }
 
-devs_string_t *devs_string_try_alloc_init(devs_ctx_t *ctx, const uint8_t *str, unsigned size) {
-    devs_string_t *s = devs_string_try_alloc(ctx, size);
-    if (s)
-        memcpy(s->data, str, size);
-    return s;
+devs_string_jmp_t *devs_string_jmp_try_alloc(devs_ctx_t *ctx, unsigned size, unsigned length) {
+    if (size > DEVS_MAX_ALLOC) {
+        devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_STRING);
+        return NULL;
+    }
+    JD_ASSERT(size >= length);
+    devs_string_jmp_t *buf =
+        devs_any_try_alloc(ctx, DEVS_GC_TAG_STRING_JMP,
+                           sizeof(devs_string_jmp_t) + size + 1 +
+                               devs_utf8_string_jmp_entries(length) * sizeof(uint16_t));
+    if (buf) {
+        buf->inner.size = size;
+        buf->inner.length = length;
+    }
+    return buf;
+}
+
+char *devs_string_prep(devs_ctx_t *ctx, value_t *v, unsigned sz, unsigned len) {
+    char *r;
+    if (len == sz && sz < DEVS_MAX_ASCII_STRING) {
+        devs_string_t *s = devs_string_try_alloc(ctx, sz);
+        *v = devs_value_from_gc_obj(ctx, s);
+        r = s ? s->data : NULL;
+    } else {
+        devs_string_jmp_t *s = devs_string_jmp_try_alloc(ctx, sz, len);
+        *v = devs_value_from_gc_obj(ctx, s);
+        r = s ? (char *)devs_utf8_string_data(&s->inner) : NULL;
+    }
+
+    devs_value_pin(ctx, *v);
+    return r;
+}
+
+void devs_string_finish(devs_ctx_t *ctx, value_t *v, unsigned sz, unsigned len) {
+    void *p = devs_value_to_gc_obj(ctx, *v);
+    unsigned tag = devs_gc_tag(p);
+    if (tag == DEVS_GC_TAG_STRING) {
+        devs_string_t *s = p;
+        JD_ASSERT(sz == s->length);
+        JD_ASSERT(sz == len && sz < DEVS_MAX_ASCII_STRING);
+    } else if (tag == DEVS_GC_TAG_STRING_JMP) {
+        devs_string_jmp_t *s = p;
+        JD_ASSERT(sz == s->inner.size);
+        JD_ASSERT(len == s->inner.length);
+        int r = devs_string_jmp_init(ctx, s);
+        JD_ASSERT(r >= 0);
+    } else {
+        JD_PANIC();
+    }
+    devs_value_unpin(ctx, *v);
+}
+
+devs_any_string_t *devs_string_try_alloc_init(devs_ctx_t *ctx, const char *str, unsigned size) {
+    unsigned len;
+    unsigned sz;
+    sz = devs_utf8_init(str, size, &len, NULL, 0);
+
+    if (size == sz && len == size && size < DEVS_MAX_ASCII_STRING) {
+        devs_string_t *s = devs_string_try_alloc(ctx, size);
+        if (s)
+            memcpy(s->data, str, size);
+        return (void *)s;
+    } else {
+        devs_string_jmp_t *s = devs_string_jmp_try_alloc(ctx, sz, len);
+        devs_utf8_init(str, size, NULL, &s->inner,
+                       DEVS_UTF8_INIT_SET_DATA | DEVS_UTF8_INIT_SET_JMP);
+        return (void *)s;
+    }
 }
 
 void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
@@ -544,8 +608,20 @@ void devs_gc_set_ctx(devs_gc_t *gc, devs_ctx_t *ctx) {
 }
 
 static const char *tags[] = {
-    "free",     "bytes",      "array",           "map",      "buffer", "string",
-    "function", "activation", "half_static_map", "short_map"};
+    "free",            //
+    "bytes",           //
+    "array",           //
+    "map",             //
+    "buffer",          //
+    "string",          //
+    "function",        //
+    "activation",      //
+    "half_static_map", //
+    "short_map",       //
+    "packet",          //
+    "string_jmp"       //
+};
+
 const char *devs_gc_tag_name(unsigned tag) {
     tag &= DEVS_GC_TAG_MASK;
     tag--;

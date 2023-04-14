@@ -83,7 +83,7 @@ static void jd_sha256_test_one(const char *key, const char *msg, const char *exp
     uint8_t hash[JD_SHA256_HASH_BYTES];
     jd_sha256_hmac_finish(hash);
 
-    DMESG("key %d + msg %d -> %-s", keysz, msgsz, jd_to_hex_a(hash, JD_SHA256_HASH_BYTES));
+    DMESG("key %d + msg %d -> %*p", keysz, msgsz, JD_SHA256_HASH_BYTES, hash);
 
     buf = jd_from_hex_a(exp, &size);
     JD_ASSERT(size == JD_SHA256_HASH_BYTES);
@@ -137,7 +137,7 @@ void jd_sha256_hmac_test(void) {
                               &sz);
     uint8_t outkey[JD_SHA256_HASH_BYTES];
     jd_sha256_hkdf(NULL, 0, key, sz, "Hello", 5, NULL, 0, outkey);
-    DMESG("%-s Hello -> %-s", jd_to_hex_a(key, sz), jd_to_hex_a(outkey, JD_SHA256_HASH_BYTES));
+    DMESG("%*p Hello -> %*p", sz, key, JD_SHA256_HASH_BYTES, outkey);
     jd_free(key);
     void *exp =
         jd_from_hex_a("765c02ce44dc89b569157316c33e8a296117c6c17efeec2e976e480825cfdcde", &sz);

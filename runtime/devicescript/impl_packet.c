@@ -24,7 +24,7 @@ value_t prop_DsPacket_role(devs_ctx_t *ctx, value_t self) {
 
 value_t prop_DsPacket_deviceIdentifier(devs_ctx_t *ctx, value_t self) {
     SELF();
-    return devs_string_sprintf(ctx, "%-s", jd_to_hex_a(&pkt->device_id, 8));
+    return devs_string_sprintf(ctx, "%*p", 8, &pkt->device_id);
 }
 
 value_t prop_DsPacket_shortId(devs_ctx_t *ctx, value_t self) {

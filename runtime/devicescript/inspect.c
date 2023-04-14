@@ -8,6 +8,7 @@ typedef struct {
     devs_ctx_t *ctx;
     unsigned off;
     unsigned size;
+    unsigned ulen;
     char *dst;
     uint8_t overflow;
 } inspect_t;
@@ -15,14 +16,33 @@ typedef struct {
 static void add_str(inspect_t *state, const char *s) {
     if (state->overflow)
         return;
+
     unsigned space = state->size - state->off;
     unsigned sz = strlen(s);
+
     if (sz > space) {
-        sz = space;
         state->overflow = 1;
+
+        // the char at ep is the last one to be included
+        int ep = (int)space - 1;
+        if (ep >= 0 && s[ep] & 0x80) {
+            while (ep >= 0) {
+                if (!devs_utf8_is_cont(s[ep])) {
+                    ep--;
+                    break;
+                }
+                ep--;
+            }
+        }
+        sz = ep + 1;
     }
-    if (state->dst)
-        memcpy(state->dst + state->off, s, sz);
+
+    for (unsigned i = 0; i < sz; ++i) {
+        if (!devs_utf8_is_cont(s[i]))
+            state->ulen++;
+        if (state->dst)
+            state->dst[state->off + i] = s[i];
+    }
     state->off += sz;
 }
 
@@ -126,11 +146,8 @@ static void inspect_obj(inspect_t *state, value_t v) {
         devs_maplike_t *map = devs_object_get_attached_enum(ctx, v);
         add_ch(state, '{');
         if (map != NULL) {
-            unsigned off0 = state->off;
             devs_maplike_iter(ctx, map, state, inspect_field);
-            if (off0 != state->off) {
-                state->off--; // eat final comma
-            }
+            // final comma eating interacts badly with ulen and length limitations
         }
         add_ch(state, '}');
     }
@@ -138,27 +155,33 @@ static void inspect_obj(inspect_t *state, value_t v) {
     devs_value_unpin(ctx, v);
 }
 
-int devs_inspect_to(devs_ctx_t *ctx, value_t v, char *dst, unsigned size) {
-    if (size < 5)
+static int devs_inspect_to(devs_ctx_t *ctx, value_t v, char *dst, unsigned size, unsigned *ulen) {
+    if (size < 10)
         return -1;
 
     inspect_t state = {
         .ctx = ctx,
         .dst = dst,
         .off = 0,
-        .size = size - 1 // space for final '\0'
+        .size = size - 3, // space for final '...'
+        .ulen = 0,
     };
     inspect_obj(&state, v);
-    JD_ASSERT(state.off < size);
-    if (dst) {
-        dst[state.off] = '\0';
-        if (state.overflow) {
-            dst[state.off - 1] = '.';
-            dst[state.off - 2] = '.';
-            dst[state.off - 3] = '.';
-        }
+    JD_ASSERT(state.off + 3 <= size);
+
+    if (state.overflow)
+        state.ulen += 3;
+    *ulen = state.ulen;
+
+    if (!dst)
+        return state.overflow ? state.off + 3 : state.off;
+
+    if (state.overflow) {
+        dst[state.off++] = '.';
+        dst[state.off++] = '.';
+        dst[state.off++] = '.';
     }
-    return state.off + 1;
+    return state.off;
 }
 
 value_t devs_inspect(devs_ctx_t *ctx, value_t v, unsigned size) {
@@ -166,19 +189,16 @@ value_t devs_inspect(devs_ctx_t *ctx, value_t v, unsigned size) {
     if (!is_complex(type_of))
         return devs_value_to_string(ctx, v);
 
-    int sz = devs_inspect_to(ctx, v, NULL, size);
+    unsigned ulen;
+    int sz = devs_inspect_to(ctx, v, NULL, size, &ulen);
     if (sz == -1)
         return devs_undefined;
 
-    sz--; // ignore trailing '\0'
-
-    devs_string_t *s = devs_string_try_alloc(ctx, sz);
-    value_t r = devs_value_from_gc_obj(ctx, s);
-    devs_value_pin(ctx, r);
-    if (s != NULL) {
-        sz = devs_inspect_to(ctx, v, s->data, size);
-        JD_ASSERT(sz - 1 == s->length);
+    value_t r;
+    char *d = devs_string_prep(ctx, &r, sz, ulen);
+    if (d) {
+        sz = devs_inspect_to(ctx, v, d, size, &ulen);
+        devs_string_finish(ctx, &r, sz, ulen);
     }
-    devs_value_unpin(ctx, r);
     return r;
 }

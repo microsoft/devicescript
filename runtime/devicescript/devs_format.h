@@ -26,9 +26,9 @@ typedef struct {
     devs_img_section_t float_literals; // value_t[]
     devs_img_section_t roles;          // devs_role_desc_t[]
     devs_img_section_t ascii_strings;  // uint16_t[]
-    devs_img_section_t utf8_strings;   // devs_img_section_t[]
+    devs_img_section_t utf8_strings;   // uint32_t[]
     devs_img_section_t buffers;        // devs_img_section_t[]
-    devs_img_section_t string_data;    // "strings" points in here
+    devs_img_section_t string_data;    // "*_strings" and "buffers" point in here
     devs_img_section_t service_specs;  // devs_service_spec_t[] followed by other stuff
     devs_img_section_t dcfg;           // see jd_dcfg.h
 } devs_img_header_t;
@@ -77,3 +77,19 @@ typedef struct {
     uint8_t numfmt;
     uint8_t flags; // DEVS_FIELDSPEC_FLAG_*
 } devs_field_spec_t;
+
+#define DEVS_STRING_JMP_TABLE_MASK ((1 << DEVS_UTF8_TABLE_SHIFT) - 1)
+
+typedef struct {
+    uint16_t size;   // in bytes, of devs_utf8_string_data()
+    uint16_t length; // in unicode
+    // jmp_table[k] has byte offset of code point at position (k + 1) << DEVS_UTF8_TABLE_SHIFT
+    uint16_t jmp_table[0];
+} devs_utf8_string_t;
+
+static inline unsigned devs_utf8_string_jmp_entries(unsigned length) {
+    return length >> DEVS_UTF8_TABLE_SHIFT;
+}
+static inline char *devs_utf8_string_data(const devs_utf8_string_t *s) {
+    return (char *)(s->jmp_table + devs_utf8_string_jmp_entries(s->length));
+}

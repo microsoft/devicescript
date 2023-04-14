@@ -55,19 +55,25 @@ void funX_DeviceScript_format(devs_ctx_t *ctx) {
     value_t *argp = ctx->the_stack + 2;
 
     char tmp[64];
-    unsigned sz = devs_strformat(ctx, fmt, len, tmp, sizeof(tmp), argp, numargs, 0);
-    devs_string_t *str = devs_string_try_alloc(ctx, sz - 1);
-    if (str == NULL)
-        return;
-    if (sz > sizeof(tmp)) {
-        value_t v = devs_value_from_gc_obj(ctx, str);
-        devs_value_pin(ctx, v);
-        devs_strformat(ctx, fmt, len, str->data, sz, argp, numargs, 0);
-        devs_value_unpin(ctx, v);
-    } else {
-        memcpy(str->data, tmp, sz - 1);
+    size_t length;
+    unsigned sz = devs_strformat(ctx, fmt, len, tmp, sizeof(tmp), argp, numargs, &length);
+    sz--;
+    length--;
+
+    value_t r;
+    char *d = devs_string_prep(ctx, &r, sz, length);
+    if (d) {
+        if (sz < sizeof(tmp) - 1) {
+            memcpy(d, tmp, sz);
+        } else {
+            sz = devs_strformat(ctx, fmt, len, d, sz + 1, argp, numargs, &length);
+            length--;
+            sz--;
+        }
+        devs_string_finish(ctx, &r, sz, length);
     }
-    devs_ret_gc_ptr(ctx, str);
+
+    devs_ret(ctx, r);
 }
 
 void fun2_DeviceScript_print(devs_ctx_t *ctx) {
@@ -109,8 +115,7 @@ void fun1_DeviceScript__dcfgString(devs_ctx_t *ctx) {
         unsigned sz;
         const char *v = dcfg_get_string(key, &sz);
         if (v)
-            devs_ret(ctx, devs_value_from_gc_obj(
-                              ctx, devs_string_try_alloc_init(ctx, (const uint8_t *)v, sz)));
+            devs_ret(ctx, devs_value_from_gc_obj(ctx, devs_string_try_alloc_init(ctx, v, sz)));
     }
 }
 
@@ -128,7 +133,7 @@ void fun1_DeviceScript_deviceIdentifier(devs_ctx_t *ctx) {
     else
         return;
 
-    devs_ret(ctx, devs_string_sprintf(ctx, "%-s", jd_to_hex_a(&id, 8)));
+    devs_ret(ctx, devs_string_sprintf(ctx, "%*p", 8, &id));
 }
 
 void fun2_DeviceScript__serverSend(devs_ctx_t *ctx) {

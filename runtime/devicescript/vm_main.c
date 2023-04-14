@@ -266,6 +266,12 @@ const char *devs_builtin_string_by_idx(unsigned idx) {
     return builtin_strings[idx];
 }
 
+const devs_utf8_string_t *devs_img_get_string_jmp(devs_img_t img, uint32_t idx) {
+    JD_ASSERT(DEVS_UTF8_HEADER_SIZE == sizeof(uint32_t));
+    unsigned off = ((const uint32_t *)(img.data + img.header->utf8_strings.start))[idx];
+    return (const devs_utf8_string_t *)(img.data + img.header->string_data.start + off);
+}
+
 const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
     if (!devs_img_stridx_ok(img, idx)) {
         if (size)
@@ -276,18 +282,22 @@ const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
     unsigned tp = (uint16_t)idx >> DEVS_STRIDX__SHIFT;
     idx &= (1 << DEVS_STRIDX__SHIFT) - 1;
 
-    const char *r = NULL;
-    const devs_img_section_t *sect = NULL;
+    const char *r;
 
     switch (tp) {
-    case DEVS_STRIDX_UTF8:
-        sect = (const devs_img_section_t *)(img.data + img.header->utf8_strings.start +
-                                            idx * sizeof(devs_img_section_t));
-        break;
-    case DEVS_STRIDX_BUFFER:
-        sect = (const devs_img_section_t *)(img.data + img.header->buffers.start +
-                                            idx * sizeof(devs_img_section_t));
-        break;
+    case DEVS_STRIDX_UTF8: {
+        const devs_utf8_string_t *s = devs_img_get_string_jmp(img, idx);
+        if (size)
+            *size = s->size;
+        return devs_utf8_string_data(s);
+    }
+    case DEVS_STRIDX_BUFFER: {
+        const devs_img_section_t *sect =
+            (const void *)(img.data + img.header->buffers.start + idx * sizeof(devs_img_section_t));
+        if (size)
+            *size = sect->length;
+        return (const char *)(img.data + img.header->string_data.start + sect->start);
+    }
     case DEVS_STRIDX_BUILTIN:
         r = builtin_strings[idx];
         break;
@@ -296,22 +306,15 @@ const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size) {
         uint16_t off = *(uint16_t *)(img.data + img.header->ascii_strings.start +
                                      idx * DEVS_ASCII_HEADER_SIZE);
         r = (const char *)(img.data + img.header->string_data.start + off);
-    } break;
+        break;
+    }
     default:
         JD_PANIC();
     }
 
-    if (sect) {
-        if (size)
-            *size = sect->length;
-        return (const char *)(img.data + img.header->string_data.start + sect->start);
-    } else if (r) {
-        if (size)
-            *size = strlen(r);
-        return r;
-    } else {
-        JD_PANIC();
-    }
+    if (size)
+        *size = strlen(r);
+    return r;
 }
 
 const char *devs_get_static_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size) {

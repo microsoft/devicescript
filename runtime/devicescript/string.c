@@ -2,9 +2,11 @@
 #include <math.h>
 
 bool devs_is_string(devs_ctx_t *ctx, value_t v) {
+    unsigned tag;
     switch (devs_handle_type(v)) {
     case DEVS_HANDLE_TYPE_GC_OBJECT:
-        return devs_gc_tag(devs_handle_ptr_value(ctx, v)) == DEVS_GC_TAG_STRING;
+        tag = devs_gc_tag(devs_handle_ptr_value(ctx, v));
+        return tag == DEVS_GC_TAG_STRING || tag == DEVS_GC_TAG_STRING_JMP;
     case DEVS_HANDLE_TYPE_IMG_BUFFERISH:
         return !devs_bufferish_is_buffer(v);
     default:
@@ -16,6 +18,29 @@ bool devs_is_number(value_t v) {
     return devs_is_tagged_int(v) || devs_handle_type(v) == DEVS_HANDLE_TYPE_FLOAT64;
 }
 
+const devs_utf8_string_t *devs_string_get_utf8_struct(devs_ctx_t *ctx, value_t v) {
+    switch (devs_handle_type(v)) {
+    case DEVS_HANDLE_TYPE_GC_OBJECT: {
+        void *ptr = devs_handle_ptr_value(ctx, v);
+        if (devs_gc_tag(ptr) == DEVS_GC_TAG_STRING_JMP) {
+            devs_string_jmp_t *s = ptr;
+            return &s->inner;
+        }
+        return NULL;
+    }
+    case DEVS_HANDLE_TYPE_IMG_BUFFERISH: {
+        unsigned idx = devs_handle_value(v);
+        unsigned tp = (uint16_t)idx >> DEVS_STRIDX__SHIFT;
+        idx &= (1 << DEVS_STRIDX__SHIFT) - 1;
+        if (tp == DEVS_STRIDX_UTF8)
+            return devs_img_get_string_jmp(ctx->img, idx);
+        return NULL;
+    }
+    default:
+        return NULL;
+    }
+}
+
 const char *devs_string_get_utf8(devs_ctx_t *ctx, value_t v, unsigned *size) {
     switch (devs_handle_type(v)) {
     case DEVS_HANDLE_TYPE_GC_OBJECT: {
@@ -25,6 +50,11 @@ const char *devs_string_get_utf8(devs_ctx_t *ctx, value_t v, unsigned *size) {
             if (size)
                 *size = s->length;
             return s->data;
+        } else if (devs_gc_tag(ptr) == DEVS_GC_TAG_STRING_JMP) {
+            devs_string_jmp_t *s = ptr;
+            if (size)
+                *size = s->inner.size;
+            return devs_utf8_string_data(&s->inner);
         }
         return NULL;
     }
@@ -42,21 +72,25 @@ value_t devs_builtin_string(unsigned idx) {
 }
 
 value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap) {
+    if (strstr(format, "%-s"))
+        JD_PANIC();
     va_list ap2;
     va_copy(ap2, ap);
-    int len = jd_vsprintf(NULL, 0, format, ap);
+    unsigned len;
+    int sz = jd_vsprintf_ext(NULL, 0, format, &len, ap);
     // len includes final NUL; devs_string_try_alloc() allocates the final NUL, but doesn't count it
     // in its len
-    devs_string_t *s = devs_string_try_alloc(ctx, len - 1);
-    if (s == NULL) {
-        // re-run vsprintf with non-NULL dst so it executes %-s (free)
-        char tmp;
-        jd_vsprintf(&tmp, 1, format, ap2);
-        return devs_undefined;
-    } else {
-        jd_vsprintf(s->data, len, format, ap2);
-        return devs_value_from_gc_obj(ctx, s);
+    len--;
+    sz--;
+    value_t r;
+    char *d = devs_string_prep(ctx, &r, sz, len);
+    if (d) {
+        sz = jd_vsprintf_ext(d, len, format, &len, ap2);
+        len--;
+        sz--;
+        devs_string_finish(ctx, &r, sz, len);
     }
+    return r;
 }
 
 value_t devs_string_sprintf(devs_ctx_t *ctx, const char *format, ...) {
@@ -68,8 +102,7 @@ value_t devs_string_sprintf(devs_ctx_t *ctx, const char *format, ...) {
 }
 
 value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len) {
-    // TODO validate utf8??
-    devs_string_t *s = devs_string_try_alloc_init(ctx, utf8, len);
+    devs_any_string_t *s = devs_string_try_alloc_init(ctx, (const char *)utf8, len);
     if (s == NULL) {
         return devs_undefined;
     } else {
@@ -83,9 +116,9 @@ static value_t buffer_to_string(devs_ctx_t *ctx, value_t v) {
     JD_ASSERT(data != NULL);
     unsigned maxbuf = 32;
     if (sz > maxbuf) {
-        return devs_string_sprintf(ctx, "[Buffer[%u] %-s...]", sz, jd_to_hex_a(data, maxbuf));
+        return devs_string_sprintf(ctx, "[Buffer[%u] %*p...]", sz, maxbuf, data);
     } else {
-        return devs_string_sprintf(ctx, "[Buffer[%u] %-s]", sz, jd_to_hex_a(data, sz));
+        return devs_string_sprintf(ctx, "[Buffer[%u] %*p]", sz, sz, data);
     }
 }
 
@@ -157,6 +190,7 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
         case DEVS_GC_TAG_MAP:
             return devs_builtin_string(DEVS_BUILTIN_STRING_MAP);
         case DEVS_GC_TAG_BUILTIN_PROTO: // can't happen
+        case DEVS_GC_TAG_STRING_JMP:    // handled on top
         case DEVS_GC_TAG_STRING:        // handled on top
         default:
             JD_PANIC();
@@ -221,9 +255,11 @@ value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
         b = devs_value_to_string_and_pin(ctx, b);
 
     const char *ap, *bp;
-    unsigned alen, blen;
-    ap = devs_string_get_utf8(ctx, a, &alen);
-    bp = devs_string_get_utf8(ctx, b, &blen);
+    unsigned asz, bsz, alen, blen;
+    ap = devs_string_get_utf8(ctx, a, &asz);
+    bp = devs_string_get_utf8(ctx, b, &bsz);
+    alen = devs_string_length(ctx, a);
+    blen = devs_string_length(ctx, b);
 
     value_t r;
 
@@ -231,18 +267,18 @@ value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b) {
         // strange...
         devs_invalid_program(ctx, 60126);
         r = devs_undefined;
-    } else if (alen == 0) {
+    } else if (asz == 0) {
         r = b;
-    } else if (blen == 0) {
+    } else if (bsz == 0) {
         r = a;
     } else {
-        devs_string_t *s = devs_string_try_alloc(ctx, alen + blen);
-        if (s == NULL) {
-            r = devs_undefined;
-        } else {
-            memcpy(s->data, ap, alen);
-            memcpy(s->data + alen, bp, blen);
-            r = devs_value_from_gc_obj(ctx, s);
+        unsigned sz = asz + bsz;
+        unsigned len = alen + blen;
+        char *p = devs_string_prep(ctx, &r, sz, len);
+        if (p) {
+            memcpy(p, ap, asz);
+            memcpy(p + asz, bp, bsz);
+            devs_string_finish(ctx, &r, sz, len);
         }
     }
 
@@ -270,16 +306,24 @@ value_t devs_string_slice(devs_ctx_t *ctx, value_t str, int start, int endp) {
     if (!data)
         return devs_undefined;
 
-    start = sanitize_idx(sz, start);
-    endp = sanitize_idx(sz, endp);
+    int slen = devs_string_length(ctx, str);
+    start = sanitize_idx(slen, start);
+    endp = sanitize_idx(slen, endp);
 
     int len = endp - start;
     if (len <= 0)
         return devs_builtin_string(DEVS_BUILTIN_STRING__EMPTY);
 
-    if (start == 0 && len == (int)sz)
+    if (start == 0 && len == slen)
         return str;
 
-    devs_string_t *r = devs_string_try_alloc_init(ctx, (const uint8_t *)data + start, len);
+    start = devs_string_index(ctx, str, start);
+    endp = devs_string_index(ctx, str, endp);
+    if (start < 0)
+        start = sz; // shouldn't happen
+    if (endp < 0)
+        endp = sz;
+
+    devs_any_string_t *r = devs_string_try_alloc_init(ctx, data + start, endp - start);
     return devs_value_from_gc_obj(ctx, r);
 }
