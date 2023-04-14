@@ -959,6 +959,7 @@ class Program implements TopOpWriter {
 
         if (!expr || !ts.isCallExpression(expr)) return undefined
         const nn = this.nodeName(expr.expression)
+        if (!nn) return undefined
         if (nn.startsWith(startServerPref)) {
             this.requireArgs(expr, 1)
             const specName = this.serviceNameFromClassName(
