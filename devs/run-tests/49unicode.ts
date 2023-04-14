@@ -68,4 +68,26 @@ function testSliceR(s: string) {
     }
 }
 
+function codes2(s: string, codes: number[]) {
+    assert(s.length === codes.length)
+    for (let i = 0; i < s.length; ++i) {
+        assert(s.charCodeAt(i) === codes[i])
+    }
+}
+
+function codes(s: string, codes: number[]) {
+    codes2(s, codes)
+    codes.push(32)
+    codes2(s + " ", codes)
+}
+
+function testAllCodes() {
+    codes("wolność", [119, 111, 108, 110, 111, 347, 263])
+    codes("вільність", [1074, 1110, 1083, 1100, 1085, 1110, 1089, 1090, 1100])
+    codes("自由", [33258, 30001])
+    codes("🗽", [0x1f5fd])
+    codes("\uD83D\uDDFD", [0x1f5fd])
+}
+
+testAllCodes()
 testUnicode()

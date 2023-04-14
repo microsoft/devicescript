@@ -14,12 +14,11 @@ or possibly use yet another abstraction since even with full 21-bit Unicode,
 several code points can still combine into a single glyph (character displayed on the screen). 
 
 In DeviceScript,
-the plan is for the method `String.charCodeAt()` to return a Unicode code point (up to 21 bits), not UTF-16 character.
+the method `String.charCodeAt()` returns Unicode code point (up to 21 bits), not UTF-16 character.
 Similarly, `String.length` will return the number of 21-bit code points.
-
-However, currently, they both assume strings is ASCII, [see issue](https://github.com/microsoft/devicescript/issues/40).
+Thus, `"🗽".length === 1` and `"🗽".charCodeAt(0) === 0x1f5fd`,
+and also `"\uD83D\uDDFD".length === 1` since `"\uD83D\uDDFD" === "🗽"` which may be confusing.
 
 Also string [construction by concatnation quadratic](https://github.com/microsoft/devicescript/issues/39).
 
 See also [discussion](https://github.com/microsoft/devicescript/discussions/34).
-

@@ -90,11 +90,12 @@ unsigned devs_utf8_code_point(const char *data) {
     if (sp[0] < 0x80) {
         return sp[0];
     } else if ((sp[0] & 0xe0) == 0xc0) {
-        return ((sp[0] & 0x1f) << 6) | sp[1];
+#define M(idx, sh) ((sp[idx] & 0x3f) << (sh))
+        return ((sp[0] & 0x1f) << 6) | M(1, 0);
     } else if ((sp[0] & 0xf0) == 0xe0) {
-        return ((sp[0] & 0x0F) << 12) | (sp[1] << 6) | sp[2];
+        return ((sp[0] & 0x0F) << 12) | M(1, 6) | M(2, 0);
     } else if ((sp[0] & 0xf8) == 0xf0) {
-        return ((sp[0] & 0x07) << 18) | (sp[1] << 12) | (sp[2] << 6) | sp[3];
+        return ((sp[0] & 0x07) << 18) | M(1, 12) | M(2, 6) | M(3, 0);
     } else {
         JD_PANIC();
         return 0xFFFD; // replacement character
