@@ -3,7 +3,7 @@ description: Mounts a light level sensor
 title: Light Level
 ---
 
-# Soil Moisture
+# Light Level
 
 The `startLightLevel` starts a simple analog sensor server that models a light level sensor
 and returns a [client](/api/clients/lightlevel) bound to the server.

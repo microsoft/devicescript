@@ -21,7 +21,7 @@ import { startPotentiometer } from "@devicescript/servers"
 const slider = startPotentiometer({
     pin: ds.gpio(3),
 })
-slider.subscribe(v => console.data({ value: 100 * v}))
+slider.position.subscribe(v => console.data({ value: 100 * v}))
 ```
 
 ## Scaling

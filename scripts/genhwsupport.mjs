@@ -80,7 +80,7 @@ function collectAnalog() {
         let m = /interface (\w+)Config extends AnalogConfig/.exec(line)
         if (m) {
             const serv = m[1]
-            analog += `* [${serv}](${servicesURL}/${serv.toLowerCase()})\n`
+            analog += `* [${serv}](${serversURL}/${serv.toLowerCase()})\n`
         }
 
         m = /interface (\w+)Config extends BaseServiceConfig/.exec(line)
