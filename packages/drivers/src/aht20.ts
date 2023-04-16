@@ -42,12 +42,12 @@ export async function startAHT20() {
     const readThr = throttle(500, read)
     startTemperature({
         min: -40,
-        max: 125,
-        error: 0.8,
+        max: 85,
+        error: 1.5,
         read: async () => (await readThr()).temperature,
     })
     startHumidity({
-        error: 3.5,
+        error: 4,
         read: async () => (await readThr()).humidity,
     })
 }
