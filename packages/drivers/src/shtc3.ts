@@ -42,6 +42,9 @@ async function init() {
     await send_cmd(SHTC3_SLEEP)
 }
 
+/**
+ * Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C 0x70.
+ */
 export async function startSHTC3() {
     await init()
     const readThr = throttle(500, read)

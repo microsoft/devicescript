@@ -34,6 +34,9 @@ async function read() {
     return { humidity, temperature }
 }
 
+/**
+ * Start driver for AHT20 temperature/humidity sensor at I2C 0x38.
+ */
 export async function startAHT20() {
     await init()
     const readThr = throttle(500, read)
