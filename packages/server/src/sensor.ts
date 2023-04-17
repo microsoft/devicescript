@@ -40,7 +40,7 @@ export class SensorServer<T extends ds.ISensorServer>
     streamingSamples() {
         return this._streamingSamples
     }
-    set_streamingSamples(value: number) {
+    async set_streamingSamples(value: number) {
         this._streamingSamples = value
 
         if (this._streamingSamples > 0 && !this._interval) {
@@ -48,7 +48,7 @@ export class SensorServer<T extends ds.ISensorServer>
                 this.sendSample,
                 this._streamingInterval
             )
-            this.sendSample()
+            await this.sendSample()
         } else this.maybeStop()
     }
     streamingPreferredInterval() {
