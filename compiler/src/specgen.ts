@@ -140,9 +140,9 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         info.shortId == "_base"
             ? "ServerInterface"
             : isSensor
-            ? "ISensorServer"
-            : "IBaseServer"
-    srv += `interface I${clname}Server extends ${ibase} {\n`
+            ? "SensorServerSpec"
+            : "BaseServerSpec"
+    srv += `interface ${clname}ServerSpec extends ${ibase} {\n`
 
     if (noCtorSpec(info))
         r +=

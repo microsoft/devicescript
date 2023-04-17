@@ -4,9 +4,9 @@ import { Server } from "./servercore"
 const minInterval = 100
 const maxInterval = 3600 * 1000
 
-export class SensorServer<T extends ds.ISensorServer>
+export class SensorServer<T extends ds.SensorServerSpec>
     extends Server
-    implements ds.ISensorServer
+    implements ds.SensorServerSpec
 {
     _preferredInterval: number
     _streamingInterval: number

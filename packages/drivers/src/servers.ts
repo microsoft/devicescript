@@ -9,8 +9,8 @@ export interface TemperatureOptions {
 }
 
 export class TemperatureServer
-    extends SensorServer<ds.ITemperatureServer>
-    implements ds.ITemperatureServer
+    extends SensorServer<ds.TemperatureServerSpec>
+    implements ds.TemperatureServerSpec
 {
     constructor(public options: TemperatureOptions) {
         super(ds.Temperature.spec, "temperature")
@@ -40,8 +40,8 @@ export interface HumidityOptions {
 }
 
 export class HumidityServer
-    extends SensorServer<ds.IHumidityServer>
-    implements ds.IHumidityServer
+    extends SensorServer<ds.HumidityServerSpec>
+    implements ds.HumidityServerSpec
 {
     constructor(public options: HumidityOptions) {
         super(ds.Humidity.spec, "humidity")

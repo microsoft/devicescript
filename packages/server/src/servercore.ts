@@ -13,7 +13,7 @@ export class Server implements ds.ServerInterface {
 let servers: ds.ServerInterface[]
 let restartCnt = 1
 
-export class ControlServer extends Server implements ds.IControlServer {
+export class ControlServer extends Server implements ds.ControlServerSpec {
     constructor() {
         super(ds.Control.spec)
     }
@@ -119,7 +119,7 @@ export function startServer(s: ds.ServerInterface) {
         servers = [new ControlServer()]
         ;(ds as typeof ds)._onServerPacket = _onServerPacket
         setInterval(async () => {
-            const iserv = servers[0] as ds.IControlServer
+            const iserv = servers[0] as ds.ControlServerSpec
             const spec = ds.Control.spec.lookup("services")
             const pkt = spec.response.encode(await iserv.services())
             await iserv._send(pkt)
