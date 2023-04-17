@@ -23,7 +23,7 @@ export class SensorServer<T extends ds.ISensorServer>
         this._preferredInterval = this._streamingInterval
     }
 
-    private syncSamples() {
+    private maybeStop() {
         if (this._streamingSamples <= 0) {
             this._streamingSamples = 0
             clearInterval(this._interval)
@@ -35,7 +35,7 @@ export class SensorServer<T extends ds.ISensorServer>
         const p = this.spec.lookup(this.readingName).encode(v)
         await this._send(p)
         this._streamingSamples--
-        this.syncSamples()
+        this.maybeStop()
     }
     streamingSamples() {
         return this._streamingSamples
@@ -43,12 +43,13 @@ export class SensorServer<T extends ds.ISensorServer>
     set_streamingSamples(value: number) {
         this._streamingSamples = value
 
-        if (this._streamingSamples > 0 && !this._interval)
+        if (this._streamingSamples > 0 && !this._interval) {
             this._interval = setInterval(
                 this.sendSample,
                 this._streamingInterval
             )
-        else this.syncSamples()
+            this.sendSample()
+        } else this.maybeStop()
     }
     streamingPreferredInterval() {
         return this._preferredInterval
@@ -58,5 +59,7 @@ export class SensorServer<T extends ds.ISensorServer>
     }
     set_streamingInterval(value: number) {
         this._streamingInterval = Math.clamp(minInterval, value, maxInterval)
+        if (this._interval)
+            updateInterval(this._interval, this._streamingInterval)
     }
 }
