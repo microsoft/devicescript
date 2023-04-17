@@ -1,0 +1,21 @@
+---
+sidebar_position: 9
+---
+
+# Drivers
+
+Drivers [builtin](/developer/builtin-packages) package provides drivers for I2C peripherals.
+
+
+## Usage
+
+```ts
+import { startSHTC3 } from "@devicescript/drivers"
+
+await startSHTC3()
+const t = new ds.Temperature()
+const h = new ds.Humidity()
+// ...
+```
+
+TODO: list drivers

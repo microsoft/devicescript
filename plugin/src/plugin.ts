@@ -39,6 +39,7 @@ function init(modules: {
                                 "@devicescript/cloud",
                                 "@devicescript/i2c",
                                 "@devicescript/settings",
+                                "@devicescript/drivers",
                             ]) {
                                 json.peerDependencies[n] = "*"
                             }

@@ -80,3 +80,6 @@ gdb gdb-dap gd:
 
 gdb-run gr:
 	lldb runtime/built/jdcli -- -n -X .devicescript/bin/crun.devs
+
+ac:
+	$(CLI) build -F allFunctions -F allPrototypes devs/run-tests/allcompile.ts
