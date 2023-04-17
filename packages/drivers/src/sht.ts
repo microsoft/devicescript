@@ -23,7 +23,7 @@ export async function shtReadU16(devAddr: number, regAddr: number, wait = 0) {
     await shtSendCmd(devAddr, regAddr)
     if (wait) await ds.delay(wait)
     const buf = await i2c.readBuf(devAddr, 3)
-    if (shtCRC8(buf, 2) != buf[2]) throw new DriverError("SHT CRC error")
+    if (shtCRC8(buf, 2) !== buf[2]) throw new DriverError("SHT CRC error")
     return (buf[0] << 8) | buf[1]
 }
 

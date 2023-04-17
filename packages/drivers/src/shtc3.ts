@@ -13,7 +13,7 @@ const SHTC3_SLEEP = 0xb098
 const SHTC3_WAKEUP = 0x3517
 
 async function send_cmd(cmd: number) {
-    shtSendCmd(SHTC3_ADDR, cmd)
+    await shtSendCmd(SHTC3_ADDR, cmd)
 }
 
 async function wake() {
