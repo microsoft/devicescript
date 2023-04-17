@@ -43,7 +43,8 @@ async function init() {
 }
 
 /**
- * Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C 0x70.
+ * Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C `0x70`.
+ * @link https://sensirion.com/products/catalog/SHTC3/ Datasheet
  */
 export async function startSHTC3() {
     await init()

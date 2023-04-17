@@ -52,7 +52,8 @@ async function init() {
 }
 
 /**
- * Start driver for Sensirion SHT30 temperature/humidity sensor at I2C 0x44 or 0x45.
+ * Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45`.
+ * @link https://sensirion.com/products/catalog/SHT30-DIS-B/ Datasheet
  */
 export async function startSHT30() {
     await init()

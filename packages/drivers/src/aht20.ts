@@ -35,7 +35,8 @@ async function read() {
 }
 
 /**
- * Start driver for AHT20 temperature/humidity sensor at I2C 0x38.
+ * Start driver for AHT20 temperature/humidity sensor at I2C address `0x38`.
+ * @link https://asairsensors.com/wp-content/uploads/2021/09/Data-Sheet-AHT20-Humidity-and-Temperature-Sensor-ASAIR-V1.0.03.pdf Datasheet
  */
 export async function startAHT20() {
     await init()
