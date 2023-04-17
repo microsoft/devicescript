@@ -27,9 +27,9 @@ async function read() {
     const data = await i2c.readBuf(addr, 6)
 
     const h0 = (data[1] << 12) | (data[2] << 4) | (data[3] >> 4)
-    const humidity = (h0 * 100) / 0x100000
+    const humidity = h0 * (100 / 0x100000)
     const t0 = ((data[3] & 0xf) << 16) | (data[4] << 8) | data[5]
-    const temperature = (t0 * 200.0) / 0x100000 - 50
+    const temperature = t0 * (200.0 / 0x100000) - 50
 
     return { humidity, temperature }
 }

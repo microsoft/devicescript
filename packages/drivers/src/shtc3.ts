@@ -30,8 +30,8 @@ async function read() {
     const hum = (data[3] << 8) | data[4]
     await send_cmd(SHTC3_SLEEP)
     return {
-        temperature: (175 / 16) * temp - 45,
-        humidity: (100 / 16) * hum,
+        temperature: (175 / 0x10000) * temp - 45,
+        humidity: (100 / 0x10000) * hum,
     }
 }
 
