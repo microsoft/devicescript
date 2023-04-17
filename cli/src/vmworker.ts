@@ -87,25 +87,23 @@ export function overrideConsoleDebug() {
     console.debug = (...args: any[]) => {
         const cl = devtoolsIface?.mainClient
         if (
-            cl &&
             args.length == 1 &&
             typeof args[0] == "string" &&
             args[0].startsWith("DEV: ")
         ) {
             let line = stripColors(args[0]).slice(5)
-            sendOutput(cl, "dev", [line])
+            if (cl) sendOutput(cl, "dev", [line])
             line = line.replace(/^DM \(\d+\): ?/, "")
             if (line) printDmesg(devtoolsIface.lastOKBuild?.dbg, "DEV", line)
         } else {
-            if (cl) {
-                let str = ""
-                for (const a of args) {
-                    if (str) str += " "
-                    str += a
-                }
-                sendOutput(cl, "verbose", [stripColors(str)])
-            } else {
-                condbg(...args)
+            let str = ""
+            for (const a of args) {
+                if (str) str += " "
+                str += a
+            }
+            if (cl) sendOutput(cl, "verbose", [stripColors(str)])
+            else {
+                if (isVerbose) condbg(wrapColor(90, stripColors(str)))
             }
         }
     }
