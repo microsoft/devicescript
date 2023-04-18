@@ -9,9 +9,9 @@ In DeviceScript, any hardware component is accessed through a service **client**
 Therefore, you need to start service **servers** on top of your
 low level hardware components to program them using DeviceScript.
 
-## Available servers
+-   Learn more about the [available servers](/api/servers)
 
-### Built-in servers
+## Built-in servers
 
 DeviceScript provides helper functions to mount of variety of servers out of the box
 in the `@devicescript/servers` module.
@@ -41,13 +41,11 @@ buttonA.up.subscribe(() => {
 })
 ```
 
--   Learn more about the [available servers](/api/servers)
+## I2C drivers
 
-### I2C drivers
+Some servers are implemented as [I2C drivers](drivers) and are either built-in from C or authored in DeviceScript directly.
 
-Some servers are implemented as I2C drivers and are either built-in from C or authored in DeviceScript directly.
-
-### Jacdac modules
+## Jacdac modules
 
 If you connect a [Jacdac module](https://aka.ms/jacdac), it will automatically run as a service server and
 you will be available to bind a role to that module.
