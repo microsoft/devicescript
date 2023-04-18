@@ -131,24 +131,6 @@ interface RoleData extends ds.Role {
     _reportHandlers: Record<string, ds.Fiber>
 }
 
-async function sendCommand(cmdpkt: ds.Packet) {
-    await cmdpkt.role.sendCommand(cmdpkt.serviceCommand, cmdpkt.payload)
-}
-
-ds.Role.prototype._commandResponse = async function (
-    this: RoleData,
-    cmdpkt,
-    fiber
-) {
-    if (!this._reportHandlers) this._reportHandlers = {}
-    this._reportHandlers[cmdpkt.serviceCommand + ""] = fiber
-    // note that cmdpkt has messed up deviceIdentifier etc; only role, serviceCommand and payload are reliable
-    sendCommand.start(cmdpkt) // start it background, so we don't get a race with ds.suspend() below
-    const res = await ds.suspend<ds.Packet>(500)
-    if (res === undefined) throw new Error(`command ${cmdpkt} timeout`)
-    return res.decode()
-}
-
 ds.Role.prototype._onPacket = async function (this: RoleData, pkt: ds.Packet) {
     //
     // If you halted the program and ended up here, it may be difficult to step in.
@@ -253,9 +235,12 @@ ds.Event.prototype.subscribe = function subscribe<T>(
 
 function noop() {}
 
-ds.Event.prototype.wait = async function (timeout) {
+;(ds as typeof ds).wait = async function wait<T>(
+    l: ds.Subscriber<T>,
+    timeout?: number
+) {
     const fib = ds.Fiber.self()
-    let unsub = this.subscribe(v => {
+    let unsub = l.subscribe(v => {
         unsub()
         unsub = noop
         if (fib.suspended) fib.resume(v)
@@ -264,6 +249,10 @@ ds.Event.prototype.wait = async function (timeout) {
     unsub()
     unsub = noop
     return r
+}
+
+ds.Event.prototype.wait = async function (timeout) {
+    return await ds.wait(this, timeout)
 }
 
 ds.Button.prototype.pressed = function pressed() {
@@ -287,244 +276,4 @@ ds.MagneticFieldLevel.prototype.detected = function pressed() {
         this.inactive.subscribe(async () => await reg.emit(false))
     }
     return reg
-}
-
-Array.prototype.map = function (f) {
-    const res: any[] = []
-    const length = this.length
-    for (let i = 0; i < length; ++i) {
-        res.push(f(this[i], i, this))
-    }
-    return res
-}
-
-Array.prototype.forEach = function (f) {
-    const length = this.length
-    for (let i = 0; i < length; ++i) {
-        f(this[i], i, this)
-    }
-}
-
-Array.prototype.find = function (f) {
-    const length = this.length
-    for (let i = 0; i < length; ++i) {
-        if (f(this[i], i, this)) return this[i]
-    }
-    return undefined
-}
-
-Array.prototype.filter = function (f) {
-    const res: any[] = []
-    const length = this.length
-    for (let i = 0; i < length; ++i) {
-        if (f(this[i], i, this)) res.push(this[i])
-    }
-    return res
-}
-
-Array.prototype.every = function (f) {
-    const length = this.length
-    for (let i = 0; i < length; ++i) {
-        if (!f(this[i], i, this)) return false
-    }
-    return true
-}
-
-Array.prototype.some = function (f) {
-    const length = this.length
-    for (let i = 0; i < length; ++i) {
-        if (f(this[i], i, this)) return true
-    }
-    return false
-}
-
-Array.prototype.includes = function (el, fromIndex) {
-    const length = this.length
-    const start = fromIndex || 0
-    for (let i = start; i < length; ++i) {
-        if (el === this[i]) return true
-    }
-    return false
-}
-
-Array.prototype.pop = function () {
-    const length = this.length - 1
-    if (length < 0) return undefined
-    const r = this[length]
-    this.insert(length, -1)
-    return r
-}
-
-Array.prototype.shift = function () {
-    if (this.length === 0) return undefined
-    const r = this[0]
-    this.insert(0, -1)
-    return r
-}
-
-Array.prototype.unshift = function (...elts: any[]) {
-    this.insert(0, elts.length)
-    for (let i = 0; i < elts.length; ++i) this[i] = elts[i]
-    return this.length
-}
-
-Array.prototype.indexOf = function (elt, from) {
-    const length = this.length
-    if (from == undefined) from = 0
-    while (from < length) {
-        if (this[from] === elt) return from
-        from++
-    }
-    return -1
-}
-
-Array.prototype.lastIndexOf = function (elt, from) {
-    if (from == undefined) from = this.length - 1
-    while (from >= 0) {
-        if (this[from] === elt) return from
-        from--
-    }
-    return -1
-}
-
-Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
-    const len = this.length
-    for (let i = 0; i < len; ++i) {
-        initialValue = callbackfn(initialValue, this[i], i)
-    }
-    return initialValue
-}
-
-declare module "@devicescript/core" {
-    interface I2C {
-        /**
-         * Write a byte to a register
-         * @param devAddr a 7 bit i2c address
-         * @param regAddr an 8 bit register address
-         * @param byte the value to write
-         * @throws I2CError
-         */
-        writeReg(devAddr: number, regAddr: number, byte: number): Promise<void>
-        /**
-         * read a byte from a register
-         * @param devAddr a 7 bit i2c address
-         * @param regAddr an 8 bit register address
-         * @returns a byte
-         * @throws I2CError
-         */
-        readReg(devAddr: number, regAddr: number): Promise<number>
-        /**
-         * write a buffer to a register
-         * @param devAddr a 7 bit i2c address
-         * @param regAddr an 8 bit register address
-         * @param b a byte buffer
-         * @throws I2CError
-         */
-        writeRegBuf(devAddr: number, regAddr: number, b: Buffer): Promise<void>
-        /**
-         * read a buffer from a register
-         * @param devAddr a 7 bit i2c address
-         * @param regAddr an 8 bit register address
-         * @param size the number of bytes to request
-         * @returns a byte buffer
-         * @throws I2CError
-         */
-        readRegBuf(
-            devAddr: number,
-            regAddr: number,
-            size: number
-        ): Promise<Buffer>
-        /**
-         * read a raw buffer
-         * @param devAddr a 7 bit i2c address
-         * @param size the number of bytes to request
-         * @returns a byte buffer
-         * @throws I2CError
-         */
-        readBuf(devAddr: number, size: number): Promise<Buffer>
-        /**
-         * write a raw buffer
-         * @param devAddr a 7 bit i2c address
-         * @param b a byte buffer
-         * @throws I2CError
-         */
-        writeBuf(devAddr: number, b: Buffer): Promise<void>
-    }
-}
-
-export class I2CError extends Error {
-    readonly status: ds.I2CStatus
-    constructor(message: string, status: ds.I2CStatus) {
-        super(message)
-        this.name = "I2CError"
-        this.status = status
-    }
-}
-
-ds.I2C.prototype.writeReg = async function (devAddr, regAddr, byte) {
-    const b = Buffer.alloc(2)
-    b[0] = regAddr
-    b[1] = byte
-    const [status, buffer] = await this.transaction(devAddr, 0, b)
-    if (status !== ds.I2CStatus.OK)
-        throw new I2CError(
-            `error writing dev=${devAddr} at reg=${regAddr}`,
-            status
-        )
-}
-
-ds.I2C.prototype.readReg = async function (devAddr, regAddr) {
-    const b = Buffer.alloc(1)
-    b[0] = regAddr
-    const [status, buffer] = await this.transaction(devAddr, 1, b)
-    if (status !== ds.I2CStatus.OK)
-        throw new I2CError(
-            `error reading dev=${devAddr} at reg=${regAddr}`,
-            status
-        )
-    return buffer[0]
-}
-
-ds.I2C.prototype.writeRegBuf = async function (devAddr, regAddr, b) {
-    const nb = Buffer.alloc(1 + b.length)
-    nb[0] = regAddr
-    nb.blitAt(1, b, 0, b.length)
-    const [status, buffer] = await this.transaction(devAddr, 0, nb)
-    if (status !== ds.I2CStatus.OK)
-        throw new I2CError(
-            `error writing dev=${devAddr} at reg=${regAddr}`,
-            status
-        )
-}
-
-ds.I2C.prototype.readRegBuf = async function (devAddr, regAddr, size) {
-    const b = Buffer.alloc(1)
-    b[0] = regAddr
-    const [status, buffer] = await this.transaction(devAddr, size, b)
-    if (status !== ds.I2CStatus.OK)
-        throw new I2CError(
-            `error reading dev=${devAddr} at reg=${regAddr}`,
-            status
-        )
-    return buffer
-}
-
-ds.I2C.prototype.readBuf = async function (devAddr, size) {
-    const [status, buffer] = await this.transaction(
-        devAddr,
-        size,
-        Buffer.alloc(0)
-    )
-    if (status !== ds.I2CStatus.OK)
-        throw new I2CError(`error reading buffer dev=${devAddr}`, status)
-    return buffer
-}
-
-ds.I2C.prototype.writeBuf = async function (devAddr, b) {
-    const [status, buffer] = await this.transaction(devAddr, 0, b)
-    if (status !== ds.I2CStatus.OK)
-        throw new I2CError(
-            `error writing buffer ${b} to dev=${devAddr}`,
-            status
-        )
 }
