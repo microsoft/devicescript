@@ -1,6 +1,6 @@
 # Test
 
-The `@devicescript/test` [builtin](/developer/builtin-packages) module provides a lightweight unit test framework, with a subset of familiar APIs to Jest/Vitest/Mocha/Chai users (`describe`, `test`, `expect`).
+The `@devicescript/test` [builtin package](/developer/packages) provides a lightweight unit test framework, with a subset of familiar APIs to Jest/Vitest/Mocha/Chai users (`describe`, `test`, `expect`).
 
 ## Usage
 

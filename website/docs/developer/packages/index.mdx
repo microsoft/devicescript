@@ -1,16 +1,25 @@
----
-sidebar_position: 19
----
-
 # Packages
 
 DeviceScript supports packages published in [npm](https://www.npmjs.com/) or any other package manager compatible
 with the `package.json` specification.
-Some packages are [builtin](/developer/builtin-packages).
 
-Currently, only TypeScript code can be published - in future we may add [services](servers/custom-services).
+Currently, only TypeScript code can be published - in future we may add [services](/developer/servers/custom-services).
 
-## Using other DeviceScript packages
+## Builtin Packages
+
+The packages are dropped by the DeviceScript compiler whenever you run build.
+They do not need to be `npm install`ed.
+
+-   `@devicescript/core` - the core package exposing the C runtime and Jacdac services
+-   `@devicescript/server` - support for writing Jacdac servers in DeviceScript
+-   `@devicescript/test` - [testing framework](/developer/testing)
+-   `@devicescript/observables` - [reactive observables](/developer/observables)
+-   `@devicescript/cloud` - [cloud connectivity](/developer/cloud)
+-   `@devicescript/i2c` - interacting with [I2C peripherals](/developer/servers/i2c)
+-   `@devicescript/settings` - reading/writing [settings in flash memory](/developer/settings)
+-   `@devicescript/drivers` - [drivers for I2C peripherals](/developer/servers/drivers)
+
+## NPM packages
 
 -   [Search for `devicescript` on npmjs.com](https://www.npmjs.com/search?q=devicescript).
     By convention, DeviceScript-compatible packages should be marked with the `devicescript` keyword.
@@ -21,12 +30,12 @@ Currently, only TypeScript code can be published - in future we may add [service
 npm install devicescript-cowsay
 ```
 
-## Publishing a DeviceScript package
+### Publishing a DeviceScript package
 
 Using npm or other package manager is the recommended way to share your DeviceScript code.
 The process is very similar to publishing packages for node.js/web on npm.
 
-### Getting started
+#### Getting started
 
 To create a DeviceScript library from your project, run this command
 or use **DeviceScript: Add npm...** from the command palette in Visual Studio Code.
@@ -49,11 +58,11 @@ All of these can be of course edited in `package.json` afterwards.
 
 After this step, you can publish your package using your favorite npm publishing pipeline.
 
-### Naming convention
+#### Naming convention
 
 In particular it's recommended to name your package `devicescript-something`.
 
-### Development notes
+#### Development notes
 
 Note that regular DeviceScript applications typically use `src/main.ts` (or `src/mainSomething.ts`)
 as the application entry point.

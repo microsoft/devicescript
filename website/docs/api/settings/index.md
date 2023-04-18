@@ -1,6 +1,6 @@
 # Settings
 
-The `@devicescript/settings` [builtin](/developer/builtin-packages) module provides a lightweight flash storage for small setting values.
+The `@devicescript/settings` [builtin](/developer/packages) module provides a lightweight flash storage for small setting values.
 Settings values are serialized in flash and available accross device reset. Firmware updates might erase the settings.
 
 ## Usage

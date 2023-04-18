@@ -70,3 +70,12 @@ If you bump minor, you need to also bump the firmware repos:
 ```bash
 make bump
 ```
+
+## Adding Builtin Packages
+
+Generally, search for `@devicescript/settings` within the workspace.
+The main places that need updating is:
+
+-   this file, `website/docs/developer/packages.mdx`
+-   list in `plugin/src/plugin.ts`
+-   list in `devs/run-test/allcompile.ts`

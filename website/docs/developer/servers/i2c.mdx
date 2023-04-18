@@ -5,7 +5,7 @@ sidebar_position: 50
 
 # I2C
 
-I2C [builtin package](/developer/builtin-packages) that exposes
+I2C [builtin package](/developer/packages) that exposes
 a [I2C service](/api/clients/i2c/) to interact with I2C devices.
 
 ```ts skip
@@ -22,7 +22,7 @@ await i2c.writeReg(address, register, value)
 const readValue = await i2c.readReg(address, register)
 ```
 
-The [drivers builtin package](/developer/builtin-packages) provides drivers for I2C peripherals.
+The [drivers builtin package](/developer/packages) provides drivers for I2C peripherals.
 
 ```ts
 import { startSHTC3 } from "@devicescript/drivers"
