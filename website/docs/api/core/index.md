@@ -16,4 +16,3 @@ Once a role is bound to a service server, DeviceScript provides the API to acces
 Additional runtime components
 
 -   [Buffer](/api/core/buffers)
--   [Cloud](/api/core/cloud)
