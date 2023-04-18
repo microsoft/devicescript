@@ -24,7 +24,7 @@ declare module "@devicescript/core" {
     }
 
     /**
-     * A register like structure
+     * A register like structure. Use `ds.clientRegister()` to create one.
      */
     export interface ClientRegister<T> {
         /**
@@ -283,6 +283,11 @@ declare module "@devicescript/core" {
      * Create a new generic emitter.
      */
     export function emitter<T>(): Emitter<T>
+
+    /**
+     * Create a new client register, using the given initial value.
+     */
+    export function clientRegister<T>(value: T): ClientRegister<T>
 
     /**
      * Wait for a given emitter to be activated.
