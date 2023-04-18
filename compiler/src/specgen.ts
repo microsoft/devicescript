@@ -22,7 +22,7 @@ import {
     wrapComment,
 } from "jacdac-ts"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
-import { runtimeVersion } from "./format"
+import { PacketSpecCode, runtimeVersion } from "./format"
 import { prelude } from "./prelude"
 import { camelize, oops, upperCamel } from "./util"
 import { pinFunctions } from "./board"
@@ -153,6 +153,10 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         wrapComment("devs", `Static specification for ${info.name}`) +
         "    static spec: ServiceSpec\n"
 
+    let codes =
+        wrapComment("devs", `Spec-code definitions for ${info.name}`) +
+        `enum ${clname}Codes {\n`
+
     info.packets.forEach(pkt => {
         if (pkt.derived) return
         const cmt = addComment(pkt)
@@ -163,8 +167,12 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         const client = !!pkt.client
         const pktName = camelize(pkt.name)
         const opt = pkt.optional ? "?" : ""
+        let enumPref = ""
+        let enumMask = 0
 
         if (isRegister(pkt.kind)) {
+            enumPref = "Reg"
+            enumMask = PacketSpecCode.REGISTER
             if (client) {
                 tp = "ClientRegister"
                 sx = "()"
@@ -178,20 +186,33 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
                 }
             }
         } else if (pkt.kind == "event") {
+            enumPref = "Event"
+            enumMask = PacketSpecCode.EVENT
             kw = "readonly "
             tp = "Event"
             // skip events for srv for now
         } else if (pkt.kind == "command") {
+            enumPref = "Cmd"
+            enumMask = PacketSpecCode.COMMAND
             r += wrapComment(
                 "devs",
                 cmt.comment +
                     pkt.fields
                         .filter(f => !!f)
-                        .map(f => `@param ${f.name} - ${f.unit}`)
+                        .map(f => `@param ${f.name} - ${f.unit ?? ""}`)
                         .join("\n")
             )
             r += `    ${commandSig(info, pkt).sig}\n`
             srv += `    ${commandSig(info, pkt, true).sig}\n`
+        } else if (pkt.kind == "report") {
+            enumPref = "Report"
+            enumMask = PacketSpecCode.REPORT
+        }
+
+        if (enumPref) {
+            const id = upperCamel(pkt.name)
+            const code = enumMask | pkt.identifier
+            codes += `    ${enumPref}${id} = 0x${code.toString(16)},\n`
         }
 
         if (tp) {
@@ -202,7 +223,9 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         }
     })
 
-    r += "}\n\n"
+    codes += "}\n\n"
+
+    r += "}\n\n" + codes
     srv += "}\n"
 
     r += srv
@@ -533,8 +556,8 @@ function commandSig(
     )
     const retType = !report ? "void" : packetType(info, report)
     if (srv && pkt.optional) name += "?"
-    const retWrap = srv ? "AsyncValue" : "Promise"
-    const sig = `${name}(${fields}): ${retWrap}<${retType}>`
+    const ret = srv ? `AsyncValue<${retType}>` : `Promise<void>`
+    const sig = `${name}(${fields}): ${ret}`
     return {
         sig,
         name,

@@ -2049,10 +2049,7 @@ class Program implements TopOpWriter {
                 wr.emitCall(wr.dsMember(BuiltInString.RESTART))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
-            if (this.roles.length > 0) {
-                this.markMethodUsed("#ds.Role._onPacket")
-                this.markMethodUsed("#ds.Role._commandResponse")
-            }
+            if (this.roles.length > 0) this.markMethodUsed("#ds.Role._onPacket")
             this.emitProtoAssigns()
         })
 
@@ -3817,11 +3814,17 @@ class Program implements TopOpWriter {
             write16(specDesc, 2, flags)
             const pkts = spec.packets
 
+            function isBytes(f: jdspec.PacketMember) {
+                return f.storage && /u8\[/.test(f.type)
+            }
+
             return () => {
                 const multifields = pkts.map(pkt => {
                     if (
                         pkt.fields.length == 0 ||
-                        (pkt.fields.length == 1 && !pkt.fields[0].startRepeats)
+                        (pkt.fields.length == 1 &&
+                            !pkt.fields[0].startRepeats &&
+                            !isBytes(pkt.fields[0]))
                     )
                         return -1 // inline field
                     else {
@@ -3829,7 +3832,7 @@ class Program implements TopOpWriter {
                         for (const f of pkt.fields) {
                             let flags = 0x00
                             let numfmt = 0
-                            if (f.storage && /u8\[/.test(f.type)) {
+                            if (isBytes(f)) {
                                 flags |= FieldSpecFlag.IS_BYTES
                                 numfmt = f.storage
                             } else {
