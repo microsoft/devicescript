@@ -227,16 +227,6 @@
                         "completionEvents": []
                     },
                     {
-                        "id": "devicescript.openfolder",
-                        "title": "Open Folder",
-                        "description": "Open a workspace where you want to generate a new project.\n[Open Folder...](command:vscode.openFolder)",
-                        "media": {
-                            "image": "media/newproject.png",
-                            "altText": "Project structure after the init command."
-                        },
-                        "completionEvents": []
-                    },
-                    {
                         "id": "devicescript.initproject",
                         "title": "Create New DeviceScript Project",
                         "description": "This step will run a command to create a new project.\n[Create New Project...](command:extension.devicescript.project.new)",
@@ -518,8 +508,7 @@
                     "command": "extension.devicescript.gateway.refresh"
                 },
                 {
-                    "command": "extension.devicescript.project.new",
-                    "when": "workbenchState != empty"
+                    "command": "extension.devicescript.project.new"
                 }
             ],
             "debug/variables/context": [
