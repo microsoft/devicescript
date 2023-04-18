@@ -5,8 +5,23 @@ declare module "@devicescript/core" {
     export type AsyncVoid = AsyncValue<void>
     export type AsyncBoolean = AsyncValue<boolean>
     export type Callback = () => AsyncVoid
-    export type PktHandler = (pkt: Packet) => AsyncVoid
     export type Unsubscribe = () => void
+    export type Handler<T> = (v: T) => AsyncVoid
+    export type PktHandler = Handler<Packet>
+
+    /**
+     * Generic interface for subscribing to events.
+     */
+    export interface Subscriber<T> {
+        subscribe(f: Handler<T>): Unsubscribe
+    }
+
+    /**
+     * Generic interface for event emitters. Use `ds.emitter()` to create one.
+     */
+    export interface Emitter<T> extends Subscriber<T> {
+        emit(v: T): Promise<void>
+    }
 
     /**
      * A register like structure
@@ -43,6 +58,11 @@ declare module "@devicescript/core" {
         readonly isBound: boolean
 
         /**
+         * Emitted whenever a report is received.
+         */
+        report(): Subscriber<Packet>
+
+        /**
          * Gets the state of the binding with a jacdac server
          */
         binding(): ClientRegister<boolean>
@@ -57,12 +77,6 @@ declare module "@devicescript/core" {
          * @deprecated internal field for runtime support
          */
         _onPacket(pkt: Packet): Promise<void>
-
-        /**
-         * @internal
-         * @deprecated internal field for runtime support
-         */
-        _commandResponse(cmdpkt: Packet, fiber: Fiber): Promise<any>
     }
 
     export class Packet {
@@ -264,6 +278,21 @@ declare module "@devicescript/core" {
     export function suspend<T>(milliseconds?: number): Promise<T | undefined>
 
     /**
+     * Create a new generic emitter.
+     */
+    export function emitter<T>(): Emitter<T>
+
+    /**
+     * Wait for a given emitter to be activated.
+     */
+    export function wait<T>(l: Subscriber<T>, timeout?: number): Promise<T>
+
+    /**
+     * Return a function that will run the argument at most once.
+     */
+    export function memoize<T>(f: () => AsyncValue<T>): () => Promise<T>
+
+    /**
      * Restart current script.
      */
     export function restart(): never
@@ -400,7 +429,13 @@ declare module "@devicescript/core" {
     // Timeouts
     //
 
-    export { setTimeout, setInterval, clearTimeout, clearInterval, updateInterval }
+    export {
+        setTimeout,
+        setInterval,
+        clearTimeout,
+        clearInterval,
+        updateInterval,
+    }
     global {
         /**
          * Schedule a function to be called after specified number of milliseconds.
@@ -442,18 +477,27 @@ declare module "@devicescript/core" {
     // Pins
     //
 
+    export type DigialValue = 0 | 1
+
+    export interface PinBase {
+        gpio: number
+        // setMode(mode: GPIOMode): Promise<void>
+    }
+
     /**
      * Represents pin capable of digital output.
      */
-    export interface InputPin {
+    export interface InputPin extends PinBase {
         _inputPinBrand: unknown
+        // read(): Promise<DigialValue>
     }
 
     /**
      * Represents pin capable of digital input.
      */
-    export interface OutputPin {
+    export interface OutputPin extends PinBase {
         _outputPinBrand: unknown
+        // write(v: DigialValue): Promise<void>
     }
 
     /**
@@ -464,15 +508,17 @@ declare module "@devicescript/core" {
     /**
      * Represents pin capable of analog input (ADC).
      */
-    export interface AnalogInPin {
+    export interface AnalogInPin extends PinBase {
         _analogInPinBranch: unknown
+        // readAnalog(): Promise<number>
     }
 
     /**
      * Represents pin capable of analog output (DAC, not PWM).
      */
-    export interface AnalogOutPin {
+    export interface AnalogOutPin extends PinBase {
         _analogOutPinBranch: unknown
+        // writeAnalog(v: number): Promise<void>
     }
 
     /**

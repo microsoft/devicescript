@@ -96,6 +96,13 @@ ds.Role.prototype.binding = function binding(this: RoleData) {
     return this._binding
 }
 
+ds.Role.prototype.report = function report(this: RoleData) {
+    if (!this._report) {
+        this._report = ds.emitter<ds.Packet>()
+    }
+    return this._report
+}
+
 type RegisterChangeHandler = (v: any, reg: ds.Register<any>) => ds.AsyncVoid
 
 type EventChangeHandler = (v: any, reg: ds.Event<any>) => ds.AsyncVoid
@@ -106,29 +113,11 @@ type ClientRegisterChangeHandler<T> = (
 ) => ds.AsyncVoid
 
 interface RoleData extends ds.Role {
-    /**
-     * @internal
-     * @deprecated internal field for runtime support
-     */
     _binding: ClientRegister<boolean>
-
-    /**
-     * @internal
-     * @deprecated internal field for runtime support
-     */
     _changeHandlers: Record<string, RegisterChangeHandler[]>
-
-    /**
-     * @internal
-     * @deprecated internal field for runtime support
-     */
     _eventHandlers: Record<string, EventChangeHandler[]>
-
-    /**
-     * @internal
-     * @deprecated internal field for runtime support
-     */
     _reportHandlers: Record<string, ds.Fiber>
+    _report: ds.Emitter<ds.Packet>
 }
 
 ds.Role.prototype._onPacket = async function (this: RoleData, pkt: ds.Packet) {
@@ -157,6 +146,8 @@ ds.Role.prototype._onPacket = async function (this: RoleData, pkt: ds.Packet) {
     if (!pkt) return
 
     if (pkt.isReport) {
+        if (pkt.spec && this._report) await this._report.emit(pkt)
+
         if (pkt.isRegGet && changeHandlers) {
             const handlers = changeHandlers[pkt.regCode + ""]
             if (handlers) {
@@ -276,4 +267,48 @@ ds.MagneticFieldLevel.prototype.detected = function pressed() {
         this.inactive.subscribe(async () => await reg.emit(false))
     }
     return reg
+}
+
+class Emitter<T> implements ds.Emitter<T> {
+    handlers: ds.Handler<T>[]
+
+    subscribe(f: ds.Handler<T>): ds.Unsubscribe {
+        if (!this.handlers) this.handlers = []
+        this.handlers.push(f)
+        const self = this
+        return () => {
+            const i = self.handlers.indexOf(f)
+            if (i >= 0) self.handlers.insert(i, -1)
+        }
+    }
+    async emit(v: T) {
+        if (!this.handlers?.length) return
+        for (const h of this.handlers) {
+            await h(v)
+        }
+    }
+}
+
+;(ds as typeof ds).emitter = function () {
+    return new Emitter()
+}
+;(ds as typeof ds).memoize = function <T>(f: () => ds.AsyncValue<T>) {
+    let r: T
+    let state = 0
+    return async () => {
+        if (state === 0) {
+            state = 1
+            try {
+                r = await f()
+                state = 2
+            } catch (e: any) {
+                r = e
+                state = 3
+            }
+        } else {
+            while (state < 2) await ds.sleep(5)
+        }
+        if (state === 2) return r
+        else throw r
+    }
 }

@@ -4,3 +4,4 @@
 import "./utils"
 import "./clientcmds"
 import "./timeouts"
+import "./array"
