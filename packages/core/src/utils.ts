@@ -59,6 +59,5 @@ Math.log2 = function log2(x) {
         }
     })
     await fn()
-    const pkt = await ds.suspend<ds.Packet>()
-    return pkt.decode()
+    return await ds.suspend<ds.Packet>()
 }
