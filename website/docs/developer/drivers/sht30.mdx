@@ -1,0 +1,19 @@
+# SHT30
+
+Driver for SHT30 temperature/humidity sensor at [I2C](/developer/i2c/) address `0x44` or `0x45`.
+
+-   Services: [temperature](/clients/api/temperature/), [humidity](/clients/api/humidity/)
+-   [Datasheet](https://sensirion.com/products/catalog/SHT30-DIS-B/)
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/sht30.ts)
+
+## Usage
+
+```ts
+// highlight-next-line
+import { startSHT30 } from "@devicescript/drivers"
+
+// highlight-next-line
+await startSHT30()
+const t = new ds.Temperature()
+const h = new ds.Humidity()
+```
