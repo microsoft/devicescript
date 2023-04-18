@@ -112,6 +112,7 @@ value_t prop_DsPacketInfo_code(devs_ctx_t *ctx, value_t self);
 void methX_DsCommand___func__(devs_ctx_t *ctx);
 // impl_role.c
 value_t prop_DsRole_isBound(devs_ctx_t *ctx, value_t self);
+value_t prop_DsRole_spec(devs_ctx_t *ctx, value_t self);
 void meth2_DsRole_sendCommand(devs_ctx_t *ctx);
 // impl_servicespec.c
 value_t prop_DsServiceSpec_classIdentifier(devs_ctx_t *ctx, value_t self);
@@ -304,25 +305,26 @@ static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
 
 static const devs_builtin_proto_entry_t DsRole_prototype_entries[] = { //
     {N(ISBOUND), 50090},                                               //
-    {N(SENDCOMMAND), 50091},                                           //
+    {N(SPEC), 50091},                                                  //
+    {N(SENDCOMMAND), 50092},                                           //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsServiceSpec_prototype_entries[] = { //
-    {N(CLASSIDENTIFIER), 50092},                                              //
-    {N(NAME), 50093},                                                         //
-    {N(LOOKUP), 50094},                                                       //
-    {N(ASSIGN), 50095},                                                       //
+    {N(CLASSIDENTIFIER), 50093},                                              //
+    {N(NAME), 50094},                                                         //
+    {N(LOOKUP), 50095},                                                       //
+    {N(ASSIGN), 50096},                                                       //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50096},                                                //
-    {N(CHARCODEAT), 50097},                                            //
-    {N(CHARAT), 50098},                                                //
-    {N(SLICE), 50099},                                                 //
+    {N(LENGTH), 50097},                                                //
+    {N(CHARCODEAT), 50098},                                            //
+    {N(CHARAT), 50099},                                                //
+    {N(SLICE), 50100},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_entries[] = { //
-    {N(FROMCHARCODE), 50100},                                //
+    {N(FROMCHARCODE), 50101},                                //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE},    //
     {0, 0}};
 
@@ -422,8 +424,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 101;
-const devs_builtin_function_t devs_builtin_functions[101] = {
+uint16_t devs_num_builtin_functions = 102;
+const devs_builtin_function_t devs_builtin_functions[102] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -515,6 +517,7 @@ const devs_builtin_function_t devs_builtin_functions[101] = {
     {N(CODE), 0, PROP, {.prop = prop_DsPacketInfo_code}},
     {N(__FUNC__), 0, 0, {.meth = methX_DsCommand___func__}},
     {N(ISBOUND), 0, PROP, {.prop = prop_DsRole_isBound}},
+    {N(SPEC), 0, PROP, {.prop = prop_DsRole_spec}},
     {N(SENDCOMMAND), 2, 0, {.meth = meth2_DsRole_sendCommand}},
     {N(CLASSIDENTIFIER), 0, PROP, {.prop = prop_DsServiceSpec_classIdentifier}},
     {N(NAME), 0, PROP, {.prop = prop_DsServiceSpec_name}},

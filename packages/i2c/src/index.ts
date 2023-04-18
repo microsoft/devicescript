@@ -10,6 +10,19 @@ export const i2c = new ds.I2C()
 declare module "@devicescript/core" {
     interface I2C {
         /**
+         * Execute I2C transaction
+         * @param devAddr a 7 bit i2c address
+         * @param writeBuf the value to write
+         * @param numRead number of bytes to read afterwards
+         * @returns a buffer `numRead` bytes long
+         */
+        xfer(
+            devAddr: number,
+            writeBuf: Buffer,
+            numRead: number
+        ): Promise<Buffer>
+
+        /**
          * Write a byte to a register
          * @param devAddr a 7 bit i2c address
          * @param regAddr an 8 bit register address

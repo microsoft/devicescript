@@ -39,3 +39,26 @@ Math.log2 = function log2(x) {
     const a = ds._dcfgString("archId")
     return a === "wasm" || a === "native"
 }
+
+// TODO timeout
+// TODO retry policy
+;(ds as typeof ds).actionReport = async function actionResponse<
+    T extends ds.Role
+>(
+    role: T,
+    meth: string & keyof T,
+    fn: ds.Callback,
+    filter?: (p: ds.Packet) => boolean
+) {
+    const sp = role.spec.lookup(meth)
+    const fib = ds.Fiber.self()
+    const unsub = role.report().subscribe(pkt => {
+        if (pkt.serviceCommand === sp.code && (!filter || filter(pkt))) {
+            unsub()
+            fib.resume(pkt)
+        }
+    })
+    await fn()
+    const pkt = await ds.suspend<ds.Packet>()
+    return pkt.decode()
+}

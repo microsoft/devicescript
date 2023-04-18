@@ -299,6 +299,12 @@ value_t devs_value_from_service_spec_idx(devs_ctx_t *ctx, unsigned idx) {
                                   DEVS_ROLE_INVALID | (idx << DEVS_ROLE_BITS));
 }
 
+value_t devs_value_from_service_spec(devs_ctx_t *ctx, const devs_service_spec_t *spec) {
+    unsigned idx = spec - devs_img_get_service_spec(ctx->img, 0);
+    JD_ASSERT(idx < ctx->img.header->num_service_specs);
+    return devs_value_from_service_spec_idx(ctx, idx);
+}
+
 value_t devs_value_from_packet_spec(devs_ctx_t *ctx, const devs_packet_spec_t *pkt) {
     if (pkt == NULL)
         return devs_undefined;

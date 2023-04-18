@@ -1,3 +1,4 @@
+import { actionReport } from "@devicescript/core"
 import { settings } from "./client"
 
 /**
@@ -22,8 +23,14 @@ export async function readSetting<T = any>(
     key: string,
     missingValue?: T
 ): Promise<T> {
-    const [k, b] = await settings.get(key)
-    if (k !== key || !b) return missingValue
+    const pkt = await actionReport(
+        settings,
+        "get",
+        async () => await settings.get(key),
+        pkt => pkt.decode()[0] === key
+    )
+    const [k, b] = pkt.decode()
+    if (!b || !b.length) return missingValue
 
     try {
         const s = b.toString()

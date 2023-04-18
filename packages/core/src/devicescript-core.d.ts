@@ -57,6 +57,8 @@ declare module "@devicescript/core" {
          */
         readonly isBound: boolean
 
+        readonly spec: ServiceSpec
+
         /**
          * Emitted whenever a report is received.
          */
@@ -376,6 +378,20 @@ declare module "@devicescript/core" {
      */
     // don't expose for now as we may want to change it
     // export function print(prefixCharCode: number, msg: string): void
+
+    /**
+     * Wait for action response on the role.
+     * @param role the role
+     * @param action name of the action
+     * @param sendActionCommand should send the command
+     * @returns the first matching packet
+     */
+    export function actionReport<T extends Role>(
+        role: T,
+        action: string & keyof T,
+        sendActionCommand: Callback,
+        filter?: (p: Packet) => boolean
+    ): Promise<Packet>
 
     export { Buffer }
 
