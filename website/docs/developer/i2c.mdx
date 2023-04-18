@@ -1,0 +1,25 @@
+---
+title: I2C
+sidebar_position: 50
+---
+
+# I2C
+
+I2C [builtin](/developer/builtin-packages) package that exposes a [I2C service](/api/clients/i2c/) to interact with I2C devices.
+
+-   [I2C service](/api/clients/i2c/)
+-   This service can be used directly or used to build [drivers](./drivers).
+
+```ts skip
+import { i2c } from "@devicescript/i2c"
+
+const address = 0x..
+const register = 0x..
+const value = 0x..
+
+// highlight-next-line
+await i2c.writeReg(address, register, value)
+
+// highlight-next-line
+const readValue = await i2c.readReg(address, register)
+```

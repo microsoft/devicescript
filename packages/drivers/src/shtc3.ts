@@ -12,23 +12,23 @@ const SHTC3_ID = 0xefc8
 const SHTC3_SLEEP = 0xb098
 const SHTC3_WAKEUP = 0x3517
 
-async function send_cmd(cmd: number) {
+async function sendCmd(cmd: number) {
     await shtSendCmd(SHTC3_ADDR, cmd)
 }
 
 async function wake() {
-    await send_cmd(SHTC3_WAKEUP)
+    await sendCmd(SHTC3_WAKEUP)
     await ds.sleep(1) // really, 200us
 }
 
 async function read() {
     await wake()
-    await send_cmd(SHTC3_MEASURE_NORMAL)
+    await sendCmd(SHTC3_MEASURE_NORMAL)
     await ds.delay(20) // datasheet says 12.1ms
     const data = await i2c.readBuf(SHTC3_ADDR, 6)
     const temp = (data[0] << 8) | data[1]
     const hum = (data[3] << 8) | data[4]
-    await send_cmd(SHTC3_SLEEP)
+    await sendCmd(SHTC3_SLEEP)
     return {
         temperature: (175 / 0x10000) * temp - 45,
         humidity: (100 / 0x10000) * hum,
@@ -39,7 +39,7 @@ async function init() {
     await wake()
     const id = await shtReadU16(SHTC3_ADDR, SHTC3_ID)
     console.debug(`SHTC3 id=${id}`)
-    await send_cmd(SHTC3_SLEEP)
+    await sendCmd(SHTC3_SLEEP)
 }
 
 /**

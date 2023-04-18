@@ -1,0 +1,53 @@
+## Usage
+
+### Read-write register byte
+
+```ts skip
+import { i2c } from "@devicescript/i2c"
+
+const address = 0x..
+const register = 0x..
+const value = 0x..
+
+// highlight-next-line
+await i2c.writeReg(address, register, value)
+
+// highlight-next-line
+const readValue = await i2c.readReg(address, register)
+```
+
+### Read-write register buffer
+
+```ts skip
+import { i2c } from "@devicescript/i2c"
+
+const address = 0x..
+const register = 0x..
+const size = 0x..
+
+// highlight-next-line
+await i2c.writeRegBuf(address, register, hex`...`)
+
+// highlight-next-line
+const readBuf = await i2c.readRegBuf(address, register, size)
+```
+
+### Read-write raw buffer
+
+```ts skip
+import { i2c } from "@devicescript/i2c"
+
+const address = 0x..
+const size = 0x..
+
+// highlight-next-line
+await i2c.writeBuf(address, hex`...`)
+
+// highlight-next-line
+const readBuf = await i2c.readBuf(address, size)
+```
+
+### Errors
+
+I2C functions may throw a `I2CError`
+error if the operation fails.
