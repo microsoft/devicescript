@@ -33,7 +33,8 @@ Math.log2 = function log2(x) {
     return Math.log(x) * 1.4426950408889634
 }
 ;(ds as typeof ds).assert = function assert(cond: boolean, msg?: string): void {
-    if (!cond) throw new Error("Assertion failed: " + msg)
+    if (!cond)
+        throw new Error("Assertion failed: " + (msg !== undefined ? msg : ""))
 }
 ;(ds as typeof ds).isSimulator = function isSimulator(): boolean {
     const a = ds._dcfgString("archId")

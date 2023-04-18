@@ -8,7 +8,7 @@ title: Sound Level
 The `startSoundLevel` starts a simple analog sensor server that models a sound level sensor
 and returns a [client](/api/clients/soundlevel) bound to the server.
 
--   Please refer to the **[analog documentation](/developer/server/analog/)** for details.
+-   Please refer to the **[analog documentation](/developer/servers/analog/)** for details.
 
 ```ts
 import { gpio } from "@devicescript/core"

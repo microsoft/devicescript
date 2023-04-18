@@ -8,7 +8,7 @@ title: Water Level
 The `startWaterLevel` starts a simple analog sensor server that models a water level sensor
 and returns a [client](/api/clients/waterlevel) bound to the server.
 
--   Please refer to the **[analog documentation](./analog)** for details.
+-   Please refer to the **[analog documentation](/developer/servers/analog/)** for details.
 
 ```ts
 import { gpio } from "@devicescript/core"
