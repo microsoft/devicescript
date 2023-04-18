@@ -7,9 +7,11 @@ sidebar_position: 4
 Commands are implemented directly on the role instance and are service specific.
 
 ```ts edit
-const buzzer = new ds.Buzzer()
+import { Buzzer } from "@devicescript/core"
 
-setInterval(() => {
-    buzzer.playNote(440, 1, 100)
+const buzzer = new Buzzer()
+
+setInterval(async () => {
+    await buzzer.playNote(440, 1, 100)
 }, 1000)
 ```

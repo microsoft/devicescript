@@ -25,6 +25,6 @@ The `wait` method blocks the tread until the event is received.
 ```ts
 const button = new ds.Button()
 
-button.down.wait()
+await button.down.wait()
 console.log("click!")
 ```

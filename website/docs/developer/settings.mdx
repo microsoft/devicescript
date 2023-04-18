@@ -7,7 +7,6 @@ sidebar_position: 9
 
 Settings [builtin package](/developer/packages) provides a friendly layer to read/write objects from the device flash. **Keep it small, there's not a lot of space!**
 
-
 ## Usage
 
 ### `writeSetting`
@@ -29,7 +28,7 @@ Deserializes an object from a setting at a given key. If the key is missing or i
 import { readSetting } from "@devicescript/settings"
 
 // highlight-next-line
-const { world } = await readSetting("hello", {})
+const { world } = await readSetting<{ world?: string }>("hello", {})
 ```
 
 ## See also
