@@ -2844,7 +2844,7 @@ class Program implements TopOpWriter {
             if (idx >= 0) {
                 this.markMethodUsed(nodeName)
                 return wr.dsMember(idx)
-            } else if (globalFunctions.includes(bn)) {
+            } else if (!bn.includes(".")) {
                 this.markMethodUsed(nodeName)
                 return wr.emitIndex(
                     this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT),
