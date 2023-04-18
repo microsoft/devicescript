@@ -15,6 +15,14 @@ declare module "@devicescript/core" {
          */
         toggle(lowerThreshold?: number): Promise<void>
     }
+
+    interface RotaryEncoder {
+        /**
+         * Expose reading from the rotary encoder between 0-`steps` as number 0-1.
+         * The value of encoder is always clamped between 0 and `steps` (which defaults to one full turn).
+         */
+        asPotentiometer(steps?: number): ClientRegister<number>
+    }
 }
 
 ds.Buzzer.prototype.playNote = async function (frequency, volume, duration) {
@@ -62,5 +70,21 @@ ds.MagneticFieldLevel.prototype.detected = function () {
         this.active.subscribe(async () => await reg.emit(true))
         this.inactive.subscribe(async () => await reg.emit(false))
     }
+    return reg
+}
+
+ds.RotaryEncoder.prototype.asPotentiometer = function (steps?: number) {
+    const self = this as ds.RotaryEncoder
+    const reg = ds.clientRegister(0)
+    async function init() {
+        if (!steps) steps = await self.clicksPerTurn.read()
+        let p0 = await self.position.read()
+        self.position.subscribe(async v => {
+            const curr = Math.clamp(0, v - p0, steps)
+            p0 = v - curr
+            await reg.emit(curr / steps)
+        })
+    }
+    init.start()
     return reg
 }
