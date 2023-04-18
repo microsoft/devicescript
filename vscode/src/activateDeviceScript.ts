@@ -46,11 +46,34 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand(
             "extension.devicescript.project.new",
             async () => {
-                const folder =
-                    vscode.workspace.workspaceFolders?.length === 1
-                        ? vscode.workspace.workspaceFolders[0]
-                        : await vscode.window.showWorkspaceFolderPick()
-                if (folder === undefined) return
+                let askOpen = false
+                let folder: vscode.Uri
+                if (!vscode.workspace.workspaceFolders?.length) {
+                    // need to open a new workspace
+                    const folders = await vscode.window.showOpenDialog({
+                        title: "Select a folder to create project",
+                        canSelectMany: false,
+                        canSelectFiles: false,
+                        canSelectFolders: true,
+                    })
+                    folder = folders?.[0]
+                    if (!folder) return
+
+                    // pick name
+                    const name = await vscode.window.showInputBox({
+                        title: "Pick a name for your project (optional)",
+                    })
+                    if (name === undefined) return
+                    else if (name) folder = Utils.joinPath(folder, name)
+                    askOpen = true
+                } else {
+                    const workspaceFolder =
+                        vscode.workspace.workspaceFolders?.length === 1
+                            ? vscode.workspace.workspaceFolders[0]
+                            : await vscode.window.showWorkspaceFolderPick()
+                    if (workspaceFolder === undefined) return
+                    folder = workspaceFolder.uri
+                }
 
                 // is this project empty?
                 let projectName: string
@@ -67,8 +90,8 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     if (!projectName) return
                 }
                 const cwd = projectName
-                    ? Utils.joinPath(folder.uri, projectName)
-                    : folder.uri
+                    ? Utils.joinPath(folder, projectName)
+                    : folder
                 await vscode.workspace.fs.createDirectory(cwd)
                 const terminal = vscode.window.createTerminal({
                     isTransient: true,
@@ -78,6 +101,20 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     "npx --yes @devicescript/cli@latest init --quiet"
                 )
                 terminal.show()
+
+                if (askOpen) {
+                    const res = await vscode.window.showInformationMessage(
+                        "Would you like to open the project?",
+                        "Yes"
+                    )
+                    if (res === "Yes") {
+                        await vscode.commands.executeCommand(
+                            "vscode.openFolder",
+                            folder,
+                            true // don't destroy terminal while reopening
+                        )
+                    }
+                }
             }
         ),
         vscode.commands.registerCommand(

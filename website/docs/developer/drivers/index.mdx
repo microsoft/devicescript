@@ -1,0 +1,24 @@
+# Drivers
+
+Drivers [builtin package](/developer/builtin-packages) provides drivers for I2C peripherals.
+
+## Usage
+
+```ts
+import { startSHTC3 } from "@devicescript/drivers"
+
+await startSHTC3()
+const t = new ds.Temperature()
+const h = new ds.Humidity()
+// ...
+```
+
+### Builtin Drivers
+
+-   [AHT20](aht20)
+-   [SHT30](sht30)
+-   [SHTC3](shtc3)
+
+## Custom drivers
+
+You can author and publish custom drivers using the [I2C service](./i2c) and [custom packages](./packages).
