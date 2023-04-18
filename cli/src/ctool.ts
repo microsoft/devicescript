@@ -56,9 +56,17 @@ export async function ctool(options: CToolOptions) {
         const res = compileWithHost("src/main.ts", host)
         const buf = res.binary
         let r = `__attribute__((aligned(sizeof(void *)))) static const uint8_t devs_empty_program[${buf.length}] = {`
+        const repl: Record<string, string> = {
+            8: "0x00",
+            9: "0x00",
+            10: "MINR",
+            11: "MAJR",
+        }
         for (let i = 0; i < buf.length; ++i) {
             if ((i & 15) == 0) r += "\n"
-            r += "0x" + ("0" + buf[i].toString(16)).slice(-2) + ", "
+            let d = "0x" + ("0" + buf[i].toString(16)).slice(-2)
+            if (repl[i]) d = repl[i]
+            r += d + ", "
         }
         r += "\n};"
         console.log(r)
