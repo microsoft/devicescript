@@ -2,8 +2,7 @@
 
 [DeviceScript](https://microsoft.github.io/devicescript/) drivers for I2C peripherals.
 
--   [Read documentation](https://microsoft.github.io/devicescript/developer/drivers)
-
+-   [Read documentation](https://microsoft.github.io/devicescript/developer/servers)
 
 ## Contributing
 

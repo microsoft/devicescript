@@ -8,22 +8,6 @@ sidebar_position: 50
 I2C [builtin package](/developer/builtin-packages) that exposes
 a [I2C service](/api/clients/i2c/) to interact with I2C devices.
 
-Drivers [builtin package](/developer/builtin-packages) provides drivers for I2C peripherals.
-
-## Usage
-
-```ts
-import { startSHTC3 } from "@devicescript/drivers"
-
-await startSHTC3()
-const t = new ds.Temperature()
-const h = new ds.Humidity()
-// ...
-```
-
--   [I2C service](/api/clients/i2c/)
--   This service can be used directly or used to build [drivers](./drivers).
-
 ```ts skip
 import { i2c } from "@devicescript/i2c"
 
@@ -36,4 +20,15 @@ await i2c.writeReg(address, register, value)
 
 // highlight-next-line
 const readValue = await i2c.readReg(address, register)
+```
+
+The [drivers builtin package](/developer/builtin-packages) provides drivers for I2C peripherals.
+
+```ts
+import { startSHTC3 } from "@devicescript/drivers"
+
+await startSHTC3()
+const t = new ds.Temperature()
+const h = new ds.Humidity()
+// ...
 ```

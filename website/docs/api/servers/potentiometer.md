@@ -8,7 +8,7 @@ title: Potentiometer
 The `startPotentiometer` starts a simple analog sensor server that models a potentiometer
 and returns a [client](/api/clients/potentiometer) bound to the server.
 
-- Please refer to the **[analog documentation](./analog)** for details.
+-   Please refer to the **[analog documentation](/developer/server/analog/)** for details.
 
 ```ts
 import { gpio } from "@devicescript/core"

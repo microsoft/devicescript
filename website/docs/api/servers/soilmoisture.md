@@ -8,7 +8,7 @@ title: Soil Moisture
 The `startSoilMoisture` starts a simple analog sensor server that models a soil moisture sensor
 and returns a [client](/api/clients/soilmoisture) bound to the server.
 
-- Please refer to the **[analog documentation](./analog)** for details.
+-   Please refer to the **[analog documentation](/developer/server/analog/)** for details.
 
 ```ts
 import { gpio } from "@devicescript/core"

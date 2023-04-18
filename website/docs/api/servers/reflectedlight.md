@@ -8,7 +8,7 @@ title: Reflected Light
 The `startReflectedLight` starts a simple analog sensor server that models a reflected light sensor
 and returns a [client](/api/clients/reflectedlight) bound to the server.
 
-- Please refer to the **[analog documentation](./analog)** for details.
+-   Please refer to the **[analog documentation](/developer/server/analog/)** for details.
 
 ```ts
 import { gpio } from "@devicescript/core"

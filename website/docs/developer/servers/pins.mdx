@@ -1,0 +1,26 @@
+---
+description: Configuring pins for servers
+title: Pins
+sidebar_position: 11
+---
+
+# Configuring pins
+
+You can either use hardware GPIO numbers using `ds.gpio()` function, or you can import
+a board definition file and use the labels present on the board:
+
+```ts no-run
+import { startButton } from "@devicescript/servers"
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+
+const buttonA2 = startButton({
+    pin: pins.A2,
+})
+```
+
+The doc-string for `pins.A2` will tell you GPIO number (`1` in this case).
+Using named pins is also less error-prone since pins used for internal
+functions are not exposed through the `pins` object and the pins that are
+exposed are annotated with type (input, output, analog, etc.) which is then
+required by the `startSomething()` functions.
+The `ds.gpio()` function does not check for pin functions or usage.
