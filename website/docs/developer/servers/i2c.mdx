@@ -1,58 +1,39 @@
 ---
 title: I2C
-sidebar_position: 1
+sidebar_position: 50
 ---
 
 # I2C
 
-The I2C class provides basic functions to work with I2C registers and perform raw communication over the I2C bus using DeviceScript.
-It is also possible to add I2C driver in the [C firmware SDK](https://github.com/microsoft/jacdac-c/tree/main/drivers).
+I2C [builtin package](/developer/builtin-packages) that exposes
+a [I2C service](/api/clients/i2c/) to interact with I2C devices.
 
-## Setup
+Drivers [builtin package](/developer/builtin-packages) provides drivers for I2C peripherals.
 
-Configure your project for testing using this command
-
-```bash
-devs add i2c
-```
-
-## MMA8452Q accelerometer example
+## Usage
 
 ```ts
-// See https://www.nxp.com/docs/en/data-sheet/MMA8452Q.pdf for details
+import { startSHTC3 } from "@devicescript/drivers"
 
-import * as devs from "@devicescript/core"
+await startSHTC3()
+const t = new ds.Temperature()
+const h = new ds.Humidity()
+// ...
+```
+
+-   [I2C service](/api/clients/i2c/)
+-   This service can be used directly or used to build [drivers](./drivers).
+
+```ts skip
 import { i2c } from "@devicescript/i2c"
 
-console.log("start")
+const address = 0x..
+const register = 0x..
+const value = 0x..
 
-const addr = 0x1d
-const scale = 2
+// highlight-next-line
+await i2c.writeReg(address, register, value)
 
-// convert signed 12-bit quantity from two I2C bytes into floating point
-function convert(high: number, low: number) {
-    const raw = ((high << 24) | (low << 16)) >> 20
-    return (raw / (1 << 11)) * scale
-}
-
-// set up the device to be active
-async function init() {
-    await i2c.writeReg(addr, 0x2a, 1) // CTRL_REG1 = 0x2a
-}
-
-// get the X, Y, Z accelerometer values in a single call
-async function read() {
-    const data = await i2c.readRegBuf(addr, 1, 6)
-    const x = convert(data[0], data[1])
-    const y = convert(data[2], data[3])
-    const z = convert(data[4], data[5])
-    return { x, y, z }
-}
-
-await init()
-while (true) {
-    const r = await read()
-    console.data(r)
-    await devs.sleep(500)
-}
+// highlight-next-line
+const readValue = await i2c.readReg(address, register)
 ```
