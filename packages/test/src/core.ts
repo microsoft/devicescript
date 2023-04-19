@@ -266,6 +266,6 @@ export async function runTests(options: TestQuery = {}) {
         ...testOptions,
         indent: "",
     })
-
+    console.log(`# tests ${total}, pass ${pass}, error ${error}`)
     if (error) throw new Error("test errors")
 }
