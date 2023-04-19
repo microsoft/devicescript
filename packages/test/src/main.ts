@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test } from "."
 
 describe("pass", function () {
-    test("console.log", () => {
-        console.log(`hi`)
+    test("console.log", ({ log }) => {
+        log(`hi`)
     })
-    test("console.log async", async () => {
-        console.log(`hi (async)`)
+    test("console.log async", async ({ log }) => {
+        log(`hi (async)`)
     })
 })
 

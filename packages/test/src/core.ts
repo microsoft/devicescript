@@ -146,9 +146,7 @@ export class TestNode {
             if (output.length === 0) return
             const oindent = indent + "     "
             console.log(`${oindent}---`)
-            for (const line of output) {
-                console.log(`${oindent}`, line)
-            }
+            console.log(`${oindent}output: ${JSON.stringify(output.join("\n"))}`)
             console.log(`${oindent}---`)
         }
         try {
