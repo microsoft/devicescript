@@ -125,7 +125,7 @@ export class SuiteNode {
 }
 export class TestNode {
     state: TestState = TestState.NotRun
-    error: unknown
+    error: any
 
     constructor(
         public readonly name: string,
@@ -137,17 +137,29 @@ export class TestNode {
         console.log(`${indent}ok ${testId++} # SKIP`)
     }
 
+    private printLog(indent: string, output: any[]) {
+        if (output.length === 0 && !this.error) return
+        const oindent = indent + "     "
+        console.log(`${oindent}---`)
+        if (output.length) {
+            console.log(`${oindent}output: |`)
+            for (const line of output) console.log(line)
+            console.log("")
+        }
+        if (this.error?.print) {
+            console.log(`${oindent}error: |`)
+            this.error.print()
+            console.log("")
+        }
+        console.log(`${oindent}---`)
+    }
+
     async run(testId: number, runOptions: TestRunOptions) {
         let { expectedError, skip } = this.options || {}
         const { indent } = runOptions
         const output: any[] = []
-        const log = (message: any) => output.push(message)
-        const printLog = () => {
-            if (output.length === 0) return
-            const oindent = indent + "     "
-            console.log(`${oindent}---`)
-            console.log(`${oindent}output: ${JSON.stringify(output.join("\n"))}`)
-            console.log(`${oindent}---`)
+        const log = (message: any) => {
+            if (message !== "") output.push(message)
         }
         try {
             this.state = TestState.Running
@@ -155,9 +167,7 @@ export class TestNode {
 
             if (skip) {
                 this.state = TestState.Ignored
-                console.log(
-                    `${indent}ok ${testId} - ${this.name} # SKIP`
-                )
+                console.log(`${indent}ok ${testId} - ${this.name} # SKIP`)
                 return
             }
 
@@ -174,20 +184,19 @@ export class TestNode {
             }
             this.state = TestState.Passed
             console.log(`${indent}ok ${testId} - ${this.name}`)
-            printLog()
+            this.printLog(indent, output)
         } catch (error: any) {
             if (expectedError) {
                 this.state = TestState.Passed
                 console.log(
                     `${indent}ok ${testId} - ${this.name}, expected error`
                 )
-                printLog()
+                this.printLog(indent, output)
             } else {
                 this.state = TestState.Error
                 this.error = error
                 console.log(`${indent}not ok ${testId} - ${this.name}`)
-                printLog()
-                if (error.print) error.print()
+                this.printLog(indent, output)
             }
         }
     }
