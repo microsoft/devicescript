@@ -256,6 +256,7 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
     const pinMap = (binfo.pins ?? {}) as Record<string, number>
     for (const pinName of Object.keys(pinMap)) {
         if (pinName.startsWith("#")) continue
+        if (pinName.startsWith("@")) continue
         const gpio = pinMap[pinName]
         const funs = pinFunctions(arch.pins, gpio)
         const types = funs

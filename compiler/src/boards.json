@@ -120,23 +120,19 @@
         "D5": 5,
         "D6": 6,
         "D9": 9,
+        "LED_PWR": 21,
         "MISO": 37,
         "MOSI": 35,
+        "PWR": 7,
         "RX": 38,
         "SCK": 36,
         "TX": 39
       },
       "productId": "0x3c2ed99e",
-      "setupPins": [
-        {
-          "out": 1,
-          "pin": 21
-        },
-        {
-          "out": 1,
-          "pin": 7
-        }
-      ],
+      "sPin": {
+        "LED_PWR": 1,
+        "PWR": 1
+      },
       "uartLog": true,
       "url": "https://www.adafruit.com/product/5000"
     },
@@ -157,7 +153,7 @@
         "type": 1
       },
       "pins": {
-        "#TX": 21,
+        "@TX": 21,
         "A0": 4,
         "A1": 3,
         "A2": 1,
@@ -254,7 +250,7 @@
       "devName": "Espressif ESP32-C3 (bare)",
       "id": "esp32c3_bare",
       "pins": {
-        "#P21": 21,
+        "@P21": 21,
         "P0": 0,
         "P1": 1,
         "P10": 10,
@@ -295,8 +291,8 @@
         "type": 1
       },
       "pins": {
-        "#LED": 7,
-        "#P21": 21,
+        "@LED": 7,
+        "@P21": 21,
         "P0": 0,
         "P1": 1,
         "P20": 20,
@@ -324,7 +320,7 @@
       "devName": "Espressif ESP32-S2 (bare)",
       "id": "esp32s2_bare",
       "pins": {
-        "#P43": 43,
+        "@P43": 43,
         "P0": 0,
         "P1": 1,
         "P10": 10,
@@ -381,8 +377,9 @@
         "type": 2
       },
       "pins": {
-        "#TX": 43,
+        "@TX": 43,
         "LED0": 13,
+        "LED_PWR": 21,
         "MISO": 37,
         "MOSI": 35,
         "P1": 1,
@@ -402,6 +399,9 @@
         "SCK": 36
       },
       "productId": "0x3126f707",
+      "sPin": {
+        "LED_PWR": 1
+      },
       "services": [
         {
           "name": "buttonBOOT",
@@ -412,12 +412,6 @@
           "name": "ambientLight",
           "pin": 4,
           "service": "analog:lightLevel"
-        }
-      ],
-      "setupPins": [
-        {
-          "out": 1,
-          "pin": 21
         }
       ],
       "uartLog": true,
@@ -455,6 +449,7 @@
         "pinTX": 0
       },
       "pins": {
+        "@HILIM": 18,
         "P1": 1,
         "P10": 10,
         "P2": 2,
@@ -471,6 +466,10 @@
         "P7": 7
       },
       "productId": "0x3875e80d",
+      "sPin": {
+        "#": "enable high power limiter mode",
+        "@HILIM": 0
+      },
       "services": [
         {
           "faultIgnoreMs": 1000,
@@ -482,13 +481,6 @@
           "pinPulse": 8,
           "pinUsbDetect": 11,
           "service": "power"
-        }
-      ],
-      "setupPins": [
-        {
-          "#": "Enable hi-power limiter mode",
-          "out": 0,
-          "pin": 18
         }
       ]
     },
@@ -786,7 +778,7 @@
       "devName": "Seeed Studio XIAO ESP32C3",
       "id": "seeed_xiao_esp32c3",
       "pins": {
-        "#D9": 9,
+        "@D9": 9,
         "D0": 2,
         "D1": 3,
         "D10": 10,
@@ -805,6 +797,47 @@
           "service": "button"
         }
       ],
+      "uartLog": true,
+      "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
+    },
+    "seeed_xiao_esp32c3_msr218": {
+      "$description": "A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.",
+      "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3_msr218-0x0.bin",
+      "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+      "archId": "esp32c3",
+      "devName": "Seeed Studio XIAO ESP32C3 with MSR218 base",
+      "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 7,
+        "pinSDA": 6
+      },
+      "id": "seeed_xiao_esp32c3_msr218",
+      "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 5
+      },
+      "led": {
+        "pin": 10,
+        "type": 1
+      },
+      "pins": {
+        "@JD": 5,
+        "@LED": 10,
+        "@SCL": 7,
+        "@SDA": 6,
+        "@TX": 21,
+        "A0": 2,
+        "A1": 3,
+        "A2": 4,
+        "D9": 9,
+        "LED_PWR": 8,
+        "RX": 20
+      },
+      "productId": "0x36b64827",
+      "sPin": {
+        "LED_PWR": 1
+      },
+      "services": [],
       "uartLog": true,
       "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
     }

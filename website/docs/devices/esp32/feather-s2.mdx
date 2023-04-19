@@ -25,6 +25,7 @@ ESP32-S2 based development board in a Feather format.
 | pin name | hardware id | features |
 |:---------|:------------|---------:|
 | **LED0** |  GPIO13 |  io |
+| **LED_PWR** |  GPIO21 |  io |
 | **MISO** |  GPIO37 |  io |
 | **MOSI** |  GPIO35 |  io |
 | **P1** |  GPIO1 |  analogIn,  io |
@@ -48,7 +49,6 @@ ESP32-S2 based development board in a Feather format.
 | **led.pinCLK** |  GPIO45 |  boot,  io |
 | **services.buttonBOOT[0].pin** |  GPIO0 |  boot,  io |
 | **services.ambientLight[1].pin** |  GPIO4 |  analogIn,  io |
-| **setupPins[0].pin** |  GPIO21 |  io |
 
 
 
@@ -88,8 +88,9 @@ devicescript flash --board feather_s2
         "type": 2
     },
     "pins": {
-        "#TX": 43,
+        "@TX": 43,
         "LED0": 13,
+        "LED_PWR": 21,
         "MISO": 37,
         "MOSI": 35,
         "P1": 1,
@@ -108,6 +109,9 @@ devicescript flash --board feather_s2
         "RX": 44,
         "SCK": 36
     },
+    "sPin": {
+        "LED_PWR": 1
+    },
     "services": [
         {
             "name": "buttonBOOT",
@@ -118,12 +122,6 @@ devicescript flash --board feather_s2
             "name": "ambientLight",
             "pin": 4,
             "service": "analog:lightLevel"
-        }
-    ],
-    "setupPins": [
-        {
-            "out": 1,
-            "pin": 21
         }
     ],
     "uartLog": true

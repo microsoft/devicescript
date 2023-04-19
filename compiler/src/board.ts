@@ -317,7 +317,7 @@ export function pinsInfo(arch: ArchConfig, devcfg: DeviceConfig) {
 
         const ex = infos.find(p => p.gpio == gpio)
 
-        if (ex)
+        if (ex && ex.label[0] != "@")
             return errors.push(
                 `GPIO${gpio} marked as both ${ex.label} and ${label}`
             )
@@ -363,6 +363,7 @@ export function pinsInfo(arch: ArchConfig, devcfg: DeviceConfig) {
     validateConfig(devcfg, "")
 
     const desc = infos
+        .filter(p => !p.label.startsWith("@"))
         .map(p => `${p.label}: GPIO${p.gpio}, ${p.functions.join(", ")}`)
         .join("\n")
 
