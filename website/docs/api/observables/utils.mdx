@@ -1,0 +1,17 @@
+# Utilities operators
+
+## tap
+
+Allows to attach a side-effect function to a pipeline, tap passes the stream through. Typically used to add logging.
+
+```ts
+import { from, map, tap } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+obs.pipe(
+    // highlight-next-line
+    tap(v => console.log(v)),
+    map(v => v * v)
+).subscribe(v => console.log(v))
+```

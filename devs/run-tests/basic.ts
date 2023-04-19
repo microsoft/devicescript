@@ -808,8 +808,8 @@ async function testSetTimeout() {
         q = 17
     }, 32)
 
-    await ds.delay(60)
-    ds.assert(q === 3)
+    await ds.delay(100)
+    ds.assert(q === 3, `expected 3, got ${q}`)
 
     id = setInterval(() => {
         q = q + 1

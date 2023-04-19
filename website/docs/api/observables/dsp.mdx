@@ -1,0 +1,69 @@
+# Digital Signal processing
+
+## ewma
+
+Exponentially weighted moving average is a simple PIR filter
+with a gain parameter.
+The closer gain to 1 and the more closely the EWMA tracks the original time series.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { ewma } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+thermometer.temperature
+    // highlight-next-line
+    .pipe(ewma(0.5))
+    .subscribe(t => console.log(t))
+```
+
+## rollingAverage
+
+A windowed rolling average filter.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { rollingAverage } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+thermometer.temperature
+    // highlight-next-line
+    .pipe(rollingAverage(10))
+    .subscribe(t => console.log(t))
+```
+
+## fir
+
+A general purpose Finite Response Filter filter. Coefficients are typically computed in a seperate process.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { fir } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+thermometer.temperature
+    // highlight-next-line
+    .pipe(fir([0.1, 0.2, 1]))
+    .subscribe(t => console.log(t))
+```
+
+## levelDetector
+
+Measures and thresholds data into low/mid/high levels.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { levelDetector } from "@devicescript/observables"
+
+const thermometer = new Temperature()
+
+thermometer.temperature
+    // highlight-next-line
+    .pipe(levelDetector(20 /* low threshold */, 30 /*high threshold */))
+    .subscribe(level =>
+        console.log(level < 0 ? "cold" : level > 0 ? "hot" : "mild")
+    )
+```

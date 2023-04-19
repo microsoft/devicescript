@@ -1,104 +1,10 @@
 ---
-title: Operators
+title: Filter Operators
 ---
 
-# Operators
+# Filter Operators
 
-Observable operators apply transformation between observable data stream. They can be combined using the `pipe`
-method to create complex data processing pipeline.
-
-Many (most) operators are adapted from [Rxjs](https://rxjs.dev/guide/operators).
-
-```ts
-import { Temperature } from "@devicescript/core"
-import { threshold, debounceTime } from "@devicescript/observables"
-
-const thermometer = new Temperature()
-// create a stream of temperature readings
-const temperature = thermometer.temperature.pipe(
-    threshold(0.1), // at least 0.1deg change
-    debounceTime(10000) // at most one update per 10s
-)
-temperature.subscribe(t => console.log(t))
-```
-
-## Creation Operators
-
-### from
-
-Converts an array into a sequence of values.
-
-```rx
-> from([a,b, c, d])
-
--a-b-c-d-|-
-```
-
-```ts
-import { from } from "@devicescript/observables"
-
-// highlight-next-line
-const obs = from([0, 1, 2, 3, 4])
-
-obs.subscribe(v => console.log(v))
-```
-
-### interval
-
-Emits a value at a time interval. The value is the number of callbacks.
-This observable runs forever.
-
-```rx
-> interval(1000)
-
--0--1--2--3-
-```
-
-```ts
-import { interval } from "@devicescript/observables"
-
-// highlight-next-line
-const obs = interval(1000)
-
-obs.subscribe(v => console.log(v))
-```
-
-### timer
-
-Emits a single value, `0` after a time interval, then completes.
-
-```rx
-> timer(1000)
-
----0-|-
-```
-
-```ts
-import { timer } from "@devicescript/observables"
-
-// highlight-next-line
-const obs = timer(1000)
-
-obs.subscribe(v => console.log(v))
-```
-
-### iif
-
-Checks a boolean at subscription time, and chooses between one of two observable sources.
-
-```ts
-import { iif } from "@devicescript/observables"
-
-let connected: boolean
-// highlight-next-line
-const obs = iif(() => connected, from(["connected"]), from(["not connected"]))
-
-obs.subscribe(v => console.log(v))
-```
-
-## Filter Operators
-
-### filter
+## filter
 
 Filter items emitted by the source Observable by only emitting those that satisfy a specified predicate.
 
@@ -121,7 +27,7 @@ obs
     .subscribe(v => console.log(v))
 ```
 
-### debounceTime
+## debounceTime
 
 Emits a notification from the source Observable
 only after a particular time span has passed without another source emission.
@@ -148,7 +54,7 @@ button.down
     .subscribe(() => console.log("click"))
 ```
 
-### throttleTime
+## throttleTime
 
 Emits a value from the source Observable,
 then ignores subsequent source values for duration milliseconds, then repeats this process.
@@ -175,7 +81,7 @@ button.down
     .subscribe(() => console.log("click"))
 ```
 
-### auditTime
+## auditTime
 
 Ignores source values for duration milliseconds,
 then emits the most recent value from the source Observable, then repeats this process
@@ -230,7 +136,7 @@ thermometer.temperature
     .subscribe(t => console.log(t))
 ```
 
-### distinctUntilChanged
+## distinctUntilChanged
 
 Returns a result Observable that emits all values pushed by the source observable
 if they are distinct in comparison to the last value the result observable emitted.
@@ -324,93 +230,3 @@ A windowed rolling average filter.
 ```ts
 import { Temperature } from "@devicescript/core"
 import { rollingAverage } from "@devicescript/observables"
-
-const thermometer = new Temperature()
-
-thermometer.temperature
-    // highlight-next-line
-    .pipe(rollingAverage(10))
-    .subscribe(t => console.log(t))
-```
-
-### fir
-
-A general purpose Finite Response Filter filter. Coefficients are typically computed in a seperate process.
-
-```ts
-import { Temperature } from "@devicescript/core"
-import { fir } from "@devicescript/observables"
-
-const thermometer = new Temperature()
-
-thermometer.temperature
-    // highlight-next-line
-    .pipe(fir([0.1, 0.2, 1]))
-    .subscribe(t => console.log(t))
-```
-
-### levelDetector
-
-Measures and thresholds data into low/mid/high levels.
-
-```ts
-import { Temperature } from "@devicescript/core"
-import { levelDetector } from "@devicescript/observables"
-
-const thermometer = new Temperature()
-
-thermometer.temperature
-    // highlight-next-line
-    .pipe(levelDetector(20 /* low threshold */, 30 /*high threshold */))
-    .subscribe(level =>
-        console.log(level < 0 ? "cold" : level > 0 ? "hot" : "mild")
-    )
-```
-
-## Error Handling
-
-### catchError
-
-It only listens to the error channel and ignores notifications.
-Handles errors from the source observable, and maps them to a new observable.
-The error may also be rethrown, or a new error can be thrown to emit an error from the result.
-
-```rx
--a-b--#-------|-
-
-       -1-2-3-|-
-
-> catch
-
--a-b----1-2-3-|-
-```
-
-```ts
-import { from, map, throwError, catchError } from "@devicescript/observables"
-
-const obs = from([1, 2, 3])
-
-obs.pipe(
-    throwError(() => new Error("no!")),
-    // highlight-next-line
-    catchError(e => from([4]))
-).subscribe(v => console.log(v))
-```
-
-## Utilities
-
-### tap
-
-Allows to attach a side-effect function to a pipeline, tap passes the stream through. Typically used to add logging.
-
-```ts
-import { from, map, tap } from "@devicescript/observables"
-
-const obs = from([1, 2, 3])
-
-obs.pipe(
-    // highlight-next-line
-    tap(v => console.log(v)),
-    map(v => v * v)
-).subscribe(v => console.log(v))
-```

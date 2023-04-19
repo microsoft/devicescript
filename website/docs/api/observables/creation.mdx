@@ -1,0 +1,73 @@
+# Creation Operators
+
+## from
+
+Converts an array into a sequence of values.
+
+```rx
+> from([a,b, c, d])
+
+-a-b-c-d-|-
+```
+
+```ts
+import { from } from "@devicescript/observables"
+
+// highlight-next-line
+const obs = from([0, 1, 2, 3, 4])
+
+obs.subscribe(v => console.log(v))
+```
+
+## interval
+
+Emits a value at a time interval. The value is the number of callbacks.
+This observable runs forever.
+
+```rx
+> interval(1000)
+
+-0--1--2--3-
+```
+
+```ts
+import { interval } from "@devicescript/observables"
+
+// highlight-next-line
+const obs = interval(1000)
+
+obs.subscribe(v => console.log(v))
+```
+
+## timer
+
+Emits a single value, `0` after a time interval, then completes.
+
+```rx
+> timer(1000)
+
+---0-|-
+```
+
+```ts
+import { timer } from "@devicescript/observables"
+
+// highlight-next-line
+const obs = timer(1000)
+
+obs.subscribe(v => console.log(v))
+```
+
+## iif
+
+Checks a boolean at subscription time, and chooses between one of two observable sources.
+
+```ts
+import { from, iif } from "@devicescript/observables"
+
+let connected: boolean
+// highlight-next-line
+const obs = iif(() => connected, from(["connected"]), from(["not connected"]))
+
+obs.subscribe(v => console.log(v))
+```
