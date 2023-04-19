@@ -86,6 +86,7 @@ export function activateDeviceScriptOutputChannel(
                         "*": channel.warn,
                         "?": channel.debug,
                         "#": channel.debug,
+                        "$": channel.info,
                     }[l[0]]
                 if (fn) fn(from + ":", l.substring(1))
             })
@@ -192,7 +193,10 @@ export function activateDeviceScriptDataChannel(
                     )
                     const notebook = (
                         await readFileText(extensionUri, "notebooks/data.ipynb")
-                    ).replace(/file\s*=\s*'[^']+\.csv'/, `file='${fileName}.csv'`)
+                    ).replace(
+                        /file\s*=\s*'[^']+\.csv'/,
+                        `file='${fileName}.csv'`
+                    )
                     const notebookFile = await writeFile(
                         projectFolder,
                         `${folder}/${fileName}.ipynb`,

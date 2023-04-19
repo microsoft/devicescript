@@ -65,14 +65,14 @@ export class SuiteNode {
         }
 
         if (suiteFilter && !suiteFilter(this)) {
-            console.log(`${indent}1..0 # SKIP}`)
+            console.test(`${indent}1..0 # SKIP}`)
             return result
         }
 
         const childOptions = { ...options, indent: indent + "    " }
 
         for (const child of this.children) {
-            if (child.name) console.log(`${indent}# Subtest: ${child.name}`)
+            if (child.name) console.test(`${indent}# Subtest: ${child.name}`)
             const r = await child.run(childOptions)
             result.total += r.total
             result.pass += r.pass
@@ -118,7 +118,7 @@ export class SuiteNode {
                     break
             }
         }
-        console.log(`${indent}1..${testId}`)
+        console.test(`${indent}1..${testId}`)
 
         return result
     }
@@ -134,24 +134,24 @@ export class TestNode {
     ) {}
 
     skip(testId: number, indent: string) {
-        console.log(`${indent}ok ${testId++} # SKIP`)
+        console.test(`${indent}ok ${testId++} # SKIP`)
     }
 
     private printLog(indent: string, output: any[]) {
         if (output.length === 0 && !this.error) return
         const oindent = indent + "     "
-        console.log(`${oindent}---`)
+        console.test(`${oindent}---`)
         if (output.length) {
-            console.log(`${oindent}output: |`)
-            for (const line of output) console.log(line)
-            console.log("")
+            console.test(`${oindent}output: |`)
+            for (const line of output) console.test(line)
+            console.test("")
         }
         if (this.error?.print) {
-            console.log(`${oindent}error: |`)
+            console.test(`${oindent}error: |`)
             this.error.print()
-            console.log("")
+            console.test("")
         }
-        console.log(`${oindent}---`)
+        console.test(`${oindent}---`)
     }
 
     async run(testId: number, runOptions: TestRunOptions) {
@@ -167,7 +167,7 @@ export class TestNode {
 
             if (skip) {
                 this.state = TestState.Ignored
-                console.log(`${indent}ok ${testId} - ${this.name} # SKIP`)
+                console.test(`${indent}ok ${testId} - ${this.name} # SKIP`)
                 return
             }
 
@@ -183,19 +183,19 @@ export class TestNode {
                 )
             }
             this.state = TestState.Passed
-            console.log(`${indent}ok ${testId} - ${this.name}`)
+            console.test(`${indent}ok ${testId} - ${this.name}`)
             this.printLog(indent, output)
         } catch (error: any) {
             if (expectedError) {
                 this.state = TestState.Passed
-                console.log(
+                console.test(
                     `${indent}ok ${testId} - ${this.name}, expected error`
                 )
                 this.printLog(indent, output)
             } else {
                 this.state = TestState.Error
                 this.error = error
-                console.log(`${indent}not ok ${testId} - ${this.name}`)
+                console.test(`${indent}not ok ${testId} - ${this.name}`)
                 this.printLog(indent, output)
             }
         }
@@ -238,7 +238,7 @@ export function describe(name: string, body: SuiteFunction) {
 
     // autorun
     if (autoRun) {
-        if (!autoRunTestTimer) console.log(`preparing to run tests...`)
+        if (!autoRunTestTimer) console.debug(`preparing to run tests...`)
         autoRunTestTimer = setTimeout(async () => {
             await runTests()
             ds.restart()
@@ -289,11 +289,11 @@ export async function runTests(options: TestQuery = {}) {
         ...query,
     }
 
-    console.log("TAP version 14")
+    console.test("TAP version 14")
     const { total, pass, error } = await root.run({
         ...testOptions,
         indent: "",
     })
-    console.log(`# tests ${total}, pass ${pass}, error ${error}`)
+    console.test(`# tests ${total}, pass ${pass}, error ${error}`)
     if (error) throw new Error("test errors")
 }

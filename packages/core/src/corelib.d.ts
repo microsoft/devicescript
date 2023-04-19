@@ -335,6 +335,11 @@ declare namespace console {
      * Print out an object with timestamp for data analysis (prefix: `# ${ms} `).
      */
     function data(object: {}): void
+
+    /**
+     * Print out test result output.
+     */
+    function test(...args: any[]): void
 }
 
 interface Math {

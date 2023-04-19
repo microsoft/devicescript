@@ -98,6 +98,16 @@ export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
 export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
+export const consoleLineCategories: Record<string, string> = {
+    log: ">",
+    info: ">",
+    error: "!",
+    warn: "*",
+    debug: "?",
+    data: "#",
+    test: "$"
+}
+
 const coreModule = "@devicescript/core"
 
 const globalFunctions = [
@@ -2562,23 +2572,16 @@ class Program implements TopOpWriter {
             case "ds._id":
                 this.requireArgs(expr, 1)
                 return this.emitExpr(expr.arguments[0])
+            case "console.log":
             case "console.data":
             case "console.info":
             case "console.debug":
             case "console.warn":
             case "console.error":
-            case "console.log": {
-                const levels: Record<string, string> = {
-                    log: ">",
-                    info: ">",
-                    error: "!",
-                    warn: "*",
-                    debug: "?",
-                    data: "#",
-                }
+            case "console.test": {
                 wr.emitCall(
                     wr.dsMember(BuiltInString.PRINT),
-                    literal(levels[funName.slice(8)].charCodeAt(0)),
+                    literal(consoleLineCategories[funName.slice(8)].charCodeAt(0)),
                     this.compileFormat(expr.arguments)
                 )
                 return undef()
