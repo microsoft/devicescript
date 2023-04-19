@@ -26,7 +26,7 @@ export interface TestQuery {
     testFilter?: (test: TestNode) => boolean
     suiteFilter?: (suite: SuiteNode) => boolean
 }
-export type RunOptions = TestQuery & {}
+export type RunOptions = TestQuery & { indent: string }
 export class SetupTeardownNode {
     constructor(readonly callback: TestFunction) {}
 
@@ -53,40 +53,49 @@ export class SuiteNode {
     }
 
     async run(options: RunOptions) {
-        if (this.name) console.log(this.name)
-        const { suiteFilter, testFilter } = options
-
+        const { suiteFilter, testFilter, indent } = options
         const result = {
             total: 0,
             pass: 0,
             error: 0,
         }
 
-        for (const child of this.children.filter(
-            child => !suiteFilter || suiteFilter(child)
-        )) {
-            const r = await child.run(options)
+        if (suiteFilter && !suiteFilter(this)) {
+            console.log(`${indent}1..0 # SKIP}`)
+            return result
+        }
+
+        const childOptions = { ...options, indent: indent + "    " }
+
+        for (const child of this.children) {
+            if (child.name) console.log(`${indent}# Subtest: ${child.name}`)
+            const r = await child.run(childOptions)
             result.total += r.total
             result.pass += r.pass
             result.error += r.error
         }
-        for (const test of this.tests.filter(
-            test => !testFilter || testFilter(test)
-        )) {
+
+        let testId = 1
+        const testOptions = options
+        for (const test of this.tests) {
+            if (testFilter && !testFilter(test)) {
+                test.skip(testId++, testOptions.indent)
+                continue
+            }
             const cleanups = []
             try {
                 // before tests
                 for (const before of this.befores) {
-                    const cleanup = await before.run(options)
+                    const cleanup = await before.run(testOptions)
                     if (cleanup) cleanups.push(cleanup)
                 }
 
                 // actually run test
-                await test.run(options)
+                await test.run(testId++, testOptions)
 
                 // run afters
                 for (const after of this.afters) {
-                    const cleanup = await after.run(options)
+                    const cleanup = await after.run(testOptions)
                     if (cleanup) cleanups.push(cleanup)
                 }
             } finally {
@@ -105,6 +114,7 @@ export class SuiteNode {
                     break
             }
         }
+        console.log(`${indent}1..${testId}`)
 
         return result
     }
@@ -119,9 +129,13 @@ export class TestNode {
         public readonly options: TestOptions
     ) {}
 
-    async run(runOptions: RunOptions) {
+    skip(testId: number, indent: string) {
+        console.log(`${indent}ok ${testId++} # SKIP`)
+    }
+
+    async run(testId: number, runOptions: RunOptions) {
         let { expectedError, skip } = this.options || {}
-        console.log(`  ${this.name}`)
+        const { indent } = runOptions
         try {
             this.state = TestState.Running
             this.error = undefined
@@ -143,12 +157,17 @@ export class TestNode {
                 )
             }
             this.state = TestState.Passed
+            console.log(`${indent}ok ${testId} - ${this.name}`)
         } catch (error: any) {
             if (expectedError) {
                 this.state = TestState.Passed
+                console.log(
+                    `${indent}ok ${testId} - ${this.name}, expected error`
+                )
             } else {
                 this.state = TestState.Error
                 this.error = error
+                console.log(`${indent}not ok ${testId} - ${this.name}`)
                 if (error.print) error.print()
             }
         }
@@ -231,14 +250,22 @@ export function afterEach(body: TestFunction) {
     parent.afters.push(new SetupTeardownNode(body))
 }
 
+/**
+ * Run tests and emit TAP
+ * @link https://testanything.org/tap-version-14-specification.html
+ * @param options
+ */
 export async function runTests(options: TestQuery = {}) {
     const { ...query } = options
     const testOptions = {
         ...query,
     }
-    console.log(`running ${root.testCount()} tests`)
-    const { total, pass, error } = await root.run(testOptions)
-    console.log(`tests: ${total}, pass: ${pass}, error: ${error}`)
+
+    console.log("TAP version 14")
+    const { total, pass, error } = await root.run({
+        ...testOptions,
+        indent: "",
+    })
 
     if (error) throw new Error("test errors")
 }
