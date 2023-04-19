@@ -45,7 +45,6 @@ Prototype board
 | **services.power[0].pinLedPulse** |  GPIO13 |  io |
 | **services.power[0].pinPulse** |  GPIO8 |  io |
 | **services.power[0].pinUsbDetect** |  GPIO11 |  io |
-| **setupPins[0].pin** |  GPIO18 |  io |
 
 
 
@@ -98,6 +97,7 @@ devicescript flash --board msr124
         "pinTX": 0
     },
     "pins": {
+        "@HILIM": 18,
         "P1": 1,
         "P10": 10,
         "P2": 2,
@@ -113,6 +113,10 @@ devicescript flash --board msr124
         "P6": 6,
         "P7": 7
     },
+    "sPin": {
+        "#": "enable high power limiter mode",
+        "@HILIM": 0
+    },
     "services": [
         {
             "faultIgnoreMs": 1000,
@@ -124,13 +128,6 @@ devicescript flash --board msr124
             "pinPulse": 8,
             "pinUsbDetect": 11,
             "service": "power"
-        }
-    ],
-    "setupPins": [
-        {
-            "#": "Enable hi-power limiter mode",
-            "out": 0,
-            "pin": 18
         }
     ]
 }

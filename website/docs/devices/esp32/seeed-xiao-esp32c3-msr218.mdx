@@ -1,0 +1,94 @@
+---
+description: Seeed Studio XIAO ESP32C3 with MSR218 base
+---
+# Seeed Studio XIAO ESP32C3 with MSR218 base
+
+
+A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.
+
+
+## Features
+
+-  Jacdac on pin 5 using Jacdac connector
+-  I2C on SDA/SCL: 6/7 using Qwiic connector
+-  WS2812B RGB LED on 10
+
+## Stores
+
+-  [https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html](https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html)
+
+## Pins
+
+| pin name | hardware id | features |
+|:---------|:------------|---------:|
+| **A0** |  GPIO2 |  analogIn,  boot,  io |
+| **A1** |  GPIO3 |  analogIn,  io |
+| **A2** |  GPIO4 |  analogIn,  debug,  io |
+| **D9** |  GPIO9 |  boot,  io |
+| **LED_PWR** |  GPIO8 |  boot,  io |
+| **RX** |  GPIO20 |  bootUart,  io |
+| **i2c.pinSCL** |  GPIO7 |  debug,  io |
+| **i2c.pinSDA** |  GPIO6 |  debug,  io |
+| **jacdac.pin** |  GPIO5 |  debug,  io |
+| **led.pin** |  GPIO10 |  io |
+
+
+
+## Firmware update
+
+In [Visual Studio Code](/getting-started/vscode),
+select **DeviceScript: Flash Firmware...** from the command palette.
+        
+Run this [command line](/api/cli) command and follow the instructions.
+
+```bash
+devicescript flash --board seeed_xiao_esp32c3_msr218
+```
+
+
+- [Firmware](https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3_msr218-0x0.bin)
+
+## Configuration
+
+```json title="seeed_xiao_esp32c3_msr218.json"
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "id": "seeed_xiao_esp32c3_msr218",
+    "devName": "Seeed Studio XIAO ESP32C3 with MSR218 base",
+    "productId": "0x36b64827",
+    "$description": "A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.",
+    "archId": "esp32c3",
+    "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html",
+    "i2c": {
+        "$connector": "Qwiic",
+        "pinSCL": 7,
+        "pinSDA": 6
+    },
+    "jacdac": {
+        "$connector": "Jacdac",
+        "pin": 5
+    },
+    "led": {
+        "pin": 10,
+        "type": 1
+    },
+    "pins": {
+        "@JD": 5,
+        "@LED": 10,
+        "@SCL": 7,
+        "@SDA": 6,
+        "@TX": 21,
+        "A0": 2,
+        "A1": 3,
+        "A2": 4,
+        "D9": 9,
+        "LED_PWR": 8,
+        "RX": 20
+    },
+    "sPin": {
+        "LED_PWR": 1
+    },
+    "services": [],
+    "uartLog": true
+}
+```

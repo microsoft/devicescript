@@ -33,16 +33,16 @@ A S2 Feather from Adafruit. (untested)
 | **D5** |  GPIO5 |  analogIn,  io |
 | **D6** |  GPIO6 |  analogIn,  io |
 | **D9** |  GPIO9 |  analogIn,  io |
+| **LED_PWR** |  GPIO21 |  io |
 | **MISO** |  GPIO37 |  io |
 | **MOSI** |  GPIO35 |  io |
+| **PWR** |  GPIO7 |  analogIn,  io |
 | **RX** |  GPIO38 |  io |
 | **SCK** |  GPIO36 |  io |
 | **TX** |  GPIO39 |  debug,  io |
 | **i2c.pinSCL** |  GPIO4 |  analogIn,  io |
 | **i2c.pinSDA** |  GPIO3 |  analogIn,  io |
 | **led.pin** |  GPIO33 |  io |
-| **setupPins[0].pin** |  GPIO21 |  io |
-| **setupPins[1].pin** |  GPIO7 |  analogIn,  io |
 
 
 
@@ -94,22 +94,18 @@ devicescript flash --board adafruit_feather_esp32_s2
         "D5": 5,
         "D6": 6,
         "D9": 9,
+        "LED_PWR": 21,
         "MISO": 37,
         "MOSI": 35,
+        "PWR": 7,
         "RX": 38,
         "SCK": 36,
         "TX": 39
     },
-    "setupPins": [
-        {
-            "out": 1,
-            "pin": 21
-        },
-        {
-            "out": 1,
-            "pin": 7
-        }
-    ],
+    "sPin": {
+        "LED_PWR": 1,
+        "PWR": 1
+    },
     "uartLog": true
 }
 ```
