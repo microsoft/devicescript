@@ -21,7 +21,7 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
             values.push(v)
         })
         let retry = 0
-        while(values.length !== sequence.length && retry++ < 10)
+        while (values.length !== sequence.length && retry++ < 10)
             await ds.sleep(10)
         expect(values.length).toBe(sequence.length)
         for (let i = 0; i < values.length; ++i) {
@@ -33,18 +33,18 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
 }
 
 describe("creation", () => {
-    test("of", async () => {
+    test("of", async ({ log }) => {
         const obs = from([1, 2, 3, 4, 5])
-        obs.subscribe(v => console.log(v))
+        obs.subscribe(v => log(v))
     })
-    test("interval", async () => {
+    test("interval", async ({ log }) => {
         let obs = interval(100)
-        obs = tap<number>(v => console.log(`interval ${v}`))(obs)
+        obs = tap<number>(v => log(`interval ${v}`))(obs)
         // start
         let count = 0
         let res: number[] = []
         const unsub = obs.subscribe(() => {
-            console.log(`next ${count}`)
+            log(`next ${count}`)
             res.push(count)
             if (count++ === 2) unusbscribe(unsub)
         })
@@ -63,52 +63,52 @@ describe("creation", () => {
 })
 
 describe("filter", () => {
-    test("filter", async () => {
+    test("filter", async ({ log }) => {
         let obs = from([1, 2, 3])
         obs = filter<number>(x => x > 2)(obs)
-        obs = tap<number>(v => console.log(v))(obs)
+        obs = tap<number>(v => log(v))(obs)
         await emits(obs, [3])
     })
-    test("distinctUntilChanged", async () => {
+    test("distinctUntilChanged", async ({ log }) => {
         let obs = from([1, 2, 2, 3, 3, 3, 3])
         obs = distinctUntilChanged<number>((x, y) => x === y)(obs)
-        obs = tap<number>(v => console.log(v))(obs)
+        obs = tap<number>(v => log(v))(obs)
         await emits(obs, [1, 2, 3])
     })
-    test("threshold", async () => {
+    test("threshold", async ({ log }) => {
         let obs = from([1, 2, 3, 6, 5, 0])
         obs = threshold(2)(obs)
-        obs = tap<number>(v => console.log(v))(obs)
+        obs = tap<number>(v => log(v))(obs)
         await emits(obs, [1, 3, 6, 0])
     })
 })
 
 describe("transform", () => {
-    test("map", async () => {
+    test("map", async ({ log }) => {
         let obs = from([1, 2, 3])
         obs = map<number, number>(x => x * x)(obs)
-        obs = tap<number>(v => console.log(v))(obs)
+        obs = tap<number>(v => log(v))(obs)
         await emits(obs, [1, 4, 9])
     })
-    test("map", async () => {
+    test("map", async ({ log }) => {
         let obs = from([1, 2, 3])
         obs = scan<number, number>((x, v) => x + v, 0)(obs)
-        obs = tap<number>(v => console.log(v))(obs)
+        obs = tap<number>(v => log(v))(obs)
         await emits(obs, [1, 3, 6])
     })
 })
 
 describe("aggregate", () => {
-    test("reduce", async () => {
+    test("reduce", async ({ log }) => {
         let obs = from([1, 2, 3])
         obs = reduce<number, number>((p, x) => p + x, 0)(obs)
-        obs = tap<number>(v => console.log(v))(obs)
+        obs = tap<number>(v => log(v))(obs)
         await emits(obs, [6])
     })
 })
 
 describe("join", () => {
-    test("collect", async () => {
+    test("collect", async ({ log }) => {
         let obs = collect(
             {
                 a: from([0, 1, 2]),
@@ -117,12 +117,12 @@ describe("join", () => {
             interval(50)
         )
         const unsub = await obs.subscribe(({ a, b }) =>
-            console.log(`collect: a: ${a}, b: ${b}`)
+            log(`collect: a: ${a}, b: ${b}`)
         )
         await ds.sleep(100)
         unsub.unsubscribe()
     })
-    test("collectTime", async () => {
+    test("collectTime", async ({ log }) => {
         let obs = collectTime(
             {
                 a: from([0, 1, 2]),
@@ -131,7 +131,7 @@ describe("join", () => {
             50
         )
         const unsub = await obs.subscribe(({ a, b }) =>
-            console.log(`collecttime: a: ${a}, b: ${b}`)
+            log(`collecttime: a: ${a}, b: ${b}`)
         )
         await ds.sleep(100)
         unsub.unsubscribe()

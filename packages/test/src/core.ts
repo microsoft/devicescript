@@ -3,7 +3,10 @@ import * as ds from "@devicescript/core"
 export type SuiteFunction = () => void
 export type Subscription = () => void
 export type SubscriptionAsync = Subscription | Promise<Subscription>
-export type TestFunction = () => ds.AsyncVoid | SubscriptionAsync
+export type SetupTeardownFunction = () => ds.AsyncVoid | SubscriptionAsync
+export type TestFunction = (options: {
+    log: (message: any) => void
+}) => ds.AsyncVoid | SubscriptionAsync
 export enum TestState {
     NotRun,
     Running,
@@ -27,8 +30,9 @@ export interface TestQuery {
     suiteFilter?: (suite: SuiteNode) => boolean
 }
 export type RunOptions = TestQuery & { indent: string }
+export type TestRunOptions = RunOptions
 export class SetupTeardownNode {
-    constructor(readonly callback: TestFunction) {}
+    constructor(readonly callback: SetupTeardownFunction) {}
 
     async run(runOptions: RunOptions) {
         return await this.callback()
@@ -133,19 +137,33 @@ export class TestNode {
         console.log(`${indent}ok ${testId++} # SKIP`)
     }
 
-    async run(testId: number, runOptions: RunOptions) {
+    async run(testId: number, runOptions: TestRunOptions) {
         let { expectedError, skip } = this.options || {}
         const { indent } = runOptions
+        const output: any[] = []
+        const log = (message: any) => output.push(message)
+        const printLog = () => {
+            if (output.length === 0) return
+            const oindent = indent + "     "
+            console.log(`${oindent}---`)
+            for (const line of output) {
+                console.log(`${oindent}`, line)
+            }
+            console.log(`${oindent}---`)
+        }
         try {
             this.state = TestState.Running
             this.error = undefined
 
             if (skip) {
                 this.state = TestState.Ignored
+                console.log(
+                    `${indent}ok ${testId} - ${this.name} # SKIP`
+                )
                 return
             }
 
-            const unsubscribe = await this.body()
+            const unsubscribe = await this.body({ log })
             if (typeof unsubscribe === "function") await unsubscribe()
 
             if (expectedError) {
@@ -158,16 +176,19 @@ export class TestNode {
             }
             this.state = TestState.Passed
             console.log(`${indent}ok ${testId} - ${this.name}`)
+            printLog()
         } catch (error: any) {
             if (expectedError) {
                 this.state = TestState.Passed
                 console.log(
                     `${indent}ok ${testId} - ${this.name}, expected error`
                 )
+                printLog()
             } else {
                 this.state = TestState.Error
                 this.error = error
                 console.log(`${indent}not ok ${testId} - ${this.name}`)
+                printLog()
                 if (error.print) error.print()
             }
         }
@@ -236,7 +257,7 @@ export const it = test
  * Register a callback to be called before each of the tests in the current context runs.
  * If the function returns a promise, waits until the promise resolve before running the test.
  */
-export function beforeEach(body: TestFunction) {
+export function beforeEach(body: SetupTeardownFunction) {
     const parent = currentSuite()
     parent.befores.push(new SetupTeardownNode(body))
 }
@@ -245,7 +266,7 @@ export function beforeEach(body: TestFunction) {
  * Register a callback to be called after each of the tests in the current context runs.
  * If the function returns a promise, waits until the promise resolve before running the test.
  */
-export function afterEach(body: TestFunction) {
+export function afterEach(body: SetupTeardownFunction) {
     const parent = currentSuite()
     parent.afters.push(new SetupTeardownNode(body))
 }
