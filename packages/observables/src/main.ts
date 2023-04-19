@@ -139,19 +139,19 @@ describe("join", () => {
 })
 
 describe("pipe", () => {
-    test("of filter", async () => {
+    test("of filter", async ({log}) => {
         const obs = from([1, 2, 3]).pipe(
             filter<number>(x => x > 2),
-            tap<number>(v => console.log(v))
+            tap<number>(v => log(v))
         )
         await emits(obs, [3])
     })
-    test("of filter filter", async () => {
+    test("of filter filter", async ({log}) => {
         const obs = from([1, 2, 3, 4, 5]).pipe(
             filter<number>(x => x > 2),
-            tap<number>(v => console.log(v)),
+            tap<number>(v => log(v)),
             filter<number>(x => x < 4),
-            tap<number>(v => console.log(v))
+            tap<number>(v => log(v))
         )
         await emits(obs, [3])
     })
@@ -226,10 +226,10 @@ describe("error", () => {
         await ds.sleep(10)
         expect(error).toBe(1)
     })
-    test("map,tap,filter", async () => {
+    test("map,tap,filter", async ({log}) => {
         const obs = from([0, 1, 2]).pipe(
             filter(v => v > 1),
-            tap(v => console.log(v)),
+            tap(v => log(v)),
             map(v => {
                 throw new Error()
             })
