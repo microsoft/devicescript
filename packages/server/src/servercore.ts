@@ -119,9 +119,13 @@ async function _onServerPacket(pkt: ds.Packet) {
             const m = methods[pkt.spec.name]
             if (m) {
                 if (pkt.isRegGet) {
-                    const resp = pkt.spec.encode(await m())
-                    await server._send(resp)
-                    return
+                    const mr = await m()
+                    if (mr !== undefined) {
+                        // treat undefined as not implemented
+                        const resp = pkt.spec.encode(mr)
+                        await server._send(resp)
+                        return
+                    }
                 } else if (pkt.isAction) {
                     const v = await m(pkt.decode())
                     if (pkt.spec.response)
