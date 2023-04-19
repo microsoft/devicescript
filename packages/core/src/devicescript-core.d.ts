@@ -502,15 +502,15 @@ declare module "@devicescript/core" {
 
     export interface PinBase {
         gpio: number
-        // setMode(mode: GPIOMode): Promise<void>
+        setMode(mode: GPIOMode): Promise<void>
     }
 
     /**
      * Represents pin capable of digital output.
      */
-    export interface InputPin extends PinBase {
+    export interface InputPin extends PinBase, Subscriber<DigialValue> {
         _inputPinBrand: unknown
-        // read(): Promise<DigialValue>
+        read(): Promise<DigialValue>
     }
 
     /**
@@ -518,7 +518,7 @@ declare module "@devicescript/core" {
      */
     export interface OutputPin extends PinBase {
         _outputPinBrand: unknown
-        // write(v: DigialValue): Promise<void>
+        write(v: DigialValue): Promise<void>
     }
 
     /**

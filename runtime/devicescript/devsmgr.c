@@ -506,6 +506,10 @@ void devs_service_full_init(const devsmgr_cfg_t *cfg) {
     devsdbg_init();
     settings_init();
 
+#if !JD_HOSTED
+    gpiosrv_config();
+#endif
+
 #if JD_WIFI
     wifi_init();
 #endif
