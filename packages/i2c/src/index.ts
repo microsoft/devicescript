@@ -1,11 +1,5 @@
-import * as ds from "@devicescript/core"
-
+export * from "./client"
 export { I2CError } from "./i2c_impl"
-
-/**
- * The I2C adapter client
- */
-export const i2c = new ds.I2C()
 
 declare module "@devicescript/core" {
     interface I2C {
