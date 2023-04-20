@@ -435,6 +435,14 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     devs_fiber_poke(ctx);
 }
 
+void devs_jd_after_user(devs_ctx_t *ctx) {
+    if (ctx->flags & DEVS_CTX_PENDING_ROLES) {
+        ctx->flags &= ~DEVS_CTX_PENDING_ROLES;
+        LOG("autobind");
+        jd_role_force_autobind();
+    }
+}
+
 void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role) {
     if (ctx->flags & DEVS_CTX_FREEING_ROLES)
         return;
@@ -463,7 +471,6 @@ void devs_jd_reset_packet(devs_ctx_t *ctx) {
 
 void devs_jd_init_roles(devs_ctx_t *ctx) {
     devs_jd_free_roles(ctx); // free any previous roles
-    // jd_role_force_autobind(); TODO
 }
 
 int devs_jd_role_by_name(devs_ctx_t *ctx, value_t name) {
@@ -481,14 +488,16 @@ int devs_jd_alloc_role(devs_ctx_t *ctx, value_t name, uint32_t srv_class) {
     if (devs_is_undefined(name)) {
         const char *spec_name = devs_get_static_utf8(ctx, spec->name_idx, NULL);
         for (unsigned suff = 0;; suff++) {
-            name = devs_string_sprintf(ctx, "%s%u", spec_name, suff);
+            name = devs_string_sprintf(ctx, "%s_%u", spec_name, suff);
             if (devs_jd_role_by_name(ctx, name) < 0)
                 break;
         }
     }
 
-    if (devs_jd_role_by_name(ctx, name) >= 0)
+    if (devs_jd_role_by_name(ctx, name) >= 0) {
+        LOG("role '%s' already exists", devs_string_get_utf8(ctx, name, NULL));
         return -3;
+    }
 
     devs_value_pin(ctx, name);
     int idx = -1;
@@ -502,6 +511,7 @@ int devs_jd_alloc_role(devs_ctx_t *ctx, value_t name, uint32_t srv_class) {
     while (idx < ctx->num_roles) {
         if (ctx->roles[idx] == NULL)
             break;
+        idx++;
     }
     if (idx >= ctx->num_roles) {
         int newsz = ctx->num_roles * 2 + 2;
@@ -523,6 +533,8 @@ int devs_jd_alloc_role(devs_ctx_t *ctx, value_t name, uint32_t srv_class) {
     } else {
         r->name = name;
         ctx->roles[idx] = r;
+        ctx->flags |= DEVS_CTX_PENDING_ROLES;
+        LOG("create role '%s' -> %d", n, idx);
     }
 
 exit:

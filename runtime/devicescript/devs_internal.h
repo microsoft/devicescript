@@ -88,6 +88,7 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
 #define DEVS_CTX_FREEING_ROLES 0x04
 #define DEVS_CTX_TRACE_DISABLED 0x08
 #define DEVS_CTX_PENDING_RESUME 0x10
+#define DEVS_CTX_PENDING_ROLES 0x20
 
 #define DEVS_CTX_STEP_EN 0x01
 #define DEVS_CTX_STEP_BRK 0x02
@@ -239,6 +240,7 @@ void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role);
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib);
 void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str);
 uint64_t devs_jd_server_device_id(void);
+void devs_jd_after_user(devs_ctx_t *ctx);
 
 // fibers.c
 void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);

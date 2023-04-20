@@ -174,8 +174,8 @@ void fun2_DeviceScript__allocRole(devs_ctx_t *ctx) {
         devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_STRING, name);
         return;
     }
-    if ((service_cls & 0xF0000000) != 0x20000000) {
-        devs_throw_range_error(ctx, "0x2xxx_xxxx expected for service class");
+    if ((service_cls & 0xF0000000) != 0x10000000) {
+        devs_throw_range_error(ctx, "0x1xxxxxxx expected for service class");
         return;
     }
     int r = devs_jd_alloc_role(ctx, name, service_cls);

@@ -678,8 +678,11 @@ devs_map_t *devs_get_spec_proto(devs_ctx_t *ctx, uint32_t spec_idx) {
     devs_map_t *m = devs_any_try_alloc(ctx, DEVS_GC_TAG_HALF_STATIC_MAP, sizeof(devs_map_t));
     if (m == NULL)
         return NULL;
+    value_t v = devs_value_from_gc_obj(ctx, m);
+    devs_value_pin(ctx, v);
     m->proto = (const void *)devs_img_get_service_spec(ctx->img, spec_idx);
-    devs_short_map_set(ctx, ctx->spec_protos, spec_idx, devs_value_from_gc_obj(ctx, m));
+    devs_short_map_set(ctx, ctx->spec_protos, spec_idx, v);
+    devs_value_unpin(ctx, v);
     return m;
 }
 

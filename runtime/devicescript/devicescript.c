@@ -140,6 +140,9 @@ void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *
     }
 
     devs_leave(ctx);
+
+    if (event_id == JD_CLIENT_EV_PROCESS)
+        devs_jd_after_user(ctx);
 }
 
 static void clear_ctx(devs_ctx_t *ctx) {
