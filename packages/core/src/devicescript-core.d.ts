@@ -336,6 +336,13 @@ declare module "@devicescript/core" {
     export function _id<T>(a: T): T
 
     /**
+     * Allocate a new service client.
+     * @internal
+     * @deprecated Use `new ds.ServiceName()`
+     */
+    export function _allocRole(cls: number, name?: string): Role
+
+    /**
      * Return number of milliseconds since device boot or program start.
      * Note that it only changes upon `await`.
      */

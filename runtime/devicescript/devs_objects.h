@@ -154,6 +154,7 @@ bool devs_is_service_spec(devs_ctx_t *ctx, const void *ptr);
 const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, unsigned *roleidx);
 const devs_service_spec_t *devs_value_to_service_spec(devs_ctx_t *ctx, value_t v);
 int devs_value_to_service_spec_idx(devs_ctx_t *ctx, value_t v);
+int devs_spec_idx(devs_ctx_t *ctx, const devs_service_spec_t *spec);
 const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t service_class);
 const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx);
 const devs_service_spec_t *devs_get_base_spec(devs_ctx_t *ctx, const devs_service_spec_t *spec);

@@ -41,9 +41,9 @@ export interface VarDebugInfo {
     type: string
 }
 
-export interface RoleDebugInfo {
+export interface SpecDebugInfo {
     name: string
-    serviceClass: number
+    classIdentifier: number
 }
 
 export interface DebugInfo {
@@ -56,7 +56,7 @@ export interface DebugInfo {
     }
     localConfig: LocalBuildConfig
     functions: FunctionDebugInfo[]
-    roles: RoleDebugInfo[]
+    specs: SpecDebugInfo[]
     globals: VarDebugInfo[]
     srcmap: SrcMap
     sources: SrcFile[]
@@ -86,7 +86,7 @@ export function emptyDebugInfo(): DebugInfo {
         },
         functions: [],
         globals: [],
-        roles: [],
+        specs: [],
         srcmap: [],
         sources: [],
         binary: { hex: "" },

@@ -46,7 +46,7 @@
 #define DEVS_STMT0_ALLOC_MAP 31
 #define DEVS_STMT1_ALLOC_ARRAY 32           // initial_size
 #define DEVS_STMT1_ALLOC_BUFFER 33          // size
-#define DEVS_EXPRx_STATIC_ROLE 34           // *role_idx
+#define DEVS_EXPRx_STATIC_SPEC_PROTO 34     // spec_idx.prototype
 #define DEVS_EXPRx_STATIC_BUFFER 35         // *buffer_idx
 #define DEVS_EXPRx_STATIC_BUILTIN_STRING 36 // *builtin_idx
 #define DEVS_EXPRx_STATIC_ASCII_STRING 37   // *ascii_idx
@@ -56,8 +56,8 @@
 #define DEVS_EXPRx_LITERAL 40               // *value
 #define DEVS_EXPRx_LITERAL_F64 41           // *f64_idx
 #define DEVS_EXPRx_BUILTIN_OBJECT 1         // *builtin_object
-#define DEVS_EXPRx_ROLE_PROTO 42            // role_idx.prototype
-#define DEVS_EXPR3_LOAD_BUFFER 43           // buffer, numfmt, offset
+#define DEVS_STMT0_REMOVED_42 42
+#define DEVS_EXPR3_LOAD_BUFFER 43 // buffer, numfmt, offset
 #define DEVS_EXPR0_RET_VAL 44
 #define DEVS_EXPR1_TYPEOF 45     // object
 #define DEVS_EXPR1_TYPEOF_STR 76 // object
@@ -99,28 +99,27 @@
 
 #define DEVS_OP_PROPS                                                                              \
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20" \
-    "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41" \
+    "\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x10\x03\x00\x41" \
     "\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42" \
     "\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42" \
     "\x42\x11\x60"
 #define DEVS_OP_TYPES                                                                              \
     "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b" \
-    "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01" \
+    "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x0b\x04\x09\x09\x09\x08\x01\x01\x0c\x01\x0b\x01" \
     "\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
     "\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06" \
     "\x06\x0c\x0b"
 
 #define DEVS_IMG_VERSION_MAJOR 2
-#define DEVS_IMG_VERSION_MINOR 6
-#define DEVS_IMG_VERSION_PATCH 2
-#define DEVS_IMG_VERSION 0x2060002
+#define DEVS_IMG_VERSION_MINOR 7
+#define DEVS_IMG_VERSION_PATCH 0
+#define DEVS_IMG_VERSION 0x2070000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0xf1296e0a
 #define DEVS_NUM_IMG_SECTIONS 10
 #define DEVS_FIX_HEADER_SIZE 32
 #define DEVS_SECTION_HEADER_SIZE 8
 #define DEVS_FUNCTION_HEADER_SIZE 16
-#define DEVS_ROLE_HEADER_SIZE 8
 #define DEVS_ASCII_HEADER_SIZE 2
 #define DEVS_UTF8_HEADER_SIZE 4
 #define DEVS_UTF8_TABLE_SHIFT 4
@@ -262,7 +261,7 @@
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC 38
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE 39
 
-#define DEVS_BUILTIN_STRING___MAX 168
+#define DEVS_BUILTIN_STRING___MAX 169
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -432,6 +431,7 @@
 #define DEVS_BUILTIN_STRING_NOTIMPLEMENTED 166
 #define DEVS_BUILTIN_STRING_DELAY 167
 #define DEVS_BUILTIN_STRING_FROMCHARCODE 168
+#define DEVS_BUILTIN_STRING__ALLOCROLE 169
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -440,14 +440,14 @@
         stmtx1_store_global, stmt4_store_buffer, expr0_inf, exprx_load_local, exprx_load_global,   \
         expr1_uplus, expr2_index, stmt3_index_set, exprx1_builtin_field, exprx1_ascii_field,       \
         exprx1_utf8_field, exprx_math_field, exprx_ds_field, stmt0_alloc_map, stmt1_alloc_array,   \
-        stmt1_alloc_buffer, exprx_static_role, exprx_static_buffer, exprx_static_builtin_string,   \
-        exprx_static_ascii_string, exprx_static_utf8_string, exprx_static_function, exprx_literal, \
-        exprx_literal_f64, exprx_role_proto, expr3_load_buffer, expr0_ret_val, expr1_typeof,       \
-        expr0_undefined, expr1_is_undefined, expr0_true, expr0_false, expr1_to_bool, expr0_nan,    \
-        expr1_abs, expr1_bit_not, expr1_is_nan, expr1_neg, expr1_not, expr1_to_int, expr2_add,     \
-        expr2_sub, expr2_mul, expr2_div, expr2_bit_and, expr2_bit_or, expr2_bit_xor,               \
-        expr2_shift_left, expr2_shift_right, expr2_shift_right_unsigned, expr2_eq, expr2_le,       \
-        expr2_lt, expr2_ne, expr1_is_nullish, stmtx2_store_closure, exprx1_load_closure,           \
+        stmt1_alloc_buffer, exprx_static_spec_proto, exprx_static_buffer,                          \
+        exprx_static_builtin_string, exprx_static_ascii_string, exprx_static_utf8_string,          \
+        exprx_static_function, exprx_literal, exprx_literal_f64, expr_invalid, expr3_load_buffer,  \
+        expr0_ret_val, expr1_typeof, expr0_undefined, expr1_is_undefined, expr0_true, expr0_false, \
+        expr1_to_bool, expr0_nan, expr1_abs, expr1_bit_not, expr1_is_nan, expr1_neg, expr1_not,    \
+        expr1_to_int, expr2_add, expr2_sub, expr2_mul, expr2_div, expr2_bit_and, expr2_bit_or,     \
+        expr2_bit_xor, expr2_shift_left, expr2_shift_right, expr2_shift_right_unsigned, expr2_eq,  \
+        expr2_le, expr2_lt, expr2_ne, expr1_is_nullish, stmtx2_store_closure, exprx1_load_closure, \
         exprx_make_closure, expr1_typeof_str, expr_invalid, stmtx_jmp_ret_val_z, stmt2_call_array, \
         stmtx_try, stmtx_end_try, stmt0_catch, stmt0_finally, stmt1_throw, stmt1_re_throw,         \
         stmtx1_throw_jmp, stmt0_debugger, expr1_new, expr2_instance_of, expr0_null,                \
@@ -475,7 +475,7 @@
         "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended",     \
         "reboot", "server", "spec", "ServiceSpec", "classIdentifier", "lookup", "PacketSpec",      \
         "parent", "response", "ServerInterface", "_onServerPacket", "_serverSend",                 \
-        "notImplemented", "delay", "fromCharCode"
+        "notImplemented", "delay", "fromCharCode", "_allocRole"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

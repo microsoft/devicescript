@@ -7,11 +7,9 @@ import {
     toUTF8,
     write16,
     write32,
-    strcmp,
     encodeU32LE,
     fromHex,
     bufferEq,
-    uniqueMap,
     encodeU16LE,
     range,
     arrayConcatMany,
@@ -65,7 +63,6 @@ import {
 } from "./specgen"
 import {
     VarDebugInfo,
-    RoleDebugInfo,
     FunctionDebugInfo,
     DebugInfo,
     SrcLocation,
@@ -76,7 +73,6 @@ import {
     computeSizes,
     LocalBuildConfig,
     ResolvedBuildConfig,
-    SystemReg,
     ProgramConfig,
     PkgJson,
 } from "@devicescript/interop"
@@ -157,48 +153,6 @@ class Cell {
             else this._name = idName(this.definition.name)
         }
         return this._name
-    }
-}
-
-class Role extends Cell {
-    stringIndex: number
-    used = false
-
-    constructor(
-        prog: Program,
-        definition: ts.VariableDeclaration | ts.Identifier,
-        public spec: jdspec.ServiceSpec,
-        _name?: string
-    ) {
-        super(definition, prog.roles, _name)
-        assert(!!spec, "no spec " + this._name)
-        this.stringIndex = prog.addString(this.getName())
-        prog.useSpec(spec)
-    }
-    emit(wr: OpWriter): Value {
-        const r = wr.emitExpr(Op.EXPRx_STATIC_ROLE, literal(this._index))
-        this.used = true
-        return r
-    }
-    serialize() {
-        const r = new Uint8Array(BinFmt.ROLE_HEADER_SIZE)
-        write32(r, 0, this.spec.classIdentifier)
-        write16(r, 4, this.stringIndex)
-        return r
-    }
-    toString() {
-        return `role ${this.getName()}`
-    }
-    isSensor() {
-        return this.spec.packets.some(
-            p => p.identifier == SystemReg.StreamingSamples
-        )
-    }
-    debugInfo(): RoleDebugInfo {
-        return {
-            name: this.getName(),
-            serviceClass: this.spec.classIdentifier,
-        }
     }
 }
 
@@ -581,7 +535,6 @@ interface PossiblyConstDeclaration extends ts.Declaration {
 
 class Program implements TopOpWriter {
     bufferLits: BufferLit[] = []
-    roles: Role[] = []
     usedSpecs: jdspec.ServiceSpec[] = []
     functions: FunctionDecl[] = []
     globals: Variable[] = []
@@ -796,8 +749,6 @@ class Program implements TopOpWriter {
 
     describeCell(ff: string, idx: number): string {
         switch (ff) {
-            case "R":
-                return this.roles[idx]?.getName()
             case "B":
                 return toHex(this.bufferLiterals[idx])
             case "U":
@@ -980,14 +931,16 @@ class Program implements TopOpWriter {
             const obj: BaseServiceConfig = this.toLiteralJSONObj(arg)
             obj.service = startName
             const spec = this.lookupRoleSpec(arg, specName)
+            this.useSpec(spec)
             this.startServices.push(obj)
-            return { obj, spec }
+            if (this.isIgnored(expr)) return unit()
+            else return this.allocRole(spec)
         } else if (nn == serversPref + "hardwareConfig") {
             this.requireArgs(expr, 1)
             const arg = expr.arguments[0]
             const obj = this.toLiteralJSONObj(arg)
             Object.assign(this.hwCfg, jsonToDcfg(obj))
-            return {}
+            return unit()
         }
 
         return undefined
@@ -1004,27 +957,6 @@ class Program implements TopOpWriter {
                 decl,
                 new BufferLit(decl, this.bufferLits, buflit)
             )
-
-        if (!expr) return null
-
-        const r = this.checkHwConfig(expr)
-        if (r?.obj) {
-            if (!r.obj.name) r.obj.name = this.forceName(decl.name)
-            const role = new Role(this, decl, r.spec, r.obj.name)
-            return this.assignCell(decl, role)
-        }
-
-        if (ts.isNewExpression(expr)) {
-            const spec = this.specFromTypeName(
-                expr.expression,
-                this.nodeName(expr.expression),
-                true
-            )
-            if (spec) {
-                this.requireArgs(expr, 0)
-                return this.assignCell(decl, new Role(this, decl, spec))
-            }
-        }
 
         return null
     }
@@ -2037,11 +1969,6 @@ class Program implements TopOpWriter {
             this.assignCellsToStmt(s)
         }
 
-        this.roles.sort((a, b) => strcmp(a.getName(), b.getName()))
-        this.roles.forEach((r, i) => {
-            r._index = i
-        })
-
         this.withProcedure(this.mainProc, wr => {
             this.protoProc.callMe(wr, [])
             for (const s of stmts) this.emitStmt(s)
@@ -2049,7 +1976,8 @@ class Program implements TopOpWriter {
                 wr.emitCall(wr.dsMember(BuiltInString.RESTART))
             wr.emitStmt(Op.STMT1_RETURN, literal(0))
             this.finalizeProc(this.mainProc)
-            if (this.roles.length > 0) this.markMethodUsed("#ds.Role._onPacket")
+            if (this.usedSpecs.length > 0)
+                this.markMethodUsed("#ds.Role._onPacket")
             this.emitProtoAssigns()
         })
 
@@ -2258,6 +2186,7 @@ class Program implements TopOpWriter {
         expr: ts.CallExpression | ts.NewExpression | CallLike,
         num: number
     ) {
+        if (num == 0 && !expr.arguments) return
         if (expr.arguments.length != num)
             throwError(
                 (expr as any).position || expr,
@@ -2622,12 +2551,14 @@ class Program implements TopOpWriter {
     }
 
     private emitCallExpression(expr: ts.CallExpression): Value {
-        if (this.checkHwConfig(expr)) return unit()
-        return this.emitCallLike({
-            position: expr,
-            callexpr: expr.expression,
-            arguments: expr.arguments.slice(),
-        })
+        return (
+            this.checkHwConfig(expr) ??
+            this.emitCallLike({
+                position: expr,
+                callexpr: expr.expression,
+                arguments: expr.arguments.slice(),
+            })
+        )
     }
 
     private checkAsyncFun(formal: ts.Type, arg: Expr) {
@@ -2868,11 +2799,6 @@ class Program implements TopOpWriter {
         return { expression: chain.expression, chain: links }
     }
 
-    private specRef(spec: jdspec.ServiceSpec) {
-        const idx = this.useSpec(spec)
-        return this.writer.emitExpr(Op.EXPRx_STATIC_SPEC, literal(idx))
-    }
-
     private emitPropertyAccessExpression(
         expr: ts.PropertyAccessExpression
     ): Value {
@@ -2891,18 +2817,13 @@ class Program implements TopOpWriter {
             if (this.isRoleClass(sym)) {
                 this.banOptional(expr)
                 const spec = this.specFromTypeName(expr.expression)
-                if (propName == "spec") return this.specRef(spec)
-                const r = this.roles.find(r => r.spec == spec)
-                if (r) {
-                    r.used = true
-                    return this.writer.emitExpr(
-                        Op.EXPRx_ROLE_PROTO,
-                        literal(r._index)
-                    )
-                } else {
-                    if (this.flags.allPrototypes) return this.specRef(spec)
-                    else throwError(expr, "role not used")
-                }
+                const idx = this.useSpec(spec)
+                return this.writer.emitExpr(
+                    propName == "spec"
+                        ? Op.EXPRx_STATIC_SPEC
+                        : Op.EXPRx_STATIC_SPEC_PROTO,
+                    literal(idx)
+                )
             }
         }
 
@@ -3350,8 +3271,31 @@ class Program implements TopOpWriter {
         return this.retVal()
     }
 
+    private allocRole(spec: jdspec.ServiceSpec, name?: string) {
+        const wr = this.writer
+        this.useSpec(spec)
+        wr.emitCall(
+            wr.dsMember(BuiltInString._ALLOCROLE),
+            literal(spec.classIdentifier),
+            ...(name ? [wr.emitString(name)] : [])
+        )
+        return this.retVal()
+    }
+
     private emitNewExpression(expr: ts.NewExpression): Value {
         const wr = this.writer
+
+        const spec = this.specFromTypeName(
+            expr.expression,
+            this.nodeName(expr.expression),
+            true
+        )
+        if (spec) {
+            // TODO allow name parameter
+            this.requireArgs(expr, 0)
+            return this.allocRole(spec)
+        }
+
         const desc: CallLike = {
             position: expr,
             callexpr: expr.expression,
@@ -3974,10 +3918,6 @@ class Program implements TopOpWriter {
         }
         floatData.append(new Uint8Array(floatBuf))
 
-        for (const r of this.roles) {
-            roleData.append(r.serialize())
-        }
-
         function addLits(lst: (Uint8Array | string)[], dst: SectionWriter) {
             lst.forEach(str => {
                 const buf: Uint8Array =
@@ -4084,7 +4024,10 @@ class Program implements TopOpWriter {
                 align: left,
             },
             localConfig: unresolveBuildConfig(this.host.getConfig()),
-            roles: this.roles.map(r => r.debugInfo()),
+            specs: this.usedSpecs.map(s => ({
+                name: s.name,
+                classIdentifier: s.classIdentifier,
+            })),
             functions: this.procs.map(p => p.debugInfo()),
             globals: this.globals.map(r => r.debugInfo()),
             srcmap,

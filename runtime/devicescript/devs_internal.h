@@ -96,8 +96,8 @@ static inline bool devs_fiber_uses_pkt_data_v(devs_fiber_t *fib) {
 #define DEVS_CTX_STEP_HALT 0x80
 
 typedef struct {
-    jd_role_t *role;
-    devs_map_t *dynproto;
+    value_t name;
+    jd_role_t *jdrole;
     devs_map_t *attached;
 } devs_role_t;
 
@@ -140,11 +140,13 @@ struct devs_ctx {
     uint8_t dbg_en;
     uint8_t ignore_brk;
     uint8_t dbg_flags;
+    uint16_t num_roles;
 
     uint32_t literal_int;
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
 
     devs_short_map_t *fn_protos;
+    devs_short_map_t *spec_protos;
 
     devs_img_t img;
 
@@ -152,7 +154,7 @@ struct devs_ctx {
     devs_fiber_t *curr_fiber;
 
     devs_fiber_t *fibers;
-    devs_role_t *roles;
+    devs_role_t **roles;
 
     // use devs_get_builtin_object()
     devs_map_t **_builtin_protos;
@@ -210,7 +212,7 @@ value_t _devs_invalid_program(devs_ctx_t *ctx, unsigned code);
 /**
  * Indicates an invalid bytecode program.
  * The compiler should never generate code that triggers this.
- * Next free error: 60130
+ * Next free error: 60132
  */
 static inline value_t devs_invalid_program(devs_ctx_t *ctx, unsigned code) {
     return _devs_invalid_program(ctx, code - 60000);
@@ -232,6 +234,7 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
 void devs_jd_reset_packet(devs_ctx_t *ctx);
 void devs_jd_init_roles(devs_ctx_t *ctx);
 void devs_jd_free_roles(devs_ctx_t *ctx);
+int devs_jd_alloc_role(devs_ctx_t *ctx, value_t name, uint32_t srv_class);
 void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role);
 void devs_jd_clear_pkt_kind(devs_fiber_t *fib);
 void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str);
@@ -282,6 +285,7 @@ value_t devs_make_closure(devs_ctx_t *ctx, devs_activation_t *closure, unsigned 
 int devs_get_fnidx(devs_ctx_t *ctx, value_t src, value_t *this_val, devs_activation_t **closure);
 
 devs_map_t *devs_get_role_proto(devs_ctx_t *ctx, unsigned roleidx);
+devs_map_t *devs_get_spec_proto(devs_ctx_t *ctx, uint32_t spec_idx);
 
 #define TODO JD_PANIC
 
@@ -310,11 +314,14 @@ static inline bool devs_did_yield(devs_ctx_t *ctx) {
 }
 void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata);
 
-static inline jd_role_t *devs_role(devs_ctx_t *ctx, unsigned roleidx) {
-    return ctx->roles[roleidx].role;
+static inline devs_role_t *devs_role(devs_ctx_t *ctx, unsigned roleidx) {
+    if (roleidx < ctx->num_roles)
+        return ctx->roles[roleidx];
+    return NULL;
 }
-
-bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a);
+devs_role_t *devs_role_or_fail(devs_ctx_t *ctx, unsigned roleidx);
+jd_device_service_t *devs_role_service(devs_ctx_t *ctx, unsigned roleidx);
+const char *devs_role_name(devs_ctx_t *ctx, unsigned idx);
 
 #define DEVS_DERIVE(cls, basecls) /* */
 

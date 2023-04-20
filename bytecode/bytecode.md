@@ -5,8 +5,8 @@ Expressions do not modify the state. They may throw exceptions though.
 ## Format Constants
 
     img_version_major = 2
-    img_version_minor = 6
-    img_version_patch = 2
+    img_version_minor = 7
+    img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a
@@ -14,7 +14,6 @@ Expressions do not modify the state. They may throw exceptions though.
     fix_header_size = 32
     section_header_size = 8
     function_header_size = 16
-    role_header_size = 8
     ascii_header_size = 2
     utf8_header_size = 4
     utf8_table_shift = 4
@@ -167,7 +166,7 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
 ### Statics
 
-    fun static_role(*role_idx): role = 34
+    fun static_spec_proto(*spec_idx): any = 34  // spec_idx.prototype
 
     fun static_buffer(*buffer_idx): buffer = 35
 
@@ -189,7 +188,7 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
 ### Misc
 
-    role_proto(*role_idx): role = 42         // role_idx.prototype
+    removed_42() = 42
 
     load_buffer(buffer, numfmt, offset): number = 43
 
@@ -644,3 +643,4 @@ Only `true` and `false` values.
     notImplemented = 166
     delay = 167
     fromCharCode = 168
+    _allocRole = 169

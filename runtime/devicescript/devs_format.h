@@ -24,7 +24,7 @@ typedef struct {
     devs_img_section_t functions;      // devs_function_desc_t[]
     devs_img_section_t functions_data; // uint16_t[]
     devs_img_section_t float_literals; // value_t[]
-    devs_img_section_t roles;          // devs_role_desc_t[]
+    devs_img_section_t roles_removed;  // no longer used
     devs_img_section_t ascii_strings;  // uint16_t[]
     devs_img_section_t utf8_strings;   // uint32_t[]
     devs_img_section_t buffers;        // devs_img_section_t[]
@@ -49,12 +49,6 @@ typedef struct {
     uint8_t num_try_frames;
     uint8_t reserved;
 } devs_function_desc_t;
-
-typedef struct {
-    uint32_t service_class;
-    uint16_t name_idx; // index in strings section
-    uint16_t reserved;
-} devs_role_desc_t;
 
 typedef struct {
     uint16_t name_idx; // "LightLevel"

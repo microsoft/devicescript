@@ -10,10 +10,6 @@ typedef struct devs_img {
     };
 } devs_img_t;
 
-static inline uint32_t devs_img_num_roles(devs_img_t img) {
-    return img.header->roles.length / sizeof(devs_role_desc_t);
-}
-
 static inline uint32_t devs_img_num_functions(devs_img_t img) {
     return img.header->functions.length / sizeof(devs_function_desc_t);
 }
@@ -25,11 +21,6 @@ static inline uint32_t devs_img_num_floats(devs_img_t img) {
 static inline const devs_function_desc_t *devs_img_get_function(devs_img_t img, uint32_t idx) {
     return (const devs_function_desc_t *)(img.data + img.header->functions.start +
                                           idx * sizeof(devs_function_desc_t));
-}
-
-static inline const devs_role_desc_t *devs_img_get_role(devs_img_t img, uint32_t idx) {
-    return (const devs_role_desc_t *)(img.data + img.header->roles.start +
-                                      idx * sizeof(devs_role_desc_t));
 }
 
 static inline const devs_service_spec_t *devs_img_get_service_spec(devs_img_t img, uint32_t idx) {
@@ -55,7 +46,6 @@ static inline value_t devs_img_get_float(devs_img_t img, uint32_t idx) {
 const char *devs_builtin_string_by_idx(unsigned idx);
 const char *devs_img_get_utf8(devs_img_t img, uint32_t idx, unsigned *size);
 const char *devs_img_fun_name(devs_img_t img, unsigned fidx);
-const char *devs_img_role_name(devs_img_t img, unsigned idx);
 bool devs_img_stridx_ok(devs_img_t img, uint32_t stridx);
 const char *devs_get_static_utf8(devs_ctx_t *ctx, uint32_t idx, unsigned *size);
 const devs_utf8_string_t *devs_img_get_string_jmp(devs_img_t img, uint32_t idx);

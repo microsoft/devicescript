@@ -3,9 +3,7 @@
 value_t prop_DsRole_isBound(devs_ctx_t *ctx, value_t self) {
     if (devs_handle_type(self) != DEVS_HANDLE_TYPE_ROLE)
         return devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_ROLE, self);
-
-    uint32_t roleidx = devs_handle_value(self);
-    return devs_value_from_bool(devs_role(ctx, roleidx)->service != NULL);
+    return devs_value_from_bool(devs_role_service(ctx, devs_handle_value(self)) != NULL);
 }
 
 value_t prop_DsRole_spec(devs_ctx_t *ctx, value_t self) {

@@ -182,8 +182,8 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
         case DEVS_GC_TAG_PACKET: {
             devs_packet_t *pkt = devs_handle_ptr_value(ctx, v);
             return devs_string_sprintf(ctx, "[Packet: %s cmd=%x sz=%d]",
-                                       devs_img_role_name(ctx->img, pkt->roleidx),
-                                       pkt->service_command, pkt->payload->length);
+                                       devs_role_name(ctx, pkt->roleidx), pkt->service_command,
+                                       pkt->payload->length);
         }
         case DEVS_GC_TAG_SHORT_MAP:
         case DEVS_GC_TAG_HALF_STATIC_MAP:
@@ -199,8 +199,7 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
         JD_ASSERT(devs_bufferish_is_buffer(v));
         return buffer_to_string(ctx, v);
     case DEVS_HANDLE_TYPE_ROLE:
-        return devs_string_sprintf(ctx, "[Role: %s]",
-                                   devs_img_role_name(ctx->img, devs_handle_value(v)));
+        return devs_string_sprintf(ctx, "[Role: %s]", devs_role_name(ctx, devs_handle_value(v)));
     case DEVS_HANDLE_TYPE_ROLE_MEMBER: {
         unsigned roleidx;
         const devs_service_spec_t *spec = devs_value_to_service_spec(ctx, v);
@@ -214,7 +213,7 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
                                        devs_img_get_utf8(ctx->img, spec->name_idx, NULL),
                                        devs_img_get_utf8(ctx->img, pkt->name_idx, NULL));
         } else
-            return devs_string_sprintf(ctx, "[Role: %s.%s]", devs_img_role_name(ctx->img, roleidx),
+            return devs_string_sprintf(ctx, "[Role: %s.%s]", devs_role_name(ctx, roleidx),
                                        devs_img_get_utf8(ctx->img, pkt->name_idx, NULL));
     }
     default:

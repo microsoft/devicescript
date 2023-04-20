@@ -24,7 +24,6 @@ import {
     SrcMapResolver,
     DebugInfo,
     FunctionDebugInfo,
-    RoleDebugInfo,
 } from "@devicescript/interop"
 import {
     range,
@@ -37,16 +36,6 @@ import {
     assert,
     fromHex,
 } from "./jdutil"
-
-export class ImgRole {
-    constructor(
-        public parent: Image,
-        public index: number,
-        public serviceClass: number,
-        public name: string,
-        public dbg: RoleDebugInfo
-    ) {}
-}
 
 export class OpTree {
     args: OpTree[] = undefined
@@ -95,8 +84,6 @@ export class ImgFunction {
             verboseDisasm: verbose,
             describeCell: (ff, idx) => {
                 switch (ff) {
-                    case "R":
-                        return this.parent.roles[idx]?.name
                     case "B":
                     case "U":
                     case "A":
@@ -479,7 +466,6 @@ export class Image {
     bufferTable: Uint8Array[]
 
     functions: ImgFunction[]
-    roles: ImgRole[]
     dbg: DebugInfo
 
     srcmap: SrcMapResolver
@@ -623,19 +609,6 @@ export class Image {
 
         this.bultinTable = BUILTIN_STRING__VAL.slice()
 
-        this.roles = range(roleData.length / BinFmt.ROLE_HEADER_SIZE).map(
-            idx =>
-                new ImgRole(
-                    this,
-                    idx,
-                    read32(roleData, idx * BinFmt.ROLE_HEADER_SIZE),
-                    getString1(
-                        read16(roleData, idx * BinFmt.ROLE_HEADER_SIZE + 4)
-                    ),
-                    this.dbg?.roles[idx]
-                )
-        )
-
         this.functions = range(
             funDesc.length / BinFmt.FUNCTION_HEADER_SIZE
         ).map(idx => {
@@ -766,19 +739,6 @@ export class Image {
         for (let i = 0; i < this.floatTable.length; ++i) {
             r += ("     " + i).slice(-4) + ": " + this.floatTable[i] + "\n"
         }
-
-        r += `\nRoles:\n`
-        for (const role of this.roles) {
-            r +=
-                ("     " + role.index).slice(-4) +
-                ": " +
-                role.name +
-                " cls: 0x" +
-                role.serviceClass.toString(16) +
-                "\n"
-        }
-
-        r += "\n"
 
         if (this.dcfgData.length == 0) {
             r += "\nDCFG: None\n\n"

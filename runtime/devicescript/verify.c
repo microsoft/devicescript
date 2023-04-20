@@ -83,8 +83,10 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
     // ignore patch
     if (DEVS_VERSION_MAJOR(header->version) == DEVS_VERSION_MAJOR(DEVS_IMG_VERSION) &&
         DEVS_VERSION_MINOR(header->version) <= DEVS_VERSION_MINOR(DEVS_IMG_VERSION) &&
-        // 2.5.0 is first version with UTF8 layout; remove when we reach v3
-        DEVS_VERSION_MINOR(header->version) >= 5) {
+        // 2.5.0 is first version with UTF8 layout
+        // 2.7.0 is first version without static roles
+        // -> remove when we reach v3
+        DEVS_VERSION_MINOR(header->version) >= 7) {
         // OK
     } else {
         DMESG("! version mismatch");
@@ -171,15 +173,7 @@ int devs_verify(const uint8_t *imgdata, uint32_t size) {
         }
     }
 
-    for (const devs_role_desc_t *fptr = FIRST_DESC(roles); //
-         (void *)fptr < LAST_DESC(roles);                  //
-         fptr++) {
-        SET_OFF(fptr);
-        int top = fptr->service_class >> 28;
-        CHECK(1040, top == 1 || top == 2);
-        // CHECK(1041, fptr->name_idx > 0); - TODO why was this here?
-        CHECK(1042, devs_img_stridx_ok(_img, fptr->name_idx));
-    }
+    CHECK(1040, header->roles_removed.length == 0);
 
     const devs_service_spec_t *specs = FIRST_DESC(service_specs);
     const uint8_t *specs_base = (const uint8_t *)specs;

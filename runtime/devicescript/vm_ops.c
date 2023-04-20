@@ -377,25 +377,13 @@ static value_t exprx_static_spec(devs_activation_t *frame, devs_ctx_t *ctx) {
     }
 }
 
-bool devs_vm_role_ok(devs_ctx_t *ctx, uint32_t a) {
-    if (a < devs_img_num_roles(ctx->img))
-        return true;
-    devs_invalid_program(ctx, 60121);
-    return false;
-}
-
-static value_t exprx_static_role(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned idx = ctx->literal_int;
-    if (!devs_vm_role_ok(ctx, idx))
-        return devs_undefined;
-    return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, idx);
-}
-
-static value_t exprx_role_proto(devs_activation_t *frame, devs_ctx_t *ctx) {
-    unsigned idx = ctx->literal_int;
-    if (!devs_vm_role_ok(ctx, idx))
-        return devs_undefined;
-    return devs_value_from_gc_obj(ctx, devs_get_role_proto(ctx, idx));
+static value_t exprx_static_spec_proto(devs_activation_t *frame, devs_ctx_t *ctx) {
+    unsigned fidx = ctx->literal_int;
+    if (fidx >= ctx->img.header->num_service_specs) {
+        return devs_invalid_program(ctx, 60131);
+    } else {
+        return devs_value_from_gc_obj(ctx, devs_get_spec_proto(ctx, fidx));
+    }
 }
 
 value_t devs_value_bufferish(devs_ctx_t *ctx, unsigned tp, uint32_t lit) {

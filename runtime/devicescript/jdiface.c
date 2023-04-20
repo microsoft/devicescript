@@ -11,7 +11,7 @@ void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
                           unsigned arg) {
     if (ctx->error_code)
         return;
-    jd_device_service_t *serv = devs_role(ctx, role_idx)->service;
+    jd_device_service_t *serv = devs_role_service(ctx, role_idx);
     if (serv != NULL) {
         devs_regcache_entry_t *cached = devs_regcache_lookup(&ctx->regcache, role_idx, code, arg);
         if (cached != NULL) {
@@ -144,10 +144,10 @@ static void devs_jd_set_packet(devs_ctx_t *ctx, unsigned role_idx, unsigned serv
     jd_packet_t *pkt = &ctx->packet;
     pkt->_size = (sz + 4 + 3) & ~3;
     pkt->flags = JD_FRAME_FLAG_COMMAND;
-    jd_device_t *dev = jd_service_parent(devs_role(ctx, role_idx)->service);
+    jd_device_t *dev = jd_service_parent(devs_role_service(ctx, role_idx));
     pkt->device_identifier = dev->device_identifier;
     pkt->service_size = sz;
-    pkt->service_index = devs_role(ctx, role_idx)->service->service_index;
+    pkt->service_index = devs_role_service(ctx, role_idx)->service_index;
     pkt->service_command = service_command;
     if (payload)
         memcpy(pkt->data, payload, sz);
@@ -268,7 +268,7 @@ static devs_regcache_entry_t *devs_jd_update_regcache(devs_ctx_t *ctx, unsigned 
 
 static bool devs_jd_pkt_matches_role(devs_ctx_t *ctx, unsigned role_idx) {
     jd_packet_t *pkt = &ctx->packet;
-    jd_device_service_t *serv = devs_role(ctx, role_idx)->service;
+    jd_device_service_t *serv = devs_role_service(ctx, role_idx);
     return serv &&
            ((pkt->service_index == 0 && pkt->service_command == 0) ||
             serv->service_index == pkt->service_index) &&
@@ -282,7 +282,7 @@ static bool retry_soon(devs_fiber_t *fiber) {
 
 static bool role_missing(devs_fiber_t *fiber) {
     devs_ctx_t *ctx = fiber->ctx;
-    jd_device_service_t *serv = devs_role(ctx, fiber->role_idx)->service;
+    jd_device_service_t *serv = devs_role_service(ctx, fiber->role_idx);
 
     if (serv == NULL) {
         // role unbound, keep waiting, no timeout
@@ -413,8 +413,6 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
     memcpy(&ctx->packet, pkt, pkt->service_size + 16);
     pkt = &ctx->packet;
 
-    unsigned numroles = devs_img_num_roles(ctx->img);
-
     // jd_log_packet(pkt);
 
     if (jd_is_command(pkt) && pkt->device_identifier == devs_jd_server_device_id()) {
@@ -426,12 +424,8 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
 
     // DMESG("pkt %d %x / %d", pkt->service_index, pkt->service_command, pkt->service_size);
 
-    for (unsigned idx = 0; idx < numroles; ++idx) {
+    for (unsigned idx = 0; idx < ctx->num_roles; ++idx) {
         if (devs_jd_pkt_matches_role(ctx, idx)) {
-#if 0
-            DMESG("wake pkt s=%d %x / %d r=%s", pkt->service_index, pkt->service_command,
-                  pkt->service_size, devs_role(ctx, idx)->name);
-#endif
             devs_fiber_sync_now(ctx);
             devs_jd_update_all_regcache(ctx, idx);
             devs_jd_wake_role(ctx, idx);
@@ -451,9 +445,9 @@ void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role) {
         devs_trace(ctx, DEVS_TRACE_EV_ROLE_CHANGED, data, sz);
     }
 
-    unsigned numroles = devs_img_num_roles(ctx->img);
-    for (unsigned idx = 0; idx < numroles; ++idx) {
-        if (devs_role(ctx, idx) == role) {
+    for (unsigned idx = 0; idx < ctx->num_roles; ++idx) {
+        devs_role_t *r = devs_role(ctx, idx);
+        if (r && r->jdrole == role) {
             devs_regcache_free_role(&ctx->regcache, idx);
             devs_jd_reset_packet(ctx);
             devs_jd_wake_role(ctx, idx);
@@ -469,13 +463,71 @@ void devs_jd_reset_packet(devs_ctx_t *ctx) {
 
 void devs_jd_init_roles(devs_ctx_t *ctx) {
     devs_jd_free_roles(ctx); // free any previous roles
-    unsigned numroles = devs_img_num_roles(ctx->img);
-    for (unsigned idx = 0; idx < numroles; ++idx) {
-        const devs_role_desc_t *role = devs_img_get_role(ctx->img, idx);
-        ctx->roles[idx].role =
-            jd_role_alloc(devs_img_role_name(ctx->img, idx), role->service_class);
+    // jd_role_force_autobind(); TODO
+}
+
+int devs_jd_role_by_name(devs_ctx_t *ctx, value_t name) {
+    for (unsigned idx = 0; idx < ctx->num_roles; ++idx)
+        if (ctx->roles[idx] && devs_value_eq(ctx, ctx->roles[idx]->name, name))
+            return idx;
+    return -1;
+}
+
+int devs_jd_alloc_role(devs_ctx_t *ctx, value_t name, uint32_t srv_class) {
+    const devs_service_spec_t *spec = devs_role_spec_for_class(ctx, srv_class);
+    if (spec == NULL)
+        return -2;
+
+    if (devs_is_undefined(name)) {
+        const char *spec_name = devs_get_static_utf8(ctx, spec->name_idx, NULL);
+        for (unsigned suff = 0;; suff++) {
+            name = devs_string_sprintf(ctx, "%s%u", spec_name, suff);
+            if (devs_jd_role_by_name(ctx, name) < 0)
+                break;
+        }
     }
-    jd_role_force_autobind();
+
+    if (devs_jd_role_by_name(ctx, name) >= 0)
+        return -3;
+
+    devs_value_pin(ctx, name);
+    int idx = -1;
+    const char *n = devs_string_get_utf8(ctx, name, NULL);
+    if (!n)
+        goto exit;
+    devs_role_t *r = devs_try_alloc(ctx, sizeof(devs_role_t));
+    if (!r)
+        goto exit;
+    idx = 0;
+    while (idx < ctx->num_roles) {
+        if (ctx->roles[idx] == NULL)
+            break;
+    }
+    if (idx >= ctx->num_roles) {
+        int newsz = ctx->num_roles * 2 + 2;
+        devs_role_t **rr = devs_try_alloc(ctx, newsz * sizeof(void *));
+        if (!rr) {
+            devs_free(ctx, r);
+            idx = -1;
+            goto exit;
+        }
+        memcpy(rr, ctx->roles, ctx->num_roles * sizeof(void *));
+        devs_free(ctx, ctx->roles);
+        ctx->roles = rr;
+        ctx->num_roles = newsz;
+    }
+
+    if (NULL == (r->jdrole = jd_role_alloc(n, srv_class))) {
+        devs_free(ctx, r);
+        idx = -1;
+    } else {
+        r->name = name;
+        ctx->roles[idx] = r;
+    }
+
+exit:
+    devs_value_unpin(ctx, name);
+    return idx;
 }
 
 void devs_jd_free_roles(devs_ctx_t *ctx) {

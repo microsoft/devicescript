@@ -46,7 +46,7 @@ export enum Op {
     STMT0_ALLOC_MAP = 31,
     STMT1_ALLOC_ARRAY = 32, // initial_size
     STMT1_ALLOC_BUFFER = 33, // size
-    EXPRx_STATIC_ROLE = 34, // *role_idx
+    EXPRx_STATIC_SPEC_PROTO = 34, // spec_idx.prototype
     EXPRx_STATIC_BUFFER = 35, // *buffer_idx
     EXPRx_STATIC_BUILTIN_STRING = 36, // *builtin_idx
     EXPRx_STATIC_ASCII_STRING = 37, // *ascii_idx
@@ -56,7 +56,7 @@ export enum Op {
     EXPRx_LITERAL = 40, // *value
     EXPRx_LITERAL_F64 = 41, // *f64_idx
     EXPRx_BUILTIN_OBJECT = 1, // *builtin_object
-    EXPRx_ROLE_PROTO = 42, // role_idx.prototype
+    STMT0_REMOVED_42 = 42,
     EXPR3_LOAD_BUFFER = 43, // buffer, numfmt, offset
     EXPR0_RET_VAL = 44,
     EXPR1_TYPEOF = 45, // object
@@ -99,22 +99,21 @@ export enum Op {
 }
 
 export const OP_PROPS =
-    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x20\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42\x42\x11\x60"
+    "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x10\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42\x42\x11\x60"
 export const OP_TYPES =
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x05\x04\x09\x09\x09\x08\x01\x01\x05\x01\x0b\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06\x06\x0c\x0b"
+    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x0b\x04\x09\x09\x09\x08\x01\x01\x0c\x01\x0b\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06\x06\x0c\x0b"
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
-    IMG_VERSION_MINOR = 6,
-    IMG_VERSION_PATCH = 2,
-    IMG_VERSION = 0x2060002,
+    IMG_VERSION_MINOR = 7,
+    IMG_VERSION_PATCH = 0,
+    IMG_VERSION = 0x2070000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
     FIX_HEADER_SIZE = 32,
     SECTION_HEADER_SIZE = 8,
     FUNCTION_HEADER_SIZE = 16,
-    ROLE_HEADER_SIZE = 8,
     ASCII_HEADER_SIZE = 2,
     UTF8_HEADER_SIZE = 4,
     UTF8_TABLE_SHIFT = 4,
@@ -282,7 +281,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 168,
+    __MAX = 169,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -452,6 +451,7 @@ export enum BuiltInString {
     NOTIMPLEMENTED = 166,
     DELAY = 167,
     FROMCHARCODE = 168,
+    _ALLOCROLE = 169,
 }
 
 export const OP_PRINT_FMTS = [
@@ -489,7 +489,7 @@ export const OP_PRINT_FMTS = [
     "ALLOC_MAP ",
     "ALLOC_ARRAY initial_size=%e",
     "ALLOC_BUFFER size=%e",
-    "%R",
+    "%S.prototype",
     "%B",
     "%I",
     "%A",
@@ -497,7 +497,7 @@ export const OP_PRINT_FMTS = [
     "%F",
     "%e",
     "%D",
-    "%R.prototype",
+    "REMOVED_42 ",
     "load_buffer(%e, %n, offset=%e)",
     "ret_val()",
     "typeof(%e)",
@@ -736,6 +736,7 @@ export const BUILTIN_STRING__VAL = [
     "notImplemented",
     "delay",
     "fromCharCode",
+    "_allocRole",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

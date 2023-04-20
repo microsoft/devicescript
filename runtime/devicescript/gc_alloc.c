@@ -204,12 +204,16 @@ static void mark_roots(devs_gc_t *gc) {
         scan_gc_obj(ctx, p, ROOT_SCAN_DEPTH);
     }
 
-    for (unsigned i = 0; i < devs_img_num_roles(ctx->img); ++i) {
-        scan_gc_obj(ctx, (block_t *)ctx->roles[i].attached, ROOT_SCAN_DEPTH);
-        scan_gc_obj(ctx, (block_t *)ctx->roles[i].dynproto, ROOT_SCAN_DEPTH);
+    for (unsigned i = 0; i < ctx->num_roles; ++i) {
+        devs_role_t *r = devs_role(ctx, i);
+        if (r) {
+            scan_value(ctx, r->name, ROOT_SCAN_DEPTH);
+            scan_gc_obj(ctx, (block_t *)r->attached, ROOT_SCAN_DEPTH);
+        }
     }
 
     scan_gc_obj(ctx, (block_t *)ctx->fn_protos, ROOT_SCAN_DEPTH);
+    scan_gc_obj(ctx, (block_t *)ctx->spec_protos, ROOT_SCAN_DEPTH);
     scan_value(ctx, ctx->exn_val, ROOT_SCAN_DEPTH);
     scan_value(ctx, ctx->diag_field, ROOT_SCAN_DEPTH);
 

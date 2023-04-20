@@ -495,11 +495,13 @@ static value_t value_from_tag_v0(devs_ctx_t *ctx, uint8_t tag, uint32_t v0) {
             return devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, v0);
         break;
 
-    case JD_DEVS_DBG_VALUE_TAG_IMG_ROLE:
-        if (v0 < devs_img_num_roles(ctx->img))
-            return ctx->roles[v0].attached ? devs_value_from_gc_obj(ctx, ctx->roles[v0].attached)
-                                           : devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, v0);
+    case JD_DEVS_DBG_VALUE_TAG_IMG_ROLE: {
+        devs_role_t *r = devs_role(ctx, v0);
+        if (r)
+            return r->attached ? devs_value_from_gc_obj(ctx, r->attached)
+                               : devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, v0);
         break;
+    }
 
     case JD_DEVS_DBG_VALUE_TAG_OBJ_ANY:
         return gcref_to_value(ctx, v0);

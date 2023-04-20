@@ -6,7 +6,6 @@ STATIC_ASSERT(sizeof(devs_img_section_t) == DEVS_SECTION_HEADER_SIZE);
 STATIC_ASSERT(sizeof(devs_img_header_t) ==
               DEVS_FIX_HEADER_SIZE + DEVS_SECTION_HEADER_SIZE * DEVS_NUM_IMG_SECTIONS);
 STATIC_ASSERT(sizeof(devs_function_desc_t) == DEVS_FUNCTION_HEADER_SIZE);
-STATIC_ASSERT(sizeof(devs_role_desc_t) == DEVS_ROLE_HEADER_SIZE);
 
 static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
     ctx->img.data = img;
@@ -14,8 +13,9 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
     ctx->gc = devs_gc_create();
 
     ctx->globals = devs_try_alloc(ctx, sizeof(value_t) * ctx->img.header->num_globals);
-    ctx->roles = devs_try_alloc(ctx, sizeof(devs_role_t) * devs_img_num_roles(ctx->img));
+
     ctx->fn_protos = devs_short_map_try_alloc(ctx);
+    ctx->spec_protos = devs_short_map_try_alloc(ctx);
 
     if (ctx->error_code)
         return;
@@ -149,6 +149,8 @@ static void clear_ctx(devs_ctx_t *ctx) {
     devs_regcache_free_all(&ctx->regcache);
     devs_fiber_free_all_fibers(ctx);
     devs_free(ctx, ctx->globals);
+    for (unsigned i = 0; i < ctx->num_roles; ++i)
+        devs_free(ctx, ctx->roles[i]);
     devs_free(ctx, ctx->roles);
     devs_gc_destroy(ctx->gc);
     memset(ctx, 0, sizeof(*ctx));

@@ -344,6 +344,14 @@ const devs_packet_spec_t *devs_decode_role_packet(devs_ctx_t *ctx, value_t v, un
     return devs_img_get_packet_spec(ctx->img, h >> DEVS_ROLE_BITS);
 }
 
+int devs_spec_idx(devs_ctx_t *ctx, const devs_service_spec_t *spec) {
+    if (spec == NULL)
+        return -1;
+    unsigned idx = spec - devs_img_get_service_spec(ctx->img, 0);
+    JD_ASSERT(idx < ctx->img.header->num_service_specs);
+    return idx;
+}
+
 const devs_service_spec_t *devs_role_spec_for_class(devs_ctx_t *ctx, uint32_t cls) {
     for (unsigned i = 0; i < ctx->img.header->num_service_specs; ++i) {
         const devs_service_spec_t *spec = devs_img_get_service_spec(ctx->img, i);
@@ -373,10 +381,33 @@ const devs_service_spec_t *devs_role_spec(devs_ctx_t *ctx, unsigned roleidx) {
         return devs_img_get_service_spec(ctx->img, specidx);
     }
 
-    if (roleidx >= devs_img_num_roles(ctx->img))
+    devs_role_t *r = devs_role(ctx, roleidx);
+
+    if (!r)
         return NULL;
 
-    return devs_role_spec_for_class(ctx, devs_img_get_role(ctx->img, roleidx)->service_class);
+    return devs_role_spec_for_class(ctx, r->jdrole->service_class);
+}
+
+devs_role_t *devs_role_or_fail(devs_ctx_t *ctx, unsigned roleidx) {
+    devs_role_t *r = devs_role(ctx, roleidx);
+    if (r == NULL)
+        devs_invalid_program(ctx, 60130);
+    return r;
+}
+
+jd_device_service_t *devs_role_service(devs_ctx_t *ctx, unsigned roleidx) {
+    devs_role_t *r = devs_role(ctx, roleidx);
+    if (r == NULL)
+        return NULL;
+    return r->jdrole->service;
+}
+
+const char *devs_role_name(devs_ctx_t *ctx, unsigned idx) {
+    devs_role_t *r = devs_role(ctx, idx);
+    if (r == NULL)
+        return "???";
+    return r->jdrole->name;
 }
 
 const devs_service_spec_t *devs_get_base_spec(devs_ctx_t *ctx, const devs_service_spec_t *spec) {
@@ -639,21 +670,30 @@ static devs_maplike_t *devs_get_static_proto(devs_ctx_t *ctx, int tp, unsigned a
     }
 }
 
-devs_map_t *devs_get_role_proto(devs_ctx_t *ctx, unsigned roleidx) {
-    devs_map_t *m = ctx->roles[roleidx].dynproto;
-    if (m)
-        return m;
-    m = devs_any_try_alloc(ctx, DEVS_GC_TAG_HALF_STATIC_MAP, sizeof(devs_map_t));
+devs_map_t *devs_get_spec_proto(devs_ctx_t *ctx, uint32_t spec_idx) {
+    value_t r = devs_short_map_get(ctx, ctx->spec_protos, spec_idx);
+    if (!devs_is_undefined(r))
+        return devs_value_to_gc_obj(ctx, r);
+
+    devs_map_t *m = devs_any_try_alloc(ctx, DEVS_GC_TAG_HALF_STATIC_MAP, sizeof(devs_map_t));
     if (m == NULL)
         return NULL;
-    m->proto = (const void *)devs_role_spec(ctx, roleidx);
-    uint32_t cls = ctx->roles[roleidx].role->service_class;
-    for (unsigned i = 0; i < devs_img_num_roles(ctx->img); ++i) {
-        if (ctx->roles[i].role->service_class == cls) {
-            ctx->roles[i].dynproto = m;
-        }
-    }
+    m->proto = (const void *)devs_img_get_service_spec(ctx->img, spec_idx);
+    devs_short_map_set(ctx, ctx->spec_protos, spec_idx, devs_value_from_gc_obj(ctx, m));
     return m;
+}
+
+devs_map_t *devs_get_role_proto(devs_ctx_t *ctx, unsigned roleidx) {
+    devs_role_t *r = devs_role(ctx, roleidx);
+    if (!r)
+        return NULL;
+
+    const devs_service_spec_t *spec = devs_role_spec_for_class(ctx, r->jdrole->service_class);
+    int idx = devs_spec_idx(ctx, spec);
+    if (idx < 0)
+        return NULL; // ???
+
+    return devs_get_spec_proto(ctx, idx);
 }
 
 static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsigned attach_flags) {
@@ -704,7 +744,10 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
 
     if (htp == DEVS_HANDLE_TYPE_ROLE) {
         unsigned roleidx = devs_handle_value(v);
-        const void *r = ctx->roles[roleidx].attached;
+        devs_role_t *rl = devs_role(ctx, roleidx);
+        if (!rl)
+            return NULL;
+        const void *r = rl->attached;
         if (r || (attach_flags & ATTACH_ENUM))
             return r;
         r = devs_get_role_proto(ctx, roleidx);
@@ -712,7 +755,7 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
             return NULL;
         if (attach_flags & ATTACH_RW) {
             devs_map_t *m = devs_map_try_alloc(ctx, r);
-            ctx->roles[roleidx].attached = m;
+            rl->attached = m;
             r = m;
         }
         return r;

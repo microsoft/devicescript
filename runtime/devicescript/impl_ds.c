@@ -166,3 +166,29 @@ void fun2_DeviceScript__serverSend(devs_ctx_t *ctx) {
 
     devs_jd_send_raw(ctx);
 }
+
+void fun2_DeviceScript__allocRole(devs_ctx_t *ctx) {
+    unsigned service_cls = devs_arg_int(ctx, 0);
+    value_t name = devs_arg(ctx, 1);
+    if (!devs_is_undefined(name) && !devs_is_string(ctx, name)) {
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_STRING, name);
+        return;
+    }
+    if ((service_cls & 0xF0000000) != 0x20000000) {
+        devs_throw_range_error(ctx, "0x2xxx_xxxx expected for service class");
+        return;
+    }
+    int r = devs_jd_alloc_role(ctx, name, service_cls);
+    if (r == -2) {
+        devs_throw_type_error(ctx, "spec missing: %x", service_cls);
+        return;
+    }
+    if (r == -3) {
+        devs_throw_range_error(ctx, "role name '%s' already used",
+                               devs_string_get_utf8(ctx, name, NULL));
+        return;
+    }
+    if (r < 0)
+        return; // OOM
+    devs_ret(ctx, devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, r));
+}

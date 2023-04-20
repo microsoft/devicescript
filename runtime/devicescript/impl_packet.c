@@ -17,7 +17,7 @@ devs_packet_t *devs_value_to_packet_or_throw(devs_ctx_t *ctx, value_t self) {
 
 value_t prop_DsPacket_role(devs_ctx_t *ctx, value_t self) {
     SELF();
-    if (pkt->roleidx < devs_img_num_roles(ctx->img))
+    if (pkt->roleidx < ctx->num_roles)
         return devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, pkt->roleidx);
     return devs_undefined;
 }
