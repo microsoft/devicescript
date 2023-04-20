@@ -148,6 +148,10 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         r +=
             wrapComment("devs", "This service cannot be accessed via role.") +
             "    private constructor()\n"
+    else
+        r +=
+            wrapComment("devs", "Create new service client.") +
+            "    constructor(roleName?: string)\n"
 
     r +=
         wrapComment("devs", `Static specification for ${info.name}`) +

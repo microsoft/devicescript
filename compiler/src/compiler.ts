@@ -934,7 +934,12 @@ class Program implements TopOpWriter {
             this.useSpec(spec)
             this.startServices.push(obj)
             if (this.isIgnored(expr)) return unit()
-            else return this.allocRole(spec)
+            else {
+                const name = spec.name
+                    ? this.writer.emitString(spec.name)
+                    : null
+                return this.allocRole(spec, name)
+            }
         } else if (nn == serversPref + "hardwareConfig") {
             this.requireArgs(expr, 1)
             const arg = expr.arguments[0]
@@ -3271,13 +3276,13 @@ class Program implements TopOpWriter {
         return this.retVal()
     }
 
-    private allocRole(spec: jdspec.ServiceSpec, name?: string) {
+    private allocRole(spec: jdspec.ServiceSpec, name?: Value) {
         const wr = this.writer
         this.useSpec(spec)
         wr.emitCall(
             wr.dsMember(BuiltInString._ALLOCROLE),
             literal(spec.classIdentifier),
-            ...(name ? [wr.emitString(name)] : [])
+            ...(name ? [name] : [])
         )
         return this.retVal()
     }
@@ -3291,9 +3296,9 @@ class Program implements TopOpWriter {
             true
         )
         if (spec) {
-            // TODO allow name parameter
-            this.requireArgs(expr, 0)
-            return this.allocRole(spec)
+            if (expr.arguments?.[0])
+                return this.allocRole(spec, this.emitExpr(expr.arguments[0]))
+            else return this.allocRole(spec)
         }
 
         const desc: CallLike = {
