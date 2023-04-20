@@ -1,18 +1,41 @@
 import { AsyncValue, RelayVariant, Relay } from "@devicescript/core"
-import { RelayServerSpec } from "@devicescript/core"
-import { Server } from "@devicescript/server"
+import { RelayServerSpec, OutputPin } from "@devicescript/core"
+import { Server, ServerOptions, startServer } from "@devicescript/server"
 
-export class GPIORelayServer extends Server implements RelayServerSpec {
-    constructor(name: string) {
-        super(Relay.spec, { instanceName: name })
+class GPIORelayServer extends Server implements RelayServerSpec {
+    private _active: boolean = false
+    private _variant: RelayVariant | undefined
+    constructor(
+        readonly pin: OutputPin,
+        options?: ServerOptions & { variant?: RelayVariant }
+    ) {
+        super(Relay.spec, options)
+        this._variant = options?.variant
+
+        this.sync()
     }
     active(): AsyncValue<boolean> {
-        throw new Error("Method not implemented.")
+        return this._active
     }
     set_active(value: boolean): AsyncValue<void> {
-        throw new Error("Method not implemented.")
+        this._active = value
+        this.sync()
     }
+    private sync() {
+        this.pin.write(this._active ? 1 : 0)
+    }
+
     variant(): AsyncValue<RelayVariant> {
-        return RelayVariant.SolidState
+        return this._variant
     }
+}
+
+export function startRelay(
+    pin: OutputPin,
+    options?: ServerOptions & { variant?: RelayVariant }
+): Relay {
+    const server = new GPIORelayServer(pin, options)
+    startServer(server)
+    // create client
+    return undefined
 }
