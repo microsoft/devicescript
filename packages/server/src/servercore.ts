@@ -1,12 +1,35 @@
 import * as ds from "@devicescript/core"
 
+export interface ServerOptions {
+    instanceName?: string
+}
+
 export class Server implements ds.ServerInterface {
     serviceIndex: number
     debug: boolean
-    constructor(public spec: ds.ServiceSpec) {}
+    private readonly _instanceName: string
+    private _stateCode: number = undefined
+
+    constructor(public spec: ds.ServiceSpec, options?: ServerOptions) {
+        this._instanceName = options?.instanceName
+    }
+
     async _send(pkt: ds.Packet) {
         if (this.debug) console.debug("Out SRV", pkt, pkt.spec)
         await ds._serverSend(this.serviceIndex, pkt)
+    }
+
+    instanceName(): ds.AsyncValue<string> {
+        return this._instanceName
+    }
+
+    statusCode(): ds.AsyncValue<[number, number]> {
+        const v = this._stateCode
+        return v !== undefined ? [(v & 0xffff) >> 16, v & 0xffff] : [0, 0]
+    }
+
+    set_statusCode(code: number, vendorCode: number) {
+        this._stateCode = (code << 16) | (vendorCode & 0xffff)
     }
 }
 
@@ -96,9 +119,13 @@ async function _onServerPacket(pkt: ds.Packet) {
             const m = methods[pkt.spec.name]
             if (m) {
                 if (pkt.isRegGet) {
-                    const resp = pkt.spec.encode(await m())
-                    await server._send(resp)
-                    return
+                    const mr = await m()
+                    if (mr !== undefined) {
+                        // treat undefined as not implemented
+                        const resp = pkt.spec.encode(mr)
+                        await server._send(resp)
+                        return
+                    }
                 } else if (pkt.isAction) {
                     const v = await m(pkt.decode())
                     if (pkt.spec.response)
