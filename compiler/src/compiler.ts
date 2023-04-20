@@ -268,22 +268,6 @@ function vkindToDbg(vkind: VariableKind): DebugVarType {
     }
 }
 
-class BufferLit extends Cell {
-    constructor(
-        definition: ts.VariableDeclaration,
-        scope: Cell[],
-        public litValue: Uint8Array
-    ) {
-        super(definition, scope)
-    }
-    emit(wr: OpWriter): Value {
-        return wr.emitString(this.litValue)
-    }
-    toString() {
-        return `bufferLit ${this.getName()}`
-    }
-}
-
 class FunctionDecl extends Cell {
     proc: Procedure
 
@@ -534,7 +518,6 @@ interface PossiblyConstDeclaration extends ts.Declaration {
 }
 
 class Program implements TopOpWriter {
-    bufferLits: BufferLit[] = []
     usedSpecs: jdspec.ServiceSpec[] = []
     functions: FunctionDecl[] = []
     globals: Variable[] = []
@@ -949,21 +932,6 @@ class Program implements TopOpWriter {
         }
 
         return undefined
-    }
-
-    private parseRole(decl: ts.VariableDeclaration): Cell {
-        if (this.getCellAtLocation(decl)) return
-
-        const expr = decl.initializer
-
-        const buflit = this.bufferLiteral(expr)
-        if (buflit)
-            return this.assignCell(
-                decl,
-                new BufferLit(decl, this.bufferLits, buflit)
-            )
-
-        return null
     }
 
     private emitStore(trg: Variable, src: Value) {
@@ -2038,10 +2006,6 @@ class Program implements TopOpWriter {
         decl: ts.VariableDeclaration | ts.ParameterDeclaration
     ) {
         const topLevel = this.isTopLevel(decl)
-        if (ts.isVariableDeclaration(decl) && idName(decl.name) && topLevel) {
-            if (this.parseRole(decl)) return
-        }
-
         const doAssign = (
             decl:
                 | ts.VariableDeclaration
@@ -2304,9 +2268,7 @@ class Program implements TopOpWriter {
     }
 
     private bufferLiteral(expr: Expr): Uint8Array {
-        if (!expr) return undefined
-
-        if (ts.isTaggedTemplateExpression(expr) && idName(expr.tag) == "hex") {
+        if (expr && ts.isTaggedTemplateExpression(expr) && idName(expr.tag) == "hex") {
             if (!ts.isNoSubstitutionTemplateLiteral(expr.template))
                 throwError(
                     expr,
@@ -2318,9 +2280,6 @@ class Program implements TopOpWriter {
                 throwError(expr, "invalid characters in hex")
             return fromHex(hexbuf)
         }
-
-        const cell = this.getCellAtLocation(expr)
-        if (cell instanceof BufferLit) return cell.litValue
 
         return undefined
     }
