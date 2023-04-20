@@ -806,7 +806,7 @@ async function testSetTimeout() {
 
     id = setTimeout(() => {
         q = 17
-    }, 32)
+    }, 64)
 
     await ds.delay(100)
     ds.assert(q === 3, `expected 3, got ${q}`)
