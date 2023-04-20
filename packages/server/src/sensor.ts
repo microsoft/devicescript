@@ -23,7 +23,7 @@ export class SensorServer<T extends ds.SensorServerSpec>
         options?: SensorServerOptions
     ) {
         super(spec, options)
-        const { interval = 500 } = options || {}
+        const interval = options?.interval || 500
         this.set_streamingInterval(interval)
         this._preferredInterval = this._streamingInterval
     }
