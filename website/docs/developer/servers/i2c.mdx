@@ -21,14 +21,3 @@ await i2c.writeReg(address, register, value)
 // highlight-next-line
 const readValue = await i2c.readReg(address, register)
 ```
-
-The [drivers builtin package](/developer/packages) provides drivers for I2C peripherals.
-
-```ts
-import { startSHTC3 } from "@devicescript/drivers"
-
-await startSHTC3()
-const t = new ds.Temperature()
-const h = new ds.Humidity()
-// ...
-```

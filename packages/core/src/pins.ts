@@ -12,9 +12,9 @@ class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
     _label: string
     _mode: ds.GPIOMode
     _caps: ds.GPIOCapabilities
-    _value: ds.DigialValue
+    _value: ds.DigitalValue
 
-    _change: ds.Emitter<ds.DigialValue>
+    _change: ds.Emitter<ds.DigitalValue>
 
     private async init() {
         if (this._intId !== undefined) return
@@ -48,7 +48,7 @@ class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
         console.debug(`init GPIO${self.gpio} -> int:${this._intId} ${this._label}`)
     }
 
-    async read(): Promise<ds.DigialValue> {
+    async read(): Promise<ds.DigitalValue> {
         await this.init()
 
         if ((this._mode & ds.GPIOMode.BaseModeMask) !== ds.GPIOMode.Input)
@@ -70,7 +70,7 @@ class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
         this._mode = mode
     }
 
-    async write(v: ds.DigialValue): Promise<void> {
+    async write(v: ds.DigitalValue): Promise<void> {
         await this.init()
         if ((this._mode & ds.GPIOMode.BaseModeMask) !== ds.GPIOMode.Output)
             throw new RangeError("pin not in output mode")
@@ -79,7 +79,7 @@ class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
 
     constructor(public gpio: number) {}
 
-    subscribe(f: ds.Handler<ds.DigialValue>): ds.Unsubscribe {
+    subscribe(f: ds.Handler<ds.DigitalValue>): ds.Unsubscribe {
         if (!this._change) this._change = ds.emitter()
         return this._change.subscribe(f)
     }
@@ -93,7 +93,7 @@ let _pins: PinImpl[]
             const chg: PinImpl[] = []
             for (const p of _pins) {
                 if (p._intId !== undefined) {
-                    const v: ds.DigialValue =
+                    const v: ds.DigitalValue =
                         buf[p._intId >> 3] & (1 << (p._intId & 7)) ? 1 : 0
                     if (v !== p._value) {
                         p._value = v
