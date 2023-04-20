@@ -1,54 +1,69 @@
 import * as ds from "@devicescript/core"
-import { i2c } from "@devicescript/i2c"
-import { DriverError, throttle } from "./core"
+import { DriverError } from "./core"
 import { startHumidity, startTemperature } from "./servers"
+import { I2CSensorDriver } from "./driver"
+import { sleep } from "@devicescript/core"
 
-// low level i2c comms
-const addr = 0x38
-async function status() {
-    return (await i2c.readBuf(addr, 1))[0]
-}
-async function waitBusy() {
-    const busy = 0x80
-    while ((await status()) & busy) await ds.sleep(10)
-}
-async function init() {
-    const ok = 0x08
-    await i2c.writeBuf(addr, hex`BA`) // reset
-    await ds.sleep(20)
-    await i2c.writeBuf(addr, hex`E10800`) // calibrate
-    await waitBusy()
-    if (!((await status()) & ok)) throw new DriverError("can't init AHT20")
-}
+const AHT20_ADDRESS = 0x38
+const AHT20_BUSY = 0x80
+const AHT20_OK = 0x08
+const AHT20_READ_THROTTLE = 500
 
-async function read() {
-    await i2c.writeBuf(addr, hex`AC3300`)
-    await waitBusy()
-    const data = await i2c.readBuf(addr, 6)
+class AHT20Driver extends I2CSensorDriver<{
+    humidity: number
+    temperature: number
+}> {
+    constructor() {
+        super(AHT20_ADDRESS, { readCacheTime: AHT20_READ_THROTTLE })
+    }
 
-    const h0 = (data[1] << 12) | (data[2] << 4) | (data[3] >> 4)
-    const humidity = h0 * (100 / 0x100000)
-    const t0 = ((data[3] & 0xf) << 16) | (data[4] << 8) | data[5]
-    const temperature = t0 * (200.0 / 0x100000) - 50
+    private async status() {
+        return (await this.readBuf(1))[0]
+    }
 
-    return { humidity, temperature }
+    private async waitBusy() {
+        while ((await this.status()) & AHT20_BUSY) await ds.sleep(10)
+    }
+
+    override async initDriver() {
+        await this.writeBuf(hex`BA`) // reset
+        await sleep(20)
+        await this.writeBuf(hex`E10800`) // calibrate
+        await this.waitBusy()
+        if (!((await this.status()) & AHT20_OK))
+            throw new DriverError("can't init AHT20")
+    }
+
+    override async readData() {
+        await this.writeBuf(hex`AC3300`)
+        await this.waitBusy()
+        const data = await this.readBuf(6)
+
+        const h0 = (data[1] << 12) | (data[2] << 4) | (data[3] >> 4)
+        const humidity = h0 * (100 / 0x100000)
+        const t0 = ((data[3] & 0xf) << 16) | (data[4] << 8) | data[5]
+        const temperature = t0 * (200.0 / 0x100000) - 50
+
+        return { humidity, temperature }
+    }
 }
 
 /**
  * Start driver for AHT20 temperature/humidity sensor at I2C address `0x38`.
  * @link https://asairsensors.com/wp-content/uploads/2021/09/Data-Sheet-AHT20-Humidity-and-Temperature-Sensor-ASAIR-V1.0.03.pdf Datasheet
+ * @throws DriverError
  */
 export async function startAHT20() {
-    await init()
-    const readThr = throttle(500, read)
+    const driver = new AHT20Driver()
+    await driver.init()
     startTemperature({
         min: -40,
         max: 85,
         error: 1.5,
-        read: async () => (await readThr()).temperature,
+        read: async () => (await driver.read()).temperature,
     })
     startHumidity({
         error: 4,
-        read: async () => (await readThr()).humidity,
+        read: async () => (await driver.read()).humidity,
     })
 }
