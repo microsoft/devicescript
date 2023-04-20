@@ -1,0 +1,79 @@
+---
+description: Digital GPIO
+title: Digital IO
+sidebar_position: 49
+---
+
+# Digital IO
+
+DeviceScript provides access to digital gpio operations on [pins](/developer/servers/pins), that do not require precise real time timings.
+
+It is recommened to encapsulate the gpio access into server implementation as they are rather low level.
+
+## Mode
+
+The pin can be access through the generic `gpio` function or through board specific packages
+that provide predefined pin mappings (see [pins](pins)).
+
+You can configure the input/output mode through `setMode`.
+
+```ts
+import { gpio, GPIOMode } from "@devicescript/core"
+
+// p0 -> output
+const p0 = gpio(0)
+// highlight-next-line
+await p0.setMode(GPIOMode.Output)
+
+// P1 -> input
+const p1 = gpio(1)
+// highlight-next-line
+await p1.setMode(GPIOMode.Input)
+```
+
+## Output
+
+Use `write` to set the output value of a pin. This example flips a pin state every second.
+
+```ts
+import { gpio, GPIOMode } from "@devicescript/core"
+
+const p0 = gpio(0)
+await p0.setMode(GPIOMode.Output)
+
+let loop = 0
+setInterval(async () => {
+    // highlight-next-line
+    await p0.write(loop++ % 2 ? 1 : 0)
+}, 1000)
+```
+
+## Input
+
+Use `read` to read the input value of a pin. This example reads the input value every second.
+
+```ts
+import { gpio, GPIOMode } from "@devicescript/core"
+
+const p1 = gpio(1)
+await p1.setMode(GPIOMode.Input)
+
+// polling read pin
+setInterval(async () => {
+    // higlight-next-line
+    const v = await p1.read()
+    console.log({ poll: v })
+}, 1000)
+```
+
+Use `subscrive` to run code whenever the pin changes state.
+
+```ts
+import { gpio, GPIOMode } from "@devicescript/core"
+
+const p1 = gpio(1)
+await p1.setMode(GPIOMode.Input)
+
+// highlight-next-line
+p1.subscribe(v => console.log({ sub: v }))
+```

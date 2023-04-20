@@ -505,19 +505,37 @@ declare module "@devicescript/core" {
     // Pins
     //
 
-    export type DigialValue = 0 | 1
+    /**
+     * Digital pin value, 0 or 1.
+     */
+    export type DigitalValue = 0 | 1
+    /**
+     * Digital high value
+     */
+    export const HIGH = 1
+    /**
+     * Digital low value
+     */
+    export const LOW = 0
 
     export interface PinBase {
+        /**
+         * hardware pin number
+         */
         gpio: number
+        /**
+         * Configure pin mode.
+         * @param mode desired mode
+         */
         setMode(mode: GPIOMode): Promise<void>
     }
 
     /**
      * Represents pin capable of digital output.
      */
-    export interface InputPin extends PinBase, Subscriber<DigialValue> {
+    export interface InputPin extends PinBase, Subscriber<DigitalValue> {
         _inputPinBrand: unknown
-        read(): Promise<DigialValue>
+        read(): Promise<DigitalValue>
     }
 
     /**
@@ -525,7 +543,7 @@ declare module "@devicescript/core" {
      */
     export interface OutputPin extends PinBase {
         _outputPinBrand: unknown
-        write(v: DigialValue): Promise<void>
+        write(v: DigitalValue): Promise<void>
     }
 
     /**

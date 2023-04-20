@@ -1,8 +1,12 @@
 import * as ds from "@devicescript/core"
-import { Server } from "./servercore"
+import { Server, ServerOptions } from "./servercore"
 
 const minInterval = 100
 const maxInterval = 3600 * 1000
+
+export interface SensorServerOptions extends ServerOptions {
+    interval?: number
+}
 
 export class SensorServer<T extends ds.SensorServerSpec>
     extends Server
@@ -16,9 +20,10 @@ export class SensorServer<T extends ds.SensorServerSpec>
     constructor(
         spec: ds.ServiceSpec,
         public readingName: keyof T & string,
-        interval = 500
+        options?: SensorServerOptions
     ) {
-        super(spec)
+        super(spec, options)
+        const interval = options?.interval || 500
         this.set_streamingInterval(interval)
         this._preferredInterval = this._streamingInterval
     }
