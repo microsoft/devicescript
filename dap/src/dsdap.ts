@@ -817,8 +817,7 @@ export class DsDapSession extends DebugSession {
             }
 
             case DevsDbgValueTag.ImgRole: {
-                const r = this.img.roles[v.v0]
-                if (r) return `[Role ${r.name}]`
+                return `[Role #${v.v0}]`
                 break
             }
 
@@ -830,11 +829,8 @@ export class DsDapSession extends DebugSession {
 
             case DevsDbgValueTag.ImgRoleMember: {
                 const mask = (1 << BinFmt.ROLE_BITS) - 1
-                const r = this.img.roles[v.v0 & mask]
-                if (r)
-                    return `[RoleMember ${r.name} @${
-                        v.v0 >>> BinFmt.ROLE_BITS
-                    }]`
+                const off = v.v0 >>> BinFmt.ROLE_BITS
+                return `[RoleMember #${v.v0 & mask} @${off}]`
                 break
             }
 
