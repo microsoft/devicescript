@@ -1,6 +1,6 @@
 import { AsyncValue, I2C, millis } from "@devicescript/core"
 import { i2c } from "@devicescript/i2c"
-import { throttle } from "./core"
+import { DriverError, throttle } from "./core"
 
 export interface I2CDriverOptions {
     /**
@@ -32,7 +32,20 @@ export abstract class I2CDriver {
      * Initializes the I2C device
      * @throws DriverError
      */
-    abstract init(): Promise<void>
+    async init(): Promise<void> {
+        try {
+            await this.initDriver()
+        } catch (e) {
+            if (e instanceof DriverError) throw e
+            throw new DriverError("I2C device not found or malfunctioning.")
+        }
+    }
+
+    /**
+     * Initializes the I2C device
+     * @throws I2CError
+     */
+    protected abstract initDriver(): Promise<void>
 
     /**
      * Execute I2C transaction

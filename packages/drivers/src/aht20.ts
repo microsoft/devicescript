@@ -25,7 +25,7 @@ class AHT20Driver extends I2CSensorDriver<{
         while ((await this.status()) & AHT20_BUSY) await ds.sleep(10)
     }
 
-    override async init() {
+    override async initDriver() {
         await this.writeBuf(hex`BA`) // reset
         await sleep(20)
         await this.writeBuf(hex`E10800`) // calibrate
