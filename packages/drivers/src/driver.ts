@@ -116,7 +116,7 @@ export abstract class I2CDriver {
      * @throws I2CError
      */
     async writeBuf(b: Buffer): Promise<void> {
-        return this.client.writeBuf(this.devAddr, b)
+        return await this.client.writeBuf(this.devAddr, b)
     }
 }
 
