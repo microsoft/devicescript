@@ -31,9 +31,9 @@
     },
     "scripts": {
         "setup": "devicescript init",
-        "build:devicescript": "devicescript build src/main.ts",
+        "build:devicescript": "devicescript build src/main.ts -F allFunctions",
         "build": "yarn build:devicescript",
-        "watch:devicescript": "devicescript devtools src/main.ts",
+        "watch:devicescript": "devicescript devtools src/main.ts -F allFunctions",
         "watch": "yarn watch:devicescript",
         "test:devicescript": "devicescript run src/main.ts --test --test-self-exit",
         "test": "yarn test:devicescript",
