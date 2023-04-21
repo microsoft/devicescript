@@ -1,6 +1,9 @@
 #include "devs_internal.h"
 #include "devs_objects.h"
 
+// #define LOG_TAG "obj"
+#include "devs_logging.h"
+
 void devs_map_clear(devs_ctx_t *ctx, devs_map_t *map) {
     if (map->data) {
         devs_free(ctx, map->data);

@@ -896,13 +896,18 @@ class Program implements TopOpWriter {
     }
 
     private startServer(expr: ts.Expression, cfg: BaseServiceConfig) {
-        const spec = this.lookupRoleSpec(expr, cfg.service.replace(/.*:/, ""))
+        const servName = (s: string) => s.replace(/.*:/, "")
+        const spec = this.lookupRoleSpec(expr, servName(cfg.service))
         this.useSpec(spec)
+        const off = this.startServices.filter(
+            s => servName(s.service) == servName(cfg.service)
+        ).length
         this.startServices.push(cfg)
         if (this.isIgnored(expr)) return unit()
         else {
-            const name = cfg.name ? this.writer.emitString(cfg.name) : null
-            return this.allocRole(spec, name)
+            let name = cfg.name || servName(cfg.service) + "__" + off
+            name += `[int:${off}]`
+            return this.allocRole(spec, this.writer.emitString(name))
         }
     }
 

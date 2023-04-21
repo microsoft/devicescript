@@ -162,11 +162,11 @@ export function startServer(s: ds.ServerInterface) {
     }
     let off = 0
     for (const o of servers) {
-        if (o == s) break
-        if (o.spec.classIdentifier == s.spec.classIdentifier) off++
+        if (o === s) break
+        if (o.spec.classIdentifier === s.spec.classIdentifier) off++
     }
     const sp = s as ds.BaseServerSpec
     let roleName = sp.instanceName?.()
     if (!roleName) roleName = s.spec.name + "_" + off
-    return `${roleName}?bnd=app/${off}`
+    return `${roleName}[app:${off}]`
 }

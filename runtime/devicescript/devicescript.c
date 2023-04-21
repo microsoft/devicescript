@@ -14,6 +14,8 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
 
     ctx->globals = devs_try_alloc(ctx, sizeof(value_t) * ctx->img.header->num_globals);
 
+    devs_gc_set_ctx(ctx->gc, ctx);
+
     ctx->fn_protos = devs_short_map_try_alloc(ctx);
     ctx->spec_protos = devs_short_map_try_alloc(ctx);
 
@@ -27,8 +29,6 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
 
     if (ctx->error_code)
         return;
-
-    devs_gc_set_ctx(ctx->gc, ctx);
 
     // reference the "main" function (first function)
     ctx->the_stack[0] = devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, 0);

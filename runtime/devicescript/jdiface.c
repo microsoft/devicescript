@@ -470,6 +470,7 @@ void devs_jd_reset_packet(devs_ctx_t *ctx) {
 }
 
 void devs_jd_init_roles(devs_ctx_t *ctx) {
+    jd_role_set_hints(JD_HOSTED ? false : true, devs_jd_server_device_id());
     devs_jd_free_roles(ctx); // free any previous roles
 }
 
