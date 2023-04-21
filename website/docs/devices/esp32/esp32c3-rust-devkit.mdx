@@ -33,7 +33,7 @@ A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originall
 | **i2c.pinSCL** |  GPIO8 |  boot,  io |
 | **i2c.pinSDA** |  GPIO10 |  io |
 | **led.pin** |  GPIO2 |  analogIn,  boot,  io |
-| **services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 
 
 
@@ -82,7 +82,7 @@ devicescript flash --board esp32c3_rust_devkit
         "P5": 5,
         "P6": 6
     },
-    "services": [
+    "$services": [
         {
             "name": "buttonBOOT",
             "pin": 9,

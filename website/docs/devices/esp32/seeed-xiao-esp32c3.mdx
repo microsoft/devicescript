@@ -30,7 +30,7 @@ A tiny ESP32-C3 board.
 | **D5** |  GPIO7 |  debug,  io |
 | **D7** |  GPIO20 |  bootUart,  io |
 | **D8** |  GPIO8 |  boot,  io |
-| **services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 
 
 
@@ -71,7 +71,7 @@ devicescript flash --board seeed_xiao_esp32c3
         "D7": 20,
         "D8": 8
     },
-    "services": [
+    "$services": [
         {
             "name": "buttonBOOT",
             "pin": 9,

@@ -84,10 +84,19 @@ export function camelize(name: string) {
     )
 }
 
+export function upperFirst(name: string) {
+    return name[0].toUpperCase() + name.slice(1)
+}
+
+export function lowerFirst(r: string) {
+    if (/[a-z]/.test(r)) return r[0].toLowerCase() + r.slice(1)
+    else return r
+}
+
 export function upperCamel(name: string) {
     name = camelize(name)
     if (!name?.length) return name
-    return name[0].toUpperCase() + name.slice(1)
+    return upperFirst(name)
 }
 
 export function addUnique<T>(arr: T[], v: T) {

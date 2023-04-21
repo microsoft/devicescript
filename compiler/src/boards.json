@@ -164,7 +164,7 @@
         "SCK": 10
       },
       "productId": "0x3693d40b",
-      "services": [
+      "$services": [
         {
           "name": "buttonBOOT",
           "pin": 9,
@@ -233,7 +233,7 @@
         "VP": 36
       },
       "productId": "0x3c507a05",
-      "services": [
+      "$services": [
         {
           "name": "buttonIO0",
           "pin": 0,
@@ -264,7 +264,7 @@
         "P8": 8
       },
       "productId": "0x3a1d89be",
-      "services": [
+      "$services": [
         {
           "name": "buttonBOOT",
           "pin": 9,
@@ -302,7 +302,7 @@
         "P6": 6
       },
       "productId": "0x33f29c59",
-      "services": [
+      "$services": [
         {
           "name": "buttonBOOT",
           "pin": 9,
@@ -402,7 +402,7 @@
       "sPin": {
         "LED_PWR": 1
       },
-      "services": [
+      "$services": [
         {
           "name": "buttonBOOT",
           "pin": 0,
@@ -470,7 +470,7 @@
         "#": "enable high power limiter mode",
         "@HILIM": 0
       },
-      "services": [
+      "$services": [
         {
           "faultIgnoreMs": 1000,
           "mode": 3,
@@ -521,7 +521,7 @@
         "pinMOSI": 35,
         "pinSCK": 36
       },
-      "services": [
+      "$services": [
         {
           "faultIgnoreMs": 100,
           "mode": 0,
@@ -570,7 +570,7 @@
         "pinMOSI": 35,
         "pinSCK": 36
       },
-      "services": [
+      "$services": [
         {
           "faultIgnoreMs": 100,
           "mode": 1,
@@ -622,7 +622,7 @@
         "TX": 37
       },
       "productId": "0x3de1398b",
-      "services": [
+      "$services": [
         {
           "faultIgnoreMs": 100,
           "mode": 0,
@@ -674,7 +674,7 @@
         "P6": 6
       },
       "productId": "0x35a678a3",
-      "services": [
+      "$services": [
         {
           "faultIgnoreMs": 100,
           "mode": 2,
@@ -790,7 +790,7 @@
         "D8": 8
       },
       "productId": "0x3eff6b51",
-      "services": [
+      "$services": [
         {
           "name": "buttonBOOT",
           "pin": 9,
@@ -837,7 +837,7 @@
       "sPin": {
         "LED_PWR": 1
       },
-      "services": [],
+      "$services": [],
       "uartLog": true,
       "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
     }

@@ -471,22 +471,21 @@ export async function expandDcfgJSON(
         if (mainJson["$include"]) {
             const prev = await expand(mainJson["$include"])
             delete mainJson["$include"]
-            if (
-                Array.isArray(mainJson["services"]) &&
-                Array.isArray(prev["services"])
-            ) {
-                for (const p of prev["services"]) {
-                    const ex = mainJson["services"].findIndex(
+
+            const serv = "$services"
+            if (Array.isArray(mainJson[serv]) && Array.isArray(prev[serv])) {
+                for (const p of prev[serv]) {
+                    const ex = mainJson[serv].findIndex(
                         e => e.service == p.service
                     )
                     if (ex >= 0) {
-                        Object.assign(p, mainJson["services"][ex])
-                        mainJson["services"][ex] = p
+                        Object.assign(p, mainJson[serv][ex])
+                        mainJson[serv][ex] = p
                     } else {
-                        mainJson["services"].push(p)
+                        mainJson[serv].push(p)
                     }
                 }
-                delete prev["services"]
+                delete prev[serv]
             }
             for (const k of Object.keys(prev)) {
                 if (mainJson[k] === undefined) mainJson[k] = prev[k]

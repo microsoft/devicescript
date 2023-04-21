@@ -47,8 +47,8 @@ ESP32-S2 based development board in a Feather format.
 | **i2c.pinSDA** |  GPIO8 |  analogIn,  io |
 | **led.pin** |  GPIO40 |  debug,  io |
 | **led.pinCLK** |  GPIO45 |  boot,  io |
-| **services.buttonBOOT[0].pin** |  GPIO0 |  boot,  io |
-| **services.ambientLight[1].pin** |  GPIO4 |  analogIn,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO0 |  boot,  io |
+| **$services.ambientLight[1].pin** |  GPIO4 |  analogIn,  io |
 
 
 
@@ -112,7 +112,7 @@ devicescript flash --board feather_s2
     "sPin": {
         "LED_PWR": 1
     },
-    "services": [
+    "$services": [
         {
             "name": "buttonBOOT",
             "pin": 0,

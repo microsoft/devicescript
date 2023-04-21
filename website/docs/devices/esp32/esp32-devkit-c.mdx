@@ -41,7 +41,7 @@ There are currently issues with serial chip on these, best avoid. ESP32-DevKitC 
 | **VN** |  GPIO39 |  analogIn,  input |
 | **VP** |  GPIO36 |  analogIn,  input |
 | **led.pin** |  GPIO2 |  boot,  io,  touch |
-| **services.buttonIO0[0].pin** |  GPIO0 |  boot,  io,  touch |
+| **$services.buttonIO0[0].pin** |  GPIO0 |  boot,  io,  touch |
 
 
 
@@ -92,7 +92,7 @@ devicescript flash --board esp32_devkit_c
         "VN": 39,
         "VP": 36
     },
-    "services": [
+    "$services": [
         {
             "name": "buttonIO0",
             "pin": 0,

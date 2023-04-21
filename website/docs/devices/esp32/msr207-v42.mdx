@@ -27,8 +27,8 @@ description: MSR JM Brain S2-mini 207 v4.2
 | **sd.pinMISO** |  GPIO37 |  io |
 | **sd.pinMOSI** |  GPIO35 |  io |
 | **sd.pinSCK** |  GPIO36 |  io |
-| **services.power[0].pinEn** |  GPIO2 |  analogIn,  io |
-| **services.power[0].pinFault** |  GPIO13 |  io |
+| **$services.power[0].pinEn** |  GPIO2 |  analogIn,  io |
+| **$services.power[0].pinFault** |  GPIO13 |  io |
 
 
 
@@ -85,7 +85,7 @@ devicescript flash --board msr207_v42
         "pinMOSI": 35,
         "pinSCK": 36
     },
-    "services": [
+    "$services": [
         {
             "faultIgnoreMs": 100,
             "mode": 0,

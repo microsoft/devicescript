@@ -72,8 +72,14 @@ export interface DeviceConfig
 
     /**
      * Services to mount. Each starts with { "service": "..." }
+     * This should not be present in .board.json files.
      */
     services?: ServiceConfig[]
+
+    /**
+     * Services to expose via `startXYZ()` API. Each starts with { "service": "..." }
+     */
+    $services?: ServiceConfig[]
 }
 
 export function parseAnyInt(s: string | number) {

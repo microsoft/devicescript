@@ -24,7 +24,7 @@ import {
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { PacketSpecCode, runtimeVersion } from "./format"
 import { prelude } from "./prelude"
-import { camelize, oops, upperCamel } from "./util"
+import { camelize, oops, upperCamel, upperFirst } from "./util"
 import { pinFunctions } from "./board"
 import { assert } from "./jdutil"
 
@@ -249,10 +249,14 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
     let r = `declare module "@dsboard/${binfo.id}" {\n`
     r += `    import * as ds from "@devicescript/core"\n`
     r += `    interface Board {\n`
-    for (const service of binfo.services ?? []) {
-        const n = service.service.replace(/.*:/, "")
-        const nu = n[0].toUpperCase() + n.slice(1)
-        r += `        ${service.name ?? n}: ds.${nu}\n`
+    for (const service of binfo.$services ?? []) {
+        const serv = upperFirst(service.service.replace(/.*:/, ""))
+        const inst = service.name ? upperFirst(service.name) : serv
+        r += wrapComment(
+            "devs",
+            `Start built-in ${inst}\n@ds-start ${JSON.stringify(service)}`
+        )
+        r += `        start${inst}(roleName?: string): ds.${serv}\n`
     }
     r += `    }\n`
     r += `    const board: Board\n`

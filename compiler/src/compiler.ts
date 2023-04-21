@@ -35,7 +35,15 @@ import {
     ServiceSpecFlag,
     FunctionFlag,
 } from "./format"
-import { addUnique, assert, camelize, oops, strlen, upperCamel } from "./util"
+import {
+    addUnique,
+    assert,
+    camelize,
+    lowerFirst,
+    oops,
+    strlen,
+    upperCamel,
+} from "./util"
 import {
     bufferFmt,
     literal,
@@ -887,13 +895,48 @@ class Program implements TopOpWriter {
         throwError(node, `expecting JSON literal here`)
     }
 
+    private startServer(expr: ts.Expression, cfg: BaseServiceConfig) {
+        const spec = this.lookupRoleSpec(expr, cfg.service.replace(/.*:/, ""))
+        this.useSpec(spec)
+        this.startServices.push(cfg)
+        if (this.isIgnored(expr)) return unit()
+        else {
+            const name = cfg.name ? this.writer.emitString(cfg.name) : null
+            return this.allocRole(spec, name)
+        }
+    }
+
     private checkHwConfig(expr: ts.Expression) {
         const serversPref = '#"@devicescript/servers".'
         const startServerPref = serversPref + "start"
 
         if (!expr || !ts.isCallExpression(expr)) return undefined
-        const nn = this.nodeName(expr.expression)
+
+        const sym = this.getSymAtLocation(this.stripTypeCast(expr.expression))
+
+        const nn = this.symName(sym)
         if (!nn) return undefined
+
+        const docs = sym.getJsDocTags(this.checker)
+        const dsstart = docs?.find(e => e.name == "ds-start")
+        if (dsstart) {
+            let sinfo: BaseServiceConfig
+            try {
+                sinfo = JSON.parse(dsstart.text[0].text)
+            } catch {}
+            if (sinfo) {
+                const arg = expr.arguments[0]
+                if (arg) {
+                    this.requireArgs(expr, 1)
+                    const str = this.toLiteralJSON(arg)
+                    if (typeof str != "string")
+                        throwError(expr, "expecting string literal here")
+                    sinfo.name = str
+                }
+                return this.startServer(expr, sinfo)
+            } else throwError(expr, "invalid @ds-start tag")
+        }
+
         if (nn.startsWith(startServerPref)) {
             this.requireArgs(expr, 1)
             const specName = this.serviceNameFromClassName(
@@ -913,16 +956,8 @@ class Program implements TopOpWriter {
             const arg = expr.arguments[0]
             const obj: BaseServiceConfig = this.toLiteralJSONObj(arg)
             obj.service = startName
-            const spec = this.lookupRoleSpec(arg, specName)
-            this.useSpec(spec)
-            this.startServices.push(obj)
-            if (this.isIgnored(expr)) return unit()
-            else {
-                const name = spec.name
-                    ? this.writer.emitString(spec.name)
-                    : null
-                return this.allocRole(spec, name)
-            }
+
+            return this.startServer(expr, obj)
         } else if (nn == serversPref + "hardwareConfig") {
             this.requireArgs(expr, 1)
             const arg = expr.arguments[0]
@@ -1463,8 +1498,7 @@ class Program implements TopOpWriter {
     }
 
     private serviceNameFromClassName(r: string) {
-        if (/[a-z]/.test(r)) return r[0].toLowerCase() + r.slice(1)
-        else return r
+        return lowerFirst(r)
     }
 
     private specFromTypeName(
@@ -2268,7 +2302,11 @@ class Program implements TopOpWriter {
     }
 
     private bufferLiteral(expr: Expr): Uint8Array {
-        if (expr && ts.isTaggedTemplateExpression(expr) && idName(expr.tag) == "hex") {
+        if (
+            expr &&
+            ts.isTaggedTemplateExpression(expr) &&
+            idName(expr.tag) == "hex"
+        ) {
             if (!ts.isNoSubstitutionTemplateLiteral(expr.template))
                 throwError(
                     expr,

@@ -32,8 +32,8 @@ description: MSR JacdacIoT 48 v0.2
 | **led.rgb[0].pin** |  GPIO8 |  analogIn,  io |
 | **led.rgb[1].pin** |  GPIO7 |  analogIn,  io |
 | **led.rgb[2].pin** |  GPIO6 |  analogIn,  io |
-| **services.power[0].pinEn** |  GPIO2 |  analogIn,  io |
-| **services.power[0].pinFault** |  GPIO13 |  io |
+| **$services.power[0].pinEn** |  GPIO2 |  analogIn,  io |
+| **$services.power[0].pinFault** |  GPIO13 |  io |
 
 
 
@@ -93,7 +93,7 @@ devicescript flash --board msr48
         "RX": 38,
         "TX": 37
     },
-    "services": [
+    "$services": [
         {
             "faultIgnoreMs": 100,
             "mode": 0,

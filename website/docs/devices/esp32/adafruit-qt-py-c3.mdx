@@ -34,7 +34,7 @@ A tiny ESP32-C3 board.
 | **i2c.pinSCL** |  GPIO6 |  debug,  io |
 | **i2c.pinSDA** |  GPIO5 |  debug,  io |
 | **led.pin** |  GPIO2 |  analogIn,  boot,  io |
-| **services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 
 
 
@@ -83,7 +83,7 @@ devicescript flash --board adafruit_qt_py_c3
         "RX": 20,
         "SCK": 10
     },
-    "services": [
+    "$services": [
         {
             "name": "buttonBOOT",
             "pin": 9,
