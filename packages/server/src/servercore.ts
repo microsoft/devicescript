@@ -19,7 +19,7 @@ export class Server implements ds.ServerInterface {
         await ds._serverSend(this.serviceIndex, pkt)
     }
 
-    instanceName(): ds.AsyncValue<string> {
+    instanceName(): string {
         return this._instanceName
     }
 
@@ -160,4 +160,13 @@ export function startServer(s: ds.ServerInterface) {
         s.serviceIndex = servers.length
         servers.push(s)
     }
+    let off = 0
+    for (const o of servers) {
+        if (o == s) break
+        if (o.spec.classIdentifier == s.spec.classIdentifier) off++
+    }
+    const sp = s as ds.BaseServerSpec
+    let roleName = sp.instanceName?.()
+    if (!roleName) roleName = s.spec.name + "_" + off
+    return `${roleName}?bnd=app/${off}`
 }

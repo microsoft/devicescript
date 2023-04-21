@@ -35,7 +35,5 @@ export function startRelay(
     options?: ServerOptions & { variant?: RelayVariant }
 ): Relay {
     const server = new GPIORelayServer(pin, options)
-    startServer(server)
-    // create client
-    return undefined
+    return new Relay(startServer(server))
 }

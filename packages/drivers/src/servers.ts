@@ -1,7 +1,11 @@
 import * as ds from "@devicescript/core"
-import { SensorServer, startServer } from "@devicescript/server"
+import {
+    SensorServer,
+    SensorServerOptions,
+    startServer,
+} from "@devicescript/server"
 
-export interface TemperatureOptions {
+export interface TemperatureOptions extends SensorServerOptions {
     min: number
     max: number
     error: number
@@ -13,7 +17,7 @@ export class TemperatureServer
     implements ds.TemperatureServerSpec
 {
     constructor(public options: TemperatureOptions) {
-        super(ds.Temperature.spec, "temperature")
+        super(ds.Temperature.spec, "temperature", options)
     }
 
     async temperature() {
@@ -31,10 +35,11 @@ export class TemperatureServer
 }
 
 export function startTemperature(options: TemperatureOptions) {
-    startServer(new TemperatureServer(options))
+    const id = startServer(new TemperatureServer(options))
+    return new ds.Temperature(id)
 }
 
-export interface HumidityOptions {
+export interface HumidityOptions extends SensorServerOptions {
     error: number
     read: () => Promise<number>
 }
@@ -44,7 +49,7 @@ export class HumidityServer
     implements ds.HumidityServerSpec
 {
     constructor(public options: HumidityOptions) {
-        super(ds.Humidity.spec, "humidity")
+        super(ds.Humidity.spec, "humidity", options)
     }
 
     async humidity() {
@@ -62,5 +67,20 @@ export class HumidityServer
 }
 
 export function startHumidity(options: HumidityOptions) {
-    startServer(new HumidityServer(options))
+    const id = startServer(new HumidityServer(options))
+    return new ds.Humidity(id)
+}
+
+export function startTempHumidity(
+    topt: TemperatureOptions,
+    hopt: HumidityOptions
+) {
+    if (
+        topt.instanceName &&
+        (!hopt.instanceName || hopt.instanceName == topt.instanceName)
+    )
+        hopt.instanceName = topt.instanceName + "_hum"
+    const temperature = startTemperature(topt)
+    const humidity = startHumidity(hopt)
+    return { temperature, humidity }
 }

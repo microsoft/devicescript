@@ -183,7 +183,9 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             } else {
                 kw = "readonly "
                 tp = "Register"
-                srv += `    ${pktName}${opt}(): AsyncValue<${argtp}>\n`
+                const rettp =
+                    pktName == "instanceName" ? argtp : `AsyncValue<${argtp}>`
+                srv += `    ${pktName}${opt}(): ${rettp}\n`
                 if (pkt.kind == "rw") {
                     const args = pktFields(info, pkt)
                     srv += `    set_${pktName}${opt}(${args}): AsyncValue<void>\n`

@@ -1,5 +1,5 @@
 import { SHTDriver } from "./sht"
-import { startHumidity, startTemperature } from "./servers"
+import { startHumidity, startTempHumidity, startTemperature } from "./servers"
 import { delay, sleep } from "@devicescript/core"
 import { DriverError } from "./core"
 
@@ -57,17 +57,20 @@ class SHTC3Driver extends SHTDriver {
  * Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C `0x70`.
  * @link https://sensirion.com/products/catalog/SHTC3/ Datasheet
  */
-export async function startSHTC3() {
+export async function startSHTC3(options?: { name?: string }) {
     const driver = new SHTC3Driver()
     await driver.init()
-    startTemperature({
-        min: -40,
-        max: 125,
-        error: 0.8,
-        read: async () => (await driver.read()).temperature,
-    })
-    startHumidity({
-        error: 3.5,
-        read: async () => (await driver.read()).humidity,
-    })
+    return startTempHumidity(
+        {
+            instanceName: options?.name,
+            min: -40,
+            max: 125,
+            error: 0.8,
+            read: async () => (await driver.read()).temperature,
+        },
+        {
+            error: 3.5,
+            read: async () => (await driver.read()).humidity,
+        }
+    )
 }
