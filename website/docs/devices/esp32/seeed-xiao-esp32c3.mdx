@@ -59,6 +59,13 @@ devicescript flash --board seeed_xiao_esp32c3
     "$description": "A tiny ESP32-C3 board.",
     "archId": "esp32c3",
     "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html",
+    "$services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 9,
+            "service": "button"
+        }
+    ],
     "pins": {
         "@D9": 9,
         "D0": 2,
@@ -71,13 +78,6 @@ devicescript flash --board seeed_xiao_esp32c3
         "D7": 20,
         "D8": 8
     },
-    "$services": [
-        {
-            "name": "buttonBOOT",
-            "pin": 9,
-            "service": "button"
-        }
-    ],
     "uartLog": true
 }
 ```

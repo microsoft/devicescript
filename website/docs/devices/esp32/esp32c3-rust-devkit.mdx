@@ -30,10 +30,10 @@ A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originall
 | **P4** |  GPIO4 |  analogIn,  debug,  io |
 | **P5** |  GPIO5 |  debug,  io |
 | **P6** |  GPIO6 |  debug,  io |
+| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 | **i2c.pinSCL** |  GPIO8 |  boot,  io |
 | **i2c.pinSDA** |  GPIO10 |  io |
 | **led.pin** |  GPIO2 |  analogIn,  boot,  io |
-| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 
 
 
@@ -62,6 +62,13 @@ devicescript flash --board esp32c3_rust_devkit
     "$description": "A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originally for ESP32 Rust port.",
     "archId": "esp32c3",
     "url": "https://github.com/esp-rs/esp-rust-board",
+    "$services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 9,
+            "service": "button"
+        }
+    ],
     "i2c": {
         "$connector": "Header",
         "pinSCL": 8,
@@ -82,13 +89,6 @@ devicescript flash --board esp32c3_rust_devkit
         "P5": 5,
         "P6": 6
     },
-    "$services": [
-        {
-            "name": "buttonBOOT",
-            "pin": 9,
-            "service": "button"
-        }
-    ],
     "uartLog": true
 }
 ```

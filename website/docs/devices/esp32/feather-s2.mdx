@@ -43,12 +43,12 @@ ESP32-S2 based development board in a Feather format.
 | **P7** |  GPIO7 |  analogIn,  io |
 | **RX** |  GPIO44 |  io |
 | **SCK** |  GPIO36 |  io |
+| **$services.buttonBOOT[0].pin** |  GPIO0 |  boot,  io |
+| **$services.ambientLight[1].pin** |  GPIO4 |  analogIn,  io |
 | **i2c.pinSCL** |  GPIO9 |  analogIn,  io |
 | **i2c.pinSDA** |  GPIO8 |  analogIn,  io |
 | **led.pin** |  GPIO40 |  debug,  io |
 | **led.pinCLK** |  GPIO45 |  boot,  io |
-| **$services.buttonBOOT[0].pin** |  GPIO0 |  boot,  io |
-| **$services.ambientLight[1].pin** |  GPIO4 |  analogIn,  io |
 
 
 
@@ -77,6 +77,18 @@ devicescript flash --board feather_s2
     "$description": "ESP32-S2 based development board in a Feather format.",
     "archId": "esp32s2",
     "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2",
+    "$services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 0,
+            "service": "button"
+        },
+        {
+            "name": "ambientLight",
+            "pin": 4,
+            "service": "analog:lightLevel"
+        }
+    ],
     "i2c": {
         "$connector": "Qwiic",
         "pinSCL": 9,
@@ -112,18 +124,6 @@ devicescript flash --board feather_s2
     "sPin": {
         "LED_PWR": 1
     },
-    "$services": [
-        {
-            "name": "buttonBOOT",
-            "pin": 0,
-            "service": "button"
-        },
-        {
-            "name": "ambientLight",
-            "pin": 4,
-            "service": "analog:lightLevel"
-        }
-    ],
     "uartLog": true
 }
 ```

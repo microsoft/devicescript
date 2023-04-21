@@ -49,6 +49,13 @@
     "$description": "A tiny ESP32-C3 board.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-adafruit_qt_py_c3-0x0.bin",
     "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 9,
+        "service": "button"
+      }
+    ],
     "archId": "esp32c3",
     "devName": "Adafruit QT Py ESP32-C3 WiFi",
     "i2c": {
@@ -73,13 +80,6 @@
       "SCK": 10
     },
     "productId": "0x3693d40b",
-    "$services": [
-      {
-        "name": "buttonBOOT",
-        "pin": 9,
-        "service": "button"
-      }
-    ],
     "uartLog": true,
     "url": "https://www.adafruit.com/product/5405",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/adafruit/qtpyesp32c3wifidevboardv10.catalog.jpg"
@@ -117,6 +117,13 @@
     "$description": "There are currently issues with serial chip on these, best avoid. ESP32-DevKitC development board. This will also work with DOIT DevkitV1, NodeMCU ESP32, ... (search for 'esp32 devkit'). Some of these boards do not have the LED.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32-esp32_devkit_c-0x1000.bin",
     "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [
+      {
+        "name": "buttonIO0",
+        "pin": 0,
+        "service": "button"
+      }
+    ],
     "archId": "esp32",
     "devName": "Espressif ESP32-DevKitC",
     "id": "esp32_devkit_c",
@@ -143,13 +150,6 @@
       "VP": 36
     },
     "productId": "0x3c507a05",
-    "$services": [
-      {
-        "name": "buttonIO0",
-        "pin": 0,
-        "service": "button"
-      }
-    ],
     "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32devkitcdevicescriptv40.catalog.jpg"
   },
@@ -157,6 +157,13 @@
     "$description": "A bare ESP32-C3 board without any pin functions.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_bare-0x0.bin",
     "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 9,
+        "service": "button"
+      }
+    ],
     "archId": "esp32c3",
     "devName": "Espressif ESP32-C3 (bare)",
     "id": "esp32c3_bare",
@@ -175,13 +182,6 @@
       "P8": 8
     },
     "productId": "0x3a1d89be",
-    "$services": [
-      {
-        "name": "buttonBOOT",
-        "pin": 9,
-        "service": "button"
-      }
-    ],
     "uartLog": true,
     "url": "https://www.espressif.com/en/products/socs/esp32-c3"
   },
@@ -189,6 +189,13 @@
     "$description": "A ESP32-C3 dev-board from Espressif with IMU and Temp/Humidity sensor, originally for ESP32 Rust port.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-esp32c3_rust_devkit-0x0.bin",
     "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 9,
+        "service": "button"
+      }
+    ],
     "archId": "esp32c3",
     "devName": "Espressif ESP32-C3-RUST-DevKit",
     "i2c": {
@@ -213,13 +220,6 @@
       "P6": 6
     },
     "productId": "0x33f29c59",
-    "$services": [
-      {
-        "name": "buttonBOOT",
-        "pin": 9,
-        "service": "button"
-      }
-    ],
     "uartLog": true,
     "url": "https://github.com/esp-rs/esp-rust-board",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32c3rustdevkitv12a.catalog.jpg"
@@ -275,6 +275,18 @@
     "$description": "ESP32-S2 based development board in a Feather format.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32s2-feather_s2-0x1000.bin",
     "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 0,
+        "service": "button"
+      },
+      {
+        "name": "ambientLight",
+        "pin": 4,
+        "service": "analog:lightLevel"
+      }
+    ],
     "archId": "esp32s2",
     "devName": "Unexpected Maker FeatherS2 ESP32-S2",
     "i2c": {
@@ -314,18 +326,6 @@
     "sPin": {
       "LED_PWR": 1
     },
-    "$services": [
-      {
-        "name": "buttonBOOT",
-        "pin": 0,
-        "service": "button"
-      },
-      {
-        "name": "ambientLight",
-        "pin": 4,
-        "service": "analog:lightLevel"
-      }
-    ],
     "uartLog": true,
     "url": "https://unexpectedmaker.com/shop/feathers2-esp32-s2",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/unexpected-maker/feathers2esp32s2v20.catalog.jpg"
@@ -383,7 +383,7 @@
       "#": "enable high power limiter mode",
       "@HILIM": 0
     },
-    "$services": [
+    "services": [
       {
         "faultIgnoreMs": 1000,
         "mode": 3,
@@ -434,7 +434,7 @@
       "pinMOSI": 35,
       "pinSCK": 36
     },
-    "$services": [
+    "services": [
       {
         "faultIgnoreMs": 100,
         "mode": 0,
@@ -483,7 +483,7 @@
       "pinMOSI": 35,
       "pinSCK": 36
     },
-    "$services": [
+    "services": [
       {
         "faultIgnoreMs": 100,
         "mode": 1,
@@ -535,7 +535,7 @@
       "TX": 37
     },
     "productId": "0x3de1398b",
-    "$services": [
+    "services": [
       {
         "faultIgnoreMs": 100,
         "mode": 0,
@@ -588,7 +588,7 @@
       "P6": 6
     },
     "productId": "0x35a678a3",
-    "$services": [
+    "services": [
       {
         "faultIgnoreMs": 100,
         "mode": 2,
@@ -691,6 +691,13 @@
     "$description": "A tiny ESP32-C3 board.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3-0x0.bin",
     "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [
+      {
+        "name": "buttonBOOT",
+        "pin": 9,
+        "service": "button"
+      }
+    ],
     "archId": "esp32c3",
     "devName": "Seeed Studio XIAO ESP32C3",
     "id": "seeed_xiao_esp32c3",
@@ -707,13 +714,6 @@
       "D8": 8
     },
     "productId": "0x3eff6b51",
-    "$services": [
-      {
-        "name": "buttonBOOT",
-        "pin": 9,
-        "service": "button"
-      }
-    ],
     "uartLog": true,
     "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html",
     "img": "https://microsoft.github.io/jacdac-docs/images/devices/seeed-studio/xiaoesp32c3v00.catalog.jpg"
@@ -722,6 +722,7 @@
     "$description": "A tiny ESP32-C3 board mounted on base with Jacdac, Qwiic and Grove connectors.",
     "$fwUrl": "https://github.com/microsoft/devicescript-esp32/releases/latest/download/devicescript-esp32c3-seeed_xiao_esp32c3_msr218-0x0.bin",
     "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-esp32/main/boards/esp32deviceconfig.schema.json",
+    "$services": [],
     "archId": "esp32c3",
     "devName": "Seeed Studio XIAO ESP32C3 with MSR218 base",
     "i2c": {
@@ -755,7 +756,6 @@
     "sPin": {
       "LED_PWR": 1
     },
-    "$services": [],
     "uartLog": true,
     "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
   }

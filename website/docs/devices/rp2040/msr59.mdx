@@ -14,7 +14,7 @@ Prototype board
 -  Jacdac on pin 9 using Jacdac connector
 -  RGB LED on pins 11, 13, 15
 -  Serial logging on pin 2 at 115200 8N1
--  Service: power
+-  Service: power (auto-start)
 
 ## Stores
 
@@ -34,8 +34,8 @@ Prototype board
 | **led.rgb[1].pin** |  GPIO13 |  io |
 | **led.rgb[2].pin** |  GPIO15 |  io |
 | **log.pinTX** |  GPIO2 |  io |
-| **$services.power[0].pinEn** |  GPIO19 |  io |
-| **$services.power[0].pinFault** |  GPIO25 |  io |
+| **services.power[0].pinEn** |  GPIO19 |  io |
+| **services.power[0].pinFault** |  GPIO25 |  io |
 
 
 
@@ -95,7 +95,7 @@ devicescript flash --board msr59
         "P5": 5,
         "P6": 6
     },
-    "$services": [
+    "services": [
         {
             "faultIgnoreMs": 100,
             "mode": 2,

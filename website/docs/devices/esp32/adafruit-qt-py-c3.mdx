@@ -31,10 +31,10 @@ A tiny ESP32-C3 board.
 | **MOSI** |  GPIO7 |  debug,  io |
 | **RX** |  GPIO20 |  bootUart,  io |
 | **SCK** |  GPIO10 |  io |
+| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 | **i2c.pinSCL** |  GPIO6 |  debug,  io |
 | **i2c.pinSDA** |  GPIO5 |  debug,  io |
 | **led.pin** |  GPIO2 |  analogIn,  boot,  io |
-| **$services.buttonBOOT[0].pin** |  GPIO9 |  boot,  io |
 
 
 
@@ -63,6 +63,13 @@ devicescript flash --board adafruit_qt_py_c3
     "$description": "A tiny ESP32-C3 board.",
     "archId": "esp32c3",
     "url": "https://www.adafruit.com/product/5405",
+    "$services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 9,
+            "service": "button"
+        }
+    ],
     "i2c": {
         "$connector": "Qwiic",
         "pinSCL": 6,
@@ -83,13 +90,6 @@ devicescript flash --board adafruit_qt_py_c3
         "RX": 20,
         "SCK": 10
     },
-    "$services": [
-        {
-            "name": "buttonBOOT",
-            "pin": 9,
-            "service": "button"
-        }
-    ],
     "uartLog": true
 }
 ```

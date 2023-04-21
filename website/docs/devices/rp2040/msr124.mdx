@@ -12,7 +12,7 @@ Prototype board
 -  Jacdac on pin 9 using Jacdac connector
 -  RGB LED on pins 16, 14, 15
 -  Serial logging on pin 0 at 115200 8N1
--  Service: power
+-  Service: power (auto-start)
 
 ## Stores
 
@@ -40,11 +40,11 @@ Prototype board
 | **led.rgb[1].pin** |  GPIO14 |  io |
 | **led.rgb[2].pin** |  GPIO15 |  io |
 | **log.pinTX** |  GPIO0 |  io |
-| **$services.power[0].pinEn** |  GPIO22 |  io |
-| **$services.power[0].pinFault** |  GPIO12 |  io |
-| **$services.power[0].pinLedPulse** |  GPIO13 |  io |
-| **$services.power[0].pinPulse** |  GPIO8 |  io |
-| **$services.power[0].pinUsbDetect** |  GPIO11 |  io |
+| **services.power[0].pinEn** |  GPIO22 |  io |
+| **services.power[0].pinFault** |  GPIO12 |  io |
+| **services.power[0].pinLedPulse** |  GPIO13 |  io |
+| **services.power[0].pinPulse** |  GPIO8 |  io |
+| **services.power[0].pinUsbDetect** |  GPIO11 |  io |
 
 
 
@@ -117,7 +117,7 @@ devicescript flash --board msr124
         "#": "enable high power limiter mode",
         "@HILIM": 0
     },
-    "$services": [
+    "services": [
         {
             "faultIgnoreMs": 1000,
             "mode": 3,

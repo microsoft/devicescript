@@ -40,8 +40,8 @@ There are currently issues with serial chip on these, best avoid. ESP32-DevKitC 
 | **P4** |  GPIO4 |  io,  touch |
 | **VN** |  GPIO39 |  analogIn,  input |
 | **VP** |  GPIO36 |  analogIn,  input |
-| **led.pin** |  GPIO2 |  boot,  io,  touch |
 | **$services.buttonIO0[0].pin** |  GPIO0 |  boot,  io,  touch |
+| **led.pin** |  GPIO2 |  boot,  io,  touch |
 
 
 
@@ -70,6 +70,13 @@ devicescript flash --board esp32_devkit_c
     "$description": "There are currently issues with serial chip on these, best avoid. ESP32-DevKitC development board. This will also work with DOIT DevkitV1, NodeMCU ESP32, ... (search for 'esp32 devkit'). Some of these boards do not have the LED.",
     "archId": "esp32",
     "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32/hw-reference/esp32/get-started-devkitc.html",
+    "$services": [
+        {
+            "name": "buttonIO0",
+            "pin": 0,
+            "service": "button"
+        }
+    ],
     "led": {
         "pin": 2
     },
@@ -91,13 +98,6 @@ devicescript flash --board esp32_devkit_c
         "P4": 4,
         "VN": 39,
         "VP": 36
-    },
-    "$services": [
-        {
-            "name": "buttonIO0",
-            "pin": 0,
-            "service": "button"
-        }
-    ]
+    }
 }
 ```

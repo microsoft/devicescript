@@ -59,6 +59,13 @@ devicescript flash --board esp32c3_bare
     "$description": "A bare ESP32-C3 board without any pin functions.",
     "archId": "esp32c3",
     "url": "https://www.espressif.com/en/products/socs/esp32-c3",
+    "$services": [
+        {
+            "name": "buttonBOOT",
+            "pin": 9,
+            "service": "button"
+        }
+    ],
     "pins": {
         "@P21": 21,
         "P0": 0,
@@ -73,13 +80,6 @@ devicescript flash --board esp32c3_bare
         "P7": 7,
         "P8": 8
     },
-    "$services": [
-        {
-            "name": "buttonBOOT",
-            "pin": 9,
-            "service": "button"
-        }
-    ],
     "uartLog": true
 }
 ```

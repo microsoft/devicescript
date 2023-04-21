@@ -63,9 +63,12 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
             } 8N1`
         )
 
-    const services = (cfg.$services ?? []).map(s => {
+    const opt = cfg.$services ?? []
+    const auto = cfg.services ?? []
+    const services = auto.concat(opt).map(s => {
         let r = s.name
         if (s.service != s.name) r += ` (${s.service})`
+        if (auto.includes(s)) r += ` (auto-start)`
         return r
     })
 
