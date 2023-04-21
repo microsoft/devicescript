@@ -16,10 +16,10 @@
     },
     "scripts": {
         "setup": "devicescript init",
-        "build:devicescript": "devicescript build",
+        "build:devicescript": "devicescript build -F allFunctions",
         "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
         "build": "yarn build:devicescript && yarn build:sim",
-        "watch:devicescript": "devicescript devtools main.ts",
+        "watch:devicescript": "devicescript devtools main.ts -F allFunctions",
         "watch:sim": "cd sim && nodemon --watch './**' --ext 'ts,json' --exec 'ts-node ./app.ts --project ./tsconfig.json'",
         "watch": "yarn watch:devicescript & yarn watch:sim",
         "start": "yarn watch"

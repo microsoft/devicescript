@@ -1,71 +1,50 @@
-import * as ds from "@devicescript/core"
-import { i2c } from "@devicescript/i2c"
-import { shtSendCmd, shtReadU16 } from "./sht"
-import { DriverError, throttle } from "./core"
+import { SHTDriver } from "./sht"
+import { DriverError } from "./core"
 import { startHumidity, startTemperature } from "./servers"
+import { delay } from "@devicescript/core"
 
-const SHT30_ADDR = 0x44
 const SHT30_MEASURE_HIGH_REP = 0x2400 // no clock stretching
 const SHT30_SOFTRESET = 0x30a2
 const SHT30_STATUS = 0xf32d
+const STH30_THROTTLE = 500
 
-let sht30_addr = SHT30_ADDR
-
-async function send_cmd(cmd: number) {
-    await shtSendCmd(sht30_addr, cmd)
-}
-
-async function wake() {
-    // nothing to do on this chip
-}
-
-async function is_present() {
-    for (let i = 0x44; i <= 0x45; ++i) {
-        try {
-            await shtReadU16(i, SHT30_STATUS)
-            return true
-        } catch {}
+class SHT30Driver extends SHTDriver {
+    constructor(devAddr: number) {
+        super(devAddr, { readCacheTime: STH30_THROTTLE })
     }
-    return false
-}
 
-async function read() {
-    await wake()
-    await send_cmd(SHT30_MEASURE_HIGH_REP)
-    await ds.delay(20) // datasheet says 15.5ms
-    const data = await i2c.readBuf(sht30_addr, 6)
-    const temp = (data[0] << 8) | data[1]
-    const hum = (data[3] << 8) | data[4]
-    return {
-        temperature: (175 / 0x10000) * temp - 45,
-        humidity: (100 / 0x10000) * hum,
+    override async readData() {
+        await this.sendCmd(SHT30_MEASURE_HIGH_REP)
+        await delay(20) // datasheet says 15.5ms
+        const data = await this.readBuf(6)
+        const temp = (data[0] << 8) | data[1]
+        const hum = (data[3] << 8) | data[4]
+        return {
+            temperature: (175 / 0x10000) * temp - 45,
+            humidity: (100 / 0x10000) * hum,
+        }
     }
-}
-
-async function init() {
-    if (await is_present()) {
-        const id = await shtReadU16(sht30_addr, SHT30_STATUS)
+    override async initDriver() {
+        const id = await this.readU16(SHT30_STATUS)
         console.debug(`SHT30 status=${id}`)
-    } else {
-        throw new DriverError("SHT30 not found")
     }
 }
 
 /**
- * Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45`.
+ * Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45` (default is `0x44`)
  * @link https://sensirion.com/products/catalog/SHT30-DIS-B/ Datasheet
  */
-export async function startSHT30() {
-    await init()
-    const readThr = throttle(500, read)
+export async function startSHT30(options?: { address?: 0x44 | 0x45 }) {
+    const driver = new SHT30Driver(options?.address || 0x44)
+    await driver.init()
     startTemperature({
         min: -40,
         max: 125,
         error: 0.6,
-        read: async () => (await readThr()).temperature,
+        read: async () => (await driver.read()).temperature,
     })
     startHumidity({
         error: 4,
-        read: async () => (await readThr()).humidity,
+        read: async () => (await driver.read()).humidity,
     })
 }
