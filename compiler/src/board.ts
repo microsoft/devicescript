@@ -209,7 +209,6 @@ export function boardMarkdownFiles() {
         }
     })
 
-    r[`boards.json`] = JSON.stringify(boardsjson, null, 2)
     return r
 }
 

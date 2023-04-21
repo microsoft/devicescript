@@ -2,7 +2,7 @@
 
 import { RepoInfo } from "@devicescript/interop"
 import jacdacDefaultSpecificationsData from "../../runtime/jacdac-c/jacdac/dist/services.json"
-import boardsJson from "./boards.json"
+import boardsJson from "../../website/docs/devices/boards.json"
 
 export const jacdacDefaultSpecifications =
     jacdacDefaultSpecificationsData as any as jdspec.ServiceSpec[]
