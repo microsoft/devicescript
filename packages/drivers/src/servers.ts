@@ -16,8 +16,11 @@ export class TemperatureServer
     extends SensorServer<ds.TemperatureServerSpec>
     implements ds.TemperatureServerSpec
 {
-    constructor(public options: TemperatureOptions) {
+    options: TemperatureOptions
+
+    constructor(options: TemperatureOptions) {
         super(ds.Temperature.spec, "temperature", options)
+        this.options = options
     }
 
     async temperature() {
@@ -48,8 +51,11 @@ export class HumidityServer
     extends SensorServer<ds.HumidityServerSpec>
     implements ds.HumidityServerSpec
 {
-    constructor(public options: HumidityOptions) {
+    options: HumidityOptions
+
+    constructor(options: HumidityOptions) {
         super(ds.Humidity.spec, "humidity", options)
+        this.options = options
     }
 
     async humidity() {
@@ -77,7 +83,7 @@ export function startTempHumidity(
 ) {
     if (
         topt.instanceName &&
-        (!hopt.instanceName || hopt.instanceName == topt.instanceName)
+        (!hopt.instanceName || hopt.instanceName === topt.instanceName)
     )
         hopt.instanceName = topt.instanceName + "_hum"
     const temperature = startTemperature(topt)

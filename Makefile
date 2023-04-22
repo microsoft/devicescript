@@ -17,7 +17,7 @@ test-c: native comp-fast
 test-em: em comp-fast
 	yarn test
 
-test: test-c test-em
+test: test-c ac test-em
 
 vscode-pkg:
 	cd vscode && yarn package
