@@ -519,15 +519,7 @@ declare module "@devicescript/core" {
     export const LOW = 0
 
     export interface PinBase {
-        /**
-         * hardware pin number
-         */
-        gpio: number
-        /**
-         * Configure pin mode.
-         * @param mode desired mode
-         */
-        setMode(mode: GPIOMode): Promise<void>
+        _pinBrand: unknown
     }
 
     /**
@@ -535,7 +527,6 @@ declare module "@devicescript/core" {
      */
     export interface InputPin extends PinBase, Subscriber<DigitalValue> {
         _inputPinBrand: unknown
-        read(): Promise<DigitalValue>
     }
 
     /**
@@ -543,7 +534,6 @@ declare module "@devicescript/core" {
      */
     export interface OutputPin extends PinBase {
         _outputPinBrand: unknown
-        write(v: DigitalValue): Promise<void>
     }
 
     /**
@@ -556,7 +546,6 @@ declare module "@devicescript/core" {
      */
     export interface AnalogInPin extends PinBase {
         _analogInPinBranch: unknown
-        // readAnalog(): Promise<number>
     }
 
     /**
@@ -564,7 +553,6 @@ declare module "@devicescript/core" {
      */
     export interface AnalogOutPin extends PinBase {
         _analogOutPinBranch: unknown
-        // writeAnalog(v: number): Promise<void>
     }
 
     /**

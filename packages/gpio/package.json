@@ -1,0 +1,41 @@
+{
+    "name": "@devicescript/gpio",
+    "version": "2.7.0",
+    "private": true,
+    "dependencies": {},
+    "devDependencies": {
+        "@devicescript/cli": "*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/devicescript.git",
+        "directory": "packages/gpio"
+    },
+    "scripts": {
+        "setup": "devicescript build",
+        "build:devicescript": "devicescript build src/main.ts -F allFunctions",
+        "build": "yarn build:devicescript",
+        "watch:devicescript": "devicescript devtools src/main.ts",
+        "watch": "yarn watch:devicescript",
+        "test:devicescript": "devicescript run src/main.ts --test --test-self-exit -F allFunctions",
+        "test": "yarn test:devicescript",
+        "start": "yarn watch"
+    },
+    "main": "./src/index.ts",
+    "license": "MIT",
+    "devicescript": {
+        "bundle": true,
+        "library": true
+    },
+    "files": [
+        "src/*.ts",
+        "devsconfig.json"
+    ],
+    "keywords": [
+        "devicescript"
+    ],
+    "author": "Microsoft",
+    "publishConfig": {
+        "access": "public"
+    }
+}

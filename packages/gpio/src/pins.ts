@@ -1,9 +1,33 @@
 import * as ds from "@devicescript/core"
 
-const gpio = new ds.GPIO() // TODO don't include role by default?
+// extend interfaces
+declare module "@devicescript/core" {
+    export interface PinBase {
+        /**
+         * hardware pin number
+         */
+        gpio: number
+        /**
+         * Configure pin mode.
+         * @param mode desired mode
+         */
+        setMode(mode: GPIOMode): Promise<void>
+    }
 
-class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
+    export interface InputPin extends PinBase, Subscriber<DigitalValue> {
+        read(): Promise<DigitalValue>
+    }
+
+    export interface OutputPin extends PinBase {
+        write(v: DigitalValue | number | boolean): Promise<void>
+    }
+}
+
+export const gpio = new ds.GPIO()
+
+export class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
     _inputPinBrand: unknown
+    _pinBrand: unknown
     _outputPinBrand: unknown
     _analogInPinBranch: unknown
     _analogOutPinBranch: unknown
@@ -45,7 +69,9 @@ class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
             await gpio.pinByHwPin(this.gpio)
             await ds.suspend(50)
         }
-        console.debug(`init GPIO${self.gpio} -> int:${this._intId} ${this._label}`)
+        console.debug(
+            `init GPIO${self.gpio} -> int:${this._intId} ${this._label}`
+        )
     }
 
     async read(): Promise<ds.DigitalValue> {
@@ -70,7 +96,7 @@ class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
         this._mode = mode
     }
 
-    async write(v: ds.DigitalValue): Promise<void> {
+    async write(v: ds.DigitalValue | number | boolean): Promise<void> {
         await this.init()
         if ((this._mode & ds.GPIOMode.BaseModeMask) !== ds.GPIOMode.Output)
             throw new RangeError("pin not in output mode")

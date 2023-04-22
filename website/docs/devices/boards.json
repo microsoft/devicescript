@@ -757,6 +757,7 @@
       "LED_PWR": 1
     },
     "uartLog": true,
-    "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html"
+    "url": "https://www.seeedstudio.com/Seeed-XIAO-ESP32C3-p-5431.html",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/seeed-studio/xiaoesp32c3withmsr218basev46.catalog.jpg"
   }
 }

@@ -40,6 +40,7 @@ function init(modules: {
                                 "@devicescript/i2c",
                                 "@devicescript/settings",
                                 "@devicescript/drivers",
+                                "@devicescript/gpio",
                             ]) {
                                 json.peerDependencies[n] = "*"
                             }
