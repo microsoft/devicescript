@@ -6,9 +6,10 @@ sidebar_position: 49
 
 # Digital IO
 
-DeviceScript provides access to digital gpio operations on [pins](/developer/servers/pins), that do not require precise real time timings.
+DeviceScript provides access to digital GPIO (General Purpose Input/Output) operations 
+on [pins](/developer/servers/pins), that do not require precise real time timings.
 
-It is recommened to encapsulate the gpio access into server implementation as they are rather low level.
+It is recommend to encapsulate the GPIO access into server implementation as they are rather low level.
 
 ## Mode
 
@@ -19,6 +20,7 @@ You can configure the input/output mode through `setMode`.
 
 ```ts
 import { gpio, GPIOMode } from "@devicescript/core"
+import "@devicescript/gpio"
 
 // p0 -> output
 const p0 = gpio(0)
@@ -37,6 +39,7 @@ Use `write` to set the output value of a pin. This example flips a pin state eve
 
 ```ts
 import { gpio, GPIOMode } from "@devicescript/core"
+import "@devicescript/gpio"
 
 const p0 = gpio(0)
 await p0.setMode(GPIOMode.Output)
@@ -44,7 +47,7 @@ await p0.setMode(GPIOMode.Output)
 let loop = 0
 setInterval(async () => {
     // highlight-next-line
-    await p0.write(loop++ % 2 ? 1 : 0)
+    await p0.write(loop++ % 2)
 }, 1000)
 ```
 
@@ -54,6 +57,7 @@ Use `read` to read the input value of a pin. This example reads the input value 
 
 ```ts
 import { gpio, GPIOMode } from "@devicescript/core"
+import "@devicescript/gpio"
 
 const p1 = gpio(1)
 await p1.setMode(GPIOMode.Input)
@@ -66,10 +70,11 @@ setInterval(async () => {
 }, 1000)
 ```
 
-Use `subscrive` to run code whenever the pin changes state.
+Use `subscribe` to run code whenever the pin changes state.
 
 ```ts
 import { gpio, GPIOMode } from "@devicescript/core"
+import "@devicescript/gpio"
 
 const p1 = gpio(1)
 await p1.setMode(GPIOMode.Input)
