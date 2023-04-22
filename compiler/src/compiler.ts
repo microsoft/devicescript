@@ -922,12 +922,12 @@ class Program implements TopOpWriter {
         const nn = this.symName(sym)
         if (!nn) return undefined
 
-        const docs = sym.getJsDocTags(this.checker)
-        const dsstart = docs?.find(e => e.name == "ds-start")
+        const tags = this.getSymTags(sym)
+        const dsstart = tags["ds-start"]
         if (dsstart) {
             let sinfo: BaseServiceConfig
             try {
-                sinfo = JSON.parse(dsstart.text[0].text)
+                sinfo = JSON.parse(dsstart)
             } catch {}
             if (sinfo) {
                 const arg = expr.arguments[0]
@@ -2763,11 +2763,32 @@ class Program implements TopOpWriter {
     }
 
     private emitBuiltInConst(expr: ts.Expression) {
+        const tags = this.getSymTags(this.getSymAtLocation(expr))
+        const gpio = parseInt(tags["ds-gpio"])
+        if (!isNaN(gpio)) {
+            const wr = this.writer
+            wr.emitCall(this.dsMember("gpio"), literal(gpio))
+            return this.retVal()
+        }
         return this.emitBuiltInConstByName(this.nodeName(expr))
     }
 
     private isBuiltInObj(nodeName: string) {
         return builtInObjByName.hasOwnProperty(nodeName)
+    }
+
+    private dsMember(memName: string) {
+        this.markMethodUsed("#ds." + memName)
+        const idx = BUILTIN_STRING__VAL.indexOf(memName)
+        const wr = this.writer
+        if (idx >= 0) {
+            return wr.dsMember(idx)
+        } else {
+            return wr.emitIndex(
+                this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT),
+                wr.emitString(memName)
+            )
+        }
     }
 
     emitBuiltInConstByName(nodeName: string) {
@@ -2777,18 +2798,7 @@ class Program implements TopOpWriter {
         if (this.flags.traceBuiltin) trace("traceBuiltin:", nodeName)
         if (nodeName.startsWith("#ds.")) {
             const bn = nodeName.slice(4)
-            const idx = BUILTIN_STRING__VAL.indexOf(bn)
-            const wr = this.writer
-            if (idx >= 0) {
-                this.markMethodUsed(nodeName)
-                return wr.dsMember(idx)
-            } else if (!bn.includes(".")) {
-                this.markMethodUsed(nodeName)
-                return wr.emitIndex(
-                    this.writer.emitBuiltInObject(BuiltInObject.DEVICESCRIPT),
-                    wr.emitString(bn)
-                )
-            }
+            if (!bn.includes(".")) return this.dsMember(bn)
         }
         return null
     }
