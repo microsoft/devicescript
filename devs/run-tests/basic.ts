@@ -871,7 +871,7 @@ async function testFibers() {
     async function logloop() {
         while (true) {
             i++
-            await ds.sleep(5)
+            await ds.sleep(9)
         }
     }
 
@@ -886,6 +886,7 @@ async function testFibers() {
     ds.assert(f0 !== f1)
     await ds.sleep(50)
     f1.terminate()
+    console.log(i)
     ds.assert(4 <= i && i <= 6)
     const i0 = i
     await ds.sleep(50)
