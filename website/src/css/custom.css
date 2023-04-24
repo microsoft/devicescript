@@ -6,87 +6,132 @@
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #005d8f;
-  --ifm-color-primary-dark: #005481;
-  --ifm-color-primary-darker: #004f7a;
-  --ifm-color-primary-darkest: #004164;
-  --ifm-color-primary-light: #00669d;
-  --ifm-color-primary-lighter: #006ba4;
-  --ifm-color-primary-lightest: #0079ba;
+    --ifm-color-primary: #005d8f;
+    --ifm-color-primary-dark: #005481;
+    --ifm-color-primary-darker: #004f7a;
+    --ifm-color-primary-darkest: #004164;
+    --ifm-color-primary-light: #00669d;
+    --ifm-color-primary-lighter: #006ba4;
+    --ifm-color-primary-lightest: #0079ba;
+}
+
+/* accelerometer */
+.markdown a {
+    --ifm-link-decoration: underline;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-  --ifm-color-primary: #2eb6ff;
-  --ifm-color-primary-dark: #10abff;
-  --ifm-color-primary-darker: #01a6ff;
-  --ifm-color-primary-darkest: #0089d3;
-  --ifm-color-primary-light: #4cc1ff;
-  --ifm-color-primary-lighter: #5bc6ff;
-  --ifm-color-primary-lightest: #88d6ff;
+[data-theme="dark"] {
+    --ifm-color-primary: #2eb6ff;
+    --ifm-color-primary-dark: #10abff;
+    --ifm-color-primary-darker: #01a6ff;
+    --ifm-color-primary-darkest: #0089d3;
+    --ifm-color-primary-light: #4cc1ff;
+    --ifm-color-primary-lighter: #5bc6ff;
+    --ifm-color-primary-lightest: #88d6ff;
 }
 
 /* code styling */
 :root {
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+    --ifm-code-font-size: 95%;
+    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
-[data-theme='dark'] {
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+[data-theme="dark"] {
+    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
 /** react split pane **/
 .Resizer {
-  background: #000;
-  opacity: 0.2;
-  z-index: 1000;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
-  box-sizing: border-box;
-  -moz-background-clip: padding;
-  -webkit-background-clip: padding;
-  background-clip: padding-box;
+    background: #000;
+    opacity: 0.2;
+    z-index: 1000;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    -moz-background-clip: padding;
+    -webkit-background-clip: padding;
+    background-clip: padding-box;
 }
 
 .Resizer:hover {
-  -webkit-transition: all 2s ease;
-  transition: all 2s ease;
+    -webkit-transition: all 2s ease;
+    transition: all 2s ease;
 }
 
 .Resizer.vertical {
-  width: 17px;
-  margin: 0 -8px;
-  border-left: 8px solid rgba(255, 255, 255, 0);
-  border-right: 8px solid rgba(255, 255, 255, 0);
-  cursor: col-resize;
+    width: 17px;
+    margin: 0 -8px;
+    border-left: 8px solid rgba(255, 255, 255, 0);
+    border-right: 8px solid rgba(255, 255, 255, 0);
+    cursor: col-resize;
 }
 
 .Resizer.vertical:hover {
-  border-left: 8px solid rgba(0, 0, 0, 0.5);
-  border-right: 8px solid rgba(0, 0, 0, 0.5);
+    border-left: 8px solid rgba(0, 0, 0, 0.5);
+    border-right: 8px solid rgba(0, 0, 0, 0.5);
 }
 .Resizer.disabled {
-  cursor: not-allowed;
+    cursor: not-allowed;
 }
 .Resizer.disabled:hover {
-  border-color: transparent;
+    border-color: transparent;
 }
 
 .pane {
-  position: absolute;
-  overflow-y: auto;
-  border: 0;
-  width: 100%;
-  top: 0;
-  height: 100%;
+    position: absolute;
+    overflow-y: auto;
+    border: 0;
+    width: 100%;
+    top: 0;
+    height: 100%;
 }
 .pane.left {
-  left: 0px;
+    left: 0px;
 }
 .pane.right {
-  right: 0px;
+    right: 0px;
 }
 
 div.navbar__logo {
-  margin-right: 1.5rem;
+    margin-right: 1.5rem;
+}
+
+[data-theme="light"] .DocSearch {
+    /* --docsearch-primary-color: var(--ifm-color-primary); */
+    /* --docsearch-text-color: var(--ifm-font-color-base); */
+    --docsearch-muted-color: var(--ifm-color-emphasis-700);
+    --docsearch-container-background: rgb(94 100 112 / 70%);
+    /* Modal */
+    --docsearch-modal-background: var(--ifm-color-secondary-lighter);
+    /* Search box */
+    --docsearch-searchbox-background: var(--ifm-color-secondary);
+    --docsearch-searchbox-focus-background: var(--ifm-color-white);
+    /* Hit */
+    --docsearch-hit-color: var(--ifm-font-color-base);
+    --docsearch-hit-active-color: var(--ifm-color-white);
+    --docsearch-hit-background: var(--ifm-color-white);
+    /* Footer */
+    --docsearch-footer-background: var(--ifm-color-white);
+}
+
+[data-theme="dark"] .DocSearch {
+    --docsearch-text-color: var(--ifm-font-color-base);
+    --docsearch-muted-color: var(--ifm-color-secondary-darkest);
+    --docsearch-container-background: rgb(47 55 69 / 70%);
+    /* Modal */
+    --docsearch-modal-background: var(--ifm-background-color);
+    /* Search box */
+    --docsearch-searchbox-background: var(--ifm-background-color);
+    --docsearch-searchbox-focus-background: var(--ifm-color-black);
+    /* Hit */
+    --docsearch-hit-color: var(--ifm-font-color-base);
+    --docsearch-hit-active-color: var(--ifm-color-white);
+    --docsearch-hit-background: var(--ifm-color-emphasis-100);
+    /* Footer */
+    --docsearch-footer-background: var(--ifm-background-surface-color);
+    --docsearch-key-gradient: linear-gradient(
+        -26.5deg,
+        var(--ifm-color-emphasis-200) 0%,
+        var(--ifm-color-emphasis-100) 100%
+    );
 }
