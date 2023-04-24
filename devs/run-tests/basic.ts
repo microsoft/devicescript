@@ -995,6 +995,13 @@ function testAssignmentChaining() {
     }
 }
 
+class UsingCtorFieldArgs {
+    constructor(public bar: number) {
+        ds.assert(bar === 12)
+        ds.assert(this.bar === 12)
+    }
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -1033,5 +1040,6 @@ testIgnoredAnd()
 testQDot()
 testHex()
 testAssignmentChaining()
+new UsingCtorFieldArgs(12)
 
 console.log("all OK")

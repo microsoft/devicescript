@@ -2659,11 +2659,15 @@ class Program implements TopOpWriter {
         return sym
     }
 
-    private symCell(sym: ts.Symbol) {
+    private symCell(sym: ts.Symbol): Cell {
         const cell = (sym as DsSymbol)?.__ds_cell
         if (!cell && sym?.valueDeclaration) {
             const name = this.symName(sym)
             const decl = sym.valueDeclaration
+            if (ts.isParameter(decl)) {
+                const s2 = this.getSymAtLocation(decl.name)
+                if (s2 !== sym) return this.symCell(s2)
+            }
             if (
                 name[0] == "#" &&
                 ts.isVariableDeclaration(decl) &&
