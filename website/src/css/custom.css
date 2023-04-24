@@ -29,6 +29,8 @@
     --ifm-color-primary-light: #4cc1ff;
     --ifm-color-primary-lighter: #5bc6ff;
     --ifm-color-primary-lightest: #88d6ff;
+
+    --docusaurus-highlighted-code-line-bg: #fff;
 }
 
 /* code styling */
