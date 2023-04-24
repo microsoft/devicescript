@@ -29,14 +29,12 @@
     --ifm-color-primary-light: #4cc1ff;
     --ifm-color-primary-lighter: #5bc6ff;
     --ifm-color-primary-lightest: #88d6ff;
-
-    --docusaurus-highlighted-code-line-bg: #fff;
 }
 
 /* code styling */
 :root {
     --ifm-code-font-size: 95%;
-    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+    --docusaurus-highlighted-code-line-bg: #fff;
 }
 [data-theme="dark"] {
     --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
