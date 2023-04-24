@@ -32,21 +32,3 @@ import { gpio } from "@devicescript/core"
 // highlight-next-line
 const p0 = gpio(0)
 ```
-
-## Digital IO
-
-To interact directly with pins, use:
-
-```ts
-import "@devicescript/gpio"
-
-const p0 = ds.gpio(0)
-
-await p0.setMode(ds.GPIOMode.Output)
-await p0.write(1)
-await p0.write(0)
-
-await p0.setMode(ds.GPIOMode.InputPullDown)
-const v = await p0.read()
-// ...
-```
