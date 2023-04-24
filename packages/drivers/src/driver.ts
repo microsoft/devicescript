@@ -1,4 +1,4 @@
-import { AsyncValue, I2C, millis } from "@devicescript/core"
+import { AsyncValue, I2C, millis, sleep } from "@devicescript/core"
 import { i2c } from "@devicescript/i2c"
 import { DriverError, throttle } from "./core"
 
@@ -151,12 +151,16 @@ export abstract class I2CSensorDriver<TData> extends I2CDriver {
      * @returns
      */
     async read(): Promise<TData> {
+        // lock on reading data
+        while (this._dataTime === -1) await sleep(5)
+
         // cache hit
         if (millis() - this._dataTime < this._dataCacheTime) return this._data
 
         // query sensor again, read data is throttled
+        this._dataTime = -1
         this._data = await this.readData()
-        this._dataCacheTime = millis()
+        this._dataTime = millis()
         return this._data
     }
 
