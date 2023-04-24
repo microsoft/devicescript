@@ -2553,10 +2553,10 @@
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-1.0.0-next.21.tgz#5de5a2385a35309427f6011992b544514d559aa1"
   integrity sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==
 
-"@rise4fun/docusaurus-plugin-application-insights@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-application-insights/-/docusaurus-plugin-application-insights-2.1.2.tgz#620b8faff0ea7603441a5e15f6d95bec5c9bb78e"
-  integrity sha512-NtPCzuBvFVo9zy8JcnkIPdRsNyh1HqkGcLjY5k+6CwtiPIeSTzinWuAMPd2Amh8hP9dO0jz/k/62X0bNJ8zO3A==
+"@rise4fun/docusaurus-plugin-application-insights@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-application-insights/-/docusaurus-plugin-application-insights-2.1.3.tgz#72da8963ff6a8bbed0b0ad515a8ae94f429b868e"
+  integrity sha512-RKu44WLrrK3Meps3sF1zwjndxxg1jDgq46YyU+/a+7CXoYeW0ZRtqnLW4Y4nfmjmNb80F+zggqpYg7qJJ+xfhg==
   dependencies:
     "@docusaurus/core" "^2.4.0"
     "@docusaurus/types" "^2.4.0"
@@ -2564,34 +2564,34 @@
     "@microsoft/applicationinsights-web" "^2.8.9"
     tslib "^2.5.0"
 
-"@rise4fun/docusaurus-plugin-rise4fun@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-2.1.2.tgz#8f2d5522f203893a9a893998807aaced7215757c"
-  integrity sha512-8yXoJXNpIiHZUYMmoGoXVsP1HwbOY0jlKjuEZxmeOC6cyjRTbZRYwEJp8x+4k02/YoFbr/5BARnAB2BzAduTcw==
+"@rise4fun/docusaurus-plugin-rise4fun@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-plugin-rise4fun/-/docusaurus-plugin-rise4fun-2.1.3.tgz#bf4289490f9cecbe58b454d3e80e274beac00a46"
+  integrity sha512-jBGUVdkfQbmO7MEub541jY05kWfVUrECu456NK2kHZWPaY8DfJ7vd5XKrNc0S6IYHF85XdqVSBYWYjBFahEmsw==
   dependencies:
     "@docusaurus/core" "^2.4.0"
     "@docusaurus/remark-plugin-npm2yarn" "^2.4.0"
     "@docusaurus/theme-mermaid" "^2.4.0"
     "@docusaurus/types" "^2.4.0"
     "@docusaurus/utils-validation" "^2.4.0"
-    "@rise4fun/docusaurus-plugin-application-insights" "^2.1.2"
-    "@rise4fun/docusaurus-remark-plugin-code-element" "^2.1.2"
-    "@rise4fun/docusaurus-remark-plugin-code-tabs" "^2.1.2"
-    "@rise4fun/docusaurus-remark-plugin-compile-code" "^2.1.2"
-    "@rise4fun/docusaurus-remark-plugin-import-file" "^2.1.2"
-    "@rise4fun/docusaurus-remark-plugin-side-editor" "^2.1.2"
-    "@rise4fun/docusaurus-theme-codesandbox-button" "^2.1.2"
-    "@rise4fun/docusaurus-theme-side-editor" "^2.1.2"
+    "@rise4fun/docusaurus-plugin-application-insights" "^2.1.3"
+    "@rise4fun/docusaurus-remark-plugin-code-element" "^2.1.3"
+    "@rise4fun/docusaurus-remark-plugin-code-tabs" "^2.1.3"
+    "@rise4fun/docusaurus-remark-plugin-compile-code" "^2.1.3"
+    "@rise4fun/docusaurus-remark-plugin-import-file" "^2.1.3"
+    "@rise4fun/docusaurus-remark-plugin-side-editor" "^2.1.3"
+    "@rise4fun/docusaurus-theme-codesandbox-button" "^2.1.3"
+    "@rise4fun/docusaurus-theme-side-editor" "^2.1.3"
     fs-extra "^11.1.0"
     hast-util-is-element "1.1.0"
     rehype-katex "5"
     remark-math "3"
     tslib "^2.5.0"
 
-"@rise4fun/docusaurus-remark-plugin-code-element@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-code-element/-/docusaurus-remark-plugin-code-element-2.1.2.tgz#ef9f1746b01e9d31457b114e9ebb1dc953360c1b"
-  integrity sha512-FVIUoXyDnronI6AsVdsqc7tWKpbDsnAkVY8r7MtY9HEp0u0jaMgDv7GoEdcEZc1pxzYKSAMHTYrTcABHEPNWnA==
+"@rise4fun/docusaurus-remark-plugin-code-element@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-code-element/-/docusaurus-remark-plugin-code-element-2.1.3.tgz#9237c4f1fae3585cc2dfd84e1a65d9f690298daa"
+  integrity sha512-/N4zJgUsLsOUxOdSTHxYzuBFqIz90iK7L4gBHJDhNbDDpHncTeZnHzdCxka2Qtd7E7GjmINcenOCGub/zQ1ikA==
   dependencies:
     fs-extra "^11.1.0"
     minimatch "^6.1.6"
@@ -2600,10 +2600,10 @@
     typescript "^4.9.4"
     unist-util-visit "^2.0.3"
 
-"@rise4fun/docusaurus-remark-plugin-code-tabs@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-code-tabs/-/docusaurus-remark-plugin-code-tabs-2.1.2.tgz#592caa8ee5631fe07ca5c4932661b7289713c344"
-  integrity sha512-6p+cC6gdJD2j1HE6qSq0quU5HKoU1yfxiO7eGcWkgtoOavz8K96m/6hLb56XBgLZ+VEkkkMZKSgDg0d+QRTM9Q==
+"@rise4fun/docusaurus-remark-plugin-code-tabs@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-code-tabs/-/docusaurus-remark-plugin-code-tabs-2.1.3.tgz#957258d5bacd0dc0e1d1aa64db2506b574caa7d9"
+  integrity sha512-pPnE597Yi5ErfWHKkQTvKJ3CO2+EvB6NGglouNKAQEV2itT63TkszCWCZTMNNHjj06EIKa2WHSXyQlOH+KZLpg==
   dependencies:
     fs-extra "^11.1.0"
     p-all "^4.0.0"
@@ -2611,10 +2611,10 @@
     typescript "^4.9.4"
     unist-util-visit "^2.0.3"
 
-"@rise4fun/docusaurus-remark-plugin-compile-code@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-compile-code/-/docusaurus-remark-plugin-compile-code-2.1.2.tgz#ba36e8cb5371e496c1002ffc2eb4382614dd5013"
-  integrity sha512-src+r8KfEnxBL8t3mmaZUAb5D/Cw5ayCvzguStYx0uOOWaYz1gyrGNy7LX2H2dD62TsXJgAJSQR7hwzaZn/V1A==
+"@rise4fun/docusaurus-remark-plugin-compile-code@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-compile-code/-/docusaurus-remark-plugin-compile-code-2.1.3.tgz#8f7b224acd173a43cf42e4cb0cdb730f83ffdefa"
+  integrity sha512-kxE8DK6ni5ASrXedpL8L2RhgFY1EKlx8n9+gyIwRztNrmuNh0jde9VatNFixbwTyQC6Bz9GmnuTG+zkg1keeCQ==
   dependencies:
     fs-extra "^11.1.0"
     minimatch "^6.1.6"
@@ -2624,10 +2624,10 @@
     typescript "^4.9.4"
     unist-util-visit "^2.0.3"
 
-"@rise4fun/docusaurus-remark-plugin-import-file@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-import-file/-/docusaurus-remark-plugin-import-file-2.1.2.tgz#30b9077a53cc265e49b4e637a4603ef49c093aff"
-  integrity sha512-h/h5opogX63WN64PJgv3SwzOD74arF+2ico8OohVFex3NQ59q/YcN6kpOeUoj7KHiJMjDpD5n/hfBHQ29BbZ4w==
+"@rise4fun/docusaurus-remark-plugin-import-file@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-import-file/-/docusaurus-remark-plugin-import-file-2.1.3.tgz#7d0362019b2669b759cd778375fdad7606ef26f2"
+  integrity sha512-Ukzff7p3pOE/Amk295pXWlk1lQ/h7A69wBBvNQYvz2XHUn/b5O7pQoE2+nCeqcvmRzZRvval0/P9+awn+YGt6A==
   dependencies:
     fs-extra "^11.1.0"
     minimatch "^6.1.6"
@@ -2636,10 +2636,10 @@
     typescript "^4.9.4"
     unist-util-visit "^2.0.3"
 
-"@rise4fun/docusaurus-remark-plugin-side-editor@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-side-editor/-/docusaurus-remark-plugin-side-editor-2.1.2.tgz#c2394a7bd4d84ca9a1d1a60b1ecccb984756a9c4"
-  integrity sha512-emG0kHzXmrNll2qgG9l7um2Q/EEY8IotamF9GZgzZ53AlaMZiJGTkbQwzwyZKq2pm+4t5/2JGm1vFSosOz8MAA==
+"@rise4fun/docusaurus-remark-plugin-side-editor@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-remark-plugin-side-editor/-/docusaurus-remark-plugin-side-editor-2.1.3.tgz#d85b5caa0c04d3795fc338003fb807ac335d87a8"
+  integrity sha512-zJQUbpn0mXx/zWrb0IS/l/+AZ/5Nbj7ILNRxv//9pM4s4oPSXry6PiAiaYktdZJ/Nnkujsnyti1ZRXtH7YT2uw==
   dependencies:
     fs-extra "^11.1.0"
     p-all "^4.0.0"
@@ -2647,10 +2647,10 @@
     typescript "^4.9.4"
     unist-util-visit "^2.0.3"
 
-"@rise4fun/docusaurus-theme-codesandbox-button@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-codesandbox-button/-/docusaurus-theme-codesandbox-button-2.1.2.tgz#b32020d7a38a11be404f443a9c950c9e23bd38e9"
-  integrity sha512-y14rJLVG+dIasFkSKky0msfkP5dDFBSxcMo03QHIctOQbNvw+izbSrVu1bbyZSTRfomgsZtrbpa1IotOwUuqRA==
+"@rise4fun/docusaurus-theme-codesandbox-button@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-codesandbox-button/-/docusaurus-theme-codesandbox-button-2.1.3.tgz#09b34c6b52d1a360b2de24f653be77fd248af361"
+  integrity sha512-rxCuc44/j2vGbZoJtL3geyP7mgkiPwnqLQ6W2cjMbMJYX+HbgkDHkkfSCTj92+BHl42ekcIhpHrNcX566liVkg==
   dependencies:
     "@docusaurus/core" "^2.4.0"
     "@docusaurus/types" "^2.4.0"
@@ -2659,10 +2659,10 @@
     clsx "^1.2.1"
     tslib "^2.5.0"
 
-"@rise4fun/docusaurus-theme-side-editor@^2.1.2":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-2.1.2.tgz#55000d2d42f9d3b524acb6b1209dfa018b05c617"
-  integrity sha512-/N9NUngO9tf7Qa5BZkUTfr4OA+12f7nrLOeKU6BgcdcyxmwZZNAyoLfTl9F/NHAxnLdayBhMpskl5diRENWzBw==
+"@rise4fun/docusaurus-theme-side-editor@^2.1.3":
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/@rise4fun/docusaurus-theme-side-editor/-/docusaurus-theme-side-editor-2.1.3.tgz#07838627a1e80808cfce1178ad1cd117c639b682"
+  integrity sha512-8ho5ETejJTx8RsvmXm13o60itdfntUhdvxCmQJw/GYbifVg1U5ZaLxjflXF9KXt/tTdDr3H+34xu362+2la2sw==
   dependencies:
     "@docusaurus/core" "^2.4.0"
     "@docusaurus/types" "^2.4.0"
