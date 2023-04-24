@@ -41,7 +41,6 @@ export async function startSHT30(options?: {
     await driver.init()
     return startTempHumidity(
         {
-            instanceName: options?.name,
             min: -40,
             max: 125,
             error: 0.6,
@@ -50,6 +49,7 @@ export async function startSHT30(options?: {
         {
             error: 4,
             read: async () => (await driver.read()).humidity,
-        }
+        },
+        options?.name
     )
 }
