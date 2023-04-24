@@ -146,7 +146,7 @@ function buildPrelude(folder, outp) {
         return ""
     })
     startServ += `
-    type UserHardwareInfo = Pick<DeviceHardwareInfo, "noScanI2C">
+    type UserHardwareInfo = Pick<DeviceHardwareInfo, "scanI2C">
 
     /**
      * Configure C runtime.
