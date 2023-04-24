@@ -83,7 +83,7 @@ export class Metric {
         return this.M2 / (this.count - 1)
     }
 
-    toString() {
+    asString() {
         return "" + this.mean
     }
 

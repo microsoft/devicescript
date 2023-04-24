@@ -19,3 +19,18 @@ function foo() {
 }
 
 foo()
+
+class FooBar {
+    // prettier-ignore
+    toString() { //! toString
+        return ""
+    }
+}
+
+new FooBar()
+
+const v: any = {}
+// prettier-ignore
+v.toString = function () {    //! toString
+    return " "
+}

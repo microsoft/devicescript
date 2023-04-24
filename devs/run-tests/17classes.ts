@@ -27,7 +27,7 @@ class XFoo {
         this.buf = [1, 2]
     }
 
-    toString() {
+    asString() {
         return `Foo${this.getPin()}`
     }
 }
@@ -42,7 +42,7 @@ function testClass() {
 function testToString() {
     msg("testToString")
     let f = new XFoo(44, 2)
-    let s = "" + f.toString()
+    let s = "" + f.asString()
     assert(s === "Foo42", "ts")
 }
 

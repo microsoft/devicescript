@@ -1833,6 +1833,7 @@ class Program implements TopOpWriter {
                     names: this.methodNames(sym),
                     methodDecl: mem,
                 }
+                if (info.methodName == "toString") this.toStringError(mem)
                 this.protoDefinitions.push(info)
                 // TODO make this conditional, see https://github.com/microsoft/devicescript/issues/332
                 this.markMethodUsed(info.names[0])
@@ -3008,6 +3009,14 @@ class Program implements TopOpWriter {
         throwError(trg, "unsupported assignment target")
     }
 
+    private toStringError(node: ts.Node) {
+        this.reportError(
+            node,
+            `in DeviceScript the .toString() method is not called implicitly; please use a different method name`,
+            ts.DiagnosticCategory.Warning
+        )
+    }
+
     private emitAssignmentExpression(
         expr: ts.BinaryExpression,
         noProto = false
@@ -3022,6 +3031,7 @@ class Program implements TopOpWriter {
         const src = this.emitExpr(expr.right) // compute src after left.property
 
         if (r) {
+            if (r.idx.strValue === "toString") this.toStringError(expr)
             if (noProto && r.obj.op == Op.EXPRx_STATIC_SPEC) {
                 assert(this.flags.allPrototypes)
                 this.ignore(r.obj)
