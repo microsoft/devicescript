@@ -139,6 +139,9 @@ void devs_client_event_handler(devs_ctx_t *ctx, int event_id, void *arg0, void *
         break;
     }
 
+    // don't sleep too long!
+    jd_set_max_sleep(devs_fiber_get_max_sleep(ctx));
+
     devs_leave(ctx);
 
     if (event_id == JD_CLIENT_EV_PROCESS)

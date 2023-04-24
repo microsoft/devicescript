@@ -19,10 +19,8 @@ extern uint64_t cached_devid;
 static bool test_mode;
 static bool remote_deploy;
 
-static void frame_cb_post(void);
 static void frame_cb(void *userdata, jd_frame_t *frame) {
     jd_rx_frame_received(frame);
-    frame_cb_post();
 }
 
 bool ends_with(const char *str, const char *suff) {
@@ -229,8 +227,10 @@ void app_process(void) {
 #endif
 }
 
+#ifndef __EMSCRIPTEN__
 static void client_process(void) {
     jd_process_everything();
+    target_wait_us(jd_max_sleep);
 }
 
 static void run_sample(const char *name, int keepgoing) {
@@ -250,7 +250,6 @@ static void run_sample(const char *name, int keepgoing) {
             }
         }
         client_process();
-        target_wait_us(10000);
 
         if (!keepgoing && iter > 15 && !devsmgr_get_ctx() && the_end == 0x1000000000) {
             // if the script ended, we shall exit soon, but not exactly now
@@ -268,26 +267,6 @@ static void run_sample(const char *name, int keepgoing) {
 static jd_transport_ctx_t *transport_ctx = NULL;
 extern int settings_in_files;
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten/eventloop.h>
-bool websock_is_connected(jd_transport_ctx_t *ctx);
-static void em_process(void *dummy) {
-    if (!websock_is_connected(transport_ctx))
-        return;
-    client_process();
-}
-static void frame_cb_post(void) {
-    em_process(NULL);
-}
-void run_emscripten_loop(void) {
-    emscripten_set_interval(em_process, 10, NULL);
-    emscripten_unwind_to_js_event_loop();
-}
-#else
-static void frame_cb_post(void) {}
-#endif
-
-#ifndef __EMSCRIPTEN__
 
 int main(int argc, const char **argv) {
     const jd_transport_t *transport = NULL;
@@ -385,14 +364,8 @@ int main(int argc, const char **argv) {
     if (devs_img) {
         run_sample(devs_img, websock);
     } else {
-#ifdef __EMSCRIPTEN__
-        run_emscripten_loop();
-#else
-        for (;;) {
+        for (;;)
             client_process();
-            target_wait_us(10000);
-        }
-#endif
     }
 
     return 0;

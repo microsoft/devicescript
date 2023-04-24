@@ -6,7 +6,7 @@ export declare type DevsModule = EmscriptenModule &
         _jd_em_set_device_id_2x_i32(id0: int32, id1: int32): void
         _jd_em_set_device_id_string(str: ptr): void
         _jd_em_init(): void
-        _jd_em_process(): void
+        _jd_em_process(): number
         _jd_em_frame_received(frame: ptr): int32
         _jd_em_devs_deploy(img: ptr, size: int32): int32
         _jd_em_devs_verify(img: ptr, size: int32): int32
@@ -40,7 +40,10 @@ export declare type DevsModule = EmscriptenModule &
 
 declare var Module: DevsModule
 
-var devs_interval: number
+// devs_timeout === undefined - program is not running
+// devs_timeout === null - the C code is executing, program running
+// devs_timeout is number - we're waiting for timeout, program running
+var devs_timeout: number = undefined
 
 function copyToHeap<T>(buf: Uint8Array, fn: (p: ptr) => T): T {
     const ptr = Module._malloc(buf.length)
@@ -79,8 +82,13 @@ export module Exts {
      * @param pkt a Jacdac frame
      */
     export function handlePacket(pkt: Uint8Array) {
-        copyToHeap(pkt, Module._jd_em_frame_received)
-        Module._jd_em_process()
+        if (devs_timeout) {
+            try {
+                copyToHeap(pkt, Module._jd_em_frame_received)
+            } catch {}
+            clearDevsTimeout()
+            process()
+        }
     }
 
     export interface TransportResult {
@@ -307,30 +315,36 @@ export module Exts {
         if (Module.flashSave) Module.flashSave(new Uint8Array([0, 0, 0, 0]))
     }
 
+    function process() {
+        devs_timeout = null
+        try {
+            const us = Module._jd_em_process()
+            devs_timeout = setTimeout(process, us / 1000)
+        } catch (e) {
+            Module.error(e)
+            devsStop()
+        }
+    }
+
+    function clearDevsTimeout() {
+        if (devs_timeout) clearInterval(devs_timeout)
+        devs_timeout = undefined
+    }
+
     /**
      * Initializes and start the virtual machine (calls init).
      */
     export function devsStart(): void {
-        if (devs_interval) return
+        if (devs_timeout) return
         Module.devsInit()
-        devs_interval = setInterval(() => {
-            try {
-                Module._jd_em_process()
-            } catch (e) {
-                Module.error(e)
-                devsStop()
-            }
-        }, 10)
+        devs_timeout = setTimeout(process, 10)
     }
 
     /**
      * Stops the virtual machine
      */
     export function devsStop(): void {
-        if (devs_interval) {
-            clearInterval(devs_interval)
-            devs_interval = undefined
-        }
+        clearDevsTimeout()
     }
 
     /**
@@ -338,7 +352,7 @@ export module Exts {
      * @returns true if the virtual machine is started.
      */
     export function devsIsRunning() {
-        return !!devs_interval
+        return devs_timeout !== undefined
     }
 
     /**

@@ -85,8 +85,9 @@ void jd_em_init(void) {
     jd_services_init();
 }
 
+
 EMSCRIPTEN_KEEPALIVE
-void jd_em_process(void) {
+int jd_em_process(void) {
     if (inited == 1) {
         inited = 2;
         char shortbuf[5];
@@ -98,6 +99,7 @@ void jd_em_process(void) {
 
     jd_process_everything();
     tx_process();
+    return jd_max_sleep;
 }
 
 EMSCRIPTEN_KEEPALIVE

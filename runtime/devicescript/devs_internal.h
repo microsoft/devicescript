@@ -258,6 +258,7 @@ void devs_fiber_run(devs_fiber_t *fiber);
 void devs_fiber_poke(devs_ctx_t *ctx);
 void devs_fiber_sync_now(devs_ctx_t *ctx);
 void devs_fiber_free_all_fibers(devs_ctx_t *ctx);
+unsigned devs_fiber_get_max_sleep(devs_ctx_t *ctx);
 
 // vm_main.c
 void devs_vm_exec_opcodes(devs_ctx_t *ctx);

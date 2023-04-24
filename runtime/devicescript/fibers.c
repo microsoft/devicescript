@@ -414,6 +414,23 @@ void devs_fiber_sync_now(devs_ctx_t *ctx) {
     ctx->_now_long = now_ms_long;
 }
 
+unsigned devs_fiber_get_max_sleep(devs_ctx_t *ctx) {
+    devs_fiber_sync_now(ctx);
+    int min_ms = 100;
+    uint32_t now_ = devs_now(ctx);
+
+    for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
+        if (fiber->wake_time) {
+            int d = fiber->wake_time - now_;
+            if (d < 0)
+                d = 0;
+            if (d < min_ms)
+                min_ms = d;
+        }
+    }
+    return min_ms * 1000;
+}
+
 static int devs_fiber_wake_some(devs_ctx_t *ctx) {
     if (devs_is_suspended(ctx))
         return 0;

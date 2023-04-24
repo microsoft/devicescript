@@ -5,7 +5,7 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
     _jd_em_set_device_id_2x_i32(id0: int32, id1: int32): void;
     _jd_em_set_device_id_string(str: ptr): void;
     _jd_em_init(): void;
-    _jd_em_process(): void;
+    _jd_em_process(): number;
     _jd_em_frame_received(frame: ptr): int32;
     _jd_em_devs_deploy(img: ptr, size: int32): int32;
     _jd_em_devs_verify(img: ptr, size: int32): int32;
