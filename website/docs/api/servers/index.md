@@ -1,14 +1,12 @@
 # Servers
 
-The `@devicescript/servers` module provides helper functions to mount service servers on your low level hardware components. Basically, you have access to all the drivers available in the C server SDK.
+Starting servers provide a programming abstraction for hardware periphericals. Some server implementations are builtin (written C), while others can be contributed as DeviceScript packages.
 
 ```ts
-import { Button } from "@devicescript/core"
 import { gpio } from "@devicescript/core"
 import { startButton } from "@devicescript/servers"
 
-startButton({
+const buttonA = startButton({
     pin: gpio(2),
 })
-const buttonA = new ds.Button()
 ```

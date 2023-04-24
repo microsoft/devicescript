@@ -1,7 +1,7 @@
 ---
 description: Configuring pins for servers
 title: Pins
-sidebar_position: 11
+sidebar_position: 9
 ---
 
 # Pins
@@ -10,12 +10,10 @@ You can either use hardware GPIO numbers using `gpio()` function, or you can imp
 a board definition file and use the labels present on the board.
 
 ```ts
-import { startButton } from "@devicescript/servers"
 import { pins } from "@dsboard/adafruit_qt_py_c3"
 
-const buttonA2 = startButton({
-    pin: pins.A2,
-})
+// highlight-next-line
+const A2 = pins.A2
 ```
 
 The doc-string for `pins.A2` will tell you GPIO number (`1` in this case).
@@ -30,5 +28,5 @@ The `gpio()` function does not check for pin functions or usage.
 import { gpio } from "@devicescript/core"
 
 // highlight-next-line
-const p0 = gpio(0)
+const P0 = gpio(0)
 ```

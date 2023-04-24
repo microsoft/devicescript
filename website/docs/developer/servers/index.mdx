@@ -11,7 +11,7 @@ low level hardware components to program them using DeviceScript.
 
 -   Learn more about the [available servers](/api/servers)
 
-## Built-in servers
+## [Analog](/developer/servers/analog) (builtin) servers
 
 DeviceScript provides helper functions to mount of variety of servers out of the box
 in the `@devicescript/servers` module.
@@ -20,10 +20,11 @@ For example, the [startButton](/api/servers/button) function allows to mount a [
 over a pin and returns the [client](/api/clients/button) for it.
 
 ```ts no-run
+import { gpio } from "@devicescript/core"
 import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
-    pin: ds.gpio(2),
+    pin: gpio(2),
 })
 ```
 
@@ -31,10 +32,11 @@ Once you've add this code to your script, you can interact with pin `2` (hardwar
 The variable name is automatically used as the **role** and **instance** name.
 
 ```ts no-run
+import { gpio } from "@devicescript/core"
 import { startButton } from "@devicescript/servers"
 
 const buttonA = startButton({
-    pin: ds.gpio(2),
+    pin: gpio(2),
 })
 buttonA.up.subscribe(() => {
     console.log("up!")
@@ -59,3 +61,7 @@ you will be available to bind a role to that module.
 For example, the KittenBot KeyCap button will surface as a **button server** when connected.
 
 [![A KittenBot KeyCap button](https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/keycapbuttonv10.list.jpg "KittenBot KeyCap button")](https://microsoft.github.io/jacdac-docs/devices/kittenbot/keycapbuttonv10/)
+
+## Serial, SPI, PWM
+
+Serial, SPI, PWM are not supported yet at the DeviceScript level.
