@@ -45,6 +45,8 @@ void devs_dump_stackframe(devs_ctx_t *ctx, devs_activation_t *fn) {
 int devs_vm_resume(devs_ctx_t *ctx) {
     if (!devs_is_suspended(ctx))
         return -1;
+    if (ctx->suspension == JD_DEVS_DBG_SUSPENSION_TYPE_PANIC)
+        return -2; // can't resume from panic
     ctx->suspension = JD_DEVS_DBG_SUSPENSION_TYPE_NONE;
     ctx->flags |= DEVS_CTX_PENDING_RESUME;
     return 0;

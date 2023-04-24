@@ -8,7 +8,9 @@
 // #define VLOGGING 1
 #include "devs_logging.h"
 
-#define SCAN_SECONDS 5
+#ifndef JD_WIFI_SCAN_SECONDS
+#define JD_WIFI_SCAN_SECONDS 10
+#endif
 
 static srv_t *_wifi_state;
 
@@ -197,7 +199,7 @@ static int8_t wifi_rssi(srv_t *state) {
 }
 
 void wifi_process(srv_t *state) {
-    if (jd_should_sample_ms(&state->next_scan, SCAN_SECONDS << 10)) {
+    if (jd_should_sample_ms(&state->next_scan, JD_WIFI_SCAN_SECONDS << 10)) {
         // tsagg_update("wifi", wifi_rssi(state));
         // tsagg_update("uptime", (double)now_ms_long / 1000);
         if (!state->is_connected)

@@ -392,7 +392,7 @@ void devs_panic(devs_ctx_t *ctx, unsigned code) {
         }
 
         // TODO for OOM we probably want to free up some memory first...
-        devs_vm_suspend(ctx, JD_DEVS_DBG_SUSPENSION_TYPE_PANIC);
+        ctx->suspension = JD_DEVS_DBG_SUSPENSION_TYPE_PANIC;
 
         devs_panic_handler(orig_code);
 
