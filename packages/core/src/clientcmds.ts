@@ -5,7 +5,7 @@ import * as ds from "@devicescript/core"
 
 declare module "@devicescript/core" {
     interface Led {
-        setAll(r: number, g: number, b: number): void
+        setAll(r: number, g: number, b: number): Promise<void>
     }
 
     interface LightBulb {
