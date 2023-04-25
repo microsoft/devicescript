@@ -1,8 +1,6 @@
 import * as ds from "@devicescript/core"
 
-export interface ServerOptions {
-    instanceName?: string
-}
+export interface ServerOptions {}
 
 export class Server implements ds.ServerInterface {
     serviceIndex: number
@@ -10,17 +8,11 @@ export class Server implements ds.ServerInterface {
     private readonly _instanceName: string
     private _stateCode: number = undefined
 
-    constructor(public spec: ds.ServiceSpec, options?: ServerOptions) {
-        this._instanceName = options?.instanceName
-    }
+    constructor(public spec: ds.ServiceSpec, options?: ServerOptions) {}
 
     async _send(pkt: ds.Packet) {
         if (this.debug) console.debug("Out SRV", pkt, pkt.spec)
         await ds._serverSend(this.serviceIndex, pkt)
-    }
-
-    instanceName(): string {
-        return this._instanceName
     }
 
     statusCode(): ds.AsyncValue<[number, number]> {
@@ -141,7 +133,11 @@ async function _onServerPacket(pkt: ds.Packet) {
     await server._send(pkt.notImplemented())
 }
 
-export function startServer(s: ds.ServerInterface) {
+function attachName(s: ds.BaseServerSpec, name: string) {
+    if (name) s.instanceName = () => name
+}
+
+export function startServer(s: ds.ServerInterface, name?: string) {
     if (!servers) {
         servers = [new ControlServer()]
         ;(ds as typeof ds)._onServerPacket = _onServerPacket
@@ -165,8 +161,8 @@ export function startServer(s: ds.ServerInterface) {
         if (o === s) break
         if (o.spec.classIdentifier === s.spec.classIdentifier) off++
     }
-    const sp = s as ds.BaseServerSpec
-    let roleName = sp.instanceName?.()
+    let roleName = name
     if (!roleName) roleName = s.spec.name + "_" + off
+    attachName(s, roleName)
     return `${roleName}[app:${off}]`
 }

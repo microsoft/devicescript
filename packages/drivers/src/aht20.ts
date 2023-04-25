@@ -58,7 +58,6 @@ export async function startAHT20(options?: { name?: string }) {
     await driver.init()
     return startTempHumidity(
         {
-            instanceName: options?.name,
             min: -40,
             max: 85,
             error: 1.5,
@@ -67,6 +66,7 @@ export async function startAHT20(options?: { name?: string }) {
         {
             error: 4,
             read: async () => (await driver.read()).humidity,
-        }
+        },
+        options?.name
     )
 }

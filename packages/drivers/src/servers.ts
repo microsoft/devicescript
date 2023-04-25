@@ -37,7 +37,7 @@ export class TemperatureServer
     }
 }
 
-export function startTemperature(options: TemperatureOptions) {
+export function startTemperature(options: TemperatureOptions, name?: string) {
     const id = startServer(new TemperatureServer(options))
     return new ds.Temperature(id)
 }
@@ -79,13 +79,12 @@ export function startHumidity(options: HumidityOptions) {
 
 export function startTempHumidity(
     topt: TemperatureOptions,
-    hopt: HumidityOptions
+    hopt: HumidityOptions,
+    name?: string
 ) {
-    if (
-        topt.instanceName &&
-        (!hopt.instanceName || hopt.instanceName === topt.instanceName)
-    )
-        hopt.instanceName = topt.instanceName + "_hum"
+    let humName: string = undefined
+    if(name) 
+        humName=name + "_hum"
     const temperature = startTemperature(topt)
     const humidity = startHumidity(hopt)
     return { temperature, humidity }
