@@ -189,6 +189,8 @@ void devs_trace(devs_ctx_t *ctx, unsigned evtype, const void *data, unsigned dat
 }
 
 void devs_oom(devs_ctx_t *ctx, unsigned size) {
+    devs_dump_heap(ctx, 0, 150);
+    devs_dump_heap(ctx, -1, 0);
     JD_LOG("devs: OOM (%u bytes)", (unsigned)size);
     devs_panic(ctx, DEVS_PANIC_OOM);
 }

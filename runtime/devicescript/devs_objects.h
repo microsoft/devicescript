@@ -254,6 +254,7 @@ static inline int devs_gc_tag(const void *ptr) {
 }
 
 void devs_gc_obj_check(devs_ctx_t *ctx, const void *ptr);
+int devs_dump_heap(devs_ctx_t *ctx, int off, int cnt);
 
 static inline bool devs_is_map(const void *ptr) {
     int t = devs_gc_tag(ptr);

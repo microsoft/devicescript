@@ -717,3 +717,54 @@ void devs_gc_obj_check_core(devs_gc_t *gc, const void *ptr) {
 void devs_gc_obj_check(devs_ctx_t *ctx, const void *ptr) {
     devs_gc_obj_check_core(ctx->gc, ptr);
 }
+
+int devs_dump_heap(devs_ctx_t *ctx, int off, int cnt) {
+    int curr = 0;
+    int endoff = off + cnt;
+
+    int numobj = 0;
+    int used_size = 0;
+    int free_size = 0;
+
+    for (chunk_t *chunk = ctx->gc->first_chunk; chunk; chunk = chunk->next) {
+        for (block_t *block = chunk->start;; block = next_block(block)) {
+            uintptr_t header = block->header;
+            unsigned tag = GET_TAG(header);
+            if (tag == DEVS_GC_TAG_FINAL)
+                break;
+            JD_ASSERT(block < chunk->end);
+
+            if (off == -1) {
+                numobj++;
+                int sz = block_size(block) * sizeof(void *);
+                if (tag == DEVS_GC_TAG_FREE)
+                    free_size += sz;
+                else
+                    used_size += sz;
+                continue;
+            }
+
+            if (tag != DEVS_GC_TAG_ACTIVATION)
+                continue;
+
+            if (curr++ < off)
+                continue;
+            if (curr > endoff)
+                return curr;
+            if (tag == DEVS_GC_TAG_ACTIVATION) {
+                devs_activation_t *fn = &block->act;
+                int idx = fn->func - devs_img_get_function(ctx->img, 0);
+                JD_LOG("act: %s_F%d (pc:%d)", devs_img_fun_name(ctx->img, idx), idx,
+                       (int)(fn->pc - fn->func->start));
+            } else {
+                JD_LOG("%s: %p", devs_gc_tag_name(tag), block);
+            }
+        }
+    }
+
+    if (off == -1) {
+        JD_LOG("stats: %d objects, %d B used, %d B free", numobj, used_size, free_size);
+    }
+
+    return curr;
+}
