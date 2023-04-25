@@ -5,9 +5,9 @@ const ledD = new ds.Led()
 const btn = new ds.Button()
 let p
 
-pot.position.subscribe(async p => {
+pot.reading.subscribe(async p => {
     console.log("tick", p)
-    await ledD.brightness.write(p * 0.3)
+    await ledD.intensity.write(p * 0.3)
 })
 
 declare module "@devicescript/core" {

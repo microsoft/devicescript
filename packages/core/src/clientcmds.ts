@@ -45,9 +45,9 @@ ds.Led.prototype.setAll = async function (r, g, b) {
 }
 
 ds.LightBulb.prototype.toggle = async function (lowerThreshold?: number) {
-    const value = await this.brightness.read()
+    const value = await this.intensity.read()
     const on = value > (lowerThreshold || 0)
-    await this.brightness.write(on ? 0 : 1)
+    await this.intensity.write(on ? 0 : 1)
 }
 
 ds.Button.prototype.pressed = function pressed() {
@@ -78,8 +78,8 @@ ds.RotaryEncoder.prototype.asPotentiometer = function (steps?: number) {
     const reg = ds.clientRegister(0)
     async function init() {
         if (!steps) steps = await self.clicksPerTurn.read()
-        let p0 = await self.position.read()
-        self.position.subscribe(async v => {
+        let p0 = await self.reading.read()
+        self.reading.subscribe(async v => {
             const curr = Math.clamp(0, v - p0, steps)
             p0 = v - curr
             await reg.emit(curr / steps)

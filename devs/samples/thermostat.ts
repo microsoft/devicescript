@@ -8,10 +8,10 @@ heater.binding().subscribe(bound => {
     else console.log("heater lost")
 })
 
-thermometer.temperature.subscribe(async t => {
+thermometer.reading.subscribe(async t => {
     if (t < 21) {
-        await heater.active.write(true)
+        await heater.enabled.write(true)
     } else {
-        await heater.active.write(false)
+        await heater.enabled.write(false)
     }
 })

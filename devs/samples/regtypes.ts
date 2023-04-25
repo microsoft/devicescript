@@ -8,8 +8,8 @@ const dc = new ds.DcCurrentMeasurement()
 const nm = await dc.measurementName.read() // read string
 
 const sw = new ds.Switch()
-const curr = await sw.active.read() // active matches something in _system
-sw.active.subscribe(() => {})
+const curr = await sw.reading.read() // active matches something in _system
+sw.reading.subscribe(() => {})
 
 const wifi = new ds.Wifi()
 const theip = await wifi.ipAddress.read()

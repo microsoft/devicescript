@@ -1,7 +1,7 @@
 import * as ds from "@devicescript/core"
 import { DriverError } from "./core"
 import { I2CSensorDriver } from "./driver"
-import { SensorServer, startServer } from "@devicescript/server"
+import { startSimpleServer } from "./servers"
 
 const LTR390UV_ADDR = 0x53
 const LTR390UV_MAIN_CTRL = 0x00
@@ -55,63 +55,30 @@ class LTR390Driver extends I2CSensorDriver<{
     }
 }
 
-export class IlluminanceServer
-    extends SensorServer<ds.IlluminanceServerSpec>
-    implements ds.IlluminanceServerSpec
-{
-    constructor(
-        public illuminance: () => Promise<number>,
-        private _errorFrac: number
-    ) {
-        super(ds.Illuminance.spec, "illuminance")
-    }
-
-    async illuminanceError() {
-        return this._errorFrac * (await this.illuminance())
-    }
-}
-
-export class UvIndexServer
-    extends SensorServer<ds.UvIndexServerSpec>
-    implements ds.UvIndexServerSpec
-{
-    constructor(
-        public uvIndex: () => Promise<number>,
-        private _errorFrac: number
-    ) {
-        super(ds.UvIndex.spec, "uvIndex")
-    }
-
-    async uvIndexError() {
-        return this._errorFrac * (await this.uvIndex())
-    }
-}
-
 /**
  * Start driver for LITEON LTR-390UV-01 UV/ambient light sensor at I2C address `0x53`.
  * @link https://optoelectronics.liteon.com/upload/download/DS86-2015-0004/LTR-390UV_Final_%20DS_V1%201.pdf Datasheet
  * @throws DriverError
  */
 export async function startLTR390(options?: { name?: string }) {
-    console.log("starting LTR")
     const driver = new LTR390Driver()
     await driver.init()
     const uvindex = new ds.UvIndex(
-        startServer(
-            new UvIndexServer(async () => (await driver.read()).uvindex, 0.1),
-            options?.name
-        )
+        startSimpleServer({
+            ...options,
+            spec: ds.UvIndex.spec,
+            errorFraction: 0.1,
+            reading: async () => (await driver.read()).uvindex,
+        })
     )
     const illuminance = new ds.Illuminance(
-        startServer(
-            new IlluminanceServer(
-                async () => (await driver.read()).illuminance,
-                0.1
-            ),
-            options?.name
-        )
+        startSimpleServer({
+            ...options,
+            spec: ds.Illuminance.spec,
+            errorFraction: 0.1,
+            reading: async () => (await driver.read()).illuminance,
+        })
     )
-    console.log("started LTR")
 
     return { uvindex, illuminance }
 }

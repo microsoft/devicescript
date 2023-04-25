@@ -60,12 +60,12 @@ export async function startAHT20(options?: { name?: string }) {
         {
             min: -40,
             max: 85,
-            error: 1.5,
-            read: async () => (await driver.read()).temperature,
+            errorValue: 1.5,
+            reading: async () => (await driver.read()).temperature,
         },
         {
-            error: 4,
-            read: async () => (await driver.read()).humidity,
+            errorValue: 4,
+            reading: async () => (await driver.read()).humidity,
         },
         options?.name
     )

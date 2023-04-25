@@ -64,12 +64,12 @@ export async function startSHTC3(options?: { name?: string }) {
         {
             min: -40,
             max: 125,
-            error: 0.8,
-            read: async () => (await driver.read()).temperature,
+            errorValue: 0.8,
+            reading: async () => (await driver.read()).temperature,
         },
         {
-            error: 3.5,
-            read: async () => (await driver.read()).humidity,
+            errorValue: 3.5,
+            reading: async () => (await driver.read()).humidity,
         },
         options?.name
     )

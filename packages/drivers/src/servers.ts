@@ -1,90 +1,92 @@
 import * as ds from "@devicescript/core"
-import {
-    SensorServer,
-    SensorServerOptions,
-    startServer,
-} from "@devicescript/server"
+import { SensorServer, startServer } from "@devicescript/server"
 
-export interface TemperatureOptions extends SensorServerOptions {
+class SimpleSensorServer extends SensorServer {
+    errorFraction: number
+    errorValue: number
     min: number
     max: number
-    error: number
-    read: () => Promise<number>
-}
+    name: string
 
-export class TemperatureServer
-    extends SensorServer<ds.TemperatureServerSpec>
-    implements ds.TemperatureServerSpec
-{
-    options: TemperatureOptions
-
-    constructor(options: TemperatureOptions) {
-        super(ds.Temperature.spec, "temperature", options)
-        this.options = options
+    constructor(options: SimpleSensorOptions) {
+        super(options.spec)
+        Object.assign(this, options)
     }
 
-    async temperature() {
-        return await this.options.read()
-    }
-    minTemperature() {
-        return this.options.min
-    }
-    maxTemperature() {
-        return this.options.max
-    }
-    temperatureError() {
-        return this.options.error
-    }
-}
-
-export function startTemperature(options: TemperatureOptions, name?: string) {
-    const id = startServer(new TemperatureServer(options))
-    return new ds.Temperature(id)
-}
-
-export interface HumidityOptions extends SensorServerOptions {
-    error: number
-    read: () => Promise<number>
-}
-
-export class HumidityServer
-    extends SensorServer<ds.HumidityServerSpec>
-    implements ds.HumidityServerSpec
-{
-    options: HumidityOptions
-
-    constructor(options: HumidityOptions) {
-        super(ds.Humidity.spec, "humidity", options)
-        this.options = options
-    }
-
-    async humidity() {
-        return await this.options.read()
-    }
-    humidityError() {
-        return this.options.error
-    }
-    minHumidity() {
+    async reading() {
         return 0
     }
-    maxHumidity() {
-        return 100
+
+    async readingError() {
+        if (typeof this.errorFraction === "number")
+            return this.errorFraction * (await this.reading())
+        else if (typeof this.errorValue === "number") return this.errorValue
+        else return undefined
+    }
+
+    async instanceName() {
+        return this.name
+    }
+
+    async minReading() {
+        return this.min
+    }
+
+    async maxReading() {
+        return this.max
     }
 }
 
-export function startHumidity(options: HumidityOptions) {
-    const id = startServer(new HumidityServer(options))
-    return new ds.Humidity(id)
+export interface SimpleSensorBaseOptions {
+    reading(): ds.AsyncValue<number>
+    minReading?(): ds.AsyncValue<number>
+    maxReading?(): ds.AsyncValue<number>
+    readingError?(): ds.AsyncValue<number>
+    variant?(): ds.AsyncValue<number>
+    errorFraction?: number
+    errorValue?: number
+    min?: number
+    max?: number
+    name?: string
+}
+
+export interface SimpleSensorOptions extends SimpleSensorBaseOptions {
+    spec: ds.ServiceSpec
+}
+
+export function startSimpleServer(options: SimpleSensorOptions) {
+    return startServer(new SimpleSensorServer(options), options.name)
+}
+
+export function startTemperature(options: SimpleSensorBaseOptions) {
+    return new ds.Temperature(
+        startSimpleServer({
+            ...options,
+            spec: ds.Temperature.spec,
+        })
+    )
+}
+
+export function startHumidity(options: SimpleSensorBaseOptions) {
+    if (options.min === undefined) options.min = 0
+    if (options.max === undefined) options.max = 100
+    return new ds.Humidity(
+        startSimpleServer({
+            ...options,
+            spec: ds.Humidity.spec,
+        })
+    )
 }
 
 export function startTempHumidity(
-    topt: TemperatureOptions,
-    hopt: HumidityOptions,
+    topt: SimpleSensorBaseOptions,
+    hopt: SimpleSensorBaseOptions,
     name?: string
 ) {
     let humName: string = undefined
-    if(name) 
-        humName=name + "_hum"
+    if (name) humName = name + "_hum"
+    if (!topt.name) topt.name = name
+    if (!hopt.name) hopt.name = humName
     const temperature = startTemperature(topt)
     const humidity = startHumidity(hopt)
     return { temperature, humidity }

@@ -82,7 +82,7 @@ export class PinImpl implements ds.IOPin, ds.AnalogInPin, ds.AnalogOutPin {
 
         while (this._value === undefined) {
             // poke it
-            await gpio.state.read()
+            await gpio.reading.read()
             await ds.delay(20)
         }
         return this._value
@@ -115,7 +115,7 @@ let _pins: PinImpl[]
 ;(ds as typeof ds).gpio = function (num) {
     if (!_pins) {
         _pins = []
-        gpio.state.subscribe(async buf => {
+        gpio.reading.subscribe(async buf => {
             const chg: PinImpl[] = []
             for (const p of _pins) {
                 if (p._intId !== undefined) {

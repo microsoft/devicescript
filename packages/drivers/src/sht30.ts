@@ -43,12 +43,12 @@ export async function startSHT30(options?: {
         {
             min: -40,
             max: 125,
-            error: 0.6,
-            read: async () => (await driver.read()).temperature,
+            errorValue: 0.6,
+            reading: async () => (await driver.read()).temperature,
         },
         {
-            error: 4,
-            read: async () => (await driver.read()).humidity,
+            errorValue: 4,
+            reading: async () => (await driver.read()).humidity,
         },
         options?.name
     )

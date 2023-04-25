@@ -5,15 +5,15 @@ const led = new ds.LightBulb()
 const relay = new ds.Relay()
 let p
 
-pot.position.subscribe(async p => {
+pot.reading.subscribe(async p => {
     console.log("tick", p)
-    await led.brightness.write(p)
+    await led.intensity.write(p)
 })
 
-led.brightness.subscribe(async b => {
-    await relay.active.write(b < 0.2)
+led.intensity.subscribe(async b => {
+    await relay.enabled.write(b < 0.2)
 })
 
 setInterval(async () => {
-    console.log("lb", await led.brightness.read())
+    console.log("lb", await led.intensity.read())
 }, 200)

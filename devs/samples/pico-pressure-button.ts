@@ -3,7 +3,7 @@ import * as ds from "@devicescript/core"
 const sensor = new ds.AirPressure()
 const mouse = new ds.HidMouse()
 // listen for pressure changes
-sensor.pressure.subscribe(async pressure => {
+sensor.reading.subscribe(async pressure => {
     console.log(pressure)
     // user blows in straw
     if (pressure > 1400) {

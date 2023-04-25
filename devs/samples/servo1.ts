@@ -11,7 +11,7 @@ button1.down.subscribe(async () => {
     x = x + 1
     await servo1.angle.write(50)
 })
-airPressure1.pressure.subscribe(async () => {
+airPressure1.reading.subscribe(async () => {
     x = 0
     await servo1.angle.write(-35)
 })

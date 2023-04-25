@@ -8,7 +8,7 @@ async function foo() {
 
     await r.down.subscribe(() => {})
     r.binding().subscribe(() => {})
-    await r.pressure.subscribe(() => {})
+    await r.reading.subscribe(() => {})
 }
 
 if (g > 0) {

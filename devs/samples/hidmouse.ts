@@ -10,9 +10,9 @@ btn.down.subscribe(async () => {
     await mouse.move(0, -5 * scale, 100)
 })
 
-let prevV = await rot.position.read()
-rot.position.subscribe(async () => {
-    const v = await rot.position.read()
+let prevV = await rot.reading.read()
+rot.reading.subscribe(async () => {
+    const v = await rot.reading.read()
     await mouse.move(scale * (v - prevV), 0, 100)
     prevV = v
     await ds.sleep(100)

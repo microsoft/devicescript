@@ -8,7 +8,7 @@ export interface SensorServerOptions extends ServerOptions {
     interval?: number
 }
 
-export class SensorServer<T extends ds.SensorServerSpec>
+export class SensorServer
     extends Server
     implements ds.SensorServerSpec
 {
@@ -19,7 +19,6 @@ export class SensorServer<T extends ds.SensorServerSpec>
 
     constructor(
         spec: ds.ServiceSpec,
-        public readingName: keyof T & string,
         options?: SensorServerOptions
     ) {
         super(spec, options)
@@ -36,8 +35,8 @@ export class SensorServer<T extends ds.SensorServerSpec>
         }
     }
     private async sendSample() {
-        const v = await (this as any)[this.readingName]()
-        const p = this.spec.lookup(this.readingName).encode(v)
+        const v = await (this as any).reading()
+        const p = this.spec.lookup("reading").encode(v)
         await this._send(p)
         this._streamingSamples--
         this.maybeStop()

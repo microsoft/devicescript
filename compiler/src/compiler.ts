@@ -65,6 +65,7 @@ import {
     trace,
 } from "./tsiface"
 import {
+    pktName,
     preludeFiles,
     resolveBuildConfig,
     unresolveBuildConfig,
@@ -3845,7 +3846,7 @@ class Program implements TopOpWriter {
                     if (numfmt == -1) numfmt = this.fieldFmt(pkt.fields[0])
                     else flags |= PacketSpecFlag.MULTI_FIELD
                     const pktDesc = encodeU16LE([
-                        this.addString(camelize(pkt.name)),
+                        this.addString(pktName(pkt)),
                         code,
                         flags,
                         numfmt,

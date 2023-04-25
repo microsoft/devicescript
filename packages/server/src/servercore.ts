@@ -32,7 +32,7 @@ export class ControlServer extends Server implements ds.ControlServerSpec {
     constructor() {
         super(ds.Control.spec)
     }
-    services(): ds.AsyncValue<any[]> {
+    announce(): ds.AsyncValue<any[]> {
         if (restartCnt < ds.ControlAnnounceFlags.RestartCounterSteady)
             restartCnt++
 
@@ -143,8 +143,8 @@ export function startServer(s: ds.ServerInterface, name?: string) {
         ;(ds as typeof ds)._onServerPacket = _onServerPacket
         setInterval(async () => {
             const iserv = servers[0] as ds.ControlServerSpec
-            const spec = ds.Control.spec.lookup("services")
-            const pkt = spec.response.encode(await iserv.services())
+            const spec = ds.Control.spec.lookup("announce")
+            const pkt = spec.response.encode(await iserv.announce())
             await iserv._send(pkt)
         }, 500)
     }

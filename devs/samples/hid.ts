@@ -21,9 +21,9 @@ async function press(k: number) {
     await ds.sleep(20)
 }
 
-let prevV = await rot.position.read()
-rot.position.subscribe(async () => {
-    const v = await rot.position.read()
+let prevV = await rot.reading.read()
+rot.reading.subscribe(async () => {
+    const v = await rot.reading.read()
     while (prevV < v) {
         prevV = prevV + 1
         await press(ds.HidKeyboardSelector.RightArrow)

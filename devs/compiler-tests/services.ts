@@ -9,12 +9,12 @@ const btn = new ds.Button()
 const clr = new ds.Color()
 async function test1() {
     {
-        let [a, b] = await btn.pressure.read() //! method that returns an iterator
-        let [aa] = await btn.pressure.read() //! method that returns an iterator
+        let [a, b] = await btn.reading.read() //! method that returns an iterator
+        let [aa] = await btn.reading.read() //! method that returns an iterator
     }
 
     {
-        let [a, b] = await clr.color.read() // OK
+        let [a, b] = await clr.reading.read() // OK
     }
 }
 

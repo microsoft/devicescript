@@ -100,6 +100,35 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
     )
 }
 
+let sysCache: Record<string, jdspec.PacketInfo>
+
+export function pktName(pkt: jdspec.PacketInfo): string {
+    if (!sysCache) {
+        sysCache = {}
+        for (const pkt of jacdacDefaultSpecifications.find(
+            s => s.camelName == "system"
+        ).packets) {
+            // these typically have much better names in the spec
+            // there also isn't much gain in harmonizing
+            if (["value", "active", "inactive"].includes(pkt.name)) continue
+            sysCache[pkt.kind + ":" + pkt.identifier] = pkt
+        }
+    }
+
+    const sys = sysCache[pkt.kind + ":" + pkt.identifier]
+    if (sys) {
+        if (
+            sys.name == "intensity" &&
+            pkt.fields.length == 1 &&
+            pkt.fields[0].type == "bool"
+        )
+            return "enabled"
+        return camelize(sys.name)
+    }
+
+    return camelize(pkt.name)
+}
+
 export function specToDeviceScript(info: jdspec.ServiceSpec): string {
     let r = ""
     let srv = ""
@@ -169,7 +198,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         let sx = ""
         let argtp = packetType(info, pkt)
         const client = !!pkt.client
-        const pktName = camelize(pkt.name)
+        const nameOfPkt = pktName(pkt)
         const opt = pkt.optional ? "?" : ""
         let enumPref = ""
         let enumMask = 0
@@ -184,11 +213,11 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
                 kw = "readonly "
                 tp = "Register"
                 const rettp =
-                    pktName == "instanceName" ? argtp : `AsyncValue<${argtp}>`
-                srv += `    ${pktName}${opt}(): ${rettp}\n`
+                    nameOfPkt == "instanceName" ? argtp : `AsyncValue<${argtp}>`
+                srv += `    ${nameOfPkt}${opt}(): ${rettp}\n`
                 if (pkt.kind == "rw") {
                     const args = pktFields(info, pkt)
-                    srv += `    set_${pktName}${opt}(${args}): AsyncValue<void>\n`
+                    srv += `    set_${nameOfPkt}${opt}(${args}): AsyncValue<void>\n`
                 }
             }
         } else if (pkt.kind == "event") {
@@ -216,16 +245,18 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         }
 
         if (enumPref) {
-            const id = upperCamel(pkt.name)
+            const id = upperFirst(pktName(pkt))
             const code = enumMask | pkt.identifier
             codes += `    ${enumPref}${id} = 0x${code.toString(16)},\n`
         }
 
         if (tp) {
             if (docUrl)
-                cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pkt.name} Documentation}`
+                cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pktName(
+                    pkt
+                )} Documentation}`
             r += wrapComment("devs", cmt.comment)
-            r += `    ${kw}${pktName}${sx}: ${tp}<${argtp}>\n`
+            r += `    ${kw}${nameOfPkt}${sx}: ${tp}<${argtp}>\n`
         }
     })
 
@@ -420,7 +451,7 @@ ${varname}.${sig}
     regs.forEach(pkt => {
         const cmt = addComment(pkt)
         const nobuild = status === "stable" && !pkt.client ? "" : "skip"
-        const pname = camelize(pkt.name)
+        const pname = pktName(pkt)
         const isConst = pkt.kind === "const"
         let tp: string = undefined
         if (cmt.needsStruct) {
@@ -437,7 +468,7 @@ ${varname}.${sig}
         const isBoolean = tp === REGISTER_BOOL
         const isString = tp === REGISTER_STRING
         r.push(
-            `### ${pname} {#${pkt.kind}:${pkt.name}}
+            `### ${pname} {#${pkt.kind}:${pktName(pkt)}
 `,
             pkt.description,
             "",
@@ -497,7 +528,7 @@ ${varname}.${pname}.subscribe(async (value) => {
     )
     if (evts.length) r.push("## Events", "")
     evts.forEach(pkt => {
-        const pname = camelize(pkt.name)
+        const pname = pktName(pkt)
         r.push(
             `### ${pname}`,
             "",
@@ -561,7 +592,7 @@ function commandSig(
     srv = false
 ) {
     const fields = pktFields(info, pkt)
-    let name = camelize(pkt.name)
+    let name = pktName(pkt)
     const report = info.packets.find(
         p => p.kind == "report" && p.identifier == pkt.identifier
     )
