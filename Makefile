@@ -83,3 +83,4 @@ gdb-run gr:
 
 ac:
 	$(CLI) build -F allFunctions -F allPrototypes devs/run-tests/allcompile.ts
+	$(CLI) snippets

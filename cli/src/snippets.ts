@@ -1,56 +1,37 @@
-import { compileWithHost, Host } from "@devicescript/compiler"
 import glob from "fast-glob"
-import { ensureDirSync } from "fs-extra"
-import { readFile, writeFile } from "fs/promises"
-import { relative, resolve, dirname } from "path"
-import { buildConfigFromDir, getHost } from "./build"
-import { BINDIR, error, log } from "./command"
-import { BuildOptions } from "./sideprotocol"
+import { ensureDir } from "fs-extra"
+import { readFile, rm, writeFile } from "fs/promises"
+import { resolve, dirname } from "path"
+import { compileFile } from "./build"
+import { log } from "./command"
 
 export interface SnippetsOptions {
     include: string
     exclude?: string
 }
 
-const fn = "devs/tmp/snippets.ts"
-
-async function snippetHost(options: BuildOptions) {
-    ensureDirSync(BINDIR)
-    ensureDirSync(dirname(fn))
-
-    const folder = resolve(".")
-    const entryPoint = relative(folder, fn)
-    const { errors, buildConfig } = buildConfigFromDir(
-        folder,
-        entryPoint,
-        options
-    )
-
-    if (errors.length) process.exit(1)
-
-    const host = await getHost(buildConfig, options, folder)
-    return host
-}
-
-async function buildSnippet(snip: string, host: Host) {
-    await writeFile(fn, snip)
-    const res = compileWithHost(fn, host)
-    return res
-}
+const snipFolder = "devs/snippets"
 
 export async function snippets(options: SnippetsOptions) {
     const files = await glob(options.include, {
         ignore: options.exclude ? [options.exclude] : [],
     })
+
+    await rm(snipFolder, { recursive: true, force: true })
+
     const pref = 'import * as ds from "@devicescript/core"'
-    const host = await snippetHost({})
-    let numerr = 0
+    let imports = ""
+    let numsnip = 0
+
     for (const fn of files) {
         const md = await readFile(fn, "utf-8")
-        const snips: string[] = []
+        const snips: { line: number; snip: string }[] = []
         md.replace(
             /```(.*)\n([^]*?)```/g,
-            (_, optline: string, snip: string) => {
+            (full: string, optline: string, snip: string) => {
+                const line =
+                    md.slice(0, md.indexOf(full)).replace(/[^\n]/g, "").length +
+                    2
                 const opts = optline.split(/\s+/).filter(Boolean)
                 if (
                     !opts.includes("skip") &&
@@ -58,21 +39,31 @@ export async function snippets(options: SnippetsOptions) {
                     !optline.includes("/sim/")
                 ) {
                     if (!snip.includes(pref)) snip = pref + "\n" + snip
-                    snips.push(snip)
+                    snip = `// ${fn}(${line})\n` + snip
+                    snips.push({ line, snip })
                 }
                 return ""
             }
         )
 
-        for (let idx = 0; idx < snips.length; ++idx) {
-            console.log(`${fn} / ${idx}`)
-            const res = await buildSnippet(snips[idx], host)
-            if (!res.success) numerr++
+        for (const { line, snip } of snips) {
+            const bn = fn.replace(/\.\w+$/, "")
+            const mod = bn.replace(/\\/g, "/") + "_" + line
+            const fullname = resolve(snipFolder, mod + ".ts")
+            await ensureDir(dirname(fullname))
+            await writeFile(fullname, snip)
+            imports += `import "./${mod}"\n`
+            numsnip++
         }
     }
 
-    if (numerr) {
-        error(`${numerr} error(s)`)
-        process.exit(1)
-    } else log("OK!")
+    const idx = resolve(snipFolder, "index.ts")
+    await writeFile(idx, imports)
+
+    const res = await compileFile(idx, {
+        ignoreMissingConfig: true,
+        flag: { allFunctions: true, allPrototypes: true },
+    })
+    if (!res.success) process.exit(1)
+    log(`${numsnip} snippets OK!`)
 }

@@ -18,3 +18,4 @@ packages/core/src/devicescript-boards.d.ts
 .vscode/settings.json
 packages/.vscode
 __pycache__
+devs/snippets
