@@ -1200,8 +1200,10 @@ class Program implements TopOpWriter {
 
         wr.emitLabel(loop.topLbl)
 
-        const cond = this.emitExpr(stmt.condition)
-        wr.emitJumpIfFalse(loop.breakLbl, cond)
+        if (stmt.condition) {
+            const cond = this.emitExpr(stmt.condition)
+            wr.emitJumpIfFalse(loop.breakLbl, cond)
+        }
 
         try {
             this.proc.loopStack.push(loop)

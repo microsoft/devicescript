@@ -1,4 +1,4 @@
-import { AsyncValue, I2C, millis, sleep } from "@devicescript/core"
+import { AsyncValue, I2C, isSimulator, millis, sleep } from "@devicescript/core"
 import { i2c } from "@devicescript/i2c"
 import { DriverError, throttle } from "./core"
 
@@ -33,11 +33,14 @@ export abstract class I2CDriver {
      * @throws DriverError
      */
     async init(): Promise<void> {
+        if (isSimulator()) return
         try {
             await this.initDriver()
-        } catch (e) {
+        } catch (e: any) {
             if (e instanceof DriverError) throw e
-            throw new DriverError("I2C device not found or malfunctioning.")
+            throw new DriverError(
+                "I2C device not found or malfunctioning: " + e.message
+            )
         }
     }
 
@@ -151,6 +154,8 @@ export abstract class I2CSensorDriver<TData> extends I2CDriver {
      * @returns
      */
     async read(): Promise<TData> {
+        if (isSimulator()) return {} as any
+
         // lock on reading data
         while (this._dataTime === -1) await sleep(5)
 

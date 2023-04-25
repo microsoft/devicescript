@@ -42,7 +42,7 @@ export interface SimpleSensorBaseOptions {
     minReading?(): ds.AsyncValue<number>
     maxReading?(): ds.AsyncValue<number>
     readingError?(): ds.AsyncValue<number>
-    variant?(): ds.AsyncValue<number>
+    variant?(): () => number
     errorFraction?: number
     errorValue?: number
     min?: number
@@ -54,7 +54,38 @@ export interface SimpleSensorOptions extends SimpleSensorBaseOptions {
     spec: ds.ServiceSpec
 }
 
+let simRoles: any
+
+function simRole(pref: string) {
+    for (let i = 0; ; i++) {
+        const k = pref + "_" + i
+        if (!simRoles[k]) {
+            simRoles[k] = true
+            return k
+        }
+    }
+}
+
 export function startSimpleServer(options: SimpleSensorOptions) {
+    if (ds.isSimulator()) {
+        if (!simRoles) simRoles = {}
+        let name = options.name
+        if (!name) name = simRole(options.spec.name)
+        else simRoles[name] = true
+        const keys: (keyof SimpleSensorOptions)[] = ["min", "max", "errorValue"]
+        let num = 0
+        for (const key of keys) {
+            if (options[key] !== undefined) addkv(key, options[key])
+        }
+        if (options.variant) addkv("variant", options.variant())
+        console.debug(`request sim: ${name}`)
+        return name
+
+        function addkv(key: string, value: any) {
+            name += (num === 0 ? "?" : "&") + key + "=" + value
+            num++
+        }
+    }
     return startServer(new SimpleSensorServer(options), options.name)
 }
 
