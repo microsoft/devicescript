@@ -7,14 +7,14 @@ const relay = new ds.Relay()
 let target = 21 // deg C
 
 setInterval(async () => {
-    const t = await temp.temperature.read()
+    const t = await temp.reading.read()
     console.log(`t: ${t}, s: ${target}`)
     if (t > target + 1) {
-        await relay.active.write(false)
+        await relay.enabled.write(false)
         // wait 10000
         await ds.sleep(10000)
     } else if (t < target - 1) {
-        await relay.active.write(true)
+        await relay.enabled.write(true)
         // wait 10000
         await ds.sleep(10000)
     } else {

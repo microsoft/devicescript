@@ -17,5 +17,5 @@ import { startReflectedLight } from "@devicescript/servers"
 const sensor = startReflectedLight({
     pin: ds.gpio(3),
 })
-sensor.brightness.subscribe(brightness => console.data({ brightness }))
+sensor.reading.subscribe(brightness => console.data({ brightness }))
 ```

@@ -17,5 +17,5 @@ import { startWaterLevel } from "@devicescript/servers"
 const sensor = startWaterLevel({
     pin: ds.gpio(3),
 })
-sensor.level.subscribe(level => console.data({ level }))
+sensor.reading.subscribe(level => console.data({ level }))
 ```

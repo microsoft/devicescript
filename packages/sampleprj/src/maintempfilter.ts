@@ -2,9 +2,7 @@ import { Temperature } from "@devicescript/core"
 import { auditTime, ewma, tap } from "@devicescript/observables"
 
 const thermometer = new Temperature()
-const { temperature } = thermometer
-
-temperature
+thermometer.reading
     .pipe(
         tap(t_raw => console.data({ t_raw })),
         ewma(0.9),

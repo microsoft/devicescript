@@ -24,7 +24,7 @@ import { threshold, throttleTime } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 // create a stream of temperature readings
-const temperature = thermometer.temperature.pipe(
+const temperature = thermometer.reading.pipe(
     threshold(0.1), // at least 0.1deg change
     throttleTime(10000) // at most one update per 10s
 )

@@ -29,7 +29,7 @@ const rot = startRotaryEncoder({
 
 rot.position.subscribe(async p => {
     p = Math.abs(p)
-    await bulb.brightness.write((p % 10) / 10)
+    await bulb.intensity.write((p % 10) / 10)
 })
 
 let freq = 100

@@ -17,5 +17,5 @@ import { startSoilMoisture } from "@devicescript/servers"
 const sensor = startSoilMoisture({
     pin: ds.gpio(3),
 })
-sensor.moisture.subscribe(moisture => console.data({ moisture }))
+sensor.reading.subscribe(moisture => console.data({ moisture }))
 ```

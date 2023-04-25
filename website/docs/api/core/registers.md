@@ -19,7 +19,7 @@ The `read` method gets the current reported value stored in the register.
 ```ts
 const sensor = new ds.Temperature()
 setInterval(async () => {
-    const t = await sensor.temperature.read()
+    const t = await sensor.reading.read()
     console.log(t)
 }, 1000)
 ```
@@ -31,7 +31,7 @@ The `write` method sets the current value of the register and only applies to `r
 ```ts
 const led = new ds.Led()
 
-await led.brightness.write(0.5)
+await led.intensity.write(0.5)
 ```
 
 ## subscribe
@@ -40,7 +40,7 @@ The `subscribe` method registers a callback that gets raised whenever a value up
 
 ```ts
 const sensor = new ds.Temperature()
-sensor.temperature.subscribe(value => {
+sensor.reading.subscribe(value => {
     console.log(value)
 })
 ```
@@ -49,7 +49,7 @@ The `subscribe` method returns an **unsubscribe** function that allows to remove
 
 ```ts
 const sensor = new ds.Temperature()
-const unsubscribe = sensor.temperature.subscribe(value => {
+const unsubscribe = sensor.reading.subscribe(value => {
     console.log(value)
 })
 

@@ -130,7 +130,7 @@ import { threshold } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-thermometer.temperature
+thermometer.reading
     // highlight-next-line
     .pipe(threshold(2))
     .subscribe(t => console.log(t))
@@ -217,7 +217,7 @@ import { ewma } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-thermometer.temperature
+thermometer.reading
     // highlight-next-line
     .pipe(ewma(0.5))
     .subscribe(t => console.log(t))

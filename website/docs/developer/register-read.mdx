@@ -14,7 +14,7 @@ the reading is in `hPa` and should be around 1000.
 ```ts edit
 const sensor = new ds.AirPressure()
 // highlight-next-line
-sensor.pressure.subscribe(async pressure => {
+sensor.reading.subscribe(async pressure => {
     console.data({ pressure })
 })
 ```
@@ -27,7 +27,7 @@ The `subscribe` method returns an `unsubscribe` callback.
 
 ```ts edit
 const sensor = new ds.AirPressure()
-const unsubscribe = sensor.pressure
+const unsubscribe = sensor.reading
     .subscribe(async pressure => console.data({ pressure }))
 
 // cleanup
@@ -43,5 +43,5 @@ You can also read the sensor data using the `read` function.
 const sensor = new ds.AirPressure()
 
 // highlight-next-line
-const pressure = await sensor.pressure.read()
+const pressure = await sensor.reading.read()
 ```

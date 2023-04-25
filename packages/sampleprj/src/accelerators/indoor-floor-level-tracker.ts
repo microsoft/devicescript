@@ -44,8 +44,8 @@ const readings = register<Partial<Reading>>({})
 // reading samples and injecting into readings
 interval(FLOOR_SAMPLE_PERIOD).pipe(
     map(async _ => {
-        const humidity = await bmp.humidity.read()
-        const temp = await tmp.temperature.read()
+        const humidity = await bmp.reading.read()
+        const temp = await tmp.reading.read()
         const pressure = (await pre.pressure.read()) / 100
         const altitude = 100 // todo
         const { floorHeight, baselineFloor } = await env.read()

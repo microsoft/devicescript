@@ -12,9 +12,7 @@ and logging each sensor reading to the console (using `console.data`).
 import { Temperature } from "@devicescript/core"
 
 const thermometer = new ds.Temperature()
-const { temperature } = thermometer
-
-temperature.subscribe(t => {
+thermometer.reading.subscribe(t => {
     console.data({ t })
 })
 ```
@@ -47,9 +45,7 @@ import { Temperature } from "@devicescript/core"
 import { ewma } from "@devicescript/observables"
 
 const thermometer = new ds.Temperature()
-const { temperature } = thermometer
-
-temperature
+thermometer.reading
     // highlight-next-line
     .pipe(ewma(0.9))
     .subscribe(t => console.data({ t }))
@@ -63,9 +59,7 @@ import { Temperature } from "@devicescript/core"
 import { ewma, tap } from "@devicescript/observables"
 
 const thermometer = new ds.Temperature()
-const { temperature } = thermometer
-
-temperature
+thermometer.reading
     .pipe(
         // highlight-next-line
         tap(t_raw => console.data({ t_raw })),
@@ -86,9 +80,7 @@ import { Temperature } from "@devicescript/core"
 import { ewma, tap, auditTime } from "@devicescript/observables"
 
 const thermometer = new ds.Temperature()
-const { temperature } = thermometer
-
-temperature
+thermometer.reading
     .pipe(
         tap(t_raw => console.data({ t_raw })),
         ewma(0.9),
@@ -111,11 +103,10 @@ import { Temperature } from "@devicescript/core"
 import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 
 const thermometer = new ds.Temperature()
-const { temperature } = thermometer
 // highlight-next-line
 const t_ref = 68 // degree F
 
-temperature
+thermometer.reading
     .pipe(
         tap(t_raw => console.data({ t_raw })),
         ewma(0.9),
@@ -138,12 +129,11 @@ import { Temperature, Relay } from "@devicescript/core"
 import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 
 const thermometer = new ds.Temperature()
-const { temperature } = thermometer
 const t_ref = 68 // degree F
 // highlight-next-line
 const relay = new ds.Relay()
 
-temperature
+thermometer.reading
     .pipe(
         tap(t_raw => console.data({ t_raw })),
         ewma(0.9),
@@ -155,9 +145,9 @@ temperature
     )
     .subscribe(async level => {
         // highlight-start
-        if (level < 0) await relay.active.write(true)
-        else if (level > 0) await relay.active.write(false)
-        console.data({ relay: await relay.active.read() })
+        if (level < 0) await relay.enabled.write(true)
+        else if (level > 0) await relay.enabled.write(false)
+        console.data({ relay: await relay.enabled.read() })
         // highlight-end
     })
 ```
@@ -175,7 +165,6 @@ import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 import { startRelay } from "@devicescript/servers"
 
 const thermometer = new ds.Temperature()
-const { temperature } = thermometer
 const t_ref = 68 // degree F
 // highlight-start
 const relay = startRelay({
@@ -183,7 +172,7 @@ const relay = startRelay({
 })
 // highlight-end
 
-temperature
+thermometer.reading
     .pipe(
         tap(t_raw => console.data({ t_raw })),
         ewma(0.9),
@@ -194,8 +183,8 @@ temperature
         tap(level => console.data({ level }))
     )
     .subscribe(async level => {
-        if (level < 0) await relay.active.write(true)
-        else if (level > 0) await relay.active.write(false)
-        console.data({ relay: await relay.active.read() })
+        if (level < 0) await relay.enabled.write(true)
+        else if (level > 0) await relay.enabled.write(false)
+        console.data({ relay: await relay.enabled.read() })
     })
 ```

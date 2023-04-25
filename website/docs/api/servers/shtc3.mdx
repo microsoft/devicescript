@@ -9,11 +9,6 @@ Driver for SHTC3 temperature/humidity sensor at I2C address `0x70`.
 ## Usage
 
 ```ts
-// highlight-next-line
 import { startSHTC3 } from "@devicescript/drivers"
-
-// highlight-next-line
-await startSHTC3()
-const t = new ds.Temperature()
-const h = new ds.Humidity()
+const { temperature, humidity } = await startSHTC3()
 ```

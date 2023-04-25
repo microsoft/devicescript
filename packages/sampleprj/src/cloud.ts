@@ -13,7 +13,7 @@ await trackEvent("start")
 
 console.log("running...")
 let h = 0
-thermo.temperature.subscribe(async t => {
+thermo.reading.subscribe(async t => {
     h = t
     temp.add(t)
 })

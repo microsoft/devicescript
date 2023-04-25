@@ -17,5 +17,5 @@ import { startSoundLevel } from "@devicescript/servers"
 const sensor = startSoundLevel({
     pin: ds.gpio(3),
 })
-sensor.soundLevel.subscribe(level => console.data({ level }))
+sensor.reading.subscribe(level => console.data({ level }))
 ```

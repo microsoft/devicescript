@@ -17,5 +17,5 @@ import { startLightLevel } from "@devicescript/servers"
 const sensor = startLightLevel({
     pin: ds.gpio(3),
 })
-sensor.lightLevel.subscribe(light => console.data({ light }))
+sensor.reading.subscribe(light => console.data({ light }))
 ```

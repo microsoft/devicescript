@@ -9,11 +9,6 @@ Driver for SHT30 temperature/humidity sensor at I2C address `0x44` or `0x45`.
 ## Usage
 
 ```ts
-// highlight-next-line
 import { startSHT30 } from "@devicescript/drivers"
-
-// highlight-next-line
-await startSHT30()
-const t = new ds.Temperature()
-const h = new ds.Humidity()
+const { temperature, humidity } = await startSHT30()
 ```

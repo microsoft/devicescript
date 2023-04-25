@@ -31,11 +31,11 @@ There is a special buffer called `ds.packet` which represents a buffer to be pas
 command or register write.
 It supports `ds.packet.setLength()` function (unlike regular buffers),
 and can be passed to any command or register write.
-For example `lamp.brightness.write(0.7)` is equivalent to:
+For example `lamp.intensity.write(0.7)` is equivalent to:
 
 ```ts skip
 const lamp = new ds.Led()
 ds.packet.setLength(2)
 ds.packet.setAt(0, "u0.16", 0.7)
-lamp.brightness.write(ds.packet)
+lamp.intensity.write(ds.packet)
 ```

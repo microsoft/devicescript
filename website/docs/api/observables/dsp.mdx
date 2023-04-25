@@ -12,7 +12,7 @@ import { ewma } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-thermometer.temperature
+thermometer.reading
     // highlight-next-line
     .pipe(ewma(0.5))
     .subscribe(t => console.log(t))
@@ -28,7 +28,7 @@ import { rollingAverage } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-thermometer.temperature
+thermometer.reading
     // highlight-next-line
     .pipe(rollingAverage(10))
     .subscribe(t => console.log(t))
@@ -44,7 +44,7 @@ import { fir } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-thermometer.temperature
+thermometer.reading
     // highlight-next-line
     .pipe(fir([0.1, 0.2, 1]))
     .subscribe(t => console.log(t))
@@ -60,7 +60,7 @@ import { levelDetector } from "@devicescript/observables"
 
 const thermometer = new Temperature()
 
-thermometer.temperature
+thermometer.reading
     // highlight-next-line
     .pipe(levelDetector(20 /* low threshold */, 30 /*high threshold */))
     .subscribe(level =>

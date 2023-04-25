@@ -61,7 +61,7 @@ button.down.subscribe(async () => {
     // a bit of logging
     console.log(copy ? "ctrl+c" : "ctrl+v")
     await keyboard.key(selector, modifier, HidKeyboardAction.Press)
-    await led.brightness.write(brightness)
+    await led.intensity.write(brightness)
     // toggle for next round
     copy = !copy
 })
