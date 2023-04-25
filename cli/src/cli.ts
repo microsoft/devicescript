@@ -6,13 +6,7 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import {
-    addNpm,
-    addService,
-    addSim,
-    addTest,
-    init,
-} from "./init"
+import { addNpm, addService, addSim, addTest, init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
@@ -37,6 +31,7 @@ import {
 } from "./flash"
 import { addBoard } from "./addboard"
 import { LoggerPriority } from "jacdac-ts"
+import { snippets } from "./snippets"
 
 export async function mainCli() {
     await notifyUpdates({
@@ -342,6 +337,13 @@ export async function mainCli() {
     addCommand("test")
         .description("add tests to current project")
         .action(dropReturn(addTest))
+
+    program
+        .command("snippets", { hidden: true })
+        .option("--include <pattern>", "include given files", "website/**/*.{md,mdx}")
+        .option("--exclude <pattern>", "exclude given files", "website/**/api/clients/*.md")
+        .description("compile devs snippets")
+        .action(snippets)
 
     program
         .command("binpatch", { hidden: true })
