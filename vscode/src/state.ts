@@ -664,6 +664,8 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     })
             )
         ).flat()
+        // ignore .devicescript files
+        files = files.filter(f => !/\/\.devicescript\//.test(f.fsPath))
         // sort
         files.sort((l, r) => l.path.localeCompare(r.path))
         // unique
