@@ -3,7 +3,7 @@
     "displayName": "DeviceScript",
     "version": "2.7.4",
     "publisher": "devicescript",
-    "description": "DeviceScript extension for Visual Studio Code.",
+    "description": "Professional TypeScript for microcontrollers.",
     "author": {
         "name": "Microsoft Corporation"
     },
