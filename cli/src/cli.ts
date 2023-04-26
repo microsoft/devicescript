@@ -151,7 +151,7 @@ export async function mainCli() {
             "use tcp jacdac proxy on 127.0.0.1:8082 (otherwise ws://127.0.0.1:8081)"
         )
         .option("-t, --test", "run in test mode (no sockets, no restarts)")
-        .option("--test-self-exit", "let the test code exit the process")
+        .option("-k, --test-self-exit", "let the test code exit the process (keep-running)")
         .option(
             "-T, --test-timeout <milliseconds>",
             "set timeout for --test mode (default: 2000ms)"
@@ -201,7 +201,7 @@ export async function mainCli() {
             "-s, --serial <serial-port>",
             "connect to serial port, not 127.0.0.1:8082"
         )
-        .option("--test-self-exit", "let the test code exit the process")
+        .option("-k, --test-self-exit", "let the test code exit the process (keep-running)")
         .arguments("<file.ts|file.devs>")
         .action(crunScript)
 
