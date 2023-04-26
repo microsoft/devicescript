@@ -386,7 +386,7 @@ export type GatewayDeviceMeta = {
     fwVersion?: string
 } & Record<string, string | number | boolean>
 
-export type GatewayDeviceEnv = Record<string, string | number | boolean>
+export type GatewayDeviceEnv = Record<string, any>
 
 export interface GatewayDeviceData extends GatewayData {
     displayName: string

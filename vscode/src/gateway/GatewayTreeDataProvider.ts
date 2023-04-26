@@ -28,7 +28,9 @@ import {
     WebSocketConnectReqArgs,
 } from "../../../cli/src/sideprotocol"
 import { sideRequest } from "../jacdac"
-import { parse as dotEnvParse } from "dotenv"
+import { Utils } from "vscode-uri"
+import { parseDotEnv, unparseDotEnv } from "./dotenv"
+import { writeFile } from "../fs"
 
 type GatewayScriptPickItem = TaggedQuickPickItem<GatewayScript>
 
@@ -208,6 +210,29 @@ export class GatewayTreeDataProvider
                 }
             ),
             vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.env.download",
+                async (device: GatewayDevice) => {
+                    if (!device) return
+                    const { env } = device
+                    const content = unparseDotEnv(env)
+                    const { projectFolder } =
+                        this.state.deviceScriptState.devtools
+                    if (!projectFolder)
+                        await vscode.workspace.openTextDocument({
+                            content,
+                            language: "dotenv",
+                        })
+                    else {
+                        const f = await writeFile(
+                            projectFolder,
+                            `${device.deviceId}.env`,
+                            content
+                        )
+                        await vscode.commands.executeCommand("vscode.open", f)
+                    }
+                }
+            ),
+            vscode.commands.registerCommand(
                 "extension.devicescript.gateway.device.env.update",
                 async (device: GatewayDevice) => {
                     const manager = this.state.manager
@@ -222,25 +247,13 @@ export class GatewayTreeDataProvider
                         )
                     if (!envFile) return
 
-                    const content = new TextDecoder().decode(
-                        await vscode.workspace.fs.readFile(envFile)
+                    await this.state.withProgress(
+                        `Uploading ${Utils.basename(envFile)}...`,
+                        async () => {
+                            const env = await parseDotEnv(envFile)
+                            await device.updateEnv(env)
+                        }
                     )
-                    const env: Record<string, string> = {}
-                    content
-                        .split("\n")
-                        .map(line => ({
-                            line,
-                            name: line.slice(0, line.indexOf("=")),
-                        }))
-                        .map(({ line, name }) => ({
-                            line,
-                            name,
-                            value: JSON.parse(line.slice(name.length + 1)),
-                        }))
-                        .forEach(({ name, value }) => {
-                            env[name] = value
-                        })
-                    await device.updateEnv(env)
                 }
             ),
             vscode.commands.registerCommand(
