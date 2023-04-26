@@ -1,8 +1,10 @@
 # DeviceScript
 
-[DeviceScript](https://aka.ms/devicescript) brings a professional TypeScript developer experience to low-resource microcontroller-based devices.
+**Professional TypeScript-like developer experience for low-resource microcontroller-based devices.**
 DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
 environments.
+
+    * [Read the documentation](https://aka.ms/devicescript)
 
 ![Screenshot of the extension](https://github.com/microsoft/devicescript/blob/main/vscode/screenshot.png?raw=true "Annotated screenshot of DeviceScript in Visual Studio Code")
 
