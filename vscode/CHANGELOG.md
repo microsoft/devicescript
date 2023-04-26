@@ -1,0 +1,2 @@
+# DeviceScript Extension Change Log
+
