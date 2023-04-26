@@ -77,8 +77,8 @@ async function userBump() {
 
 async function cloudPublish() {
     // check secrets
-    const missingEnvs = ["GITHUB_TOKEN", "NPM_TOKEN", "VSCE_PAT"].filter(
-        k => !process.env[k]
+    const missingEnvs = ["GITHUB_TOKEN", "NODE_AUTH_TOKEN", "VSCE_PAT"].filter(
+        k => process.env[k] === undefined
     )
     if (missingEnvs.length) fail(`${missingEnvs.join(", ")} not set`)
 
