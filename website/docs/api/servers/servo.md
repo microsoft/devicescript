@@ -12,7 +12,7 @@ and returns a [client](/api/clients/servo) bound to the server.
 import { gpio, delay } from "@devicescript/core"
 import { startServo } from "@devicescript/servers"
 
-const sensor = startMotion({
+const sensor = startServo({
     pin: ds.gpio(3),
 })
 setInterval(async () => {
