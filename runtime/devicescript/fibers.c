@@ -438,6 +438,10 @@ static int devs_fiber_wake_some(devs_ctx_t *ctx) {
     devs_fiber_t *fibmin = NULL;
 
     for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
+        if (fiber->role_wkp) {
+            fibmin = fiber;
+            break;
+        }
         if (fiber->wake_time && fiber->wake_time <= now_) {
             if (fibmin == NULL || fibmin->wake_time > fiber->wake_time)
                 fibmin = fiber;

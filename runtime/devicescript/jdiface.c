@@ -7,6 +7,19 @@
 #define RESUME_USER_CODE 1
 #define KEEP_WAITING 0
 
+static void devs_jd_setup_cached(devs_ctx_t *ctx, unsigned role_idx,
+                                 devs_regcache_entry_t *cached) {
+    jd_device_service_t *serv = devs_role_service(ctx, role_idx);
+    cached = devs_regcache_mark_used(&ctx->regcache, cached);
+    memset(&ctx->packet, 0, sizeof(ctx->packet));
+    ctx->packet.service_command = cached->service_command;
+    ctx->packet.service_size = cached->resp_size;
+    ctx->packet.service_index = serv->service_index;
+    ctx->packet.device_identifier = jd_service_parent(serv)->device_identifier;
+    memcpy(ctx->packet.data, devs_regcache_data(cached), cached->resp_size);
+    // DMESG("cached reg %x sz=%d cmd=%d", code, cached->resp_size, cached->service_command);
+}
+
 void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
                           unsigned arg) {
     if (ctx->error_code)
@@ -22,15 +35,7 @@ void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, uns
             if (cached->last_refresh_time + timeout < devs_now(ctx)) {
                 devs_regcache_free(&ctx->regcache, cached);
             } else {
-                cached = devs_regcache_mark_used(&ctx->regcache, cached);
-                memset(&ctx->packet, 0, sizeof(ctx->packet));
-                ctx->packet.service_command = cached->service_command;
-                ctx->packet.service_size = cached->resp_size;
-                ctx->packet.service_index = serv->service_index;
-                ctx->packet.device_identifier = jd_service_parent(serv)->device_identifier;
-                memcpy(ctx->packet.data, devs_regcache_data(cached), cached->resp_size);
-                // DMESG("cached reg %x sz=%d cmd=%d", code, cached->resp_size,
-                // cached->service_command);
+                devs_jd_setup_cached(ctx, role_idx, cached);
                 return;
             }
         }
@@ -191,34 +196,17 @@ static void start_pkt_handler(devs_ctx_t *ctx, value_t fn, unsigned role_idx) {
     ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role_idx);
     devs_fiber_t *fiber = devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
     if (fiber)
-        fiber->role_wkp = 1;
+        devs_fiber_set_wake_time(fiber, devs_now(ctx));
 }
 
 void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
-    for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
-        if (fiber->role_idx == role_idx) {
-            fiber->role_wkp = 1;
-        }
-    }
+    LOGV("wake %d", role_idx);
 
     value_t role = devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, role_idx);
     value_t fn = devs_function_bind(
         ctx, role, devs_object_get_built_in_field(ctx, role, DEVS_BUILTIN_STRING__ONPACKET));
 
     start_pkt_handler(ctx, fn, role_idx);
-
-    int runsome = 1;
-    while (runsome) {
-        runsome = 0;
-        for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
-            if (fiber->role_wkp) {
-                fiber->role_wkp = 0;
-                devs_fiber_run(fiber);
-                runsome = 1;
-                break; // can't go to next - fiber might be gone
-            }
-        }
-    }
 }
 
 static int devs_jd_reg_arg_length(devs_ctx_t *ctx, unsigned command_arg) {
@@ -294,18 +282,20 @@ static bool role_missing(devs_fiber_t *fiber) {
 }
 
 static bool handle_reg_get(devs_fiber_t *fiber) {
-    if (role_missing(fiber))
+    if (role_missing(fiber)) {
+        fiber->role_wkp = 0; // just in case...
         return KEEP_WAITING;
+    }
 
     devs_ctx_t *ctx = fiber->ctx;
-    jd_packet_t *pkt = &ctx->packet;
-    if (jd_is_report(pkt) && pkt->service_command &&
-        pkt->service_command == fiber->service_command &&
-        devs_jd_pkt_matches_role(ctx, fiber->role_idx)) {
-        devs_regcache_entry_t *q =
-            devs_jd_update_regcache(ctx, fiber->role_idx, fiber->pkt_data.reg_get.string_idx);
-        if (q) {
-            q = devs_regcache_mark_used(&ctx->regcache, q);
+
+    if (fiber->role_wkp) {
+        fiber->role_wkp = 0;
+        devs_regcache_entry_t *cached =
+            devs_regcache_lookup(&ctx->regcache, fiber->role_idx, fiber->service_command,
+                                 fiber->pkt_data.reg_get.string_idx);
+        if (cached) {
+            devs_jd_setup_cached(ctx, fiber->role_idx, cached);
             return RESUME_USER_CODE;
         }
     }
@@ -322,7 +312,8 @@ static bool handle_reg_get(devs_fiber_t *fiber) {
             LOGV("(re)send pkt FAILED cmd=%x", fiber->service_command);
             return retry_soon(fiber);
         } else {
-            LOGV("(re)send pkt cmd=%x", fiber->service_command);
+            LOGV("(re)send pkt cmd=%x TO=%d", fiber->service_command,
+                 fiber->pkt_data.reg_get.resend_timeout);
             if (fiber->pkt_data.reg_get.resend_timeout < 1000)
                 fiber->pkt_data.reg_get.resend_timeout *= 2;
             devs_fiber_sleep(fiber, fiber->pkt_data.reg_get.resend_timeout);
@@ -365,10 +356,6 @@ bool devs_jd_should_run(devs_fiber_t *fiber) {
         return RESUME_USER_CODE;
 
     switch (fiber->pkt_kind) {
-    case DEVS_PKT_KIND_ROLE_WAIT:
-        fiber->ret_val = devs_jd_pkt_capture(fiber->ctx, fiber->role_idx);
-        return RESUME_USER_CODE;
-
     case DEVS_PKT_KIND_REG_GET:
         return handle_reg_get(fiber);
 
@@ -395,11 +382,30 @@ static void devs_jd_update_all_regcache(devs_ctx_t *ctx, unsigned role_idx) {
         return;
     }
 
+    int num = 0;
+
+    for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
+        if (pkt->service_command && pkt->service_command == fiber->service_command &&
+            devs_jd_pkt_matches_role(ctx, fiber->role_idx)) {
+            devs_regcache_entry_t *q =
+                devs_jd_update_regcache(ctx, fiber->role_idx, fiber->pkt_data.reg_get.string_idx);
+            if (q) {
+                q = devs_regcache_mark_used(&ctx->regcache, q);
+                fiber->role_wkp = 1;
+                num++;
+            }
+        }
+    }
+
+    if (num > 0)
+        return;
+
     for (;;) {
         q = devs_regcache_next(&ctx->regcache, role_idx, pkt->service_command, q);
         if (!q)
             break;
-        if (devs_jd_update_regcache(ctx, q->role_idx, q->argument))
+        devs_regcache_entry_t *e = devs_jd_update_regcache(ctx, q->role_idx, q->argument);
+        if (e)
             break; // we only allow for one update
     }
 }
