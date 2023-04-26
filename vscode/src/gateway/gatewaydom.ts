@@ -525,6 +525,13 @@ export class GatewayDevice extends GatewayNode<GatewayDeviceData> {
             }
         )
     }
+
+    async sendMessage(topic: string, payload: any) {
+        await this.manager.fetchJSON(`devices/${this.data.id}/json`, {
+            method: "POST",
+            body: { $topic: topic, ...payload },
+        })
+    }
 }
 
 export interface GatewayScriptData extends GatewayData {

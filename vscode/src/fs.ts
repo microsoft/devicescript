@@ -1,11 +1,12 @@
+import { JSON5TryParse } from "@devicescript/interop"
 import * as vscode from "vscode"
 
 export async function checkFileExists(
-    cwd: vscode.Uri,
-    filePath: string
+    folderOrFile: vscode.Uri,
+    filePath?: string
 ): Promise<boolean> {
     try {
-        const file = vscode.Uri.joinPath(cwd, filePath)
+        const file = filePath ? vscode.Uri.joinPath(folderOrFile, filePath) : folderOrFile
         await vscode.workspace.fs.stat(file)
         return true
     } catch (error) {
@@ -35,23 +36,25 @@ export async function openFileEditor(folder: vscode.Uri, fileName: string) {
 }
 
 export async function readFileText(
-    folder: vscode.Uri,
-    filePath: string
+    folderOrFile: vscode.Uri,
+    filePath?: string
 ): Promise<string> {
-    if (!(await checkFileExists(folder, filePath))) return undefined
+    if (!(await checkFileExists(folderOrFile, filePath))) return undefined
 
-    const file = vscode.Uri.joinPath(folder, filePath)
+    const file = filePath
+        ? vscode.Uri.joinPath(folderOrFile, filePath)
+        : folderOrFile
     const buffer = await vscode.workspace.fs.readFile(file)
     return new TextDecoder().decode(buffer)
 }
 
 export async function readFileJSON<T>(
     folder: vscode.Uri,
-    filePath: string
+    filePath?: string
 ): Promise<T> {
     const src = await readFileText(folder, filePath)
     try {
-        return JSON.parse(src)
+        return JSON5TryParse(src)
     } catch (e) {
         return undefined
     }

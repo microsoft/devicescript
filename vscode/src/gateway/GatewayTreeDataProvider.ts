@@ -30,7 +30,7 @@ import {
 import { sideRequest } from "../jacdac"
 import { Utils } from "vscode-uri"
 import { parseDotEnv, unparseDotEnv } from "./dotenv"
-import { writeFile } from "../fs"
+import { readFileJSON, writeFile } from "../fs"
 
 type GatewayScriptPickItem = TaggedQuickPickItem<GatewayScript>
 
@@ -205,6 +205,40 @@ export class GatewayTreeDataProvider
                             )
                             await device.refresh()
                             this.refresh(device)
+                        }
+                    )
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.sendMessage",
+                async (device: GatewayDevice) => {
+                    const manager = this.state.manager
+                    if (!manager || !device) return
+
+                    const messageFile =
+                        await this.state.deviceScriptState.pickDeviceScriptFile(
+                            {
+                                fileSearchPattern: "**/*.json",
+                                title: "Select a JSON file to send to the device (filename lower case is topic)",
+                                forcePick: true,
+                            }
+                        )
+                    if (!messageFile) return
+
+                    const msg = await readFileJSON<any>(messageFile)
+                    if (!msg) return
+                    await this.state.withProgress(
+                        `Sending ${Utils.basename(messageFile)}...`,
+                        async () => {
+                            const msg = await readFileJSON<any>(messageFile)
+                            const topic =
+                                msg.topic ||
+                                Utils.basename(messageFile).replace(
+                                    /\.json$/i,
+                                    ""
+                                )
+                            delete msg.topic
+                            await device.sendMessage(topic, msg)
                         }
                     )
                 }

@@ -442,6 +442,10 @@
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
                 },
                 {
+                    "command": "extension.devicescript.gateway.device.sendMessage",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
+                },
+                {
                     "command": "extension.devicescript.gateway.device.refreshToken",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
                 },
@@ -785,6 +789,11 @@
             {
                 "command": "extension.devicescript.gateway.device.env.download",
                 "title": "Download Environment Variables",
+                "category": "DeviceScript Gateway"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.sendMessage",
+                "title": "Send a JSON topic message...",
                 "category": "DeviceScript Gateway"
             },
             {
