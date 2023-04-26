@@ -11,6 +11,7 @@ import { DeviceScriptExtensionState } from "../state"
 import "isomorphic-fetch"
 import { GatewayManager, FETCH_ERROR } from "./gatewaydom"
 import { showError, showErrorMessage } from "../telemetry"
+import { splitNameValuePair } from "./dotenv"
 
 export class GatewayExtensionState extends JDEventSource {
     private _manager: GatewayManager
@@ -218,7 +219,8 @@ export class GatewayExtensionState extends JDEventSource {
                 newConnectionString
                     .trim()
                     .split(";")
-                    .map(chunk => chunk.split("=", 2)),
+                    .map(splitNameValuePair)
+                    .filter(kv => !!kv),
                 ([name, _]) => name,
                 ([_, val]) => val
             )

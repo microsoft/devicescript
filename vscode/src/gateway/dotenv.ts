@@ -1,6 +1,12 @@
 import { JSON5TryParse } from "@devicescript/interop"
 import * as vscode from "vscode"
 
+export function splitNameValuePair(line: string) {
+    const i = line.indexOf("=")
+    if (i < 0) return undefined
+    return [line.slice(0, i).trim(), line.slice(i + 1)]
+}
+
 export async function parseDotEnv(envFile: vscode.Uri) {
     const content = new TextDecoder().decode(
         await vscode.workspace.fs.readFile(envFile)
@@ -9,17 +15,11 @@ export async function parseDotEnv(envFile: vscode.Uri) {
     content
         .split("\n")
         .filter(line => !!line && !/^#/.test(line)) // filter out comments
-        .map(line => ({
-            line,
-            name: line.slice(0, line.indexOf("=")),
-        }))
-        .filter(({ name }) => name) // filter out empty names
-        .map(({ line, name }) => ({
-            line,
+        .map(line => splitNameValuePair(line))
+        .filter(kv => !!kv) // filter out empty names
+        .map(([name, value]) => ({
             name,
-            value:
-                JSON5TryParse<any>(line.slice(name.length + 1)) ??
-                line.slice(name.length + 1),
+            value: JSON5TryParse<any>(value) ?? value,
         }))
         .forEach(({ name, value }) => {
             env[name] = value
