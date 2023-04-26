@@ -655,7 +655,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 configs
                     .filter(cfg => !/\/node_modules\//.test(cfg.fsPath))
                     .map(async cfg => {
-                        const d = Utils.dirname(cfg)
+                        const d = Utils.dirname(cfg).fsPath
                         const res = await vscode.workspace.findFiles(
                             new vscode.RelativePattern(d, fileSearchPattern),
                             "**​/node_modules/**"

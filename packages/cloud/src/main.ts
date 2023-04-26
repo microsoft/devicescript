@@ -1,6 +1,7 @@
 import * as ds from "@devicescript/core"
 import {
     createMetric,
+    environment,
     trackEvent,
     trackException,
     trackMetric,
@@ -91,6 +92,14 @@ describe("upload message", () => {
         await uploadMessage("cloud/tests", {
             t: ds.millis(),
         })
+    })
+})
+describe("environment", () => { 
+    test("env", async () => {
+        const env = await environment()
+        await ds.delay(1500)
+        const value = await env.read()
+        console.log(value)
     })
 })
 

@@ -444,7 +444,7 @@ export class GatewayDevice extends GatewayNode<GatewayDeviceData> {
     }
     get env(): GatewayDeviceEnv {
         const { data } = this
-        return data.env || {}
+        return data.env
     }
     get deviceId() {
         return this.data.id

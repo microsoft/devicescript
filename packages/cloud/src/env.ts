@@ -10,7 +10,7 @@ let _env: ObservableValue<any>
  * Gets an observable environment register that may get updated by the cloud.
  * @returns environment
  */
-export async function environment<T = any>(): Promise<ObservableValue<T>> {
+export async function environment<T = object>(): Promise<ObservableValue<T>> {
     if (_env) return _env
 
     const old = await readSetting(ENV_TOPIC, {})
@@ -18,12 +18,17 @@ export async function environment<T = any>(): Promise<ObservableValue<T>> {
 
     // query env when cloud restarts
     cloud.connected.subscribe(async curr => {
-        if (curr) await uploadMessage(ENV_TOPIC, {})
+        if (curr) {
+            await uploadMessage(ENV_TOPIC, {})
+        }
     })
-    if (await cloud.connected.read()) await uploadMessage(ENV_TOPIC, {})
+    if (await cloud.connected.read()) {
+        await uploadMessage(ENV_TOPIC, {})
+    }
     // receive env messages
     subscribeMessages(ENV_TOPIC, async (newValue: any) => {
-        console.debug(`cloud: received env`)
+        console.log(`cloud: received env`)
+        console.debug(newValue)
         await writeSetting(ENV_TOPIC, newValue)
         await _env.emit(newValue)
     })
