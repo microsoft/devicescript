@@ -16,6 +16,13 @@ export async function environment<T = object>(): Promise<ObservableValue<T>> {
     const old = await readSetting(ENV_TOPIC, {})
     _env = register(old || {})
 
+    // receive env messages
+    subscribeMessages(ENV_TOPIC, async (newValue: any) => {
+        console.log(`cloud: received env`)
+        console.debug(newValue)
+        await writeSetting(ENV_TOPIC, newValue)
+        await _env.emit(newValue)
+    })
     // query env when cloud restarts
     cloud.connected.subscribe(async curr => {
         if (curr) {
@@ -25,13 +32,5 @@ export async function environment<T = object>(): Promise<ObservableValue<T>> {
     if (await cloud.connected.read()) {
         await uploadMessage(ENV_TOPIC, {})
     }
-    // receive env messages
-    subscribeMessages(ENV_TOPIC, async (newValue: any) => {
-        console.log(`cloud: received env`)
-        console.debug(newValue)
-        await writeSetting(ENV_TOPIC, newValue)
-        await _env.emit(newValue)
-    })
-
     return _env
 }
