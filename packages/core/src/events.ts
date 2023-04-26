@@ -2,48 +2,61 @@
 
 import * as ds from "@devicescript/core"
 
-function addElement<T>(arr: T[], e: T) {
-    if (!arr) return [e]
-    arr.push(e)
-    return arr
-}
-function removeElement<T>(arr: T[], e: T) {
-    if (!arr) return arr
-    const i = arr.indexOf(e)
-    if (i >= 0) arr.insert(i, -1)
-    if (!arr.length) return undefined
-    else return arr
-}
-
 function noop() {}
 
+type Fn<T> = (v: T) => void
+
+enum Wrapper {
+    Idle = 0,
+    StartPending = 1,
+    Running = 2,
+}
+
+function handlerWrapper<T>(handler: ds.Handler<T>) {
+    let state = Wrapper.Idle
+    let value: T
+
+    async function emit() {
+        try {
+            while (state === Wrapper.StartPending) {
+                state = Wrapper.Running
+                await handler(value)
+            }
+        } finally {
+            state = Wrapper.Idle
+        }
+    }
+
+    return (v: T) => {
+        value = v
+        if (state === Wrapper.Idle) emit.start()
+        state = Wrapper.StartPending
+    }
+}
+
+// TODO move to C?
 class Emitter<T> implements ds.Emitter<T> {
-    handlers: ds.Handler<T>[]
+    handlers: Fn<T>[]
 
     subscribe(f: ds.Handler<T>): ds.Unsubscribe {
         if (!this.handlers) this.handlers = []
-        this.handlers.push(f)
+        const h = handlerWrapper(f)
+        this.handlers.push(h)
         const self = this
         return () => {
-            const i = self.handlers.indexOf(f)
+            const i = self.handlers.indexOf(h)
             if (i >= 0) self.handlers.insert(i, -1)
         }
     }
-    async emit(v: T) {
+    emit(v: T) {
         if (!this.handlers?.length) return
-        for (const h of this.handlers) {
-            await h(v)
-        }
+        for (const h of this.handlers) h(v)
     }
 }
 
-type ClientRegisterChangeHandler<T> = (
-    v: T,
-    reg: ClientRegister<T>
-) => ds.AsyncVoid
-
 class ClientRegister<T> implements ds.ClientRegister<T> {
     private value: T
+    private emitter: ds.Emitter<T>
 
     constructor(value: T) {
         this.value = value
@@ -53,34 +66,22 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
         return this.value
     }
 
-    subscribe(next_: (v: T, reg: this) => ds.AsyncVoid): ds.Unsubscribe {
-        const next = (next_ || (() => {})) as ClientRegisterChangeHandler<T>
-
-        this._subscriptions = addElement(this._subscriptions, next)
-        const that = this
-        return () => {
-            that._subscriptions = removeElement(that._subscriptions, next)
-        }
+    subscribe(handler: ds.Handler<T>): ds.Unsubscribe {
+        if (!this.emitter) this.emitter = ds.emitter()
+        return this.emitter.subscribe(handler)
     }
 
-    async emit(newValue: T): Promise<void> {
+    emit(newValue: T) {
         if (this.value !== newValue) {
             this.value = newValue
-            if (this._subscriptions) {
-                for (const next of this._subscriptions) {
-                    await next(this.value, this)
-                }
-            }
+            this.emitter?.emit(this.value)
         }
     }
-
-    private _subscriptions: ClientRegisterChangeHandler<T>[]
 }
 
 ;(ds as typeof ds).clientRegister = function (v) {
     return new ClientRegister(v)
 }
-
 ;(ds as typeof ds).wait = async function wait<T>(
     l: ds.Subscriber<T>,
     timeout?: number
@@ -96,7 +97,6 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
     unsub = noop
     return r
 }
-
 ;(ds as typeof ds).emitter = function () {
     return new Emitter()
 }

@@ -16,14 +16,10 @@ ds.Role.prototype.report = function report(this: RoleData) {
     return this._report
 }
 
-type RegisterChangeHandler = (v: any, reg: ds.Register<any>) => ds.AsyncVoid
-
-type EventChangeHandler = (v: any, reg: ds.Event<any>) => ds.AsyncVoid
-
 interface RoleData extends ds.Role {
     _binding: ds.ClientRegister<boolean>
-    _changeHandlers: Record<string, RegisterChangeHandler[]>
-    _eventHandlers: Record<string, EventChangeHandler[]>
+    _changeHandlers: Record<string, ds.Emitter<any>>
+    _eventHandlers: Record<string, ds.Emitter<any>>
     _reportHandlers: Record<string, ds.Fiber>
     _report: ds.Emitter<ds.Packet>
 }
@@ -36,39 +32,35 @@ ds.Role.prototype._onPacket = async function (this: RoleData, pkt: ds.Packet) {
     const changeHandlers = this._changeHandlers
     if (!pkt || pkt.serviceCommand === 0) {
         const conn = this.isBound
-        await this.binding().emit(conn)
+        this._binding?.emit(conn)
         if (conn && changeHandlers) {
             const regs = Object.keys(changeHandlers)
             for (let i = 0; i < regs.length; ++i) {
-                const rg = parseInt(regs[i])
-                if (rg === 0x0101) {
+                const rg = regs[i]
+                if (rg === "reading") {
                     const b = Buffer.alloc(1)
                     b[0] = 199
                     await this.sendCommand(0x2003, b)
                 } else {
-                    await this.sendCommand(0x1000 | rg)
+                    // refresh
+                    // TODO don't refresh const registers
+                    await this.sendCommand(this.spec.lookup(rg).code)
                 }
             }
         }
     }
-    if (!pkt) return
+    if (!pkt || !pkt.spec) return
 
     if (pkt.isReport) {
-        if (pkt.spec && this._report) await this._report.emit(pkt)
+        this._report?.emit(pkt)
 
         if (pkt.isRegGet && changeHandlers) {
-            const handlers = changeHandlers[pkt.regCode + ""]
-            if (handlers) {
-                const val = pkt.decode()
-                for (const h of handlers) {
-                    // TODO pass register
-                    await h(val, null)
-                }
-            }
+            const handlers = changeHandlers[pkt.spec.name]
+            handlers?.emit(pkt.decode())
         }
 
         if (pkt.isAction && this._reportHandlers) {
-            const key = pkt.serviceCommand + ""
+            const key = pkt.spec.name
             const fib = this._reportHandlers[key]
             if (fib) {
                 delete this._reportHandlers[key]
@@ -77,62 +69,39 @@ ds.Role.prototype._onPacket = async function (this: RoleData, pkt: ds.Packet) {
         }
 
         if (pkt.isEvent && this._eventHandlers) {
-            const hh = this._eventHandlers[pkt.eventCode + ""]
-            // TODO pass event
-            if (hh) for (const h of hh) await h(pkt.decode(), null)
+            const hh = this._eventHandlers[pkt.spec.name]
+            hh?.emit(pkt.decode())
         }
     }
 }
 
-ds.Register.prototype.subscribe = function subscribe<T>(
+function subscribe(
+    emitterSet: Record<string, ds.Emitter<any>>,
+    name: string,
+    handler: ds.Handler<any>
+) {
+    if (!emitterSet[name]) emitterSet[name] = ds.emitter()
+    return emitterSet[name].subscribe(handler)
+}
+
+ds.Register.prototype.subscribe = function <T>(
     this: ds.Register<T>,
-    handler: (v: T, reg: ds.Register<T>) => void
+    handler: (v: T) => void
 ) {
     const role = this.role as RoleData
     if (!role._changeHandlers) role._changeHandlers = {}
-    const key = this.code + ""
-    let handlers = role._changeHandlers[key]
-    if (!handlers) {
-        handlers = []
-        role._changeHandlers[key] = handlers
-    }
-    handlers.push(handler)
-    return () => {
-        const idx = handlers.indexOf(handler)
-        if (idx >= 0) {
-            handlers.insert(idx, -1)
-            if (!handlers.length) delete role._changeHandlers[key]
-        }
-    }
+    return subscribe(role._changeHandlers, this.name, handler)
 }
 
-ds.Event.prototype.subscribe = function subscribe<T>(
+ds.Event.prototype.subscribe = function <T>(
     this: ds.Event<T>,
-    handler: (v: T, reg: ds.Event<T>) => void
+    handler: (v: T) => void
 ) {
     const role = this.role as RoleData
-    let eventHandlers = role._eventHandlers
-    if (!eventHandlers) {
-        eventHandlers = {}
-        role._eventHandlers = eventHandlers
-    }
-    const k = this.code + ""
-    let handlers = eventHandlers[k]
-    if (!handlers) {
-        handlers = []
-        eventHandlers[k] = handlers
-    }
-    handlers.push(handler)
-    return () => {
-        const idx = handlers.indexOf(handler)
-        if (idx >= 0) {
-            handlers.insert(idx, -1)
-            if (!handlers.length) delete eventHandlers[k]
-        }
-    }
+    if (!role._eventHandlers) role._eventHandlers = {}
+    return subscribe(role._eventHandlers, this.name, handler)
 }
 
 ds.Event.prototype.wait = async function (timeout) {
     return await ds.wait(this, timeout)
 }
-

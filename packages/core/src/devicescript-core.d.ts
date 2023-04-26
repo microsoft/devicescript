@@ -20,7 +20,7 @@ declare module "@devicescript/core" {
      * Generic interface for event emitters. Use `ds.emitter()` to create one.
      */
     export interface Emitter<T> extends Subscriber<T> {
-        emit(v: T): Promise<void>
+        emit(v: T): void
     }
 
     /**
@@ -37,13 +37,13 @@ declare module "@devicescript/core" {
          * @param next
          * @return unsubscribe
          */
-        subscribe(next: (v: T, reg: this) => AsyncVoid): Unsubscribe
+        subscribe(next: (v: T) => AsyncVoid): Unsubscribe
 
         /**
          * Sends the new value to subscriptions
          * @param newValue
          */
-        emit(newValue: T): Promise<void>
+        emit(newValue: T): void
     }
 
     /**
@@ -240,7 +240,7 @@ declare module "@devicescript/core" {
          * Registers a callback to execute when a register value is received
          * @param handler callback to execute
          */
-        subscribe(handler: (curr: T, reg: this) => AsyncVoid): Unsubscribe
+        subscribe(handler: (curr: T) => AsyncVoid): Unsubscribe
     }
 
     export class Event<T = void> extends PacketInfo {
@@ -252,7 +252,7 @@ declare module "@devicescript/core" {
          * Registers a callback to execute when an event is received
          * @param next callback to execute
          */
-        subscribe(next: (curr: T, reg: this) => AsyncVoid): Unsubscribe
+        subscribe(next: (curr: T) => AsyncVoid): Unsubscribe
     }
 
     /**

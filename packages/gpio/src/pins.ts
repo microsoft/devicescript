@@ -128,7 +128,7 @@ let _pins: PinImpl[]
                 }
             }
 
-            for (const p of chg) await p._change.emit(p._value)
+            for (const p of chg) p._change.emit(p._value)
         })
     }
     for (const p of _pins) if (p.gpio === num) return p

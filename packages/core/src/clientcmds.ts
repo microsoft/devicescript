@@ -55,9 +55,9 @@ ds.Button.prototype.pressed = function pressed() {
     if (!reg) {
         reg = ds.clientRegister(false)
         ;(this as any).__pressed = reg
-        this.down.subscribe(async () => await reg.emit(true))
-        this.hold.subscribe(async () => await reg.emit(true))
-        this.up.subscribe(async () => await reg.emit(false))
+        this.down.subscribe(() => reg.emit(true))
+        this.hold.subscribe(() => reg.emit(true))
+        this.up.subscribe(() => reg.emit(false))
     }
     return reg
 }
@@ -67,8 +67,8 @@ ds.MagneticFieldLevel.prototype.detected = function () {
     if (!reg) {
         reg = ds.clientRegister(false)
         ;(this as any).__detected = reg
-        this.active.subscribe(async () => await reg.emit(true))
-        this.inactive.subscribe(async () => await reg.emit(false))
+        this.active.subscribe(() => reg.emit(true))
+        this.inactive.subscribe(() => reg.emit(false))
     }
     return reg
 }
@@ -79,10 +79,10 @@ ds.RotaryEncoder.prototype.asPotentiometer = function (steps?: number) {
     async function init() {
         if (!steps) steps = await self.clicksPerTurn.read()
         let p0 = await self.reading.read()
-        self.reading.subscribe(async v => {
+        self.reading.subscribe(v => {
             const curr = Math.clamp(0, v - p0, steps)
             p0 = v - curr
-            await reg.emit(curr / steps)
+            reg.emit(curr / steps)
         })
     }
     init.start()
