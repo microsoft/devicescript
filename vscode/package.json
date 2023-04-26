@@ -23,10 +23,6 @@
         "vscode": "^1.76.0"
     },
     "icon": "images/devs-logo.png",
-    "galleryBanner": {
-        "color": "#C80000",
-        "theme": "dark"
-    },
     "categories": [
         "Debuggers",
         "Other"
