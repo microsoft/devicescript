@@ -82,8 +82,6 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     fib->role_idx = role_idx;
     fib->service_command = code;
 
-    LOG("send");
-
     unsigned sz = ctx->packet.service_size;
     fib->pkt_kind = DEVS_PKT_KIND_SEND_PKT;
     fib->pkt_data.send_pkt.data = devs_try_alloc(ctx, sz);
@@ -212,13 +210,15 @@ void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx, bool is_role_evt) {
 
     start_pkt_handler(ctx, fn, role_idx);
 
-    if (is_role_evt)
+    if (is_role_evt) {
+        LOGV("role wake %d", role_idx);
         for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
-            if (fiber->role_idx == role_idx && (fiber->pkt_kind == DEVS_PKT_KIND_SEND_PKT ||
-                                                fiber->pkt_kind == DEVS_PKT_KIND_SEND_RAW_PKT)) {
+            LOGV("scan %d %d %d %u", fiber->handle_tag, fiber->role_idx, fiber->pkt_kind,
+                 fiber->wake_time);
+            if (fiber->role_idx == role_idx)
                 devs_fiber_set_wake_time(fiber, devs_now(ctx));
-            }
         }
+    }
 }
 
 static int devs_jd_reg_arg_length(devs_ctx_t *ctx, unsigned command_arg) {
