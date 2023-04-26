@@ -21,6 +21,8 @@ jobs:
             - run: yarn install --frozen-lockfile
             - name: Build tools
               run: yarn build
+            - name: Test snippets
+              run: yarn test:snippets
             - name: Build website
               working-directory: website
               run: yarn build
