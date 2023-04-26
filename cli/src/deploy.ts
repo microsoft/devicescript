@@ -1,5 +1,6 @@
 import {
     bufferEq,
+    delay,
     DeviceScriptManagerCmd,
     DeviceScriptManagerReg,
     JDBus,
@@ -47,6 +48,10 @@ export async function deployToService(
         const exp = await sha256([bytecode])
         if (bufferEq(exp, sha.data)) {
             console.log(`  sha256 match ${toHex(exp)}, skip`)
+            const running = service.register(DeviceScriptManagerReg.Running)
+            await running.sendSetBoolAsync(false)
+            await delay(10)
+            await running.sendSetBoolAsync(true)
             return
         }
     }
