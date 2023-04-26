@@ -4,7 +4,7 @@
 DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
 environments.
 
-    * [Read the documentation](https://aka.ms/devicescript)
+-   [Read the documentation](https://microsoft.github.io/devicescript/)
 
 ![Screenshot of the extension](https://github.com/microsoft/devicescript/blob/main/vscode/screenshot.png?raw=true "Annotated screenshot of DeviceScript in Visual Studio Code")
 
