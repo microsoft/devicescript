@@ -138,7 +138,7 @@ async function cloudPublish() {
 
     await $`make vscode-pkg`
     await $`gh release create ${vCurrVer} vscode/devicescript.vsix`
-    await $`npx vsce publish --packagePath vscode/devicescript.vsix --pat $(VSCE_PAT)`
+    await $`npx vsce publish --packagePath vscode/devicescript.vsix --pat $VSCE_PAT`
 }
 
 if (argv.cloud) {
