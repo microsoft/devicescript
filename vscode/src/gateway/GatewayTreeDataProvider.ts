@@ -241,8 +241,9 @@ export class GatewayTreeDataProvider
                     const envFile =
                         await this.state.deviceScriptState.pickDeviceScriptFile(
                             {
-                                fileSearchPattern: "src/*.env",
+                                fileSearchPattern: "**/*.env",
                                 title: "Select a .env file",
+                                forcePick: true,
                             }
                         )
                     if (!envFile) return
@@ -447,7 +448,7 @@ export class GatewayTreeDataProvider
             }
             case GATEWAY_DEVICE_NODE: {
                 const d = node as GatewayDevice
-                const { meta, connected, scriptId, scriptVersion } = d
+                const { meta, connected, scriptId, scriptVersion, env } = d
                 const script = this.state.manager?.script(scriptId)
                 const spec =
                     this.state.bus.deviceCatalog.specificationFromProductIdentifier(
@@ -475,6 +476,10 @@ $(${iconName}) ${connected ? `connected` : `disconnected`}
 - last activity: ${d.lastActivity}
 - product: ${spec?.name || meta.productId?.toString(16) || ""}
 - firmware version: ${meta.fwVersion || ""}
+- environment variables:
+\`\`\`
+${unparseDotEnv(env)}
+\`\`\`
 
 ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
 
