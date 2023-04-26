@@ -28,6 +28,7 @@ import {
     WebSocketConnectReqArgs,
 } from "../../../cli/src/sideprotocol"
 import { sideRequest } from "../jacdac"
+import { parse as dotEnvParse } from "dotenv"
 
 type GatewayScriptPickItem = TaggedQuickPickItem<GatewayScript>
 
@@ -204,6 +205,42 @@ export class GatewayTreeDataProvider
                             this.refresh(device)
                         }
                     )
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.env.update",
+                async (device: GatewayDevice) => {
+                    const manager = this.state.manager
+                    if (!manager || !device) return
+
+                    const envFile =
+                        await this.state.deviceScriptState.pickDeviceScriptFile(
+                            {
+                                fileSearchPattern: "src/*.env",
+                                title: "Select a .env file",
+                            }
+                        )
+                    if (!envFile) return
+
+                    const content = new TextDecoder().decode(
+                        await vscode.workspace.fs.readFile(envFile)
+                    )
+                    const env: Record<string, string> = {}
+                    content
+                        .split("\n")
+                        .map(line => ({
+                            line,
+                            name: line.slice(0, line.indexOf("=")),
+                        }))
+                        .map(({ line, name }) => ({
+                            line,
+                            name,
+                            value: JSON.parse(line.slice(name.length + 1)),
+                        }))
+                        .forEach(({ name, value }) => {
+                            env[name] = value
+                        })
+                    await device.updateEnv(env)
                 }
             ),
             vscode.commands.registerCommand(

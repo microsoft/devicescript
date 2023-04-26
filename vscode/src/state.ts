@@ -635,10 +635,12 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async pickDeviceScriptFile(
-        options?: vscode.QuickPickOptions
+        options?: vscode.QuickPickOptions & { fileSearchPattern?: string }
     ): Promise<vscode.Uri> {
         const { projectFolder: folder } = this.devtools
         if (!folder) return undefined
+
+        const { fileSearchPattern = "src/main*.ts" } = options || {}
 
         // find file marker
         const configs = await vscode.workspace.findFiles(
@@ -653,7 +655,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     .map(async cfg => {
                         const d = Utils.dirname(cfg).fsPath
                         const res = await vscode.workspace.findFiles(
-                            new vscode.RelativePattern(d, "src/main*.ts")
+                            new vscode.RelativePattern(d, fileSearchPattern)
                         )
                         return res
                     })
