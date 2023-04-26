@@ -449,10 +449,11 @@ export class GatewayTreeDataProvider
             case GATEWAY_DEVICE_NODE: {
                 const d = node as GatewayDevice
                 const { meta, connected, scriptId, scriptVersion, env } = d
+                const { productId } = meta || {}
                 const script = this.state.manager?.script(scriptId)
                 const spec =
                     this.state.bus.deviceCatalog.specificationFromProductIdentifier(
-                        meta.productId
+                        productId
                     )
 
                 label = `${shortDeviceId(d.deviceId)}, ${d.name}`
@@ -474,7 +475,7 @@ $(${iconName}) ${connected ? `connected` : `disconnected`}
 
 - device id: ${d.deviceId}
 - last activity: ${d.lastActivity}
-- product: ${spec?.name || meta.productId?.toString(16) || ""}
+- product: ${spec?.name || productId?.toString(16) || ""}
 - firmware version: ${meta.fwVersion || ""}
 - environment variables:
 \`\`\`

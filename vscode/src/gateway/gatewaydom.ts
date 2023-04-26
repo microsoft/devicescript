@@ -440,7 +440,7 @@ export class GatewayDevice extends GatewayNode<GatewayDeviceData> {
     }
     get meta(): GatewayDeviceMeta {
         const { data } = this
-        return data.meta || {}
+        return data.meta
     }
     get env(): GatewayDeviceEnv {
         const { data } = this
