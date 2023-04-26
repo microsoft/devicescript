@@ -28,6 +28,9 @@ import {
     WebSocketConnectReqArgs,
 } from "../../../cli/src/sideprotocol"
 import { sideRequest } from "../jacdac"
+import { Utils } from "vscode-uri"
+import { parseDotEnv, unparseDotEnv } from "./dotenv"
+import { writeFile } from "../fs"
 
 type GatewayScriptPickItem = TaggedQuickPickItem<GatewayScript>
 
@@ -202,6 +205,54 @@ export class GatewayTreeDataProvider
                             )
                             await device.refresh()
                             this.refresh(device)
+                        }
+                    )
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.env.download",
+                async (device: GatewayDevice) => {
+                    if (!device) return
+                    const { env } = device
+                    const content = unparseDotEnv(env)
+                    const { projectFolder } =
+                        this.state.deviceScriptState.devtools
+                    if (!projectFolder)
+                        await vscode.workspace.openTextDocument({
+                            content,
+                            language: "dotenv",
+                        })
+                    else {
+                        const f = await writeFile(
+                            projectFolder,
+                            `${device.deviceId}.env`,
+                            content
+                        )
+                        await vscode.commands.executeCommand("vscode.open", f)
+                    }
+                }
+            ),
+            vscode.commands.registerCommand(
+                "extension.devicescript.gateway.device.env.update",
+                async (device: GatewayDevice) => {
+                    const manager = this.state.manager
+                    if (!manager || !device) return
+
+                    const envFile =
+                        await this.state.deviceScriptState.pickDeviceScriptFile(
+                            {
+                                fileSearchPattern: "**/*.env",
+                                title: "Select a .env file",
+                                forcePick: true,
+                            }
+                        )
+                    if (!envFile) return
+
+                    await this.state.withProgress(
+                        `Uploading ${Utils.basename(envFile)}...`,
+                        async () => {
+                            const env = await parseDotEnv(envFile)
+                            await device.updateEnv(env)
                         }
                     )
                 }
@@ -397,7 +448,7 @@ export class GatewayTreeDataProvider
             }
             case GATEWAY_DEVICE_NODE: {
                 const d = node as GatewayDevice
-                const { meta, connected, scriptId, scriptVersion } = d
+                const { meta, connected, scriptId, scriptVersion, env } = d
                 const script = this.state.manager?.script(scriptId)
                 const spec =
                     this.state.bus.deviceCatalog.specificationFromProductIdentifier(
@@ -425,6 +476,10 @@ $(${iconName}) ${connected ? `connected` : `disconnected`}
 - last activity: ${d.lastActivity}
 - product: ${spec?.name || meta.productId?.toString(16) || ""}
 - firmware version: ${meta.fwVersion || ""}
+- environment variables:
+\`\`\`
+${unparseDotEnv(env)}
+\`\`\`
 
 ${spec ? `![Device image](${deviceCatalogImage(spec, "list")})` : ""}
 

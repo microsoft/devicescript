@@ -635,8 +635,12 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async pickDeviceScriptFile(
-        options?: vscode.QuickPickOptions
+        options?: vscode.QuickPickOptions & {
+            fileSearchPattern?: string
+            forcePick?: boolean
+        }
     ): Promise<vscode.Uri> {
+        const { fileSearchPattern = "src/main*.ts", forcePick } = options || {}
         const { projectFolder: folder } = this.devtools
         if (!folder) return undefined
 
@@ -651,9 +655,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 configs
                     .filter(cfg => !/\/node_modules\//.test(cfg.fsPath))
                     .map(async cfg => {
-                        const d = Utils.dirname(cfg).fsPath
+                        const d = Utils.dirname(cfg)
                         const res = await vscode.workspace.findFiles(
-                            new vscode.RelativePattern(d, "src/main*.ts")
+                            new vscode.RelativePattern(d, fileSearchPattern),
+                            "**​/node_modules/**"
                         )
                         return res
                     })
@@ -670,7 +675,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         }
 
         // only 1 file
-        if (files.length === 1) return files[0]
+        if (files.length === 1 && !forcePick) return files[0]
 
         // ask user
         const res = await vscode.window.showQuickPick(

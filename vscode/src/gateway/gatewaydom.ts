@@ -127,6 +127,7 @@ export class GatewayManager extends JDNode {
         const body = {
             name,
             meta: {},
+            env: {},
             body: scriptBody,
         }
         const resp = await this.fetchJSON<GatewayScriptData>("scripts", {
@@ -176,13 +177,14 @@ export class GatewayManager extends JDNode {
             runtimeVersion,
             firmwareVersion,
         }
+        const env: any = {}
         // cleanup
         Object.keys(meta)
             .filter(k => meta[k] === undefined)
             .forEach(k => delete meta[k])
         await this.fetchJSON(`devices/${deviceId}`, {
             method: "PATCH",
-            body: { name, meta },
+            body: { name, meta, env },
         })
 
         // patch cloud configuration service
@@ -384,6 +386,8 @@ export type GatewayDeviceMeta = {
     fwVersion?: string
 } & Record<string, string | number | boolean>
 
+export type GatewayDeviceEnv = Record<string, any>
+
 export interface GatewayDeviceData extends GatewayData {
     displayName: string
     name: string
@@ -393,6 +397,7 @@ export interface GatewayDeviceData extends GatewayData {
     scriptVersion?: number
     deployedHash?: string
     meta?: GatewayDeviceMeta
+    env?: GatewayDeviceEnv
 }
 
 export interface CloudDeviceConnectionInfo {
@@ -437,6 +442,10 @@ export class GatewayDevice extends GatewayNode<GatewayDeviceData> {
         const { data } = this
         return data.meta || {}
     }
+    get env(): GatewayDeviceEnv {
+        const { data } = this
+        return data.env || {}
+    }
     get deviceId() {
         return this.data.id
     }
@@ -464,7 +473,14 @@ export class GatewayDevice extends GatewayNode<GatewayDeviceData> {
         // async refresh
         this.refresh()
     }
-
+    async updateEnv(env: GatewayDeviceEnv) {
+        await this.manager.fetchJSON(this.apiPath, {
+            method: "PATCH",
+            body: { env },
+        })
+        // async refresh
+        this.refresh()
+    }
     async refreshMeta() {
         const device = this.resolveDevice()
         if (!device) return
@@ -514,6 +530,7 @@ export class GatewayDevice extends GatewayNode<GatewayDeviceData> {
 export interface GatewayScriptData extends GatewayData {
     name?: string
     meta?: Record<string, string | number | boolean>
+    env?: Record<string, string | number | boolean>
     id: string
     version?: number
     updated?: number

@@ -56,10 +56,10 @@
         "@types/vscode": "^1.76.0",
         "@vscode/debugadapter": "^1.59.0",
         "@vscode/debugadapter-testsupport": "^1.59.0",
-        "@vscode/vsce": "^2.18.0",
         "@vscode/extension-telemetry": "^0.7.7",
-        "jacdac-ts": "*",
+        "@vscode/vsce": "^2.18.0",
         "isomorphic-fetch": "^3.0.0",
+        "jacdac-ts": "*",
         "papaparse": "^5.4.1",
         "typescript": "^4.9.5",
         "vscode-uri": "^3.0.7",
@@ -434,6 +434,14 @@
                     "group": "inline"
                 },
                 {
+                    "command": "extension.devicescript.gateway.device.env.update",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
+                },
+                {
+                    "command": "extension.devicescript.gateway.device.env.download",
+                    "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
+                },
+                {
                     "command": "extension.devicescript.gateway.device.refreshToken",
                     "when": "view == extension.devicescript.gateway && viewItem == cloudDevice"
                 },
@@ -768,6 +776,16 @@
                 "title": "Update Script to Latest",
                 "category": "DeviceScript Gateway",
                 "icon": "$(arrow-down)"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.env.update",
+                "title": "Update Environment Variables...",
+                "category": "DeviceScript Gateway"
+            },
+            {
+                "command": "extension.devicescript.gateway.device.env.download",
+                "title": "Download Environment Variables",
+                "category": "DeviceScript Gateway"
             },
             {
                 "command": "extension.devicescript.gateway.device.refreshToken",
