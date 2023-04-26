@@ -82,6 +82,8 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     fib->role_idx = role_idx;
     fib->service_command = code;
 
+    LOG("send");
+
     unsigned sz = ctx->packet.service_size;
     fib->pkt_kind = DEVS_PKT_KIND_SEND_PKT;
     fib->pkt_data.send_pkt.data = devs_try_alloc(ctx, sz);
@@ -103,6 +105,8 @@ void devs_jd_send_raw(devs_ctx_t *ctx) {
 
     fib->role_idx = DEVS_ROLE_INVALID;
     fib->service_command = pkt->service_command;
+
+    LOG("send raw");
 
     unsigned sz = pkt->service_size + JD_SERIAL_FULL_HEADER_SIZE;
     fib->pkt_kind = DEVS_PKT_KIND_SEND_RAW_PKT;
@@ -199,7 +203,7 @@ static void start_pkt_handler(devs_ctx_t *ctx, value_t fn, unsigned role_idx) {
         devs_fiber_set_wake_time(fiber, devs_now(ctx));
 }
 
-void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
+void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx, bool is_role_evt) {
     LOGV("wake %d", role_idx);
 
     value_t role = devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, role_idx);
@@ -207,6 +211,14 @@ void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx) {
         ctx, role, devs_object_get_built_in_field(ctx, role, DEVS_BUILTIN_STRING__ONPACKET));
 
     start_pkt_handler(ctx, fn, role_idx);
+
+    if (is_role_evt)
+        for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
+            if (fiber->role_idx == role_idx && (fiber->pkt_kind == DEVS_PKT_KIND_SEND_PKT ||
+                                                fiber->pkt_kind == DEVS_PKT_KIND_SEND_RAW_PKT)) {
+                devs_fiber_set_wake_time(fiber, devs_now(ctx));
+            }
+        }
 }
 
 static int devs_jd_reg_arg_length(devs_ctx_t *ctx, unsigned command_arg) {
@@ -385,7 +397,8 @@ static void devs_jd_update_all_regcache(devs_ctx_t *ctx, unsigned role_idx) {
     int num = 0;
 
     for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
-        if (pkt->service_command && pkt->service_command == fiber->service_command &&
+        if (fiber->pkt_kind == DEVS_PKT_KIND_REG_GET && pkt->service_command &&
+            pkt->service_command == fiber->service_command &&
             devs_jd_pkt_matches_role(ctx, fiber->role_idx)) {
             devs_regcache_entry_t *q =
                 devs_jd_update_regcache(ctx, fiber->role_idx, fiber->pkt_data.reg_get.string_idx);
@@ -434,7 +447,7 @@ void devs_jd_process_pkt(devs_ctx_t *ctx, jd_device_service_t *serv, jd_packet_t
         if (devs_jd_pkt_matches_role(ctx, idx)) {
             devs_fiber_sync_now(ctx);
             devs_jd_update_all_regcache(ctx, idx);
-            devs_jd_wake_role(ctx, idx);
+            devs_jd_wake_role(ctx, idx, false);
         }
     }
 
@@ -464,7 +477,7 @@ void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role) {
         if (r && r->jdrole == role) {
             devs_regcache_free_role(&ctx->regcache, idx);
             devs_jd_reset_packet(ctx);
-            devs_jd_wake_role(ctx, idx);
+            devs_jd_wake_role(ctx, idx, true);
             break;
         }
     }

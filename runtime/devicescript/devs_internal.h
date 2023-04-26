@@ -32,7 +32,7 @@ typedef struct devs_activation devs_activation_t;
 #define DEVS_PKT_KIND_REG_GET 1
 #define DEVS_PKT_KIND_SEND_PKT 2
 #define DEVS_PKT_KIND_SEND_RAW_PKT 3
-#define DEVS_PKT_KIND_SUSPENDED 3
+#define DEVS_PKT_KIND_SUSPENDED 4
 
 typedef void (*devs_resume_cb_t)(devs_ctx_t *ctx, void *userdata);
 
@@ -225,7 +225,7 @@ size_t devs_strformat(devs_ctx_t *ctx, const char *fmt, size_t fmtlen, char *dst
 // jdiface.c
 bool devs_jd_should_run(devs_fiber_t *fiber);
 value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx);
-void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx);
+void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx, bool is_role_evt);
 void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code);
 void devs_jd_send_raw(devs_ctx_t *ctx);
 void devs_jd_get_register(devs_ctx_t *ctx, unsigned role_idx, unsigned code, unsigned timeout,
