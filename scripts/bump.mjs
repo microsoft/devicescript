@@ -76,6 +76,13 @@ async function userBump() {
 }
 
 async function cloudPublish() {
+    // check secrets
+    const missingEnvs = ["GITHUB_TOKEN", "NPM_TOKEN", "VSCE_PAT"].filter(
+        k => !process.env[k]
+    )
+    if (missingEnvs.length) fail(`${missingEnvs.join(", ")} not set`)
+
+    // let's go!
     if (process.env["GITHUB_WORKFLOW"]) {
         await $`git config user.email "<>"`
         await $`git config user.name "GitHub Bot"`
