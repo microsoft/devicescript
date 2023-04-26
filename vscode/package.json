@@ -14,10 +14,19 @@
         "workspace"
     ],
     "keywords": [
-        "DeviceScript",
-        "IoT",
         "TypeScript",
-        "Embdded"
+        "ESP",
+        "ESP32",
+        "ESP32-C3",
+        "ESP32-S2",
+        "ESP32-S3",
+        "RP2040",
+        "IoT",
+        "Embedded",
+        "Espressif",
+        "microcontroller",
+        "RaspberryPi",
+        "Jacdac"
     ],
     "engines": {
         "vscode": "^1.76.0"
