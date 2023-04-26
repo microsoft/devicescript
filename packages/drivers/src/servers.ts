@@ -48,6 +48,7 @@ export interface SimpleSensorBaseOptions {
     min?: number
     max?: number
     name?: string
+    simOk?: boolean
 }
 
 export interface SimpleSensorOptions extends SimpleSensorBaseOptions {
@@ -67,7 +68,7 @@ function simRole(pref: string) {
 }
 
 export function startSimpleServer(options: SimpleSensorOptions) {
-    if (ds.isSimulator()) {
+    if (ds.isSimulator() && !options.simOk) {
         if (!simRoles) simRoles = {}
         let name = options.name
         if (!name) name = simRole(options.spec.name)
