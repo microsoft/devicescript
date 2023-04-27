@@ -305,7 +305,7 @@ class BME680Driver extends I2CSensorDriver<{
             gas,
             pressure,
         }
-        console.log(r)
+        // console.log(r)
         return r
     }
 }

@@ -120,10 +120,15 @@ function filesInDir(fn) {
 const genspecs = ["devicescript-spec.d.ts", "devicescript-boards.d.ts"]
 const serversname = "core/src/devicescript-servers.d.ts"
 function buildPrelude(folder, outp) {
+    // get the srvcfg.d.ts extension from archconfig.ts
+    let additions = fs
+        .readFileSync("interop/src/archconfig.ts", "utf-8")
+        .replace(/[^]*^declare module.*/m, "")
+        .replace(/^\}[^]*/m, "")
     let srvcfg = fs.readFileSync("runtime/jacdac-c/dcfg/srvcfg.d.ts", "utf-8")
     // no reason to encode hex number as strings in full TS syntax
     srvcfg = srvcfg
-        .replace("type HexInt = integer | string", "type HexInt = integer")
+        .replace("type HexInt = integer | string", "type HexInt = integer" + "\n" + additions)
         .replace(/type \w*Pin = .*/g, "")
         .replace("/srvcfg", "/servers")
         .replace(
@@ -145,8 +150,6 @@ function buildPrelude(folder, outp) {
         return ""
     })
     startServ += `
-    type UserHardwareInfo = Pick<DeviceHardwareInfo, "scanI2C">
-
     /**
      * Configure C runtime.
      */

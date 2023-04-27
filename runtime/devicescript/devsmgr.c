@@ -510,11 +510,13 @@ void devs_service_full_init(const devsmgr_cfg_t *cfg) {
     gpiosrv_config();
 #endif
 
-#if JD_WIFI
-    wifi_init();
-#endif
 #if JD_NETWORK
-    wsskhealth_init();
-    devscloud_init(&wssk_cloud);
+    if (!dcfg_get_bool("devNetwork")) {
+#if JD_WIFI
+        wifi_init();
+#endif
+        wsskhealth_init();
+        devscloud_init(&wssk_cloud);
+    }
 #endif
 }
