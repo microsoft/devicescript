@@ -7,6 +7,8 @@ sidebar_position: 1
 
 ## Upload Message
 
+Uploads a topic, payload pair to the gateway.
+
 DeviceScript will stringify and upload your object as a JSON payload. The gateway add this messages
 into an [Azure Event Hub](https://azure.microsoft.com/en-us/products/event-hubs/), additonal sinks can be configured online.
 
@@ -22,3 +24,18 @@ await uploadMessage("topic", { msg: "hello" })
 Keep those field names very short as the payload needs to be small (`< 236` bytes).
 
 :::
+
+In the Visual Studio Code extension, you can upload a JSON
+message from the device context menu.
+
+### Subscribe Message
+
+Subscribes to able to receive messages from the gateway.
+
+```ts
+import { subscribeMessage } from "@devicescript/cloud"
+
+subscribeMessage("topic", async msg => {
+    console.log(msg)
+})
+```

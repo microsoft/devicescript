@@ -1,4 +1,4 @@
-import { subscribeMessages, uploadMessage } from "./messages"
+import { subscribeMessage, uploadMessage } from "./messages"
 import { cloud } from "./client"
 import { readSetting, writeSetting } from "@devicescript/settings"
 import { ObservableValue, register } from "@devicescript/observables"
@@ -17,7 +17,7 @@ export async function environment<T = object>(): Promise<ObservableValue<T>> {
     _env = register(old || {})
 
     // receive env messages
-    subscribeMessages(ENV_TOPIC, async (newValue: any) => {
+    subscribeMessage(ENV_TOPIC, async (newValue: any) => {
         console.log(`cloud: received env`)
         console.debug(newValue)
         await writeSetting(ENV_TOPIC, newValue)

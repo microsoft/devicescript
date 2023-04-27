@@ -1,4 +1,4 @@
-import { subscribeMessages } from "@devicescript/cloud"
+import { subscribeMessage } from "@devicescript/cloud"
 
 setInterval(() => {
     console.data({
@@ -7,4 +7,4 @@ setInterval(() => {
     })
 }, 500)
 
-subscribeMessages("test", msg => console.log(msg))
+subscribeMessage("test", msg => console.log(msg))

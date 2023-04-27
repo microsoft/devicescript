@@ -18,7 +18,7 @@ export async function uploadMessage(topicName: string, payload: any) {
  * @param next called on every message
  * @returns unsubscribe handler
  */
-export function subscribeMessages<TMessage = any>(
+export function subscribeMessage<TMessage = any>(
     topicName: "*" | string,
     next: (curr: TMessage) => ds.AsyncVoid
 ) {
