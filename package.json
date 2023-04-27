@@ -10,6 +10,7 @@
         "build": "yarn build:jacdac-ts && yarn build:vscodeicons && yarn build:slow",
         "build:jacdac-ts-fast": "cd jacdac-ts && node ./build.js --fast",
         "build-fast": "yarn build:jacdac-ts-fast && node ./build.js --fast",
+        "package": "cd vscode && yarn package",
         "watch": "node ./build.js --watch",
         "docs": "cd website && yarn start",
         "dev": "yarn watch & yarn docs",
