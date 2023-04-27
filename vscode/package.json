@@ -33,6 +33,7 @@
     },
     "icon": "images/devs-logo.png",
     "categories": [
+        "Programming Languages",
         "Debuggers",
         "Other"
     ],
