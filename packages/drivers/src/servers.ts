@@ -48,6 +48,7 @@ export interface SimpleSensorBaseOptions {
     min?: number
     max?: number
     name?: string
+    baseName?: string
     simOk?: boolean
 }
 
@@ -71,8 +72,11 @@ export function startSimpleServer(options: SimpleSensorOptions) {
     if (ds.isSimulator() && !options.simOk) {
         if (!simRoles) simRoles = {}
         let name = options.name
-        if (!name) name = simRole(options.spec.name)
-        else simRoles[name] = true
+        if (!name) {
+            if (options.baseName)
+                name = options.baseName + "_" + options.spec.name
+            else name = simRole(options.spec.name)
+        } else simRoles[name] = true
         const keys: (keyof SimpleSensorOptions)[] = ["min", "max", "errorValue"]
         let num = 0
         for (const key of keys) {
@@ -115,11 +119,29 @@ export function startTempHumidity(
     hopt: SimpleSensorBaseOptions,
     name?: string
 ) {
-    let humName: string = undefined
-    if (name) humName = name + "_hum"
-    if (!topt.name) topt.name = name
-    if (!hopt.name) hopt.name = humName
+    if (name) {
+        topt.baseName = name
+        hopt.baseName = name
+    }
     const temperature = startTemperature(topt)
     const humidity = startHumidity(hopt)
     return { temperature, humidity }
+}
+
+export function startAirPressure(options: SimpleSensorBaseOptions) {
+    return new ds.AirPressure(
+        startSimpleServer({
+            ...options,
+            spec: ds.AirPressure.spec,
+        })
+    )
+}
+
+export function startAQI(options: SimpleSensorBaseOptions) {
+    return new ds.AirQualityIndex(
+        startSimpleServer({
+            ...options,
+            spec: ds.AirQualityIndex.spec,
+        })
+    )
 }
