@@ -441,7 +441,10 @@ export async function compileFile(
 
     const host = await getHost(buildConfig, options, folder)
 
+    const t0 = Date.now()
     const res = compileWithHost(fn, host)
+    const time = Date.now() - t0
+    verboseLog(`compile: ${time}ms`)
 
     if (res.binary) {
         res.dbg.binarySHA256 = toHex(await sha256([res.binary]))

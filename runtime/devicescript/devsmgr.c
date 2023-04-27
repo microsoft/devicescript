@@ -110,8 +110,11 @@ static void run_img(srv_t *state, const void *img, unsigned size) {
     devs_cfg_t cfg = {.mgr_service_idx = state->service_index};
     state->ctx = devs_create_ctx(img, size, &cfg);
     if (state->ctx) {
-        if (img != devs_empty_program)
+        if (img != devs_empty_program) {
+            DMESG("* start: %s %s", dcfg_get_string("@name", NULL),
+                  dcfg_get_string("@version", NULL));
             devsdbg_restarted(state->ctx);
+        }
     }
 }
 
@@ -154,8 +157,11 @@ static void try_run(srv_t *state) {
 }
 
 static void stop_program(srv_t *state) {
-    devs_free_ctx(state->ctx);
-    state->ctx = NULL;
+    if (state->ctx) {
+        devs_free_ctx(state->ctx);
+        state->ctx = NULL;
+        DMESG("* stop program");
+    }
     send_status(state);
 }
 

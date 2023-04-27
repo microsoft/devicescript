@@ -63,6 +63,8 @@ devs_ctx_t *devs_create_ctx(const uint8_t *img, uint32_t size, const devs_cfg_t 
     jd_sha256_update(img, size);
     jd_sha256_finish(ctx->program_hash);
 
+    DMESG("DevS-SHA256: %*p", JD_SHA256_HASH_BYTES, ctx->program_hash);
+
     setup_ctx(ctx, img);
 
     return ctx;
