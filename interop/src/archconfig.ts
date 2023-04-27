@@ -3,23 +3,26 @@
 /// <reference path="../../runtime/jacdac-c/dcfg/srvcfg.d.ts" />
 
 import {
-    DeviceScriptConfig,
+    DeviceHardwareInfo,
     HexInt,
     JsonComment,
     ServiceConfig,
 } from "@devicescript/srvcfg"
 
-declare module "@devicescript/srvcfg" {
-    interface DeviceScriptConfig extends DeviceHardwareInfo {
-        /**
-         * Don't start internal cloud adapter service (including the WiFi adapter) and instead use one running
-         * on the computer connected via USB.
-         */
-        devNetwork?: boolean
-    }
-
-    type UserHardwareInfo = Pick<DeviceScriptConfig, "scanI2C" | "devNetwork">
+// BEGIN-DS-SERVERS
+export interface DeviceScriptConfig extends DeviceHardwareInfo {
+    /**
+     * Don't start internal cloud adapter service (including the WiFi adapter) and instead use one running
+     * on the computer connected via USB.
+     */
+    devNetwork?: boolean
 }
+
+export type UserHardwareInfo = Pick<
+    DeviceScriptConfig,
+    "scanI2C" | "devNetwork"
+>
+// END-DS-SERVERS
 
 export interface DeviceProps {
     /**

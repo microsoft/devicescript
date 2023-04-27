@@ -123,8 +123,8 @@ function buildPrelude(folder, outp) {
     // get the srvcfg.d.ts extension from archconfig.ts
     let additions = fs
         .readFileSync("interop/src/archconfig.ts", "utf-8")
-        .replace(/[^]*^declare module.*/m, "")
-        .replace(/^\}[^]*/m, "")
+        .replace(/[^]*^\/\/ BEGIN-DS-SERVERS.*/m, "")
+        .replace(/^\/\/ END-DS-SERVERS[^]*/m, "")
     let srvcfg = fs.readFileSync("runtime/jacdac-c/dcfg/srvcfg.d.ts", "utf-8")
     // no reason to encode hex number as strings in full TS syntax
     srvcfg = srvcfg
