@@ -19,3 +19,4 @@ packages/core/src/devicescript-boards.d.ts
 packages/.vscode
 __pycache__
 devs/snippets
+local.env
