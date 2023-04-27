@@ -86,7 +86,10 @@ npm run dev
 ```
 
 -   open the swagger page, `http://localhost:7071/swagger/` and make sure it loads
--   in Visual Studio Code, use the configuration string printed in the console
+-   in Visual Studio Code, use the configuration string printed in the console.
+
+Make sure to use the connection string for **local network** to connect to a device on the same local network.
+Otherwise, you can also work on the simulator device using the local host connection string.
 
 ## Azure deployment (optional)
 
@@ -97,6 +100,10 @@ The Development Gateway can be deployed to Azure on top of Azure services:
 -   [Storage](https://learn.microsoft.com/en-us/azure/storage/), blobs and tables to manage devices, scripts and telemetry
 -   [App Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview), to collect telemetry about the health of devices
 -   [Event Hub](https://learn.microsoft.com/en-us/azure/event-hubs/) to forward JSON messages from the device
+
+> NOTE:
+>
+> -   Some Azure resources will incur costs to your Azure subscription.
 
 ```mermaid
 stateDiagram-v2
