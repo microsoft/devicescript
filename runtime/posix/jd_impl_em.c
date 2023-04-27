@@ -108,7 +108,7 @@ int jd_em_frame_received(jd_frame_t *frame) {
         ERROR("invalid CRC");
         return -2;
     }
-    return jd_rx_frame_received(frame);
+    return jd_rx_frame_received_loopback(frame);
 }
 
 EMSCRIPTEN_KEEPALIVE

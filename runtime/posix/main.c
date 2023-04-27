@@ -20,7 +20,7 @@ static bool test_mode;
 static bool remote_deploy;
 
 static void frame_cb(void *userdata, jd_frame_t *frame) {
-    jd_rx_frame_received(frame);
+    jd_rx_frame_received_loopback(frame);
 }
 
 bool ends_with(const char *str, const char *suff) {
