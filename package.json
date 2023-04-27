@@ -1,6 +1,6 @@
 {
     "name": "DeviceScript-workspace",
-    "version": "2.7.11",
+    "version": "2.8.0",
     "private": true,
     "scripts": {
         "setup": "git submodule update --init --recursive && git pull && yarn install --frozen-lockfile && npm install -g -u jacdac-cli",
