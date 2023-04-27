@@ -1,4 +1,3 @@
-
 Array.prototype.map = function (f) {
     const res: any[] = []
     const length = this.length
@@ -103,4 +102,27 @@ Array.prototype.reduce = function (callbackfn: any, initialValue: any) {
         initialValue = callbackfn(initialValue, this[i], i)
     }
     return initialValue
+}
+
+Buffer.prototype.set = function (other: Buffer, trgOff?: number) {
+    if (!trgOff) trgOff = 0
+    this.blitAt(trgOff, other, 0, other.length)
+}
+
+Buffer.prototype.concat = function (other: Buffer) {
+    const r = Buffer.alloc(this.length + other.length)
+    r.set(this)
+    r.set(other, this.length)
+    return r
+}
+
+Buffer.prototype.slice = function (start?: number, end?: number) {
+    if (end === undefined) end = this.length
+    if (start === undefined) start = 0
+    const len = end - start
+    if (len <= 0 || start >= this.length)
+        return Buffer.alloc(0)
+    const r = Buffer.alloc(len)
+    r.blitAt(0, this, start, len)
+    return r
 }

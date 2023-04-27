@@ -104,8 +104,6 @@ void devs_jd_send_raw(devs_ctx_t *ctx) {
     fib->role_idx = DEVS_ROLE_INVALID;
     fib->service_command = pkt->service_command;
 
-    LOG("send raw");
-
     unsigned sz = pkt->service_size + JD_SERIAL_FULL_HEADER_SIZE;
     fib->pkt_kind = DEVS_PKT_KIND_SEND_RAW_PKT;
     fib->pkt_data.send_pkt.data = devs_try_alloc(ctx, sz);

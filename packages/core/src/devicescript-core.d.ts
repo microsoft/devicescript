@@ -438,6 +438,10 @@ declare module "@devicescript/core" {
             [idx: number]: number
 
             toString(encoding?: "hex" | "utf-8" | "utf8"): string
+
+            set(from: Buffer, targetOffset?: number): void
+            concat(other: Buffer): Buffer
+            slice(from?: number, to?: number): Buffer
         }
 
         /**
