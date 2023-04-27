@@ -580,3 +580,11 @@ uint32_t devs_get_global_flags(void) {
 __attribute__((weak)) uint64_t devs_jd_server_device_id(void) {
     return jd_device_id() ^ 0xdb2249a7751b53f8;
 }
+
+bool jd_need_to_send(jd_frame_t *f) {
+    // no need to send packets to/from ourselves on the SWS wire
+    if (f->device_identifier == jd_device_id() ||
+        f->device_identifier == devs_jd_server_device_id())
+        return false;
+    return true;
+}
