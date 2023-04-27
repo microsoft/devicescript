@@ -80,7 +80,6 @@
         ]
     },
     "main": "./built/devicescript-vscode.js",
-    "browser": "./built/devicescript-vscode-web.js",
     "activationEvents": [
         "workspaceContains:**/devsconfig.json",
         "onDebugResolve:devicescript",

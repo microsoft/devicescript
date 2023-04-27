@@ -105,7 +105,6 @@ const files = {
     "cli/built/devicescript-cli.cjs": "cli/src/cli.ts",
 
     "vscode/built/devicescript-vscode.js": "vscode/src/extension.ts",
-    "vscode/built/devicescript-vscode-web.js": "vscode/src/web-extension.ts",
 }
 
 function strcmp(a, b) {
