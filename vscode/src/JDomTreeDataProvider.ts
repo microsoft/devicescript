@@ -1395,7 +1395,10 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
             DeviceScriptManagerReg.Running
         ).boolValue
 
-        this.label = programName || programHash || "no script"
+        this.label =
+            programSize === 0
+                ? "no script"
+                : programName || programHash || "no script"
         this.description = programVersion || ""
         this.iconPath = new vscode.ThemeIcon(
             running ? "debug-stop" : "debug-start",
@@ -1408,7 +1411,7 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
 
         this.tooltip = toMarkdownString(
             `
-#### ${running ? "running" : "stopped"}            
+#### DeviceScript: ${running ? "running" : "stopped"}            
 
 - program name: ${programName || ""}
 - program version: ${programVersion || ""}
