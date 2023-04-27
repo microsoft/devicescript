@@ -129,11 +129,7 @@ stateDiagram-v2
 
 ```
 
-For development,
-
--   [GitHub Actions](https://docs.github.com/en/actions), deploy the web application on each successful build
-
-The Development Gateway requires an Azure and a GitHub account.
+The Development Gateway requires an Azure account and optionally a GitHub account.
 
 ### Provisioning
 
@@ -169,9 +165,10 @@ You will be able to continue the configuration of the gateway through the [VS Co
 
 ### Deployment
 
-The repository is configured to
-deploy the site on every build on the `main` brain,
-using the `build.yml` workflow.
+The repository can be configured to deploy the site on every build on the `main` brain,
+using the `build.yml` [GitHub Actions](https://docs.github.com/en/actions).
+
+-   to enable, uncomment `# AZURE_WEBAPP_PUBLISH: "true"` in `.github/workflows/build.yml`
 
 The project `README.md` file contains details for local development.
 
@@ -187,4 +184,5 @@ npm run unprovision
 
 Out of the box, the gateway will push [telemetry metrics](/developer/cloud) in an Application Insights instance and in an Event Hub.
 
+-   You can use the built-in dashboarding capabilities of Application Insights to visualize metrics and explore logs.
 -   You can build a dashboard of metrics in an [Azure Hosted Grafana](https://azure.microsoft.com/en-us/products/managed-grafana/) instance.
