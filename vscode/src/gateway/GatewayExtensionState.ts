@@ -97,12 +97,16 @@ export class GatewayExtensionState extends JDEventSource {
                     )
                     if (res === undefined) return
                     const device = res.device
-                    const name = await vscode.window.showInputBox({
-                        title: `Enter a friendly name for ${device.shortId}`,
-                        placeHolder: "my device",
-                    })
-
-                    if (!name) return
+                    let name =
+                        device.deviceId ===
+                        this.deviceScriptState.simulatorScriptManagerId
+                            ? "simulator"
+                            : await vscode.window.showInputBox({
+                                  title: `Enter a friendly name for ${device.shortId}`,
+                                  placeHolder: "my device",
+                              })
+                    if (name === undefined) return
+                    if (!name) name = device.shortId
 
                     await this.withProgress("Registering Device", async () => {
                         await manager.registerDevice(device, name)
@@ -254,15 +258,20 @@ export class GatewayExtensionState extends JDEventSource {
         }
     }
 
-    withProgress(title: string, transaction: () => Promise<void>) {
+    withProgress(
+        title: string,
+        transaction: (
+            progress: vscode.Progress<{ message?: string; increment?: number }>
+        ) => Promise<void>
+    ) {
         return vscode.window.withProgress(
             {
                 title,
                 location: vscode.ProgressLocation.SourceControl,
             },
-            async () => {
+            async progress => {
                 try {
-                    await transaction()
+                    await transaction(progress)
                 } catch (e) {
                     showError(e)
                     // async

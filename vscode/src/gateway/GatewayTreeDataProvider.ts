@@ -110,7 +110,7 @@ export class GatewayTreeDataProvider
                     if (await showConfirmBox("Unregister device?"))
                         await this.state.withProgress(
                             "Unregistering device...",
-                            async () => await device?.delete()
+                            async () => await device.delete()
                         )
                 }
             ),
