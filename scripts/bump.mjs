@@ -77,7 +77,7 @@ async function userBump() {
 
 async function cloudPublish() {
     // check secrets
-    const missingEnvs = ["GITHUB_TOKEN", "NODE_AUTH_TOKEN", "VSCE_PAT"].filter(
+    const missingEnvs = ["GITHUB_TOKEN", "NODE_AUTH_TOKEN"].filter(
         k => process.env[k] === undefined
     )
     if (missingEnvs.length) fail(`${missingEnvs.join(", ")} not set`)
@@ -138,7 +138,8 @@ async function cloudPublish() {
 
     await $`make vscode-pkg`
     await $`gh release create ${vCurrVer} vscode/devicescript.vsix`
-    await $`npx vsce publish --packagePath vscode/devicescript.vsix --pat $VSCE_PAT`
+    if (process.env.VSCE_PAT)
+        await $`npx vsce publish --packagePath vscode/devicescript.vsix`
 }
 
 if (argv.cloud) {
