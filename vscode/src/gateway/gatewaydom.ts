@@ -176,6 +176,7 @@ export class GatewayManager extends JDNode {
             company: deviceSpec?.company,
             runtimeVersion,
             firmwareVersion,
+            services: device.serviceClasses,
         }
         const env: any = {}
         // cleanup
