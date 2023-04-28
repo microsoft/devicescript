@@ -583,8 +583,8 @@ __attribute__((weak)) uint64_t devs_jd_server_device_id(void) {
 
 bool jd_need_to_send(jd_frame_t *f) {
     // no need to send packets to/from ourselves on the SWS wire
-    if (f->device_identifier == jd_device_id() ||
-        f->device_identifier == devs_jd_server_device_id())
+    if (((jd_packet_t *)f)->service_command && (f->device_identifier == jd_device_id() ||
+                                                f->device_identifier == devs_jd_server_device_id()))
         return false;
     return true;
 }

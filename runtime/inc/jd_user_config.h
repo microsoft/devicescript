@@ -44,4 +44,7 @@ extern const uint8_t jd_dcfg_array[];
 
 #define JD_NETWORK 1
 
+int tx_send_frame(void *frame);
+#define JD_USB_BRIDGE_SEND(f) tx_send_frame(f)
+
 #endif

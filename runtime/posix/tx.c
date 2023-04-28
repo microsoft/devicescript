@@ -18,13 +18,18 @@ void jd_packet_ready(void) {
 }
 
 void tx_process(void) {
+    // just empty the queue - we do not have SWS
     while (packet_ready) {
         packet_ready = 0;
         jd_frame_t *f = jd_tx_get_frame();
-        if (f) {
-            if (transport)
-                transport->send_frame(transport_ctx, f);
+        if (f)
             jd_tx_frame_sent(f);
-        }
     }
+}
+
+int tx_send_frame(void *frame) {
+    // the real transport is plugged in place of USB
+    if (transport)
+        return transport->send_frame(transport_ctx, frame);
+    return -1;
 }

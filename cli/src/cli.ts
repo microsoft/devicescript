@@ -151,12 +151,16 @@ export async function mainCli() {
             "use tcp jacdac proxy on 127.0.0.1:8082 (otherwise ws://127.0.0.1:8081)"
         )
         .option("-t, --test", "run in test mode (no sockets, no restarts)")
-        .option("-k, --test-self-exit", "let the test code exit the process (keep-running)")
+        .option(
+            "-k, --test-self-exit",
+            "let the test code exit the process (keep-running)"
+        )
         .option(
             "-T, --test-timeout <milliseconds>",
             "set timeout for --test mode (default: 2000ms)"
         )
         .option("-w, --wait", "wait for external deploy")
+        .option("--device-id <string>", "set device ID")
         .arguments("[file.ts|file.devs]")
         .action(runScript)
 
@@ -201,7 +205,10 @@ export async function mainCli() {
             "-s, --serial <serial-port>",
             "connect to serial port, not 127.0.0.1:8082"
         )
-        .option("-k, --test-self-exit", "let the test code exit the process (keep-running)")
+        .option(
+            "-k, --test-self-exit",
+            "let the test code exit the process (keep-running)"
+        )
         .arguments("<file.ts|file.devs>")
         .action(crunScript)
 
@@ -340,8 +347,16 @@ export async function mainCli() {
 
     program
         .command("snippets", { hidden: true })
-        .option("--include <pattern>", "include given files", "website/**/*.{md,mdx}")
-        .option("--exclude <pattern>", "exclude given files", "website/**/api/clients/*.md")
+        .option(
+            "--include <pattern>",
+            "include given files",
+            "website/**/*.{md,mdx}"
+        )
+        .option(
+            "--exclude <pattern>",
+            "exclude given files",
+            "website/**/api/clients/*.md"
+        )
         .description("compile devs snippets")
         .action(snippets)
 

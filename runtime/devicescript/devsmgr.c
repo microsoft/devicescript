@@ -434,6 +434,7 @@ void devsmgr_handle_packet(srv_t *state, jd_packet_t *pkt) {
                 state->running = 0; // not running yet
                 try_run(state);
             } else if (!state->running && state->ctx) {
+                LOG("running set to false");
                 stop_program(state);
             }
             break;
@@ -517,7 +518,10 @@ void devs_service_full_init(const devsmgr_cfg_t *cfg) {
 #endif
 
 #if JD_NETWORK
-    if (!dcfg_get_bool("devNetwork")) {
+    if (dcfg_get_bool("devNetwork")) {
+        LOG("devNetwork mode - disable cloud adapter");
+    } else {
+        LOG("starting cloud adapter");
 #if JD_WIFI
         wifi_init();
 #endif
