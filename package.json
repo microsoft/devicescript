@@ -31,7 +31,7 @@
         "localboards1": "node ./cli/devicescript ctool --local-boards .. --fetch-boards compiler/src/boards.json",
         "package:vscode": "cd vscode && yarn package",
         "processvideos": "node scripts/processvideos.mjs",
-        "changelog": "auto-changelog -o ./vscode/CHANGELOG.md --hide-credit --hide-empty-releases --ignore-commit-pattern skip"
+        "changelog": "auto-changelog -o ./vscode/CHANGELOG.md --hide-credit --hide-empty-releases --ignore-commit-pattern \"(skip ci|bump bytecode|bump to)\""
     },
     "workspaces": [
         "interop",

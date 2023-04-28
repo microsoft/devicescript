@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.8.3](https://github.com/microsoft/devicescript/compare/v2.8.2...v2.8.3)
+
+> 28 April 2023
+
+- automatic update of changelog [`705037b`](https://github.com/microsoft/devicescript/commit/705037bfac7518756cd277502106afebba82286c)
+- updated docs [`b84256a`](https://github.com/microsoft/devicescript/commit/b84256ade132070330e49679dff7a23965cdb355)
+
 #### [v2.8.2](https://github.com/microsoft/devicescript/compare/v2.8.1...v2.8.2)
 
 > 28 April 2023
@@ -15,8 +22,8 @@ All notable changes to this project will be documented in this file. Dates are d
 > 27 April 2023
 
 - indicate what user program is run; also more debug logging [`4d7617b`](https://github.com/microsoft/devicescript/commit/4d7617b776b3987ae5998f30235b61b29de0aca7)
-- bump bytecode to v2.8.1 [`7242d2c`](https://github.com/microsoft/devicescript/commit/7242d2c8498762e2970d02b4f5c66e5f11f4f050)
 - update jd-c/ts [`7ccd32a`](https://github.com/microsoft/devicescript/commit/7ccd32a0a31eb0fe4d45af067831054d9b2ac212)
+- use correct APIs for frame reception when hosted [`65b0c53`](https://github.com/microsoft/devicescript/commit/65b0c5302d5433422345f456a5988fbde4b287ff)
 
 #### [v2.8.0](https://github.com/microsoft/devicescript/compare/v2.7.11...v2.8.0)
 
@@ -24,7 +31,6 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - add devNetwork dcfg flag [`ef3036c`](https://github.com/microsoft/devicescript/commit/ef3036c1a26c362ba14eb9703c011f972b62387e)
 - fix build [`5cc7a31`](https://github.com/microsoft/devicescript/commit/5cc7a31137cc99b9c78738f3678a77765cb80a0a)
-- bump to 2.8.0 [`4826b2b`](https://github.com/microsoft/devicescript/commit/4826b2b8fae528d2d6262427eb2e4aefeb8c20e4)
 
 #### [v2.7.11](https://github.com/microsoft/devicescript/compare/v2.7.10...v2.7.11)
 
@@ -46,9 +52,8 @@ All notable changes to this project will be documented in this file. Dates are d
 
 > 26 April 2023
 
-- bump bytecode to v2.7.9 [`931ba70`](https://github.com/microsoft/devicescript/commit/931ba708510a3ceeb4db2de118d2d29f9058367c)
 - fix zx syntax [`6ff9b87`](https://github.com/microsoft/devicescript/commit/6ff9b87c18d7d4e7c78f1de5d4c3bf4028a165eb)
-- bump bytecode to v2.7.8 [`ec72172`](https://github.com/microsoft/devicescript/commit/ec7217242629b056b700f3cd0206207b967f81b0)
+- other attempt using env var [`aff3283`](https://github.com/microsoft/devicescript/commit/aff328364a34481a07b298cb50b1aceffe47e635)
 
 #### [v2.7.7](https://github.com/microsoft/devicescript/compare/v2.7.4...v2.7.7)
 
@@ -63,7 +68,6 @@ All notable changes to this project will be documented in this file. Dates are d
 > 26 April 2023
 
 - add tags [`e7227fa`](https://github.com/microsoft/devicescript/commit/e7227fa20827ebdec4382112d16446507938bbe7)
-- bump bytecode to v2.7.4 [`1ebcfa6`](https://github.com/microsoft/devicescript/commit/1ebcfa6aff3b431c415bb35c329b678057bb9acb)
 - fix make release [`2914a72`](https://github.com/microsoft/devicescript/commit/2914a7214fe9fd2c25a2012a34d117f1ac14742e)
 
 #### [v2.7.3](https://github.com/microsoft/devicescript/compare/v2.7.2...v2.7.3)
@@ -194,7 +198,6 @@ All notable changes to this project will be documented in this file. Dates are d
 > 4 April 2023
 
 - updated generated notebook [`d3953a0`](https://github.com/microsoft/devicescript/commit/d3953a0487ee9cdbfd90ba41a63fade9b5fe027b)
-- bump bytecode to v2.3.3 [`d31c7a8`](https://github.com/microsoft/devicescript/commit/d31c7a88becc5a6828dde53ea52f3bd189b5d064)
 
 #### [v2.3.2](https://github.com/microsoft/devicescript/compare/v2.3.1...v2.3.2)
 
@@ -241,7 +244,6 @@ All notable changes to this project will be documented in this file. Dates are d
 > 31 March 2023
 
 - attempt at fixing publshing [`a2db8e2`](https://github.com/microsoft/devicescript/commit/a2db8e2516e52e9be7530f1f50bf8ae025548d9b)
-- bump bytecode to v2.2.27 [`7400b05`](https://github.com/microsoft/devicescript/commit/7400b05fa41456bd7f74f3682601a76c872543d3)
 
 #### [v2.2.26](https://github.com/microsoft/devicescript/compare/v2.2.24...v2.2.26)
 
@@ -249,7 +251,7 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - add video to home screen [`f655de2`](https://github.com/microsoft/devicescript/commit/f655de2533121e5b679b0b0b6184286704e2c11f)
 - fix observables tests [`238de35`](https://github.com/microsoft/devicescript/commit/238de35cca343be5375f8924ce888dfc0463e01f)
-- bump bytecode to v2.2.26 [`1f4837b`](https://github.com/microsoft/devicescript/commit/1f4837b8dc9e90b38c7161c6d3932169d9690606)
+- try yarn publish [`7a89f1e`](https://github.com/microsoft/devicescript/commit/7a89f1e5568c906014f07b5c94892a7cf1fc3760)
 
 #### [v2.2.24](https://github.com/microsoft/devicescript/compare/v2.2.22...v2.2.24)
 
@@ -257,14 +259,12 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - fix: package of depdencies in vscode extension [`4a38ede`](https://github.com/microsoft/devicescript/commit/4a38ede443367a1d45b7a19a8823db2c19bd16c7)
 - fix bump.js [`916c820`](https://github.com/microsoft/devicescript/commit/916c820db2ac90430504140af5ab9328d7c4b974)
-- bump bytecode to v2.2.24 [`7260f03`](https://github.com/microsoft/devicescript/commit/7260f03d4d07b4fb56dd1e76de5252a43656ea7c)
 
 #### [v2.2.22](https://github.com/microsoft/devicescript/compare/v2.2.21...v2.2.22)
 
 > 31 March 2023
 
 - fix: build vsix after patching resources [`53ba99e`](https://github.com/microsoft/devicescript/commit/53ba99eeb516fd50067826abe28b71f37f17870a)
-- bump bytecode to v2.2.22 [`cd7f48f`](https://github.com/microsoft/devicescript/commit/cd7f48f17e7752bd3d87901068c8226fdac2e105)
 - updated output channel name [`0fd9cd3`](https://github.com/microsoft/devicescript/commit/0fd9cd3624ddf70f2b3a126f83b6b7d5fa19d59f)
 
 #### [v2.2.21](https://github.com/microsoft/devicescript/compare/v2.2.20...v2.2.21)
@@ -290,7 +290,6 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - sync subscribe in observables [`#298`](https://github.com/microsoft/devicescript/pull/298)
 - gateway connection message [`685aaa2`](https://github.com/microsoft/devicescript/commit/685aaa28ede16a1c402c95528977abf008b6c6c2)
-- bump bytecode to v2.2.19 [`13a2e88`](https://github.com/microsoft/devicescript/commit/13a2e8804c8ff42478671903f8a46c7b9cd5129c)
 
 #### [v2.2.18](https://github.com/microsoft/devicescript/compare/v2.2.16...v2.2.18)
 
@@ -298,7 +297,7 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - fix: @devicescript/cloud dependencies [`51dbf67`](https://github.com/microsoft/devicescript/commit/51dbf67c04f8e8a30eb0295863d6b3eb39cd6d96)
 - observable docs [`77b4280`](https://github.com/microsoft/devicescript/commit/77b4280b480656ab45dfe935e5ae6bc00a373666)
-- bump bytecode to v2.2.18 [`43842ae`](https://github.com/microsoft/devicescript/commit/43842ae0f11d684b4e43ce5ad43e5d418f168f0f)
+- add test as a devdependency [`a5f8652`](https://github.com/microsoft/devicescript/commit/a5f865227f79ac739ec52ed7687586a857038780)
 
 #### [v2.2.16](https://github.com/microsoft/devicescript/compare/v2.2.15...v2.2.16)
 
@@ -314,7 +313,6 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - vscode should not reference compiler [`d3ab38b`](https://github.com/microsoft/devicescript/commit/d3ab38b3bdfd5426a7930f638afaf9d1cf8f7bf3)
 - fix jacdac-c? [`b1c5d32`](https://github.com/microsoft/devicescript/commit/b1c5d324ae9235cccce855311737b632f689175e)
-- bump bytecode to v2.2.15 [`ea04a0f`](https://github.com/microsoft/devicescript/commit/ea04a0f61806572a72bc5bfcbb19e694d41f4080)
 
 #### [v2.2.14](https://github.com/microsoft/devicescript/compare/v2.2.13...v2.2.14)
 
@@ -347,7 +345,7 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - use fspath in file context [`2b06715`](https://github.com/microsoft/devicescript/commit/2b06715ac9f26f5ff91ea9f2190a02de27dc602b)
 - faster initial devtools connect [`dd31946`](https://github.com/microsoft/devicescript/commit/dd319467d9f304c63c2ff1ab7b6d535b04ee0339)
-- bump bytecode to v2.2.11 [`3eb173a`](https://github.com/microsoft/devicescript/commit/3eb173a304f35d2d4a6afd0423323c9397147c96)
+- updated jacdac-ts [`5db40ff`](https://github.com/microsoft/devicescript/commit/5db40ff7d9817ed7c9765afc79eb2d2f750bdf71)
 
 #### [v2.2.10](https://github.com/microsoft/devicescript/compare/v2.2.9...v2.2.10)
 
@@ -355,13 +353,6 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - cheesy homepage [`6da6dfa`](https://github.com/microsoft/devicescript/commit/6da6dfa364f0eb44afffd484457fbb44aca153c5)
 - fix: don't ask for workspace folder if only one [`7d327ce`](https://github.com/microsoft/devicescript/commit/7d327cebc10c35ddc7f7a2dd9b6888e1f776e843)
-- bump bytecode to v2.2.10 [`ad81330`](https://github.com/microsoft/devicescript/commit/ad813303c3a06f15dd54bafe74b0bd922369c5ce)
-
-#### [v2.2.9](https://github.com/microsoft/devicescript/compare/v2.2.8...v2.2.9)
-
-> 27 March 2023
-
-- bump bytecode to v2.2.9 [`489e37f`](https://github.com/microsoft/devicescript/commit/489e37f6d189a321221933ab0b4f56d166897d5e)
 
 #### [v2.2.8](https://github.com/microsoft/devicescript/compare/v2.2.6...v2.2.8)
 
@@ -423,13 +414,11 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - added new sample [`9c9b829`](https://github.com/microsoft/devicescript/commit/9c9b82957fea0774a09982c2b25110cf4799d03d)
 - work on sample [`f35e0b9`](https://github.com/microsoft/devicescript/commit/f35e0b95fbacbb864f994f8518bed47832b247f5)
-- bump bytecode to v2.2.2 [`659bbb4`](https://github.com/microsoft/devicescript/commit/659bbb47900a5b9d36228cbec8948d3b3fb7c76f)
 
 #### [v2.2.1](https://github.com/microsoft/devicescript/compare/v2.2.0...v2.2.1)
 
 > 23 March 2023
 
-- bump bytecode to v2.2.1 [`6e996b1`](https://github.com/microsoft/devicescript/commit/6e996b1e1e795a23ca1d977c3826e70298988d51)
 - try to fix debug paths [`31d7669`](https://github.com/microsoft/devicescript/commit/31d7669f6da6836b714112158ee51d2a08ee8ccb)
 - more logging [`bb6ce05`](https://github.com/microsoft/devicescript/commit/bb6ce05898167c770e7d168df260c631a68ecb0c)
 
@@ -463,14 +452,12 @@ All notable changes to this project will be documented in this file. Dates are d
 > 22 March 2023
 
 - add analog docs [`61d3c21`](https://github.com/microsoft/devicescript/commit/61d3c214e88c1b7133e893189157254ab78ef90b)
-- bump bytecode to v2.0.8 [`538f147`](https://github.com/microsoft/devicescript/commit/538f147c4f4d89e22f5e1334d919ae0c3d18d821)
 - bump jd-c [`c51e9aa`](https://github.com/microsoft/devicescript/commit/c51e9aa8e56e7d93b9da2447abc147d4d9b307c1)
 
 #### [v2.0.7](https://github.com/microsoft/devicescript/compare/v2.0.6...v2.0.7)
 
 > 22 March 2023
 
-- bump bytecode to v2.0.7 [`1456b5f`](https://github.com/microsoft/devicescript/commit/1456b5f0b2453cdcecc9a85b1f54ff1db687450b)
 - build before publish [`e9e7ee3`](https://github.com/microsoft/devicescript/commit/e9e7ee34ced4cd0e57376d4ebd62c85c9dc5d9db)
 
 #### [v2.0.6](https://github.com/microsoft/devicescript/compare/v2.0.5...v2.0.6)
@@ -479,7 +466,7 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - improve esptool detection [`113a590`](https://github.com/microsoft/devicescript/commit/113a590d60f86490f52231228e3f32be76c9be13)
 - fix 'devs flash esp32 --board xyz' [`f8d05c0`](https://github.com/microsoft/devicescript/commit/f8d05c09cc32e466eb825497e3e825858c666256)
-- bump bytecode to v2.0.6 [`a77125c`](https://github.com/microsoft/devicescript/commit/a77125c87b79ebd181938ae72cd8bff31bd87a64)
+- generate meta files with sizes [`4c9fa0b`](https://github.com/microsoft/devicescript/commit/4c9fa0b2121ac6dfcb40e4d930837674848fa1a4)
 
 #### [v2.0.5](https://github.com/microsoft/devicescript/compare/v2.0.4...v2.0.5)
 
@@ -505,7 +492,7 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - fix: beforeeach, aftereach in tests [`8a49c33`](https://github.com/microsoft/devicescript/commit/8a49c33e10db05fdd02025b27a23be9ca11bd1a3)
 - try to fix npm 402 [`f1c9551`](https://github.com/microsoft/devicescript/commit/f1c9551a3c41e9ffd0809b40b84f1fed7c3240de)
-- bump bytecode to v2.0.3 [`1884404`](https://github.com/microsoft/devicescript/commit/188440479f3e5ab61a0d0821d6282e6c144f41d9)
+- don't build C if tools not installed [`8dbeeae`](https://github.com/microsoft/devicescript/commit/8dbeeaead6f0bc7958a20bbe8aecc71f6d8e55a5)
 
 #### [v2.0.2](https://github.com/microsoft/devicescript/compare/v2.0.1...v2.0.2)
 
