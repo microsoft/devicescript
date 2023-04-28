@@ -36,6 +36,7 @@ import {
     assert,
     fromHex,
 } from "./jdutil"
+import { IMAGE_MIN_LENGTH, checkMagic } from "./magic"
 
 export class OpTree {
     args: OpTree[] = undefined
@@ -532,14 +533,11 @@ export class Image {
         const img = this.devsBinary
         const error = (m: string) => this.error(m)
 
-        if (!img || img.length < 100) {
+        if (!img || img.length < IMAGE_MIN_LENGTH) {
             this.error(`img too small`)
             return
         }
-        if (
-            read32(img, 0) != BinFmt.MAGIC0 ||
-            read32(img, 4) != BinFmt.MAGIC1
-        ) {
+        if (!checkMagic(img)) {
             this.error(`invalid magic`)
             return
         }
