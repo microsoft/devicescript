@@ -88,3 +88,9 @@ ds.RotaryEncoder.prototype.asPotentiometer = function (steps?: number) {
     init.start()
     return reg
 }
+
+let _ctrl: ds.Control
+;(ds as typeof ds).intControl = function () {
+    if (!_ctrl) _ctrl = new ds.Control("intControl[int:0]")
+    return _ctrl
+}

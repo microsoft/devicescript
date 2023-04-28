@@ -78,7 +78,7 @@ function toHex(n: number): string {
 }
 
 function noCtorSpec(info: jdspec.ServiceSpec) {
-    return [SRV_CONTROL].indexOf(info.classIdentifier) > -1
+    return [].indexOf(info.classIdentifier) > -1
 }
 
 function ignoreSpec(info: jdspec.ServiceSpec) {
