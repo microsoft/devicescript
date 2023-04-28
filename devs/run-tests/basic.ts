@@ -1003,6 +1003,27 @@ class UsingCtorFieldArgs {
     }
 }
 
+class StaticTest {
+    static baz: number
+    static qux() {
+        StaticTest.baz = 12
+    }
+    qux2() {}
+}
+
+function testStatic() {
+    ds.assert(StaticTest.baz === undefined)
+    StaticTest.qux()
+    ds.assert(StaticTest.baz === 12)
+    ds.assert(typeof StaticTest.qux === "function")
+    ds.assert((StaticTest as any).qux2 === undefined)
+    ds.assert(typeof StaticTest.prototype.qux2 === "function")
+    ds.assert((StaticTest.prototype as any).qux === undefined)
+    const f = new StaticTest()
+    ds.assert(typeof f.qux2 === "function")
+    ds.assert((f as any).qux === undefined)
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -1042,5 +1063,6 @@ testQDot()
 testHex()
 testAssignmentChaining()
 new UsingCtorFieldArgs(12)
+testStatic()
 
 console.log("all OK")

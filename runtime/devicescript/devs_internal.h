@@ -146,6 +146,7 @@ struct devs_ctx {
     value_t the_stack[DEVS_MAX_STACK_DEPTH];
 
     devs_short_map_t *fn_protos;
+    devs_short_map_t *fn_values;
     devs_short_map_t *spec_protos;
 
     devs_img_t img;

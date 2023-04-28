@@ -18,6 +18,7 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
 
     ctx->fn_protos = devs_short_map_try_alloc(ctx);
     ctx->spec_protos = devs_short_map_try_alloc(ctx);
+    ctx->fn_values = devs_short_map_try_alloc(ctx);
 
     if (ctx->error_code)
         return;

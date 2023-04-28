@@ -1533,6 +1533,7 @@ class Program implements TopOpWriter {
             FunctionFlag.IS_CTOR | FunctionFlag.NEEDS_THIS
         for (const mem of cls.members) {
             if (!ts.isPropertyDeclaration(mem)) continue
+            if (this.isStatic(mem)) continue
             const id = this.forceName(mem.name)
             if (mem.initializer)
                 this.withLocation(mem, wr => {
@@ -1842,6 +1843,9 @@ class Program implements TopOpWriter {
                 this.markMethodUsed(info.names[0])
             } else if (ts.isConstructorDeclaration(mem)) {
                 numCtorArgs = mem.parameters.length
+            } else if (ts.isPropertyDeclaration(mem) && this.isStatic(mem)) {
+                if (mem.initializer) 
+                    throwError(mem, "initializers on static members are not supported (yet)")
             }
         }
 
@@ -1884,13 +1888,20 @@ class Program implements TopOpWriter {
         return cell
     }
 
+    private isStatic(meth: ts.MethodDeclaration | ts.PropertyDeclaration) {
+        return meth.modifiers?.some(m => m.kind == SK.StaticKeyword)
+    }
+
     private emitMethod(meth: ts.MethodDeclaration) {
         const proc = new Procedure(this, this.forceName(meth.name), meth)
         this.emitFunction(meth, proc)
         this.withLocation(meth, wr => {
+            const ctor = this.ctorProc(meth.parent)
             wr.emitStmt(
                 Op.STMT3_INDEX_SET,
-                this.ctorProc(meth.parent).dotPrototype(wr),
+                this.isStatic(meth)
+                    ? ctor.reference(wr)
+                    : ctor.dotPrototype(wr),
                 wr.emitString(this.forceName(meth.name)),
                 proc.reference(wr)
             )

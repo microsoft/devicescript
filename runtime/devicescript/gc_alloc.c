@@ -213,6 +213,7 @@ static void mark_roots(devs_gc_t *gc) {
     }
 
     scan_gc_obj(ctx, (block_t *)ctx->fn_protos, ROOT_SCAN_DEPTH);
+    scan_gc_obj(ctx, (block_t *)ctx->fn_values, ROOT_SCAN_DEPTH);
     scan_gc_obj(ctx, (block_t *)ctx->spec_protos, ROOT_SCAN_DEPTH);
     scan_value(ctx, ctx->exn_val, ROOT_SCAN_DEPTH);
     scan_value(ctx, ctx->diag_field, ROOT_SCAN_DEPTH);

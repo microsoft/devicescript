@@ -776,6 +776,27 @@ static devs_maplike_t *devs_object_get_attached(devs_ctx_t *ctx, value_t v, unsi
                 return devs_get_static_proto(ctx, hv - DEVS_SPECIAL_BUILTIN_OBJ_FIRST,
                                              attach_flags | ATTACH_DIRECT);
         }
+        if (tp == DEVS_OBJECT_TYPE_FUNCTION) {
+            value_t this_val;
+            devs_activation_t *closure;
+            int fidx = devs_get_fnidx(ctx, v, &this_val, &closure);
+            if (fidx >= 0) {
+                value_t r = devs_short_map_get(ctx, ctx->fn_values, fidx);
+                if (devs_is_undefined(r) && attach_flags) {
+                    r = devs_value_from_gc_obj(
+                        ctx,
+                        devs_map_try_alloc(ctx, devs_get_builtin_object(
+                                                    ctx, DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE)));
+                    if (!devs_is_undefined(r)) {
+                        devs_value_pin(ctx, r);
+                        devs_short_map_set(ctx, ctx->fn_values, fidx, r);
+                        devs_value_unpin(ctx, r);
+                    }
+                }
+                if (!devs_is_undefined(r))
+                    return devs_value_to_gc_obj(ctx, r);
+            }
+        }
         if (tp < (int)sizeof(proto_by_object_type)) {
             pt = proto_by_object_type[tp];
         }
