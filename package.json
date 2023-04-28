@@ -30,7 +30,8 @@
         "localboards2": "node ./cli/devicescript ctool --local-boards ../.. --fetch-boards compiler/src/boards.json",
         "localboards1": "node ./cli/devicescript ctool --local-boards .. --fetch-boards compiler/src/boards.json",
         "package:vscode": "cd vscode && yarn package",
-        "processvideos": "node scripts/processvideos.mjs"
+        "processvideos": "node scripts/processvideos.mjs",
+        "changelog": "auto-changelog -o ./vscode/CHANGELOG.md --hide-credit --hide-empty-releases --ignore-commit-pattern skip"
     },
     "workspaces": [
         "interop",
@@ -46,6 +47,7 @@
         "website"
     ],
     "devDependencies": {
+        "auto-changelog": "^2.4.0",
         "esbuild": "^0.17.11",
         "semver": "^7.3.8",
         "zx": "^7.2.1"

@@ -112,7 +112,7 @@ async function cloudPublish() {
 
     // some files bundle package.json - make sure they get the latest version
     await $`yarn build-fast`
-
+    await $`yarn changelog`
     await $`git add .`
     await $`git commit -m ${"[skip ci] release " + vCurrVer}`
     await $`git tag ${vCurrVer}`
