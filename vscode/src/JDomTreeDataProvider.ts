@@ -719,8 +719,10 @@ class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
         const { notImplemented } = register
         if (notImplemented) return true
 
-        const { data, specification, lastGetAttempts } = register
+        const { data, specification, lastGetAttempts, code } = register
         const { optional } = specification || {}
+
+        if (code === SystemReg.ClientVariant) return true
 
         return optional && lastGetAttempts > 2 && data === undefined
     }
