@@ -1,4 +1,4 @@
-import { DebugInfo } from "@devicescript/compiler"
+import { DebugInfo, checkMagic } from "@devicescript/compiler"
 import { readFileSync } from "node:fs"
 import { compileFile, devsFactory, devsStartWithNetwork } from "./build"
 import { error } from "./command"
@@ -17,9 +17,15 @@ export async function readCompiled(
     options: BuildOptions = {}
 ): Promise<{ binary: Uint8Array; dbg?: DebugInfo }> {
     const buf = readFileSync(fn)
-    if (buf.subarray(0, 8).toString("hex") == "446576530a7e6a9a")
-        return { binary: buf }
-    if (buf.subarray(0, 16).toString("binary") == "446576530a7e6a9a")
+    if (checkMagic(buf)) return { binary: buf }
+    if (
+        checkMagic(
+            Buffer.from(
+                buf.subarray(0, 16).toString("binary").replace(/\s*/g, ""),
+                "hex"
+            )
+        )
+    )
         return {
             binary: Buffer.from(
                 buf.toString("binary").replace(/\s*/g, ""),
