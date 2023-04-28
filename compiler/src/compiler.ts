@@ -964,7 +964,7 @@ class Program implements TopOpWriter {
             obj.service = startName
 
             return this.startServer(expr, obj)
-        } else if (nn == serversPref + "hardwareConfig") {
+        } else if (nn == serversPref + "configureHardware") {
             this.requireArgs(expr, 1)
             const arg = expr.arguments[0]
             const obj = this.toLiteralJSONObj(arg)

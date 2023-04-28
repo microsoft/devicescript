@@ -1,4 +1,4 @@
-import { hardwareConfig } from "@devicescript/servers"
+import { configureHardware } from "@devicescript/servers"
 
 export * from "./driver"
 export * from "./shtc3"
@@ -7,4 +7,4 @@ export * from "./aht20"
 export * from "./ltr390"
 export * from "./bme680"
 
-hardwareConfig({ scanI2C: false })
+configureHardware({ scanI2C: false })

@@ -153,7 +153,7 @@ function buildPrelude(folder, outp) {
     /**
      * Configure C runtime.
      */
-    export function hardwareConfig(cfg: UserHardwareInfo): void
+    export function configureHardware(cfg: UserHardwareInfo): void
 `
     srvcfg = srvcfg.replace(m[0], startServ + m[0])
     srvcfg = "// auto-generated! do not edit here\n" + srvcfg
