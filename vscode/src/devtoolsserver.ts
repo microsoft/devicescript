@@ -300,12 +300,25 @@ export class DeveloperToolsManager extends JDEventSource {
      * Builds a file relative to the current project folder
      */
     async build(
-        relativeFileName: string,
+        relativeFileName: string | vscode.Uri,
         service?: JDService,
         buildOptions?: BuildOptions
     ): Promise<BuildStatus> {
         this._watcher?.dispose()
         this._watcher = undefined
+        const { projectFolder } = this
+
+        // absolute uri to relative file name
+        if (relativeFileName instanceof vscode.Uri) {
+            if (
+                projectFolder &&
+                relativeFileName.path.startsWith(projectFolder.path)
+            ) {
+                relativeFileName = relativeFileName.path.slice(
+                    projectFolder.path.length + 1
+                )
+            } else relativeFileName = relativeFileName.path
+        }
 
         // make sure this file is an entry foind
         const entrypoints = await this.entryPoints()

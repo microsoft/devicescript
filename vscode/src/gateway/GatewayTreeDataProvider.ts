@@ -334,9 +334,7 @@ export class GatewayTreeDataProvider
                             { title: "Pick an entry point file." }
                         )
                     const status =
-                        await this.state.deviceScriptState.devtools.build(
-                            file.fsPath
-                        )
+                        await this.state.deviceScriptState.devtools.build(file)
                     if (!status?.success) {
                         vscode.window.showErrorMessage(
                             `DeviceScript Gateway: project has build errors.`
@@ -367,9 +365,7 @@ export class GatewayTreeDataProvider
 
                     // TODOtry to build
                     const status =
-                        await this.state.deviceScriptState.devtools.build(
-                            file.fsPath
-                        )
+                        await this.state.deviceScriptState.devtools.build(file)
                     if (!status?.success) {
                         vscode.window.showErrorMessage(
                             `DeviceScript Gateway: project has build errors.`
