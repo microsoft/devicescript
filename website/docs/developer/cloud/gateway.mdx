@@ -8,7 +8,9 @@ sidebar_position: 4
 DeviceScript defines a [cloud layer](/developer/cloud/)
 to abstract the communication between the device and a cloud provider.
 
-In order to facilite rapid prototyping, it is possible to run a **Development Gateway** locally or deploy it to Azure on top of Azure services.
+In order to facilite rapid prototyping,
+it is possible to run a Development Gateway **locally**
+or deploy it to Azure on top of Azure services.
 
 -   Full sources at https://github.com/microsoft/devicescript-gateway
 
@@ -60,13 +62,16 @@ stateDiagram-v2
     wssk: Web Socket
     openapi: Open API
     vscode: VS Code
-    storage: Azure Storage
-    storage: (Azurite)
+    storage: Device Table, Script Blobs
+    storage: Emulated Azure Storage (Azurite)
+    messages: Message Queue
+    messages: Emulated Azure Storage (Azurite)
 
     dev --> wssk
     wssk --> web
     openapi --> web
     web --> storage
+    web --> messages
     vscode --> openapi
 
 ```
@@ -91,6 +96,9 @@ npm run dev
 Make sure to use the connection string for **local network** to connect to a device on the same local network.
 Otherwise, you can also work on the simulator device using the local host connection string.
 
+Device messages are pushed into the `messages` [Azure Storage Queue](https://learn.microsoft.com/en-us/azure/storage/queues/storage-queues-introduction) as a base-64 encoded JSON string.
+You can use any client library to access those messages.
+
 ## Azure deployment (optional)
 
 The Development Gateway can be deployed to Azure on top of Azure services:
@@ -109,14 +117,18 @@ The Development Gateway can be deployed to Azure on top of Azure services:
 stateDiagram-v2
     web: Fastify server
     dev: Device
+    ai: Telemetry
     ai: Azure Application Insights
-    hub: Azure Event Hub
+    kv: Service connection strings
     kv: Azure Key Vault
     wssk: Web Socket
     openapi: Open API
-    web: (Azure App Service)
+    web: Azure App Service
     vscode: VS Code
+    storage: Device Table, Script Blobs
     storage: Azure Storage
+    messages: Message Queue
+    messages: Azure Event Hub
 
     dev --> wssk
     web --> ai
@@ -124,7 +136,7 @@ stateDiagram-v2
     wssk --> web
     openapi --> web
     web --> storage
-    web --> hub
+    web --> messages
     vscode --> openapi
 
 ```
