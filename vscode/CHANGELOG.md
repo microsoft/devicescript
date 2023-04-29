@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.0](https://github.com/microsoft/devicescript/compare/v2.8.3...v2.9.0)
+
+> 28 April 2023
+
+- support for static class members; fixes #337; 2.9.0 [`#337`](https://github.com/microsoft/devicescript/issues/337)
+- filter out more commits from changelog [`cf5883f`](https://github.com/microsoft/devicescript/commit/cf5883fc8307b3ad779cb9e24fc64b6b07518567)
+- store list of services in device meta [`7ca544c`](https://github.com/microsoft/devicescript/commit/7ca544c77ee788333e92042503365ca61456b956)
+
 #### [v2.8.3](https://github.com/microsoft/devicescript/compare/v2.8.2...v2.8.3)
 
 > 28 April 2023
