@@ -1,5 +1,5 @@
 import { cloud } from "./client"
-import { uploadMessage } from "./messages"
+import { publishMessage } from "./messages"
 
 const EVENT_TOPIC = "tev"
 const METRIC_TOPIC = "tme"
@@ -26,7 +26,7 @@ export async function trackEvent(
     options?: TrackEventOptions
 ): Promise<void> {
     const { properties: p, measurements: m } = options || {}
-    await uploadMessage(EVENT_TOPIC, {
+    await publishMessage(EVENT_TOPIC, {
         n: name,
         p,
         m,
@@ -147,7 +147,7 @@ export async function trackMetric(
         variance: a,
         properties: p,
     } = options || {}
-    await uploadMessage(METRIC_TOPIC, {
+    await publishMessage(METRIC_TOPIC, {
         n: name,
         v,
         mi,

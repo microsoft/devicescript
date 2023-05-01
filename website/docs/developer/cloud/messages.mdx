@@ -5,18 +5,18 @@ sidebar_position: 1
 
 # Messages
 
-## Upload Message
+## Publish Message
 
-Uploads a topic, payload pair to the gateway.
+Publish a topic, payload pair to the gateway.
 
 DeviceScript will stringify and upload your object as a JSON payload. The gateway add this messages
 into an [Azure Event Hub](https://azure.microsoft.com/en-us/products/event-hubs/), additonal sinks can be configured online.
 
 ```ts
-import { uploadMessage } from "@devicescript/cloud"
+import { publishMessage } from "@devicescript/cloud"
 
 // highlight-next-line
-await uploadMessage("topic", { msg: "hello" })
+await publishMessage("topic", { msg: "hello" })
 ```
 
 :::tip

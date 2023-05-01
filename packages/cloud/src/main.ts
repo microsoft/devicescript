@@ -5,7 +5,7 @@ import {
     trackEvent,
     trackException,
     trackMetric,
-    uploadMessage,
+    publishMessage,
 } from "."
 import { describe, test } from "@devicescript/test"
 
@@ -81,15 +81,15 @@ describe("metric", () => {
 })
 describe("upload message", () => {
     test("upload", async () => {
-        await uploadMessage("cloud/tests", {
+        await publishMessage("cloud/tests", {
             t: ds.millis(),
         })
     })
     test("upload2", async () => {
-        await uploadMessage("cloud/tests", {
+        await publishMessage("cloud/tests", {
             t: ds.millis(),
         })
-        await uploadMessage("cloud/tests", {
+        await publishMessage("cloud/tests", {
             t: ds.millis(),
         })
     })

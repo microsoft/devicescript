@@ -1,4 +1,4 @@
-import { subscribeMessage, uploadMessage } from "./messages"
+import { subscribeMessage, publishMessage } from "./messages"
 import { cloud } from "./client"
 import { readSetting, writeSetting } from "@devicescript/settings"
 import { ObservableValue, register } from "@devicescript/observables"
@@ -26,11 +26,11 @@ export async function environment<T = object>(): Promise<ObservableValue<T>> {
     // query env when cloud restarts
     cloud.connected.subscribe(async curr => {
         if (curr) {
-            await uploadMessage(ENV_TOPIC, {})
+            await publishMessage(ENV_TOPIC, {})
         }
     })
     if (await cloud.connected.read()) {
-        await uploadMessage(ENV_TOPIC, {})
+        await publishMessage(ENV_TOPIC, {})
     }
     return _env
 }

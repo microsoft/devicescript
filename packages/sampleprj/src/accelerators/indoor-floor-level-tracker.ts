@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { cloud, environment, uploadMessage } from "@devicescript/cloud"
+import { cloud, environment, publishMessage } from "@devicescript/cloud"
 import { filter, interval, map, register } from "@devicescript/observables"
 
 /**
@@ -67,7 +67,7 @@ interval(FLOOR_SAMPLE_PERIOD).pipe(
 interval(LIVE_UPDATE_PERIOD)
     .pipe(filter(async () => await cloud.connected.read()))
     .subscribe(
-        async () => await uploadMessage("readings", await readings.read())
+        async () => await publishMessage("readings", await readings.read())
     )
 
 // update display

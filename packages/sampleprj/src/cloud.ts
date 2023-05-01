@@ -3,7 +3,7 @@ import {
     createMetric,
     trackException,
     trackEvent,
-    uploadMessage,
+    publishMessage,
 } from "@devicescript/cloud"
 
 console.log("starting...")
@@ -21,7 +21,7 @@ setInterval(async () => {
     console.log("upload data")
     await temp.upload()
     await trackEvent("data", { measurements: { humi: h } })
-    await uploadMessage("samples/cloud", { humi: h })
+    await publishMessage("samples/cloud", { humi: h })
     try {
         throw new Error("noes!")
     } catch (e) {

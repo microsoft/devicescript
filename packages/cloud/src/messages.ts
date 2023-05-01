@@ -4,7 +4,7 @@ import { cloud } from "./client"
 /**
  * Uploads a message to the cloud
  */
-export async function uploadMessage(topicName: string, payload: any) {
+export async function publishMessage(topicName: string, payload: any) {
     // reduce payload size
     if (typeof payload === "object")
         Object.keys(payload)
