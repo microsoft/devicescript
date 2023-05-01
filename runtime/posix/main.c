@@ -23,22 +23,6 @@ static void frame_cb(void *userdata, jd_frame_t *frame) {
     jd_rx_frame_received_loopback(frame);
 }
 
-bool ends_with(const char *str, const char *suff) {
-    if (!str)
-        return false;
-    int lstr = strlen(str);
-    int lsuff = strlen(suff);
-    if (lstr < lsuff)
-        return false;
-    return strcmp(str + lstr - lsuff, suff) == 0;
-}
-
-bool starts_with(const char *str, const char *pref) {
-    if (!str)
-        return false;
-    return memcmp(str, pref, strlen(pref)) == 0;
-}
-
 void app_init_services() {
     flash_init();
     devs_service_full_init(NULL);
@@ -293,14 +277,14 @@ int main(int argc, const char **argv) {
 
     for (int i = 1; i < argc; ++i) {
         const char *arg = argv[i];
-        if (starts_with(arg, "/dev/")) {
+        if (jd_starts_with(arg, "/dev/")) {
             transport_arg = arg;
             transport = &hf2_transport;
             remote_deploy = 1;
         } else if (atoi(arg)) {
             transport_arg = arg;
             transport = &sock_transport;
-        } else if (ends_with(arg, ".devs")) {
+        } else if (jd_ends_with(arg, ".devs")) {
             devs_img = arg;
         } else if (strcmp(arg, "-l") == 0) {
             enable_lstore = 1;

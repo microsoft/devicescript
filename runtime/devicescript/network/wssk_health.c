@@ -40,6 +40,7 @@ struct srv_state {
     char *device_id;
     uint8_t master_key[JD_AES_KEY_BYTES];
     uint16_t portnum;
+    bool use_tls;
 
     jd_queue_t fwdqueue;
 };
@@ -153,9 +154,11 @@ static void wsskhealth_reconnect(srv_t *state) {
     if (!state->hub_name || !jd_tcpsock_is_available())
         return;
 
-    LOG("connecting to ws://%s:%d%s", state->hub_name, state->portnum, state->device_id);
+    LOG("connecting to %s://%s:%d%s", state->use_tls ? "wss" : "ws", state->hub_name,
+        state->portnum, state->device_id);
 
-    int r = jd_wssk_new(state->hub_name, state->portnum, state->device_id, state->master_key);
+    int r = jd_wssk_new(state->hub_name, state->use_tls ? -state->portnum : state->portnum,
+                        state->device_id, state->master_key);
     if (r)
         return;
 
@@ -181,14 +184,19 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
     uint8_t master_key[JD_AES_KEY_BYTES];
     int portnum = 80;
 
-    // ws://wssk:df1...64@foobar.example.com:7011/jacdac-ws0/f70e6b97713cdaee
+    // ws://wssk:df1...64@foobar.example.com:7011/wssk/f70e6b97713cdaee
     if (strlen(conn) < JD_AES_KEY_BYTES * 2 + 6)
         goto fail_parse;
 
-    if (memcmp(conn, "ws://", 5) != 0)
+    int is_tls = 0;
+
+    if (jd_starts_with(conn, "wss://")) {
+        is_tls = 1;
+        portnum = 443;
+    } else if (!jd_starts_with(conn, "ws://"))
         goto fail_parse;
 
-    char *keybeg = conn + 5;
+    char *keybeg = conn + (5 + is_tls);
     char *at_pos = strchr(keybeg, '@');
     char *user_colon_pos = strchr(keybeg, ':');
     if (user_colon_pos > at_pos)
@@ -202,7 +210,7 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
         goto fail_parse;
 
     if (user_colon_pos) {
-        if (memcmp(keybeg, "wssk:", 5) != 0)
+        if (!jd_starts_with(keybeg, "wssk:"))
             goto fail_parse;
         keybeg = user_colon_pos + 1;
     }
@@ -231,7 +239,16 @@ static int set_conn_string(srv_t *state, const char *conn_str, unsigned conn_sz,
 
     state->hub_name = host;
     state->device_id = path;
+
+    // for codespaces ports, force TLS - they don't work over TCP
+    if (jd_ends_with(host, ".app.github.dev")) {
+        is_tls = 1;
+        if (portnum == 80)
+            portnum = 443;
+    }
+
     state->portnum = portnum;
+    state->use_tls = is_tls;
     memcpy(state->master_key, master_key, JD_AES_KEY_BYTES);
 
     if (save) {
@@ -357,7 +374,7 @@ void wsskhealth_handle_packet(srv_t *state, jd_packet_t *pkt) {
 
     case JD_GET(JD_CLOUD_CONFIGURATION_REG_CLOUD_DEVICE_ID): {
         const char *id = state->device_id;
-        if (id && memcmp(id, "/wssk/", 6) == 0)
+        if (id && jd_starts_with(id, "/wssk/"))
             id += 6;
         jd_respond_string(pkt, id);
         return;

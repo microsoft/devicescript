@@ -4,7 +4,7 @@
 
 #define LOG(fmt, ...) DMESG("WS: " fmt, ##__VA_ARGS__)
 #define LOGV(...) ((void)0)
-//#define LOGV LOG
+// #define LOGV LOG
 
 #define ST_OPENING 0x00
 #define ST_REQ_SENT 0x01
@@ -107,7 +107,7 @@ static const char *websock_start =   //
     "Origin: http://%s\r\n"          // host
     "Sec-WebSocket-Key: %s==\r\n"    // key 22 chars
     "Sec-WebSocket-Protocol: %s\r\n" // proto
-    "User-Agent: jacdac-c/%s"        // version
+    "User-Agent: jacdac-c/%s\r\n"    // version
     "Pragma: no-cache\r\n"
     "Cache-Control: no-cache\r\n"
     "Upgrade: websocket\r\n"
@@ -175,7 +175,7 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
 
     if (ws->state == ST_REQ_SENT) {
         if (ws->msgptr >= 12) {
-            if (memcmp(ws->msg, "HTTP/1.1 101", 12) == 0) {
+            if (jd_starts_with((char *)ws->msg, "HTTP/1.1 101")) {
                 ws->state = ST_GOT_101;
                 LOG("got 101");
             } else {

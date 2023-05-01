@@ -67,6 +67,7 @@ void jd_websock_close(void);
 
 // This is on encrypted packet transport level - messages are whole
 // and this will try to re-connect.
+// If port is negative, use TLS.
 int jd_wssk_new(const char *hostname, int port, const char *path, const uint8_t master_key[JD_AES_KEY_BYTES]);
 void jd_wssk_on_event(unsigned event, const void *data, unsigned size);
 int jd_wssk_send_message(const void *data0, unsigned size0, const void *data1, unsigned size1);
