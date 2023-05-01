@@ -39,7 +39,12 @@ function urlQuery(url: string, args?: Record<string, string | number>) {
     return query?.length ? `${url}?${query.join("&")}` : url
 }
 
+export interface GatewayInfo {
+    mqttServer?: string
+}
+
 export class GatewayManager extends JDNode {
+    private _info: GatewayInfo
     private _devices: GatewayDevice[]
     private _scripts: GatewayScript[]
     private _lastFetchStatus: string
@@ -51,6 +56,10 @@ export class GatewayManager extends JDNode {
         readonly token: string
     ) {
         super()
+    }
+
+    get info() {
+        return this._info
     }
 
     get id(): string {
@@ -205,9 +214,18 @@ export class GatewayManager extends JDNode {
     }
 
     async refresh() {
-        await this.refreshDevices()
+        await this.refreshInfo()
         if (this.lastFetchStatus !== GATEWAY_LAST_FETCH_STATUS_OK) return
+
+        await this.refreshDevices()
         await this.refreshScripts()
+    }
+
+    async refreshInfo() {
+        const info = (await this.fetchJSON("info")) as GatewayInfo
+        if (!info) return // query failed
+        this._info = info
+        this.emit(CHANGE)
     }
 
     async refreshDevices() {
@@ -399,6 +417,7 @@ export interface GatewayDeviceData extends GatewayData {
     deployedHash?: string
     meta?: GatewayDeviceMeta
     env?: GatewayDeviceEnv
+    mqttTopic?: string
 }
 
 export interface CloudDeviceConnectionInfo {
@@ -446,6 +465,10 @@ export class GatewayDevice extends GatewayNode<GatewayDeviceData> {
     get env(): GatewayDeviceEnv {
         const { data } = this
         return data.env
+    }
+    get mqttTopic(): string {
+        const { data } = this
+        return data.mqttTopic
     }
     get deviceId() {
         return this.data.id

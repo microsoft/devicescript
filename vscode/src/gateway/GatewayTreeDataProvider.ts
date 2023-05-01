@@ -463,7 +463,8 @@ export class GatewayTreeDataProvider
                 tooltip = toMarkdownString(`
 -   OpenAPI: [${mgr.apiRoot}](${mgr.apiRoot}/swagger/)
 -   Last fetch: ${mgr.lastFetchStatus}
-                `)
+-   MQTT server: ${mgr.info?.mqttServer || ""}
+`)
                 break
             }
             case GATEWAY_DEVICES_NODE:
@@ -478,7 +479,14 @@ export class GatewayTreeDataProvider
             }
             case GATEWAY_DEVICE_NODE: {
                 const d = node as GatewayDevice
-                const { meta, connected, scriptId, scriptVersion, env } = d
+                const {
+                    meta,
+                    connected,
+                    scriptId,
+                    scriptVersion,
+                    env,
+                    mqttTopic,
+                } = d
                 const { productId } = meta || {}
                 const script = this.state.manager?.script(scriptId)
                 const spec =
@@ -507,6 +515,7 @@ $(${iconName}) ${connected ? `connected` : `disconnected`}
 - last activity: ${d.lastActivity}
 - product: ${spec?.name || productId?.toString(16) || ""}
 - firmware version: ${meta.fwVersion || ""}
+- MQTT topic: ${mqttTopic}/(from|to)/
 - environment variables:
 \`\`\`
 ${unparseDotEnv(env)}
