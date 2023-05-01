@@ -1,5 +1,4 @@
 import { subscribeMessage, publishMessage } from "@devicescript/cloud"
-import { configureHardware } from "@devicescript/servers"
 
 setInterval(async () => {
     const data = {

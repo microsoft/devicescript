@@ -64,14 +64,17 @@ stateDiagram-v2
     vscode: VS Code
     storage: Device Table, Script Blobs
     storage: Emulated Azure Storage (Azurite)
-    messages: Message Queue
-    messages: Emulated Azure Storage (Azurite)
+    queue: Message Queue
+    queue: Emulated Azure Storage (Azurite)
+    mqtt: MQTT server
 
     dev --> wssk
     wssk --> web
     openapi --> web
     web --> storage
-    web --> messages
+    web --> queue
+    web --> mqtt
+    mqtt --> web
     vscode --> openapi
 
 ```
@@ -101,7 +104,7 @@ You can use any client library to access those messages.
 
 ## Codesandbox.io
 
-Running the local web server from [CodeSandbox.io](https://codesandbox.io/) 
+Running the local web server from [CodeSandbox.io](https://codesandbox.io/)
 allows you to run the Development Gateway in the cloud, which simplifies many connectivity issues with local networks.
 
 The Development Gateway can be run in a browser using [codesandbox.io](https://codesandbox.io/).
@@ -109,6 +112,14 @@ The Development Gateway can be run in a browser using [codesandbox.io](https://c
 -   open https://codesandbox.io/
 -   click on **Import repository**
 -   enter `microsoft/devicescript-gateway` or your forked repository.
+
+## MQTT
+
+The gateway can also be used as an MQTT server or a bridge to an existing MQTT server.
+
+-   `publishMessage`, `subscribeMessage` from "@devicescript/cloud" will automatically be bridge to the MQTT server under the topic `devs/{deviceId}/(from|to)/{topic}`.
+-   You can use the [MQTT Client](https://marketplace.visualstudio.com/items?itemName=kwkmp.mqttclient) in Visual Studio Code to connect to the MQTT server
+    and publish, subscribe to topics.
 
 ## Azure deployment (optional)
 
