@@ -16,8 +16,12 @@ into an [Azure Event Hub](https://azure.microsoft.com/en-us/products/event-hubs/
 import { publishMessage } from "@devicescript/cloud"
 
 // highlight-next-line
-await publishMessage("topic", { msg: "hello" })
+await uploadMessage("greetings", { msg: "hello" })
 ```
+
+In the device gateway, this topic will be expanded to `devs/{deviceid}/from/{topic}`.
+If you want to override this behavior, use `/{topic}` and the leading will be removed
+the MQTT topic to be `{topic}`.
 
 :::tip
 
@@ -35,7 +39,7 @@ Subscribes to able to receive messages from the gateway.
 ```ts
 import { subscribeMessage } from "@devicescript/cloud"
 
-subscribeMessage("topic", async msg => {
+subscribeMessage("greetings", async msg => {
     console.log(msg)
 })
 ```
