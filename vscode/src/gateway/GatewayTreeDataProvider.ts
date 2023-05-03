@@ -463,8 +463,22 @@ export class GatewayTreeDataProvider
                 tooltip = toMarkdownString(`
 -   OpenAPI: [${mgr.apiRoot}](${mgr.apiRoot}/swagger/)
 -   Last fetch: ${mgr.lastFetchStatus}
--   MQTT server: ${mgr.info?.mqttServer || ""}
-`)
+${
+    mgr.info?.mqtt
+        ? `-   MQTT:
+\`\`\`json
+${JSON.stringify(
+    {
+        name: "DeviceScript Gateway",
+        ...mgr.info.mqtt,
+    },
+    null,
+    2
+)}
+\`\`\`
+`
+        : ""
+}`)
                 break
             }
             case GATEWAY_DEVICES_NODE:

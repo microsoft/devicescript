@@ -40,7 +40,13 @@ function urlQuery(url: string, args?: Record<string, string | number>) {
 }
 
 export interface GatewayInfo {
-    mqttServer?: string
+    mqtt?: {
+        host: string
+        path?: string
+        port?: string
+        username?: string
+        password?: string
+    }
 }
 
 export class GatewayManager extends JDNode {

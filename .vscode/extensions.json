@@ -1,5 +1,6 @@
 {
     "recommendations": [
-        "dotenv.dotenv-vscode"
+        "dotenv.dotenv-vscode",
+        "rpdswtk.vsmqtt"
     ]
 }
