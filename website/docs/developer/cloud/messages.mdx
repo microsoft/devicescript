@@ -16,7 +16,7 @@ into an [Azure Event Hub](https://azure.microsoft.com/en-us/products/event-hubs/
 import { publishMessage } from "@devicescript/cloud"
 
 // highlight-next-line
-await uploadMessage("greetings", { msg: "hello" })
+await publishMessage("greetings", { msg: "hello" })
 ```
 
 In the device gateway, this topic will be expanded to `devs/{deviceid}/from/{topic}`.
