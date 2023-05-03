@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.1](https://github.com/microsoft/devicescript/compare/v2.9.0...v2.9.1)
+
+> 29 April 2023
+
+- refactor magic helpers [`#378`](https://github.com/microsoft/devicescript/pull/378)
+- hardwareConfig -&gt; configureHardware ? [`#375`](https://github.com/microsoft/devicescript/pull/375)
+- fix name resolution of entry when uploading scripts to gateway [`fdb6f65`](https://github.com/microsoft/devicescript/commit/fdb6f65f5d7f0cfc0cfe64a75cdc3a8a8b130c4e)
+- expose self-control service (eg for standby()) [`abae36b`](https://github.com/microsoft/devicescript/commit/abae36b1ab9ed72fdb43e3b8195a9b67926cb058)
+- add codesandbox info [`e16053e`](https://github.com/microsoft/devicescript/commit/e16053e73408ad6524482135cd9a360642f55095)
+
 #### [v2.9.0](https://github.com/microsoft/devicescript/compare/v2.8.3...v2.9.0)
 
 > 28 April 2023
