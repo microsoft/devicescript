@@ -43,7 +43,7 @@ export interface GatewayInfo {
     mqtt?: {
         host: string
         path?: string
-        port?: string
+        port?: number
         username?: string
         password?: string
     }
