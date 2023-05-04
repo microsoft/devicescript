@@ -694,8 +694,8 @@ class JDomRegisterTreeItem extends JDomServiceMemberTreeItem {
 
     override async copy() {
         const { register } = this
-        const { humanValue, qualifiedName } = register
-        await vscode.env.clipboard.writeText(`${qualifiedName}: ${humanValue}`)
+        const { humanValue } = register
+        await vscode.env.clipboard.writeText(humanValue)
     }
 
     override async selected() {
