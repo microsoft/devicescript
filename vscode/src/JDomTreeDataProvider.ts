@@ -73,10 +73,14 @@ import { showErrorMessage } from "./telemetry"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
+const registerRenames: Record<string, string> = {
+    eui_48: "MAC",
+    ip_address: "IP",
+}
+
 function shouldShowRegister(reg: JDRegister) {
     const { service, specification } = reg
     const { serviceClass } = service
-    const { identifier } = specification
 
     if (serviceClass === SRV_WIFI)
         return (
@@ -398,7 +402,11 @@ ${spec.description}`,
                     new JDomRegisterTreeItem(this, reg, {
                         ...this.props,
                         idPrefix: this.props.idPrefix + "readings_",
-                        label: humanify(`${reg.service.name} ${reg.name}`),
+                        label: humanify(
+                            `${reg.service.name} ${
+                                registerRenames[reg.name] || reg.name
+                            }`
+                        ),
                     })
             )
 
