@@ -26,7 +26,7 @@ import { environment } from "@devicescript/cloud"
 const env = await environment<{ target: number }>()
 
 // highlight-next-line
-const { target } = env.value || {}
+const { target } = await env.read()
 ```
 
 ## subscribe
