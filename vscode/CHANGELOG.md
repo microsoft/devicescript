@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.2](https://github.com/microsoft/devicescript/compare/v2.9.1...v2.9.2)
+
+> 3 May 2023
+
+- support for TLS [`ce21748`](https://github.com/microsoft/devicescript/commit/ce21748b3f343a5376e3d7e4e29a21e1ef0e2995)
+- uploadMessage -&gt; publishMessage [`4bc8e3a`](https://github.com/microsoft/devicescript/commit/4bc8e3a567395df20232d314a3045f28f53eddfd)
+- surface mqtt info in tooltips [`44418a7`](https://github.com/microsoft/devicescript/commit/44418a7845ea76eb6aaee9ef91691bb6b27e76cc)
+
 #### [v2.9.1](https://github.com/microsoft/devicescript/compare/v2.9.0...v2.9.1)
 
 > 29 April 2023
