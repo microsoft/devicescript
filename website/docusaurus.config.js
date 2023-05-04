@@ -231,6 +231,12 @@ const config = configure(
                     items: [
                         {
                             type: "doc",
+                            docId: "getting-started/index",
+                            position: "left",
+                            label: "Download",
+                        },
+                        {
+                            type: "doc",
                             docId: "intro",
                             position: "left",
                             label: "Docs",
