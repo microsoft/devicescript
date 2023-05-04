@@ -14,19 +14,19 @@ export async function publishMessage(topicName: string, payload: any) {
 }
 
 /**
- * Subscribes to the incoming cloud message
+ * Subscribes to the incoming cloud message. Does not support wildcards (yet).
  * @param next called on every message
  * @returns unsubscribe handler
  */
 export function subscribeMessage<TMessage = any>(
     topicName: "*" | string,
-    next: (curr: TMessage) => ds.AsyncVoid
+    next: (curr: TMessage, topic: string) => ds.AsyncVoid
 ) {
     return cloud.onJson.subscribe(async (arg: string[]) => {
         const [topic, json] = arg
         if (topicName === "*" || topic === topicName) {
             const payload = JSON.parse(json) as TMessage
-            await next(payload)
+            await next(payload, topic)
         }
     })
 }
