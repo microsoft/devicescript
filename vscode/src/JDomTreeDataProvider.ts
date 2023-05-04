@@ -73,6 +73,20 @@ import { showErrorMessage } from "./telemetry"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
+function shouldShowRegister(reg: JDRegister) {
+    const { service, specification } = reg
+    const { serviceClass } = service
+    const { identifier } = specification
+
+    if (serviceClass === SRV_WIFI)
+        return (
+            specification.identifier === WifiReg.IpAddress ||
+            specification.identifier === WifiReg.Eui48
+        )
+
+    return false
+}
+
 export interface TreeItemProps {
     refresh: RefreshFunction
     command: vscode.Command
@@ -373,7 +387,8 @@ ${spec.description}`,
                     .filter(
                         reg =>
                             isReading(reg.specification) ||
-                            isValueOrIntensity(reg.specification)
+                            isValueOrIntensity(reg.specification) ||
+                            shouldShowRegister(reg)
                     )
             )
             .flat(2)
