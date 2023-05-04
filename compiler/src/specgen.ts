@@ -468,7 +468,7 @@ ${varname}.${sig}
         const isBoolean = tp === REGISTER_BOOL
         const isString = tp === REGISTER_STRING
         r.push(
-            `### ${pname} {#${pkt.kind}:${pktName(pkt)}
+            `### ${pname} {#${pkt.kind}:${pktName(pkt)}}
 `,
             pkt.description,
             "",
