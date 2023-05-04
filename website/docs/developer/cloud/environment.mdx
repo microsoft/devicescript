@@ -1,0 +1,44 @@
+---
+title: Environment
+sidebar_position: 3
+---
+
+# Environment
+
+An configuration object pushed from the cloud as an observable. The environment can be configured
+throug the gateway OpenAPI or the Visual Studio Code extension.
+
+The environment is cached locally in the settings to handle offline scenarios.
+
+```ts
+import { environment } from "@devicescript/cloud"
+
+// highlight-next-line
+const env = await environment<{ target: number }>()
+```
+
+## value
+
+Reads the current value of the environment.
+
+```ts
+import { environment } from "@devicescript/cloud"
+const env = await environment<{ target: number }>()
+
+// highlight-next-line
+const { target } = env.value || {}
+```
+
+## subscribe
+
+Subscribes to updates to the environment values.
+
+```ts
+import { environment } from "@devicescript/cloud"
+const env = await environment<{ target: number }>()
+
+// highlight-next-line
+env.subscribe(async ({ target }) => {
+    console.log(target)
+})
+```
