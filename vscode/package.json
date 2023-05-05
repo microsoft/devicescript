@@ -767,7 +767,7 @@
             },
             {
                 "command": "extension.devicescript.gateway.device.connect",
-                "title": "Connect...",
+                "title": "Connect Logs",
                 "category": "DeviceScript Gateway",
                 "icon": "$(plug)"
             },

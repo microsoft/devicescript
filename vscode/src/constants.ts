@@ -1,5 +1,4 @@
 export const CONNECTION_RESOURCE_GROUP = "vscode"
-export const CONNECTION_GATEWAY_RESOURCE_GROUP = "gateway"
 
 export const ICON_LOADING = "loading~spin"
 

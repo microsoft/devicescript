@@ -8,7 +8,7 @@ import {
 import * as vscode from "vscode"
 import { toMarkdownString } from "../catalog"
 import { GatewayExtensionState } from "./GatewayExtensionState"
-import { CONNECTION_GATEWAY_RESOURCE_GROUP } from "../constants"
+import { CONNECTION_RESOURCE_GROUP } from "../constants"
 import { showConfirmBox, TaggedQuickPickItem } from "../pickers"
 import {
     GatewayManager,
@@ -88,7 +88,7 @@ export class GatewayTreeDataProvider
                         data: <WebSocketConnectReqArgs>{
                             transport: "websocket",
                             background: false,
-                            resourceGroupId: CONNECTION_GATEWAY_RESOURCE_GROUP,
+                            resourceGroupId: CONNECTION_RESOURCE_GROUP,
                             url,
                             protocol,
                         },
