@@ -7,6 +7,7 @@ setInterval(async () => {
     }
     console.data(data)
     await publishMessage("data", data)
+    await publishMessage("/humi", data.humi)
 }, 1000)
 
 subscribeMessage("test", msg => console.log(msg))
