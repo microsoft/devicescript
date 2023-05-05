@@ -1,7 +1,7 @@
 {
     "name": "@devicescript/vm",
     "private": false,
-    "version": "2.9.3",
+    "version": "2.9.4",
     "description": "DeviceScript Virtual Machine",
     "keywords": [
         "devicescript",

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.3](https://github.com/microsoft/devicescript/compare/v2.9.2...v2.9.3)
+
+> 4 May 2023
+
+- add wifi config info [`d9f3ccd`](https://github.com/microsoft/devicescript/commit/d9f3ccdae7716c2e25fe91eac313e8b8a5ccb15d)
+- environment docs [`5e5b32f`](https://github.com/microsoft/devicescript/commit/5e5b32f4e36233e4fd516deb057cfbdde9243ead)
+- more gateweay docs [`3a3efe1`](https://github.com/microsoft/devicescript/commit/3a3efe1ee943c40dd44db7a5da8991820d86235f)
+
 #### [v2.9.2](https://github.com/microsoft/devicescript/compare/v2.9.1...v2.9.2)
 
 > 3 May 2023
