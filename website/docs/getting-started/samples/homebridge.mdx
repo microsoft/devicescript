@@ -51,7 +51,7 @@ We can start programming with devicescript by using the simulator. The simulator
 import { Humidity } from "@devicescript/core"
 
 const sensor = new Humidity()
-humidity.reading.subscribe(humidity => {
+sensor.reading.subscribe(humidity => {
     console.data({ humidity })
 })
 ```
@@ -69,7 +69,7 @@ import { Humidity } from "@devicescript/core"
 import { publishMessage } from "@devicescript/cloud"
 
 const sensor = new Humidity()
-sensor.reading.subscribe(humidity => {
+sensor.reading.subscribe(async humidity => {
     // highlight-next-line
     await publishMessage("/humidity", { humidity })
 })
