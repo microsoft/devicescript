@@ -96,3 +96,22 @@ Notice that the topic starts with `/`. By default DeviceScript routes topics to 
 -   open HomeBridge and you should see the humidity being updated from the values on the sensor. Try to move the slider on the humidity sensor simulator to verify that the values are updated.
 
 ### Programming with hardware
+
+Click on the magic wand icon on the file menu and select your hardware device. Then add the code to connect to the `startSHT30`.
+
+```ts
+import { pins, board } from "@dsboard/seeed_xiao_esp32c3_msr218"
+import { Humidity } from "@devicescript/core"
+import { throttleTime } from "@devicescript/observables"
+import { publishMessage } from "@devicescript/cloud"
+// highlight-next-line
+import { startSHT30 } from "@devicescript/drivers"
+
+// highlight-next-line
+const { humidity: sensor } = await startSHT30()
+
+sensor.reading.pipe(throttleTime(5000)).subscribe(async humidity => {
+    console.data({ humidity })
+    await publishMessage("/humidity", { humidity })
+})
+```
