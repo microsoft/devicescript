@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "dotenv.dotenv-vscode",
-        "rpdswtk.vsmqtt"
+        "rpdswtk.vsmqtt",
+        "unifiedjs.vscode-mdx"
     ]
 }

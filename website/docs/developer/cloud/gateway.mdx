@@ -127,14 +127,15 @@ The Development Gateway can be run in a browser using [codesandbox.io](https://c
 ## MQTT
 
 The gateway can also be used as an MQTT server or a bridge to an existing MQTT server.
-You can configure a MQTT server by providing the `DEVS_MQTT_SERVER` environment variable.
 
 -   `publishMessage`, `subscribeMessage` from "@devicescript/cloud" will automatically be bridge to the MQTT server under the topic `devs/{deviceId}/(from|to)/{topic}`.
 -   You can override the `devs/.../from/...` routing scheme by starting your topic with `/`. For example, `/mytopic` will be routed to `mytopic`.
 
 ::: tip
+
 You can use the [VSMqtt](https://marketplace.visualstudio.com/items?itemName=rpdswtk.vsmqtt) in Visual Studio Code to connect to the MQTT server
 and publish, subscribe to topics.
+
 :::
 
 ## Azure deployment (optional)
