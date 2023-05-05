@@ -129,7 +129,15 @@ The Development Gateway can be run in a browser using [codesandbox.io](https://c
 The gateway can also be used as an MQTT server or a bridge to an existing MQTT server.
 
 -   `publishMessage`, `subscribeMessage` from "@devicescript/cloud" will automatically be bridge to the MQTT server under the topic `devs/{deviceId}/(from|to)/{topic}`.
--   You can override the `devs/.../from/...` routing scheme by starting your topic with `/`. For example, `/mytopic` will be routed to `mytopic`.
+-   You can override the `devs/.../(from|to)/...` routing scheme by starting your topic with `/`. For example, `/mytopic` will be routed to `mytopic`.
+
+There are [many options](https://mqtt.org/software/) to run your own MQTT broker/server. Once you have a server,
+you can configure the gateway using the `DEVS_MQTT_URL` and `DEVS_MQTT_USER` environment variables or secrets.
+
+```
+DEVS_MQTT_URL="mqtts://host:post"
+DEVS_MQTT_USER="username:password"
+```
 
 ::: tip
 
