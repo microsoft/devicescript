@@ -23,24 +23,32 @@ stateDiagram-v2
     hb: HomeBridge MQTTThing
 ```
 
-## Cloud configuration
+## MQTT server configuration
 
 -   Start a MQTT server. You can find a [list of servers here](https://mqtt.org/software/).
--   Start a [DeviceScript Gateway](/developer/cloud/gateway) and configure it to route the messages to the MQTT server
--   Install [HomeBridge](https://homebridge)
+
+You will need the URL, port and optionaly username, password to configure the gateway.
+
+## Device Gateway configuration
+
+-   Clone or create a [DeviceScript Gateway](/developer/cloud/gateway) (by starting a GitHub Codespace for example)
+-   Configure it to route the messages to the MQTT server
+-   Start the development server. If you are using GitHub Codespaces, make sure to change the visibility of the port to `Public` in the `Ports` pane.
 
 ## HomeBridge configuration
 
+-   Install [HomeBridge](https://homebridge)
 -   Open the plugins pane and install the [HomeBridge MQTTThing plugin](https://www.npmjs.com/package/homebridge-mqttthing) plugin
 -   Click on `SETTINGS` for the MQTTThing plugin and add a **Humidity Sensor** accessory
--   Scroll down to the **MQTT settings** and set the `get Humidity` topic to `office/humidity`
+-   Configure the MQTT settings to connect to the MQTT server
+-   Scroll down to the **MQTT topics** and set the `get Humidity` topic to `humidity`
 
 ## Programming the device
 
 -   Open Visual Studio Code and make sure to have the [DeviceScript extension](/getting-started/vscode) installed
 -   Open the `DeviceScript Gateway` pane and configure it with the connection string that was printed in the gateway terminal output
 
-## Programming the simulator
+### Programming the simulator
 
 We can start programming with devicescript by using the simulator. The simulator allows you to test your code without having to deploy it to a physical device.
 
@@ -80,3 +88,6 @@ sensor.reading.subscribe(async humidity => {
 Notice that the topic starts with `/`. By default DeviceScript routes topics to `devs/{deviceid}/from/{topic}`. Starting the topic with `/` disables this mode.
 
 :::
+
+### Programming with hardware
+
