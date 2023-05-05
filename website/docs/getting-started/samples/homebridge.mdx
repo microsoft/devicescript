@@ -69,7 +69,7 @@ import { Humidity } from "@devicescript/core"
 import { publishMessage } from "@devicescript/cloud"
 
 const sensor = new Humidity()
-humidity.reading.subscribe(humidity => {
+sensor.reading.subscribe(humidity => {
     // highlight-next-line
     await publishMessage("/humidity", { humidity })
 })
