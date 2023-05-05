@@ -363,7 +363,8 @@
                 },
                 {
                     "command": "extension.devicescript.node.copy",
-                    "when": "view == extension.devicescript.jdom && viewItem =~ /^register/"
+                    "when": "view == extension.devicescript.jdom && viewItem =~ /^register/",
+                    "group": "inline"
                 },
                 {
                     "command": "extension.devicescript.jdom.gateway.connect",
@@ -630,7 +631,8 @@
             {
                 "command": "extension.devicescript.node.copy",
                 "title": "Copy",
-                "category": "DeviceScript"
+                "category": "DeviceScript",
+                "icon": "$(copy)"
             },
             {
                 "command": "extension.devicescript.node.select",
