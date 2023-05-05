@@ -35,7 +35,7 @@ import { checkFileExists } from "./fs"
 import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
 import { extensionVersion } from "./version"
 import { showError, showErrorMessage } from "./telemetry"
-import { MESSAGE_PREFIX } from "./constants"
+import { BUILD, MESSAGE_PREFIX } from "./constants"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -364,15 +364,17 @@ export class DeveloperToolsManager extends JDEventSource {
         ) as JDService
         const deployTo = service?.device?.deviceId
         try {
+            const data = {
+                filename,
+                buildOptions,
+                deployTo,
+            }
             const res = await sideRequest<SideBuildReq, SideBuildResp>({
                 req: "build",
-                data: {
-                    filename,
-                    buildOptions,
-                    deployTo,
-                },
+                data,
             })
             this.showBuildResults(res.data)
+            this.emit(BUILD, { service, req: data, res: res.data })
             return res.data
         } catch (err) {
             showError(err)

@@ -10,3 +10,5 @@ export const DEVICESCRIPT_DOCS_ROOT = "https://microsoft.github.io/devicescript/
 export const MESSAGE_PREFIX = "DeviceScript - "
 
 export const CONSOLE_DATA_MAX_ROWS = 1000000
+
+export const BUILD = "deviceScriptBuild"

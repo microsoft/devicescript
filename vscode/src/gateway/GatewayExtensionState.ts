@@ -3,6 +3,7 @@ import {
     ERROR,
     JDDevice,
     JDEventSource,
+    JDService,
     SRV_CLOUD_ADAPTER,
     toMap,
 } from "jacdac-ts"
@@ -12,6 +13,8 @@ import "isomorphic-fetch"
 import { GatewayManager, FETCH_ERROR } from "./gatewaydom"
 import { showError, showErrorMessage } from "../telemetry"
 import { splitNameValuePair } from "./dotenv"
+import { BUILD } from "../constants"
+import { BuildReqArgs, BuildStatus } from "../../../cli/src/sideprotocol"
 
 export class GatewayExtensionState extends JDEventSource {
     private _manager: GatewayManager
@@ -117,6 +120,40 @@ export class GatewayExtensionState extends JDEventSource {
 
         // first connection - async
         this.handleRefreshConnection()
+
+        this.deviceScriptState.devtools.on(BUILD, this.handleBuild.bind(this))
+    }
+
+    private async handleBuild(props: {
+        service: JDService
+        req: BuildReqArgs
+        res: BuildStatus
+    }) {
+        const manager = this.manager
+        const { service, req, res } = props
+        // no deployment
+        if (
+            !manager ||
+            !service ||
+            !req.deployTo ||
+            !res?.success ||
+            res.deployStatus !== "OK"
+        )
+            return
+
+        // there was a deployment, check if this device is managed by the gameway
+        const dev = manager.device(service.device.deviceId)
+        if (dev?.scriptId) {
+            // so the user pushed a local build on a device that will get overriden
+            const resp = await vscode.window.showWarningMessage(
+                "DeviceScript: deployed script will be overriden by the gateway. To avoid this, clear the device script from the gateway.",
+                "Clear"
+            )
+            if (resp === "Clear") {
+                await dev.updateScript("")
+                await dev.refresh()
+            }
+        }
     }
 
     async refresh() {

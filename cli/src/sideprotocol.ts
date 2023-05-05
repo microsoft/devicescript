@@ -163,7 +163,7 @@ export interface BuildOptions {
     quiet?: boolean
     ignoreMissingConfig?: boolean
 }
-export type BuildStatus = CompilationResult & { deployStatus: string }
+export type BuildStatus = CompilationResult & { deployStatus: "OK" | string }
 export interface BuildReqArgs {
     filename: string
     buildOptions?: BuildOptions
