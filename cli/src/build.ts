@@ -66,8 +66,10 @@ export function setupWebsocket() {
         }
         global.WebSocket.prototype.close = function (this: any, code, reason) {
             this.state_ = WebSocket.CLOSING
-            if (code === undefined) this.connection_.sendCloseFrame()
-            else this.connection_.sendCloseFrame(code, reason)
+            if (this.connection_) {
+                if (code === undefined) this.connection_.sendCloseFrame()
+                else this.connection_.sendCloseFrame(code, reason)
+            }
         }
     } catch {
         log("can't load websocket-polyfill")

@@ -536,6 +536,9 @@ export class DeviceScriptExtensionState extends JDEventSource {
         if (!this.devtools.connected) return
 
         const { transports } = this.transport
+        const connecteds = transports.filter(
+            tr => tr.connectionState === ConnectionState.Connected
+        )
         const serial = transports.find(t => t.type === "serial")
         const usb = transports.find(t => t.type === "usb")
         const sim = !!this.bus.device(this.simulatorScriptManagerId, true)
@@ -555,6 +558,13 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 description: usb
                     ? `${usb.description || ""}(${usb.connectionState})`
                     : "",
+            },
+            !!connecteds.length && {
+                transport: "none",
+                label: "Disconnect",
+                detail: `Disconnect from ${connecteds
+                    .map(tr => tr.type)
+                    .join(", ")}`,
             },
             !sim && {
                 label: "",

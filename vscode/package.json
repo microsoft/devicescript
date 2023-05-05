@@ -592,7 +592,7 @@
             },
             {
                 "command": "extension.devicescript.connect",
-                "title": "Connect",
+                "title": "Connect...",
                 "category": "DeviceScript",
                 "icon": "$(plug)"
             },
