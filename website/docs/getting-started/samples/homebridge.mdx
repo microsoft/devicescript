@@ -34,6 +34,7 @@ You will need the URL, port and optionaly username, password to configure the ga
 -   Clone or create a [DeviceScript Gateway](/developer/cloud/gateway) (by starting a GitHub Codespace for example)
 -   Configure it to route the messages to the MQTT server
 -   Start the development server. If you are using GitHub Codespaces, make sure to change the visibility of the port to `Public` in the `Ports` pane.
+-   Copy the connection string that is printed in the terminal output and enter it in the `DeviceScript Gateway` pane in Visual Studio Code. You should get a confirmation that the gateway is connected.
 
 ## HomeBridge configuration
 
@@ -88,6 +89,8 @@ sensor.reading.subscribe(async humidity => {
 Notice that the topic starts with `/`. By default DeviceScript routes topics to `devs/{deviceid}/from/{topic}`. Starting the topic with `/` disables this mode.
 
 :::
+
+-   open HomeBridge and you should see the humidity being updated from the values on the sensor. Try to move the slider on the humidity sensor simulator to verify that the values are updated.
 
 ### Programming with hardware
 
