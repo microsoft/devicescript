@@ -19,6 +19,7 @@ import { readFileText, writeFile } from "./fs"
 import { subSideEvent } from "./jacdac"
 import { DeviceScriptExtensionState } from "./state"
 import { DataRecorder } from "./datarecorder"
+import { MESSAGE_PREFIX } from "./constants"
 
 export function activateJacdacOutputChannel(state: DeviceScriptExtensionState) {
     const { context, bus } = state
@@ -170,6 +171,13 @@ export function activateDeviceScriptDataChannel(
             "extension.devicescript.data.download",
             async () => {
                 const content = recorder.toCSV()
+                if (!content) {
+                    vscode.window.showInformationMessage(
+                        MESSAGE_PREFIX + "No data to download."
+                    )
+                    return
+                }
+
                 clear()
                 const { projectFolder } = state.devtools
                 if (!projectFolder)
@@ -192,7 +200,10 @@ export function activateDeviceScriptDataChannel(
                     )
                     const notebook = (
                         await readFileText(extensionUri, "notebooks/data.ipynb")
-                    ).replace(/file\s*=\s*'[^']+\.csv'/, `file='${fileName}.csv'`)
+                    ).replace(
+                        /file\s*=\s*'[^']+\.csv'/,
+                        `file='${fileName}.csv'`
+                    )
                     const notebookFile = await writeFile(
                         projectFolder,
                         `${folder}/${fileName}.ipynb`,

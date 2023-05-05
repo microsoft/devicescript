@@ -1,9 +1,10 @@
 import { unparse } from "papaparse"
 
 export function JSONtoCSV(data: any[]) {
+    if (!data) return undefined
     // collect headers
     const cs: any = {}
-    data.forEach(d =>
+    data?.forEach(d =>
         Object.keys(d).forEach(k => {
             cs[k] = 1
         })
