@@ -1,124 +1,299 @@
 {
     "servers": [
         {
+            "label": "Rotary encoder",
+            "detail": "An incremental rotary encoder - converts angular motion of a shaft to digital signal.",
             "startName": "startRotaryEncoder",
-            "classIdentifier": 284830153,
+            "classIdentifiers": [
+                284830153
+            ],
             "imports": {
                 "startRotaryEncoder": "@devicescript/servers"
             },
             "snippet": "const rotaryEncoder = startRotaryEncoder({\n    pin0: pins.${1},\n    pin1: pins.${2},\n})\n"
         },
         {
+            "label": "Button",
+            "detail": "A push-button, which returns to inactive position when not operated anymore.",
             "startName": "startButton",
-            "classIdentifier": 343122531,
+            "classIdentifiers": [
+                343122531
+            ],
             "imports": {
                 "startButton": "@devicescript/servers"
             },
             "snippet": "const button = startButton({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Switch",
+            "detail": "A switch, which keeps its position.",
+            "startName": "startSwitch",
+            "classIdentifiers": [
+                450008066
+            ],
+            "imports": {
+                "startSwitch": "@devicescript/servers"
+            },
+            "snippet": "const switch = startSwitch({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "label": "Flex",
+            "detail": "A bending or deflection sensor.",
+            "startName": "startFlex",
+            "classIdentifiers": [
+                524797638
+            ],
+            "imports": {
+                "startFlex": "@devicescript/servers"
+            },
+            "snippet": "const flex = startFlex({\n    pinL: pins.${1},\n    pinM: pins.${2},\n    pinH: pins.${3},\n})\n"
+        },
+        {
+            "label": "Relay",
+            "detail": "A switching relay.",
             "startName": "startRelay",
-            "classIdentifier": 406840918,
+            "classIdentifiers": [
+                406840918
+            ],
             "imports": {
                 "startRelay": "@devicescript/servers"
             },
             "snippet": "const relay = startRelay({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Motion",
+            "detail": "A sensor, typically PIR, that detects object motion within a certain range",
+            "startName": "startMotion",
+            "classIdentifiers": [
+                293185353
+            ],
+            "imports": {
+                "startMotion": "@devicescript/servers"
+            },
+            "snippet": "const motion = startMotion({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "label": "Light bulb",
+            "detail": "A light bulb controller.",
             "startName": "startLightBulb",
-            "classIdentifier": 480970060,
+            "classIdentifiers": [
+                480970060
+            ],
             "imports": {
                 "startLightBulb": "@devicescript/servers"
             },
             "snippet": "const lightBulb = startLightBulb({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Buzzer",
+            "detail": "A simple buzzer.",
             "startName": "startBuzzer",
-            "classIdentifier": 458731991,
+            "classIdentifiers": [
+                458731991
+            ],
             "imports": {
                 "startBuzzer": "@devicescript/servers"
             },
             "snippet": "const buzzer = startBuzzer({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Servo",
+            "detail": "Servo is a small motor with arm that can be pointing at a specific direction.",
+            "startName": "startServo",
+            "classIdentifiers": [
+                318542083
+            ],
+            "imports": {
+                "startServo": "@devicescript/servers"
+            },
+            "snippet": "const servo = startServo({\n    pin: pins.${1},\n})\n"
+        },
+        {
+            "label": "Light level",
+            "detail": "A sensor that measures luminosity level.",
             "startName": "startLightLevel",
-            "classIdentifier": 400333340,
+            "classIdentifiers": [
+                400333340
+            ],
             "imports": {
                 "startLightLevel": "@devicescript/servers"
             },
             "snippet": "const lightLevel = startLightLevel({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Reflected light",
+            "detail": "A sensor that detects light and dark surfaces, commonly used for line following robots.",
             "startName": "startReflectedLight",
-            "classIdentifier": 309087410,
+            "classIdentifiers": [
+                309087410
+            ],
             "imports": {
                 "startReflectedLight": "@devicescript/servers"
             },
             "snippet": "const reflectedLight = startReflectedLight({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Water level",
+            "detail": "A sensor that measures liquid/water level.",
             "startName": "startWaterLevel",
-            "classIdentifier": 343630573,
+            "classIdentifiers": [
+                343630573
+            ],
             "imports": {
                 "startWaterLevel": "@devicescript/servers"
             },
             "snippet": "const waterLevel = startWaterLevel({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Sound level",
+            "detail": "A sound level detector sensor, gives a relative indication of the sound level.",
             "startName": "startSoundLevel",
-            "classIdentifier": 346888797,
+            "classIdentifiers": [
+                346888797
+            ],
             "imports": {
                 "startSoundLevel": "@devicescript/servers"
             },
             "snippet": "const soundLevel = startSoundLevel({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Soil moisture",
+            "detail": "A soil moisture sensor.",
             "startName": "startSoilMoisture",
-            "classIdentifier": 491430835,
+            "classIdentifiers": [
+                491430835
+            ],
             "imports": {
                 "startSoilMoisture": "@devicescript/servers"
             },
             "snippet": "const soilMoisture = startSoilMoisture({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Potentiometer",
+            "detail": "A slider or rotary potentiometer.",
             "startName": "startPotentiometer",
-            "classIdentifier": 522667846,
+            "classIdentifiers": [
+                522667846
+            ],
             "imports": {
                 "startPotentiometer": "@devicescript/servers"
             },
             "snippet": "const potentiometer = startPotentiometer({\n    pin: pins.${1},\n})\n"
         },
         {
+            "label": "Accelerometer",
+            "detail": "A 3-axis accelerometer.",
             "startName": "startAccelerometer",
-            "classIdentifier": 521405449,
+            "classIdentifiers": [
+                521405449
+            ],
             "imports": {
                 "startAccelerometer": "@devicescript/servers"
             },
             "snippet": "const accelerometer = startAccelerometer({\n})\n"
         },
         {
+            "label": "HID Joystick",
+            "detail": "Controls a HID joystick.",
             "startName": "startHidJoystick",
-            "classIdentifier": 437330261,
+            "classIdentifiers": [
+                437330261
+            ],
             "imports": {
                 "startHidJoystick": "@devicescript/servers"
             },
             "snippet": "const hidJoystick = startHidJoystick({\n})\n"
         },
         {
+            "label": "HID Keyboard",
+            "detail": "Control a HID keyboard.",
             "startName": "startHidKeyboard",
-            "classIdentifier": 414210922,
+            "classIdentifiers": [
+                414210922
+            ],
             "imports": {
                 "startHidKeyboard": "@devicescript/servers"
             },
             "snippet": "const hidKeyboard = startHidKeyboard({\n})\n"
         },
         {
+            "label": "HID Mouse",
+            "detail": "Controls a HID mouse.",
             "startName": "startHidMouse",
-            "classIdentifier": 411425820,
+            "classIdentifiers": [
+                411425820
+            ],
             "imports": {
                 "startHidMouse": "@devicescript/servers"
             },
             "snippet": "const hidMouse = startHidMouse({\n})\n"
+        },
+        {
+            "label": "Sensirion SHTC3",
+            "detail": "Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C `0x70`.",
+            "startName": "startSHTC3",
+            "classIdentifiers": [
+                337754823,
+                382210232
+            ],
+            "imports": {
+                "startSHTC3": "@devicescript/drivers"
+            },
+            "snippet": "const { temperature, humidity } = await startSHTC3()\n"
+        },
+        {
+            "label": "Sensirion SHT30",
+            "detail": "Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45` (default is `0x44`)",
+            "startName": "startSHT30",
+            "classIdentifiers": [
+                337754823,
+                382210232
+            ],
+            "imports": {
+                "startSHT30": "@devicescript/drivers"
+            },
+            "snippet": "const { temperature, humidity } = await startSHT30()\n"
+        },
+        {
+            "label": "AHT20",
+            "detail": "Start driver for AHT20 temperature/humidity sensor at I2C address `0x38`.",
+            "startName": "startAHT20",
+            "classIdentifiers": [
+                337754823,
+                382210232
+            ],
+            "imports": {
+                "startAHT20": "@devicescript/drivers"
+            },
+            "snippet": "const { temperature, humidity } = await startAHT20()\n"
+        },
+        {
+            "label": "LITEON LTR-390UV-01",
+            "detail": "Start driver for LITEON LTR-390UV-01 UV/ambient light sensor at I2C address `0x53`.",
+            "startName": "startLTR390",
+            "classIdentifiers": [
+                527306128,
+                510577394
+            ],
+            "imports": {
+                "startLTR390": "@devicescript/drivers"
+            },
+            "snippet": "const { uvindex, illuminance } = await startLTR390()\n"
+        },
+        {
+            "label": "Bosch BME68",
+            "detail": "Start driver for Bosch BME680 temperature/humidity/pressure/gas sensor at I2C `0x77`.",
+            "startName": "startBME680",
+            "classIdentifiers": [
+                337754823,
+                382210232,
+                504462570,
+                346844886
+            ],
+            "imports": {
+                "startBME680": "@devicescript/drivers"
+            },
+            "snippet": "const { temperature, humidity, pressure, aqi } = await startBME680()\n"
         }
     ]
 }

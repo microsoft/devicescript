@@ -94,8 +94,10 @@ export function emptyDebugInfo(): DebugInfo {
 }
 
 export interface ServerInfo {
+    label: string
     startName: string
-    classIdentifier: number
+    detail: string
+    classIdentifiers?: number[]
     imports: Record<string, string>
     snippet: string
 }

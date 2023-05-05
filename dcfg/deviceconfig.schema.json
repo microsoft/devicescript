@@ -134,6 +134,50 @@
             ],
             "type": "object"
         },
+        "FlexConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pinH": {
+                    "type": "integer"
+                },
+                "pinL": {
+                    "type": "integer"
+                },
+                "pinM": {
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "flex"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pinH",
+                "pinL",
+                "pinM",
+                "service"
+            ],
+            "type": "object"
+        },
         "HexInt": {
             "type": [
                 "string",
@@ -496,8 +540,60 @@
             ],
             "type": "object"
         },
+        "MotionConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "activeLow": {
+                    "description": "When set, the sensor is considered 'active' when `pin` is low.",
+                    "type": "boolean"
+                },
+                "angle": {
+                    "default": 120,
+                    "description": "Sensing angle in degrees.",
+                    "type": "integer"
+                },
+                "minDistance": {
+                    "default": 1200,
+                    "description": "Maximum sensing distance in centimeters.",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "description": "The input pin.",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "motion"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
         "PinLabels": {
             "additionalProperties": false,
+            "description": "Typical pin labels, others are allowed.\nPin labels starting with '@' are hidden to the user.",
             "properties": {
                 "#": {
                     "description": "All fields starting with '#' arg ignored",
@@ -1088,6 +1184,10 @@
             ],
             "type": "object"
         },
+        "Record<string,0|1>": {
+            "additionalProperties": false,
+            "type": "object"
+        },
         "ReflectedLightConfig": {
             "additionalProperties": false,
             "properties": {
@@ -1281,16 +1381,28 @@
                     "$ref": "#/definitions/ButtonConfig"
                 },
                 {
+                    "$ref": "#/definitions/SwitchConfig"
+                },
+                {
+                    "$ref": "#/definitions/FlexConfig"
+                },
+                {
                     "$ref": "#/definitions/RelayConfig"
                 },
                 {
                     "$ref": "#/definitions/PowerConfig"
                 },
                 {
+                    "$ref": "#/definitions/MotionConfig"
+                },
+                {
                     "$ref": "#/definitions/LightBulbConfig"
                 },
                 {
                     "$ref": "#/definitions/BuzzerConfig"
+                },
+                {
+                    "$ref": "#/definitions/ServoConfig"
                 },
                 {
                     "$ref": "#/definitions/LightLevelConfig"
@@ -1324,18 +1436,68 @@
                 }
             ]
         },
-        "SetupPin": {
+        "ServoConfig": {
             "additionalProperties": false,
             "properties": {
-                "out": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "fixed": {
+                    "description": "When set, the min/maxAngle/Pulse can't be changed by the user.",
+                    "type": "boolean"
+                },
+                "maxAngle": {
+                    "default": 90,
+                    "description": "Maximum angle supported by the servo in degrees.\nAlways minAngle < maxAngle",
                     "type": "integer"
                 },
+                "maxPulse": {
+                    "default": 600,
+                    "description": "Pulse value to use to reach maxAngle in us.\nTypically minPulse > maxPulse",
+                    "type": "integer"
+                },
+                "minAngle": {
+                    "default": -90,
+                    "description": "Minimum angle supported by the servo in degrees.\nAlways minAngle < maxAngle",
+                    "type": "integer"
+                },
+                "minPulse": {
+                    "default": 2500,
+                    "description": "Pulse value to use to reach minAngle in us.\nTypically minPulse > maxPulse",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
                 "pin": {
+                    "description": "The driving (PWM) pin.",
+                    "type": "integer"
+                },
+                "powerPin": {
+                    "description": "The pin to set low when servo is used. Floating otherwise.",
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "servo"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
                     "type": "integer"
                 }
             },
             "required": [
-                "pin"
+                "name",
+                "pin",
+                "service"
             ],
             "type": "object"
         },
@@ -1479,6 +1641,42 @@
             ],
             "type": "object"
         },
+        "SwitchConfig": {
+            "additionalProperties": false,
+            "properties": {
+                "#": {
+                    "description": "All fields starting with '#' arg ignored",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Instance/role name to be assigned to service.",
+                    "examples": [
+                        "buttonA",
+                        "activityLed"
+                    ],
+                    "type": "string"
+                },
+                "pin": {
+                    "type": "integer"
+                },
+                "service": {
+                    "enum": [
+                        "switch"
+                    ],
+                    "type": "string"
+                },
+                "variant": {
+                    "description": "Service variant (see service definition for possible values).",
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "name",
+                "pin",
+                "service"
+            ],
+            "type": "object"
+        },
         "WaterLevelConfig": {
             "additionalProperties": false,
             "properties": {
@@ -1562,6 +1760,13 @@
         "$schema": {
             "type": "string"
         },
+        "$services": {
+            "description": "Services to expose via `startXYZ()` API. Each starts with { \"service\": \"...\" }",
+            "items": {
+                "$ref": "#/definitions/ServiceConfig"
+            },
+            "type": "array"
+        },
         "@name": {
             "description": "Name of the program, derived from package.json. Exposed as `program_name` register.",
             "type": "string"
@@ -1585,6 +1790,10 @@
             ],
             "type": "string"
         },
+        "devNetwork": {
+            "description": "Don't start internal cloud adapter service (including the WiFi adapter) and instead use one running\non the computer connected via USB.",
+            "type": "boolean"
+        },
         "i2c": {
             "$ref": "#/definitions/I2CConfig"
         },
@@ -1607,16 +1816,18 @@
                 "0x379ea214"
             ]
         },
+        "sPin": {
+            "$ref": "#/definitions/Record<string,0|1>",
+            "description": "Initial values for pins."
+        },
+        "scanI2C": {
+            "description": "Enable legacy auto-scan for I2C devices.",
+            "type": "boolean"
+        },
         "services": {
-            "description": "Services to mount. Each starts with { \"service\": \"...\" }",
+            "description": "Services to mount. Each starts with { \"service\": \"...\" }\nThis should not be present in .board.json files.",
             "items": {
                 "$ref": "#/definitions/ServiceConfig"
-            },
-            "type": "array"
-        },
-        "setupPins": {
-            "items": {
-                "$ref": "#/definitions/SetupPin"
             },
             "type": "array"
         },

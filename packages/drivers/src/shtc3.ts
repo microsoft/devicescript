@@ -55,6 +55,8 @@ class SHTC3Driver extends SHTDriver {
 
 /**
  * Start driver for Sensirion SHTC3 temperature/humidity sensor at I2C `0x70`.
+ * @ds-part Sensirion SHTC3
+ * @ds-services temperature, humidity
  * @link https://sensirion.com/products/catalog/SHTC3/ Datasheet
  */
 export async function startSHTC3(options?: { name?: string }) {

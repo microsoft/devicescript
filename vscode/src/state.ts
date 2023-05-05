@@ -358,13 +358,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
         const server = await vscode.window.showQuickPick(
             serverInfo.servers.map(e => {
-                const spec = serviceSpecificationFromClassIdentifier(
-                    e.classIdentifier
-                )
                 return {
-                    label: spec.name,
+                    label: e.label,
                     description: e.startName,
-                    detail: (spec.notes["short"] ?? "").replace(/\n[^]*/, ""),
+                    detail: e.detail,
                     entry: e,
                 }
             }),

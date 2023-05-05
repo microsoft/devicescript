@@ -5,5 +5,7 @@
 * [Relay](/api/servers/relay)
 * [LightBulb](/api/servers/lightbulb)
 * [Buzzer](/api/servers/buzzer)
+* [Servo](/api/servers/servo)
+* [Motion](/api/servers/motion)
 * [Power](/api/servers/power)
 * [Accelerometer](/api/servers/accelerometer)

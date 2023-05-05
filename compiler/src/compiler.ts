@@ -305,7 +305,7 @@ class FunctionDecl extends Cell {
     }
 }
 
-function idName(pat: Expr | ts.DeclarationName) {
+export function idName(pat: Expr | ts.DeclarationName) {
     if (pat && ts.isIdentifier(pat)) return pat.text
     else return null
 }
@@ -524,6 +524,20 @@ export const compileFlagHelp: Record<string, string> = {
 
 interface PossiblyConstDeclaration extends ts.Declaration {
     __ds_const_val?: Folded
+}
+
+export function getSymTags(sym: ts.Symbol, pref = "ds-") {
+    const tags: Record<string, string> = {}
+    for (const tag of sym?.getJsDocTags() ?? []) {
+        if (tag.name.startsWith(pref)) {
+            const v = tag.text
+                ?.map(t => t.text)
+                .filter(s => !!s?.trim())
+                .join(" ")
+            tags[tag.name] = v ?? ""
+        }
+    }
+    return tags
 }
 
 class Program implements TopOpWriter {
@@ -825,20 +839,6 @@ class Program implements TopOpWriter {
         return r
     }
 
-    private getSymTags(sym: ts.Symbol) {
-        const tags: Record<string, string> = {}
-        for (const tag of sym?.getJsDocTags() ?? []) {
-            if (tag.name.startsWith("ds-")) {
-                const v = tag.text
-                    ?.map(t => t.text)
-                    .filter(s => !!s?.trim())
-                    .join(" ")
-                tags[tag.name] = v ?? ""
-            }
-        }
-        return tags
-    }
-
     private stripTypeCast(node: ts.Node): ts.Node {
         while (
             ts.isParenthesizedExpression(node) ||
@@ -889,7 +889,7 @@ class Program implements TopOpWriter {
             if (nam == "#ds.gpio") return this.toLiteralJSON(node.arguments[0])
         }
 
-        const tags = this.getSymTags(this.getSymAtLocation(node))
+        const tags = getSymTags(this.getSymAtLocation(node))
         const gpio = parseInt(tags["ds-gpio"])
         if (!isNaN(gpio)) return gpio
 
@@ -923,7 +923,7 @@ class Program implements TopOpWriter {
         const nn = this.symName(sym)
         if (!nn) return undefined
 
-        const tags = this.getSymTags(sym)
+        const tags = getSymTags(sym)
         const dsstart = tags["ds-start"]
         if (dsstart) {
             let sinfo: BaseServiceConfig
@@ -1844,8 +1844,11 @@ class Program implements TopOpWriter {
             } else if (ts.isConstructorDeclaration(mem)) {
                 numCtorArgs = mem.parameters.length
             } else if (ts.isPropertyDeclaration(mem) && this.isStatic(mem)) {
-                if (mem.initializer) 
-                    throwError(mem, "initializers on static members are not supported (yet)")
+                if (mem.initializer)
+                    throwError(
+                        mem,
+                        "initializers on static members are not supported (yet)"
+                    )
             }
         }
 
@@ -2782,7 +2785,7 @@ class Program implements TopOpWriter {
     }
 
     private emitBuiltInConst(expr: ts.Expression) {
-        const tags = this.getSymTags(this.getSymAtLocation(expr))
+        const tags = getSymTags(this.getSymAtLocation(expr))
         const gpio = parseInt(tags["ds-gpio"])
         if (!isNaN(gpio)) {
             const wr = this.writer
