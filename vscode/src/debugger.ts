@@ -205,8 +205,8 @@ export class DeviceScriptConfigurationProvider
             dir = Utils.dirname(dir)
             if (await checkFileExists(dir, `devsconfig.json`)) {
                 await this.extensionState.devtools.setProjectFolder(dir)
-                program = programUri.fsPath.slice(
-                    this.extensionState.devtools.projectFolder.fsPath.length + 1
+                program = programUri.path.slice(
+                    this.extensionState.devtools.projectFolder.path.length + 1
                 )
                 break
             }

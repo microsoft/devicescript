@@ -35,7 +35,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             name: "DeviceScript: Run File",
             stopOnEntry: false,
             noDebug,
-            program: file.fsPath,
+            program: file.path,
         } as vscode.DebugConfiguration)
         if (noDebug)
             vscode.commands.executeCommand("extension.devicescript.jdom.focus")
