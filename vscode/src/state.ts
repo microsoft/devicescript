@@ -357,43 +357,50 @@ export class DeviceScriptExtensionState extends JDEventSource {
         }
 
         const server = await vscode.window.showQuickPick(
-            serverInfo.servers.map(e => {
-                return {
-                    label: e.label,
-                    description: e.startName,
-                    detail: e.detail,
-                    entry: e,
-                }
-            }),
+            [
+                ...serverInfo.servers.map(
+                    e =>
+                        <TaggedQuickPickItem<ServerInfo>>{
+                            label: e.label,
+                            description: e.startName,
+                            detail: e.detail,
+                            data: e,
+                        }
+                ),
+                <TaggedQuickPickItem<ServerInfo>>{
+                    label: "Search...",
+                    description: "npmjs.com",
+                    detail: "Search for packages on npmjs.com with the `devicescript` keyword.",
+                },
+            ],
             {
-                title: `Pick a server to start`,
+                title: `Pick a driver to start`,
                 matchOnDescription: true,
                 matchOnDetail: true,
                 canPickMany: false,
             }
         )
+        if (server === undefined) return
 
-        if (server) {
-            for (const [symName, modName] of Object.entries(
-                server.entry.imports
-            )) {
-                await this.addImport(editor, symName, modName)
-            }
-
-            await this.addStartServer(editor, server)
-        }
+        if (server.data) await this.addStartServer(editor, server.data)
+        // npm
+        else
+            vscode.env.openExternal(
+                vscode.Uri.parse(
+                    "https://www.npmjs.com/search?q=keywords%3Adevicescript"
+                )
+            )
     }
 
     // find first line that is not an import, comment or empty
     private async addStartServer(
         editor: vscode.TextEditor,
-        server: {
-            label: string
-            description: string
-            detail: string
-            entry: ServerInfo
-        }
+        server: ServerInfo
     ) {
+        for (const [symName, modName] of Object.entries(server.imports)) {
+            await this.addImport(editor, symName, modName)
+        }
+
         const document = editor.document
         let line: vscode.TextLine
         let i = 0
@@ -407,12 +414,12 @@ export class DeviceScriptExtensionState extends JDEventSource {
         }
         const position = line?.rangeIncludingLineBreak?.start
         await editor.insertSnippet(
-            new vscode.SnippetString(server.entry.snippet),
+            new vscode.SnippetString(server.snippet),
             position
         )
     }
 
-    async addImport(
+    private async addImport(
         editor: vscode.TextEditor,
         symName: string,
         modName: string
