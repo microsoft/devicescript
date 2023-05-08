@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.4](https://github.com/microsoft/devicescript/compare/v2.9.3...v2.9.4)
+
+> 5 May 2023
+
+- add disconnect [`34e810c`](https://github.com/microsoft/devicescript/commit/34e810c7bf59d1b8349e3adf0c76f4720d6e1278)
+- handle missing data download [`164d01d`](https://github.com/microsoft/devicescript/commit/164d01d816eb344a147d8555487650fb8f74aa66)
+- updated mqtt docs [`223330c`](https://github.com/microsoft/devicescript/commit/223330cc5f488f7531d1b916e5757d1c33c493cb)
+
 #### [v2.9.3](https://github.com/microsoft/devicescript/compare/v2.9.2...v2.9.3)
 
 > 4 May 2023

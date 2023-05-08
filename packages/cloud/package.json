@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/cloud",
-    "version": "2.9.4",
+    "version": "2.9.5",
     "private": true,
     "dependencies": {},
     "devDependencies": {
