@@ -62,7 +62,7 @@
         "@vscode/debugadapter": "^1.59.0",
         "@vscode/debugadapter-testsupport": "^1.59.0",
         "@vscode/extension-telemetry": "^0.7.7",
-        "@vscode/vsce": "^2.18.0",
+        "@vscode/vsce": "^2.19.0",
         "isomorphic-fetch": "^3.0.0",
         "jacdac-ts": "*",
         "papaparse": "^5.4.1",

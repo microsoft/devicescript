@@ -3622,10 +3622,10 @@
     "@microsoft/applicationinsights-web-basic" "^2.8.11"
     applicationinsights "2.5.0"
 
-"@vscode/vsce@^2.18.0":
-  version "2.18.0"
-  resolved "https://registry.yarnpkg.com/@vscode/vsce/-/vsce-2.18.0.tgz#9f40bf8e7df084a36844b9dadf5c277265c9fbd6"
-  integrity sha512-tUA3XoKx5xjoi3EDcngk0VUYMhvfXLhS4s7CntpLPh1qtLYtgSCexTIMUHkCy6MqyozRW98bdW3a2yHPEADRnQ==
+"@vscode/vsce@^2.19.0":
+  version "2.19.0"
+  resolved "https://registry.yarnpkg.com/@vscode/vsce/-/vsce-2.19.0.tgz#342225662811245bc40d855636d000147c394b11"
+  integrity sha512-dAlILxC5ggOutcvJY24jxz913wimGiUrHaPkk16Gm9/PGFbz1YezWtrXsTKUtJws4fIlpX2UIlVlVESWq8lkfQ==
   dependencies:
     azure-devops-node-api "^11.0.1"
     chalk "^2.4.2"
@@ -3644,7 +3644,7 @@
     tmp "^0.2.1"
     typed-rest-client "^1.8.4"
     url-join "^4.0.1"
-    xml2js "^0.4.23"
+    xml2js "^0.5.0"
     yauzl "^2.3.1"
     yazl "^2.2.2"
   optionalDependencies:
@@ -13159,6 +13159,14 @@ xml2js@^0.4.23:
   version "0.4.23"
   resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.4.23.tgz#a0c69516752421eb2ac758ee4d4ccf58843eac66"
   integrity sha512-ySPiMjM0+pLDftHgXY4By0uswI3SPKLDw/i3UXbnO8M/p28zqexCUoPmQFrYD+/1BzhGJSs2i1ERWKJAtiLrug==
+  dependencies:
+    sax ">=0.6.0"
+    xmlbuilder "~11.0.0"
+
+xml2js@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.5.0.tgz#d9440631fbb2ed800203fad106f2724f62c493b7"
+  integrity sha512-drPFnkQJik/O+uPKpqSgr22mpuFHqKdbS835iAQrUC73L2F5WkboIRd63ai/2Yg6I1jzifPFKH2NTK+cfglkIA==
   dependencies:
     sax ">=0.6.0"
     xmlbuilder "~11.0.0"
