@@ -110,3 +110,19 @@ sensor.reading.pipe(throttleTime(5000)).subscribe(async humidity => {
     await publishMessage("/humidity", { humidity })
 })
 ```
+
+-   Click the play button to deploy the script to your board and test it.
+
+## Managing the device with the Gateway
+
+The last step is to upload the script to the gateway and assign this script to the device. The gateway will automatically deploy the script to the device.
+
+In the Device Gateway view,
+
+-   Click `+` next to script and add your script
+-   Click `script` icon near the device and assign the script you've just uploaded
+
+## Next steps
+
+-   If you want to continue iterating locally, make sure to clear the script assigned to your device (the extension will remind).
+-   If you upload a new version of the script, make sure to update the assigned script on the device too.
