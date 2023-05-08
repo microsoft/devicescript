@@ -9,7 +9,6 @@
     },
     "homepage": "https://microsoft.github.io/devicescript/",
     "license": "MIT",
-    "preview": true,
     "extensionKind": [
         "workspace"
     ],
