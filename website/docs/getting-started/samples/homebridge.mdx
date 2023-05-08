@@ -44,12 +44,7 @@ You will need the URL, port and optionaly username, password to configure the ga
 -   Configure the MQTT settings to connect to the MQTT server
 -   Scroll down to the **MQTT topics** and set the `get Humidity` topic to `humidity`
 
-## Programming the device
-
--   Open Visual Studio Code and make sure to have the [DeviceScript extension](/getting-started/vscode) installed
--   Open the `DeviceScript Gateway` pane and configure it with the connection string that was printed in the gateway terminal output
-
-### Programming the simulator
+## Programming with simulators
 
 We can start programming with devicescript by using the simulator. The simulator allows you to test your code without having to deploy it to a physical device.
 
@@ -95,20 +90,20 @@ Notice that the topic starts with `/`. By default DeviceScript routes topics to 
 
 -   open HomeBridge and you should see the humidity being updated from the values on the sensor. Try to move the slider on the humidity sensor simulator to verify that the values are updated.
 
-### Programming with hardware
+## Programming hardware
 
-Click on the magic wand icon on the file menu and select your hardware device. Then add the code to connect to the `startSHT30`.
+-   Click the `plug` icon and connect your device
+-   Click on the magic wand icon on the file menu and select your hardware device. Then add the code to connect to the `startSHTC3`.
 
 ```ts
-import { pins, board } from "@dsboard/seeed_xiao_esp32c3_msr218"
 import { Humidity } from "@devicescript/core"
 import { throttleTime } from "@devicescript/observables"
 import { publishMessage } from "@devicescript/cloud"
 // highlight-next-line
-import { startSHT30 } from "@devicescript/drivers"
+import { startSHTC3 } from "@devicescript/drivers"
 
 // highlight-next-line
-const { humidity: sensor } = await startSHT30()
+const { humidity: sensor } = await startSHTC3()
 
 sensor.reading.pipe(throttleTime(5000)).subscribe(async humidity => {
     console.data({ humidity })
