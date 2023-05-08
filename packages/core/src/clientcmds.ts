@@ -31,19 +31,6 @@ ds.Buzzer.prototype.playNote = async function (frequency, volume, duration) {
     await this.playTone(p, p * volume * 0.5, duration)
 }
 
-ds.Led.prototype.setAll = async function (r, g, b) {
-    const buflen = (await this.numPixels.read()) * 3
-    const buf = Buffer.alloc(buflen)
-    let idx = 0
-    while (idx < buflen) {
-        buf.setAt(idx, "u0.8", r)
-        buf.setAt(idx + 1, "u0.8", g)
-        buf.setAt(idx + 2, "u0.8", b)
-        idx = idx + 3
-    }
-    await this.pixels.write(buf)
-}
-
 ds.LightBulb.prototype.toggle = async function (lowerThreshold?: number) {
     const value = await this.intensity.read()
     const on = value > (lowerThreshold || 0)
