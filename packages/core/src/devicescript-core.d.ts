@@ -390,12 +390,6 @@ declare module "@devicescript/core" {
      */
     export function intControl(): Control
 
-    /**
-     * Argument: duration ms uint32_t. Attempt to put devices into lowest power sleep mode for a specified time - most likely involving a full reset on wake-up.
-     * @param duration - ms
-     */
-    export function standby(millis: number): Promise<void>
-
     /*
      * Print out message. Used by console.log, etc.
      */
