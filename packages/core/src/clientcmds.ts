@@ -81,3 +81,14 @@ let _ctrl: ds.Control
     if (!_ctrl) _ctrl = new ds.Control("intControl[int:0]")
     return _ctrl
 }
+
+/**
+ * Argument: duration ms uint32_t. Attempt to put devices into lowest power sleep mode for a specified time - most likely involving a full reset on wake-up.
+ * @param duration - ms
+ */
+export async function standby(millis: number) {
+    if (isNaN(millis) || millis < 0) return
+
+    const ctrl = ds.intControl()
+    await ctrl.standby(millis)
+}

@@ -1,0 +1,27 @@
+---
+title: Low Power
+sidebar_position: 11
+---
+
+# Low Power
+
+## Standby
+
+The `standby` function attempt to put devices into lowest power sleep mode for a specified time,
+most likely involving a full reset on wake-up.
+
+```ts
+import { Temperature, standby } from "@devicescript/core"
+
+console.log("going to sleep for 1 hour...")
+// highlight_next_line
+await standby(3600_000) // shut down for 1 hour
+```
+
+Use allow to save on battery power for long running operation where the device should mostly be idle in between sensor readings.
+
+:::note
+
+`standby` is available on ESP32 chip currently.
+
+:::
