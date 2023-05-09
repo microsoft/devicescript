@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.5](https://github.com/microsoft/devicescript/compare/v2.9.4...v2.9.5)
+
+> 8 May 2023
+
+- adding some led options [`#383`](https://github.com/microsoft/devicescript/pull/383)
+- generate server-info.json for DS drivers; fixes #381 [`#381`](https://github.com/microsoft/devicescript/issues/381)
+- updated samples [`76dcdda`](https://github.com/microsoft/devicescript/commit/76dcddad26701c0fc1035048fb416917c16b24af)
+- search npm [`5b0c360`](https://github.com/microsoft/devicescript/commit/5b0c36022e6f32e3635d401b9ccdcd03d2736505)
+- handle deploying to a device that is managed by a gateway [`6021672`](https://github.com/microsoft/devicescript/commit/6021672436e3111404d806f3276dfc08677063e2)
+
 #### [v2.9.4](https://github.com/microsoft/devicescript/compare/v2.9.3...v2.9.4)
 
 > 5 May 2023
