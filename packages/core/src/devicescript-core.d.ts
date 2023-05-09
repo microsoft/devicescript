@@ -385,11 +385,6 @@ declare module "@devicescript/core" {
      */
     export function isSimulator(): boolean
 
-    /**
-     * Return the control service for the current device.
-     */
-    export function intControl(): Control
-
     /*
      * Print out message. Used by console.log, etc.
      */
