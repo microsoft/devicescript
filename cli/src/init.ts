@@ -186,6 +186,7 @@ const optionalFiles: FileSet = {
     },
     ".vscode/extensions.json": {
         recommendations: [
+            "devicescript.devicescript-vscode",
             "esbenp.prettier-vscode",
             "ms-toolsai.jupyter",
             "ms-toolsai.jupyter-renderers",
