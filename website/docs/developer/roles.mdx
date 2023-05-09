@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Defining Roles
+# Roles
 
 In DeviceScript, all access to sensors, actuators or other hardware components
 are abstracted through [Jacdac](https://aka.ms/jacdac) services.
@@ -16,24 +16,9 @@ rotary encoder to change the desired temperature.
 Therefore, we declare 3 roles.
 
 ```ts
-import * as ds from "@devicescript/core"
+import { Temperature, Relay } from "@devicescript/core"
 
-const thermometer = new ds.Temperature()
-const encoder = new ds.RotaryEncoder()
-const relay = new ds.Relay()
+const thermometer = new Temperature()
+const thermometer2 = new Temperature()
+const relay = new Relay()
 ```
-
-:::note
-
-For consistency and breivity, the `@devicescript/core` module
-is implicitely imported as follows:
-
-```ts skip no-run
-import * as ds from "@devicescript/core"
-```
-
-:::
-
-## Where are the servers?
-
-Now you are probably wondering how you convert your existing low level components into services? We'll cover that in the next step.

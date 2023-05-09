@@ -42,7 +42,7 @@ export default function HomepageFeatures(): JSX.Element {
             title: "Hardware as Services",
             description:
                 "Client/server architecture for sensors and actuators.",
-            link: "/devicescript/developer/defining-roles",
+            link: "/devicescript/developer/roles",
         },
         {
             title: "Debugging",

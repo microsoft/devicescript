@@ -1,0 +1,141 @@
+---
+sidebar_position: 5
+---
+
+# Thermostat + Gateaway
+
+The [Thermostat](/getting-started/samples/thermostat) sample showed how to implement a thermostat controller
+using local data. This part 2 of the sample shows how to connect the device to a cloud gateway and configure
+the desired temperature from the cloud.
+
+## Development Gateway
+
+Start by setting up a [Development Gateway](/developer/cloud/gateway) and connecting the ESP to it.
+
+## Telemetry
+
+Just like any web or desktop app, a DeviceScript app can be instrumented with [telemetry](/developer/cloud/telemetry) to get insights into
+how it is behaving.
+
+For example, we instrument the code to notify the cloud whenever the relay is enabled or disabled.
+
+```ts
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { Temperature } from "@devicescript/core"
+import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
+import { startRelay } from "@devicescript/servers"
+import { trackEvent } from "@deviescript/cloud"
+
+const thermometer = new Temperature()
+const t_ref = 68 // degree F
+const relay = startRelay({
+    pin: pins.A0,
+})
+
+thermometer.reading
+    .pipe(
+        tap(t_raw => console.data({ t_raw })),
+        ewma(0.9),
+        tap(t_ewma => console.data({ t_ewma })),
+        auditTime(5000),
+        tap(t_audit => console.data({ t_audit })),
+        levelDetector(t_ref - 1, t_ref + 1),
+        tap(level => console.data({ level }))
+    )
+    .subscribe(async level => {
+        const enabled = relay.enabled.read()
+        const newEnabled = level < 0 ? true : level > 0 ? false : enabled
+        await relay.enabled.write(newEnabled)
+        // highlight-next-line
+        if (enabled !== newEnabled) trackEvent("relay", { enabled: newEnabled })
+    })
+```
+
+## Environment variables
+
+If you connect the ESP to the [Development Gateway](/developer/cloud/gateway),
+you can use environment variables configured in the cloud rather constants in the code.
+
+The `environment` function from `@devicescript/cloud` downloads and caches the environment variables from the cloud.
+
+```ts
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { Temperature } from "@devicescript/core"
+import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
+import { startRelay } from "@devicescript/servers"
+// highlight-next-line
+import { environment } from "@devicescript/cloud"
+
+const thermometer = new Temperature()
+const relay = startRelay({
+    pin: pins.A0,
+})
+// highlight-start
+const env = environment<{ t_ref }>({ t_ref: 68 })
+const { t_ref } = await env.read()
+// highlight-end
+
+thermometer.reading
+    .pipe(
+        tap(t_raw => console.data({ t_raw })),
+        ewma(0.9),
+        tap(t_ewma => console.data({ t_ewma })),
+        auditTime(5000),
+        tap(t_audit => console.data({ t_audit })),
+        levelDetector(t_ref - 1, t_ref + 1),
+        tap(level => console.data({ level }))
+    )
+    .subscribe(async level => {
+        if (level < 0) await relay.enabled.write(true)
+        else if (level > 0) await relay.enabled.write(false)
+        console.data({ relay: await relay.enabled.read() })
+    })
+```
+
+## Environment updates
+
+The environment variables can be updated in the cloud at any time.
+We can track the changes and update the relay accordingly.
+
+```ts
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+import { Temperature } from "@devicescript/core"
+import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
+import { startRelay } from "@devicescript/servers"
+// highlight-next-line
+import { environment } from "@devicescript/cloud"
+
+const thermometer = new ds.Temperature()
+const relay = startRelay({
+    pin: pins.A0,
+})
+const env = environment<{ t_ref }>({ t_ref: 68 })
+let unsubscribe
+const controlTemperature = () => {
+    // cleanup previous loop
+    if (unsubscribe) unsubscribe()
+
+    // start new control loop
+    const { t_ref } = await env.read()
+    unsubscribe = thermometer.reading
+        .pipe(
+            tap(t_raw => console.data({ t_raw })),
+            ewma(0.9),
+            tap(t_ewma => console.data({ t_ewma })),
+            auditTime(5000),
+            tap(t_audit => console.data({ t_audit })),
+            levelDetector(t_ref - 1, t_ref + 1),
+            tap(level => console.data({ level }))
+        )
+        .subscribe(async level => {
+            if (level < 0) await relay.enabled.write(true)
+            else if (level > 0) await relay.enabled.write(false)
+            console.data({ relay: await relay.enabled.read() })
+        })
+}
+
+// hightline-next-line
+env.subscribe(controlTemperature)
+controlTemperature()
+```
+

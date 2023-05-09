@@ -15,7 +15,7 @@ and logging each sensor reading to the console (using `console.data`).
 ```ts
 import { Temperature } from "@devicescript/core"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 thermometer.reading.subscribe(t => {
     console.data({ t })
 })
@@ -48,7 +48,7 @@ import { Temperature } from "@devicescript/core"
 // highlight-next-line
 import { ewma } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 thermometer.reading
     // highlight-next-line
     .pipe(ewma(0.9))
@@ -62,7 +62,7 @@ import { Temperature } from "@devicescript/core"
 // highlight-next-line
 import { ewma, tap } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 thermometer.reading
     .pipe(
         // highlight-next-line
@@ -83,7 +83,7 @@ import { Temperature } from "@devicescript/core"
 // highlight-next-line
 import { ewma, tap, auditTime } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 thermometer.reading
     .pipe(
         tap(t_raw => console.data({ t_raw })),
@@ -106,7 +106,7 @@ import { Temperature } from "@devicescript/core"
 // highlight-next-line
 import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 // highlight-next-line
 const t_ref = 68 // degree F
 
@@ -132,10 +132,10 @@ thermometer.reading
 import { Temperature, Relay } from "@devicescript/core"
 import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 const t_ref = 68 // degree F
 // highlight-next-line
-const relay = new ds.Relay()
+const relay = new Relay()
 
 thermometer.reading
     .pipe(
@@ -168,7 +168,7 @@ import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 // highlight-next-line
 import { startRelay } from "@devicescript/servers"
 
-const thermometer = new ds.Temperature()
+const thermometer = new Temperature()
 const t_ref = 68 // degree F
 // highlight-start
 const relay = startRelay({

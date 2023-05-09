@@ -8,12 +8,15 @@ let _env: ObservableValue<any>
 
 /**
  * Gets an observable environment register that may get updated by the cloud.
+ * @param defaultValues default values if no cloud values are available
  * @returns environment
  */
-export async function environment<T = object>(): Promise<ObservableValue<T>> {
+export async function environment<T = object>(
+    defaultValues?: T
+): Promise<ObservableValue<T>> {
     if (_env) return _env
 
-    const old = await readSetting(ENV_TOPIC, {})
+    const old = await readSetting(ENV_TOPIC, defaultValues || {})
     _env = register(old || {})
 
     // receive env messages
