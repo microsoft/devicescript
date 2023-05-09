@@ -1,4 +1,5 @@
-import { delay, Led, rgb } from "@devicescript/core"
+import { delay, Led } from "@devicescript/core"
+import { rgb } from "@devicescript/runtime"
 
 const led = new Led()
 
