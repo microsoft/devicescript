@@ -24,7 +24,7 @@ import { pins } from "@dsboard/adafruit_qt_py_c3"
 import { Temperature } from "@devicescript/core"
 import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
 import { startRelay } from "@devicescript/servers"
-import { trackEvent } from "@deviescript/cloud"
+import { trackEvent } from "@devicescript/cloud"
 
 const thermometer = new Temperature()
 const t_ref = 68 // degree F
@@ -43,11 +43,14 @@ thermometer.reading
         tap(level => console.data({ level }))
     )
     .subscribe(async level => {
-        const enabled = relay.enabled.read()
+        const enabled = await relay.enabled.read()
         const newEnabled = level < 0 ? true : level > 0 ? false : enabled
         await relay.enabled.write(newEnabled)
         // highlight-next-line
-        if (enabled !== newEnabled) trackEvent("relay", { enabled: newEnabled })
+        if (enabled !== newEnabled)
+            await trackEvent("relay.change", {
+                properties: { active: newEnabled ? "on" : "off" },
+            })
     })
 ```
 
@@ -71,7 +74,7 @@ const relay = startRelay({
     pin: pins.A0,
 })
 // highlight-start
-const env = environment<{ t_ref }>({ t_ref: 68 })
+const env = await environment<{ t_ref: number }>({ t_ref: 68 })
 const { t_ref } = await env.read()
 // highlight-end
 
@@ -100,7 +103,13 @@ We can track the changes and update the relay accordingly.
 ```ts
 import { pins } from "@dsboard/adafruit_qt_py_c3"
 import { Temperature } from "@devicescript/core"
-import { ewma, tap, auditTime, levelDetector } from "@devicescript/observables"
+import {
+    ewma,
+    tap,
+    auditTime,
+    levelDetector,
+    Subscription,
+} from "@devicescript/observables"
 import { startRelay } from "@devicescript/servers"
 // highlight-next-line
 import { environment } from "@devicescript/cloud"
@@ -109,15 +118,15 @@ const thermometer = new ds.Temperature()
 const relay = startRelay({
     pin: pins.A0,
 })
-const env = environment<{ t_ref }>({ t_ref: 68 })
-let unsubscribe
-const controlTemperature = () => {
+const env = await environment<{ t_ref: number }>({ t_ref: 68 })
+let sub: Subscription
+const controlTemperature = async () => {
     // cleanup previous loop
-    if (unsubscribe) unsubscribe()
+    if (sub) sub.unsubscribe()
 
     // start new control loop
     const { t_ref } = await env.read()
-    unsubscribe = thermometer.reading
+    sub = thermometer.reading
         .pipe(
             tap(t_raw => console.data({ t_raw })),
             ewma(0.9),
@@ -136,6 +145,5 @@ const controlTemperature = () => {
 
 // hightline-next-line
 env.subscribe(controlTemperature)
-controlTemperature()
+await controlTemperature()
 ```
-
