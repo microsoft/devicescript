@@ -77,6 +77,7 @@ export class ColorBuffer {
     readonly length: number
 
     constructor(buffer: ds.Buffer, start: number, length: number) {
+        ds.assert(buffer.length >= (start + length) * 3, "buffer too small")
         this.buffer = buffer
         this.start = start
         this.length = length
@@ -84,15 +85,76 @@ export class ColorBuffer {
 
     /**
      * Set a pixel color in the buffer
-     * @param pixeloffset
+     * @param pixeloffset pixel offset. if negative starts from the end
      * @param color RGB color
      */
     setPixelColor(pixeloffset: number, color: number) {
-        const i = this.start + (pixeloffset << 0) * 3
+        while (pixeloffset < 0) pixeloffset += this.length
+        const i = this.start + (pixeloffset << 0)
         if (i < this.start || i >= this.start + this.length) return
-        this.buffer.setAt(i, "u8", (color >> 16) & 0xff)
-        this.buffer.setAt(i + 1, "u8", (color >> 8) & 0xff)
-        this.buffer.setAt(i + 2, "u8", color & 0xff)
+        const bi = i * 3
+        this.buffer.setAt(bi, "u8", (color >> 16) & 0xff)
+        this.buffer.setAt(bi + 1, "u8", (color >> 8) & 0xff)
+        this.buffer.setAt(bi + 2, "u8", color & 0xff)
+    }
+
+    /**
+     * Reads the pixel color at the given offsret
+     * @param pixeloffset pixel offset. if negative starts from the end
+     * @returns
+     */
+    getPixelColor(pixeloffset: number): number {
+        while (pixeloffset < 0) pixeloffset += this.length
+        const i = this.start + (pixeloffset << 0)
+        if (i < this.start || i >= this.start + this.length) return undefined
+        const bi = i * 3
+        const r = this.buffer.getAt(bi, "u8")
+        const g = this.buffer.getAt(bi + 1, "u8")
+        const b = this.buffer.getAt(bi + 2, "u8")
+
+        return rgb(r, g, b)
+    }
+
+    /**
+     * Renders a bar grpah on the LEDs
+     * @param value
+     * @param high
+     * @returns
+     */
+    setBarGraph(
+        value: number,
+        high: number,
+        options?: {
+            emptyRangeColor?: number
+            zeroColor?: number
+        }
+    ): void {
+        if (high <= 0) {
+            const emptyRangeColor = options?.emptyRangeColor
+            this.clear()
+            this.setPixelColor(
+                0,
+                isNaN(emptyRangeColor) ? 0xffff00 : emptyRangeColor
+            )
+            return
+        }
+
+        value = Math.abs(value)
+        const n = this.length
+        const n1 = n - 1
+        let v = Math.idiv(value * n, high)
+        if (v === 0) {
+            const zeroColor = options?.zeroColor
+            this.setPixelColor(0, isNaN(zeroColor) ? 0x666600 : zeroColor)
+            for (let i = 1; i < n; ++i) this.setPixelColor(i, 0)
+        } else {
+            for (let i = 0; i < n; ++i) {
+                if (i <= v) {
+                    const b = Math.idiv(i * 255, n1)
+                    this.setPixelColor(i, rgb(b, 0, 255 - b))
+                } else this.setPixelColor(i, 0)
+            }
+        }
     }
 
     /**
@@ -123,6 +185,7 @@ export class ColorBuffer {
  * @param numPixels number of pixels
  */
 export function colorBuffer(numPixels: number) {
+    numPixels = numPixels << 0
     const buf = ds.Buffer.alloc(numPixels * 3)
     return new ColorBuffer(buf, 0, numPixels)
 }
