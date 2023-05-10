@@ -73,9 +73,12 @@ make bump
 
 ## Adding Builtin Packages
 
-Generally, search for `@devicescript/settings` within the workspace.
+Generally, search for `@devicescript/gpio` within the workspace.
 The main places that need updating is:
 
 -   this file, `website/docs/developer/packages.mdx`
 -   list in `plugin/src/plugin.ts`
 -   list in `devs/run-test/allcompile.ts`
+
+After adding a new packages, run `yarn` at the top-level to update workspace links,
+followed by the usual `yarn build`.
