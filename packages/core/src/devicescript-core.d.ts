@@ -295,11 +295,6 @@ declare module "@devicescript/core" {
     export function wait<T>(l: Subscriber<T>, timeout?: number): Promise<T>
 
     /**
-     * Return a function that will run the argument at most once.
-     */
-    export function memoize<T>(f: () => AsyncValue<T>): () => Promise<T>
-
-    /**
      * Restart current script.
      */
     export function restart(): never

@@ -100,23 +100,3 @@ class ClientRegister<T> implements ds.ClientRegister<T> {
 ;(ds as typeof ds).emitter = function () {
     return new Emitter()
 }
-;(ds as typeof ds).memoize = function <T>(f: () => ds.AsyncValue<T>) {
-    let r: T
-    let state = 0
-    return async () => {
-        if (state === 0) {
-            state = 1
-            try {
-                r = await f()
-                state = 2
-            } catch (e: any) {
-                r = e
-                state = 3
-            }
-        } else {
-            while (state < 2) await ds.sleep(5)
-        }
-        if (state === 2) return r
-        else throw r
-    }
-}
