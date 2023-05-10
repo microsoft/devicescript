@@ -12,7 +12,7 @@ and returns a [client](/api/clients/switch).
 import { gpio } from "@devicescript/core"
 import { startSwitch } from "@devicescript/servers"
 
-const switch = startSwitch({
+const sw = startSwitch({
     pin: gpio(2),
 })
 ```
