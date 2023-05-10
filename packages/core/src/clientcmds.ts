@@ -75,15 +75,3 @@ ds.RotaryEncoder.prototype.asPotentiometer = function (steps?: number) {
     init.start()
     return reg
 }
-
-let _ctrl: ds.Control
-;(ds as typeof ds).intControl = function () {
-    if (!_ctrl) _ctrl = new ds.Control("intControl[int:0]")
-    return _ctrl
-}
-;(ds as typeof ds).standby = async function (millis: number) {
-    if (isNaN(millis) || millis < 0) return
-
-    const ctrl = ds.intControl()
-    await ctrl.standby(millis)
-}

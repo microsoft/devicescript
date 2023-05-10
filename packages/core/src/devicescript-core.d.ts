@@ -295,11 +295,6 @@ declare module "@devicescript/core" {
     export function wait<T>(l: Subscriber<T>, timeout?: number): Promise<T>
 
     /**
-     * Return a function that will run the argument at most once.
-     */
-    export function memoize<T>(f: () => AsyncValue<T>): () => Promise<T>
-
-    /**
      * Restart current script.
      */
     export function restart(): never
@@ -384,17 +379,6 @@ declare module "@devicescript/core" {
      * Check if running inside a simulator.
      */
     export function isSimulator(): boolean
-
-    /**
-     * Return the control service for the current device.
-     */
-    export function intControl(): Control
-
-    /**
-     * Argument: duration ms uint32_t. Attempt to put devices into lowest power sleep mode for a specified time - most likely involving a full reset on wake-up.
-     * @param duration - ms
-     */
-    export function standby(millis: number): Promise<void>
 
     /*
      * Print out message. Used by console.log, etc.

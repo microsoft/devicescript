@@ -1,8 +1,6 @@
-# @devicescript/gpio
+# @devicescript/runtime
 
-[DeviceScript](https://microsoft.github.io/devicescript/) GPIO support.
-
--   [Read documentation](https://microsoft.github.io/devicescript/developer/servers/pins)
+[DeviceScript](https://microsoft.github.io/devicescript/) runtime utilities.
 
 ## Contributing
 
