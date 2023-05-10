@@ -518,7 +518,9 @@ class JDomServiceTreeItem extends JDomTreeItem {
                     ? `
             
 \`\`\`ts
-const ${varname} = new ds.${clname}()
+import { ${clname} } from "@devicescript/core"
+
+const ${varname} = new ${clname}()
 \`\`\`
 
 `

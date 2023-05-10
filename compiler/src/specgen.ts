@@ -416,7 +416,9 @@ ${patchLinks(info.notes["long"])}
             : undefined,
         `
 \`\`\`ts
-const ${varname} = new ds.${clname}()
+import { ${clname} } from "@devicescript/core"
+
+const ${varname} = new ${clname}()
 \`\`\`
             `,
     ]
@@ -485,7 +487,9 @@ ${varname}.${sig}
                 : pkt.kind === "rw"
                 ? `-  read and write
 \`\`\`ts ${nobuild}
-const ${varname} = new ds.${clname}()
+import { ${clname} } from "@devicescript/core"
+
+const ${varname} = new ${clname}()
 // ...
 const value = await ${varname}.${pname}.read()
 await ${varname}.${pname}.write(value)
@@ -493,7 +497,9 @@ await ${varname}.${pname}.write(value)
 `
                 : `-  read only
 \`\`\`ts ${nobuild}
-const ${varname} = new ds.${clname}()
+import { ${clname} } from "@devicescript/core"
+
+const ${varname} = new ${clname}()
 // ...
 const value = await ${varname}.${pname}.read()
 \`\`\`
@@ -502,7 +508,9 @@ const value = await ${varname}.${pname}.read()
                 ? undefined
                 : `-  track incoming values
 \`\`\`ts ${nobuild}
-const ${varname} = new ds.${clname}()
+import { ${clname} } from "@devicescript/core"
+
+const ${varname} = new ${clname}()
 // ...
 ${varname}.${pname}.subscribe(async (value) => {
     ...
