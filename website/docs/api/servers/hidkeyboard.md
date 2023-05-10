@@ -17,9 +17,3 @@ const keyboard = startHidKeyboard({})
 ```
 
 The [service instance name](https://microsoft.github.io/jacdac-docs/services/_base/) is automatically set to the variable name. In this example, it is set to `keyboard`.
-
-:::note
-
-This feature is only available on [specific boards](/devices/peripherals/hid).
-
-:::

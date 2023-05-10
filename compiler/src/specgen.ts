@@ -20,6 +20,11 @@ import {
     cStorage,
     addComment,
     wrapComment,
+    SRV_WSSK,
+    SRV_CLOUD_CONFIGURATION,
+    SRV_CODAL_MESSAGE_BUS,
+    SRV_DEVS_DBG,
+    SRV_TCP,
 } from "jacdac-ts"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { PacketSpecCode, runtimeVersion } from "./format"
@@ -96,6 +101,11 @@ function ignoreSpec(info: jdspec.ServiceSpec) {
             SRV_BRIDGE,
             SRV_DEVICE_SCRIPT_CONDITION,
             SRV_DEVICE_SCRIPT_MANAGER,
+            SRV_WSSK,
+            SRV_CLOUD_CONFIGURATION,
+            SRV_CODAL_MESSAGE_BUS,
+            SRV_DEVS_DBG,
+            SRV_TCP,
         ].indexOf(info.classIdentifier) > -1
     )
 }
