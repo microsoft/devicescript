@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Roles
+# Clients
 
 In DeviceScript, all access to sensors, actuators or other hardware components
 are abstracted through [Jacdac](https://aka.ms/jacdac) services.
@@ -21,4 +21,16 @@ import { Temperature, Relay } from "@devicescript/core"
 const thermometer = new Temperature()
 const thermometer2 = new Temperature()
 const relay = new Relay()
+```
+
+## Onboard servers
+
+You can also start servers for onboard sensors and actuators. For example, the `startBME680` function maps a BME680 sensor to 4 roles: temperature, humidity, pressure and air quality index.
+
+```ts
+import { startBME680 } from "@devicescript/drivers"
+
+// mount services on a BME680
+// highlight-next-line
+const { temperature, humidity, pressure, airQualityIndex } = await startBME680()
 ```
