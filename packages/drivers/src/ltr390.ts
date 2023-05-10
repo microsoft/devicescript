@@ -62,15 +62,22 @@ class LTR390Driver extends I2CSensorDriver<{
  * @link https://optoelectronics.liteon.com/upload/download/DS86-2015-0004/LTR-390UV_Final_%20DS_V1%201.pdf Datasheet
  * @throws DriverError
  */
-export async function startLTR390(options?: { name?: string }) {
+export async function startLTR390(options?: {
+    uvIndexName?: string
+    illuminanceName?: string
+    baseName?: string
+}) {
+    const { uvIndexName, illuminanceName, baseName } = options || {}
     const driver = new LTR390Driver()
     await driver.init()
-    const uvindex = new ds.UvIndex(
+    const uvIndex = new ds.UvIndex(
         startSimpleServer({
             ...options,
             spec: ds.UvIndex.spec,
             errorFraction: 0.1,
             reading: async () => (await driver.read()).uvindex,
+            name: uvIndexName,
+            baseName,
         })
     )
     const illuminance = new ds.Illuminance(
@@ -79,8 +86,10 @@ export async function startLTR390(options?: { name?: string }) {
             spec: ds.Illuminance.spec,
             errorFraction: 0.1,
             reading: async () => (await driver.read()).illuminance,
+            name: illuminanceName,
+            baseName,
         })
     )
 
-    return { uvindex, illuminance }
+    return { uvIndex, illuminance }
 }

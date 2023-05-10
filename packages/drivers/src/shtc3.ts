@@ -1,12 +1,12 @@
 import { SHTDriver } from "./sht"
-import { startHumidity, startTempHumidity, startTemperature } from "./servers"
+import { startTemperatureHumidity } from "./servers"
 import { delay, sleep } from "@devicescript/core"
 import { DriverError } from "./core"
 
 const SHTC3_ADDR = 0x70
 const SHTC3_MEASURE_NORMAL = 0x7866
-const SHTC3_MEASURE_LOW_POWER = 0x609c
-const SHTC3_SOFTRESET = 0x805d
+//const SHTC3_MEASURE_LOW_POWER = 0x609c
+//const SHTC3_SOFTRESET = 0x805d
 const SHTC3_ID = 0xefc8
 const SHTC3_SLEEP = 0xb098
 const SHTC3_WAKEUP = 0x3517
@@ -58,21 +58,30 @@ class SHTC3Driver extends SHTDriver {
  * @ds-part Sensirion SHTC3
  * @ds-services temperature, humidity
  * @link https://sensirion.com/products/catalog/SHTC3/ Datasheet
+ * @throws DriverError
  */
-export async function startSHTC3(options?: { name?: string }) {
+export async function startSHTC3(options?: {
+    temperatureName?: string
+    humidityName?: string
+    baseName?: string
+}) {
+    const { temperatureName, humidityName, baseName } = options || {}
     const driver = new SHTC3Driver()
     await driver.init()
-    return startTempHumidity(
+    return startTemperatureHumidity(
         {
             min: -40,
             max: 125,
             errorValue: 0.8,
             reading: async () => (await driver.read()).temperature,
+            name: temperatureName,
+            baseName,
         },
         {
             errorValue: 3.5,
             reading: async () => (await driver.read()).humidity,
-        },
-        options?.name
+            name: humidityName,
+            baseName,
+        }
     )
 }

@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 import { DriverError } from "./core"
-import { startTempHumidity } from "./servers"
+import { startTemperatureHumidity } from "./servers"
 import { I2CSensorDriver } from "./driver"
 import { sleep } from "@devicescript/core"
 
@@ -55,20 +55,28 @@ class AHT20Driver extends I2CSensorDriver<{
  * @link https://asairsensors.com/wp-content/uploads/2021/09/Data-Sheet-AHT20-Humidity-and-Temperature-Sensor-ASAIR-V1.0.03.pdf Datasheet
  * @throws DriverError
  */
-export async function startAHT20(options?: { name?: string }) {
+export async function startAHT20(options?: {
+    temperatureName?: string
+    humidityName?: string
+    baseName?: string
+}) {
+    const { temperatureName, humidityName, baseName } = options || {}
     const driver = new AHT20Driver()
     await driver.init()
-    return startTempHumidity(
+    return startTemperatureHumidity(
         {
             min: -40,
             max: 85,
             errorValue: 1.5,
             reading: async () => (await driver.read()).temperature,
+            name: temperatureName,
+            baseName,
         },
         {
             errorValue: 4,
             reading: async () => (await driver.read()).humidity,
-        },
-        options?.name
+            name: humidityName,
+            baseName,
+        }
     )
 }

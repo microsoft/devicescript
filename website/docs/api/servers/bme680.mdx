@@ -1,0 +1,14 @@
+# BME680
+
+Driver for BME680 temperature/humidity/air pressure/aqi.
+
+-   Services: [temperature](/api/clients/temperature/), [humidity](/api/clients/humidity/), [air pressure](/api/clients/airpressure/), [air quality index](/api/clients/airqualityindex/)
+-   [Datasheet](https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme680-ds001.pdf)
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/bme680.ts)
+
+## Usage
+
+```ts
+import { startBME680 } from "@devicescript/drivers"
+const { temperature, humidity, pressure, airQualityIndex } = await startBME680()
+```

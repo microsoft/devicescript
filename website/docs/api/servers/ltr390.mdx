@@ -1,0 +1,14 @@
+# LTR390
+
+Driver for LTR390 UV Index, illuminance.
+
+-   Services: [uvindex](/api/clients/uvindex/), [illuminance](/api/clients/illuminance/)
+-   [Datasheet](https://optoelectronics.liteon.com/upload/download/DS86-2015-0004/LTR-390UV_Final_%20DS_V1%201.pdf)
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/ltr390.ts)
+
+## Usage
+
+```ts
+import { startLTR390 } from "@devicescript/drivers"
+const { uvIndex, illuminance } = await startBME680()
+```

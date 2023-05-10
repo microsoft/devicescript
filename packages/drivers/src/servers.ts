@@ -114,15 +114,10 @@ export function startHumidity(options: SimpleSensorBaseOptions) {
     )
 }
 
-export function startTempHumidity(
+export function startTemperatureHumidity(
     topt: SimpleSensorBaseOptions,
-    hopt: SimpleSensorBaseOptions,
-    name?: string
+    hopt: SimpleSensorBaseOptions
 ) {
-    if (name) {
-        topt.baseName = name
-        hopt.baseName = name
-    }
     const temperature = startTemperature(topt)
     const humidity = startHumidity(hopt)
     return { temperature, humidity }
@@ -137,7 +132,7 @@ export function startAirPressure(options: SimpleSensorBaseOptions) {
     )
 }
 
-export function startAQI(options: SimpleSensorBaseOptions) {
+export function startAirQualityIndex(options: SimpleSensorBaseOptions) {
     return new ds.AirQualityIndex(
         startSimpleServer({
             ...options,

@@ -1,9 +1,9 @@
 import { SHTDriver } from "./sht"
-import { startTempHumidity } from "./servers"
+import { startTemperatureHumidity } from "./servers"
 import { delay } from "@devicescript/core"
 
 const SHT30_MEASURE_HIGH_REP = 0x2400 // no clock stretching
-const SHT30_SOFTRESET = 0x30a2
+//const SHT30_SOFTRESET = 0x30a2
 const SHT30_STATUS = 0xf32d
 const STH30_THROTTLE = 500
 
@@ -34,24 +34,31 @@ class SHT30Driver extends SHTDriver {
  * @ds-part Sensirion SHT30
  * @ds-services temperature, humidity
  * @link https://sensirion.com/products/catalog/SHT30-DIS-B/ Datasheet
+ * @throws DriverError
  */
 export async function startSHT30(options?: {
-    name?: string
     address?: 0x44 | 0x45
+    temperatureName?: string
+    humidityName?: string
+    baseName?: string
 }) {
-    const driver = new SHT30Driver(options?.address || 0x44)
+    const { address, temperatureName, humidityName, baseName } = options || {}
+    const driver = new SHT30Driver(address || 0x44)
     await driver.init()
-    return startTempHumidity(
+    return startTemperatureHumidity(
         {
             min: -40,
             max: 125,
             errorValue: 0.6,
             reading: async () => (await driver.read()).temperature,
+            name: temperatureName,
+            baseName,
         },
         {
             errorValue: 4,
             reading: async () => (await driver.read()).humidity,
-        },
-        options?.name
+            name: humidityName,
+            baseName,
+        }
     )
 }

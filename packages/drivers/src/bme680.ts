@@ -1,5 +1,5 @@
 import {
-    startAQI,
+    startAirQualityIndex,
     startAirPressure,
     startHumidity,
     startTemperature,
@@ -315,9 +315,18 @@ class BME680Driver extends I2CSensorDriver<{
  * @link https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme680-ds001.pdf Datasheet
  * @link https://www.adafruit.com/product/3660 Adafruit
  * @ds-part Bosch BME68
- * @ds-services temperature, humidity, airPressure, AirQualityIndex
+ * @ds-services temperature, humidity, airPressure, airQualityIndex
+ * @throws DriverError
  */
-export async function startBME680(options?: { name?: string }) {
+export async function startBME680(options?: {
+    temperatureName?: string
+    humidityName?: string
+    pressureName?: string
+    airQualityIndexName?: string
+    baseName?: string
+}) {
+    const { baseName, temperatureName, humidityName, pressureName, airQualityIndexName } =
+        options || {}
     const driver = new BME680Driver()
     await driver.init()
     return {
@@ -326,22 +335,30 @@ export async function startBME680(options?: { name?: string }) {
             max: 85,
             errorValue: 1,
             reading: async () => (await driver.read()).temperature,
+            name: temperatureName,
+            baseName,
         }),
         humidity: startHumidity({
             errorValue: 3,
             reading: async () => (await driver.read()).humidity,
+            name: humidityName,
+            baseName,
         }),
         pressure: startAirPressure({
             min: 300,
             max: 1100,
             errorValue: 0.12,
             reading: async () => (await driver.read()).pressure,
+            name: pressureName,
+            baseName,
         }),
         // TODO this is not really AQI
-        aqi: startAQI({
+        airQualityIndex: startAirQualityIndex({
             min: 1,
             max: 100000,
             reading: async () => (await driver.read()).gas,
+            name: airQualityIndexName,
+            baseName,
         }),
     }
 }
