@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.7](https://github.com/microsoft/devicescript/compare/v2.9.6...v2.9.7)
+
+> 10 May 2023
+
+- move rgb/hsl into runtime module [`#388`](https://github.com/microsoft/devicescript/pull/388)
+- a couple more color helpers [`5268c7f`](https://github.com/microsoft/devicescript/commit/5268c7f4895b84fd6644e332f062a7a2d0c35f91)
+- add color buffer [`11eb0da`](https://github.com/microsoft/devicescript/commit/11eb0da79b9456fee5db6ba2365f28a717390dbb)
+- update docs [`fb192e7`](https://github.com/microsoft/devicescript/commit/fb192e7778f51c91c5fb9037bb568932634d2300)
+
 #### [v2.9.6](https://github.com/microsoft/devicescript/compare/v2.9.5...v2.9.6)
 
 > 9 May 2023
