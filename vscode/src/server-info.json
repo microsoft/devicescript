@@ -293,7 +293,7 @@
             "imports": {
                 "startBME680": "@devicescript/drivers"
             },
-            "snippet": "const { temperature, humidity, pressure, aqi } = await startBME680()\n"
+            "snippet": "const { temperature, humidity, pressure, airQualityIndex } = await startBME680()\n"
         }
     ]
 }
