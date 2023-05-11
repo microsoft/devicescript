@@ -1,0 +1,23 @@
+---
+sidebar_position: 4
+---
+
+# JSON
+
+It's worth mentionning that JSON serialization and parsing is fully supported in DeviceScript.
+
+You can use the `JSON` object to parse and stringify JSON objects, just like in JavaScript.
+
+## JSON.parse
+
+```ts
+const msg = JSON.parse('{"hello": "world"}')
+// destructure field 'hello'
+const { hello } = msg
+```
+
+## JSON.stringify
+
+```ts
+const json = JSON.stringify({ hello: "world" })
+```
