@@ -12,6 +12,7 @@ declare module "@devicescript/core" {
         /**
          * Toggle light between off and full brightness
          * @param lowerThreshold if specified, the light will be turned off if the current brightness is above this threshold
+         * @see {@link https://microsoft.github.io/devicescript/api/clients/lightbulb/#cmd:toggle Documentation}
          */
         toggle(lowerThreshold?: number): Promise<void>
     }

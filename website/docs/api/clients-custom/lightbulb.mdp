@@ -1,0 +1,11 @@
+### toggle {#cmd:toggle}
+
+The toggle method flips the brightness state.
+
+```ts
+import { LightBulb } from "@devicescript/core"
+
+const lightBulb = new LightBulb()
+// ...
+await lightBulb.toggle()
+```
