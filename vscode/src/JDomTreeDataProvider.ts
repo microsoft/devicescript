@@ -427,9 +427,6 @@ ${spec.description}`,
         return <JDomTreeItem[]>(
             [
                 ...registers,
-                ...roleManagers.map(
-                    srv => new JDomRoleManagerTreeItem(this, srv, props)
-                ),
                 ...powers.map(srv => new JDomPowerTreeItem(this, srv, props)),
                 ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
                 ...cloudAdapters.map(
@@ -437,6 +434,9 @@ ${spec.description}`,
                 ),
                 ...deviceScriptManagers.map(
                     srv => new JDomDeviceManagerTreeItem(this, srv, props)
+                ),
+                ...roleManagers.map(
+                    srv => new JDomRoleManagerTreeItem(this, srv, props)
                 ),
                 new JDomServicesTreeItem(this),
             ].filter(e => !!e)
