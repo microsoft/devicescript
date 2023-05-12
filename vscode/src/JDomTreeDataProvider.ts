@@ -60,6 +60,10 @@ import {
     PowerReg,
     SRV_POWER,
     PowerPowerStatus,
+    RoleManagerReg,
+    SRV_ROLE_MANAGER,
+    RoleManagerClient,
+    serviceName,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -411,6 +415,7 @@ ${spec.description}`,
             )
 
         const powers = device.services({ serviceClass: SRV_POWER })
+        const roleManagers = device.services({ serviceClass: SRV_ROLE_MANAGER })
         const wifis = device.services({ serviceClass: SRV_WIFI })
         const cloudAdapters = device.services({
             serviceClass: SRV_CLOUD_ADAPTER,
@@ -422,6 +427,9 @@ ${spec.description}`,
         return <JDomTreeItem[]>(
             [
                 ...registers,
+                ...roleManagers.map(
+                    srv => new JDomRoleManagerTreeItem(this, srv, props)
+                ),
                 ...powers.map(srv => new JDomPowerTreeItem(this, srv, props)),
                 ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
                 ...cloudAdapters.map(
@@ -843,6 +851,68 @@ class JDomCustomTreeItem extends JDomTreeItem {
             .forEach(register =>
                 this.subscribe(register, REPORT_UPDATE, this.handleChange)
             )
+    }
+}
+
+class JDomRoleManagerTreeItem extends JDomCustomTreeItem {
+    private _client: RoleManagerClient
+    constructor(
+        parent: JDomDeviceTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "roles_",
+            contextValue: props.idPrefix + "role",
+            iconPath: "organization",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+        })
+    }
+
+    mount() {
+        super.mount()
+        this.subscribeRegisters(RoleManagerReg.AllRolesAllocated)
+        this._client = new RoleManagerClient(this.service)
+        this._client.mount(this._client.subscribe(CHANGE, this.handleChange))
+    }
+
+    unmount(): void {
+        super.unmount()
+        this._client?.unmount()
+        this._client = undefined
+    }
+
+    update() {
+        const oldLabel = this.label
+        const oldDescription = this.description
+
+        const allRolesAllocated = this._client?.allRolesBound()
+        this.label = allRolesAllocated ? "all roles ok" : "missing roles"
+        return oldLabel !== this.label || oldDescription !== this.description
+    }
+
+    async resolveTreeItem(token: vscode.CancellationToken) {
+        this.update()
+        const roles = this._client?.roles || []
+        this.tooltip = toMarkdownString(`
+## roles
+
+${roles
+    .map(
+        role =>
+            `-  ${role.name}, ${serviceName(role.serviceClass)}: ${
+                role.deviceId !== "0000000000000000"
+                    ? `${role.deviceId}[${role.serviceIndex}]`
+                    : "missing"
+            }`
+    )
+    .join("\n")}`)
+        return this
+    }
+
+    protected createChildrenTreeItems(): JDomTreeItem[] {
+        return []
     }
 }
 
