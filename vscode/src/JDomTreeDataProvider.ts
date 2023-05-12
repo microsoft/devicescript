@@ -64,6 +64,8 @@ import {
     SRV_ROLE_MANAGER,
     RoleManagerClient,
     serviceName,
+    Role,
+    shortDeviceId,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -854,19 +856,55 @@ class JDomCustomTreeItem extends JDomTreeItem {
     }
 }
 
+class JDomRoleTreeItem extends JDomCustomTreeItem {
+    readonly role: Role
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        role: Role,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "role_",
+            contextValue: props.idPrefix + "role",
+            iconPath: "organization",
+            collapsibleState: vscode.TreeItemCollapsibleState.None,
+        })
+        this.role = role
+        this.update()
+    }
+
+    protected update(): boolean {
+        const { role } = this
+        if (!role) return
+        const { deviceId, name, serviceIndex, serviceClass } = role
+        const bound = deviceId !== "0000000000000000"
+        this.label = `${name}: ${serviceName(serviceClass)}`
+        this.description = bound
+            ? `${shortDeviceId(deviceId)}[${serviceIndex}]`
+            : `unbound`
+        this.tooltip = toMarkdownString(`
+-  service class: 0x${serviceClass.toString(16)}
+-  device id: ${deviceId}
+-  service index: ${serviceIndex}`)
+        return true
+    }
+}
+
 class JDomRoleManagerTreeItem extends JDomCustomTreeItem {
     private _client: RoleManagerClient
     constructor(
-        parent: JDomDeviceTreeItem,
+        parent: JDomTreeItem,
         service: JDService,
         props: TreeItemProps
     ) {
         super(parent, service, {
             ...props,
             idPrefix: props.idPrefix + "roles_",
-            contextValue: props.idPrefix + "role",
+            contextValue: props.idPrefix + "roles",
             iconPath: "organization",
-            collapsibleState: vscode.TreeItemCollapsibleState.None,
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
         })
     }
 
@@ -888,31 +926,17 @@ class JDomRoleManagerTreeItem extends JDomCustomTreeItem {
         const oldDescription = this.description
 
         const allRolesAllocated = this._client?.allRolesBound()
-        this.label = allRolesAllocated ? "all roles ok" : "missing roles"
+        this.label = allRolesAllocated ? "all clients bound" : "missing servers"
+        this.tooltip = "Roles are bindings between servers and clients."
         return oldLabel !== this.label || oldDescription !== this.description
     }
 
-    async resolveTreeItem(token: vscode.CancellationToken) {
-        this.update()
-        const roles = this._client?.roles || []
-        this.tooltip = toMarkdownString(`
-## roles
-
-${roles
-    .map(
-        role =>
-            `-  ${role.name}, ${serviceName(role.serviceClass)}: ${
-                role.deviceId !== "0000000000000000"
-                    ? `${role.deviceId}[${role.serviceIndex}]`
-                    : "missing"
-            }`
-    )
-    .join("\n")}`)
-        return this
-    }
-
     protected createChildrenTreeItems(): JDomTreeItem[] {
-        return []
+        const roles = this._client?.roles || []
+        const nodes = roles.map(
+            role => new JDomRoleTreeItem(this, this.service, role, this.props)
+        )
+        return nodes
     }
 }
 
