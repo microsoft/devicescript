@@ -56,13 +56,14 @@ Below we list supported and unsupported langauge features.
 -   file-based modules (`import * from ...`, `import { foo } from ...` etc)
 -   array/object destructuring in parameters and definitions (not in assignments yet)
 -   optional chaining (`a?.b.c`, `foo.bar?.()`, `foo?.[1]`, etc)
+-   static fields and methods in classes
 
 ### Unsupported language features
 
 Things you may miss and we may implement:
 
 -   support of `enums` as run-time arrays
--   static fields and methods in classes
+-   initializer for static fields
 -   method-like properties (get/set accessors)
 -   tagged templates `` tag `text ${expression} more text`  `` are limited to special compiler features
     like buffer literals; regular templates are supported
