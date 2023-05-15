@@ -479,7 +479,10 @@ void devs_jd_role_changed(devs_ctx_t *ctx, jd_role_t *role) {
             break;
         }
     }
-    devs_fiber_poke(ctx);
+
+    // Can't execute here - it could lead to allocating roles and re-entering
+    // rolemgr which it doesn't like.
+    // devs_fiber_poke(ctx);
 }
 
 void devs_jd_reset_packet(devs_ctx_t *ctx) {
