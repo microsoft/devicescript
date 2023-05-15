@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.9](https://github.com/microsoft/devicescript/compare/v2.9.8...v2.9.9)
+
+> 15 May 2023
+
+- cleanout peripherical docs [`5f3340a`](https://github.com/microsoft/devicescript/commit/5f3340ad17a26ffde208ded7a11b4ce48b0bf572)
+- updated role tree item [`488fc11`](https://github.com/microsoft/devicescript/commit/488fc110efa6593c8b1650f6112470c51ab2f20c)
+- add rolemanager pretty render [`4f46198`](https://github.com/microsoft/devicescript/commit/4f4619894672e7c6960c895401d237068c0b9b1e)
+
 #### [v2.9.8](https://github.com/microsoft/devicescript/compare/v2.9.7...v2.9.8)
 
 > 10 May 2023

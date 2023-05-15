@@ -1,6 +1,6 @@
 {
     "name": "devicescript-cowsay",
-    "version": "2.9.9",
+    "version": "2.9.10",
     "main": "./src/index.ts",
     "private": false,
     "description": "DeviceScript package sample implementing the famous cow say rendering engine.",
