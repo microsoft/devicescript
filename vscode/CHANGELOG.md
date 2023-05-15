@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.8](https://github.com/microsoft/devicescript/compare/v2.9.7...v2.9.8)
+
+> 10 May 2023
+
+- document, cleanup some i2c drivers [`f2c21a7`](https://github.com/microsoft/devicescript/commit/f2c21a779a91f0528ec13889f80844b1e4153ce1)
+- add switch docs [`9ac7615`](https://github.com/microsoft/devicescript/commit/9ac76154312b26fbca9779abfc35952b9b77ffa2)
+- use named imports in docs [`dac3431`](https://github.com/microsoft/devicescript/commit/dac34315726b91eb8209e3d5105a52e49ca216de)
+
 #### [v2.9.7](https://github.com/microsoft/devicescript/compare/v2.9.6...v2.9.7)
 
 > 10 May 2023
