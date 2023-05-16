@@ -26,6 +26,7 @@ export function setupFlashBoards(dir = ".") {
 export interface FlashOptions {
     board?: string
     once?: boolean
+    refresh?: boolean
 }
 
 export interface FlashESP32Options extends FlashOptions {
@@ -197,7 +198,7 @@ export async function flashESP32(options: FlashESP32Options) {
 
     log(`esptool: ${options.esptool}`)
 
-    const cachePath = await fetchFW(board)
+    const cachePath = await fetchFW(board, options)
 
     const moff = /-(0x[a-f0-9]+)\.bin$/.exec(cachePath)
     if (!moff)
@@ -303,7 +304,7 @@ export async function flashESP32(options: FlashESP32Options) {
     }
 }
 
-async function fetchFW(board: DeviceConfig) {
+async function fetchFW(board: DeviceConfig, options: FlashOptions) {
     let dlUrl = board.$fwUrl
     let needsPatch = false
     if (!dlUrl) {
@@ -322,7 +323,7 @@ async function fetchFW(board: DeviceConfig) {
     const cachedFolder = ".devicescript/cache/"
     const cachePath = cachedFolder + bn
     const st = await stat(cachePath, { bigint: false }).catch<Stats>(_ => null)
-    if (st && Date.now() - st.mtime.getTime() < 24 * 3600 * 1000) {
+    if (!options.refresh && st && Date.now() - st.mtime.getTime() < 24 * 3600 * 1000) {
         log(`using cached ${cachePath}`)
     } else {
         log(`fetch ${dlUrl}`)
@@ -484,7 +485,7 @@ export async function flashRP2040(options: FlashRP2040Options) {
         options.drive = drives[0]
     }
     log(`using drive ${options.drive}`)
-    const fn = await fetchFW(board)
+    const fn = await fetchFW(board, options)
     const buf = readFileSync(fn)
     log(`cp ${fn} ${options.drive}`)
     await writeFile(join(options.drive, "fw.uf2"), buf)

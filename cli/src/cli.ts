@@ -261,6 +261,7 @@ export async function mainCli() {
         if (!arch) {
             r.option("-b, --board <board-id>", "specify board to flash")
             r.option("--once", "do not wait for the board to be connected")
+            r.option("-r, --refresh", "discard cached firmware image, even if less than 24h old")
         }
         r.addHelpText("after", () => {
             setupFlashBoards()
