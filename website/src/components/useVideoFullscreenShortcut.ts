@@ -22,17 +22,12 @@ export default function useVideoFullscreenShortcut() {
         if (typeof document === "undefined") return
 
         const handler = async (ev: KeyboardEvent) => {
-            console.log({ ev })
             if (ev.code !== "KeyF") return
 
             if (document.fullscreenElement) {
                 await document.exitFullscreen?.()
             } else {
                 const videos = getVisibleVideos()
-                console.log({
-                    videos,
-                    rects: videos.map(v => v.getClientRects()),
-                })
                 const video = videos[0]
                 await video?.requestFullscreen?.({ navigationUI: "show" })
             }
