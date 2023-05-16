@@ -8,6 +8,8 @@ import HeroImage from "@site/src/components/HeroImage"
 
 import styles from "./index.module.css"
 import StaticVideo from "../components/StaticVideo"
+import useVideoFullscreenShortcut from "../components/useVideoFullscreenShortcut"
+
 const videoStyle: CSSProperties = {
     borderRadius: "0.5rem",
     marginTop: "2rem",
@@ -17,6 +19,7 @@ const videoStyle: CSSProperties = {
 
 function HomepageHeader() {
     const { siteConfig } = useDocusaurusContext()
+    useVideoFullscreenShortcut()
     return (
         <header className={clsx("hero hero--primary", styles.heroBanner)}>
             <div className="container">
