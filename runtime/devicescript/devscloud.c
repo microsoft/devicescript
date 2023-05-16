@@ -23,10 +23,16 @@ static void devscloud_upload(srv_t *state, int type, jd_packet_t *pkt) {
         LOG("invalid cloud upload format");
         return;
     }
+    if (!state->api->is_connected())
+        return;
     int r =
         state->api->send_message(type, (char *)pkt->data, pkt->data + ep, pkt->service_size - ep);
-    if (r)
+    if (r) {
         LOG("failed upload");
+        jd_blink(JD_BLINK_CLOUD_ERROR);
+    } else {
+        jd_blink(JD_BLINK_CLOUD_UPLOADED);
+    }
 }
 
 void devscloud_handle_packet(srv_t *state, jd_packet_t *pkt) {
