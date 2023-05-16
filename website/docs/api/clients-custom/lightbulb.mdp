@@ -1,11 +1,35 @@
+### on {#cmd:on}
+
+Turns on of the light bulb with an optional intensity value.
+
+```ts
+import { LightBulb } from "@devicescript/core"
+const lightBulb = new LightBulb()
+
+// highlight-next-line
+await lightBulb.on(0.5)
+```
+
+### off {#cmd:off}
+
+Turns off of the light bulb, same as writing 0 to the intensity register.
+
+```ts
+import { LightBulb } from "@devicescript/core"
+const lightBulb = new LightBulb()
+
+// highlight-next-line
+await lightBulb.off()
+```
+
 ### toggle {#cmd:toggle}
 
 The toggle method flips the brightness state.
 
 ```ts
 import { LightBulb } from "@devicescript/core"
-
 const lightBulb = new LightBulb()
-// ...
+
+// highlight-next-line
 await lightBulb.toggle()
 ```

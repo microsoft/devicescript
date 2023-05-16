@@ -1,5 +1,6 @@
 import { describe, expect, test } from "@devicescript/test"
-import { colorBuffer, rgb } from "."
+import { colorBuffer, rgb, setStatusLight, uptime } from "."
+import { delay } from "@devicescript/core"
 
 describe("rgb", () => {
     test("0,0,0", () => {
@@ -31,5 +32,16 @@ describe("colorbuffer", () => {
         const buf = colorBuffer(4)
         buf.setBarGraph(5, 10)
         console.log(buf.buffer)
+    })
+})
+
+describe("control", () => {
+    test("uptime", async () => {
+        console.log({ uptime: await uptime() })
+    })
+    test("setStatusLight", async () => {
+        await setStatusLight(0xff0000)
+        await delay(100)
+        await setStatusLight(0x00ff00)
     })
 })

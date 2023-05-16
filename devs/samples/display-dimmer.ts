@@ -10,24 +10,14 @@ pot.reading.subscribe(async p => {
     await ledD.intensity.write(p * 0.3)
 })
 
-declare module "@devicescript/core" {
-    interface Led {
-        setAllColors(r: number, g: number, b: number): Promise<void>
-    }
-}
-
-ds.Led.prototype.setAllColors = async function (r, g, b) {
-    await this.setAll(r, g, b)
-}
-
 ledD.binding().subscribe(async () => {
-    await ledD.setAllColors(0.9, 1, 0)
+    await ledD.setAll(0xff0000)
 })
 
 btn.down.subscribe(async () => {
-    await ledD.setAll(1, 0, 1)
+    await ledD.setAll(0xff00ff)
 })
 
 btn.up.subscribe(async () => {
-    await ledD.setAll(0, 0, 1)
+    await ledD.setAll(0x0000ff)
 })

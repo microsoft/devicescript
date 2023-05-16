@@ -1,4 +1,4 @@
-import { AsyncValue, Control, sleep } from "@devicescript/core"
+import { Control } from "@devicescript/core"
 
 let _ctrl: Control
 /**
@@ -21,25 +21,23 @@ export async function standby(millis: number): Promise<void> {
 }
 
 /**
- * Return a function that will run the argument at most once.
+ * Sets the status light to the specified color, or brightness if monochrome LED.
+ * The color may be overriden by internal DeviceScript status updated.
+ * @param color RGB color
  */
-export function memoize<T>(f: () => AsyncValue<T>): () => Promise<T> {
-    let r: T
-    let state = 0
-    return async () => {
-        if (state === 0) {
-            state = 1
-            try {
-                r = await f()
-                state = 2
-            } catch (e: any) {
-                r = e
-                state = 3
-            }
-        } else {
-            while (state < 2) await sleep(5)
-        }
-        if (state === 2) return r
-        else throw r
-    }
+export async function setStatusLight(color: number): Promise<void> {
+    const ctrl = currentControl()
+    const r = (color >> 16) & 0xff
+    const g = (color >> 8) & 0xff
+    const b = color & 0xff
+
+    await ctrl.setStatusLight(r, g, b, 0)
+}
+
+/**
+ * Uptime in microseconds (us).
+ */
+export async function uptime() {
+    const ctrl = currentControl()
+    return await ctrl.uptime.read()
 }

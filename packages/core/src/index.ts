@@ -2,9 +2,13 @@
 // they are only exported via the ambient declarations
 // we import the modules, as they assign to various prototypes
 import "./utils"
-import "./clientcmds"
 import "./timeouts"
 import "./array"
 import "./events"
 import "./jacdac"
 import "./led"
+import "./lightbulb"
+import "./rotaryencoder"
+import "./button"
+import "./magneticfieldlevel"
+import "./buzzer"
