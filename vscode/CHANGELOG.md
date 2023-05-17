@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.10](https://github.com/microsoft/devicescript/compare/v2.9.9...v2.9.10)
+
+> 15 May 2023
+
+- fix crash in role mgr; bump jd-c [`3bb6e63`](https://github.com/microsoft/devicescript/commit/3bb6e6300487668f24b72dce4166790babd1f5ee)
+- docs: statics supported [`3ef6df2`](https://github.com/microsoft/devicescript/commit/3ef6df29ee3b4d21fa253bec2a373667c210c8dc)
+
 #### [v2.9.9](https://github.com/microsoft/devicescript/compare/v2.9.8...v2.9.9)
 
 > 15 May 2023
