@@ -49,8 +49,10 @@ export default function StaticVideo(props: {
                     await document.exitFullscreen?.()
             } else {
                 const current = getVisibleVideos()[0]
-                if (current === video)
-                    await video?.requestFullscreen?.({ navigationUI: "show" })
+                if (current === video) {
+                    video.focus?.()
+                    await video.requestFullscreen?.({ navigationUI: "show" })
+                }
             }
         }
         document.addEventListener("keydown", handler)
