@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.11](https://github.com/microsoft/devicescript/compare/v2.9.10...v2.9.11)
+
+> 17 May 2023
+
+- cleanup client commands [`99bd7d8`](https://github.com/microsoft/devicescript/commit/99bd7d89964a4ebd7c8ce6a2ce7d947f78a5f77c)
+- support F shortcut in all videos [`f923ab9`](https://github.com/microsoft/devicescript/commit/f923ab95d0b1cfaacbab17131b3ed0666874dfe2)
+- support F key for full screen [`b23be3e`](https://github.com/microsoft/devicescript/commit/b23be3ed6f9dae0ebcab661a2f69ada725278415)
+
 #### [v2.9.10](https://github.com/microsoft/devicescript/compare/v2.9.9...v2.9.10)
 
 > 15 May 2023
