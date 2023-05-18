@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@devicescript/test"
-import { colorBuffer, rgb, setStatusLight, uptime } from "."
+import { pixelBuffer, rgb, setStatusLight, uptime } from "."
 import { delay } from "@devicescript/core"
 
 describe("rgb", () => {
@@ -19,18 +19,23 @@ describe("rgb", () => {
 
 describe("colorbuffer", () => {
     test("setpixelcolor", () => {
-        const buf = colorBuffer(3)
-        buf.setPixelColor(1, 0x123456)
-        expect(buf.getPixelColor(1)).toBe(0x123456)
+        const buf = pixelBuffer(3)
+        buf.setColor(1, 0x123456)
+        expect(buf.getColor(1)).toBe(0x123456)
     })
     test("setpixelcolor negative", () => {
-        const buf = colorBuffer(3)
-        buf.setPixelColor(-1, 0x123456)
-        expect(buf.getPixelColor(-1)).toBe(0x123456)
+        const buf = pixelBuffer(3)
+        buf.setColor(-1, 0x123456)
+        expect(buf.getColor(-1)).toBe(0x123456)
     })
     test("setbargraph", () => {
-        const buf = colorBuffer(4)
+        const buf = pixelBuffer(4)
         buf.setBarGraph(5, 10)
+        console.log(buf.buffer)
+    })
+    test("gradient", () => {
+        const buf = pixelBuffer(4)
+        buf.setGradient(0xff0000, 0x00ff00)
         console.log(buf.buffer)
     })
 })
