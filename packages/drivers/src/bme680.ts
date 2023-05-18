@@ -10,7 +10,6 @@ import { I2CSensorDriver } from "./driver"
 
 // based on https://github.com/adafruit/Adafruit_CircuitPython_BME680/blob/main/adafruit_bme680.py
 
-const BME680_ADDR = 0x77
 const BME680_THROTTLE = 100
 
 const BME680_CHIPID = 0x61
@@ -103,8 +102,8 @@ class BME680Driver extends I2CSensorDriver<{
     private _LOOKUP_TABLE_1: number[]
     private _LOOKUP_TABLE_2: number[]
 
-    constructor() {
-        super(BME680_ADDR, { readCacheTime: BME680_THROTTLE })
+    constructor(addr: 0x77 | 0x76) {
+        super(addr, { readCacheTime: BME680_THROTTLE })
     }
 
     override async initDriver(): Promise<void> {
@@ -311,7 +310,7 @@ class BME680Driver extends I2CSensorDriver<{
 }
 
 /**
- * Start driver for Bosch BME680 temperature/humidity/pressure/gas sensor at I2C `0x77`.
+ * Start driver for Bosch BME680 temperature/humidity/pressure/gas sensor at I2C `0x76` (default) or `0x77`.
  * @link https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme680-ds001.pdf Datasheet
  * @link https://www.adafruit.com/product/3660 Adafruit
  * @ds-part Bosch BME68
@@ -319,15 +318,22 @@ class BME680Driver extends I2CSensorDriver<{
  * @throws DriverError
  */
 export async function startBME680(options?: {
+    address?: 0x77 | 0x76
     temperatureName?: string
     humidityName?: string
     pressureName?: string
     airQualityIndexName?: string
     baseName?: string
 }) {
-    const { baseName, temperatureName, humidityName, pressureName, airQualityIndexName } =
-        options || {}
-    const driver = new BME680Driver()
+    const {
+        baseName,
+        temperatureName,
+        humidityName,
+        pressureName,
+        airQualityIndexName,
+        address,
+    } = options || {}
+    const driver = new BME680Driver(address || 0x76)
     await driver.init()
     return {
         temperature: startTemperature({
