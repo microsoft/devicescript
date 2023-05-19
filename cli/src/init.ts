@@ -130,14 +130,22 @@ export const bus = createWebSocketBus({
 `,
     "sim/README.md": `# Simulators (node.js)
 
-This folder contains a Node.JS/TypeScript application that will be executed side-by-side with
+This folder contains a Node.JS/TypeScript application that can be executed side-by-side with
 the DeviceScript debugger and simulators. The application uses the [Jacdac TypeScript package](https://microsoft.github.io/jacdac-docs/clients/javascript/)
 to communicate with DeviceScript.
 
-The default entry point file is \`app.ts\`, which uses the Jacdac bus from \`runtime.ts\` to communicate
+The default entry point file is \`./sim/app.ts\`, which uses the Jacdac bus from \`./sim/runtime.ts\` to communicate
 with the rest of the DeviceScript execution.
 
-Feel free to modify to your needs and taste.
+## Editing and using the sim
+
+-  open a new terminal
+-  launch the simulator in watch mode (restarts on every change)
+
+    yarn watch:sim
+
+-  edit the DeviceScript part of the application as usual. The sim process will automatically connect
+to the VS Code extension
 `,
     "sim/app.ts": `import { bus } from "./runtime"\n\n`,
     "sim/tsconfig.json": {
