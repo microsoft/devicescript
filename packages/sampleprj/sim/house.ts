@@ -23,7 +23,6 @@ import {
     addServiceProvider,
 } from "jacdac-ts"
 import { bus } from "./runtime"
-import { parse, unparse } from "papaparse"
 
 const HEAT_CAPACITY_AIR = 1005 // J/(kg*K)
 const DENSITY_AIR = 1.225 // kg/m^3
@@ -74,6 +73,7 @@ export function startHouse() {
         isActive: values => !!values?.[0],
     })
     const indoorTemperature = new AnalogSensorServer(SRV_TEMPERATURE, {
+        instanceName: "indoor",
         readingValues: [21.5],
         streamingInterval: 1000,
         minReading: -5,
@@ -82,6 +82,7 @@ export function startHouse() {
         variant: TemperatureVariant.Indoor,
     })
     const outdoorTemperature = new AnalogSensorServer(SRV_TEMPERATURE, {
+        instanceName: "outdoor",
         readingValues: [21.5],
         streamingInterval: 1000,
         minReading: -40,

@@ -482,6 +482,15 @@ class JDomServiceTreeItem extends JDomTreeItem {
         return this.node as JDService
     }
 
+    mount(): void {
+        super.mount()
+        this.subscribe(
+            this.service.register(SystemReg.InstanceName),
+            REPORT_UPDATE,
+            this.handleChange
+        )
+    }
+
     getChildren(): Thenable<JDomTreeItem[]> {
         const nodeKindOrder: Record<string, number> = {
             [REGISTER_NODE_NAME]: 0,
@@ -552,10 +561,12 @@ ${snippet}
         const oldLabel = this.label
         const oldDescription = this.description
 
+        const instanceName = service.instanceName
+
         this.label = this.props.fullName
             ? this.node.friendlyName
             : specification?.name?.toLocaleLowerCase() ?? this.node.name
-        this.description = role || ""
+        this.description = [instanceName, role].filter(n => !!n).join(", ")
 
         return oldLabel !== this.label || oldDescription !== this.description
     }
