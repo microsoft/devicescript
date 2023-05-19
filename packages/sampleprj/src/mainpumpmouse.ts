@@ -6,7 +6,7 @@ const mouse = new ds.HidMouse()
 // listen for pressure changes
 sensor.reading.subscribe(async () => {
     // read sensor reading
-    const pressure = await sensor.pressure.read()
+    const pressure = await sensor.reading.read()
     console.log(pressure)
     // user blows in straw
     if (pressure > 1400) {
