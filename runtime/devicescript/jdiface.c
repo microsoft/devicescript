@@ -375,6 +375,9 @@ bool devs_jd_should_run(devs_fiber_t *fiber) {
     case DEVS_PKT_KIND_SEND_RAW_PKT:
         return handle_send_raw_pkt(fiber);
 
+    case DEVS_PKT_KIND_AWAITING:
+        return *fiber->pkt_data.awaiting ? RESUME_USER_CODE : KEEP_WAITING;
+
     default:
         JD_PANIC();
     }

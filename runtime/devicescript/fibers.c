@@ -175,6 +175,18 @@ void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time) {
     devs_fiber_yield(fiber->ctx);
 }
 
+void devs_fiber_await(devs_fiber_t *fib, uint8_t *awaiting) {
+    *awaiting = 0;
+    fib->pkt_kind = DEVS_PKT_KIND_AWAITING;
+    fib->pkt_data.awaiting = awaiting;
+    devs_fiber_sleep(fib, 0xffffffff);
+}
+
+void devs_fiber_await_done(uint8_t *awaiting) {
+    *awaiting = 1;
+    JD_WAKE_MAIN();
+}
+
 static void free_fiber(devs_fiber_t *fiber) {
     devs_jd_clear_pkt_kind(fiber);
     devs_ctx_t *ctx = fiber->ctx;
@@ -438,10 +450,12 @@ static int devs_fiber_wake_some(devs_ctx_t *ctx) {
     devs_fiber_t *fibmin = NULL;
 
     for (devs_fiber_t *fiber = ctx->fibers; fiber; fiber = fiber->next) {
-        if (fiber->role_wkp) {
+        if (fiber->role_wkp ||
+            (fiber->pkt_kind == DEVS_PKT_KIND_AWAITING && *fiber->pkt_data.awaiting)) {
             fibmin = fiber;
             break;
         }
+
         if (fiber->wake_time && fiber->wake_time <= now_) {
             if (fibmin == NULL || fibmin->wake_time > fiber->wake_time)
                 fibmin = fiber;

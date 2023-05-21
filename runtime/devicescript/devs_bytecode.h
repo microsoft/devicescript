@@ -261,7 +261,7 @@
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC 38
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE 39
 
-#define DEVS_BUILTIN_STRING___MAX 169
+#define DEVS_BUILTIN_STRING___MAX 171
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -432,6 +432,8 @@
 #define DEVS_BUILTIN_STRING_DELAY 167
 #define DEVS_BUILTIN_STRING_FROMCHARCODE 168
 #define DEVS_BUILTIN_STRING__ALLOCROLE 169
+#define DEVS_BUILTIN_STRING_SPICONFIGURE 170
+#define DEVS_BUILTIN_STRING_SPIXFER 171
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -475,7 +477,7 @@
         "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended",     \
         "reboot", "server", "spec", "ServiceSpec", "classIdentifier", "lookup", "PacketSpec",      \
         "parent", "response", "ServerInterface", "_onServerPacket", "_serverSend",                 \
-        "notImplemented", "delay", "fromCharCode", "_allocRole"
+        "notImplemented", "delay", "fromCharCode", "_allocRole", "spiConfigure", "spiXfer"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

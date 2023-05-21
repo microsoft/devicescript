@@ -4,10 +4,6 @@ import * as ds from "@devicescript/core"
 declare module "@devicescript/core" {
     export interface PinBase {
         /**
-         * hardware pin number
-         */
-        gpio: number
-        /**
          * Configure pin mode.
          * @param mode desired mode
          */

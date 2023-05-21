@@ -644,3 +644,5 @@ Only `true` and `false` values.
     delay = 167
     fromCharCode = 168
     _allocRole = 169
+    spiConfigure = 170
+    spiXfer = 171

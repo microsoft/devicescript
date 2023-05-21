@@ -33,6 +33,7 @@ typedef struct devs_activation devs_activation_t;
 #define DEVS_PKT_KIND_SEND_PKT 2
 #define DEVS_PKT_KIND_SEND_RAW_PKT 3
 #define DEVS_PKT_KIND_SUSPENDED 4
+#define DEVS_PKT_KIND_AWAITING 5
 
 typedef void (*devs_resume_cb_t)(devs_ctx_t *ctx, void *userdata);
 
@@ -49,6 +50,7 @@ typedef struct devs_fiber {
             uint16_t resend_timeout;
         } reg_get;
         value_t v;
+        uint8_t *awaiting;
     } pkt_data;
 
     uint8_t pkt_kind : 4;
@@ -247,6 +249,8 @@ void devs_fiber_set_wake_time(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_sleep(devs_fiber_t *fiber, unsigned time);
 void devs_fiber_termiante(devs_fiber_t *fiber);
 void devs_fiber_yield(devs_ctx_t *ctx);
+void devs_fiber_await(devs_fiber_t *fib, uint8_t *awaiting);
+void devs_fiber_await_done(uint8_t *awaiting);
 // if `args` is passed, `numparams==0`
 // otherwise, `numparams` arguments are sought on the_stack
 int devs_fiber_call_function(devs_fiber_t *fiber, unsigned numparams, devs_array_t *args);

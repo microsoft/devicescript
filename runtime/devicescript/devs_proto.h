@@ -19,7 +19,7 @@ typedef struct {
     } handler;
 } devs_builtin_function_t;
 
-#define DEVS_BUILTIN_MAX_ARGS 4
+#define DEVS_BUILTIN_MAX_ARGS 8 // not sure this does anything, except for the stack size
 #define DEVS_BUILTIN_FLAG_IS_PROPERTY 0x01
 #define DEVS_BUILTIN_FLAG_ASYNC_CALL 0x02
 #define DEVS_BUILTIN_FLAG_NO_SELF 0x04

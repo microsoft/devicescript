@@ -62,3 +62,5 @@ Math.log2 = function log2(x) {
     await fn()
     return await ds.suspend<ds.Packet>()
 }
+// this is overridden byt the gpio package
+;(ds as typeof ds).gpio = gpio => ({ gpio } as any)

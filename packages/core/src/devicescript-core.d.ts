@@ -519,6 +519,11 @@ declare module "@devicescript/core" {
 
     export interface PinBase {
         _pinBrand: unknown
+
+        /**
+         * Hardware pin number
+         */
+        gpio: number
     }
 
     /**

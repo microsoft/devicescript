@@ -281,7 +281,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 169,
+    __MAX = 171,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -452,6 +452,8 @@ export enum BuiltInString {
     DELAY = 167,
     FROMCHARCODE = 168,
     _ALLOCROLE = 169,
+    SPICONFIGURE = 170,
+    SPIXFER = 171,
 }
 
 export const OP_PRINT_FMTS = [
@@ -737,6 +739,8 @@ export const BUILTIN_STRING__VAL = [
     "delay",
     "fromCharCode",
     "_allocRole",
+    "spiConfigure",
+    "spiXfer",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
