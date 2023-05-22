@@ -422,11 +422,13 @@ Only `true` and `false` values.
 
     null = 12
 
+    image = 13
+
 ### Object_Types only used in static type info
 
-    any = 11
+    any = 14
 
-    void = 12
+    void = 15
 
 ## Enum: BuiltIn_Object
 
@@ -470,6 +472,8 @@ Only `true` and `false` values.
     DsServiceSpec_prototype = 37
     DsPacketSpec = 38
     DsPacketSpec_prototype = 39
+    Image = 40
+    Image_prototype = 41
 
 ## Enum: BuiltIn_String
 
@@ -646,3 +650,7 @@ Only `true` and `false` values.
     _allocRole = 169
     spiConfigure = 170
     spiXfer = 171
+    Image = 172
+    width = 173
+    height = 174
+    bpp = 175

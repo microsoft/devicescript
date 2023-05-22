@@ -84,7 +84,9 @@ static void stmt_callN(devs_activation_t *frame, devs_ctx_t *ctx, unsigned N) {
 }
 
 #define STMT_CALL(n, k)                                                                            \
-    static void n(devs_activation_t *frame, devs_ctx_t *ctx) { stmt_callN(frame, ctx, k); }
+    static void n(devs_activation_t *frame, devs_ctx_t *ctx) {                                     \
+        stmt_callN(frame, ctx, k);                                                                 \
+    }
 
 STMT_CALL(stmt1_call0, 0)
 STMT_CALL(stmt2_call1, 1)
@@ -479,6 +481,7 @@ static const uint8_t typeof_map[] = {
     [DEVS_OBJECT_TYPE_MAP] = DEVS_BUILTIN_STRING_OBJECT,
     [DEVS_OBJECT_TYPE_ARRAY] = DEVS_BUILTIN_STRING_OBJECT,
     [DEVS_OBJECT_TYPE_BUFFER] = DEVS_BUILTIN_STRING_OBJECT,
+    [DEVS_OBJECT_TYPE_IMAGE] = DEVS_BUILTIN_STRING_OBJECT,
     [DEVS_OBJECT_TYPE_ROLE] = DEVS_BUILTIN_STRING_OBJECT,
     [DEVS_OBJECT_TYPE_BOOL] = DEVS_BUILTIN_STRING_BOOLEAN,
     [DEVS_OBJECT_TYPE_FIBER] = DEVS_BUILTIN_STRING_OBJECT,

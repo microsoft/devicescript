@@ -185,6 +185,8 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
                                        devs_role_name(ctx, pkt->roleidx), pkt->service_command,
                                        pkt->payload->length);
         }
+        case DEVS_GC_TAG_IMAGE:
+            return devs_builtin_string(DEVS_BUILTIN_STRING_IMAGE);
         case DEVS_GC_TAG_SHORT_MAP:
         case DEVS_GC_TAG_HALF_STATIC_MAP:
         case DEVS_GC_TAG_MAP:

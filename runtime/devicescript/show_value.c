@@ -103,6 +103,9 @@ const char *devs_show_value0(devs_ctx_t *ctx, value_t v) {
         case DEVS_GC_TAG_BUFFER:
             fmt = "buffer";
             break;
+        case DEVS_GC_TAG_IMAGE:
+            fmt = "image";
+            break;
         case DEVS_GC_TAG_STRING_JMP:
         case DEVS_GC_TAG_STRING:
             fmt = "string";
