@@ -40,7 +40,7 @@ export default function StaticVideo(props: {
         if (typeof document === "undefined") return
 
         const handler = async (ev: KeyboardEvent) => {
-            if (ev.code !== "KeyF") return
+            if (ev.altKey || ev.ctrlKey || ev.code !== "KeyF") return
             const video = videoRef.current
             if (!video) return
 
