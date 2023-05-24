@@ -20,7 +20,7 @@ button.down.subscribe(() => {
 
 ## wait
 
-The `wait` method blocks the tread until the event is received.
+The `wait` method blocks the thread until the event is received.
 
 ```ts
 const button = new ds.Button()
