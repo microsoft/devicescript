@@ -36,16 +36,19 @@ const P0 = gpio(0)
 `digitalWrite` and `digitalRead` functions are provided for Arduino-like
 digital IO.
 
-### setMode
+### pinMode
 
 Sets the pin input/output and pull up/down mode.
 
 ```ts
 import { gpio } from "@devicescript/core"
 import { GPIOMode } from "@devicescript/core"
+// highlight-next-line
+import { pinMode } from "@devicescript/gpio"
 
 const pin = gpio(0)
-await setMode(pin, GPIOMode.Output)
+// highlight-next-line
+await pinMode(pin, GPIOMode.Output)
 ```
 
 ### digitalWrite
@@ -56,10 +59,10 @@ For digital output, you can use `digitalWrite` function.
 import { gpio } from "@devicescript/core"
 import { HIGH, GPIOMode } from "@devicescript/core"
 // highlight-next-line
-import { digitalWrite } from "@devicescript/gpio"
+import { pinMode, digitalWrite } from "@devicescript/gpio"
 
 const pin = gpio(0)
-await setMode(pin, GPIOMode.Output)
+await pinMode(pin, GPIOMode.Output)
 
 // start-highlight
 await digitalWrite(pin, true)
@@ -76,10 +79,10 @@ For digital input, you can use `digitalRead` function.
 import { gpio } from "@devicescript/core"
 import { GPIOMode } from "@devicescript/core"
 // highlight-next-line
-import { digitalRead } from "@devicescript/gpio"
+import { pinMode, digitalRead } from "@devicescript/gpio"
 
 const pin = gpio(0)
-await setMode(pin, GPIOMode.Input)
+await pinMode(pin, GPIOMode.Input)
 
 // start-highlight
 const value = await digitalRead(pin)
@@ -94,10 +97,10 @@ You can also subscribe to digital input changes.
 import { gpio } from "@devicescript/core"
 import { GPIOMode } from "@devicescript/core"
 // highlight-next-line
-import { subscribeDigital } from "@devicescript/gpio"
+import { pinMode, subscribeDigital } from "@devicescript/gpio"
 
 const pin = gpio(0)
-await setMode(pin, GPIOMode.Input)
+await pinMode(pin, GPIOMode.Input)
 
 // start-highlight
 subscribeDigital(pin, value => console.data({ value }))
