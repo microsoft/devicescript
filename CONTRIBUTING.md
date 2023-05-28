@@ -39,7 +39,7 @@ nvm use 18
 yarn dev
 ```
 
--   start `jacdac devtools` (the npm version) and let is running
+-   start `jacdac devtools` (the npm version) and let it run
 -   open this folder in VSCode; use "Reopen in Container" if needed
 -   start Terminal in VSCode
 -   run `yarn install`
