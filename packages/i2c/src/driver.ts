@@ -1,6 +1,12 @@
-import { AsyncValue, I2C, isSimulator, millis, sleep } from "@devicescript/core"
+import { I2C, isSimulator } from "@devicescript/core"
 import { i2c } from "@devicescript/i2c"
-import { DriverError, throttle } from "./core"
+
+export class I2CDriverError extends Error {
+    constructor(message?: string) {
+        super(message)
+        this.name = "DriverError"
+    }
+}
 
 export interface I2CDriverOptions {
     /**
@@ -12,7 +18,7 @@ export interface I2CDriverOptions {
 /**
  * A helper class to implement I2C drivers
  */
-export abstract class I2CDriver {
+export class I2CDriver {
     readonly devAddr: number
     readonly client: I2C
 
@@ -37,8 +43,8 @@ export abstract class I2CDriver {
         try {
             await this.initDriver()
         } catch (e: any) {
-            if (e instanceof DriverError) throw e
-            throw new DriverError(
+            if (e instanceof I2CDriverError) throw e
+            throw new I2CDriverError(
                 "I2C device not found or malfunctioning: " + e.message
             )
         }
@@ -46,9 +52,9 @@ export abstract class I2CDriver {
 
     /**
      * Initializes the I2C device
-     * @throws I2CError
+     * @throws I2CDriverError
      */
-    protected abstract initDriver(): Promise<void>
+    protected async initDriver(): Promise<void> {}
 
     /**
      * Execute I2C transaction
@@ -121,56 +127,4 @@ export abstract class I2CDriver {
     async writeBuf(b: Buffer): Promise<void> {
         return await this.client.writeBuf(this.devAddr, b)
     }
-}
-
-export interface I2CSensorDriverOptions extends I2CDriverOptions {
-    /**
-     * Data read throttle time in milliseconds
-     */
-    readCacheTime?: number
-}
-
-/**
- * A helper class to implement I2C sensor drivers
- */
-export abstract class I2CSensorDriver<TData> extends I2CDriver {
-    _data: TData
-    _dataTime = 0
-    _dataCacheTime: number
-
-    /**
-     * Instantiate a driver
-     * @param devAddr a 7 bit i2c address
-     * @param options
-     */
-    constructor(devAddr: number, options?: I2CSensorDriverOptions) {
-        super(devAddr, options)
-        const { readCacheTime } = options || {}
-        this._dataCacheTime = readCacheTime || 50
-    }
-
-    /**
-     * Throttled read of the sensor data
-     * @returns
-     */
-    async read(): Promise<TData> {
-        if (isSimulator()) return {} as any
-
-        // lock on reading data
-        while (this._dataTime === -1) await sleep(5)
-
-        // cache hit
-        if (millis() - this._dataTime < this._dataCacheTime) return this._data
-
-        // query sensor again, read data is throttled
-        this._dataTime = -1
-        this._data = await this.readData()
-        this._dataTime = millis()
-        return this._data
-    }
-
-    /**
-     * Perform the I2C transaction to read the sensor data
-     */
-    protected abstract readData(): AsyncValue<TData>
 }

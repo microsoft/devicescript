@@ -1,12 +1,5 @@
 import * as ds from "@devicescript/core"
 
-export class DriverError extends Error {
-    constructor(message?: string) {
-        super(message)
-        this.name = "DriverError"
-    }
-}
-
 export function throttle<T>(
     ms: number,
     f: () => ds.AsyncValue<T>

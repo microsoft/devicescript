@@ -1,6 +1,9 @@
 import * as ds from "@devicescript/core"
-import { DriverError } from "./core"
-import { I2CSensorDriver, I2CSensorDriverOptions } from "./driver"
+import {
+    I2CSensorDriver,
+    I2CSensorDriverOptions,
+    I2CDriverError,
+} from "@devicescript/i2c"
 
 export abstract class SHTDriver extends I2CSensorDriver<{
     humidity: number
@@ -14,7 +17,8 @@ export abstract class SHTDriver extends I2CSensorDriver<{
         await this.sendCmd(regAddr)
         if (wait) await ds.delay(wait)
         const buf = await this.readBuf(3)
-        if (shtCRC8(buf, 2) !== buf[2]) throw new DriverError("SHT CRC error")
+        if (shtCRC8(buf, 2) !== buf[2])
+            throw new I2CDriverError("SHT CRC error")
         return (buf[0] << 8) | buf[1]
     }
 

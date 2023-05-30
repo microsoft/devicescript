@@ -1,6 +1,5 @@
 import * as ds from "@devicescript/core"
-import { DriverError } from "./core"
-import { I2CSensorDriver } from "./driver"
+import { I2CSensorDriver, I2CDriverError } from "@devicescript/i2c"
 import { startSimpleServer } from "./servers"
 
 const LTR390UV_ADDR = 0x53
@@ -34,7 +33,7 @@ class LTR390Driver extends I2CSensorDriver<{
     override async initDriver() {
         const part = await this.readReg(LTR390UV_PART_ID)
         console.debug(`LTR390 part ${part}`)
-        if (part >> 4 !== 0xb) throw new DriverError(`can't find LTR390UV`)
+        if (part >> 4 !== 0xb) throw new I2CDriverError(`can't find LTR390UV`)
         await this.writeReg(LTR390UV_MEAS_RATE, 0x22) // 18bit/100ms
         this.gain = 3
         await this.writeReg(LTR390UV_GAIN, 0x01)

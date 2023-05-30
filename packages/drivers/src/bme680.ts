@@ -5,8 +5,7 @@ import {
     startTemperature,
 } from "./servers"
 import { delay } from "@devicescript/core"
-import { DriverError } from "./core"
-import { I2CSensorDriver } from "./driver"
+import { I2CSensorDriver, I2CDriverError } from "@devicescript/i2c"
 
 // based on https://github.com/adafruit/Adafruit_CircuitPython_BME680/blob/main/adafruit_bme680.py
 
@@ -111,7 +110,8 @@ class BME680Driver extends I2CSensorDriver<{
         await delay(5)
         const id = await this.readReg(BME680_REG_CHIPID)
         console.debug(`BME680 id=${id}`)
-        if (id !== BME680_CHIPID) throw new DriverError(`BME680: wrong chip id`)
+        if (id !== BME680_CHIPID)
+            throw new I2CDriverError(`BME680: wrong chip id`)
         this.chipVariant = await this.readReg(BME680_REG_VARIANT)
         await this.readCalibration()
 

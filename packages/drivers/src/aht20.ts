@@ -1,8 +1,7 @@
 import * as ds from "@devicescript/core"
-import { DriverError } from "./core"
 import { startTemperatureHumidity } from "./servers"
-import { I2CSensorDriver } from "./driver"
 import { sleep } from "@devicescript/core"
+import { I2CSensorDriver, I2CDriverError } from "@devicescript/i2c"
 
 const AHT20_ADDRESS = 0x38
 const AHT20_BUSY = 0x80
@@ -31,7 +30,7 @@ class AHT20Driver extends I2CSensorDriver<{
         await this.writeBuf(hex`E10800`) // calibrate
         await this.waitBusy()
         if (!((await this.status()) & AHT20_OK))
-            throw new DriverError("can't init AHT20")
+            throw new I2CDriverError("can't init AHT20")
     }
 
     override async readData() {

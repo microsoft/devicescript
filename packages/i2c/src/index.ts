@@ -1,5 +1,7 @@
 export * from "./client"
 export { I2CError } from "./i2c_impl"
+export * from "./driver"
+export * from "./sensor"
 
 declare module "@devicescript/core" {
     interface I2C {

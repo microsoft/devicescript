@@ -1,7 +1,6 @@
 import { SHTDriver } from "./sht"
 import { startTemperatureHumidity } from "./servers"
 import { delay, sleep } from "@devicescript/core"
-import { DriverError } from "./core"
 
 const SHTC3_ADDR = 0x70
 const SHTC3_MEASURE_NORMAL = 0x7866
