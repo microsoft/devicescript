@@ -2,6 +2,7 @@ import { I2CDriver, I2CDriverError, I2CDriverOptions } from "@devicescript/i2c"
 import { GPIOMode, InputPin, sleep } from "@devicescript/core"
 import "@devicescript/gpio"
 
+export const SEESAW_ADDRESS = 0x49
 const _STATUS_BASE = 0x00
 const _GPIO_BASE = 0x01
 const _SERCOM0_BASE = 0x02
@@ -57,7 +58,8 @@ export const OUTPUT = 0x01
 export const INPUT_PULLUP = 0x02
 export const INPUT_PULLDOWN = 0x03
 
-export interface SeesawDriverOptions extends I2CDriverOptions {
+export interface SeesawDriverOptions {
+    driver?: I2CDriver
     flow?: InputPin
     reset?: boolean
 }
@@ -67,26 +69,31 @@ export interface SeesawDriverOptions extends I2CDriverOptions {
  * @link from https://github.com/adafruit/Adafruit_Seesaw/blob/master/Adafruit_seesaw.cpp
  */
 export class SeesawDriver {
-    private readonly _driver: I2CDriver
+    readonly driver: I2CDriver
     private readonly _flow?: InputPin
     private readonly _reset?: boolean
 
     private _hardwareID: number
 
-    constructor(addr: number = 0x49, options?: SeesawDriverOptions) {
-        this._driver = new I2CDriver(addr, options)
+    /**
+     * Instantiates a new seesaw driver
+     * @param options
+     */
+    constructor(options?: SeesawDriverOptions) {
+        this.driver = options?.driver || new I2CDriver(SEESAW_ADDRESS)
         this._flow = options?.flow
+        this._reset = !!options?.reset
     }
 
     /**
      * Initializes the seesaw connection
      */
     async init(): Promise<void> {
-        await this._driver.init()
+        await this.driver.init()
 
         if (this._reset) {
             await this.softwareReset()
-            await this._driver.init()
+            await this.driver.init()
         }
 
         if (this._flow) this._flow.setMode(GPIOMode.Input)
@@ -161,7 +168,7 @@ export class SeesawDriver {
         fullBuf.blitAt(2, buf, 0, buf.length)
 
         await this.waitFlowReady()
-        await this._driver.xfer(fullBuf, 0)
+        await this.driver.xfer(fullBuf, 0)
     }
 
     /**
@@ -207,7 +214,7 @@ export class SeesawDriver {
         if (delay > 0) await sleep(delay / 1000) // todo: delayUs
         await this.waitFlowReady()
 
-        const res = await this._driver.readBuf(num)
+        const res = await this.driver.readBuf(num)
         buf.blitAt(0, res, 0, res.length)
 
         return res.length

@@ -1,0 +1,25 @@
+---
+sidebar_position: 50
+---
+
+# Adafruit Seesaw
+
+The `@devicescript/seesaw` package provides basic support for Adafruit Seesaw. Adafruit Seesaw is an I2C protocol to communicate with multiple sensors and devices over a single wire.
+
+-   [Documentation on adafruit.com](https://learn.adafruit.com/adafruit-seesaw-atsamd09-breakout/overview)
+
+:::tip
+
+The package is very "base" and is in need of community contributions to add support for the various devices that can be connected to the seesaw.
+
+:::
+
+## Usage
+
+Instantiate the driver
+
+```ts
+import { SeesawDriver } from "@devicescript/seesaw"
+
+const seesaw = new SeesawDriver()
+```

@@ -5,6 +5,7 @@ to interact with [Adafruit Seesaw peripherals](https://learn.adafruit.com/adafru
 
 -   [Read documentation](https://microsoft.github.io/devicescript/developer/seesaw)
 
+> Under construction and looking for contributors...
 
 ## Contributing
 
