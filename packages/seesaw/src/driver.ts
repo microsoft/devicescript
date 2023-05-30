@@ -96,7 +96,7 @@ export class SeesawDriver {
             await this.driver.init()
         }
 
-        if (this._flow) this._flow.setMode(GPIOMode.Input)
+        if (this._flow) await this._flow.setMode(GPIOMode.Input)
 
         this._hardwareID = await this.read8(_STATUS_BASE, _STATUS_HW_ID)
     }
