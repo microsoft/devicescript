@@ -57,8 +57,8 @@ class LTR390Driver extends I2CSensorDriver<{
 
 /**
  * Start driver for LITEON LTR-390UV-01 UV/ambient light sensor at I2C address `0x53`.
- * @ds-part LITEON LTR-390UV-01
- * @ds-services uvIndex, illuminance
+ * @devsPart LITEON LTR-390UV-01
+ * @devsServices uvIndex, illuminance
  * @see {@link https://optoelectronics.liteon.com/upload/download/DS86-2015-0004/LTR-390UV_Final_%20DS_V1%201.pdf | Datasheet}
  * @throws DriverError
  */

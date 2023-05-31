@@ -4,7 +4,7 @@ import { Host } from "./format"
 import { preludeFiles } from "./specgen"
 import { camelize, upperCamel } from "./util"
 import { ServerInfoFile } from "@devicescript/interop"
-import { getSymTags } from "./compiler"
+import { TSDOC_PART, TSDOC_SERVICES, getSymTags } from "./compiler"
 
 export function serverInfo(host: Host) {
     const { program } = buildAST(
@@ -42,9 +42,9 @@ export function serverInfo(host: Host) {
     function customServer(stmt: ts.FunctionDeclaration) {
         const sym = checker.getSymbolAtLocation(stmt.name)
         const tags = getSymTags(sym, "")
-        if (!tags["ds-part"]) return
+        if (!tags[TSDOC_PART]) return
 
-        const serv = (tags?.["ds-services"] ?? "")
+        const serv = (tags?.[TSDOC_SERVICES] ?? "")
             .split(/[,;\s]+/)
             .filter(Boolean)
             .map(servName => {
@@ -91,7 +91,7 @@ export function serverInfo(host: Host) {
         const snippet = `const ${varName} = ${isAwait}${sym.name}()\n`
 
         info.servers.push({
-            label: tags["ds-part"] ?? sym.name.slice("start".length),
+            label: tags[TSDOC_PART] ?? sym.name.slice("start".length),
             detail,
             startName: sym.name,
             classIdentifiers: serv.length

@@ -103,6 +103,9 @@ export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
 export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
+export const TSDOC_PART = "devsPart"
+export const TSDOC_SERVICES = "devsServices"
+
 const coreModule = "@devicescript/core"
 
 const globalFunctions = [
