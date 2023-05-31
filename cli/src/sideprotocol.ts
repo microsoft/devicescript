@@ -11,6 +11,7 @@ import type {
     AddSimOptions,
     AddNpmOptions,
     AddTestOptions,
+    AddSettingsOptions,
 } from "./init"
 
 export interface SideReq<T extends string = string> {
@@ -115,6 +116,12 @@ export interface SideAddNpmReq extends SideReq<"addNpm"> {
     data: AddNpmOptions
 }
 export interface SideAddNpmResp extends SideResp<"addNpm"> {
+    data: AddResponse
+}
+export interface SideAddSettingsReq extends SideReq<"addSettings"> {
+    data: AddSettingsOptions
+}
+export interface SideAddSettingsResp extends SideResp<"addSettings"> {
     data: AddResponse
 }
 export interface SideAddTestReq extends SideReq<"addTest"> {
