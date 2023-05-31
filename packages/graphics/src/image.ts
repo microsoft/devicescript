@@ -1,15 +1,5 @@
 import * as ds from "@devicescript/core"
 
-/*
-StaticImage type for img`...`
-ds.native() as method body - check in compiler
-
-is the view interesting?
-staticimage contains size I guess
-
-
-*/
-
 export type color = number
 
 /**

@@ -1,5 +1,8 @@
 #include "devs_internal.h"
 
+// based on https://github.com/microsoft/pxt-common-packages/blob/master/libs/screen/image.cpp
+// (mostly used in MakeCode Arcade https://arcade.makecode.com)
+
 static devs_gimage_t *devs_to_image(devs_ctx_t *ctx, value_t s) {
     devs_gimage_t *r = devs_handle_ptr_value(ctx, s);
 
