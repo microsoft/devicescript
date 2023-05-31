@@ -1641,7 +1641,10 @@ class Program implements TopOpWriter {
     }
 
     private emitFunctionBody(stmt: FunctionLike, proc: Procedure) {
-        if (ts.isBlock(stmt.body)) {
+        if (!stmt.body) {
+            const wr = this.writer
+            wr.emitCall(wr.dsMember(BuiltInString.NOTIMPLEMENTED))
+        } else if (ts.isBlock(stmt.body)) {
             this.emitStmt(stmt.body)
             if (!this.writer.justHadReturn())
                 this.writer.emitStmt(Op.STMT1_RETURN, literal(undefined))
@@ -1831,6 +1834,8 @@ class Program implements TopOpWriter {
 
             if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
+                const tags = getSymTags(sym)
+                if (tags.hasOwnProperty("ds-native")) continue
                 const info: ProtoDefinition = {
                     className: this.nodeName(stmt),
                     methodName: this.forceName(mem.name),
@@ -2791,6 +2796,24 @@ class Program implements TopOpWriter {
             const wr = this.writer
             wr.emitCall(this.dsMember("gpio"), literal(gpio))
             return this.retVal()
+        }
+        if (tags["ds-native"]) {
+            const id = builtInObjByName["#" + tags["ds-native"]]
+            if (id === undefined) {
+                this.reportError(
+                    expr,
+                    "allowed names: " +
+                        Object.keys(builtInObjByName)
+                            .map(s => s.slice(1))
+                            .join(", "),
+                    ts.DiagnosticCategory.Message
+                )
+                throwError(
+                    expr,
+                    `invalid @ds-native tag '${tags["ds-native"]}'`
+                )
+            }
+            return this.writer.emitBuiltInObject(id)
         }
         return this.emitBuiltInConstByName(this.nodeName(expr))
     }

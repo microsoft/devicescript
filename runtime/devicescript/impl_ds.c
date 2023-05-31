@@ -192,3 +192,7 @@ void fun2_DeviceScript__allocRole(devs_ctx_t *ctx) {
         return; // OOM
     devs_ret(ctx, devs_value_from_handle(DEVS_HANDLE_TYPE_ROLE, r));
 }
+
+void fun0_DeviceScript_notImplemented(devs_ctx_t *ctx) {
+    devs_throw_generic_error(ctx, "body missing");
+}

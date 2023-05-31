@@ -289,6 +289,14 @@ value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...) {
     return devs_undefined;
 }
 
+value_t devs_throw_generic_error(devs_ctx_t *ctx, const char *format, ...) {
+    va_list arg;
+    va_start(arg, format);
+    devs_throw_internal_error(ctx, DEVS_BUILTIN_OBJECT_ERROR_PROTOTYPE, format, arg);
+    va_end(arg);
+    return devs_undefined;
+}
+
 value_t devs_throw_range_error(devs_ctx_t *ctx, const char *format, ...) {
     va_list arg;
     va_start(arg, format);

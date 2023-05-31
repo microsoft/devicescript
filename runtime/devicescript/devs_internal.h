@@ -345,6 +345,7 @@ void devs_throw(devs_ctx_t *ctx, value_t exn, unsigned flags);
 value_t devs_throw_type_error(devs_ctx_t *ctx, const char *format, ...);
 value_t devs_throw_range_error(devs_ctx_t *ctx, const char *format, ...);
 value_t devs_throw_syntax_error(devs_ctx_t *ctx, const char *format, ...);
+value_t devs_throw_generic_error(devs_ctx_t *ctx, const char *format, ...);
 value_t devs_throw_not_supported_error(devs_ctx_t *ctx, const char *what);
 value_t devs_throw_expecting_error_ext(devs_ctx_t *ctx, const char *what, value_t v);
 value_t devs_throw_expecting_error(devs_ctx_t *ctx, unsigned builtinstr, value_t v);

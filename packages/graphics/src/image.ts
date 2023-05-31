@@ -10,12 +10,15 @@ staticimage contains size I guess
 
 */
 
-type DsGraphics = typeof ds & {}
-
 export type color = number
 
-export declare class ImageNative {
-    protected constructor()
+/**
+ * Represents monochromatic or color 2D image.
+ * 
+ * @ds-native Image
+ */
+export declare class Image {
+    private constructor()
 
     /**
      * Get the width of the image
@@ -100,11 +103,6 @@ export declare class ImageNative {
     equals(other: Image): boolean
 
     /**
-     * Returns true if the image cannot be modified.
-     */
-    isReadOnly(): boolean
-
-    /**
      * Fills a circle
      */
     fillCircle(cx: number, cy: number, r: number, c: color): void
@@ -137,12 +135,6 @@ export declare class ImageNative {
         transparent: boolean,
         check: boolean
     ): boolean
-}
-
-export class Image extends ImageNative {
-    private constructor() {
-        super()
-    }
 
     /**
      * Allocate a new image, backed by the buffer is specified (otherwise a new buffer is allocated)
@@ -159,76 +151,95 @@ export class Image extends ImageNative {
         bpp: 1 | 4,
         init?: Buffer,
         offset?: number
-    ): Image {
-        return ds._native()
-    }
+    ): Image
+
+    //
+    // Non-native methods
+    //
 
     /**
      * Draw a circle
      */
-    drawCircle(cx: number, cy: number, r: number, c: color): void {
-        cx = cx | 0
-        cy = cy | 0
-        r = r | 0
-        // short cuts
-        if (r < 0) return
-
-        // Bresenham's algorithm
-        let x = 0
-        let y = r
-        let d = 3 - 2 * r
-
-        while (y >= x) {
-            this.set(cx + x, cy + y, c)
-            this.set(cx - x, cy + y, c)
-            this.set(cx + x, cy - y, c)
-            this.set(cx - x, cy - y, c)
-            this.set(cx + y, cy + x, c)
-            this.set(cx - y, cy + x, c)
-            this.set(cx + y, cy - x, c)
-            this.set(cx - y, cy - x, c)
-            x++
-            if (d > 0) {
-                y--
-                d += 4 * (x - y) + 10
-            } else {
-                d += 4 * x + 6
-            }
-        }
-    }
+    drawCircle(cx: number, cy: number, r: number, c: color): void
 
     /**
      * Draw an empty rectangle
      */
-    drawRect(x: number, y: number, w: number, h: number, c: color): void {
-        if (w == 0 || h == 0) return
-        w--
-        h--
-        this.drawLine(x, y, x + w, y, c)
-        this.drawLine(x, y, x, y + h, c)
-        this.drawLine(x + w, y + h, x + w, y, c)
-        this.drawLine(x + w, y + h, x, y + h, c)
-    }
+    drawRect(x: number, y: number, w: number, h: number, c: color): void
 
     /**
      * Returns an image rotated by -90, 0, 90, 180, 270 deg clockwise
      */
-    rotated(deg: number): Image {
-        if (deg == -90 || deg == 270) {
-            let r = this.transposed()
-            r.flipY()
-            return r
-        } else if (deg == 180 || deg == -180) {
-            let r = this.clone()
-            r.flipX()
-            r.flipY()
-            return r
-        } else if (deg == 90) {
-            let r = this.transposed()
-            r.flipX()
-            return r
+    rotated(deg: number): Image
+}
+
+Image.prototype.drawCircle = function (
+    cx: number,
+    cy: number,
+    r: number,
+    c: color
+): void {
+    cx = cx | 0
+    cy = cy | 0
+    r = r | 0
+    // short cuts
+    if (r < 0) return
+
+    // Bresenham's algorithm
+    let x = 0
+    let y = r
+    let d = 3 - 2 * r
+
+    while (y >= x) {
+        this.set(cx + x, cy + y, c)
+        this.set(cx - x, cy + y, c)
+        this.set(cx + x, cy - y, c)
+        this.set(cx - x, cy - y, c)
+        this.set(cx + y, cy + x, c)
+        this.set(cx - y, cy + x, c)
+        this.set(cx + y, cy - x, c)
+        this.set(cx - y, cy - x, c)
+        x++
+        if (d > 0) {
+            y--
+            d += 4 * (x - y) + 10
         } else {
-            return null
+            d += 4 * x + 6
         }
+    }
+}
+
+Image.prototype.drawRect = function (
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    c: color
+): void {
+    if (w === 0 || h === 0) return
+    w--
+    h--
+    this.drawLine(x, y, x + w, y, c)
+    this.drawLine(x, y, x, y + h, c)
+    this.drawLine(x + w, y + h, x + w, y, c)
+    this.drawLine(x + w, y + h, x, y + h, c)
+}
+
+Image.prototype.rotated = function (deg: number): Image {
+    if (deg === -90 || deg === 270) {
+        let r = this.transposed()
+        r.flipY()
+        return r
+    } else if (deg === 180 || deg === -180) {
+        let r = this.clone()
+        r.flipX()
+        r.flipY()
+        return r
+    } else if (deg === 90) {
+        let r = this.transposed()
+        r.flipX()
+        return r
+    } else {
+        return null
     }
 }
