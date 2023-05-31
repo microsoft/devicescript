@@ -170,7 +170,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
         if (info.tags?.length) cmt += `@category ${info.tags.join(", ")}\n`
-        if (docUrl) cmt += `@see {@link ${docUrl} Documentation}`
+        if (docUrl) cmt += `@see {@link ${docUrl} | Documentation}`
         r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class
@@ -264,7 +264,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             if (docUrl)
                 cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pktName(
                     pkt
-                )} Documentation}`
+                )} | Documentation}`
             r += wrapComment("devs", cmt.comment)
             r += `    ${kw}${nameOfPkt}${sx}: ${tp}<${argtp}>\n`
         }
