@@ -1,9 +1,8 @@
-import { JSON5TryParse } from "@devicescript/interop"
-import { stringToBuffer } from "jacdac-ts"
+import { JSONTryParse, stringToBuffer } from "jacdac-ts"
 
 function stringToSettingValue(s: string) {
     // string -> any
-    const v: any = JSON5TryParse(s, undefined) ?? s
+    const v: any = JSONTryParse(s, undefined) ?? s
     // value -> json
     const jv = JSON.stringify(v)
     // json -> utf8

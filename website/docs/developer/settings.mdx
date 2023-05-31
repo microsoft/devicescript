@@ -2,7 +2,7 @@
 title: Settings
 sidebar_position: 9
 description: Settings provides a friendly layer to read/write objects from the
-  device flash. Keep it small, there's not a lot of space!
+    device flash. Keep it small, there's not a lot of space!
 ---
 
 # Settings
@@ -11,16 +11,27 @@ Settings [builtin package](/developer/packages) provides a friendly layer to rea
 
 ## Usage
 
-### `writeSetting`
+The settings store is cleared on each deployment. It is recommended to use the `readSetting` and `writeSetting` functions to access the settings store.
+The functions are asynchronous and return a promise.
 
-Serializes an object into a setting at a given key. The key name should be less than 16 characters.
+### `.env` file
 
-```ts
-import { writeSetting } from "@devicescript/settings"
+You can store secrets in the `./.env` file at the root of the project (**make sure it is in `.gitignore`**).
+The file should be in the following format:
 
-// highlight-next-line
-await writeSetting("hello", { world: true })
+```env
+# This is a comment
+PASSWORD=VALUE
+TEMP=68
 ```
+
+where the value can be any valid JSON (parsed automatically) or a string.
+
+:::note
+
+Note that multiline values, and `#` in quote strings are not supported.
+
+:::
 
 ### `readSetting`
 
@@ -31,6 +42,17 @@ import { readSetting } from "@devicescript/settings"
 
 // highlight-next-line
 const { world } = await readSetting<{ world?: string }>("hello", {})
+```
+
+### `writeSetting`
+
+Serializes an object into a setting at a given key. The key name should be less than 16 characters.
+
+```ts
+import { writeSetting } from "@devicescript/settings"
+
+// highlight-next-line
+await writeSetting("hello", { world: "world" })
 ```
 
 ## See also
