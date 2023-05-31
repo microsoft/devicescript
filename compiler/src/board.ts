@@ -46,14 +46,17 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
     }
 
     if (cfg.led) {
+        const help = ` (use [setStatusLight](/developer/status-light) to control)`
         if (cfg.led.type === 1)
-            features.push(`WS2812B RGB LED on ${cfg.led.pin}`)
+            features.push(`WS2812B RGB LED on ${cfg.led.pin} ${help}`)
         else if (cfg.led.rgb?.length == 3)
             features.push(
-                `RGB LED on pins ${cfg.led.rgb.map(l => l.pin).join(", ")}`
+                `RGB LED on pins ${cfg.led.rgb
+                    .map(l => l.pin)
+                    .join(", ")} ${help}`
             )
         else if (cfg.led.pin !== undefined)
-            features.push(`LED on pin ${cfg.led.pin}`)
+            features.push(`LED on pin ${cfg.led.pin} ${help}`)
     }
 
     if (cfg.log?.pinTX !== undefined)

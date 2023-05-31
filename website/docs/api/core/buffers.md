@@ -1,7 +1,14 @@
 ---
 sidebar_position: 9
+description: Learn how to use buffers for dynamic allocation, memory
+  conservation, and creating arrays with fixed upper limits.
+keywords:
+  - buffers
+  - markdown
+  - dynamic allocation
+  - memory conservation
+  - arrays
 ---
-
 # Buffers
 
 Buffers can be dynamically allocated, read and written.

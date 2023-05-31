@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.12](https://github.com/microsoft/devicescript/compare/v2.9.11...v2.9.12)
+
+> 18 May 2023
+
+- more led runtime [`d49250b`](https://github.com/microsoft/devicescript/commit/d49250b1bba6c3804f01988a091fdde6ceec7037)
+- allow address setting on BME680; defl to 0x76 (Seeed) [`6f5594a`](https://github.com/microsoft/devicescript/commit/6f5594a8d9ee91d3394be06c175552538777fc62)
+- updated gateway docs [`2168e56`](https://github.com/microsoft/devicescript/commit/2168e56d166905dc0c6b7733e893611d2f50ef7f)
+
 #### [v2.9.11](https://github.com/microsoft/devicescript/compare/v2.9.10...v2.9.11)
 
 > 17 May 2023

@@ -218,6 +218,9 @@ const optionalFiles: FileSet = {
             },
         ],
     },
+    ".yarnrc.yml": `
+# Force Yarn v2+ to use node_modules
+nodeLinker: node-modules`,
     "devsconfig.json": {},
     "package.json": {
         version: "0.0.0",

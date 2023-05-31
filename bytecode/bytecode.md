@@ -6,7 +6,7 @@ Expressions do not modify the state. They may throw exceptions though.
 
     img_version_major = 2
     img_version_minor = 9
-    img_version_patch = 12
+    img_version_patch = 13
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a

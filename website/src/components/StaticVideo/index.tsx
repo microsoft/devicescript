@@ -36,29 +36,6 @@ export default function StaticVideo(props: {
     const { name, style = defaultStyle, webm } = props
     const videoRef = useRef<HTMLVideoElement>(null)
 
-    useEffect(() => {
-        if (typeof document === "undefined") return
-
-        const handler = async (ev: KeyboardEvent) => {
-            if (ev.code !== "KeyF") return
-            const video = videoRef.current
-            if (!video) return
-
-            if (document.fullscreenElement) {
-                if (document.fullscreenElement === video)
-                    await document.exitFullscreen?.()
-            } else {
-                const current = getVisibleVideos()[0]
-                if (current === video) {
-                    video.focus?.()
-                    await video.requestFullscreen?.({ navigationUI: "show" })
-                }
-            }
-        }
-        document.addEventListener("keydown", handler)
-        return () => document.removeEventListener("keydown", handler)
-    }, [])
-
     return (
         <video
             ref={videoRef}

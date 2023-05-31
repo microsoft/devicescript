@@ -18,6 +18,12 @@ const bulb = startLightBulb({
 })
 ```
 
+:::tip
+
+For the onboard LED, use [setStatusLight](/developer/status-light) instead.
+
+:::
+
 ## Options
 
 ### pin

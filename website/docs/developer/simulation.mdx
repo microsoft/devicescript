@@ -1,5 +1,9 @@
 ---
 sidebar_position: 21
+description: Learn how to simulate DeviceScript devices using the web dashboard
+    and Node.js project. Start by configuring your project for simulation and use
+    Visual Studio Code to debug your DeviceScript code and the simulator in the
+    same session.
 ---
 
 # Simulation
@@ -9,6 +13,7 @@ DeviceScript supports simulation through a web dashboard and a Node.JS project r
 ## Simulated DeviceScript Device
 
 DeviceScript will start a simulated programmable microcontroller on demand. You can also start it from the connect dialog.
+It runs a [WASM-ed build of the C runtime](/api/vm).
 
 ![A screenshot of starting the DeviceScript simulator](./simulator.png)
 
@@ -23,8 +28,8 @@ The simulators dashboard is the most convenient way to start simulating services
 
 ## Node.JS simulation
 
-The Node.JS project uses the [Jacdac TypeScript client library](https://microsoft.github.io/jacdac-docs/clients/javascript/) and,
-any other Node package (like your favorite test project).
+For advanced simulation scenario, you can use Node.JS and the [Jacdac TypeScript client library](https://microsoft.github.io/jacdac-docs/clients/javascript/) and,
+any other Node package (like your favorite test project), to generate complex scenarios.
 
 Start by configuring your project for simulation by running
 
