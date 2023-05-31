@@ -283,7 +283,7 @@ export class SeesawDriver {
 
         await this.read(_ADC_BASE, _ADC_CHANNEL_OFFSET + p, buf, 2, 500)
         const ret = ((buf[0] & 0xffff) << 8) | buf[1]
-        sleep(1)
+        await sleep(1)
         return ret
     }
 
