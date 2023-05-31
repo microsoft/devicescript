@@ -105,6 +105,7 @@ export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
 export const TSDOC_PART = "devsPart"
 export const TSDOC_SERVICES = "devsServices"
+export const TSDOC_START = "devsStart"
 
 const coreModule = "@devicescript/core"
 
@@ -927,7 +928,7 @@ class Program implements TopOpWriter {
         if (!nn) return undefined
 
         const tags = getSymTags(sym)
-        const dsstart = tags["ds-start"]
+        const dsstart = tags[TSDOC_START]
         if (dsstart) {
             let sinfo: BaseServiceConfig
             try {
@@ -943,7 +944,7 @@ class Program implements TopOpWriter {
                     sinfo.name = str
                 }
                 return this.startServer(expr, sinfo)
-            } else throwError(expr, "invalid @ds-start tag")
+            } else throwError(expr, `invalid @${TSDOC_START} tag`)
         }
 
         if (nn.startsWith(startServerPref)) {

@@ -32,6 +32,7 @@ import { prelude } from "./prelude"
 import { camelize, oops, upperCamel, upperFirst } from "./util"
 import { pinFunctions } from "./board"
 import { assert } from "./jdutil"
+import { TSDOC_START } from "./compiler"
 
 const REGISTER_NUMBER = "Register<number>"
 const REGISTER_BOOL = "Register<boolean>"
@@ -297,7 +298,7 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
         const inst = service.name ? upperFirst(service.name) : serv
         r += wrapComment(
             "devs",
-            `Start built-in ${inst}\n@ds-start ${JSON.stringify(service)}`
+            `Start built-in ${inst}\n@${TSDOC_START} ${JSON.stringify(service)}`
         )
         r += `        start${inst}(roleName?: string): ds.${serv}\n`
     }
