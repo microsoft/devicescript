@@ -14,6 +14,7 @@ import {
 import { DeviceScriptExtensionState } from "./state"
 import { activateTelemetry } from "./telemetry"
 import { JDDevice } from "jacdac-ts"
+import { activateTestController } from "./testController"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions } = context
@@ -220,6 +221,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     activateGateway(context, extensionState)
     activateTreeViews(extensionState)
     activateMainStatusBar(extensionState)
+    activateTestController(extensionState)
     activateJacdacOutputChannel(extensionState)
     activateDeviceScriptI2COutputChannel(extensionState)
     activateDeviceScriptOutputChannel(extensionState)
