@@ -1815,6 +1815,8 @@ class Program implements TopOpWriter {
     private emitClassDeclaration(stmt: ts.ClassDeclaration) {
         const fdecl = this.getCellAtLocation(stmt) as FunctionDecl
         assert(fdecl instanceof FunctionDecl)
+        const classTags = getSymTags(this.getSymAtLocation(stmt))
+        const whenUsed = classTags["ds-when-used"] !== undefined
 
         let numCtorArgs: number = null
 
@@ -1831,6 +1833,7 @@ class Program implements TopOpWriter {
 
             if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
+                const tags = getSymTags(sym)
                 const info: ProtoDefinition = {
                     className: this.nodeName(stmt),
                     methodName: this.forceName(mem.name),
@@ -1839,8 +1842,11 @@ class Program implements TopOpWriter {
                 }
                 if (info.methodName == "toString") this.toStringError(mem)
                 this.protoDefinitions.push(info)
-                // TODO make this conditional, see https://github.com/microsoft/devicescript/issues/332
-                this.markMethodUsed(info.names[0])
+                if (whenUsed || tags["ds-when-used"] !== undefined) {
+                    // skip marking as used
+                } else {
+                    this.markMethodUsed(info.names[0])
+                }
             } else if (ts.isConstructorDeclaration(mem)) {
                 numCtorArgs = mem.parameters.length
             } else if (ts.isPropertyDeclaration(mem) && this.isStatic(mem)) {
