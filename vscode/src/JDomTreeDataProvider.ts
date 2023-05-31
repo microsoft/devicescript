@@ -422,7 +422,7 @@ ${spec.description}`,
         const powers = device.services({ serviceClass: SRV_POWER })
         const roleManagers = device.services({ serviceClass: SRV_ROLE_MANAGER })
         const wifis = device.services({ serviceClass: SRV_WIFI })
-        const settings = device.services({ serviceClass: SRV_SETTINGS })
+        //const settings = device.services({ serviceClass: SRV_SETTINGS })
         const cloudAdapters = device.services({
             serviceClass: SRV_CLOUD_ADAPTER,
         })
@@ -430,26 +430,24 @@ ${spec.description}`,
             serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
         })
 
-        return <JDomTreeItem[]>(
-            [
-                ...registers,
-                ...powers.map(srv => new JDomPowerTreeItem(this, srv, props)),
-                ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
-                ...cloudAdapters.map(
-                    srv => new JDomCloudAdapterTreeItem(this, srv, props)
-                ),
-                ...settings.map(
-                    srv => new JDomSettingsTreeItem(this, srv, props)
-                ),
-                ...deviceScriptManagers.map(
-                    srv => new JDomDeviceManagerTreeItem(this, srv, props)
-                ),
-                ...roleManagers.map(
-                    srv => new JDomRoleManagerTreeItem(this, srv, props)
-                ),
-                new JDomServicesTreeItem(this),
-            ].filter(e => !!e)
-        )
+        return <JDomTreeItem[]>[
+            ...registers,
+            ...powers.map(srv => new JDomPowerTreeItem(this, srv, props)),
+            ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
+            ...cloudAdapters.map(
+                srv => new JDomCloudAdapterTreeItem(this, srv, props)
+            ),
+            //...settings.map(
+            //    srv => new JDomSettingsTreeItem(this, srv, props)
+            //),
+            ...deviceScriptManagers.map(
+                srv => new JDomDeviceManagerTreeItem(this, srv, props)
+            ),
+            ...roleManagers.map(
+                srv => new JDomRoleManagerTreeItem(this, srv, props)
+            ),
+            new JDomServicesTreeItem(this),
+        ].filter(e => !!e)
     }
 }
 
