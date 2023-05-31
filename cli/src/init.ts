@@ -192,6 +192,10 @@ const optionalFiles: FileSet = {
         semi: false,
         tabWidth: 4,
     },
+    ".env": `# Store your secrets here as key=value pairs
+# Do not commit this file to source control
+
+`,
     ".vscode/extensions.json": {
         recommendations: [
             "devicescript.devicescript-vscode",
@@ -396,7 +400,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
     const cwd = writeFiles(dir, options, optionalFiles)
 
     // .gitignore
-    const gids = ["node_modules", GENDIR]
+    const gids = ["node_modules", GENDIR, ".env"]
     const gitignoren = join(cwd, GITIGNORE)
     if (!pathExistsSync(gitignoren)) {
         debug(`write ${gitignoren}`)

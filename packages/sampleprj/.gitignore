@@ -1,4 +1,5 @@
-.devicescript/
-node_modules/
+node_modules
+.devicescript
+.env
 cloud/
 data/
