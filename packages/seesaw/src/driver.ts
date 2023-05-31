@@ -28,6 +28,7 @@ const _GPIO_PULLENCLR = 0x0c
 const _STATUS_HW_ID = 0x01
 const _STATUS_VERSION = 0x02
 const _STATUS_OPTIONS = 0x03
+const _STATUS_TEMP = 0x04
 const _STATUS_SWRST = 0x7f
 const _TIMER_STATUS = 0x00
 const _TIMER_PWM = 0x01
@@ -52,6 +53,18 @@ const _NEOPIXEL_SHOW = 0x05
 const _TOUCH_CHANNEL_OFFSET = 0x10
 const _HW_ID_CODE = 0x55
 const _EEPROM_I2C_ADDR = 0x3f
+const ADC_INPUT_0_PIN = 2 ///< default ADC input pin
+const ADC_INPUT_1_PIN = 3 ///< default ADC input pin
+const ADC_INPUT_2_PIN = 4 ///< default ADC input pin
+const ADC_INPUT_3_PIN = 5 ///< default ADC input pin
+
+const PWM_0_PIN = 4 ///< default PWM output pin
+const PWM_1_PIN = 5 ///< default PWM output pin
+const PWM_2_PIN = 6 ///< default PWM output pin
+const PWM_3_PIN = 7 ///< default PWM output pin
+
+const _HW_ID_CODE_SAMD09 = 0x55 ///< seesaw HW ID code for SAMD09
+const _HW_ID_CODE_TINY8X7 = 0x87 ///< seesaw HW ID code for ATtiny817
 
 export const INPUT = 0x00
 export const OUTPUT = 0x01
@@ -184,7 +197,7 @@ export class SeesawDriver {
         delayUs?: number
     ): Promise<number> {
         const ret = Buffer.alloc(1)
-        await this.read(regHigh, regLow, ret)
+        await this.read(regHigh, regLow, ret, delayUs)
         return ret[0]
     }
 
@@ -222,5 +235,82 @@ export class SeesawDriver {
 
     private async waitFlowReady() {
         if (this._flow) while (!(await this._flow.read())) await sleep(0)
+    }
+
+    /**
+     * Enable or disable GPIO interrupts on the passed pins
+     * @param pins a bitmask of the pins to write. On the SAMD09 breakout, this corresponds to the number on the silkscreen. For example, passing 0b0110 will enable or disable interrups on pins 2 and 3.
+     * @param enabled pass true to enable the interrupts on the passed pins, false to disable the interrupts on the passed pins.
+     */
+    async setGPIOInterrupts(pins: number, enabled: boolean) {
+        const cmd = Buffer.from([pins >> 24, pins >> 16, pins >> 8, pins])
+        const regLow = enabled ? _GPIO_INTENSET : _GPIO_INTENCLR
+        await this.write(_GPIO_BASE, regLow, cmd)
+    }
+
+    /**
+     * Read the analog value on an ADC-enabled pin.
+     * @param pin the number of the pin to read. On the SAMD09 breakout, this corresponds to the number on the silkscreen. On the default seesaw firmware on the SAMD09 breakout, pins 2, 3, and 4 are ADC-enabled.
+     * @return the analog value. This is an integer between 0 and 1023
+     * @throws I2CDriverError if the pin is not ADC-enabled
+     */
+    async analogRead(pin: number) {
+        const buf = Buffer.alloc(2)
+        let p = 0
+
+        if (this._hardwareID === _HW_ID_CODE_SAMD09) {
+            switch (pin) {
+                case ADC_INPUT_0_PIN:
+                    p = 0
+                    break
+                case ADC_INPUT_1_PIN:
+                    p = 1
+                    break
+                case ADC_INPUT_2_PIN:
+                    p = 2
+                    break
+                case ADC_INPUT_3_PIN:
+                    p = 3
+                    break
+                default:
+                    return 0
+            }
+        } else if (this._hardwareID == _HW_ID_CODE_TINY8X7) {
+            p = pin
+        } else {
+            throw new I2CDriverError("Unsupported hardware ID")
+        }
+
+        await this.read(_ADC_BASE, _ADC_CHANNEL_OFFSET + p, buf, 2, 500)
+        const ret = ((buf[0] & 0xffff) << 8) | buf[1]
+        sleep(1)
+        return ret
+    }
+
+    /**
+     * Read the analog value on an capacitive touch-enabled pin.
+     *  @param  pin the number of the pin to read.
+     *  @return the analog value. This is an integer between 0 and 1023
+     */
+    async touchRead(pin: number) {
+        const buf = Buffer.alloc(2)
+        let p = pin
+        let ret = 65535
+
+        for (let retry = 0; retry < 5; retry++) {
+            if (
+                await this.read(
+                    _TOUCH_BASE,
+                    _TOUCH_CHANNEL_OFFSET + p,
+                    buf,
+                    2,
+                    3000 + retry * 1000
+                )
+            ) {
+                ret = ((buf[0] & 0xffff) << 8) | buf[1]
+                break
+            }
+        }
+        return ret
     }
 }
