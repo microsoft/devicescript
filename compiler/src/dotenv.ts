@@ -1,4 +1,5 @@
 import { JSON5TryParse } from "@devicescript/interop"
+import { stringToBuffer } from "jacdac-ts"
 
 function stringToSettingValue(s: string) {
     // string -> any
@@ -6,8 +7,7 @@ function stringToSettingValue(s: string) {
     // value -> json
     const jv = JSON.stringify(v)
     // json -> utf8
-    const encoder = new TextEncoder()
-    const encoded = encoder.encode(jv)
+    const encoded = stringToBuffer(jv)
     return encoded
 }
 

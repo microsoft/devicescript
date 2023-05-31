@@ -18,6 +18,7 @@ import {
     loadServiceSpecifications,
     serializeToTrace,
     SRV_DEVICE_SCRIPT_MANAGER,
+    SRV_SETTINGS,
 } from "jacdac-ts"
 import { deployToService } from "./deploy"
 import { open, readFile } from "fs/promises"
@@ -388,9 +389,13 @@ async function rebuild(args: BuildReqArgs) {
     let deployStatus = ""
     if (args.deployTo && res.success) {
         const binary = res.binary
+        const settings = res.settings
         try {
             const service = deployService(args)
-            await deployToService(service, binary)
+            const settingsService = service?.device?.services({
+                serviceClass: SRV_SETTINGS,
+            })?.[0]
+            await deployToService(service, binary, settingsService, settings)
             deployStatus = `OK`
         } catch (err) {
             deployStatus = err.message || "" + err
