@@ -17,7 +17,7 @@ The functions are asynchronous and return a promise.
 ### `.env.defaults` and `.env.local` files
 
 You can store general settings in `./.env.defaults` and secrets in the `./.env.local` file at the root of the project.
-The file should be in the following format where the value can be any valid JSON (parsed automatically) or a string.
+The file should be in the following format where the value can be any valid JSON (parsed automatically) or a string. This is similar to the [dotenv-flow](https://www.npmjs.com/package/dotenv-flow) package.
 
 ```env title="./.env.defaults"
 # This file is tracked by git. DO NOT store secrets in this file.
