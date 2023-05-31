@@ -17,7 +17,7 @@ The functions are asynchronous and return a promise.
 ### `.env` file
 
 You can store secrets in the `./.env` file at the root of the project (**make sure it is in `.gitignore`**).
-The file should be in the following format:
+The file should be in the following format where the value can be any valid JSON (parsed automatically) or a string.
 
 ```env
 # This is a comment
@@ -25,9 +25,9 @@ PASSWORD=VALUE
 TEMP=68
 ```
 
-where the value can be any valid JSON (parsed automatically) or a string.
+The secrets can only be accessed by the DeviceScript program and are not available through the Jacdac protocol.
 
-:::note
+:::warning
 
 Note that multiline values, and `#` in quote strings are not supported.
 
