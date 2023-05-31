@@ -192,7 +192,11 @@ const optionalFiles: FileSet = {
         semi: false,
         tabWidth: 4,
     },
-    ".env": `# Store your secrets here as key=value pairs
+    ".env.defaults": `# Store common settings here.
+# You can commit this file to source control, make sure there are no secrets.
+
+`,
+    ".env.local": `# Store your secrets here. Overrides values in .env
 # Do not commit this file to source control
 
 `,
@@ -400,7 +404,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
     const cwd = writeFiles(dir, options, optionalFiles)
 
     // .gitignore
-    const gids = ["node_modules", GENDIR, ".env"]
+    const gids = ["node_modules", GENDIR, ".env.local", ".env.*.local"]
     const gitignoren = join(cwd, GITIGNORE)
     if (!pathExistsSync(gitignoren)) {
         debug(`write ${gitignoren}`)

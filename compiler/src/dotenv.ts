@@ -22,16 +22,17 @@ function parseInto(
         .filter(line => !!line)
         .forEach(({ groups }) => {
             const { key, value } = groups
+            delete res[key]
             res[secret ? `${key}` : key] = stringToSettingValue(value)
         })
 }
 
-export function parseToSettings(
-    secrets: string,
-    publics?: string
-): Record<string, Uint8Array> {
+export function parseToSettings(options: {
+    envDefaults: string
+    envLocal: string
+}): Record<string, Uint8Array> {
     const res = {}
-    parseInto(secrets, true, res)
-    parseInto(publics, false, res)
+    parseInto(options.envDefaults, false, res)
+    parseInto(options.envLocal, true, res)
     return res
 }

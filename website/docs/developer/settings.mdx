@@ -14,15 +14,20 @@ Settings [builtin package](/developer/packages) provides a friendly layer to rea
 The settings store is cleared on each deployment. It is recommended to use the `readSetting` and `writeSetting` functions to access the settings store.
 The functions are asynchronous and return a promise.
 
-### `.env` file
+### `.env.defaults` and `.env.local` files
 
-You can store secrets in the `./.env` file at the root of the project (**make sure it is in `.gitignore`**).
+You can store general settings in `./.env.defaults` and secrets in the `./.env.local` file at the root of the project.
 The file should be in the following format where the value can be any valid JSON (parsed automatically) or a string.
 
-```env
-# This is a comment
-PASSWORD=VALUE
+```env title="./.env.defaults"
+# This file is tracked by git. DO NOT store secrets in this file.
 TEMP=68
+```
+
+```env title="./.env.local"
+# This file is **NOT** tracked by git and may contain secrets
+PASSWORD=VALUE
+TEMP=70 # override TEMP
 ```
 
 The secrets can only be accessed by the DeviceScript program and are not available through the Jacdac protocol.

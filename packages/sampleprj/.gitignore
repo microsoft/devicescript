@@ -1,5 +1,5 @@
 node_modules
 .devicescript
-.env
+*.local
 cloud/
 data/
