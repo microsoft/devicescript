@@ -41,14 +41,15 @@ export async function deploySettingsToService(
     settingsService: JDService,
     settings: Record<string, Uint8Array>
 ) {
-    console.log(`deploying settings...`)
     const client = new SettingsClient(settingsService)
     await client.clear()
-    if (settings)
+    if (settings) {
         for (const key in settings) {
+            console.debug(`deploying setting ${key}...`)
             const value = settings[key]
             await client.setValue(key, value)
         }
+    }
 }
 
 export async function deployToService(
@@ -60,6 +61,7 @@ export async function deployToService(
     console.log(`deploy to ${service.device}`)
 
     const autostart = service.register(DeviceScriptManagerReg.Autostart)
+    const running = service.register(DeviceScriptManagerReg.Running)
     const sha = service.register(DeviceScriptManagerReg.ProgramSha256)
 
     await sha.refresh()
@@ -67,13 +69,26 @@ export async function deployToService(
         const exp = await sha256([bytecode])
         if (bufferEq(exp, sha.data)) {
             console.log(`  sha256 match ${toHex(exp)}, skip`)
-            await restartService(service, settingsService, settings)
+            // stop running
+            await running.sendSetBoolAsync(false)
+            await delay(10)
+
+            // deploy settings if needed
+            if (settingsService)
+                await deploySettingsToService(settingsService, settings)
+
+            // restart engine
+            await running.sendSetBoolAsync(true)
             return
         }
     }
 
     // disable autostart to write settings
-    if (settingsService) await autostart.sendSetBoolAsync(false)
+    if (settingsService) {
+        await autostart.sendSetBoolAsync(false)
+        await running.sendSetBoolAsync(false)
+        await delay(10)
+    }
     await OutPipe.sendBytes(
         service,
         DeviceScriptManagerCmd.DeployBytecode,
@@ -82,43 +97,11 @@ export async function deployToService(
             // console.debug(`  prog: ${(p * 100).toFixed(1)}%`)
         }
     )
-    await restartService(service, settingsService, settings)
-    // restore autostart
-    if (settingsService) await autostart.sendSetBoolAsync(false)
-    console.log(`  --> done, ${prettySize(bytecode.length)}`)
-}
-
-async function restartService(
-    service: JDService,
-    settingsService?: JDService,
-    settings?: Record<string, Uint8Array>
-) {
-    const running = service.register(DeviceScriptManagerReg.Running)
-
-    // stop running
-    await running.sendSetBoolAsync(false)
-    await delay(10)
-
-    // deploy settings if needed
     if (settingsService) {
         await deploySettingsToService(settingsService, settings)
-        await delay(10)
+        await autostart.sendSetBoolAsync(true)
+        await running.sendSetBoolAsync(true)
     }
 
-    // restart engine
-    await running.sendSetBoolAsync(true)
+    console.log(`  --> done, ${prettySize(bytecode.length)}`)
 }
-
-/*
-export async function deployToBus(bus: JDBus, bytecode: Uint8Array) {
-    let num = 0
-    for (const service of bus.services({
-        serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
-        lost: false,
-    })) {
-        await deployToService(service, bytecode)
-        num++
-    }
-    return num
-}
-*/

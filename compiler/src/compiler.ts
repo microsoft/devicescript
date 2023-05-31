@@ -4139,9 +4139,8 @@ class Program implements TopOpWriter {
         assert(!this.tree)
 
         const env = this.host.read("./.env")
-        const settings: Record<string, Uint8Array> = parseToSettings(env)
+        const settings = parseToSettings(env)
 
-        console.log({ env, settings })
         const ast = buildAST(
             this.mainFileName,
             this.host,
