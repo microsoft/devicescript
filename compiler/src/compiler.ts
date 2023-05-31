@@ -4135,12 +4135,20 @@ class Program implements TopOpWriter {
         this.host.write(DEVS_LIB_FILE, JSON.stringify(lib, null, 1))
     }
 
+    private readSettings(): Record<string, Uint8Array> {
+        try {
+            const env = this.host.read("./.env")
+            const settings = parseToSettings(env)
+            return settings
+        } catch (e) {
+            return undefined
+        }
+    }
+
     emit(): CompilationResult {
         assert(!this.tree)
 
-        const env = this.host.read("./.env")
-        const settings = parseToSettings(env)
-
+        const settings = this.readSettings()
         const ast = buildAST(
             this.mainFileName,
             this.host,
