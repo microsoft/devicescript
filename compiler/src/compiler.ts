@@ -103,6 +103,12 @@ export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
 export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 
+export const TSDOC_PART = "devsPart"
+export const TSDOC_SERVICES = "devsServices"
+export const TSDOC_START = "devsStart"
+export const TSDOC_GPIO = "devsGPIO"
+export const TSDOC_WHEN_USED = "devsWhenUsed"
+
 const coreModule = "@devicescript/core"
 
 const globalFunctions = [
@@ -526,7 +532,7 @@ interface PossiblyConstDeclaration extends ts.Declaration {
     __ds_const_val?: Folded
 }
 
-export function getSymTags(sym: ts.Symbol, pref = "ds-") {
+export function getSymTags(sym: ts.Symbol, pref = "devs") {
     const tags: Record<string, string> = {}
     for (const tag of sym?.getJsDocTags() ?? []) {
         if (tag.name.startsWith(pref)) {
@@ -890,7 +896,7 @@ class Program implements TopOpWriter {
         }
 
         const tags = getSymTags(this.getSymAtLocation(node))
-        const gpio = parseInt(tags["ds-gpio"])
+        const gpio = parseInt(tags[TSDOC_GPIO])
         if (!isNaN(gpio)) return gpio
 
         throwError(node, `expecting JSON literal here`)
@@ -924,7 +930,7 @@ class Program implements TopOpWriter {
         if (!nn) return undefined
 
         const tags = getSymTags(sym)
-        const dsstart = tags["ds-start"]
+        const dsstart = tags[TSDOC_START]
         if (dsstart) {
             let sinfo: BaseServiceConfig
             try {
@@ -940,7 +946,7 @@ class Program implements TopOpWriter {
                     sinfo.name = str
                 }
                 return this.startServer(expr, sinfo)
-            } else throwError(expr, "invalid @ds-start tag")
+            } else throwError(expr, `invalid @${TSDOC_START} tag`)
         }
 
         if (nn.startsWith(startServerPref)) {
@@ -1815,6 +1821,8 @@ class Program implements TopOpWriter {
     private emitClassDeclaration(stmt: ts.ClassDeclaration) {
         const fdecl = this.getCellAtLocation(stmt) as FunctionDecl
         assert(fdecl instanceof FunctionDecl)
+        const classTags = getSymTags(this.getSymAtLocation(stmt))
+        const whenUsed = classTags[TSDOC_WHEN_USED] !== undefined
 
         let numCtorArgs: number = null
 
@@ -1831,6 +1839,7 @@ class Program implements TopOpWriter {
 
             if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
+                const tags = getSymTags(sym)
                 const info: ProtoDefinition = {
                     className: this.nodeName(stmt),
                     methodName: this.forceName(mem.name),
@@ -1839,8 +1848,11 @@ class Program implements TopOpWriter {
                 }
                 if (info.methodName == "toString") this.toStringError(mem)
                 this.protoDefinitions.push(info)
-                // TODO make this conditional, see https://github.com/microsoft/devicescript/issues/332
-                this.markMethodUsed(info.names[0])
+                if (whenUsed || tags[TSDOC_WHEN_USED] !== undefined) {
+                    // skip marking as used
+                } else {
+                    this.markMethodUsed(info.names[0])
+                }
             } else if (ts.isConstructorDeclaration(mem)) {
                 numCtorArgs = mem.parameters.length
             } else if (ts.isPropertyDeclaration(mem) && this.isStatic(mem)) {
@@ -2786,7 +2798,7 @@ class Program implements TopOpWriter {
 
     private emitBuiltInConst(expr: ts.Expression) {
         const tags = getSymTags(this.getSymAtLocation(expr))
-        const gpio = parseInt(tags["ds-gpio"])
+        const gpio = parseInt(tags[TSDOC_GPIO])
         if (!isNaN(gpio)) {
             const wr = this.writer
             wr.emitCall(this.dsMember("gpio"), literal(gpio))

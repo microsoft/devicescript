@@ -1024,6 +1024,22 @@ function testStatic() {
     ds.assert((f as any).qux === undefined)
 }
 
+/**
+ * Foo
+ *
+ * @devsWhenUsed
+ */
+class Foo2 {
+    meth1() {}
+    meth2() {}
+}
+function testWhenUsed() {
+    ds.keep(Foo2.prototype.meth1)
+    const f: any = new Foo2()
+    ds.assert(f["meth1"] !== undefined)
+    ds.assert(f["meth2"] === undefined)
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -1064,5 +1080,6 @@ testHex()
 testAssignmentChaining()
 new UsingCtorFieldArgs(12)
 testStatic()
+testWhenUsed()
 
 console.log("all OK")
