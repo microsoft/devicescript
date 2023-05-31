@@ -313,8 +313,8 @@ class BME680Driver extends I2CSensorDriver<{
  * Start driver for Bosch BME680 temperature/humidity/pressure/gas sensor at I2C `0x76` (default) or `0x77`.
  * @see {@link https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme680-ds001.pdf | Datasheet}
  * @see {@link https://www.adafruit.com/product/3660 | Adafruit}
- * @ds-part Bosch BME68
- * @ds-services temperature, humidity, airPressure, airQualityIndex
+ * @devsPart Bosch BME68
+ * @devsServices temperature, humidity, airPressure, airQualityIndex
  * @throws DriverError
  */
 export async function startBME680(options?: {

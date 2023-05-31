@@ -1027,7 +1027,7 @@ function testStatic() {
 /**
  * Foo
  *
- * @ds-when-used
+ * @devsWhenUsed
  */
 class Foo2 {
     meth1() {}

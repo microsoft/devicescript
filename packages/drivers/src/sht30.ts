@@ -31,8 +31,8 @@ class SHT30Driver extends SHTDriver {
 
 /**
  * Start driver for Sensirion SHT30 temperature/humidity sensor at I2C `0x44` or `0x45` (default is `0x44`)
- * @ds-part Sensirion SHT30
- * @ds-services temperature, humidity
+ * @devsPart Sensirion SHT30
+ * @devsServices temperature, humidity
  * @see {@link https://sensirion.com/products/catalog/SHT30-DIS-B/ | Datasheet}
  * @throws DriverError
  */

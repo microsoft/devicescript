@@ -11,7 +11,7 @@ keywords:
 ---
 # Tree-shaking
 
-Classes and/or methods in classes can be marked with `@ds-when-used` JSDoc attribute.
+Classes and/or methods in classes can be marked with `@devsWhenUsed` JSDoc attribute.
 This will cause them to be omitted from compilation unless they are used.
 In such case, care needs to be taken when using index operator (`obj[some_expression]`)
 or accessing properties through `any` type.
@@ -21,7 +21,7 @@ You can use `ds.keep()` function to make sure methods are included.
 /**
  * Foooooo!
  * 
- * @ds-when-used
+ * @devsWhenUsed
  */
 class Foo {
     bar() {}
@@ -35,7 +35,7 @@ callBar(new Foo())
 ds.keep(Foo.prototype.bar)
 ```
 
-The `@ds-when-used` attribute is implicit when methods are defined through
+The `@devsWhenUsed` attribute is implicit when methods are defined through
 prototype assignments.
 
 We may improve compiler warnings about such cases in future.
