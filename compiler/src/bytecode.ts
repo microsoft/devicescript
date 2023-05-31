@@ -284,7 +284,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 175,
+    __MAX = 192,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -461,6 +461,23 @@ export enum BuiltInString {
     WIDTH = 173,
     HEIGHT = 174,
     BPP = 175,
+    GET = 176,
+    CLONE = 177,
+    SET = 178,
+    FILL = 179,
+    FLIPX = 180,
+    FLIPY = 181,
+    TRANSPOSED = 182,
+    DRAWIMAGE = 183,
+    DRAWTRANSPARENTIMAGE = 184,
+    OVERLAPSWITH = 185,
+    FILLRECT = 186,
+    DRAWLINE = 187,
+    EQUALS = 188,
+    ISREADONLY = 189,
+    FILLCIRCLE = 190,
+    BLITROW = 191,
+    BLIT = 192,
 }
 
 export const OP_PRINT_FMTS = [
@@ -755,6 +772,23 @@ export const BUILTIN_STRING__VAL = [
     "width",
     "height",
     "bpp",
+    "get",
+    "clone",
+    "set",
+    "fill",
+    "flipX",
+    "flipY",
+    "transposed",
+    "drawImage",
+    "drawTransparentImage",
+    "overlapsWith",
+    "fillRect",
+    "drawLine",
+    "equals",
+    "isReadOnly",
+    "fillCircle",
+    "blitRow",
+    "blit",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

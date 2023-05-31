@@ -1146,6 +1146,10 @@ int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx) {
     return devs_value_to_int(ctx, devs_arg(ctx, idx));
 }
 
+bool devs_arg_bool(devs_ctx_t *ctx, unsigned idx) {
+    return devs_value_to_bool(ctx, devs_arg(ctx, idx));
+}
+
 double devs_arg_double(devs_ctx_t *ctx, unsigned idx) {
     return devs_value_to_double(ctx, devs_arg(ctx, idx));
 }

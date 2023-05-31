@@ -10,20 +10,11 @@ staticimage contains size I guess
 
 */
 
-type DsGraphics = typeof ds & {
-    spiConfigure(
-        miso: number,
-        mosi: number,
-        sck: number,
-        mode: number,
-        hz: number
-    ): void
-    spiXfer(tx: Buffer, rx: Buffer): Promise<void>
-}
+type DsGraphics = typeof ds & {}
 
 export type color = number
 
-export declare class ImageBase {
+export declare class ImageNative {
     protected constructor()
 
     /**
@@ -42,30 +33,24 @@ export declare class ImageBase {
     bpp: number
 
     /**
-     * Sets all pixels in the current image from the other image, which has to be of the same size and
-     * bpp.
-     */
-    copyFrom(from: Image): void
-
-    /**
-     * Set pixel color
-     */
-    setPixel(x: number, y: number, c: color): void
-
-    /**
      * Get a pixel color
      */
-    getPixel(x: number, y: number): number
-
-    /**
-     * Fill entire image with a given color
-     */
-    fill(c: color): void
+    get(x: number, y: number): number
 
     /**
      * Return a copy of the current image
      */
     clone(): Image
+
+    /**
+     * Set pixel color
+     */
+    set(x: number, y: number, c: color): void
+
+    /**
+     * Fill entire image with a given color
+     */
+    fill(c: color): void
 
     /**
      * Flips (mirrors) pixels horizontally in the current image
@@ -83,39 +68,15 @@ export declare class ImageBase {
     transposed(): Image
 
     /**
-     * Every pixel in image is moved by (dx,dy)
-     */
-    scroll(dx: number, dy: number): void
-
-    /**
-     * Stretches the image horizontally by 100%
-     */
-    doubledX(): Image
-
-    /**
-     * Stretches the image vertically by 100%
-     */
-    doubledY(): Image
-
-    /**
-     * Replaces one color in an image with another
-     */
-    replace(from: number, to: number): void
-
-    /**
-     * Stretches the image in both directions by 100%
-     */
-    doubled(): Image
-
-    /**
      * Draw given image on the current image
      */
     drawImage(from: Image, x: number, y: number): void
 
     /**
-     * Draw given image with transparent background on the current image
+     * Draw given image with transparent background on the current image.
+     * If `from` is mono, paint it using color `c` (defaults to `1`).
      */
-    drawTransparentImage(from: Image, x: number, y: number): void
+    drawTransparentImage(from: Image, x: number, y: number, c?: color): void
 
     /**
      * Check if the current image "collides" with another
@@ -126,11 +87,6 @@ export declare class ImageBase {
      * Fill a rectangle
      */
     fillRect(x: number, y: number, w: number, h: number, c: color): void
-
-    /**
-     * Replace colors in a rectangle
-     */
-    mapRect(x: number, y: number, w: number, h: number, colorMap: Buffer): void
 
     /**
      * Draw a line
@@ -149,11 +105,6 @@ export declare class ImageBase {
     isReadOnly(): boolean
 
     /**
-     * Draw an icon (monochromatic image) using given color
-     */
-    drawIcon(icon: Buffer, x: number, y: number, c: color): void
-
-    /**
      * Fills a circle
      */
     fillCircle(cx: number, cy: number, r: number, c: color): void
@@ -162,9 +113,9 @@ export declare class ImageBase {
      * Scale and copy a row of pixels from a texture.
      */
     blitRow(
+        from: Image,
         dstX: number,
         dstY: number,
-        from: Image,
         fromX: number,
         fromH: number
     ): void
@@ -188,31 +139,28 @@ export declare class ImageBase {
     ): boolean
 }
 
-export class Image extends ImageBase {
+export class Image extends ImageNative {
     private constructor() {
         super()
     }
 
     /**
-     * Allocate a new image, with the initial contents from the buffer,
-     * or filled with color 0 when buffer is not provided.
+     * Allocate a new image, backed by the buffer is specified (otherwise a new buffer is allocated)
      *
      * @param width in pixels
      * @param height in pixels
      * @param bpp bits per pixel
      * @param init initial contents of the image
      * @param offset byte offset in `init`
-     * @param stride how many bytes each row in `init` has
      */
     static alloc(
         width: number,
         height: number,
         bpp: 1 | 4,
         init?: Buffer,
-        offset?: number,
-        stride?: number
+        offset?: number
     ): Image {
-        return null
+        return ds._native()
     }
 
     /**
@@ -231,14 +179,14 @@ export class Image extends ImageBase {
         let d = 3 - 2 * r
 
         while (y >= x) {
-            this.setPixel(cx + x, cy + y, c)
-            this.setPixel(cx - x, cy + y, c)
-            this.setPixel(cx + x, cy - y, c)
-            this.setPixel(cx - x, cy - y, c)
-            this.setPixel(cx + y, cy + x, c)
-            this.setPixel(cx - y, cy + x, c)
-            this.setPixel(cx + y, cy - x, c)
-            this.setPixel(cx - y, cy - x, c)
+            this.set(cx + x, cy + y, c)
+            this.set(cx - x, cy + y, c)
+            this.set(cx + x, cy - y, c)
+            this.set(cx - x, cy - y, c)
+            this.set(cx + y, cy + x, c)
+            this.set(cx - y, cy + x, c)
+            this.set(cx + y, cy - x, c)
+            this.set(cx - y, cy - x, c)
             x++
             if (d > 0) {
                 y--

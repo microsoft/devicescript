@@ -324,6 +324,11 @@ declare module "@devicescript/core" {
     export function _logRepr(v: any, label?: string): void
 
     /**
+     * Used to create a fake function body
+     */
+    export function _native(): any
+
+    /**
      * Identity function, used to prevent constant folding.
      * @internal
      * @deprecated internal field for runtime support

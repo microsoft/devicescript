@@ -297,6 +297,7 @@ devs_map_t *devs_get_spec_proto(devs_ctx_t *ctx, uint32_t spec_idx);
 #define TODO JD_PANIC
 
 // for impl_*.c
+bool devs_arg_bool(devs_ctx_t *ctx, unsigned idx);
 int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx);
 double devs_arg_double(devs_ctx_t *ctx, unsigned idx);
 const char *devs_arg_utf8_with_conv(devs_ctx_t *ctx, unsigned idx, unsigned *sz);

@@ -24,13 +24,12 @@ let r = `// auto-generated!
 const bytecodedef = fs.readFileSync(scriptArgs.shift(), "utf-8")
 const builtinObjects = {}
 
-bytecodedef.replace(/^#define (DEVS_BUILTIN_OBJECT_\w+)/mg, (_, key) => {
+bytecodedef.replace(/^#define (DEVS_BUILTIN_OBJECT_\w+)/gm, (_, key) => {
     builtinObjects[key] = true
     return ""
 })
 delete builtinObjects["DEVS_BUILTIN_OBJECT___MAX"]
 delete builtinObjects["DEVS_BUILTIN_OBJECT__VAL"]
-
 
 const deriveMap = {}
 
@@ -46,12 +45,11 @@ for (const fn of scriptArgs) {
 
         ln.replace(/^\s*DEVS_DERIVE\((\w+), (\w+)\)/, (_, cl, base) => {
             deriveMap[cl] = base
-            if (!byObj[cl])
-                byObj[cl] = []
+            if (!byObj[cl]) byObj[cl] = []
             return ""
         })
 
-        if (ln[0] == '}') {
+        if (ln[0] == "}") {
             checkArgmap()
             continue
         }
@@ -61,31 +59,41 @@ for (const fn of scriptArgs) {
                 accessArg(+n)
             })
 
+            ln.replace(/\bDEVS_ARGS\w*\(([\-\d]+)\)/g, (_1, n) => {
+                for (let i = 0; i < Math.abs(+n); ++i) accessArg(i)
+                accessArg(-1)
+            })
 
             ln.replace(/\b(fun|meth)(\d+)_\w/g, (_1, fm, n) => {
                 for (let i = 0; i < +n; ++i) accessArg(i)
                 if (fm == "meth") accessArg(-1)
             })
 
-            if (/\bdevs_arg_self\w*\(/.test(ln))
-                accessArg(-1)
+            if (/\bdevs_arg_self\w*\(/.test(ln)) accessArg(-1)
         }
 
-        const m = /^(static\s+)?(\w+) ((fun|prop|meth)(X|\d*)_(\w+))\((.*)\)/.exec(ln)
-        if (!m)
-            continue
-        const [full, isStatic, retTp, fnName, funProp, numArgsStr, suffName, argString] = m
+        const m =
+            /^(static\s+)?(\w+) ((fun|prop|meth)(X|\d*)_(\w+))\((.*)\)/.exec(ln)
+        if (!m) continue
+        const [
+            full,
+            isStatic,
+            retTp,
+            fnName,
+            funProp,
+            numArgsStr,
+            suffName,
+            argString,
+        ] = m
         const flags = []
-
 
         checkArgmap()
         let numArgs = parseInt(numArgsStr) || 0
         argmap = []
         argmap[numArgs] = undefined
-        isMeth = funProp != 'fun'
+        isMeth = funProp != "fun"
 
-        if (isStatic)
-            continue
+        if (isStatic) continue
 
         const m2 = /^([a-zA-Z0-9]+)_(\w+)$/.exec(suffName)
         let [_x, className, methodName] = m2
@@ -94,8 +102,7 @@ for (const fn of scriptArgs) {
         r += `${full};\n`
 
         const argWords = argString.split(/,\s*/).map(s => s.trim())
-        if (argWords[0] != "devs_ctx_t *ctx")
-            error("first arg should be ctx")
+        if (argWords[0] != "devs_ctx_t *ctx") error("first arg should be ctx")
 
         const params = argWords.slice(1)
         let fld = ".meth"
@@ -118,14 +125,11 @@ for (const fn of scriptArgs) {
             } else {
                 error("only void supported as return")
             }
-            if (numArgsStr == "")
-                error("fun/prop need number of args")
-            else if (numArgsStr == "X")
-                argmap = null
-            if (params.length)
-                error(`params not supported`)
+            if (numArgsStr == "") error("fun/prop need number of args")
+            else if (numArgsStr == "X") argmap = null
+            if (params.length) error(`params not supported`)
         }
-        if (funProp == 'fun') {
+        if (funProp == "fun") {
             flags.push("NO_SELF")
         } else if (methodName == "__ctor__") {
             methodName = "__func__"
@@ -138,15 +142,23 @@ for (const fn of scriptArgs) {
 
         const fl = flags.length == 0 ? "0" : flags.join("|")
 
-        addByObj(objId, `{ N(${methodName.toUpperCase()}), ${firstFun + allfuns.length} }`)
+        addByObj(
+            objId,
+            `{ N(${methodName.toUpperCase()}), ${firstFun + allfuns.length} }`
+        )
 
         let allfunName = methodName
         if (flags.includes("CTOR")) {
-            addByObj(objId + "_prototype", `{ N(CONSTRUCTOR), ${firstFun + allfuns.length} }`)
+            addByObj(
+                objId + "_prototype",
+                `{ N(CONSTRUCTOR), ${firstFun + allfuns.length} }`
+            )
             allfunName = objId
         }
 
-        allfuns.push(`{ N(${allfunName.toUpperCase()}), ${numArgs}, ${fl}, { ${fld} = ${fnName} } }`)
+        allfuns.push(
+            `{ N(${allfunName.toUpperCase()}), ${numArgs}, ${fl}, { ${fld} = ${fnName} } }`
+        )
     }
 
     function addByObj(id, ent) {
@@ -160,31 +172,27 @@ for (const fn of scriptArgs) {
     }
 
     function checkArgmap() {
-        if (!argmap)
-            return
-        if (isMeth && !argmap[0])
-            error("self not accessed")
+        if (!argmap) return
+        if (isMeth && !argmap[0]) error("self not accessed")
         for (let i = 1; i < argmap.length; ++i)
-            if (!argmap[i])
-                error(`arg #${i - 1} not accessed`)
+            if (!argmap[i]) error(`arg #${i - 1} not accessed`)
         argmap = null
     }
 
     function accessArg(n) {
         if (n == -1) {
-            if (!isMeth)
-                error(`accessing self in non-method`)
+            if (!isMeth) error(`accessing self in non-method`)
         }
         n++
         if (argmap.length <= n) {
             error(`accessing arg #${n - 1} out of ${argmap.length - 1}`)
+        } else {
+            argmap[n] = true
         }
-        argmap[n] = true
     }
 }
 
-if (numerr)
-    process.exit(1)
+if (numerr) process.exit(1)
 
 r += "\n"
 byObj["empty"] = []
@@ -217,9 +225,15 @@ delete byObj["empty"]
 
 r += `const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {\n`
 for (const k of Object.keys(byObj)) {
-    const base = deriveMap[k] ? `&devs_builtin_protos[DEVS_BUILTIN_OBJECT_${deriveMap[k].toUpperCase()}]` : `NULL`
+    const base = deriveMap[k]
+        ? `&devs_builtin_protos[DEVS_BUILTIN_OBJECT_${deriveMap[
+              k
+          ].toUpperCase()}]`
+        : `NULL`
     delete deriveMap[k]
-    r += `[${objKey(k)}] = { DEVS_BUILTIN_PROTO_INIT, ${base}, ${k}_entries },\n`
+    r += `[${objKey(
+        k
+    )}] = { DEVS_BUILTIN_PROTO_INIT, ${base}, ${k}_entries },\n`
 }
 
 for (const key of Object.keys(builtinObjects)) {
@@ -229,7 +243,6 @@ for (const key of Object.keys(builtinObjects)) {
 }
 
 r += "};\n\n"
-
 
 r += `uint16_t devs_num_builtin_functions = ${allfuns.length};\n`
 r += `const devs_builtin_function_t devs_builtin_functions[${allfuns.length}] = {\n`
