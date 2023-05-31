@@ -1,5 +1,5 @@
 ---
-name: Drive request template
+name: Drive request
 about: Request for a missing device driver
 title: ''
 labels: driver request
