@@ -1,5 +1,6 @@
 import * as ts from "typescript"
 import { SyntaxKind as SK } from "typescript"
+import { parseToSettings } from "./dotenv"
 
 import {
     stringToUint8Array,
@@ -84,6 +85,7 @@ import {
     ResolvedBuildConfig,
     ProgramConfig,
     PkgJson,
+    JSON5TryParse,
 } from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
@@ -4136,6 +4138,10 @@ class Program implements TopOpWriter {
     emit(): CompilationResult {
         assert(!this.tree)
 
+        const env = this.host.read("./.env")
+        const settings: Record<string, Uint8Array> = parseToSettings(env)
+
+        console.log({ env, settings })
         const ast = buildAST(
             this.mainFileName,
             this.host,
@@ -4215,6 +4221,7 @@ class Program implements TopOpWriter {
             usedFiles: ast.usedFiles(),
             diagnostics: this.diagnostics,
             config: this.host.getConfig(),
+            settings,
         }
     }
 }
@@ -4226,6 +4233,7 @@ export interface CompilationResult {
     usedFiles: string[]
     diagnostics: DevsDiagnostic[]
     config?: ResolvedBuildConfig
+    settings?: Record<string, Uint8Array>
 }
 
 /**
