@@ -1,5 +1,6 @@
 import * as ts from "typescript"
 import { SyntaxKind as SK } from "typescript"
+import { parseToSettings } from "./dotenv"
 
 import {
     stringToUint8Array,
@@ -84,6 +85,7 @@ import {
     ResolvedBuildConfig,
     ProgramConfig,
     PkgJson,
+    JSON5TryParse,
 } from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
@@ -4133,9 +4135,30 @@ class Program implements TopOpWriter {
         this.host.write(DEVS_LIB_FILE, JSON.stringify(lib, null, 1))
     }
 
+    private readFile(fileName: string) {
+        try {
+            return this.host.read(fileName)
+        } catch (e) {
+            return undefined
+        }
+    }
+
+    private readSettings(): Record<string, Uint8Array> {
+        try {
+            const envDefaults = this.readFile("./.env.defaults")
+            const envLocal = this.readFile("./.env.local")
+            const settings = parseToSettings({ envDefaults, envLocal })
+            console.debug({ envDefaults, envLocal, settings })
+            return settings
+        } catch (e) {
+            return undefined
+        }
+    }
+
     emit(): CompilationResult {
         assert(!this.tree)
 
+        const settings = this.readSettings()
         const ast = buildAST(
             this.mainFileName,
             this.host,
@@ -4215,6 +4238,7 @@ class Program implements TopOpWriter {
             usedFiles: ast.usedFiles(),
             diagnostics: this.diagnostics,
             config: this.host.getConfig(),
+            settings,
         }
     }
 }
@@ -4226,6 +4250,7 @@ export interface CompilationResult {
     usedFiles: string[]
     diagnostics: DevsDiagnostic[]
     config?: ResolvedBuildConfig
+    settings?: Record<string, Uint8Array>
 }
 
 /**

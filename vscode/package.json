@@ -511,6 +511,10 @@
                     "when": "workbenchState != empty"
                 },
                 {
+                    "command": "extension.devicescript.settings.add",
+                    "when": "workbenchState != empty"
+                },
+                {
                     "command": "extension.devicescript.services.add",
                     "when": "workbenchState != empty"
                 },
@@ -603,6 +607,11 @@
             {
                 "command": "extension.devicescript.sims.add",
                 "title": "Add Sim...",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.settings.add",
+                "title": "Add Settings...",
                 "category": "DeviceScript"
             },
             {

@@ -21,6 +21,8 @@ import type {
     SideAddNpmResp,
     SideAddServiceReq,
     SideAddServiceResp,
+    SideAddSettingsReq,
+    SideAddSettingsResp,
     SideAddSimReq,
     SideAddSimResp,
     SideAddTestReq,
@@ -67,6 +69,17 @@ const npmFiles: FileSet = {
         keywords: ["devicescript"],
     },
     "src/index.ts": `${IMPORT_PREFIX}\n\n`,
+}
+
+const settingsFiles: FileSet = {
+    ".env.defaults": `# Store common settings here.
+# You can commit this file to source control, make sure there are no secrets.
+
+`,
+    ".env.local": `# Store your secrets here. Overrides values in .env
+# Do not commit this file to source control
+
+`,
 }
 
 const simFiles: FileSet = {
@@ -396,7 +409,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
     const cwd = writeFiles(dir, options, optionalFiles)
 
     // .gitignore
-    const gids = ["node_modules", GENDIR]
+    const gids = ["node_modules", GENDIR, ".env.local", ".env.*.local"]
     const gitignoren = join(cwd, GITIGNORE)
     if (!pathExistsSync(gitignoren)) {
         debug(`write ${gitignoren}`)
@@ -490,12 +503,23 @@ export interface AddNpmOptions extends InitOptions {
     license?: string
 }
 
+export interface AddSettingsOptions extends InitOptions {}
+
 function execCmd(cmd: string) {
     try {
         return execSync(cmd, { encoding: "utf-8" }).trim()
     } catch {
         return ""
     }
+}
+
+export async function addSettings(options: AddSettingsOptions) {
+    const files = clone(settingsFiles)
+    const cwd = writeFiles(".", options, files)
+    return finishAdd(
+        `Prepared .env.* files, please add settings in those files.`,
+        Object.keys(files)
+    )
 }
 
 export async function addNpm(options: AddNpmOptions) {
@@ -566,6 +590,9 @@ export function initAddCmds() {
     )
     addReqHandler<SideAddSimReq, SideAddSimResp>("addSim", d => addSim(d.data))
     addReqHandler<SideAddNpmReq, SideAddNpmResp>("addNpm", d => addNpm(d.data))
+    addReqHandler<SideAddSettingsReq, SideAddSettingsResp>("addSettings", d =>
+        addSettings(d.data)
+    )
     addReqHandler<SideAddTestReq, SideAddTestResp>("addTest", d =>
         addTest(d.data)
     )

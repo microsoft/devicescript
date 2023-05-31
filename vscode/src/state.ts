@@ -26,6 +26,8 @@ import {
     AddResponse,
     SideAddServiceReq,
     SideAddServiceResp,
+    SideAddSettingsReq,
+    SideAddSettingsResp,
     SideAddSimReq,
     SideAddSimResp,
     SideConnectReq,
@@ -154,6 +156,16 @@ export class DeviceScriptExtensionState extends JDEventSource {
             req: "addSim",
             data: {},
         })
+        await this.handleAddResponse(resp.data)
+    }
+
+    async addSettings() {
+        const resp = await sideRequest<SideAddSettingsReq, SideAddSettingsResp>(
+            {
+                req: "addSettings",
+                data: {},
+            }
+        )
         await this.handleAddResponse(resp.data)
     }
 
