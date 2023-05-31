@@ -275,7 +275,7 @@ export class SeesawDriver {
                 default:
                     return 0
             }
-        } else if (this._hardwareID == _HW_ID_CODE_TINY8X7) {
+        } else if (this._hardwareID === _HW_ID_CODE_TINY8X7) {
             p = pin
         } else {
             throw new I2CDriverError("Unsupported hardware ID")
