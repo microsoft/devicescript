@@ -32,7 +32,7 @@ import { prelude } from "./prelude"
 import { camelize, oops, upperCamel, upperFirst } from "./util"
 import { pinFunctions } from "./board"
 import { assert } from "./jdutil"
-import { TSDOC_START } from "./compiler"
+import { TSDOC_GPIO, TSDOC_START } from "./compiler"
 
 const REGISTER_NUMBER = "Register<number>"
 const REGISTER_BOOL = "Register<boolean>"
@@ -321,7 +321,7 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
                 `/**`,
                 ` * Pin ${pinName} (GPIO${gpio}, ${funs.join(", ")})`,
                 ` *`,
-                ` * @ds-gpio ${gpio}`,
+                ` * @${TSDOC_GPIO} ${gpio}`,
                 ` */`,
                 // `//% gpio=${gpio}`,
                 `${pinName}: ${types.join(" & ")}`,

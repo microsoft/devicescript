@@ -106,6 +106,7 @@ export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
 export const TSDOC_PART = "devsPart"
 export const TSDOC_SERVICES = "devsServices"
 export const TSDOC_START = "devsStart"
+export const TSDOC_GPIO = "devsGPIO"
 
 const coreModule = "@devicescript/core"
 
