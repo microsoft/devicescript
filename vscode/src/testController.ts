@@ -6,6 +6,7 @@ import { Utils } from "vscode-uri"
 
 interface TestData {
     type: "describe" | "test" | "it"
+    indent: string
 }
 
 export function activateTestController(
@@ -21,7 +22,7 @@ export function activateTestController(
         "DeviceScript"
     )
     subscriptions.push(controller)
-    devtools.subscribe(CHANGE, () => parseTests)
+    devtools.subscribe(CHANGE, parseTests)
 
     // When text documents are open, parse tests in them.
     subscriptions.push(
@@ -55,7 +56,7 @@ export function activateTestController(
         }
     }
     async function parseTests() {
-        const { currentFile } = devtools
+        const { currentFile, projectFolder } = devtools
 
         // clear all tests
         if (!currentFile) {
@@ -63,26 +64,46 @@ export function activateTestController(
             return
         }
 
-        const suite = Utils.basename(currentFile)
+        const suite = `${Utils.basename(projectFolder)}/${Utils.basename(
+            currentFile
+        )}`
         const content = await readFileText(currentFile)
         const lines = content.split("\n")
 
-        let parent: vscode.TestItem = controller.createTestItem(suite, suite)
+        let root = controller.items.get(suite)
+        if (!root) {
+            root = controller.createTestItem(suite, suite)
+            controller.items.replace([root])
+        }
+        let parent = root
         for (const line of lines) {
-            const m =
-                /^\s*(?<type>describe|it|test)\(['"](?<name>.*?)['"],/.exec(
+            const mopen =
+                /^(?<indent>\s*)(?<type>describe|it|test)\(['"](?<name>.*?)['"],/.exec(
                     line
                 )
-            if (m) {
-                const { name, type } = m.groups
+            if (mopen) {
+                const { indent, name, type } = mopen.groups
                 const id = `${parent.id}/${name}`
                 let test = controller.items.get(id)
                 if (!controller.items.get(id)) {
                     test = controller.createTestItem(id, name)
                     parent.children.add(test)
-                    testData.set(test, { type } as TestData)
+                    testData.set(test, { type, indent } as TestData)
                 }
                 if (type === "describe") parent = test
+                continue
+            }
+
+            const mclose = /^(?<indent>\s*)}\s*\)\s*;?\s*$/.exec(line)
+            // don't pop top level test
+            if (mclose && parent !== root) {
+                const { indent } = mclose.groups
+                const parentData = testData.get(parent)
+                if (!parentData) continue
+                if (indent.length <= parentData.indent.length) {
+                    parent = parent.parent
+                }
+                continue
             }
         }
     }
