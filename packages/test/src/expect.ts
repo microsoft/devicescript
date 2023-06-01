@@ -15,10 +15,14 @@ export class Expect<T> {
     }
 
     toThrow() {
+        if (typeof this.value !== "function")
+            throw new AssertionError("toThrow", "Expected function")
         try {
             ;(this.value as any)()
-            throw new AssertionError("toThrow", "Expected to throw")
-        } catch (e) {}
+        } catch (e) {
+            return
+        }
+        throw new AssertionError("toThrow", "Expected to throw")
     }
 
     toBe(other: T): void {
