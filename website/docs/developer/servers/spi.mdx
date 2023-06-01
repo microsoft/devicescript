@@ -5,8 +5,45 @@ sidebar_position: 101
 
 # SPI
 
-:::info
+SPI [builtin package](/developer/packages) that exposes functions to read, write, transfer buffers over SPI.
 
-TODO
+## `spiConfigure`
 
-:::
+The `spiConfigure` function is used to configure the SPI bus. It takes the pin configuration, frequency and mode.
+
+```ts
+import { spiConfigure } from "@devicescript/spi"
+
+await spiConfigure({})
+```
+
+## `spiRead`
+
+The `spiRead` function is used to read a buffer from the SPI bus.
+
+```ts
+import { spiRead } from "@devicescript/spi"
+
+const res = await spiRead(8) // read 8 bytes
+```
+
+## `spiWrite`
+
+The `spiWrite` function is used to write a buffer to the SPI bus.
+
+```ts
+import { spiWrite } from "@devicescript/spi"
+
+await spiWrite(hex`abcd`)
+```
+
+## `spiTransfer`
+
+The `spiTransfter` function is used to write and read buffers from and to the SPI bus.
+The read buffer has the same length as the write buffer.
+
+```ts
+import { spiTransfer } from "@devicescript/spi"
+
+const res = await spiTransfer(hex`abcd`)
+```
