@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.15](https://github.com/microsoft/devicescript/compare/v2.9.14...v2.9.15)
+
+> 1 June 2023
+
+- barebone docs on spi [`0f568ac`](https://github.com/microsoft/devicescript/commit/0f568ac607e9364017e34eadab8fae321ac278fc)
+- add note about network support [`d5aac75`](https://github.com/microsoft/devicescript/commit/d5aac7525b7c3234665e503a697581f339a634f2)
+- add settings clear menu item [`2188d0b`](https://github.com/microsoft/devicescript/commit/2188d0bc064faef5215b3434c8a741991f0809ad)
+
 #### [v2.9.14](https://github.com/microsoft/devicescript/compare/v2.9.13...v2.9.14)
 
 > 1 June 2023
