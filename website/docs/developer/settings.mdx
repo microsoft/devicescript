@@ -11,13 +11,18 @@ Settings [builtin package](/developer/packages) provides a friendly layer to rea
 
 ## Usage
 
-The settings store is cleared on each deployment. It is recommended to use the `readSetting` and `writeSetting` functions to access the settings store.
+The settings store is cleared on each deployment.
+It is recommended to use the `readSetting` and `writeSetting` functions to access the settings store.
 The functions are asynchronous and return a promise.
 
 ### `.env.defaults` and `.env.local` files
 
-You can store general settings in `./.env.defaults` and secrets in the `./.env.local` file at the root of the project.
-The file should be in the following format where the value can be any valid JSON (parsed automatically) or a string. This is similar to the [dotenv-flow](https://www.npmjs.com/package/dotenv-flow) package.
+Don't store secrets or settings in the code, use `.env` files instead.
+
+-   `./.env.defaults`: store general settings (**tracked by version control**)
+-   `./.env.local`: store secrets or override for general settings (**untracked by version control**)
+
+The `.env*` file use a similar format to node.js `.env` file.
 
 ```env title="./.env.defaults"
 # This file is tracked by git. DO NOT store secrets in this file.
@@ -32,9 +37,13 @@ TEMP=70 # override TEMP
 
 The secrets can only be accessed by the DeviceScript program and are not available through the Jacdac protocol.
 
-:::warning
+-   multiline values, and `#` in quote strings are not supported.
+-   key length should be less than 16 characters.
 
-Note that multiline values, and `#` in quote strings are not supported.
+:::tip
+
+In Visual Studio Code, open the command palette and run **DeviceScript: Add Settings...**.
+From the CLI, run `devs add settings`.
 
 :::
 
