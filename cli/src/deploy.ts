@@ -41,14 +41,13 @@ export async function deploySettingsToService(
     settingsService: JDService,
     settings: Record<string, Uint8Array>
 ) {
+    if (!settings || !Object.keys(settings).length) return
+
     const client = new SettingsClient(settingsService)
-    await client.clear()
-    if (settings) {
-        for (const key in settings) {
-            console.debug(`deploying setting ${key}...`)
-            const value = settings[key]
-            await client.setValue(key, value)
-        }
+    for (const key in settings) {
+        console.debug(`deploying setting ${key}...`)
+        const value = settings[key]
+        await client.setValue(key, value)
     }
 }
 
