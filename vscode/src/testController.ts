@@ -1,6 +1,10 @@
 import * as vscode from "vscode"
 import { DeviceScriptExtensionState } from "./state"
-import { CHANGE } from "jacdac-ts"
+import {
+    CHANGE,
+    DeviceScriptTestControllerServer,
+    SRV_DEVS_TEST,
+} from "jacdac-ts"
 import { readFileText } from "./fs"
 import { Utils } from "vscode-uri"
 
@@ -14,7 +18,7 @@ interface TestData {
 export function activateTestController(
     extensionState: DeviceScriptExtensionState
 ) {
-    const { context, devtools } = extensionState
+    const { context, devtools, bus } = extensionState
     const { subscriptions } = context
 
     const testData = new WeakMap<vscode.TestItem, TestData>()
@@ -131,6 +135,14 @@ export function activateTestController(
             console.log({ tests, include, exclude })
         }
 
+        const testControllerService = bus.services({
+            serviceClass: SRV_DEVS_TEST,
+        })[0]
+        const testController = bus
+            .findServiceProvider(testControllerService.device.deviceId)
+            .service(
+                testControllerService.serviceIndex
+            ) as DeviceScriptTestControllerServer
         const run = controller.createTestRun(request)
         try {
             // mark tests as undefined
@@ -140,6 +152,7 @@ export function activateTestController(
             console.log({ testIds })
 
             // start sniffing console.log
+            testController.tests = testIds
 
             // start running
             await vscode.commands.executeCommand(
@@ -149,6 +162,7 @@ export function activateTestController(
             if (token.isCancellationRequested) return
         } finally {
             // stop sniffing console.log
+            testController.tests = []
 
             // fail remaining tests
             tests.forEach(test => run.errored(test, { message: "cancelled" }))

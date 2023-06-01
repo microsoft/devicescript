@@ -1,11 +1,16 @@
 import {
+    addServiceProvider,
     createWebSocketTransport,
+    DeviceScriptTestControllerServer,
     ERROR,
     ERROR_TIMEOUT,
     JDBus,
     JDError,
     JDEventSource,
+    JDServiceServer,
     SIDE_DATA,
+    SRV_DEVS_TEST,
+    SRV_INFRASTRUCTURE,
     WebSocketTransport,
 } from "jacdac-ts"
 import type { SideEvent, SideReq, SideResp } from "../../cli/src/sideprotocol"
@@ -85,6 +90,15 @@ function uncachedStartJacdacBus() {
             }
         })
         const bus = new JDBus([ws], { client: false, disableRoleManager: true })
+        const testController = new DeviceScriptTestControllerServer(bus)
+        addServiceProvider(bus, {
+            name: "vscode",
+            serviceClasses: [SRV_DEVS_TEST, SRV_INFRASTRUCTURE],
+            services: () => [
+                testController,
+                new JDServiceServer(SRV_INFRASTRUCTURE),
+            ],
+        })
         bus.on(ERROR, err => {
             console.error("Bus error", err)
         })
