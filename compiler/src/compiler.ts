@@ -4148,7 +4148,6 @@ class Program implements TopOpWriter {
             const envDefaults = this.readFile("./.env.defaults")
             const envLocal = this.readFile("./.env.local")
             const settings = parseToSettings({ envDefaults, envLocal })
-            console.debug({ envDefaults, envLocal, settings })
             return settings
         } catch (e) {
             return undefined

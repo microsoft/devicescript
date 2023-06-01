@@ -38,7 +38,7 @@ TEMP=70 # override TEMP
 The secrets can only be accessed by the DeviceScript program and are not available through the Jacdac protocol.
 
 -   multiline values, and `#` in quote strings are not supported.
--   key length should be less than 16 characters.
+-   key length should be less than 14 characters.
 
 :::tip
 
@@ -49,7 +49,8 @@ From the CLI, run `devs add settings`.
 
 ### `readSetting`
 
-Deserializes an object from a setting at a given key. If the key is missing or invalid format, returns undefined.
+Deserializes an object from a setting at a given key. If the key is missing or invalid format, returns undefined
+or the default value.
 
 ```ts
 import { readSetting } from "@devicescript/settings"
@@ -60,7 +61,7 @@ const { world } = await readSetting<{ world?: string }>("hello", {})
 
 ### `writeSetting`
 
-Serializes an object into a setting at a given key. The key name should be less than 16 characters.
+Serializes an object into a setting at a given key. **The key name should be less than 14 characters.**
 
 ```ts
 import { writeSetting } from "@devicescript/settings"
