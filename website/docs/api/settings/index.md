@@ -1,9 +1,36 @@
 # Settings
 
 The `@devicescript/settings` [builtin](/developer/packages) module provides a lightweight flash storage for small setting values.
-Settings values are serialized in flash and available accross device reset. Firmware updates might erase the settings.
+Settings values are serialized in flash and available across device reset. Firmware updates might erase the settings.
 
 ## Usage
+
+You can store settings and secrets in `.env` files.
+
+### `.env.defaults` and `.env.local` files
+
+Don't store secrets or settings in the code, use `.env` files instead.
+
+-   `./.env.defaults`: store general settings (**tracked by version control**)
+-   `./.env.local`: store secrets or override for general settings (**untracked by version control**)
+
+The `.env*` file use a similar format to node.js `.env` file.
+
+```env title="./.env.defaults"
+# This file is tracked by git. DO NOT store secrets in this file.
+TEMP=68
+```
+
+```env title="./.env.local"
+# This file is **NOT** tracked by git and may contain secrets
+PASSWORD=VALUE
+TEMP=70 # override TEMP
+```
+
+The secrets can only be accessed by the DeviceScript program and are not available through the Jacdac protocol.
+
+-   multiline values, and `#` in quote strings are not supported.
+-   key length should be less than 14 characters.
 
 ### writeSetting
 

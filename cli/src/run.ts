@@ -15,7 +15,11 @@ export interface RunOptions {
 export async function readCompiled(
     fn: string,
     options: BuildOptions = {}
-): Promise<{ binary: Uint8Array; dbg?: DebugInfo }> {
+): Promise<{
+    binary: Uint8Array
+    dbg?: DebugInfo
+    settings?: Record<string, Uint8Array>
+}> {
     const buf = readFileSync(fn)
     if (checkMagic(buf)) return { binary: buf }
     if (
@@ -38,7 +42,7 @@ export async function readCompiled(
     }
     const res = await compileFile(fn, options)
     if (!res.success) process.exit(1)
-    return { binary: res.binary, dbg: res.dbg }
+    return { binary: res.binary, dbg: res.dbg, settings: res.settings }
 }
 
 export async function runTest(

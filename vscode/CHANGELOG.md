@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.15](https://github.com/microsoft/devicescript/compare/v2.9.14...v2.9.15)
+
+> 1 June 2023
+
+- barebone docs on spi [`0f568ac`](https://github.com/microsoft/devicescript/commit/0f568ac607e9364017e34eadab8fae321ac278fc)
+- add note about network support [`d5aac75`](https://github.com/microsoft/devicescript/commit/d5aac7525b7c3234665e503a697581f339a634f2)
+- add settings clear menu item [`2188d0b`](https://github.com/microsoft/devicescript/commit/2188d0bc064faef5215b3434c8a741991f0809ad)
+
+#### [v2.9.14](https://github.com/microsoft/devicescript/compare/v2.9.13...v2.9.14)
+
+> 1 June 2023
+
+- support for .env file [`#426`](https://github.com/microsoft/devicescript/pull/426)
+- tsdoc attributes normalization [`#424`](https://github.com/microsoft/devicescript/pull/424)
+- docs: fix broken HomeBridge hyperlink [`#422`](https://github.com/microsoft/devicescript/pull/422)
+- Update index.mdx [`#417`](https://github.com/microsoft/devicescript/pull/417)
+- Typo fix in CONTRIBUTING.md [`#416`](https://github.com/microsoft/devicescript/pull/416)
+- Fix documentation typos [`#415`](https://github.com/microsoft/devicescript/pull/415)
+- allow @ds-when-used attributes; fixes #332 [`#332`](https://github.com/microsoft/devicescript/issues/332)
+- updated docs about status light [`ecb7c7b`](https://github.com/microsoft/devicescript/commit/ecb7c7be5ab9c882e6194880e63d4ba60932fd06)
+- Update issue templates [`05fc469`](https://github.com/microsoft/devicescript/commit/05fc469c3f8d25781a18f1b8e37ca24e9f95f43e)
+- Update issue templates [`509ce4f`](https://github.com/microsoft/devicescript/commit/509ce4fc77a5fa88ca5773e47ba66911b84f8c1f)
+
+#### [v2.9.13](https://github.com/microsoft/devicescript/compare/v2.9.12...v2.9.13)
+
+> 25 May 2023
+
+- support for yarn 2.0 [`#406`](https://github.com/microsoft/devicescript/pull/406)
+- Fix typo in events.md [`#399`](https://github.com/microsoft/devicescript/pull/399)
+- Fix typo in add-board.mdx [`#400`](https://github.com/microsoft/devicescript/pull/400)
+- Update json.mdx [`#398`](https://github.com/microsoft/devicescript/pull/398)
+- add csv history [`48500b3`](https://github.com/microsoft/devicescript/commit/48500b38d465a24996430f6e8a78c9151b4d9002)
+- simplify sample [`7ba4133`](https://github.com/microsoft/devicescript/commit/7ba4133371eef1be7985d72f304cebedacaae890)
+- add @devicescript/spi module [`05feaaf`](https://github.com/microsoft/devicescript/commit/05feaaf3ff42a5161b788fc461b421aa1f491b4c)
+
 #### [v2.9.12](https://github.com/microsoft/devicescript/compare/v2.9.11...v2.9.12)
 
 > 18 May 2023

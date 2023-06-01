@@ -66,6 +66,9 @@ import {
     serviceName,
     Role,
     shortDeviceId,
+    SRV_SETTINGS,
+    SettingsClient,
+    bufferToString,
 } from "jacdac-ts"
 import { DeviceScriptExtensionState, NodeWatch } from "./state"
 import { deviceIconUri, toMarkdownString } from "./catalog"
@@ -76,6 +79,7 @@ import {
     WIFI_RECONNECT_TIMEOUT,
 } from "./constants"
 import { showErrorMessage } from "./telemetry"
+import { showConfirmBox } from "./pickers"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -419,6 +423,7 @@ ${spec.description}`,
         const powers = device.services({ serviceClass: SRV_POWER })
         const roleManagers = device.services({ serviceClass: SRV_ROLE_MANAGER })
         const wifis = device.services({ serviceClass: SRV_WIFI })
+        const settings = device.services({ serviceClass: SRV_SETTINGS })
         const cloudAdapters = device.services({
             serviceClass: SRV_CLOUD_ADAPTER,
         })
@@ -433,6 +438,9 @@ ${spec.description}`,
                 ...wifis.map(srv => new JDomWifiTreeItem(this, srv, props)),
                 ...cloudAdapters.map(
                     srv => new JDomCloudAdapterTreeItem(this, srv, props)
+                ),
+                ...settings.map(
+                    srv => new JDomSettingsTreeItem(this, srv, props)
                 ),
                 ...deviceScriptManagers.map(
                     srv => new JDomDeviceManagerTreeItem(this, srv, props)
@@ -1305,6 +1313,97 @@ class JDomWifiAPTreeItem extends JDomCustomTreeItem {
     }
 }
 
+class JDomSettingsTreeItem extends JDomCustomTreeItem {
+    private entries: { key: string; value?: Uint8Array }[]
+
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        props: TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "settings_",
+            contextValue: props.idPrefix + "settings",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            iconPath: "settings-gear",
+            label: "settings",
+        })
+    }
+
+    async clear() {
+        const res = await showConfirmBox("Clear all settings?")
+        if (!res) return
+
+        const client = new SettingsClient(this.service)
+        await client.clear()
+        this.entries = []
+        this.refresh()
+    }
+
+    async sync() {
+        let listPromise = this.service.nodeData["list-promise"] as Promise<
+            { key: string; value?: Uint8Array }[]
+        >
+        if (!listPromise) {
+            const client = new SettingsClient(this.service)
+            listPromise = client.list()
+            this.service.nodeData["list-promise"] = listPromise
+        }
+        this.entries = await listPromise
+        this.service.nodeData["list-promise"] = undefined
+        console.log({ entries: this.entries })
+        this.refresh()
+    }
+
+    protected createChildrenTreeItems(): JDomTreeItem[] {
+        if (!this.entries) this.sync() // sync in background
+
+        const props = this.props
+        const entries = this.entries || []
+        return entries.map(
+            entry =>
+                new JDomSettingTreeItem(this, this.service, {
+                    entry,
+                    ...props,
+                })
+        )
+    }
+}
+
+class JDomSettingTreeItem extends JDomCustomTreeItem {
+    private readonly client: SettingsClient
+    private entry: { key: string; value?: Uint8Array }
+
+    constructor(
+        parent: JDomTreeItem,
+        service: JDService,
+        props: {
+            entry: { key: string; value?: Uint8Array }
+        } & TreeItemProps
+    ) {
+        super(parent, service, {
+            ...props,
+            idPrefix: props.idPrefix + "setting_",
+            contextValue: props.idPrefix + "setting",
+            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+            iconPath: "settings-gear",
+        })
+        this.entry = props.entry
+    }
+
+    protected override update(): boolean {
+        const { key, value } = this.entry
+        const oldlabel = this.label
+        const oldDescription = this.description
+
+        this.label = key
+        this.description = value ? bufferToString(value) : "***"
+
+        return oldlabel !== this.label || oldDescription !== this.description
+    }
+}
+
 class JDomCloudAdapterTreeItem extends JDomCustomTreeItem {
     constructor(
         parent: JDomDeviceTreeItem,
@@ -1918,6 +2017,10 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.devicescript.toggle",
             (item: JDomDeviceManagerTreeItem) => item?.toggle()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.settings.clear",
+            (item: JDomSettingsTreeItem) => item?.clear()
         )
     )
 }

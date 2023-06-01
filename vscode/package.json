@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "2.9.13",
+    "version": "2.9.16",
     "publisher": "devicescript",
     "description": "Professional TypeScript for microcontrollers.",
     "author": {
@@ -400,6 +400,11 @@
                     "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_known"
                 },
                 {
+                    "command": "extension.devicescript.jdom.settings.clear",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_settings",
+                    "group": "inline"
+                },
+                {
                     "command": "extension.devicescript.watch.add",
                     "when": "view == extension.devicescript.jdom && viewItem =~ /^(register|event)/",
                     "group": "inline"
@@ -511,6 +516,10 @@
                     "when": "workbenchState != empty"
                 },
                 {
+                    "command": "extension.devicescript.settings.add",
+                    "when": "workbenchState != empty"
+                },
+                {
                     "command": "extension.devicescript.services.add",
                     "when": "workbenchState != empty"
                 },
@@ -526,6 +535,9 @@
                 },
                 {
                     "command": "extension.devicescript.project.new"
+                },
+                {
+                    "command": "extension.devicescript.openIssueReporter"
                 }
             ],
             "debug/variables/context": [
@@ -603,6 +615,17 @@
             {
                 "command": "extension.devicescript.sims.add",
                 "title": "Add Sim...",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.jdom.settings.clear",
+                "title": "Clear Settings...",
+                "category": "DeviceScript",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "extension.devicescript.settings.add",
+                "title": "Add Settings...",
                 "category": "DeviceScript"
             },
             {
@@ -733,6 +756,11 @@
             {
                 "command": "extension.devicescript.device.showFirmwareInformation",
                 "title": "Update Firmware",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.openIssueReporter",
+                "title": "Report Issue...",
                 "category": "DeviceScript"
             },
             {
