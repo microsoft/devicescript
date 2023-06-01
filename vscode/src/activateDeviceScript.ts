@@ -26,22 +26,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     })
     const extensionState = new DeviceScriptExtensionState(context, bus)
 
-    const debugFile = async (file: vscode.Uri, noDebug: boolean) => {
-        if (!file) return
-        const folder = vscode.workspace.getWorkspaceFolder(file)
-        if (!folder) return
-        await vscode.debug.startDebugging(folder, {
-            type: "devicescript",
-            request: "launch",
-            name: "DeviceScript: Run File",
-            stopOnEntry: false,
-            noDebug,
-            program: file.path,
-        } as vscode.DebugConfiguration)
-        if (noDebug)
-            vscode.commands.executeCommand("extension.devicescript.jdom.focus")
-    }
-
     // build
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -197,11 +181,12 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.run",
-            async (file: vscode.Uri) => debugFile(file, true)
+            async (file: vscode.Uri) => extensionState.runFile(file)
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.debug",
-            async (file: vscode.Uri) => debugFile(file, false)
+            async (file: vscode.Uri) =>
+                extensionState.runFile(file, { debug: true })
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.build",

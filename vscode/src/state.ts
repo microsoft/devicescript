@@ -108,6 +108,25 @@ export class DeviceScriptExtensionState extends JDEventSource {
         return this.state.get(STATE_WATCHES_KEY) || []
     }
 
+    async runFile(file: vscode.Uri, options?: { debug?: boolean }) {
+        const noDebug = !options?.debug
+        if (!file) file = this.devtools.currentFile
+
+        if (!file) return
+        const folder = vscode.workspace.getWorkspaceFolder(file)
+        if (!folder) return
+        await vscode.debug.startDebugging(folder, {
+            type: "devicescript",
+            request: "launch",
+            name: "DeviceScript: Test",
+            stopOnEntry: false,
+            noDebug,
+            program: file.path,
+        } as vscode.DebugConfiguration)
+        if (noDebug)
+            vscode.commands.executeCommand("extension.devicescript.jdom.focus")
+    }
+
     async updateWatches(watches: NodeWatch[]) {
         await this.state.update(STATE_WATCHES_KEY, watches || [])
         this.emit(CHANGE)

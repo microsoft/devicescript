@@ -6,6 +6,8 @@ import { Utils } from "vscode-uri"
 
 interface TestData {
     type: "describe" | "test" | "it"
+    // identifier used in devicescript
+    testId: string
     indent: string
 }
 
@@ -70,12 +72,7 @@ export function activateTestController(
         const content = await readFileText(currentFile)
         const lines = content.split("\n")
 
-        let root = controller.items.get(suite)
-        if (!root) {
-            root = controller.createTestItem(suite, suite)
-            controller.items.replace([root])
-        }
-        let parent = root
+        let parent: vscode.TestItem
         for (const line of lines) {
             const mopen =
                 /^(?<indent>\s*)(?<type>describe|it|test)\(['"](?<name>.*?)['"],/.exec(
@@ -83,12 +80,17 @@ export function activateTestController(
                 )
             if (mopen) {
                 const { indent, name, type } = mopen.groups
-                const id = `${parent.id}/${name}`
+                const id = `${parent?.id || suite}/${name}`
                 let test = controller.items.get(id)
                 if (!controller.items.get(id)) {
-                    test = controller.createTestItem(id, name)
-                    parent.children.add(test)
-                    testData.set(test, { type, indent } as TestData)
+                    const parentData = parent && testData.get(parent)
+                    const testId = parentData
+                        ? `${parentData.testId}/${name}`
+                        : name
+                    test = controller.createTestItem(id, name, currentFile)
+                    if (parent) parent.children.add(test)
+                    else controller.items.add(test)
+                    testData.set(test, { type, indent, testId } as TestData)
                 }
                 if (type === "describe") parent = test
                 continue
@@ -96,7 +98,7 @@ export function activateTestController(
 
             const mclose = /^(?<indent>\s*)}\s*\)\s*;?\s*$/.exec(line)
             // don't pop top level test
-            if (mclose && parent !== root) {
+            if (mclose) {
                 const { indent } = mclose.groups
                 const parentData = testData.get(parent)
                 if (!parentData) continue
@@ -113,33 +115,46 @@ export function activateTestController(
         request: vscode.TestRunRequest,
         token: vscode.CancellationToken
     ) {
-        const run = controller.createTestRun(request)
-        const queue: vscode.TestItem[] = []
-
-        // Loop through all included tests, or all known tests, and add them to our queue
-        if (request.include) {
-            request.include.forEach(test => queue.push(test))
-        } else {
-            controller.items.forEach(test => queue.push(test))
-        }
-
-        // For every test that was queued, try to run it. Call run.passed() or run.failed().
-        // The `TestMessage` can contain extra information, like a failing location or
-        // a diff output. But here we'll just give it a textual message.
-        while (queue.length > 0 && !token.isCancellationRequested) {
-            const test = queue.pop()!
-
-            // Skip tests the user asked to exclude
-            if (request.exclude?.includes(test)) {
-                continue
+        // recursively expand all tests
+        const tests: vscode.TestItem[] = []
+        {
+            const todo: vscode.TestItem[] = []
+            const { include, exclude } = request
+            if (include) todo.push(...include)
+            else controller.items.forEach(item => todo.push(item))
+            while (todo.length) {
+                const next = todo.pop()
+                if (exclude?.includes(next)) continue
+                tests.push(next)
+                next.children.forEach(child => todo.push(child))
             }
-            run.passed(test, 0)
-
-            // queue children
-            test.children.forEach(test => queue.push(test))
+            console.log({ tests, include, exclude })
         }
 
-        // Make sure to end the run after all tests have been executed:
-        run.end()
+        const run = controller.createTestRun(request)
+        try {
+            // mark tests as undefined
+            tests.forEach(test => run.enqueued(test))
+
+            const testIds = tests.map(test => testData.get(test)?.testId)
+            console.log({ testIds })
+
+            // start sniffing console.log
+
+            // start running
+            await vscode.commands.executeCommand(
+                `extension.devicescript.editor.${shouldDebug ? "debug" : "run"}`
+            )
+
+            if (token.isCancellationRequested) return
+        } finally {
+            // stop sniffing console.log
+
+            // fail remaining tests
+            tests.forEach(test => run.errored(test, { message: "cancelled" }))
+
+            // and done
+            run.end()
+        }
     }
 }
