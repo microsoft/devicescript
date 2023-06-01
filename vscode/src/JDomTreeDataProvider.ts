@@ -79,6 +79,7 @@ import {
     WIFI_RECONNECT_TIMEOUT,
 } from "./constants"
 import { showErrorMessage } from "./telemetry"
+import { showConfirmBox } from "./pickers"
 
 export type RefreshFunction = (item: JDomTreeItem) => void
 
@@ -1330,6 +1331,16 @@ class JDomSettingsTreeItem extends JDomCustomTreeItem {
         })
     }
 
+    async clear() {
+        const res = await showConfirmBox("Clear all settings?")
+        if (!res) return
+
+        const client = new SettingsClient(this.service)
+        await client.clear()
+        this.entries = []
+        this.refresh()
+    }
+
     async sync() {
         let listPromise = this.service.nodeData["list-promise"] as Promise<
             { key: string; value?: Uint8Array }[]
@@ -2006,6 +2017,10 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.devicescript.toggle",
             (item: JDomDeviceManagerTreeItem) => item?.toggle()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.settings.clear",
+            (item: JDomSettingsTreeItem) => item?.clear()
         )
     )
 }

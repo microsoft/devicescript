@@ -400,6 +400,11 @@
                     "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_known"
                 },
                 {
+                    "command": "extension.devicescript.jdom.settings.clear",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_settings",
+                    "group": "inline"
+                },
+                {
                     "command": "extension.devicescript.watch.add",
                     "when": "view == extension.devicescript.jdom && viewItem =~ /^(register|event)/",
                     "group": "inline"
@@ -608,6 +613,12 @@
                 "command": "extension.devicescript.sims.add",
                 "title": "Add Sim...",
                 "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.jdom.settings.clear",
+                "title": "Clear Settings...",
+                "category": "DeviceScript",
+                "icon": "$(trash)"
             },
             {
                 "command": "extension.devicescript.settings.add",
