@@ -37,7 +37,7 @@ static inline bool img_has_padding(devs_gimage_t *r) {
 
 static devs_gimage_t *make_writable_image(devs_ctx_t *ctx, devs_gimage_t *r) {
     if (r && r->read_only) {
-        r->buffer = devs_try_alloc(ctx, r->stride * r->width);
+        r->buffer = devs_buffer_try_alloc(ctx, r->stride * r->width);
         if (r->buffer == NULL)
             return NULL;
         r->read_only = 0;
@@ -249,7 +249,7 @@ void meth3_Image_set(devs_ctx_t *ctx) {
 }
 
 void meth2_Image_get(devs_ctx_t *ctx) {
-    DEVS_ARGS(2);
+    DEVS_ARGS(-2);
     int c = args.in_range ? getCore(img, args.x, args.y) : 0;
     devs_ret_int(ctx, c);
 }
@@ -428,7 +428,7 @@ void meth0_Image_flipY(devs_ctx_t *ctx) {
 }
 
 void meth0_Image_transposed(devs_ctx_t *ctx) {
-    devs_gimage_t *img = devs_arg_self_writable_image(ctx);
+    devs_gimage_t *img = devs_arg_self_image(ctx);
     if (!img)
         return;
 
