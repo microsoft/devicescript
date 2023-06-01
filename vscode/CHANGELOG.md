@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.14](https://github.com/microsoft/devicescript/compare/v2.9.13...v2.9.14)
+
+> 1 June 2023
+
+- support for .env file [`#426`](https://github.com/microsoft/devicescript/pull/426)
+- tsdoc attributes normalization [`#424`](https://github.com/microsoft/devicescript/pull/424)
+- docs: fix broken HomeBridge hyperlink [`#422`](https://github.com/microsoft/devicescript/pull/422)
+- Update index.mdx [`#417`](https://github.com/microsoft/devicescript/pull/417)
+- Typo fix in CONTRIBUTING.md [`#416`](https://github.com/microsoft/devicescript/pull/416)
+- Fix documentation typos [`#415`](https://github.com/microsoft/devicescript/pull/415)
+- allow @ds-when-used attributes; fixes #332 [`#332`](https://github.com/microsoft/devicescript/issues/332)
+- updated docs about status light [`ecb7c7b`](https://github.com/microsoft/devicescript/commit/ecb7c7be5ab9c882e6194880e63d4ba60932fd06)
+- Update issue templates [`05fc469`](https://github.com/microsoft/devicescript/commit/05fc469c3f8d25781a18f1b8e37ca24e9f95f43e)
+- Update issue templates [`509ce4f`](https://github.com/microsoft/devicescript/commit/509ce4fc77a5fa88ca5773e47ba66911b84f8c1f)
+
 #### [v2.9.13](https://github.com/microsoft/devicescript/compare/v2.9.12...v2.9.13)
 
 > 25 May 2023
