@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.13](https://github.com/microsoft/devicescript/compare/v2.9.12...v2.9.13)
+
+> 25 May 2023
+
+- support for yarn 2.0 [`#406`](https://github.com/microsoft/devicescript/pull/406)
+- Fix typo in events.md [`#399`](https://github.com/microsoft/devicescript/pull/399)
+- Fix typo in add-board.mdx [`#400`](https://github.com/microsoft/devicescript/pull/400)
+- Update json.mdx [`#398`](https://github.com/microsoft/devicescript/pull/398)
+- add csv history [`48500b3`](https://github.com/microsoft/devicescript/commit/48500b38d465a24996430f6e8a78c9151b4d9002)
+- simplify sample [`7ba4133`](https://github.com/microsoft/devicescript/commit/7ba4133371eef1be7985d72f304cebedacaae890)
+- add @devicescript/spi module [`05feaaf`](https://github.com/microsoft/devicescript/commit/05feaaf3ff42a5161b788fc461b421aa1f491b4c)
+
 #### [v2.9.12](https://github.com/microsoft/devicescript/compare/v2.9.11...v2.9.12)
 
 > 18 May 2023
