@@ -535,6 +535,9 @@
                 },
                 {
                     "command": "extension.devicescript.project.new"
+                },
+                {
+                    "command": "extension.devicescript.openIssueReporter"
                 }
             ],
             "debug/variables/context": [
@@ -753,6 +756,11 @@
             {
                 "command": "extension.devicescript.device.showFirmwareInformation",
                 "title": "Update Firmware",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.openIssueReporter",
+                "title": "Report Issue...",
                 "category": "DeviceScript"
             },
             {

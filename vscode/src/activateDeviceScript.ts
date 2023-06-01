@@ -217,6 +217,16 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 if (!editor) return
                 await extensionState.configureHardware(editor)
             }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.openIssueReporter",
+            () =>
+                vscode.commands.executeCommand(
+                    "workbench.action.openIssueReporter",
+                    {
+                        extensionId: "devicescript.devicescript-vscode",
+                    }
+                )
         )
     )
 
