@@ -9,36 +9,29 @@ description: Settings provides a friendly layer to read/write objects from the
 
 Settings [builtin package](/developer/packages) provides a friendly layer to read/write objects from the device flash. **Keep it small, there's not a lot of space!**
 
-## Usage
-
-The settings store is cleared on each deployment.
-It is recommended to use the `readSetting` and `writeSetting` functions to access the settings store.
-The functions are asynchronous and return a promise.
-
-### `.env.defaults` and `.env.local` files
+## .env files
 
 Don't store secrets or settings in the code, use `.env` files instead.
 
 -   `./.env.defaults`: store general settings (**tracked by version control**)
 -   `./.env.local`: store secrets or override for general settings (**untracked by version control**)
 
-The `.env*` file use a similar format to node.js `.env` file.
+The `.env*` file use a similar format to node.js `.env` file. The content will be transfered in the device flash
+when deploying the DeviceScript bytecode.
 
 ```env title="./.env.defaults"
-# This file is tracked by git. DO NOT store secrets in this file.
-TEMP=68
+# Default settings
+# This file is tracked by git.
+# DO NOT store secrets in this file.
+temperature=68
 ```
 
 ```env title="./.env.local"
-# This file is **NOT** tracked by git and may contain secrets
-PASSWORD=VALUE
-TEMP=70 # override TEMP
+# Local settings and secrets
+# This file is/should **NOT** tracked by git
+temperature=70 # override
+PASSWORD=secret
 ```
-
-The secrets can only be accessed by the DeviceScript program and are not available through the Jacdac protocol.
-
--   multiline values, and `#` in quote strings are not supported.
--   key length should be less than 14 characters.
 
 :::tip
 
@@ -47,27 +40,35 @@ From the CLI, run `devs add settings`.
 
 :::
 
-### `readSetting`
 
-Deserializes an object from a setting at a given key. If the key is missing or invalid format, returns undefined
-or the default value.
+### Using settings
 
-```ts
-import { readSetting } from "@devicescript/settings"
-
-// highlight-next-line
-const { world } = await readSetting<{ world?: string }>("hello", {})
-```
-
-### `writeSetting`
-
-Serializes an object into a setting at a given key. **The key name should be less than 14 characters.**
+Once your .env files are ready, you can use `readSetting` and `writeSetting` to read/write settings.
 
 ```ts
-import { writeSetting } from "@devicescript/settings"
+import { Temperature, Button } from "@devicescript/core"
+import { readSetting, writeSetting } from "@devicescript/settings"
 
+const temperature = new Temperature()
+const button = new Button()
 // highlight-next-line
-await writeSetting("hello", { world: "world" })
+let threshold = await readSetting<number>("temperature")
+
+// show alert when temperature is above threshold
+temperature.reading.subscribe(t => {
+    // highlight-next-line
+    if (t > threshold) {
+        // too hot!
+        console.log("hot!")
+    }
+})
+
+// increase threshold when button is pressed
+button.down.subscribe(async () => {
+    threshold++;
+    // highlight-next-line
+    await writeSetting("temperature", threshold)
+})
 ```
 
 ## See also

@@ -214,8 +214,6 @@ const optionalFiles: FileSet = {
             "ms-python.python",
             "ms-python.vscode-pylance",
             "mechatroner.rainbow-csv",
-            "dotenv.dotenv-vscode",
-            "rpdswtk.vsmqtt",
         ],
     },
     ".vscode/launch.json": {
