@@ -437,6 +437,7 @@ const ${varname} = new ${clname}()
     const cmds = info.packets.filter(
         pkt =>
             pkt.kind === "command" &&
+            !pkt.pipeType &&
             !pkt.internal &&
             !pkt.derived &&
             !pkt.lowLevel
