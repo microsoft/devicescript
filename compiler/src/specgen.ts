@@ -202,7 +202,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         `enum ${clname}Codes {\n`
 
     info.packets.forEach(pkt => {
-        if (pkt.derived) return
+        if (pkt.derived || pkt.pipeType) return
         const cmt = addComment(pkt)
         let kw = ""
         let tp = ""
