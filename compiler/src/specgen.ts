@@ -7,7 +7,6 @@ import {
 import {
     SRV_BOOTLOADER,
     SRV_BRIDGE,
-    SRV_CONTROL,
     SRV_DASHBOARD,
     SRV_DEVICE_SCRIPT_CONDITION,
     SRV_DEVICE_SCRIPT_MANAGER,
@@ -202,7 +201,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         `enum ${clname}Codes {\n`
 
     info.packets.forEach(pkt => {
-        if (pkt.derived) return
+        if (pkt.derived || pkt.pipeType) return
         const cmt = addComment(pkt)
         let kw = ""
         let tp = ""
