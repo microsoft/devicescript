@@ -2,8 +2,16 @@ import * as ds from "@devicescript/core"
 
 /**
  * ROS message type
+ * TODO: code generate message signature
  */
-export type RosMessage = boolean | number | any
+export type RosMessage =
+    | boolean
+    | number
+    | {
+          id: string
+          foo: number
+      }
+    | any // escape hatch
 
 /**
  * Subscribes to a ROS topi.
