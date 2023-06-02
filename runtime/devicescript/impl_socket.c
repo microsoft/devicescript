@@ -1,5 +1,11 @@
 #include "devs_internal.h"
 
+#ifndef JD_USER_SOCKET
+#define JD_USER_SOCKET JD_NETWORK
+#endif
+
+#if JD_USER_SOCKET
+static bool inside_sock;
 static void tcpsock_on_event(unsigned event, const void *data, unsigned size) {
     int ev = 0;
     value_t arg = devs_undefined;
@@ -39,7 +45,8 @@ static void tcpsock_on_event(unsigned event, const void *data, unsigned size) {
         return;
     }
 
-    DEVS_CHECK_CTX_FREE(ctx);
+    if (!inside_sock)
+        DEVS_CHECK_CTX_FREE(ctx);
 
     ctx->stack_top_for_gc = 3;
     ctx->the_stack[0] = fn;
@@ -49,9 +56,10 @@ static void tcpsock_on_event(unsigned event, const void *data, unsigned size) {
     if (fiber)
         devs_fiber_set_wake_time(fiber, devs_now(ctx));
 }
+#endif
 
 void fun2_DeviceScript__socketOpen(devs_ctx_t *ctx) {
-#if JD_NETWORK
+#if JD_USER_SOCKET
     const char *host = devs_string_get_utf8(ctx, devs_arg(ctx, 0), NULL);
     int port = devs_arg_int(ctx, 1);
 
@@ -61,7 +69,10 @@ void fun2_DeviceScript__socketOpen(devs_ctx_t *ctx) {
     }
 
     jd_tcpsock_on_event_override = tcpsock_on_event;
+    devs_ret(ctx, devs_arg(ctx, 0)); // make sure host argument is not GC-ed
+    inside_sock = true;
     int r = jd_tcpsock_new(host, port);
+    inside_sock = false;
     if (r != 0) {
         jd_tcpsock_on_event_override = NULL;
         devs_ret_int(ctx, -1);
@@ -75,7 +86,7 @@ void fun2_DeviceScript__socketOpen(devs_ctx_t *ctx) {
 }
 
 void fun0_DeviceScript__socketClose(devs_ctx_t *ctx) {
-#if JD_NETWORK
+#if JD_USER_SOCKET
     if (jd_tcpsock_on_event_override) {
         jd_tcpsock_close();
         jd_tcpsock_on_event_override = NULL;
@@ -89,7 +100,7 @@ void fun0_DeviceScript__socketClose(devs_ctx_t *ctx) {
 }
 
 void fun1_DeviceScript__socketWrite(devs_ctx_t *ctx) {
-#if JD_NETWORK
+#if JD_USER_SOCKET
     if (!jd_tcpsock_on_event_override) {
         devs_ret_int(ctx, -100);
     } else {
@@ -97,8 +108,13 @@ void fun1_DeviceScript__socketWrite(devs_ctx_t *ctx) {
         const void *buf = devs_bufferish_data(ctx, devs_arg(ctx, 0), &sz);
         if (buf == NULL)
             devs_ret_int(ctx, -101);
-        else
-            devs_ret_int(ctx, jd_tcpsock_write(buf, sz));
+        else {
+            devs_ret(ctx, devs_arg(ctx, 0)); // "pin" it
+            inside_sock = true;
+            int r = jd_tcpsock_write(buf, sz);
+            inside_sock = false;
+            devs_ret_int(ctx, r);
+        }
     }
 #else
     devs_throw_not_supported_error(ctx, "Networking");

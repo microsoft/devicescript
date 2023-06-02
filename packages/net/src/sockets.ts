@@ -4,11 +4,13 @@ type SocketEvent = "open" | "close" | "data" | "error"
 type DsSockets = typeof ds & {
     _socketOpen(host: string, port: number): number
     _socketClose(): number
-    _socketWrite(buf: Buffer): number
+    _socketWrite(buf: Buffer | string): number
     _socketOnEvent(event: SocketEvent, arg?: Buffer | string): void
 }
 
 let socket: Socket
+
+export type SocketProto = "tcp" | "tls"
 
 export class Socket {
     private buffers: Buffer[] = []
@@ -16,24 +18,7 @@ export class Socket {
     private closed: boolean
     private emitter = ds.emitter<Buffer | boolean | Error>()
 
-    private constructor(public name: string) {
-        const self = this
-        this.emitter.subscribe(v => {
-            if (v instanceof Buffer) self.buffers.push(v)
-            if (v instanceof Error) {
-                self.lastError = v
-                self.closed = true
-            }
-            if (v === false) {
-                self.closed = true
-            }
-        })
-    }
-
-    private terminate() {
-        socket = null
-        this.emitter.emit(this.error("terminated"))
-    }
+    private constructor(public name: string) {}
 
     private error(msg: string): Error {
         return new Error(`socket ${this.name}: ${msg}`)
@@ -61,12 +46,12 @@ export class Socket {
      */
     async recv(timeout?: number) {
         for (;;) {
-            if (this.lastError) throw this.lastError
-            if (this.closed) return null
             if (this.buffers.length) {
                 const r = this.buffers.shift()
                 return r
             }
+            if (this.lastError) throw this.lastError
+            if (this.closed) return null
             const v = await ds.wait(this.emitter, timeout)
             if (v === undefined) return undefined
         }
@@ -76,34 +61,44 @@ export class Socket {
      * Send given buffer over the socket.
      * Throws when connection is closed or there is an error.
      */
-    async send(buf: Buffer) {
+    async send(buf: Buffer | string) {
         for (;;) {
             this.check()
             const r = (ds as DsSockets)._socketWrite(buf)
-            if (r == 0) break
-            if (r == -1) await ds.sleep(10)
+            if (r === 0) break
+            if (r === -1) await ds.sleep(10)
             throw this.error(`send error ${r}`)
         }
     }
 
+    private finish(msg: string) {
+        if (msg !== null) this.lastError = this.error(msg)
+        this.closed = true
+        socket = null
+        this.emitter.emit(false)
+    }
+
     static _socketOnEvent(event: SocketEvent, arg?: Buffer | string) {
+        if (event !== "data") console.debug("socket", socket?.name, event, arg)
+
         if (!socket) return
-        const e = socket.emitter
+
         switch (event) {
             case "open":
-                e.emit(true)
+                socket.emitter.emit(true)
                 break
             case "close":
-                e.emit(false)
-                socket = null
+                socket.finish(null)
                 break
             case "error":
-                e.emit(socket.error(arg + ""))
-                socket = null
+                socket.finish(arg + "")
                 break
             case "data":
-                if (arg instanceof Buffer) e.emit(arg)
+                socket.buffers.push(arg as Buffer)
+                socket.emitter.emit(false)
                 break
+            default:
+                console.warn(event)
         }
     }
 
@@ -114,23 +109,26 @@ export class Socket {
     static async connect(options: {
         host: string
         port: number
-        proto?: "tcp" | "tls"
+        proto?: SocketProto
         timeout?: number
     }) {
-        const { host, port, proto = "tcp" } = options
+        let { host, port, proto } = options
+        if (!proto) proto = "tcp"
         const port2 = proto === "tls" ? -port : port
         ;(ds as DsSockets)._socketOnEvent = Socket._socketOnEvent
-        socket?.terminate()
+        socket?.finish("terminated")
         socket = new Socket(`${proto}://${host}:${port}`)
+        console.debug(`connecting to ${socket.name}`)
         const r = (ds as DsSockets)._socketOpen(options.host, port2)
-        if (r != 0) {
+        if (r !== 0) {
             const e = socket.error(`can't connect: ${r}`)
             socket = null
             throw e
         }
         const v = await ds.wait(socket.emitter, options.timeout || 30000)
-        if (v instanceof Error) throw v
+        if (socket.lastError) throw socket.lastError
         if (v === undefined) throw socket.error("Timeout")
+        ds.assert(!socket.closed)
         ds.assert(v === true)
         return socket
     }
