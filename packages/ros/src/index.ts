@@ -41,7 +41,7 @@ let broker: MessageBroker = new MessageBroker()
  * Configures the ROS node information.
  * @param nodeName
  */
-export function rosConfigure(name: string) {
+export async function rosConfigure(name: string) {
     if (name === nodeName) return // same device
 
     nodeName = name || ds.deviceIdentifier("self")
