@@ -52,7 +52,7 @@ async function handleReport(pkt: ds.Packet) {
     if (pkt.isReport && pkt.serviceCommand === ds.RosCodes.ReportMessage) {
         const [topic, src] = pkt.decode()
         const msg = JSON.parse(src)
-        broker.emit(topic, msg)
+        await broker.emit(topic, msg)
     }
 }
 
