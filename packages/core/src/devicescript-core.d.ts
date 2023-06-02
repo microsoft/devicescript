@@ -291,6 +291,7 @@ declare module "@devicescript/core" {
 
     /**
      * Wait for a given emitter to be activated.
+     * Returns `undefined` when `timeout` expires (defaults to Infinity).
      */
     export function wait<T>(l: Subscriber<T>, timeout?: number): Promise<T>
 

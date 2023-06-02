@@ -646,3 +646,11 @@ Only `true` and `false` values.
     _allocRole = 169
     spiConfigure = 170
     spiXfer = 171
+    _socketOpen = 172
+    _socketClose = 173
+    _socketWrite = 174
+    _socketOnEvent = 175
+    open = 176
+    close = 177
+    error_ = 178 // error
+    data = 179

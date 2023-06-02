@@ -28,9 +28,7 @@ void fun1_Buffer_from(devs_ctx_t *ctx) {
     devs_buffer_t *buf = NULL;
 
     if (d) {
-        buf = devs_buffer_try_alloc(ctx, sz);
-        if (buf)
-            memcpy(buf->data, d, sz);
+        buf = devs_buffer_try_alloc_init(ctx, d, sz);
     } else {
         if (devs_is_array(ctx, v)) {
             devs_array_t *arr = devs_value_to_gc_obj(ctx, v);

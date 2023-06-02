@@ -515,15 +515,22 @@ devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size) {
     return arr;
 }
 
-devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size) {
+devs_buffer_t *devs_buffer_try_alloc_init(devs_ctx_t *ctx, const void *data, unsigned size) {
     if (size > DEVS_MAX_ALLOC) {
         devs_throw_too_big_error(ctx, DEVS_BUILTIN_STRING_BUFFER);
         return NULL;
     }
     devs_buffer_t *buf = devs_any_try_alloc(ctx, DEVS_GC_TAG_BUFFER, sizeof(devs_buffer_t) + size);
-    if (buf)
+    if (buf) {
         buf->length = size;
+        if (data)
+            memcpy(buf->data, data, size);
+    }
     return buf;
+}
+
+devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size) {
+    return devs_buffer_try_alloc_init(ctx, NULL, size);
 }
 
 devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size) {

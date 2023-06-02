@@ -356,3 +356,5 @@ const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack);
 void devs_dump_exception(devs_ctx_t *ctx, value_t exn);
 void devs_track_exception(devs_ctx_t *ctx);
+
+#define DEVS_CHECK_CTX_FREE(ctx) JD_ASSERT((ctx->flags & DEVS_CTX_FLAG_BUSY) == 0)

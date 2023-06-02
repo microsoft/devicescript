@@ -31,6 +31,8 @@ static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
     if (ctx->error_code)
         return;
 
+    DEVS_CHECK_CTX_FREE(ctx);
+
     // reference the "main" function (first function)
     ctx->the_stack[0] = devs_value_from_handle(DEVS_HANDLE_TYPE_STATIC_FUNCTION, 0);
     ctx->stack_top_for_gc = 1;

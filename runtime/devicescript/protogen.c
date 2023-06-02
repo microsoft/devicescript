@@ -123,6 +123,10 @@ value_t prop_DsServiceSpec_classIdentifier(devs_ctx_t *ctx, value_t self);
 value_t prop_DsServiceSpec_name(devs_ctx_t *ctx, value_t self);
 void meth1_DsServiceSpec_lookup(devs_ctx_t *ctx);
 void meth1_DsServiceSpec_assign(devs_ctx_t *ctx);
+// impl_socket.c
+void fun2_DeviceScript__socketOpen(devs_ctx_t *ctx);
+void fun0_DeviceScript__socketClose(devs_ctx_t *ctx);
+void fun1_DeviceScript__socketWrite(devs_ctx_t *ctx);
 // impl_string.c
 value_t prop_String_length(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
@@ -176,6 +180,9 @@ static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
     {N(SPICONFIGURE), 50028},                                      //
     {N(SPIXFER), 50029},                                           //
     {N(SUSPEND), 50040},                                           //
+    {N(_SOCKETOPEN), 50100},                                       //
+    {N(_SOCKETCLOSE), 50101},                                      //
+    {N(_SOCKETWRITE), 50102},                                      //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t TypeError_prototype_entries[] = { //
@@ -324,14 +331,14 @@ static const devs_builtin_proto_entry_t DsServiceSpec_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50100},                                                //
-    {N(CHARCODEAT), 50101},                                            //
-    {N(CHARAT), 50102},                                                //
-    {N(SLICE), 50103},                                                 //
+    {N(LENGTH), 50103},                                                //
+    {N(CHARCODEAT), 50104},                                            //
+    {N(CHARAT), 50105},                                                //
+    {N(SLICE), 50106},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_entries[] = { //
-    {N(FROMCHARCODE), 50104},                                //
+    {N(FROMCHARCODE), 50107},                                //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE},    //
     {0, 0}};
 
@@ -431,8 +438,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 105;
-const devs_builtin_function_t devs_builtin_functions[105] = {
+uint16_t devs_num_builtin_functions = 108;
+const devs_builtin_function_t devs_builtin_functions[108] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -533,6 +540,9 @@ const devs_builtin_function_t devs_builtin_functions[105] = {
     {N(NAME), 0, PROP, {.prop = prop_DsServiceSpec_name}},
     {N(LOOKUP), 1, 0, {.meth = meth1_DsServiceSpec_lookup}},
     {N(ASSIGN), 1, 0, {.meth = meth1_DsServiceSpec_assign}},
+    {N(_SOCKETOPEN), 2, NO_SELF, {.meth = fun2_DeviceScript__socketOpen}},
+    {N(_SOCKETCLOSE), 0, NO_SELF, {.meth = fun0_DeviceScript__socketClose}},
+    {N(_SOCKETWRITE), 1, NO_SELF, {.meth = fun1_DeviceScript__socketWrite}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},
     {N(CHARAT), 1, 0, {.meth = meth1_String_charAt}},

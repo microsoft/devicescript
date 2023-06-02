@@ -281,7 +281,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 171,
+    __MAX = 179,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -454,6 +454,14 @@ export enum BuiltInString {
     _ALLOCROLE = 169,
     SPICONFIGURE = 170,
     SPIXFER = 171,
+    _SOCKETOPEN = 172,
+    _SOCKETCLOSE = 173,
+    _SOCKETWRITE = 174,
+    _SOCKETONEVENT = 175,
+    OPEN = 176,
+    CLOSE = 177,
+    ERROR_ = 178, // error
+    DATA = 179,
 }
 
 export const OP_PRINT_FMTS = [
@@ -741,6 +749,14 @@ export const BUILTIN_STRING__VAL = [
     "_allocRole",
     "spiConfigure",
     "spiXfer",
+    "_socketOpen",
+    "_socketClose",
+    "_socketWrite",
+    "_socketOnEvent",
+    "open",
+    "close",
+    "error",
+    "data",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
