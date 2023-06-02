@@ -8,7 +8,7 @@ static struct Sha_256 _sha_ctx;
 static uint8_t _sha_hash[JD_SHA256_HASH_BYTES];
 static uint8_t _sha_locked;
 
-void jd_sha256_setup() {
+void jd_sha256_setup(void) {
     target_disable_irq();
     if (_sha_locked)
         JD_PANIC();

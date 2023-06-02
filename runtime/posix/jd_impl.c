@@ -25,7 +25,7 @@ uint8_t jd_connected_blink = JD_BLINK_CONNECTED;
 void jd_blink(uint8_t encoded) {}
 void jd_glow(uint32_t glow) {}
 
-void jd_alloc_stack_check() {}
+void jd_alloc_stack_check(void) {}
 
 void *jd_alloc(uint32_t size) {
     void *p = malloc(size);

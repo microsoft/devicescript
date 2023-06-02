@@ -211,7 +211,7 @@ void devsmgr_process(srv_t *state) {
     }
 }
 
-void devsmgr_restart() {
+void devsmgr_restart(void) {
     srv_t *state = _state;
     stop_program(state);
     state->next_restart = now + MS(50);

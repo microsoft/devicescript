@@ -57,7 +57,7 @@ uint64_t hw_device_id(void) {
     return cached_devid;
 }
 
-void target_reset() {
+void target_reset(void) {
     DMESG("target reset");
     exit(0);
 }
@@ -76,7 +76,7 @@ static uint64_t getmicros(void) {
     return tv.tv_sec * 1000000LL + tv.tv_usec;
 }
 
-uint64_t tim_get_micros() {
+uint64_t tim_get_micros(void) {
     static uint64_t starttime;
     if (!starttime) {
         starttime = getmicros() - 23923;
