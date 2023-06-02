@@ -578,7 +578,7 @@ too_short:
     return;
 }
 
-void jd_net_disable_fwd() {
+void jd_net_disable_fwd(void) {
     srv_t *state = _wsskhealth_state;
     if (state)
         state->streaming_en &= ~JD_WSSK_STREAMING_TYPE_JACDAC;

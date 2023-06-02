@@ -1,6 +1,5 @@
 export {
     describe,
-    it,
     test,
     runTests,
     autoRun,
