@@ -1,6 +1,9 @@
 import * as ds from "@devicescript/core"
 
-type RosMessage = any
+/**
+ * ROS message type
+ */
+export type RosMessage = boolean | number | any
 
 /**
  * Subscribes to a ROS topi.
