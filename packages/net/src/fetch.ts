@@ -59,6 +59,10 @@ export class Response {
     status: number
     statusText: string
     headers: Headers
+
+    constructor() {
+        this.headers = new Headers()
+    }
 }
 
 export async function fetch(url: string, options?: FetchOptions) {
@@ -117,11 +121,35 @@ export async function fetch(url: string, options?: FetchOptions) {
         port,
         proto,
     })
-    console.debug(`req: ${JSON.stringify(reqStr)}`)
+    console.debug(`req: ${reqStr}`)
     await s.send(reqStr)
-    for (;;) {
-        const r = await s.recv()
-        if (!r) break
-        console.debug(r.toString("utf-8"))
+
+    const resp = new Response()
+
+    let status = await s.readLine()
+    if (status.startsWith("HTTP/1.1 ")) {
+        status = status.slice(9)
+        resp.status = parseInt(status)
+        const sp = status.indexOf(" ")
+        if (sp > 0) resp.statusText = status.slice(sp + 1)
+        else resp.statusText = ""
+    } else {
+        resp.status = 0
+        resp.statusText = status
     }
+
+    console.debug(`HTTP ${resp.status}: ${resp.statusText}`)
+
+    for (;;) {
+        const hd = await s.readLine()
+        if (hd === "") break
+        const colon = hd.indexOf(":")
+        if (colon > 0) {
+            const name = hd.slice(0, colon).trim()
+            const val = hd.slice(colon + 1).trim()
+            resp.headers.append(name, val)
+        }
+    }
+
+    console.log(resp.headers)
 }
