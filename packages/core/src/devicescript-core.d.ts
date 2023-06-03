@@ -416,6 +416,7 @@ declare module "@devicescript/core" {
 
             static alloc(size: number): Buffer
             static from(data: string | Buffer | number[]): Buffer
+            static concat(...buffers: Buffer[]): Buffer
 
             /**
              * Gets the length in bytes of the buffer

@@ -257,8 +257,9 @@ static const uint8_t builtin_proto_idx[] = {
     [DEVS_BUILTIN_OBJECT_DSROLE_PROTOTYPE] = 6,
     [DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE] = 7,
     [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = 8,
+    [DEVS_BUILTIN_OBJECT_BUFFER] = 9,
 };
-#define MAX_PROTO 8
+#define MAX_PROTO 9
 
 devs_maplike_t *devs_get_builtin_object(devs_ctx_t *ctx, unsigned idx) {
     if (idx < sizeof(builtin_proto_idx)) {
