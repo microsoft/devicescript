@@ -48,6 +48,14 @@ export class Headers {
             callbackfn(this.data[k], k, this)
         }
     }
+    serialize() {
+        const req: string[] = []
+        this.forEach((v, k) => {
+            req.push(`${k}: ${v}`)
+        })
+        req.push("")
+        return req.join("\r\n")
+    }
 }
 
 /**
@@ -59,9 +67,41 @@ export class Response {
     status: number
     statusText: string
     headers: Headers
+    ok: boolean
+    private _buffer: Buffer
 
-    constructor() {
+    constructor(private socket: Socket) {
         this.headers = new Headers()
+    }
+
+    async buffer() {
+        if (this._buffer) return this._buffer
+        const explen = parseInt(this.headers.get("content-length"))
+        const buffers: Buffer[] = []
+        let buflen = 0
+        for (;;) {
+            const buf = await this.socket.recv()
+            if (!buf) break
+            buflen += buf.length
+            buffers.push(buf)
+            // note: explen can be NaN
+            if (buflen >= explen) break
+        }
+        await this.socket.close()
+        this._buffer = Buffer.concat(...buffers)
+        return this._buffer
+    }
+
+    async text() {
+        return (await this.buffer()).toString("utf-8")
+    }
+
+    async json() {
+        return JSON.parse(await this.text())
+    }
+
+    async close() {
+        await this.socket.close()
     }
 }
 
@@ -109,13 +149,8 @@ export async function fetch(url: string, options?: FetchOptions) {
     if (!hd.has("accept")) hd.set("accept", "*/*")
     hd.set("host", host)
     hd.set("connection", "close")
-    const req = [`${options.method} ${path} HTTP/1.1`]
-    hd.forEach((v, k) => {
-        req.push(`${k}: ${v}`)
-    })
-    req.push("", "")
-    const reqStr = req.join("\r\n")
 
+    const reqStr = `${options.method} ${path} HTTP/1.1\r\n${hd.serialize()}\r\n`
     const s = await Socket.connect({
         host,
         port,
@@ -124,7 +159,7 @@ export async function fetch(url: string, options?: FetchOptions) {
     console.debug(`req: ${reqStr}`)
     await s.send(reqStr)
 
-    const resp = new Response()
+    const resp = new Response(s)
 
     let status = await s.readLine()
     if (status.startsWith("HTTP/1.1 ")) {
@@ -133,6 +168,7 @@ export async function fetch(url: string, options?: FetchOptions) {
         const sp = status.indexOf(" ")
         if (sp > 0) resp.statusText = status.slice(sp + 1)
         else resp.statusText = ""
+        if (200 <= resp.status && resp.status <= 299) resp.ok = true
     } else {
         resp.status = 0
         resp.statusText = status
@@ -151,5 +187,6 @@ export async function fetch(url: string, options?: FetchOptions) {
         }
     }
 
-    console.log(resp.headers)
+    console.debug(resp.headers.serialize())
+    return resp
 }

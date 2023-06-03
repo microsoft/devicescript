@@ -59,21 +59,17 @@ export class Socket {
 
     async readLine(): Promise<string> {
         let bufs: Buffer[] = []
-        let keepGoing = true
         for (;;) {
             const b = await this.recv()
             if (b == null) break
-            for (let i = 0; i < b.length; ++i) {
-                if (b[i] === 10) {
-                    const rest = b.slice(i + 1)
-                    if (rest.length) this.buffers.unshift(rest)
-                    if (i > 0 && b[i - 1] === 13) i--
-                    bufs.push(b.slice(0, i))
-                    keepGoing = false
-                    break
-                }
+            let nlPos = b.indexOf(10)
+            if (nlPos >= 0) {
+                const rest = b.slice(nlPos + 1)
+                if (rest.length) this.buffers.unshift(rest)
+                if (nlPos > 0 && b[nlPos - 1] === 13) nlPos--
+                bufs.push(b.slice(0, nlPos))
+                break
             }
-            if (!keepGoing) break
             bufs.push(b)
         }
         if (bufs.length === 0) return null
