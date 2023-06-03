@@ -6,6 +6,24 @@ String.prototype.toUpperCase = function (this: string) {
     return this // TODO
 }
 
+function isSpace(s: string) {
+    return " \t\r\n".includes(s)
+}
+
+String.prototype.trim = function (this: string) {
+    let beg = 0
+    while (beg < this.length) {
+        if (!isSpace(this[beg])) break
+        beg++
+    }
+    let end = this.length - 1
+    while (end >= beg) {
+        if (!isSpace(this[end])) break
+        end--
+    }
+    return this.slice(beg, end + 1)
+}
+
 String.prototype.indexOf = function (
     this: string,
     searchString: string,

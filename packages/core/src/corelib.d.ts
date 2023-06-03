@@ -160,6 +160,9 @@ interface String {
 
     /** Converts all the alphabetic characters in a string to uppercase. */
     toUpperCase(): string
+
+    /** Removes the leading and trailing white space and line terminator characters from a string. */
+    trim(): string
 }
 
 interface StringConstructor {
