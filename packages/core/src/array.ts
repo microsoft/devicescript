@@ -139,3 +139,8 @@ Buffer.concat = function (...buffers: Buffer[]) {
     }
     return r
 }
+
+Buffer.prototype.lastIndexOf = function (byte, startOffset, endOffset) {
+    if (endOffset == undefined) endOffset = this.length
+    return this.indexOf(byte, startOffset, -endOffset)
+}

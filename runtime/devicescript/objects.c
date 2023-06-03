@@ -1137,6 +1137,13 @@ int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int coun
     return 0;
 }
 
+int32_t devs_arg_int_defl(devs_ctx_t *ctx, unsigned idx, int32_t defl) {
+    value_t arg = devs_arg(ctx, idx);
+    if (devs_is_null_or_undefined(arg))
+        return defl;
+    return devs_value_to_int(ctx, arg);
+}
+
 int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx) {
     return devs_value_to_int(ctx, devs_arg(ctx, idx));
 }

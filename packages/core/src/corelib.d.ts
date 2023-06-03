@@ -120,10 +120,16 @@ interface String {
 
     /**
      * Returns the position of the first occurrence of a substring.
+     * When `endPosition < position` the search if performed in reverse.
      * @param searchString The substring to search for in the string
      * @param position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string.
+     * @param endPosition `position <= return_value < endPosition || return_value == -1` (and `endPosition < 0` has special meaning)
      */
-    indexOf(searchString: string, position?: number): number
+    indexOf(
+        searchString: string,
+        position?: number,
+        endPosition?: number
+    ): number
 
     /**
      * Returns the last occurrence of a substring in the string.

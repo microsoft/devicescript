@@ -1040,6 +1040,35 @@ function testWhenUsed() {
     ds.assert(f["meth2"] === undefined)
 }
 
+function testStringMethods() {
+    const a = ds._id("F") + "oo"
+    ds.assert(a.toLowerCase() === "foo")
+    ds.assert(a.toUpperCase() === "FOO")
+    ds.assert("foobarbaz".includes("bar") === true)
+    ds.assert("foobarbaz".includes("bar", 4) === false)
+    ds.assert("foobarbaz".startsWith("foo") === true)
+    ds.assert("foobarbaz".startsWith("bar", 3) === true)
+    ds.assert("foobarbaz".endsWith("baz") === true)
+    ds.assert("foobarbaz".endsWith("bar", 6) === true)
+    ds.assert("foobarbaz".indexOf("baz") === 6)
+    ds.assert("foobarbaz".indexOf("foo") === 0)
+    ds.assert("foobarbaz".indexOf("foo", 1) === -1)
+    ds.assert("ffoo".startsWith("foo") === false)
+    ds.assert("ffoo".endsWith("fo") === false)
+
+    const buf = hex`0011223322`
+    ds.assert(buf.indexOf(0x00) === 0)
+    ds.assert(buf.indexOf(0x22) === 2)
+    ds.assert(buf.indexOf(0x42) === -1)
+    ds.assert(buf.indexOf(0x11, 2) === -1)
+    ds.assert(buf.indexOf(0x11, 1) === 1)
+    ds.assert(buf.indexOf(0x22, 0, 2) === -1)
+
+    console.log(buf.indexOf(0x22, 0, -buf.length))
+    console.log(buf.lastIndexOf(0x22))
+    ds.assert(buf.lastIndexOf(0x22) === 4)
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -1081,5 +1110,6 @@ testAssignmentChaining()
 new UsingCtorFieldArgs(12)
 testStatic()
 testWhenUsed()
+testStringMethods()
 
 console.log("all OK")

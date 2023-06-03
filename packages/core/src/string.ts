@@ -1,11 +1,3 @@
-String.prototype.toLowerCase = function (this: string) {
-    return this // TODO
-}
-
-String.prototype.toUpperCase = function (this: string) {
-    return this // TODO
-}
-
 function isSpace(s: string) {
     return " \t\r\n".includes(s)
 }
@@ -24,42 +16,13 @@ String.prototype.trim = function (this: string) {
     return this.slice(beg, end + 1)
 }
 
-String.prototype.indexOf = function (
-    this: string,
-    searchString: string,
-    position?: number
-): number {
-    const endP = this.length - searchString.length + 1
-    if (!(position > 0)) position = 0
-    if (searchString === "") return position
-    const p0 = searchString.charCodeAt(0)
-    for (let i = position; i < endP; ++i) {
-        if (
-            this.charCodeAt(i) === p0 &&
-            this.slice(i, i + searchString.length) === searchString
-        )
-            return i
-    }
-    return -1
-}
-
 String.prototype.lastIndexOf = function (
     this: string,
     searchString: string,
     position?: number
 ): number {
-    const endP = this.length - searchString.length + 1
-    if (!(position > 0)) position = 0
-    if (searchString === "") return endP - 1
-    const p0 = searchString.charCodeAt(0)
-    for (let i = endP - 1; i >= position; i--) {
-        if (
-            this.charCodeAt(i) === p0 &&
-            this.slice(i, i + searchString.length) === searchString
-        )
-            return i
-    }
-    return -1
+    if (position == undefined) position = this.length
+    return this.indexOf(searchString, 0, -position)
 }
 
 String.prototype.includes = function (
@@ -77,8 +40,11 @@ String.prototype.endsWith = function (
 ): boolean {
     if (!(endPosition < this.length)) endPosition = this.length
     return (
-        this.slice(endPosition - searchString.length, endPosition) ===
-        searchString
+        this.indexOf(
+            searchString,
+            endPosition - searchString.length,
+            endPosition
+        ) >= 0
     )
 }
 
@@ -88,5 +54,5 @@ String.prototype.startsWith = function (
     position?: number
 ): boolean {
     if (!(position > 0)) position = 0
-    return this.slice(position, position + searchString.length) === searchString
+    return this.indexOf(searchString, position, position + 1) >= 0
 }

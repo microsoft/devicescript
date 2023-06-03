@@ -298,6 +298,7 @@ devs_map_t *devs_get_spec_proto(devs_ctx_t *ctx, uint32_t spec_idx);
 
 // for impl_*.c
 int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx);
+int32_t devs_arg_int_defl(devs_ctx_t *ctx, unsigned idx, int32_t defl);
 double devs_arg_double(devs_ctx_t *ctx, unsigned idx);
 const char *devs_arg_utf8_with_conv(devs_ctx_t *ctx, unsigned idx, unsigned *sz);
 static inline value_t devs_arg(devs_ctx_t *ctx, unsigned idx) {
@@ -320,6 +321,7 @@ static inline bool devs_did_yield(devs_ctx_t *ctx) {
     return ctx->curr_fiber == NULL;
 }
 void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata);
+int devs_clamp_size(int v, int max);
 
 static inline devs_role_t *devs_role(devs_ctx_t *ctx, unsigned roleidx) {
     if (roleidx < ctx->num_roles)

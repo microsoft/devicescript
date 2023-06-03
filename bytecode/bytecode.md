@@ -654,3 +654,7 @@ Only `true` and `false` values.
     close = 177
     error_ = 178 // error
     data = 179
+    toUpperCase = 180
+    toLowerCase = 181
+    indexOf = 182
+

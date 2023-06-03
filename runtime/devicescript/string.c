@@ -101,8 +101,8 @@ value_t devs_string_sprintf(devs_ctx_t *ctx, const char *format, ...) {
     return r;
 }
 
-value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len) {
-    devs_any_string_t *s = devs_string_try_alloc_init(ctx, (const char *)utf8, len);
+value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned size) {
+    devs_any_string_t *s = devs_string_try_alloc_init(ctx, (const char *)utf8, size);
     if (s == NULL) {
         return devs_undefined;
     } else {
