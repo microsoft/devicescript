@@ -35,7 +35,7 @@ static void tcpsock_on_event(unsigned event, const void *data, unsigned size) {
         break;
     case JD_CONN_EV_ERROR:
         jd_tcpsock_on_event_override = NULL;
-        ev = DEVS_BUILTIN_STRING_ERROR;
+        ev = DEVS_BUILTIN_STRING_ERROR_;
         jd_tcpsock_close();
         if (data)
             arg = devs_value_from_gc_obj(ctx, devs_string_try_alloc_init(ctx, data, size));
@@ -62,6 +62,11 @@ void fun2_DeviceScript__socketOpen(devs_ctx_t *ctx) {
 #if JD_USER_SOCKET
     const char *host = devs_string_get_utf8(ctx, devs_arg(ctx, 0), NULL);
     int port = devs_arg_int(ctx, 1);
+
+    if (dcfg_get_bool("devNetwork")) {
+        devs_throw_range_error(ctx, "devNetwork enabled");
+        return;
+    }
 
     if (!host || !port) {
         devs_throw_range_error(ctx, "host or port invalid");

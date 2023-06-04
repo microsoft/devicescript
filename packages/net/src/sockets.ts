@@ -118,7 +118,7 @@ export class Socket {
                 socket.emitter.emit(false)
                 break
             default:
-                console.warn(event)
+                console.warn("unknown event", event)
         }
     }
 
