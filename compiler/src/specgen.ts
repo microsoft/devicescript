@@ -25,6 +25,11 @@ import {
     SRV_CODAL_MESSAGE_BUS,
     SRV_DEVS_DBG,
     SRV_TCP,
+    SRV_I2C,
+    SRV_SETTINGS,
+    SRV_CLOUD_ADAPTER,
+    SRV_ROS,
+    SRV_GPIO,
 } from "jacdac-ts"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { PacketSpecCode, runtimeVersion } from "./format"
@@ -365,6 +370,14 @@ ${thespecs}
     return r
 }
 
+const serviceBuiltinPackages: Record<number, string> = {
+    [SRV_I2C]: "i2c",
+    [SRV_SETTINGS]: "settings",
+    [SRV_CLOUD_ADAPTER]: "cloud",
+    [SRV_ROS]: "ros",
+    [SRV_GPIO]: "gpio",
+}
+
 function serviceSpecificationToMarkdown(info: jdspec.ServiceSpec): string {
     const { status, camelName } = info
 
@@ -401,11 +414,27 @@ and is not directly programmable in DeviceScript.
 `
     }
 
+    const builtinPackage = serviceBuiltinPackages[info.classIdentifier]
+    if (builtinPackage) {
+        return `---
+pagination_prev: null
+pagination_next: null
+description: DeviceScript client for ${info.name} service
+---
+# ${clname}
+        
+The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/) is used internally by the 
+[\`@devicescript/${builtinPackage}\`](/developer/packages) package.
+
+{@import optional ../clients-custom/${info.shortId}.mdp}
+`
+    }
+
     let r: string[] = [
         `---
 pagination_prev: null
 pagination_next: null
-description: DeviceScript client for Jacdac ${info.name} service
+description: DeviceScript client for ${info.name} service
 ---
 # ${clname}
 `,
@@ -432,6 +461,7 @@ import { ${clname} } from "@devicescript/core"
 const ${varname} = new ${clname}()
 \`\`\`
             `,
+        `{@import optional ../clients-custom/${info.shortId}-about.mdp}`,
     ]
 
     const cmds = info.packets.filter(
