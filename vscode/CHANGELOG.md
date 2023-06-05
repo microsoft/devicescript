@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.0](https://github.com/microsoft/devicescript/compare/v2.9.16...v2.10.0)
+
+> 5 June 2023
+
+- 2.10.0: add net.Socket, net.fetch and more String/Buffer methods [`#433`](https://github.com/microsoft/devicescript/pull/433)
+- Fix trivial typo in CLI docs [`#431`](https://github.com/microsoft/devicescript/pull/431)
+- ROS [`#430`](https://github.com/microsoft/devicescript/pull/430)
+- fix docs codegen for builtin packages [`22c688d`](https://github.com/microsoft/devicescript/commit/22c688d7545f7842f4ecfe27891c178d835b7315)
+- fix new gcc warning: int foo() -&gt; int foo(void) [`615e1eb`](https://github.com/microsoft/devicescript/commit/615e1ebdee4566e57ca30dbcd54b9c8f3474e7e6)
+- remove it support in tests [`a8bb583`](https://github.com/microsoft/devicescript/commit/a8bb583fcfa22ef1b41d87d5d297b65d897947af)
+
 #### [v2.9.16](https://github.com/microsoft/devicescript/compare/v2.9.15...v2.9.16)
 
 > 1 June 2023
