@@ -260,6 +260,10 @@ void devs_vm_exec_opcodes(devs_ctx_t *ctx) {
         devs_panic(ctx, DEVS_PANIC_TIMEOUT);
 }
 
+bool devs_in_vm_loop(devs_ctx_t *ctx) {
+    return ctx->curr_fn && !ctx->suspension && !ctx->error_code;
+}
+
 static const char *builtin_strings[DEVS_BUILTIN_STRING___MAX + 1] = {DEVS_BUILTIN_STRING__VAL};
 
 const char *devs_builtin_string_by_idx(unsigned idx) {

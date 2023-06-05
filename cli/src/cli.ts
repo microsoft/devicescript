@@ -337,12 +337,12 @@ export async function mainCli() {
             "-n, --name <service-name>",
             "name of new service (required, example 'Light Level')"
         )
-        .description("add a custom Jacdac service")
+        .description("add a custom service")
         .action(dropReturn(addService))
 
     addCommand("npm")
         .option("--license <string>", "set the license", "MIT")
-        .description("make current project into an NPM library")
+        .description("make current project into an NPM package")
         .action(dropReturn(addNpm))
 
     addCommand("settings")

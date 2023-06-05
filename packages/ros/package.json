@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/ros",
-    "version": "2.9.16",
+    "version": "2.10.0",
     "private": true,
     "dependencies": {},
     "devDependencies": {

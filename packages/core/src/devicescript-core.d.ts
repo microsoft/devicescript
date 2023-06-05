@@ -291,6 +291,7 @@ declare module "@devicescript/core" {
 
     /**
      * Wait for a given emitter to be activated.
+     * Returns `undefined` when `timeout` expires (defaults to Infinity).
      */
     export function wait<T>(l: Subscriber<T>, timeout?: number): Promise<T>
 
@@ -415,6 +416,7 @@ declare module "@devicescript/core" {
 
             static alloc(size: number): Buffer
             static from(data: string | Buffer | number[]): Buffer
+            static concat(...buffers: Buffer[]): Buffer
 
             /**
              * Gets the length in bytes of the buffer
@@ -430,6 +432,14 @@ declare module "@devicescript/core" {
                 len: number
             ): void
             fillAt(offset: number, length: number, value: number): void
+            /**
+             * Return index of specified byte in buffer or -1 if not found.
+             * @param byte 
+             * @param startOffset defaults to 0
+             * @param endOffset defaults to buffer length (`endOffset < 0` has special meaning)
+             */
+            indexOf(byte: number, startOffset?: number, endOffset?: number): number
+            lastIndexOf(byte: number, startOffset?: number, endOffset?: number): number
             [idx: number]: number
 
             toString(encoding?: "hex" | "utf-8" | "utf8"): string

@@ -5,8 +5,8 @@ Expressions do not modify the state. They may throw exceptions though.
 ## Format Constants
 
     img_version_major = 2
-    img_version_minor = 9
-    img_version_patch = 16
+    img_version_minor = 10
+    img_version_patch = 0
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a
@@ -646,3 +646,16 @@ Only `true` and `false` values.
     _allocRole = 169
     spiConfigure = 170
     spiXfer = 171
+    _socketOpen = 172
+    _socketClose = 173
+    _socketWrite = 174
+    _socketOnEvent = 175
+    open = 176
+    close = 177
+    error_ = 178 // error
+    data = 179
+    toUpperCase = 180
+    toLowerCase = 181
+    indexOf = 182
+    byteLength = 183
+

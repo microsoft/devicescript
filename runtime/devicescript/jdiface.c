@@ -168,12 +168,11 @@ value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx) {
     value_t r = devs_value_from_gc_obj(ctx, pkt);
     devs_value_pin(ctx, r);
 
-    pkt->payload = devs_buffer_try_alloc(ctx, ctx->packet.service_size);
+    pkt->payload = devs_buffer_try_alloc_init(ctx, ctx->packet.data, ctx->packet.service_size);
     if (pkt->payload == NULL) {
         devs_value_unpin(ctx, r);
         return devs_undefined;
     }
-    memcpy(pkt->payload->data, ctx->packet.data, pkt->payload->length);
     pkt->device_id = ctx->packet.device_identifier;
     pkt->service_index = ctx->packet.service_index;
     pkt->service_command = ctx->packet.service_command;
@@ -186,17 +185,20 @@ value_t devs_jd_pkt_capture(devs_ctx_t *ctx, unsigned role_idx) {
 }
 
 static void start_pkt_handler(devs_ctx_t *ctx, value_t fn, unsigned role_idx) {
-    if (devs_is_undefined(fn))
+    if (devs_is_undefined(fn) || ctx->error_code)
         return;
+
+    if (devs_is_suspended(ctx))
+        return; // this would lead to OOM very quickly
+
+    DEVS_CHECK_CTX_FREE(ctx);
 
     ctx->stack_top_for_gc = 2;
     ctx->the_stack[0] = fn;
     // null it out first, in case devs_jd_pkt_capture() triggers GC
     ctx->the_stack[1] = devs_undefined;
     ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role_idx);
-    devs_fiber_t *fiber = devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
-    if (fiber)
-        devs_fiber_set_wake_time(fiber, devs_now(ctx));
+    devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
 }
 
 void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx, bool is_role_evt) {

@@ -111,9 +111,9 @@
     "\x06\x0c\x0b"
 
 #define DEVS_IMG_VERSION_MAJOR 2
-#define DEVS_IMG_VERSION_MINOR 9
-#define DEVS_IMG_VERSION_PATCH 16
-#define DEVS_IMG_VERSION 0x2090010
+#define DEVS_IMG_VERSION_MINOR 10
+#define DEVS_IMG_VERSION_PATCH 0
+#define DEVS_IMG_VERSION 0x20a0000
 #define DEVS_MAGIC0 0x53766544 // "DevS"
 #define DEVS_MAGIC1 0xf1296e0a
 #define DEVS_NUM_IMG_SECTIONS 10
@@ -261,7 +261,7 @@
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC 38
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE 39
 
-#define DEVS_BUILTIN_STRING___MAX 171
+#define DEVS_BUILTIN_STRING___MAX 183
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -434,6 +434,18 @@
 #define DEVS_BUILTIN_STRING__ALLOCROLE 169
 #define DEVS_BUILTIN_STRING_SPICONFIGURE 170
 #define DEVS_BUILTIN_STRING_SPIXFER 171
+#define DEVS_BUILTIN_STRING__SOCKETOPEN 172
+#define DEVS_BUILTIN_STRING__SOCKETCLOSE 173
+#define DEVS_BUILTIN_STRING__SOCKETWRITE 174
+#define DEVS_BUILTIN_STRING__SOCKETONEVENT 175
+#define DEVS_BUILTIN_STRING_OPEN 176
+#define DEVS_BUILTIN_STRING_CLOSE 177
+#define DEVS_BUILTIN_STRING_ERROR_ 178 // error
+#define DEVS_BUILTIN_STRING_DATA 179
+#define DEVS_BUILTIN_STRING_TOUPPERCASE 180
+#define DEVS_BUILTIN_STRING_TOLOWERCASE 181
+#define DEVS_BUILTIN_STRING_INDEXOF 182
+#define DEVS_BUILTIN_STRING_BYTELENGTH 183
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -477,7 +489,9 @@
         "_commandResponse", "isAction", "millis", "from", "hex", "utf8", "utf-8", "suspended",     \
         "reboot", "server", "spec", "ServiceSpec", "classIdentifier", "lookup", "PacketSpec",      \
         "parent", "response", "ServerInterface", "_onServerPacket", "_serverSend",                 \
-        "notImplemented", "delay", "fromCharCode", "_allocRole", "spiConfigure", "spiXfer"
+        "notImplemented", "delay", "fromCharCode", "_allocRole", "spiConfigure", "spiXfer",        \
+        "_socketOpen", "_socketClose", "_socketWrite", "_socketOnEvent", "open", "close", "error", \
+        "data", "toUpperCase", "toLowerCase", "indexOf", "byteLength"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

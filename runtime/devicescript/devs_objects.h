@@ -179,6 +179,7 @@ typedef struct _devs_gc_t devs_gc_t;
 devs_map_t *devs_map_try_alloc(devs_ctx_t *ctx, devs_maplike_t *proto);
 devs_short_map_t *devs_short_map_try_alloc(devs_ctx_t *ctx);
 devs_array_t *devs_array_try_alloc(devs_ctx_t *ctx, unsigned size);
+devs_buffer_t *devs_buffer_try_alloc_init(devs_ctx_t *ctx, const void *data, unsigned size);
 devs_buffer_t *devs_buffer_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_string_t *devs_string_try_alloc(devs_ctx_t *ctx, unsigned size);
 devs_string_jmp_t *devs_string_jmp_try_alloc(devs_ctx_t *ctx, unsigned size, unsigned length);

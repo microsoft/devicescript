@@ -28,9 +28,7 @@ void fun1_Buffer_from(devs_ctx_t *ctx) {
     devs_buffer_t *buf = NULL;
 
     if (d) {
-        buf = devs_buffer_try_alloc(ctx, sz);
-        if (buf)
-            memcpy(buf->data, d, sz);
+        buf = devs_buffer_try_alloc_init(ctx, d, sz);
     } else {
         if (devs_is_array(ctx, v)) {
             devs_array_t *arr = devs_value_to_gc_obj(ctx, v);
@@ -122,4 +120,54 @@ void meth4_Buffer_blitAt(devs_ctx_t *ctx) {
         len = dlen;
 
     memcpy(dst + dst_offset, src + src_offset, len);
+}
+
+int devs_clamp_size(int v, int max) {
+    if (v < 0)
+        return 0;
+    if (v > max)
+        return max;
+    return v;
+}
+
+void meth3_Buffer_indexOf(devs_ctx_t *ctx) {
+    unsigned sz;
+    const uint8_t *data = buffer_data(ctx, devs_arg_self(ctx), &sz);
+    if (!data)
+        return;
+
+    int ch = devs_arg_int(ctx, 0);
+    int start_pos = devs_arg_int(ctx, 1);
+    int end_pos = devs_arg_int_defl(ctx, 2, sz);
+    int rev = 0;
+
+    start_pos = devs_clamp_size(start_pos, sz);
+    if (end_pos < 0) {
+        rev = 1;
+        end_pos = -end_pos;
+    }
+    end_pos = devs_clamp_size(end_pos, sz);
+
+    int r = -1;
+
+    if (rev) {
+        end_pos--;
+        while (start_pos <= end_pos) {
+            if (data[end_pos] == ch) {
+                r = end_pos;
+                break;
+            }
+            end_pos--;
+        }
+    } else {
+        while (start_pos < end_pos) {
+            if (data[start_pos] == ch) {
+                r = start_pos;
+                break;
+            }
+            start_pos++;
+        }
+    }
+
+    devs_ret_int(ctx, r);
 }

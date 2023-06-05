@@ -129,7 +129,8 @@ void jd_wssk_on_event(unsigned event, const void *data, unsigned size) {
         on_msg(state, (void *)data, size);
         break;
     case JD_CONN_EV_CLOSE:
-        DMESG("* connection to %s closed", state->hub_name);
+        if (state->hub_name)
+            DMESG("* connection to %s closed", state->hub_name);
         stop_streaming(state);
         set_status(state, JD_CLOUD_CONFIGURATION_CONNECTION_STATUS_DISCONNECTED);
         break;

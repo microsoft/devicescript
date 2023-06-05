@@ -24,12 +24,16 @@ import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 import {
     AddResponse,
+    SideAddNpmReq,
+    SideAddNpmResp,
     SideAddServiceReq,
     SideAddServiceResp,
     SideAddSettingsReq,
     SideAddSettingsResp,
     SideAddSimReq,
     SideAddSimResp,
+    SideAddTestReq,
+    SideAddTestResp,
     SideConnectReq,
     SideStartVmReq,
     SideStopVmReq,
@@ -61,6 +65,11 @@ export interface NodeWatch {
     label: string
     icon: string
 }
+
+export type ServerQuickPickItem = TaggedQuickPickItem<{
+    command: "test" | "settings" | "search" | "server" | "sim" | "npm" | "board"
+    info?: ServerInfo
+}>
 
 export class DeviceScriptExtensionState extends JDEventSource {
     readonly devtools: DeveloperToolsManager
@@ -151,9 +160,25 @@ export class DeviceScriptExtensionState extends JDEventSource {
         return this.deviceScriptManager || this.pickDeviceScriptManager(options)
     }
 
+    async addTest() {
+        const resp = await sideRequest<SideAddTestReq, SideAddTestResp>({
+            req: "addTest",
+            data: {},
+        })
+        await this.handleAddResponse(resp.data)
+    }
+
     async addSim() {
         const resp = await sideRequest<SideAddSimReq, SideAddSimResp>({
             req: "addSim",
+            data: {},
+        })
+        await this.handleAddResponse(resp.data)
+    }
+
+    async addNpm() {
+        const resp = await sideRequest<SideAddNpmReq, SideAddNpmResp>({
+            req: "addNpm",
             data: {},
         })
         await this.handleAddResponse(resp.data)
@@ -368,25 +393,58 @@ export class DeviceScriptExtensionState extends JDEventSource {
             })
         }
 
+        await this.showQuickAddFeatureOrDriver(editor)
+    }
+
+    private async showQuickAddFeatureOrDriver(editor: vscode.TextEditor) {
         const server = await vscode.window.showQuickPick(
             [
+                {
+                    label: "Drivers",
+                    kind: vscode.QuickPickItemKind.Separator,
+                },
                 ...serverInfo.servers.map(
                     e =>
-                        <TaggedQuickPickItem<ServerInfo>>{
+                        <ServerQuickPickItem>{
                             label: e.label,
                             description: e.startName,
                             detail: e.detail,
-                            data: e,
+                            data: { info: e, command: "server" },
                         }
                 ),
-                <TaggedQuickPickItem<ServerInfo>>{
+                <ServerQuickPickItem>{
                     label: "Search...",
                     description: "npmjs.com",
                     detail: "Search for packages on npmjs.com with the `devicescript` keyword.",
+                    data: { command: "search" },
+                },
+                {
+                    label: "Features",
+                    kind: vscode.QuickPickItemKind.Separator,
+                },
+                <ServerQuickPickItem>{
+                    label: "Add settings and secrets",
+                    detail: "Add .env.default and .env.local files to store configuration settings and secrets.",
+                    data: { command: "settings" },
+                },
+                <ServerQuickPickItem>{
+                    label: "Add tests",
+                    detail: "Add a test file to run tests on your device.",
+                    data: { command: "test" },
+                },
+                <ServerQuickPickItem>{
+                    label: "Add board",
+                    detail: "Add a custom board configuration.",
+                    data: { command: "board" },
+                },
+                <ServerQuickPickItem>{
+                    label: "Convert to NPM package",
+                    detail: "Update package.json to support publishing as a library on npm.js.",
+                    data: { command: "npm" },
                 },
             ],
             {
-                title: `Pick a driver to start`,
+                title: `Configure project`,
                 matchOnDescription: true,
                 matchOnDetail: true,
                 canPickMany: false,
@@ -394,14 +452,19 @@ export class DeviceScriptExtensionState extends JDEventSource {
         )
         if (server === undefined) return
 
-        if (server.data) await this.addStartServer(editor, server.data)
-        // npm
-        else
-            vscode.env.openExternal(
+        const { command, info } = server.data
+        if (command === "server") await this.addStartServer(editor, info)
+        else if (command === "search")
+            await vscode.env.openExternal(
                 vscode.Uri.parse(
                     "https://www.npmjs.com/search?q=keywords%3Adevicescript"
                 )
             )
+        else if (command === "test") await this.addTest()
+        else if (command === "settings") await this.addSettings()
+        else if (command === "sim") await this.addSim()
+        else if (command === "npm") await this.addNpm()
+        else if (command === "board") await this.addBoard()
     }
 
     // find first line that is not an import, comment or empty
