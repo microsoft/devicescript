@@ -137,18 +137,19 @@ export class Socket {
         const port2 = proto === "tls" ? -port : port
         ;(ds as DsSockets)._socketOnEvent = Socket._socketOnEvent
         socket?.finish("terminated")
-        socket = new Socket(`${proto}://${host}:${port}`)
+        const sock = new Socket(`${proto}://${host}:${port}`)
+        socket = sock
         console.debug(`connecting to ${socket.name}`)
         const r = (ds as DsSockets)._socketOpen(options.host, port2)
         if (r !== 0) {
-            const e = socket.error(`can't connect: ${r}`)
+            const e = sock.error(`can't connect: ${r}`)
             socket = null
             throw e
         }
-        const v = await ds.wait(socket.emitter, options.timeout || 30000)
-        if (socket.lastError) throw socket.lastError
-        if (v === undefined) throw socket.error("Timeout")
-        ds.assert(!socket.closed)
+        const v = await ds.wait(sock.emitter, options.timeout || 30000)
+        if (sock.lastError) throw sock.lastError
+        if (v === undefined) throw sock.error("Timeout")
+        ds.assert(!socket?.closed)
         ds.assert(v === true)
         return socket
     }
