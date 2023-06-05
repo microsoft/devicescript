@@ -164,10 +164,10 @@ interface String {
      */
     startsWith(searchString: string, position?: number): boolean
 
-    /** Converts all the alphabetic characters in a string to lowercase. */
+    /** Converts all the alphabetic characters in a string to lowercase. Currently ASCII-only. */
     toLowerCase(): string
 
-    /** Converts all the alphabetic characters in a string to uppercase. */
+    /** Converts all the alphabetic characters in a string to uppercase. Currently ASCII-only. */
     toUpperCase(): string
 
     /** Removes the leading and trailing white space and line terminator characters from a string. */
