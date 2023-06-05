@@ -24,6 +24,8 @@ import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
 import {
     AddResponse,
+    SideAddNpmReq,
+    SideAddNpmResp,
     SideAddServiceReq,
     SideAddServiceResp,
     SideAddSettingsReq,
@@ -65,7 +67,7 @@ export interface NodeWatch {
 }
 
 export type ServerQuickPickItem = TaggedQuickPickItem<{
-    command: "test" | "settings" | "search" | "server" | "sim"
+    command: "test" | "settings" | "search" | "server" | "sim" | "npm"
     info?: ServerInfo
 }>
 
@@ -169,6 +171,14 @@ export class DeviceScriptExtensionState extends JDEventSource {
     async addSim() {
         const resp = await sideRequest<SideAddSimReq, SideAddSimResp>({
             req: "addSim",
+            data: {},
+        })
+        await this.handleAddResponse(resp.data)
+    }
+
+    async addNpm() {
+        const resp = await sideRequest<SideAddNpmReq, SideAddNpmResp>({
+            req: "addNpm",
             data: {},
         })
         await this.handleAddResponse(resp.data)
@@ -389,16 +399,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
     private async showQuickAddFeatureOrDriver(editor: vscode.TextEditor) {
         const server = await vscode.window.showQuickPick(
             [
-                <ServerQuickPickItem>{
-                    label: "Add settings and secrets",
-                    detail: "Add .env.default and .env.local files to store configuration settings and secrets.",
-                    data: { command: "settings" },
-                },
-                <ServerQuickPickItem>{
-                    label: "Add tests",
-                    detail: "Add a test file to run tests on your device.",
-                    data: { command: "test" },
-                },
                 {
                     label: "Drivers",
                     kind: vscode.QuickPickItemKind.Separator,
@@ -417,6 +417,25 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     description: "npmjs.com",
                     detail: "Search for packages on npmjs.com with the `devicescript` keyword.",
                     data: { command: "search" },
+                },
+                {
+                    label: "Features",
+                    kind: vscode.QuickPickItemKind.Separator,
+                },
+                <ServerQuickPickItem>{
+                    label: "Add settings and secrets",
+                    detail: "Add .env.default and .env.local files to store configuration settings and secrets.",
+                    data: { command: "settings" },
+                },
+                <ServerQuickPickItem>{
+                    label: "Add tests",
+                    detail: "Add a test file to run tests on your device.",
+                    data: { command: "test" },
+                },
+                <ServerQuickPickItem>{
+                    label: "Convert to NPM package",
+                    detail: "Update package.json to support publishing as a library on npm.js.",
+                    data: { command: "npm" },
                 },
             ],
             {
@@ -439,6 +458,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         else if (command === "test") await this.addTest()
         else if (command === "settings") await this.addSettings()
         else if (command === "sim") await this.addSim()
+        else if (command === "npm") await this.addNpm()
     }
 
     // find first line that is not an import, comment or empty
