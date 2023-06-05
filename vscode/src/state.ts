@@ -30,6 +30,8 @@ import {
     SideAddSettingsResp,
     SideAddSimReq,
     SideAddSimResp,
+    SideAddTestReq,
+    SideAddTestResp,
     SideConnectReq,
     SideStartVmReq,
     SideStopVmReq,
@@ -61,6 +63,11 @@ export interface NodeWatch {
     label: string
     icon: string
 }
+
+export type ServerQuickPickItem = TaggedQuickPickItem<{
+    command: "test" | "settings" | "search" | "server" | "sim"
+    info?: ServerInfo
+}>
 
 export class DeviceScriptExtensionState extends JDEventSource {
     readonly devtools: DeveloperToolsManager
@@ -149,6 +156,14 @@ export class DeviceScriptExtensionState extends JDEventSource {
         skipUpdate?: boolean
     }): Promise<JDService> {
         return this.deviceScriptManager || this.pickDeviceScriptManager(options)
+    }
+
+    async addTest() {
+        const resp = await sideRequest<SideAddTestReq, SideAddTestResp>({
+            req: "addTest",
+            data: {},
+        })
+        await this.handleAddResponse(resp.data)
     }
 
     async addSim() {
@@ -368,25 +383,44 @@ export class DeviceScriptExtensionState extends JDEventSource {
             })
         }
 
+        await this.showQuickAddFeatureOrDriver(editor)
+    }
+
+    private async showQuickAddFeatureOrDriver(editor: vscode.TextEditor) {
         const server = await vscode.window.showQuickPick(
             [
+                <ServerQuickPickItem>{
+                    label: "Add settings and secrets",
+                    detail: "Add .env.default and .env.local files to store configuration settings and secrets.",
+                    data: { command: "settings" },
+                },
+                <ServerQuickPickItem>{
+                    label: "Add tests",
+                    detail: "Add a test file to run tests on your device.",
+                    data: { command: "test" },
+                },
+                {
+                    label: "Drivers",
+                    kind: vscode.QuickPickItemKind.Separator,
+                },
                 ...serverInfo.servers.map(
                     e =>
-                        <TaggedQuickPickItem<ServerInfo>>{
+                        <ServerQuickPickItem>{
                             label: e.label,
                             description: e.startName,
                             detail: e.detail,
-                            data: e,
+                            data: { info: e, command: "server" },
                         }
                 ),
-                <TaggedQuickPickItem<ServerInfo>>{
+                <ServerQuickPickItem>{
                     label: "Search...",
                     description: "npmjs.com",
                     detail: "Search for packages on npmjs.com with the `devicescript` keyword.",
+                    data: { command: "search" },
                 },
             ],
             {
-                title: `Pick a driver to start`,
+                title: `Configure project`,
                 matchOnDescription: true,
                 matchOnDetail: true,
                 canPickMany: false,
@@ -394,14 +428,17 @@ export class DeviceScriptExtensionState extends JDEventSource {
         )
         if (server === undefined) return
 
-        if (server.data) await this.addStartServer(editor, server.data)
-        // npm
-        else
-            vscode.env.openExternal(
+        const { command, info } = server.data
+        if (command === "server") await this.addStartServer(editor, info)
+        else if (command === "search")
+            await vscode.env.openExternal(
                 vscode.Uri.parse(
                     "https://www.npmjs.com/search?q=keywords%3Adevicescript"
                 )
             )
+        else if (command === "test") await this.addTest()
+        else if (command === "settings") await this.addSettings()
+        else if (command === "sim") await this.addSim()
     }
 
     // find first line that is not an import, comment or empty
