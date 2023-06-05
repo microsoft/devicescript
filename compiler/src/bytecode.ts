@@ -281,7 +281,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 182,
+    __MAX = 183,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -465,6 +465,7 @@ export enum BuiltInString {
     TOUPPERCASE = 180,
     TOLOWERCASE = 181,
     INDEXOF = 182,
+    BYTELENGTH = 183,
 }
 
 export const OP_PRINT_FMTS = [
@@ -763,6 +764,7 @@ export const BUILTIN_STRING__VAL = [
     "toUpperCase",
     "toLowerCase",
     "indexOf",
+    "byteLength",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

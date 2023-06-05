@@ -145,10 +145,20 @@ export async function fetch(url: string, options?: FetchOptions) {
             hd.set(k, options.headers[k])
         }
     }
+
+    let bodyLen = 0
+    if (typeof options.body === "string") bodyLen = options.body.byteLength
+    else if (options.body instanceof Buffer) bodyLen = options.body.length
+    else
+        throw new TypeError(
+            `body has to be string or buffer; got ${options.body}`
+        )
+
     if (!hd.has("user-agent")) hd.set("user-agent", "DeviceScript fetch()")
     if (!hd.has("accept")) hd.set("accept", "*/*")
     hd.set("host", host)
     hd.set("connection", "close")
+    if (bodyLen) hd.set("content-length", bodyLen + "")
 
     const reqStr = `${options.method} ${path} HTTP/1.1\r\n${hd.serialize()}\r\n`
     const s = await Socket.connect({
@@ -158,6 +168,7 @@ export async function fetch(url: string, options?: FetchOptions) {
     })
     console.debug(`req: ${reqStr}`)
     await s.send(reqStr)
+    if (bodyLen) await s.send(options.body)
 
     const resp = new Response(s)
 

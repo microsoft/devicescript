@@ -115,6 +115,9 @@ interface String {
     /** Returns the length of a String object. */
     readonly length: number
 
+    /** Returns the length in bytes of UTF8 encoding of a String object. */
+    readonly byteLength: number
+
     [Symbol.iterator](): IterableIterator<string>
     readonly [index: number]: string
 

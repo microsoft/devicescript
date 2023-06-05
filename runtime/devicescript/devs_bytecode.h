@@ -261,7 +261,7 @@
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC 38
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE 39
 
-#define DEVS_BUILTIN_STRING___MAX 182
+#define DEVS_BUILTIN_STRING___MAX 183
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -445,6 +445,7 @@
 #define DEVS_BUILTIN_STRING_TOUPPERCASE 180
 #define DEVS_BUILTIN_STRING_TOLOWERCASE 181
 #define DEVS_BUILTIN_STRING_INDEXOF 182
+#define DEVS_BUILTIN_STRING_BYTELENGTH 183
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -490,7 +491,7 @@
         "parent", "response", "ServerInterface", "_onServerPacket", "_serverSend",                 \
         "notImplemented", "delay", "fromCharCode", "_allocRole", "spiConfigure", "spiXfer",        \
         "_socketOpen", "_socketClose", "_socketWrite", "_socketOnEvent", "open", "close", "error", \
-        "data", "toUpperCase", "toLowerCase", "indexOf"
+        "data", "toUpperCase", "toLowerCase", "indexOf", "byteLength"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

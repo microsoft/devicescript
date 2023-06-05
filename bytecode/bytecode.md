@@ -657,4 +657,5 @@ Only `true` and `false` values.
     toUpperCase = 180
     toLowerCase = 181
     indexOf = 182
+    byteLength = 183
 

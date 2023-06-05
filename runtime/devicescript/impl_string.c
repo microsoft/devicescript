@@ -7,6 +7,13 @@ value_t prop_String_length(devs_ctx_t *ctx, value_t self) {
     return devs_value_from_int(len);
 }
 
+value_t prop_String_byteLength(devs_ctx_t *ctx, value_t self) {
+    unsigned size;
+    if (devs_string_get_utf8(ctx, self, &size))
+        return devs_value_from_int(size);
+    return devs_undefined;
+}
+
 void meth1_String_charCodeAt(devs_ctx_t *ctx) {
     int off = devs_string_index(ctx, devs_arg_self(ctx), devs_arg_int(ctx, 0));
 

@@ -130,6 +130,7 @@ void fun0_DeviceScript__socketClose(devs_ctx_t *ctx);
 void fun1_DeviceScript__socketWrite(devs_ctx_t *ctx);
 // impl_string.c
 value_t prop_String_length(devs_ctx_t *ctx, value_t self);
+value_t prop_String_byteLength(devs_ctx_t *ctx, value_t self);
 void meth1_String_charCodeAt(devs_ctx_t *ctx);
 void meth1_String_charAt(devs_ctx_t *ctx);
 void meth2_String_slice(devs_ctx_t *ctx);
@@ -337,16 +338,17 @@ static const devs_builtin_proto_entry_t DsServiceSpec_prototype_entries[] = { //
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
     {N(LENGTH), 50104},                                                //
-    {N(CHARCODEAT), 50105},                                            //
-    {N(CHARAT), 50106},                                                //
-    {N(SLICE), 50107},                                                 //
-    {N(INDEXOF), 50109},                                               //
-    {N(TOLOWERCASE), 50110},                                           //
-    {N(TOUPPERCASE), 50111},                                           //
+    {N(BYTELENGTH), 50105},                                            //
+    {N(CHARCODEAT), 50106},                                            //
+    {N(CHARAT), 50107},                                                //
+    {N(SLICE), 50108},                                                 //
+    {N(INDEXOF), 50110},                                               //
+    {N(TOLOWERCASE), 50111},                                           //
+    {N(TOUPPERCASE), 50112},                                           //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_entries[] = { //
-    {N(FROMCHARCODE), 50108},                                //
+    {N(FROMCHARCODE), 50109},                                //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE},    //
     {0, 0}};
 
@@ -446,8 +448,8 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 112;
-const devs_builtin_function_t devs_builtin_functions[112] = {
+uint16_t devs_num_builtin_functions = 113;
+const devs_builtin_function_t devs_builtin_functions[113] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -553,6 +555,7 @@ const devs_builtin_function_t devs_builtin_functions[112] = {
     {N(_SOCKETCLOSE), 0, NO_SELF, {.meth = fun0_DeviceScript__socketClose}},
     {N(_SOCKETWRITE), 1, NO_SELF, {.meth = fun1_DeviceScript__socketWrite}},
     {N(LENGTH), 0, PROP, {.prop = prop_String_length}},
+    {N(BYTELENGTH), 0, PROP, {.prop = prop_String_byteLength}},
     {N(CHARCODEAT), 1, 0, {.meth = meth1_String_charCodeAt}},
     {N(CHARAT), 1, 0, {.meth = meth1_String_charAt}},
     {N(SLICE), 2, 0, {.meth = meth2_String_slice}},
