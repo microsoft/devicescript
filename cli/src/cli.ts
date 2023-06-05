@@ -265,6 +265,7 @@ export async function mainCli() {
                 "-r, --refresh",
                 "discard cached firmware image, even if less than 24h old"
             )
+            r.option("-C, --clean", "remove all settings, user program, and firmware instead of flashing")
         }
         r.option(
             "--install",

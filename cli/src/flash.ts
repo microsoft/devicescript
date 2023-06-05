@@ -33,6 +33,11 @@ export interface FlashOptions {
      * run `py -m pip install esptool`
      */
     install?: boolean
+
+    /**
+     * Delete settings and user program instead of flashing the firmware.
+     */
+    clean?: boolean
 }
 
 export interface FlashESP32Options extends FlashOptions {
@@ -202,18 +207,29 @@ export async function flashESP32(options: FlashESP32Options) {
 
     const cachePath = await fetchFW(board, options)
 
-    const moff = /-(0x[a-f0-9]+)\.bin$/.exec(cachePath)
-    if (!moff)
-        fatal("invalid $fwUrl format, should end in -0x1000.bin or similar")
-
-    const { code } = await runEsptool("write_flash", moff[1], cachePath)
-
-    if (code === 0) {
-        log("flash OK!")
-        process.exit(0)
+    if (options.clean) {
+        const { code } = await runEsptool("erase_flash")
+        if (code === 0) {
+            log("erase flash OK!")
+            process.exit(0)
+        } else {
+            error("erase flash failed")
+            process.exit(1)
+        }
     } else {
-        error("flash failed")
-        process.exit(1)
+        const moff = /-(0x[a-f0-9]+)\.bin$/.exec(cachePath)
+        if (!moff)
+            fatal("invalid $fwUrl format, should end in -0x1000.bin or similar")
+
+        const { code } = await runEsptool("write_flash", moff[1], cachePath)
+
+        if (code === 0) {
+            log("flash OK!")
+            process.exit(0)
+        } else {
+            error("flash failed")
+            process.exit(1)
+        }
     }
 
     async function findEsptool() {
@@ -335,6 +351,9 @@ async function fetchFW(board: DeviceConfig, options: FlashOptions) {
             )
         }
     }
+
+    if (options.clean && board.archId.includes("rp2040"))
+        dlUrl = "https://datasheets.raspberrypi.com/soft/flash_nuke.uf2"
 
     const bn = dlUrl.replace(/.*\//, "")
     const cachedFolder = ".devicescript/cache/"
