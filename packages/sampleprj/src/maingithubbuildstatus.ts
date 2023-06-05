@@ -4,12 +4,12 @@ import { fetch } from "@devicescript/net"
 // read configuration from ./env.defaults
 const owner = await readSetting("GITHUB_OWNER")
 const repo = await readSetting("GITHUB_REPO")
-const ref = await readSetting("GITHUB_REF")
+const ref = await readSetting("GITHUB_REF", "main")
 // read secret from ./env.local
-const token = await readSetting("GITHUB_TOKEN")
+const token = await readSetting("GITHUB_TOKEN", "")
 
-if (!owner || !repo || !ref || !token)
-    throw new Error("missing configuration")
+console.log({ owner, repo, ref })
+if (!owner || !repo) throw new Error("missing configuration")
 
 // track state of last fetch
 let state: "failure" | "pending" | "success" | "error" | "" = ""
@@ -34,14 +34,15 @@ setInterval(async () => {
         {
             headers: {
                 Accept: "application/vnd.github+json",
-                Authorization: `Bearer ${token}`,
+                Authorization: token ? `Bearer ${token}` : undefined,
                 "X-GitHub-Api-Version": "2022-11-28",
             },
         }
     )
+    console.log({ status: res.status })
     if (res.status === 200) {
         const json = await res.json()
         state = json.state
-        console.log({ json, state })
+        console.log({ state })
     } else state = "error"
 }, 60000)
