@@ -1,0 +1,179 @@
+---
+sidebar_position: 3
+---
+
+# GitHub Build Status
+
+In this sample, we will query the GitHub API to get the status of the latest build of a repository. The status will be used to update the [status light](/developer/status-light).
+
+## Prerequisites
+
+-   [Device](/devices) wih WiFi connectivity (ESP32 only currently)
+-   GitHub account and repository
+
+## Getting the build status
+
+The [GitHub commit API](https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28) allows to query the
+[combined status of a reference](https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#get-the-combined-status-for-a-specific-reference).
+We can use this API to get the status of a branch in the repository.
+
+```bash
+curl -L \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer <TOKEN>"\
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/OWNER/REPO/commits/REF/status
+```
+
+## Settings and secrets
+
+To make the request to GitHub, you need a few configuration strings and one secret. Instead of storing those in source code,
+we use the builtin [settings](/developer/settings).
+
+Public configuration settings are stored in the `./env.defaults` file. This file is part of the source code and can be committed to a repository.
+
+```yaml title="./env.defaults"
+GITHUB_OWNER=microsoft
+GITHUB_REPO=devicescript
+GITHUB_REF=main
+```
+
+Secrets are stored in the `./env.local` file. This file is not part of the source code and **should not be committed to a repository**.
+The GitHub token needs `repo:status` scope (and no more). You can create a token in the [GitHub settings](https://github.com/settings/tokens).
+
+```yaml title="./env.local"
+GITHUB_TOKEN=...
+```
+
+In the code, we use the `readSettings` function to read the settings and secrets.
+
+```ts title="./src/index.ts"
+import { readSetting } from "@devicescript/settings"
+
+// read configuration from ./env.defaults
+const owner = await readSetting("GITHUB_OWNER")
+const repo = await readSetting("GITHUB_REPO")
+const ref = await readSetting("GITHUB_REF")
+// read secret from ./env.local
+const token = await readSetting("GITHUB_TOKEN")
+
+console.log({ owner, repo, ref })
+```
+
+## Using `fetch`
+
+We combine the settings and secrets to create the URL to query the GitHub API. We use the `fetch` function from the
+[@devicescript/net](/developer/net) package to make the request. Fetch is similar to the [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch).
+
+```ts skip
+import { fetch } from "@devicescript/net"
+
+...
+
+const res = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/status`,
+    {
+        headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: `Bearer ${token}`,
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    }
+)
+
+console.log({ res })
+```
+
+:::tip
+
+Microcontrollers are memory constrained and you should always try to minimize the amount of data you send and receive.
+The [GraphQL API](https://docs.github.com/en/graphql) from GitHub would allow you to create more targetted queries with smaller result payloads.
+
+:::
+
+## Parsing the response
+
+Handle the `fetch` response you like any other response. In this case, we parse the JSON response and log the status.
+
+```ts skip
+if (res.status === 200) {
+    const json = await res.json()
+    const state: "failure" | "pending" | "success" = json.state
+    console.log({ json, state })
+}
+```
+
+## Updating the status light
+
+Based on the last state, we'll create some LED animation on the status light:
+
+-   `failure`: blinking fast red (2x per second)
+-   `pending`: blinking slow orange (1x per second)
+-   `success`: solid green
+
+```ts skip
+let state: "failure" | "pending" | "success" = ...
+let blinki = 0
+
+setInterval(() => {
+    blinki++;
+    let c = 0x000000
+    if (state === "failure")
+        c = blinki % 2 === 0 ? 0xff0000 : 0x000000
+    else if (state === "pending")
+        c = (blinki >> 1) % 2 === 0 ? 0xFFA500 : 0x000000
+    else // success
+        c = 0x00ff00
+}, 500)
+```
+
+## Putting it all together
+
+```ts
+import { readSetting } from "@devicescript/settings"
+import { fetch } from "@devicescript/net"
+
+// read configuration from ./env.defaults
+const owner = await readSetting("GITHUB_OWNER")
+const repo = await readSetting("GITHUB_REPO")
+const ref = await readSetting("GITHUB_REF")
+// read secret from ./env.local
+const token = await readSetting("GITHUB_TOKEN")
+
+if (!owner || !repo || !ref || !token) throw new Error("missing configuration")
+
+// track state of last fetch
+let state: "failure" | "pending" | "success" | "error" | "" = ""
+let blinki = 0
+
+// update status light
+setInterval(() => {
+    blinki++
+    let c = 0x000000
+    if (state === "failure")
+        c = blinki % 2 === 0 ? 0xff0000 : 0x000000 // blink fast red
+    else if (state === "pending")
+        c = (blinki >> 1) % 2 === 0 ? 0xffa500 : 0x000000 // blink slow orange
+    else if (state === "success") c = 0x00ff00 // solid green
+    else c = 0x000000 // dark if any error
+}, 500)
+
+// query github every minute
+setInterval(async () => {
+    const res = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/status`,
+        {
+            headers: {
+                Accept: "application/vnd.github+json",
+                Authorization: `Bearer ${token}`,
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        }
+    )
+    if (res.status === 200) {
+        const json = await res.json()
+        state = json.state
+        console.log({ json, state })
+    } else state = "error"
+}, 60000)
+```

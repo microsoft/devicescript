@@ -5,4 +5,20 @@ sidebar_position: 14
 
 # TCP/TLS Sockets
 
-TODO
+## fetch
+
+DeviceScript provides the familiar `fetch` function to issue HTTP requests.
+`fetch` is designed to match the browser [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+
+```ts
+import { fetch } from "@devicescript/net"
+
+const resp = await fetch("https://www.githubstatus.com/api/v2/status.json")
+const body: {
+    status: {
+        indicator: "none" | "minor" | "major" | "critical"
+    }
+} = await resp.json()
+const indicator = body.status.indicator
+console.log(`GitHub status: ${indicator}`)
+```
