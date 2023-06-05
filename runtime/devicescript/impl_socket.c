@@ -52,9 +52,7 @@ static void tcpsock_on_event(unsigned event, const void *data, unsigned size) {
     ctx->the_stack[0] = fn;
     ctx->the_stack[1] = devs_builtin_string(ev);
     ctx->the_stack[2] = arg;
-    devs_fiber_t *fiber = devs_fiber_start(ctx, 2, DEVS_OPCALL_BG);
-    if (fiber)
-        devs_fiber_set_wake_time(fiber, devs_now(ctx));
+    devs_fiber_start(ctx, 2, DEVS_OPCALL_BG);
 }
 #endif
 

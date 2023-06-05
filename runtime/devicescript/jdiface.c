@@ -188,6 +188,9 @@ static void start_pkt_handler(devs_ctx_t *ctx, value_t fn, unsigned role_idx) {
     if (devs_is_undefined(fn) || ctx->error_code)
         return;
 
+    if (devs_is_suspended(ctx))
+        return; // this would lead to OOM very quickly
+
     DEVS_CHECK_CTX_FREE(ctx);
 
     ctx->stack_top_for_gc = 2;
@@ -195,9 +198,7 @@ static void start_pkt_handler(devs_ctx_t *ctx, value_t fn, unsigned role_idx) {
     // null it out first, in case devs_jd_pkt_capture() triggers GC
     ctx->the_stack[1] = devs_undefined;
     ctx->the_stack[1] = devs_jd_pkt_capture(ctx, role_idx);
-    devs_fiber_t *fiber = devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
-    if (fiber)
-        devs_fiber_set_wake_time(fiber, devs_now(ctx));
+    devs_fiber_start(ctx, 1, DEVS_OPCALL_BG);
 }
 
 void devs_jd_wake_role(devs_ctx_t *ctx, unsigned role_idx, bool is_role_evt) {

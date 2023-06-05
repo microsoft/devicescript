@@ -266,6 +266,7 @@ unsigned devs_fiber_get_max_sleep(devs_ctx_t *ctx);
 
 // vm_main.c
 void devs_vm_exec_opcodes(devs_ctx_t *ctx);
+bool devs_in_vm_loop(devs_ctx_t *ctx);
 uint8_t devs_fetch_opcode(devs_activation_t *frame, devs_ctx_t *ctx);
 
 int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc, unsigned flags);
@@ -359,4 +360,4 @@ void devs_dump_stack(devs_ctx_t *ctx, value_t stack);
 void devs_dump_exception(devs_ctx_t *ctx, value_t exn);
 void devs_track_exception(devs_ctx_t *ctx);
 
-#define DEVS_CHECK_CTX_FREE(ctx) JD_ASSERT((ctx->flags & DEVS_CTX_FLAG_BUSY) == 0)
+#define DEVS_CHECK_CTX_FREE(ctx) JD_ASSERT(!devs_in_vm_loop(ctx))
