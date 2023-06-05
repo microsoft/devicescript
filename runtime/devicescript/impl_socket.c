@@ -66,8 +66,13 @@ void fun2_DeviceScript__socketOpen(devs_ctx_t *ctx) {
         return;
     }
 
+    if (!jd_tcpsock_is_available()) {
+        devs_throw_range_error(ctx, "network not available");
+        return;
+    }
+
     if (!host || !port) {
-        devs_throw_range_error(ctx, "host or port invalid");
+        devs_throw_type_error(ctx, "host or port invalid");
         return;
     }
 

@@ -11,6 +11,7 @@ export declare type DevsModule = EmscriptenModule & typeof Exts & {
     _jd_em_devs_verify(img: ptr, size: int32): int32;
     _jd_em_devs_client_deploy(img: ptr, size: int32): int32;
     _jd_em_devs_enable_gc_stress(en: int32): void;
+    _jd_em_tcpsock_on_event(ev: int32, arg: ptr, len: int32): void;
     sendPacket(pkt: Uint8Array): void;
     /**
      * Overrideable metod called when deployment is done.
@@ -132,6 +133,10 @@ export declare module Exts {
      * @param id1 the second 32 bits of the device id, undefined if id0 is a string
      */
     function devsSetDeviceId(id0: string | number, id1?: number): void;
+    function sockClose(): 0 | -10;
+    function sockWrite(data: ptr, len: number): 0 | -10;
+    function sockIsAvailable(): boolean;
+    function sockOpen(hostptr: ptr, port: int32): void;
 }
 declare function factory(): Promise<DevsModule>;
 export default factory;

@@ -46,6 +46,7 @@ void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsig
                     const void *info, unsigned info_size, const void *info2, unsigned info_size2,
                     uint8_t outkey[JD_SHA256_HASH_BYTES]);
 
+// duplicated in wasmpre.ts!
 #define JD_CONN_EV_OPEN 0x01
 #define JD_CONN_EV_CLOSE 0x02
 #define JD_CONN_EV_ERROR 0x03

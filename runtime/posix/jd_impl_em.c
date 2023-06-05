@@ -79,12 +79,14 @@ void jd_em_init(void) {
     if (inited)
         return;
     inited = 1;
+#if JD_EM_NODEJS_SOCKET
+    jd_tcpsock_close(); // link it
+#endif
     tx_init(&em_transport, NULL);
     jd_rx_init();
     jd_lstore_init();
     jd_services_init();
 }
-
 
 EMSCRIPTEN_KEEPALIVE
 int jd_em_process(void) {
