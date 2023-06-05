@@ -19,12 +19,20 @@ This repository contains:
 -   [jacdac-c submodule](https://github.com/microsoft/jacdac-c), including sources for Jacdac client libraries and DeviceScript VM
 -   `compiler/` - sources for DeviceScript compiler
 -   `runtime/devicescript-vm/` - glue files to build DeviceScript VM as WASM module using [emscripten](https://emscripten.org/); `vm/dist/` contain pre-built files
--   `devs/samples/` - sample DeviceScript programs
+-   `packages` - builtin packages and sample project (`packages/sampleprj`)
 -   `runtime/posix/` - implementation of Jacdac SDK HAL for grown-up POSIX-like operating systems (as opposed to embedded platforms)
+-   `vscode` - Visual Studio Code extension
+-   `website` - docusaurus documentation side
 
 ## Usage
 
-You can just use the devcontainer to build.
+The development requirement will vary (widely) depending on which part of DeviceScript you want to work on.
+
+Using Visual Studio Code is strongly recommended.
+
+### Compiler, runtime and command line
+
+You can use the devcontainer to build. The instructions are tested for a Unix terminal.
 
 If you want to build locally you need to install node.js. After cloning, the repo run
 
@@ -44,16 +52,29 @@ yarn dev
 -   start Terminal in VSCode
 -   run `yarn install`
 -   run `yarn build`
--   run `devs run devs/samples/something.ts` - this will execute given DeviceScript program using the WASM binary
+-   run `yarn devs run devs/samples/something.ts` - this will execute given DeviceScript program using the WASM binary
 
 If you want to develop the runtime (as opposed to compiler or website), you will also need
 GNU Make, C compiler, and [emscripten](https://emscripten.org/docs/getting_started/downloads.html).
 Once you have it all:
 
 -   run `make native` to compile using native C compiler
--   run `devs crun devs/samples/something.ts` - this will execute given DeviceScript program using the POSIX/native binary
+-   run `yarn devs crun devs/samples/something.ts` - this will execute given DeviceScript program using the POSIX/native binary
 -   run `./runtime/built/jdcli 8082` - this will run the POSIX/native DeviceScript server, which can be accessed from the devtools dashboard
 -   run `make em` to compile using emscripten
+
+### Visual Studio Extension
+
+Open the Debug view in VSCode and run the `VSCode Extension` configuration. This will launch a new VSCode instance with the extension loaded. A build is automatically triggered before launch VSCode.
+
+### Builting packages
+
+Similar to working on the Visual Studio Code extension, lunch the `VSCode Extension` debugger configuration. This will launch a new VSCode instance with the extension loaded.
+It should also open the `packages` folder which will allow you to work on the builtin packages.
+
+### Documentation
+
+Run ``yarn docs` and edit any markdown file in the `website/docs` folder. The changes should be automatically picked up and rendered by docusaurus.
 
 ## Release process
 
@@ -63,9 +84,9 @@ The cloud build will rebuild and check-in the VM, update version numbers in all 
 
 If you bump minor, you need to also bump the firmware repos:
 
-- go to each firmware repo (https://github.com/microsoft/devicescript-esp32, https://github.com/microsoft/devicescript-pico, https://github.com/microsoft/devicescript-stm32)
-- update the `devicescript` submodule
-- run
+-   go to each firmware repo (https://github.com/microsoft/devicescript-esp32, https://github.com/microsoft/devicescript-pico, https://github.com/microsoft/devicescript-stm32)
+-   update the `devicescript` submodule
+-   run
 
 ```bash
 make bump
