@@ -247,7 +247,7 @@ int jd_tcpsock_write(const void *buf, unsigned size) {
 }
 
 void jd_tcpsock_process(void) {
-    static uint8_t sockbuf[128];
+    static uint8_t sockbuf[1024];
 
     if (!sock_fd)
         return;

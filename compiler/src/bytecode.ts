@@ -105,9 +105,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
-    IMG_VERSION_MINOR = 9,
-    IMG_VERSION_PATCH = 16,
-    IMG_VERSION = 0x2090010,
+    IMG_VERSION_MINOR = 10,
+    IMG_VERSION_PATCH = 0,
+    IMG_VERSION = 0x20a0000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
@@ -281,7 +281,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 171,
+    __MAX = 182,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -454,6 +454,17 @@ export enum BuiltInString {
     _ALLOCROLE = 169,
     SPICONFIGURE = 170,
     SPIXFER = 171,
+    _SOCKETOPEN = 172,
+    _SOCKETCLOSE = 173,
+    _SOCKETWRITE = 174,
+    _SOCKETONEVENT = 175,
+    OPEN = 176,
+    CLOSE = 177,
+    ERROR_ = 178, // error
+    DATA = 179,
+    TOUPPERCASE = 180,
+    TOLOWERCASE = 181,
+    INDEXOF = 182,
 }
 
 export const OP_PRINT_FMTS = [
@@ -741,6 +752,17 @@ export const BUILTIN_STRING__VAL = [
     "_allocRole",
     "spiConfigure",
     "spiXfer",
+    "_socketOpen",
+    "_socketClose",
+    "_socketWrite",
+    "_socketOnEvent",
+    "open",
+    "close",
+    "error",
+    "data",
+    "toUpperCase",
+    "toLowerCase",
+    "indexOf",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

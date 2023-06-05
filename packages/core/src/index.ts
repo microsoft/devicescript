@@ -4,6 +4,7 @@
 import "./utils"
 import "./timeouts"
 import "./array"
+import "./string"
 import "./events"
 import "./jacdac"
 import "./led"

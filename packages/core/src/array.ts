@@ -120,9 +120,27 @@ Buffer.prototype.slice = function (start?: number, end?: number) {
     if (end === undefined) end = this.length
     if (start === undefined) start = 0
     const len = end - start
-    if (len <= 0 || start >= this.length)
-        return Buffer.alloc(0)
+    if (len <= 0 || start >= this.length) return Buffer.alloc(0)
     const r = Buffer.alloc(len)
     r.blitAt(0, this, start, len)
     return r
+}
+
+Buffer.concat = function (...buffers: Buffer[]) {
+    let size = 0
+    for (const b of buffers) {
+        size += b.length
+    }
+    const r = Buffer.alloc(size)
+    size = 0
+    for (const b of buffers) {
+        r.blitAt(size, b, 0, b.length)
+        size += b.length
+    }
+    return r
+}
+
+Buffer.prototype.lastIndexOf = function (byte, startOffset, endOffset) {
+    if (endOffset == undefined) endOffset = this.length
+    return this.indexOf(byte, startOffset, -endOffset)
 }

@@ -36,7 +36,12 @@ typedef struct {
 } jd_websock_t;
 static jd_websock_t _websock;
 
+void (*jd_tcpsock_on_event_override)(unsigned event, const void *data, unsigned size);
+
 int jd_websock_new(const char *hostname, int port, const char *path, const char *proto) {
+    if (jd_tcpsock_on_event_override)
+        return -108;
+
     jd_websock_t *ws = &_websock;
     ws->msgptr = 0;
     ws->framestart = 0;
@@ -304,6 +309,11 @@ static void on_data(jd_websock_t *ws, const uint8_t *data, unsigned size) {
 }
 
 void jd_tcpsock_on_event(unsigned event, const void *data, unsigned size) {
+    if (jd_tcpsock_on_event_override) {
+        jd_tcpsock_on_event_override(event, data, size);
+        return;
+    }
+
     jd_websock_t *ws = &_websock;
     switch (event) {
     case JD_CONN_EV_OPEN:

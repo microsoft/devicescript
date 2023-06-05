@@ -23,6 +23,7 @@ __attribute__((format(printf, 1, 2))) void app_dmesg(const char *format, ...);
 #define JD_LSTORE 0
 #define JD_NET_BRIDGE 0
 #define JD_WEBSOCK_IMPL 0
+#define JD_USER_SOCKET 0
 #else
 #define JD_LSTORE 1
 #define JD_LSTORE_FF 0
