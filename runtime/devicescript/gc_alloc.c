@@ -9,6 +9,10 @@
 
 void devs_gc_obj_check_core(devs_gc_t *gc, const void *ptr);
 
+// we run GC when allocation size since last GC reaches (JD_GC_STEP_SIZE+LAST)
+// where LAST is used size upon last GC
+#define JD_GC_STEP_SIZE 1024
+
 #define ROOT_SCAN_DEPTH 10
 
 #define GET_TAG(p) ((p) >> DEVS_GC_TAG_POS)
@@ -16,6 +20,7 @@ void devs_gc_obj_check_core(devs_gc_t *gc, const void *ptr);
 
 #define IS_FREE(header) (BASIC_TAG(header) == DEVS_GC_TAG_FREE)
 
+// in words
 #define BLOCK_SIZE(p) ((p)&0xffffff)
 
 #if JD_64
@@ -60,6 +65,8 @@ struct _devs_gc_t {
     block_t *first_free;
     chunk_t *first_chunk;
     uint32_t num_alloc;
+    uint32_t last_used;
+    uint32_t curr_alloc;
     devs_ctx_t *ctx;
 };
 
@@ -83,8 +90,19 @@ void devs_gc_add_chunk(devs_gc_t *gc, void *start, unsigned size) {
     chunk_t *ch = start;
     ch->end =
         (block_t *)(((uintptr_t)((uint8_t *)start + size) & ~(JD_PTRSIZE - 1)) - sizeof(uintptr_t));
-    ch->next = gc->first_chunk;
-    gc->first_chunk = ch;
+
+    ch->next = NULL;
+    if (gc->first_chunk == NULL) {
+        gc->first_chunk = ch;
+    } else {
+        for (chunk_t *p = gc->first_chunk; p; p = p->next) {
+            JD_ASSERT(p < ch); // addresses have to be in order
+            if (p->next == NULL) {
+                p->next = ch;
+                break;
+            }
+        }
+    }
     ch->end->header = DEVS_GC_MK_TAG_WORDS(DEVS_GC_TAG_FINAL, 1);
     mark_block(gc, ch->start, DEVS_GC_TAG_FREE, block_ptr(ch->end) - block_ptr(ch->start));
 }
@@ -228,6 +246,7 @@ static void mark_roots(devs_gc_t *gc) {
     }
 }
 
+// in words
 static inline unsigned block_size(block_t *b) {
     unsigned sz = BLOCK_SIZE(b->header);
     JD_ASSERT(sz > 0);
@@ -256,6 +275,8 @@ static void sweep(devs_gc_t *gc) {
     int sweep = 0;
     block_t *prev = NULL;
     gc->first_free = NULL;
+    gc->last_used = 0;
+    gc->curr_alloc = 0;
 
     for (;;) {
         int had_pending = 0;
@@ -296,6 +317,7 @@ static void sweep(devs_gc_t *gc) {
                         block->free.next = NULL;
                         prev = block;
                     } else {
+                        gc->last_used += block_size(block);
                         block->header = block->header &
                                         ~((uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS);
                     }
@@ -391,7 +413,10 @@ static block_t *alloc_block(devs_gc_t *gc, unsigned tag, unsigned size) {
     if (devs_get_global_flags() & DEVS_FLAG_GC_STRESS) {
         validate_heap(gc);
         devs_gc(gc);
+    } else if (gc->curr_alloc > gc->last_used + JD_GC_STEP_SIZE / sizeof(void *)) {
+        devs_gc(gc);
     }
+    gc->curr_alloc += words;
 
     block_t *b = find_free_block(gc, tag, words);
     if (!b) {
@@ -733,6 +758,7 @@ int devs_dump_heap(devs_ctx_t *ctx, int off, int cnt) {
     int numobj = 0;
     int used_size = 0;
     int free_size = 0;
+    int max_free_block = 0;
 
     for (chunk_t *chunk = ctx->gc->first_chunk; chunk; chunk = chunk->next) {
         for (block_t *block = chunk->start;; block = next_block(block)) {
@@ -745,9 +771,11 @@ int devs_dump_heap(devs_ctx_t *ctx, int off, int cnt) {
             if (off == -1) {
                 numobj++;
                 int sz = block_size(block) * sizeof(void *);
-                if (tag == DEVS_GC_TAG_FREE)
+                if (tag == DEVS_GC_TAG_FREE) {
                     free_size += sz;
-                else
+                    if (sz > max_free_block)
+                        max_free_block = sz;
+                } else
                     used_size += sz;
                 continue;
             }
@@ -771,7 +799,8 @@ int devs_dump_heap(devs_ctx_t *ctx, int off, int cnt) {
     }
 
     if (off == -1) {
-        JD_LOG("stats: %d objects, %d B used, %d B free", numobj, used_size, free_size);
+        JD_LOG("stats: %d objects, %d B used, %d B free (%d B max block)", numobj, used_size,
+               free_size, max_free_block);
     }
 
     return curr;
