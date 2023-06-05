@@ -27,6 +27,12 @@ export interface FlashOptions {
     board?: string
     once?: boolean
     refresh?: boolean
+    /**
+     * Automatically install missing flashing utilities.
+     * For ESP32, if {@link https://docs.espressif.com/projects/esptool/en/latest/esp32/ | esptool} is missing,
+     * run `py -m pip install esptool`
+     */
+    install?: boolean
 }
 
 export interface FlashESP32Options extends FlashOptions {
@@ -174,17 +180,13 @@ export async function flashESP32(options: FlashESP32Options) {
     }
 
     if (!options.esptool) {
-        for (const tool of [
-            "python -m esptool",
-            "python3 -m esptool",
-            "/usr/local/bin/python -m esptool",
-        ]) {
-            const { stdout } = await runTool({ cmd: tool, quiet: true })
-            if (oldEsptool(stdout) === "") {
-                options.esptool = tool
-                break
-            }
-        }
+        await findEsptool()
+    }
+
+    if (!options.esptool && options.install) {
+        log("trying to install esptool with pip...")
+        await runTool({ cmd: "py -m pip install esptool" })
+        await findEsptool()
     }
 
     if (!options.esptool) {
@@ -212,6 +214,21 @@ export async function flashESP32(options: FlashESP32Options) {
     } else {
         error("flash failed")
         process.exit(1)
+    }
+
+    async function findEsptool() {
+        for (const tool of [
+            "py",
+            "python",
+            "python3",
+            "/usr/local/bin/python",
+        ].map(py => `${py} -m esptool`)) {
+            const { stdout } = await runTool({ cmd: tool, quiet: true })
+            if (oldEsptool(stdout) === "") {
+                options.esptool = tool
+                break
+            }
+        }
     }
 
     function printPorts(all = true) {
@@ -323,7 +340,11 @@ async function fetchFW(board: DeviceConfig, options: FlashOptions) {
     const cachedFolder = ".devicescript/cache/"
     const cachePath = cachedFolder + bn
     const st = await stat(cachePath, { bigint: false }).catch<Stats>(_ => null)
-    if (!options.refresh && st && Date.now() - st.mtime.getTime() < 24 * 3600 * 1000) {
+    if (
+        !options.refresh &&
+        st &&
+        Date.now() - st.mtime.getTime() < 24 * 3600 * 1000
+    ) {
         log(`using cached ${cachePath}`)
     } else {
         log(`fetch ${dlUrl}`)

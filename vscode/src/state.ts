@@ -581,7 +581,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
             title: "DeviceScript Flasher",
             progress: "Starting flashing tools...",
             useShell: true,
-            args: ["flash", "--board", id],
+            args: ["flash", "--board", id, "--install"],
             diagnostics: false,
         })
         t.show()

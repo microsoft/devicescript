@@ -266,6 +266,10 @@ export async function mainCli() {
                 "discard cached firmware image, even if less than 24h old"
             )
         }
+        r.option(
+            "--install",
+            "automatically install missing flashing utilities. For ESP32, if 'esptool' is missing, run `py -m pip install esptool`"
+        )
         r.addHelpText("after", () => {
             setupFlashBoards()
             return `\nAvailable boards:\n` + boardNames(arch)
