@@ -7,7 +7,7 @@ import { catchError } from "./error"
 import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
 import { Observable, Subscription, unusbscribe } from "./observable"
-import { map, scan } from "./transform"
+import { map, scan, timestamp } from "./transform"
 import { tap } from "./utility"
 import { register } from "./value"
 const btn = new ds.Button()
@@ -21,11 +21,34 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
             values.push(v)
         })
         let retry = 0
-        while(values.length !== sequence.length && retry++ < 10)
+        while (values.length !== sequence.length && retry++ < 10)
             await ds.sleep(10)
         expect(values.length).toBe(sequence.length)
         for (let i = 0; i < values.length; ++i) {
             expect(values[i]).toBe(sequence[i])
+        }
+    } finally {
+        unusbscribe(s)
+    }
+}
+
+async function emitsR<T, R>(
+    o: Observable<T>,
+    sequence: R[],
+    converter: (v: T) => R
+) {
+    let s: Subscription
+    const values: T[] = []
+    try {
+        s = o.subscribe(v => {
+            values.push(v)
+        })
+        let retry = 0
+        while (values.length !== sequence.length && retry++ < 10)
+            await ds.sleep(10)
+        expect(values.length).toBe(sequence.length)
+        for (let i = 0; i < values.length; ++i) {
+            expect(converter(values[i])).toBe(sequence[i])
         }
     } finally {
         unusbscribe(s)
@@ -90,11 +113,20 @@ describe("transform", () => {
         obs = tap<number>(v => console.log(v))(obs)
         await emits(obs, [1, 4, 9])
     })
-    test("map", async () => {
+    test("scan", async () => {
         let obs = from([1, 2, 3])
         obs = scan<number, number>((x, v) => x + v, 0)(obs)
         obs = tap<number>(v => console.log(v))(obs)
         await emits(obs, [1, 3, 6])
+    })
+    test("timestamp", async () => {
+        let obs = from([1, 2, 3])
+        obs = scan<number, number>((x, v) => x + v, 0)(obs)
+        let obs2 = timestamp<number>()(obs)
+        obs2 = tap<{ value: number; time: number; lastTime: number }>(v =>
+            console.log(v)
+        )(obs2)
+        await emitsR(obs2, [1,3,6], (v: { value: number; time: number; lastTime: number }) => v.value)
     })
 })
 

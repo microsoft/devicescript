@@ -1,3 +1,4 @@
+import { AsyncValue, millis } from "@devicescript/core"
 import { interval } from "./creation"
 import { Observable, OperatorFunction, wrapSubscriptions } from "./observable"
 
@@ -23,6 +24,38 @@ export function map<T, R>(
             })
         })
     }
+}
+
+/**
+ * Expands value with timestamp and last timestamp.
+ * @param converter
+ * @returns an observable operator to be used in pipe
+ */
+export function timestamp<T>(): OperatorFunction<
+    T,
+    {
+        /**
+         * Observable value
+         */
+        value: T
+        /**
+         * Current time in milliseconds
+         */
+        time: number
+        /**
+         * Time of the last value in milliseconds
+         */
+        lastTime: number
+    }
+> {
+    let lastTime: number = undefined
+    return map<T, { value: T; time: number; lastTime: number }>(async value => {
+        const time = millis()
+        if (lastTime === undefined) lastTime = time
+        const res = { value, time, lastTime }
+        lastTime = time
+        return res
+    })
 }
 
 /**
