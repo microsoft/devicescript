@@ -315,7 +315,9 @@ void devs_ret_int(devs_ctx_t *ctx, int v);
 void devs_ret_bool(devs_ctx_t *ctx, bool v);
 void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v);
 static inline void devs_ret(devs_ctx_t *ctx, value_t v) {
-    ctx->curr_fiber->ret_val = v;
+    // curr_fiber might be reset by panic; we don't want to crash
+    if (ctx->curr_fiber)
+        ctx->curr_fiber->ret_val = v;
 }
 
 static inline bool devs_did_yield(devs_ctx_t *ctx) {
