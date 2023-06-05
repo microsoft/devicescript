@@ -140,6 +140,8 @@ const ref = await readSetting("GITHUB_REF")
 // read secret from ./env.local
 const token = await readSetting("GITHUB_TOKEN")
 
+if (!owner || !repo || !ref || !token) throw new Error("missing configuration")
+
 // track state of last fetch
 let state: "failure" | "pending" | "success" | "error" | "" = ""
 let blinki = 0
@@ -157,7 +159,7 @@ setInterval(() => {
 }, 500)
 
 // query github every minute
-setInterval(() => {
+setInterval(async () => {
     const res = await fetch(
         `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/status`,
         {
