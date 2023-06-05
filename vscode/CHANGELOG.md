@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.9.16](https://github.com/microsoft/devicescript/compare/v2.9.15...v2.9.16)
+
+> 1 June 2023
+
+- more docs on settings [`46f1633`](https://github.com/microsoft/devicescript/commit/46f16338aa34da4fa36e416328dd5e167a4272dc)
+- more docs [`172645d`](https://github.com/microsoft/devicescript/commit/172645dd94286c8b2df860b698b89357c09669eb)
+- add issue reporting [`5f57c62`](https://github.com/microsoft/devicescript/commit/5f57c621a2ef518ef1d9d4b586472a3775d006fc)
+
 #### [v2.9.15](https://github.com/microsoft/devicescript/compare/v2.9.14...v2.9.15)
 
 > 1 June 2023
