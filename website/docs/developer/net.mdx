@@ -19,6 +19,6 @@ const body: {
         indicator: "none" | "minor" | "major" | "critical"
     }
 } = await resp.json()
-const indicator = status.status.indicator
+const indicator = body.status.indicator
 console.log(`GitHub status: ${indicator}`)
 ```
