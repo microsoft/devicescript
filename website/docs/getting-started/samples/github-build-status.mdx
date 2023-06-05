@@ -48,7 +48,7 @@ GITHUB_TOKEN=...
 In the code, we use the `readSettings` function to read the settings and secrets.
 
 ```ts title="./src/index.ts"
-import { readSettings } from "@devicescript/settings"
+import { readSetting } from "@devicescript/settings"
 
 // read configuration from ./env.defaults
 const owner = await readSetting("GITHUB_OWNER")
@@ -130,7 +130,8 @@ setInterval(() => {
 ## Putting it all together
 
 ```ts
-import { readSettings } from "@devicescript/settings"
+import { readSetting } from "@devicescript/settings"
+import { fetch } from "@devicescript/net"
 
 // read configuration from ./env.defaults
 const owner = await readSetting("GITHUB_OWNER")
