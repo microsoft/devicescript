@@ -216,21 +216,22 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 ]
                 const versions = extensionState.devtools?.versions()
                 const py = await resolvePythonEnvironment()
-                issueBody.push(`- vscode: ${vscode.version}`)
+                issueBody.push(`vscode: ${vscode.version}`)
                 issueBody.push(
-                    `- vscode extension: ${
+                    `extension: ${
                         context.extension.packageJSON?.version || "?"
                     }`
                 )
                 if (versions) {
                     Object.entries(versions).forEach(([k, v]) =>
-                        issueBody.push(`- ${k}: ${v}`)
+                        issueBody.push(`${k}: ${v}`)
                     )
                 }
                 if (py)
                     issueBody.push(
-                        `- python: ${py.version.major}.${py.version.minor}.${py.version.micro}`
+                        `python: ${py.version.major}.${py.version.minor}.${py.version.micro}`
                     )
+                issueBody.push(``, `## Bus`, bus.describe({ ignoreSimulators: true, physical: true }))
                 await vscode.commands.executeCommand(
                     "workbench.action.openIssueReporter",
                     {
