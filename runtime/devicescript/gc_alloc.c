@@ -9,9 +9,10 @@
 
 void devs_gc_obj_check_core(devs_gc_t *gc, const void *ptr);
 
-// we run GC when allocation size since last GC reaches (JD_GC_STEP_SIZE+LAST)
-// where LAST is used size upon last GC
+// we run GC when allocation size since last GC reaches min(heap_size/JD_GC_FRACTION,
+// (JD_GC_STEP_SIZE+LAST)) where LAST is used size upon last GC
 #define JD_GC_STEP_SIZE 1024
+#define JD_GC_FRACTION 4
 
 #define ROOT_SCAN_DEPTH 10
 
@@ -65,7 +66,7 @@ struct _devs_gc_t {
     block_t *first_free;
     chunk_t *first_chunk;
     uint32_t num_alloc;
-    uint32_t last_used;
+    uint32_t gc_threshold;
     uint32_t curr_alloc;
     devs_ctx_t *ctx;
 };
@@ -94,6 +95,7 @@ void devs_gc_add_chunk(devs_gc_t *gc, void *start, unsigned size) {
     ch->next = NULL;
     if (gc->first_chunk == NULL) {
         gc->first_chunk = ch;
+        gc->gc_threshold = JD_GC_STEP_SIZE;
     } else {
         for (chunk_t *p = gc->first_chunk; p; p = p->next) {
             JD_ASSERT(p < ch); // addresses have to be in order
@@ -275,7 +277,8 @@ static void sweep(devs_gc_t *gc) {
     int sweep = 0;
     block_t *prev = NULL;
     gc->first_free = NULL;
-    gc->last_used = 0;
+    unsigned last_used = 0;
+    unsigned free_size = 0;
     gc->curr_alloc = 0;
 
     for (;;) {
@@ -316,8 +319,9 @@ static void sweep(devs_gc_t *gc) {
                         }
                         block->free.next = NULL;
                         prev = block;
+                        free_size += new_size;
                     } else {
-                        gc->last_used += block_size(block);
+                        last_used += block_size(block);
                         block->header = block->header &
                                         ~((uintptr_t)DEVS_GC_TAG_MASK_SCANNED << DEVS_GC_TAG_POS);
                     }
@@ -331,6 +335,13 @@ static void sweep(devs_gc_t *gc) {
             sweep = 1;
         }
     }
+
+    unsigned total_size = last_used + free_size;
+    last_used += JD_GC_STEP_SIZE / sizeof(void *);
+    if (last_used > total_size / JD_GC_FRACTION)
+        gc->gc_threshold = total_size / JD_GC_FRACTION;
+    else
+        gc->gc_threshold = last_used;
 }
 
 static void validate_heap(devs_gc_t *gc) {
@@ -413,7 +424,7 @@ static block_t *alloc_block(devs_gc_t *gc, unsigned tag, unsigned size) {
     if (devs_get_global_flags() & DEVS_FLAG_GC_STRESS) {
         validate_heap(gc);
         devs_gc(gc);
-    } else if (gc->curr_alloc > gc->last_used + JD_GC_STEP_SIZE / sizeof(void *)) {
+    } else if (gc->curr_alloc > gc->gc_threshold) {
         devs_gc(gc);
     }
     gc->curr_alloc += words;
