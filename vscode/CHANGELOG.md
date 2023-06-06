@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.2](https://github.com/microsoft/devicescript/compare/v2.10.1...v2.10.2)
+
+> 6 June 2023
+
+- add 'devs flash --clean ...' [`c94fb79`](https://github.com/microsoft/devicescript/commit/c94fb7963d376377e6b0f233fffd35c52236fb1f)
+- updated github build sample [`b4b9f00`](https://github.com/microsoft/devicescript/commit/b4b9f001d8f3fd78f9caaa74a6ccfc7029146e11)
+- unicode trim(); info on ASCII toLowerCase() [`f337581`](https://github.com/microsoft/devicescript/commit/f337581b40994adceb2ce9c496ca26c1dd6e7d38)
+
 #### [v2.10.1](https://github.com/microsoft/devicescript/compare/v2.10.0...v2.10.1)
 
 > 5 June 2023
