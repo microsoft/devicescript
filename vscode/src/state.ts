@@ -546,13 +546,12 @@ export class DeviceScriptExtensionState extends JDEventSource {
         })
     }
 
-    async flashFirmware(device?: JDDevice) {
-        const python = await resolvePythonEnvironment()
+    private async resolveBoardDefinition(device?: JDDevice) {
         await this.devtools.start()
-        if (!this.devtools.connected) return
+        if (!this.devtools.connected) return undefined
         await this.devtools.refreshSpecs()
         const { boards } = this.devtools
-        if (!boards?.length) return
+        if (!boards?.length) return undefined
 
         const productIdentifier = await device?.resolveProductIdentifier()
         let board: DeviceConfig =
@@ -565,8 +564,41 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 "What kind of device are you flashing?",
                 { useUniqueDevice: true }
             )
-            if (!board) return
+            if (!board) return undefined
         }
+        return board
+    }
+
+    async cleanFirmware(device?: JDDevice) {
+        const board = await this.resolveBoardDefinition(device)
+        if (!board) return
+        if (
+            !(await showConfirmBox(
+                `The entire flash on ${board.devName} will be erased. There is NO undo. Confirm?`
+            ))
+        )
+            return
+
+        // force disconnect
+        await this.disconnect()
+
+        const { id } = board
+        const args = ["flash", "--board", id, "--install", "--clean"]
+        const python = await resolvePythonEnvironment()
+        if (python) args.push("--python", python.path)
+        const t = await this.devtools.createCliTerminal({
+            title: "DeviceScript Flasher",
+            progress: "Starting flashing tools...",
+            useShell: true,
+            args,
+            diagnostics: false,
+        })
+        t.show()
+    }
+
+    async flashFirmware(device?: JDDevice) {
+        const board = await this.resolveBoardDefinition(device)
+        if (!board) return
 
         if (
             !(await showConfirmBox(
@@ -580,6 +612,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
 
         const { id } = board
         const args = ["flash", "--board", id, "--refresh", "--install"]
+        const python = await resolvePythonEnvironment()
         if (python) args.push("--python", python.path)
         const t = await this.devtools.createCliTerminal({
             title: "DeviceScript Flasher",
@@ -627,6 +660,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const sim = !!this.bus.device(this.simulatorScriptManagerId, true)
         const items: (vscode.QuickPickItem & { transport?: string })[] = [
             {
+                label: "Hardware Connections",
+                kind: vscode.QuickPickItemKind.Separator,
+            },
+            {
                 transport: "serial",
                 label: "Serial",
                 detail: "ESP32, RP2040, ...",
@@ -634,14 +671,14 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     ? `${serial.description || ""}(${serial.connectionState})`
                     : "",
             },
-            {
+            /*{
                 transport: "usb",
                 label: "USB",
                 detail: "micro:bit",
                 description: usb
                     ? `${usb.description || ""}(${usb.connectionState})`
                     : "",
-            },
+            },*/
             !!connecteds.length && {
                 transport: "none",
                 label: "Disconnect",
@@ -650,7 +687,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     .join(", ")}`,
             },
             !sim && {
-                label: "",
+                label: "Simulator",
                 kind: vscode.QuickPickItemKind.Separator,
             },
             !sim && {
@@ -660,13 +697,18 @@ export class DeviceScriptExtensionState extends JDEventSource {
                 transport: simulatorScriptManagerId,
             },
             {
-                label: "",
+                label: "Firmware Tools",
                 kind: vscode.QuickPickItemKind.Separator,
             },
             {
                 label: "Flash Firmware...",
                 transport: "flash",
                 detail: "Flash the DeviceScript runtime on new devices.",
+            },
+            {
+                label: "Clean Flash...",
+                transport: "clean",
+                detail: "Erase the entire flash.",
             },
         ].filter(m => !!m)
         const res = await vscode.window.showQuickPick(items, {
@@ -675,6 +717,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         if (res === undefined || !res.transport) return
 
         if (res.transport === "flash") await this.flashFirmware()
+        else if (res.transport === "clean") await this.cleanFirmware()
         else if (res.transport === simulatorScriptManagerId)
             await this.startSimulator()
         else
