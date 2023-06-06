@@ -61,6 +61,25 @@ Once the project is created, reopen the project in VSCode and make sure that the
 
 Before we start working wiith hardware, we can start programming and debugging embedded application using simulators, both for the main board and the sensors.
 
+- edit `src/main.ts` to contain:
+```ts
+import { Buzzer } from "@devicescript/core"
+
+const buzzer = new Buzzer()
+setInterval(async () => {
+    // update the frequency, volume and duration to your taste
+    await buzzer.playNote(440, 0.5, 50)
+}, 1000)
+```
+- click on Play button on the editor menu in the top-right corner
+![Play button](play.png)
+- in the simulator pane click auto-start to start the buzzer simulator
+![Auto-start button](autostart.png)
+- enable sound on the simulator
+- enjoy the music!
+
+### More tutorials
+
 - Follow the [Blinky](https://microsoft.github.io/devicescript/getting-started/samples/blinky) to get used to the DeviceScript interface
 - Follow the [Thermostat](https://microsoft.github.io/devicescript/getting-started/samples/thermostat) to get used to handle sensor data
 
@@ -260,7 +279,7 @@ schedule(async () => {
         state = json.state
         console.log({ json, state })
     } else state = "error"
-}, timeout: 1000, interval: 5000)
+}, { timeout: 1000, interval: 5000 })
 ```
 
 Memory is limited! Be careful about using Web APIs that return huge payloads as you will surely run out of memory...
