@@ -138,6 +138,7 @@ setInterval(async () => {
 ```ts
 import { readSetting } from "@devicescript/settings"
 import { fetch } from "@devicescript/net"
+import { setStatusLight } from "@devicescript/runtime"
 
 // read configuration from ./env.defaults
 const owner = await readSetting("GITHUB_OWNER")
