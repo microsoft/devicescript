@@ -126,14 +126,12 @@ The wizard will add an import that contains the pin mapping for the Xiao and sea
 ```ts
 import { pins, board } from "@dsboard/seeed_xiao_esp32c3_msr218"
 import { startBME680 } from "@devicescript/drivers"
-import { Led } from "@devicescript/core"
 import { startBuzzer } from "@devicescript/servers"
 
 const { temperature, humidity, pressure, airQualityIndex } = await startBME680()
 const buzzer = startBuzzer({
     pin: pins.A0,
 })
-const led = new Led()
 ```
 
 ## Part 5: Funny humidity meter
@@ -147,14 +145,13 @@ If you want to use simulator, disconnect the hardware and restart.
 ```ts
 import { pins, board } from "@dsboard/seeed_xiao_esp32c3_msr218"
 import { startBME680 } from "@devicescript/drivers"
-import { Led } from "@devicescript/core"
 import { startBuzzer } from "@devicescript/servers"
+import { setStatusLight } from "@devicescript/runtime"
 
 const { temperature, humidity, pressure, airQualityIndex } = await startBME680()
 const buzzer = startBuzzer({
     pin: pins.A0,
 })
-const led = new Led()
 
 setInterval(async () => {
     // read humidity sensor data
@@ -162,10 +159,11 @@ setInterval(async () => {
     const h = await humidity.reading.read()
     // buzz if humidity goes above 80%
     if (h > 80) await buzzer.playNote(440, 0.5, 500)
+
     // show red on LEDs if humidity goes above 80%
-    if (h > 80) await led.setAll(0xff0000)
+    if (h > 80) await setStatusLight(0xff0000)
     // otherwise turn off
-    else await led.setAll(0)
+    else await setStatusLight(0)
 }, 1000)
 ```
 
