@@ -49,11 +49,12 @@ DeviceScript is tested on Windows and MacOS. Results may vary in other environme
 ## Getting started
 
 - Open VS Code
+- Make sure that the [DeviceScript extension](https://marketplace.visualstudio.com/items?itemName=devicescript.devicescript-vscode) is installed
 - Open the command palette and run the `DeviceScript: Create new Project...` command.
 
 ![image](image.png)
 
-Once the project is created, reopen the project in VSCode and make sure that the [DeviceScript extension](https://marketplace.visualstudio.com/items?itemName=devicescript.devicescript-vscode) is installed as well.
+- Once the project is created, reopen the project in VSCode
 
 ![image](image-1.png)
 
