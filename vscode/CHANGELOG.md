@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.3](https://github.com/microsoft/devicescript/compare/v2.10.2...v2.10.3)
+
+> 6 June 2023
+
+- use python extension to resolve python path [`0e85940`](https://github.com/microsoft/devicescript/commit/0e859405b080cae3b62147f775e8a1a4833b3b3f)
+- adding schedule function [`98ed647`](https://github.com/microsoft/devicescript/commit/98ed6473c4bee6e996288d285a530562ca593bd5)
+- collect version number when reporting issue [`354b272`](https://github.com/microsoft/devicescript/commit/354b272d7e49580a0d36de6b44b117393ea3b6d4)
+
 #### [v2.10.2](https://github.com/microsoft/devicescript/compare/v2.10.1...v2.10.2)
 
 > 6 June 2023
