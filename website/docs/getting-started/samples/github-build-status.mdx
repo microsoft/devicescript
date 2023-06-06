@@ -167,14 +167,14 @@ setInterval(async () => {
     await setStatusLight(c)
 }, 500)
 
-// query github every minute
+// query github every 5s
 setInterval(async () => {
     const res = await fetch(
         `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/status`,
         {
             headers: {
                 Accept: "application/vnd.github+json",
-                Authorization: `Bearer ${token}`,
+                Authorization: token ? `Bearer ${token}` : undefined,
                 "X-GitHub-Api-Version": "2022-11-28",
             },
         }
@@ -184,5 +184,5 @@ setInterval(async () => {
         state = json.state
         console.log({ json, state })
     } else state = "error"
-}, 60000)
+}, 5000)
 ```
