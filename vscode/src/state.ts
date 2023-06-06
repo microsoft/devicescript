@@ -880,4 +880,22 @@ export class DeviceScriptExtensionState extends JDEventSource {
             )
         return service
     }
+
+    async runFile(file: vscode.Uri, options?: { debug?: boolean }) {
+        if (!file) return
+        const folder = vscode.workspace.getWorkspaceFolder(file)
+        if (!folder) return
+
+        const { debug } = options || {}
+        await vscode.debug.startDebugging(folder, {
+            type: "devicescript",
+            request: "launch",
+            name: "DeviceScript: Run File",
+            stopOnEntry: false,
+            noDebug: !debug,
+            program: file.path,
+        } as vscode.DebugConfiguration)
+        if (!debug)
+            vscode.commands.executeCommand("extension.devicescript.jdom.focus")
+    }
 }

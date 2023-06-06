@@ -25,22 +25,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
     })
     const extensionState = new DeviceScriptExtensionState(context, bus)
 
-    const debugFile = async (file: vscode.Uri, noDebug: boolean) => {
-        if (!file) return
-        const folder = vscode.workspace.getWorkspaceFolder(file)
-        if (!folder) return
-        await vscode.debug.startDebugging(folder, {
-            type: "devicescript",
-            request: "launch",
-            name: "DeviceScript: Run File",
-            stopOnEntry: false,
-            noDebug,
-            program: file.path,
-        } as vscode.DebugConfiguration)
-        if (noDebug)
-            vscode.commands.executeCommand("extension.devicescript.jdom.focus")
-    }
-
     // build
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -196,11 +180,13 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.run",
-            async (file: vscode.Uri) => debugFile(file, true)
+            async (file: vscode.Uri) =>
+                extensionState.runFile(file, { debug: false })
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.debug",
-            async (file: vscode.Uri) => debugFile(file, false)
+            async (file: vscode.Uri) =>
+                extensionState.runFile(file, { debug: true })
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.build",
@@ -220,13 +206,33 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.openIssueReporter",
-            () =>
+            () => {
+                const issueBody: string[] = [
+                    `## Describe the program`,
+                    ``,
+                    `## Environment`,
+                    ``,
+                ]
+                const versions = extensionState.devtools?.versions()
+                issueBody.push(`- vscode: ${vscode.version}`)
+                issueBody.push(
+                    `- vscode extension: ${
+                        context.extension.packageJSON?.version || "?"
+                    }`
+                )
+                if (versions) {
+                    Object.entries(versions).forEach(([k, v]) =>
+                        issueBody.push(`- ${k}: ${v}`)
+                    )
+                }
                 vscode.commands.executeCommand(
                     "workbench.action.openIssueReporter",
                     {
                         extensionId: "devicescript.devicescript-vscode",
+                        issueBody: issueBody.join("\n"),
                     }
                 )
+            }
         )
     )
 
