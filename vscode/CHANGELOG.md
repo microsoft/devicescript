@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.4](https://github.com/microsoft/devicescript/compare/v2.10.3...v2.10.4)
+
+> 6 June 2023
+
+- add clean option in UI [`ad1f4a1`](https://github.com/microsoft/devicescript/commit/ad1f4a19c50cac0d6826b787a3d0f78d39089c7f)
+- better error reporting [`48c00b6`](https://github.com/microsoft/devicescript/commit/48c00b687a3b72abfa2860f8d5b25d57d08d069c)
+- revert clean option [`ffcf189`](https://github.com/microsoft/devicescript/commit/ffcf1895a025f9b033c9689ac87a80cec68910da)
+
 #### [v2.10.3](https://github.com/microsoft/devicescript/compare/v2.10.2...v2.10.3)
 
 > 6 June 2023
