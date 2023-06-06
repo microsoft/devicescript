@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.1](https://github.com/microsoft/devicescript/compare/v2.10.0...v2.10.1)
+
+> 5 June 2023
+
+- auto install esptool on flash [`#437`](https://github.com/microsoft/devicescript/pull/437)
+- sample using fetch [`#435`](https://github.com/microsoft/devicescript/pull/435)
+- add option to add settings, tests in wand [`#436`](https://github.com/microsoft/devicescript/pull/436)
+- tcp/tls sockets for wasm [`73b688e`](https://github.com/microsoft/devicescript/commit/73b688ef36e8dfa80912a5074723bf6452799ec2)
+- add observable timestamp operator [`0f4bf61`](https://github.com/microsoft/devicescript/commit/0f4bf6195f2fed6593ee28bec107f6a74ecaf59a)
+- add support for fetch body [`f80cf1e`](https://github.com/microsoft/devicescript/commit/f80cf1ea56e4a50f516b5fea3b85a9d489c18a3d)
+
 #### [v2.10.0](https://github.com/microsoft/devicescript/compare/v2.9.16...v2.10.0)
 
 > 5 June 2023

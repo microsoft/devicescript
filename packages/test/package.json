@@ -1,6 +1,6 @@
 {
     "name": "@devicescript/test",
-    "version": "2.10.1",
+    "version": "2.10.2",
     "dependencies": {},
     "devDependencies": {
         "@devicescript/cli": "*"
