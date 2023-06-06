@@ -13,10 +13,17 @@ DeviceScript provides the familiar `fetch` function to issue HTTP requests.
 ```ts
 import { fetch } from "@devicescript/net"
 
-const resp = await fetch("https://www.githubstatus.com/api/v2/status.json")
-const body = await resp.json()
-const indicator = body.status.indicator
-console.log(`GitHub status: ${indicator}`)
+const res = await fetch(
+    `https://api.github.com/repos/microsoft/devicescript/commits/main/status`,
+    {
+        headers: {
+            Accept: "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    }
+)
+const body = await res.json()
+console.log(`DeviceScript build state: ${body.state}`)
 ```
 
 :::tip
