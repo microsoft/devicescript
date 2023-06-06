@@ -51,6 +51,7 @@ import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { SimulatorsWebView } from "./simulatorWebView"
 import { showErrorMessage } from "./telemetry"
 import _serverInfo from "./server-info.json"
+import { resolvePythonEnvironment } from "./python"
 
 const serverInfo = _serverInfo as ServerInfoFile
 
@@ -546,6 +547,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
     }
 
     async flashFirmware(device?: JDDevice) {
+        const python = await resolvePythonEnvironment()
         await this.devtools.start()
         if (!this.devtools.connected) return
         await this.devtools.refreshSpecs()
@@ -577,11 +579,13 @@ export class DeviceScriptExtensionState extends JDEventSource {
         await this.disconnect()
 
         const { id } = board
+        const args = ["flash", "--board", id, "--install"]
+        if (python) args.push("--python", python.path)
         const t = await this.devtools.createCliTerminal({
             title: "DeviceScript Flasher",
             progress: "Starting flashing tools...",
             useShell: true,
-            args: ["flash", "--board", id, "--install"],
+            args,
             diagnostics: false,
         })
         t.show()

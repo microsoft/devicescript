@@ -14,6 +14,7 @@ import {
 import { DeviceScriptExtensionState } from "./state"
 import { activateTelemetry } from "./telemetry"
 import { JDDevice } from "jacdac-ts"
+import { resolvePythonEnvironment } from "./python"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions } = context
@@ -206,7 +207,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.openIssueReporter",
-            () => {
+            async () => {
                 const issueBody: string[] = [
                     `## Describe the program`,
                     ``,
@@ -214,6 +215,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     ``,
                 ]
                 const versions = extensionState.devtools?.versions()
+                const py = await resolvePythonEnvironment()
                 issueBody.push(`- vscode: ${vscode.version}`)
                 issueBody.push(
                     `- vscode extension: ${
@@ -225,7 +227,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                         issueBody.push(`- ${k}: ${v}`)
                     )
                 }
-                vscode.commands.executeCommand(
+                if (py)
+                    issueBody.push(
+                        `- python: ${py.version.major}.${py.version.minor}.${py.version.micro}`
+                    )
+                await vscode.commands.executeCommand(
                     "workbench.action.openIssueReporter",
                     {
                         extensionId: "devicescript.devicescript-vscode",

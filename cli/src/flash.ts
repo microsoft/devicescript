@@ -35,6 +35,11 @@ export interface FlashOptions {
     install?: boolean
 
     /**
+     * Path to the python executable.
+     */
+    python?: string
+
+    /**
      * Delete settings and user program instead of flashing the firmware.
      */
     clean?: boolean
@@ -44,6 +49,9 @@ export interface FlashESP32Options extends FlashOptions {
     allSerial?: boolean
     baud?: string
     port?: string
+    /**
+     * Path to the esptool.py script.
+     */
     esptool?: string
 }
 
@@ -190,7 +198,15 @@ export async function flashESP32(options: FlashESP32Options) {
 
     if (!options.esptool && options.install) {
         log("trying to install esptool with pip...")
-        await runTool({ cmd: "py -m pip install esptool" })
+        for (const cmd of pythonPaths().map(
+            py => `${py} -m pip install esptool`
+        )) {
+            const { stdout } = await runTool({ cmd, quiet: true })
+            if (/esptool/.test(stdout)) {
+                console.log(`esptool installed`)
+                break
+            }
+        }
         await findEsptool()
     }
 
@@ -232,13 +248,13 @@ export async function flashESP32(options: FlashESP32Options) {
         }
     }
 
+    function pythonPaths() {
+        if (options.python) return [options.python]
+        else return ["py", "python", "python3", "/usr/local/bin/python"]
+    }
+
     async function findEsptool() {
-        for (const tool of [
-            "py",
-            "python",
-            "python3",
-            "/usr/local/bin/python",
-        ].map(py => `${py} -m esptool`)) {
+        for (const tool of pythonPaths().map(py => `${py} -m esptool`)) {
             const { stdout } = await runTool({ cmd: tool, quiet: true })
             if (oldEsptool(stdout) === "") {
                 options.esptool = tool

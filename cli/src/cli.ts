@@ -271,6 +271,7 @@ export async function mainCli() {
             "--install",
             "automatically install missing flashing utilities. For ESP32, if 'esptool' is missing, run `py -m pip install esptool`"
         )
+        .option("--python <path>", "path to the python executable")
         r.addHelpText("after", () => {
             setupFlashBoards()
             return `\nAvailable boards:\n` + boardNames(arch)
