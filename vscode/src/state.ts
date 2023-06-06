@@ -579,7 +579,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         await this.disconnect()
 
         const { id } = board
-        const args = ["flash", "--board", id, "--refresh", "--install"]
+        const args = ["flash", "--board", id, "--refresh", "--install", "--clear"]
         if (python) args.push("--python", python.path)
         const t = await this.devtools.createCliTerminal({
             title: "DeviceScript Flasher",
