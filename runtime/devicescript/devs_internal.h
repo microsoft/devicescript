@@ -168,6 +168,10 @@ struct devs_ctx {
     uint32_t _logged_now;
 
     uint32_t fiber_handle_tag;
+    uint32_t send_pkt_throttle;
+
+    uint32_t num_throttled_pkts;
+    uint32_t last_warning;
 
     devs_gc_t *gc;
 

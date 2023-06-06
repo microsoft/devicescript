@@ -66,6 +66,25 @@ void devs_jd_clear_pkt_kind(devs_fiber_t *fib) {
     fib->pkt_kind = DEVS_PKT_KIND_NONE;
 }
 
+#define THROTTLE_BURST_PKTS 5
+#define THROTTLE_COST_MS 20
+
+static void throttle_send_pkt(devs_ctx_t *ctx, devs_fiber_t *fib, int minsleep) {
+    uint32_t n = devs_now(ctx);
+    uint32_t past = n - THROTTLE_BURST_PKTS * THROTTLE_COST_MS;
+    if (past > n)
+        past = 0; // underflow
+    if (ctx->send_pkt_throttle < past)
+        ctx->send_pkt_throttle = past;
+    ctx->send_pkt_throttle += THROTTLE_COST_MS;
+    int sleep = ctx->send_pkt_throttle - n;
+    if (sleep < minsleep)
+        sleep = minsleep;
+    else
+        ctx->num_throttled_pkts++;
+    devs_fiber_sleep(fib, sleep);
+}
+
 void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
     if (ctx->error_code)
         return;
@@ -89,7 +108,7 @@ void devs_jd_send_cmd(devs_ctx_t *ctx, unsigned role_idx, unsigned code) {
         fib->pkt_data.send_pkt.size = sz;
         memcpy(fib->pkt_data.send_pkt.data, ctx->packet.data, sz);
     }
-    devs_fiber_sleep(fib, 0);
+    throttle_send_pkt(ctx, fib, 0);
 }
 
 void devs_jd_send_raw(devs_ctx_t *ctx) {
@@ -111,7 +130,7 @@ void devs_jd_send_raw(devs_ctx_t *ctx) {
         fib->pkt_data.send_pkt.size = sz;
         memcpy(fib->pkt_data.send_pkt.data, pkt, sz);
     }
-    devs_fiber_sleep(fib, 0);
+    throttle_send_pkt(ctx, fib, 0);
 }
 
 void devs_jd_send_logmsg(devs_ctx_t *ctx, char lev, value_t str) {
@@ -276,7 +295,7 @@ static bool devs_jd_pkt_matches_role(devs_ctx_t *ctx, unsigned role_idx) {
 }
 
 static bool retry_soon(devs_fiber_t *fiber) {
-    devs_fiber_sleep(fiber, 3);
+    throttle_send_pkt(fiber->ctx, fiber, 3);
     return KEEP_WAITING;
 }
 
