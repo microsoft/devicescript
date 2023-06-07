@@ -69,6 +69,25 @@ const npmFiles: FileSet = {
         keywords: ["devicescript"],
     },
     "src/index.ts": `${IMPORT_PREFIX}\n\n`,
+    ".github/workflows/build.yml": `name: Build
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 18
+            - run: npm ci
+            - run: npm test    
+`,
 }
 
 const settingsFiles: FileSet = {
@@ -235,7 +254,8 @@ nodeLinker: node-modules`,
     "devsconfig.json": {},
     "package.json": {
         version: "0.0.0",
-        private: "Please use 'npm run devicescript add npm' to make this a publishable package",
+        private:
+            "Please use 'yarn devs add npm' to make this a publishable package",
         dependencies: {},
         devDependencies: {
             "@devicescript/cli": "latest",
