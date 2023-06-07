@@ -10,10 +10,13 @@ import {
     bufferConcat,
     debounce,
     delay,
+    DEVICE_ANNOUNCE,
+    DeviceScriptManagerReg,
     ERROR,
     Flags,
     FRAME_PROCESS,
     JDBus,
+    JDDevice,
     JDFrameBuffer,
     loadServiceSpecifications,
     serializeToTrace,
@@ -133,6 +136,7 @@ export async function devtools(
     startDbgServer(dbgPort, options)
 
     enableLogging(bus)
+    if (options.vscode) disableAutoStart(bus)
 
     bus.autoConnect = true
     bus.start()
@@ -161,6 +165,22 @@ export async function devtools(
             console.log(`deploy status: ${st.deployStatus}`)
         }
     }
+}
+
+export const DISABLE_AUTO_START_KEY = "disableAutoStart"
+function disableAutoStart(bus: JDBus) {
+    bus.nodeData[DISABLE_AUTO_START_KEY] = true // settings might fiddle with this flag
+    bus.on(DEVICE_ANNOUNCE, async (dev: JDDevice) => {
+        // when a device manager connects, disable auto start
+        const managers = dev.services({
+            serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+        })
+        for (const manager of managers) {
+            console.debug(`disable autostart of ${manager}`)
+            const autoStart = manager.register(DeviceScriptManagerReg.Autostart)
+            await autoStart.sendSetBoolAsync(false)
+        }
+    })
 }
 
 function startProxyServers(

@@ -381,7 +381,12 @@
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.jdom.devicescript.toggle",
+                    "command": "extension.devicescript.jdom.devicescript.start",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_devicescript",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.jdom.devicescript.stop",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_devicescript",
                     "group": "inline"
                 },
@@ -686,10 +691,16 @@
                 "icon": "$(refresh)"
             },
             {
-                "command": "extension.devicescript.jdom.devicescript.toggle",
-                "title": "Start/Stop",
+                "command": "extension.devicescript.jdom.devicescript.start",
+                "title": "Restart",
                 "category": "DeviceScript",
-                "icon": "$(refresh)"
+                "icon": "$(debug-start)"
+            },
+            {
+                "command": "extension.devicescript.jdom.devicescript.stop",
+                "title": "Stop",
+                "category": "DeviceScript",
+                "icon": "$(debug-stop)"
             },
             {
                 "command": "extension.devicescript.jdom.wifi.ap.add",
