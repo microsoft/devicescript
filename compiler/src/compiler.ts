@@ -4200,7 +4200,7 @@ class Program implements TopOpWriter {
                     this.printDiag(
                         mkDiag(
                             fn,
-                            `missing "devicescript" section; please use 'devs add npm' on your package`
+                            `missing "devicescript" section; please use 'npm run devicescript add npm' on your package`
                         )
                     )
                     return false

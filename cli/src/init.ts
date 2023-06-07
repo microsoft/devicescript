@@ -235,7 +235,7 @@ nodeLinker: node-modules`,
     "devsconfig.json": {},
     "package.json": {
         version: "0.0.0",
-        private: "Please use 'devs add npm' to make this a publishable package",
+        private: "Please use 'npm run devicescript add npm' to make this a publishable package",
         dependencies: {},
         devDependencies: {
             "@devicescript/cli": "latest",
