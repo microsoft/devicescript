@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.6](https://github.com/microsoft/devicescript/compare/v2.10.5...v2.10.6)
+
+> 7 June 2023
+
+- don't use yarn [`#443`](https://github.com/microsoft/devicescript/pull/443)
+- adding worksho info [`d7f0539`](https://github.com/microsoft/devicescript/commit/d7f0539be064afcf3f908c962bb361cbe70b1e3f)
+- updated  workshop info [`be75cdb`](https://github.com/microsoft/devicescript/commit/be75cdb8df454dc811724d186a61a58fb52452e6)
+- update buzzer docs [`0113838`](https://github.com/microsoft/devicescript/commit/0113838efc041ea694c76b34a97d70f8491b6e92)
+
 #### [v2.10.5](https://github.com/microsoft/devicescript/compare/v2.10.4...v2.10.5)
 
 > 6 June 2023
