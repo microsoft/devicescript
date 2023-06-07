@@ -18,7 +18,7 @@ import {
     CONNECTION_STATE,
     ConnectionState,
     JDDevice,
-    serviceSpecificationFromClassIdentifier,
+    DEVICE_ANNOUNCE,
 } from "jacdac-ts"
 import * as vscode from "vscode"
 import { Utils } from "vscode-uri"
@@ -94,6 +94,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         this.bus.on([DEVICE_CHANGE, CONNECTION_STATE], () => {
             this.emit(CHANGE)
         })
+        this.bus.on(DEVICE_ANNOUNCE, this.handleDeviceAnnounce.bind(this))
         this.devtools.on(CHANGE, () => this.emit(CHANGE))
         subSideEvent<SideTransportEvent>("transport", msg => {
             const _transport = msg.data
@@ -395,6 +396,17 @@ export class DeviceScriptExtensionState extends JDEventSource {
         }
 
         await this.showQuickAddFeatureOrDriver(editor)
+    }
+
+    private async handleDeviceAnnounce(dev: JDDevice) {
+        // ignore simulator
+        if (dev.deviceId === this.simulatorScriptManagerId) return
+        // only handle devices that have a script manager
+        if (!dev.hasService(SRV_DEVICE_SCRIPT_MANAGER)) return
+        // check if a simulator is running
+        if (!this.bus.device(this.simulatorScriptManagerId, true)) return
+        // stop simulator and let other manager take over
+        await this.stopSimulator()
     }
 
     private async showQuickAddFeatureOrDriver(editor: vscode.TextEditor) {
