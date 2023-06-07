@@ -10,11 +10,11 @@ function stringToSettingValue(s: string) {
     return encoded
 }
 
-function parseInto(
+export function parseToSettings(
     source: string,
-    secret: boolean,
-    res: Record<string, Uint8Array>
-) {
+    secret: boolean
+): Record<string, Uint8Array> {
+    const res: Record<string, Uint8Array> = {}
     source
         ?.split(/\r?\n/g)
         .filter(line => !/\s*#/.test(line)) // skip empty lines and commands
@@ -25,14 +25,5 @@ function parseInto(
             delete res[key]
             res[secret ? `${key}` : key] = stringToSettingValue(value)
         })
-}
-
-export function parseToSettings(options: {
-    envDefaults: string
-    envLocal: string
-}): Record<string, Uint8Array> {
-    const res = {}
-    parseInto(options.envDefaults, false, res)
-    parseInto(options.envLocal, true, res)
     return res
 }

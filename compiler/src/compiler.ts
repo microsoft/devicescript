@@ -4145,9 +4145,39 @@ class Program implements TopOpWriter {
 
     private readSettings(): Record<string, Uint8Array> {
         try {
-            const envDefaults = this.readFile("./.env.defaults")
-            const envLocal = this.readFile("./.env.local")
-            const settings = parseToSettings({ envDefaults, envLocal })
+            const MAX_SETTING_NAME_LENGTH = 14
+            const envDefaults = parseToSettings(
+                this.readFile("./.env.defaults"),
+                false
+            )
+            const d = Object.keys(envDefaults).find(
+                k => k.length > MAX_SETTING_NAME_LENGTH
+            )
+            if (d)
+                this.printDiag(
+                    mkDiag(
+                        "./.env.defaults",
+                        `setting name '${d}' too long (max ${MAX_SETTING_NAME_LENGTH} chars)`
+                    )
+                )
+            const envLocal = parseToSettings(
+                this.readFile("./.env.local"),
+                true
+            )
+            const l = Object.keys(envDefaults).find(
+                k => k.length > MAX_SETTING_NAME_LENGTH
+            )
+            if (l)
+                this.printDiag(
+                    mkDiag(
+                        "./.env.local",
+                        `setting name '${d}' too long (max ${
+                            MAX_SETTING_NAME_LENGTH - 1
+                        } chars)`
+                    )
+                )
+
+            const settings = { ...envDefaults, ...envLocal }
             return settings
         } catch (e) {
             return undefined
