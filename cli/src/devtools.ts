@@ -167,7 +167,9 @@ export async function devtools(
     }
 }
 
+export const DISABLE_AUTO_START_KEY = "disableAutoStart"
 function disableAutoStart(bus: JDBus) {
+    bus.nodeData[DISABLE_AUTO_START_KEY] = true // settings might fiddle with this flag
     bus.on(DEVICE_ANNOUNCE, async (dev: JDDevice) => {
         // when a device manager connects, disable auto start
         const managers = dev.services({

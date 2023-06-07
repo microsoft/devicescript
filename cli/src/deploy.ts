@@ -16,6 +16,7 @@ import { devsStartWithNetwork } from "./build"
 import { error } from "./command"
 import { readCompiled } from "./run"
 import { BuildOptions } from "./sideprotocol"
+import { DISABLE_AUTO_START_KEY } from "./devtools"
 
 export interface RunOptions {
     tcp?: boolean
@@ -98,7 +99,9 @@ export async function deployToService(
     )
     if (settingsService) {
         await deploySettingsToService(settingsService, settings)
-        await autostart.sendSetBoolAsync(true)
+        if (!service.device.bus.nodeData[DISABLE_AUTO_START_KEY])
+            // don't reset auto-start if disabled
+            await autostart.sendSetBoolAsync(true)
         await running.sendSetBoolAsync(true)
     }
 
