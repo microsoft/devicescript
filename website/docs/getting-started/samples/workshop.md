@@ -1,60 +1,70 @@
+---
+sidebar_position: 1000
+---
+
 # DeviceScript Workshop
 
 Leverage your TypeScript skills to program electronics using [DeviceScript](https://microsoft.github.io/devicescript/).
 
 ## Time Estimate
+
 2.0 hours
 
 ## Overview
-This project will introduce participants to DeviceScript, a TypeScript programming environment for small electronics, including sensing and interacting with the physical environment using a common microcontroller - ESP32-C3. 
 
-- Participants will program a microcontroller to retrieve data readings from the sensor and then act upon that data. 
-- Participants will use `fetch` to call a Web API (GitHub build status) and update an LED based on the result.
+This project will introduce participants to DeviceScript, a TypeScript programming environment for small electronics, including sensing and interacting with the physical environment using a common microcontroller - ESP32-C3.
+
+-   Participants will program a microcontroller to retrieve data readings from the sensor and then act upon that data.
+-   Participants will use `fetch` to call a Web API (GitHub build status) and update an LED based on the result.
 
 ## Who are You?
+
 The ideal participant is someone who is familiar with TypeScript (front-end or back-end). Experience with electronics is **not** required.
 
 ## Activity Outcome
-Participants should have a device programmed with DeviceScript that can detect moisture levels in their plant soil, 
-show some light animation on a LED display. Update the LED display based on the build status of their favorite GitHub repository. 
+
+Participants should have a device programmed with DeviceScript that can detect moisture levels in their plant soil,
+show some light animation on a LED display. Update the LED display based on the build status of their favorite GitHub repository.
 
 Participants will have learned to:
-- Connect sensors to read the phyiscal environment (BME680)
-- Control the physical environment by playing sounds on buzzer, animating LEDs
-- Deploy DeviceScript scripts to hardware device
-- Issue Web HTTP requests
+
+-   Connect sensors to read the phyiscal environment (BME680)
+-   Control the physical environment by playing sounds on buzzer, animating LEDs
+-   Deploy DeviceScript scripts to hardware device
+-   Issue Web HTTP requests
 
 ## Required Materials
+
 These items are required.
 
-|Image|Item|Url|
-|---|---|---|
-| ![Xiao ESP32C3 on custom PCB](https://microsoft.github.io/jacdac-docs/images/devices/seeed-studio/xiaoesp32c3withmsr218base218v46.catalog.jpg)| Xiao ESP32C3 + Breakout broard | https://microsoft.github.io/devicescript/devices/esp32/seeed-xiao-esp32c3-msr218 |
-| ![BME680 sensor](https://media-cdn.seeedstudio.com/media/catalog/product/cache/bb49d3ec4ee05b6f018e93f896b8a25d/h/t/httpsstatics3.seeedstudio.comseeedfile2018-08bazaar896611_img_0076a.jpg) | BME680 sensor | https://www.seeedstudio.com/Grove-Temperature-Humidity-Pressure-and-Gas-Sensor-for-Arduino-BME680.html?queryID=3a720270a67b60e6bdac9638b0b9e5f0&objectID=100&indexName=bazaar_retailer_products |
-| ![Buzzer grove module](https://media-cdn.seeedstudio.com/media/catalog/product/cache/bb49d3ec4ee05b6f018e93f896b8a25d/h/t/httpsstatics3.seeedstudio.comseeedfile2018-08bazaar897328_1.jpg) | Buzzer | https://www.seeedstudio.com/Grove-Buzzer.html?queryID=fd5ea919ecbc76ef7f1e4210879a99fd&objectID=1805&indexName=bazaar_retailer_products |
-| ![Grove cables](https://media-cdn.seeedstudio.com/media/catalog/product/cache/bb49d3ec4ee05b6f018e93f896b8a25d/h/t/httpsstatics3.seeedstudio.comimagesproduct20cmbk1.jpg) | Grove cables | https://www.seeedstudio.com/Grove-Universal-4-Pin-Buckled-20cm-Cable-5-PCs-pack.html?queryID=f4ec2714afc36affeef7955392573644&objectID=1693&indexName=bazaar_retailer_products |
-| ![Modules in the KittenBot Kit A](https://microsoft.github.io/jacdac-docs/images/devices/kittenbot/jacdacstarterkitawithjacdaptorformicrobitv2v10.catalog.jpg) | KittenBot Jacdac Kit A | https://microsoft.github.io/jacdac-docs/devices/kittenbot/jacdacstarterkitawithjacdaptorformicrobitv2v10/ |
-| ![USB-C cable](https://media-cdn.seeedstudio.com/media/catalog/product/cache/bb49d3ec4ee05b6f018e93f896b8a25d/c/a/cable-1.png) | USB-C cables | https://www.seeedstudio.com/USB-3-1-Type-C-to-A-Cable-1-Meter-3-1A-p-4085.html?queryID=6bd7ee107594c139732c712ddb72eca0&objectID=4085&indexName=bazaar_retailer_products |
- 
+| Image                                                                                                                                                                                        | Item                           | Url                                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ![Xiao ESP32C3 on custom PCB](https://microsoft.github.io/jacdac-docs/images/devices/seeed-studio/xiaoesp32c3withmsr218base218v46.catalog.jpg)                                               | Xiao ESP32C3 + Breakout broard | https://microsoft.github.io/devicescript/devices/esp32/seeed-xiao-esp32c3-msr218                                                                                                                |
+| ![BME680 sensor](https://media-cdn.seeedstudio.com/media/catalog/product/cache/bb49d3ec4ee05b6f018e93f896b8a25d/h/t/httpsstatics3.seeedstudio.comseeedfile2018-08bazaar896611_img_0076a.jpg) | BME680 sensor                  | https://www.seeedstudio.com/Grove-Temperature-Humidity-Pressure-and-Gas-Sensor-for-Arduino-BME680.html?queryID=3a720270a67b60e6bdac9638b0b9e5f0&objectID=100&indexName=bazaar_retailer_products |
+| ![Buzzer grove module](https://media-cdn.seeedstudio.com/media/catalog/product/cache/bb49d3ec4ee05b6f018e93f896b8a25d/h/t/httpsstatics3.seeedstudio.comseeedfile2018-08bazaar897328_1.jpg)   | Buzzer                         | https://www.seeedstudio.com/Grove-Buzzer.html?queryID=fd5ea919ecbc76ef7f1e4210879a99fd&objectID=1805&indexName=bazaar_retailer_products                                                         |
+| ![Grove cables](https://media-cdn.seeedstudio.com/media/catalog/product/cache/bb49d3ec4ee05b6f018e93f896b8a25d/h/t/httpsstatics3.seeedstudio.comimagesproduct20cmbk1.jpg)                    | Grove cables                   | https://www.seeedstudio.com/Grove-Universal-4-Pin-Buckled-20cm-Cable-5-PCs-pack.html?queryID=f4ec2714afc36affeef7955392573644&objectID=1693&indexName=bazaar_retailer_products                  |
+| ![USB-C cable](https://media-cdn.seeedstudio.com/media/catalog/product/cache/bb49d3ec4ee05b6f018e93f896b8a25d/c/a/cable-1.png)                                                               | USB-C cables                   | https://www.seeedstudio.com/USB-3-1-Type-C-to-A-Cable-1-Meter-3-1A-p-4085.html?queryID=6bd7ee107594c139732c712ddb72eca0&objectID=4085&indexName=bazaar_retailer_products                        |
+
 ## Prerequisites: 
+
 This workshop does not require experience with programming or electronics. However to make the most of the time, experience with TypeScript is helpful.
- 
+
 ### Setup
 
 DeviceScript is tested on Windows and MacOS. Results may vary in other environment, depending of the support of [serialport](https://www.npmjs.com/package/serialport). The programming can be done from containers (GitHub Codespaces, docker, WSL2) but access to Serial/USB typically requires to run on the host OS.
 
-- Install [Node.JS 18+](https://nodejs.org/en/download/) and [Visual Studio Code](https://code.visualstudio.com/)
-- Install [DeviceScript extension v2.10.2+](https://marketplace.visualstudio.com/items?itemName=devicescript.devicescript-vscode) ([more info...](https://microsoft.github.io/devicescript/getting-started/vscode)). If you have an older installation of the extension, make sure to take the update.
+-   Install [Node.JS 18+](https://nodejs.org/en/download/) and [Visual Studio Code](https://code.visualstudio.com/)
+-   Install [DeviceScript extension v2.10.2+](https://marketplace.visualstudio.com/items?itemName=devicescript.devicescript-vscode) ([more info...](https://microsoft.github.io/devicescript/getting-started/vscode)). If you have an older installation of the extension, make sure to take the update.
 
 ## Getting started
 
-- Open VS Code
-- Make sure that the [DeviceScript extension](https://marketplace.visualstudio.com/items?itemName=devicescript.devicescript-vscode) is installed
-- Open the command palette and run the `DeviceScript: Create new Project...` command.
+-   Open VS Code
+-   Make sure that the [DeviceScript extension](https://marketplace.visualstudio.com/items?itemName=devicescript.devicescript-vscode) is installed
+-   Open the command palette and run the `DeviceScript: Create new Project...` command.
 
 ![image](image.png)
 
-- Once the project is created, reopen the project in VSCode
+-   Once the project is created, reopen the project in VSCode
 
 ![image](image-1.png)
 
@@ -62,7 +72,8 @@ DeviceScript is tested on Windows and MacOS. Results may vary in other environme
 
 Before we start working wiith hardware, we can start programming and debugging embedded application using simulators, both for the main board and the sensors.
 
-- edit `src/main.ts` to contain:
+-   edit `src/main.ts` to contain:
+
 ```ts
 import { Buzzer } from "@devicescript/core"
 
@@ -72,17 +83,18 @@ setInterval(async () => {
     await buzzer.playNote(440, 0.5, 50)
 }, 1000)
 ```
-- click on Play button on the editor menu in the top-right corner
-![Play button](play.png)
-- in the simulator pane click auto-start to start the buzzer simulator
-![Auto-start button](autostart.png)
-- enable sound on the simulator
-- enjoy the music!
+
+-   click on Play button on the editor menu in the top-right corner
+    ![Play button](play.png)
+-   in the simulator pane click auto-start to start the buzzer simulator
+    ![Auto-start button](autostart.png)
+-   enable sound on the simulator
+-   enjoy the music!
 
 ### More tutorials
 
-- Follow the [Blinky](https://microsoft.github.io/devicescript/getting-started/samples/blinky) to get used to the DeviceScript interface
-- Follow the [Thermostat](https://microsoft.github.io/devicescript/getting-started/samples/thermostat) to get used to handle sensor data
+-   Follow the [Blinky](https://microsoft.github.io/devicescript/getting-started/samples/blinky) to get used to the DeviceScript interface
+-   Follow the [Thermostat](https://microsoft.github.io/devicescript/getting-started/samples/thermostat) to get used to handle sensor data
 
 ## Part 2: Configuring the Hardware
 
@@ -90,34 +102,33 @@ Now that we have a simple program working on simulator, it is time to specialize
 
 Let's start by making sure the DeviceScript firmware is updated.
 
-- Connect the BME680 sensor to the Qwic connector
-- Connect the Buzzer to the Grove connector **A0**
-- Connect the KittenBot LED ring to the Jacdac connector
-- Connect Xiao board to your computer using the USB-C cable
-- Make sure the Python extension is installed, along with a Python runtime
-- Open the **DeviceScript** view and click on the **plug** to connect to your Xiao.
+-   Connect the BME680 sensor to the Qwic connector
+-   Connect the Buzzer to the Grove connector **A0**
+-   Connect Xiao board to your computer using the USB-C cable
+-   Make sure the Python extension is installed, along with a Python runtime
+-   Open the **DeviceScript** view and click on the **plug** to connect to your Xiao.
 
 ![image](image-2.png)
 
-- Select **Flash Firmware...**
-- Scroll down and select **Seeed Studio XIAO ESP32C3 with MSR218 base**
+-   Select **Flash Firmware...**
+-   Scroll down and select **Seeed Studio XIAO ESP32C3 with MSR218 base**
 
 ![image](image-3.png)
 
 Once the flashing process is over,
 
-- Open the **DeviceScript** view and click on the **plug** to connect to your Xiao.
-- Select **Serial**
+-   Open the **DeviceScript** view and click on the **plug** to connect to your Xiao.
+-   Select **Serial**
 
 ![Alt text](image-4.png)
 
-- Your device should be appearing in the device explorer!
+-   Your device should be appearing in the device explorer!
 
 ![Alt text](image-5.png)
 
 ## Part 4: Sensors
 
-- Open **main.ts** and click on the **magic wand** icon in the file menu.
+-   Open **main.ts** and click on the **magic wand** icon in the file menu.
 
 ![Alt text](image-6.png)
 
@@ -136,7 +147,7 @@ const buzzer = startBuzzer({
 
 ## Part 5: Funny humidity meter
 
-Here is a tiny toy example that puts everything together. 
+Here is a tiny toy example that puts everything together.
 It buzzes and turns the LEDs red if the humidity gets too high. In the simulator, drag the slider
 or blow on the BME680 sensor to test it out.
 
@@ -167,20 +178,29 @@ setInterval(async () => {
 }, 1000)
 ```
 
-## Part 6: Connecting the XIAO to MSFTGUEST
+## Part 6: Connect to Wifi
 
-You need to register the XIAO MAC address in order for it to connect to the MSFTGUESS network.
+Enter the Wifi connection information through the explorer,
 
-- In the **Devices** tree, find the **WiFi MAC** field value and copy it.
+-   expand the wifi node in the device explorer
+-   hover on the access point and click the **plug** button
+-   enter the access point password
+
+DeviceScript should use the Access Point when detected.
+
+### Microsoft Campus Device Registration
+
+You need to register the XIAO MAC address in order for it to connect to the `MSFTGUEST` network.
+
+-   in the **Devices** tree, find the **WiFi MAC** field value and copy it.
 
 ![Alt text](image-7.png)
 
-- Navigate to https://aka.ms/getconnected , click **Quick Registration - Wireless**, **Guest Account (MSFTGUEST)**, and register your device MAC address
+-   navigate to https://aka.ms/getconnected , click **Quick Registration - Wireless**, **Guest Account (MSFTGUEST)**, and register your device MAC address
 
 ![Alt text](image-8.png)
 
-- Find MSFTGUEST in the list of APs, click the **plug** icon and press Enter to leave the password empty.
-
+-   find **MSFTGUEST** in the list of APs, click the **plug** icon and press Enter to leave the password empty.
 
 ## Part 7: Settings and secrets
 
@@ -188,8 +208,8 @@ In this section, we'll add a GET call to the GitHub repository status API and us
 
 First thing first, we'll add .env files to the project to store the github configuration and **secret** token.
 
-- Click on the **wand** icon on the file menu
-- Select **Add Settings...**
+-   Click on the **wand** icon on the file menu
+-   Select **Add Settings...**
 
 Update `.env.defaults` with the public settings (checked in)
 
@@ -208,7 +228,6 @@ The GitHub token needs `repo:status` scope (and no more). You can create a token
 GITHUB_TOKEN=...
 ```
 
-
 ```ts
 import { readSetting } from "@devicescript/settings"
 
@@ -226,7 +245,7 @@ console.log({ owner, repo, ref })
 
 DeviceScript provides a [Fetch API](https://microsoft.github.io/devicescript/developer/net) similar to the browser [fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API). You can use it to issue web requests.
 
-This snippet makes the query to github and updates the status. 
+This snippet makes the query to github and updates the status.
 Feel free to remix it to integrate it into your current application
 
 ```ts
@@ -262,31 +281,35 @@ setInterval(async () => {
 }, 500)
 
 // query github every 5s
-schedule(async () => {
-    const res = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/status`,
-        {
-            headers: {
-                Accept: "application/vnd.github+json",
-                Authorization: token ? `Bearer ${token}` : undefined,
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
-        }
-    )
-    if (res.status === 200) {
-        const json = await res.json()
-        state = json.state
-        console.log({ json, state })
-    } else state = "error"
-}, { timeout: 1000, interval: 5000 })
+schedule(
+    async () => {
+        const res = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/status`,
+            {
+                headers: {
+                    Accept: "application/vnd.github+json",
+                    Authorization: token ? `Bearer ${token}` : undefined,
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+            }
+        )
+        if (res.status === 200) {
+            const json = await res.json()
+            state = json.state
+            console.log({ json, state })
+        } else state = "error"
+    },
+    { timeout: 1000, interval: 5000 }
+)
 ```
 
 Memory is limited! Be careful about using Web APIs that return huge payloads as you will surely run out of memory...
 
 ## Resources
 
-- Session Recording
-- [DeviceScript Documentation](https://microsoft.github.io/devicescript/)
+-   Session Recording
+-   [DeviceScript Documentation](https://microsoft.github.io/devicescript/)
 
 ## Content Owner
-Contact [Peli de Halleux](<mailto:jhalleux@microsoft.com>)
+
+Contact [Peli de Halleux](mailto:jhalleux@microsoft.com)
