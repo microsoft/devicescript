@@ -116,10 +116,10 @@ const simFiles: FileSet = {
         scripts: {
             [FORCE]: true,
             "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
-            build: "yarn build:devicescript && yarn build:sim",
+            build: "npm run build:devicescript && npm run build:sim",
             "watch:sim":
                 "cd sim && nodemon --watch './**' --ext 'ts,json' --exec 'ts-node ./app.ts --project ./tsconfig.json'",
-            watch: "yarn watch:devicescript & yarn watch:sim",
+            watch: "npm run watch:devicescript & npm run watch:sim",
         },
     },
     "sim/runtime.ts": `import "websocket-polyfill"
@@ -155,7 +155,7 @@ with the rest of the DeviceScript execution.
 -  open a new terminal
 -  launch the simulator in watch mode (restarts on every change)
 
-    yarn watch:sim
+    npm run watch:sim
 
 -  edit the DeviceScript part of the application as usual. The sim process will automatically connect
 to the VS Code extension
@@ -244,13 +244,13 @@ nodeLinker: node-modules`,
             setup: "devicescript build --quiet", // generates node_modules/@devicescript/* files
             postinstall: "devicescript build",
             "build:devicescript": "devicescript build src/main.ts",
-            build: "yarn build:devicescript",
+            build: "npm run build:devicescript",
             "watch:devicescript": `devicescript devtools ${MAIN}`,
-            watch: "yarn watch:devicescript",
+            watch: "npm run watch:devicescript",
             "test:devicescript":
                 "devicescript run src/main.ts --test --test-self-exit",
-            test: "yarn test:devicescript",
-            start: "yarn watch",
+            test: "npm run test:devicescript",
+            start: "npm run watch",
         },
     },
     [MAIN]: `${IMPORT_PREFIX}
@@ -283,7 +283,7 @@ nvm use 18
 -  install dependencies
 
 \`\`\`bash
-yarn install
+npm install
 \`\`\`
 
 ### Using Visual Studio Code
@@ -303,7 +303,7 @@ code .
 - start the watch build and developer tools server
 
 \`\`\`bash
-yarn watch
+npm run watch
 \`\`\`
 
 -  navigate to devtools page (see terminal output) 
@@ -377,8 +377,8 @@ function writeFiles(dir: string, options: InitOptions, files: FileSet) {
 
 async function runInstall(cwd: string, options: InitOptions) {
     if (options.install) {
-        const npm = pathExistsSync(join(cwd, "package-lock.json"))
-        const cmd = npm ? "npm" : "yarn"
+        const yarn = pathExistsSync(join(cwd, "yarn.lock"))
+        const cmd = yarn ? "yarn" : "npm"
         log(`install dependencies...`)
         spawnSync(cmd, ["install"], {
             shell: true,
