@@ -158,10 +158,10 @@ export class DeveloperToolsManager extends JDEventSource {
                 if (yes) {
                     const t = vscode.window.createTerminal({
                         isTransient: true,
-                        name: "@devicescript/cli upgrade",
+                        name: "@devicescript/cli update",
                         cwd: projectFolder,
                     })
-                    t.sendText("yarn upgrade @devicescript/cli@latest")
+                    t.sendText("npm update @devicescript/cli@latest")
                     t.show()
                 }
                 throwError("Dependencies outdated", { cancel: true })
@@ -794,7 +794,7 @@ export class DeveloperToolsManager extends JDEventSource {
                         cwd: cwd.fsPath,
                         isTransient: true,
                     })
-                    t.sendText("yarn install")
+                    t.sendText("npm install")
                     t.show()
                 }
             })
