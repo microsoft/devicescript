@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.7](https://github.com/microsoft/devicescript/compare/v2.10.6...v2.10.7)
+
+> 7 June 2023
+
+- stop simulator when physical device connects [`5911164`](https://github.com/microsoft/devicescript/commit/5911164ba4ebceba3c320f3ce517cc2d52ab41cf)
+
 #### [v2.10.6](https://github.com/microsoft/devicescript/compare/v2.10.5...v2.10.6)
 
 > 7 June 2023
