@@ -148,6 +148,14 @@ export class DeveloperToolsManager extends JDEventSource {
             console.debug(
                 `devicescript : vscode ${extv}, devtools ${this.devsVersion}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
             )
+            if (semverCmp(this.nodeVersion, "v18.0.0") < 0) {
+                // node.js version outdated
+                throwError(
+                    `node.js outdated (${this.nodeVersion}), v18+ needed`,
+                    { cancel: true }
+                )
+            }
+
             if (semverCmp(this.devsVersion, extv) < 0) {
                 // installed devs tool are outdated for the vscode addon
                 const { projectFolder } = this
