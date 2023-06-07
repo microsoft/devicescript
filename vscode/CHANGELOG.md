@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.5](https://github.com/microsoft/devicescript/compare/v2.10.4...v2.10.5)
+
+> 6 June 2023
+
+- throttle outgoing packets (50/s) [`6a3a631`](https://github.com/microsoft/devicescript/commit/6a3a631b61f6fd9bf7cb09a216fb556440467e06)
+- tweak GC trigger heuristic [`f9ba2cf`](https://github.com/microsoft/devicescript/commit/f9ba2cf7198337e954d40d93a66a83cac9031bda)
+- simplify gc trigger logic [`00b0b21`](https://github.com/microsoft/devicescript/commit/00b0b21b2dea0cf1d969d85d40970a11d70c61fe)
+
 #### [v2.10.4](https://github.com/microsoft/devicescript/compare/v2.10.3...v2.10.4)
 
 > 6 June 2023
