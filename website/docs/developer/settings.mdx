@@ -19,6 +19,12 @@ Don't store secrets or settings in the code, use `.env` files instead.
 The `.env*` file use a similar format to node.js `.env` file. The content will be transfered in the device flash
 when deploying the DeviceScript bytecode.
 
+:::warning
+
+The setting keys should be shorter than 14 characters!
+
+:::
+
 ```env title="./.env.defaults"
 # Default settings
 # This file is tracked by git.
