@@ -8,12 +8,11 @@ const md = await fs.readFile("./website/docs/developer/errors.mdx", {
 const ts =
     (await fs.exists("./interop/src/errors.ts")) &&
     (await fs.readFile("./interop/src/errors.ts", { encoding: "utf-8" }))
-const rx = /^##\s+(?<name>.+)\s+\{#(?<id>[^}]+)\}/gim
 const errors = {}
-md.replace(rx, _ => {
-    const m = rx.exec(_)
+md.replace(/##\s+(?<name>.+)\s+\{#(?<id>[^}]+)\}/gi, _ => {
+    const m = /##\s+(?<name>.+)\s+\{#(?<id>[^}]+)\}/i.exec(_)
     const { name, id } = m.groups
-    errors[id.toLowerCase()] = name
+    errors[name] = id
     return ""
 })
 

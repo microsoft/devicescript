@@ -21,12 +21,7 @@ export interface StackFrame {
     fn: FunctionDebugInfo
 }
 
-const errorsRx = new RegExp(
-    Object.keys(errors)
-        .map(k => k.replace(/-/g, " "))
-        .join("|"),
-    "gi"
-)
+const errorsRx = new RegExp(Object.keys(errors).join("|"), "gi")
 
 export function parseStackFrame(dbgInfo: DebugInfo, line: string) {
     const resolver = dbgInfo ? SrcMapResolver.from(dbgInfo) : undefined
@@ -63,9 +58,8 @@ export function parseStackFrame(dbgInfo: DebugInfo, line: string) {
             expand(pc, fnName, fnIdx)
         )
         .replace(errorsRx, name => {
-            const id = name.replace(/ /g, "-").toLowerCase()
-            const text = errors[id]
-            return `${text} (https://microsoft.github.io/devicescript/developer/errors/#${id})`
+            const id = errors[name]
+            return `${name} (https://microsoft.github.io/devicescript/developer/errors/#${id})`
         })
     return { markedLine, frames }
 }

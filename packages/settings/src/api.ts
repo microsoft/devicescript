@@ -1,7 +1,7 @@
 import { actionReport } from "@devicescript/core"
 import { settings } from "./client"
 
-const MAX_KEY_SIZE = 14
+const MAX_KEY_SIZE = 13
 /**
  * Serializes a JSON object to a setting
  * @param key name of the setting
