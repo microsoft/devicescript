@@ -1582,6 +1582,7 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
     }
 
     async start() {
+        await this.setRunning(false)
         await this.setRunning(true)
     }
 
@@ -1629,14 +1630,16 @@ class JDomDeviceManagerTreeItem extends JDomCustomTreeItem {
         this.label =
             programSize === 0
                 ? "no script"
-                : programName || programHash || "no script"
+                : `${programName || programHash || "no script"}${
+                      !running ? " (stopped)" : ""
+                  }`
         this.description = programVersion || ""
         this.iconPath = new vscode.ThemeIcon(
-            running ? "debug-stop" : "debug-start",
+            "devicescript-logo",
             new vscode.ThemeColor(
                 running
-                    ? "debugIcon.stopForeground"
-                    : "debugIcon.startForeground"
+                    ? "debugIcon.startForeground"
+                    : "debugIcon.stopForeground"
             )
         )
 
@@ -2015,8 +2018,12 @@ function activateDevicesTreeView(extensionState: DeviceScriptExtensionState) {
             (item: JDomWifiTreeItem) => item?.reconnect()
         ),
         vscode.commands.registerCommand(
-            "extension.devicescript.jdom.devicescript.toggle",
-            (item: JDomDeviceManagerTreeItem) => item?.toggle()
+            "extension.devicescript.jdom.devicescript.start",
+            (item: JDomDeviceManagerTreeItem) => item?.start()
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.jdom.devicescript.stop",
+            (item: JDomDeviceManagerTreeItem) => item?.stop()
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.jdom.settings.clear",
