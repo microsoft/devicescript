@@ -7,6 +7,8 @@
 // #define VLOGGING 1
 #include "devs_logging.h"
 
+#define JD_GC_KEEP (!JD_HOSTED)
+
 void devs_gc_obj_check_core(devs_gc_t *gc, const void *ptr);
 
 // we run GC when allocation size since last GC reaches heap_size/JD_GC_FRACTION
@@ -701,16 +703,37 @@ void devs_gc_destroy(devs_gc_t *gc) {
 
 #else
 
+#if JD_GC_KEEP
+// we only allocate the GC heap once, and keep it - this is to avoid problems with fragmented memory in the system allocator
+static devs_gc_t *global_gc;
+static uint32_t global_gc_size;
+#endif
+
 devs_gc_t *devs_gc_create(void) {
     unsigned size = JD_GC_KB * 1024;
-    devs_gc_t *gc = jd_alloc(sizeof(devs_gc_t) + size);
+    devs_gc_t *gc;
+
+#if JD_GC_KEEP
+    if (!global_gc) {
+        global_gc_size = sizeof(devs_gc_t) + size;
+        global_gc = jd_alloc(global_gc_size);
+    }
+    gc = global_gc;
+#else
+    gc = jd_alloc(sizeof(devs_gc_t) + size);
+#endif
+
     devs_gc_add_chunk(gc, gc + 1, size);
     return gc;
 }
 
 void devs_gc_destroy(devs_gc_t *gc) {
+#if JD_GC_KEEP
+    memset(gc, 0, global_gc_size);
+#else
     gc->first_chunk = NULL;
     jd_free(gc);
+#endif
 }
 
 #endif
