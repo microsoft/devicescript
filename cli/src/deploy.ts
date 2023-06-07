@@ -65,6 +65,9 @@ export async function deployToService(
     const sha = service.register(DeviceScriptManagerReg.ProgramSha256)
 
     await sha.refresh()
+    await autostart.refresh()
+    const oldAutoStart = autostart.boolValue
+
     if (sha.data?.length == 32) {
         const exp = await sha256([bytecode])
         if (bufferEq(exp, sha.data)) {
@@ -99,9 +102,11 @@ export async function deployToService(
     )
     if (settingsService) {
         await deploySettingsToService(settingsService, settings)
-        if (!service.device.bus.nodeData[DISABLE_AUTO_START_KEY])
-            // don't reset auto-start if disabled
-            await autostart.sendSetBoolAsync(true)
+        if (
+            !service.device.bus.nodeData[DISABLE_AUTO_START_KEY] &&
+            oldAutoStart !== undefined
+        )
+            await autostart.sendSetBoolAsync(oldAutoStart)
         await running.sendSetBoolAsync(true)
     }
 
