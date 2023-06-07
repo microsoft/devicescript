@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.8](https://github.com/microsoft/devicescript/compare/v2.10.7...v2.10.8)
+
+> 7 June 2023
+
+- adding error infrastructure [`2190501`](https://github.com/microsoft/devicescript/commit/21905013dd1fdb74b84ce40d99f07b002a670941)
+- trap long settings at compile time [`4e3b710`](https://github.com/microsoft/devicescript/commit/4e3b71094c1ba89556b1f8867dce90e0a32570ba)
+- more logging [`b4c77aa`](https://github.com/microsoft/devicescript/commit/b4c77aa90bb319a82b357805ebedb38c5ad457f5)
+
 #### [v2.10.7](https://github.com/microsoft/devicescript/compare/v2.10.6...v2.10.7)
 
 > 7 June 2023
