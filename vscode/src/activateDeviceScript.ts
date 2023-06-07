@@ -219,7 +219,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 issueBody.push(`vscode: ${vscode.version}`)
                 issueBody.push(
                     `extension: ${
-                        context.extension.packageJSON?.version || "?"
+                        context.extension?.packageJSON?.version || "?"
                     }`
                 )
                 if (versions) {

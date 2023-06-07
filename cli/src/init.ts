@@ -242,8 +242,8 @@ nodeLinker: node-modules`,
         },
         scripts: {
             setup: "devicescript build --quiet", // generates node_modules/@devicescript/* files
-            postinstall: "devicescript build",
             "build:devicescript": "devicescript build src/main.ts",
+            postinstall: "npm run setup",
             build: "npm run build:devicescript",
             "watch:devicescript": `devicescript devtools ${MAIN}`,
             watch: "npm run watch:devicescript",
@@ -273,14 +273,14 @@ src/main.ts        default DeviceScript entry point
 
 ## Local/container development
 
--  install node.js 18+
+-  install [Node.js LTS 18+](https://nodejs.org/en/download)
 
 \`\`\`bash
 nvm install 18
 nvm use 18
 \`\`\`
 
--  install dependencies
+-  install DeviceScript compiler and tools
 
 \`\`\`bash
 npm install
@@ -377,9 +377,9 @@ function writeFiles(dir: string, options: InitOptions, files: FileSet) {
 
 async function runInstall(cwd: string, options: InitOptions) {
     if (options.install) {
-        const yarn = pathExistsSync(join(cwd, "yarn.lock"))
-        const cmd = yarn ? "yarn" : "npm"
-        log(`install dependencies...`)
+        const yarnlock = pathExistsSync(join(cwd, "yarn.lock"))
+        const cmd = yarnlock ? "yarn" : "npm"
+        log(`install dependencies using ${cmd}...`)
         spawnSync(cmd, ["install"], {
             shell: true,
             stdio: "inherit",
@@ -437,7 +437,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
     await build(MAIN, {})
 
     return finishAdd(
-        `Your DeviceScript project is initialized. Try 'devs add' to see what can be added.\n` +
+        `Your DeviceScript project is initialized.\n` +
             `To get more help, https://microsoft.github.io/devicescript/getting-started/`,
         ["package.json", MAIN]
     )

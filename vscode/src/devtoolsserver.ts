@@ -151,7 +151,7 @@ export class DeveloperToolsManager extends JDEventSource {
             if (semverCmp(this.nodeVersion, "v18.0.0") < 0) {
                 // node.js version outdated
                 throwError(
-                    `node.js outdated (${this.nodeVersion}), v18+ needed`,
+                    `Node.js outdated (${this.nodeVersion}), v18+ needed`,
                     { cancel: true }
                 )
             }
@@ -169,7 +169,8 @@ export class DeveloperToolsManager extends JDEventSource {
                         name: "@devicescript/cli update",
                         cwd: projectFolder,
                     })
-                    t.sendText("npm update @devicescript/cli@latest")
+                    const cmd = await this.resolvePackageTool()
+                    t.sendText(`${cmd} upgrade @devicescript/cli@latest`)
                     t.show()
                 }
                 throwError("Dependencies outdated", { cancel: true })
@@ -768,6 +769,14 @@ export class DeveloperToolsManager extends JDEventSource {
         terminal?.show()
     }
 
+    private async resolvePackageTool() {
+        const cwd = this._projectFolder
+        if (!cwd) return undefined
+        const yarn = await checkFileExists(cwd, "yarn.lock")
+        const cmd = yarn ? "yarn" : "npm"
+        return cmd
+    }
+
     public async createCliTerminal(options: {
         title?: string
         progress: string
@@ -795,14 +804,15 @@ export class DeveloperToolsManager extends JDEventSource {
                 "terminal.notinstalled",
                 "Install Node.JS dependencies to enable tools.",
                 "Install"
-            ).then((res: string) => {
+            ).then(async (res: string) => {
                 if (res === "Install") {
                     const t = vscode.window.createTerminal({
                         name: "Install Node.JS dependencies",
                         cwd: cwd.fsPath,
                         isTransient: true,
                     })
-                    t.sendText("npm install")
+                    const cmd = await this.resolvePackageTool()
+                    t.sendText(`${cmd} install`)
                     t.show()
                 }
             })
