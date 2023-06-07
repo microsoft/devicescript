@@ -92,6 +92,15 @@ If you bump minor, you need to also bump the firmware repos:
 make bump
 ```
 
+## Documenting/patching console output
+
+To add new substitions from console output message to pretty text + URL, do the following.
+
+The `website/docs/developer/errors.mdx` gets parsed by builderrors.mjs.
+The hash of the H2 titles is the console log look up key (replacing - with spaces) and the H2 text will replace that key + URL.
+
+    loopback rx ovf --> Loopback buffer overflow (....#loopback-rx-ovf)
+
 ## Adding Builtin Packages
 
 Generally, search for `@devicescript/gpio` within the workspace.
