@@ -737,20 +737,12 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - try fixing npm publish [`15b4cf1`](https://github.com/microsoft/devicescript/commit/15b4cf1b69166127fc4db7b99d4bf92a9dda5fb1)
 
-### [v2.0.1](https://github.com/microsoft/devicescript/compare/v0.0.1...v2.0.1)
+#### v2.0.1
 
 > 21 March 2023
 
 - synchronized bump script [`#238`](https://github.com/microsoft/devicescript/pull/238)
 - fix: replace * with ^version in packaged files [`#236`](https://github.com/microsoft/devicescript/pull/236)
-- fix: hide commands when no workspace [`9780b90`](https://github.com/microsoft/devicescript/commit/9780b90d6b07ed39f9bd7d0ff430ac3bf9a614f5)
-- fixing server docs [`84d44cd`](https://github.com/microsoft/devicescript/commit/84d44cdae775f7ae78b80112d8074de521b019dd)
-- docs [`7da487b`](https://github.com/microsoft/devicescript/commit/7da487b62cc1063644c3686abf78341e29583ab3)
-
-#### v0.0.1
-
-> 18 March 2023
-
 - fix: ability to open socket streaming device logging [`#230`](https://github.com/microsoft/devicescript/pull/230)
 - fix: update trackException [`#226`](https://github.com/microsoft/devicescript/pull/226)
 - fix: cleaning out role.connected [`#195`](https://github.com/microsoft/devicescript/pull/195)
