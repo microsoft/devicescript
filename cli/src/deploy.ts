@@ -3,14 +3,14 @@ import {
     delay,
     DeviceScriptManagerCmd,
     DeviceScriptManagerReg,
-    JDBus,
     JDService,
     OutPipe,
     prettySize,
     SettingsClient,
     sha256,
-    SRV_DEVICE_SCRIPT_MANAGER,
+    SRV_WIFI,
     toHex,
+    WifiCmd,
 } from "jacdac-ts"
 import { devsStartWithNetwork } from "./build"
 import { error } from "./command"
@@ -42,13 +42,33 @@ export async function deploySettingsToService(
     settingsService: JDService,
     settings: Record<string, Uint8Array>
 ) {
-    if (!settings || !Object.keys(settings).length) return
+    if (!settings) return
 
-    const client = new SettingsClient(settingsService)
-    for (const key in settings) {
-        console.debug(`deploying setting ${key}...`)
-        const value = settings[key]
-        await client.setValue(key, value)
+    // handle special settings
+    const { WIFI_SSID, WIFI_PWD, ...rest } = settings
+
+    // apply generic settings
+    if (Object.keys(rest)) {
+        const client = new SettingsClient(settingsService)
+        for (const key in rest) {
+            console.debug(`deploying setting ${key}...`)
+            const value = settings[key]
+            await client.setValue(key, value)
+        }
+    }
+
+    // wifi settings
+    if (WIFI_SSID) {
+        const wifis = settingsService.device.services({
+            serviceClass: SRV_WIFI,
+        })
+        for (const wifi of wifis) {
+            console.debug(`deploying wifi credentials`)
+            await wifi.sendCmdPackedAsync(WifiCmd.AddNetwork, [
+                WIFI_SSID,
+                WIFI_PWD || "",
+            ])
+        }
     }
 }
 
