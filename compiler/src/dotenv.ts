@@ -1,6 +1,7 @@
 import { JSONTryParse, stringToBuffer } from "jacdac-ts"
 
 function stringToSettingValue(s: string) {
+    if (!s?.length) return undefined // delete key
     // string -> any
     const v: any = JSONTryParse(s, undefined) ?? s
     // value -> json
