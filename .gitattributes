@@ -1,0 +1,5 @@
+[attr]generated -diff merge=binary linguist-generated
+compiler/src/bytecode.ts generated
+runtime/devicescript/devs_bytecode.h generated
+runtime/devicescript/protogen.c generated
+
