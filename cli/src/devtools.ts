@@ -87,12 +87,8 @@ function transportError(ev: {
     context: string
     exception: any
 }) {
-    error(
-        `transport error: ${ev.transport.type} ${ev.context} ${
-            ev.exception?.message || ""
-        }`
-    )
-    if (ev.exception) console.debug(ev.exception)
+    error(`${ev.transport.type} error: ${ev.exception?.message || ev.context}`)
+    if (ev.exception && Flags.diagnostics) console.debug(ev.exception)
 }
 
 export async function devtools(
