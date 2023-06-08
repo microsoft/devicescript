@@ -264,8 +264,7 @@
 #define DEVS_BUILTIN_OBJECT_IMAGE 40
 #define DEVS_BUILTIN_OBJECT_IMAGE_PROTOTYPE 41
 
-#define DEVS_BUILTIN_STRING___MAX 192
-#define DEVS_BUILTIN_STRING___MAX 183
+#define DEVS_BUILTIN_STRING___MAX 204
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -438,27 +437,39 @@
 #define DEVS_BUILTIN_STRING__ALLOCROLE 169
 #define DEVS_BUILTIN_STRING_SPICONFIGURE 170
 #define DEVS_BUILTIN_STRING_SPIXFER 171
-#define DEVS_BUILTIN_STRING_IMAGE 172
-#define DEVS_BUILTIN_STRING_WIDTH 173
-#define DEVS_BUILTIN_STRING_HEIGHT 174
-#define DEVS_BUILTIN_STRING_BPP 175
-#define DEVS_BUILTIN_STRING_GET 176
-#define DEVS_BUILTIN_STRING_CLONE 177
-#define DEVS_BUILTIN_STRING_SET 178
-#define DEVS_BUILTIN_STRING_FILL 179
-#define DEVS_BUILTIN_STRING_FLIPX 180
-#define DEVS_BUILTIN_STRING_FLIPY 181
-#define DEVS_BUILTIN_STRING_TRANSPOSED 182
-#define DEVS_BUILTIN_STRING_DRAWIMAGE 183
-#define DEVS_BUILTIN_STRING_DRAWTRANSPARENTIMAGE 184
-#define DEVS_BUILTIN_STRING_OVERLAPSWITH 185
-#define DEVS_BUILTIN_STRING_FILLRECT 186
-#define DEVS_BUILTIN_STRING_DRAWLINE 187
-#define DEVS_BUILTIN_STRING_EQUALS 188
-#define DEVS_BUILTIN_STRING_ISREADONLY 189
-#define DEVS_BUILTIN_STRING_FILLCIRCLE 190
-#define DEVS_BUILTIN_STRING_BLITROW 191
-#define DEVS_BUILTIN_STRING_BLIT 192
+#define DEVS_BUILTIN_STRING__SOCKETOPEN 172
+#define DEVS_BUILTIN_STRING__SOCKETCLOSE 173
+#define DEVS_BUILTIN_STRING__SOCKETWRITE 174
+#define DEVS_BUILTIN_STRING__SOCKETONEVENT 175
+#define DEVS_BUILTIN_STRING_OPEN 176
+#define DEVS_BUILTIN_STRING_CLOSE 177
+#define DEVS_BUILTIN_STRING_ERROR_ 178 // error
+#define DEVS_BUILTIN_STRING_DATA 179
+#define DEVS_BUILTIN_STRING_TOUPPERCASE 180
+#define DEVS_BUILTIN_STRING_TOLOWERCASE 181
+#define DEVS_BUILTIN_STRING_INDEXOF 182
+#define DEVS_BUILTIN_STRING_BYTELENGTH 183
+#define DEVS_BUILTIN_STRING_IMAGE 184
+#define DEVS_BUILTIN_STRING_WIDTH 185
+#define DEVS_BUILTIN_STRING_HEIGHT 186
+#define DEVS_BUILTIN_STRING_BPP 187
+#define DEVS_BUILTIN_STRING_GET 188
+#define DEVS_BUILTIN_STRING_CLONE 189
+#define DEVS_BUILTIN_STRING_SET 190
+#define DEVS_BUILTIN_STRING_FILL 191
+#define DEVS_BUILTIN_STRING_FLIPX 192
+#define DEVS_BUILTIN_STRING_FLIPY 193
+#define DEVS_BUILTIN_STRING_TRANSPOSED 194
+#define DEVS_BUILTIN_STRING_DRAWIMAGE 195
+#define DEVS_BUILTIN_STRING_DRAWTRANSPARENTIMAGE 196
+#define DEVS_BUILTIN_STRING_OVERLAPSWITH 197
+#define DEVS_BUILTIN_STRING_FILLRECT 198
+#define DEVS_BUILTIN_STRING_DRAWLINE 199
+#define DEVS_BUILTIN_STRING_EQUALS 200
+#define DEVS_BUILTIN_STRING_ISREADONLY 201
+#define DEVS_BUILTIN_STRING_FILLCIRCLE 202
+#define DEVS_BUILTIN_STRING_BLITROW 203
+#define DEVS_BUILTIN_STRING_BLIT 204
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -503,9 +514,11 @@
         "reboot", "server", "spec", "ServiceSpec", "classIdentifier", "lookup", "PacketSpec",      \
         "parent", "response", "ServerInterface", "_onServerPacket", "_serverSend",                 \
         "notImplemented", "delay", "fromCharCode", "_allocRole", "spiConfigure", "spiXfer",        \
-        "Image", "width", "height", "bpp", "get", "clone", "set", "fill", "flipX", "flipY",        \
-        "transposed", "drawImage", "drawTransparentImage", "overlapsWith", "fillRect", "drawLine", \
-        "equals", "isReadOnly", "fillCircle", "blitRow", "blit"
+        "_socketOpen", "_socketClose", "_socketWrite", "_socketOnEvent", "open", "close", "error", \
+        "data", "toUpperCase", "toLowerCase", "indexOf", "byteLength", "Image", "width", "height", \
+        "bpp", "get", "clone", "set", "fill", "flipX", "flipY", "transposed", "drawImage",         \
+        "drawTransparentImage", "overlapsWith", "fillRect", "drawLine", "equals", "isReadOnly",    \
+        "fillCircle", "blitRow", "blit"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \
