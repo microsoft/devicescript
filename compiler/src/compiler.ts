@@ -812,10 +812,6 @@ class Program implements TopOpWriter {
         }, e as ts.Expression)
     }
 
-    private emitSleep(ms: number) {
-        const wr = this.writer
-        wr.emitCall(wr.dsMember(BuiltInString.SLEEP), literal(ms))
-    }
 
     private withProcedure(proc: Procedure, f: (wr: OpWriter) => void) {
         assert(!!proc)
@@ -2186,45 +2182,6 @@ class Program implements TopOpWriter {
         this.emitIgnoredExpression(stmt.expression)
     }
 
-    private uniqueProcName(base: string) {
-        let suff = 0
-        while (this.procs.some(p => p.name == base + "_" + suff)) suff++
-        return base + "_" + suff
-    }
-
-    private emitHandler(
-        name: string,
-        func: Expr,
-        options: {
-            every?: number
-        } = {}
-    ): Procedure {
-        if (!ts.isArrowFunction(func))
-            throwError(func, "arrow function expected here")
-        const proc = new Procedure(this, this.uniqueProcName(name), func)
-        proc.useFrom(func)
-        proc.writer.ret = proc.writer.mkLabel("ret")
-        if (func.parameters.length)
-            throwError(func, "parameters not supported here")
-        this.withProcedure(proc, wr => {
-            this.emitParameters(func, proc)
-            if (options.every) {
-                this.emitSleep(options.every)
-            }
-            if (ts.isBlock(func.body)) {
-                this.emitStmt(func.body)
-            } else {
-                this.ignore(this.emitExpr(func.body))
-            }
-            wr.emitLabel(wr.ret)
-            if (options.every) wr.emitJump(wr.top)
-            else {
-                wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
-            }
-            this.finalizeProc(proc)
-        })
-        return proc
-    }
 
     private requireArgs(
         expr: ts.CallExpression | ts.NewExpression | CallLike,
@@ -2238,13 +2195,6 @@ class Program implements TopOpWriter {
             )
     }
 
-    private requireTopLevel(expr: ts.Node) {
-        if (!this.isTopLevel(expr))
-            throwError(
-                expr,
-                "this can only be done at the top-level of the program"
-            )
-    }
 
     private parseFormat(expr: Expr): NumFmt {
         const str = this.stringLiteral(expr) || ""
@@ -2491,11 +2441,6 @@ class Program implements TopOpWriter {
         return args.map(arg => this.emitExpr(arg))
     }
 
-    private forceNumberLiteral(expr: Expr) {
-        const tmp = this.emitExpr(expr)
-        if (!tmp.isLiteral) throwError(expr, "number literal expected")
-        return tmp.numValue
-    }
 
     private isStringLike(expr: Expr) {
         return !!(
