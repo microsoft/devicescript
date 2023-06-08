@@ -5,7 +5,7 @@ export type color = number
 /**
  * Represents monochromatic or color 2D image.
  *
- * @ds-native Image
+ * @devsNative Image
  */
 export declare class Image {
     private constructor()
@@ -236,7 +236,7 @@ Image.prototype.rotated = function (deg: number): Image {
 
 /**
  * Make an Image object from ASCII art
- * @ds-native
+ * @devsNative
  */
 export function img(lits: any, ...args: any[]): Image {
     return null

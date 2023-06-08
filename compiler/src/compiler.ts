@@ -1845,7 +1845,7 @@ class Program implements TopOpWriter {
             if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
                 const tags = getSymTags(sym)
-                if (tags.hasOwnProperty("ds-native")) continue
+                if (tags.hasOwnProperty("devsNative")) continue
                 const info: ProtoDefinition = {
                     className: this.nodeName(stmt),
                     methodName: this.forceName(mem.name),
@@ -2903,8 +2903,8 @@ class Program implements TopOpWriter {
             wr.emitCall(this.dsMember("gpio"), literal(gpio))
             return this.retVal()
         }
-        if (tags["ds-native"]) {
-            const id = builtInObjByName["#" + tags["ds-native"]]
+        if (tags["devsNative"]) {
+            const id = builtInObjByName["#" + tags["devsNative"]]
             if (id === undefined) {
                 this.reportError(
                     expr,
@@ -2916,7 +2916,7 @@ class Program implements TopOpWriter {
                 )
                 throwError(
                     expr,
-                    `invalid @ds-native tag '${tags["ds-native"]}'`
+                    `invalid @devsNative tag '${tags["devsNative"]}'`
                 )
             }
             return this.writer.emitBuiltInObject(id)
