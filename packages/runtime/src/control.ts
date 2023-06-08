@@ -1,4 +1,4 @@
-import { Control } from "@devicescript/core"
+import { Control, isSimulator } from "@devicescript/core"
 
 let _ctrl: Control
 /**
@@ -47,6 +47,9 @@ export async function uptime() {
  * @returns temperature in celcius (°C); undefined if sensor is not available.
  */
 export async function mcuTemperature() {
-    const ctrl = currentControl()
-    return await ctrl.mcuTemperature.read()
+    if (isSimulator()) return 21
+    else {
+        const ctrl = currentControl()
+        return await ctrl.mcuTemperature.read()
+    }
 }
