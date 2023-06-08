@@ -1,0 +1,60 @@
+---
+title: Blues.io Notecard
+sidebar_position: 5.5
+---
+
+# Blues.io Notecard
+
+The [Blues.io Notecard](https://blues.io/products/notecard/) provides
+a simple way to add cellular connectivity to your IoT project.
+
+The [pelikhan/devicescript-note](https://github.com/pelikhan/devicescript-note) package uses [I2C to communicate with the Notecard](https://dev.blues.io/guides-and-tutorials/notecard-guides/serial-over-i2c-protocol/).
+
+## Getting started
+
+-   Create a new DeviceScript project
+-   Add the library to your DeviceScript project:
+
+```bash
+npm install --save pelikhan/devicescript-note
+```
+
+## Configuration
+
+-   Add settings to your project
+-   Add the notehub product UID into your settings.
+    By default, DeviceScript will use the deviceid as a serial number; but you can override this setting.
+
+```yaml
+# .env.defaults
+NOTE_PUID=your-product-uid
+NOTE_SN=your-serial-number
+```
+
+-   Connect the notecard to your I2C pins and power it up.
+
+```ts
+import { Temperature } from "@devicescript/core"
+import { delay, millis } from "@devicescript/core"
+import { init, request, NoteAddRequest } from "devicescript-note"
+
+// configure product UID and serial number
+await init()
+
+// connect sensors
+const temperature = new Temperature()
+
+while (true) {
+    // read sensor values
+    const t = await temperature.reading.read()
+
+    // send node.add request
+    await request(<NoteAddRequest>{
+        req: "note.add",
+        body: { t },
+    })
+
+    // take a break
+    await delay(10000)
+}
+```
