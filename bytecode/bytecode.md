@@ -18,7 +18,7 @@ Expressions do not modify the state. They may throw exceptions though.
     utf8_header_size = 4
     utf8_table_shift = 4
     binary_size_align = 32
-    max_stack_depth = 10
+    max_stack_depth = 16
     max_call_depth = 100
     direct_const_op = 0x80
     direct_const_offset = 16
