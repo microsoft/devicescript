@@ -1,3 +1,4 @@
+import { pins, board } from "@dsboard/adafruit_qt_py_c3"
 // https://dev.blues.io/guides-and-tutorials/notecard-guides/serial-over-i2c-protocol/
 
 import { I2CStatus, delay } from "@devicescript/core"
@@ -30,6 +31,10 @@ export interface HubRequest extends Request {
         | "hub.get"
         | "hub.set"
         | "hub.log"
+}
+
+export interface CardRequest extends Request {
+    req: "card.version"
 }
 
 /**
@@ -87,7 +92,12 @@ export interface NoteAddRequest extends NoteRequest {
     verify?: boolean
 }
 
-export type Requests = HubRequest | HubSetRequest | NoteRequest | NoteAddRequest
+export type Requests =
+    | HubRequest
+    | HubSetRequest
+    | NoteRequest
+    | NoteAddRequest
+    | CardRequest
 
 /**
  * Default 0x17 I2c address of notecard
@@ -151,22 +161,29 @@ async function internalRequest(req: Request): Promise<Response> {
     // data poll
     const res = await receive()
     const rstr = res.toString()
-    debug(rstr)
-    const r = JSON.parse(rstr) as Response
+    // debug(`resp: ${rstr}`)
+    let r: Response
+    try {
+        r = JSON.parse(rstr) as Response
+    } catch (e) {
+        debug(`invalid json output`)
+    }
+    // why?
     await delay(250)
+
     return r
 }
 
 async function query() {
-    // debug(`query`)
+    // https://dev.blues.io/guides-and-tutorials/notecard-guides/serial-over-i2c-protocol/#data-query
     try {
-        await i2c.writeBuf(ADDRESS, Buffer.alloc(2))
+        await i2c.writeBuf(ADDRESS, hex`0000`)
     } catch (e) {
         if (e instanceof I2CError) return undefined
         throw e
     }
     const sz = await i2c.readBuf(ADDRESS, 2)
-    // debug(`query > ${sz.toHex()}`)
+    debug(`query ${sz.toString("hex")}`)
     return sz
 }
 
@@ -174,7 +191,6 @@ function encode(req: Request): Buffer {
     // notes will reconstruct the JSON message until \n is found
     const str = JSON.stringify(req) + "\n"
     const buf = Buffer.from(str)
-    debug(str)
     return buf
 }
 
@@ -188,7 +204,7 @@ async function receive(): Promise<Buffer> {
 
     let res = Buffer.alloc(0)
     while (sz[0] > 0) {
-        // debug(`reading ${sz[0]} bytes`)
+        debug(`reading ${sz[0]} bytes`)
         const readReq = Buffer.alloc(2)
         readReq[0] = 0
         readReq[1] = sz[0]
@@ -201,6 +217,7 @@ async function receive(): Promise<Buffer> {
 }
 
 async function transmit(buf: Buffer) {
+    debug(`transmit ${buf.toString("hex")}`)
     let error = 0
     let index = 0
     while (index < buf.length) {
@@ -210,7 +227,7 @@ async function transmit(buf: Buffer) {
         index += chunk.length
         await delay(20)
     }
-    // debug(`write > ${error}`)
+    debug(`write > ${error}`)
     return error
 }
 
@@ -262,3 +279,7 @@ export async function log(text: string) {
         text,
     })
 }
+
+//console.log(await request({ req: "hub.status" }))
+console.log(await request(<CardRequest>{ req: "card.version" }))
+await log("hello for devicescript")
