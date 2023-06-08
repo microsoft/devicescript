@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.11.0](https://github.com/microsoft/devicescript/compare/v2.10.10...v2.11.0)
+
+> 8 June 2023
+
+- add built-in Image type [`#423`](https://github.com/microsoft/devicescript/pull/423)
+- Wifi settings [`#457`](https://github.com/microsoft/devicescript/pull/457)
+- mcuTemperature API + docs [`#454`](https://github.com/microsoft/devicescript/pull/454)
+- add adafruit.io example [`bea432d`](https://github.com/microsoft/devicescript/commit/bea432d7c228bb4e67a34fa7a959113989e3bcc4)
+- updated build status sample [`c11926c`](https://github.com/microsoft/devicescript/commit/c11926c438dc2ca2a0a887b99d6507e2180c6ae6)
+- more samples [`4ed8968`](https://github.com/microsoft/devicescript/commit/4ed8968f9b693ba025f9fdaa05a5c107ea72f049)
+
 #### [v2.10.10](https://github.com/microsoft/devicescript/compare/v2.10.9...v2.10.10)
 
 > 8 June 2023
