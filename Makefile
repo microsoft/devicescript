@@ -41,10 +41,10 @@ bytecode-gen-ci: bc
 	git add runtime/devicescript/devs_bytecode.h
 
 bc:
-	cd bytecode && ./run.sh
 	node runtime/scripts/ds-builtin-proto.js \
 		runtime/devicescript/devs_bytecode.h \
 		runtime/devicescript/impl_*.c
+	cd bytecode && ./run.sh
 	clang-format -i runtime/devicescript/protogen.c
 
 regen: bc

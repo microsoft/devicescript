@@ -104,11 +104,11 @@
     "\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42" \
     "\x42\x11\x60"
 #define DEVS_OP_TYPES                                                                              \
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b" \
-    "\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x0b\x04\x09\x09\x09\x08\x01\x01\x0c\x01\x0b\x01" \
+    "\x7f\x01\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x08\x0e\x0f\x0f\x0f\x01\x0e\x0e" \
+    "\x01\x0e\x0f\x0e\x0e\x0e\x0e\x0e\x0f\x0f\x0f\x0e\x04\x09\x09\x09\x08\x01\x01\x0f\x01\x0e\x01" \
     "\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06" \
-    "\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06" \
-    "\x06\x0c\x0b"
+    "\x06\x06\x06\x06\x0f\x0e\x08\x01\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x08\x06\x0c\x06" \
+    "\x06\x0f\x0e"
 
 #define DEVS_IMG_VERSION_MAJOR 2
 #define DEVS_IMG_VERSION_MINOR 10
@@ -124,7 +124,7 @@
 #define DEVS_UTF8_HEADER_SIZE 4
 #define DEVS_UTF8_TABLE_SHIFT 4
 #define DEVS_BINARY_SIZE_ALIGN 32
-#define DEVS_MAX_STACK_DEPTH 10
+#define DEVS_MAX_STACK_DEPTH 16
 #define DEVS_MAX_CALL_DEPTH 100
 #define DEVS_DIRECT_CONST_OP 0x80
 #define DEVS_DIRECT_CONST_OFFSET 16
@@ -202,7 +202,7 @@
 #define DEVS_FIELDSPEC_FLAG_IS_BYTES 0x01
 #define DEVS_FIELDSPEC_FLAG_STARTS_REPEATS 0x02
 
-#define DEVS_OBJECT_TYPE___MAX 12
+#define DEVS_OBJECT_TYPE___MAX 15
 #define DEVS_OBJECT_TYPE_UNDEFINED 0
 #define DEVS_OBJECT_TYPE_NUMBER 1
 #define DEVS_OBJECT_TYPE_MAP 2
@@ -216,10 +216,11 @@
 #define DEVS_OBJECT_TYPE_PACKET 10
 #define DEVS_OBJECT_TYPE_EXOTIC 11
 #define DEVS_OBJECT_TYPE_NULL 12
-#define DEVS_OBJECT_TYPE_ANY 11
-#define DEVS_OBJECT_TYPE_VOID 12
+#define DEVS_OBJECT_TYPE_IMAGE 13
+#define DEVS_OBJECT_TYPE_ANY 14
+#define DEVS_OBJECT_TYPE_VOID 15
 
-#define DEVS_BUILTIN_OBJECT___MAX 39
+#define DEVS_BUILTIN_OBJECT___MAX 41
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
@@ -260,8 +261,10 @@
 #define DEVS_BUILTIN_OBJECT_DSSERVICESPEC_PROTOTYPE 37
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC 38
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE 39
+#define DEVS_BUILTIN_OBJECT_IMAGE 40
+#define DEVS_BUILTIN_OBJECT_IMAGE_PROTOTYPE 41
 
-#define DEVS_BUILTIN_STRING___MAX 183
+#define DEVS_BUILTIN_STRING___MAX 205
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -446,6 +449,28 @@
 #define DEVS_BUILTIN_STRING_TOLOWERCASE 181
 #define DEVS_BUILTIN_STRING_INDEXOF 182
 #define DEVS_BUILTIN_STRING_BYTELENGTH 183
+#define DEVS_BUILTIN_STRING_IMAGE 184
+#define DEVS_BUILTIN_STRING_WIDTH 185
+#define DEVS_BUILTIN_STRING_HEIGHT 186
+#define DEVS_BUILTIN_STRING_BPP 187
+#define DEVS_BUILTIN_STRING_GET 188
+#define DEVS_BUILTIN_STRING_CLONE 189
+#define DEVS_BUILTIN_STRING_SET 190
+#define DEVS_BUILTIN_STRING_FILL 191
+#define DEVS_BUILTIN_STRING_FLIPX 192
+#define DEVS_BUILTIN_STRING_FLIPY 193
+#define DEVS_BUILTIN_STRING_TRANSPOSED 194
+#define DEVS_BUILTIN_STRING_DRAWIMAGE 195
+#define DEVS_BUILTIN_STRING_DRAWTRANSPARENTIMAGE 196
+#define DEVS_BUILTIN_STRING_OVERLAPSWITH 197
+#define DEVS_BUILTIN_STRING_FILLRECT 198
+#define DEVS_BUILTIN_STRING_DRAWLINE 199
+#define DEVS_BUILTIN_STRING_EQUALS 200
+#define DEVS_BUILTIN_STRING_ISREADONLY 201
+#define DEVS_BUILTIN_STRING_FILLCIRCLE 202
+#define DEVS_BUILTIN_STRING_BLITROW 203
+#define DEVS_BUILTIN_STRING_BLIT 204
+#define DEVS_BUILTIN_STRING__I2CTRANSACTION 205
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -491,7 +516,10 @@
         "parent", "response", "ServerInterface", "_onServerPacket", "_serverSend",                 \
         "notImplemented", "delay", "fromCharCode", "_allocRole", "spiConfigure", "spiXfer",        \
         "_socketOpen", "_socketClose", "_socketWrite", "_socketOnEvent", "open", "close", "error", \
-        "data", "toUpperCase", "toLowerCase", "indexOf", "byteLength"
+        "data", "toUpperCase", "toLowerCase", "indexOf", "byteLength", "Image", "width", "height", \
+        "bpp", "get", "clone", "set", "fill", "flipX", "flipY", "transposed", "drawImage",         \
+        "drawTransparentImage", "overlapsWith", "fillRect", "drawLine", "equals", "isReadOnly",    \
+        "fillCircle", "blitRow", "blit", "_i2cTransaction"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \
@@ -501,4 +529,4 @@
         "DsEvent_prototype", "DsReport_prototype", "Error", "Error_prototype", "TypeError",        \
         "TypeError_prototype", "RangeError", "RangeError_prototype", "SyntaxError",                \
         "SyntaxError_prototype", "JSON", "DsServiceSpec", "DsServiceSpec_prototype",               \
-        "DsPacketSpec", "DsPacketSpec_prototype"
+        "DsPacketSpec", "DsPacketSpec_prototype", "Image", "Image_prototype"

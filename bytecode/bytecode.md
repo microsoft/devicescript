@@ -18,7 +18,7 @@ Expressions do not modify the state. They may throw exceptions though.
     utf8_header_size = 4
     utf8_table_shift = 4
     binary_size_align = 32
-    max_stack_depth = 10
+    max_stack_depth = 16
     max_call_depth = 100
     direct_const_op = 0x80
     direct_const_offset = 16
@@ -422,11 +422,13 @@ Only `true` and `false` values.
 
     null = 12
 
+    image = 13
+
 ### Object_Types only used in static type info
 
-    any = 11
+    any = 14
 
-    void = 12
+    void = 15
 
 ## Enum: BuiltIn_Object
 
@@ -470,6 +472,8 @@ Only `true` and `false` values.
     DsServiceSpec_prototype = 37
     DsPacketSpec = 38
     DsPacketSpec_prototype = 39
+    Image = 40
+    Image_prototype = 41
 
 ## Enum: BuiltIn_String
 
@@ -658,4 +662,25 @@ Only `true` and `false` values.
     toLowerCase = 181
     indexOf = 182
     byteLength = 183
-
+    Image = 184
+    width = 185
+    height = 186
+    bpp = 187
+    get = 188
+    clone = 189
+    set = 190
+    fill = 191
+    flipX = 192
+    flipY = 193
+    transposed = 194
+    drawImage = 195
+    drawTransparentImage = 196
+    overlapsWith = 197
+    fillRect = 198
+    drawLine = 199
+    equals = 200
+    isReadOnly = 201
+    fillCircle = 202
+    blitRow = 203
+    blit = 204
+    _i2cTransaction = 205

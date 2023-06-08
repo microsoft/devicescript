@@ -812,10 +812,6 @@ class Program implements TopOpWriter {
         }, e as ts.Expression)
     }
 
-    private emitSleep(ms: number) {
-        const wr = this.writer
-        wr.emitCall(wr.dsMember(BuiltInString.SLEEP), literal(ms))
-    }
 
     private withProcedure(proc: Procedure, f: (wr: OpWriter) => void) {
         assert(!!proc)
@@ -1649,7 +1645,10 @@ class Program implements TopOpWriter {
     }
 
     private emitFunctionBody(stmt: FunctionLike, proc: Procedure) {
-        if (ts.isBlock(stmt.body)) {
+        if (!stmt.body) {
+            const wr = this.writer
+            wr.emitCall(wr.dsMember(BuiltInString.NOTIMPLEMENTED))
+        } else if (ts.isBlock(stmt.body)) {
             this.emitStmt(stmt.body)
             if (!this.writer.justHadReturn())
                 this.writer.emitStmt(Op.STMT1_RETURN, literal(undefined))
@@ -1842,6 +1841,7 @@ class Program implements TopOpWriter {
             if (ts.isMethodDeclaration(mem) && mem.body) {
                 const sym = this.getSymAtLocation(mem)
                 const tags = getSymTags(sym)
+                if (tags.hasOwnProperty("devsNative")) continue
                 const info: ProtoDefinition = {
                     className: this.nodeName(stmt),
                     methodName: this.forceName(mem.name),
@@ -2182,45 +2182,6 @@ class Program implements TopOpWriter {
         this.emitIgnoredExpression(stmt.expression)
     }
 
-    private uniqueProcName(base: string) {
-        let suff = 0
-        while (this.procs.some(p => p.name == base + "_" + suff)) suff++
-        return base + "_" + suff
-    }
-
-    private emitHandler(
-        name: string,
-        func: Expr,
-        options: {
-            every?: number
-        } = {}
-    ): Procedure {
-        if (!ts.isArrowFunction(func))
-            throwError(func, "arrow function expected here")
-        const proc = new Procedure(this, this.uniqueProcName(name), func)
-        proc.useFrom(func)
-        proc.writer.ret = proc.writer.mkLabel("ret")
-        if (func.parameters.length)
-            throwError(func, "parameters not supported here")
-        this.withProcedure(proc, wr => {
-            this.emitParameters(func, proc)
-            if (options.every) {
-                this.emitSleep(options.every)
-            }
-            if (ts.isBlock(func.body)) {
-                this.emitStmt(func.body)
-            } else {
-                this.ignore(this.emitExpr(func.body))
-            }
-            wr.emitLabel(wr.ret)
-            if (options.every) wr.emitJump(wr.top)
-            else {
-                wr.emitStmt(Op.STMT1_RETURN, literal(undefined))
-            }
-            this.finalizeProc(proc)
-        })
-        return proc
-    }
 
     private requireArgs(
         expr: ts.CallExpression | ts.NewExpression | CallLike,
@@ -2234,13 +2195,6 @@ class Program implements TopOpWriter {
             )
     }
 
-    private requireTopLevel(expr: ts.Node) {
-        if (!this.isTopLevel(expr))
-            throwError(
-                expr,
-                "this can only be done at the top-level of the program"
-            )
-    }
 
     private parseFormat(expr: Expr): NumFmt {
         const str = this.stringLiteral(expr) || ""
@@ -2338,22 +2292,118 @@ class Program implements TopOpWriter {
         return undefined
     }
 
-    private bufferLiteral(expr: Expr): Uint8Array {
-        if (
-            expr &&
-            ts.isTaggedTemplateExpression(expr) &&
-            idName(expr.tag) == "hex"
+    private decodeImage(node: ts.Node, s: string) {
+        const matrix: number[][] = []
+        let line: number[] = []
+        let width = 0
+        s += "\n"
+        for (let i = 0; i < s.length; ++i) {
+            let c = s[i]
+            switch (c) {
+                case " ":
+                case "\t":
+                    break
+                case "\n":
+                    if (line.length > 0) {
+                        matrix.push(line)
+                        width = Math.max(line.length, width)
+                        line = []
+                    }
+                    break
+                case ".":
+                    line.push(0)
+                    break
+                case "#":
+                    line.push(1)
+                    break
+                default:
+                    let n = -1
+                    if (/[0-9]/.test(c)) n = +c
+                    else if (/[a-z]/i.test(c))
+                        n =
+                            c.toLowerCase().charCodeAt(0) -
+                            "a".charCodeAt(0) +
+                            10
+                    if (n < 0 || n >= 16)
+                        throwError(
+                            node,
+                            `invalid character ${JSON.stringify(
+                                c
+                            )} in img\`...\` literal`
+                        )
+                    line.push(n)
+                    break
+            }
+        }
+
+        const bpp = 4
+        const height = matrix.length
+        const buf = f4EncodeImg(width, height, bpp, (x, y) => matrix[y][x] || 0)
+        const wr = this.writer
+        const alloc = wr.builtInMember(
+            wr.emitBuiltInObject(BuiltInObject.IMAGE),
+            BuiltInString.ALLOC
+        )
+        wr.emitCall(
+            alloc,
+            literal(width),
+            literal(height),
+            literal(bpp),
+            wr.emitString(buf)
+        )
+        return this.retVal()
+
+        function f4EncodeImg(
+            w: number,
+            h: number,
+            bpp: number,
+            getPix: (x: number, y: number) => number
         ) {
+            const r: number[] = []
+            let ptr = 0
+            let curr = 0
+            let shift = 0
+
+            const pushBits = (n: number) => {
+                curr |= n << shift
+                if (shift == 8 - bpp) {
+                    r.push(curr)
+                    ptr++
+                    curr = 0
+                    shift = 0
+                } else {
+                    shift += bpp
+                }
+            }
+
+            for (let i = 0; i < w; ++i) {
+                for (let j = 0; j < h; ++j) pushBits(getPix(i, j))
+                while (shift != 0) pushBits(0)
+                if (bpp > 1) {
+                    while (ptr & 3) pushBits(0)
+                }
+            }
+
+            return new Uint8Array(r)
+        }
+    }
+
+    private bufferLiteral(expr: Expr) {
+        if (expr && ts.isTaggedTemplateExpression(expr)) {
+            const tp = idName(expr.tag)
+            if (tp !== "hex" && tp !== "img") return undefined
+
             if (!ts.isNoSubstitutionTemplateLiteral(expr.template))
                 throwError(
                     expr,
-                    "${}-expressions not supported in hex literals"
+                    `\${}-expressions not supported in ${tp} literals`
                 )
+            if (tp == "img") return this.decodeImage(expr, expr.template.text)
             const hexbuf = expr.template.text.replace(/\s+/g, "").toLowerCase()
             if (hexbuf.length & 1) throwError(expr, "non-even hex length")
             if (!/^[0-9a-f]*$/.test(hexbuf))
                 throwError(expr, "invalid characters in hex")
-            return fromHex(hexbuf)
+            return this.writer.emitString(fromHex(hexbuf))
         }
 
         return undefined
@@ -2382,11 +2432,8 @@ class Program implements TopOpWriter {
             return wr.emitString(stringLiteral)
         } else {
             const buf = this.bufferLiteral(expr)
-            if (buf) {
-                return wr.emitString(buf)
-            } else {
-                throwError(expr, "expecting a string literal here")
-            }
+            if (buf) return buf
+            else throwError(expr, "expecting a string literal here")
         }
     }
 
@@ -2394,11 +2441,6 @@ class Program implements TopOpWriter {
         return args.map(arg => this.emitExpr(arg))
     }
 
-    private forceNumberLiteral(expr: Expr) {
-        const tmp = this.emitExpr(expr)
-        if (!tmp.isLiteral) throwError(expr, "number literal expected")
-        return tmp.numValue
-    }
 
     private isStringLike(expr: Expr) {
         return !!(
@@ -2805,6 +2847,24 @@ class Program implements TopOpWriter {
             const wr = this.writer
             wr.emitCall(this.dsMember("gpio"), literal(gpio))
             return this.retVal()
+        }
+        if (tags["devsNative"]) {
+            const id = builtInObjByName["#" + tags["devsNative"]]
+            if (id === undefined) {
+                this.reportError(
+                    expr,
+                    "allowed names: " +
+                        Object.keys(builtInObjByName)
+                            .map(s => s.slice(1))
+                            .join(", "),
+                    ts.DiagnosticCategory.Message
+                )
+                throwError(
+                    expr,
+                    `invalid @devsNative tag '${tags["devsNative"]}'`
+                )
+            }
+            return this.writer.emitBuiltInObject(id)
         }
         return this.emitBuiltInConstByName(this.nodeName(expr))
     }

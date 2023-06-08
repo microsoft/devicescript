@@ -49,6 +49,7 @@ typedef struct _devs_gc_block_t {
         devs_gc_object_t gc;
         devs_array_t array;
         devs_buffer_t buffer;
+        devs_gimage_t image;
         devs_map_t map;
         devs_short_map_t short_map;
         devs_activation_t act;
@@ -165,6 +166,10 @@ static void scan_gc_obj(devs_ctx_t *ctx, block_t *block, int depth) {
         switch (BASIC_TAG(header)) {
         case DEVS_GC_TAG_BUFFER:
             map = block->buffer.attached;
+            break;
+        case DEVS_GC_TAG_IMAGE:
+            scan_gc_obj(ctx, (block_t *)block->image.buffer, depth);
+            map = block->image.attached;
             break;
         case DEVS_GC_TAG_SHORT_MAP:
         case DEVS_GC_TAG_HALF_STATIC_MAP:

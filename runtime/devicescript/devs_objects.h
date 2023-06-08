@@ -107,6 +107,18 @@ typedef struct {
     devs_buffer_t *payload;
 } devs_packet_t;
 
+typedef struct {
+    devs_gc_object_t gc;
+    devs_small_size_t width;
+    devs_small_size_t height;
+    devs_small_size_t stride;
+    uint8_t bpp;
+    uint8_t read_only;
+    uint8_t *pix;
+    devs_buffer_t *buffer;
+    devs_map_t *attached;
+} devs_gimage_t;
+
 void devs_map_set(devs_ctx_t *ctx, devs_map_t *map, value_t key, value_t v);
 value_t devs_map_get(devs_ctx_t *ctx, devs_map_t *map, value_t key);
 int devs_map_delete(devs_ctx_t *ctx, devs_map_t *map, value_t key);
@@ -246,6 +258,7 @@ void devs_gc_destroy(devs_gc_t *gc);
 #define DEVS_GC_TAG_SHORT_MAP 0xA
 #define DEVS_GC_TAG_PACKET 0xB
 #define DEVS_GC_TAG_STRING_JMP 0xC
+#define DEVS_GC_TAG_IMAGE 0xD
 #define DEVS_GC_TAG_BUILTIN_PROTO DEVS_GC_TAG_MASK // these are not in GC heap!
 #define DEVS_GC_TAG_FINAL (DEVS_GC_TAG_MASK | DEVS_GC_TAG_MASK_PINNED)
 

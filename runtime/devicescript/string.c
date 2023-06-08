@@ -185,6 +185,11 @@ value_t devs_value_to_string(devs_ctx_t *ctx, value_t v) {
                                        devs_role_name(ctx, pkt->roleidx), pkt->service_command,
                                        pkt->payload->length);
         }
+        case DEVS_GC_TAG_IMAGE: {
+            devs_gimage_t *img = devs_handle_ptr_value(ctx, v);
+            return devs_string_sprintf(ctx, "[Image: %dx%d (%d bpp)]", img->width, img->height,
+                                       img->bpp);
+        }
         case DEVS_GC_TAG_SHORT_MAP:
         case DEVS_GC_TAG_HALF_STATIC_MAP:
         case DEVS_GC_TAG_MAP:

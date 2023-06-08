@@ -101,7 +101,7 @@ export enum Op {
 export const OP_PROPS =
     "\x7f\x60\x11\x12\x13\x14\x15\x16\x17\x18\x19\x12\x51\x70\x31\x42\x60\x31\x31\x14\x40\x20\x20\x41\x02\x13\x21\x21\x21\x60\x60\x10\x11\x11\x60\x60\x60\x60\x60\x60\x60\x60\x10\x03\x00\x41\x40\x41\x40\x40\x41\x40\x41\x41\x41\x41\x41\x41\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x41\x32\x21\x20\x41\x10\x30\x12\x30\x70\x10\x10\x51\x51\x71\x10\x41\x42\x40\x42\x42\x11\x60"
 export const OP_TYPES =
-    "\x7f\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x0b\x0c\x0c\x0c\x01\x0b\x0b\x01\x0b\x0c\x0b\x0b\x0b\x0b\x0b\x0c\x0c\x0c\x0b\x04\x09\x09\x09\x08\x01\x01\x0c\x01\x0b\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x06\x0c\x0b\x08\x01\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x0c\x08\x06\x0c\x06\x06\x0c\x0b"
+    "\x7f\x01\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x08\x0e\x0f\x0f\x0f\x01\x0e\x0e\x01\x0e\x0f\x0e\x0e\x0e\x0e\x0e\x0f\x0f\x0f\x0e\x04\x09\x09\x09\x08\x01\x01\x0f\x01\x0e\x01\x0c\x06\x06\x06\x06\x01\x01\x01\x06\x01\x06\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x01\x06\x06\x06\x06\x06\x0f\x0e\x08\x01\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x0f\x08\x06\x0c\x06\x06\x0f\x0e"
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
@@ -118,7 +118,7 @@ export enum BinFmt {
     UTF8_HEADER_SIZE = 4,
     UTF8_TABLE_SHIFT = 4,
     BINARY_SIZE_ALIGN = 32,
-    MAX_STACK_DEPTH = 10,
+    MAX_STACK_DEPTH = 16,
     MAX_CALL_DEPTH = 100,
     DIRECT_CONST_OP = 0x80,
     DIRECT_CONST_OFFSET = 16,
@@ -218,7 +218,7 @@ export enum FieldSpecFlag {
 }
 
 export enum ObjectType {
-    __MAX = 12,
+    __MAX = 15,
     UNDEFINED = 0,
     NUMBER = 1,
     MAP = 2,
@@ -232,12 +232,13 @@ export enum ObjectType {
     PACKET = 10,
     EXOTIC = 11,
     NULL = 12,
-    ANY = 11,
-    VOID = 12,
+    IMAGE = 13,
+    ANY = 14,
+    VOID = 15,
 }
 
 export enum BuiltInObject {
-    __MAX = 39,
+    __MAX = 41,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -278,10 +279,12 @@ export enum BuiltInObject {
     DSSERVICESPEC_PROTOTYPE = 37,
     DSPACKETSPEC = 38,
     DSPACKETSPEC_PROTOTYPE = 39,
+    IMAGE = 40,
+    IMAGE_PROTOTYPE = 41,
 }
 
 export enum BuiltInString {
-    __MAX = 183,
+    __MAX = 205,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -466,6 +469,28 @@ export enum BuiltInString {
     TOLOWERCASE = 181,
     INDEXOF = 182,
     BYTELENGTH = 183,
+    IMAGE = 184,
+    WIDTH = 185,
+    HEIGHT = 186,
+    BPP = 187,
+    GET = 188,
+    CLONE = 189,
+    SET = 190,
+    FILL = 191,
+    FLIPX = 192,
+    FLIPY = 193,
+    TRANSPOSED = 194,
+    DRAWIMAGE = 195,
+    DRAWTRANSPARENTIMAGE = 196,
+    OVERLAPSWITH = 197,
+    FILLRECT = 198,
+    DRAWLINE = 199,
+    EQUALS = 200,
+    ISREADONLY = 201,
+    FILLCIRCLE = 202,
+    BLITROW = 203,
+    BLIT = 204,
+    _I2CTRANSACTION = 205,
 }
 
 export const OP_PRINT_FMTS = [
@@ -577,6 +602,9 @@ export const OBJECT_TYPE = [
     "function",
     "string",
     "packet",
+    "exotic",
+    "null",
+    "image",
     "any",
     "void",
 ]
@@ -765,6 +793,28 @@ export const BUILTIN_STRING__VAL = [
     "toLowerCase",
     "indexOf",
     "byteLength",
+    "Image",
+    "width",
+    "height",
+    "bpp",
+    "get",
+    "clone",
+    "set",
+    "fill",
+    "flipX",
+    "flipY",
+    "transposed",
+    "drawImage",
+    "drawTransparentImage",
+    "overlapsWith",
+    "fillRect",
+    "drawLine",
+    "equals",
+    "isReadOnly",
+    "fillCircle",
+    "blitRow",
+    "blit",
+    "_i2cTransaction",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
@@ -807,4 +857,6 @@ export const BUILTIN_OBJECT__VAL = [
     "DsServiceSpec_prototype",
     "DsPacketSpec",
     "DsPacketSpec_prototype",
+    "Image",
+    "Image_prototype",
 ]
