@@ -1,8 +1,10 @@
 import { pins, board } from "@dsboard/adafruit_qt_py_c3"
 // https://dev.blues.io/guides-and-tutorials/notecard-guides/serial-over-i2c-protocol/
 
+import { _dcfgString, deviceIdentifier } from "@devicescript/core"
 import { I2CStatus, delay } from "@devicescript/core"
 import { I2CError, i2c } from "@devicescript/i2c"
+import { readSetting } from "@devicescript/settings"
 
 function debug(msg: string) {
     console.debug(`notes> ` + msg)
@@ -33,8 +35,32 @@ export interface HubRequest extends Request {
         | "hub.log"
 }
 
-export interface CardRequest extends Request {
-    req: "card.version"
+export type EnvCommands = "get"
+
+export interface EnvRequest extends Request {
+    req: `env.${EnvCommands}`
+}
+
+export interface EnvGetRequest extends EnvRequest {
+    req: "env.get"
+    name: string
+    time?: number
+}
+
+export interface EnvGetResponse extends Response {
+    text: string
+    time: number
+}
+
+export interface EnvGetMultipleRequest extends EnvRequest {
+    req: "env.get"
+    names: string[]
+    time?: number
+}
+
+export interface EnvGetMultipleResponse extends Response {
+    body: Record<string, string>
+    time: number
 }
 
 /**
@@ -97,7 +123,9 @@ export type Requests =
     | HubSetRequest
     | NoteRequest
     | NoteAddRequest
-    | CardRequest
+    | EnvRequest
+    | EnvGetRequest
+    | EnvGetMultipleRequest
 
 /**
  * Default 0x17 I2c address of notecard
@@ -121,7 +149,7 @@ export function requestQueueLength() {
 /**
  * Sends a request to the notecard over i2c
  */
-export async function request(req: Requests): Promise<Response> {
+export async function request<T extends Requests>(req: T): Promise<Response> {
     if (!req || !req.req) {
         debug(`invalid request`)
         return undefined
@@ -160,6 +188,7 @@ async function internalRequest(req: Request): Promise<Response> {
 
     // data poll
     const res = await receive()
+    if (!res) return { err: "i2c timeout" }
     const rstr = res.toString()
     // debug(`resp: ${rstr}`)
     let r: Response
@@ -196,7 +225,8 @@ function encode(req: Request): Buffer {
 
 async function receive(): Promise<Buffer> {
     let sz = Buffer.alloc(2)
-    while (sz !== undefined && sz[0] === 0 && sz[1] === 0) {
+    let retry = 20
+    while (sz !== undefined && sz[0] === 0 && sz[1] === 0 && retry-- > 0) {
         await delay(25)
         sz = await query()
     }
@@ -270,16 +300,41 @@ async function send(buf: Buffer): Promise<number> {
 }
 
 /**
- * Sends a log message to the hub
- * @param text message to send
+ * Initial connection to the nodecard and configures the product, serial number.
+ *
+ * The product and serial are read from arguments, or settings (BLUES_PID, BLUES_SN).
+ * If not provided, the serial number is `dev:device id`.
+ * @param options optional overrides
  */
-export async function log(text: string) {
-    await request(<HubLogRequest>{
-        req: "hub.log",
-        text,
+export async function init(options?: { product?: string; sn?: string }) {
+    const product = options?.product || (await readSetting("BLUES_PID"))
+    const sn =
+        options?.sn ||
+        (await readSetting("BLUES_SN")) ||
+        "devs:" + deviceIdentifier("self")
+    await request(<HubSetRequest>{
+        req: "hub.set",
+        product,
+        sn,
     })
 }
 
-//console.log(await request({ req: "hub.status" }))
-console.log(await request(<CardRequest>{ req: "card.version" }))
-await log("hello for devicescript")
+await init()
+await request(<HubSetRequest>{
+    req: "hub.set",
+    mode: "continuous",
+    sync: true,
+})
+
+let i = 0
+while (true) {
+    await delay(5000)
+    await request<HubLogRequest>({ req: "hub.log", text: "counter: " + i })
+    await request(<NoteAddRequest>{
+        req: "note.add",
+        body: {
+            i,
+        },
+    })
+    console.log(await request({ req: "hub.status" }))
+}
