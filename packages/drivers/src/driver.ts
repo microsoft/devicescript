@@ -1,5 +1,5 @@
-import { AsyncValue, I2C, isSimulator, millis, sleep } from "@devicescript/core"
-import { i2c } from "@devicescript/i2c"
+import { AsyncValue, isSimulator, millis, sleep } from "@devicescript/core"
+import { i2c, I2C } from "@devicescript/i2c"
 import { DriverError, throttle } from "./core"
 
 export interface I2CDriverOptions {

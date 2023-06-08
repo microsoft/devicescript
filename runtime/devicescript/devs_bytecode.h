@@ -264,7 +264,7 @@
 #define DEVS_BUILTIN_OBJECT_IMAGE 40
 #define DEVS_BUILTIN_OBJECT_IMAGE_PROTOTYPE 41
 
-#define DEVS_BUILTIN_STRING___MAX 204
+#define DEVS_BUILTIN_STRING___MAX 205
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -470,6 +470,7 @@
 #define DEVS_BUILTIN_STRING_FILLCIRCLE 202
 #define DEVS_BUILTIN_STRING_BLITROW 203
 #define DEVS_BUILTIN_STRING_BLIT 204
+#define DEVS_BUILTIN_STRING__I2CTRANSACTION 205
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -518,7 +519,7 @@
         "data", "toUpperCase", "toLowerCase", "indexOf", "byteLength", "Image", "width", "height", \
         "bpp", "get", "clone", "set", "fill", "flipX", "flipY", "transposed", "drawImage",         \
         "drawTransparentImage", "overlapsWith", "fillRect", "drawLine", "equals", "isReadOnly",    \
-        "fillCircle", "blitRow", "blit"
+        "fillCircle", "blitRow", "blit", "_i2cTransaction"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \

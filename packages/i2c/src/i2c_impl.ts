@@ -9,52 +9,115 @@ export class I2CError extends Error {
     }
 }
 
-ds.I2C.prototype.xfer = async function (
-    this: ds.I2C,
-    address: number,
-    writeBuf: Buffer,
-    numRead: number
-): Promise<Buffer> {
-    const self = this
-    const pkt = await ds.actionReport(
-        self,
-        "transaction",
-        async () => await self.transaction(address, numRead, writeBuf)
-    )
-    const [status, buffer] = pkt.decode()
-
-    if (status !== ds.I2CStatus.OK)
-        throw new I2CError(
-            `I2C error dev=${address}: write ${writeBuf}, read ${numRead} B`,
-            status
-        )
-
-    return buffer
+type DsI2C = typeof ds & {
+    _i2cTransaction(
+        addr: number,
+        wrbuf: Buffer,
+        rdbuf?: Buffer
+    ): Promise<number>
 }
 
-ds.I2C.prototype.writeReg = async function (devAddr, regAddr, byte) {
-    await this.xfer(devAddr, Buffer.from([regAddr, byte]), 0)
-}
+export class I2C {
+    /**
+     * Execute I2C transaction
+     * @param devAddr a 7 bit i2c address
+     * @param writeBuf the value to write
+     * @param numRead number of bytes to read afterwards
+     * @returns a buffer `numRead` bytes long
+     */
+    async xfer(
+        devAddr: number,
+        writeBuf: Buffer,
+        numRead?: number
+    ): Promise<Buffer> {
+        const rdbuf = numRead ? Buffer.alloc(numRead) : undefined
+        const rc = await (ds as DsI2C)._i2cTransaction(devAddr, writeBuf, rdbuf)
+        if (rc !== 0)
+            throw new I2CError(
+                `I2C error dev=${devAddr}: write ${writeBuf}, read ${numRead} B`,
+                rc
+            )
+        return rdbuf || hex``
+    }
 
-ds.I2C.prototype.readReg = async function (devAddr, regAddr) {
-    return (await this.xfer(devAddr, Buffer.from([regAddr]), 1))[0]
-}
+    /**
+     * Write a byte to a register
+     * @param devAddr a 7 bit i2c address
+     * @param regAddr an 8 bit register address
+     * @param byte the value to write
+     * @throws I2CError
+     */
+    async writeReg(
+        devAddr: number,
+        regAddr: number,
+        byte: number
+    ): Promise<void> {
+        await this.xfer(devAddr, Buffer.from([regAddr, byte]))
+    }
 
-ds.I2C.prototype.writeRegBuf = async function (devAddr, regAddr, b) {
-    const nb = Buffer.alloc(1 + b.length)
-    nb[0] = regAddr
-    nb.blitAt(1, b, 0, b.length)
-    await this.xfer(devAddr, nb, 0)
-}
+    /**
+     * read a byte from a register
+     * @param devAddr a 7 bit i2c address
+     * @param regAddr an 8 bit register address
+     * @returns a byte
+     * @throws I2CError
+     */
+    async readReg(devAddr: number, regAddr: number): Promise<number> {
+        return (await this.xfer(devAddr, Buffer.from([regAddr]), 1))[0]
+    }
 
-ds.I2C.prototype.readRegBuf = async function (devAddr, regAddr, size) {
-    return await this.xfer(devAddr, Buffer.from([regAddr]), size)
-}
+    /**
+     * write a buffer to a register
+     * @param devAddr a 7 bit i2c address
+     * @param regAddr an 8 bit register address
+     * @param b a byte buffer
+     * @throws I2CError
+     */
+    async writeRegBuf(
+        devAddr: number,
+        regAddr: number,
+        b: Buffer
+    ): Promise<void> {
+        const nb = Buffer.alloc(1 + b.length)
+        nb[0] = regAddr
+        nb.blitAt(1, b, 0, b.length)
+        await this.xfer(devAddr, nb)
+    }
 
-ds.I2C.prototype.readBuf = async function (devAddr, size) {
-    return await this.xfer(devAddr, hex``, size)
-}
+    /**
+     * read a buffer from a register
+     * @param devAddr a 7 bit i2c address
+     * @param regAddr an 8 bit register address
+     * @param size the number of bytes to request
+     * @returns a byte buffer
+     * @throws I2CError
+     */
+    async readRegBuf(
+        devAddr: number,
+        regAddr: number,
+        size: number
+    ): Promise<Buffer> {
+        return await this.xfer(devAddr, Buffer.from([regAddr]), size)
+    }
 
-ds.I2C.prototype.writeBuf = async function (devAddr, b) {
-    return await this.xfer(devAddr, b, 0)
+    /**
+     * read a raw buffer
+     * @param devAddr a 7 bit i2c address
+     * @param size the number of bytes to request
+     * @returns a byte buffer
+     * @throws I2CError
+     */
+    async readBuf(devAddr: number, size: number): Promise<Buffer> {
+        return await this.xfer(devAddr, hex``, size)
+    }
+
+    /**
+     * write a raw buffer
+     * @param devAddr a 7 bit i2c address
+     * @param b a byte buffer
+     * @throws I2CError
+     */
+    async writeBuf(devAddr: number, b: Buffer): Promise<void> {
+        await this.xfer(devAddr, b)
+    }
 }
