@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.10.10](https://github.com/microsoft/devicescript/compare/v2.10.9...v2.10.10)
+
+> 8 June 2023
+
+- Minor Style fixes no section 5. [`#453`](https://github.com/microsoft/devicescript/pull/453)
+- updated docs on custom packages [`83f1bad`](https://github.com/microsoft/devicescript/commit/83f1bad5f62a9a43280d18035a5141d8d0580e6b)
+- stabler serial connection [`0d33b15`](https://github.com/microsoft/devicescript/commit/0d33b15d80a6e7d0167691707856147f144d05cc)
+- add github action file for npm package [`bec68be`](https://github.com/microsoft/devicescript/commit/bec68bea45b9f7fdfdd5a9089c59dd453fda212e)
+
 #### [v2.10.9](https://github.com/microsoft/devicescript/compare/v2.10.8...v2.10.9)
 
 > 7 June 2023
@@ -75,7 +84,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - add option to add settings, tests in wand [`#436`](https://github.com/microsoft/devicescript/pull/436)
 - tcp/tls sockets for wasm [`73b688e`](https://github.com/microsoft/devicescript/commit/73b688ef36e8dfa80912a5074723bf6452799ec2)
 - add observable timestamp operator [`0f4bf61`](https://github.com/microsoft/devicescript/commit/0f4bf6195f2fed6593ee28bec107f6a74ecaf59a)
-- add support for fetch body [`f80cf1e`](https://github.com/microsoft/devicescript/commit/f80cf1ea56e4a50f516b5fea3b85a9d489c18a3d)
+- more aggressive GC; 2.10.1 [`fbefb8d`](https://github.com/microsoft/devicescript/commit/fbefb8d851e77b3b5502e2546beaf6312cbf2d07)
 
 #### [v2.10.0](https://github.com/microsoft/devicescript/compare/v2.9.16...v2.10.0)
 
@@ -251,8 +260,8 @@ All notable changes to this project will be documented in this file. Dates are d
 > 28 April 2023
 
 - fixes around frame sending [`81547c8`](https://github.com/microsoft/devicescript/commit/81547c8e5ed6bc861b15c9f4961b8de4c5241774)
-- bump jd-c; 2.8.2 [`22a66ff`](https://github.com/microsoft/devicescript/commit/22a66fff6381a5ed8bf5deca5de723480b9ccfc5)
 - use new jd_need_to_send() [`92620b0`](https://github.com/microsoft/devicescript/commit/92620b06e3f23b4b637b91c06d4dce6fb67491fa)
+- bump jd-c; 2.8.2 [`22a66ff`](https://github.com/microsoft/devicescript/commit/22a66fff6381a5ed8bf5deca5de723480b9ccfc5)
 
 #### [v2.8.1](https://github.com/microsoft/devicescript/compare/v2.8.0...v2.8.1)
 
@@ -379,7 +388,7 @@ All notable changes to this project will be documented in this file. Dates are d
 
 - initial work on UTF8 strings [`747d802`](https://github.com/microsoft/devicescript/commit/747d802196ff62d07bfae199fcfdb1865efaf4f6)
 - Add String.join() [`487f1ee`](https://github.com/microsoft/devicescript/commit/487f1ee2f351d1de4620f963d360303a9e2f04e3)
-- Add String.fromCharCode() [`6d427f0`](https://github.com/microsoft/devicescript/commit/6d427f07c80e99d518832c3f0d6e77fe8c3011be)
+- add unicode test from pxt [`402c3d6`](https://github.com/microsoft/devicescript/commit/402c3d6bb89b9d5e2278051cc76cd52a8a68a686)
 
 #### [v2.4.4](https://github.com/microsoft/devicescript/compare/v2.4.3...v2.4.4)
 
@@ -564,9 +573,9 @@ All notable changes to this project will be documented in this file. Dates are d
 > 28 March 2023
 
 - fix: add json5 [`#186`](https://github.com/microsoft/devicescript/pull/186)
-- ds.reboot()-&gt;ds.restart(); ds.reboot() now reboots [`e43fd0a`](https://github.com/microsoft/devicescript/commit/e43fd0a2a0c08798879cb3f1a04eea71f0c8561b)
 - corrrectly display data [`832aae0`](https://github.com/microsoft/devicescript/commit/832aae028933953bf43921f043e0144ea533224e)
 - save file to 'data', normalize time to seconds [`0482692`](https://github.com/microsoft/devicescript/commit/0482692d707278c351bed7eead5e59511aae6fe0)
+- ds.reboot()-&gt;ds.restart(); ds.reboot() now reboots [`e43fd0a`](https://github.com/microsoft/devicescript/commit/e43fd0a2a0c08798879cb3f1a04eea71f0c8561b)
 
 #### [v2.2.12](https://github.com/microsoft/devicescript/compare/v2.2.11...v2.2.12)
 
@@ -664,8 +673,8 @@ All notable changes to this project will be documented in this file. Dates are d
 > 23 March 2023
 
 - Settings [`#251`](https://github.com/microsoft/devicescript/pull/251)
-- use fiber suspend in setTimeout(); v2.2.0 [`ba3b780`](https://github.com/microsoft/devicescript/commit/ba3b780c61f778ee2c69f8b76970e6efcb1deb80)
 - don't run git commands if no .git folder [`830bceb`](https://github.com/microsoft/devicescript/commit/830bcebeaa7a3e371a247f661206cd4e1e478fe8)
+- use fiber suspend in setTimeout(); v2.2.0 [`ba3b780`](https://github.com/microsoft/devicescript/commit/ba3b780c61f778ee2c69f8b76970e6efcb1deb80)
 - implement debug pause button [`4fbe25d`](https://github.com/microsoft/devicescript/commit/4fbe25d6403d63bac535f0957bdce8623c7b0c18)
 
 #### [v2.1.0](https://github.com/microsoft/devicescript/compare/v2.0.9...v2.1.0)
