@@ -46,8 +46,14 @@ From the CLI, run `devs add settings`.
 
 :::
 
+## Special Settings
 
-### Using settings
+Some settings entries are treaty specially and routed to other services:
+
+-   `WIFI_SSID`: set the WiFi SSID to connect to
+-   `WIFI_PWD`: set the WiFi password (skip or leave empty to connect to open WiFi)
+
+## Using settings
 
 Once your .env files are ready, you can use `readSetting` and `writeSetting` to read/write settings.
 
@@ -71,7 +77,7 @@ temperature.reading.subscribe(t => {
 
 // increase threshold when button is pressed
 button.down.subscribe(async () => {
-    threshold++;
+    threshold++
     // highlight-next-line
     await writeSetting("temperature", threshold)
 })

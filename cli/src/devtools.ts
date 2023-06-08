@@ -22,6 +22,8 @@ import {
     serializeToTrace,
     SRV_DEVICE_SCRIPT_MANAGER,
     SRV_SETTINGS,
+    Transport,
+    TRANSPORT_ERROR,
 } from "jacdac-ts"
 import { deployToService } from "./deploy"
 import { open, readFile } from "fs/promises"
@@ -80,6 +82,15 @@ function loadProjectServiceSpecifications() {
         )
 }
 
+function transportError(ev: {
+    transport: Transport
+    context: string
+    exception: any
+}) {
+    error(`${ev.transport.type} error: ${ev.exception?.message || ev.context}`)
+    if (ev.exception && Flags.diagnostics) console.debug(ev.exception)
+}
+
 export async function devtools(
     fn: string | undefined,
     options: DevToolsOptions & BuildOptions & TransportsOptions = {}
@@ -122,6 +133,7 @@ export async function devtools(
 
     bus.passive = false
     bus.on(ERROR, e => error(e))
+    bus.on(TRANSPORT_ERROR, transportError)
     bus.on(FRAME_PROCESS, (frame: JDFrameBuffer) => {
         if (traceFd)
             traceFd.write(

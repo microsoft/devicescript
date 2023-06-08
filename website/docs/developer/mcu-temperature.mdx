@@ -1,0 +1,21 @@
+---
+sidebar_position: 10.5
+---
+
+# MCU Temperature
+
+Microcontrollers typically have a temperature sensor built in. This is a great way to monitor the temperature of the MCU itself.
+The temperature sensor is not very accurate, but it is good enough to detect if the MCU is overheating.
+
+The `mcuTemperature` function returns the temperature in degrees Celsius.
+
+```ts
+import { mcuTemperature } from "@devicescript/runtime"
+
+setInterval(async () => {
+    const temp = await mcuTemperature()
+    console.log({ temp })
+}, 1000)
+```
+
+The simulator temperature is alwasy 21 degrees Celsius.

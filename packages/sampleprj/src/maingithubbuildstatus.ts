@@ -1,6 +1,7 @@
+import { pins, board } from "@dsboard/adafruit_qt_py_c3"
 import { readSetting } from "@devicescript/settings"
 import { fetch } from "@devicescript/net"
-import { setStatusLight } from "@devicescript/runtime"
+import { schedule, setStatusLight } from "@devicescript/runtime"
 
 // read configuration from ./env.defaults
 const owner = await readSetting("GITHUB_OWNER")
@@ -30,21 +31,24 @@ setInterval(async () => {
 }, 500)
 
 // query github every minute
-setInterval(async () => {
-    const res = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/status`,
-        {
-            headers: {
-                Accept: "application/vnd.github+json",
-                Authorization: token ? `Bearer ${token}` : undefined,
-                "X-GitHub-Api-Version": "2022-11-28",
-            },
-        }
-    )
-    console.log({ status: res.status })
-    if (res.status === 200) {
-        const json = await res.json()
-        state = json.state
-        console.log({ state })
-    } else state = "error"
-}, 60000)
+schedule(
+    async () => {
+        const res = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/commits/${ref}/status`,
+            {
+                headers: {
+                    Accept: "application/vnd.github+json",
+                    Authorization: token ? `Bearer ${token}` : undefined,
+                    "X-GitHub-Api-Version": "2022-11-28",
+                },
+            }
+        )
+        console.log({ status: res.status })
+        if (res.status === 200) {
+            const json = await res.json()
+            state = json.state
+            console.log({ state })
+        } else state = "error"
+    },
+    { timeout: 1000, interval: 60000 }
+)

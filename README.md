@@ -16,6 +16,10 @@ https://user-images.githubusercontent.com/4175913/228997575-122d6ad0-f37e-4d4e-a
 
 Contributions are welcome! See [contributing page](./CONTRIBUTING.md).
 
+<a href="https://github.com/microsoft/devicescript/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=microsoft/devicescript" />
+</a>
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft

@@ -1,0 +1,28 @@
+---
+sidebar_position: 2.5
+---
+
+# Status Light Blinky
+
+Many boards have integrated status LED that can be controlled using the `setStatusLight` function.
+
+It's important to remember that the status LED is also used by DeviceScript to
+indicate the status of the runtime, like a short red blink every half second.
+So your color will get overriden by the system colors.
+Therefore, keep your blinks short.
+
+```ts
+import { delay } from "@devicescript/core"
+import { setStatusLight } from "@devicescript/runtime"
+
+setInterval(async () => {
+    // red
+    await setStatusLight(0x100000)
+    // wait 0.5s
+    await delay(400)
+    // blue
+    await setStatusLight(0x000010)
+    // wait 0.5s
+    await delay(400)
+}, 1)
+```

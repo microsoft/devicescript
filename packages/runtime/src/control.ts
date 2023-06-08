@@ -1,4 +1,4 @@
-import { Control } from "@devicescript/core"
+import { Control, isSimulator } from "@devicescript/core"
 
 let _ctrl: Control
 /**
@@ -40,4 +40,16 @@ export async function setStatusLight(color: number): Promise<void> {
 export async function uptime() {
     const ctrl = currentControl()
     return await ctrl.uptime.read()
+}
+
+/**
+ * Reads the onboard temperature sensor if any.
+ * @returns temperature in celcius (°C); undefined if sensor is not available.
+ */
+export async function mcuTemperature() {
+    if (isSimulator()) return 21
+    else {
+        const ctrl = currentControl()
+        return await ctrl.mcuTemperature.read()
+    }
 }

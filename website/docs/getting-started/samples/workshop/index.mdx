@@ -1,8 +1,4 @@
----
-sidebar_position: 1000
----
-
-# DeviceScript Workshop
+# Workshop
 
 Leverage your TypeScript skills to program electronics using [DeviceScript](https://microsoft.github.io/devicescript/).
 
@@ -168,13 +164,16 @@ setInterval(async () => {
     // read humidity sensor data
     // improvements: what about filtering?
     const h = await humidity.reading.read()
-    // buzz if humidity goes above 80%
-    if (h > 80) await buzzer.playNote(440, 0.5, 500)
-
-    // show red on LEDs if humidity goes above 80%
-    if (h > 80) await setStatusLight(0xff0000)
-    // otherwise turn off
-    else await setStatusLight(0)
+    // if humidity goes above threshold (80%)
+    const humidityThreshold = 80
+    if (h > humidityThreshold)  {
+        // buzz and turn the board LED red
+        await buzzer.playNote(440, 0.5, 500)
+        await setStatusLight(0xff0000)
+    } else {
+        // otherwise turn the LED off
+        await setStatusLight(0) 
+    }
 }, 1000)
 ```
 
@@ -304,12 +303,3 @@ schedule(
 ```
 
 Memory is limited! Be careful about using Web APIs that return huge payloads as you will surely run out of memory...
-
-## Resources
-
--   Session Recording
--   [DeviceScript Documentation](https://microsoft.github.io/devicescript/)
-
-## Content Owner
-
-Contact [Peli de Halleux](mailto:jhalleux@microsoft.com)
