@@ -161,6 +161,23 @@ export declare class Image {
      * Returns an image rotated by -90, 0, 90, 180, 270 deg clockwise
      */
     rotated(deg: number): Image
+
+    /**
+     * Draw text on image with specified top-left position
+     */
+    print(text: string, x: number, y: number, color?: number, font?: Font): void
+
+    /**
+     * Draw text in the center of image at given `y` position.
+     */
+    printCenter(text: string, y: number, color?: number, font?: Font): void
+}
+
+export interface Font {
+    charWidth: number
+    charHeight: number
+    data: Buffer
+    multiplier?: number
 }
 
 Image.prototype.drawCircle = function (
@@ -241,4 +258,3 @@ Image.prototype.rotated = function (deg: number): Image {
 export function img(lits: any, ...args: any[]): Image {
     return null
 }
-

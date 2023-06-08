@@ -88,7 +88,7 @@ static void img_clamp(devs_gimage_t *r, int *x, int *y) {
     if (*y < 0)
         *y = 0;
     if (*y >= r->height)
-        *x = r->height - 1;
+        *y = r->height - 1;
 }
 
 static bool img_in_range(devs_gimage_t *r, int x, int y) {
