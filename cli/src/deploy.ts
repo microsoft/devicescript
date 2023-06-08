@@ -62,12 +62,13 @@ export async function deploySettingsToService(
         const wifis = settingsService.device.services({
             serviceClass: SRV_WIFI,
         })
+        const ssid = JSON.parse(Buffer.from(WIFI_SSID).toString("utf-8"))
+        const pwd = JSON.parse(
+            WIFI_PWD ? Buffer.from(WIFI_PWD).toString("utf-8") : '""'
+        )
         for (const wifi of wifis) {
             console.debug(`deploying wifi credentials`)
-            await wifi.sendCmdPackedAsync(WifiCmd.AddNetwork, [
-                WIFI_SSID,
-                WIFI_PWD || "",
-            ])
+            await wifi.sendCmdPackedAsync(WifiCmd.AddNetwork, [ssid, pwd], true)
         }
     }
 }
