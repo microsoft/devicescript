@@ -1,3 +1,4 @@
+import { errors } from "./errors"
 import {
     DebugInfo,
     FunctionDebugInfo,
@@ -19,6 +20,8 @@ export interface StackFrame {
     srcpos: SrcLocation
     fn: FunctionDebugInfo
 }
+
+const errorsRx = new RegExp(Object.keys(errors).join("|"), "gi")
 
 export function parseStackFrame(dbgInfo: DebugInfo, line: string) {
     const resolver = dbgInfo ? SrcMapResolver.from(dbgInfo) : undefined
@@ -54,6 +57,10 @@ export function parseStackFrame(dbgInfo: DebugInfo, line: string) {
         .replace(/at\s+(\w*)_F(\d+)\s+\(pc:(\d+)\)/g, (_, fnName, fnIdx, pc) =>
             expand(pc, fnName, fnIdx)
         )
+        .replace(errorsRx, name => {
+            const id = errors[name]
+            return `${name} (https://microsoft.github.io/devicescript/developer/errors/#${id})`
+        })
     return { markedLine, frames }
 }
 

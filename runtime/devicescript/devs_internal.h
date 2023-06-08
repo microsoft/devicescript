@@ -168,6 +168,10 @@ struct devs_ctx {
     uint32_t _logged_now;
 
     uint32_t fiber_handle_tag;
+    uint32_t send_pkt_throttle;
+
+    uint32_t num_throttled_pkts;
+    uint32_t last_warning;
 
     devs_gc_t *gc;
 
@@ -266,6 +270,7 @@ unsigned devs_fiber_get_max_sleep(devs_ctx_t *ctx);
 
 // vm_main.c
 void devs_vm_exec_opcodes(devs_ctx_t *ctx);
+bool devs_in_vm_loop(devs_ctx_t *ctx);
 uint8_t devs_fetch_opcode(devs_activation_t *frame, devs_ctx_t *ctx);
 
 int devs_vm_set_breakpoint(devs_ctx_t *ctx, unsigned pc, unsigned flags);
@@ -299,6 +304,7 @@ devs_map_t *devs_get_spec_proto(devs_ctx_t *ctx, uint32_t spec_idx);
 // for impl_*.c
 bool devs_arg_bool(devs_ctx_t *ctx, unsigned idx);
 int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx);
+int32_t devs_arg_int_defl(devs_ctx_t *ctx, unsigned idx, int32_t defl);
 double devs_arg_double(devs_ctx_t *ctx, unsigned idx);
 const char *devs_arg_utf8_with_conv(devs_ctx_t *ctx, unsigned idx, unsigned *sz);
 static inline value_t devs_arg(devs_ctx_t *ctx, unsigned idx) {
@@ -314,13 +320,16 @@ void devs_ret_int(devs_ctx_t *ctx, int v);
 void devs_ret_bool(devs_ctx_t *ctx, bool v);
 void devs_ret_gc_ptr(devs_ctx_t *ctx, void *v);
 static inline void devs_ret(devs_ctx_t *ctx, value_t v) {
-    ctx->curr_fiber->ret_val = v;
+    // curr_fiber might be reset by panic; we don't want to crash
+    if (ctx->curr_fiber)
+        ctx->curr_fiber->ret_val = v;
 }
 
 static inline bool devs_did_yield(devs_ctx_t *ctx) {
     return ctx->curr_fiber == NULL;
 }
 void devs_setup_resume(devs_fiber_t *f, devs_resume_cb_t cb, void *userdata);
+int devs_clamp_size(int v, int max);
 
 static inline devs_role_t *devs_role(devs_ctx_t *ctx, unsigned roleidx) {
     if (roleidx < ctx->num_roles)
@@ -358,3 +367,5 @@ const devs_function_desc_t *devs_function_by_pc(devs_ctx_t *ctx, unsigned pc);
 void devs_dump_stack(devs_ctx_t *ctx, value_t stack);
 void devs_dump_exception(devs_ctx_t *ctx, value_t exn);
 void devs_track_exception(devs_ctx_t *ctx);
+
+#define DEVS_CHECK_CTX_FREE(ctx) JD_ASSERT(!devs_in_vm_loop(ctx))

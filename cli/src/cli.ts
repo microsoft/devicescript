@@ -6,7 +6,7 @@ import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
 import { devtools } from "./devtools"
 import { disasm } from "./disasm"
-import { addNpm, addService, addSim, addTest, init } from "./init"
+import { addNpm, addService, addSettings, addSim, addTest, init } from "./init"
 import { logParse } from "./logparse"
 import { runScript } from "./run"
 import { compileFlagHelp } from "@devicescript/compiler"
@@ -261,8 +261,17 @@ export async function mainCli() {
         if (!arch) {
             r.option("-b, --board <board-id>", "specify board to flash")
             r.option("--once", "do not wait for the board to be connected")
-            r.option("-r, --refresh", "discard cached firmware image, even if less than 24h old")
+            r.option(
+                "-r, --refresh",
+                "discard cached firmware image, even if less than 24h old"
+            )
+            r.option("-C, --clean", "remove all settings, user program, and firmware instead of flashing")
         }
+        r.option(
+            "--install",
+            "automatically install missing flashing utilities. For ESP32, if 'esptool' is missing, run `py -m pip install esptool`"
+        )
+        .option("--python <path>", "path to the python executable")
         r.addHelpText("after", () => {
             setupFlashBoards()
             return `\nAvailable boards:\n` + boardNames(arch)
@@ -334,13 +343,17 @@ export async function mainCli() {
             "-n, --name <service-name>",
             "name of new service (required, example 'Light Level')"
         )
-        .description("add a custom Jacdac service")
+        .description("add a custom service")
         .action(dropReturn(addService))
 
     addCommand("npm")
         .option("--license <string>", "set the license", "MIT")
-        .description("make current project into an NPM library")
+        .description("make current project into an NPM package")
         .action(dropReturn(addNpm))
+
+    addCommand("settings")
+        .description("add .env files to store settings and secrets")
+        .action(dropReturn(addSettings))
 
     addCommand("test")
         .description("add tests to current project")

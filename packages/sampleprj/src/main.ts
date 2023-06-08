@@ -1,5 +1,6 @@
 import { subscribeMessage, publishMessage } from "@devicescript/cloud"
 
+console.log("loopback rx ovf")
 setInterval(async () => {
     const data = {
         temp: 20 + Math.random() / 10,

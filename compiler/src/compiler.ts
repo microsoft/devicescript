@@ -1,5 +1,6 @@
 import * as ts from "typescript"
 import { SyntaxKind as SK } from "typescript"
+import { parseToSettings } from "./dotenv"
 
 import {
     stringToUint8Array,
@@ -84,6 +85,7 @@ import {
     ResolvedBuildConfig,
     ProgramConfig,
     PkgJson,
+    JSON5TryParse,
 } from "@devicescript/interop"
 import { BaseServiceConfig } from "@devicescript/srvcfg"
 import { jsonToDcfg, serializeDcfg } from "./dcfg"
@@ -102,6 +104,12 @@ export const DEVS_BYTECODE_FILE = `${DEVS_FILE_PREFIX}.devs`
 export const DEVS_LIB_FILE = `${DEVS_FILE_PREFIX}-lib.json`
 export const DEVS_DBG_FILE = `${DEVS_FILE_PREFIX}-dbg.json`
 export const DEVS_SIZES_FILE = `${DEVS_FILE_PREFIX}-sizes.md`
+
+export const TSDOC_PART = "devsPart"
+export const TSDOC_SERVICES = "devsServices"
+export const TSDOC_START = "devsStart"
+export const TSDOC_GPIO = "devsGPIO"
+export const TSDOC_WHEN_USED = "devsWhenUsed"
 
 const coreModule = "@devicescript/core"
 
@@ -526,7 +534,7 @@ interface PossiblyConstDeclaration extends ts.Declaration {
     __ds_const_val?: Folded
 }
 
-export function getSymTags(sym: ts.Symbol, pref = "ds-") {
+export function getSymTags(sym: ts.Symbol, pref = "devs") {
     const tags: Record<string, string> = {}
     for (const tag of sym?.getJsDocTags() ?? []) {
         if (tag.name.startsWith(pref)) {
@@ -890,7 +898,7 @@ class Program implements TopOpWriter {
         }
 
         const tags = getSymTags(this.getSymAtLocation(node))
-        const gpio = parseInt(tags["ds-gpio"])
+        const gpio = parseInt(tags[TSDOC_GPIO])
         if (!isNaN(gpio)) return gpio
 
         throwError(node, `expecting JSON literal here`)
@@ -924,7 +932,7 @@ class Program implements TopOpWriter {
         if (!nn) return undefined
 
         const tags = getSymTags(sym)
-        const dsstart = tags["ds-start"]
+        const dsstart = tags[TSDOC_START]
         if (dsstart) {
             let sinfo: BaseServiceConfig
             try {
@@ -940,7 +948,7 @@ class Program implements TopOpWriter {
                     sinfo.name = str
                 }
                 return this.startServer(expr, sinfo)
-            } else throwError(expr, "invalid @ds-start tag")
+            } else throwError(expr, `invalid @${TSDOC_START} tag`)
         }
 
         if (nn.startsWith(startServerPref)) {
@@ -1818,6 +1826,8 @@ class Program implements TopOpWriter {
     private emitClassDeclaration(stmt: ts.ClassDeclaration) {
         const fdecl = this.getCellAtLocation(stmt) as FunctionDecl
         assert(fdecl instanceof FunctionDecl)
+        const classTags = getSymTags(this.getSymAtLocation(stmt))
+        const whenUsed = classTags[TSDOC_WHEN_USED] !== undefined
 
         let numCtorArgs: number = null
 
@@ -1844,8 +1854,11 @@ class Program implements TopOpWriter {
                 }
                 if (info.methodName == "toString") this.toStringError(mem)
                 this.protoDefinitions.push(info)
-                // TODO make this conditional, see https://github.com/microsoft/devicescript/issues/332
-                this.markMethodUsed(info.names[0])
+                if (whenUsed || tags[TSDOC_WHEN_USED] !== undefined) {
+                    // skip marking as used
+                } else {
+                    this.markMethodUsed(info.names[0])
+                }
             } else if (ts.isConstructorDeclaration(mem)) {
                 numCtorArgs = mem.parameters.length
             } else if (ts.isPropertyDeclaration(mem) && this.isStatic(mem)) {
@@ -2884,7 +2897,7 @@ class Program implements TopOpWriter {
 
     private emitBuiltInConst(expr: ts.Expression) {
         const tags = getSymTags(this.getSymAtLocation(expr))
-        const gpio = parseInt(tags["ds-gpio"])
+        const gpio = parseInt(tags[TSDOC_GPIO])
         if (!isNaN(gpio)) {
             const wr = this.writer
             wr.emitCall(this.dsMember("gpio"), literal(gpio))
@@ -4237,9 +4250,59 @@ class Program implements TopOpWriter {
         this.host.write(DEVS_LIB_FILE, JSON.stringify(lib, null, 1))
     }
 
+    private readFile(fileName: string) {
+        try {
+            return this.host.read(fileName)
+        } catch (e) {
+            return undefined
+        }
+    }
+
+    private readSettings(): Record<string, Uint8Array> {
+        try {
+            const MAX_SETTING_NAME_LENGTH = 14
+            const envDefaults = parseToSettings(
+                this.readFile("./.env.defaults"),
+                false
+            )
+            const d = Object.keys(envDefaults).find(
+                k => k.length > MAX_SETTING_NAME_LENGTH
+            )
+            if (d)
+                this.printDiag(
+                    mkDiag(
+                        "./.env.defaults",
+                        `setting name '${d}' too long (max ${MAX_SETTING_NAME_LENGTH} chars)`
+                    )
+                )
+            const envLocal = parseToSettings(
+                this.readFile("./.env.local"),
+                true
+            )
+            const l = Object.keys(envDefaults).find(
+                k => k.length > MAX_SETTING_NAME_LENGTH
+            )
+            if (l)
+                this.printDiag(
+                    mkDiag(
+                        "./.env.local",
+                        `setting name '${d}' too long (max ${
+                            MAX_SETTING_NAME_LENGTH - 1
+                        } chars)`
+                    )
+                )
+
+            const settings = { ...envDefaults, ...envLocal }
+            return settings
+        } catch (e) {
+            return undefined
+        }
+    }
+
     emit(): CompilationResult {
         assert(!this.tree)
 
+        const settings = this.readSettings()
         const ast = buildAST(
             this.mainFileName,
             this.host,
@@ -4252,7 +4315,7 @@ class Program implements TopOpWriter {
                     this.printDiag(
                         mkDiag(
                             fn,
-                            `missing "devicescript" section; please use 'devs add npm' on your package`
+                            `missing "devicescript" section; please use 'npm run devicescript add npm' on your package`
                         )
                     )
                     return false
@@ -4319,6 +4382,7 @@ class Program implements TopOpWriter {
             usedFiles: ast.usedFiles(),
             diagnostics: this.diagnostics,
             config: this.host.getConfig(),
+            settings,
         }
     }
 }
@@ -4330,6 +4394,7 @@ export interface CompilationResult {
     usedFiles: string[]
     diagnostics: DevsDiagnostic[]
     config?: ResolvedBuildConfig
+    settings?: Record<string, Uint8Array>
 }
 
 /**

@@ -1,7 +1,7 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "2.9.13",
+    "version": "2.10.9",
     "publisher": "devicescript",
     "description": "Professional TypeScript for microcontrollers.",
     "author": {
@@ -381,7 +381,12 @@
                     "group": "inline"
                 },
                 {
-                    "command": "extension.devicescript.jdom.devicescript.toggle",
+                    "command": "extension.devicescript.jdom.devicescript.start",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_devicescript",
+                    "group": "inline"
+                },
+                {
+                    "command": "extension.devicescript.jdom.devicescript.stop",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_devicescript",
                     "group": "inline"
                 },
@@ -398,6 +403,11 @@
                 {
                     "command": "extension.devicescript.jdom.wifi.ap.setPriority",
                     "when": "view == extension.devicescript.jdom && viewItem == devs_wifi_ap_known"
+                },
+                {
+                    "command": "extension.devicescript.jdom.settings.clear",
+                    "when": "view == extension.devicescript.jdom && viewItem == devs_settings",
+                    "group": "inline"
                 },
                 {
                     "command": "extension.devicescript.watch.add",
@@ -511,6 +521,10 @@
                     "when": "workbenchState != empty"
                 },
                 {
+                    "command": "extension.devicescript.settings.add",
+                    "when": "workbenchState != empty"
+                },
+                {
                     "command": "extension.devicescript.services.add",
                     "when": "workbenchState != empty"
                 },
@@ -526,6 +540,9 @@
                 },
                 {
                     "command": "extension.devicescript.project.new"
+                },
+                {
+                    "command": "extension.devicescript.openIssueReporter"
                 }
             ],
             "debug/variables/context": [
@@ -606,6 +623,17 @@
                 "category": "DeviceScript"
             },
             {
+                "command": "extension.devicescript.jdom.settings.clear",
+                "title": "Clear Settings...",
+                "category": "DeviceScript",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "extension.devicescript.settings.add",
+                "title": "Add Settings...",
+                "category": "DeviceScript"
+            },
+            {
                 "command": "extension.devicescript.services.add",
                 "title": "Add Service...",
                 "category": "DeviceScript"
@@ -663,10 +691,16 @@
                 "icon": "$(refresh)"
             },
             {
-                "command": "extension.devicescript.jdom.devicescript.toggle",
-                "title": "Start/Stop",
+                "command": "extension.devicescript.jdom.devicescript.start",
+                "title": "Restart",
                 "category": "DeviceScript",
-                "icon": "$(refresh)"
+                "icon": "$(debug-start)"
+            },
+            {
+                "command": "extension.devicescript.jdom.devicescript.stop",
+                "title": "Stop",
+                "category": "DeviceScript",
+                "icon": "$(debug-stop)"
             },
             {
                 "command": "extension.devicescript.jdom.wifi.ap.add",
@@ -733,6 +767,11 @@
             {
                 "command": "extension.devicescript.device.showFirmwareInformation",
                 "title": "Update Firmware",
+                "category": "DeviceScript"
+            },
+            {
+                "command": "extension.devicescript.openIssueReporter",
+                "title": "Report Issue...",
                 "category": "DeviceScript"
             },
             {

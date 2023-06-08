@@ -46,6 +46,7 @@ void jd_sha256_hkdf(const void *salt, unsigned salt_size, const void *key, unsig
                     const void *info, unsigned info_size, const void *info2, unsigned info_size2,
                     uint8_t outkey[JD_SHA256_HASH_BYTES]);
 
+// duplicated in wasmpre.ts!
 #define JD_CONN_EV_OPEN 0x01
 #define JD_CONN_EV_CLOSE 0x02
 #define JD_CONN_EV_ERROR 0x03
@@ -64,6 +65,7 @@ int jd_websock_new(const char *hostname, int port, const char *path, const char 
 void jd_websock_on_event(unsigned event, const void *data, unsigned size);
 int jd_websock_send_message(const void *data, unsigned size);
 void jd_websock_close(void);
+extern void (*jd_tcpsock_on_event_override)(unsigned event, const void *data, unsigned size);
 
 // This is on encrypted packet transport level - messages are whole
 // and this will try to re-connect.

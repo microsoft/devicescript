@@ -21,6 +21,8 @@ import type {
     SideAddNpmResp,
     SideAddServiceReq,
     SideAddServiceResp,
+    SideAddSettingsReq,
+    SideAddSettingsResp,
     SideAddSimReq,
     SideAddSimResp,
     SideAddTestReq,
@@ -67,6 +69,36 @@ const npmFiles: FileSet = {
         keywords: ["devicescript"],
     },
     "src/index.ts": `${IMPORT_PREFIX}\n\n`,
+    ".github/workflows/build.yml": `name: Build
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: 18
+            - run: npm ci
+            - run: npm test    
+`,
+}
+
+const settingsFiles: FileSet = {
+    ".env.defaults": `# Store common settings here.
+# You can commit this file to source control, make sure there are no secrets.
+
+`,
+    ".env.local": `# Store your secrets here. Overrides values in .env
+# Do not commit this file to source control
+
+`,
 }
 
 const simFiles: FileSet = {
@@ -103,10 +135,10 @@ const simFiles: FileSet = {
         scripts: {
             [FORCE]: true,
             "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
-            build: "yarn build:devicescript && yarn build:sim",
+            build: "npm run build:devicescript && npm run build:sim",
             "watch:sim":
                 "cd sim && nodemon --watch './**' --ext 'ts,json' --exec 'ts-node ./app.ts --project ./tsconfig.json'",
-            watch: "yarn watch:devicescript & yarn watch:sim",
+            watch: "npm run watch:devicescript & npm run watch:sim",
         },
     },
     "sim/runtime.ts": `import "websocket-polyfill"
@@ -142,7 +174,7 @@ with the rest of the DeviceScript execution.
 -  open a new terminal
 -  launch the simulator in watch mode (restarts on every change)
 
-    yarn watch:sim
+    npm run watch:sim
 
 -  edit the DeviceScript part of the application as usual. The sim process will automatically connect
 to the VS Code extension
@@ -201,8 +233,6 @@ const optionalFiles: FileSet = {
             "ms-python.python",
             "ms-python.vscode-pylance",
             "mechatroner.rainbow-csv",
-            "dotenv.dotenv-vscode",
-            "rpdswtk.vsmqtt",
         ],
     },
     ".vscode/launch.json": {
@@ -224,22 +254,23 @@ nodeLinker: node-modules`,
     "devsconfig.json": {},
     "package.json": {
         version: "0.0.0",
-        private: "Please use 'devs add npm' to make this a publishable package",
+        private:
+            "Please use 'yarn devs add npm' to make this a publishable package",
         dependencies: {},
         devDependencies: {
             "@devicescript/cli": "latest",
         },
         scripts: {
             setup: "devicescript build --quiet", // generates node_modules/@devicescript/* files
-            postinstall: "devicescript build",
             "build:devicescript": "devicescript build src/main.ts",
-            build: "yarn build:devicescript",
+            postinstall: "npm run setup",
+            build: "npm run build:devicescript",
             "watch:devicescript": `devicescript devtools ${MAIN}`,
-            watch: "yarn watch:devicescript",
+            watch: "npm run watch:devicescript",
             "test:devicescript":
                 "devicescript run src/main.ts --test --test-self-exit",
-            test: "yarn test:devicescript",
-            start: "yarn watch",
+            test: "npm run test:devicescript",
+            start: "npm run watch",
         },
     },
     [MAIN]: `${IMPORT_PREFIX}
@@ -262,17 +293,17 @@ src/main.ts        default DeviceScript entry point
 
 ## Local/container development
 
--  install node.js 18+
+-  install [Node.js LTS 18+](https://nodejs.org/en/download)
 
 \`\`\`bash
 nvm install 18
 nvm use 18
 \`\`\`
 
--  install dependencies
+-  install DeviceScript compiler and tools
 
 \`\`\`bash
-yarn install
+npm install
 \`\`\`
 
 ### Using Visual Studio Code
@@ -292,7 +323,7 @@ code .
 - start the watch build and developer tools server
 
 \`\`\`bash
-yarn watch
+npm run watch
 \`\`\`
 
 -  navigate to devtools page (see terminal output) 
@@ -366,9 +397,9 @@ function writeFiles(dir: string, options: InitOptions, files: FileSet) {
 
 async function runInstall(cwd: string, options: InitOptions) {
     if (options.install) {
-        const npm = pathExistsSync(join(cwd, "package-lock.json"))
-        const cmd = npm ? "npm" : "yarn"
-        log(`install dependencies...`)
+        const yarnlock = pathExistsSync(join(cwd, "yarn.lock"))
+        const cmd = yarnlock ? "yarn" : "npm"
+        log(`install dependencies using ${cmd}...`)
         spawnSync(cmd, ["install"], {
             shell: true,
             stdio: "inherit",
@@ -396,7 +427,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
     const cwd = writeFiles(dir, options, optionalFiles)
 
     // .gitignore
-    const gids = ["node_modules", GENDIR]
+    const gids = ["node_modules", GENDIR, ".env.local", ".env.*.local"]
     const gitignoren = join(cwd, GITIGNORE)
     if (!pathExistsSync(gitignoren)) {
         debug(`write ${gitignoren}`)
@@ -426,7 +457,7 @@ export async function init(dir: string | undefined, options: InitOptions) {
     await build(MAIN, {})
 
     return finishAdd(
-        `Your DeviceScript project is initialized. Try 'devs add' to see what can be added.\n` +
+        `Your DeviceScript project is initialized.\n` +
             `To get more help, https://microsoft.github.io/devicescript/getting-started/`,
         ["package.json", MAIN]
     )
@@ -490,12 +521,23 @@ export interface AddNpmOptions extends InitOptions {
     license?: string
 }
 
+export interface AddSettingsOptions extends InitOptions {}
+
 function execCmd(cmd: string) {
     try {
         return execSync(cmd, { encoding: "utf-8" }).trim()
     } catch {
         return ""
     }
+}
+
+export async function addSettings(options: AddSettingsOptions) {
+    const files = clone(settingsFiles)
+    const cwd = writeFiles(".", options, files)
+    return finishAdd(
+        `Prepared .env.* files, please add settings in those files.`,
+        Object.keys(files)
+    )
 }
 
 export async function addNpm(options: AddNpmOptions) {
@@ -566,6 +608,9 @@ export function initAddCmds() {
     )
     addReqHandler<SideAddSimReq, SideAddSimResp>("addSim", d => addSim(d.data))
     addReqHandler<SideAddNpmReq, SideAddNpmResp>("addNpm", d => addNpm(d.data))
+    addReqHandler<SideAddSettingsReq, SideAddSettingsResp>("addSettings", d =>
+        addSettings(d.data)
+    )
     addReqHandler<SideAddTestReq, SideAddTestResp>("addTest", d =>
         addTest(d.data)
     )

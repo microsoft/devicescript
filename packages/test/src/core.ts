@@ -209,11 +209,6 @@ export function test(name: string, body: TestFunction, options?: TestOptions) {
 }
 
 /**
- * Alias for the test method
- */
-export const it = test
-
-/**
  * Register a callback to be called before each of the tests in the current context runs.
  * If the function returns a promise, waits until the promise resolve before running the test.
  */

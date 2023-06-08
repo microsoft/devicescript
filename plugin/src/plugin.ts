@@ -43,6 +43,7 @@ function init(modules: {
                                 "@devicescript/gpio",
                                 "@devicescript/spi",
                                 "@devicescript/graphics",
+                                "@devicescript/net",
                                 "@devicescript/runtime",
                             ]) {
                                 json.peerDependencies[n] = "*"

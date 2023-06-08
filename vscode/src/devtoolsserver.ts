@@ -148,6 +148,14 @@ export class DeveloperToolsManager extends JDEventSource {
             console.debug(
                 `devicescript : vscode ${extv}, devtools ${this.devsVersion}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
             )
+            if (semverCmp(this.nodeVersion, "v18.0.0") < 0) {
+                // node.js version outdated
+                throwError(
+                    `Node.js outdated (${this.nodeVersion}), v18+ needed`,
+                    { cancel: true }
+                )
+            }
+
             if (semverCmp(this.devsVersion, extv) < 0) {
                 // installed devs tool are outdated for the vscode addon
                 const { projectFolder } = this
@@ -158,10 +166,11 @@ export class DeveloperToolsManager extends JDEventSource {
                 if (yes) {
                     const t = vscode.window.createTerminal({
                         isTransient: true,
-                        name: "@devicescript/cli upgrade",
+                        name: "@devicescript/cli update",
                         cwd: projectFolder,
                     })
-                    t.sendText("yarn upgrade @devicescript/cli@latest")
+                    const cmd = await this.resolvePackageTool()
+                    t.sendText(`${cmd} upgrade @devicescript/cli@latest`)
                     t.show()
                 }
                 throwError("Dependencies outdated", { cancel: true })
@@ -760,6 +769,14 @@ export class DeveloperToolsManager extends JDEventSource {
         terminal?.show()
     }
 
+    private async resolvePackageTool() {
+        const cwd = this._projectFolder
+        if (!cwd) return undefined
+        const yarn = await checkFileExists(cwd, "yarn.lock")
+        const cmd = yarn ? "yarn" : "npm"
+        return cmd
+    }
+
     public async createCliTerminal(options: {
         title?: string
         progress: string
@@ -787,14 +804,15 @@ export class DeveloperToolsManager extends JDEventSource {
                 "terminal.notinstalled",
                 "Install Node.JS dependencies to enable tools.",
                 "Install"
-            ).then((res: string) => {
+            ).then(async (res: string) => {
                 if (res === "Install") {
                     const t = vscode.window.createTerminal({
                         name: "Install Node.JS dependencies",
                         cwd: cwd.fsPath,
                         isTransient: true,
                     })
-                    t.sendText("yarn install")
+                    const cmd = await this.resolvePackageTool()
+                    t.sendText(`${cmd} install`)
                     t.show()
                 }
             })

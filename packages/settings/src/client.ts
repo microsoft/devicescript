@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 
 /**
- * The cloud adapter client
+ * The settings object.
  */
 export const settings = new ds.Settings()

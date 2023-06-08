@@ -5,7 +5,12 @@ import {
 } from "./deploy"
 import { DeviceScriptExtensionState } from "./state"
 import { WorkspaceFolder, DebugConfiguration, CancellationToken } from "vscode"
-import { CHANGE, SRV_DEVICE_SCRIPT_MANAGER, SRV_ROLE_MANAGER } from "jacdac-ts"
+import {
+    CHANGE,
+    DeviceScriptManagerReg,
+    SRV_DEVICE_SCRIPT_MANAGER,
+    SRV_ROLE_MANAGER,
+} from "jacdac-ts"
 import type { StartArgs } from "@devicescript/dap"
 import { Utils } from "vscode-uri"
 import { checkFileExists } from "./fs"
@@ -32,6 +37,7 @@ export function activateDebugger(extensionState: DeviceScriptExtensionState) {
         )
     )
     trackRolesAndSimulators(extensionState)
+    trackDeviceScriptManagers(extensionState)
 
     subscriptions.push(
         vscode.commands.registerCommand(
@@ -152,6 +158,45 @@ function trackRolesAndSimulators(extensionState: DeviceScriptExtensionState) {
             unmount = undefined
         },
     })
+}
+
+/**
+ * Stop devicescript managers when debugging session ends
+ */
+function trackDeviceScriptManagers(extensionState: DeviceScriptExtensionState) {
+    const { context } = extensionState
+    const { subscriptions } = context
+    let deviceId: string
+    vscode.debug.onDidStartDebugSession(
+        session => {
+            if (session.type !== "devicescript") return
+
+            const config = session.configuration
+            const dsConfig = config as StartArgs
+            deviceId = dsConfig.deviceId
+        },
+        undefined,
+        subscriptions
+    )
+    vscode.debug.onDidTerminateDebugSession(
+        async session => {
+            if (session.type === "devicescript" && deviceId) {
+                const dev = extensionState.bus.device(deviceId, true)
+                const managers = dev?.services({
+                    serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
+                })
+                if (managers)
+                    for (const manager of managers) {
+                        const running = manager.register(
+                            DeviceScriptManagerReg.Running
+                        )
+                        await running.sendSetBoolAsync(false)
+                    }
+            }
+        },
+        undefined,
+        subscriptions
+    )
 }
 
 export class DeviceScriptAdapterServerDescriptorFactory
@@ -314,7 +359,6 @@ export class DeviceScriptConfigurationProvider
         await this.extensionState.updateCurrentDeviceScriptManagerId(
             service.device.deviceId
         )
-
 
         // show UI
         startSimulatorsOnStart()

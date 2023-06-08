@@ -28,6 +28,10 @@ void fun1_DeviceScript_delay(devs_ctx_t *ctx) {
 
 void fun1_DeviceScript__panic(devs_ctx_t *ctx) {
     unsigned code = devs_arg_int(ctx, 0);
+    if (code == 0xab04711) {
+        DMESG("! User-requested JD_PANIC()");
+        JD_PANIC();
+    }
     if (code == 0 || code >= 60000)
         code = 59999;
     devs_panic(ctx, code);

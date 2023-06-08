@@ -472,8 +472,20 @@ static int devs_fiber_wake_some(devs_ctx_t *ctx) {
     return 1;
 }
 
+static void devs_print_warnings(devs_ctx_t *ctx) {
+    if (ctx->num_throttled_pkts) {
+        DMESG("%u packets throttled", (unsigned)ctx->num_throttled_pkts);
+        ctx->num_throttled_pkts = 0;
+    }
+}
+
 void devs_fiber_poke(devs_ctx_t *ctx) {
     devs_fiber_sync_now(ctx);
     while (devs_fiber_wake_some(ctx))
         ;
+
+    if (devs_now(ctx) > ctx->last_warning + 5 * 1024) {
+        ctx->last_warning = devs_now(ctx);
+        devs_print_warnings(ctx);
+    }
 }

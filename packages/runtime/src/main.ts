@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@devicescript/test"
-import { pixelBuffer, rgb, setStatusLight, uptime } from "."
+import { pixelBuffer, rgb, schedule, setStatusLight, uptime } from "."
 import { delay } from "@devicescript/core"
 
 describe("rgb", () => {
@@ -48,5 +48,44 @@ describe("control", () => {
         await setStatusLight(0xff0000)
         await delay(100)
         await setStatusLight(0x00ff00)
+    })
+})
+
+describe("schedule", () => {
+    test("timeout", async () => {
+        let called = 0
+        schedule(
+            () => {
+                called++
+            },
+            { timeout: 50 }
+        )
+        await delay(100)
+        console.log({ called })
+        expect(called).toBe(1)
+    })
+    test("interval", async () => {
+        let called = 0
+        schedule(
+            () => {
+                called++
+            },
+            { interval: 40 }
+        )
+        await delay(100)
+        console.log({ called })
+        expect(called === 2).toBe(true)
+    })
+    test("timeout+interval", async () => {
+        let called = 0
+        schedule(
+            () => {
+                called++
+            },
+            { interval: 50, timeout: 20 }
+        )
+        await delay(100)
+        console.log({ called })
+        expect(called === 2).toBe(true)
     })
 })

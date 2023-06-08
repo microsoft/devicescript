@@ -1,16 +1,25 @@
 import { actionReport } from "@devicescript/core"
 import { settings } from "./client"
 
+const MAX_KEY_SIZE = 13
 /**
  * Serializes a JSON object to a setting
  * @param key name of the setting
  * @param value object to serialize
  */
 export async function writeSetting(key: string, value: any): Promise<void> {
+    checkKey(key)
     // TODO json -> buffer
     const s = JSON.stringify(value)
     const b = Buffer.from(s)
     await settings.set(key, b)
+}
+
+function checkKey(key: string) {
+    if (!key || !key.length)
+        throw new RangeError("key must be a non-empty string")
+    if (key.length > MAX_KEY_SIZE)
+        throw RangeError(`key length must be <= ${MAX_KEY_SIZE}`)
 }
 
 /**
@@ -23,6 +32,7 @@ export async function readSetting<T = any>(
     key: string,
     missingValue?: T
 ): Promise<T> {
+    checkKey(key)
     const pkt = await actionReport(
         settings,
         "get",
@@ -46,5 +56,6 @@ export async function readSetting<T = any>(
  * @param key name of the key
  */
 export async function deleteSetting(key: string) {
+    checkKey(key)
     await settings.delete(key)
 }

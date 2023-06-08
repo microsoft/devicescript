@@ -79,12 +79,14 @@ void jd_em_init(void) {
     if (inited)
         return;
     inited = 1;
+#if JD_EM_NODEJS_SOCKET
+    jd_tcpsock_close(); // link it
+#endif
     tx_init(&em_transport, NULL);
     jd_rx_init();
     jd_lstore_init();
     jd_services_init();
 }
-
 
 EMSCRIPTEN_KEEPALIVE
 int jd_em_process(void) {
@@ -145,7 +147,7 @@ uint64_t hw_device_id(void) {
     return cached_devid;
 }
 
-void target_reset() {
+void target_reset(void) {
     DMESG("target reset");
     exit(0);
 }
@@ -154,7 +156,7 @@ static uint64_t getmicros(void) {
     return (uint64_t)(em_time_now() * 1000.0);
 }
 
-uint64_t tim_get_micros() {
+uint64_t tim_get_micros(void) {
     static uint64_t starttime;
     if (!starttime) {
         starttime = getmicros() - 123;

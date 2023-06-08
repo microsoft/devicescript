@@ -25,6 +25,11 @@ import {
     SRV_CODAL_MESSAGE_BUS,
     SRV_DEVS_DBG,
     SRV_TCP,
+    SRV_I2C,
+    SRV_SETTINGS,
+    SRV_CLOUD_ADAPTER,
+    SRV_ROS,
+    SRV_GPIO,
 } from "jacdac-ts"
 import { boardSpecifications, jacdacDefaultSpecifications } from "./embedspecs"
 import { PacketSpecCode, runtimeVersion } from "./format"
@@ -32,6 +37,7 @@ import { prelude } from "./prelude"
 import { camelize, oops, upperCamel, upperFirst } from "./util"
 import { pinFunctions } from "./board"
 import { assert } from "./jdutil"
+import { TSDOC_GPIO, TSDOC_START } from "./compiler"
 
 const REGISTER_NUMBER = "Register<number>"
 const REGISTER_BOOL = "Register<boolean>"
@@ -170,7 +176,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             cmt += "@experimental\n"
         if (info.group) cmt += `@group ${info.group}\n`
         if (info.tags?.length) cmt += `@category ${info.tags.join(", ")}\n`
-        if (docUrl) cmt += `@see {@link ${docUrl} Documentation}`
+        if (docUrl) cmt += `@see {@link ${docUrl} | Documentation}`
         r += wrapComment("devs", patchLinks(cmt))
     }
     // emit class
@@ -201,7 +207,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
         `enum ${clname}Codes {\n`
 
     info.packets.forEach(pkt => {
-        if (pkt.derived) return
+        if (pkt.derived || pkt.pipeType) return
         const cmt = addComment(pkt)
         let kw = ""
         let tp = ""
@@ -264,7 +270,7 @@ export function specToDeviceScript(info: jdspec.ServiceSpec): string {
             if (docUrl)
                 cmt.comment += `@see {@link ${docUrl}#${pkt.kind}:${pktName(
                     pkt
-                )} Documentation}`
+                )} | Documentation}`
             r += wrapComment("devs", cmt.comment)
             r += `    ${kw}${nameOfPkt}${sx}: ${tp}<${argtp}>\n`
         }
@@ -297,7 +303,7 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
         const inst = service.name ? upperFirst(service.name) : serv
         r += wrapComment(
             "devs",
-            `Start built-in ${inst}\n@ds-start ${JSON.stringify(service)}`
+            `Start built-in ${inst}\n@${TSDOC_START} ${JSON.stringify(service)}`
         )
         r += `        start${inst}(roleName?: string): ds.${serv}\n`
     }
@@ -320,7 +326,7 @@ function boardFile(binfo: DeviceConfig, arch: ArchConfig) {
                 `/**`,
                 ` * Pin ${pinName} (GPIO${gpio}, ${funs.join(", ")})`,
                 ` *`,
-                ` * @ds-gpio ${gpio}`,
+                ` * @${TSDOC_GPIO} ${gpio}`,
                 ` */`,
                 // `//% gpio=${gpio}`,
                 `${pinName}: ${types.join(" & ")}`,
@@ -364,6 +370,14 @@ ${thespecs}
     return r
 }
 
+const serviceBuiltinPackages: Record<number, string> = {
+    [SRV_I2C]: "i2c",
+    [SRV_SETTINGS]: "settings",
+    [SRV_CLOUD_ADAPTER]: "cloud",
+    [SRV_ROS]: "ros",
+    [SRV_GPIO]: "gpio",
+}
+
 function serviceSpecificationToMarkdown(info: jdspec.ServiceSpec): string {
     const { status, camelName } = info
 
@@ -400,11 +414,27 @@ and is not directly programmable in DeviceScript.
 `
     }
 
+    const builtinPackage = serviceBuiltinPackages[info.classIdentifier]
+    if (builtinPackage) {
+        return `---
+pagination_prev: null
+pagination_next: null
+description: DeviceScript client for ${info.name} service
+---
+# ${clname}
+        
+The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${info.shortId}/) is used internally by the 
+[\`@devicescript/${builtinPackage}\`](/developer/packages) package.
+
+{@import optional ../clients-custom/${info.shortId}.mdp}
+`
+    }
+
     let r: string[] = [
         `---
 pagination_prev: null
 pagination_next: null
-description: DeviceScript client for Jacdac ${info.name} service
+description: DeviceScript client for ${info.name} service
 ---
 # ${clname}
 `,
@@ -431,11 +461,13 @@ import { ${clname} } from "@devicescript/core"
 const ${varname} = new ${clname}()
 \`\`\`
             `,
+        `{@import optional ../clients-custom/${info.shortId}-about.mdp}`,
     ]
 
     const cmds = info.packets.filter(
         pkt =>
             pkt.kind === "command" &&
+            !pkt.pipeType &&
             !pkt.internal &&
             !pkt.derived &&
             !pkt.lowLevel

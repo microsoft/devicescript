@@ -14,6 +14,7 @@ import {
 import { DeviceScriptExtensionState } from "./state"
 import { activateTelemetry } from "./telemetry"
 import { JDDevice } from "jacdac-ts"
+import { resolvePythonEnvironment } from "./python"
 
 export function activateDeviceScript(context: vscode.ExtensionContext) {
     const { subscriptions } = context
@@ -24,22 +25,6 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         dispose: stopJacdacBus,
     })
     const extensionState = new DeviceScriptExtensionState(context, bus)
-
-    const debugFile = async (file: vscode.Uri, noDebug: boolean) => {
-        if (!file) return
-        const folder = vscode.workspace.getWorkspaceFolder(file)
-        if (!folder) return
-        await vscode.debug.startDebugging(folder, {
-            type: "devicescript",
-            request: "launch",
-            name: "DeviceScript: Run File",
-            stopOnEntry: false,
-            noDebug,
-            program: file.path,
-        } as vscode.DebugConfiguration)
-        if (noDebug)
-            vscode.commands.executeCommand("extension.devicescript.jdom.focus")
-    }
 
     // build
     subscriptions.push(
@@ -157,6 +142,10 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async () => extensionState.addSim()
         ),
         vscode.commands.registerCommand(
+            "extension.devicescript.settings.add",
+            async () => extensionState.addSettings()
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.services.add",
             async () => extensionState.addService()
         ),
@@ -192,11 +181,13 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.run",
-            async (file: vscode.Uri) => debugFile(file, true)
+            async (file: vscode.Uri) =>
+                extensionState.runFile(file, { debug: false })
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.debug",
-            async (file: vscode.Uri) => debugFile(file, false)
+            async (file: vscode.Uri) =>
+                extensionState.runFile(file, { debug: true })
         ),
         vscode.commands.registerCommand(
             "extension.devicescript.editor.build",
@@ -212,6 +203,42 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                 const editor = await vscode.window.showTextDocument(file)
                 if (!editor) return
                 await extensionState.configureHardware(editor)
+            }
+        ),
+        vscode.commands.registerCommand(
+            "extension.devicescript.openIssueReporter",
+            async () => {
+                const issueBody: string[] = [
+                    `## Describe the program`,
+                    ``,
+                    `## Environment`,
+                    ``,
+                ]
+                const versions = extensionState.devtools?.versions()
+                const py = await resolvePythonEnvironment()
+                issueBody.push(`vscode: ${vscode.version}`)
+                issueBody.push(
+                    `extension: ${
+                        context.extension?.packageJSON?.version || "?"
+                    }`
+                )
+                if (versions) {
+                    Object.entries(versions).forEach(([k, v]) =>
+                        issueBody.push(`${k}: ${v}`)
+                    )
+                }
+                if (py)
+                    issueBody.push(
+                        `python: ${py.version.major}.${py.version.minor}.${py.version.micro}`
+                    )
+                issueBody.push(``, `## Bus`, bus.describe({ ignoreSimulators: true, physical: true }))
+                await vscode.commands.executeCommand(
+                    "workbench.action.openIssueReporter",
+                    {
+                        extensionId: "devicescript.devicescript-vscode",
+                        issueBody: issueBody.join("\n"),
+                    }
+                )
             }
         )
     )

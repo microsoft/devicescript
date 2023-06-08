@@ -1,7 +1,7 @@
 {
     "name": "@devicescript/cli",
     "private": false,
-    "version": "2.9.13",
+    "version": "2.10.9",
     "description": "DeviceScript command line tool",
     "keywords": [
         "devicescript",

@@ -50,9 +50,9 @@ class AHT20Driver extends I2CSensorDriver<{
 
 /**
  * Start driver for AHT20 temperature/humidity sensor at I2C address `0x38`.
- * @ds-part AHT20
- * @ds-services temperature, humidity
- * @link https://asairsensors.com/wp-content/uploads/2021/09/Data-Sheet-AHT20-Humidity-and-Temperature-Sensor-ASAIR-V1.0.03.pdf Datasheet
+ * @devsPart AHT20
+ * @devsServices temperature, humidity
+ * @see {@link https://asairsensors.com/wp-content/uploads/2021/09/Data-Sheet-AHT20-Humidity-and-Temperature-Sensor-ASAIR-V1.0.03.pdf | Datasheet}.
  * @throws DriverError
  */
 export async function startAHT20(options?: {

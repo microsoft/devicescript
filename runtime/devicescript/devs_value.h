@@ -207,12 +207,15 @@ bool devs_is_array(devs_ctx_t *ctx, value_t v);
 bool devs_is_string(devs_ctx_t *ctx, value_t v);
 value_t devs_string_concat(devs_ctx_t *ctx, value_t a, value_t b);
 const char *devs_string_get_utf8(devs_ctx_t *ctx, value_t s, unsigned *size);
+/**
+ * If this returns NULL then `v` is not a string or is ASCII-only.
+ */
 const devs_utf8_string_t *devs_string_get_utf8_struct(devs_ctx_t *ctx, value_t v);
 value_t devs_value_to_string(devs_ctx_t *ctx, value_t v);
 value_t devs_string_vsprintf(devs_ctx_t *ctx, const char *format, va_list ap);
 __attribute__((format(printf, 2, 3))) value_t devs_string_sprintf(devs_ctx_t *ctx,
                                                                   const char *format, ...);
-value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned len);
+value_t devs_string_from_utf8(devs_ctx_t *ctx, const uint8_t *utf8, unsigned size);
 value_t devs_builtin_string(unsigned idx);
 value_t devs_string_slice(devs_ctx_t *ctx, value_t str, int start, int endp);
 

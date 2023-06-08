@@ -28,17 +28,7 @@ export async function checkRuntimeVersion(minVersion: string, srv: JDService) {
     const version = await readRuntimeVersion(srv)
     console.debug(`deploy: version min ${minVersion}, device ${version}`)
     if (version === undefined) {
-        showErrorMessage(
-            "build.firmware.noversion",
-            `Deploy cancelled. Your device firmware does not have a runtime version.`,
-            flashCommand
-        ).then(cmd => {
-            if (cmd === flashCommand)
-                vscode.commands.executeCommand(
-                    "extension.devicescript.device.flash",
-                    srv.device
-                )
-        })
+        // might be in a broken state that prevents querying the runtime
         return false
     }
 

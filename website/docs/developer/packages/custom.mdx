@@ -1,0 +1,48 @@
+---
+title: Custom Packages
+---
+
+# Publishing a DeviceScript package
+
+Using npm, GitHub releases, or other package manager is the recommended way to share your DeviceScript code.
+The process is very similar to publishing packages for node.js/web on npm.
+
+Here are some examples of custom packages:
+
+- [Adafruit.io create data](https://github.com/pelikhan/devicescript-adafruit-io/) to upload sensor data to io.adafruit.com
+
+## Getting started
+
+To create a DeviceScript library from your project, run this command
+or use **DeviceScript: Add npm...** from the command palette in Visual Studio Code.
+
+```bash
+yarn devs add npm
+```
+
+This will:
+
+-   remove the `"private"` field from `package.json`
+-   add `"devicescript": { "library": true }` (this is required)
+-   set `"main": "src/index.ts"` (`src/index.ts` is created if missing)
+-   set `"files"` field
+-   add `"license"`
+-   add `"keywords": ["devicescript"]` - keep this so npm search works better!
+-   add `"author"` and `"repository"` if they can be inferred
+
+All of these can be of course edited in `package.json` afterwards.
+
+After this step, you can publish your package using your favorite npm publishing pipeline.
+
+## Naming convention
+
+In particular it's recommended to name your package `devicescript-something`.
+
+## Development notes
+
+Note that regular DeviceScript applications typically use `src/main.ts` (or `src/mainSomething.ts`)
+as the application entry point.
+This is typically, **not** the right choice for **library** entry point.
+
+You can keep your `src/main.ts` file as an example or test for the library,
+but best to stick to `"main": "src/index.ts"` in `package.json`.

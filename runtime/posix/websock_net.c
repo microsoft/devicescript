@@ -1,6 +1,6 @@
-#ifdef __EMSCRIPTEN__
-
 #include "jd_sdk.h"
+
+#if defined(__EMSCRIPTEN__) && JD_EM_WEBSOCKET
 
 #include <stdio.h>
 #include <string.h>

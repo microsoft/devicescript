@@ -115,8 +115,63 @@ interface String {
     /** Returns the length of a String object. */
     readonly length: number
 
+    /** Returns the length in bytes of UTF8 encoding of a String object. */
+    readonly byteLength: number
+
     [Symbol.iterator](): IterableIterator<string>
     readonly [index: number]: string
+
+    /**
+     * Returns the position of the first occurrence of a substring.
+     * When `endPosition < position` the search if performed in reverse.
+     * @param searchString The substring to search for in the string
+     * @param position The index at which to begin searching the String object. If omitted, search starts at the beginning of the string.
+     * @param endPosition `position <= return_value < endPosition || return_value == -1` (and `endPosition < 0` has special meaning)
+     */
+    indexOf(
+        searchString: string,
+        position?: number,
+        endPosition?: number
+    ): number
+
+    /**
+     * Returns the last occurrence of a substring in the string.
+     * @param searchString The substring to search for.
+     * @param position The index at which to begin searching. If omitted, the search begins at the end of the string.
+     */
+    lastIndexOf(searchString: string, position?: number): number
+
+    /**
+     * Returns true if searchString appears as a substring of the result of converting this
+     * object to a String, at one or more positions that are
+     * greater than or equal to position; otherwise, returns false.
+     * @param searchString search string
+     * @param position If position is undefined, 0 is assumed, so as to search all of the String.
+     */
+    includes(searchString: string, position?: number): boolean
+
+    /**
+     * Returns true if the sequence of elements of searchString converted to a String is the
+     * same as the corresponding elements of this object (converted to a String) starting at
+     * endPosition – length(this). Otherwise returns false.
+     */
+    endsWith(searchString: string, endPosition?: number): boolean
+
+    /**
+     * Returns true if the sequence of elements of searchString converted to a String is the
+     * same as the corresponding elements of this object (converted to a String) starting at
+     * position. Otherwise returns false.
+     */
+    startsWith(searchString: string, position?: number): boolean
+
+    /** Converts all the alphabetic characters in a string to lowercase. Currently ASCII-only. */
+    toLowerCase(): string
+
+    /** Converts all the alphabetic characters in a string to uppercase. Currently ASCII-only. */
+    toUpperCase(): string
+
+    /** Removes the leading and trailing white space and line terminator characters from a string. */
+    trim(): string
 }
 
 interface StringConstructor {

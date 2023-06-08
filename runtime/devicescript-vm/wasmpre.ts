@@ -12,6 +12,7 @@ export declare type DevsModule = EmscriptenModule &
         _jd_em_devs_verify(img: ptr, size: int32): int32
         _jd_em_devs_client_deploy(img: ptr, size: int32): int32
         _jd_em_devs_enable_gc_stress(en: int32): void
+        _jd_em_tcpsock_on_event(ev: int32, arg: ptr, len: int32): void
         sendPacket(pkt: Uint8Array): void
 
         /**
@@ -377,6 +378,87 @@ export module Exts {
             Module._jd_em_set_device_id_2x_i32(id0, id1)
         } else {
             throw new Error("invalid arguments")
+        }
+    }
+
+    let currSock: any
+
+    export function sockClose() {
+        if (!currSock) return -10
+        currSock.end()
+        currSock = null
+        return 0
+    }
+
+    export function sockWrite(data: ptr, len: number) {
+        if (!currSock) return -10
+        const buf = Module.HEAPU8.slice(data, data + len)
+        currSock.write(buf)
+        return 0
+    }
+
+    declare var require: any
+
+    export function sockIsAvailable() {
+        try {
+            require("node:tls")
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    export function sockOpen(hostptr: ptr, port: int32) {
+        const host = UTF8ToString(hostptr, 256)
+
+        const JD_CONN_EV_OPEN = 0x01
+        const JD_CONN_EV_CLOSE = 0x02
+        const JD_CONN_EV_ERROR = 0x03
+        const JD_CONN_EV_MESSAGE = 0x04
+
+        const isTLS = port < 0
+        if (isTLS) port = -port
+        const name = `${isTLS ? "tls" : "tcp"}://${host}:${port}`
+        currSock?.end()
+        currSock = null
+        const sock = isTLS
+            ? require("tls").connect({
+                  host,
+                  port,
+              })
+            : require("net").createConnection({ host, port })
+        currSock = sock
+        currSock.once("connect", () => {
+            if (sock === currSock) cb(JD_CONN_EV_OPEN)
+        })
+        currSock.on("data", (buf: Uint8Array) => {
+            if (sock === currSock) cb(JD_CONN_EV_MESSAGE, buf)
+        })
+        currSock.on("error", (err: Error) => {
+            if (sock === currSock) {
+                cb(JD_CONN_EV_ERROR, `${name}: ${err.message}`)
+                currSock = null
+            }
+        })
+        currSock.on("close", (hadError: boolean) => {
+            if (sock === currSock) {
+                cb(JD_CONN_EV_CLOSE)
+                currSock = null
+            }
+        })
+
+        function cb(tp: number, arg?: Uint8Array | string) {
+            let len = arg ? arg.length : 0
+            let ptr = 0
+            if (typeof arg === "string") {
+                len = lengthBytesUTF8(arg)
+                ptr = allocateUTF8(arg)
+            } else if (arg) {
+                ptr = Module._malloc(len)
+                Module.HEAPU8.set(arg, ptr)
+            }
+            Module._jd_em_tcpsock_on_event(tp, ptr, len)
+            if (ptr) Module._free(ptr)
         }
     }
 }

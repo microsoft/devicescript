@@ -63,7 +63,7 @@ EM_JS(void, em_flash_load, (void *start, unsigned size), {
     }
 });
 
-void flash_sync() {
+void flash_sync(void) {
     DMESG("flash sync");
     for (int i = FLASH_SIZE - 1; i >= 0; i--) {
         if (flash_base[i] != FILL_PATTERN) {
@@ -81,7 +81,7 @@ void flash_init(void) {
 
 #else
 
-void flash_sync() {
+void flash_sync(void) {
     if (settings_in_files) {
         mkdir(UPPER_FLASH_DIR, 0777);
         mkdir(FLASH_DIR, 0777);

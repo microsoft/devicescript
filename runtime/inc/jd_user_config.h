@@ -19,11 +19,21 @@ __attribute__((format(printf, 1, 2))) void app_dmesg(const char *format, ...);
 
 #define JD_FLASH_PAGE_SIZE 4096
 
+
 #ifdef __EMSCRIPTEN__
 #define JD_LSTORE 0
 #define JD_NET_BRIDGE 0
+#define JD_EM_WEBSOCKET 0
+
+#if JD_EM_WEBSOCKET
 #define JD_WEBSOCK_IMPL 0
+#define JD_USER_SOCKET 0
+#define JD_EM_NODEJS_SOCKET 0
 #else
+#define JD_EM_NODEJS_SOCKET 1
+#endif
+
+#else // not emcc
 #define JD_LSTORE 1
 #define JD_LSTORE_FF 0
 #define JD_LSTORE_FILE_SIZE (4 * 1024 * 1024)

@@ -8,8 +8,13 @@ and [digital gpio](./digital-io).
 ```ts
 import { startSHTC3 } from "@devicescript/drivers"
 
-await startSHTC3()
-const t = new ds.Temperature()
-const h = new ds.Humidity()
-// ...
+const { temperature, humidity } = await startSHTC3()
 ```
+
+## What about missing drivers?
+
+So the driver you need isn't here? There are a few options:
+
+-   [Search on npm](https://www.npmjs.com/search?q=devicescript) where a community member may have already published a driver.
+-   [Check if a request is already open](https://github.com/microsoft/devicescript/labels/driver%20request)
+-   [Create a Driver Request](https://github.com/microsoft/devicescript/issues/new?assignees=&labels=enhancement&projects=&template=feature_request.md&title=) to request a new driver. We can't guarantee that we'll have time to implement it, but we maybe someone in the community will!

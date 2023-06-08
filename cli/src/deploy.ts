@@ -7,6 +7,7 @@ import {
     JDService,
     OutPipe,
     prettySize,
+    SettingsClient,
     sha256,
     SRV_DEVICE_SCRIPT_MANAGER,
     toHex,
@@ -15,6 +16,7 @@ import { devsStartWithNetwork } from "./build"
 import { error } from "./command"
 import { readCompiled } from "./run"
 import { BuildOptions } from "./sideprotocol"
+import { DISABLE_AUTO_START_KEY } from "./devtools"
 
 export interface RunOptions {
     tcp?: boolean
@@ -36,26 +38,60 @@ export async function deployScript(
     console.log(`remote-deployed ${fn}`)
 }
 
+export async function deploySettingsToService(
+    settingsService: JDService,
+    settings: Record<string, Uint8Array>
+) {
+    if (!settings || !Object.keys(settings).length) return
+
+    const client = new SettingsClient(settingsService)
+    for (const key in settings) {
+        console.debug(`deploying setting ${key}...`)
+        const value = settings[key]
+        await client.setValue(key, value)
+    }
+}
+
 export async function deployToService(
     service: JDService,
-    bytecode: Uint8Array
+    bytecode: Uint8Array,
+    settingsService?: JDService,
+    settings?: Record<string, Uint8Array>
 ) {
     console.log(`deploy to ${service.device}`)
 
+    const autostart = service.register(DeviceScriptManagerReg.Autostart)
+    const running = service.register(DeviceScriptManagerReg.Running)
     const sha = service.register(DeviceScriptManagerReg.ProgramSha256)
+
     await sha.refresh()
+    await autostart.refresh()
+    const oldAutoStart = autostart.boolValue
+
     if (sha.data?.length == 32) {
         const exp = await sha256([bytecode])
         if (bufferEq(exp, sha.data)) {
             console.log(`  sha256 match ${toHex(exp)}, skip`)
-            const running = service.register(DeviceScriptManagerReg.Running)
+            // stop running
             await running.sendSetBoolAsync(false)
             await delay(10)
+
+            // deploy settings if needed
+            if (settingsService)
+                await deploySettingsToService(settingsService, settings)
+
+            // restart engine
             await running.sendSetBoolAsync(true)
             return
         }
     }
 
+    // disable autostart to write settings
+    if (settingsService) {
+        await autostart.sendSetBoolAsync(false)
+        await running.sendSetBoolAsync(false)
+        await delay(10)
+    }
     await OutPipe.sendBytes(
         service,
         DeviceScriptManagerCmd.DeployBytecode,
@@ -64,17 +100,15 @@ export async function deployToService(
             // console.debug(`  prog: ${(p * 100).toFixed(1)}%`)
         }
     )
-    console.log(`  --> done, ${prettySize(bytecode.length)}`)
-}
-
-export async function deployToBus(bus: JDBus, bytecode: Uint8Array) {
-    let num = 0
-    for (const service of bus.services({
-        serviceClass: SRV_DEVICE_SCRIPT_MANAGER,
-        lost: false,
-    })) {
-        await deployToService(service, bytecode)
-        num++
+    if (settingsService) {
+        await deploySettingsToService(settingsService, settings)
+        if (
+            !service.device.bus.nodeData[DISABLE_AUTO_START_KEY] &&
+            oldAutoStart !== undefined
+        )
+            await autostart.sendSetBoolAsync(oldAutoStart)
+        await running.sendSetBoolAsync(true)
     }
-    return num
+
+    console.log(`  --> done, ${prettySize(bytecode.length)}`)
 }

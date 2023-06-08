@@ -97,11 +97,10 @@ value_t devs_buffer_decode(devs_ctx_t *ctx, uint32_t fmt0, uint8_t **buf, unsign
         return devs_undefined;
 
     case DEVS_NUMFMT_SPECIAL_BYTES: {
-        devs_buffer_t *block = devs_buffer_try_alloc(ctx, len);
+        devs_buffer_t *block = devs_buffer_try_alloc_init(ctx, data, len);
         if (block == NULL)
             return devs_undefined;
         *buf += len;
-        memcpy(block->data, data, len);
         return devs_value_from_gc_obj(ctx, block);
     }
 

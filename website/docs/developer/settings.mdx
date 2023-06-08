@@ -1,36 +1,80 @@
 ---
-title: Settings
+title: Settings and Secrets
 sidebar_position: 9
 description: Settings provides a friendly layer to read/write objects from the
-  device flash. Keep it small, there's not a lot of space!
+    device flash. Keep it small, there's not a lot of space!
 ---
 
 # Settings
 
 Settings [builtin package](/developer/packages) provides a friendly layer to read/write objects from the device flash. **Keep it small, there's not a lot of space!**
 
-## Usage
+## .env files
 
-### `writeSetting`
+Don't store secrets or settings in the code, use `.env` files instead.
 
-Serializes an object into a setting at a given key. The key name should be less than 16 characters.
+-   `./.env.defaults`: store general settings (**tracked by version control**)
+-   `./.env.local`: store secrets or override for general settings (**untracked by version control**)
 
-```ts
-import { writeSetting } from "@devicescript/settings"
+The `.env*` file use a similar format to node.js `.env` file. The content will be transfered in the device flash
+when deploying the DeviceScript bytecode.
 
-// highlight-next-line
-await writeSetting("hello", { world: true })
+:::warning
+
+The setting keys should be shorter than 14 characters!
+
+:::
+
+```env title="./.env.defaults"
+# Default settings
+# This file is tracked by git.
+# DO NOT store secrets in this file.
+temperature=68
 ```
 
-### `readSetting`
+```env title="./.env.local"
+# Local settings and secrets
+# This file is/should **NOT** tracked by git
+temperature=70 # override
+PASSWORD=secret
+```
 
-Deserializes an object from a setting at a given key. If the key is missing or invalid format, returns undefined.
+:::tip
+
+In Visual Studio Code, open the command palette and run **DeviceScript: Add Settings...**.
+From the CLI, run `devs add settings`.
+
+:::
+
+
+### Using settings
+
+Once your .env files are ready, you can use `readSetting` and `writeSetting` to read/write settings.
 
 ```ts
-import { readSetting } from "@devicescript/settings"
+import { Temperature, Button } from "@devicescript/core"
+import { readSetting, writeSetting } from "@devicescript/settings"
 
+const temperature = new Temperature()
+const button = new Button()
 // highlight-next-line
-const { world } = await readSetting<{ world?: string }>("hello", {})
+let threshold = await readSetting<number>("temperature")
+
+// show alert when temperature is above threshold
+temperature.reading.subscribe(t => {
+    // highlight-next-line
+    if (t > threshold) {
+        // too hot!
+        console.log("hot!")
+    }
+})
+
+// increase threshold when button is pressed
+button.down.subscribe(async () => {
+    threshold++;
+    // highlight-next-line
+    await writeSetting("temperature", threshold)
+})
 ```
 
 ## See also

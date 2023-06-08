@@ -1,0 +1,20 @@
+---
+sidebar_position: 10000
+title: Errors
+description: Troubleshooting DeviceScript errors
+---
+
+# Errors
+
+## loopback rx ovf {#loopback-rx-ovf}
+
+The program is issuing requests to service client faster than the system can handle.
+
+## can't connect, no HF2 nor JDUSB {#no-hf2}
+
+On ESP32-C3, we do not support external serial chips. This is the [list of known supported ESP32 boards](/devices/esp32).
+
+## esptool cannot connect {#esptool-cannot-connect}
+
+If the `esptool` complains about not being able to connect, try plugging your board in
+while holding `IO0`/`BOOT` button.

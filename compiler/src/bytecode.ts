@@ -105,9 +105,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
-    IMG_VERSION_MINOR = 9,
-    IMG_VERSION_PATCH = 13,
-    IMG_VERSION = 0x209000d,
+    IMG_VERSION_MINOR = 10,
+    IMG_VERSION_PATCH = 9,
+    IMG_VERSION = 0x20a0009,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
@@ -478,6 +478,18 @@ export enum BuiltInString {
     FILLCIRCLE = 190,
     BLITROW = 191,
     BLIT = 192,
+    _SOCKETOPEN = 172,
+    _SOCKETCLOSE = 173,
+    _SOCKETWRITE = 174,
+    _SOCKETONEVENT = 175,
+    OPEN = 176,
+    CLOSE = 177,
+    ERROR_ = 178, // error
+    DATA = 179,
+    TOUPPERCASE = 180,
+    TOLOWERCASE = 181,
+    INDEXOF = 182,
+    BYTELENGTH = 183,
 }
 
 export const OP_PRINT_FMTS = [

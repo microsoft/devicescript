@@ -258,8 +258,9 @@ static const uint8_t builtin_proto_idx[] = {
     [DEVS_BUILTIN_OBJECT_DSEVENT_PROTOTYPE] = 7,
     [DEVS_BUILTIN_OBJECT_DEVICESCRIPT] = 8,
     [DEVS_BUILTIN_OBJECT_IMAGE_PROTOTYPE] = 9,
+    [DEVS_BUILTIN_OBJECT_BUFFER] = 10,
 };
-#define MAX_PROTO 9
+#define MAX_PROTO 10
 
 devs_maplike_t *devs_get_builtin_object(devs_ctx_t *ctx, unsigned idx) {
     if (idx < sizeof(builtin_proto_idx)) {
@@ -1140,6 +1141,13 @@ int devs_array_insert(devs_ctx_t *ctx, devs_array_t *arr, unsigned idx, int coun
     arr->length = newlen;
 
     return 0;
+}
+
+int32_t devs_arg_int_defl(devs_ctx_t *ctx, unsigned idx, int32_t defl) {
+    value_t arg = devs_arg(ctx, idx);
+    if (devs_is_null_or_undefined(arg))
+        return defl;
+    return devs_value_to_int(ctx, arg);
 }
 
 int32_t devs_arg_int(devs_ctx_t *ctx, unsigned idx) {

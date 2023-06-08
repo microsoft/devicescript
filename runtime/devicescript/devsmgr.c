@@ -211,7 +211,7 @@ void devsmgr_process(srv_t *state) {
     }
 }
 
-void devsmgr_restart() {
+void devsmgr_restart(void) {
     srv_t *state = _state;
     stop_program(state);
     state->next_restart = now + MS(50);
@@ -496,8 +496,11 @@ void devsmgr_init(const devsmgr_cfg_t *cfg) {
 #endif
     state->read_program_ptr = -1;
     state->autostart = 1;
+
     // first start 1.5s after brain boot up - allow devices to enumerate
-    state->next_restart = now + SECONDS(1.5);
+    // state->next_restart = now + SECONDS(1.5);
+    // in case the program causes a crash, give the command line some time to connect
+    state->next_restart = now + SECONDS(5);
 
     JD_ASSERT(devs_verify(devs_empty_program, sizeof(devs_empty_program)) == 0);
 

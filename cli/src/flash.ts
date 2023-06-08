@@ -27,12 +27,31 @@ export interface FlashOptions {
     board?: string
     once?: boolean
     refresh?: boolean
+    /**
+     * Automatically install missing flashing utilities.
+     * For ESP32, if {@link https://docs.espressif.com/projects/esptool/en/latest/esp32/ | esptool} is missing,
+     * run `py -m pip install esptool`
+     */
+    install?: boolean
+
+    /**
+     * Path to the python executable.
+     */
+    python?: string
+
+    /**
+     * Delete settings and user program instead of flashing the firmware.
+     */
+    clean?: boolean
 }
 
 export interface FlashESP32Options extends FlashOptions {
     allSerial?: boolean
     baud?: string
     port?: string
+    /**
+     * Path to the esptool.py script.
+     */
     esptool?: string
 }
 
@@ -174,17 +193,21 @@ export async function flashESP32(options: FlashESP32Options) {
     }
 
     if (!options.esptool) {
-        for (const tool of [
-            "python -m esptool",
-            "python3 -m esptool",
-            "/usr/local/bin/python -m esptool",
-        ]) {
-            const { stdout } = await runTool({ cmd: tool, quiet: true })
-            if (oldEsptool(stdout) === "") {
-                options.esptool = tool
+        await findEsptool()
+    }
+
+    if (!options.esptool && options.install) {
+        log("trying to install esptool with pip...")
+        for (const cmd of pythonPaths().map(
+            py => `${py} -m pip install esptool`
+        )) {
+            const { stdout } = await runTool({ cmd, quiet: true })
+            if (/esptool/.test(stdout)) {
+                console.log(`esptool installed`)
                 break
             }
         }
+        await findEsptool()
     }
 
     if (!options.esptool) {
@@ -200,18 +223,44 @@ export async function flashESP32(options: FlashESP32Options) {
 
     const cachePath = await fetchFW(board, options)
 
-    const moff = /-(0x[a-f0-9]+)\.bin$/.exec(cachePath)
-    if (!moff)
-        fatal("invalid $fwUrl format, should end in -0x1000.bin or similar")
-
-    const { code } = await runEsptool("write_flash", moff[1], cachePath)
-
-    if (code === 0) {
-        log("flash OK!")
-        process.exit(0)
+    if (options.clean) {
+        const { code } = await runEsptool("erase_flash")
+        if (code === 0) {
+            log("erase flash OK!")
+            process.exit(0)
+        } else {
+            error("erase flash failed")
+            process.exit(1)
+        }
     } else {
-        error("flash failed")
-        process.exit(1)
+        const moff = /-(0x[a-f0-9]+)\.bin$/.exec(cachePath)
+        if (!moff)
+            fatal("invalid $fwUrl format, should end in -0x1000.bin or similar")
+
+        const { code } = await runEsptool("write_flash", moff[1], cachePath)
+
+        if (code === 0) {
+            log("flash OK!")
+            process.exit(0)
+        } else {
+            error("flash failed")
+            process.exit(1)
+        }
+    }
+
+    function pythonPaths() {
+        if (options.python) return [options.python]
+        else return ["py", "python", "python3", "/usr/local/bin/python"]
+    }
+
+    async function findEsptool() {
+        for (const tool of pythonPaths().map(py => `${py} -m esptool`)) {
+            const { stdout } = await runTool({ cmd: tool, quiet: true })
+            if (oldEsptool(stdout) === "") {
+                options.esptool = tool
+                break
+            }
+        }
     }
 
     function printPorts(all = true) {
@@ -319,11 +368,18 @@ async function fetchFW(board: DeviceConfig, options: FlashOptions) {
         }
     }
 
+    if (options.clean && board.archId.includes("rp2040"))
+        dlUrl = "https://datasheets.raspberrypi.com/soft/flash_nuke.uf2"
+
     const bn = dlUrl.replace(/.*\//, "")
     const cachedFolder = ".devicescript/cache/"
     const cachePath = cachedFolder + bn
     const st = await stat(cachePath, { bigint: false }).catch<Stats>(_ => null)
-    if (!options.refresh && st && Date.now() - st.mtime.getTime() < 24 * 3600 * 1000) {
+    if (
+        !options.refresh &&
+        st &&
+        Date.now() - st.mtime.getTime() < 24 * 3600 * 1000
+    ) {
         log(`using cached ${cachePath}`)
     } else {
         log(`fetch ${dlUrl}`)
