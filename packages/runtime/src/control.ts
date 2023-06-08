@@ -41,3 +41,12 @@ export async function uptime() {
     const ctrl = currentControl()
     return await ctrl.uptime.read()
 }
+
+/**
+ * Reads the onboard temperature sensor if any.
+ * @returns temperature in celcius (°C); undefined if sensor is not available.
+ */
+export async function mcuTemperature() {
+    const ctrl = currentControl()
+    return await ctrl.mcuTemperature.read()
+}
