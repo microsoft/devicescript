@@ -3,32 +3,79 @@
 import { I2CStatus, delay } from "@devicescript/core"
 import { I2CError, i2c } from "@devicescript/i2c"
 
-function log(msg: string) {
-    console.log(`notes> ` + msg)
-}
 function debug(msg: string) {
-    // console.debug(`notes> ` + msg)
+    console.debug(`notes> ` + msg)
 }
 
+/**
+ * A blues.io note request
+ */
 export interface Request {
     req: string
 }
 
+/**
+ * A blues.io note response
+ */
 export interface Response {}
 
+/**
+ * hub requests
+ */
 export interface HubRequest extends Request {
-    req: "hub.status" | "hub.sync" | "hub.sync.status" | "hub.get" | "hub.set"
+    req:
+        | "hub.status"
+        | "hub.sync"
+        | "hub.sync.status"
+        | "hub.get"
+        | "hub.set"
+        | "hub.log"
 }
 
-export interface LogRequest extends Request {
+/**
+ * Setting a product io and serial number
+ */
+export interface HubSetRequest extends HubRequest {
+    req: "hub.set"
+    product?: string
+    sn?: string
+    mode?: "preriodic" | "continuous" | "minimum" | "off"
+    /**
+     * inbound data from Notehub to be synchronized to the Notecard as soon as it is detected.
+     */
+    sync?: boolean
+    /**
+     * Max wait time in minutes to sync outbound data
+     */
+    outbound?: number
+    /**
+     *  the max wait time (in minutes) to sync inbound data
+     */
+    inbound?: number
+    /**
+     * session duration in minutes
+     */
+    duration?: number
+}
+
+/**
+ * Sends a log message to note
+ */
+export interface HubLogRequest extends HubRequest {
     req: "hub.log"
     text: string
 }
 
+/**
+ * A blues.io note request
+ */
 export interface NoteRequest extends Request {
     req: "note.add" | "note.get" | "note.delete" | "note.udpate"
 }
 
+/**
+ * A request to add a note
+ */
 export interface NoteAddRequest extends NoteRequest {
     req: "note.add"
     body: any
@@ -39,6 +86,8 @@ export interface NoteAddRequest extends NoteRequest {
     key?: string
     verify?: boolean
 }
+
+export type Requests = HubRequest | HubSetRequest | NoteRequest | NoteAddRequest
 
 /**
  * Default 0x17 I2c address of notecard
@@ -62,21 +111,22 @@ export function requestQueueLength() {
 /**
  * Sends a request to the notecard over i2c
  */
-export async function request(req: Request): Promise<Response> {
+export async function request(req: Requests): Promise<Response> {
     if (!req || !req.req) {
-        log(`invalid request`)
+        debug(`invalid request`)
         return undefined
     }
 
     if (pending.length > MAX_QUEUE) {
-        log(`request queue full`)
+        debug(`request queue full`)
         return undefined
     }
 
     // block until it's our turn to send a message
     pending.push(req)
+    // block until we can process this request
     while (pending[0] !== req) await delay(1000)
-
+    // handle request
     let res: Response
     try {
         res = await internalRequest(req)
@@ -101,7 +151,7 @@ async function internalRequest(req: Request): Promise<Response> {
     // data poll
     const res = await receive()
     const rstr = res.toString()
-    log(rstr)
+    debug(rstr)
     const r = JSON.parse(rstr) as Response
     await delay(250)
     return r
@@ -124,7 +174,7 @@ function encode(req: Request): Buffer {
     // notes will reconstruct the JSON message until \n is found
     const str = JSON.stringify(req) + "\n"
     const buf = Buffer.from(str)
-    log(str)
+    debug(str)
     return buf
 }
 
@@ -155,8 +205,8 @@ async function transmit(buf: Buffer) {
     let index = 0
     while (index < buf.length) {
         const chunk = buf.slice(index, Math.min(CHUNK, buf.length - index))
-        const sent = await send(chunk)
-        if (!sent) break
+        error = await send(chunk)
+        if (error) break
         index += chunk.length
         await delay(20)
     }
@@ -164,13 +214,13 @@ async function transmit(buf: Buffer) {
     return error
 }
 
-async function send(buf: Buffer): Promise<boolean> {
+async function send(buf: Buffer): Promise<number> {
     const sbuf = Buffer.alloc(buf.length + 1)
     sbuf[0] = buf.length
     await sbuf.blitAt(1, buf, 0, buf.length)
     try {
         await i2c.writeBuf(ADDRESS, sbuf)
-        return true
+        return 0
     } catch (e) {
         if (e instanceof I2CError) {
             const status: number = e.status
@@ -178,26 +228,37 @@ async function send(buf: Buffer): Promise<boolean> {
                 case I2CStatus.OK:
                     break
                 case 1:
-                    log("data too long to fit in transmit buffer")
+                    debug("data too long to fit in transmit buffer")
                     break
                 case I2CStatus.NoI2C:
-                    log("received NACK on transmit of address")
+                    debug("received NACK on transmit of address")
                     break
                 case I2CStatus.NAckData:
-                    log("received NACK on transmit of data")
+                    debug("received NACK on transmit of data")
                     break
                 case 4:
-                    log("unknown error on TwoWire::endTransmission()")
+                    debug("unknown error on TwoWire::endTransmission()")
                     break
                 case 5:
-                    log("timeout")
+                    debug("timeout")
                     break
                 default:
-                    log(
+                    debug(
                         `unknown error encounter during I2C transmission ${status}`
                     )
             }
-            return false
+            return status
         } else throw e
     }
+}
+
+/**
+ * Sends a log message to the hub
+ * @param text message to send
+ */
+export async function log(text: string) {
+    await request(<HubLogRequest>{
+        req: "hub.log",
+        text,
+    })
 }
