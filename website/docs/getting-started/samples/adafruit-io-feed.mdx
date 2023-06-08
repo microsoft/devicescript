@@ -31,13 +31,6 @@ The Qt Py firmware might need to be updated to the latest version.
 
 Once the flashing is done, connect to the device. If all goes well, it will appear in the device explorer.
 
-## WiFi setup
-
-In the DeviceScript explorer view, find the access point you plan to use and configure it with the password
-(leave it empty if no password). The device should be able to connect and you'll see the IP address.
-
-You also get the MAC address if you need it to allow access to the WiFi network.
-
 ## Adafruit.io Configuration
 
 Navigate to [Adafruit.io](https://io.adafruit.com/) and create an account.
@@ -45,10 +38,10 @@ Then create a new feed and name it `temperature`.
 
 Make note of your user name and the access key. We'll need those shortly.
 
-## Code configuration
+## Settings configuration
 
 Before writing the logic of the application, we want to configure the script
-for the current hardware. We will need settings to store the Adafruit.io secret key,
+for the current hardware. We will need settings to store WiFi configuration, the Adafruit.io secret key,
 the pin mapping for the Qt Py and the SHTC3 driver.
 
 -   click on the **wand** icon in the file editor menu
@@ -60,8 +53,16 @@ the pin mapping for the Qt Py and the SHTC3 driver.
 Edit `.env.local` and add your Adafruit.io secret key. **This file should not be committed to source control.**
 
 ```yaml
-# secrets, don't commit
+# env.defaults
+# public settings, commit to source control
+WIFI_SSID=your-wifi-ssid
+```
+
+```yaml
+# env.local
+# secrets, don't commit to source control
 IO_KEY=your-secret-key
+WIFI_PWD=your-wifi-password
 ```
 
 ## Code
