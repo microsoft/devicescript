@@ -1,0 +1,68 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/devicescript-pico/main/boards/rp2040deviceconfig.schema.json",
+    "devName": "pico bricks",
+    "productId": "0x3ab4b07e",
+    "$description": "Pico Bricks sensor kit with a RP2040 board from Raspberry Pi with a WiFi chip.",
+    "archId": "rp2040w",
+    "url": "https://picobricks.com/",
+    "log": {
+        "baud": 115200,
+        "pinTX": 0
+    },
+    "pins": {
+        "P1": 1,
+        "P11": 11,
+        "P13": 13,
+        "P14": 14,
+        "P15": 15,
+        "P16": 16,
+        "P17": 17,
+        "P18": 18,
+        "P19": 19,
+        "P2": 2,
+        "P21": 21,
+        "P22": 22,
+        "P28": 28,
+        "P3": 3,
+        "P6": 6,
+        "P8": 8,
+        "P9": 9
+    },
+    "led": {
+        "pin": 7,
+        "isMono": true
+    },
+    "noScanI2C": true,
+    "i2c": {
+        "pinSCL": 5,
+        "pinSDA": 4,
+        "kHz": 200
+    },
+    "services": [
+        {
+            "service": "buzzer",
+            "pin": 20,
+            "name": "buzzer"
+        },
+        {
+            "service": "relay",
+            "pin": 12,
+            "name": "relay"
+        },
+        {
+            "service": "button",
+            "pin": 10,
+            "name": "button"
+        },
+        {
+            "service": "analog:potentiometer",
+            "pin": 26,
+            "name": "pot"
+        },
+        {
+            "service": "analog:lightLevel",
+            "pin": 27,
+            "name": "lightLevel"
+        }
+    ]
+}
