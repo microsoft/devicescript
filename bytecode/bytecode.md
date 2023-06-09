@@ -1,6 +1,22 @@
 # DeviceScript bytecode spec
 
-Expressions do not modify the state. They may throw exceptions though.
+This file documents bytecode format for DeviceScript.
+A [C header file](https://github.com/microsoft/devicescript/blob/main/runtime/devicescript/devs_bytecode.h)
+and a [TypeScript file](https://github.com/microsoft/devicescript/blob/main/compiler/src/bytecode.ts) are generated from it.
+Additional structures are defined in [devs_format.h](https://github.com/microsoft/devicescript/blob/main/runtime/devicescript/devs_format.h).
+
+A DeviceScript bytecode file contains magic and version numbers followed by a number of binary sections
+defining functions, various literals (floats, ASCII strings, Unicode strings, buffers),
+Jacdac service specifications, and runtime configuration (`configureHardware()` and built-in servers).
+
+Functions are sequences of opcodes defined below.
+Opcodes are divided into expressions (with return type) which do not modify state,
+and statements (no return type; `ret_val()` expression is used to retrive the logical
+result of a last statement).
+Many opcodes (both expressions and statements) can also throw an exception.
+
+For a more highlevel description of runtime and bytecode, see [Runtime implementation page](/language/runtime).
+
 
 ## Format Constants
 
@@ -192,7 +208,7 @@ Shorthand to `index(obj, static_utf8_string(utf8_idx))`
 
     load_buffer(buffer, numfmt, offset): number = 43
 
-    ret_val: any = 44
+    ret_val(): any = 44
 
 Return value of query register, call, etc.
 
@@ -255,6 +271,8 @@ Check if value is precisely `null` or `undefined`.
 Same as `x | 0`.
 
     fun add(x, y): number = 58     // x + y
+
+Note that this also works on strings, etc.
 
     fun sub(x, y): number = 59     // x - y
 

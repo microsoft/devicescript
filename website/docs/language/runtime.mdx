@@ -1,0 +1,201 @@
+---
+title: Runtime implementation
+sidebar_position: 99
+---
+
+# Runtime implementation
+
+DeviceScript compiler takes TypeScript files and generates bytecode files, which are then executed by
+the DeviceScript runtime.
+The bytecode files are designed to be small (about half the size of source code)
+and executable directly from storage (typically flash memory), with minimal overhead in RAM.
+
+For technical specification of bytecode files see [Bytecode format page](/language/bytecode)
+and the example below.
+
+## Why not Web Assembly (Wasm)?
+
+While the DeviceScript runtime itself can be compiled to Wasm, the bytecode format that the TypeScript
+is compiled to is quite different.
+
+Wasm files have a tree structure of unlimited depth, designed for fast JIT compilation, not in-place interpreters.
+Thus, executing Wasm from a read-only memory incurs significant overhead in working memory,
+even with [state of the art approaches](https://arxiv.org/pdf/2205.01183.pdf).
+
+Additionally, Wasm is a low-level bytecode, for example `i32.add` takes two 32-bit integers and adds them up.
+For JavaScript semantics, you want the `+` operator to work on doubles, strings, and integers (if represented differently than doubles).
+
+## NaN-boxing
+
+The DeviceScript runtime uses [NaN-boxing](https://anniecherkaev.com/the-secret-life-of-nan)
+on both 64- and 32-bit architectures.
+That is all JavaScript values are represented as 64-bit doubles,
+but various NaN and subnormal encodings have special meaning:
+* all 32-bit signed integers are represented in low word (mantissa),
+  when the high word (sign, exponent, and high bits of mantissa) is set to `0xffff_ffff`
+  (this is subset of NaNs)
+* various special values (`undefined`, `null`, `NaN`, `true`, `false`, `Infinity`, `-Infinity`)
+  are represented as subnormals
+* pointers to heap objects are also represented as subnormals;
+  on 64-bit machines pointers are assumed to live within GC heap, which is assumed to be under 4GB
+* references to bytecode objects (strings, buffers, service specifcations, functions, ...)
+  are subnormal too
+* finally, functions (which are 16 bit indices) can be bound to other objects and still fit in a subnormal;
+  `x.foo` where `.foo` is a function is represented as heap reference to `x` and index of `.foo` function
+  in bytecode, all packed into a 64-bit value.
+
+## String representation
+
+All strings are represented as valid UTF8 (which is a [slight departure](/language/strings) from JavaScript semantics).
+This makes it easy to send them over wire and also saves memory when strings only use
+ASCII characters (which is often the case even in international code-bases due to field/function names).
+There are two representations:
+* short ASCII strings are represented simply as NUL-terminated byte sequences in bytecode - when `.length` is requested it's recomputed
+* longer and non-ASCII strings are represented as structures with byte size, character length and jump list to speed up indexing;
+  the jump list has byte index of every 16-th character index
+
+## GC
+
+Garbage collector in DeviceScript is quite simple, yet efficient.
+Collection can happen on any allocation, and is forced after a fixed size of allocations has been reached since
+last collection, or when the allocation cannot be performed.
+Allocation always prefers returning smaller addresses, which tends to reduce fragmentation
+(this is also the reason why we force collection more often than necessary).
+
+The collection is quick, since the heap size compared to CPU speed is very small.
+Typical embedded system is 10-100x slower than a desktop CPU, but has 100,000-1,000,000x less memory,
+thus scanning the whole heap takes on the order of a single millisecond.
+
+## Bytecode example
+
+Let's take a look at how a simple example is compiled:
+
+```ts
+function add(x: any, y: any) {
+    return x + y
+}
+function assertEq(x: any, y: any) {
+    if (x !== y) throw new Error(`Not eq: ${x} != ${y}!`)
+}
+assertEq(add(2, 2.1), 4.1)
+assertEq(add("2", 2), "22")
+```
+
+We compile it with `devs build` and then can disassemble it with `devs disasm`
+(or `devs disasm --detailed`).
+This results in the following output:
+
+```js skip
+proc main_F0(): @176
+```
+
+The first procedure in bytecode file is an entry point.
+Here, it sits at byte offset `176` in the bytecode file.
+
+```js skip
+   0:     CALL prototype_F1{F1}() // 270102
+```
+
+The three bytes `0x27, 0x01, 0x02` encode state 
+"function reference", "function number 1", "call 0-arguments".
+
+```js skip
+   3:     CALL add_F3{F3}(2, 2.1{D0}) // 270392290004
+```
+
+Here the opcodes say "function reference", "function 3",
+"constant 0x92 - 0x90 == 2", "double reference", 
+"double number 0", "call 2-arguments".
+The number `3:` in front refers to byte offset within a function.
+
+```js skip
+   9:     CALL assertEq_F2{F2}(ret_val(), 4.1{D1}) // 27022c290104
+```
+
+Here, we have `ret_val()` opcode refering to the result of previous
+call - calls are statements so they cannot be nested.
+
+```js skip
+  15:     CALL add_F3{F3}("2"{A3}, 2) // 270325039204
+```
+
+The new thing here is ASCII string reference (see table of strings and doubles at the bottom of the file).
+
+```js skip
+  21:     CALL assertEq_F2{F2}(ret_val(), "22"{A4}) // 27022c250404
+  27:     CALL ds."restart"{I57}() // 1e3902
+  30:     RETURN 0 // 900c
+```
+
+The compiler adds call to `ds.restart()` in test-mode compilation.
+Note that there is special opcode for members of `@devicescript/core`
+module that are referenced by built-in strings ("internal string 57"); 
+thus `ds.restart()` is only 3 bytes.
+The final `RETURN` is superfluous.
+
+```js skip
+proc prototype_F1(): @208
+   0:     RETURN undefined // 2e0c
+```
+
+The `prototype_Fx()` function would have assignment of methods
+to prototypes if there were any.
+Also `undefined` has it's own opcode.
+
+```js skip
+proc assertEq_F2(par0, par1): @212
+   0:     JMP 25 IF NOT (par0{L0} !== par1{L1}) // 15001501470ef90014
+```
+
+Here we jump to offset `25` if the condition is not true.
+The condition refers to "local variable 0" and "1"
+(which happen to be parameters).
+
+```js skip
+   9:     CALL ds."format"{I76}("Not eq: {0} != {1}!"{A1}, par0{L0}, par1{L1}) // 1e4c25011500150105
+```
+
+The template literals are compiled to `ds.format()` calls.
+
+```js skip
+  18:     CALL (new Error{O27})(ret_val()) // 011b582c03
+```
+
+Here, the `new` opcode takes a reference to "built-in object 27" (`Error`).
+
+```js skip
+  23:     THROW ret_val() // 2c54
+  25:     RETURN undefined // 2e0c
+
+proc add_F3(par0, par1): @240
+   0:     RETURN (par0{L0} + par1{L1}) // 150015013a0c
+
+```
+
+Note how the `+` opcode can be used on both strings and numbers.
+
+```js skip
+Strings ASCII:
+   0: "assertEq"
+   1: "Not eq: {0} != {1}!"
+   2: "add"
+   3: "2"
+   4: "22"
+   5: "assertEq"
+
+Strings UTF8:
+
+Strings buffer:
+
+Doubles:
+   0: 2.1
+   1: 4.1
+```
+
+The file finishes with tables of various literals.
+The short ASCII literals are separate from UTF8 literals, which have a more
+complex representation.
+
+You can disassemble a compiled `.devs` or `-dbg.json` file by running `devs disasm`
+(without arguments it will look in `.devicescript/bin/` where a previous `devs build`
+should have left the binaries).

@@ -723,8 +723,8 @@ export class Image {
     disassemble(verbose = false) {
         const img = this
         let r =
-            `; img size ${this.devsBinary.length}\n` +
-            `; ${this.numGlobals} globals\n`
+            `// img size ${this.devsBinary.length}\n` +
+            `// ${this.numGlobals} globals\n`
 
         for (const fn of this.functions) r += "\n" + fn.disassemble(verbose)
 
