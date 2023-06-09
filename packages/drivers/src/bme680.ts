@@ -111,7 +111,7 @@ class BME680Driver extends I2CSensorDriver<{
         await delay(5)
         const id = await this.readReg(BME680_REG_CHIPID)
         console.debug(`BME680 id=${id}`)
-        if (id !== BME680_CHIPID) throw new DriverError(`BME680: wrong chip id`)
+        if (id !== BME680_CHIPID) throw new DriverError(`BME680: wrong chip id (${id})`)
         this.chipVariant = await this.readReg(BME680_REG_VARIANT)
         await this.readCalibration()
 

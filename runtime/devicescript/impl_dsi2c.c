@@ -29,7 +29,7 @@ void fun3_DeviceScript__i2cTransaction(devs_ctx_t *ctx) {
             devs_throw_expecting_error_ext(ctx, "mutable Buffer", rdbuf);
             return;
         }
-        rdata = (uint8_t *)devs_buffer_data(ctx, buf, &num_read);
+        rdata = (uint8_t *)devs_buffer_data(ctx, rdbuf, &num_read);
     }
 
     if (wrsize > 0) {
