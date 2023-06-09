@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.11.5](https://github.com/microsoft/devicescript/compare/v2.11.4...v2.11.5)
+
+> 9 June 2023
+
+- refactoring iot docs [`#469`](https://github.com/microsoft/devicescript/pull/469)
+- remove professional from docs [`#467`](https://github.com/microsoft/devicescript/pull/467)
+- fix #466 I2C bug; 2.11.5 [`#466`](https://github.com/microsoft/devicescript/issues/466)
+- Fix SPI mention [`919ce81`](https://github.com/microsoft/devicescript/commit/919ce817889b5579da8589e28cd9e9e52fdf6672)
+
 #### [v2.11.4](https://github.com/microsoft/devicescript/compare/v2.11.3...v2.11.4)
 
 > 9 June 2023
