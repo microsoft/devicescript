@@ -60,3 +60,61 @@ String.prototype.startsWith = function (
     if (!(position > 0)) position = 0
     return this.indexOf(searchString, position, position + 1) >= 0
 }
+
+String.prototype.split = function (
+    this: string,
+    separator?: string,
+    limit?: number
+): string[] {
+    const S = this
+    // https://www.ecma-international.org/ecma-262/6.0/#sec-string.prototype.split
+    const A: string[] = []
+    let lim = 0
+    if (limit === undefined) lim = (1 << 29) - 1
+    // spec says 1 << 53, leaving it at 29 for constant folding
+    else if (limit < 0) lim = 0
+    else lim = limit | 0
+    const s = S.length
+    let p = 0
+    const R = separator
+    if (lim == 0) return A
+    if (separator === undefined) {
+        A[0] = S
+        return A
+    }
+    if (s == 0) {
+        let z = splitMatch(S, 0, R)
+        if (z > -1) return A
+        A[0] = S
+        return A
+    }
+    let T: string
+    let q = p
+    while (q != s) {
+        let e = splitMatch(S, q, R)
+        if (e < 0) q++
+        else {
+            if (e == p) q++
+            else {
+                T = S.slice(p, q)
+                A.push(T)
+                if (A.length == lim) return A
+                p = e
+                q = p
+            }
+        }
+    }
+    T = S.slice(p, q)
+    A.push(T)
+    return A
+}
+
+function splitMatch(S: string, q: number, R: string): number {
+    const r = R.length
+    const s = S.length
+    if (q + r > s) return -1
+    for (let i = 0; i < r; ++i) {
+        if (S[q + i] != R[i]) return -1
+    }
+    return q + r
+}
