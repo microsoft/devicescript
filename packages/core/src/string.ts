@@ -83,7 +83,7 @@ String.prototype.split = function (
         return A
     }
     if (s === 0) {
-        let z = S.indexOf(R, 0)
+        let z = splitMatch(S, 0, R)
         if (z > -1) return A
         A[0] = S
         return A
@@ -91,7 +91,7 @@ String.prototype.split = function (
     let T: string
     let q = p
     while (q !== s) {
-        let e = S.indexOf(R, q)
+        let e = splitMatch(S, q, R)
         if (e < 0) q++
         else {
             if (e === p) q++
@@ -107,4 +107,14 @@ String.prototype.split = function (
     T = S.slice(p, q)
     A.push(T)
     return A
+}
+
+function splitMatch(S: string, q: number, R: string): number {
+    const r = R.length
+    const s = S.length
+    if (q + r > s) return -1
+    for (let i = 0; i < r; ++i) {
+        if (S[q + i] !== R[i]) return -1
+    }
+    return q + r
 }
