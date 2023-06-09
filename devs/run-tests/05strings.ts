@@ -121,6 +121,11 @@ function testSplit() {
     isEq(sq2[0], "a")
     isEq(sq2[1], "b")
 
+    const sq3 = "a,:b,:c,d".split(",:")
+    isEq(sq3.length, 3)
+    isEq(sq3[0], "a")
+    isEq(sq3[1], "b")
+    isEq(sq3[2], "c,d")
 }
 
 testStrings()
