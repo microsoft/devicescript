@@ -25,7 +25,7 @@ String.prototype.lastIndexOf = function (
     searchString: string,
     position?: number
 ): number {
-    if (position == undefined) position = this.length
+    if (position === undefined) position = this.length
     return this.indexOf(searchString, 0, -position)
 }
 
@@ -77,12 +77,12 @@ String.prototype.split = function (
     const s = S.length
     let p = 0
     const R = separator
-    if (lim == 0) return A
+    if (lim === 0) return A
     if (separator === undefined) {
         A[0] = S
         return A
     }
-    if (s == 0) {
+    if (s === 0) {
         let z = splitMatch(S, 0, R)
         if (z > -1) return A
         A[0] = S
@@ -90,15 +90,15 @@ String.prototype.split = function (
     }
     let T: string
     let q = p
-    while (q != s) {
+    while (q !== s) {
         let e = splitMatch(S, q, R)
         if (e < 0) q++
         else {
-            if (e == p) q++
+            if (e === p) q++
             else {
                 T = S.slice(p, q)
                 A.push(T)
-                if (A.length == lim) return A
+                if (A.length === lim) return A
                 p = e
                 q = p
             }
@@ -114,7 +114,7 @@ function splitMatch(S: string, q: number, R: string): number {
     const s = S.length
     if (q + r > s) return -1
     for (let i = 0; i < r; ++i) {
-        if (S[q + i] != R[i]) return -1
+        if (S[q + i] !== R[i]) return -1
     }
     return q + r
 }
