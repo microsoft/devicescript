@@ -161,7 +161,7 @@ export class DeveloperToolsManager extends JDEventSource {
             // installed devs tool are outdated for the vscode addon
             if (semverCmp(devsVersion, extv) < 0) {
                 const yes = await showConfirmBox(
-                    `DeviceScript - @devicescript/cli dependency is outdated (${extv}), upgrade to latest (${devsVersion}+) ?`
+                    `DeviceScript - @devicescript/cli is outdated (${devsVersion}), upgrade to latest (${extv}+) ?`
                 )
                 if (yes) {
                     await this.kill()
@@ -620,6 +620,7 @@ export class DeveloperToolsManager extends JDEventSource {
             await sideRequest<SideKillReq, SideKillResp>({
                 req: "kill",
                 data: {},
+                timeout: 1000,
             })
             // process acknoledged the message
             return true
@@ -629,16 +630,18 @@ export class DeveloperToolsManager extends JDEventSource {
     }
 
     private async kill() {
-        this.sendKillRequest()
+        await this.sendKillRequest()
         const p = this._terminalPromise
         this.clear()
         if (p) {
-            const t = await p
-            if (t) {
-                try {
-                    t.sendText("\u001c")
-                } catch {}
-            }
+            await delay(1000)
+            p.then(t => {
+                if (t) {
+                    try {
+                        t.sendText("\u001c")
+                    } catch {}
+                }
+            })
         }
     }
 
