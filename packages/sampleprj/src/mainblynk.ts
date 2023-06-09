@@ -1,3 +1,4 @@
+import { sleep } from "@devicescript/core"
 import { fetch } from "@devicescript/net"
 import { readSetting } from "@devicescript/settings"
 
@@ -43,4 +44,11 @@ export class VirtualPin<T extends VirtualPinValueType> {
         }
         return this.value
     }
+}
+
+const switchControl = new VirtualPin(0, 0)
+while (true) {
+    await switchControl.read()
+    console.log(switchControl.value)
+    await sleep(1000)
 }
