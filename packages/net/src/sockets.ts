@@ -12,6 +12,13 @@ let socket: Socket
 
 export type SocketProto = "tcp" | "tls"
 
+export interface SocketConnectOptions {
+    host: string
+    port: number
+    proto?: SocketProto
+    timeout?: number
+}
+
 export class Socket {
     private buffers: Buffer[] = []
     private lastError: Error
@@ -122,16 +129,7 @@ export class Socket {
         }
     }
 
-    /**
-     * Create a new socket and connect it.
-     * Throws on error or timeout.
-     */
-    static async connect(options: {
-        host: string
-        port: number
-        proto?: SocketProto
-        timeout?: number
-    }) {
+    static async _connect(options: SocketConnectOptions) {
         let { host, port, proto } = options
         if (!proto) proto = "tcp"
         const port2 = proto === "tls" ? -port : port
@@ -153,4 +151,13 @@ export class Socket {
         ds.assert(v === true)
         return socket
     }
+}
+
+/**
+ * Create a new socket and connect it.
+ * Throws on error or timeout.
+ * @param options socket connection options
+ */
+export async function connect(options: SocketConnectOptions) {
+    return await Socket._connect(options)
 }

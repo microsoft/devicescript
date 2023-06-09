@@ -1,5 +1,8 @@
-import { Socket, SocketProto } from "./sockets"
+import { Socket, SocketProto, connect } from "./sockets"
 
+/**
+ * Represents options for a fetch request.
+ */
 export interface FetchOptions {
     method?:
         | "GET"
@@ -105,7 +108,19 @@ export class Response {
     }
 }
 
-export async function fetch(url: string, options?: FetchOptions) {
+/**
+ * Fetches a resource from the network.
+ *
+ * @param url - The URL to fetch.
+ * @param options - Optional fetch options.
+ * @returns A promise that resolves to a `Response` object.
+ *
+ * @throws {TypeError} If the URL is invalid or the request body is not a string or buffer.
+ */
+export async function fetch(
+    url: string,
+    options?: FetchOptions
+): Promise<Response> {
     if (!options) options = {}
     if (!options.method) options.method = "GET"
     if (!options.headers) options.headers = new Headers()
@@ -161,7 +176,7 @@ export async function fetch(url: string, options?: FetchOptions) {
     if (bodyLen) hd.set("content-length", bodyLen + "")
 
     const reqStr = `${options.method} ${path} HTTP/1.1\r\n${hd.serialize()}\r\n`
-    const s = await Socket.connect({
+    const s = await connect({
         host,
         port,
         proto,
