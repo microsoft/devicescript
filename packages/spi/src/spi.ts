@@ -38,43 +38,50 @@ function pinNum(p: ds.Pin) {
     return p ? p.gpio : -1
 }
 
-/**
- * Configure the SPI bus
- * @param cfg a set of configuration options
- */
-export function spiConfigure(cfg: SPIConfig) {
-    ;(ds as DsSpi).spiConfigure(
-        pinNum(cfg.miso),
-        pinNum(cfg.mosi),
-        pinNum(cfg.sck),
-        cfg.mode || 0,
-        cfg.hz || 1000000
-    )
+export class SPI {
+    /**
+     * Configure the SPI bus
+     * @param cfg a set of configuration options
+     */
+    configure(cfg: SPIConfig) {
+        ;(ds as DsSpi).spiConfigure(
+            pinNum(cfg.miso),
+            pinNum(cfg.mosi),
+            pinNum(cfg.sck),
+            cfg.mode || 0,
+            cfg.hz || 1000000
+        )
+    }
+
+    /**
+     * Write a buffer to the SPI bus
+     */
+    async write(buf: Buffer) {
+        await (ds as DsSpi).spiXfer(buf, null)
+    }
+
+    /**
+     * Reads a buffer from the SPI bus
+     */
+    async read(numbytes: number) {
+        const r = Buffer.alloc(numbytes)
+        await (ds as DsSpi).spiXfer(null, r)
+        return r
+    }
+
+    /**
+     * Transfers a buffer to and from the SPI bus
+     * @param buf buffer to send
+     * @returns buffer received of the same size
+     */
+    async transfer(buf: Buffer) {
+        const r = Buffer.alloc(buf.length)
+        await (ds as DsSpi).spiXfer(buf, r)
+        return r
+    }
 }
 
 /**
- * Write a buffer to the SPI bus
+ * The default SPI instance.
  */
-export async function spiWrite(buf: Buffer) {
-    await (ds as DsSpi).spiXfer(buf, null)
-}
-
-/**
- * Reads a buffer from the SPI bus
- */
-export async function spiRead(numbytes: number) {
-    const r = Buffer.alloc(numbytes)
-    await (ds as DsSpi).spiXfer(null, r)
-    return r
-}
-
-/**
- * Transfers a buffer to and from the SPI bus
- * @param buf buffer to send
- * @returns buffer received of the same size
- */
-export async function spiTransfer(buf: Buffer) {
-    const r = Buffer.alloc(buf.length)
-    await (ds as DsSpi).spiXfer(buf, r)
-    return r
-}
+export const spi = new SPI()

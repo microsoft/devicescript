@@ -8,18 +8,18 @@ sidebar_position: 14
 SPI [builtin package](/developer/packages) that exposes functions to read, write, transfer buffers over SPI.
 
 ```ts
-import { spiConfigure, spiRead, spiWrite, spiTransfer } from "@devicescript/spi"
+import { spi } from "@devicescript/spi"
 
-await spiConfigure({})
+await spi.configure({})
 
 // write a few bytes
-await spiWrite(hex`abcd`)
+await spi.write(hex`abcd`)
 
 // read 8 bytes
-const resp = await spiRead(8)
+const resp = await spi.read(8)
 
 // write and read a buffer
-const resp2 = await spiTransfer(hex`abcd`)
+const resp2 = await spi.transfer(hex`abcd`)
 ```
 
 :::warning
