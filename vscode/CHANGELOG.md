@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.11.1](https://github.com/microsoft/devicescript/compare/v2.11.0...v2.11.1)
+
+> 8 June 2023
+
+- added blues docs [`55a0526`](https://github.com/microsoft/devicescript/commit/55a0526d3ac8c36baaff41b25bc843ac7c4aa0a0)
+- skip blues sample [`a0650ad`](https://github.com/microsoft/devicescript/commit/a0650adcd792750bcbe7116265b23f952f13c6c5)
+
 #### [v2.11.0](https://github.com/microsoft/devicescript/compare/v2.10.10...v2.11.0)
 
 > 8 June 2023
