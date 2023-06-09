@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.11.2](https://github.com/microsoft/devicescript/compare/v2.11.1...v2.11.2)
+
+> 9 June 2023
+
+- fix issue with npm upgrade detection [`9312277`](https://github.com/microsoft/devicescript/commit/9312277490d75408c4da5de97f7bf394756618c2)
+- docs about adding boards [`30234ae`](https://github.com/microsoft/devicescript/commit/30234ae255174443a62e27c26f331fbd4c26fad1)
+- Update README.md [`439463a`](https://github.com/microsoft/devicescript/commit/439463a54b7c01f52d1c5be20bf58bf3ba35b235)
+
 #### [v2.11.1](https://github.com/microsoft/devicescript/compare/v2.11.0...v2.11.1)
 
 > 8 June 2023
