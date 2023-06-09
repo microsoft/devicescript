@@ -110,11 +110,5 @@ String.prototype.split = function (
 }
 
 function splitMatch(S: string, q: number, R: string): number {
-    const r = R.length
-    const s = S.length
-    if (q + r > s) return -1
-    for (let i = 0; i < r; ++i) {
-        if (S[q + i] !== R[i]) return -1
-    }
-    return q + r
+    return S.indexOf(R, q, q + 1) === q ? q + R.length : -1
 }
