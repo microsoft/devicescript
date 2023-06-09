@@ -15,7 +15,7 @@ In this sample, we will use [HomeBridge](https://homebridge.io/) to integrate ou
 
 [HomeBridge](https://homebridge.io/) allows you to integrate with smart home devices that do not natively support HomeKit.
 Using the [HomeBridge MQTTThing plugin](https://www.npmjs.com/package/homebridge-mqttthing), you can integrate your MQTT Things with HomeKit.
-The [DeviceScript Gateway](/developer/cloud/gateway) can be configured to route [cloud messages](/developer/cloud/messages) to a MQTT server which can then be used by HomeBridge.
+The [DeviceScript Gateway](/developer/development-gateway/gateway) can be configured to route [cloud messages](/developer/development-gateway/messages) to a MQTT server which can then be used by HomeBridge.
 
 ```mermaid
 stateDiagram-v2
@@ -38,7 +38,7 @@ You will need the URL, port and optionaly username, password to configure the ga
 
 ## Device Gateway configuration
 
--   Clone or create a [DeviceScript Gateway](/developer/cloud/gateway) (by starting a GitHub Codespace for example)
+-   Clone or create a [DeviceScript Gateway](/developer/development-gateway/gateway) (by starting a GitHub Codespace for example)
 -   Configure it to route the messages to the MQTT server
 -   Start the development server. If you are using GitHub Codespaces, make sure to change the visibility of the port to `Public` in the `Ports` pane.
 -   Copy the connection string that is printed in the terminal output and enter it in the `DeviceScript Gateway` pane in Visual Studio Code. You should get a confirmation that the gateway is connected.

@@ -2,13 +2,13 @@
 
 **TypeScript for Tiny IoT Devices.**
 
-DeviceScript brings a professional TypeScript developer experience to low-resource microcontroller-based devices.
+DeviceScript brings a TypeScript developer experience to low-resource microcontroller-based devices.
 DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
 environments.
 
 -   [Read the documentation](https://microsoft.github.io/devicescript)
 
-** Technical Preview - Join the <a href="https://github.com/microsoft/devicescript/discussions">discussions</a> to provide feedback. **
+> Technical Preview - Join the <a href="https://github.com/microsoft/devicescript/discussions">discussions</a> to provide feedback.
 
 https://user-images.githubusercontent.com/4175913/228997575-122d6ad0-f37e-4d4e-ab79-3d8f680ed99d.mp4
 

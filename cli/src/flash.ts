@@ -240,7 +240,7 @@ export async function flashESP32(options: FlashESP32Options) {
         const { code } = await runEsptool("write_flash", moff[1], cachePath)
 
         if (code === 0) {
-            log("flash OK!")
+            log("flash OK, you can connect again to the device.")
             process.exit(0)
         } else {
             error("flash failed")
@@ -545,7 +545,7 @@ export async function flashRP2040(options: FlashRP2040Options) {
     const buf = readFileSync(fn)
     log(`cp ${fn} ${options.drive}`)
     await writeFile(join(options.drive, "fw.uf2"), buf)
-    log("OK")
+    log("flash OK, you can connect again to the device.")
 }
 
 export async function flashAuto(options: FlashOptions) {

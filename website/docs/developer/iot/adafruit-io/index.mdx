@@ -1,12 +1,14 @@
 ---
-title: Adafruit.io Temperature Feed
-sidebar_position: 5
+title: Adafruit.io
+sidebar_position: 2
 ---
 
-# Adafruit.io Temperature Feed
+# Adafruit.io
 
 In this sample, we upload temperature readings to [Adafruit.io](https://io.adafruit.com/).
 It is free for up to 30 data points per minute. This is a great way to get started with IoT.
+
+![Screenshot of temperature chart](./adafruitio.png)
 
 We'll assume you have Visual Studio Code installed and the DeviceScript extension installed.
 
@@ -16,7 +18,7 @@ To get started create a new project by using **DeviceScript: Create New Project.
 
 We'll use the Qt Py and a SHTC3 from Adafruit for this sample.
 
--   [Adafruit QT Py ESP32-C3 WiFi](https://www.adafruit.com/product/5405)
+-   ![](https://microsoft.github.io/jacdac-docs/images/devices/adafruit/qtpyesp32c3wifidevboardv10.avatar.jpg) [Adafruit QT Py ESP32-C3 WiFi](https://www.adafruit.com/product/5405) ([configuration](/devices/esp32/adafruit-qt-py-c3))
 -   [Adafruit Sensirion SHTC3 Temperature & Humidity Sensor - STEMMA QT / Qwiic](https://www.adafruit.com/product/4636)
 
 Make sure to connect the SHTC3 to the QT Py using the Qwiic connector.
@@ -26,10 +28,10 @@ Make sure to connect the SHTC3 to the QT Py using the Qwiic connector.
 The Qt Py firmware might need to be updated to the latest version.
 
 -   connect the QT Py to your computer
--   Click on the **plug** icon in the DeviceScript explorer and select **Flash firmware**
+-   Click on the **plug** icon in the DeviceScript explorer and select **Flash firmware...**
 -   select **Adafruit QT Py ESP32-C3 WiFi**
 
-Once the flashing is done, connect to the device. If all goes well, it will appear in the device explorer.
+Once the flashing is done (you may need to install `esptool`), re-connect to the device. If all goes well, it will appear in the device explorer.
 
 ## Adafruit.io Configuration
 
@@ -50,7 +52,9 @@ the pin mapping for the Qt Py and the SHTC3 driver.
 -   click on the **wand** again
 -   select **Add settings**
 
-Edit `.env.local` and add your Adafruit.io secret key. **This file should not be committed to source control.**
+Edit `.env.local` and add your Adafruit.io secret key.
+
+> ⚠️ `.env.local` should not be committed to source control.
 
 ```yaml
 # env.defaults
@@ -121,3 +125,22 @@ schedule(
 If you don't want to remember the REST API syntax, you can use some packages that wrap the Adafruit.io API.
 
 -   https://github.com/pelikhan/devicescript-adafruit-io/
+
+```ts skip
+import { pins, board } from "@dsboard/adafruit_qt_py_c3"
+import { startSHTC3 } from "@devicescript/drivers"
+import { schedule } from "@devicescript/runtime"
+// highlight-next-line
+import { createData } from "devicescript/adafruit-io"
+
+const { temperature, humidity } = await startSHTC3()
+
+schedule(
+    async () => {
+        const value = await temperature.reading.read()
+        // highlight-next-line
+        await createData(value)
+    },
+    { timeout: 1000, interval: 60000 }
+)
+```

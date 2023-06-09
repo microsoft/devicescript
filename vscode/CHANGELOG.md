@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.11.5](https://github.com/microsoft/devicescript/compare/v2.11.4...v2.11.5)
+
+> 9 June 2023
+
+- refactoring iot docs [`#469`](https://github.com/microsoft/devicescript/pull/469)
+- remove professional from docs [`#467`](https://github.com/microsoft/devicescript/pull/467)
+- fix #466 I2C bug; 2.11.5 [`#466`](https://github.com/microsoft/devicescript/issues/466)
+- Fix SPI mention [`919ce81`](https://github.com/microsoft/devicescript/commit/919ce817889b5579da8589e28cd9e9e52fdf6672)
+
+#### [v2.11.4](https://github.com/microsoft/devicescript/compare/v2.11.3...v2.11.4)
+
+> 9 June 2023
+
+- fix typo; thank you Benjamin_Dobell [`a59e8aa`](https://github.com/microsoft/devicescript/commit/a59e8aafce2b66c602c60bc82bb1bfd23298e5db)
+- handle syntactic difference of npm [`cb4533e`](https://github.com/microsoft/devicescript/commit/cb4533ecc1b65f365efa627da77de2291b17b71b)
+
+#### [v2.11.3](https://github.com/microsoft/devicescript/compare/v2.11.2...v2.11.3)
+
+> 9 June 2023
+
+- added shtc3 example [`314dcb6`](https://github.com/microsoft/devicescript/commit/314dcb691a2ff1fb8e74ef842287b9468506f515)
+- fix deadlock when upgrading cli tools [`32fe8ad`](https://github.com/microsoft/devicescript/commit/32fe8adb462e31a39c422cdea5701e11528a0e59)
+- add bytecode to docs [`0881e6d`](https://github.com/microsoft/devicescript/commit/0881e6d1687eaa472cbe0d5754e00b52bf129216)
+
+#### [v2.11.2](https://github.com/microsoft/devicescript/compare/v2.11.1...v2.11.2)
+
+> 9 June 2023
+
+- fix issue with npm upgrade detection [`9312277`](https://github.com/microsoft/devicescript/commit/9312277490d75408c4da5de97f7bf394756618c2)
+- docs about adding boards [`30234ae`](https://github.com/microsoft/devicescript/commit/30234ae255174443a62e27c26f331fbd4c26fad1)
+- Update README.md [`439463a`](https://github.com/microsoft/devicescript/commit/439463a54b7c01f52d1c5be20bf58bf3ba35b235)
+
+#### [v2.11.1](https://github.com/microsoft/devicescript/compare/v2.11.0...v2.11.1)
+
+> 8 June 2023
+
+- added blues docs [`55a0526`](https://github.com/microsoft/devicescript/commit/55a0526d3ac8c36baaff41b25bc843ac7c4aa0a0)
+- skip blues sample [`a0650ad`](https://github.com/microsoft/devicescript/commit/a0650adcd792750bcbe7116265b23f952f13c6c5)
+
 #### [v2.11.0](https://github.com/microsoft/devicescript/compare/v2.10.10...v2.11.0)
 
 > 8 June 2023

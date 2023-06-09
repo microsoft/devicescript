@@ -1,6 +1,6 @@
 # DeviceScript
 
-**Professional TypeScript-like developer experience for low-resource microcontroller-based devices.**
+**TypeScript developer experience for low-resource microcontroller-based devices.**
 DeviceScript is compiled to a custom VM bytecode, which can run in very constrained
 environments.
 

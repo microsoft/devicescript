@@ -1,9 +1,9 @@
 {
     "name": "devicescript-vscode",
     "displayName": "DeviceScript",
-    "version": "2.11.1",
+    "version": "2.11.5",
     "publisher": "devicescript",
-    "description": "Professional TypeScript for microcontrollers.",
+    "description": "TypeScript for microcontrollers.",
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -208,10 +208,6 @@
             {
                 "view": "extension.devicescript.dbgwatch",
                 "contents": "Select Registers or Events to watch."
-            },
-            {
-                "view": "extension.devicescript.gateway",
-                "contents": "Deploy scripts remotely, track telemetry.\n[Configure...](command:extension.devicescript.gateway.configure)\n[Create Gateway](https://microsoft.github.io/devicescript/developer/cloud/gateway)\n\nTo learn more about DeviceScript Gateway, [read the docs](https://microsoft.github.io/devicescript/developer/cloud/gateway)."
             }
         ],
         "walkthroughs": [

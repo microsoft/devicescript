@@ -1,22 +1,26 @@
 ---
 description: Learn about the supported and unsupported features of DeviceScript,
-  a TypeScript subset designed for limited resources environments.
+    a TypeScript subset designed for limited resources environments.
 keywords:
-  - DeviceScript
-  - TypeScript subset
-  - language features
-  - supported features
-  - unsupported features
+    - DeviceScript
+    - TypeScript subset
+    - language features
+    - supported features
+    - unsupported features
 ---
+
 # DeviceScript Language
 
 DeviceScript generally works just like TypeScript, unless the compiler tells you something is not supported.
+
+The TypeScript sources are compiled to a [bytecode](/language/bytecode)
+that is then executed on the DeviceScript runtime.
 
 ## TypeScript subset
 
 DeviceScript is a subset of [TypeScript](https://www.typescriptlang.org).
 TypeScript itself follows semantics of ECMAScript also known as JavaScript (JS).
-DeviceScript (DS) generally also follows JavaScript semantics, and the DeviceScript compiler
+DeviceScript generally also follows JavaScript semantics, and the DeviceScript compiler
 will give you an error if you're using an unsupported feature.
 
 Otherwise, there are some semantic differences stemming from the limited
@@ -90,4 +94,4 @@ unlikely to miss it):
 -   namespaces (we do support ES modules)
 -   `arguments` keyword; `.apply` method (modern spread operator is supported)
 -   marking properties as non-enumerable etc
--   `==` and `!=` operators (other than `== null`/`undefined`); please use `===` and `!===`
+-   `==` and `!=` operators (other than `== null`/`undefined`); please use `===` and `!==`
