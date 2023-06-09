@@ -1,4 +1,4 @@
-import { Socket, SocketProto } from "./sockets"
+import { Socket, SocketProto, connect } from "./sockets"
 
 export interface FetchOptions {
     method?:
@@ -161,7 +161,7 @@ export async function fetch(url: string, options?: FetchOptions) {
     if (bodyLen) hd.set("content-length", bodyLen + "")
 
     const reqStr = `${options.method} ${path} HTTP/1.1\r\n${hd.serialize()}\r\n`
-    const s = await Socket.connect({
+    const s = await connect({
         host,
         port,
         proto,

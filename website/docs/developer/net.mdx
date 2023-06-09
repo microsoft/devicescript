@@ -24,3 +24,25 @@ The [fetch sources](https://github.com/microsoft/devicescript/blob/main/packages
 can help you with understanding how to use sockets.
 
 :::
+
+## Sockets
+
+Use `net.connect` to open a socket TCP or TLS socket.
+
+This example issues is HTTPS request to the Github.com status API.
+
+```ts
+import { connect } from "@devicescript/net"
+
+const socket = await connect({ proto: "tls", host: "github.com", port: 443 })
+await socket.send(`GET /status.json HTTP/1.1
+user-agent: DeviceScript fetch()
+accept: */*
+host: github.com
+connection: close
+
+`)
+const status = await socket.readLine()
+console.log(status)
+await socket.close()
+```
