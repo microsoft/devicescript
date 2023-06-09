@@ -1,6 +1,6 @@
 ---
-title: Cloud
-sidebar_position: 15
+title: Development Gateway
+sidebar_position: 1000
 description: Learn how to use the DeviceScript cloud agnostic API to send and
     receive JSON messages, connect to the Development Gateway, and utilize
     application telemetry and message queues.
@@ -12,13 +12,13 @@ keywords:
     - application telemetry
 ---
 
-# Cloud
+# Development Gateway
 
 The `@devicescript/cloud` [builtin package](/developer/packages) provides a cloud agnostic device to cloud API
 that allows to send and receive small JSON messages to an online gateway.
 The gateway can route the messages into any further cloud service.
 
-As a proof of concept, DeviceScript can be connected to the [Development Gateway](/developer/cloud/gateway).
+As a proof of concept, DeviceScript can be connected to the Development Gateway.
 
 :::tip
 
@@ -28,11 +28,11 @@ This API is only supported on ESP32 devices currently.
 
 ## Usage
 
--   [Application Telemetry](cloud/telemetry), track application usage and errors
--   [Message queues](cloud/messages), upload and subscribe to message queues
+-   [Application Telemetry](/developer/development-gateway/telemetry), track application usage and errors
+-   [Message queues](/developer/development-gateway/messages), upload and subscribe to message queues
 
 ## Development Gateway
 
 This package relies on a prototype Development Gateway that needs to be deployed prior to using it.
 
--   [Development Gateway](cloud/gateway)
+-   [Development Gateway](/developer/development-gateway/gateway)

@@ -1,14 +1,15 @@
 ---
 sidebar_position: 10
 description: Learn how to connect a thermostat device to a cloud gateway and
-  configure the desired temperature from the cloud using DeviceScript.
+    configure the desired temperature from the cloud using DeviceScript.
 keywords:
-  - thermostat
-  - gateway
-  - devicescript
-  - cloud
-  - temperature control
+    - thermostat
+    - gateway
+    - devicescript
+    - cloud
+    - temperature control
 ---
+
 # Thermostat + Gateway
 
 The [Thermostat](/getting-started/samples/thermostat) sample showed how to implement a thermostat controller
@@ -17,11 +18,11 @@ the desired temperature from the cloud.
 
 ## Development Gateway
 
-Start by setting up a [Development Gateway](/developer/cloud/gateway) and connecting the ESP to it.
+Start by setting up a [Development Gateway](/developer/development-gateway/gateway) and connecting the ESP to it.
 
 ## Telemetry
 
-Just like any web or desktop app, a DeviceScript app can be instrumented with [telemetry](/developer/cloud/telemetry) to get insights into
+Just like any web or desktop app, a DeviceScript app can be instrumented with [telemetry](/developer/development-gateway/telemetry) to get insights into
 how it is behaving.
 
 For example, we instrument the code to notify the cloud whenever the relay is enabled or disabled.
@@ -63,7 +64,7 @@ thermometer.reading
 
 ## Environment variables
 
-If you connect the ESP to the [Development Gateway](/developer/cloud/gateway),
+If you connect the ESP to the [Development Gateway](/developer/development-gateway/gateway),
 you can use environment variables configured in the cloud rather constants in the code.
 
 The `environment` function from `@devicescript/cloud` downloads and caches the environment variables from the cloud.
