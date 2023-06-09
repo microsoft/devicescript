@@ -20,8 +20,6 @@
     "pins": {
         "TX": 21,
         "RX": 20,
-        "A0": 4,
-        "A1": 3,
         "A2": 1,
         "A3": 0,
         "MISO": 8,
@@ -30,7 +28,7 @@
     },
     "archId": "esp32c3",
     "productId": "0x31fc3cd0",
-    "_": [
+    "services": [
         {
             "service": "button",
             "name": "buttonB",
