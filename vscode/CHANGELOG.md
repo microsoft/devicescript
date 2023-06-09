@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.11.3](https://github.com/microsoft/devicescript/compare/v2.11.2...v2.11.3)
+
+> 9 June 2023
+
+- added shtc3 example [`314dcb6`](https://github.com/microsoft/devicescript/commit/314dcb691a2ff1fb8e74ef842287b9468506f515)
+- fix deadlock when upgrading cli tools [`32fe8ad`](https://github.com/microsoft/devicescript/commit/32fe8adb462e31a39c422cdea5701e11528a0e59)
+- add bytecode to docs [`0881e6d`](https://github.com/microsoft/devicescript/commit/0881e6d1687eaa472cbe0d5754e00b52bf129216)
+
 #### [v2.11.2](https://github.com/microsoft/devicescript/compare/v2.11.1...v2.11.2)
 
 > 9 June 2023
