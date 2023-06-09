@@ -171,7 +171,7 @@ export class DeveloperToolsManager extends JDEventSource {
                         cwd: projectFolder,
                     })
                     const cmd = await this.resolvePackageTool(projectFolder)
-                    t.sendText(`${cmd} upgrade @devicescript/cli@latest`)
+                    t.sendText(`${cmd} upgrade @devicescript/cli`)
                     t.show()
                 }
                 throwError("Dependencies outdated", { cancel: true })
