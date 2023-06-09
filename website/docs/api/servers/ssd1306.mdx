@@ -1,0 +1,34 @@
+# SS1306
+
+Driver for SS1306 OLED screen `0x3c` (or `0x3d`).
+
+This screen can be driven directly or through a character screen service.
+
+## Character screen
+
+The user sets a message on the character screen and it will be rendered on the screen. Using the service is compatible with the simulator.
+
+-   Services: [character screen](/api/clients/characterscreen/)
+-   [Datasheet](https://www.digikey.com/htmldatasheets/production/2047793/0/0/1/ssd1306.html)
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/characterscreen.ts)
+
+```ts
+import { startSsd1306CharacterScreen } from "@devicescript/drivers"
+
+const screen = await startSsd1306CharacterScreen({ width: 128, height: 64 })
+await screen.message.write(`hello
+workd`)
+```
+
+## Using the drivers
+
+You can also use the SS1306 driver directly. However, it will not be usable from a simulator.
+
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/ssd1306.ts)
+
+```ts
+const ssd = new SSD1306Driver({ width: 64, height: 48 })
+await ssd.init()
+ssd.image.print("Hello world!", 3, 10)
+await ssd.show()
+```
