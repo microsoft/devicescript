@@ -52,10 +52,7 @@ function testStrings(): void {
 
     msg("X" + true)
 
-    assert(
-        ds._id("X") + true === ds._id("Xt") + "rue",
-        "boolStr"
-    )
+    assert(ds._id("X") + true === ds._id("Xt") + "rue", "boolStr")
     msg("testStrings DONE")
 }
 
@@ -110,10 +107,30 @@ function testSlice() {
     isEq(q.slice(1, -2), "123")
 }
 
+function testSplit() {
+    const q = "a,b,c,d"
+    const sq = q.split(",")
+    isEq(sq.length, 4)
+    isEq(sq[0], "a")
+    isEq(sq[1], "b")
+    isEq(sq[2], "c")
+    isEq(sq[3], "d")
+
+    const sq2 = q.split(",", 2)
+    isEq(sq2.length, 2)
+    isEq(sq2[0], "a")
+    isEq(sq2[1], "b")
+
+    const sq3 = "a,:b,:c,d".split(",:")
+    isEq(sq3.length, 3)
+    isEq(sq3[0], "a")
+    isEq(sq3[1], "b")
+    isEq(sq3[2], "c,d")
+}
+
 testStrings()
 testStringOps()
 consStringTest()
 
 testSlice()
-
-
+testSplit()
