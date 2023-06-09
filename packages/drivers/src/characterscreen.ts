@@ -16,7 +16,6 @@ class CharacterScreenServer extends Server {
     private readonly _render: () => AsyncVoid
     private readonly _columns: number
     private readonly _rows: number
-    private _textDirection: CharacterScreenTextDirection
     background = 0
     color = 1
 
@@ -34,8 +33,6 @@ class CharacterScreenServer extends Server {
         this._render = options.render
         this._columns = options.columns
         this._rows = options.rows
-        this._textDirection =
-            options.textDirection || CharacterScreenTextDirection.LeftToRight
         this._message = ""
     }
 
@@ -45,14 +42,6 @@ class CharacterScreenServer extends Server {
 
     set_message(value: string) {
         this._message = value || ""
-    }
-
-    textDirection() {
-        return this._textDirection
-    }
-
-    set_textDirection(value: CharacterScreenTextDirection) {
-        this._textDirection = value
     }
 
     columns() {
@@ -69,8 +58,6 @@ class CharacterScreenServer extends Server {
         const columns = this._columns
         const rows = this._rows
         const message = this._message
-        const rtl =
-            this._textDirection === CharacterScreenTextDirection.RightToLeft
         const b = this.background
         const c = this.color
         const f = this._font
@@ -81,25 +68,25 @@ class CharacterScreenServer extends Server {
         const ch = 10
         const m = 1
         const mo = 2
-        const fs = 8
 
-        const w = columns * (cw + m) - m + 2 * mo
-        const h = rows * (ch + m) - m + 2 * mo
-
-        const lines = (message || "").split("\n")
-
-        let y = mo
-        for (let row = 0; row < rows; ++row) {
-            let x = mo
-            const line = lines[row]
-            for (let column = 0; column < columns; ++column) {
-                if (line) {
-                    const char = line[rtl ? columns - 1 - column : column]
-                    img.print(char || " ", x, y, c, f)
-                }
-                x += cw + m
+        let row = 0
+        let column = 0
+        for (const char of message) {
+            if (char === "\n") {
+                row += 1
+                column = 0
+            } else {
+                if (column < columns)
+                    img.print(
+                        char,
+                        column * (cw + m) + mo,
+                        row * (ch + m) + mo,
+                        c,
+                        f
+                    )
+                column += 1
             }
-            y += ch + m
+            if (row >= rows) break
         }
 
         // flush buffer
@@ -110,7 +97,6 @@ class CharacterScreenServer extends Server {
 export interface CharacterScreenOptions {
     columns: number
     rows: number
-    textDirection?: CharacterScreenTextDirection
 }
 
 /**
