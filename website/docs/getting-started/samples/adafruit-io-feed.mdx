@@ -121,3 +121,22 @@ schedule(
 If you don't want to remember the REST API syntax, you can use some packages that wrap the Adafruit.io API.
 
 -   https://github.com/pelikhan/devicescript-adafruit-io/
+
+```ts skip
+import { pins, board } from "@dsboard/adafruit_qt_py_c3"
+import { startSHTC3 } from "@devicescript/drivers"
+import { schedule } from "@devicescript/runtime"
+// highlight-next-line
+import { createData } from "devicescript/adafruit-io"
+
+const { temperature, humidity } = await startSHTC3()
+
+schedule(
+    async () => {
+        const value = await temperature.reading.read()
+        // highlight-next-line
+        await createData(value)
+    },
+    { timeout: 1000, interval: 60000 }
+)
+```

@@ -145,31 +145,32 @@ export class DeveloperToolsManager extends JDEventSource {
         if (JSON.stringify(this._versions) !== JSON.stringify(versions)) {
             this._versions = versions
             const extv = extensionVersion()
+            const { devsVersion, runtimeVersion, nodeVersion, projectFolder } =
+                this
             console.debug(
-                `devicescript : vscode ${extv}, devtools ${this.devsVersion}, runtime ${this.runtimeVersion}, node ${this.nodeVersion}`
+                `devicescript : vscode ${extv}, devtools ${devsVersion}, runtime ${runtimeVersion}, node ${nodeVersion}`
             )
-            if (semverCmp(this.nodeVersion, "v18.0.0") < 0) {
-                // node.js version outdated
-                throwError(
-                    `Node.js outdated (${this.nodeVersion}), v18+ needed`,
-                    { cancel: true }
-                )
+
+            // node.js version outdated
+            if (semverCmp(nodeVersion, "v18.0.0") < 0) {
+                throwError(`Node.js outdated (${nodeVersion}), v18+ needed`, {
+                    cancel: true,
+                })
             }
 
-            if (semverCmp(this.devsVersion, extv) < 0) {
-                // installed devs tool are outdated for the vscode addon
-                const { projectFolder } = this
-                this.clear()
+            // installed devs tool are outdated for the vscode addon
+            if (semverCmp(devsVersion, extv) < 0) {
                 const yes = await showConfirmBox(
-                    `DeviceScript - @devicescript/cli dependency is outdated, upgrade?`
+                    `DeviceScript - @devicescript/cli dependency is outdated (${extv}), upgrade to latest (${devsVersion}+) ?`
                 )
                 if (yes) {
+                    await this.kill()
                     const t = vscode.window.createTerminal({
                         isTransient: true,
-                        name: "@devicescript/cli update",
+                        name: "@devicescript/cli upgrade",
                         cwd: projectFolder,
                     })
-                    const cmd = await this.resolvePackageTool()
+                    const cmd = await this.resolvePackageTool(projectFolder)
                     t.sendText(`${cmd} upgrade @devicescript/cli@latest`)
                     t.show()
                 }
@@ -769,9 +770,8 @@ export class DeveloperToolsManager extends JDEventSource {
         terminal?.show()
     }
 
-    private async resolvePackageTool() {
-        const cwd = this._projectFolder
-        if (!cwd) return undefined
+    private async resolvePackageTool(cwd: vscode.Uri) {
+        if (!cwd) return "npm"
         const yarn = await checkFileExists(cwd, "yarn.lock")
         const cmd = yarn ? "yarn" : "npm"
         return cmd
@@ -811,7 +811,7 @@ export class DeveloperToolsManager extends JDEventSource {
                         cwd: cwd.fsPath,
                         isTransient: true,
                     })
-                    const cmd = await this.resolvePackageTool()
+                    const cmd = await this.resolvePackageTool(cwd)
                     t.sendText(`${cmd} install`)
                     t.show()
                 }
