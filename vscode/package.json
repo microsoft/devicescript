@@ -3,7 +3,7 @@
     "displayName": "DeviceScript",
     "version": "2.11.4",
     "publisher": "devicescript",
-    "description": "Professional TypeScript for microcontrollers.",
+    "description": "TypeScript for microcontrollers.",
     "author": {
         "name": "Microsoft Corporation"
     },
