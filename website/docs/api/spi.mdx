@@ -6,44 +6,43 @@ sidebar_position: 101
 # SPI
 
 The SPI [builtin package](/developer/packages) that exposes functions to read, write, transfer buffers over SPI.
+In particular, it exposes an `SPI` class and `spi` singleton instance (currently only one SPI interface is supported).
 
-## `spiConfigure`
+## `SPI.configure`
 
-The `spiConfigure` function is used to configure the SPI bus. It takes the pin configuration, frequency and mode.
-
-```ts
-import { spiConfigure } from "@devicescript/spi"
-
-await spiConfigure({})
-```
-
-## `spiRead`
-
-The `spiRead` function is used to read a buffer from the SPI bus.
+The `SPI.configure` function is used to configure the SPI bus. It takes the pin configuration, frequency and mode.
 
 ```ts
-import { spiRead } from "@devicescript/spi"
-
-const res = await spiRead(8) // read 8 bytes
+import { spi } from "@devicescript/spi"
+await spi.configure({})
 ```
 
-## `spiWrite`
+## `SPI.read`
 
-The `spiWrite` function is used to write a buffer to the SPI bus.
+The `SPI.read` function is used to read a buffer from the SPI bus.
 
 ```ts
-import { spiWrite } from "@devicescript/spi"
-
-await spiWrite(hex`abcd`)
+import { spi } from "@devicescript/spi"
+const res = await spi.read(8) // read 8 bytes
 ```
 
-## `spiTransfer`
+## `SPI.write`
 
-The `spiTransfter` function is used to write and read buffers from and to the SPI bus.
+The `SPI.write` function is used to write a buffer to the SPI bus.
+
+```ts
+import { spi } from "@devicescript/spi"
+
+await spi.write(hex`abcd`)
+```
+
+## `SPI.transfer`
+
+The `SPI.transfer` function is used to write and read buffers from and to the SPI bus.
 The read buffer has the same length as the write buffer.
 
 ```ts
-import { spiTransfer } from "@devicescript/spi"
+import { spi } from "@devicescript/spi"
 
-const res = await spiTransfer(hex`abcd`)
+const res = await spi.transfer(hex`abcd`)
 ```
