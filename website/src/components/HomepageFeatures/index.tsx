@@ -57,10 +57,10 @@ export default function HomepageFeatures(): JSX.Element {
             link: "/devicescript/developer/simulation",
         },
         {
-            title: "Development Gateway",
+            title: "TypeScript Drivers",
             description:
-                "Prototype cloud service with device management, firmware deployment and message queues.",
-            link: "/devicescript/developer/cloud/gateway",
+                "Write drivers in TypeScript using I2C, SPI, ... without having to go down to C (limitations apply :) )",
+            link: "/devicescript/developer/servers",
         },
     ]
 
