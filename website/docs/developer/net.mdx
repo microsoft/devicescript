@@ -1,13 +1,13 @@
 ---
-title: TCP/TLS Sockets
+title: net
 sidebar_position: 14
 ---
 
-# TCP/TLS Sockets
+# net
 
 ## fetch
 
-DeviceScript provides the familiar `fetch` function to issue HTTP requests.
+DeviceScript provides the familiar `fetch` function to issue HTTP/HTTPS requests.
 `fetch` is designed to match the browser [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
 
 ```ts
@@ -24,3 +24,25 @@ The [fetch sources](https://github.com/microsoft/devicescript/blob/main/packages
 can help you with understanding how to use sockets.
 
 :::
+
+## TCP/TLS Sockets
+
+Use `net.connect` to open a socket TCP or TLS socket.
+
+This example issues is HTTPS request to the Github.com status API.
+
+```ts
+import { connect } from "@devicescript/net"
+
+const socket = await connect({ proto: "tls", host: "github.com", port: 443 })
+await socket.send(`GET /status.json HTTP/1.1
+user-agent: DeviceScript fetch()
+accept: */*
+host: github.com
+connection: close
+
+`)
+const status = await socket.readLine()
+console.log(status)
+await socket.close()
+```
