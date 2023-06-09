@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.11.4](https://github.com/microsoft/devicescript/compare/v2.11.3...v2.11.4)
+
+> 9 June 2023
+
+- fix typo; thank you Benjamin_Dobell [`a59e8aa`](https://github.com/microsoft/devicescript/commit/a59e8aafce2b66c602c60bc82bb1bfd23298e5db)
+- handle syntactic difference of npm [`cb4533e`](https://github.com/microsoft/devicescript/commit/cb4533ecc1b65f365efa627da77de2291b17b71b)
+
 #### [v2.11.3](https://github.com/microsoft/devicescript/compare/v2.11.2...v2.11.3)
 
 > 9 June 2023
