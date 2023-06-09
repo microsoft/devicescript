@@ -296,7 +296,7 @@ export class DeviceScriptExtensionState extends JDEventSource {
         const content = JSON.stringify(newBoard, null, 4)
         await writeFile(
             this.devtools.projectFolder,
-            `./boards/${normalize(board)}.json`,
+            `./boards/${normalize(board)}.board.json`,
             content,
             { open: true }
         )
