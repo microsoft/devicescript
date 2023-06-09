@@ -198,6 +198,15 @@ to the VS Code extension
 }
 
 const optionalFiles: FileSet = {
+    ".devcontainer/devcontainer.json": {
+        image: "mcr.microsoft.com/devcontainers/universal:2",
+        features: {
+            "ghcr.io/devcontainers/features/node:1": {
+                version: "lts",
+            },
+            "ghcr.io/devcontainers/features/github-cli:1": {},
+        },
+    },
     "src/tsconfig.json": {
         compilerOptions: {
             moduleResolution: "node",
