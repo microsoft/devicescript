@@ -54,10 +54,11 @@ export class CanvasRenderingContext2D
         font: Font
         transform: Point
     } & CanvasFillStrokeStyles)[] = []
+    private font: Font
+    private transform: Point
+
     fillColor: number = 1
     strokeColor: number = 1
-    font: Font
-    transform: Point
 
     constructor(readonly image: Image) {
         this.font = fontForText("")
