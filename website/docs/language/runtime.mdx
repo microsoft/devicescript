@@ -21,6 +21,7 @@ is compiled to is quite different.
 Wasm files have a tree structure of unlimited depth, designed for fast JIT compilation, not in-place interpreters.
 Thus, executing Wasm from a read-only memory incurs significant overhead in working memory,
 even with [state of the art approaches](https://arxiv.org/pdf/2205.01183.pdf).
+Typically, on an embedded system you have ~5x-20x the flash memory (which is quite slow to write) compared to RAM.
 
 Additionally, Wasm is a low-level bytecode, for example `i32.add` takes two 32-bit integers and adds them up.
 For JavaScript semantics, you want the `+` operator to work on doubles, strings, and integers (if represented differently than doubles).
@@ -33,7 +34,7 @@ That is all JavaScript values are represented as 64-bit doubles,
 but various NaN and subnormal encodings have special meaning:
 * all 32-bit signed integers are represented in low word (mantissa),
   when the high word (sign, exponent, and high bits of mantissa) is set to `0xffff_ffff`
-  (this is subset of NaNs)
+  (this is a subset of NaNs)
 * various special values (`undefined`, `null`, `NaN`, `true`, `false`, `Infinity`, `-Infinity`)
   are represented as subnormals
 * pointers to heap objects are also represented as subnormals;
@@ -41,8 +42,8 @@ but various NaN and subnormal encodings have special meaning:
 * references to bytecode objects (strings, buffers, service specifcations, functions, ...)
   are subnormal too
 * finally, functions (which are 16 bit indices) can be bound to other objects and still fit in a subnormal;
-  `x.foo` where `.foo` is a function is represented as heap reference to `x` and index of `.foo` function
-  in bytecode, all packed into a 64-bit value.
+  that is, `x.foo` where `.foo` is a function is represented as heap reference to `x` and index of `.foo` function
+  in bytecode, all packed into a 64-bit value
 
 ## String representation
 
@@ -50,7 +51,7 @@ All strings are represented as valid UTF8 (which is a [slight departure](/langua
 This makes it easy to send them over wire and also saves memory when strings only use
 ASCII characters (which is often the case even in international code-bases due to field/function names).
 There are two representations:
-* short ASCII strings are represented simply as NUL-terminated byte sequences in bytecode - when `.length` is requested it's recomputed
+* short ASCII strings are represented simply as NUL-terminated byte sequences in bytecode - when `.length` is requested - it's recomputed
 * longer and non-ASCII strings are represented as structures with byte size, character length and jump list to speed up indexing;
   the jump list has byte index of every 16-th character index
 
@@ -63,7 +64,7 @@ Allocation always prefers returning smaller addresses, which tends to reduce fra
 (this is also the reason why we force collection more often than necessary).
 
 The collection is quick, since the heap size compared to CPU speed is very small.
-Typical embedded system is 10-100x slower than a desktop CPU, but has 100,000-1,000,000x less memory,
+Typical embedded system is 10x-100x slower than a desktop CPU, but has 100,000x-1,000,000x less RAM,
 thus scanning the whole heap takes on the order of a single millisecond.
 
 ## Bytecode example
@@ -82,8 +83,8 @@ assertEq(add("2", 2), "22")
 ```
 
 We compile it with `devs build` and then can disassemble it with `devs disasm`
-(or `devs disasm --detailed`).
-This results in the following output:
+(or `devs disasm --detailed`; you can also pass a `.devs` or `-dbg.json` file to `disasm`).
+The disassembly results in the following output:
 
 ```js skip
 proc main_F0(): @176
@@ -196,6 +197,3 @@ The file finishes with tables of various literals.
 The short ASCII literals are separate from UTF8 literals, which have a more
 complex representation.
 
-You can disassemble a compiled `.devs` or `-dbg.json` file by running `devs disasm`
-(without arguments it will look in `.devicescript/bin/` where a previous `devs build`
-should have left the binaries).
