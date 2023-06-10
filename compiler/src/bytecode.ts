@@ -284,7 +284,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 205,
+    __MAX = 206,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -491,6 +491,7 @@ export enum BuiltInString {
     BLITROW = 203,
     BLIT = 204,
     _I2CTRANSACTION = 205,
+    _TWINMESSAGE = 206,
 }
 
 export const OP_PRINT_FMTS = [
@@ -815,6 +816,7 @@ export const BUILTIN_STRING__VAL = [
     "blitRow",
     "blit",
     "_i2cTransaction",
+    "_twinMessage",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",

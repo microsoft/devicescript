@@ -24,6 +24,15 @@ EM_JS(void, _devs_panic_handler, (int exitcode), {
         Module.panicHandler(exitcode);
 });
 
+EM_JS(void, em_send_large_frame, (const void *frame, unsigned sz), {
+    const pkt = HEAPU8.slice(frame, frame + sz);
+    Module.sendPacket(pkt)
+});
+
+void devs_send_large_frame(const void *data, unsigned size) {
+    em_send_large_frame(data, size);
+}
+
 // the syntax above doesn't work with weak symbols
 void devs_panic_handler(int exitcode) {
     flush_dmesg();

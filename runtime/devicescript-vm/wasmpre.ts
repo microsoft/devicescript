@@ -115,6 +115,7 @@ export module Exts {
             let sock: any = null
 
             const send = (data: Uint8Array) => {
+                if (data.length >= 0xff) return
                 const buf = new Uint8Array(1 + data.length)
                 buf[0] = data.length
                 buf.set(data, 1)

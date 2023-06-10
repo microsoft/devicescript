@@ -352,6 +352,14 @@ declare module "@devicescript/core" {
     ): string
 
     /**
+     * Send message to the twin in the dashboard.
+     */
+    export function _twinMessage(
+        topic: string,
+        data: string | Buffer
+    ): Promise<void>
+
+    /**
      * Return hex-encoded device 64 bit device identifier of the current device or its server counterpart
      */
     export function deviceIdentifier(which: "self" | "server"): string
@@ -434,12 +442,20 @@ declare module "@devicescript/core" {
             fillAt(offset: number, length: number, value: number): void
             /**
              * Return index of specified byte in buffer or -1 if not found.
-             * @param byte 
+             * @param byte
              * @param startOffset defaults to 0
              * @param endOffset defaults to buffer length (`endOffset < 0` has special meaning)
              */
-            indexOf(byte: number, startOffset?: number, endOffset?: number): number
-            lastIndexOf(byte: number, startOffset?: number, endOffset?: number): number
+            indexOf(
+                byte: number,
+                startOffset?: number,
+                endOffset?: number
+            ): number
+            lastIndexOf(
+                byte: number,
+                startOffset?: number,
+                endOffset?: number
+            ): number
             [idx: number]: number
 
             toString(encoding?: "hex" | "utf-8" | "utf8"): string

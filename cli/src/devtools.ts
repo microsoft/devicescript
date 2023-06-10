@@ -15,6 +15,7 @@ import {
     ERROR,
     Flags,
     FRAME_PROCESS,
+    FRAME_PROCESS_LARGE,
     JDBus,
     JDDevice,
     JDFrameBuffer,
@@ -143,6 +144,11 @@ export async function devtools(
             .filter(c => c.__devsSender !== frame._jacdac_sender)
             .forEach(c => c.send(Buffer.from(frame)))
     })
+    bus.on(FRAME_PROCESS_LARGE, (frame: JDFrameBuffer) => {
+        devtoolsSelf.clients
+            .filter(c => c.__devsSender !== frame._jacdac_sender)
+            .forEach(c => c.send(Buffer.from(frame)))
+    })
 
     startProxyServers(port, tcpPort, options)
     startDbgServer(dbgPort, options)
@@ -259,6 +265,7 @@ function startProxyServers(
         client.send = (pkt0: Buffer | string) => {
             if (typeof pkt0 == "string") return
             if (socket.readyState !== "open") return
+            if (pkt0.length >= 0xff) return
             const pkt = new Uint8Array(pkt0)
             const b = new Uint8Array(1 + pkt.length)
             b[0] = pkt.length

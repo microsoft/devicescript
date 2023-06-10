@@ -702,3 +702,4 @@ Only `true` and `false` values.
     blitRow = 203
     blit = 204
     _i2cTransaction = 205
+    _twinMessage = 206
