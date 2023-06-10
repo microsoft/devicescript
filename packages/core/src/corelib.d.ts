@@ -178,7 +178,7 @@ interface String {
      * @param separator A string that identifies character or characters to use in separating the string. If omitted, a single-element array containing the entire string is returned.
      * @param limit A value used to limit the number of elements returned in the array.
      */
-    split(separator: string, limit?: number): string[];
+    split(separator: string, limit?: number): string[]
 }
 
 interface StringConstructor {
@@ -503,6 +503,22 @@ interface Math {
      * @param x A numeric expression.
      */
     log2(x: number): number
+
+    /**
+     * Maps value from the [`originalMin`, `originalMax`] interval to the [`newMin`, `newMax`] interval.
+     * @param value Value to map
+     * @param originalMin Original interval minimum
+     * @param originalMax Original interval maximum
+     * @param newMin New interval minimum
+     * @param newax New interval maximum
+     */
+    map(
+        value: number,
+        originalMin: number,
+        originalMax: number,
+        newMin: number,
+        newax: number
+    ): number
 }
 /** An intrinsic object that provides basic mathematics functionality and constants. */
 declare var Math: Math
