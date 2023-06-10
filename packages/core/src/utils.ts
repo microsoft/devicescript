@@ -32,6 +32,12 @@ Math.log10 = function log10(x) {
 Math.log2 = function log2(x) {
     return Math.log(x) * 1.4426950408889634
 }
+
+Math.map = function map(x, inMin, inMax, outMin, outMax) {
+    const inRange = inMax - inMin
+    const outRange = outMax - outMin
+    return ((x - inMin) / inRange) * outRange + outMin
+}
 ;(ds as typeof ds).assert = function assert(cond: boolean, msg?: string): void {
     if (!cond)
         throw new Error("Assertion failed: " + (msg !== undefined ? msg : ""))
