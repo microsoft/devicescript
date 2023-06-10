@@ -10,4 +10,11 @@ function testMap(): void {
     assert(r === 50, "map 5 -> 50")
 }
 
+function testConstrain(): void {
+    assert(Math.constrain(-0.1, 0, 1) === 0)
+    assert(Math.constrain(1.1, 0, 1) === 1)
+    assert(Math.constrain(0.5, 0, 1) === 0.5)
+}
+
 testMap()
+testConstrain()

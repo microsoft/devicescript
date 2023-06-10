@@ -38,6 +38,11 @@ Math.map = function map(x, inMin, inMax, outMin, outMax) {
     const outRange = outMax - outMin
     return ((x - inMin) / inRange) * outRange + outMin
 }
+Math.constrain = function constrain(x, low, high) {
+    if (x < low) return low
+    else if (x > high) return high
+    else return x
+}
 ;(ds as typeof ds).assert = function assert(cond: boolean, msg?: string): void {
     if (!cond)
         throw new Error("Assertion failed: " + (msg !== undefined ? msg : ""))

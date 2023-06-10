@@ -511,6 +511,7 @@ interface Math {
      * @param originalMax Original interval maximum
      * @param newMin New interval minimum
      * @param newax New interval maximum
+     * @returns mapped value
      */
     map(
         value: number,
@@ -519,6 +520,15 @@ interface Math {
         newMin: number,
         newax: number
     ): number
+
+    /**
+     * Constrains a number to be within a range.
+     * @param value value to constrain
+     * @param min minimum limit
+     * @param max maximum limit
+     * @returns constrained value
+     */
+    constrain(value: number, min: number, max: number): number
 }
 /** An intrinsic object that provides basic mathematics functionality and constants. */
 declare var Math: Math
