@@ -2,7 +2,7 @@ import { Font, Image } from "./image"
 import { fontForText } from "./text"
 
 export type ImageTextBaseLine = "top" | "middle" | "bottom"
-export type ImageTextAlign = "start" | "center"
+export type ImageTextAlign = "start" | "center" | "right"
 
 /**
  * Partial implementation of CanvasRenderingContext2D
@@ -107,6 +107,8 @@ export class ImageRenderingContext {
         let tx = this.transformX + x
         if (this.textAlign === "center")
             tx -= (text.length * this.font.charWidth) / 2
+        else if (this.textAlign === "right")
+            tx -= text.length * this.font.charWidth
         let ty = this.transformY + y
         if (this.textBaseline === "middle") ty -= this.font.charHeight / 2
         else if (this.textBaseline === "bottom") ty -= this.font.charHeight
