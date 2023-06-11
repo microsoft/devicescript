@@ -1,6 +1,9 @@
 import { Font, Image } from "./image"
 import { fontForText } from "./text"
 
+export type ImageTextBaseLine = "top" | "middle" | "bottom"
+export type ImageTextAlign = "start" | "center"
+
 /**
  * Partial implementation of CanvasRenderingContext2D
  * { @link https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D }
@@ -12,18 +15,31 @@ export class ImageRenderingContext {
         transformY: number
         fillColor: number
         strokeColor: number
+        textAlign: ImageTextAlign
+        textBaseline: ImageTextBaseLine
     }[] = []
     private transformX: number
     private transformY: number
 
     font: Font
-    fillColor: number = 1
-    strokeColor: number = 1
+    fillColor: number
+    strokeColor: number
+    textAlign: ImageTextAlign
+    textBaseline: ImageTextBaseLine
 
     constructor(public readonly image: Image) {
         this.font = fontForText("")
-        this.transformX = 0
-        this.transformY = 0
+        this.reset()
+    }
+    /**
+     * Resets the state of the canvas context
+     */
+    reset() {
+        this.resetTransform()
+        this.fillColor = 1
+        this.strokeColor = 1
+        this.textAlign = "start"
+        this.textBaseline = "top"
     }
 
     drawImage(image: Image, dx: number, dy: number): void {
@@ -54,6 +70,7 @@ export class ImageRenderingContext {
             this.strokeColor = state.strokeColor
             this.transformX = state.transformX
             this.transformY = state.transformY
+            this.textAlign = state.textAlign
         }
     }
 
@@ -64,6 +81,8 @@ export class ImageRenderingContext {
             strokeColor: this.strokeColor,
             transformX: this.transformX,
             transformY: this.transformY,
+            textAlign: this.textAlign,
+            textBaseline: this.textBaseline,
         })
     }
 
@@ -85,7 +104,13 @@ export class ImageRenderingContext {
             const l = Math.floor(maxWidth / this.font.charWidth)
             if (l < text.length) text = text.slice(0, l)
         }
-        this.image.print(text, x, y, c, this.font)
+        let tx = this.transformX + x
+        if (this.textAlign === "center")
+            tx -= (text.length * this.font.charWidth) / 2
+        let ty = this.transformY + y
+        if (this.textBaseline === "middle") ty -= this.font.charHeight / 2
+        else if (this.textBaseline === "bottom") ty -= this.font.charHeight
+        this.image.print(text, tx, ty, c, this.font)
     }
 
     resetTransform(): void {
@@ -148,14 +173,5 @@ export class ImageRenderingContext {
         const tx2 = this.transformX + x2
         const ty2 = this.transformY + y2
         this.image.drawLine(tx1, ty1, tx2, ty2, this.strokeColor)
-    }
-
-    /**
-     * Resets the state of the canvas context
-     */
-    reset() {
-        this.resetTransform()
-        this.fillColor = 1
-        this.strokeColor = 1
     }
 }
