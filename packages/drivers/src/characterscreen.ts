@@ -26,7 +26,7 @@ class CharacterScreenServer extends Server {
     // line spacing
     lineSpacing = 1
     // outer margin
-    margin = 2
+    margin = 0
 
     constructor(
         options: {
