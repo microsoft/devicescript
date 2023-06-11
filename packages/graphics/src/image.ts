@@ -1,4 +1,5 @@
 import * as ds from "@devicescript/core"
+import { ImageRenderingContext } from "./canvas"
 
 export type color = number
 
@@ -171,6 +172,11 @@ export declare class Image {
      * Draw text in the center of image at given `y` position.
      */
     printCenter(text: string, y: number, color?: number, font?: Font): void
+
+    /**
+     * Gets a rendering context
+     */
+    getContext(): ImageRenderingContext
 }
 
 export interface Font {
@@ -249,6 +255,10 @@ Image.prototype.rotated = function (deg: number): Image {
     } else {
         return null
     }
+}
+
+Image.prototype.getContext = function (): ImageRenderingContext {
+    return new ImageRenderingContext(this)
 }
 
 /**

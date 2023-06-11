@@ -1,76 +1,57 @@
 import { Font, Image } from "./image"
 import { fontForText } from "./text"
 
-export interface CanvasDrawImage {
-    drawImage(image: Image, dx: number, dy: number): void
-}
-
-export interface CanvasFillStrokeStyles {
-    fillColor: number
-    strokeColor: number
-}
-
-export interface CanvasRect {
-    clearRect(x: number, y: number, w: number, h: number): void
-    fillRect(x: number, y: number, w: number, h: number): void
-    strokeRect(x: number, y: number, w: number, h: number): void
-}
-
-export interface CanvasState {
-    restore(): void
-    save(): void
-}
-
-export interface CanvasText {
-    fillText(text: string, x: number, y: number, maxWidth?: number): void
-    strokeText(text: string, x: number, y: number, maxWidth?: number): void
-    //measureText(text: string): TextMetrics;
-}
-
-export interface CanvasTransform {
-    resetTransform(): void
-    translate(x: number, y: number): void
-}
-
-interface Point {
-    x: number
-    y: number
-}
-
 /**
  * Partial implementation of CanvasRenderingContext2D
  * { @link https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D }
  */
-export class CanvasRenderingContext2D
-    implements
-        CanvasDrawImage,
-        CanvasFillStrokeStyles,
-        CanvasRect,
-        CanvasState,
-        CanvasText,
-        CanvasTransform
-{
-    private states: ({
+export class ImageRenderingContext {
+    private states: {
         font: Font
-        transform: Point
-    } & CanvasFillStrokeStyles)[] = []
+        transformX: number
+        transformY: number
+        fillColor: number
+        strokeColor: number
+    }[] = []
     private font: Font
-    private transform: Point
+    private transformX: number
+    private transformY: number
 
     fillColor: number = 1
     strokeColor: number = 1
 
-    constructor(readonly image: Image) {
+    constructor(public readonly image: Image) {
         this.font = fontForText("")
-        this.transform = { x: 0, y: 0 }
+        this.transformX = 0
+        this.transformY = 0
     }
 
-    drawImage(image: Image, dx: number, dy: number): void {
-        const x = this.transform.x + dx
-        const y = this.transform.y + dy
-        this.image.drawImage(image, x, y)
+    drawImage(
+        image: Image,
+        dx: number,
+        dy: number,
+        dw?: number,
+        dh?: number
+    ): void {
+        const x = this.transformX + dx
+        const y = this.transformY + dy
+        if (dw === undefined || dh === undefined)
+            this.image.drawTransparentImage(image, x, y)
+        else
+            this.image.blit(
+                x,
+                y,
+                dw,
+                dh,
+                image,
+                0,
+                0,
+                image.width,
+                image.height,
+                true,
+                true
+            )
     }
-
     clearRect(x: number, y: number, w: number, h: number): void {
         this.fillRectC(x, y, w, h, 0)
     }
@@ -78,8 +59,8 @@ export class CanvasRenderingContext2D
         this.fillRectC(x, y, w, h, this.fillColor)
     }
     private fillRectC(x: number, y: number, w: number, h: number, c: number) {
-        const tx = this.transform.x + x
-        const ty = this.transform.y + y
+        const tx = this.transformX + x
+        const ty = this.transformY + y
         this.image.fillRect(tx, ty, w, h, c)
     }
     strokeRect(x: number, y: number, w: number, h: number): void {
@@ -92,7 +73,8 @@ export class CanvasRenderingContext2D
             this.font = state.font
             this.fillColor = state.fillColor
             this.strokeColor = state.strokeColor
-            this.transform = state.transform
+            this.transformX = state.transformX
+            this.transformY = state.transformY
         }
     }
 
@@ -101,7 +83,8 @@ export class CanvasRenderingContext2D
             font: this.font,
             fillColor: this.fillColor,
             strokeColor: this.strokeColor,
-            transform: { ...this.transform },
+            transformX: this.transformX,
+            transformY: this.transformY,
         })
     }
 
@@ -113,10 +96,36 @@ export class CanvasRenderingContext2D
     }
 
     resetTransform(): void {
-        this.transform = { x: 0, y: 0 }
+        this.transformX = 0
+        this.transformY = 0
     }
     translate(x: number, y: number): void {
-        this.transform.x += x
-        this.transform.y += y
+        this.transformX += x
+        this.transformY += y
+    }
+
+    // extras
+    clear() {
+        this.image.fill(0)
+    }
+    fill() {
+        this.image.fill(this.fillColor)
+    }
+    fillCircle(cx: number, cy: number, r: number) {
+        const x = this.transformX + cx
+        const y = this.transformY + cy
+        this.image.drawCircle(x, y, r, this.fillColor)
+    }
+    strokeCircle(cx: number, cy: number, r: number) {
+        const x = this.transformX + cx
+        const y = this.transformY + cy
+        this.image.drawCircle(x, y, r, this.strokeColor)
+    }
+    strokeLine(x1: number, y1: number, x2: number, y2: number) {
+        const tx1 = this.transformX + x1
+        const ty1 = this.transformY + y1
+        const tx2 = this.transformX + x2
+        const ty2 = this.transformY + y2
+        this.image.drawLine(tx1, ty1, tx2, ty2, this.strokeColor)
     }
 }
