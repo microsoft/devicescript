@@ -77,14 +77,13 @@ export class CanvasRenderingContext2D
     fillRect(x: number, y: number, w: number, h: number): void {
         this.fillRectC(x, y, w, h, this.fillColor)
     }
-    strokeRect(x: number, y: number, w: number, h: number): void {
-        this.fillRectC(x, y, w, h, this.strokeColor)
-    }
-
     private fillRectC(x: number, y: number, w: number, h: number, c: number) {
         const tx = this.transform.x + x
         const ty = this.transform.y + y
         this.image.fillRect(tx, ty, w, h, c)
+    }
+    strokeRect(x: number, y: number, w: number, h: number): void {
+        this.image.drawRect(x, y, w, h, this.strokeColor)
     }
 
     restore(): void {
