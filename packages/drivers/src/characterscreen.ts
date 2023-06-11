@@ -3,7 +3,6 @@ import { Server, ServerOptions, startServer } from "@devicescript/server"
 import {
     AsyncVoid,
     CharacterScreen,
-    CharacterScreenTextDirection,
     assert,
     isSimulator,
 } from "@devicescript/core"
@@ -18,10 +17,6 @@ class CharacterScreenServer extends Server {
     private readonly _render: () => AsyncVoid
     private readonly _columns: number
     private readonly _rows: number
-    /**
-     * Background color (palete index)
-     */
-    background = 0
     /**
      * Foreground color (palete index)
      */
@@ -65,7 +60,7 @@ class CharacterScreenServer extends Server {
         this._message = ""
 
         // clear screen
-        if (this._image) this._image.fill(this.background)
+        if (this._image) this._image.fill(0)
     }
 
     message() {
@@ -95,12 +90,15 @@ class CharacterScreenServer extends Server {
 
         // paint image
         const img = this._image
+        const ctx = img.getContext()
+
+        ctx.font = this._font
+        ctx.fillColor = this.color
+        ctx.strokeColor = this.color
+
         const columns = this._columns
         const rows = this._rows
         const message = this._message
-        const b = this.background
-        const c = this.color
-        const f = this._font
 
         const cw = this._font.charWidth
         const ch = this._font.charHeight
@@ -108,22 +106,19 @@ class CharacterScreenServer extends Server {
         const lineSpacing = this.lineSpacing
         const margin = this.margin
 
-        img.fill(b)
+        ctx.clear()
+        ctx.translate(margin, margin)
+
         let row = 0
         let column = 0
         for (const char of message) {
             if (char === "\n") {
+                ctx.translate(0, ch + lineSpacing)
                 row += 1
                 column = 0
             } else {
                 if (column < columns) {
-                    img.print(
-                        char,
-                        column * (cw + letterSpacing) + margin,
-                        row * (ch + lineSpacing) + margin,
-                        c,
-                        f
-                    )
+                    ctx.fillText(char, column * (cw + letterSpacing), 0)
                 }
                 column += 1
             }

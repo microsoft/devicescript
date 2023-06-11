@@ -13,10 +13,10 @@ export class ImageRenderingContext {
         fillColor: number
         strokeColor: number
     }[] = []
-    private font: Font
     private transformX: number
     private transformY: number
 
+    font: Font
     fillColor: number = 1
     strokeColor: number = 1
 
@@ -26,31 +26,10 @@ export class ImageRenderingContext {
         this.transformY = 0
     }
 
-    drawImage(
-        image: Image,
-        dx: number,
-        dy: number,
-        dw?: number,
-        dh?: number
-    ): void {
+    drawImage(image: Image, dx: number, dy: number): void {
         const x = this.transformX + dx
         const y = this.transformY + dy
-        if (dw === undefined || dh === undefined)
-            this.image.drawTransparentImage(image, x, y)
-        else
-            this.image.blit(
-                x,
-                y,
-                dw,
-                dh,
-                image,
-                0,
-                0,
-                image.width,
-                image.height,
-                true,
-                true
-            )
+        this.image.drawTransparentImage(image, x, y)
     }
     clearRect(x: number, y: number, w: number, h: number): void {
         this.fillRectC(x, y, w, h, 0)
@@ -89,10 +68,24 @@ export class ImageRenderingContext {
     }
 
     fillText(text: string, x: number, y: number, maxWidth?: number): void {
-        this.image.print(text, x, y, this.fillColor, this.font)
+        this.printTextC(text, x, y, this.fillColor, maxWidth)
     }
     strokeText(text: string, x: number, y: number, maxWidth?: number): void {
-        this.image.print(text, x, y, this.strokeColor, this.font)
+        this.printTextC(text, x, y, this.strokeColor, maxWidth)
+    }
+    private printTextC(
+        text: string,
+        x: number,
+        y: number,
+        c: number,
+        maxWidth?: number
+    ) {
+        if (!text) return
+        if (maxWidth !== undefined) {
+            const l = Math.floor(maxWidth / this.font.charWidth)
+            if (l < text.length) text = text.slice(0, l)
+        }
+        this.image.print(text, x, y, c, this.font)
     }
 
     resetTransform(): void {
