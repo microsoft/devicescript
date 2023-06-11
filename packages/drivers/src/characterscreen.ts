@@ -3,13 +3,17 @@ import { Server, ServerOptions, startServer } from "@devicescript/server"
 import {
     AsyncVoid,
     CharacterScreen,
+    CharacterScreenServerSpec,
     assert,
     isSimulator,
 } from "@devicescript/core"
 import { SSD1306Driver, SSD1306Options } from "./ssd1306"
 import { Image, fontForText, Font } from "@devicescript/graphics"
 
-class CharacterScreenServer extends Server {
+class CharacterScreenServer
+    extends Server
+    implements CharacterScreenServerSpec
+{
     private _message: string
 
     private readonly _image: Image
@@ -92,10 +96,6 @@ class CharacterScreenServer extends Server {
         const img = this._image
         const ctx = img.getContext()
 
-        ctx.font = this._font
-        ctx.fillColor = this.color
-        ctx.strokeColor = this.color
-
         const columns = this._columns
         const rows = this._rows
         const message = this._message
@@ -106,6 +106,9 @@ class CharacterScreenServer extends Server {
         const lineSpacing = this.lineSpacing
         const margin = this.margin
 
+        ctx.font = this._font
+        ctx.fillColor = this.color
+        ctx.strokeColor = this.color
         ctx.clear()
         ctx.translate(margin, margin)
 
