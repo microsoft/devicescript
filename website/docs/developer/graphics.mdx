@@ -21,7 +21,8 @@ The `Image` represents a space-optimized pateletted image, with either 1 or 4 bi
 ### `img`
 
 `img` is a [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) that allows to declare images from ASCII art.
-The compiler will automatically generate an image in flash. This image is readonly; if you wish to modify use you will need to `clone` it first.
+The compiler will automatically generate an image in flash.
+This image is initially readonly; if you modify it, the runtime will internally allocate a buffer in RAM for it.
 
 The image format is the grid of pixels with either `.` or the palette color index (`#` treated as 1).
 
