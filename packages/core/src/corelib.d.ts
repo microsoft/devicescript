@@ -510,7 +510,7 @@ interface Math {
      * @param originalMin Original interval minimum
      * @param originalMax Original interval maximum
      * @param newMin New interval minimum
-     * @param newax New interval maximum
+     * @param newMax New interval maximum
      * @returns mapped value
      */
     map(
@@ -518,7 +518,7 @@ interface Math {
         originalMin: number,
         originalMax: number,
         newMin: number,
-        newax: number
+        newMax: number
     ): number
 
     /**
