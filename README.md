@@ -8,7 +8,7 @@ environments.
 
 -   [Read the documentation](https://microsoft.github.io/devicescript)
 
-> Technical Preview - Join the <a href="https://github.com/microsoft/devicescript/discussions">discussions</a> to provide feedback.
+> Experimental Project from Microsoft Research - Join the <a href="https://github.com/microsoft/devicescript/discussions">discussions</a> to provide feedback.
 
 https://user-images.githubusercontent.com/4175913/228997575-122d6ad0-f37e-4d4e-ab79-3d8f680ed99d.mp4
 
