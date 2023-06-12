@@ -40,7 +40,6 @@ ds.DotMatrix.prototype.readImage = async function () {
     const columns = img.width
     for (let row = 0; row < rows; ++row) {
         for (let col = 0; col < columns; ++col) {
-            const pixel = img.get(col, row)
             const columnspadded = columns + (8 - (columns % 8))
             const bitindex = row * columnspadded + col
             const dot = data.getBit(bitindex)
