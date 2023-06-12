@@ -25,8 +25,9 @@ ds.Buffer.prototype.getBit = function getBit(bitindex: number) {
 }
 
 ds.Buffer.prototype.setBit = function setBit(bitindex: number, on: boolean) {
+    const i = bitindex >> 3
     // find bit to flip
-    let byte = this[bitindex >> 3]
+    let byte = this[i]
     const bit = bitindex % 8
     // flip bit
     if (on) {
@@ -35,5 +36,5 @@ ds.Buffer.prototype.setBit = function setBit(bitindex: number, on: boolean) {
         byte &= ~(1 << bit)
     }
     // save
-    this[bitindex >> 3] = byte
+    this[i] = byte
 }

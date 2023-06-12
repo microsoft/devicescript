@@ -126,7 +126,6 @@ export interface BitMatrixOptions {
 export async function startSsd1306DotMatrix(
     options: BitMatrixOptions & SSD1306Options & ServerOptions
 ) {
-    const font = fontForText("")
     let image: Image
     let render: () => AsyncVoid
     if (isSimulator()) {
