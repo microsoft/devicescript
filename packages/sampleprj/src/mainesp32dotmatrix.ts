@@ -7,5 +7,6 @@ const dots = await startSsd1306DotMatrix({
     rows: 8,
     columns: 16,
     cellWidth: 6,
+    devAddr: 0x3c,
 })
 await dots.dots.write(hex`12345512e3`)

@@ -2,6 +2,7 @@
 // they are only exported via the ambient declarations
 // we import the modules, as they assign to various prototypes
 import "./utils"
+import "./buffer"
 import "./timeouts"
 import "./array"
 import "./string"
