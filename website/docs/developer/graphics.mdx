@@ -1,0 +1,52 @@
+---
+sidebar_position: 10
+title: Graphics
+---
+
+# Graphics
+
+The `@devicescript/graphics` package provides an `Image` type support which can be used to author efficient driver for small screens
+such as the [SSD1306 LCD scree](/api/servers/ssd1306).
+
+```ts
+import { Image } from "@devicescript/graphics"
+
+const img = Image.alloc(128, 64, 1)
+```
+
+## Image
+
+The `Image` represents a space-optimized pateletted image, with either 1 or 4 bit per pixels.
+
+### `img`
+
+`img` is a [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) that allows to declare images from ASCII art.
+The compiler will automatically generate an image in flash. This image is readonly; if you wish to modify use you will need to `clone` it first.
+
+The image format is the grid of pixels with either `.` or the palette color index (`#` treated as 1).
+
+```ts
+import { img } from "@devicescript/graphics"
+
+const i = img`
+    . . . 4 . . . . . .
+    . 2 2 2 2 2 . . . .
+    . 2 7 7 . 2 . . . .
+    . 2 7 7 . 2 . . . .
+    . 2 . . . 2 . . . .
+    . 2 2 2 2 2 . . . .
+    . . . . . . . . . .`
+```
+
+### Rendering context
+
+You can create a rendering context for an image; that provides a HTML canvas-like API (smaller subset).
+
+```ts
+import { Image } from "@devicescript/graphics"
+
+const img = Image.alloc(128, 64, 1)
+const ctx = img.getContext()
+
+ctx.fillText(":)", 0, 0)
+```
