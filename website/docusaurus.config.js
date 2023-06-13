@@ -213,7 +213,7 @@ const config = configure(
                 announcementBar: {
                     id: "support_us",
                     content:
-                        'Technical Preview - Join the <a href="https://github.com/microsoft/devicescript/discussions">discussions</a> to provide feedback.',
+                        'Experimental Project from Microsoft Research - Join the <a href="https://github.com/microsoft/devicescript/discussions">discussions</a> to provide feedback.',
                     backgroundColor: "#fafbfc",
                     textColor: "#091E42",
                     isCloseable: true,
