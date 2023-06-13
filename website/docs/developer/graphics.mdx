@@ -24,7 +24,7 @@ The `Image` represents a space-optimized pateletted image, with either 1 or 4 bi
 The compiler will automatically generate an image in flash.
 This image is initially readonly; if you modify it, the runtime will internally allocate a buffer in RAM for it.
 
-The image format is the grid of pixels with either `.` or the palette color index (`#` treated as 1).
+The image format is the grid of pixels with either `.` or the palette color index (`#` treated as 1). 
 
 ```ts
 import { img } from "@devicescript/graphics"
@@ -38,6 +38,12 @@ const i = img`
     . 2 2 2 2 2 . . . .
     . . . . . . . . . .`
 ```
+
+:::tip
+
+You can use the [MakeCode Arcade](https://arcade.makecode.com) sprite editor to create images and copy them back to DeviceScript!
+
+:::
 
 ### Rendering context
 
