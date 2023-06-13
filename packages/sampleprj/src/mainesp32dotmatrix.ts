@@ -4,14 +4,14 @@ import { img } from "@devicescript/graphics"
 
 const width = 128
 const height = 64
-const rows = 8
-const columns = 16
+const columns = 32
+const rows = 16
 const dots = await startSsd1306DotMatrix({
     width,
     height,
     rows,
     columns,
-    cellWidth: 6,
+    cellWidth: 2,
     devAddr: 0x3c,
 })
 
@@ -21,5 +21,5 @@ const tic = img`# # . # #
 . # # # .
 # . # . .`
 const i = await dots.readImage()
-await i.drawLine(0, 0, 15, 7, 1)
+await i.printCenter("Hello", 0, 1)
 await dots.writeImage(i)
