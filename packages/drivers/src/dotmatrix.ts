@@ -8,7 +8,8 @@ import {
     isSimulator,
 } from "@devicescript/core"
 import { SSD1306Driver, SSD1306Options } from "./ssd1306"
-import { Image, fontForText } from "@devicescript/graphics"
+import { Image } from "@devicescript/graphics"
+import { JD_SERIAL_MAX_PAYLOAD_SIZE } from "@devicescript/core/src/jacdac"
 
 class DotMatrixServer extends Server implements DotMatrixServerSpec {
     private _dots: Buffer
@@ -43,6 +44,8 @@ class DotMatrixServer extends Server implements DotMatrixServerSpec {
         this.cellWidth = options.cellWidth
 
         const column_size = (this._rows + 7) >> 3
+        if (this._columns * column_size > JD_SERIAL_MAX_PAYLOAD_SIZE)
+            throw new RangeError("too many dots to fit in a packet")
         this._dots = Buffer.alloc(this._columns * column_size)
 
         this.marginX =

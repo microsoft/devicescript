@@ -4,7 +4,7 @@ import { img } from "@devicescript/graphics"
 
 const width = 128
 const height = 64
-const columns = 32
+const columns = 48
 const rows = 16
 const dots = await startSsd1306DotMatrix({
     width,
