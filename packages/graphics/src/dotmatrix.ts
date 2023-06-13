@@ -38,11 +38,12 @@ ds.DotMatrix.prototype.readImage = async function () {
 
     const rows = img.height
     const columns = img.width
+    const columnspadded = rows <= 8 ? columns : columns + (8 - (columns % 8))
     for (let row = 0; row < rows; ++row) {
         for (let col = 0; col < columns; ++col) {
-            const columnspadded = columns + (8 - (columns % 8))
-            const bitindex = row * columnspadded + col
-            const dot = data.getBit(bitindex)
+            const bit = row * columnspadded + col
+            const dot = data.getBit(bit)
+            console.log({ row, col, bit, dot })
             img.set(col, row, dot ? 1 : 0)
         }
     }
@@ -57,14 +58,17 @@ ds.DotMatrix.prototype.writeImage = async function (img: Image) {
 
     if (!data || isNaN(columns) || isNaN(rows)) return
 
+    const w = Math.min(img.width, columns)
+    const h = Math.min(img.height, rows)
     const n = data.length
-    for (let row = 0; row < rows; ++row) {
-        for (let col = 0; col < columns; ++col) {
-            const pixel = img.get(col, row)
-            const columnspadded = columns + (8 - (columns % 8))
-            const bitindex = row * columnspadded + col
-            console.log({ n, bitindex })
-            data.setBit(bitindex, !!pixel)
+    const columnspadded = rows <= 8 ? columns : columns + (8 - (columns % 8))
+    console.log({ n, columnspadded, rows, columns })
+    for (let row = 0; row < h; ++row) {
+        for (let col = 0; col < w; ++col) {
+            const dot = !!img.get(col, row)
+            const bit = row * columnspadded + col
+            console.log({ row, col, bit, dot })
+            data.setBit(bit, dot)
         }
     }
 

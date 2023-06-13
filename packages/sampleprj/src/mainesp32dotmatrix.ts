@@ -5,7 +5,7 @@ import "@devicescript/graphics"
 const width = 128
 const height = 64
 const rows = 8
-const columns = 16
+const columns = 10
 const dots = await startSsd1306DotMatrix({
     width,
     height,
@@ -16,9 +16,10 @@ const dots = await startSsd1306DotMatrix({
 })
 
 const tic = await dots.readImage()
+console.log(tic)
 for(let row = 0; row < rows; row++) {
     for(let col = 0; col < columns; col++) {
-        tic.set(col, row, ((row + col) % 2) ? 1 : 0)
+        tic.set(col, row, (row === col) ? 1 : 0)
     }
 }
 await dots.writeImage(tic)
