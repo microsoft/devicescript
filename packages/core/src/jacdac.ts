@@ -2,6 +2,8 @@
 
 import * as ds from "@devicescript/core"
 
+export const JD_SERIAL_MAX_PAYLOAD_SIZE = 236
+
 ds.Role.prototype.binding = function binding(this: RoleData) {
     if (!this._binding) {
         this._binding = ds.clientRegister(false)

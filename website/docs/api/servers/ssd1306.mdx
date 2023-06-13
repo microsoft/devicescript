@@ -20,6 +20,31 @@ await screen.message.write(`hello
 world`)
 ```
 
+## Dot matrix
+
+The screen emulates a dot matrix of monochrome LEDs.
+
+-   Services: [character screen](/api/clients/dotmatrix/)
+-   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/dotmatrix.ts)
+
+```ts
+import { startSsd1306DotMatrix } from "@devicescript/drivers"
+import { img } from "@devicescript/graphics"
+
+const dots = await startSsd1306DotMatrix({
+    width: 128,
+    height: 64,
+    rows: 5,
+    columns: 5,
+    devAddr: 0x3c,
+})
+await dots.writeImage(img`# # . # #
+# # . # #
+. # # # .
+. # # # .
+# . # . .`)
+```
+
 ## Using the drivers
 
 You can also use the SS1306 driver directly. However, it will not be usable from a simulator.
