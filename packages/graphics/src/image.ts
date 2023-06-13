@@ -1,5 +1,5 @@
 import * as ds from "@devicescript/core"
-import { ImageRenderingContext } from "./canvas"
+import { ImageContext } from "./canvas"
 
 export type color = number
 
@@ -174,9 +174,9 @@ export declare class Image {
     printCenter(text: string, y: number, color?: number, font?: Font): void
 
     /**
-     * Gets a rendering context
+     * Creates a new rendering context
      */
-    getContext(): ImageRenderingContext
+    allocContext(): ImageContext
 }
 
 export interface Font {
@@ -257,8 +257,8 @@ Image.prototype.rotated = function (deg: number): Image {
     }
 }
 
-Image.prototype.getContext = function (): ImageRenderingContext {
-    return new ImageRenderingContext(this)
+Image.prototype.allocContext = function (): ImageContext {
+    return new ImageContext(this)
 }
 
 /**

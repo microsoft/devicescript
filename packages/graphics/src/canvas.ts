@@ -8,7 +8,7 @@ export type ImageTextAlign = "start" | "center" | "right"
  * Partial implementation of CanvasRenderingContext2D
  * { @link https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D }
  */
-export class ImageRenderingContext {
+export class ImageContext {
     private states: {
         font: Font
         transformX: number

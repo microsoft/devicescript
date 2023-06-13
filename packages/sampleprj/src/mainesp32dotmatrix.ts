@@ -11,7 +11,6 @@ const dots = await startSsd1306DotMatrix({
     height,
     rows,
     columns,
-    cellWidth: 2,
     devAddr: 0x3c,
 })
 

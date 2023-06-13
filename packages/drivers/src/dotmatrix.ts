@@ -42,6 +42,15 @@ class DotMatrixServer extends Server implements DotMatrixServerSpec {
         this._columns = options.columns
         this._rows = options.rows
         this.cellWidth = options.cellWidth
+        if (this.cellWidth === undefined) {
+            const cw = Math.floor(
+                Math.min(
+                    this._image.width / this._columns,
+                    this._image.height / this._rows
+                )
+            )
+            this.cellWidth = Math.max(1, cw - this.marginCell)
+        }
 
         const column_size = (this._rows + 7) >> 3
         if (this._columns * column_size > JD_SERIAL_MAX_PAYLOAD_SIZE)
@@ -89,7 +98,7 @@ class DotMatrixServer extends Server implements DotMatrixServerSpec {
 
         // paint image
         const img = this._image
-        const ctx = img.getContext()
+        const ctx = img.allocContext()
 
         const columns = this._columns
         const rows = this._rows
@@ -120,7 +129,7 @@ class DotMatrixServer extends Server implements DotMatrixServerSpec {
 export interface BitMatrixOptions {
     columns: number
     rows: number
-    cellWidth: number
+    cellWidth?: number
 }
 
 /**

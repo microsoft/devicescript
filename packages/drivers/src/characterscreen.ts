@@ -94,7 +94,7 @@ class CharacterScreenServer
 
         // paint image
         const img = this._image
-        const ctx = img.getContext()
+        const ctx = img.allocContext()
 
         const columns = this._columns
         const rows = this._rows
