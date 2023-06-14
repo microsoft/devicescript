@@ -19,7 +19,7 @@ environments.
 -   Device, services, register Explorer view
 -   Register and Event watch
 
-> **If you fancy building your own tiny DOM/UI framework, this is your chance!** We have a limited implementation of CanvasRenderingContext2D for SSD1306 LCD screens that you can use to display a UI. Limited memory, limited pixels, limited battery, it's a great challenge!
+> **If you fancy building your own tiny DOM/UI framework, this is your chance!** We have a limited implementation of [CanvasRenderingContext2D](https://microsoft.github.io/devicescript/developer/graphics) for SSD1306 LCD screens that you can use to display a UI. Limited memory, limited pixels, limited battery, it's a great challenge ([discussion](https://github.com/microsoft/devicescript/discussions/485))!
 
 ## Telemetry
 
