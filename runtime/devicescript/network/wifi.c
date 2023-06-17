@@ -121,7 +121,7 @@ void jd_wifi_scan_done_cb(jd_wifi_results_t *res, unsigned num_res) {
 void jd_wifi_got_ip_cb(uint32_t ipv4) {
     srv_t *state = _wifi_state;
     state->is_connected = true;
-    LOG("got ip %x", ipv4);
+    LOG("got ip %x", (unsigned)ipv4);
     state->ipv4 = ipv4;
     jd_send_event(state, JD_WIFI_EV_GOT_IP);
 }
