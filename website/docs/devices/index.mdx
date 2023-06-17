@@ -10,17 +10,20 @@ For sensors and other peripherals, see [servers](/api/servers).
 
 ## Implementation status
 
-**The ESP32-C3 and ESP32-S2 boards are best supported.**
+**The ESP32-C3 boards are best supported.**
 The regular ESP32 (without -C3 or -S2) currently have issues with the USB connection
 (as it's handled by external chip). 
+The ESP32-S2 has limited memory which makes it difficult to use TLS.
 
-The RP2040 should generally work, but networking is not supported on pico-w. See
+The RP2040 should generally work, but TLS is not supported on Pico-W.
 
 :::note
 
 If you have ESP-IDF or Pico SDK expertise, we are actively looking for contributors to help
 with the C embedded runtime. You can look at the [ESP32 issues](https://github.com/microsoft/devicescript/labels/esp32)
 or the [RP2040 issues](https://github.com/microsoft/devicescript/labels/rp2040) for ideas.
+There's also an incomplete [STM32 port](https://github.com/microsoft/devicescript-stm32) if you
+want to contribute there.
 
 :::
 
