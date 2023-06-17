@@ -173,6 +173,8 @@ struct devs_ctx {
     uint32_t num_throttled_pkts;
     uint32_t last_warning;
 
+    uint32_t ctx_seq_no;
+
     devs_gc_t *gc;
 
     devs_cfg_t cfg;
