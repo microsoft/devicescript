@@ -19,6 +19,8 @@ environments.
 -   Device, services, register Explorer view
 -   Register and Event watch
 
+> **If you fancy building your own tiny DOM/UI framework, this is your chance!** We have a limited implementation of [CanvasRenderingContext2D](https://microsoft.github.io/devicescript/developer/graphics) for SSD1306 LCD screens that you can use to display a UI. Limited memory, limited pixels, limited battery, it's a great challenge ([discussion](https://github.com/microsoft/devicescript/discussions/485))!
+
 ## Telemetry
 
 This extension collects telemetry data to help us build a better experience working remotely from VS Code. We only collect data on which commands are executed. We do not collect any information about image names, paths, etc. The extension respects the `telemetry.enableTelemetry` setting which you can learn more about in the [Visual Studio Code FAQ](https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting).

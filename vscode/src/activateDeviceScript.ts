@@ -72,7 +72,7 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                         title: "Pick project subfolder",
                         prompt: "It will be used as a root for the new DeviceScript project",
                     })
-                    if (!projectName) return
+                    if (projectName === undefined) return
                 }
                 const cwd = projectName
                     ? Utils.joinPath(folder, projectName)
@@ -231,7 +231,11 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
                     issueBody.push(
                         `python: ${py.version.major}.${py.version.minor}.${py.version.micro}`
                     )
-                issueBody.push(``, `## Bus`, bus.describe({ ignoreSimulators: true, physical: true }))
+                issueBody.push(
+                    ``,
+                    `## Bus`,
+                    bus.describe({ ignoreSimulators: true, physical: true })
+                )
                 await vscode.commands.executeCommand(
                     "workbench.action.openIssueReporter",
                     {

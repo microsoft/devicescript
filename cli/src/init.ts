@@ -202,7 +202,7 @@ const optionalFiles: FileSet = {
         image: "mcr.microsoft.com/devcontainers/universal:2",
         features: {
             "ghcr.io/devcontainers/features/node:1": {
-                version: "lts",
+                version: "18",
             },
             "ghcr.io/devcontainers/features/github-cli:1": {},
         },

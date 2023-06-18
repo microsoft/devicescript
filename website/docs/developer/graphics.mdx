@@ -6,7 +6,7 @@ title: Graphics
 # Graphics
 
 The `@devicescript/graphics` package provides an `Image` type support which can be used to author efficient driver for small screens
-such as the [SSD1306 LCD scree](/api/servers/ssd1306).
+such as the [SSD1306 LCD screen](/api/servers/ssd1306)
 
 ```ts
 import { Image } from "@devicescript/graphics"
@@ -24,7 +24,7 @@ The `Image` represents a space-optimized pateletted image, with either 1 or 4 bi
 The compiler will automatically generate an image in flash.
 This image is initially readonly; if you modify it, the runtime will internally allocate a buffer in RAM for it.
 
-The image format is the grid of pixels with either `.` or the palette color index (`#` treated as 1).
+The image format is the grid of pixels with either `.` or the palette color index (`#` treated as 1). 
 
 ```ts
 import { img } from "@devicescript/graphics"
@@ -39,6 +39,12 @@ const i = img`
     . . . . . . . . . .`
 ```
 
+:::tip
+
+You can use the [MakeCode Arcade](https://arcade.makecode.com) sprite editor to create images and copy them back to DeviceScript!
+
+:::
+
 ### Rendering context
 
 You can create a rendering context for an image; that provides a HTML canvas-like API (smaller subset).
@@ -47,7 +53,7 @@ You can create a rendering context for an image; that provides a HTML canvas-lik
 import { Image } from "@devicescript/graphics"
 
 const img = Image.alloc(128, 64, 1)
-const ctx = img.getContext()
+const ctx = img.allocContext()
 
 ctx.fillText(":)", 0, 0)
 ```
