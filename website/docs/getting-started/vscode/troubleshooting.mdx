@@ -16,14 +16,26 @@ yarn add -D @devicescript/cli@latest
 yarn install
 ```
 
-## Node.JS won't start
+## DeviceScript terminal won't start
 
 The DeviceScript extension spawns a Node.JS process to
 run the debugger adapter, connect to hardware device and build sources.
 Depending on your machine configuration, you may have to specify where the Node.JS binaries
 are located.
 
--   Open the **Settings**
+Start by enable the `Devtools: Shell` preference so that DeviceScript start node is a terminal rather directly.
+This allows you to look at the potential error messages.
+
+-   Open the **User Settings**
+-   Search for **DeviceScript Devtools shell**
+-   Reload Visual Studio Code
+
+![Devtools shell settings](./shellconfig.png)
+
+If the error messages indicates that the `node` process cannot be resolved, you may want to specify the path
+of your node.js v18+ manually in the user settings.
+
+-   Open the **User Settings**
 -   Search for **DeviceScript node** and update the Node.JS binary path
 -   Reload Visual Studio Code
 
