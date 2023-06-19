@@ -16,6 +16,14 @@ type DsSpi = typeof ds & {
     spiSendImage(image: Image, palette: Buffer, flags: number): Promise<void>
 }
 
+/**
+ * Send the pixels of an image over SPI bus.
+ * 
+ * @param spi the SPI instance to use
+ * @param img the image to send; height has to be even; only bpp==4 currently supported
+ * @param palette palette for the image - 3 bytes per color index
+ * @param flags currently only MODE_565 is supported (in both BY_COL and BY_ROW modes)
+ */
 export async function spiSendImage(
     spi: SPI,
     img: Image,
