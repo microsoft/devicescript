@@ -1,5 +1,9 @@
 import * as ds from "@devicescript/core"
-import { startBME680, startSsd1306CharacterScreen } from "@devicescript/drivers"
+import {
+    SSD1306Driver,
+    startBME680,
+    startCharacterScreen,
+} from "@devicescript/drivers"
 import { fetch } from "@devicescript/net"
 import {
     startBuzzer,
@@ -23,7 +27,9 @@ const servo = startServo({ pin: pins.A2 })
 const potentiometer = startPotentiometer({ pin: pins.A0 })
 const buzzer = startBuzzer({ pin: pins.A1 })
 const { temperature, humidity, pressure } = await startBME680()
-const display = await startSsd1306CharacterScreen({ width: 64, height: 48 })
+const display = await startCharacterScreen(
+    new SSD1306Driver({ width: 64, height: 48 })
+)
 const btnA = new ds.Button()
 const btnB = new ds.Button()
 
