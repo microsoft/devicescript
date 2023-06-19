@@ -10,5 +10,6 @@ export * from "./bme680"
 export * from "./ssd1306"
 export * from "./characterscreen"
 export * from "./dotmatrix"
+export * from "./st7735"
 
 configureHardware({ scanI2C: false })

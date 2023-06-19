@@ -16,19 +16,67 @@ type DsSpi = typeof ds & {
     spiSendImage(image: Image, palette: Buffer, flags: number): Promise<void>
 }
 
+export interface SpiImageOptions {
+    /**
+     * The SPI instance to use.
+     */
+    spi: SPI
+
+    /**
+     * The image to send; height has to be even; only bpp==4 currently supported.
+     */
+    image: Image
+
+    /**
+     * Palette for the image
+     */
+    palette: Palette
+
+    /**
+     * Currently only MODE_565 is supported (in both BY_COL and BY_ROW modes)
+     */
+    flags: SpiImageFlags
+}
+
 /**
  * Send the pixels of an image over SPI bus.
- * 
- * @param spi the SPI instance to use
- * @param img the image to send; height has to be even; only bpp==4 currently supported
- * @param palette palette for the image - 3 bytes per color index
- * @param flags currently only MODE_565 is supported (in both BY_COL and BY_ROW modes)
  */
-export async function spiSendImage(
-    spi: SPI,
-    img: Image,
-    palette: Buffer,
-    flags: SpiImageFlags
-) {
-    await (ds as DsSpi).spiSendImage(img, palette, flags)
+export async function spiSendImage(options: SpiImageOptions) {
+    await (ds as DsSpi).spiSendImage(
+        options.image,
+        options.palette.data,
+        options.flags
+    )
+}
+
+export class Palette {
+    readonly data: Buffer
+    numColors = 16
+
+    static arcade() {
+        return new Palette(hex`
+            000000 ffffff ff2121 ff93c4 ff8135 fff609 249ca3 78dc52 
+            003fad 87f2ff 8e2ec4 a4839f 5c406c e5cdc4 91463d 000000
+        `)
+    }
+
+    constructor(init?: Buffer) {
+        this.data = Buffer.alloc(this.numColors * 3)
+        if (init) this.data.set(init)
+    }
+
+    color(idx: number) {
+        if (idx < 0 || idx >= this.numColors) return 0
+        return (
+            (this.data[3 * idx + 0] << 16) |
+            (this.data[3 * idx + 1] << 8) |
+            (this.data[3 * idx + 2] << 0)
+        )
+    }
+
+    setColor(idx: number, color: number) {
+        this.data[3 * idx + 0] = color >> 16
+        this.data[3 * idx + 1] = color >> 8
+        this.data[3 * idx + 2] = color >> 0
+    }
 }

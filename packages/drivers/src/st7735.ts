@@ -1,6 +1,11 @@
-import { GPIOMode, OutputPin, delay } from "@devicescript/core"
+import { GPIOMode, OutputPin, assert, delay } from "@devicescript/core"
 import { SPI, spi } from "@devicescript/spi"
-import { Image } from "@devicescript/graphics"
+import {
+    Image,
+    Palette,
+    SpiImageFlags,
+    spiSendImage,
+} from "@devicescript/graphics"
 import "@devicescript/gpio"
 import { Display } from "./core"
 
@@ -44,9 +49,15 @@ export interface ST7735Options {
     cs: OutputPin
 
     /**
-     * Pin for switching between command and data (D/C).
+     * Pin for switching between command and data (D/C or RS).
      */
     dc: OutputPin
+
+    /**
+     * Pin for resetting the display.
+     * TODO use this
+     */
+    reset?: OutputPin
 
     /**
      * SPI bus instance to use
@@ -69,19 +80,29 @@ export interface ST7735Options {
 }
 
 export class ST7735Driver implements Display {
+    public readonly palette: Palette
+
     constructor(public image: Image, public options: ST7735Options) {
+        assert(image.bpp === 4)
         this.options = Object.assign({}, this.options)
         if (this.options.frmctr1 == undefined) this.options.frmctr1 = 0x000603
         if (this.options.madctl == undefined) this.options.madctl = 0x40
         if (this.options.spi == undefined) this.options.spi = spi
+
+        this.palette = Palette.arcade()
     }
 
-    private async sendCmd(cmd: number, ...args: number[]) {
+    private async cmdPrep(cmd: number) {
         const { spi, cs, dc } = this.options
         await dc.write(0)
         await cs.write(0)
         await spi.write(Buffer.from([cmd]))
         await dc.write(1)
+    }
+
+    private async sendCmd(cmd: number, ...args: number[]) {
+        const { spi, cs } = this.options
+        await this.cmdPrep(cmd)
         if (args.length) await spi.write(Buffer.from(args))
         await cs.write(1)
     }
@@ -92,7 +113,15 @@ export class ST7735Driver implements Display {
     }
 
     private async doInit() {
-        const { cs, dc } = this.options
+        const { cs, dc, reset } = this.options
+
+        if (reset) {
+            await reset.setMode(GPIOMode.OutputLow)
+            await delay(20)
+            await reset.setMode(GPIOMode.OutputHigh)
+            await delay(20)
+        }
+
         await dc.setMode(GPIOMode.OutputHigh)
         await cs.setMode(GPIOMode.OutputHigh)
 
@@ -123,5 +152,17 @@ export class ST7735Driver implements Display {
         await this.doInit()
     }
 
-    async show() {}
+    async show() {
+        const { spi, cs } = this.options
+        await this.cmdPrep(ST7735_RAMWR)
+
+        await spiSendImage({
+            spi,
+            image: this.image,
+            palette: this.palette,
+            flags: SpiImageFlags.BY_ROW | SpiImageFlags.MODE_565,
+        })
+
+        await cs.write(1)
+    }
 }
