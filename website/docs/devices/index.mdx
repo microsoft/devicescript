@@ -10,10 +10,21 @@ For sensors and other peripherals, see [servers](/api/servers).
 
 ## Implementation status
 
+| Device       | USB | TCP | TLS | I2C | SPI | GPIO | Jacdac |
+| ------------ | --- | --- | --- | --- | --- | ---- | ------ |
+| **WASM Sim** | N/A | ✓   | ✓   | ❌  | ❌  | ❌   | ✓      |
+| **ESP32**    | ⚠️  | ✓   | ✓   | ✓   | ✓   | ✓    | ✓      |
+| **ESP32-C3** | ✓   | ✓   | ✓   | ✓   | ✓   | ✓    | ✓      |
+| **ESP32-S2** | ✓   | ❌  | ✓   | ✓   | ✓   | ✓    | ✓      |
+| **ESP32-S3** | ✓   | ✓   | ✓   | ✓   | ✓   | ✓    | ✓      |
+| **RP2040**   | ✓   | ❌  | ❌  | ✓   | ❌  | ✓    | ✓      |
+| **RP2040-W** | ✓   | ✓   | ❌  | ✓   | ❌  | ✓    | ✓      |
+
 **The ESP32-C3 boards are best supported.**
 The regular ESP32 (without -C3 or -S2) currently have issues with the USB connection
-(as it's handled by external chip). 
+(as it's handled by external chip).
 The ESP32-S2 has limited memory which makes it difficult to use TLS.
+The ESP32-S3 is very recent and largely untested.
 
 The RP2040 should generally work, but TLS is not supported on Pico-W.
 
