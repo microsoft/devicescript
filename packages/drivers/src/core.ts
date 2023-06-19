@@ -1,4 +1,5 @@
 import * as ds from "@devicescript/core"
+import { Image } from "@devicescript/graphics"
 
 export class DriverError extends Error {
     constructor(message?: string) {
@@ -27,4 +28,10 @@ export function throttle<T>(
         }
         return lastV
     }
+}
+
+export interface Display {
+    image: Image
+    show(): Promise<void>
+    init(): Promise<void>
 }

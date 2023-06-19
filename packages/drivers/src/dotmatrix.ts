@@ -10,6 +10,7 @@ import {
 import { SSD1306Driver, SSD1306Options } from "./ssd1306"
 import { Image } from "@devicescript/graphics"
 import { JD_SERIAL_MAX_PAYLOAD_SIZE } from "@devicescript/core/src/jacdac"
+import { Display } from "./core"
 
 class DotMatrixServer extends Server implements DotMatrixServerSpec {
     private _dots: Buffer
@@ -29,16 +30,15 @@ class DotMatrixServer extends Server implements DotMatrixServerSpec {
 
     constructor(
         options: {
-            image: Image
+            display: Display
             columns: number
             rows: number
-            render: () => AsyncVoid
         } & BitMatrixOptions &
             ServerOptions
     ) {
         super(ds.DotMatrix.spec, options)
-        this._image = options.image
-        this._render = options.render
+        this._image = options.display.image
+        this._render = options.display.show
         this._columns = options.columns
         this._rows = options.rows
         this.cellWidth = options.cellWidth
@@ -133,24 +133,14 @@ export interface BitMatrixOptions {
 }
 
 /**
- * Starts a dot matrix server on a SSD1306 display.
+ * Starts a dot matrix server on a display.
  */
-export async function startSsd1306DotMatrix(
-    options: BitMatrixOptions & SSD1306Options & ServerOptions
+export async function startDotMatrix(
+    display: Display,
+    options: BitMatrixOptions & ServerOptions
 ) {
-    let image: Image
-    let render: () => AsyncVoid
-    if (isSimulator()) {
-        image = Image.alloc(options.width, options.height, 1)
-    } else {
-        const ssd = new SSD1306Driver(options)
-        await ssd.init()
-        image = ssd.image
-        render = async () => await ssd.show()
-    }
     const server = new DotMatrixServer({
-        image,
-        render,
+        display,
         ...options,
     })
 
