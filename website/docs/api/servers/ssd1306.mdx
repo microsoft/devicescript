@@ -13,9 +13,11 @@ The user sets a message on the character screen and it will be rendered on the s
 -   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/characterscreen.ts)
 
 ```ts
-import { startSsd1306CharacterScreen } from "@devicescript/drivers"
+import { SSD1306Driver, startCharacterScreen } from "@devicescript/drivers"
 
-const screen = await startSsd1306CharacterScreen({ width: 128, height: 64 })
+const screen = await startCharacterScreen(
+    new SSD1306Driver({ width: 128, height: 64 })
+)
 await screen.message.write(`hello
 world`)
 ```
@@ -28,16 +30,20 @@ The screen emulates a dot matrix of monochrome LEDs.
 -   [Source](https://github.com/microsoft/devicescript/blob/main/packages/drivers/src/dotmatrix.ts)
 
 ```ts
-import { startSsd1306DotMatrix } from "@devicescript/drivers"
+import { SSD1306Driver, startDotMatrix } from "@devicescript/drivers"
 import { img } from "@devicescript/graphics"
 
-const dots = await startSsd1306DotMatrix({
-    width: 128,
-    height: 64,
-    rows: 5,
-    columns: 5,
-    devAddr: 0x3c,
-})
+const dots = await startDotMatrix(
+    new SSD1306Driver({
+        width: 128,
+        height: 64,
+        devAddr: 0x3c,
+    }),
+    {
+        rows: 5,
+        columns: 5,
+    }
+)
 await dots.writeImage(img`# # . # #
 # # . # #
 . # # # .

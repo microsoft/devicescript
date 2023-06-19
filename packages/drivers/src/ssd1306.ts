@@ -1,6 +1,8 @@
 import { Image } from "@devicescript/graphics"
 import { I2CDriver } from "./driver"
 import { I2CDriverOptions } from "./driver"
+import { Display } from "./core"
+import { isSimulator } from "@devicescript/core"
 
 // inspired by https://github.com/adafruit/Adafruit_CircuitPython_SSD1306/blob/main/adafruit_ssd1306.py
 
@@ -32,14 +34,14 @@ export interface SSD1306Options extends I2CDriverOptions {
 
 /**
  * Driver for SSD1306 OLED displays.
- * 
+ *
  * @example
  * const ssd = new SSD1306Driver({ width: 64, height: 48 })
  * await ssd.init()
  * ssd.image.print("Hello world!", 3, 10)
  * await ssd.show()
  */
-export class SSD1306Driver extends I2CDriver {
+export class SSD1306Driver extends I2CDriver implements Display {
     externalVCC: boolean
     framebuffer: Buffer
     image: Image
@@ -57,10 +59,12 @@ export class SSD1306Driver extends I2CDriver {
     }
 
     private async writeCmd(...cmds: number[]) {
+        if (isSimulator()) return
         for (const cmd of cmds) await this.writeReg(0x80, cmd)
     }
 
     async reInit() {
+        if (isSimulator()) return
         await this.powerOff()
         await this.writeCmd(SET_MEM_ADDR, 0x01) // Vertical
         await this.rotate(true)
@@ -122,6 +126,8 @@ export class SSD1306Driver extends I2CDriver {
     }
 
     async show() {
+        if (isSimulator()) return
+
         const { width, height } = this.image
         let xStart = 0
         let xEnd = width - 1

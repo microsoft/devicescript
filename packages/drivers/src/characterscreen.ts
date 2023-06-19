@@ -5,10 +5,9 @@ import {
     CharacterScreen,
     CharacterScreenServerSpec,
     assert,
-    isSimulator,
 } from "@devicescript/core"
-import { SSD1306Driver, SSD1306Options } from "./ssd1306"
 import { Image, fontForText, Font } from "@devicescript/graphics"
+import { Display } from "./core"
 
 class CharacterScreenServer
     extends Server
@@ -34,16 +33,15 @@ class CharacterScreenServer
 
     constructor(
         options: {
-            image: Image
+            display: Display
             font: Font
-            render: () => AsyncVoid
         } & CharacterScreenOptions &
             ServerOptions
     ) {
         super(ds.CharacterScreen.spec, options)
-        this._image = options.image
+        this._image = options.display.image
         this._font = options.font
-        this._render = options.render
+        this._render = options.display.show
         this._columns = options.columns
         this._rows = options.rows
 
@@ -139,27 +137,19 @@ export interface CharacterScreenOptions {
 }
 
 /**
- * Starts a character screen server
- * on a SSD1306 display.
+ * Starts a character screen server on a display.
  */
-export async function startSsd1306CharacterScreen(
-    options: CharacterScreenOptions & SSD1306Options & ServerOptions
+export async function startCharacterScreen(
+    display: Display,
+    options: CharacterScreenOptions & ServerOptions = {}
 ) {
     const font = fontForText("")
-    let image: Image
-    let render: () => AsyncVoid
-    if (isSimulator()) {
-        image = Image.alloc(options.width, options.height, 1)
-    } else {
-        const ssd = new SSD1306Driver(options)
-        await ssd.init()
-        image = ssd.image
-        render = async () => await ssd.show()
-    }
+
+    await display.init()
+
     const server = new CharacterScreenServer({
-        image,
+        display,
         font,
-        render,
         ...options,
     })
 
