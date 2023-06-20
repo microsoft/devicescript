@@ -41,7 +41,7 @@ import { GPIOMode } from "@devicescript/core"
 
 const pin = gpio(0)
 // highlight-next-line
-await pin.setMode(GPIOMode.Output)
+pin.setMode(GPIOMode.Output)
 ```
 
 ### write
@@ -54,18 +54,18 @@ import { gpio } from "@devicescript/core"
 import { HIGH, GPIOMode } from "@devicescript/core"
 
 const pin = gpio(0)
-await pin.setMode(GPIOMode.Output)
+pin.setMode(GPIOMode.Output)
 
 // start-highlight
-await pin.write(true)
-await pin.write(1)
-await pin.write(HIGH)
+pin.write(true)
+pin.write(1)
+pin.write(HIGH)
 // end-highlight
 ```
 
-### read
+### value
 
-For digital input, you can use the `read` function
+For digital input, you can use the `value` property
 after setting the mode to `GPIOMode.Input`.
 
 ```ts
@@ -73,10 +73,10 @@ import { gpio } from "@devicescript/core"
 import { GPIOMode } from "@devicescript/core"
 
 const pin = gpio(0)
-await pin.setMode(GPIOMode.Input)
+pin.setMode(GPIOMode.Input)
 
 // start-highlight
-const value = await pin.read()
+const value = pin.value
 // end-highlight
 ```
 
@@ -90,7 +90,7 @@ import { gpio } from "@devicescript/core"
 import { GPIOMode } from "@devicescript/core"
 
 const pin = gpio(0)
-await pin.setMode(GPIOMode.Input)
+pin.setMode(GPIOMode.Input)
 
 // start-highlight
 pin.subscribe(value => console.data({ value }))
