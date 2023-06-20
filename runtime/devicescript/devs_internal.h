@@ -142,6 +142,7 @@ struct devs_ctx {
     uint8_t dbg_en;
     uint8_t ignore_brk;
     uint8_t dbg_flags;
+    uint8_t num_pins;
     uint16_t num_roles;
 
     uint32_t literal_int;
@@ -179,6 +180,8 @@ struct devs_ctx {
 
     devs_cfg_t cfg;
 
+    struct devs_pin_state *pin_state;
+
     devs_activation_t *step_fn;
     devs_brk_t *brk_list;
     uint16_t brk_count;
@@ -203,6 +206,15 @@ struct devs_activation {
     const devs_function_desc_t *func;
     value_t slots[0];
 };
+
+typedef struct devs_pin_state {
+    value_t obj;
+    const char *label;
+    uint8_t id;
+    uint8_t gpio;
+    uint8_t mode;
+    uint16_t capabilities;
+} devs_pin_state_t;
 
 static inline uint32_t devs_now(devs_ctx_t *ctx) {
     return (uint32_t)ctx->_now_long;

@@ -492,6 +492,8 @@ Only `true` and `false` values.
     DsPacketSpec_prototype = 39
     Image = 40
     Image_prototype = 41
+    GPIO = 42
+    GPIO_prototype = 43
 
 ## Enum: BuiltIn_String
 
@@ -704,3 +706,9 @@ Only `true` and `false` values.
     _i2cTransaction = 205
     _twinMessage = 206
     spiSendImage = 207
+    gpio = 208
+    label = 209
+    mode = 210
+    capabilities = 211
+    value = 212
+    setMode = 213

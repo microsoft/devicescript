@@ -238,7 +238,7 @@ export enum ObjectType {
 }
 
 export enum BuiltInObject {
-    __MAX = 41,
+    __MAX = 43,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -281,10 +281,12 @@ export enum BuiltInObject {
     DSPACKETSPEC_PROTOTYPE = 39,
     IMAGE = 40,
     IMAGE_PROTOTYPE = 41,
+    GPIO = 42,
+    GPIO_PROTOTYPE = 43,
 }
 
 export enum BuiltInString {
-    __MAX = 207,
+    __MAX = 213,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -493,6 +495,12 @@ export enum BuiltInString {
     _I2CTRANSACTION = 205,
     _TWINMESSAGE = 206,
     SPISENDIMAGE = 207,
+    GPIO = 208,
+    LABEL = 209,
+    MODE = 210,
+    CAPABILITIES = 211,
+    VALUE = 212,
+    SETMODE = 213,
 }
 
 export const OP_PRINT_FMTS = [
@@ -819,6 +827,12 @@ export const BUILTIN_STRING__VAL = [
     "_i2cTransaction",
     "_twinMessage",
     "spiSendImage",
+    "gpio",
+    "label",
+    "mode",
+    "capabilities",
+    "value",
+    "setMode",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
@@ -863,4 +877,6 @@ export const BUILTIN_OBJECT__VAL = [
     "DsPacketSpec_prototype",
     "Image",
     "Image_prototype",
+    "GPIO",
+    "GPIO_prototype",
 ]

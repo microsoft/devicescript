@@ -220,7 +220,7 @@
 #define DEVS_OBJECT_TYPE_ANY 14
 #define DEVS_OBJECT_TYPE_VOID 15
 
-#define DEVS_BUILTIN_OBJECT___MAX 41
+#define DEVS_BUILTIN_OBJECT___MAX 43
 #define DEVS_BUILTIN_OBJECT_MATH 0
 #define DEVS_BUILTIN_OBJECT_OBJECT 1
 #define DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE 2
@@ -263,8 +263,10 @@
 #define DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE 39
 #define DEVS_BUILTIN_OBJECT_IMAGE 40
 #define DEVS_BUILTIN_OBJECT_IMAGE_PROTOTYPE 41
+#define DEVS_BUILTIN_OBJECT_GPIO 42
+#define DEVS_BUILTIN_OBJECT_GPIO_PROTOTYPE 43
 
-#define DEVS_BUILTIN_STRING___MAX 207
+#define DEVS_BUILTIN_STRING___MAX 213
 #define DEVS_BUILTIN_STRING__EMPTY 0
 #define DEVS_BUILTIN_STRING_MINFINITY 1 // -Infinity
 #define DEVS_BUILTIN_STRING_DEVICESCRIPT 2
@@ -473,6 +475,12 @@
 #define DEVS_BUILTIN_STRING__I2CTRANSACTION 205
 #define DEVS_BUILTIN_STRING__TWINMESSAGE 206
 #define DEVS_BUILTIN_STRING_SPISENDIMAGE 207
+#define DEVS_BUILTIN_STRING_GPIO 208
+#define DEVS_BUILTIN_STRING_LABEL 209
+#define DEVS_BUILTIN_STRING_MODE 210
+#define DEVS_BUILTIN_STRING_CAPABILITIES 211
+#define DEVS_BUILTIN_STRING_VALUE 212
+#define DEVS_BUILTIN_STRING_SETMODE 213
 
 #define DEVS_OP_HANDLERS                                                                           \
     expr_invalid, exprx_builtin_object, stmt1_call0, stmt2_call1, stmt3_call2, stmt4_call3,        \
@@ -521,7 +529,8 @@
         "data", "toUpperCase", "toLowerCase", "indexOf", "byteLength", "Image", "width", "height", \
         "bpp", "get", "clone", "set", "fill", "flipX", "flipY", "transposed", "drawImage",         \
         "drawTransparentImage", "overlapsWith", "fillRect", "drawLine", "equals", "isReadOnly",    \
-        "fillCircle", "blitRow", "blit", "_i2cTransaction", "_twinMessage", "spiSendImage"
+        "fillCircle", "blitRow", "blit", "_i2cTransaction", "_twinMessage", "spiSendImage",        \
+        "gpio", "label", "mode", "capabilities", "value", "setMode"
 #define DEVS_BUILTIN_OBJECT__VAL                                                                   \
     "Math", "Object", "Object_prototype", "Array", "Array_prototype", "Buffer",                    \
         "Buffer_prototype", "String", "String_prototype", "Number", "Number_prototype", "DsFiber", \
@@ -531,4 +540,5 @@
         "DsEvent_prototype", "DsReport_prototype", "Error", "Error_prototype", "TypeError",        \
         "TypeError_prototype", "RangeError", "RangeError_prototype", "SyntaxError",                \
         "SyntaxError_prototype", "JSON", "DsServiceSpec", "DsServiceSpec_prototype",               \
-        "DsPacketSpec", "DsPacketSpec_prototype", "Image", "Image_prototype"
+        "DsPacketSpec", "DsPacketSpec_prototype", "Image", "Image_prototype", "GPIO",              \
+        "GPIO_prototype"
