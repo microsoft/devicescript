@@ -6,15 +6,42 @@ sidebar_position: 49
 
 # Digital IO
 
-DeviceScript provides access to digital GPIO (General Purpose Input/Output) operations 
-on [pins](/developer/servers/pins), that do not require precise real time timings.
+DeviceScript provides access to digital GPIO (General Purpose Input/Output) operations
+on pins that do **not** require precise real time timings.
 
 It is recommend to encapsulate the GPIO access into server implementation as they are rather low level.
+
+## Pin mappings
+
+You can either use hardware GPIO numbers using [gpio](/developer/servers/gpio) function, or you can import
+a board definition file and use the labels present on the board.
+
+```ts
+import { pins } from "@dsboard/adafruit_qt_py_c3"
+
+// highlight-next-line
+const A2 = pins.A2
+```
+
+The doc-string for `pins.A2` will tell you GPIO number (`1` in this case).
+Using named pins is also less error-prone since pins used for internal
+functions are not exposed through the `pins` object and the pins that are
+exposed are annotated with type (input, output, analog, etc.) which is then
+required by the `startSomething()` functions.
+
+The `gpio()` function does not check for pin functions or usage.
+
+```ts
+import { gpio } from "@devicescript/core"
+
+// highlight-next-line
+const P0 = gpio(0)
+```
 
 ## Mode
 
 The pin can be access through the generic `gpio` function or through board specific packages
-that provide predefined pin mappings (see [pins](pins)).
+that provide predefined pin mappings (see [devices](/devices)).
 
 You can configure the input/output mode through `setMode`.
 

@@ -2,7 +2,7 @@
 
 [DeviceScript](https://microsoft.github.io/devicescript/) GPIO support.
 
--   [Read documentation](https://microsoft.github.io/devicescript/developer/servers/pins)
+-   [Read documentation](https://microsoft.github.io/devicescript/developer/gpio)
 
 ## Contributing
 

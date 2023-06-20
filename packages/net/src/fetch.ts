@@ -146,8 +146,8 @@ export async function fetch(
         throw new TypeError(`credentials in URL not supported: ${url}`)
     let colon = host.indexOf(":")
     if (colon > 0) {
-        host = host.slice(0, colon)
         port = +host.slice(colon + 1)
+        host = host.slice(0, colon)
         if (!port) throw new TypeError(`invalid port in url: ${url}`)
     }
 

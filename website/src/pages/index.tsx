@@ -52,22 +52,6 @@ export default function Home(): JSX.Element {
             <HomepageHeader />
             <main>
                 <HomepageFeatures />
-                <header
-                    className={clsx("hero hero--primary", styles.heroBanner)}
-                >
-                    <div className="container">
-                        <h2 className="hero__title">Build Devices Fast</h2>
-                        <p className="hero__subtitle">
-                            Code, Debug, Upload, Inspect from Visual Studio Code.
-                        </p>
-                        <div>
-                            <StaticVideo
-                                name="copy-paste-button"
-                                style={videoStyle}
-                            />
-                        </div>
-                    </div>
-                </header>
             </main>
         </Layout>
     )

@@ -9,14 +9,11 @@ keywords:
   - HID keyboard
   - status LED
 ---
-import StaticVideo from "@site/src/components/StaticVideo"
 
 # Copy Paste Button
 
 In this example, we use a single button to create a `copy-paste` micro-keyboard
 on [Raspberry Pi Pico](/devices/rp2040).
-
-<StaticVideo name="copy-paste-button" />
 
 -   The button is connected to the Pico's GP14 pin. When the button is pressed, the Pico will send a `ctrl+c` or `ctrl+v` keystroke to the computer using a [HID keyboard](/api/servers/hidkeyboard) server.
     The `ctrl+c` keystroke will copy the selected text, and the `ctrl+v` keystroke will paste the copied text.

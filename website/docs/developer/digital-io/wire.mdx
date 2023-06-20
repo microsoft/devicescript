@@ -1,42 +1,15 @@
 ---
-description: Configuring pins for servers
-title: Pins
+description: Arduino-like GPIO APIs
+title: Wire
 sidebar_position: 9
 ---
 
-# Pins
+# Wire
 
-You can either use hardware GPIO numbers using `gpio()` function, or you can import
-a board definition file and use the labels present on the board.
-
-```ts
-import { pins } from "@dsboard/adafruit_qt_py_c3"
-
-// highlight-next-line
-const A2 = pins.A2
-```
-
-The doc-string for `pins.A2` will tell you GPIO number (`1` in this case).
-Using named pins is also less error-prone since pins used for internal
-functions are not exposed through the `pins` object and the pins that are
-exposed are annotated with type (input, output, analog, etc.) which is then
-required by the `startSomething()` functions.
-
-The `gpio()` function does not check for pin functions or usage.
-
-```ts
-import { gpio } from "@devicescript/core"
-
-// highlight-next-line
-const P0 = gpio(0)
-```
-
-## Digital IO
-
-`digitalWrite` and `digitalRead` functions are provided for Arduino-like
+`digitalWrite`, `digitalRead`, `pinMode` functions are provided for Arduino-like
 digital IO.
 
-### pinMode
+## pinMode
 
 Sets the pin input/output and pull up/down mode.
 
@@ -64,14 +37,14 @@ import { pinMode, digitalWrite } from "@devicescript/gpio"
 const pin = gpio(0)
 await pinMode(pin, GPIOMode.Output)
 
-// start-highlight
+// highlight-start
 await digitalWrite(pin, true)
 await digitalWrite(pin, 1)
 await digitalWrite(pin, HIGH)
-// end-highlight
+// highlight-end
 ```
 
-### digitalRead
+## digitalRead
 
 For digital input, you can use `digitalRead` function.
 
@@ -84,12 +57,12 @@ import { pinMode, digitalRead } from "@devicescript/gpio"
 const pin = gpio(0)
 await pinMode(pin, GPIOMode.Input)
 
-// start-highlight
+// highlight-start
 const value = await digitalRead(pin)
-// end-highlight
+// highlight-end
 ```
 
-### subscribeDigital
+## subscribeDigital
 
 You can also subscribe to digital input changes.
 
@@ -102,7 +75,7 @@ import { pinMode, subscribeDigital } from "@devicescript/gpio"
 const pin = gpio(0)
 await pinMode(pin, GPIOMode.Input)
 
-// start-highlight
+// highlight-start
 subscribeDigital(pin, value => console.data({ value }))
-// end-highlight
+// highlight-end
 ```
