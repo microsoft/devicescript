@@ -65,11 +65,10 @@ export interface ST7735Options {
     spi?: SPI
 
     /**
-     * MADCTL display register setting.
-     *
-     * @default 0x40
+     * Flip the display 180 deg.
+     * Without flipping, the connector ribbon of the screen should be on the top or left.
      */
-    madctl?: number
+    flip?: boolean
 
     /**
      * FRMCTR1 display register setting. Three bytes encoded as big endian number.
@@ -81,33 +80,37 @@ export interface ST7735Options {
 
 export class ST7735Driver implements Display {
     public readonly palette: Palette
+    private rot = 0
 
     constructor(public image: Image, public options: ST7735Options) {
         assert(image.bpp === 4)
         this.options = Object.assign({}, this.options)
         if (this.options.frmctr1 == undefined) this.options.frmctr1 = 0x000603
-        if (this.options.madctl == undefined) this.options.madctl = 0x40
         if (this.options.spi == undefined) this.options.spi = spi
 
         this.palette = Palette.arcade()
+        if (image.width > image.height) this.rot = 1
+        if (this.options.flip) this.rot |= 2
     }
 
     private async cmdPrep(cmd: number) {
         const { spi, cs, dc } = this.options
-        await dc.write(0)
-        await cs.write(0)
+        dc.write(0)
+        cs.write(0)
         await spi.write(Buffer.from([cmd]))
-        await dc.write(1)
+        dc.write(1)
     }
 
     private async sendCmd(cmd: number, ...args: number[]) {
         const { spi, cs } = this.options
         await this.cmdPrep(cmd)
         if (args.length) await spi.write(Buffer.from(args))
-        await cs.write(1)
+        cs.write(1)
     }
 
     private async setAddrWindow(x: number, y: number, w: number, h: number) {
+        w += x - 1
+        h += y - 1
         await this.sendCmd(ST7735_RASET, 0, x, w >> 8, w & 0xff)
         await this.sendCmd(ST7735_CASET, 0, y, h >> 8, h & 0xff)
     }
@@ -116,27 +119,27 @@ export class ST7735Driver implements Display {
         const { cs, dc, reset } = this.options
 
         if (reset) {
-            await reset.setMode(GPIOMode.OutputLow)
+            reset.setMode(GPIOMode.OutputLow)
             await delay(20)
-            await reset.setMode(GPIOMode.OutputHigh)
+            reset.setMode(GPIOMode.OutputHigh)
             await delay(20)
         }
 
-        await dc.setMode(GPIOMode.OutputHigh)
-        await cs.setMode(GPIOMode.OutputHigh)
+        dc.setMode(GPIOMode.OutputHigh)
+        cs.setMode(GPIOMode.OutputHigh)
 
         await this.sendCmd(ST7735_SWRESET)
         await delay(120)
         await this.sendCmd(ST7735_SLPOUT)
         await delay(120)
         await this.sendCmd(ST7735_INVOFF)
-        await this.sendCmd(ST7735_COLMOD, 3) // 16-bit
+        await this.sendCmd(ST7735_COLMOD, 0b101) // 16-bit
         await this.sendCmd(ST7735_NORON)
         await delay(10)
         await this.sendCmd(ST7735_DISPON)
         await delay(10)
 
-        await this.sendCmd(ST7735_MADCTL, this.options.madctl)
+        await this.sendCmd(ST7735_MADCTL, hex`00 40 C0 80`[this.rot])
         const frmctr1 = [
             this.options.frmctr1 >> 16,
             (this.options.frmctr1 >> 8) & 0xff,
@@ -145,7 +148,9 @@ export class ST7735Driver implements Display {
         if (frmctr1[2] === 0xff) frmctr1.pop()
         await this.sendCmd(ST7735_FRMCTR1, ...frmctr1)
 
-        await this.setAddrWindow(0, 0, this.image.width, this.image.height)
+        if (this.rot & 1)
+            await this.setAddrWindow(0, 0, this.image.width, this.image.height)
+        else await this.setAddrWindow(0, 0, this.image.height, this.image.width)
     }
 
     async init() {
@@ -156,13 +161,18 @@ export class ST7735Driver implements Display {
         const { spi, cs } = this.options
         await this.cmdPrep(ST7735_RAMWR)
 
+        let flags = SpiImageFlags.MODE_565
+
+        if (this.rot & 1) flags |= SpiImageFlags.BY_COL
+        else flags |= SpiImageFlags.BY_ROW
+
         await spiSendImage({
             spi,
             image: this.image,
             palette: this.palette,
-            flags: SpiImageFlags.BY_ROW | SpiImageFlags.MODE_565,
+            flags,
         })
 
-        await cs.write(1)
+        cs.write(1)
     }
 }
