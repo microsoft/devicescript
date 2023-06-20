@@ -1,7 +1,5 @@
 #include "jd_network.h"
 
-#define M JD_AES_CCM_TAG_BYTES
-#define L JD_AES_CCM_LENGTH_BYTES
 #define NONCE_SIZE JD_AES_CCM_NONCE_BYTES
 #define BLOCK_BYTES JD_AES_BLOCK_BYTES
 
@@ -21,9 +19,9 @@ static void xor_buf(uint8_t *trg, const uint8_t *src, unsigned sz) {
         trg[i] ^= src[i];
 }
 
-static void cbc_mac(const uint8_t *nonce, const uint8_t *plain, unsigned size) {
+static void cbc_mac(const uint8_t *nonce, const uint8_t *plain, unsigned size, unsigned tag_bytes) {
     setup_nonce(nonce, size);
-    aes_buf[0] = 8 * ((JD_AES_CCM_TAG_BYTES - 2) / 2) + (JD_AES_CCM_LENGTH_BYTES - 1);
+    aes_buf[0] = 8 * ((tag_bytes - 2) / 2) + (JD_AES_CCM_LENGTH_BYTES - 1);
 
     jd_aes_encrypt(aes_buf);
 
@@ -44,18 +42,18 @@ static void ctr_xcrypt(const uint8_t *nonce, uint8_t *msg, unsigned size) {
 }
 
 void jd_aes_ccm_encrypt(const uint8_t key[JD_AES_KEY_BYTES],
-                        const uint8_t nonce[JD_AES_CCM_NONCE_BYTES],
-                        uint8_t tag[JD_AES_CCM_TAG_BYTES], uint8_t *plain, unsigned size) {
+                        const uint8_t nonce[JD_AES_CCM_NONCE_BYTES], uint8_t tag[],
+                        unsigned tag_bytes, uint8_t *plain, unsigned size) {
     if (size >= (1 << (JD_AES_CCM_LENGTH_BYTES * 8)) - 10)
         JD_PANIC();
 
     jd_aes_setup_key(key);
 
-    cbc_mac(nonce, plain, size);
-    memcpy(tag, aes_buf, JD_AES_CCM_TAG_BYTES);
+    cbc_mac(nonce, plain, size, tag_bytes);
+    memcpy(tag, aes_buf, tag_bytes);
     setup_nonce(nonce, 0);
     jd_aes_encrypt(aes_buf);
-    xor_buf(tag, aes_buf, JD_AES_CCM_TAG_BYTES);
+    xor_buf(tag, aes_buf, tag_bytes);
 
     ctr_xcrypt(nonce, plain, size);
 
@@ -63,8 +61,8 @@ void jd_aes_ccm_encrypt(const uint8_t key[JD_AES_KEY_BYTES],
 }
 
 int jd_aes_ccm_decrypt(const uint8_t key[JD_AES_KEY_BYTES],
-                       const uint8_t nonce[JD_AES_CCM_NONCE_BYTES],
-                       uint8_t tag[JD_AES_CCM_TAG_BYTES], uint8_t *msg, unsigned size) {
+                       const uint8_t nonce[JD_AES_CCM_NONCE_BYTES], uint8_t tag[],
+                       unsigned tag_bytes, uint8_t *msg, unsigned size) {
     if (size >= (1 << (JD_AES_CCM_LENGTH_BYTES * 8)) - 10)
         return -1;
 
@@ -72,16 +70,16 @@ int jd_aes_ccm_decrypt(const uint8_t key[JD_AES_KEY_BYTES],
 
     ctr_xcrypt(nonce, msg, size);
 
-    cbc_mac(nonce, msg, size);
-    xor_buf(tag, aes_buf, JD_AES_CCM_TAG_BYTES);
+    cbc_mac(nonce, msg, size, tag_bytes);
+    xor_buf(tag, aes_buf, tag_bytes);
     setup_nonce(nonce, 0);
     jd_aes_encrypt(aes_buf);
-    xor_buf(tag, aes_buf, JD_AES_CCM_TAG_BYTES);
+    xor_buf(tag, aes_buf, tag_bytes);
 
     jd_aes_clear_key();
 
     int sum = 0;
-    for (unsigned i = 0; i < JD_AES_CCM_TAG_BYTES; ++i)
+    for (unsigned i = 0; i < tag_bytes; ++i)
         sum += tag[i];
     return sum;
 }
@@ -95,12 +93,12 @@ void jd_aes_ccm_test(void) {
 
     jd_from_hex(key, "c0c1c2c3c4c5c6c7c8c9cacbcccdcecfc0c1c2c3c4c5c6c7c8c9cacbcccdcecf");
     jd_from_hex(nonce, "00000003020100a0a1a2a3a4a5");
-    size = jd_from_hex(plain, "616c61206d61206b6f74612c206b6f74206d6120616c652c20616e642065766572796f6e65206973206861707079");
+    size = jd_from_hex(plain, "616c61206d61206b6f74612c206b6f74206d6120616c652c20616e64206576657279"
+                              "6f6e65206973206861707079");
 
-    jd_aes_ccm_encrypt(key, nonce, tag, plain, size);
+    jd_aes_ccm_encrypt(key, nonce, tag, JD_AES_CCM_TAG_BYTES, plain, size);
     DMESG("res: %s %s", jd_to_hex_a(plain, size), jd_to_hex_a(tag, JD_AES_CCM_TAG_BYTES));
 
-    int r = jd_aes_ccm_decrypt(key, nonce, tag, plain, size);
+    int r = jd_aes_ccm_decrypt(key, nonce, tag, JD_AES_CCM_TAG_BYTES, plain, size);
     DMESG("dec: %s %d", jd_to_hex_a(plain, size), r);
-
 }

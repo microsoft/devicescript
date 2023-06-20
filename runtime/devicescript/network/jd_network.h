@@ -20,11 +20,11 @@ void jd_aes_clear_key(void);
 
 void jd_aes_ccm_encrypt(const uint8_t key[JD_AES_KEY_BYTES],
                         const uint8_t nonce[JD_AES_CCM_NONCE_BYTES],
-                        uint8_t tag[JD_AES_CCM_TAG_BYTES], uint8_t *plain, unsigned size);
+                        uint8_t tag[], unsigned tag_bytes, uint8_t *plain, unsigned size);
 
 int jd_aes_ccm_decrypt(const uint8_t key[JD_AES_KEY_BYTES],
                        const uint8_t nonce[JD_AES_CCM_NONCE_BYTES],
-                       uint8_t tag[JD_AES_CCM_TAG_BYTES], uint8_t *msg, unsigned size);
+                       uint8_t tag[], unsigned tag_bytes, uint8_t *msg, unsigned size);
 
 
 // this is used by DeviceScript Manager and implemented by default in software

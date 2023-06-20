@@ -121,7 +121,8 @@ static int decrypt(jd_wssk_t *es, uint8_t *msg, unsigned size) {
     }
 
     unsigned msgsize = size - JD_AES_CCM_TAG_BYTES;
-    int r = jd_aes_ccm_decrypt(es->key, es->server_nonce, msg + msgsize, msg, msgsize);
+    int r = jd_aes_ccm_decrypt(es->key, es->server_nonce, msg + msgsize, JD_AES_CCM_TAG_BYTES, msg,
+                               msgsize);
     inc_nonce(es->server_nonce);
     if (r != 0) {
         raise_error(es, "tag error");
@@ -176,7 +177,8 @@ int jd_wssk_send_message(const void *data0, unsigned size0, const void *data1, u
         memcpy(sendbuf, data0, size0);
     if (data1)
         memcpy(sendbuf + size0, data1, size1);
-    jd_aes_ccm_encrypt(es->key, es->client_nonce, sendbuf + size, sendbuf, size);
+    jd_aes_ccm_encrypt(es->key, es->client_nonce, sendbuf + size, JD_AES_CCM_TAG_BYTES, sendbuf,
+                       size);
     int r = jd_websock_send_message(sendbuf, size + JD_AES_CCM_TAG_BYTES);
     jd_free(sendbuf);
     if (r != 0) {
