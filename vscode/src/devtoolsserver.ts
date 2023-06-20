@@ -36,6 +36,7 @@ import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
 import { extensionVersion } from "./version"
 import { showError, showErrorMessage } from "./telemetry"
 import { BUILD, MESSAGE_PREFIX } from "./constants"
+import { tryGetNodeVersion } from "./spawn"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -780,6 +781,14 @@ export class DeveloperToolsManager extends JDEventSource {
         return cmd
     }
 
+    private get nodePath() {
+        const devToolsConfig = vscode.workspace.getConfiguration(
+            "devicescript.devtools"
+        )
+        const nodePath = devToolsConfig.get("node") as string
+        return nodePath || "node"
+    }
+
     public async createCliTerminal(options: {
         title?: string
         progress: string
@@ -803,6 +812,25 @@ export class DeveloperToolsManager extends JDEventSource {
         const cliBin = "./node_modules/.bin/devicescript"
         const cliInstalled = await checkFileExists(cwd, cliBin)
         if (!cliInstalled) {
+            const v = await tryGetNodeVersion(
+                this.nodePath,
+                Utils.joinPath(cwd, ".devicescript/node.version")
+            )
+            if (!v) {
+                showErrorMessage(
+                    "terminal.nodemissing",
+                    "Unable to locate Node.JS v18+."
+                )
+                return undefined
+            }
+            if (!(v.major >= 18)) {
+                showErrorMessage(
+                    "terminal.nodeversion",
+                    `Node.JS version outdated, found ${v.major}.${v.minor} but needed v18+.`
+                )
+                return undefined
+            }
+
             showErrorMessage(
                 "terminal.notinstalled",
                 "Install Node.JS dependencies to enable tools.",
@@ -839,7 +867,7 @@ export class DeveloperToolsManager extends JDEventSource {
                 const isWindows = globalThis.process?.platform === "win32"
                 const useShell =
                     options.useShell ?? !!devToolsConfig.get("shell")
-                const nodePath = devToolsConfig.get("node") as string
+                const nodePath = this.nodePath
                 const diagnostics =
                     options.diagnostics ?? jacdacConfig.get("diagnostics")
                 const developerMode =
