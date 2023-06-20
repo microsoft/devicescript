@@ -1,79 +1,71 @@
 import * as vscode from "vscode"
-import { readFileText } from "./fs"
+import { checkFileExists, readFileText } from "./fs"
+import { versionTryParse } from "jacdac-ts"
+import { Utils } from "vscode-uri"
 
-/**
- * Launches a terminal and watches for an output files
- * @param options
- * @returns
- */
-export function spawnAndWatch(
+function spawnAndWatch(
     options: vscode.TerminalOptions & {
         text?: string
         outFile: vscode.Uri
         timeout?: number
     }
 ): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
         const { outFile, text, timeout = 10000, ...rest } = options
         // handle terminal crash
         let onclose = vscode.window.onDidCloseTerminal(e => {
             if (e === terminal) {
-                cleanup()
-                reject(new Error("Terminal closed"))
+                ready()
             }
         })
         let terminal: vscode.Terminal
-        let watcher: vscode.FileSystemWatcher
         let timeoutId: any
 
         const cleanup = () => {
+            const canResolve = !!terminal || !!timeoutId
             terminal?.dispose?.()
-            watcher?.dispose?.()
             onclose?.dispose?.()
             clearTimeout(timeoutId)
             terminal = undefined
-            watcher = undefined
             onclose = undefined
+            timeoutId = undefined
+            return canResolve
         }
 
         const ready = async () => {
-            cleanup()
-            const text = await readFileText(outFile)
-            resolve(text)
+            if (cleanup()) {
+                const text = await readFileText(outFile)
+                resolve(text)
+            }
         }
 
         timeoutId = setTimeout(() => {
-            cleanup()
-            if (terminal) reject(new Error("Terminal not responding"))
+            if (cleanup()) resolve(undefined)
         }, timeout)
 
         try {
             terminal = vscode.window.createTerminal(rest)
             terminal.show()
-            if (outFile) {
-                const glob = vscode.workspace.asRelativePath(outFile)
-                watcher = vscode.workspace.createFileSystemWatcher(glob)
-                watcher.onDidChange(ready)
-                watcher.onDidCreate(ready)
-            }
             if (text) terminal.sendText(text, true)
         } catch (e) {
-            cleanup()
-            reject(e)
+            console.debug(e)
+            if (cleanup()) resolve(undefined)
         }
     })
 }
 
-export async function tryGetNodeVersion() {
-    const outFile = vscode.Uri.file("./.devicescript/node.version")
+export async function tryGetNodeVersion(nodePath: string, outFile: vscode.Uri) {
+    await vscode.workspace.fs.createDirectory(Utils.dirname(outFile))
+    if (await checkFileExists(outFile))
+        await vscode.workspace.fs.delete(outFile, { useTrash: false })
     const v = await spawnAndWatch({
-        name: "Node.js resolution",
-        shellPath: "node",
+        name: "DeviceScript - Installation Diagnostics",
+        shellPath: nodePath,
         shellArgs: [
             "-e",
             `require('fs').writeFileSync('${outFile.fsPath}',process.version, { encoding: 'utf8' })`,
         ],
         outFile,
     })
-    return v
+    return versionTryParse(v)
 }
