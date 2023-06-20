@@ -72,6 +72,11 @@ value_t prop_Image_bpp(devs_ctx_t *ctx, value_t self) {
     return devs_value_from_int(r ? r->bpp : 0);
 }
 
+value_t prop_Image_buffer(devs_ctx_t *ctx, value_t self) {
+    devs_gimage_t *r = devs_to_writable_image(ctx, self);
+    return devs_value_from_gc_obj(ctx, r ? r->buffer : NULL);
+}
+
 static devs_gimage_t *devs_arg_self_image(devs_ctx_t *ctx) {
     return devs_to_gimage(ctx, devs_arg_self(ctx));
 }
@@ -275,7 +280,10 @@ static void fill_rect(devs_ctx_t *ctx, devs_gimage_t *img, int x, int y, int w, 
     uint8_t f = img->bpp == 1 ? (c & 1) * 0xff : 0x11 * (c & 0xf);
     int bh = img->stride;
 
-    make_writable_image(ctx, img);
+    img = make_writable_image(ctx, img);
+
+    if (img == NULL)
+        return;
 
     if (!img_has_padding(img) && x == 0 && y == 0 && w == img->width && h == img->height) {
         memset(img->pix, f, bh * img->width);
@@ -801,7 +809,9 @@ static void drawLine(devs_ctx_t *ctx, devs_gimage_t *img, int x0, int y0, int x1
         }
     }
 
-    make_writable_image(ctx, img);
+    img = make_writable_image(ctx, img);
+    if (img == NULL)
+        return;
 
     if (h < 0) {
         h = -h;
@@ -902,8 +912,11 @@ void meth11_Image_blit(devs_ctx_t *ctx) {
     int xSrcEnd = min(src->width, xSrc + wSrc) << 16;
     int ySrcEnd = min(src->height, ySrc + hSrc) << 16;
 
-    if (!check)
-        make_writable_image(ctx, dst);
+    if (!check) {
+        dst = make_writable_image(ctx, dst);
+        if (dst == NULL)
+            return;
+    }
 
     for (int yDstCur = yDstStart, ySrcCur = ySrcStart; yDstCur < yDstEnd && ySrcCur < ySrcEnd;
          ++yDstCur, ySrcCur += ySrcStep) {
@@ -961,8 +974,8 @@ void meth4_Image_fillCircle(devs_ctx_t *ctx) {
     }
 }
 
-devs_gimage_xfer_state_t *devs_gimage_prep_xfer(devs_ctx_t *ctx, devs_gimage_t *img, value_t palette,
-                                                uint32_t flags, unsigned max_buf) {
+devs_gimage_xfer_state_t *devs_gimage_prep_xfer(devs_ctx_t *ctx, devs_gimage_t *img,
+                                                value_t palette, uint32_t flags, unsigned max_buf) {
     unsigned mode = flags & DEVS_GIMAGE_XFER_MODE_MASK;
     devs_gimage_xfer_state_t *state = NULL;
 
