@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.11.6](https://github.com/microsoft/devicescript/compare/v2.11.5...v2.11.6)
+
+> 10 June 2023
+
+- String.split support [`#463`](https://github.com/microsoft/devicescript/pull/463)
+- character screen server [`#462`](https://github.com/microsoft/devicescript/pull/462)
+- blynk HTTP support [`#475`](https://github.com/microsoft/devicescript/pull/475)
+- added socket example, use same api as node [`#470`](https://github.com/microsoft/devicescript/pull/470)
+- more runtime docs [`55e8f99`](https://github.com/microsoft/devicescript/commit/55e8f993441fd36e818fcd790e4814a3488d8243)
+- use singleton for spi to match i2c [`fcae930`](https://github.com/microsoft/devicescript/commit/fcae930d59308ff84b971183a2aa0e681a03a9f6)
+- add devcontainer to project template [`6bb6e9c`](https://github.com/microsoft/devicescript/commit/6bb6e9ca0bc81fd68b1faad1e036734ce76bef2c)
+
 #### [v2.11.5](https://github.com/microsoft/devicescript/compare/v2.11.4...v2.11.5)
 
 > 9 June 2023
