@@ -36,6 +36,7 @@ import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
 import { extensionVersion } from "./version"
 import { showError, showErrorMessage } from "./telemetry"
 import { BUILD, MESSAGE_PREFIX } from "./constants"
+import { tryGetNodeVersion } from "./spawn"
 
 function showTerminalError(message: string) {
     showInformationMessageWithHelp(
@@ -553,6 +554,8 @@ export class DeveloperToolsManager extends JDEventSource {
 
         // store current folder
         await this.saveProjectFolder()
+
+        await tryGetNodeVersion()
 
         try {
             this.connectionState = ConnectionState.Connecting
