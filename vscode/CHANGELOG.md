@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.12.2](https://github.com/microsoft/devicescript/compare/v2.12.1...v2.12.2)
+
+> 20 June 2023
+
+- Node version detect [`#493`](https://github.com/microsoft/devicescript/pull/493)
+- add readme linking to proper docs; fixes #476 [`#476`](https://github.com/microsoft/devicescript/issues/476)
+- add @devicescript/crypto [`4e07577`](https://github.com/microsoft/devicescript/commit/4e07577c5d97c2a24e25e8df4e5d5cc201b224a5)
+- allow for arbitrary tag size in AES CCM [`ee8a688`](https://github.com/microsoft/devicescript/commit/ee8a6880ae113407e465f2625a35beaac704d64c)
+
 #### [v2.12.1](https://github.com/microsoft/devicescript/compare/v2.12.0...v2.12.1)
 
 > 20 June 2023
