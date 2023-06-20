@@ -171,3 +171,112 @@ void meth3_Buffer_indexOf(devs_ctx_t *ctx) {
 
     devs_ret_int(ctx, r);
 }
+
+//
+// Crypto
+//
+
+void meth0_Buffer_fillRandom(devs_ctx_t *ctx) {
+    unsigned dlen;
+    uint8_t *dst = wr_buffer_data(ctx, devs_arg_self(ctx), &dlen);
+    if (dst == NULL)
+        return;
+    jd_crypto_get_random(dst, dlen);
+}
+
+void meth4_Buffer_encrypt(devs_ctx_t *ctx) {
+    unsigned slen, klen, ivlen;
+    const uint8_t *src = buffer_data(ctx, devs_arg_self(ctx), &slen);
+    const char *algo = devs_string_get_utf8(ctx, devs_arg(ctx, 0), NULL);
+    const uint8_t *key = buffer_data(ctx, devs_arg(ctx, 1), &klen);
+    const uint8_t *iv = buffer_data(ctx, devs_arg(ctx, 2), &ivlen);
+    int tagLen = devs_arg_int_defl(ctx, 3, -1);
+    bool encrypt = true;
+    if (tagLen >= 0x1000) {
+        encrypt = false;
+        tagLen -= 0x1000;
+    }
+
+    if (strcmp(algo, "aes-256-ccm") != 0)
+        return;
+
+    if (src == NULL || klen != JD_AES_KEY_BYTES || ivlen != JD_AES_CCM_NONCE_BYTES)
+        return;
+
+    if (tagLen < 0 || tagLen > 16)
+        return;
+
+    int dlen = (int)slen;
+    if (encrypt)
+        dlen += tagLen;
+    else
+        dlen -= tagLen;
+
+    if (dlen < 0) {
+        devs_throw_generic_error(ctx, "encrypted data (len=%u) shorter than tagLen (%u)", slen,
+                                 tagLen);
+        return;
+    }
+
+    devs_buffer_t *dst = devs_buffer_try_alloc(ctx, dlen);
+    if (dst == NULL)
+        return;
+    devs_ret_gc_ptr(ctx, dst);
+
+    if (encrypt) {
+        memcpy(dst->data, src, slen);
+        jd_aes_ccm_encrypt(key, iv, dst->data + slen, tagLen, dst->data, slen);
+    } else {
+        uint8_t tag[tagLen + 1];
+        memcpy(tag, src + dlen, tagLen);
+        memcpy(dst->data, src, dlen);
+        int r = jd_aes_ccm_decrypt(key, iv, tag, tagLen, dst->data, dlen);
+        if (r) {
+            devs_throw_generic_error(ctx, "encryption tag mismatch");
+            devs_ret(ctx, devs_undefined);
+        }
+    }
+}
+
+void fun3_Buffer_digest(devs_ctx_t *ctx) {
+    unsigned klen;
+    const uint8_t *key = devs_bufferish_data(ctx, devs_arg(ctx, 0), &klen);
+    const char *algo = devs_string_get_utf8(ctx, devs_arg(ctx, 1), NULL);
+    value_t other = devs_arg(ctx, 2);
+    if (!devs_is_array(ctx, other)) {
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_ARRAY, other);
+        return;
+    }
+    devs_array_t *data = devs_value_to_gc_obj(ctx, other);
+
+    if (strcmp(algo, "sha256") != 0)
+        return;
+
+    if (key)
+        jd_sha256_hmac_setup(key, klen);
+    else
+        jd_sha256_setup();
+
+    for (unsigned i = 0; i < data->length; ++i) {
+        unsigned sz;
+        const uint8_t *d = buffer_data(ctx, data->data[i], &sz);
+        if (!d) {
+            devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_BUFFER, data->data[i]);
+            return;
+        }
+
+        if (key)
+            jd_sha256_hmac_update(d, sz);
+        else
+            jd_sha256_update(d, sz);
+    }
+
+    devs_buffer_t *buf = devs_buffer_try_alloc(ctx, JD_SHA256_HASH_BYTES);
+    if (buf == NULL)
+        return;
+    devs_ret_gc_ptr(ctx, buf);
+    if (key)
+        jd_sha256_hmac_finish(buf->data);
+    else
+        jd_sha256_finish(buf->data);
+}

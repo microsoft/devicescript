@@ -8,6 +8,7 @@ import "@devicescript/drivers"
 import "@devicescript/gpio"
 import "@devicescript/spi"
 import "@devicescript/graphics"
+import "@devicescript/crypto"
 import "@devicescript/net"
 import "@devicescript/runtime"
 

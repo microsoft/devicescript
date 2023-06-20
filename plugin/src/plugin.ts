@@ -43,6 +43,7 @@ function init(modules: {
                                 "@devicescript/gpio",
                                 "@devicescript/spi",
                                 "@devicescript/graphics",
+                                "@devicescript/crypto",
                                 "@devicescript/net",
                                 "@devicescript/runtime",
                             ]) {

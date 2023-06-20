@@ -106,8 +106,8 @@ export const OP_TYPES =
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
     IMG_VERSION_MINOR = 12,
-    IMG_VERSION_PATCH = 1,
-    IMG_VERSION = 0x20c0001,
+    IMG_VERSION_PATCH = 2,
+    IMG_VERSION = 0x20c0002,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
@@ -286,7 +286,7 @@ export enum BuiltInObject {
 }
 
 export enum BuiltInString {
-    __MAX = 213,
+    __MAX = 217,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -501,6 +501,10 @@ export enum BuiltInString {
     CAPABILITIES = 211,
     VALUE = 212,
     SETMODE = 213,
+    FILLRANDOM = 214,
+    ENCRYPT = 215,
+    DECRYPT = 216,
+    DIGEST = 217,
 }
 
 export const OP_PRINT_FMTS = [
@@ -833,6 +837,10 @@ export const BUILTIN_STRING__VAL = [
     "capabilities",
     "value",
     "setMode",
+    "fillRandom",
+    "encrypt",
+    "decrypt",
+    "digest",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
