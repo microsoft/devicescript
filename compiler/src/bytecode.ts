@@ -105,9 +105,9 @@ export const OP_TYPES =
 
 export enum BinFmt {
     IMG_VERSION_MAJOR = 2,
-    IMG_VERSION_MINOR = 11,
-    IMG_VERSION_PATCH = 6,
-    IMG_VERSION = 0x20b0006,
+    IMG_VERSION_MINOR = 12,
+    IMG_VERSION_PATCH = 0,
+    IMG_VERSION = 0x20c0000,
     MAGIC0 = 0x53766544, // "DevS"
     MAGIC1 = 0xf1296e0a,
     NUM_IMG_SECTIONS = 10,
@@ -238,7 +238,7 @@ export enum ObjectType {
 }
 
 export enum BuiltInObject {
-    __MAX = 41,
+    __MAX = 43,
     MATH = 0,
     OBJECT = 1,
     OBJECT_PROTOTYPE = 2,
@@ -281,10 +281,12 @@ export enum BuiltInObject {
     DSPACKETSPEC_PROTOTYPE = 39,
     IMAGE = 40,
     IMAGE_PROTOTYPE = 41,
+    GPIO = 42,
+    GPIO_PROTOTYPE = 43,
 }
 
 export enum BuiltInString {
-    __MAX = 206,
+    __MAX = 213,
     _EMPTY = 0,
     MINFINITY = 1, // -Infinity
     DEVICESCRIPT = 2,
@@ -492,6 +494,13 @@ export enum BuiltInString {
     BLIT = 204,
     _I2CTRANSACTION = 205,
     _TWINMESSAGE = 206,
+    SPISENDIMAGE = 207,
+    GPIO = 208,
+    LABEL = 209,
+    MODE = 210,
+    CAPABILITIES = 211,
+    VALUE = 212,
+    SETMODE = 213,
 }
 
 export const OP_PRINT_FMTS = [
@@ -817,6 +826,13 @@ export const BUILTIN_STRING__VAL = [
     "blit",
     "_i2cTransaction",
     "_twinMessage",
+    "spiSendImage",
+    "gpio",
+    "label",
+    "mode",
+    "capabilities",
+    "value",
+    "setMode",
 ]
 export const BUILTIN_OBJECT__VAL = [
     "Math",
@@ -861,4 +877,6 @@ export const BUILTIN_OBJECT__VAL = [
     "DsPacketSpec_prototype",
     "Image",
     "Image_prototype",
+    "GPIO",
+    "GPIO_prototype",
 ]

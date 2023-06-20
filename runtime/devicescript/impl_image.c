@@ -3,7 +3,7 @@
 // based on https://github.com/microsoft/pxt-common-packages/blob/master/libs/screen/image.cpp
 // (mostly used in MakeCode Arcade https://arcade.makecode.com)
 
-static devs_gimage_t *devs_to_image(devs_ctx_t *ctx, value_t s) {
+devs_gimage_t *devs_to_gimage(devs_ctx_t *ctx, value_t s) {
     devs_gimage_t *r = devs_handle_ptr_value(ctx, s);
 
     if (devs_gc_tag(r) == DEVS_GC_TAG_IMAGE)
@@ -54,26 +54,26 @@ static uint8_t *pix_ptr(devs_gimage_t *r, int x, int y) {
 }
 
 static devs_gimage_t *devs_to_writable_image(devs_ctx_t *ctx, value_t s) {
-    return make_writable_image(ctx, devs_to_image(ctx, s));
+    return make_writable_image(ctx, devs_to_gimage(ctx, s));
 }
 
 value_t prop_Image_width(devs_ctx_t *ctx, value_t self) {
-    devs_gimage_t *r = devs_to_image(ctx, self);
+    devs_gimage_t *r = devs_to_gimage(ctx, self);
     return devs_value_from_int(r ? r->width : 0);
 }
 
 value_t prop_Image_height(devs_ctx_t *ctx, value_t self) {
-    devs_gimage_t *r = devs_to_image(ctx, self);
+    devs_gimage_t *r = devs_to_gimage(ctx, self);
     return devs_value_from_int(r ? r->height : 0);
 }
 
 value_t prop_Image_bpp(devs_ctx_t *ctx, value_t self) {
-    devs_gimage_t *r = devs_to_image(ctx, self);
+    devs_gimage_t *r = devs_to_gimage(ctx, self);
     return devs_value_from_int(r ? r->bpp : 0);
 }
 
 static devs_gimage_t *devs_arg_self_image(devs_ctx_t *ctx) {
-    return devs_to_image(ctx, devs_arg_self(ctx));
+    return devs_to_gimage(ctx, devs_arg_self(ctx));
 }
 
 static devs_gimage_t *devs_arg_self_writable_image(devs_ctx_t *ctx) {
@@ -237,7 +237,7 @@ static void devs_arg_img2(devs_ctx_t *ctx, img2_args_t *args, int cnt) {
     JD_ASSERT(cnt == 3 || cnt == -3);
     devs_gimage_t *img = cnt < 0 ? devs_arg_self_image(ctx) : devs_arg_self_writable_image(ctx);
     args->img = img;
-    args->simg = devs_to_image(ctx, devs_arg(ctx, 0));
+    args->simg = devs_to_gimage(ctx, devs_arg(ctx, 0));
     args->x = devs_arg_int(ctx, 1);
     args->y = devs_arg_int(ctx, 2);
 }
@@ -342,8 +342,8 @@ void meth5_Image_fillRect(devs_ctx_t *ctx) {
 }
 
 void meth1_Image_equals(devs_ctx_t *ctx) {
-    devs_gimage_t *img = devs_to_image(ctx, devs_arg_self(ctx));
-    devs_gimage_t *other = devs_to_image(ctx, devs_arg(ctx, 0));
+    devs_gimage_t *img = devs_to_gimage(ctx, devs_arg_self(ctx));
+    devs_gimage_t *other = devs_to_gimage(ctx, devs_arg(ctx, 0));
 
     bool eq = false;
     if (img && other) {
@@ -379,7 +379,7 @@ static devs_gimage_t *alloc_img_ret(devs_ctx_t *ctx, int width, int height, int 
 }
 
 void meth0_Image_clone(devs_ctx_t *ctx) {
-    devs_gimage_t *img = devs_to_image(ctx, devs_arg_self(ctx));
+    devs_gimage_t *img = devs_to_gimage(ctx, devs_arg_self(ctx));
     if (!img)
         return;
     devs_gimage_t *r = alloc_img_ret(ctx, img->width, img->height, img->bpp);
@@ -875,7 +875,7 @@ void meth11_Image_blit(devs_ctx_t *ctx) {
     int wDst = devs_arg_int(ctx, 2);
     int hDst = devs_arg_int(ctx, 3);
 
-    devs_gimage_t *src = devs_to_image(ctx, devs_arg(ctx, 4));
+    devs_gimage_t *src = devs_to_gimage(ctx, devs_arg(ctx, 4));
     int xSrc = devs_arg_int(ctx, 5);
     int ySrc = devs_arg_int(ctx, 6);
     int wSrc = devs_arg_int(ctx, 7);
@@ -959,4 +959,110 @@ void meth4_Image_fillCircle(devs_ctx_t *ctx) {
             err += dx - (r << 1);
         }
     }
+}
+
+devs_gimage_xfer_state_t *devs_gimage_prep_xfer(devs_ctx_t *ctx, devs_gimage_t *img, value_t palette,
+                                                uint32_t flags, unsigned max_buf) {
+    unsigned mode = flags & DEVS_GIMAGE_XFER_MODE_MASK;
+    devs_gimage_xfer_state_t *state = NULL;
+
+    if (img->height & 1) {
+        devs_throw_range_error(ctx, "image height has to be even");
+        return NULL;
+    }
+    unsigned buf_sz = max_buf;
+    if (buf_sz > 1024)
+        buf_sz = 1024;
+    int colors = 1 << img->bpp;
+    if (mode == DEVS_GIMAGE_XFER_MODE_565 && img->bpp == 4) {
+        unsigned palsize;
+        const uint8_t *paldata = devs_bufferish_data(ctx, palette, &palsize);
+        if ((int)palsize != 3 * colors)
+            devs_throw_range_error(ctx, "invalid palette");
+        state = devs_try_alloc(ctx, sizeof(devs_gimage_xfer_state_t) + colors * 2 + buf_sz);
+        if (!state)
+            return NULL;
+        state->image = img;
+        state->flags = flags;
+        state->buffer_size = buf_sz;
+        state->buffer_offset = colors * 2;
+        uint16_t *pal = (uint16_t *)(state->data);
+        for (int i = 0; i < colors; ++i) {
+            uint8_t r = paldata[3 * i + 0];
+            uint8_t g = paldata[3 * i + 1];
+            uint8_t b = paldata[3 * i + 2];
+            // 565
+            pal[i] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+            pal[i] = (pal[i] >> 8) | (pal[i] << 8); // swap bytes - little endian
+        }
+        return state;
+    } else {
+        devs_throw_range_error(ctx, "mode/bpp not supported");
+        return NULL;
+    }
+}
+
+int devs_gimage_compute_xfer(devs_ctx_t *ctx, devs_gimage_xfer_state_t *state) {
+    unsigned mode = state->flags & DEVS_GIMAGE_XFER_MODE_MASK;
+    unsigned order = state->flags & DEVS_GIMAGE_XFER_ORDER_MASK;
+    devs_gimage_t *img = state->image;
+
+    if (mode == DEVS_GIMAGE_XFER_MODE_565 && img->bpp == 4) {
+        uint16_t *dp = (uint16_t *)(state->data + state->buffer_offset);
+        uint16_t *pal = (uint16_t *)(state->data);
+        int x = state->x;
+        int y = state->y;
+        int height = img->height;
+        int width = img->width;
+        int len = state->buffer_size / 2;
+        if (order == DEVS_GIMAGE_XFER_BY_COL) {
+            JD_ASSERT((height & 1) == 0);
+            JD_ASSERT(y == 0);
+            int cols = width - x;
+            if (cols == 0)
+                return 0;
+            if (cols * height > len)
+                cols = len / height;
+            JD_ASSERT(cols > 0);
+
+            for (int i = 0; i < cols; ++i) {
+                const uint8_t *sp = pix_ptr(img, x++, 0);
+                for (int j = 0; j < height; j += 2) {
+                    uint8_t c = *sp++;
+                    *dp++ = pal[c & 0xf];
+                    *dp++ = pal[c >> 4];
+                }
+            }
+            state->x = x;
+            return cols * height * 2;
+        } else {
+            JD_ASSERT((height & 1) == 0);
+            JD_ASSERT(x == 0);
+            int rows = height - y;
+            if (rows == 0)
+                return 0;
+            if (rows * width > len)
+                rows = len / width;
+            rows &= ~1;
+            JD_ASSERT(rows > 0);
+
+            unsigned stride = img->stride;
+            for (int i = 0; i < rows; i += 2) {
+                const uint8_t *sp = pix_ptr(img, 0, y++);
+                for (int j = 0; j < width; j++) {
+                    *dp++ = pal[*sp & 0xf];
+                    sp += stride;
+                }
+                sp = pix_ptr(img, 0, y++);
+                for (int j = 0; j < width; j++) {
+                    *dp++ = pal[*sp >> 4];
+                    sp += stride;
+                }
+            }
+            state->y = y;
+            return rows * width * 2;
+        }
+    }
+
+    return -1;
 }

@@ -555,7 +555,7 @@ declare module "@devicescript/core" {
     /**
      * Represents pin capable of digital output.
      */
-    export interface InputPin extends PinBase, Subscriber<DigitalValue> {
+    export interface InputPin extends PinBase {
         _inputPinBrand: unknown
     }
 

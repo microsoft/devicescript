@@ -511,13 +511,16 @@ void devsmgr_init(const devsmgr_cfg_t *cfg) {
 }
 
 void devs_service_full_init(const devsmgr_cfg_t *cfg) {
+    // set initial pin states
+    devs_gpio_init_dcfg(NULL);
+
     jd_role_manager_init();
     devsmgr_init(cfg);
     devsdbg_init();
     settings_init();
 
 #if !JD_HOSTED
-    gpiosrv_config();
+    // gpiosrv_config();
 #endif
 
 #if JD_NETWORK

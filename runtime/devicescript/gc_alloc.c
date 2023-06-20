@@ -239,6 +239,10 @@ static void mark_roots(devs_gc_t *gc) {
         }
     }
 
+    for (unsigned i = 0; i < ctx->num_pins; ++i) {
+        scan_value(ctx, ctx->pin_state[i].obj, ROOT_SCAN_DEPTH);
+    }
+
     scan_gc_obj(ctx, (block_t *)ctx->fn_protos, ROOT_SCAN_DEPTH);
     scan_gc_obj(ctx, (block_t *)ctx->fn_values, ROOT_SCAN_DEPTH);
     scan_gc_obj(ctx, (block_t *)ctx->spec_protos, ROOT_SCAN_DEPTH);
@@ -709,7 +713,8 @@ void devs_gc_destroy(devs_gc_t *gc) {
 #else
 
 #if JD_GC_KEEP
-// we only allocate the GC heap once, and keep it - this is to avoid problems with fragmented memory in the system allocator
+// we only allocate the GC heap once, and keep it - this is to avoid problems with fragmented memory
+// in the system allocator
 static devs_gc_t *global_gc;
 static uint32_t global_gc_size;
 #endif
