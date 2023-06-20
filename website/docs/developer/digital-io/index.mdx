@@ -80,7 +80,7 @@ setInterval(async () => {
 
 ## Input
 
-Use `read` to read the input value of a pin. This example reads the input value every second.
+Use `value` to read the input value of a pin. This example reads the input value every second.
 
 ```ts
 import { gpio, GPIOMode } from "@devicescript/core"
@@ -92,7 +92,7 @@ await p1.setMode(GPIOMode.Input)
 // polling read pin
 setInterval(async () => {
     // higlight-next-line
-    const v = await p1.read()
+    const v = p1.value
     console.log({ poll: v })
 }, 1000)
 ```

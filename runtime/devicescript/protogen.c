@@ -47,6 +47,7 @@ void fun3_DeviceScript__i2cTransaction(devs_ctx_t *ctx);
 // impl_dsspi.c
 void fun5_DeviceScript_spiConfigure(devs_ctx_t *ctx);
 void fun2_DeviceScript_spiXfer(devs_ctx_t *ctx);
+void fun3_DeviceScript_spiSendImage(devs_ctx_t *ctx);
 // impl_error.c
 void meth1_Error___ctor__(devs_ctx_t *ctx);
 void meth1_RangeError___ctor__(devs_ctx_t *ctx);
@@ -65,10 +66,17 @@ void fun0_DsFiber_self(devs_ctx_t *ctx);
 void methX_Function_start(devs_ctx_t *ctx);
 value_t prop_Function_prototype(devs_ctx_t *ctx, value_t self);
 value_t prop_Function_name(devs_ctx_t *ctx, value_t self);
+// impl_gpio.c
+value_t prop_GPIO_mode(devs_ctx_t *ctx, value_t self);
+value_t prop_GPIO_capabilities(devs_ctx_t *ctx, value_t self);
+value_t prop_GPIO_value(devs_ctx_t *ctx, value_t self);
+void meth1_GPIO_setMode(devs_ctx_t *ctx);
+void fun1_DeviceScript_gpio(devs_ctx_t *ctx);
 // impl_image.c
 value_t prop_Image_width(devs_ctx_t *ctx, value_t self);
 value_t prop_Image_height(devs_ctx_t *ctx, value_t self);
 value_t prop_Image_bpp(devs_ctx_t *ctx, value_t self);
+value_t prop_Image_buffer(devs_ctx_t *ctx, value_t self);
 void fun5_Image_alloc(devs_ctx_t *ctx);
 void meth3_Image_set(devs_ctx_t *ctx);
 void meth2_Image_get(devs_ctx_t *ctx);
@@ -213,197 +221,207 @@ static const devs_builtin_proto_entry_t DeviceScript_entries[] = { //
     {N(_I2CTRANSACTION), 50031},                                   //
     {N(SPICONFIGURE), 50032},                                      //
     {N(SPIXFER), 50033},                                           //
-    {N(SUSPEND), 50044},                                           //
-    {N(_SOCKETOPEN), 50124},                                       //
-    {N(_SOCKETCLOSE), 50125},                                      //
-    {N(_SOCKETWRITE), 50126},                                      //
+    {N(SPISENDIMAGE), 50034},                                      //
+    {N(SUSPEND), 50045},                                           //
+    {N(GPIO), 50054},                                              //
+    {N(_SOCKETOPEN), 50131},                                       //
+    {N(_SOCKETCLOSE), 50132},                                      //
+    {N(_SOCKETWRITE), 50133},                                      //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t TypeError_prototype_entries[] = { //
-    {N(CONSTRUCTOR), 50036},                                              //
+    {N(CONSTRUCTOR), 50037},                                              //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t RangeError_prototype_entries[] = { //
-    {N(CONSTRUCTOR), 50035},                                               //
+    {N(CONSTRUCTOR), 50036},                                               //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Error_entries[] = { //
-    {N(__FUNC__), 50034},                                   //
+    {N(__FUNC__), 50035},                                   //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_ERROR_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Error_prototype_entries[] = { //
-    {N(CONSTRUCTOR), 50034},                                          //
-    {N(NAME), 50038},                                                 //
-    {N(PRINT), 50039},                                                //
+    {N(CONSTRUCTOR), 50035},                                          //
+    {N(NAME), 50039},                                                 //
+    {N(PRINT), 50040},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t RangeError_entries[] = { //
-    {N(__FUNC__), 50035},                                        //
+    {N(__FUNC__), 50036},                                        //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_RANGEERROR_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t TypeError_entries[] = { //
-    {N(__FUNC__), 50036},                                       //
+    {N(__FUNC__), 50037},                                       //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_TYPEERROR_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t SyntaxError_entries[] = { //
-    {N(__FUNC__), 50037},                                         //
+    {N(__FUNC__), 50038},                                         //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_SYNTAXERROR_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t SyntaxError_prototype_entries[] = { //
-    {N(CONSTRUCTOR), 50037},                                                //
+    {N(CONSTRUCTOR), 50038},                                                //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsFiber_prototype_entries[] = { //
-    {N(ID), 50040},                                                     //
-    {N(SUSPENDED), 50041},                                              //
-    {N(RESUME), 50042},                                                 //
-    {N(TERMINATE), 50043},                                              //
+    {N(ID), 50041},                                                     //
+    {N(SUSPENDED), 50042},                                              //
+    {N(RESUME), 50043},                                                 //
+    {N(TERMINATE), 50044},                                              //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsFiber_entries[] = { //
-    {N(SELF), 50045},                                         //
+    {N(SELF), 50046},                                         //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_DSFIBER_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Function_prototype_entries[] = { //
-    {N(START), 50046},                                                   //
-    {N(PROTOTYPE), 50047},                                               //
-    {N(NAME), 50048},                                                    //
+    {N(START), 50047},                                                   //
+    {N(PROTOTYPE), 50048},                                               //
+    {N(NAME), 50049},                                                    //
+    {0, 0}};
+
+static const devs_builtin_proto_entry_t GPIO_prototype_entries[] = { //
+    {N(MODE), 50050},                                                //
+    {N(CAPABILITIES), 50051},                                        //
+    {N(VALUE), 50052},                                               //
+    {N(SETMODE), 50053},                                             //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Image_prototype_entries[] = { //
-    {N(WIDTH), 50049},                                                //
-    {N(HEIGHT), 50050},                                               //
-    {N(BPP), 50051},                                                  //
-    {N(SET), 50053},                                                  //
-    {N(GET), 50054},                                                  //
-    {N(FILL), 50055},                                                 //
-    {N(FILLRECT), 50056},                                             //
-    {N(EQUALS), 50057},                                               //
-    {N(CLONE), 50058},                                                //
-    {N(FLIPX), 50059},                                                //
-    {N(FLIPY), 50060},                                                //
-    {N(TRANSPOSED), 50061},                                           //
-    {N(DRAWIMAGE), 50062},                                            //
-    {N(DRAWTRANSPARENTIMAGE), 50063},                                 //
-    {N(OVERLAPSWITH), 50064},                                         //
-    {N(DRAWLINE), 50065},                                             //
-    {N(BLITROW), 50066},                                              //
-    {N(BLIT), 50067},                                                 //
-    {N(FILLCIRCLE), 50068},                                           //
+    {N(WIDTH), 50055},                                                //
+    {N(HEIGHT), 50056},                                               //
+    {N(BPP), 50057},                                                  //
+    {N(BUFFER), 50058},                                               //
+    {N(SET), 50060},                                                  //
+    {N(GET), 50061},                                                  //
+    {N(FILL), 50062},                                                 //
+    {N(FILLRECT), 50063},                                             //
+    {N(EQUALS), 50064},                                               //
+    {N(CLONE), 50065},                                                //
+    {N(FLIPX), 50066},                                                //
+    {N(FLIPY), 50067},                                                //
+    {N(TRANSPOSED), 50068},                                           //
+    {N(DRAWIMAGE), 50069},                                            //
+    {N(DRAWTRANSPARENTIMAGE), 50070},                                 //
+    {N(OVERLAPSWITH), 50071},                                         //
+    {N(DRAWLINE), 50072},                                             //
+    {N(BLITROW), 50073},                                              //
+    {N(BLIT), 50074},                                                 //
+    {N(FILLCIRCLE), 50075},                                           //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Image_entries[] = { //
-    {N(ALLOC), 50052},                                      //
+    {N(ALLOC), 50059},                                      //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_IMAGE_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t JSON_entries[] = { //
-    {N(PARSE), 50069},                                     //
-    {N(STRINGIFY), 50070},                                 //
+    {N(PARSE), 50076},                                     //
+    {N(STRINGIFY), 50077},                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Math_entries[] = { //
-    {N(CEIL), 50071},                                      //
-    {N(FLOOR), 50072},                                     //
-    {N(ROUND), 50073},                                     //
-    {N(ABS), 50074},                                       //
-    {N(RANDOM), 50075},                                    //
-    {N(RANDOMINT), 50076},                                 //
-    {N(LOG), 50077},                                       //
-    {N(POW), 50078},                                       //
-    {N(IDIV), 50079},                                      //
-    {N(IMOD), 50080},                                      //
-    {N(IMUL), 50081},                                      //
-    {N(MIN), 50082},                                       //
-    {N(MAX), 50083},                                       //
+    {N(CEIL), 50078},                                      //
+    {N(FLOOR), 50079},                                     //
+    {N(ROUND), 50080},                                     //
+    {N(ABS), 50081},                                       //
+    {N(RANDOM), 50082},                                    //
+    {N(RANDOMINT), 50083},                                 //
+    {N(LOG), 50084},                                       //
+    {N(POW), 50085},                                       //
+    {N(IDIV), 50086},                                      //
+    {N(IMOD), 50087},                                      //
+    {N(IMUL), 50088},                                      //
+    {N(MIN), 50089},                                       //
+    {N(MAX), 50090},                                       //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t Object_entries[] = { //
-    {N(ASSIGN), 50084},                                      //
-    {N(KEYS), 50085},                                        //
-    {N(VALUES), 50086},                                      //
-    {N(SETPROTOTYPEOF), 50087},                              //
+    {N(ASSIGN), 50091},                                      //
+    {N(KEYS), 50092},                                        //
+    {N(VALUES), 50093},                                      //
+    {N(SETPROTOTYPEOF), 50094},                              //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE},    //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacket_prototype_entries[] = { //
-    {N(ROLE), 50088},                                                    //
-    {N(DEVICEIDENTIFIER), 50089},                                        //
-    {N(SHORTID), 50090},                                                 //
-    {N(SERVICEINDEX), 50091},                                            //
-    {N(SERVICECOMMAND), 50092},                                          //
-    {N(FLAGS), 50093},                                                   //
-    {N(ISCOMMAND), 50094},                                               //
-    {N(ISREPORT), 50095},                                                //
-    {N(PAYLOAD), 50096},                                                 //
-    {N(ISEVENT), 50097},                                                 //
-    {N(EVENTCODE), 50098},                                               //
-    {N(ISREGSET), 50099},                                                //
-    {N(ISREGGET), 50100},                                                //
-    {N(REGCODE), 50101},                                                 //
-    {N(ISACTION), 50102},                                                //
-    {N(SPEC), 50103},                                                    //
-    {N(DECODE), 50104},                                                  //
-    {N(NOTIMPLEMENTED), 50105},                                          //
+    {N(ROLE), 50095},                                                    //
+    {N(DEVICEIDENTIFIER), 50096},                                        //
+    {N(SHORTID), 50097},                                                 //
+    {N(SERVICEINDEX), 50098},                                            //
+    {N(SERVICECOMMAND), 50099},                                          //
+    {N(FLAGS), 50100},                                                   //
+    {N(ISCOMMAND), 50101},                                               //
+    {N(ISREPORT), 50102},                                                //
+    {N(PAYLOAD), 50103},                                                 //
+    {N(ISEVENT), 50104},                                                 //
+    {N(EVENTCODE), 50105},                                               //
+    {N(ISREGSET), 50106},                                                //
+    {N(ISREGGET), 50107},                                                //
+    {N(REGCODE), 50108},                                                 //
+    {N(ISACTION), 50109},                                                //
+    {N(SPEC), 50110},                                                    //
+    {N(DECODE), 50111},                                                  //
+    {N(NOTIMPLEMENTED), 50112},                                          //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketSpec_prototype_entries[] = { //
-    {N(PARENT), 50106},                                                      //
-    {N(NAME), 50107},                                                        //
-    {N(CODE), 50108},                                                        //
-    {N(RESPONSE), 50109},                                                    //
-    {N(ENCODE), 50110},                                                      //
+    {N(PARENT), 50113},                                                      //
+    {N(NAME), 50114},                                                        //
+    {N(CODE), 50115},                                                        //
+    {N(RESPONSE), 50116},                                                    //
+    {N(ENCODE), 50117},                                                      //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRegister_prototype_entries[] = { //
-    {N(READ), 50111},                                                      //
-    {N(WRITE), 50112},                                                     //
+    {N(READ), 50118},                                                      //
+    {N(WRITE), 50119},                                                     //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsCommand_prototype_entries[] = { //
-    {N(__FUNC__), 50116},                                                 //
+    {N(__FUNC__), 50123},                                                 //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsEvent_prototype_entries[] = { //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsPacketInfo_prototype_entries[] = { //
-    {N(ROLE), 50113},                                                        //
-    {N(NAME), 50114},                                                        //
-    {N(CODE), 50115},                                                        //
+    {N(ROLE), 50120},                                                        //
+    {N(NAME), 50121},                                                        //
+    {N(CODE), 50122},                                                        //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsRole_prototype_entries[] = { //
-    {N(ISBOUND), 50117},                                               //
-    {N(SPEC), 50118},                                                  //
-    {N(SENDCOMMAND), 50119},                                           //
+    {N(ISBOUND), 50124},                                               //
+    {N(SPEC), 50125},                                                  //
+    {N(SENDCOMMAND), 50126},                                           //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t DsServiceSpec_prototype_entries[] = { //
-    {N(CLASSIDENTIFIER), 50120},                                              //
-    {N(NAME), 50121},                                                         //
-    {N(LOOKUP), 50122},                                                       //
-    {N(ASSIGN), 50123},                                                       //
+    {N(CLASSIDENTIFIER), 50127},                                              //
+    {N(NAME), 50128},                                                         //
+    {N(LOOKUP), 50129},                                                       //
+    {N(ASSIGN), 50130},                                                       //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_prototype_entries[] = { //
-    {N(LENGTH), 50127},                                                //
-    {N(BYTELENGTH), 50128},                                            //
-    {N(CHARCODEAT), 50129},                                            //
-    {N(CHARAT), 50130},                                                //
-    {N(SLICE), 50131},                                                 //
-    {N(INDEXOF), 50133},                                               //
-    {N(TOLOWERCASE), 50134},                                           //
-    {N(TOUPPERCASE), 50135},                                           //
+    {N(LENGTH), 50134},                                                //
+    {N(BYTELENGTH), 50135},                                            //
+    {N(CHARCODEAT), 50136},                                            //
+    {N(CHARAT), 50137},                                                //
+    {N(SLICE), 50138},                                                 //
+    {N(INDEXOF), 50140},                                               //
+    {N(TOLOWERCASE), 50141},                                           //
+    {N(TOUPPERCASE), 50142},                                           //
     {0, 0}};
 
 static const devs_builtin_proto_entry_t String_entries[] = { //
-    {N(FROMCHARCODE), 50132},                                //
+    {N(FROMCHARCODE), 50139},                                //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_STRING_PROTOTYPE},    //
     {0, 0}};
 
@@ -438,6 +456,10 @@ static const devs_builtin_proto_entry_t dspacketspec_entries[] = { //
     {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_DSPACKETSPEC_PROTOTYPE},    //
     {0, 0}};
 
+static const devs_builtin_proto_entry_t gpio_entries[] = { //
+    {N(PROTOTYPE), DEVS_BUILTIN_OBJECT_GPIO_PROTOTYPE},    //
+    {0, 0}};
+
 const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = {
     [DEVS_BUILTIN_OBJECT_ARRAY_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
                                              Array_prototype_entries},
@@ -465,6 +487,7 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSFIBER] = {DEVS_BUILTIN_PROTO_INIT, NULL, DsFiber_entries},
     [DEVS_BUILTIN_OBJECT_FUNCTION_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
                                                 Function_prototype_entries},
+    [DEVS_BUILTIN_OBJECT_GPIO_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, GPIO_prototype_entries},
     [DEVS_BUILTIN_OBJECT_IMAGE_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL,
                                              Image_prototype_entries},
     [DEVS_BUILTIN_OBJECT_IMAGE] = {DEVS_BUILTIN_PROTO_INIT, NULL, Image_entries},
@@ -500,14 +523,15 @@ const devs_builtin_proto_t devs_builtin_protos[DEVS_BUILTIN_OBJECT___MAX + 1] = 
     [DEVS_BUILTIN_OBJECT_DSPACKET] = {DEVS_BUILTIN_PROTO_INIT, NULL, dspacket_entries},
     [DEVS_BUILTIN_OBJECT_DSSERVICESPEC] = {DEVS_BUILTIN_PROTO_INIT, NULL, dsservicespec_entries},
     [DEVS_BUILTIN_OBJECT_DSPACKETSPEC] = {DEVS_BUILTIN_PROTO_INIT, NULL, dspacketspec_entries},
+    [DEVS_BUILTIN_OBJECT_GPIO] = {DEVS_BUILTIN_PROTO_INIT, NULL, gpio_entries},
     [DEVS_BUILTIN_OBJECT_OBJECT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
     [DEVS_BUILTIN_OBJECT_NUMBER_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
     [DEVS_BUILTIN_OBJECT_BOOLEAN_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
     [DEVS_BUILTIN_OBJECT_DSREPORT_PROTOTYPE] = {DEVS_BUILTIN_PROTO_INIT, NULL, empty_entries},
 };
 
-uint16_t devs_num_builtin_functions = 136;
-const devs_builtin_function_t devs_builtin_functions[136] = {
+uint16_t devs_num_builtin_functions = 143;
+const devs_builtin_function_t devs_builtin_functions[143] = {
     {N(LENGTH), 0, PROP, {.prop = prop_Array_length}},
     {N(INSERT), 2, 0, {.meth = meth2_Array_insert}},
     {N(ISARRAY), 1, NO_SELF, {.meth = fun1_Array_isArray}},
@@ -542,6 +566,7 @@ const devs_builtin_function_t devs_builtin_functions[136] = {
     {N(_I2CTRANSACTION), 3, NO_SELF, {.meth = fun3_DeviceScript__i2cTransaction}},
     {N(SPICONFIGURE), 5, NO_SELF, {.meth = fun5_DeviceScript_spiConfigure}},
     {N(SPIXFER), 2, NO_SELF, {.meth = fun2_DeviceScript_spiXfer}},
+    {N(SPISENDIMAGE), 3, NO_SELF, {.meth = fun3_DeviceScript_spiSendImage}},
     {N(ERROR), 1, CTOR, {.meth = meth1_Error___ctor__}},
     {N(RANGEERROR), 1, CTOR, {.meth = meth1_RangeError___ctor__}},
     {N(TYPEERROR), 1, CTOR, {.meth = meth1_TypeError___ctor__}},
@@ -557,9 +582,15 @@ const devs_builtin_function_t devs_builtin_functions[136] = {
     {N(START), 0, 0, {.meth = methX_Function_start}},
     {N(PROTOTYPE), 0, PROP, {.prop = prop_Function_prototype}},
     {N(NAME), 0, PROP, {.prop = prop_Function_name}},
+    {N(MODE), 0, PROP, {.prop = prop_GPIO_mode}},
+    {N(CAPABILITIES), 0, PROP, {.prop = prop_GPIO_capabilities}},
+    {N(VALUE), 0, PROP, {.prop = prop_GPIO_value}},
+    {N(SETMODE), 1, 0, {.meth = meth1_GPIO_setMode}},
+    {N(GPIO), 1, NO_SELF, {.meth = fun1_DeviceScript_gpio}},
     {N(WIDTH), 0, PROP, {.prop = prop_Image_width}},
     {N(HEIGHT), 0, PROP, {.prop = prop_Image_height}},
     {N(BPP), 0, PROP, {.prop = prop_Image_bpp}},
+    {N(BUFFER), 0, PROP, {.prop = prop_Image_buffer}},
     {N(ALLOC), 5, NO_SELF, {.meth = fun5_Image_alloc}},
     {N(SET), 3, 0, {.meth = meth3_Image_set}},
     {N(GET), 2, 0, {.meth = meth2_Image_get}},

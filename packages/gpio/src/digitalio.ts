@@ -14,8 +14,8 @@ import {
  * @param pin
  * @param mode
  */
-export async function pinMode(pin: PinBase, mode: GPIOMode): Promise<void> {
-    await pin.setMode(mode)
+export function pinMode(pin: PinBase, mode: GPIOMode) {
+    pin.setMode(mode)
 }
 
 /**
@@ -24,11 +24,11 @@ export async function pinMode(pin: PinBase, mode: GPIOMode): Promise<void> {
  * @param value HIGH or LOW, 1 or 0, true or false
  * @throws RangeError pin is not an output pin or output mode
  */
-export async function digitalWrite(
+export function digitalWrite(
     pin: OutputPin,
     value: DigitalValue | number | boolean
-): Promise<void> {
-    await pin.write(value)
+) {
+    pin.write(value)
 }
 
 /**
@@ -37,8 +37,8 @@ export async function digitalWrite(
  * @returns HIGH (1) or LOW (0)
  * @throws RangeError pin is not an input pin or intput mode
  */
-export async function digitalRead(pin: InputPin): Promise<DigitalValue> {
-    return await pin.read()
+export function digitalRead(pin: InputPin): DigitalValue {
+    return pin.value as DigitalValue
 }
 
 /**

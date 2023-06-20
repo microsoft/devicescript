@@ -38,6 +38,8 @@ void devs_set_global_flags(uint32_t global_flags);
 void devs_reset_global_flags(uint32_t global_flags);
 uint32_t devs_get_global_flags(void);
 
+void devs_gpio_init_dcfg(devs_ctx_t *ctx);
+
 // General utils
 char *devs_json_escape(const char *str, unsigned sz);
 

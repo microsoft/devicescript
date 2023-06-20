@@ -73,5 +73,3 @@ Math.constrain = function constrain(x, low, high) {
     await fn()
     return await ds.suspend<ds.Packet>()
 }
-// this is overridden byt the gpio package
-;(ds as typeof ds).gpio = gpio => ({ gpio } as any)

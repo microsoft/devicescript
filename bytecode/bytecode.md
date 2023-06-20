@@ -21,8 +21,8 @@ For a more highlevel description of runtime and bytecode, see [Runtime implement
 ## Format Constants
 
     img_version_major = 2
-    img_version_minor = 11
-    img_version_patch = 6
+    img_version_minor = 12
+    img_version_patch = 1
     img_version = $version
     magic0 = 0x53766544 // "DevS"
     magic1 = 0xf1296e0a
@@ -492,6 +492,8 @@ Only `true` and `false` values.
     DsPacketSpec_prototype = 39
     Image = 40
     Image_prototype = 41
+    GPIO = 42
+    GPIO_prototype = 43
 
 ## Enum: BuiltIn_String
 
@@ -703,3 +705,10 @@ Only `true` and `false` values.
     blit = 204
     _i2cTransaction = 205
     _twinMessage = 206
+    spiSendImage = 207
+    gpio = 208
+    label = 209
+    mode = 210
+    capabilities = 211
+    value = 212
+    setMode = 213

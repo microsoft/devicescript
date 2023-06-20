@@ -27,6 +27,12 @@ export declare class Image {
     bpp: number
 
     /**
+     * Get the underlying writable buffer.
+     * Allocates if needed.
+     */
+    buffer: Buffer
+
+    /**
      * Get a pixel color
      */
     get(x: number, y: number): number

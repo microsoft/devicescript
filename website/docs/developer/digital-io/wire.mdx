@@ -21,7 +21,7 @@ import { pinMode } from "@devicescript/gpio"
 
 const pin = gpio(0)
 // highlight-next-line
-await pinMode(pin, GPIOMode.Output)
+pinMode(pin, GPIOMode.Output)
 ```
 
 ### digitalWrite
@@ -35,12 +35,12 @@ import { HIGH, GPIOMode } from "@devicescript/core"
 import { pinMode, digitalWrite } from "@devicescript/gpio"
 
 const pin = gpio(0)
-await pinMode(pin, GPIOMode.Output)
+pinMode(pin, GPIOMode.Output)
 
 // highlight-start
-await digitalWrite(pin, true)
-await digitalWrite(pin, 1)
-await digitalWrite(pin, HIGH)
+digitalWrite(pin, true)
+digitalWrite(pin, 1)
+digitalWrite(pin, HIGH)
 // highlight-end
 ```
 
@@ -55,10 +55,10 @@ import { GPIOMode } from "@devicescript/core"
 import { pinMode, digitalRead } from "@devicescript/gpio"
 
 const pin = gpio(0)
-await pinMode(pin, GPIOMode.Input)
+pinMode(pin, GPIOMode.Input)
 
 // highlight-start
-const value = await digitalRead(pin)
+const value = digitalRead(pin)
 // highlight-end
 ```
 
@@ -73,7 +73,7 @@ import { GPIOMode } from "@devicescript/core"
 import { pinMode, subscribeDigital } from "@devicescript/gpio"
 
 const pin = gpio(0)
-await pinMode(pin, GPIOMode.Input)
+pinMode(pin, GPIOMode.Input)
 
 // highlight-start
 subscribeDigital(pin, value => console.data({ value }))

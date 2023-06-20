@@ -8,7 +8,10 @@ STATIC_ASSERT(sizeof(devs_img_header_t) ==
 STATIC_ASSERT(sizeof(devs_function_desc_t) == DEVS_FUNCTION_HEADER_SIZE);
 
 static void setup_ctx(devs_ctx_t *ctx, const uint8_t *img) {
+    static uint32_t ctx_seq_no;
+
     ctx->img.data = img;
+    ctx->ctx_seq_no = ++ctx_seq_no;
 
     ctx->gc = devs_gc_create();
 
