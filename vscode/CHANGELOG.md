@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.12.1](https://github.com/microsoft/devicescript/compare/v2.12.0...v2.12.1)
+
+> 20 June 2023
+
+- add Image.buffer property [`7c520f6`](https://github.com/microsoft/devicescript/commit/7c520f61a8fda3bf797a2b747bfe5461959f12f3)
+
 #### [v2.12.0](https://github.com/microsoft/devicescript/compare/v2.11.6...v2.12.0)
 
 > 20 June 2023
