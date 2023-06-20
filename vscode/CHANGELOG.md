@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.12.0](https://github.com/microsoft/devicescript/compare/v2.11.6...v2.12.0)
+
+> 20 June 2023
+
+- native GPIO, SPI image send, and ST7735 screens support [`#490`](https://github.com/microsoft/devicescript/pull/490)
+- fix port parsing [`#491`](https://github.com/microsoft/devicescript/pull/491)
+- Misc word/grammar fixes to index.mdx [`#483`](https://github.com/microsoft/devicescript/pull/483)
+- Dotmatrix over image implementation [`#480`](https://github.com/microsoft/devicescript/pull/480)
+- ImageRenderingContext [`#478`](https://github.com/microsoft/devicescript/pull/478)
+- math.map helper class [`#477`](https://github.com/microsoft/devicescript/pull/477)
+- doc reorg [`ce12d80`](https://github.com/microsoft/devicescript/commit/ce12d80a4d8119e117c884ec00897ca239c9d586)
+- docs update [`5ad5a93`](https://github.com/microsoft/devicescript/commit/5ad5a930f205033c626875b6263c980ef5c753b0)
+- introduce common Display interface [`e6a6115`](https://github.com/microsoft/devicescript/commit/e6a6115e3051b6aff01263c3ec137fb2c97b0301)
+
 #### [v2.11.6](https://github.com/microsoft/devicescript/compare/v2.11.5...v2.11.6)
 
 > 10 June 2023
