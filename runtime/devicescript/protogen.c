@@ -18,7 +18,7 @@ void methX_Array_slice(devs_ctx_t *ctx);
 void meth1_Array_join(devs_ctx_t *ctx);
 // impl_buffer.c
 void fun1_Buffer_alloc(devs_ctx_t *ctx);
-void fun1_Buffer_from(devs_ctx_t *ctx);
+void fun2_Buffer_from(devs_ctx_t *ctx);
 value_t prop_Buffer_length(devs_ctx_t *ctx, value_t self);
 void meth1_Buffer_toString(devs_ctx_t *ctx);
 void meth3_Buffer_fillAt(devs_ctx_t *ctx);
@@ -546,7 +546,7 @@ const devs_builtin_function_t devs_builtin_functions[146] = {
     {N(SLICE), 0, 0, {.meth = methX_Array_slice}},
     {N(JOIN), 1, 0, {.meth = meth1_Array_join}},
     {N(ALLOC), 1, NO_SELF, {.meth = fun1_Buffer_alloc}},
-    {N(FROM), 1, NO_SELF, {.meth = fun1_Buffer_from}},
+    {N(FROM), 2, NO_SELF, {.meth = fun2_Buffer_from}},
     {N(LENGTH), 0, PROP, {.prop = prop_Buffer_length}},
     {N(TOSTRING), 1, 0, {.meth = meth1_Buffer_toString}},
     {N(FILLAT), 3, 0, {.meth = meth3_Buffer_fillAt}},

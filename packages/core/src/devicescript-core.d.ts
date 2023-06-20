@@ -423,7 +423,13 @@ declare module "@devicescript/core" {
             private constructor()
 
             static alloc(size: number): Buffer
-            static from(data: string | Buffer | number[]): Buffer
+
+            static from(
+                data: string,
+                encoding?: undefined | "utf-8" | "utf8" | "hex"
+            ): Buffer
+            static from(data: Buffer | number[]): Buffer
+
             static concat(...buffers: Buffer[]): Buffer
 
             /**

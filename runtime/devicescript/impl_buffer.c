@@ -21,14 +21,50 @@ void fun1_Buffer_alloc(devs_ctx_t *ctx) {
     devs_ret_gc_ptr(ctx, devs_buffer_try_alloc(ctx, sz));
 }
 
-void fun1_Buffer_from(devs_ctx_t *ctx) {
+#define ENC_NULL 0
+#define ENC_HEX 1
+#define ENC_UTF 2
+#define ENC_ERR -1
+
+static int get_encoding(devs_ctx_t *ctx, value_t enc) {
+    if (devs_is_null_or_undefined(enc))
+        return ENC_NULL;
+
+    if (devs_value_eq_builtin_string(ctx, enc, DEVS_BUILTIN_STRING_HEX)) {
+        return ENC_HEX;
+    } else if (devs_value_eq_builtin_string(ctx, enc, DEVS_BUILTIN_STRING_UTF8) ||
+               devs_value_eq_builtin_string(ctx, enc, DEVS_BUILTIN_STRING_UTF_8)) {
+        return ENC_UTF;
+    } else {
+        devs_throw_type_error(ctx, "Unknown encoding: %s", devs_show_value(ctx, enc));
+        return ENC_ERR;
+    }
+}
+
+void fun2_Buffer_from(devs_ctx_t *ctx) {
     value_t v = devs_arg(ctx, 0);
+    int enc = get_encoding(ctx, devs_arg(ctx, 1));
     unsigned sz;
     const uint8_t *d = devs_bufferish_data(ctx, v, &sz);
     devs_buffer_t *buf = NULL;
 
+    if (enc == ENC_ERR)
+        return;
+
+    if (enc != ENC_NULL && !devs_is_string(ctx, v)) {
+        devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_STRING, v);
+        return;
+    }
+
     if (d) {
-        buf = devs_buffer_try_alloc_init(ctx, d, sz);
+        if (enc == ENC_HEX) {
+            sz = jd_from_hex(NULL, (const char *)d);
+            buf = devs_buffer_try_alloc(ctx, sz);
+            if (buf)
+                jd_from_hex(buf->data, (const char *)d);
+        } else {
+            buf = devs_buffer_try_alloc_init(ctx, d, sz);
+        }
     } else {
         if (devs_is_array(ctx, v)) {
             devs_array_t *arr = devs_value_to_gc_obj(ctx, v);
