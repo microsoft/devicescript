@@ -38,14 +38,19 @@ Make sure, `ENC_HTTP_KEY` is 64 hex characters long (for 32 byte key).
 # Local settings and secrets
 # This file should **NOT** tracked by git
 ENC_HTTP_URL=http://localhost:8080/devs-enc-fetch
-ENC_HTTP_KEY=63f3f33d4b743303b98e4f4425032aa8aad9a1302796ef208ea56d330b400b1e
+ENC_HTTP_KEY=RANDOM-HEX-STRING-OF-64-CHARACTERS
 ```
 
 On the server side, you can run the code below.
 Feel free to adopt to other languages or frameworks.
 If you have more than one device, you could use `/devices/:deviceId` or similar as the URL path and assign separate
 keys to each device.
+
+:::warning
+
 Two devices should never share a key.
+
+:::
 
 ```ts skip
 import express from "express"
