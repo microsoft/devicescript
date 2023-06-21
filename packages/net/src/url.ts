@@ -77,11 +77,16 @@ export class URL {
         this.hostname = hostname
         this.port = port
 
-        const [path, afterPath] = split2(afterHost, "?")
-        this.pathname = "/" + path
-
-        const [search, hash] = split2(afterPath, "#")
-        if (search) this.search = "?" + search
-        if (hash) this.hash = "#" + hash
+        if (afterHost.includes("?")) {
+            const [path, afterPath] = split2(afterHost, "?")
+            this.pathname = "/" + path
+            const [search, hash] = split2(afterPath, "#")
+            if (search) this.search = "?" + search
+            if (hash) this.hash = "#" + hash
+        } else {
+            const [path, hash] = split2(afterHost, "#")
+            this.pathname = "/" + path
+            if (hash) this.hash = "#" + hash
+        }
     }
 }

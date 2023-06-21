@@ -45,5 +45,9 @@ describe("net", () => {
 
         u.search = ""
         checkURL(u, "https://sub.example.com/p/a/t/h")
+
+        const u2 = new URL("https://foobar.com/foo#bar")
+        assert(u2.pathname === "/foo")
+        assert(u2.hash === "#bar")
     })
 })
