@@ -14,19 +14,17 @@ Let's see how this works!
 First, set up a `main.ts` file:
 
 ```ts
+import { assert } from "@devicescript/core"
 import { sha256Hkdf } from "@devicescript/crypto"
 import { URL, encryptedFetch } from "@devicescript/net"
 import { readSetting } from "@devicescript/settings"
 
 async function sendReq(data: any) {
     const url = new URL(await readSetting<string>("ENC_HTTP_URL"))
-
-    // Use username/password from URL
-    const key = sha256Hkdf(url.password, "")
-    if (url.username) url.pathname += "/" + url.username
-    url.username = ""
-    url.password = ""
-
+    const pass = url.hash.split("pass=")[1]
+    assert(pass !== "SecretPassword", "Please change password in production!")
+    const key = sha256Hkdf(pass, "")
+    url.hash = ""
     return await encryptedFetch({
         data,
         key,
@@ -47,7 +45,8 @@ Use the widget below if you need a demo key.
 ```env title="./.env.local"
 # Local settings and secrets
 # This file should **NOT** tracked by git
-ENC_HTTP_URL=http://mydevice:SuPeRSecret123@localhost:8080/api/devs-enc-fetch
+# Make sure to put the value below in "..."; otherwise the # gets treated as comment
+ENC_HTTP_URL="http://localhost:8080/api/devs-enc-fetch/mydevice#pass=SecretPassword"
 ```
 
 In production, you may want to use `deviceIdentifier('self')` as the user name,
@@ -73,11 +72,12 @@ function getKeyForDevice(deviceId: string): Buffer | undefined {
     // TODO look up device in database here!
 
     config({ path: "./.env.local" })
-    const deviceURL = new URL(process.env["ENC_HTTP_URL"] + "")
-    if (deviceId == deviceURL.username)
-        return Buffer.from(
-            crypto.hkdfSync("sha256", deviceURL.password, "", "", 32)
-        )
+    const url = new URL(process.env["ENC_HTTP_URL"] + "")
+    if (url.pathname.replace(/.*\//, "") == deviceId) {
+        const pass = url.hash.split("pass=")[1]
+        if (pass !== "SecretPassword")
+            return Buffer.from(crypto.hkdfSync("sha256", pass, "", "", 32))
+    }
 
     return undefined
 }
