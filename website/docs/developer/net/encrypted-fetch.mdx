@@ -2,6 +2,7 @@
 title: Encrypted Fetch
 sidebar_position: 14.5
 ---
+import KeyGenerator from "@site/src/components/KeyGenerator"
 
 # Encrypted Fetch
 
@@ -40,6 +41,12 @@ Make sure, `ENC_HTTP_KEY` is 64 hex characters long (for 32 byte key).
 ENC_HTTP_URL=http://localhost:8080/devs-enc-fetch
 ENC_HTTP_KEY=RANDOM-HEX-STRING-OF-64-CHARACTERS
 ```
+
+:::info
+
+<KeyGenerator />
+
+:::
 
 On the server side, you can run the code below.
 Feel free to adopt to other languages or frameworks.
