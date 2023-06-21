@@ -1,6 +1,6 @@
 import { program, CommandOptions, Command } from "commander"
 import { annotate } from "./annotate"
-import { build } from "./build"
+import { build, buildAll } from "./build"
 import { crunScript } from "./crun"
 import { ctool } from "./ctool"
 import { deployScript } from "./deploy"
@@ -79,6 +79,10 @@ export async function mainCli() {
         .description("build a DeviceScript file")
         .argument("[src/mainXYZ.ts]", "entry point", "src/main.ts")
         .action(build)
+
+    buildCommand("build-all", { hidden: true })
+        .description("build all src/main*.ts files")
+        .action(buildAll)
 
     program
         .command("flags")
@@ -265,13 +269,15 @@ export async function mainCli() {
                 "-r, --refresh",
                 "discard cached firmware image, even if less than 24h old"
             )
-            r.option("-C, --clean", "remove all settings, user program, and firmware instead of flashing")
+            r.option(
+                "-C, --clean",
+                "remove all settings, user program, and firmware instead of flashing"
+            )
         }
         r.option(
             "--install",
             "automatically install missing flashing utilities. For ESP32, if 'esptool' is missing, run `py -m pip install esptool`"
-        )
-        .option("--python <path>", "path to the python executable")
+        ).option("--python <path>", "path to the python executable")
         r.addHelpText("after", () => {
             setupFlashBoards()
             return `\nAvailable boards:\n` + boardNames(arch)

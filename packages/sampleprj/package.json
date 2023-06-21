@@ -21,6 +21,7 @@
         "build:devicescript": "devicescript build -F allFunctions",
         "build:sim": "cd sim && tsc --outDir ../.devicescript/sim",
         "build": "yarn build:devicescript && yarn build:sim",
+        "build-all": "devicescript build-all -F allFunctions",
         "watch:devicescript": "devicescript devtools src/main.ts",
         "watch:sim": "cd sim && nodemon --watch './**' --ext 'ts,json' --exec 'ts-node ./app.ts --project ./tsconfig.json'",
         "watch": "yarn watch:devicescript & yarn watch:sim",

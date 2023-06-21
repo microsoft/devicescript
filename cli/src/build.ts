@@ -33,6 +33,7 @@ import {
     log,
     verboseLog,
 } from "./command"
+import glob from "fast-glob"
 
 import type { DevsModule } from "@devicescript/vm"
 import { readFile, writeFile } from "node:fs/promises"
@@ -429,7 +430,8 @@ export async function compileFile(
     )
         throw new Error("./devsconfig.json file not found")
 
-    ensureDirSync(options.outDir || BINDIR)
+    const outDir = options.outDir || BINDIR
+    ensureDirSync(outDir)
 
     const folder = resolve(".")
     const entryPoint = relative(folder, fn)
@@ -452,7 +454,7 @@ export async function compileFile(
         res.dbg.binarySHA256 = toHex(await sha256([res.binary]))
         verboseLog(`sha: ${res.dbg.binarySHA256}`)
         writeFileSync(
-            join(folder, BINDIR, DEVS_DBG_FILE),
+            join(folder, outDir, DEVS_DBG_FILE),
             JSON.stringify(res.dbg)
         )
     }
@@ -522,6 +524,16 @@ export async function saveLibFiles(
                 encoding: "utf-8",
             }
         )
+    }
+}
+
+export async function buildAll(options: BuildOptions) {
+    for (const file of await glob("src/main*.ts")) {
+        log(`build ${file}`)
+        await build(file, {
+            ...options,
+            outDir: BINDIR + "/" + file.slice(8, -3),
+        })
     }
 }
 

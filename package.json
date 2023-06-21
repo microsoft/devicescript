@@ -29,7 +29,7 @@
         "test:graphics": "cd packages/graphics && yarn test",
         "test:ros": "cd packages/ros && yarn test",
         "test:snippets": "node ./cli/devicescript snippets",
-        "test:sampleprj": "node ./scripts/buildsampleprj.mjs",
+        "test:sampleprj": "cd packages/sampleprj && yarn build-all",
         "test": "yarn test:compiler && yarn test:test && yarn test:runtime && yarn test:settings && yarn test:i2c && yarn test:observables && yarn test:ros && yarn test:cloud && yarn test:sampleprj && yarn test:snippets && yarn test:crypto && yarn test:net && yarn test:graphics && yarn test:cowsay",
         "boards": "node ./cli/devicescript ctool --fetch-boards compiler/src/boards.json",
         "bump": "node scripts/bump.mjs",
