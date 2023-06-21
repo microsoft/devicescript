@@ -1,5 +1,12 @@
-import React, { useEffect, useState } from "react"
-import { toHex } from "jacdac-ts"
+import React, { useState } from "react"
+
+function toHex(bytes: Uint8Array) {
+    let r = ""
+    for (let i = 0; i < bytes.length; ++i) {
+        r += ("0" + bytes[i].toString(16)).slice(-2)
+    }
+    return r
+}
 
 export default function KeyGenerator() {
     const compute = () => {
