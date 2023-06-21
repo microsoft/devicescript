@@ -10,6 +10,9 @@ function toHex(bytes: Uint8Array) {
 
 export default function KeyGenerator() {
     const compute = () => {
+        if (typeof window === "undefined")
+            return "00000000000000000000000000000000"
+
         const array = new Uint8Array(32) // Create a Uint8Array with 32 elements.
         window.crypto.getRandomValues(array) // Fill the array with cryptographically strong random values.
         return toHex(array)
