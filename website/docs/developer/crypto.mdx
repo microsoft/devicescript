@@ -86,8 +86,8 @@ console.log(key.toString("hex"))
 This gives the same result as the following in node.js:
 
 ```ts skip
+import * as crypto from "node:crypto"
 const password = "SuPeRSecret!!"
-crypto.hkdf("sha256", password, "", "Req-1", 32, (err, key) => {
-    console.log(Buffer.from(key).toString("hex"))
-})
+const key = Buffer.from(crypto.hkdfSync("sha256", password, "", "Req-1", 32))
+console.log(key.toString("hex"))
 ```
