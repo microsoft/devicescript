@@ -24,27 +24,29 @@ export default function KeyGenerator() {
     const handleCopy = async () => {
         await navigator.clipboard.writeText(value)
     }
-    const title = "Random Device Key (64hex)"
     return (
         <div>
-            <label>{title}</label>
-            <pre style={{ whiteSpace: "pre-wrap", maxWidth: "100%" }}>
+            <pre
+                className="item shadow--md"
+                style={{ whiteSpace: "pre-wrap", maxWidth: "100%" }}
+            >
                 {value}
             </pre>
-            <button
-                style={{ marginRight: "0.5rem" }}
-                aria-label="copy random number to clipboard"
-                onClick={handleCopy}
-            >
-                Copy
-            </button>
-            <button
-                aria-label="regenerate random number"
-                color="primary"
-                onClick={handleRegenerate}
-            >
-                Regenerate
-            </button>
+            <div>
+                <button
+                    className="button button--primary  margin--sm button-sm shadow--lw"
+                    aria-label="copy random number to clipboard"
+                    onClick={handleCopy}
+                >
+                    Copy
+                </button>
+                <button
+                    className="button button--outline  button-sm button--secondary shadow--lw"
+                    onClick={handleRegenerate}
+                >
+                    Regenerate
+                </button>
+            </div>
         </div>
     )
 }
