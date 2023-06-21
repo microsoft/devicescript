@@ -1,0 +1,138 @@
+---
+title: Encrypted Fetch
+sidebar_position: 14.5
+---
+
+# Encrypted Fetch
+
+The `@devicescript/net` package contains `encryptedFetch()` function which lets you
+HTTP POST encrypted data and read encrypted responses.
+The encryption uses `aes-256-ccm`.
+
+Let's see how this works!
+
+First, set up a `main.ts` file:
+
+```ts
+import { encryptedFetch } from "@devicescript/net"
+import { readSetting } from "@devicescript/settings"
+
+async function sendReq(data: any) {
+    return await encryptedFetch({
+        data,
+        key: Buffer.from(await readSetting<string>("ENC_HTTP_KEY"), "hex"),
+        url: await readSetting<string>("ENC_HTTP_URL"),
+    })
+}
+console.log(
+    await sendReq({
+        hello: "world",
+    })
+)
+```
+
+Second, create a file with secrets.
+Make sure, `ENC_HTTP_KEY` is 64 hex characters long (for 32 byte key).
+
+```env title="./.env.local"
+# Local settings and secrets
+# This file should **NOT** tracked by git
+ENC_HTTP_URL=http://localhost:8080/devs-enc-fetch
+ENC_HTTP_KEY=63f3f33d4b743303b98e4f4425032aa8aad9a1302796ef208ea56d330b400b1e
+```
+
+On the server side, you can run the code below.
+Feel free to adopt to other languages or frameworks.
+If you have more than one device, you could use `/devices/:deviceId` or similar as the URL path and assign separate
+keys to each device.
+Two devices should never share a key.
+
+```ts skip
+import express from "express"
+import bodyParser from "body-parser"
+import * as crypto from "node:crypto"
+import { config } from "dotenv"
+
+config({ path: "./.env.local" })
+const key = Buffer.from(process.env["ENC_HTTP_KEY"] + "", "hex")
+
+const TAG_BYTES = 4
+const IV_BYTES = 13
+const KEY_BYTES = 32
+
+function aesCcmEncrypt(key: Buffer, iv: Buffer, plaintext: Buffer) {
+    if (key.length != KEY_BYTES || iv.length != IV_BYTES)
+        throw new Error("Invalid key/iv")
+
+    const cipher = crypto.createCipheriv("aes-256-ccm", key, iv, {
+        authTagLength: TAG_BYTES,
+    })
+    const b0 = cipher.update(plaintext)
+    const b1 = cipher.final()
+    const tag = cipher.getAuthTag()
+    return Buffer.concat([b0, b1, tag])
+}
+
+function aesCcmDecrypt(key: Buffer, iv: Buffer, msg: Buffer) {
+    if (
+        key.length != KEY_BYTES ||
+        iv.length != IV_BYTES ||
+        !Buffer.isBuffer(msg)
+    )
+        throw new Error("invalid key, iv or msg")
+
+    if (msg.length < TAG_BYTES) return null
+
+    const decipher = crypto.createDecipheriv("aes-256-ccm", key, iv, {
+        authTagLength: TAG_BYTES,
+    })
+
+    decipher.setAuthTag(msg.slice(msg.length - TAG_BYTES))
+
+    const b0 = decipher.update(msg.slice(0, msg.length - TAG_BYTES))
+    try {
+        decipher.final()
+        return b0
+    } catch {
+        return null
+    }
+}
+
+const app = express()
+app.post(
+    "/devs-enc-fetch",
+    bodyParser.raw({ type: "application/x-devs-enc-fetch" }),
+    (req, res) => {
+        const reqIV = Buffer.from(
+            req.headers["x-devs-enc-fetch-iv"] + "",
+            "hex"
+        )
+        const body = aesCcmDecrypt(key, reqIV, req.body as Buffer)
+        if (!body) {
+            res.sendStatus(400)
+            return
+        }
+        const obj = JSON.parse(body.toString("utf-8"))
+        console.log("Request body:", obj)
+
+        const rid = obj.$rid
+        const respIV = Buffer.from(obj.$iv, "hex")
+
+        // TODO check for duplicate rid!
+
+        const resp = {
+            $rid: rid,
+            response: "Got it!",
+        }
+
+        const rbody = aesCcmEncrypt(
+            key,
+            respIV,
+            Buffer.from(JSON.stringify(resp), "utf8")
+        )
+        res.end(rbody)
+    }
+)
+
+app.listen(8080)
+```
