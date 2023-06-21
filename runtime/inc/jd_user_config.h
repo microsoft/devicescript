@@ -47,7 +47,6 @@ __attribute__((format(printf, 1, 2))) void app_dmesg(const char *format, ...);
 
 extern uintptr_t flash_base_addr(void);
 #define JD_FSTOR_BASE_ADDR flash_base_addr()
-#define JD_SETTINGS_LARGE 1
 
 extern const uint8_t jd_dcfg_array[];
 #define JD_DCFG_BASE_ADDR ((uintptr_t)jd_dcfg_array)

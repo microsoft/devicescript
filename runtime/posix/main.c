@@ -25,7 +25,7 @@ static void frame_cb(void *userdata, jd_frame_t *frame) {
 
 void app_init_services(void) {
     flash_init();
-    devs_service_full_init(NULL);
+    devs_service_full_init();
 }
 
 struct {
