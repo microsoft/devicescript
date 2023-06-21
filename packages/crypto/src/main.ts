@@ -105,9 +105,8 @@ describe("sha256", () => {
 
     test("hkdf", () => {
         const h = sha256Hkdf(
-            hex``,
             hex`60e431591ee0b67f0d8a26aacbf5b77f 8e0bc6213728c5140546040f0ee37f54`,
-            Buffer.from("Hello")
+            "Hello"
         )
         bufferEq(
             h,

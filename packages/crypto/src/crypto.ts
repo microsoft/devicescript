@@ -137,12 +137,21 @@ export function hmac(
     return (Buffer as any).digest(key, algo, data)
 }
 
+/**
+ * Generate a derived key using HKDF function from RFC 5869.
+ * 
+ * @param key input key material of any length
+ * @param info typically describes type of key generated
+ * @param salt optional
+ * @returns 32 bytes of key
+ */
 export function sha256Hkdf(
-    salt: Buffer,
-    key: Buffer,
-    info: Buffer,
-    info2: Buffer = hex``
+    key: Buffer | string,
+    info: Buffer | string,
+    salt: Buffer = hex``
 ) {
+    if (typeof key === "string") key = Buffer.from(key)
     const outkey = hmac(salt, "sha256", key)
-    return hmac(outkey, "sha256", info, info2, hex`01`)
+    if (typeof info === "string") info = Buffer.from(info)
+    return hmac(outkey, "sha256", info, hex`01`)
 }

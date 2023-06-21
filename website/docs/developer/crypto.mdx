@@ -7,4 +7,87 @@ title: Cryptography
 
 The `@devicescript/crypto` provides functions to perform AES encryption and SHA256 digests.
 
-TODO
+## Symmetric encryption
+
+Let's start with simple encryption/decryption example:
+
+```ts
+import { decrypt, encrypt, getRandom, ivSize } from "@devicescript/crypto"
+import { readSetting } from "@devicescript/settings"
+import { assert } from "@devicescript/core"
+
+// this is currently the only algorithm supported
+const algo = "aes-256-ccm"
+// get key from settings
+const key = Buffer.from(await readSetting<string>("ENC_KEY"), "hex")
+// you should never ever reuse IV; always generate them randomly!
+const iv = getRandom(ivSize(algo))
+// encrypt data
+const encrypted = encrypt({
+    algo,
+    key,
+    iv,
+    data: Buffer.from("Hello world!"),
+    tagLength: 4,
+})
+
+// decryption takes the similar arguments
+const plain = decrypt({
+    algo,
+    key,
+    iv,
+    data: encrypted,
+    tagLength: 4,
+})
+
+console.log(encrypted, plain)
+
+assert(plain.toString("utf-8") === "Hello world!")
+```
+
+## SHA256 digest and HMAC
+
+The `digest()` function lets you compute cryptographically strong digests (hashes).
+The only algorithm currently supported is `sha256`.
+
+```ts
+import { digest } from "@devicescript/crypto"
+
+const hash = digest("sha256", Buffer.from("Hello world!"))
+console.log(hash.toString("hex"))
+```
+
+You can pass more buffers to `digest()` - they will be concatenated.
+
+You can also pass a key to the SHA256 function, to compute an HMAC (authenticated digest):
+
+```ts
+import { hmac } from "@devicescript/crypto"
+
+const hash = hmac(Buffer.from("Secret!"), "sha256", Buffer.from("Hello world!"))
+console.log(hash.toString("hex"))
+```
+
+## Key-derivation function
+
+In case you want to go with passwords, instead of binary 32 byte keys,
+you can use the RFC 5869 HKDF.
+The string `"Req-1"` describes the type of key you want to generate,
+it can be anything.
+
+```ts
+import { sha256Hkdf } from "@devicescript/crypto"
+
+const password = "SuPeRSecret!!"
+const key = sha256Hkdf(password, "Req-1")
+console.log(key.toString("hex"))
+```
+
+This gives the same result as the following in node.js:
+
+```ts skip
+const password = "SuPeRSecret!!"
+crypto.hkdf("sha256", password, "", "Req-1", 32, (err, key) => {
+    console.log(Buffer.from(key).toString("hex"))
+})
+```
