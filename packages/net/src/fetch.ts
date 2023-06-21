@@ -1,4 +1,5 @@
 import { Socket, SocketProto, connect } from "./sockets"
+import { URL } from "./url"
 
 /**
  * Represents options for a fetch request.
@@ -118,7 +119,7 @@ export class Response {
  * @throws {TypeError} If the URL is invalid or the request body is not a string or buffer.
  */
 export async function fetch(
-    url: string,
+    url: string | URL,
     options?: FetchOptions
 ): Promise<Response> {
     if (!options) options = {}
@@ -126,30 +127,23 @@ export async function fetch(
     if (!options.headers) options.headers = new Headers()
     if (!options.body) options.body = ""
 
+    if (typeof url === "string") url = new URL(url)
+
     let proto: SocketProto = "tcp"
     let port = 80
-    let urlsuff: string
-    if (url.startsWith("https://")) {
+
+    if (url.protocol === "https:") {
         proto = "tls"
         port = 443
-        urlsuff = url.slice(8)
-    } else if (url.startsWith("http://")) {
-        urlsuff = url.slice(7)
-    } else {
-        throw new TypeError(`invalid url: ${url}`)
+    } else if (url.protocol !== "http:") {
+        throw new TypeError(`invalid protocol: ${url.protocol}`)
     }
-    let slash = urlsuff.indexOf("/")
-    if (slash < 0) slash = urlsuff.length
-    let host = urlsuff.slice(0, slash)
-    let path = urlsuff.slice(slash) || "/"
-    if (host.includes("@"))
-        throw new TypeError(`credentials in URL not supported: ${url}`)
-    let colon = host.indexOf(":")
-    if (colon > 0) {
-        port = +host.slice(colon + 1)
-        host = host.slice(0, colon)
-        if (!port) throw new TypeError(`invalid port in url: ${url}`)
-    }
+
+    if (url.username || url.password)
+        throw new TypeError(`credentials in URL not supported: ${url.href()}`)
+
+    if (url.port) port = +url.port
+    if (!port) throw new TypeError(`invalid port in url: ${url.href()}`)
 
     let hd: Headers
     if (options.headers instanceof Headers) {
@@ -171,13 +165,14 @@ export async function fetch(
 
     if (!hd.has("user-agent")) hd.set("user-agent", "DeviceScript fetch()")
     if (!hd.has("accept")) hd.set("accept", "*/*")
-    hd.set("host", host)
+    hd.set("host", url.host())
     hd.set("connection", "close")
     if (bodyLen) hd.set("content-length", bodyLen + "")
 
+    const path = url.path()
     const reqStr = `${options.method} ${path} HTTP/1.1\r\n${hd.serialize()}\r\n`
     const s = await connect({
-        host,
+        host: url.hostname,
         port,
         proto,
     })

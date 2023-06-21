@@ -1,5 +1,6 @@
 import { decrypt, encrypt, getRandom, ivSize } from "@devicescript/crypto"
 import { fetch } from "./fetch"
+import { URL } from "./url"
 
 const algo = "aes-256-ccm"
 const tagLength = 4
@@ -11,9 +12,9 @@ export interface EncFetchOptions {
     data: any
 
     /**
-     * Where to send the request. This should be the same for all requests as it's send unencrypted.
+     * Where to send the request. This should be the same for all requests from this device as it's send unencrypted.
      */
-    url: string
+    url: string | URL
 
     /**
      * 32 byte key.
