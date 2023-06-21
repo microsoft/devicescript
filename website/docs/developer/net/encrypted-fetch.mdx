@@ -3,8 +3,6 @@ title: Encrypted Fetch
 sidebar_position: 14.5
 ---
 
-import KeyGenerator from "@site/src/components/KeyGenerator"
-
 # Encrypted Fetch
 
 The `@devicescript/net` package contains `encryptedFetch()` function which lets you
@@ -16,14 +14,23 @@ Let's see how this works!
 First, set up a `main.ts` file:
 
 ```ts
-import { encryptedFetch } from "@devicescript/net"
+import { sha256Hkdf } from "@devicescript/crypto"
+import { URL, encryptedFetch } from "@devicescript/net"
 import { readSetting } from "@devicescript/settings"
 
 async function sendReq(data: any) {
+    const url = new URL(await readSetting<string>("ENC_HTTP_URL"))
+
+    // Use username/password from URL
+    const key = sha256Hkdf(url.password, "")
+    if (url.username) url.pathname += "/" + url.username
+    url.username = ""
+    url.password = ""
+
     return await encryptedFetch({
         data,
-        key: Buffer.from(await readSetting<string>("ENC_HTTP_KEY"), "hex"),
-        url: await readSetting<string>("ENC_HTTP_URL"),
+        key,
+        url,
     })
 }
 console.log(
@@ -40,20 +47,15 @@ Use the widget below if you need a demo key.
 ```env title="./.env.local"
 # Local settings and secrets
 # This file should **NOT** tracked by git
-ENC_HTTP_URL=http://localhost:8080/devs-enc-fetch
-ENC_HTTP_KEY=RANDOM-HEX-STRING-OF-64-CHARACTERS
+ENC_HTTP_URL=http://mydevice:SuPeRSecret123@localhost:8080/api/devs-enc-fetch
 ```
 
-:::info Random key generator (256bit)
+In production, you may want to use `deviceIdentifier('self')` as the user name,
+provided you handle that server-side.
 
-<KeyGenerator />
-
-:::
 
 On the server side, you can run the code below.
 Feel free to adopt to other languages or frameworks.
-If you have more than one device, you could use `/devices/:deviceId` or similar as the URL path and assign separate
-keys to each device.
 
 :::warning
 
@@ -67,8 +69,18 @@ import bodyParser from "body-parser"
 import * as crypto from "node:crypto"
 import { config } from "dotenv"
 
-config({ path: "./.env.local" })
-const key = Buffer.from(process.env["ENC_HTTP_KEY"] + "", "hex")
+function getKeyForDevice(deviceId: string): Buffer | undefined {
+    // TODO look up device in database here!
+
+    config({ path: "./.env.local" })
+    const deviceURL = new URL(process.env["ENC_HTTP_URL"] + "")
+    if (deviceId == deviceURL.username)
+        return Buffer.from(
+            crypto.hkdfSync("sha256", deviceURL.password, "", "", 32)
+        )
+
+    return undefined
+}
 
 const TAG_BYTES = 4
 const IV_BYTES = 13
@@ -114,15 +126,26 @@ function aesCcmDecrypt(key: Buffer, iv: Buffer, msg: Buffer) {
 
 const app = express()
 app.post(
-    "/devs-enc-fetch",
+    "/api/devs-enc-fetch/:deviceId",
     bodyParser.raw({ type: "application/x-devs-enc-fetch" }),
     (req, res) => {
+        const { deviceId } = req.params
+        const key = getKeyForDevice(deviceId)
+        if (!key) {
+            console.log(`No device ${deviceId}`)
+            res.sendStatus(404)
+            return
+        }
+
+        console.log(`Device connected ${deviceId}`)
+
         const reqIV = Buffer.from(
             req.headers["x-devs-enc-fetch-iv"] + "",
             "hex"
         )
         const body = aesCcmDecrypt(key, reqIV, req.body as Buffer)
         if (!body) {
+            console.log(`Can't decrypt`)
             res.sendStatus(400)
             return
         }
@@ -150,3 +173,40 @@ app.post(
 
 app.listen(8080)
 ```
+
+## Technical description
+
+The `encryptedFetch()` function performs as HTTP request which uses `content-type` of `application/x-devs-enc-fetch`
+and two special headers.
+The `x-devs-enc-fetch-info` header contains information about the request encryption algorithm
+and can be safely ignored.
+The `x-devs-enc-fetch-iv` header contain hex-encoded 13-byte initialization vector (or nonce) for the AES-256-CCM
+encryption method.
+
+The `encryptedFetch()` function also requires a key, which is a 32-byte buffer.
+In the examples above, the key is derived from password using HMAC key derivation function (HKDF) from RFC 5869.
+This key is used for both encryption and authentication of the request.
+
+The body of the request is a JSON object.
+Before sending it out, `encryptedFetch()` extends it with response initialization vector
+(which is hex-encoded and stored in `$iv` property)
+and a random request identifier (stored in `$rid` property).
+After these extensions, the JSON object is converted to a buffer and
+encrypted using AES-256-CCM and a 4-byte authentication tag is appended.
+
+This is send to the server, which decrypts the request accordingly.
+
+:::warning
+
+If applicable, the server should check if a request with a given `$rid` was already handled,
+and if so, reject it.
+Otherwise, someone can reply a client request.
+
+:::
+
+If the server responds with with `2xx` code, the response is assumed to be
+a JSON object encrypted using the same key and the `$iv` from the request.
+The response also has the 4-byte authentication tag.
+
+If the response is not `2xx` or if it cannot be authenticated an exception is thrown.
+Otherwise, the JSON object of the response is returned.
