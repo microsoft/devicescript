@@ -254,7 +254,7 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
 
     if (!ft) fatal("no file type provided")
 
-    const binary = await readFile(binFn)
+    const binary = options.fake ? null : await readFile(binFn)
     const outpath = options.outdir || "dist"
     const outext = options.uf2 ? ".uf2" : ".bin"
     const binext = (off: HexInt) => {
