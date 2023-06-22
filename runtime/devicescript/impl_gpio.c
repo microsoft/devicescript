@@ -133,9 +133,11 @@ value_t prop_GPIO_value(devs_ctx_t *ctx, value_t self) {
     int m = p->mode & JD_GPIO_MODE_BASE_MODE_MASK;
     if (m == JD_GPIO_MODE_INPUT) {
         return devs_value_from_int(pin_get(p->gpio));
+#if JD_ANALOG
     } else if (m == JD_GPIO_MODE_ANALOG_IN) {
         int v = adc_read_pin(p->gpio);
         return devs_value_from_double(v / 65536.0);
+#endif
     } else {
         return devs_undefined;
     }

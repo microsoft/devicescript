@@ -159,7 +159,7 @@ int devs_utf8_init(const char *data, unsigned size, unsigned *out_len_p,
         } else if ((sp[0] & 0xf8) == 0xf0) {
             // 11110XXX 10XXxxxx 10xxxxxx 10xxxxxx
             for (unsigned i = 1; i <= 3; ++i)
-                if (ep - sp < i || !devs_utf8_is_cont(sp[i])) {
+                if (ep - sp < (int)i || !devs_utf8_is_cont(sp[i])) {
                     ch_len = i;
                     goto repl;
                 }
