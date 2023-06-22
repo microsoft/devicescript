@@ -24,9 +24,21 @@ export function setupFlashBoards(dir = ".") {
 }
 
 export interface FlashOptions {
+    /**
+     * Which board to flash. Required.
+     */
     board?: string
+
+    /**
+     * Do no wait for device to be connected - fail immediately if not found.
+     */
     once?: boolean
+
+    /**
+     * Always re-download the firmware file, even if cached less than 1 day old.
+     */
     refresh?: boolean
+
     /**
      * Automatically install missing flashing utilities.
      * For ESP32, if {@link https://docs.espressif.com/projects/esptool/en/latest/esp32/ | esptool} is missing,
@@ -43,6 +55,11 @@ export interface FlashOptions {
      * Delete settings and user program instead of flashing the firmware.
      */
     clean?: boolean
+
+    /**
+     * Write specified BIN or UF2 file instead of downloaded firmware.
+     */
+    file?: string
 }
 
 export interface FlashESP32Options extends FlashOptions {
@@ -354,6 +371,8 @@ export async function flashESP32(options: FlashESP32Options) {
 }
 
 export async function fetchFW(board: DeviceConfig, options: FlashOptions) {
+    if (options.file) return options.file
+
     let dlUrl = board.$fwUrl
     let needsPatch = false
     if (!dlUrl) {

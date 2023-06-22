@@ -20,3 +20,4 @@ packages/.vscode
 __pycache__
 devs/snippets
 local.env
+.env.local
