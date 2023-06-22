@@ -38,9 +38,7 @@ console.log(
 )
 ```
 
-Second, create a file with secrets.
-Make sure, `ENC_HTTP_KEY` is 64 hex characters long (for 32 byte/256 bit key).
-Use the widget below if you need a demo key.
+Second, create a settings file with secrets.
 
 ```env title="./.env.local"
 # Local settings and secrets
@@ -51,7 +49,6 @@ ENC_HTTP_URL="http://localhost:8080/api/devs-enc-fetch/mydevice#pass=SecretPassw
 
 In production, you may want to use `deviceIdentifier('self')` as the user name,
 provided you handle that server-side.
-
 
 On the server side, you can run the code below.
 Feel free to adopt to other languages or frameworks.
