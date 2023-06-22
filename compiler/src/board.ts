@@ -108,13 +108,8 @@ export function boardInfo(cfg: DeviceConfig, arch?: ArchConfig): BoardInfo {
 }
 
 export function architectureFamily(id: string) {
-    const arches: Record<string, string> = {
-        esp32s2: "esp32",
-        esp32s3: "esp32",
-        esp32c3: "esp32",
-        rp2040w: "rp2040",
-    }
-    return arches[id] || id
+    for (const a of ["esp32", "rp2040"]) if (id.startsWith(a)) return a
+    return id
 }
 
 function deviceConfigToMarkdown(
