@@ -533,7 +533,7 @@ int devs_jd_alloc_role(devs_ctx_t *ctx, value_t name, uint32_t srv_class) {
     if (devs_is_undefined(name)) {
         const char *spec_name = devs_get_static_utf8(ctx, spec->name_idx, NULL);
         for (unsigned suff = 0;; suff++) {
-            name = devs_string_sprintf(ctx, "%s_%u", spec_name, suff);
+            name = devs_string_sprintf(ctx, "%s%u", spec_name, suff);
             if (devs_jd_role_by_name(ctx, name) < 0)
                 break;
         }
