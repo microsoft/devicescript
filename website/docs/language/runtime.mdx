@@ -13,6 +13,25 @@ and executable directly from storage (typically flash memory), with minimal over
 For technical specification of bytecode files see [Bytecode format page](/language/bytecode)
 and the example below.
 
+## Memory requirements {#memory}
+
+A DeviceScript build for Raspberry Pi Pico (not W) takes about 200kB of flash.
+Of that, 134kB is taken by DeviceScript (and Jacdac) library and the rest by system libraries.
+A build for STM32L4+ takes 153kB of flash, of which 115kB if taken by DeviceScript
+(this likely due to different compiler settings).
+Builds for ESP32 are around 1.2MB due to various libraries, mostly related to networking and TLS.
+
+These numbers do not include bytecode size for user program.
+
+RAM usage can be configured via `JD_GC_KB`. This defaults to 64kB but it's often possible
+to run with 32kB or less when not doing web requests.
+Additionally, the following subsystems take some RAM:
+- DeviceScript context - 2kB
+- DeviceScript logging (`DMESG()`) - 4kB
+- Jacdac packet queues - 5kB
+
+Note that networking typically takes significant amounts of RAM, especially when using TLS.
+
 ## Why not Web Assembly (Wasm)?
 
 While the DeviceScript runtime itself can be compiled to Wasm, the bytecode format that the TypeScript
