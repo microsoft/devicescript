@@ -295,7 +295,7 @@ void fun3_Buffer_digest(devs_ctx_t *ctx) {
 
     for (unsigned i = 0; i < data->length; ++i) {
         unsigned sz;
-        const uint8_t *d = buffer_data(ctx, data->data[i], &sz);
+        const uint8_t *d = devs_bufferish_data(ctx, data->data[i], &sz);
         if (!d) {
             devs_throw_expecting_error(ctx, DEVS_BUILTIN_STRING_BUFFER, data->data[i]);
             return;

@@ -1,9 +1,16 @@
-import { decrypt, encrypt, getRandom, ivSize } from "@devicescript/crypto"
+import {
+    decrypt,
+    encrypt,
+    randomBuffer,
+    ivSize,
+    randomString,
+    sha256Hkdf,
+} from "@devicescript/crypto"
 import { fetch } from "./fetch"
 import { URL } from "./url"
 
 const algo = "aes-256-ccm"
-const tagLength = 4
+const tagLength = 8
 
 export interface EncFetchOptions {
     /**
@@ -17,9 +24,9 @@ export interface EncFetchOptions {
     url: string | URL
 
     /**
-     * 32 byte key.
+     * A long-ish random string.
      */
-    key: Buffer
+    password: string
 
     /**
      * Additional headers.
@@ -40,21 +47,20 @@ export interface EncFetchOptions {
  */
 export async function encryptedFetch(options: EncFetchOptions) {
     // we add a random request ID - the server is supposed to ignore duplicate requests to prevent reply attacks
-    const rid = getRandom(8).toString("hex")
-
-    // we select both IVs so that MIM attacker cannot reply old server responses
-    const iv = getRandom(ivSize(algo))
-    const respIv = getRandom(ivSize(algo))
+    const rid = randomBuffer(8).toString("hex")
 
     const data = Buffer.from(
         JSON.stringify({
             $rid: rid,
-            // response IV is encrypted and authenticated, so the two IVs are tied together
-            $iv: respIv.toString("hex"),
             ...options.data,
         })
     )
-    const key = options.key
+
+    if (!options.password) throw new TypeError(`password not specified`)
+
+    const salt = randomString(20)
+    const key = sha256Hkdf(options.password, "", salt)
+    const iv = Buffer.alloc(ivSize(algo)) // zero IV
     const encrypted = encrypt({
         data,
         algo,
@@ -67,8 +73,8 @@ export async function encryptedFetch(options: EncFetchOptions) {
         method: options.method || "POST",
         body: encrypted,
         headers: {
-            "x-devs-enc-fetch-info": `${algo}/tag=${tagLength}`,
-            "x-devs-enc-fetch-iv": iv.toString("hex"),
+            "x-devs-enc-fetch-algo": `${algo}/tag=${tagLength}`,
+            "x-devs-enc-fetch-salt": salt,
             "content-type": "application/x-devs-enc-fetch",
             ...(options.headers || {}),
         },
@@ -77,12 +83,17 @@ export async function encryptedFetch(options: EncFetchOptions) {
     if (!resp.ok)
         throw new Error(`invalid response ${resp.status} ${resp.statusText}`)
 
+    const serverSalt = resp.headers.get("x-devs-enc-fetch-info")
+    if (!serverSalt)
+        throw new Error(`x-devs-enc-fetch-info missing in response`)
+
     const data2 = await resp.buffer()
+    const key2 = sha256Hkdf(options.password, serverSalt, salt)
     const respData = decrypt({
         data: data2,
         algo,
-        key,
-        iv: respIv,
+        key: key2,
+        iv,
         tagLength,
     })
 

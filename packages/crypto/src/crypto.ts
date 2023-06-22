@@ -3,6 +3,8 @@ import * as ds from "@devicescript/core"
 export type SymmetricAlgorithm = "aes-256-ccm"
 export type HashAlgorithm = "sha256"
 
+export type Binary = Buffer | string
+
 export interface CipherOptions {
     /**
      * Data to be encrypted or decrypted.
@@ -106,7 +108,7 @@ export function decrypt(options: CipherOptions): Buffer {
 /**
  * Fill buffer with cryptographically strong random values
  */
-export function getRandom(size: number): Buffer {
+export function randomBuffer(size: number): Buffer {
     const r = Buffer.alloc(size)
     ;(r as any).fillRandom()
     return r
@@ -119,7 +121,7 @@ function validateHash(algo: HashAlgorithm) {
 /**
  * Compute digest (hash) of the concatenation of the specified buffers.
  */
-export function digest(algo: HashAlgorithm, ...data: Buffer[]): Buffer {
+export function digest(algo: HashAlgorithm, ...data: Binary[]): Buffer {
     validateHash(algo)
     return (Buffer as any).digest(undefined, algo, data)
 }
@@ -128,30 +130,32 @@ export function digest(algo: HashAlgorithm, ...data: Buffer[]): Buffer {
  * Compute HMAC digest (authenticated hash) of the concatenation of the specified buffers.
  */
 export function hmac(
-    key: Buffer,
+    key: Binary,
     algo: HashAlgorithm,
-    ...data: Buffer[]
+    ...data: Binary[]
 ): Buffer {
     validateHash(algo)
-    expectBuffer(key, "key")
+    if (typeof key !== "string") expectBuffer(key, "key")
     return (Buffer as any).digest(key, algo, data)
 }
 
 /**
  * Generate a derived key using HKDF function from RFC 5869.
- * 
+ *
  * @param key input key material of any length
  * @param info typically describes type of key generated
  * @param salt optional
  * @returns 32 bytes of key
  */
-export function sha256Hkdf(
-    key: Buffer | string,
-    info: Buffer | string,
-    salt: Buffer = hex``
-) {
-    if (typeof key === "string") key = Buffer.from(key)
+export function sha256Hkdf(key: Binary, info: Binary = "", salt: Binary = "") {
     const outkey = hmac(salt, "sha256", key)
-    if (typeof info === "string") info = Buffer.from(info)
     return hmac(outkey, "sha256", info, hex`01`)
+}
+
+const alphabet = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_`
+
+export function randomString(len: number) {
+    const r = randomBuffer(len)
+    for (let i = 0; i < r.length; ++i) r[i] = alphabet.charCodeAt(r[i] & 63)
+    return r.toString("utf-8")
 }

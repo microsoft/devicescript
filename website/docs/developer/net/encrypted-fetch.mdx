@@ -15,19 +15,20 @@ First, set up a `main.ts` file:
 
 ```ts
 import { assert } from "@devicescript/core"
-import { sha256Hkdf } from "@devicescript/crypto"
 import { URL, encryptedFetch } from "@devicescript/net"
 import { readSetting } from "@devicescript/settings"
 
 async function sendReq(data: any) {
     const url = new URL(await readSetting<string>("ENC_HTTP_URL"))
-    const pass = url.hash.split("pass=")[1]
-    assert(pass !== "SecretPassword", "Please change password in production!")
-    const key = sha256Hkdf(pass, "")
+    const password = url.hash.split("pass=")[1]
+    assert(
+        password !== "SecretPassword",
+        "Please change password in production!"
+    )
     url.hash = ""
     return await encryptedFetch({
         data,
-        key,
+        password,
         url,
     })
 }
@@ -65,21 +66,20 @@ import bodyParser from "body-parser"
 import * as crypto from "node:crypto"
 import { config } from "dotenv"
 
-function getKeyForDevice(deviceId: string): Buffer | undefined {
+function getPasswordForDevice(deviceId: string): string | undefined {
     // TODO look up device in database here!
 
     config({ path: "./.env.local" })
     const url = new URL(process.env["ENC_HTTP_URL"] + "")
     if (url.pathname.replace(/.*\//, "") == deviceId) {
         const pass = url.hash.split("pass=")[1]
-        if (pass !== "SecretPassword")
-            return Buffer.from(crypto.hkdfSync("sha256", pass, "", "", 32))
+        if (pass !== "SecretPassword") return pass
     }
 
     return undefined
 }
 
-const TAG_BYTES = 4
+const TAG_BYTES = 8
 const IV_BYTES = 13
 const KEY_BYTES = 32
 
@@ -127,8 +127,8 @@ app.post(
     bodyParser.raw({ type: "application/x-devs-enc-fetch" }),
     (req, res) => {
         const { deviceId } = req.params
-        const key = getKeyForDevice(deviceId)
-        if (!key) {
+        const pass = getPasswordForDevice(deviceId)
+        if (!pass) {
             console.log(`No device ${deviceId}`)
             res.sendStatus(404)
             return
@@ -136,11 +136,11 @@ app.post(
 
         console.log(`Device connected ${deviceId}`)
 
-        const reqIV = Buffer.from(
-            req.headers["x-devs-enc-fetch-iv"] + "",
-            "hex"
-        )
-        const body = aesCcmDecrypt(key, reqIV, req.body as Buffer)
+        const iv = Buffer.alloc(13) // zero IV
+        const salt = req.headers["x-devs-enc-fetch-salt"] + ""
+        const key = Buffer.from(crypto.hkdfSync("sha256", pass, salt, "", 32))
+
+        const body = aesCcmDecrypt(key, iv, req.body as Buffer)
         if (!body) {
             console.log(`Can't decrypt`)
             res.sendStatus(400)
@@ -150,7 +150,12 @@ app.post(
         console.log("Request body:", obj)
 
         const rid = obj.$rid
-        const respIV = Buffer.from(obj.$iv, "hex")
+
+        const respKeyInfo = crypto.randomBytes(15).toString("base64")
+        res.header("x-devs-enc-fetch-info", respKeyInfo)
+        const respKey = Buffer.from(
+            crypto.hkdfSync("sha256", pass, salt, respKeyInfo, 32)
+        )
 
         // TODO check for duplicate rid!
 
@@ -160,8 +165,8 @@ app.post(
         }
 
         const rbody = aesCcmEncrypt(
-            key,
-            respIV,
+            respKey,
+            iv,
             Buffer.from(JSON.stringify(resp), "utf8")
         )
         res.end(rbody)
@@ -175,21 +180,21 @@ app.listen(8080)
 
 The `encryptedFetch()` function performs as HTTP request which uses `content-type` of `application/x-devs-enc-fetch`
 and two special headers.
-The `x-devs-enc-fetch-info` header contains information about the request encryption algorithm
+The `x-devs-enc-fetch-algo` header contains information about the request encryption algorithm
 and can be safely ignored.
-The `x-devs-enc-fetch-iv` header contain hex-encoded 13-byte initialization vector (or nonce) for the AES-256-CCM
-encryption method.
+The `x-devs-enc-fetch-salt` contain a string salt value for HMAC key derivation function (HKDF) from RFC 5869.
 
-The `encryptedFetch()` function also requires a key, which is a 32-byte buffer.
-In the examples above, the key is derived from password using HMAC key derivation function (HKDF) from RFC 5869.
+The `encryptedFetch()` function also requires a password, which should be long-ish
+random string (with about 256-bits of entropy).
+The key for AES encryption is derived using HKDF based on the password and previously
+generated salt; the `info` parameter is set to `""`.
 This key is used for both encryption and authentication of the request.
 
 The body of the request is a JSON object.
-Before sending it out, `encryptedFetch()` extends it with response initialization vector
-(which is hex-encoded and stored in `$iv` property)
-and a random request identifier (stored in `$rid` property).
-After these extensions, the JSON object is converted to a buffer and
-encrypted using AES-256-CCM and a 4-byte authentication tag is appended.
+Before sending it out, `encryptedFetch()` extends it with a random request identifier (stored in `$rid` property).
+The JSON object is converted to a buffer and
+encrypted using AES-256-CCM and an 8-byte authentication tag is appended.
+The initialization vector (IV) is all-zero.
 
 This is send to the server, which decrypts the request accordingly.
 
@@ -197,13 +202,29 @@ This is send to the server, which decrypts the request accordingly.
 
 If applicable, the server should check if a request with a given `$rid` was already handled,
 and if so, reject it.
-Otherwise, someone can reply a client request.
+Otherwise, someone can replay a client request.
 
 :::
 
 If the server responds with with `2xx` code, the response is assumed to be
-a JSON object encrypted using the same key and the `$iv` from the request.
-The response also has the 4-byte authentication tag.
+a JSON object encrypted using a key derived using HKDF from the password,
+the previously generated salt, and `info` parameter set to the value
+of `x-devs-enc-fetch-info` in the response.
+IV is all zero.
+The response also has the 8-byte authentication tag.
 
 If the response is not `2xx` or if it cannot be authenticated an exception is thrown.
 Otherwise, the JSON object of the response is returned.
+
+## Security
+
+From the device standpoint, if the salt is unique, the device can be sure
+only someone with the password can read the request or generate a response.
+Response cannot be replayed, since the key for it incorporates the salt.
+
+From the server standpoint, a man-in-the-middle attacker can intercept
+a device request and either delay it or send it again at later time.
+Thus, server should check for uniqueness of the `$rid` if this can be a problem.
+The attacker will not be able to deduce anything about the contents of the response
+even if the server doesn't ignore a duplicate request, since the `info` parameter
+send from server is incorporated in the response key and it is random.
