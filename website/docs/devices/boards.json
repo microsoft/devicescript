@@ -365,7 +365,8 @@
     },
     "productId": "0x3574d277",
     "uartLog": true,
-    "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitm-1.html"
+    "url": "https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/hw-reference/esp32s3/user-guide-devkitm-1.html",
+    "img": "https://microsoft.github.io/jacdac-docs/images/devices/espressif/esp32s3devkitmv10.catalog.jpg"
   },
   "feather_s2": {
     "$description": "ESP32-S2 based development board in a Feather format.",
