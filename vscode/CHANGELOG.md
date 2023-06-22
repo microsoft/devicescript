@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.12.3](https://github.com/microsoft/devicescript/compare/v2.12.2...v2.12.3)
+
+> 20 June 2023
+
+- allow hex encoding in Buffer.from(); 2.12.3 [`5c2a4d8`](https://github.com/microsoft/devicescript/commit/5c2a4d8d52e98057bec4f5d6782937bf96be285a)
+
 #### [v2.12.2](https://github.com/microsoft/devicescript/compare/v2.12.1...v2.12.2)
 
 > 20 June 2023
