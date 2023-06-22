@@ -12,7 +12,7 @@ The `@devicescript/crypto` provides functions to perform AES encryption and SHA2
 Let's start with simple encryption/decryption example:
 
 ```ts
-import { decrypt, encrypt, getRandom, ivSize } from "@devicescript/crypto"
+import { decrypt, encrypt, randomBuffer, ivSize } from "@devicescript/crypto"
 import { readSetting } from "@devicescript/settings"
 import { assert } from "@devicescript/core"
 
@@ -21,7 +21,7 @@ const algo = "aes-256-ccm"
 // get key from settings
 const key = Buffer.from(await readSetting<string>("ENC_KEY"), "hex")
 // you should never ever reuse IV; always generate them randomly!
-const iv = getRandom(ivSize(algo))
+const iv = randomBuffer(ivSize(algo))
 // encrypt data
 const encrypted = encrypt({
     algo,
