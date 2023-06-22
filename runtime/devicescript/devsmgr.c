@@ -277,7 +277,6 @@ int devsmgr_deploy_write(const void *buf, unsigned size) {
             stop_program(state);
             jd_send_event(state, JD_EV_CHANGE);
             state->next_restart = now; // make it more responsive
-            state->force_start = 1;
             return 0;
         }
     }

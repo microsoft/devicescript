@@ -38,9 +38,28 @@ export interface DeviceProps {
 
 export type ProgramConfig = Partial<DeviceProps> & Partial<DeviceScriptConfig>
 
+export interface FstorConfig {
+    /**
+     * Size of a flash page, typically 4096.
+     */
+    flashPageSize: number
+
+    /**
+     * Total number of pages in FSTOR. 
+     * Often 32 (for 128k) or 64 (for 256k).
+     */
+    fstorPages: number
+
+    /**
+     * Offset where FSTOR sits in total flash space.
+     */
+    fstorOffset: HexInt
+}
+
 export interface DeviceConfig
     extends DeviceProps,
         DeviceScriptConfig,
+        Partial<FstorConfig>,
         JsonComment {
     $schema?: string
 
@@ -250,7 +269,7 @@ export interface PinFunctionInfo {
 
 export type PinFunction = keyof PinFunctionInfo
 
-export interface ArchConfig extends JsonComment {
+export interface ArchConfig extends JsonComment, FstorConfig {
     $schema?: string
 
     /**
@@ -291,7 +310,7 @@ export interface ArchConfig extends JsonComment {
 
     /**
      * Force alignment of the last page in the patched UF2 file.
-     * Set to 4096 on RP2040 because wof RP2040-E14.
+     * Set to 4096 on RP2040 because of RP2040-E14.
      */
     uf2Align?: HexInt
 

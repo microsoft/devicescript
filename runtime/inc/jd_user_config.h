@@ -19,7 +19,6 @@ __attribute__((format(printf, 1, 2))) void app_dmesg(const char *format, ...);
 
 #define JD_FLASH_PAGE_SIZE 4096
 
-
 #ifdef __EMSCRIPTEN__
 #define JD_LSTORE 0
 #define JD_NET_BRIDGE 0
@@ -46,7 +45,10 @@ __attribute__((format(printf, 1, 2))) void app_dmesg(const char *format, ...);
 // #define JD_THR_PTHREAD 1
 
 extern uintptr_t flash_base_addr(void);
+extern uint32_t flash_size;
 #define JD_FSTOR_BASE_ADDR flash_base_addr()
+#define JD_FSTOR_TOTAL_SIZE flash_size
+#define JD_FSTOR_MAX_DATA_PAGES (512 / 4)
 
 extern const uint8_t jd_dcfg_array[];
 #define JD_DCFG_BASE_ADDR ((uintptr_t)jd_dcfg_array)

@@ -32,6 +32,7 @@ import {
 import { addBoard } from "./addboard"
 import { LoggerPriority } from "jacdac-ts"
 import { snippets } from "./snippets"
+import { bundle } from "./bundle"
 
 export async function mainCli() {
     await notifyUpdates({
@@ -96,6 +97,14 @@ export async function mainCli() {
                 console.log(`    -F ${pad(k, 20)} ${compileFlagHelp[k]}`)
             }
         })
+
+    buildCommand("bundle")
+        .description("bundle program, settings, and runtime")
+        .option("-b, --board <board-id>", "specify board to flash")
+        .option("--flash-size <kb>", "override flash size (kilobytes)")
+        .option("--flash-file <name>", "where to save")
+        .arguments("[file.ts]")
+        .action(bundle)
 
     program
         .command("devtools")
@@ -397,6 +406,7 @@ export async function mainCli() {
             "--generic",
             "copy the uf2/bin file and corresponding ELF file as 'generic' variant"
         )
+        .option("--fake", "only generate info.json files")
         .option("--slug <string>", "repo slug (eg. microsoft/devicescript)")
         .option("--elf <file.elf>", "specify ELF file name")
         .arguments("<file.board.json...>")

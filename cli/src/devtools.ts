@@ -434,7 +434,10 @@ async function rebuild(args: BuildReqArgs) {
             const settingsService = service?.device?.services({
                 serviceClass: SRV_SETTINGS,
             })?.[0]
-            await deployToService(service, binary, settingsService, settings)
+            await deployToService(service, binary, {
+                settingsService,
+                settings,
+            })
             deployStatus = `OK`
         } catch (err) {
             deployStatus = err.message || "" + err

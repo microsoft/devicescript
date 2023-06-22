@@ -92,15 +92,15 @@ export function showAllBoards(arch: string, opt = "--board") {
     )
 }
 
-async function checkBoard(arch: string, options: FlashOptions) {
-    await setupFlashBoards()
-    const b = buildConfig.boards[options.board]
-    if (!b) {
+export async function resolveBoard(arch: string, options: FlashOptions) {
+    setupFlashBoards()
+    const board = buildConfig.boards[options.board]
+    if (!board) {
         showAllBoards(arch)
         if (!options.board) fatal("missing --board")
         else fatal("invalid board id: " + options.board)
     }
-    return b
+    return { board, arch: buildConfig.archs[board.archId] }
 }
 
 export async function flashESP32(options: FlashESP32Options) {
@@ -111,7 +111,7 @@ export async function flashESP32(options: FlashESP32Options) {
         0x0403, // M5stick
     ]
 
-    const board = await checkBoard("esp32", options)
+    const { board } = await resolveBoard("esp32", options)
 
     const listPorts = async () => {
         const ports = await SerialPort.list()
@@ -353,7 +353,7 @@ export async function flashESP32(options: FlashESP32Options) {
     }
 }
 
-async function fetchFW(board: DeviceConfig, options: FlashOptions) {
+export async function fetchFW(board: DeviceConfig, options: FlashOptions) {
     let dlUrl = board.$fwUrl
     let needsPatch = false
     if (!dlUrl) {
@@ -524,7 +524,7 @@ async function rescan<T>(
 }
 
 export async function flashRP2040(options: FlashRP2040Options) {
-    const board = await checkBoard("rp2040", options)
+    const { board } = await resolveBoard("rp2040", options)
     if (!options.drive) {
         const drives = await rescan(
             options,
@@ -549,11 +549,11 @@ export async function flashRP2040(options: FlashRP2040Options) {
 }
 
 export async function flashAuto(options: FlashOptions) {
-    const board = await checkBoard("", options)
-    const arch = architectureFamily(board.archId)
-    if (arch == "esp32") return flashESP32(options)
-    else if (arch == "rp2040") return flashRP2040(options)
+    const { board } = await resolveBoard("", options)
+    const archFamily = architectureFamily(board.archId)
+    if (archFamily == "esp32") return flashESP32(options)
+    else if (archFamily == "rp2040") return flashRP2040(options)
     else {
-        fatal(`unknown arch family: ${arch}`)
+        fatal(`unknown arch family: ${archFamily}`)
     }
 }

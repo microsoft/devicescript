@@ -37,6 +37,12 @@ export declare type DevsModule = EmscriptenModule &
          * Currently, we save up to 128k.
          */
         flashSave(data: Uint8Array): void
+
+        /**
+         * Overridable. The requested size of flash in bytes.
+         * Defaults to 128k.
+         */
+        flashSize?: number
     }
 
 declare var Module: DevsModule

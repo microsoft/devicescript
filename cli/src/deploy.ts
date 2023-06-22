@@ -73,13 +73,20 @@ export async function deploySettingsToService(
     }
 }
 
+export interface DeployOptions {
+    settingsService?: JDService
+    settings?: Record<string, Uint8Array>
+    noRun?: boolean
+}
+
 export async function deployToService(
     service: JDService,
     bytecode: Uint8Array,
-    settingsService?: JDService,
-    settings?: Record<string, Uint8Array>
+    options: DeployOptions = {}
 ) {
     console.log(`deploy to ${service.device}`)
+
+    const { settingsService, settings, noRun } = options
 
     const autostart = service.register(DeviceScriptManagerReg.Autostart)
     const running = service.register(DeviceScriptManagerReg.Running)
@@ -88,6 +95,11 @@ export async function deployToService(
     await sha.refresh()
     await autostart.refresh()
     const oldAutoStart = autostart.boolValue
+
+    // disable autostart
+    await autostart.sendSetBoolAsync(false)
+    await running.sendSetBoolAsync(false)
+    await delay(10)
 
     if (sha.data?.length == 32) {
         const exp = await sha256([bytecode])
@@ -101,18 +113,11 @@ export async function deployToService(
             if (settingsService)
                 await deploySettingsToService(settingsService, settings)
 
-            // restart engine
-            await running.sendSetBoolAsync(true)
+            await startAgain()
             return
         }
     }
 
-    // disable autostart to write settings
-    if (settingsService) {
-        await autostart.sendSetBoolAsync(false)
-        await running.sendSetBoolAsync(false)
-        await delay(10)
-    }
     await OutPipe.sendBytes(
         service,
         DeviceScriptManagerCmd.DeployBytecode,
@@ -121,8 +126,15 @@ export async function deployToService(
             // console.debug(`  prog: ${(p * 100).toFixed(1)}%`)
         }
     )
-    if (settingsService) {
+    if (settingsService)
         await deploySettingsToService(settingsService, settings)
+
+    await startAgain()
+
+    console.log(`  --> done, ${prettySize(bytecode.length)}`)
+
+    async function startAgain() {
+        if (noRun) return
         if (
             !service.device.bus.nodeData[DISABLE_AUTO_START_KEY] &&
             oldAutoStart !== undefined
@@ -130,6 +142,4 @@ export async function deployToService(
             await autostart.sendSetBoolAsync(oldAutoStart)
         await running.sendSetBoolAsync(true)
     }
-
-    console.log(`  --> done, ${prettySize(bytecode.length)}`)
 }

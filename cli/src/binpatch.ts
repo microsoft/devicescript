@@ -21,12 +21,19 @@ import { readFile, writeFile } from "fs/promises"
 import { read32, toHex } from "jacdac-ts"
 import { basename, dirname, join, resolve } from "path"
 import { error, isVerbose, log, verboseLog } from "./command"
-import { EspImage } from "./esp"
 
 export interface FileTypes {
     uf2?: string
     bin?: string
-    esp?: string
+}
+
+export interface BinPatchArgs {
+    binary: Uint8Array // UF2 or BIN file
+    type: keyof FileTypes
+    arch: ArchConfig
+    board: DeviceConfig
+    dcfg?: DcfgSettings
+    fstor?: Uint8Array
 }
 
 export interface BinPatchOptions extends FileTypes {
@@ -34,6 +41,7 @@ export interface BinPatchOptions extends FileTypes {
     outdir?: string
     elf?: string
     generic?: boolean
+    fake?: boolean
 }
 
 function fatal(msg: string) {
@@ -47,17 +55,12 @@ function isDCFG(data: Uint8Array, off = 0) {
     )
 }
 
-async function patchUF2File(
-    uf2: Uint8Array,
-    arch: ArchConfig,
-    devcfg: DcfgSettings
-) {
-    const off = parseAnyInt(arch.dcfgOffset)
-    let buf = serializeDcfg(devcfg)
+async function patchUF2File(args: BinPatchArgs) {
+    const { binary, arch, board, fstor, dcfg } = args
 
-    if (!UF2File.isUF2(uf2)) throw new Error("not a UF2 file")
+    if (!UF2File.isUF2(binary)) throw new Error("not a UF2 file")
 
-    const f = UF2File.fromFile(uf2)
+    const f = UF2File.fromFile(binary)
 
     // needed for RP2040-E14
     const align = parseAnyInt(arch.uf2Align)
@@ -75,16 +78,30 @@ async function patchUF2File(
         }
     }
 
-    const tmp = f.readBytes(off, 12)
-    if (tmp && isDCFG(tmp)) {
-        log(`patching existing config`)
-        buf = padCfg(buf, read32(tmp, 8))
+    if (dcfg) {
+        const dcfgOff = parseAnyInt(arch.dcfgOffset)
+        let dcfgBuf = serializeDcfg(dcfg)
+
+        const tmp = f.readBytes(dcfgOff, 12)
+        if (tmp) {
+            if (isDCFG(tmp)) {
+                log(`patching existing config`)
+                dcfgBuf = padCfg(dcfgBuf, read32(tmp, 8))
+            } else {
+                throw new Error(`data already at DCFG`)
+            }
+        }
+
+        f.writeBytes(dcfgOff, dcfgBuf)
     }
 
-    //const aligned = new Uint8Array((buf.length + amask) & ~amask)
-    //aligned.set(buf)
+    if (fstor) {
+        const fstorOff = parseAnyInt(board.fstorOffset ?? arch.fstorOffset)
+        if (f.readBytes(fstorOff, 4))
+            throw new Error(`data already at flash offset`)
+        f.writeBytes(fstorOff, fstor)
+    }
 
-    f.writeBytes(off, buf)
     return f.serialize()
 }
 
@@ -95,83 +112,51 @@ function padCfg(cfg: Uint8Array, minsz: number) {
     return res
 }
 
-async function patchBinFile(
-    binFile: Uint8Array,
-    arch: ArchConfig,
-    devcfg: DcfgSettings
-) {
-    const off0 = parseAnyInt(arch.dcfgOffset)
+async function patchBinFile(args: BinPatchArgs) {
+    const { binary, arch, dcfg, board, fstor } = args
     const shift = parseAnyInt(arch.binFlashOffset) ?? 0
-    const off = off0 - shift
-    let buf = serializeDcfg(devcfg)
+    const dcfgOff = parseAnyInt(arch.dcfgOffset) - shift
+    const fstorOff = parseAnyInt(board.fstorOffset ?? arch.fstorOffset) - shift
+    const pageSize = board.flashPageSize ?? arch.flashPageSize ?? 4096
+    let dcfgBuf = dcfg ? serializeDcfg(dcfg) : null
 
-    if (UF2File.isUF2(binFile)) throw new Error("expecting BIN, not UF2 file")
-    if (off > 16 * 1024 * 1024) throw new Error("offset too large for BIN")
-    if (binFile.length > off) {
-        if (isDCFG(binFile, off)) {
+    if (UF2File.isUF2(binary)) throw new Error("expecting BIN, not UF2 file")
+    if (dcfgOff > 16 * 1024 * 1024) throw new Error("offset too large for BIN")
+    if (fstorOff > 16 * 1024 * 1024)
+        throw new Error("fstor offset too large for BIN")
+
+    let minSize = binary.length
+    if (dcfg) minSize = Math.max(minSize, dcfgOff + dcfgBuf.length)
+    if (fstor) minSize = Math.max(minSize, fstorOff + fstor.length)
+    minSize = (minSize + (pageSize - 1)) & ~(pageSize - 1)
+
+    verboseLog(`size: ${binary.length} -> ${minSize} bytes`)
+
+    const output = new Uint8Array(minSize)
+    output.fill(0xff)
+    output.set(binary)
+
+    if (dcfg) {
+        if (isDCFG(output, dcfgOff)) {
             verboseLog("patching existing")
-            buf = padCfg(buf, read32(binFile, off + 8))
-        } else if (
-            toHex(binFile.slice(off, off + 8)) == "0000000000000000" ||
-            toHex(binFile.slice(off, off + 8)) == "ffffffffffffffff"
-        )
-            verboseLog("patching 00 or ff")
-        else throw new Error("data already at patch point!")
-        const res = new Uint8Array(binFile)
-        res.set(buf, off)
-        return res
-    } else {
-        verboseLog("appending to existing file")
+            dcfgBuf = padCfg(dcfgBuf, read32(output, dcfgOff + 8))
+        } else {
+            const slice = toHex(output.slice(dcfgOff, dcfgOff + 8))
+            if (slice == "0000000000000000" || slice == "ffffffffffffffff")
+                verboseLog("patching 00 or ff")
+            else throw new Error("data already at patch point!")
+        }
+        output.set(dcfgBuf, dcfgOff)
     }
 
-    const res = new Uint8Array(off + buf.length)
-    res.fill(0xff)
-    res.set(binFile)
-    res.set(buf, off)
-    return res
-}
-
-async function patchEspFile(
-    binFile: Uint8Array,
-    arch: ArchConfig,
-    devcfg: DcfgSettings
-) {
-    if (UF2File.isUF2(binFile)) throw new Error("expecting BIN, not UF2 file")
-
-    let imgoffset = 0
-    let img = EspImage.fromBuffer(binFile)
-    if (!img.looksValid) {
-        imgoffset = 0x10000
-        img = EspImage.fromBuffer(binFile.slice(imgoffset))
-    }
-    if (!img.looksValid) throw new Error("image doesn't look valid")
-
-    verboseLog(`patching at 0x${imgoffset.toString(16)}`)
-
-    const cfgoff = parseAnyInt(arch.dcfgOffset)
-
-    const seg = img.getLastDROM()
-    const exoff = cfgoff - seg.addr
-
-    if (isDCFG(seg.data, exoff)) {
-        verboseLog("patching existing config")
-    } else {
-        if (seg.data.length > exoff)
-            throw new Error(
-                `no space for dcfg; ${seg.data.length - exoff} B missing\n` +
-                    img.toString()
-            )
+    if (fstor) {
+        for (let i = 0; i < fstor.length; ++i)
+            if (output[fstorOff + i] != 0x00 && output[fstorOff + i] != 0xff)
+                throw new Error("data already at fstor patch point!")
+        output.set(fstor, fstorOff)
     }
 
-    const cfg = serializeDcfg(devcfg)
-    const newdata = new Uint8Array(exoff + cfg.length)
-    newdata.set(seg.data)
-    newdata.set(cfg, exoff)
-    seg.data = newdata
-
-    const res = await img.toBuffer()
-    return binFile
-    // return bufferConcat(binFile.slice(0, imgoffset), res)
+    return output
 }
 
 function compileBoard(arch: ArchConfig, devcfg: DeviceConfig) {
@@ -220,15 +205,10 @@ export async function compileDcfgFile(fn: string) {
 
 const patch: Record<
     keyof FileTypes,
-    (
-        binFile: Uint8Array,
-        arch: ArchConfig,
-        devcfg: DcfgSettings
-    ) => Promise<Uint8Array>
+    (args: BinPatchArgs) => Promise<Uint8Array>
 > = {
     bin: patchBinFile,
     uf2: patchUF2File,
-    esp: patchEspFile,
 }
 
 export async function patchCustomBoard(
@@ -238,20 +218,27 @@ export async function patchCustomBoard(
 ) {
     board.$custom = true
     const dcfg = compileBoard(arch, board)
-    const ext = fn.replace(/.*\./, "") as keyof FileTypes
-    if (!patch[ext]) throw new Error(`unknown file format: ${ext}`)
-    const buf = await readFile(fn)
-    return await patchFile(ext, buf, arch, dcfg)
+    const type = fn.replace(/.*\./, "") as keyof FileTypes
+    if (!patch[type]) throw new Error(`unknown file format: ${type}`)
+    const binary = await readFile(fn)
+    return await patchFile({ type, binary, arch, board, dcfg })
 }
 
-async function patchFile(
-    type: keyof FileTypes,
-    binFile: Uint8Array,
+export async function patchFstorToBoard(
+    fn: string,
+    board: DeviceConfig,
     arch: ArchConfig,
-    devcfg: DcfgSettings
+    fstor: Uint8Array
 ) {
-    const f = patch[type]
-    return f(binFile, arch, devcfg)
+    const type = fn.replace(/.*\./, "") as keyof FileTypes
+    if (!patch[type]) throw new Error(`unknown file format: ${type}`)
+    const binary = await readFile(fn)
+    return await patchFile({ type, binary, arch, board, fstor })
+}
+
+async function patchFile(args: BinPatchArgs) {
+    const f = patch[args.type]
+    return f(args)
 }
 
 export async function binPatch(files: string[], options: BinPatchOptions) {
@@ -267,7 +254,7 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
 
     if (!ft) fatal("no file type provided")
 
-    const binFileBuf = await readFile(binFn)
+    const binary = await readFile(binFn)
     const outpath = options.outdir || "dist"
     const outext = options.uf2 ? ".uf2" : ".bin"
     const binext = (off: HexInt) => {
@@ -299,11 +286,21 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
             const suff = binext(arch.binFlashOffset)
             const outname = (devid: string, ext = suff) =>
                 join(outpath, `devicescript-${arch.id}-${devid}${ext}`)
-            const patched = await patchFile(ft, binFileBuf, arch, dcfg)
             const outp = outname(json.id)
             if (info.repoUrl)
                 json.$fwUrl =
                     info.repoUrl + "/releases/latest/download/" + basename(outp)
+            info.archs[arch.id] = arch
+            info.boards[json.id] = json
+            if (options.fake) continue
+
+            const patched = await patchFile({
+                type: ft,
+                binary,
+                arch,
+                board: json,
+                dcfg,
+            })
             log(`writing ${outp}: ${patched.length} bytes`)
             await writeFile(outp, patched)
             if (options.generic || arch.binGenericFlashOffset !== undefined) {
@@ -313,15 +310,13 @@ export async function binPatch(files: string[], options: BinPatchOptions) {
                 if (offgen !== undefined) off = offgen - offpatched
                 await writeFile(
                     outname("generic", binext(offgen ?? offpatched)),
-                    binFileBuf.slice(off)
+                    binary.slice(off)
                 )
                 const elfFileBuf = await readFile(
                     options.elf ?? binFn.replace(/\.[^\.]+$/, ".elf")
                 )
                 await writeFile(outname("generic", ".elf"), elfFileBuf)
             }
-            info.archs[arch.id] = arch
-            info.boards[json.id] = json
         }
     } catch (e) {
         verboseLog(e.stack)
