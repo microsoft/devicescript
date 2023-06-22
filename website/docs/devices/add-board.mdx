@@ -51,6 +51,14 @@ Build the projet to test the board definition.
 npm run build
 ```
 
+#### Services
+
+Note that there is two ways of defining services in the `.board.json` file.
+The ones listed under `"$services": [ ... ]` will generate `startFoo()` functions,
+which need to be called for the service to be started.
+The ones under `"services": [ ... ]` are always started; this is typically only
+used for `power` service.
+
 ### Flash the new configuration
 
 The command line and Visual Studio will automatically integrate any configuration file in the `boards/` folder.
