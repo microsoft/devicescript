@@ -28,12 +28,38 @@ void fun1_Array_isArray(devs_ctx_t *ctx) {
     devs_ret_bool(ctx, devs_is_array(ctx, devs_arg(ctx, 0)));
 }
 
-void meth1_Array___ctor__(devs_ctx_t *ctx) {
+void methX_Array___ctor__(devs_ctx_t *ctx) {
     // this is somewhat inefficient - the runtime allocates a map
     value_t ignored = devs_arg_self(ctx);
     (void)ignored;
-    uint32_t sz = devs_arg_int(ctx, 0);
-    devs_ret_gc_ptr(ctx, devs_array_try_alloc(ctx, sz));
+
+    unsigned size = 0;
+    int numargs = ctx->stack_top_for_gc - 1;
+    bool copy = false;
+
+    if (numargs >= 1) {
+        value_t arg0 = devs_arg(ctx, 0);
+        if (numargs == 1 && devs_is_number(arg0)) {
+            if (!devs_is_tagged_int(arg0)) {
+                devs_throw_range_error(ctx, "Invalid array length");
+                return;
+            }
+            size = devs_value_to_int(ctx, arg0);
+        } else {
+            size = numargs;
+            copy = true;
+        }
+    }
+
+    devs_array_t *arr = devs_array_try_alloc(ctx, size);
+    if (!arr)
+        return;
+    devs_ret_gc_ptr(ctx, arr);
+
+    if (copy)
+        for (int i = 0; i < numargs; ++i) {
+            devs_array_set(ctx, arr, i, devs_arg(ctx, i));
+        }
 }
 
 void methX_Array_push(devs_ctx_t *ctx) {

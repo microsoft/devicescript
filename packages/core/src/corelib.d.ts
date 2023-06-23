@@ -375,7 +375,11 @@ interface Array<T> {
 interface ArrayConstructor {
     new (arrayLength?: number): any[]
     new <T>(arrayLength: number): T[]
+    new <T>(...items: T[]): T[];
+
     (arrayLength?: number): any[]
+    <T>(...items: T[]): T[];
+
     <T>(arrayLength: number): T[]
     isArray(arg: any): arg is any[]
     readonly prototype: any[]

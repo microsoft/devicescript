@@ -1087,6 +1087,18 @@ function testObjArrayCtor() {
     const o = { x: 1 }
     ds.assert(new Object(o) === o)
     ds.assert(Object(o) === o)
+
+    function arrEq(a: any, b: any) {
+        const aa = JSON.stringify(a)
+        const bb = JSON.stringify(b)
+        ds.assert(aa === bb)
+    }
+    arrEq(["A"], Array("A"))
+    arrEq(["A", "B"], Array("A", "B"))
+    arrEq([1, 2], Array(1, 2))
+    arrEq(["A"], new Array("A"))
+    arrEq(["A", "B"], new Array("A", "B"))
+    arrEq([1, 2], new Array(1, 2))
 }
 
 testFlow()
