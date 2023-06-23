@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.2](https://github.com/microsoft/devicescript/compare/v2.13.1...v2.13.2)
+
+> 23 June 2023
+
+- more contrivuting to docs [`f191669`](https://github.com/microsoft/devicescript/commit/f191669fb457d7ebef6b0dce5230470f3bf3f2b3)
+- reorg contributions page [`63ade1d`](https://github.com/microsoft/devicescript/commit/63ade1db678fda30cd356e17695d722f6dc57f18)
+- don't use GPIO0 as TX by default on pico [`e74b6c1`](https://github.com/microsoft/devicescript/commit/e74b6c1c7863fe01625b2eee1b2780aa77c4705b)
+
 #### [v2.13.1](https://github.com/microsoft/devicescript/compare/v2.13.0...v2.13.1)
 
 > 23 June 2023
