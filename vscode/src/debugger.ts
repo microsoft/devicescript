@@ -349,10 +349,8 @@ export class DeviceScriptConfigurationProvider
             service
         )
         if (!buildResult?.success) {
-            showErrorMessage(
-                "debug.builderrors",
-                `Debug cancelled\nProgram has build errors.`
-            )
+            // show errors
+            vscode.commands.executeCommand("workbench.action.problems.focus")
             return undefined
         }
         // save as currently debugged project
