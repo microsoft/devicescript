@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.1](https://github.com/microsoft/devicescript/compare/v2.13.0...v2.13.1)
+
+> 23 June 2023
+
+- allow arbitrary config in configureHardware(); fixes #473 [`#473`](https://github.com/microsoft/devicescript/issues/473)
+- add memory docs; fixes #397 [`#397`](https://github.com/microsoft/devicescript/issues/397)
+- remove _ from role names; fixes #389 [`#389`](https://github.com/microsoft/devicescript/issues/389)
+- add docs on services vs $services; fixes #459 [`#459`](https://github.com/microsoft/devicescript/issues/459)
+- add docs for `devs bundle`; fixes #495 [`#495`](https://github.com/microsoft/devicescript/issues/495)
+- add devkitM S3 [`b6782cb`](https://github.com/microsoft/devicescript/commit/b6782cb61ea2fde285c5ed7c732bf04176a5f3ac)
+- use HKDF in encryptedFetch() [`4ca8550`](https://github.com/microsoft/devicescript/commit/4ca8550a2148f0dc84f46ada32bf727236e1a181)
+- picture for devkitM [`5ba81f0`](https://github.com/microsoft/devicescript/commit/5ba81f0ac3142b52046228abc0c2e8c7cef5dfa9)
+
 #### [v2.13.0](https://github.com/microsoft/devicescript/compare/v2.12.3...v2.13.0)
 
 > 22 June 2023
