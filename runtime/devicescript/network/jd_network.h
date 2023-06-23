@@ -98,4 +98,6 @@ int jd_wifi_init(uint8_t mac_out[6]);
 int jd_wifi_disconnect(void);
 int jd_wifi_rssi(void);
 void jd_wifi_process(void);
+bool jd_wifi_available(void);
+
 #endif

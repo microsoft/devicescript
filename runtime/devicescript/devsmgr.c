@@ -472,6 +472,10 @@ void devsmgr_init(void) {
     devsmgr_sync_dcfg(state);
 }
 
+__attribute__((weak)) bool jd_wifi_available(void) {
+    return true;
+}
+
 void devs_service_full_init(void) {
     // set initial pin states
     devs_gpio_init_dcfg(NULL);
@@ -486,7 +490,12 @@ void devs_service_full_init(void) {
 #endif
 
 #if JD_NETWORK
-    if (dcfg_get_bool("devNetwork")) {
+#if JD_WIFI
+    if (!jd_wifi_available()) {
+        LOG("wifi not available; skipping networking");
+    } else
+#endif
+        if (dcfg_get_bool("devNetwork")) {
         LOG("devNetwork mode - disable cloud adapter");
     } else {
         LOG("starting cloud adapter");
