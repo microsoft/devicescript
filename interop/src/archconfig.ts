@@ -18,9 +18,8 @@ export interface DeviceScriptConfig extends DeviceHardwareInfo {
     devNetwork?: boolean
 }
 
-export type UserHardwareInfo = Pick<
-    DeviceScriptConfig,
-    "scanI2C" | "devNetwork"
+export type UserHardwareInfo = Partial<
+    Exclude<DeviceScriptConfig, "pins" | "sPins">
 >
 // END-DS-SERVERS
 
@@ -45,7 +44,7 @@ export interface FstorConfig {
     flashPageSize: number
 
     /**
-     * Total number of pages in FSTOR. 
+     * Total number of pages in FSTOR.
      * Often 32 (for 128k) or 64 (for 256k).
      */
     fstorPages: number
