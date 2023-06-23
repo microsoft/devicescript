@@ -1,10 +1,9 @@
 ---
-name: Drive request
+name: Driver request
 about: Request for a missing device driver
-title: ''
+title: ""
 labels: driver request
-assignees: ''
-
+assignees: ""
 ---
 
 ** Device description **
