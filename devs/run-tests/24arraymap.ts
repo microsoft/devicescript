@@ -68,6 +68,11 @@ function testArrayFind() {
     assert(str.find(x => x === 2) === 2, "sometrue")
     assert(str.find(x => x < 0) === undefined, "somefalse")
 }
+function testArrayFindIndex() {
+    let str = ["a", "b", "c", "d"]
+    assert(str.findIndex(x => x === "c") === 2, "sometrue")
+    assert(str.findIndex(x => x === "z") === -1, "somefalse")
+}
 function swap<T>(arr: T[], i: number, j: number): void {
     let temp: T = arr[i]
     arr[i] = arr[j]
@@ -118,5 +123,6 @@ testArrayIndexOf()
 testArrayForEach()
 testArrayMap()
 testArrayFind()
+testArrayFindIndex()
 testGenerics()
 testArrayIncludes()

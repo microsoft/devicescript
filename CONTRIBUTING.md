@@ -112,3 +112,16 @@ The main places that need updating is:
 
 After adding a new packages, run `yarn` at the top-level to update workspace links,
 followed by the usual `yarn build`.
+
+## Add Core JavaScript APIs
+
+The DeviceScript [core js library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects) is not complete; but it is possible to fill the gaps
+as needed. The requests are tracked by the [core js issue label](https://github.com/microsoft/devicescript/issues?q=is%3Aissue+is%3Aopen+label%3A%22core+js%22).
+
+If you want to add a new function:
+
+-   find the corresponding function definition in one of the `lib/es....d.ts` file.
+-   copy the definition in the corresponding interface in `packages/core/core/src/lib.d.ts`
+-   implement the function in the implementation file of the type (see `packages/core/core/src/array.ts` for example)
+-   add test cases in the corresponding test file under `devs/run-tests`
+-   create a pull request and go!
