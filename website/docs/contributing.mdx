@@ -12,7 +12,14 @@ title: Contributing
 -   port firmware to other embedded platforms
 -   and many more!
 
-## Repository structure
+## Local development
+
+The development requirement will vary (widely) depending
+on which part of DeviceScript you want to work on.
+
+Using Visual Studio Code is strongly recommended.
+
+### Repository structure
 
 This repository contains:
 
@@ -23,12 +30,6 @@ This repository contains:
 -   `runtime/posix/` - implementation of Jacdac SDK HAL for grown-up POSIX-like operating systems (as opposed to embedded platforms)
 -   `vscode` - Visual Studio Code extension
 -   `website` - docusaurus documentation side
-
-## Usage
-
-The development requirement will vary (widely) depending on which part of DeviceScript you want to work on.
-
-Using Visual Studio Code is strongly recommended.
 
 ### Compiler, runtime and command line
 
@@ -92,7 +93,9 @@ If you bump minor, you need to also bump the firmware repos:
 make bump
 ```
 
-## Documenting/patching console output
+## Contributions
+
+### Documenting/patching console output
 
 To add new substitions from console output message to pretty text + URL, do the following.
 
@@ -101,19 +104,7 @@ The hash of the H2 titles is the console log look up key (replacing - with space
 
     loopback rx ovf --> Loopback buffer overflow (....#loopback-rx-ovf)
 
-## Adding Builtin Packages
-
-Generally, search for `@devicescript/gpio` within the workspace.
-The main places that need updating is:
-
--   this file, `website/docs/developer/packages.mdx`
--   list in `plugin/src/plugin.ts`
--   list in `devs/run-test/allcompile.ts`
-
-After adding a new packages, run `yarn` at the top-level to update workspace links,
-followed by the usual `yarn build`.
-
-## Add Core JavaScript APIs
+### Add Core JavaScript APIs
 
 The DeviceScript [core js library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects) is not complete; but it is possible to fill the gaps
 as needed. The requests are tracked by the [core js issue label](https://github.com/microsoft/devicescript/issues?q=is%3Aissue+is%3Aopen+label%3A%22core+js%22).
@@ -125,6 +116,18 @@ If you want to add a new function:
 -   implement the function in the implementation file of the type (see `packages/core/core/src/array.ts` for example)
 -   add test cases in the corresponding test file under `devs/run-tests`
 -   create a pull request and go!
+
+### Adding Builtin Packages
+
+Generally, search for `@devicescript/gpio` within the workspace.
+The main places that need updating is:
+
+-   this file, `website/docs/developer/packages.mdx`
+-   list in `plugin/src/plugin.ts`
+-   list in `devs/run-test/allcompile.ts`
+
+After adding a new packages, run `yarn` at the top-level to update workspace links,
+followed by the usual `yarn build`.
 
 ## Legal
 
