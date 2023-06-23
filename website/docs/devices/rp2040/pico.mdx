@@ -12,7 +12,6 @@ RP2040 board from Raspberry Pi.
 ## Features
 
 -  LED on pin 25  (use [setStatusLight](/developer/status-light) to control)
--  Serial logging on pin 0 at 115200 8N1
 
 ## Stores
 
@@ -23,6 +22,7 @@ RP2040 board from Raspberry Pi.
 
 | pin name | hardware id | features |
 |:---------|:------------|---------:|
+| **P0** |  GPIO0 |  io |
 | **P1** |  GPIO1 |  io |
 | **P10** |  GPIO10 |  io |
 | **P11** |  GPIO11 |  io |
@@ -49,7 +49,6 @@ RP2040 board from Raspberry Pi.
 | **P8** |  GPIO8 |  io |
 | **P9** |  GPIO9 |  io |
 | **led.pin** |  GPIO25 |  io |
-| **log.pinTX** |  GPIO0 |  io |
 
 
 
@@ -81,11 +80,8 @@ devicescript flash --board pico
     "led": {
         "pin": 25
     },
-    "log": {
-        "baud": 115200,
-        "pinTX": 0
-    },
     "pins": {
+        "P0": 0,
         "P1": 1,
         "P10": 10,
         "P11": 11,

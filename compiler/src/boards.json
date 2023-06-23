@@ -829,11 +829,8 @@
       "led": {
         "pin": 25
       },
-      "log": {
-        "baud": 115200,
-        "pinTX": 0
-      },
       "pins": {
+        "P0": 0,
         "P1": 1,
         "P10": 10,
         "P11": 11,
@@ -870,11 +867,8 @@
       "archId": "rp2040w",
       "devName": "Raspberry Pi Pico W",
       "id": "pico_w",
-      "log": {
-        "baud": 115200,
-        "pinTX": 0
-      },
       "pins": {
+        "P0": 0,
         "P1": 1,
         "P10": 10,
         "P11": 11,

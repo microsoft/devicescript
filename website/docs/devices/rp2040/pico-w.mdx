@@ -11,7 +11,6 @@ RP2040 board from Raspberry Pi with a WiFi chip.
 
 ## Features
 
--  Serial logging on pin 0 at 115200 8N1
 
 ## Stores
 
@@ -22,6 +21,7 @@ RP2040 board from Raspberry Pi with a WiFi chip.
 
 | pin name | hardware id | features |
 |:---------|:------------|---------:|
+| **P0** |  GPIO0 |  io |
 | **P1** |  GPIO1 |  io |
 | **P10** |  GPIO10 |  io |
 | **P11** |  GPIO11 |  io |
@@ -47,7 +47,6 @@ RP2040 board from Raspberry Pi with a WiFi chip.
 | **P7** |  GPIO7 |  io |
 | **P8** |  GPIO8 |  io |
 | **P9** |  GPIO9 |  io |
-| **log.pinTX** |  GPIO0 |  io |
 
 
 
@@ -76,11 +75,8 @@ devicescript flash --board pico_w
     "$description": "RP2040 board from Raspberry Pi with a WiFi chip.",
     "archId": "rp2040w",
     "url": "https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html",
-    "log": {
-        "baud": 115200,
-        "pinTX": 0
-    },
     "pins": {
+        "P0": 0,
         "P1": 1,
         "P10": 10,
         "P11": 11,
