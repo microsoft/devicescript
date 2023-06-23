@@ -28,6 +28,14 @@ void fun1_Array_isArray(devs_ctx_t *ctx) {
     devs_ret_bool(ctx, devs_is_array(ctx, devs_arg(ctx, 0)));
 }
 
+void meth1_Array___ctor__(devs_ctx_t *ctx) {
+    // this is somewhat inefficient - the runtime allocates a map
+    value_t ignored = devs_arg_self(ctx);
+    (void)ignored;
+    uint32_t sz = devs_arg_int(ctx, 0);
+    devs_ret_gc_ptr(ctx, devs_array_try_alloc(ctx, sz));
+}
+
 void methX_Array_push(devs_ctx_t *ctx) {
     devs_array_t *self = devs_arg_self_array(ctx);
     if (!self)

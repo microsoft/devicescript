@@ -33,6 +33,8 @@ interface Object {
 
 interface ObjectConstructor {
     (): any
+    (value?: any): Object
+    new (value?: any): Object
 
     /**
      * Copy the values of all of the enumerable own properties from one or more source objects to a
@@ -319,7 +321,7 @@ interface Array<T> {
      * order, until it finds one where predicate returns true. If such an element is found,
      * findIndex immediately returns that element index. Otherwise, findIndex returns -1.
      */
-    findIndex(predicate: (value: T, index: number, obj: T[]) => unknown): number;
+    findIndex(predicate: (value: T, index: number, obj: T[]) => unknown): number
 
     /**
      * Calls the specified callback function for all the elements in an array. The return value of the callback function is the accumulated result, and is provided as an argument in the next call to the callback function.
@@ -371,9 +373,14 @@ interface Array<T> {
 }
 
 interface ArrayConstructor {
+    new (arrayLength?: number): any[]
+    new <T>(arrayLength: number): T[]
+    (arrayLength?: number): any[]
+    <T>(arrayLength: number): T[]
     isArray(arg: any): arg is any[]
     readonly prototype: any[]
 }
+
 declare var Array: ArrayConstructor
 
 declare namespace console {

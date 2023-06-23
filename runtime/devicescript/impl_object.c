@@ -62,3 +62,12 @@ void fun2_Object_setPrototypeOf(devs_ctx_t *ctx) {
 
     devs_ret(ctx, trg);
 }
+
+void meth1_Object___ctor__(devs_ctx_t *ctx) {
+    value_t self = devs_arg_self(ctx);
+    value_t value = devs_arg(ctx, 0);
+    if (devs_is_null_or_undefined(value))
+        devs_ret(ctx, self); // self should be already an object
+    else
+        devs_ret(ctx, value);
+}

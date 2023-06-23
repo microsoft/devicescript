@@ -1069,6 +1069,26 @@ function testStringMethods() {
     ds.assert(buf.lastIndexOf(0x22) === 4)
 }
 
+function testObjArrayCtor() {
+    function testArr(a: any[], len = 5) {
+        ds.assert(a.length === len)
+        ds.assert(a[0] === undefined)
+    }
+    testArr(Array(), 0)
+    testArr(Array(0), 0)
+    testArr([], 0)
+    testArr(Array(5))
+    testArr(new Array(5))
+
+    ds.assert(new Object() !== new Object())
+    ds.assert(Object() !== Object())
+    ds.assert(JSON.stringify(Object()) === "{}")
+    ds.assert(JSON.stringify(new Object()) === "{}")
+    const o = { x: 1 }
+    ds.assert(new Object(o) === o)
+    ds.assert(Object(o) === o)
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -1111,5 +1131,6 @@ new UsingCtorFieldArgs(12)
 testStatic()
 testWhenUsed()
 testStringMethods()
+testObjArrayCtor()
 
 console.log("all OK")
