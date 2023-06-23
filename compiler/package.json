@@ -1,7 +1,7 @@
 {
     "name": "@devicescript/compiler",
     "private": false,
-    "version": "2.13.0",
+    "version": "2.13.1",
     "description": "DeviceScript Compiler",
     "keywords": [
         "devicescript",

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.0](https://github.com/microsoft/devicescript/compare/v2.12.3...v2.13.0)
+
+> 22 June 2023
+
+- add 'devs bundle' command [`de9532d`](https://github.com/microsoft/devicescript/commit/de9532d0cf68a5d4a76b58f118e65159ff3d8be0)
+- update board definitions [`ba705d3`](https://github.com/microsoft/devicescript/commit/ba705d3f0455d0357a2cd5c6a77b93a187cd3870)
+- add encryptedFetch() [`714f0ed`](https://github.com/microsoft/devicescript/commit/714f0eda364a5acdc0b994c28ac10c3cc9332526)
+
 #### [v2.12.3](https://github.com/microsoft/devicescript/compare/v2.12.2...v2.12.3)
 
 > 20 June 2023
