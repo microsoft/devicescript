@@ -910,7 +910,7 @@ class Program implements TopOpWriter {
         this.startServices.push(cfg)
         if (this.isIgnored(expr)) return unit()
         else {
-            let name = cfg.name || servName(cfg.service) + "__" + off
+            let name = cfg.name || servName(cfg.service) + "_" + off
             name += `[int:${off}]`
             return this.allocRole(spec, this.writer.emitString(name))
         }
