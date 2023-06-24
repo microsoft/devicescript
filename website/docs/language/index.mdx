@@ -44,7 +44,8 @@ Below we list supported and unsupported language features.
 -   `if ... else if ... else` statements
 -   `while` and `do ... while` loops
 -   `for(;;)` loops
--   `for ... of` statements (see below about `for ... in`)
+-   `for ... of` statements
+-   `for ... in` statements (though they behave the same as `for ... of Object.keys(...)`)
 -   `break/continue`; also with labeled loops
 -   `switch` statement (on numbers, strings, and arbitrary types - the last one isn't very useful)
 -   `debugger` statement for breakpoints
@@ -89,7 +90,6 @@ unlikely to miss it):
 -   `yield` expression and `function*`
 -   `with` statement
 -   `eval`
--   `for ... in` statements (`for ... of` is supported)
 -   JSX (HTML fragments as part of JavaScript)
 -   namespaces (we do support ES modules)
 -   `arguments` keyword; `.apply` method (modern spread operator is supported)

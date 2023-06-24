@@ -1101,6 +1101,17 @@ function testObjArrayCtor() {
     arrEq([1, 2], new Array(1, 2))
 }
 
+function testForIn() {
+    const obj = { a: 1, b: "bar" }
+    let idx = 0
+    for (const k in obj) {
+        if (idx === 0) ds.assert(k === "a")
+        if (idx === 1) ds.assert(k === "b")
+        ds.assert(idx <= 1)
+        idx++
+    }
+}
+
 testFlow()
 if (x !== 42) _panic(10)
 testMath()
@@ -1144,5 +1155,6 @@ testStatic()
 testWhenUsed()
 testStringMethods()
 testObjArrayCtor()
+testForIn()
 
 console.log("all OK")

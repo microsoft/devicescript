@@ -812,7 +812,6 @@ class Program implements TopOpWriter {
         }, e as ts.Expression)
     }
 
-
     private withProcedure(proc: Procedure, f: (wr: OpWriter) => void) {
         assert(!!proc)
         const prevProc = this.proc
@@ -1394,22 +1393,27 @@ class Program implements TopOpWriter {
         return res
     }
 
-    private emitForOfStatement(stmt: ts.ForOfStatement) {
+    private emitForInOrOfStatement(stmt: ts.ForInOrOfStatement) {
         const wr = this.writer
 
         const loop = this.mkLoopLabels(stmt)
 
         if (
-            stmt.awaitModifier ||
+            (stmt as ts.ForOfStatement).awaitModifier ||
             !stmt.initializer ||
             !ts.isVariableDeclarationList(stmt.initializer) ||
             stmt.initializer.declarations.length != 1
         )
-            throwError(stmt, "only for (let/const x of ...) supported")
+            throwError(stmt, "only for (let/const x in/of ...) supported")
 
         const decl = stmt.initializer.declarations[0]
 
-        const coll = wr.cacheValue(this.emitExpr(stmt.expression), true)
+        let collExpr = this.emitExpr(stmt.expression)
+        if (stmt.kind == SK.ForInStatement) {
+            wr.emitCall(wr.objectMember(BuiltInString.KEYS), collExpr)
+            collExpr = this.retVal()
+        }
+        const coll = wr.cacheValue(collExpr, true)
         const idx = wr.cacheValue(literal(0), true)
 
         this.emitVariableDeclarationList(stmt.initializer)
@@ -2182,7 +2186,6 @@ class Program implements TopOpWriter {
         this.emitIgnoredExpression(stmt.expression)
     }
 
-
     private requireArgs(
         expr: ts.CallExpression | ts.NewExpression | CallLike,
         num: number
@@ -2194,7 +2197,6 @@ class Program implements TopOpWriter {
                 `${num} arguments required; got ${expr.arguments.length}`
             )
     }
-
 
     private parseFormat(expr: Expr): NumFmt {
         const str = this.stringLiteral(expr) || ""
@@ -2440,7 +2442,6 @@ class Program implements TopOpWriter {
     private emitArgs(args: Expr[]) {
         return args.map(arg => this.emitExpr(arg))
     }
-
 
     private isStringLike(expr: Expr) {
         return !!(
@@ -3758,7 +3759,10 @@ class Program implements TopOpWriter {
                 case SK.ForStatement:
                     return this.emitForStatement(stmt as ts.ForStatement)
                 case SK.ForOfStatement:
-                    return this.emitForOfStatement(stmt as ts.ForOfStatement)
+                case SK.ForInStatement:
+                    return this.emitForInOrOfStatement(
+                        stmt as ts.ForOfStatement
+                    )
                 case SK.ContinueStatement:
                 case SK.BreakStatement:
                     return this.emitBreakContStatement(
