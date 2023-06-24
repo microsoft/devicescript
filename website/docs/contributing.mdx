@@ -5,12 +5,47 @@ title: Contributing
 
 # Contributing
 
-**Contributions are welcome!** Here are some ways you can contribute:
+**Contributions are welcome!**
 
--   add missing core js functions (like `Array.findLast`)
--   add missing TypeScript support (like `for .. in ...`)
--   port firmware to other embedded platforms
--   and many more!
+## Contributions
+
+### Add Core JavaScript APIs
+
+The DeviceScript [core js library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects) is not complete; but it is possible to fill the gaps
+as needed. The requests are tracked by the [core js issue label](https://github.com/microsoft/devicescript/issues?q=is%3Aissue+is%3Aopen+label%3A%22core+js%22).
+
+If you want to add a new function:
+
+-   find the corresponding function definition in one of the `lib/es....d.ts` file.
+-   copy the definition in the corresponding interface in `packages/core/src/corelib.d.ts`
+-   implement the function in the implementation file of the type (see `packages/core/src/array.ts` for example).
+    If you are adding a new file, make sure to import it in `packages/core/src/index.ts`.
+-   add test cases in the corresponding test file under `devs/run-tests`
+-   build and test
+-   create a pull request and go!
+
+### Adding Builtin Packages
+
+> A good question to start with: Do we need a new builtin package or should it be a new npm package?
+
+Generally, search for `@devicescript/gpio` within the workspace.
+The main places that need updating is:
+
+-   this file, `website/docs/developer/packages.mdx`
+-   list in `plugin/src/plugin.ts`
+-   list in `devs/run-test/allcompile.ts`
+
+After adding a new packages, run `yarn` at the top-level to update workspace links,
+followed by the usual `yarn build`.
+
+### Documenting/patching console output
+
+To add new substitions from console output message to pretty text + URL, do the following.
+
+The `website/docs/developer/errors.mdx` gets parsed by builderrors.mjs.
+The hash of the H2 titles is the console log look up key (replacing - with spaces) and the H2 text will replace that key + URL.
+
+    loopback rx ovf --> Loopback buffer overflow (....#loopback-rx-ovf)
 
 ## Local development
 
@@ -92,42 +127,6 @@ If you bump minor, you need to also bump the firmware repos:
 ```bash
 make bump
 ```
-
-## Contributions
-
-### Documenting/patching console output
-
-To add new substitions from console output message to pretty text + URL, do the following.
-
-The `website/docs/developer/errors.mdx` gets parsed by builderrors.mjs.
-The hash of the H2 titles is the console log look up key (replacing - with spaces) and the H2 text will replace that key + URL.
-
-    loopback rx ovf --> Loopback buffer overflow (....#loopback-rx-ovf)
-
-### Add Core JavaScript APIs
-
-The DeviceScript [core js library](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects) is not complete; but it is possible to fill the gaps
-as needed. The requests are tracked by the [core js issue label](https://github.com/microsoft/devicescript/issues?q=is%3Aissue+is%3Aopen+label%3A%22core+js%22).
-
-If you want to add a new function:
-
--   find the corresponding function definition in one of the `lib/es....d.ts` file.
--   copy the definition in the corresponding interface in `packages/core/core/src/lib.d.ts`
--   implement the function in the implementation file of the type (see `packages/core/core/src/array.ts` for example)
--   add test cases in the corresponding test file under `devs/run-tests`
--   create a pull request and go!
-
-### Adding Builtin Packages
-
-Generally, search for `@devicescript/gpio` within the workspace.
-The main places that need updating is:
-
--   this file, `website/docs/developer/packages.mdx`
--   list in `plugin/src/plugin.ts`
--   list in `devs/run-test/allcompile.ts`
-
-After adding a new packages, run `yarn` at the top-level to update workspace links,
-followed by the usual `yarn build`.
 
 ## Legal
 
