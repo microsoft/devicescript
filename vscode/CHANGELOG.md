@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.3](https://github.com/microsoft/devicescript/compare/v2.13.2...v2.13.3)
+
+> 23 June 2023
+
+- jd-c with startMotor(); fixes #461 [`#461`](https://github.com/microsoft/devicescript/issues/461)
+- add additional array ctor, see #501 [`9b1c212`](https://github.com/microsoft/devicescript/commit/9b1c21261489b1f6645a4064ecc588e6478d6dcc)
+- add Object and Array ctors; see #501 [`731c85d`](https://github.com/microsoft/devicescript/commit/731c85dab82844a6450fa4934f8a329913599b09)
+
 #### [v2.13.2](https://github.com/microsoft/devicescript/compare/v2.13.1...v2.13.2)
 
 > 23 June 2023
