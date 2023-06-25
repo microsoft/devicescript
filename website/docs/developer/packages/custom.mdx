@@ -11,6 +11,7 @@ Here are some examples of custom packages:
 
 -   [Adafruit.io create data](https://github.com/pelikhan/devicescript-adafruit-io/) to upload sensor data to io.adafruit.com
 -   [Blues.io note api](https://github.com/pelikhan/devicescript-note) to interact with blues.io notecard
+-   [Blynk.io](https://github.com/pelikhan/devicescript-blynk) to upload data to blynk.io
 
 ## Getting started
 
@@ -33,11 +34,24 @@ This will:
 
 All of these can be of course edited in `package.json` afterwards.
 
-After this step, you can publish your package using your favorite npm publishing pipeline.
-
 ## Naming convention
 
 In particular it's recommended to name your package `devicescript-something`.
+
+## Publishing
+
+After this step, you can publish your package using your favorite npm publishing pipeline.
+
+:::tip
+
+A DeviceScript does not require any special build assets.
+You can create a GitHub release and use as a dependency in your projects.
+
+```bash npm2yarn
+npm install --save user/repo@version
+```
+
+:::
 
 ## Development notes
 
