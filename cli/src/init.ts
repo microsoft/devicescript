@@ -86,6 +86,7 @@ jobs:
               with:
                   node-version: 18
             - run: npm ci
+            - run: npm run build
             - run: npm test    
 `,
 }
@@ -528,6 +529,7 @@ A measure of ${name}.
 
 export interface AddNpmOptions extends InitOptions {
     license?: string
+    name?: string
 }
 
 export interface AddSettingsOptions extends InitOptions {}
@@ -570,7 +572,7 @@ export async function addNpm(options: AddNpmOptions) {
             }
     }
     if (!pkg.version) pkg.version = "0.0.0"
-    if (!pkg.name) pkg.name = `devicescript-${basename(__dirname)}`
+    if (!pkg.name) pkg.name = options.name || basename(resolve("."))
     delete pkg.private
     let lst = await readdir("src")
     lst = lst.filter(f => !f.startsWith("main") && f.endsWith(".ts"))

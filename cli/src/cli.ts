@@ -368,6 +368,7 @@ export async function mainCli() {
 
     addCommand("npm")
         .option("--license <string>", "set the license", "MIT")
+        .option("--name <string>", "set the project name")
         .description("make current project into an NPM package")
         .action(dropReturn(addNpm))
 
