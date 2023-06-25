@@ -1,14 +1,16 @@
 ---
-position: 20
+title: Bundled firmware
+sidebar_position: 20
 ---
 
-# Bundling
+# Bundled Firmware
 
 A firmware image can be bundled together with a DeviceScript program and settings
-into a single image that can be flashed at once.
+into a single image that can be flashed at once
+using the platform native tools.Ï
 
 Let's assume you're developing for `seeed_xiao_esp32c3` board.
-Inside your project folder run:
+Inside your project folder run using the [CLI](/cli):
 
 ```bash
 devs bundle --board seeed_xiao_esp32c3 src/main.ts
@@ -31,7 +33,7 @@ writing 1875968 bytes to .devicescript/bin/bundle-devicescript-esp32c3-seeed_xia
 The file `.devicescript/bin/bundle-devicescript-esp32c3-seeed_xiao_esp32c3-0x0.bin` can be now flashed
 to the device.
 You can do it using `esptool` or in case of Pico by just copying the `.UF2` file.
-Or simply use `devs flash --file` command:
+Or use `devs flash --file` command:
 
 ```bash
 devs flash --board seeed_xiao_esp32c3 --file .devicescript/bin/bundle-devicescript-esp32c3-seeed_xiao_esp32c3-0x0.bin
