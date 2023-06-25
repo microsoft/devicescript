@@ -521,6 +521,10 @@
                     "when": "workbenchState != empty"
                 },
                 {
+                    "command": "extension.devicescript.npm",
+                    "when": "workbenchState != empty"
+                },
+                {
                     "command": "extension.devicescript.services.add",
                     "when": "workbenchState != empty"
                 },
@@ -623,6 +627,11 @@
                 "title": "Clear Settings...",
                 "category": "DeviceScript",
                 "icon": "$(trash)"
+            },
+            {
+                "command": "extension.devicescript.npm",
+                "title": "Add npm...",
+                "category": "DeviceScript"
             },
             {
                 "command": "extension.devicescript.settings.add",

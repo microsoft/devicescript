@@ -1,0 +1,62 @@
+---
+title: Blynk.io
+sidebar_position: 5.5
+---
+
+# Blynk.io
+
+[Blynk.io](https://blynk.io) provides an IoT dashboard for devices with virtual pins.
+
+The [pelikhan/devicescript-blynk](https://github.com/pelikhan/devicescript-blynk)
+package uses the [HTTPS REST API](https://docs.blynk.io/en/blynk.cloud/https-api-overview)
+to send data from devices.
+
+## Getting started
+
+-   Create a new DeviceScript project
+-   Add the library to your DeviceScript project:
+
+```bash
+npm install --save pelikhan/devicescript-blynk
+```
+
+## Configuration
+
+-   [Add settings](/developer/settings) to your project
+-   Add the device authentication token to your settings
+
+```yaml
+# .env.local
+BLYNK_TOKEN=your-token
+```
+
+## Uploading data
+
+Use `updateDatastream` to update multiple virtual pins at once.
+
+```ts skip
+import { Temperature, Humidity } from "@devicescript/core"
+import { delay, millis } from "@devicescript/core"
+// highlight-next-line
+import { updateDatastream } from "devicescript-blynk"
+
+// connect sensors
+const temperature = new Temperature()
+
+while (true) {
+    // read sensor values
+    const t = await temperature.reading.read()
+    const h = await humidity.reading.read()
+
+    // highlight-start
+    // send blynk.io data
+    await updateDatastream({
+        v1: t,
+        v2: h,
+    })
+    // highlight-end
+
+    // take a break
+    await delay(10000)
+}
+```

@@ -146,6 +146,10 @@ export function activateDeviceScript(context: vscode.ExtensionContext) {
             async () => extensionState.addSettings()
         ),
         vscode.commands.registerCommand(
+            "extension.devicescript.npm",
+            async () => extensionState.addNpm()
+        ),
+        vscode.commands.registerCommand(
             "extension.devicescript.services.add",
             async () => extensionState.addService()
         ),
