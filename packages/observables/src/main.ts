@@ -7,7 +7,7 @@ import { catchError } from "./error"
 import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
 import { Observable, Subscription, unusbscribe } from "./observable"
-import { map, scan, timestamp } from "./transform"
+import { map, scan, switchMap, timestamp } from "./transform"
 import { tap } from "./utility"
 import { register } from "./value"
 const btn = new ds.Button()
@@ -126,7 +126,11 @@ describe("transform", () => {
         obs2 = tap<{ value: number; time: number; lastTime: number }>(v =>
             console.log(v)
         )(obs2)
-        await emitsR(obs2, [1,3,6], (v: { value: number; time: number; lastTime: number }) => v.value)
+        await emitsR(
+            obs2,
+            [1, 3, 6],
+            (v: { value: number; time: number; lastTime: number }) => v.value
+        )
     })
 })
 
@@ -295,6 +299,13 @@ describe("error", () => {
             catchError(e => {
                 return from([5])
             })
+        )
+        await ds.sleep(100)
+        await emits(obs, [5])
+    })
+    test("switchMap", async () => {
+        const obs = from([0, 1, 2]).pipe(
+            switchMap(v => from([v + 1, v + 1, v + 1]))
         )
         await ds.sleep(100)
         await emits(obs, [5])
