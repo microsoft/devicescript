@@ -153,10 +153,14 @@ export class DeveloperToolsManager extends JDEventSource {
             )
 
             // node.js version outdated
-            if (semverCmp(nodeVersion, "v18.0.0") < 0) {
-                throwError(`Node.js outdated (${nodeVersion}), v18+ needed`, {
-                    cancel: true,
-                })
+            const MIN_NODE_VERSION = 16
+            if (semverCmp(nodeVersion, `v${MIN_NODE_VERSION}.0.0`) < 0) {
+                throwError(
+                    `Node.js outdated (${nodeVersion}), v${MIN_NODE_VERSION}+ needed`,
+                    {
+                        cancel: true,
+                    }
+                )
             }
 
             // installed devs tool are outdated for the vscode addon
@@ -819,14 +823,14 @@ export class DeveloperToolsManager extends JDEventSource {
             if (!v) {
                 showErrorMessage(
                     "terminal.nodemissing",
-                    "Unable to locate Node.JS v18+."
+                    "Unable to locate Node.JS v16+."
                 )
                 return undefined
             }
             if (!(v.major >= 18)) {
                 showErrorMessage(
                     "terminal.nodeversion",
-                    `Node.JS version outdated, found ${v.major}.${v.minor} but needed v18+.`
+                    `Node.JS version outdated, found ${v.major}.${v.minor} but needed v16+.`
                 )
                 return undefined
             }

@@ -26,7 +26,7 @@
         "./built/**"
     ],
     "engines": {
-        "node": ">=18"
+        "node": ">=16"
     },
     "license": "MIT",
     "devDependencies": {

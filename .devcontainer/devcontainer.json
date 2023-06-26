@@ -3,8 +3,8 @@
     "name": "Node.js + C++",
     "build": {
         "dockerfile": "Dockerfile",
-        // Node v18
-        "args": { "VARIANT": "18" }
+        // Node v16
+        "args": { "VARIANT": "16" }
     },
     "runArgs": ["--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined"],
 
