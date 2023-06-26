@@ -73,3 +73,29 @@ obs.pipe(
     timestamp()
 ).subscribe(v => console.log(v))
 ```
+
+## switchMap
+
+Takes a source Observable and calls transform(T) for each emitted value.
+It will immediately subscribe to any Observable coming from transform(T), b
+ut in addition to this, will unsubscribe() from any prior Observables -
+so that there is only ever one Observable subscribed at any one time.
+
+```rx
+--1-----2--3--4--------
+
+> switchMap(v => from([v+1, v+1, v+1]))
+
+--2--2--3--4--5--5--5--
+```
+
+```ts
+import { from, switchMap } from "@devicescript/observables"
+
+const obs = from([1, 2, 3])
+
+obs.pipe(
+    // highlight-next-line
+    switchMap(v => from([v + 1, v + 1, v + 1]))
+).subscribe(v => console.log(v))
+```

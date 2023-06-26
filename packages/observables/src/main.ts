@@ -7,7 +7,7 @@ import { catchError } from "./error"
 import { threshold, filter, distinctUntilChanged } from "./filter"
 import { collect, collectTime } from "./join"
 import { Observable, Subscription, unusbscribe } from "./observable"
-import { map, scan, timestamp } from "./transform"
+import { map, scan, switchMap, timestamp } from "./transform"
 import { tap } from "./utility"
 import { register } from "./value"
 const btn = new ds.Button()
@@ -23,6 +23,7 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
         let retry = 0
         while (values.length !== sequence.length && retry++ < 10)
             await ds.sleep(10)
+        console.log({ values, sequence })
         expect(values.length).toBe(sequence.length)
         for (let i = 0; i < values.length; ++i) {
             expect(values[i]).toBe(sequence[i])
@@ -126,7 +127,11 @@ describe("transform", () => {
         obs2 = tap<{ value: number; time: number; lastTime: number }>(v =>
             console.log(v)
         )(obs2)
-        await emitsR(obs2, [1,3,6], (v: { value: number; time: number; lastTime: number }) => v.value)
+        await emitsR(
+            obs2,
+            [1, 3, 6],
+            (v: { value: number; time: number; lastTime: number }) => v.value
+        )
     })
 })
 
@@ -298,5 +303,12 @@ describe("error", () => {
         )
         await ds.sleep(100)
         await emits(obs, [5])
+    })
+    test("switchMap", async () => {
+        const obs = from([0, 1, 2]).pipe(
+            switchMap(v => from([v + 1, v + 1, v + 1]))
+        )
+        await ds.sleep(100)
+        await emits(obs, [3, 3, 3])
     })
 })

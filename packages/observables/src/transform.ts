@@ -1,6 +1,11 @@
 import { AsyncValue, millis } from "@devicescript/core"
 import { interval } from "./creation"
-import { Observable, OperatorFunction, wrapSubscriptions } from "./observable"
+import {
+    Observable,
+    OperatorFunction,
+    Subscription,
+    wrapSubscriptions,
+} from "./observable"
 
 /**
  * An observable operator that contains streamed values.
@@ -119,4 +124,48 @@ export function buffer<T>(
  */
 export function bufferTime<T>(duration: number): OperatorFunction<T, T[]> {
     return buffer(interval(duration))
+}
+
+/**
+ * Takes a source Observable<T> and calls transform(T) for each emitted value.
+ * Immediately subscribe to any Observable<U> coming from transform(T),
+ * but in addition to this, will unsubscribe() from any prior Observable<U>s -
+ * so that there is only ever one Observable<U> subscribed at any one time.
+ * @param transform
+ * @returns
+ */
+export function switchMap<T, A>(
+    transform: (item: T) => Observable<A>
+): OperatorFunction<T, A> {
+    let remaining = 0
+    return function operator(source: Observable<T>) {
+        return new Observable<A>(observer => {
+            const { next, error, complete } = observer
+            let oldSubscription: Subscription
+            const unsub = source.subscribe({
+                error,
+                next: value => {
+                    remaining += 1
+                    // cancel previous observable
+                    if (oldSubscription) {
+                        remaining -= 1
+                        oldSubscription.unsubscribe()
+                    }
+                    // register to next observable
+                    oldSubscription = transform(value)?.subscribe({
+                        error,
+                        next,
+                        complete: async () => {
+                            remaining -= 1
+                            if (remaining === 0) {
+                                await complete()
+                                if (unsub) unsub?.unsubscribe()
+                            }
+                        },
+                    })
+                },
+            })
+            return wrapSubscriptions([unsub, oldSubscription])
+        })
+    }
 }
