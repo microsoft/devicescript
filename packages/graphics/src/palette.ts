@@ -1,6 +1,6 @@
 export class Palette {
     readonly buffer: Buffer
-    numColors = 16
+    readonly numColors: number
 
     static arcade() {
         return new Palette(hex`
@@ -9,9 +9,14 @@ export class Palette {
         `)
     }
 
-    constructor(init?: Buffer) {
-        this.buffer = Buffer.alloc(this.numColors * 3)
-        if (init) this.buffer.set(init)
+    static monochrome() {
+        return new Palette(hex`000000 ffffff`)
+    }
+
+    constructor(init: Buffer) {
+        this.buffer = init.slice(0)
+        this.buffer.set(init)
+        this.numColors = (this.buffer.length / 3) >> 0
     }
 
     color(idx: number) {

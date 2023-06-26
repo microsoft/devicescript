@@ -7,12 +7,11 @@ class TwinDisplay implements Display {
     constructor(
         readonly topic: string,
         readonly image: Image,
-        readonly palette?: Palette
+        readonly palette: Palette
     ) {}
 
     async show(): Promise<void> {
-        if (this.palette)
-            await ds._twinMessage(`${this.topic}/palette`, this.palette.buffer)
+        await ds._twinMessage(`${this.topic}/palette`, this.palette.buffer)
         await ds._twinMessage(`${this.topic}/image`, this.image.buffer)
     }
 
@@ -23,18 +22,16 @@ class TwinDisplay implements Display {
 
 /**
  * Creates a simulator twin display
- * @param topic
- * @param image
- * @param palette
+ * @param topic screen model name and address model/address
+ * @param image image to display
+ * @param palette palette to use
  * @returns
  */
-export function createTwinDisplay(
+export function startTwinDisplay(
     idOrAddress: string,
-    width: number,
-    height: number,
     image: Image,
-    palette?: Palette
+    palette: Palette
 ): Display {
-    const topic = `display/${idOrAddress}/${width}x${height}`
+    const topic = `display/${idOrAddress}`
     return new TwinDisplay(topic, image, palette)
 }
