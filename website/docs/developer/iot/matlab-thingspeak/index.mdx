@@ -1,0 +1,72 @@
+# Matlab ThingSpeak
+
+[Matlab ThingSpeak](https://thingspeak.com/) is an IoT platform
+that allows you to collect and store sensor data in the cloud and develop IoT applications
+in Matlab.
+
+## writeData
+
+ThingSpeak provides a [HTTPS REST API](https://www.mathworks.com/help/thingspeak/writedata.html) to write data to a channel.
+
+You can use settings to store your ThingSpeak API key and `fetch` to send data to ThingSpeak.
+
+```.env title=".env.local"
+TS_KEY=api_key
+```
+
+```ts title="./src/main.ts"
+import { fetch } from "@devicescript/net"
+import { readSetting } from "@devicescript/settings"
+
+/**
+ * Write data to ThingSpeak channel
+ * @param fields
+ * @param options
+ * @see {@link https://www.mathworks.com/help/thingspeak/writedata.html write data}
+ * @see {@link https://www.mathworks.com/help/thingspeak/error-codes.html error codes}
+ */
+export async function writeData(
+    // field values
+    fields?: Record<string, number>,
+    options?: {
+        // Latitude in degrees, specified as a value between -90 and 90.
+        lat?: number
+        // Longitude in degrees, specified as a value between -180 and 180.
+        long?: number
+        // Elevation in meters
+        elevation?: number
+        // Status update message.
+        status?: string
+    }
+) {
+    const url = "https://api.thingspeak.com/update.json"
+    // the secret key should be in .env.local
+    const key = await readSetting("TS_KEY")
+
+    // construct payload
+    const payload: any = {}
+    // field values
+    Object.keys(fields).forEach(k => {
+        const v = fields[k]
+        if (v !== undefined && v !== null) payload[`field${k}`] = v
+    })
+    // additional options
+    if (options) Object.assign(payload, options)
+
+    // send request and return http response
+    let resp: response
+    try {
+        resp = await fetch(url, {
+            method: "POST",
+            headers: {
+                THINGSPEAKAPIKEY: key,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        })
+        return resp.status
+    } finally {
+        resp?.close()
+    }
+}
+```
