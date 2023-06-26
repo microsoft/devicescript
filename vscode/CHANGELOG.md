@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.5](https://github.com/microsoft/devicescript/compare/v2.13.3...v2.13.5)
+
+> 25 June 2023
+
+- add for-in statement; fixes #500 [`#500`](https://github.com/microsoft/devicescript/issues/500)
+- added blynk example [`449a09e`](https://github.com/microsoft/devicescript/commit/449a09e037c2e5e451b52ac52749e6aec391775e)
+- updated contributing [`fcbde77`](https://github.com/microsoft/devicescript/commit/fcbde777d11cdf3cef86d1d2e9faba78b6909ce7)
+- more docs on packages [`9a5e463`](https://github.com/microsoft/devicescript/commit/9a5e463057cff88d81c381f7c01e319675cc0093)
+
 #### [v2.13.3](https://github.com/microsoft/devicescript/compare/v2.13.2...v2.13.3)
 
 > 23 June 2023
