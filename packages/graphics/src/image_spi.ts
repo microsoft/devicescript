@@ -45,7 +45,7 @@ export interface SpiImageOptions {
 export async function spiSendImage(options: SpiImageOptions) {
     await (ds as DsSpi).spiSendImage(
         options.image,
-        options.palette.data,
+        options.palette.buffer,
         options.flags
     )
 }

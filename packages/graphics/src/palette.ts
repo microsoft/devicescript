@@ -1,5 +1,5 @@
 export class Palette {
-    readonly data: Buffer
+    readonly buffer: Buffer
     numColors = 16
 
     static arcade() {
@@ -10,22 +10,22 @@ export class Palette {
     }
 
     constructor(init?: Buffer) {
-        this.data = Buffer.alloc(this.numColors * 3)
-        if (init) this.data.set(init)
+        this.buffer = Buffer.alloc(this.numColors * 3)
+        if (init) this.buffer.set(init)
     }
 
     color(idx: number) {
         if (idx < 0 || idx >= this.numColors) return 0
         return (
-            (this.data[3 * idx + 0] << 16) |
-            (this.data[3 * idx + 1] << 8) |
-            (this.data[3 * idx + 2] << 0)
+            (this.buffer[3 * idx + 0] << 16) |
+            (this.buffer[3 * idx + 1] << 8) |
+            (this.buffer[3 * idx + 2] << 0)
         )
     }
 
     setColor(idx: number, color: number) {
-        this.data[3 * idx + 0] = color >> 16
-        this.data[3 * idx + 1] = color >> 8
-        this.data[3 * idx + 2] = color >> 0
+        this.buffer[3 * idx + 0] = color >> 16
+        this.buffer[3 * idx + 1] = color >> 8
+        this.buffer[3 * idx + 2] = color >> 0
     }
 }
