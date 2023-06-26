@@ -15,7 +15,7 @@ TS_KEY=api_key
 ```
 
 ```ts title="./src/main.ts"
-import { fetch } from "@devicescript/net"
+import { fetch, Response } from "@devicescript/net"
 import { readSetting } from "@devicescript/settings"
 
 /**
@@ -54,7 +54,7 @@ export async function writeData(
     if (options) Object.assign(payload, options)
 
     // send request and return http response
-    let resp: response
+    let resp: Response
     try {
         resp = await fetch(url, {
             method: "POST",
