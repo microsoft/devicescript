@@ -1,4 +1,4 @@
-import { fetch } from "@devicescript/net"
+import { fetch, Response } from "@devicescript/net"
 import { readSetting } from "@devicescript/settings"
 
 /**
@@ -23,21 +23,32 @@ export async function writeData(
     }
 ) {
     const url = "https://api.thingspeak.com/update.json"
+    // the secret key should be in .env.local
     const key = await readSetting("TS_KEY")
 
+    // construct payload
     const payload: any = {}
+    // field values
     Object.keys(fields).forEach(k => {
         const v = fields[k]
         if (v !== undefined && v !== null) payload[`field${k}`] = v
     })
+    // additional options
     if (options) Object.assign(payload, options)
 
-    return await fetch(url, {
-        method: "POST",
-        headers: {
-            THINGSPEAKAPIKEY: key,
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-    })
+    // send request and return http response
+    let resp: Response
+    try {
+        resp = await fetch(url, {
+            method: "POST",
+            headers: {
+                THINGSPEAKAPIKEY: key,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+        })
+        return resp.status
+    } finally {
+        await resp?.close()
+    }
 }
