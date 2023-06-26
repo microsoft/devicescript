@@ -142,7 +142,7 @@ export function switchMap<T, A>(
         return new Observable<A>(observer => {
             const { next, error, complete } = observer
             let oldSubscription: Subscription
-            const { unsubscribe } = source.subscribe({
+            const unsub = source.subscribe({
                 error,
                 next: value => {
                     remaining += 1
@@ -159,12 +159,13 @@ export function switchMap<T, A>(
                             remaining -= 1
                             if (remaining === 0) {
                                 complete()
-                                if (unsubscribe) unsubscribe()
+                                if (unsub) unsub?.unsubscribe()
                             }
                         },
                     })
                 },
             })
+            return unsub
         })
     }
 }
