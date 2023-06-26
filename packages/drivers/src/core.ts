@@ -29,9 +29,3 @@ export function throttle<T>(
         return lastV
     }
 }
-
-export interface Display {
-    image: Image
-    show(): Promise<void>
-    init(): Promise<void>
-}
