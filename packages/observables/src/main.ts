@@ -23,6 +23,7 @@ async function emits<T>(o: Observable<T>, sequence: T[]) {
         let retry = 0
         while (values.length !== sequence.length && retry++ < 10)
             await ds.sleep(10)
+        console.log({ values, sequence })
         expect(values.length).toBe(sequence.length)
         for (let i = 0; i < values.length; ++i) {
             expect(values[i]).toBe(sequence[i])
@@ -308,6 +309,6 @@ describe("error", () => {
             switchMap(v => from([v + 1, v + 1, v + 1]))
         )
         await ds.sleep(100)
-        await emits(obs, [5])
+        await emits(obs, [3, 3, 3])
     })
 })

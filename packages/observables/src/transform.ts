@@ -155,10 +155,10 @@ export function switchMap<T, A>(
                     oldSubscription = transform(value)?.subscribe({
                         error,
                         next,
-                        complete: () => {
+                        complete: async () => {
                             remaining -= 1
                             if (remaining === 0) {
-                                complete()
+                                await complete()
                                 if (unsub) unsub?.unsubscribe()
                             }
                         },
