@@ -27,7 +27,7 @@
         "directory": "cli"
     },
     "engines": {
-        "node": ">=18"
+        "node": ">=16"
     },
     "license": "MIT",
     "devDependencies": {
@@ -36,7 +36,7 @@
         "@devicescript/vm": "*",
         "@types/debounce-promise": "^3.1.6",
         "@types/fs-extra": "^11.0.1",
-        "@types/node": "^18.15.3",
+        "@types/node": "^16",
         "@types/update-notifier": "^6.0.2",
         "commander": "^10.0.0",
         "debounce-promise": "^3.1.2",

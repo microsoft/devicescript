@@ -26,13 +26,13 @@
         "./built/**"
     ],
     "engines": {
-        "node": ">=18"
+        "node": ">=16"
     },
     "license": "MIT",
     "devDependencies": {
         "@devicescript/interop": "*",
         "@types/fs-extra": "^11.0.1",
-        "@types/node": "^18.15.3",
+        "@types/node": "^16",
         "esbuild": "^0.17.11",
         "jacdac-ts": "*",
         "typescript": "^4.9.5"
