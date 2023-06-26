@@ -30,6 +30,7 @@ import type {
 } from "./sideprotocol"
 import { addBoard } from "./addboard"
 import { readJSON5Sync } from "./jsonc"
+import { MIN_NODE_VERSION } from "@devicescript/interop"
 
 const MAIN = "src/main.ts"
 const GITIGNORE = ".gitignore"
@@ -84,7 +85,7 @@ jobs:
             - uses: actions/checkout@v3
             - uses: actions/setup-node@v3
               with:
-                  node-version: 18
+                  node-version: ${MIN_NODE_VERSION}
             - run: npm ci
             - run: npm run build
             - run: npm test    
@@ -203,7 +204,7 @@ const optionalFiles: FileSet = {
         image: "mcr.microsoft.com/devcontainers/universal:2",
         features: {
             "ghcr.io/devcontainers/features/node:1": {
-                version: "18",
+                version: MIN_NODE_VERSION,
             },
             "ghcr.io/devcontainers/features/github-cli:1": {},
         },

@@ -32,7 +32,11 @@ import { showConfirmBox, TaggedQuickPickItem } from "./pickers"
 import { EXIT_CODE_EADDRINUSE } from "../../cli/src/exitcodes"
 import { showInformationMessageWithHelp } from "./commands"
 import { checkFileExists } from "./fs"
-import { ResolvedBuildConfig, VersionInfo } from "@devicescript/interop"
+import {
+    MIN_NODE_VERSION,
+    ResolvedBuildConfig,
+    VersionInfo,
+} from "@devicescript/interop"
 import { extensionVersion } from "./version"
 import { showError, showErrorMessage } from "./telemetry"
 import { BUILD, MESSAGE_PREFIX } from "./constants"
@@ -153,7 +157,6 @@ export class DeveloperToolsManager extends JDEventSource {
             )
 
             // node.js version outdated
-            const MIN_NODE_VERSION = 16
             if (semverCmp(nodeVersion, `v${MIN_NODE_VERSION}.0.0`) < 0) {
                 throwError(
                     `Node.js outdated (${nodeVersion}), v${MIN_NODE_VERSION}+ needed`,
