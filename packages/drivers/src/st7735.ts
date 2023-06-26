@@ -1,13 +1,13 @@
 import { GPIOMode, OutputPin, assert, delay } from "@devicescript/core"
 import { SPI, spi } from "@devicescript/spi"
 import {
+    Display,
     Image,
     Palette,
     SpiImageFlags,
     spiSendImage,
 } from "@devicescript/graphics"
 import "@devicescript/gpio"
-import { Display } from "./core"
 
 const ST7735_NOP = 0x00
 const ST7735_SWRESET = 0x01
