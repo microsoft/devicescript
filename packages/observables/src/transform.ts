@@ -165,7 +165,7 @@ export function switchMap<T, A>(
                     })
                 },
             })
-            return unsub
+            return wrapSubscriptions([unsub, oldSubscription])
         })
     }
 }
