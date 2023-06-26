@@ -1,7 +1,6 @@
-import { Image } from "@devicescript/graphics"
+import { Image, Display } from "@devicescript/graphics"
 import { I2CDriver } from "./driver"
 import { I2CDriverOptions } from "./driver"
-import { Display } from "./core"
 import { isSimulator } from "@devicescript/core"
 
 // inspired by https://github.com/adafruit/Adafruit_CircuitPython_SSD1306/blob/main/adafruit_ssd1306.py

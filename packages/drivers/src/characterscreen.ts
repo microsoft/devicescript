@@ -6,8 +6,7 @@ import {
     CharacterScreenServerSpec,
     assert,
 } from "@devicescript/core"
-import { Image, fontForText, Font } from "@devicescript/graphics"
-import { Display } from "./core"
+import { Image, fontForText, Font, Display } from "@devicescript/graphics"
 
 class CharacterScreenServer
     extends Server

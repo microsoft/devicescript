@@ -5,12 +5,9 @@ import {
     DotMatrix,
     DotMatrixServerSpec,
     assert,
-    isSimulator,
 } from "@devicescript/core"
-import { SSD1306Driver, SSD1306Options } from "./ssd1306"
-import { Image } from "@devicescript/graphics"
+import { Image, Display } from "@devicescript/graphics"
 import { JD_SERIAL_MAX_PAYLOAD_SIZE } from "@devicescript/core/src/jacdac"
-import { Display } from "./core"
 
 class DotMatrixServer extends Server implements DotMatrixServerSpec {
     private _dots: Buffer
