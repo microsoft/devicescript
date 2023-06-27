@@ -369,10 +369,10 @@ export class DeviceScriptExtensionState extends JDEventSource {
     async configureHardware(editor: vscode.TextEditor) {
         await this.devtools.start()
         if (!this.devtools.connected) return
+        await this.devtools.refreshSpecs()
         const { boards } = this.devtools
 
         const document = editor.document
-        await this.devtools.refreshSpecs()
 
         // first identify the board
         const { boardimport } =
