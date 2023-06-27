@@ -68,7 +68,7 @@ export interface NodeWatch {
 }
 
 export type ServerQuickPickItem = TaggedQuickPickItem<{
-    command: "test" | "settings" | "search" | "server" | "sim" | "npm" | "board"
+    command: "test" | "settings" | "search" | "server" | "sim" | "npm"
     info?: ServerInfo
 }>
 
@@ -446,11 +446,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
                     data: { command: "test" },
                 },
                 <ServerQuickPickItem>{
-                    label: "Add board",
-                    detail: "Add a custom board configuration.",
-                    data: { command: "board" },
-                },
-                <ServerQuickPickItem>{
                     label: "Convert to NPM package",
                     detail: "Update package.json to support publishing as a library on npm.js.",
                     data: { command: "npm" },
@@ -477,7 +472,6 @@ export class DeviceScriptExtensionState extends JDEventSource {
         else if (command === "settings") await this.addSettings()
         else if (command === "sim") await this.addSim()
         else if (command === "npm") await this.addNpm()
-        else if (command === "board") await this.addBoard()
     }
 
     // find first line that is not an import, comment or empty
