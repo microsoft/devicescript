@@ -1,9 +1,4 @@
-import {
-    Image,
-    Display,
-    startTwinDisplay,
-    Palette,
-} from "@devicescript/graphics"
+import { Image, Display, Palette } from "@devicescript/graphics"
 import { I2CDriver } from "./driver"
 import { I2CDriverOptions } from "./driver"
 import { isSimulator } from "@devicescript/core"
@@ -46,7 +41,7 @@ export interface SSD1306Options extends I2CDriverOptions {
  * ssd.image.print("Hello world!", 3, 10)
  * await ssd.show()
  */
-class SSD1306Driver extends I2CDriver implements Display {
+export class SSD1306Driver extends I2CDriver implements Display {
     externalVCC: boolean
     palette: Palette
     image: Image
@@ -151,21 +146,4 @@ class SSD1306Driver extends I2CDriver implements Display {
         const fb = this.image.buffer
         await this.writeRegBuf(0x40, fb)
     }
-}
-
-/**
- * Driver for SSD1306 OLED displays.
- * @param options
- * @returns
- */
-export function startSSD1306Driver(options: SSD1306Options): Display {
-    if (isSimulator()) {
-        const framebuffer = Buffer.alloc(options.width * (options.height >> 3))
-        const image = Image.alloc(options.width, options.height, 1, framebuffer)
-        return startTwinDisplay(
-            `ssd1306/${options.devAddr || DEFAULT_ADDRESS}`,
-            image,
-            Palette.monochrome()
-        )
-    } else return new SSD1306Driver(options)
 }
