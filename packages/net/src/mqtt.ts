@@ -4,6 +4,9 @@
  * A port of https://github.com/rovale/micro-mqtt for MakeCode, ported to DeviceScript.
  */
 
+import { delay } from "@devicescript/core"
+import { Socket, SocketConnectOptions, connect } from "./sockets"
+
 /**
  * Connect flags
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
@@ -79,16 +82,14 @@ export const enum Constants {
 /**
  * The options used to connect to the MQTT broker.
  */
-export interface IConnectionOptions {
-    host: string
-    port?: number
+export interface MqttConnectOptions extends SocketConnectOptions {
     username?: string
     password?: string
     clientId: string
-    will?: IConnectionOptionsWill
+    will?: MqttConnectOptionsWill
 }
 
-export interface IConnectionOptionsWill {
+export interface MqttConnectOptionsWill {
     topic: string
     message: string
     qos?: number
@@ -100,7 +101,7 @@ export interface IConnectionOptionsWill {
  */
 export module Protocol {
     function strChr(codes: number[]): Buffer {
-        return pins.createBufferFromArray(codes)
+        return Buffer.from(codes)
     }
 
     /**
@@ -127,7 +128,7 @@ export module Protocol {
      * Connect flags
      * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
      */
-    function createConnectFlags(options: IConnectionOptions): number {
+    function createConnectFlags(options: MqttConnectOptions): number {
         let flags: number = 0
         flags |= options.username ? ConnectFlags.UserName : 0
         flags |=
@@ -153,7 +154,7 @@ export module Protocol {
      * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Figure_1.1_Structure
      */
     function pack(s: string): Buffer {
-        const buf = control.createBufferFromUTF8(s)
+        const buf = Buffer.from(s)
         return strChr(getBytes(buf.length)).concat(buf)
     }
 
@@ -181,7 +182,7 @@ export module Protocol {
         variable: Buffer,
         payload?: Buffer
     ): Buffer {
-        if (payload == null) payload = control.createBuffer(0)
+        if (payload == null) payload = Buffer.alloc(0)
         return createPacketHeader(byte1, variable, payload.length).concat(
             payload
         )
@@ -191,7 +192,7 @@ export module Protocol {
      * CONNECT - Client requests a connection to a Server
      * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
      */
-    export function createConnect(options: IConnectionOptions): Buffer {
+    export function createConnect(options: MqttConnectOptions): Buffer {
         const byte1: number = ControlPacketType.Connect << 4
 
         const protocolName = pack("MQTT")
@@ -338,21 +339,17 @@ export enum Status {
 }
 
 export class Client extends EventEmitter {
-    public logPriority = ConsolePriority.Debug
-    public tracePriority = -1 as ConsolePriority
-
     private log(msg: string) {
-        console.add(this.logPriority, `mqtt: ${msg}`)
+        console.log(`mqtt: ${msg}`)
     }
 
     private trace(msg: string) {
-        console.add(this.tracePriority, `mqtt: ${msg}`)
+        console.debug(`mqtt: ${msg}`)
     }
 
-    public opt: IConnectionOptions
+    public opt: MqttConnectOptions
 
-    private net: net.Net
-    private sct?: net.Socket
+    private sct?: Socket
 
     private wdId: number
     private piId: number
@@ -369,7 +366,7 @@ export class Client extends EventEmitter {
 
     private mqttHandlers: MQTTHandler[]
 
-    constructor(opt: IConnectionOptions) {
+    constructor(opt: MqttConnectOptions) {
         super()
 
         this.wdId = Constants.Uninitialized
@@ -383,7 +380,6 @@ export class Client extends EventEmitter {
         }
 
         this.opt = opt
-        this.net = net.instance()
     }
 
     private static describe(code: ConnectReturnCode): string {
@@ -411,7 +407,7 @@ export class Client extends EventEmitter {
         return error
     }
 
-    public disconnect(): void {
+    public async disconnect(): Promise<void> {
         this.log("disconnect")
         if (this.wdId !== Constants.Uninitialized) {
             clearInterval(this.wdId)
@@ -426,28 +422,28 @@ export class Client extends EventEmitter {
         const s = this.sct
         if (s) {
             this.sct = null
-            s.close()
+            await s.close()
         }
 
         this.status = Status.Disconnected
     }
 
-    public connect(): void {
+    public async connect(): Promise<void> {
         if (this.status != Status.Disconnected) return
         this.status = Status.Connecting
         this.log(`Connecting to ${this.opt.host}:${this.opt.port}`)
         if (this.wdId === Constants.Uninitialized) {
-            this.wdId = setInterval(() => {
+            this.wdId = setInterval(async () => {
                 if (!this.connected) {
+                    await this.disconnect()
                     this.emit("disconnected")
                     this.emit("error", "No connection. Retrying.")
-                    this.disconnect()
-                    this.connect()
+                    await this.connect()
                 }
             }, Constants.WatchDogInterval * 1000)
         }
 
-        this.sct = this.net.createSocket(this.opt.host, this.opt.port, true)
+        this.sct = await connect(this.opt)
         this.sct.onOpen(() => {
             this.log("Network connection established.")
             this.emit("connect")
@@ -470,14 +466,14 @@ export class Client extends EventEmitter {
         this.sct.connect()
     }
 
-    private canSend() {
+    private async canSend() {
         let cnt = 0
         while (true) {
             if (this.status == Status.Connected) {
                 this.status = Status.Sending
                 return true
             }
-            if (cnt++ < 100 && this.status == Status.Sending) pause(20)
+            if (cnt++ < 100 && this.status == Status.Sending) await delay(20)
             else {
                 this.log("drop pkt")
                 return false
@@ -497,10 +493,7 @@ export class Client extends EventEmitter {
         qos: number = Constants.DefaultQos,
         retained: boolean = false
     ): void {
-        const buf =
-            typeof message == "string"
-                ? control.createBufferFromUTF8(message)
-                : message
+        const buf = typeof message == "string" ? Buffer.from(message) : message
         message = null
         if (this.startPublish(topic, buf ? buf.length : 0, qos, retained)) {
             if (buf) this.send(buf)
@@ -561,39 +554,15 @@ export class Client extends EventEmitter {
         this.subscribeCore(topic, handler, qos)
     }
 
-    // Subscribe to one update on the topic. Returns function that waits for the topic to be updated.
-    public awaitUpdate(
-        topic: string,
-        qos: number = Constants.DefaultQos
-    ): () => IMessage {
-        let res: IMessage = null
-        const evid = control.allocateNotifyEvent()
-        const h = this.subscribeCore(
-            topic,
-            msg => {
-                res = msg
-                control.raiseEvent(DAL.DEVICE_ID_NOTIFY, evid)
-            },
-            qos
-        )
-        h.status = HandlerStatus.Once
-        return () => {
-            while (res == null) {
-                control.waitForEvent(DAL.DEVICE_ID_NOTIFY, evid)
-            }
-            return res
-        }
-    }
-
-    private send(data: Buffer): void {
+    private async send(data: Buffer): Promise<void> {
         if (this.sct) {
             this.trace("send: " + data[0] + " / " + data.length + " bytes")
             // this.log("send: " + data[0] + " / " + data.length + " bytes: " + data.toHex())
-            this.sct.send(data)
+            await this.sct.send(data)
         }
     }
 
-    private handleMessage(data: Buffer) {
+    private async handleMessage(data: Buffer) {
         if (this.buf) data = this.buf.concat(data)
         this.buf = data
         if (data.length < 2) return
@@ -629,15 +598,15 @@ export class Client extends EventEmitter {
                     this.emit("connected")
                     this.status = Status.Connected
                     this.piId = setInterval(
-                        () => this.ping(),
+                        async () => await this.ping(),
                         Constants.PingInterval * 1000
                     )
-                    for (const sub of this.subs) this.send1(sub)
+                    for (const sub of this.subs) await this.send1(sub)
                 } else {
                     const connectionError: string = Client.describe(returnCode)
                     this.log("MQTT connection error: " + connectionError)
                     this.emit("error", connectionError)
-                    this.disconnect()
+                    await this.disconnect()
                 }
                 break
             case ControlPacketType.Publish:
@@ -681,15 +650,15 @@ export class Client extends EventEmitter {
         if (data.length > payloadEnd) this.handleMessage(data.slice(payloadEnd))
     }
 
-    private send1(msg: Buffer) {
-        if (this.canSend()) {
-            this.send(msg)
+    private async send1(msg: Buffer) {
+        if (await this.canSend()) {
+            await this.send(msg)
             this.doneSending()
         }
     }
 
-    private ping() {
-        this.send1(Protocol.createPingReq())
+    private async ping() {
+        await this.send1(Protocol.createPingReq())
         this.emit("debug", "Sent: Ping request.")
     }
 }
