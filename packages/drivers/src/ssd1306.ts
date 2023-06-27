@@ -1,11 +1,11 @@
-import { Image } from "@devicescript/graphics"
+import { Image, Display, Palette } from "@devicescript/graphics"
 import { I2CDriver } from "./driver"
 import { I2CDriverOptions } from "./driver"
-import { Display } from "./core"
 import { isSimulator } from "@devicescript/core"
 
 // inspired by https://github.com/adafruit/Adafruit_CircuitPython_SSD1306/blob/main/adafruit_ssd1306.py
 
+const DEFAULT_ADDRESS = 0x3d
 const SET_CONTRAST = 0x81
 const SET_ENTIRE_ON = 0xa4
 const SET_NORM_INV = 0xa6
@@ -43,18 +43,14 @@ export interface SSD1306Options extends I2CDriverOptions {
  */
 export class SSD1306Driver extends I2CDriver implements Display {
     externalVCC: boolean
-    framebuffer: Buffer
+    palette: Palette
     image: Image
 
     constructor(options: SSD1306Options) {
-        super(options.devAddr || 0x3d, options)
-        this.framebuffer = Buffer.alloc(options.width * (options.height >> 3))
-        this.image = Image.alloc(
-            options.width,
-            options.height,
-            1,
-            this.framebuffer
-        )
+        super(options.devAddr || DEFAULT_ADDRESS, options)
+        this.palette = Palette.monochrome()
+        const framebuffer = Buffer.alloc(options.width * (options.height >> 3))
+        this.image = Image.alloc(options.width, options.height, 1, framebuffer)
         if (options.externalVCC) this.externalVCC = true
     }
 
@@ -147,7 +143,7 @@ export class SSD1306Driver extends I2CDriver implements Display {
             0,
             pages - 1
         )
-        const fb = this.framebuffer
+        const fb = this.image.buffer
         await this.writeRegBuf(0x40, fb)
     }
 }
