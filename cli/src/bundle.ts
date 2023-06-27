@@ -1,7 +1,12 @@
 import { writeFileSync } from "fs"
 import { compileFile, devsFactory } from "./build"
 import { BINDIR, fatal, log, verboseLog } from "./command"
-import { SRV_DEVICE_SCRIPT_MANAGER, SRV_SETTINGS, delay } from "jacdac-ts"
+import {
+    SRV_DEVICE_SCRIPT_MANAGER,
+    SRV_SETTINGS,
+    delay,
+    isTimeoutError,
+} from "jacdac-ts"
 import { devtools } from "./devtools"
 import { devtoolsIface } from "./sidedata"
 import { deployToService } from "./deploy"
@@ -21,7 +26,7 @@ export async function bundle(
 ) {
     const { board, arch } = await resolveBoard("", options)
 
-    await devtools(undefined, { })
+    await devtools(undefined, {})
 
     const inst = await devsFactory()
     await inst.setupWebsocketTransport("ws://127.0.0.1:8081")
@@ -57,6 +62,7 @@ export async function bundle(
     const res = await compileFile(filename, options)
     if (!res.success) process.exit(1)
 
+    const RETRY_DELAY = 100
     const bus = devtoolsIface.bus
     for (let i = 0; i < 20; i++) {
         const service = bus.services({
@@ -67,11 +73,21 @@ export async function bundle(
             const settingsService = service?.device?.services({
                 serviceClass: SRV_SETTINGS,
             })?.[0]
-            await deployToService(service, res.binary, {
-                noRun: true,
-                settingsService,
-                settings: res.settings,
-            })
+            try {
+                await deployToService(service, res.binary, {
+                    noRun: true,
+                    settingsService,
+                    settings: res.settings,
+                })
+            } catch (e) {
+                if (isTimeoutError(e)) {
+                    // reset?
+                    // keep retrying
+                    await delay(RETRY_DELAY)
+                    continue
+                }
+                throw e
+            }
             await delay(300)
 
             const fwPath = await fetchFW(board, options)
@@ -86,7 +102,7 @@ export async function bundle(
 
             process.exit(0)
         }
-        await delay(100)
+        await delay(RETRY_DELAY)
     }
 
     throw new Error("no service")
