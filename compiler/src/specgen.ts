@@ -91,7 +91,9 @@ function toHex(n: number): string {
 function noCtorSpec(info: jdspec.ServiceSpec) {
     return [].indexOf(info.classIdentifier) > -1
 }
-
+function noClientMarkdownSpec(info: jdspec.ServiceSpec) {
+    return [SRV_CONTROL].indexOf(info.classIdentifier) > -1
+}
 function ignoreSpec(info: jdspec.ServiceSpec) {
     return (
         info.status === "deprecated" ||
@@ -400,7 +402,7 @@ The [${info.name} service](https://microsoft.github.io/jacdac-docs/services/${in
 `
     }
 
-    if (ignoreSpec(info) || noCtorSpec(info)) {
+    if (ignoreSpec(info) || noCtorSpec(info) || noClientMarkdownSpec(info)) {
         return `---
 pagination_prev: null
 pagination_next: null
