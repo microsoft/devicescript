@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 
-type SocketEvent = "open" | "close" | "data" | "error"
+type SocketEvent = "open" | "close" | "message" | "error"
 type DsSockets = typeof ds & {
     _socketOpen(host: string, port: number): number
     _socketClose(): number
@@ -12,6 +12,13 @@ let socket: Socket
 
 export type SocketProto = "tcp" | "tls"
 
+export enum ReadyState {
+    Connecting = 0,
+    Open = 1,
+    Closing = 2,
+    Closed = 3,
+}
+
 export interface SocketConnectOptions {
     host: string
     port: number
@@ -19,37 +26,30 @@ export interface SocketConnectOptions {
     timeout?: number
 }
 
-export class Socket {
-    private buffers: Buffer[] = []
+export class SocketReader {
+    private socket: Socket
     private lastError: Error
-    private closed: boolean
-    private emitter = ds.emitter<Buffer | boolean | Error>()
+    private buffers: Buffer[] = []
+    private unsubs: ds.Unsubscribe[] = []
+    private emitter = ds.emitter()
 
-    public readonly onopen = ds.emitter()
-    public readonly onclose = ds.emitter()
-    public readonly onerror = ds.emitter<Error>()
-    public readonly onmessage = ds.emitter<Buffer>()
-
-    private constructor(public name: string) {
-    }
-
-    private error(msg: string): Error {
-        return new Error(`socket ${this.name}: ${msg}`)
-    }
-
-    private check() {
-        if (this !== socket) throw this.error(`old socket used`)
-    }
-
-    /**
-     * Attempt to close the current socket.
-     */
-    async close() {
-        if (this === socket) {
-            const _r = (ds as DsSockets)._socketClose()
-            // ignore errors
-            socket = null
-        }
+    constructor(socket: Socket) {
+        this.socket = socket
+        this.unsubs.push(
+            this.socket.onerror.subscribe(error => {
+                this.lastError = error
+                this.unsubscribe()
+                this.emitter.emit(undefined)
+            }),
+            this.socket.onmessage.subscribe(data => {
+                this.buffers.push(data)
+                this.emitter.emit(undefined)
+            }),
+            this.socket.onclose.subscribe(() => {
+                this.unsubscribe()
+                this.emitter.emit(undefined)
+            })
+        )
     }
 
     /**
@@ -57,14 +57,14 @@ export class Socket {
      * @param timeout in ms, defaults to Infinity
      * @returns Buffer or `undefined` on timeout or `null` when socket is closed
      */
-    async recv(timeout?: number) {
+    async read(timeout?: number): Promise<Buffer | undefined | null> {
         for (;;) {
             if (this.buffers.length) {
                 const r = this.buffers.shift()
                 return r
             }
             if (this.lastError) throw this.lastError
-            if (this.closed) return null
+            if (this.socket.readyState === ReadyState.Closed) return null
             const v = await ds.wait(this.emitter, timeout)
             if (v === undefined) return undefined
         }
@@ -73,7 +73,7 @@ export class Socket {
     async readLine(): Promise<string> {
         let bufs: Buffer[] = []
         for (;;) {
-            const b = await this.recv()
+            const b = await this.read()
             if (b == null) break
             let nlPos = b.indexOf(10)
             if (nlPos >= 0) {
@@ -88,6 +88,54 @@ export class Socket {
         if (bufs.length === 0) return null
         const r = Buffer.concat(...bufs)
         return r.toString("utf-8")
+    }
+
+    unsubscribe() {
+        for (const unsub of this.unsubs) {
+            unsub()
+        }
+        this.unsubs = []
+    }
+}
+
+export class Socket {
+    readyState: ReadyState
+    private lastError: Error
+    private emitter = ds.emitter<Buffer | boolean | Error>()
+
+    public readonly onopen = ds.emitter()
+    public readonly onclose = ds.emitter()
+    public readonly onerror = ds.emitter<Error>()
+    public readonly onmessage = ds.emitter<Buffer>()
+
+    private constructor(public name: string) {}
+
+    private error(msg: string): Error {
+        return new Error(`socket ${this.name}: ${msg}`)
+    }
+
+    private check() {
+        if (this !== socket) throw this.error(`old socket used`)
+    }
+
+    /**
+     * Gets a socket reader
+     * @returns
+     */
+    getReader() {
+        return new SocketReader(this)
+    }
+
+    /**
+     * Attempt to close the current socket.
+     */
+    async close() {
+        if (this === socket) {
+            const _r = (ds as DsSockets)._socketClose()
+            // ignore errors
+            socket = null
+        }
+        this.readyState = ReadyState.Closed
     }
 
     /**
@@ -106,13 +154,14 @@ export class Socket {
 
     private finish(msg: string) {
         if (msg !== null) this.lastError = this.error(msg)
-        this.closed = true
+        this.readyState = ReadyState.Closed
         socket = null
         this.emitter.emit(false)
     }
 
     static _socketOnEvent(event: SocketEvent, arg?: Buffer | string) {
-        if (event !== "data") console.debug("socket", socket?.name, event, arg)
+        if (event !== "message")
+            console.debug("socket", socket?.name, event, arg)
 
         if (!socket) return
 
@@ -130,8 +179,7 @@ export class Socket {
                 s.finish(arg + "")
                 s.onerror.emit(new Error(arg + ""))
                 break
-            case "data":
-                s.buffers.push(arg as Buffer)
+            case "message":
                 s.emitter.emit(false)
                 s.onmessage.emit(arg as Buffer)
                 break
@@ -147,6 +195,7 @@ export class Socket {
         ;(ds as DsSockets)._socketOnEvent = Socket._socketOnEvent
         socket?.finish("terminated")
         const sock = new Socket(`${proto}://${host}:${port}`)
+        socket.readyState = ReadyState.Connecting
         socket = sock
         console.debug(`connecting to ${socket.name}`)
         const r = (ds as DsSockets)._socketOpen(options.host, port2)
@@ -158,7 +207,9 @@ export class Socket {
         const v = await ds.wait(sock.emitter, options.timeout || 30000)
         if (sock.lastError) throw sock.lastError
         if (v === undefined) throw sock.error("Timeout")
-        ds.assert(!socket?.closed)
+
+        sock.readyState = ReadyState.Open
+        ds.assert(sock.readyState === ReadyState.Open)
         ds.assert(v === true)
         return socket
     }

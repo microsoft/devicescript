@@ -1,4 +1,4 @@
-import { Socket, SocketProto, connect } from "./sockets"
+import { Socket, SocketProto, SocketReader, connect } from "./sockets"
 import { URL } from "./url"
 
 /**
@@ -83,15 +83,21 @@ export class Response {
         const explen = parseInt(this.headers.get("content-length"))
         const buffers: Buffer[] = []
         let buflen = 0
-        for (;;) {
-            const buf = await this.socket.recv()
-            if (!buf) break
-            buflen += buf.length
-            buffers.push(buf)
-            // note: explen can be NaN
-            if (buflen >= explen) break
+        let reader: SocketReader
+        try {
+            reader = this.socket.getReader()
+            for (;;) {
+                const buf = await reader.read()
+                if (!buf) break
+                buflen += buf.length
+                buffers.push(buf)
+                // note: explen can be NaN
+                if (buflen >= explen) break
+            }
+        } finally {
+            reader?.unsubscribe()
+            await this.socket.close()
         }
-        await this.socket.close()
         this._buffer = Buffer.concat(...buffers)
         return this._buffer
     }

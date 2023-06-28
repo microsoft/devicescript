@@ -4,14 +4,8 @@
  * A port of https://github.com/rovale/micro-mqtt for MakeCode, ported to DeviceScript.
  */
 
-import { delay } from "@devicescript/core"
+import { delay, emitter } from "@devicescript/core"
 import { Socket, SocketConnectOptions, connect } from "./sockets"
-import {
-    ErrorEvent,
-    Event,
-    EventTarget,
-    MessageEvent,
-} from "@devicescript/runtime"
 
 /**
  * Connect flags
@@ -303,7 +297,10 @@ enum HandlerStatus {
 
 class MQTTHandler {
     public status: HandlerStatus
-    constructor(public readonly topic: string, public readonly handler: (m: Message) => void) {
+    constructor(
+        public readonly topic: string,
+        public readonly handler: (m: Message) => void
+    ) {
         this.status = HandlerStatus.Normal
     }
 }
@@ -318,7 +315,7 @@ export enum Status {
 /**
  * A MQTT client
  */
-export class MQTTClient extends EventTarget {
+export class MQTTClient {
     private log(msg: string) {
         console.log(`mqtt: ${msg}`)
     }
@@ -340,6 +337,11 @@ export class MQTTClient extends EventTarget {
 
     public status = Status.Disconnected
 
+    public readonly onerror = emitter<Error>()
+    public readonly onopen = emitter<unknown>()
+    public readonly onclose = emitter<unknown>()
+    public readonly onmessage = emitter<Message>()
+
     connected() {
         return this.status >= Status.Connected
     }
@@ -347,8 +349,6 @@ export class MQTTClient extends EventTarget {
     private mqttHandlers: MQTTHandler[]
 
     constructor(opt: MqttConnectOptions) {
-        super()
-
         this.wdId = Constants.Uninitialized
         this.piId = Constants.Uninitialized
         opt.port = opt.port || 8883
@@ -416,31 +416,29 @@ export class MQTTClient extends EventTarget {
             this.wdId = setInterval(async () => {
                 if (!this.connected) {
                     await this.disconnect()
-                    this.dispatchEvent(new Event("error")) //, "No connection. Retrying.")
+                    this.onerror.emit(new Error("No connection. Retrying."))
                     await this.connect()
                 }
             }, Constants.WatchDogInterval * 1000)
         }
 
         this.sct = await connect(this.opt)
-        this.sct.addEventListener("open", () => {
+        this.sct.onopen.subscribe(() => {
             this.log("Network connection established.")
-            this.dispatchEvent(new Event("connect"))
+            this.onopen.emit(undefined)
             this.send(Protocol.createConnect(this.opt))
         })
-        this.sct.addEventListener("message", ev => {
-            const mev = ev as MessageEvent<Buffer>
-            const msg = mev.data
+        this.sct.onmessage.subscribe(msg => {
             this.trace("incoming " + msg.length + " bytes")
             this.handleMessage(msg)
         })
-        this.sct.addEventListener("error", ev => {
+        this.sct.onerror.subscribe(err => {
             this.log("error")
-            this.dispatchEvent(new Event("error"))
+            this.onerror.emit(err)
         })
-        this.sct.addEventListener("close", () => {
+        this.sct.onclose.subscribe(() => {
             this.log("Close.")
-            this.dispatchEvent(new Event("disconnected"))
+            this.onclose.emit(undefined)
             this.status = Status.Disconnected
             this.sct = null
         })
@@ -468,52 +466,35 @@ export class MQTTClient extends EventTarget {
     }
 
     // Publish a message
-    public publish(
+    public async publish(
         topic: string,
         message?: string | Buffer,
         qos: number = Constants.DefaultQos,
         retained: boolean = false
-    ): void {
+    ): Promise<boolean> {
         const buf = typeof message == "string" ? Buffer.from(message) : message
         message = null
-        if (this.startPublish(topic, buf ? buf.length : 0, qos, retained)) {
-            if (buf) this.send(buf)
-            this.finishPublish()
-        }
-    }
+        if (!(await this.canSend())) return false
 
-    public startPublish(
-        topic: string,
-        messageLen: number,
-        qos: number = Constants.DefaultQos,
-        retained: boolean = false
-    ) {
-        if (!this.canSend()) return false
+        const messageLen = buf ? buf.length : 0
         this.trace(`publish: ${topic} ${messageLen}b`)
-        this.send(
+        await this.send(
             Protocol.createPublishHeader(topic, messageLen, qos, retained)
         )
+        if (buf) await this.send(buf)
+        this.doneSending()
         return true
     }
 
-    public continuePublish(data: Buffer) {
-        this.send(data)
-    }
-
-    public finishPublish() {
-        this.doneSending()
-        this.dispatchEvent(new Event("published"))
-    }
-
-    private subscribeCore(
+    private async subscribeCore(
         topic: string,
         handler: (msg: Message) => void,
         qos: number = Constants.DefaultQos
-    ): MQTTHandler {
+    ): Promise<MQTTHandler> {
         this.log(`subscribe: ${topic}`)
         const sub = Protocol.createSubscribe(topic, qos)
         this.subs.push(sub)
-        this.send1(sub)
+        await this.send1(sub)
         if (handler) {
             if (topic[topic.length - 1] == "#")
                 topic = topic.slice(0, topic.length - 1)
@@ -552,7 +533,7 @@ export class MQTTClient extends EventTarget {
         if (len & 0x80) {
             if (data.length < 3) return
             if (data[2] & 0x80) {
-                this.dispatchEvent(new ErrorEvent("error", `too large packet.`))
+                this.onerror.emit(new Error(`too large packet.`))
                 this.buf = null
                 return
             }
@@ -576,7 +557,7 @@ export class MQTTClient extends EventTarget {
                 const returnCode: number = payload[1]
                 if (returnCode === ConnectReturnCode.Accepted) {
                     this.log("MQTT connection accepted.")
-                    this.dispatchEvent(new Event("connected"))
+                    this.onopen.emit(undefined)
                     this.status = Status.Connected
                     this.piId = setInterval(
                         async () => await this.ping(),
@@ -587,7 +568,7 @@ export class MQTTClient extends EventTarget {
                     const connectionError: string =
                         MQTTClient.describe(returnCode)
                     this.log("MQTT connection error: " + connectionError)
-                    this.dispatchEvent(new ErrorEvent("error", connectionError))
+                    this.onerror.emit(new Error(connectionError))
                     await this.disconnect()
                 }
                 break
@@ -611,13 +592,12 @@ export class MQTTClient extends EventTarget {
                             h => h.status != HandlerStatus.ToRemove
                         )
                 }
-                if (!handled)
-                    this.dispatchEvent(
-                        new MessageEvent<Message>("receive", message)
-                    )
+                if (!handled) this.onmessage.emit(message)
                 if (message.qos > 0) {
-                    setTimeout(() => {
-                        this.send1(Protocol.createPubAck(message.pid || 0))
+                    setTimeout(async () => {
+                        await this.send1(
+                            Protocol.createPubAck(message.pid || 0)
+                        )
                     }, 0)
                 }
                 break
@@ -626,11 +606,8 @@ export class MQTTClient extends EventTarget {
             case ControlPacketType.SubAck:
                 break
             default:
-                this.dispatchEvent(
-                    new ErrorEvent(
-                        "error",
-                        `MQTT unexpected packet type: ${controlPacketType}.`
-                    )
+                this.onerror.emit(
+                    new Error(`unexpected packet type: ${controlPacketType}.`)
                 )
                 break
         }
