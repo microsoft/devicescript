@@ -305,11 +305,12 @@ class MQTTHandler {
     }
 }
 
-export enum Status {
-    Disconnected = 0,
-    Connecting = 1,
-    Connected = 2,
-    Sending = 3,
+export enum ReadyState {
+    Connecting = 0,
+    Open = 1,
+    Closing = 2,
+    Closed = 3,
+    Sending = 4,
 }
 
 /**
@@ -335,16 +336,12 @@ export class MQTTClient {
     // we re-send subscriptions on re-connect
     private subs: Buffer[] = []
 
-    public status = Status.Disconnected
+    public readyState = ReadyState.Closed
 
     public readonly onerror = emitter<Error>()
     public readonly onopen = emitter<unknown>()
     public readonly onclose = emitter<unknown>()
     public readonly onmessage = emitter<Message>()
-
-    connected() {
-        return this.status >= Status.Connected
-    }
 
     private mqttHandlers: MQTTHandler[]
 
@@ -405,16 +402,16 @@ export class MQTTClient {
             await s.close()
         }
 
-        this.status = Status.Disconnected
+        this.readyState = ReadyState.Closed
     }
 
     public async connect(): Promise<void> {
-        if (this.status != Status.Disconnected) return
-        this.status = Status.Connecting
+        if (this.readyState != ReadyState.Closed) return
+        this.readyState = ReadyState.Connecting
         this.log(`Connecting to ${this.opt.host}:${this.opt.port}`)
         if (this.wdId === Constants.Uninitialized) {
             this.wdId = setInterval(async () => {
-                if (!this.connected) {
+                if (this.readyState !== ReadyState.Open) {
                     await this.disconnect()
                     this.onerror.emit(new Error("No connection. Retrying."))
                     await this.connect()
@@ -423,10 +420,11 @@ export class MQTTClient {
         }
 
         this.sct = await connect(this.opt)
-        this.sct.onopen.subscribe(() => {
+        this.sct.onopen.subscribe(async () => {
             this.log("Network connection established.")
+            await this.send(Protocol.createConnect(this.opt))
+            this.readyState = ReadyState.Open
             this.onopen.emit(undefined)
-            this.send(Protocol.createConnect(this.opt))
         })
         this.sct.onmessage.subscribe(msg => {
             this.trace("incoming " + msg.length + " bytes")
@@ -439,7 +437,7 @@ export class MQTTClient {
         this.sct.onclose.subscribe(() => {
             this.log("Close.")
             this.onclose.emit(undefined)
-            this.status = Status.Disconnected
+            this.readyState = ReadyState.Closed
             this.sct = null
         })
         // await this.sct.connect()
@@ -448,11 +446,12 @@ export class MQTTClient {
     private async canSend() {
         let cnt = 0
         while (true) {
-            if (this.status == Status.Connected) {
-                this.status = Status.Sending
+            if (this.readyState == ReadyState.Open) {
+                this.readyState = ReadyState.Sending
                 return true
             }
-            if (cnt++ < 100 && this.status == Status.Sending) await delay(20)
+            if (cnt++ < 100 && this.readyState == ReadyState.Sending)
+                await delay(20)
             else {
                 this.log("drop pkt")
                 return false
@@ -462,7 +461,8 @@ export class MQTTClient {
 
     private doneSending() {
         this.trace("done send")
-        if (this.status == Status.Sending) this.status = Status.Connected
+        if (this.readyState == ReadyState.Sending)
+            this.readyState = ReadyState.Open
     }
 
     // Publish a message
@@ -558,7 +558,7 @@ export class MQTTClient {
                 if (returnCode === ConnectReturnCode.Accepted) {
                     this.log("MQTT connection accepted.")
                     this.onopen.emit(undefined)
-                    this.status = Status.Connected
+                    this.readyState = ReadyState.Open
                     this.piId = setInterval(
                         async () => await this.ping(),
                         Constants.PingInterval * 1000
