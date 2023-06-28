@@ -44,7 +44,7 @@ export const enum ConnectReturnCode {
 /**
  * A message received in a Publish packet.
  */
-export interface IMessage {
+export interface Message {
     pid?: number
     topic: string
     content: Buffer
@@ -252,7 +252,7 @@ export module Protocol {
         return createPacketHeader(byte1, variable, payloadSize)
     }
 
-    export function parsePublish(cmd: number, payload: Buffer): IMessage {
+    export function parsePublish(cmd: number, payload: Buffer): Message {
         const qos: number = (cmd & 0b00000110) >> 1
 
         const topicLength = payload.readUInt16BE(0)
@@ -261,7 +261,7 @@ export module Protocol {
             variableLength += 2
         }
 
-        const message: IMessage = {
+        const message: Message = {
             topic: payload.slice(2, topicLength).toString(),
             content: payload.slice(variableLength),
             qos: qos,
@@ -303,7 +303,7 @@ enum HandlerStatus {
 
 class MQTTHandler {
     public status: HandlerStatus
-    constructor(public topic: string, public handler: (m: IMessage) => void) {
+    constructor(public readonly topic: string, public readonly handler: (m: Message) => void) {
         this.status = HandlerStatus.Normal
     }
 }
@@ -315,7 +315,10 @@ export enum Status {
     Sending = 3,
 }
 
-export class Client extends EventTarget {
+/**
+ * A MQTT client
+ */
+export class MQTTClient extends EventTarget {
     private log(msg: string) {
         console.log(`mqtt: ${msg}`)
     }
@@ -504,7 +507,7 @@ export class Client extends EventTarget {
 
     private subscribeCore(
         topic: string,
-        handler: (msg: IMessage) => void,
+        handler: (msg: Message) => void,
         qos: number = Constants.DefaultQos
     ): MQTTHandler {
         this.log(`subscribe: ${topic}`)
@@ -526,7 +529,7 @@ export class Client extends EventTarget {
     // Subscribe to topic
     public subscribe(
         topic: string,
-        handler?: (msg: IMessage) => void,
+        handler?: (msg: Message) => void,
         qos: number = Constants.DefaultQos
     ): void {
         this.subscribeCore(topic, handler, qos)
@@ -581,14 +584,15 @@ export class Client extends EventTarget {
                     )
                     for (const sub of this.subs) await this.send1(sub)
                 } else {
-                    const connectionError: string = Client.describe(returnCode)
+                    const connectionError: string =
+                        MQTTClient.describe(returnCode)
                     this.log("MQTT connection error: " + connectionError)
                     this.dispatchEvent(new ErrorEvent("error", connectionError))
                     await this.disconnect()
                 }
                 break
             case ControlPacketType.Publish:
-                const message: IMessage = Protocol.parsePublish(cmd, payload)
+                const message: Message = Protocol.parsePublish(cmd, payload)
                 this.trace(`incoming: ${message.topic}`)
                 let handled = false
                 let cleanup = false
@@ -609,7 +613,7 @@ export class Client extends EventTarget {
                 }
                 if (!handled)
                     this.dispatchEvent(
-                        new MessageEvent<IMessage>("receive", message)
+                        new MessageEvent<Message>("receive", message)
                     )
                 if (message.qos > 0) {
                     setTimeout(() => {
