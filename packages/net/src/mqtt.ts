@@ -6,6 +6,7 @@
 
 import { delay } from "@devicescript/core"
 import { Socket, SocketConnectOptions, connect } from "./sockets"
+import { Event, EventTarget, MessageEvent } from "@devicescript/runtime"
 
 /**
  * Connect flags
@@ -293,31 +294,6 @@ export module Protocol {
     }
 }
 
-export type EventHandler = (arg?: string | IMessage) => void
-
-export class EventEmitter {
-    private handlers: { [index: string]: EventHandler[] }
-
-    constructor() {
-        this.handlers = {}
-    }
-
-    public on(event: string, listener: EventHandler): void {
-        if (!event || !listener) return
-
-        let listeners = this.handlers[event]
-        if (!listeners) this.handlers[event] = listeners = []
-        listeners.push(listener)
-    }
-    protected emit(event: string, arg?: string | IMessage): boolean {
-        let listeners = this.handlers[event]
-        if (listeners) {
-            listeners.forEach(listener => listener(arg))
-        }
-        return true
-    }
-}
-
 enum HandlerStatus {
     Normal = 0,
     Once = 1,
@@ -338,7 +314,7 @@ export enum Status {
     Sending = 3,
 }
 
-export class Client extends EventEmitter {
+export class Client extends EventTarget {
     private log(msg: string) {
         console.log(`mqtt: ${msg}`)
     }
@@ -436,34 +412,35 @@ export class Client extends EventEmitter {
             this.wdId = setInterval(async () => {
                 if (!this.connected) {
                     await this.disconnect()
-                    this.emit("disconnected")
-                    this.emit("error", "No connection. Retrying.")
+                    this.dispatchEvent(new Event("error")) //, "No connection. Retrying.")
                     await this.connect()
                 }
             }, Constants.WatchDogInterval * 1000)
         }
 
         this.sct = await connect(this.opt)
-        this.sct.onOpen(() => {
+        this.sct.addEventListener("open", () => {
             this.log("Network connection established.")
-            this.emit("connect")
+            this.dispatchEvent(new Event("connect"))
             this.send(Protocol.createConnect(this.opt))
         })
-        this.sct.onMessage((msg: Buffer) => {
+        this.sct.addEventListener("message", ev => {
+            const mev = ev as MessageEvent<Buffer>
+            const msg = mev.data
             this.trace("incoming " + msg.length + " bytes")
             this.handleMessage(msg)
         })
-        this.sct.onError(() => {
-            this.log("Error.")
-            this.emit("error")
+        this.sct.addEventListener("error", ev => {
+            this.log("error")
+            this.dispatchEvent(new Event("error"))
         })
-        this.sct.onClose(() => {
+        this.sct.addEventListener("close", () => {
             this.log("Close.")
-            this.emit("disconnected")
+            this.dispatchEvent(new Event("disconnected"))
             this.status = Status.Disconnected
             this.sct = null
         })
-        this.sct.connect()
+        await this.sct.connect()
     }
 
     private async canSend() {
@@ -521,7 +498,7 @@ export class Client extends EventEmitter {
 
     public finishPublish() {
         this.doneSending()
-        this.emit("published")
+        this.dispatchEvent(new Event("published"))
     }
 
     private subscribeCore(
@@ -595,7 +572,7 @@ export class Client extends EventEmitter {
                 const returnCode: number = payload[1]
                 if (returnCode === ConnectReturnCode.Accepted) {
                     this.log("MQTT connection accepted.")
-                    this.emit("connected")
+                    this.dispatchEvent(new Event("connected"))
                     this.status = Status.Connected
                     this.piId = setInterval(
                         async () => await this.ping(),
@@ -629,7 +606,10 @@ export class Client extends EventEmitter {
                             h => h.status != HandlerStatus.ToRemove
                         )
                 }
-                if (!handled) this.emit("receive", message)
+                if (!handled)
+                    this.dispatchEvent(
+                        new MessageEvent<IMessage>("receive", message)
+                    )
                 if (message.qos > 0) {
                     setTimeout(() => {
                         this.send1(Protocol.createPubAck(message.pid || 0))
@@ -641,9 +621,11 @@ export class Client extends EventEmitter {
             case ControlPacketType.SubAck:
                 break
             default:
-                this.emit(
-                    "error",
-                    `MQTT unexpected packet type: ${controlPacketType}.`
+                this.dispatchEvent(
+                    new Event(
+                        "error",
+                        `MQTT unexpected packet type: ${controlPacketType}.`
+                    )
                 )
         }
 
@@ -659,6 +641,6 @@ export class Client extends EventEmitter {
 
     private async ping() {
         await this.send1(Protocol.createPingReq())
-        this.emit("debug", "Sent: Ping request.")
+        //this.emit("debug", "Sent: Ping request.")
     }
 }
