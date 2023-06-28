@@ -1,5 +1,4 @@
 import * as ds from "@devicescript/core"
-import { Event, EventTarget, MessageEvent } from "@devicescript/runtime"
 
 type SocketEvent = "open" | "close" | "data" | "error"
 type DsSockets = typeof ds & {
@@ -20,14 +19,18 @@ export interface SocketConnectOptions {
     timeout?: number
 }
 
-export class Socket extends EventTarget {
+export class Socket {
     private buffers: Buffer[] = []
     private lastError: Error
     private closed: boolean
     private emitter = ds.emitter<Buffer | boolean | Error>()
 
+    public readonly onopen = ds.emitter()
+    public readonly onclose = ds.emitter()
+    public readonly onerror = ds.emitter<Error>()
+    public readonly onmessage = ds.emitter<Buffer>()
+
     private constructor(public name: string) {
-        super()
     }
 
     private error(msg: string): Error {
@@ -117,20 +120,20 @@ export class Socket extends EventTarget {
         switch (event) {
             case "open":
                 s.emitter.emit(true)
-                s.dispatchEvent(new Event("open"))
+                s.onopen.emit(undefined)
                 break
             case "close":
                 s.finish(null)
-                s.dispatchEvent(new Event("close"))
+                s.onclose.emit(undefined)
                 break
             case "error":
                 s.finish(arg + "")
-                s.dispatchEvent(new Event("error"))
+                s.onerror.emit(new Error(arg + ""))
                 break
             case "data":
                 s.buffers.push(arg as Buffer)
                 s.emitter.emit(false)
-                s.dispatchEvent(new MessageEvent<Buffer>(arg as Buffer))
+                s.onmessage.emit(arg as Buffer)
                 break
             default:
                 console.warn("unknown event", event)
