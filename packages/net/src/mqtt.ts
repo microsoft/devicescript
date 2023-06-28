@@ -6,7 +6,12 @@
 
 import { delay } from "@devicescript/core"
 import { Socket, SocketConnectOptions, connect } from "./sockets"
-import { Event, EventTarget, MessageEvent } from "@devicescript/runtime"
+import {
+    ErrorEvent,
+    Event,
+    EventTarget,
+    MessageEvent,
+} from "@devicescript/runtime"
 
 /**
  * Connect flags
@@ -436,7 +441,7 @@ export class Client extends EventTarget {
             this.status = Status.Disconnected
             this.sct = null
         })
-        await this.sct.connect()
+        // await this.sct.connect()
     }
 
     private async canSend() {
@@ -544,7 +549,7 @@ export class Client extends EventTarget {
         if (len & 0x80) {
             if (data.length < 3) return
             if (data[2] & 0x80) {
-                this.emit("error", `too large packet.`)
+                this.dispatchEvent(new ErrorEvent("error", `too large packet.`))
                 this.buf = null
                 return
             }
@@ -578,7 +583,7 @@ export class Client extends EventTarget {
                 } else {
                     const connectionError: string = Client.describe(returnCode)
                     this.log("MQTT connection error: " + connectionError)
-                    this.emit("error", connectionError)
+                    this.dispatchEvent(new ErrorEvent("error", connectionError))
                     await this.disconnect()
                 }
                 break
@@ -618,11 +623,12 @@ export class Client extends EventTarget {
                 break
             default:
                 this.dispatchEvent(
-                    new Event(
+                    new ErrorEvent(
                         "error",
                         `MQTT unexpected packet type: ${controlPacketType}.`
                     )
                 )
+                break
         }
 
         if (data.length > payloadEnd) this.handleMessage(data.slice(payloadEnd))

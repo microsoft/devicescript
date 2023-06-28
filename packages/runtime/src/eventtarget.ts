@@ -13,11 +13,20 @@ export class Event {
     }
 }
 
+export class ErrorEvent extends Event {
+    readonly error: string | Error
+
+    constructor(type: string, error: string | Error) {
+        super(type)
+        this.error = error
+    }
+}
+
 export class MessageEvent<T = any> extends Event {
     readonly data: T
 
-    constructor(data: T) {
-        super("message")
+    constructor(type: string, data: T) {
+        super(type)
         this.data = data
     }
 }
