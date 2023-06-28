@@ -468,7 +468,6 @@ export class MQTTClient {
         const buf = typeof message == "string" ? Buffer.from(message) : message
         message = null
         if (!(await this.canSend())) return false
-
         const messageLen = buf ? buf.length : 0
         this.trace(`publish: ${topic} ${messageLen}b`)
         await this.send(createPublishHeader(topic, messageLen, qos, retained))
@@ -487,7 +486,7 @@ export class MQTTClient {
         this.subs.push(sub)
         await this.send1(sub)
         if (handler) {
-            if (topic[topic.length - 1] == "#")
+            if (topic[topic.length - 1] === "#")
                 topic = topic.slice(0, topic.length - 1)
             if (!this.mqttHandlers) this.mqttHandlers = []
             const h = new MQTTHandler(topic, handler)
@@ -582,6 +581,7 @@ export class MQTTClient {
                         this.mqttHandlers = this.mqttHandlers.filter(
                             h => h.status != HandlerStatus.ToRemove
                         )
+                    break
                 }
                 if (!handled) this.onmessage.emit(message)
                 if (message.qos > 0) {
@@ -591,8 +591,13 @@ export class MQTTClient {
                 }
                 break
             case ControlPacketType.PingResp:
+                this.trace("ping resp")
+                break
             case ControlPacketType.PubAck:
+                this.trace("pub ack")
+                break
             case ControlPacketType.SubAck:
+                this.trace("sub ack")
                 break
             default:
                 this.onerror.emit(
