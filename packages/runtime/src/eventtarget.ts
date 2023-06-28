@@ -12,12 +12,17 @@ export class Event {
         this.timeStamp = millis()
     }
 }
-export type EventListener = (ev: Event) => AsyncVoid
 
-export interface AddEventListenerOptions {
-    /** When `true`, the listener is automatically removed when it is first invoked. Default: `false`. */
-    once?: boolean
+export class MessageEvent<T = any> extends Event {
+    readonly data: T
+
+    constructor(data: T) {
+        super("message")
+        this.data = data
+    }
 }
+
+export type EventListener = (ev: Event) => void
 
 /**
  * EventTarget is a DOM interface implemented by objects that can
@@ -53,11 +58,9 @@ export class EventTarget {
      * if either event's cancelable attribute value is false
      * or its preventDefault() method was not invoked, and false otherwise.
      **/
-    async dispatchEvent(event: Event): Promise<boolean> {
+    dispatchEvent(event: Event): boolean {
         const ls = this.listeners.filter(l => l.type === event.type)
-        for (const l of ls) {
-            await l.listener(event)
-        }
+        for (const l of ls) l.listener(event)
         return true
     }
 }
