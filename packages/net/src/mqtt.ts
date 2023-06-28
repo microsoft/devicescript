@@ -11,7 +11,7 @@ import { Socket, SocketConnectOptions, connect } from "./sockets"
  * Connect flags
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
  */
-export const enum ConnectFlags {
+export const enum MQTTConnectFlags {
     UserName = 128,
     Password = 64,
     WillRetain = 32,
@@ -25,7 +25,7 @@ export const enum ConnectFlags {
  * Connect Return code
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349256
  */
-export const enum ConnectReturnCode {
+export const enum MQTTConnectReturnCode {
     Unknown = -1,
     Accepted = 0,
     UnacceptableProtocolVersion = 1,
@@ -38,7 +38,7 @@ export const enum ConnectReturnCode {
 /**
  * A message received in a Publish packet.
  */
-export interface Message {
+export interface MQTTMessage {
     pid?: number
     topic: string
     content: Buffer
@@ -50,7 +50,7 @@ export interface Message {
  * MQTT Control Packet type
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc353481061
  */
-export const enum ControlPacketType {
+const enum MQTTControlPacketType {
     Connect = 1,
     ConnAck = 2,
     Publish = 3,
@@ -70,7 +70,7 @@ export const enum ControlPacketType {
 /**
  * Optimization, the TypeScript compiler replaces the constant enums.
  */
-export const enum Constants {
+const enum Constants {
     PingInterval = 40,
     WatchDogInterval = 50,
     DefaultQos = 0,
@@ -129,14 +129,15 @@ function encodeRemainingLength(remainingLength: number): number[] {
  */
 function createConnectFlags(options: MqttConnectOptions): number {
     let flags: number = 0
-    flags |= options.username ? ConnectFlags.UserName : 0
-    flags |= options.username && options.password ? ConnectFlags.Password : 0
-    flags |= ConnectFlags.CleanSession
+    flags |= options.username ? MQTTConnectFlags.UserName : 0
+    flags |=
+        options.username && options.password ? MQTTConnectFlags.Password : 0
+    flags |= MQTTConnectFlags.CleanSession
 
     if (options.will) {
-        flags |= ConnectFlags.Will
+        flags |= MQTTConnectFlags.Will
         flags |= (options.will.qos || 0) << 3
-        flags |= options.will.retain ? ConnectFlags.WillRetain : 0
+        flags |= options.will.retain ? MQTTConnectFlags.WillRetain : 0
     }
 
     return flags
@@ -187,7 +188,7 @@ function createPacket(
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
  */
 function createConnect(options: MqttConnectOptions): Buffer {
-    const byte1: number = ControlPacketType.Connect << 4
+    const byte1: number = MQTTControlPacketType.Connect << 4
 
     const protocolName = pack("MQTT")
     const nums = Buffer.alloc(4)
@@ -218,7 +219,7 @@ function createConnect(options: MqttConnectOptions): Buffer {
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800454
  */
 function createPingReq() {
-    return strChr([ControlPacketType.PingReq << 4, 0])
+    return strChr([MQTTControlPacketType.PingReq << 4, 0])
 }
 
 /**
@@ -231,7 +232,7 @@ function createPublishHeader(
     qos: number,
     retained: boolean
 ) {
-    let byte1: number = (ControlPacketType.Publish << 4) | (qos << 1)
+    let byte1: number = (MQTTControlPacketType.Publish << 4) | (qos << 1)
     byte1 |= retained ? 1 : 0
 
     const pid = strChr(getBytes(Constants.FixedPackedId))
@@ -240,7 +241,7 @@ function createPublishHeader(
     return createPacketHeader(byte1, variable, payloadSize)
 }
 
-function parsePublish(cmd: number, payload: Buffer): Message {
+function parsePublish(cmd: number, payload: Buffer): MQTTMessage {
     const qos: number = (cmd & 0b00000110) >> 1
 
     const topicLength = payload.readUInt16BE(0)
@@ -249,7 +250,7 @@ function parsePublish(cmd: number, payload: Buffer): Message {
         variableLength += 2
     }
 
-    const message: Message = {
+    const message: MQTTMessage = {
         topic: payload.slice(2, topicLength).toString(),
         content: payload.slice(variableLength),
         qos: qos,
@@ -266,7 +267,7 @@ function parsePublish(cmd: number, payload: Buffer): Message {
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800416
  */
 function createPubAck(pid: number) {
-    const byte1: number = ControlPacketType.PubAck << 4
+    const byte1: number = MQTTControlPacketType.PubAck << 4
 
     return createPacket(byte1, strChr(getBytes(pid)))
 }
@@ -276,7 +277,7 @@ function createPubAck(pid: number) {
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800436
  */
 function createSubscribe(topic: string, qos: number): Buffer {
-    const byte1: number = (ControlPacketType.Subscribe << 4) | 2
+    const byte1: number = (MQTTControlPacketType.Subscribe << 4) | 2
     const pid = strChr(getBytes(Constants.FixedPackedId))
 
     return createPacket(byte1, pid, pack(topic).concat(strChr([qos])))
@@ -293,13 +294,13 @@ class MQTTHandler {
     constructor(
         public readonly header: Buffer,
         public readonly topic: string,
-        public readonly handler: (m: Message) => void
+        public readonly handler: (m: MQTTMessage) => void
     ) {
         this.status = HandlerStatus.Normal
     }
 }
 
-export enum ReadyState {
+export enum MQTTState {
     Connecting = 0,
     Open = 1,
     Closing = 2,
@@ -327,12 +328,12 @@ export class MQTTClient {
     private piId: number
 
     private buf: Buffer
-    public readyState = ReadyState.Closed
+    public readyState = MQTTState.Closed
 
     public readonly onerror = emitter<Error>()
     public readonly onopen = emitter<unknown>()
     public readonly onclose = emitter<unknown>()
-    public readonly onmessage = emitter<Message>()
+    public readonly onmessage = emitter<MQTTMessage>()
 
     private mqttHandlers: MQTTHandler[] = []
 
@@ -350,22 +351,22 @@ export class MQTTClient {
         this.opt = opt
     }
 
-    private static describe(code: ConnectReturnCode): string {
+    private static describe(code: MQTTConnectReturnCode): string {
         let error: string = "Connection refused, "
         switch (code) {
-            case ConnectReturnCode.UnacceptableProtocolVersion:
+            case MQTTConnectReturnCode.UnacceptableProtocolVersion:
                 error += "unacceptable protocol version."
                 break
-            case ConnectReturnCode.IdentifierRejected:
+            case MQTTConnectReturnCode.IdentifierRejected:
                 error += "identifier rejected."
                 break
-            case ConnectReturnCode.ServerUnavailable:
+            case MQTTConnectReturnCode.ServerUnavailable:
                 error += "server unavailable."
                 break
-            case ConnectReturnCode.BadUserNameOrPassword:
+            case MQTTConnectReturnCode.BadUserNameOrPassword:
                 error += "bad user name or password."
                 break
-            case ConnectReturnCode.NotAuthorized:
+            case MQTTConnectReturnCode.NotAuthorized:
                 error += "not authorized."
                 break
             default:
@@ -393,16 +394,16 @@ export class MQTTClient {
             await s.close()
         }
 
-        this.readyState = ReadyState.Closed
+        this.readyState = MQTTState.Closed
     }
 
     public async connect(): Promise<void> {
-        if (this.readyState != ReadyState.Closed) return
-        this.readyState = ReadyState.Connecting
+        if (this.readyState != MQTTState.Closed) return
+        this.readyState = MQTTState.Connecting
         this.log(`Connecting to ${this.opt.host}:${this.opt.port}`)
         if (this.wdId === Constants.Uninitialized) {
             this.wdId = setInterval(async () => {
-                if (this.readyState !== ReadyState.Open) {
+                if (this.readyState !== MQTTState.Open) {
                     await this.disconnect()
                     this.onerror.emit(new Error("No connection. Retrying."))
                     await this.connect()
@@ -414,7 +415,7 @@ export class MQTTClient {
         this.sct.onopen.subscribe(async () => {
             this.log("Network connection established.")
             await this.send(createConnect(this.opt))
-            this.readyState = ReadyState.Open
+            this.readyState = MQTTState.Open
             this.onopen.emit(undefined)
         })
         this.sct.onmessage.subscribe(msg => {
@@ -428,7 +429,7 @@ export class MQTTClient {
         this.sct.onclose.subscribe(() => {
             this.log("Close.")
             this.onclose.emit(undefined)
-            this.readyState = ReadyState.Closed
+            this.readyState = MQTTState.Closed
             this.sct = null
         })
         // await this.sct.connect()
@@ -437,11 +438,11 @@ export class MQTTClient {
     private async canSend() {
         let cnt = 0
         while (true) {
-            if (this.readyState == ReadyState.Open) {
-                this.readyState = ReadyState.Sending
+            if (this.readyState == MQTTState.Open) {
+                this.readyState = MQTTState.Sending
                 return true
             }
-            if (cnt++ < 100 && this.readyState == ReadyState.Sending)
+            if (cnt++ < 100 && this.readyState == MQTTState.Sending)
                 await delay(20)
             else {
                 this.log("drop pkt")
@@ -452,8 +453,8 @@ export class MQTTClient {
 
     private doneSending() {
         this.trace("done send")
-        if (this.readyState == ReadyState.Sending)
-            this.readyState = ReadyState.Open
+        if (this.readyState == MQTTState.Sending)
+            this.readyState = MQTTState.Open
     }
 
     // Publish a message
@@ -482,16 +483,18 @@ export class MQTTClient {
      */
     public async subscribe(
         topic: string,
-        handler: (msg: Message) => AsyncVoid,
+        handler: (msg: MQTTMessage) => AsyncVoid,
         qos: number = Constants.DefaultQos
-    ): Promise<void> {
+    ): Promise<boolean> {
         this.log(`subscribe: ${topic}`)
+        if (!(await this.canSend())) return false
         const sub = createSubscribe(topic, qos)
         await this.send1(sub)
         if (topic[topic.length - 1] === "#")
             topic = topic.slice(0, topic.length - 1)
         const h = new MQTTHandler(sub, topic, handler)
         this.mqttHandlers.push(h)
+        return true
     }
 
     private async send(data: Buffer): Promise<void> {
@@ -525,18 +528,18 @@ export class MQTTClient {
         this.buf = null
 
         const cmd = data[0]
-        const controlPacketType: ControlPacketType = cmd >> 4
+        const controlPacketType: MQTTControlPacketType = cmd >> 4
         // this.emit('debug', `Rcvd: ${controlPacketType}: '${data}'.`);
 
         const payload = data.slice(payloadOff, payloadEnd - payloadOff)
 
         switch (controlPacketType) {
-            case ControlPacketType.ConnAck:
+            case MQTTControlPacketType.ConnAck:
                 const returnCode: number = payload[1]
-                if (returnCode === ConnectReturnCode.Accepted) {
+                if (returnCode === MQTTConnectReturnCode.Accepted) {
                     this.log("MQTT connection accepted.")
                     this.onopen.emit(undefined)
-                    this.readyState = ReadyState.Open
+                    this.readyState = MQTTState.Open
                     this.piId = setInterval(
                         async () => await this.ping(),
                         Constants.PingInterval * 1000
@@ -551,8 +554,8 @@ export class MQTTClient {
                     await this.disconnect()
                 }
                 break
-            case ControlPacketType.Publish:
-                const message: Message = parsePublish(cmd, payload)
+            case MQTTControlPacketType.Publish:
+                const message: MQTTMessage = parsePublish(cmd, payload)
                 this.trace(`incoming: ${message.topic}`)
                 let handled = false
                 let cleanup = false
@@ -578,13 +581,13 @@ export class MQTTClient {
                     }, 0)
                 }
                 break
-            case ControlPacketType.PingResp:
+            case MQTTControlPacketType.PingResp:
                 this.trace("ping resp")
                 break
-            case ControlPacketType.PubAck:
+            case MQTTControlPacketType.PubAck:
                 this.trace("pub ack")
                 break
-            case ControlPacketType.SubAck:
+            case MQTTControlPacketType.SubAck:
                 this.trace("sub ack")
                 break
             default:

@@ -74,20 +74,19 @@ export class Response {
     ok: boolean
     private _buffer: Buffer
 
-    constructor(private socket: Socket) {
+    constructor(private socket: Socket, private reader: SocketReader) {
         this.headers = new Headers()
     }
 
     async buffer() {
         if (this._buffer) return this._buffer
+
         const explen = parseInt(this.headers.get("content-length"))
         const buffers: Buffer[] = []
         let buflen = 0
-        let reader: SocketReader
         try {
-            reader = this.socket.getReader()
             for (;;) {
-                const buf = await reader.read()
+                const buf = await this.reader.read()
                 if (!buf) break
                 buflen += buf.length
                 buffers.push(buf)
@@ -95,8 +94,8 @@ export class Response {
                 if (buflen >= explen) break
             }
         } finally {
-            reader?.unsubscribe()
-            await this.socket.close()
+            this.reader.unsubscribe()
+            await this.close()
         }
         this._buffer = Buffer.concat(...buffers)
         return this._buffer
@@ -111,7 +110,9 @@ export class Response {
     }
 
     async close() {
-        await this.socket.close()
+        await this.socket?.close()
+        this.reader = undefined
+        this.socket = undefined
     }
 }
 
@@ -186,9 +187,10 @@ export async function fetch(
     await s.send(reqStr)
     if (bodyLen) await s.send(options.body)
 
-    const resp = new Response(s)
+    const reader = s.getReader()
+    const resp = new Response(s, reader)
 
-    let status = await s.readLine()
+    let status = await reader.readLine()
     if (status.startsWith("HTTP/1.1 ")) {
         status = status.slice(9)
         resp.status = parseInt(status)
@@ -204,7 +206,7 @@ export async function fetch(
     console.debug(`HTTP ${resp.status}: ${resp.statusText}`)
 
     for (;;) {
-        const hd = await s.readLine()
+        const hd = await reader.readLine()
         if (hd === "") break
         const colon = hd.indexOf(":")
         if (colon > 0) {
