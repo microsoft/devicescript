@@ -337,7 +337,7 @@ export class Client extends EventTarget {
 
     public status = Status.Disconnected
 
-    get connected() {
+    connected() {
         return this.status >= Status.Connected
     }
 
