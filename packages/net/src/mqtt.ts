@@ -4,7 +4,7 @@
  * A port of https://github.com/rovale/micro-mqtt for MakeCode, ported to DeviceScript.
  */
 
-import { delay, emitter } from "@devicescript/core"
+import { AsyncVoid, delay, emitter } from "@devicescript/core"
 import { Socket, SocketConnectOptions, connect } from "./sockets"
 
 /**
@@ -291,6 +291,7 @@ enum HandlerStatus {
 class MQTTHandler {
     public status: HandlerStatus
     constructor(
+        public readonly header: Buffer,
         public readonly topic: string,
         public readonly handler: (m: Message) => void
     ) {
@@ -326,9 +327,6 @@ export class MQTTClient {
     private piId: number
 
     private buf: Buffer
-    // we re-send subscriptions on re-connect
-    private subs: Buffer[] = []
-
     public readyState = ReadyState.Closed
 
     public readonly onerror = emitter<Error>()
@@ -336,7 +334,7 @@ export class MQTTClient {
     public readonly onclose = emitter<unknown>()
     public readonly onmessage = emitter<Message>()
 
-    private mqttHandlers: MQTTHandler[]
+    private mqttHandlers: MQTTHandler[] = []
 
     constructor(opt: MqttConnectOptions) {
         this.wdId = Constants.Uninitialized
@@ -476,34 +474,24 @@ export class MQTTClient {
         return true
     }
 
-    private async subscribeCore(
+    /**
+     * Subscribe to a MQTT topic
+     * @param topic
+     * @param handler
+     * @param qos
+     */
+    public async subscribe(
         topic: string,
-        handler: (msg: Message) => void,
+        handler: (msg: Message) => AsyncVoid,
         qos: number = Constants.DefaultQos
-    ): Promise<MQTTHandler> {
+    ): Promise<void> {
         this.log(`subscribe: ${topic}`)
         const sub = createSubscribe(topic, qos)
-        this.subs.push(sub)
         await this.send1(sub)
-        if (handler) {
-            if (topic[topic.length - 1] === "#")
-                topic = topic.slice(0, topic.length - 1)
-            if (!this.mqttHandlers) this.mqttHandlers = []
-            const h = new MQTTHandler(topic, handler)
-            this.mqttHandlers.push(h)
-            return h
-        } else {
-            return null
-        }
-    }
-
-    // Subscribe to topic
-    public subscribe(
-        topic: string,
-        handler?: (msg: Message) => void,
-        qos: number = Constants.DefaultQos
-    ): void {
-        this.subscribeCore(topic, handler, qos)
+        if (topic[topic.length - 1] === "#")
+            topic = topic.slice(0, topic.length - 1)
+        const h = new MQTTHandler(sub, topic, handler)
+        this.mqttHandlers.push(h)
     }
 
     private async send(data: Buffer): Promise<void> {
@@ -553,7 +541,8 @@ export class MQTTClient {
                         async () => await this.ping(),
                         Constants.PingInterval * 1000
                     )
-                    for (const sub of this.subs) await this.send1(sub)
+                    for (const sub of this.mqttHandlers)
+                        await this.send1(sub.header)
                 } else {
                     const connectionError: string =
                         MQTTClient.describe(returnCode)
@@ -567,10 +556,10 @@ export class MQTTClient {
                 this.trace(`incoming: ${message.topic}`)
                 let handled = false
                 let cleanup = false
-                if (this.mqttHandlers) {
+                if (this.mqttHandlers.length) {
                     for (let h of this.mqttHandlers)
                         if (message.topic.slice(0, h.topic.length) == h.topic) {
-                            h.handler(message)
+                            await h.handler(message)
                             handled = true
                             if (h.status == HandlerStatus.Once) {
                                 h.status = HandlerStatus.ToRemove
@@ -581,7 +570,6 @@ export class MQTTClient {
                         this.mqttHandlers = this.mqttHandlers.filter(
                             h => h.status != HandlerStatus.ToRemove
                         )
-                    break
                 }
                 if (!handled) this.onmessage.emit(message)
                 if (message.qos > 0) {
