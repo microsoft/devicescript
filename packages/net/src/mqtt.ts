@@ -97,196 +97,189 @@ export interface MqttConnectOptionsWill {
 }
 
 /**
- * The specifics of the MQTT protocol.
+ * The specifics of the MQTT
  */
-export module Protocol {
-    function strChr(codes: number[]): Buffer {
-        return Buffer.from(codes)
-    }
+function strChr(codes: number[]): Buffer {
+    return Buffer.from(codes)
+}
 
-    /**
-     * Encode remaining length
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
-     */
-    function encodeRemainingLength(remainingLength: number): number[] {
-        let length: number = remainingLength
-        const encBytes: number[] = []
-        do {
-            let encByte: number = length & 127
-            length = length >> 7
-            // if there are more data to encode, set the top bit of this byte
-            if (length > 0) {
-                encByte += 128
-            }
-            encBytes.push(encByte)
-        } while (length > 0)
-
-        return encBytes
-    }
-
-    /**
-     * Connect flags
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
-     */
-    function createConnectFlags(options: MqttConnectOptions): number {
-        let flags: number = 0
-        flags |= options.username ? ConnectFlags.UserName : 0
-        flags |=
-            options.username && options.password ? ConnectFlags.Password : 0
-        flags |= ConnectFlags.CleanSession
-
-        if (options.will) {
-            flags |= ConnectFlags.Will
-            flags |= (options.will.qos || 0) << 3
-            flags |= options.will.retain ? ConnectFlags.WillRetain : 0
+/**
+ * Encode remaining length
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
+ */
+function encodeRemainingLength(remainingLength: number): number[] {
+    let length: number = remainingLength
+    const encBytes: number[] = []
+    do {
+        let encByte: number = length & 127
+        length = length >> 7
+        // if there are more data to encode, set the top bit of this byte
+        if (length > 0) {
+            encByte += 128
         }
+        encBytes.push(encByte)
+    } while (length > 0)
 
-        return flags
+    return encBytes
+}
+
+/**
+ * Connect flags
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
+ */
+function createConnectFlags(options: MqttConnectOptions): number {
+    let flags: number = 0
+    flags |= options.username ? ConnectFlags.UserName : 0
+    flags |= options.username && options.password ? ConnectFlags.Password : 0
+    flags |= ConnectFlags.CleanSession
+
+    if (options.will) {
+        flags |= ConnectFlags.Will
+        flags |= (options.will.qos || 0) << 3
+        flags |= options.will.retain ? ConnectFlags.WillRetain : 0
     }
 
-    // Returns the MSB and LSB.
-    function getBytes(int16: number): number[] {
-        return [int16 >> 8, int16 & 255]
-    }
+    return flags
+}
 
-    /**
-     * Structure of UTF-8 encoded strings
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Figure_1.1_Structure
-     */
-    function pack(s: string): Buffer {
-        const buf = Buffer.from(s)
-        return strChr(getBytes(buf.length)).concat(buf)
-    }
+// Returns the MSB and LSB.
+function getBytes(int16: number): number[] {
+    return [int16 >> 8, int16 & 255]
+}
 
-    /**
-     * Structure of an MQTT Control Packet
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800392
-     */
-    function createPacketHeader(
-        byte1: number,
-        variable: Buffer,
-        payloadSize: number
-    ): Buffer {
-        const byte2: number[] = encodeRemainingLength(
-            variable.length + payloadSize
+/**
+ * Structure of UTF-8 encoded strings
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Figure_1.1_Structure
+ */
+function pack(s: string): Buffer {
+    const buf = Buffer.from(s)
+    return strChr(getBytes(buf.length)).concat(buf)
+}
+
+/**
+ * Structure of an MQTT Control Packet
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800392
+ */
+function createPacketHeader(
+    byte1: number,
+    variable: Buffer,
+    payloadSize: number
+): Buffer {
+    const byte2: number[] = encodeRemainingLength(variable.length + payloadSize)
+    return strChr([byte1]).concat(strChr(byte2)).concat(variable)
+}
+
+/**
+ * Structure of an MQTT Control Packet
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800392
+ */
+function createPacket(
+    byte1: number,
+    variable: Buffer,
+    payload?: Buffer
+): Buffer {
+    if (payload == null) payload = Buffer.alloc(0)
+    return createPacketHeader(byte1, variable, payload.length).concat(payload)
+}
+
+/**
+ * CONNECT - Client requests a connection to a Server
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
+ */
+function createConnect(options: MqttConnectOptions): Buffer {
+    const byte1: number = ControlPacketType.Connect << 4
+
+    const protocolName = pack("MQTT")
+    const nums = Buffer.alloc(4)
+    nums[0] = 4 // protocol level
+    nums[1] = createConnectFlags(options)
+    nums[2] = 0
+    nums[3] = Constants.KeepAlive
+
+    let payload = pack(options.clientId)
+
+    if (options.will) {
+        payload = payload.concat(
+            pack(options.will.topic).concat(pack(options.will.message))
         )
-        return strChr([byte1]).concat(strChr(byte2)).concat(variable)
     }
 
-    /**
-     * Structure of an MQTT Control Packet
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800392
-     */
-    function createPacket(
-        byte1: number,
-        variable: Buffer,
-        payload?: Buffer
-    ): Buffer {
-        if (payload == null) payload = Buffer.alloc(0)
-        return createPacketHeader(byte1, variable, payload.length).concat(
-            payload
-        )
-    }
-
-    /**
-     * CONNECT - Client requests a connection to a Server
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
-     */
-    export function createConnect(options: MqttConnectOptions): Buffer {
-        const byte1: number = ControlPacketType.Connect << 4
-
-        const protocolName = pack("MQTT")
-        const nums = Buffer.alloc(4)
-        nums[0] = 4 // protocol level
-        nums[1] = createConnectFlags(options)
-        nums[2] = 0
-        nums[3] = Constants.KeepAlive
-
-        let payload = pack(options.clientId)
-
-        if (options.will) {
-            payload = payload.concat(
-                pack(options.will.topic).concat(pack(options.will.message))
-            )
+    if (options.username) {
+        payload = payload.concat(pack(options.username))
+        if (options.password) {
+            payload = payload.concat(pack(options.password))
         }
-
-        if (options.username) {
-            payload = payload.concat(pack(options.username))
-            if (options.password) {
-                payload = payload.concat(pack(options.password))
-            }
-        }
-
-        return createPacket(byte1, protocolName.concat(nums), payload)
     }
 
-    /** PINGREQ - PING request
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800454
-     */
-    export function createPingReq() {
-        return strChr([ControlPacketType.PingReq << 4, 0])
+    return createPacket(byte1, protocolName.concat(nums), payload)
+}
+
+/** PINGREQ - PING request
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800454
+ */
+function createPingReq() {
+    return strChr([ControlPacketType.PingReq << 4, 0])
+}
+
+/**
+ * PUBLISH - Publish message header - doesn't include "payload"
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800410
+ */
+function createPublishHeader(
+    topic: string,
+    payloadSize: number,
+    qos: number,
+    retained: boolean
+) {
+    let byte1: number = (ControlPacketType.Publish << 4) | (qos << 1)
+    byte1 |= retained ? 1 : 0
+
+    const pid = strChr(getBytes(Constants.FixedPackedId))
+    const variable = qos === 0 ? pack(topic) : pack(topic).concat(pid)
+
+    return createPacketHeader(byte1, variable, payloadSize)
+}
+
+function parsePublish(cmd: number, payload: Buffer): Message {
+    const qos: number = (cmd & 0b00000110) >> 1
+
+    const topicLength = payload.readUInt16BE(0)
+    let variableLength: number = 2 + topicLength
+    if (qos > 0) {
+        variableLength += 2
     }
 
-    /**
-     * PUBLISH - Publish message header - doesn't include "payload"
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800410
-     */
-    export function createPublishHeader(
-        topic: string,
-        payloadSize: number,
-        qos: number,
-        retained: boolean
-    ) {
-        let byte1: number = (ControlPacketType.Publish << 4) | (qos << 1)
-        byte1 |= retained ? 1 : 0
-
-        const pid = strChr(getBytes(Constants.FixedPackedId))
-        const variable = qos === 0 ? pack(topic) : pack(topic).concat(pid)
-
-        return createPacketHeader(byte1, variable, payloadSize)
+    const message: Message = {
+        topic: payload.slice(2, topicLength).toString(),
+        content: payload.slice(variableLength),
+        qos: qos,
+        retain: cmd & 1,
     }
 
-    export function parsePublish(cmd: number, payload: Buffer): Message {
-        const qos: number = (cmd & 0b00000110) >> 1
+    if (qos > 0) message.pid = payload.readUInt16BE(variableLength - 2)
 
-        const topicLength = payload.readUInt16BE(0)
-        let variableLength: number = 2 + topicLength
-        if (qos > 0) {
-            variableLength += 2
-        }
+    return message
+}
 
-        const message: Message = {
-            topic: payload.slice(2, topicLength).toString(),
-            content: payload.slice(variableLength),
-            qos: qos,
-            retain: cmd & 1,
-        }
+/**
+ * PUBACK - Publish acknowledgement
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800416
+ */
+function createPubAck(pid: number) {
+    const byte1: number = ControlPacketType.PubAck << 4
 
-        if (qos > 0) message.pid = payload.readUInt16BE(variableLength - 2)
+    return createPacket(byte1, strChr(getBytes(pid)))
+}
 
-        return message
-    }
+/**
+ * SUBSCRIBE - Subscribe to topics
+ * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800436
+ */
+function createSubscribe(topic: string, qos: number): Buffer {
+    const byte1: number = (ControlPacketType.Subscribe << 4) | 2
+    const pid = strChr(getBytes(Constants.FixedPackedId))
 
-    /**
-     * PUBACK - Publish acknowledgement
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800416
-     */
-    export function createPubAck(pid: number) {
-        const byte1: number = ControlPacketType.PubAck << 4
-
-        return createPacket(byte1, strChr(getBytes(pid)))
-    }
-
-    /**
-     * SUBSCRIBE - Subscribe to topics
-     * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc384800436
-     */
-    export function createSubscribe(topic: string, qos: number): Buffer {
-        const byte1: number = (ControlPacketType.Subscribe << 4) | 2
-        const pid = strChr(getBytes(Constants.FixedPackedId))
-
-        return createPacket(byte1, pid, pack(topic).concat(strChr([qos])))
-    }
+    return createPacket(byte1, pid, pack(topic).concat(strChr([qos])))
 }
 
 enum HandlerStatus {
@@ -422,7 +415,7 @@ export class MQTTClient {
         this.sct = await connect(this.opt)
         this.sct.onopen.subscribe(async () => {
             this.log("Network connection established.")
-            await this.send(Protocol.createConnect(this.opt))
+            await this.send(createConnect(this.opt))
             this.readyState = ReadyState.Open
             this.onopen.emit(undefined)
         })
@@ -478,9 +471,7 @@ export class MQTTClient {
 
         const messageLen = buf ? buf.length : 0
         this.trace(`publish: ${topic} ${messageLen}b`)
-        await this.send(
-            Protocol.createPublishHeader(topic, messageLen, qos, retained)
-        )
+        await this.send(createPublishHeader(topic, messageLen, qos, retained))
         if (buf) await this.send(buf)
         this.doneSending()
         return true
@@ -492,7 +483,7 @@ export class MQTTClient {
         qos: number = Constants.DefaultQos
     ): Promise<MQTTHandler> {
         this.log(`subscribe: ${topic}`)
-        const sub = Protocol.createSubscribe(topic, qos)
+        const sub = createSubscribe(topic, qos)
         this.subs.push(sub)
         await this.send1(sub)
         if (handler) {
@@ -573,7 +564,7 @@ export class MQTTClient {
                 }
                 break
             case ControlPacketType.Publish:
-                const message: Message = Protocol.parsePublish(cmd, payload)
+                const message: Message = parsePublish(cmd, payload)
                 this.trace(`incoming: ${message.topic}`)
                 let handled = false
                 let cleanup = false
@@ -595,9 +586,7 @@ export class MQTTClient {
                 if (!handled) this.onmessage.emit(message)
                 if (message.qos > 0) {
                     setTimeout(async () => {
-                        await this.send1(
-                            Protocol.createPubAck(message.pid || 0)
-                        )
+                        await this.send1(createPubAck(message.pid || 0))
                     }, 0)
                 }
                 break
@@ -623,7 +612,7 @@ export class MQTTClient {
     }
 
     private async ping() {
-        await this.send1(Protocol.createPingReq())
+        await this.send1(createPingReq())
         //this.emit("debug", "Sent: Ping request.")
     }
 }
