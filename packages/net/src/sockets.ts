@@ -35,21 +35,28 @@ export class SocketReader {
 
     constructor(socket: Socket) {
         this.socket = socket
+        const self = this
         this.unsubs.push(
-            this.socket.onerror.subscribe(error => {
-                this.lastError = error
-                this.unsubscribe()
-                this.emitter.emit(undefined)
-            }),
-            this.socket.onmessage.subscribe(data => {
-                this.buffers.push(data)
-                this.emitter.emit(undefined)
-            }),
-            this.socket.onclose.subscribe(() => {
-                this.unsubscribe()
-                this.emitter.emit(undefined)
-            })
+            self.socket.onerror.subscribe(error => self.handleError(error)),
+            self.socket.onmessage.subscribe(data => self.handleMessage(data)),
+            self.socket.onclose.subscribe(() => self.handleClose())
         )
+    }
+
+    private handleError(error: Error) {
+        this.lastError = error
+        this.unsubscribe()
+        this.emitter.emit(undefined)
+    }
+
+    private handleMessage(data: Buffer) {
+        this.buffers.push(data)
+        this.emitter.emit(undefined)
+    }
+
+    private handleClose() {
+        this.unsubscribe()
+        this.emitter.emit(undefined)
     }
 
     /**

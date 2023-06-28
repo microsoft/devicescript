@@ -110,7 +110,7 @@ function strChr(codes: number[]): Buffer {
 function encodeRemainingLength(remainingLength: number): number[] {
     let length: number = remainingLength
     const encBytes: number[] = []
-    do {
+    while (length > 0) {
         let encByte: number = length & 127
         length = length >> 7
         // if there are more data to encode, set the top bit of this byte
@@ -118,8 +118,7 @@ function encodeRemainingLength(remainingLength: number): number[] {
             encByte += 128
         }
         encBytes.push(encByte)
-    } while (length > 0)
-
+    }
     return encBytes
 }
 
@@ -179,7 +178,7 @@ function createPacket(
     variable: Buffer,
     payload?: Buffer
 ): Buffer {
-    if (payload == null) payload = Buffer.alloc(0)
+    if (!payload) payload = Buffer.alloc(0)
     return createPacketHeader(byte1, variable, payload.length).concat(payload)
 }
 
@@ -294,7 +293,7 @@ class MQTTHandler {
     constructor(
         public readonly header: Buffer,
         public readonly topic: string,
-        public readonly handler: (m: MQTTMessage) => void
+        public readonly handler: (m: MQTTMessage) => AsyncVoid
     ) {
         this.status = HandlerStatus.Normal
     }
@@ -398,39 +397,40 @@ export class MQTTClient {
     }
 
     public async connect(): Promise<void> {
-        if (this.readyState != MQTTState.Closed) return
+        if (this.readyState !== MQTTState.Closed) return
+        const self = this
         this.readyState = MQTTState.Connecting
         this.log(`Connecting to ${this.opt.host}:${this.opt.port}`)
         if (this.wdId === Constants.Uninitialized) {
             this.wdId = setInterval(async () => {
-                if (this.readyState !== MQTTState.Open) {
-                    await this.disconnect()
-                    this.onerror.emit(new Error("No connection. Retrying."))
-                    await this.connect()
+                if (self.readyState !== MQTTState.Open) {
+                    await self.disconnect()
+                    self.onerror.emit(new Error("No connection. Retrying."))
+                    await self.connect()
                 }
             }, Constants.WatchDogInterval * 1000)
         }
 
         this.sct = await connect(this.opt)
         this.sct.onopen.subscribe(async () => {
-            this.log("Network connection established.")
-            await this.send(createConnect(this.opt))
-            this.readyState = MQTTState.Open
-            this.onopen.emit(undefined)
+            self.log("Network connection established.")
+            await self.send(createConnect(self.opt))
+            self.readyState = MQTTState.Open
+            self.onopen.emit(undefined)
         })
-        this.sct.onmessage.subscribe(msg => {
-            this.trace("incoming " + msg.length + " bytes")
-            this.handleMessage(msg)
+        this.sct.onmessage.subscribe(async msg => {
+            self.trace("incoming " + msg.length + " bytes")
+            await self.handleMessage(msg)
         })
         this.sct.onerror.subscribe(err => {
-            this.log("error")
-            this.onerror.emit(err)
+            self.log("error")
+            self.onerror.emit(err)
         })
         this.sct.onclose.subscribe(() => {
-            this.log("Close.")
-            this.onclose.emit(undefined)
-            this.readyState = MQTTState.Closed
-            this.sct = null
+            self.log("Close.")
+            self.onclose.emit(undefined)
+            self.readyState = MQTTState.Closed
+            self.sct = null
         })
         // await this.sct.connect()
     }
@@ -438,11 +438,11 @@ export class MQTTClient {
     private async canSend() {
         let cnt = 0
         while (true) {
-            if (this.readyState == MQTTState.Open) {
+            if (this.readyState === MQTTState.Open) {
                 this.readyState = MQTTState.Sending
                 return true
             }
-            if (cnt++ < 100 && this.readyState == MQTTState.Sending)
+            if (cnt++ < 100 && this.readyState === MQTTState.Sending)
                 await delay(20)
             else {
                 this.log("drop pkt")
@@ -453,7 +453,7 @@ export class MQTTClient {
 
     private doneSending() {
         this.trace("done send")
-        if (this.readyState == MQTTState.Sending)
+        if (this.readyState === MQTTState.Sending)
             this.readyState = MQTTState.Open
     }
 
@@ -464,7 +464,7 @@ export class MQTTClient {
         qos: number = Constants.DefaultQos,
         retained: boolean = false
     ): Promise<boolean> {
-        const buf = typeof message == "string" ? Buffer.from(message) : message
+        const buf = typeof message === "string" ? Buffer.from(message) : message
         message = null
         if (!(await this.canSend())) return false
         const messageLen = buf ? buf.length : 0
@@ -537,11 +537,12 @@ export class MQTTClient {
             case MQTTControlPacketType.ConnAck:
                 const returnCode: number = payload[1]
                 if (returnCode === MQTTConnectReturnCode.Accepted) {
+                    const self = this
                     this.log("MQTT connection accepted.")
                     this.onopen.emit(undefined)
                     this.readyState = MQTTState.Open
                     this.piId = setInterval(
-                        async () => await this.ping(),
+                        async () => await self.ping(),
                         Constants.PingInterval * 1000
                     )
                     for (const sub of this.mqttHandlers)
@@ -561,23 +562,26 @@ export class MQTTClient {
                 let cleanup = false
                 if (this.mqttHandlers.length) {
                     for (let h of this.mqttHandlers)
-                        if (message.topic.slice(0, h.topic.length) == h.topic) {
+                        if (
+                            message.topic.slice(0, h.topic.length) === h.topic
+                        ) {
                             await h.handler(message)
                             handled = true
-                            if (h.status == HandlerStatus.Once) {
+                            if (h.status === HandlerStatus.Once) {
                                 h.status = HandlerStatus.ToRemove
                                 cleanup = true
                             }
                         }
                     if (cleanup)
                         this.mqttHandlers = this.mqttHandlers.filter(
-                            h => h.status != HandlerStatus.ToRemove
+                            h => h.status !== HandlerStatus.ToRemove
                         )
                 }
                 if (!handled) this.onmessage.emit(message)
                 if (message.qos > 0) {
+                    const self = this
                     setTimeout(async () => {
-                        await this.send1(createPubAck(message.pid || 0))
+                        await self.send1(createPubAck(message.pid || 0))
                     }, 0)
                 }
                 break
@@ -597,7 +601,8 @@ export class MQTTClient {
                 break
         }
 
-        if (data.length > payloadEnd) this.handleMessage(data.slice(payloadEnd))
+        if (data.length > payloadEnd)
+            await this.handleMessage(data.slice(payloadEnd))
     }
 
     private async send1(msg: Buffer) {

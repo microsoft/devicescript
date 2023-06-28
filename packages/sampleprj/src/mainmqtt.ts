@@ -1,10 +1,10 @@
 import { MQTTClient } from "@devicescript/net"
 
 const client = new MQTTClient({
-    broker: "broker.hivemq.com",
+    host: "broker.hivemq.com",
     port: 8000,
+    clientId: "devs",
 })
 
 await client.connect()
-
-client.publish("test", "Hello World!")
+await client.publish("test", "Hello World!")
