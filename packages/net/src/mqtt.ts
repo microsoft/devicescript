@@ -250,7 +250,7 @@ export module Protocol {
     export function parsePublish(cmd: number, payload: Buffer): IMessage {
         const qos: number = (cmd & 0b00000110) >> 1
 
-        const topicLength = payload.getNumber(NumberFormat.UInt16BE, 0)
+        const topicLength = payload.readUInt16BE(0)
         let variableLength: number = 2 + topicLength
         if (qos > 0) {
             variableLength += 2
@@ -263,11 +263,7 @@ export module Protocol {
             retain: cmd & 1,
         }
 
-        if (qos > 0)
-            message.pid = payload.getNumber(
-                NumberFormat.UInt16BE,
-                variableLength - 2
-            )
+        if (qos > 0) message.pid = payload.readUInt16BE(variableLength - 2)
 
         return message
     }
