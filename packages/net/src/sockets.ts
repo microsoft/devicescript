@@ -130,7 +130,9 @@ export class Socket extends EventTarget {
             case "data":
                 s.buffers.push(arg as Buffer)
                 s.emitter.emit(false)
-                s.dispatchEvent(new MessageEvent<Buffer>(arg as Buffer))
+                s.dispatchEvent(
+                    new MessageEvent<Buffer>("message", arg as Buffer)
+                )
                 break
             default:
                 console.warn("unknown event", event)
