@@ -2,7 +2,7 @@ import { describe, expect, test } from "@devicescript/test"
 import { URL } from "./url"
 import { assert, delay, emitter, wait } from "@devicescript/core"
 import { fetch } from "./fetch"
-import { MQTTClient } from "./mqtt"
+import { connectMQTT } from "./mqtt"
 
 describe("net", () => {
     test("URL", () => {
@@ -76,7 +76,7 @@ describe("net", () => {
     })
 
     test("mqtt hivemq public", async () => {
-        const mqtt = new MQTTClient({
+        const mqtt = await connectMQTT({
             host: "broker.hivemq.com",
             proto: "tcp",
             port: 1883,
@@ -86,7 +86,6 @@ describe("net", () => {
         const recv = emitter()
         const payload = Buffer.from(Math.random() + "")
         console.log({ payload: payload.toString("hex") })
-        await mqtt.connect()
         await mqtt.subscribe("devs/tcp", async msg => {
             console.log(msg)
             if (msg.content.toString("hex") === payload.toString("hex")) {

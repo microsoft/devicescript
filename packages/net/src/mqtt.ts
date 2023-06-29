@@ -82,14 +82,14 @@ const enum Constants {
 /**
  * The options used to connect to the MQTT broker.
  */
-export interface MqttConnectOptions extends SocketConnectOptions {
+export interface MQTTConnectOptions extends SocketConnectOptions {
     username?: string
     password?: string
     clientId: string
-    will?: MqttConnectOptionsWill
+    will?: MQTTConnectOptionsWill
 }
 
-export interface MqttConnectOptionsWill {
+export interface MQTTConnectOptionsWill {
     topic: string
     message: string
     qos?: number
@@ -126,7 +126,7 @@ function encodeRemainingLength(remainingLength: number): number[] {
  * Connect flags
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
  */
-function createConnectFlags(options: MqttConnectOptions): number {
+function createConnectFlags(options: MQTTConnectOptions): number {
     let flags: number = 0
     flags |= options.username ? MQTTConnectFlags.UserName : 0
     flags |=
@@ -186,7 +186,7 @@ function createPacket(
  * CONNECT - Client requests a connection to a Server
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
  */
-function createConnect(options: MqttConnectOptions): Buffer {
+function createConnect(options: MQTTConnectOptions): Buffer {
     const byte1: number = MQTTControlPacketType.Connect << 4
 
     const protocolName = pack("MQTT")
@@ -332,7 +332,7 @@ export class MQTTClient {
         console.debug(`mqtt: ${msg}`)
     }
 
-    public opt: MqttConnectOptions
+    public opt: MQTTConnectOptions
 
     private sct?: Socket
 
@@ -349,7 +349,7 @@ export class MQTTClient {
 
     private mqttHandlers: MQTTHandler[] = []
 
-    constructor(opt: MqttConnectOptions) {
+    constructor(opt: MQTTConnectOptions) {
         opt.port = opt.port || 8883
         opt.clientId = opt.clientId
 
@@ -623,4 +623,10 @@ export class MQTTClient {
         await this.send1(createPingReq())
         //this.emit("debug", "Sent: Ping request.")
     }
+}
+
+export async function connectMQTT(options: MQTTConnectOptions) {
+    const mqtt = new MQTTClient(options)
+    await mqtt.connect()
+    return mqtt
 }
