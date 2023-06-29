@@ -1,6 +1,7 @@
 import { describe, expect, test } from "@devicescript/test"
 import { URL } from "./url"
 import { assert } from "@devicescript/core"
+import { fetch } from "./fetch"
 
 describe("net", () => {
     test("URL", () => {
@@ -49,5 +50,26 @@ describe("net", () => {
         const u2 = new URL("https://foobar.com/foo#bar")
         assert(u2.pathname === "/foo")
         assert(u2.hash === "#bar")
+    })
+
+    /*
+    test("fetch test.json", async () => {
+        const res = await fetch(
+            "https://microsoft.github.io/devicescript/test.json"
+        )
+        assert(res.ok)
+        assert(res.status === 200)
+        const json = await res.json()
+        console.log(json)
+        assert(json.data === "test")
+    })*/
+
+    test("fetch gthub status", async () => {
+        const res = await fetch("https://github.com/status.json")
+        assert(res.ok)
+        assert(res.status === 200)
+        const json = await res.json()
+        console.log(json)
+        assert(!!json.status)
     })
 })
