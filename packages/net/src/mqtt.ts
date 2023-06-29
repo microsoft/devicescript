@@ -500,7 +500,7 @@ export class MQTTClient {
             topic = topic.slice(0, topic.length - 1)
         const h = new MQTTHandler(sub, topic, handler)
         this.mqttHandlers.push(h)
-        await delay(1000) // sub ack?
+        // sub ack
         return true
     }
 
