@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### [v2.13.6](https://github.com/microsoft/devicescript/compare/v2.13.5...v2.13.6)
+
+> 26 June 2023
+
+- Node v16 minimal support (v18 not required) [`#510`](https://github.com/microsoft/devicescript/pull/510)
+- support for switchMap in observables [`#508`](https://github.com/microsoft/devicescript/pull/508)
+- add thingspeak [`4cf9b54`](https://github.com/microsoft/devicescript/commit/4cf9b54efa6878aade25ce9c30d547783b0e00c5)
+- missing awaits [`64668d0`](https://github.com/microsoft/devicescript/commit/64668d0e1286ddf74d16b8d6d684bc5baada5a8f)
+- add node.js diag [`8bdd1c6`](https://github.com/microsoft/devicescript/commit/8bdd1c6fb23339f8855b93fd62805c58897e1b65)
+
 #### [v2.13.5](https://github.com/microsoft/devicescript/compare/v2.13.3...v2.13.5)
 
 > 25 June 2023
