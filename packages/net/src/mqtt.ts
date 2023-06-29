@@ -327,7 +327,13 @@ export enum MQTTState {
      * MQTT broken acked connection packet
      */
     Connected = 2,
+    /**
+     * The connection is in the process of closing
+     */
     Closing = 3,
+    /**
+     * Connection closed
+     */
     Closed = 4,
     /**
      * Sending packet
