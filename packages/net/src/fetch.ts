@@ -1,4 +1,4 @@
-import { Socket, SocketProto, SocketReader, connect } from "./sockets"
+import { Socket, SocketProto, connect } from "./sockets"
 import { URL } from "./url"
 
 /**
@@ -74,29 +74,24 @@ export class Response {
     ok: boolean
     private _buffer: Buffer
 
-    constructor(private socket: Socket, private reader: SocketReader) {
+    constructor(private socket: Socket) {
         this.headers = new Headers()
     }
 
     async buffer() {
         if (this._buffer) return this._buffer
-
         const explen = parseInt(this.headers.get("content-length"))
         const buffers: Buffer[] = []
         let buflen = 0
-        try {
-            for (;;) {
-                const buf = await this.reader.read()
-                if (!buf) break
-                buflen += buf.length
-                buffers.push(buf)
-                // note: explen can be NaN
-                if (buflen >= explen) break
-            }
-        } finally {
-            this.reader.unsubscribe()
-            await this.close()
+        for (;;) {
+            const buf = await this.socket.recv()
+            if (!buf) break
+            buflen += buf.length
+            buffers.push(buf)
+            // note: explen can be NaN
+            if (buflen >= explen) break
         }
+        await this.socket.close()
         this._buffer = Buffer.concat(...buffers)
         return this._buffer
     }
@@ -110,9 +105,7 @@ export class Response {
     }
 
     async close() {
-        await this.socket?.close()
-        this.reader = undefined
-        this.socket = undefined
+        await this.socket.close()
     }
 }
 
@@ -187,11 +180,9 @@ export async function fetch(
     await s.send(reqStr)
     if (bodyLen) await s.send(options.body)
 
-    const reader = s.getReader()
-    const resp = new Response(s, reader)
+    const resp = new Response(s)
 
-    let status = await reader.readLine()
-    console.log({ status })
+    let status = await s.readLine()
     if (status.startsWith("HTTP/1.1 ")) {
         status = status.slice(9)
         resp.status = parseInt(status)
@@ -207,7 +198,7 @@ export async function fetch(
     console.debug(`HTTP ${resp.status}: ${resp.statusText}`)
 
     for (;;) {
-        const hd = await reader.readLine()
+        const hd = await s.readLine()
         if (hd === "") break
         const colon = hd.indexOf(":")
         if (colon > 0) {
