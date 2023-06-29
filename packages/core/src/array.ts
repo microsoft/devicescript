@@ -1,3 +1,12 @@
+Array.prototype.at = function (index) {
+    if (index < 0) {
+        const length = this.length
+        return this[length + index];        
+    }
+    return this[index];
+    
+}
+
 Array.prototype.map = function (f) {
     const res: any[] = []
     const length = this.length

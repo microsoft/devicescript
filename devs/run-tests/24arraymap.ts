@@ -117,6 +117,17 @@ function testGenerics() {
     }
 }
 
+function testArrayAt() {
+    msg("testArrayAt")
+    let str = [1, 2, 3]
+    assert(str.at(2) === 3, "arrayAtTrue")
+    assert(str.at(0) === 1, "arrayAtTrue")
+    assert(str.at(-0) === 1, "arrayAtTrue")
+    assert(str.at(-3) === 1, "arrayAtTrue")
+    assert(str.at(7) === undefined, "arrayAtUndefined")
+    assert(str.at(-6) === undefined, "arrayAtUndefined")
+}
+
 testArraySome()
 testArrayEvery()
 testArrayIndexOf()
@@ -126,3 +137,4 @@ testArrayFind()
 testArrayFindIndex()
 testGenerics()
 testArrayIncludes()
+testArrayAt()
