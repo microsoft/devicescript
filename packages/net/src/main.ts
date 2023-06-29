@@ -1,7 +1,8 @@
 import { describe, expect, test } from "@devicescript/test"
 import { URL } from "./url"
-import { assert } from "@devicescript/core"
+import { assert, delay, emitter, wait } from "@devicescript/core"
 import { fetch } from "./fetch"
+import { connectMQTT } from "./mqtt"
 
 describe("net", () => {
     test("URL", () => {
@@ -66,10 +67,37 @@ describe("net", () => {
 
     test("fetch gthub status", async () => {
         const res = await fetch("https://github.com/status.json")
+        console.log({ ok: res.ok, status: res.status })
         assert(res.ok)
         assert(res.status === 200)
         const json = await res.json()
         console.log(json)
         assert(!!json.status)
+    })
+
+    test("mqtt hivemq public", async () => {
+        const mqtt = await connectMQTT({
+            host: "broker.hivemq.com",
+            proto: "tcp",
+            port: 1883,
+            clientId: "devs",
+        })
+        let received = false
+        const recv = emitter()
+        const payload = Buffer.from(Math.random() + "")
+        //console.log({ payload: payload.toString("hex") })
+        const obs = await mqtt.subscribe("devs/tcp")
+        obs.subscribe(async msg => {
+            // console.log(msg)
+            if (msg.content.toString("hex") === payload.toString("hex")) {
+                received = true
+                recv.emit(undefined)
+            }
+        })
+        await mqtt.publish("devs/tcp", payload)
+        await wait(recv, 5000)
+        await mqtt.close()
+
+        assert(received, "mqtt msg sent and received")
     })
 })

@@ -39,12 +39,6 @@ export default function HomepageFeatures(): JSX.Element {
             link: "/devicescript/devices",
         },
         {
-            title: "Hardware as Services",
-            description:
-                "Client/server architecture for sensors and actuators.",
-            link: "/devicescript/developer/clients",
-        },
-        {
             title: "Debugging",
             description:
                 "In Visual Studio Code, for embedded hardware or simulated devices.",
@@ -61,6 +55,23 @@ export default function HomepageFeatures(): JSX.Element {
             description:
                 "Write drivers in TypeScript using I2C, SPI, ... without having to go down to C (limitations apply :) )",
             link: "/devicescript/developer/servers",
+        },
+        {
+            title: "ESP32, RP2040, ...",
+            description:
+                "Supported on popular microcontrollers. Portable to more...",
+            link: "/devicescript/devices",
+        },
+        {
+            title: "Networking",
+            description: "fetch, TCP, TLS, HTTP/S, MQTT, ...",
+            link: "/devicescript/developer/net",
+        },
+        {
+            title: "Package Ecosystem",
+            description:
+                "Leverage npm, yarn or pnpm to distribute and consume DeviceScript packages.",
+            link: "/devicescript/developer/packages",
         },
     ]
 

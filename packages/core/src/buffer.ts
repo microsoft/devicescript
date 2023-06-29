@@ -13,6 +13,16 @@ declare module "@devicescript/core" {
          * @param on
          */
         setBit(bitindex: number, on: boolean): void
+
+        /**
+         * Reads an unsigned, low-endian 16-bit integer at the specified offset.
+         */
+        readUInt16LE(offset: number): number
+
+        /**
+         * Reads an unsigned, big-endian 16-bit integer at the specified offset.
+         */
+        readUInt16BE(offset: number): number
     }
 }
 
@@ -37,4 +47,14 @@ ds.Buffer.prototype.setBit = function setBit(bitindex: number, on: boolean) {
     }
     // save
     this[i] = byte
+}
+
+ds.Buffer.prototype.readUInt16LE = function readUInt16LE(offset: number) {
+    if (offset < 0 || offset + 2 > this.length) return 0
+    return (this[offset + 1] << 8) | this[offset]
+}
+
+ds.Buffer.prototype.readUInt16BE = function readUInt16BE(offset: number) {
+    if (offset < 0 || offset + 2 > this.length) return 0
+    return (this[offset] << 8) | this[offset + 1]
 }

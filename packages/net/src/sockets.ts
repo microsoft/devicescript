@@ -28,10 +28,9 @@ export class Socket {
     public readonly onopen = ds.emitter()
     public readonly onclose = ds.emitter()
     public readonly onerror = ds.emitter<Error>()
-    public readonly onmessage = ds.emitter<Buffer>()
+    public readonly onmessage = ds.emitter()
 
-    private constructor(public name: string) {
-    }
+    private constructor(public name: string) {}
 
     private error(msg: string): Error {
         return new Error(`socket ${this.name}: ${msg}`)
@@ -133,7 +132,7 @@ export class Socket {
             case "data":
                 s.buffers.push(arg as Buffer)
                 s.emitter.emit(false)
-                s.onmessage.emit(arg as Buffer)
+                s.onmessage.emit(undefined)
                 break
             default:
                 console.warn("unknown event", event)
