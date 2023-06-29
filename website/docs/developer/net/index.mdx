@@ -35,7 +35,7 @@ HTTP POST encrypted data and read encrypted responses using symmetric encryption
 
 ## MQTT client
 
-The `connectMQTT` function connects to a MQTT broker using TCP or TLS.
+The [connectMQTT](/developer/net/mqtt) function connects to a MQTT broker using TCP or TLS.
 
 ```ts
 import { connectMQTT } from "@devicescript/net"
@@ -46,16 +46,8 @@ const mqtt = await connectMQTT({
     port: 1883,
     clientId: "devs",
 })
-const payload = Buffer.from("hello")
-await mqtt.subscribe("devs/tcp", async msg => {
-    console.log(msg.content.toString("utf-8"))
-})
-await mqtt.publish("devs/tcp", payload)
+await mqtt.publish("devs/log", "hello!")
 ```
-
-The MQTT client is based on [micro-mqtt](https://github.com/rovale/micro-mqtt).
-You can use [HiveMQ public broker](https://www.hivemq.com/public-mqtt-broker/) for testing
-with public data.
 
 ## TCP/TLS Sockets
 
