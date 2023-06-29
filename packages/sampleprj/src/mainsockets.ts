@@ -16,7 +16,6 @@ host: github.com
 connection: close
 
 `)
-const reader = socket.getReader()
-const status = await reader.readLine()
+const status = await socket.readLine()
 console.log(status)
 await socket.close()
