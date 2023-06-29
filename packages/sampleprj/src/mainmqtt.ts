@@ -1,10 +1,13 @@
-import { MQTTClient } from "@devicescript/net"
+import { connectMQTT } from "@devicescript/net"
 
-const client = new MQTTClient({
+const mqtt = await connectMQTT({
     host: "broker.hivemq.com",
-    port: 8000,
+    proto: "tcp",
+    port: 1883,
     clientId: "devs",
 })
-
-await client.connect()
-await client.publish("test", "Hello World!")
+const payload = Buffer.from("hello")
+await mqtt.subscribe("devs/tcp", async msg => {
+    console.log(msg.content.toString("utf-8"))
+})
+await mqtt.publish("devs/tcp", payload)

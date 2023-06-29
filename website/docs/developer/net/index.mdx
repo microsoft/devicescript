@@ -5,6 +5,8 @@ sidebar_position: 14
 
 # Network
 
+DeviceScript supports TCP, TLS, MQTT and HTTP/HTTPS sockets on specific [devices](/devices).
+
 ## fetch
 
 DeviceScript provides the familiar `fetch` function to issue HTTP/HTTPS requests.
@@ -25,11 +27,31 @@ can help you with understanding how to use sockets.
 
 :::
 
-## Encrypted fetch
+## encryptedFetch
 
 The [encryptedFetch](/developer/net/encrypted-fetch) function lets you
 HTTP POST encrypted data and read encrypted responses using symmetric encryption
 (AES-256-CCM).
+
+## MQTT client
+
+The `connectMQTT` function connects to a MQTT broker using TCP or TLS.
+
+```ts
+import { connectMQTT } from "@devicescript/net"
+
+const mqtt = await connectMQTT({
+    host: "broker.hivemq.com",
+    proto: "tcp",
+    port: 1883,
+    clientId: "devs",
+})
+const payload = Buffer.from("hello")
+await mqtt.subscribe("devs/tcp", async msg => {
+    console.log(msg.content.toString("utf-8"))
+})
+await mqtt.publish("devs/tcp", payload)
+```
 
 ## TCP/TLS Sockets
 
