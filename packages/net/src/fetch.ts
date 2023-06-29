@@ -191,6 +191,7 @@ export async function fetch(
     const resp = new Response(s, reader)
 
     let status = await reader.readLine()
+    console.log({ status })
     if (status.startsWith("HTTP/1.1 ")) {
         status = status.slice(9)
         resp.status = parseInt(status)

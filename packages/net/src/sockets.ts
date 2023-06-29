@@ -1,6 +1,6 @@
 import * as ds from "@devicescript/core"
 
-type SocketEvent = "open" | "close" | "message" | "error"
+type SocketEvent = "open" | "close" | "data" | "error"
 type DsSockets = typeof ds & {
     _socketOpen(host: string, port: number): number
     _socketClose(): number
@@ -51,7 +51,7 @@ export class SocketReader {
 
     private handleMessage(data: Buffer) {
         this.buffers.push(data)
-        this.emitter.emit(undefined)
+        this.emitter.emit(data)
     }
 
     private handleClose() {
@@ -71,14 +71,18 @@ export class SocketReader {
                 return r
             }
             if (this.lastError) throw this.lastError
-            if (this.socket.readyState === ReadyState.Closed) return null
+            if (this.socket.readyState === ReadyState.Closed) {
+                return null
+            }
             const v = await ds.wait(this.emitter, timeout)
-            if (v === undefined) return undefined
+            if (v === undefined) {
+                return undefined
+            }
         }
     }
 
     async readLine(): Promise<string> {
-        let bufs: Buffer[] = []
+        const bufs: Buffer[] = []
         for (;;) {
             const b = await this.read()
             if (b == null) break
@@ -167,8 +171,7 @@ export class Socket {
     }
 
     static _socketOnEvent(event: SocketEvent, arg?: Buffer | string) {
-        if (event !== "message")
-            console.debug("socket", socket?.name, event, arg)
+        if (event !== "data") console.debug("socket", socket?.name, event, arg)
 
         if (!socket) return
 
@@ -186,7 +189,7 @@ export class Socket {
                 s.finish(arg + "")
                 s.onerror.emit(new Error(arg + ""))
                 break
-            case "message":
+            case "data":
                 s.emitter.emit(false)
                 s.onmessage.emit(arg as Buffer)
                 break
@@ -202,8 +205,8 @@ export class Socket {
         ;(ds as DsSockets)._socketOnEvent = Socket._socketOnEvent
         socket?.finish("terminated")
         const sock = new Socket(`${proto}://${host}:${port}`)
-        socket.readyState = ReadyState.Connecting
         socket = sock
+        socket.readyState = ReadyState.Connecting
         console.debug(`connecting to ${socket.name}`)
         const r = (ds as DsSockets)._socketOpen(options.host, port2)
         if (r !== 0) {

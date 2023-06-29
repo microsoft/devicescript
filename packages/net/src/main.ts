@@ -66,6 +66,7 @@ describe("net", () => {
 
     test("fetch gthub status", async () => {
         const res = await fetch("https://github.com/status.json")
+        console.log({ ok: res.ok, status: res.status })
         assert(res.ok)
         assert(res.status === 200)
         const json = await res.json()
