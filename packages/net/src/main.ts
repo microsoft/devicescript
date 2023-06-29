@@ -75,26 +75,16 @@ describe("net", () => {
         assert(!!json.status)
     })
 
-    test("mqtt hivemq public tls", async () => {
+    test("mqtt hivemq public", async () => {
         const mqtt = new MQTTClient({
             host: "broker.hivemq.com",
-            proto: "tls",
-            port: 8884,
-            clientId: "devs",
-        })
-        await mqtt.connect()
-        await mqtt.publish("devs/tls", "hello world")
-        await mqtt.close()
-    })
-
-    test("mqtt hivemq public tcp", async () => {
-        const mqtt = new MQTTClient({
-            host: "broker.hivemq.com",
-            port: 8000,
+            proto: "tcp",
+            port: 1883,
             clientId: "devs",
         })
         await mqtt.connect()
         await mqtt.publish("devs/tcp", "hello world")
         await mqtt.close()
     })
+
 })

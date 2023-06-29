@@ -250,7 +250,7 @@ function parsePublish(cmd: number, payload: Buffer): MQTTMessage {
     }
 
     const message: MQTTMessage = {
-        topic: payload.slice(2, topicLength).toString(),
+        topic: payload.slice(2, 2 + topicLength).toString(),
         content: payload.slice(variableLength),
         qos: qos,
         retain: cmd & 1,
@@ -414,7 +414,7 @@ export class MQTTClient {
         this.log(`socket connecting to ${this.opt.host}:${this.opt.port}`)
         clearInterval(this.wdId)
         this.wdId = setInterval(async () => {
-            if (self.readyState !== MQTTState.Open) {
+            if (self.readyState !== MQTTState.Connected) {
                 await self.close()
                 self.onerror.emit(new Error("No connection. Retrying."))
                 await self.connect()
@@ -424,7 +424,7 @@ export class MQTTClient {
         this.sct = await connect(this.opt)
         this.sct.onmessage.subscribe(async () => {
             const msg = await self.sct?.recv()
-            self.trace("recv " + msg.length + "b")
+            self.trace(`recv ${msg.length}b ${msg.toString("hex")}`)
             await self.handleMessage(msg)
         })
         this.sct.onerror.subscribe(err => {
@@ -440,13 +440,13 @@ export class MQTTClient {
         self.log("socket opened, connecting to broker")
         this.readyState = MQTTState.Open
         await self.send(createConnect(self.opt))
-        //    await wait(this.onopen, self.opt.timeout)
+        await wait(this.onopen, self.opt.timeout)
     }
 
     private async canSend() {
         let cnt = 0
         while (true) {
-            if (this.readyState === MQTTState.Open) {
+            if (this.readyState === MQTTState.Connected) {
                 this.readyState = MQTTState.Sending
                 return true
             }
@@ -462,7 +462,7 @@ export class MQTTClient {
     private doneSending() {
         this.trace("done send")
         if (this.readyState === MQTTState.Sending)
-            this.readyState = MQTTState.Open
+            this.readyState = MQTTState.Connected
     }
 
     // Publish a message
@@ -507,9 +507,7 @@ export class MQTTClient {
 
     private async send(data: Buffer): Promise<void> {
         if (this.sct) {
-            this.trace(
-                `send ${data[0]}/${data.length}b ${data.toString("hex")}`
-            )
+            this.trace(`send ${data.length}b ${data.toString("hex")}`)
             await this.sct.send(data)
         }
     }
@@ -540,8 +538,7 @@ export class MQTTClient {
         const controlPacketType: MQTTControlPacketType = cmd >> 4
         // this.emit('debug', `Rcvd: ${controlPacketType}: '${data}'.`);
 
-        const payload = data.slice(payloadOff, payloadEnd - payloadOff)
-
+        const payload = data.slice(payloadOff, payloadEnd)
         switch (controlPacketType) {
             case MQTTControlPacketType.ConnAck:
                 const returnCode: number = payload[1]
