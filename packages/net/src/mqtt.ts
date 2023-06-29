@@ -11,7 +11,7 @@ import { Socket, SocketConnectOptions, connect } from "./sockets"
  * Connect flags
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349229
  */
-export const enum MQTTConnectFlags {
+const enum MQTTConnectFlags {
     UserName = 128,
     Password = 64,
     WillRetain = 32,
@@ -25,7 +25,7 @@ export const enum MQTTConnectFlags {
  * Connect Return code
  * http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc385349256
  */
-export const enum MQTTConnectReturnCode {
+const enum MQTTConnectReturnCode {
     Unknown = -1,
     Accepted = 0,
     UnacceptableProtocolVersion = 1,
@@ -36,13 +36,28 @@ export const enum MQTTConnectReturnCode {
 }
 
 /**
- * A message received in a Publish packet.
+ * A message received by the MQTT client.
  */
 export interface MQTTMessage {
+    /**
+     * The packet identifier of the message.
+     */
     pid?: number
+    /**
+     * The topic the message was published to.
+     */
     topic: string
+    /**
+     * The message payload.
+     */
     content: Buffer
+    /**
+     * The QoS of the message.
+     */
     qos: number
+    /**
+     * Whether the message was retained.
+     */
     retain: number
 }
 
@@ -322,6 +337,8 @@ export enum MQTTState {
 
 /**
  * A MQTT client
+ * @devsWhenUsed
+ * Ported from {@link https://github.com/rovale/micro-mqtt micro-mqtt}
  */
 export class MQTTClient {
     private log(msg: string) {
@@ -332,20 +349,31 @@ export class MQTTClient {
         console.debug(`mqtt: ${msg}`)
     }
 
-    public opt: MQTTConnectOptions
+    public readonly opt: MQTTConnectOptions
 
-    private sct?: Socket
-
-    private wdId: any
-    private piId: any
+    private socket?: Socket
+    private watchdogId: any
+    private pingId: any
 
     private buf: Buffer
     public readyState = MQTTState.Closed
 
+    /**
+     * Emitted when an error occurs.
+     */
     public readonly onerror = emitter<Error>()
-    public readonly onopen = emitter<unknown>()
+    /**
+     * Emitted when the connection is established.
+     */
+    public readonly onconnect = emitter<unknown>()
+    /**
+     * Emitted when the connection is closed.
+     */
     public readonly onclose = emitter<unknown>()
-    public readonly onmessage = emitter<MQTTMessage>()
+    /**
+     * Emitted when a message is received and not handled by any subscription.
+     */
+    public readonly onunhandledmessage = emitter<MQTTMessage>()
 
     private mqttHandlers: MQTTHandler[] = []
 
@@ -394,13 +422,13 @@ export class MQTTClient {
 
         this.readyState = MQTTState.Closing
         this.log("disconnect")
-        clearInterval(this.wdId)
-        this.wdId = undefined
-        clearInterval(this.piId)
-        this.piId = undefined
-        const s = this.sct
+        clearInterval(this.watchdogId)
+        this.watchdogId = undefined
+        clearInterval(this.pingId)
+        this.pingId = undefined
+        const s = this.socket
         if (s) {
-            this.sct = null
+            this.socket = null
             await s.close()
         }
         this.readyState = MQTTState.Closed
@@ -412,8 +440,8 @@ export class MQTTClient {
         const self = this
         this.readyState = MQTTState.Connecting
         this.log(`socket connecting to ${this.opt.host}:${this.opt.port}`)
-        clearInterval(this.wdId)
-        this.wdId = setInterval(async () => {
+        clearInterval(this.watchdogId)
+        this.watchdogId = setInterval(async () => {
             if (self.readyState !== MQTTState.Connected) {
                 await self.close()
                 self.onerror.emit(new Error("No connection. Retrying."))
@@ -421,26 +449,26 @@ export class MQTTClient {
             }
         }, Constants.WatchDogInterval * 1000)
 
-        this.sct = await connect(this.opt)
-        this.sct.onmessage.subscribe(async () => {
-            const msg = await self.sct?.recv()
+        this.socket = await connect(this.opt)
+        this.socket.onmessage.subscribe(async () => {
+            const msg = await self.socket?.recv()
             self.trace(`recv ${msg.length}b ${msg.toString("hex")}`)
             await self.handleMessage(msg)
         })
-        this.sct.onerror.subscribe(err => {
+        this.socket.onerror.subscribe(err => {
             self.log("error")
             self.onerror.emit(err)
         })
-        this.sct.onclose.subscribe(() => {
+        this.socket.onclose.subscribe(() => {
             self.log("Close.")
             self.onclose.emit(undefined)
             self.readyState = MQTTState.Closed
-            self.sct = null
+            self.socket = null
         })
         self.log("socket opened, connecting to broker")
         this.readyState = MQTTState.Open
         await self.send(createConnect(self.opt))
-        await wait(this.onopen, self.opt.timeout)
+        await wait(this.onconnect, self.opt.timeout)
     }
 
     private async canSend() {
@@ -505,9 +533,9 @@ export class MQTTClient {
     }
 
     private async send(data: Buffer): Promise<void> {
-        if (this.sct) {
+        if (this.socket) {
             this.trace(`send ${data.length}b ${data.toString("hex")}`)
-            await this.sct.send(data)
+            await this.socket.send(data)
         }
     }
 
@@ -545,8 +573,8 @@ export class MQTTClient {
                     const self = this
                     this.log("MQTT connection accepted.")
                     this.readyState = MQTTState.Connected
-                    this.onopen.emit(undefined)
-                    this.piId = setInterval(
+                    this.onconnect.emit(undefined)
+                    this.pingId = setInterval(
                         async () => await self.ping(),
                         Constants.PingInterval * 1000
                     )
@@ -582,7 +610,7 @@ export class MQTTClient {
                             h => h.status !== HandlerStatus.ToRemove
                         )
                 }
-                if (!handled) this.onmessage.emit(message)
+                if (!handled) this.onunhandledmessage.emit(message)
                 if (message.qos > 0) {
                     const self = this
                     setTimeout(async () => {
@@ -625,6 +653,11 @@ export class MQTTClient {
     }
 }
 
+/**
+ * Opens a MQTT client connection
+ * @param options connection options
+ * @returns connected MQTT client
+ */
 export async function connectMQTT(options: MQTTConnectOptions) {
     const mqtt = new MQTTClient(options)
     await mqtt.connect()
