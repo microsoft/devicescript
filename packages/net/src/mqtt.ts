@@ -300,11 +300,24 @@ class MQTTHandler {
 }
 
 export enum MQTTState {
+    /**
+     * Opening socket
+     */
     Connecting = 0,
+    /**
+     * Socket opened, waiting for MQTT broker
+     */
     Open = 1,
-    Closing = 2,
-    Closed = 3,
-    Sending = 4,
+    /**
+     * MQTT broken acked connection packet
+     */
+    Connected = 2,
+    Closing = 3,
+    Closed = 4,
+    /**
+     * Sending packet
+     */
+    Sending = 5,
 }
 
 /**
@@ -323,8 +336,8 @@ export class MQTTClient {
 
     private sct?: Socket
 
-    private wdId: number
-    private piId: number
+    private wdId: any
+    private piId: any
 
     private buf: Buffer
     public readyState = MQTTState.Closed
@@ -337,8 +350,6 @@ export class MQTTClient {
     private mqttHandlers: MQTTHandler[] = []
 
     constructor(opt: MqttConnectOptions) {
-        this.wdId = Constants.Uninitialized
-        this.piId = Constants.Uninitialized
         opt.port = opt.port || 8883
         opt.clientId = opt.clientId
 
@@ -379,23 +390,19 @@ export class MQTTClient {
      * Close the current connection and socket
      */
     public async close(): Promise<void> {
+        if (this.readyState === MQTTState.Closed) return
+
+        this.readyState = MQTTState.Closing
         this.log("disconnect")
-        if (this.wdId !== Constants.Uninitialized) {
-            clearInterval(this.wdId)
-            this.wdId = Constants.Uninitialized
-        }
-
-        if (this.piId !== Constants.Uninitialized) {
-            clearInterval(this.piId)
-            this.piId = Constants.Uninitialized
-        }
-
+        clearInterval(this.wdId)
+        this.wdId = undefined
+        clearInterval(this.piId)
+        this.piId = undefined
         const s = this.sct
         if (s) {
             this.sct = null
             await s.close()
         }
-
         this.readyState = MQTTState.Closed
     }
 
@@ -404,16 +411,15 @@ export class MQTTClient {
 
         const self = this
         this.readyState = MQTTState.Connecting
-        this.log(`Connecting to ${this.opt.host}:${this.opt.port}`)
-        if (this.wdId === Constants.Uninitialized) {
-            this.wdId = setInterval(async () => {
-                if (self.readyState !== MQTTState.Open) {
-                    await self.close()
-                    self.onerror.emit(new Error("No connection. Retrying."))
-                    await self.connect()
-                }
-            }, Constants.WatchDogInterval * 1000)
-        }
+        this.log(`socket connecting to ${this.opt.host}:${this.opt.port}`)
+        clearInterval(this.wdId)
+        this.wdId = setInterval(async () => {
+            if (self.readyState !== MQTTState.Open) {
+                await self.close()
+                self.onerror.emit(new Error("No connection. Retrying."))
+                await self.connect()
+            }
+        }, Constants.WatchDogInterval * 1000)
 
         this.sct = await connect(this.opt)
         this.sct.onmessage.subscribe(async () => {
@@ -431,9 +437,10 @@ export class MQTTClient {
             self.readyState = MQTTState.Closed
             self.sct = null
         })
-        self.log("Network connection established, connecting.")
+        self.log("socket opened, connecting to broker")
+        this.readyState = MQTTState.Open
         await self.send(createConnect(self.opt))
-        await wait(this.onopen, 5000)
+        //    await wait(this.onopen, self.opt.timeout)
     }
 
     private async canSend() {
@@ -500,8 +507,9 @@ export class MQTTClient {
 
     private async send(data: Buffer): Promise<void> {
         if (this.sct) {
-            this.trace("send " + data[0] + "/" + data.length + "b")
-            // this.log("send: " + data[0] + " / " + data.length + " bytes: " + data.toHex())
+            this.trace(
+                `send ${data[0]}/${data.length}b ${data.toString("hex")}`
+            )
             await this.sct.send(data)
         }
     }
@@ -540,8 +548,8 @@ export class MQTTClient {
                 if (returnCode === MQTTConnectReturnCode.Accepted) {
                     const self = this
                     this.log("MQTT connection accepted.")
+                    this.readyState = MQTTState.Connected
                     this.onopen.emit(undefined)
-                    this.readyState = MQTTState.Open
                     this.piId = setInterval(
                         async () => await self.ping(),
                         Constants.PingInterval * 1000

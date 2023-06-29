@@ -83,7 +83,7 @@ describe("net", () => {
             clientId: "devs",
         })
         await mqtt.connect()
-        await mqtt.publish("devs/build/test", "hello world")
+        await mqtt.publish("devs/tls", "hello world")
         await mqtt.close()
     })
 
@@ -94,7 +94,7 @@ describe("net", () => {
             clientId: "devs",
         })
         await mqtt.connect()
-        await mqtt.publish("devs/build/test", "hello world")
+        await mqtt.publish("devs/tcp", "hello world")
         await mqtt.close()
     })
 })
