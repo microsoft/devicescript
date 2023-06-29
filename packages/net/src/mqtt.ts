@@ -460,7 +460,6 @@ export class MQTTClient {
     }
 
     private doneSending() {
-        this.trace("done send")
         if (this.readyState === MQTTState.Sending)
             this.readyState = MQTTState.Connected
     }
@@ -495,13 +494,13 @@ export class MQTTClient {
         qos: number = Constants.DefaultQos
     ): Promise<boolean> {
         this.log(`subscribe: ${topic}`)
-        if (!(await this.canSend())) return false
         const sub = createSubscribe(topic, qos)
-        await this.send1(sub)
+        if (!(await this.send1(sub))) return false
         if (topic[topic.length - 1] === "#")
             topic = topic.slice(0, topic.length - 1)
         const h = new MQTTHandler(sub, topic, handler)
         this.mqttHandlers.push(h)
+        await delay(1000) // sub ack?
         return true
     }
 
@@ -615,7 +614,9 @@ export class MQTTClient {
         if (await this.canSend()) {
             await this.send(msg)
             this.doneSending()
+            return true
         }
+        return false
     }
 
     private async ping() {

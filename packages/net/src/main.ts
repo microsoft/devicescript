@@ -1,6 +1,6 @@
 import { describe, expect, test } from "@devicescript/test"
 import { URL } from "./url"
-import { assert } from "@devicescript/core"
+import { assert, delay, emitter, wait } from "@devicescript/core"
 import { fetch } from "./fetch"
 import { MQTTClient } from "./mqtt"
 
@@ -82,9 +82,22 @@ describe("net", () => {
             port: 1883,
             clientId: "devs",
         })
+        let received = false
+        const recv = emitter()
+        const payload = Buffer.from(Math.random() + "")
+        console.log({ payload: payload.toString("hex") })
         await mqtt.connect()
-        await mqtt.publish("devs/tcp", "hello world")
+        await mqtt.subscribe("devs/tcp", async msg => {
+            console.log(msg)
+            if (msg.content.toString("hex") === payload.toString("hex")) {
+                received = true
+                recv.emit(undefined)
+            }
+        })
+        await mqtt.publish("devs/tcp", payload)
+        await wait(recv, 5000)
         await mqtt.close()
-    })
 
+        assert(received, "mqtt msg sent and received")
+    })
 })
