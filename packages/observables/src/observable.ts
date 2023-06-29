@@ -39,7 +39,7 @@ export type SubscriberFunction<T> = (
 ) => Subscription | ds.Unsubscribe | void
 
 export class Observable<T> {
-    constructor(readonly subscriber: SubscriberFunction<T>) {}
+    constructor(private readonly subscriber: SubscriberFunction<T>) {}
 
     subscribe(observer: SloppyObserver<T>): Subscription {
         const { subscriber } = this

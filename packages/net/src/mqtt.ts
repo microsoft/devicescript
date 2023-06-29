@@ -6,6 +6,11 @@
 
 import { AsyncVoid, delay, emitter, wait } from "@devicescript/core"
 import { Socket, SocketConnectOptions, connect } from "./sockets"
+import {
+    Observable,
+    ObservableValue,
+    register,
+} from "@devicescript/observables"
 
 /**
  * Connect flags
@@ -308,7 +313,7 @@ class MQTTHandler {
     constructor(
         public readonly header: Buffer,
         public readonly topic: string,
-        public readonly handler: (m: MQTTMessage) => AsyncVoid
+        public readonly obs: ObservableValue<MQTTMessage>
     ) {
         this.status = HandlerStatus.Normal
     }
@@ -524,18 +529,20 @@ export class MQTTClient {
      */
     public async subscribe(
         topic: string,
-        handler: (msg: MQTTMessage) => AsyncVoid,
+        handler: (msg: MQTTMessage) => AsyncVoid = undefined,
         qos: number = Constants.DefaultQos
-    ): Promise<boolean> {
+    ): Promise<Observable<MQTTMessage>> {
         this.log(`subscribe: ${topic}`)
         const sub = createSubscribe(topic, qos)
-        if (!(await this.send1(sub))) return false
+        if (!(await this.send1(sub))) return undefined
         if (topic[topic.length - 1] === "#")
             topic = topic.slice(0, topic.length - 1)
-        const h = new MQTTHandler(sub, topic, handler)
+        const o = register<MQTTMessage>()
+        if (handler) o.subscribe(handler)
+        const h = new MQTTHandler(sub, topic, o)
         this.mqttHandlers.push(h)
         // sub ack
-        return true
+        return o
     }
 
     private async send(data: Buffer): Promise<void> {
@@ -604,7 +611,7 @@ export class MQTTClient {
                         if (
                             message.topic.slice(0, h.topic.length) === h.topic
                         ) {
-                            await h.handler(message)
+                            await h.obs.emit(message)
                             handled = true
                             if (h.status === HandlerStatus.Once) {
                                 h.status = HandlerStatus.ToRemove
