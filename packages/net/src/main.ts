@@ -85,9 +85,9 @@ describe("net", () => {
         let received = false
         const recv = emitter()
         const payload = Buffer.from(Math.random() + "")
-        console.log({ payload: payload.toString("hex") })
+        //console.log({ payload: payload.toString("hex") })
         await mqtt.subscribe("devs/tcp", async msg => {
-            console.log(msg)
+           // console.log(msg)
             if (msg.content.toString("hex") === payload.toString("hex")) {
                 received = true
                 recv.emit(undefined)
