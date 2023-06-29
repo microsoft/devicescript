@@ -4,7 +4,7 @@
  * A port of https://github.com/rovale/micro-mqtt for MakeCode, ported to DeviceScript.
  */
 
-import { AsyncVoid, delay, emitter } from "@devicescript/core"
+import { AsyncVoid, delay, emitter, wait } from "@devicescript/core"
 import { Socket, SocketConnectOptions, connect } from "./sockets"
 
 /**
@@ -375,7 +375,10 @@ export class MQTTClient {
         return error
     }
 
-    public async disconnect(): Promise<void> {
+    /**
+     * Close the current connection and socket
+     */
+    public async close(): Promise<void> {
         this.log("disconnect")
         if (this.wdId !== Constants.Uninitialized) {
             clearInterval(this.wdId)
@@ -398,13 +401,14 @@ export class MQTTClient {
 
     public async connect(): Promise<void> {
         if (this.readyState !== MQTTState.Closed) return
+
         const self = this
         this.readyState = MQTTState.Connecting
         this.log(`Connecting to ${this.opt.host}:${this.opt.port}`)
         if (this.wdId === Constants.Uninitialized) {
             this.wdId = setInterval(async () => {
                 if (self.readyState !== MQTTState.Open) {
-                    await self.disconnect()
+                    await self.close()
                     self.onerror.emit(new Error("No connection. Retrying."))
                     await self.connect()
                 }
@@ -412,14 +416,9 @@ export class MQTTClient {
         }
 
         this.sct = await connect(this.opt)
-        this.sct.onopen.subscribe(async () => {
-            self.log("Network connection established.")
-            await self.send(createConnect(self.opt))
-            self.readyState = MQTTState.Open
-            self.onopen.emit(undefined)
-        })
-        this.sct.onmessage.subscribe(async msg => {
-            self.trace("incoming " + msg.length + " bytes")
+        this.sct.onmessage.subscribe(async () => {
+            const msg = await self.sct?.recv()
+            self.trace("recv " + msg.length + "b")
             await self.handleMessage(msg)
         })
         this.sct.onerror.subscribe(err => {
@@ -432,7 +431,9 @@ export class MQTTClient {
             self.readyState = MQTTState.Closed
             self.sct = null
         })
-        // await this.sct.connect()
+        self.log("Network connection established, connecting.")
+        await self.send(createConnect(self.opt))
+        await wait(this.onopen, 5000)
     }
 
     private async canSend() {
@@ -499,7 +500,7 @@ export class MQTTClient {
 
     private async send(data: Buffer): Promise<void> {
         if (this.sct) {
-            this.trace("send: " + data[0] + " / " + data.length + " bytes")
+            this.trace("send " + data[0] + "/" + data.length + "b")
             // this.log("send: " + data[0] + " / " + data.length + " bytes: " + data.toHex())
             await this.sct.send(data)
         }
@@ -552,7 +553,7 @@ export class MQTTClient {
                         MQTTClient.describe(returnCode)
                     this.log("MQTT connection error: " + connectionError)
                     this.onerror.emit(new Error(connectionError))
-                    await this.disconnect()
+                    await this.close()
                 }
                 break
             case MQTTControlPacketType.Publish:

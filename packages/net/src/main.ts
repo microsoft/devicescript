@@ -2,6 +2,7 @@ import { describe, expect, test } from "@devicescript/test"
 import { URL } from "./url"
 import { assert } from "@devicescript/core"
 import { fetch } from "./fetch"
+import { MQTTClient } from "./mqtt"
 
 describe("net", () => {
     test("URL", () => {
@@ -72,5 +73,28 @@ describe("net", () => {
         const json = await res.json()
         console.log(json)
         assert(!!json.status)
+    })
+
+    test("mqtt hivemq public tls", async () => {
+        const mqtt = new MQTTClient({
+            host: "broker.hivemq.com",
+            proto: "tls",
+            port: 8884,
+            clientId: "devs",
+        })
+        await mqtt.connect()
+        await mqtt.publish("devs/build/test", "hello world")
+        await mqtt.close()
+    })
+
+    test("mqtt hivemq public tcp", async () => {
+        const mqtt = new MQTTClient({
+            host: "broker.hivemq.com",
+            port: 8000,
+            clientId: "devs",
+        })
+        await mqtt.connect()
+        await mqtt.publish("devs/build/test", "hello world")
+        await mqtt.close()
     })
 })
