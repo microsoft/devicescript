@@ -53,6 +53,8 @@ await mqtt.subscribe("devs/tcp", async msg => {
 await mqtt.publish("devs/tcp", payload)
 ```
 
+The MQTT client is based on [micro-mqtt](https://github.com/rovale/micro-mqtt).
+
 ## TCP/TLS Sockets
 
 The `connect` function to open a socket TCP or TLS socket.
