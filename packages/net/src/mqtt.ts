@@ -97,8 +97,8 @@ const enum MQTTControlPacketType {
  * Optimization, the TypeScript compiler replaces the constant enums.
  */
 const enum Constants {
-    PingInterval = 40,
-    WatchDogInterval = 50,
+    PingInterval = 40000,
+    WatchDogInterval = 50000,
     DefaultQos = 0,
     Uninitialized = -123,
     FixedPackedId = 1,
@@ -112,6 +112,18 @@ export interface MQTTConnectOptions extends SocketConnectOptions {
     username?: string
     password?: string
     clientId?: string
+    /**
+     * Connection watchdog interval (ms). Default to 50s.
+     */
+    watchdogInterval?: number
+    /**
+     * Ping packet interval (ms). Default to 40s.
+     */
+    pingInterval?: number
+    /**
+     * Connection keep alive (seconds). Default to 60.
+     */
+    keepAlive?: number
     will?: MQTTConnectOptionsWill
 }
 
@@ -222,7 +234,7 @@ function createConnect(options: MQTTConnectOptions): Buffer {
     nums[0] = 4 // protocol level
     nums[1] = createConnectFlags(options)
     nums[2] = 0
-    nums[3] = Constants.KeepAlive
+    nums[3] = options.keepAlive || Constants.KeepAlive
 
     let payload = pack(options.clientId || "")
 
@@ -464,7 +476,7 @@ export class MQTTClient {
                 self.onerror.emit(new Error("No connection. Retrying."))
                 await self.connect()
             }
-        }, Constants.WatchDogInterval * 1000)
+        }, this.opt.watchdogInterval || Constants.WatchDogInterval)
         await self.connect()
     }
 
@@ -629,9 +641,10 @@ export class MQTTClient {
                     this.log("MQTT connection accepted.")
                     this.readyState = MQTTState.Connected
                     this.onconnect.emit(undefined)
+                    clearInterval(this.pingId)
                     this.pingId = setInterval(
                         async () => await self.ping(),
-                        Constants.PingInterval * 1000
+                        self.opt.pingInterval || Constants.PingInterval
                     )
                     for (const sub of this.mqttHandlers)
                         await this.send1(sub.header)
