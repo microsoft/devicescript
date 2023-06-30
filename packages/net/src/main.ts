@@ -75,12 +75,36 @@ describe("net", () => {
         assert(!!json.status)
     })
 
-    test("mqtt hivemq public", async () => {
+    test("mqtt eqmx tls", async () => {
+        const mqtt = await connectMQTT({
+            host: "broker.emqx.io",
+            proto: "tls",
+            port: 8883,
+        })
+        let received = false
+        const recv = emitter()
+        const payload = Buffer.from(Math.random() + "")
+        //console.log({ payload: payload.toString("hex") })
+        const obs = await mqtt.subscribe("devs/tcp")
+        obs.subscribe(async msg => {
+            // console.log(msg)
+            if (msg.content.toString("hex") === payload.toString("hex")) {
+                received = true
+                recv.emit(undefined)
+            }
+        })
+        await mqtt.publish("devs/tcp", payload)
+        await wait(recv, 5000)
+        await mqtt.close()
+
+        assert(received, "mqtt msg sent and received")
+    })
+
+    test("mqtt hivemq tcp", async () => {
         const mqtt = await connectMQTT({
             host: "broker.hivemq.com",
             proto: "tcp",
             port: 1883,
-            clientId: "devs",
         })
         let received = false
         const recv = emitter()
