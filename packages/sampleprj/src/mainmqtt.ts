@@ -12,7 +12,7 @@ const mqtt = await startMQTTClient({
     username,
     password,
 })
-const payload = Buffer.from("hello")
+const payload = Buffer.from("21.3")
 await mqtt.subscribe("devs/tcp", async msg => {
     console.log(msg.content.toString("utf-8"))
 })
