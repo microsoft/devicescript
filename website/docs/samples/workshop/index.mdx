@@ -89,8 +89,8 @@ setInterval(async () => {
 
 ### More tutorials
 
--   Follow the [Blinky](https://microsoft.github.io/devicescript/getting-started/samples/blinky) to get used to the DeviceScript interface
--   Follow the [Thermostat](https://microsoft.github.io/devicescript/getting-started/samples/thermostat) to get used to handle sensor data
+-   Follow the [Blinky](https://microsoft.github.io/devicescript/samples/blinky) to get used to the DeviceScript interface
+-   Follow the [Thermostat](https://microsoft.github.io/devicescript/samples/thermostat) to get used to handle sensor data
 
 ## Part 2: Configuring the Hardware
 
@@ -166,13 +166,13 @@ setInterval(async () => {
     const h = await humidity.reading.read()
     // if humidity goes above threshold (80%)
     const humidityThreshold = 80
-    if (h > humidityThreshold)  {
+    if (h > humidityThreshold) {
         // buzz and turn the board LED red
         await buzzer.playNote(440, 0.5, 500)
         await setStatusLight(0xff0000)
     } else {
         // otherwise turn the LED off
-        await setStatusLight(0) 
+        await setStatusLight(0)
     }
 }, 1000)
 ```
