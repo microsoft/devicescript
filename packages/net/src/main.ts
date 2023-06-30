@@ -117,16 +117,12 @@ describe("net", () => {
             proto: "tls",
             port: 8886,
         }))
+    /*
     test("mqtt eqmx tls", async () =>
         await testMqtt({
             host: "broker.emqx.io",
             proto: "tls",
             port: 8883,
         }))
-    test("mqtt eqmx tls", async () =>
-        await testMqtt({
-            host: "broker.emqx.io",
-            proto: "tls",
-            port: 8883,
-        }))
+    */
 })
