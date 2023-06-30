@@ -34,7 +34,7 @@ export class I2C {
         const rc = await (ds as DsI2C)._i2cTransaction(devAddr, writeBuf, rdbuf)
         if (rc !== 0)
             throw new I2CError(
-                `I2C error dev=${devAddr}: write ${writeBuf}, read ${numRead} B`,
+                `I2C error ${rc} dev=${devAddr}: write ${writeBuf}, read ${numRead} B`,
                 rc
             )
         return rdbuf || hex``

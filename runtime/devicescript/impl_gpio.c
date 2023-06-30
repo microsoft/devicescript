@@ -9,15 +9,44 @@
 // #define VLOGGING 1
 #include "devs_logging.h"
 
+static uint8_t usedpins[128 / 8];
+#define MAX_PIN (sizeof(usedpins) * 8 - 1)
+
+static void init_used(void) {
+    const dcfg_entry_t *info = NULL;
+    memset(usedpins, 0, sizeof(usedpins));
+    for (;;) {
+        info = dcfg_get_next_entry("", info);
+        if (info == NULL)
+            break;
+        const char *p = strstr(info->key, "pin");
+        if (p && p > info->key && (p[-1] == '.' || (uint8_t)p[-1] >= 0x80)) {
+            int pin = dcfg_get_pin(info->key);
+            if (pin != NO_PIN && pin < (sizeof(usedpins) * 8)) {
+                usedpins[pin / 8] |= 1 << (pin & 7);
+            }
+        }
+    }
+}
+
+static bool is_pin_used(int gpio) {
+    if (gpio == NO_PIN || gpio < 0 || gpio >= MAX_PIN)
+        return false;
+    return (usedpins[gpio / 8] & (1 << (gpio & 7))) != 0;
+}
+
 static bool valid_pin(const char *name) {
-    return name[5] != '@' && dcfg_get_pin(name) != NO_PIN;
+    if (name[5] == '@')
+        return false;
+    int gpio = dcfg_get_pin(name);
+    return gpio != NO_PIN && !is_pin_used(gpio);
 }
 
 void devs_gpio_init_dcfg(devs_ctx_t *ctx) {
-    const dcfg_entry_t *info = NULL;
+    init_used();
 
-    info = NULL;
     unsigned idx = 0;
+    const dcfg_entry_t *info = NULL;
     for (;;) {
         info = dcfg_get_next_entry("pins.", info);
         if (info == NULL)
@@ -36,12 +65,15 @@ void devs_gpio_init_dcfg(devs_ctx_t *ctx) {
             pin_set(gpio, init_val);
             pin_setup_output(gpio);
 #endif
+        } else if (is_pin_used(gpio)) {
+            LOG("skip %s -> %d (used)", info->key + 5, gpio);
         }
 
         if (!valid_pin(info->key))
             continue;
 
         if (ctx && ctx->pin_state) {
+            JD_ASSERT(idx <= ctx->num_pins);
             devs_pin_state_t *p = &ctx->pin_state[idx];
             p->label = info->key + 5;
             p->id = idx;
@@ -74,6 +106,8 @@ void devs_gpio_init_dcfg(devs_ctx_t *ctx) {
 static void init_pin_state(devs_ctx_t *ctx) {
     if (ctx->pin_state)
         return;
+
+    init_used();
 
     unsigned num_pins = 0;
     const dcfg_entry_t *info = NULL;
