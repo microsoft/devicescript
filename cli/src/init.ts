@@ -304,11 +304,11 @@ src/main.ts        default DeviceScript entry point
 
 ## Local/container development
 
--  install [Node.js LTS 18+](https://nodejs.org/en/download)
+-  install [Node.js LTS 16+](https://nodejs.org/en/download)
 
 \`\`\`bash
-nvm install 18
-nvm use 18
+nvm install 16
+nvm use 16
 \`\`\`
 
 -  install DeviceScript compiler and tools
