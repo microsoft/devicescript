@@ -76,11 +76,7 @@ describe("net", () => {
     })
 
     const testMqtt = async (opts: MQTTConnectOptions) => {
-        const mqtt = await connectMQTT({
-            host: "broker.emqx.io",
-            proto: "tls",
-            port: 8883,
-        })
+        const mqtt = await connectMQTT(opts)
         let received = false
         const recv = emitter()
         const payload = Buffer.from(Math.random() + "")
@@ -101,32 +97,25 @@ describe("net", () => {
         console.log(`mqtt: ok`)
     }
 
-    test("mqtt mosquitto tcp unauthenticated", async () =>
+    test("mqtt mosquitto 1883", async () =>
         await testMqtt({
             host: "test.mosquitto.org",
             proto: "tcp",
             port: 1883,
         }))
-
-    test("mqtt mosquitto tls unauthenticated", async () =>
+    test("mqtt mosquitto 1884", async () =>
         await testMqtt({
             host: "test.mosquitto.org",
-            proto: "tls",
-            port: 8883,
+            proto: "tcp",
+            port: 1884,
+            username: "rw",
+            password: "readwrite",
         }))
-    test("mqtt mosquitto tls unauthenticated 8886", async () =>
+    test("mqtt mosquitto 8886", async () =>
         await testMqtt({
             host: "test.mosquitto.org",
             proto: "tls",
             port: 8886,
-        }))
-    test("mqtt mosquitto tls authenticated", async () =>
-        await testMqtt({
-            host: "test.mosquitto.org",
-            proto: "tls",
-            port: 8885,
-            username: "rw",
-            password: "readwrite",
         }))
     test("mqtt eqmx tls", async () =>
         await testMqtt({
