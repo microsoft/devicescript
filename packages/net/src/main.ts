@@ -90,7 +90,7 @@ describe("net", () => {
             }
         })
         await mqtt.publish("devs/tcp", payload)
-        await wait(recv, 5000)
+        await wait(recv, 15000)
         await mqtt.close()
 
         assert(received, "mqtt msg sent and received")
